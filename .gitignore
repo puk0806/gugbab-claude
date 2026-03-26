@@ -1,0 +1,22 @@
+# Claude Auto Memory (기기 로컬 전용, git 제외)
+.claude/memory/
+**/.claude/memory/
+
+# 드래프트 파일
+docs/research/.draft-*.md
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 에디터
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 환경변수 및 민감 정보
+.env
+.env.*
+*.key
+*.pem
