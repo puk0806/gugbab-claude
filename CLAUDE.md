@@ -1,121 +1,127 @@
 # CLAUDE.md — gugbab-claude 프로젝트 규칙
 
-이 파일은 Claude Code가 이 프로젝트에서 작업할 때 항상 따라야 하는 규칙입니다.
+Claude Code 활용에 필요한 에이전트(Agent), 스킬(Skill), 설정(CLAUDE.md)을 만들고 관리하는 레포지토리입니다.
+
+<!-- 이 파일은 200줄 이내로 유지한다. 초과 시 .claude/rules/ 로 분리할 것 -->
 
 ---
 
-## 프로젝트 개요
+## 정보 검증 원칙 (IMPORTANT)
 
-Claude Code 활용에 필요한 에이전트(Agent), 스킬(Skill), 설정(CLAUDE.md)을 만들고 관리하는 레포지토리입니다.
+외부 정보 참조 시 반드시 아래 순서로 검증한다. 추측으로 답하지 말고 확인 안 되면 사용자에게 알린다.
+
+| 우선순위 | 소스 | 기준 |
+|----------|------|------|
+| 1순위 | Anthropic 공식 문서 | `code.claude.com`, `docs.claude.com` |
+| 2순위 | Anthropic 공식 GitHub | `github.com/anthropics` |
+| 3순위 | 커뮤니티 레포 | Stars 500+, 최근 6개월 내 업데이트 |
+| 4순위 | 기술 블로그 | 작성자 명확, 날짜 최신 |
+
+**낮은 신뢰도 경고:** Stars 100 미만, 출처 불명, 공식 문서와 배치되는 내용, 1년 이상 된 자료는 재검증 필요.
+
+---
+
+## 에이전트 설계 원칙
+
+### 모델 선택
+
+| 모델 | 적합한 경우 |
+|------|------------|
+| `opus` | 복잡한 판단, 오케스트레이터, 고품질 분석 |
+| `sonnet` | 일반 개발, 코드 생성, 검색/조회 |
+| `haiku` | 단순 포맷 변환, 반복 작업 |
+
+### 도구 부여
+
+- 필요한 도구만 최소로 부여한다
+- `Agent` 도구는 오케스트레이터 에이전트에만 부여한다
+- `Bash`는 꼭 필요한 경우에만 (보안 위험)
+
+### 에이전트 vs 스킬
+
+| 상황 | 선택 |
+|------|------|
+| 독립 컨텍스트가 필요한 전문 작업 | 에이전트 |
+| 파일을 많이 읽어 컨텍스트 오염 우려 | 에이전트 |
+| 메인 대화에 주입할 도메인 지식/패턴 | 스킬 |
+| 반복 실행하는 작업 절차(workflow) | 스킬 |
+
+---
+
+## CLAUDE.md 작성 원칙
+
+**목표: 파일당 200줄 이내. 각 줄 삭제 시 Claude가 실수하지 않으면 삭제한다.**
+
+| ✅ 포함 | ❌ 제외 |
+|--------|--------|
+| 코드만 봐서는 알 수 없는 규칙 | 코드 읽으면 알 수 있는 것 |
+| 기본값과 다른 스타일 규칙 | 표준 언어 컨벤션 |
+| 비직관적인 동작·주의사항 | 자세한 API 문서 (링크로 대체) |
+| 브랜치·PR 컨벤션 | "깔끔한 코드 작성" 같은 당연한 것 |
+
+**지시문 작성법 (구체적으로):**
+- ❌ "코드를 잘 포맷하라" → ✅ "들여쓰기는 2칸 스페이스를 사용한다"
+- ❌ "테스트를 실행하라" → ✅ "커밋 전 `npm test`를 실행한다"
+
+**파일 분리:** 200줄 초과 시 `.claude/rules/` 디렉토리에 토픽별로 분리한다.
+```
+.claude/rules/
+├── agent-design.md     # 에이전트 설계 규칙
+├── code-style.md       # 코드 스타일
+└── security.md         # 보안 규칙
+```
+
+**파일 임포트:** `@path/to/file` 문법으로 외부 파일을 참조할 수 있다.
+```
+# 추가 규칙 참조
+- 에이전트 설계: @.claude/rules/agent-design.md
+```
+
+---
+
+## 컨텍스트 관리
+
+- 관련 없는 작업 사이에는 `/clear`로 컨텍스트 초기화
+- 같은 실수를 2번 이상 수정하면 `/clear` 후 더 구체적인 프롬프트로 재시작
+- 파일을 많이 읽는 조사 작업은 서브에이전트에 위임
+- 컨텍스트 압축 시: `/compact "수정된 파일 목록과 주요 결정사항 보존"`
 
 ---
 
 ## Git 커밋 컨벤션
 
-### 구조
-
-```
-type: Subject
-
-body (선택)
-
-footer (선택)
-```
-
-카테고리가 명확한 경우 대괄호 prefix 사용:
-
-```
-[agent] Add: agent-creator subagent
-[skill] Add: deep-researcher skill
-[docs] Update: README agent list
-```
-
-### Type
-
-| Type | 설명 |
-|------|------|
-| `Add` | 새로운 에이전트, 스킬, 파일 추가 |
-| `Remove` | 파일 및 코드 삭제 |
-| `Fix` | 버그 및 오류 수정 |
-| `Modify` | 기존 기능 추가 또는 변경 |
-| `Improve` | 성능, 품질, 가독성 향상 |
-| `Refactor` | 중복 제거, 변수명 변경, 구조 개선 |
-| `Simplify` | 코드/내용 단순화 (Refactor보다 가벼운 수정) |
-| `Move` | 파일 이동 |
-| `Rename` | 파일 또는 코드 이름 변경 |
-| `Merge` | 코드 병합 |
-
-### Subject 규칙
-
-- 코드 변경사항에 대한 짧은 요약
-- 마침표 및 특수 기호 사용하지 않음
-- 영문으로 작성 시 동사를 가장 앞에, 첫 글자는 대문자로 표기
-- 한글 작성 가능
-
-### Body 규칙 (선택)
-
-- 한 줄에 72자 이내
-- "어떻게"보다 "무엇을, 왜" 변경했는지 작성
-- 최대한 자세히 작성
-
-### Footer 규칙 (선택)
-
-이슈 트래커 ID 명시 시 사용:
-
-| 키워드 | 사용 시점 |
-|--------|-----------|
-| `Fixes` | 이슈 수정 중 |
-| `Resolves` | 이슈를 해결했을 때 |
-| `Ref` | 참고할 이슈가 있을 때 |
-| `Related to` | 해당 커밋에 관련된 이슈가 있을 때 |
-
-### 커밋 예시
-
-```
-[agent] Add: agent-creator subagent for generating agent MD files
-
-새로운 서브에이전트를 대화형으로 설계하고 .claude/agents/에 저장하는
-에이전트를 추가. 모델/도구/절차/출력형식을 자동으로 구성함.
-```
-
-```
-[docs] Update: README agent list
-```
-
-```
-Fix: Correct typo in agent-creator description
-```
+커밋 시에만 참조: @.claude/rules/git.md
 
 ---
 
 ## 파일 및 폴더 규칙
 
-### 에이전트 파일 (.claude/agents/)
-
-- 파일명: `kebab-case.md` (예: `agent-creator.md`, `code-reviewer.md`)
-- 반드시 YAML frontmatter 포함 (name, description, tools, model)
-- 시스템 프롬프트는 한국어로 작성
-- description에 `<example>` 태그로 사용 예시 포함
-
-### 스킬 파일 (.claude/skills/)
-
+**에이전트** (`.claude/agents/{name}.md`):
 - 파일명: `kebab-case.md`
-- 에이전트와 달리 YAML frontmatter 불필요
-- 메인 대화에 주입할 지식/패턴 중심으로 작성
+- YAML frontmatter 필수: `name`, `description`, `tools`, `model`
+- 시스템 프롬프트 한국어 작성
+- `description`에 `<example>` 태그 2-3개 포함
+
+**스킬** (`.claude/skills/{name}/SKILL.md`):
+- YAML frontmatter 포함: `name`, `description`
+- 반복 실행 workflow는 `disable-model-invocation: true`
+
+**Rules** (`.claude/rules/{topic}.md`):
+- CLAUDE.md가 200줄 초과할 때 토픽별로 분리
+- 특정 파일 경로에만 적용할 규칙은 YAML frontmatter `paths` 사용
 
 ---
 
 ## README 업데이트 규칙
 
-에이전트나 스킬이 추가/수정/삭제될 때마다 README.md도 함께 업데이트합니다.
-
-- 에이전트 추가 → README "에이전트 목록" 섹션에 항목 추가
-- 스킬 추가 → README "스킬 목록" 섹션에 항목 추가
-- 업데이트 로그 날짜와 변경 내용 기록
+에이전트·스킬 추가/수정/삭제 시 README.md도 반드시 함께 업데이트:
+- 목록 섹션에 항목 추가/수정
+- 업데이트 로그에 날짜·변경 내용 기록
 
 ---
 
 ## 금지 사항
 
-- 민감한 정보(API 키, 토큰, 비밀번호)를 파일에 직접 작성하지 않음
-- 테스트되지 않은 에이전트를 main 브랜치에 바로 커밋하지 않음
+- API 키·토큰·비밀번호를 파일에 직접 작성 금지
+- 검증되지 않은 외부 소스 그대로 복붙 금지
+- 테스트되지 않은 에이전트를 main 브랜치에 직접 커밋 금지
