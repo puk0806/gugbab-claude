@@ -77,7 +77,7 @@ model: {opus|sonnet|haiku}
 ├── meta/        ← 에이전트 생성·관리 도구
 ├── research/    ← 리서치·조사 관련
 ├── validation/  ← 검증·확인 관련
-└── dev/         ← 개발 관련 (예정)
+└── frontend/    ← 프론트엔드 개발 관련
 ```
 
 새 카테고리 추가 시 `docs/agents/{category}/` 문서 폴더도 함께 생성한다.

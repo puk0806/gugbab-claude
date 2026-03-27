@@ -12,14 +12,18 @@ gugbab-claude/
 ├── CLAUDE.md                     ← 프로젝트 공통 규칙
 ├── docs/
 │   ├── agents/                   ← 에이전트 상세 문서
-│   └── skills/                   ← 스킬 상세 문서 (예정)
+│   └── skills/
+│       ├── VERIFICATION_TEMPLATE.md   ← 스킬 검증 템플릿
+│       └── frontend/             ← 프론트엔드 스킬 검증 문서
 └── .claude/
     ├── agents/
     │   ├── meta/                 ← 에이전트 생성/관리
     │   ├── research/             ← 리서치
-    │   └── validation/           ← 검증
+    │   ├── validation/           ← 검증
+    │   └── frontend/             ← 프론트엔드 개발
     ├── rules/                    ← 상황별 규칙
-    └── skills/                   ← 스킬 (예정)
+    └── skills/
+        └── frontend/             ← 프론트엔드 도메인 스킬
 ```
 
 ---
@@ -49,11 +53,29 @@ gugbab-claude/
 | [fact-checker](./docs/agents/validation/fact-checker.md) | 단일 클레임 교차 검증 (VERIFIED/UNVERIFIED/DISPUTED) | → |
 | [source-validator](./docs/agents/validation/source-validator.md) | URL/레포/문서 신뢰도 평가 (TRUST/CAUTION/REJECT) | → |
 
+### frontend
+
+| 에이전트 | 역할 | 문서 |
+|---------|------|------|
+| [frontend-architect](./.claude/agents/frontend/frontend-architect.md) | 프론트엔드 아키텍처 설계 (구조/스택/렌더링/번들링 판단) | - |
+
 ---
 
 ## 📚 스킬 목록
 
-> 추후 추가 예정
+상세 문서: [docs/skills/](./docs/skills/)
+
+### frontend
+
+| 스킬 | 설명 | 검증 문서 |
+|------|------|----------|
+| [react-core](./.claude/skills/frontend/react-core/SKILL.md) | React 18/19 핵심 패턴, Concurrent, React Compiler | [→](./docs/skills/frontend/react-core/verification.md) |
+| [nextjs](./.claude/skills/frontend/nextjs/SKILL.md) | Next.js 15/16 App Router, 캐싱, Server Actions | [→](./docs/skills/frontend/nextjs/verification.md) |
+| [typescript](./.claude/skills/frontend/typescript/SKILL.md) | TypeScript 핵심 패턴, React 타입, tsconfig | [→](./docs/skills/frontend/typescript/verification.md) |
+| [monorepo-turborepo](./.claude/skills/frontend/monorepo-turborepo/SKILL.md) | 모노레포 구조, Turborepo 파이프라인 | [→](./docs/skills/frontend/monorepo-turborepo/verification.md) |
+| [bundling-compiler](./.claude/skills/frontend/bundling-compiler/SKILL.md) | tsup/Vite/Turbopack 선택 기준, React Compiler, Tree Shaking | [→](./docs/skills/frontend/bundling-compiler/verification.md) |
+| [code-convention](./.claude/skills/frontend/code-convention/SKILL.md) | ESLint 9+ flat config, Biome, Prettier, Husky, lint-staged | [→](./docs/skills/frontend/code-convention/verification.md) |
+| [state-management](./.claude/skills/frontend/state-management/SKILL.md) | Zustand v5 전역 상태, TanStack Query v5 서버 상태/캐싱 | [→](./docs/skills/frontend/state-management/verification.md) |
 
 ---
 
@@ -80,3 +102,5 @@ claude --continue             # 이전 대화 이어서
 |------|-----------|
 | 2026-03-26 | 프로젝트 초기화 — `agent-creator` 추가, CLAUDE.md 작성, 커밋 컨벤션 분리 |
 | 2026-03-27 | 리서치·검증 에이전트 5종 추가, 카테고리별 폴더 구조 도입, 상세 문서 분리 |
+| 2026-03-27 | 프론트엔드 스킬 5종 추가 (react-core, nextjs, typescript, monorepo-turborepo, bundling-compiler), frontend-architect 에이전트 추가, 스킬 검증 템플릿 도입 |
+| 2026-03-27 | 프론트엔드 스킬 2종 추가 (code-convention, state-management) |
