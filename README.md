@@ -89,7 +89,7 @@ gugbab-claude/
 
 | 훅 | 유형 | 설명 | 문서 |
 |----|------|------|------|
-| [permission-judge](./.claude/hooks/permission-judge.js) | PreToolUse | 도구 실행 전 자동 허가 판단 (approve/block/ask) | [→](./docs/hooks/permission-judge.md) |
+| [permission-judge](./.claude/hooks/permission-judge.js) | PreToolUse | 위험 Bash 명령어 차단 (block 전용, 나머지는 settings.json 위임) | [→](./docs/hooks/permission-judge.md) |
 
 ---
 
@@ -118,4 +118,5 @@ claude --continue             # 이전 대화 이어서
 | 2026-03-27 | 리서치·검증 에이전트 5종 추가, 카테고리별 폴더 구조 도입, 상세 문서 분리 |
 | 2026-03-27 | 프론트엔드 스킬 5종 추가 (react-core, nextjs, typescript, monorepo-turborepo, bundling-compiler), frontend-architect 에이전트 추가, 스킬 검증 템플릿 도입 |
 | 2026-03-27 | 프론트엔드 스킬 2종 추가 (code-convention, state-management) |
-| 2026-04-01 | permission-judge PreToolUse 훅 추가 — 자동 허가 판단기 (45개 테스트 전부 통과) |
+| 2026-04-01 | permission-judge 훅 리팩터 — approve 로직 제거, block 전용으로 단순화 |
+| 2026-04-01 | settings.json 개편 — defaultMode: auto, permissions.allow/deny 명시적 정의 (19개 테스트 통과) |
