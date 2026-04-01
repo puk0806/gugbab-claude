@@ -12,6 +12,8 @@ gugbab-claude/
 ├── CLAUDE.md                     ← 프로젝트 공통 규칙
 ├── docs/
 │   ├── agents/                   ← 에이전트 상세 문서
+│   ├── hooks/                    ← 훅 문서
+│   │   └── permission-judge.md   ← 자동 허가 판단기 문서
 │   └── skills/
 │       ├── VERIFICATION_TEMPLATE.md   ← 스킬 검증 템플릿
 │       └── frontend/             ← 프론트엔드 스킬 검증 문서
@@ -21,7 +23,11 @@ gugbab-claude/
     │   ├── research/             ← 리서치
     │   ├── validation/           ← 검증
     │   └── frontend/             ← 프론트엔드 개발
+    ├── hooks/
+    │   ├── permission-judge.js   ← PreToolUse 자동 허가 판단기
+    │   └── permission-judge.test.js
     ├── rules/                    ← 상황별 규칙
+    ├── settings.json             ← 훅 등록 설정
     └── skills/
         └── frontend/             ← 프론트엔드 도메인 스킬
 ```
@@ -79,6 +85,14 @@ gugbab-claude/
 
 ---
 
+## 🔒 훅 (Hooks)
+
+| 훅 | 유형 | 설명 | 문서 |
+|----|------|------|------|
+| [permission-judge](./.claude/hooks/permission-judge.js) | PreToolUse | 도구 실행 전 자동 허가 판단 (approve/block/ask) | [→](./docs/hooks/permission-judge.md) |
+
+---
+
 ## ⚡ Claude Code 빠른 참조
 
 ```bash
@@ -104,3 +118,4 @@ claude --continue             # 이전 대화 이어서
 | 2026-03-27 | 리서치·검증 에이전트 5종 추가, 카테고리별 폴더 구조 도입, 상세 문서 분리 |
 | 2026-03-27 | 프론트엔드 스킬 5종 추가 (react-core, nextjs, typescript, monorepo-turborepo, bundling-compiler), frontend-architect 에이전트 추가, 스킬 검증 템플릿 도입 |
 | 2026-03-27 | 프론트엔드 스킬 2종 추가 (code-convention, state-management) |
+| 2026-04-01 | permission-judge PreToolUse 훅 추가 — 자동 허가 판단기 (45개 테스트 전부 통과) |
