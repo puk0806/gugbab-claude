@@ -43,6 +43,7 @@ gugbab-claude/
 | 에이전트 | 역할 | 문서 |
 |---------|------|------|
 | [agent-creator](./docs/agents/meta/agent-creator.md) | 새 에이전트 MD 파일 대화형 생성 | → |
+| [skill-creator](./.claude/agents/meta/skill-creator.md) | 공식 문서 검증 후 스킬 SKILL.md 생성 | - |
 
 ### research
 
@@ -82,6 +83,17 @@ gugbab-claude/
 | [bundling-compiler](./.claude/skills/frontend/bundling-compiler/SKILL.md) | tsup/Vite/Turbopack 선택 기준, React Compiler, Tree Shaking | [→](./docs/skills/frontend/bundling-compiler/verification.md) |
 | [code-convention](./.claude/skills/frontend/code-convention/SKILL.md) | ESLint 9+ flat config, Biome, Prettier, Husky, lint-staged | [→](./docs/skills/frontend/code-convention/verification.md) |
 | [state-management](./.claude/skills/frontend/state-management/SKILL.md) | Zustand v5 전역 상태, TanStack Query v5 서버 상태/캐싱 | [→](./docs/skills/frontend/state-management/verification.md) |
+| [sass](./.claude/skills/frontend/sass/SKILL.md) | SCSS 핵심 패턴, CSS Modules + SCSS, 캡슐화 중심 스타일 설계 | - |
+| [testing](./.claude/skills/frontend/testing/SKILL.md) | Jest/Vitest + React Testing Library, 동작 중심 테스트 전략 | - |
+| [component-design](./.claude/skills/frontend/component-design/SKILL.md) | 캡슐화 원칙, Compound Component, Headless 패턴, 컴포넌트 API 설계 | - |
+| [form-handling](./.claude/skills/frontend/form-handling/SKILL.md) | React Hook Form + Zod 유효성 검증, 재사용 필드 컴포넌트 | - |
+| [api-integration](./.claude/skills/frontend/api-integration/SKILL.md) | API 클라이언트 캡슐화, TanStack Query 연동, 에러 핸들링 | - |
+| [accessibility](./.claude/skills/frontend/accessibility/SKILL.md) | ARIA 패턴, 시맨틱 HTML, 키보드 네비게이션, a11y 테스트 | - |
+| [animation](./.claude/skills/frontend/animation/SKILL.md) | Framer Motion 핵심 패턴, CSS transition/keyframe, 성능 고려 | - |
+| [performance](./.claude/skills/frontend/performance/SKILL.md) | React Compiler 기준 메모이제이션, 코드 스플리팅, TanStack Virtual 가상화 | - |
+| [error-handling](./.claude/skills/frontend/error-handling/SKILL.md) | Error Boundary, React 19 에러 콜백, TanStack Query 에러 처리, 에러 유형별 전략 | - |
+| [design-patterns](./.claude/skills/frontend/design-patterns/SKILL.md) | Compound Component, Custom Hook, useSyncExternalStore, API 캡슐화, 전략 주입 | - |
+| [seo](./.claude/skills/frontend/seo/SKILL.md) | Next.js 15 Metadata API, OpenGraph, JSON-LD, sitemap/robots | - |
 
 ---
 
@@ -120,3 +132,4 @@ claude --continue             # 이전 대화 이어서
 | 2026-03-27 | 프론트엔드 스킬 2종 추가 (code-convention, state-management) |
 | 2026-04-01 | permission-judge 훅 리팩터 — approve 로직 제거, block 전용으로 단순화 |
 | 2026-04-01 | settings.json 개편 — defaultMode: auto, permissions.allow/deny 명시적 정의 (19개 테스트 통과) |
+| 2026-04-02 | skill-creator 에이전트 추가, creation-workflow.md 분리, 기존 7종 스킬 공식 문서 검증 및 오류 수정 |

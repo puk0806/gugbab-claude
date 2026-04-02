@@ -99,6 +99,12 @@ Claude Code 활용에 필요한 에이전트(Agent), 스킬(Skill), 설정(CLAUD
 
 ---
 
+## 스킬·에이전트 생성 절차
+
+외부 기술 정보 포함 시 반드시 검증 후 작성: @.claude/rules/creation-workflow.md
+
+---
+
 ## 금지 사항
 
 - API 키·토큰·비밀번호를 파일에 직접 작성 금지
