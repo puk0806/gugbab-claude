@@ -71,7 +71,7 @@ import { create } from 'zustand'  // named import
 const useStore = create(...)
 
 // v5 추가: useShallow (shallow compare)
-import { useShallow } from 'zustand/react/shallow'
+import { useShallow } from 'zustand/shallow'
 const { open, close } = useStore(useShallow((s) => ({ open: s.open, close: s.close })))
 ```
 
@@ -161,7 +161,7 @@ const user = useStore((s) => s.user)
 const isOpen = useSidebarStore((s) => s.isOpen)
 
 // ✅ 여러 값 구독 시 useShallow로 객체 비교
-import { useShallow } from 'zustand/react/shallow'
+import { useShallow } from 'zustand/shallow'
 const { open, close } = useStore(
   useShallow((s) => ({ open: s.open, close: s.close }))
 )

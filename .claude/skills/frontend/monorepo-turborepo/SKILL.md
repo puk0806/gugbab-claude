@@ -263,8 +263,10 @@ turbo run build --filter=@myorg/web
 # 특정 패키지와 의존 패키지 포함
 turbo run build --filter=@myorg/web...
 
-# 변경된 패키지만 실행 (git 기반)
-turbo run build --filter=[main]
+# 변경된 패키지만 실행 (git 기반) — main 브랜치 대비
+turbo run build --filter=[main...HEAD]
+# 또는 간략하게
+turbo run build --affected
 
 # 실행 그래프 시각화
 turbo run build --graph

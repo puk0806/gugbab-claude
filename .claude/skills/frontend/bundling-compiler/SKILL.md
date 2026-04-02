@@ -164,7 +164,7 @@ const nextConfig = {
 | Dev 시작 | 느림 | 매우 빠름 |
 | HMR | 느림 | 거의 즉각 |
 | 플러그인 호환 | 전체 | 제한적 (재구현 필요) |
-| 프로덕션 빌드 | 안정 | Next.js 15.5+부터 안정 |
+| 프로덕션 빌드 | 안정 | 15.3에서 alpha, 안정화 시점 미확정 |
 
 **Turbopack 제약:** 일부 Webpack 플러그인 미지원 → 대안 확인 필요
 
@@ -182,11 +182,17 @@ const nextConfig = {
   experimental: { reactCompiler: true }
 }
 
-// Vite + Babel
-// babel.config.js
-module.exports = {
-  plugins: [['babel-plugin-react-compiler', {}]]
-}
+// Vite — vite.config.js에서 @vitejs/plugin-react의 babel 옵션으로 추가 (권장)
+import react from '@vitejs/plugin-react'
+export default defineConfig({
+  plugins: [
+    react({
+      babel: {
+        plugins: ['babel-plugin-react-compiler'],
+      },
+    }),
+  ],
+})
 ```
 
 ### React Compiler 활성화 시 변경되는 것
@@ -268,6 +274,8 @@ function Button({ variant = 'primary' }: { variant: keyof typeof variants }) {
 ```
 
 **특징:** 빌드 타임에 static CSS 생성 → 런타임 오버헤드 없음
+
+> **주의:** `@vanilla-extract/css`의 webpack 플러그인은 현재 Turbopack에서 **미지원**. Turbopack 기반 Next.js 환경에서는 사용 불가.
 
 ---
 

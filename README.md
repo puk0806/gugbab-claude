@@ -130,6 +130,4 @@ claude --continue             # 이전 대화 이어서
 | 2026-03-27 | 리서치·검증 에이전트 5종 추가, 카테고리별 폴더 구조 도입, 상세 문서 분리 |
 | 2026-03-27 | 프론트엔드 스킬 5종 추가 (react-core, nextjs, typescript, monorepo-turborepo, bundling-compiler), frontend-architect 에이전트 추가, 스킬 검증 템플릿 도입 |
 | 2026-03-27 | 프론트엔드 스킬 2종 추가 (code-convention, state-management) |
-| 2026-04-01 | permission-judge 훅 리팩터 — approve 로직 제거, block 전용으로 단순화 |
-| 2026-04-01 | settings.json 개편 — defaultMode: auto, permissions.allow/deny 명시적 정의 (19개 테스트 통과) |
-| 2026-04-02 | skill-creator 에이전트 추가, creation-workflow.md 분리, 기존 7종 스킬 공식 문서 검증 및 오류 수정 |
+| 2026-04-02 | permission-judge 훅 리팩터(block 전용), settings.json 권한 체계 개편, 프론트엔드 스킬 11종 추가(sass·testing·component-design·form-handling·api-integration·accessibility·animation·performance·error-handling·design-patterns·seo), skill-creator 에이전트 추가, 생성 검증 절차(creation-workflow.md) 분리, 기존 스킬 공식 문서 검증 및 오류 수정 |

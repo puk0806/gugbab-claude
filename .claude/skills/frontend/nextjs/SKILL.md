@@ -309,7 +309,7 @@ export const config = {
 ```tsx
 // proxy.ts (루트) — Next.js 16+
 // middleware.ts는 deprecated, proxy.ts로 대체
-// Node.js 런타임에서 실행 (Edge 런타임 제약 없음)
+// Node.js 런타임에서 실행
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
@@ -327,6 +327,8 @@ export const config = {
   matcher: ['/dashboard/:path*', '/api/protected/:path*']
 }
 ```
+
+> **주의:** `proxy.ts`는 Node.js 런타임 전용으로 **Edge 런타임을 지원하지 않는다**. Edge 런타임이 필요한 경우 deprecated된 `middleware.ts`를 유지해야 한다.
 
 **middleware.ts → proxy.ts 마이그레이션 (codemod 사용 가능):**
 ```bash
@@ -371,18 +373,22 @@ const nextConfig = {
 // → next build --webpack 으로 실행해야 함
 ```
 
-### AGENTS.md 자동 생성 (AI 에이전트 지원)
+### AGENTS.md 자동 생성 (AI 에이전트 지원) — v16.2
 
-Next.js 16 신규 프로젝트는 루트에 `AGENTS.md` 파일이 자동 생성됩니다. Claude Code 등 AI 에이전트가 코드 작성 전 `node_modules/next/dist/docs/`의 번들된 Next.js 문서를 먼저 읽도록 안내합니다.
+Next.js **16.2** `create-next-app`에서 도입. 루트에 `AGENTS.md` 파일이 자동 생성되어 Claude Code 등 AI 에이전트가 코드 작성 전 `node_modules/next/dist/docs/`의 번들된 Next.js 문서를 먼저 읽도록 안내합니다.
 
-### Next.js DevTools MCP
+### Next.js DevTools MCP — v16.2
 
-개발 서버 실행 시 MCP(Model Context Protocol) 서버가 함께 시작되어 AI 에이전트가 개발 환경 진단, 에러 설명, 수정 제안을 직접 수행할 수 있습니다.
+AI 에이전트가 개발 환경 진단, 에러 설명, 수정 제안을 수행할 수 있는 MCP 서버. **자동 시작되지 않으며** MCP 클라이언트 설정 파일에 수동 등록이 필요합니다.
 
-### 성능 개선 (v16.2)
+```json
+{ "mcpServers": { "next-devtools": { "command": "npx", "args": ["-y", "next-devtools-mcp@latest"] } } }
+```
+
+### 성능 개선 (v16.2, 2026-03-18)
 
 - dev 서버 시작 **~400% 빠름**
-- 렌더링 **~50% 빠름**
+- 렌더링 **~50% 빠름** (RSC payload 역직렬화 개선)
 - Server Fast Refresh (서버사이드 HMR) 도입
 
 ---

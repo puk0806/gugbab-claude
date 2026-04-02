@@ -139,7 +139,7 @@ export const nextjs = tseslint.config(
 ```json
 // biome.json
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.0/schema.json",
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "organizeImports": { "enabled": true },
   "linter": {
     "enabled": true,
