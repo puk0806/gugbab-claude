@@ -1,29 +1,45 @@
 #!/usr/bin/env node
 /**
  * permission-judge.js
- * Claude Code PreToolUse Hook — 위험 작업 차단기
+ * Claude Code PreToolUse + PermissionRequest Hook
  *
- * 역할: settings.json permissions.allow/deny로 처리 안 되는
- *       동적 패턴 기반 위험 작업을 추가로 차단한다.
+ * PreToolUse:
+ *   - 안전한 도구 → permissionDecision: "allow" (즉시 승인)
+ *   - 위험한 Bash 패턴 → permissionDecision: "deny" (차단)
+ *   - 그 외 Bash → 위임 (settings.json allow/deny)
  *
- * 퍼미션 처리 우선순위:
- *   1. settings.json permissions.allow  → 자동 승인 (사용자 프롬프트 없음)
- *   2. settings.json permissions.deny   → 자동 차단
- *   3. 이 훅 (PreToolUse)               → block 반환 시 차단, 그 외 위임
- *   4. 사용자 프롬프트                   → 최종 결정
- *
- * 출력 형식:
- *   { "decision": "block", "reason": "..." }  → 차단
- *   (아무것도 출력 안 함)                       → 사용자에게 위임
+ * PermissionRequest:
+ *   - 권한 다이얼로그가 표시되기 직전에 실행
+ *   - 안전한 도구 → behavior: "allow" (다이얼로그 없이 자동 승인)
  */
 
 const readline = require('readline')
 
-// ─────────────────────────────────────────────
-// 차단 패턴 (동적 판단이 필요한 위험 패턴)
-// 정적 패턴은 settings.json permissions.deny에 정의
-// ─────────────────────────────────────────────
+// PreToolUse에서 자동 승인할 도구 목록 (Bash 제외 — Bash는 별도 패턴 체크)
+const AUTO_APPROVE_TOOLS = new Set([
+  'Agent',
+  'Read',
+  'Write',
+  'Edit',
+  'Glob',
+  'Grep',
+  'WebSearch',
+  'WebFetch',
+  'TodoRead',
+  'TodoWrite',
+  'NotebookRead',
+  'NotebookEdit',
+  'Task',
+])
 
+// PermissionRequest에서 추가 승인할 도구 목록
+// PreToolUse에서 위험 패턴을 이미 차단했으므로 Bash도 여기서 승인
+const PERMISSION_REQUEST_APPROVE_TOOLS = new Set([
+  ...AUTO_APPROVE_TOOLS,
+  'Bash',
+])
+
+// 위험한 Bash 패턴
 const BASH_DENY_PATTERNS = [
   { pattern: /git\s+push\s+(--force|-f)\b/, reason: 'force push는 히스토리를 덮어씁니다. 직접 실행하세요.' },
   { pattern: /git\s+push\s+.*-f\b/, reason: 'force push 감지. 직접 실행하세요.' },
@@ -38,26 +54,45 @@ const BASH_DENY_PATTERNS = [
   { pattern: /:\s*\(\)\s*\{.*:\|:.*\}/, reason: 'Fork bomb 패턴 감지. 차단합니다.' },
 ]
 
-// ─────────────────────────────────────────────
-// 판단 로직
-// ─────────────────────────────────────────────
+function handlePreToolUse(toolName, toolInput) {
+  if (AUTO_APPROVE_TOOLS.has(toolName)) {
+    return {
+      hookSpecificOutput: {
+        hookEventName: 'PreToolUse',
+        permissionDecision: 'allow',
+      },
+    }
+  }
 
-function judge(toolName, toolInput) {
   if (toolName === 'Bash') {
     const cmd = (toolInput.command || '').trim()
     for (const { pattern, reason } of BASH_DENY_PATTERNS) {
       if (pattern.test(cmd)) {
-        return { decision: 'block', reason }
+        return {
+          hookSpecificOutput: {
+            hookEventName: 'PreToolUse',
+            permissionDecision: 'deny',
+            permissionDecisionReason: reason,
+          },
+        }
       }
     }
   }
-  // 그 외 모든 경우 → settings.json permissions 또는 사용자에게 위임
+
   return null
 }
 
-// ─────────────────────────────────────────────
-// 메인 실행
-// ─────────────────────────────────────────────
+function handlePermissionRequest(toolName) {
+  if (PERMISSION_REQUEST_APPROVE_TOOLS.has(toolName)) {
+    return {
+      hookSpecificOutput: {
+        hookEventName: 'PermissionRequest',
+        decision: { behavior: 'allow' },
+      },
+    }
+  }
+  return null
+}
 
 async function readStdin() {
   const rl = readline.createInterface({ input: process.stdin })
@@ -84,8 +119,16 @@ async function main() {
     process.exit(0)
   }
 
-  const { tool_name, tool_input = {} } = input
-  const decision = judge(tool_name, tool_input)
+  // 입력은 snake_case(hook_event_name), 출력은 camelCase(hookEventName)
+  const { hook_event_name, hookEventName, tool_name, tool_input = {} } = input
+  const eventName = hook_event_name || hookEventName
+
+  let decision = null
+  if (eventName === 'PermissionRequest') {
+    decision = handlePermissionRequest(tool_name)
+  } else {
+    decision = handlePreToolUse(tool_name, tool_input)
+  }
 
   if (decision) {
     process.stdout.write(JSON.stringify(decision) + '\n')

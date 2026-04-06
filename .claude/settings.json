@@ -33,7 +33,11 @@
       "Bash(mv*)",
       "Bash(rm*)",
       "Write(**)",
-      "Edit(**)"
+      "Edit(**)",
+      "Read(**)",
+      "WebSearch",
+      "WebFetch",
+      "Agent"
     ],
     "deny": [
       "Bash(git push --force*)",
@@ -55,6 +59,17 @@
   },
   "hooks": {
     "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/permission-judge.js"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
       {
         "matcher": "*",
         "hooks": [
