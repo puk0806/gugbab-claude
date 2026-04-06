@@ -94,6 +94,18 @@ gugbab-claude/
 | [error-handling](./.claude/skills/frontend/error-handling/SKILL.md) | Error Boundary, React 19 에러 콜백, TanStack Query 에러 처리, 에러 유형별 전략 | - |
 | [design-patterns](./.claude/skills/frontend/design-patterns/SKILL.md) | Compound Component, Custom Hook, useSyncExternalStore, API 캡슐화, 전략 주입 | - |
 | [seo](./.claude/skills/frontend/seo/SKILL.md) | Next.js 15 Metadata API, OpenGraph, JSON-LD, sitemap/robots | - |
+| [intersection-observer](./.claude/skills/frontend/intersection-observer/SKILL.md) | Intersection Observer API 핵심 패턴, lazy load, React Hook | - |
+| [mutation-observer](./.claude/skills/frontend/mutation-observer/SKILL.md) | MutationObserver API 핵심 패턴 — 자식 노드·속성 변경 감지 | - |
+| [page-visibility](./.claude/skills/frontend/page-visibility/SKILL.md) | Page Visibility API — 탭 가시성 감지, 폴링 제어, 데이터 갱신 | - |
+| [resize-observer](./.claude/skills/frontend/resize-observer/SKILL.md) | ResizeObserver API 핵심 패턴, React Hook | - |
+
+---
+
+### css
+
+| 스킬 | 설명 | 검증 문서 |
+|------|------|----------|
+| [css-variables](./.claude/skills/css-variables/SKILL.md) | CSS Custom Properties 핵심 패턴 — 선언, 상속, 폴백, 테마 전환, JS 연동 | - |
 
 ---
 
@@ -127,8 +139,6 @@ claude --continue             # 이전 대화 이어서
 | 날짜 | 변경 내용 |
 |------|-----------|
 | 2026-03-26 | 프로젝트 초기화 — `agent-creator` 추가, CLAUDE.md 작성, 커밋 컨벤션 분리 |
-| 2026-03-27 | 리서치·검증 에이전트 5종 추가, 카테고리별 폴더 구조 도입, 상세 문서 분리 |
-| 2026-03-27 | 프론트엔드 스킬 5종 추가 (react-core, nextjs, typescript, monorepo-turborepo, bundling-compiler), frontend-architect 에이전트 추가, 스킬 검증 템플릿 도입 |
-| 2026-03-27 | 프론트엔드 스킬 2종 추가 (code-convention, state-management) |
-| 2026-04-02 | permission-judge 훅 리팩터(block 전용), settings.json 권한 체계 개편, 프론트엔드 스킬 11종 추가(sass·testing·component-design·form-handling·api-integration·accessibility·animation·performance·error-handling·design-patterns·seo), skill-creator 에이전트 추가, 생성 검증 절차(creation-workflow.md) 분리, 기존 스킬 공식 문서 검증 및 오류 수정 |
-| 2026-04-02 | permission-judge 훅 PermissionRequest 이벤트 추가 — 서브에이전트 파일 생성 시 allow 프롬프트 제거 (hook_event_name 필드명 버그 수정, Bash 자동 승인 추가) |
+| 2026-03-27 | 리서치·검증 에이전트 5종 추가, 카테고리별 폴더 구조 도입, 상세 문서 분리, 프론트엔드 스킬 7종 추가(react-core·nextjs·typescript·monorepo-turborepo·bundling-compiler·code-convention·state-management), frontend-architect 에이전트 추가, 스킬 검증 템플릿 도입 |
+| 2026-04-02 | permission-judge 훅 전면 개편(PermissionRequest 이벤트 추가, hook_event_name 버그 수정, Bash 자동 승인 추가, block 전용 리팩터), settings.json 권한 체계 개편, 프론트엔드 스킬 11종 추가(sass·testing·component-design·form-handling·api-integration·accessibility·animation·performance·error-handling·design-patterns·seo), skill-creator 에이전트 추가, creation-workflow.md 분리, 기존 스킬 공식 문서 검증 및 오류 수정 |
+| 2026-04-06 | 스킬 5종 추가(intersection-observer·mutation-observer·page-visibility·resize-observer·css-variables) — fact-checker 검증 완료, DISPUTED 항목 수정 |

@@ -2,6 +2,10 @@
 .claude/memory/
 **/.claude/memory/
 
+# 로그 파일
+*.log
+.claude/hooks/*.log
+
 # 드래프트 파일
 docs/research/.draft-*.md
 
