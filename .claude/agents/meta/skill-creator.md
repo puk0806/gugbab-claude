@@ -130,6 +130,14 @@ status: PENDING_TEST
 | 검증 방법 | skill-creator 에이전트 (web-searcher + fact-checker) |
 | 버전 기준 | {라이브러리명} {버전} |
 
+## 실행 에이전트 로그
+
+| 단계 | 에이전트 | 입력 요약 | 출력 요약 |
+|------|----------|-----------|-----------|
+| 조사 | web-searcher 또는 deep-researcher | {조사 키워드 및 공식 문서 URL} | {수집한 소스 목록 및 주요 발견} |
+| 검증 | fact-checker | {검증 클레임 수}개 클레임 | VERIFIED {n}, DISPUTED {n}, UNVERIFIED {n} |
+| 소스검증 | source-validator (해당 시) | {검증 대상 URL} | TRUST / CAUTION / REJECT |
+
 ## 조사 소스
 | 소스명 | URL | 신뢰도 |
 |--------|-----|--------|
@@ -143,6 +151,7 @@ status: PENDING_TEST
 
 ## 검증 체크리스트
 - [x] 공식 문서 1순위 소스 확인
+- [x] web-searcher / deep-researcher로 조사 실행
 - [x] fact-checker로 핵심 클레임 검증
 - [x] DISPUTED 항목 수정 반영
 - [x] deprecated 패턴 제외
