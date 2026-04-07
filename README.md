@@ -22,14 +22,18 @@ gugbab-claude/
     │   ├── meta/                 ← 에이전트 생성/관리
     │   ├── research/             ← 리서치
     │   ├── validation/           ← 검증
-    │   └── frontend/             ← 프론트엔드 개발
+    │   ├── frontend/             ← 프론트엔드 개발
+    │   └── backend/              ← Rust 백엔드 개발
     ├── hooks/
     │   ├── permission-judge.js   ← PreToolUse 자동 허가 판단기
     │   └── permission-judge.test.js
     ├── rules/                    ← 상황별 규칙
     ├── settings.json             ← 훅 등록 설정
     └── skills/
-        └── frontend/             ← 프론트엔드 도메인 스킬
+        ├── frontend/             ← 프론트엔드 도메인 스킬
+        ├── css-variables/        ← CSS Custom Properties
+        ├── tokio/                ← Rust Tokio 비동기 런타임
+        └── {axum,reqwest,...}/   ← Rust 백엔드 스킬 14종
 ```
 
 ---
@@ -65,6 +69,13 @@ gugbab-claude/
 | 에이전트 | 역할 | 문서 |
 |---------|------|------|
 | [frontend-architect](./.claude/agents/frontend/frontend-architect.md) | 프론트엔드 아키텍처 설계 (구조/스택/렌더링/번들링 판단) | - |
+
+### backend
+
+| 에이전트 | 역할 | 문서 |
+|---------|------|------|
+| [rust-backend-developer](./.claude/agents/backend/rust-backend-developer.md) | Rust + Axum 핸들러·서비스·라우터 코드 구현, 컴파일 에러 수정 | - |
+| [rust-backend-architect](./.claude/agents/backend/rust-backend-architect.md) | Rust + Axum 아키텍처 설계 — 크레이트 구조, 레이어드 아키텍처, 트레이트 추상화 | - |
 
 ---
 
@@ -109,6 +120,28 @@ gugbab-claude/
 
 ---
 
+### backend (Rust)
+
+| 스킬 | 설명 | 검증 문서 |
+|------|------|----------|
+| [tokio](./.claude/skills/tokio/SKILL.md) | Rust Tokio 비동기 런타임 — #[tokio::main], spawn, sync, fs, time | [⚠️](./docs/skills/backend/tokio/verification.md) |
+| [axum](./.claude/skills/axum/SKILL.md) | Rust Axum 웹 프레임워크 — 라우팅, 상태 공유, 추출자, 에러 핸들링, 미들웨어 | [⚠️](./docs/skills/backend/axum/verification.md) |
+| [reqwest](./.claude/skills/reqwest/SKILL.md) | Rust reqwest HTTP 클라이언트 — GET/POST, JSON, 헤더, 스트리밍, Client 재사용 | [⚠️](./docs/skills/backend/reqwest/verification.md) |
+| [serde](./.claude/skills/serde/SKILL.md) | Rust serde + serde_json 직렬화/역직렬화 핵심 패턴 | [⚠️](./docs/skills/backend/serde/verification.md) |
+| [thiserror](./.claude/skills/thiserror/SKILL.md) | Rust thiserror 에러 처리 — derive(Error), #[from] 변환, Axum IntoResponse 연동 | [⚠️](./docs/skills/backend/thiserror/verification.md) |
+| [tower-http](./.claude/skills/tower-http/SKILL.md) | tower-http 미들웨어 — CorsLayer, TraceLayer, CompressionLayer, Axum 연동 | [⚠️](./docs/skills/backend/tower-http/verification.md) |
+| [sse-streaming](./.claude/skills/sse-streaming/SKILL.md) | Axum SSE 스트리밍 — Sse 응답, Event 구성, Claude API 스트리밍 변환 | [⚠️](./docs/skills/backend/sse-streaming/verification.md) |
+| [multipart-upload](./.claude/skills/multipart-upload/SKILL.md) | Axum Multipart 파일 업로드 — 필드 구분, 바이트 읽기, 파일 타입별 처리 | [⚠️](./docs/skills/backend/multipart-upload/verification.md) |
+| [dotenvy](./.claude/skills/dotenvy/SKILL.md) | Rust 환경변수 관리 — dotenvy(.env 로드) + envy(타입 안전 매핑) 조합 패턴 | [⚠️](./docs/skills/backend/dotenvy/verification.md) |
+| [tracing](./.claude/skills/tracing/SKILL.md) | Rust tracing + tracing-subscriber 구조화 로깅 — 초기화, EnvFilter, #[instrument], Span, Axum 연동 | [⚠️](./docs/skills/backend/tracing/verification.md) |
+| [cargo-workspace](./.claude/skills/cargo-workspace/SKILL.md) | Rust Cargo Workspace 멀티 크레이트 구조 설계 및 의존성 관리 | [⚠️](./docs/skills/backend/cargo-workspace/verification.md) |
+| [project-structure](./.claude/skills/project-structure/SKILL.md) | Rust + Axum 레이어드 아키텍처 — 4계층 구조, 모듈 시스템, 책임 분리, DI 조립 패턴 | [⚠️](./docs/skills/backend/project-structure/verification.md) |
+| [dependency-injection](./.claude/skills/dependency-injection/SKILL.md) | Rust Trait 기반 DI — Arc<dyn Trait> vs 제네릭, AppState 구성, Axum 핸들러 주입, Mock 테스트 | [⚠️](./docs/skills/backend/dependency-injection/verification.md) |
+| [repository-pattern](./.claude/skills/repository-pattern/SKILL.md) | Rust Repository 패턴 — async trait DB 추상화, 의존성 역전, In-Memory Mock, Hexagonal Architecture | [⚠️](./docs/skills/backend/repository-pattern/verification.md) |
+| [custom-middleware](./.claude/skills/custom-middleware/SKILL.md) | Axum Tower 커스텀 미들웨어 — from_fn, from_fn_with_state, 요청/응답 가로채기 | [⚠️](./docs/skills/backend/custom-middleware/verification.md) |
+
+---
+
 ## 🔒 훅 (Hooks)
 
 | 훅 | 유형 | 설명 | 문서 |
@@ -141,4 +174,4 @@ claude --continue             # 이전 대화 이어서
 | 2026-03-26 | 프로젝트 초기화 — `agent-creator` 추가, CLAUDE.md 작성, 커밋 컨벤션 분리 |
 | 2026-03-27 | 리서치·검증 에이전트 5종 추가, 카테고리별 폴더 구조 도입, 상세 문서 분리, 프론트엔드 스킬 7종 추가(react-core·nextjs·typescript·monorepo-turborepo·bundling-compiler·code-convention·state-management), frontend-architect 에이전트 추가, 스킬 검증 템플릿 도입 |
 | 2026-04-02 | permission-judge 훅 전면 개편(PermissionRequest 이벤트 추가, hook_event_name 버그 수정, Bash 자동 승인 추가, block 전용 리팩터), settings.json 권한 체계 개편, 프론트엔드 스킬 11종 추가(sass·testing·component-design·form-handling·api-integration·accessibility·animation·performance·error-handling·design-patterns·seo), skill-creator 에이전트 추가, creation-workflow.md 분리, 기존 스킬 공식 문서 검증 및 오류 수정 |
-| 2026-04-06 | 스킬 5종 추가(intersection-observer·mutation-observer·page-visibility·resize-observer·css-variables) — fact-checker 검증 완료, DISPUTED 항목 수정 |
+| 2026-04-06~07 | 프론트엔드 스킬 5종 추가(intersection-observer·mutation-observer·page-visibility·resize-observer·css-variables), Rust 백엔드 스킬 15종 추가(tokio·axum·reqwest·serde·thiserror·tower-http·sse-streaming·multipart-upload·dotenvy·tracing·cargo-workspace·project-structure·dependency-injection·repository-pattern·custom-middleware), 백엔드 에이전트 2종 추가(rust-backend-developer·rust-backend-architect), skill-creator 검증 프로세스 강화(fact-checker 필수화, verification.md 의무화), creation-workflow 4단계 개편 |
