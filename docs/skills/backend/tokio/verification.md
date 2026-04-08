@@ -2,8 +2,8 @@
 skill: tokio
 category: backend
 version: v1
-date: 2026-04-06
-status: UNVERIFIED
+date: 2026-04-08
+status: APPROVED
 ---
 
 ## 메타 정보
@@ -13,9 +13,18 @@ status: UNVERIFIED
 | 스킬 이름 | tokio |
 | 스킬 경로 | .claude/skills/tokio/SKILL.md |
 | 최초 작성일 | 2026-04-06 |
-| 검증 방법 | 수동 작성 (skill-creator 에이전트 미사용) |
+| 재검증일 | 2026-04-07 |
+| 검증 방법 | fact-checker 에이전트 (재검증) |
 | 버전 기준 | tokio 1.x (최신 안정) |
-| 현재 상태 | **UNVERIFIED** — fact-checker 미실행, 재검증 필요 |
+
+---
+
+## 실행 에이전트 로그
+
+| 단계 | 에이전트 | 입력 요약 | 출력 요약 |
+|------|----------|-----------|-----------|
+| 검증 | fact-checker | 핵심 클레임 7개 | VERIFIED 6, DISPUTED 1 |
+| 활용 테스트 | rust-backend-developer | spawn, mpsc, interval_at, Mutex 패턴 코드 작성 요청 | 전항목 스킬 내용과 일치, 오류 없음 |
 
 ---
 
@@ -30,26 +39,29 @@ status: UNVERIFIED
 
 ## fact-checker 검증 결과
 
-> ⚠️ fact-checker 에이전트를 통한 검증이 실행되지 않았습니다.
-
 | 클레임 | 판정 | 비고 |
 |--------|------|------|
-| `#[tokio::main]`은 `macros` + `rt-multi-thread` feature 필요 | 미검증 | SKILL.md에 주의로 표기됨 |
-| `.await` 포함 시 `tokio::sync::Mutex` 사용 | 미검증 | 공식 문서 권장 사항 |
-| `spawn_blocking`은 별도 스레드 풀에서 실행 | 미검증 | - |
+| `#[tokio::main]`에 `macros` + `rt-multi-thread`(또는 `rt`) feature 필요 | DISPUTED → 수정됨 | `rt`는 항상 필수. `rt-multi-thread`는 multi-thread flavor 사용 시 추가 필요. OR 관계 아님 |
+| 짧은 구간엔 `std::sync::Mutex`, `.await` 필요 시 `tokio::sync::Mutex` | VERIFIED | - |
+| `tokio::fs`는 `spawn_blocking` 사용, `fs` feature 필요 | VERIFIED | 향후 io_uring으로 변경 가능성 있음 |
+| `interval` 첫 `tick()`은 즉시 완료, 지연 시작은 `interval_at` | VERIFIED | - |
+| `tokio::spawn`은 `JoinHandle` 반환, drop 시 detach | VERIFIED | 취소하려면 `abort()` 명시 호출 필요 |
+| `tokio::sync::mpsc`는 다중 생산자 단일 소비자 | VERIFIED | - |
+| `tokio::sync::broadcast`는 다중 생산자 다중 소비자 | VERIFIED | - |
 
 ---
 
 ## 검증 체크리스트
 
-- [x] 공식 문서 1순위 소스 확인 (tokio.rs, docs.rs)
-- [ ] fact-checker로 핵심 클레임 검증 ← **미실행**
-- [ ] DISPUTED 항목 수정 반영 ← **미실행**
-- [x] deprecated 패턴 제외
-- [x] 버전 명시
+- [✅] 공식 문서 1순위 소스 확인 (tokio.rs, docs.rs)
+- [✅] fact-checker로 핵심 클레임 검증 (7개)
+- [✅] DISPUTED 항목 수정 반영 (클레임 1 → SKILL.md 수정 완료)
+- [✅] deprecated 패턴 제외
+- [✅] 버전 명시
+- [✅] Claude Code에서 실제 활용 테스트 (rust-backend-developer, 전항목 PASS)
 
 ---
 
 ## 최종 판정
 
-**UNVERIFIED** — 공식 문서 소스를 사용했으나 skill-creator 에이전트 파이프라인(fact-checker)을 거치지 않음. 재검증 필요.
+**APPROVED** — fact-checker 검증 + rust-backend-developer 활용 테스트 모두 완료.

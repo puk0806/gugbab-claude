@@ -49,7 +49,7 @@ async fn main() { /* ... */ }
 async fn main() { /* ... */ }
 ```
 
-> 주의: `#[tokio::main]`은 `macros`와 `rt-multi-thread`(또는 `rt`) feature가 필요하다.
+> 주의: `#[tokio::main]`은 `macros` + `rt` feature가 필수다. 기본 flavor(multi-thread) 사용 시에는 `rt-multi-thread`도 추가로 필요하다. `flavor = "current_thread"` 지정 시에는 `rt-multi-thread` 없이도 동작한다.
 
 **매크로 없이 수동 구성:**
 

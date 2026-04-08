@@ -42,7 +42,7 @@ async fn main() {
 }
 ```
 
-> 주의: axum 0.7부터 `axum::Server`가 제거되었습니다. `tokio::net::TcpListener` + `axum::serve`를 사용합니다.
+> 주의: axum 0.7부터 `axum::Server`를 사용할 수 없습니다 (hyper 1.0 의존으로 소멸). `tokio::net::TcpListener` + `axum::serve`를 사용합니다.
 
 ---
 
@@ -216,7 +216,7 @@ async fn with_auth(
 }
 ```
 
-> 주의: `TypedHeader`는 `axum-extra` 크레이트에 있으며, `headers` feature를 활성화해야 합니다.
+> 주의: `TypedHeader`는 `axum-extra` 크레이트에 있으며, `typed-header` feature를 활성화해야 합니다. (`axum-extra = { version = "0.9", features = ["typed-header"] }`)
 
 ### 추출자 순서 규칙
 
