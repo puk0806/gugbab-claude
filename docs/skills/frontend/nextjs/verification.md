@@ -13,15 +13,15 @@
 
 ## 1. 작업 목록
 
-- [x] 공식 문서 확인 (nextjs.org/docs)
-- [x] Next.js 15 주요 변경사항 확인 (async params/searchParams)
-- [x] Next.js 16 Breaking Changes 확인 (proxy.ts, Node.js 20.9.0, Turbopack 기본값)
-- [x] App Router 파일 컨벤션 정리
-- [x] 캐싱 4계층 구조 정리
-- [x] Server Actions 패턴 정리
-- [x] Streaming + Suspense 패턴 정리
-- [x] middleware.ts → proxy.ts 마이그레이션 패턴 정리
-- [x] SKILL.md 파일 작성
+- [✅] 공식 문서 확인 (nextjs.org/docs)
+- [✅] Next.js 15 주요 변경사항 확인 (async params/searchParams)
+- [✅] Next.js 16 Breaking Changes 확인 (proxy.ts, Node.js 20.9.0, Turbopack 기본값)
+- [✅] App Router 파일 컨벤션 정리
+- [✅] 캐싱 4계층 구조 정리
+- [✅] Server Actions 패턴 정리
+- [✅] Streaming + Suspense 패턴 정리
+- [✅] middleware.ts → proxy.ts 마이그레이션 패턴 정리
+- [✅] SKILL.md 파일 작성
 
 ---
 
@@ -38,23 +38,23 @@
 ## 3. 검증 체크리스트
 
 ### 3-1. 내용 정확성
-- [x] Next.js 15 async params/searchParams Breaking Change 반영
-- [x] 캐싱 전략 (force-cache, no-store, revalidate) 정확히 기술
-- [x] Server Actions 'use server' 지시어 위치 정확히 기술
-- [x] Route Handler 응답 형식 (NextResponse) 정확히 기술
+- [✅] Next.js 15 async params/searchParams Breaking Change 반영
+- [✅] 캐싱 전략 (force-cache, no-store, revalidate) 정확히 기술
+- [✅] Server Actions 'use server' 지시어 위치 정확히 기술
+- [✅] Route Handler 응답 형식 (NextResponse) 정확히 기술
 
 ### 3-2. 구조 완전성
-- [x] YAML frontmatter 포함
-- [x] 파일 컨벤션 구조도 포함
-- [x] Server/Client Component 결정 기준 포함
-- [x] 데이터 페칭 패턴 (fetch, unstable_cache) 포함
-- [x] 캐싱 4계층 비교표 포함
-- [x] 흔한 실수 패턴 포함
+- [✅] YAML frontmatter 포함
+- [✅] 파일 컨벤션 구조도 포함
+- [✅] Server/Client Component 결정 기준 포함
+- [✅] 데이터 페칭 패턴 (fetch, unstable_cache) 포함
+- [✅] 캐싱 4계층 비교표 포함
+- [✅] 흔한 실수 패턴 포함
 
 ### 3-3. 실용성
-- [x] Route Handler, Server Action, Middleware 예시 모두 포함
-- [x] 범용적 패턴 (특정 DB 라이브러리 종속 없음)
-- [ ] 에이전트 활용 테스트 (미실시)
+- [✅] Route Handler, Server Action, Middleware 예시 모두 포함
+- [✅] 범용적 패턴 (특정 DB 라이브러리 종속 없음)
+- [❌] 에이전트 활용 테스트 (미실시)
 
 ---
 
@@ -104,9 +104,9 @@ Next.js 14에서 15로 마이그레이션할 때 주의할 점은?
 
 ## 6. 개선 필요 사항
 
-- [ ] 에이전트 테스트 수행
-- [ ] Next.js 16 특이사항 추가 (Turbopack 기본값 등)
-- [ ] Parallel Routes / Intercepting Routes 패턴 추가 고려
+- [❌] 에이전트 테스트 수행
+- [❌] Next.js 16 특이사항 추가 (Turbopack 기본값 등)
+- [❌] Parallel Routes / Intercepting Routes 패턴 추가 고려
 
 ---
 

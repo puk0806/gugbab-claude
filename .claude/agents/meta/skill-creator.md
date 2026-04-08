@@ -150,13 +150,13 @@ status: PENDING_TEST
 | {클레임 2} | VERIFIED | - |
 
 ## 검증 체크리스트
-- [x] 공식 문서 1순위 소스 확인
-- [x] web-searcher / deep-researcher로 조사 실행
-- [x] fact-checker로 핵심 클레임 검증
-- [x] DISPUTED 항목 수정 반영
-- [x] deprecated 패턴 제외
-- [x] 버전 명시
-- [ ] Claude Code에서 실제 활용 테스트 (PENDING)
+- [✅] 공식 문서 1순위 소스 확인
+- [✅] web-searcher / deep-researcher로 조사 실행
+- [✅] fact-checker로 핵심 클레임 검증
+- [✅] DISPUTED 항목 수정 반영
+- [✅] deprecated 패턴 제외
+- [✅] 버전 명시
+- [❌] Claude Code에서 실제 활용 테스트 (PENDING)
 
 ## 최종 판정
 **PENDING_TEST** — 내용 검증 완료, 실제 에이전트 활용 테스트 미실시

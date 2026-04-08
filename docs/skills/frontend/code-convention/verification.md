@@ -13,14 +13,14 @@
 
 ## 1. 작업 목록
 
-- [x] ESLint 9 flat config 공식 문서 확인
-- [x] Biome 공식 문서 확인
-- [x] Prettier 공식 문서 확인
-- [x] Husky v9 + lint-staged 설정 확인
-- [x] 모노레포 공유 eslint-config 패턴 정리
-- [x] TypeScript 타입 체크 패턴 추가 (tsc --noEmit, ts-expect-error, strict 옵션)
-- [x] pre-commit vs pre-push typecheck 기준 추가
-- [x] SKILL.md 파일 작성
+- [✅] ESLint 9 flat config 공식 문서 확인
+- [✅] Biome 공식 문서 확인
+- [✅] Prettier 공식 문서 확인
+- [✅] Husky v9 + lint-staged 설정 확인
+- [✅] 모노레포 공유 eslint-config 패턴 정리
+- [✅] TypeScript 타입 체크 패턴 추가 (tsc --noEmit, ts-expect-error, strict 옵션)
+- [✅] pre-commit vs pre-push typecheck 기준 추가
+- [✅] SKILL.md 파일 작성
 
 ---
 
@@ -37,11 +37,11 @@
 
 ## 3. 검증 체크리스트
 
-- [x] ESLint 9 flat config 형식 (eslint.config.js) 반영
-- [x] eslint-config-prettier 충돌 방지 패턴 포함
-- [x] 모노레포 공유 설정 패턴 포함
-- [x] Biome vs ESLint+Prettier 선택 기준표 포함
-- [ ] 에이전트 활용 테스트 (미실시)
+- [✅] ESLint 9 flat config 형식 (eslint.config.js) 반영
+- [✅] eslint-config-prettier 충돌 방지 패턴 포함
+- [✅] 모노레포 공유 설정 패턴 포함
+- [✅] Biome vs ESLint+Prettier 선택 기준표 포함
+- [❌] 에이전트 활용 테스트 (미실시)
 
 ---
 

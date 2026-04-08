@@ -13,15 +13,15 @@
 
 ## 1. 작업 목록
 
-- [x] tsup 공식 문서 확인
-- [x] Vite 공식 문서 확인
-- [x] Turbopack 공식 문서 확인 (nextjs.org)
-- [x] React Compiler v1.0 공식 문서 확인
-- [x] Vanilla Extract 공식 문서 확인
-- [x] 번들러 선택 기준 정리
-- [x] Tree Shaking 패턴 정리
-- [x] 코드 스플리팅 패턴 정리
-- [x] SKILL.md 파일 작성
+- [✅] tsup 공식 문서 확인
+- [✅] Vite 공식 문서 확인
+- [✅] Turbopack 공식 문서 확인 (nextjs.org)
+- [✅] React Compiler v1.0 공식 문서 확인
+- [✅] Vanilla Extract 공식 문서 확인
+- [✅] 번들러 선택 기준 정리
+- [✅] Tree Shaking 패턴 정리
+- [✅] 코드 스플리팅 패턴 정리
+- [✅] SKILL.md 파일 작성
 
 ---
 
@@ -40,23 +40,23 @@
 ## 3. 검증 체크리스트
 
 ### 3-1. 내용 정확성
-- [x] React Compiler v1.0 안정화 날짜 (2025년 10월) 명시
-- [x] Turbopack이 Next.js 16 기본값임을 반영
-- [x] tsup format 옵션 (esm/cjs) 정확히 기술
-- [x] sideEffects false 설정 의미 정확히 기술
+- [✅] React Compiler v1.0 안정화 날짜 (2025년 10월) 명시
+- [✅] Turbopack이 Next.js 16 기본값임을 반영
+- [✅] tsup format 옵션 (esm/cjs) 정확히 기술
+- [✅] sideEffects false 설정 의미 정확히 기술
 
 ### 3-2. 구조 완전성
-- [x] 번들러 선택 기준 (결정 트리) 포함
-- [x] 각 도구별 기본 설정 예시 포함
-- [x] package.json exports 설정 패턴 포함
-- [x] Tree Shaking 원리와 설정 포함
-- [x] 코드 스플리팅 (lazy, dynamic) 패턴 포함
-- [x] Vanilla Extract Next.js 설정 포함
+- [✅] 번들러 선택 기준 (결정 트리) 포함
+- [✅] 각 도구별 기본 설정 예시 포함
+- [✅] package.json exports 설정 패턴 포함
+- [✅] Tree Shaking 원리와 설정 포함
+- [✅] 코드 스플리팅 (lazy, dynamic) 패턴 포함
+- [✅] Vanilla Extract Next.js 설정 포함
 
 ### 3-3. 실용성
-- [x] 도구 선택 기준이 명확한 기준으로 제시됨
-- [x] 범용적 패턴 (특정 프로젝트 종속 없음)
-- [ ] 에이전트 활용 테스트 (미실시)
+- [✅] 도구 선택 기준이 명확한 기준으로 제시됨
+- [✅] 범용적 패턴 (특정 프로젝트 종속 없음)
+- [❌] 에이전트 활용 테스트 (미실시)
 
 ---
 
@@ -108,9 +108,9 @@ React Compiler 도입하면 useMemo 다 지워도 돼?
 
 ## 6. 개선 필요 사항
 
-- [ ] 에이전트 테스트 수행
-- [ ] Rolldown (Vite 8 기본 번들러) 내용 구체화
-- [ ] Parcel 관련 내용 추가 고려
+- [❌] 에이전트 테스트 수행
+- [❌] Rolldown (Vite 8 기본 번들러) 내용 구체화
+- [❌] Parcel 관련 내용 추가 고려
 
 ---
 

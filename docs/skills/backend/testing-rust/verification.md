@@ -66,12 +66,12 @@ status: VERIFIED
 
 ## 검증 체크리스트
 
-- [x] 공식 문서 1순위 소스 확인
-- [x] fact-checker로 핵심 클레임 검증 (9개 항목 CONFIRMED)
-- [x] DISPUTED 항목 수정 반영 (해당 없음)
-- [x] deprecated 패턴 제외
-- [x] 버전 명시 (Rust 1.75+ / tokio 1.x / axum 0.8.x)
-- [x] 주의사항 표기 완료 (5개 항목)
+- [✅] 공식 문서 1순위 소스 확인
+- [✅] fact-checker로 핵심 클레임 검증 (9개 항목 CONFIRMED)
+- [✅] DISPUTED 항목 수정 반영 (해당 없음)
+- [✅] deprecated 패턴 제외
+- [✅] 버전 명시 (Rust 1.75+ / tokio 1.x / axum 0.8.x)
+- [✅] 주의사항 표기 완료 (5개 항목)
 
 ---
 

@@ -13,14 +13,14 @@
 
 ## 1. 작업 목록
 
-- [x] Zustand v5 공식 문서 확인 (named import, useShallow)
-- [x] TanStack Query v5 공식 문서 확인 (객체 방식 API, onSuccess 제거)
-- [x] v4→v5 Breaking Changes 정리
-- [x] 슬라이스 패턴 정리
-- [x] 쿼리 키 팩토리 패턴 정리
-- [x] Next.js App Router + SSR Prefetching 패턴 정리
-- [x] Zustand + TanStack Query 역할 분리 기준 정리
-- [x] SKILL.md 파일 작성
+- [✅] Zustand v5 공식 문서 확인 (named import, useShallow)
+- [✅] TanStack Query v5 공식 문서 확인 (객체 방식 API, onSuccess 제거)
+- [✅] v4→v5 Breaking Changes 정리
+- [✅] 슬라이스 패턴 정리
+- [✅] 쿼리 키 팩토리 패턴 정리
+- [✅] Next.js App Router + SSR Prefetching 패턴 정리
+- [✅] Zustand + TanStack Query 역할 분리 기준 정리
+- [✅] SKILL.md 파일 작성
 
 ---
 
@@ -38,26 +38,26 @@
 ## 3. 검증 체크리스트
 
 ### 3-1. 내용 정확성
-- [x] Zustand v5 named import (`import { create }`) 반영
-- [x] useShallow 임포트 경로 (`zustand/react/shallow`) 정확
-- [x] TanStack Query v5 객체 방식 API 반영
-- [x] v5에서 onSuccess/onError 제거됨 표시
-- [x] gcTime (구 cacheTime) 명칭 변경 반영
-- [x] isPending vs isLoading 차이 설명
+- [✅] Zustand v5 named import (`import { create }`) 반영
+- [✅] useShallow 임포트 경로 (`zustand/react/shallow`) 정확
+- [✅] TanStack Query v5 객체 방식 API 반영
+- [✅] v5에서 onSuccess/onError 제거됨 표시
+- [✅] gcTime (구 cacheTime) 명칭 변경 반영
+- [✅] isPending vs isLoading 차이 설명
 
 ### 3-2. 구조 완전성
-- [x] 상태 분류 기준표 (언제 뭘 쓸지) 포함
-- [x] 슬라이스 패턴 코드 예시 포함
-- [x] 쿼리 키 팩토리 패턴 포함
-- [x] useMutation + 낙관적 업데이트 포함
-- [x] useInfiniteQuery 패턴 포함
-- [x] Next.js SSR Prefetching 포함
-- [x] 흔한 실수 패턴 포함
+- [✅] 상태 분류 기준표 (언제 뭘 쓸지) 포함
+- [✅] 슬라이스 패턴 코드 예시 포함
+- [✅] 쿼리 키 팩토리 패턴 포함
+- [✅] useMutation + 낙관적 업데이트 포함
+- [✅] useInfiniteQuery 패턴 포함
+- [✅] Next.js SSR Prefetching 포함
+- [✅] 흔한 실수 패턴 포함
 
 ### 3-3. 실용성
-- [x] 범용적 패턴 (특정 도메인 종속 없음)
-- [x] 즉시 적용 가능한 코드 예시
-- [ ] 에이전트 활용 테스트 (미실시)
+- [✅] 범용적 패턴 (특정 도메인 종속 없음)
+- [✅] 즉시 적용 가능한 코드 예시
+- [❌] 에이전트 활용 테스트 (미실시)
 
 ---
 
@@ -96,9 +96,9 @@ TanStack Query에서 유저 상세 데이터를 5분간 캐싱하고 싶어
 
 ## 6. 개선 필요 사항
 
-- [ ] 에이전트 테스트 수행
-- [ ] Jotai와 비교 내용 추가 고려 (요청 시)
-- [ ] React 19 use() hook과 TanStack Query 조합 패턴 추가 고려
+- [❌] 에이전트 테스트 수행
+- [❌] Jotai와 비교 내용 추가 고려 (요청 시)
+- [❌] React 19 use() hook과 TanStack Query 조합 패턴 추가 고려
 
 ---
 

@@ -68,13 +68,13 @@ status: VERIFIED_WITH_CAVEATS
 
 ## 검증 체크리스트
 
-- [x] 공식 문서 1순위 소스 확인
-- [x] fact-checker로 핵심 클레임 검증 실행
-- [x] DISPUTED 항목 수정 반영 (해당 없음)
-- [x] deprecated 패턴 제외
-- [x] 버전 명시 (jsonwebtoken 9.x / axum 0.8.x)
-- [x] 불확실한 항목에 `> 주의:` 표기
-- [ ] README.md 업데이트 — 사용자 별도 처리 예정
+- [✅] 공식 문서 1순위 소스 확인
+- [✅] fact-checker로 핵심 클레임 검증 실행
+- [✅] DISPUTED 항목 수정 반영 (해당 없음)
+- [✅] deprecated 패턴 제외
+- [✅] 버전 명시 (jsonwebtoken 9.x / axum 0.8.x)
+- [✅] 불확실한 항목에 `> 주의:` 표기
+- [❌] README.md 업데이트 — 사용자 별도 처리 예정
 
 ---
 

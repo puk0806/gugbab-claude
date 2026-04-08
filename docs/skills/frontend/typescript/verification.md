@@ -13,14 +13,14 @@
 
 ## 1. 작업 목록
 
-- [x] 공식 문서 확인 (typescriptlang.org/docs)
-- [x] tsconfig 핵심 옵션 정리
-- [x] 유틸리티 타입 패턴 정리
-- [x] React 타입 패턴 정리 (ComponentProps, PropsWithChildren 등)
-- [x] 타입 가드 패턴 정리
-- [x] as const / satisfies 정리
-- [x] 흔한 에러 패턴 정리
-- [x] SKILL.md 파일 작성
+- [✅] 공식 문서 확인 (typescriptlang.org/docs)
+- [✅] tsconfig 핵심 옵션 정리
+- [✅] 유틸리티 타입 패턴 정리
+- [✅] React 타입 패턴 정리 (ComponentProps, PropsWithChildren 등)
+- [✅] 타입 가드 패턴 정리
+- [✅] as const / satisfies 정리
+- [✅] 흔한 에러 패턴 정리
+- [✅] SKILL.md 파일 작성
 
 ---
 
@@ -37,24 +37,24 @@
 ## 3. 검증 체크리스트
 
 ### 3-1. 내용 정확성
-- [x] `moduleResolution: "bundler"` 최신 권장 설정 반영
-- [x] React.FC 비권장 이유 명시
-- [x] satisfies 연산자 (TS 4.9+) 버전 조건 명시
-- [x] noUncheckedIndexedAccess strict 설정 포함
+- [✅] `moduleResolution: "bundler"` 최신 권장 설정 반영
+- [✅] React.FC 비권장 이유 명시
+- [✅] satisfies 연산자 (TS 4.9+) 버전 조건 명시
+- [✅] noUncheckedIndexedAccess strict 설정 포함
 
 ### 3-2. 구조 완전성
-- [x] tsconfig 전체 권장 설정 포함
-- [x] 타입 vs 인터페이스 선택 기준표 포함
-- [x] 핵심 유틸리티 타입 사용 패턴 포함
-- [x] React 컴포넌트 타입 패턴 포함
-- [x] 타입 가드 패턴 (is, in, Discriminated Union) 포함
-- [x] 모노레포 tsconfig 상속 패턴 포함
-- [x] 흔한 에러 패턴 포함
+- [✅] tsconfig 전체 권장 설정 포함
+- [✅] 타입 vs 인터페이스 선택 기준표 포함
+- [✅] 핵심 유틸리티 타입 사용 패턴 포함
+- [✅] React 컴포넌트 타입 패턴 포함
+- [✅] 타입 가드 패턴 (is, in, Discriminated Union) 포함
+- [✅] 모노레포 tsconfig 상속 패턴 포함
+- [✅] 흔한 에러 패턴 포함
 
 ### 3-3. 실용성
-- [x] 범용적 패턴 (React/Next.js 환경 기준)
-- [x] 실제 코드에서 바로 쓸 수 있는 예시
-- [ ] 에이전트 활용 테스트 (미실시)
+- [✅] 범용적 패턴 (React/Next.js 환경 기준)
+- [✅] 실제 코드에서 바로 쓸 수 있는 예시
+- [❌] 에이전트 활용 테스트 (미실시)
 
 ---
 
@@ -104,9 +104,9 @@ HTML button 속성을 모두 받으면서 variant prop을 추가하고 싶어
 
 ## 6. 개선 필요 사항
 
-- [ ] 에이전트 테스트 수행
-- [ ] Template Literal Types 패턴 추가 고려
-- [ ] Mapped Types 심화 패턴 추가 고려
+- [❌] 에이전트 테스트 수행
+- [❌] Template Literal Types 패턴 추가 고려
+- [❌] Mapped Types 심화 패턴 추가 고려
 
 ---
 
