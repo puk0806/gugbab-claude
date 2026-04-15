@@ -9,7 +9,11 @@ description: Axum Multipart 파일 업로드 처리 — 필드 구분, 바이트
 > 소스: https://docs.rs/axum/latest/axum/extract/struct.DefaultBodyLimit.html
 > 검증일: 2026-04-06
 
-> 주의: Axum은 버전별 API 변경이 빈번합니다. axum 0.7.x 기준으로 작성되었으며, 0.8+ 에서는 시그니처가 달라질 수 있습니다.
+> 주의: axum 0.8.x 기준입니다. `Multipart`는 기본 feature가 아니므로 `Cargo.toml`에 반드시 명시해야 합니다.
+
+```toml
+axum = { version = "0.8", features = ["multipart"] }
+```
 
 ---
 
@@ -257,12 +261,15 @@ async fn upload(mut multipart: Multipart) -> Result<String, (StatusCode, String)
 
 ### MultipartError 주요 원인
 
-| 상황 | 에러 |
-|------|------|
-| Content-Type이 multipart가 아님 | `InvalidBoundary` |
-| 바디 크기 초과 | 연결 종료 또는 `ReadError` |
-| 필드 읽기 실패 | `FieldRead` |
-| 불완전한 multipart 데이터 | 다양한 에러 |
+> 주의: `MultipartError`는 `multer::Error`를 래핑한 단일 구조체로 공개 variant가 없다.
+> 에러는 `.to_string()`으로 메시지 처리하거나, extractor 레벨은 `MultipartRejection`으로 구분한다.
+
+| 상황 | 처리 방법 |
+|------|-----------|
+| Content-Type이 multipart가 아님 | `MultipartRejection::InvalidBoundary` (extractor 레벨) |
+| 바디 크기 초과 | 연결 종료 또는 `.to_string()`으로 확인 |
+| 필드 읽기 실패 | `.map_err(\|e\| e.to_string())` |
+| 불완전한 multipart 데이터 | `.to_string()`으로 에러 메시지 처리 |
 
 ### 구조화된 에러 핸들링
 

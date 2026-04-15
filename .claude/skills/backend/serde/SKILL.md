@@ -210,18 +210,22 @@ struct Config {
     #[serde(skip_serializing_if = "Option::is_none")]
     description: Option<String>,
 
-    // 빈 Vec이면 제외
-    #[serde(skip_serializing_if = "Vec::is_empty")]
+    // 빈 Vec이면 제외 + 역직렬화 시 필드 없어도 허용
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     tags: Vec<String>,
 
-    // 커스텀 함수 사용
-    #[serde(skip_serializing_if = "is_zero")]
+    // 커스텀 함수 사용 + 역직렬화 시 필드 없어도 허용
+    #[serde(default, skip_serializing_if = "is_zero")]
     count: u32,
 }
 
 fn is_zero(v: &u32) -> bool {
     *v == 0
 }
+
+// 주의: skip_serializing_if는 직렬화에만 영향을 준다.
+// 역직렬화 시 해당 필드가 JSON에 없으면 "missing field" 에러가 발생한다.
+// Option<T> 이외의 타입에서 생략을 허용하려면 #[serde(default)]를 반드시 함께 써야 한다.
 ```
 
 ### default (역직렬화 시 기본값)

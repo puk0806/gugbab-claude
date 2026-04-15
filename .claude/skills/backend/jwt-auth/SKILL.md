@@ -11,6 +11,8 @@ description: Rust JWT 인증 패턴 - jsonwebtoken 크레이트 + Axum 미들웨
 
 > 주의: 이 문서는 jsonwebtoken 9.x / axum 0.8.x 기준으로 작성되었습니다. 버전 변경 시 API 시그니처와 기본값이 달라질 수 있으므로 공식 docs.rs를 반드시 확인하세요.
 
+> 주의: jsonwebtoken 9.x는 내부적으로 `time ^0.3`에 의존합니다. Rust 1.84 이하 환경에서는 `time` 최신 버전이 빌드되지 않을 수 있습니다. 이 경우 `Cargo.toml`에 `time = "=0.3.36"`을 명시하거나 Rust를 1.85+로 업그레이드하세요.
+
 ---
 
 ## 의존성 설정

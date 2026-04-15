@@ -10,6 +10,8 @@ description: Axum Tower 커스텀 미들웨어 작성 패턴 - from_fn, from_fn_
 
 > 주의: axum 0.8.x 기준. 0.7 이하에서는 `Next<Body>` 제네릭 파라미터가 필요했으나, 0.8부터 `Next`는 제네릭 없이 사용한다.
 
+> 주의: 미들웨어 함수의 `Request` 타입은 반드시 `axum::extract::Request`를 사용해야 한다. `axum::http::Request`는 제네릭(`Request<T>`)이므로 그대로 쓰면 컴파일 에러가 발생한다.
+
 ---
 
 ## tower-http vs 커스텀 미들웨어 선택 기준
@@ -31,7 +33,7 @@ description: Axum Tower 커스텀 미들웨어 작성 패턴 - from_fn, from_fn_
 
 ```rust
 use axum::{
-    http::Request,
+    extract::Request,
     middleware::{self, Next},
     response::Response,
     Router,
@@ -66,7 +68,12 @@ let app = Router::new()
 미들웨어 함수에서 앱 State에 접근해야 할 때 사용한다.
 
 ```rust
-use axum::extract::State;
+use axum::{
+    extract::{Request, State},
+    http::StatusCode,
+    middleware::Next,
+    response::Response,
+};
 
 #[derive(Clone)]
 struct AppState {
@@ -132,6 +139,17 @@ async fn mw(
 
 ## 요청 가로채기 패턴
 
+이 섹션의 예시들은 아래 공통 import를 전제한다.
+
+```rust
+use axum::{
+    extract::Request,
+    http::StatusCode,
+    middleware::Next,
+    response::Response,
+};
+```
+
 ### 요청 헤더 읽기
 
 ```rust
@@ -159,8 +177,8 @@ async fn log_request(
 본문을 읽으면 소비되므로, 읽은 후 새 `Request`로 재구성해야 한다.
 
 ```rust
-use axum::body::{Body, Bytes};
-use http::Request as HttpRequest;
+use axum::body::Body;
+use axum::extract::Request;
 use http_body_util::BodyExt;
 
 async fn log_body(
@@ -178,8 +196,8 @@ async fn log_body(
 
     tracing::info!(body = %String::from_utf8_lossy(&bytes), "request body");
 
-    // 새 Request로 재구성
-    let request = HttpRequest::from_parts(parts, Body::from(bytes));
+    // 새 Request로 재구성 (axum::extract::Request = http::Request<Body>의 타입 alias)
+    let request = Request::from_parts(parts, Body::from(bytes));
 
     Ok(next.run(request).await)
 }
@@ -206,6 +224,8 @@ async fn reject_if_missing_header(
 ---
 
 ## 응답 가로채기 패턴
+
+이 섹션의 예시들도 `axum::extract::Request`, `middleware::Next`, `response::Response` import를 전제한다.
 
 ### 응답 헤더 추가
 
@@ -257,7 +277,8 @@ async fn log_response(
 
 ```rust
 use axum::{
-    http::{Request, StatusCode},
+    extract::Request,
+    http::StatusCode,
     middleware::Next,
     response::Response,
 };
@@ -300,8 +321,8 @@ DB나 설정에서 API 키를 검증하는 패턴.
 
 ```rust
 use axum::{
-    extract::State,
-    http::{Request, StatusCode},
+    extract::{Request, State},
+    http::StatusCode,
     middleware::Next,
     response::{IntoResponse, Response},
     Json,
@@ -365,6 +386,13 @@ let app = Router::new()
 미들웨어에서 추출한 데이터를 핸들러에 전달할 때 `request.extensions_mut()`를 사용한다.
 
 ```rust
+use axum::{
+    extract::Request,
+    http::StatusCode,
+    middleware::Next,
+    response::Response,
+};
+
 #[derive(Clone)]
 struct CurrentUser {
     id: u64,

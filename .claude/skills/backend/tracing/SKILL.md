@@ -349,7 +349,8 @@ let trace_layer = TraceLayer::new_for_http()
     .make_span_with(DefaultMakeSpan::new().level(Level::INFO))
     .on_response(DefaultOnResponse::new().level(Level::INFO));
 
-let app = Router::new()
+// 주의: axum::serve() 없이 단독 사용 시 Router 타입 추론 실패 가능. 타입 명시 권장.
+let app: Router = Router::new()
     .route("/", get(root))
     .layer(trace_layer);
 ```

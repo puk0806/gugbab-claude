@@ -414,8 +414,8 @@ let app = Router::new()
 ### axum::middleware::from_fn
 
 ```rust
+use axum::extract::Request;
 use axum::middleware::{self, Next};
-use axum::http::Request;
 use axum::response::Response;
 
 async fn auth_middleware(
