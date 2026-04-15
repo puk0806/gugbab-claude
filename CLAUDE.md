@@ -81,7 +81,7 @@ Claude Code 활용에 필요한 에이전트(Agent), 스킬(Skill), 설정(CLAUD
 - 시스템 프롬프트 한국어 작성
 - `description`에 `<example>` 태그 2-3개 포함
 
-**스킬** (`.claude/skills/{name}/SKILL.md`):
+**스킬** (`.claude/skills/{category}/{name}/SKILL.md`):
 - YAML frontmatter 포함: `name`, `description`
 - 반복 실행 workflow는 `disable-model-invocation: true`
 
