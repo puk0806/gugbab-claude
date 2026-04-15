@@ -2,6 +2,11 @@
 .claude/memory/
 **/.claude/memory/
 
+# Rust 빌드 산출물
+*.rlib
+*.rmeta
+target/
+
 # 로그 파일
 *.log
 .claude/hooks/*.log
