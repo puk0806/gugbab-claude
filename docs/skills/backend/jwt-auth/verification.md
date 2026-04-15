@@ -3,7 +3,7 @@ skill: jwt-auth
 category: backend
 version: v1
 date: 2026-04-07
-status: VERIFIED_WITH_CAVEATS
+status: APPROVED
 ---
 
 ## 메타 정보
@@ -74,7 +74,8 @@ status: VERIFIED_WITH_CAVEATS
 - [✅] deprecated 패턴 제외
 - [✅] 버전 명시 (jsonwebtoken 9.x / axum 0.8.x)
 - [✅] 불확실한 항목에 `> 주의:` 표기
-- [❌] README.md 업데이트 — 사용자 별도 처리 예정
+- [✅] Claude Code에서 실제 활용 테스트 (rust-backend-developer, 6/6 PASS)
+- [✅] time 의존성 제약 주의사항 SKILL.md에 추가
 
 ---
 
@@ -88,4 +89,4 @@ status: VERIFIED_WITH_CAVEATS
 
 ## 최종 판정
 
-**VERIFIED_WITH_CAVEATS** — 핵심 API 시그니처와 패턴은 공식 docs.rs 기준으로 검증 완료. `required_spec_claims` 기본값과 `axum-extra` TypedHeader 경로는 마이너 버전 차이 가능성이 있어 주의사항으로 표기함. SKILL.md에서는 이 불확실성을 회피하는 안전한 패턴(직접 헤더 파싱)을 기본으로 채택함.
+**APPROVED** — fact-checker 검증 완료 + rust-backend-developer 활용 테스트 6/6 PASS (jsonwebtoken 9.3.1 / axum 0.8.x). time 의존성 제약 주의사항 추가 완료.

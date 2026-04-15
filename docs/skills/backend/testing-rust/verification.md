@@ -3,7 +3,7 @@ skill: testing-rust
 category: backend
 version: v1
 date: 2026-04-07
-status: VERIFIED
+status: APPROVED
 ---
 
 ## 메타 정보
@@ -72,9 +72,10 @@ status: VERIFIED
 - [✅] deprecated 패턴 제외
 - [✅] 버전 명시 (Rust 1.75+ / tokio 1.x / axum 0.8.x)
 - [✅] 주의사항 표기 완료 (5개 항목)
+- [✅] Claude Code에서 실제 활용 테스트 (rust-backend-developer, 6/6 PASS)
 
 ---
 
 ## 최종 판정
 
-**VERIFIED** -- 공식 문서 기반 조사 완료, 핵심 클레임 9개 모두 CONFIRMED, DISPUTED 항목 없음.
+**APPROVED** — fact-checker 9개 클레임 CONFIRMED + rust-backend-developer 활용 테스트 6/6 PASS.

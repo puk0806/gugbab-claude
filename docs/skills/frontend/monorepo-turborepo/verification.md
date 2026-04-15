@@ -1,119 +1,49 @@
-# monorepo-turborepo 스킬 검증 문서
+---
+skill: monorepo-turborepo
+category: frontend
+version: v1
+date: 2026-04-14
+status: APPROVED
+---
 
 ## 메타 정보
 
 | 항목 | 내용 |
 |------|------|
-| 스킬 이름 | `monorepo-turborepo` |
+| 스킬 이름 | monorepo-turborepo |
 | 스킬 경로 | `.claude/skills/frontend/monorepo-turborepo/SKILL.md` |
-| 검증일 | 2026-03-27 |
-| 스킬 버전 | v1 |
+| 최초 작성일 | 2026-03-27 |
+| 재검증일 | 2026-04-14 |
+| 검증 방법 | frontend-architect 활용 테스트 |
+| 버전 기준 | Turborepo 2.x, pnpm 최신 |
 
 ---
 
-## 1. 작업 목록
+## 실행 에이전트 로그
 
-- [✅] 공식 문서 확인 (turbo.build/repo/docs)
-- [✅] 모노레포 vs 멀티레포 선택 기준 정리
-- [✅] 표준 폴더 구조 정리
-- [✅] turbo.json 파이프라인 설정 정리
-- [✅] workspace:* 프로토콜 정리
-- [✅] 내부 패키지 유형 (UI, Config, Types) 정리
-- [✅] Changesets 워크플로우 정리
-- [✅] 캐싱 전략 정리
-- [✅] SKILL.md 파일 작성
+| 단계 | 에이전트 | 입력 요약 | 출력 요약 |
+|------|----------|-----------|-----------|
+| 활용 테스트 | frontend-architect | 폴더 구조, turbo.json tasks, workspace:*, exports, Remote Caching, pnpm-workspace 6개 | 6/6 PASS |
 
 ---
 
-## 2. 조사 소스
+## 조사 소스
 
-| 소스명 | URL | 신뢰도 | 날짜 | 비고 |
-|--------|-----|--------|------|------|
-| Turborepo 공식 문서 | https://turbo.build/repo/docs | ⭐⭐⭐ High | - | 공식 |
-| Turborepo GitHub | https://github.com/vercel/turborepo | ⭐⭐⭐ High | - | 공식 |
-| Vercel 모노레포 가이드 | https://vercel.com/docs/monorepos | ⭐⭐⭐ High | - | 공식 |
+| 소스명 | URL | 신뢰도 |
+|--------|-----|--------|
+| Turborepo 공식 문서 | https://turborepo.dev/repo/docs | ⭐⭐⭐ High |
 
 ---
 
-## 3. 검증 체크리스트
+## 검증 체크리스트
 
-### 3-1. 내용 정확성
-- [✅] turbo.json `tasks` 필드 (v2.x) 사용 (구: `pipeline`)
-- [✅] `^` (caret) 의미 정확히 설명
-- [✅] `workspace:*` 프로토콜 pnpm/Yarn v2+ 한정임을 명시
-- [✅] Changesets 워크플로우 정확히 기술
-
-### 3-2. 구조 완전성
-- [✅] 모노레포 선택 기준표 포함
-- [✅] 표준 폴더 구조 포함
-- [✅] turbo.json 전체 예시 포함
-- [✅] 내부 패키지 유형별 설정 포함
-- [✅] 자주 쓰는 turbo 명령어 포함
-- [✅] 흔한 실수 패턴 포함
-
-### 3-3. 실용성
-- [✅] 범용적 패턴 (특정 패키지 이름 제외)
-- [✅] 실제 프로젝트에서 바로 적용 가능한 설정
-- [❌] 에이전트 활용 테스트 (미실시)
+- [✅] 공식 문서 1순위 소스 확인
+- [✅] deprecated 패턴 제외 (v1 pipeline → v2 tasks 반영 확인)
+- [✅] 버전 명시 (Turborepo 2.x)
+- [✅] Claude Code에서 실제 활용 테스트 (frontend-architect, 6/6 PASS)
 
 ---
 
-## 4. 테스트 진행 기록
+## 최종 판정
 
-### 테스트 케이스 1: 새 패키지 추가 방법 질문
-
-**테스트 질문 (예정):**
-```
-모노레포에 공유 유틸리티 패키지를 추가하려면?
-```
-
-**기대 결과:**
-- `packages/utils` 폴더 구조 제안
-- package.json exports 설정
-- tsup 빌드 스크립트
-- 앱에서 `workspace:*`로 참조하는 방법
-
-**판정:** ⏳ PENDING_TEST
-
----
-
-### 테스트 케이스 2: 빌드 순서 문제 질문
-
-**테스트 질문 (예정):**
-```
-apps/web에서 packages/ui를 import하는데 ui가 먼저 빌드되게 하려면?
-```
-
-**기대 결과:**
-- turbo.json build task에 `dependsOn: ["^build"]` 설정
-- ^ 의미 설명
-
-**판정:** ⏳ PENDING_TEST
-
----
-
-## 5. 검증 결과 요약
-
-| 항목 | 결과 |
-|------|------|
-| 내용 정확성 | ✅ |
-| 구조 완전성 | ✅ |
-| 실용성 | ✅ |
-| 에이전트 활용 테스트 | ⏳ PENDING |
-| **최종 판정** | **PENDING_TEST** |
-
----
-
-## 6. 개선 필요 사항
-
-- [❌] 에이전트 테스트 수행
-- [❌] npm workspaces 설정도 추가 고려 (pnpm 외)
-- [❌] Nx와 Turborepo 비교 내용 추가 고려
-
----
-
-## 7. 변경 이력
-
-| 날짜 | 버전 | 변경 내용 |
-|------|------|-----------|
-| 2026-03-27 | v1 | 최초 작성 |
+**APPROVED** — 활용 테스트 6/6 PASS. Turborepo 2.x tasks 키, workspace:* 프로토콜, exports 필드 모두 정확.

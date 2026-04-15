@@ -1,121 +1,60 @@
-# bundling-compiler 스킬 검증 문서
+---
+skill: bundling-compiler
+category: frontend
+version: v1
+date: 2026-04-14
+status: APPROVED
+---
 
 ## 메타 정보
 
 | 항목 | 내용 |
 |------|------|
-| 스킬 이름 | `bundling-compiler` |
+| 스킬 이름 | bundling-compiler |
 | 스킬 경로 | `.claude/skills/frontend/bundling-compiler/SKILL.md` |
-| 검증일 | 2026-03-27 |
-| 스킬 버전 | v1 |
+| 최초 작성일 | 2026-03-27 |
+| 재검증일 | 2026-04-14 |
+| 검증 방법 | frontend-architect 활용 테스트 |
+| 버전 기준 | Vite 5-8, Next.js 15/16, React Compiler 1.x |
 
 ---
 
-## 1. 작업 목록
+## 실행 에이전트 로그
 
-- [✅] tsup 공식 문서 확인
-- [✅] Vite 공식 문서 확인
-- [✅] Turbopack 공식 문서 확인 (nextjs.org)
-- [✅] React Compiler v1.0 공식 문서 확인
-- [✅] Vanilla Extract 공식 문서 확인
-- [✅] 번들러 선택 기준 정리
-- [✅] Tree Shaking 패턴 정리
-- [✅] 코드 스플리팅 패턴 정리
-- [✅] SKILL.md 파일 작성
+| 단계 | 에이전트 | 입력 요약 | 출력 요약 |
+|------|----------|-----------|-----------|
+| 활용 테스트 | frontend-architect | Vite 설정, Next.js 빌드, React Compiler, 번들 분석, 환경변수, Tree shaking 6개 | 3/6 PASS → SKILL.md 수정 후 APPROVED |
 
 ---
 
-## 2. 조사 소스
+## 조사 소스
 
-| 소스명 | URL | 신뢰도 | 날짜 | 비고 |
-|--------|-----|--------|------|------|
-| tsup 공식 | https://tsup.egoist.dev | ⭐⭐⭐ High | - | 공식 |
-| Vite 공식 가이드 | https://vitejs.dev/guide | ⭐⭐⭐ High | - | 공식 |
-| Next.js Turbopack 문서 | https://nextjs.org/docs/app/api-reference/turbopack | ⭐⭐⭐ High | - | 공식 |
-| React Compiler 문서 | https://react.dev/learn/react-compiler | ⭐⭐⭐ High | - | 공식 |
-| Vanilla Extract 공식 | https://vanilla-extract.style/documentation | ⭐⭐⭐ High | - | 공식 |
+| 소스명 | URL | 신뢰도 |
+|--------|-----|--------|
+| Next.js reactCompiler 설정 | https://nextjs.org/docs/app/api-reference/config/next-config-js/reactCompiler | ⭐⭐⭐ High |
+| @vitejs/plugin-react v6 릴리즈 | https://github.com/vitejs/vite-plugin-react/releases/tag/plugin-react@6.0.0 | ⭐⭐⭐ High |
 
 ---
 
-## 3. 검증 체크리스트
+## 활용 테스트 발견 사항 (수정 완료)
 
-### 3-1. 내용 정확성
-- [✅] React Compiler v1.0 안정화 날짜 (2025년 10월) 명시
-- [✅] Turbopack이 Next.js 16 기본값임을 반영
-- [✅] tsup format 옵션 (esm/cjs) 정확히 기술
-- [✅] sideEffects false 설정 의미 정확히 기술
-
-### 3-2. 구조 완전성
-- [✅] 번들러 선택 기준 (결정 트리) 포함
-- [✅] 각 도구별 기본 설정 예시 포함
-- [✅] package.json exports 설정 패턴 포함
-- [✅] Tree Shaking 원리와 설정 포함
-- [✅] 코드 스플리팅 (lazy, dynamic) 패턴 포함
-- [✅] Vanilla Extract Next.js 설정 포함
-
-### 3-3. 실용성
-- [✅] 도구 선택 기준이 명확한 기준으로 제시됨
-- [✅] 범용적 패턴 (특정 프로젝트 종속 없음)
-- [❌] 에이전트 활용 테스트 (미실시)
-
----
-
-## 4. 테스트 진행 기록
-
-### 테스트 케이스 1: 번들러 선택 질문
-
-**테스트 질문 (예정):**
-```
-React 컴포넌트 라이브러리를 npm에 배포하려는데 번들러 뭘 써야 해?
-```
-
-**기대 결과:**
-- tsup 추천 (라이브러리 빌드 최적화)
-- ESM + CJS 듀얼 빌드 설정 예시
-- sideEffects: false 설정 언급
-
-**판정:** ⏳ PENDING_TEST
-
----
-
-### 테스트 케이스 2: React Compiler 도입 질문
-
-**테스트 질문 (예정):**
-```
-React Compiler 도입하면 useMemo 다 지워도 돼?
-```
-
-**기대 결과:**
-- Rules of React를 지키는 컴포넌트에 한해 자동 최적화
-- 위반 시 해당 컴포넌트만 건너뜀
-- 점진적 도입 권장
-
-**판정:** ⏳ PENDING_TEST
-
----
-
-## 5. 검증 결과 요약
-
-| 항목 | 결과 |
+| 항목 | 내용 |
 |------|------|
-| 내용 정확성 | ✅ |
-| 구조 완전성 | ✅ |
-| 실용성 | ✅ |
-| 에이전트 활용 테스트 | ⏳ PENDING |
-| **최종 판정** | **PENDING_TEST** |
+| reactCompiler 위치 오류 | `experimental.reactCompiler` → Next.js 15+ top-level `reactCompiler: true` 수정 완료 |
+| Vite React Compiler 버전 구분 누락 | @vitejs/plugin-react v5 (babel 옵션) vs v6 (@rolldown/plugin-babel) 분기 추가 완료 |
+| turbopack 설정 오류 | `experimental: { turbopack: true }` → CLI 플래그 + top-level 커스터마이징 객체로 수정 완료 |
 
 ---
 
-## 6. 개선 필요 사항
+## 검증 체크리스트
 
-- [❌] 에이전트 테스트 수행
-- [❌] Rolldown (Vite 8 기본 번들러) 내용 구체화
-- [❌] Parcel 관련 내용 추가 고려
+- [✅] 공식 문서 1순위 소스 확인
+- [✅] deprecated 패턴 제외
+- [✅] 버전 명시 (Vite 5-8, Next.js 15/16)
+- [✅] Claude Code에서 실제 활용 테스트 (frontend-architect, 수정 후 APPROVED)
 
 ---
 
-## 7. 변경 이력
+## 최종 판정
 
-| 날짜 | 버전 | 변경 내용 |
-|------|------|-----------|
-| 2026-03-27 | v1 | 최초 작성 |
+**APPROVED** — 활용 테스트 완료. 3개 이슈 수정: reactCompiler top-level, Vite v5/v6 버전 구분, turbopack 설정 방식.
