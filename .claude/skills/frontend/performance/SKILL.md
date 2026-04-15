@@ -155,7 +155,14 @@ import Image from 'next/image'
 // React DevTools Profiler API
 import { Profiler } from 'react'
 
-function onRender(id, phase, actualDuration) {
+function onRender(
+  id: string,              // Profiler id prop
+  phase: 'mount' | 'update' | 'nested-update',
+  actualDuration: number,  // 커밋에 소요된 렌더링 시간 (ms)
+  baseDuration: number,    // 메모이제이션 없이 렌더링 시 예상 시간
+  startTime: number,       // 렌더링 시작 타임스탬프
+  commitTime: number       // 커밋 타임스탬프
+) {
   console.log({ id, phase, actualDuration })
 }
 

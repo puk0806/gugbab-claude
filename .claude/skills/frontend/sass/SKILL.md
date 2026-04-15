@@ -5,7 +5,7 @@ description: SCSS 핵심 패턴, CSS Modules + SCSS, 캡슐화 중심 스타일 
 
 # SASS / SCSS 패턴
 
-> 소스: https://sass-lang.com/documentation/ | https://create-react-app.dev/docs/adding-a-sass-stylesheet/
+> 소스: https://sass-lang.com/documentation/ | https://nextjs.org/docs/app/building-your-application/styling/sass
 > 검증일: 2026-04-01
 
 ---
@@ -103,6 +103,8 @@ $font-weight-bold: 700;
 
 ```scss
 // mixins/_responsive.scss
+@use 'sass:map';
+
 $breakpoints: (
   'sm': 640px,
   'md': 768px,
@@ -111,8 +113,8 @@ $breakpoints: (
 );
 
 @mixin respond-to($breakpoint) {
-  @if map-has-key($breakpoints, $breakpoint) {
-    @media (min-width: map-get($breakpoints, $breakpoint)) {
+  @if map.has-key($breakpoints, $breakpoint) {
+    @media (min-width: map.get($breakpoints, $breakpoint)) {
       @content;
     }
   }
@@ -154,7 +156,7 @@ $breakpoints: (
   padding: 0;
   margin: -1px;
   overflow: hidden;
-  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);  // clip: rect() deprecated
   white-space: nowrap;
   border: 0;
 }
@@ -166,8 +168,11 @@ $breakpoints: (
 
 ```scss
 // functions/_unit.scss
+@use 'sass:math';
+@use 'sass:map';
+
 @function rem($px) {
-  @return #{$px / 16}rem;
+  @return math.div($px, 16) * 1rem;
 }
 
 @function z($layer) {
@@ -179,7 +184,7 @@ $breakpoints: (
     'modal': 200,
     'toast': 300,
   );
-  @return map-get($z-layers, $layer);
+  @return map.get($z-layers, $layer);
 }
 
 // 사용

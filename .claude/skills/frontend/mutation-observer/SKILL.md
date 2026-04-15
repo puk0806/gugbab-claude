@@ -79,6 +79,40 @@ observer.observe(targetElement, {
 
 ---
 
+## React useEffect 연동 패턴
+
+```typescript
+import { useEffect, useRef } from 'react'
+
+function useMutationObserver(
+  ref: React.RefObject<HTMLElement | null>,
+  callback: MutationCallback,
+  options: MutationObserverInit
+) {
+  useEffect(() => {
+    if (!ref.current) return
+    const observer = new MutationObserver(callback)
+    observer.observe(ref.current, options)
+    return () => observer.disconnect()
+  }, [ref, callback, options])
+}
+
+// 사용 예시
+function MyComponent() {
+  const targetRef = useRef<HTMLDivElement>(null)
+  useMutationObserver(
+    targetRef,
+    (mutations) => {
+      mutations.forEach(m => console.log(m.type, m.addedNodes))
+    },
+    { childList: true, subtree: true }
+  )
+  return <div ref={targetRef}>...</div>
+}
+```
+
+---
+
 ## 필수 규칙
 
 - `observe()` 호출 시 `childList`, `attributes`, `characterData` 중 최소 하나는 `true`여야 한다. 그렇지 않으면 `TypeError`가 발생한다.

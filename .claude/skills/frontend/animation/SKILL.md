@@ -19,7 +19,7 @@ description: Framer Motion 핵심 패턴, CSS transition/keyframe, 성능 고려
 | 드래그 & 제스처 | ❌ | ✅ |
 | 스크롤 기반 애니메이션 | 가능 | ✅ |
 | 성능 | GPU 가속 가능 | GPU 가속 + JS |
-| 번들 크기 | 0 | ~50KB |
+| 번들 크기 | 0 | ~34KB (LazyMotion: ~4.6KB) |
 
 **원칙: 간단한 건 CSS, 복잡한 상태 전환/인터랙션은 Framer Motion.**
 
@@ -89,7 +89,7 @@ pnpm add motion
 ### 기본 animate
 
 ```tsx
-import { motion } from 'framer-motion'
+import { motion } from 'motion/react'
 
 // 마운트 시 애니메이션
 function Card() {
@@ -109,7 +109,7 @@ function Card() {
 ### AnimatePresence — 언마운트 애니메이션
 
 ```tsx
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'motion/react'
 
 function Modal({ open, children }: { open: boolean; children: React.ReactNode }) {
   return (
@@ -164,7 +164,7 @@ function List({ items }: { items: string[] }) {
 ### useAnimate — 명령형 애니메이션 (조건부 로직)
 
 ```tsx
-import { useAnimate } from 'framer-motion'
+import { useAnimate } from 'motion/react'
 
 function ShakeOnError({ hasError }: { hasError: boolean }) {
   const [scope, animate] = useAnimate()
@@ -216,7 +216,7 @@ animate={{ width: 0, height: 0, margin: 0 }}
 </motion.div>
 
 // LayoutGroup — 여러 컴포넌트 간 layout 애니메이션 동기화
-import { LayoutGroup } from 'framer-motion'
+import { LayoutGroup } from 'motion/react'
 <LayoutGroup>
   <TabList />
   <TabContent />
@@ -228,7 +228,7 @@ import { LayoutGroup } from 'framer-motion'
 ## prefers-reduced-motion 대응
 
 ```tsx
-import { useReducedMotion } from 'framer-motion'
+import { useReducedMotion } from 'motion/react'
 
 function AnimatedCard() {
   const shouldReduceMotion = useReducedMotion()

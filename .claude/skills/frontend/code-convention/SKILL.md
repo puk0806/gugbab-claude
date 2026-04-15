@@ -215,7 +215,7 @@ pnpm add -D eslint-config-prettier  # ESLint의 포맷 규칙 비활성화
 
 ```javascript
 // eslint.config.js
-import prettierConfig from 'eslint-config-prettier'
+import prettierConfig from 'eslint-config-prettier/flat'  // flat config용 서브패스
 export default [...기존설정, prettierConfig]  // 항상 마지막에
 ```
 

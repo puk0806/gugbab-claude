@@ -232,16 +232,19 @@ export function useDeleteUser() {
 ```tsx
 // app/users/page.tsx — 서버에서 직접 페칭 (TanStack Query 불필요)
 async function UsersPage() {
-  // fetch는 Next.js가 자동으로 캐싱/재검증 처리
   const users = await usersApi.getAll()
   return <UserList users={users} />
 }
 
-// 캐시 제어
-const users = await fetch('/api/users', {
-  next: { revalidate: 60 },  // 60초마다 재검증
+// fetch 직접 사용 시 (Server Component — 절대 URL 필요)
+// Next.js 15+: 기본값 no-store. 캐싱은 명시 필요
+const res = await fetch('https://api.example.com/users', {
+  next: { revalidate: 60 },  // 60초마다 재검증 (ISR)
 })
-const users = await fetch('/api/users', {
-  cache: 'no-store',          // 항상 최신 데이터
+const users = await res.json()
+
+const res2 = await fetch('https://api.example.com/users', {
+  cache: 'no-store',  // 항상 최신 (Next.js 15+ 기본값)
 })
+const dynamic = await res2.json()
 ```

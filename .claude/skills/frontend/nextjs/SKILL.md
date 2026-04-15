@@ -72,8 +72,9 @@ function PostList({ posts }: { posts: Post[] }) {
 
 ```tsx
 // 정적 (빌드 시 1회 페칭, CDN 캐시)
+// 주의: Next.js 14까지는 force-cache가 기본값이었으나, Next.js 15+에서는 no-store가 기본값
 const data = await fetch('https://api.example.com/data', {
-  cache: 'force-cache' // 기본값
+  cache: 'force-cache' // Next.js 15+: 정적 캐싱을 원하면 명시 필수
 })
 
 // 동적 (매 요청마다 페칭)
@@ -124,6 +125,28 @@ const getCachedPosts = unstable_cache(
 
 // 사용
 const posts = await getCachedPosts(userId)
+```
+
+### 'use cache' 디렉티브 (Next.js 16 권장, unstable_cache 대체)
+
+`next.config.ts`에 `experimental.dynamicIO: true` 설정 필요.
+
+```tsx
+// DB 쿼리 캐싱 — unstable_cache보다 간결
+async function getCachedPosts(userId: string) {
+  'use cache'
+  return await db.post.findMany({ where: { userId } })
+}
+
+// cacheTag / cacheLife로 세밀한 제어
+import { cacheTag, cacheLife } from 'next/cache'
+
+async function getPost(id: string) {
+  'use cache'
+  cacheTag('posts', `post-${id}`)
+  cacheLife('hours') // 1시간 TTL
+  return await db.post.findUnique({ where: { id } })
+}
 ```
 
 ---
@@ -224,7 +247,7 @@ const schema = z.object({
   content: z.string().min(1)
 })
 
-export async function createPost(formData: FormData) {
+export async function createPost(prevState: unknown, formData: FormData) {
   const result = schema.safeParse({
     title: formData.get('title'),
     content: formData.get('content')
@@ -252,6 +275,45 @@ function PostForm() {
       {state?.error && <p>에러 발생</p>}
     </form>
   )
+}
+```
+
+---
+
+## 메타데이터 API
+
+### 정적 메타데이터
+
+```tsx
+// app/about/page.tsx
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'About',
+  description: '소개 페이지',
+  openGraph: {
+    title: 'About',
+    description: '소개 페이지',
+    images: ['/og-image.png'],
+  },
+}
+```
+
+### 동적 메타데이터
+
+```tsx
+// app/posts/[id]/page.tsx
+import type { Metadata } from 'next'
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ id: string }> }
+): Promise<Metadata> {
+  const { id } = await params
+  const post = await fetch(`https://api.example.com/posts/${id}`).then(r => r.json())
+  return {
+    title: post.title,
+    description: post.excerpt,
+  }
 }
 ```
 

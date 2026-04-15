@@ -216,10 +216,13 @@ function ContactForm() {
     resolver: zodResolver(Schema),
   })
 
-  async function onSubmit(data: FormData) {
-    const result = await submitForm(data)
+  // RHF handleSubmit은 스키마 타입 객체를 전달 (브라우저 FormData 아님)
+  async function onSubmit(data: z.infer<typeof Schema>) {
+    const formData = new FormData()
+    Object.entries(data).forEach(([k, v]) => formData.append(k, String(v)))
+    const result = await submitForm(formData)
     if (result.error) {
-      setServerError(result.error.formErrors[0])
+      setServerError(result.error.formErrors[0] ?? result.error.fieldErrors.email?.[0] ?? '오류')
     }
   }
 

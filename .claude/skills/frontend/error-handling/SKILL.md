@@ -90,9 +90,9 @@ const root = createRoot(container, {
     // Error Boundary 없이 throw된 에러
     reportToSentry(error, errorInfo.componentStack)
   },
-  onRecoverableError: (error) => {
+  onRecoverableError: (error, errorInfo) => {
     // React가 자동 복구 가능한 에러 (hydration 불일치 등)
-    console.warn(error)
+    console.warn(error, errorInfo.componentStack)
   },
 })
 ```

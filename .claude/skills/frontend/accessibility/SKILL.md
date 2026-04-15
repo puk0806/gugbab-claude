@@ -52,7 +52,9 @@ description: ARIA 패턴, 시맨틱 HTML, 키보드 네비게이션, a11y 테스
   role="switch"
   aria-checked={isOn}
   tabIndex={0}
-  onKeyDown={e => e.key === 'Enter' && toggle()}
+  onKeyDown={e => {
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggle() }
+  }}
   onClick={toggle}
 >
 ```
@@ -99,8 +101,9 @@ function Modal({ open, onClose, title, children }: ModalProps) {
 function Toast({ message, type }: { message: string; type: 'success' | 'error' }) {
   return (
     <div
-      role="alert"                        // 즉시 읽음
-      aria-live={type === 'error' ? 'assertive' : 'polite'}  // error는 assertive
+      // role="alert"은 암묵적으로 aria-live="assertive" 포함
+      // success는 role="status" (암묵적 aria-live="polite")
+      role={type === 'error' ? 'alert' : 'status'}
       aria-atomic="true"
     >
       {message}
@@ -193,7 +196,7 @@ function Menu({ items }: { items: string[] }) {
           key={item}
           role="menuitem"
           tabIndex={index === activeIndex ? 0 : -1}
-          aria-selected={index === activeIndex}
+          // menuitem에 aria-selected 없음 — 포커스로 활성 항목 표시
         >
           {item}
         </li>

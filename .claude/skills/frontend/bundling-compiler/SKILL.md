@@ -150,9 +150,12 @@ const nextConfig = {}
 
 export default nextConfig
 
-// Next.js 15에서 명시적 활성화
+// Next.js 15: CLI 플래그로 활성화 (next dev --turbopack)
+// Next.js 16+: 기본값. 커스터마이징만 turbopack 키 사용
 const nextConfig = {
-  experimental: { turbopack: true }
+  turbopack: {
+    // resolveAlias, rules 등 커스터마이징 시에만 설정
+  },
 }
 ```
 
@@ -177,12 +180,12 @@ const nextConfig = {
 ### 활성화
 
 ```javascript
-// Next.js
+// Next.js 15+ (reactCompiler는 top-level 옵션, experimental 아님)
 const nextConfig = {
-  experimental: { reactCompiler: true }
+  reactCompiler: true,
 }
 
-// Vite — vite.config.js에서 @vitejs/plugin-react의 babel 옵션으로 추가 (권장)
+// Vite (@vitejs/plugin-react v5 이하)
 import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [
@@ -192,6 +195,13 @@ export default defineConfig({
       },
     }),
   ],
+})
+
+// Vite 8+ (@vitejs/plugin-react v6 — babel 옵션 제거됨, @rolldown/plugin-babel 사용)
+import react, { reactCompilerPreset } from '@vitejs/plugin-react'
+import babel from '@rolldown/plugin-babel'
+export default defineConfig({
+  plugins: [react(), babel(reactCompilerPreset())],
 })
 ```
 

@@ -19,7 +19,7 @@ description: React 18/19 핵심 패턴, 렌더링 최적화, 마이그레이션 
 | ref 전달 | forwardRef 필수 | ref를 prop으로 직접 전달 |
 | Promise 사용 | 불가 | use(promise) |
 | 자동 메모이제이션 | 수동 (useMemo/useCallback) | React Compiler |
-| 자동 배칭 | 이벤트 핸들러만 | Promise/setTimeout도 포함 |
+| 자동 배칭 | Promise/setTimeout 포함 (React 17: 이벤트 핸들러만) | 동일 |
 
 ---
 
