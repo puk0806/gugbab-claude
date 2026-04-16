@@ -24,7 +24,8 @@ gugbab-claude/
     │   ├── research/             ← 리서치
     │   ├── validation/           ← 검증
     │   ├── frontend/             ← 프론트엔드 개발
-    │   └── backend/              ← Rust 백엔드 개발
+    │   ├── backend/              ← Rust 백엔드 개발
+    │   └── domain/               ← 도메인 분석
     ├── hooks/
     │   ├── permission-judge.js   ← PreToolUse 자동 허가 판단기
     │   └── permission-judge.test.js
@@ -77,6 +78,13 @@ gugbab-claude/
 |---------|------|------|
 | [rust-backend-developer](./.claude/agents/backend/rust-backend-developer.md) | Rust + Axum 핸들러·서비스·라우터 코드 구현, 컴파일 에러 수정 | - |
 | [rust-backend-architect](./.claude/agents/backend/rust-backend-architect.md) | Rust + Axum 아키텍처 설계 — 크레이트 구조, 레이어드 아키텍처, 트레이트 추상화 | - |
+
+### domain
+
+| 에이전트 | 역할 | 문서 |
+|---------|------|------|
+| [business-domain-analyst](./.claude/agents/domain/business-domain-analyst.md) | 비즈니스 요구사항 → DDD 도메인 모델 도출 (유비쿼터스 언어, 바운디드 컨텍스트, 집합체, 도메인 이벤트) | [→](./docs/agents/domain/business-domain-analyst-verification.md) |
+| [codebase-domain-analyst](./.claude/agents/domain/codebase-domain-analyst.md) | 코드베이스 역분석 — 도메인 구조 파악, 레이어 의존성 진단, 아키텍처 개선 제안 | [→](./docs/agents/domain/codebase-domain-analyst-verification.md) |
 
 ---
 
@@ -176,3 +184,4 @@ claude --continue             # 이전 대화 이어서
 | 2026-04-07 | Rust 백엔드 스킬 18종 추가(tokio·axum·reqwest·serde·thiserror·tower-http·sse-streaming·multipart-upload·dotenvy·tracing·cargo-workspace·project-structure·dependency-injection·repository-pattern·custom-middleware·sqlx·testing-rust·jwt-auth), 백엔드 에이전트 2종 추가(rust-backend-developer·rust-backend-architect), skill-creator 검증 프로세스 강화(fact-checker 필수화, verification.md 의무화, 실행 에이전트 로그 섹션 추가), creation-workflow 4단계 개편, 관심사별 커밋 분리 원칙 추가 |
 | 2026-04-08 | Rust 백엔드 스킬 1종 추가(design-patterns-rust), claude-code-guide 에이전트 추가, tokio·axum SKILL.md DISPUTED 항목 수정, verification.md 체크리스트 [✅]/[❌] 표기 도입, tokio 검증 APPROVED |
 | 2026-04-14~15 | 프론트엔드 스킬 23개 전체 frontend-architect 활용 테스트 완료 및 APPROVED, 스킬 폴더 구조 정리(backend/ · frontend/ 2단계 분류), frontend-developer 에이전트 추가 |
+| 2026-04-16 | 도메인 분석 에이전트 2종 추가(business-domain-analyst·codebase-domain-analyst), domain/ 카테고리 신설 |
