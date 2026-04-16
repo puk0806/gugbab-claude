@@ -33,11 +33,17 @@ const AUTO_APPROVE_TOOLS = new Set([
 ])
 
 // PermissionRequest에서 추가 승인할 도구 목록
-// PreToolUse에서 위험 패턴을 이미 차단했으므로 Bash도 여기서 승인
+// PreToolUse에서 위험 패턴을 이미 차단했으므로 Bash도 여기서 승인 (단, git commit/push 제외)
 const PERMISSION_REQUEST_APPROVE_TOOLS = new Set([
   ...AUTO_APPROVE_TOOLS,
   'Bash',
 ])
+
+// PermissionRequest에서 사용자 확인이 필요한 Bash 패턴 (auto-approve 제외)
+const BASH_REQUIRE_APPROVAL_PATTERNS = [
+  /git\s+commit\b/,
+  /git\s+push\b/,
+]
 
 // 위험한 Bash 패턴
 const BASH_DENY_PATTERNS = [
@@ -82,16 +88,23 @@ function handlePreToolUse(toolName, toolInput) {
   return null
 }
 
-function handlePermissionRequest(toolName) {
-  if (PERMISSION_REQUEST_APPROVE_TOOLS.has(toolName)) {
-    return {
-      hookSpecificOutput: {
-        hookEventName: 'PermissionRequest',
-        decision: { behavior: 'allow' },
-      },
+function handlePermissionRequest(toolName, toolInput) {
+  if (!PERMISSION_REQUEST_APPROVE_TOOLS.has(toolName)) return null
+
+  // git commit / git push는 사용자 확인 필요 → auto-approve 제외
+  if (toolName === 'Bash') {
+    const cmd = (toolInput.command || '').trim()
+    for (const pattern of BASH_REQUIRE_APPROVAL_PATTERNS) {
+      if (pattern.test(cmd)) return null
     }
   }
-  return null
+
+  return {
+    hookSpecificOutput: {
+      hookEventName: 'PermissionRequest',
+      decision: { behavior: 'allow' },
+    },
+  }
 }
 
 async function readStdin() {
@@ -125,7 +138,7 @@ async function main() {
 
   let decision = null
   if (eventName === 'PermissionRequest') {
-    decision = handlePermissionRequest(tool_name)
+    decision = handlePermissionRequest(tool_name, tool_input)
   } else {
     decision = handlePreToolUse(tool_name, tool_input)
   }
