@@ -150,9 +150,11 @@ gugbab-claude/
 
 ## 🔒 훅 (Hooks)
 
-| 훅 | 유형 | 설명 | 문서 |
-|----|------|------|------|
-| [permission-judge](./.claude/hooks/permission-judge.js) | PreToolUse + PermissionRequest | 안전한 도구(Write/Edit/Bash 등) 자동 승인, 위험 Bash 패턴 차단 | [→](./docs/hooks/permission-judge.md) |
+| 훅 | 유형 | 설명 |
+|----|------|------|
+| [auto-approve](./.claude/hooks/auto-approve.js) | PreToolUse + PermissionRequest | 안전한 비-Bash 도구(Read/Write/Edit 등) 자동 승인 |
+| [bash-guard](./.claude/hooks/bash-guard.js) | PreToolUse + PermissionRequest | 위험한 Bash 패턴 차단, git commit/push 사용자 확인 강제 |
+| [skill-guard](./.claude/hooks/skill-guard.js) | PreToolUse | SKILL.md 직접 작성 차단 — skill-creator 에이전트 사용 강제 |
 
 ---
 
