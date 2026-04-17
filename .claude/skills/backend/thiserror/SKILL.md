@@ -8,7 +8,7 @@ description: Rust thiserror 크레이트 기반 에러 처리 패턴 - derive(Er
 > 소스: https://docs.rs/thiserror/latest/thiserror/ | https://github.com/dtolnay/thiserror
 > 검증일: 2026-04-06
 
-> 주의: 이 문서는 thiserror 2.x 기준으로 작성되었습니다. thiserror 1.x에서 2.x로 업그레이드 시 MSRV 변경(1.61 -> 1.77) 및 일부 동작 차이가 있으므로 공식 CHANGELOG를 확인하세요.
+> 주의: 이 문서는 thiserror 2.x 기준으로 작성되었습니다. 2.0.0 출시 시 MSRV는 1.61이었으나 이후 지속적으로 상향되어 2026년 4월 기준 1.71입니다. 1.x에서 2.x로 업그레이드 시 일부 동작 차이가 있으므로 공식 CHANGELOG를 확인하세요.
 
 ---
 

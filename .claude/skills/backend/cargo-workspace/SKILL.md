@@ -144,7 +144,9 @@ tokio = { version = "1" }
 tokio = { workspace = true, features = ["full"] }
 ```
 
-**제약:** `workspace = true`를 사용할 때 `version`을 직접 지정할 수 없다. 버전은 워크스페이스 루트에서만 관리한다.
+**제약:** `workspace = true`를 사용할 때 `version`을 함께 지정하면 경고(unused manifest key)와 함께 무시된다. 버전은 워크스페이스 루트에서만 관리한다.
+
+> 주의: `workspace = true` + `version` 동시 지정은 에러가 아니라 경고로 처리되어 `version` 값이 무시된다. 실수 방지를 위해 `version` 키는 제거하는 것이 권장된다. (WebSearch 교차 검증 확인, 2026-04-17)
 
 ---
 

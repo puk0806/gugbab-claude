@@ -323,4 +323,4 @@ mod tests {
 }
 ```
 
-> 주의: `env::set_var`는 Rust 1.83부터 `unsafe`로 변경될 예정입니다. 테스트 시 `temp_env` 등의 크레이트 사용을 고려하세요.
+> 주의: `env::set_var`는 Rust Edition 2024(rustc 1.85.0, 2025-02-20 stable)부터 `unsafe`로 변경되었습니다. Edition 2024 프로젝트에서는 `unsafe` 블록으로 감싸거나 `temp_env` 등의 크레이트 사용을 고려하세요.

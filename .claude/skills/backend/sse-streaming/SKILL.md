@@ -148,7 +148,7 @@ async fn sse_handler() -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
 }
 ```
 
-> 주의: `async-stream`은 Axum 공식 예제에서도 사용되지만 별도 크레이트(`async-stream = "0.3"`)가 필요하다.
+> 주의: `async-stream`은 별도 크레이트(`async-stream = "0.3"`)가 필요하다. Axum 공식 예제는 `stream!` 매크로 대신 `futures_util::stream::repeat_with()`를 사용한다. `stream!`은 커뮤니티에서 널리 사용되는 패턴이지만 공식 예제 포함 여부와는 무관하다.
 
 ### 3-3. Keep-Alive 설정
 
@@ -216,7 +216,7 @@ async fn chat_stream(
             .header("anthropic-version", "2023-06-01")
             .header("content-type", "application/json")
             .json(&serde_json::json!({
-                "model": "claude-sonnet-4-20250514",
+                "model": "claude-sonnet-4-6",
                 "max_tokens": 1024,
                 "stream": true,
                 "messages": [{"role": "user", "content": req.message}]
@@ -279,7 +279,7 @@ async fn chat_stream(
 }
 ```
 
-> 주의: Claude API 스트리밍 응답의 이벤트 타입(`message_start`, `content_block_delta`, `message_stop` 등)은 API 버전에 따라 변경될 수 있다. 최신 사양은 https://docs.anthropic.com/en/api/messages-streaming 참조.
+> 주의: Claude API 스트리밍 응답의 전체 이벤트 타입은 `message_start`, `content_block_start`, `content_block_delta`, `content_block_stop`, `message_delta`, `message_stop`, `ping`, `error`이며, extended thinking 사용 시 `thinking_delta`, `signature_delta`가 추가됩니다. API 버전에 따라 변경될 수 있으므로 최신 사양은 https://docs.anthropic.com/en/api/messages-streaming 참조.
 
 ---
 

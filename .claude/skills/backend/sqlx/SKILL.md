@@ -35,7 +35,7 @@ thiserror = "2"
 | `uuid` | `uuid::Uuid` 타입 지원 |
 | `migrate` | 마이그레이션 매크로 `migrate!()` 사용 |
 
-> 주의: `runtime-*`과 `tls-*` feature는 각각 정확히 하나만 선택해야 합니다. 복수 선택 시 컴파일 에러가 발생합니다.
+> 주의: `runtime-*`과 `tls-*` feature는 각각 정확히 하나만 선택해야 합니다. sqlx 0.8부터 복수 선택 시 컴파일 에러 대신 런타임 패닉이 발생합니다. tls feature를 복수 선택하면 `tls-native-tls`가 우선 적용됩니다.
 
 ---
 

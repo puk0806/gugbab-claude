@@ -224,8 +224,8 @@ fn is_zero(v: &u32) -> bool {
 }
 
 // 주의: skip_serializing_if는 직렬화에만 영향을 준다.
-// 역직렬화 시 해당 필드가 JSON에 없으면 "missing field" 에러가 발생한다.
-// Option<T> 이외의 타입에서 생략을 허용하려면 #[serde(default)]를 반드시 함께 써야 한다.
+// Option<T> 필드는 Serde가 특수 처리하여 #[serde(default)] 없이도 누락 시 자동으로 None으로 처리된다.
+// Option<T> 외 타입(String, u32, Vec<T> 등)에서 필드 누락을 허용하려면 #[serde(default)]를 반드시 함께 써야 한다.
 ```
 
 ### default (역직렬화 시 기본값)

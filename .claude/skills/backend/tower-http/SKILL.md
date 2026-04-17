@@ -45,7 +45,8 @@ Cross-Origin Resource Sharing 헤더를 응답에 추가한다.
 use tower_http::cors::{CorsLayer, Any};
 use http::Method;
 
-// 모든 origin 허용 (개발용)
+// 모든 origin 허용 (개발용) — credentials는 허용하지 않음
+// credentials까지 허용하려면 CorsLayer::very_permissive() 사용
 let cors = CorsLayer::permissive();
 
 // 프로덕션 권장: 명시적 설정
@@ -179,12 +180,9 @@ let compression = CompressionLayer::new()
 
 ### 알고리즘 우선순위
 
-클라이언트 `Accept-Encoding`에 따라 자동 선택. 기본 우선순위:
+클라이언트 `Accept-Encoding`의 quality 값(q=)이 높은 알고리즘을 우선 선택한다. quality 값이 동일할 때는 서버 내부 순서(deflate < gzip < brotli < zstd)가 타이브레이커로 작동한다.
 
-1. zstd (feature 활성화 시)
-2. br (brotli)
-3. gzip
-4. deflate
+> 주의: `Accept-Encoding: gzip;q=1.0, br;q=0.9`처럼 클라이언트가 명시한 경우 quality 값이 높은 gzip이 선택된다. "zstd > brotli > gzip > deflate" 우선순위는 quality 값이 동일한 경우에만 적용된다.
 
 ### 주의사항
 

@@ -8,7 +8,8 @@ description: Axum Tower 커스텀 미들웨어 작성 패턴 - from_fn, from_fn_
 > 소스: https://docs.rs/axum/0.8.1/axum/middleware/index.html | https://docs.rs/axum/0.8.1/axum/middleware/fn.from_fn.html | https://docs.rs/axum/0.8.1/axum/middleware/fn.from_fn_with_state.html
 > 검증일: 2026-04-06
 
-> 주의: axum 0.8.x 기준. 0.7 이하에서는 `Next<Body>` 제네릭 파라미터가 필요했으나, 0.8부터 `Next`는 제네릭 없이 사용한다.
+> 주의: axum 0.8.x 기준. 0.6 이하에서는 `Next<B>` 제네릭 파라미터가 필요했으나, 0.7부터 `Next`는 제네릭 없이 사용한다.
+> (DISPUTED 수정: 변경 기점이 0.8이 아닌 0.7임. axum 0.7 공식 발표 및 Discussion #2488에서 확인)
 
 > 주의: 미들웨어 함수의 `Request` 타입은 반드시 `axum::extract::Request`를 사용해야 한다. `axum::http::Request`는 제네릭(`Request<T>`)이므로 그대로 쓰면 컴파일 에러가 발생한다.
 

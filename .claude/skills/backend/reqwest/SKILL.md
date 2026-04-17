@@ -101,7 +101,7 @@ struct Message {
 }
 
 let request_body = CreateRequest {
-    model: "claude-sonnet-4-20250514".into(),
+    model: "claude-sonnet-4-6".into(),
     max_tokens: 1024,
     messages: vec![Message {
         role: "user".into(),
@@ -158,7 +158,7 @@ let response = client.post("https://api.anthropic.com/v1/messages")
     .header("x-api-key", api_key)
     .header("anthropic-version", "2023-06-01")
     .json(&serde_json::json!({
-        "model": "claude-sonnet-4-20250514",
+        "model": "claude-sonnet-4-6",
         "max_tokens": 1024,
         "stream": true,
         "messages": [{"role": "user", "content": "Hello"}]
@@ -324,6 +324,8 @@ async fn send_message(
 ## 재시도 패턴
 
 reqwest 자체에는 재시도 기능이 없다. 직접 구현하거나 `reqwest-middleware` + `reqwest-retry` 크레이트 사용.
+
+> 주의: reqwest 0.12.23(2025-08-08 릴리즈)부터 `reqwest::retry` 모듈과 `ClientBuilder::retries(policy)` 메서드가 내장됨. 단, 기본 내장 retry는 HTTP/2 REFUSED_STREAM 등 프로토콜 레벨 NACK 재시도 용도이며, 커스텀 정책이 필요한 경우 reqwest-middleware + reqwest-retry 조합이 더 유연함.
 
 ```rust
 // 수동 재시도 (지수 백오프)
