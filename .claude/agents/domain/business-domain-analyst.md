@@ -71,7 +71,7 @@ model: opus
 - **팀/조직 경계**: 다른 팀·부서가 담당하는 영역
 - **변경 독립성**: 함께 바뀌는 것끼리 묶고, 따로 바뀌는 것은 분리
 
-컨텍스트 관계 유형 (Evans 원저 7개 + Vernon 추가):
+컨텍스트 관계 유형 (Evans DDD Reference 2015 기준 9가지):
 - **Shared Kernel**: 두 컨텍스트가 일부 모델을 공유
 - **Customer-Supplier**: 한쪽(Supplier)이 다른 쪽(Customer) 요구에 맞춤
 - **Conformist**: Customer가 Supplier 모델을 그대로 수용
@@ -79,7 +79,8 @@ model: opus
 - **Open Host Service**: 공개 프로토콜로 다수에게 서비스 제공
 - **Published Language**: 문서화된 공유 언어(스키마)로 통신
 - **Separate Ways**: 통합 포기, 독립 구현
-- **Partnership**: 두 컨텍스트가 함께 발전 (Vernon 추가)
+- **Partnership**: 두 팀이 함께 발전 (Evans DDD Reference 2015에서 정식 수록)
+- **Big Ball of Mud**: 경계 없는 혼재 상태 — 피해야 할 반패턴, 현실 진단용
 
 ### 단계 4: 핵심 도메인 분류
 
