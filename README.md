@@ -1,10 +1,10 @@
-# 🤖 gugbab-claude
+# gugbab-claude
 
 Claude Code를 효과적으로 활용하기 위한 **에이전트(Agent)**, **스킬(Skill)**, **설정(CLAUDE.md)** 모음입니다.
 
 ---
 
-## 📁 프로젝트 구조
+## 프로젝트 구조
 
 ```
 gugbab-claude/
@@ -17,7 +17,8 @@ gugbab-claude/
 │   └── skills/
 │       ├── VERIFICATION_TEMPLATE.md   ← 스킬 검증 템플릿
 │       ├── frontend/             ← 프론트엔드 스킬 검증 문서
-│       └── backend/              ← 백엔드 스킬 검증 문서
+│       ├── backend/              ← 백엔드 스킬 검증 문서
+│       └── architecture/         ← 아키텍처 스킬 검증 문서
 └── .claude/
     ├── agents/
     │   ├── meta/                 ← 에이전트 생성/관리
@@ -27,18 +28,20 @@ gugbab-claude/
     │   ├── backend/              ← Rust 백엔드 개발
     │   └── domain/               ← 도메인 분석
     ├── hooks/
-    │   ├── permission-judge.js   ← PreToolUse 자동 허가 판단기
-    │   └── permission-judge.test.js
+    │   ├── auto-approve.js       ← 안전한 도구 자동 승인
+    │   ├── bash-guard.js         ← 위험 Bash 차단
+    │   └── skill-guard.js        ← SKILL.md 직접 작성 차단
     ├── rules/                    ← 상황별 규칙
     ├── settings.json             ← 훅 등록 설정
     └── skills/
         ├── frontend/             ← 프론트엔드 스킬 (24종)
-        └── backend/              ← Rust 백엔드 스킬 (19종)
+        ├── backend/              ← Rust 백엔드 스킬 (19종)
+        └── architecture/         ← 아키텍처 스킬 (1종)
 ```
 
 ---
 
-## 🧩 에이전트 목록
+## 에이전트 목록
 
 상세 문서: [docs/agents/](./docs/agents/)
 
@@ -88,9 +91,17 @@ gugbab-claude/
 
 ---
 
-## 📚 스킬 목록
+## 스킬 목록
 
 상세 문서: [docs/skills/](./docs/skills/)
+
+### architecture
+
+| 스킬 | 설명 | 검증 문서 |
+|------|------|----------|
+| [ddd](./.claude/skills/architecture/ddd/SKILL.md) | DDD 아키텍처 핵심 패턴 — 유비쿼터스 언어, 서브도메인, 바운디드 컨텍스트, Aggregate, Entity/VO, 도메인 서비스/이벤트, 레이어드 아키텍처 | [→](./docs/skills/architecture/ddd/verification.md) |
+
+---
 
 ### frontend
 
@@ -148,7 +159,7 @@ gugbab-claude/
 
 ---
 
-## 🔒 훅 (Hooks)
+## 훅 (Hooks)
 
 | 훅 | 유형 | 설명 |
 |----|------|------|
@@ -158,7 +169,7 @@ gugbab-claude/
 
 ---
 
-## ⚡ Claude Code 빠른 참조
+## Claude Code 빠른 참조
 
 ```bash
 claude                        # 실행
@@ -175,7 +186,7 @@ claude --continue             # 이전 대화 이어서
 
 ---
 
-## 🔄 업데이트 로그
+## 업데이트 로그
 
 | 날짜 | 변경 내용 |
 |------|-----------|
@@ -184,6 +195,6 @@ claude --continue             # 이전 대화 이어서
 | 2026-04-02 | permission-judge 훅 전면 개편(PermissionRequest 이벤트 추가, hook_event_name 버그 수정, Bash 자동 승인 추가, block 전용 리팩터), settings.json 권한 체계 개편, 프론트엔드 스킬 11종 추가(sass·testing·component-design·form-handling·api-integration·accessibility·animation·performance·error-handling·design-patterns·seo), skill-creator 에이전트 추가, creation-workflow.md 분리, 기존 스킬 공식 문서 검증 및 오류 수정 |
 | 2026-04-06 | 프론트엔드 스킬 5종 추가(intersection-observer·mutation-observer·page-visibility·resize-observer·css-variables), permission-judge 훅 수정(PermissionRequest 이벤트 추가) |
 | 2026-04-07 | Rust 백엔드 스킬 18종 추가(tokio·axum·reqwest·serde·thiserror·tower-http·sse-streaming·multipart-upload·dotenvy·tracing·cargo-workspace·project-structure·dependency-injection·repository-pattern·custom-middleware·sqlx·testing-rust·jwt-auth), 백엔드 에이전트 2종 추가(rust-backend-developer·rust-backend-architect), skill-creator 검증 프로세스 강화(fact-checker 필수화, verification.md 의무화, 실행 에이전트 로그 섹션 추가), creation-workflow 4단계 개편, 관심사별 커밋 분리 원칙 추가 |
-| 2026-04-08 | Rust 백엔드 스킬 1종 추가(design-patterns-rust), claude-code-guide 에이전트 추가, tokio·axum SKILL.md DISPUTED 항목 수정, verification.md 체크리스트 [✅]/[❌] 표기 도입, tokio 검증 APPROVED |
+| 2026-04-08 | Rust 백엔드 스킬 1종 추가(design-patterns-rust), claude-code-guide 에이전트 추가, tokio·axum SKILL.md DISPUTED 항목 수정, verification.md 체크리스트 표기 도입, tokio 검증 APPROVED |
 | 2026-04-14~15 | 프론트엔드 스킬 23개 전체 frontend-architect 활용 테스트 완료 및 APPROVED, 스킬 폴더 구조 정리(backend/ · frontend/ 2단계 분류), frontend-developer 에이전트 추가 |
-| 2026-04-16 | 도메인 분석 에이전트 2종 추가(business-domain-analyst·codebase-domain-analyst), domain/ 카테고리 신설 |
+| 2026-04-16~17 | 도메인 분석 에이전트 2종 추가(business-domain-analyst·codebase-domain-analyst), domain/ 카테고리 신설, 훅 단일 책임 분리(permission-judge → auto-approve·bash-guard·skill-guard 3파일), skill-guard로 SKILL.md 직접 작성 차단, DDD 아키텍처 스킬 추가(skill-creator로 생성, PENDING_TEST), verification-guard PostToolUse 훅 추가(verification.md 품질 자동 검증), skill-creator 프롬프트 정비(내장 템플릿 제거·VERIFICATION_TEMPLATE.md 단일 소스화·서브에이전트 호출 강제), DDD 스킬 fact-checker 재검증(DISPUTED 3건 수정 반영) |
