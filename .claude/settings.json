@@ -68,6 +68,14 @@
         ]
       }
     ],
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          { "type": "command", "command": "node .claude/hooks/verification-guard.js" }
+        ]
+      }
+    ],
     "PermissionRequest": [
       {
         "matcher": "*",
