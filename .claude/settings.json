@@ -62,10 +62,9 @@
       {
         "matcher": "*",
         "hooks": [
-          {
-            "type": "command",
-            "command": "node .claude/hooks/permission-judge.js"
-          }
+          { "type": "command", "command": "node .claude/hooks/skill-guard.js" },
+          { "type": "command", "command": "node .claude/hooks/bash-guard.js" },
+          { "type": "command", "command": "node .claude/hooks/auto-approve.js" }
         ]
       }
     ],
@@ -73,10 +72,8 @@
       {
         "matcher": "*",
         "hooks": [
-          {
-            "type": "command",
-            "command": "node .claude/hooks/permission-judge.js"
-          }
+          { "type": "command", "command": "node .claude/hooks/bash-guard.js" },
+          { "type": "command", "command": "node .claude/hooks/auto-approve.js" }
         ]
       }
     ]
