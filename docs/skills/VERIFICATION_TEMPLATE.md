@@ -67,13 +67,12 @@
 
 ## 2. 실행 에이전트 로그
 
-> skill-creator 에이전트가 어떤 서브에이전트를 사용했는지 기록
+> skill-creator 에이전트가 사용한 도구와 조사·검증 내역 기록
 
-| 단계 | 에이전트 | 입력 요약 | 출력 요약 |
-|------|----------|-----------|-----------|
-| 조사 | web-searcher / deep-researcher | {조사 키워드 및 공식 문서 URL} | {수집 소스 수, 주요 발견} |
-| 검증 | fact-checker | {클레임 수}개 클레임 | VERIFIED {n} / DISPUTED {n} / UNVERIFIED {n} |
-| 소스검증 | source-validator (해당 시) | {검증 URL} | TRUST / CAUTION / REJECT |
+| 단계 | 도구 | 입력 요약 | 출력 요약 |
+|------|------|-----------|-----------|
+| 조사 | WebSearch / WebFetch | {조사 키워드 및 공식 문서 URL} | {수집 소스 수, 주요 발견} |
+| 교차 검증 | WebSearch | {클레임 수}개 클레임, 독립 소스 {n}개 | VERIFIED {n} / DISPUTED {n} / UNVERIFIED {n} |
 
 ---
 
