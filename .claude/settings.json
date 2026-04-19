@@ -62,7 +62,6 @@
       {
         "matcher": "*",
         "hooks": [
-          { "type": "command", "command": "node .claude/hooks/skill-guard.js" },
           { "type": "command", "command": "node .claude/hooks/bash-guard.js" },
           { "type": "command", "command": "node .claude/hooks/auto-approve.js" }
         ]
@@ -72,7 +71,8 @@
       {
         "matcher": "Write",
         "hooks": [
-          { "type": "command", "command": "node .claude/hooks/verification-guard.js" }
+          { "type": "command", "command": "node .claude/hooks/verification-guard.js" },
+          { "type": "command", "command": "node .claude/hooks/skill-md-guard.js" }
         ]
       }
     ],

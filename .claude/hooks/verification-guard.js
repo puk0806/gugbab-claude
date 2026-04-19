@@ -43,8 +43,8 @@ function validate(content) {
   if (agentLogMatch && /내장/.test(agentLogMatch[1])) {
     errors.push(
       '에이전트 로그에 "내장" 키워드가 감지됐습니다.\n' +
-      '  → skill-creator는 반드시 Agent 도구로 web-searcher/deep-researcher, fact-checker를 실제 호출해야 합니다.\n' +
-      '  → 내장 지식으로 대체하는 것은 금지입니다. 서브에이전트를 호출한 뒤 verification.md를 재작성하세요.'
+      '  → skill-creator는 반드시 WebSearch/WebFetch로 공식 문서를 직접 조사·교차 검증해야 합니다.\n' +
+      '  → 내장 지식으로 대체하는 것은 금지입니다. 실제 조사를 수행한 뒤 verification.md를 재작성하세요.'
     )
   }
 
