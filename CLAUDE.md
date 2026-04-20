@@ -2,60 +2,6 @@
 
 Claude Code 활용에 필요한 에이전트(Agent), 스킬(Skill), 설정(CLAUDE.md)을 만들고 관리하는 레포지토리입니다.
 
-<!-- 이 파일은 200줄 이내로 유지한다. 초과 시 .claude/rules/ 로 분리할 것 -->
-
----
-
-## 정보 검증 원칙 (IMPORTANT)
-
-외부 정보 참조 시 반드시 아래 순서로 검증한다. 추측으로 답하지 말고 확인 안 되면 사용자에게 알린다.
-
-| 우선순위 | 소스 | 기준 |
-|----------|------|------|
-| 1순위 | Anthropic 공식 문서 | `code.claude.com`, `docs.claude.com` |
-| 2순위 | Anthropic 공식 GitHub | `github.com/anthropics` |
-| 3순위 | 커뮤니티 레포 | Stars 500+, 최근 6개월 내 업데이트 |
-| 4순위 | 기술 블로그 | 작성자 명확, 날짜 최신 |
-
-**낮은 신뢰도 경고:** Stars 100 미만, 출처 불명, 공식 문서와 배치되는 내용, 1년 이상 된 자료는 재검증 필요.
-
----
-
-## 에이전트 설계 원칙
-
-에이전트 설계 시에만 참조: @.claude/rules/agent-design.md
-
----
-
-## CLAUDE.md 작성 원칙
-
-**목표: 파일당 200줄 이내. 각 줄 삭제 시 Claude가 실수하지 않으면 삭제한다.**
-
-| ✅ 포함 | ❌ 제외 |
-|--------|--------|
-| 코드만 봐서는 알 수 없는 규칙 | 코드 읽으면 알 수 있는 것 |
-| 기본값과 다른 스타일 규칙 | 표준 언어 컨벤션 |
-| 비직관적인 동작·주의사항 | 자세한 API 문서 (링크로 대체) |
-| 브랜치·PR 컨벤션 | "깔끔한 코드 작성" 같은 당연한 것 |
-
-**지시문 작성법 (구체적으로):**
-- ❌ "코드를 잘 포맷하라" → ✅ "들여쓰기는 2칸 스페이스를 사용한다"
-- ❌ "테스트를 실행하라" → ✅ "커밋 전 `npm test`를 실행한다"
-
-**파일 분리:** 200줄 초과 시 `.claude/rules/` 디렉토리에 토픽별로 분리한다.
-```
-.claude/rules/
-├── agent-design.md     # 에이전트 설계 규칙
-├── code-style.md       # 코드 스타일
-└── security.md         # 보안 규칙
-```
-
-**파일 임포트:** `@path/to/file` 문법으로 외부 파일을 참조할 수 있다.
-```
-# 추가 규칙 참조
-- 에이전트 설계: @.claude/rules/agent-design.md
-```
-
 ---
 
 ## 컨텍스트 관리
@@ -67,46 +13,20 @@ Claude Code 활용에 필요한 에이전트(Agent), 스킬(Skill), 설정(CLAUD
 
 ---
 
-## Git 커밋 컨벤션
-
-커밋 시에만 참조: @.claude/rules/git.md
-
----
-
-## 파일 및 폴더 규칙
-
-**에이전트** (`.claude/agents/{name}.md`):
-- 파일명: `kebab-case.md`
-- YAML frontmatter 필수: `name`, `description`, `tools`, `model`
-- 시스템 프롬프트 한국어 작성
-- `description`에 `<example>` 태그 2-3개 포함
-
-**스킬** (`.claude/skills/{category}/{name}/SKILL.md`):
-- YAML frontmatter 포함: `name`, `description`
-- 반복 실행 workflow는 `disable-model-invocation: true`
-
-**Rules** (`.claude/rules/{topic}.md`):
-- CLAUDE.md가 200줄 초과할 때 토픽별로 분리
-- 특정 파일 경로에만 적용할 규칙은 YAML frontmatter `paths` 사용
-
----
-
-## README 업데이트 규칙
-
-에이전트·스킬 추가/수정/삭제 시 README.md도 반드시 함께 업데이트:
-- 목록 섹션에 항목 추가/수정
-- 업데이트 로그에 날짜·변경 내용 기록
-
----
-
-## 스킬·에이전트 생성 절차
-
-외부 기술 정보 포함 시 반드시 검증 후 작성: @.claude/rules/creation-workflow.md
-
----
-
 ## 금지 사항
 
 - API 키·토큰·비밀번호를 파일에 직접 작성 금지
 - 검증되지 않은 외부 소스 그대로 복붙 금지
 - 테스트되지 않은 에이전트를 main 브랜치에 직접 커밋 금지
+
+---
+
+## 상황별 규칙 참조
+
+| 상황 | 참조 파일 |
+|------|----------|
+| 외부 정보 조사·검증 | @.claude/rules/info-verification.md |
+| 에이전트 설계·작성 | @.claude/rules/agent-design.md |
+| 스킬·에이전트 생성 절차 | @.claude/rules/creation-workflow.md |
+| Git 커밋 컨벤션 | @.claude/rules/git.md |
+| README 업데이트 | @.claude/rules/readme-update.md |
