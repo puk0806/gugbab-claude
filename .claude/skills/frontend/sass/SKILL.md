@@ -229,6 +229,116 @@ styles/
 
 ---
 
+## 헤드리스 UI 컴포넌트 라이브러리 SCSS 패턴
+
+헤드리스 컴포넌트(Radix UI 등)는 스타일을 제공하지 않는 대신 상태를 `data-*` attribute로 노출한다. SCSS에서 이를 선택자로 활용한다.
+
+### data-attribute 기반 상태 스타일링
+
+```scss
+// Dialog.module.scss
+.overlay {
+  background: rgba(0, 0, 0, 0.5);
+  position: fixed;
+  inset: 0;
+
+  // Radix가 노출하는 data-state 활용
+  &[data-state="open"] {
+    animation: fadeIn 150ms ease;
+  }
+
+  &[data-state="closed"] {
+    animation: fadeOut 150ms ease;
+  }
+}
+
+.content {
+  background: #fff;
+  border-radius: 8px;
+  padding: 24px;
+
+  &[data-state="open"] {
+    animation: slideIn 150ms ease;
+  }
+}
+
+// Tooltip, Popover 공통 패턴
+.trigger {
+  &[data-state="delayed-open"],
+  &[data-state="instant-open"] {
+    color: var(--color-primary);
+  }
+}
+```
+
+### 주요 data-attribute 목록
+
+| 컴포넌트 | attribute | 값 |
+|---------|-----------|-----|
+| Dialog / Sheet | `data-state` | `open` \| `closed` |
+| Tooltip / Popover | `data-state` | `delayed-open` \| `instant-open` \| `closed` |
+| Select / Combobox | `data-state` | `open` \| `closed` |
+| Checkbox | `data-state` | `checked` \| `unchecked` \| `indeterminate` |
+| Accordion Item | `data-state` | `open` \| `closed` |
+| Tab | `data-state` | `active` \| `inactive` |
+| Disabled 공통 | `data-disabled` | 빈 문자열 (속성 존재 여부로 판별) |
+| Orientation | `data-orientation` | `horizontal` \| `vertical` |
+
+### 컴포넌트 라이브러리 SCSS 폴더 구조
+
+```
+packages/ui/
+└── src/
+    ├── styles/
+    │   ├── tokens/
+    │   │   ├── _colors.scss       ← 디자인 토큰
+    │   │   ├── _spacing.scss
+    │   │   └── _typography.scss
+    │   ├── mixins/
+    │   │   ├── _responsive.scss
+    │   │   └── _a11y.scss         ← visually-hidden 등 접근성 믹스인
+    │   ├── base/
+    │   │   └── _reset.scss
+    │   └── index.scss             ← 토큰/믹스인 전체 @forward (컴포넌트 스타일 제외)
+    └── components/
+        ├── Button/
+        │   ├── Button.tsx
+        │   └── Button.module.scss
+        └── Dialog/
+            ├── Dialog.tsx
+            └── Dialog.module.scss
+```
+
+> 주의: 컴포넌트 스타일(`.module.scss`)은 전역 `index.scss`에 포함하지 않는다. 번들러가 컴포넌트 임포트 시 자동으로 포함한다.
+
+### `clsx`와 조합 (조건부 클래스)
+
+헤드리스 컴포넌트에 여러 CSS Modules 클래스를 조건부로 적용할 때 `clsx`를 활용한다.
+
+```tsx
+import clsx from 'clsx'
+import styles from './Button.module.scss'
+
+function Button({ variant = 'primary', size = 'md', disabled, className }) {
+  return (
+    <button
+      className={clsx(
+        styles.button,
+        styles[`button--${variant}`],
+        styles[`button--${size}`],
+        disabled && styles['button--disabled'],
+        className  // 외부 클래스 병합 (오버라이드 허용 시)
+      )}
+      disabled={disabled}
+    >
+      {children}
+    </button>
+  )
+}
+```
+
+---
+
 ## ❌ 피해야 할 패턴
 
 ```scss
@@ -249,4 +359,10 @@ styles/
 
 // ✅ CSS Modules로 스코프 제한
 .active { color: blue; } // Button.module.scss 안에서만 유효
+
+// ❌ data-attribute 대신 JS로 클래스 토글
+element.classList.toggle('is-open')  // 헤드리스 라이브러리와 이중 관리
+
+// ✅ 헤드리스 라이브러리가 노출하는 data-attribute를 SCSS에서 직접 선택
+[data-state="open"] { ... }
 ```
