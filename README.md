@@ -30,6 +30,7 @@ gugbab-claude/
     ├── hooks/
     │   ├── auto-approve.js       ← 안전한 도구 자동 승인
     │   ├── bash-guard.js         ← 위험 Bash 차단
+    │   ├── session-summary.js    ← 세션 종료 시 수정 파일 요약 출력
     │   ├── verification-guard.js ← verification.md 구조·품질 자동 검증
     │   └── skill-md-guard.js     ← SKILL.md 구조 자동 검증
     ├── rules/                    ← 상황별 규칙
@@ -53,6 +54,7 @@ gugbab-claude/
 | [agent-creator](./docs/agents/meta/agent-creator.md) | 새 에이전트 MD 파일 대화형 생성 | → |
 | [skill-creator](./.claude/agents/meta/skill-creator.md) | 공식 문서 검증 후 스킬 SKILL.md 생성 | - |
 | [claude-code-guide](./.claude/agents/meta/claude-code-guide.md) | Claude Code CLI·hooks·MCP·settings·Anthropic SDK 사용법 안내 | - |
+| [planner](./.claude/agents/meta/planner.md) | 복잡한 요청을 단계별 실행 계획으로 분해, 에이전트·스킬 매핑 | - |
 
 ### research
 
@@ -171,7 +173,8 @@ gugbab-claude/
 | 훅 | 유형 | 설명 |
 |----|------|------|
 | [auto-approve](./.claude/hooks/auto-approve.js) | PreToolUse + PermissionRequest | 안전한 비-Bash 도구(Read/Write/Edit 등) 자동 승인 |
-| [bash-guard](./.claude/hooks/bash-guard.js) | PreToolUse + PermissionRequest | 위험한 Bash 패턴 차단, git commit/push 사용자 확인 강제 |
+| [bash-guard](./.claude/hooks/bash-guard.js) | PreToolUse + PermissionRequest + PostToolUse | 위험한 Bash 패턴 차단, git commit/push 사용자 확인 강제, .claude/ 파일 삭제·이동 시 README 동기화 경고 |
+| [session-summary](./.claude/hooks/session-summary.js) | PostToolUse + Stop | 세션 중 수정된 파일을 누적 추적, 세션 종료 시 요약 출력 |
 | [verification-guard](./.claude/hooks/verification-guard.js) | PostToolUse | verification.md 구조·품질 자동 검증 (8개 섹션, 내장 지식 금지, 체크박스 완성도) |
 | [skill-md-guard](./.claude/hooks/skill-md-guard.js) | PostToolUse | SKILL.md 구조 자동 검증 (frontmatter name·description, > 소스:, > 검증일: 필수) |
 
@@ -207,4 +210,4 @@ claude --continue             # 이전 대화 이어서
 | 2026-04-14~15 | 프론트엔드 스킬 23개 전체 frontend-architect 활용 테스트 완료 및 APPROVED, 스킬 폴더 구조 정리(backend/ · frontend/ 2단계 분류), frontend-developer 에이전트 추가 |
 | 2026-04-16~17 | 도메인 분석 에이전트 2종 추가(business-domain-analyst·codebase-domain-analyst), domain/ 카테고리 신설, 훅 단일 책임 분리(permission-judge → auto-approve·bash-guard 2파일), skill-guard 제거(skill-creator Write 충돌 해소), skill-creator 아키텍처 개편(Agent 도구 제거 → WebSearch/WebFetch 직접 조사·검증으로 중첩 제한 해소), verification-guard PostToolUse 훅 추가(verification.md 품질 자동 검증), DDD 아키텍처 스킬 추가(fact-checker 재검증 DISPUTED 3건 수정 반영, PENDING_TEST) |
 | 2026-04-17 | 백엔드 스킬 14종 WebSearch 교차 검증 및 DISPUTED 항목 수정, 전체 43개 스킬 verification.md 8섹션 포맷 마이그레이션, 헤드리스 UI 패키지 대응 프론트엔드 스킬 추가·업데이트 (radix-ui·design-token-scss 신규 추가, sass·component-design asChild/Slot·data-attribute 패턴 보완) |
-| 2026-04-20 | CRA → Vite 마이그레이션 관련 프론트엔드 스킬 4종 추가 (cra-to-vite-migration·webpack-vite-config-mapping·vite-advanced-splitting·vite-pwa-service-worker), lf-ui 프로젝트 분석 기반 WebSearch 교차 검증 전항목 VERIFIED, README 최신화 (hooks 구조도·스킬 수·검증 심볼 수정) |
+| 2026-04-20 | CRA → Vite 마이그레이션 관련 프론트엔드 스킬 4종 추가 (cra-to-vite-migration·webpack-vite-config-mapping·vite-advanced-splitting·vite-pwa-service-worker), lf-ui 프로젝트 분석 기반 WebSearch 교차 검증 전항목 VERIFIED, README 최신화 (hooks 구조도·스킬 수·검증 심볼 수정), CLAUDE.md 경량화 및 디렉토리별 CLAUDE.md 분리, bash-guard PostToolUse 핸들러 추가 (README 동기화 경고), session-summary 훅 추가 (Stop 이벤트 세션 요약), planner 에이전트 추가 (복잡 요청 단계 분해) |
