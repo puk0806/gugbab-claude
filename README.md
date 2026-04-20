@@ -130,6 +130,8 @@ gugbab-claude/
 | [page-visibility](./.claude/skills/frontend/page-visibility/SKILL.md) | Page Visibility API — 탭 가시성 감지, 폴링 제어, 데이터 갱신 | [→](./docs/skills/frontend/page-visibility/verification.md) |
 | [resize-observer](./.claude/skills/frontend/resize-observer/SKILL.md) | ResizeObserver API 핵심 패턴, React Hook | [→](./docs/skills/frontend/resize-observer/verification.md) |
 | [css-variables](./.claude/skills/frontend/css-variables/SKILL.md) | CSS Custom Properties 핵심 패턴 — 선언, 상속, 폴백, 테마 전환, JS 연동 | [→](./docs/skills/frontend/css-variables/verification.md) |
+| [radix-ui](./.claude/skills/frontend/radix-ui/SKILL.md) | Radix UI Primitives — asChild/Slot, Compound Component, Controlled/Uncontrolled, data-attribute + SCSS 스타일링 | [→](./docs/skills/frontend/radix-ui/verification.md) |
+| [design-token-scss](./.claude/skills/frontend/design-token-scss/SKILL.md) | 디자인 토큰 3계층 설계, Figma 토큰 추출, Style Dictionary v4 SCSS/CSS 변환, 테마 전환 패턴 | [→](./docs/skills/frontend/design-token-scss/verification.md) |
 
 ---
 
@@ -165,7 +167,8 @@ gugbab-claude/
 |----|------|------|
 | [auto-approve](./.claude/hooks/auto-approve.js) | PreToolUse + PermissionRequest | 안전한 비-Bash 도구(Read/Write/Edit 등) 자동 승인 |
 | [bash-guard](./.claude/hooks/bash-guard.js) | PreToolUse + PermissionRequest | 위험한 Bash 패턴 차단, git commit/push 사용자 확인 강제 |
-| [skill-guard](./.claude/hooks/skill-guard.js) | PreToolUse | SKILL.md 직접 작성 차단 — skill-creator 에이전트 사용 강제 |
+| [verification-guard](./.claude/hooks/verification-guard.js) | PostToolUse | verification.md 구조·품질 자동 검증 (8개 섹션, 내장 지식 금지, 체크박스 완성도) |
+| [skill-md-guard](./.claude/hooks/skill-md-guard.js) | PostToolUse | SKILL.md 구조 자동 검증 (frontmatter name·description, > 소스:, > 검증일: 필수) |
 
 ---
 
@@ -197,4 +200,5 @@ claude --continue             # 이전 대화 이어서
 | 2026-04-07 | Rust 백엔드 스킬 18종 추가(tokio·axum·reqwest·serde·thiserror·tower-http·sse-streaming·multipart-upload·dotenvy·tracing·cargo-workspace·project-structure·dependency-injection·repository-pattern·custom-middleware·sqlx·testing-rust·jwt-auth), 백엔드 에이전트 2종 추가(rust-backend-developer·rust-backend-architect), skill-creator 검증 프로세스 강화(fact-checker 필수화, verification.md 의무화, 실행 에이전트 로그 섹션 추가), creation-workflow 4단계 개편, 관심사별 커밋 분리 원칙 추가 |
 | 2026-04-08 | Rust 백엔드 스킬 1종 추가(design-patterns-rust), claude-code-guide 에이전트 추가, tokio·axum SKILL.md DISPUTED 항목 수정, verification.md 체크리스트 표기 도입, tokio 검증 APPROVED |
 | 2026-04-14~15 | 프론트엔드 스킬 23개 전체 frontend-architect 활용 테스트 완료 및 APPROVED, 스킬 폴더 구조 정리(backend/ · frontend/ 2단계 분류), frontend-developer 에이전트 추가 |
-| 2026-04-16~17 | 도메인 분석 에이전트 2종 추가(business-domain-analyst·codebase-domain-analyst), domain/ 카테고리 신설, 훅 단일 책임 분리(permission-judge → auto-approve·bash-guard·skill-guard 3파일), skill-guard로 SKILL.md 직접 작성 차단, DDD 아키텍처 스킬 추가(skill-creator로 생성, PENDING_TEST), verification-guard PostToolUse 훅 추가(verification.md 품질 자동 검증), skill-creator 프롬프트 정비(내장 템플릿 제거·VERIFICATION_TEMPLATE.md 단일 소스화·서브에이전트 호출 강제), DDD 스킬 fact-checker 재검증(DISPUTED 3건 수정 반영) |
+| 2026-04-16~17 | 도메인 분석 에이전트 2종 추가(business-domain-analyst·codebase-domain-analyst), domain/ 카테고리 신설, 훅 단일 책임 분리(permission-judge → auto-approve·bash-guard 2파일), skill-guard 제거(skill-creator Write 충돌 해소), skill-creator 아키텍처 개편(Agent 도구 제거 → WebSearch/WebFetch 직접 조사·검증으로 중첩 제한 해소), verification-guard PostToolUse 훅 추가(verification.md 품질 자동 검증), DDD 아키텍처 스킬 추가(fact-checker 재검증 DISPUTED 3건 수정 반영, PENDING_TEST) |
+| 2026-04-17 | 백엔드 스킬 14종 WebSearch 교차 검증 및 DISPUTED 항목 수정, 전체 43개 스킬 verification.md 8섹션 포맷 마이그레이션, 헤드리스 UI 패키지 대응 프론트엔드 스킬 추가·업데이트 (radix-ui·design-token-scss 신규 추가, sass·component-design asChild/Slot·data-attribute 패턴 보완) |

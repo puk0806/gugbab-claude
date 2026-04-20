@@ -140,3 +140,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-04-01 | v1 | 최초 작성 및 frontend-architect 활용 테스트 완료 | frontend-architect 에이전트 |
 | 2026-04-17 | v2 | verification.md 신규 8섹션 포맷으로 마이그레이션 | 메인 대화 오케스트레이션 |
+| 2026-04-17 | v3 | 헤드리스 UI 컴포넌트 라이브러리용 SCSS 패턴 추가 (data-attribute 선택자, 컴포넌트 라이브러리 폴더 구조, clsx 조합 패턴) | 메인 대화 오케스트레이션 |

@@ -135,3 +135,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-03-27 | v1 | 최초 작성 및 frontend-architect 활용 테스트 완료 | frontend-architect 에이전트 |
 | 2026-04-17 | v2 | verification.md 신규 8섹션 포맷으로 마이그레이션 | 메인 대화 오케스트레이션 |
+| 2026-04-17 | v3 | 헤드리스 컴포넌트 패턴 보완: asChild/Slot 패턴 구현, data-attribute 상태 노출 패턴, forwardRef 조합 예시 추가 | 메인 대화 오케스트레이션 |
