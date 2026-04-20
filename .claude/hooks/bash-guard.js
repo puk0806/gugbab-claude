@@ -71,19 +71,24 @@ function handlePermissionRequest(toolName, toolInput) {
   }
 }
 
-// .claude/ 하위 모니터링 경로 — 변경 시 README 동기화 필요
-const README_SYNC_PATHS = ['.claude/hooks/', '.claude/skills/', '.claude/agents/']
+// 프로젝트 내부 .claude/ 모니터링 경로 — 삭제·이동 시 README 동기화 필요
+// 셸 구문 단위(statement)로 판단 — node -e "..." 등 인수 내부 문자열은 제외
+function postToolUseMonitoredPath(cmd) {
+  // 세미콜론·&&·||·개행으로 구분된 개별 구문으로 분리
+  const statements = cmd.split(/;|&&|\|\||\n/)
+  return statements.some(stmt => {
+    const s = stmt.trim()
+    // 구문이 rm / mv 로 시작하고, 상대 경로 .claude/(hooks|skills|agents)/ 를 포함
+    return /^(rm|mv)\s/.test(s) && /\s\.claude\/(hooks|skills|agents)\//.test(s)
+  })
+}
 
 function handlePostToolUse(toolName, toolInput) {
   if (toolName !== 'Bash') return null
 
   const cmd = (toolInput.command || '').trim()
 
-  // rm 또는 mv 가 모니터링 경로를 타겟으로 하는지 확인
-  const isDestructiveOrMove = /\brm\b|\bmv\b/.test(cmd)
-  const touchesMonitored = README_SYNC_PATHS.some(p => cmd.includes(p))
-
-  if (isDestructiveOrMove && touchesMonitored) {
+  if (postToolUseMonitoredPath(cmd)) {
     return {
       decision: 'block',
       reason: 'README.md 동기화 필요: .claude/ 경로 파일이 삭제·이동됐습니다. 프로젝트 구조도·목록·스킬 수를 README.md에 즉시 반영하세요.',

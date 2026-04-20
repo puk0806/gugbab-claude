@@ -72,18 +72,7 @@
         "matcher": "Write",
         "hooks": [
           { "type": "command", "command": "node .claude/hooks/verification-guard.js" },
-          { "type": "command", "command": "node .claude/hooks/skill-md-guard.js" }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          { "type": "command", "command": "node .claude/hooks/bash-guard.js" }
-        ]
-      },
-      {
-        "matcher": "Write",
-        "hooks": [
+          { "type": "command", "command": "node .claude/hooks/skill-md-guard.js" },
           { "type": "command", "command": "node .claude/hooks/session-summary.js" }
         ]
       },
@@ -91,6 +80,12 @@
         "matcher": "Edit",
         "hooks": [
           { "type": "command", "command": "node .claude/hooks/session-summary.js" }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "node .claude/hooks/bash-guard.js" }
         ]
       }
     ],
