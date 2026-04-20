@@ -71,6 +71,28 @@ function handlePermissionRequest(toolName, toolInput) {
   }
 }
 
+// .claude/ 하위 모니터링 경로 — 변경 시 README 동기화 필요
+const README_SYNC_PATHS = ['.claude/hooks/', '.claude/skills/', '.claude/agents/']
+
+function handlePostToolUse(toolName, toolInput) {
+  if (toolName !== 'Bash') return null
+
+  const cmd = (toolInput.command || '').trim()
+
+  // rm 또는 mv 가 모니터링 경로를 타겟으로 하는지 확인
+  const isDestructiveOrMove = /\brm\b|\bmv\b/.test(cmd)
+  const touchesMonitored = README_SYNC_PATHS.some(p => cmd.includes(p))
+
+  if (isDestructiveOrMove && touchesMonitored) {
+    return {
+      decision: 'block',
+      reason: 'README.md 동기화 필요: .claude/ 경로 파일이 삭제·이동됐습니다. 프로젝트 구조도·목록·스킬 수를 README.md에 즉시 반영하세요.',
+    }
+  }
+
+  return null
+}
+
 async function main() {
   const rl = readline.createInterface({ input: process.stdin })
   let raw = ''
@@ -87,7 +109,9 @@ async function main() {
 
   const result = eventName === 'PermissionRequest'
     ? handlePermissionRequest(tool_name, tool_input)
-    : handlePreToolUse(tool_name, tool_input)
+    : eventName === 'PostToolUse'
+      ? handlePostToolUse(tool_name, tool_input)
+      : handlePreToolUse(tool_name, tool_input)
 
   if (result) process.stdout.write(JSON.stringify(result) + '\n')
 
