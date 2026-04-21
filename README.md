@@ -40,7 +40,7 @@ gugbab-claude/
     ├── rules/                    ← 상황별 규칙 (git, typescript, rust 등)
     ├── settings.json             ← 훅 등록 설정
     └── skills/
-        ├── frontend/             ← 프론트엔드 스킬 (29종)
+        ├── frontend/             ← 프론트엔드 스킬 (38종)
         ├── backend/              ← Rust 백엔드 스킬 (19종)
         ├── architecture/         ← 아키텍처 스킬 (1종)
         └── meta/                 ← 프로젝트 관리 스킬 (1종)
@@ -60,6 +60,7 @@ gugbab-claude/
 | [skill-creator](./.claude/agents/meta/skill-creator.md) | 공식 문서 검증 후 스킬 SKILL.md 생성 | - |
 | [claude-code-guide](./.claude/agents/meta/claude-code-guide.md) | Claude Code CLI·hooks·MCP·settings·Anthropic SDK 사용법 안내 | - |
 | [planner](./.claude/agents/meta/planner.md) | 복잡한 요청을 단계별 실행 계획으로 분해, 에이전트·스킬 매핑 | - |
+| [freshness-auditor](./.claude/agents/meta/freshness-auditor.md) | 에이전트·스킬 전체 감사 — 모델 deprecated, 버전 outdated, 검증일 만료, verification.md 누락 점검 | - |
 
 ### research
 
@@ -118,7 +119,8 @@ gugbab-claude/
 |------|------|----------|
 | [react-core](./.claude/skills/frontend/react-core/SKILL.md) | React 18/19 핵심 패턴, Concurrent, React Compiler | [→](./docs/skills/frontend/react-core/verification.md) |
 | [nextjs](./.claude/skills/frontend/nextjs/SKILL.md) | Next.js 15/16 App Router, 캐싱, Server Actions | [→](./docs/skills/frontend/nextjs/verification.md) |
-| [typescript](./.claude/skills/frontend/typescript/SKILL.md) | TypeScript 핵심 패턴, React 타입, tsconfig | [→](./docs/skills/frontend/typescript/verification.md) |
+| [typescript-v4](./.claude/skills/frontend/typescript-v4/SKILL.md) | TypeScript 4.x (4.0~4.9) 버전별 핵심 기능, 타입 시스템 고급 패턴, tsconfig 설정 | [→](./docs/skills/frontend/typescript-v4/verification.md) |
+| [typescript-v5](./.claude/skills/frontend/typescript-v5/SKILL.md) | TypeScript 5.x (5.0~5.8) 버전별 신규 기능, tsconfig 5.x 설정, 4.x 마이그레이션 | [→](./docs/skills/frontend/typescript-v5/verification.md) |
 | [monorepo-turborepo](./.claude/skills/frontend/monorepo-turborepo/SKILL.md) | 모노레포 구조, Turborepo 파이프라인 | [→](./docs/skills/frontend/monorepo-turborepo/verification.md) |
 | [bundling-compiler](./.claude/skills/frontend/bundling-compiler/SKILL.md) | tsup/Vite/Turbopack 선택 기준, React Compiler, Tree Shaking | [→](./docs/skills/frontend/bundling-compiler/verification.md) |
 | [code-convention](./.claude/skills/frontend/code-convention/SKILL.md) | ESLint 9+ flat config, Biome, Prettier, Husky, lint-staged | [→](./docs/skills/frontend/code-convention/verification.md) |
@@ -129,7 +131,10 @@ gugbab-claude/
 | [form-handling](./.claude/skills/frontend/form-handling/SKILL.md) | React Hook Form + Zod 유효성 검증, 재사용 필드 컴포넌트 | [→](./docs/skills/frontend/form-handling/verification.md) |
 | [api-integration](./.claude/skills/frontend/api-integration/SKILL.md) | API 클라이언트 캡슐화, TanStack Query 연동, 에러 핸들링 | [→](./docs/skills/frontend/api-integration/verification.md) |
 | [accessibility](./.claude/skills/frontend/accessibility/SKILL.md) | ARIA 패턴, 시맨틱 HTML, 키보드 네비게이션, a11y 테스트 | [→](./docs/skills/frontend/accessibility/verification.md) |
-| [animation](./.claude/skills/frontend/animation/SKILL.md) | motion/react(Framer Motion) 핵심 패턴, CSS transition/keyframe, 성능 고려 | [→](./docs/skills/frontend/animation/verification.md) |
+| [animation](./.claude/skills/frontend/animation/SKILL.md) | motion 12.x (구 framer-motion) — CSS transition/keyframe, useScroll/useTransform, 드래그/제스처, LazyMotion 번들 최적화, Next.js App Router | [→](./docs/skills/frontend/animation/verification.md) |
+| [dayjs](./.claude/skills/frontend/dayjs/SKILL.md) | dayjs 날짜 라이브러리 — 파싱/포맷/조작/비교, 플러그인(relativeTime·utc·timezone·duration), i18n, TypeScript, date-fns 마이그레이션 | [→](./docs/skills/frontend/dayjs/verification.md) |
+| [storybook](./.claude/skills/frontend/storybook/SKILL.md) | Storybook 8.x — CSF 3.0, args/controls, play function, autodocs, TypeScript 타입, 모노레포 설정, Chromatic 연동 | [→](./docs/skills/frontend/storybook/verification.md) |
+| [react-virtuoso](./.claude/skills/frontend/react-virtuoso/SKILL.md) | react-virtuoso 4.x 가상 스크롤 — Virtuoso/VirtuosoGrid/TableVirtuoso, 동적 높이, 무한 스크롤, GroupedVirtuoso, 프로그래매틱 스크롤 | [→](./docs/skills/frontend/react-virtuoso/verification.md) |
 | [performance](./.claude/skills/frontend/performance/SKILL.md) | React Compiler 기준 메모이제이션, 코드 스플리팅, TanStack Virtual 가상화 | [→](./docs/skills/frontend/performance/verification.md) |
 | [error-handling](./.claude/skills/frontend/error-handling/SKILL.md) | Error Boundary, React 19 에러 콜백, TanStack Query 에러 처리, 에러 유형별 전략 | [→](./docs/skills/frontend/error-handling/verification.md) |
 | [design-patterns](./.claude/skills/frontend/design-patterns/SKILL.md) | Compound Component, Custom Hook, useSyncExternalStore, API 캡슐화, 전략 주입 | [→](./docs/skills/frontend/design-patterns/verification.md) |
@@ -141,10 +146,14 @@ gugbab-claude/
 | [css-variables](./.claude/skills/frontend/css-variables/SKILL.md) | CSS Custom Properties 핵심 패턴 — 선언, 상속, 폴백, 테마 전환, JS 연동 | [→](./docs/skills/frontend/css-variables/verification.md) |
 | [radix-ui](./.claude/skills/frontend/radix-ui/SKILL.md) | Radix UI Primitives — asChild/Slot, Compound Component, Controlled/Uncontrolled, data-attribute + SCSS 스타일링 | [→](./docs/skills/frontend/radix-ui/verification.md) |
 | [design-token-scss](./.claude/skills/frontend/design-token-scss/SKILL.md) | 디자인 토큰 3계층 설계, Figma 토큰 추출, Style Dictionary v4 SCSS/CSS 변환, 테마 전환 패턴 | [→](./docs/skills/frontend/design-token-scss/verification.md) |
+| [mui-v5](./.claude/skills/frontend/mui-v5/SKILL.md) | MUI v5 + Emotion — ThemeProvider, sx prop, styled(), 컴포넌트 오버라이드, TypeScript 테마 확장, 반응형 레이아웃, Next.js App Router 통합 | [→](./docs/skills/frontend/mui-v5/verification.md) |
+| [swiper](./.claude/skills/frontend/swiper/SKILL.md) | Swiper 11.x 슬라이더/캐러셀 — React 컴포넌트 + Swiper Element, 핵심 모듈, 반응형, 성능 최적화, Next.js SSR | [→](./docs/skills/frontend/swiper/verification.md) |
 | [cra-to-vite-migration](./.claude/skills/frontend/cra-to-vite-migration/SKILL.md) | CRA → Vite 마이그레이션 8단계 절차 — 환경 변수, index.html, SVG, tsconfig, Jest→Vitest 전환 | [→](./docs/skills/frontend/cra-to-vite-migration/verification.md) |
 | [webpack-vite-config-mapping](./.claude/skills/frontend/webpack-vite-config-mapping/SKILL.md) | Webpack/Craco 설정 → Vite 1:1 매핑 — cacheGroups→manualChunks, babel→esbuild, plugins 대응표, retry chunk | [→](./docs/skills/frontend/webpack-vite-config-mapping/verification.md) |
 | [vite-advanced-splitting](./.claude/skills/frontend/vite-advanced-splitting/SKILL.md) | Vite 고급 코드 스플리팅 — manualChunks 함수형, 모바일/데스크톱 분리 빌드, Gulp→Vite 플러그인 훅 전환 | [→](./docs/skills/frontend/vite-advanced-splitting/verification.md) |
 | [vite-pwa-service-worker](./.claude/skills/frontend/vite-pwa-service-worker/SKILL.md) | Vite PWA/Service Worker — vite-plugin-pwa, generateSW/injectManifest 전략, 기존 커스텀 SW 마이그레이션 | [→](./docs/skills/frontend/vite-pwa-service-worker/verification.md) |
+| [react-dnd](./.claude/skills/frontend/react-dnd/SKILL.md) | react-dnd 16.x 드래그앤드롭 — DndProvider, useDrag/useDrop/useDragLayer, 리스트 순서 변경, 커스텀 프리뷰, 중첩 드롭, Next.js SSR 주의사항, @dnd-kit 선택 기준 | [→](./docs/skills/frontend/react-dnd/verification.md) |
+| [tsup](./.claude/skills/frontend/tsup/SKILL.md) | esbuild 기반 TypeScript 라이브러리 번들러 — CJS/ESM 동시 출력, DTS 생성, exports 필드 설정, 모노레포 공유 패키지 빌드 패턴 | [→](./docs/skills/frontend/tsup/verification.md) |
 
 ---
 
@@ -303,4 +312,4 @@ claude --continue             # 이전 대화 이어서
 | 2026-04-14~15 | 프론트엔드 스킬 23개 전체 frontend-architect 활용 테스트 완료 및 APPROVED, 스킬 폴더 구조 정리(backend/ · frontend/ 2단계 분류), frontend-developer 에이전트 추가 |
 | 2026-04-16~17 | 도메인 분석 에이전트 2종 추가(business-domain-analyst·codebase-domain-analyst), domain/ 카테고리 신설, 훅 단일 책임 분리(permission-judge → auto-approve·bash-guard 2파일), skill-guard 제거(skill-creator Write 충돌 해소), skill-creator 아키텍처 개편(Agent 도구 제거 → WebSearch/WebFetch 직접 조사·검증으로 중첩 제한 해소), verification-guard PostToolUse 훅 추가(verification.md 품질 자동 검증), DDD 아키텍처 스킬 추가(fact-checker 재검증 DISPUTED 3건 수정 반영, PENDING_TEST) |
 | 2026-04-17 | 백엔드 스킬 14종 WebSearch 교차 검증 및 DISPUTED 항목 수정, 전체 43개 스킬 verification.md 8섹션 포맷 마이그레이션, 헤드리스 UI 패키지 대응 프론트엔드 스킬 추가·업데이트 (radix-ui·design-token-scss 신규 추가, sass·component-design asChild/Slot·data-attribute 패턴 보완) |
-| 2026-04-20 | CRA → Vite 마이그레이션 관련 프론트엔드 스킬 4종 추가, CLAUDE.md 경량화 및 디렉토리별 CLAUDE.md 분리, bash-guard PostToolUse 핸들러 추가, session-summary 훅 추가 (Stop 이벤트 세션 요약), planner 에이전트 추가, build-error-resolver 에이전트 추가, rules/typescript·rust 언어별 코딩 규칙 분리, agents/frontend·backend CLAUDE.md 추가 (규칙 자동 로드), continuous-learning 메타 스킬 추가, examples/ CLAUDE.md 템플릿 3종 추가 (react-spa·nextjs·rust-axum), project-install.sh 추가 (다른 프로젝트에 Claude Code 컨벤션 이식) |
+| 2026-04-20 | freshness-auditor 에이전트 추가 (에이전트·스킬 최신화 감사), typescript-v4·typescript-v5 스킬 추가 (TS 버전별 핵심 기능·tsconfig·마이그레이션), typescript 통합 스킬 제거 (v4·v5로 분리 대체), web-searcher MCP 도구 제거 (WebSearch/WebFetch 단순화), continuous-learning verification.md 보완, CRA → Vite 마이그레이션 관련 프론트엔드 스킬 4종 추가, animation 스킬 motion 12.x 기준 전면 재작성 (framer-motion → motion 마이그레이션·useScroll/useTransform/useSpring/useInView·LazyMotion), dayjs·storybook·swiper·react-dnd·tsup·mui-v5·react-virtuoso 프론트엔드 스킬 7종 추가 (공식 문서 WebSearch 기반 검증), CLAUDE.md 경량화 및 디렉토리별 CLAUDE.md 분리, bash-guard PostToolUse 핸들러 추가, session-summary 훅 추가, planner·build-error-resolver 에이전트 추가, rules/typescript·rust 언어별 코딩 규칙 분리, project-install.sh 추가 (다른 프로젝트에 Claude Code 컨벤션 이식) |
