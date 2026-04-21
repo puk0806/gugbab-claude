@@ -381,33 +381,23 @@ fi
 echo ""
 echo "[CLAUDE.md]"
 
-if [ "$TEMPLATE" = "all" ]; then
-  mkdir -p "$TARGET/examples"
-  for tmpl in util react-spa nextjs rust-axum; do
-    cp "$REPO_DIR/examples/${tmpl}-CLAUDE.md" "$TARGET/examples/${tmpl}-CLAUDE.md"
-    echo "  → examples/${tmpl}-CLAUDE.md"
+CLAUDE_FILE="$TARGET/CLAUDE.md"
+if [ -f "$CLAUDE_FILE" ]; then
+  echo "  ⚠ CLAUDE.md 이미 존재합니다."
+  while true; do
+    read -rp "  덮어쓸까요? (y/N): " OVERWRITE_CLAUDE
+    case "$OVERWRITE_CLAUDE" in
+      y|Y) cp "$REPO_DIR/examples/CLAUDE.template.md" "$CLAUDE_FILE"
+           echo "  → CLAUDE.md 덮어쓰기"
+           echo "  ℹ {프로젝트명}과 {설명}을 수정하세요"; break ;;
+      n|N|"") echo "  → 건너뜀 (프로젝트 고유 파일 보존)"; break ;;
+      *) echo "  y 또는 n을 입력하세요." ;;
+    esac
   done
-  echo ""
-  echo "  ℹ 맞는 템플릿을 CLAUDE.md 로 복사 후 수정하세요"
-  echo "    예) cp examples/util-CLAUDE.md CLAUDE.md"
 else
-  CLAUDE_FILE="$TARGET/CLAUDE.md"
-  if [ -f "$CLAUDE_FILE" ]; then
-    echo "  ⚠ CLAUDE.md 이미 존재합니다."
-    while true; do
-      read -rp "  덮어쓸까요? (y/N): " OVERWRITE_CLAUDE
-      case "$OVERWRITE_CLAUDE" in
-        y|Y) cp "$REPO_DIR/examples/${TEMPLATE}-CLAUDE.md" "$CLAUDE_FILE"
-             echo "  → CLAUDE.md 덮어쓰기 ($TEMPLATE 템플릿)"; break ;;
-        n|N|"") echo "  → 건너뜀 (프로젝트 고유 파일 보존)"
-                echo "    최신 템플릿 참고: $REPO_DIR/examples/${TEMPLATE}-CLAUDE.md"; break ;;
-        *) echo "  y 또는 n을 입력하세요." ;;
-      esac
-    done
-  else
-    cp "$REPO_DIR/examples/${TEMPLATE}-CLAUDE.md" "$CLAUDE_FILE"
-    echo "  → CLAUDE.md ($TEMPLATE 템플릿, 최초 생성)"
-  fi
+  cp "$REPO_DIR/examples/CLAUDE.template.md" "$CLAUDE_FILE"
+  echo "  → CLAUDE.md (최초 생성)"
+  echo "  ℹ {프로젝트명}과 {설명}을 수정하세요"
 fi
 
 # ── 완료 ─────────────────────────────────────────────────────────────
