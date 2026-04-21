@@ -30,7 +30,8 @@ gugbab-claude/
     │   ├── validation/           ← 검증
     │   ├── frontend/             ← 프론트엔드 개발
     │   ├── backend/              ← Rust 백엔드 개발
-    │   └── domain/               ← 도메인 분석
+    │   ├── domain/               ← 도메인 분석·기획·설계
+    │   └── devops/               ← DevOps·배포
     ├── hooks/
     │   ├── auto-approve.js       ← 안전한 도구 자동 승인
     │   ├── bash-guard.js         ← 위험 Bash 차단
@@ -40,8 +41,9 @@ gugbab-claude/
     ├── rules/                    ← 상황별 규칙 (git, typescript, rust 등)
     ├── settings.json             ← 훅 등록 설정
     └── skills/
-        ├── frontend/             ← 프론트엔드 스킬 (37종)
+        ├── frontend/             ← 프론트엔드 스킬 (38종)
         ├── backend/              ← Rust 백엔드 스킬 (19종)
+        ├── devops/               ← DevOps 스킬 (2종)
         ├── architecture/         ← 아키텍처 스킬 (1종)
         └── meta/                 ← 프로젝트 관리 스킬 (1종)
 ```
@@ -69,6 +71,8 @@ gugbab-claude/
 | [deep-researcher](./docs/agents/research/deep-researcher.md) | 3축(논문/오픈소스/기업사례) 딥리서치 오케스트레이터 | → |
 | [web-searcher](./docs/agents/research/web-searcher.md) | 검색 축별 전담 서브에이전트 | → |
 | [research-reviewer](./docs/agents/research/research-reviewer.md) | 리서치 품질 5항목 평가 | → |
+| [data-analyst](./.claude/agents/research/data-analyst.md) | 이벤트 택소노미 설계, 퍼널 분석, A/B 테스트 계획, KPI 대시보드 스키마 | [→](./docs/agents/research/data-analyst.md) |
+| [competitor-analyst](./.claude/agents/research/competitor-analyst.md) | 경쟁사 분석, 기능 비교표, SWOT, 시장 포지셔닝, 차별화 전략 | [→](./docs/agents/research/competitor-analyst.md) |
 
 ### validation
 
@@ -76,6 +80,7 @@ gugbab-claude/
 |---------|------|------|
 | [fact-checker](./docs/agents/validation/fact-checker.md) | 단일 클레임 교차 검증 (VERIFIED/UNVERIFIED/DISPUTED) | → |
 | [source-validator](./docs/agents/validation/source-validator.md) | URL/레포/문서 신뢰도 평가 (TRUST/CAUTION/REJECT) | → |
+| [qa-engineer](./.claude/agents/validation/qa-engineer.md) | PRD 수용 기준 → 테스트 계획서, E2E 시나리오, Playwright 코드, 회귀 체크리스트 | [→](./docs/agents/validation/qa-engineer.md) |
 
 ### frontend
 
@@ -98,7 +103,15 @@ gugbab-claude/
 |---------|------|------|
 | [business-domain-analyst](./.claude/agents/domain/business-domain-analyst.md) | 비즈니스 요구사항 → DDD 도메인 모델 도출 (유비쿼터스 언어, 바운디드 컨텍스트, 집합체, 도메인 이벤트) | [→](./docs/agents/domain/business-domain-analyst-verification.md) |
 | [codebase-domain-analyst](./.claude/agents/domain/codebase-domain-analyst.md) | 코드베이스 역분석 — 도메인 구조 파악, 레이어 의존성 진단, 아키텍처 개선 제안 | [→](./docs/agents/domain/codebase-domain-analyst-verification.md) |
-| [product-planner](./.claude/agents/domain/product-planner.md) | 기능 아이디어 → PRD/기능 명세서 작성 (사용자 스토리, 수용 기준, 화면 흐름, 데이터 요구사항, 엣지 케이스) | - |
+| [product-planner](./.claude/agents/domain/product-planner.md) | 기능 아이디어 → PRD/기능 명세서 작성 (사용자 스토리, 수용 기준, 화면 흐름, 데이터 요구사항, 엣지 케이스) | [→](./docs/agents/domain/product-planner.md) |
+| [ui-ux-designer](./.claude/agents/domain/ui-ux-designer.md) | PRD → 텍스트 와이어프레임, 디자인 토큰 체계, 컴포넌트 스펙, 사용자 플로우 (Mermaid), 반응형 전략 | [→](./docs/agents/domain/ui-ux-designer.md) |
+| [api-spec-designer](./.claude/agents/domain/api-spec-designer.md) | PRD → OpenAPI 3.x 스펙, REST API 설계, 요청/응답 스키마, RFC 9457 에러 코드 체계 | [→](./docs/agents/domain/api-spec-designer.md) |
+
+### devops
+
+| 에이전트 | 역할 | 문서 |
+|---------|------|------|
+| [devops-engineer](./.claude/agents/devops/devops-engineer.md) | Dockerfile, docker-compose, GitHub Actions CI/CD, Vercel/Railway 배포, 환경변수 관리 | [→](./docs/agents/devops/devops-engineer.md) |
 
 ---
 
@@ -155,6 +168,16 @@ gugbab-claude/
 | [vite-pwa-service-worker](./.claude/skills/frontend/vite-pwa-service-worker/SKILL.md) | Vite PWA/Service Worker — vite-plugin-pwa, generateSW/injectManifest 전략, 기존 커스텀 SW 마이그레이션 | [→](./docs/skills/frontend/vite-pwa-service-worker/verification.md) |
 | [react-dnd](./.claude/skills/frontend/react-dnd/SKILL.md) | react-dnd 16.x 드래그앤드롭 — DndProvider, useDrag/useDrop/useDragLayer, 리스트 순서 변경, 커스텀 프리뷰, 중첩 드롭, Next.js SSR 주의사항, @dnd-kit 선택 기준 | [→](./docs/skills/frontend/react-dnd/verification.md) |
 | [tsup](./.claude/skills/frontend/tsup/SKILL.md) | esbuild 기반 TypeScript 라이브러리 번들러 — CJS/ESM 동시 출력, DTS 생성, exports 필드 설정, 모노레포 공유 패키지 빌드 패턴 | [→](./docs/skills/frontend/tsup/verification.md) |
+| [e2e-testing](./.claude/skills/frontend/e2e-testing/SKILL.md) | Playwright E2E 테스팅 — POM, 로케이터 전��, 네트워크 인터셉트, 인증 상태, 비주얼 회귀, CI, 샤딩 | [→](./docs/skills/frontend/e2e-testing/verification.md) |
+
+---
+
+### devops
+
+| 스킬 | 설명 | 검증 문서 |
+|------|------|----------|
+| [docker-deployment](./.claude/skills/devops/docker-deployment/SKILL.md) | Docker 멀티스테이지 빌드, Node.js/Rust Docker화, compose, 이미지 최적화, 보안, Vercel/Railway 배포 | [→](./docs/skills/devops/docker-deployment/verification.md) |
+| [github-actions](./.claude/skills/devops/github-actions/SKILL.md) | GitHub Actions CI/CD — 이벤트 트리거, 매트릭스 빌드, 캐싱, Node.js/Rust CI, Docker 빌드, Reusable workflows | [→](./docs/skills/devops/github-actions/verification.md) |
 
 ---
 
@@ -313,5 +336,5 @@ claude --continue             # 이전 대화 이어서
 | 2026-04-14~15 | 프론트엔드 스킬 23개 전체 frontend-architect 활용 테스트 완료 및 APPROVED, 스킬 폴더 구조 정리(backend/ · frontend/ 2단계 분류), frontend-developer 에이전트 추가 |
 | 2026-04-16~17 | 도메인 분석 에이전트 2종 추가(business-domain-analyst·codebase-domain-analyst), domain/ 카테고리 신설, 훅 단일 책임 분리(permission-judge → auto-approve·bash-guard 2파일), skill-guard 제거(skill-creator Write 충돌 해소), skill-creator 아키텍처 개편(Agent 도구 제거 → WebSearch/WebFetch 직접 조사·검증으로 중첩 제한 해소), verification-guard PostToolUse 훅 추가(verification.md 품질 자동 검증), DDD 아키텍처 스킬 추가(fact-checker 재검증 DISPUTED 3건 수정 반영, PENDING_TEST) |
 | 2026-04-17 | 백엔드 스킬 14종 WebSearch 교차 검증 및 DISPUTED 항목 수정, 전체 43개 스킬 verification.md 8섹션 포맷 마이그레이션, 헤드리스 UI 패키지 대응 프론트엔드 스킬 추가·업데이트 (radix-ui·design-token-scss 신규 추가, sass·component-design asChild/Slot·data-attribute 패턴 보완) |
-| 2026-04-21 | product-planner 에이전트 추가 (기능 아이디어 → PRD/기능 명세서, WebSearch 검증 후 성공 지표·비기능 요구사항 보완), research-reviewer·web-searcher example 태그 보완, verification-policy.md 규칙 추가 (APPROVED 전환 4단계 절차 강제), bash-guard.js에 verification.md·SKILL.md Bash 수정 차단 패턴 추가, 에이전트 docs 9개 일괄 생성 (backend 3·domain 1·frontend 2·meta 3), 프론트엔드 스킬 12개 APPROVED 전환 (WebSearch 교차 검증 + 테스트 질문 수행), 프론트엔드 스킬 수 38→37종 수정 (typescript 통합 스킬 삭제 반영) |
+| 2026-04-21 | 1인 스타트업 역할 확장 — 에이전트 6종 추가 (ui-ux-designer·qa-engineer·devops-engineer·api-spec-designer·data-analyst·competitor-analyst), devops 카테고리 신설, 스킬 3종 추가 (e2e-testing·docker-deployment·github-actions), product-planner WebSearch 검증 (성공 지표·비기능 요구사항 보완), verification-policy.md 규칙 추가 (APPROVED 전환 4단계 절차 강제, bash-guard 검증 파일 보호), 프론트엔드 스킬 12개 APPROVED 전환 (WebSearch 교차 검증 + 테스트 질문), 에이전트 docs 9개 생성, example 태그 보완 |
 | 2026-04-20 | freshness-auditor 에이전트 추가 (에이전트·스킬 최신화 감사), typescript-v4·typescript-v5 스킬 추가 (TS 버전별 핵심 기능·tsconfig·마이그레이션), typescript 통합 스킬 제거 (v4·v5로 분리 대체), web-searcher MCP 도구 제거 (WebSearch/WebFetch 단순화), continuous-learning verification.md 보완, CRA → Vite 마이그레이션 관련 프론트엔드 스킬 4종 추가, animation 스킬 motion 12.x 기준 전면 재작성 (framer-motion → motion 마이그레이션·useScroll/useTransform/useSpring/useInView·LazyMotion), dayjs·storybook·swiper·react-dnd·tsup·mui-v5·react-virtuoso 프론트엔드 스킬 7종 추가 (공식 문서 WebSearch 기반 검증), CLAUDE.md 경량화 및 디렉토리별 CLAUDE.md 분리, bash-guard PostToolUse 핸들러 추가, session-summary 훅 추가, planner·build-error-resolver 에이전트 추가, rules/typescript·rust 언어별 코딩 규칙 분리, project-install.sh 추가 (다른 프로젝트에 Claude Code 컨벤션 이식) |
