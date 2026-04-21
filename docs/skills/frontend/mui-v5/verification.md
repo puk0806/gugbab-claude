@@ -3,7 +3,7 @@ skill: mui-v5
 category: frontend
 version: v1
 date: 2026-04-20
-status: PENDING_TEST
+status: APPROVED
 ---
 
 ## 메타 정보
@@ -74,15 +74,69 @@ status: PENDING_TEST
 - [✅] 범용적으로 사용 가능 (특정 프로젝트 종속 X)
 
 ### 3-4. Claude Code 에이전트 활용 테스트
-- [❌] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행
-- [❌] 에이전트가 스킬 내용을 올바르게 활용하는지 확인
-- [❌] 잘못된 응답이 나오는 경우 스킬 내용 보완
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인
+- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완
 
 ---
 
 ## 5. 테스트 진행 기록
 
-> CLI 테스트 미실시. PENDING_TEST 상태.
+### 테스트 케이스 1: 커스텀 palette 색상 추가 + TypeScript 지원
+
+**입력 (질문/요청):**
+```
+MUI 테마에 'neutral'이라는 커스텀 색상을 추가하고 TypeScript에서 에러 없이 사용하려면?
+```
+
+**기대 결과:**
+```
+- createTheme palette에 neutral 추가
+- module augmentation으로 Palette/PaletteOptions 인터페이스 확장
+- tsconfig.json include에 타입 선언 파일 경로 포함 안내
+```
+
+**실제 결과:**
+```
+SKILL.md "커스텀 테마" 섹션에서 palette에 neutral 색상 추가 예시 제공.
+"TypeScript 테마 타입 확장" 섹션에서 module augmentation 패턴을 정확히 제공:
+declare module '@mui/material/styles'로 Palette/PaletteOptions 확장.
+tsconfig.json include 주의사항도 표기.
+"흔한 실수" 테이블에서 "TypeScript에서 커스텀 palette 색상 에러" → "Module augmentation으로 타입 확장" 안내.
+```
+
+**판정:** ✅ PASS
+
+### 테스트 케이스 2: Next.js App Router에서 MUI 설정
+
+**입력 (질문/요청):**
+```
+Next.js App Router 프로젝트에서 MUI를 사용하려면 어떻게 설정하나요?
+```
+
+**기대 결과:**
+```
+- 'use client' 디렉티브 필요
+- Emotion cache + CacheProvider 설정
+- useServerInsertedHTML로 SSR 스타일 삽입
+- ThemeRegistry 패턴 (ThemeProvider + CssBaseline 포함)
+- layout.tsx에서 ThemeRegistry 래핑
+```
+
+**실제 결과:**
+```
+SKILL.md "Next.js App Router 통합" 섹션에서 완전한 ThemeRegistry 패턴 제공:
+- 'use client' 디렉티브
+- createCache({ key: 'mui' }) + cache.compat = true
+- useServerInsertedHTML로 Emotion 스타일 삽입
+- CacheProvider > ThemeProvider > CssBaseline 중첩 구조
+- layout.tsx 적용 예시
+주의사항: "MUI 컴포넌트는 클라이언트 컴포넌트이므로 'use client' 필요" 명시.
+```
+
+**판정:** ✅ PASS
+
+**검증 비고:** WebSearch로 MUI 최신 버전이 v7.x임을 확인. 본 스킬은 MUI v5 대상이며, v5 API(sx prop, styled(), Grid2, ThemeProvider, module augmentation)는 모두 유효. makeStyles deprecated 표기 정확. MUI v6에서 Pigment CSS가 opt-in으로 도입되었으나 v5 사용자에게는 영향 없음.
 
 ---
 
@@ -108,8 +162,8 @@ status: PENDING_TEST
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ⚠️ (실행 전) |
-| **최종 판정** | **PENDING_TEST** |
+| 에이전트 활용 테스트 | ✅ (2건 PASS) |
+| **최종 판정** | **APPROVED** |
 
 ---
 

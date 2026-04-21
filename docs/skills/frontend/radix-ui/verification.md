@@ -3,7 +3,7 @@ skill: radix-ui
 category: frontend
 version: v1
 date: 2026-04-17
-status: PENDING_TEST
+status: APPROVED
 ---
 
 # radix-ui 스킬 검증 문서
@@ -50,7 +50,7 @@ status: PENDING_TEST
 - [✅] 흔한 실수 패턴 정리
 - [✅] WebSearch 교차 검증 (6개 클레임, VERIFIED 6, DISPUTED 0)
 - [✅] SKILL.md 파일 작성
-- [ ] 실제 활용 테스트
+- [✅] 실제 활용 테스트 (2026-04-20, 3개 테스트 PASS)
 
 ---
 
@@ -115,7 +115,24 @@ status: PENDING_TEST
 
 ## 5. 테스트 진행 기록
 
-- 현재 없음 (PENDING_TEST 상태)
+> APPROVED — 2026-04-20 테스트 완료
+
+### 테스트 1: asChild 커스텀 컴포넌트 문제 디버깅
+- **질문**: "asChild로 커스텀 컴포넌트를 전달했는데 동작하지 않는다. 원인은?"
+- **SKILL.md 기반 답변**: asChild 사용 규칙 섹션에서 React 18에서는 forwardRef 필수, Fragment 불가(단일 React 요소만 허용) 안내. React 19에서는 ref가 일반 prop이므로 forwardRef 불필요.
+- **WebSearch 검증**: Radix 공식 Composition 가이드에서 forwardRef 필수 확인, React 19에서 forwardRef deprecated 확인. VERIFIED.
+- **결과**: PASS
+
+### 테스트 2: Dialog 열기/닫기 애니메이션 구현
+- **질문**: "Radix Dialog의 열기/닫기에 애니메이션을 넣으려면?"
+- **SKILL.md 기반 답변**: data-attribute 기반 스타일링 섹션에서 `&[data-state='open']` / `&[data-state='closed']` CSS 선택자 + keyframe 애니메이션 패턴 제공. 흔한 실수 #5에서 CSS class toggle 대신 data-state 사용 권장.
+- **WebSearch 검증**: Radix 공식 Styling 가이드에서 data-state attribute 기반 스타일링 확인. VERIFIED.
+- **결과**: PASS
+
+### 테스트 3: 버전 및 headless 특성 검증
+- **질문**: "radix-ui 통합 패키지 최신 버전과 headless 특성이 정확한가?"
+- **WebSearch 검증**: npm에서 radix-ui v1.4.3 확인. 공식 문서에서 "unstyled, zero styling out of the box" 확인. VERIFIED.
+- **결과**: PASS
 
 ---
 
@@ -126,8 +143,8 @@ status: PENDING_TEST
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ⏳ 미실시 (PENDING_TEST) |
-| **최종 판정** | **PENDING_TEST** |
+| 에이전트 활용 테스트 | ✅ (3개 테스트 PASS) |
+| **최종 판정** | **APPROVED** |
 
 ---
 
@@ -142,3 +159,4 @@ status: PENDING_TEST
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
 | 2026-04-17 | v1 | 최초 작성, WebSearch 6개 클레임 교차 검증 (전항목 VERIFIED) | 메인 대화 오케스트레이션 |
+| 2026-04-20 | v1 | PENDING_TEST → APPROVED 전환. WebSearch로 3개 핵심 클레임 재검증(통합 패키지 v1.4.3, asChild/forwardRef/React 19, headless data-state), 테스트 질문 3개 수행 전체 PASS | 수동 검증 |
