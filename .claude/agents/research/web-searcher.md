@@ -3,6 +3,8 @@ name: web-searcher
 description: >
   검색 축(논문/오픈소스/기업사례)과 쿼리를 받아
   관련 소스를 찾고 구조화된 결과를 반환하는 검색 전담 에이전트.
+  <example>사용자: "LLM 코드 리뷰 관련 논문 검색해줘"</example>
+  <example>사용자: "실시간 협업 에디터 오픈소스 찾아줘"</example>
 tools:
   - WebSearch
   - WebFetch

@@ -3,6 +3,8 @@ name: research-reviewer
 description: >
   리서치 보고서 초안을 읽고 5항목 품질 기준으로 평가한 뒤
   PASS 또는 GAPS(부족 항목 + 추가 검색 제안)를 반환하는 리뷰 전담 에이전트.
+  <example>사용자: "이 리서치 보고서 품질 검토해줘"</example>
+  <example>사용자: "리서치 초안 리뷰하고 부족한 부분 알려줘"</example>
 tools:
   - Read
 model: opus
