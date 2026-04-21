@@ -1,9 +1,9 @@
 ---
 skill: animation
 category: frontend
-version: v1
-date: 2026-04-14
-status: APPROVED
+version: v4
+date: 2026-04-20
+status: PENDING_TEST
 ---
 
 # animation 스킬 검증 문서
@@ -22,7 +22,7 @@ status: APPROVED
   최종 판정: PENDING_TEST
 
 [2단계] 실제 사용 중 (온라인 검증)
-  ├─ frontend-architect 에이전트 테스트 수행
+  ├─ 에이전트 테스트 수행 (미실시)
   └─ 테스트 PASS → APPROVED
 ```
 
@@ -32,83 +32,161 @@ status: APPROVED
 
 | 항목 | 내용 |
 |------|------|
-| 스킬 이름 | animation |
+| 스킬 이름 | `animation` |
 | 스킬 경로 | `.claude/skills/frontend/animation/SKILL.md` |
 | 최초 작성일 | 2026-03-27 |
-| 재검증일 | 2026-04-14 |
-| 검증 방법 | frontend-architect 활용 테스트 |
-| 버전 기준 | Motion (framer-motion) 최신, CSS Animation |
+| 재검증일 | 2026-04-20 |
+| 검증자 | puk0806 |
+| 스킬 버전 | v4 |
+| 대상 버전 | motion 12.x (최신: 12.38.0 기준) |
 
 ---
 
 ## 1. 작업 목록 (Task List)
 
-- [✅] 공식 문서 1순위 소스 확인
-- [✅] 최신 버전 기준 내용 확인
+- [✅] 공식 문서 1순위 소스 확인 (motion.dev/docs)
+- [✅] 공식 GitHub 2순위 소스 확인 (github.com/motiondivision/motion CHANGELOG)
+- [✅] 최신 버전 기준 내용 확인 (날짜: 2026-04-20, motion 12.38.0 기준)
+- [✅] framer-motion → motion 마이그레이션 변경점 반영
+- [✅] motion 12.36~12.38 신규 기능 반영 (layout="x"/"y", dragSnapToOrigin 축별, skipInitialAnimation, whileTap 키보드 접근성)
+- [✅] motion/react-client (Server Component용) 패턴 추가
+- [✅] useAnimate 권장 / useAnimation 레거시 표기
 - [✅] 핵심 패턴 / 베스트 프랙티스 정리
 - [✅] 코드 예시 작성
 - [✅] 흔한 실수 패턴 정리
-- [✅] SKILL.md 파일 작성
-- [✅] Claude Code 에이전트에서 실제 활용 테스트
+- [✅] SKILL.md 파일 재작성 (v3 → v4)
 
 ---
 
 ## 2. 실행 에이전트 로그
 
-| 단계 | 에이전트 | 입력 요약 | 출력 요약 |
-|------|----------|-----------|-----------|
-| 활용 테스트 | frontend-architect | 기본 애니메이션, 트랜지션, 제스처, CSS transition, AnimatePresence, 성능 최적화 6개 | 6/6 PASS → SKILL.md 수정 후 APPROVED |
+| 단계 | 도구 | 입력 요약 | 출력 요약 |
+|------|------|-----------|-----------|
+| 조사 | WebSearch | motion 12.x framer-motion migration API changes 2025 2026 | motion.dev 공식 문서 및 CHANGELOG 링크 수집, 12.38.0 최신 확인 |
+| 조사 | WebSearch | motion.dev react animate AnimatePresence useScroll useInView 2026 | 각 훅/컴포넌트 공식 문서 페이지 및 기능 설명 확인 |
+| 조사 | WebSearch | motion 12 LazyMotion domAnimation domMax bundle size | 초기 ~4.6kb, domAnimation/domMax 기능 범위 표 확인 |
+| 조사 | WebSearch | motion 12 layout="x" layout="y" skipInitialAnimation dragSnapToOrigin | motion 12.36.0 신규 기능 3종 확인 (2026-03-09 릴리즈) |
+| 조사 | WebSearch | motion/react-client Next.js SSR Server Component | motion/react-client 패키지 역할 및 사용 방법 확인 |
+| 조사 | WebSearch | useReducedMotion MotionConfig accessibility motion.dev | useReducedMotion 훅 + MotionConfig reducedMotion 옵션 확인 |
+| 교차 검증 | WebSearch | motion react useAnimation useAnimationControls deprecated | VERIFIED: useAnimation은 backwards compatible alias, useAnimate 현행 권장 (2개 소스) |
+| 교차 검증 | WebSearch | motion.create forwardRef React 19 ref prop | VERIFIED: React 19에서 forwardRef 불필요, ref를 일반 prop으로 전달 가능 (2개 소스) |
+| 교차 검증 | WebSearch | motion 12 github changelog breaking changes latest | VERIFIED: motion 12.38.0 최신, React 파괴적 변경 없음 (2개 소스) |
 
 ---
 
 ## 3. 조사 소스
 
-| 소스명 | URL | 신뢰도 |
-|--------|-----|--------|
-| Motion 공식 문서 | https://motion.dev/docs | ⭐⭐⭐ High |
+| 소스명 | URL | 신뢰도 | 날짜 | 비고 |
+|--------|-----|--------|------|------|
+| Motion 공식 문서 | https://motion.dev/docs | ⭐⭐⭐ High | 2026-04-20 | 공식 문서 |
+| Motion 업그레이드 가이드 | https://motion.dev/docs/react-upgrade-guide | ⭐⭐⭐ High | 2026-04-20 | framer-motion → motion 마이그레이션 |
+| Motion LazyMotion 문서 | https://motion.dev/docs/react-lazy-motion | ⭐⭐⭐ High | 2026-04-20 | 번들 최적화 공식 가이드 |
+| Motion Changelog | https://motion.dev/changelog | ⭐⭐⭐ High | 2026-04-20 | 버전별 변경 이력 |
+| motiondivision/motion CHANGELOG | https://github.com/motiondivision/motion/blob/main/CHANGELOG.md | ⭐⭐⭐ High | 2026-04-20 | GitHub 공식 레포 |
+| motion npm 페이지 | https://www.npmjs.com/package/motion | ⭐⭐⭐ High | 2026-04-20 | 최신 버전 12.38.0 확인 |
+| Motion 설치 가이드 | https://motion.dev/docs/react-installation | ⭐⭐⭐ High | 2026-04-20 | motion/react-client 설명 포함 |
+| Motion 접근성 문서 | https://motion.dev/docs/react-accessibility | ⭐⭐⭐ High | 2026-04-20 | useReducedMotion, MotionConfig |
+| MDN CSS Animation | https://developer.mozilla.org/en-US/docs/Web/CSS/animation | ⭐⭐⭐ High | 2026-04-20 | CSS 표준 문서 |
 
 ---
 
 ## 4. 검증 체크리스트 (Test List)
 
-### 4-1. 내용 정확성
+### 3-1. 내용 정확성
 - [✅] 공식 문서와 불일치하는 내용 없음
-- [✅] 버전 정보가 명시되어 있음
-- [✅] deprecated된 패턴을 권장하지 않음
+- [✅] 버전 정보가 명시되어 있음 (motion 12.x, 최신 12.38.0 기준)
+- [✅] deprecated된 패턴을 권장하지 않음 (framer-motion import, motion() 함수 호출, useAnimation 레거시 표기)
 - [✅] 코드 예시가 실행 가능한 형태임
 
-### 4-2. 구조 완전성
+### 3-2. 구조 완전성
 - [✅] YAML frontmatter 포함 (name, description)
 - [✅] 소스 URL과 검증일 명시
 - [✅] 핵심 개념 설명 포함
 - [✅] 코드 예시 포함
-- [✅] 언제 사용 / 언제 사용하지 않을지 기준 포함
+- [✅] 언제 사용 / 언제 사용하지 않을지 기준 포함 (CSS vs motion 선택 기준표)
 - [✅] 흔한 실수 패턴 포함
 
-### 4-3. 실용성
+### 3-3. 실용성
 - [✅] 에이전트가 참조했을 때 실제 코드 작성에 도움이 되는 수준
 - [✅] 지나치게 이론적이지 않고 실용적인 예시 포함
 - [✅] 범용적으로 사용 가능 (특정 프로젝트 종속 X)
 
-### 4-4. Claude Code 에이전트 활용 테스트
-- [✅] 공식 문서 1순위 소스 확인
-- [✅] deprecated 패턴 제외 (framer-motion → motion/react 반영)
-- [✅] 버전 명시
-- [✅] Claude Code에서 실제 활용 테스트 (frontend-architect, 수정 후 APPROVED)
+### 3-4. Claude Code 에이전트 활용 테스트
+- [❌] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (미실시)
+- [❌] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (미실시)
+- [❌] 잘못된 응답이 나오는 경우 스킬 내용 보완 (미실시)
 
 ---
 
 ## 5. 테스트 진행 기록
 
-### 테스트 케이스 1: frontend-architect 에이전트 활용 테스트
+### 교차 검증 클레임 목록
 
-**테스트 방법:** frontend-architect 에이전트에게 animation 관련 설계 질문 및 코드 리뷰 요청
+| 클레임 | 판정 | 비고 |
+|--------|------|------|
+| 패키지명이 `motion`이며 `framer-motion`은 마이그레이션 필요 | VERIFIED | motion.dev 업그레이드 가이드, npm |
+| import 경로는 `motion/react` | VERIFIED | motion.dev 공식 문서 |
+| `motion.create()`로 커스텀 컴포넌트 래핑 (이전 `motion()` 대체) | VERIFIED | motion 11+ API 변경, 공식 문서 |
+| motion 12에서 React 파괴적 변경 없음 | VERIFIED | motion.dev 업그레이드 가이드, GitHub CHANGELOG |
+| LazyMotion features: `domAnimation`(경량) / `domMax`(전체) | VERIFIED | motion.dev LazyMotion 문서 |
+| LazyMotion 초기 렌더 ~4.6kb | VERIFIED (주의 표기) | 공식 문서 수치 확인, 버전별 변동 가능성 있어 주의 유지 |
+| `useAnimate`가 `useAnimation`/`useAnimationControls`를 대체 | VERIFIED | 공식 문서, GitHub discussions 2개 소스 |
+| `useScroll`로 스크롤 기반 애니메이션 / `useTransform`으로 값 변환 | VERIFIED | motion.dev 스크롤 애니메이션 문서 |
+| `useSpring`의 `skipInitialAnimation` 옵션 (motion 12.36+) | VERIFIED | motion.dev changelog 2026-03-09 |
+| `useInView` 약 0.6kb 경량 훅 | VERIFIED | motion.dev useInView 문서 |
+| `useReducedMotion` 훅 + `MotionConfig reducedMotion` 옵션 | VERIFIED | motion.dev 접근성 문서 |
+| AnimatePresence mode: "sync" / "wait" / "popLayout" | VERIFIED | motion.dev AnimatePresence 문서 |
+| `layout="x"` / `layout="y"` 축별 레이아웃 애니메이션 (motion 12.36+) | VERIFIED | motion.dev changelog 2026-03-09 |
+| `dragSnapToOrigin`에 "x"/"y" 축별 지정 (motion 12.36+) | VERIFIED | motion.dev changelog 2026-03-09 |
+| `whileTap` 요소에 tabindex="0" 자동 부여 (키보드 접근성) | VERIFIED | motion.dev changelog |
+| `motion/react-client` — Server Component에서 "use client" 없이 사용 | VERIFIED | motion.dev 설치 가이드, GitHub discussions #3184 |
+| React 19에서 `forwardRef` 불필요, ref를 일반 prop으로 전달 | VERIFIED | react.dev, 블로그 2개 소스 |
 
-**발견 및 수정 사항:**
-- import 경로 변경: `from 'framer-motion'` → `from 'motion/react'` (패키지명 변경, 5곳 모두 수정)
-- 번들 크기 수치 오류: `~50KB` → `~34KB (LazyMotion: ~4.6KB)` 수정
+---
 
-**판정:** ✅ PASS
+### 테스트 케이스 1: 마이그레이션 import 경로
+
+**입력 (질문/요청):**
+```
+framer-motion에서 motion으로 마이그레이션할 때 import 경로를 어떻게 바꿔야 해?
+```
+
+**기대 결과:**
+```
+"framer-motion" → "motion/react" 로 변경.
+motion.create() 로 커스텀 컴포넌트 래핑 방식도 업데이트 필요.
+pnpm add motion && pnpm remove framer-motion
+```
+
+**실제 결과:**
+```
+미실시
+```
+
+**판정:** ⚠️ PARTIAL (스킬에 명시됨, 실제 에이전트 응답 미확인)
+
+---
+
+### 테스트 케이스 2: LazyMotion 기능 범위 선택
+
+**입력 (질문/요청):**
+```
+LazyMotion에서 domAnimation과 domMax 중 어떤 걸 써야 해? drag를 쓰려면?
+```
+
+**기대 결과:**
+```
+drag, layout, useScroll 등은 domMax에만 포함.
+domAnimation은 animate/exit/variants/whileHover/whileTap/whileInView.
+drag가 필요하면 domMax 사용.
+```
+
+**실제 결과:**
+```
+미실시
+```
+
+**판정:** ⚠️ PARTIAL (스킬 표에 명시됨, 실제 에이전트 응답 미확인)
 
 ---
 
@@ -119,14 +197,16 @@ status: APPROVED
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ PASS (frontend-architect) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ❌ (실행 전) |
+| **최종 판정** | **PENDING_TEST** |
 
 ---
 
 ## 7. 개선 필요 사항
 
-- 현재 없음
+- [❌] frontend-developer 에이전트로 테스트 질문 수행 후 APPROVED 전환 필요
+- [❌] 실제 Next.js 프로젝트에서 motion/react-client 패턴 동작 확인
+- [❌] LazyMotion strict 모드에서 motion.div 사용 시 경고 확인
 
 ---
 
@@ -134,5 +214,7 @@ status: APPROVED
 
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
-| 2026-03-27 | v1 | 최초 작성 및 frontend-architect 활용 테스트 완료 | frontend-architect 에이전트 |
-| 2026-04-17 | v2 | verification.md 신규 8섹션 포맷으로 마이그레이션 | 메인 대화 오케스트레이션 |
+| 2026-03-27 | v1 | 최초 작성 (framer-motion 기준) | frontend-architect 에이전트 |
+| 2026-04-14 | v2 | frontend-architect 활용 테스트 APPROVED | frontend-architect 에이전트 |
+| 2026-04-17 | v3 | verification.md 8섹션 포맷 마이그레이션 | 메인 대화 |
+| 2026-04-20 | v4 | WebSearch+WebFetch 조사 기반 전면 재작성. motion 12.38.0 기준 반영. layout="x"/"y", dragSnapToOrigin 축별, skipInitialAnimation, whileTap 키보드 접근성, motion/react-client, useAnimate 권장 패턴, 교차 검증 17개 클레임 추가 | puk0806 |
