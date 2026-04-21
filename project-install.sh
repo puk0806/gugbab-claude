@@ -237,9 +237,18 @@ echo "[settings]"
 SETTINGS_FILE="$TARGET/.claude/settings.json"
 
 if [ -f "$SETTINGS_FILE" ]; then
-  echo "  ⚠ settings.json 이미 존재 — 건너뜀 (프로젝트 고유 설정 보존)"
-  echo "    참고 템플릿: $REPO_DIR/.claude/settings.json"
-else
+  echo "  ⚠ settings.json 이미 존재합니다."
+  read -rp "  덮어쓸까요? (y/N): " OVERWRITE_SETTINGS
+  if [ "$OVERWRITE_SETTINGS" = "y" ] || [ "$OVERWRITE_SETTINGS" = "Y" ]; then
+    echo "  → settings.json 덮어쓰기"
+  else
+    echo "  → 건너뜀 (프로젝트 고유 설정 보존)"
+    echo "    참고 템플릿: $REPO_DIR/.claude/settings.json"
+    OVERWRITE_SETTINGS="skip"
+  fi
+fi
+
+if [ ! -f "$SETTINGS_FILE" ] || ([ -f "$SETTINGS_FILE" ] && [ "$OVERWRITE_SETTINGS" != "skip" ]); then
   # 유틸과 개발 템플릿은 Write PostToolUse 훅 구성이 다름
   if [ "$TEMPLATE" = "util" ]; then
     cat > "$SETTINGS_FILE" << 'EOF'
@@ -373,8 +382,15 @@ if [ "$TEMPLATE" = "all" ]; then
 else
   CLAUDE_FILE="$TARGET/CLAUDE.md"
   if [ -f "$CLAUDE_FILE" ]; then
-    echo "  ⚠ CLAUDE.md 는 프로젝트 고유 파일 — 건너뜀 (수동 관리)"
-    echo "    최신 템플릿 참고: $REPO_DIR/examples/${TEMPLATE}-CLAUDE.md"
+    echo "  ⚠ CLAUDE.md 이미 존재합니다."
+    read -rp "  덮어쓸까요? (y/N): " OVERWRITE_CLAUDE
+    if [ "$OVERWRITE_CLAUDE" = "y" ] || [ "$OVERWRITE_CLAUDE" = "Y" ]; then
+      cp "$REPO_DIR/examples/${TEMPLATE}-CLAUDE.md" "$CLAUDE_FILE"
+      echo "  → CLAUDE.md 덮어쓰기 ($TEMPLATE 템플릿)"
+    else
+      echo "  → 건너뜀 (프로젝트 고유 파일 보존)"
+      echo "    최신 템플릿 참고: $REPO_DIR/examples/${TEMPLATE}-CLAUDE.md"
+    fi
   else
     cp "$REPO_DIR/examples/${TEMPLATE}-CLAUDE.md" "$CLAUDE_FILE"
     echo "  → CLAUDE.md ($TEMPLATE 템플릿, 최초 생성)"
