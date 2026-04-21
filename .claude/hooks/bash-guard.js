@@ -18,6 +18,16 @@
 const readline = require('readline')
 
 const DENY_PATTERNS = [
+  // verification.md / SKILL.md를 Bash(sed/awk/perl/echo/cat)로 직접 수정 차단
+  { pattern: /\bsed\b.*verification\.md/, reason: 'verification.md는 Bash(sed)로 수정할 수 없습니다. Write/Edit 도구를 사용하세요 (verification-guard 훅 통과 필수).' },
+  { pattern: /\bsed\b.*SKILL\.md/, reason: 'SKILL.md는 Bash(sed)로 수정할 수 없습니다. Write/Edit 도구를 사용하세요.' },
+  { pattern: /\bawk\b.*verification\.md/, reason: 'verification.md는 Bash(awk)로 수정할 수 없습니다. Write/Edit 도구를 사용하세요.' },
+  { pattern: /\bawk\b.*SKILL\.md/, reason: 'SKILL.md는 Bash(awk)로 수정할 수 없습니다. Write/Edit 도구를 사용하세요.' },
+  { pattern: /\bperl\b.*-[ip].*verification\.md/, reason: 'verification.md는 Bash(perl)로 수정할 수 없습니다. Write/Edit 도구를 사용하세요.' },
+  { pattern: /\bperl\b.*-[ip].*SKILL\.md/, reason: 'SKILL.md는 Bash(perl)로 수정할 수 없습니다. Write/Edit 도구를 사용하세요.' },
+  { pattern: /\becho\b.*>.*verification\.md/, reason: 'verification.md는 Bash(echo)로 수정할 수 없습니다. Write/Edit 도구를 사용하세요.' },
+  { pattern: /\bcat\b.*>.*verification\.md/, reason: 'verification.md는 Bash(cat)로 수정할 수 없습니다. Write/Edit 도구를 사용하세요.' },
+  // 기존 위험 패턴
   { pattern: /git\s+push\s+(--force|-f)\b/, reason: 'force push는 히스토리를 덮어씁니다. 직접 실행하세요.' },
   { pattern: /git\s+push\s+.*-f\b/, reason: 'force push 감지. 직접 실행하세요.' },
   { pattern: /rm\s+-rf\s+\/(bin|boot|dev|etc|lib|lib64|proc|root|sbin|sys|usr|var)(\/|$|\s|$)/, reason: '시스템 디렉토리 삭제는 차단됩니다.' },
