@@ -7,19 +7,23 @@ REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 echo ""
 echo "=== gugbab-claude 프로젝트 설치 ==="
 echo ""
-read -rp "프로젝트 경로를 입력하세요: " TARGET
 
-TARGET="${TARGET/#\~/$HOME}"  # ~ 를 절대경로로 변환
+while true; do
+  read -rp "프로젝트 경로를 입력하세요: " TARGET
+  TARGET="${TARGET/#\~/$HOME}"  # ~ 를 절대경로로 변환
 
-if [ -z "$TARGET" ]; then
-  echo "오류: 경로를 입력해주세요."
-  exit 1
-fi
+  if [ -z "$TARGET" ]; then
+    echo "오류: 경로를 입력해주세요."
+    continue
+  fi
 
-if [ ! -d "$TARGET" ]; then
-  echo "오류: '$TARGET' 디렉토리가 존재하지 않습니다."
-  exit 1
-fi
+  if [ ! -d "$TARGET" ]; then
+    echo "오류: '$TARGET' 디렉토리가 존재하지 않습니다."
+    continue
+  fi
+
+  break
+done
 
 # ── 템플릿 선택 ────────────────────────────────────────────────────────
 echo ""
@@ -30,19 +34,18 @@ echo "  2) react-spa  — React SPA"
 echo "  3) nextjs     — Next.js App Router"
 echo "  4) rust-axum  — Rust + Axum 백엔드"
 echo ""
-read -rp "번호 입력 (0/1/2/3/4): " TEMPLATE_NUM
 
-case "$TEMPLATE_NUM" in
-  0) TEMPLATE="all" ;;
-  1) TEMPLATE="util" ;;
-  2) TEMPLATE="react-spa" ;;
-  3) TEMPLATE="nextjs" ;;
-  4) TEMPLATE="rust-axum" ;;
-  *)
-    echo "오류: 올바른 번호를 입력하세요 (0, 1, 2, 3, 4)"
-    exit 1
-    ;;
-esac
+while true; do
+  read -rp "번호 입력 (0/1/2/3/4): " TEMPLATE_NUM
+  case "$TEMPLATE_NUM" in
+    0) TEMPLATE="all"; break ;;
+    1) TEMPLATE="util"; break ;;
+    2) TEMPLATE="react-spa"; break ;;
+    3) TEMPLATE="nextjs"; break ;;
+    4) TEMPLATE="rust-axum"; break ;;
+    *) echo "오류: 0, 1, 2, 3, 4 중 하나를 입력하세요." ;;
+  esac
+done
 
 # ── 설치 시작 ─────────────────────────────────────────────────────────
 echo ""
@@ -78,15 +81,20 @@ done
 echo ""
 echo "[agents]"
 
-# 유틸: 범용 에이전트만 허용
+# 유틸: 범용 에이전트만 허용 (비개발자도 사용 가능한 것)
 UTIL_AGENTS=(
   "meta/planner.md"
   "meta/claude-code-guide.md"
   "research/deep-researcher.md"
   "research/web-searcher.md"
   "research/research-reviewer.md"
+  "research/data-analyst.md"
+  "research/competitor-analyst.md"
   "validation/fact-checker.md"
   "validation/source-validator.md"
+  "validation/qa-engineer.md"
+  "domain/product-planner.md"
+  "domain/ui-ux-designer.md"
 )
 
 # react-spa / nextjs: Rust 백엔드 에이전트 제외
@@ -190,6 +198,7 @@ for src_path in "$REPO_DIR/.claude/skills"/*/*/SKILL.md; do
   if [ "$TEMPLATE" = "util" ]; then
     [[ "$rel" == frontend/* ]] && continue
     [[ "$rel" == backend/* ]] && continue
+    [[ "$rel" == devops/* ]] && continue
     [[ "$rel" == architecture/* ]] && continue
   fi
 
@@ -238,14 +247,16 @@ SETTINGS_FILE="$TARGET/.claude/settings.json"
 
 if [ -f "$SETTINGS_FILE" ]; then
   echo "  ⚠ settings.json 이미 존재합니다."
-  read -rp "  덮어쓸까요? (y/N): " OVERWRITE_SETTINGS
-  if [ "$OVERWRITE_SETTINGS" = "y" ] || [ "$OVERWRITE_SETTINGS" = "Y" ]; then
-    echo "  → settings.json 덮어쓰기"
-  else
-    echo "  → 건너뜀 (프로젝트 고유 설정 보존)"
-    echo "    참고 템플릿: $REPO_DIR/.claude/settings.json"
-    OVERWRITE_SETTINGS="skip"
-  fi
+  while true; do
+    read -rp "  덮어쓸까요? (y/N): " OVERWRITE_SETTINGS
+    case "$OVERWRITE_SETTINGS" in
+      y|Y) echo "  → settings.json 덮어쓰기"; break ;;
+      n|N|"") echo "  → 건너뜀 (프로젝트 고유 설정 보존)"
+              echo "    참고 템플릿: $REPO_DIR/.claude/settings.json"
+              OVERWRITE_SETTINGS="skip"; break ;;
+      *) echo "  y 또는 n을 입력하세요." ;;
+    esac
+  done
 fi
 
 if [ ! -f "$SETTINGS_FILE" ] || ([ -f "$SETTINGS_FILE" ] && [ "$OVERWRITE_SETTINGS" != "skip" ]); then
@@ -383,14 +394,16 @@ else
   CLAUDE_FILE="$TARGET/CLAUDE.md"
   if [ -f "$CLAUDE_FILE" ]; then
     echo "  ⚠ CLAUDE.md 이미 존재합니다."
-    read -rp "  덮어쓸까요? (y/N): " OVERWRITE_CLAUDE
-    if [ "$OVERWRITE_CLAUDE" = "y" ] || [ "$OVERWRITE_CLAUDE" = "Y" ]; then
-      cp "$REPO_DIR/examples/${TEMPLATE}-CLAUDE.md" "$CLAUDE_FILE"
-      echo "  → CLAUDE.md 덮어쓰기 ($TEMPLATE 템플릿)"
-    else
-      echo "  → 건너뜀 (프로젝트 고유 파일 보존)"
-      echo "    최신 템플릿 참고: $REPO_DIR/examples/${TEMPLATE}-CLAUDE.md"
-    fi
+    while true; do
+      read -rp "  덮어쓸까요? (y/N): " OVERWRITE_CLAUDE
+      case "$OVERWRITE_CLAUDE" in
+        y|Y) cp "$REPO_DIR/examples/${TEMPLATE}-CLAUDE.md" "$CLAUDE_FILE"
+             echo "  → CLAUDE.md 덮어쓰기 ($TEMPLATE 템플릿)"; break ;;
+        n|N|"") echo "  → 건너뜀 (프로젝트 고유 파일 보존)"
+                echo "    최신 템플릿 참고: $REPO_DIR/examples/${TEMPLATE}-CLAUDE.md"; break ;;
+        *) echo "  y 또는 n을 입력하세요." ;;
+      esac
+    done
   else
     cp "$REPO_DIR/examples/${TEMPLATE}-CLAUDE.md" "$CLAUDE_FILE"
     echo "  → CLAUDE.md ($TEMPLATE 템플릿, 최초 생성)"
