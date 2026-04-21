@@ -161,9 +161,19 @@ status: PENDING_TEST
 
 ---
 
-## 단계 6: README.md 업데이트 (Read + Edit — 필수)
+## 단계 6: README.md 업데이트 (gugbab-claude 전용)
 
-README.md의 스킬 목록 섹션에 새 스킬을 추가하고, 업데이트 로그에 날짜·변경 내용을 기록한다.
+먼저 프로젝트 루트에 `.gugbab-source` 파일이 존재하는지 확인한다.
+
+```
+Glob: .gugbab-source
+```
+
+- **파일 있음 (gugbab-claude)** → README.md 스킬 목록 섹션에 새 스킬 추가, 업데이트 로그에 날짜·변경 내용 기록
+- **파일 없음 (다른 프로젝트)** → README 업데이트 건너뜀. 사용자에게 안내:
+  ```
+  ℹ README 업데이트는 생략했습니다. 프로젝트 README에 직접 반영해주세요.
+  ```
 
 ---
 

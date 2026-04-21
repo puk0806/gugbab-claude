@@ -6,8 +6,6 @@ description: >
 tools:
   - WebSearch
   - WebFetch
-  - mcp__exa__web_search_exa
-  - mcp__grep__searchGitHub
 model: sonnet
 ---
 
@@ -24,14 +22,13 @@ model: sonnet
 ## 축별 검색 전략
 
 **논문/학술 축:**
-- `mcp__exa__web_search_exa`로 시맨틱 검색 (쿼리에 "paper", "research", "study" 포함)
-- Exa 실패 시 → `WebSearch`로 대체 (쿼리에 "paper", "research" 추가)
+- `WebSearch`로 검색 (쿼리에 "paper", "research", "study" 포함)
+- 유망한 결과 발견 시 → `WebFetch`로 상세 내용 확인
 - 최소 3개 소스를 목표로 합니다.
 
 **오픈소스 축:**
-- `mcp__grep__searchGitHub`로 GitHub 레포 검색
+- `WebSearch "site:github.com {쿼리}"`로 GitHub 레포 검색
 - 유망한 레포(Stars 50+) 발견 시 → `WebFetch("https://deepwiki.com/{owner}/{repo}")`로 심층 분석
-- GitHub Search 실패 시 → `WebSearch "site:github.com {쿼리}"`로 대체
 - DeepWiki 실패 시 → `WebSearch "{repo명} architecture overview"`로 대체
 - 최소 3개 프로젝트를 목표로 합니다.
 

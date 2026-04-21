@@ -194,6 +194,85 @@ gugbab-claude/
 
 ---
 
+## 다른 프로젝트에 설치하기
+
+gugbab-claude의 에이전트·훅·규칙을 다른 프로젝트에 심어서 팀 전체가 동일한 Claude Code 환경으로 작업할 수 있습니다.
+
+### 설치
+
+```bash
+cd ~/Desktop/gugbab-workspace/00_gugbab-claude
+./project-install.sh
+```
+
+실행하면 순서대로 입력을 요청합니다.
+
+```
+프로젝트 경로를 입력하세요: /Users/lf/Desktop/my-project
+
+템플릿을 선택하세요:
+  0) 전체       — 모든 에이전트·스킬·규칙 복사
+  1) 유틸       — 비개발자용 (리서치·검증·플래너 등 범용 에이전트만)
+  2) react-spa  — React SPA
+  3) nextjs     — Next.js App Router
+  4) rust-axum  — Rust + Axum 백엔드
+
+번호 입력 (0/1/2/3/4): 2
+```
+
+설치가 완료되면 대상 프로젝트에서 커밋합니다.
+
+```bash
+cd /Users/lf/Desktop/my-project
+git add .claude/ CLAUDE.md
+git commit -m '[config] Add: Claude Code 컨벤션 설정'
+git push
+```
+
+팀원은 `git clone` 후 Claude Code를 열면 바로 동일한 환경이 구성됩니다.
+
+### 설치되는 항목
+
+| 항목 | 동작 |
+|------|------|
+| `.claude/hooks/` | 같은 이름이면 덮어씌움 / 프로젝트 고유 훅은 유지 |
+| `.claude/agents/` | 같은 이름이면 덮어씌움 / 프로젝트 고유 에이전트는 유지 |
+| `.claude/rules/` | 같은 이름이면 덮어씌움 / 프로젝트 고유 규칙은 유지 |
+| `.claude/skills/` | 같은 이름이면 덮어씌움 / 프로젝트 고유 스킬은 유지 |
+| `.claude/settings.json` | 이미 있으면 건너뜀 (프로젝트 고유 권한·훅 설정 보존) |
+| `CLAUDE.md` | 이미 있으면 건너뜀 (프로젝트 고유 내용 보존) |
+
+### gugbab-claude 업데이트 후 갱신
+
+gugbab-claude에 에이전트·훅·규칙이 추가되거나 수정되면 동일한 스크립트를 다시 실행해 프로젝트에 반영합니다.
+
+```bash
+# gugbab-claude 최신화
+cd ~/Desktop/gugbab-workspace/00_gugbab-claude
+git pull
+
+# 대상 프로젝트에 갱신
+./project-install.sh
+# 경로·템플릿 입력 후 자동으로 덮어씌워짐
+
+# 변경 내용 커밋
+cd /Users/lf/Desktop/my-project
+git add .claude/
+git commit -m '[config] Update: Claude Code 컨벤션 업데이트'
+git push
+```
+
+> **CLAUDE.md와 settings.json은 갱신하지 않습니다.**
+>
+> 두 파일은 프로젝트마다 직접 수정하는 파일입니다.
+> - `CLAUDE.md` — 프로젝트명, 실행 명령어, 팀 고유 규칙이 담겨 있음
+> - `settings.json` — 프로젝트 고유 권한 설정, 추가 훅 연결이 담겨 있음
+>
+> 덮어쓰면 프로젝트에서 작성한 내용이 전부 사라지므로 건너뜁니다.
+> hooks·agents·rules는 gugbab-claude가 원본이므로 같은 이름의 파일은 최신 버전으로 덮어쓰고, 프로젝트 고유 파일은 그대로 유지합니다.
+
+---
+
 ## Claude Code 빠른 참조
 
 ```bash
@@ -224,4 +303,4 @@ claude --continue             # 이전 대화 이어서
 | 2026-04-14~15 | 프론트엔드 스킬 23개 전체 frontend-architect 활용 테스트 완료 및 APPROVED, 스킬 폴더 구조 정리(backend/ · frontend/ 2단계 분류), frontend-developer 에이전트 추가 |
 | 2026-04-16~17 | 도메인 분석 에이전트 2종 추가(business-domain-analyst·codebase-domain-analyst), domain/ 카테고리 신설, 훅 단일 책임 분리(permission-judge → auto-approve·bash-guard 2파일), skill-guard 제거(skill-creator Write 충돌 해소), skill-creator 아키텍처 개편(Agent 도구 제거 → WebSearch/WebFetch 직접 조사·검증으로 중첩 제한 해소), verification-guard PostToolUse 훅 추가(verification.md 품질 자동 검증), DDD 아키텍처 스킬 추가(fact-checker 재검증 DISPUTED 3건 수정 반영, PENDING_TEST) |
 | 2026-04-17 | 백엔드 스킬 14종 WebSearch 교차 검증 및 DISPUTED 항목 수정, 전체 43개 스킬 verification.md 8섹션 포맷 마이그레이션, 헤드리스 UI 패키지 대응 프론트엔드 스킬 추가·업데이트 (radix-ui·design-token-scss 신규 추가, sass·component-design asChild/Slot·data-attribute 패턴 보완) |
-| 2026-04-20 | CRA → Vite 마이그레이션 관련 프론트엔드 스킬 4종 추가, CLAUDE.md 경량화 및 디렉토리별 CLAUDE.md 분리, bash-guard PostToolUse 핸들러 추가, session-summary 훅 추가 (Stop 이벤트 세션 요약), planner 에이전트 추가, build-error-resolver 에이전트 추가, rules/typescript·rust 언어별 코딩 규칙 분리, agents/frontend·backend CLAUDE.md 추가 (규칙 자동 로드), continuous-learning 메타 스킬 추가, examples/ CLAUDE.md 템플릿 3종 추가 (react-spa·nextjs·rust-axum) |
+| 2026-04-20 | CRA → Vite 마이그레이션 관련 프론트엔드 스킬 4종 추가, CLAUDE.md 경량화 및 디렉토리별 CLAUDE.md 분리, bash-guard PostToolUse 핸들러 추가, session-summary 훅 추가 (Stop 이벤트 세션 요약), planner 에이전트 추가, build-error-resolver 에이전트 추가, rules/typescript·rust 언어별 코딩 규칙 분리, agents/frontend·backend CLAUDE.md 추가 (규칙 자동 로드), continuous-learning 메타 스킬 추가, examples/ CLAUDE.md 템플릿 3종 추가 (react-spa·nextjs·rust-axum), project-install.sh 추가 (다른 프로젝트에 Claude Code 컨벤션 이식) |

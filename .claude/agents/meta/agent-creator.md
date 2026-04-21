@@ -134,6 +134,22 @@ model: {opus|sonnet|haiku}
 
 ---
 
+## 단계 5: README.md 업데이트 (gugbab-claude 전용)
+
+먼저 프로젝트 루트에 `.gugbab-source` 파일이 존재하는지 확인한다.
+
+```
+Glob: .gugbab-source
+```
+
+- **파일 있음 (gugbab-claude)** → README.md 에이전트 목록 섹션에 새 에이전트 추가, 업데이트 로그에 날짜·변경 내용 기록
+- **파일 없음 (다른 프로젝트)** → README 업데이트 건너뜀. 사용자에게 안내:
+  ```
+  ℹ README 업데이트는 생략했습니다. 프로젝트 README에 직접 반영해주세요.
+  ```
+
+---
+
 ## 에러 핸들링
 
 - 카테고리 폴더 없으면 → agent-design.md 폴더 구조 기준으로 새 카테고리 생성
