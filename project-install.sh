@@ -271,7 +271,7 @@ if [ ! -f "$SETTINGS_FILE" ] || ([ -f "$SETTINGS_FILE" ] && [ "$OVERWRITE_SETTIN
   },
   "permissions": {
     "allow": [
-      "Bash(node*)", "Bash(npx*)", "Bash(pnpm*)", "Bash(npm*)",
+      "Bash(node*)", "Bash(npx*)", "Bash(pnpm*)", "Bash(npm*)", "Bash(codex*)",
       "Bash(git status*)", "Bash(git diff*)", "Bash(git log*)",
       "Bash(git branch*)", "Bash(git show*)", "Bash(git remote*)",
       "Bash(git add*)", "Bash(git stash*)", "Bash(git fetch*)",
@@ -330,7 +330,7 @@ EOF
   },
   "permissions": {
     "allow": [
-      "Bash(node*)", "Bash(npx*)", "Bash(pnpm*)", "Bash(npm*)",
+      "Bash(node*)", "Bash(npx*)", "Bash(pnpm*)", "Bash(npm*)", "Bash(codex*)",
       "Bash(git status*)", "Bash(git diff*)", "Bash(git log*)",
       "Bash(git branch*)", "Bash(git show*)", "Bash(git remote*)",
       "Bash(git add*)", "Bash(git stash*)", "Bash(git fetch*)",

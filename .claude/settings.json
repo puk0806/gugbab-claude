@@ -10,6 +10,7 @@
       "Bash(npx*)",
       "Bash(pnpm*)",
       "Bash(npm*)",
+      "Bash(codex*)",
       "Bash(git status*)",
       "Bash(git diff*)",
       "Bash(git log*)",
