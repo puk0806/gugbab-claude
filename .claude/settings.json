@@ -1,5 +1,9 @@
 {
   "defaultMode": "auto",
+  "enabledPlugins": {
+    "codex@openai-codex": true,
+    "superpowers@superpowers-marketplace": true
+  },
   "permissions": {
     "allow": [
       "Bash(node*)",

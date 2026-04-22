@@ -265,6 +265,10 @@ if [ ! -f "$SETTINGS_FILE" ] || ([ -f "$SETTINGS_FILE" ] && [ "$OVERWRITE_SETTIN
     cat > "$SETTINGS_FILE" << 'EOF'
 {
   "defaultMode": "auto",
+  "enabledPlugins": {
+    "codex@openai-codex": true,
+    "superpowers@superpowers-marketplace": true
+  },
   "permissions": {
     "allow": [
       "Bash(node*)", "Bash(npx*)", "Bash(pnpm*)", "Bash(npm*)",
@@ -320,6 +324,10 @@ EOF
     cat > "$SETTINGS_FILE" << 'EOF'
 {
   "defaultMode": "auto",
+  "enabledPlugins": {
+    "codex@openai-codex": true,
+    "superpowers@superpowers-marketplace": true
+  },
   "permissions": {
     "allow": [
       "Bash(node*)", "Bash(npx*)", "Bash(pnpm*)", "Bash(npm*)",
