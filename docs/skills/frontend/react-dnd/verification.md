@@ -170,8 +170,8 @@ getEmptyImage import 경로(react-dnd-html5-backend)와 captureDraggingState 옵
 
 > 검증 과정에서 발견된 문제점 및 TODO
 
-- [❌] frontend-developer 에이전트로 실제 활용 테스트 수행
-- [❌] @dnd-kit 번들 크기 비교 수치 bundlephobia로 정확히 확인 (현재 `> 주의:` 표기 처리됨)
+- [✅] 에이전트 활용 테스트 — 리스트 드래그 정렬 + 커스텀 프리뷰 2건 PASS (섹션 5 기록, 2026-04-20)
+- [⏸️] @dnd-kit 번들 크기 비교 bundlephobia 수치 확인 — 현재 `> 주의:` 표기 처리됨, 검증 보강 선택 사항
 
 ---
 

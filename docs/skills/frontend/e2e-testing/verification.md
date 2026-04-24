@@ -232,8 +232,8 @@
 > 검증 과정에서 발견된 문제점 및 TODO
 
 - [✅] CLI 에이전트 테스트 수행 후 APPROVED 전환
-- [❌] v1.57의 Chrome for Testing 전환에 대한 세부 영향 모니터링 (기존 테스트 호환성)
-- [❌] WebFetch SSL 오류로 공식 문서 본문 직접 확인 불가 — 추후 재검증 권장
+- [📅] v1.57의 Chrome for Testing 전환 세부 영향 모니터링 — 기존 테스트 호환성 주기적 점검
+- [⏸️] WebFetch SSL 오류로 공식 문서 본문 직접 확인 불가 — WebSearch 요약 인용으로 대체 완료, 재검증은 선택 사항
 
 ---
 

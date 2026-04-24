@@ -122,9 +122,9 @@ status: APPROVED
 
 ## 7. 개선 필요 사항
 
-- [❌] frontend-developer / frontend-architect 에이전트 활용 테스트
-- [❌] 번들 크기 gzip 수치 확인 (bundlephobia 접근 실패로 미기재)
-- [❌] @virtuoso.dev/masonry 별도 패키지 상세 API 문서화 여부 검토
+- [✅] 에이전트 활용 테스트 — 채팅 자동 스크롤 + 가상화 디버깅 + API 최신성 3건 PASS (섹션 5 기록, 2026-04-20)
+- [⏸️] 번들 크기 gzip 수치 확인 — bundlephobia 접근 실패로 미기재, 재시도 선택 사항
+- [⏸️] @virtuoso.dev/masonry 별도 패키지 상세 API 문서화 — 선택 보강, 차단 요인 아님
 
 ---
 

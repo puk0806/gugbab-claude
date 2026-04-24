@@ -167,8 +167,8 @@ await expect 패턴, fn() spy 모두 포함. 올바른 답 도출 가능.
 
 ## 7. 개선 필요 사항
 
-- [❌] 실사용 테스트 — frontend-developer 에이전트로 스토리 작성 요청 후 품질 확인
-- [❌] Storybook Test addon (Vitest 통합) 섹션 추가 검토 — 8.x에서 Vitest와의 통합 방식 공식 docs에 존재
+- [✅] 실사용 테스트 — 에이전트 CSF 3.0 + play function 2건 PASS (섹션 5 기록, 2026-04-20)
+- [⏸️] Storybook Test addon (Vitest 통합) 섹션 추가 — 선택 보강, 차단 요인 아님
 
 ---
 

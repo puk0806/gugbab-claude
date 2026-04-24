@@ -29,7 +29,7 @@ gugbab-claude/
     │   ├── research/             ← 리서치
     │   ├── validation/           ← 검증
     │   ├── frontend/             ← 프론트엔드 개발
-    │   ├── backend/              ← Rust 백엔드 개발
+    │   ├── backend/              ← Rust · Java 백엔드 개발
     │   ├── domain/               ← 도메인 분석·기획·설계
     │   └── devops/               ← DevOps·배포
     ├── hooks/
@@ -41,8 +41,8 @@ gugbab-claude/
     ├── rules/                    ← 상황별 규칙 (git, typescript, rust 등)
     ├── settings.json             ← 훅 등록 설정
     └── skills/
-        ├── frontend/             ← 프론트엔드 스킬 (38종)
-        ├── backend/              ← Rust 백엔드 스킬 (19종)
+        ├── frontend/             ← 프론트엔드 스킬 (39종)
+        ├── backend/              ← Rust 백엔드 (19종) + Java 백엔드 (22종)
         ├── devops/               ← DevOps 스킬 (2종)
         ├── architecture/         ← 아키텍처 스킬 (1종)
         └── meta/                 ← 프로젝트 관리 스킬 (1종)
@@ -63,6 +63,7 @@ gugbab-claude/
 | [claude-code-guide](./.claude/agents/meta/claude-code-guide.md) | Claude Code CLI·hooks·MCP·settings·Anthropic SDK 사용법 안내 | - |
 | [planner](./.claude/agents/meta/planner.md) | 복잡한 요청을 단계별 실행 계획으로 분해, 에이전트·스킬 매핑 | - |
 | [freshness-auditor](./.claude/agents/meta/freshness-auditor.md) | 에이전트·스킬 전체 감사 — 모델 deprecated, 버전 outdated, 검증일 만료, verification.md 누락 점검 | - |
+| [skill-tester](./.claude/agents/meta/skill-tester.md) | PENDING_TEST 스킬의 2단계 실사용 테스트 자동 수행 — SKILL.md 기반 실전 질문 생성, general-purpose로 답변 확인, verification.md 업데이트·상태 전환까지 자기 완결 | - |
 
 ### research
 
@@ -95,6 +96,8 @@ gugbab-claude/
 |---------|------|------|
 | [rust-backend-developer](./.claude/agents/backend/rust-backend-developer.md) | Rust + Axum 핸들러·서비스·라우터 코드 구현 | - |
 | [rust-backend-architect](./.claude/agents/backend/rust-backend-architect.md) | Rust + Axum 아키텍처 설계 — 크레이트 구조, 레이어드 아키텍처, 트레이트 추상화 | - |
+| [java-backend-developer](./.claude/agents/backend/java-backend-developer.md) | Java + Spring Boot 코드 구현 — 레거시(SB 2.5/Java 11/MyBatis/WAR) 및 모던(SB 3.x/Java 21) 양쪽 대응, 컴파일 에러 수정 | - |
+| [java-backend-architect](./.claude/agents/backend/java-backend-architect.md) | Java + Spring Boot 아키텍처 설계 — 멀티 데이터소스, 캐시 계층, 레거시→모던 마이그레이션 판단, 트레이드오프 | - |
 | [build-error-resolver](./.claude/agents/backend/build-error-resolver.md) | Rust/TypeScript/Vite 빌드·컴파일·타입 에러 전담 진단·수정 | - |
 
 ### domain
@@ -168,6 +171,7 @@ gugbab-claude/
 | [vite-pwa-service-worker](./.claude/skills/frontend/vite-pwa-service-worker/SKILL.md) | Vite PWA/Service Worker — vite-plugin-pwa, generateSW/injectManifest 전략, 기존 커스텀 SW 마이그레이션 | [→](./docs/skills/frontend/vite-pwa-service-worker/verification.md) |
 | [react-dnd](./.claude/skills/frontend/react-dnd/SKILL.md) | react-dnd 16.x 드래그앤드롭 — DndProvider, useDrag/useDrop/useDragLayer, 리스트 순서 변경, 커스텀 프리뷰, 중첩 드롭, Next.js SSR 주의사항, @dnd-kit 선택 기준 | [→](./docs/skills/frontend/react-dnd/verification.md) |
 | [tsup](./.claude/skills/frontend/tsup/SKILL.md) | esbuild 기반 TypeScript 라이브러리 번들러 — CJS/ESM 동시 출력, DTS 생성, exports 필드 설정, 모노레포 공유 패키지 빌드 패턴 | [→](./docs/skills/frontend/tsup/verification.md) |
+| [rsbuild](./.claude/skills/frontend/rsbuild/SKILL.md) | Rsbuild 2.x — Rspack 기반 고수준 웹 앱 빌드 툴, React/Vue/Svelte 플러그인, CRA·webpack 공식 마이그레이션, Module Federation, Vite/tsup/Rslib와의 선택 기준 | [→](./docs/skills/frontend/rsbuild/verification.md) |
 | [e2e-testing](./.claude/skills/frontend/e2e-testing/SKILL.md) | Playwright E2E 테스팅 — POM, 로케이터 전��, 네트워크 인터셉트, 인증 상태, 비주얼 회귀, CI, 샤딩 | [→](./docs/skills/frontend/e2e-testing/verification.md) |
 
 ---
@@ -215,6 +219,35 @@ gugbab-claude/
 
 ---
 
+### backend (Java)
+
+| 스킬 | 설명 | 검증 문서 |
+|------|------|----------|
+| [spring-boot-gradle-setup](./.claude/skills/backend/spring-boot-gradle-setup/SKILL.md) | Spring Boot 2.5 + Java 11 + WAR/Tomcat 9 (레거시) 와 SB 3.4 + Java 21 + Jar/Native (모던) 듀얼 커버, Gradle 빌드 설정, 마이그레이션 체크리스트 | [→](./docs/skills/backend/spring-boot-gradle-setup/verification.md) |
+| [mybatis-mapper-patterns](./.claude/skills/backend/mybatis-mapper-patterns/SKILL.md) | MyBatis Mapper 인터페이스+XML, 동적 SQL, resultMap, TypeHandler, Oracle/MySQL 특화, 페이징, N+1 방지 | [→](./docs/skills/backend/mybatis-mapper-patterns/verification.md) |
+| [spring-multi-datasource-oracle-mysql](./.claude/skills/backend/spring-multi-datasource-oracle-mysql/SKILL.md) | Oracle + MySQL 멀티 DataSource 구성, SqlSessionFactory 분리, @Transactional 네임드 매니저, HikariCP 풀 분리 | [→](./docs/skills/backend/spring-multi-datasource-oracle-mysql/verification.md) |
+| [hikaricp-tuning-oracle-mysql](./.claude/skills/backend/hikaricp-tuning-oracle-mysql/SKILL.md) | HikariCP 커넥션 풀 튜닝 — Oracle/MySQL 별 권장 설정, maxLifetime vs wait_timeout, Pool Exhaustion 진단, Micrometer 메트릭 | [→](./docs/skills/backend/hikaricp-tuning-oracle-mysql/verification.md) |
+| [spring-security-5-jwt-jjwt10](./.claude/skills/backend/spring-security-5-jwt-jjwt10/SKILL.md) | **레거시** Spring Security 5 + JWT (jjwt 0.10.7) — `WebSecurityConfigurerAdapter` 상속, 0.10.x `Jwts.parser()` API, `javax.servlet` | [→](./docs/skills/backend/spring-security-5-jwt-jjwt10/verification.md) |
+| [spring-security-6-jwt-jjwt12](./.claude/skills/backend/spring-security-6-jwt-jjwt12/SKILL.md) | **모던** Spring Security 6 + JWT (jjwt 0.12.x) — `SecurityFilterChain` Bean + 람다 DSL, 0.12.x `verifyWith`/`parseSignedClaims`, `jakarta.servlet`, Virtual Threads | [→](./docs/skills/backend/spring-security-6-jwt-jjwt12/verification.md) |
+| [global-exception-validation](./.claude/skills/backend/global-exception-validation/SKILL.md) | `@RestControllerAdvice` + `@ExceptionHandler`, 도메인 예외 계층, Bean Validation 표준 어노테이션, 커스텀 Validator, ErrorResponse DTO + traceId | [→](./docs/skills/backend/global-exception-validation/verification.md) |
+| [testing-junit5-spring-boot](./.claude/skills/backend/testing-junit5-spring-boot/SKILL.md) | JUnit 5 + Mockito + `@SpringBootTest`, `@MockBean`/`@MockitoBean`, `@MybatisTest`, MockMvc, AssertJ, Testcontainers (Oracle/MySQL) | [→](./docs/skills/backend/testing-junit5-spring-boot/verification.md) |
+| [lombok-mapstruct-modelmapper](./.claude/skills/backend/lombok-mapstruct-modelmapper/SKILL.md) | Lombok 어노테이션, MapStruct (컴파일타임, 고성능) vs ModelMapper (런타임, 편의) 선택 기준, `lombok-mapstruct-binding`, Record 지원 | [→](./docs/skills/backend/lombok-mapstruct-modelmapper/verification.md) |
+| [logback-mdc-tracing](./.claude/skills/backend/logback-mdc-tracing/SKILL.md) | Logback 설정, SLF4J+MDC, Spring Cloud Sleuth(레거시) vs Micrometer Tracing(모던) 분기, 비동기 컨텍스트 전파 | [→](./docs/skills/backend/logback-mdc-tracing/verification.md) |
+| [jasypt-encrypted-config](./.claude/skills/backend/jasypt-encrypted-config/SKILL.md) | `application.yml` 민감값 암호화 — `ENC(...)` 구문, 환경변수 키 주입, `PBEWITHHMACSHA512ANDAES_256`, 커스텀 `StringEncryptor` Bean | [→](./docs/skills/backend/jasypt-encrypted-config/verification.md) |
+| [xss-lucy-jsoup](./.claude/skills/backend/xss-lucy-jsoup/SKILL.md) | Naver Lucy XSS Servlet Filter(파라미터 레벨) + jsoup Safelist(HTML 본문) 조합 — 한국 엔터프라이즈 실무 패턴, CSP 헤더 | [→](./docs/skills/backend/xss-lucy-jsoup/verification.md) |
+| [jackson-time-migration](./.claude/skills/backend/jackson-time-migration/SKILL.md) | Joda-Time → java.time(JSR-310) 마이그레이션 — Jackson `JavaTimeModule`, `WRITE_DATES_AS_TIMESTAMPS=false`, 타입 매핑·점진 전환 | [→](./docs/skills/backend/jackson-time-migration/verification.md) |
+| [swagger-springfox-2](./.claude/skills/backend/swagger-springfox-2/SKILL.md) | **레거시** Springfox 2.9.2 / 3.0.0 — `@Api/@ApiOperation`, SB 2.6+ `PathPatternParser` NPE 해결책, Springdoc 전환 매핑 | [→](./docs/skills/backend/swagger-springfox-2/verification.md) |
+| [springdoc-openapi-3](./.claude/skills/backend/springdoc-openapi-3/SKILL.md) | **모던** Springdoc OpenAPI 2.x — OpenAPI 3.1 자동 활성화, `@Tag/@Operation/@Parameter`, Spring Security whitelist, JWT Bearer 설정 | [→](./docs/skills/backend/springdoc-openapi-3/verification.md) |
+| [redis-redisson-legacy](./.claude/skills/backend/redis-redisson-legacy/SKILL.md) | **레거시** Redisson 2.15.2 — 분산 락(`RLock.tryLock`), 분산 맵/셋/큐, spring-data-redis 2.6 역할 분담, `RedisCacheManager` | [→](./docs/skills/backend/redis-redisson-legacy/verification.md) |
+| [redis-redisson-modern](./.claude/skills/backend/redis-redisson-modern/SKILL.md) | **모던** Redisson 3.18.1+ — `RedissonClient` 자동 구성, Reactive/Async API, 2.x→3.x 마이그레이션(yaml 키 이동) | [→](./docs/skills/backend/redis-redisson-modern/verification.md) |
+| [ehcache-2-legacy](./.claude/skills/backend/ehcache-2-legacy/SKILL.md) | **레거시** EhCache 2.10.9.2 — `ehcache.xml`(TTL/LRU/maxEntriesLocalHeap), CacheEventListener, Redis 2계층 캐시 패턴 | [→](./docs/skills/backend/ehcache-2-legacy/verification.md) |
+| [aws-sdk-v1-s3-rekognition](./.claude/skills/backend/aws-sdk-v1-s3-rekognition/SKILL.md) | **레거시** AWS SDK v1 — S3 presigned URL, `TransferManager`, Rekognition DetectFaces/Labels, BOM 통일(2025-12 EOL 경고) | [→](./docs/skills/backend/aws-sdk-v1-s3-rekognition/verification.md) |
+| [aws-sdk-v2-s3-rekognition](./.claude/skills/backend/aws-sdk-v2-s3-rekognition/SKILL.md) | **모던** AWS SDK v2 — `S3Client`/`S3Presigner`/`S3TransferManager`, `RekognitionClient`, `AutoCloseable`, OpenRewrite 마이그레이션 도구 | [→](./docs/skills/backend/aws-sdk-v2-s3-rekognition/verification.md) |
+| [webflux-webclient-in-sync-app](./.claude/skills/backend/webflux-webclient-in-sync-app/SKILL.md) | WebMVC 블로킹 앱에서 `WebClient` 부분 비동기 사용 — Reactor Netty 타임아웃, `onStatus`, `Retry.backoff`, `MockWebServer` 테스트 | [→](./docs/skills/backend/webflux-webclient-in-sync-app/verification.md) |
+| [bouncycastle-crypto](./.claude/skills/backend/bouncycastle-crypto/SKILL.md) | BC 1.64 / 1.78.1 — AES-GCM/RSA-OAEP, X.509, PEM, KISA SEED/ARIA 표준, CVE 주의 | [→](./docs/skills/backend/bouncycastle-crypto/verification.md) |
+
+---
+
 ## 훅 (Hooks)
 
 | 훅 | 유형 | 설명 |
@@ -224,6 +257,7 @@ gugbab-claude/
 | [session-summary](./.claude/hooks/session-summary.js) | PostToolUse + Stop | 세션 중 수정된 파일을 누적 추적, 세션 종료 시 요약 출력 |
 | [verification-guard](./.claude/hooks/verification-guard.js) | PostToolUse | verification.md 구조·품질 자동 검증 (8개 섹션, 내장 지식 금지, 체크박스 완성도) |
 | [skill-md-guard](./.claude/hooks/skill-md-guard.js) | PostToolUse | SKILL.md 구조 자동 검증 (frontmatter name·description, > 소스:, > 검증일: 필수) |
+| [pending-test-guard](./.claude/hooks/pending-test-guard.js) | Stop | 오늘 생성·수정된 PENDING_TEST 스킬 중 verification.md 섹션 5에 오늘 날짜 수행 기록이 없는 경우 세션 종료 차단. skill-tester 호출 유도 |
 
 ---
 
@@ -244,13 +278,15 @@ cd ~/Desktop/gugbab-workspace/00_gugbab-claude
 프로젝트 경로를 입력하세요: /Users/lf/Desktop/my-project
 
 템플릿을 선택하세요:
-  0) 전체       — 모든 에이전트·스킬·규칙 복사
-  1) 유틸       — 비개발자용 (리서치·검증·플래너 등 범용 에이전트만)
-  2) react-spa  — React SPA
-  3) nextjs     — Next.js App Router
-  4) rust-axum  — Rust + Axum 백엔드
+  0) 전체              — 모든 에이전트·스킬·규칙 복사
+  1) 유틸              — 비개발자용 (리서치·검증·플래너 등 범용 에이전트만)
+  2) react-spa         — React SPA
+  3) nextjs            — Next.js App Router
+  4) rust-axum         — Rust + Axum 백엔드
+  5) java-spring-legacy — Java 11 + Spring Boot 2.5 + WAR + MyBatis
+  6) java-spring-modern — Java 21 + Spring Boot 3.x + Jar/Native + MyBatis
 
-번호 입력 (0/1/2/3/4): 2
+번호 입력 (0/1/2/3/4/5/6): 2
 ```
 
 설치가 완료되면 대상 프로젝트에서 커밋합니다.
@@ -337,4 +373,6 @@ claude --continue             # 이전 대화 이어서
 | 2026-04-16~17 | 도메인 분석 에이전트 2종 추가(business-domain-analyst·codebase-domain-analyst), domain/ 카테고리 신설, 훅 단일 책임 분리(permission-judge → auto-approve·bash-guard 2파일), skill-guard 제거(skill-creator Write 충돌 해소), skill-creator 아키텍처 개편(Agent 도구 제거 → WebSearch/WebFetch 직접 조사·검증으로 중첩 제한 해소), verification-guard PostToolUse 훅 추가(verification.md 품질 자동 검증), DDD 아키텍처 스킬 추가(fact-checker 재검증 DISPUTED 3건 수정 반영, PENDING_TEST) |
 | 2026-04-17 | 백엔드 스킬 14종 WebSearch 교차 검증 및 DISPUTED 항목 수정, 전체 43개 스킬 verification.md 8섹션 포맷 마이그레이션, 헤드리스 UI 패키지 대응 프론트엔드 스킬 추가·업데이트 (radix-ui·design-token-scss 신규 추가, sass·component-design asChild/Slot·data-attribute 패턴 보완) |
 | 2026-04-21 | 1인 스타트업 역할 확장 — 에이전트 6종 추가 (ui-ux-designer·qa-engineer·devops-engineer·api-spec-designer·data-analyst·competitor-analyst), devops 카테고리 신설, 스킬 3종 추가 (e2e-testing·docker-deployment·github-actions), product-planner WebSearch 검증 (성공 지표·비기능 요구사항 보완), verification-policy.md 규칙 추가 (APPROVED 전환 4단계 절차 강제, bash-guard 검증 파일 보호), 프론트엔드 스킬 12개 APPROVED 전환 (WebSearch 교차 검증 + 테스트 질문), 에이전트 docs 9개 생성, example 태그 보완 |
+| 2026-04-23 | Java 백엔드 스킬 12종 추가 (Tier 2 확장) — jasypt-encrypted-config, xss-lucy-jsoup, jackson-time-migration (COMMON), swagger-springfox-2, redis-redisson-legacy, ehcache-2-legacy, aws-sdk-v1-s3-rekognition (LEGACY_ONLY), springdoc-openapi-3, redis-redisson-modern, aws-sdk-v2-s3-rekognition (MODERN_ONLY), webflux-webclient-in-sync-app, bouncycastle-crypto (COMMON). 전부 2단계 에이전트 활용 테스트 PASS → APPROVED. project-install.sh `JAVA_SKILLS_*` 배열 확장 (COMMON 13 / LEGACY_ONLY 5 / MODERN_ONLY 4). Tier 1 Phase 4 gap 보강 완료 (spring-boot-gradle-setup §6.5 추가, 경미 gap 6건 보강, gradle-setup APPROVED 전환). 프론트엔드 스킬 1종 추가 — rsbuild (Rspack 기반 웹 앱 빌드 툴, CRA·webpack 마이그레이션, Module Federation, Vite/tsup/Rslib 선택 기준, 2단계 테스트 PASS → APPROVED). skill-tester 에이전트 개편 — 단계 5에 "섹션 7 체크박스 전환 + 섹션 8 변경 이력 행 추가" 의무 조항 추가, 단계 5.5(verification.md Read 재확인 체크리스트 6개) 신설, 중요 원칙에 섹션 5·6·7·8 전체 동기화 규칙 추가 (rsbuild 스킬 작업 중 발견된 섹션 5·6만 업데이트되고 섹션 7·8 cleanup 누락 이슈 대응). 전체 37개 verification.md 섹션 7 ❌ 항목 일괄 cleanup — 125개 ❌ → 0개(완료 ✅ 31 / 선택 보강 ⏸️ 64 / 미래 버전 📅 13 / 실환경 검증 🔬 21)로 정리해 "테스트 안 됨"으로 오해되던 문서 불일치 해소. pending-test-guard 훅 완화 — 섹션 5에 과거 수행 기록이 있으면 섹션 7/8 cleanup-only 수정을 통과시키도록 조건 변경 (신규 스킬 PENDING_TEST 차단 효과는 유지) |
+| 2026-04-22 | **테스트 강제화 체계 구축** — skill-tester 에이전트 신설 (PENDING_TEST 스킬 2단계 테스트 자동 수행), pending-test-guard Stop 훅 신설 (오늘 생성된 PENDING_TEST 중 섹션 5 수행 기록 없으면 세션 종료 차단), creation-workflow.md 5단계로 확장 (단계 5: skill-tester 호출 필수), 산출물 체크리스트에 "agent content test" + "수행일 기록" 항목 추가, Java Tier 1 10종에 2단계 테스트 수행 및 7종 APPROVED 전환 + 3종 (빌드/워크플로우/설정) agent test 기록 유지 / Java 백엔드 지원 추가 — rules/java.md (Java 11/21 듀얼 커버, MyBatis, 멀티 데이터소스, Spring Boot 2→3 마이그레이션 가이드) 추가, 에이전트 2종 추가 (java-backend-architect, java-backend-developer), Java 백엔드 스킬 10종 추가 (spring-boot-gradle-setup, mybatis-mapper-patterns, spring-multi-datasource-oracle-mysql, hikaricp-tuning-oracle-mysql, spring-security-5-jwt-jjwt10, spring-security-6-jwt-jjwt12, global-exception-validation, testing-junit5-spring-boot, lombok-mapstruct-modelmapper, logback-mdc-tracing), project-install.sh 템플릿 2종 추가 (java-spring-legacy, java-spring-modern), 플러그인 설정 프로젝트 scope 이관 (extraKnownMarketplaces 제거, enabledPlugins만 유지로 강제 설치 프롬프트 방지), `Bash(codex*)` 권한 추가, 글로벌(`~/.claude/`) CLAUDE.md·rules·agents 심볼릭 링크 정리 (프로젝트 scope 전용 원칙 확립), '요청된 것만 수정' 원칙을 CLAUDE.md·템플릿에 이식, CLAUDE.md 인코딩 깨짐 교정 |
 | 2026-04-20 | freshness-auditor 에이전트 추가 (에이전트·스킬 최신화 감사), typescript-v4·typescript-v5 스킬 추가 (TS 버전별 핵심 기능·tsconfig·마이그레이션), typescript 통합 스킬 제거 (v4·v5로 분리 대체), web-searcher MCP 도구 제거 (WebSearch/WebFetch 단순화), continuous-learning verification.md 보완, CRA → Vite 마이그레이션 관련 프론트엔드 스킬 4종 추가, animation 스킬 motion 12.x 기준 전면 재작성 (framer-motion → motion 마이그레이션·useScroll/useTransform/useSpring/useInView·LazyMotion), dayjs·storybook·swiper·react-dnd·tsup·mui-v5·react-virtuoso 프론트엔드 스킬 7종 추가 (공식 문서 WebSearch 기반 검증), CLAUDE.md 경량화 및 디렉토리별 CLAUDE.md 분리, bash-guard PostToolUse 핸들러 추가, session-summary 훅 추가, planner·build-error-resolver 에이전트 추가, rules/typescript·rust 언어별 코딩 규칙 분리, project-install.sh 추가 (다른 프로젝트에 Claude Code 컨벤션 이식) |

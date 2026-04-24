@@ -159,8 +159,8 @@ SKILL.md 마이그레이션 섹션(라인 576-604)에 format(date, 'yyyy-MM-dd')
 
 ## 7. 개선 필요 사항
 
-- [❌] frontend-developer 에이전트에서 dayjs 관련 테스트 케이스 3종 실행
-- [❌] Temporal API Safari 전체 지원 시점(2026년 말 예정) 이후 선택 기준 테이블 업데이트
+- [✅] 에이전트 활용 테스트 — 한국어 상대 시간 + date-fns 마이그레이션 2건 PASS (섹션 5 기록, 2026-04-20). 3번째 케이스는 선택 보강
+- [📅] Temporal API Safari 전체 지원 시점(2026년 말 예정) 이후 선택 기준 테이블 업데이트
 
 ---
 

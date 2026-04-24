@@ -179,8 +179,8 @@ SwiperClass 타입 + useState, onSwiper 콜백으로 인스턴스 보관,
 ## 7. 개선 필요 사항
 
 - [✅] Swiper 슬라이더 구현 테스트 — 히어로 배너, 커스텀 네비게이션 2건 + WebSearch 교차 검증 1건 PASS
-- [❌] Swiper 12.x 정식 마이그레이션 가이드 공개 시 CSS 변경사항 반영 (scss 소스 제거, SVG 네비게이션 아이콘)
-- [❌] React 19 + Swiper 11/12 호환성 실사용 테스트
+- [📅] Swiper 12.x 정식 마이그레이션 가이드 공개 시 CSS 변경사항 반영 (scss 소스 제거, SVG 네비게이션 아이콘)
+- [🔬] React 19 + Swiper 11/12 호환성 실사용 테스트 — 실환경 검증 대기
 
 ---
 

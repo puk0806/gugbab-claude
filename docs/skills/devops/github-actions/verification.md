@@ -226,8 +226,8 @@ docker/build-push-action@v6 (cache-from/cache-to: type=gha), permissions: packag
 ## 7. 개선 필요 사항
 
 - [✅] 에이전트 활용 테스트 실시 후 APPROVED로 상태 변경 (2026-04-20)
-- [❌] self-hosted runner 설정 패턴 추가 검토
-- [❌] GitHub Actions OIDC (id-token) 기반 클라우드 인증 심화 패턴 추가 검토
+- [⏸️] self-hosted runner 설정 패턴 추가 검토 — 선택 보강, 차단 요인 아님
+- [⏸️] GitHub Actions OIDC (id-token) 기반 클라우드 인증 심화 패턴 — 선택 보강, 차단 요인 아님
 
 ---
 

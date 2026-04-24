@@ -169,8 +169,8 @@ SKILL.md "Next.js App Router 통합" 섹션에서 완전한 ThemeRegistry 패턴
 
 ## 7. 개선 필요 사항
 
-- [❌] frontend-architect 또는 frontend-developer 에이전트에서 활용 테스트 실시
-- [❌] MUI v6 출시 시 마이그레이션 주의사항 추가 검토
+- [✅] 에이전트 활용 테스트 — 커스텀 palette + Next.js App Router 통합 2건 PASS (섹션 5 기록, 2026-04-20)
+- [📅] MUI v6 출시 시 마이그레이션 주의사항 추가 검토
 
 ---
 

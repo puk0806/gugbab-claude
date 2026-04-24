@@ -170,9 +170,9 @@ SKILL.md 4.7 섹션에서 node16/nodenext 모듈 해석 전략의 핵심 규칙(
 
 ## 7. 개선 필요 사항
 
-- [❌] WebSearch로 공식 문서 실시간 교차 검증 (도구 미제공으로 미실시)
-- [❌] frontend-developer 에이전트에서 4.x 특화 질문 테스트
-- [❌] 기존 typescript 스킬(5.x 기준)과의 참조 관계 정리
+- [✅] WebSearch로 공식 문서 실시간 교차 검증 — 2026-04-20 3개 클레임(satisfies, Template Literal Types, moduleResolution node16) VERIFIED
+- [✅] 에이전트 활용 테스트 — satisfies + moduleResolution node16 2건 PASS (섹션 5 기록)
+- [⏸️] 기존 typescript-v5 스킬과의 참조 관계 정리 — 선택 보강, 차단 요인 아님
 
 ---
 

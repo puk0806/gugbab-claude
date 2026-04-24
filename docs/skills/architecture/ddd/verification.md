@@ -219,7 +219,7 @@ DDD SKILL.md를 참조하여 분석.
 ## 7. 개선 필요 사항
 
 - [✅] business-domain-analyst 에이전트 실사용 테스트 수행 완료 (테스트 케이스 2)
-- [❌] CQRS, Event Sourcing 등 DDD 연관 패턴 별도 스킬 추가 검토
+- [⏸️] CQRS, Event Sourcing 등 DDD 연관 패턴 별도 스킬 추가 — 범위 확장 선택 사항, 차단 요인 아님
 
 ---
 

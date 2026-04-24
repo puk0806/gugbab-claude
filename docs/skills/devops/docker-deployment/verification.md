@@ -239,8 +239,8 @@ SKILL.md "docker-compose.yml (개발 / 프로덕션)" 섹션에서 정확한 패
 > 검증 과정에서 발견된 문제점 및 TODO
 
 - [✅] 에이전트 활용 테스트 3종 수행 후 결과 기록
-- [❌] Docker Hardened Images (DHI) 관련 내용 추가 검토 (Docker 공식 권장 이미지)
-- [❌] Docker Scout 이미지 취약점 스캔 워크플로우 추가 고려
+- [⏸️] Docker Hardened Images (DHI) 관련 내용 추가 검토 — 선택 보강, 차단 요인 아님
+- [⏸️] Docker Scout 이미지 취약점 스캔 워크플로우 추가 — 선택 보강, 차단 요인 아님
 
 ---
 
