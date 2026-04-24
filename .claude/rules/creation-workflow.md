@@ -16,7 +16,7 @@
 
 ---
 
-## 4단계 워크플로우
+## 5단계 워크플로우
 
 ### 단계 1: 조사 (Research)
 
@@ -81,6 +81,25 @@ SKILL.md 필수 포함:
 
 **이 단계를 생략하면 스킬 생성이 미완료 상태다.**
 
+### 단계 5: 2단계 실사용 테스트 (skill-tester 호출) — 생략 불가
+
+스킬 작성 직후(같은 세션 내) 반드시 `skill-tester` 에이전트를 호출하여 **verification-policy.md의 3·4단계**(테스트 질문 수행 + verification.md 업데이트)를 수행한다.
+
+```
+Agent(subagent_type="skill-tester", prompt="<skill-category/skill-name>")
+```
+
+skill-tester가 자동 수행하는 것:
+- SKILL.md Read 후 2~3개 실전 질문 생성
+- domain-specific 에이전트(또는 general-purpose)로 답변 실행
+- 근거 섹션 존재 여부·anti-pattern 회피 확인
+- verification.md의 섹션 5(테스트 진행 기록) + 섹션 6(검증 결과 요약) 업데이트
+- status 전환: PASS → `APPROVED` (또는 "실사용 필수 스킬" 카테고리면 PENDING_TEST 유지)
+
+**이 단계를 생략하고 세션을 종료하려 하면 `pending-test-guard` 훅이 차단한다.**
+
+"실사용 필수 스킬" 카테고리(`verification-policy.md` 참조)인 경우도 **agent content test는 반드시 수행·기록**해야 훅을 통과한다.
+
 ---
 
 ## 산출물 체크리스트
@@ -95,6 +114,8 @@ SKILL.md 필수 포함:
 - [ ] 버전 번호가 명시되어 있는가
 - [ ] 교차 검증 결과가 verification.md에 기록되어 있는가
 - [ ] DISPUTED 항목이 수정 반영되었는가
+- [ ] **skill-tester로 2단계 테스트 수행** (agent content test PASS)
+- [ ] **verification.md 섹션 5에 오늘 날짜 "수행일" 기록** (pending-test-guard 통과)
 
 ---
 

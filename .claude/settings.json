@@ -97,6 +97,7 @@
     "Stop": [
       {
         "hooks": [
+          { "type": "command", "command": "node .claude/hooks/pending-test-guard.js" },
           { "type": "command", "command": "node .claude/hooks/session-summary.js" }
         ]
       }

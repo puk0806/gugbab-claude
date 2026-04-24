@@ -28,22 +28,26 @@ done
 # ── 템플릿 선택 ────────────────────────────────────────────────────────
 echo ""
 echo "템플릿을 선택하세요:"
-echo "  0) 전체       — 모든 에이전트·스킬·규칙 복사"
-echo "  1) 유틸       — 비개발자용 (리서치·검증·플래너 등 범용 에이전트만)"
-echo "  2) react-spa  — React SPA"
-echo "  3) nextjs     — Next.js App Router"
-echo "  4) rust-axum  — Rust + Axum 백엔드"
+echo "  0) 전체              — 모든 에이전트·스킬·규칙 복사"
+echo "  1) 유틸              — 비개발자용 (리서치·검증·플래너 등 범용 에이전트만)"
+echo "  2) react-spa         — React SPA"
+echo "  3) nextjs            — Next.js App Router"
+echo "  4) rust-axum         — Rust + Axum 백엔드"
+echo "  5) java-spring-legacy — Java 11 + Spring Boot 2.5 + WAR + MyBatis"
+echo "  6) java-spring-modern — Java 21 + Spring Boot 3.x + Jar/Native + MyBatis"
 echo ""
 
 while true; do
-  read -rp "번호 입력 (0/1/2/3/4): " TEMPLATE_NUM
+  read -rp "번호 입력 (0/1/2/3/4/5/6): " TEMPLATE_NUM
   case "$TEMPLATE_NUM" in
     0) TEMPLATE="all"; break ;;
     1) TEMPLATE="util"; break ;;
     2) TEMPLATE="react-spa"; break ;;
     3) TEMPLATE="nextjs"; break ;;
     4) TEMPLATE="rust-axum"; break ;;
-    *) echo "오류: 0, 1, 2, 3, 4 중 하나를 입력하세요." ;;
+    5) TEMPLATE="java-spring-legacy"; break ;;
+    6) TEMPLATE="java-spring-modern"; break ;;
+    *) echo "오류: 0, 1, 2, 3, 4, 5, 6 중 하나를 입력하세요." ;;
   esac
 done
 
@@ -66,7 +70,7 @@ echo "[hooks]"
 if [ "$TEMPLATE" = "util" ]; then
   HOOKS=("bash-guard.js" "auto-approve.js" "session-summary.js")
 else
-  HOOKS=("bash-guard.js" "auto-approve.js" "session-summary.js" "verification-guard.js" "skill-md-guard.js")
+  HOOKS=("bash-guard.js" "auto-approve.js" "session-summary.js" "verification-guard.js" "skill-md-guard.js" "pending-test-guard.js")
 fi
 
 for hook in "${HOOKS[@]}"; do
@@ -97,16 +101,29 @@ UTIL_AGENTS=(
   "domain/ui-ux-designer.md"
 )
 
-# react-spa / nextjs: Rust 백엔드 에이전트 제외
+# react-spa / nextjs: Rust/Java 백엔드 에이전트 제외
 EXCLUDE_AGENTS_FRONTEND=(
   "backend/rust-backend-developer.md"
   "backend/rust-backend-architect.md"
+  "backend/java-backend-developer.md"
+  "backend/java-backend-architect.md"
 )
 
-# rust-axum: 프론트엔드 에이전트 제외
+# rust-axum: 프론트엔드·Java 에이전트 제외
 EXCLUDE_AGENTS_BACKEND=(
   "frontend/frontend-developer.md"
   "frontend/frontend-architect.md"
+  "backend/java-backend-developer.md"
+  "backend/java-backend-architect.md"
+)
+
+# java-spring-*: 프론트엔드·Rust 백엔드 에이전트 제외 (build-error-resolver는 Rust/TS/Vite 전용이라 Java 제외)
+EXCLUDE_AGENTS_JAVA=(
+  "frontend/frontend-developer.md"
+  "frontend/frontend-architect.md"
+  "backend/rust-backend-developer.md"
+  "backend/rust-backend-architect.md"
+  "backend/build-error-resolver.md"
 )
 
 for src_path in "$REPO_DIR/.claude/agents"/**/*.md "$REPO_DIR/.claude/agents"/*.md; do
@@ -122,22 +139,31 @@ for src_path in "$REPO_DIR/.claude/agents"/**/*.md "$REPO_DIR/.claude/agents"/*.
     $allowed || continue
   fi
 
-  # react-spa / nextjs: Rust 에이전트 제외
+  # react-spa / nextjs: Rust/Java 에이전트 제외
   if [ "$TEMPLATE" = "react-spa" ] || [ "$TEMPLATE" = "nextjs" ]; then
     skip=false
     for ex in "${EXCLUDE_AGENTS_FRONTEND[@]}"; do
       [ "$rel" = "$ex" ] && skip=true && break
     done
-    $skip && echo "  skip (rust전용) .claude/agents/$rel" && continue
+    $skip && echo "  skip (타언어 백엔드) .claude/agents/$rel" && continue
   fi
 
-  # rust-axum: 프론트엔드 에이전트 제외
+  # rust-axum: 프론트엔드·Java 에이전트 제외
   if [ "$TEMPLATE" = "rust-axum" ]; then
     skip=false
     for ex in "${EXCLUDE_AGENTS_BACKEND[@]}"; do
       [ "$rel" = "$ex" ] && skip=true && break
     done
-    $skip && echo "  skip (frontend전용) .claude/agents/$rel" && continue
+    $skip && echo "  skip (rust 외) .claude/agents/$rel" && continue
+  fi
+
+  # java-spring-*: 프론트엔드·Rust 에이전트 제외
+  if [ "$TEMPLATE" = "java-spring-legacy" ] || [ "$TEMPLATE" = "java-spring-modern" ]; then
+    skip=false
+    for ex in "${EXCLUDE_AGENTS_JAVA[@]}"; do
+      [ "$rel" = "$ex" ] && skip=true && break
+    done
+    $skip && echo "  skip (java 외) .claude/agents/$rel" && continue
   fi
 
   dest="$TARGET/.claude/agents/$rel"
@@ -190,9 +216,48 @@ if [ -f "$REPO_DIR/.claude/skills/CLAUDE.md" ]; then
   fi
 fi
 
+# Java 스킬 분류 (backend/ 아래에 Rust·Java 스킬이 혼재해 세밀한 필터 필요)
+JAVA_SKILLS_COMMON=(
+  "backend/spring-boot-gradle-setup"
+  "backend/mybatis-mapper-patterns"
+  "backend/spring-multi-datasource-oracle-mysql"
+  "backend/hikaricp-tuning-oracle-mysql"
+  "backend/global-exception-validation"
+  "backend/testing-junit5-spring-boot"
+  "backend/lombok-mapstruct-modelmapper"
+  "backend/logback-mdc-tracing"
+  "backend/jasypt-encrypted-config"
+  "backend/xss-lucy-jsoup"
+  "backend/jackson-time-migration"
+  "backend/webflux-webclient-in-sync-app"
+  "backend/bouncycastle-crypto"
+)
+JAVA_SKILLS_LEGACY_ONLY=(
+  "backend/spring-security-5-jwt-jjwt10"
+  "backend/swagger-springfox-2"
+  "backend/redis-redisson-legacy"
+  "backend/ehcache-2-legacy"
+  "backend/aws-sdk-v1-s3-rekognition"
+)
+JAVA_SKILLS_MODERN_ONLY=(
+  "backend/spring-security-6-jwt-jjwt12"
+  "backend/springdoc-openapi-3"
+  "backend/redis-redisson-modern"
+  "backend/aws-sdk-v2-s3-rekognition"
+)
+
+is_java_skill() {
+  local prefix="$1"
+  for s in "${JAVA_SKILLS_COMMON[@]}" "${JAVA_SKILLS_LEGACY_ONLY[@]}" "${JAVA_SKILLS_MODERN_ONLY[@]}"; do
+    [[ "$prefix" == "$s" ]] && return 0
+  done
+  return 1
+}
+
 for src_path in "$REPO_DIR/.claude/skills"/*/*/SKILL.md; do
   [ -f "$src_path" ] || continue
   rel="${src_path#$REPO_DIR/.claude/skills/}"
+  skill_prefix="${rel%/SKILL.md}"   # backend/foo
 
   # 유틸: 기술 스택 스킬 전부 제외
   if [ "$TEMPLATE" = "util" ]; then
@@ -202,20 +267,60 @@ for src_path in "$REPO_DIR/.claude/skills"/*/*/SKILL.md; do
     [[ "$rel" == architecture/* ]] && continue
   fi
 
-  # react-spa / nextjs: 백엔드 스킬 제외
+  # react-spa / nextjs: 백엔드 스킬 전부 제외
   if [ "$TEMPLATE" = "react-spa" ] || [ "$TEMPLATE" = "nextjs" ]; then
     if [[ "$rel" == backend/* ]]; then
-      echo "  skip (rust전용) .claude/skills/$rel"
+      echo "  skip (backend 제외) .claude/skills/$rel"
       continue
     fi
   fi
 
-  # rust-axum: 프론트엔드 스킬 제외
+  # rust-axum: 프론트엔드 + Java 스킬 제외
   if [ "$TEMPLATE" = "rust-axum" ]; then
     if [[ "$rel" == frontend/* ]]; then
-      echo "  skip (frontend전용) .claude/skills/$rel"
+      echo "  skip (frontend 제외) .claude/skills/$rel"
       continue
     fi
+    if [[ "$rel" == backend/* ]] && is_java_skill "$skill_prefix"; then
+      echo "  skip (java 스킬 제외) .claude/skills/$rel"
+      continue
+    fi
+  fi
+
+  # java-spring-legacy: 프론트엔드 + Rust 백엔드 + Security 6(모던) 제외
+  if [ "$TEMPLATE" = "java-spring-legacy" ]; then
+    if [[ "$rel" == frontend/* ]]; then
+      echo "  skip (frontend 제외) .claude/skills/$rel"
+      continue
+    fi
+    if [[ "$rel" == backend/* ]] && ! is_java_skill "$skill_prefix"; then
+      echo "  skip (rust 백엔드 제외) .claude/skills/$rel"
+      continue
+    fi
+    for m in "${JAVA_SKILLS_MODERN_ONLY[@]}"; do
+      if [[ "$skill_prefix" == "$m" ]]; then
+        echo "  skip (모던 전용 스킬 제외) .claude/skills/$rel"
+        continue 2
+      fi
+    done
+  fi
+
+  # java-spring-modern: 프론트엔드 + Rust 백엔드 + Security 5(레거시) 제외
+  if [ "$TEMPLATE" = "java-spring-modern" ]; then
+    if [[ "$rel" == frontend/* ]]; then
+      echo "  skip (frontend 제외) .claude/skills/$rel"
+      continue
+    fi
+    if [[ "$rel" == backend/* ]] && ! is_java_skill "$skill_prefix"; then
+      echo "  skip (rust 백엔드 제외) .claude/skills/$rel"
+      continue
+    fi
+    for l in "${JAVA_SKILLS_LEGACY_ONLY[@]}"; do
+      if [[ "$skill_prefix" == "$l" ]]; then
+        echo "  skip (레거시 전용 스킬 제외) .claude/skills/$rel"
+        continue 2
+      fi
+    done
   fi
 
   dest="$TARGET/.claude/skills/$rel"
@@ -369,6 +474,7 @@ EOF
     ],
     "Stop": [
       { "hooks": [
+        { "type": "command", "command": "node .claude/hooks/pending-test-guard.js" },
         { "type": "command", "command": "node .claude/hooks/session-summary.js" }
       ]}
     ],
