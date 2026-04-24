@@ -110,11 +110,44 @@ status: PENDING_TEST
 
 - 없음 (전 클레임 VERIFIED)
 
+### 4-6. 에이전트 활용 테스트
+
+- [✅] skill-tester 수행 (2026-04-24): 3개 실전 질문, 3/3 PASS
+
 ---
 
 ## 5. 테스트 진행 기록
 
-- 현재 없음 (PENDING_TEST 상태)
+**수행일**: 2026-04-24
+**수행자**: skill-tester → general-purpose (frontend-developer 에이전트 세션 미등록으로 대체)
+**수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
+
+### 실제 수행 테스트
+
+**Q1. craco cacheGroups → Vite manualChunks 변환 (객체형 + 함수형)**
+- PASS
+- 근거: SKILL.md "1. cacheGroups → manualChunks" 섹션 (L29-L123)
+- 상세: 객체 형식(L75-L81)과 함수형(L95-L120) 두 패턴 모두 제시. anti-pattern인 `webpackConfig.optimization.splitChunks` 직접 사용은 "흔한 실수 패턴 2번"(L339-L343)에서 명시적으로 경고. `manualChunks` 객체 형식에 존재하지 않는 패키지명을 넣으면 빌드 에러 주의도 L123에 포함.
+
+**Q2. babel-plugin-transform-remove-console → esbuild 대체, console.error 유지 조건**
+- PASS
+- 근거: SKILL.md "2. Babel 플러그인 → Vite 대응" 섹션 (L127-L164)
+- 상세: `esbuildOptions.drop: ['console']`이 기본 대체 경로이나 `console.error`도 제거된다는 함정을 L163 "주의:" 블록에 명확히 경고. 특정 메서드만 유지하려면 `pure: ['console.log', 'console.warn', 'console.debug']` 옵션을 사용하라는 안내(L150)가 있어 질문 조건에 충분히 답변 가능.
+
+**Q3. webpack-retry-chunk-load-plugin → vite:preloadError 이벤트 처리**
+- PASS
+- 근거: SKILL.md "3. Webpack 플러그인 → Vite 대응표" 및 "청크 로드 실패 재시도" 섹션 (L167-L207)
+- 상세: 대응표(L170)에서 `webpack-retry-chunk-load-plugin` → `vite:preloadError` 이벤트 리스너로 명시. `retryChunkPlugin()` 커스텀 인라인 플러그인 전체 코드와 `transformIndexHtml` 훅 패턴(L181-L207) 완비. npm 패키지 추가 없이 처리 가능함을 명확히 함.
+
+### 발견된 gap
+
+- 없음 (3/3 PASS, SKILL.md에 충분한 근거 존재)
+
+### 판정
+
+- agent content test: PASS (3/3)
+- verification-policy 분류: 빌드 설정 스킬 (출력 결과물 검증 필요) — 실사용 필수 카테고리
+- 최종 상태: PENDING_TEST 유지 (실제 프로젝트 빌드 결과 검증 후 APPROVED 전환)
 
 ---
 
@@ -125,14 +158,16 @@ status: PENDING_TEST
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ⏳ 미실시 (PENDING_TEST) |
-| **최종 판정** | **PENDING_TEST** |
+| 에이전트 활용 테스트 | ✅ 수행 완료 (2026-04-24, 3/3 PASS) |
+| **최종 판정** | **PENDING_TEST** (빌드 설정 카테고리 — 실 빌드 결과 검증 후 APPROVED 전환) |
 
 ---
 
 ## 7. 개선 필요 사항
 
-- 현재 없음
+- [✅] skill-tester가 agent content test 수행하고 섹션 5·6 업데이트 (2026-04-24 완료, 3/3 PASS)
+- [❌] 실제 프로젝트(lf-ui 또는 신규 Vite 프로젝트)에서 마이그레이션 적용 후 빌드 산출물 검증 → 차단 요인: APPROVED 전환 필수 조건 (빌드 설정 카테고리). 실전 도입 전까지 PENDING_TEST 유지.
+- [❌] esbuild `pure` vs `drop` 옵션 동작 차이를 실제 빌드로 확인 → 선택 보강 항목 (현재 SKILL.md 주의 문구로 충분히 안내됨)
 
 ---
 
@@ -141,3 +176,4 @@ status: PENDING_TEST
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
 | 2026-04-20 | v1 | 최초 작성, lf-ui craco.config.js 분석 기반, WebSearch 6개 클레임 교차 검증 (전항목 VERIFIED) | 메인 대화 |
+| 2026-04-24 | v1 | 2단계 실사용 테스트 수행 (Q1 cacheGroups→manualChunks / Q2 babel→esbuild console 제거 / Q3 vite:preloadError 청크 재시도) → 3/3 PASS, PENDING_TEST 유지 (빌드 설정 카테고리) | skill-tester |

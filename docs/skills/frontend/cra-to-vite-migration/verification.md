@@ -115,7 +115,36 @@ status: PENDING_TEST
 
 ## 5. 테스트 진행 기록
 
-- 현재 없음 (PENDING_TEST 상태)
+**수행일**: 2026-04-24
+**수행자**: skill-tester → general-purpose (frontend-developer 미등록으로 대체)
+**수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
+
+### 실제 수행 테스트
+
+**Q1. CRA SVG import (`ReactComponent as Logo`) → Vite 전환 방법**
+- PASS
+- 근거: SKILL.md "6단계: SVG import 수정" 섹션 + "흔한 실수 패턴 3. SVG ?react 쿼리 누락" 섹션
+- 상세: `npm install -D vite-plugin-svgr`, `plugins: [react(), svgr()]`, `import Logo from './logo.svg?react'` 모두 근거 존재. `?react` 없으면 URL 문자열 반환(런타임 에러) anti-pattern도 명시적으로 경고됨.
+
+**Q2. 환경 변수 전환 (process.env.REACT_APP_* → import.meta.env.VITE_*, NODE_ENV 처리, 접두사 없는 변수 처리)**
+- PASS
+- 근거: SKILL.md "5단계: 환경 변수 전환" 섹션 (내장 환경 변수 대응 테이블 포함) + "흔한 실수 패턴 2. process.env 잔존" + "흔한 실수 패턴 5. VITE_ 없는 변수 클라이언트 노출 불가" 섹션
+- 상세: `process.env.NODE_ENV` → `import.meta.env.MODE` 대응 테이블, `VITE_` 없는 변수 undefined 처리 모두 근거 존재.
+
+**Q3. Jest → Vitest 전환 후 @types/jest 타입 충돌 원인·해결 + jest.config.js 처리**
+- PASS
+- 근거: SKILL.md "8단계: Jest → Vitest 전환" 섹션 + "흔한 실수 패턴 6. jest.config.js와 vitest test 블록 중복" + "흔한 실수 패턴 7. @types/jest 잔존" 섹션
+- 상세: `npm uninstall @types/jest`, `jest.config.js` 삭제, tsconfig `"types": ["vite/client", "vitest/globals"]` 추가 모두 근거 존재. anti-pattern(두 가지 중복 잔존) 명시적 경고.
+
+### 발견된 gap
+
+- 없음. 3개 질문 모두 SKILL.md 내 명확한 근거 섹션에서 답변 도출 가능.
+
+### 판정
+
+- agent content test: PASS (3/3)
+- verification-policy 분류: 마이그레이션 (실사용 필수 카테고리)
+- 최종 상태: PENDING_TEST 유지 (실제 프로젝트 적용 후 APPROVED 전환 대상)
 
 ---
 
@@ -126,14 +155,15 @@ status: PENDING_TEST
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ⏳ 미실시 (PENDING_TEST) |
-| **최종 판정** | **PENDING_TEST** |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-04-24) |
+| **최종 판정** | **PENDING_TEST** (마이그레이션 카테고리 — 실제 프로젝트 적용 후 APPROVED 전환) |
 
 ---
 
 ## 7. 개선 필요 사항
 
-- 현재 없음
+- [✅] skill-tester가 content test 수행하고 섹션 5·6 업데이트 (2026-04-24 완료, 3/3 PASS)
+- [ ] 실제 프로젝트 적용 후 APPROVED 전환 — 차단 요인 아님 (선택 보강: 실전 도입 전에도 스킬 사용 가능, 적용 이후 흔한 실수 추가 보강 권장)
 
 ---
 
@@ -142,3 +172,4 @@ status: PENDING_TEST
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
 | 2026-04-20 | v1 | 최초 작성, WebSearch 6개 클레임 교차 검증 (전항목 VERIFIED) | 메인 대화 |
+| 2026-04-24 | v1 | 2단계 실사용 테스트 수행 (Q1 SVG import ?react 전환 / Q2 환경 변수 REACT_APP→VITE_ 전환 / Q3 @types/jest 충돌 해결) → 3/3 PASS, PENDING_TEST 유지 (마이그레이션 카테고리) | skill-tester |

@@ -109,11 +109,44 @@ status: PENDING_TEST
 
 - 없음 (전 클레임 VERIFIED)
 
+### 4-6. 에이전트 활용 테스트
+
+- [✅] skill-tester → general-purpose 에이전트 테스트 수행 (2026-04-24, 3/3 PASS)
+
 ---
 
 ## 5. 테스트 진행 기록
 
-- 현재 없음 (PENDING_TEST 상태)
+**수행일**: 2026-04-24
+**수행자**: skill-tester → general-purpose (frontend-developer 대체)
+**수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
+
+### 실제 수행 테스트
+
+**Q1. generateSW 전략에서 API는 NetworkFirst, 이미지는 CacheFirst로 캐싱 설정하는 방법**
+- PASS
+- 근거: SKILL.md "1. generateSW 전략 (기본)" 섹션의 `runtimeCaching` 배열 코드 예시 + "6. Workbox 캐싱 전략 선택 기준" 표
+- 상세: `urlPattern` + `handler: 'NetworkFirst'`/`'CacheFirst'` + `cacheName` + `expiration` 옵션 조합이 코드 예시로 완전히 제공됨. 캐싱 전략 선택 기준 표에서도 NetworkFirst는 API, CacheFirst는 이미지에 적합함을 명시
+
+**Q2. injectManifest 마이그레이션 시 self.__WB_MANIFEST 없이 빌드 에러를 피하는 방법**
+- PASS
+- 근거: SKILL.md "2. injectManifest 전략" 하위 "`self.__WB_MANIFEST` 없이 사용하는 경우" 코드 블록 + "흔한 실수 패턴 1. self.__WB_MANIFEST 누락"
+- 상세: `injectManifest: { injectionPoint: undefined }` 설정이 명시됨. 빌드 에러 메시지 "Unable to find a place to inject the manifest"까지 포함. anti-pattern(설정 없이 self.__WB_MANIFEST 생략)에 대한 경고도 명확
+
+**Q3. registerType: 'prompt'로 새 버전 배포 시 사용자 확인 후 즉시 업데이트 적용 코드**
+- PASS
+- 근거: SKILL.md "4. SW 업데이트 처리" 섹션 + "흔한 실수 패턴 3. registerType 미설정으로 SW 업데이트 안 됨"
+- 상세: `virtual:pwa-register`에서 `registerSW` import, `onNeedRefresh` 콜백에서 `updateSW(true)` 호출 패턴이 완전한 코드 예시로 제공됨. tsconfig `"vite-plugin-pwa/client"` 타입 추가 안내도 포함
+
+### 발견된 gap
+
+- 없음 (3/3 PASS, SKILL.md 내용이 각 질문에 충분한 근거 제공)
+
+### 판정
+
+- agent content test: PASS (3/3)
+- verification-policy 분류: 빌드 설정 + PWA 실동작 검증 → 실사용 필수 카테고리
+- 최종 상태: PENDING_TEST 유지 (agent content test PASS이나 실제 프로젝트 적용 전까지 APPROVED 전환 보류)
 
 ---
 
@@ -124,14 +157,15 @@ status: PENDING_TEST
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ⏳ 미실시 (PENDING_TEST) |
-| **최종 판정** | **PENDING_TEST** |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-04-24) |
+| **최종 판정** | **PENDING_TEST** (빌드 설정·실사용 필수 카테고리, 실전 적용 후 APPROVED 전환) |
 
 ---
 
 ## 7. 개선 필요 사항
 
-- 현재 없음
+- [✅] skill-tester가 agent content test 수행 및 섹션 5·6 업데이트 (2026-04-24 완료, 3/3 PASS)
+- 실전 프로젝트(lf-ui 등)에 실제 적용 후 APPROVED 전환 — **선택 보강** (차단 요인 아님, 빌드 설정·PWA 실동작 카테고리 정책에 따른 유보)
 
 ---
 
@@ -140,3 +174,4 @@ status: PENDING_TEST
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
 | 2026-04-20 | v1 | 최초 작성, lf-ui public/service-worker.js 마이그레이션 시나리오 기반, WebSearch 6개 클레임 교차 검증 (전항목 VERIFIED) | 메인 대화 |
+| 2026-04-24 | v1 | 2단계 실사용 테스트 수행 (Q1 generateSW runtimeCaching 설정 / Q2 injectionPoint undefined 마이그레이션 함정 / Q3 prompt 업데이트 UI 코드) → 3/3 PASS, PENDING_TEST 유지 (빌드 설정·실사용 필수 카테고리) | skill-tester |
