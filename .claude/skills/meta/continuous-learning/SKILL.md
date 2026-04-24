@@ -92,6 +92,8 @@ git log --all -S "Arc<dyn" --oneline    # Rust DI 패턴 추가된 커밋
 ls .claude/skills/frontend/    # 프론트엔드 스킬 목록
 ls .claude/skills/backend/     # 백엔드 스킬 목록
 ls .claude/skills/architecture/
+ls .claude/skills/devops/      # 빌드·배포 스킬 목록
+ls .claude/skills/meta/        # 프로젝트 관리 스킬 목록
 ```
 
 겹치는 스킬이 있다면 신규 생성보다 기존 스킬 업데이트가 맞다.
