@@ -51,6 +51,12 @@
       "WebFetch",
       "Agent"
     ],
+    "additionalDirectories": [
+      "/tmp",
+      "/private/tmp",
+      "/var/folders",
+      "/private/var/folders"
+    ],
     "deny": [
       "Bash(git push --force*)",
       "Bash(git push -f*)",
