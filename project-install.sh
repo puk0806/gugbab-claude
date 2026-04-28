@@ -365,130 +365,22 @@ if [ -f "$SETTINGS_FILE" ]; then
 fi
 
 if [ ! -f "$SETTINGS_FILE" ] || ([ -f "$SETTINGS_FILE" ] && [ "$OVERWRITE_SETTINGS" != "skip" ]); then
-  # 유틸과 개발 템플릿은 Write PostToolUse 훅 구성이 다름
+  # 단일 source of truth — 템플릿 파일을 그대로 복사한다
+  # 유틸: examples/settings/util.json (보수적 hook + 비개발자 권한 세트)
+  # 그 외: .claude/settings.json (이 레포의 운영 설정 = 모든 개선 자동 반영)
   if [ "$TEMPLATE" = "util" ]; then
-    cat > "$SETTINGS_FILE" << 'EOF'
-{
-  "defaultMode": "auto",
-  "enabledPlugins": {
-    "codex@openai-codex": true,
-    "superpowers@superpowers-marketplace": true
-  },
-  "permissions": {
-    "allow": [
-      "Bash(node*)", "Bash(npx*)", "Bash(pnpm*)", "Bash(npm*)", "Bash(codex*)",
-      "Bash(git status*)", "Bash(git diff*)", "Bash(git log*)",
-      "Bash(git branch*)", "Bash(git show*)", "Bash(git remote*)",
-      "Bash(git add*)", "Bash(git stash*)", "Bash(git fetch*)",
-      "Bash(ls*)", "Bash(cat*)", "Bash(head*)", "Bash(tail*)",
-      "Bash(find*)", "Bash(grep*)", "Bash(wc*)", "Bash(pwd)",
-      "Bash(which*)", "Bash(echo*)", "Bash(mkdir*)", "Bash(touch*)",
-      "Bash(cp*)", "Bash(mv*)",
-      "Write(**)", "Edit(**)", "Read(**)", "WebSearch", "WebFetch", "Agent"
-    ],
-    "deny": [
-      "Bash(git push --force*)", "Bash(git push -f*)",
-      "Bash(git reset --hard HEAD~[2-9]*)",
-      "Bash(rm -rf /bin*)", "Bash(rm -rf /etc*)", "Bash(rm -rf /usr*)",
-      "Bash(chmod 777*)", "Bash(curl*|*bash)", "Bash(wget*|*sh)"
-    ]
-  },
-  "hooks": {
-    "PreToolUse": [
-      { "matcher": "*", "hooks": [
-        { "type": "command", "command": "node .claude/hooks/bash-guard.js" },
-        { "type": "command", "command": "node .claude/hooks/auto-approve.js" }
-      ]}
-    ],
-    "PostToolUse": [
-      { "matcher": "Write", "hooks": [
-        { "type": "command", "command": "node .claude/hooks/session-summary.js" }
-      ]},
-      { "matcher": "Edit", "hooks": [
-        { "type": "command", "command": "node .claude/hooks/session-summary.js" }
-      ]},
-      { "matcher": "Bash", "hooks": [
-        { "type": "command", "command": "node .claude/hooks/bash-guard.js" }
-      ]}
-    ],
-    "Stop": [
-      { "hooks": [
-        { "type": "command", "command": "node .claude/hooks/session-summary.js" }
-      ]}
-    ],
-    "PermissionRequest": [
-      { "matcher": "*", "hooks": [
-        { "type": "command", "command": "node .claude/hooks/bash-guard.js" },
-        { "type": "command", "command": "node .claude/hooks/auto-approve.js" }
-      ]}
-    ]
-  }
-}
-EOF
+    SETTINGS_SRC="$REPO_DIR/examples/settings/util.json"
   else
-    cat > "$SETTINGS_FILE" << 'EOF'
-{
-  "defaultMode": "auto",
-  "enabledPlugins": {
-    "codex@openai-codex": true,
-    "superpowers@superpowers-marketplace": true
-  },
-  "permissions": {
-    "allow": [
-      "Bash(node*)", "Bash(npx*)", "Bash(pnpm*)", "Bash(npm*)", "Bash(codex*)",
-      "Bash(git status*)", "Bash(git diff*)", "Bash(git log*)",
-      "Bash(git branch*)", "Bash(git show*)", "Bash(git remote*)",
-      "Bash(git add*)", "Bash(git stash*)", "Bash(git fetch*)",
-      "Bash(ls*)", "Bash(cat*)", "Bash(head*)", "Bash(tail*)",
-      "Bash(find*)", "Bash(grep*)", "Bash(wc*)", "Bash(pwd)",
-      "Bash(which*)", "Bash(echo*)", "Bash(mkdir*)", "Bash(touch*)",
-      "Bash(cp*)", "Bash(mv*)",
-      "Write(**)", "Edit(**)", "Read(**)", "WebSearch", "WebFetch", "Agent"
-    ],
-    "deny": [
-      "Bash(git push --force*)", "Bash(git push -f*)",
-      "Bash(git reset --hard HEAD~[2-9]*)",
-      "Bash(rm -rf /bin*)", "Bash(rm -rf /etc*)", "Bash(rm -rf /usr*)",
-      "Bash(chmod 777*)", "Bash(curl*|*bash)", "Bash(wget*|*sh)"
-    ]
-  },
-  "hooks": {
-    "PreToolUse": [
-      { "matcher": "*", "hooks": [
-        { "type": "command", "command": "node .claude/hooks/bash-guard.js" },
-        { "type": "command", "command": "node .claude/hooks/auto-approve.js" }
-      ]}
-    ],
-    "PostToolUse": [
-      { "matcher": "Write", "hooks": [
-        { "type": "command", "command": "node .claude/hooks/verification-guard.js" },
-        { "type": "command", "command": "node .claude/hooks/skill-md-guard.js" },
-        { "type": "command", "command": "node .claude/hooks/session-summary.js" }
-      ]},
-      { "matcher": "Edit", "hooks": [
-        { "type": "command", "command": "node .claude/hooks/session-summary.js" }
-      ]},
-      { "matcher": "Bash", "hooks": [
-        { "type": "command", "command": "node .claude/hooks/bash-guard.js" }
-      ]}
-    ],
-    "Stop": [
-      { "hooks": [
-        { "type": "command", "command": "node .claude/hooks/pending-test-guard.js" },
-        { "type": "command", "command": "node .claude/hooks/session-summary.js" }
-      ]}
-    ],
-    "PermissionRequest": [
-      { "matcher": "*", "hooks": [
-        { "type": "command", "command": "node .claude/hooks/bash-guard.js" },
-        { "type": "command", "command": "node .claude/hooks/auto-approve.js" }
-      ]}
-    ]
-  }
-}
-EOF
+    SETTINGS_SRC="$REPO_DIR/.claude/settings.json"
   fi
-  echo "  → .claude/settings.json"
+
+  if [ ! -f "$SETTINGS_SRC" ]; then
+    echo "  ✗ .claude/settings.json (템플릿 누락: $SETTINGS_SRC)"
+  elif cp -f "$SETTINGS_SRC" "$SETTINGS_FILE" 2>/dev/null; then
+    echo "  → .claude/settings.json (from $(basename "$(dirname "$SETTINGS_SRC")")/$(basename "$SETTINGS_SRC"))"
+  else
+    echo "  ✗ .claude/settings.json (복사 실패)"
+  fi
 fi
 
 # ── 7. CLAUDE.md ─────────────────────────────────────────────────────

@@ -334,6 +334,316 @@ function isStatementSafeForCompound(stmt, allowedDirs) {
   return true
 }
 
+// 멀티라인 스크립트에서 추가로 허용하는 명령들
+const SCRIPT_EXTRA_SAFE = new Set([
+  'cd',
+  'sleep', 'wait', 'kill',
+  'export', 'unset',
+  'curl', 'wget',  // URL은 별도 localhost 검증
+  'python', 'python3',
+  'jq', 'yq',
+  'basename', 'dirname',
+  'true', 'false', 'test', '[',
+])
+
+const SCRIPT_ALL_SAFE = new Set([...COMPOUND_SAFE_COMMANDS, ...SCRIPT_EXTRA_SAFE])
+
+// 알려진 로컬 개발 서버 패턴 (백그라운드 실행 허용 대상)
+const LOCAL_SERVER_PATTERNS = [
+  /^python3?\s+(?:-u\s+)?-m\s+http\.server\b/,
+  /^npx\s+(?:-y\s+)?(?:serve|http-server|live-server|vite|next\s+dev|wrangler\s+dev)\b/,
+  /^(?:pnpm|npm|yarn)\s+(?:run\s+)?(?:dev|start|preview|serve|watch)\b/,
+  /^node\s+(?:--\S+\s+)*\S*server\S*\.js\b/,
+  /^vite(?:\s+(?:dev|preview))?\b/,
+]
+
+function isLocalhostUrl(url) {
+  if (!url) return false
+  const cleaned = url.replace(/^["']|["']$/g, '')
+  return /^https?:\/\/(?:localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])(?::\d+)?(?:[/?#]|$)/.test(cleaned)
+}
+
+function isReadOnlyPipeChain(stmt, allowedDirs, safeVars) {
+  const stages = quoteAwareSplit(stmt, '|')
+  for (const stage of stages) {
+    const fw = (stage.match(/^(\S+)/) || [])[1]
+    if (!fw || /[{}'"`\\$]/.test(fw)) return false
+    if (!SAFE_READONLY_COMMANDS.has(fw) && fw !== 'basename' && fw !== 'dirname') return false
+    if (!validateLineReferences(stage, allowedDirs, safeVars)) return false
+  }
+  return true
+}
+
+// $VAR 가 모두 safeVars 에 있는지 + 절대경로가 모두 안전 영역인지 + URL 이 localhost 인지
+function validateLineReferences(line, allowedDirs, safeVars) {
+  // 단일따옴표 영역 제거 (확장 안 됨)
+  const noSingleQuotes = removeSingleQuotedSegments(line)
+
+  // $VAR 검증 — 더블쿼트 안에서도 확장되므로 noSingleQuotes 에서 검색
+  const varMatches = [...noSingleQuotes.matchAll(/\$\{?([A-Za-z_][A-Za-z0-9_]*)\}?/g)]
+  for (const v of varMatches) {
+    const name = v[1]
+    if (!safeVars.has(name)) return false
+  }
+  // $1, $@, $#, $? 등 positional/special 거부
+  if (/\$[0-9@#\?\*]/.test(noSingleQuotes)) return false
+  // $! BG PID — 별도 처리 (할당 시점에서만 허용)
+  if (/\$!/.test(noSingleQuotes)) return false
+
+  // URL 검증 — 따옴표 안/밖 모두 검사 (URL은 보통 따옴표로 감싸짐)
+  const urlMatches = noSingleQuotes.match(/https?:\/\/[^\s"'<>|]+/g) || []
+  for (const u of urlMatches) {
+    if (!isLocalhostUrl(u)) return false
+  }
+
+  // 절대경로 검증 — 더블쿼트 안의 텍스트는 제외 (echo 등의 인자에 들어간 경로는 텍스트일 뿐)
+  // 명령에 직접 인자로 전달된 경로(따옴표 밖)만 체크
+  const noQuotes = noSingleQuotes.replace(/"[^"]*"/g, '""')
+  const pathMatches = noQuotes.match(/(?<![:/])\/(?:[a-zA-Z0-9._-]+\/?)+/g) || []
+  for (const p of pathMatches) {
+    if (/^\/dev\/(?:null|stdin|stdout|stderr)$/.test(p)) continue
+    // URL 의 /path 부분일 수 있음 (URL은 따옴표 밖에 직접 쓰일 때)
+    if (urlMatches.some(u => u.includes(p))) continue
+    if (isUnderTempDir(p)) continue
+    if (isUnderAllowed(p, allowedDirs)) continue
+    return false
+  }
+
+  return true
+}
+
+function removeSingleQuotedSegments(line) {
+  // '...' 영역을 빈 문자열로 (이스케이프된 ' 는 sh 에서 일반적으로 안 됨)
+  return line.replace(/'[^']*'/g, "''")
+}
+
+// quote-aware split — 따옴표 안에 있는 구분자는 무시
+function quoteAwareSplit(line, sep) {
+  const parts = []
+  let buf = ''
+  let inSingle = false, inDouble = false
+  let i = 0
+  while (i < line.length) {
+    const ch = line[i]
+    if (ch === "'" && !inDouble) { inSingle = !inSingle; buf += ch; i++; continue }
+    if (ch === '"' && !inSingle) { inDouble = !inDouble; buf += ch; i++; continue }
+    if (!inSingle && !inDouble) {
+      // 구분자 매칭
+      if (sep === '|') {
+        // | 분리 (단, ||는 제외)
+        if (ch === '|' && line[i + 1] !== '|' && line[i - 1] !== '|') {
+          parts.push(buf.trim())
+          buf = ''
+          i++
+          continue
+        }
+      } else if (sep === 'compound') {
+        // && 또는 || 분리
+        if ((ch === '&' && line[i + 1] === '&') || (ch === '|' && line[i + 1] === '|')) {
+          parts.push(buf.trim())
+          buf = ''
+          i += 2
+          continue
+        }
+      }
+    }
+    buf += ch
+    i++
+  }
+  if (buf.trim()) parts.push(buf.trim())
+  return parts.filter(Boolean)
+}
+
+function extractCommandSubstitutions(line) {
+  // 중첩 미지원 (간단한 $(cmd) 만)
+  const matches = []
+  const re = /\$\(([^()]+)\)/g
+  let m
+  while ((m = re.exec(line)) !== null) matches.push(m[1])
+  return matches
+}
+
+// 안전 패턴: 멀티라인 셸 스크립트 (디버그·빌드 verify·로컬 서버 테스트 등)
+// 변수 추적 + $() read-only 검증 + localhost URL + BG 서버 + kill 추적
+function isShellScriptSafe(cmd, allowedDirs) {
+  const trimmed = cmd.trim()
+  if (!trimmed) return false
+
+  // 다른 핸들러 영역 양보 — heredoc 은 별도, cd-only 도 별도
+  if (/<<-?\s*['\\]?[A-Za-z_]/.test(trimmed)) return false
+  if (/`/.test(trimmed)) return false  // 백틱 차단 (정확한 추출 어려움)
+
+  // 멀티라인 / 컴파운드 / 백그라운드 / 변수할당 / $() / pipe 가 있을 때만 적용
+  // 단일 단순 명령은 다른 핸들러나 permissions.allow 에 위임
+  const hasMultiline = trimmed.includes('\n')
+  const hasCompound = /&&|\|\|/.test(trimmed)
+  const hasBackground = /&\s*$/m.test(trimmed)
+  const hasAssignment = /^[A-Za-z_][A-Za-z0-9_]*=/m.test(trimmed)
+  const hasCmdSub = /\$\(/.test(trimmed)
+  const hasPipe = /\s\|\s/.test(trimmed)
+  const hasVarRef = /\$[A-Za-z_!]/.test(trimmed)
+  if (!hasMultiline && !hasCompound && !hasBackground && !hasAssignment && !hasCmdSub && !hasPipe && !hasVarRef) {
+    return false
+  }
+
+  // 줄별 / && || 으로 분리해서 statement 시퀀스 만들기 (quote-aware)
+  const rawLines = trimmed.split('\n')
+  const statements = []
+  for (const raw of rawLines) {
+    const line = raw.trim()
+    if (!line || line.startsWith('#')) continue
+    const parts = quoteAwareSplit(line, 'compound')
+    for (const p of parts) {
+      const t = p.trim()
+      if (t) statements.push(t)
+    }
+  }
+  if (statements.length === 0) return false
+
+  // 컨텍스트
+  const safeVars = new Set()
+  let lastWasBgServer = false  // 직전 statement 가 BG 로컬 서버였는가
+
+  for (const rawStmt of statements) {
+    let stmt = rawStmt.trim()
+    if (!stmt) continue
+
+    // 끝의 & 제거 후 BG 여부 추적
+    let isBackground = false
+    if (/&\s*$/.test(stmt)) {
+      isBackground = true
+      stmt = stmt.replace(/&\s*$/, '').trim()
+    }
+
+    // 변수 할당 (VAR=value)
+    const assign = stmt.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/)
+    if (assign) {
+      const name = assign[1]
+      const value = assign[2].trim()
+      // VAR=$!  — 직전이 안전한 BG 서버일 때만 허용
+      if (value === '$!') {
+        if (lastWasBgServer) {
+          safeVars.add(name)
+          lastWasBgServer = false
+          continue
+        }
+        return false
+      }
+      // VAR=$(safe-readonly-pipe)
+      const subMatch = value.match(/^["']?\$\(([^()]+)\)["']?$/)
+      if (subMatch) {
+        if (isReadOnlyPipeChain(subMatch[1].trim(), allowedDirs, safeVars)) {
+          safeVars.add(name)
+          lastWasBgServer = false
+          continue
+        }
+        return false
+      }
+      // VAR=리터럴 (숫자, 따옴표 안 문자열, 단순 단어, 허용 영역의 절대경로)
+      if (/^\d+$/.test(value) ||
+          /^["'][^$`"'\\]*["']$/.test(value) ||
+          /^[\w./:-]+$/.test(value)) {
+        safeVars.add(name)
+        lastWasBgServer = false
+        continue
+      }
+      return false  // 알 수 없는 할당
+    }
+
+    // 일반 statement — 첫 단어 검사
+    const firstWord = (stmt.match(/^(\S+)/) || [])[1]
+    if (!firstWord || /[{}'"`\\$]/.test(firstWord)) return false
+    if (!SCRIPT_ALL_SAFE.has(firstWord)) return false
+
+    // cd <safe>
+    if (firstWord === 'cd') {
+      const target = stmt.split(/\s+/)[1]
+      if (!target || !target.startsWith('/')) return false
+      if (!isUnderAllowed(target, allowedDirs) && !isUnderTempDir(target)) return false
+    }
+
+    // git: 위험 서브커맨드 차단
+    if (firstWord === 'git' && /\bgit\s+(?:push|commit|reset\s+--hard|clean\s+-[fdx]|checkout\b)/.test(stmt)) {
+      return false
+    }
+
+    // rm/cp/mv 경로 검사
+    if (firstWord === 'rm' || firstWord === 'cp' || firstWord === 'mv') {
+      const args = stmt.split(/\s+/).slice(1).filter(a => !a.startsWith('-'))
+      for (const a of args) {
+        if (a.startsWith('/')) {
+          if (!isUnderAllowed(a, allowedDirs) && !isUnderTempDir(a)) return false
+        }
+      }
+    }
+
+    // chmod +x 차단
+    if (firstWord === 'chmod' && /\+x\b/.test(stmt)) return false
+
+    // ln -s / ln: 대상이 안전 영역이어야 함
+    if (firstWord === 'ln') {
+      const args = stmt.split(/\s+/).slice(1).filter(a => !a.startsWith('-'))
+      const target = args[args.length - 1]
+      if (target && target.startsWith('/')) {
+        if (!isUnderAllowed(target, allowedDirs) && !isUnderTempDir(target)) return false
+      }
+    }
+
+    // kill — 안전 변수 PID 만 허용
+    if (firstWord === 'kill') {
+      // kill $VAR 또는 kill SIGNAL $VAR
+      const killVars = [...stmt.matchAll(/\$\{?([A-Za-z_][A-Za-z0-9_]*)\}?/g)].map(m => m[1])
+      if (killVars.length === 0) return false  // 리터럴 PID 거부 (안전 추적 불가)
+      for (const v of killVars) {
+        if (!safeVars.has(v)) return false
+      }
+    }
+
+    // 백그라운드 — 알려진 로컬 서버만
+    if (isBackground) {
+      const cmdOnly = stmt.replace(/\s*>.*$/, '').replace(/\s*2>.*$/, '').trim()
+      if (!LOCAL_SERVER_PATTERNS.some(p => p.test(cmdOnly))) return false
+      lastWasBgServer = true
+    } else {
+      lastWasBgServer = false
+    }
+
+    // 파이프 체인 — 모든 단계 검사 (quote-aware split)
+    const stages = quoteAwareSplit(stmt, '|')
+    for (const stage of stages) {
+      const fw = (stage.match(/^(\S+)/) || [])[1]
+      if (!fw) return false
+      if (!SCRIPT_ALL_SAFE.has(fw)) return false
+      // xargs 다음 명령은 read-only
+      if (fw === 'xargs') {
+        const m = stage.match(/^xargs(?:\s+-\S+)*\s+(\S+)/)
+        const next = m ? m[1] : null
+        if (!next || /[{}'"`\\$]/.test(next)) return false
+        if (!SAFE_READONLY_COMMANDS.has(next)) return false
+        if (next === 'xargs') return false
+      }
+    }
+
+    // $() 내부 검증 — read-only pipe 만
+    const cmdSubs = extractCommandSubstitutions(stmt)
+    for (const sub of cmdSubs) {
+      if (!isReadOnlyPipeChain(sub, allowedDirs, safeVars)) return false
+    }
+
+    // 위험한 redirect (단, /dev/null /dev/stdout /dev/stderr 는 허용)
+    if (/>\s*\/(?:etc|usr|bin|sbin|sys|proc|root)\//.test(stmt)) return false
+    if (/>\s*\/dev\/(?!null|stdout|stderr|stdin\b)/.test(stmt)) return false
+    if (/>\s*\S*\.zshrc\b/.test(stmt)) return false
+    if (/>\s*\S*\.bashrc\b/.test(stmt)) return false
+    if (/>\s*\S*\/\.ssh\//.test(stmt)) return false
+
+    // 기타 변수/경로/URL 참조 검증
+    if (!validateLineReferences(stmt, allowedDirs, safeVars)) return false
+  }
+
+  return true
+}
+
 // 안전 패턴: A && B && C ... 형태의 컴파운드 명령
 // → "/tmp access" 권한 트리거나 복합 패턴 휴리스틱 우회
 // 모든 statement(파이프 단계 포함)가 화이트리스트 명령 + 경로가 안전 영역일 때만 허용
@@ -444,9 +754,13 @@ function handlePreToolUse(toolName, toolInput, cwd) {
     }
   }
 
-  // 안전 패턴 자동 허용 — 하드코딩 휴리스틱(cd+git, heredoc, brace expansion, compound) 우회
+  // 안전 패턴 자동 허용 — 휴리스틱 우회 (cd+git, heredoc, brace, compound, multiline shell)
   const allowedDirs = getAllowedDirs(cwd)
-  if (isCdGitSafe(cmd, allowedDirs) || isHeredocSafe(cmd, allowedDirs) || isBraceExpansionSafe(cmd) || isCompoundSafe(cmd, allowedDirs)) {
+  if (isCdGitSafe(cmd, allowedDirs)
+   || isHeredocSafe(cmd, allowedDirs)
+   || isBraceExpansionSafe(cmd)
+   || isCompoundSafe(cmd, allowedDirs)
+   || isShellScriptSafe(cmd, allowedDirs)) {
     return {
       hookSpecificOutput: {
         hookEventName: 'PreToolUse',
@@ -540,6 +854,9 @@ module.exports = {
   isBraceExpansionSafe,
   isCompoundSafe,
   isStatementSafeForCompound,
+  isShellScriptSafe,
+  isLocalhostUrl,
+  isReadOnlyPipeChain,
   isUnderAllowed,
   isUnderTempDir,
   handlePreToolUse,

@@ -8,7 +8,7 @@ const { execSync } = require('child_process')
 const path = require('path')
 const HOOK = path.join(__dirname, 'bash-guard.js')
 const PROJECT_ROOT = path.resolve(__dirname, '..', '..')
-const { isCdGitSafe, isHeredocSafe, isBraceExpansionSafe, isCompoundSafe, isStatementSafeForCompound, findProjectRoot } = require('./bash-guard.js')
+const { isCdGitSafe, isHeredocSafe, isBraceExpansionSafe, isCompoundSafe, isStatementSafeForCompound, isShellScriptSafe, isLocalhostUrl, findProjectRoot } = require('./bash-guard.js')
 
 let passed = 0, failed = 0
 
@@ -408,6 +408,64 @@ test('Case 6 — cd + git stash + npx vitest + git stash pop',
   'Bash', { command: CASE6 }, 'allow', 'PreToolUse', { cwd: SIBLING })
 test('Case 7 — heredoc to workspace path + pnpm test',
   'Bash', { command: CASE7 }, 'allow', 'PreToolUse', { cwd: SIBLING })
+
+// ─────────────────────────────────────────────────────────────
+// isShellScriptSafe — 멀티라인·$()·BG 서버·kill PID 추적
+// ─────────────────────────────────────────────────────────────
+section('isShellScriptSafe — localhost URL 판정')
+assert('http://localhost:8765', isLocalhostUrl('http://localhost:8765'), true)
+assert('http://127.0.0.1/x', isLocalhostUrl('http://127.0.0.1/x'), true)
+assert('http://0.0.0.0:80', isLocalhostUrl('http://0.0.0.0:80'), true)
+assert('https://github.com 거부', isLocalhostUrl('https://github.com'), false)
+assert('https://google.com 거부', isLocalhostUrl('https://google.com'), false)
+
+const ALLOWED_FOR_SCRIPT = [SIBLING, '/Users/lf/Desktop/workspace/00_lf-ui']
+
+section('isShellScriptSafe — 허용 케이스 (true)')
+assert('빌드 verify + http.server + curl + kill',
+  isShellScriptSafe(`mkdir -p /tmp/x
+ln -sf ${SIBLING}/build /tmp/x/app
+cd /tmp/x && python3 -m http.server 8765 > /tmp/x.log 2>&1 &
+SERVE_PID=$!
+sleep 2
+curl -s http://localhost:8765/app/
+ENTRY=$(ls /tmp/x/app/assets/entry-AAA.js | head -1 | xargs basename)
+curl -s "http://localhost:8765/app/assets/$ENTRY"
+kill $SERVE_PID 2>/dev/null`, ALLOWED_FOR_SCRIPT), true)
+assert('echo + grep 멀티라인',
+  isShellScriptSafe(`echo "---"\ngrep -r foo /tmp/x | head -10\necho done`, ALLOWED_FOR_SCRIPT), true)
+assert('변수 할당 + 사용',
+  isShellScriptSafe(`X=42\necho "X is $X"`, ALLOWED_FOR_SCRIPT), true)
+
+section('isShellScriptSafe — 거부 케이스 (false)')
+assert('외부 URL curl 차단',
+  isShellScriptSafe(`mkdir -p /tmp/x\ncurl -s https://github.com/leak | tee /tmp/x/out`, ALLOWED_FOR_SCRIPT), false)
+assert('kill 임의 PID',
+  isShellScriptSafe(`kill 1`, ALLOWED_FOR_SCRIPT), false)
+assert('curl | bash 원격 실행',
+  isShellScriptSafe(`curl -s http://localhost:8765/payload.sh | bash`, ALLOWED_FOR_SCRIPT), false)
+assert('$() 안에 rm',
+  isShellScriptSafe(`X=$(rm -rf /tmp/x)\necho $X`, ALLOWED_FOR_SCRIPT), false)
+assert('백그라운드에 nc',
+  isShellScriptSafe(`nc -l 9999 &\nSERVE_PID=$!\nkill $SERVE_PID`, ALLOWED_FOR_SCRIPT), false)
+assert('정의 안 된 변수',
+  isShellScriptSafe(`echo $RANDOMVAR\nls /tmp/x`, ALLOWED_FOR_SCRIPT), false)
+assert('eval',
+  isShellScriptSafe(`X="ls /tmp"\neval $X`, ALLOWED_FOR_SCRIPT), false)
+assert('sudo',
+  isShellScriptSafe(`sudo cat /etc/shadow\necho done`, ALLOWED_FOR_SCRIPT), false)
+assert('source',
+  isShellScriptSafe(`X="x.sh"\nsource /tmp/x.sh`, ALLOWED_FOR_SCRIPT), false)
+assert('git push 포함',
+  isShellScriptSafe(`git status\ngit push origin main`, ALLOWED_FOR_SCRIPT), false)
+assert('chmod +x',
+  isShellScriptSafe(`echo evil > /tmp/x/run.sh\nchmod +x /tmp/x/run.sh`, ALLOWED_FOR_SCRIPT), false)
+assert('워크스페이스 밖 cd',
+  isShellScriptSafe(`cd /etc && ls`, ALLOWED_FOR_SCRIPT), false)
+assert('백틱 치환',
+  isShellScriptSafe('X=`rm -rf /tmp/x`\necho done', ALLOWED_FOR_SCRIPT), false)
+assert('단일 명령 (다른 핸들러 양보)',
+  isShellScriptSafe(`git status`, ALLOWED_FOR_SCRIPT), false)
 
 console.log(`\n${'─'.repeat(40)}`)
 console.log(`결과: ${passed}/${passed + failed} 통과 ${failed > 0 ? `(${failed}개 실패)` : ''}`)

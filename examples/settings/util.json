@@ -1,0 +1,114 @@
+{
+  "defaultMode": "auto",
+  "enabledPlugins": {
+    "codex@openai-codex": true,
+    "superpowers@superpowers-marketplace": true
+  },
+  "permissions": {
+    "allow": [
+      "Bash(node*)",
+      "Bash(npx*)",
+      "Bash(pnpm*)",
+      "Bash(npm*)",
+      "Bash(codex*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git branch*)",
+      "Bash(git show*)",
+      "Bash(git remote*)",
+      "Bash(git add*)",
+      "Bash(git stash*)",
+      "Bash(git fetch*)",
+      "Bash(ls*)",
+      "Bash(cat*)",
+      "Bash(head*)",
+      "Bash(tail*)",
+      "Bash(find*)",
+      "Bash(grep*)",
+      "Bash(wc*)",
+      "Bash(pwd)",
+      "Bash(which*)",
+      "Bash(echo*)",
+      "Bash(mkdir*)",
+      "Bash(touch*)",
+      "Bash(cp*)",
+      "Bash(mv*)",
+      "Bash(sort*)",
+      "Bash(uniq*)",
+      "Bash(diff*)",
+      "Bash(xargs*)",
+      "Bash(for*)",
+      "Write(**)",
+      "Edit(**)",
+      "Read(**)",
+      "WebSearch",
+      "WebFetch",
+      "Agent"
+    ],
+    "additionalDirectories": [
+      "/tmp",
+      "/private/tmp",
+      "/var/folders",
+      "/private/var/folders"
+    ],
+    "deny": [
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git reset --hard HEAD~[2-9]*)",
+      "Bash(rm -rf /bin*)",
+      "Bash(rm -rf /etc*)",
+      "Bash(rm -rf /usr*)",
+      "Bash(chmod 777*)",
+      "Bash(curl*|*bash)",
+      "Bash(wget*|*sh)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          { "type": "command", "command": "node .claude/hooks/bash-guard.js" },
+          { "type": "command", "command": "node .claude/hooks/auto-approve.js" }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          { "type": "command", "command": "node .claude/hooks/session-summary.js" }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          { "type": "command", "command": "node .claude/hooks/session-summary.js" }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "node .claude/hooks/bash-guard.js" }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          { "type": "command", "command": "node .claude/hooks/session-summary.js" }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": "*",
+        "hooks": [
+          { "type": "command", "command": "node .claude/hooks/bash-guard.js" },
+          { "type": "command", "command": "node .claude/hooks/auto-approve.js" }
+        ]
+      }
+    ]
+  }
+}
