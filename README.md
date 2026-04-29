@@ -41,9 +41,9 @@ gugbab-claude/
     ├── rules/                    ← 상황별 규칙 (git, typescript, rust 등)
     ├── settings.json             ← 훅 등록 설정
     └── skills/
-        ├── frontend/             ← 프론트엔드 스킬 (39종)
+        ├── frontend/             ← 프론트엔드 스킬 (40종)
         ├── backend/              ← Rust 백엔드 (19종) + Java 백엔드 (22종)
-        ├── devops/               ← DevOps 스킬 (2종)
+        ├── devops/               ← DevOps 스킬 (3종)
         ├── architecture/         ← 아키텍처 스킬 (1종)
         └── meta/                 ← 프로젝트 관리 스킬 (1종)
 ```
@@ -173,6 +173,7 @@ gugbab-claude/
 | [tsup](./.claude/skills/frontend/tsup/SKILL.md) | esbuild 기반 TypeScript 라이브러리 번들러 — CJS/ESM 동시 출력, DTS 생성, exports 필드 설정, 모노레포 공유 패키지 빌드 패턴 | [→](./docs/skills/frontend/tsup/verification.md) |
 | [rsbuild](./.claude/skills/frontend/rsbuild/SKILL.md) | Rsbuild 2.x — Rspack 기반 고수준 웹 앱 빌드 툴, React/Vue/Svelte 플러그인, CRA·webpack 공식 마이그레이션, Module Federation, Vite/tsup/Rslib와의 선택 기준 | [→](./docs/skills/frontend/rsbuild/verification.md) |
 | [e2e-testing](./.claude/skills/frontend/e2e-testing/SKILL.md) | Playwright E2E 테스팅 — POM, 로케이터 전��, 네트워크 인터셉트, 인증 상태, 비주얼 회귀, CI, 샤딩 | [→](./docs/skills/frontend/e2e-testing/verification.md) |
+| [storybook-visual-testing](./.claude/skills/frontend/storybook-visual-testing/SKILL.md) | Storybook 10 + @storybook/test-runner + Playwright `toHaveScreenshot` 자체 호스팅 시각 회귀 — preVisit/postVisit 훅, axe-playwright a11y, iframe 캡처, baseline Docker 강제, 모노레포 멀티 Storybook | [→](./docs/skills/frontend/storybook-visual-testing/verification.md) |
 
 ---
 
@@ -182,6 +183,7 @@ gugbab-claude/
 |------|------|----------|
 | [docker-deployment](./.claude/skills/devops/docker-deployment/SKILL.md) | Docker 멀티스테이지 빌드, Node.js/Rust Docker화, compose, 이미지 최적화, 보안, Vercel/Railway 배포 | [→](./docs/skills/devops/docker-deployment/verification.md) |
 | [github-actions](./.claude/skills/devops/github-actions/SKILL.md) | GitHub Actions CI/CD — 이벤트 트리거, 매트릭스 빌드, 캐싱, Node.js/Rust CI, Docker 빌드, Reusable workflows | [→](./docs/skills/devops/github-actions/verification.md) |
+| [github-actions-visual-regression](./.claude/skills/devops/github-actions-visual-regression/SKILL.md) | Storybook + Playwright 시각 회귀 GitHub Actions workflow — paths-filter 트리거, start-server-and-test, baseline 캐시, PR 코멘트 자동화, matrix 멀티 Storybook, pull_request_target 보안 | [→](./docs/skills/devops/github-actions-visual-regression/verification.md) |
 
 ---
 
@@ -363,6 +365,7 @@ claude --continue             # 이전 대화 이어서
 
 | 날짜 | 변경 내용 |
 |------|-----------|
+| 2026-04-29 | 시각 회귀 테스트 스킬 2종 추가 — `frontend/storybook-visual-testing` (Storybook 10 + @storybook/test-runner + Playwright `toHaveScreenshot` 자체 호스팅, preVisit/postVisit 훅·axe-playwright·iframe 캡처·baseline Docker 강제·모노레포 멀티 Storybook), `devops/github-actions-visual-regression` (paths-filter 트리거·start-server-and-test·baseline 캐시·PR 코멘트 자동화·matrix·pull_request_target 보안 anti-pattern). 외부 SaaS(Chromatic·Percy) 의존 없는 자체 호스팅 패턴. 양쪽 모두 2단계 에이전트 활용 테스트 3/3 PASS → APPROVED 전환 |
 | 2026-03-26 | 프로젝트 초기화 — `agent-creator` 추가, CLAUDE.md 작성, 커밋 컨벤션 분리 |
 | 2026-03-27 | 리서치·검증 에이전트 5종 추가, 카테고리별 폴더 구조 도입, 상세 문서 분리, 프론트엔드 스킬 7종 추가(react-core·nextjs·typescript·monorepo-turborepo·bundling-compiler·code-convention·state-management), frontend-architect 에이전트 추가, 스킬 검증 템플릿 도입 |
 | 2026-04-02 | permission-judge 훅 전면 개편(PermissionRequest 이벤트 추가, hook_event_name 버그 수정, Bash 자동 승인 추가, block 전용 리팩터), settings.json 권한 체계 개편, 프론트엔드 스킬 11종 추가(sass·testing·component-design·form-handling·api-integration·accessibility·animation·performance·error-handling·design-patterns·seo), skill-creator 에이전트 추가, creation-workflow.md 분리, 기존 스킬 공식 문서 검증 및 오류 수정 |
