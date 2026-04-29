@@ -1,5 +1,5 @@
 {
-  "defaultMode": "auto",
+  "defaultMode": "acceptEdits",
   "enabledPlugins": {
     "codex@openai-codex": true,
     "superpowers@superpowers-marketplace": true
@@ -44,9 +44,11 @@
       "Bash(diff*)",
       "Bash(xargs*)",
       "Bash(for*)",
-      "Write(**)",
-      "Edit(**)",
-      "Read(**)",
+      "Write",
+      "Edit",
+      "Read",
+      "Glob",
+      "Grep",
       "WebSearch",
       "WebFetch",
       "Agent"
@@ -80,8 +82,8 @@
       {
         "matcher": "*",
         "hooks": [
-          { "type": "command", "command": "node .claude/hooks/bash-guard.js" },
-          { "type": "command", "command": "node .claude/hooks/auto-approve.js" }
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/bash-guard.js" },
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/auto-approve.js" }
         ]
       }
     ],
@@ -89,29 +91,29 @@
       {
         "matcher": "Write",
         "hooks": [
-          { "type": "command", "command": "node .claude/hooks/verification-guard.js" },
-          { "type": "command", "command": "node .claude/hooks/skill-md-guard.js" },
-          { "type": "command", "command": "node .claude/hooks/session-summary.js" }
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/verification-guard.js" },
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/skill-md-guard.js" },
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-summary.js" }
         ]
       },
       {
         "matcher": "Edit",
         "hooks": [
-          { "type": "command", "command": "node .claude/hooks/session-summary.js" }
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-summary.js" }
         ]
       },
       {
         "matcher": "Bash",
         "hooks": [
-          { "type": "command", "command": "node .claude/hooks/bash-guard.js" }
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/bash-guard.js" }
         ]
       }
     ],
     "Stop": [
       {
         "hooks": [
-          { "type": "command", "command": "node .claude/hooks/pending-test-guard.js" },
-          { "type": "command", "command": "node .claude/hooks/session-summary.js" }
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/pending-test-guard.js" },
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-summary.js" }
         ]
       }
     ],
@@ -119,8 +121,8 @@
       {
         "matcher": "*",
         "hooks": [
-          { "type": "command", "command": "node .claude/hooks/bash-guard.js" },
-          { "type": "command", "command": "node .claude/hooks/auto-approve.js" }
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/bash-guard.js" },
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/auto-approve.js" }
         ]
       }
     ]
