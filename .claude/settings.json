@@ -93,12 +93,14 @@
         "hooks": [
           { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/verification-guard.js" },
           { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/skill-md-guard.js" },
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/drift-monitor.js" },
           { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-summary.js" }
         ]
       },
       {
         "matcher": "Edit",
         "hooks": [
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/drift-monitor.js" },
           { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-summary.js" }
         ]
       },
