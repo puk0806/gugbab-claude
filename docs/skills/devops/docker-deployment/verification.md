@@ -1,4 +1,12 @@
-# 스킬 검증 템플릿
+---
+skill: docker-deployment
+category: devops
+version: v1
+date: 2026-04-20
+status: APPROVED
+---
+
+# 스킬 검증 문서: docker-deployment
 
 ---
 

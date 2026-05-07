@@ -1,3 +1,11 @@
+---
+skill: e2e-testing
+category: frontend
+version: v1
+date: 2026-04-20
+status: APPROVED
+---
+
 # 스킬 검증 — e2e-testing (Playwright)
 
 ---
