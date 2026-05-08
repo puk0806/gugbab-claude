@@ -170,6 +170,26 @@ for src_path in "$REPO_DIR/.claude/agents"/**/*.md "$REPO_DIR/.claude/agents"/*.
   mkdir -p "$(dirname "$dest")"
   if cp -f "$src_path" "$dest" 2>/dev/null; then
     echo "  → .claude/agents/$rel"
+
+    # 같은 에이전트의 docs 페어링 복사
+    # 1) docs/agents/{cat}/{name}.md
+    agent_doc_src="$REPO_DIR/docs/agents/$rel"
+    if [ -f "$agent_doc_src" ]; then
+      agent_doc_dest="$TARGET/docs/agents/$rel"
+      mkdir -p "$(dirname "$agent_doc_dest")"
+      cp -f "$agent_doc_src" "$agent_doc_dest" 2>/dev/null && \
+        echo "  → docs/agents/$rel"
+    fi
+    # 2) docs/agents/{cat}/{name}-verification.md (접미사 형태)
+    agent_name_no_ext="${rel%.md}"
+    agent_verif_rel="${agent_name_no_ext}-verification.md"
+    agent_verif_src="$REPO_DIR/docs/agents/$agent_verif_rel"
+    if [ -f "$agent_verif_src" ]; then
+      agent_verif_dest="$TARGET/docs/agents/$agent_verif_rel"
+      mkdir -p "$(dirname "$agent_verif_dest")"
+      cp -f "$agent_verif_src" "$agent_verif_dest" 2>/dev/null && \
+        echo "  → docs/agents/$agent_verif_rel"
+    fi
   else
     echo "  ✗ .claude/agents/$rel (복사 실패)"
   fi
@@ -327,22 +347,57 @@ for src_path in "$REPO_DIR/.claude/skills"/*/*/SKILL.md; do
   mkdir -p "$(dirname "$dest")"
   if cp -f "$src_path" "$dest" 2>/dev/null; then
     echo "  → .claude/skills/$rel"
+
+    # 같은 스킬의 docs 페어링 복사 (docs/skills/{cat}/{name}/)
+    docs_src_dir="$REPO_DIR/docs/skills/$skill_prefix"
+    if [ -d "$docs_src_dir" ]; then
+      docs_dest_dir="$TARGET/docs/skills/$skill_prefix"
+      mkdir -p "$docs_dest_dir"
+      if cp -Rf "$docs_src_dir/." "$docs_dest_dir/" 2>/dev/null; then
+        echo "  → docs/skills/$skill_prefix/"
+      else
+        echo "  ✗ docs/skills/$skill_prefix/ (복사 실패)"
+      fi
+    fi
   else
     echo "  ✗ .claude/skills/$rel (복사 실패)"
   fi
 done
 
-# ── 5. docs ──────────────────────────────────────────────────────────────
+# ── 5. docs (공용 항목만 — 페어링 docs는 위 루프에서 처리) ─────────────
 echo ""
-echo "[docs]"
+echo "[docs (공용)]"
+
+# 정책 (옵션 B):
+#   - 스킬·에이전트 docs는 각자 export될 때 페어링되어 위 루프에서 복사됨
+#   - 공용 항목(VERIFICATION_TEMPLATE.md, hooks/)만 여기서 처리
+#   - 내부 자료(docs/domain, docs/research)는 외부 export 제외
 
 if [ "$TEMPLATE" = "util" ]; then
   echo "  - 유틸 모드: docs/ 건너뜀"
 else
-  if [ -d "$REPO_DIR/docs" ]; then
-    cp -rf "$REPO_DIR/docs" "$TARGET/docs" 2>/dev/null || true
-    echo "  → docs/ (검증 문서·에이전트 문서 전체)"
+  # docs/skills/VERIFICATION_TEMPLATE.md (스킬 검증 공용 템플릿)
+  if [ -f "$REPO_DIR/docs/skills/VERIFICATION_TEMPLATE.md" ]; then
+    mkdir -p "$TARGET/docs/skills"
+    if cp -f "$REPO_DIR/docs/skills/VERIFICATION_TEMPLATE.md" \
+            "$TARGET/docs/skills/VERIFICATION_TEMPLATE.md" 2>/dev/null; then
+      echo "  → docs/skills/VERIFICATION_TEMPLATE.md"
+    else
+      echo "  ✗ docs/skills/VERIFICATION_TEMPLATE.md (복사 실패)"
+    fi
   fi
+
+  # docs/hooks/ (훅 문서 — 모든 템플릿이 동일한 훅 세트를 받으므로 통째 복사)
+  if [ -d "$REPO_DIR/docs/hooks" ]; then
+    mkdir -p "$TARGET/docs/hooks"
+    if cp -Rf "$REPO_DIR/docs/hooks/." "$TARGET/docs/hooks/" 2>/dev/null; then
+      echo "  → docs/hooks/"
+    else
+      echo "  ✗ docs/hooks/ (복사 실패)"
+    fi
+  fi
+
+  # docs/domain, docs/research 는 레포 내부 자료라 외부 export에서 제외
 fi
 
 # ── 6. settings.json ────────────────────────────────────────────────────
