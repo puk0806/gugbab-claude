@@ -100,6 +100,44 @@ skill-tester가 자동 수행하는 것:
 
 "실사용 필수 스킬" 카테고리(`verification-policy.md` 참조)인 경우도 **agent content test는 반드시 수행·기록**해야 훅을 통과한다.
 
+#### 안티패턴 — 셀프 검증으로 단계 5 대체 금지
+
+다음 패턴은 *룰 위반*이며, 강화된 `pending-test-guard` 훅이 차단한다:
+
+```
+## 5. 테스트 진행 기록
+
+**수행일**: YYYY-MM-DD
+**수행 방법**: SKILL.md 작성 직후 셀프 검증 (skill-tester 호출 미수행)
+```
+
+**왜 차단되나:**
+- "수행일" 라인이 *형식상* 존재해도, 본문에 "skill-tester 호출 미수행"·"셀프 검증" 같은 자백 키워드가 있으면 훅이 진짜 수행으로 인정 안 함
+- 카테고리 분류(PENDING_TEST 유지)는 *status 결정 근거*일 뿐, *content test 수행 자체를 스킵할 근거가 아님*
+- 카테고리상 PENDING_TEST 유지가 맞아도 agent content test는 *별도로* 수행해야 함
+
+**올바른 패턴:**
+
+```
+## 5. 테스트 진행 기록
+
+**수행일**: YYYY-MM-DD
+**수행자**: skill-tester → general-purpose (또는 frontend-developer 등)
+**수행 방법**: SKILL.md Read 후 실전 질문 N개 답변
+
+Q1. ... — PASS (근거: SKILL.md "..." 섹션)
+Q2. ... — PASS
+Q3. ... — PASS
+
+agent content test: 3/3 PASS
+```
+
+**훅 통과 조건** (`pending-test-guard.js` 강화 후):
+- "수행일: YYYY-MM-DD" 라인 존재 AND
+- 같은 섹션에 *진짜 수행 흔적* 키워드 1개 이상 존재
+  (PASS / FAIL / Q1·Q2 / skill-tester 호출 / agent content test / N/N PASS)
+- 자백 키워드 라인은 진짜 흔적으로 간주되지 않음 (자동 제거 후 검사)
+
 ---
 
 ## 산출물 체크리스트

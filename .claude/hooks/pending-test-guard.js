@@ -8,15 +8,25 @@
  * 동작:
  *   1. docs/skills/**\/verification.md 스캔
  *   2. 오늘 날짜에 mtime 기록된 파일 중 status: PENDING_TEST 추출
- *   3. 섹션 5 "테스트 진행 기록"에 "수행일: YYYY-MM-DD" 라인이 **하나도 없으면** 차단
- *      → 과거 수행 기록이 있으면 섹션 7/8 cleanup-only 수정은 통과 (cleanup 허용 완화)
- *      → 신규 스킬(섹션 5 빈 상태)은 여전히 차단되어 skill-tester 호출 유도
+ *   3. 섹션 5 "테스트 진행 기록"에 *진짜* 수행 기록이 있는지 검사
+ *      → "수행일: YYYY-MM-DD" 라인 + 실제 테스트 흔적 키워드 동시 충족 필요
+ *      → "skill-tester 호출 미수행" 등 자백 키워드 발견 시 차단
  *   4. stderr로 skill-tester 호출 지시 + exit 2 (Stop 차단)
  *
  * 블로킹 정책:
- *   - PENDING_TEST이고 섹션 5에 어떤 수행일 라인도 없으면 → 차단 (exit 2)
- *   - PENDING_TEST이지만 섹션 5에 과거 수행 기록이 있으면 → 통과 (섹션 7 cleanup-only 허용)
+ *   - PENDING_TEST이고 진짜 수행 기록이 없으면 → 차단 (exit 2)
+ *   - PENDING_TEST이지만 진짜 수행 기록이 있으면 → 통과 (섹션 7 cleanup-only 허용)
  *   - APPROVED이거나 수정이 오늘이 아니면 → 통과
+ *
+ * "진짜 수행 기록" 정의:
+ *   - 섹션 5 안에 "수행일: YYYY-MM-DD" 라인 존재 AND
+ *   - 같은 섹션 안에 실제 테스트 흔적 키워드 1개 이상 존재
+ *     (PASS / FAIL / Q1 / Q2 / Q3 / skill-tester 정식 / agent content test / 답변 / 근거)
+ *   - 그리고 명시적 미수행 자백 키워드가 *하나도 없을 것*
+ *     (skill-tester 호출 미수행 / skill-tester 미수행 / agent content test 미수행)
+ *
+ * 자백 키워드가 있더라도 *나중 날짜의 진짜 수행 기록*이 추가되면 통과
+ * (예: 2026-05-07 셀프 검증 자백 + 2026-05-08 정식 skill-tester 기록 = 통과)
  *
  * 안전장치: 에러 발생 시 exit 0 (차단 않음)
  */
@@ -51,29 +61,81 @@ function findVerificationFiles(rootDir) {
 }
 
 function extractStatus(content) {
-  const m = content.match(/^---[\s\S]+?\n\s*status:\s*([A-Z_]+)\s*\n[\s\S]+?---/m)
-  return m ? m[1].trim() : null
+  // frontmatter 블록을 먼저 추출한 뒤 그 안에서 status 라인 검색
+  // (단순한 `---\nstatus:VAL\n---` 형태와 다중 필드 형태 모두 지원)
+  const fm = content.match(/^---\s*\n([\s\S]*?)\n---/m)
+  if (!fm) return null
+  const sm = fm[1].match(/^\s*status\s*:\s*([A-Z_]+)\s*$/m)
+  return sm ? sm[1].trim() : null
 }
 
-function hasTodayTestRecord(content, today) {
-  const section5Match = content.match(
+// 진짜 테스트 수행 흔적 키워드 (1개 이상 매치되어야 함)
+// 셀프 검증·자백 라인만 있을 때를 차단하기 위해 "실제 결과" 단서를 요구
+const GENUINE_TEST_KEYWORDS = [
+  /\bPASS\b/,
+  /\bFAIL\b/,
+  /\bPARTIAL\b/,
+  /\bQ\d+\./,                              // Q1. / Q2. 형식 질문 라벨
+  /skill-tester\s+(정식\s+)?호출/,         // skill-tester 정식 호출 / skill-tester 호출
+  /agent\s+content\s+test/i,
+  /수행자\s*[:：]\s*skill-tester/,
+  /\d+\/\d+\s*(PASS|FAIL)/,                // 3/3 PASS 형식
+]
+
+// 명시적 *미수행 자백* 키워드 — 검출되면 그 라인 자체는 진짜 수행으로 간주 안 함
+const NEGATION_KEYWORDS = [
+  /skill-tester\s+호출\s+미수행/,
+  /skill-tester\s+미수행/,
+  /agent\s+content\s+test\s+미수행/i,
+  /셀프\s+검증\s*\(skill-tester\s+호출\s+미수행\)/,
+]
+
+function extractSection5(content) {
+  const m = content.match(
     /##\s+5\.\s+테스트\s+진행\s+기록([\s\S]*?)(?=\n##\s+\d|\n---\s*$|$)/i
   )
-  if (!section5Match) return false
-  const body = section5Match[1]
-  const re = new RegExp(`수행일[\\s*:：]+${today}`)
-  return re.test(body)
+  return m ? m[1] : null
 }
 
-// 섹션 5에 어떤 형식이든 "수행일: YYYY-MM-DD" 라인이 존재하는지
-// 존재하면 과거 수행 기록이 있다고 간주해 섹션 7 cleanup-only 수정을 허용
-function hasAnyTestRecord(content) {
-  const section5Match = content.match(
-    /##\s+5\.\s+테스트\s+진행\s+기록([\s\S]*?)(?=\n##\s+\d|\n---\s*$|$)/i
-  )
-  if (!section5Match) return false
-  const body = section5Match[1]
+function hasAnyDateLine(body) {
   return /수행일[\s*:：]+\d{4}-\d{2}-\d{2}/.test(body)
+}
+
+function hasGenuineTestEvidence(body) {
+  // NEGATION 매치되는 라인은 먼저 제거한 뒤 GENUINE 검사
+  // → "skill-tester 호출 미수행" 의 "skill-tester 호출" 부분이
+  //   GENUINE("skill-tester 호출")으로 오판 매치되는 것 방지
+  const cleaned = body
+    .split(/\r?\n/)
+    .filter(line => !NEGATION_KEYWORDS.some(re => re.test(line)))
+    .join('\n')
+  return GENUINE_TEST_KEYWORDS.some(re => re.test(cleaned))
+}
+
+function hasOnlyNegationConfession(body) {
+  // 자백 키워드는 있는데 (자백 라인 제외 후) 진짜 수행 흔적은 없는 상태
+  const hasNegation = NEGATION_KEYWORDS.some(re => re.test(body))
+  return hasNegation && !hasGenuineTestEvidence(body)
+}
+
+// 오늘 진짜 수행 기록이 있는지 (오늘 날짜 라인 + 진짜 흔적 동시 충족)
+function hasTodayTestRecord(content, today) {
+  const body = extractSection5(content)
+  if (!body) return false
+  const todayRe = new RegExp(`수행일[\\s*:：]+${today}`)
+  if (!todayRe.test(body)) return false
+  // 오늘 날짜 라인은 있지만 진짜 흔적이 없으면 셀프 검증 자백으로 간주
+  return hasGenuineTestEvidence(body)
+}
+
+// 진짜 수행 기록이 한 번이라도 있는지 (cleanup-only 허용 판정용)
+// 자백 라인만 있는 셀프 검증은 진짜 수행으로 간주 안 함
+function hasAnyTestRecord(content) {
+  const body = extractSection5(content)
+  if (!body) return false
+  if (!hasAnyDateLine(body)) return false
+  if (hasOnlyNegationConfession(body)) return false
+  return hasGenuineTestEvidence(body)
 }
 
 async function readStdin() {
@@ -131,8 +193,13 @@ async function main() {
     '═══════════════════════════════════════════════════════════════',
     '',
     `다음 ${missing.length}개 스킬이 오늘(${today}) 생성/수정됐지만`,
-    '섹션 5 "테스트 진행 기록"에 어떤 "수행일" 라인도 없습니다:',
-    '(과거 수행 기록이라도 있으면 섹션 7 cleanup은 통과합니다)',
+    '섹션 5 "테스트 진행 기록"에 *진짜* 수행 기록이 없습니다.',
+    '',
+    '판정 기준:',
+    '  • "수행일: YYYY-MM-DD" 라인 + 실제 테스트 흔적 키워드 동시 필요',
+    '    (PASS / FAIL / Q1·Q2 / skill-tester 호출 / agent content test / N/N PASS)',
+    '  • "skill-tester 호출 미수행", "셀프 검증" 같은 자백 라인만 있으면 차단',
+    '    (셀프 검증은 skill-tester 정식 수행을 대체하지 않음)',
     '',
     ...missing.map(f => `  • ${f}`),
     '',
@@ -158,7 +225,21 @@ async function main() {
   process.exit(2)  // Stop 차단
 }
 
-main().catch(err => {
-  process.stderr.write(`pending-test-guard error (non-blocking): ${err.message}\n`)
-  process.exit(0)
-})
+if (require.main === module) {
+  main().catch(err => {
+    process.stderr.write(`pending-test-guard error (non-blocking): ${err.message}\n`)
+    process.exit(0)
+  })
+}
+
+module.exports = {
+  extractStatus,
+  extractSection5,
+  hasAnyDateLine,
+  hasGenuineTestEvidence,
+  hasOnlyNegationConfession,
+  hasTodayTestRecord,
+  hasAnyTestRecord,
+  GENUINE_TEST_KEYWORDS,
+  NEGATION_KEYWORDS,
+}
