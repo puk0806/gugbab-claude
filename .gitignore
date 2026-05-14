@@ -31,5 +31,5 @@ Thumbs.db
 *.pem
 
 # 학위논문 작업물 (개인 작업물 — 본 repo는 Claude Code 컨벤션 repo)
-akrasia-thesis-draft.md
+akrasia/*
 research-notes/
