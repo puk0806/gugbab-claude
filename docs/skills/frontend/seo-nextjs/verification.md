@@ -1,12 +1,12 @@
 ---
-skill: seo
+skill: seo-nextjs
 category: frontend
-version: v1
-date: 2026-04-14
+version: v2
+date: 2026-06-01
 status: APPROVED
 ---
 
-# seo 스킬 검증 문서
+# seo-nextjs 스킬 검증 문서
 
 ---
 
@@ -32,10 +32,10 @@ status: APPROVED
 
 | 항목 | 내용 |
 |------|------|
-| 스킬 이름 | seo |
-| 스킬 경로 | `.claude/skills/frontend/seo/SKILL.md` |
+| 스킬 이름 | seo-nextjs |
+| 스킬 경로 | `.claude/skills/frontend/seo-nextjs/SKILL.md` |
 | 최초 작성일 | 2026-04-01 |
-| 재검증일 | 2026-04-14 |
+| 재검증일 | 2026-06-01 (리네이밍) |
 | 검증 방법 | frontend-architect 활용 테스트 |
 | 버전 기준 | Next.js 15 App Router |
 
@@ -137,3 +137,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-04-01 | v1 | 최초 작성 및 frontend-architect 활용 테스트 완료 | frontend-architect 에이전트 |
 | 2026-04-17 | v2 | verification.md 신규 8섹션 포맷으로 마이그레이션 | 메인 대화 오케스트레이션 |
+| 2026-06-01 | v2 | SEO 스킬 분할 작업에 따라 seo → seo-nextjs 리네이밍. 동일 SKILL 내용 유지(범위가 Next.js 한정으로 명확). seo-vite-spa·seo-static-html이 별도 스킬로 분리됨 | 메인 대화 |

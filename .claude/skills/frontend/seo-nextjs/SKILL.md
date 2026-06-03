@@ -1,5 +1,5 @@
 ---
-name: seo
+name: seo-nextjs
 description: Next.js 15 App Router SEO — Metadata API, OpenGraph, JSON-LD, sitemap/robots
 ---
 
