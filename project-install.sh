@@ -35,10 +35,11 @@ echo "  3) nextjs            — Next.js App Router"
 echo "  4) rust-axum         — Rust + Axum 백엔드"
 echo "  5) java-spring-legacy — Java 11 + Spring Boot 2.5 + WAR + MyBatis"
 echo "  6) java-spring-modern — Java 21 + Spring Boot 3.x + Jar/Native + MyBatis"
+echo "  7) unity-game        — Unity 6 LTS 2D 모바일 게임 개발"
 echo ""
 
 while true; do
-  read -rp "번호 입력 (0/1/2/3/4/5/6): " TEMPLATE_NUM
+  read -rp "번호 입력 (0/1/2/3/4/5/6/7): " TEMPLATE_NUM
   case "$TEMPLATE_NUM" in
     0) TEMPLATE="all"; break ;;
     1) TEMPLATE="util"; break ;;
@@ -47,7 +48,8 @@ while true; do
     4) TEMPLATE="rust-axum"; break ;;
     5) TEMPLATE="java-spring-legacy"; break ;;
     6) TEMPLATE="java-spring-modern"; break ;;
-    *) echo "오류: 0, 1, 2, 3, 4, 5, 6 중 하나를 입력하세요." ;;
+    7) TEMPLATE="unity-game"; break ;;
+    *) echo "오류: 0, 1, 2, 3, 4, 5, 6, 7 중 하나를 입력하세요." ;;
   esac
 done
 
@@ -66,11 +68,34 @@ fi
 mkdir -p "$TARGET/.claude/hooks"
 echo "[hooks]"
 
-# 유틸: 기본 3개만 / 나머지: 검증 훅 포함 전체
+# 유틸: 범용 훅 (보안·알림·컨텍스트 요약)
+# 개발: 유틸 훅 + 검증·품질·TDD 훅 전체
+HOOKS_UTIL=(
+  "bash-guard.js"
+  "auto-approve.js"
+  "session-start.js"
+  "session-summary.js"
+  "parry.js"
+  "cc-notify.js"
+  "pre-compact.js"
+  "instructions-loaded.js"
+  "user-prompt-submit.js"
+  "subagent-audit.js"
+)
+HOOKS_DEV=(
+  "${HOOKS_UTIL[@]}"
+  "verification-guard.js"
+  "skill-md-guard.js"
+  "pending-test-guard.js"
+  "drift-monitor.js"
+  "tdd-guard.js"
+  "typescript-quality.js"
+)
+
 if [ "$TEMPLATE" = "util" ]; then
-  HOOKS=("bash-guard.js" "auto-approve.js" "session-summary.js")
+  HOOKS=("${HOOKS_UTIL[@]}")
 else
-  HOOKS=("bash-guard.js" "auto-approve.js" "session-summary.js" "verification-guard.js" "skill-md-guard.js" "pending-test-guard.js")
+  HOOKS=("${HOOKS_DEV[@]}")
 fi
 
 for hook in "${HOOKS[@]}"; do
@@ -80,6 +105,19 @@ for hook in "${HOOKS[@]}"; do
     echo "  ✗ .claude/hooks/$hook (복사 실패)"
   fi
 done
+
+# git 훅 (.githooks/pre-commit) — 개발 템플릿만
+if [ "$TEMPLATE" != "util" ]; then
+  if [ -d "$REPO_DIR/.githooks" ]; then
+    mkdir -p "$TARGET/.githooks"
+    if cp -Rf "$REPO_DIR/.githooks/." "$TARGET/.githooks/" 2>/dev/null; then
+      chmod +x "$TARGET/.githooks/"* 2>/dev/null || true
+      echo "  → .githooks/ (활성화: cd $TARGET && git config core.hooksPath .githooks)"
+    else
+      echo "  ✗ .githooks/ (복사 실패)"
+    fi
+  fi
+fi
 
 # ── 2. agents ─────────────────────────────────────────────────────────
 echo ""
@@ -115,6 +153,17 @@ EXCLUDE_AGENTS_BACKEND=(
   "frontend/frontend-architect.md"
   "backend/java-backend-developer.md"
   "backend/java-backend-architect.md"
+)
+
+# unity-game: 웹 프론트엔드 + 서버 백엔드 에이전트 제외 (게임 파이프라인에 불필요)
+EXCLUDE_AGENTS_GAME=(
+  "frontend/frontend-developer.md"
+  "frontend/frontend-architect.md"
+  "backend/rust-backend-developer.md"
+  "backend/rust-backend-architect.md"
+  "backend/java-backend-developer.md"
+  "backend/java-backend-architect.md"
+  "backend/build-error-resolver.md"
 )
 
 # java-spring-*: 프론트엔드·Rust 백엔드 에이전트 제외 (build-error-resolver는 Rust/TS/Vite 전용이라 Java 제외)
@@ -164,6 +213,15 @@ for src_path in "$REPO_DIR/.claude/agents"/**/*.md "$REPO_DIR/.claude/agents"/*.
       [ "$rel" = "$ex" ] && skip=true && break
     done
     $skip && echo "  skip (java 외) .claude/agents/$rel" && continue
+  fi
+
+  # unity-game: 웹·서버 에이전트 제외
+  if [ "$TEMPLATE" = "unity-game" ]; then
+    skip=false
+    for ex in "${EXCLUDE_AGENTS_GAME[@]}"; do
+      [ "$rel" = "$ex" ] && skip=true && break
+    done
+    $skip && echo "  skip (웹·서버 에이전트 제외) .claude/agents/$rel" && continue
   fi
 
   dest="$TARGET/.claude/agents/$rel"
@@ -343,6 +401,18 @@ for src_path in "$REPO_DIR/.claude/skills"/*/*/SKILL.md; do
     done
   fi
 
+  # unity-game: 웹 프론트엔드 + 서버 백엔드 스킬 제외 (game/*, devops/*, architecture/* 포함)
+  if [ "$TEMPLATE" = "unity-game" ]; then
+    if [[ "$rel" == frontend/* ]]; then
+      echo "  skip (웹 프론트엔드 제외) .claude/skills/$rel"
+      continue
+    fi
+    if [[ "$rel" == backend/* ]]; then
+      echo "  skip (서버 백엔드 제외) .claude/skills/$rel"
+      continue
+    fi
+  fi
+
   dest="$TARGET/.claude/skills/$rel"
   mkdir -p "$(dirname "$dest")"
   if cp -f "$src_path" "$dest" 2>/dev/null; then
@@ -468,6 +538,10 @@ echo ""
 echo "다음 단계:"
 echo "  1. CLAUDE.md 열어서 프로젝트명·실행 명령어 수정"
 echo "  2. .claude/ 와 CLAUDE.md 를 git에 커밋"
+if [ "$TEMPLATE" != "util" ]; then
+  echo "  3. git 훅 활성화 (시크릿 스캔 pre-commit):"
+  echo "       git config core.hooksPath .githooks"
+fi
 echo ""
 echo "  git add .claude/ CLAUDE.md"
 echo "  git commit -m '[config] Add: Claude Code 컨벤션 설정'"
