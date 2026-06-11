@@ -62,10 +62,10 @@ metadata:
 
 ---
 
-## 현재 훅 수 (18종)
-- 공통 12 + 개발 전용 2(tdd-guard·test-fake-guard) + TypeScript 전용 1(typescript-quality) + memory 선택 3
-- test-fake-guard.js (신규): PreToolUse Bash — echo/printf 가짜 테스트 결과·단독 true/exit 0 차단 (exit 2)
-- session-summary.js: Stop 핸들러에 Claude 작업 요약 지시 주입 강화
+## 현재 훅 수 (20종)
+- 공통 14 + 개발 전용 2(tdd-guard·test-fake-guard) + TypeScript 전용 1(typescript-quality) + memory 선택 3
+- Task 5 신규: agent-md-guard.js (PostToolUse Write: agent .md 구조 검증), readme-guard.js (Stop 경고: README 미업데이트 감지)
+- 공통 14: bash-guard·auto-approve·parry·session-start·session-summary·cc-notify·instructions-loaded·pending-test-guard·readme-guard·skill-md-guard·agent-md-guard·verification-guard·staleness-check·task-plan-guard
 
 ## 현재 스킬 수 (202종)
 - frontend: 76종
