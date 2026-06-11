@@ -39,23 +39,23 @@ metadata:
 - java.md·rust.md 룰 export 필터링 → Task 3으로 이관
 - settings.json에서 4개 이벤트 블록 제거 완료
 
-### 작업 3: Export 구조화 🔄 진행 중
+### 작업 3: Export 구조화 ✅ 완료
 - ✅ 훅 export 매트릭스 설계·구현 (`project-install.sh` + `scripts/gen-settings.js`)
-  - 공통(11): bash-guard·auto-approve·parry·session-start·session-summary·cc-notify·instructions-loaded·pending-test-guard·skill-md-guard·verification-guard·staleness-check
+  - 공통(12): bash-guard·auto-approve·parry·session-start·session-summary·cc-notify·instructions-loaded·pending-test-guard·skill-md-guard·verification-guard·staleness-check·task-plan-guard
   - 개발 전용: tdd-guard. TypeScript 전용: typescript-quality. Memory 선택: memory-pull·memory-sync·memory-stop-guard
-- ✅ 룰 export 매트릭스 구현 (공통7·언어별3·memory선택1)
+- ✅ 룰 export 매트릭스 구현 (공통8[task-workflow.md 추가]·언어별3·memory선택1)
 - ✅ memory 공유 기능 선택 질문 신설 (y/N)
-- ✅ 강제화: parry·typescript-quality exit 2 차단. staleness-check 신규 훅
-- ⬜ 각 템플릿용 CLAUDE.md 파일 작성 (examples/ 폴더)
-- ⬜ project-install.sh 설치 테스트 (빈 디렉토리에 각 템플릿 실행)
+- ✅ 강제화: parry·typescript-quality exit 2 차단. staleness-check·task-plan-guard 신규 훅
+- ✅ 9종 CLAUDE.md 템플릿 작성 (`examples/` 폴더) — util·react-spa·nextjs·rust-axum·java-spring-legacy·java-spring-modern·unity-game·academic·dream-interpretation
+- ✅ project-install.sh 설치 테스트 통과 (react-spa·java-spring-legacy·util 3개 검증)
 
 ### 작업 4: README 개편 ⬜ 대기
 ### 작업 5: 강제성 강화 ⬜ 대기
 
 ---
 
-## 현재 훅 수 (16종)
-- 공통 11 + 개발 전용 1(tdd-guard) + TypeScript 전용 1(typescript-quality) + memory 선택 3
+## 현재 훅 수 (17종)
+- 공통 12 + 개발 전용 1(tdd-guard) + TypeScript 전용 1(typescript-quality) + memory 선택 3
 
 ## 현재 스킬 수 (202종)
 - frontend: 76종
