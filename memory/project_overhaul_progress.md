@@ -54,6 +54,9 @@ metadata:
 
 ---
 
+## 현재 훅 수 (16종)
+- 공통 11 + 개발 전용 1(tdd-guard) + TypeScript 전용 1(typescript-quality) + memory 선택 3
+
 ## 현재 스킬 수 (202종)
 - frontend: 76종
 - backend Rust: 17종 / Java: 22종 / Python: 10종
