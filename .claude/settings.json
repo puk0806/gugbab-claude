@@ -85,6 +85,12 @@
           { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/bash-guard.js" },
           { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/auto-approve.js" }
         ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/parry.js" }
+        ]
       }
     ],
     "PostToolUse": [
@@ -94,14 +100,20 @@
           { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/verification-guard.js" },
           { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/skill-md-guard.js" },
           { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/drift-monitor.js" },
-          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-summary.js" }
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/tdd-guard.js" },
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/typescript-quality.js" },
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-summary.js" },
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/memory-sync.js" }
         ]
       },
       {
         "matcher": "Edit",
         "hooks": [
           { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/drift-monitor.js" },
-          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-summary.js" }
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/tdd-guard.js" },
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/typescript-quality.js" },
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-summary.js" },
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/memory-sync.js" }
         ]
       },
       {
@@ -111,11 +123,58 @@
         ]
       }
     ],
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/memory-pull.js" },
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-start.js" }
+        ]
+      }
+    ],
+    "InstructionsLoaded": [
+      {
+        "hooks": [
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/instructions-loaded.js" }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/user-prompt-submit.js" }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/subagent-audit.js" }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/subagent-audit.js" }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/pre-compact.js" }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [
           { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/pending-test-guard.js" },
-          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-summary.js" }
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/memory-stop-guard.js" },
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-summary.js" },
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/cc-notify.js" }
         ]
       }
     ],

@@ -20,6 +20,7 @@ Claude Code 활용에 필요한 에이전트(Agent), 스킬(Skill), 설정(CLAUD
 - 검증되지 않은 외부 소스 그대로 복붙 금지
 - 테스트되지 않은 에이전트를 main 브랜치에 직접 커밋 금지
 - **verification.md, SKILL.md를 Bash(sed/awk 등)로 수정 금지** — 반드시 Write/Edit 도구 사용
+- **memory 파일을 Bash로 직접 수정 금지** — Write/Edit 도구 사용 시에만 memory-sync 훅이 자동 동기화
 - **PENDING_TEST → APPROVED 일괄 전환 금지** — 스킬별 개별 검증 필수 (@.claude/rules/verification-policy.md)
 
 ---
@@ -34,3 +35,5 @@ Claude Code 활용에 필요한 에이전트(Agent), 스킬(Skill), 설정(CLAUD
 | Git 커밋 컨벤션 | @.claude/rules/git.md |
 | README 업데이트 | @.claude/rules/readme-update.md |
 | 검증 정책·APPROVED 전환 | @.claude/rules/verification-policy.md |
+| 슬래시 커맨드 작성·목록 | @.claude/rules/commands.md |
+| 메모리 동기화 정책 | @.claude/rules/memory-sync.md |
