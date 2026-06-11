@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SEO · GEO 유의사항 치트시트</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --bg2: #1a1d27;
+      --bg3: #252836;
+      --border: #2e3147;
+      --text: #e2e4ef;
+      --muted: #8b8fa8;
+      --accent-blue: #4f9cf9;
+      --accent-green: #3ecf8e;
+      --accent-yellow: #f0b429;
+      --accent-red: #f55b5b;
+      --accent-purple: #9b72cf;
+      --accent-orange: #f97316;
+      --accent-cyan: #22d3ee;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.6;
+      display: flex;
+    }
+    /* NAV */
+    nav {
+      width: 220px;
+      min-height: 100vh;
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 20px 0;
+      flex-shrink: 0;
+    }
+    nav .logo {
+      padding: 0 16px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent-blue);
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 8px;
+    }
+    nav a {
+      display: block;
+      padding: 6px 16px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 12.5px;
+      border-left: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    nav a:hover { color: var(--text); background: var(--bg3); }
+    nav .nav-section { padding: 12px 16px 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #555a7a; }
+    nav a.active { color: var(--accent-blue); border-left-color: var(--accent-blue); }
+
+    /* MAIN */
+    main { flex: 1; padding: 32px; max-width: 1100px; overflow-x: hidden; }
+    h1 { font-size: 24px; margin-bottom: 6px; }
+    .subtitle { color: var(--muted); margin-bottom: 36px; font-size: 13px; }
+    section { margin-bottom: 48px; }
+    h2 {
+      font-size: 16px; font-weight: 700;
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    h2 .tag {
+      font-size: 10px; font-weight: 600; padding: 2px 7px;
+      border-radius: 20px; letter-spacing: 0.05em;
+    }
+    h3 { font-size: 13px; font-weight: 600; color: var(--muted); margin: 20px 0 10px; text-transform: uppercase; letter-spacing: 0.06em; }
+    p { margin-bottom: 10px; color: var(--text); }
+
+    /* CARDS */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .card-title { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+    .card ul { list-style: none; }
+    .card ul li { font-size: 12.5px; color: var(--muted); padding: 3px 0; border-bottom: 1px solid var(--border); }
+    .card ul li:last-child { border-bottom: none; }
+    .card ul li::before { content: "•"; color: var(--accent-blue); margin-right: 6px; }
+    .card ul li strong { color: var(--text); }
+    .card ul li .bad { color: var(--accent-red); }
+    .card ul li .good { color: var(--accent-green); }
+
+    /* TABLE */
+    .tbl-wrap { overflow-x: auto; margin: 12px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    th { background: var(--bg3); color: var(--muted); font-weight: 600; padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+    td { padding: 8px 12px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--bg3); }
+    td code, th code { font-size: 11.5px; background: var(--bg3); padding: 1px 5px; border-radius: 4px; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+
+    /* BADGE */
+    .badge {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 2px 7px; border-radius: 20px; margin-left: 6px; vertical-align: middle;
+    }
+    .badge-green { background: #14352a; color: var(--accent-green); }
+    .badge-red { background: #3b1a1a; color: var(--accent-red); }
+    .badge-yellow { background: #3b2d0a; color: var(--accent-yellow); }
+    .badge-blue { background: #112040; color: var(--accent-blue); }
+    .badge-purple { background: #281c3b; color: var(--accent-purple); }
+
+    /* ALERT */
+    .alert {
+      padding: 10px 14px; border-radius: 8px; margin: 10px 0;
+      font-size: 12.5px; display: flex; gap: 8px; align-items: flex-start;
+    }
+    .alert-warn { background: #2e2200; border-left: 3px solid var(--accent-yellow); }
+    .alert-info { background: #0d1f35; border-left: 3px solid var(--accent-blue); }
+    .alert-danger { background: #2e0a0a; border-left: 3px solid var(--accent-red); }
+    .alert-ok { background: #0a2416; border-left: 3px solid var(--accent-green); }
+
+    /* CODE */
+    pre {
+      background: #0a0c14; border: 1px solid var(--border);
+      border-radius: 8px; padding: 14px 16px;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 12px; overflow-x: auto; margin: 10px 0;
+      line-height: 1.7;
+    }
+    code { font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 12px; }
+    .cmt { color: #555a7a; }
+    .kw { color: var(--accent-blue); }
+    .str { color: var(--accent-green); }
+    .val { color: var(--accent-yellow); }
+    .tag-name { color: var(--accent-red); }
+    .attr { color: var(--accent-cyan); }
+
+    /* CHECKLIST */
+    .checklist { list-style: none; }
+    .checklist li { padding: 5px 0; font-size: 12.5px; border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: flex-start; }
+    .checklist li:last-child { border-bottom: none; }
+    .checklist li::before { content: "☐"; font-size: 13px; flex-shrink: 0; color: var(--muted); margin-top: 1px; }
+
+    /* SECTION COLORS */
+    .s-geo h2 { background: linear-gradient(90deg, #1a1040, var(--bg2)); border-left: 3px solid var(--accent-purple); }
+    .s-technical h2 { background: linear-gradient(90deg, #0d1a30, var(--bg2)); border-left: 3px solid var(--accent-blue); }
+    .s-content h2 { background: linear-gradient(90deg, #0a2010, var(--bg2)); border-left: 3px solid var(--accent-green); }
+    .s-korea h2 { background: linear-gradient(90deg, #2e1a00, var(--bg2)); border-left: 3px solid var(--accent-orange); }
+    .s-infra h2 { background: linear-gradient(90deg, #1a1010, var(--bg2)); border-left: 3px solid var(--accent-red); }
+    .s-checklist h2 { background: linear-gradient(90deg, #001a1a, var(--bg2)); border-left: 3px solid var(--accent-cyan); }
+
+    .divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } nav { display: none; } }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">🔍 SEO · GEO 치트시트</div>
+  <div class="nav-section">GEO</div>
+  <a href="#geo">AI 검색 최적화</a>
+  <a href="#geo-crawlers">크롤러 제어</a>
+  <a href="#geo-content">인용 친화 구조</a>
+
+  <div class="nav-section">Technical SEO</div>
+  <a href="#meta">메타태그 기본</a>
+  <a href="#cwv">Core Web Vitals</a>
+  <a href="#image">이미지 최적화</a>
+  <a href="#font">폰트 최적화</a>
+  <a href="#schema">Schema.org JSON-LD</a>
+  <a href="#security">보안 헤더 + SEO</a>
+  <a href="#bot">봇 관리</a>
+  <a href="#canonical">Canonical · 리다이렉트</a>
+  <a href="#mobile">모바일 · PWA</a>
+
+  <div class="nav-section">Content SEO</div>
+  <a href="#eeat">E-E-A-T 품질</a>
+  <a href="#ymyl">YMYL 주의사항</a>
+  <a href="#og">OG 이미지</a>
+  <a href="#i18n">다국어 SEO</a>
+  <a href="#multilingual">다국어 콘텐츠 전략</a>
+
+  <div class="nav-section">한국 특수성</div>
+  <a href="#naver">네이버 SEO</a>
+  <a href="#kakao">카카오 공유</a>
+  <a href="#local">로컬 비즈니스</a>
+
+  <div class="nav-section">인프라</div>
+  <a href="#monitoring">모니터링 자동화</a>
+  <a href="#a11y">접근성(WCAG 2.2)</a>
+  <a href="#media-a11y">미디어 접근성</a>
+  <a href="#ecommerce">이커머스 SEO</a>
+
+  <div class="nav-section">체크리스트</div>
+  <a href="#checklist">런치 전 체크리스트</a>
+</nav>
+
+<main>
+  <h1>SEO · GEO 유의사항 치트시트</h1>
+  <p class="subtitle">2026-06-04 기준 · 공식 문서 교차 검증 완료 스킬 기반 · 한 눈에 보는 실무 핵심 요약</p>
+
+  <!-- ===== GEO ===== -->
+  <section class="s-geo" id="geo">
+    <h2>🤖 GEO — AI 검색 최적화 (Generative Engine Optimization)
+      <span class="tag badge badge-purple">NEW 2024+</span>
+    </h2>
+    <p style="color:var(--muted);font-size:12.5px;margin-bottom:16px;">ChatGPT·Perplexity·Google AI Overviews·Claude 답변에 사이트가 인용되도록 하는 최적화. 전통 SEO와 목표가 다르다.</p>
+
+    <div class="alert alert-warn">
+      ⚠️ <span><strong>GEO의 핵심:</strong> 학습용 크롤러를 전부 차단하면 AI 답변 인용 기회도 함께 사라진다. 학습은 차단하되 인용·검색용은 허용하는 전략이 기본값.</span>
+    </div>
+
+    <h3 id="geo-crawlers">AI 크롤러 3분류 + robots.txt 전략</h3>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>분류</th><th>User-agent 예시</th><th>차단 시 영향</th><th>권장</th></tr>
+        <tr><td><strong>학습용</strong></td><td><code>GPTBot</code> <code>ClaudeBot</code> <code>Google-Extended</code> <code>Applebot-Extended</code> <code>Meta-ExternalAgent</code> <code>CCBot</code></td><td>모델 학습에 미사용 — 인용 영향 <em>적음</em></td><td class="badge badge-yellow">선택적 차단 가능</td></tr>
+        <tr><td><strong>인덱싱·검색용</strong></td><td><code>OAI-SearchBot</code> <code>Claude-SearchBot</code> <code>PerplexityBot</code></td><td><span style="color:var(--accent-red)">차단하면 AI 검색 결과에서 사라짐</span></td><td class="badge badge-green">허용 권장</td></tr>
+        <tr><td><strong>사용자 요청 fetch</strong></td><td><code>ChatGPT-User</code> <code>Claude-User</code> <code>Perplexity-User</code></td><td>사용자가 명시 요청 시 동작. 일부는 robots.txt 무시 가능 명시</td><td class="badge badge-blue">허용 권장</td></tr>
+      </table>
+    </div>
+
+    <div class="alert alert-info">
+      ℹ️ <code>Google-Extended</code>는 크롤러가 아니라 <strong>robots.txt 토큰</strong>이다. Googlebot 자체가 아닌, 수집 데이터가 Gemini·Vertex AI 학습에 쓰일지만 제어한다. Googlebot을 차단하면 일반 구글 검색도 사라진다.
+    </div>
+
+    <h3>robots.txt 권장 템플릿 — "학습 차단, 인용 허용"</h3>
+    <pre><span class="cmt"># 학습용은 차단</span>
+<span class="kw">User-agent:</span> <span class="str">GPTBot</span>
+<span class="kw">Disallow:</span> <span class="str">/</span>
+
+<span class="kw">User-agent:</span> <span class="str">ClaudeBot</span>
+<span class="kw">Disallow:</span> <span class="str">/</span>
+
+<span class="kw">User-agent:</span> <span class="str">Google-Extended</span>
+<span class="kw">Disallow:</span> <span class="str">/</span>
+
+<span class="cmt"># 인덱싱·인용용은 허용 (기본값 allow이므로 명시 안해도 됨)</span>
+<span class="kw">User-agent:</span> <span class="str">OAI-SearchBot</span>
+<span class="kw">Allow:</span> <span class="str">/</span>
+
+<span class="kw">User-agent:</span> <span class="str">PerplexityBot</span>
+<span class="kw">Allow:</span> <span class="str">/</span></pre>
+
+    <h3 id="geo-content">인용 친화 콘텐츠 구조 (GEO 핵심)</h3>
+    <div class="grid">
+      <div class="card">
+        <div class="card-title" style="color:var(--accent-purple)">✅ AI가 인용하기 좋은 구조</div>
+        <ul>
+          <li><strong>질문-답변 구조</strong> 우선 (What is X? → 명확한 1~2문장 답변)</li>
+          <li><strong>청크 100~300토큰</strong> 단위로 단락 구분</li>
+          <li><strong>FAQPage JSON-LD</strong> 마크업 추가</li>
+          <li><strong>정의·통계·인용 출처</strong>를 명시 (신뢰도 신호)</li>
+          <li>문장 두괄식: 핵심 → 세부 설명 순서</li>
+          <li>고유 데이터·조사·관점 포함 (복붙 콘텐츠 인용 안 됨)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:var(--accent-red)">❌ AI 인용이 안 되는 패턴</div>
+        <ul>
+          <li><span class="bad">광고성 서술</span> ("최고의 솔루션!" 등)</li>
+          <li><span class="bad">robots.txt로 OAI-SearchBot 차단</span></li>
+          <li><span class="bad">JavaScript 렌더링 의존</span> (크롤러가 읽지 못함)</li>
+          <li><span class="bad">중복 콘텐츠</span> (타 사이트 복붙)</li>
+          <li><span class="bad">로그인 필요 페이지</span></li>
+          <li><span class="bad">이미지 속 텍스트만</span> (OCR 의존 불안정)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="alert alert-warn">
+      ⚠️ <strong>llms.txt</strong>는 Answer.AI가 제안한 비공식 표준이다. 아직 OpenAI·Google·Anthropic이 공식 채택하지 않았으므로 "있으면 좋지만 없어도 현재 SEO에 직접 영향 없음" 수준.
+    </div>
+  </section>
+
+  <!-- ===== TECHNICAL SEO ===== -->
+  <section class="s-technical" id="meta">
+    <h2>🏷️ 메타태그 · HTML 기본</h2>
+
+    <h3>head 필수 5종 (순서 중요)</h3>
+    <pre><span class="tag-name">&lt;meta</span> <span class="attr">charset</span>=<span class="str">"utf-8"</span><span class="tag-name">&gt;</span>
+<span class="tag-name">&lt;meta</span> <span class="attr">name</span>=<span class="str">"viewport"</span> <span class="attr">content</span>=<span class="str">"width=device-width, initial-scale=1"</span><span class="tag-name">&gt;</span>
+<span class="tag-name">&lt;title&gt;</span>페이지 고유 타이틀 — 사이트명<span class="tag-name">&lt;/title&gt;</span>  <span class="cmt">// 50~60자</span>
+<span class="tag-name">&lt;meta</span> <span class="attr">name</span>=<span class="str">"description"</span> <span class="attr">content</span>=<span class="str">"50~160자 요약"</span><span class="tag-name">&gt;</span>
+<span class="tag-name">&lt;link</span> <span class="attr">rel</span>=<span class="str">"canonical"</span> <span class="attr">href</span>=<span class="str">"https://example.com/path/"</span><span class="tag-name">&gt;</span>  <span class="cmt">// 절대 URL</span></pre>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">OG (OpenGraph) 필수</div>
+        <ul>
+          <li><code>og:title</code> — 페이지 제목</li>
+          <li><code>og:description</code> — 요약 (200자 이내)</li>
+          <li><code>og:image</code> — <strong>1200×630px</strong> 절대 URL</li>
+          <li><code>og:url</code> — canonical과 동일</li>
+          <li><code>og:type</code> — <code>website</code> or <code>article</code></li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">X (Twitter) 카드</div>
+        <ul>
+          <li><code>twitter:card</code> — <code>summary_large_image</code></li>
+          <li><code>twitter:title</code></li>
+          <li><code>twitter:description</code></li>
+          <li><code>twitter:image</code> — 최소 300×157px</li>
+          <li><code>twitter:site</code> — @계정명</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="alert alert-info">
+      ℹ️ <code>meta name="keywords"</code>는 Google이 무시. 작성해도 SEO에 해롭진 않지만 시간 낭비.
+    </div>
+
+    <h3>robots 메타 + X-Robots-Tag</h3>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>디렉티브</th><th>의미</th><th>주요 사용처</th></tr>
+        <tr><td><code>noindex</code></td><td>검색 결과 노출 차단</td><td>내부 검색 결과, 로그인 페이지, 파라미터 URL</td></tr>
+        <tr><td><code>nofollow</code></td><td>링크 추적 차단</td><td>댓글 영역, 광고 링크</td></tr>
+        <tr><td><code>noarchive</code></td><td>캐시 링크 미노출</td><td>실시간 가격·재고 페이지</td></tr>
+        <tr><td><code>max-snippet:N</code></td><td>텍스트 스니펫 길이 제한</td><td>유료 콘텐츠 미리보기</td></tr>
+        <tr><td><code>unavailable_after: DATE</code></td><td>특정 날짜 후 인덱싱 중단</td><td>이벤트·기간 한정 프로모션</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section class="s-technical" id="cwv">
+    <h2>⚡ Core Web Vitals (CWV)</h2>
+
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>지표</th><th>측정 대상</th><th class="badge-green">Good</th><th class="badge-yellow">NI</th><th class="badge-red">Poor</th></tr>
+        <tr><td><strong>LCP</strong></td><td>가장 큰 콘텐츠 렌더 시점</td><td>≤ 2.5s</td><td>2.5–4.0s</td><td>&gt; 4.0s</td></tr>
+        <tr><td><strong>INP</strong></td><td>모든 상호작용 응답성 (FID 대체, 2024-03-12)</td><td>≤ 200ms</td><td>200–500ms</td><td>&gt; 500ms</td></tr>
+        <tr><td><strong>CLS</strong></td><td>시각적 레이아웃 안정성</td><td>≤ 0.10</td><td>0.10–0.25</td><td>&gt; 0.25</td></tr>
+      </table>
+    </div>
+
+    <div class="alert alert-warn">
+      ⚠️ Lighthouse 90+이어도 CrUX(실제 사용자 데이터)가 Poor일 수 있다. <strong>Google 순위 반영은 CrUX 기준</strong>. Lighthouse는 디버깅·CI 보조용.
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="card-title" style="color:var(--accent-blue)">LCP 개선 핵심</div>
+        <ul>
+          <li>히어로 이미지에 <code>fetchpriority="high"</code></li>
+          <li><code>&lt;link rel="preload" as="image"&gt;</code> 조기 선언</li>
+          <li>LCP 이미지에 <code>loading="lazy"</code> 금지</li>
+          <li>TTFB 500ms 이하 유지 (서버 응답 최적화)</li>
+          <li>렌더 블로킹 CSS·JS 제거 or defer</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:var(--accent-green)">INP 개선 핵심</div>
+        <ul>
+          <li>React: <code>useTransition</code> / <code>useDeferredValue</code></li>
+          <li><code>scheduler.yield()</code> (Chrome 129+ stable)</li>
+          <li>Long Task &gt; 50ms를 Task로 쪼개기</li>
+          <li>무거운 이벤트 핸들러는 <code>setTimeout(0)</code> 위임</li>
+          <li>Third-party 스크립트 → Partytown 격리</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:var(--accent-yellow)">CLS 개선 핵심</div>
+        <ul>
+          <li>모든 이미지에 <code>width</code> + <code>height</code> 명시</li>
+          <li>광고·임베드: 고정 크기 placeholder</li>
+          <li>동적 삽입 콘텐츠는 뷰포트 상단 위치 금지</li>
+          <li>웹폰트 FOUT: <code>font-display: swap</code> + <code>size-adjust</code></li>
+          <li>애니메이션은 <code>transform</code>·<code>opacity</code>만</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="s-technical" id="image">
+    <h2>🖼️ 이미지 최적화</h2>
+
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>도구</th><th>푸는 문제</th><th>사용 시나리오</th></tr>
+        <tr><td><code>srcset + sizes</code></td><td>같은 이미지, 뷰포트별 다른 <em>크기</em></td><td>본문 콘텐츠 이미지</td></tr>
+        <tr><td><code>srcset x 디스크립터</code></td><td>같은 크기, 디스플레이 <em>해상도</em> 차이</td><td>아이콘·로고</td></tr>
+        <tr><td><code>&lt;picture&gt; + media</code></td><td>뷰포트별 다른 <em>크롭</em> (art direction)</td><td>히어로 이미지</td></tr>
+        <tr><td><code>&lt;picture&gt; + type</code></td><td>포맷 <em>폴백 체인</em></td><td>AVIF → WebP → JPEG</td></tr>
+      </table>
+    </div>
+
+    <h3>포맷 폴백 체인 (권장 순서)</h3>
+    <pre><span class="tag-name">&lt;picture&gt;</span>
+  <span class="tag-name">&lt;source</span> <span class="attr">type</span>=<span class="str">"image/avif"</span> <span class="attr">srcset</span>=<span class="str">"hero.avif"</span><span class="tag-name">&gt;</span>
+  <span class="tag-name">&lt;source</span> <span class="attr">type</span>=<span class="str">"image/webp"</span> <span class="attr">srcset</span>=<span class="str">"hero.webp"</span><span class="tag-name">&gt;</span>
+  <span class="tag-name">&lt;img</span> <span class="attr">src</span>=<span class="str">"hero.jpg"</span> <span class="attr">alt</span>=<span class="str">"..."</span> <span class="attr">width</span>=<span class="str">"1200"</span> <span class="attr">height</span>=<span class="str">"630"</span>
+       <span class="attr">fetchpriority</span>=<span class="str">"high"</span> <span class="tag-name">/&gt;</span>  <span class="cmt">// LCP 이미지라면</span>
+<span class="tag-name">&lt;/picture&gt;</span></pre>
+
+    <div class="grid">
+      <div class="card">
+        <div class="card-title">alt text 작성 원칙</div>
+        <ul>
+          <li>80~140자 권장 (SEO + a11y 교차)</li>
+          <li>5W1H: 무엇이, 어디서, 어떤 상태인지</li>
+          <li><span class="bad">금지:</span> "이미지", "사진", 파일명 반복</li>
+          <li>장식용 이미지: <code>alt=""</code> (공백 필수)</li>
+          <li>상품 이미지: 색상·각도·모델번호 포함</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">이미지 sitemap 주의</div>
+        <ul>
+          <li>2022-08-06 deprecated 4태그: <code>&lt;image:license&gt;</code> <code>&lt;image:geo_location&gt;</code> <code>&lt;image:title&gt;</code> <code>&lt;image:caption&gt;</code></li>
+          <li>현재 유효: <code>image:image</code> + <code>image:loc</code>만</li>
+          <li>Next.js Image: v16+ <code>priority</code> → <code>preload</code> prop 전환</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="s-technical" id="font">
+    <h2>🔤 폰트 최적화</h2>
+    <div class="grid">
+      <div class="card">
+        <div class="card-title">font-display 전략</div>
+        <ul>
+          <li><code>swap</code> — 기본 권장 (FOUT 허용, CLS 위험)</li>
+          <li><code>optional</code> — 성능 최우선 (느리면 시스템 폰트)</li>
+          <li><code>block</code> — FOUT 완전 방지 (FCP 지연)</li>
+          <li>CLS 보정: <code>size-adjust</code> + <code>ascent-override</code></li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">한국어 폰트 카탈로그</div>
+        <ul>
+          <li><strong>Pretendard</strong> — GitHub, variable font 지원</li>
+          <li><strong>Noto Sans KR</strong> — Google Fonts, 광범위 호환</li>
+          <li><strong>Nanum 시리즈</strong> — 네이버 제공</li>
+          <li><strong>Spoqa Han Sans</strong> — 다국어 혼용에 적합</li>
+          <li>시스템 폴백: <code>Apple SD Gothic Neo</code> → <code>Malgun Gothic</code></li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">Google Fonts GDPR 주의</div>
+        <ul>
+          <li>LG München I 2022-01 판결: Google CDN 직접 로드 → 위반</li>
+          <li>해결: <code>next/font</code> 셀프 호스팅</li>
+          <li>또는 <code>@font-face</code> + 자체 서버 호스팅</li>
+          <li>CJK 서브셋: <code>subset-font</code> / <code>pyftsubset</code> 도구</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="s-technical" id="schema">
+    <h2>📋 Schema.org JSON-LD</h2>
+
+    <div class="alert alert-warn">
+      ⚠️ <strong>FAQPage</strong>는 2026-05-07부터 SERP Rich Results 표시 중단. JSON-LD 자체는 GEO 관점에서 유지 권장. <strong>HowTo</strong>는 2023-08(모바일) / 2023-09(데스크톱) Rich Results 중단.
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>타입</th><th>주요 필수 필드</th><th>Rich Results</th><th>주의</th></tr>
+        <tr><td><code>Article</code></td><td><code>headline</code> <code>author</code> <code>datePublished</code></td><td>✅</td><td>headline NewsArticle만 110자 제한</td></tr>
+        <tr><td><code>Product</code></td><td><code>name</code> <code>offers</code> <code>aggregateRating</code></td><td>✅ 쇼핑</td><td><code>priceValidUntil</code> 날짜 YYYY-MM-DD</td></tr>
+        <tr><td><code>BreadcrumbList</code></td><td><code>itemListElement</code> <code>position</code> <code>name</code></td><td>✅ 경로</td><td>position은 1부터 순서대로</td></tr>
+        <tr><td><code>Organization</code></td><td><code>name</code> <code>url</code> <code>logo</code></td><td>✅</td><td>logo: ImageObject로 중첩</td></tr>
+        <tr><td><code>VideoObject</code></td><td><code>name</code> <code>description</code> <code>thumbnailUrl</code> <code>uploadDate</code></td><td>✅ 동영상</td><td>duration: ISO 8601 (PT1M30S)</td></tr>
+        <tr><td><code>WebSite+SearchAction</code></td><td><code>potentialAction</code></td><td>⚠️ deprecated</td><td>2024-11-21 Sitelinks Search Box 중단</td></tr>
+      </table>
+    </div>
+
+    <h3>공통 원칙</h3>
+    <div class="grid">
+      <div class="card">
+        <div class="card-title">XSS 방지 (React)</div>
+        <pre style="margin:0;font-size:11px;"><span class="tag-name">&lt;script</span>
+  <span class="attr">type</span>=<span class="str">"application/ld+json"</span>
+  <span class="attr">dangerouslySetInnerHTML</span>={{
+    __html: JSON.stringify(data)
+      .replace(<span class="val">/</span><span class="str">&lt;</span><span class="val">/g</span>, <span class="str">'<'</span>)
+  }}
+<span class="tag-name">/&gt;</span></pre>
+      </div>
+      <div class="card">
+        <div class="card-title">검증 도구</div>
+        <ul>
+          <li><a href="https://search.google.com/test/rich-results" target="_blank" style="color:var(--accent-blue)">Google Rich Results Test</a></li>
+          <li><a href="https://validator.schema.org" target="_blank" style="color:var(--accent-blue)">Schema.org Validator</a></li>
+          <li>Rich Results Test ≠ schema.org 스펙 준수. 이중 확인 권장</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="s-technical" id="security">
+    <h2>🔒 보안 헤더 + SEO 영향</h2>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>헤더</th><th>권장값</th><th>SEO 영향</th></tr>
+        <tr><td><code>Strict-Transport-Security</code></td><td><code>max-age=31536000; includeSubDomains; preload</code></td><td>HTTPS 강제 → 구글 순위 신호 긍정적</td></tr>
+        <tr><td><code>X-Frame-Options</code></td><td><code>DENY</code> (CSP frame-ancestors로 대체 권장)</td><td>클릭재킹 방지</td></tr>
+        <tr><td><code>Referrer-Policy</code></td><td><code>strict-origin-when-cross-origin</code></td><td>Chrome 85 기본값. GSC referrer 데이터에 영향</td></tr>
+        <tr><td><code>X-Robots-Tag</code></td><td><code>noindex</code> / <code>none</code></td><td>HTTP 헤더로 meta robots 대체 (비-HTML 파일 유용)</td></tr>
+        <tr><td><code>Permissions-Policy</code></td><td>불필요한 기능 명시 차단</td><td>Feature-Policy deprecated → Permissions-Policy로</td></tr>
+      </table>
+    </div>
+
+    <div class="alert alert-danger">
+      🚨 <strong>HSTS Preload 주의:</strong> 등록 해제에 수개월~수년 소요. HTTPS 100% 확보 후에만 등록. Preload 등록 3요건: <code>max-age≥31536000</code> + <code>includeSubDomains</code> + <code>preload</code>
+    </div>
+  </section>
+
+  <section class="s-technical" id="bot">
+    <h2>🤖 봇 관리 (Bot Management)</h2>
+    <div class="grid">
+      <div class="card">
+        <div class="card-title">Googlebot 정당성 검증 (4단계)</div>
+        <ul>
+          <li>① 접속 IP 역DNS 조회 → hostname 확인</li>
+          <li>② hostname으로 정방향 DNS 조회 → IP 일치 확인</li>
+          <li>③ Googlebot IP 범위 JSON 공식 경로에서 확인</li>
+          <li>④ User-agent 스푸핑 가능 → IP 검증이 실질적 방법</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">Cloudflare · AWS WAF 구분</div>
+        <ul>
+          <li>Cloudflare: <code>cf.verified_bot</code> 불리언 필드</li>
+          <li>Cloudflare 카테고리: <code>cf.verified_bot_category</code></li>
+          <li>AWS WAF: <code>awswaf:managed:aws:bot-control:bot:category:search_engine</code></li>
+          <li>Naver 크롤러 UA: <code>Yeti</code> (공식 명칭)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="alert alert-info">
+      ℹ️ Googlebot IP 범위 공식 JSON: <code>static/crawling/ipranges/common-crawlers.json</code> (검색엔진 공식 문서에서 최신 경로 확인 권장)
+    </div>
+  </section>
+
+  <section class="s-technical" id="canonical">
+    <h2>🔗 Canonical · 리다이렉트 · URL 구조</h2>
+    <div class="grid">
+      <div class="card">
+        <div class="card-title">Canonical 3원칙</div>
+        <ul>
+          <li>자기참조 canonical을 <strong>모든 페이지</strong>에 추가</li>
+          <li>절대 URL 사용 (상대 URL 금지)</li>
+          <li>https/www/trailing slash를 통일한 정규화 형태</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">리다이렉트 유형</div>
+        <ul>
+          <li><strong>301</strong> — 영구 이동 (link equity 전달 ~99%)</li>
+          <li><strong>302</strong> — 임시 이동 (link equity 보류)</li>
+          <li><strong>307</strong> — 임시, 메서드 유지 (POST 보존)</li>
+          <li>체인 리다이렉트 3단계 초과 금지</li>
+          <li>리다이렉트 루프 모니터링 필수</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">Sitemap 한계</div>
+        <ul>
+          <li>최대 50,000 URL / 50MB (압축 전)</li>
+          <li>초과 시 sitemap 분할 + sitemap index 파일</li>
+          <li><code>lastmod</code>는 실제 변경일만 (형식적 날짜 금지)</li>
+          <li>rel=prev/next: 2019년 Google이 무시 선언 (폐기)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">내부 검색 결과 처리</div>
+        <ul>
+          <li>파라미터 URL 중복 위험 → <code>noindex</code> 권장</li>
+          <li>Faceted navigation: canonical 또는 noindex</li>
+          <li>정렬·필터 파라미터: GSC URL 파라미터 설정</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="s-technical" id="mobile">
+    <h2>📱 모바일 · PWA SEO</h2>
+    <div class="grid">
+      <div class="card">
+        <div class="card-title">모바일 필수 조건</div>
+        <ul>
+          <li>viewport 메타 필수 (<code>initial-scale=1</code>)</li>
+          <li>탭 타겟 최소 48×48px (SC 2.5.8)</li>
+          <li>텍스트 최소 16px (확대 불필요)</li>
+          <li>가로 스크롤 금지</li>
+          <li>Google은 모바일 우선 색인(Mobile-First Indexing)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">PWA + SEO 통합</div>
+        <ul>
+          <li>SSR / Prerendering 필수 (SPA CSR 크롤 위험)</li>
+          <li>Service Worker: Cache-Control과 충돌 방지</li>
+          <li>manifest.json: <code>start_url</code>이 canonical과 일치</li>
+          <li>App Shell 패턴: 초기 HTML에 콘텐츠 포함</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CONTENT SEO ===== -->
+  <section class="s-content" id="eeat">
+    <h2>📖 E-E-A-T 콘텐츠 품질</h2>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>축</th><th>의미</th><th>강화 방법</th></tr>
+        <tr><td><strong>Experience</strong></td><td>실제 경험에서 나온 콘텐츠</td><td>1인칭 체험담, 구체적 사례, 제품 직접 사용 사진</td></tr>
+        <tr><td><strong>Expertise</strong></td><td>해당 분야 전문성</td><td>작성자 바이오·자격증, 출처 명시, 정확한 전문 용어</td></tr>
+        <tr><td><strong>Authoritativeness</strong></td><td>분야 내 권위</td><td>언론 인용, 외부 링크, 업계 수상·인증</td></tr>
+        <tr><td><strong>Trustworthiness</strong></td><td>신뢰성 (4가지 중 가장 중요)</td><td>정확한 정보, 투명한 운영자 정보, 명확한 연락처, HTTPS</td></tr>
+      </table>
+    </div>
+    <div class="alert alert-info">
+      ℹ️ AI 생성 콘텐츠 자체는 Google 정책 위반이 아니다. 단, "유용하고, 신뢰할 수 있고, 사람 우선의 콘텐츠"인지가 기준. AI 양산 저품질 콘텐츠는 2024-03 Google 코어 업데이트 주요 타겟.
+    </div>
+  </section>
+
+  <section class="s-content" id="ymyl">
+    <h2>⚕️ YMYL (Your Money Your Life) 유의사항</h2>
+    <div class="alert alert-danger">
+      🚨 의료·금융·법률·안전 콘텐츠는 E-E-A-T 기준이 "가장 높은 수준(highest standards)"으로 적용된다.
+    </div>
+    <div class="grid">
+      <div class="card">
+        <div class="card-title" style="color:var(--accent-red)">의료 콘텐츠</div>
+        <ul>
+          <li>작성자 의사 자격 명시 필수</li>
+          <li>"Medically reviewed by" 사인</li>
+          <li><code>MedicalWebPage</code> Schema 권장</li>
+          <li>응급 키워드 → 119·응급의료포털 안내</li>
+          <li>한국 의료법: 의료 광고 심의 필요 여부 확인</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:var(--accent-yellow)">금융 콘텐츠</div>
+        <ul>
+          <li>금감원 라이선스 정보 공시</li>
+          <li>수익성 강조 광고: 공정위 2024-06 가이드라인</li>
+          <li>affiliate 링크 명시 의무</li>
+          <li>"투자 손실 위험" 고지 필수</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:var(--accent-blue)">법률 콘텐츠</div>
+        <ul>
+          <li>변호사 자격 없는 "법적 조언" 금지</li>
+          <li>"일반 정보" vs "법적 조언" 구분 명시</li>
+          <li>면책 조항 필수</li>
+          <li>작성자 법무법인·변호사 정보 표기</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="s-content" id="og">
+    <h2>🎨 OG 이미지 생성</h2>
+    <div class="grid">
+      <div class="card">
+        <div class="card-title">플랫폼별 스펙</div>
+        <ul>
+          <li><strong>Facebook/LinkedIn:</strong> 1200×630px 기본</li>
+          <li><strong>X(Twitter):</strong> 최소 300×157px, 권장 1200×628</li>
+          <li><strong>카카오:</strong> 5MB 이하, 최소 200×200px</li>
+          <li>포맷: JPEG 또는 PNG (SVG 미지원 — 공식 명문화 없음, 주의)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">Next.js 동적 OG</div>
+        <ul>
+          <li><code>opengraph-image.tsx</code> 파일 컨벤션</li>
+          <li><code>params</code>는 Promise (Next.js 15+)</li>
+          <li>CJK 폰트: <code>loadAdditionalAsset</code> 동적 로드</li>
+          <li>Vercel Edge: satori → Resvg → PNG 파이프라인</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="s-content" id="i18n">
+    <h2>🌐 다국어 SEO (hreflang)</h2>
+    <div class="alert alert-warn">
+      ⚠️ <code>hreflang="kr"</code> 는 <strong>오류</strong>. 올바른 값: <code>ko</code> (언어만) 또는 <code>ko-KR</code> (언어+지역). BCP 47 표준 준수.
+    </div>
+    <div class="grid">
+      <div class="card">
+        <div class="card-title">필수 규칙</div>
+        <ul>
+          <li>자기참조 hreflang 포함 필수</li>
+          <li>양방향 일관성: A→B 지정 시 B→A도 지정</li>
+          <li><code>x-default</code>: 언어 매칭 실패 시 폴백 URL</li>
+          <li>canonical과 hreflang 충돌 금지</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">구현 방식 비교</div>
+        <ul>
+          <li><strong>HTML link 태그</strong> — 소규모 사이트 적합</li>
+          <li><strong>HTTP Link 헤더</strong> — 비-HTML(PDF) 가능</li>
+          <li><strong>sitemap xhtml:link</strong> — 대규모 사이트 권장</li>
+          <li>Accept-Language 자동 리다이렉트: Google 비권장</li>
+        </ul>
+      </div>
+    </div>
+    <div class="alert alert-danger">
+      🚨 canonical URL을 영문 버전으로 통일하는 것은 <strong>안티패턴</strong>이다. 각 언어 버전이 독립 canonical을 가져야 한다. (John Mueller 공식 언급)
+    </div>
+  </section>
+
+  <section class="s-content" id="multilingual">
+    <h2>🗣️ 다국어 콘텐츠 전략</h2>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>단계</th><th>정의</th><th>사용 상황</th></tr>
+        <tr><td><strong>Translation</strong></td><td>원문 직역</td><td>기술 문서, 법적 문서</td></tr>
+        <tr><td><strong>Localization</strong></td><td>문화·지역 맞춤 (날짜·통화·이미지 교체)</td><td>제품 마케팅</td></tr>
+        <tr><td><strong>Transcreation</strong></td><td>감성·브랜드 재창조</td><td>광고 카피, 슬로건</td></tr>
+        <tr><td><strong>i18n (국제화)</strong></td><td>코드 레벨 다국어 지원 구조</td><td>소프트웨어 개발</td></tr>
+      </table>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <div class="card-title">Yahoo Japan 주의</div>
+        <ul>
+          <li><strong>2010년부터</strong> Google 검색 기술 사용</li>
+          <li>2025년 파트너십 만료 예정 (변경 가능) <span class="badge badge-yellow">주의</span></li>
+          <li>"2023년 6월 전환"은 잘못된 정보 — 2010년부터가 사실</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">중국 (Baidu) 진출 요건</div>
+        <ul>
+          <li>ICP 라이선스 조건부 필요 (수익화 여부에 따라)</li>
+          <li>서버를 중국 본토에 위치해야 최적 속도</li>
+          <li>Baidu Webmaster Tools 등록 권장</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== KOREA ===== -->
+  <section class="s-korea" id="naver">
+    <h2>🇰🇷 네이버 SEO 특수성</h2>
+    <div class="alert alert-info">
+      ℹ️ 한국 검색 점유율: StatCounter(글로벌) 기준 Google 47% / Naver 44%. 인터넷트렌드(국내) 기준 Naver 62% / Google 29%. 표본 방식이 달라 둘 다 정상.
+    </div>
+
+    <h3>핵심 알고리즘 3종 (에어서치 AiRSEARCH)</h3>
+    <div class="grid">
+      <div class="card">
+        <div class="card-title" style="color:var(--accent-orange)">C-Rank</div>
+        <ul>
+          <li><strong>출처(작성자) 신뢰도</strong> 평가</li>
+          <li>Context: 주제 일관성</li>
+          <li>Content: 콘텐츠 양·품질·반응</li>
+          <li>Chain: 다른 신뢰 출처의 언급·참조</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:var(--accent-orange)">D.I.A. / D.I.A.+</div>
+        <ul>
+          <li><strong>문서 품질·정보성</strong> 평가</li>
+          <li>검색 의도 충족도 반영</li>
+          <li>D.I.A.+: AI 양산 콘텐츠 페널티 방향</li>
+          <li>가중치·계산식 비공개</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:var(--accent-orange)">스마트블록 (2021+)</div>
+        <ul>
+          <li>같은 키워드도 의도별 블록 순서 상이</li>
+          <li>가격·후기·위치 의도별 컬렉션 변화</li>
+          <li>자체 도메인의 주 노출: <strong>웹사이트 컬렉션</strong></li>
+          <li>VIEW·지식iN·플레이스: 네이버 직접 등록 필요</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Google vs Naver 핵심 차이</h3>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>항목</th><th>Google</th><th>Naver</th></tr>
+        <tr><td>백링크 영향</td><td>매우 큰 비중 (PageRank)</td><td>상대적으로 낮음, C-Rank 출처 중심</td></tr>
+        <tr><td>자체 콘텐츠 우선</td><td>없음</td><td>네이버 블로그·카페·지식iN 상위 우선</td></tr>
+        <tr><td>웹마스터 도구</td><td>Google Search Console</td><td>네이버 서치어드바이저</td></tr>
+        <tr><td>구조화 데이터</td><td>JSON-LD 지원</td><td>제한적 지원 (플레이스 중심)</td></tr>
+        <tr><td>색인 속도</td><td>빠름 (시간~일 단위)</td><td>느릴 수 있음 (일~주 단위)</td></tr>
+        <tr><td>RSS 활용</td><td>사이트맵 중심</td><td>RSS 피드 활성화 권장</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section class="s-korea" id="kakao">
+    <h2>💬 카카오 공유 최적화</h2>
+    <div class="grid">
+      <div class="card">
+        <div class="card-title">SDK 현황</div>
+        <ul>
+          <li>현재 최신: SDK <strong>v2.8.1</strong></li>
+          <li>v1.43.0부터 <code>Kakao.Link</code> → <code>Kakao.Share</code>로 전환</li>
+          <li>구버전 <code>Kakao.Link.sendDefault()</code> deprecated</li>
+          <li>신버전: <code>Kakao.Share.sendDefault()</code></li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">이미지 요건</div>
+        <ul>
+          <li>최대 5MB</li>
+          <li>최소 200×200px</li>
+          <li>권장: JPEG 또는 PNG</li>
+          <li>SVG·WebP: 공식 문서 미지원 명시 없으나 주의 <span class="badge badge-yellow">주의</span></li>
+          <li>OG 캐시 초기화: 카카오 디버거 활용</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">SPA (CSR) 주의</div>
+        <ul>
+          <li>CSR 환경에서 meta OG 미인식 가능</li>
+          <li>SSR/SSG로 초기 HTML에 OG 태그 포함 필수</li>
+          <li>Next.js: <code>generateMetadata()</code> 활용</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="s-korea" id="local">
+    <h2>📍 로컬 비즈니스 SEO</h2>
+    <div class="grid">
+      <div class="card">
+        <div class="card-title">NAP 일관성 원칙</div>
+        <ul>
+          <li><strong>N</strong>ame · <strong>A</strong>ddress · <strong>P</strong>hone</li>
+          <li>모든 플랫폼에서 동일한 표기 필수</li>
+          <li>전화번호: <code>+82-02-1234-5678</code> 국제 형식</li>
+          <li>다른 표기 혼용 시 신뢰도 하락</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">Google Business Profile (GBP)</div>
+        <ul>
+          <li>기본 카테고리 1개 + 추가 최대 9개 = <strong>10개</strong></li>
+          <li>영업시간: <code>openingHoursSpecification</code> Schema</li>
+          <li>리뷰 응답: 빠른 응답이 신뢰 신호</li>
+          <li>2019-09-16 이후 self-serving 리뷰 Schema 비허용</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">네이버 스마트플레이스</div>
+        <ul>
+          <li>등록: business.naver.com</li>
+          <li>한국 로컬 비즈니스의 네이버 플레이스 노출 필수</li>
+          <li>사진·영업시간·메뉴 정보 최신 유지</li>
+          <li>다중 지점: <code>/locations/{name}</code> URL 구조 권장</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== INFRA ===== -->
+  <section class="s-infra" id="monitoring">
+    <h2>📊 SEO 모니터링 자동화</h2>
+    <div class="grid">
+      <div class="card">
+        <div class="card-title">Google Search Console API v3</div>
+        <ul>
+          <li>Scope: <code>webmasters.readonly</code></li>
+          <li><code>rowLimit</code>: 최대 25,000</li>
+          <li>URL Inspection: 쿼터 <strong>2,000회/일</strong></li>
+          <li>데이터 지연: 3~4일 (최신 데이터 미반영)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">IndexNow (네이버 공식 엔드포인트)</div>
+        <ul>
+          <li>단일: <code>GET searchadvisor.naver.com/indexnow</code></li>
+          <li>다중: <code>POST api.searchadvisor.naver.com/indexnow</code></li>
+          <li><span class="bad">오류:</span> <code>searchadvisor.naver.com/api/search/request</code> (비공식)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">GitHub Actions Cron 주의</div>
+        <ul>
+          <li>cron은 <strong>UTC 기준</strong> (KST = UTC+9)</li>
+          <li>60일 이상 레포 비활성화 시 workflow 자동 중단</li>
+          <li>정기 커밋 또는 workflow_dispatch 트리거 유지</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="s-infra" id="a11y">
+    <h2>♿ 접근성 (WCAG 2.2) SEO 교차점</h2>
+    <div class="alert alert-info">
+      ℹ️ WCAG 2.2 발표일: <strong>2023-10-05</strong>. 접근성이 직접 SEO 순위 요소는 아니나 CWV·모바일 친화성·구조화 데이터와 교차점이 크다.
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>WCAG 2.2 신규 SC</th><th>레벨</th><th>SEO 교차점</th></tr>
+        <tr><td>2.4.11 Focus Not Obscured (최소)</td><td>AA</td><td>sticky 헤더·쿠키 배너로 포커스 가림 금지</td></tr>
+        <tr><td>2.4.12 Focus Not Obscured (향상)</td><td>AAA</td><td>포커스 완전 가림 금지 (AA보다 엄격)</td></tr>
+        <tr><td>2.4.13 Focus Appearance</td><td>AAA</td><td>포커스 링 최소 크기·대비</td></tr>
+        <tr><td>2.5.7 Dragging Movements</td><td>AA</td><td>드래그 대안 제공 (슬라이더 등)</td></tr>
+        <tr><td>2.5.8 Target Size (최소)</td><td>AA</td><td>탭 타겟 24×24px 이상 (모바일 UX 직결)</td></tr>
+        <tr><td>3.2.6 Consistent Help</td><td>A</td><td>도움말 위치 일관성</td></tr>
+        <tr><td>3.3.7 Redundant Entry</td><td>A</td><td>이전 입력 재입력 불필요</td></tr>
+        <tr><td>3.3.8 Accessible Authentication (최소)</td><td>AA</td><td>인지 테스트 없는 로그인</td></tr>
+        <tr><td>3.3.9 Accessible Authentication (향상)</td><td>AAA</td><td>모든 인지 테스트 금지</td></tr>
+      </table>
+    </div>
+    <div class="alert alert-warn">
+      ⚠️ axe-core 자동 탐지율: SC 기준 약 29.5% 자동 / 60.2% 수동 필요. 자동화 도구 통과 = 접근성 완전 충족 아님.
+    </div>
+  </section>
+
+  <section class="s-infra" id="media-a11y">
+    <h2>🎬 미디어 접근성</h2>
+    <div class="grid">
+      <div class="card">
+        <div class="card-title">자막 종류 구분</div>
+        <ul>
+          <li><strong>Captions (CC)</strong> — 청각장애인용: 대화 + 배경음 + 음향 효과 포함</li>
+          <li><strong>Subtitles</strong> — 일반 자막: 대화 번역만</li>
+          <li>YouTube auto-captions ≠ WCAG SC 1.2.2 충족 (정확도 부족)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">WebVTT 작성법</div>
+        <ul>
+          <li>첫 줄 반드시 <code>WEBVTT</code></li>
+          <li>화자 표기: <code>&lt;v 홍길동&gt;</code></li>
+          <li>배경음: <code>[박수 소리]</code> 대괄호</li>
+          <li>위치: <code>position:10%</code></li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">&lt;track&gt; kind 5종</div>
+        <ul>
+          <li><code>subtitles</code> — 번역 자막</li>
+          <li><code>captions</code> — 청각장애인 자막</li>
+          <li><code>descriptions</code> — 화면해설 (시각장애인)</li>
+          <li><code>chapters</code> — 챕터 탐색</li>
+          <li><code>metadata</code> — 스크립트용 데이터</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">법적 의무</div>
+        <ul>
+          <li>한국 <strong>장차법 제21조</strong>: 공공기관 자막 의무</li>
+          <li>미국 <strong>ADA</strong>: Robles v. Domino's (2019) 판례</li>
+          <li>EU <strong>EAA</strong>: 2025-06-28 발효</li>
+          <li>Whisper API: <code>response_format=vtt</code>로 자막 자동 생성</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="s-infra" id="ecommerce">
+    <h2>🛒 이커머스 SEO</h2>
+    <div class="grid">
+      <div class="card">
+        <div class="card-title">재고 상태 Schema 값</div>
+        <ul>
+          <li><code>InStock</code> — 재고 있음</li>
+          <li><code>OutOfStock</code> — 품절</li>
+          <li><code>PreOrder</code> — 사전 주문</li>
+          <li><code>BackOrder</code> — 재고 없어도 주문 가능</li>
+          <li><code>Discontinued</code> — 생산 중단</li>
+          <li><code>SoldOut</code> — 완판 (재입고 미정)</li>
+          <li><code>LimitedAvailability</code> — 한정 재고</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">Faceted Navigation 4전략</div>
+        <ul>
+          <li>중요 조합: canonical 지정</li>
+          <li>비중요 조합: noindex</li>
+          <li>무한 조합: robots.txt Disallow (파라미터)</li>
+          <li>GSC URL 파라미터 설정 활용</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">Product Schema 주의</div>
+        <ul>
+          <li><code>rel=prev/next</code>: 2019년 Google이 무시 선언 (폐기)</li>
+          <li><code>priceValidUntil</code>: YYYY-MM-DD 형식</li>
+          <li>내부 검색 결과: noindex 처리</li>
+          <li>카테고리 페이지 중복: canonical 일관 적용</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CHECKLIST ===== -->
+  <section class="s-checklist" id="checklist">
+    <h2>✅ 런치 전 SEO · GEO 체크리스트</h2>
+
+    <div class="two-col">
+      <div>
+        <h3>Technical</h3>
+        <ul class="checklist">
+          <li>모든 페이지 title 고유 (50~60자)</li>
+          <li>모든 페이지 meta description (50~160자)</li>
+          <li>모든 페이지 canonical (절대 URL)</li>
+          <li>OG 4종 + Twitter Card 5종</li>
+          <li>OG 이미지 1200×630px / 5MB 이하</li>
+          <li>sitemap.xml 제출 (GSC + 서치어드바이저)</li>
+          <li>robots.txt 오류 없음 확인</li>
+          <li>HTTPS 전환 + HSTS 헤더</li>
+          <li>LCP ≤ 2.5s / INP ≤ 200ms / CLS ≤ 0.10</li>
+          <li>모든 이미지 width + height 속성</li>
+          <li>모든 이미지 alt text (장식용: alt="")</li>
+          <li>Schema.org JSON-LD Rich Results Test 통과</li>
+          <li>모바일 친화성 테스트 통과</li>
+        </ul>
+
+        <h3 style="margin-top:20px">GEO</h3>
+        <ul class="checklist">
+          <li>robots.txt: 인덱싱·인용용 크롤러 허용 (OAI-SearchBot 등)</li>
+          <li>학습용 차단 / 인용용 허용 전략 구분 적용</li>
+          <li>FAQPage JSON-LD (GEO 인용 친화)</li>
+          <li>질문-답변 구조 콘텐츠 존재</li>
+          <li>고유 데이터·관점·출처 명시</li>
+        </ul>
+      </div>
+
+      <div>
+        <h3>콘텐츠</h3>
+        <ul class="checklist">
+          <li>E-E-A-T 4축 신호 존재 (작성자 정보, 출처, 연락처)</li>
+          <li>YMYL 해당 시 전문가 자격 명시</li>
+          <li>중복 콘텐츠 없음 (타 사이트 복붙 금지)</li>
+          <li>내부 링크 구조 (고아 페이지 없음)</li>
+          <li>BreadcrumbList Schema 적용</li>
+        </ul>
+
+        <h3 style="margin-top:20px">한국</h3>
+        <ul class="checklist">
+          <li>네이버 서치어드바이저 등록 + sitemap 제출</li>
+          <li>Google Search Console 등록</li>
+          <li>카카오 공유 SDK 최신 버전 (Kakao.Share)</li>
+          <li>로컬 비즈니스: 네이버 스마트플레이스 등록</li>
+          <li>NAP 정보 전 플랫폼 일치</li>
+        </ul>
+
+        <h3 style="margin-top:20px">접근성</h3>
+        <ul class="checklist">
+          <li>WCAG 2.2 AA 준수 (탭 타겟 24×24px 이상)</li>
+          <li>동영상 자막 (CC) 제공</li>
+          <li>axe-core 자동 검사 오류 0</li>
+          <li>키보드 탐색 전체 가능</li>
+          <li>색상 대비 4.5:1 이상 (일반 텍스트)</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+  <p style="color:var(--muted);font-size:11.5px;text-align:center;margin-bottom:32px;">
+    기반 스킬: frontend 30종 · writing 4종 · validation 에이전트 · 2026-06-04 교차 검증 완료
+  </p>
+</main>
+
+<script>
+  // 현재 스크롤 위치에 따라 nav 링크 active 처리
+  const sections = document.querySelectorAll('section[id], h3[id]');
+  const navLinks = document.querySelectorAll('nav a');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => {
+      if (window.scrollY >= s.offsetTop - 80) current = s.id;
+    });
+    navLinks.forEach(a => {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+    });
+  });
+</script>
+</body>
+</html>
