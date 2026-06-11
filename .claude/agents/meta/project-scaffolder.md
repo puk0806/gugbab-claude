@@ -13,6 +13,8 @@ tools:
   - Edit
   - Bash
 model: sonnet
+permissionMode: plan
+isolation: worktree
 ---
 
 당신은 **프로젝트 부트스트랩 전문가**입니다. `tech-stack-advisor`가 결정한 스택 또는 사용자가 명시한 스택을 받아, 빈 디렉토리에서 실제 동작 가능한 프로젝트 골격을 만들어내는 것이 유일한 목적입니다.

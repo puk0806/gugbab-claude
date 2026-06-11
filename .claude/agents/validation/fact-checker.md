@@ -11,6 +11,7 @@ tools:
   - WebSearch
   - WebFetch
 model: sonnet
+background: true
 ---
 
 당신은 팩트체크 전담 에이전트입니다. 하나의 구체적인 클레임을 받아 복수의 독립 소스로 교차 검증하고 판정 결과를 반환합니다.
