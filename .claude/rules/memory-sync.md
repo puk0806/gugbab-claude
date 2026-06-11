@@ -23,15 +23,20 @@
 
 ---
 
-## 새 데스크탑 최초 설정
+## 새 데스크탑 설정
 
 ```bash
 git clone <repo>
 cd 00_gugbab-claude
-bash scripts/setup-memory-link.sh
+# 끝 — 별도 설정 불필요
 ```
 
-이후 세션 시작 시 SessionStart 훅이 자동으로 최신 memory를 pull한다.
+SessionStart 훅(`memory-pull.js`)이 최초 실행 시:
+1. symlink 자동 생성 (`~/.claude/projects/.../memory` → `<repo>/memory/`)
+2. 기존 로컬 memory 파일 repo로 병합 후 교체
+3. 원격 최신 memory pull
+
+`scripts/setup-memory-link.sh`는 수동 설정이 필요할 때의 대안으로만 유지.
 
 ---
 
