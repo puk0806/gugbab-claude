@@ -67,6 +67,13 @@
     ]
   },
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-start.js" }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "*",
@@ -74,19 +81,27 @@
           { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/bash-guard.js" },
           { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/auto-approve.js" }
         ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/parry.js" }
+        ]
       }
     ],
     "PostToolUse": [
       {
         "matcher": "Write",
         "hooks": [
-          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-summary.js" }
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-summary.js" },
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/pre-compact.js" }
         ]
       },
       {
         "matcher": "Edit",
         "hooks": [
-          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-summary.js" }
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-summary.js" },
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/pre-compact.js" }
         ]
       },
       {
@@ -96,10 +111,48 @@
         ]
       }
     ],
+    "InstructionsLoaded": [
+      {
+        "hooks": [
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/instructions-loaded.js" }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/user-prompt-submit.js" }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/subagent-audit.js" }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/subagent-audit.js" }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/pre-compact.js" }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [
-          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-summary.js" }
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-summary.js" },
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/cc-notify.js" }
         ]
       }
     ],
