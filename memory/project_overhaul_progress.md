@@ -29,11 +29,15 @@ metadata:
 - **project-install.sh 템플릿 2종 추가**: academic(#8)·dream-interpretation(#9) → 총 10개 템플릿
 - README·OVERHAUL.html 동기화 완료
 
-### 작업 2: 훅/룰 정리 ⬜ 대기
-- 훅 21종 역할·실제 동작 여부 정리표 작성
-- tdd-guard·typescript-quality·drift-monitor·instructions-loaded 실효성 검토
-- 룰 11종 — java.md·rust.md 해당 템플릿 export 시만 포함 여부 검토
-- 제거 실행 + settings.json 정리
+### 작업 2: 훅/룰 정리 ✅ 완료
+- 훅 4종 삭제 (19→15종):
+  - drift-monitor: spec.md 없어 항상 silent pass — 실효성 0
+  - subagent-audit: /tmp 로그, 아무도 안 읽음
+  - pre-compact: /tmp 스냅샷, 빌트인 압축으로 충분
+  - user-prompt-submit: low signal 힌트, 컨텍스트 오염
+- tdd-guard·typescript-quality·instructions-loaded 유지 결정
+- java.md·rust.md 룰 export 필터링 → Task 3으로 이관
+- settings.json에서 4개 이벤트 블록 제거 완료
 
 ### 작업 3: Export 구조화 ⬜ 대기
 - 템플릿별 훅·룰·CLAUDE.md 매트릭스 설계

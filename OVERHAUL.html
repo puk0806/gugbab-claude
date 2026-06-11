@@ -95,11 +95,11 @@
     <p class="subtitle">Claude Code 컨벤션 자산 레포 — 전체 구조 개편 작업 트래커</p>
 
     <div class="stats-row">
-      <div class="stat"><div class="stat-num" id="s-skills">224</div><div class="stat-label">스킬</div></div>
+      <div class="stat"><div class="stat-num" id="s-skills">202</div><div class="stat-label">스킬</div></div>
       <div class="stat"><div class="stat-num" id="s-agents">69</div><div class="stat-label">에이전트</div></div>
       <div class="stat"><div class="stat-num" id="s-hooks">21</div><div class="stat-label">훅</div></div>
       <div class="stat"><div class="stat-num" id="s-rules">11</div><div class="stat-label">룰</div></div>
-      <div class="stat"><div class="stat-num">8</div><div class="stat-label">템플릿</div></div>
+      <div class="stat"><div class="stat-num">10</div><div class="stat-label">템플릿</div></div>
     </div>
 
     <div class="progress-wrap">
@@ -121,12 +121,12 @@
       </div>
       <p class="task-desc">Claude 에이전트가 built-in으로 보유한 스킬과 중복되는 것들 제거. 컨벤션·프로젝트 고유 스킬만 유지.</p>
       <div class="subtasks" id="st1">
-        <div class="sub"><input type="checkbox" data-task="1" data-id="1a"><label>vercel-labs/agent-skills 레포 built-in 스킬 목록 조사</label></div>
-        <div class="sub"><input type="checkbox" data-task="1" data-id="1b"><label>현재 스킬 224종 카테고리별 audit — 중복·불필요 목록 도출</label></div>
-        <div class="sub"><input type="checkbox" data-task="1" data-id="1c"><label>humanities / education / research 계열 — 삭제 여부 결정</label></div>
-        <div class="sub"><input type="checkbox" data-task="1" data-id="1d"><label>dream-app 전용 스킬 20종+ — 별도 레포 이관 or 삭제 결정</label></div>
-        <div class="sub"><input type="checkbox" data-task="1" data-id="1e"><label>컨벤션 스킬만 남기고 삭제 실행</label></div>
-        <div class="sub"><input type="checkbox" data-task="1" data-id="1f"><label>README 스킬 목록 동기화</label></div>
+        <div class="sub"><input type="checkbox" data-task="1" data-id="1a" checked><label>vercel-labs/agent-skills 레포 built-in 스킬 목록 조사</label></div>
+        <div class="sub"><input type="checkbox" data-task="1" data-id="1b" checked><label>전체 스킬 224종 카테고리별 audit — 중복·불필요 목록 도출 (frontend·backend·meta 전체 검토)</label></div>
+        <div class="sub"><input type="checkbox" data-task="1" data-id="1c" checked><label>humanities / education / research 계열 — 유지 결정 (논문·도메인 특화 가치)</label></div>
+        <div class="sub"><input type="checkbox" data-task="1" data-id="1d" checked><label>dream-interpretation 스킬 — dream-interpretation 템플릿(#9)으로 분리 유지</label></div>
+        <div class="sub"><input type="checkbox" data-task="1" data-id="1e" checked><label>삭제 실행 완료 — 21종 제거 (224→202종)</label></div>
+        <div class="sub"><input type="checkbox" data-task="1" data-id="1f" checked><label>README 스킬 목록 동기화 완료</label></div>
       </div>
       <div class="note"><b>논의 필요:</b> humanities/education/research 스킬들은 논문 작업용 — 현재는 불필요. dream-app 스킬도 별도 앱 레포로 이관 검토.</div>
     </div>
@@ -218,13 +218,18 @@
         <span class="d-tag">정책</span>
       </div>
       <div class="decision-item">
-        <span class="d-date">미결</span>
-        <span class="d-text">humanities / education / research 스킬 — 삭제 vs 유지 결정 필요. 논문 작업 완료 후 대부분 불필요한 상황.</span>
+        <span class="d-date">2026-06-11</span>
+        <span class="d-text">작업 1 완료 — 스킬 21종 삭제 (224→202종). Claude 내장 지식 커버 기초 스킬 제거: frontend 12종·backend Rust 2종·backend Python 6종·meta 1종. 유지: humanities/education/research/dream-interpretation 전체.</span>
         <span class="d-tag">스킬 정리</span>
       </div>
       <div class="decision-item">
-        <span class="d-date">미결</span>
-        <span class="d-text">dream-app 스킬 20종+ — 별도 앱 레포로 이관 or 이 레포에서 삭제 결정 필요.</span>
+        <span class="d-date">2026-06-11</span>
+        <span class="d-text">humanities / education / research 스킬 — 유지 결정. 도메인 특화 가치 존재. academic 템플릿(#8)으로 분리 제공.</span>
+        <span class="d-tag">스킬 정리</span>
+      </div>
+      <div class="decision-item">
+        <span class="d-date">2026-06-11</span>
+        <span class="d-text">dream-interpretation 스킬 20종+ — 유지 결정. dream-interpretation 템플릿(#9)으로 분리 제공. 별도 이관 불필요.</span>
         <span class="d-tag">스킬 정리</span>
       </div>
     </div>

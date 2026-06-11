@@ -36,10 +36,12 @@ echo "  4) rust-axum         — Rust + Axum 백엔드"
 echo "  5) java-spring-legacy — Java 11 + Spring Boot 2.5 + WAR + MyBatis"
 echo "  6) java-spring-modern — Java 21 + Spring Boot 3.x + Jar/Native + MyBatis"
 echo "  7) unity-game        — Unity 6 LTS 2D 모바일 게임 개발"
+echo "  8) academic          — 논문·학술 작업 (humanities/education/research/writing)"
+echo "  9) dream-interpretation         — 꿈 해몽 앱 개발 (dream 전용 스킬·에이전트 포함)"
 echo ""
 
 while true; do
-  read -rp "번호 입력 (0/1/2/3/4/5/6/7): " TEMPLATE_NUM
+  read -rp "번호 입력 (0-9): " TEMPLATE_NUM
   case "$TEMPLATE_NUM" in
     0) TEMPLATE="all"; break ;;
     1) TEMPLATE="util"; break ;;
@@ -49,7 +51,9 @@ while true; do
     5) TEMPLATE="java-spring-legacy"; break ;;
     6) TEMPLATE="java-spring-modern"; break ;;
     7) TEMPLATE="unity-game"; break ;;
-    *) echo "오류: 0, 1, 2, 3, 4, 5, 6, 7 중 하나를 입력하세요." ;;
+    8) TEMPLATE="academic"; break ;;
+    9) TEMPLATE="dream-interpretation"; break ;;
+    *) echo "오류: 0~9 중 하나를 입력하세요." ;;
   esac
 done
 
@@ -123,6 +127,8 @@ fi
 echo ""
 echo "[agents]"
 
+# ── 에이전트 카테고리 정의 ────────────────────────────────────────────────
+
 # 유틸: 범용 에이전트만 허용 (비개발자도 사용 가능한 것)
 UTIL_AGENTS=(
   "meta/planner.md"
@@ -139,23 +145,109 @@ UTIL_AGENTS=(
   "domain/ui-ux-designer.md"
 )
 
-# react-spa / nextjs: Rust/Java 백엔드 에이전트 제외
+# academic: 논문·학술 전용 에이전트 허용 목록
+ACADEMIC_AGENTS=(
+  "education/curriculum-2022-fact-checker.md"
+  "research/academic-researcher.md"
+  "research/defense-question-simulator.md"
+  "research/literature-review-synthesizer.md"
+  "research/research-proposal-coach.md"
+  "research/research-reviewer.md"
+  "research/socratic-interviewer.md"
+  "research/translation-comparison.md"
+  "research/web-searcher.md"
+  "research/deep-researcher.md"
+  "validation/abstract-reviewer.md"
+  "validation/argument-reviewer.md"
+  "validation/citation-checker.md"
+  "validation/fact-checker.md"
+  "validation/peer-review-simulator.md"
+  "validation/source-validator.md"
+  "meta/planner.md"
+  "meta/claude-code-guide.md"
+  "meta/freshness-auditor.md"
+)
+
+# dream-interpretation: 꿈 앱 전용 에이전트 허용 목록
+DREAM_APP_AGENTS=(
+  "frontend/frontend-developer.md"
+  "frontend/frontend-architect.md"
+  "backend/python-backend-developer.md"
+  "backend/python-backend-architect.md"
+  "backend/database-architect.md"
+  "devops/devops-engineer.md"
+  "domain/api-spec-designer.md"
+  "domain/product-planner.md"
+  "domain/ui-ux-designer.md"
+  "research/dream-journal-coach.md"
+  "research/dream-multi-perspective-synthesizer.md"
+  "research/web-searcher.md"
+  "research/deep-researcher.md"
+  "research/research-reviewer.md"
+  "validation/dream-image-safety-classifier.md"
+  "validation/dream-interpretation-prompt-tester.md"
+  "validation/dream-safety-classifier.md"
+  "validation/fact-checker.md"
+  "validation/source-validator.md"
+  "validation/qa-engineer.md"
+  "validation/security-auditor.md"
+  "meta/planner.md"
+  "meta/claude-code-guide.md"
+  "meta/tech-stack-advisor.md"
+  "meta/mvp-scope-planner.md"
+  "meta/project-scaffolder.md"
+)
+
+# 특수 목적 에이전트 (일반 개발 템플릿에서 제외)
+SPECIAL_AGENTS_ACADEMIC=(
+  "education/curriculum-2022-fact-checker.md"
+  "research/academic-researcher.md"
+  "research/defense-question-simulator.md"
+  "research/literature-review-synthesizer.md"
+  "research/research-proposal-coach.md"
+  "research/socratic-interviewer.md"
+  "research/translation-comparison.md"
+  "validation/abstract-reviewer.md"
+  "validation/argument-reviewer.md"
+  "validation/citation-checker.md"
+  "validation/peer-review-simulator.md"
+)
+SPECIAL_AGENTS_DREAM=(
+  "research/dream-journal-coach.md"
+  "research/dream-multi-perspective-synthesizer.md"
+  "validation/dream-image-safety-classifier.md"
+  "validation/dream-interpretation-prompt-tester.md"
+  "validation/dream-safety-classifier.md"
+)
+SPECIAL_AGENTS_GAME=(
+  "game/game-asset-ai-director.md"
+  "game/game-design-document-writer.md"
+  "game/game-monetization-strategist.md"
+  "game/mobile-app-publisher.md"
+  "game/unity-architect.md"
+  "game/unity-developer.md"
+)
+
+# 기술 스택별 제외 목록
 EXCLUDE_AGENTS_FRONTEND=(
   "backend/rust-backend-developer.md"
   "backend/rust-backend-architect.md"
   "backend/java-backend-developer.md"
   "backend/java-backend-architect.md"
 )
-
-# rust-axum: 프론트엔드·Java 에이전트 제외
-EXCLUDE_AGENTS_BACKEND=(
+EXCLUDE_AGENTS_RUST=(
   "frontend/frontend-developer.md"
   "frontend/frontend-architect.md"
   "backend/java-backend-developer.md"
   "backend/java-backend-architect.md"
 )
-
-# unity-game: 웹 프론트엔드 + 서버 백엔드 에이전트 제외 (게임 파이프라인에 불필요)
+EXCLUDE_AGENTS_JAVA=(
+  "frontend/frontend-developer.md"
+  "frontend/frontend-architect.md"
+  "backend/rust-backend-developer.md"
+  "backend/rust-backend-architect.md"
+  "backend/build-error-resolver.md"
+)
 EXCLUDE_AGENTS_GAME=(
   "frontend/frontend-developer.md"
   "frontend/frontend-architect.md"
@@ -166,62 +258,61 @@ EXCLUDE_AGENTS_GAME=(
   "backend/build-error-resolver.md"
 )
 
-# java-spring-*: 프론트엔드·Rust 백엔드 에이전트 제외 (build-error-resolver는 Rust/TS/Vite 전용이라 Java 제외)
-EXCLUDE_AGENTS_JAVA=(
-  "frontend/frontend-developer.md"
-  "frontend/frontend-architect.md"
-  "backend/rust-backend-developer.md"
-  "backend/rust-backend-architect.md"
-  "backend/build-error-resolver.md"
-)
+# 에이전트 제외 여부 확인 헬퍼
+is_in_list() {
+  local needle="$1"; shift
+  for item in "$@"; do [ "$item" = "$needle" ] && return 0; done
+  return 1
+}
 
 for src_path in "$REPO_DIR/.claude/agents"/**/*.md "$REPO_DIR/.claude/agents"/*.md; do
   [ -f "$src_path" ] || continue
   rel="${src_path#$REPO_DIR/.claude/agents/}"
 
-  # 유틸: 허용 목록에 없으면 건너뜀
+  # 화이트리스트 템플릿 (util / academic / dream-interpretation)
   if [ "$TEMPLATE" = "util" ]; then
-    allowed=false
-    for ua in "${UTIL_AGENTS[@]}"; do
-      [ "$rel" = "$ua" ] && allowed=true && break
-    done
-    $allowed || continue
+    is_in_list "$rel" "${UTIL_AGENTS[@]}" || continue
+  fi
+  if [ "$TEMPLATE" = "academic" ]; then
+    is_in_list "$rel" "${ACADEMIC_AGENTS[@]}" || continue
+  fi
+  if [ "$TEMPLATE" = "dream-interpretation" ]; then
+    is_in_list "$rel" "${DREAM_APP_AGENTS[@]}" || continue
   fi
 
-  # react-spa / nextjs: Rust/Java 에이전트 제외
+  # 일반 개발 템플릿: 특수 목적 에이전트 공통 제외
+  if [[ "$TEMPLATE" =~ ^(react-spa|nextjs|rust-axum|java-spring-legacy|java-spring-modern|unity-game)$ ]]; then
+    if is_in_list "$rel" "${SPECIAL_AGENTS_ACADEMIC[@]}"; then
+      echo "  skip (학술 전용) .claude/agents/$rel" && continue
+    fi
+    if is_in_list "$rel" "${SPECIAL_AGENTS_DREAM[@]}"; then
+      echo "  skip (dream 전용) .claude/agents/$rel" && continue
+    fi
+  fi
+
+  # 게임 에이전트 제외 (unity-game 외 모두)
+  if [ "$TEMPLATE" != "unity-game" ] && [ "$TEMPLATE" != "all" ]; then
+    if is_in_list "$rel" "${SPECIAL_AGENTS_GAME[@]}"; then
+      echo "  skip (게임 전용) .claude/agents/$rel" && continue
+    fi
+  fi
+
+  # 기술 스택별 제외
   if [ "$TEMPLATE" = "react-spa" ] || [ "$TEMPLATE" = "nextjs" ]; then
-    skip=false
-    for ex in "${EXCLUDE_AGENTS_FRONTEND[@]}"; do
-      [ "$rel" = "$ex" ] && skip=true && break
-    done
-    $skip && echo "  skip (타언어 백엔드) .claude/agents/$rel" && continue
+    is_in_list "$rel" "${EXCLUDE_AGENTS_FRONTEND[@]}" && \
+      echo "  skip (타언어 백엔드) .claude/agents/$rel" && continue
   fi
-
-  # rust-axum: 프론트엔드·Java 에이전트 제외
   if [ "$TEMPLATE" = "rust-axum" ]; then
-    skip=false
-    for ex in "${EXCLUDE_AGENTS_BACKEND[@]}"; do
-      [ "$rel" = "$ex" ] && skip=true && break
-    done
-    $skip && echo "  skip (rust 외) .claude/agents/$rel" && continue
+    is_in_list "$rel" "${EXCLUDE_AGENTS_RUST[@]}" && \
+      echo "  skip (rust 외) .claude/agents/$rel" && continue
   fi
-
-  # java-spring-*: 프론트엔드·Rust 에이전트 제외
   if [ "$TEMPLATE" = "java-spring-legacy" ] || [ "$TEMPLATE" = "java-spring-modern" ]; then
-    skip=false
-    for ex in "${EXCLUDE_AGENTS_JAVA[@]}"; do
-      [ "$rel" = "$ex" ] && skip=true && break
-    done
-    $skip && echo "  skip (java 외) .claude/agents/$rel" && continue
+    is_in_list "$rel" "${EXCLUDE_AGENTS_JAVA[@]}" && \
+      echo "  skip (java 외) .claude/agents/$rel" && continue
   fi
-
-  # unity-game: 웹·서버 에이전트 제외
   if [ "$TEMPLATE" = "unity-game" ]; then
-    skip=false
-    for ex in "${EXCLUDE_AGENTS_GAME[@]}"; do
-      [ "$rel" = "$ex" ] && skip=true && break
-    done
-    $skip && echo "  skip (웹·서버 에이전트 제외) .claude/agents/$rel" && continue
+    is_in_list "$rel" "${EXCLUDE_AGENTS_GAME[@]}" && \
+      echo "  skip (웹·서버 에이전트 제외) .claude/agents/$rel" && continue
   fi
 
   dest="$TARGET/.claude/agents/$rel"
@@ -294,6 +385,52 @@ if [ -f "$REPO_DIR/.claude/skills/CLAUDE.md" ]; then
   fi
 fi
 
+# ── 스킬 카테고리 정의 ────────────────────────────────────────────────────
+
+# SEO 관련 writing 스킬 — frontend 템플릿에서 유지
+SEO_WRITING_SKILLS=(
+  "writing/content-eeat-quality"
+  "writing/multilingual-content-strategy"
+  "writing/ymyl-content-seo"
+  "writing/accessibility-vpat-writing"
+)
+
+# dream-interpretation 전용 humanities 스킬 (academic 템플릿에서 제외)
+DREAM_HUMANITIES_SKILLS=(
+  "humanities/dream-content-privacy-ethics"
+  "humanities/dream-content-research"
+  "humanities/dream-psychology-jung-freud"
+  "humanities/korean-dream-interpretation-tradition"
+  "humanities/crisis-intervention-resources-korea"
+  "humanities/attachment-theory-basics"
+  "humanities/relational-pattern-analysis"
+)
+
+# dream-interpretation 전용 meta 스킬
+DREAM_META_SKILLS=(
+  "meta/dream-interpretation-ab-testing-prompts"
+  "meta/dream-interpretation-prompt-engineering"
+  "meta/dream-safety-classifier-prompts"
+)
+
+is_seo_writing() {
+  local prefix="$1"
+  for s in "${SEO_WRITING_SKILLS[@]}"; do [[ "$prefix" == "$s" ]] && return 0; done
+  return 1
+}
+
+is_dream_humanities() {
+  local prefix="$1"
+  for s in "${DREAM_HUMANITIES_SKILLS[@]}"; do [[ "$prefix" == "$s" ]] && return 0; done
+  return 1
+}
+
+is_dream_meta() {
+  local prefix="$1"
+  for s in "${DREAM_META_SKILLS[@]}"; do [[ "$prefix" == "$s" ]] && return 0; done
+  return 1
+}
+
 # Java 스킬 분류 (backend/ 아래에 Rust·Java 스킬이 혼재해 세밀한 필터 필요)
 JAVA_SKILLS_COMMON=(
   "backend/spring-boot-gradle-setup"
@@ -337,80 +474,130 @@ for src_path in "$REPO_DIR/.claude/skills"/*/*/SKILL.md; do
   rel="${src_path#$REPO_DIR/.claude/skills/}"
   skill_prefix="${rel%/SKILL.md}"   # backend/foo
 
+  # ── 템플릿별 스킬 필터 ────────────────────────────────────────────────
+
   # 유틸: 기술 스택 스킬 전부 제외
   if [ "$TEMPLATE" = "util" ]; then
     [[ "$rel" == frontend/* ]] && continue
     [[ "$rel" == backend/* ]] && continue
     [[ "$rel" == devops/* ]] && continue
     [[ "$rel" == architecture/* ]] && continue
+    [[ "$rel" == game/* ]] && continue
+    [[ "$rel" == humanities/* ]] && continue
+    [[ "$rel" == education/* ]] && continue
+    [[ "$rel" == research/* ]] && continue
+    [[ "$rel" == writing/* ]] && continue
   fi
 
-  # react-spa / nextjs: 백엔드 스킬 전부 제외
+  # academic: 학술·논문 스킬만 포함
+  if [ "$TEMPLATE" = "academic" ]; then
+    [[ "$rel" == frontend/* ]] && continue
+    [[ "$rel" == backend/* ]] && continue
+    [[ "$rel" == devops/* ]] && continue
+    [[ "$rel" == game/* ]] && continue
+    # dream-interpretation 전용 humanities는 제외
+    if [[ "$rel" == humanities/* ]] && is_dream_humanities "$skill_prefix"; then
+      echo "  skip (dream 전용) .claude/skills/$rel" && continue
+    fi
+    # dream-interpretation 전용 meta는 제외
+    if [[ "$rel" == meta/* ]] && is_dream_meta "$skill_prefix"; then
+      echo "  skip (dream 전용) .claude/skills/$rel" && continue
+    fi
+    # architecture는 ddd만 허용
+    if [[ "$rel" == architecture/* ]] && [[ "$skill_prefix" != "architecture/ddd" ]]; then
+      echo "  skip (비학술 architecture) .claude/skills/$rel" && continue
+    fi
+  fi
+
+  # dream-interpretation: 꿈 앱 스킬 포함 (game·학술·비드림 humanities 제외)
+  if [ "$TEMPLATE" = "dream-interpretation" ]; then
+    [[ "$rel" == game/* ]] && continue
+    [[ "$rel" == education/* ]] && continue
+    [[ "$rel" == research/* ]] && continue
+    # humanities: dream 관련만 허용
+    if [[ "$rel" == humanities/* ]] && ! is_dream_humanities "$skill_prefix"; then
+      echo "  skip (비dream humanities) .claude/skills/$rel" && continue
+    fi
+    # writing: SEO 관련만 허용
+    if [[ "$rel" == writing/* ]] && ! is_seo_writing "$skill_prefix"; then
+      echo "  skip (학술 writing) .claude/skills/$rel" && continue
+    fi
+    # backend: python 계열만 허용
+    if [[ "$rel" == backend/* ]] && [[ "$skill_prefix" != backend/python-* ]]; then
+      echo "  skip (비python 백엔드) .claude/skills/$rel" && continue
+    fi
+    # meta: dream 전용 + 범용만 허용 (riper-workflow, ralph-loop, continuous-learning 포함)
+  fi
+
+  # react-spa / nextjs: 백엔드·게임·학술 스킬 제외, SEO writing 유지
   if [ "$TEMPLATE" = "react-spa" ] || [ "$TEMPLATE" = "nextjs" ]; then
-    if [[ "$rel" == backend/* ]]; then
-      echo "  skip (backend 제외) .claude/skills/$rel"
-      continue
+    [[ "$rel" == backend/* ]] && echo "  skip (backend 제외) .claude/skills/$rel" && continue
+    [[ "$rel" == game/* ]] && echo "  skip (game 제외) .claude/skills/$rel" && continue
+    [[ "$rel" == humanities/* ]] && echo "  skip (humanities 제외) .claude/skills/$rel" && continue
+    [[ "$rel" == education/* ]] && echo "  skip (education 제외) .claude/skills/$rel" && continue
+    [[ "$rel" == research/* ]] && echo "  skip (research 제외) .claude/skills/$rel" && continue
+    if [[ "$rel" == writing/* ]] && ! is_seo_writing "$skill_prefix"; then
+      echo "  skip (학술 writing 제외) .claude/skills/$rel" && continue
     fi
   fi
 
-  # rust-axum: 프론트엔드 + Java 스킬 제외
+  # rust-axum: 프론트엔드·Java·게임·학술 스킬 제외
   if [ "$TEMPLATE" = "rust-axum" ]; then
-    if [[ "$rel" == frontend/* ]]; then
-      echo "  skip (frontend 제외) .claude/skills/$rel"
-      continue
-    fi
+    [[ "$rel" == frontend/* ]] && echo "  skip (frontend 제외) .claude/skills/$rel" && continue
+    [[ "$rel" == game/* ]] && echo "  skip (game 제외) .claude/skills/$rel" && continue
+    [[ "$rel" == humanities/* ]] && echo "  skip (humanities 제외) .claude/skills/$rel" && continue
+    [[ "$rel" == education/* ]] && echo "  skip (education 제외) .claude/skills/$rel" && continue
+    [[ "$rel" == research/* ]] && echo "  skip (research 제외) .claude/skills/$rel" && continue
+    [[ "$rel" == writing/* ]] && echo "  skip (writing 제외) .claude/skills/$rel" && continue
     if [[ "$rel" == backend/* ]] && is_java_skill "$skill_prefix"; then
-      echo "  skip (java 스킬 제외) .claude/skills/$rel"
-      continue
+      echo "  skip (java 스킬 제외) .claude/skills/$rel" && continue
     fi
   fi
 
-  # java-spring-legacy: 프론트엔드 + Rust 백엔드 + Security 6(모던) 제외
+  # java-spring-legacy: 프론트엔드 + Rust 백엔드 + Security 6(모던) + 게임·학술 제외
   if [ "$TEMPLATE" = "java-spring-legacy" ]; then
-    if [[ "$rel" == frontend/* ]]; then
-      echo "  skip (frontend 제외) .claude/skills/$rel"
-      continue
-    fi
+    [[ "$rel" == frontend/* ]] && echo "  skip (frontend 제외) .claude/skills/$rel" && continue
+    [[ "$rel" == game/* ]] && echo "  skip (game 제외) .claude/skills/$rel" && continue
+    [[ "$rel" == humanities/* ]] && echo "  skip (humanities 제외) .claude/skills/$rel" && continue
+    [[ "$rel" == education/* ]] && echo "  skip (education 제외) .claude/skills/$rel" && continue
+    [[ "$rel" == research/* ]] && echo "  skip (research 제외) .claude/skills/$rel" && continue
+    [[ "$rel" == writing/* ]] && echo "  skip (writing 제외) .claude/skills/$rel" && continue
     if [[ "$rel" == backend/* ]] && ! is_java_skill "$skill_prefix"; then
-      echo "  skip (rust 백엔드 제외) .claude/skills/$rel"
-      continue
+      echo "  skip (rust 백엔드 제외) .claude/skills/$rel" && continue
     fi
     for m in "${JAVA_SKILLS_MODERN_ONLY[@]}"; do
       if [[ "$skill_prefix" == "$m" ]]; then
-        echo "  skip (모던 전용 스킬 제외) .claude/skills/$rel"
-        continue 2
+        echo "  skip (모던 전용 스킬 제외) .claude/skills/$rel" && continue 2
       fi
     done
   fi
 
-  # java-spring-modern: 프론트엔드 + Rust 백엔드 + Security 5(레거시) 제외
+  # java-spring-modern: 프론트엔드 + Rust 백엔드 + Security 5(레거시) + 게임·학술 제외
   if [ "$TEMPLATE" = "java-spring-modern" ]; then
-    if [[ "$rel" == frontend/* ]]; then
-      echo "  skip (frontend 제외) .claude/skills/$rel"
-      continue
-    fi
+    [[ "$rel" == frontend/* ]] && echo "  skip (frontend 제외) .claude/skills/$rel" && continue
+    [[ "$rel" == game/* ]] && echo "  skip (game 제외) .claude/skills/$rel" && continue
+    [[ "$rel" == humanities/* ]] && echo "  skip (humanities 제외) .claude/skills/$rel" && continue
+    [[ "$rel" == education/* ]] && echo "  skip (education 제외) .claude/skills/$rel" && continue
+    [[ "$rel" == research/* ]] && echo "  skip (research 제외) .claude/skills/$rel" && continue
+    [[ "$rel" == writing/* ]] && echo "  skip (writing 제외) .claude/skills/$rel" && continue
     if [[ "$rel" == backend/* ]] && ! is_java_skill "$skill_prefix"; then
-      echo "  skip (rust 백엔드 제외) .claude/skills/$rel"
-      continue
+      echo "  skip (rust 백엔드 제외) .claude/skills/$rel" && continue
     fi
     for l in "${JAVA_SKILLS_LEGACY_ONLY[@]}"; do
       if [[ "$skill_prefix" == "$l" ]]; then
-        echo "  skip (레거시 전용 스킬 제외) .claude/skills/$rel"
-        continue 2
+        echo "  skip (레거시 전용 스킬 제외) .claude/skills/$rel" && continue 2
       fi
     done
   fi
 
-  # unity-game: 웹 프론트엔드 + 서버 백엔드 스킬 제외 (game/*, devops/*, architecture/* 포함)
+  # unity-game: 웹 프론트엔드 + 서버 백엔드 + 학술 스킬 제외
   if [ "$TEMPLATE" = "unity-game" ]; then
-    if [[ "$rel" == frontend/* ]]; then
-      echo "  skip (웹 프론트엔드 제외) .claude/skills/$rel"
-      continue
-    fi
-    if [[ "$rel" == backend/* ]]; then
-      echo "  skip (서버 백엔드 제외) .claude/skills/$rel"
-      continue
-    fi
+    [[ "$rel" == frontend/* ]] && echo "  skip (웹 프론트엔드 제외) .claude/skills/$rel" && continue
+    [[ "$rel" == backend/* ]] && echo "  skip (서버 백엔드 제외) .claude/skills/$rel" && continue
+    [[ "$rel" == humanities/* ]] && echo "  skip (humanities 제외) .claude/skills/$rel" && continue
+    [[ "$rel" == education/* ]] && echo "  skip (education 제외) .claude/skills/$rel" && continue
+    [[ "$rel" == research/* ]] && echo "  skip (research 제외) .claude/skills/$rel" && continue
+    [[ "$rel" == writing/* ]] && echo "  skip (writing 제외) .claude/skills/$rel" && continue
   fi
 
   dest="$TARGET/.claude/skills/$rel"
