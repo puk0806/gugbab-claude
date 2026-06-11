@@ -16,6 +16,7 @@
 - [검증 단계 생략 금지 — 명시적 강도 요구](feedback_verification_strictness.md) — 학술·논문 작업에서 fact-checker/source-validator/skill-tester/통합 시나리오 모두 수행, "역할 정의만 있으면 생략 가능" 안주 금지
 - [정적 절대경로 작성 금지](feedback_no_static_paths.md) — 문서에 `/Users/lf/...` 박지 말고 상대경로(`./...`) 또는 placeholder(`<프로젝트 루트>/`, `~/.../<해시>/`)로 작성. 다른 사람·다른 PC도 이해 가능하게
 - [verification.md 작성 4원칙](feedback_verification_md_rules.md) — 로컬 프로젝트명·PR 번호 박기 금지, 일괄 업데이트는 사전 승인, 자의적 부분 적용 금지, content test PASS = APPROVED 가능 카테고리 구분
+- [네이밍은 이름만으로 의미 전달](feedback_naming_clarity.md) — Group A/B/C 같은 임시 라벨 금지. dream-app→dream-interpretation처럼 목적이 드러나는 이름 사용
 
 ## Project — 컨벤션 자산 인프라
 
