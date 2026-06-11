@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# pre-commit — 스테이징된 파일에서 시크릿 패턴 스캔
+# 활성화: git config core.hooksPath .githooks
+
+SECRET_PATTERNS=(
+  'sk-ant-[a-zA-Z0-9_-]+'         # Anthropic API key
+  'sk-[a-zA-Z0-9]{48}'            # OpenAI API key
+  'AKIA[0-9A-Z]{16}'              # AWS Access Key ID
+  'aws_secret_access_key\s*=\s*[^\s]+'
+  '-----BEGIN (RSA|EC|OPENSSH) PRIVATE KEY-----'
+  'ghp_[a-zA-Z0-9]{36}'           # GitHub Personal Access Token
+  'ghs_[a-zA-Z0-9]{36}'           # GitHub App Token
+  'Bearer [a-zA-Z0-9\-_]{20,}'    # Bearer token (긴 것만)
+  'password\s*[:=]\s*[^\s#]{8,}'  # password 할당 (8자 이상)
+  'api[_-]?key\s*[:=]\s*[^\s#]{8,}' # API key 할당
+)
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACM)
+
+if [ -z "$STAGED" ]; then
+  exit 0
+fi
+
+FOUND=0
+
+for file in $STAGED; do
+  # .env 파일은 의도적 시크릿 보관 장소이므로 스킵
+  [[ "$file" == *.env* ]] && continue
+  [[ "$file" == .env* ]] && continue
+
+  content=$(git show ":$file" 2>/dev/null) || continue
+
+  for pattern in "${SECRET_PATTERNS[@]}"; do
+    match=$(echo "$content" | grep -E "$pattern" 2>/dev/null | head -1)
+    if [ -n "$match" ]; then
+      echo "⛔ [pre-commit] 시크릿 패턴 감지: $file" >&2
+      echo "   패턴: $pattern" >&2
+      echo "   내용(앞 60자): ${match:0:60}..." >&2
+      FOUND=1
+    fi
+  done
+done
+
+if [ "$FOUND" -eq 1 ]; then
+  echo "" >&2
+  echo "커밋이 차단되었습니다. 시크릿을 제거하거나 .env 파일로 이동하세요." >&2
+  echo "확인 후 강제 커밋: git commit --no-verify" >&2
+  exit 1
+fi
+
+exit 0
