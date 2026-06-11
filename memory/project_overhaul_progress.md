@@ -39,9 +39,15 @@ metadata:
 - java.md·rust.md 룰 export 필터링 → Task 3으로 이관
 - settings.json에서 4개 이벤트 블록 제거 완료
 
-### 작업 3: Export 구조화 ⬜ 대기
-- 템플릿별 훅·룰·CLAUDE.md 매트릭스 설계
-- 각 템플릿용 CLAUDE.md 파일 작성
+### 작업 3: Export 구조화 🔄 진행 중
+- ✅ 훅 export 매트릭스 설계·구현 (`project-install.sh` + `scripts/gen-settings.js`)
+  - 공통(11): bash-guard·auto-approve·parry·session-start·session-summary·cc-notify·instructions-loaded·pending-test-guard·skill-md-guard·verification-guard·staleness-check
+  - 개발 전용: tdd-guard. TypeScript 전용: typescript-quality. Memory 선택: memory-pull·memory-sync·memory-stop-guard
+- ✅ 룰 export 매트릭스 구현 (공통7·언어별3·memory선택1)
+- ✅ memory 공유 기능 선택 질문 신설 (y/N)
+- ✅ 강제화: parry·typescript-quality exit 2 차단. staleness-check 신규 훅
+- ⬜ 각 템플릿용 CLAUDE.md 파일 작성 (examples/ 폴더)
+- ⬜ project-install.sh 설치 테스트 (빈 디렉토리에 각 템플릿 실행)
 
 ### 작업 4: README 개편 ⬜ 대기
 ### 작업 5: 강제성 강화 ⬜ 대기
