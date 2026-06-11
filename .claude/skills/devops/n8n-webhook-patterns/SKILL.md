@@ -1,6 +1,7 @@
 ---
 name: n8n-webhook-patterns
 description: n8n Webhook 노드로 외부 트리거·HTTP API 엔드포인트 구축. Test/Production URL, 응답 모드, 인증, CORS, HMAC 서명 검증, 비동기 처리, 파일 업로드, 외부 서비스 연동 패턴.
+disable-model-invocation: true
 ---
 
 # n8n Webhook 패턴 — 외부 트리거·HTTP API 엔드포인트

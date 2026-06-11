@@ -1,5 +1,6 @@
 ---
 name: concept-analysis-methods
+user-invocable: false
 description: >
   도덕윤리교육 대학원생이 akrasia 같은 철학적 개념을 학술적으로 분석할 때 활용하는 방법론 가이드.
   분석철학적 개념 분석, 해석학, 사상사 방법론, 현상학, 개념사를 비교 정리하고 박사논문 방법론 챕터 작성 팁까지 제공한다.

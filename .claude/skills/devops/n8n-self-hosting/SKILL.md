@@ -1,6 +1,7 @@
 ---
 name: n8n-self-hosting
 description: n8n self-host 운영 - Docker·docker-compose, PostgreSQL 백엔드, 리버스 프록시, 큐 모드, 인증·암호화 키·백업 보안 베스트
+disable-model-invocation: true
 ---
 
 # n8n Self-Hosting

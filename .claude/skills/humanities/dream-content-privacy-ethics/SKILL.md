@@ -1,5 +1,6 @@
 ---
 name: dream-content-privacy-ethics
+user-invocable: false
 description: >
   꿈 데이터를 *민감 정보*로 취급해야 하는 학술·법적 근거(한국 개인정보보호법 제23조, GDPR Art.9, HIPAA, APA Ethics), AI/LLM 시대 추가 위험, 익명화 한계, 사용자 권리, 미성년자 보호 등을 정리한 윤리·법 가이드 스킬.
   <example>사용자: "꿈 일기 앱을 만들 건데 꿈 내용이 민감 정보인지 정리해줘"</example>

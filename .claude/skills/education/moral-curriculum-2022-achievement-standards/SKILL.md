@@ -1,5 +1,6 @@
 ---
 name: moral-curriculum-2022-achievement-standards
+user-invocable: false
 description: >
   2022 개정 도덕과 교육과정(교육부 고시 제2022-33호 [별책 6]) 성취기준 전문(全文) 부록.
   도덕윤리교육 대학원생이 학위논문에서 성취기준을 정확히 인용할 때 NCIC PDF를 매번 열지 않고 참조할 수 있도록 정리.

@@ -1,5 +1,6 @@
 ---
 name: korean-moral-education-thinkers
+user-invocable: false
 description: >
   한국 도덕교육 사상가의 시대별 계보(개화기·일제강점기 → 해방 후 1세대 → 2~3세대 → 현대)를 정리한다.
   도덕윤리교육 전공 대학원생이 학위논문 "한국 도덕교육사 흐름 속에서 본 연구의 위치" 챕터를 작성할 때 참조한다.

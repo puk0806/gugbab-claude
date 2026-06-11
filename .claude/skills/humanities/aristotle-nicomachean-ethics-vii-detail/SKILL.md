@@ -1,5 +1,6 @@
 ---
 name: aristotle-nicomachean-ethics-vii-detail
+user-invocable: false
 description: >
   아리스토텔레스 『니코마코스 윤리학』 VII권(자제력없음·즐거움)의 절별 정밀 독해 가이드.
   Bekker 번호·Bywater OCT 1894 비평본 기준, 핵심 그리스어 어휘 위치, 표준 주석서·현대 해석 학파,

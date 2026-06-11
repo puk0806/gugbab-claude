@@ -1,5 +1,8 @@
 ---
 name: systematic-literature-review
+user-invocable: false
+context: fork
+agent: general-purpose
 description: >
   대학원 수준 체계적 문헌 검토(SLR) 가이드. PRISMA 2020·SPIDER·SPICE·thematic synthesis·meta-ethnography 등 표준 방법론을 인문학·교육학(특히 도덕윤리교육) 학위논문 "선행연구" 챕터 작성에 적용한다.
   <example>사용자: "도덕교육 박사논문 선행연구 챕터를 PRISMA에 맞춰 쓰고 싶은데 어디서부터 시작하나요?"</example>

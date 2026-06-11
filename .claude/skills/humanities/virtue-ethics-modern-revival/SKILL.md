@@ -1,5 +1,6 @@
 ---
 name: virtue-ethics-modern-revival
+user-invocable: false
 description: >
   20세기 후반 영미 철학계에서 부흥한 현대 덕윤리(Virtue Ethics)의
   주요 저자·저작·핵심 개념을 정리한 스킬. 도덕윤리교육 대학원생이

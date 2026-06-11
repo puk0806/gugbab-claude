@@ -1,5 +1,6 @@
 ---
 name: crisis-intervention-resources-korea
+user-invocable: false
 description: >
   한국 위기 대응 자원(자살·자해·정신건강·여성·청소년·노인·다문화) 핫라인과
   앱·챗봇 안전 가드 응답 패턴 종합. 꿈 해몽·정신건강 앱 등 자가 진단/감정

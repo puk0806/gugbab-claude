@@ -1,5 +1,6 @@
 ---
 name: ddd
+user-invocable: false
 description: DDD(Domain-Driven Design) 아키텍처 핵심 패턴 - 유비쿼터스 언어, 서브도메인, 바운디드 컨텍스트, Aggregate, Entity/VO, 도메인 서비스/이벤트, 레이어드 아키텍처
 ---
 

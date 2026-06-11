@@ -1,5 +1,6 @@
 ---
 name: moral-education-self-control-modern-issues
+user-invocable: false
 description: 학위논문 4장 — 현대 도덕교육에서 자제력 교육의 필요성을 통계·도덕심리학·KCI 선행연구와 연결하기 위한 research notes. akrasia/akolasia 분석을 현대 청소년 자제력 결여 문제에 적용할 때 인용·표·재현성 주의점·논증 정당화 패턴을 제공한다.
 ---
 

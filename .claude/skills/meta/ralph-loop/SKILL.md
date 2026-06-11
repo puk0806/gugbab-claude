@@ -1,5 +1,6 @@
 ---
 name: ralph-loop
+user-invocable: false
 description: 명시적 종료 조건이 있는 자율 반복 루프 워크플로우. 검증·테스트·다듬기 작업을 *통과 기준 충족까지* 반복 실행하되 max_iterations·convergence·timeout으로 무한 루프 방지. Ouroboros Ralph 패턴(boulder never stops)을 우리 프로젝트 컨벤션에 맞게 정리한 메타 스킬
 ---
 

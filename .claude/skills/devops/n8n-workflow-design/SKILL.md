@@ -4,6 +4,7 @@ description: >
   n8n 워크플로우 설계 패턴 — 노드 구조, 데이터 흐름, 재사용,
   표현식, 디버깅, 모범 사례. n8n.io의 노코드·로우코드 자동화 플랫폼에서
   유지보수 가능한 워크플로우를 짜는 방법을 정리한다.
+disable-model-invocation: true
 ---
 
 # n8n 워크플로우 설계 (Workflow Design Patterns)

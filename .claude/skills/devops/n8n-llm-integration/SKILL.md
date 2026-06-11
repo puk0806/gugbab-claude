@@ -6,6 +6,7 @@ description: >
   <example>사용자: "n8n에서 Claude로 챗봇 만들고 싶어"</example>
   <example>사용자: "n8n RAG 워크플로우 — Pinecone vs Qdrant"</example>
   <example>사용자: "n8n AI Agent에서 도구 호출 setup"</example>
+disable-model-invocation: true
 ---
 
 # n8n LLM Integration

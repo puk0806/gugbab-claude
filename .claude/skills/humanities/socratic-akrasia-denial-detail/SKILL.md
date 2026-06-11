@@ -1,5 +1,6 @@
 ---
 name: socratic-akrasia-denial-detail
+user-invocable: false
 description: >
   소크라테스의 akrasia(아크라시아·의지의 약함) 부정론을 다수 플라톤 대화편 + 크세노폰 + 아리스토텔레스 비판을 종합해 정리한 대학원 논문 작성용 세부 스킬.
   Stephanus 번호 정확성, 대화편 간 입장 변화, 학자별 해석 차이(Vlastos / Penner / Irwin)까지 포함한다.

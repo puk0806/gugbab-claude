@@ -1,5 +1,6 @@
 ---
 name: moral-education-pedagogy-models
+user-invocable: false
 description: >
   도덕교육 분야 핵심 교수·학습 모델 카탈로그. 인지발달·인격교육·배려윤리·가치명료화·도덕적 토의·통합모델·덕윤리·사회인지영역 이론을 망라하여
   학위논문(특히 akrasia 논의)의 "교수·학습 방법론 제언" 챕터에서 직접 인용 가능하도록 출판사·연도·핵심 명제를 검증해 정리.
