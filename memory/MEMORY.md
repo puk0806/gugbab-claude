@@ -25,7 +25,6 @@
 - [★ SEO·GEO·웹표준 인프라 (1·2·3차 완료)](project_seo_geo_assets_2026-06.md) — **"SEO 메모리 꺼내와" 호출 시 진입점**. 스킬 28종 + 에이전트 4종 전체 커밋·푸시 완료 (2026-06-04). P3 항목(headless-cms·voice-search 등)은 보류 결정
 - [프로젝트 scope 전용 원칙](project_scope_only.md) — gugbab-claude 모든 산출물은 프로젝트 scope에만, 글로벌(~/.claude) 설정 금지
 - [MCP 미사용 결정](project_mcp_decision.md) — WebSearch/WebFetch만 사용, 팀 이식성 우선
-- [project-install.sh 이식 아키텍처](project_install_architecture.md) — 8개 템플릿(0~7, 7=unity-game), JAVA_SKILLS_* 필터, settings.json 단일 source-of-truth (heredoc 제거, cp 방식)
 
 - [★ Unity 게임 개발 인프라 (전체 완료)](project_unity_gamedev_assets_plan.md) — **"Unity/게임 이어서" 호출 시 진입점**. 스킬 17종 + 에이전트 6종 전체 APPROVED. Phase 1~7 완료·커밋·푸시 (2026-06-10). project-install.sh 템플릿 7번 unity-game 포함
 
