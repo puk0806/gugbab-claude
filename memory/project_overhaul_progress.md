@@ -51,7 +51,14 @@ metadata:
 - ✅ project-install.sh 설치 테스트 통과 (react-spa·java-spring-legacy·util 3개 검증)
 
 ### 작업 4: README 개편 ⬜ 대기
-### 작업 5: 강제성 강화 ⬜ 대기
+
+### 작업 5: 강제성 강화 ✅ 완료
+- ✅ 5a: 도출 — verification UNVERIFIED 저장, agent-md 구조, README 미업데이트, memory Bash 수정, rules 약한 표현
+- ✅ 5b: verification-guard.js — status UNVERIFIED 저장 차단(exit 2)
+- ✅ 5c: agent-md-guard.js 신규 — .claude/agents/ .md 파일 name/description/tools/model/<example> 검증
+- ✅ 5d: readme-guard.js 신규 — Stop 경고: SKILL.md·agent .md 수정 시 README 미업데이트 감지
+- ✅ 5e: bash-guard.js — memory/ 파일 sed/awk/perl/echo/cat Bash 차단 5종 추가
+- ✅ 5f: agent-design.md — maxTurns "권장" → "반드시 설정" 강제 표현 교체
 
 ---
 
