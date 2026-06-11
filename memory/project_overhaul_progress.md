@@ -46,6 +46,7 @@ metadata:
 - ✅ 룰 export 매트릭스 구현 (공통8[task-workflow.md 추가]·언어별3·memory선택1)
 - ✅ memory 공유 기능 선택 질문 신설 (y/N)
 - ✅ 강제화: parry·typescript-quality exit 2 차단. staleness-check·task-plan-guard 신규 훅
+- ✅ 강제화 추가: test-fake-guard.js(개발 전용 신규) + session-summary Stop 지시 강화. 훅 17→18종
 - ✅ 9종 CLAUDE.md 템플릿 작성 (`examples/` 폴더) — util·react-spa·nextjs·rust-axum·java-spring-legacy·java-spring-modern·unity-game·academic·dream-interpretation
 - ✅ project-install.sh 설치 테스트 통과 (react-spa·java-spring-legacy·util 3개 검증)
 
