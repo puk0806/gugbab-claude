@@ -54,8 +54,10 @@ metadata:
 
 ---
 
-## 현재 훅 수 (17종)
-- 공통 12 + 개발 전용 1(tdd-guard) + TypeScript 전용 1(typescript-quality) + memory 선택 3
+## 현재 훅 수 (18종)
+- 공통 12 + 개발 전용 2(tdd-guard·test-fake-guard) + TypeScript 전용 1(typescript-quality) + memory 선택 3
+- test-fake-guard.js (신규): PreToolUse Bash — echo/printf 가짜 테스트 결과·단독 true/exit 0 차단 (exit 2)
+- session-summary.js: Stop 핸들러에 Claude 작업 요약 지시 주입 강화
 
 ## 현재 스킬 수 (202종)
 - frontend: 76종
