@@ -57,10 +57,64 @@ while true; do
   esac
 done
 
+# ── Memory 공유 기능 ────────────────────────────────────────────────────
+echo ""
+read -rp "크로스 데스크탑 Claude memory 공유 기능 포함하시겠습니까? (y/N): " _MEM_ANS
+case "$_MEM_ANS" in
+  y|Y) INCLUDE_MEMORY=true ;;
+  *)   INCLUDE_MEMORY=false ;;
+esac
+
+# ── Codex 적대적 코드 리뷰 (개발 템플릿 전용) ─────────────────────────
+INCLUDE_CODEX=false
+case "$TEMPLATE" in
+  react-spa|nextjs|rust-axum|java-spring-legacy|java-spring-modern|unity-game|all)
+    echo ""
+    echo "Codex 적대적 코드 리뷰를 활성화하시겠습니까?"
+    echo "  (codex CLI 설치 + 로그인 필요. settings.json에 codex@openai-codex 플러그인 등록)"
+    read -rp "  활성화 (y/N): " _CODEX_ANS
+    case "$_CODEX_ANS" in
+      y|Y) INCLUDE_CODEX=true ;;
+      *)   INCLUDE_CODEX=false ;;
+    esac ;;
+esac
+
+# ── README 미업데이트 커밋 차단 (readme-guard) ─────────────────────────
+INCLUDE_README_GUARD=false
+case "$TEMPLATE" in
+  react-spa|nextjs|rust-axum|java-spring-legacy|java-spring-modern|unity-game|academic|dream-interpretation|all)
+    echo ""
+    echo "스킬/에이전트 수정 후 README 미업데이트 시 git commit/push 차단하시겠습니까?"
+    echo "  (.claude/skills/ 또는 .claude/agents/ 파일 수정 시 적용)"
+    read -rp "  활성화 (y/N): " _README_GUARD_ANS
+    case "$_README_GUARD_ANS" in
+      y|Y) INCLUDE_README_GUARD=true ;;
+      *)   INCLUDE_README_GUARD=false ;;
+    esac ;;
+esac
+
+# ── staleness-check 강제 모드 (스킬 검증일 60일 초과 시 재검증 강제 지시) ──
+INCLUDE_STALENESS_GUARD=false
+case "$TEMPLATE" in
+  react-spa|nextjs|rust-axum|java-spring-legacy|java-spring-modern|unity-game|academic|dream-interpretation|all)
+    echo ""
+    echo "스킬 검증일 60일 초과 시 세션 시작마다 freshness-auditor 강제 재검증을 활성화하시겠습니까?"
+    echo "  (30~59일: 경고만. 60일+: Claude가 다른 작업 전 반드시 재검증)"
+    read -rp "  활성화 (y/N): " _STALE_ANS
+    case "$_STALE_ANS" in
+      y|Y) INCLUDE_STALENESS_GUARD=true ;;
+      *)   INCLUDE_STALENESS_GUARD=false ;;
+    esac ;;
+esac
+
 # ── 설치 시작 ─────────────────────────────────────────────────────────
 echo ""
 echo "대상: $TARGET"
 echo "템플릿: $TEMPLATE"
+echo "memory 공유: $INCLUDE_MEMORY"
+echo "Codex 리뷰: $INCLUDE_CODEX"
+echo "README guard: $INCLUDE_README_GUARD"
+echo "Staleness guard: $INCLUDE_STALENESS_GUARD"
 echo ""
 
 # 기존 .claude/ 폴더가 있으면 쓰기 권한 확보
@@ -72,41 +126,60 @@ fi
 mkdir -p "$TARGET/.claude/hooks"
 echo "[hooks]"
 
-# 유틸: 범용 훅 (보안·알림·컨텍스트 요약)
-# 개발: 유틸 훅 + 검증·품질·TDD 훅 전체
-HOOKS_UTIL=(
+# 공통 — 모든 템플릿
+HOOKS_COMMON=(
+  "_lib.js"
   "bash-guard.js"
   "auto-approve.js"
+  "parry.js"
+  "protect-secrets.js"
   "session-start.js"
   "session-summary.js"
-  "parry.js"
+  "session-handoff.js"
+  "session-handoff-inject.js"
   "cc-notify.js"
-  "pre-compact.js"
   "instructions-loaded.js"
-  "user-prompt-submit.js"
-  "subagent-audit.js"
-)
-HOOKS_DEV=(
-  "${HOOKS_UTIL[@]}"
-  "verification-guard.js"
-  "skill-md-guard.js"
   "pending-test-guard.js"
-  "drift-monitor.js"
-  "tdd-guard.js"
-  "typescript-quality.js"
+  "readme-guard.js"
+  "skill-md-guard.js"
+  "agent-md-guard.js"
+  "verification-guard.js"
+  "staleness-check.js"
+  "task-plan-guard.js"
+  "statusline.sh"
 )
 
-if [ "$TEMPLATE" = "util" ]; then
-  HOOKS=("${HOOKS_UTIL[@]}")
-else
-  HOOKS=("${HOOKS_DEV[@]}")
+# 개발 전용 (util·academic·dream 제외)
+HOOKS_DEV_ONLY=("tdd-guard.js" "test-fake-guard.js" "verification-gate.js" "careful-with-judge.js")
+
+# TypeScript 전용 (react-spa·nextjs만)
+HOOKS_TS_ONLY=("typescript-quality.js")
+
+# Memory 선택 시 추가
+HOOKS_MEMORY_SET=("memory-pull.js" "memory-sync.js" "memory-stop-guard.js")
+
+# 복사 목록 구성
+HOOKS=("${HOOKS_COMMON[@]}")
+
+case "$TEMPLATE" in
+  react-spa|nextjs|rust-axum|java-spring-legacy|java-spring-modern|unity-game|all)
+    HOOKS+=("${HOOKS_DEV_ONLY[@]}") ;;
+esac
+
+case "$TEMPLATE" in
+  react-spa|nextjs|all)
+    HOOKS+=("${HOOKS_TS_ONLY[@]}") ;;
+esac
+
+if [ "$INCLUDE_MEMORY" = "true" ]; then
+  HOOKS+=("${HOOKS_MEMORY_SET[@]}")
 fi
 
 for hook in "${HOOKS[@]}"; do
   if cp -f "$REPO_DIR/.claude/hooks/$hook" "$TARGET/.claude/hooks/$hook" 2>/dev/null; then
     echo "  → .claude/hooks/$hook"
   else
-    echo "  ✗ .claude/hooks/$hook (복사 실패)"
+    echo "  ✗ .claude/hooks/$hook (복사 실패 또는 미존재)"
   fi
 done
 
@@ -348,8 +421,20 @@ done
 echo ""
 echo "[rules]"
 
-# 유틸 모드: 기술 스택 무관한 규칙만
-UTIL_RULES=("git.md" "info-verification.md")
+# 공통 — 모든 템플릿
+RULES_COMMON=(
+  "git.md"
+  "info-verification.md"
+  "agent-design.md"
+  "commands.md"
+  "creation-workflow.md"
+  "readme-update.md"
+  "verification-policy.md"
+  "task-workflow.md"
+)
+
+# util 전용 (최소)
+RULES_UTIL=("git.md" "info-verification.md")
 
 mkdir -p "$TARGET/.claude/rules"
 for rule in "$REPO_DIR/.claude/rules"/*.md; do
@@ -357,11 +442,26 @@ for rule in "$REPO_DIR/.claude/rules"/*.md; do
   name="$(basename "$rule")"
 
   if [ "$TEMPLATE" = "util" ]; then
-    allowed=false
-    for ur in "${UTIL_RULES[@]}"; do
-      [ "$name" = "$ur" ] && allowed=true && break
-    done
-    $allowed || continue
+    is_in_list "$name" "${RULES_UTIL[@]}" || continue
+  else
+    # 공통 룰 포함 여부 확인
+    if ! is_in_list "$name" "${RULES_COMMON[@]}"; then
+      # 언어별·조건부 룰
+      case "$name" in
+        java.md)
+          case "$TEMPLATE" in all|java-spring-legacy|java-spring-modern) ;; *) continue ;; esac ;;
+        rust.md)
+          case "$TEMPLATE" in all|rust-axum) ;; *) continue ;; esac ;;
+        typescript.md)
+          case "$TEMPLATE" in all|react-spa|nextjs) ;; *) continue ;; esac ;;
+        memory-sync.md)
+          [ "$INCLUDE_MEMORY" = "true" ] || continue ;;
+        codex-review.md)
+          [ "$INCLUDE_CODEX" = "true" ] || continue ;;
+        *)
+          continue ;;
+      esac
+    fi
   fi
 
   if cp -f "$rule" "$TARGET/.claude/rules/$name" 2>/dev/null; then
@@ -677,21 +777,31 @@ if [ -f "$SETTINGS_FILE" ]; then
 fi
 
 if [ ! -f "$SETTINGS_FILE" ] || ([ -f "$SETTINGS_FILE" ] && [ "$OVERWRITE_SETTINGS" != "skip" ]); then
-  # 단일 source of truth — 템플릿 파일을 그대로 복사한다
-  # 유틸: examples/settings/util.json (보수적 hook + 비개발자 권한 세트)
-  # 그 외: .claude/settings.json (이 레포의 운영 설정 = 모든 개선 자동 반영)
-  if [ "$TEMPLATE" = "util" ]; then
-    SETTINGS_SRC="$REPO_DIR/examples/settings/util.json"
-  else
-    SETTINGS_SRC="$REPO_DIR/.claude/settings.json"
-  fi
+  # gen-settings.js로 템플릿·옵션에 맞는 settings.json 동적 생성
+  GEN_FLAGS=""
+  [ "$TEMPLATE" = "util" ] && GEN_FLAGS="$GEN_FLAGS --util"
+  case "$TEMPLATE" in
+    react-spa|nextjs|rust-axum|java-spring-legacy|java-spring-modern|unity-game|all)
+      GEN_FLAGS="$GEN_FLAGS --dev" ;;
+  esac
+  case "$TEMPLATE" in
+    react-spa|nextjs|all)
+      GEN_FLAGS="$GEN_FLAGS --typescript" ;;
+  esac
+  [ "$INCLUDE_MEMORY" = "true" ] && GEN_FLAGS="$GEN_FLAGS --memory"
+  [ "$INCLUDE_CODEX" = "true" ] && GEN_FLAGS="$GEN_FLAGS --codex"
+  [ "$INCLUDE_README_GUARD" = "true" ] && GEN_FLAGS="$GEN_FLAGS --readme-guard"
+  [ "$INCLUDE_STALENESS_GUARD" = "true" ] && GEN_FLAGS="$GEN_FLAGS --staleness-guard"
 
-  if [ ! -f "$SETTINGS_SRC" ]; then
-    echo "  ✗ .claude/settings.json (템플릿 누락: $SETTINGS_SRC)"
-  elif cp -f "$SETTINGS_SRC" "$SETTINGS_FILE" 2>/dev/null; then
-    echo "  → .claude/settings.json (from $(basename "$(dirname "$SETTINGS_SRC")")/$(basename "$SETTINGS_SRC"))"
+  if node "$REPO_DIR/scripts/gen-settings.js" $GEN_FLAGS > "$SETTINGS_FILE" 2>/dev/null; then
+    _SUFFIX=""
+    [ "$INCLUDE_MEMORY" = "true" ] && _SUFFIX="$_SUFFIX +memory"
+    [ "$INCLUDE_CODEX" = "true" ] && _SUFFIX="$_SUFFIX +codex"
+    [ "$INCLUDE_README_GUARD" = "true" ] && _SUFFIX="$_SUFFIX +readme-guard"
+    [ "$INCLUDE_STALENESS_GUARD" = "true" ] && _SUFFIX="$_SUFFIX +staleness-guard"
+    echo "  → .claude/settings.json (생성: $TEMPLATE$_SUFFIX)"
   else
-    echo "  ✗ .claude/settings.json (복사 실패)"
+    echo "  ✗ .claude/settings.json (gen-settings.js 실패)"
   fi
 fi
 
@@ -700,22 +810,49 @@ echo ""
 echo "[CLAUDE.md]"
 
 CLAUDE_FILE="$TARGET/CLAUDE.md"
+
+# 템플릿별 CLAUDE.md 소스 선택
+CLAUDE_SRC="$REPO_DIR/examples/CLAUDE.${TEMPLATE}.md"
+[ -f "$CLAUDE_SRC" ] || CLAUDE_SRC="$REPO_DIR/examples/CLAUDE.template.md"
+
+CLAUDE_WRITTEN=false
+
 if [ -f "$CLAUDE_FILE" ]; then
   echo "  ⚠ CLAUDE.md 이미 존재합니다."
   while true; do
     read -rp "  덮어쓸까요? (y/N): " OVERWRITE_CLAUDE
     case "$OVERWRITE_CLAUDE" in
-      y|Y) cp "$REPO_DIR/examples/CLAUDE.template.md" "$CLAUDE_FILE"
-           echo "  → CLAUDE.md 덮어쓰기"
-           echo "  ℹ {프로젝트명}과 {설명}을 수정하세요"; break ;;
+      y|Y) cp "$CLAUDE_SRC" "$CLAUDE_FILE"
+           echo "  → CLAUDE.md 덮어쓰기 (템플릿: $TEMPLATE)"
+           CLAUDE_WRITTEN=true; break ;;
       n|N|"") echo "  → 건너뜀 (프로젝트 고유 파일 보존)"; break ;;
       *) echo "  y 또는 n을 입력하세요." ;;
     esac
   done
 else
-  cp "$REPO_DIR/examples/CLAUDE.template.md" "$CLAUDE_FILE"
-  echo "  → CLAUDE.md (최초 생성)"
-  echo "  ℹ {프로젝트명}과 {설명}을 수정하세요"
+  cp "$CLAUDE_SRC" "$CLAUDE_FILE"
+  echo "  → CLAUDE.md (템플릿: $TEMPLATE)"
+  CLAUDE_WRITTEN=true
+fi
+
+if [ "$CLAUDE_WRITTEN" = true ]; then
+  read -rp "  프로젝트명을 입력하세요 (Enter로 건너뜀): " PROJECT_NAME
+  if [ -n "$PROJECT_NAME" ]; then
+    TMP=$(mktemp)
+    sed "s|{프로젝트명}|$PROJECT_NAME|g" "$CLAUDE_FILE" > "$TMP" && mv "$TMP" "$CLAUDE_FILE"
+    echo "  ✓ 프로젝트명: $PROJECT_NAME"
+  fi
+  read -rp "  프로젝트 설명을 입력하세요 (Enter로 건너뜀): " PROJECT_DESC
+  if [ -n "$PROJECT_DESC" ]; then
+    TMP=$(mktemp)
+    sed "s|{프로젝트 한 줄 설명}|$PROJECT_DESC|g" "$CLAUDE_FILE" > "$TMP" && mv "$TMP" "$CLAUDE_FILE"
+    TMP=$(mktemp)
+    sed "s|{논문·연구 주제 한 줄 설명}|$PROJECT_DESC|g" "$CLAUDE_FILE" > "$TMP" && mv "$TMP" "$CLAUDE_FILE"
+    echo "  ✓ 프로젝트 설명 적용"
+  fi
+  if [ -z "$PROJECT_NAME" ] && [ -z "$PROJECT_DESC" ]; then
+    echo "  ℹ {프로젝트명}과 {설명}을 직접 수정하세요"
+  fi
 fi
 
 # ── 완료 ─────────────────────────────────────────────────────────────

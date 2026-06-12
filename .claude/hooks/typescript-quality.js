@@ -1,4 +1,4 @@
-// PostToolUse Write|Edit — .ts/.tsx 파일 저장 후 tsc --noEmit 자동 실행 (경고만, 차단 안 함)
+// PostToolUse Write|Edit — .ts/.tsx 저장 시 tsc --noEmit 자동 실행 (오류 있으면 차단)
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
@@ -35,13 +35,13 @@ try {
   } catch (e) {
     const output = (e.stdout || e.stderr || '').toString().trim();
     if (output) {
-      process.stderr.write(`[typescript-quality] ❌ TypeScript 오류 발견:\n`);
-      // 첫 10줄만 출력 (노이즈 감소)
+      process.stderr.write(`[typescript-quality] ❌ TypeScript 오류 — 수정 후 재저장하세요:\n`);
       const lines = output.split('\n').slice(0, 10);
       lines.forEach(l => process.stderr.write(`  ${l}\n`));
       if (output.split('\n').length > 10) {
-        process.stderr.write(`  ... (이하 생략)\n`);
+        process.stderr.write(`  ... (이하 생략, tsc --noEmit 로 전체 확인)\n`);
       }
+      process.exit(2); // 차단
     }
   }
 } catch {}

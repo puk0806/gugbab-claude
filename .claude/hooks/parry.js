@@ -1,4 +1,4 @@
-// PreToolUse Write — 파일 쓰기 전 시크릿·프롬프트 인젝션 패턴 스캔 (경고만, 차단 안 함)
+// PreToolUse Write — 시크릿·프롬프트 인젝션 패턴 스캔 (시크릿/인젝션 감지 시 차단)
 const fs = require('fs');
 const path = require('path');
 
@@ -31,20 +31,31 @@ try {
   // .env 파일 자체는 의도적으로 시크릿을 담으므로 스킵
   if (path.basename(filePath).startsWith('.env')) process.exit(0);
 
-  const warnings = [];
+  const secretHits = [];
+  const injectionHits = [];
 
   for (const p of SECRET_PATTERNS) {
-    if (p.regex.test(content)) warnings.push(`🔐 시크릿 패턴: ${p.name}`);
+    if (p.regex.test(content)) secretHits.push(`🔐 시크릿: ${p.name}`);
   }
   for (const p of INJECTION_PATTERNS) {
-    if (p.regex.test(content)) warnings.push(`💉 인젝션 패턴: ${p.name}`);
+    if (p.regex.test(content)) injectionHits.push(`💉 인젝션: ${p.name}`);
   }
 
-  if (warnings.length > 0) {
-    process.stderr.write(`[parry] ⚠️  보안 경고 (${path.basename(filePath)}):\n`);
-    warnings.forEach(w => process.stderr.write(`  ${w}\n`));
-    process.stderr.write(`[parry] 의도된 내용이면 계속 진행하세요.\n`);
+  const all = [...secretHits, ...injectionHits];
+  if (all.length === 0) process.exit(0);
+
+  process.stderr.write(`[parry] ❌ 보안 위협 감지 (${path.basename(filePath)}):\n`);
+  all.forEach(w => process.stderr.write(`  ${w}\n`));
+
+  if (secretHits.length > 0) {
+    process.stderr.write(`[parry] 시크릿은 .env 파일에 보관하고 코드에서 환경변수로 참조하세요.\n`);
   }
+  if (injectionHits.length > 0) {
+    process.stderr.write(`[parry] 프롬프트 인젝션 의심 패턴이 감지됐습니다. 내용을 검토하세요.\n`);
+  }
+  process.stderr.write(`[parry] 의도된 내용이라면 패턴을 수정하거나 직접 파일을 작성하세요.\n`);
+
+  process.exit(2); // 차단
 } catch {}
 
 process.exit(0);

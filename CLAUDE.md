@@ -13,6 +13,19 @@ Claude Code 활용에 필요한 에이전트(Agent), 스킬(Skill), 설정(CLAUD
 
 ---
 
+## 작업 착수 전 확인 절차 (필수)
+
+구현·설계·추가·변경·개편 등 복잡한 작업을 시작하기 전에 반드시:
+
+1. **"이렇게 이해했습니다:"** — 요청 내용 요약
+2. **"작업 목록:"** — 번호 있는 단계 리스트
+3. **"진행할까요?"** — 사용자 확인 대기
+4. 승인 후 실행
+
+단순 조회(설명·요약·검색)와 git 커밋·푸시는 예외. 자세한 기준 → @.claude/rules/task-workflow.md
+
+---
+
 ## 금지 사항
 
 - **커밋·푸시는 사용자가 명시적으로 요청할 때만 진행한다. 작업 완료 후 자동 커밋 제안·실행 금지** — settings.json deny 목록으로 강제
@@ -38,3 +51,4 @@ Claude Code 활용에 필요한 에이전트(Agent), 스킬(Skill), 설정(CLAUD
 | 검증 정책·APPROVED 전환 | @.claude/rules/verification-policy.md |
 | 슬래시 커맨드 작성·목록 | @.claude/rules/commands.md |
 | 메모리 동기화 정책 | @.claude/rules/memory-sync.md |
+| 작업 착수 전 확인 절차 | @.claude/rules/task-workflow.md |
