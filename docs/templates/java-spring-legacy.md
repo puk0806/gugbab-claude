@@ -131,7 +131,7 @@ Java 11 + Spring Boot 2.5 + WAR + MyBatis 레거시 백엔드 프로젝트.
 
 ## settings.json
 
-`scripts/gen-settings.js --dev` 플래그로 생성됩니다. (rust-axum과 동일한 플래그)
+`scripts/gen-settings.js --dev` 플래그로 생성됩니다.
 
 이미 settings.json이 있으면 덮어쓸지 확인 후 처리합니다.
 

@@ -307,6 +307,10 @@ EXCLUDE_AGENTS_FRONTEND=(
   "backend/rust-backend-architect.md"
   "backend/java-backend-developer.md"
   "backend/java-backend-architect.md"
+  "backend/python-backend-developer.md"
+  "backend/python-backend-architect.md"
+  "backend/database-architect.md"
+  "backend/build-error-resolver.md"
 )
 EXCLUDE_AGENTS_RUST=(
   "frontend/frontend-developer.md"

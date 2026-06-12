@@ -10,7 +10,39 @@ Java 21 + Spring Boot 3.x + Jar/Native + MyBatis 모던 백엔드 프로젝트.
 
 ## 에이전트
 
-java-spring-legacy와 동일한 에이전트 구성입니다. → [java-spring-legacy 에이전트 목록](./java-spring-legacy.md)
+| 카테고리 | 에이전트 | 설명 |
+|----------|---------|------|
+| meta | [agent-creator](../../.claude/agents/meta/agent-creator.md) | 에이전트 MD 파일 대화형 생성 |
+| meta | [skill-creator](../../.claude/agents/meta/skill-creator.md) | 공식 문서 검증 후 SKILL.md 생성 |
+| meta | [skill-tester](../../.claude/agents/meta/skill-tester.md) | PENDING_TEST 스킬 2단계 실사용 테스트 |
+| meta | [freshness-auditor](../../.claude/agents/meta/freshness-auditor.md) | 에이전트·스킬 최신화 필요 항목 감사 |
+| meta | [planner](../../.claude/agents/meta/planner.md) | 복잡한 작업 단계별 실행 계획 분해 |
+| meta | [claude-code-guide](../../.claude/agents/meta/claude-code-guide.md) | Claude Code CLI 사용법·설정 가이드 |
+| meta | [tech-stack-advisor](../../.claude/agents/meta/tech-stack-advisor.md) | 요구사항에 맞는 기술 스택 추천·비교 |
+| meta | [mvp-scope-planner](../../.claude/agents/meta/mvp-scope-planner.md) | MVP Phase 1·2·3 범위 절단 |
+| meta | [project-scaffolder](../../.claude/agents/meta/project-scaffolder.md) | 결정된 스택으로 프로젝트 부트스트랩 |
+| backend | [java-backend-developer](../../.claude/agents/backend/java-backend-developer.md) | Java + Spring Boot 백엔드 코드 구현 |
+| backend | [java-backend-architect](../../.claude/agents/backend/java-backend-architect.md) | Java + Spring Boot 백엔드 아키텍처 설계 |
+| backend | [python-backend-developer](../../.claude/agents/backend/python-backend-developer.md) | FastAPI 백엔드 코드 구현 |
+| backend | [python-backend-architect](../../.claude/agents/backend/python-backend-architect.md) | FastAPI 백엔드 아키텍처 설계 |
+| backend | [database-architect](../../.claude/agents/backend/database-architect.md) | DB 스키마·ERD·인덱싱 설계 |
+| domain | [business-domain-analyst](../../.claude/agents/domain/business-domain-analyst.md) | 비즈니스 요구사항 → DDD 도메인 모델 도출 |
+| domain | [codebase-domain-analyst](../../.claude/agents/domain/codebase-domain-analyst.md) | 코드베이스 역분석 → 도메인 구조 진단 |
+| domain | [product-planner](../../.claude/agents/domain/product-planner.md) | 아이디어·요구사항 → PRD 작성 |
+| domain | [ui-ux-designer](../../.claude/agents/domain/ui-ux-designer.md) | PRD → 와이어프레임·디자인 토큰·컴포넌트 스펙 |
+| domain | [api-spec-designer](../../.claude/agents/domain/api-spec-designer.md) | PRD → OpenAPI 3.1 스펙·에러 코드·인증 설계 |
+| devops | [devops-engineer](../../.claude/agents/devops/devops-engineer.md) | Dockerfile·GitHub Actions·배포 설정 |
+| research | [deep-researcher](../../.claude/agents/research/deep-researcher.md) | 논문/오픈소스/기업 사례 3축 딥 리서치 |
+| research | [web-searcher](../../.claude/agents/research/web-searcher.md) | 검색 축별 소스 탐색 전담 |
+| research | [research-reviewer](../../.claude/agents/research/research-reviewer.md) | 리서치 보고서 품질 평가 |
+| research | [data-analyst](../../.claude/agents/research/data-analyst.md) | 이벤트 택소노미·퍼널 분석·A/B 테스트 설계 |
+| research | [competitor-analyst](../../.claude/agents/research/competitor-analyst.md) | 경쟁사 분석·기능 비교·차별화 포인트 도출 |
+| validation | [fact-checker](../../.claude/agents/validation/fact-checker.md) | 사실·수치·주장 교차 검증 |
+| validation | [source-validator](../../.claude/agents/validation/source-validator.md) | URL·문서 신뢰도 판정 |
+| validation | [qa-engineer](../../.claude/agents/validation/qa-engineer.md) | E2E 테스트·Playwright 코드 생성 |
+| validation | [security-auditor](../../.claude/agents/validation/security-auditor.md) | OWASP·PIPA·LLM 리스크 보안 감사 |
+
+> `build-error-resolver`는 Java 템플릿에서 제외됩니다 (Rust/TS 전용 기능).
 
 ---
 
@@ -99,7 +131,7 @@ java-spring-legacy와 동일한 에이전트 구성입니다. → [java-spring-l
 
 ## settings.json
 
-`scripts/gen-settings.js --dev` 플래그로 생성됩니다. (java-spring-legacy와 동일)
+`scripts/gen-settings.js --dev` 플래그로 생성됩니다.
 
 이미 settings.json이 있으면 덮어쓸지 확인 후 처리합니다.
 
