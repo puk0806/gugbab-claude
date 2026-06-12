@@ -97,7 +97,7 @@
     <div class="stats-row">
       <div class="stat"><div class="stat-num" id="s-skills">202</div><div class="stat-label">스킬</div></div>
       <div class="stat"><div class="stat-num" id="s-agents">69</div><div class="stat-label">에이전트</div></div>
-      <div class="stat"><div class="stat-num" id="s-hooks">21</div><div class="stat-label">훅</div></div>
+      <div class="stat"><div class="stat-num" id="s-hooks">20</div><div class="stat-label">훅</div></div>
       <div class="stat"><div class="stat-num" id="s-rules">11</div><div class="stat-label">룰</div></div>
       <div class="stat"><div class="stat-num">10</div><div class="stat-label">템플릿</div></div>
     </div>
@@ -140,11 +140,11 @@
       </div>
       <p class="task-desc">현재 훅 21종·룰 11종을 감사. 중복·미사용·효과 없는 것들 제거하고 핵심만 유지.</p>
       <div class="subtasks" id="st2">
-        <div class="sub"><input type="checkbox" data-task="2" data-id="2a"><label>훅 21종 역할·실제 동작 여부 정리표 작성</label></div>
-        <div class="sub"><input type="checkbox" data-task="2" data-id="2b"><label>tdd-guard, typescript-quality — 범용 프로젝트에 불필요 여부 검토</label></div>
-        <div class="sub"><input type="checkbox" data-task="2" data-id="2c"><label>drift-monitor, instructions-loaded 실효성 검토</label></div>
-        <div class="sub"><input type="checkbox" data-task="2" data-id="2d"><label>룰 11종 — java.md / rust.md 코딩 컨벤션 룰 export 시만 포함으로 이동 검토</label></div>
-        <div class="sub"><input type="checkbox" data-task="2" data-id="2e"><label>제거 실행 + settings.json 정리</label></div>
+        <div class="sub"><input type="checkbox" data-task="2" data-id="2a" checked><label>훅 21종 역할·실제 동작 여부 정리표 작성</label></div>
+        <div class="sub"><input type="checkbox" data-task="2" data-id="2b" checked><label>tdd-guard, typescript-quality — 범용 프로젝트에 불필요 여부 검토</label></div>
+        <div class="sub"><input type="checkbox" data-task="2" data-id="2c" checked><label>drift-monitor, instructions-loaded 실효성 검토</label></div>
+        <div class="sub"><input type="checkbox" data-task="2" data-id="2d" checked><label>룰 11종 — java.md / rust.md 코딩 컨벤션 룰 export 시만 포함으로 이동 검토</label></div>
+        <div class="sub"><input type="checkbox" data-task="2" data-id="2e" checked><label>제거 실행 + settings.json 정리</label></div>
       </div>
       <div class="note"><b>방향:</b> 이 레포 자체에 필요한 훅 vs export 시에만 필요한 훅 구분. memory-sync 3종은 유지.</div>
     </div>
@@ -154,17 +154,17 @@
       <div class="task-head">
         <span class="task-num">03</span>
         <span class="task-title">Export 구조화 — 템플릿별 세밀한 설정</span>
-        <span class="badge todo" id="b3">대기</span>
+        <span class="badge done" id="b3">완료</span>
       </div>
       <p class="task-desc">project-install.sh 8개 템플릿을 개선. 각 템플릿별 훅·룰·CLAUDE.md·에이전트·스킬을 명확하게 정의.</p>
       <div class="subtasks" id="st3">
-        <div class="sub"><input type="checkbox" data-task="3" data-id="3a"><label>템플릿별 export 매트릭스 설계 (훅·룰·CLAUDE.md 각각)</label></div>
-        <div class="sub"><input type="checkbox" data-task="3" data-id="3b"><label>각 템플릿용 CLAUDE.md 템플릿 파일 작성 (examples/ 폴더)</label></div>
-        <div class="sub"><input type="checkbox" data-task="3" data-id="3c"><label>각 템플릿용 settings.json 커스터마이징 (훅 포함 여부)</label></div>
-        <div class="sub"><input type="checkbox" data-task="3" data-id="3d"><label>project-install.sh 리팩터 — 매트릭스 기반으로 재작성</label></div>
-        <div class="sub"><input type="checkbox" data-task="3" data-id="3e"><label>설치 테스트 (빈 디렉토리에 각 템플릿 실행)</label></div>
+        <div class="sub"><input type="checkbox" data-task="3" data-id="3a" checked><label>템플릿별 export 매트릭스 설계 (훅·룰·CLAUDE.md 각각)</label></div>
+        <div class="sub"><input type="checkbox" data-task="3" data-id="3b" checked><label>각 템플릿용 CLAUDE.md 템플릿 파일 작성 (examples/ 폴더)</label></div>
+        <div class="sub"><input type="checkbox" data-task="3" data-id="3c" checked><label>각 템플릿용 settings.json 커스터마이징 (훅 포함 여부)</label></div>
+        <div class="sub"><input type="checkbox" data-task="3" data-id="3d" checked><label>project-install.sh 리팩터 — 매트릭스 기반으로 재작성</label></div>
+        <div class="sub"><input type="checkbox" data-task="3" data-id="3e" checked><label>설치 테스트 (빈 디렉토리에 각 템플릿 실행)</label></div>
       </div>
-      <div class="note"><b>현황:</b> java.md·rust.md 룰이 해당 템플릿에만 나가야 하는데 현재는 전부 포함 여부 불명확.</div>
+      <div class="note"><b>완료:</b> 9종 CLAUDE.md 템플릿(util·react-spa·nextjs·rust-axum·java-spring-legacy·java-spring-modern·unity-game·academic·dream-interpretation) 생성. gen-settings.js로 settings.json 동적 생성. 언어별 룰(java/rust/typescript) + task-workflow.md export 필터링 구현. 3개 템플릿 설치 테스트 통과.</div>
     </div>
 
     <!-- Task 4 -->
@@ -194,12 +194,12 @@
       </div>
       <p class="task-desc">현재 "권고" 수준인 규칙들을 훅으로 강제. 위반 시 경고 또는 차단.</p>
       <div class="subtasks" id="st5">
-        <div class="sub"><input type="checkbox" data-task="5" data-id="5a"><label>creation-workflow.md 권고 사항 중 훅으로 강제 가능한 항목 도출</label></div>
-        <div class="sub"><input type="checkbox" data-task="5" data-id="5b"><label>verification-guard 강화 — UNVERIFIED 상태 파일 Write 차단</label></div>
-        <div class="sub"><input type="checkbox" data-task="5" data-id="5c"><label>agent-design 규칙 위반 에이전트 파일 저장 시 경고</label></div>
-        <div class="sub"><input type="checkbox" data-task="5" data-id="5d"><label>README 미업데이트 감지 훅 — 스킬/에이전트 추가 시 README 변경 없으면 경고</label></div>
-        <div class="sub"><input type="checkbox" data-task="5" data-id="5e"><label>CLAUDE.md 금지 사항 → 실제 차단 훅 연결</label></div>
-        <div class="sub"><input type="checkbox" data-task="5" data-id="5f"><label>rules/ 파일 내 "권고" "추천" 표현 전수 검토 후 강제 표현으로 교체</label></div>
+        <div class="sub checked"><input type="checkbox" data-task="5" data-id="5a" checked><label>creation-workflow.md 권고 사항 중 훅으로 강제 가능한 항목 도출</label></div>
+        <div class="sub checked"><input type="checkbox" data-task="5" data-id="5b" checked><label>verification-guard 강화 — UNVERIFIED 상태 파일 Write 차단</label></div>
+        <div class="sub checked"><input type="checkbox" data-task="5" data-id="5c" checked><label>agent-design 규칙 위반 에이전트 파일 저장 시 경고</label></div>
+        <div class="sub checked"><input type="checkbox" data-task="5" data-id="5d" checked><label>README 미업데이트 감지 훅 — 스킬/에이전트 추가 시 README 변경 없으면 경고</label></div>
+        <div class="sub checked"><input type="checkbox" data-task="5" data-id="5e" checked><label>CLAUDE.md 금지 사항 → 실제 차단 훅 연결 (memory/ Bash 수정 차단 추가)</label></div>
+        <div class="sub checked"><input type="checkbox" data-task="5" data-id="5f" checked><label>rules/ 파일 내 "권고" "추천" 표현 전수 검토 후 강제 표현으로 교체</label></div>
       </div>
       <div class="note"><b>방향:</b> 경고(stdout 출력)와 차단(exit 2) 구분 필요. 차단은 복구 불가 위험이 있을 때만. 일반 규칙 위반은 경고.</div>
     </div>
@@ -231,6 +231,46 @@
         <span class="d-date">2026-06-11</span>
         <span class="d-text">dream-interpretation 스킬 20종+ — 유지 결정. dream-interpretation 템플릿(#9)으로 분리 제공. 별도 이관 불필요.</span>
         <span class="d-tag">스킬 정리</span>
+      </div>
+      <div class="decision-item">
+        <span class="d-date">2026-06-11</span>
+        <span class="d-text">작업 2 완료 — 훅 4종 삭제 (19→15종): drift-monitor(spec.md 없어 항상 pass)·subagent-audit(/tmp 로그 아무도 안 읽음)·pre-compact(/tmp 스냅샷 불필요)·user-prompt-submit(low signal 힌트). tdd-guard·typescript-quality·instructions-loaded 유지. java.md/rust.md 룰 export 필터링은 Task 3으로 이관.</span>
+        <span class="d-tag">훅 정리</span>
+      </div>
+      <div class="decision-item">
+        <span class="d-date">2026-06-11</span>
+        <span class="d-text">훅 export 매트릭스 최종 확정 — 공통(14종): bash-guard·auto-approve·parry·session-start·session-summary·cc-notify·instructions-loaded·pending-test-guard·skill-md-guard·agent-md-guard·verification-guard·readme-guard·staleness-check·task-plan-guard. 개발 전용(2종): tdd-guard·test-fake-guard. TypeScript 전용(1종): typescript-quality. Memory 선택(3종): memory-pull·memory-sync·memory-stop-guard. Codex 선택: enabledPlugins codex@openai-codex. 총 20종. project-install.sh + gen-settings.js로 구현 완료.</span>
+        <span class="d-tag">export 구조</span>
+      </div>
+      <div class="decision-item">
+        <span class="d-date">2026-06-11</span>
+        <span class="d-text">룰 export 매트릭스 확정 — 공통(8): git·info-verification·agent-design·commands·creation-workflow·readme-update·verification-policy·task-workflow. 언어별: java(5·6)·rust(4)·typescript(2·3). 조건부: memory-sync(memory 선택), codex-review(codex 선택). util은 git+info-verification만.</span>
+        <span class="d-tag">export 구조</span>
+      </div>
+      <div class="decision-item">
+        <span class="d-date">2026-06-11</span>
+        <span class="d-text">강제화 — parry.js: 시크릿/인젝션 감지 시 exit 2 차단(기존 경고). typescript-quality.js: tsc 오류 시 exit 2 차단(기존 경고). tdd-guard.js: 경고 유지(차단 과도). 신규 staleness-check.js(InstructionsLoaded): 검증일 60일 초과 스킬 감지 시 재검증 여부 사용자 확인. 신규 task-plan-guard.js(UserPromptSubmit): 복잡한 작업 요청 시 계획 확인 절차 지시. 훅 15→17종.</span>
+        <span class="d-tag">강제화</span>
+      </div>
+      <div class="decision-item">
+        <span class="d-date">2026-06-11</span>
+        <span class="d-text">작업 3 완료 — 9종 CLAUDE.md 템플릿 생성(examples/ 폴더). gen-settings.js로 settings.json 동적 생성(--util/--dev/--typescript/--memory 플래그). RULES_COMMON에 task-workflow.md 추가. 언어별 룰(java/rust/typescript) + memory-sync 조건부 export 구현. react-spa·java-spring-legacy·util 3개 설치 테스트 통과.</span>
+        <span class="d-tag">export 구조</span>
+      </div>
+      <div class="decision-item">
+        <span class="d-date">2026-06-11</span>
+        <span class="d-text">강제화 추가 — session-summary.js Stop 핸들러에 Claude 지시 주입: 수정 파일 있을 때 작업 요약 보고 강제(stderr). test-fake-guard.js 신규(PreToolUse Bash): echo/printf 가짜 테스트 결과·단독 true/exit 0으로 테스트 통과 위장 시 exit 2 차단. 실제 테스트 러너 포함 시 허용. 훅 17→18종. 개발 전용(--dev) 훅으로 분류.</span>
+        <span class="d-tag">강제화</span>
+      </div>
+      <div class="decision-item">
+        <span class="d-date">2026-06-11</span>
+        <span class="d-text">Task 5 완료 + export 구조 업데이트 완료 — 강제화 강화 5a~5f 전체 구현. (5b) verification-guard.js: status UNVERIFIED 저장 차단(exit 2). (5c) agent-md-guard.js 신규(PostToolUse Write): .claude/agents/ .md 파일의 name/description/tools/model/&lt;example&gt; 검증·차단. (5d) readme-guard.js 신규(Stop 경고): SKILL.md·agent .md 수정 시 README.md 미업데이트 감지. (5e) bash-guard.js DENY_PATTERNS에 memory/ 파일 sed/awk/perl/echo/cat 차단 5종 추가. (5f) agent-design.md maxTurns "권장" → "반드시 설정". 공통 훅 12→14종. 총 훅 18→20종.</span>
+        <span class="d-tag">강제화</span>
+      </div>
+      <div class="decision-item">
+        <span class="d-date">2026-06-11</span>
+        <span class="d-text">Codex 적대적 코드 리뷰 워크플로우 구축 — codex-review.md(신규): CLI 설치·로그인·플러그인 3조건 확인 후 최대 3라운드 핑퐁. Codex=적대적 리뷰어, Claude=ACCEPT/REJECT/PARTIAL 근거 판단(맹목 수용 금지). gen-settings.js --codex 플래그: enabledPlugins codex@openai-codex 출력. project-install.sh: 코딩 6개 템플릿 대상 Codex 활성화 질문 + codex-review.md 조건부 export. 코딩 템플릿 CLAUDE.md 6종(react-spa·nextjs·rust-axum·java-spring-legacy·java-spring-modern·unity-game) 규칙 참조 행 추가. /codex-review 슬래시 커맨드(신규) + commands.md 동기화.</span>
+        <span class="d-tag">Codex 리뷰</span>
       </div>
     </div>
 
