@@ -194,12 +194,3 @@ metadata:
 ### 2026-06-02 — P1-3 완료 (token limit 후 verification.md 보충 작성)
 - `frontend/og-image-generation` 신규: 1200×630 표준, Next.js `opengraph-image.tsx` 파일 컨벤션 + `params` Promise, vercel/satori 단독(JSX→SVG, Resvg → PNG), CJK 폰트 임베드 3옵션(전체/서브셋/loadAdditionalAsset 동적), SSG 사전 생성 vs Edge 동적, @vercel/og→next/og 통합, Facebook/X/Kakao OG 디버거. SKILL.md 580줄 11섹션. content test 3/3 PASS → APPROVED (skill-creator가 token limit 직전 SKILL.md만 작성하고 종료 → 메인이 verification.md 직접 작성 후 skill-tester 호출)
 
-## 주의 사항 (메모리 인덱스 기반)
-
-- [[feedback_skill_testing_enforcement]]: skill-creator → skill-tester 순차 호출 필수
-- [[feedback_skill_tester_self_replacement_anti]]: 셀프 검증으로 skill-tester 대체 금지, 훅이 차단
-- [[feedback_parallel_readme]]: 병렬 README 충돌 방지 — 순차 진행으로 회피
-- [[feedback_neutral_tech_comparison]]: 중립 관점 기본, 사용자의 lf-ui CRA 같은 특정 스택은 참고 섹션으로만
-- [[feedback_verification_md_rules]]: verification.md에 로컬 프로젝트명·PR 번호 박지 않기
-- [[feedback_commit_policy]]: 사용자가 커밋 요청하기 전까지 자동 커밋 금지
-- [[project_scope_only]]: 모든 산출물은 프로젝트 scope에만 (글로벌 ~/.claude 금지)
