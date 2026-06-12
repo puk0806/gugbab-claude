@@ -50,7 +50,18 @@ metadata:
 - ✅ 9종 CLAUDE.md 템플릿 작성 (`examples/` 폴더) — util·react-spa·nextjs·rust-axum·java-spring-legacy·java-spring-modern·unity-game·academic·dream-interpretation
 - ✅ project-install.sh 설치 테스트 통과 (react-spa·java-spring-legacy·util 3개 검증)
 
-### 작업 4: README 개편 ⬜ 대기
+### 작업 4: README 개편 ✅ 완료 (2026-06-12)
+- ✅ README 루트 간소화: 에이전트·스킬·훅 상세 테이블 제거 → 트리 + 4줄 링크로 대체
+- ✅ 프로젝트 구조 코드블럭 → 트리 시각화 유지 + 아래 클릭 가능 링크(agents/skills/hooks/rules)
+- ✅ docs/agents/README.md 신설 (9카테고리 인덱스)
+- ✅ docs/skills/README.md 신설 (10카테고리 인덱스)
+- ✅ docs/agents/{category}/README.md 9종 신설 (각 카테고리별 에이전트 목록)
+- ✅ docs/skills/{category}/README.md 10종 신설 (각 카테고리별 스킬 목록 + verification 링크)
+- ✅ docs/hooks/README.md 신설 (20종 전체 목록)
+- ✅ docs/rules/README.md 신설 (13종 전체 목록)
+- ✅ docs/templates/{9종}.md 신설 — 에이전트·스킬·훅·규칙·CLAUDE.md·settings.json 6섹션 상세
+- ✅ 템플릿 테이블에 상세 링크(→) 열 추가
+- ✅ 불필요 링크 2줄 제거 ("템플릿별 CLAUDE.md 예시 → examples/", "에이전트·스킬 전체 목록 → docs/")
 
 ### 작업 5: 강제성 강화 ✅ 완료
 - ✅ 5a: 도출 — verification UNVERIFIED 저장, agent-md 구조, README 미업데이트, memory Bash 수정, rules 약한 표현
