@@ -30,6 +30,7 @@
 
 ### 자산 이력 (커밋·푸시 완료)
 
+- [스킬/에이전트 frontmatter 업그레이드 (2026-06-06)](project_skill_agent_frontmatter_upgrade_2026-06.md) — anthropics/skills 레포 갭 분석 기반. disable-model-invocation·user-invocable·permissionMode·isolation·background 필드 + InstructionsLoaded·UserPromptSubmit 훅 추가. A1~C2 전체 완료
 - [프론트엔드 성능 벤치마킹 인프라 (2026-05-14)](project_perf_benchmarking_assets_2026-05-14.md) — 스킬 5종 + validation 에이전트 2종(build-perf-benchmarker + perf-report-writer). 69 클레임 VERIFIED
 - [꿈 해몽 앱 인프라 통합 (2026-05-14·15)](project_dream_app_complete_2026-05.md) — 1+2+3차 통합. 스킬 28종 + 에이전트 5종 + 보강 3건. content test 84/84 PASS. 사용자는 별도 프로젝트에서 실제 앱 개발 예정
 - [Python + n8n 인프라 (2026-05-15)](project_python_n8n_assets_2026-05-15.md) — Python 16종 + n8n 5종. 일반 실무·학습 우선. content test 21/21 PASS
