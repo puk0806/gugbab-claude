@@ -20,18 +20,17 @@
 
 ## Project — 컨벤션 자산 인프라
 
-- [★ 레포 개편 진행 상황](project_overhaul_progress.md) — 작업1~5 전부 완료. 훅 20→27종(공통 14→19, dev 2→4) 2026-06-12 추가 완료
-- [project-install.sh 이식 아키텍처](project_install_architecture.md) — 10개 템플릿(0~9, 8=academic, 9=dream-interpretation), JAVA_SKILLS_* 필터
-- [★ SEO·GEO·웹표준 인프라 (1·2·3차 완료)](project_seo_geo_assets_2026-06.md) — **"SEO 메모리 꺼내와" 호출 시 진입점**. 스킬 28종 + 에이전트 4종 전체 커밋·푸시 완료 (2026-06-04). P3 항목(headless-cms·voice-search 등)은 보류 결정
+- [project-install.sh 이식 아키텍처](project_install_architecture.md) — 10개 템플릿(0~9), JAVA_SKILLS_* 필터, scripts/gen-settings.js로 settings.json 생성
 - [프로젝트 scope 전용 원칙](project_scope_only.md) — gugbab-claude 모든 산출물은 프로젝트 scope에만, 글로벌(~/.claude) 설정 금지
 - [MCP 미사용 결정](project_mcp_decision.md) — WebSearch/WebFetch만 사용, 팀 이식성 우선
 
-- [★ Unity 게임 개발 인프라 (전체 완료)](project_unity_gamedev_assets_plan.md) — **"Unity/게임 이어서" 호출 시 진입점**. 스킬 17종 + 에이전트 6종 전체 APPROVED. Phase 1~7 완료·커밋·푸시 (2026-06-10). project-install.sh 템플릿 7번 unity-game 포함
-
 ### 자산 이력 (커밋·푸시 완료)
 
-- [스킬/에이전트 frontmatter 업그레이드 (2026-06-06)](project_skill_agent_frontmatter_upgrade_2026-06.md) — anthropics/skills 레포 갭 분석 기반. disable-model-invocation·user-invocable·permissionMode·isolation·background 필드 + InstructionsLoaded·UserPromptSubmit 훅 추가. A1~C2 전체 완료
-- [프론트엔드 성능 벤치마킹 인프라 (2026-05-14)](project_perf_benchmarking_assets_2026-05-14.md) — 스킬 5종 + validation 에이전트 2종(build-perf-benchmarker + perf-report-writer). 69 클레임 VERIFIED
-- [꿈 해몽 앱 인프라 통합 (2026-05-14·15)](project_dream_app_complete_2026-05.md) — 1+2+3차 통합. 스킬 28종 + 에이전트 5종 + 보강 3건. content test 84/84 PASS. 사용자는 별도 프로젝트에서 실제 앱 개발 예정
-- [Python + n8n 인프라 (2026-05-15)](project_python_n8n_assets_2026-05-15.md) — Python 16종 + n8n 5종. 일반 실무·학습 우선. content test 21/21 PASS
-- [범용 워크플로우 에이전트 9종 (2026-05-15)](project_workflow_agents_2026-05-15.md) — "0→MVP" 갭 메움. meta 3 + backend 5 + validation 1. 통합 흐름: socratic→product-planner→mvp-scope→tech-stack→database→backend-architect→frontend→api-spec→ui-ux→scaffolder→developers→qa→security-auditor→devops
+- [★ 레포 개편 전체 완료 (2026-06-12)](project_overhaul_progress.md) — 작업1~5 전부 완료. 스킬 224→202종, 훅 20→27종(공통 19·dev 4), docs 전체 구조 신설, 9종 templates·examples
+- [★ SEO·GEO·웹표준 인프라 1·2·3차 (2026-06-04)](project_seo_geo_assets_2026-06.md) — 스킬 28종 + 에이전트 4종. 전체 커밋·푸시 완료
+- [★ Unity 게임 개발 인프라 전체 완료 (2026-06-10)](project_unity_gamedev_assets_plan.md) — 스킬 17종 + 에이전트 6종 APPROVED. Phase 1~7 완료
+- [스킬/에이전트 frontmatter 업그레이드 (2026-06-06)](project_skill_agent_frontmatter_upgrade_2026-06.md) — A1~C2 전체 완료. disable-model-invocation·permissionMode·isolation·background 필드 + InstructionsLoaded·UserPromptSubmit 훅
+- [프론트엔드 성능 벤치마킹 인프라 (2026-05-14)](project_perf_benchmarking_assets_2026-05-14.md) — 스킬 5종 + validation 에이전트 2종. 69 클레임 VERIFIED
+- [꿈 해몽 앱 인프라 통합 (2026-05-14·15)](project_dream_app_complete_2026-05.md) — 스킬 28종 + 에이전트 5종. content test 84/84 PASS
+- [Python + n8n 인프라 (2026-05-15)](project_python_n8n_assets_2026-05-15.md) — Python 16종 + n8n 5종. content test 21/21 PASS
+- [범용 워크플로우 에이전트 9종 (2026-05-15)](project_workflow_agents_2026-05-15.md) — meta 3 + backend 5 + validation 1. "0→MVP" 갭 메움
