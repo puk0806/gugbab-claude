@@ -1,6 +1,7 @@
 ---
 name: site-migration-seo
 description: 도메인 이전·URL 구조 변경·플랫폼 마이그레이션 시 SEO 자산을 안전하게 옮기는 운영 워크플로우. D-30 사전 준비부터 D+90 모니터링·롤백까지 전체 라이프사이클 가이드.
+disable-model-invocation: true
 ---
 
 # 사이트 이전 SEO 워크플로우 (site-migration-seo)

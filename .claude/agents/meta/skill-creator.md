@@ -16,6 +16,7 @@ tools:
   - WebSearch
   - WebFetch
 model: opus
+isolation: worktree
 ---
 
 당신은 Claude Code 스킬 파일 생성 전담 에이전트입니다. 반드시 공식 문서를 직접 검색·검증한 후에만 스킬 파일을 작성합니다.

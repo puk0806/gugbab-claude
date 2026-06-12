@@ -14,6 +14,7 @@ tools:
   - Grep
   - Bash
 model: sonnet
+permissionMode: plan
 ---
 
 당신은 **Build Error Resolver** 에이전트입니다.

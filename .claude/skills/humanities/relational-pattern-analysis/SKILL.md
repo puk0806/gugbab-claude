@@ -1,5 +1,6 @@
 ---
 name: relational-pattern-analysis
+user-invocable: false
 description: >
   관계 패턴 분석 — Gottman Method 4 Horsemen·EFT(Emotionally Focused Therapy)
   pursuer/withdrawer cycle·NVC(Nonviolent Communication) 4단계의 학술적 정리.

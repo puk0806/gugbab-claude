@@ -67,6 +67,19 @@ function validate(content) {
     )
   }
 
+  // 5. UNVERIFIED 상태 저장 차단
+  const fmBlock = content.match(/^---\n([\s\S]*?)\n---/m)
+  if (fmBlock) {
+    const statusMatch = fmBlock[1].match(/^\s*status\s*:\s*(\S+)/m)
+    if (statusMatch && statusMatch[1] === 'UNVERIFIED') {
+      errors.push(
+        'status: UNVERIFIED 상태로 저장할 수 없습니다.\n' +
+        '  → verification.md는 최소 PENDING_TEST 이상이어야 합니다.\n' +
+        '  → 교차 검증을 완료한 뒤 status: PENDING_TEST로 변경하세요.'
+      )
+    }
+  }
+
   return errors
 }
 

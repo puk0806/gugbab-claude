@@ -1,5 +1,6 @@
 ---
 name: aristotle-greek-text-tools
+user-invocable: false
 description: >
   도덕윤리교육 전공 대학원생이 아리스토텔레스 1차 텍스트(특히 *니코마코스 윤리학*)를
   그리스어 원전으로 직접 다룰 때 활용하는 디지털 도구·사전·비평본·인용 표기 가이드.

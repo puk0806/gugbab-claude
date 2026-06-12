@@ -1,5 +1,6 @@
 ---
 name: korean-dream-interpretation-tradition
+user-invocable: false
 description: >
   한국 전통 꿈 해몽을 민속학적·문헌학적 자료로 정리한 스킬.
   『동의보감』 내경편, 『삼국유사』, 한국민족문화대백과사전, 국립민속박물관 한국민속신앙사전 등 1차/공인 학술 출처만 사용한다.

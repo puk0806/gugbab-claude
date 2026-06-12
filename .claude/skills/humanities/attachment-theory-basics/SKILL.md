@@ -1,5 +1,6 @@
 ---
 name: attachment-theory-basics
+user-invocable: false
 description: >
   성인 애착 이론(Adult Attachment Theory)의 역사·4유형·측정 도구·꿈/관계 행동 패턴 적용을
   학술적 기반으로 정리한 스킬. Bowlby–Ainsworth–Hazan&Shaver–Bartholomew&Horowitz–Mikulincer&Shaver

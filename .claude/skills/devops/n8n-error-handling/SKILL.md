@@ -4,6 +4,7 @@ description: >
   n8n 워크플로우의 에러 처리·재시도·알림 패턴 가이드. 노드 에러 모드, Error Trigger
   워크플로우, Retry On Fail, HTTP 429/5xx 대응, Dead Letter Queue, 타임아웃,
   알림 라우팅까지 프로덕션 운영에 필요한 패턴 정리.
+disable-model-invocation: true
 ---
 
 # n8n Error Handling (에러 처리 패턴)

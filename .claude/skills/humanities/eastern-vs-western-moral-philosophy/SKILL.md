@@ -1,5 +1,6 @@
 ---
 name: eastern-vs-western-moral-philosophy
+user-invocable: false
 description: >
   동·서양 도덕철학 비교 — akrasia(아크라시아)와 유교 자기수양(自省·克己·愼獨·誠意正心,
   朱子 居敬窮理, 王陽明 知行合一, 退溪 敬, 栗谷 誠敬)을 비교 분석하기 위한 개념·전거·

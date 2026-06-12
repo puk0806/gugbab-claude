@@ -1,5 +1,6 @@
 ---
 name: dream-content-research
+user-invocable: false
 description: >
   현대 꿈 내용 분석(content analysis of dreams) 경험 연구 전통을 정리한 스킬.
   Hall & Van de Castle(1966) 코딩 시스템·Domhoff 연속성 가설·Zadra/Robert 반복 꿈 연구·Schredl 회상 빈도 연구를

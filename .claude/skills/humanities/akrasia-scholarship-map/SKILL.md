@@ -1,5 +1,6 @@
 ---
 name: akrasia-scholarship-map
+user-invocable: false
 description: >
   아크라시아(akrasia, 자제력 없음) 학술 논쟁의 핵심 구도와 주요 연구자·문헌을 빠르게 파악할 수 있는 도메인 지식 스킬.
   도덕윤리교육 전공 대학원생(석/박사)이 학위논문·KCI 투고·세미나 준비 시 고대–현대–한국 학계–도덕심리학 흐름을 한 번에 짚도록 구성.

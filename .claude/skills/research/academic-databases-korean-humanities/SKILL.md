@@ -1,5 +1,8 @@
 ---
 name: academic-databases-korean-humanities
+user-invocable: false
+context: fork
+agent: general-purpose
 description: >
   도덕윤리교육 전공 대학원생(석/박사)이 akrasia(자제력 없음/의지박약) 등 인문학·윤리학 주제의 학위논문·KCI 학술지 논문을 작성할 때
   활용할 국내외 학술 데이터베이스 검색 전략. KCI·RISS·DBpia·교보스콜라 등 국내 DB와 PhilPapers·JSTOR·

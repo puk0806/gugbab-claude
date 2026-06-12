@@ -1,5 +1,6 @@
 ---
 name: dream-safety-classifier-prompts
+user-invocable: false
 description: >
   꿈 해몽 앱용 *전용 안전 분류기* 프롬프트 패턴 — 자해·자살·트라우마·폭력
   신호를 해몽 모델과 분리된 별도 Claude 호출로 분류해 이중 안전망을 구축한다.

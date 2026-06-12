@@ -1,0 +1,105 @@
+# Codex 적대적 코드 리뷰 워크플로우
+
+## 실행 조건 — 3가지 모두 충족해야 실행
+
+코딩 작업 완료 후 다음 순서로 확인한다:
+
+```bash
+# 1. Codex CLI 설치 확인
+which codex >/dev/null 2>&1 || { echo "[codex-review] codex CLI 없음 — 건너뜀"; exit 0; }
+
+# 2. 로그인 상태 확인
+codex login status 2>&1 | grep -qi "logged in" || { echo "[codex-review] codex 미로그인 — 건너뜀"; exit 0; }
+
+# 3. 프로젝트 플러그인 활성화 확인
+node -e "const s=require('./.claude/settings.json');process.exit(s.enabledPlugins?.['codex@openai-codex']?0:1)" 2>/dev/null \
+  || { echo "[codex-review] codex 플러그인 비활성화 — 건너뜀"; exit 0; }
+```
+
+3가지 중 하나라도 실패 → 조용히 건너뜀 (오류 없이 계속 진행).
+
+---
+
+## 실행 시점
+
+다음 코딩 작업 완료 후 조건 확인 → 리뷰 실행:
+
+| 실행 | 건너뜀 |
+|------|--------|
+| 새 기능 구현 완료 | 문서만 수정 |
+| 버그 수정 완료 | 설정 파일만 변경 |
+| 리팩터링 완료 | 타입 이름 변경만 |
+| PR 제출 전 최종 검토 | 주석만 수정 |
+
+---
+
+## 핵심 원칙
+
+- Codex는 **매우 적대적인 리뷰어**로 설정: 모든 가능한 결함을 찾아내려 한다
+- Claude는 **리뷰를 맹목적으로 수용하지 않는다**: 자신의 설계 의도와 근거를 기반으로 판단한다
+- **ACCEPT**: 타당한 지적 → 수정 + 수용 이유 설명
+- **REJECT**: 근거 없거나 설계 의도와 충돌 → 반박 이유 제시, 수정하지 않음
+- **PARTIAL**: 일부만 타당 → 수용·거부 부분 각각 이유 설명
+
+---
+
+## 워크플로우 (최대 3라운드)
+
+### Round 1 — 초기 적대적 리뷰
+
+```bash
+codex review --uncommitted "You are an extremely adversarial and merciless code reviewer. Your mission: find every possible bug, security vulnerability, performance bottleneck, design flaw, and code smell. Assume worst-case scenarios. Be specific, brutal, and ruthless. Do not be polite. Challenge every decision. Produce a numbered list of issues ordered by severity."
+```
+
+**Claude의 응답:**
+1. 각 지적을 분석하고 ACCEPT / REJECT / PARTIAL 판정
+2. ACCEPT 항목 수정
+3. 수용·거부 근거 정리 후 Round 2 실행
+
+### Round 2 — 수정 검증 + 추가 공격
+
+```bash
+codex review --uncommitted "You are a relentless adversarial reviewer doing a second pass. Verify whether Round 1 issues were properly fixed — if fixes are incomplete or introduce new problems, escalate. Find any NEW issues the fixes introduced. Challenge the developer's justifications for rejected items. Be merciless."
+```
+
+**Claude의 응답:**
+- Round 1에서 반박한 항목에 대한 Codex의 재반박 → 근거 재검토 후 재판정
+- 새로 제기된 이슈에 대해 ACCEPT / REJECT / PARTIAL
+- Round 3 실행 또는 조기 종료 판단
+
+### Round 3 — 최종 검토 (마지막 기회)
+
+```bash
+codex review --uncommitted "Final adversarial review — last chance to catch issues. Be comprehensive and unforgiving. Check if all previous concerns were resolved. Look for subtle issues: edge cases, race conditions, error handling gaps, resource leaks. If you find no new critical issues, say so explicitly."
+```
+
+**Claude의 응답:**
+- 최종 ACCEPT / REJECT 결정 (번복 없음)
+- 잔존 이슈 정리
+
+---
+
+## 조기 종료 조건
+
+다음 중 하나 충족 시 남은 라운드를 건너뛴다:
+- Codex가 새로운 critical 이슈(bug·security·performance)를 제기하지 않음
+- 모든 지적이 이전 라운드에서 이미 다뤄진 내용의 반복
+
+---
+
+## 최종 요약 형식
+
+라운드 종료 후 Claude가 사용자에게 반드시 보고:
+
+```
+## Codex 리뷰 요약 ({N}라운드 완료)
+
+### ✅ ACCEPTED (수정함)
+- [이슈 요약]: [수정 내용] — 수용 이유: [근거]
+
+### ❌ REJECTED (반박)
+- [이슈 요약]: [반박 근거] — 원래 구현 유지
+
+### ⚠️ 잔존 이슈
+- [있으면 나열] / 없음
+```

@@ -1,5 +1,6 @@
 ---
 name: moral-education-curriculum-link
+user-invocable: false
 description: >
   2022 개정 교육과정 도덕과의 구조(영역·역량·성취기준)와 akrasia(도덕적 나약함) 논의를
   연결해, 도덕윤리교육 전공 학부 논문에서 "akrasia 논의의 도덕과 교육적 함의" 챕터를 쓸 때

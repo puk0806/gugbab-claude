@@ -1,5 +1,6 @@
 ---
 name: dream-app-ab-testing-prompts
+user-invocable: false
 description: >
   꿈 해몽 앱 시스템 프롬프트 A/B 테스트 설계 패턴 — 어떤 프롬프트가
   사용자 만족도·안전·정확도가 높은가를 무작위 배정·통계 검정·점진적

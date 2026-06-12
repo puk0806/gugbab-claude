@@ -38,6 +38,12 @@ const DENY_PATTERNS = [
   { pattern: /\bperl\b.*-[ip].*SKILL\.md/, reason: 'SKILL.md는 Bash(perl)로 수정할 수 없습니다. Write/Edit 도구를 사용하세요.' },
   { pattern: /\becho\b.*>.*verification\.md/, reason: 'verification.md는 Bash(echo)로 수정할 수 없습니다. Write/Edit 도구를 사용하세요.' },
   { pattern: /\bcat\b.*>.*verification\.md/, reason: 'verification.md는 Bash(cat)로 수정할 수 없습니다. Write/Edit 도구를 사용하세요.' },
+  // memory/ 파일을 Bash로 직접 수정 차단 — Write/Edit 도구 사용 시에만 memory-sync 훅이 자동 동기화
+  { pattern: /\bsed\b.*\bmemory\//, reason: 'memory/ 파일은 Bash(sed)로 수정할 수 없습니다. Write/Edit 도구를 사용하세요 (memory-sync 자동 동기화).' },
+  { pattern: /\bawk\b.*\bmemory\//, reason: 'memory/ 파일은 Bash(awk)로 수정할 수 없습니다. Write/Edit 도구를 사용하세요.' },
+  { pattern: /\bperl\b.*-[ip].*\bmemory\//, reason: 'memory/ 파일은 Bash(perl)로 수정할 수 없습니다. Write/Edit 도구를 사용하세요.' },
+  { pattern: /\becho\b.*>.*\bmemory\//, reason: 'memory/ 파일은 Bash(echo)로 수정할 수 없습니다. Write/Edit 도구를 사용하세요.' },
+  { pattern: /\bcat\b.*>.*\bmemory\//, reason: 'memory/ 파일은 Bash(cat)로 수정할 수 없습니다. Write/Edit 도구를 사용하세요.' },
   // 기존 위험 패턴
   { pattern: /git\s+push\s+(--force|-f)\b/, reason: 'force push는 히스토리를 덮어씁니다. 직접 실행하세요.' },
   { pattern: /git\s+push\s+.*-f\b/, reason: 'force push 감지. 직접 실행하세요.' },

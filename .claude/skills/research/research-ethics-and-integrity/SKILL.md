@@ -1,5 +1,8 @@
 ---
 name: research-ethics-and-integrity
+user-invocable: false
+context: fork
+agent: general-purpose
 description: >
   대학원생(석/박사)이 학위논문·KCI 등재지 투고 시 IRB·연구윤리 심사를
   통과하기 위해 알아야 할 한국 연구윤리 표준과 인용 윤리, AI 활용 윤리,

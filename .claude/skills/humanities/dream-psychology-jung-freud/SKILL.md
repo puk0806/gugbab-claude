@@ -1,5 +1,6 @@
 ---
 name: dream-psychology-jung-freud
+user-invocable: false
 description: >
   프로이트(Freud)와 융(Jung) 꿈 심리학의 핵심 개념·해석법·차이점을 학술적 관점에서 정리한 스킬.
   Die Traumdeutung(1900)의 꿈 작업 4가지·자유 연상법과, 분석심리학의 보상 기능·확충법·원형

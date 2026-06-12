@@ -1,5 +1,6 @@
 ---
 name: aristotle-akrasia-translations-comparison
+user-invocable: false
 description: >
   도덕윤리교육 대학원생이 아리스토텔레스 아크라시아(akrasia) 논문을 작성할 때
   핵심 어휘 8종(akrasia, enkrateia, propeteia, astheneia, akolasia, hexis, phronesis, orexis)을

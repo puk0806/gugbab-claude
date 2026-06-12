@@ -1,5 +1,6 @@
 ---
 name: aristotle-akrasia-vs-akolasia-distinction
+user-invocable: false
 description: >
   아리스토텔레스 『니코마코스 윤리학』에서 akrasia(자제력없음)와 akolasia(무절제)의 5축 차이를 정밀하게 정리한 학위논문 자료 스킬.
   NE VII.4 1147b20-1148b14, VII.8 1150b29-1151a28, III.10-12 1117b23-1119b18 절별 분해와 표준 학자 해석(Bostock, Broadie-Rowe, Pakaluk, Hursthouse, Charles 등)을 포함.

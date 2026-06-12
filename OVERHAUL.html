@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>gugbab-claude 개편 계획</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3350;
+    --text: #e2e4f0;
+    --muted: #7880a0;
+    --blue: #4f8ef7;
+    --green: #3ecf8e;
+    --yellow: #f5c242;
+    --red: #f76b6b;
+    --purple: #b57bee;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.6; }
+
+  /* Layout */
+  .layout { max-width: 1100px; margin: 0 auto; padding: 32px 20px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 24px; }
+
+  /* Header */
+  header { margin-bottom: 32px; }
+  header h1 { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  header h1 span { color: var(--blue); }
+  .subtitle { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+
+  /* Stats row */
+  .stats-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 16px; }
+  .stat-num { font-size: 20px; font-weight: 700; color: var(--blue); }
+  .stat-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* Global progress */
+  .progress-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 8px; }
+  .progress-label { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
+  .progress-label span { color: var(--muted); }
+  .bar-bg { background: var(--surface2); border-radius: 99px; height: 8px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--blue), var(--purple)); transition: width 0.4s; }
+
+  /* Task card */
+  .task { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+  .task.full { grid-column: 1 / -1; }
+  .task-head { display: flex; align-items: flex-start; gap: 12px; }
+  .task-num { background: var(--surface2); color: var(--muted); font-size: 11px; font-weight: 700; border-radius: 6px; padding: 3px 8px; min-width: 28px; text-align: center; flex-shrink: 0; margin-top: 2px; }
+  .task-title { font-size: 15px; font-weight: 600; flex: 1; }
+  .badge { font-size: 11px; font-weight: 600; border-radius: 99px; padding: 2px 10px; flex-shrink: 0; }
+  .badge.todo { background: #2a2e3e; color: var(--muted); }
+  .badge.doing { background: #2a3a1a; color: var(--green); }
+  .badge.done { background: #1a2a3a; color: var(--blue); }
+  .badge.blocked { background: #3a1a1a; color: var(--red); }
+
+  .task-desc { font-size: 13px; color: var(--muted); padding-left: 40px; }
+
+  /* Subtasks */
+  .subtasks { padding-left: 40px; display: flex; flex-direction: column; gap: 6px; }
+  .sub { display: flex; align-items: flex-start; gap: 8px; cursor: pointer; }
+  .sub input[type=checkbox] { margin-top: 3px; accent-color: var(--blue); flex-shrink: 0; cursor: pointer; }
+  .sub label { cursor: pointer; font-size: 13px; color: var(--text); }
+  .sub.checked label { color: var(--muted); text-decoration: line-through; }
+
+  /* Notes */
+  .note { background: var(--surface2); border-left: 3px solid var(--yellow); border-radius: 0 6px 6px 0; padding: 8px 12px; font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .note b { color: var(--yellow); }
+
+  /* Decision log */
+  .decisions { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; grid-column: 1 / -1; margin-top: 8px; }
+  .decisions h2 { font-size: 14px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; }
+  .decision-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .decision-item:last-child { border-bottom: none; }
+  .d-date { color: var(--muted); min-width: 80px; font-size: 12px; }
+  .d-text { flex: 1; }
+  .d-tag { font-size: 11px; color: var(--purple); background: #1e1a2e; border-radius: 4px; padding: 1px 6px; align-self: flex-start; flex-shrink: 0; }
+
+  /* Section divider */
+  .section-title { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin: 28px 0 12px; }
+  .section-title:first-child { margin-top: 0; }
+
+  footer { text-align: center; color: var(--muted); font-size: 11px; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- Header -->
+  <header>
+    <h1><span>gugbab-claude</span> 개편 계획</h1>
+    <p class="subtitle">Claude Code 컨벤션 자산 레포 — 전체 구조 개편 작업 트래커</p>
+
+    <div class="stats-row">
+      <div class="stat"><div class="stat-num" id="s-skills">202</div><div class="stat-label">스킬</div></div>
+      <div class="stat"><div class="stat-num" id="s-agents">69</div><div class="stat-label">에이전트</div></div>
+      <div class="stat"><div class="stat-num" id="s-hooks">20</div><div class="stat-label">훅</div></div>
+      <div class="stat"><div class="stat-num" id="s-rules">11</div><div class="stat-label">룰</div></div>
+      <div class="stat"><div class="stat-num">10</div><div class="stat-label">템플릿</div></div>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-label"><b>전체 진행률</b><span id="pct-label">0%</span></div>
+      <div class="bar-bg"><div class="bar-fill" id="bar" style="width:0%"></div></div>
+    </div>
+  </header>
+
+  <!-- Tasks -->
+  <div class="section-title">작업 목록</div>
+  <div class="grid">
+
+    <!-- Task 1 -->
+    <div class="task" id="t1">
+      <div class="task-head">
+        <span class="task-num">01</span>
+        <span class="task-title">스킬 정리 — 필수만 남기기</span>
+        <span class="badge todo" id="b1">대기</span>
+      </div>
+      <p class="task-desc">Claude 에이전트가 built-in으로 보유한 스킬과 중복되는 것들 제거. 컨벤션·프로젝트 고유 스킬만 유지.</p>
+      <div class="subtasks" id="st1">
+        <div class="sub"><input type="checkbox" data-task="1" data-id="1a" checked><label>vercel-labs/agent-skills 레포 built-in 스킬 목록 조사</label></div>
+        <div class="sub"><input type="checkbox" data-task="1" data-id="1b" checked><label>전체 스킬 224종 카테고리별 audit — 중복·불필요 목록 도출 (frontend·backend·meta 전체 검토)</label></div>
+        <div class="sub"><input type="checkbox" data-task="1" data-id="1c" checked><label>humanities / education / research 계열 — 유지 결정 (논문·도메인 특화 가치)</label></div>
+        <div class="sub"><input type="checkbox" data-task="1" data-id="1d" checked><label>dream-interpretation 스킬 — dream-interpretation 템플릿(#9)으로 분리 유지</label></div>
+        <div class="sub"><input type="checkbox" data-task="1" data-id="1e" checked><label>삭제 실행 완료 — 21종 제거 (224→202종)</label></div>
+        <div class="sub"><input type="checkbox" data-task="1" data-id="1f" checked><label>README 스킬 목록 동기화 완료</label></div>
+      </div>
+      <div class="note"><b>논의 필요:</b> humanities/education/research 스킬들은 논문 작업용 — 현재는 불필요. dream-app 스킬도 별도 앱 레포로 이관 검토.</div>
+    </div>
+
+    <!-- Task 2 -->
+    <div class="task" id="t2">
+      <div class="task-head">
+        <span class="task-num">02</span>
+        <span class="task-title">훅 / 룰 정리 — 불필요 제거</span>
+        <span class="badge todo" id="b2">대기</span>
+      </div>
+      <p class="task-desc">현재 훅 21종·룰 11종을 감사. 중복·미사용·효과 없는 것들 제거하고 핵심만 유지.</p>
+      <div class="subtasks" id="st2">
+        <div class="sub"><input type="checkbox" data-task="2" data-id="2a" checked><label>훅 21종 역할·실제 동작 여부 정리표 작성</label></div>
+        <div class="sub"><input type="checkbox" data-task="2" data-id="2b" checked><label>tdd-guard, typescript-quality — 범용 프로젝트에 불필요 여부 검토</label></div>
+        <div class="sub"><input type="checkbox" data-task="2" data-id="2c" checked><label>drift-monitor, instructions-loaded 실효성 검토</label></div>
+        <div class="sub"><input type="checkbox" data-task="2" data-id="2d" checked><label>룰 11종 — java.md / rust.md 코딩 컨벤션 룰 export 시만 포함으로 이동 검토</label></div>
+        <div class="sub"><input type="checkbox" data-task="2" data-id="2e" checked><label>제거 실행 + settings.json 정리</label></div>
+      </div>
+      <div class="note"><b>방향:</b> 이 레포 자체에 필요한 훅 vs export 시에만 필요한 훅 구분. memory-sync 3종은 유지.</div>
+    </div>
+
+    <!-- Task 3 -->
+    <div class="task" id="t3">
+      <div class="task-head">
+        <span class="task-num">03</span>
+        <span class="task-title">Export 구조화 — 템플릿별 세밀한 설정</span>
+        <span class="badge done" id="b3">완료</span>
+      </div>
+      <p class="task-desc">project-install.sh 8개 템플릿을 개선. 각 템플릿별 훅·룰·CLAUDE.md·에이전트·스킬을 명확하게 정의.</p>
+      <div class="subtasks" id="st3">
+        <div class="sub"><input type="checkbox" data-task="3" data-id="3a" checked><label>템플릿별 export 매트릭스 설계 (훅·룰·CLAUDE.md 각각)</label></div>
+        <div class="sub"><input type="checkbox" data-task="3" data-id="3b" checked><label>각 템플릿용 CLAUDE.md 템플릿 파일 작성 (examples/ 폴더)</label></div>
+        <div class="sub"><input type="checkbox" data-task="3" data-id="3c" checked><label>각 템플릿용 settings.json 커스터마이징 (훅 포함 여부)</label></div>
+        <div class="sub"><input type="checkbox" data-task="3" data-id="3d" checked><label>project-install.sh 리팩터 — 매트릭스 기반으로 재작성</label></div>
+        <div class="sub"><input type="checkbox" data-task="3" data-id="3e" checked><label>설치 테스트 (빈 디렉토리에 각 템플릿 실행)</label></div>
+      </div>
+      <div class="note"><b>완료:</b> 9종 CLAUDE.md 템플릿(util·react-spa·nextjs·rust-axum·java-spring-legacy·java-spring-modern·unity-game·academic·dream-interpretation) 생성. gen-settings.js로 settings.json 동적 생성. 언어별 룰(java/rust/typescript) + task-workflow.md export 필터링 구현. 3개 템플릿 설치 테스트 통과.</div>
+    </div>
+
+    <!-- Task 4 -->
+    <div class="task" id="t4">
+      <div class="task-head">
+        <span class="task-num">04</span>
+        <span class="task-title">README 개편 — 간결 + 링크 구조</span>
+        <span class="badge todo" id="b4">대기</span>
+      </div>
+      <p class="task-desc">README를 "빠른 이식 도구" 소개 문서로 재편. 상세 자산 목록은 별도 페이지 링크로 분리.</p>
+      <div class="subtasks" id="st4">
+        <div class="sub"><input type="checkbox" data-task="4" data-id="4a"><label>README 새 구조 설계: 목적 → 빠른 시작 → 템플릿 매트릭스 → 링크</label></div>
+        <div class="sub"><input type="checkbox" data-task="4" data-id="4b"><label>전체 에이전트·스킬 목록 → docs/ASSETS.md 로 이동</label></div>
+        <div class="sub"><input type="checkbox" data-task="4" data-id="4c"><label>템플릿별 "무엇이 나가는가" 매트릭스 표 작성</label></div>
+        <div class="sub"><input type="checkbox" data-task="4" data-id="4d"><label>README 재작성</label></div>
+        <div class="sub"><input type="checkbox" data-task="4" data-id="4e"><label>업데이트 로그 → CHANGELOG.md 분리</label></div>
+      </div>
+      <div class="note"><b>목표:</b> README는 15초 안에 "이게 뭔지, 어떻게 쓰는지" 파악 가능한 수준으로.</div>
+    </div>
+
+    <!-- Task 5 -->
+    <div class="task full" id="t5">
+      <div class="task-head">
+        <span class="task-num">05</span>
+        <span class="task-title">강제성 강화 — 권고 → 훅 기반 강제</span>
+        <span class="badge todo" id="b5">대기</span>
+      </div>
+      <p class="task-desc">현재 "권고" 수준인 규칙들을 훅으로 강제. 위반 시 경고 또는 차단.</p>
+      <div class="subtasks" id="st5">
+        <div class="sub checked"><input type="checkbox" data-task="5" data-id="5a" checked><label>creation-workflow.md 권고 사항 중 훅으로 강제 가능한 항목 도출</label></div>
+        <div class="sub checked"><input type="checkbox" data-task="5" data-id="5b" checked><label>verification-guard 강화 — UNVERIFIED 상태 파일 Write 차단</label></div>
+        <div class="sub checked"><input type="checkbox" data-task="5" data-id="5c" checked><label>agent-design 규칙 위반 에이전트 파일 저장 시 경고</label></div>
+        <div class="sub checked"><input type="checkbox" data-task="5" data-id="5d" checked><label>README 미업데이트 감지 훅 — 스킬/에이전트 추가 시 README 변경 없으면 경고</label></div>
+        <div class="sub checked"><input type="checkbox" data-task="5" data-id="5e" checked><label>CLAUDE.md 금지 사항 → 실제 차단 훅 연결 (memory/ Bash 수정 차단 추가)</label></div>
+        <div class="sub checked"><input type="checkbox" data-task="5" data-id="5f" checked><label>rules/ 파일 내 "권고" "추천" 표현 전수 검토 후 강제 표현으로 교체</label></div>
+      </div>
+      <div class="note"><b>방향:</b> 경고(stdout 출력)와 차단(exit 2) 구분 필요. 차단은 복구 불가 위험이 있을 때만. 일반 규칙 위반은 경고.</div>
+    </div>
+
+    <!-- Decision log -->
+    <div class="decisions">
+      <h2>결정 사항 로그</h2>
+      <div class="decision-item">
+        <span class="d-date">2026-06-11</span>
+        <span class="d-text">메모리 공유 인프라 구축 완료 — <code>memory/</code> git 추적, SessionStart symlink 자동 설정, 3종 훅으로 강제 동기화</span>
+        <span class="d-tag">인프라</span>
+      </div>
+      <div class="decision-item">
+        <span class="d-date">2026-06-11</span>
+        <span class="d-text">git commit/push — Bash 도구로는 실행 시 권한 프롬프트 강제 (allow 목록 미포함). 사용자 명시 요청 시에만 승인.</span>
+        <span class="d-tag">정책</span>
+      </div>
+      <div class="decision-item">
+        <span class="d-date">2026-06-11</span>
+        <span class="d-text">작업 1 완료 — 스킬 21종 삭제 (224→202종). Claude 내장 지식 커버 기초 스킬 제거: frontend 12종·backend Rust 2종·backend Python 6종·meta 1종. 유지: humanities/education/research/dream-interpretation 전체.</span>
+        <span class="d-tag">스킬 정리</span>
+      </div>
+      <div class="decision-item">
+        <span class="d-date">2026-06-11</span>
+        <span class="d-text">humanities / education / research 스킬 — 유지 결정. 도메인 특화 가치 존재. academic 템플릿(#8)으로 분리 제공.</span>
+        <span class="d-tag">스킬 정리</span>
+      </div>
+      <div class="decision-item">
+        <span class="d-date">2026-06-11</span>
+        <span class="d-text">dream-interpretation 스킬 20종+ — 유지 결정. dream-interpretation 템플릿(#9)으로 분리 제공. 별도 이관 불필요.</span>
+        <span class="d-tag">스킬 정리</span>
+      </div>
+      <div class="decision-item">
+        <span class="d-date">2026-06-11</span>
+        <span class="d-text">작업 2 완료 — 훅 4종 삭제 (19→15종): drift-monitor(spec.md 없어 항상 pass)·subagent-audit(/tmp 로그 아무도 안 읽음)·pre-compact(/tmp 스냅샷 불필요)·user-prompt-submit(low signal 힌트). tdd-guard·typescript-quality·instructions-loaded 유지. java.md/rust.md 룰 export 필터링은 Task 3으로 이관.</span>
+        <span class="d-tag">훅 정리</span>
+      </div>
+      <div class="decision-item">
+        <span class="d-date">2026-06-11</span>
+        <span class="d-text">훅 export 매트릭스 최종 확정 — 공통(14종): bash-guard·auto-approve·parry·session-start·session-summary·cc-notify·instructions-loaded·pending-test-guard·skill-md-guard·agent-md-guard·verification-guard·readme-guard·staleness-check·task-plan-guard. 개발 전용(2종): tdd-guard·test-fake-guard. TypeScript 전용(1종): typescript-quality. Memory 선택(3종): memory-pull·memory-sync·memory-stop-guard. Codex 선택: enabledPlugins codex@openai-codex. 총 20종. project-install.sh + gen-settings.js로 구현 완료.</span>
+        <span class="d-tag">export 구조</span>
+      </div>
+      <div class="decision-item">
+        <span class="d-date">2026-06-11</span>
+        <span class="d-text">룰 export 매트릭스 확정 — 공통(8): git·info-verification·agent-design·commands·creation-workflow·readme-update·verification-policy·task-workflow. 언어별: java(5·6)·rust(4)·typescript(2·3). 조건부: memory-sync(memory 선택), codex-review(codex 선택). util은 git+info-verification만.</span>
+        <span class="d-tag">export 구조</span>
+      </div>
+      <div class="decision-item">
+        <span class="d-date">2026-06-11</span>
+        <span class="d-text">강제화 — parry.js: 시크릿/인젝션 감지 시 exit 2 차단(기존 경고). typescript-quality.js: tsc 오류 시 exit 2 차단(기존 경고). tdd-guard.js: 경고 유지(차단 과도). 신규 staleness-check.js(InstructionsLoaded): 검증일 60일 초과 스킬 감지 시 재검증 여부 사용자 확인. 신규 task-plan-guard.js(UserPromptSubmit): 복잡한 작업 요청 시 계획 확인 절차 지시. 훅 15→17종.</span>
+        <span class="d-tag">강제화</span>
+      </div>
+      <div class="decision-item">
+        <span class="d-date">2026-06-11</span>
+        <span class="d-text">작업 3 완료 — 9종 CLAUDE.md 템플릿 생성(examples/ 폴더). gen-settings.js로 settings.json 동적 생성(--util/--dev/--typescript/--memory 플래그). RULES_COMMON에 task-workflow.md 추가. 언어별 룰(java/rust/typescript) + memory-sync 조건부 export 구현. react-spa·java-spring-legacy·util 3개 설치 테스트 통과.</span>
+        <span class="d-tag">export 구조</span>
+      </div>
+      <div class="decision-item">
+        <span class="d-date">2026-06-11</span>
+        <span class="d-text">강제화 추가 — session-summary.js Stop 핸들러에 Claude 지시 주입: 수정 파일 있을 때 작업 요약 보고 강제(stderr). test-fake-guard.js 신규(PreToolUse Bash): echo/printf 가짜 테스트 결과·단독 true/exit 0으로 테스트 통과 위장 시 exit 2 차단. 실제 테스트 러너 포함 시 허용. 훅 17→18종. 개발 전용(--dev) 훅으로 분류.</span>
+        <span class="d-tag">강제화</span>
+      </div>
+      <div class="decision-item">
+        <span class="d-date">2026-06-11</span>
+        <span class="d-text">Task 5 완료 + export 구조 업데이트 완료 — 강제화 강화 5a~5f 전체 구현. (5b) verification-guard.js: status UNVERIFIED 저장 차단(exit 2). (5c) agent-md-guard.js 신규(PostToolUse Write): .claude/agents/ .md 파일의 name/description/tools/model/&lt;example&gt; 검증·차단. (5d) readme-guard.js 신규(Stop 경고): SKILL.md·agent .md 수정 시 README.md 미업데이트 감지. (5e) bash-guard.js DENY_PATTERNS에 memory/ 파일 sed/awk/perl/echo/cat 차단 5종 추가. (5f) agent-design.md maxTurns "권장" → "반드시 설정". 공통 훅 12→14종. 총 훅 18→20종.</span>
+        <span class="d-tag">강제화</span>
+      </div>
+      <div class="decision-item">
+        <span class="d-date">2026-06-11</span>
+        <span class="d-text">Codex 적대적 코드 리뷰 워크플로우 구축 — codex-review.md(신규): CLI 설치·로그인·플러그인 3조건 확인 후 최대 3라운드 핑퐁. Codex=적대적 리뷰어, Claude=ACCEPT/REJECT/PARTIAL 근거 판단(맹목 수용 금지). gen-settings.js --codex 플래그: enabledPlugins codex@openai-codex 출력. project-install.sh: 코딩 6개 템플릿 대상 Codex 활성화 질문 + codex-review.md 조건부 export. 코딩 템플릿 CLAUDE.md 6종(react-spa·nextjs·rust-axum·java-spring-legacy·java-spring-modern·unity-game) 규칙 참조 행 추가. /codex-review 슬래시 커맨드(신규) + commands.md 동기화.</span>
+        <span class="d-tag">Codex 리뷰</span>
+      </div>
+    </div>
+
+  </div>
+  <footer>gugbab-claude overhaul tracker · 마지막 업데이트: <span id="updated">—</span></footer>
+</div>
+
+<script>
+  const KEY = 'gugbab-overhaul-v1';
+
+  function save() {
+    const state = {};
+    document.querySelectorAll('input[type=checkbox]').forEach(cb => {
+      state[cb.dataset.id] = cb.checked;
+    });
+    localStorage.setItem(KEY, JSON.stringify(state));
+    update();
+  }
+
+  function load() {
+    const state = JSON.parse(localStorage.getItem(KEY) || '{}');
+    document.querySelectorAll('input[type=checkbox]').forEach(cb => {
+      if (state[cb.dataset.id]) { cb.checked = true; cb.closest('.sub').classList.add('checked'); }
+    });
+    update();
+  }
+
+  function update() {
+    const all = document.querySelectorAll('input[type=checkbox]');
+    const done = document.querySelectorAll('input[type=checkbox]:checked');
+    const pct = all.length ? Math.round(done.length / all.length * 100) : 0;
+    document.getElementById('bar').style.width = pct + '%';
+    document.getElementById('pct-label').textContent = pct + '%';
+
+    // Badge per task
+    for (let i = 1; i <= 5; i++) {
+      const subs = document.querySelectorAll(`input[data-task="${i}"]`);
+      const checked = document.querySelectorAll(`input[data-task="${i}"]:checked`);
+      const badge = document.getElementById(`b${i}`);
+      if (checked.length === 0) { badge.className = 'badge todo'; badge.textContent = '대기'; }
+      else if (checked.length === subs.length) { badge.className = 'badge done'; badge.textContent = '완료'; }
+      else { badge.className = 'badge doing'; badge.textContent = `${checked.length}/${subs.length}`; }
+    }
+  }
+
+  document.querySelectorAll('input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      cb.closest('.sub').classList.toggle('checked', cb.checked);
+      save();
+    });
+  });
+
+  document.getElementById('updated').textContent = new Date().toLocaleDateString('ko-KR');
+  load();
+</script>
+</body>
+</html>

@@ -11,6 +11,7 @@ tools:
   - WebSearch
   - WebFetch
 model: sonnet
+background: true
 ---
 
 당신은 소스 신뢰도 검증 전담 에이전트입니다. 하나의 소스(URL, 레포, 문서)를 받아 신뢰도를 평가하고 TRUST / CAUTION / REJECT 판정을 반환합니다.

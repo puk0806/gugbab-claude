@@ -73,7 +73,7 @@ model: {opus|sonnet|haiku}
 - 시스템 프롬프트는 한국어로 작성
 - description에 `<example>` 태그 2-3개 포함 (Claude 자동 선택 정확도 향상)
 - 자동 호출을 원하면 description에 "Use proactively" 포함
-- `maxTurns`는 비용/안전 제어 목적으로 오케스트레이터 에이전트에 권장
+- 오케스트레이터 에이전트(Agent 도구 사용)에는 `maxTurns`를 반드시 설정한다 (비용/안전 제어 필수)
 
 ---
 

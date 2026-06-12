@@ -77,6 +77,9 @@ function handleStop(sessionId) {
     `📋 세션 작업 요약  (${session.files.length}개 파일 수정 | ${toolSummary})`,
     fileList + overflow,
     '',
+    '[session-summary → Claude 지시] 위 수정 파일 목록을 기반으로 이번 세션에서 수행한 작업 내용을',
+    '  2-3줄로 요약해서 사용자에게 반드시 보고하세요. (완료된 것, 변경 이유, 다음 단계)',
+    '',
   ].join('\n')
 
   process.stderr.write(msg)

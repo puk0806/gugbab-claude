@@ -1,5 +1,8 @@
 ---
 name: case-study-methodology
+user-invocable: false
+context: fork
+agent: general-purpose
 description: >
   교육학·도덕교육 학위논문에 사례연구(Case Study) 챕터를 포함하는 대학원생을 위한
   방법론 가이드. Yin·Stake·Merriam의 정의·설계·분석·신뢰도 확보 절차와

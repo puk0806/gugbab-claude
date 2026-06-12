@@ -1,5 +1,6 @@
 ---
 name: aristotle-primary-citation
+user-invocable: false
 description: >
   도덕윤리교육 전공 대학원생(석/박사)이 아리스토텔레스(특히 akrasia 주제) 1차 텍스트를 인용할 때
   Bekker 번호, 작품 표준 약어, 영역본/그리스어 비평본/국역본 표기를 정확히 사용하도록 돕는 스킬.

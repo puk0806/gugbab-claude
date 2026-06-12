@@ -1,5 +1,6 @@
 ---
 name: akrasia-classroom-application-guide
+user-invocable: false
 description: >
   아리스토텔레스의 자제력없음(akrasia)·무절제(akolasia) 이론을 한국 학교 도덕수업에
   적용하는 실무 가이드. 2022 개정 도덕과 「자신과의 관계」 영역과 연결한 단원 지도안 패턴,

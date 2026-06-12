@@ -1,6 +1,7 @@
 ---
 name: bundling-compiler
 description: tsup/Vite/Turbopack 번들러 선택 기준, React Compiler, Tree Shaking, 코드 스플리팅 패턴
+disable-model-invocation: true
 ---
 
 # 번들링 & 컴파일러 패턴
