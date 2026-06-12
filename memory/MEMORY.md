@@ -20,7 +20,7 @@
 
 ## Project — 컨벤션 자산 인프라
 
-- [★ 레포 개편 진행 상황 (feature/overhaul)](project_overhaul_progress.md) — **개편 재개 시 진입점**. 작업1(스킬 정리) 완료 224→202종. 다음: 작업2(훅/룰 정리)
+- [★ 레포 개편 진행 상황](project_overhaul_progress.md) — 작업1~5 전부 완료. 훅 20→27종(공통 14→19, dev 2→4) 2026-06-12 추가 완료
 - [project-install.sh 이식 아키텍처](project_install_architecture.md) — 10개 템플릿(0~9, 8=academic, 9=dream-interpretation), JAVA_SKILLS_* 필터
 - [★ SEO·GEO·웹표준 인프라 (1·2·3차 완료)](project_seo_geo_assets_2026-06.md) — **"SEO 메모리 꺼내와" 호출 시 진입점**. 스킬 28종 + 에이전트 4종 전체 커밋·푸시 완료 (2026-06-04). P3 항목(headless-cms·voice-search 등)은 보류 결정
 - [프로젝트 scope 전용 원칙](project_scope_only.md) — gugbab-claude 모든 산출물은 프로젝트 scope에만, 글로벌(~/.claude) 설정 금지
