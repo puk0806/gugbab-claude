@@ -185,25 +185,6 @@ metadata:
 
 ### 2026-06-02 — P0-3 완료
 
-### 재개 프로토콜 — 사용자가 다시 호출 시
-
-사용자 트리거 예: "SEO 메모리 꺼내와" / "SEO 작업 이어서" / "그 다음 진행"
-
-진행 순서 (예전 2차 라운드와 동일 방식):
-1. TaskCreate로 7개(P0-5/6 + P1-6/7/8 + P2-7/8) + FIN-3 만들기
-2. 본 메모리 표 상태(⏳ → 🔵 → ✅) 업데이트
-3. 스킬마다: skill-creator → skill-tester → verification.md APPROVED 확인
-4. 완료 시 README.md 스킬 수(frontend 79 → 86, +7) + 업데이트 로그 신규 행
-5. MEMORY.md 인덱스 진입점 갱신
-
-### 1·2차 미커밋 상태 (재개 시 확인)
-
-- 1차: 7 신규 스킬 + 1 리네이밍 + 1 에이전트 + README 수정 = 미커밋
-- 2차: 11 신규 스킬 + 2 에이전트 + README 수정 = 미커밋
-- 사용자가 커밋 요청 시 [skill]·[agent]·[docs] 분리 (1차/2차 묶거나 분리 모두 가능, [[git]] 컨벤션 따름)
-
----
-
 ### 2026-06-02 — P0-3 완료
 - `validation/a11y-auditor` 신규 에이전트: WCAG 2.2 A/AA 자동/수동 점검 + 2.2 신규 9 SC 특별 점검 + Critical/Major/Minor 판정. tools: Read·Glob·Grep·WebFetch·WebSearch (수정 권한 없음). 짝 스킬 [[wcag-2.2-checklist]]·[[accessibility]], 짝 에이전트 [[seo-auditor]]
 
