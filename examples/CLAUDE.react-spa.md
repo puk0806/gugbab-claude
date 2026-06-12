@@ -7,12 +7,12 @@ React SPA (Vite + TypeScript) — {프로젝트 한 줄 설명}
 ## 필수 원칙
 
 - 복잡한 작업 전 계획 확인 → @.claude/rules/task-workflow.md
-- 커밋·푸시는 사용자 명시 요청 시에만
 
 ---
 
 ## 금지 사항
 
+- **커밋·푸시는 사용자가 명시적으로 요청할 때만 진행한다. 작업 완료 후 자동 커밋 제안·실행 금지**
 - `any` 타입 사용 금지 — `unknown` + 타입 가드로 대체
 - `console.log` 프로덕션 코드에 남기지 않기
 - prop drilling 3단계 초과 금지 — Zustand 또는 Compound Component 패턴 사용
