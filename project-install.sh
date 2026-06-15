@@ -65,6 +65,16 @@ case "$_MEM_ANS" in
   *)   INCLUDE_MEMORY=false ;;
 esac
 
+# ── Superpowers 스킬 시스템 ─────────────────────────────────────────────
+echo ""
+echo "Superpowers 스킬·에이전트 시스템을 활성화하시겠습니까?"
+echo "  (superpowers CLI 설치 필요. settings.json에 superpowers@superpowers-marketplace 플러그인 등록)"
+read -rp "  활성화 (y/N): " _SP_ANS
+case "$_SP_ANS" in
+  y|Y) INCLUDE_SUPERPOWERS=true ;;
+  *)   INCLUDE_SUPERPOWERS=false ;;
+esac
+
 # ── Codex 적대적 코드 리뷰 (개발 템플릿 전용) ─────────────────────────
 INCLUDE_CODEX=false
 case "$TEMPLATE" in
@@ -112,6 +122,7 @@ echo ""
 echo "대상: $TARGET"
 echo "템플릿: $TEMPLATE"
 echo "memory 공유: $INCLUDE_MEMORY"
+echo "Superpowers: $INCLUDE_SUPERPOWERS"
 echo "Codex 리뷰: $INCLUDE_CODEX"
 echo "README guard: $INCLUDE_README_GUARD"
 echo "Staleness guard: $INCLUDE_STALENESS_GUARD"
@@ -799,15 +810,17 @@ if [ ! -f "$SETTINGS_FILE" ] || ([ -f "$SETTINGS_FILE" ] && [ "$OVERWRITE_SETTIN
     react-spa|nextjs|all)
       GEN_FLAGS="$GEN_FLAGS --typescript" ;;
   esac
-  [ "$INCLUDE_MEMORY" = "true" ] && GEN_FLAGS="$GEN_FLAGS --memory"
-  [ "$INCLUDE_CODEX" = "true" ] && GEN_FLAGS="$GEN_FLAGS --codex"
+  [ "$INCLUDE_MEMORY" = "true" ]      && GEN_FLAGS="$GEN_FLAGS --memory"
+  [ "$INCLUDE_SUPERPOWERS" = "true" ] && GEN_FLAGS="$GEN_FLAGS --superpowers"
+  [ "$INCLUDE_CODEX" = "true" ]       && GEN_FLAGS="$GEN_FLAGS --codex"
   [ "$INCLUDE_README_GUARD" = "true" ] && GEN_FLAGS="$GEN_FLAGS --readme-guard"
   [ "$INCLUDE_STALENESS_GUARD" = "true" ] && GEN_FLAGS="$GEN_FLAGS --staleness-guard"
 
   if node "$REPO_DIR/scripts/gen-settings.js" $GEN_FLAGS > "$SETTINGS_FILE" 2>/dev/null; then
     _SUFFIX=""
-    [ "$INCLUDE_MEMORY" = "true" ] && _SUFFIX="$_SUFFIX +memory"
-    [ "$INCLUDE_CODEX" = "true" ] && _SUFFIX="$_SUFFIX +codex"
+    [ "$INCLUDE_MEMORY" = "true" ]      && _SUFFIX="$_SUFFIX +memory"
+    [ "$INCLUDE_SUPERPOWERS" = "true" ] && _SUFFIX="$_SUFFIX +superpowers"
+    [ "$INCLUDE_CODEX" = "true" ]       && _SUFFIX="$_SUFFIX +codex"
     [ "$INCLUDE_README_GUARD" = "true" ] && _SUFFIX="$_SUFFIX +readme-guard"
     [ "$INCLUDE_STALENESS_GUARD" = "true" ] && _SUFFIX="$_SUFFIX +staleness-guard"
     echo "  → .claude/settings.json (생성: $TEMPLATE$_SUFFIX)"

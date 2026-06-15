@@ -1,15 +1,16 @@
 #!/usr/bin/env node
 // gen-settings.js — project-install.sh에서 호출. 선택된 옵션에 따라 settings.json 생성
-// 사용: node scripts/gen-settings.js [--util] [--dev] [--typescript] [--memory] [--codex] [--readme-guard]
+// 사용: node scripts/gen-settings.js [--util] [--dev] [--typescript] [--memory] [--superpowers] [--codex] [--readme-guard]
 
 const args = process.argv.slice(2);
-const isUtil          = args.includes('--util');
-const isDev           = args.includes('--dev');          // tdd-guard 포함 (개발 템플릿)
-const withTs          = args.includes('--typescript');   // typescript-quality 포함
-const withMemory      = args.includes('--memory');       // memory-* 훅 포함
-const withCodex          = args.includes('--codex');           // codex@openai-codex 플러그인 활성화
-const withReadmeGuard    = args.includes('--readme-guard');    // git commit/push 직전 README 미업데이트 차단
-const withStalenessGuard = args.includes('--staleness-guard'); // 60일 초과 스킬 강제 재검증 지시 주입
+const isUtil             = args.includes('--util');
+const isDev              = args.includes('--dev');              // tdd-guard 포함 (개발 템플릿)
+const withTs             = args.includes('--typescript');       // typescript-quality 포함
+const withMemory         = args.includes('--memory');           // memory-* 훅 포함
+const withSuperpowers    = args.includes('--superpowers');      // superpowers@superpowers-marketplace 플러그인 활성화
+const withCodex          = args.includes('--codex');            // codex@openai-codex 플러그인 활성화
+const withReadmeGuard    = args.includes('--readme-guard');     // git commit/push 직전 README 미업데이트 차단
+const withStalenessGuard = args.includes('--staleness-guard');  // 60일 초과 스킬 강제 재검증 지시 주입
 
 const H = (name) => ({ type: 'command', command: `node $CLAUDE_PROJECT_DIR/.claude/hooks/${name}` });
 
@@ -25,7 +26,7 @@ const permissions = {
     'Bash(which*)', 'Bash(echo*)', 'Bash(printf*)',
     'Bash(mkdir*)', 'Bash(touch*)', 'Bash(cp*)', 'Bash(mv*)', 'Bash(rm*)',
     'Bash(sed*)', 'Bash(awk*)', 'Bash(sort*)', 'Bash(uniq*)',
-    'Bash(diff*)', 'Bash(xargs*)', 'Bash(for*)',
+    'Bash(diff*)', 'Bash(xargs*)', 'Bash(for*)', 'Bash(tee*)',
     'Write', 'Edit', 'Read', 'Glob', 'Grep', 'WebSearch', 'WebFetch', 'Agent',
   ],
   additionalDirectories: [
@@ -133,12 +134,13 @@ if (isUtil) {
 
 // ── Output ───────────────────────────────────────────────────────────────
 const enabledPlugins = {
-  'superpowers@superpowers-marketplace': true,
-  ...(withCodex ? { 'codex@openai-codex': true } : {}),
+  ...(withSuperpowers ? { 'superpowers@superpowers-marketplace': true } : {}),
+  ...(withCodex       ? { 'codex@openai-codex': true }               : {}),
 };
+const hasPlugins = Object.keys(enabledPlugins).length > 0;
 const settings = {
   defaultMode: 'acceptEdits',
-  enabledPlugins,
+  ...(hasPlugins ? { enabledPlugins } : {}),
   permissions,
   hooks,
   statusLine: { type: 'command', command: 'bash $CLAUDE_PROJECT_DIR/.claude/hooks/statusline.sh' },
