@@ -37,7 +37,7 @@ function isPluginEnabled(repoRoot) {
 
 function isLoggedIn() {
   try {
-    const r = execSync('codex login status 2>&1', { encoding: 'utf8', timeout: 8000, stdio: ['pipe', 'pipe', 'ignore'] });
+    const r = execSync('codex login status 2>&1', { encoding: 'utf8', timeout: 15000 });
     return /logged[\s-]*in/i.test(r);
   } catch { return false; }
 }
@@ -131,7 +131,7 @@ process.stderr.write([
   '',
   '다음을 즉시 실행하세요 (사용자에게 묻지 말고, 3라운드 완료까지):',
   '  → .claude/rules/codex-review.md 의 워크플로우 그대로 실행',
-  '  → Round 1~3: Bash("codex review --uncommitted \\"<해당 라운드 프롬프트>\\"") 실행',
+  '  → Round 1~3: Bash("codex review --uncommitted 2>&1 | tee /tmp/codex-r{N}.txt") 실행',
   '  → 각 라운드 결과: ACCEPT/REJECT/PARTIAL 판정 및 수정 반영',
   '  → 새 Critical 이슈 없으면 조기 종료 가능',
   `  → 완료 후 반드시: Bash("touch ${marker}")`,

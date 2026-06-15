@@ -46,11 +46,16 @@ node -e "const s=require('./.claude/settings.json');process.exit(s.enabledPlugin
 
 ## 워크플로우 (최대 3라운드)
 
+> **주의 (v0.122.0+)**: `codex review --uncommitted "[PROMPT]"` 구문은 지원되지 않는다.
+> 각 라운드는 `--uncommitted` 단독 실행 후 출력을 temp 파일에 저장해 재사용한다.
+
 ### Round 1 — 초기 적대적 리뷰
 
 ```bash
-codex review --uncommitted "You are an extremely adversarial and merciless code reviewer. Your mission: find every possible bug, security vulnerability, performance bottleneck, design flaw, and code smell. Assume worst-case scenarios. Be specific, brutal, and ruthless. Do not be polite. Challenge every decision. Produce a numbered list of issues ordered by severity."
+codex review --uncommitted 2>&1 | tee /tmp/codex-r1.txt
 ```
+
+Codex의 기본 리뷰어 관점: 모든 결함·보안취약점·성능 문제를 찾아낸다. Claude는 전체 출력(`/tmp/codex-r1.txt`)을 읽어 아래를 수행한다:
 
 **Claude의 응답:**
 1. 각 지적을 분석하고 ACCEPT / REJECT / PARTIAL 판정
@@ -60,8 +65,10 @@ codex review --uncommitted "You are an extremely adversarial and merciless code 
 ### Round 2 — 수정 검증 + 추가 공격
 
 ```bash
-codex review --uncommitted "You are a relentless adversarial reviewer doing a second pass. Verify whether Round 1 issues were properly fixed — if fixes are incomplete or introduce new problems, escalate. Find any NEW issues the fixes introduced. Challenge the developer's justifications for rejected items. Be merciless."
+codex review --uncommitted 2>&1 | tee /tmp/codex-r2.txt
 ```
+
+Round 1 수정 후 재실행. 전체 출력(`/tmp/codex-r2.txt`) 읽어 판정한다.
 
 **Claude의 응답:**
 - Round 1에서 반박한 항목에 대한 Codex의 재반박 → 근거 재검토 후 재판정
@@ -71,8 +78,10 @@ codex review --uncommitted "You are a relentless adversarial reviewer doing a se
 ### Round 3 — 최종 검토 (마지막 기회)
 
 ```bash
-codex review --uncommitted "Final adversarial review — last chance to catch issues. Be comprehensive and unforgiving. Check if all previous concerns were resolved. Look for subtle issues: edge cases, race conditions, error handling gaps, resource leaks. If you find no new critical issues, say so explicitly."
+codex review --uncommitted 2>&1 | tee /tmp/codex-r3.txt
 ```
+
+전체 출력(`/tmp/codex-r3.txt`) 읽어 최종 판정한다.
 
 **Claude의 응답:**
 - 최종 ACCEPT / REJECT 결정 (번복 없음)
