@@ -1,6 +1,6 @@
 # 훅 (Hooks)
 
-Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 27종).
+Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 28종).
 
 훅 파일 위치: `.claude/hooks/`
 
@@ -22,7 +22,7 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 27종).
 | [cc-notify.js](../../.claude/hooks/cc-notify.js) | Stop | 작업 완료 시 macOS 데스크탑 알림 (타 플랫폼 silent) |
 | [instructions-loaded.js](../../.claude/hooks/instructions-loaded.js) | InstructionsLoaded | CLAUDE.md 로드 완료 시 규칙 요약 출력 |
 | [pending-test-guard.js](../../.claude/hooks/pending-test-guard.js) | Stop | 세션 종료 전 PENDING_TEST 상태 스킬 존재 시 차단 — 미테스트 스킬 누락 방지 |
-| [readme-guard.js](../../.claude/hooks/readme-guard.js) | Stop | 에이전트·스킬 추가 후 README 미업데이트 시 커밋·푸시 경고 |
+| [readme-guard.js](../../.claude/hooks/readme-guard.js) | PreToolUse Bash / Stop | git commit·push 직전 README 미업데이트 차단 + 세션 종료 차단 |
 | [skill-md-guard.js](../../.claude/hooks/skill-md-guard.js) | PostToolUse Write | SKILL.md 저장 시 소스 URL·검증일·필수 섹션 존재 여부 검증 |
 | [agent-md-guard.js](../../.claude/hooks/agent-md-guard.js) | PostToolUse Write | 에이전트 .md 저장 시 name·description·tools·model·example 형식 검증 |
 | [verification-guard.js](../../.claude/hooks/verification-guard.js) | PostToolUse Write | verification.md 저장 시 필수 섹션 확인, UNVERIFIED 상태 차단 |
@@ -36,7 +36,7 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 27종).
 
 | 훅 | 이벤트 | 설명 |
 |----|--------|------|
-| [tdd-guard.js](../../.claude/hooks/tdd-guard.js) | PostToolUse Write/Edit | 소스 파일 수정 시 대응 테스트 파일 존재 여부 검사 (경고만, 차단 안 함) |
+| [tdd-guard.js](../../.claude/hooks/tdd-guard.js) | PostToolUse Write/Edit | 소스 파일 수정 시 대응 테스트 파일 존재 여부 검사 — 없으면 차단 (hooks/commands/scripts/ 제외) |
 | [test-fake-guard.js](../../.claude/hooks/test-fake-guard.js) | PostToolUse Write | 테스트 코드에서 가짜 패스(skip/mock 남용 등) 탐지 차단 |
 | [verification-gate.js](../../.claude/hooks/verification-gate.js) | Stop | 소스 파일 수정 후 테스트 파일 변경 없으면 경고 출력 (차단 안 함) |
 | [careful-with-judge.js](../../.claude/hooks/careful-with-judge.js) | PreToolUse Bash | rm -rf 분석 — 시스템·.git·홈 삭제는 차단, 그 외는 경고 |
@@ -61,11 +61,20 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 27종).
 
 ---
 
+## Codex 훅 (1종) — Codex 리뷰 기능 선택 시
+
+| 훅 | 이벤트 | 설명 |
+|----|--------|------|
+| [codex-review-guard.js](../../.claude/hooks/codex-review-guard.js) | Stop | 미커밋 코드 변경 감지 시 Codex 적대적 리뷰 3라운드 강제 — 로그인 미완료 시 로그인 선행 요구 |
+
+---
+
 ## 훅 계층 구조
 
 ```
 공통 (19종)      ← 모든 템플릿
 ├── 개발 전용 (4종)  ← react-spa·nextjs·rust-axum·java-spring-*·unity-game
 │   └── TypeScript (1종)  ← react-spa·nextjs만 추가
-└── Memory (3종)    ← --memory 옵션 선택 시 추가
+├── Memory (3종)    ← --memory 옵션 선택 시 추가
+└── Codex (1종)     ← --codex 옵션 선택 시 추가
 ```
