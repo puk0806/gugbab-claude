@@ -26,7 +26,7 @@
 
 ### 자산 이력 (커밋·푸시 완료)
 
-- [★ 레포 개편 전체 완료 (2026-06-12)](project_overhaul_progress.md) — 작업1~5 전부 완료. 스킬 224→202종, 훅 20→27종(공통 19·dev 4), docs 전체 구조 신설, 9종 templates·examples
+- [★ 레포 개편 전체 완료 (2026-06-12)](project_overhaul_progress.md) — 작업1~5 전부 완료. 스킬 224→202종, 훅 20→28종(공통 19·dev 4·Codex 1), docs 전체 구조 신설, 9종 templates·examples
 - [★ SEO·GEO·웹표준 인프라 1·2·3차 (2026-06-04)](project_seo_geo_assets_2026-06.md) — 스킬 28종 + 에이전트 4종. 전체 커밋·푸시 완료
 - [★ Unity 게임 개발 인프라 전체 완료 (2026-06-10)](project_unity_gamedev_assets_plan.md) — 스킬 17종 + 에이전트 6종 APPROVED. Phase 1~7 완료
 - [스킬/에이전트 frontmatter 업그레이드 (2026-06-06)](project_skill_agent_frontmatter_upgrade_2026-06.md) — A1~C2 전체 완료. disable-model-invocation·permissionMode·isolation·background 필드 + InstructionsLoaded·UserPromptSubmit 훅
