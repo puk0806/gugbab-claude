@@ -73,12 +73,14 @@ metadata:
 
 ---
 
-## 현재 훅 수 (27종)
-- 공통 19 + 개발 전용 4 + TypeScript 전용 1(typescript-quality) + memory 선택 3
+## 현재 훅 수 (28종)
+- 공통 19 + 개발 전용 4 + TypeScript 전용 1(typescript-quality) + memory 선택 3 + Codex 선택 1
 - 공통 19: bash-guard·auto-approve·parry·protect-secrets·session-start·session-handoff-inject·session-summary·session-handoff·cc-notify·instructions-loaded·pending-test-guard·readme-guard·skill-md-guard·agent-md-guard·verification-guard·staleness-check·task-plan-guard·_lib·statusline
 - 개발 전용 4: tdd-guard·test-fake-guard·verification-gate·careful-with-judge
+- Codex 선택 1: codex-review-guard.js (Stop: 미커밋 코드 변경 시 3라운드 Codex 리뷰 강제)
 - Task 5 신규: agent-md-guard.js (PostToolUse Write: agent .md 구조 검증), readme-guard.js (Stop 경고: README 미업데이트 감지)
 - 2026-06-12 신규 7종: _lib.js(공통 유틸), protect-secrets.js(민감파일 차단), session-handoff.js(Stop: git 상태 저장), session-handoff-inject.js(SessionStart: 이전 세션 주입), verification-gate.js(dev: 테스트 없는 src 변경 경고), statusline.sh(브랜치·미커밋·PENDING_TEST 상태바), careful-with-judge.js(dev: rm -rf 판단)
+- 2026-06-15 신규 1종: codex-review-guard.js (Stop: Codex 적대적 리뷰 3라운드 강제, 마커 기반 bypass)
 
 ## 현재 스킬 수 (202종)
 - frontend: 76종
