@@ -105,6 +105,7 @@ hooks.InstructionsLoaded = [{
 // Stop
 const stopHooks = [H('pending-test-guard.js')];
 if (withReadmeGuard) stopHooks.push(H('readme-guard.js'));
+if (withCodex) stopHooks.push(H('codex-review-guard.js'));
 if (withMemory) stopHooks.push(H('memory-stop-guard.js'));
 if (isDev) stopHooks.push(H('verification-gate.js'));
 stopHooks.push(H('session-summary.js'));

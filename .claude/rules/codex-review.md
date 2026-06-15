@@ -40,6 +40,7 @@ node -e "const s=require('./.claude/settings.json');process.exit(s.enabledPlugin
 - **ACCEPT**: 타당한 지적 → 수정 + 수용 이유 설명
 - **REJECT**: 근거 없거나 설계 의도와 충돌 → 반박 이유 제시, 수정하지 않음
 - **PARTIAL**: 일부만 타당 → 수용·거부 부분 각각 이유 설명
+- **codex-review-guard 훅에 의해 자동 트리거된 경우**: 사용자에게 묻지 않고 Round 1부터 즉시 실행
 
 ---
 
@@ -103,3 +104,16 @@ codex review --uncommitted "Final adversarial review — last chance to catch is
 ### ⚠️ 잔존 이슈
 - [있으면 나열] / 없음
 ```
+
+---
+
+## 완료 후 마커 기록 (codex-review-guard 연동 필수)
+
+모든 라운드가 완료되면 반드시 아래 명령을 실행한다:
+
+```bash
+touch .claude/.codex-review-done
+```
+
+이 마커가 있어야 `codex-review-guard` Stop 훅이 통과된다.
+훅에 의해 자동 트리거된 경우: 마커 기록 후 세션 종료를 재시도한다.

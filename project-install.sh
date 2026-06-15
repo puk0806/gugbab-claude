@@ -158,6 +158,9 @@ HOOKS_TS_ONLY=("typescript-quality.js")
 # Memory 선택 시 추가
 HOOKS_MEMORY_SET=("memory-pull.js" "memory-sync.js" "memory-stop-guard.js")
 
+# Codex 선택 시 추가
+HOOKS_CODEX_SET=("codex-review-guard.js")
+
 # 복사 목록 구성
 HOOKS=("${HOOKS_COMMON[@]}")
 
@@ -173,6 +176,10 @@ esac
 
 if [ "$INCLUDE_MEMORY" = "true" ]; then
   HOOKS+=("${HOOKS_MEMORY_SET[@]}")
+fi
+
+if [ "$INCLUDE_CODEX" = "true" ]; then
+  HOOKS+=("${HOOKS_CODEX_SET[@]}")
 fi
 
 for hook in "${HOOKS[@]}"; do

@@ -1,4 +1,4 @@
-// PostToolUse Write|Edit — 소스 파일 수정 시 대응 테스트 파일 존재 여부 검사 (경고만, 차단 안 함)
+// PostToolUse Write|Edit — 소스 파일 수정 시 대응 테스트 파일 존재 여부 검사 (없으면 차단)
 const fs = require('fs');
 const path = require('path');
 
@@ -21,7 +21,8 @@ try {
     basename.includes('_test') ||
     filePath.includes('__tests__') ||
     filePath.includes('.claude/hooks') ||
-    filePath.includes('.claude/commands')
+    filePath.includes('.claude/commands') ||
+    /(?:^|\/)scripts\//.test(filePath)
   ) {
     process.exit(0);
   }
@@ -30,7 +31,9 @@ try {
     path.join(dir, `${basename}.test${ext}`),
     path.join(dir, `${basename}.spec${ext}`),
     path.join(dir, '__tests__', `${basename}.test${ext}`),
+    path.join(dir, '__tests__', `${basename}.spec${ext}`),
     path.join(path.dirname(dir), '__tests__', `${basename}.test${ext}`),
+    path.join(path.dirname(dir), '__tests__', `${basename}.spec${ext}`),
   ];
 
   const hasTest = testPatterns.some(p => {
@@ -38,8 +41,11 @@ try {
   });
 
   if (!hasTest) {
-    process.stderr.write(`[tdd-guard] ⚠️  테스트 없음: ${path.relative(process.cwd(), filePath)}\n`);
-    process.stderr.write(`[tdd-guard] 권장: ${basename}.test${ext} 작성\n`);
+    process.stdout.write(
+      `[tdd-guard] 테스트 파일 없음: ${path.relative(process.cwd(), filePath)}\n` +
+      `즉시 생성하세요: ${basename}.test${ext}\n`
+    );
+    process.exit(2);
   }
 } catch {}
 

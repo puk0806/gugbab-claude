@@ -59,8 +59,8 @@ const DENY_PATTERNS = [
 ]
 
 const REQUIRE_APPROVAL_PATTERNS = [
-  /git\s+commit\b/,
-  /git\s+push\b/,
+  /(?:^|&&|\|\||;|\n)\s*(?:[A-Za-z_][A-Za-z_0-9]*=(?:"[^"]*"|'[^']*'|[^\s]*)\s+)*git\s+commit\b/,
+  /(?:^|&&|\|\||;|\n)\s*(?:[A-Za-z_][A-Za-z_0-9]*=(?:"[^"]*"|'[^']*'|[^\s]*)\s+)*git\s+push\b/,
 ]
 
 // 안전 패턴 자동 허용 — heredoc 출력에 허용되는 비실행 확장자

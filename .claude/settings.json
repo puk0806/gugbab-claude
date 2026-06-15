@@ -157,6 +157,7 @@
         "hooks": [
           { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/pending-test-guard.js" },
           { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/readme-guard.js" },
+          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/codex-review-guard.js" },
           { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/memory-stop-guard.js" },
           { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-summary.js" },
           { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/cc-notify.js" }

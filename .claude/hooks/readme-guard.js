@@ -110,20 +110,18 @@ async function main() {
     const assets = getUnupdatedAssets(session_id)
     if (!assets) return process.exit(0)
 
-    process.stderr.write([
-      '',
-      '[readme-guard] ⚠️  README.md 미업데이트 감지',
+    process.stdout.write([
+      '[readme-guard] README.md 미업데이트 — 세션 종료 차단',
       '',
       `이번 세션에서 스킬/에이전트 파일 ${assets.length}개가 수정됐지만 README.md는 변경되지 않았습니다.`,
       '',
       '수정된 파일:',
       buildAssetList(assets),
       '',
-      '커밋 전 README.md를 업데이트하세요 — git commit/push 시 readme-guard가 차단합니다.',
+      '즉시 README.md를 업데이트한 뒤 세션 종료를 재시도하세요.',
       '참고: @.claude/rules/readme-update.md',
-      '',
     ].join('\n'))
-    return process.exit(0)
+    return process.exit(2)
   }
 
   process.exit(0)

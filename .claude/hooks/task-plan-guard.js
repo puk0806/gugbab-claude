@@ -48,7 +48,7 @@ try {
 
   if (!isComplex) process.exit(0);
 
-  process.stderr.write(
+  process.stdout.write(
     `[task-plan-guard] → Claude 지시: 실행 전 아래 순서를 따르세요.\n` +
     `  1. "이렇게 이해했습니다:" — 요청 내용 1-3줄 요약\n` +
     `  2. "작업 목록:" — 번호 있는 구체적 단계 리스트\n` +
