@@ -132,10 +132,13 @@ if (isUtil) {
 }
 
 // ── Output ───────────────────────────────────────────────────────────────
-const enabledPlugins = withCodex ? { 'codex@openai-codex': true } : undefined;
+const enabledPlugins = {
+  'superpowers@superpowers-marketplace': true,
+  ...(withCodex ? { 'codex@openai-codex': true } : {}),
+};
 const settings = {
   defaultMode: 'acceptEdits',
-  ...(enabledPlugins ? { enabledPlugins } : {}),
+  enabledPlugins,
   permissions,
   hooks,
   statusLine: { type: 'command', command: 'bash $CLAUDE_PROJECT_DIR/.claude/hooks/statusline.sh' },
