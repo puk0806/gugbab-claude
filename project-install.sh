@@ -860,6 +860,14 @@ else
 fi
 
 if [ "$CLAUDE_WRITTEN" = true ]; then
+  # 공통 규칙 주입 (<!-- common-rules --> 플레이스홀더 → CLAUDE.common.md 내용으로 대체)
+  CLAUDE_COMMON="$REPO_DIR/examples/CLAUDE.common.md"
+  if [ -f "$CLAUDE_COMMON" ] && grep -q "<!-- common-rules -->" "$CLAUDE_FILE" 2>/dev/null; then
+    TMP=$(mktemp)
+    sed "/<!-- common-rules -->/r $CLAUDE_COMMON" "$CLAUDE_FILE" | sed "/<!-- common-rules -->/d" > "$TMP" && mv "$TMP" "$CLAUDE_FILE"
+    echo "  ✓ 공통 규칙 주입 (CLAUDE.common.md)"
+  fi
+
   read -rp "  프로젝트명을 입력하세요 (Enter로 건너뜀): " PROJECT_NAME
   if [ -n "$PROJECT_NAME" ]; then
     TMP=$(mktemp)

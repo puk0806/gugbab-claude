@@ -12,7 +12,7 @@ Next.js App Router (TypeScript) — {프로젝트 한 줄 설명}
 
 ## 금지 사항
 
-- **커밋·푸시는 사용자가 명시적으로 요청할 때만 진행한다. 작업 완료 후 자동 커밋 제안·실행 금지**
+<!-- common-rules -->
 - `use client` 남용 금지 — Server Component 기본, 상호작용 필요한 부분만 클라이언트 컴포넌트
 - `any` 타입 사용 금지 — `unknown` + 타입 가드로 대체
 - `console.log` 프로덕션 코드에 남기지 않기

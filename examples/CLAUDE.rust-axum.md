@@ -12,7 +12,7 @@ Rust + Axum — {프로젝트 한 줄 설명}
 
 ## 금지 사항
 
-- **커밋·푸시는 사용자가 명시적으로 요청할 때만 진행한다. 작업 완료 후 자동 커밋 제안·실행 금지**
+<!-- common-rules -->
 - `unwrap()` / `expect()` 프로덕션 코드 금지 — 테스트에서만 허용
 - `std::sync::Mutex` async 컨텍스트 금지 — `tokio::sync::Mutex` 사용
 - blocking 작업을 async 함수에서 직접 실행 금지 — `spawn_blocking` 사용

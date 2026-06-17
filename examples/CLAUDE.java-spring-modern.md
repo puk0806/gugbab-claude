@@ -12,7 +12,7 @@ Java 21 + Spring Boot 3.x + MyBatis — {프로젝트 한 줄 설명}
 
 ## 금지 사항
 
-- **커밋·푸시는 사용자가 명시적으로 요청할 때만 진행한다. 작업 완료 후 자동 커밋 제안·실행 금지**
+<!-- common-rules -->
 - `javax.*` import 금지 — 이 프로젝트는 `jakarta.*` 사용 (Spring Boot 3.x)
 - `WebSecurityConfigurerAdapter` 상속 금지 — `SecurityFilterChain` Bean 방식 사용
 - `System.out.println` 금지 — SLF4J 사용
