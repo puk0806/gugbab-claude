@@ -46,10 +46,14 @@ try {
 
       if (onMain || explicitMain || refspecToMain) {
         process.stderr.write('[branch-protection] main 브랜치로 직접 push할 수 없습니다.\n')
-        process.stderr.write('  → PR(Pull Request)을 통해 머지하세요.\n')
+        process.stderr.write('  → PR(Pull Request)을 통해 머지해야 합니다.\n')
         if (onMain) {
-          process.stderr.write('  → 현재 main 브랜치입니다. 피처 브랜치로 이동 후 push하세요:\n')
-          process.stderr.write('      git checkout -b feature/{작업명}\n')
+          process.stderr.write('\n  아래 순서로 진행하세요:\n')
+          process.stderr.write('\n  1) 피처 브랜치 생성 (현재 커밋이 함께 이동됩니다):\n')
+          process.stderr.write('       git checkout -b feature/{작업명}\n')
+          process.stderr.write('\n  2) 피처 브랜치로 push:\n')
+          process.stderr.write('       git push origin feature/{작업명}\n')
+          process.stderr.write('\n  3) GitHub에서 PR 생성 후 main에 머지하세요.\n')
         }
         process.exit(2)
       }
