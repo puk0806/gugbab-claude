@@ -22,7 +22,7 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 28종).
 | [cc-notify.js](../../.claude/hooks/cc-notify.js) | Stop | 작업 완료 시 macOS 데스크탑 알림 (타 플랫폼 silent) |
 | [instructions-loaded.js](../../.claude/hooks/instructions-loaded.js) | InstructionsLoaded | CLAUDE.md 로드 완료 시 규칙 요약 출력 |
 | [pending-test-guard.js](../../.claude/hooks/pending-test-guard.js) | Stop | 세션 종료 전 PENDING_TEST 상태 스킬 존재 시 차단 — 미테스트 스킬 누락 방지 |
-| [readme-guard.js](../../.claude/hooks/readme-guard.js) | PreToolUse Bash / Stop | git commit·push 직전 README 미업데이트 차단 + 세션 종료 차단 |
+| [readme-guard.js](../../.claude/hooks/readme-guard.js) | PreToolUse Bash / Stop | git commit·push 직전 README 미업데이트 차단 + 세션 종료 차단. SKILL.md·agents/*.md·.changeset/*.md 변경 감지 (git diff 기반) |
 | [skill-md-guard.js](../../.claude/hooks/skill-md-guard.js) | PostToolUse Write | SKILL.md 저장 시 소스 URL·검증일·필수 섹션 존재 여부 검증 |
 | [agent-md-guard.js](../../.claude/hooks/agent-md-guard.js) | PostToolUse Write | 에이전트 .md 저장 시 name·description·tools·model·example 형식 검증 |
 | [verification-guard.js](../../.claude/hooks/verification-guard.js) | PostToolUse Write | verification.md 저장 시 필수 섹션 확인, UNVERIFIED 상태 차단 |
