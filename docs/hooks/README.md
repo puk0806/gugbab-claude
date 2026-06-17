@@ -1,6 +1,6 @@
 # 훅 (Hooks)
 
-Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 28종).
+Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 29종).
 
 훅 파일 위치: `.claude/hooks/`
 
@@ -69,6 +69,14 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 28종).
 
 ---
 
+## 브랜치 보호 훅 (1종) — Branch Protection 선택 시
+
+| 훅 | 이벤트 | 설명 |
+|----|--------|------|
+| [branch-protection.js](../../.claude/hooks/branch-protection.js) | PreToolUse Bash | main 브랜치로 직접 push 차단(PR 필수) + 피처 브랜치에서 새 브랜치 생성 차단(main에서만 허용) |
+
+---
+
 ## 훅 계층 구조
 
 ```
@@ -76,5 +84,6 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 28종).
 ├── 개발 전용 (4종)  ← react-spa·nextjs·rust-axum·java-spring-*·unity-game
 │   └── TypeScript (1종)  ← react-spa·nextjs만 추가
 ├── Memory (3종)    ← --memory 옵션 선택 시 추가
-└── Codex (1종)     ← --codex 옵션 선택 시 추가
+├── Codex (1종)     ← --codex 옵션 선택 시 추가
+└── Branch Protection (1종)  ← --branch-protection 옵션 선택 시 추가
 ```

@@ -37,7 +37,7 @@ gugbab-claude/
 
 - [agents/](./docs/agents/README.md) — 9카테고리
 - [skills/](./docs/skills/README.md) — 10카테고리 202종
-- [hooks/](./docs/hooks/README.md) — 28종 (공통 19 · dev 4 · TypeScript 1 · Memory 3 · Codex 1)
+- [hooks/](./docs/hooks/README.md) — 29종 (공통 19 · dev 4 · TypeScript 1 · Memory 3 · Codex 1 · Branch Protection 1)
 - [rules/](./docs/rules/README.md) — 13종 (공통 8 · 언어별 3 · 선택적 2)
 
 ---
@@ -161,7 +161,7 @@ claude --continue             # 이전 대화 이어서
 
 | 날짜 | 변경 내용 |
 |------|-----------|
-| 2026-06-17 | **`readme-guard.js` 강화** — `.changeset/*.md` 생성 시 README 버전 테이블 업데이트 강제(git diff 기반 탐지). Stop 훅을 경고(exit 0)에서 세션 종료 차단(exit 2)으로 강화. 하위 패키지 README 오탐 수정. **CLAUDE.md 상속 구조 도입** — `examples/CLAUDE.common.md` 신설(공통 5개 규칙). `project-install.sh` 공통 규칙 자동 주입(`<!-- common-rules -->` 플레이스홀더). README 템플릿 표 CLAUDE.md 예시 링크 추가 |
+| 2026-06-17 | **`readme-guard.js` 강화** — `.changeset/*.md` 생성 시 README 버전 테이블 업데이트 강제(git diff 기반 탐지). Stop 훅을 경고(exit 0)에서 세션 종료 차단(exit 2)으로 강화. 하위 패키지 README 오탐 수정. **CLAUDE.md 상속 구조 도입** — `examples/CLAUDE.common.md` 신설(공통 5개 규칙). `project-install.sh` 공통 규칙 자동 주입(`<!-- common-rules -->` 플레이스홀더). README 템플릿 표 CLAUDE.md 예시 링크 추가. **`branch-protection.js` 추가** — main push 차단(PR 필수) + 피처→피처 브랜치 생성 차단. 이 프로젝트 필수 적용, export 시 선택 옵션 제공. **훅 28→29종** |
 | 2026-06-12 | **README 간소화 + docs/ 연동** — 에이전트·스킬·훅 상세 목록 제거. 프로젝트 구조 카테고리별 클릭 링크 추가. 템플릿별 개별 상세 페이지(9종) 신설. 훅·규칙 개요 페이지 신설. 절대 경로 → 상대 경로 수정. **Codex 적대적 리뷰 인프라 추가**: `codex-review-guard.js` 신규 훅(Stop) — 미커밋 코드 변경 감지 시 3라운드 Codex 리뷰 강제. `bash-guard.js` env var prefix 패턴 보강. `tdd-guard.js` scripts/ 디렉토리 제외 추가. `gen-settings.js` + `project-install.sh` codex 옵션 연동. **훅 27→28종** |
 | 2026-06-11 | **레포 정비 개편 작업 2 후속 + Task 3·5 완료 + 강제화 추가** — 훅/룰 export 매트릭스 구현: `project-install.sh` 훅 3계층(공통·개발·TypeScript) + memory 선택 질문 신설. `scripts/gen-settings.js` 추가. 훅 강제화: `parry.js`(시크릿/인젝션 차단), `typescript-quality.js`(tsc 오류 차단). 신규 훅 `staleness-check.js`·`task-plan-guard.js`·`test-fake-guard.js`(개발 전용: 가짜 테스트 차단)·`session-summary.js` Stop 강화. 9종 CLAUDE.md 템플릿(`examples/` 폴더). **Task 5 강제화 강화**: `verification-guard.js`(UNVERIFIED 상태 저장 차단), `agent-md-guard.js` 신규(PostToolUse: agent .md name/description/tools/model/example 검증), `readme-guard.js` 신규(Stop: 스킬·에이전트 추가 시 README 미업데이트 경고), `bash-guard.js`에 memory/ Bash 수정 차단 5종 추가, `agent-design.md` maxTurns 강제 표현 교체. **훅 15→20종** (공통 14 + 개발 전용 2 + TypeScript 1 + memory 3) |
 | 2026-06-11 | **크로스 데스크탑 메모리 공유 인프라 구축**: `memory/` 폴더 git 추적 시작(25개 파일) · 훅 3종 추가 — `memory-sync.js`(PostToolUse Write/Edit: memory 변경 즉시 commit+push) · `memory-stop-guard.js`(Stop: 세션 종료 전 미동기 변경 강제 재시도) · `memory-pull.js`(SessionStart: 원격 최신 memory 자동 pull) · `scripts/setup-memory-link.sh`(새 데스크탑 최초 설정 스크립트) · `.claude/rules/memory-sync.md`(동기화 정책 문서화). **레포 정비 개편 (feature/overhaul) 작업 1** — **스킬 21종 삭제** (Claude 내장 지식으로 커버되는 범용·기초 스킬 전체 정리. 총 스킬 224→202종). **project-install.sh 템플릿 2종 신설** — `academic` · `dream-interpretation`. **레포 정비 개편 작업 2** — **훅 4종 삭제** (훅 19→15종). settings.json 4개 이벤트 블록 제거 |
