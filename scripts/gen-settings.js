@@ -1,16 +1,17 @@
 #!/usr/bin/env node
 // gen-settings.js — project-install.sh에서 호출. 선택된 옵션에 따라 settings.json 생성
-// 사용: node scripts/gen-settings.js [--util] [--dev] [--typescript] [--memory] [--superpowers] [--codex] [--readme-guard]
+// 사용: node scripts/gen-settings.js [--util] [--dev] [--typescript] [--memory] [--superpowers] [--codex] [--readme-guard] [--branch-protection]
 
 const args = process.argv.slice(2);
-const isUtil             = args.includes('--util');
-const isDev              = args.includes('--dev');              // tdd-guard 포함 (개발 템플릿)
-const withTs             = args.includes('--typescript');       // typescript-quality 포함
-const withMemory         = args.includes('--memory');           // memory-* 훅 포함
-const withSuperpowers    = args.includes('--superpowers');      // superpowers@superpowers-marketplace 플러그인 활성화
-const withCodex          = args.includes('--codex');            // codex@openai-codex 플러그인 활성화
-const withReadmeGuard    = args.includes('--readme-guard');     // git commit/push 직전 README 미업데이트 차단
-const withStalenessGuard = args.includes('--staleness-guard');  // 60일 초과 스킬 강제 재검증 지시 주입
+const isUtil               = args.includes('--util');
+const isDev                = args.includes('--dev');               // tdd-guard 포함 (개발 템플릿)
+const withTs               = args.includes('--typescript');        // typescript-quality 포함
+const withMemory           = args.includes('--memory');            // memory-* 훅 포함
+const withSuperpowers      = args.includes('--superpowers');       // superpowers@superpowers-marketplace 플러그인 활성화
+const withCodex            = args.includes('--codex');             // codex@openai-codex 플러그인 활성화
+const withReadmeGuard      = args.includes('--readme-guard');      // git commit/push 직전 README 미업데이트 차단
+const withStalenessGuard   = args.includes('--staleness-guard');   // 60일 초과 스킬 강제 재검증 지시 주입
+const withBranchProtection = args.includes('--branch-protection'); // main push 금지 + 피처→피처 브랜치 생성 금지
 
 const H = (name) => ({ type: 'command', command: `node $CLAUDE_PROJECT_DIR/.claude/hooks/${name}` });
 
@@ -58,6 +59,10 @@ if (isDev) {
 // PreToolUse Bash — readme-guard 선택 시 (git commit/push 직전 README 미업데이트 차단)
 if (withReadmeGuard) {
   hooks.PreToolUse.push({ matcher: 'Bash', hooks: [H('readme-guard.js')] });
+}
+// PreToolUse Bash — branch-protection 선택 시 (main push 금지 + 피처→피처 브랜치 생성 금지)
+if (withBranchProtection) {
+  hooks.PreToolUse.push({ matcher: 'Bash', hooks: [H('branch-protection.js')] });
 }
 
 // PostToolUse Write

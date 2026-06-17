@@ -117,6 +117,17 @@ case "$TEMPLATE" in
     esac ;;
 esac
 
+# ── 브랜치 보호 규칙 ────────────────────────────────────────────────────
+echo ""
+echo "브랜치 보호 규칙을 활성화하시겠습니까?"
+echo "  - main 브랜치로 직접 push 금지 (PR 필수)"
+echo "  - 피처 브랜치에서 새 브랜치 생성 금지 (main에서만 브랜치 생성 허용)"
+read -rp "  활성화 (y/N): " _BRANCH_ANS
+case "$_BRANCH_ANS" in
+  y|Y) INCLUDE_BRANCH_PROTECTION=true ;;
+  *)   INCLUDE_BRANCH_PROTECTION=false ;;
+esac
+
 # ── 설치 시작 ─────────────────────────────────────────────────────────
 echo ""
 echo "대상: $TARGET"
@@ -126,6 +137,7 @@ echo "Superpowers: $INCLUDE_SUPERPOWERS"
 echo "Codex 리뷰: $INCLUDE_CODEX"
 echo "README guard: $INCLUDE_README_GUARD"
 echo "Staleness guard: $INCLUDE_STALENESS_GUARD"
+echo "Branch protection: $INCLUDE_BRANCH_PROTECTION"
 echo ""
 
 # 기존 .claude/ 폴더가 있으면 쓰기 권한 확보
@@ -172,6 +184,9 @@ HOOKS_MEMORY_SET=("memory-pull.js" "memory-sync.js" "memory-stop-guard.js")
 # Codex 선택 시 추가
 HOOKS_CODEX_SET=("codex-review-guard.js")
 
+# Branch protection 선택 시 추가
+HOOKS_BRANCH_SET=("branch-protection.js")
+
 # 복사 목록 구성
 HOOKS=("${HOOKS_COMMON[@]}")
 
@@ -191,6 +206,10 @@ fi
 
 if [ "$INCLUDE_CODEX" = "true" ]; then
   HOOKS+=("${HOOKS_CODEX_SET[@]}")
+fi
+
+if [ "$INCLUDE_BRANCH_PROTECTION" = "true" ]; then
+  HOOKS+=("${HOOKS_BRANCH_SET[@]}")
 fi
 
 for hook in "${HOOKS[@]}"; do
@@ -813,8 +832,9 @@ if [ ! -f "$SETTINGS_FILE" ] || ([ -f "$SETTINGS_FILE" ] && [ "$OVERWRITE_SETTIN
   [ "$INCLUDE_MEMORY" = "true" ]      && GEN_FLAGS="$GEN_FLAGS --memory"
   [ "$INCLUDE_SUPERPOWERS" = "true" ] && GEN_FLAGS="$GEN_FLAGS --superpowers"
   [ "$INCLUDE_CODEX" = "true" ]       && GEN_FLAGS="$GEN_FLAGS --codex"
-  [ "$INCLUDE_README_GUARD" = "true" ] && GEN_FLAGS="$GEN_FLAGS --readme-guard"
-  [ "$INCLUDE_STALENESS_GUARD" = "true" ] && GEN_FLAGS="$GEN_FLAGS --staleness-guard"
+  [ "$INCLUDE_README_GUARD" = "true" ]      && GEN_FLAGS="$GEN_FLAGS --readme-guard"
+  [ "$INCLUDE_STALENESS_GUARD" = "true" ]   && GEN_FLAGS="$GEN_FLAGS --staleness-guard"
+  [ "$INCLUDE_BRANCH_PROTECTION" = "true" ] && GEN_FLAGS="$GEN_FLAGS --branch-protection"
 
   if node "$REPO_DIR/scripts/gen-settings.js" $GEN_FLAGS > "$SETTINGS_FILE" 2>/dev/null; then
     _SUFFIX=""
@@ -822,7 +842,8 @@ if [ ! -f "$SETTINGS_FILE" ] || ([ -f "$SETTINGS_FILE" ] && [ "$OVERWRITE_SETTIN
     [ "$INCLUDE_SUPERPOWERS" = "true" ] && _SUFFIX="$_SUFFIX +superpowers"
     [ "$INCLUDE_CODEX" = "true" ]       && _SUFFIX="$_SUFFIX +codex"
     [ "$INCLUDE_README_GUARD" = "true" ] && _SUFFIX="$_SUFFIX +readme-guard"
-    [ "$INCLUDE_STALENESS_GUARD" = "true" ] && _SUFFIX="$_SUFFIX +staleness-guard"
+    [ "$INCLUDE_STALENESS_GUARD" = "true" ]   && _SUFFIX="$_SUFFIX +staleness-guard"
+    [ "$INCLUDE_BRANCH_PROTECTION" = "true" ] && _SUFFIX="$_SUFFIX +branch-protection"
     echo "  → .claude/settings.json (생성: $TEMPLATE$_SUFFIX)"
   else
     echo "  ✗ .claude/settings.json (gen-settings.js 실패)"
