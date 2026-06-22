@@ -49,8 +49,8 @@ const hooks = {};
 // PreToolUse — 공통
 hooks.PreToolUse = [
   { matcher: '*',     hooks: [H('bash-guard.js'), H('auto-approve.js')] },
-  { matcher: 'Write', hooks: [H('parry.js'), H('protect-secrets.js')] },
-  { matcher: 'Edit',  hooks: [H('protect-secrets.js')] },
+  { matcher: 'Write', hooks: [H('confirmation-gate.js'), H('parry.js'), H('protect-secrets.js')] },
+  { matcher: 'Edit',  hooks: [H('confirmation-gate.js'), H('protect-secrets.js')] },
 ];
 // PreToolUse Bash — 개발 전용 (가짜 테스트 차단 + rm -rf 분석)
 if (isDev) {
