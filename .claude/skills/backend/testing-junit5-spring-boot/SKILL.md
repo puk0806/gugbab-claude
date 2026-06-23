@@ -374,6 +374,56 @@ class OrderServiceIntegrationTest {
 
 ---
 
+## Spring Boot 4.x 테스트 마이그레이션
+
+> 기준: Spring Boot 4.0 GA (2025-11-30) / JUnit 6 / Spring Framework 7.0
+> 소스: https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide
+>       https://rieckpil.de/whats-new-for-testing-in-spring-boot-4-0-and-spring-framework-7/
+> 검증일: 2026-06-19
+
+### @MockBean / @SpyBean 완전 제거 (4.0)
+
+| 어노테이션 | 상태 | 대체 |
+|-----------|------|------|
+| `@MockBean` | **4.0에서 제거** | `@MockitoBean` |
+| `@SpyBean` | **4.0에서 제거** | `@MockitoSpyBean` |
+
+```java
+// Spring Boot 3.x (deprecated)
+import org.springframework.boot.test.mock.mockito.MockBean;
+@MockBean
+private PaymentGateway paymentGateway;
+
+// Spring Boot 4.x (필수)
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+@MockitoBean
+private PaymentGateway paymentGateway;
+```
+
+> 주의: `@MockitoBean`은 테스트 클래스 필드에서만 동작. `@Configuration`·`@Component` 클래스 필드에서는 미지원.
+
+### JUnit 6 (Spring Boot 4.0 기반)
+
+| 항목 | JUnit 5 | JUnit 6 |
+|------|---------|---------|
+| 최소 Java | 8 | **17** |
+| 패키지 | `org.junit.jupiter.*` | `org.junit.jupiter.*` (동일) |
+| Spring 연동 | `SpringExtension` | `SpringExtension` (유지) |
+| JUnit 4 지원 | `junit-vintage-engine` | **Deprecated** |
+
+### TestRestTemplate 관련 변경
+
+Spring Boot 4.0에서 `RestTemplate` 자동 구성이 제거되었으므로 `TestRestTemplate`을 사용하는 슬라이스 테스트 코드가 영향을 받을 수 있다. `WebTestClient`(`@AutoConfigureRestTestClient`)로 대체를 검토.
+
+### 4.x 마이그레이션 체크리스트
+
+- [ ] `@MockBean` → `@MockitoBean` import 변경 (4.0에서 필수)
+- [ ] `@SpyBean` → `@MockitoSpyBean` 전환
+- [ ] `@Configuration` 클래스 내 `@MockitoBean` 사용 → 수동 주입으로 변환
+- [ ] JUnit 4 `junit-vintage-engine` 의존성 제거 검토
+- [ ] `TestRestTemplate` 사용 코드 → `WebTestClient` 대체 검토
+- [ ] Gradle 8.14+ 또는 9.x 업그레이드
+
 ---
 
 > 상세 레퍼런스 (예제·고급 패턴·흔한 실수) → [`references/REFERENCE.md`](references/REFERENCE.md)

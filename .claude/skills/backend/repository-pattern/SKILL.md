@@ -6,7 +6,7 @@ description: Rust Repository 패턴 — async trait 기반 DB 추상화, Service
 # Rust Repository 패턴 (DB 추상화 레이어)
 
 > 소스: https://doc.rust-lang.org/reference/items/traits.html | https://doc.rust-lang.org/std/error/trait.Error.html | https://docs.rs/thiserror/latest/thiserror/ | https://docs.rs/tokio/latest/tokio/
-> 검증일: 2026-04-06
+> 검증일: 2026-06-20
 
 > 주의: 이 문서는 아키텍처 패턴 가이드이며, 특정 크레이트의 API 문서가 아닙니다. Rust 1.75+ 네이티브 async fn in trait, thiserror 2.x 기준으로 작성되었습니다.
 

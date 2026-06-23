@@ -6,7 +6,7 @@ description: Rust tracing + tracing-subscriber 구조화 로깅 - 초기화, Env
 # tracing 구조화 로깅 가이드
 
 > 소스: https://docs.rs/tracing/latest/tracing/ | https://docs.rs/tracing-subscriber/latest/tracing_subscriber/
-> 검증일: 2026-04-06
+> 검증일: 2026-06-20
 
 > 주의: tracing 0.1.x / tracing-subscriber 0.3.x 기준. tracing 0.2는 미출시 상태이며, 향후 API 변경 가능성이 있으므로 실제 프로젝트의 Cargo.lock 버전을 확인할 것.
 

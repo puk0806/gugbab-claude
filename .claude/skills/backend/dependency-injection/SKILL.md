@@ -6,7 +6,7 @@ description: Rust Trait 기반 의존성 주입 패턴 - DI 원리, Arc<dyn Trai
 # Rust 의존성 주입(Dependency Injection) 패턴
 
 > 소스: https://doc.rust-lang.org/book/ch17-02-trait-objects.html | https://doc.rust-lang.org/reference/items/traits.html | https://docs.rs/axum/latest/axum/extract/struct.State.html | https://blog.rust-lang.org/2023/12/21/async-fn-rpit-in-traits.html
-> 검증일: 2026-04-06
+> 검증일: 2026-06-20
 
 > 주의: Axum 코드는 0.8.x 기준입니다. async fn in traits는 Rust 1.75+ 기준이며, dyn Trait에서는 여전히 제약이 있습니다.
 

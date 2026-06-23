@@ -440,4 +440,45 @@ springdoc:
 | starter 버전을 Spring Boot 버전 확인 없이 최신으로 고정 | 호환 매트릭스 확인 후 버전 지정 |
 | OpenAPI 3.1 전환 후 Swagger UI 일부 기능 이슈 | 필요 시 `springdoc.api-docs.version=openapi_3_0`으로 고정 |
 | `show-actuator: true`로 두고 프로덕션 배포 | 운영에서는 비활성 또는 인증 필요로 제한 |
+
+---
+
+## springdoc-openapi v3.x (Spring Boot 4.x 대응)
+
+> 기준: springdoc-openapi 3.0.3 / Spring Boot 4.0+ / Spring Framework 7.0
+> 소스: https://springdoc.org/v4/
+> 검증일: 2026-06-19
+
+> 주의: 이 스킬(v2.x)은 Spring Boot 3.0~3.5 전용이다. Spring Boot 4.0+에서는 **springdoc-openapi 3.x**를 사용한다.
+
+### Spring Boot 버전별 호환 매트릭스
+
+| Spring Boot | springdoc-openapi |
+|-------------|-------------------|
+| 2.x | v1.8.0 (레거시) |
+| 3.0 ~ 3.5 | **v2.x** (이 스킬) |
+| **4.0+** | **v3.x** (3.0.3+) |
+
+### Spring Boot 4.x 의존성 변경
+
+**아티팩트명은 동일**하다. 버전 번호(`2.x` → `3.x`)만 변경.
+
+```kotlin
+// Spring Boot 4.x — WebMVC
+implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3")
+```
+
+### v2.x → v3.x 주요 차이점
+
+| 항목 | v2.x | v3.x |
+|------|------|------|
+| Spring Boot 호환 | 3.0 ~ 3.5 | **4.0+** |
+| Spring Framework | 6.x | **7.0** |
+| Jackson | 2.x | **3.0** (`tools.jackson` Group ID) |
+| BOM 제공 | 없음 | **있음** |
+| Scalar UI | 별도 | `springdoc-openapi-starter-webmvc-scalar` 공식 지원 |
+
+### 어노테이션 변경 없음
+
+`@Tag`, `@Operation`, `@Parameter`, `@Schema`, `@ApiResponse` 등 **어노테이션 패키지명(`io.swagger.v3.oas.annotations.*`) 변경 없음**. 의존성 버전만 교체하면 대부분 그대로 동작한다.
 | 전역 `addSecurityItem` 설정 후 로그인 엔드포인트에도 Authorize 요구 표시 | 로그인 메서드에 `@SecurityRequirements()` (빈 배열)로 해제 |

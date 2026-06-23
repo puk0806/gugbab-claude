@@ -6,7 +6,7 @@ description: Rust 테스트 패턴 — 단위 테스트, 통합 테스트, #[tok
 # Rust 테스트 패턴
 
 > 소스: https://doc.rust-lang.org/book/ch11-00-testing.html | https://docs.rs/tokio/latest/tokio/attr.test.html | https://docs.rs/axum/0.8/axum/ | https://docs.rs/tower/latest/tower/trait.ServiceExt.html
-> 검증일: 2026-04-07
+> 검증일: 2026-06-20
 
 > 주의: Rust 1.75+ / tokio 1.x / axum 0.8.x 기준으로 작성되었습니다.
 

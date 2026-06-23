@@ -7,7 +7,7 @@ disable-model-invocation: true
 # 번들링 & 컴파일러 패턴
 
 > 소스: https://tsup.egoist.dev | https://vitejs.dev | https://nextjs.org/docs | https://react.dev/learn/react-compiler
-> 검증일: 2026-03-27
+> 검증일: 2026-06-20
 
 ---
 
@@ -168,7 +168,7 @@ const nextConfig = {
 | Dev 시작 | 느림 | 매우 빠름 |
 | HMR | 느림 | 거의 즉각 |
 | 플러그인 호환 | 전체 | 제한적 (재구현 필요) |
-| 프로덕션 빌드 | 안정 | 15.3에서 alpha, 안정화 시점 미확정 |
+| 프로덕션 빌드 | 안정 | Next.js 16에서 안정화 (기본값) |
 
 **Turbopack 제약:** 일부 Webpack 플러그인 미지원 → 대안 확인 필요
 

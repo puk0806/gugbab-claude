@@ -6,7 +6,7 @@ description: Rust Axum SSE 스트리밍 구현 — Sse 응답, Event 구성, tok
 # Axum SSE 스트리밍 구현
 
 > 소스: https://docs.rs/axum/latest/axum/response/sse/index.html | https://docs.rs/tokio-stream/latest/tokio_stream/ | https://developer.mozilla.org/en-US/docs/Web/API/EventSource
-> 검증일: 2026-04-06
+> 검증일: 2026-06-20
 
 > 주의: Axum 0.8.x 기준으로 작성. 0.7 이하에서는 `axum::response::sse` 모듈 경로 및 일부 API가 다를 수 있다.
 

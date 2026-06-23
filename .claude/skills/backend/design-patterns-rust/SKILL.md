@@ -6,7 +6,7 @@ description: Rust 디자인 패턴 8종 - Builder, Newtype, Type State, Strategy
 # Rust 디자인 패턴
 
 > 소스: https://rust-unofficial.github.io/patterns/ | https://doc.rust-lang.org/book/ | https://docs.rs/tokio/latest/tokio/sync/ | https://docs.rs/derive_builder/latest/derive_builder/
-> 검증일: 2026-04-07
+> 검증일: 2026-06-20
 
 > 주의: 코드 예제는 Rust 1.75+ stable 기준입니다. derive_builder 버전은 0.20.x 기준이며, API가 변경될 수 있습니다.
 

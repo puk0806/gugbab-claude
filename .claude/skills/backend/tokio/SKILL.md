@@ -6,7 +6,7 @@ description: Rust 비동기 런타임 Tokio 핵심 패턴 및 API 가이드
 # Tokio - Rust 비동기 런타임
 
 > 소스: https://tokio.rs/ , https://docs.rs/tokio/latest/tokio/
-> 검증일: 2026-04-06
+> 검증일: 2026-06-20
 
 ---
 

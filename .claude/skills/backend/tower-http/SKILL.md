@@ -6,9 +6,15 @@ description: tower-http 미들웨어 라이브러리 (CorsLayer, TraceLayer, Com
 # tower-http 미들웨어 가이드
 
 > 소스: https://docs.rs/tower-http | https://github.com/tower-rs/tower-http
-> 검증일: 2026-04-06
+> 검증일: 2026-06-20
 
-> 주의: tower-http는 0.x 버전으로 minor 버전 간 Breaking Change가 발생할 수 있다. 프로젝트의 Cargo.lock에서 실제 사용 버전을 반드시 확인할 것. 아래 내용은 0.6.x 기준이며, 0.5.x 이하에서는 일부 API가 다를 수 있다.
+> 주의: 이 문서는 tower-http 0.6.x 기준으로 작성되었습니다. 0.7.0이 2026-05-18 릴리즈되어 Breaking Change가 있으므로 신규 프로젝트는 마이그레이션 노트를 참조하세요. 프로젝트의 Cargo.lock에서 실제 사용 버전을 반드시 확인할 것.
+
+> **tower-http 0.7로의 마이그레이션 시 주요 Breaking Change (0.6 → 0.7):**
+> - tokio, async-compression 암묵적 no-op feature 제거 (0.6.x 하위 호환용 dummy feature 삭제)
+> - `FollowRedirect`: Extensions가 리다이렉트 요청으로 전달됨 (이전에는 drop). 기존 동작 유지 시 `preserve_extensions(false)` 명시 필요
+> - `DefaultOnRequest`, `DefaultOnResponse`, `DefaultOnFailure`, `DefaultOnEos`: 이제 명시적으로 request span에 parent span 설정됨
+> - `GrpcCode`, `GrpcFailureClass`가 `#[non_exhaustive]`로 변경
 
 ---
 
@@ -17,6 +23,7 @@ description: tower-http 미들웨어 라이브러리 (CorsLayer, TraceLayer, Com
 tower-http는 feature flag 기반으로 필요한 미들웨어만 선택적으로 활성화한다.
 
 ```toml
+# tower-http 0.6.x (현재 문서 기준) — 0.7.0이 2026-05-18 릴리즈됨, 마이그레이션 주의사항 참조
 [dependencies]
 tower-http = { version = "0.6", features = ["cors", "trace", "compression-full", "timeout", "limit"] }
 ```
