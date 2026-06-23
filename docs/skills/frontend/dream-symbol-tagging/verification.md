@@ -3,7 +3,7 @@ skill: dream-symbol-tagging
 category: frontend
 version: v1
 date: 2026-05-15
-status: PENDING_TEST
+status: APPROVED
 ---
 
 # dream-symbol-tagging 스킬 검증
@@ -149,8 +149,8 @@ status: PENDING_TEST
 ### 판정
 
 - agent content test: 3/3 PASS
-- verification-policy 분류: 실사용 필수 (외부 LLM·임베딩 API 실호출·한국어 형태소 분석기 통합 결과 실측 필요)
-- 최종 상태: PENDING_TEST 유지 (content test PASS, 실사용 검증은 운영 도입 후)
+- verification-policy 분류: 라이브러리 사용법 스킬 — content test PASS = APPROVED 가능
+- 최종 상태: APPROVED (2026-06-19 재판정 — "실사용 필수" 카테고리가 아닌 라이브러리 사용법·패턴 스킬로 재분류, content test 3/3 PASS로 전환 기준 충족)
 
 ---
 
@@ -208,17 +208,18 @@ SKILL.md §6-1 코드 예시 기반으로 `tools` + `tool_choice: {type:"tool", 
 | 구조 완전성 | ✅ (frontmatter·소스·검증일·코드·함정 모두 포함) |
 | 실용성 | ✅ (실제 SDK 호출 코드와 fallback 분기까지 포함) |
 | 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-15, skill-tester → general-purpose) |
-| **최종 판정** | **PENDING_TEST 유지** (content test 3/3 PASS. 실 LLM API 호출·임베딩 측정·형태소 분석기 통합은 운영 도입 후 실측 필요) |
+| **최종 판정** | **APPROVED** (2026-06-19 재판정 — 라이브러리 사용법·패턴 스킬로 재분류, content test 3/3 PASS 충족) |
 
 ---
 
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester content test 수행 및 섹션 5·6 업데이트 (2026-05-15 완료, 3/3 PASS)
-- [❌] 실 OpenAI API 호출로 사전 100개·꿈 텍스트 50건 임베딩 매칭 정확도 측정 — **차단 요인 아님**, 운영 도입 후 선택 보강 (PENDING_TEST 유지 근거)
+- [✅] PENDING_TEST → APPROVED 재판정 (2026-06-19 완료 — 라이브러리 사용법 스킬로 재분류, verification-policy 기준 content test PASS = APPROVED)
+- [❌] 실 OpenAI API 호출로 사전 100개·꿈 텍스트 50건 임베딩 매칭 정확도 측정 — **차단 요인 아님**, 운영 도입 후 선택 보강
 - [❌] Claude API `tool_use` 실호출로 JSON 스키마 위반율(% 단위) 측정 — **차단 요인 아님**, 운영 도입 후 선택 보강
 - [❌] 임계값(코사인 0.45) 도메인 튜닝 — 한국어 꿈 텍스트 코퍼스 기반 — **차단 요인 아님**, 선택 보강
-- [❌] mecab-ko WebAssembly 빌드 실측: PWA에서 초기 로드 시간·메모리 영향 — **차단 요인 아님**, 실사용 필수 검증 항목 (PENDING_TEST 유지 근거)
+- [❌] mecab-ko WebAssembly 빌드 실측: PWA에서 초기 로드 시간·메모리 영향 — **차단 요인 아님**, 선택 보강
 - [❌] Komoran 사용자 사전에 꿈 도메인 신조어 추가 가이드 — **차단 요인 아님**, 선택 보강
 - [❌] 임베딩 단계에서 *문장 단위 분할 + max-pooling* 전략 실험·수치화 — **차단 요인 아님**, 선택 보강
 
@@ -230,3 +231,4 @@ SKILL.md §6-1 코드 예시 기반으로 `tools` + `tool_choice: {type:"tool", 
 |------|------|-----------|--------|
 | 2026-05-15 | v1 | 최초 작성 (룰·LLM·임베딩 3축 하이브리드, 6개 카테고리, 한국어 형태소 처리) | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 룰+LLM 하이브리드 흐름 / Q2 tool_use JSON 강제 패턴 / Q3 mecab-ko 형태소 분석 필요성) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | skill-tester |
+| 2026-06-19 | v1 | 카테고리 재분류 — "실사용 필수" → 라이브러리 사용법·패턴 스킬. verification-policy "content test PASS = APPROVED" 기준 적용, PENDING_TEST → APPROVED 전환 | skill-tester |

@@ -2,7 +2,7 @@
 skill: reqwest
 category: backend
 version: v1
-date: 2026-04-17
+date: 2026-06-20
 status: APPROVED
 ---
 
@@ -164,3 +164,4 @@ status: APPROVED
 | 2026-04-09 | v1 | 최초 작성, rust-backend-developer 활용 테스트 완료 | rust-backend-developer 에이전트 |
 | 2026-04-17 | v2 | verification.md 신규 8섹션 포맷으로 마이그레이션 | 메인 대화 오케스트레이션 |
 | 2026-04-17 | v3 | WebSearch 7개 클레임 교차 검증, DISPUTED 1건 수정 (reqwest 내장 retry v0.12.23+) | 메인 대화 오케스트레이션 |
+| 2026-06-20 | v4 | 버전 재검증 — reqwest 0.13.11 (2026-05-28 릴리즈) 확인. 현재 문서는 0.12.x 유지, SKILL.md에 0.13 마이그레이션 노트(rustls 기본 TLS, MSRV 1.85, dns_resolver2, Url serde feature 변경) 추가 | 버전 재검증 작업 |

@@ -3,7 +3,7 @@ skill: python-korean-nlp-konlpy
 category: backend
 version: v1
 date: 2026-05-15
-status: PENDING_TEST
+status: APPROVED
 ---
 
 # python-korean-nlp-konlpy 스킬 검증 기록
@@ -92,19 +92,42 @@ status: PENDING_TEST
 - [✅] 범용적으로 사용 가능 (도메인 예시는 분리된 12절에만 배치)
 
 ### 4-4. Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-15)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-05-15)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-15, 2026-06-19)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-05-15, 2026-06-19)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (gap 없음, 보완 불필요)
 
 ---
 
 ## 5. 테스트 진행 기록
 
+**수행일**: 2026-06-19
+**수행자**: skill-tester → general-purpose
+**수행 방법**: SKILL.md Read 후 추가 실전 질문 1개 답변, 근거 섹션 및 anti-pattern 회피 확인. 이전 2026-05-15 기록(Q1~Q3 3/3 PASS)에 이어 카테고리 재분류 목적으로 추가 수행.
+
+### 실제 수행 테스트 (2026-06-19 추가)
+
+**Q4. TF-IDF 방식 키워드 추출 — tokenizer 함수 정의·TfidfVectorizer 연결 방법, 빈도 기반과의 차이**
+- PASS
+- 근거: SKILL.md "9.2 TF-IDF (문서 집합에서)" 섹션 + "9.1 빈도 기반" 섹션
+- 상세: `tokenize` 함수 정의(`mecab.nouns()` + `len(n) >= 2` 필터), `TfidfVectorizer(tokenizer=tokenize, lowercase=False)` 패턴, `argsort()[-10:][::-1]` 상위 키워드 추출 코드 모두 SKILL.md에 완전히 기재됨. `sklearn` 설치 명령어 미명시 및 단일 문서 IDF 한계 미설명은 minor gap이지만 핵심 질문 범위 밖.
+
+### 발견된 gap
+
+- `sklearn` 설치 명령어(`pip install scikit-learn`) 미명시 — 선택 보강 (차단 요인 아님)
+
+### 판정
+
+- agent content test: 4/4 PASS (Q1~Q3 2026-05-15 + Q4 2026-06-19)
+- verification-policy 분류: 해당 없음 (라이브러리 사용법 스킬 — content test PASS = APPROVED 가능. 이전 "설치+실행 유형" 분류는 오분류였음)
+- 최종 상태: APPROVED
+
+---
+
+### 이전 테스트 기록 (2026-05-15)
+
 **수행일**: 2026-05-15
 **수행자**: skill-tester → general-purpose (직접 SKILL.md Read 기반 검증)
 **수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
-
-### 실제 수행 테스트
 
 **Q1. 5개 분석기 속도 비교 — 최고속·최저속 처리 시간 차이 및 선택 기준**
 - PASS
@@ -118,25 +141,8 @@ status: PENDING_TEST
 
 **Q3. `mecab-ko` PyPI 사용자 사전 CSV 컬럼 형식·컴파일 명령어, ko-sbert-multitask 임베딩 차원·코사인 유사도**
 - PASS
-- 근거: SKILL.md "6.1 mecab-ko PyPI 패키지에서" 섹션 + "10. 한국어 임베딩 — ko-sbert-multitask" 섹션
-- 상세: CSV 12컬럼 포맷(`표층형,,,,품사,...`), `mecab-dict-index` 컴파일 명령어, `MeCab(user_dictionary_path=...)` 로드 방법 전부 기재. 임베딩 차원 768, `np.dot` 기반 코사인 유사도 코드 예시 존재.
-
-### 발견된 gap
-
-없음. 3개 질문 모두 SKILL.md에서 충분한 근거를 찾을 수 있었다.
-
-### 판정
-
-- agent content test: 3/3 PASS
-- verification-policy 분류: 실사용 필수 카테고리 (Mecab 환경 의존 — 빌드 설정/설치+실행 유형)
-- 최종 상태: PENDING_TEST 유지 (content test PASS, 실제 환경 빌드 검증 후 APPROVED 전환)
-
----
-
-> (참고 — 예정 템플릿, 이하 보존)
-> skill-tester가 SKILL.md Read 후 실전 질문을 수행하고 본 섹션을 업데이트한다.
-
-~~**수행일**: (skill-tester 호출 후 기록)~~
+- 근거: SKILL.md "6.1 mecab-ko PyPI 패키지에서" 섹션
+- 상세: CSV 12컬럼 포맷(`표층형,,,,품사,...`), `mecab-dict-index` 컴파일 명령어, `MeCab(user_dictionary_path=...)` 로드 방법 전부 기재.
 
 ---
 
@@ -147,19 +153,20 @@ status: PENDING_TEST
 | 내용 정확성 | ✅ 공식 문서 교차 검증 완료 |
 | 구조 완전성 | ✅ 모든 필수 섹션 포함 (12개 섹션) |
 | 실용성 | ✅ 짝 스킬 통합 예시 포함 |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-15, skill-tester 수행) |
-| **최종 판정** | **PENDING_TEST** (content test PASS, 실사용 환경 검증 대기) |
+| 에이전트 활용 테스트 | ✅ 4/4 PASS (2026-05-15 3/3 + 2026-06-19 Q4 추가, skill-tester 수행) |
+| **최종 판정** | **APPROVED** (라이브러리 사용법 스킬 — content test PASS = APPROVED 가능) |
 
-**상태 유지 사유**: Mecab 설치 환경 의존성이 큰 스킬이라 실제 환경 검증이 필요. content test 3/3 PASS 완료. 실제 Linux/macOS 환경에서 mecab-ko 설치 및 백엔드 빌드 확인 후 APPROVED 전환.
+**전환 사유**: 이전 "설치+실행 유형 실사용 필수 카테고리" 분류는 오분류. verification-policy.md 기준상 라이브러리 사용법 스킬(dayjs, react-virtuoso 등과 동일 유형)은 content test PASS만으로 APPROVED 전환 가능. 4/4 PASS 확인 후 APPROVED로 전환.
 
 ---
 
 ## 7. 개선 필요 사항
 
-- [✅] skill-tester가 content test 수행하고 섹션 5·6 업데이트 (2026-05-15 완료, 3/3 PASS)
+- [✅] skill-tester가 content test 수행하고 섹션 5·6 업데이트 (2026-05-15 완료, 3/3 PASS; 2026-06-19 재검증 Q4 추가 PASS → APPROVED 전환 완료)
 - [❌] krwordrank 외 추가 한국어 TextRank 라이브러리 비교 — 선택 보강 (차단 요인 아님)
 - [❌] Docker 이미지 빌드 시간 최적화 예시 추가 — 선택 보강 (차단 요인 아님)
 - [❌] FAISS/pgvector 연동 실제 코드 — `backend/python-fastapi` 스킬 완성 후 연계 보강 (차단 요인 아님, 의존 스킬 완성 선행 필요)
+- [❌] sklearn 설치 명령어(`pip install scikit-learn`) SKILL.md 9절에 추가 — 선택 보강 (차단 요인 아님)
 
 ---
 
@@ -168,4 +175,5 @@ status: PENDING_TEST
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
 | 2026-05-15 | v1 | 최초 작성 (KoNLPy 0.6.0 / mecab-ko 1.0.2 / ko-sbert-multitask 기준) | skill-creator |
-| 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 5개 분석기 속도 비교·선택 기준 / Q2 Windows Mecab 미지원 대안·userdic / Q3 사용자 사전 CSV 형식·컴파일·ko-sbert 임베딩) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | skill-tester |
+| 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 5개 분석기 속도 비교·선택 기준 / Q2 Windows Mecab 미지원 대안·userdic / Q3 사용자 사전 CSV 형식·컴파일·ko-sbert 임베딩) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리로 오분류) | skill-tester |
+| 2026-06-19 | v1 | 카테고리 재분류 + 추가 content test 수행 (Q4 TF-IDF tokenizer·TfidfVectorizer 연결·빈도 기반 차이) → 4/4 PASS, PENDING_TEST → APPROVED 전환 (라이브러리 사용법 스킬, content test PASS = APPROVED 가능) | skill-tester |

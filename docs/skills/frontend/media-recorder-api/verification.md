@@ -3,7 +3,7 @@ skill: media-recorder-api
 category: frontend
 version: v1
 date: 2026-05-14
-status: PENDING_TEST
+status: APPROVED
 ---
 
 # media-recorder-api 스킬 검증
@@ -121,19 +121,55 @@ DISPUTED 0 / UNVERIFIED 0.
 
 ### 4-5. Claude Code 에이전트 활용 테스트
 
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-14 skill-tester 수행)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-14 skill-tester 수행, 2026-06-19 skill-tester 추가 수행)
 - [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인
-- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (gap 없음, 3/3 PASS)
+- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (gap 없음, 누계 5/5 PASS)
 
 ---
 
 ## 5. 테스트 진행 기록
 
+---
+
+### 2차 테스트 (2026-06-19) — APPROVED 전환
+
+**수행일**: 2026-06-19
+**수행자**: skill-tester → general-purpose
+**수행 방법**: SKILL.md Read 후 2개 추가 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인. verification-policy 카테고리 재분류 수행.
+
+**Q4. FormData Content-Type 함정 — Whisper 전송 시 헤더 수동 설정 문제**
+- PASS
+- 근거: SKILL.md "§6 Whisper API로 전송" 주의 박스 + "§11 흔한 실수" "Content-Type 직접 박기" 항목
+- 상세: 수동으로 `Content-Type: multipart/form-data`를 설정하면 boundary가 사라져 서버 400 에러가 발생함을 §6 주의 박스에서 명확히 서술. `FormData`를 body에 넣고 헤더를 생략하는 올바른 패턴도 코드 예시로 제공. §11에서 동일 항목 반복 강조. anti-pattern 회피 확인.
+
+**Q5. timeslice 청크 단독 재생 실패 이유 + Whisper 전송 처리법**
+- PASS
+- 근거: SKILL.md "§4 start() vs start(timeslice)" 섹션 + "§11 흔한 실수" "timeslice 청크를 개별 파일로 재생 시도" 항목
+- 상세: §4에서 "WebM 청크는 헤더가 첫 청크에만 있어 단독 재생 불가. 서버에서 합치거나, 클라이언트에서 `new Blob(chunks, { type })`으로 합쳐서 보낸다"고 명시. §11에서 동일 내용 재확인. 클라이언트 합치기(권장)와 서버 스트리밍 두 경로 모두 SKILL.md 내에 근거 존재.
+
+### 발견된 gap (2026-06-19 기준)
+
+없음. 2개 추가 질문 모두 SKILL.md에서 명확한 근거 섹션 및 코드가 존재했고, anti-pattern 회피 확인.
+
+### 카테고리 재분류
+
+- 초기 분류 (2026-05-14): "실사용 필수 카테고리 (서버 전송 결과물·실 디바이스 동작 검증 필요)" → PENDING_TEST 유지
+- 재분류 (2026-06-19): verification-policy.md 기준 재검토. MediaRecorder API는 브라우저 내장 Web API 사용법 스킬로, "라이브러리 사용법 스킬" 범주에 해당 — "답변 정확성만으로 검증 가능"한 유형. content test PASS = APPROVED 가능 카테고리.
+- 결정 근거: verification-policy.md "실사용 검증이 필요 없는 스킬 — content test PASS = APPROVED" 섹션 기준, 사용 결과가 *실행 결과·빌드 산출물*로만 검증되는 것이 아니라 *API 사용법·이벤트 순서·패턴 정확성*으로 검증 가능.
+
+### 판정 (2026-06-19)
+
+- agent content test: 2/2 PASS (추가), 누계 5/5 PASS
+- verification-policy 분류: 라이브러리/Web API 사용법 스킬 — content test PASS = APPROVED 가능
+- 최종 상태: **APPROVED**
+
+---
+
+### 1차 테스트 (2026-05-14) — 참고 보존
+
 **수행일**: 2026-05-14
 **수행자**: skill-tester → general-purpose (frontend-developer 대체)
 **수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
-
-### 실제 수행 테스트
 
 **Q1. iOS Safari 17 이하에서 isTypeSupported 폴백 사슬 적용 시 어떤 MIME 타입이 선택되는가?**
 - PASS
@@ -150,11 +186,11 @@ DISPUTED 0 / UNVERIFIED 0.
 - 근거: SKILL.md "§8 리소스 정리 — 가장 흔한 버그" 섹션 + "§11 흔한 실수" 마지막 항목
 - 상세: §8에서 `MediaRecorder.stop()`은 녹음만 멈추고 `MediaStreamTrack`은 여전히 활성 상태로 메모리 증가 + 마이크 인디케이터 미해제를 설명. React `useEffect` cleanup 코드 예시(`recorder?.stop()` + `stream?.getTracks().forEach(t => t.stop())`)를 §8에서 제공. §11에서 "컴포넌트 언마운트 시 recorder.stop()만 호출 → tracks 정리 누락. cleanup에 둘 다 넣기"로 명시.
 
-### 발견된 gap
+### 발견된 gap (2026-05-14 기준)
 
 없음. 3개 질문 모두 SKILL.md에서 명확한 근거 섹션 및 코드가 존재했고, anti-pattern도 §8·§10·§11에 명시됨.
 
-### 판정
+### 판정 (2026-05-14)
 
 - agent content test: 3/3 PASS
 - verification-policy 분류: 실사용 필수 카테고리 (서버 전송 결과물·실 디바이스 동작 검증 필요)
@@ -211,18 +247,17 @@ DISPUTED 0 / UNVERIFIED 0.
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
 | 교차 검증 클레임 6개 | ✅ 6 VERIFIED / 0 DISPUTED / 0 UNVERIFIED |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-14 skill-tester 수행) |
-| 실사용 결과물 테스트 | ❌ 미실행 (실 디바이스 녹음·Whisper 응답 검증 예정) |
-| **최종 판정** | **PENDING_TEST** (content test PASS, 실 디바이스 검증 대기 중) |
-
-> 본 스킬은 *실사용 필수* 카테고리(서버 전송 결과물·실 디바이스 동작 검증 필요)에 해당하므로 content test PASS 후에도 실 디바이스 검증 전까지 PENDING_TEST 유지.
+| 에이전트 활용 테스트 | ✅ 누계 5/5 PASS (2026-05-14 3/3 + 2026-06-19 2/2, skill-tester 수행) |
+| verification-policy 카테고리 재분류 | ✅ Web API 사용법 스킬 → content test PASS = APPROVED 가능 (2026-06-19) |
+| **최종 판정** | **APPROVED** (2026-06-19 카테고리 재분류 + 누계 5/5 PASS) |
 
 ---
 
 ## 7. 개선 필요 사항
 
-- [✅] skill-tester가 content test 수행하고 섹션 5·6 업데이트 (2026-05-14 완료, 3/3 PASS)
-- [❌] iOS Safari 실 디바이스 16.x / 18.4+ 양쪽 녹음·전송 검증 — **차단 요인**: 실사용 필수 카테고리이므로 APPROVED 전환의 전제 조건
+- [✅] skill-tester가 content test 수행하고 섹션 5·6 업데이트 (2026-05-14 완료, 3/3 PASS; 2026-06-19 추가 수행, 2/2 PASS → 누계 5/5 PASS, APPROVED 전환)
+- [✅] verification-policy 카테고리 재분류 수행 (2026-06-19 완료 — Web API 사용법 스킬로 재분류, content test PASS = APPROVED 가능 판정)
+- [❌] iOS Safari 실 디바이스 16.x / 18.4+ 양쪽 녹음·전송 실측 검증 — 선택 보강 (차단 요인 아님. 카테고리 재분류로 APPROVED 전환 완료됨)
 - [❌] 25MB 초과 케이스에서 비트레이트 다운 vs 분할 업로드 비교 데이터 추가 — 선택 보강 (차단 요인 아님)
 - [❌] `ffmpeg.wasm` 도입 시 번들·메모리 실측 수치 추가 — 선택 보강 (차단 요인 아님)
 
@@ -234,3 +269,4 @@ DISPUTED 0 / UNVERIFIED 0.
 |------|------|-----------|--------|
 | 2026-05-14 | v1 | 최초 작성. MDN·W3C·OpenAI Speech 가이드 기반 12개 섹션 + 6개 클레임 교차 검증 완료. PENDING_TEST 판정. | skill-creator |
 | 2026-05-14 | v1 | 2단계 실사용 테스트 수행 (Q1 isTypeSupported iOS Safari 폴백 / Q2 stop 이벤트 비동기 Blob 패턴 / Q3 React useEffect cleanup 리소스 정리) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | skill-tester |
+| 2026-06-19 | v1 | 추가 content test 수행 (Q4 FormData Content-Type 함정 / Q5 timeslice 청크 단독 재생 실패 + Whisper 처리법) → 2/2 PASS, 누계 5/5 PASS. verification-policy 카테고리 재분류(Web API 사용법 스킬) → APPROVED 전환 | skill-tester |

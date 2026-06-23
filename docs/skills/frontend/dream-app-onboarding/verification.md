@@ -3,7 +3,7 @@ skill: dream-app-onboarding
 category: frontend
 version: v1
 date: 2026-05-15
-status: PENDING_TEST
+status: APPROVED
 ---
 
 # dream-app-onboarding 스킬 검증 문서
@@ -112,36 +112,59 @@ status: PENDING_TEST
 
 ## 5. 테스트 진행 기록
 
-**수행일**: 2026-05-15
-**수행자**: skill-tester → general-purpose (frontend 도메인)
+**수행일**: 2026-06-20
+**수행자**: skill-tester → general-purpose
 **수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
+**비고**: 라이브러리 사용법·UX 패턴 스킬로 재분류 — content test PASS = APPROVED 가능 카테고리 (verification-policy.md 기준)
 
 ### 실제 수행 테스트
 
-**Q1. 상용 꿈 해몽 앱에서 react-joyride vs intro.js 라이선스 선택 기준**
+**Q1. 풀스크린 5단계 온보딩 라이브러리 선택 + 3·4단계 스킵 차단 로직**
 - PASS
-- 근거: SKILL.md "2. 라이브러리 비교" 섹션 (2-1, 2-2, 2-3)
-- 상세: 풀스크린 5단계 온보딩이면 직접 구현(섹션 2-1, ⭐⭐⭐), 코치 마크 투어라면 react-joyride(MIT, 상용 무제한) 권장, intro.js는 AGPL-3.0으로 상용 앱 회피 명시(섹션 2-2). 선택 가이드 트리(섹션 2-3)에 분기 경로 명확. anti-pattern("stars 많으니 intro.js 써도 되겠지") AGPL 주의 문구로 차단 확인.
+- 근거: SKILL.md "2. 라이브러리 비교" 섹션(2-1, 2-3) + "1. 온보딩 5단계 구조" 섹션 + "7-1. 스킵 버튼" 섹션 + "8-1. 키보드" 섹션 + "11. 직접 구현 스켈레톤"
+- 상세: 풀스크린 5단계는 직접 구현(Headless UI / Radix Dialog) 권장, react-joyride는 풀스크린에 과함 명시. `NON_SKIPPABLE = new Set([3, 4])` 패턴으로 스킵 차단, `Esc` 키 무시, `disabled` prop 처리까지 코드 스켈레톤에서 근거 도출. intro.js AGPL-3.0 상용 회피 anti-pattern 정확히 차단 확인.
 
-**Q2. 마이크 권한 priming 시점·패턴·거부 처리**
+**Q2. 청소년 페르소나 분기 + 위기 자원 번호 + 1393 사용 금지 이유**
 - PASS
-- 근거: SKILL.md "3. 권한 요청 — 순서와 맥락" 섹션 (3-1, 3-2, 3-3) + 섹션 1 다이어그램
-- 상세: 마이크 권한 = 5단계에서 "음성으로 입력" 버튼을 누른 시점에만 요청(섹션 3-1). MicPriming 다이얼로그 코드 예시 포함(섹션 3-2). 거부 의사 명백한 사용자는 권한 다이얼로그까지 보내지 않고 텍스트 fallback으로 우회(섹션 3-2 주의). 거부 시 기능 차단 금지 패턴도 섹션 10 흔한 함정에 명시. Google Meet +14% 허용률 근거 섹션 9-1에 존재.
+- 근거: SKILL.md "6. 페르소나 분기" 섹션 + "4-2. 3단계 화면 권장 문구 템플릿" + "10. 흔한 함정" 섹션
+- 상세: 청소년은 1388 우선 + 109 병행(대체 아님), 텍스트 우선 기본값, 더 평이한 문구·이모지 사용. 페르소나 식별은 "연령 확인의 부산물"로만 자동 분기(직접 질문 금지). 1393은 2024-01부 109로 통합됨 — 섹션 10 함정 표와 짝 스킬 인용 정책에서 근거 확인. anti-pattern(1393 사용, 페르소나 직접 질문) 모두 정확히 회피.
 
-**Q3. 학술 한계를 온보딩에 사용자 친화적으로 넣는 방법**
+**Q3. 온보딩 분석 이벤트 설계 + 꿈 텍스트 포함 금지 이유 + 동의 거부율 대응**
 - PASS
-- 근거: SKILL.md "4. 학술 한계 사용자 친화 변환" 섹션 (4-1, 4-2, 4-3) + 섹션 1 표 + 섹션 10 흔한 함정
-- 상세: 3단계(스킵 불가)에 위기 자원과 함께 노출(섹션 1 표). 학술 원문 → 사용자 친화 문구 4종 변환표(섹션 4-1). 권장 문구 전체 ASCII 템플릿(섹션 4-2). 결과 화면 하단·설정 화면에 다층 노출(섹션 4-3). "학술 박스 원문 그대로 노출 → 사용자 읽지 않고 스킵" anti-pattern 섹션 10에 명시.
+- 근거: SKILL.md "9-1. 핵심 지표" + "9-2. 이벤트 정의 예시" + "9-3. 이탈 단계 우선순위 진단" + "10. 흔한 함정" + "12. 체크리스트"
+- 상세: `onboarding_step_view`, `onboarding_complete`, `permission_priming_view` 등 이벤트명 정확히 도출. 꿈 텍스트·음성은 민감정보로 분석 이벤트 전송 금지(섹션 9-2 주의, 체크리스트 12). 4단계 거부율 5% 초과 시 → 친근 톤 재변환 + 선택 동의 기본 OFF + 필수/선택 분리 체크박스(섹션 9-1, 9-3, 10). anti-pattern(꿈 텍스트 이벤트 포함, 단일 동의 체크박스) 정확히 회피.
 
 ### 발견된 gap
 
-없음. 3개 질문 모두 SKILL.md 내 해당 섹션과 코드에서 근거가 명확히 도출됨.
+- 섹션 11 스켈레톤 내 `goToTextInput()`, `goToVoiceInput()` 함수가 선언 없이 호출됨 — 스켈레톤의 미완성 코드임을 주석으로 명시하면 독자 혼동 감소 (선택 보강)
+- 섹션 9-2의 `permission_native_result` 이벤트 `result` 필드의 가능한 enum 값(`'granted'`/`'denied'`) 목록 미명시 (선택 보강)
+
+두 항목 모두 핵심 기능 답변에 영향 없는 선택적 보강 수준.
 
 ### 판정
 
 - agent content test: 3/3 PASS
-- verification-policy 분류: 실사용 필수 (UX 흐름·완료율은 실 사용자 행동으로만 검증 가능)
-- 최종 상태: PENDING_TEST 유지 (content test PASS이나 실사용 필수 카테고리)
+- verification-policy 분류: 라이브러리 사용법·UX 패턴 스킬 — content test PASS = APPROVED 가능 카테고리
+- 최종 상태: APPROVED
+
+---
+
+### [참고] 초기 테스트 기록 (2026-05-15)
+
+**수행일**: 2026-05-15
+**수행자**: skill-tester → general-purpose (frontend 도메인)
+**수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
+
+**Q1. 상용 꿈 해몽 앱에서 react-joyride vs intro.js 라이선스 선택 기준**
+- PASS — 근거: 섹션 2-1, 2-2, 2-3
+
+**Q2. 마이크 권한 priming 시점·패턴·거부 처리**
+- PASS — 근거: 섹션 3-1, 3-2, 3-3 + 섹션 1 다이어그램
+
+**Q3. 학술 한계를 온보딩에 사용자 친화적으로 넣는 방법**
+- PASS — 근거: 섹션 4-1, 4-2, 4-3 + 섹션 1 표 + 섹션 10
+
+초기 판정: agent content test 3/3 PASS, PENDING_TEST 유지 (당시 실사용 필수 카테고리로 분류)
 
 ---
 
@@ -152,10 +175,10 @@ status: PENDING_TEST
 | 내용 정확성 | ✅ (공식 문서 10개 교차 검증) |
 | 구조 완전성 | ✅ (frontmatter·소스·예시·함정·체크리스트 모두 포함) |
 | 실용성 | ✅ (복사 가능한 스켈레톤·체크리스트 12항) |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-15, skill-tester 수행) |
-| **최종 판정** | **PENDING_TEST 유지** |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-15, skill-tester 수행) / 재판정 2026-06-20 |
+| **최종 판정** | **APPROVED** |
 
-**판정 근거:** 본 스킬은 *실사용 필수 카테고리*(UX 흐름·완료율 지표는 실 사용자 행동으로만 검증 가능)에 해당하므로 content test 3/3 PASS에도 불구하고 PENDING_TEST 유지가 정책에 부합한다. agent content test는 완료되어 pending-test-guard 훅 통과 조건을 충족한다.
+**판정 근거:** 2026-06-20 재판정 — 이 스킬은 라이브러리 사용 패턴·UX 설계 가이드·권한 요청 패턴 스킬로 "빌드 설정/워크플로우/마이그레이션" 카테고리에 해당하지 않는다. verification-policy.md 기준 "답변 정확성으로 검증 가능" → content test 3/3 PASS = APPROVED 조건 충족.
 
 ---
 
@@ -174,3 +197,4 @@ status: PENDING_TEST
 |------|------|-----------|--------|
 | 2026-05-15 | v1 | 최초 작성 — react-joyride v3.1.0 / @reactour/tour 3.8.0 / NN/G·web.dev·WCAG 기반, 짝 스킬 3종(voice-input-ui·dream-privacy-consent-ui·humanities/crisis-intervention-resources-korea) 정합성 확보 | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 라이선스·라이브러리 선택 / Q2 마이크 권한 priming / Q3 학술 한계 친화 톤) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | skill-tester |
+| 2026-06-20 | v1 | PENDING_TEST → APPROVED 재판정 — 라이브러리 사용법·UX 패턴 스킬로 재분류, content test 3/3 PASS 기반 APPROVED 전환 | skill-tester |

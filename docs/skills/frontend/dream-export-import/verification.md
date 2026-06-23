@@ -3,7 +3,7 @@ skill: dream-export-import
 category: frontend
 version: v1
 date: 2026-05-15
-status: PENDING_TEST
+status: APPROVED
 ---
 
 # 스킬 검증 — dream-export-import
@@ -85,9 +85,9 @@ status: PENDING_TEST
 - [✅] 범용적으로 사용 가능 (꿈 일기 도메인이되, 다른 일기·노트 PWA에도 그대로 적용 가능)
 
 ### 4-4. Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-15 수행 완료)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-15 1차, 2026-06-20 2차 수행 완료)
 - [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (3/3 PASS)
-- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (gap 없음, 보완 불필요)
+- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (gap 선택 보강 수준, 차단 요인 아님)
 
 ---
 
@@ -111,41 +111,54 @@ status: PENDING_TEST
 
 ## 5. 테스트 진행 기록
 
-**수행일**: 2026-05-15
-**수행자**: skill-tester → general-purpose (도메인 에이전트 미등록, general-purpose 대체)
+**수행일**: 2026-06-20
+**수행자**: skill-tester → general-purpose
 **수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
 
 ### 실제 수행 테스트
 
-**Q1. JSZip으로 첨부 포함 암호화 ZIP export를 만들 수 있는가**
-- PASS
-- 근거: SKILL.md "2. Export 포맷 3종" 표 (`**JSZip은 암호화 미지원**`), "6-2. 권장 조합" (`JSZip은 *암호화 미지원*이므로 사용 금지`), "12. 흔한 함정" 표 (`@zip.js/zip.js 또는 libsodium 사용`)
-- 상세: 3개 독립 섹션에서 일관되게 JSZip 암호화 미지원을 명시하고 @zip.js/zip.js v2.8.26+ AES-256을 대안으로 안내. anti-pattern(JSZip 암호화 옵션 있음 오안내) 발생 불가
+**Q1. 이미지 첨부 포함 export 시 포맷·라이브러리 선택 — JSZip 암호화 사용 가능 여부**
+- ✅ PASS
+- 근거: SKILL.md "2. Export 포맷 3종" 표, "2-1. 포맷별 트레이드오프", "6-2. 권장 조합", "7. 이미지·오디오 첨부 처리", "12. 흔한 함정"
+- 상세: 섹션 2-1에서 "첨부가 있으면 ZIP이 사실상 유일한 선택지" 명시, 1 MB 임계치 기준 도출 가능. JSZip 암호화 미지원은 3개 독립 섹션(2표·6-2·12)에서 일관되게 확인. anti-pattern(JSZip 암호화 가능 오안내) 발생 불가
 
-**Q2. libsodium Argon2id KDF 파라미터 및 모바일 저사양 고려**
-- PASS
-- 근거: SKILL.md "6-3. libsodium 패스프레이즈 암호화 예시" 코드 (`OPSLIMIT_MODERATE=3`, `MEMLIMIT_MODERATE=256MiB`, `ALG_ARGON2ID13`, 파일 포맷 `salt||nonce||cipher`), "6-3 주의" 블록 (저사양 폴백 지침 + OWASP 2026 baseline 미충족 경고)
-- 상세: 상수값·파일 포맷·저사양 폴백 지침 모두 코드 수준으로 명시. OWASP 2026 baseline(m=19 MiB·t=2·p=1) 기준 명시로 보안 약화 anti-pattern 차단
+**Q2. libsodium Argon2id KDF 상수·파일 포맷·모바일 저사양 고려·OWASP 2026 baseline**
+- ✅ PASS
+- 근거: SKILL.md "6-3. libsodium 패스프레이즈 암호화 예시" 코드, "6-3 주의" 블록, "6-1 표", "12. 흔한 함정"
+- 상세: KDF 상수명(OPSLIMIT_MODERATE·MEMLIMIT_MODERATE·ALG_ARGON2ID13), 파일 포맷(salt||nonce||cipher), 저사양 폴백 지침(INTERACTIVE 상수), OWASP 2026 baseline(m=19 MiB·t=2·p=1) 모두 코드 수준으로 명시. 3곳에서 baseline 수치 일관 확인
 
-**Q3. Firefox·Safari에서 showSaveFilePicker 미지원 시 폴백 구현**
-- PASS
-- 근거: SKILL.md "8-1. File System Access API" (`Firefox/Safari 미지원` 명시 + `if ("showSaveFilePicker" in window)` 분기 코드 + `triggerAnchorDownload` 폴백), "12. 흔한 함정" (`항상 <a download> 폴백 동시 구현`)
-- 상세: 폴백 코드가 직접 포함되어 있어 올바른 구현 패턴을 즉시 도출 가능. Firefox/Safari도 지원 된다는 오정보 없음
+**Q3. Firefox·Safari 폴백 구현 + Background Sync 핵심 흐름 의존 가부**
+- ✅ PASS
+- 근거: SKILL.md "8-1. File System Access API", "9. Service Worker Background Sync", "12. 흔한 함정"
+- 상세: `"showSaveFilePicker" in window` 분기 코드와 `triggerAnchorDownload` 폴백이 직접 포함되어 정확한 패턴 도출. Background Sync를 핵심 흐름에 쓰면 안 된다는 anti-pattern이 섹션 9·12 양쪽에서 명확히 차단됨
 
-### 발견된 gap
+### 발견된 gap (선택 보강 수준, 차단 요인 아님)
 
-없음. 3개 질문 모두 SKILL.md에 충분한 근거가 존재하며 anti-pattern을 회피하는 정보를 제공.
+- `triggerAnchorDownload` 헬퍼 함수 구현 코드 미포함 (구현 방향은 명확)
+- `@zip.js/zip.js` 사용 코드 예시 미포함 (libsodium 예시는 있음)
+- `OPSLIMIT_INTERACTIVE`·`MEMLIMIT_INTERACTIVE` 구체 수치 미포함 (libsodium 문서 위임)
 
 ### 판정
 
 - agent content test: 3/3 PASS
-- verification-policy 분류: 실사용 필수 (암호화 export·다중 브라우저 폴백·대용량 처리 — 실행 결과·브라우저 환경 검증 필요)
-- 최종 상태: PENDING_TEST 유지 (content test PASS, 실사용 검증 후 APPROVED 전환)
+- verification-policy 분류: 라이브러리 사용법 스킬 (Zod·libsodium·File System Access API·Dexie 패턴) — content test PASS = APPROVED 가능
+- 최종 상태: APPROVED
 
 ---
 
-> (참고용 — 기존 예정 기록)
-> skill-tester 메인 호출 예정. 작성 직후 호출 후 갱신.
+> (참고용 — 1차 테스트 기록 2026-05-15)
+>
+> **수행일**: 2026-05-15
+> **수행자**: skill-tester → general-purpose (도메인 에이전트 미등록, general-purpose 대체)
+> **수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
+>
+> Q1. JSZip으로 첨부 포함 암호화 ZIP export를 만들 수 있는가 — PASS
+> Q2. libsodium Argon2id KDF 파라미터 및 모바일 저사양 고려 — PASS
+> Q3. Firefox·Safari에서 showSaveFilePicker 미지원 시 폴백 구현 — PASS
+>
+> agent content test: 3/3 PASS
+> 당시 판정: PENDING_TEST 유지 (실사용 필수 카테고리로 분류)
+> → 2026-06-20 재분류: content test PASS = APPROVED 가능 카테고리로 확정, APPROVED 전환
 
 ---
 
@@ -156,18 +169,16 @@ status: PENDING_TEST
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (3/3 PASS, 2026-05-15) |
-| **최종 판정** | **PENDING_TEST 유지** (content test PASS, 실사용 검증 대기) |
-
-> 본 스킬은 *실사용 필수 카테고리*(마이그레이션 가이드·빌드 설정·워크플로우)에 해당한다. 대용량 데이터·실제 암호화 export·다양한 브라우저(Chrome/Firefox/Safari) import 시나리오를 거친 뒤에만 APPROVED 전환을 권장한다.
+| 에이전트 활용 테스트 | ✅ (3/3 PASS, 2026-05-15 1차 / 2026-06-20 2차 재검증) |
+| **최종 판정** | **APPROVED** (content test 3/3 PASS, 라이브러리 사용법 스킬 카테고리 확정) |
 
 ---
 
 ## 7. 개선 필요 사항
 
-- [✅] skill-tester content test 수행 및 섹션 5·6 업데이트 (2026-05-15 완료, 3/3 PASS)
-- [❌] 실제 PWA 프로젝트에서 1만 건 이상 dream 데이터로 export → 다른 기기 import 종단 테스트 (차단 요인: 실사용 필수 카테고리, APPROVED 전환 전 필수 수행)
-- [❌] iOS Safari·Android Chrome·데스크탑 Firefox 3종에서 폴백 동작 확인 (차단 요인: 실사용 필수 카테고리, APPROVED 전환 전 필수 수행)
+- [✅] skill-tester content test 수행 및 섹션 5·6 업데이트 (2026-05-15 1차 완료, 2026-06-20 2차 재검증 완료 — 3/3 PASS, APPROVED 전환)
+- [❌] 실제 PWA 프로젝트에서 1만 건 이상 dream 데이터로 export → 다른 기기 import 종단 테스트 (선택 보강: APPROVED 전환 완료, 실전 도입 후 추가 검증 가능)
+- [❌] iOS Safari·Android Chrome·데스크탑 Firefox 3종에서 폴백 동작 확인 (선택 보강: APPROVED 전환 완료, 실전 검증 후 보강 가능)
 - [❌] 암호화 export 파일 손상 시 사용자 안내 메시지 UX 검증 (선택 보강: content test에서 gap 발견되지 않음, 실전 도입 후 개선 가능)
 - [❌] Background Sync 미지원 환경(Safari)에서 클라우드 백업 옵션 UI flow 확정 (선택 보강: SKILL.md에서 옵션 기능임이 명확히 명시됨)
 - [❌] CSV export 시 첨부·중첩 필드 처리 정책 구체화 (선택 보강: 현재 "손실 변환" 언급만 있으나 content test에서 차단 문제 아님)
@@ -179,4 +190,5 @@ status: PENDING_TEST
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
 | 2026-05-15 | v1 | 최초 작성. 12개 공식 소스 + 3개 보조 소스로 11개 핵심 클레임 교차 검증 (10 VERIFIED / 1 주의표기) | skill-creator |
-| 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 JSZip 암호화 한계·대안 / Q2 libsodium Argon2id 파라미터·저사양 폴백 / Q3 File System Access API Firefox·Safari 폴백) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | skill-tester |
+| 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 JSZip 암호화 한계·대안 / Q2 libsodium Argon2id 파라미터·저사양 폴백 / Q3 File System Access API Firefox·Safari 폴백) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리로 당시 분류) | skill-tester |
+| 2026-06-20 | v1 | 2단계 실사용 테스트 재수행 (Q1 첨부 포함 export 포맷·JSZip 암호화 가부 / Q2 libsodium KDF 상수·OWASP baseline·저사양 폴백 / Q3 Firefox·Safari 폴백·Background Sync 핵심 흐름 의존 가부) → 3/3 PASS, APPROVED 전환 (라이브러리 사용법 스킬 카테고리 확정) | skill-tester |

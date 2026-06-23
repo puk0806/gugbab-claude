@@ -1,8 +1,8 @@
 ---
 skill: custom-middleware
 category: backend
-version: v2
-date: 2026-04-09
+version: v3
+date: 2026-06-20
 status: APPROVED
 ---
 
@@ -171,3 +171,4 @@ cargo check 컴파일 검증 결과 (2026-04-08): axum 0.8.8 실설치 환경에
 | 2026-04-09 | v1 | 최초 작성, cargo check 컴파일 검증 완료 | rust-backend-developer 에이전트 |
 | 2026-04-17 | v2 | verification.md 신규 8섹션 포맷으로 마이그레이션 | 메인 대화 오케스트레이션 |
 | 2026-04-17 | v3 | fact-checker WebSearch 교차 검증 완료 (VERIFIED 6, DISPUTED 1, UNVERIFIED 1); DISPUTED 1건 수정 반영: Next 제네릭 제거 기점 0.8 → 0.7 | WebSearch 직접 검증 |
+| 2026-06-20 | v4 | 버전 재검증 — axum 0.8.9 확인 (최신). SKILL.md는 0.8.x 범위 표기이므로 변경 없음. breaking change 없음 | 버전 재검증 작업 |

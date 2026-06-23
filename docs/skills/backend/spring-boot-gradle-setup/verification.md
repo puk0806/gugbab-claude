@@ -2,7 +2,7 @@
 skill: spring-boot-gradle-setup
 category: backend
 version: v1
-date: 2026-04-22
+date: 2026-06-19
 status: APPROVED
 ---
 
@@ -226,3 +226,4 @@ Spring Boot 3.4, Java 21, Kotlin DSL로 REST API 프로젝트의 build.gradle.kt
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
 | 2026-04-22 | v1 | 최초 작성 (레거시 2.5.12 + 모던 3.4 양쪽 커버) | skill-creator |
+| 2026-06-19 | v1 | Spring Boot 4.x 마이그레이션 섹션 추가 (섹션 9 — Gradle 8.14+, Jackson 3.0 Group ID 변경, Undertow 제거, 마이그레이션 순서). 검증일 갱신. | Claude (Sonnet 4.6) |

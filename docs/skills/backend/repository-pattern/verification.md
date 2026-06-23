@@ -1,8 +1,8 @@
 ---
 skill: repository-pattern
 category: backend
-version: v1
-date: 2026-04-09
+version: v2
+date: 2026-06-20
 status: APPROVED
 ---
 
@@ -166,3 +166,4 @@ status: APPROVED
 | 2026-04-09 | v1 | 최초 작성, rust-backend-developer 활용 테스트 완료 | rust-backend-developer 에이전트 |
 | 2026-04-17 | v2 | verification.md 신규 8섹션 포맷으로 마이그레이션 | 메인 대화 오케스트레이션 |
 | 2026-04-17 | v3 | WebSearch 교차 검증 완료 (8개 클레임 VERIFIED, DISPUTED 0건, SKILL.md 수정 없음) | 메인 대화 오케스트레이션 |
+| 2026-06-20 | v4 | 버전 재검증 — thiserror 2.0.18 확인 (이미 2.x 기준, 변경 없음). trait-variant 0.1.x 유지 확인. SKILL.md 수정 없음 | 버전 재검증 작업 |

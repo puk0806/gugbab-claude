@@ -2,7 +2,7 @@
 skill: hikaricp-tuning-oracle-mysql
 category: backend
 version: v1
-date: 2026-04-22
+date: 2026-06-19
 status: APPROVED
 ---
 
@@ -240,3 +240,4 @@ Oracle DB 재시작 후 HikariCP 커넥션 복구가 오래 걸린다
 |------|------|-----------|--------|
 | 2026-04-22 | v1 | 최초 작성, HikariCP 3.4.5 ~ 5.x 통합 가이드 | skill-creator |
 | 2026-04-24 | v1 | 섹션 1 ❌ 마커·섹션 6 중복 요약표 cleanup (APPROVED 상태와 일관되도록 정리) | 메인 오케스트레이션 |
+| 2026-06-19 | v1 | Spring Boot 4.x / HikariCP 7.0 마이그레이션 섹션 추가 (섹션 11 — HikariCP 번들 버전표, 설정 키 변경 없음, HikariCredentialsProvider, Virtual Thread 고려사항). 검증일 갱신. | Claude (Sonnet 4.6) |

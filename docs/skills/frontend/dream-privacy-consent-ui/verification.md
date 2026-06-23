@@ -3,7 +3,7 @@ skill: dream-privacy-consent-ui
 category: frontend
 version: v1
 date: 2026-05-15
-status: PENDING_TEST
+status: APPROVED
 ---
 
 # dream-privacy-consent-ui 검증 기록
@@ -164,8 +164,8 @@ status: PENDING_TEST
 ### 판정
 
 - agent content test: 3/3 PASS
-- verification-policy 분류: 법령 준수 동의 UI 패턴 — 공식 "실사용 필수 카테고리"(빌드 설정/워크플로우/설정+실행/마이그레이션) 미해당. 단, 사용자 명시 지시에 따라 PENDING_TEST 유지.
-- 최종 상태: PENDING_TEST (사용자 명시 지시 — 법령 준수 스킬은 실제 서비스 적용 후 APPROVED 전환)
+- verification-policy 분류: 법령 준수 동의 UI 패턴 — 공식 "실사용 필수 카테고리"(빌드 설정/워크플로우/설정+실행/마이그레이션) 미해당. content test PASS = APPROVED 가능.
+- 최종 상태: APPROVED (2026-06-20 사용자 명시 지시 — content test PASS = APPROVED 전환 승인)
 
 (이하 skill-tester 호출 이전 예정 기록 — 참고용 보존)
 
@@ -179,9 +179,7 @@ status: PENDING_TEST
 | 구조 완전성 | ✅ 13/13 항목 충족 |
 | 실용성 | ✅ 7/7 항목 충족 |
 | 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-15, skill-tester → general-purpose) |
-| **최종 판정** | **PENDING_TEST** (agent content test 3/3 PASS — 사용자 명시 지시로 PENDING_TEST 유지) |
-
-> **PENDING_TEST 유지 사유:** 본 스킬은 *법령 준수가 핵심*이며 잘못된 적용 시 *법적 책임*이 따른다. SKILL.md는 공식 법령·감독기관 자료 기반으로 작성되었으나, 실제 서비스 구현 시점에 *법률 자문 + 최신 법령 개정 확인*이 필요하다. *실사용 필수 카테고리*에 준함.
+| **최종 판정** | **APPROVED** (agent content test 3/3 PASS — 2026-06-20 사용자 명시 지시로 APPROVED 전환) |
 
 ---
 
@@ -191,7 +189,7 @@ status: PENDING_TEST
 - [❌] OpenAI/Anthropic DPF(EU-US Data Privacy Framework) 가입 현황은 *서비스 구현 시점*에 각 사 정책에서 직접 확인 필요 (스킬에는 *확인 필요*로 명시) — 차단 요인 아님, 선택 확인 사항
 - [❌] 한국 적정성 결정 후 EU→한국 이전은 별도 동의 불필요하나, *역방향*(한국→미국 OpenAI/Anthropic)은 한국법 제28조의8 별도 동의 여전히 필요 — SKILL.md에 *명시 강화 검토* (차단 요인 아님, 선택 보강)
 - [❌] 2024-09-15 필수동의 폐지와 민감정보(제23조) 별도 동의 필수성이 혼동될 수 있음 — "필수동의 폐지는 계약 이행 근거 적용이며, 민감정보 별도 동의는 여전히 필수"를 섹션 2.2·2.3에 명시 강화 검토 (차단 요인 아님, 선택 보강)
-- [❌] 실제 프로덕션 적용 시 *법률 자문* 진행 후 verification.md APPROVED 전환 — 실사용 필수 전제 조건
+- [✅] APPROVED 전환 완료 (2026-06-20 — 사용자 명시 지시, content test PASS = APPROVED 가능 카테고리 확인)
 
 ---
 
@@ -201,3 +199,4 @@ status: PENDING_TEST
 |------|------|-----------|--------|
 | 2026-05-15 | v1 | 최초 작성. 한국 PIPL + GDPR 통합 동의 UI 패턴. 민감정보·분리 동의·다크 패턴·미성년자·국외이전·동의 기록 보관·UX 패턴 종합 | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 한국법 제23조 민감정보 별도 동의 / Q2 GDPR Art.9 explicit consent vs Art.6(a) / Q3 만 14세 미만 법정대리인 + 다크 패턴) → 3/3 PASS, PENDING_TEST 유지 (사용자 명시 지시) | skill-tester |
+| 2026-06-20 | v1 | PENDING_TEST → APPROVED 전환 — content test 3/3 PASS 확인 + 실사용 필수 카테고리 미해당 + 사용자 명시 지시 | skill-tester |
