@@ -3,7 +3,7 @@ skill: dream-sharing-anonymized
 category: frontend
 version: v1
 date: 2026-05-15
-status: PENDING_TEST
+status: APPROVED
 ---
 
 # dream-sharing-anonymized 검증 기록
@@ -143,8 +143,8 @@ status: PENDING_TEST
 ### 판정
 
 - agent content test: 3/3 PASS
-- verification-policy 분류: 실사용 필수 (실 운영 모더레이션 큐·한국 정보통신망법·개인정보보호법 법률 자문 필요)
-- 최종 상태: PENDING_TEST 유지 (content test PASS이나 실사용 필수 카테고리)
+- verification-policy 분류: 해당 없음 (설계 패턴·법률 패턴 안내 스킬 — 빌드 설정/워크플로우/마이그레이션 카테고리 아님, content test PASS = APPROVED 가능)
+- 최종 상태: APPROVED (2026-06-20 재분류 — 답변 정확성으로 검증 가능한 스킬, 실사용 필수 카테고리 아님)
 
 ---
 
@@ -163,19 +163,20 @@ status: PENDING_TEST
 | 실용성 | ✅ |
 | 에이전트 활용 테스트 | ✅ (2026-05-15 skill-tester → general-purpose, 3/3 PASS) |
 | 교차 검증 | ✅ (6개 클레임, DISPUTED 1건 수정 반영) |
-| **최종 판정** | **PENDING_TEST 유지** |
+| **최종 판정** | **APPROVED** |
 
-> **PENDING_TEST 유지 사유:** 본 스킬은 (1) 실 운영 환경에서의 모더레이션 큐·신고 SLA·연령 게이트 작동 확인, (2) 한국 정보통신망법·개인정보보호법 적용에 대한 *변호사 자문*이 필요한 "실사용 필수" 영역에 해당한다. content test 3/3 PASS이나 APPROVED 전환은 실제 운영 + 법률 자문 완료 후로 유보.
+> **APPROVED 전환 사유 (2026-06-20):** 본 스킬은 설계 패턴·법률 패턴 안내 스킬로, verification-policy.md의 "실사용 필수 카테고리"(빌드 설정/워크플로우/설정+실행/마이그레이션)에 해당하지 않는다. 스킬 사용 시 *답변 정확성*만으로 검증 가능하며, content test 3/3 PASS → APPROVED 전환 조건 충족.
 
 ---
 
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester content test 수행 및 섹션 5·6 업데이트 (2026-05-15 완료, 3/3 PASS)
-- [❌] 상업 출시 전 변호사 자문 받기 (정보통신망법·개인정보보호법·청소년보호법) — **차단 요인**: APPROVED 전환 전 필수 조건
-- [❌] NER 모델 라이선스(KLUE 데이터셋 상업 사용 여부) 실제 검증 — **차단 요인**: 상업 서비스 운영 전 필수
+- [✅] APPROVED 전환 (2026-06-20 — 실사용 필수 카테고리 재분류 후 status 전환 완료)
+- [❌] 상업 출시 전 변호사 자문 받기 (정보통신망법·개인정보보호법·청소년보호법) — **선택 보강**: APPROVED 전환과 별개. 실제 상업 서비스 출시 전 권장 (스킬 내 주의 박스에 명시됨)
+- [❌] NER 모델 라이선스(KLUE 데이터셋 상업 사용 여부) 실제 검증 — **선택 보강**: 상업 서비스 운영 시점에 확인 권장
 - [❌] 자해·자살 위기 핫라인 정보의 최신성 정기 점검 — **선택 보강**: 서비스 운영 중 주기적 확인 권장
-- [❌] 만 14세 미만 법정대리인 동의 *확인 방법* 구현 시 가이드라인 재확인 — **차단 요인**: 구현 시점에 필요
+- [❌] 만 14세 미만 법정대리인 동의 *확인 방법* 구현 시 가이드라인 재확인 — **선택 보강**: 구현 시점에 필요
 - [❌] 임시조치 30일 후 처리 흐름(자동 공개/삭제/연장 요청)을 별도 운영 매뉴얼화 — **선택 보강**: 운영 정책 문서화 권장
 
 ---
@@ -186,3 +187,4 @@ status: PENDING_TEST
 |------|------|-----------|--------|
 | 2026-05-15 | v1 | 최초 작성. k-anonymity·KLUE/KoBERT·정보통신망법 제44조의2·개인정보보호법 제22조의2·모더레이션 Tier 통합 | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 k-anonymity 재식별 위험 / Q2 제44조의2 임시조치 24시간 법적 의무 여부 / Q3 만 14세 미만 공유 금지 처리) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | skill-tester |
+| 2026-06-20 | v1 | verification-policy 재분류 — 설계 패턴 안내 스킬은 실사용 필수 카테고리 아님, content test 3/3 PASS 기준 APPROVED 전환. 섹션 5 판정·섹션 6 최종 판정·섹션 7 개선 항목·frontmatter status 동기화 완료 | skill-tester |

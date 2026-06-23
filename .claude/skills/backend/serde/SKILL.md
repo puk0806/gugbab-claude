@@ -6,7 +6,7 @@ description: Rust serde + serde_json 직렬화/역직렬화 핵심 패턴
 # Serde + serde_json
 
 > 소스: https://serde.rs/ , https://docs.rs/serde_json/
-> 검증일: 2026-04-06
+> 검증일: 2026-06-20
 
 ---
 

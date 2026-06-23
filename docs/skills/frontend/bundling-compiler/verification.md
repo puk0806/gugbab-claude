@@ -2,7 +2,7 @@
 skill: bundling-compiler
 category: frontend
 version: v1
-date: 2026-04-14
+date: 2026-06-20
 status: APPROVED
 ---
 
@@ -35,9 +35,9 @@ status: APPROVED
 | 스킬 이름 | bundling-compiler |
 | 스킬 경로 | `.claude/skills/frontend/bundling-compiler/SKILL.md` |
 | 최초 작성일 | 2026-03-27 |
-| 재검증일 | 2026-04-14 |
+| 재검증일 | 2026-06-20 |
 | 검증 방법 | frontend-architect 활용 테스트 |
-| 버전 기준 | Vite 5-8, Next.js 15/16, React Compiler 1.x |
+| 버전 기준 | Vite 8.0.16, Next.js 16.2.9, React Compiler 1.x |
 
 ---
 
@@ -138,3 +138,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-03-27 | v1 | 최초 작성 및 frontend-architect 활용 테스트 완료 | frontend-architect 에이전트 |
 | 2026-04-17 | v2 | verification.md 신규 8섹션 포맷으로 마이그레이션 | 메인 대화 오케스트레이션 |
+| 2026-06-20 | v3 | Turbopack 프로덕션 빌드 안정화 반영 (SKILL.md 수정) — Vite 최신 8.0.16, Next.js 16.2.9 확인 | 버전 재검증 |

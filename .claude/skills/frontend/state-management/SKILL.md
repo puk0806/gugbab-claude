@@ -6,7 +6,7 @@ description: Zustand v5 전역 상태관리, TanStack Query v5 서버 상태/캐
 # 상태 관리 패턴 (Zustand v5 + TanStack Query v5)
 
 > 소스: https://zustand.docs.pmnd.rs | https://tanstack.com/query/v5/docs
-> 검증일: 2026-03-27
+> 검증일: 2026-06-20
 
 ---
 

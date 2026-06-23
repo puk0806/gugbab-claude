@@ -2,7 +2,7 @@
 skill: monorepo-turborepo
 category: frontend
 version: v1
-date: 2026-04-14
+date: 2026-06-20
 status: APPROVED
 ---
 
@@ -35,9 +35,9 @@ status: APPROVED
 | 스킬 이름 | monorepo-turborepo |
 | 스킬 경로 | `.claude/skills/frontend/monorepo-turborepo/SKILL.md` |
 | 최초 작성일 | 2026-03-27 |
-| 재검증일 | 2026-04-14 |
+| 재검증일 | 2026-06-20 |
 | 검증 방법 | frontend-architect 활용 테스트 |
-| 버전 기준 | Turborepo 2.x, pnpm 최신 |
+| 버전 기준 | Turborepo 2.9.18, pnpm 11.8.0 |
 
 ---
 
@@ -135,3 +135,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-03-27 | v1 | 최초 작성 및 frontend-architect 활용 테스트 완료 | frontend-architect 에이전트 |
 | 2026-04-17 | v2 | verification.md 신규 8섹션 포맷으로 마이그레이션 | 메인 대화 오케스트레이션 |
+| 2026-06-20 | v3 | 버전 재검증 — Turborepo 2.9.18 최신, pnpm 11.8.0 최신 확인. pnpm 11 + Turborepo 호환성 주의 노트 SKILL.md에 추가 | 버전 재검증 |

@@ -7,11 +7,11 @@ description: Rust JWT 인증 패턴 - jsonwebtoken 크레이트 + Axum 미들웨
 
 > 소스: https://docs.rs/jsonwebtoken/latest/jsonwebtoken/ | https://github.com/Keats/jsonwebtoken
 > 소스: https://docs.rs/axum/latest/axum/middleware/
-> 검증일: 2026-04-07
+> 검증일: 2026-06-20
 
-> 주의: 이 문서는 jsonwebtoken 9.x / axum 0.8.x 기준으로 작성되었습니다. 버전 변경 시 API 시그니처와 기본값이 달라질 수 있으므로 공식 docs.rs를 반드시 확인하세요.
+> 주의: 이 문서는 jsonwebtoken 10.x / axum 0.8.x 기준으로 작성되었습니다. 버전 변경 시 API 시그니처와 기본값이 달라질 수 있으므로 공식 docs.rs를 반드시 확인하세요.
 
-> 주의: jsonwebtoken 9.x는 내부적으로 `time ^0.3`에 의존합니다. Rust 1.84 이하 환경에서는 `time` 최신 버전이 빌드되지 않을 수 있습니다. 이 경우 `Cargo.toml`에 `time = "=0.3.36"`을 명시하거나 Rust를 1.85+로 업그레이드하세요.
+> 주의: jsonwebtoken 10.0부터 암호화 백엔드를 feature flag로 명시적으로 선택해야 합니다. `aws_lc_rs` 또는 `rust_crypto` 중 하나를 반드시 지정해야 합니다. 9.x에서 마이그레이션 시 Cargo.toml 변경이 필요합니다.
 
 ---
 
@@ -22,7 +22,9 @@ description: Rust JWT 인증 패턴 - jsonwebtoken 크레이트 + Axum 미들웨
 [dependencies]
 axum = "0.8"
 axum-extra = { version = "0.10", features = ["typed-header"] }
-jsonwebtoken = "9"
+# jsonwebtoken 10.x: 암호화 백엔드 feature를 반드시 선택해야 한다
+# aws_lc_rs (권장: 성능 우수, AWS 환경에 최적화) 또는 rust_crypto (순수 Rust, 이식성 높음) 중 하나 선택
+jsonwebtoken = { version = "10", features = ["rust_crypto"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 chrono = { version = "0.4", features = ["serde"] }
@@ -374,6 +376,47 @@ fn load_jwt_config() -> (String, String) {
 - `.env` 파일을 `.gitignore`에 반드시 추가
 - HS256 시크릿은 최소 256비트(32바이트) 이상 권장
 - 프로덕션에서는 환경변수 또는 시크릿 매니저 사용
+
+---
+
+## jsonwebtoken 9.x → 10.x 마이그레이션 노트
+
+jsonwebtoken 10.0.0에서 **암호화 백엔드 선택이 필수**가 되었다.
+
+### 변경 사항
+
+| 항목 | 9.x | 10.x |
+|------|-----|------|
+| 암호화 백엔드 | 내장 (선택 불필요) | `aws_lc_rs` 또는 `rust_crypto` feature 명시 필수 |
+| PEM 지원 | 기본 포함 | 기본 포함 (비활성화 가능: `default-features = false`) |
+| `time` 의존성 | `time ^0.3` (Rust 1.84 이하 제약 있음) | 제거됨 (time 의존성 없음) |
+| decode 함수 | `Clone` 바운드 있음 | `Clone` 바운드 제거 (10.2.0) |
+
+### Cargo.toml 마이그레이션
+
+```toml
+# 9.x (이전)
+jsonwebtoken = "9"
+
+# 10.x (신규) — 백엔드 feature 선택 필수
+jsonwebtoken = { version = "10", features = ["rust_crypto"] }
+# 또는
+jsonwebtoken = { version = "10", features = ["aws_lc_rs"] }
+```
+
+> 주의: `aws_lc_rs`와 `rust_crypto`는 동시에 활성화할 수 없다. 둘 중 하나만 선택해야 한다.
+
+- **rust_crypto**: 순수 Rust 구현, 크로스 컴파일·이식성 우선 시 선택
+- **aws_lc_rs**: C 라이브러리 기반, AWS 환경이나 성능 최우선 시 선택
+
+### API 변경
+
+```rust
+// 9.x와 10.x에서 encode/decode API 시그니처는 동일
+// 마이그레이션 시 코드 변경 없음 — Cargo.toml만 수정하면 됨
+encode(&Header::default(), &claims, &EncodingKey::from_secret(secret))
+decode::<Claims>(token, &DecodingKey::from_secret(secret), &validation)
+```
 
 ---
 

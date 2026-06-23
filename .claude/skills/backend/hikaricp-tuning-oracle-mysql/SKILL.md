@@ -486,4 +486,57 @@ ext['hikaricp.version'] = '5.1.0'
 - [ ] `pool-name` 명시로 메트릭/로그에서 풀 구분
 - [ ] Actuator `/metrics`에 `hikaricp.connections.*` 노출 확인
 - [ ] 멀티 DataSource 총합이 DB `max_connections`의 80% 이하인가
+
+---
+
+## 11. Spring Boot 4.x / HikariCP 7.0 마이그레이션 포인트
+
+> 기준: Spring Boot 4.0 번들 HikariCP 7.0.x / Java 17+
+> 소스: https://github.com/brettwooldridge/HikariCP/blob/dev/CHANGES
+>       https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Release-Notes
+> 검증일: 2026-06-19
+
+### 11.1 Spring Boot 버전별 HikariCP 번들
+
+| Spring Boot | 번들 HikariCP |
+|-------------|---------------|
+| 2.7.x | 4.0.3 ~ 5.0.1 |
+| 3.0.x ~ 3.2.x | 5.0.x |
+| 3.3.x ~ 3.5.x | 5.1.x |
+| **4.0.x ~ 4.1.x** | **7.0.x** |
+
+### 11.2 HikariCP 7.0 변경사항 요약
+
+**설정 파라미터 이름 자체는 변경 없다.** 기존 `application.yml`의 `spring.datasource.hikari.*` 키 이름을 그대로 사용 가능.
+
+| 항목 | 내용 |
+|------|------|
+| 설정 키 변경 | **없음** — 기존 yml 그대로 동작 |
+| `HikariCredentialsProvider` | 신규 추가 — 동적 자격증명 공급자 인터페이스 |
+| 가상 스레드 최적화 | ConcurrentBag의 virtual-thread yield 스핀 최소화 |
+| 메트릭 이름 | 변경 없음 (`hikaricp.connections.*`) |
+
+### 11.3 HikariCredentialsProvider (7.0+ 신규)
+
+AWS Secrets Manager, Vault 동적 시크릿 등 자격증명을 동적으로 제공해야 하는 환경을 위한 확장 포인트.
+
+```java
+import com.zaxxer.hikari.HikariCredentialsProvider;
+
+public class AwsIamCredentialsProvider implements HikariCredentialsProvider {
+    @Override
+    public String getUsername() { return fetchUsernameFromSecretsManager(); }
+    @Override
+    public String getPassword() { return generateIamAuthToken(); }
+}
+
+// HikariConfig에 등록
+config.setCredentialsProvider(new AwsIamCredentialsProvider());
+```
+
+### 11.4 Virtual Thread 환경 고려사항 (Spring Boot 4.x)
+
+Spring Boot 4.x에서 가상 스레드 활성화 시 HikariCP 7.x의 ConcurrentBag 최적화가 자동 적용된다. 별도 설정 변경 불필요.
+
+> 주의: Virtual Thread 환경에서는 물리 스레드 기반 공식인 `(core_count * 2) + spindle`보다 낮은 커넥션 수에서도 높은 처리량이 유지되는 경우가 많다. 기존 값부터 시작해 실측값을 기반으로 조정할 것.
 - [ ] 부하 테스트로 p95/p99 지연 측정 완료

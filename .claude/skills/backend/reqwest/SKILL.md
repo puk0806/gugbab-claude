@@ -6,15 +6,23 @@ description: Rust reqwest HTTP 클라이언트 핵심 패턴 — GET/POST, JSON,
 # reqwest HTTP 클라이언트
 
 > 소스: https://docs.rs/reqwest/latest/reqwest/ | https://github.com/seanmonstar/reqwest
-> 검증일: 2026-04-06
+> 검증일: 2026-06-20
 
-> 주의: reqwest 0.12.x 기준 작성. 0.11.x 이하는 hyper 0.14 기반으로 일부 API 차이 있음.
+> 주의: 이 문서는 reqwest 0.12.x 기준으로 작성되었습니다. 0.13.x (최신 0.13.11, 2026-05-28 릴리즈)가 출시되어 Breaking Change가 있으므로 신규 프로젝트는 마이그레이션 노트를 참조하세요.
+
+> **reqwest 0.13으로의 마이그레이션 시 주요 Breaking Change (0.12 → 0.13):**
+> - rustls가 기본 TLS로 변경(aws-lc 기반), `rustls-tls` feature가 `rustls`로 rename
+> - MSRV이 1.85로 상향
+> - `ClientBuilder::dns_resolver`가 `dns_resolver2`로 교체
+> - `reqwest::Url`의 serde Deserialize 지원이 별도 feature 필요
+> - 0.11.x 이하(hyper 0.14 기반) 대비 API 변경 있음
 
 ---
 
 ## Cargo.toml 의존성
 
 ```toml
+# reqwest 0.12.x (현재 문서 기준) — 0.13이 2026-05-28 릴리즈됨, 마이그레이션 주의사항 참조
 [dependencies]
 reqwest = { version = "0.12", features = ["json", "stream"] }
 tokio = { version = "1", features = ["full"] }

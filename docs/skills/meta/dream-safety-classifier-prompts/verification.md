@@ -3,7 +3,7 @@ skill: dream-safety-classifier-prompts
 category: meta
 version: v1
 date: 2026-05-15
-status: PENDING_TEST
+status: APPROVED
 ---
 
 # dream-safety-classifier-prompts — 검증 문서
@@ -136,6 +136,39 @@ status: PENDING_TEST
 
 ---
 
+---
+
+### 2차 테스트 (2026-06-19, APPROVED 전환 수행)
+
+**수행일**: 2026-06-19
+**수행자**: skill-tester → general-purpose (meta 카테고리, domain-specific 에이전트 대체)
+**수행 방법**: SKILL.md Read 후 2개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
+
+**Q1. 분리 분류기 핵심 이유 3가지 + 운영 흐름 + fallback 동작**
+- PASS
+- 근거: SKILL.md "§1 분리 동기" 표 7개 차원 + "§8 운영 패턴" Python 코드 + "§10 함정 5·10번"
+- 상세: 분리 이유(평가 지표 분리·모델 최적화·이중 안전망) 모두 §1에서 확인됨. fallback "보수적 unsafe" 원칙이 §10 항목 5·10에 명시됨. anti-pattern(fail-open) 명시적으로 회피. gap: §8 코드에 네트워크 예외 처리 블록 부재 (텍스트와 코드 불일치 — 선택 보강).
+
+**Q2. 일반 흉몽 FP 회피 vs 자해 신호 분류 + temperature=0 이유 + few-shot 5개 근거**
+- PASS
+- 근거: SKILL.md "§2 카테고리 정의·FP/FN 회피 기준" + "§3 판정 규칙·설계 근거" + "§4 few-shot 예시 2·3번" + "§10 함정 8번"
+- 상세: 이빨 빠짐 → null (§2 FP 회피 + §4 예시 2번), 반복+현실충동 → self_harm (§2 FN 회피 + §4 예시 3번) 모두 근거 섹션 즉시 확인. temperature=0 이유 §3·§10에서 "일관성" 키워드. few-shot 5개 구성 논리 §4에서 설명. gap: violence_toward_others few-shot 예시 누락(5개 중 4카테고리만 커버 — 선택 보강), self_harm vs trauma 동시 신호 우선순위 규칙 미명시(선택 보강).
+
+### 발견된 gap (2026-06-19)
+
+- §8 Python 코드에 `anthropic.APIError` 등 네트워크 예외 처리 블록 부재 (§10 항목 10 텍스트와 불일치) — 선택 보강
+- violence_toward_others few-shot 예시 없음 (5개 예시 중 4카테고리만 커버) — 선택 보강
+- self_harm vs trauma 동시 신호 시 우선순위 규칙 미명시 — 선택 보강
+
+### 판정 (2026-06-19)
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 프롬프트 패턴·개념 스킬 — content test PASS = APPROVED 가능
+- 사용자 지시: APPROVED 전환
+- 최종 상태: APPROVED
+
+---
+
 ### 교차 검증 (단계 2) 결과 (skill-creator 수행)
 
 | # | 클레임 | 출처 1 | 출처 2 | 판정 |
@@ -161,24 +194,22 @@ DISPUTED 항목 없음. UNVERIFIED 항목 없음.
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
 | 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-15, skill-tester 수행, general-purpose 대체) |
-| **최종 판정** | **PENDING_TEST 유지** (실 운영 골든셋 precision/recall 평가는 사용자 영역) |
+| **최종 판정** | **APPROVED** (2026-06-19, content test 2/2 PASS, 사용자 지시에 따라 전환) |
 
 **판정 근거:**
 - 8개 핵심 클레임 모두 Anthropic 공식 문서 + 공식 cookbook + 공식 발표 블로그
   교차 검증 완료. 내용 신뢰성 확보.
-- 본 카테고리는 *분류 정확성 평가가 핵심*이므로 content test PASS만으로 APPROVED
-  전환이 가능한 경계선이지만, 안전 분류기는 *실제 운영 골든셋 평가가 매우 중요*하므로
-  PENDING_TEST 유지를 권장. 실 운영 평가(precision/recall 골든셋 200~500건)는
-  사용자 영역.
-- 사용자 지시: skill-tester는 메인이 직접 호출 → 본 verification은 단계 1·2까지만
-  완료.
+- 2026-05-15 초기 테스트 3/3 PASS 이후 2026-06-19 추가 테스트 2/2 PASS.
+- 프롬프트 패턴·개념 스킬 카테고리 — content test PASS = APPROVED 가능.
+- 사용자 지시: APPROVED 전환. 실 운영 골든셋 평가(precision/recall 200~500건)는
+  사용자 영역이며 차단 요인이 아닌 선택 보강 사항.
 
 ---
 
 ## 7. 개선 필요 사항
 
-- [✅] skill-tester가 content test 수행하고 섹션 5·6 업데이트 (2026-05-15 완료, 3/3 PASS)
-- [❌] 실 운영 골든셋 200~500건 구축 후 precision/recall 측정 결과 추가 (사용자 영역 — PENDING_TEST 유지의 핵심 차단 요인)
+- [✅] skill-tester가 content test 수행하고 섹션 5·6 업데이트 (2026-05-15 완료, 3/3 PASS; 2026-06-19 추가 2/2 PASS → APPROVED 전환)
+- [❌] 실 운영 골든셋 200~500건 구축 후 precision/recall 측정 결과 추가 (사용자 영역 — 선택 보강, 차단 요인 아님)
 - [❌] 사용자가 짝 스킬 `humanities/crisis-intervention-resources-korea` 분리 생성 시
        본 스킬 §6 자원 표를 그 스킬 참조로 단순화 가능 (선택 보강 — 차단 요인 아님)
 - [❌] 분류기를 Claude Structured Outputs(JSON schema 강제) 기능으로 마이그레이션
@@ -192,3 +223,4 @@ DISPUTED 항목 없음. UNVERIFIED 항목 없음.
 |------|------|-----------|--------|
 | 2026-05-15 | v1 | 최초 작성 — Anthropic content moderation 공식 가이드 + cookbook 기반 안전 분류기 분리형 프롬프트 패턴. 5개 카테고리·few-shot 5개·precision/recall 평가·2단계 호출 비용 분석 포함 | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 분리형 vs 통합형 설계 근거 / Q2 일반 흉몽 FP 회피·자해 신호 구분 / Q3 Haiku 4.5+Sonnet 4.6 조합+temperature=0+confidence처리) → 3/3 PASS, PENDING_TEST 유지 (실 운영 골든셋 평가 필요) | skill-tester |
+| 2026-06-19 | v1 | 2단계 실사용 테스트 재수행 (Q1 분리 이유·운영흐름·fallback / Q2 일반흉몽 FP vs 자해신호 분류·temperature=0·few-shot 5개 근거) → 2/2 PASS, PENDING_TEST → APPROVED 전환 (사용자 지시: 프롬프트 패턴 스킬 content test PASS = APPROVED) | skill-tester |

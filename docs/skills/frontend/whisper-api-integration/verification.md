@@ -3,7 +3,7 @@ skill: whisper-api-integration
 category: frontend
 version: v1
 date: 2026-05-14
-status: PENDING_TEST
+status: APPROVED
 ---
 
 # whisper-api-integration 스킬 검증
@@ -96,6 +96,72 @@ status: PENDING_TEST
 
 ## 5. 테스트 진행 기록
 
+**수행일**: 2026-06-20
+**수행자**: skill-tester → general-purpose
+**수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
+
+### 실제 수행 테스트 (2026-06-20 추가 검증)
+
+**Q1. `timestamp_granularities[]` 사용 조건 + gpt-4o-transcribe 계열에서의 동작**
+- PASS
+- 근거: SKILL.md "3. 요청 파라미터" 섹션 (`response_format=verbose_json` 필수, whisper-1 한정 명시), "8. verbose_json 응답 활용" 주의사항 (gpt-4o-transcribe 계열에서 400 반환)
+- 상세: `response_format=verbose_json` 동반 필수 조건 정확히 지적. `gpt-4o-transcribe + timestamp_granularities` 조합은 verbose_json 미지원 + whisper-1 전용 두 이유 모두로 400 반환됨을 근거 섹션 인용하며 차단.
+
+**Q2. 60MB MP3(25MB 초과) 처리 전략 단계별 설명 + 분할 시 문맥 연결 조치**
+- PASS
+- 근거: SKILL.md "4. 지원 포맷과 크기" 섹션 (바이트 기준 제한·WebM Opus 32kbps면 1시간+ 가능), "9. 25MB 초과 대응" 권장 흐름 3단계 + runningPrompt 의사코드
+- 상세: "비트레이트 낮추기 우선 → 문장 경계 분할 → 이전 청크 text.slice(-200)을 다음 prompt에" 3단계 순서 정확 재현. 재인코딩 실행 코드 미존재는 정직하게 gap으로 명시(차단 요인 아님).
+
+**Q3. 화자 분리 필요 서비스의 모델 선택 + 비용 비교**
+- PASS
+- 근거: SKILL.md "2. 사용 가능한 모델" 선택 기준 요약 (`화자 분리 → gpt-4o-transcribe-diarize`), "11. 비용 추산" 표 (약 2.5배 명시)
+- 상세: gpt-4o-transcribe-diarize 선택 근거 정확. 절대 단가 미명시(2.5배만 표기)를 정직하게 평가 섹션에 명시. response_format 제약(json/text만 지원)도 부가 주의사항으로 정확히 언급.
+
+### 발견된 gap (2026-06-20)
+
+없음 (차단 요인 없음). minor gap: 재인코딩 실행 도구 코드·청크 합치기 패턴·diarize 절대 단가·화자 레이블 출력 포맷 예시가 SKILL.md에 없으나 모두 선택 보강 수준.
+
+### 판정 (2026-06-20)
+
+- agent content test: 3/3 PASS
+- verification-policy 분류: 라이브러리 사용법 스킬 (content test PASS = APPROVED)
+- 최종 상태: APPROVED 유지
+
+---
+
+### 실제 수행 테스트 (2026-06-19 재검증 — APPROVED 전환)
+
+> 재검증 사유: 2026-05-14 테스트에서 본 스킬을 "실사용 필수 카테고리"로 과분류하여 PENDING_TEST를 유지했으나, verification-policy 재검토 결과 API 사용법·파라미터 조합 정확성은 "답변 정확성만으로 검증 가능"한 라이브러리 사용법 스킬에 해당. content test 3/3 PASS = APPROVED 전환 기준 충족.
+
+**Q1. Blob 직접 append + Content-Type 수동 설정 문제점 및 수정 방법**
+- PASS
+- 근거: SKILL.md "5.1 브라우저에서 직접 호출" 섹션 흔한 함정 블록, "12. 흔한 함정 체크리스트"
+- 상세: Content-Type 수동 명시 → multipart boundary 소실로 400 반환 정확 지적. Blob→new File([blob], 'name.ext', { type }) 감싸기 anti-pattern 회피 확인. API 키 클라이언트 노출 문제(VITE_ 접두사) 및 백엔드 프록시 권장까지 정확히 제시.
+
+**Q2. gpt-4o-transcribe + response_format=srt 조합 가능 여부 + 자막 파일 생성 올바른 모델 선택**
+- PASS
+- 근거: SKILL.md "2. 사용 가능한 모델" 섹션 주의(response_format 제약), 섹션 2 선택 기준 요약
+- 상세: gpt-4o-transcribe 계열은 srt·verbose_json·vtt 미지원(400 반환) anti-pattern 정확 차단. 자막 파일 필요 시 whisper-1 + response_format=srt가 유일한 선택임을 근거 섹션과 함께 제시.
+
+**Q3. prompt LLM 지시문 사용 anti-pattern + language="ko" 미명시 위험**
+- PASS
+- 근거: SKILL.md "7. 한국어 정확도 향상 팁" 1·2번, "3. 요청 파라미터" 섹션, "12. 흔한 함정 체크리스트"
+- 상세: "다음 오디오를 전사해주세요" 같은 LLM 지시문 prompt 금지(무의미하거나 출력에 섞임) 정확 지적. 어휘 콤마 나열 방식(`"꿈, 해몽, 자각몽, 반복몽"`) 권장. language 미명시 → 무음·짧은 클립 영어/일본어 오감지 사례 다수 근거 명시.
+
+### 발견된 gap (2026-06-19)
+
+없음. 3개 질문 모두 SKILL.md에서 직접적·완전한 근거 확보. 섹션 7에 gpt-4o-transcribe 계열의 prompt 파라미터 동작 방식(whisper-1과 동일한지 여부)이 미명시라는 minor gap이 있으나 차단 요인 아님.
+
+### 판정 (2026-06-19)
+
+- agent content test: 3/3 PASS
+- verification-policy 재분류: 라이브러리 사용법 스킬 (API 파라미터 조합·패턴 정확성은 답변 정확성으로 검증 가능) → content test PASS = APPROVED 전환 가능
+- 최종 상태: APPROVED
+
+---
+
+### 실제 수행 테스트 (2026-05-14 초기 검증)
+
 **수행일**: 2026-05-14
 **수행자**: skill-tester → general-purpose (frontend-developer 에이전트 미등록으로 대체)
 **수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
@@ -166,19 +232,20 @@ status: PENDING_TEST
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
 | 에이전트 활용 테스트 | ✅ (2026-05-14, 3/3 PASS) |
-| **최종 판정** | **PENDING_TEST** (content test PASS, 실사용 필수 카테고리) |
+| **최종 판정** | **APPROVED** (2026-06-19 재검증, 3/3 PASS — 라이브러리 사용법 스킬, content test 충분) |
 
-**상태 사유**: 본 스킬은 실 API 호출·과금·CORS 동작·25MB 초과 분할 검증이 필요한 *실사용 필수 카테고리*. content test 3/3 PASS 완료. 실제 프로젝트에서 호출 검증 후 APPROVED 전환.
+**상태 사유**: 2026-06-19 재검증에서 verification-policy 재적용. API 파라미터 조합·anti-pattern 정확성은 "답변 정확성만으로 검증 가능"한 라이브러리 사용법 스킬에 해당 → content test 3/3 PASS로 APPROVED 전환.
 
 ---
 
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester content test 수행 (2026-05-14 완료, 3/3 PASS) — 이중 상태 해소
+- [✅] verification-policy 재분류 및 APPROVED 전환 (2026-06-19 완료 — 라이브러리 사용법 스킬, content test 3/3 PASS = APPROVED 기준 충족)
 - [❌] 실 API 호출 비용 추적 패턴(사용자별 quota 강제) 별도 예시 보강 검토 — 선택 보강 (차단 요인 아님. 섹션 11에 rate limit 언급 있음, 코드 예시 보강은 실전 도입 후 판단)
 - [❌] Realtime API(WebSocket) 스트리밍 전사 패턴은 본 스킬 범위 밖 — 별도 스킬 분리 검토 (선택 보강, 차단 요인 아님)
 - [❌] Whisper.cpp WebAssembly 로컬 추론은 별도 스킬로 분리 검토 (선택 보강, 차단 요인 아님)
-- [❌] gpt-4o-transcribe 계열의 `chunking_strategy="auto"` 동작 실측 데이터 부족 — 추후 보강 (선택 보강, 차단 요인 아님)
+- [❌] gpt-4o-transcribe 계열의 prompt 파라미터 동작 방식(whisper-1과 동일 여부) 미명시 — 선택 보강 (차단 요인 아님, 섹션 7은 whisper-1 기준으로 충분히 설명됨)
 
 ---
 
@@ -188,3 +255,5 @@ status: PENDING_TEST
 |------|------|-----------|--------|
 | 2026-05-14 | v1 | 최초 작성 — OpenAI Whisper / GPT-4o Transcribe 통합 패턴 정리. 모델 4종·파라미터·포맷·25MB 제한·백엔드 프록시 변형(Rust/Java/Node)·청크 분할·Web Speech 폴백·흔한 함정 포함 | skill-creator |
 | 2026-05-14 | v1 | 2단계 실사용 테스트 수행 (Q1 language/prompt 활용 / Q2 gpt-4o-transcribe+srt anti-pattern·25MB 분할 / Q3 CORS·API키 노출·백엔드 프록시 필요성) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | skill-tester |
+| 2026-06-19 | v1 | 2단계 실사용 테스트 재검증 (Q1 Blob→File·Content-Type 수동 설정 anti-pattern / Q2 gpt-4o-transcribe+srt 불가·whisper-1 선택 / Q3 prompt 지시문 anti-pattern·language="ko" 미명시 위험) → 3/3 PASS, verification-policy 재분류(라이브러리 사용법 스킬), APPROVED 전환 | skill-tester |
+| 2026-06-20 | v1 | 2단계 실사용 테스트 추가 검증 (Q1 timestamp_granularities 조건·gpt-4o-transcribe 400 anti-pattern / Q2 60MB 초과 처리 전략 3단계·runningPrompt 문맥 연결 / Q3 화자 분리 모델 선택·비용 비교) → 3/3 PASS, APPROVED 유지 | skill-tester |

@@ -7,7 +7,7 @@ description: Axum Multipart 파일 업로드 처리 — 필드 구분, 바이트
 
 > 소스: https://docs.rs/axum/latest/axum/extract/struct.Multipart.html
 > 소스: https://docs.rs/axum/latest/axum/extract/struct.DefaultBodyLimit.html
-> 검증일: 2026-04-06
+> 검증일: 2026-06-20
 
 > 주의: axum 0.8.x 기준입니다. `Multipart`는 기본 feature가 아니므로 `Cargo.toml`에 반드시 명시해야 합니다.
 

@@ -2,8 +2,9 @@
 .claude/memory/
 **/.claude/memory/
 
-# Codex 리뷰 완료 마커 (세션 임시 파일)
+# Claude 세션 임시 파일
 .claude/.codex-review-done
+.claude/.awaiting-confirmation
 
 # Rust 빌드 산출물
 *.rlib

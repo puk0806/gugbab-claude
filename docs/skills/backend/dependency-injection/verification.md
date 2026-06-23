@@ -2,7 +2,7 @@
 skill: dependency-injection
 category: backend
 version: v1
-date: 2026-04-09
+date: 2026-06-20
 status: APPROVED
 ---
 
@@ -162,3 +162,4 @@ status: APPROVED
 | 2026-04-09 | v1 | 최초 작성, rust-backend-developer 활용 테스트 완료 | rust-backend-developer 에이전트 |
 | 2026-04-17 | v2 | verification.md 신규 8섹션 포맷으로 마이그레이션 | 메인 대화 오케스트레이션 |
 | 2026-04-17 | v3 | fact-checker WebSearch 교차 검증 완료 (VERIFIED 8, DISPUTED 0, 수정 없음) | WebSearch 직접 검증 |
+| 2026-06-20 | v4 | 버전 재확인 — 변경 없음. 언어 패턴 스킬(Rust trait 기반 DI)로 크레이트 버전 독립. axum 0.8.x 기반 코드 패턴 정확성 확인 | 버전 재검증 작업 |

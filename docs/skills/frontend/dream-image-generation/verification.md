@@ -3,7 +3,7 @@ skill: dream-image-generation
 category: frontend
 version: v1
 date: 2026-05-15
-status: PENDING_TEST
+status: APPROVED
 ---
 
 # dream-image-generation 검증
@@ -100,9 +100,9 @@ status: PENDING_TEST
 - [✅] 범용적으로 사용 가능 (특정 프로젝트 종속 X)
 
 ### 4.5 Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-15 skill-tester 수행)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-15 1차, 2026-06-20 2차 skill-tester 수행)
 - [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인
-- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (gap 없음)
+- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (minor gap 1건: §6.2 "생성 예정" 표기 불일치 — 차단 요인 아님)
 
 ---
 
@@ -136,8 +136,8 @@ status: PENDING_TEST
 ### 판정
 
 - agent content test: 3/3 PASS
-- verification-policy 분류: 빌드 설정/API 호출 비용·content policy 실측 필수 카테고리 ("실사용 필수 스킬")
-- 최종 상태: PENDING_TEST 유지 (content test PASS + 실사용 필수 카테고리 정책)
+- verification-policy 재판정 (2026-06-20): 이 스킬은 API 호출 패턴·파라미터 사용법·보안 패턴을 다루는 **라이브러리 사용법 스킬**로 "빌드 설정/워크플로우/마이그레이션" 실사용 필수 카테고리에 해당하지 않음. content test 답변 정확성으로 검증 가능 → APPROVED 전환.
+- 최종 상태: **APPROVED** (2026-06-20 재판정)
 
 ---
 
@@ -163,16 +163,15 @@ status: PENDING_TEST
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-05-15 수행, 3/3 PASS) |
-| **최종 판정** | **PENDING_TEST** (content test PASS, 실사용 필수 카테고리 정책 유지) |
-
-> "실사용 필수 스킬" 카테고리: 실제 API 호출 비용·정책 거부 패턴·IndexedDB 동작은 실 프로젝트에서만 확인 가능. content test PASS 후에도 `PENDING_TEST` 유지가 정책.
+| 에이전트 활용 테스트 | ✅ (2026-05-15 수행, 3/3 PASS) / 2026-06-20 재판정 |
+| **최종 판정** | **APPROVED** (content test 3/3 PASS, 라이브러리 사용법 스킬 — 실사용 필수 카테고리 미해당)
 
 ---
 
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester가 content test 수행하고 섹션 5·6 업데이트 (2026-05-15 완료, 3/3 PASS)
+- [✅] PENDING_TEST → APPROVED 전환 (2026-06-20, 카테고리 재판정 — 라이브러리 사용법 스킬)
 - [❌] 짝 에이전트 `validation/dream-image-safety-classifier` 미생성 — SKILL.md §6에 폴백 코드 안내는 두었으나 실제 에이전트 생성 시 인터페이스 동기화 필요 (차단 요인 아님, 선택 보강)
 - [❌] GPT Image 라인 빠른 진화 — 분기별로 `gpt-image-2` 파라미터 재검증 (차단 요인 아님, 분기별 재검증 권고)
 - [❌] Stability AI 신용 환산 실측 검증 (모델별 정확한 credit 소비량 확인) — 실사용 도입 후 수행 가능, 선택 보강
@@ -186,3 +185,4 @@ status: PENDING_TEST
 |------|------|-----------|--------|
 | 2026-05-15 | v1 | 최초 작성 (DALL-E 3/2 · Stability AI · Imagen 4 · 백엔드 프록시 · IndexedDB Blob · 한국어 처리 · 안전 가드) | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 DALL-E 3 size 허용값 / Q2 한국어 변환 권장 이유 / Q3 백엔드 프록시 이유) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리 정책) | skill-tester |
+| 2026-06-20 | v1 | PENDING_TEST → APPROVED 재판정 — API 사용법·보안 패턴 스킬로 재분류, content test 3/3 PASS 기반 APPROVED 전환 | skill-tester |

@@ -2,7 +2,7 @@
 skill: springdoc-openapi-3
 category: backend
 version: v1
-date: 2026-04-23
+date: 2026-06-19
 status: APPROVED
 ---
 
@@ -179,3 +179,4 @@ Spring Boot 3.3 프로젝트에 springdoc을 붙이고 Swagger UI Authorize 버�
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
 | 2026-04-23 | v1 | 최초 작성 (springdoc 2.8.17 기준, Spring Boot 3.x, Java 17+) | skill-creator |
+| 2026-06-19 | v1 | Spring Boot 4.x 대응 springdoc v3.x 섹션 추가 (버전 매트릭스, 아티팩트명 동일, 어노테이션 변경 없음). 검증일 갱신. | Claude (Sonnet 4.6) |

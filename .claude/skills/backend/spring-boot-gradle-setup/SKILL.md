@@ -470,4 +470,80 @@ Spring Boot 3부터 **Sleuth는 삭제됨** (Sleuth GitHub Issue #2239). Microme
 | Spring Boot 3.4 + Gradle 8.3 조합 | 빌드 시 Gradle 버전 지원 중단 메시지 | Gradle 8.4+ 또는 7.6.4로 변경 |
 | `@Valid`가 동작 안 함 (Spring Boot 3.x) | 검증 에러가 던져지지 않음 | `spring-boot-starter-validation` 명시적 추가 |
 | 프로파일별 값이 병합되지 않는다고 착각 | `application-prod.yml`에만 있는 값이 적용 안 됨 | 프로파일 활성화(`--spring.profiles.active`) 확인 |
+
+---
+
+## 9. Spring Boot 4.x 마이그레이션 포인트
+
+> 기준: Spring Boot 4.0 GA (2025-11-30) / 4.1 (2026-06-10) / Spring Framework 7.0
+> 소스: https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Release-Notes
+>       https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide
+>       https://endoflife.date/spring-boot
+> 검증일: 2026-06-19
+
+> 주의: Spring Boot 3.5의 OSS 지원은 2026-06-30 종료. 신규 프로젝트는 4.1을 선택하거나, OSS 지원 연장이 필요하면 3.5 상용 LTS 지원을 검토할 것.
+
+### 9.1 버전 매트릭스 (3.x vs 4.x)
+
+| 항목 | 3.4.x | 3.5.x (LTS) | 4.0.x | 4.1.x |
+|------|-------|-------------|-------|-------|
+| 최소 Java | 17 | 17 | 17 | 17 |
+| Spring Framework | 6.2 | 6.3 | **7.0** | **7.0** |
+| Gradle 최소 | 7.6.4 or 8.4 | 7.6.4 or 8.4 | **8.14 or 9.x** | **8.14 or 9.x** |
+| Servlet API | 6.0 | 6.0 | **6.1** | **6.1** |
+| 내장 Tomcat | 10.1 | 10.1 | **11.0** | **11.0** |
+| Jackson | 2.x | 2.x | **3.0** (Group ID 변경) | **3.0** |
+
+### 9.2 Gradle 버전 요구사항 강화
+
+Spring Boot 4.0은 **Gradle 8.14 이상 또는 9.x** 를 요구한다.
+
+```bash
+# Gradle Wrapper 업그레이드
+./gradlew wrapper --gradle-version 8.14
+```
+
+### 9.3 build.gradle.kts (4.x 기준)
+
+```kotlin
+plugins {
+    java
+    id("org.springframework.boot") version "4.1.0"
+    id("io.spring.dependency-management") version "1.1.7"
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)  // 17 이상 필수, 21 LTS 권장
+    }
+}
+```
+
+### 9.4 Jackson 3.0 Group ID 변경 (주의)
+
+Spring Boot 4.0은 Jackson 3.0을 번들. **Group ID가 변경**되었다.
+
+```gradle
+// 3.x: com.fasterxml.jackson
+// 4.x: tools.jackson
+```
+
+Jackson 버전을 직접 선언하는 경우 Group ID를 수정해야 빌드가 통과된다. Spring Boot BOM을 사용하면 자동 관리된다.
+
+### 9.5 제거된 기능
+
+| 기능 | 4.x 대체 |
+|------|---------|
+| Undertow 임베디드 서버 | Tomcat 또는 Jetty |
+| `RestTemplate` 자동 구성 | `RestClient` 또는 `WebClient` |
+| GraalVM 21 지원 | **GraalVM 25 이상 필요** |
+| Kotlin 1.9 지원 | **Kotlin 2.2 이상 필요** |
+
+### 9.6 마이그레이션 순서 (3.5 → 4.0)
+
+1. Spring Boot 3.5 최신 패치로 올리고 모든 deprecation warning 해소
+2. `@MockBean` → `@MockitoBean` 전환 (3.4에서 deprecated, 4.0에서 제거)
+3. Gradle **8.14 이상**으로 업그레이드
+4. Undertow 사용 중이면 Tomcat 또는 Jetty로 전환
+5. Spring Boot 4.0 GA로 업그레이드 후 `spring-boot-properties-migrator` 실행
 | Native 빌드 시 리플렉션 실패 | `ClassNotFoundException` at runtime | `@RegisterReflectionForBinding` 또는 `reflect-config.json` 추가 |

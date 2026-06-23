@@ -2,7 +2,7 @@
 skill: testing-junit5-spring-boot
 category: backend
 version: v1
-date: 2026-04-22
+date: 2026-06-19
 status: PENDING_TEST
 ---
 
@@ -88,11 +88,49 @@ status: PENDING_TEST
 ### 3-4. Claude Code 에이전트 활용 테스트
 - [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-04-22, general-purpose로 대체 실행)
 - [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 — `@MockitoBean` 대체, `@MybatisTest` 활용 정확히 설명
+- [✅] 2026-06-20 재테스트 수행 (Spring Boot 4.x 섹션 추가 이후 신규 content test 3/3 PASS) — skill-tester → general-purpose
 - [⚠️] **워크플로우 스킬**이므로 verification-policy에 따라 실제 프로젝트에서 JUnit 실행까지 확인 후 APPROVED 전환 예정 (현재는 agent 내용 검증만 PASS)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### 2026-06-20 — Spring Boot 4.x 섹션 추가 이후 재검증
+
+**수행일**: 2026-06-20
+**수행자**: skill-tester → general-purpose (domain-specific java-backend-developer 대체)
+**수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
+
+#### 실제 수행 테스트
+
+**Q1. Spring Boot 3.4에서 `@MockBean` deprecated 대체 어노테이션 및 SB 4.0 제거 여부**
+- ✅ PASS
+- 근거: SKILL.md "Spring Boot 3.4+ (@MockitoBean)" 섹션(355~373행) + "Spring Boot 4.x 테스트 마이그레이션" 섹션(384~401행)
+- 상세: import 경로(`org.springframework.test.context.bean.override.mockito.MockitoBean`), SB 3.4 deprecated → SB 4.0 완전 제거 여부, `@Configuration`/`@Component` 클래스 필드 미지원 주의사항까지 정확히 근거 제시
+
+**Q2. MyBatis Mapper 단위 테스트 — `@ExtendWith(MockitoExtension.class)` + `@Mock` + `@InjectMocks` 패턴**
+- ✅ PASS
+- 근거: SKILL.md "단위 테스트 — Mockito" 섹션(218~270행)
+- 상세: 어노테이션 조합 설명, 전체 코드 예시, "존재하지 않는 사용자 조회 시 예외" 테스트 코드(`assertThatThrownBy`)까지 SKILL.md 근거로 완전 제공
+
+**Q3. Spring Boot 3.2 → 4.0 마이그레이션 — `@MockBean` 처리, `TestRestTemplate` 영향, 전체 체크리스트**
+- ✅ PASS
+- 근거: SKILL.md "Spring Boot 4.x 테스트 마이그레이션" 섹션 내 "4.x 마이그레이션 체크리스트"(419~425행) + "TestRestTemplate 관련 변경"(414~416행)
+- 상세: 6개 체크리스트 항목 모두 정확히 열거, TestRestTemplate → WebTestClient 전환 방향 안내
+
+#### 발견된 gap (선택 보강 수준, 차단 요인 아님)
+
+- `@MockitoSpyBean` import 경로가 명시되지 않음 (같은 패키지라고 유추 가능하나 코드 예시 없음)
+- `TestRestTemplate` → `WebTestClient` 전환 구체적 코드 예시 없음
+- `@Configuration` 클래스 내 `@MockitoBean` → 수동 주입 변환 방법 미상세
+
+#### 판정
+
+- agent content test: ✅ 3/3 PASS
+- verification-policy 분류: **워크플로우 스킬** → 실 프로젝트에서 JUnit 실행까지 확인 후 APPROVED
+- 최종 상태: **PENDING_TEST** 유지 (agent content test는 통과, 실 JUnit 실행 대기)
+
+---
 
 ### 2026-04-23 — 섹션 7 cleanup only (새 content test 미수행)
 
@@ -186,15 +224,17 @@ assertThatThrownBy로 실패 케이스 검증
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ agent content test PASS (2026-04-22) / ⚠️ 실 JUnit 실행 대기 |
-| **최종 판정** | **PENDING_TEST** (워크플로우 스킬 — 실 프로젝트 실행까지 확인 후 APPROVED) |
+| 에이전트 활용 테스트 | ✅ agent content test 3/3 PASS (2026-06-20 재검증, SB 4.x 섹션 포함) / ⚠️ 실 JUnit 실행 대기 |
+| **최종 판정** | **PENDING_TEST** (워크플로우 스킬 — 실 프로젝트 JUnit 실행까지 확인 후 APPROVED) |
 
 ---
 
 ## 7. 개선 필요 사항
 
-- [🔬] 실사용 테스트 3건(MyBatis Mapper·SB 3.4 Service·Testcontainers Oracle) 수행 후 APPROVED 전환 — 워크플로우 스킬, 실 JUnit 실행 대기 (agent content test는 2026-04-22 PASS)
-- [⏸️] `@MockitoBean`이 `@Configuration`/`@Component` 클래스에서 동작하지 않는 케이스 구체 예시 — 선택 보강
+- [✅] skill-tester content test 수행 (2026-06-20 완료, 3/3 PASS — Q1 @MockitoBean 마이그레이션 / Q2 MyBatis Mapper 단위 테스트 / Q3 SB 4.x 마이그레이션 체크리스트)
+- [🔬] 실사용 테스트 수행 후 APPROVED 전환 — 워크플로우 스킬, 실 JUnit 실행 대기 (agent content test는 2026-06-20 3/3 PASS, 차단 요인 아님 — 실 프로젝트 실행 후 전환)
+- [⏸️] `@MockitoBean`이 `@Configuration`/`@Component` 클래스에서 동작하지 않는 케이스 구체 코드 예시 추가 — 선택 보강, 차단 요인 아님
+- [⏸️] `TestRestTemplate` → `WebTestClient` 전환 구체적 코드 예시 추가 — 선택 보강, 차단 요인 아님 (2026-06-20 Q3에서 gap으로 확인)
 - [⏸️] SB 2.5 → 3.x 마이그레이션 시 테스트 코드 변환 포인트 별도 섹션화 — 현재 인라인 주석 위주, 선택 보강
 - [⏸️] `@ServiceConnection`(SB 3.1+) 활용 예시 추가 — 선택 보강, 차단 요인 아님
 
@@ -205,3 +245,5 @@ assertThatThrownBy로 실패 케이스 검증
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
 | 2026-04-22 | v1 | 최초 작성 — JUnit 5 + Spring Boot 2.5/3.x 테스트 스킬, MyBatis 중심 (JPA 제외) | skill-creator |
+| 2026-06-19 | v1 | Spring Boot 4.x 테스트 마이그레이션 섹션 추가 (@MockBean 완전 제거→@MockitoBean, JUnit 6, TestRestTemplate 대체). 검증일 갱신. PENDING_TEST 유지 (세션 한도로 skill-tester 대기). | Claude (Sonnet 4.6) |
+| 2026-06-20 | v1 | 2단계 실사용 테스트 수행 (Q1 @MockitoBean 마이그레이션 / Q2 MyBatis Mapper 단위 테스트 / Q3 SB 4.x 체크리스트) → 3/3 PASS, PENDING_TEST 유지 (워크플로우 스킬 — 실 JUnit 실행 대기) | skill-tester |

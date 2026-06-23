@@ -6,7 +6,7 @@ description: Rust Axum 웹 프레임워크 핵심 패턴 - 라우팅, 상태 공
 # Axum 웹 프레임워크 핵심 패턴
 
 > 소스: https://docs.rs/axum/latest/axum/ | https://github.com/tokio-rs/axum
-> 검증일: 2026-04-06
+> 검증일: 2026-06-20
 
 > 주의: 이 문서는 axum 0.8.x 기준으로 작성되었습니다. 0.7에서 0.8로의 마이그레이션 시 Breaking Change가 있으므로 공식 changelog를 반드시 확인하세요.
 

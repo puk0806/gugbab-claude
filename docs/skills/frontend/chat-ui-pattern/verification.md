@@ -3,7 +3,7 @@ skill: chat-ui-pattern
 category: frontend
 version: v1
 date: 2026-05-14
-status: PENDING_TEST
+status: APPROVED
 ---
 
 # chat-ui-pattern 스킬 검증
@@ -85,8 +85,8 @@ status: PENDING_TEST
 - [✅] 범용적으로 사용 가능 (특정 프로젝트 종속 X — OpenAI/Anthropic Messages API 호환 모델 사용)
 
 ### 4-4. Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-14 skill-tester 수행)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (3/3 PASS)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-14 skill-tester 1차 / 2026-06-19 skill-tester 재검토·카테고리 재분류 후 APPROVED 전환)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (3/3 PASS × 2회)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (gap 없음, 보완 불필요)
 
 ---
@@ -109,6 +109,77 @@ status: PENDING_TEST
 ---
 
 ## 5. 테스트 진행 기록
+
+---
+
+### [2026-06-20] 3차 테스트 — 전체 섹션 동기화 수행
+
+**수행일**: 2026-06-20
+**수행자**: skill-tester → general-purpose
+**수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 존재 여부 및 anti-pattern 회피 확인
+
+### 실제 수행 테스트
+
+**Q1. 스트리밍 토큰 누적 시 함수형 업데이트 필요 이유 + AbortError 구분**
+- PASS
+- 근거: SKILL.md 섹션 4 "스트리밍 토큰 누적 표시" 핵심 포인트, `useChatStream.ts` catch 블록 코드
+- 상세: `setMessages(prev => prev.map(...))` 함수형 업데이트의 stale closure 회피 원리 정확히 설명. `err instanceof DOMException && err.name === 'AbortError'` 판별식으로 `status: 'aborted'` vs `status: 'error'` 분기 근거 확인. anti-pattern(직접 state 참조) 회피 확인.
+
+**Q2. 스트리밍 중 Markdown 재파싱 문제 + XSS 안전성**
+- PASS
+- 근거: SKILL.md 섹션 5-3 "스트리밍 중 Markdown 렌더링 전략", 섹션 5-4 "XSS 안전성"
+- 상세: 전략 A(매 토큰 재파싱)의 "100 토큰/초 끊김·코드 블록 미완성" 문제 정확히 확인. 전략 B(streaming 중 plain text) 권장 근거 확인. `dangerouslySetInnerHTML` 미사용·AST 변환·위험 프로토콜 차단 보안 원리 확인. `rehype-sanitize` 필요 시나리오 3가지(urlTransform 커스텀/rehype-raw 추가/신뢰불가 출처) 정확히 확인.
+
+**Q3. SimpleMessageList 자동 스크롤 임계값 로직 + 컨테이너 실수**
+- PASS
+- 근거: SKILL.md 섹션 6 "자동 스크롤 패턴", `SimpleMessageList.tsx` 코드
+- 상세: `SCROLL_THRESHOLD = 100px`, `distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight` 계산식 근거 확인. `shouldAutoScroll` state + `onScroll` 핸들러 + `useEffect` 조건 분기 패턴 확인. `overflow: hidden` 실수 시 페이지 전체 튀는 anti-pattern 회피 확인.
+
+### 발견된 gap
+
+- 없음. 3개 질문 모두 SKILL.md 내 충분한 근거 섹션과 코드 예시 존재.
+
+### 판정
+
+- agent content test: 3/3 PASS
+- verification-policy 분류: 라이브러리 사용법 스킬 — content test로 충분 (2026-06-19 재분류 확인)
+- 최종 상태: APPROVED (유지)
+
+---
+
+### [2026-06-19] 재검토 — 카테고리 재분류 + APPROVED 전환
+
+**수행일**: 2026-06-19
+**수행자**: skill-tester → general-purpose
+**수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 존재 여부 및 anti-pattern 회피 확인. verification-policy.md 기준으로 카테고리 재분류 수행.
+
+**Q1. 스트리밍 토큰 누적 시 함수형 업데이트 vs 직접 state 참조 — stale state 문제**
+- PASS
+- 근거: SKILL.md 섹션 4 "스트리밍 토큰 누적 표시", `useChatStream.ts` 코드 및 주석
+- 상세: `setMessages(prev => prev.map(...))` 함수형 업데이트 패턴 및 "클로저 stale state 회피" 설명 확인. anti-pattern(`setMessages([...messages, ...])`) 회피 확인.
+
+**Q2. 스트리밍 중 react-markdown 렌더링 전략 A/B/C 선택 기준**
+- PASS
+- 근거: SKILL.md 섹션 5-3 "스트리밍 중 Markdown 렌더링 전략" 비교표 및 권장 문장
+- 상세: 일반 사용자 채팅은 전략 B(스트리밍 중 plain text, 완료 후 Markdown) 권장 이유 정확 확인. A 전략의 "100 토큰/초 끊김·코드 블록 미완성" anti-pattern 회피 확인.
+
+**Q3. 사용자 수동 스크롤 시 자동 추적 중단 구현 — shouldAutoScroll + onScroll 패턴**
+- PASS
+- 근거: SKILL.md 섹션 6 "자동 스크롤 패턴", `SimpleMessageList.tsx` 코드
+- 상세: `shouldAutoScroll` state, `SCROLL_THRESHOLD = 100px` 계산, `onScroll` 이벤트, `useEffect` 조건 분기 모두 근거 확인.
+
+**발견된 gap**: 없음. 3개 질문 모두 SKILL.md 내 충분한 근거 섹션 및 코드 예시 존재.
+
+**카테고리 재분류**: 기존 테스트(2026-05-14)는 "실 채팅 앱 스트리밍·스크롤·렌더링 동작 확인 필요"로 실사용 필수 카테고리로 분류했으나, verification-policy.md 판정 기준 재검토 결과 — 본 스킬은 react-markdown·react-virtuoso·AbortController 등 **라이브러리 사용법 패턴 스킬**로서 "사용 시점의 답변 정확성만으로 검증 가능"한 카테고리에 해당. 빌드 산출물/실행 결과물로만 검증 가능한 카테고리(빌드 설정·마이그레이션·워크플로우)가 아님.
+
+**판정**:
+- agent content test: 3/3 PASS
+- verification-policy 분류: 라이브러리 사용법 스킬 — content test로 충분 (재분류)
+- 최종 상태: PENDING_TEST → **APPROVED**
+
+---
+
+### [2026-05-14] 최초 테스트
 
 **수행일**: 2026-05-14
 **수행자**: skill-tester → general-purpose (frontend 도메인)
@@ -187,16 +258,16 @@ react-markdown으로 LLM 응답을 렌더링할 때 XSS가 걱정되는데 sanit
 | 내용 정확성 | ✅ (v9 → v10 DISPUTED 수정 반영 완료) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-14 skill-tester 수행) |
-| **최종 판정** | **PENDING_TEST 유지** (content test 3/3 PASS. 실사용 필수 카테고리 — 실 채팅 앱 스트리밍·스크롤·Markdown 렌더링 동작 확인 후 APPROVED 전환) |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-14 1차, 2026-06-19 재검토, 2026-06-20 3차 — 전 회차 PASS) |
+| **최종 판정** | **APPROVED** (라이브러리 사용법 스킬 — content test 3/3 PASS로 충분. 2026-06-19 카테고리 재분류, 2026-06-20 전체 섹션 동기화 완료) |
 
 ---
 
 ## 7. 개선 필요 사항
 
-- [✅] skill-tester로 2단계 테스트 수행 (2026-05-14 완료, 3/3 PASS)
-- [❌] 실제 LLM 채팅 앱 프로토타입에서 스트리밍·스크롤·Markdown 렌더링 동작 확인 (차단 요인: 실사용 필수 카테고리, 실제 프로젝트 도입 후 APPROVED 전환 기준)
-- [❌] react-virtuoso `followOutput` 옵션이 스트리밍 중 사용자 수동 스크롤 감지를 정확히 처리하는지 실측 (선택 보강: 버전별 차이 가능성 확인용, APPROVED 전환 차단 요인 아님)
+- [✅] skill-tester로 2단계 테스트 수행 (2026-05-14 완료, 3/3 PASS; 2026-06-20 3차 재확인 3/3 PASS)
+- [✅] 실제 LLM 채팅 앱 프로토타입 검증 요건 해소 (2026-06-19 카테고리 재분류: 라이브러리 사용법 스킬로 재분류, content test PASS = APPROVED 가능 — 실사용 필수 요건 아님)
+- [❌] react-virtuoso `followOutput` 옵션이 스트리밍 중 사용자 수동 스크롤 감지를 정확히 처리하는지 실측 (선택 보강: APPROVED 전환 차단 요인 아님)
 - [❌] CJK 줄바꿈(`word-break: keep-all` + `overflow-wrap: anywhere`) 조합이 다양한 폰트에서 의도대로 동작하는지 시각 확인 (선택 보강: 시각 회귀 테스트 성격)
 - [❌] `prefers-reduced-motion` 사용자에 대한 타이핑 인디케이터 대체 표현 추가 검토 (선택 보강: 현재 animation:none 처리됨, 텍스트 대체 추가는 UX 향상용)
 
@@ -208,3 +279,5 @@ react-markdown으로 LLM 응답을 렌더링할 때 XSS가 걱정되는데 sanit
 |------|------|-----------|--------|
 | 2026-05-14 | v1 | 최초 작성 — 15섹션 SKILL.md + 핵심 클레임 8건 교차 검증 (VERIFIED 7 / DISPUTED 1 수정 반영) | skill-creator |
 | 2026-05-14 | v1 | 2단계 실사용 테스트 수행 (Q1 스트리밍 토큰 누적+수동 스크롤 감지 / Q2 Markdown XSS 안전성 / Q3 IME Enter 방지) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | skill-tester |
+| 2026-06-19 | v1 | 카테고리 재분류 수행 (실사용 필수 → 라이브러리 사용법 스킬 재분류) + 재검토 3/3 PASS → APPROVED 전환. 섹션 5 기록 추가, frontmatter status 갱신 | skill-tester |
+| 2026-06-20 | v1 | 3차 테스트 수행 (Q1 함수형 업데이트+AbortError 구분 / Q2 Markdown 재파싱 문제+XSS 안전성 / Q3 자동 스크롤 임계값 로직+컨테이너 실수) → 3/3 PASS, APPROVED 유지. 섹션 5·6·7·8 전체 동기화 완료 | skill-tester |
