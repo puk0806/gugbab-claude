@@ -5,12 +5,12 @@
 
 ---
 
-## 자동 동기화 훅 (강제)
+## 자동 동기화 훅
 
 | 훅 | 이벤트 | 동작 |
 |----|--------|------|
-| `memory-sync.js` | PostToolUse Write / Edit | memory 파일 변경 감지 → 즉시 commit + push |
-| `memory-stop-guard.js` | Stop | 세션 종료 전 미동기 변경 재시도 |
+| `memory-sync.js` | PostToolUse Write / Edit | memory 파일 변경 감지 → commit (push는 사용자가 직접) |
+| `memory-stop-guard.js` | Stop | 세션 종료 전 미커밋 변경 커밋 (push는 사용자가 직접) |
 | `memory-pull.js` | SessionStart | 세션 시작 시 원격 최신 memory pull |
 
 ---
