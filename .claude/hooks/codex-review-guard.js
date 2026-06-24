@@ -66,20 +66,16 @@ function hasCodeChangesNewerThan(repoRoot, markerMtime) {
       // R (renamed): "old -> new" — extract the new path after " -> "
       const actualFile = flag.startsWith('R') ? (f.split(' -> ').pop() || f) : f;
       if (!CODE_EXT.test(actualFile)) return false;
-      if (flag === 'D' || flag.startsWith('R')) {
-        // Can't check mtime of deleted/renamed source directly.
-        // Staged changes: .git/index mtime is updated.
-        // Unstaged deletes (rm -f): .git/index unchanged, parent dir mtime is updated.
+      if (flag === 'D') {
+        // deleted: .git/index mtime은 git status 자체가 갱신하므로 사용 금지 → parent dir mtime으로만 판단
         try {
-          const indexMtime = fs.statSync(path.join(repoRoot, '.git', 'index')).mtime.getTime();
-          if (indexMtime > markerMtime) return true;
+          const dirMtime = fs.statSync(path.join(repoRoot, path.dirname(actualFile))).mtime.getTime();
+          return dirMtime > markerMtime;
         } catch {}
-        if (flag === 'D') {
-          try {
-            const dirMtime = fs.statSync(path.join(repoRoot, path.dirname(actualFile))).mtime.getTime();
-            return dirMtime > markerMtime;
-          } catch {}
-        }
+        return false;
+      }
+      if (flag.startsWith('R')) {
+        // renamed: 마커 이후 신규 코드 변경 아님
         return false;
       }
       try { return fs.statSync(path.join(repoRoot, actualFile)).mtime.getTime() > markerMtime; }

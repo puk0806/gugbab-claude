@@ -1,5 +1,5 @@
 'use strict';
-// PostToolUse (Write|Edit): memory 파일 변경 감지 → 즉시 git commit + push
+// PostToolUse (Write|Edit): memory 파일 변경 감지 → git commit (push는 사용자가 직접)
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
@@ -33,14 +33,8 @@ process.stdin.on('end', () => {
     if (!status.stdout?.trim()) process.exit(0);
 
     const fileName = path.basename(filePath);
-    spawnSync('git', ['-C', repoRoot, 'commit', '-m', `[memory] sync: ${fileName}`], { stdio: 'pipe' });
-
-    const push = spawnSync('git', ['-C', repoRoot, 'push'], { encoding: 'utf8', stdio: 'pipe', timeout: 15000 });
-    if (push.status !== 0) {
-      process.stdout.write(
-        `[memory-sync] ⚠️  push 실패 — 나중에 수동으로 git push하세요.\n${push.stderr || ''}\n`
-      );
-    }
+    // memory/ 경로만 커밋 (staged 다른 파일에 영향 없음)
+    spawnSync('git', ['-C', repoRoot, 'commit', '-m', `[memory] sync: ${fileName}`, '--', 'memory/'], { stdio: 'pipe' });
   } catch {
     // Claude 작업 절대 차단 금지
   }
