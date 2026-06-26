@@ -27,35 +27,93 @@ done
 
 # ── 템플릿 선택 ────────────────────────────────────────────────────────
 echo ""
-echo "템플릿을 선택하세요:"
-echo "  0) 전체              — 모든 에이전트·스킬·규칙 복사"
-echo "  1) 유틸              — 비개발자용 (리서치·검증·플래너 등 범용 에이전트만)"
-echo "  2) react-spa         — React SPA"
-echo "  3) nextjs            — Next.js App Router"
-echo "  4) rust-axum         — Rust + Axum 백엔드"
-echo "  5) java-spring-legacy — Java 11 + Spring Boot 2.5 + WAR + MyBatis"
-echo "  6) java-spring-modern — Java 21 + Spring Boot 3.x + Jar/Native + MyBatis"
-echo "  7) unity-game        — Unity 6 LTS 2D 모바일 게임 개발"
-echo "  8) academic          — 논문·학술 작업 (humanities/education/research/writing)"
-echo "  9) dream-interpretation         — 꿈 해몽 앱 개발 (dream 전용 스킬·에이전트 포함)"
+echo "템플릿을 선택하세요 (쉼표로 구분해서 복수 선택 가능):"
+echo "   0/all                — 전체 (모든 에이전트·스킬·규칙)"
+echo "   1/util               — 유틸 (비개발자용 범용 에이전트만)"
+echo "   2/react-spa          — React SPA (Vite + TypeScript)"
+echo "   3/nextjs             — Next.js App Router"
+echo "   4/rust-axum          — Rust + Axum 백엔드"
+echo "   5/java-spring-legacy — Java 11 + Spring Boot 2.5 + MyBatis"
+echo "   6/java-spring-modern — Java 21 + Spring Boot 3.x + MyBatis"
+echo "   7/unity-game         — Unity 6 LTS 2D 모바일 게임"
+echo "   8/academic           — 논문·학술 작업"
+echo "   9/dream-interpretation — 꿈 해몽 앱 개발"
+echo "  10/health             — 건강·식단 PWA 앱"
+echo ""
+echo "  복수 선택 예시: react-spa,health  또는  2,10  또는  nextjs,java-spring-modern"
 echo ""
 
-while true; do
-  read -rp "번호 입력 (0-9): " TEMPLATE_NUM
-  case "$TEMPLATE_NUM" in
-    0) TEMPLATE="all"; break ;;
-    1) TEMPLATE="util"; break ;;
-    2) TEMPLATE="react-spa"; break ;;
-    3) TEMPLATE="nextjs"; break ;;
-    4) TEMPLATE="rust-axum"; break ;;
-    5) TEMPLATE="java-spring-legacy"; break ;;
-    6) TEMPLATE="java-spring-modern"; break ;;
-    7) TEMPLATE="unity-game"; break ;;
-    8) TEMPLATE="academic"; break ;;
-    9) TEMPLATE="dream-interpretation"; break ;;
-    *) echo "오류: 0~9 중 하나를 입력하세요." ;;
+_parse_template() {
+  local raw="${1// /}"  # trim spaces
+  case "$raw" in
+    0|all)                  echo "all" ;;
+    1|util)                 echo "util" ;;
+    2|react-spa)            echo "react-spa" ;;
+    3|nextjs)               echo "nextjs" ;;
+    4|rust-axum)            echo "rust-axum" ;;
+    5|java-spring-legacy)   echo "java-spring-legacy" ;;
+    6|java-spring-modern)   echo "java-spring-modern" ;;
+    7|unity-game)           echo "unity-game" ;;
+    8|academic)             echo "academic" ;;
+    9|dream-interpretation) echo "dream-interpretation" ;;
+    10|health)              echo "health" ;;
+    *) return 1 ;;
   esac
+}
+
+while true; do
+  read -rp "번호 또는 이름 입력 (쉼표로 구분): " TEMPLATE_INPUT
+  TEMPLATES=()
+  _VALID=true
+  IFS=',' read -ra _RAW_LIST <<< "$TEMPLATE_INPUT"
+  for _raw in "${_RAW_LIST[@]}"; do
+    _parsed=$(_parse_template "$_raw")
+    if [ $? -ne 0 ]; then
+      echo "오류: 알 수 없는 템플릿 '${_raw// /}'"
+      _VALID=false; break
+    fi
+    TEMPLATES+=("$_parsed")
+  done
+  [ "$_VALID" = true ] && [ "${#TEMPLATES[@]}" -gt 0 ] && break
+  echo "다시 입력해주세요."
 done
+
+TEMPLATE="${TEMPLATES[0]}"   # 첫 번째를 기본 템플릿으로 사용 (CLAUDE.md·docs 선택 기준)
+_TMPL_STR="${TEMPLATES[*]}"
+TEMPLATE_DISPLAY="${_TMPL_STR// /,}"  # 표시용 (쉼표 구분)
+
+# ── 다중 템플릿 헬퍼 함수 ─────────────────────────────────────────────
+
+# 특정 템플릿 포함 여부
+has_template() {
+  local _t="$1"
+  for _tmpl in "${TEMPLATES[@]}"; do [ "$_tmpl" = "$_t" ] && return 0; done
+  return 1
+}
+
+# 개발 템플릿(코딩 작업)이 하나라도 선택되었는가
+is_dev_selected() {
+  for _tmpl in "${TEMPLATES[@]}"; do
+    case "$_tmpl" in
+      react-spa|nextjs|rust-axum|java-spring-legacy|java-spring-modern|unity-game|health|all)
+        return 0 ;;
+    esac
+  done
+  return 1
+}
+
+# TypeScript 대상 템플릿이 하나라도 선택되었는가
+is_ts_selected() {
+  for _tmpl in "${TEMPLATES[@]}"; do
+    case "$_tmpl" in react-spa|nextjs|health|all) return 0 ;; esac
+  done
+  return 1
+}
+
+# util만 선택되었는가 (util 단독일 때만 true)
+is_util_only() {
+  [ "${#TEMPLATES[@]}" -eq 1 ] && has_template "util"
+}
 
 # ── Memory 공유 기능 ────────────────────────────────────────────────────
 echo ""
@@ -77,45 +135,42 @@ esac
 
 # ── Codex 적대적 코드 리뷰 (개발 템플릿 전용) ─────────────────────────
 INCLUDE_CODEX=false
-case "$TEMPLATE" in
-  react-spa|nextjs|rust-axum|java-spring-legacy|java-spring-modern|unity-game|all)
-    echo ""
-    echo "Codex 적대적 코드 리뷰를 활성화하시겠습니까?"
-    echo "  (codex CLI 설치 + 로그인 필요. settings.json에 codex@openai-codex 플러그인 등록)"
-    read -rp "  활성화 (y/N): " _CODEX_ANS
-    case "$_CODEX_ANS" in
-      y|Y) INCLUDE_CODEX=true ;;
-      *)   INCLUDE_CODEX=false ;;
-    esac ;;
-esac
+if is_dev_selected; then
+  echo ""
+  echo "Codex 적대적 코드 리뷰를 활성화하시겠습니까?"
+  echo "  (codex CLI 설치 + 로그인 필요. settings.json에 codex@openai-codex 플러그인 등록)"
+  read -rp "  활성화 (y/N): " _CODEX_ANS
+  case "$_CODEX_ANS" in
+    y|Y) INCLUDE_CODEX=true ;;
+    *)   INCLUDE_CODEX=false ;;
+  esac
+fi
 
 # ── README 미업데이트 커밋 차단 (readme-guard) ─────────────────────────
 INCLUDE_README_GUARD=false
-case "$TEMPLATE" in
-  react-spa|nextjs|rust-axum|java-spring-legacy|java-spring-modern|unity-game|academic|dream-interpretation|all)
-    echo ""
-    echo "스킬/에이전트 수정 후 README 미업데이트 시 git commit/push 차단하시겠습니까?"
-    echo "  (.claude/skills/ 또는 .claude/agents/ 파일 수정 시 적용)"
-    read -rp "  활성화 (y/N): " _README_GUARD_ANS
-    case "$_README_GUARD_ANS" in
-      y|Y) INCLUDE_README_GUARD=true ;;
-      *)   INCLUDE_README_GUARD=false ;;
-    esac ;;
-esac
+if ! is_util_only; then
+  echo ""
+  echo "스킬/에이전트 수정 후 README 미업데이트 시 git commit/push 차단하시겠습니까?"
+  echo "  (.claude/skills/ 또는 .claude/agents/ 파일 수정 시 적용)"
+  read -rp "  활성화 (y/N): " _README_GUARD_ANS
+  case "$_README_GUARD_ANS" in
+    y|Y) INCLUDE_README_GUARD=true ;;
+    *)   INCLUDE_README_GUARD=false ;;
+  esac
+fi
 
 # ── staleness-check 강제 모드 (스킬 검증일 60일 초과 시 재검증 강제 지시) ──
 INCLUDE_STALENESS_GUARD=false
-case "$TEMPLATE" in
-  react-spa|nextjs|rust-axum|java-spring-legacy|java-spring-modern|unity-game|academic|dream-interpretation|all)
-    echo ""
-    echo "스킬 검증일 60일 초과 시 세션 시작마다 freshness-auditor 강제 재검증을 활성화하시겠습니까?"
-    echo "  (30~59일: 경고만. 60일+: Claude가 다른 작업 전 반드시 재검증)"
-    read -rp "  활성화 (y/N): " _STALE_ANS
-    case "$_STALE_ANS" in
-      y|Y) INCLUDE_STALENESS_GUARD=true ;;
-      *)   INCLUDE_STALENESS_GUARD=false ;;
-    esac ;;
-esac
+if ! is_util_only; then
+  echo ""
+  echo "스킬 검증일 60일 초과 시 세션 시작마다 freshness-auditor 강제 재검증을 활성화하시겠습니까?"
+  echo "  (30~59일: 경고만. 60일+: Claude가 다른 작업 전 반드시 재검증)"
+  read -rp "  활성화 (y/N): " _STALE_ANS
+  case "$_STALE_ANS" in
+    y|Y) INCLUDE_STALENESS_GUARD=true ;;
+    *)   INCLUDE_STALENESS_GUARD=false ;;
+  esac
+fi
 
 # ── 브랜치 보호 규칙 ────────────────────────────────────────────────────
 echo ""
@@ -131,7 +186,7 @@ esac
 # ── 설치 시작 ─────────────────────────────────────────────────────────
 echo ""
 echo "대상: $TARGET"
-echo "템플릿: $TEMPLATE"
+echo "템플릿: $TEMPLATE_DISPLAY"
 echo "memory 공유: $INCLUDE_MEMORY"
 echo "Superpowers: $INCLUDE_SUPERPOWERS"
 echo "Codex 리뷰: $INCLUDE_CODEX"
@@ -190,15 +245,13 @@ HOOKS_BRANCH_SET=("branch-protection.js")
 # 복사 목록 구성
 HOOKS=("${HOOKS_COMMON[@]}")
 
-case "$TEMPLATE" in
-  react-spa|nextjs|rust-axum|java-spring-legacy|java-spring-modern|unity-game|all)
-    HOOKS+=("${HOOKS_DEV_ONLY[@]}") ;;
-esac
+if is_dev_selected; then
+  HOOKS+=("${HOOKS_DEV_ONLY[@]}")
+fi
 
-case "$TEMPLATE" in
-  react-spa|nextjs|all)
-    HOOKS+=("${HOOKS_TS_ONLY[@]}") ;;
-esac
+if is_ts_selected; then
+  HOOKS+=("${HOOKS_TS_ONLY[@]}")
+fi
 
 if [ "$INCLUDE_MEMORY" = "true" ]; then
   HOOKS+=("${HOOKS_MEMORY_SET[@]}")
@@ -220,8 +273,8 @@ for hook in "${HOOKS[@]}"; do
   fi
 done
 
-# git 훅 (.githooks/pre-commit) — 개발 템플릿만
-if [ "$TEMPLATE" != "util" ]; then
+# git 훅 (.githooks/pre-commit) — util 단독 제외
+if ! is_util_only; then
   if [ -d "$REPO_DIR/.githooks" ]; then
     mkdir -p "$TARGET/.githooks"
     if cp -Rf "$REPO_DIR/.githooks/." "$TARGET/.githooks/" 2>/dev/null; then
@@ -372,10 +425,56 @@ EXCLUDE_AGENTS_GAME=(
   "backend/build-error-resolver.md"
 )
 
-# 에이전트 제외 여부 확인 헬퍼
+# 에이전트 포함 여부 확인 헬퍼
 is_in_list() {
   local needle="$1"; shift
   for item in "$@"; do [ "$item" = "$needle" ] && return 0; done
+  return 1
+}
+
+# ── 다중 템플릿 에이전트 포함 판정 ──────────────────────────────────────
+
+# 단일 템플릿 기준으로 에이전트 포함 여부 반환 (0=포함, 1=제외)
+_agent_ok_for_tmpl() {
+  local rel="$1" tmpl="$2"
+  # 화이트리스트 방식 템플릿
+  if [ "$tmpl" = "util" ]; then
+    is_in_list "$rel" "${UTIL_AGENTS[@]}" && return 0; return 1
+  fi
+  if [ "$tmpl" = "academic" ]; then
+    is_in_list "$rel" "${ACADEMIC_AGENTS[@]}" && return 0; return 1
+  fi
+  if [ "$tmpl" = "dream-interpretation" ]; then
+    is_in_list "$rel" "${DREAM_APP_AGENTS[@]}" && return 0; return 1
+  fi
+  if [ "$tmpl" = "all" ]; then return 0; fi
+  # 개발 템플릿 공통: 학술·dream 전용 제외
+  is_in_list "$rel" "${SPECIAL_AGENTS_ACADEMIC[@]}" && return 1
+  is_in_list "$rel" "${SPECIAL_AGENTS_DREAM[@]}" && return 1
+  # unity-game 외 게임 에이전트 제외
+  if [ "$tmpl" != "unity-game" ]; then
+    is_in_list "$rel" "${SPECIAL_AGENTS_GAME[@]}" && return 1
+  fi
+  # 기술 스택별 추가 제외
+  case "$tmpl" in
+    react-spa|nextjs|health)
+      is_in_list "$rel" "${EXCLUDE_AGENTS_FRONTEND[@]}" && return 1 ;;
+    rust-axum)
+      is_in_list "$rel" "${EXCLUDE_AGENTS_RUST[@]}" && return 1 ;;
+    java-spring-legacy|java-spring-modern)
+      is_in_list "$rel" "${EXCLUDE_AGENTS_JAVA[@]}" && return 1 ;;
+    unity-game)
+      is_in_list "$rel" "${EXCLUDE_AGENTS_GAME[@]}" && return 1 ;;
+  esac
+  return 0
+}
+
+# 선택된 템플릿 중 하나라도 포함하면 포함 (union)
+should_include_agent() {
+  local rel="$1"
+  for _tmpl in "${TEMPLATES[@]}"; do
+    _agent_ok_for_tmpl "$rel" "$_tmpl" && return 0
+  done
   return 1
 }
 
@@ -383,50 +482,8 @@ for src_path in "$REPO_DIR/.claude/agents"/**/*.md "$REPO_DIR/.claude/agents"/*.
   [ -f "$src_path" ] || continue
   rel="${src_path#$REPO_DIR/.claude/agents/}"
 
-  # 화이트리스트 템플릿 (util / academic / dream-interpretation)
-  if [ "$TEMPLATE" = "util" ]; then
-    is_in_list "$rel" "${UTIL_AGENTS[@]}" || continue
-  fi
-  if [ "$TEMPLATE" = "academic" ]; then
-    is_in_list "$rel" "${ACADEMIC_AGENTS[@]}" || continue
-  fi
-  if [ "$TEMPLATE" = "dream-interpretation" ]; then
-    is_in_list "$rel" "${DREAM_APP_AGENTS[@]}" || continue
-  fi
-
-  # 일반 개발 템플릿: 특수 목적 에이전트 공통 제외
-  if [[ "$TEMPLATE" =~ ^(react-spa|nextjs|rust-axum|java-spring-legacy|java-spring-modern|unity-game)$ ]]; then
-    if is_in_list "$rel" "${SPECIAL_AGENTS_ACADEMIC[@]}"; then
-      echo "  skip (학술 전용) .claude/agents/$rel" && continue
-    fi
-    if is_in_list "$rel" "${SPECIAL_AGENTS_DREAM[@]}"; then
-      echo "  skip (dream 전용) .claude/agents/$rel" && continue
-    fi
-  fi
-
-  # 게임 에이전트 제외 (unity-game 외 모두)
-  if [ "$TEMPLATE" != "unity-game" ] && [ "$TEMPLATE" != "all" ]; then
-    if is_in_list "$rel" "${SPECIAL_AGENTS_GAME[@]}"; then
-      echo "  skip (게임 전용) .claude/agents/$rel" && continue
-    fi
-  fi
-
-  # 기술 스택별 제외
-  if [ "$TEMPLATE" = "react-spa" ] || [ "$TEMPLATE" = "nextjs" ]; then
-    is_in_list "$rel" "${EXCLUDE_AGENTS_FRONTEND[@]}" && \
-      echo "  skip (타언어 백엔드) .claude/agents/$rel" && continue
-  fi
-  if [ "$TEMPLATE" = "rust-axum" ]; then
-    is_in_list "$rel" "${EXCLUDE_AGENTS_RUST[@]}" && \
-      echo "  skip (rust 외) .claude/agents/$rel" && continue
-  fi
-  if [ "$TEMPLATE" = "java-spring-legacy" ] || [ "$TEMPLATE" = "java-spring-modern" ]; then
-    is_in_list "$rel" "${EXCLUDE_AGENTS_JAVA[@]}" && \
-      echo "  skip (java 외) .claude/agents/$rel" && continue
-  fi
-  if [ "$TEMPLATE" = "unity-game" ]; then
-    is_in_list "$rel" "${EXCLUDE_AGENTS_GAME[@]}" && \
-      echo "  skip (웹·서버 에이전트 제외) .claude/agents/$rel" && continue
+  if ! should_include_agent "$rel"; then
+    echo "  skip .claude/agents/$rel" && continue
   fi
 
   dest="$TARGET/.claude/agents/$rel"
@@ -477,34 +534,40 @@ RULES_COMMON=(
 # util 전용 (최소)
 RULES_UTIL=("git.md" "info-verification.md")
 
+# ── 다중 템플릿 규칙 포함 판정 ──────────────────────────────────────────
+
+_rule_ok_for_tmpl() {
+  local name="$1" tmpl="$2"
+  if [ "$tmpl" = "util" ]; then
+    is_in_list "$name" "${RULES_UTIL[@]}" && return 0; return 1
+  fi
+  is_in_list "$name" "${RULES_COMMON[@]}" && return 0
+  case "$name" in
+    java.md)
+      [[ "$tmpl" == all || "$tmpl" == java-spring-legacy || "$tmpl" == java-spring-modern ]] && return 0 ;;
+    rust.md)
+      [[ "$tmpl" == all || "$tmpl" == rust-axum ]] && return 0 ;;
+    typescript.md)
+      [[ "$tmpl" == all || "$tmpl" == react-spa || "$tmpl" == nextjs || "$tmpl" == health ]] && return 0 ;;
+  esac
+  return 1
+}
+
+should_include_rule() {
+  local name="$1"
+  [ "$name" = "memory-sync.md" ]  && { [ "$INCLUDE_MEMORY" = "true" ] && return 0 || return 1; }
+  [ "$name" = "codex-review.md" ] && { [ "$INCLUDE_CODEX" = "true" ]  && return 0 || return 1; }
+  for _tmpl in "${TEMPLATES[@]}"; do
+    _rule_ok_for_tmpl "$name" "$_tmpl" && return 0
+  done
+  return 1
+}
+
 mkdir -p "$TARGET/.claude/rules"
 for rule in "$REPO_DIR/.claude/rules"/*.md; do
   [ -f "$rule" ] || continue
   name="$(basename "$rule")"
-
-  if [ "$TEMPLATE" = "util" ]; then
-    is_in_list "$name" "${RULES_UTIL[@]}" || continue
-  else
-    # 공통 룰 포함 여부 확인
-    if ! is_in_list "$name" "${RULES_COMMON[@]}"; then
-      # 언어별·조건부 룰
-      case "$name" in
-        java.md)
-          case "$TEMPLATE" in all|java-spring-legacy|java-spring-modern) ;; *) continue ;; esac ;;
-        rust.md)
-          case "$TEMPLATE" in all|rust-axum) ;; *) continue ;; esac ;;
-        typescript.md)
-          case "$TEMPLATE" in all|react-spa|nextjs) ;; *) continue ;; esac ;;
-        memory-sync.md)
-          [ "$INCLUDE_MEMORY" = "true" ] || continue ;;
-        codex-review.md)
-          [ "$INCLUDE_CODEX" = "true" ] || continue ;;
-        *)
-          continue ;;
-      esac
-    fi
-  fi
-
+  if ! should_include_rule "$name"; then continue; fi
   if cp -f "$rule" "$TARGET/.claude/rules/$name" 2>/dev/null; then
     echo "  → .claude/rules/$name"
   else
@@ -610,135 +673,86 @@ is_java_skill() {
   return 1
 }
 
+# ── 다중 템플릿 스킬 포함 판정 ──────────────────────────────────────────
+
+# 단일 템플릿 기준으로 스킬 포함 여부 반환 (0=포함, 1=제외)
+_skill_ok_for_tmpl() {
+  local rel="$1" skill_prefix="$2" tmpl="$3"
+  if [ "$tmpl" = "all" ]; then return 0; fi
+  if [ "$tmpl" = "util" ]; then
+    [[ "$rel" == frontend/* || "$rel" == backend/* || "$rel" == devops/* ||
+       "$rel" == architecture/* || "$rel" == game/* || "$rel" == humanities/* ||
+       "$rel" == education/* || "$rel" == research/* || "$rel" == writing/* ]] && return 1
+    return 0
+  fi
+  if [ "$tmpl" = "academic" ]; then
+    [[ "$rel" == frontend/* || "$rel" == backend/* || "$rel" == devops/* || "$rel" == game/* ]] && return 1
+    [[ "$rel" == humanities/* ]] && is_dream_humanities "$skill_prefix" && return 1
+    [[ "$rel" == meta/* ]] && is_dream_meta "$skill_prefix" && return 1
+    [[ "$rel" == architecture/* ]] && [[ "$skill_prefix" != "architecture/ddd" ]] && return 1
+    return 0
+  fi
+  if [ "$tmpl" = "dream-interpretation" ]; then
+    [[ "$rel" == game/* || "$rel" == education/* || "$rel" == research/* ]] && return 1
+    [[ "$rel" == humanities/* ]] && ! is_dream_humanities "$skill_prefix" && return 1
+    [[ "$rel" == writing/* ]] && ! is_seo_writing "$skill_prefix" && return 1
+    [[ "$rel" == backend/* ]] && [[ "$skill_prefix" != backend/python-* ]] && return 1
+    return 0
+  fi
+  if [[ "$tmpl" =~ ^(react-spa|nextjs|health)$ ]]; then
+    [[ "$rel" == backend/* || "$rel" == game/* || "$rel" == humanities/* ||
+       "$rel" == education/* || "$rel" == research/* ]] && return 1
+    [[ "$rel" == writing/* ]] && ! is_seo_writing "$skill_prefix" && return 1
+    return 0
+  fi
+  if [ "$tmpl" = "rust-axum" ]; then
+    [[ "$rel" == frontend/* || "$rel" == game/* || "$rel" == humanities/* ||
+       "$rel" == education/* || "$rel" == research/* || "$rel" == writing/* ]] && return 1
+    [[ "$rel" == backend/* ]] && is_java_skill "$skill_prefix" && return 1
+    return 0
+  fi
+  if [ "$tmpl" = "java-spring-legacy" ]; then
+    [[ "$rel" == frontend/* || "$rel" == game/* || "$rel" == humanities/* ||
+       "$rel" == education/* || "$rel" == research/* || "$rel" == writing/* ]] && return 1
+    [[ "$rel" == backend/* ]] && ! is_java_skill "$skill_prefix" && return 1
+    for _m in "${JAVA_SKILLS_MODERN_ONLY[@]}"; do
+      [[ "$skill_prefix" == "$_m" ]] && return 1
+    done
+    return 0
+  fi
+  if [ "$tmpl" = "java-spring-modern" ]; then
+    [[ "$rel" == frontend/* || "$rel" == game/* || "$rel" == humanities/* ||
+       "$rel" == education/* || "$rel" == research/* || "$rel" == writing/* ]] && return 1
+    [[ "$rel" == backend/* ]] && ! is_java_skill "$skill_prefix" && return 1
+    for _l in "${JAVA_SKILLS_LEGACY_ONLY[@]}"; do
+      [[ "$skill_prefix" == "$_l" ]] && return 1
+    done
+    return 0
+  fi
+  if [ "$tmpl" = "unity-game" ]; then
+    [[ "$rel" == frontend/* || "$rel" == backend/* || "$rel" == humanities/* ||
+       "$rel" == education/* || "$rel" == research/* || "$rel" == writing/* ]] && return 1
+    return 0
+  fi
+  return 1
+}
+
+# 선택된 템플릿 중 하나라도 포함하면 포함 (union)
+should_include_skill() {
+  local rel="$1" skill_prefix="$2"
+  for _tmpl in "${TEMPLATES[@]}"; do
+    _skill_ok_for_tmpl "$rel" "$skill_prefix" "$_tmpl" && return 0
+  done
+  return 1
+}
+
 for src_path in "$REPO_DIR/.claude/skills"/*/*/SKILL.md; do
   [ -f "$src_path" ] || continue
   rel="${src_path#$REPO_DIR/.claude/skills/}"
   skill_prefix="${rel%/SKILL.md}"   # backend/foo
 
-  # ── 템플릿별 스킬 필터 ────────────────────────────────────────────────
-
-  # 유틸: 기술 스택 스킬 전부 제외
-  if [ "$TEMPLATE" = "util" ]; then
-    [[ "$rel" == frontend/* ]] && continue
-    [[ "$rel" == backend/* ]] && continue
-    [[ "$rel" == devops/* ]] && continue
-    [[ "$rel" == architecture/* ]] && continue
-    [[ "$rel" == game/* ]] && continue
-    [[ "$rel" == humanities/* ]] && continue
-    [[ "$rel" == education/* ]] && continue
-    [[ "$rel" == research/* ]] && continue
-    [[ "$rel" == writing/* ]] && continue
-  fi
-
-  # academic: 학술·논문 스킬만 포함
-  if [ "$TEMPLATE" = "academic" ]; then
-    [[ "$rel" == frontend/* ]] && continue
-    [[ "$rel" == backend/* ]] && continue
-    [[ "$rel" == devops/* ]] && continue
-    [[ "$rel" == game/* ]] && continue
-    # dream-interpretation 전용 humanities는 제외
-    if [[ "$rel" == humanities/* ]] && is_dream_humanities "$skill_prefix"; then
-      echo "  skip (dream 전용) .claude/skills/$rel" && continue
-    fi
-    # dream-interpretation 전용 meta는 제외
-    if [[ "$rel" == meta/* ]] && is_dream_meta "$skill_prefix"; then
-      echo "  skip (dream 전용) .claude/skills/$rel" && continue
-    fi
-    # architecture는 ddd만 허용
-    if [[ "$rel" == architecture/* ]] && [[ "$skill_prefix" != "architecture/ddd" ]]; then
-      echo "  skip (비학술 architecture) .claude/skills/$rel" && continue
-    fi
-  fi
-
-  # dream-interpretation: 꿈 앱 스킬 포함 (game·학술·비드림 humanities 제외)
-  if [ "$TEMPLATE" = "dream-interpretation" ]; then
-    [[ "$rel" == game/* ]] && continue
-    [[ "$rel" == education/* ]] && continue
-    [[ "$rel" == research/* ]] && continue
-    # humanities: dream 관련만 허용
-    if [[ "$rel" == humanities/* ]] && ! is_dream_humanities "$skill_prefix"; then
-      echo "  skip (비dream humanities) .claude/skills/$rel" && continue
-    fi
-    # writing: SEO 관련만 허용
-    if [[ "$rel" == writing/* ]] && ! is_seo_writing "$skill_prefix"; then
-      echo "  skip (학술 writing) .claude/skills/$rel" && continue
-    fi
-    # backend: python 계열만 허용
-    if [[ "$rel" == backend/* ]] && [[ "$skill_prefix" != backend/python-* ]]; then
-      echo "  skip (비python 백엔드) .claude/skills/$rel" && continue
-    fi
-    # meta: dream 전용 + 범용만 허용 (riper-workflow, ralph-loop, continuous-learning 포함)
-  fi
-
-  # react-spa / nextjs: 백엔드·게임·학술 스킬 제외, SEO writing 유지
-  if [ "$TEMPLATE" = "react-spa" ] || [ "$TEMPLATE" = "nextjs" ]; then
-    [[ "$rel" == backend/* ]] && echo "  skip (backend 제외) .claude/skills/$rel" && continue
-    [[ "$rel" == game/* ]] && echo "  skip (game 제외) .claude/skills/$rel" && continue
-    [[ "$rel" == humanities/* ]] && echo "  skip (humanities 제외) .claude/skills/$rel" && continue
-    [[ "$rel" == education/* ]] && echo "  skip (education 제외) .claude/skills/$rel" && continue
-    [[ "$rel" == research/* ]] && echo "  skip (research 제외) .claude/skills/$rel" && continue
-    if [[ "$rel" == writing/* ]] && ! is_seo_writing "$skill_prefix"; then
-      echo "  skip (학술 writing 제외) .claude/skills/$rel" && continue
-    fi
-  fi
-
-  # rust-axum: 프론트엔드·Java·게임·학술 스킬 제외
-  if [ "$TEMPLATE" = "rust-axum" ]; then
-    [[ "$rel" == frontend/* ]] && echo "  skip (frontend 제외) .claude/skills/$rel" && continue
-    [[ "$rel" == game/* ]] && echo "  skip (game 제외) .claude/skills/$rel" && continue
-    [[ "$rel" == humanities/* ]] && echo "  skip (humanities 제외) .claude/skills/$rel" && continue
-    [[ "$rel" == education/* ]] && echo "  skip (education 제외) .claude/skills/$rel" && continue
-    [[ "$rel" == research/* ]] && echo "  skip (research 제외) .claude/skills/$rel" && continue
-    [[ "$rel" == writing/* ]] && echo "  skip (writing 제외) .claude/skills/$rel" && continue
-    if [[ "$rel" == backend/* ]] && is_java_skill "$skill_prefix"; then
-      echo "  skip (java 스킬 제외) .claude/skills/$rel" && continue
-    fi
-  fi
-
-  # java-spring-legacy: 프론트엔드 + Rust 백엔드 + Security 6(모던) + 게임·학술 제외
-  if [ "$TEMPLATE" = "java-spring-legacy" ]; then
-    [[ "$rel" == frontend/* ]] && echo "  skip (frontend 제외) .claude/skills/$rel" && continue
-    [[ "$rel" == game/* ]] && echo "  skip (game 제외) .claude/skills/$rel" && continue
-    [[ "$rel" == humanities/* ]] && echo "  skip (humanities 제외) .claude/skills/$rel" && continue
-    [[ "$rel" == education/* ]] && echo "  skip (education 제외) .claude/skills/$rel" && continue
-    [[ "$rel" == research/* ]] && echo "  skip (research 제외) .claude/skills/$rel" && continue
-    [[ "$rel" == writing/* ]] && echo "  skip (writing 제외) .claude/skills/$rel" && continue
-    if [[ "$rel" == backend/* ]] && ! is_java_skill "$skill_prefix"; then
-      echo "  skip (rust 백엔드 제외) .claude/skills/$rel" && continue
-    fi
-    for m in "${JAVA_SKILLS_MODERN_ONLY[@]}"; do
-      if [[ "$skill_prefix" == "$m" ]]; then
-        echo "  skip (모던 전용 스킬 제외) .claude/skills/$rel" && continue 2
-      fi
-    done
-  fi
-
-  # java-spring-modern: 프론트엔드 + Rust 백엔드 + Security 5(레거시) + 게임·학술 제외
-  if [ "$TEMPLATE" = "java-spring-modern" ]; then
-    [[ "$rel" == frontend/* ]] && echo "  skip (frontend 제외) .claude/skills/$rel" && continue
-    [[ "$rel" == game/* ]] && echo "  skip (game 제외) .claude/skills/$rel" && continue
-    [[ "$rel" == humanities/* ]] && echo "  skip (humanities 제외) .claude/skills/$rel" && continue
-    [[ "$rel" == education/* ]] && echo "  skip (education 제외) .claude/skills/$rel" && continue
-    [[ "$rel" == research/* ]] && echo "  skip (research 제외) .claude/skills/$rel" && continue
-    [[ "$rel" == writing/* ]] && echo "  skip (writing 제외) .claude/skills/$rel" && continue
-    if [[ "$rel" == backend/* ]] && ! is_java_skill "$skill_prefix"; then
-      echo "  skip (rust 백엔드 제외) .claude/skills/$rel" && continue
-    fi
-    for l in "${JAVA_SKILLS_LEGACY_ONLY[@]}"; do
-      if [[ "$skill_prefix" == "$l" ]]; then
-        echo "  skip (레거시 전용 스킬 제외) .claude/skills/$rel" && continue 2
-      fi
-    done
-  fi
-
-  # unity-game: 웹 프론트엔드 + 서버 백엔드 + 학술 스킬 제외
-  if [ "$TEMPLATE" = "unity-game" ]; then
-    [[ "$rel" == frontend/* ]] && echo "  skip (웹 프론트엔드 제외) .claude/skills/$rel" && continue
-    [[ "$rel" == backend/* ]] && echo "  skip (서버 백엔드 제외) .claude/skills/$rel" && continue
-    [[ "$rel" == humanities/* ]] && echo "  skip (humanities 제외) .claude/skills/$rel" && continue
-    [[ "$rel" == education/* ]] && echo "  skip (education 제외) .claude/skills/$rel" && continue
-    [[ "$rel" == research/* ]] && echo "  skip (research 제외) .claude/skills/$rel" && continue
-    [[ "$rel" == writing/* ]] && echo "  skip (writing 제외) .claude/skills/$rel" && continue
+  if ! should_include_skill "$rel" "$skill_prefix"; then
+    echo "  skip .claude/skills/$rel" && continue
   fi
 
   dest="$TARGET/.claude/skills/$rel"
@@ -771,7 +785,7 @@ echo "[docs (공용)]"
 #   - 공용 항목(VERIFICATION_TEMPLATE.md, hooks/)만 여기서 처리
 #   - 내부 자료(docs/domain, docs/research)는 외부 export 제외
 
-if [ "$TEMPLATE" = "util" ]; then
+if is_util_only; then
   echo "  - 유틸 모드: docs/ 건너뜀"
 else
   # docs/skills/VERIFICATION_TEMPLATE.md (스킬 검증 공용 템플릿)
@@ -820,15 +834,12 @@ fi
 if [ ! -f "$SETTINGS_FILE" ] || ([ -f "$SETTINGS_FILE" ] && [ "$OVERWRITE_SETTINGS" != "skip" ]); then
   # gen-settings.js로 템플릿·옵션에 맞는 settings.json 동적 생성
   GEN_FLAGS=""
-  [ "$TEMPLATE" = "util" ] && GEN_FLAGS="$GEN_FLAGS --util"
-  case "$TEMPLATE" in
-    react-spa|nextjs|rust-axum|java-spring-legacy|java-spring-modern|unity-game|all)
-      GEN_FLAGS="$GEN_FLAGS --dev" ;;
-  esac
-  case "$TEMPLATE" in
-    react-spa|nextjs|all)
-      GEN_FLAGS="$GEN_FLAGS --typescript" ;;
-  esac
+  # --util: util 단독 선택 시에만
+  is_util_only && GEN_FLAGS="$GEN_FLAGS --util"
+  # --dev: 개발 템플릿 하나라도 포함 시
+  is_dev_selected && GEN_FLAGS="$GEN_FLAGS --dev"
+  # --typescript: TypeScript 템플릿 하나라도 포함 시
+  is_ts_selected && GEN_FLAGS="$GEN_FLAGS --typescript"
   [ "$INCLUDE_MEMORY" = "true" ]      && GEN_FLAGS="$GEN_FLAGS --memory"
   [ "$INCLUDE_SUPERPOWERS" = "true" ] && GEN_FLAGS="$GEN_FLAGS --superpowers"
   [ "$INCLUDE_CODEX" = "true" ]       && GEN_FLAGS="$GEN_FLAGS --codex"
@@ -844,7 +855,7 @@ if [ ! -f "$SETTINGS_FILE" ] || ([ -f "$SETTINGS_FILE" ] && [ "$OVERWRITE_SETTIN
     [ "$INCLUDE_README_GUARD" = "true" ] && _SUFFIX="$_SUFFIX +readme-guard"
     [ "$INCLUDE_STALENESS_GUARD" = "true" ]   && _SUFFIX="$_SUFFIX +staleness-guard"
     [ "$INCLUDE_BRANCH_PROTECTION" = "true" ] && _SUFFIX="$_SUFFIX +branch-protection"
-    echo "  → .claude/settings.json (생성: $TEMPLATE$_SUFFIX)"
+    echo "  → .claude/settings.json (생성: $TEMPLATE_DISPLAY$_SUFFIX)"
   else
     echo "  ✗ .claude/settings.json (gen-settings.js 실패)"
   fi
@@ -856,7 +867,7 @@ echo "[CLAUDE.md]"
 
 CLAUDE_FILE="$TARGET/CLAUDE.md"
 
-# 템플릿별 CLAUDE.md 소스 선택
+# 첫 번째 템플릿 기준으로 CLAUDE.md 소스 선택
 CLAUDE_SRC="$REPO_DIR/examples/CLAUDE.${TEMPLATE}.md"
 [ -f "$CLAUDE_SRC" ] || CLAUDE_SRC="$REPO_DIR/examples/CLAUDE.template.md"
 
@@ -868,7 +879,7 @@ if [ -f "$CLAUDE_FILE" ]; then
     read -rp "  덮어쓸까요? (y/N): " OVERWRITE_CLAUDE
     case "$OVERWRITE_CLAUDE" in
       y|Y) cp "$CLAUDE_SRC" "$CLAUDE_FILE"
-           echo "  → CLAUDE.md 덮어쓰기 (템플릿: $TEMPLATE)"
+           echo "  → CLAUDE.md 덮어쓰기 (기본 템플릿: $TEMPLATE)"
            CLAUDE_WRITTEN=true; break ;;
       n|N|"") echo "  → 건너뜀 (프로젝트 고유 파일 보존)"; break ;;
       *) echo "  y 또는 n을 입력하세요." ;;
@@ -876,7 +887,7 @@ if [ -f "$CLAUDE_FILE" ]; then
   done
 else
   cp "$CLAUDE_SRC" "$CLAUDE_FILE"
-  echo "  → CLAUDE.md (템플릿: $TEMPLATE)"
+  echo "  → CLAUDE.md (기본 템플릿: $TEMPLATE)"
   CLAUDE_WRITTEN=true
 fi
 
@@ -887,6 +898,43 @@ if [ "$CLAUDE_WRITTEN" = true ]; then
     TMP=$(mktemp)
     sed "/<!-- common-rules -->/r $CLAUDE_COMMON" "$CLAUDE_FILE" | sed "/<!-- common-rules -->/d" > "$TMP" && mv "$TMP" "$CLAUDE_FILE"
     echo "  ✓ 공통 규칙 주입 (CLAUDE.common.md)"
+  fi
+
+  # ── 추가 템플릿 도메인 섹션 append (다중 템플릿 선택 시) ──────────────
+  if [ "${#TEMPLATES[@]}" -gt 1 ]; then
+    for _idx in "${!TEMPLATES[@]}"; do
+      [ "$_idx" -eq 0 ] && continue  # 첫 번째는 이미 base로 사용
+      _add_tmpl="${TEMPLATES[$_idx]}"
+      _add_src="$REPO_DIR/examples/CLAUDE.${_add_tmpl}.md"
+      [ -f "$_add_src" ] || continue
+
+      # 표준 섹션(# 헤더, ## 필수 원칙/금지 사항/규칙 참조, ---, <!-- common-rules -->)
+      # 을 제외한 도메인 전용 ## 섹션 추출
+      _domain_content=$(awk '
+        /^# /                                         { skip=1; next }
+        /^## (필수 원칙|금지 사항|규칙 참조)/         { skip=1; next }
+        /^## /                                        { skip=0 }
+        /^---/                                        { skip=0; next }
+        /^<!-- common-rules -->/                      { skip=1; next }
+        !skip                                         { print }
+      ' "$_add_src" | sed '/^[[:space:]]*$/{ N; /^\n[[:space:]]*$/d }')
+
+      if [ -n "$_domain_content" ]; then
+        # ## 규칙 참조 섹션 바로 앞에 도메인 섹션 삽입
+        TMP=$(mktemp)
+        awk -v domain="$_domain_content" -v added=0 '
+          /^## 규칙 참조/ && added==0 {
+            print "---"
+            print ""
+            print domain
+            print ""
+            added=1
+          }
+          { print }
+        ' "$CLAUDE_FILE" > "$TMP" && mv "$TMP" "$CLAUDE_FILE"
+        echo "  ✓ ${_add_tmpl} 도메인 섹션 추가"
+      fi
+    done
   fi
 
   read -rp "  프로젝트명을 입력하세요 (Enter로 건너뜀): " PROJECT_NAME
@@ -915,7 +963,7 @@ echo ""
 echo "다음 단계:"
 echo "  1. CLAUDE.md 열어서 프로젝트명·실행 명령어 수정"
 echo "  2. .claude/ 와 CLAUDE.md 를 git에 커밋"
-if [ "$TEMPLATE" != "util" ]; then
+if ! is_util_only; then
   echo "  3. git 훅 활성화 (시크릿 스캔 pre-commit):"
   echo "       git config core.hooksPath .githooks"
 fi
