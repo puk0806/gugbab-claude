@@ -1,6 +1,6 @@
 # devops 스킬
 
-Docker · GitHub Actions · n8n · SEO 운영 스킬 모음 (총 9종).
+Docker · GitHub Actions · n8n · Vercel Sandbox · SEO 운영 스킬 모음 (총 10종).
 
 | 스킬 | 설명 | 검증 |
 |------|------|------|
@@ -13,3 +13,4 @@ Docker · GitHub Actions · n8n · SEO 운영 스킬 모음 (총 9종).
 | [n8n-error-handling](../../../.claude/skills/devops/n8n-error-handling/SKILL.md) | n8n 에러 처리·재시도·알림 — Error Trigger, Retry On Fail, HTTP 상태 코드 | [→](./n8n-error-handling/verification.md) |
 | [n8n-self-hosting](../../../.claude/skills/devops/n8n-self-hosting/SKILL.md) | n8n self-host 운영 — Docker·docker-compose, PostgreSQL, 리버스 프록시, 큐 모드 | [→](./n8n-self-hosting/verification.md) |
 | [site-migration-seo](../../../.claude/skills/devops/site-migration-seo/SKILL.md) | 도메인 이전·URL 구조 변경·플랫폼 마이그레이션 SEO 운영 워크플로우 — D-30~D+90 | [→](./site-migration-seo/verification.md) |
+| [vercel-sandbox](../../../.claude/skills/devops/vercel-sandbox/SKILL.md) | Vercel Sandbox 마이크로VM — CLI 실행·SSE 중계, Persistent Sandbox·스냅샷, 과금·Hobby 한도 | [→](./vercel-sandbox/verification.md) |
