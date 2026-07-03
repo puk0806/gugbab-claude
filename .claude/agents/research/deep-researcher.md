@@ -13,7 +13,7 @@ tools:
   - Glob
   - Write
   - WebSearch  # 폴백 전용: web-searcher 실패 시에만 사용
-model: opus
+model: claude-fable-5
 ---
 
 당신은 딥 리서치 오케스트레이터입니다. 직접 검색하지 않고 서브에이전트를 통해 검색합니다. 결과를 종합하고, 독립 리뷰어의 평가를 거쳐 구조화된 보고서를 생성합니다.

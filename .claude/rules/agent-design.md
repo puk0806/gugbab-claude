@@ -9,14 +9,16 @@ CLAUDE.md와 agent-creator 모두 이 파일을 기준으로 삼습니다.
 
 | 모델 | 최신 ID | 적합한 경우 | 예시 |
 |------|---------|------------|------|
-| `opus` | `claude-opus-4-6` | 최고난도 판단·분석, 오케스트레이터 | deep-researcher, agent-creator |
+| fable | `claude-fable-5` | 최고난도 **장기(long-horizon) 멀티에이전트 오케스트레이션** — 다수 서브에이전트를 장시간 지휘·종합 | deep-researcher, academic-researcher |
+| `opus` | `claude-opus-4-8` | 최고난도 판단·분석, 일반 오케스트레이터 | agent-creator, skill-creator |
 | `sonnet` | `claude-sonnet-4-6` | 검색·코드 생성, 검증·판정 | web-searcher, fact-checker, rust-backend-developer |
 | `haiku` | `claude-haiku-4-5` | 단순 포맷 변환, 반복 작업 | 포맷터, 분류기 등 |
 
-> **참고 (2026-04-17 기준):** Sonnet 4.6은 Opus 수준의 코딩·추론 성능을 제공하면서 비용은 낮다. 오케스트레이터 외에는 sonnet이 기본 선택이다. `claude-sonnet-4-20250514`, `claude-opus-4-20250514`는 2026-06-15 deprecated 예정이므로 신규 에이전트에서는 위 최신 ID를 사용한다.
+> **참고 (2026-07-03 기준):** Claude Fable 5는 Opus 상위 티어다(입·출력 단가 $10/$50 per MTok — Opus 4.8의 2배, 구독 한도 소모도 큼). fable 지정은 *장기 멀티에이전트 오케스트레이션*에 한정하고, frontmatter에는 별칭 대신 전체 ID `claude-fable-5`를 사용한다(에이전트 frontmatter에서의 별칭 해석 미보장). `opus`·`sonnet`·`haiku` 별칭은 현행 최신 모델(Opus 4.8·Sonnet 4.6·Haiku 4.5)로 자동 해석되므로 기존 에이전트의 ID 갱신은 불필요하다. 오케스트레이터 외에는 sonnet이 기본 선택.
 
 **선택 기준:**
-- 다른 에이전트를 호출(Agent 도구)하는 오케스트레이터 → `opus` 또는 `sonnet` (단순 조합이면 sonnet)
+- 다수 서브에이전트를 장시간 지휘하는 최고난도 리서치 오케스트레이터 → `claude-fable-5` (비용 감안해 최소 지정)
+- 그 외 오케스트레이터(Agent 도구 사용) → `opus` 또는 `sonnet` (단순 조합이면 sonnet)
 - 판단보다 검색/실행이 주된 작업 → `sonnet`
 - 입력을 정해진 형식으로 변환만 하는 작업 → `haiku`
 
