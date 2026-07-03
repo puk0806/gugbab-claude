@@ -21,6 +21,7 @@
 
 ## Project — 컨벤션 자산 인프라
 
+- [Claude 구독 중계 서버(05_gugbab-claude-relay) 계획](project_claude_relay_plan.md) — Vercel Sandbox+claude -p 구독 인증 SSE 중계. 스킬 2종 APPROVED(2026-07-03), 스캐폴딩 미착수
 - [project-install.sh 이식 아키텍처](project_install_architecture.md) — 10개 템플릿(0~9), JAVA_SKILLS_* 필터, scripts/gen-settings.js로 settings.json 생성
 - [프로젝트 scope 전용 원칙](project_scope_only.md) — gugbab-claude 모든 산출물은 프로젝트 scope에만, 글로벌(~/.claude) 설정 금지
 - [MCP 미사용 결정](project_mcp_decision.md) — WebSearch/WebFetch만 사용, 팀 이식성 우선
