@@ -700,6 +700,8 @@ _skill_ok_for_tmpl() {
     return 0
   fi
   if [[ "$tmpl" =~ ^(react-spa|nextjs|health)$ ]]; then
+    # Claude 구독 중계(relay) 등 Next.js 프로젝트에서 쓰는 backend 예외 스킬
+    [[ "$skill_prefix" == "backend/claude-code-headless" ]] && return 0
     [[ "$rel" == backend/* || "$rel" == game/* || "$rel" == humanities/* ||
        "$rel" == education/* || "$rel" == research/* ]] && return 1
     [[ "$rel" == writing/* ]] && ! is_seo_writing "$skill_prefix" && return 1
