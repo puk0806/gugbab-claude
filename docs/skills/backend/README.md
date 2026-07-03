@@ -1,6 +1,6 @@
 # backend 스킬
 
-Rust · Java · Python 백엔드 스킬 모음 (총 49종).
+Rust · Java · Python · Claude Code CLI 백엔드 스킬 모음 (총 50종).
 
 ---
 
@@ -83,3 +83,11 @@ Rust · Java · Python 백엔드 스킬 모음 (총 49종).
 | [python-langchain-current](../../../.claude/skills/backend/python-langchain-current/SKILL.md) | LangChain 1.x 균형 평가 — 아키텍처·장단점·LlamaIndex 비교·실전 사용 판단 기준 | [→](./python-langchain-current/verification.md) |
 | [python-korean-nlp-konlpy](../../../.claude/skills/backend/python-korean-nlp-konlpy/SKILL.md) | KoNLPy + Mecab-ko 한국어 NLP — 형태소 분석, 품사 태깅, 키워드 추출 | [→](./python-korean-nlp-konlpy/verification.md) |
 | [python-cli-typer](../../../.claude/skills/backend/python-cli-typer/SKILL.md) | Typer Python CLI 개발 — 타입 힌트 기반, 서브커맨드, 옵션/인자, Click 호환 | [→](./python-cli-typer/verification.md) |
+
+---
+
+## Claude Code CLI (1종)
+
+| 스킬 | 설명 | 검증 |
+|------|------|------|
+| [claude-code-headless](../../../.claude/skills/backend/claude-code-headless/SKILL.md) | Claude Code headless(`claude -p`) — stream-json 파싱·SSE 중계, 구독(OAuth) 인증, 인증 우선순위 함정, 안전 가드 | [→](./claude-code-headless/verification.md) |
