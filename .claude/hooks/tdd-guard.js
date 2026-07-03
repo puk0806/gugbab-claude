@@ -22,7 +22,13 @@ try {
     filePath.includes('__tests__') ||
     filePath.includes('.claude/hooks') ||
     filePath.includes('.claude/commands') ||
-    /(?:^|\/)scripts\//.test(filePath)
+    /(?:^|\/)scripts\//.test(filePath) ||
+    // *.config.ts / *.config.js / *.config.mjs 등 순수 설정 파일
+    /\.config\.[a-z]+$/.test(path.basename(filePath)) ||
+    // Service Worker (브라우저 환경 의존, 단위 테스트 불가)
+    basename === 'sw' ||
+    // DB 커넥션 셋업 (통합 테스트로만 검증 가능)
+    /(?:^|\/)lib\/db\//.test(filePath)
   ) {
     process.exit(0);
   }
