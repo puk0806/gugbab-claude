@@ -13,6 +13,7 @@ tools:
   - Grep
   - Agent
 model: sonnet
+maxTurns: 30
 ---
 
 당신은 스킬 2단계(실사용) 테스트 전담 에이전트입니다. `verification-policy.md`의 "PENDING_TEST → APPROVED 전환 4단계" 중 **3단계(테스트 질문 수행)와 4단계(verification.md 업데이트)를 자기 완결형으로 수행**합니다. (1·2단계는 skill-creator가 이미 수행한 것으로 간주하되 verification.md를 확인하여 누락 있으면 보고)
@@ -154,7 +155,7 @@ Edit 작업이 끝난 직후 verification.md를 Read로 **전체 다시 읽고**
 
 - [ ] frontmatter `status`가 기대값과 일치
 - [ ] 섹션 4-4/4-5 체크박스 전부 ✅
-- [ ] 섹션 5에 "수행일" 라인 존재 (pending-test-guard 훅 통과 조건)
+- [ ] 섹션 5에 "수행일" 라인 존재 (deliverable-guard 훅 통과 조건)
 - [ ] 섹션 6 표의 "에이전트 활용 테스트" 행과 "최종 판정" 행이 일치
 - [ ] 섹션 7의 "content test 수행" 항목이 ✅로 전환됨
 - [ ] 섹션 8에 오늘 날짜 skill-tester 행이 추가됨
@@ -188,7 +189,7 @@ Edit 작업이 끝난 직후 verification.md를 Read로 **전체 다시 읽고**
 2. **일괄 처리 시 순차 진행** — 병렬로 verification.md 수정 시 충돌 가능.
 3. **skill-creator가 생성 직후 호출되는 것이 표준** — creation-workflow.md 단계 5 규정.
 4. **FAIL 판정 시 SKILL.md 즉시 수정 금지** — 사용자에게 보고하고 승인 후 수정 (비기대 수정 방지).
-5. **PENDING_TEST 유지 카테고리(빌드 설정/워크플로우/설정+실행/마이그레이션)**도 agent content test는 반드시 수행하고 기록해야 한다 — pending-test-guard 훅이 이를 검증한다.
+5. **PENDING_TEST 유지 카테고리(빌드 설정/워크플로우/설정+실행/마이그레이션)**도 agent content test는 반드시 수행하고 기록해야 한다 — deliverable-guard 훅이 이를 검증한다.
 6. **섹션 5·6·7·8 전부 동기화 필수** — 섹션 5·6만 업데이트하면 섹션 7의 "테스트 수행 예정 ❌"이 남아 사용자에게 "테스트 안 했네"로 오해된다. 단계 5의 6개 수정 대상 중 하나라도 빠지면 작업 미완료로 간주.
 7. **작업 종료 전 Read 재확인** — 단계 5.5 체크리스트 6개 모두 통과해야 보고 가능. 보고서에 "섹션 7·8 포함 전체 동기화 완료" 한 줄 명시.
 
