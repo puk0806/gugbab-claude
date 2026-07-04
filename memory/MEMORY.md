@@ -29,6 +29,7 @@
 
 ### 자산 이력 (커밋·푸시 완료)
 
+- [★ 훅 다이어트·사전 차단 격상·전수 검증 완료 (2026-07-04)](project_hook_diet_plan.md) — 훅 29→22종·Stop 차단형 3·구조검증 3종 PreToolUse 격상·훅 테스트 14종·스킬 209/에이전트 67 전수 PASS·staleness 0건. PR 제출(머지 대기)
 - [★ 레포 개편 전체 완료 (2026-06-12)](project_overhaul_progress.md) — 작업1~5 전부 완료. 스킬 224→202종, 훅 20→28종(공통 19·dev 4·Codex 1), docs 전체 구조 신설, 9종 templates·examples
 - [★ SEO·GEO·웹표준 인프라 1·2·3차 (2026-06-04)](project_seo_geo_assets_2026-06.md) — 스킬 28종 + 에이전트 4종. 전체 커밋·푸시 완료
 - [★ Unity 게임 개발 인프라 전체 완료 (2026-06-10)](project_unity_gamedev_assets_plan.md) — 스킬 17종 + 에이전트 6종 APPROVED. Phase 1~7 완료
