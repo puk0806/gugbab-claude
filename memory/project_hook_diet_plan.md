@@ -13,7 +13,7 @@ metadata:
 
 1. **Plan Mode 중복 제거** ✅ — task-plan-guard·confirmation-gate 삭제. CLAUDE.md·task-workflow.md에 "복잡한 작업은 네이티브 Plan Mode 사용" 규칙으로 대체. settings.json UserPromptSubmit 이벤트 제거
 2. **Stop 통합** ✅ — pending-test-guard + readme-guard + session-summary(세션 파일 추적) → **deliverable-guard.js** 1개로 병합(PostToolUse Write/Edit 추적 + PreToolUse Bash commit/push README 검사 + Stop 산출물 검사). session-handoff/inject(네이티브 resume 커버)·verification-gate(경고만)·careful-with-judge(bash-guard에 rm 패턴 흡수) 삭제. Stop = 차단형 3(deliverable·codex-review·memory-stop) + 알림 1(cc-notify)
-3. **오탐 수정** ✅ — bash-guard 보호 파일(verification.md/SKILL.md/memory/) 차단을 *쓰기 연산만*(sed -i·perl -i·awk -i inplace·리다이렉트·tee)으로 축소, 읽기 전용 grep/diff/sed -n 허용. deliverable-guard 스캔에서 `.claude/worktrees/`·node_modules 제외. agent-md-guard VALID_MODELS에 claude-fable-5·claude-opus-4-8 추가 + Edit 부분 문자열 전체 검증 오탐 수정(Write만 검증)
+3. **오탐 수정** ✅ — bash-guard 보호 파일(verification.md/SKILL.md/memory/) 차단을 *쓰기 연산만*(sed -i·perl -i·awk -i inplace·리다이렉트·tee)으로 축소, 읽기 전용 grep/diff/sed -n 허용. deliverable-guard 스캔에서 `.claude/worktrees/`·node_modules 제외. agent-md-guard VALID_MODELS에 claude-fable-5·claude-opus-4-8 추가 + Edit 부분 문자열 오탐 수정(Edit는 디스크에서 전체 파일 재읽기 검증 — Codex 리뷰 반영)
 4. **유지 확정** ✅ — parry·branch-protection·memory 3종·verification-guard·tdd-guard 유지. protect-secrets는 배선 누락 상태였음을 발견해 PreToolUse Write/Edit에 배선 추가
 5. **테스트 필수화** ✅ — 차단형 훅 전체 테스트 작성(신규 10종: deliverable·parry·protect-secrets·test-fake·branch-protection·tdd·agent-md·typescript-quality·memory-stop·codex-review). 훅 테스트 4→14종, 총 323 어설션 전체 통과. 비차단 관찰 훅(cc-notify·session-start·instructions-loaded·staleness-check·memory-pull/sync)은 테스트 제외(오탐 피해 없음)
 
