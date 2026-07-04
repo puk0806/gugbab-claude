@@ -18,7 +18,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `virtue-ethics-modern-revival` |
 | 스킬 경로 | `.claude/skills/humanities/virtue-ethics-modern-revival/SKILL.md` |
-| 검증일 | 2026-05-03 |
+| 검증일 | 2026-07-04 |
 | 검증자 | skill-creator (Opus 4.7) |
 | 스킬 버전 | v1 |
 
@@ -136,7 +136,7 @@ status: APPROVED
 ### 4-3. 구조 완전성
 
 - [✅] YAML frontmatter 포함 (name, description)
-- [✅] 소스 URL과 검증일 명시 (`> 소스:`, `> 검증일: 2026-05-03`)
+- [✅] 소스 URL과 검증일 명시 (`> 소스:`, `> 검증일: 2026-07-04`)
 - [✅] 핵심 개념 설명 포함 (Anscombe→MacIntyre→Foot→Hursthouse→Slote→Annas→Nussbaum→Swanton)
 - [✅] akrasia 연결 섹션 (§9) 포함
 - [✅] 한국 학계 수용 (§10) 포함
@@ -220,3 +220,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-05-03 | v1 | 최초 작성 (현대 덕윤리 부흥 13개 섹션 + 검증 19개 클레임) | skill-creator (Opus 4.7) |
 | 2026-05-03 | v1 | 2단계 실사용 테스트 수행 (Q1 Anscombe 기점·인용형식 / Q2 Hursthouse akrasia 처리 / Q3 MacIntyre 판본 차이 표기) → 2/3 PASS + 1/3 PARTIAL, APPROVED 전환 | skill-tester |
+| 2026-07-04 | v2 | freshness 재검증 — Anscombe "Modern Moral Philosophy" *Philosophy* 33(124) 1958 pp.1-19·consequentialism 신조어 도입, MacIntyre *After Virtue* 판본 이력(1981 초판/1984 Postscript/2007 Prologue), Hursthouse 1999·Foot 2001·Annas 2011 OUP 서지 재확인 → 전원 VERIFIED, 내용 변경 없이 검증일만 갱신 | freshness-audit |

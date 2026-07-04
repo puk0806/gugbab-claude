@@ -3,9 +3,11 @@
  * skill-md-guard.js
  * Claude Code PostToolUse Hook
  *
- * 목적: SKILL.md 작성 후 구조 검증
+ * 목적: SKILL.md 구조 검증
  *
- * 대상: Write 도구로 .claude/skills/{category}/{name}/SKILL.md 경로에 저장할 때
+ * 이벤트:
+ *   PreToolUse Write — tool_input.content 사전 검증. 위반 시 저장 자체를 차단 (exit 2)
+ *   PostToolUse Edit — 수정 반영된 파일을 디스크에서 재읽기 검증. 위반 시 수정 요구 (exit 2)
  *
  * 검증 항목:
  *   1. YAML frontmatter 존재 (--- 블록)
@@ -16,6 +18,7 @@
  */
 
 const readline = require('readline')
+const fs = require('fs')
 
 const SKILL_MD_PATTERN = /\.claude\/skills\/.+\/SKILL\.md$/
 
@@ -69,26 +72,38 @@ async function main() {
   const { hook_event_name, hookEventName, tool_name, tool_input = {} } = input
   const eventName = hook_event_name || hookEventName
 
-  // PostToolUse + Write 도구만 처리
-  if (eventName !== 'PostToolUse' || tool_name !== 'Write') return process.exit(0)
-
   const filePath = (tool_input.file_path || '').replace(/\\/g, '/')
   if (!SKILL_MD_PATTERN.test(filePath)) return process.exit(0)
 
-  const content = tool_input.content || ''
-  const errors = validate(content)
+  // PreToolUse Write: 저장될 전체 내용을 사전 검증 → 위반 시 저장 차단
+  // PostToolUse Edit: 파일이 이미 갱신됐으므로 디스크에서 전체 재읽기 검증
+  let content = ''
+  if (eventName === 'PreToolUse' && tool_name === 'Write') {
+    content = tool_input.content || ''
+  } else if (eventName === 'PostToolUse' && tool_name === 'Edit') {
+    try { content = fs.readFileSync(tool_input.file_path, 'utf8') } catch { return process.exit(0) }
+  } else {
+    return process.exit(0)
+  }
+  if (!content) return process.exit(0)
 
+  const errors = validate(content)
   if (errors.length === 0) return process.exit(0)
 
+  const blocked = eventName === 'PreToolUse'
   const message = [
-    `[skill-md-guard] SKILL.md 구조 검증 실패: ${filePath}`,
+    `[skill-md-guard] SKILL.md 구조 검증 실패${blocked ? ' — 저장 차단됨' : ''}: ${filePath}`,
     '',
     ...errors.map((e, i) => `${i + 1}. ${e}`),
     '',
-    '위 항목을 추가한 뒤 SKILL.md를 재작성하세요.',
+    blocked ? '위 항목을 포함한 내용으로 다시 저장하세요.' : '위 항목을 추가한 뒤 SKILL.md를 재작성하세요.',
   ].join('\n')
 
-  process.stdout.write(JSON.stringify({ reason: message }) + '\n')
+  if (blocked) {
+    process.stderr.write(message + '\n')
+  } else {
+    process.stdout.write(JSON.stringify({ reason: message }) + '\n')
+  }
   process.exit(2)
 }
 

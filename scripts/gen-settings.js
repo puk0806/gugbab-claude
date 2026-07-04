@@ -47,36 +47,38 @@ const permissions = {
 const hooks = {};
 
 // PreToolUse — 공통
+// (계획 확인은 confirmation-gate/task-plan-guard 훅 대신 네이티브 Plan Mode 사용 — 2026-07 훅 다이어트)
+// 구조 검증 3종(verification/skill-md/agent-md)은 Write 사전 차단 — 위반 파일은 저장 자체가 안 됨
 hooks.PreToolUse = [
   { matcher: '*',     hooks: [H('bash-guard.js'), H('auto-approve.js')] },
-  { matcher: 'Write', hooks: [H('confirmation-gate.js'), H('parry.js'), H('protect-secrets.js')] },
-  { matcher: 'Edit',  hooks: [H('confirmation-gate.js'), H('protect-secrets.js')] },
+  { matcher: 'Write', hooks: [H('parry.js'), H('protect-secrets.js'), H('verification-guard.js'), H('skill-md-guard.js'), H('agent-md-guard.js')] },
+  { matcher: 'Edit',  hooks: [H('protect-secrets.js')] },
 ];
-// PreToolUse Bash — 개발 전용 (가짜 테스트 차단 + rm -rf 분석)
+// PreToolUse Bash — 개발 전용 (가짜 테스트 차단. rm -rf 분석은 bash-guard에 흡수)
 if (isDev) {
-  hooks.PreToolUse.push({ matcher: 'Bash', hooks: [H('test-fake-guard.js'), H('careful-with-judge.js')] });
+  hooks.PreToolUse.push({ matcher: 'Bash', hooks: [H('test-fake-guard.js')] });
 }
 // PreToolUse Bash — readme-guard 선택 시 (git commit/push 직전 README 미업데이트 차단)
+// deliverable-guard가 구 readme-guard + pending-test-guard + 세션 파일 추적 통합 훅
 if (withReadmeGuard) {
-  hooks.PreToolUse.push({ matcher: 'Bash', hooks: [H('readme-guard.js')] });
+  hooks.PreToolUse.push({ matcher: 'Bash', hooks: [H('deliverable-guard.js')] });
 }
 // PreToolUse Bash — branch-protection 선택 시 (main push 금지 + 피처→피처 브랜치 생성 금지)
 if (withBranchProtection) {
   hooks.PreToolUse.push({ matcher: 'Bash', hooks: [H('branch-protection.js')] });
 }
 
-// PostToolUse Write
-const writeHooks = [H('verification-guard.js'), H('skill-md-guard.js'), H('agent-md-guard.js')];
+// PostToolUse Write — deliverable-guard(세션 수정 파일 추적, 구 session-summary 역할)를
+// 체인 선두에 배치: 뒤의 exit 2 검증 훅이 체인을 중단시켜도 추적 기록은 보장
+const writeHooks = [H('deliverable-guard.js')];
 if (isDev) writeHooks.push(H('tdd-guard.js'));
 if (withTs) writeHooks.push(H('typescript-quality.js'));
-writeHooks.push(H('session-summary.js'));
 if (withMemory) writeHooks.push(H('memory-sync.js'));
 
-// PostToolUse Edit
-const editHooks = [];
+// PostToolUse Edit — 구조 검증 3종은 Edit만 사후 검증 (디스크 전체 재읽기, Write는 PreToolUse에서 사전 차단)
+const editHooks = [H('deliverable-guard.js'), H('verification-guard.js'), H('skill-md-guard.js'), H('agent-md-guard.js')];
 if (isDev) editHooks.push(H('tdd-guard.js'));
 if (withTs) editHooks.push(H('typescript-quality.js'));
-editHooks.push(H('session-summary.js'));
 if (withMemory) editHooks.push(H('memory-sync.js'));
 
 hooks.PostToolUse = [
@@ -85,17 +87,11 @@ hooks.PostToolUse = [
   { matcher: 'Bash',  hooks: [H('bash-guard.js')] },
 ];
 
-// SessionStart
+// SessionStart — 핸드오프 주입은 네이티브 resume이 커버하므로 제거 (2026-07 훅 다이어트)
 const sessionStartHooks = [];
 if (withMemory) sessionStartHooks.push(H('memory-pull.js'));
 sessionStartHooks.push(H('session-start.js'));
-sessionStartHooks.push(H('session-handoff-inject.js'));
 hooks.SessionStart = [{ hooks: sessionStartHooks }];
-
-// UserPromptSubmit — 복잡한 작업 요청 시 계획 확인 절차 지시
-hooks.UserPromptSubmit = [{
-  hooks: [H('task-plan-guard.js')],
-}];
 
 // InstructionsLoaded — /clear 포함 모든 컨텍스트 초기화 시 동작
 const stalenessHook = withStalenessGuard
@@ -108,14 +104,14 @@ hooks.InstructionsLoaded = [{
   ],
 }];
 
-// Stop
-const stopHooks = [H('pending-test-guard.js')];
-if (withReadmeGuard) stopHooks.push(H('readme-guard.js'));
+// Stop — 산출물 완결성(deliverable-guard) + 선택 훅만 (스태킹 최소화)
+// --readme-guard 미선택 시 README 검사는 끄고 PENDING_TEST 검사만 수행 (opt-in 의미 보존)
+const deliverableStop = withReadmeGuard
+  ? H('deliverable-guard.js')
+  : { type: 'command', command: 'node $CLAUDE_PROJECT_DIR/.claude/hooks/deliverable-guard.js --no-readme' };
+const stopHooks = [deliverableStop];
 if (withCodex) stopHooks.push(H('codex-review-guard.js'));
 if (withMemory) stopHooks.push(H('memory-stop-guard.js'));
-if (isDev) stopHooks.push(H('verification-gate.js'));
-stopHooks.push(H('session-summary.js'));
-stopHooks.push(H('session-handoff.js'));
 stopHooks.push(H('cc-notify.js'));
 hooks.Stop = [{ hooks: stopHooks }];
 
@@ -124,15 +120,37 @@ hooks.PermissionRequest = [
   { matcher: '*', hooks: [H('bash-guard.js'), H('auto-approve.js')] },
 ];
 
-// ── util 모드: 검증 훅 제외, 최소 구성 ─────────────────────────────────
+// ── util 모드: 스킬·에이전트 구조 검증 훅 제외, 최소 구성 ────────────────
+// 단, 명시적 opt-in 옵션(--readme-guard·--branch-protection·--memory·--codex)은 보존한다
 if (isUtil) {
+  // PreToolUse 재정의 — 구조 검증 3종(verification/skill-md/agent-md)이 딸려가지 않도록
+  hooks.PreToolUse = [
+    { matcher: '*',     hooks: [H('bash-guard.js'), H('auto-approve.js')] },
+    { matcher: 'Write', hooks: [H('parry.js'), H('protect-secrets.js')] },
+    { matcher: 'Edit',  hooks: [H('protect-secrets.js')] },
+  ];
+  if (withReadmeGuard)      hooks.PreToolUse.push({ matcher: 'Bash', hooks: [H('deliverable-guard.js')] });
+  if (withBranchProtection) hooks.PreToolUse.push({ matcher: 'Bash', hooks: [H('branch-protection.js')] });
+
+  // README 검사를 쓰려면 세션 파일 추적(PostToolUse)도 함께 필요
+  const utilWriteHooks = [
+    ...(withReadmeGuard ? [H('deliverable-guard.js')] : []),
+    ...(withMemory ? [H('memory-sync.js')] : []),
+  ];
   hooks.PostToolUse = [
-    { matcher: 'Write', hooks: [H('session-summary.js'), ...(withMemory ? [H('memory-sync.js')] : [])] },
-    { matcher: 'Edit',  hooks: [H('session-summary.js'), ...(withMemory ? [H('memory-sync.js')] : [])] },
-    { matcher: 'Bash',  hooks: [H('bash-guard.js')] },
+    ...(utilWriteHooks.length > 0 ? [
+      { matcher: 'Write', hooks: utilWriteHooks },
+      { matcher: 'Edit',  hooks: utilWriteHooks },
+    ] : []),
+    { matcher: 'Bash', hooks: [H('bash-guard.js')] },
   ];
   hooks.Stop = [
-    { hooks: [H('session-summary.js'), H('session-handoff.js'), ...(withMemory ? [H('memory-stop-guard.js')] : []), H('cc-notify.js')] },
+    { hooks: [
+      ...(withReadmeGuard ? [H('deliverable-guard.js')] : []),
+      ...(withCodex ? [H('codex-review-guard.js')] : []),
+      ...(withMemory ? [H('memory-stop-guard.js')] : []),
+      H('cc-notify.js'),
+    ] },
   ];
   // InstructionsLoaded / PermissionRequest 유지
 }

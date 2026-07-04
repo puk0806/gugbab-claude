@@ -19,7 +19,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `spring-security-6-jwt-jjwt12` |
 | 스킬 경로 | `.claude/skills/backend/spring-security-6-jwt-jjwt12/SKILL.md` |
-| 검증일 | 2026-04-22 |
+| 검증일 | 2026-07-04 |
 | 검증자 | skill-creator (자동) |
 | 스킬 버전 | v1 |
 
@@ -112,7 +112,7 @@ status: APPROVED
 ### 4-2. 구조 완전성
 
 - [✅] YAML frontmatter 포함 (name, description)
-- [✅] 소스 URL과 검증일 명시 (상단 `> 소스:` / `> 검증일: 2026-04-22`)
+- [✅] 소스 URL과 검증일 명시 (상단 `> 소스:` / `> 검증일: 2026-07-04`)
 - [✅] 핵심 개념 설명 포함 (SecurityFilterChain, 람다 DSL, OncePerRequestFilter, jakarta.servlet, jjwt 0.12.x API, OAuth2 Resource Server, Virtual Threads)
 - [✅] 코드 예시 포함 (Gradle/Maven 의존성, SecurityConfig, JwtAuthenticationFilter, JwtService, ApplicationConfig, AuthController, OAuth2 설정)
 - [✅] 언제 사용 / 언제 사용하지 않을지 기준 포함 ("자체 JWT 필터 vs OAuth2 Resource Server 선택 기준" 표)
@@ -251,3 +251,4 @@ spring:
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
 | 2026-04-22 | v1 | 최초 작성: Spring Boot 3.5 + Security 6.5 + jjwt 0.12.x 모던 패턴 스킬. 교차 검증 13건 수행 (VERIFIED 12 / DISPUTED 1). | skill-creator |
+| 2026-07-04 | v2 | freshness 재검증 — Spring Boot 3.5 OSS EOL(2026-06-30, 최종 3.5.16)·Security 6.5.11(OSS 2027-07-31까지)·jjwt 0.12.7 반영. 0.12.x 파서/빌더 API·SecurityFilterChain 람다 DSL 패턴 변화 없음 확인 | freshness-audit |

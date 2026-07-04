@@ -13,7 +13,7 @@ description: >
 # 한국 위기 대응 자원 — 종합 안내 + 앱 안전 가드 패턴
 
 > 소스: 보건복지부(https://www.mohw.go.kr/), 자살예방상담전화 109(https://www.129.go.kr/109), 한국생명존중희망재단(https://www.kfsp.or.kr/), 국가트라우마센터(https://www.nct.go.kr/), 청소년상담1388(https://www.1388.go.kr/), 여성긴급전화 1366(https://www.women1366.kr/, https://www.mogef.go.kr/cc/wcc/cc_wcc_f001.do), 중앙노인보호전문기관(https://noinboho1389.or.kr/), 다누리콜센터(https://www.liveinkorea.kr/), Wee 프로젝트(https://www.wee.go.kr/), 한국생명의전화(https://www.lifeline.or.kr/)
-> 검증일: 2026-05-15
+> 검증일: 2026-07-04
 > 재검증 주기 권고: 연 1회 이상. 정부 통합·번호 변경이 잦으므로(2024-01 109 통합 사례) 매년 보건복지부 보도자료·재단 공지 기준으로 갱신한다.
 
 ---

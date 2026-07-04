@@ -22,6 +22,7 @@ Claude Code 활용에 필요한 에이전트(Agent), 스킬(Skill), 설정(CLAUD
 3. **"진행할까요?"** — 사용자 확인 대기
 4. 승인 후 실행
 
+여러 파일에 걸친 복잡한 작업은 네이티브 **Plan Mode**(EnterPlanMode)를 우선 사용한다.
 단순 조회(설명·요약·검색)와 git 커밋·푸시는 예외. 자세한 기준 → @.claude/rules/task-workflow.md
 
 ---

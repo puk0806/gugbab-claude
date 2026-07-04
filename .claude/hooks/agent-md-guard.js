@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 /**
  * agent-md-guard.js
- * Claude Code PostToolUse Hook
+ * Claude Code PreToolUse (Write) + PostToolUse (Edit) Hook
  *
  * 목적: .claude/agents/{category}/{name}.md 저장 시 agent-design.md 규칙 구조 검증
+ *   PreToolUse Write — 사전 검증, 위반 시 저장 자체 차단 (exit 2)
+ *   PostToolUse Edit — 디스크 전체 재읽기 검증, 위반 시 수정 요구 (exit 2)
  *
  * 검증 항목:
  *   1. YAML frontmatter 존재 (--- 블록)
@@ -17,14 +19,21 @@
  */
 
 const readline = require('readline')
+const fs = require('fs')
 
+// CLAUDE.md(디렉토리 컨텍스트)·README.md는 에이전트 정의가 아니므로 제외
 const AGENT_MD_PATTERN = /\.claude\/agents\/.+\.md$/
+const NON_AGENT_BASENAMES = new Set(['CLAUDE.md', 'README.md'])
 
-// 유효한 model 값 (단축명 + 전체 ID)
+// 유효한 model 값 (단축명 + 전체 ID) — agent-design.md 모델 표와 동기화
+// 'fable' 별칭은 불허 — agent-design.md 규정상 frontmatter에는 전체 ID
+// claude-fable-5만 사용 (별칭 해석 미보장)
 const VALID_MODELS = new Set([
   'opus', 'sonnet', 'haiku',
-  'claude-opus-4-6', 'claude-sonnet-4-6', 'claude-haiku-4-5',
-  'claude-opus-4-7', 'claude-haiku-4-5-20251001',
+  'claude-fable-5',
+  'claude-opus-4-6', 'claude-opus-4-7', 'claude-opus-4-8',
+  'claude-sonnet-4-6',
+  'claude-haiku-4-5', 'claude-haiku-4-5-20251001',
 ])
 
 function validate(content) {
@@ -100,29 +109,42 @@ async function main() {
   const { hook_event_name, hookEventName, tool_name, tool_input = {} } = input
   const eventName = hook_event_name || hookEventName
 
-  // PostToolUse + Write/Edit 도구만 처리
-  if (eventName !== 'PostToolUse') return process.exit(0)
-  if (!['Write', 'Edit'].includes(tool_name)) return process.exit(0)
-
   const filePath = (tool_input.file_path || '').replace(/\\/g, '/')
   if (!AGENT_MD_PATTERN.test(filePath)) return process.exit(0)
+  if (NON_AGENT_BASENAMES.has(filePath.split('/').pop())) return process.exit(0)
 
-  // Edit의 경우 content가 없으므로 간단히 경고만
-  const content = tool_input.content || tool_input.new_string || ''
+  // PreToolUse Write: tool_input.content가 저장될 전체 내용 → 사전 검증, 위반 시 저장 차단
+  // PostToolUse Edit: new_string은 파일 *일부*라 그대로 검증하면 오탐 →
+  //                   파일이 이미 갱신됐으므로 디스크에서 전체 내용을 읽어 검증
+  let content = ''
+  if (eventName === 'PreToolUse' && tool_name === 'Write') {
+    content = tool_input.content || ''
+  } else if (eventName === 'PostToolUse' && tool_name === 'Edit') {
+    try { content = fs.readFileSync(tool_input.file_path, 'utf8') } catch { return process.exit(0) }
+  } else {
+    return process.exit(0)
+  }
   if (!content) return process.exit(0)
 
   const errors = validate(content)
   if (errors.length === 0) return process.exit(0)
 
+  const blocked = eventName === 'PreToolUse'
   const message = [
-    `[agent-md-guard] ⚠️  에이전트 파일 구조 검증 실패: ${filePath}`,
+    `[agent-md-guard] ⚠️  에이전트 파일 구조 검증 실패${blocked ? ' — 저장 차단됨' : ''}: ${filePath}`,
     '',
     ...errors.map((e, i) => `${i + 1}. ${e}`),
     '',
-    '위 항목을 수정하세요. (참조: @.claude/rules/agent-design.md)',
+    blocked
+      ? '위 항목을 수정한 내용으로 다시 저장하세요. (참조: @.claude/rules/agent-design.md)'
+      : '위 항목을 수정하세요. (참조: @.claude/rules/agent-design.md)',
   ].join('\n')
 
-  process.stdout.write(JSON.stringify({ reason: message }) + '\n')
+  if (blocked) {
+    process.stderr.write(message + '\n')
+  } else {
+    process.stdout.write(JSON.stringify({ reason: message }) + '\n')
+  }
   process.exit(2)
 }
 

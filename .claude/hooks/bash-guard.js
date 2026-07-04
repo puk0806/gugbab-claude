@@ -28,29 +28,43 @@ const readline = require('readline')
 const path = require('path')
 const fs = require('fs')
 
+// 보호 파일(verification.md / SKILL.md / memory/)은 Bash *쓰기 연산*만 차단
+// 읽기 전용 사용(grep / diff / cat FILE / sed -n / awk 출력)은 허용 — 오탐 방지
+// 쓰기 연산 판정: sed -i / perl -i / awk -i inplace / 리다이렉트(> >>) / tee
+function buildProtectedWritePatterns() {
+  const targets = [
+    { re: 'verification\\.md', label: 'verification.md', hint: ' (verification-guard 훅 통과 필수)' },
+    { re: 'SKILL\\.md', label: 'SKILL.md', hint: '' },
+    { re: '\\bmemory\\/', label: 'memory/ 파일', hint: ' (memory-sync 자동 동기화)' },
+  ]
+  const patterns = []
+  for (const { re, label, hint } of targets) {
+    const reason = `${label}은(는) Bash 쓰기 연산으로 수정할 수 없습니다. Write/Edit 도구를 사용하세요${hint}. (읽기 전용 grep/diff/cat은 허용)`
+    // in-place 편집: sed -i / perl -i (같은 statement 안에서만 매칭)
+    patterns.push({ pattern: new RegExp(`\\bsed\\b[^|;&\\n]*\\s-[a-zA-Z]*i[a-zA-Z]*\\b[^|;&\\n]*${re}`), reason })
+    patterns.push({ pattern: new RegExp(`\\bperl\\b[^|;&\\n]*\\s-[a-zA-Z]*i[^|;&\\n]*${re}`), reason })
+    patterns.push({ pattern: new RegExp(`\\bawk\\b[^|;&\\n]*-i\\s*inplace[^|;&\\n]*${re}`), reason })
+    // 리다이렉트로 덮어쓰기·이어쓰기: echo/cat/printf/sed/awk ... > FILE
+    patterns.push({ pattern: new RegExp(`>>?\\s*\\S*${re}`), reason })
+    // tee로 쓰기
+    patterns.push({ pattern: new RegExp(`\\btee\\b\\s+(?:-a\\s+)?\\S*${re}`), reason })
+  }
+  return patterns
+}
+
 const DENY_PATTERNS = [
-  // verification.md / SKILL.md를 Bash(sed/awk/perl/echo/cat)로 직접 수정 차단
-  { pattern: /\bsed\b.*verification\.md/, reason: 'verification.md는 Bash(sed)로 수정할 수 없습니다. Write/Edit 도구를 사용하세요 (verification-guard 훅 통과 필수).' },
-  { pattern: /\bsed\b.*SKILL\.md/, reason: 'SKILL.md는 Bash(sed)로 수정할 수 없습니다. Write/Edit 도구를 사용하세요.' },
-  { pattern: /\bawk\b.*verification\.md/, reason: 'verification.md는 Bash(awk)로 수정할 수 없습니다. Write/Edit 도구를 사용하세요.' },
-  { pattern: /\bawk\b.*SKILL\.md/, reason: 'SKILL.md는 Bash(awk)로 수정할 수 없습니다. Write/Edit 도구를 사용하세요.' },
-  { pattern: /\bperl\b.*-[ip].*verification\.md/, reason: 'verification.md는 Bash(perl)로 수정할 수 없습니다. Write/Edit 도구를 사용하세요.' },
-  { pattern: /\bperl\b.*-[ip].*SKILL\.md/, reason: 'SKILL.md는 Bash(perl)로 수정할 수 없습니다. Write/Edit 도구를 사용하세요.' },
-  { pattern: /\becho\b.*>.*verification\.md/, reason: 'verification.md는 Bash(echo)로 수정할 수 없습니다. Write/Edit 도구를 사용하세요.' },
-  { pattern: /\bcat\b.*>.*verification\.md/, reason: 'verification.md는 Bash(cat)로 수정할 수 없습니다. Write/Edit 도구를 사용하세요.' },
-  // memory/ 파일을 Bash로 직접 수정 차단 — Write/Edit 도구 사용 시에만 memory-sync 훅이 자동 동기화
-  { pattern: /\bsed\b.*\bmemory\//, reason: 'memory/ 파일은 Bash(sed)로 수정할 수 없습니다. Write/Edit 도구를 사용하세요 (memory-sync 자동 동기화).' },
-  { pattern: /\bawk\b.*\bmemory\//, reason: 'memory/ 파일은 Bash(awk)로 수정할 수 없습니다. Write/Edit 도구를 사용하세요.' },
-  { pattern: /\bperl\b.*-[ip].*\bmemory\//, reason: 'memory/ 파일은 Bash(perl)로 수정할 수 없습니다. Write/Edit 도구를 사용하세요.' },
-  { pattern: /\becho\b.*>.*\bmemory\//, reason: 'memory/ 파일은 Bash(echo)로 수정할 수 없습니다. Write/Edit 도구를 사용하세요.' },
-  { pattern: /\bcat\b.*>.*\bmemory\//, reason: 'memory/ 파일은 Bash(cat)로 수정할 수 없습니다. Write/Edit 도구를 사용하세요.' },
-  // 기존 위험 패턴
+  ...buildProtectedWritePatterns(),
+  // 위험 명령 패턴
   { pattern: /git\s+push\s+(--force|-f)\b/, reason: 'force push는 히스토리를 덮어씁니다. 직접 실행하세요.' },
   { pattern: /git\s+push\s+.*-f\b/, reason: 'force push 감지. 직접 실행하세요.' },
   { pattern: /rm\s+-rf\s+\/(bin|boot|dev|etc|lib|lib64|proc|root|sbin|sys|usr|var)(\/|$|\s|$)/, reason: '시스템 디렉토리 삭제는 차단됩니다.' },
   { pattern: /rm\s+-rf\s+\/$/, reason: '루트 디렉토리 삭제는 차단됩니다.' },
   { pattern: /rm\s+-rf\s+\/\s/, reason: '루트 디렉토리 삭제는 차단됩니다.' },
   { pattern: /rm\s+-rf\s+\.\.\//, reason: '상위 디렉토리 삭제는 차단됩니다.' },
+  // 구 careful-with-judge.js에서 흡수한 고위험 rm 패턴
+  { pattern: /rm\s+-[a-zA-Z]*rf?[a-zA-Z]*\s+(~|\$HOME)\/?\s*$/, reason: '홈 디렉토리 삭제는 차단됩니다.' },
+  { pattern: /rm\s+-[a-zA-Z]*rf?[a-zA-Z]*\s+\.\s*$/, reason: '현재 디렉토리 전체 삭제는 차단됩니다.' },
+  { pattern: /rm\s+-[a-zA-Z]*rf?[a-zA-Z]*\s+\S*\.(git|claude|ssh)\/?\s*$/, reason: '.git / .claude / .ssh 디렉토리 삭제는 차단됩니다.' },
   { pattern: /curl\s+.*\|\s*(ba)?sh/, reason: '원격 스크립트 실행(curl|bash)은 차단됩니다.' },
   { pattern: /wget\s+.*\|\s*(ba)?sh/, reason: '원격 스크립트 실행(wget|bash)은 차단됩니다.' },
   { pattern: /chmod\s+777/, reason: '777 권한 설정은 보안 위험입니다.' },

@@ -6,7 +6,7 @@ description: Spring Security 5.5.x + jjwt 0.10.7 레거시 JWT 인증 - WebSecur
 # Spring Security 5 + jjwt 0.10.x 레거시 JWT 인증
 
 > 소스: https://docs.spring.io/spring-security/site/docs/5.5.x-SNAPSHOT/reference/html5/ | https://github.com/jwtk/jjwt/tree/0.10.7 | https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-2.5-Release-Notes
-> 검증일: 2026-04-22
+> 검증일: 2026-07-04
 
 > 주의: 이 스킬은 **Spring Boot 2.5.x + Spring Security 5.5.x + jjwt 0.10.7 + Java 11 + javax.\*** 레거시 환경 전용입니다.
 > 신규 프로젝트는 Spring Security 6 + jjwt 0.12.x (parserBuilder, jakarta.\*) 기반 모던 스킬을 사용하세요.

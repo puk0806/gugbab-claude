@@ -95,7 +95,7 @@ description: 테스트 스킬 한 줄 설명
 내용입니다.
 `
 
-function runHook(toolName, filePath, content, eventName = 'PostToolUse') {
+function runHook(toolName, filePath, content, eventName = 'PreToolUse') {
   const input = JSON.stringify({
     hook_event_name: eventName,
     tool_name: toolName,
@@ -114,7 +114,7 @@ function runHook(toolName, filePath, content, eventName = 'PostToolUse') {
   }
 }
 
-function test(desc, toolName, filePath, content, expectedPass, eventName = 'PostToolUse') {
+function test(desc, toolName, filePath, content, expectedPass, eventName = 'PreToolUse') {
   const { output, exitCode } = runHook(toolName, filePath, content, eventName)
   const didPass = exitCode === 0 && output === null
   const pass = didPass === expectedPass
@@ -126,7 +126,7 @@ function section(title) { console.log(`\n── ${title} ──`) }
 
 const SKILL_PATH = '.claude/skills/frontend/test-skill/SKILL.md'
 
-console.log('🔍 skill-md-guard 테스트 시작')
+console.log('🔍 skill-md-guard 테스트 시작 (Write = PreToolUse 사전 차단)')
 
 section('정상 케이스 → 통과')
 test('유효한 SKILL.md', 'Write', SKILL_PATH, VALID_CONTENT, true)
@@ -146,11 +146,23 @@ section('대상 아닌 경로 → 무시 (통과)')
 test('다른 경로', 'Write', 'README.md', VALID_CONTENT, true)
 test('.claude/skills 외 경로', 'Write', 'docs/skills/frontend/test/SKILL.md', VALID_CONTENT, true)
 
-section('Write 외 도구 → 무시 (통과)')
-test('Edit 도구', 'Edit', SKILL_PATH, VALID_CONTENT, true)
+section('대상 외 이벤트/도구 조합 → 무시 (통과)')
+test('PostToolUse Write (사전 차단으로 이동됨)', 'Write', SKILL_PATH, VALID_CONTENT, true, 'PostToolUse')
+test('PreToolUse Edit (사후 검증 담당)', 'Edit', SKILL_PATH, VALID_CONTENT, true, 'PreToolUse')
 
-section('PreToolUse 이벤트 → 무시 (통과)')
-test('PreToolUse 이벤트', 'Write', SKILL_PATH, VALID_CONTENT, true, 'PreToolUse')
+section('PostToolUse Edit → 디스크 전체 재읽기 검증')
+{
+  const os = require('os')
+  const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'smg-edit-'))
+  const skillDir = path.join(tmpRoot, '.claude', 'skills', 'frontend', 'edit-skill')
+  fs.mkdirSync(skillDir, { recursive: true })
+  const validOnDisk = path.join(skillDir, 'SKILL.md')
+  fs.writeFileSync(validOnDisk, VALID_CONTENT)
+  test('Edit — 디스크 파일 유효 → 통과', 'Edit', validOnDisk, undefined, true, 'PostToolUse')
+  fs.writeFileSync(validOnDisk, NO_SOURCE)
+  test('Edit — 디스크 파일 소스 누락 → 실패', 'Edit', validOnDisk, undefined, false, 'PostToolUse')
+  fs.rmSync(tmpRoot, { recursive: true, force: true })
+}
 
 console.log(`\n${'─'.repeat(40)}`)
 console.log(`결과: ${passed}/${passed + failed} 통과 ${failed > 0 ? `(${failed}개 실패)` : ''}`)

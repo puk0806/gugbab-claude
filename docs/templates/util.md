@@ -41,7 +41,7 @@
 
 ---
 
-## 훅 (19종) — 공통 훅
+## 훅 (14종) — 공통 훅
 
 | 훅 | 이벤트 | 설명 |
 |----|--------|------|
@@ -51,21 +51,16 @@
 | [parry.js](../../.claude/hooks/parry.js) | PreToolUse Write | 시크릿·프롬프트 인젝션 패턴 스캔 — 감지 시 저장 차단 |
 | [protect-secrets.js](../../.claude/hooks/protect-secrets.js) | PreToolUse Write/Edit | 민감 파일(.env, *.pem, *.key, credentials 등) 수정 차단 |
 | [session-start.js](../../.claude/hooks/session-start.js) | SessionStart | 세션 시작 시 브랜치·미커밋 파일·최근 커밋 요약 출력 |
-| [session-handoff-inject.js](../../.claude/hooks/session-handoff-inject.js) | SessionStart | 직전 세션 핸드오프(24h 이내) git 상태 컨텍스트 주입 |
-| [session-summary.js](../../.claude/hooks/session-summary.js) | Stop / PostToolUse | 수정된 파일 목록 및 작업 요약 기록 |
-| [session-handoff.js](../../.claude/hooks/session-handoff.js) | Stop | 세션 종료 시 브랜치·커밋·변경 파일 핸드오프 파일 저장 |
 | [cc-notify.js](../../.claude/hooks/cc-notify.js) | Stop | 작업 완료 시 macOS 데스크탑 알림 |
 | [instructions-loaded.js](../../.claude/hooks/instructions-loaded.js) | InstructionsLoaded | CLAUDE.md 로드 완료 시 규칙 요약 출력 |
-| [pending-test-guard.js](../../.claude/hooks/pending-test-guard.js) | Stop | PENDING_TEST 스킬 존재 시 세션 종료 차단 |
-| [readme-guard.js](../../.claude/hooks/readme-guard.js) | Stop | 에이전트·스킬 추가 후 README 미업데이트 경고 |
+| [deliverable-guard.js](../../.claude/hooks/deliverable-guard.js) | PostToolUse Write/Edit · PreToolUse Bash · Stop | 산출물 완결성 — 세션 수정 파일 추적 + README 동기화 검사 + PENDING_TEST 스킬 테스트 미수행 차단 |
 | [skill-md-guard.js](../../.claude/hooks/skill-md-guard.js) | PostToolUse Write | SKILL.md 소스 URL·검증일·필수 섹션 검증 |
 | [agent-md-guard.js](../../.claude/hooks/agent-md-guard.js) | PostToolUse Write | 에이전트 .md name·description·tools·model·example 형식 검증 |
 | [verification-guard.js](../../.claude/hooks/verification-guard.js) | PostToolUse Write | verification.md 필수 섹션 확인, UNVERIFIED 상태 차단 |
 | [staleness-check.js](../../.claude/hooks/staleness-check.js) | InstructionsLoaded | 스킬 검증일 경과 감지 — 30~59일 경고, 60일+ 재검증 강제 |
-| [task-plan-guard.js](../../.claude/hooks/task-plan-guard.js) | UserPromptSubmit | 복잡한 작업 요청 감지 시 계획 확인 절차 지시 |
 | [statusline.sh](../../.claude/hooks/statusline.sh) | statusLine | 상태 바 — 브랜치·미커밋 수·PENDING_TEST 스킬 수 표시 |
 
-> dev 전용(tdd-guard·test-fake-guard·verification-gate·careful-with-judge)·TypeScript(typescript-quality) 훅은 포함되지 않습니다.
+> dev 전용(tdd-guard·test-fake-guard)·TypeScript(typescript-quality) 훅은 포함되지 않습니다.
 
 ---
 
@@ -105,4 +100,4 @@
 | `permissions.allow` | node/npm/git 조회 명령어, Write/Edit/Read/Glob/Grep/WebSearch/WebFetch/Agent |
 | `permissions.deny` | `git push --force`, `rm -rf` 시스템 경로, `chmod 777`, curl\|bash 패턴 |
 | `statusLine` | 브랜치·미커밋·PENDING_TEST 상태 표시 (`statusline.sh`) |
-| 훅 연결 | 유틸 최소 구성 — verification·skill/agent-md-guard 제외, session-summary·session-handoff·cc-notify 유지 |
+| 훅 연결 | 유틸 최소 구성 — verification·skill/agent-md-guard 제외, bash-guard·cc-notify 유지 |

@@ -7,7 +7,7 @@ description: >
 
 # Unity 6 LTS — 2D 모바일 게임 UI System (uGUI)
 
-> 소스
+> 소스:
 > - Unity Manual — UI Systems Comparison (Unity 6): https://docs.unity3d.com/6000.3/Documentation/Manual/UI-system-compare.html
 > - Unity Scripting API — Screen.safeArea: https://docs.unity3d.com/ScriptReference/Screen-safeArea.html
 > - Unity Manual — Canvas Scaler (uGUI 2.0): https://docs.unity3d.com/Packages/com.unity.ugui@2.0/manual/script-CanvasScaler.html

@@ -205,6 +205,8 @@ mkdir -p "$TARGET/.claude/hooks"
 echo "[hooks]"
 
 # 공통 — 모든 템플릿
+# (2026-07 훅 다이어트: session-summary/handoff·pending-test-guard·readme-guard·
+#  task-plan-guard → deliverable-guard 통합 또는 네이티브 기능(Plan Mode·resume)으로 대체)
 HOOKS_COMMON=(
   "_lib.js"
   "bash-guard.js"
@@ -212,23 +214,18 @@ HOOKS_COMMON=(
   "parry.js"
   "protect-secrets.js"
   "session-start.js"
-  "session-summary.js"
-  "session-handoff.js"
-  "session-handoff-inject.js"
   "cc-notify.js"
   "instructions-loaded.js"
-  "pending-test-guard.js"
-  "readme-guard.js"
+  "deliverable-guard.js"
   "skill-md-guard.js"
   "agent-md-guard.js"
   "verification-guard.js"
   "staleness-check.js"
-  "task-plan-guard.js"
   "statusline.sh"
 )
 
 # 개발 전용 (util·academic·dream 제외)
-HOOKS_DEV_ONLY=("tdd-guard.js" "test-fake-guard.js" "verification-gate.js" "careful-with-judge.js")
+HOOKS_DEV_ONLY=("tdd-guard.js" "test-fake-guard.js")
 
 # TypeScript 전용 (react-spa·nextjs만)
 HOOKS_TS_ONLY=("typescript-quality.js")

@@ -8,11 +8,12 @@ verification.md와 SKILL.md 수정 및 검증 상태 전환에 관한 규칙.
 
 **verification.md, SKILL.md 파일은 반드시 Write 또는 Edit 도구로만 수정한다.**
 
-금지 방법:
-- `Bash(sed)`, `Bash(awk)`, `Bash(perl -i)`, `Bash(echo >)`, `Bash(cat >)`
+금지 방법 (쓰기 연산):
+- `Bash(sed -i)`, `Bash(perl -i)`, `Bash(awk -i inplace)`, `Bash(echo >)`, `Bash(cat >)`, `Bash(tee)`
 - 이유: Write/Edit 도구를 사용해야 verification-guard 훅이 내용을 검증할 수 있다
+- 읽기 전용 사용(`grep`, `diff`, `cat FILE`, `sed -n`)은 허용
 
-bash-guard.js가 이를 강제하지만, 규칙 수준에서도 명시한다.
+bash-guard.js가 쓰기 연산만 차단하도록 강제하지만, 규칙 수준에서도 명시한다.
 
 ---
 

@@ -3,18 +3,23 @@
  * verification-guard.js
  * Claude Code PostToolUse Hook
  *
- * 목적: verification.md 작성 직후 품질 자동 검증
+ * 목적: verification.md 품질 자동 검증
+ *
+ * 이벤트:
+ *   PreToolUse Write — tool_input.content 사전 검증. 위반 시 저장 자체를 차단 (exit 2)
+ *   PostToolUse Edit — 수정 반영된 파일을 디스크에서 재읽기 검증. 위반 시 수정 요구 (exit 2)
  *
  * 검사 항목:
- *   1. 에이전트 로그에 "내장" 키워드 → 서브에이전트 미호출
+ *   1. 에이전트 로그에 "내장 지식" 구문 → 조사를 내장 지식으로 대체한 자백
+ *      ("내장" 단독 매칭은 오탐 — 예: "Python 내장 자료형" 스킬의 정당한 문맥)
  *   2. frontmatter status 필드 누락
  *   3. 필수 8개 섹션 누락
  *   4. 검증 체크박스 전부 [❌] → 체크리스트 미완성
- *
- * 조건: Write 도구로 docs/skills/{category}/{name}/verification.md 경로에 저장할 때만 동작
+ *   5. status: UNVERIFIED 저장 차단
  */
 
 const readline = require('readline')
+const fs = require('fs')
 
 const VERIFICATION_PATH_PATTERN = /docs\/skills\/.+\/verification\.md$/
 
@@ -38,11 +43,11 @@ function validate(content) {
     errors.push('frontmatter에 status 필드가 없습니다.')
   }
 
-  // 2. 에이전트 로그 "내장" 키워드 감지
+  // 2. 에이전트 로그 "내장 지식" 구문 감지 ("내장" 단독은 정당한 문맥 오탐 — 문맥 좁힘)
   const agentLogMatch = content.match(/##\s+2\.\s+실행\s+에이전트\s+로그([\s\S]*?)(?=\n##\s+|\n---\s*$|$)/i)
-  if (agentLogMatch && /내장/.test(agentLogMatch[1])) {
+  if (agentLogMatch && /내장\s*지식/.test(agentLogMatch[1])) {
     errors.push(
-      '에이전트 로그에 "내장" 키워드가 감지됐습니다.\n' +
+      '에이전트 로그에 "내장 지식" 구문이 감지됐습니다.\n' +
       '  → skill-creator는 반드시 WebSearch/WebFetch로 공식 문서를 직접 조사·교차 검증해야 합니다.\n' +
       '  → 내장 지식으로 대체하는 것은 금지입니다. 실제 조사를 수행한 뒤 verification.md를 재작성하세요.'
     )
@@ -97,28 +102,39 @@ async function main() {
   const { hook_event_name, hookEventName, tool_name, tool_input = {} } = input
   const eventName = hook_event_name || hookEventName
 
-  // PostToolUse + Write 도구만 처리
-  if (eventName !== 'PostToolUse' || tool_name !== 'Write') return process.exit(0)
-
   const filePath = (tool_input.file_path || '').replace(/\\/g, '/')
   if (!VERIFICATION_PATH_PATTERN.test(filePath)) return process.exit(0)
 
-  const content = tool_input.content || ''
-  const errors = validate(content)
+  // PreToolUse Write: 저장될 전체 내용을 사전 검증 → 위반 시 저장 차단
+  // PostToolUse Edit: 파일이 이미 갱신됐으므로 디스크에서 전체 재읽기 검증
+  let content = ''
+  if (eventName === 'PreToolUse' && tool_name === 'Write') {
+    content = tool_input.content || ''
+  } else if (eventName === 'PostToolUse' && tool_name === 'Edit') {
+    try { content = fs.readFileSync(tool_input.file_path, 'utf8') } catch { return process.exit(0) }
+  } else {
+    return process.exit(0)
+  }
+  if (!content) return process.exit(0)
 
+  const errors = validate(content)
   if (errors.length === 0) return process.exit(0)
 
+  const blocked = eventName === 'PreToolUse'
   const message = [
-    `[verification-guard] ❌ verification.md 검증 실패: ${filePath}`,
+    `[verification-guard] ❌ verification.md 검증 실패${blocked ? ' — 저장 차단됨' : ''}: ${filePath}`,
     '',
     ...errors.map((e, i) => `${i + 1}. ${e}`),
     '',
-    '위 문제를 수정한 뒤 verification.md를 재작성하세요.',
+    blocked ? '위 문제를 수정한 내용으로 다시 저장하세요.' : '위 문제를 수정한 뒤 verification.md를 재작성하세요.',
   ].join('\n')
 
-  // PostToolUse: stdout 출력 → Claude에게 피드백으로 전달
-  process.stdout.write(JSON.stringify({ reason: message }) + '\n')
-  process.exit(2) // exit 2 = 오류 신호, Claude가 수정 필요성 인식
+  if (blocked) {
+    process.stderr.write(message + '\n')       // PreToolUse: stderr + exit 2 → 도구 실행 차단
+  } else {
+    process.stdout.write(JSON.stringify({ reason: message }) + '\n') // PostToolUse: 수정 요구 피드백
+  }
+  process.exit(2)
 }
 
 main().catch(() => process.exit(0))

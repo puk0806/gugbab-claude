@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `aristotle-akrasia-vs-akolasia-distinction` |
 | 스킬 경로 | `.claude/skills/humanities/aristotle-akrasia-vs-akolasia-distinction/SKILL.md` |
-| 검증일 | 2026-05-05 |
+| 검증일 | 2026-07-04 |
 | 검증자 | skill-creator (사용자 학위논문 3장 자료) |
 | 스킬 버전 | v1 |
 
@@ -146,7 +146,7 @@ status: APPROVED
 
 - [✅] YAML frontmatter (name, description) 포함
 - [✅] `> 소스:` 줄 명시 (Bywater 1894 OCT 외 7종 서지)
-- [✅] `> 검증일: 2026-05-05` 명시
+- [✅] `> 검증일: 2026-07-04` 명시
 - [✅] 권별 분담 매핑 표 포함
 - [✅] NE VII.4·VII.8·VII.10·III.10-12 절별 분해 포함
 - [✅] 5축 차이 표 + 출처 명시
@@ -307,3 +307,4 @@ status: APPROVED
 | 2026-05-05 | v1 | 최초 작성. NE VII.4·VII.8·VII.10·III.10-12 절별 분해, 5축 차이, 학자 8인 해석, 그리스어 어휘 10항, 한국어 번역어 표, 도덕교육 적용 함의 포함. 사용자 요청 5건 DISPUTED 정정 반영 (ἡμιπόνηρος vs ἥμισυ μοχθηρία; 1151a 행수 표기). | skill-creator |
 | 2026-05-06 | v1 | 2단계 실사용 테스트 수행 (Q1 prohairesis·NE위치·교정전략 / Q2 ἁπλῶς akrasia·분노·명예·Bekker 위치 / Q3 Hursthouse 연속체·위상·도덕교육 함의) → 3/3 PASS, APPROVED 전환. 섹션 6·7·8 동기화 완료. | skill-tester |
 | 2026-05-06 | v1.1 | **fact-checker 추가 검증 정정 3건** (Perseus/Callard 2017/Broadie PhilPapers 교차): (a) prohairesis 대조 *핵심 명제*는 **1151a5-8** (akrasia↔vice 직접 대조), 1151a20-28은 부수 논거(akrates의 ἀρχή 보존) — 두 위치 분리 표기 (b) Bywater OCT 1894 챕터 분할상 1150b29는 **VII.7 결미 행**, **VII.8 본문은 1150b30부터** — 챕터 귀속 명시 시 정확화 (c) akolasia 본격 도입은 **III.10 1117b23**부터, III.11은 신체적 즐거움 한정 심화. 사전 정정 박스에 항목 6-8 추가 + 5축 차이표·핵심 어휘표·권별 분담표 동기화. APPROVED 유지(정정 후 신뢰도 상승). | fact-checker + main |
+| 2026-07-04 | v1.2 | freshness 재검증 — ἡμιπόνηρος("절반의 악") NE VII.10 1152a15-18 구간 내 위치, 1150b29-32 후회(μεταμελητικός/ἀμεταμέλητος)·치유 가능성(ἰατός/ἀνίατος) 대조 및 수종·결핵 vs 간질 비유, 1151a의 παρὰ/κατὰ τὴν προαίρεσιν 대조 명제(akrasia↔kakia) 재확인 → 전원 VERIFIED, 내용 변경 없이 검증일만 갱신 | freshness-audit |

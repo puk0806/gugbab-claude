@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `crisis-intervention-resources-korea` |
 | 스킬 경로 | `.claude/skills/humanities/crisis-intervention-resources-korea/SKILL.md` |
-| 검증일 | 2026-05-15 |
+| 검증일 | 2026-07-04 |
 | 검증자 | skill-creator (Claude) |
 | 스킬 버전 | v1 |
 | 재검증 주기 | 연 1회 (정부 번호 통합·변경 가능성) |
@@ -125,7 +125,7 @@ status: APPROVED
 ### 4-3. 구조 완전성
 - [✅] YAML frontmatter 포함 (name, description + `<example>` 3개)
 - [✅] `> 소스:` 줄 명시 (10개 공식 사이트 URL)
-- [✅] `> 검증일: 2026-05-15` 명시
+- [✅] `> 검증일: 2026-07-04` 명시
 - [✅] 핵심 자원 (자살·정신건강·여성·청소년·노인·다문화·외국인·LGBTQ+) 모두 포함
 - [✅] 임상 의뢰 가이드 포함
 - [✅] 앱·챗봇 안전 가드 4단계 템플릿 + 톤 가이드 + 자원 카드 마크업 포함
@@ -234,3 +234,4 @@ status: APPROVED
 | 2026-05-15 | v1 | 최초 작성. 공식 정부·운영 기관 22개 클레임 교차 검증. PENDING_TEST(재검증 필요 카테고리). | skill-creator (Claude) |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 109 통합시점·1393·129 구분 / Q2 109 vs 1577-0199 판단 / Q3 청소년 자해 위기 안전가드 작성) → 3/3 PASS, PENDING_TEST 유지 (재검증 필요 카테고리) | skill-tester |
 | 2026-06-19 | v1 | 2단계 실사용 테스트 재확인 (Q1 베트남어 다문화 가정폭력 1366 vs 1577-1366 / Q2 위험 등급 분류 및 4단계 응답 작성) → 2/2 PASS, APPROVED 전환 (자원 안내·개념 스킬 — content test PASS = APPROVED 가능) | skill-tester |
+| 2026-07-04 | v2 | freshness 재검증 — 109(24시간·2024-01 통합, 상담량 증가 속 정상 운영) / 1577-0199(정신건강 위기상담, 109와 별도 존속) / 1366·1388(여성가족부, 24시간) / 1577-1389(37개 기관 24시간) / 1577-1366(다누리) / 1588-9191(생명의전화 24시간) 전 번호 정부·운영기관 공식 소스로 유효 확인(VERIFIED 7/7). 번호 통합·변경 없음, SKILL.md 검증일만 갱신 | freshness-audit |
