@@ -38,7 +38,8 @@ metadata:
 - 스킬 209종 구조 전수 PASS (game/unity-ui-system 소스 콜론 누락 1건 수정), verification.md 짝 209/209, status 분포 APPROVED 193 + PENDING_TEST 16
 - 관찰: statusline.sh는 이 레포 settings.json에 statusLine 미배선 (export 시에는 gen-settings가 넣어줌) — 로컬에서 상태바 쓰려면 배선 필요
 - E2E 설치 실증: project-install.sh를 임시 디렉토리에 실제 실행(react-spa 풀옵션·util 최소) — 배선 훅 전부 복사·문법 통과·옵션별 배선 일치·구훅 미참조·statusLine 포함 확인
-- 검증일 경과(2026-07-04 기준): 60일+ 5종(spring-security-5/6-jwt 73일·akrasia-scholarship-map·virtue-ethics-modern-revival·abstract-and-keywords-writing 62일) + 30~59일 3종. freshness-auditor 재검증은 사용자 결정 대기
+- 검증일 경과 8종(60일+ 5 + 30~59일 3) → 병렬 서브에이전트 3개로 freshness 재검증 완료(2026-07-04): 전원 VERIFIED·DISPUTED 0. spring-security-6-jwt-jjwt12에 jjwt 0.12.7·Boot 3.5.16(OSS EOL 2026-06-30)·Security 6.5(2027-07까지 지원) 반영. 위기상담 번호(109·1577-0199·1366·1388 등 7건) 전부 유효. SKILL.md+verification.md 검증일 갱신 → staleness 0건. 참고: Spring Security 7.x 출시됨 — 추후 spring-security-7 스킬 신설 검토 가치
+- 오케스트레이터 maxTurns 누락 2건 보정: deep-researcher 50·skill-tester 30 (agent-design.md 필수 규칙)
 - 에이전트 모델 신선도: 67종 전부 최신(별칭 65 + claude-fable-5 2 + claude-sonnet-4-6 1), deprecated ID 0건
 
 ## 후순위 (미착수)
