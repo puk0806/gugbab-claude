@@ -64,15 +64,15 @@ frontend/claude-api-streaming-frontend ← 프론트→Claude API 직접 호출
 
 ---
 
-## 훅 (24종)
+## 훅 (17종)
 
-### 공통 (19종)
+### 공통 (14종)
 
 react-spa 템플릿과 동일한 공통 훅 세트. 자세한 목록은 [react-spa.md](./react-spa.md) 참조.
 
-### 개발 전용 (4종)
+### 개발 전용 (2종)
 
-`tdd-guard.js` · `test-fake-guard.js` · `verification-gate.js` · `careful-with-judge.js`
+`tdd-guard.js` · `test-fake-guard.js`
 
 ### TypeScript 전용 (1종)
 
