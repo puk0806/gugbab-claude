@@ -13,7 +13,7 @@ description: >
 # 학술 논문 초록·키워드 작성 + 검색 노출 최적화
 
 > 소스: APA 7판 Abstract & Keywords Guide(https://apastyle.apa.org/instructional-aids/abstract-keywords-guide.pdf), Springer Nature Titles·Abstracts·Keywords(https://www.springernature.com/gp/authors/campaigns/writing-a-manuscript/titles-abstracts-keywords), Elsevier Researcher Academy(https://researcheracademy.elsevier.com/writing-research/fundamentals-manuscript-preparation/write-abstract-improve-article), PhilPapers Categorization(https://philpapers.org/help/categorization.html), UKSG Insights ASEO(https://insights.uksg.org/articles/10.1629/uksg.534), Purdue OWL Abstracts(https://owl.purdue.edu/owl/graduate_writing/graduate_writing_genres/graduate_writing_genres_abstracts_new.html), Editage Insights 한국어 시제·인칭(https://www.editage.co.kr/insights/which-tense-should-be-used-in-the-abstract-of-a-paper), KCI(https://www.kci.go.kr/)
-> 검증일: 2026-05-03
+> 검증일: 2026-07-04
 
 ---
 

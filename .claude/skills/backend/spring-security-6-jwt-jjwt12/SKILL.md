@@ -6,20 +6,20 @@ description: Spring Boot 3.x + Spring Security 6.x + jjwt 0.12.x 기반 모던 J
 # Spring Security 6 + JWT (jjwt 0.12.x) 모던 인증 패턴
 
 > 소스: https://docs.spring.io/spring-security/reference/servlet/ | https://github.com/jwtk/jjwt | https://spring.io/projects/spring-boot
-> 검증일: 2026-04-22
+> 검증일: 2026-07-04
 
-> 주의: 이 문서는 Spring Boot 3.5.x + Spring Security 6.5.x + jjwt 0.12.6 (또는 0.13.0) + Java 17+ 기준입니다. Spring Boot 3.4 이하는 2025-12-31 EOL입니다. 레거시 Spring Security 5.x/`WebSecurityConfigurerAdapter` 패턴은 별도 스킬을 참조하세요.
+> 주의: 이 문서는 Spring Boot 3.5.x + Spring Security 6.5.x + jjwt 0.12.7 (또는 0.13.0) + Java 17+ 기준입니다. Spring Boot 3.5는 2026-06-30 OSS EOL(최종 패치 3.5.16)이며 현행 OSS 지원 라인은 Boot 4.x입니다. 단, Spring Security 6.5는 2027-07-31까지 OSS 지원됩니다. 레거시 Spring Security 5.x/`WebSecurityConfigurerAdapter` 패턴은 별도 스킬을 참조하세요.
 
 ---
 
 ## 적용 범위
 
-| 항목 | 최소 버전 | 권장 버전 (2026-04 기준) |
+| 항목 | 최소 버전 | 권장 버전 (2026-07 기준) |
 |------|-----------|--------------------------|
 | Java | 17 | 21 (Virtual Threads 사용 시) |
-| Spring Boot | 3.2 | 3.5.13 |
-| Spring Security | 6.2 | 6.5.x (Boot 3.5에 번들) |
-| jjwt | 0.12.0 | 0.12.6 이상 (또는 0.13.0) |
+| Spring Boot | 3.2 | 3.5.16 (3.5 라인 최종 OSS 패치) |
+| Spring Security | 6.2 | 6.5.11 (Boot 3.5에 번들, OSS 지원 2027-07-31까지) |
+| jjwt | 0.12.0 | 0.12.7 (또는 0.13.0) |
 | Jakarta Servlet | 5.0+ (`jakarta.servlet`) | 6.0 (Boot 3.x 기본) |
 
 > 주의: `javax.servlet.*` 패키지는 Spring Boot 3.x에서 제거되었습니다. 반드시 `jakarta.servlet.*`를 사용합니다.
@@ -37,9 +37,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
 
     // jjwt 0.12.x — 3개 모듈 분리
-    implementation("io.jsonwebtoken:jjwt-api:0.12.6")
-    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
-    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
+    implementation("io.jsonwebtoken:jjwt-api:0.12.7")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.7")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.7")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
@@ -62,18 +62,18 @@ dependencies {
     <dependency>
         <groupId>io.jsonwebtoken</groupId>
         <artifactId>jjwt-api</artifactId>
-        <version>0.12.6</version>
+        <version>0.12.7</version>
     </dependency>
     <dependency>
         <groupId>io.jsonwebtoken</groupId>
         <artifactId>jjwt-impl</artifactId>
-        <version>0.12.6</version>
+        <version>0.12.7</version>
         <scope>runtime</scope>
     </dependency>
     <dependency>
         <groupId>io.jsonwebtoken</groupId>
         <artifactId>jjwt-jackson</artifactId>
-        <version>0.12.6</version>
+        <version>0.12.7</version>
         <scope>runtime</scope>
     </dependency>
 </dependencies>

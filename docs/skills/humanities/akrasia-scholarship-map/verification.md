@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `akrasia-scholarship-map` |
 | 스킬 경로 | `.claude/skills/humanities/akrasia-scholarship-map/SKILL.md` |
-| 검증일 | 2026-05-03 |
+| 검증일 | 2026-07-04 |
 | 검증자 | skill-creator (Opus 4.7) |
 | 스킬 버전 | v1 |
 | 대상 사용자 | 도덕윤리교육 전공 학부생 |
@@ -121,7 +121,7 @@ status: APPROVED
 ### 4-3. 구조 완전성
 
 - [✅] YAML frontmatter (name, description) 포함
-- [✅] 소스 URL과 검증일 명시 (> 소스: ... > 검증일: 2026-05-03)
+- [✅] 소스 URL과 검증일 명시 (> 소스: ... > 검증일: 2026-07-04)
 - [✅] 고대–현대–한국 학계–도덕심리학–교육 함의 5개 축 모두 포함
 - [✅] 인용 양식 가이드 포함
 - [✅] 흔한 오류 패턴 섹션 포함
@@ -234,3 +234,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-05-03 | v1 | 최초 작성 — 고대 2, 현대 분석철학 6, 한국 학계 4, 도덕심리학 4, 핸드북 4 항목 검증 후 작성 | skill-creator (Opus 4.7) |
 | 2026-05-03 | v1 | 2단계 실사용 테스트 수행 (Q1 소크라테스 vs 아리스토텔레스 텍스트 위치 / Q2 Davidson ATC 논증 및 현대 논쟁 위상 / Q3 ego depletion·마시멜로 재현성 논란 주의 확인) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-07-04 | v2 | freshness 재검증 — SEP "Weakness of Will" 저자(Stroud & Svirsky)·최종 개정일(2025-09-18), Davidson 1969 Feinberg 편 원 게재·1980 *Essays on Actions and Events* Ch.2 재수록, Wiggins PAS Vol.79 pp.251-278, NE VII.7 1150b19 이하 propeteia/astheneia 구분 재확인 → 전원 VERIFIED, 내용 변경 없이 검증일만 갱신 | freshness-audit |

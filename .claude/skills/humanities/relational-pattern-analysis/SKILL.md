@@ -12,7 +12,7 @@ description: >
 
 > 소스: Gottman Institute(https://www.gottman.com/) · ICEEFT(https://iceeft.com/) · Dr. Sue Johnson(https://drsuejohnson.com/) · Center for Nonviolent Communication(https://www.cnvc.org/) · PuddleDancer Press(https://nonviolentcommunication.com/)
 > 학술 1차 문헌: Gottman & Levenson (1992) *J. Personality & Social Psychology* 63(2); Gottman, Coan, Carrere & Swanson (1998) *J. Marriage & Family* 60; Gottman & Levenson (2000) *J. Family Psychology* 14(1); Johnson, S. M. (2008/2019) *Hold Me Tight: Seven Conversations for a Lifetime of Love* · *Attachment Theory in Practice*; Rosenberg, M. B. (2003/2015) *Nonviolent Communication: A Language of Life*
-> 검증일: 2026-05-15
+> 검증일: 2026-07-04
 > 짝 스킬: `humanities/attachment-theory-basics` (EFT 이론 기반) · `meta/dream-interpretation-prompt-engineering` (꿈 해몽 후 관계 조언 참조)
 
 ---

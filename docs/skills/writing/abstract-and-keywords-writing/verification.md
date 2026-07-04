@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `abstract-and-keywords-writing` |
 | 스킬 경로 | `.claude/skills/writing/abstract-and-keywords-writing/SKILL.md` |
-| 검증일 | 2026-05-03 |
+| 검증일 | 2026-07-04 |
 | 검증자 | skill-creator (Claude Opus 4.7) |
 | 스킬 버전 | v1 |
 
@@ -108,7 +108,7 @@ status: APPROVED
 ### 4-3. 구조 완전성
 
 - [✅] YAML frontmatter 포함 (name, description)
-- [✅] 소스 URL과 검증일 명시 (`> 소스:`, `> 검증일: 2026-05-03`)
+- [✅] 소스 URL과 검증일 명시 (`> 소스:`, `> 검증일: 2026-07-04`)
 - [✅] 핵심 개념 설명 포함 (구조화/비구조화 초록, ASEO)
 - [✅] 예시 골격 포함 (akrasia 인문학 5요소 패턴)
 - [✅] 언제 사용/언제 사용하지 않을지 기준 포함 (학술지별 표 + 분야별 권장)
@@ -221,3 +221,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-05-03 | v1 | 최초 작성. APA/MLA/Springer/Elsevier/PhilPapers/UKSG 공식 소스 9개 + 한국어 보조 소스 3개 교차 검증. 11개 핵심 클레임 중 9 VERIFIED / 1 DISPUTED(수정) / 1 UNVERIFIED(주의 표기). | skill-creator (Claude Opus 4.7) |
 | 2026-05-03 | v1 | 2단계 실사용 테스트 수행 (Q1 KCI 한국어 초록 5요소 / Q2 ASEO 키워드 한·영 조합 / Q3 초록 인용 정책 Springer·APA·KCI 비교) → 2/3 PASS + 1/3 PARTIAL, APPROVED 전환 | skill-tester |
+| 2026-07-04 | v2 | freshness 재검증 — APA 7판 150-250단어·3-5 키워드 / Springer Nature 200단어 이내·4-6 키워드 / Elsevier 구조화 초록 250단어 이내(Background·Methods·Results·Conclusion) 모두 현행 공식 가이드와 일치 확인(VERIFIED 3/3). 내용 수정 없음, SKILL.md 검증일만 갱신 | freshness-audit |

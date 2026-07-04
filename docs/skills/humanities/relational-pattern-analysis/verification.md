@@ -19,7 +19,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `relational-pattern-analysis` |
 | 스킬 경로 | `.claude/skills/humanities/relational-pattern-analysis/SKILL.md` |
-| 검증일 | 2026-05-15 |
+| 검증일 | 2026-07-04 |
 | 검증자 | skill-creator (자동) |
 | 스킬 버전 | v1 |
 | 짝 스킬 | `humanities/attachment-theory-basics` · `meta/dream-interpretation-prompt-engineering` |
@@ -92,7 +92,7 @@ status: APPROVED
 ### 4-2. 구조 완전성
 
 - [✅] YAML frontmatter 포함 (name, description)
-- [✅] 소스 URL과 검증일 명시 (`> 소스:`·`> 검증일: 2026-05-15`)
+- [✅] 소스 URL과 검증일 명시 (`> 소스:`·`> 검증일: 2026-07-04`)
 - [✅] 핵심 개념 설명 포함 (3개 학파 각각)
 - [✅] 적용 예시 포함 (꿈 해몽 앱 4가지 활용 예)
 - [✅] 언제 사용 / 언제 사용하지 않을지 기준 포함 (학술적 한계 박스 + 출력 가드레일)
@@ -223,3 +223,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-05-15 | v1 | 최초 작성 (Gottman 4 horsemen + EFT cycle + NVC 4단계 + 꿈 해몽 앱 적용 + 학술적 한계 가드레일) | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 Contempt 정의·antidote / Q2 pursuer-withdrawer cycle / Q3 NVC 느낌vs판단·요청vs요구) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-07-04 | v2 | freshness 재검증 — Gottman 4 horsemen 정의·antidote 4종·contempt 최강 예측 변수(Gottman Institute) / EFT Johnson+Greenberg 1980년대 초 공동 개발·ICEEFT 1998 오타와 설립 / NVC Rosenberg 1960-70년대 개발·4단계(관찰·느낌·욕구·요청)·CNVC 1984 설립 — 이론·연구자 귀속 모두 정확 확인(VERIFIED 3/3). 내용 수정 없음, SKILL.md 검증일만 갱신 | freshness-audit |

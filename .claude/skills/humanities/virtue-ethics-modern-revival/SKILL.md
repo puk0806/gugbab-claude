@@ -14,7 +14,7 @@ description: >
 # 현대 덕윤리(Virtue Ethics) 부흥
 
 > 소스: SEP "Virtue Ethics" (https://plato.stanford.edu/entries/ethics-virtue/), Oxford Academic / Cambridge Core / Notre Dame Press 공식 페이지, PhilPapers, KCI(한국학술지인용색인)
-> 검증일: 2026-05-03
+> 검증일: 2026-07-04
 
 ---
 

@@ -12,7 +12,7 @@ description: >
 # 아크라시아 학술 논쟁 지도 (Akrasia Scholarship Map)
 
 > 소스: Stanford Encyclopedia of Philosophy "Weakness of Will" (Stroud & Svirsky, 최종 개정 2025-09-18) 외 다수
-> 검증일: 2026-05-03
+> 검증일: 2026-07-04
 > 대상: 도덕윤리교육 전공 대학원생(석/박사) — 학위논문·KCI 등재지 투고·세미나 준비
 
 이 스킬은 아크라시아 논의의 **핵심 논쟁 구도**와 **인용 가능한 1차·2차 문헌**을 정리합니다. 모든 서지정보는 출판사 공식 페이지·PhilPapers·KCI에서 교차 검증되었습니다.

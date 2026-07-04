@@ -13,7 +13,7 @@ description: >
 # 아리스토텔레스 akrasia(자제력없음) vs akolasia(무절제) 차이 정밀 분석
 
 > 소스: Bywater, I. (ed.) 1894. *Aristotelis Ethica Nicomachea*. Oxford Classical Text. Clarendon Press / 강상진·김재홍·이창우 옮김, 『니코마코스 윤리학』, 길, 2011 (ISBN 978-89-6445-038-3) / SEP "Aristotle's Ethics" (R. Kraut, rev. 2022) https://plato.stanford.edu/entries/aristotle-ethics/ / Broadie & Rowe 2002 *Aristotle: Nicomachean Ethics*, Oxford UP (ISBN 0-19-875271-7) / Bostock 2000 *Aristotle's Ethics*, Oxford UP (ISBN 978-0198752653) / Pakaluk 2005 *Aristotle's Nicomachean Ethics: An Introduction*, Cambridge UP (ISBN 978-0521520683) / Hursthouse 1999 *On Virtue Ethics*, Oxford UP (ISBN 978-0199247998) / Charles 1984 *Aristotle's Philosophy of Action*, Duckworth.
-> 검증일: 2026-05-05
+> 검증일: 2026-07-04
 
 ---
 
