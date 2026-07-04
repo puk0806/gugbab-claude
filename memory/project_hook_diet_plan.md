@@ -37,6 +37,9 @@ metadata:
 - 에이전트 67종 frontmatter 전수 PASS (agents/ 하위 CLAUDE.md 3개는 컨텍스트 파일 — agent-md-guard 패턴에서 CLAUDE.md·README.md 제외 처리)
 - 스킬 209종 구조 전수 PASS (game/unity-ui-system 소스 콜론 누락 1건 수정), verification.md 짝 209/209, status 분포 APPROVED 193 + PENDING_TEST 16
 - 관찰: statusline.sh는 이 레포 settings.json에 statusLine 미배선 (export 시에는 gen-settings가 넣어줌) — 로컬에서 상태바 쓰려면 배선 필요
+- E2E 설치 실증: project-install.sh를 임시 디렉토리에 실제 실행(react-spa 풀옵션·util 최소) — 배선 훅 전부 복사·문법 통과·옵션별 배선 일치·구훅 미참조·statusLine 포함 확인
+- 검증일 경과(2026-07-04 기준): 60일+ 5종(spring-security-5/6-jwt 73일·akrasia-scholarship-map·virtue-ethics-modern-revival·abstract-and-keywords-writing 62일) + 30~59일 3종. freshness-auditor 재검증은 사용자 결정 대기
+- 에이전트 모델 신선도: 67종 전부 최신(별칭 65 + claude-fable-5 2 + claude-sonnet-4-6 1), deprecated ID 0건
 
 ## 후순위 (미착수)
 
