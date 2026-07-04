@@ -1,9 +1,5 @@
 {
   "defaultMode": "acceptEdits",
-  "enabledPlugins": {
-    "codex@openai-codex": true,
-    "superpowers@superpowers-marketplace": true
-  },
   "permissions": {
     "allow": [
       "Bash(node*)",
@@ -21,6 +17,7 @@
       "Bash(git stash*)",
       "Bash(git fetch*)",
       "Bash(ls*)",
+      "Bash(ll*)",
       "Bash(cat*)",
       "Bash(head*)",
       "Bash(tail*)",
@@ -30,15 +27,20 @@
       "Bash(pwd)",
       "Bash(which*)",
       "Bash(echo*)",
+      "Bash(printf*)",
       "Bash(mkdir*)",
       "Bash(touch*)",
       "Bash(cp*)",
       "Bash(mv*)",
+      "Bash(rm*)",
+      "Bash(sed*)",
+      "Bash(awk*)",
       "Bash(sort*)",
       "Bash(uniq*)",
       "Bash(diff*)",
       "Bash(xargs*)",
       "Bash(for*)",
+      "Bash(tee*)",
       "Write",
       "Edit",
       "Read",
@@ -60,99 +62,98 @@
       "Bash(git reset --hard HEAD~[2-9]*)",
       "Bash(rm -rf /bin*)",
       "Bash(rm -rf /etc*)",
+      "Bash(rm -rf /lib*)",
+      "Bash(rm -rf /sbin*)",
+      "Bash(rm -rf /sys*)",
       "Bash(rm -rf /usr*)",
+      "Bash(rm -rf /var*)",
+      "Bash(rm -rf /proc*)",
+      "Bash(rm -rf /dev*)",
       "Bash(chmod 777*)",
       "Bash(curl*|*bash)",
       "Bash(wget*|*sh)"
     ]
   },
   "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-start.js" }
-        ]
-      }
-    ],
     "PreToolUse": [
       {
         "matcher": "*",
         "hooks": [
-          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/bash-guard.js" },
-          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/auto-approve.js" }
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/bash-guard.js"
+          },
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/auto-approve.js"
+          }
         ]
       },
       {
         "matcher": "Write",
         "hooks": [
-          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/parry.js" }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Write",
-        "hooks": [
-          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-summary.js" },
-          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/pre-compact.js" }
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/parry.js"
+          },
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/protect-secrets.js"
+          }
         ]
       },
       {
         "matcher": "Edit",
         "hooks": [
-          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-summary.js" },
-          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/pre-compact.js" }
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/protect-secrets.js"
+          }
         ]
-      },
+      }
+    ],
+    "PostToolUse": [
       {
         "matcher": "Bash",
         "hooks": [
-          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/bash-guard.js" }
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/bash-guard.js"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-start.js"
+          }
         ]
       }
     ],
     "InstructionsLoaded": [
       {
         "hooks": [
-          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/instructions-loaded.js" }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/user-prompt-submit.js" }
-        ]
-      }
-    ],
-    "SubagentStart": [
-      {
-        "matcher": "*",
-        "hooks": [
-          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/subagent-audit.js" }
-        ]
-      }
-    ],
-    "SubagentStop": [
-      {
-        "matcher": "*",
-        "hooks": [
-          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/subagent-audit.js" }
-        ]
-      }
-    ],
-    "PreCompact": [
-      {
-        "hooks": [
-          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/pre-compact.js" }
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/instructions-loaded.js"
+          },
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/staleness-check.js"
+          }
         ]
       }
     ],
     "Stop": [
       {
         "hooks": [
-          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-summary.js" },
-          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/cc-notify.js" }
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/cc-notify.js"
+          }
         ]
       }
     ],
@@ -160,10 +161,20 @@
       {
         "matcher": "*",
         "hooks": [
-          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/bash-guard.js" },
-          { "type": "command", "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/auto-approve.js" }
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/bash-guard.js"
+          },
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/auto-approve.js"
+          }
         ]
       }
     ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash $CLAUDE_PROJECT_DIR/.claude/hooks/statusline.sh"
   }
 }

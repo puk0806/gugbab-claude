@@ -96,13 +96,13 @@ skill-tester가 자동 수행하는 것:
 - verification.md의 섹션 5(테스트 진행 기록) + 섹션 6(검증 결과 요약) 업데이트
 - status 전환: PASS → `APPROVED` (또는 "실사용 필수 스킬" 카테고리면 PENDING_TEST 유지)
 
-**이 단계를 생략하고 세션을 종료하려 하면 `pending-test-guard` 훅이 차단한다.**
+**이 단계를 생략하고 세션을 종료하려 하면 `deliverable-guard` 훅이 차단한다.**
 
 "실사용 필수 스킬" 카테고리(`verification-policy.md` 참조)인 경우도 **agent content test는 반드시 수행·기록**해야 훅을 통과한다.
 
 #### 안티패턴 — 셀프 검증으로 단계 5 대체 금지
 
-다음 패턴은 *룰 위반*이며, 강화된 `pending-test-guard` 훅이 차단한다:
+다음 패턴은 *룰 위반*이며, 강화된 `deliverable-guard` 훅이 차단한다:
 
 ```
 ## 5. 테스트 진행 기록
@@ -132,7 +132,7 @@ Q3. ... — PASS
 agent content test: 3/3 PASS
 ```
 
-**훅 통과 조건** (`pending-test-guard.js` 강화 후):
+**훅 통과 조건** (`deliverable-guard.js` 강화 후):
 - "수행일: YYYY-MM-DD" 라인 존재 AND
 - 같은 섹션에 *진짜 수행 흔적* 키워드 1개 이상 존재
   (PASS / FAIL / Q1·Q2 / skill-tester 호출 / agent content test / N/N PASS)
@@ -153,7 +153,7 @@ agent content test: 3/3 PASS
 - [ ] 교차 검증 결과가 verification.md에 기록되어 있는가
 - [ ] DISPUTED 항목이 수정 반영되었는가
 - [ ] **skill-tester로 2단계 테스트 수행** (agent content test PASS)
-- [ ] **verification.md 섹션 5에 오늘 날짜 "수행일" 기록** (pending-test-guard 통과)
+- [ ] **verification.md 섹션 5에 오늘 날짜 "수행일" 기록** (deliverable-guard 통과)
 
 ---
 

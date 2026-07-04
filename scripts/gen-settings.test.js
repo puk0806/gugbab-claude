@@ -68,6 +68,67 @@ console.log('\n[구조] 필수 필드')
   assert('플러그인 없으면 enabledPlugins 필드 자체 없음', 'enabledPlugins' in s, false)
 }
 
+// ── 훅 다이어트 (2026-07) 배선 검증 ─────────────────────────────────────
+console.log('\n[훅 다이어트] deliverable-guard 통합 · 제거 훅 미참조')
+{
+  const flat = (s) => JSON.stringify(s.hooks)
+  const s = generate('--dev', '--memory', '--readme-guard', '--codex')
+  assert('Stop에 deliverable-guard 포함', flat(s).includes('deliverable-guard.js') , true)
+  assert('제거된 훅 미참조 (pending-test/readme/session-summary/handoff/task-plan/confirmation-gate/verification-gate/careful-with-judge)',
+    /pending-test-guard|readme-guard\.js|session-summary|session-handoff|task-plan-guard|confirmation-gate|verification-gate|careful-with-judge/.test(flat(s)), false)
+  assert('UserPromptSubmit 이벤트 제거됨', 'UserPromptSubmit' in s.hooks, false)
+  const stopCmds = s.hooks.Stop[0].hooks.map(h => h.command)
+  assert('Stop 훅 4개 이하 (deliverable+codex+memory+notify)', stopCmds.length <= 4, true)
+}
+{
+  const s = generate('--util')
+  assert('util 모드 Stop에 cc-notify만 (opt-in 미선택)', s.hooks.Stop[0].hooks.length, 1)
+  const utilPreWrite = s.hooks.PreToolUse.find(b => b.matcher === 'Write').hooks.map(h => h.command).join(' ')
+  assert('util 모드 PreToolUse Write에 구조 검증 3종 미포함 (최소 구성)',
+    ['verification-guard', 'skill-md-guard', 'agent-md-guard'].some(n => utilPreWrite.includes(n)), false)
+}
+{
+  const s = generate('--util', '--readme-guard', '--branch-protection')
+  const flatPre = JSON.stringify(s.hooks.PreToolUse)
+  const flatStop = JSON.stringify(s.hooks.Stop)
+  const flatPost = JSON.stringify(s.hooks.PostToolUse)
+  assert('util + --readme-guard → PreToolUse Bash에 deliverable-guard 보존', flatPre.includes('deliverable-guard'), true)
+  assert('util + --readme-guard → Stop에 deliverable-guard 보존', flatStop.includes('deliverable-guard'), true)
+  assert('util + --readme-guard → PostToolUse 세션 추적 배선', flatPost.includes('deliverable-guard'), true)
+  assert('util + --branch-protection → PreToolUse Bash에 branch-protection 보존', flatPre.includes('branch-protection'), true)
+}
+{
+  const s = generate('--dev')
+  const stopDeliverable = s.hooks.Stop[0].hooks.find(h => h.command.includes('deliverable-guard'))
+  assert('--readme-guard 미선택 → Stop deliverable에 --no-readme 전달', stopDeliverable.command.includes('--no-readme'), true)
+}
+{
+  const s = generate('--dev', '--readme-guard')
+  const stopDeliverable = s.hooks.Stop[0].hooks.find(h => h.command.includes('deliverable-guard'))
+  assert('--readme-guard 선택 → Stop deliverable README 검사 활성 (--no-readme 없음)', stopDeliverable.command.includes('--no-readme'), false)
+}
+
+// ── 구조 검증 3종 사전 차단 격상 (2026-07) ──────────────────────────────
+console.log('\n[사전 차단] verification/skill-md/agent-md — PreToolUse Write')
+{
+  const s = generate('--dev')
+  const preWrite = s.hooks.PreToolUse.find(b => b.matcher === 'Write').hooks.map(h => h.command).join(' ')
+  const postWrite = s.hooks.PostToolUse.find(b => b.matcher === 'Write').hooks.map(h => h.command).join(' ')
+  const postEdit = s.hooks.PostToolUse.find(b => b.matcher === 'Edit').hooks.map(h => h.command).join(' ')
+  assert('PreToolUse Write에 구조 검증 3종 배선',
+    ['verification-guard', 'skill-md-guard', 'agent-md-guard'].every(n => preWrite.includes(n)), true)
+  assert('PostToolUse Write에서 구조 검증 3종 제거',
+    ['verification-guard', 'skill-md-guard', 'agent-md-guard'].some(n => postWrite.includes(n)), false)
+  assert('PostToolUse Edit에 구조 검증 3종 배선 (디스크 재읽기)',
+    ['verification-guard', 'skill-md-guard', 'agent-md-guard'].every(n => postEdit.includes(n)), true)
+  const editCmds = s.hooks.PostToolUse.find(b => b.matcher === 'Edit').hooks.map(h => h.command)
+  const writeCmds = s.hooks.PostToolUse.find(b => b.matcher === 'Write').hooks.map(h => h.command)
+  assert('PostToolUse Edit 선두 = deliverable-guard (추적이 차단 훅보다 먼저)',
+    editCmds[0].includes('deliverable-guard'), true)
+  assert('PostToolUse Write 선두 = deliverable-guard',
+    writeCmds[0].includes('deliverable-guard'), true)
+}
+
 // ── 최종 ────────────────────────────────────────────────────────────────
 console.log(`\n결과: ${passed} passed, ${failed} failed`)
 process.exit(failed > 0 ? 1 : 0)

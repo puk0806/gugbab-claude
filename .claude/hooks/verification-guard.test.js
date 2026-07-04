@@ -116,7 +116,7 @@ status: PENDING_TEST
 const CONTENT_ALL_UNCHECKED = VALID_CONTENT
   .replace(/\[✅\]/g, '[❌]')
 
-function runHook(toolName, filePath, content, eventName = 'PostToolUse') {
+function runHook(toolName, filePath, content, eventName = 'PreToolUse') {
   const input = JSON.stringify({
     hook_event_name: eventName,
     tool_name: toolName,
@@ -136,7 +136,7 @@ function runHook(toolName, filePath, content, eventName = 'PostToolUse') {
   }
 }
 
-function test(desc, toolName, filePath, content, expectedPass, eventName = 'PostToolUse') {
+function test(desc, toolName, filePath, content, expectedPass, eventName = 'PreToolUse') {
   const { output, exitCode } = runHook(toolName, filePath, content, eventName)
   const didPass = exitCode === 0 && output === null
   const pass = didPass === expectedPass
@@ -151,8 +151,15 @@ console.log('🔍 verification-guard 테스트 시작')
 section('정상 케이스 → 통과 (exit 0, 출력 없음)')
 test('유효한 verification.md', 'Write', 'docs/skills/frontend/test/verification.md', VALID_CONTENT, true)
 
-section('"내장" 키워드 감지 → 실패 (exit 2)')
-test('"내장" 키워드 포함', 'Write', 'docs/skills/frontend/test/verification.md', CONTENT_WITH_NAEJANG, false)
+section('"내장 지식" 구문 감지 → 실패 (exit 2)')
+test('"내장 지식" 구문 포함', 'Write', 'docs/skills/frontend/test/verification.md', CONTENT_WITH_NAEJANG, false)
+
+section('"내장" 단독 (정당한 문맥) → 통과 — 오탐 방지')
+const CONTENT_NAEJANG_LEGIT = VALID_CONTENT.replace(
+  '| 조사 | deep-researcher | test-skill 공식 문서 | 3개 소스 수집 |',
+  '| 조사 | deep-researcher | Python 내장 자료형 공식 문서 | 3개 소스 수집 |'
+)
+test('"Python 내장 자료형" 문맥', 'Write', 'docs/skills/backend/python-builtins/verification.md', CONTENT_NAEJANG_LEGIT, true)
 
 section('frontmatter status 누락 → 실패')
 test('status 필드 없음', 'Write', 'docs/skills/frontend/test/verification.md', CONTENT_WITHOUT_STATUS, false)
@@ -167,11 +174,23 @@ section('대상 아닌 경로 → 무시 (통과)')
 test('다른 경로 Write', 'Write', 'README.md', VALID_CONTENT, true)
 test('docs/skills 외 경로', 'Write', 'docs/agents/test.md', VALID_CONTENT, true)
 
-section('Write 외 도구 → 무시 (통과)')
-test('Edit 도구', 'Edit', 'docs/skills/frontend/test/verification.md', VALID_CONTENT, true)
+section('대상 외 이벤트/도구 조합 → 무시 (통과)')
+test('PostToolUse Write (사전 차단으로 이동됨)', 'Write', 'docs/skills/frontend/test/verification.md', VALID_CONTENT, true, 'PostToolUse')
+test('PreToolUse Edit (사후 검증 담당)', 'Edit', 'docs/skills/frontend/test/verification.md', VALID_CONTENT, true, 'PreToolUse')
 
-section('PreToolUse 이벤트 → 무시 (통과)')
-test('PreToolUse 이벤트', 'Write', 'docs/skills/frontend/test/verification.md', VALID_CONTENT, true, 'PreToolUse')
+section('PostToolUse Edit → 디스크 전체 재읽기 검증')
+{
+  const os = require('os')
+  const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'vg-edit-'))
+  const vDir = path.join(tmpRoot, 'docs', 'skills', 'frontend', 'edit-test')
+  fs.mkdirSync(vDir, { recursive: true })
+  const onDisk = path.join(vDir, 'verification.md')
+  fs.writeFileSync(onDisk, VALID_CONTENT)
+  test('Edit — 디스크 파일 유효 → 통과', 'Edit', onDisk, undefined, true, 'PostToolUse')
+  fs.writeFileSync(onDisk, CONTENT_WITHOUT_STATUS)
+  test('Edit — 디스크 파일 status 누락 → 실패', 'Edit', onDisk, undefined, false, 'PostToolUse')
+  fs.rmSync(tmpRoot, { recursive: true, force: true })
+}
 
 console.log(`\n${'─'.repeat(40)}`)
 console.log(`결과: ${passed}/${passed + failed} 통과 ${failed > 0 ? `(${failed}개 실패)` : ''}`)

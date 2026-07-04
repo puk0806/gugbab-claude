@@ -467,6 +467,37 @@ assert('백틱 치환',
 assert('단일 명령 (다른 핸들러 양보)',
   isShellScriptSafe(`git status`, ALLOWED_FOR_SCRIPT), false)
 
+// ─────────────────────────────────────────────────────────────
+// 보호 파일 (verification.md / SKILL.md / memory/) — 쓰기 연산만 deny
+// ─────────────────────────────────────────────────────────────
+section('보호 파일 — 쓰기 연산 → deny')
+test('sed -i verification.md', 'Bash', { command: "sed -i '' 's/PENDING_TEST/APPROVED/' docs/skills/x/y/verification.md" }, 'deny')
+test('sed -i SKILL.md', 'Bash', { command: "sed -i 's/a/b/' .claude/skills/x/y/SKILL.md" }, 'deny')
+test('perl -pi memory/', 'Bash', { command: "perl -pi -e 's/a/b/' memory/MEMORY.md" }, 'deny')
+test('echo > verification.md', 'Bash', { command: 'echo "status: APPROVED" > docs/skills/x/y/verification.md' }, 'deny')
+test('cat > memory 파일', 'Bash', { command: 'cat /tmp/new.md > memory/user_profile.md' }, 'deny')
+test('>> append SKILL.md', 'Bash', { command: 'echo "- new line" >> .claude/skills/x/y/SKILL.md' }, 'deny')
+test('tee memory 파일', 'Bash', { command: 'echo x | tee memory/MEMORY.md' }, 'deny')
+test('awk -i inplace verification.md', 'Bash', { command: "awk -i inplace '{print}' docs/x/verification.md" }, 'deny')
+
+section('보호 파일 — 읽기 전용 → null (오탐 방지: 2026-07-03 실측 오탐 수정)')
+test('grep verification.md', 'Bash', { command: 'grep -n "status" docs/skills/x/y/verification.md' }, 'null')
+test('diff verification.md', 'Bash', { command: 'diff /tmp/a/verification.md docs/skills/x/y/verification.md' }, 'null')
+test('sed -n (읽기 전용) verification.md', 'Bash', { command: "sed -n '1,20p' docs/skills/x/y/verification.md" }, 'null')
+test('cat SKILL.md (읽기)', 'Bash', { command: 'cat .claude/skills/x/y/SKILL.md' }, 'null')
+test('awk print memory/ (읽기)', 'Bash', { command: "awk '/^-/{print}' memory/MEMORY.md" }, 'null')
+test('head memory 파일', 'Bash', { command: 'head -5 memory/MEMORY.md' }, 'null')
+
+section('고위험 rm — careful-with-judge 흡수 패턴')
+test('rm -rf ~', 'Bash', { command: 'rm -rf ~' }, 'deny')
+test('rm -rf $HOME', 'Bash', { command: 'rm -rf $HOME' }, 'deny')
+test('rm -rf . (현재 디렉토리)', 'Bash', { command: 'rm -rf .' }, 'deny')
+test('rm -rf .git', 'Bash', { command: 'rm -rf .git' }, 'deny')
+test('rm -rf 절대경로/.claude', 'Bash', { command: 'rm -rf /Users/x/project/.claude' }, 'deny')
+test('rm -rf ~/.ssh', 'Bash', { command: 'rm -rf ~/.ssh' }, 'deny')
+test('rm 일반 파일 → null', 'Bash', { command: 'rm .claude/hooks/old-hook.js' }, 'null')
+test('rm -rf 하위 일반 경로 → null', 'Bash', { command: 'rm -rf /tmp/scratch-dir' }, 'null')
+
 console.log(`\n${'─'.repeat(40)}`)
 console.log(`결과: ${passed}/${passed + failed} 통과 ${failed > 0 ? `(${failed}개 실패)` : ''}`)
 if (failed === 0) console.log('✅ 모든 테스트 통과')
