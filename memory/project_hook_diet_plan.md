@@ -21,6 +21,10 @@ metadata:
 
 최종: 훅 파일 22종(실행 훅 20 + _lib + statusline). 판단 기준 유지 — "없으면 비가역 사고가 나는가? 아니면 CLAUDE.md 한 줄/네이티브로 충분한가"
 
+## 후속: 구조 검증 3종 사전 차단 격상 (2026-07-04, 같은 날 사용자 요청)
+
+사용자 요구("Claude 의지 말고 정해진 경로로 강제")에 따라 verification-guard·skill-md-guard·agent-md-guard의 Write 검증을 **PreToolUse 사전 차단**으로 격상 — 위반 파일은 저장 자체가 안 됨(parry와 동일 패턴). Edit는 new_string이 부분 문자열이라 사전 검증 불가 → PostToolUse에서 디스크 전체 재읽기 검증으로 통일. 격상 전제조건으로 verification-guard "내장" 단독 매칭을 "내장 지식" 구문으로 좁힘(예: "Python 내장 자료형" 정당 문맥 오탐 제거). 근거: 2026-05-08 셀프 검증 우회 전례(사후 수정 의존이 깨진 실증) + 에이전트 MD는 Stop 백스톱 부재. 테스트 15스위트 362 어설션 통과. 훅 강제 수준 최종 분류: ①사전 차단(bash-guard·parry·protect-secrets·test-fake·branch-protection·구조검증3종·deliverable commit검사) ②사후 강제(tdd·typescript-quality·Edit 경로 구조검증) ③종료 게이트(deliverable·codex-review) ④자동 수행(memory 3종·cc-notify) ⑤권고(staleness-check --strict는 지시 주입일 뿐 차단 아님·Plan Mode 확인 절차)
+
 ## 평가 요약 (2026-07-03, 공식 best-practices 문서 대조 — 배경)
 
 - 잘된 것: 검증 루프(skill-creator→tester), 얇은 CLAUDE.md+@rules, 결정론 가드, 크로스머신 memory
