@@ -31,6 +31,13 @@ metadata:
 - 문제였던 것: 훅 과다(Stop 6개 스태킹 — 공식상 8회 연속 차단 시 강제 종료), 네이티브 Plan Mode 재구현, 훅 테스트 4/27, 실측 오탐 4건(전부 미테스트 훅) → 위 실행으로 해소
 - 구조적 발견(미해결): 스킬 209종은 2단계 중첩 경로라 **스킬로 등록 안 됨**(에이전트가 Read하는 지식베이스로만 동작). 에이전트 68종 description 매 세션 로드(수천 토큰). project-install.sh 복사 방식은 구세대(2026 표준은 플러그인+사설 마켓플레이스)
 
+## 전수 검증 결과 (2026-07-04)
+
+- export: 28개 플래그 조합 전부 "배선된 훅 ⊆ 복사되는 훅" 성립, install.sh 훅 배열 22종 전부 실존, 전 조합 settings JSON 유효
+- 에이전트 67종 frontmatter 전수 PASS (agents/ 하위 CLAUDE.md 3개는 컨텍스트 파일 — agent-md-guard 패턴에서 CLAUDE.md·README.md 제외 처리)
+- 스킬 209종 구조 전수 PASS (game/unity-ui-system 소스 콜론 누락 1건 수정), verification.md 짝 209/209, status 분포 APPROVED 193 + PENDING_TEST 16
+- 관찰: statusline.sh는 이 레포 settings.json에 statusLine 미배선 (export 시에는 gen-settings가 넣어줌) — 로컬에서 상태바 쓰려면 배선 필요
+
 ## 후순위 (미착수)
 
 - 플러그인 전환: project-install.sh → plugin.json+marketplace.json 사설 배포
