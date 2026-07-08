@@ -112,6 +112,7 @@ const deliverableStop = withReadmeGuard
 const stopHooks = [deliverableStop];
 if (withCodex) stopHooks.push(H('codex-review-guard.js'));
 if (withMemory) stopHooks.push(H('memory-stop-guard.js'));
+stopHooks.push(H('session-export.js')); // 대화 요약 강제 보존 — 옵션 없음 (Y: 레포 exports/ · N: 로컬 exports/)
 stopHooks.push(H('cc-notify.js'));
 hooks.Stop = [{ hooks: stopHooks }];
 
@@ -149,6 +150,7 @@ if (isUtil) {
       ...(withReadmeGuard ? [H('deliverable-guard.js')] : []),
       ...(withCodex ? [H('codex-review-guard.js')] : []),
       ...(withMemory ? [H('memory-stop-guard.js')] : []),
+      H('session-export.js'), // 대화 요약 강제 보존 — util 모드에서도 옵션 없이 포함
       H('cc-notify.js'),
     ] },
   ];

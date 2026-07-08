@@ -214,6 +214,7 @@ HOOKS_COMMON=(
   "parry.js"
   "protect-secrets.js"
   "session-start.js"
+  "session-export.js"
   "cc-notify.js"
   "instructions-loaded.js"
   "deliverable-guard.js"
