@@ -115,23 +115,36 @@ is_util_only() {
   [ "${#TEMPLATES[@]}" -eq 1 ] && has_template "util"
 }
 
+# y/N 질문 공용 함수 — y/Y → 0(yes), n/N/엔터 → 1(no), 그 외 입력은 재질문
+ask_yn() {
+  local _prompt="$1" _ans
+  while true; do
+    read -rp "$_prompt" _ans
+    case "$_ans" in
+      y|Y)    return 0 ;;
+      n|N|"") return 1 ;;
+      *)      echo "  y 또는 n을 입력하세요. (엔터 = n)" ;;
+    esac
+  done
+}
+
 # ── Memory 공유 기능 ────────────────────────────────────────────────────
 echo ""
-read -rp "크로스 데스크탑 Claude memory 공유 기능 포함하시겠습니까? (y/N): " _MEM_ANS
-case "$_MEM_ANS" in
-  y|Y) INCLUDE_MEMORY=true ;;
-  *)   INCLUDE_MEMORY=false ;;
-esac
+if ask_yn "크로스 데스크탑 Claude memory 공유 기능 포함하시겠습니까? (y/N): "; then
+  INCLUDE_MEMORY=true
+else
+  INCLUDE_MEMORY=false
+fi
 
 # ── Superpowers 스킬 시스템 ─────────────────────────────────────────────
 echo ""
 echo "Superpowers 스킬·에이전트 시스템을 활성화하시겠습니까?"
 echo "  (superpowers CLI 설치 필요. settings.json에 superpowers@superpowers-marketplace 플러그인 등록)"
-read -rp "  활성화 (y/N): " _SP_ANS
-case "$_SP_ANS" in
-  y|Y) INCLUDE_SUPERPOWERS=true ;;
-  *)   INCLUDE_SUPERPOWERS=false ;;
-esac
+if ask_yn "  활성화 (y/N): "; then
+  INCLUDE_SUPERPOWERS=true
+else
+  INCLUDE_SUPERPOWERS=false
+fi
 
 # ── Codex 적대적 코드 리뷰 (개발 템플릿 전용) ─────────────────────────
 INCLUDE_CODEX=false
@@ -139,11 +152,9 @@ if is_dev_selected; then
   echo ""
   echo "Codex 적대적 코드 리뷰를 활성화하시겠습니까?"
   echo "  (codex CLI 설치 + 로그인 필요. settings.json에 codex@openai-codex 플러그인 등록)"
-  read -rp "  활성화 (y/N): " _CODEX_ANS
-  case "$_CODEX_ANS" in
-    y|Y) INCLUDE_CODEX=true ;;
-    *)   INCLUDE_CODEX=false ;;
-  esac
+  if ask_yn "  활성화 (y/N): "; then
+    INCLUDE_CODEX=true
+  fi
 fi
 
 # ── README 미업데이트 커밋 차단 (readme-guard) ─────────────────────────
@@ -152,11 +163,9 @@ if ! is_util_only; then
   echo ""
   echo "스킬/에이전트 수정 후 README 미업데이트 시 git commit/push 차단하시겠습니까?"
   echo "  (.claude/skills/ 또는 .claude/agents/ 파일 수정 시 적용)"
-  read -rp "  활성화 (y/N): " _README_GUARD_ANS
-  case "$_README_GUARD_ANS" in
-    y|Y) INCLUDE_README_GUARD=true ;;
-    *)   INCLUDE_README_GUARD=false ;;
-  esac
+  if ask_yn "  활성화 (y/N): "; then
+    INCLUDE_README_GUARD=true
+  fi
 fi
 
 # ── staleness-check 강제 모드 (스킬 검증일 60일 초과 시 재검증 강제 지시) ──
@@ -165,11 +174,9 @@ if ! is_util_only; then
   echo ""
   echo "스킬 검증일 60일 초과 시 세션 시작마다 freshness-auditor 강제 재검증을 활성화하시겠습니까?"
   echo "  (30~59일: 경고만. 60일+: Claude가 다른 작업 전 반드시 재검증)"
-  read -rp "  활성화 (y/N): " _STALE_ANS
-  case "$_STALE_ANS" in
-    y|Y) INCLUDE_STALENESS_GUARD=true ;;
-    *)   INCLUDE_STALENESS_GUARD=false ;;
-  esac
+  if ask_yn "  활성화 (y/N): "; then
+    INCLUDE_STALENESS_GUARD=true
+  fi
 fi
 
 # ── 브랜치 보호 규칙 ────────────────────────────────────────────────────
@@ -177,11 +184,11 @@ echo ""
 echo "브랜치 보호 규칙을 활성화하시겠습니까?"
 echo "  - main 브랜치로 직접 push 금지 (PR 필수)"
 echo "  - 피처 브랜치에서 새 브랜치 생성 금지 (main에서만 브랜치 생성 허용)"
-read -rp "  활성화 (y/N): " _BRANCH_ANS
-case "$_BRANCH_ANS" in
-  y|Y) INCLUDE_BRANCH_PROTECTION=true ;;
-  *)   INCLUDE_BRANCH_PROTECTION=false ;;
-esac
+if ask_yn "  활성화 (y/N): "; then
+  INCLUDE_BRANCH_PROTECTION=true
+else
+  INCLUDE_BRANCH_PROTECTION=false
+fi
 
 # ── 설치 시작 ─────────────────────────────────────────────────────────
 echo ""
