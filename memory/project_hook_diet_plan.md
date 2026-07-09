@@ -44,9 +44,9 @@ metadata:
 - 오케스트레이터 maxTurns 누락 2건 보정: deep-researcher 50·skill-tester 30 (agent-design.md 필수 규칙)
 - 에이전트 모델 신선도: 67종 전부 최신(별칭 65 + claude-fable-5 2 + claude-sonnet-4-6 1), deprecated ID 0건
 
-## 후순위 (미착수)
+## 후순위
 
-- 플러그인 전환: project-install.sh → plugin.json+marketplace.json 사설 배포
+- 플러그인 전환: project-install.sh → plugin.json+marketplace.json 사설 배포 — **2026-07-09 계획 수립 착수** ([[project-plugin-migration-plan]])
 - 자산 다이어트: 저사용 에이전트/스킬(dream 28·unity 17·학술 ~40) 아카이브 분리
 - agent-design.md에 "네이티브 우선 원칙" 추가, 테스트 실행 PostToolUse 훅 검토
 
