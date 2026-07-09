@@ -9,7 +9,9 @@ metadata:
 
 # 하네스 평가 & 훅 다이어트 (2026-07-03 평가 → 2026-07-04 실행 완료)
 
-## 실행 결과 (2026-07-04, 5단계 전체 완료 — 커밋은 사용자 대기)
+**커밋·머지 완료**: feature/hook-diet-full-audit 브랜치 → PR #9 머지(main). 이후 session-export.js 훅 추가(세션 요약 exports/ 강제 보존 + [export] sync 자동 커밋)로 훅 22→23종.
+
+## 실행 결과 (2026-07-04, 5단계 전체 완료)
 
 1. **Plan Mode 중복 제거** ✅ — task-plan-guard·confirmation-gate 삭제. CLAUDE.md·task-workflow.md에 "복잡한 작업은 네이티브 Plan Mode 사용" 규칙으로 대체. settings.json UserPromptSubmit 이벤트 제거
 2. **Stop 통합** ✅ — pending-test-guard + readme-guard + session-summary(세션 파일 추적) → **deliverable-guard.js** 1개로 병합(PostToolUse Write/Edit 추적 + PreToolUse Bash commit/push README 검사 + Stop 산출물 검사). session-handoff/inject(네이티브 resume 커버)·verification-gate(경고만)·careful-with-judge(bash-guard에 rm 패턴 흡수) 삭제. Stop = 차단형 3(deliverable·codex-review·memory-stop) + 알림 1(cc-notify)
