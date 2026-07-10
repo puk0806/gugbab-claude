@@ -13,6 +13,9 @@
  * PreToolUse (Bash):
  *   - git commit / git push 직전 README.md 동기화 검사
  *     → SKILL.md / agents/*.md / .changeset/*.md 수정 시 README 미업데이트 → deny
+ *   - git push / gh pr create 직전 memory·exports 클린 검사 (--no-readme와 무관하게 항상)
+ *     → memory 공유(Y) 프로젝트에서 memory/·exports/ 미커밋 변경 존재 시 deny
+ *     → 메모리 정리 + 세션 요약 최신화(session-export --refresh)가 배치에 포함되어야 push/PR 가능
  *
  * Stop:
  *   1. README.md 동기화 검사 (위와 동일 조건, staged+unstaged+untracked까지)
@@ -157,6 +160,38 @@ function buildReadmeReason(violations, action) {
 
   lines.push('', '참고: @.claude/rules/readme-update.md')
   return lines.join('\n')
+}
+
+// ── memory·exports 클린 검사 (push / PR 생성 직전) ──────────────────
+
+/**
+ * memory 공유(Y) 프로젝트에서 memory/·exports/ 미커밋 변경 목록 반환
+ * N 프로젝트(레포에 memory/ 없음)는 검사 대상 아님 → []
+ */
+function getMemoryExportViolations() {
+  const projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd()
+  if (!fs.existsSync(path.join(projectDir, 'memory'))) return []
+  return runGit(`git -C "${projectDir}" status --porcelain -- memory/ exports/`)
+}
+
+function buildMemoryExportReason(dirtyLines, action) {
+  const files = dirtyLines.map(l => l.replace(/^\s*\S+\s+/, ''))
+  return [
+    `[deliverable-guard] memory·exports 미커밋 — ${action} 차단`,
+    '',
+    '⚠️  메모리 정리·세션 요약이 이번 배치에 포함되지 않았습니다.',
+    '    PR에는 메모리 정리가 끝난 상태의 모든 정보가 함께 올라가야 합니다.',
+    '',
+    '미커밋 파일:',
+    buildFileList(files),
+    '',
+    '조치 순서:',
+    '  1. 낡은 memory 서술 갱신·신규 결정 기록 (Write/Edit)',
+    '  2. node $CLAUDE_PROJECT_DIR/.claude/hooks/session-export.js --refresh  ← 세션 요약 최신화',
+    '  3. [memory] / [export] 커밋으로 포함 후 push·PR 재시도',
+    '',
+    '참고: @.claude/rules/memory-sync.md — 커밋 시 메모리 정리',
+  ].join('\n')
 }
 
 // ── PENDING_TEST 검사 (구 pending-test-guard) ──────────────────────
@@ -348,11 +383,32 @@ async function main() {
     return process.exit(0)
   }
 
-  // ── PreToolUse Bash: git commit / push 직전 README 검사 ─────────
+  // ── PreToolUse Bash: push/PR 직전 memory·exports 검사 + commit/push 직전 README 검사 ─
   if (eventName === 'PreToolUse') {
-    if (!readmeCheckEnabled) return process.exit(0)
     if (!session_id || tool_name !== 'Bash') return process.exit(0)
     const cmd = (tool_input.command || '').trim()
+
+    // memory·exports 클린 검사 — --no-readme와 무관하게 항상 (별개 관심사)
+    // 명령 세그먼트 선두에서만 매치 — 커밋 메시지 등 인용 텍스트 내 "git push" 오탐 방지
+    const segs = cmd.split(/&&|\|\||;/).map(s => s.trim())
+    const isPush = segs.some(s => /^git\s+push\b/.test(s))
+    const isPrCreate = segs.some(s => /^gh\s+pr\s+create\b/.test(s))
+    if (isPush || isPrCreate) {
+      const dirty = getMemoryExportViolations()
+      if (dirty.length > 0) {
+        const action = isPrCreate ? 'PR 생성' : '푸시'
+        process.stdout.write(JSON.stringify({
+          hookSpecificOutput: {
+            hookEventName: 'PreToolUse',
+            permissionDecision: 'deny',
+            permissionDecisionReason: buildMemoryExportReason(dirty, action),
+          },
+        }) + '\n')
+        return process.exit(0)
+      }
+    }
+
+    if (!readmeCheckEnabled) return process.exit(0)
     if (!/\bgit\s+(commit|push)\b/.test(cmd)) return process.exit(0)
 
     const violations = getReadmeViolations(session_id, true)
@@ -407,6 +463,9 @@ module.exports = {
   isRootReadme,
   getReadmeViolations,
   buildReadmeReason,
+  // memory·exports 클린 검사
+  getMemoryExportViolations,
+  buildMemoryExportReason,
   // PENDING_TEST 검사
   extractStatus,
   extractSection5,

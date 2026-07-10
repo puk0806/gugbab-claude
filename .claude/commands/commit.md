@@ -6,8 +6,11 @@
 
 1. 이번 작업으로 낡아진 memory 서술이 있는지 스캔 → Write/Edit로 갱신
 2. 기록할 가치 있는 신규 결정·피드백이 있으면 memory 파일로 저장 (+ MEMORY.md 인덱스)
-3. 레포 `memory/` ↔ 전역 `~/.claude/projects/<해시>/memory/` 미러 일치 확인 (`diff -rq`)
-4. memory 변경이 있으면 `[memory]` 커밋으로, exports 변경이 있으면 `[export]` 커밋으로 이번 배치에 포함
+3. **세션 요약 최신화**: `node $CLAUDE_PROJECT_DIR/.claude/hooks/session-export.js --refresh` — 이 시점까지의 전체 대화를 exports에 재생성
+4. 레포 `memory/` ↔ 전역 `~/.claude/projects/<해시>/memory/` 미러 일치 확인 (`diff -rq`)
+5. memory 변경이 있으면 `[memory]` 커밋으로, exports 변경이 있으면 `[export]` 커밋으로 이번 배치에 포함
+
+> **강제됨**: memory/·exports/에 미커밋 변경이 남은 채 `git push`·`gh pr create`를 실행하면 deliverable-guard 훅이 차단한다.
 
 ## 커밋 규칙
 

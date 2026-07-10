@@ -60,8 +60,12 @@ if (isDev) {
 }
 // PreToolUse Bash — readme-guard 선택 시 (git commit/push 직전 README 미업데이트 차단)
 // deliverable-guard가 구 readme-guard + pending-test-guard + 세션 파일 추적 통합 훅
+// memory 선택 시에는 README 검사 없이도 push/PR 직전 memory·exports 클린 검사가 필요 → --no-readme로 배선
+const deliverablePreBash = { type: 'command', command: 'node $CLAUDE_PROJECT_DIR/.claude/hooks/deliverable-guard.js --no-readme' };
 if (withReadmeGuard) {
   hooks.PreToolUse.push({ matcher: 'Bash', hooks: [H('deliverable-guard.js')] });
+} else if (withMemory) {
+  hooks.PreToolUse.push({ matcher: 'Bash', hooks: [deliverablePreBash] });
 }
 // PreToolUse Bash — branch-protection 선택 시 (main push 금지 + 피처→피처 브랜치 생성 금지)
 if (withBranchProtection) {
@@ -131,6 +135,7 @@ if (isUtil) {
     { matcher: 'Edit',  hooks: [H('protect-secrets.js')] },
   ];
   if (withReadmeGuard)      hooks.PreToolUse.push({ matcher: 'Bash', hooks: [H('deliverable-guard.js')] });
+  else if (withMemory)      hooks.PreToolUse.push({ matcher: 'Bash', hooks: [deliverablePreBash] });
   if (withBranchProtection) hooks.PreToolUse.push({ matcher: 'Bash', hooks: [H('branch-protection.js')] });
 
   // README 검사를 쓰려면 세션 파일 추적(PostToolUse)도 함께 필요

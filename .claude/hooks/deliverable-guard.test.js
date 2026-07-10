@@ -153,9 +153,63 @@ const noReadmePre = spawnSync('node', [HOOK, '--no-readme'], {
 assert('--no-readme면 commit 직전 README 검사 생략 (exit 0, 출력 없음)',
   noReadmePre.status === 0 && !noReadmePre.stdout.trim(), true)
 
+// ─── memory·exports 클린 검사 — push/PR 차단 ─────────────────────
+section('memory·exports 클린 검사 — push / gh pr create 차단')
+const memRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dg-mem-'))
+const git = (args) => spawnSync('git', ['-C', memRoot, ...args], { encoding: 'utf8' })
+git(['init', '-q'])
+git(['config', 'user.email', 't@t.local'])
+git(['config', 'user.name', 't'])
+fs.mkdirSync(path.join(memRoot, 'memory'))
+fs.writeFileSync(path.join(memRoot, 'memory', 'fact.md'), 'v1')
+git(['add', '.'])
+git(['commit', '-qm', 'init'])
+
+const memEnv = { cwd: memRoot, env: { ...process.env, CLAUDE_PROJECT_DIR: memRoot } }
+const preBash = (command, opts = memEnv) => runHook(
+  { hook_event_name: 'PreToolUse', session_id: 'dg-mem', tool_name: 'Bash', tool_input: { command } }, opts,
+)
+
+// 클린 상태 → push 허용
+assert('클린 상태 push → 통과 (출력 없음)', !preBash('git push origin main').stdout.trim(), true)
+
+// memory 미커밋 → push/PR 차단
+fs.writeFileSync(path.join(memRoot, 'memory', 'fact.md'), 'v2 (미커밋)')
+assert('memory 미커밋 push → deny', preBash('git push origin main').stdout.includes('"permissionDecision":"deny"'), true)
+assert('memory 미커밋 gh pr create → deny', preBash('gh pr create --title x').stdout.includes('"permissionDecision":"deny"'), true)
+assert('차단 메시지에 refresh 조치 포함', preBash('git push').stdout.includes('session-export.js --refresh'), true)
+assert('--no-readme여도 memory 검사는 동작', spawnSync('node', [HOOK, '--no-readme'], {
+  input: JSON.stringify({ hook_event_name: 'PreToolUse', session_id: 'dg-mem', tool_name: 'Bash', tool_input: { command: 'git push' } }),
+  encoding: 'utf8', timeout: 5000, ...memEnv,
+}).stdout.includes('"permissionDecision":"deny"'), true)
+
+// exports 미커밋도 차단
+git(['add', '.']); git(['commit', '-qm', 'memory v2'])
+fs.mkdirSync(path.join(memRoot, 'exports'))
+fs.writeFileSync(path.join(memRoot, 'exports', 'x.md'), '요약')
+assert('exports 미커밋(untracked) push → deny', preBash('git push').stdout.includes('"permissionDecision":"deny"'), true)
+git(['add', '.']); git(['commit', '-qm', 'exports'])
+assert('전부 커밋 후 push → 통과', !preBash('git push origin main').stdout.trim(), true)
+
+// commit 자체는 차단 안 함 (커밋으로 해소하는 절차이므로)
+fs.writeFileSync(path.join(memRoot, 'memory', 'fact.md'), 'v3 (미커밋)')
+assert('memory 미커밋이어도 git commit은 통과', !preBash('git commit -m x').stdout.trim(), true)
+assert('커밋 메시지에 "git push/gh pr create" 인용돼도 통과 (세그먼트 선두 앵커)',
+  !preBash('git commit -m "deliverable-guard: git push/gh pr create 직전 차단 추가"').stdout.trim(), true)
+assert('세그먼트 선두의 진짜 push는 여전히 차단', preBash('git add . && git push origin main').stdout.includes('"permissionDecision":"deny"'), true)
+
+// N 프로젝트(memory/ 없음)는 검사 대상 아님
+const nRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dg-nmode-'))
+spawnSync('git', ['-C', nRoot, 'init', '-q'])
+assert('N 프로젝트 push → 통과 (memory/ 없음)', !preBash('git push', {
+  cwd: nRoot, env: { ...process.env, CLAUDE_PROJECT_DIR: nRoot },
+}).stdout.trim(), true)
+
 // 정리
 fs.rmSync(tmpRoot, { recursive: true, force: true })
 fs.rmSync(cleanRoot, { recursive: true, force: true })
+fs.rmSync(memRoot, { recursive: true, force: true })
+fs.rmSync(nRoot, { recursive: true, force: true })
 
 console.log(`\n${'─'.repeat(40)}`)
 console.log(`결과: ${passed}/${passed + failed} 통과 ${failed > 0 ? `(${failed}개 실패)` : ''}`)
