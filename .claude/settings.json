@@ -250,10 +250,6 @@
           },
           {
             "type": "command",
-            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/memory-stop-guard.js"
-          },
-          {
-            "type": "command",
             "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-export.js"
           },
           {

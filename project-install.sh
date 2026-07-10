@@ -239,7 +239,7 @@ HOOKS_DEV_ONLY=("tdd-guard.js" "test-fake-guard.js")
 HOOKS_TS_ONLY=("typescript-quality.js")
 
 # Memory 선택 시 추가
-HOOKS_MEMORY_SET=("memory-pull.js" "memory-sync.js" "memory-stop-guard.js")
+HOOKS_MEMORY_SET=("memory-pull.js" "memory-sync.js")
 
 # Codex 선택 시 추가
 HOOKS_CODEX_SET=("codex-review-guard.js")
