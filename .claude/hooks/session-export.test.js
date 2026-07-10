@@ -94,5 +94,58 @@ check('Codex 리뷰 섹션 포함', () => {
   assert.ok(md.includes('리뷰 내용'));
 });
 
+// ── resolveRefreshTarget (--refresh 대상 선택) ──────────────────────────
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const { resolveRefreshTarget } = require('./session-export.js');
+
+const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'se-refresh-'));
+const fakeProject = '/Users/tester/my_proj';
+const encDir = path.join(fakeHome, '.claude', 'projects', fakeProject.replace(/[/\_]/g, '-'));
+fs.mkdirSync(encDir, { recursive: true });
+fs.writeFileSync(path.join(encDir, 'old-session.jsonl'), '{}');
+fs.writeFileSync(path.join(encDir, 'current-session.jsonl'), '{}');
+const past = new Date(Date.now() - 60000);
+fs.utimesSync(path.join(encDir, 'old-session.jsonl'), past, past);
+
+check('refresh: 최신 mtime .jsonl(현재 세션) 선택', () => {
+  const t = resolveRefreshTarget(fakeHome, fakeProject);
+  assert.strictEqual(t.session_id, 'current-session');
+  assert.strictEqual(t.transcript_path, path.join(encDir, 'current-session.jsonl'));
+});
+check('refresh: 프로젝트 경로 없으면 null', () => {
+  assert.strictEqual(resolveRefreshTarget(fakeHome, null), null);
+  assert.strictEqual(resolveRefreshTarget(fakeHome, '/no/such/project'), null);
+});
+fs.rmSync(fakeHome, { recursive: true, force: true });
+
+// ── resolveDest — Stop은 로컬 고정, --refresh만 레포 ────────────────────
+const { resolveDest } = require('./session-export.js');
+const fakeRepo = fs.mkdtempSync(path.join(os.tmpdir(), 'se-repo-'));
+fs.mkdirSync(path.join(fakeRepo, 'memory'));
+const savedProjectDir = process.env.CLAUDE_PROJECT_DIR;
+process.env.CLAUDE_PROJECT_DIR = fakeRepo;
+
+check('Stop(기본): Y 프로젝트여도 로컬 exports/ (git status 오염 방지)', () => {
+  const d = resolveDest('/fake/local/t.jsonl');
+  assert.strictEqual(d.destDir, '/fake/local/exports');
+  assert.strictEqual(d.repoRoot, null);
+});
+check('--refresh(toRepo=true): Y 프로젝트 → 레포 exports/', () => {
+  const d = resolveDest('/fake/local/t.jsonl', true);
+  assert.strictEqual(d.destDir, path.join(fakeRepo, 'exports'));
+  assert.strictEqual(d.repoRoot, fakeRepo);
+});
+check('--refresh여도 N 프로젝트(memory/ 없음) → 로컬', () => {
+  process.env.CLAUDE_PROJECT_DIR = '/no/such/project';
+  const d = resolveDest('/fake/local/t.jsonl', true);
+  assert.strictEqual(d.destDir, '/fake/local/exports');
+});
+
+if (savedProjectDir === undefined) delete process.env.CLAUDE_PROJECT_DIR;
+else process.env.CLAUDE_PROJECT_DIR = savedProjectDir;
+fs.rmSync(fakeRepo, { recursive: true, force: true });
+
 console.log(`\nsession-export.test.js: ${pass} pass / ${fail} fail`);
 process.exit(fail ? 1 : 0);

@@ -9,7 +9,10 @@ body (선택, 72자 이내)
 footer (선택)
 ```
 
-**category:** `agent` | `skill` | `docs` | `config`
+**category:** `agent` | `skill` | `docs` | `config` | `memory` | `export`
+
+> `memory`·`export`는 커밋·푸시 요청 시 선행하는 메모리 정리 산출물 전용 (@.claude/rules/memory-sync.md).
+> `[memory] Type: Subject` 형식, `[export]`는 관례상 `[export] sync: <파일명>`.
 
 ## Type
 

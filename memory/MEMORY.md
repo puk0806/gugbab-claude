@@ -5,7 +5,7 @@
 
 ## Feedback
 - [README 업데이트 로그 규칙](feedback_readme_log.md) — 날짜별 단일 행 유지, 같은 날 여러 변경은 기존 행에 합산
-- [커밋은 사용자 요청 시에만](feedback_commit_policy.md) — 작업 완료 후 자동 커밋 금지
+- [커밋은 사용자 요청 시에만](feedback_commit_policy.md) — 자동 커밋·제안 금지, 요청 시 실행 전 메모리 정리 선행 후 [memory] 커밋 포함, main push는 branch-protection이 차단(PR 경유)
 - [병렬 에이전트 README 충돌 방지](feedback_parallel_readme.md) — 병렬 스킬 생성 시 README 동시 수정 금지, 완료 후 한 번에 정리
 - [플러그인 설치는 claude CLI로 끝낸다](feedback_plugin_install.md) — `claude plugin marketplace add` + `install` Bash 실행, 프로젝트 scope `enabledPlugins`만, user-scope 별도
 - [스킬 생성 후 2단계 테스트 즉시 수행](feedback_skill_testing_enforcement.md) — skill-creator → skill-tester 순차 호출 필수, pending-test-guard 훅이 세션 종료 차단

@@ -1,12 +1,14 @@
 'use strict';
 // Stop: 세션 대화 요약을 강제 보존 (y/N 선택과 무관하게 항상 동작)
-//   - memory 공유(Y) 모드: <레포>/exports/ 에 저장 (워킹트리만 — 커밋·푸시는 사용자가 직접)
-//   - 비공유(N) 모드:     ~/.claude/projects/<해시>/exports/ 에 저장 (로컬 전용)
+//   - Stop(매 턴):  ~/.claude/projects/<해시>/exports/ 에만 기록 — 레포 git status를 오염시키지 않음
+//   - --refresh:    커밋 배치 시점에 레포 exports/ 로 전체 요약 생성 (Y 프로젝트만, 직후 [export] 커밋)
+//                   refresh는 트랜스크립트 전체를 다시 읽으므로 직전 push 턴 꼬리까지 포함됨
 // Y/N 판별: 레포에 memory/ 디렉토리가 존재하면 Y (과거 symlink 감지 방식은 2026-07-10 폐기)
 // 내용: 사용자 요청 + Claude 응답 텍스트(작업 보고) + 수정 파일 + Codex 리뷰 라운드 출력
 // 도구 호출 원문·thinking 은 제외 (원본은 JSONL 트랜스크립트에 항상 남음)
 // 수정 파일·도구 통계는 트랜스크립트의 tool_use 블록에서 직접 추출 — 다른 훅 의존 없음
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 
 const USER_TEXT_LIMIT = 1500;   // 사용자 요청 1건당 최대 길이
@@ -173,20 +175,24 @@ function buildMarkdown(parsed, sessionId, codexRounds) {
   return lines.join('\n');
 }
 
-// ── 저장 위치 판정: 레포에 memory/ 디렉토리 존재 → Y(레포) / 아니면 N(로컬) ──
-function resolveDest(transcriptPath) {
+// ── 저장 위치 판정 ──────────────────────────────────────────────────────
+// Stop(toRepo=false): 항상 로컬 exports/ — 매 턴 기록이 레포를 dirty로 만들지 않도록
+// --refresh(toRepo=true): 레포에 memory/ 있으면(Y) 레포 exports/, 아니면(N) 로컬
+function resolveDest(transcriptPath, toRepo = false) {
   const localDir = path.dirname(transcriptPath);
   const repoRoot = process.env.CLAUDE_PROJECT_DIR;
-  try {
-    if (repoRoot && fs.statSync(path.join(repoRoot, 'memory')).isDirectory()) {
-      return { destDir: path.join(repoRoot, 'exports'), repoRoot };
-    }
-  } catch { /* memory 없음 → N 모드 */ }
+  if (toRepo) {
+    try {
+      if (repoRoot && fs.statSync(path.join(repoRoot, 'memory')).isDirectory()) {
+        return { destDir: path.join(repoRoot, 'exports'), repoRoot };
+      }
+    } catch { /* memory 없음 → N 모드 */ }
+  }
   return { destDir: path.join(localDir, 'exports'), repoRoot: null };
 }
 
 // ── 메인 ────────────────────────────────────────────────────────────────
-function main(input) {
+function main(input, toRepo = false) {
   const data = JSON.parse(input);
   const sessionId = data.session_id;
   const transcriptPath = data.transcript_path;
@@ -199,17 +205,47 @@ function main(input) {
   const codexRounds = collectCodexRounds(startMs);
 
   const md = buildMarkdown(parsed, sessionId, codexRounds);
-  const { destDir, repoRoot } = resolveDest(transcriptPath);
+  const { destDir } = resolveDest(transcriptPath, toRepo);
   const fileName = `${localDate(parsed.firstTs)}-${sessionId.slice(0, 8)}.md`;
 
   fs.mkdirSync(destDir, { recursive: true });
   fs.writeFileSync(path.join(destDir, fileName), md);
-  // Y 모드도 워킹트리 저장까지만 — 커밋·푸시는 사용자가 직접 (2026-07-10 자동 커밋 제거)
+  // 레포 저장(--refresh)도 워킹트리까지만 — 커밋·푸시는 사용자가 직접 (2026-07-10 자동 커밋 제거)
 }
 
-module.exports = { parseTranscript, buildMarkdown, resolveDest, cleanUserText };
+// ── --refresh: 커밋·푸시 직전 수동 최신화 ──────────────────────────────
+// Stop 이벤트 없이 현재 세션(가장 최근에 기록 중인 .jsonl) 요약을 즉시 재생성.
+// 커밋 시 메모리 정리 절차(memory-sync.md)의 2단계에서 Claude가 직접 실행한다.
+function resolveRefreshTarget(homeDir, projectDir) {
+  if (!projectDir) return null;
+  const encoded = projectDir.replace(/[/\_]/g, '-');
+  const localDir = path.join(homeDir, '.claude', 'projects', encoded);
+  let entries;
+  try { entries = fs.readdirSync(localDir); } catch { return null; }
+  const jsonls = entries
+    .filter(f => f.endsWith('.jsonl'))
+    .map(f => ({ f, mtime: fs.statSync(path.join(localDir, f)).mtimeMs }))
+    .sort((a, b) => b.mtime - a.mtime);
+  if (jsonls.length === 0) return null;
+  return {
+    session_id: path.basename(jsonls[0].f, '.jsonl'),
+    transcript_path: path.join(localDir, jsonls[0].f),
+  };
+}
+
+module.exports = { parseTranscript, buildMarkdown, resolveDest, cleanUserText, resolveRefreshTarget };
 
 if (require.main === module) {
+  if (process.argv.includes('--refresh')) {
+    try {
+      const target = resolveRefreshTarget(os.homedir(), process.env.CLAUDE_PROJECT_DIR);
+      if (target) {
+        main(JSON.stringify(target), true); // 레포 exports/ 로 생성 (Y 프로젝트)
+        process.stdout.write(`[session-export] refresh 완료: ${target.session_id.slice(0, 8)}\n`);
+      }
+    } catch { /* 비차단 */ }
+    process.exit(0);
+  }
   let input = '';
   process.stdin.on('data', d => (input += d));
   process.stdin.on('end', () => {

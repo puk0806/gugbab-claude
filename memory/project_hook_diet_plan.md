@@ -1,6 +1,6 @@
 ---
 name: project-hook-diet-plan
-description: 하네스 평가(2026-07-03) 후속 훅 다이어트 — 2026-07-04 5단계 전체 완료(훅 29→22종·Stop 차단형 6→3·오탐 수정·테스트 15스위트 362 어설션). PR #9 머지 완료. 이후 session-export 훅 추가로 23종. 후순위 중 플러그인 전환은 2026-07-09 계획 수립 착수
+description: 하네스 평가(2026-07-03) 후속 훅 다이어트 — 2026-07-04 5단계 전체 완료(훅 29→22종·Stop 차단형 6→3·오탐 수정·테스트 15스위트 362 어설션). PR #9 머지. session-export 추가(23종) 후 2026-07-10 메모리 개편으로 memory-stop-guard 삭제 → 현재 22종. 후순위 중 플러그인 전환은 2026-07-09 계획 수립 착수
 metadata: 
   node_type: memory
   type: project
@@ -9,7 +9,9 @@ metadata:
 
 # 하네스 평가 & 훅 다이어트 (2026-07-03 평가 → 2026-07-04 실행 완료)
 
-**커밋·머지 완료**: feature/hook-diet-full-audit 브랜치 → PR #9 머지(main). 이후 session-export.js 훅 추가(세션 요약 exports/ 강제 보존 + [export] sync 자동 커밋)로 훅 22→23종.
+**커밋·머지 완료**: feature/hook-diet-full-audit 브랜치 → PR #9 머지(main). 이후 session-export.js 훅 추가로 훅 22→23종.
+
+> **2026-07-10 후속 변경** (PR #10, [[project-memory-architecture]]): 메모리 개편으로 memory-stop-guard 삭제 → **현재 훅 22종**. memory·exports 자동 커밋 전면 폐지 — 아래 기록 중 "[export] sync 자동 커밋"·"차단형 3(… memory-stop)"·"자동 수행(memory 3종)"은 당시 기준.
 
 ## 실행 결과 (2026-07-04, 5단계 전체 완료)
 
