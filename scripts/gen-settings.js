@@ -111,8 +111,8 @@ const deliverableStop = withReadmeGuard
   : { type: 'command', command: 'node $CLAUDE_PROJECT_DIR/.claude/hooks/deliverable-guard.js --no-readme' };
 const stopHooks = [deliverableStop];
 if (withCodex) stopHooks.push(H('codex-review-guard.js'));
-if (withMemory) stopHooks.push(H('memory-stop-guard.js'));
-stopHooks.push(H('session-export.js')); // 대화 요약 강제 보존 — 옵션 없음 (Y: 레포 exports/ · N: 로컬 exports/)
+// memory-stop-guard는 2026-07-10 제거 — 자동 커밋 폐지로 존재 이유 소멸 (memory-sync가 미러 복사 담당)
+stopHooks.push(H('session-export.js')); // 대화 요약 강제 보존 — 옵션 없음 (Y: 레포 exports/ 워킹트리 · N: 로컬 exports/)
 stopHooks.push(H('cc-notify.js'));
 hooks.Stop = [{ hooks: stopHooks }];
 
@@ -149,7 +149,6 @@ if (isUtil) {
     { hooks: [
       ...(withReadmeGuard ? [H('deliverable-guard.js')] : []),
       ...(withCodex ? [H('codex-review-guard.js')] : []),
-      ...(withMemory ? [H('memory-stop-guard.js')] : []),
       H('session-export.js'), // 대화 요약 강제 보존 — util 모드에서도 옵션 없이 포함
       H('cc-notify.js'),
     ] },

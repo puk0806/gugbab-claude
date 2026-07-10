@@ -1,6 +1,6 @@
 ---
 name: project-hook-diet-plan
-description: 하네스 평가(2026-07-03) 후속 훅 다이어트 — 2026-07-04 5단계 전체 완료(훅 29→22종·Stop 차단형 6→3·오탐 수정·테스트 14종 323 어설션). 커밋 대기. 후순위(플러그인 전환·자산 아카이브)만 미착수
+description: 하네스 평가(2026-07-03) 후속 훅 다이어트 — 2026-07-04 5단계 전체 완료(훅 29→22종·Stop 차단형 6→3·오탐 수정·테스트 15스위트 362 어설션). PR #9 머지 완료. 이후 session-export 훅 추가로 23종. 후순위 중 플러그인 전환은 2026-07-09 계획 수립 착수
 metadata: 
   node_type: memory
   type: project
@@ -9,7 +9,9 @@ metadata:
 
 # 하네스 평가 & 훅 다이어트 (2026-07-03 평가 → 2026-07-04 실행 완료)
 
-## 실행 결과 (2026-07-04, 5단계 전체 완료 — 커밋은 사용자 대기)
+**커밋·머지 완료**: feature/hook-diet-full-audit 브랜치 → PR #9 머지(main). 이후 session-export.js 훅 추가(세션 요약 exports/ 강제 보존 + [export] sync 자동 커밋)로 훅 22→23종.
+
+## 실행 결과 (2026-07-04, 5단계 전체 완료)
 
 1. **Plan Mode 중복 제거** ✅ — task-plan-guard·confirmation-gate 삭제. CLAUDE.md·task-workflow.md에 "복잡한 작업은 네이티브 Plan Mode 사용" 규칙으로 대체. settings.json UserPromptSubmit 이벤트 제거
 2. **Stop 통합** ✅ — pending-test-guard + readme-guard + session-summary(세션 파일 추적) → **deliverable-guard.js** 1개로 병합(PostToolUse Write/Edit 추적 + PreToolUse Bash commit/push README 검사 + Stop 산출물 검사). session-handoff/inject(네이티브 resume 커버)·verification-gate(경고만)·careful-with-judge(bash-guard에 rm 패턴 흡수) 삭제. Stop = 차단형 3(deliverable·codex-review·memory-stop) + 알림 1(cc-notify)
@@ -42,9 +44,9 @@ metadata:
 - 오케스트레이터 maxTurns 누락 2건 보정: deep-researcher 50·skill-tester 30 (agent-design.md 필수 규칙)
 - 에이전트 모델 신선도: 67종 전부 최신(별칭 65 + claude-fable-5 2 + claude-sonnet-4-6 1), deprecated ID 0건
 
-## 후순위 (미착수)
+## 후순위
 
-- 플러그인 전환: project-install.sh → plugin.json+marketplace.json 사설 배포
+- 플러그인 전환: project-install.sh → plugin.json+marketplace.json 사설 배포 — **2026-07-09 계획 수립 착수** ([[project-plugin-migration-plan]])
 - 자산 다이어트: 저사용 에이전트/스킬(dream 28·unity 17·학술 ~40) 아카이브 분리
 - agent-design.md에 "네이티브 우선 원칙" 추가, 테스트 실행 PostToolUse 훅 검토
 

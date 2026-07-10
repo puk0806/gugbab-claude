@@ -1,13 +1,13 @@
 'use strict';
 // Stop: 세션 대화 요약을 강제 보존 (y/N 선택과 무관하게 항상 동작)
-//   - memory 공유(Y) 모드: <레포>/exports/ 에 저장 + git commit (push는 사용자가 직접)
+//   - memory 공유(Y) 모드: <레포>/exports/ 에 저장 (워킹트리만 — 커밋·푸시는 사용자가 직접)
 //   - 비공유(N) 모드:     ~/.claude/projects/<해시>/exports/ 에 저장 (로컬 전용)
+// Y/N 판별: 레포에 memory/ 디렉토리가 존재하면 Y (과거 symlink 감지 방식은 2026-07-10 폐기)
 // 내용: 사용자 요청 + Claude 응답 텍스트(작업 보고) + 수정 파일 + Codex 리뷰 라운드 출력
 // 도구 호출 원문·thinking 은 제외 (원본은 JSONL 트랜스크립트에 항상 남음)
 // 수정 파일·도구 통계는 트랜스크립트의 tool_use 블록에서 직접 추출 — 다른 훅 의존 없음
 const fs = require('fs');
 const path = require('path');
-const { spawnSync } = require('child_process');
 
 const USER_TEXT_LIMIT = 1500;   // 사용자 요청 1건당 최대 길이
 const CODEX_LINE_LIMIT = 120;   // Codex 라운드 파일 1개당 최대 라인
@@ -173,14 +173,12 @@ function buildMarkdown(parsed, sessionId, codexRounds) {
   return lines.join('\n');
 }
 
-// ── 저장 위치 판정: memory symlink → Y(레포) / 아니면 N(로컬) ───────────
+// ── 저장 위치 판정: 레포에 memory/ 디렉토리 존재 → Y(레포) / 아니면 N(로컬) ──
 function resolveDest(transcriptPath) {
   const localDir = path.dirname(transcriptPath);
-  const memDir = path.join(localDir, 'memory');
+  const repoRoot = process.env.CLAUDE_PROJECT_DIR;
   try {
-    const st = fs.lstatSync(memDir);
-    if (st.isSymbolicLink()) {
-      const repoRoot = path.dirname(fs.realpathSync(memDir));
+    if (repoRoot && fs.statSync(path.join(repoRoot, 'memory')).isDirectory()) {
       return { destDir: path.join(repoRoot, 'exports'), repoRoot };
     }
   } catch { /* memory 없음 → N 모드 */ }
@@ -206,17 +204,7 @@ function main(input) {
 
   fs.mkdirSync(destDir, { recursive: true });
   fs.writeFileSync(path.join(destDir, fileName), md);
-
-  // Y 모드: 레포에 커밋 (memory-sync와 동일 정책 — push는 사용자가 직접)
-  if (repoRoot) {
-    const st = spawnSync('git', ['-C', repoRoot, 'status', '--porcelain', 'exports/'], {
-      encoding: 'utf8', stdio: 'pipe',
-    });
-    if (st.stdout && st.stdout.trim()) {
-      spawnSync('git', ['-C', repoRoot, 'add', 'exports/'], { stdio: 'pipe' });
-      spawnSync('git', ['-C', repoRoot, 'commit', '-m', `[export] sync: ${fileName}`, '--', 'exports/'], { stdio: 'pipe' });
-    }
-  }
+  // Y 모드도 워킹트리 저장까지만 — 커밋·푸시는 사용자가 직접 (2026-07-10 자동 커밋 제거)
 }
 
 module.exports = { parseTranscript, buildMarkdown, resolveDest, cleanUserText };
