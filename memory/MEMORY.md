@@ -21,7 +21,8 @@
 
 ## Project — 컨벤션 자산 인프라
 
-- [하네스 평가 & 훅 다이어트 완료](project_hook_diet_plan.md) — 2026-07-04 5단계 완료 + PR #9 머지. 이후 session-export 추가로 훅 23종. 후순위 중 플러그인 전환은 2026-07-09 계획 수립 착수
+- [하네스 평가 & 훅 다이어트 완료](project_hook_diet_plan.md) — 2026-07-04 5단계 완료 + PR #9 머지. 2026-07-10 메모리 개편(memory-stop-guard 삭제)으로 훅 22종. 후순위 중 플러그인 전환은 2026-07-09 계획 수립 착수
+- [메모리 저장 구조 (2026-07-10 개편)](project_memory_architecture.md) — 전역 실제 디렉토리 = 1차 저장, 레포 memory/ = 워킹트리 미러, 자동 커밋 전면 폐지(memory·exports), Y/N 판별 = 레포 memory/ 존재 여부
 - [Claude 구독 중계 서버(05_gugbab-claude-relay) 계획](project_claude_relay_plan.md) — Vercel Sandbox+claude -p 구독 인증 SSE 중계. 스킬 2종 APPROVED(2026-07-03), 스캐폴딩 미착수
 - [project-install.sh 이식 아키텍처](project_install_architecture.md) — 10개 템플릿(0~9), JAVA_SKILLS_* 필터, scripts/gen-settings.js로 settings.json 생성
 - [프로젝트 scope 전용 원칙](project_scope_only.md) — gugbab-claude 모든 산출물은 프로젝트 scope에만, 글로벌(~/.claude) 설정 금지
