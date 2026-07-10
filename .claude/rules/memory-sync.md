@@ -38,6 +38,17 @@ Claude가 memory 파일 Write/Edit
   └→ memory-pull.js: 레포 memory/ → 전역으로 반영
 ```
 
+## 커밋 시 메모리 정리 (2026-07-10 신설)
+
+사용자가 **커밋·푸시를 요청하면 실행 전에 항상** 아래를 수행하고, memory 변경을 같은 배치에 포함한다:
+
+1. 이번 작업으로 낡아진 memory 서술 스캔 → 갱신 (예: 훅 수·정책 변경이 기존 memory와 어긋나는 경우)
+2. 기록할 가치 있는 신규 결정·피드백 저장 (+ MEMORY.md 인덱스 갱신)
+3. 레포 ↔ 전역 미러 일치 확인 (`diff -rq memory ~/.claude/projects/<해시>/memory`)
+4. memory 변경 → `[memory]` 커밋 / exports 변경 → `[export]` 커밋으로 **해당 커밋 배치에 함께 포함**
+
+세션 중 발생한 피드백·결정은 그 자리에서 memory에 기록하되(미러까지 자동), 커밋은 이 시점에만 묶는다.
+
 ## 메모리 작성 규칙
 
 - memory 파일은 반드시 **Write 또는 Edit 도구**로만 작성한다
