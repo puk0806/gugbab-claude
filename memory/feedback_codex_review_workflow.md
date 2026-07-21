@@ -1,8 +1,10 @@
 ---
 name: codex-review-workflow-findings
-description: "codex review CLI v0.122.0 제약 및 훅 안정성 패턴. --uncommitted에 prompt 병용 불가, stderr 캡처 필수"
-metadata:
+description: "codex review CLI v0.122.0 제약 및 훅 안정성 패턴. 적대적 기준은 adversarial-review 컴패니언(기본 codex review 아님), --uncommitted에 prompt 병용 불가, stderr 캡처 필수"
+metadata: 
+  node_type: memory
   type: feedback
+  originSessionId: d685a042-0480-44be-95c3-ce07507ef3ba
 ---
 
 codex review 워크플로우 작업 중 발견한 사항들.
@@ -23,7 +25,17 @@ codex review 워크플로우 작업 중 발견한 사항들.
 Claude Code Stop 훅 기본값이 600s(10분)이므로 `codex review --uncommitted` 실행에 별도 타임아웃 설정 불필요.
 `isLoggedIn()`용 execSync timeout(15000ms)과 혼동하지 말 것.
 
+**규칙 4: 적대적 기준을 쓰려면 기본 `codex review`가 아니라 `adversarial-review` 컴패니언 (2026-07-21)**
+`codex review`(= `/codex:review`)는 codex *내장 일반* 리뷰 기준일 뿐이다. 진짜 적대적 attack-surface 기준(auth·IDOR·데이터 손실·멱등성·레이스·null/timeout·스키마 drift·관측성)은 플러그인 내장 프롬프트 `prompts/adversarial-review.md`에 있고, 이를 태우는 명령은:
+```bash
+CODEX_COMPANION=$(ls ~/.claude/plugins/cache/openai-codex/codex/*/scripts/codex-companion.mjs 2>/dev/null | sort -V | tail -1); node "$CODEX_COMPANION" adversarial-review --wait --scope working-tree 2>&1 | tee /tmp/codex-rN.txt
+```
+→ codex-review.md·codex-review-guard.js 3라운드 전부 이 형태로 교체됨. 컴패니언 경로는 설치 버전 무관하게 glob+`sort -V`로 동적 해석, 미검출 시 `codex review --uncommitted` 폴백. `/codex:review`·`/codex:adversarial-review`는 `disable-model-invocation: true`라 모델 자동 호출 불가 → 컴패니언 스크립트 직접 호출이 확실.
+
+**Why:** codex 적대적 리뷰 기준이 실은 이 레포가 정하는 게 아니라 플러그인 프롬프트에 있고, 강제 경로가 기본 리뷰를 쓰고 있던 갭을 [[feedback_adversarial_testing]]와 같은 attack-surface로 정렬.
+
 **How to apply:**
-- codex-review.md 업데이트 시 → `--uncommitted "[PROMPT]"` 구문 절대 쓰지 말 것
+- codex-review.md 업데이트 시 → `--uncommitted "[PROMPT]"` 구문 절대 쓰지 말 것, 적대적 기준 필요하면 adversarial-review 컴패니언 사용
+- codex 리뷰에 **레포 스킬 추가 불필요** — 플러그인이 CLI·프롬프트·자체 스킬(codex-cli-runtime·gpt-5-4-prompting·codex-result-handling) 번들. 요건은 CLI 설치+플러그인 활성+로그인뿐
 - codex-review-guard.js isLoggedIn() 수정 시 → `2>&1` 유지 필수
 - Stop 훅에서 느린 외부 명령 실행 시 → 기본 600s 먼저 확인, 초과 시 settings.json `"timeout"` 필드(초 단위)로 늘리기

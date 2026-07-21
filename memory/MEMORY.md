@@ -18,6 +18,7 @@
 - [verification.md 작성 4원칙](feedback_verification_md_rules.md) — 로컬 프로젝트명·PR 번호 박기 금지, 일괄 업데이트는 사전 승인, 자의적 부분 적용 금지, content test PASS = APPROVED 가능 카테고리 구분
 - [네이밍은 이름만으로 의미 전달](feedback_naming_clarity.md) — Group A/B/C 같은 임시 라벨 금지. dream-app→dream-interpretation처럼 목적이 드러나는 이름 사용
 - [codex review 워크플로우 제약·패턴](feedback_codex_review_workflow.md) — --uncommitted+prompt 병용 불가(v0.122.0), isLoggedIn에 2>&1 필수, Stop훅 기본 600s로 별도 timeout 불필요
+- [적대적 테스트 강제](feedback_adversarial_testing.md) — 테스트는 정상 흐름만 아니라 악성 유저 방어·이상 경로까지 필수, 테스트 통과용 하드코딩 return 금지(A안 hard block). adversarial-test-guard·fake-impl-guard 훅
 
 ## Project — 컨벤션 자산 인프라
 
@@ -27,6 +28,8 @@
 - [project-install.sh 이식 아키텍처](project_install_architecture.md) — 10개 템플릿(0~9), JAVA_SKILLS_* 필터, scripts/gen-settings.js로 settings.json 생성
 - [프로젝트 scope 전용 원칙](project_scope_only.md) — gugbab-claude 모든 산출물은 프로젝트 scope에만, 글로벌(~/.claude) 설정 금지
 - [MCP 미사용 결정](project_mcp_decision.md) — WebSearch/WebFetch만 사용, 팀 이식성 우선
+- [PDF 빈칸 뚫기 워크플로우](project_pdf_blank_workflow.md) — 반복 요청 작업(첫 건 2026-07-13 종결). 글자(char) 단위 판정·줄별 분리·침범 금지 6대 주의사항 + 검증 6종. 파일은 사용 후 삭제됨 — 재요청 시 메모리 기준 재작성, 미세 침범 개선 반영해 시작
+- [PDF 근무표 양식 생성 워크플로우](project_pdf_schedule_form_workflow.md) — 반복 요청 작업(첫 건 2026-07-15 수용). 손글씨 표 사진 → PyMuPDF 재현: A4 가로·홀/주방 8행·굵은 구분선·화목토 교대 음영. 스크립트 전문 포함(파일 삭제 후 재작성용), 행 수는 매번 질문으로 확정
 
 ### 자산 이력 (커밋·푸시 완료)
 

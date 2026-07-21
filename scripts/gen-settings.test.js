@@ -151,6 +151,24 @@ console.log('\n[사전 차단] verification/skill-md/agent-md — PreToolUse Wri
     writeCmds[0].includes('deliverable-guard'), true)
 }
 
+// ── 적대적 테스트 훅 배선 (dev 전용) ────────────────────────────────────
+console.log('\n[적대적 테스트] adversarial-test-guard · fake-impl-guard — dev PostToolUse')
+{
+  const dev = generate('--dev')
+  const devWrite = dev.hooks.PostToolUse.find(b => b.matcher === 'Write').hooks.map(h => h.command).join(' ')
+  const devEdit = dev.hooks.PostToolUse.find(b => b.matcher === 'Edit').hooks.map(h => h.command).join(' ')
+  assert('dev PostToolUse Write에 adversarial-test-guard 배선', devWrite.includes('adversarial-test-guard'), true)
+  assert('dev PostToolUse Write에 fake-impl-guard 배선', devWrite.includes('fake-impl-guard'), true)
+  assert('dev PostToolUse Edit에 adversarial-test-guard 배선', devEdit.includes('adversarial-test-guard'), true)
+  assert('dev PostToolUse Edit에 fake-impl-guard 배선', devEdit.includes('fake-impl-guard'), true)
+
+  const util = generate('--util')
+  const utilWriteBlock = util.hooks.PostToolUse.find(b => b.matcher === 'Write')
+  const utilWrite = utilWriteBlock ? utilWriteBlock.hooks.map(h => h.command).join(' ') : ''
+  assert('util 모드에는 adversarial-test-guard 미배선', utilWrite.includes('adversarial-test-guard'), false)
+  assert('util 모드에는 fake-impl-guard 미배선', utilWrite.includes('fake-impl-guard'), false)
+}
+
 // ── 최종 ────────────────────────────────────────────────────────────────
 console.log(`\n결과: ${passed} passed, ${failed} failed`)
 process.exit(failed > 0 ? 1 : 0)

@@ -37,6 +37,7 @@ Claude Code 활용에 필요한 에이전트(Agent), 스킬(Skill), 설정(CLAUD
 - **verification.md, SKILL.md를 Bash(sed/awk 등)로 수정 금지** — 반드시 Write/Edit 도구 사용
 - **memory 파일을 Bash로 직접 수정 금지** — Write/Edit 도구 사용 시에만 memory-sync 훅이 자동 동기화
 - **PENDING_TEST → APPROVED 일괄 전환 금지** — 스킬별 개별 검증 필수 (@.claude/rules/verification-policy.md)
+- **정상 흐름만 담은 테스트 금지** — 테스트 코드는 악성 유저 방어·이상 경로까지 필수 커버, 테스트 통과용 하드코딩 return 금지. adversarial-test-guard·fake-impl-guard 훅으로 강제 (@.claude/rules/adversarial-testing.md)
 
 ---
 
@@ -45,6 +46,7 @@ Claude Code 활용에 필요한 에이전트(Agent), 스킬(Skill), 설정(CLAUD
 | 상황 | 참조 파일 |
 |------|----------|
 | 외부 정보 조사·검증 | @.claude/rules/info-verification.md |
+| 테스트 코드 작성(악성 유저 방어·가짜 구현 차단) | @.claude/rules/adversarial-testing.md |
 | 에이전트 설계·작성 | @.claude/rules/agent-design.md |
 | 스킬·에이전트 생성 절차 | @.claude/rules/creation-workflow.md |
 | Git 커밋 컨벤션 | @.claude/rules/git.md |

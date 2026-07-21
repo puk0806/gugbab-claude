@@ -1,12 +1,12 @@
 # 규칙 (Rules)
 
-상황별 Claude Code 동작 규칙 파일 모음 (총 13종).
+상황별 Claude Code 동작 규칙 파일 모음 (총 14종).
 
 규칙 파일 위치: `.claude/rules/`
 
 ---
 
-## 공통 규칙 (8종) — 대부분의 템플릿
+## 공통 규칙 (9종) — 대부분의 템플릿
 
 | 규칙 | 설명 |
 |------|------|
@@ -18,6 +18,7 @@
 | [readme-update.md](../../.claude/rules/readme-update.md) | README 업데이트 규칙 — 추가·삭제·이름변경·이동 시 반영 항목, 업데이트 로그 형식 |
 | [verification-policy.md](../../.claude/rules/verification-policy.md) | 검증 정책 — PENDING_TEST→APPROVED 전환 절차, 수정 도구 제한, 실사용 필수 카테고리 |
 | [task-workflow.md](../../.claude/rules/task-workflow.md) | 작업 착수 전 확인 절차 — 이해 확인→작업 목록→사용자 확인 대기→승인 후 실행 |
+| [adversarial-testing.md](../../.claude/rules/adversarial-testing.md) | 적대적 테스트 원칙 — 테스트 3계층(정상/악성 유저 방어/이상·경계) 강제, 악성 유저 공격 체크리스트, 테스트 통과용 하드코딩 return 금지(adversarial-test-guard·fake-impl-guard 훅) |
 
 ---
 
