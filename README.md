@@ -29,16 +29,16 @@ gugbab-claude/
 └── .claude/
     ├── agents/      ← 에이전트 (9카테고리)
     ├── skills/      ← 스킬 (11카테고리, 209종)
-    ├── hooks/       ← 훅 (22종)
-    ├── rules/       ← 규칙 (13종)
+    ├── hooks/       ← 훅 (24종)
+    ├── rules/       ← 규칙 (14종)
     ├── commands/    ← 슬래시 커맨드
     └── settings.json
 ```
 
 - [agents/](./docs/agents/README.md) — 9카테고리
 - [skills/](./docs/skills/README.md) — 11카테고리 209종
-- [hooks/](./docs/hooks/README.md) — 22종 (공통 15 · dev 2 · TypeScript 1 · Memory 2 · Codex 1 · Branch Protection 1)
-- [rules/](./docs/rules/README.md) — 13종 (공통 8 · 언어별 3 · 선택적 2)
+- [hooks/](./docs/hooks/README.md) — 24종 (공통 15 · dev 4 · TypeScript 1 · Memory 2 · Codex 1 · Branch Protection 1)
+- [rules/](./docs/rules/README.md) — 14종 (공통 9 · 언어별 3 · 선택적 2)
 
 ---
 
@@ -164,6 +164,8 @@ claude --continue             # 이전 대화 이어서
 ## 업데이트 로그
 
 | 날짜 | 변경 내용 |
+| 2026-07-21 | **codex 리뷰를 실제 적대적 프롬프트로 정렬 + health 스킬 export 누출 수정**: ① `codex-review.md`·`codex-review-guard.js`가 강제하던 `codex review --uncommitted`는 codex *기본* 리뷰 기준이었음 — 플러그인 내장 적대적 프롬프트(`prompts/adversarial-review.md`, attack-surface: auth·IDOR·데이터 손실·멱등성·레이스·null/timeout·스키마 drift·관측성)를 쓰도록 `adversarial-review` 컴패니언 호출로 3라운드 전부 교체(설치 버전 무관 동적 경로 해석 + 미검출 시 기본 리뷰 폴백). codex 리뷰 attack-surface를 adversarial-testing.md 테스트 기준과 동일 축으로 정렬. codex 리뷰는 별도 레포 스킬 불필요 — 플러그인이 CLI·프롬프트·스킬(codex-cli-runtime 등) 자체 번들, 요건은 CLI 설치+플러그인 활성+로그인뿐. ② `project-install.sh` 스킬 선택에서 react-spa·nextjs 템플릿이 `health/*`(영양·식단 도메인 스킬 5종)를 제외 목록에 빠뜨려 함께 export되던 누출 수정 — health 도메인 스킬은 health 템플릿에서만 포함. codex-review-guard 3/3·gen-settings 46/46 회귀 통과 |
+| 2026-07-20 | **적대적 테스트 강제 인프라 — dev 훅 2종 + 규칙 신설**: 테스트 코드가 정상 흐름만 담거나 테스트 통과용 가짜 구현을 넣는 것을 차단. ① `@.claude/rules/adversarial-testing.md` 신설 — 테스트 3계층(정상/악성 유저 방어/이상·경계) 표준 + 악성 유저 공격 체크리스트(인증·인가/인젝션/비즈니스 로직 오남용/파일·CSRF) + 테스트 통과용 하드코딩 return 금지(A안 hard block). ② `adversarial-test-guard.js` 신규(PostToolUse Write/Edit, dev 전용) — 테스트 케이스 2개 이상인데 적대적 커버리지(에러/보안/경계) 카테고리 2개 미만이면 차단, TDD RED 초기 1케이스·waiver 주석 예외. ③ `fake-impl-guard.js` 신규(PostToolUse Write/Edit, dev 전용) — 파라미터를 무시하고 테스트 기대 리터럴(문자열/숫자)을 그대로 return하는 가짜 구현 차단, boolean/null·상수 getter·waiver 제외로 오탐 최소화. ④ `qa-engineer` 에이전트 산출물 4→5종(적대적 악성 유저 E2E 시나리오 필수 추가). settings.json·gen-settings.js·project-install.sh(HOOKS_DEV_ONLY) 배선, 신규 훅 테스트 10+12건 + gen-settings 배선 검증 6건 전체 통과. **훅 22→24종(dev 2→4)·규칙 13→14종** |
 |------|-----------|
 | 2026-07-10 | **메모리 저장 구조 개편 — symlink·자동 커밋 폐지**: 전역 `~/.claude/projects/<해시>/memory/`를 실제 디렉토리 1차 저장소로 전환(과거 symlink는 `memory-pull.js`가 자동 마이그레이션), 레포 `memory/`는 워킹트리 미러로 격하. `memory-sync.js` 재작성(git commit → 전역↔레포 양방향 미러 복사), `memory-pull.js` 재작성(git fetch/checkout/commit 제거 → 레포→전역 반영만), `memory-stop-guard.js`(Stop 자동 커밋)·`scripts/setup-memory-link.sh`(symlink 수동 설정) 삭제. `session-export.js` Y/N 판별을 symlink 감지→레포 `memory/` 존재 기준으로 교체 + exports 자동 커밋 제거(워킹트리 저장까지만). memory·exports 커밋·푸시는 전부 사용자 수동 — `[memory] sync`/`[export] sync` 자동 커밋으로 인한 깃 트리 오염 해소. 신규 훅 샌드박스 테스트 9건 + gen-settings 36 + session-export 16 전체 통과. **훅 23→22종**. **커밋 전 메모리 정리 절차 신설(PR #11)**: 커밋·푸시 요청 시 memory 정리→`session-export.js --refresh`(세션 요약 즉시 최신화, 신규 모드)→`[memory]`/`[export]` 커밋 포함을 의무화 — commit.md 0단계·create-pr.md·memory-sync.md 명문화, git.md category에 `memory`·`export` 공식 추가. **deliverable-guard 강제 추가**: push·`gh pr create` 직전 memory/·exports/ 미커밋 감지 시 차단(PreToolUse Bash, --no-readme 무관), gen-settings에 --memory 단독 선택 시 PreToolUse Bash 배선(--no-readme) 신설. 테스트: deliverable-guard 30→39, session-export 16→18, gen-settings 36→40 전체 통과 + 실환경 차단·refresh 검증. **exports 저장 위치 재설계**: Stop(매 턴)은 로컬 `~/.claude/.../exports/`에만 기록, 레포 `exports/`는 커밋 배치 `--refresh` 시점에만 생성 → push 후 워킹트리 항상 클린(매 턴 dirty 잔류 해소), session-export 테스트 18→21 |
 | 2026-07-08 | **세션 대화 요약 강제 보존 훅 추가**: `session-export.js` 신규(Stop, 비차단) — 매 세션 대화 요약(사용자 요청 + Claude 응답 + 수정 파일·도구 통계 + Codex 리뷰 라운드)을 markdown으로 자동 저장. memory 공유(Y) 모드면 레포 `exports/`에 커밋(푸시는 사용자), 비공유(N) 모드면 로컬 `~/.claude/projects/<해시>/exports/`. 선택 옵션 없이 모든 템플릿 공통 세트(HOOKS_COMMON)·gen-settings dev/util 양쪽 Stop에 강제 배선. 수정 파일·도구 통계는 트랜스크립트 tool_use 블록에서 직접 추출(제거된 session-summary 의존 없음). 단위 테스트 16 어설션(`session-export.test.js`) + gen-settings 배선 검증 3건 추가. **훅 22→23종** |
