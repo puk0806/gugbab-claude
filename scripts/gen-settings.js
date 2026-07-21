@@ -4,7 +4,7 @@
 
 const args = process.argv.slice(2);
 const isUtil               = args.includes('--util');
-const isDev                = args.includes('--dev');               // tdd-guard 포함 (개발 템플릿)
+const isDev                = args.includes('--dev');               // tdd-guard·adversarial-test-guard·fake-impl-guard 포함 (개발 템플릿)
 const withTs               = args.includes('--typescript');        // typescript-quality 포함
 const withMemory           = args.includes('--memory');            // memory-* 훅 포함
 const withSuperpowers      = args.includes('--superpowers');       // superpowers@superpowers-marketplace 플러그인 활성화
@@ -75,13 +75,13 @@ if (withBranchProtection) {
 // PostToolUse Write — deliverable-guard(세션 수정 파일 추적, 구 session-summary 역할)를
 // 체인 선두에 배치: 뒤의 exit 2 검증 훅이 체인을 중단시켜도 추적 기록은 보장
 const writeHooks = [H('deliverable-guard.js')];
-if (isDev) writeHooks.push(H('tdd-guard.js'));
+if (isDev) writeHooks.push(H('tdd-guard.js'), H('adversarial-test-guard.js'), H('fake-impl-guard.js'));
 if (withTs) writeHooks.push(H('typescript-quality.js'));
 if (withMemory) writeHooks.push(H('memory-sync.js'));
 
 // PostToolUse Edit — 구조 검증 3종은 Edit만 사후 검증 (디스크 전체 재읽기, Write는 PreToolUse에서 사전 차단)
 const editHooks = [H('deliverable-guard.js'), H('verification-guard.js'), H('skill-md-guard.js'), H('agent-md-guard.js')];
-if (isDev) editHooks.push(H('tdd-guard.js'));
+if (isDev) editHooks.push(H('tdd-guard.js'), H('adversarial-test-guard.js'), H('fake-impl-guard.js'));
 if (withTs) editHooks.push(H('typescript-quality.js'));
 if (withMemory) editHooks.push(H('memory-sync.js'));
 

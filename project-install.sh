@@ -233,7 +233,7 @@ HOOKS_COMMON=(
 )
 
 # 개발 전용 (util·academic·dream 제외)
-HOOKS_DEV_ONLY=("tdd-guard.js" "test-fake-guard.js")
+HOOKS_DEV_ONLY=("tdd-guard.js" "test-fake-guard.js" "adversarial-test-guard.js" "fake-impl-guard.js")
 
 # TypeScript 전용 (react-spa·nextjs만)
 HOOKS_TS_ONLY=("typescript-quality.js")
@@ -554,6 +554,9 @@ _rule_ok_for_tmpl() {
       [[ "$tmpl" == all || "$tmpl" == rust-axum ]] && return 0 ;;
     typescript.md)
       [[ "$tmpl" == all || "$tmpl" == react-spa || "$tmpl" == nextjs || "$tmpl" == health ]] && return 0 ;;
+    adversarial-testing.md)
+      # 적대적 테스트 강제 훅(adversarial-test-guard·fake-impl-guard)이 참조 — dev 템플릿 전체에 포함
+      case "$tmpl" in all|react-spa|nextjs|rust-axum|java-spring-legacy|java-spring-modern|unity-game|health) return 0 ;; esac ;;
   esac
   return 1
 }
@@ -684,6 +687,8 @@ is_java_skill() {
 _skill_ok_for_tmpl() {
   local rel="$1" skill_prefix="$2" tmpl="$3"
   if [ "$tmpl" = "all" ]; then return 0; fi
+  # health 도메인 스킬(영양·식단 5종)은 health 템플릿에서만 — 그 외 전 템플릿(util·academic·dream·rust·java·unity·react·next) 누출 차단
+  if [[ "$rel" == health/* && "$tmpl" != "health" ]]; then return 1; fi
   if [ "$tmpl" = "util" ]; then
     [[ "$rel" == frontend/* || "$rel" == backend/* || "$rel" == devops/* ||
        "$rel" == architecture/* || "$rel" == game/* || "$rel" == humanities/* ||
