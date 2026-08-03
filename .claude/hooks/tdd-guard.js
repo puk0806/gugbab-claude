@@ -33,23 +33,35 @@ try {
     process.exit(0);
   }
 
-  const testPatterns = [
-    path.join(dir, `${basename}.test${ext}`),
-    path.join(dir, `${basename}.spec${ext}`),
-    path.join(dir, '__tests__', `${basename}.test${ext}`),
-    path.join(dir, '__tests__', `${basename}.spec${ext}`),
-    path.join(path.dirname(dir), '__tests__', `${basename}.test${ext}`),
-    path.join(path.dirname(dir), '__tests__', `${basename}.spec${ext}`),
-  ];
+  // 테스트 파일은 소스와 확장자가 다를 수 있음 (예: .ts 훅 소스 + renderHook용 .test.tsx)
+  const crossExts = {
+    '.ts': ['.ts', '.tsx'],
+    '.tsx': ['.tsx', '.ts'],
+    '.js': ['.js', '.jsx'],
+    '.jsx': ['.jsx', '.js'],
+  };
+  const testExts = crossExts[ext] || [ext];
+
+  const testPatterns = testExts.flatMap(testExt => [
+    path.join(dir, `${basename}.test${testExt}`),
+    path.join(dir, `${basename}.spec${testExt}`),
+    path.join(dir, '__tests__', `${basename}.test${testExt}`),
+    path.join(dir, '__tests__', `${basename}.spec${testExt}`),
+    path.join(path.dirname(dir), '__tests__', `${basename}.test${testExt}`),
+    path.join(path.dirname(dir), '__tests__', `${basename}.spec${testExt}`),
+  ]);
 
   const hasTest = testPatterns.some(p => {
     try { return fs.existsSync(p); } catch { return false; }
   });
 
   if (!hasTest) {
-    process.stdout.write(
+    // exit 2 차단 시 모델에 전달되는 메시지는 stderr (stdout은 유실됨)
+    process.stderr.write(
       `[tdd-guard] 테스트 파일 없음: ${path.relative(process.cwd(), filePath)}\n` +
-      `즉시 생성하세요: ${basename}.test${ext}\n`
+      `즉시 생성하세요: ${basename}.test${ext}` +
+      (testExts.length > 1 ? ` (또는 ${basename}.test${testExts[1]})` : '') +
+      `\n`
     );
     process.exit(2);
   }

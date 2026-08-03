@@ -41,6 +41,32 @@ fs.writeFileSync(path.join(tmp, 'src', 'nested.ts'), 'export const z = 3')
 fs.writeFileSync(path.join(tmp, 'src', '__tests__', 'nested.test.ts'), 'test')
 test('__tests__ 하위 테스트 존재', path.join(tmp, 'src', 'nested.ts'), 0)
 
+console.log('\n── 교차 확장자 테스트 인식 → exit 0 ──')
+fs.writeFileSync(path.join(tmp, 'src', 'use-hook.ts'), 'export const h = 1')
+fs.writeFileSync(path.join(tmp, 'src', 'use-hook.test.tsx'), 'test')
+test('.ts 소스 + .test.tsx 테스트', path.join(tmp, 'src', 'use-hook.ts'), 0)
+
+fs.writeFileSync(path.join(tmp, 'src', 'Widget.tsx'), 'export const W = 1')
+fs.writeFileSync(path.join(tmp, 'src', 'Widget.test.ts'), 'test')
+test('.tsx 소스 + .test.ts 테스트', path.join(tmp, 'src', 'Widget.tsx'), 0)
+
+fs.writeFileSync(path.join(tmp, 'src', 'legacy.js'), 'module.exports = 1')
+fs.writeFileSync(path.join(tmp, 'src', '__tests__', 'legacy.test.jsx'), 'test')
+test('.js 소스 + __tests__/.test.jsx 테스트', path.join(tmp, 'src', 'legacy.js'), 0)
+
+console.log('\n── 차단 사유는 stderr로 전달 ──')
+fs.writeFileSync(path.join(tmp, 'src', 'orphan2.ts'), 'export const q = 1')
+{
+  const input = JSON.stringify({
+    hook_event_name: 'PostToolUse', tool_name: 'Edit',
+    tool_input: { file_path: path.join(tmp, 'src', 'orphan2.ts') },
+  })
+  const r = spawnSync('node', [HOOK], { input, encoding: 'utf8', timeout: 5000 })
+  const pass = r.status === 2 && r.stderr.includes('[tdd-guard]') && r.stderr.includes('테스트 파일 없음')
+  console.log(`  ${pass ? '✅' : '❌'} 차단 시 stderr에 사유 포함 → ${pass ? 'PASS' : `FAIL (exit ${r.status}, stderr: ${JSON.stringify(r.stderr)})`}`)
+  pass ? passed++ : failed++
+}
+
 console.log('\n── 검사 제외 대상 → exit 0 ──')
 test('테스트 파일 자체', path.join(tmp, 'src', 'covered.test.ts'), 0)
 test('.claude/hooks 파일', '/proj/.claude/hooks/some-hook.js', 0)
