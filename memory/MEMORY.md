@@ -28,6 +28,7 @@
 - [project-install.sh 이식 아키텍처](project_install_architecture.md) — 10개 템플릿(0~9), JAVA_SKILLS_* 필터, scripts/gen-settings.js로 settings.json 생성
 - [프로젝트 scope 전용 원칙](project_scope_only.md) — gugbab-claude 모든 산출물은 프로젝트 scope에만, 글로벌(~/.claude) 설정 금지
 - [MCP 미사용 결정](project_mcp_decision.md) — WebSearch/WebFetch만 사용, 팀 이식성 우선
+- [Claude Code 설치 환경·npm SSL 우회](project_claude_install_environment.md) — 단일 npm-global 설치(2.1.218, 2026-07-27 중복 해소), npm tgz가 SELF_SIGNED_CERT로 막히면 curl 우회 절차 사용
 - [PDF 빈칸 뚫기 워크플로우](project_pdf_blank_workflow.md) — 반복 요청 작업(첫 건 2026-07-13 종결). 글자(char) 단위 판정·줄별 분리·침범 금지 6대 주의사항 + 검증 6종. 파일은 사용 후 삭제됨 — 재요청 시 메모리 기준 재작성, 미세 침범 개선 반영해 시작
 - [PDF 근무표 양식 생성 워크플로우](project_pdf_schedule_form_workflow.md) — 반복 요청 작업(첫 건 2026-07-15 수용). 손글씨 표 사진 → PyMuPDF 재현: A4 가로·홀/주방 8행·굵은 구분선·화목토 교대 음영. 스크립트 전문 포함(파일 삭제 후 재작성용), 행 수는 매번 질문으로 확정
 
