@@ -5,7 +5,10 @@ metadata:
   node_type: memory
   type: project
   originSessionId: fad2d3a7-7551-4503-a516-6a3524b02835
+  modified: 2026-08-11T01:45:35.602Z
 ---
+
+> **2026-08-11 갱신**: 전수검사에서 `mvp-scope-planner`는 중복 판정으로 **삭제**되고 기능이 `domain/product-planner` 단계 7.5(MVP Phase 절단)로 흡수됨. 같은 날 `meta/planner`·`meta/spec-writer`·`validation/seo-content-writer-coach`도 정리(에이전트 67→63종). 나머지 8종은 유지. → [[doctor-context-optimization]]
 
 ## 신규 산출물 9개
 

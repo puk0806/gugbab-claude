@@ -5,6 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 9152b891-1df7-4c78-8301-10defaed293c
+  modified: 2026-08-12T00:33:30.915Z
 ---
 
 gugbab-claude는 Claude Code 컨벤션 소스 레포. `project-install.sh`로 다른 프로젝트에 이식.
@@ -37,6 +38,18 @@ gugbab-claude는 Claude Code 컨벤션 소스 레포. `project-install.sh`로 �
 **기타 동작:**
 - `CLAUDE.md` / `settings.json`: 존재 시 덮어쓸지 사용자에게 질문 (기본 N)
 - hooks/agents/rules/skills: 같은 이름이면 덮어쓰기, 없는 것만 추가
+- **잔재 정리 (2026-08-07 신설, 2026-08-12 매니페스트 체계로 개편 — `scripts/install-cleanup.js`)**: 훅 복사 직전 0.5단계로 실행.
+  옵션 OFF 시 해당 훅 파일·rules·플러그인·마커 삭제 + 기존 settings.json에서 배선 수술적 제거
+  (settings 덮어쓰기 skip해도 옵션 선택 반영됨). memory OFF 시 구버전 전역 symlink → 실제 디렉토리
+  마이그레이션 + 레포 memory/ 의 `.md`만 전역 이전(그 외 파일은 앱 데이터로 보고 보존).
+  **소유권 판정은 `.claude/.install-manifest.json`이 기준** — 설치 마지막에 `scripts/write-install-manifest.js`가
+  복사한 에이전트·스킬·훅 목록 + 설치 시점 sha256을 기록. 삭제는 "매니페스트에 있고 + 해시 일치
+  (=설치 후 안 건드림)"일 때만. 폐지 훅·옵션 OFF 훅도 동일한 소유 증명 필요(basename만으로 삭제 금지).
+  매니페스트 없는 레거시 설치는 첫 재설치 때 1회 확인(`잔재 삭제? [y/N]`) → `--delete-orphans`.
+  상세 규칙은 [[full-audit-2026-08-11]] 매니페스트 섹션. 테스트: install-cleanup 146건 + write-install-manifest 27건.
+  배경: 재설치 시 이전 설치 잔재가 정리되지 않아 N 선택이 무시되던 문제
+  (실제로 01~05 + lf-ui·lfos-ui 전부 memory 잔재/symlink 활성 상태였음 — 2026-08-07 감사).
+  **미정리 프로젝트는 각자 재설치를 돌려야 정리 적용됨** — 첫 회에 y 응답하면 폐기 에이전트 4종(planner 등)도 자동 제거
 - settings.json 생성: `scripts/gen-settings.js` 스크립트로 자동 생성 (2026-06-15 기준)
   - `--superpowers` 플래그 → `superpowers@superpowers-marketplace: true` 추가 (조건부, codex와 동일 방식)
   - `--codex` 플래그 → `codex@openai-codex: true` 추가 (조건부)
