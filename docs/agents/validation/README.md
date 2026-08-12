@@ -11,8 +11,7 @@
 | [security-auditor](../../../.claude/agents/validation/security-auditor.md) | OWASP Top 10 + PIPA/GDPR 등 17개 영역 보안·개인정보 종합 진단 |
 | [seo-auditor](../../../.claude/agents/validation/seo-auditor.md) | SEO·GEO·웹표준 통합 감사 (HTML·메타·구조화 데이터·CWV·robots 등 10영역) |
 | [a11y-auditor](../../../.claude/agents/validation/a11y-auditor.md) | WCAG 2.2 A/AA 기준 접근성 자동 점검 + 수동 점검 9개 시나리오 |
-| [content-quality-reviewer](../../../.claude/agents/validation/content-quality-reviewer.md) | E-E-A-T·Helpful Content 기준 콘텐츠 품질 진단 |
-| [seo-content-writer-coach](../../../.claude/agents/validation/seo-content-writer-coach.md) | SEO·E-E-A-T·검색 의도·네이버 특화 기준으로 콘텐츠 초안 코칭 |
+| [content-quality-reviewer](../../../.claude/agents/validation/content-quality-reviewer.md) | E-E-A-T·Helpful Content 기준 콘텐츠 품질 진단 + 초안 코칭·네이버 특화 점검 (구 seo-content-writer-coach 통합) |
 | [build-perf-benchmarker](../../../.claude/agents/validation/build-perf-benchmarker.md) | hyperfine·번들 분석기·lhci로 빌드·번들·dev 서버·Lighthouse 성능 측정 |
 | [perf-report-writer](../../../.claude/agents/validation/perf-report-writer.md) | 벤치마크 결과 → Executive Summary·통계 해석·권고 포함 이해관계자용 보고서 |
 | [abstract-reviewer](../../../.claude/agents/validation/abstract-reviewer.md) | 학술 초록·키워드 평가 (KCI/APA/Springer/Elsevier 기준 PASS/NEEDS_REVISION) |

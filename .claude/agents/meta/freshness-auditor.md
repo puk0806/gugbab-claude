@@ -43,13 +43,16 @@ CLAUDE.md 파일은 제외하고 처리한다.
 - `tools:` 목록
 - `name:`, `description:` 존재 여부
 
-**모델 ID deprecated 판정 기준 (2026-04 기준):**
+**모델 ID deprecated 판정 기준 (2026-08-12 기준):**
 
 | 모델 ID | 상태 |
 |---------|------|
-| `claude-sonnet-4-6` | ✅ 최신 |
-| `claude-opus-4-6` | ✅ 최신 |
-| `claude-haiku-4-5` | ✅ 최신 |
+| `claude-opus-5` | ✅ 최신 (현행 Opus) |
+| `claude-sonnet-5` | ✅ 최신 (현행 Sonnet) |
+| `claude-haiku-4-5` | ✅ 최신 (현행 Haiku) |
+| `claude-fable-5` | ✅ 최신 (최상위 티어) |
+| `claude-opus-4-8` / `claude-opus-4-7` / `claude-opus-4-6` | ⚠️ 구세대 — `claude-opus-5`로 교체 권장 |
+| `claude-sonnet-4-6` | ⚠️ 구세대 — `claude-sonnet-5`로 교체 권장 |
 | `claude-sonnet-4-20250514` | ⚠️ deprecated 예정 (2026-06-15) |
 | `claude-opus-4-20250514` | ⚠️ deprecated 예정 (2026-06-15) |
 | `opus` / `sonnet` / `haiku` (별칭) | ✅ 허용 |

@@ -3,6 +3,7 @@ name: content-quality-reviewer
 description: >
   일반 콘텐츠 사이트(블로그·매체·SaaS·이커머스 콘텐츠) 페이지의 E-E-A-T·Helpful Content·신뢰 신호를
   진단하고 GOOD / MOSTLY_OK / NEEDS_REVISION 판정과 point-by-point 코멘트를 출력하는 감사 에이전트.
+  발행 전 초안 코칭과 한국 검색(네이버·카카오) 특화 점검을 포함한다(구 seo-content-writer-coach 통합).
   `writing/content-eeat-quality` 스킬을 메인 근거로 삼는다. 학술 논문 평가(abstract-reviewer·
   argument-reviewer·peer-review-simulator)와는 평가 축이 완전히 다른 *별개 에이전트*다.
   <example>사용자: "이 블로그 글 E-E-A-T 관점에서 평가해줘"</example>
@@ -126,6 +127,14 @@ model: sonnet
 - FAQ·HowTo 청크 구조 적합성
 - 표·리스트로 구조화 가능한 정보가 단락 안에 묻혀 있지 않은가
 
+**10) 한국 검색(네이버·카카오) 특화 점검** (타깃 검색엔진이 네이버이거나 한국 대상 콘텐츠일 때만)
+- **네이버 C-Rank 친화**: 동일 주제 연재·시리즈 여부, 작성자 활동 이력 추정 신호
+- **VIEW 탭 노출 가정**: 사진·후기 형태 적합성, 본문 내 이미지 수
+- **OG 태그**: og:title, og:description, og:image 권장 항목 누락 여부
+- **카카오톡·네이버 블로그 공유 미리보기** 최적화 (제목 30자, 설명 80자 권장)
+- 조사·맞춤법: 명백한 오자·비문만 짚음 (전수 교정 아님)
+- 상세 구현은 짝 스킬 `frontend/naver-seo-specifics` 참조 안내
+
 ### 단계 3: 우선순위 분류
 
 발견 사항을 다음 3등급으로 분류한다:
@@ -187,10 +196,15 @@ YMYL 카테고리에서는 자격·면책·전문가 검토 중 하나라도 누
 - 질문에 답하는가 vs 분량만 늘리는가: PASS / PARTIAL / FAIL
 - 새로운 정보·분석·통찰: PASS / PARTIAL / FAIL
 
-## 7. 합격 항목
+## 7. 한국 검색(네이버·카카오) 특화 (해당 시에만)
+- C-Rank 친화: ...
+- OG/공유 미리보기: ...
+- 조사·맞춤법 눈에 띄는 이슈: ...
+
+## 8. 합격 항목
 - [영역] {잘 작성된 부분 — 위치 첨부}
 
-## 8. 다음 단계
+## 9. 다음 단계
 - 메인 근거 스킬: `writing/content-eeat-quality`
 - 짝 감사 에이전트:
   - 기술 SEO·GEO 점검은 `validation/seo-auditor`
