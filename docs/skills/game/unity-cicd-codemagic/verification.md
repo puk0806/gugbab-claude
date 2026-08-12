@@ -97,8 +97,8 @@ status: PENDING_TEST
 
 ### 4-4. Claude Code 에이전트 활용 테스트
 
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-06-10 skill-tester 수행)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (3/3 PASS)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-06-10 최초 수행 + 2026-08-11 재검증)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (누적 6/6 PASS)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (gap 없음, 보완 불필요)
 
 ---
@@ -123,6 +123,41 @@ status: PENDING_TEST
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-08-11
+**수행자**: skill-tester → general-purpose(content test) + fact-checker(핵심 클레임 3개 WebSearch 재검증)
+**수행 방법**: SKILL.md Read 후 실전 질문 3개 재답변 + 핵심 클레임 3개 WebSearch 재검증(최초 검증일로부터 약 2개월 경과, Codemagic 문서·요금·스키마 변경 여부 재확인)
+
+### 실제 수행 테스트 (content test, 2026-08-11)
+
+**Q1. keystore 파일을 repo에 커밋하면 안 되는 이유와 올바른 관리 방법**
+- ✅ PASS
+- 근거: SKILL.md 섹션 11 "흔한 실수" 표 + 섹션 4-2 "keystore 업로드 (Codemagic UI)" + 섹션 4-3 자동 주입 환경변수 표
+- 상세: 이유(보안 사고·서명 무효화 불가)와 방법(Codemagic UI 업로드 → `keystore_reference` 참조, 다운로드 불가하므로 별도 백업 필수, CM_KEYSTORE_* 4종 자동 주입)까지 근거 섹션에서 정확히 인용
+
+**Q2. TestFlight만 자동 업로드하고 App Store 심사에는 자동 제출 안 되게 하려면**
+- ✅ PASS
+- 근거: SKILL.md 섹션 7-1 "publishing.app_store_connect 필드" + 섹션 7-2 "일반적인 흐름" 표 + 섹션 5-4 iOS 전체 예시
+- 상세: `submit_to_testflight: true` + `submit_to_app_store: false` 조합을 섹션 7-2 표에서 정확히 인용, 섹션 5-4 실전 예시와도 일치 확인
+
+**Q3. Unity 라이선스 시트 소진 흔한 원인과 예방법**
+- ✅ PASS
+- 근거: SKILL.md 섹션 3 "반환 스크립트(publishing 섹션 — 필수)" + 섹션 11 "흔한 실수" 표 1번·8번 행
+- 상세: 원인(`scripts:`에 deactivate를 두면 빌드 실패 시 미실행) + 해결(`publishing.scripts`로 이동) + 추가 원인(Personal 라이선스 사용) 모두 정확히 인용
+
+agent content test: 2026-08-11 재검증 3/3 PASS (gap: keystore 백업 위치 구체 권장 없음 — 선택 보강)
+
+### 핵심 클레임 WebSearch 재검증 (fact-checker, 2026-08-11)
+
+| # | 클레임 | 판정 | 근거 |
+|---|--------|------|------|
+| 1 | Codemagic Unity CI 빌드는 Unity Plus/Pro 라이선스 필요 (Personal 미보장) | ✅ VERIFIED | docs.codemagic.io/yaml-quick-start/building-a-unity-app/ 원문 그대로 유지, GitHub Discussion #2480(Codemagic 메인테이너 답변)도 동일 확인. 커뮤니티 이견(2025-12, "Unity 자체 요구사항 아니다")은 공식 정책 변경으로 이어지지 않음 |
+| 2 | 무료 플랜 월 500분(mac_mini_m2 기준), 팀 계정은 무료분 미제공 | ✅ VERIFIED | codemagic.io/pricing/ + docs.codemagic.io/billing/pricing/ 두 공식 소스 모두 변경 없이 일치 |
+| 3 | `publishing.google_play`/`publishing.app_store_connect` 스키마에 deprecated·변경 필드 없음 | ⚠️ DISPUTED(경미, SKILL.md에는 영향 없음) | SKILL.md가 실제 참조하는 필드(`track`, `submit_as_draft`, `rollout_fraction`, `submit_to_testflight`, `auth: integration`)는 모두 현재도 유효. 다만 같은 `app_store_connect` 섹션 내 SKILL.md가 다루지 않는 별도 인증 방식(`app_specific_password`)이 공식적으로 deprecated 처리되어 있음이 확인됨 — SKILL.md 서술 자체에는 오류 없음, 향후 인증 필드 추가 시 유의 |
+
+**핵심 판정**: 3개 중 2 VERIFIED, 1 DISPUTED이나 이는 SKILL.md가 다루는 필드 범위 밖의 사안(참고용)으로 실질적 수정 불필요. Codemagic 문서·요금·스키마가 최초 검증일(2026-06-10) 대비 변경되지 않았음을 확인.
+
+### 최초 수행 기록 (2026-06-10, 참고용 — 아래 내용은 그대로 보존)
 
 **수행일**: 2026-06-10
 **수행자**: skill-tester → general-purpose (도메인 에이전트 미등록으로 general-purpose 대체)
@@ -171,14 +206,16 @@ status: PENDING_TEST
 | 내용 정확성 | ✅ (12 클레임 중 11 VERIFIED, 1 DISPUTED 수정 반영) |
 | 구조 완전성 | ✅ (frontmatter, 소스, 검증일, 코드 예시, 흔한 실수 모두 포함) |
 | 실용성 | ✅ (공식 샘플 기반 실제 사용 가능한 yaml) |
-| 에이전트 활용 테스트 | ✅ (2026-06-10 skill-tester 수행, 3/3 PASS) |
-| **최종 판정** | **PENDING_TEST** (빌드 설정 실사용 필수 카테고리 — content test PASS이나 실사용 검증 전까지 유지) |
+| 에이전트 활용 테스트 | ✅ (2026-06-10 최초 3/3 PASS + 2026-08-11 재검증 3/3 PASS, 누적 6/6) |
+| 클레임 재검증(2026-08-11) | 2 VERIFIED, 1 DISPUTED(SKILL.md 미참조 필드 관련, 실질 영향 없음) — 최초 검증일 대비 문서·요금·스키마 변경 없음 |
+| **최종 판정** | **PENDING_TEST 유지** (빌드 설정 실사용 필수 카테고리 — content test·재검증 모두 PASS이나 실제 Codemagic 빌드 실행 검증 전까지 APPROVED 전환 보류) |
 
 ---
 
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester로 2단계 에이전트 활용 테스트 수행 (2026-06-10 완료, 3/3 PASS)
+- [✅] 핵심 클레임 재검증 — 문서·요금·스키마 최신성 확인 (2026-08-11 완료, 2 VERIFIED + 1 경미 DISPUTED — SKILL.md 실질 영향 없음)
 - [❌] 실제 Unity 6.0 LTS 또는 6.3 LTS 프로젝트로 빌드 성공 여부 확인 (실사용 검증) — **차단 요인**: 실사용 필수 카테고리 APPROVED 전환 필수 조건. 실제 Codemagic 빌드 성공 확인 후 APPROVED 전환 가능
 - [❌] Unity Cloud Build와의 비교 섹션 추가 검토 (필요 시) — **선택 보강**: 차단 요인 아님, 도입 검토 시 유용할 수 있음
 
@@ -192,3 +229,4 @@ status: PENDING_TEST
 |------|------|-----------|--------|
 | 2026-06-10 | v1 | 최초 작성 — Codemagic Unity Android/iOS 워크플로우, 라이선스, 자동 배포, 트리거, 흔한 실수 전반 | skill-creator |
 | 2026-06-10 | v1 | 2단계 실사용 테스트 수행 (Q1 Google Play 내부 테스트 배포 구성 / Q2 라이선스 시트 소진 원인·해결 / Q3 linux_x2 iOS 불가·TestFlight 설정) → 3/3 PASS, PENDING_TEST 유지 (빌드 설정 실사용 필수 카테고리) | skill-tester |
+| 2026-08-11 | v1 | 2단계 실사용 테스트 재수행 (Q1 keystore 관리 / Q2 TestFlight-only 자동배포 / Q3 라이선스 시트 소진 예방) → 3/3 PASS. 핵심 클레임 3개 WebSearch 재검증 → 2 VERIFIED, 1 경미 DISPUTED(SKILL.md 미참조 필드) — 문서·요금·스키마 변경 없음 확인, PENDING_TEST 유지(빌드 설정 실사용 필수 카테고리, 실제 빌드 미실행) | skill-tester |

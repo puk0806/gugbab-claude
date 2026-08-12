@@ -197,16 +197,15 @@ WebSearch로 2026년 기준 production-ready 버전을 확인한다. 다음 영�
 
 ## 5. 다음 단계 — 에이전트 호출 순서
 
-1. `product-planner` (PRD 없으면) — 한 줄 아이디어 → PRD 작성
-2. `mvp-scope-planner` — MVP Phase 1·2·3 분해
-3. `business-domain-analyst` — DDD 도메인 모델·바운디드 컨텍스트
-4. `database-architect` — ERD + 인덱스 + 마이그레이션 전략
-5. `{language}-backend-architect` — 모듈 구조·레이어 설계
-6. `frontend-architect` — 라우팅·상태·디자인 시스템 구조
-7. `api-spec-designer` — OpenAPI 3.x 스펙
-8. `ui-ux-designer` — 와이어프레임·디자인 토큰
-9. `{language}-backend-developer` + `frontend-developer` — 구현
-10. `qa-engineer` — 테스트 전략·E2E
+1. `product-planner` (PRD 없으면) — 한 줄 아이디어 → PRD 작성 + MVP Phase 1·2·3 절단
+2. `business-domain-analyst` — DDD 도메인 모델·바운디드 컨텍스트
+3. `database-architect` — ERD + 인덱스 + 마이그레이션 전략
+4. `{language}-backend-architect` — 모듈 구조·레이어 설계
+5. `frontend-architect` — 라우팅·상태·디자인 시스템 구조
+6. `api-spec-designer` — OpenAPI 3.x 스펙
+7. `ui-ux-designer` — 와이어프레임·디자인 토큰
+8. `{language}-backend-developer` + `frontend-developer` — 구현
+9. `qa-engineer` — 테스트 전략·E2E
 11. `devops-engineer` — CI/CD·배포 자동화
 12. `security-auditor` — 출시 전 보안 점검
 

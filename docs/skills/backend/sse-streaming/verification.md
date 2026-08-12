@@ -170,3 +170,4 @@ status: APPROVED
 | 2026-04-17 | v2 | verification.md 신규 8섹션 포맷으로 마이그레이션 | 메인 대화 오케스트레이션 |
 | 2026-04-17 | v3 | WebSearch 7개 클레임 교차 검증, DISPUTED 2건 수정 (async-stream 공식 예제 미포함, Claude 이벤트 타입 목록 보완) | 메인 대화 오케스트레이션 |
 | 2026-06-20 | v4 | 버전 재검증 — axum 0.8.9, tower-http 0.7.0 확인. CorsLayer API 시그니처 변경 없음 (0.7의 Vary 헤더 동작 변경은 코드에 영향 없음). SKILL.md 버전 표기는 0.8.x 범위이므로 변경 없음 | 버전 재검증 작업 |
+| 2026-08-12 | v4 | **모델 ID 세대 정렬.** Claude Messages API 스트리밍 예제의 `claude-sonnet-4-6` → `claude-sonnet-5` 교체(1곳). Sonnet 4.6은 legacy로 호출은 되지만 현행 세대는 Sonnet 5. 샘플링 파라미터·`budget_tokens` 사용 없음 — 5 계열 400 이슈 해당 없음. axum/SSE 패턴 본문은 변경 없음. 검증일 2026-06-20 → 2026-08-12. status **APPROVED 유지** | 모델 ID 세대 정렬 |

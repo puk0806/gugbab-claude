@@ -1,8 +1,8 @@
 ---
 skill: animation
 category: frontend
-version: v4
-date: 2026-04-20
+version: v5
+date: 2026-08-11
 status: APPROVED
 ---
 
@@ -35,10 +35,10 @@ status: APPROVED
 | 스킬 이름 | `animation` |
 | 스킬 경로 | `.claude/skills/frontend/animation/SKILL.md` |
 | 최초 작성일 | 2026-03-27 |
-| 재검증일 | 2026-04-20 |
+| 재검증일 | 2026-08-11 (직전 2026-04-20) |
 | 검증자 | puk0806 |
-| 스킬 버전 | v4 |
-| 대상 버전 | motion 12.x (최신: 12.38.0 기준) |
+| 스킬 버전 | v5 |
+| 대상 버전 | motion **13.x** (최신: 13.1.0, 2026-08-10 릴리즈) |
 
 ---
 
@@ -87,6 +87,11 @@ status: APPROVED
 | Motion 설치 가이드 | https://motion.dev/docs/react-installation | ⭐⭐⭐ High | 2026-04-20 | motion/react-client 설명 포함 |
 | Motion 접근성 문서 | https://motion.dev/docs/react-accessibility | ⭐⭐⭐ High | 2026-04-20 | useReducedMotion, MotionConfig |
 | MDN CSS Animation | https://developer.mozilla.org/en-US/docs/Web/CSS/animation | ⭐⭐⭐ High | 2026-04-20 | CSS 표준 문서 |
+| Motion React 업그레이드 가이드 (재확인) | https://motion.dev/docs/react-upgrade-guide | ⭐⭐⭐ High | 2026-08-11 | motion 13 파괴적 변경 1차 소스 |
+| Motion Changelog (재확인) | https://motion.dev/changelog | ⭐⭐⭐ High | 2026-08-11 | 13.0.0 / 12.40~12.43 항목 |
+| motion npm registry 메타데이터 | https://registry.npmjs.org/motion | ⭐⭐⭐ High | 2026-08-11 | `dist-tags`·`time`·`peerDependencies` 직접 조회 (latest 13.1.0) |
+| framer-motion npm registry 메타데이터 | https://registry.npmjs.org/framer-motion | ⭐⭐⭐ High | 2026-08-11 | 별칭 패키지 버전·deprecated 플래그 확인 |
+| Motion AnimateView 문서 | https://motion.dev/docs/react-animate-view | ⭐⭐⭐ High | 2026-08-11 | React용 AnimateView 실험 상태·요구사항 |
 
 ---
 
@@ -94,7 +99,7 @@ status: APPROVED
 
 ### 3-1. 내용 정확성
 - [✅] 공식 문서와 불일치하는 내용 없음
-- [✅] 버전 정보가 명시되어 있음 (motion 12.x, 최신 12.38.0 기준)
+- [✅] 버전 정보가 명시되어 있음 (motion 13.x, 최신 13.1.0 기준 — 2026-08-11 갱신)
 - [✅] deprecated된 패턴을 권장하지 않음 (framer-motion import, motion() 함수 호출, useAnimation 레거시 표기)
 - [✅] 코드 예시가 실행 가능한 형태임
 
@@ -141,6 +146,42 @@ status: APPROVED
 | `whileTap` 요소에 tabindex="0" 자동 부여 (키보드 접근성) | VERIFIED | motion.dev changelog |
 | `motion/react-client` — Server Component에서 "use client" 없이 사용 | VERIFIED | motion.dev 설치 가이드, GitHub discussions #3184 |
 | React 19에서 `forwardRef` 불필요, ref를 일반 prop으로 전달 | VERIFIED | react.dev, 블로그 2개 소스 |
+
+---
+
+### 2026-08-11 최신화 재검증 (motion 12.38 → 13.1.0)
+
+**검증 방법**: 각 클레임을 최소 2개 독립 소스로 교차 검증.
+소스 A = npm registry 메타데이터 직접 조회(`registry.npmjs.org/motion`, `registry.npmjs.org/framer-motion`),
+소스 B = motion.dev 공식 문서(React 업그레이드 가이드 / Changelog / 설치·LazyMotion·AnimateView 문서).
+
+| # | 클레임 | 판정 | 교차 검증 근거 |
+|---|--------|------|---------------|
+| 1 | `motion` 최신 안정 버전은 **13.1.0** (2026-08-10), 13.0.0은 2026-08-05 | VERIFIED | npm `dist-tags.latest = 13.1.0`, `time` 객체의 13.0.0 = 2026-08-05 / 공식 Changelog "13.0.0 — August 5, 2026" |
+| 2 | motion 13의 유일한 파괴적 변경은 **`@emotion/is-prop-valid` optional dependency 제거** | VERIFIED | 공식 React 업그레이드 가이드 "Motion 13.0" 절 / 공식 Changelog 13.0.0 Breaking Changes 항목 |
+| 3 | 위 변경의 **하드 증거** — 12.43.0 peerDependencies에는 `@emotion/is-prop-valid: "*"`가 있고 13.1.0에는 없음 | VERIFIED | npm registry `motion/12.43.0` vs `motion/13.1.0`의 `peerDependencies` 필드 직접 비교(패키지 메타데이터 = 문서와 독립된 증거) |
+| 4 | 해결책은 `<MotionConfig isValidProp={isPropValid}>` 명시 주입 또는 합성 순서 반전(`motion.create(StyledComponent)`) | VERIFIED | 공식 React 업그레이드 가이드 코드 예제 / WebSearch로 동일 코드 재확인 |
+| 5 | motion 13에 그 외 **React API 파괴적 변경 없음** (v12도 React 변경 없음) | VERIFIED | 공식 React 업그레이드 가이드 "There are no breaking changes in Motion for React in version 12" + 13 절이 is-prop-valid만 기술 / Changelog 13.0.0 Breaking Changes 단일 항목 |
+| 6 | `framer-motion`은 **동일 버전(13.1.0)으로 계속 배포되는 별칭 패키지**이며, `motion`이 내부적으로 `framer-motion`을 의존 | VERIFIED | npm `framer-motion` `dist-tags.latest = 13.1.0` / npm `motion@13.1.0`의 `dependencies`에 `framer-motion: ^13.1.0` |
+| 7 | 단, npm registry의 `deprecated` 플래그는 걸려 있지 **않다** (설치 시 경고 없음) — 공식 문서 서술상으로만 deprecated alias | VERIFIED (주의 표기) | npm `framer-motion@13.1.0`의 `deprecated` 필드 부재 직접 확인 / 공식 문서·검색 결과는 "deprecated alias" 서술. **문서 서술과 패키지 메타데이터가 불일치하므로 SKILL.md에 주의 문구로 명시** |
+| 8 | peerDependencies는 `react`·`react-dom` `^18.0.0 \|\| ^19.0.0`이며 **optional**로 표기 | VERIFIED | npm `motion@13.1.0`의 `peerDependencies` + `peerDependenciesMeta` 직접 확인 / 공식 설치 문서는 "React 18.2 이상" 표기 |
+| 9 | 12.41.0(2026-06-23)에서 `animateView`가 Early Access·alpha → **메인 라이브러리 승격** | VERIFIED | 공식 Changelog 12.41.0 항목 / motion.dev animateView 문서 |
+| 10 | 12.43.0(2026-07-27)에서 `backgroundColor`·SVG 하드웨어 가속 추가 | VERIFIED | 공식 Changelog 12.43.0 항목 / 13.0.0 항목의 "hardware-accelerated SVG" 후속 수정 언급 |
+| 11 | React용 `AnimateView` 컴포넌트는 **아직 실험적** — Motion+ Early Access 전용, `motion@12.34.0+` **및 React canary 이상** 요구 | VERIFIED | 공식 react-animate-view 문서 "Early Access API, expect changes" + 요구사항 명시 / WebSearch 재확인 |
+| 12 | LazyMotion 번들 수치(`motion` ~34kb / `LazyMotion`+`m` 초기 ~4.6kb) 현행 유지 | VERIFIED | 공식 LazyMotion 문서 재확인(수치 변동 없음) / 기존 v4 검증 결과와 일치 |
+| 13 | 기존 API(`motion/react` import, `motion.create()`, `AnimatePresence` mode 3종, variants·staggerChildren, `useAnimate`·`useScroll`·`useTransform`·`useSpring`·`useInView`, `motion/react-client`)는 **전부 현행 유효** | VERIFIED | 공식 설치 문서에서 `motion/react`·`motion/react-client` 재확인 / 업그레이드 가이드·Changelog에 해당 API 변경·제거 기록 없음 |
+
+**판정 요약**: VERIFIED 13 / DISPUTED 0 / UNVERIFIED 0 (클레임 7은 주의 표기 동반)
+
+**SKILL.md 반영 사항**:
+- frontmatter description·제목 `motion 12.x` → `motion 13.x`, 검증일 2026-08-11, 소스 URL 3건 추가
+- "motion 13 업그레이드 (v12 → v13)" 절 신설 — `@emotion/is-prop-valid` 파괴적 변경, 영향 범위(CSS-in-JS 사용자 한정), 해결책 2가지
+- framer-motion 별칭 패키지 현황 + npm deprecated 플래그 부재 주의 문구 추가
+- React 요구 버전(설치 문서 18.2+ vs npm peer ^18||^19) 병기
+- "최근 버전 변경 요약 (v12.40 → v13.1)" 표 + `animateView`/`AnimateView` 절 신설 (React용은 프로덕션 미도입 권고)
+
+**기존 내용 중 무효화된 것**: 없음. `references/REFERENCE.md`의 "motion 12.36+" 표기는
+*기능 도입 버전* 마커이므로 13.x에서도 정확 — 수정 불필요.
 
 ---
 
@@ -218,3 +259,4 @@ m.div 사용법, 비동기 loadFeatures 패턴, strict 모드까지 포함. 올�
 | 2026-04-14 | v2 | frontend-architect 활용 테스트 APPROVED | frontend-architect 에이전트 |
 | 2026-04-17 | v3 | verification.md 8섹션 포맷 마이그레이션 | 메인 대화 |
 | 2026-04-20 | v4 | WebSearch+WebFetch 조사 기반 전면 재작성. motion 12.38.0 기준 반영. layout="x"/"y", dragSnapToOrigin 축별, skipInitialAnimation, whileTap 키보드 접근성, motion/react-client, useAnimate 권장 패턴, 교차 검증 17개 클레임 추가 | puk0806 |
+| 2026-08-11 | v5 | **메이저 버전 갭 최신화 (12.38.0 → 13.1.0)**. npm registry 메타데이터 + motion.dev 공식 문서 2소스 교차 검증 13개 클레임 전항목 VERIFIED. motion 13 파괴적 변경(`@emotion/is-prop-valid` 제거 → `MotionConfig isValidProp`) 절 신설, framer-motion 별칭 현황 + npm deprecated 플래그 부재 주의 표기, v12.40~13.1 변경 요약표, `animateView`/React `AnimateView`(실험적) 절 추가. **기존 API 전량 현행 유효 — 본문 유지**. status APPROVED 유지 (기존 테스트 2건의 대상 패턴 stagger·LazyMotion 모두 무변경) | 최신화 재검증 |

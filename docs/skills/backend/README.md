@@ -35,6 +35,7 @@ Rust · Java · Python · Claude Code CLI 백엔드 스킬 모음 (총 50종).
 | 스킬 | 설명 | 검증 |
 |------|------|------|
 | [spring-boot-gradle-setup](../../../.claude/skills/backend/spring-boot-gradle-setup/SKILL.md) | Spring Boot 프로젝트 초기 셋업 — 레거시(SB 2.5/Java 11/WAR)·모던(SB 3.4+/Java 21/Jar) | [→](./spring-boot-gradle-setup/verification.md) |
+| [spring-boot-2-to-3-migration](../../../.claude/skills/backend/spring-boot-2-to-3-migration/SKILL.md) | SB 2.5(Java 11) → 3.x 마이그레이션 — Phase 0~9 게이트, javax→jakarta, Security 5→6, Tomcat 10, 롤백 기준 | [→](./spring-boot-2-to-3-migration/verification.md) |
 | [mybatis-mapper-patterns](../../../.claude/skills/backend/mybatis-mapper-patterns/SKILL.md) | MyBatis Mapper 작성 패턴 — 인터페이스·XML 매퍼, 동적 SQL, resultMap, TypeHandler | [→](./mybatis-mapper-patterns/verification.md) |
 | [spring-multi-datasource-oracle-mysql](../../../.claude/skills/backend/spring-multi-datasource-oracle-mysql/SKILL.md) | Oracle + MySQL 멀티 데이터소스 — SqlSessionFactory 분리, 트랜잭션 매니저 설정 | [→](./spring-multi-datasource-oracle-mysql/verification.md) |
 | [hikaricp-tuning-oracle-mysql](../../../.claude/skills/backend/hikaricp-tuning-oracle-mysql/SKILL.md) | HikariCP 커넥션 풀 튜닝 — Oracle/MySQL 필수 파라미터, Leak Detection, 모니터링 | [→](./hikaricp-tuning-oracle-mysql/verification.md) |
@@ -65,6 +66,7 @@ Rust · Java · Python · Claude Code CLI 백엔드 스킬 모음 (총 50종).
 | [spring-security-6-jwt-jjwt12](../../../.claude/skills/backend/spring-security-6-jwt-jjwt12/SKILL.md) | Spring Security 6.x + jjwt 0.12.x 모던 JWT 인증 — SecurityFilterChain Bean | [→](./spring-security-6-jwt-jjwt12/verification.md) |
 | [springdoc-openapi-3](../../../.claude/skills/backend/springdoc-openapi-3/SKILL.md) | Springdoc OpenAPI 2.x 모던 API 문서화 — Spring Boot 3.x, OpenAPI 3.1, Swagger UI | [→](./springdoc-openapi-3/verification.md) |
 | [redis-redisson-modern](../../../.claude/skills/backend/redis-redisson-modern/SKILL.md) | Redisson 3.x 모던 — Spring Boot 3.x + Java 17+, RedissonClient 자동 구성 | [→](./redis-redisson-modern/verification.md) |
+| [redis-redisson-4](../../../.claude/skills/backend/redis-redisson-4/SKILL.md) | Redisson 4.x — 3.x→4.x Breaking Change(Config 최상위 이동·모듈 분리), Spring Boot 3.x/4.x 호환 매트릭스 | [→](./redis-redisson-4/verification.md) |
 | [aws-sdk-v2-s3-rekognition](../../../.claude/skills/backend/aws-sdk-v2-s3-rekognition/SKILL.md) | AWS SDK Java v2 S3 + Rekognition 모던 — 빌더 API, 비동기 클라이언트 | [→](./aws-sdk-v2-s3-rekognition/verification.md) |
 
 ---

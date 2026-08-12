@@ -1,5 +1,8 @@
 # Memory Index
 
+## Reference
+- [comux/copad 자료+사용법](reference_comux_copad.md) — AI 에이전트용 tmux 스타일 멀티플렉서. 사용자 맥 설치 완료(2026-08-07), 레포별 세션 분리·단축키·링크 정리
+
 ## User
 - [사용자 프로필](user_profile.md) — 풀스택 개발자. 프론트엔드(lfos-ui Next.js 모노레포 + lf-ui CRA 레거시) + Java 레거시 백엔드(SB 2.5+MyBatis+Oracle+MySQL+Redisson 2+EhCache 2+AWS SDK v1) 운영
 
@@ -25,10 +28,12 @@
 - [하네스 평가 & 훅 다이어트 완료](project_hook_diet_plan.md) — 2026-07-04 5단계 완료 + PR #9 머지. 2026-07-10 메모리 개편(memory-stop-guard 삭제)으로 훅 22종. 후순위 중 플러그인 전환은 2026-07-09 계획 수립 착수
 - [메모리 저장 구조 (2026-07-10 개편)](project_memory_architecture.md) — 전역 실제 디렉토리 = 1차 저장, 레포 memory/ = 워킹트리 미러, 자동 커밋 전면 폐지(memory·exports), Y/N 판별 = 레포 memory/ 존재 여부
 - [Claude 구독 중계 서버(05_gugbab-claude-relay) 계획](project_claude_relay_plan.md) — Vercel Sandbox+claude -p 구독 인증 SSE 중계. 스킬 2종 APPROVED(2026-07-03), 스캐폴딩 미착수
+- [전수검사·정리 (2026-08-11)](project_full_audit_2026-08-11.md) — 스킬 209·에이전트 67 전수 감사, 에이전트 4종 정리(67→63), 긴급 스킬 7종 갱신, UPDATE 백로그 12건
+- [doctor 컨텍스트 최적화 (2026-08-10)](project_doctor_context_optimization.md) — rules 5종 paths 스코핑·auto 모드 적용, 스킬 209종 목록 미노출 발견(정리 작업 1단계)
 - [project-install.sh 이식 아키텍처](project_install_architecture.md) — 10개 템플릿(0~9), JAVA_SKILLS_* 필터, scripts/gen-settings.js로 settings.json 생성
 - [프로젝트 scope 전용 원칙](project_scope_only.md) — gugbab-claude 모든 산출물은 프로젝트 scope에만, 글로벌(~/.claude) 설정 금지
 - [MCP 미사용 결정](project_mcp_decision.md) — WebSearch/WebFetch만 사용, 팀 이식성 우선
-- [Claude Code 설치 환경·npm SSL 우회](project_claude_install_environment.md) — 단일 npm-global 설치(2.1.218, 2026-07-27 중복 해소), npm tgz가 SELF_SIGNED_CERT로 막히면 curl 우회 절차 사용
+- [Claude Code 설치 환경·npm SSL 우회](project_claude_install_environment.md) — 단일 nvm-global 설치(2.1.226, 2026-08-10 이중화 재해소), 업데이트 후 버전 안 바뀌면 .npm-global 중복 의심, npm tgz가 SELF_SIGNED_CERT로 막히면 curl 우회 절차 사용
 - [PDF 빈칸 뚫기 워크플로우](project_pdf_blank_workflow.md) — 반복 요청 작업(첫 건 2026-07-13 종결). 글자(char) 단위 판정·줄별 분리·침범 금지 6대 주의사항 + 검증 6종. 파일은 사용 후 삭제됨 — 재요청 시 메모리 기준 재작성, 미세 침범 개선 반영해 시작
 - [PDF 근무표 양식 생성 워크플로우](project_pdf_schedule_form_workflow.md) — 반복 요청 작업(첫 건 2026-07-15 수용). 손글씨 표 사진 → PyMuPDF 재현: A4 가로·홀/주방 8행·굵은 구분선·화목토 교대 음영. 스크립트 전문 포함(파일 삭제 후 재작성용), 행 수는 매번 질문으로 확정
 

@@ -15,6 +15,7 @@ status: APPROVED
 | 스킬 이름 | `dream-image-generation` |
 | 스킬 경로 | `.claude/skills/frontend/dream-image-generation/SKILL.md` |
 | 검증일 | 2026-05-15 |
+| 모델 ID 한정 재감사일 | 2026-08-11 — 변경 없음 (아래 §8 참조) |
 | 검증자 | skill-creator (자동) |
 | 스킬 버전 | v1 |
 
@@ -186,3 +187,4 @@ status: APPROVED
 | 2026-05-15 | v1 | 최초 작성 (DALL-E 3/2 · Stability AI · Imagen 4 · 백엔드 프록시 · IndexedDB Blob · 한국어 처리 · 안전 가드) | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 DALL-E 3 size 허용값 / Q2 한국어 변환 권장 이유 / Q3 백엔드 프록시 이유) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리 정책) | skill-tester |
 | 2026-06-20 | v1 | PENDING_TEST → APPROVED 재판정 — API 사용법·보안 패턴 스킬로 재분류, content test 3/3 PASS 기반 APPROVED 전환 | skill-tester |
+| 2026-08-11 | v1 | **모델 ID 정기 감사 — 변경 없음.** SKILL.md §6.2의 유일한 Claude 모델 ID `claude-haiku-4-5`가 `.claude/rules/agent-design.md` 기준 현행임을 확인. 나머지 모델 ID는 이미지 생성 API(DALL-E 3/2·Stability·Imagen 4)로 이번 감사 범위 밖. SKILL.md 미수정, 전체 검증일(2026-05-15)·status(APPROVED) 유지 | 모델 ID 정기 감사 |

@@ -47,7 +47,7 @@ maxTurns: 15
 | few-shot 예시 | 사용된 예시 묶음 (경로 또는 본문) | 권장 |
 | 모델 응답 샘플 | 평가할 테스트 케이스별 응답 (있으면 더 정확) | 선택 |
 | 프롬프트 버전 | v0.x / 날짜 등 식별자 | 필수 |
-| 대상 모델 | claude-sonnet-4-6 / opus-4-6 등 | 필수 |
+| 대상 모델 | claude-sonnet-5 / claude-opus-5 등 | 필수 |
 | 평가 강도 | 표준 / 엄격 (출시 직전 모드) | 선택 |
 
 파일 경로가 주어지면 Read로 전체를 읽는다. 본문 직접 입력이면 그대로 분석한다.
@@ -106,7 +106,7 @@ maxTurns: 15
 ---
 date: YYYY-MM-DD
 prompt_version: v0.x
-model: claude-sonnet-4-6
+model: claude-sonnet-5
 evaluator: dream-interpretation-prompt-tester
 verdict: PASS | NEEDS_REVISION | FAIL
 ---

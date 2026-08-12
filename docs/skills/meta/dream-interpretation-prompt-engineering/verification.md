@@ -2,7 +2,7 @@
 skill: dream-interpretation-prompt-engineering
 category: meta
 version: v1
-date: 2026-05-14
+date: 2026-08-11
 status: APPROVED
 ---
 
@@ -14,10 +14,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `dream-interpretation-prompt-engineering` |
 | 스킬 경로 | `.claude/skills/meta/dream-interpretation-prompt-engineering/SKILL.md` |
-| 검증일 | 2026-05-14 |
-| 검증자 | skill-creator |
+| 검증일 | 2026-08-11 (최초 2026-05-14) |
+| 검증자 | skill-creator (최초) / 모델 ID 정기 감사 (2026-08-11) |
 | 스킬 버전 | v1 |
-| 대상 모델 | Claude Opus 4.7 / Sonnet 4.6 / Haiku 4.5 (2026-05 기준) |
+| 대상 모델 | Claude Opus 4.8 / Sonnet 4.6 / Haiku 4.5 (`.claude/rules/agent-design.md`) |
 
 ---
 
@@ -83,7 +83,10 @@ status: APPROVED
 | C1 | `cache_control: {type: "ephemeral"}` API 형식 | **VERIFIED** | 공식 docs + LiteLLM/Bedrock 문서 일치 |
 | C2 | 5분 TTL 기본, `ttl: "1h"` 옵션 | **VERIFIED** | 공식 docs + dev.to 2026 가이드 일치 |
 | C3 | Sonnet 4.6 최소 캐시 토큰 = 1,024 | **VERIFIED** | 공식 docs + apiyi 트러블슈팅 가이드 일치 |
-| C4 | Opus 4.7 / Haiku 4.5 최소 캐시 토큰 = 4,096 | **VERIFIED** | 공식 docs 명시 |
+| C4 | ~~Opus 4.7 / Haiku 4.5 최소 캐시 토큰 = 4,096~~ | **DISPUTED (2026-08-11 재검증)** | 공식 prompt-caching 표 기준 Opus 4.7은 **2,048**, Haiku 4.5만 4,096. Opus 4.7 부분이 오류였음 |
+| C4' | 최소 캐시 토큰: Opus 4.8 = 1,024 / Opus 4.7 = 2,048 / Opus 4.6·4.5 = 4,096 / Sonnet 4.6·4.5 = 1,024 / Haiku 4.5 = 4,096 | **VERIFIED (2026-08-11)** | 공식 prompt-caching 표 (WebFetch 직접 인용) + 번들 `claude-api` 스킬 레퍼런스 교차 확인 |
+| C5 | 대상 모델 Opus 계열 현행 ID는 `claude-opus-4-8` | **VERIFIED (2026-08-11)** | `.claude/rules/agent-design.md` + 공식 model-deprecations |
+| C6 | `claude-sonnet-4-20250514`·`claude-opus-4-20250514`는 2026-06-15 retired, `claude-opus-4-1-20250805`는 2026-08-05 retired | **VERIFIED (2026-08-11)** | 공식 model-deprecations 페이지 + 교차 검색 |
 | C5 | Cache write 1.25x / read 0.1x 가격 | **VERIFIED** | 공식 docs + finout 가격 가이드 일치 |
 | C6 | few-shot 3–5개 권장, `<example>` 태그 | **VERIFIED** | 공식 best-practices `Use examples effectively` 명시 |
 | C7 | role prompting을 system에 두는 권고 | **VERIFIED** | 공식 best-practices `Give Claude a role` + 검색 결과 다수 |
@@ -178,3 +181,5 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-05-14 | v1 | 최초 작성. 공식 docs 기반 + 한국 안전 자원(109 통합) 정정 반영 | skill-creator |
 | 2026-05-14 | v1 | 2단계 실사용 테스트 수행 (Q1 안전가드 system 배치 이유 / Q2 109 vs 1577-0199 구분 / Q3 Haiku 캐시 미스 원인·해결) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-08-11 | v1 | **모델 ID 정기 감사.** 헤더 "대상 모델" `Claude Opus 4.7` → `Claude Opus 4.8`. 최소 캐시 토큰 절(§6) 정정 — 기존 "Opus 4.7 = 4,096"은 오류로, Opus 4.8=1,024 / 4.7=2,048 / 4.6·4.5=4,096 / Haiku 4.5=4,096으로 교체. 함정 §9의 retired 모델 ID 안내를 "작동하지 않을 수 있다" → 실제 retired 사실로 현행화. 본문 코드의 `claude-sonnet-4-6`은 현행이라 미변경. Q3 테스트 근거(Haiku 4.5=4,096, Sonnet 4.6=1,024)는 정정 후에도 그대로 유효. status는 APPROVED 유지 | 모델 ID 정기 감사 |
+| 2026-08-12 | v1.1 | **모델 ID 세대 정렬.** 헤더 "대상 모델" `Claude Opus 4.8 / Sonnet 4.6 / Haiku 4.5` → `Claude Opus 5 / Sonnet 5 / Haiku 4.5`(Haiku는 현행 유지). 본문 캐싱 예제 코드의 `claude-sonnet-4-6` → `claude-sonnet-5`. §6 최소 캐시 토큰 표에 **Opus 5 = 512** 행 추가(Opus 4.8 대비 절반), Sonnet 5를 1,024 행에 편입, 임계값이 세대 순으로 단조롭지 않다는 주의 추가. 비용 효과 절 기준 모델 Sonnet 4.6 → Sonnet 5. 함정 §9의 모델 ID 하드코딩 항목을 현행 별칭(`claude-opus-5`·`claude-sonnet-5`·`claude-haiku-4-5`) 기준으로 재작성하고 4.8/4.6을 legacy로 표기. 샘플링 파라미터·`budget_tokens` 사용 없음 — 5 계열 400 이슈 해당 없음. 검증일 2026-08-11 → 2026-08-12. status **APPROVED 유지** | 모델 ID 세대 정렬 |

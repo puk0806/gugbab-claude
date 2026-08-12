@@ -14,10 +14,20 @@ disable-model-invocation: true
 > - https://github.com/actions/upload-artifact
 > - https://github.com/actions/checkout
 > - https://securitylab.github.com/resources/github-actions-preventing-pwn-requests/
+> - https://github.blog/changelog/2026-06-18-safer-pull_request_target-defaults-for-github-actions-checkout/
 >
-> 검증일: 2026-04-29
+> 검증일: 2026-08-11
 
-> 주의: 이 문서는 2026-04 기준으로 작성되었습니다. actions/checkout@v5, actions/cache@v4, actions/upload-artifact@v4, actions/github-script@v7, dorny/paths-filter@v3, thollander/actions-comment-pull-request@v3 기준이며, 각 액션의 v6/v5/v4 신규 메이저는 출시되었으나 본 문서는 v5/v4 LTS 라인을 기준으로 합니다 (프로젝트의 다른 워크플로우와 버전 일치).
+> 주의: 이 문서는 2026-08 기준 최신 메이저 버전으로 작성되었습니다.
+> `actions/checkout@v7`(7.0.1, 2026-07-20), `actions/cache@v6`(6.1.0), `actions/upload-artifact@v7`(7.0.1),
+> `actions/download-artifact@v8`(8.0.1), `actions/setup-node@v7`(7.0.0), `actions/github-script@v9`(9.0.0),
+> `dorny/paths-filter@v4`(4.0.3), `pnpm/action-setup@v6`(6.0.10), `peter-evans/create-pull-request@v8`(8.1.1),
+> `thollander/actions-comment-pull-request@v3`(3.0.1) 기준입니다.
+
+> **보안 필독 — actions/checkout v7 기본값 변경 (2026-06-18):** `pull_request_target` 및
+> `workflow_run`(pull_request 계열 이벤트 트리거) 워크플로우에서 **포크 PR 코드 체크아웃이 기본 차단**됩니다.
+> 2026-07-20부터 v2~v6 지원 메이저에도 백포트되어, `@v5` 같은 부동 태그를 쓰던 기존 시각 회귀 워크플로우도 그대로 영향을 받습니다.
+> 시각 회귀는 `pull_request_target`을 쓰고 싶어지는 대표 사례라 특히 주의해야 합니다 — 섹션 2·7 참조.
 
 > 주의: 본 스킬은 시각 회귀 **CI 파이프라인 구성**에만 집중합니다. Playwright `toHaveScreenshot` 사용법, Storybook test-runner 설정 자체는 `frontend/storybook-visual-testing` 스킬을, 일반 CI 패턴은 `devops/github-actions` 스킬을 참조하세요.
 
@@ -107,8 +117,8 @@ jobs:
       mui: ${{ steps.filter.outputs.mui }}
       radix: ${{ steps.filter.outputs.radix }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: dorny/paths-filter@v3
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v4
         id: filter
         with:
           filters: |
@@ -122,7 +132,9 @@ jobs:
               - 'packages/tokens/**'
 ```
 
-> 주의: `pull_request_target` 트리거는 **사용 금지**. 포크 PR의 코드를 baseline으로 인정하면 시크릿 유출 + 임의 코드 실행으로 이어집니다 (자세한 내용은 섹션 8).
+> 주의: `pull_request_target` 트리거는 **사용 금지**. 포크 PR의 코드를 baseline으로 인정하면 시크릿 유출 + 임의 코드 실행으로 이어집니다 (자세한 내용은 REFERENCE의 섹션 8-1).
+>
+> 2026-06-18 `actions/checkout@v7`부터는 이 실수가 **액션 차원에서 차단**됩니다 — `pull_request_target`·`workflow_run`(pull_request 계열)에서 포크 PR의 head/merge ref·SHA 또는 포크 `repository:`를 체크아웃하려 하면 액션이 실패합니다(예외 입력 `allow-unsafe-pr-checkout`, 기본 `false`). 2026-07-20 백포트로 v2~v6 부동 태그에도 적용되므로, 이 패턴을 쓰던 기존 시각 회귀 워크플로우는 **버전을 올리지 않아도 갑자기 실패**할 수 있습니다. 해결책은 `allow-unsafe-pr-checkout: true`를 켜는 것이 아니라, 시각 테스트는 시크릿이 전달되지 않는 `pull_request`에서 돌리고 결과 코멘트만 별도 신뢰 잡으로 분리하는 것입니다.
 
 ---
 
@@ -145,15 +157,15 @@ jobs:
         # changes 결과로 동적 매트릭스를 만드는 것은 복잡하므로
         # 빌드는 양쪽 모두 수행하고, 시각 테스트만 변경된 쪽에서 돌립니다.
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Use Node 22
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: 'pnpm'
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 9
 
@@ -163,7 +175,7 @@ jobs:
         run: pnpm --filter ${{ matrix.app }} build:storybook
 
       - name: Upload storybook-static artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: storybook-static-${{ matrix.app }}
           path: apps/${{ matrix.app }}/storybook-static
@@ -172,10 +184,11 @@ jobs:
 ```
 
 **핵심 포인트:**
-- `actions/upload-artifact@v4`: v4부터 동일 이름의 artifact 덮어쓰기 불가. matrix와 함께 쓸 때는 이름에 `${{ matrix.app }}`를 포함해야 충돌 없음
+- `actions/upload-artifact@v7`: v4 이후 artifact는 **불변(immutable)** 이라 여러 잡이 같은 이름으로 업로드할 수 없다. matrix와 함께 쓸 때는 이름에 `${{ matrix.app }}` 같은 접두·접미를 포함해야 충돌 없음 (같은 이름을 굳이 갱신해야 하면 `overwrite: true`)
 - `if-no-files-found: error`: 빌드 결과물이 비었으면 즉시 실패 (default는 `warn`)
 - `retention-days`: 1~90 사이. 시각 회귀 결과물은 PR이 머지되기 전까지만 필요하므로 7일 권장
-- `cache: 'pnpm'`은 `actions/setup-node@v4`의 내장 캐시를 활용 (별도 `actions/cache` 불필요)
+- v7에서 추가된 `archive: false`(단일 파일을 zip 없이 직접 업로드)는 Storybook 정적 빌드처럼 **디렉토리**를 올릴 때는 쓰지 않는다 — 기본값 `archive: true` 유지
+- `cache: 'pnpm'`은 `actions/setup-node@v7`의 내장 캐시를 활용 (별도 `actions/cache` 불필요). `pnpm/action-setup@v6`의 `version`은 `package.json`에 `packageManager`/`devEngines.packageManager`가 있으면 생략 가능
 
 ---
 
@@ -200,14 +213,14 @@ jobs:
           - app: storybook-radix
             run: ${{ needs.changes.outputs.radix == 'true' }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: 'pnpm'
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 9
 
@@ -220,14 +233,14 @@ jobs:
 
       - name: Download storybook-static
         if: matrix.run == 'true'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: storybook-static-${{ matrix.app }}
           path: apps/${{ matrix.app }}/storybook-static
 
       - name: Restore visual baseline cache
         if: matrix.run == 'true'
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: apps/${{ matrix.app }}/__snapshots__
           key: vrt-baseline-${{ matrix.app }}-${{ runner.os }}-${{ hashFiles(format('apps/{0}/__snapshots__/**', matrix.app)) }}
@@ -248,7 +261,7 @@ jobs:
 
       - name: Upload test-results on failure
         if: failure() && matrix.run == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: vrt-results-${{ matrix.app }}
           path: |
@@ -301,13 +314,13 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.head_ref || github.ref_name }}
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with: { node-version: 22, cache: 'pnpm' }
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with: { version: 9 }
       - run: pnpm install --frozen-lockfile
 
@@ -322,7 +335,7 @@ jobs:
             "test-storybook -u"
 
       - name: Create PR with new baselines
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           title: "chore(vrt): update baseline for ${{ inputs.app }}"
           branch: vrt/baseline-${{ inputs.app }}
@@ -361,7 +374,9 @@ jobs:
 
 ### actions/github-script로 코멘트
 
-`actions/github-script@v7`은 octokit이 사전 주입돼 별도 의존성 없이 PR 코멘트를 작성할 수 있습니다.
+`actions/github-script@v9`는 octokit이 사전 주입돼 별도 의존성 없이 PR 코멘트를 작성할 수 있습니다.
+
+> 주의: v9는 `@actions/github` v9(ESM 전용)로 올라가면서 스크립트 안의 `require('@actions/github')`가 더 이상 동작하지 않습니다. 또 주입되는 `getOctokit` 인자를 `const`/`let`으로 재선언하면 `SyntaxError`가 납니다. v7/v8에서 올릴 때 이 두 가지만 확인하면 아래 예시 코드는 그대로 동작합니다.
 
 ```yaml
   comment-pr:
@@ -373,11 +388,13 @@ jobs:
       actions: read
     steps:
       - name: Download all vrt-results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: artifacts
           pattern: vrt-results-*
           merge-multiple: false
+          # digest-mismatch: error (기본값) — 다운로드 해시 불일치 시 실패.
+          # skip-decompress: true 를 주지 않는 한 zip은 자동 해제된다.
 
       - name: Build comment body
         id: body
@@ -404,7 +421,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Comment PR
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const body = `${{ steps.body.outputs.body }}`;
@@ -444,7 +461,7 @@ jobs:
           comment-tag: vrt-comment   # 같은 태그면 갱신
 ```
 
-> 주의: `actions/github-script`는 v7이 안정. v8(Node 24)도 출시되어 있지만 본 문서는 v7 기준입니다. `thollander/actions-comment-pull-request`는 v3.0.1이 최신.
+> 주의: `actions/github-script`는 v9(9.0.0)가 최신입니다. v8부터 스크립트가 Node 24에서 실행되며 Actions Runner 2.327.1 이상이 필요합니다(self-hosted 러너 확인 필요). `thollander/actions-comment-pull-request`는 v3.0.1이 여전히 최신입니다.
 
 ---
 

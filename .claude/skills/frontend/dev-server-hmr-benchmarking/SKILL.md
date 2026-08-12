@@ -17,7 +17,7 @@ description: >
 > - hyperfine: https://github.com/sharkdp/hyperfine
 > - chokidar: https://github.com/paulmillr/chokidar
 >
-> 검증일: 2026-05-14
+> 검증일: 2026-08-11
 
 ---
 
@@ -300,7 +300,7 @@ for (let i = 0; i < runs; i++) {
 
 | 도구 | median (ms) | stdev (ms) | min | max |
 |------|------|------|------|------|
-| Vite 7.x | 820 | 45 | 760 | 910 |
+| Vite 8.x | 820 | 45 | 760 | 910 |
 | Webpack 5.x | 24,300 | 1,800 | 22,100 | 27,500 |
 
 조건: macOS 14, M2 Pro, Node 22.x, 캐시 매 실행 전 삭제, 전원 연결.

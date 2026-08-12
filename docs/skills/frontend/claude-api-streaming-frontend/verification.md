@@ -2,7 +2,7 @@
 skill: claude-api-streaming-frontend
 category: frontend
 version: v1
-date: 2026-05-14
+date: 2026-08-12
 status: APPROVED
 ---
 
@@ -14,9 +14,11 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `claude-api-streaming-frontend` |
 | 스킬 경로 | `.claude/skills/frontend/claude-api-streaming-frontend/SKILL.md` |
-| 검증일 | 2026-05-14 |
-| 검증자 | skill-creator |
+| 검증일 | 2026-08-12 (최초 2026-05-14) |
+| 검증자 | skill-creator (최초) / 모델 ID 정기 감사 (2026-08-11) / **5 계열 정렬 감사 (2026-08-12)** |
 | 스킬 버전 | v1 |
+| SDK 기준 버전 | `@anthropic-ai/sdk` v0.116.0 (npm latest — 2026-08-12 재확인, 변동 없음) |
+| 모델 기준 | `claude-opus-5` / `claude-sonnet-5` / `claude-haiku-4-5` |
 
 ---
 
@@ -102,15 +104,34 @@ status: APPROVED
 | 10 | SDK `stream.controller.abort()` 로 스트림 중단 | TS SDK helpers.md (GitHub) | npm/SDK 사용 가이드 | VERIFIED |
 | 11 | TS SDK 최신 버전 v0.96.0 (2026-05-13) | GitHub releases | npm registry | VERIFIED |
 | 12 | 브라우저 직접 호출은 `dangerouslyAllowBrowser: true` 필수 + API 키 노출 위험 | SDK README | OWASP 2026 / API key 다크웹 재판매 보고 | VERIFIED |
-| 13 | 최신 모델 ID: `claude-opus-4-7` / `claude-sonnet-4-6` / `claude-haiku-4-5` | Messages 문서 §Latest model | Streaming 문서 모든 예시 | VERIFIED (사용자 메시지에 등장한 `claude-sonnet-4-5`는 구버전 ID — 2026년 frontier로 보정) |
+| 13 | ~~최신 모델 ID: `claude-opus-4-7` / `claude-sonnet-4-6` / `claude-haiku-4-5`~~ | Messages 문서 §Latest model | Streaming 문서 모든 예시 | **DISPUTED (2026-08-11 재검증)** — Opus 계열 현행은 `claude-opus-4-8` |
+| 13' | 현행 모델 ID: `claude-opus-4-8` / `claude-sonnet-4-6` / `claude-haiku-4-5` | `.claude/rules/agent-design.md` | 공식 model-deprecations (retired 구 ID의 대체가 `claude-opus-4-8`) | VERIFIED (2026-08-11) |
+| 14 | 최소 캐시 토큰: Opus 4.8 = 1,024 / Opus 4.7 = 2,048 / Opus 4.6·4.5 = 4,096 / Sonnet 4.6·4.5 = 1,024 / Haiku 4.5 = 4,096 | 공식 prompt-caching 표 (WebFetch 직접 인용) | 번들 `claude-api` 스킬 prompt-caching 레퍼런스 | VERIFIED (2026-08-11) — 기존 REFERENCE.md의 "Opus 4.7/4.6/4.5 = 4,096" 표기는 오류였음 |
+| 15 | TS SDK 최신 버전 v0.116.0 | npm registry `@anthropic-ai/sdk` latest | — | VERIFIED (2026-08-11) |
 | 14 | `message_delta.usage`의 토큰은 누적값 | Streaming 문서 §Event types Warning | — | VERIFIED (공식 Warning) |
 | 15 | Messages API 요청 크기 최대 32 MB | Errors 문서 §Request size limits | — | VERIFIED |
 
 DISPUTED 처리:
 - 사용자 메시지의 "캐시 write 25% more, read 90% less" 표현 → 공식 문서는 "1.25× / 0.1×"로 표기. **SKILL에는 공식 표기로 작성**.
-- 모델 ID 예시로 들어온 `claude-sonnet-4-5-20250929` → 2026년 기준 구버전. **SKILL에는 `claude-sonnet-4-6` 등 최신 ID 사용**.
+- 모델 ID 예시로 들어온 `claude-sonnet-4-5-20250929` → 2026년 기준 구버전. **SKILL에는 5 계열 현행 ID 사용** (2026-08-12 기준 `claude-sonnet-5`).
 
 UNVERIFIED 없음.
+
+### 4-6. 2026-08-12 5 계열 정렬 감사 — 추가 클레임
+
+| # | 클레임 | 판정 | 근거 |
+|---|--------|------|------|
+| 16 | ~~현행 모델 ID `claude-opus-4-8` / `claude-sonnet-4-6`~~ | **DISPUTED (2026-08-12)** | 현행은 `claude-opus-5` / `claude-sonnet-5`. 4-8·4-6은 아직 서비스되나 **구세대** |
+| 17 | 현행 라인업: Fable 5($10/$50) / Opus 5($5/$25, 기본 권장) / Sonnet 5($3/$15, 2026-08-31까지 인트로 $2/$10) / Haiku 4.5($1/$5) | VERIFIED (2026-08-12) | 현행 모델 카탈로그 |
+| 18 | `claude-haiku-4-5`는 **여전히 현행** — 교체 대상 아님 (200K 컨텍스트 / 64K 출력) | VERIFIED (2026-08-12) | 현행 모델 카탈로그 |
+| 19 | 5 계열 + Opus 4.7/4.8에서 `temperature`/`top_p`/`top_k` → **400** | VERIFIED (2026-08-12) | 마이그레이션 가이드 breaking changes |
+| 20 | `thinking: {type:'enabled', budget_tokens:N}` → **400**, `{type:'adaptive'}` + `output_config.effort`로 대체 | VERIFIED (2026-08-12) | 마이그레이션 가이드 |
+| 21 | 마지막 assistant 턴 prefill → **400**, `output_config.format`로 대체 | VERIFIED (2026-08-12) | 마이그레이션 가이드 prefill 제거 항목 |
+| 22 | Opus 5는 사고 기본 ON, `thinking:{type:'disabled'}`는 effort `high` 이하에서만 허용(`xhigh`/`max` 병용 시 400) | VERIFIED (2026-08-12) | 마이그레이션 가이드 Breaking change 1·2 |
+| 23 | **`thinking.display` 기본값은 `"omitted"`** — 스트리밍 프론트에서는 사고 블록이 빈 문자열로 도착해 "출력 전 긴 정지"로 보임. 요약 노출은 `'summarized'` 명시 필요 | VERIFIED (2026-08-12) | 공식 thinking/effort 레퍼런스 — 본 스킬(스트리밍 UI)에 직접 영향 |
+| 24 | ~~최소 캐시 토큰 최저값은 Opus 4.8의 1,024~~ | **DISPUTED (2026-08-12)** | Opus 5·Fable 5는 **512**. 기존 목록에 5 계열 행 누락 |
+| 25 | 최소 캐시 토큰: **Opus 5·Fable 5 = 512** / Opus 4.8·Sonnet 5·Sonnet 4.6·4.5 = 1,024 / Opus 4.7 = 2,048 / Opus 4.6·4.5·Haiku 4.5 = 4,096 | VERIFIED (2026-08-12) | 공식 prompt-caching 최소 토큰 표 |
+| 26 | TS SDK 최신 버전 `@anthropic-ai/sdk` v0.116.0 (변동 없음) | VERIFIED (2026-08-12) | npm registry `/@anthropic-ai/sdk/latest` → `version` = 0.116.0 |
 
 ---
 
@@ -181,3 +202,5 @@ UNVERIFIED 없음.
 |------|------|-----------|--------|
 | 2026-05-14 | v1 | 최초 작성 (Anthropic Messages API 스트리밍 프론트엔드 패턴) | skill-creator |
 | 2026-05-14 | v1 | 2단계 실사용 테스트 수행 (Q1 SSE 파싱 / Q2 매 토큰 setState·rAF throttle / Q3 AbortController unmount·dangerouslyAllowBrowser) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-08-12 | v1 | **Claude 5 계열 정렬 감사.** ① 모델 ID: SKILL.md `claude-sonnet-4-6` → `claude-sonnet-5` 3곳(Next.js Route Handler·브라우저 직접 호출 예시), REFERENCE.md 2곳. `claude-haiku-4-5`는 현행이므로 **미변경**. ② SKILL.md delta 표에 **`thinking.display` 기본값 `"omitted"`** 경고 신설 — 스트리밍 UI에서 사고 블록이 빈 문자열로 도착해 "출력 전 긴 정지"로 보이는 문제, `display: 'summarized'` 명시 필요. `extended thinking` 표기를 `adaptive thinking`으로 정정. ③ REFERENCE.md 모델 표를 4행(Fable 5/Opus 5/Sonnet 5/Haiku 4.5) + 컨텍스트·단가 컬럼으로 재작성. ④ **"5 계열 API 규약(프록시 백엔드에서 지킬 것)" 섹션 신설** — 프록시가 요청 본문을 그대로 전달하므로 `temperature`·`top_p`·`top_k`·`budget_tokens`·prefill이 400을 유발함을 명시. ⑤ 최소 캐시 크기 목록에 **Opus 5·Fable 5 = 512** 추가, Sonnet 5 반영. ⑥ 소스 URL에 adaptive-thinking·migration-guide 추가, 검증일 2026-08-12. SDK v0.116.0은 npm 재확인 결과 변동 없음. status는 APPROVED 유지 | 5 계열 정렬 감사 |
+| 2026-08-11 | v1 | **모델 ID 정기 감사.** SKILL.md 본문 모델 ID(`claude-sonnet-4-6`)는 현행이라 미변경. references/REFERENCE.md의 `claude-opus-4-7` → `claude-opus-4-8` 교체(모델 선택 표), 최소 캐시 토큰 목록 정정(Opus 4.8=1,024 / 4.7=2,048 / 4.6·4.5·Haiku 4.5=4,096 — 기존 "Opus 4.7/4.6/4.5/Haiku 4.5=4,096" 오류). SDK 기준 버전 v0.96.0 → v0.116.0. status는 APPROVED 유지 | 모델 ID 정기 감사 |

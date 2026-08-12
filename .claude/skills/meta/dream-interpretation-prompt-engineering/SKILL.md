@@ -18,8 +18,8 @@ description: >
 > - Anthropic Prompt caching — https://platform.claude.com/docs/en/build-with-claude/prompt-caching
 > - 보건복지부 자살예방 상담전화 109 통합 — https://www.mohw.go.kr/board.es?mid=a10503010100&bid=0027
 >
-> 검증일: 2026-05-14
-> 대상 모델: Claude Opus 4.7 / Sonnet 4.6 / Haiku 4.5 (2026-05 기준 현행)
+> 검증일: 2026-08-12
+> 대상 모델: Claude Opus 5 / Sonnet 5 / Haiku 4.5 (2026-08-12 현행 세대)
 
 이 스킬은 꿈 해몽 앱(소비자용 AI 코파일럿) 백엔드에서 Claude API를 호출할 때
 시스템 프롬프트·few-shot·안전 가드·JSON 응답·캐싱을 어떻게 조립할지에 대한
@@ -234,7 +234,7 @@ client = anthropic.Anthropic()
 SYSTEM_PROMPT = """당신은 한국 전통 해몽과 융/프로이트 심리학 ... (위 템플릿)"""
 
 response = client.messages.create(
-    model="claude-sonnet-4-6",  # 비용 효율 권장 모델 (2026-05 기준)
+    model="claude-sonnet-5",  # 비용 효율 권장 모델 (2026-08-12 기준)
     max_tokens=1024,
     system=[
         {
@@ -252,15 +252,19 @@ response = client.messages.create(
 print(response.usage.cache_read_input_tokens, response.usage.cache_creation_input_tokens)
 ```
 
-**최소 캐시 토큰 임계값 (공식 docs 2026-05 기준):**
-- Claude Sonnet 4.6 / Sonnet 4.5: **1,024 tokens**
-- Claude Opus 4.7: **4,096 tokens**
+**최소 캐시 토큰 임계값 (공식 docs 2026-08-12 기준):**
+- Claude Opus 5: **512 tokens**
+- Claude Sonnet 5 / Opus 4.8 / Sonnet 4.6 / Sonnet 4.5: **1,024 tokens**
+- Claude Opus 4.7: **2,048 tokens**
+- Claude Opus 4.6 / 4.5: **4,096 tokens**
 - Claude Haiku 4.5: **4,096 tokens**
 
+> 임계값은 세대 순으로 단조롭지 않다 — Opus 5가 512로 가장 낮고 Opus 4.6·Haiku 4.5가 4,096으로 가장 높다.
+
 few-shot 3개 + 안전 가드 + 톤 규칙을 모두 포함한 시스템 프롬프트는 한국어
-기준 대략 1,500–2,500 tokens 이므로 **Sonnet 4.6 에서는 캐시 적용 가능**,
+기준 대략 1,500–2,500 tokens 이므로 **Sonnet 5 에서는 캐시 적용 가능**,
 Haiku 4.5에서는 토큰 부족으로 캐시 미스 가능성 → 프롬프트를 더 채우거나
-Sonnet 4.6 사용을 권장.
+Sonnet 5 사용을 권장.
 
 **1시간 TTL (`ttl: "1h"`) 사용 기준:**
 - 트래픽이 5분 안에 다음 요청이 안 들어오는 저-트래픽 앱 → 1h 권장
@@ -271,7 +275,7 @@ Sonnet 4.6 사용을 권장.
 "cache_control": {"type": "ephemeral", "ttl": "1h"}
 ```
 
-**비용 효과 (공식 docs 기준, Sonnet 4.6 / per 1M tokens):**
+**비용 효과 (공식 docs 기준, Sonnet 5 / per 1M tokens):**
 - 기본 input: $3
 - 5m cache write: $3.75 (1.25x)
 - 1h cache write: $6 (2x)
@@ -377,9 +381,11 @@ Sonnet 4.6 사용을 권장.
 8. **109/1577-0199 혼동** — *자살 위험*은 109 (2024 통합), *일반 정신건강
    상담*은 1577-0199. system prompt에 두 번호 역할을 명확히 분리해 기재.
 
-9. **모델 ID 하드코딩** — `claude-sonnet-4-20250514` 같은 deprecated ID는
-   2026-06-15 이후 작동하지 않을 수 있다. `claude-sonnet-4-6` 등 최신 ID 사용
-   (`agent-design.md` 참조).
+9. **모델 ID 하드코딩** — `claude-sonnet-4-20250514` / `claude-opus-4-20250514`는
+   2026-06-15에 **retired** 되어 이미 호출 실패한다(`claude-opus-4-1-20250805`도
+   2026-08-05 retired). 날짜 접미사 없는 현행 별칭 ID(`claude-opus-5`·`claude-sonnet-5`·
+   `claude-haiku-4-5`)를 사용한다. 구세대 `claude-sonnet-4-6`·`claude-opus-4-8`은
+   아직 호출 가능한 legacy지만 신규 코드에는 쓰지 않는다.
 
 10. **few-shot 예시에 PII** — 예시 안의 가상 인물 이름·번호도 실제 PII로
     오인될 수 있다. 모두 명백히 가상("홍길동", "01000000000")으로.

@@ -7,7 +7,7 @@ description: 식단 입력 → 칼로리·영양소 분석 Claude 프롬프트 �
 
 > 소스: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices
 > 참고: https://platform.claude.com/cookbook/tool-use-vision-with-tools
-> 검증일: 2026-06-26
+> 검증일: 2026-08-12
 
 ---
 
@@ -153,7 +153,7 @@ const analyzeFoodNutrition = async (
   unit: string = 'g'
 ): Promise<NutritionResult> => {
   const message = await client.messages.create({
-    model: 'claude-sonnet-4-6',
+    model: 'claude-sonnet-5',
     max_tokens: 512,
     system: `당신은 한국 식품에 정통한 영양 분석 전문가입니다. 한국 식품의약품안전처 식품영양성분 DB 기준으로 영양소를 추정하며, 응답은 반드시 JSON 형식으로만 반환합니다.`,
     messages: [{
@@ -201,7 +201,7 @@ const analyzeDayNutrition = async (
   dailyGoal: NutritionGoal
 ): Promise<DayAnalysisResult> => {
   const message = await client.messages.create({
-    model: 'claude-sonnet-4-6',
+    model: 'claude-sonnet-5',
     max_tokens: 1024,
     system: `당신은 한국 식품에 정통한 영양 분석 전문가입니다. 분석 결과를 JSON 형식으로만 반환합니다. 의료적 진단은 하지 않습니다.`,
     messages: [{

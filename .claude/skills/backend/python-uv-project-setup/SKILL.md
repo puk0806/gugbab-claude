@@ -10,9 +10,11 @@ description: >
 
 # Python uv Project Setup
 
-> 소스: https://docs.astral.sh/uv/ , https://github.com/astral-sh/uv
-> 검증일: 2026-05-15
-> 검증 버전: uv 0.11.14 (2026-05-12 릴리즈)
+> 소스: https://docs.astral.sh/uv/ , https://github.com/astral-sh/uv/releases ,
+> https://docs.astral.sh/uv/concepts/projects/init/ , https://docs.astral.sh/uv/guides/integration/github/ ,
+> https://docs.astral.sh/uv/guides/integration/docker/ , https://github.com/astral-sh/setup-uv/releases
+> 검증일: 2026-08-12
+> 검증 버전: uv 0.12.3 (2026-08-07 릴리즈) / astral-sh/setup-uv v9.0.0 / 베이스 이미지 `python:3.12-slim-trixie`
 
 ---
 
@@ -24,7 +26,7 @@ description: >
 |------|------|
 | 제작사 | Astral (ruff·ty 제작사) |
 | 언어 | Rust (코드베이스 98.1% Rust) |
-| 최신 버전 | 0.11.14 (2026-05-12) |
+| 최신 버전 | 0.12.3 (2026-08-07) |
 | 대체 대상 | `pip`, `pip-tools`, `pipx`, `poetry`, `pyenv`, `virtualenv`, `twine` |
 | 라이선스 | MIT or Apache-2.0 |
 
@@ -94,22 +96,50 @@ uv init my-project
 cd my-project
 ```
 
-**생성되는 파일:**
-- `pyproject.toml` — 프로젝트 메타데이터·의존성
+> **⚠️ 0.12.0 breaking change (2026-07-28):** `uv init`은 이제 **패키지형(packaged) 프로젝트를 기본 생성**한다.
+> `[build-system]`에 `uv_build` 백엔드를 선언하고, 소스를 `src/<project_name>/`에 배치하며,
+> `[project.scripts]` 진입점을 추가한다. 0.11 이하의 비패키지형 레이아웃(`main.py` 평면 구조)을 원하면
+> **`--no-package`를 명시**해야 한다.
+
+**생성되는 파일 (0.12.0+ 기본 = `--app` + 패키지형):**
+- `pyproject.toml` — 프로젝트 메타데이터·의존성 + `[build-system]`(`uv_build`) + `[project.scripts]`
 - `.python-version` — 기본 Python 버전 핀
 - `README.md`
-- `main.py` — 진입점 샘플
-- `.gitignore`
+- `src/my_project/__init__.py` — 소스 모듈 (구 `main.py` 자리)
+
+**생성되는 파일 (`uv init --no-package` = 0.11 이하의 기본 동작):**
+- `pyproject.toml` — `[build-system]` **없음**
+- `.python-version`
+- `README.md`
+- `main.py` — 평면 진입점 샘플
 
 ### 기존 디렉토리에서 초기화
 
 ```bash
 cd existing-project
-uv init                  # 현재 디렉토리에 pyproject.toml 생성
-uv init --bare           # main.py·README 생략, 최소 구성
-uv init --lib            # 라이브러리 구조 (src/ 레이아웃)
-uv init --app            # 애플리케이션 구조 (기본값)
+uv init                  # 현재 디렉토리에 패키지형 프로젝트 생성 (0.12.0+ 기본)
+uv init --app            # 애플리케이션 구조 (기본값) — [project.scripts] 진입점 포함
+uv init --lib            # 라이브러리 구조 — src/ 레이아웃 + py.typed, 진입점 없음
+uv init --no-package     # 빌드 시스템 없이 main.py 평면 구조 (구 기본 동작)
+uv init --bare           # pyproject.toml만 생성 — .python-version·README·VCS 초기화 모두 생략
+uv init --build-backend hatchling   # 대체 빌드 백엔드 (--package를 함축)
 ```
+
+> `--lib`는 0.12 이전에도 `src/` 레이아웃이었다. 0.12에서 바뀐 것은 **`--app`(기본값)이 패키지형이 된 것**이다.
+
+### 0.11 → 0.12 마이그레이션 노트
+
+| 항목 | 0.11 이하 | 0.12.0+ | 대응 |
+|------|-----------|---------|------|
+| `uv init` 기본 레이아웃 | 비패키지형, `main.py` | 패키지형, `src/<name>/` + `uv_build` | 구 동작 필요 시 `--no-package` |
+| 기존 프로젝트 | 영향 없음 | 영향 없음 | 이미 생성된 `pyproject.toml`은 자동 변경되지 않음 |
+| CI 스크립트 | `python main.py` 가정 | `main.py` 미생성 가능 | `uv run <script-name>` 또는 `--no-package`로 고정 |
+| 소스 배포 형식 | `.tar.bz2`/`.tar.xz` 허용 | **`.tar.gz`만 허용** | 사설 인덱스의 sdist 형식 확인 |
+| pre-release 해석 | `if-necessary-or-explicit` | `if-necessary` (안정판 우선) | 프리릴리즈 필요 시 명시적 허용 설정 |
+| `--require-hashes` | 요구사항 파일 지시자 미강제 | **강제**, MD5-only 해시 거부 | 해시 갱신 필요 |
+
+> **주의:** 위 breaking change는 *새 프로젝트 생성·해석 동작*에 대한 것이다. `uv add`·`uv sync`·`uv run`·`uv lock`·
+> `uv python install`의 기본 동작은 0.12에서도 그대로 유지된다.
 
 ### pyproject.toml 구조
 
@@ -288,9 +318,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
-          version: "0.11.14"          # 핀 권장
+          version: "0.12.3"           # uv 버전 핀 권장
           enable-cache: true          # ~/.cache/uv 자동 캐싱
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
@@ -303,13 +333,18 @@ jobs:
 
 > **`--locked`** 옵션은 lockfile이 최신이 아니면 빌드 실패시킨다. CI에서 반드시 사용한다.
 
+> **⚠️ setup-uv 태그 정책 (v8.0.0부터):** 공급망 공격 방지를 위해 **이동 태그(moving tag) 발행이 중단**됐다.
+> `@v8`·`@v8.0` 같은 축약 메이저·마이너 태그는 더 이상 resolve되지 않으므로 **풀버전 태그(`@v9.0.0`)
+> 또는 커밋 해시**를 써야 한다. 공식 uv 문서 예시는 위처럼 **커밋 해시 + `# v9.0.0` 주석** 방식을 권장한다.
+> 과거 예시에서 흔히 보이는 `astral-sh/setup-uv@v3`는 다수 메이저 뒤처진 구식 표기다.
+
 ### Docker (multi-stage)
 
 ```dockerfile
 # syntax=docker/dockerfile:1.7
-FROM ghcr.io/astral-sh/uv:0.11.14 AS uv
+FROM ghcr.io/astral-sh/uv:0.12.3 AS uv
 
-FROM python:3.12-slim AS builder
+FROM python:3.12-slim-trixie AS builder
 COPY --from=uv /uv /uvx /bin/
 
 ENV UV_LINK_MODE=copy \
@@ -328,7 +363,7 @@ COPY . .
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-dev
 
-FROM python:3.12-slim
+FROM python:3.12-slim-trixie
 COPY --from=builder /app /app
 ENV PATH="/app/.venv/bin:$PATH"
 WORKDIR /app
@@ -342,6 +377,25 @@ CMD ["python", "-m", "my_project"]
 - `--no-install-project` — 의존성만 먼저 설치하여 캐시 적중률 향상
 - `--no-dev` — 프로덕션 이미지에서 dev 그룹 제외
 - `.dockerignore`에 `.venv` 포함
+
+#### 이미지 태그 선택
+
+| 태그 계열 | 예시 | 용도 |
+|-----------|------|------|
+| distroless (uv 바이너리만) | `ghcr.io/astral-sh/uv:0.12.3` | 위 예시처럼 `COPY --from`으로 uv만 꺼내 쓸 때 |
+| Python 동봉 | `ghcr.io/astral-sh/uv:python3.12-trixie-slim`, `ghcr.io/astral-sh/uv:python3.12-alpine` | uv + Python이 함께 필요한 단일 스테이지 빌드 |
+| 베이스 이미지 | `python:3.12-slim-trixie` | uv를 `COPY --from`으로 주입할 때의 런타임 베이스 |
+
+> **태그 핀 고정 (공식 권장):** `:latest` 대신 `:{major}.{minor}.{patch}`(예: `0.12.3`)로 핀한다.
+> 재현 가능한 빌드가 필요하면 태그는 다른 커밋 SHA로 **이동될 수 있으므로** SHA256 다이제스트까지 핀하는 것이
+> 공식 문서의 최상위 권장이다:
+> ```dockerfile
+> COPY --from=ghcr.io/astral-sh/uv@sha256:<digest> /uv /uvx /bin/
+> ```
+>
+> **⚠️ Debian 코드네임 드리프트:** 공식 예시 베이스가 `bookworm` 계열에서 **`trixie` 계열로 이동**했다.
+> `python:3.12-slim`(코드네임 미지정)은 상위 이미지 갱신 시 배포판이 바뀔 수 있으므로,
+> 위처럼 코드네임을 명시한 태그(`slim-trixie`)를 쓰는 편이 안전하다.
 
 ---
 

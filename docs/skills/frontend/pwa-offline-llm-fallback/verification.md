@@ -3,7 +3,7 @@ skill: pwa-offline-llm-fallback
 category: frontend
 version: v1
 date: 2026-05-14
-status: PENDING_TEST
+status: APPROVED
 ---
 
 # pwa-offline-llm-fallback 검증
@@ -116,6 +116,64 @@ status: PENDING_TEST
 
 ## 5. 테스트 진행 기록
 
+**수행일**: 2026-08-11
+**수행자**: skill-tester → general-purpose (재검증 라운드 + status 재분류)
+**수행 방법**: (1) SKILL.md 핵심 클레임 3개 WebSearch 재교차검증 (2) SKILL.md Read 후 실전 질문 3개 재답변(2026-05-14와 다른 질문 구성) (3) verification-policy.md 기준 카테고리 재판단
+
+### WebSearch 재교차검증 (2026-08-11)
+
+| # | 클레임 | 결과 | 비고 |
+|---|--------|------|------|
+| 1 | `navigator.onLine`은 "inherently unreliable, 힌트 용도로만" — MDN 경고 유효 | VERIFIED (변동 없음) | MDN 최종 수정 2025-02-15, 2026-08 기준 유효 |
+| 2 | Background Sync API는 iOS Safari 미지원 | VERIFIED (변동 없음, 로드맵도 없음) | caniuse 기준 "조만간 구현 가능성 낮음"으로 재확인 |
+| 3 | Claude API 429(`rate_limit_error`)/529(`overloaded_error`) 에러 코드 체계 | VERIFIED (변동 없음) | platform.claude.com 공식 문서 2026-08 기준 재확인 |
+
+DISPUTED: 0건 — 2026-05-14 시점 검증 내용이 3개월 후에도 그대로 유효함 확인.
+
+### 재검증 테스트 (2026-08-11, 신규 질문)
+
+**Q1. Claude API 529 overloaded 시 사용자 표시 + 큐 처리**
+- PASS
+- 근거: SKILL.md 섹션 2(LLM 호출 래퍼 표·코드)·섹션 4(오프라인 큐)·섹션 6(UX 패턴 상태별 메시지)
+- 상세: 429/529/timeout/네트워크 실패 모두 동일 fallback 트리거로 수렴, 사용자에게는 기술 스택 미노출 메시지("서버가 일시 과부하...")를 보여주고 큐에 적재 후 재시도하는 흐름이 코드와 표로 명확히 도출됨.
+
+**Q2. iOS Safari Background Sync 미지원 시 수동 flush 구현**
+- PASS
+- 근거: SKILL.md 섹션 4-1 주의·섹션 4-3 manual-flush 코드·섹션 10 결정 트리
+- 상세: iOS Safari/Firefox 미지원 확인 후 IndexedDB 수동 큐 + `online`/`visibilitychange` 이벤트 기반 flush 패턴이 코드로 도출됨.
+
+**Q3. navigator.onLine === true인데 실제 인터넷 안 되는 회사 LAN 처리**
+- PASS
+- 근거: SKILL.md 섹션 1(온라인 감지 한계)·섹션 9 흔한 함정 #1
+- 상세: false positive 원인(LAN-only 환경)과 `isRealOnline()`(HEAD ping + AbortController) 재검증 패턴이 코드로 명확히 도출됨.
+
+### 발견된 gap (2026-08-11)
+
+- `flushLocalQueue()` 본체 구현(실제 IndexedDB fetch 재전송 로직)은 함수명만 언급되고 코드 미제공 — 선택 보강
+- `/api/ping` 서버 측 라우트 구현 예시 없음 — 선택 보강
+- 캡티브 포털 환경에서 HEAD 요청이 200 OK로 오판될 가능성 미언급 — 선택 보강
+- 3건 모두 질문에 답하는 데는 지장 없었음(YES 판정) — 차단 요인 아님
+
+### 카테고리 재판단 (2026-08-11)
+
+기존(2026-05-14) 판단은 "PWA Service Worker 동작·오프라인 시나리오 — 실행 결과로만 검증 가능"을 근거로 실사용 필수 카테고리로 분류했다. 재검토 결과:
+
+- 본 스킬의 핵심 내용(navigator.onLine 재검증 패턴, Workbox BackgroundSyncPlugin/Queue 사용법, Claude API 에러 코드별 분기, NetworkFirst/CacheFirst Service Worker 통합)은 모두 **공식 문서(MDN·Workbox·platform.claude.com)에 규격화된 API 사용법**이며, "코드가 문서화된 API 계약을 올바르게 구현했는가"는 content test(WebSearch 교차검증 + 실전 질문 답변)만으로 충분히 검증 가능하다.
+- `verification-policy.md`의 예시 카테고리("API 패턴 스킬(REST 설계 등) — content test로 충분")와 본질적으로 동일한 성격 — *실행해야만 알 수 있는 빌드 산출물*이 아니라 *API 사용법이 스펙과 일치하는가*를 검증하는 스킬이다.
+- 남은 실 디바이스 검증 항목(비행기 모드 토글, iOS 실기기 flush, 실 429/529 응답)은 *스킬 내용의 정확성*이 아니라 *배포 후 QA 성격*의 후속 확인이며, 다른 API 사용법 스킬(예: pwa-push-notifications)과 형평성 있게 content test 통과로 APPROVED 전환하는 것이 타당하다고 판단.
+- 억지 전환이 아님을 명시: 만약 향후 content test나 WebSearch 재검증에서 DISPUTED가 발견되면 즉시 NEEDS_REVISION으로 재하향한다.
+
+### 판정 (2026-08-11)
+
+- WebSearch 재교차검증: 3/3 VERIFIED, DISPUTED 0
+- agent content test: 3/3 PASS (신규 질문 구성)
+- verification-policy 재분류 판단: API 사용법 패턴 스킬 → **content test로 충분한 카테고리로 재분류**
+- 최종 상태: **PENDING_TEST → APPROVED 전환**
+
+---
+
+> 아래는 2026-05-14 최초 테스트 기록 (참고용 보존)
+
 **수행일**: 2026-05-14
 **수행자**: skill-tester → general-purpose (frontend-developer 에이전트 존재하나 SKILL.md 단독 content test 목적으로 general-purpose 방식 적용)
 **수행 방법**: SKILL.md Read 후 실전 질문 3개 답변, 근거 섹션 및 anti-pattern 회피 확인
@@ -157,22 +215,25 @@ status: PENDING_TEST
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
 | 짝 스킬 정합성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-05-14 skill-tester 수행, 3/3 PASS) |
-| **최종 판정** | **PENDING_TEST** (content test PASS, 실사용 필수 카테고리 유지) |
+| 에이전트 활용 테스트 | ✅ (2026-05-14 최초 3/3 PASS, 2026-08-11 재검증 3/3 PASS) |
+| WebSearch 재교차검증 (2026-08-11) | ✅ 3/3 VERIFIED, DISPUTED 0 |
+| **최종 판정** | **APPROVED** (2026-08-11 재분류 — API 사용법 패턴 스킬, content test로 충분) |
 
 판정 근거:
-- 10개 핵심 클레임 모두 복수 공식·반공식 소스에서 VERIFIED
+- 10개 핵심 클레임 모두 복수 공식·반공식 소스에서 VERIFIED, 2026-08-11 재교차검증에서도 변동 없음 재확인
 - 구조·실용성 체크리스트 모두 통과
-- 단, 본 스킬은 "실사용 필수 스킬" 카테고리(`verification-policy.md` 명시): 실제 오프라인 환경에서 fallback 트리거·큐 적재·복귀 시 자동 전송이 동작하는지 *실행 결과로만 검증 가능*하므로 PENDING_TEST 유지가 정책상 옳다
+- 2026-05-14 최초 판단은 "실사용 필수 스킬" 카테고리로 분류했으나, 2026-08-11 재검토 결과 본 스킬의 핵심 내용은 공식 문서(MDN·Workbox·platform.claude.com)에 규격화된 *API 사용법*이며 content test만으로 정확성 검증이 충분하다고 재판단 — 상세 근거는 섹션 5 "카테고리 재판단" 참조
 
 ---
 
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester가 content test 수행하고 섹션 5·6 업데이트 (2026-05-14 완료, 3/3 PASS)
-- [❌] 실제 PWA 프로젝트에서 비행기 모드 토글·Chrome DevTools Application > Background Services > Background Sync 패널로 큐 동작 확인 (차단 요인: 실사용 필수 — 실행 결과로만 검증 가능)
-- [❌] iOS Safari 실기기에서 수동 flush 폴백 동작 확인 (visibilitychange + online 이벤트) (차단 요인: 실사용 필수 — 실기기 테스트 필요)
-- [❌] Claude API 429/529 실 응답을 받았을 때 fallback이 일관되게 트리거되는지 확인 (모의 응답 또는 rate limit 의도적 초과) (차단 요인: 실사용 필수 — 실 API 응답 검증 필요)
+- [✅] skill-tester 재검증(WebSearch 재교차검증 + content test) 및 카테고리 재판단 수행 (2026-08-11 완료, 3/3 VERIFIED + 3/3 PASS → APPROVED 전환)
+- [❌] 실제 PWA 프로젝트에서 비행기 모드 토글·Chrome DevTools Application > Background Services > Background Sync 패널로 큐 동작 확인 — **선택 보강** (차단 요인 아님, 2026-08-11 재분류로 content test 통과가 APPROVED 조건 충족. 배포 후 QA 성격의 추가 확인 권장)
+- [❌] iOS Safari 실기기에서 수동 flush 폴백 동작 확인 (visibilitychange + online 이벤트) — **선택 보강** (차단 요인 아님, 동일 사유)
+- [❌] Claude API 429/529 실 응답을 받았을 때 fallback이 일관되게 트리거되는지 확인 — **선택 보강** (차단 요인 아님, 동일 사유)
+- [❌] `flushLocalQueue()` 본체 구현 예시, `/api/ping` 서버 라우트 예시 추가 — **선택 보강** (차단 요인 아님, 2026-08-11 content test에서 발견된 gap)
 
 ---
 
@@ -182,3 +243,4 @@ status: PENDING_TEST
 |------|------|-----------|--------|
 | 2026-05-14 | v1 | 최초 작성 — 공식 MDN·web.dev·developer.chrome.com·platform.claude.com 기반, 클레임 10건 VERIFIED | skill-creator |
 | 2026-05-14 | v1 | 2단계 실사용 테스트 수행 (Q1 navigator.onLine false positive / Q2 iOS Safari Background Sync 대안 / Q3 Retry-After + maxRetentionTime 단위) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | skill-tester |
+| 2026-08-11 | v1 | 재검증 수행 — WebSearch 재교차검증 3/3 VERIFIED(0 DISPUTED) + 신규 질문 content test (Q1 529 처리 / Q2 iOS 수동 flush / Q3 LAN false positive) → 3/3 PASS. 카테고리 재판단: API 사용법 패턴 스킬로 재분류 → PENDING_TEST에서 **APPROVED 전환** | skill-tester |

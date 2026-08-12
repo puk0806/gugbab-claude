@@ -146,7 +146,7 @@ async def chat_stream(req: ChatRequest, http: HttpDep):
                 "content-type": "application/json",
             },
             json={
-                "model": "claude-sonnet-4-6",
+                "model": "claude-sonnet-5",
                 "messages": req.messages,
                 "max_tokens": 1024,
                 "stream": True,

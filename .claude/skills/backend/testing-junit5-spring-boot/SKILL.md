@@ -6,9 +6,9 @@ description: JUnit 5 + Spring Boot(2.5 & 3.x) 테스트 패턴 - 단위·슬라�
 # JUnit 5 + Spring Boot 테스트 스킬
 
 > 소스: https://junit.org/junit5/docs/current/user-guide/ | https://docs.spring.io/spring-boot/reference/testing/ | https://mybatis.org/spring-boot-starter/mybatis-spring-boot-test-autoconfigure/ | https://java.testcontainers.org/test_framework_integration/junit_5/
-> 검증일: 2026-04-22
+> 검증일: 2026-08-11
 
-> 주의: 이 문서는 JUnit 5.14.x(LTS)와 Spring Boot 2.5 / 3.x 양쪽을 대상으로 합니다. JUnit 6.x(2026-02 GA)는 JDK 17+ 요구 등 breaking change가 있어 기존 2.5/3.x 프로젝트에서는 JUnit 5.x를 유지하는 것이 안전합니다.
+> 주의: 이 문서는 JUnit 5.14.x(LTS)와 Spring Boot 2.5 / 3.x 양쪽을 대상으로 합니다. JUnit 6.x(2025-09-30 GA)는 최소 JDK 17 요구 등 breaking change가 있어 기존 2.5/3.x 프로젝트에서는 JUnit 5.x를 유지하는 것이 안전합니다.
 
 > 주의: MyBatis 기반 프로젝트를 전제로 합니다. JPA 관련 어노테이션(`@DataJpaTest` 등)은 의도적으로 제외했습니다.
 

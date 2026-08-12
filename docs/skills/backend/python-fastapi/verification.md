@@ -201,3 +201,4 @@ status: APPROVED
 | 2026-05-15 | v1 | 최초 작성 (FastAPI 0.115+ / Pydantic 2.x 기준) | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 Annotated Depends 패턴 / Q2 async vs sync 핸들러 / Q3 SSE X-Accel-Buffering + CORS 와일드카드) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | skill-tester |
 | 2026-06-19 | v1 | 2단계 실사용 테스트 재수행 (Q1 Query 모델 + extra forbid / Q2 yield 의존성 try/finally + DBDep 별칭 / Q3 Pydantic v2 마이그레이션 4가지 + from_attributes) → 3/3 PASS, 카테고리 재평가 후 APPROVED 전환 | skill-tester |
+| 2026-08-12 | v1 | **모델 ID 세대 정렬.** `references/REFERENCE.md`의 Claude 프록시 SSE 예제에서 `claude-sonnet-4-6` → `claude-sonnet-5` 교체(1곳). Sonnet 4.6은 legacy, 현행 세대는 Sonnet 5. 샘플링 파라미터·`budget_tokens` 사용 없음 — 5 계열 400 이슈 해당 없음. FastAPI/Pydantic 본문은 변경 없음. SKILL.md 검증일 2026-05-15 → 2026-08-12. status **APPROVED 유지** | 모델 ID 세대 정렬 |

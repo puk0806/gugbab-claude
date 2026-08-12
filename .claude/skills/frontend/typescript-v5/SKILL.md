@@ -1,13 +1,51 @@
 ---
 name: typescript-v5
-description: TypeScript 5.x (5.0~5.8) 버전별 신규 기능, tsconfig 5.x 설정, React 타입 패턴, 4.x와의 차이점
+description: TypeScript 5.x (5.0~5.9) 버전별 신규 기능과 tsconfig·React 타입 패턴, 그리고 TS 6.0(마지막 JS 컴파일러)·7.0(Go 네이티브) 시대에서 5.x 지식의 유효 범위와 마이그레이션 경로
 ---
 
-# TypeScript 5.x 버전별 신규 기능
+# TypeScript 5.x 버전별 신규 기능 (6.0 · 7.0 시대 기준)
 
 > 소스: https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-0.html
-> 소스: https://devblogs.microsoft.com/typescript/
-> 검증일: 2026-04-20
+> 소스: https://devblogs.microsoft.com/typescript/announcing-typescript-6-0/
+> 소스: https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/
+> 검증일: 2026-08-11
+
+---
+
+## 0. 지금 어디에 서 있는가 — 버전 지형
+
+| 버전 | 출시 | 성격 |
+|------|------|------|
+| 5.0 ~ 5.8 | 2023 ~ 2025 | 이 스킬 본문의 범위. 현대 TS 타입 시스템 기능 대부분이 여기서 도입됨 |
+| 5.9 | 2025-08 | 5.x의 마지막. `import defer`, `--module node20`, 최소화된 `tsc --init` |
+| **6.0** | **2026-03-23** | **JavaScript 기반 컴파일러의 마지막 메이저.** 새 문법보다 *deprecation + 기본값 변경*이 핵심 — 7.0으로 가는 다리 |
+| **7.0** | **2026-07-08** | **Go 네이티브 컴파일러(코드명 Corsa).** 전체 빌드 기준 통상 8~12배(공칭 "약 10배") 빠름 |
+
+**핵심: 5.x의 *타입 시스템* 지식은 7.0에서도 그대로 유효하다.**
+공식 발표 기준 "TypeScript 6.0에서 깨끗하게 컴파일되는 코드는 사실상 7.0에서도 동일하게 컴파일된다" — 7.0은 *언어 변경*이 아니라 *컴파일러 재작성*이다. 바뀐 것은 **컴파일러 구현·tsconfig 기본값·deprecated 옵션·툴링 API**이지, `const` 타입 매개변수·`NoInfer`·`using`·타입 서술어 추론 같은 문법·타입 규칙이 아니다.
+
+| 이 스킬에서 여전히 유효한 것 | 이 스킬 밖에서 반드시 확인할 것 |
+|------|------|
+| 5.0~5.9 문법·타입 규칙 전부 (아래 본문) | tsconfig 기본값 — 6.0에서 대거 변경됨 (§9-1) |
+| `const` 타입 매개변수, `NoInfer`, `using`, 타입 서술어 추론 | `target`/`module`/`moduleResolution` 선택지 — 6.0 deprecated → 7.0 하드 에러 (§9-2) |
+| Stage 3 데코레이터, Import Attributes(`with`) | 빌드 도구·에디터 플러그인 호환성 — 7.0은 프로그래매틱 API 미제공 (§9-4) |
+
+> 주의: 4.x 전용 레거시 지식(4.0~4.9 기능)은 짝 스킬 `frontend/typescript-v4`를 참조한다. 이 스킬은 5.x 이후 + 6/7 전환을 담당한다.
+
+---
+
+## 0-1. 5.9 — 5.x의 마지막 릴리즈
+
+```tsx
+// import defer — 모듈을 임포트하되 실제 사용 시점까지 평가(실행)를 지연
+import defer * as heavy from "./heavy-module.js"
+// heavy의 멤버에 처음 접근하는 순간 모듈 본문이 실행됨
+```
+
+> 주의: `import defer`는 `--module` 이 `preserve` 또는 `esnext` 일 때만 동작한다.
+
+- `--module node20`: Node.js 20 동작을 고정 모델링. 계속 진화하는 `nodenext`(암묵적 `target esnext`)와 달리 `target es2023`으로 고정된다.
+- `tsc --init` 산출물이 최소·처방적(prescriptive) 형태로 축소됨.
 
 ---
 
@@ -363,6 +401,89 @@ console.log(result) // 에러: 모든 경로에서 초기화되지 않음
 - `.ts` 확장자 기반 경로 자동 완성 지원 개선
 
 ---
+
+## 9. 5.x → 6.0 → 7.0 마이그레이션
+
+공식 권장 경로는 **건너뛰기 없이 6.0을 경유**하는 것이다. 6.0이 경고·deprecation으로 알려주는 문제를 7.0은 하드 에러로 막기 때문이다.
+
+```
+5.x  ──►  6.0 (경고로 문제 노출·수정)  ──►  7.0 (동일 설정에서 10배 빌드)
+```
+
+### 9-1. 6.0에서 바뀐 tsconfig 기본값 — 가장 먼저 확인할 것
+
+| 옵션 | 5.x 기본 | 6.0 기본 |
+|------|----------|----------|
+| `strict` | `false` | **`true`** |
+| `module` | `commonjs` | **`esnext`** |
+| `target` | `es3`(사실상 es5 지정) | **`es2025`** (매년 현행 ES로 이동) |
+| `rootDir` | 입력 파일에서 추론 | **`tsconfig.json` 디렉터리** |
+| `types` | `node_modules/@types` 전부 자동 포함 | **`[]`** (빈 배열) |
+| `noUncheckedSideEffectImports` | `false` | **`true`** |
+| `libReplacement` | `true` | **`false`** |
+
+**대부분의 프로젝트가 실제로 손대야 하는 두 가지:**
+
+```jsonc
+{
+  "compilerOptions": {
+    // 1) types 자동 포함이 사라짐 — 필요한 것을 명시
+    "types": ["node", "jest"],   // 또는 과거 동작 복원: ["*"]
+
+    // 2) 소스가 하위 디렉터리에 있으면 rootDir 명시
+    "rootDir": "./src"
+  }
+}
+```
+
+### 9-2. 6.0 deprecated → 7.0에서 제거·하드 에러
+
+| 항목 | 대체 |
+|------|------|
+| `--target es5` | ES2015 이상. ES5 산출물이 꼭 필요하면 별도 다운레벨 도구 사용 |
+| `--downlevelIteration` | 없음 (ES5 전용 기능이라 함께 사라짐) |
+| `--moduleResolution node`(node10) / `classic` | `nodenext` 또는 `bundler` |
+| `--module amd` / `umd` / `systemjs` / `none` | `esnext` 또는 `preserve` |
+| `--baseUrl` | `paths` 항목에 접두사를 직접 기입 |
+| `--outFile` | 외부 번들러(Vite·esbuild·webpack) |
+| `esModuleInterop: false` / `allowSyntheticDefaultImports: false` / `alwaysStrict: false` | 항상 켜진 것으로 간주 — `false` 지정 불가 |
+| 임포트 `assert` 키워드 | `with` (Import Attributes, §5.3 참조) |
+| 네임스페이스의 레거시 `module` 문법 | `namespace` 키워드 |
+
+전환 기간에는 6.0에서 `"ignoreDeprecations": "6.0"`으로 경고를 유예할 수 있으나, 7.0에서는 통하지 않는다.
+
+### 9-3. `--stableTypeOrdering`
+
+병렬 타입 체크를 하는 7.0에서는 선언 출력·진단 순서가 달라질 수 있다. 6.0에 추가된 `--stableTypeOrdering`을 켜면 7.0과 동일한 결정적 순서로 맞춰볼 수 있다.
+
+```jsonc
+{ "compilerOptions": { "stableTypeOrdering": true } }
+```
+
+> 주의: 6.0에서는 옵트인이며 체크 속도가 약 25% 느려진다(진단 목적). 7.0에서는 기본값이자 비활성화 불가다.
+
+### 9-4. 7.0 도입 전 반드시 확인할 제약
+
+7.0은 타입 체크 동작은 호환되지만 **프로그래매틱 API가 아직 없다**. 다음에 해당하면 6.0을 유지하거나 병행 설치한다.
+
+- `typescript-eslint`, webpack loader 등 TS 컴파일러 API에 의존하는 툴
+- Vue·Svelte·Astro·MDX·Angular 템플릿 등 임베디드 언어 지원 (Volar 계열 language service 플러그인)
+- → API는 7.1에서 제공 예정
+
+**6.0과 7.0 병행 설치:**
+
+```bash
+npm install -D typescript@npm:@typescript/typescript6   # tsc6 로 6.0 실행
+npm install -D @typescript/native                       # tsc 로 7.0 실행
+```
+
+### 9-5. 실전 체크리스트
+
+1. 5.x → 5.9로 올려 경고 정리
+2. 6.0 설치 → `types`·`rootDir` 명시 → deprecation 경고 0으로 수렴
+3. `stableTypeOrdering: true`로 순서 의존 이슈 사전 노출
+4. 툴체인이 컴파일러 API에 의존하는지 확인 (§9-4)
+5. 7.0 전환 — 타입 에러가 새로 나면 대개 *6.0 기본값 미반영*이 원인이다
 
 ---
 

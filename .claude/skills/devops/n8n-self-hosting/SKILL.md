@@ -7,20 +7,26 @@ disable-model-invocation: true
 # n8n Self-Hosting
 
 > 소스:
-> - https://docs.n8n.io/hosting/
-> - https://docs.n8n.io/hosting/installation/docker/
-> - https://docs.n8n.io/hosting/installation/server-setups/docker-compose/
-> - https://docs.n8n.io/hosting/configuration/environment-variables/database/
-> - https://docs.n8n.io/hosting/configuration/configuration-examples/encryption-key/
-> - https://docs.n8n.io/hosting/scaling/queue-mode/
-> - https://docs.n8n.io/hosting/configuration/user-management-self-hosted/
-> - https://docs.n8n.io/sustainable-use-license/
-> - https://docs.n8n.io/2-0-breaking-changes/
+> - https://docs.n8n.io/deploy/host-n8n/install-options/install-with-docker.md
+> - https://docs.n8n.io/deploy/host-n8n/install-options/use-a-cloud-provider/use-docker-compose.md
+> - https://docs.n8n.io/deploy/host-n8n/configure-n8n/basic-configuration/use-environment-variables/database.md
+> - https://docs.n8n.io/deploy/host-n8n/configure-n8n/basic-configuration/use-environment-variables/deployment.md
+> - https://docs.n8n.io/deploy/host-n8n/configure-n8n/basic-configuration/use-environment-variables/queue-mode.md
+> - https://docs.n8n.io/deploy/host-n8n/configure-n8n/basic-configuration/configuration-examples/set-a-custom-encryption-key.md
+> - https://docs.n8n.io/deploy/host-n8n/configure-n8n/scaling/enable-queue-mode.md
+> - https://docs.n8n.io/deploy/host-n8n/configure-n8n/set-up-task-runners.md
+> - https://docs.n8n.io/deploy/host-n8n/configure-n8n/user-management.md
+> - https://docs.n8n.io/privacy-and-security/sustainable-use-license
+> - https://docs.n8n.io/changelog/release-notes-2.x
 > - https://github.com/n8n-io/n8n-hosting
 >
-> 검증일: 2026-05-15
-> 대상 버전: n8n v2.x (stable tag, 2026-05 기준 v2.21.x)
+> 검증일: 2026-08-11
+> 대상 버전: n8n v2.x — **2026-08-11 기준 stable v2.33.7 / beta v2.34.4**
 > 짝 스킬: `devops/docker-deployment` (컨테이너 일반), `devops/n8n-workflow-design` (워크플로우 설계)
+
+> **주의 — 공식 문서 URL 전면 개편 (2026-08 확인):** 구 `docs.n8n.io/hosting/...` 경로는 전부 404다.
+> 현재 구조는 `docs.n8n.io/deploy/host-n8n/...`. 북마크·CI 링크체크·사내 위키에 구 경로가 남아 있으면 갱신할 것.
+> 경로를 모를 때는 `https://docs.n8n.io/sitemap.md`로 현재 트리를 확인한다.
 
 ---
 
@@ -70,7 +76,6 @@ docker run -d \
   -e GENERIC_TIMEZONE="Asia/Seoul" \
   -e TZ="Asia/Seoul" \
   -e N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true \
-  -e N8N_RUNNERS_ENABLED=true \
   -v n8n_data:/home/node/.n8n \
   docker.n8n.io/n8nio/n8n:stable
 ```
@@ -80,9 +85,16 @@ docker run -d \
 | `GENERIC_TIMEZONE` | 스케줄러 노드(Cron 등) 타임존 |
 | `TZ` | 컨테이너 OS 타임존 |
 | `N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true` | `~/.n8n/config` 파일 `0600` 권한 강제 |
-| `N8N_RUNNERS_ENABLED=true` | Task runner 활성화 (v2.0+ 권장 기본값) |
+
+> **변경 (v2.0+):** `N8N_RUNNERS_ENABLED`는 **deprecated**다. v2.0부터 task runner가 항상 켜져 있어 이 변수를 지정할 필요가 없다
+> (공식 문서에서도 제거됨 — n8n-docs issue #4328 / PR #4450). **v1.x에서만** `true` 지정이 필요하다.
+> 기존 compose 파일에 남아 있으면 삭제한다. → 실행 격리 설정은 아래 "task runner 모드" 참조.
+
+**이미지 태그 선택:** 태그를 생략한 `docker.n8n.io/n8nio/n8n`은 최신 stable을 가리킨다. 프로덕션은 재현 가능한 배포를 위해
+버전 핀(`:2.33.7`)을 권장하고, `:stable`은 "최신 안정판 자동 추종"이 필요할 때만 쓴다. `:next`는 beta(2.34.x) 채널이다.
 
 > 주의: 단일 컨테이너 + SQLite 조합은 동시 쓰기·큐 모드를 지원하지 않는다. 프로덕션은 PostgreSQL로 갈 것.
+> 단, PostgreSQL로 가더라도 **`~/.n8n` 볼륨은 계속 유지**한다 — encryption key 등이 이 디렉토리에 있다.
 
 ---
 
@@ -131,7 +143,7 @@ services:
       # Security
       N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
       N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: 'true'
-      N8N_RUNNERS_ENABLED: 'true'
+      # (N8N_RUNNERS_ENABLED는 v2.0+에서 deprecated — 지정하지 않는다)
       # Locale
       GENERIC_TIMEZONE: Asia/Seoul
       TZ: Asia/Seoul
@@ -202,8 +214,18 @@ openssl rand -hex 32
 | `N8N_ENCRYPTION_KEY` | (자동 생성) | **반드시 명시 + 백업**. credentials 암호화에 사용 |
 | `GENERIC_TIMEZONE` | `America/New_York` | 스케줄러 타임존 |
 | `N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS` | `false` (v1) → `true` 권장 | settings 파일 `0600` 권한 강제 |
-| `N8N_RUNNERS_ENABLED` | v2.0+ `true` | Task runner 활성화 |
+| `N8N_RUNNERS_ENABLED` | — | **v2.0+ deprecated — 지정하지 않는다.** v1.x에서만 `true` 필요 |
 | `EXECUTIONS_MODE` | `regular` | 큐 모드는 `queue` |
+
+### v2.1x~2.2x에서 추가된 운영 변수
+
+| 변수 | 도입 | 용도 |
+|------|------|------|
+| `N8N_OTEL_ENABLED` / `N8N_OTEL_EXPORTER_OTLP_ENDPOINT` | v2.15 | 워크플로우 실행 트레이스를 OTLP 컬렉터로 전송 (관측성) |
+| `N8N_TOKEN_EXCHANGE_TRUSTED_KEYS` | v2.16 | OAuth 2.0 Token Exchange 인증 (임베디드 사용) |
+| `N8N_INSIGHTS_MAX_AGE_DAYS` | v2.20 | Insights 데이터 보존 기간 (기본 365일, 최대 730일) |
+
+> v2.19부터 **instance bootstrapping** — 최초 기동 시 환경 변수만으로 인스턴스 전체 설정을 주입할 수 있다. IaC로 n8n을 굽는 경우 유용.
 
 > 주의 (v2.0 변경): `N8N_BLOCK_ENV_ACCESS_IN_NODE=true`가 기본. Code 노드에서 `process.env` 접근이 기본 차단된다. 필요 시 명시적으로 `false` 지정.
 
@@ -322,9 +344,23 @@ DB 마이그레이션은 컨테이너 시작 시 자동 수행된다. **업그�
 - `N8N_BLOCK_ENV_ACCESS_IN_NODE` 기본값 `true`
 - `N8N_SKIP_AUTH_ON_OAUTH_CALLBACK` 기본값 `false`
 - `N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS` 동작 강화 (0600 강제)
-- Task runner: 기본 이미지에서 분리. 외부 runner 모드는 `n8nio/runners` 이미지 사용
+- Task runner가 **기본 활성화** → `N8N_RUNNERS_ENABLED`는 deprecated (지정 불필요). 외부 runner 모드는 `n8nio/runners` 이미지 사용
+- in-memory binary data 모드 제거
 
 업그레이드 후 워크플로우 실행이 실패하면 → 컨테이너 로그(`docker compose logs n8n`)에서 마이그레이션 오류 확인.
+
+**v2.21 → v2.33 사이 셀프호스팅 관점 변경 요약 (2026-08-11 확인):**
+
+| 항목 | 내용 |
+|------|------|
+| 공식 문서 경로 | `/hosting/...` → `/deploy/host-n8n/...` 전면 개편 (구 경로 404) |
+| `N8N_RUNNERS_ENABLED` | 공식 문서에서 제거 — v2에서 지정 불필요 |
+| 큐 모드 (v2.34) | 워커가 **크기 제한 없이** webhook 응답을 반환할 수 있게 됨 (대용량 응답 페이로드 제약 해소) |
+| AI (v2.22) | MCP Client 노드 없이 에이전트에 MCP 서버 직접 연결 |
+| DB / 마이그레이션 | v2.22~2.34 구간에 스키마·마이그레이션 breaking change **없음** |
+| 설치 방식 | Docker / docker-compose 절차 변경 **없음** |
+
+> 즉 2.21 → 2.33 업그레이드는 **일반 minor 업그레이드 절차(pull → up -d)로 충분**하다. 별도 마이그레이션 작업은 없다.
 
 ---
 
@@ -376,6 +412,64 @@ services:
 - 워커당 메모리 200~500MB
 - `--concurrency` 기본 10. 워크플로우 무게에 따라 5~20
 
+**워커 헬스체크 (`QUEUE_HEALTH_CHECK_ACTIVE=true`):**
+
+활성화하면 워커가 두 엔드포인트를 노출한다 — 로드밸런서·오케스트레이터 probe에 연결한다.
+
+| 엔드포인트 | 용도 |
+|-----------|------|
+| `/healthz` | liveness — 프로세스 생존 |
+| `/healthz/readiness` | readiness — 큐·DB 연결까지 준비 완료 |
+
+```yaml
+  n8n-worker:
+    environment:
+      QUEUE_HEALTH_CHECK_ACTIVE: 'true'
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O- http://localhost:5678/healthz/readiness || exit 1']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+```
+
+**webhook processor 분리 (선택, 대규모):**
+
+webhook 수신 부하가 큰 경우 메인 인스턴스에서 webhook 처리를 분리한 전용 프로세스를 둘 수 있다.
+
+- `EXECUTIONS_MODE=queue` + 동일 Redis + **동일 `N8N_ENCRYPTION_KEY`** 필요
+- `WEBHOOK_URL`을 외부 URL로 지정
+- 로드밸런서에서 `/webhook/*`, `/webhook-waiting/*` 경로를 메인이 아닌 webhook processor로 라우팅
+
+> v2.34부터 큐 모드 워커가 **페이로드 크기 제한 없이** webhook 응답을 반환할 수 있다. 대용량 응답 때문에 webhook을
+> 메인 프로세스로 우회시켰던 구성이 있으면 재검토 대상.
+
+---
+
+## 11-1. Task runner 모드 (Code 노드 격리)
+
+v2.0부터 task runner가 기본 활성화다. 문제는 **어디서** 실행되느냐다.
+
+| 모드 | 동작 | 적합성 |
+|------|------|--------|
+| **internal** (기본) | n8n이 같은 호스트에서 자식 프로세스로 runner 기동. uid/gid 공유 | 공식 문서상 **"insecure by design"** — 민감 데이터 프로덕션에는 부적합 |
+| **external** | 별도 컨테이너(`n8nio/runners`)에서 launcher가 runner 관리 | 프로덕션 권장. Code 노드가 n8n 프로세스와 격리됨 |
+
+```yaml
+  n8n:
+    environment:
+      N8N_RUNNERS_MODE: external
+      N8N_RUNNERS_AUTH_TOKEN: ${RUNNERS_AUTH_TOKEN}     # 양쪽 동일
+      N8N_RUNNERS_BROKER_LISTEN_ADDRESS: 0.0.0.0        # 외부 컨테이너 접속 허용
+
+  n8n-runners:
+    image: n8nio/runners:2.33.7                          # n8n 이미지와 버전 일치
+    environment:
+      N8N_RUNNERS_TASK_BROKER_URI: http://n8n:5679
+      N8N_RUNNERS_AUTH_TOKEN: ${RUNNERS_AUTH_TOKEN}
+```
+
+> 주의: `n8nio/runners` 태그는 **n8n 본체 이미지와 동일 버전**으로 맞춘다. 버전 불일치 시 broker 프로토콜 호환 문제가 생길 수 있다.
+
 ---
 
 ## 12. 보안 베스트 (요약)
@@ -391,7 +485,8 @@ services:
 | 공개 API | 사용 안 하면 `N8N_PUBLIC_API_DISABLED=true` |
 | 데이터 보존 | `EXECUTIONS_DATA_PRUNE=true` + `EXECUTIONS_DATA_MAX_AGE` (시간 단위) |
 | SSRF 보호 | `N8N_BLOCK_FILE_ACCESS_TO_N8N_FILES`, `N8N_RESTRICT_FILE_ACCESS_TO` 설정 |
-| Code 노드 격리 | Task runner 모드(`n8nio/runners` 이미지) 활용 |
+| Code 노드 격리 | **`N8N_RUNNERS_MODE=external`** + `n8nio/runners` 사이드카 (기본 internal은 공식적으로 insecure by design) |
+| 관측성 | `N8N_OTEL_ENABLED=true` + OTLP 컬렉터 — 실행 실패·지연 추적 (v2.15+) |
 
 ---
 
@@ -440,9 +535,14 @@ n8n을 EC2 public IP에 띄우고 User Management owner 계정도 안 만든 채
 
 워커가 메인과 다른 `N8N_ENCRYPTION_KEY`를 갖고 있으면 DB에서 credentials를 복호화할 수 없어 워크플로우가 silent하게 실패한다 (로그도 모호함). docker-compose에서 동일 환경 변수 참조로 통일.
 
-### 함정 6: v1 → v2 업그레이드 시 `N8N_RUNNERS_ENABLED` 누락
+### 함정 6: v2에서 `N8N_RUNNERS_ENABLED`를 계속 지정 (2026-08 정정)
 
-v2.0부터 task runner가 기본 권장. 명시하지 않으면 deprecation warning이 뜨고, 일부 보안 격리 기능이 비활성화된다.
+**방향이 반대다.** v2.0부터 task runner는 기본 활성화이며 `N8N_RUNNERS_ENABLED`는 **deprecated**다 —
+공식 문서에서도 제거됐다(n8n-docs issue #4328 → PR #4450). v1 시절 compose 파일을 그대로 들고 v2로 올라오면
+이 변수가 남아 있는데, 지금 해야 할 일은 **삭제**다. (v1.x를 아직 쓴다면 `true` 유지가 맞다.)
+
+진짜 챙겨야 할 것은 **격리 모드**다 — 기본 `internal`은 n8n과 uid/gid를 공유하는 자식 프로세스라 공식 문서가
+"insecure by design"이라 명시한다. 민감 데이터를 다루면 `N8N_RUNNERS_MODE=external` + `n8nio/runners` 사이드카로 간다 (11-1절).
 
 ### 함정 7: 상업적 SaaS 형태로 n8n 호스팅 임대
 
@@ -457,10 +557,11 @@ Sustainable Use License는 "n8n을 제3자에게 서비스로 판매"하는 형�
 | `devops/docker-deployment` | Docker·docker-compose 일반 패턴 (멀티스테이지, 헬스체크 등) |
 | `devops/n8n-workflow-design` | n8n 워크플로우 설계 패턴 (별도 스킬) |
 
-**공식 자료:**
-- Docs: https://docs.n8n.io/hosting/
+**공식 자료 (2026-08 개편 경로):**
+- Docs: https://docs.n8n.io/deploy/host-n8n/
 - Hosting 예시 레포: https://github.com/n8n-io/n8n-hosting
-- Release notes: https://docs.n8n.io/release-notes/
+- Release notes (2.x): https://docs.n8n.io/changelog/release-notes-2.x
+- Sitemap (경로 확인용): https://docs.n8n.io/sitemap.md
 - Community: https://community.n8n.io/
 
 ---
@@ -480,8 +581,11 @@ Sustainable Use License는 "n8n을 제3자에게 서비스로 판매"하는 형�
 - [ ] webhook 노드 Authentication 옵션 검토
 - [ ] 자동 백업 cron 설정 (pg_dump + 워크플로우 export)
 - [ ] `EXECUTIONS_DATA_PRUNE` 활성화 (실행 이력 무한 적재 방지)
+- [ ] compose 파일에 `N8N_RUNNERS_ENABLED`가 남아 있으면 삭제 (v2 deprecated)
+- [ ] 민감 데이터 처리 시 `N8N_RUNNERS_MODE=external` + `n8nio/runners` 구성
 
 운영 중:
 - [ ] 주 1회 docker pull + 업그레이드 (백업 후)
 - [ ] 백업 복구 리허설 분기 1회
 - [ ] 릴리즈 노트 확인 (major 업그레이드 시 breaking changes 점검)
+- [ ] 큐 모드 운영 시 `QUEUE_HEALTH_CHECK_ACTIVE` + `/healthz/readiness` probe 연결 확인

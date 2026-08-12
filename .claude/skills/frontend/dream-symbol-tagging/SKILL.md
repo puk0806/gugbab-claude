@@ -18,7 +18,7 @@ description: >
 > - Anthropic Cookbook (Tool Use JSON 추출): https://github.com/anthropics/anthropic-cookbook/blob/main/tool_use/extracting_structured_json.ipynb
 > - KoNLPy 공식: https://konlpy.org/en/latest/morph/
 > - mecab-ko (Eunjeon Project): https://bitbucket.org/eunjeon/mecab-ko/
-> 검증일: 2026-05-15
+> 검증일: 2026-08-12
 
 ---
 
@@ -195,7 +195,7 @@ const symbolExtractTool = {
 } as const;
 
 const res = await client.messages.create({
-  model: "claude-sonnet-4-6",
+  model: "claude-sonnet-5",
   max_tokens: 1024,
   tools: [symbolExtractTool],
   tool_choice: { type: "tool", name: "extract_dream_symbols" },

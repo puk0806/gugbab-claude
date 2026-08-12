@@ -2,7 +2,7 @@
 skill: dream-app-ab-testing-prompts
 category: meta
 version: v1
-date: 2026-05-15
+date: 2026-08-11
 status: APPROVED
 ---
 
@@ -14,9 +14,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `dream-app-ab-testing-prompts` |
 | 스킬 경로 | `.claude/skills/meta/dream-app-ab-testing-prompts/SKILL.md` |
-| 검증일 | 2026-05-15 |
-| 검증자 | skill-creator |
+| 검증일 | 2026-08-11 (최초 2026-05-15) |
+| 검증자 | skill-creator (최초) / 모델 ID 정기 감사 (2026-08-11) |
 | 스킬 버전 | v1 |
+| 대상 모델 | Claude Opus 4.8 / Sonnet 4.6 / Haiku 4.5 (`.claude/rules/agent-design.md`) |
 
 ---
 
@@ -70,7 +71,7 @@ status: APPROVED
 ### 4-1. 내용 정확성
 
 - [✅] 공식 문서와 불일치하는 내용 없음
-- [✅] 버전 정보가 명시되어 있음 (Claude Opus 4.7 / Sonnet 4.6 / Haiku 4.5, 2026-05-15 기준)
+- [✅] 버전 정보가 명시되어 있음 (Claude Opus 4.8 / Sonnet 4.6 / Haiku 4.5, 2026-08-11 재검증 기준)
 - [✅] deprecated된 패턴 권장하지 않음
 - [✅] 공식 공식·임계값이 출처와 일치 (Kohavi 80% power 공식 `n = 16σ²/d²` 확인)
 
@@ -181,3 +182,4 @@ DISPUTED 0건. UNVERIFIED 0건. SKILL.md 본문 그대로 신뢰 가능.
 |------|------|-----------|--------|
 | 2026-05-15 | v1 | 최초 작성 — 12개 섹션, 8개 1차 소스 교차 검증, anti-pattern 10건 | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 안전 가드 A/B 금지 이유 / Q2 Kohavi 표본 크기 계산 / Q3 꿈 원문 수집 금지 항목 구분) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-08-11 | v1 | **모델 ID 정기 감사.** 헤더 "대상 모델" `Claude Opus 4.7` → `Claude Opus 4.8` 정정(`.claude/rules/agent-design.md` 기준). Sonnet 4.6·Haiku 4.5는 현행이라 미변경. 본문 A/B 설계·통계 내용은 모델 무관하므로 변경 없음. status는 APPROVED 유지 | 모델 ID 정기 감사 |

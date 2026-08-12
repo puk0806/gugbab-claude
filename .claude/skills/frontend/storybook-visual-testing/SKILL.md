@@ -6,8 +6,8 @@ description: Storybook 10 + @storybook/test-runner + Playwright toHaveScreenshot
 # Storybook Visual Testing — 자체 호스팅 시각 회귀
 
 > 소스: https://storybook.js.org/docs/releases/migration-guide | https://github.com/storybookjs/test-runner | https://playwright.dev/docs/test-snapshots
-> 검증일: 2026-04-29
-> 대상 버전: Storybook 10.3.x · @storybook/test-runner 0.x · Playwright v1.59.x
+> 검증일: 2026-08-11
+> 대상 버전: Storybook 10.5.x · @storybook/test-runner 0.x · Playwright v1.59.x
 
 ---
 
@@ -21,7 +21,7 @@ description: Storybook 10 + @storybook/test-runner + Playwright toHaveScreenshot
 ## 언제 사용하지 않는가
 
 - 페이지 단위 사용자 흐름 검증 → `frontend/e2e-testing` 스킬 (Playwright E2E)
-- Storybook 8.x 기본 설치·CSF 작성 → `frontend/storybook` 스킬
+- Storybook 기본 설치·CSF 3 스토리 작성·Controls·play function → `frontend/storybook` 스킬
 - 크로스 브라우저 픽셀 회귀가 핵심 가치인 대규모 디자인 시스템 → Chromatic 같은 SaaS가 운영 비용 대비 효율적
 - CI 인프라(셀프호스팅 러너 또는 Docker 이미지) 없이 macOS/Windows 로컬에서 baseline을 만들어 운영 → 픽셀 차이로 깨짐
 
@@ -42,7 +42,7 @@ description: Storybook 10 + @storybook/test-runner + Playwright toHaveScreenshot
 
 ```yaml
 # .github/workflows/visual-test.yml
-- uses: actions/setup-node@v4
+- uses: actions/setup-node@v7
   with:
     node-version: '22.12'   # Storybook 10 호환 최소
 ```
@@ -62,11 +62,16 @@ import type { StorybookConfig } from '@storybook/react-vite';
 const config: StorybookConfig = {
   stories: ['../src/**/*.stories.@(ts|tsx|mdx)'],
   framework: '@storybook/react-vite',
-  addons: ['@storybook/addon-essentials'],
+  addons: [
+    '@storybook/addon-docs',   // autodocs·MDX 문서화
+    '@storybook/addon-a11y',   // a11y 패널 (선택 — 섹션 3의 CI 게이팅과 별개)
+  ],
 };
 
 export default config;
 ```
+
+> 주의: **`@storybook/addon-essentials` / `@storybook/addon-interactions`를 `addons`에 남겨두면 안 된다** — v9에서 제거되어 controls·actions·backgrounds·viewport·toolbars·measure·outline·highlight·인터랙션 패널이 모두 **코어에 내장**됐다. 남아 있으면 Storybook 시작 시 에러가 난다. 패키지 이동 대응표 전체는 `frontend/storybook` 스킬의 "v8 → v10 마이그레이션 노트" 참조.
 
 ### Storybook 9 → 10 차이 요약
 
@@ -75,10 +80,11 @@ export default config;
 | Node 요구 | 18+ / 20+ | **20.19+ / 22.12+** |
 | 패키지 형식 | CJS + ESM 듀얼 | **ESM only** |
 | main/preview | CJS·ESM 모두 가능 | **ESM 필수** |
-| a11y addon | 별도 설치 가능 | 내장 a11y 지원 |
+| essentials 애드온 | v9에서 제거 (코어 내장) | `addons`에 남기면 에러 |
+| a11y addon | `@storybook/addon-a11y` 별도 패키지 | 여전히 별도 패키지 (Recommended 설치에 기본 포함) |
 | 자동 마이그레이션 | — | `npx storybook@latest upgrade` |
 
-> 주의: Storybook 10.3에는 `MCP` for React, Vite 8 / Next.js 16.2 지원 등이 추가됐지만 시각 테스트 셋업에는 직접 영향 없음.
+> 주의: 10.4~10.5의 추가 사항(Vite 8 / Next.js 16.2 지원 등)은 시각 테스트 셋업에 직접 영향 없음. 현재 최신 안정은 10.5.x다.
 
 ---
 
@@ -192,7 +198,7 @@ const config: TestRunnerConfig = {
 export default config;
 ```
 
-> Storybook 9 이상은 a11y 지원이 내장되어 있지만, **CI 파이프라인에서 a11y를 빌드 게이팅으로 강제**하려면 여전히 `axe-playwright` + `postVisit` 조합이 가장 명시적이다.
+> `@storybook/addon-a11y`는 개발 중 a11y 패널로 위반을 *표시*해줄 뿐이다. **CI 파이프라인에서 a11y를 빌드 게이팅으로 강제**하려면 여전히 `axe-playwright` + `postVisit` 조합이 가장 명시적이다.
 
 ---
 

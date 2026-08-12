@@ -1,8 +1,8 @@
 ---
 skill: storybook-visual-testing
 category: frontend
-version: v1
-date: 2026-04-29
+version: v1.1
+date: 2026-08-11
 status: APPROVED
 ---
 
@@ -48,10 +48,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `storybook-visual-testing` |
 | 스킬 경로 | `.claude/skills/frontend/storybook-visual-testing/SKILL.md` |
-| 검증일 | 2026-04-29 |
+| 검증일 | 2026-08-11 (최초 2026-04-29) |
 | 검증자 | Claude (skill-creator) |
-| 스킬 버전 | v1 |
-| 대상 버전 | Storybook 10.3.x · @storybook/test-runner 0.x · Playwright v1.59.x |
+| 스킬 버전 | v1.1 |
+| 대상 버전 | Storybook 10.5.x · @storybook/test-runner 0.x · Playwright v1.59.x |
 
 ---
 
@@ -252,7 +252,8 @@ status: APPROVED
 > 검증 과정에서 발견된 문제점 및 TODO
 
 - [✅] skill-tester로 실사용 테스트 3건 수행 후 APPROVED 전환 (2026-04-29 완료, 3/3 PASS)
-- [📅] Storybook 10.4 stable 릴리스 시 변경점 모니터링 (현재 next: 10.4.0-alpha.3) — 선택 보강 항목, 차단 요인 아님
+- [✅] **짝 스킬(`frontend/storybook`, 2026-08-11 10.5.x 갱신)과의 패키지 구조 불일치 정정** (2026-08-11 완료) — `.storybook/main.ts` 예시가 v9에서 제거된 `@storybook/addon-essentials`를 `addons`에 그대로 두고 있어, 그대로 따라 하면 Storybook 시작 시 에러가 나는 상태였음. `@storybook/addon-docs` + `@storybook/addon-a11y` 구조로 교체하고 essentials·interactions 제거 경고를 명시. 역할 분리(storybook=기본 사용법 / storybook-visual-testing=시각 회귀)는 그대로 유지하고, 패키지 이동 대응표 전체는 짝 스킬 참조로 위임
+- [✅] Storybook 10.4 stable 릴리스 시 변경점 모니터링 (2026-08-11 확인 — 10.5.x가 최신 안정. 10.4~10.5 변경점은 Vite 8 / Next.js 16.2 지원 등으로 시각 테스트 셋업에 직접 영향 없음)
 - [📅] @storybook/test-runner의 Vitest addon 대체 흐름 모니터링 — 공식 docs가 Vite 기반 SB에 Vitest addon 권장 시작. Playwright 기반 시각 회귀가 그래도 표준이지만, 차후 Vitest browser mode + visual 테스트로 대체될 가능성 있음. 선택 보강 항목, 차단 요인 아님
 - [⏸️] DISPUTED였던 Node 버전(20.16+/22.19+ vs 20.19+/22.12+)의 정확한 차이 출처를 Storybook 코어 팀이 명확화하면 SKILL.md 재정리 — 선택 보강 항목, 차단 요인 아님
 
@@ -264,3 +265,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-04-29 | v1 | 최초 작성 — Storybook 10.3 + @storybook/test-runner + Playwright v1.59.x 기준, 8개 필수 토픽 모두 포함, 핵심 클레임 4건 교차 검증 (VERIFIED 3 / DISPUTED 1) | Claude (skill-creator) |
 | 2026-04-29 | v1 | 2단계 실사용 테스트 수행 (Q1 preRender deprecated 함정 + a11y/스크린샷 동시 설정 / Q2 macOS baseline vs CI Linux 1px 깨짐 / Q3 자체 호스팅 vs Chromatic 의사결정) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-08-11 | v1.1 | 짝 스킬 정합성 정정: ① `.storybook/main.ts` 예시에서 v9 제거 패키지 `@storybook/addon-essentials` 삭제 → `@storybook/addon-docs` + `@storybook/addon-a11y`로 교체 + essentials·interactions 잔존 시 에러 경고 추가 ② SB9→10 비교표의 "a11y addon 내장" 서술 정정(여전히 별도 패키지, Recommended 설치에 기본 포함) ③ 섹션 3의 "SB9 이상 a11y 내장" 문구를 addon 패널 vs CI 게이팅 구분으로 정정 ④ 대상 버전 10.3.x→10.5.x·검증일 갱신 ⑤ `frontend/storybook` 참조 문구의 "Storybook 8.x" 잔재 제거 ⑥ CI 예시의 `actions/setup-node@v4`→`@v7`(`devops/github-actions` 동일자 갱신과 정합). 코드 예시·정책 서술 외 구조 변경 없음, status APPROVED 유지 | Claude (Opus 5) |

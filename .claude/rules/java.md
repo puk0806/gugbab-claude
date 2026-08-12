@@ -1,3 +1,11 @@
+---
+paths:
+  - "**/*.java"
+  - "**/*.gradle"
+  - "**/*.gradle.kts"
+  - "**/pom.xml"
+---
+
 # Java 코딩 규칙
 
 Java + Spring Boot 백엔드 코드 작성 시 준수해야 할 규칙.

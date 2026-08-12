@@ -18,10 +18,8 @@ Unity 6 LTS 2D 모바일 게임 개발 프로젝트. 웹 프론트엔드·서버
 | game | [unity-developer](../../.claude/agents/game/unity-developer.md) | Unity 6 LTS + C# 2D 게임 코드 구현 |
 | game | [mobile-app-publisher](../../.claude/agents/game/mobile-app-publisher.md) | Google Play·App Store 출시 단계별 가이드 |
 | game | [game-monetization-strategist](../../.claude/agents/game/game-monetization-strategist.md) | 광고·IAP 수익화 전략 + Firebase Analytics 설계 |
-| meta | [planner](../../.claude/agents/meta/planner.md) | 복잡한 작업 단계별 실행 계획 분해 |
 | meta | [claude-code-guide](../../.claude/agents/meta/claude-code-guide.md) | Claude Code CLI 사용법·설정 가이드 |
 | meta | [tech-stack-advisor](../../.claude/agents/meta/tech-stack-advisor.md) | 요구사항에 맞는 기술 스택 추천·비교 |
-| meta | [mvp-scope-planner](../../.claude/agents/meta/mvp-scope-planner.md) | MVP Phase 1·2·3 범위 절단 |
 | meta | [project-scaffolder](../../.claude/agents/meta/project-scaffolder.md) | 결정된 스택으로 프로젝트 부트스트랩 |
 | backend | [python-backend-developer](../../.claude/agents/backend/python-backend-developer.md) | FastAPI 백엔드 코드 구현 |
 | backend | [python-backend-architect](../../.claude/agents/backend/python-backend-architect.md) | FastAPI 백엔드 아키텍처 설계 |

@@ -5,8 +5,11 @@ description: 모노레포 vs 멀티레포 선택 기준, Turborepo 구조 및 �
 
 # 모노레포 & Turborepo 패턴
 
-> 소스: https://turbo.build/repo/docs | https://github.com/vercel/turborepo
-> 검증일: 2026-06-20
+> 소스: https://turborepo.dev/docs | https://github.com/vercel/turborepo
+> 검증일: 2026-08-11
+> 기준 버전: Turborepo 2.10.9 (2026-08-07) / pnpm 11.21.0
+>
+> 참고: 구 도메인 `turbo.build`는 현재 `turborepo.dev`로 301 리다이렉트된다.
 
 ---
 
@@ -56,7 +59,7 @@ monorepo/
 {
   "name": "myorg",
   "private": true,
-  "packageManager": "pnpm@11.8.0",
+  "packageManager": "pnpm@11.21.0",
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",
@@ -319,7 +322,7 @@ pnpm add -D typescript --filter @myorg/ui
 
 ---
 
-## pnpm 11 + Turborepo 호환성 주의 (2026-06-20 기준)
+## pnpm 11 + Turborepo 호환성 (2026-08-11 기준 — 이슈 해소됨)
 
 > **주의:** pnpm 11(2026-04-28 출시)은 Node.js 22+ 필수. pnpm 10에서 11로 업그레이드 시 CI/개발 환경도 Node.js 22 이상으로 함께 올려야 한다.
 
@@ -329,15 +332,44 @@ pnpm add -D typescript --filter @myorg/ui
 # - 순수 ESM으로 전환
 # - SQLite 기반 스토어 인덱스 (JSON-per-package → 단일 SQLite DB)
 # - 자체 publish 구현 (npm CLI 폴백 제거)
+# - lockfile 구조 변경 (configDependencies가 별도 YAML 문서로 분리)
 ```
 
-**Turborepo + pnpm 11 알려진 이슈 (Turborepo 2.9.x):**
+**과거 Turborepo + pnpm 11 lockfile 이슈 — 모두 Turborepo 2.9.7(2026-05-01)에서 해소:**
 
-| 이슈 | 원인 | 상태 |
-|------|------|------|
-| multi-document YAML lockfile 파싱 실패 | pnpm 11의 `configDependencies` 사용 시 멀티 YAML 문서 생성 | Turborepo가 단일 YAML 문서만 지원 |
-| `patchedDependencies` flat-string 형식 | pnpm 11이 `{path, hash}` 대신 flat 해시로 변경 | serde_yaml 타입 불일치 |
+| 이슈 | 원인 | 해소 버전 |
+|------|------|-----------|
+| multi-document YAML lockfile 파싱 실패 | pnpm 11의 `configDependencies` 사용 시 멀티 YAML 문서 생성 | **2.9.7** (PR #12616) |
+| `patchedDependencies` flat-string 형식 경고 | pnpm 11이 `{path, hash}` 대신 flat 해시 문자열로 변경 | **2.9.7** (PR #12676) |
 
 **대응 방법:**
-- `configDependencies` 또는 `patchedDependencies` 사용 중이면 Turborepo 최신 패치 확인 후 업그레이드
-- 해당 기능 미사용 시 pnpm 11 + Turborepo 2.9.x 조합 일반적으로 동작
+- **Turborepo 2.9.7 이상**을 쓰면 pnpm 11의 `configDependencies`·`patchedDependencies`를 그대로 사용할 수 있다. 신규 세팅은 최신 안정 버전(2.10.9)을 권장한다.
+- 2.9.6 이하에 고정돼 있다면 위 두 기능 사용 시 lockfile 파싱 실패·경고가 발생하므로 **업그레이드가 유일한 해법**이다 (우회 설정 없음).
+- pnpm 11로 올릴 때는 Turborepo 버전보다 **Node.js 22+ 요구사항**이 실제 CI 실패의 더 흔한 원인이다 — 런타임을 먼저 확인한다.
+
+---
+
+## Turborepo 2.10 신규 기능 (2026-06-24)
+
+| 기능 | 내용 |
+|------|------|
+| **로컬 캐시 자동 정리** | `turbo.json` 최상위 `cacheMaxAge`·`cacheMaxSize`로 오래되거나 용량 초과한 캐시 항목 자동 제거 |
+| **`--affected` + `--filter` 조합** | 이전에는 배타적이었던 두 옵션을 함께 사용 가능 |
+| **Graceful shutdown** | 태스크 중단 시 정상 종료 절차·exit code 보존 |
+| **Incremental task caching** | 태스크 단위 증분 캐싱 |
+| **Boundaries 순환 의존성 탐지** | `turbo boundaries`가 패키지 간 순환 의존성을 검출 |
+
+```jsonc
+// turbo.json — 로컬 캐시 자동 정리 (기본값은 둘 다 "0" = 비활성)
+{
+  "$schema": "https://turbo.build/schema.json",
+  "cacheMaxAge": "7d",      // 30s | 5m | 24h | 7d | 2w
+  "cacheMaxSize": "10GB",   // 500MB | 10GB | 1.5GB (대소문자 무관)
+  "tasks": { }
+}
+```
+
+```bash
+# 2.10부터 --affected와 --filter 동시 사용 가능
+turbo run build --affected --filter=@myorg/web
+```

@@ -12,7 +12,6 @@
 
 | 카테고리 | 에이전트 | 설명 |
 |----------|---------|------|
-| meta | [planner](../../.claude/agents/meta/planner.md) | 복잡한 작업을 단계별 실행 계획으로 분해 |
 | meta | [claude-code-guide](../../.claude/agents/meta/claude-code-guide.md) | Claude Code CLI 사용법·설정 가이드 |
 | research | [deep-researcher](../../.claude/agents/research/deep-researcher.md) | 논문/오픈소스/기업 사례 3축 딥 리서치 |
 | research | [web-searcher](../../.claude/agents/research/web-searcher.md) | 검색 축별 소스 탐색 전담 |

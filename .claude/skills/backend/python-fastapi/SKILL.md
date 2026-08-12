@@ -9,7 +9,7 @@ description: >
 
 > 소스: https://fastapi.tiangolo.com/ (공식 docs), https://github.com/fastapi/fastapi/releases
 > 버전 기준: FastAPI 0.115+ (테스트 시점 최신: 0.136.x), Pydantic 2.x, Starlette 0.4x~1.0
-> 검증일: 2026-05-15
+> 검증일: 2026-08-12
 
 ---
 

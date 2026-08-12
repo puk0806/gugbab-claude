@@ -16,7 +16,8 @@ React·Next.js·TypeScript·SEO·접근성·성능·PWA·꿈 앱 UI 등 프론�
 
 | 스킬 | 설명 | 검증 |
 |------|------|------|
-| [state-management](../../../.claude/skills/frontend/state-management/SKILL.md) | Zustand v5 전역 상태, TanStack Query v5 서버 상태·캐싱 | [→](./state-management/verification.md) |
+| [state-management](../../../.claude/skills/frontend/state-management/SKILL.md) | Zustand v5 전역 상태, TanStack Query v5 서버 상태·캐싱 — 무엇을 어디에 둘지 선택 기준 | [→](./state-management/verification.md) |
+| [tanstack-query](../../../.claude/skills/frontend/tanstack-query/SKILL.md) | TanStack Query v5 실전 — queryKey 설계·staleTime/gcTime·낙관적 업데이트·무한 스크롤·App Router SSR | [→](./tanstack-query/verification.md) |
 | [form-handling](../../../.claude/skills/frontend/form-handling/SKILL.md) | React Hook Form + Zod 유효성 검증, 재사용 필드 컴포넌트 | [→](./form-handling/verification.md) |
 | [error-handling](../../../.claude/skills/frontend/error-handling/SKILL.md) | React 19 Error Boundary, Suspense 조합, TanStack Query 에러 처리 | [→](./error-handling/verification.md) |
 
@@ -25,7 +26,7 @@ React·Next.js·TypeScript·SEO·접근성·성능·PWA·꿈 앱 UI 등 프론�
 | 스킬 | 설명 | 검증 |
 |------|------|------|
 | [radix-ui](../../../.claude/skills/frontend/radix-ui/SKILL.md) | Radix UI Primitives — asChild/Slot, Compound Component, data-attribute 스타일링 | [→](./radix-ui/verification.md) |
-| [mui-v5](../../../.claude/skills/frontend/mui-v5/SKILL.md) | MUI v5 + Emotion — ThemeProvider, sx prop, 오버라이드, Next.js 연동 | [→](./mui-v5/verification.md) |
+| [mui-v9](../../../.claude/skills/frontend/mui-v9/SKILL.md) | MUI v9 + Emotion — slots/slotProps, CSS Variables·colorSchemes, v5→v9 마이그레이션 | [→](./mui-v9/verification.md) |
 | [animation](../../../.claude/skills/frontend/animation/SKILL.md) | motion 12.x 애니메이션 — CSS transition, useScroll, 드래그, LazyMotion | [→](./animation/verification.md) |
 | [swiper](../../../.claude/skills/frontend/swiper/SKILL.md) | Swiper 11.x 슬라이더 — React 컴포넌트, 핵심 모듈, 반응형, Next.js SSR | [→](./swiper/verification.md) |
 | [react-virtuoso](../../../.claude/skills/frontend/react-virtuoso/SKILL.md) | react-virtuoso 가상 스크롤 — 동적 높이, 무한 스크롤 | [→](./react-virtuoso/verification.md) |

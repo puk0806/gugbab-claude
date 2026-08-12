@@ -207,6 +207,50 @@ if [ -d "$TARGET/.claude" ]; then
   chmod -R u+w "$TARGET/.claude" 2>/dev/null || true
 fi
 
+# ── 0.5 이전 설치 잔재 정리 ─────────────────────────────────────────────
+# 옵션 OFF 시 해당 훅·배선·rules·플러그인 잔재를 정리하고, 소스에서 폐지된 훅과
+# 구세대 .cjs 훅을 제거한다. settings.json 덮어쓰기를 skip해도 옵션 선택이 반영된다.
+# memory OFF 시 구버전 전역 symlink를 실제 디렉토리로 마이그레이션하고
+# 레포 memory/ 를 전역으로 이전한다 (메모리 유실 없음). 상세: scripts/install-cleanup.js
+if [ -d "$TARGET/.claude" ]; then
+  echo "[cleanup] 이전 설치 잔재 정리"
+  CLEANUP_KEEP=""
+  [ "$INCLUDE_MEMORY" = "true" ]            && CLEANUP_KEEP="$CLEANUP_KEEP --keep-memory"
+  [ "$INCLUDE_CODEX" = "true" ]             && CLEANUP_KEEP="$CLEANUP_KEEP --keep-codex"
+  [ "$INCLUDE_BRANCH_PROTECTION" = "true" ] && CLEANUP_KEEP="$CLEANUP_KEEP --keep-branch-protection"
+  [ "$INCLUDE_SUPERPOWERS" = "true" ]       && CLEANUP_KEEP="$CLEANUP_KEEP --keep-superpowers"
+  [ "$INCLUDE_README_GUARD" = "true" ]      && CLEANUP_KEEP="$CLEANUP_KEEP --keep-readme-guard"
+  [ "$INCLUDE_STALENESS_GUARD" = "true" ]   && CLEANUP_KEEP="$CLEANUP_KEEP --keep-staleness-strict"
+  is_dev_selected                            && CLEANUP_KEEP="$CLEANUP_KEEP --keep-dev"
+  is_ts_selected                             && CLEANUP_KEEP="$CLEANUP_KEEP --keep-typescript"
+
+  # 매니페스트가 없는 구버전 설치 → 1회 확인 후 소스에 없는 스킬·에이전트·폐지 훅 일괄 정리.
+  # 이후 설치부터는 매니페스트가 기록되므로 이 질문은 다시 나오지 않는다.
+  if [ ! -f "$TARGET/.claude/.install-manifest.json" ] && \
+     { [ -d "$TARGET/.claude/agents" ] || [ -d "$TARGET/.claude/skills" ] || [ -d "$TARGET/.claude/hooks" ]; }; then
+    echo ""
+    echo "  이 프로젝트에는 설치 매니페스트가 없습니다 (구버전 설치)."
+    echo "  소스 레포에 없는 스킬·에이전트·폐지된 훅을 이전 설치 잔재로 보고 삭제할까요?"
+    echo "  (이 프로젝트에서 직접 만든 커스텀 파일이 있다면 N — 목록만 경고로 출력됩니다)"
+    read -rp "  잔재 삭제? [y/N] " _ORPHAN_ANSWER
+    case "$_ORPHAN_ANSWER" in
+      y|Y) CLEANUP_KEEP="$CLEANUP_KEEP --delete-orphans" ;;
+    esac
+    echo ""
+  fi
+
+  # shellcheck disable=SC2086 — keep 플래그는 공백 분리 의도
+  node "$REPO_DIR/scripts/install-cleanup.js" --target "$TARGET" --source "$REPO_DIR" $CLEANUP_KEEP || \
+    echo "  ⚠ 잔재 정리 실패 — 설치는 계속 진행"
+  echo ""
+fi
+
+# 설치 매니페스트 수집 시작 — 이번 실행이 복사하는 에이전트·스킬·훅을 기록해
+# 설치 마지막에 .claude/.install-manifest.json 으로 저장한다 (재설치 시 폐기 수렴 근거)
+MANIFEST_AGENTS_TMP=$(mktemp)
+MANIFEST_SKILLS_TMP=$(mktemp)
+MANIFEST_HOOKS_TMP=$(mktemp)
+
 # ── 1. hooks ────────────────────────────────────────────────────────────
 mkdir -p "$TARGET/.claude/hooks"
 echo "[hooks]"
@@ -273,6 +317,7 @@ fi
 for hook in "${HOOKS[@]}"; do
   if cp -f "$REPO_DIR/.claude/hooks/$hook" "$TARGET/.claude/hooks/$hook" 2>/dev/null; then
     echo "  → .claude/hooks/$hook"
+    echo "$hook" >> "$MANIFEST_HOOKS_TMP"
   else
     echo "  ✗ .claude/hooks/$hook (복사 실패 또는 미존재)"
   fi
@@ -299,7 +344,6 @@ echo "[agents]"
 
 # 유틸: 범용 에이전트만 허용 (비개발자도 사용 가능한 것)
 UTIL_AGENTS=(
-  "meta/planner.md"
   "meta/claude-code-guide.md"
   "research/deep-researcher.md"
   "research/web-searcher.md"
@@ -331,7 +375,6 @@ ACADEMIC_AGENTS=(
   "validation/fact-checker.md"
   "validation/peer-review-simulator.md"
   "validation/source-validator.md"
-  "meta/planner.md"
   "meta/claude-code-guide.md"
   "meta/freshness-auditor.md"
 )
@@ -359,10 +402,8 @@ DREAM_APP_AGENTS=(
   "validation/source-validator.md"
   "validation/qa-engineer.md"
   "validation/security-auditor.md"
-  "meta/planner.md"
   "meta/claude-code-guide.md"
   "meta/tech-stack-advisor.md"
-  "meta/mvp-scope-planner.md"
   "meta/project-scaffolder.md"
 )
 
@@ -495,6 +536,7 @@ for src_path in "$REPO_DIR/.claude/agents"/**/*.md "$REPO_DIR/.claude/agents"/*.
   mkdir -p "$(dirname "$dest")"
   if cp -f "$src_path" "$dest" 2>/dev/null; then
     echo "  → .claude/agents/$rel"
+    echo "$rel" >> "$MANIFEST_AGENTS_TMP"
 
     # 같은 에이전트의 docs 페어링 복사
     # 1) docs/agents/{cat}/{name}.md
@@ -771,6 +813,7 @@ for src_path in "$REPO_DIR/.claude/skills"/*/*/SKILL.md; do
   mkdir -p "$(dirname "$dest")"
   if cp -f "$src_path" "$dest" 2>/dev/null; then
     echo "  → .claude/skills/$rel"
+    echo "$rel" >> "$MANIFEST_SKILLS_TMP"
 
     # 같은 스킬의 docs 페어링 복사 (docs/skills/{cat}/{name}/)
     docs_src_dir="$REPO_DIR/docs/skills/$skill_prefix"
@@ -967,6 +1010,16 @@ if [ "$CLAUDE_WRITTEN" = true ]; then
     echo "  ℹ {프로젝트명}과 {설명}을 직접 수정하세요"
   fi
 fi
+
+# ── 설치 매니페스트 저장 ────────────────────────────────────────────────
+# 이번 실행이 복사한 파일 + (이전 매니페스트 중 아직 대상에 존재하는 파일)의 합집합에
+# 설치 시점 sha256을 함께 기록한다. 재설치 시 cleanup이 이 목록으로 "설치 관리 파일 vs
+# 커스텀"을 추측 없이 판별하고, 해시가 일치하는(=손대지 않은) 파일만 폐기 삭제한다.
+# memoryManaged는 옵션값이 기본이되 memory 이전 미완 시 유지된다 — 상세: scripts/write-install-manifest.js
+node "$REPO_DIR/scripts/write-install-manifest.js" \
+  "$TARGET" "$MANIFEST_AGENTS_TMP" "$MANIFEST_SKILLS_TMP" "$INCLUDE_MEMORY" "$MANIFEST_HOOKS_TMP" || \
+  echo "  ⚠ 매니페스트 저장 실패 — 다음 재설치 시 잔재 확인 질문이 다시 표시됩니다"
+rm -f "$MANIFEST_AGENTS_TMP" "$MANIFEST_SKILLS_TMP" "$MANIFEST_HOOKS_TMP"
 
 # ── 완료 ─────────────────────────────────────────────────────────────
 echo ""

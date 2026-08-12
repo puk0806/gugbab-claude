@@ -6,7 +6,7 @@ description: Create React App(CRA)에서 Vite로 마이그레이션하는 단계
 # CRA → Vite 마이그레이션
 
 > 소스: https://vitejs.dev/guide/ | https://react.dev/blog/2025/02/14/sunsetting-create-react-app | https://vitest.dev/config/
-> 검증일: 2026-04-20
+> 검증일: 2026-08-11 (최초 작성 2026-04-20, WebSearch 재검증 완료 — Vite 8/Rolldown 전환은 이 스킬의 rollupOptions/manualChunks 미사용으로 영향 없음, vite-plugin-svgr 최신 v5.2.0 확인·`?react` 쿼리 방식은 v4~v5 동일 유효)
 
 > **배경:** CRA(Create React App)는 2025년 2월 공식 deprecated. 신규 프로젝트는 Vite, 기존 프로젝트는 이 가이드로 전환한다.
 

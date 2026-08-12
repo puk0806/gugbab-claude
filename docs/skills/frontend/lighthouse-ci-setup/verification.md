@@ -122,6 +122,55 @@ UNVERIFIED: 0건
 
 ## 5. 테스트 진행 기록
 
+**수행일**: 2026-08-11
+**수행자**: skill-tester → general-purpose (재검증 라운드)
+**수행 방법**: (1) SKILL.md 핵심 클레임 3개 WebSearch 재교차검증 (2) SKILL.md Read 후 실전 질문 3개 재답변 (2026-05-14와 다른 질문 구성)
+
+### WebSearch 재교차검증 (2026-08-11)
+
+| # | 클레임 | 결과 | 비고 |
+|---|--------|------|------|
+| 1 | `@lhci/cli` 최신 버전 0.15.1 | VERIFIED (변동 없음) | npm 최신 버전 재확인 |
+| 2 | `assert.assertions` 스키마(`"categories:performance": ["error", {...}]`) 유효 | VERIFIED (변동 없음) | deprecated 없음 |
+| 3 | `treosh/lighthouse-ci-action` 최신 릴리즈 | VERIFIED (v12.6.2, 메이저 v12 유지) | SKILL.md의 `@v12` 참조 그대로 유효 |
+
+DISPUTED: 0건 — 2026-05-14 시점 검증 내용이 3개월 후에도 그대로 유효함 확인.
+
+### 재검증 테스트 (2026-08-11, 신규 질문)
+
+**Q1. numberOfRuns를 왜 늘려야 하고 TBT처럼 variance 큰 메트릭에는 어떤 aggregationMethod를 조합해야 하나**
+- PASS
+- 근거: SKILL.md 섹션 2(collect 옵션)·4-4(aggregationMethod 선택)·7-1(variance 큰 메트릭)
+- 상세: numberOfRuns 기본 3(natural page variability 완화), 불안정하면 5. TBT는 `pessimistic`(worst-case 보호) 조합 권장이 코드 예시와 함께 명확히 도출됨.
+
+**Q2. GitHub Actions startServerCommand에 npm run dev를 쓰면 안 되는 이유와 대안**
+- PASS
+- 근거: SKILL.md 섹션 7-5(startServerCommand가 종료되지 않는 문제)
+- 상세: LHCI가 백그라운드로 띄우고 SIGTERM으로 종료시키는 방식이라 watcher가 무한 실행되는 dev 서버는 hang. `next start`/`vite preview` 같은 production 서버 사용, `startServerReadyPattern`으로 ready 신호 명시 가능함이 코드로 도출됨.
+
+**Q3. PR에서만 빌드 실패시키고 main 브랜치 push 후에는 deploy를 막지 않으려면**
+- PASS
+- 근거: SKILL.md 섹션 7-6(PR 머지 전에만 실패시키기)·섹션 5-1 워크플로우 예시
+- 상세: `on: pull_request` 트리거만 등록하고 `push: main`은 등록하지 않는 방법과, main용 별도 config에서 `"warn"` 다운그레이드하는 대안 모두 도출됨.
+
+### 발견된 gap (2026-08-11)
+
+- numberOfRuns를 3→5로 올리는 구체적 판단 기준(실행 시간/비용 트레이드오프)이 축약되어 있음 — 선택 보강
+- `startServerReadyPattern`의 프레임워크별 실제 ready 로그 문구 예시 부족 — 선택 보강
+- main 브랜치용 별도 config 파일의 구체적 코드 예시 없음(개념만 언급) — 선택 보강
+- 3건 모두 질문에 답하는 데는 지장 없었음(YES 판정) — 차단 요인 아님
+
+### 판정 (2026-08-11)
+
+- WebSearch 재교차검증: 3/3 VERIFIED, DISPUTED 0
+- agent content test: 3/3 PASS (신규 질문 구성)
+- verification-policy 재분류 판단: CI 빌드 설정 스킬 — 실제 GitHub Actions 파이프라인 실행 결과·LHCI 리포트 산출물로만 "baseline이 실제로 안정적으로 동작하는가"를 최종 확인 가능. `verification-policy.md`의 "빌드 설정 스킬 (출력 결과물 검증 필요)"에 해당 → **실사용 필수 카테고리 유지**
+- 최종 상태: **PENDING_TEST 유지** (content test 재확인 PASS, 실제 CI 실행·리포트 산출까지는 미검증)
+
+---
+
+> 아래는 2026-05-14 최초 테스트 기록 (참고용 보존)
+
 **수행일**: 2026-05-14
 **수행자**: skill-tester → general-purpose (frontend-developer 미사용 — general-purpose 대체)
 **수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 존재 여부 및 anti-pattern 회피 확인
@@ -169,10 +218,11 @@ UNVERIFIED: 0건
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-05-14 수행 — 3/3 PASS) |
-| **최종 판정** | **PENDING_TEST** (실사용 필수 카테고리, content test PASS) |
+| 에이전트 활용 테스트 | ✅ (2026-05-14 최초 3/3 PASS, 2026-08-11 재검증 3/3 PASS) |
+| WebSearch 재교차검증 (2026-08-11) | ✅ 3/3 VERIFIED, DISPUTED 0 |
+| **최종 판정** | **PENDING_TEST** (실사용 필수 카테고리, content test 재확인 PASS) |
 
-판정 사유: 1단계(오프라인 내용 검증) 완료 + 2단계(agent content test) 3/3 PASS 완료. 본 스킬은 *실사용 필수 카테고리*(CI 빌드 설정)이므로 실제 GitHub Actions 워크플로우 실행 및 산출 LHCI 리포트 검증까지 거쳐야 APPROVED 전환 가능.
+판정 사유: 1단계(오프라인 내용 검증) 완료 + 2단계(agent content test) 2026-05-14·2026-08-11 두 차례 모두 3/3 PASS 완료. 본 스킬은 *실사용 필수 카테고리*(CI 빌드 설정)이므로 실제 GitHub Actions 워크플로우 실행 및 산출 LHCI 리포트 검증까지 거쳐야 APPROVED 전환 가능.
 
 ---
 
@@ -182,6 +232,8 @@ UNVERIFIED: 0건
 - [❌] LHCI Server self-hosting 가이드 (Docker 등) — 별도 스킬로 분리 가능. **선택 보강** (차단 요인 아님 — 본 스킬 범위 밖, 독립 스킬 생성으로 처리)
 - [❌] performance budget(`budgetPath`) 상세 — 본 스킬에 추가하거나 별도 스킬 분리. **선택 보강** (차단 요인 아님 — 현재 스킬에서 budgetPath 입력 옵션 소개 수준으로 충분)
 - [✅] skill-tester 호출 → 섹션 5 추가 기록 (2026-05-14 완료, 3/3 PASS)
+- [✅] skill-tester 재검증(WebSearch 재교차검증 + content test) 수행 (2026-08-11 완료, 3/3 VERIFIED + 3/3 PASS)
+- [❌] 실제 GitHub Actions 워크플로우 실행 + LHCI 리포트 산출물 확인 — **차단 요인**: 실사용 필수 카테고리(CI 빌드 설정), 실 프로젝트에서 파이프라인을 돌려 baseline 안정성을 확인해야 APPROVED 전환 가능
 
 ---
 
@@ -191,3 +243,4 @@ UNVERIFIED: 0건
 |------|------|-----------|--------|
 | 2026-05-14 | v1 | 최초 작성. LHCI 0.15.1 + treosh action v12 + Core Web Vitals 2026-05 기준. 15개 클레임 모두 VERIFIED. | skill-creator |
 | 2026-05-14 | v1 | 2단계 실사용 테스트 수행 (Q1 performance/TBT assert 구성 / Q2 CI variance 안정화 / Q3 upload target 보안 선택) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | skill-tester |
+| 2026-08-11 | v1 | 재검증 수행 — WebSearch 재교차검증 3/3 VERIFIED(0 DISPUTED) + 신규 질문 content test (Q1 numberOfRuns/aggregationMethod / Q2 startServerCommand dev서버 함정 / Q3 PR-only 실패 설정) → 3/3 PASS, PENDING_TEST 유지 (CI 빌드 설정 — 실행 결과물 검증 필요) | skill-tester |

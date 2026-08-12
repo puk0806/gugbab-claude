@@ -104,13 +104,45 @@ status: PENDING_TEST
 | 5 | `manualChunks`에서 앱 내부 파일(src/)을 강제 분할하면 circular dependency 위험 있음 | VERIFIED | vitejs/vite issue #12209 + #17653 확인 |
 | 6 | `vite:preloadError` 이벤트로 동적 import 실패를 감지하고 재시도 로직 구현 가능 | VERIFIED | vitejs.dev/guide/troubleshooting 공식 문서 확인 |
 
+| 7 | Vite 8부터 Rolldown이 기본 번들러로 전환되며 `build.rollupOptions`는 `build.rolldownOptions`로 개명(`rollupOptions`는 deprecated alias로 하위호환 유지). `output.manualChunks` 객체 형식은 Vite 8+에서 미지원(함수 형식은 deprecated로 계속 동작) | VERIFIED (SKILL.md 인용 출처 기준) | SKILL.md 자체 인용 출처 https://vite.dev/guide/migration 기준으로 2026-08-11 SKILL.md에 반영됨. 이번 동기화 세션에서 별도 WebSearch 재검증은 미수행 — SKILL.md 인용 출처 대조 + 내용 일관성만 확인 |
+
 ### 4-5. DISPUTED 항목 처리
 
-- 없음 (전 클레임 VERIFIED)
+- 없음 (전 클레임 VERIFIED, 7번 항목은 SKILL.md 인용 출처 기준)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-08-12
+**수행자**: 메인 대화 직접 수행 (skill-tester 서브에이전트 미호출 — SKILL.md에 이미 반영된 Vite 8 대응 주의사항 동기화 목적의 단발 점검)
+**수행 방법**: SKILL.md에 2026-08-11 추가된 "Vite 8+" 주의사항(rollupOptions→rolldownOptions 개명, manualChunks 객체 형식 미지원)이 verification.md에 미기록 상태였던 것을 확인 → 신규 내용 기반 실전 질문 2개를 직접 답변·근거 대조
+
+### 신규 반영 내용 content test (2026-08-12)
+
+**Q1. Vite 8에서 manualChunks 객체 형식(`manualChunks: { 'react-vendor': [...] }`)을 그대로 쓸 수 있는가?**
+- PASS
+- 근거: SKILL.md 최상단 "주의 (Vite 8+):" 블록 + "1. manualChunks 전략 > 기본 형식 비교" 섹션 내 "주의 (Vite 8+):" 문구
+- 상세: 미지원. "패키지명 기반 자동 분할"에서 제시하는 함수 형식 `manualChunks(id)` 패턴으로 전환해야 한다고 SKILL.md가 명시적으로 안내.
+
+**Q2. 함수형 manualChunks는 Vite 8+에서 계속 쓸 수 있는가?**
+- PASS
+- 근거: 최상단 "주의 (Vite 8+):" 블록 + "기본 형식 비교" 코드 블록 주석("Vite 8+에서도 동작, deprecated")
+- 상세: 예, deprecated 상태로는 계속 동작한다고 명시. 단 향후 대체(`rolldownOptions.output.codeSplitting` 등) 검토가 필요하다는 점도 안내됨.
+
+### 발견된 gap
+
+- 없음 (2/2 PASS, SKILL.md의 Vite 8 대응 주의사항이 자기 완결적으로 근거 제공)
+
+### 판정 (2026-08-12)
+
+- agent content test (신규 내용): PASS (2/2, 메인 대화 직접 수행)
+- verification-policy 분류: 빌드 설정 스킬 — 실사용 필수 카테고리 (변동 없음)
+- 최종 상태: PENDING_TEST 유지 (Vite 8 대응 내용 동기화 완료, 실제 프로젝트 빌드 검증 후 APPROVED 전환 대상이라는 기존 판정 변동 없음)
+
+---
+
+## 5-1. 이전 테스트 진행 기록 (2026-04-24, 보존)
 
 **수행일**: 2026-04-24
 **수행자**: skill-tester → general-purpose (대체 사용: java-backend-developer 미해당, frontend-developer 미등록)
@@ -158,14 +190,16 @@ status: PENDING_TEST
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ PASS (3/3, 2026-04-24) |
-| **최종 판정** | **PENDING_TEST** (빌드 설정 실사용 필수 카테고리, content test PASS) |
+| 에이전트 활용 테스트 | ✅ PASS (3/3, 2026-04-24 / 2026-08-12 Vite 8 신규 내용 2/2 PASS 추가) |
+| Vite 8 대응 주의사항 동기화(2026-08-12) | ✅ SKILL.md 반영 내용 클레임 판정표(4-4 #7) 기록 + content test 2/2 PASS |
+| **최종 판정** | **PENDING_TEST** (빌드 설정 실사용 필수 카테고리, content test PASS, 2026-08-12 동기화에도 유지) |
 
 ---
 
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester가 content test 수행하고 섹션 5·6 업데이트 (2026-04-24 완료, 3/3 PASS)
+- [✅] SKILL.md에 반영된 Vite 8 대응 주의사항을 verification.md에 동기화 (2026-08-12 완료 — 섹션 4-4 클레임 판정표 #7 추가, content test 2/2 PASS)
 - [ ] 실제 프로젝트(lf-ui) 적용 후 빌드 결과물 확인 → APPROVED 전환 (차단 요인 아님, 선택 보강: 빌드 설정 카테고리 정책상 실사용 후 전환)
 
 ---
@@ -176,3 +210,4 @@ status: PENDING_TEST
 |------|------|-----------|--------|
 | 2026-04-20 | v1 | 최초 작성, lf-ui 프로젝트 분석 기반, WebSearch 6개 클레임 교차 검증 (전항목 VERIFIED) | 메인 대화 |
 | 2026-04-24 | v1 | 2단계 실사용 테스트 수행 (Q1 scoped 패키지 manualChunks 분류 / Q2 loadEnv 미사용 undefined 원인 / Q3 closeBundle vs writeBundle 선택) → 3/3 PASS, PENDING_TEST 유지 (빌드 설정 실사용 필수 카테고리) | skill-tester |
+| 2026-08-12 | v1 | SKILL.md에 이미 반영된 Vite 8 대응 주의사항(rollupOptions→rolldownOptions, manualChunks 객체 형식 미지원)을 verification.md에 동기화 — 클레임 판정표 #7 추가, content test 2/2 PASS. PENDING_TEST 유지 | 메인 대화 |

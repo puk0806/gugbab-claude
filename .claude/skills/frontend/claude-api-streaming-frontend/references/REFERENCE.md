@@ -4,7 +4,7 @@
 
 ```ts
 await client.messages.create({
-  model: 'claude-sonnet-4-6',
+  model: 'claude-sonnet-5',
   max_tokens: 1024,
   system: [
     {
@@ -26,9 +26,15 @@ await client.messages.create({
 - output: 변동 없음
 
 **최소 캐시 크기 (이하면 캐시 안 됨, 에러 없이 silently 무시):**
-- 4,096 tokens — Opus 4.7 / 4.6 / 4.5 / Haiku 4.5
-- 1,024 tokens — Sonnet 4.6 / 4.5 / Opus 4.1
-- 2,048 tokens — Haiku 3.5
+- **512 tokens — Opus 5 / Fable 5**
+- 1,024 tokens — Opus 4.8 / Sonnet 5 / Sonnet 4.6 / Sonnet 4.5
+- 2,048 tokens — Opus 4.7
+- 4,096 tokens — Opus 4.6 / 4.5 / Haiku 4.5
+
+> 주의: 세대가 올라간다고 임계값이 낮아지지만은 않는다(Opus 4.6 4,096 → 4.7 2,048 →
+> 4.8 1,024 → Opus 5 512). 모델을 바꾸면 캐시 임계값을 다시 확인한다.
+> Opus 4.8 → Opus 5 전환 시 임계값이 절반(1,024 → 512)이 되므로, 기존에 "너무 짧다"고
+> 판단해 캐시를 포기했던 system 블록이 코드 변경 없이 캐시될 수 있다.
 
 **캐시 hit 모니터링:**
 ```ts
@@ -139,10 +145,25 @@ async function retryWithBackoff<T>(
 
 ## 10. 모델 선택 가이드
 
-| 모델 ID (2026 frontier) | 용도 |
-|--------------------------|------|
-| `claude-opus-4-7` | 장기 에이전트·복잡한 코딩 추론 |
-| `claude-sonnet-4-6` | 채팅 일반·속도+지능 균형 (기본 권장) |
-| `claude-haiku-4-5` | 빠른 응답·간단 분류 |
+| 모델 ID (2026-08 현행) | 용도 | 컨텍스트 | 단가 (입력/출력, per MTok) |
+|------------------------|------|----------|---------------------------|
+| `claude-fable-5` | 최상위 티어 — 최고난도 추론·장기 에이전트 | 1M | $10 / $50 |
+| `claude-opus-5` | 장기 에이전트·복잡한 코딩 추론 (기본 권장) | 1M | $5 / $25 |
+| `claude-sonnet-5` | 채팅 일반·속도+지능 균형 | 1M | $3 / $15 (2026-08-31까지 인트로 $2 / $10) |
+| `claude-haiku-4-5` | 빠른 응답·간단 분류 | 200K | $1 / $5 |
 
+> `claude-opus-4-8` / `claude-sonnet-4-6` / `claude-opus-4-7`은 아직 서비스되지만 **구세대**다.
+> Haiku 4.5는 **여전히 현행**이므로 교체하지 않는다.
+>
 > 주의: 모델 ID는 시기마다 갱신된다. 작업 전 공식 문서 `/docs/en/api/models` 확인 필수.
+
+### 5 계열 API 규약 (프록시 백엔드에서 지킬 것)
+
+스트리밍 프록시는 요청 본문을 그대로 Anthropic에 전달하므로, 아래 위반은 프록시 단에서 400을 낸다.
+
+- `temperature` / `top_p` / `top_k` → **400**. 제거하고 프롬프팅으로 유도한다.
+- `thinking: { type: 'enabled', budget_tokens: N }` → **400**. `{ type: 'adaptive' }` + `output_config: { effort }`로 대체.
+- 마지막 assistant 턴 prefill → **400**. `output_config.format`(structured outputs) 또는 시스템 프롬프트로 대체.
+- Opus 5는 사고가 **기본 ON**이며 `thinking: { type: 'disabled' }`는 effort `high` 이하에서만 허용된다
+  (`xhigh` / `max`와 함께 쓰면 400). `max_tokens`는 사고 + 응답 합산 상한이다.
+- `thinking.display` 기본값은 `"omitted"` — 사용자에게 추론을 보여주려면 `'summarized'`를 명시한다.
