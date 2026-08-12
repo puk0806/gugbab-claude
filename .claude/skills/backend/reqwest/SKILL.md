@@ -6,7 +6,7 @@ description: Rust reqwest HTTP 클라이언트 핵심 패턴 — GET/POST, JSON,
 # reqwest HTTP 클라이언트
 
 > 소스: https://docs.rs/reqwest/latest/reqwest/ | https://github.com/seanmonstar/reqwest
-> 검증일: 2026-06-20
+> 검증일: 2026-08-12
 
 > 주의: 이 문서는 reqwest 0.12.x 기준으로 작성되었습니다. 0.13.x (최신 0.13.11, 2026-05-28 릴리즈)가 출시되어 Breaking Change가 있으므로 신규 프로젝트는 마이그레이션 노트를 참조하세요.
 
@@ -109,7 +109,7 @@ struct Message {
 }
 
 let request_body = CreateRequest {
-    model: "claude-sonnet-4-6".into(),
+    model: "claude-sonnet-5".into(),
     max_tokens: 1024,
     messages: vec![Message {
         role: "user".into(),
@@ -166,7 +166,7 @@ let response = client.post("https://api.anthropic.com/v1/messages")
     .header("x-api-key", api_key)
     .header("anthropic-version", "2023-06-01")
     .json(&serde_json::json!({
-        "model": "claude-sonnet-4-6",
+        "model": "claude-sonnet-5",
         "max_tokens": 1024,
         "stream": true,
         "messages": [{"role": "user", "content": "Hello"}]

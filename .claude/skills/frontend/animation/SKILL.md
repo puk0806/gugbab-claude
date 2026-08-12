@@ -1,12 +1,17 @@
 ---
 name: animation
-description: motion 12.x (구 framer-motion) 핵심 패턴, CSS transition/keyframe, 성능 최적화, React 18/19 + Next.js App Router 대응
+description: motion 13.x (구 framer-motion) 핵심 패턴, CSS transition/keyframe, 성능 최적화, React 18/19 + Next.js App Router 대응
 ---
 
-# Animation — motion 12.x + CSS
+# Animation — motion 13.x + CSS
 
-> 소스: https://motion.dev/docs | https://developer.mozilla.org/en-US/docs/Web/CSS/animation
-> 검증일: 2026-04-20
+> 소스: https://motion.dev/docs | https://motion.dev/docs/react-upgrade-guide | https://motion.dev/changelog
+> 소스: https://developer.mozilla.org/en-US/docs/Web/CSS/animation
+> 검증일: 2026-08-11
+
+> **motion v13.1.0** 기준 (2026-08-10 릴리즈, npm registry `latest` 확인. v13.0.0은 2026-08-05).
+> React API에서 v12 → v13 파괴적 변경은 **CSS-in-JS 사용자에게만 해당하는 1건**뿐이다 (아래 "motion 13 업그레이드" 참조).
+> 그 외 `motion` 컴포넌트·`AnimatePresence`·variants·훅 API는 v12와 동일하다.
 
 ---
 
@@ -86,9 +91,12 @@ transform: scaleX(1.2); // width 변화 효과
 ### 설치
 
 ```bash
-# motion 12.x (신규 프로젝트)
+# motion 13.x (신규 프로젝트)
 pnpm add motion
 ```
+
+> 요구 React 버전: 공식 설치 문서 기준 **React 18.2 이상**.
+> npm에 선언된 peerDependencies는 `^18.0.0 || ^19.0.0`이며 optional로 표기된다(바닐라 JS 사용 대비).
 
 ### framer-motion에서 마이그레이션
 
@@ -108,7 +116,45 @@ pnpm remove framer-motion
 - `import { AnimatePresence } from "framer-motion"` → `import { AnimatePresence } from "motion/react"`
 - `motion('button')` 함수 호출 방식 → `motion.create('button')` 사용 (motion 11+)
 - 나머지 API(animate, variants, transition 등)는 동일하게 유지
-- motion 12: React에서 파괴적 변경 없음. 기존 motion 11 코드 그대로 동작
+- motion 12·13: React에서 파괴적 변경 사실상 없음 (13의 CSS-in-JS 항목 제외). 기존 motion 11 코드 그대로 동작
+
+> `framer-motion`은 여전히 `motion`과 **동일한 버전 번호로 함께 배포되는 별칭 패키지**다
+> (2026-08-11 기준 양쪽 모두 13.1.0. `motion`이 내부적으로 `framer-motion`을 의존한다).
+> 즉 당장 깨지지는 않지만 신규 프로젝트는 `motion`을 설치한다 — 공식 문서는 `framer-motion`을
+> deprecated alias로 안내하며, 문서·예제는 모두 `motion/react` 기준이다.
+> 주의: npm registry의 `deprecated` 플래그 자체는 걸려 있지 않아 `npm install` 시 경고는 나오지 않는다.
+
+### motion 13 업그레이드 (v12 → v13)
+
+**파괴적 변경 1건 — `@emotion/is-prop-valid` 자동 사용 제거.**
+
+motion 12까지는 `@emotion/is-prop-valid`가 optional peer dependency로 설치돼 있으면
+motion이 이를 자동 감지해 "DOM에 넘기면 안 되는 props"를 걸러냈다.
+motion 13은 이 자동 주입을 제거하고 **명시적 주입 방식**으로 바꿨다.
+
+**영향 대상: Styled Components / Emotion 등 CSS-in-JS와 motion을 함께 쓰는 프로젝트만.**
+증상은 "이전에는 필터링되던 스타일 전용 props가 DOM에 그대로 렌더링됨"이다.
+CSS Module / SCSS / Tailwind만 쓴다면 **조치 불필요**.
+
+```tsx
+// 해결책 1 — MotionConfig로 명시적 주입 (기존 동작 그대로 복원)
+import isPropValid from '@emotion/is-prop-valid'
+import { MotionConfig } from 'motion/react'
+
+<MotionConfig isValidProp={isPropValid}>
+  <App />
+</MotionConfig>
+```
+
+```tsx
+// 해결책 2 — 합성 순서를 뒤집어 스타일링 라이브러리가 DOM prop 전달을 통제하게 함
+// (motion 컴포넌트를 styled로 감싸는 대신, styled 컴포넌트를 motion.create로 감쌈)
+const StyledBox = styled.div`...`
+const MotionBox = motion.create(StyledBox)
+```
+
+> Styled Components 6를 쓴다면 transient props(`$prop`) 또는 `shouldForwardProp` 설정으로도 해결된다.
+> 그 외 v13에는 React API 파괴적 변경이 없다 (공식 React 업그레이드 가이드 기준).
 
 ---
 
@@ -351,6 +397,38 @@ function FadeInSection() {
 ```
 
 > 주의: `useInView`는 약 0.6kb의 경량 훅. `whileInView` prop으로도 동일 효과 가능.
+
+---
+
+## 최근 버전 변경 요약 (v12.40 → v13.1)
+
+| 버전 | 날짜 | 내용 |
+|------|------|------|
+| 12.41.0 | 2026-06-23 | `animateView`(View Transition API 래퍼)가 Early Access·alpha에서 **메인 라이브러리로 승격** (바닐라 JS API) |
+| 12.42.0 | 2026-06-24 | `animateView` 레이어가 DOM 계층에 맞춰 자동 그룹화, auto-crop이 종횡비 유지 |
+| 12.43.0 | 2026-07-27 | `backgroundColor`와 SVG 엘리먼트에 **하드웨어 가속 추가** |
+| 13.0.0 | 2026-08-05 | `@emotion/is-prop-valid` 자동 사용 제거(위 업그레이드 절 참조). SVG 하드웨어 가속 종료 시 최종 스타일 적용 수정, `AnimatePresence` `propagate` 관련 수정 |
+| 13.1.0 | 2026-08-10 | 현재 최신 안정 버전 |
+
+### animateView / AnimateView — 페이지·뷰 전환
+
+브라우저 네이티브 View Transition API를 감싼 API다. **바닐라 JS의 `animateView`는 메인 패키지에 포함**되어 있다.
+
+```ts
+import { animateView } from 'motion'
+
+animateView((view) => {
+  view.add('.card')            // 선택자에 view-transition-name 자동 부여·제거
+  view.new({ opacity: [0, 1] }) // 새 레이어에 적용할 값
+  view.old({ opacity: [1, 0] }) // 이전 레이어에 적용할 값
+})
+```
+
+> **주의 — React용 `AnimateView` 컴포넌트는 아직 실험적이다.**
+> 현재 Motion+ Early Access 전용(`motion-plus/animate-view`)이며, React의 `ViewTransition` 컴포넌트에
+> 의존하므로 **React canary 이상 + motion 12.34.0 이상**을 요구한다.
+> 정식 릴리즈 시 메인 `motion` 패키지로 이동 예정. **프로덕션 React 앱에는 아직 도입하지 않는다** —
+> 페이지 전환은 위의 `AnimatePresence mode="wait"` 패턴을 계속 사용한다.
 
 ---
 

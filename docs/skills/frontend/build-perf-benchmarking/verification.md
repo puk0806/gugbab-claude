@@ -152,6 +152,52 @@ status: PENDING_TEST
 
 ## 5. 테스트 진행 기록
 
+### 2026-08-11 재검증
+
+**재검증일**: 2026-08-11
+**수행자**: skill-tester → general-purpose (WebSearch 재검증 + content test 재수행)
+**수행 방법**: SKILL.md 핵심 클레임 3개 WebSearch 재검증 + 실전 질문 3개 재수행 (2026-05-14와 다른 질문으로 갱신)
+
+#### WebSearch 재검증 (핵심 클레임 3개)
+
+| # | 클레임 | 검증 결과 |
+|---|--------|-----------|
+| 1 | hyperfine 최신 버전 v1.20.0 (2025-11-18) | ✅ 변동 없음 — 2026-08-11 기준에도 최신 (GitHub Releases) |
+| 2 | `--prepare`/`--warmup`/`--export-json` 옵션 현재도 유효, deprecated 없음 | ✅ 변동 없음 (공식 README) |
+| 3 | Vite dep pre-bundling 캐시 위치 `node_modules/.vite` | ✅ 변동 없음 (Vite 공식 문서) |
+
+#### 실제 수행 테스트 (2026-08-11, 신규 질문)
+
+**Q1. Turborepo 모노레포 before/after 비교에서 git stash 방식의 문제점과 대안**
+- ✅ PASS
+- 근거: SKILL.md "4.3 hyperfine 명령 패턴" Before/After 비교 코드 블록 + 바로 아래 주의 문구 (git stash 워킹트리 전환 오버헤드 → `git worktree add` 대안)
+- 상세: stash/pop 오버헤드가 측정값에 섞이는 문제와 별도 워크트리 사용 대안이 정확히 근거로 제시됨. 경미한 gap: 워크트리별 `.turbo` 캐시 격리 구체 방법은 SKILL.md에 명시 없음(보강 권장, 차단 요인 아님)
+
+**Q2. hyperfine "first benchmarking run이 significantly slower" 경고 대응**
+- ✅ PASS
+- 근거: SKILL.md "7.1 함정 2번" + "9. 참고 경고 메시지 원문" + "2. 핵심 옵션" warmup/prepare 목적 구분 주의문
+- 상세: 경고 원문 인용, 원인(파일시스템 캐시 미충족), warmup(warm 의도)·prepare(cold 의도) 각각의 대응이 정확히 구분되어 근거 제시됨. gap 없음
+
+**Q3. 빌드 벤치마크 보고서에 필수 명시할 혼동변수 항목**
+- ✅ PASS
+- 근거: SKILL.md "5.1 필수 명시 항목" 표 + "5.2 통제 가능/불가 구분" + "6.3 보고서 헤더 템플릿" + "8. 체크리스트"
+- 상세: 4개 섹션이 교차 반영되어 하드웨어·OS·런타임·CPU상태·백그라운드·온도 항목이 일관되게 근거 제시됨. gap 없음
+
+#### 발견된 gap (2026-08-11 재검증)
+
+- Q1: Turborepo 모노레포에서 워크트리별 `.turbo` 캐시 공유/격리 방법 — 선택 보강 (차단 요인 아님)
+
+#### 판정 (2026-08-11)
+
+- WebSearch 재검증: 3/3 클레임 변동 없음 (VERIFIED 유지)
+- agent content test: 3/3 PASS (신규 질문)
+- verification-policy 분류: 실사용 필수 카테고리 (빌드 워크플로우 / 측정 도구 실행 결과로만 최종 검증 가능) — 재확인
+- 최종 상태: PENDING_TEST 유지 (content test 누적 6/6 PASS, 실제 hyperfine 실행·산출물 검증 전까지 APPROVED 보류)
+
+---
+
+### 2026-05-14 최초 테스트
+
 **수행일**: 2026-05-14
 **수행자**: skill-tester → general-purpose
 **수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
@@ -195,18 +241,19 @@ status: PENDING_TEST
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-05-14 skill-tester 수행, 3/3 PASS) |
+| 에이전트 활용 테스트 | ✅ (2026-05-14 3/3 PASS + 2026-08-11 재검증 3/3 PASS, 누적 6/6 PASS) |
+| WebSearch 재검증 (2026-08-11) | ✅ hyperfine v1.20.0·옵션·Vite 캐시 위치 3건 모두 변동 없음 |
 | 실사용 테스트 (hyperfine 실제 실행) | ❌ (실사용 필수 카테고리 — 측정 도구 출력 검증 필요) |
-| **최종 판정** | **PENDING_TEST** (content test 3/3 PASS, 실사용 검증 후 APPROVED 전환 예정) |
+| **최종 판정** | **PENDING_TEST** (content test 누적 6/6 PASS, 실사용 검증 후 APPROVED 전환 예정) |
 
 ---
 
 ## 7. 개선 필요 사항
 
-- [✅] skill-tester로 content test 수행 (2026-05-14 완료, 3/3 PASS — cold/warm 분리·median/p95 추출·runs/warmup 권장값·warmup vs prepare 목적 차이 시나리오 포함)
+- [✅] skill-tester로 content test 수행 (2026-05-14 완료, 3/3 PASS — cold/warm 분리·median/p95 추출·runs/warmup 권장값·warmup vs prepare 목적 차이 시나리오 포함 / 2026-08-11 재검증 3/3 PASS 추가 — Turborepo git stash 대안·first-run 경고 대응·혼동변수 필수 항목)
 - [❌] 실제 프로젝트에서 hyperfine v1.20.0 실행해 markdown/JSON 출력 형식이 스킬 설명과 일치하는지 확인 (차단 요인: 실사용 필수 카테고리 조건 미충족 — 실제 실행 전까지 PENDING_TEST 유지)
 - [❌] macOS/Linux/Windows 각 OS에서 `--prepare` 명령 동작 확인 (선택 보강: 특히 Windows에서 `rm -rf` 대체 명령 추가 필요, APPROVED 전환 조건은 아님)
-- [❌] turborepo 모노레포에서 `--filter=` 옵션과 hyperfine 조합 측정 검증 (선택 보강: 실전 도입 이후 추가 검증 권장)
+- [❌] turborepo 모노레포에서 `--filter=` 옵션과 hyperfine 조합 측정 검증 + 워크트리별 `.turbo` 캐시 격리 방법 (선택 보강: 실전 도입 이후 추가 검증 권장)
 
 ---
 
@@ -216,3 +263,4 @@ status: PENDING_TEST
 |------|------|-----------|--------|
 | 2026-05-14 | v1 | 최초 작성 — hyperfine v1.20.0 기준, cold/warm 분리·median/p95 보고·혼동변수 통제·안티패턴 9개 포함 | skill-creator |
 | 2026-05-14 | v1 | 2단계 실사용 테스트 수행 (Q1 Vite cold/warm 분리 측정 / Q2 median·p95 추출 방법 / Q3 45초 빌드 runs/warmup 권장값 + warmup vs prepare 목적 차이) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | skill-tester |
+| 2026-08-11 | v1 | 재검증 — WebSearch 3건(hyperfine 버전·옵션·Vite 캐시 위치) 모두 변동 없음 확인 + content test 재수행 (Q1 Turborepo git stash 대안 / Q2 first-run 경고 대응 / Q3 혼동변수 필수 항목) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | skill-tester |

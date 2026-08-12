@@ -6,16 +6,19 @@ description: Radix UI Primitives 헤드리스 컴포넌트 — asChild/Slot, Com
 # Radix UI Primitives
 
 > 소스: https://www.radix-ui.com/primitives/docs/overview/introduction
-> 검증일: 2026-04-17
+> 소스: https://www.radix-ui.com/primitives/docs/overview/releases
+> 검증일: 2026-08-11
 
-> 주의: 통합 패키지 radix-ui v1.4.x 기준. 정확한 마이너 버전은 npm registry에서 확인 필요.
+> 통합 패키지 `radix-ui` **v1.6.7** 기준 (2026-07-24 릴리즈, npm registry `latest` 확인).
+> v1.4.x → v1.6.x 사이에 **파괴적 변경 없음** — asChild/Slot, Compound Component, Controlled/Uncontrolled,
+> data-attribute 스타일링 패턴은 모두 그대로 유효하다. 추가된 기능은 아래 "1.5~1.6 신규 사항" 참조.
 
 ---
 
 ## 설치 및 의존성
 
 ```bash
-# 통합 패키지 (v1.4.x 이후 권장)
+# 통합 패키지 (권장)
 npm install radix-ui
 
 # 기존 개별 패키지 (마이그레이션 권장)
@@ -26,12 +29,15 @@ npm install radix-ui
 // package.json
 {
   "dependencies": {
-    "radix-ui": "^1.4.0",
+    "radix-ui": "^1.6.0",
     "react": "^18.0.0 || ^19.0.0",
     "react-dom": "^18.0.0 || ^19.0.0"
   }
 }
 ```
+
+> Radix가 선언한 peerDependencies 범위는 `^16.8 || ^17.0 || ^18.0 || ^19.0`이다 (npm registry 확인).
+> 신규 프로젝트는 React 18/19 기준으로 잡으면 된다.
 
 ### 개별 패키지에서 통합 패키지로 마이그레이션
 
@@ -44,6 +50,22 @@ import * as Select from '@radix-ui/react-select'
 import { Dialog, Select } from 'radix-ui'
 ```
 
+### 개별 primitive 서브패스 임포트 (v1.6.3+)
+
+루트 엔트리 외에 primitive별 서브패스 엔트리가 추가됐다. 번들러 트리셰이킹이 약한 환경에서 유용하다.
+
+```tsx
+// 루트 엔트리 (기본)
+import { Accordion, Dialog } from 'radix-ui'
+
+// primitive별 서브패스 (v1.6.3+)
+import { Accordion } from 'radix-ui/accordion'
+import * as Accordion from 'radix-ui/accordion'
+```
+
+> v1.6.3에서 컴포넌트 파트에 `/* @__PURE__ */` 주석과 named render 함수가 적용되어
+> 루트 임포트도 트리셰이킹이 개선됐다. 서브패스는 그 위의 추가 보험 성격이다.
+
 ---
 
 ## asChild / Slot 패턴
@@ -55,7 +77,32 @@ Radix의 핵심 합성(composition) 메커니즘. `asChild` prop을 사용하면
 1. `asChild={false}` (기본값): Radix가 내부 DOM 요소(예: `<button>`)를 렌더링
 2. `asChild={true}`: 자식 요소를 그대로 렌더링하되, Radix의 props(이벤트 핸들러, aria 속성, data 속성)를 자식에 merge
 
-내부적으로 `@radix-ui/react-slot`의 `Slot` 컴포넌트가 이를 처리한다. Slot은 자식의 props와 Radix의 props를 얕게 merge하고, 이벤트 핸들러는 체이닝한다.
+내부적으로 Slot 유틸리티가 이를 처리한다. Slot은 자식의 props와 Radix의 props를 얕게 merge하고, 이벤트 핸들러는 체이닝한다.
+
+직접 `asChild`를 지원하는 자체 컴포넌트를 만들 때는 통합 패키지의 Slot을 쓴다. **통합 패키지에서는 네임스페이스 형태(`Slot.Root`)로 사용한다.**
+
+```tsx
+import { Slot } from 'radix-ui'
+
+function Button({ asChild, ...props }: ButtonProps) {
+  const Comp = asChild ? Slot.Root : 'button'
+  return <Comp {...props} />
+}
+
+// 아이콘 등 고정 자식과 함께 쓸 때 — Slottable로 "합성될 자식"을 지정
+function IconButton({ asChild, leftIcon, children, ...props }: IconButtonProps) {
+  const Comp = asChild ? Slot.Root : 'button'
+  return (
+    <Comp {...props}>
+      {leftIcon}
+      <Slot.Slottable>{children}</Slot.Slottable>
+    </Comp>
+  )
+}
+```
+
+> `Slot.Slottable`은 v1.5.0부터 render prop 형태의 `child`도 지원한다 —
+> 합성 대상 요소를 추가 마크업으로 감싸면서 Slot이 props·ref는 그대로 merge하게 할 수 있다.
 
 ```tsx
 import { Dialog } from 'radix-ui'
@@ -479,6 +526,87 @@ Radix는 일부 컴포넌트에 CSS 변수를 자동으로 주입한다.
 | `--radix-select-trigger-width` | Select.Content | 트리거 너비 맞춤 |
 | `--radix-popper-available-height` | Popover, Tooltip 등 | 사용 가능한 높이 |
 | `--radix-popper-available-width` | Popover, Tooltip 등 | 사용 가능한 너비 |
+
+---
+
+## 프리뷰(unstable) primitive
+
+일부 신규 primitive는 API가 아직 고정되지 않아 `unstable_` 접두사로 export된다.
+**프로덕션 도입 시 마이너 업데이트에서 API가 바뀔 수 있음을 감안한다.**
+
+```tsx
+// 일회용 비밀번호(OTP) 입력 — 문자당 input 분리 패턴
+import { unstable_OneTimePasswordField as OneTimePasswordField } from 'radix-ui'
+
+<OneTimePasswordField.Root>
+  <OneTimePasswordField.Input />
+  <OneTimePasswordField.Input />
+  <OneTimePasswordField.Input />
+  <OneTimePasswordField.Input />
+  <OneTimePasswordField.Input />
+  <OneTimePasswordField.Input />
+  {/* 폼 데이터에 단일 값으로 제출되는 hidden input */}
+  <OneTimePasswordField.HiddenInput />
+</OneTimePasswordField.Root>
+```
+
+```tsx
+// 비밀번호 표시/숨김 토글이 통합된 입력 필드
+import { unstable_PasswordToggleField as PasswordToggleField } from 'radix-ui'
+
+<PasswordToggleField.Root>
+  <PasswordToggleField.Input />
+  <PasswordToggleField.Toggle>
+    <PasswordToggleField.Icon visible={<EyeOpenIcon />} hidden={<EyeClosedIcon />} />
+  </PasswordToggleField.Toggle>
+</PasswordToggleField.Root>
+```
+
+> OneTimePasswordField는 키보드 내비게이션·붙여넣기 처리·비밀번호 관리자 자동완성·완성 시 자동 제출까지 내장한다.
+> PasswordToggleField는 토글 시 포커스 복귀와 폼 제출 후 자동 숨김 처리를 내장한다.
+
+### 폼 컨트롤 내부 합성 파트 노출 (v1.5.0+)
+
+폼 제출용 hidden(bubble) input을 직접 배치·생략할 수 있도록 내부 파트가 `unstable_` 접두사로 공개됐다.
+기본 동작은 그대로이므로 **필요할 때만** 재합성한다.
+
+| 컴포넌트 | 노출된 파트 |
+|----------|------------|
+| Checkbox | `unstable_Provider`, `unstable_Trigger`, `unstable_BubbleInput` |
+| Switch | `unstable_Provider`, `unstable_Trigger`, `unstable_BubbleInput` |
+| Select | `unstable_Provider`, `unstable_BubbleInput` |
+| RadioGroup | `unstable_ItemProvider`, `unstable_ItemTrigger`, `unstable_ItemBubbleInput` |
+| Slider | `unstable_ThumbProvider`, `unstable_ThumbTrigger`, `unstable_BubbleInput` |
+
+```tsx
+import { Switch } from 'radix-ui'
+
+<Switch.unstable_Provider>
+  <Switch.unstable_Trigger>
+    <Switch.Thumb />
+  </Switch.unstable_Trigger>
+  {/* 폼 제출이 필요 없으면 생략 가능 */}
+  <Switch.unstable_BubbleInput />
+</Switch.unstable_Provider>
+```
+
+---
+
+## v1.4 → v1.6 변경 요약
+
+파괴적 변경은 없다. 아래는 추가·개선 사항이다.
+
+| 버전 | 날짜 | 주요 변경 |
+|------|------|-----------|
+| 1.5.0 | 2026-06-06 | ContextMenu에 controlled `open` prop 지원 / 폼 컨트롤 `unstable_` 합성 파트 공개 / `Slot.Slottable` 중첩 render prop / Select presence 기반 exit 애니메이션 / SubContent에 `align` prop (DropdownMenu·ContextMenu·Menubar) / Toast.Provider `announcerContainer` prop / Popper anchor에 `data-side`·`data-align` 노출 |
+| 1.6.0 | 2026-06-15 | React 19 관련 안정화 (Slot ref 콜백 무한 리렌더, Presence "Maximum update depth" 등) |
+| 1.6.2 | 2026-07-06 | Form 파트 단독 렌더 시 런타임 에러 수정 / 폼 reset 시 값 동기화 (RadioGroup·Slider·Select·Switch) / React 19.2 관련 핸들러 수정 |
+| 1.6.3~1.6.7 | 2026-07-20~24 | primitive별 서브패스 엔트리 추가 / `@__PURE__` 기반 트리셰이킹 개선 / dev 전용 경고를 프로덕션 번들에서 제거 / Dialog ARIA 참조 수정 |
+
+**컴포넌트 API 관점의 조치 필요 사항: 없음.** 기존 v1.4.x 코드는 그대로 동작한다.
+
+> 주의: ContextMenu의 controlled `open`은 공식 문서상 **상태 읽기·프로그래밍적 닫기 용도**로만 권장된다.
+> 메뉴 위치가 사용자 포인터 위치에 의존하므로 프로그래밍적 열기는 권장되지 않는다.
 
 ---
 

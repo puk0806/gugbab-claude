@@ -18,8 +18,12 @@ description: >
 > - 프롬프트 캐싱: https://platform.claude.com/docs/en/build-with-claude/prompt-caching
 > - 스트리밍: https://platform.claude.com/docs/en/build-with-claude/streaming
 > - 비전 입력: https://platform.claude.com/docs/en/build-with-claude/vision
-> 검증일: 2026-05-15
-> SDK 기준 버전: `anthropic` v0.102.0 (2026-05-13 릴리스), Python 3.9+ 요구
+> - 적응형 사고(adaptive thinking): https://platform.claude.com/docs/en/build-with-claude/adaptive-thinking
+> - effort 파라미터: https://platform.claude.com/docs/en/build-with-claude/effort
+> - 모델 마이그레이션: https://platform.claude.com/docs/en/about-claude/models/migration-guide
+> 검증일: 2026-08-12
+> SDK 기준 버전: `anthropic` v0.121.0 (PyPI latest, 2026-08-12 확인), Python 3.9+ 요구
+> 모델 기준: Claude Opus 5(`claude-opus-5`) 기본 권장 / Sonnet 5(`claude-sonnet-5`) / Haiku 4.5(`claude-haiku-4-5`)
 
 ---
 
@@ -88,7 +92,7 @@ async def main() -> None:
     message = await client.messages.create(
         max_tokens=1024,
         messages=[{"role": "user", "content": "Hello, Claude"}],
-        model="claude-opus-4-7",
+        model="claude-opus-5",
     )
     print(message.content)
 
@@ -119,7 +123,7 @@ client = Anthropic()  # 환경변수 자동 로드
 
 ```python
 message = client.messages.create(
-    model="claude-opus-4-7",
+    model="claude-opus-5",
     max_tokens=1024,
     messages=[
         {"role": "user", "content": "Hello, Claude"},
@@ -139,9 +143,31 @@ print(message._request_id)     # 디버깅용 request-id (공개 속성)
 | `max_tokens` | ✅ | 생성할 최대 출력 토큰 |
 | `messages` | ✅ | `{"role": "user"|"assistant", "content": ...}` 배열 |
 | `system` | | 시스템 프롬프트(문자열 또는 텍스트 블록 배열) |
-| `temperature` | | 0.0~1.0, 기본 1.0 |
+| `thinking` | | `{"type": "adaptive"}` — Opus 5는 **기본 ON**(생략 시 adaptive) |
+| `output_config` | | `{"effort": "low"\|"medium"\|"high"\|"xhigh"\|"max"}` — 사고 깊이·토큰 사용량 조절 |
 | `tools` | | 도구 정의 배열 (섹션 6) |
 | `stream` | | `True` 시 SSE 스트림 반환 |
+
+> **주의 — 5 계열(Opus 5·Sonnet 5·Fable 5)과 Opus 4.7/4.8에서 제거된 파라미터:**
+> - `temperature` / `top_p` / `top_k` → **400 에러**. 제거하고 프롬프팅으로 출력 성향을 유도한다.
+> - `thinking: {"type": "enabled", "budget_tokens": N}` → **400 에러**. `{"type": "adaptive"}` + `output_config.effort`로 대체한다.
+> - 마지막 assistant 턴 prefill → **400 에러**. `output_config.format`(structured outputs) 또는 시스템 프롬프트로 대체한다.
+>
+> **Opus 5 고유 규약:**
+> - 사고가 **기본 ON**이다(파라미터 생략 시 adaptive). `max_tokens`는 *사고 + 응답 텍스트* 합산 상한이므로, 기존에 사고 없이 돌던 경로는 `max_tokens`를 늘리지 않으면 응답이 잘린다.
+> - `thinking: {"type": "disabled"}`는 effort `high` 이하에서만 허용된다. `xhigh`/`max`와 함께 쓰면 **400 에러**.
+> - `thinking.display` 기본값은 `"omitted"`(사고 텍스트가 빈 문자열). 사용자에게 추론 요약을 보여주려면 `{"type": "adaptive", "display": "summarized"}`를 명시한다.
+
+```python
+# 5 계열 권장 형태 — 샘플링 파라미터 없이 thinking + effort로 제어
+message = client.messages.create(
+    model="claude-opus-5",
+    max_tokens=16000,
+    thinking={"type": "adaptive", "display": "summarized"},
+    output_config={"effort": "high"},
+    messages=[{"role": "user", "content": "단계적으로 분석해줘"}],
+)
+```
 
 ---
 
@@ -157,7 +183,7 @@ from anthropic import Anthropic
 client = Anthropic()
 
 with client.messages.stream(
-    model="claude-opus-4-7",
+    model="claude-opus-5",
     max_tokens=1024,
     messages=[{"role": "user", "content": "Say hello there!"}],
 ) as stream:
@@ -179,7 +205,7 @@ client = AsyncAnthropic()
 
 async def main() -> None:
     async with client.messages.stream(
-        model="claude-opus-4-7",
+        model="claude-opus-5",
         max_tokens=1024,
         messages=[{"role": "user", "content": "Say hello there!"}],
     ) as stream:
@@ -198,7 +224,7 @@ asyncio.run(main())
 
 ```python
 stream = client.messages.create(
-    model="claude-opus-4-7",
+    model="claude-opus-5",
     max_tokens=1024,
     messages=[{"role": "user", "content": "Hello"}],
     stream=True,
@@ -238,7 +264,7 @@ client = AsyncAnthropic()
 async def chat(prompt: str):
     async def event_generator():
         async with client.messages.stream(
-            model="claude-opus-4-7",
+            model="claude-opus-5",
             max_tokens=1024,
             messages=[{"role": "user", "content": prompt}],
         ) as stream:
@@ -261,7 +287,7 @@ async def chat(prompt: str):
 
 ```python
 response = client.messages.create(
-    model="claude-opus-4-7",
+    model="claude-opus-5",
     max_tokens=1024,
     system=[
         {
@@ -336,10 +362,16 @@ system=[
 
 | 모델 | 최소 캐시 토큰 |
 |------|---------------|
-| Claude Opus 4.7 / 4.6 / 4.5 | 4,096 |
-| Claude Sonnet 4.6 / 4.5, Opus 4.1 | 1,024 |
+| **Claude Opus 5, Fable 5** | **512** |
+| Claude Opus 4.8, Sonnet 5, Sonnet 4.6 / 4.5 | 1,024 |
+| Claude Opus 4.7 | 2,048 |
+| Claude Opus 4.6 / 4.5 | 4,096 |
 | Claude Haiku 4.5 | 4,096 |
-| Claude Haiku 3.5 | 2,048 |
+
+> 주의: 최소 캐시 토큰은 세대 순으로 단조 감소하지 않는다. Opus 5는 512로 가장 낮지만
+> Opus 4.8은 1,024, Opus 4.7은 2,048, Opus 4.6은 4,096이다. 모델을 바꾸면 캐시 임계값도
+> 다시 확인해야 한다. Opus 4.8 → Opus 5로 옮기면 임계값이 절반(1,024 → 512)이 되므로,
+> 기존에 "너무 짧아서 캐시 안 된다"고 판단했던 프롬프트가 코드 변경 없이 캐시될 수 있다.
 
 ### 5.5 TTL 혼합 규칙
 
@@ -370,7 +402,7 @@ tools = [
 ]
 
 response = client.messages.create(
-    model="claude-opus-4-7",
+    model="claude-opus-5",
     max_tokens=1024,
     tools=tools,
     messages=[{"role": "user", "content": "서울 날씨 알려줘"}],
@@ -382,7 +414,7 @@ while response.stop_reason == "tool_use":
     result = handle_tool(tool_use.name, tool_use.input)  # 사용자 정의
 
     response = client.messages.create(
-        model="claude-opus-4-7",
+        model="claude-opus-5",
         max_tokens=1024,
         tools=tools,
         messages=[
@@ -424,7 +456,7 @@ def get_weather(location: str) -> str:
     return json.dumps({"location": location, "temperature": "20°C", "condition": "Clear"})
 
 runner = client.beta.messages.tool_runner(
-    model="claude-opus-4-7",
+    model="claude-opus-5",
     max_tokens=1024,
     tools=[get_weather],
     messages=[{"role": "user", "content": "서울 날씨?"}],
@@ -453,7 +485,7 @@ tools = [{
 }]
 
 response = client.messages.create(
-    model="claude-opus-4-7",
+    model="claude-opus-5",
     max_tokens=512,
     tools=tools,
     tool_choice={"type": "tool", "name": "extract_info"},

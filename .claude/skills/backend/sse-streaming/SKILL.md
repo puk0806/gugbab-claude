@@ -6,7 +6,7 @@ description: Rust Axum SSE 스트리밍 구현 — Sse 응답, Event 구성, tok
 # Axum SSE 스트리밍 구현
 
 > 소스: https://docs.rs/axum/latest/axum/response/sse/index.html | https://docs.rs/tokio-stream/latest/tokio_stream/ | https://developer.mozilla.org/en-US/docs/Web/API/EventSource
-> 검증일: 2026-06-20
+> 검증일: 2026-08-12
 
 > 주의: Axum 0.8.x 기준으로 작성. 0.7 이하에서는 `axum::response::sse` 모듈 경로 및 일부 API가 다를 수 있다.
 
@@ -216,7 +216,7 @@ async fn chat_stream(
             .header("anthropic-version", "2023-06-01")
             .header("content-type", "application/json")
             .json(&serde_json::json!({
-                "model": "claude-sonnet-4-6",
+                "model": "claude-sonnet-5",
                 "max_tokens": 1024,
                 "stream": true,
                 "messages": [{"role": "user", "content": req.message}]

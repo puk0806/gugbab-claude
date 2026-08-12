@@ -106,17 +106,50 @@ status: PENDING_TEST
 | 5 | `vite-tsconfig-paths` 플러그인으로 tsconfig `baseUrl: "src"` 절대경로 자동 해석 | VERIFIED | vite.dev 공식 가이드 + vite-tsconfig-paths npm 확인 |
 | 6 | Craco는 2025년 10월 공식 maintenance-only 전환, 신규 기능 업데이트 없음 | VERIFIED | craco GitHub + 마이그레이션 가이드 다수 확인 |
 
+| 7 | Vite 8부터 Rolldown이 기본 번들러로 전환되며 `build.rollupOptions`는 `build.rolldownOptions`로 개명(`rollupOptions`는 deprecated alias로 하위호환 유지). `output.manualChunks` 객체 형식은 Vite 8+에서 미지원(함수 형식은 deprecated로 계속 동작). esbuild `drop` 옵션은 Rolldown 전환 후 `build.rolldownOptions.output.minify.compress.drop*`로 위치 이동 | VERIFIED (SKILL.md 인용 출처 기준) | SKILL.md 자체 인용 출처 https://vite.dev/guide/migration 기준으로 2026-08-11 SKILL.md에 반영됨. 이번 동기화 세션에서 별도 WebSearch 재검증은 미수행 — SKILL.md 인용 출처 대조 + 내용 일관성만 확인 |
+
 ### 4-5. DISPUTED 항목 처리
 
-- 없음 (전 클레임 VERIFIED)
+- 없음 (전 클레임 VERIFIED, 7번 항목은 SKILL.md 인용 출처 기준)
 
 ### 4-6. 에이전트 활용 테스트
 
 - [✅] skill-tester 수행 (2026-04-24): 3개 실전 질문, 3/3 PASS
+- [✅] 메인 대화 직접 수행 (2026-08-12): Vite 8 대응 신규 내용 2개 질문, 2/2 PASS (섹션 5 참조)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-08-12
+**수행자**: 메인 대화 직접 수행 (skill-tester 서브에이전트 미호출 — SKILL.md에 이미 반영된 Vite 8 대응 주의사항 동기화 목적의 단발 점검)
+**수행 방법**: SKILL.md에 2026-08-11 추가된 "Vite 8+" 주의사항(rollupOptions→rolldownOptions 개명, manualChunks 객체 형식 미지원, esbuild drop 위치 이동)이 verification.md에 미기록 상태였던 것을 확인 → 신규 내용 기반 실전 질문 2개를 직접 답변·근거 대조
+
+### 신규 반영 내용 content test (2026-08-12)
+
+**Q1. Vite 8 환경에서 craco cacheGroups를 매핑한 manualChunks 객체 형식을 그대로 쓰면 어떤 문제가 생기고 어떻게 고쳐야 하나?**
+- PASS
+- 근거: SKILL.md 최상단 "주의 (Vite 8+):" 블록 + "1. cacheGroups → manualChunks" 섹션 내 "주의 (Vite 8+):" 문구
+- 상세: 객체 형식 `manualChunks`는 Vite 8+에서 미지원 → 함수형 `manualChunks(id)` 패턴으로 전환 필요. `rollupOptions`는 deprecated alias로 당장 깨지지 않으나 `rolldownOptions`로의 이전이 공식 권장 방향임을 SKILL.md가 명시.
+
+**Q2. babel-plugin-transform-remove-console 대체용 esbuild drop 옵션이 Vite 8+ Rolldown 전환 후에도 같은 위치(`build.esbuildOptions.drop`)에 있는가?**
+- PASS
+- 근거: SKILL.md "2. Babel 플러그인 → Vite 대응" 섹션의 "주의 (Vite 8+):" 문구
+- 상세: 아니다 — Rolldown 전환 후에는 `build.rolldownOptions.output.minify.compress.drop*`로 위치가 이동한다고 SKILL.md가 명시적으로 경고. 기존 `esbuildOptions.drop`은 Vite 6/7 기준이라는 버전 스코프도 명확.
+
+### 발견된 gap
+
+- 없음 (2/2 PASS, SKILL.md의 Vite 8 대응 주의사항이 자기 완결적으로 근거 제공)
+
+### 판정 (2026-08-12)
+
+- agent content test (신규 내용): PASS (2/2, 메인 대화 직접 수행)
+- verification-policy 분류: 빌드 설정 스킬 — 실사용 필수 카테고리 (변동 없음)
+- 최종 상태: PENDING_TEST 유지 (Vite 8 대응 내용 동기화 완료, 실제 프로젝트 빌드 검증 후 APPROVED 전환 대상이라는 기존 판정 변동 없음)
+
+---
+
+## 5-1. 이전 테스트 진행 기록 (2026-04-24, 보존)
 
 **수행일**: 2026-04-24
 **수행자**: skill-tester → general-purpose (frontend-developer 에이전트 세션 미등록으로 대체)
@@ -158,14 +191,16 @@ status: PENDING_TEST
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ 수행 완료 (2026-04-24, 3/3 PASS) |
-| **최종 판정** | **PENDING_TEST** (빌드 설정 카테고리 — 실 빌드 결과 검증 후 APPROVED 전환) |
+| 에이전트 활용 테스트 | ✅ 수행 완료 (2026-04-24, 3/3 PASS / 2026-08-12 Vite 8 신규 내용 2/2 PASS 추가) |
+| Vite 8 대응 주의사항 동기화(2026-08-12) | ✅ SKILL.md 반영 내용 클레임 판정표(4-4 #7) 기록 + content test 2/2 PASS |
+| **최종 판정** | **PENDING_TEST** (빌드 설정 카테고리 — 실 빌드 결과 검증 후 APPROVED 전환, 2026-08-12 동기화에도 유지) |
 
 ---
 
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester가 agent content test 수행하고 섹션 5·6 업데이트 (2026-04-24 완료, 3/3 PASS)
+- [✅] SKILL.md에 반영된 Vite 8 대응 주의사항을 verification.md에 동기화 (2026-08-12 완료 — 섹션 4-4 클레임 판정표 #7 추가, content test 2/2 PASS)
 - [❌] 실제 프로젝트(lf-ui 또는 신규 Vite 프로젝트)에서 마이그레이션 적용 후 빌드 산출물 검증 → 차단 요인: APPROVED 전환 필수 조건 (빌드 설정 카테고리). 실전 도입 전까지 PENDING_TEST 유지.
 - [❌] esbuild `pure` vs `drop` 옵션 동작 차이를 실제 빌드로 확인 → 선택 보강 항목 (현재 SKILL.md 주의 문구로 충분히 안내됨)
 
@@ -177,3 +212,4 @@ status: PENDING_TEST
 |------|------|-----------|--------|
 | 2026-04-20 | v1 | 최초 작성, lf-ui craco.config.js 분석 기반, WebSearch 6개 클레임 교차 검증 (전항목 VERIFIED) | 메인 대화 |
 | 2026-04-24 | v1 | 2단계 실사용 테스트 수행 (Q1 cacheGroups→manualChunks / Q2 babel→esbuild console 제거 / Q3 vite:preloadError 청크 재시도) → 3/3 PASS, PENDING_TEST 유지 (빌드 설정 카테고리) | skill-tester |
+| 2026-08-12 | v1 | SKILL.md에 이미 반영된 Vite 8 대응 주의사항(rollupOptions→rolldownOptions, manualChunks 객체 형식 미지원, esbuild drop 위치 이동)을 verification.md에 동기화 — 클레임 판정표 #7 추가, content test 2/2 PASS. PENDING_TEST 유지 | 메인 대화 |

@@ -99,6 +99,53 @@ status: PENDING_TEST
 
 ## 5. 테스트 진행 기록
 
+### 2026-08-11 재검증
+
+**재검증일**: 2026-08-11
+**수행자**: skill-tester → general-purpose (WebSearch 재검증 + content test 재수행)
+**수행 방법**: SKILL.md 핵심 클레임 3개 WebSearch 재검증 + 실전 질문 3개 재수행 (2026-05-14와 다른 질문으로 갱신)
+
+#### WebSearch 재검증 (핵심 클레임 3개)
+
+| # | 클레임 | 검증 결과 |
+|---|--------|-----------|
+| 1 | Vite HMR API `vite:beforeUpdate`/`vite:afterUpdate` 이벤트 유효성 | ✅ 변동 없음 — 공식 문서(vite.dev/guide/api-hmr)에 여전히 지원 이벤트로 명시 |
+| 2 | Chrome DevTools Performance 패널 Record and reload / Capture settings(Network·CPU throttling) | ✅ 변동 없음 — 이름·위치 동일, CPU 캘리브레이션 기능 추가 확인 |
+| 3 | 대상 도구 버전 (Vite) 최신성 | ⚠️ **메이저 버전 변경 발견** — 2026-03-12 **Vite 8** 정식 출시(Rolldown 기반 Rust 번들러로 아키텍처 개편, 최신 패치 8.2.1). SKILL.md 본문은 HMR API·hyperfine 측정 방법론 자체를 다루며 Vite 버전에 종속된 API 변경은 없어 방법론은 여전히 유효. 다만 "7. 보고 템플릿" 예시 표(줄 303)의 "Vite 7.x"는 예시 데이터일 뿐이라 실사용에 영향 없음 |
+
+#### 실제 수행 테스트 (2026-08-11, 신규 질문)
+
+**Q1. Docker + macOS 호스트 마운트 환경에서 HMR 미반응 원인·대응**
+- ✅ PASS
+- 근거: SKILL.md "6.1 파일 시스템 워처 차이" 표 — "Docker 컨테이너 + macOS/Windows 마운트" 행 (FSEvents·ReadDirectoryChanges 미전달) + "폴링 켜면 지연 증가" 주의문
+- 상세: 원인(호스트 워처 이벤트가 컨테이너에 전달 안 됨)과 대응(`CHOKIDAR_USEPOLLING=true`/`WATCHPACK_POLLING=true`) 모두 정확히 근거 제시. 경미한 gap: 워처 라이브러리-도구 대응관계, vite.config 레벨 폴링 설정 코드 예시 부재 (선택 보강)
+
+**Q2. "ready in" 시점과 "첫 페이지 인터랙티브 시점"을 별도 지표로 보고해야 하는 이유**
+- ✅ PASS
+- 근거: SKILL.md "6.4 첫 페이지 요청까지 포함 여부" 섹션 — `dev_ready_ms`/`first_paint_ms`/`tti_ms` 3분리 지표 정의
+- 상세: SPA entry 모듈 transform이 cold일 때 첫 요청이 수백ms~수초 추가 소요되는 이유가 명확히 근거 제시됨. 경미한 gap: `first_paint_ms`/`tti_ms` 자동 추출 스크립트 연계는 수동 DevTools 절차만 제공 (선택 보강)
+
+**Q3. HMR 30회 측정 시 median을 1차 지표로 삼는 이유**
+- ✅ PASS
+- 근거: SKILL.md "6.6 측정 횟수와 통계" 섹션 + "6.3 백그라운드 프로세스·전원 상태" (outlier 유발 요인) + "7. 보고 템플릿" (median 표제 일관 사용)
+- 상세: median이 outlier(전원 모드 변동·Spotlight 인덱싱 등)에 강하다는 근거가 교차 섹션에서 확인됨. 경미한 gap: "median이 mean보다 이상치에 강한 통계적 원리" 자체는 명시적으로 서술되지 않고 추론 필요 (선택 보강)
+
+#### 발견된 gap (2026-08-11 재검증)
+
+- Vite 8(Rolldown) 출시로 "7. 보고 템플릿" 예시의 "Vite 7.x" 표기가 최신 메이저와 어긋남 — 예시 데이터일 뿐이라 방법론에는 영향 없음, 표기 갱신은 선택 보강
+- 워처 라이브러리-도구 대응관계, DevTools 자동 추출 연계, median 통계적 원리 서술 — 선택 보강 3건
+
+#### 판정 (2026-08-11)
+
+- WebSearch 재검증: 3/3 클레임 확인, 1건 메이저 버전 변경(Vite 8) 발견 — 방법론 자체는 영향 없음
+- agent content test: 3/3 PASS (신규 질문)
+- verification-policy 분류: 워크플로우 스킬 (실사용 필수 카테고리) — 재확인
+- 최종 상태: PENDING_TEST 유지 (content test 누적 6/6 PASS, 실제 dev 서버 측정 검증 전까지 APPROVED 보류)
+
+---
+
+### 2026-05-14 최초 테스트
+
 **수행일**: 2026-05-14
 **수행자**: skill-tester → general-purpose (frontend-developer 에이전트 미등록으로 대체)
 **수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
@@ -143,7 +190,8 @@ status: PENDING_TEST
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-14) |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-14) + 3/3 PASS (2026-08-11 재검증), 누적 6/6 PASS |
+| WebSearch 재검증 (2026-08-11) | ⚠️ HMR API·DevTools 패널 변동 없음, Vite 8(Rolldown) 메이저 출시 확인(방법론 영향 없음) |
 | **최종 판정** | **PENDING_TEST** (실사용 필수 카테고리 — 실제 측정 후 APPROVED 전환) |
 
 > 해당 스킬은 **실사용 필수 카테고리**(워크플로우 스킬 — 실제 측정 실행 결과 검증 필요)에 해당. content test PASS 후에도 PENDING_TEST 유지 가능.
@@ -152,8 +200,9 @@ status: PENDING_TEST
 
 ## 7. 개선 필요 사항
 
-- [✅] skill-tester로 2~3개 실전 질문 수행 (2026-05-14 완료, 3/3 PASS) — Q1 import.meta.hot latency / Q2 stats.timings+WSL2 / Q3 hyperfine 명령 구조+통계
+- [✅] skill-tester로 2~3개 실전 질문 수행 (2026-05-14 완료, 3/3 PASS) — Q1 import.meta.hot latency / Q2 stats.timings+WSL2 / Q3 hyperfine 명령 구조+통계 (2026-08-11 재검증 3/3 PASS 추가 — Docker+macOS 마운트 HMR 미반응 / ready 시점 vs 인터랙티브 시점 분리 / median 1차 지표 근거)
 - [❌] 실제 측정 시 cold start "ready in" 시점 매칭 정규식이 Vite 마이너 버전 사이에서 흔들리지 않는지 회귀 점검 — 선택 보강 (차단 요인 아님. Vite 버전 업그레이드 후 bench-cold.sh 실행 시 확인 권장)
+- [❌] **(2026-08-11 신규)** "7. 보고 템플릿" 예시 표의 "Vite 7.x" 표기를 Vite 8(Rolldown) 출시 반영해 갱신 — 차단 요인 아님, 예시 데이터일 뿐이라 선택 보강. SKILL.md 수정은 사용자 승인 후 별도 진행
 
 ---
 
@@ -163,3 +212,4 @@ status: PENDING_TEST
 |------|------|-----------|--------|
 | 2026-05-14 | v1 | 최초 작성 (Vite 7.x / Webpack 5 + dev-server v5 / Chrome 129+ 기준) | skill-creator |
 | 2026-05-14 | v1 | 2단계 실사용 테스트 수행 (Q1 import.meta.hot latency / Q2 stats.timings+WSL2 / Q3 hyperfine 명령+통계) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | skill-tester |
+| 2026-08-11 | v1 | 재검증 — WebSearch 3건 중 Vite 8(Rolldown) 메이저 출시 발견(방법론 영향 없음) + content test 재수행 (Q1 Docker+macOS 마운트 HMR 미반응 / Q2 ready vs 인터랙티브 시점 분리 / Q3 median 1차 지표 근거) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | skill-tester |

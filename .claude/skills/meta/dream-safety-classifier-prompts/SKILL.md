@@ -21,7 +21,7 @@ description: >
 > - Anthropic Building safeguards for Claude — https://www.anthropic.com/news/building-safeguards-for-claude
 > - Anthropic Protecting the wellbeing of our users — https://www.anthropic.com/news/protecting-well-being-of-users
 >
-> 검증일: 2026-05-15
+> 검증일: 2026-08-12
 > 대상 모델: Claude Haiku 4.5 (분류기 권장) / Sonnet 4.6 (정확도 우선)
 
 이 스킬은 짝 스킬 `meta/dream-interpretation-prompt-engineering`(해몽 *생성*
@@ -330,9 +330,9 @@ def handle_dream(user_dream: str) -> dict:
     if classification["confidence"] < 0.7:
         log_for_review(user_dream, classification)
 
-    # 2단계: 해몽 모델 (Sonnet 4.6, 해석 품질 우선)
+    # 2단계: 해몽 모델 (Sonnet 5, 해석 품질 우선)
     interpretation = client.messages.create(
-        model="claude-sonnet-4-6",
+        model="claude-sonnet-5",
         max_tokens=1024,
         system=[{
             "type": "text",
@@ -352,13 +352,13 @@ def handle_dream(user_dream: str) -> dict:
 | 호출 | 모델 | 입력 토큰 | 출력 토큰 | 단가 | 회당 비용 |
 |------|------|-----------|-----------|------|-----------|
 | 분류기 | Haiku 4.5 | ~700 (캐시 hit 시 ~50) | ~80 | $1.00 / $5.00 per MTok | ~$0.0005 |
-| 해몽 | Sonnet 4.6 | ~2,000 (캐시 hit 시 ~100) | ~800 | $3.00 / $15.00 per MTok | ~$0.013 |
+| 해몽 | Sonnet 5 | ~2,000 (캐시 hit 시 ~100) | ~800 | $3.00 / $15.00 per MTok | ~$0.013 |
 
 분류기는 해몽 비용의 **~4%** 수준 — 이중 안전망의 비용 부담은 무시 가능.
 
 > 주의: Haiku 4.5의 prompt cache 최소는 **4,096 tokens**이다. §3 분류기 시스템
 > 프롬프트는 한국어 기준 ~700~900 tokens 이므로 **단독으로는 캐시 미적용**.
-> few-shot을 더 늘려 4,096 tokens 이상으로 키우거나, Sonnet 4.6(최소 1,024
+> few-shot을 더 늘려 4,096 tokens 이상으로 키우거나, Sonnet 5(최소 1,024
 > tokens)로 분류기를 운영하면 캐시 가능. 트래픽이 매우 많지 않으면 캐시 없이도
 > 회당 $0.0005 수준이므로 Haiku 4.5 권장.
 
@@ -369,12 +369,12 @@ def handle_dream(user_dream: str) -> dict:
 | 모델 | 캐시 최소 토큰 | 분류기 적용 가능성 |
 |------|---------------|----------------|
 | Claude Haiku 4.5 | 4,096 | few-shot 7~10개로 확장하면 가능 |
-| Claude Sonnet 4.6 | 1,024 | 기본 템플릿(§3)으로 적용 가능 |
-| Claude Opus 4.7 | 4,096 | (분류기에 Opus는 과잉) |
+| Claude Sonnet 5 | 1,024 | 기본 템플릿(§3)으로 적용 가능 |
+| Claude Opus 5 | 512 | (분류기에 Opus는 과잉) |
 
 **선택 가이드:**
 - 트래픽 < 1,000 req/day → 캐시 무시, Haiku 4.5 단순 호출
-- 트래픽 ≥ 1,000 req/day → Sonnet 4.6 + cache (회당 입력 비용 90% 절감)
+- 트래픽 ≥ 1,000 req/day → Sonnet 5 + cache (회당 입력 비용 90% 절감)
 - 분류기 시스템 프롬프트는 *불변*으로 유지 — 매 호출마다 동일해야 캐시 적중
 
 ---

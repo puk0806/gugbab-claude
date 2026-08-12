@@ -11,8 +11,9 @@ description: 프론트엔드 번들 크기 측정·시각화·비교 방법론 �
 > - webpack-bundle-analyzer: https://github.com/webpack-contrib/webpack-bundle-analyzer
 > - size-limit: https://github.com/ai/size-limit
 >
-> 검증일: 2026-05-14
-> 버전 기준: rollup-plugin-visualizer 7.0.1 (2026-03-03) / vite-bundle-visualizer 1.2.1 / size-limit 12.1.0 (2026-04-13)
+> 검증일: 2026-08-11
+> 버전 기준: rollup-plugin-visualizer 7.0.1 (2026-03-03) / vite-bundle-visualizer 1.2.1 / size-limit 13.0.3
+> 주의: size-limit 13.0.0에서 Node 20 지원이 종료됐다(breaking change). 설정 파일 문법 자체는 12.x와 동일하므로 아래 예시는 그대로 유효하다.
 
 이 스킬은 **측정·비교 방법론**을 다룬다. 분할 *전략*은 `vite-advanced-splitting` 스킬을 참조한다.
 

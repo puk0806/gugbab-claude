@@ -177,15 +177,18 @@ export default function Page() {
 }
 
 // 네비게이션 버튼 커스텀
+// v12+ 화살표는 아이콘 폰트(::after)가 아니라 인라인 SVG —
+// ::after { font-size } 방식은 동작하지 않으므로 CSS 변수로 조정한다
+.swiper {
+  --swiper-navigation-size: 44px;
+  --swiper-navigation-color: var(--color-primary);
+  --swiper-navigation-sides-offset: 10px;
+}
+
 .swiper-button-next,
 .swiper-button-prev {
-  color: var(--color-primary);
   width: 44px;
   height: 44px;
-
-  &::after {
-    font-size: 20px;
-  }
 }
 
 // 페이지네이션 도트 커스텀

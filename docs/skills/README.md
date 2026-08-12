@@ -12,4 +12,14 @@
 | [education](./education/README.md) | 5종 | 도덕과 교육과정·수업 적용 |
 | [game](./game/README.md) | 17종 | Unity 2D 게임 개발·출시·수익화 |
 | [health](./health/README.md) | 5종 | 건강·식단·영양 (KDRIs·한국 식품 DB·식단 프롬프트) |
-| [meta](./meta/README.md) | 5종 | 워크플로우·프롬프트 엔지니어링 |
+| [meta](./meta/README.md) | 6종 | 워크플로우·프롬프트 엔지니어링·훅 작성법 |
+
+---
+
+## 검증 상태
+
+스킬별 검증 문서는 각 카테고리 폴더의 `{스킬명}/verification.md`에 있다.
+
+- **`APPROVED`** — 내용 검증 + 실사용/content 테스트 완료
+- **`PENDING_TEST`** — 내용 검증 완료, 실행 결과로만 확인 가능한 항목이 남음 (사용은 가능)
+- 남은 PENDING_TEST 스킬과 **각각의 졸업 조건**은 → [PENDING_TEST.md](./PENDING_TEST.md)

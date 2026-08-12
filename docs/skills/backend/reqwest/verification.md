@@ -165,3 +165,4 @@ status: APPROVED
 | 2026-04-17 | v2 | verification.md 신규 8섹션 포맷으로 마이그레이션 | 메인 대화 오케스트레이션 |
 | 2026-04-17 | v3 | WebSearch 7개 클레임 교차 검증, DISPUTED 1건 수정 (reqwest 내장 retry v0.12.23+) | 메인 대화 오케스트레이션 |
 | 2026-06-20 | v4 | 버전 재검증 — reqwest 0.13.11 (2026-05-28 릴리즈) 확인. 현재 문서는 0.12.x 유지, SKILL.md에 0.13 마이그레이션 노트(rustls 기본 TLS, MSRV 1.85, dns_resolver2, Url serde feature 변경) 추가 | 버전 재검증 작업 |
+| 2026-08-12 | v4 | **모델 ID 세대 정렬.** Claude API 예제 코드 2곳의 `claude-sonnet-4-6` → `claude-sonnet-5` 교체(§JSON 요청 본문, §스트리밍 응답 처리). Sonnet 4.6은 여전히 호출 가능한 legacy지만 현행 세대는 Sonnet 5. 샘플링 파라미터(`temperature`/`top_p`/`top_k`)·`budget_tokens` 사용 없음 — 5 계열 400 이슈 해당 없음. reqwest 라이브러리 내용은 변경 없음. 검증일 2026-06-20 → 2026-08-12. status **APPROVED 유지** | 모델 ID 세대 정렬 |

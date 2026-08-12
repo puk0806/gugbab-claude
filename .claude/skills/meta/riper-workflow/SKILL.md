@@ -7,8 +7,12 @@ disable-model-invocation: true
 
 # RIPER 워크플로우
 
-> 소스: https://github.com/tom-doerr/riper, https://www.reddit.com/r/ClaudeAI/comments/1kh2mgk/
-> 검증일: 2026-06-06
+> 소스: [1차·원 출처] Cursor 포럼 게시글 "I created an AMAZING MODE called 'RIPER-5 Mode' Fixes Claude 3.7 Drastically!"
+> — 작성자 robotlovehuman, 2025-03-17 · https://forum.cursor.com/t/i-created-an-amazing-mode-called-riper-5-mode-fixes-claude-3-7-drastically/65516
+> 참고 구현체: https://github.com/tony/claude-code-riper-5 (Claude Code 이식판. README에서 위 포럼 게시글을 원저작으로 명시)
+> 주의: 참고 구현체는 Stars 100 미만이라 info-verification.md 기준 신뢰도가 낮다 — 원 출처인 포럼 게시글을 우선 근거로 삼는다
+> 참고: 원본 RIPER-5는 매 응답을 `[MODE: RESEARCH]` 같은 모드 선언으로 시작하는 프로토콜을 포함한다. 본 스킬은 모드 선언 대신 단계 경계의 사용자 승인만 사용하는 변형이다
+> 검증일: 2026-08-12 (위 두 URL 실제 접속 확인)
 
 새 기능 구현, 복잡한 리팩터, 아키텍처 변경 등 **30분 이상 소요될 작업**에 적용한다.
 단순 버그 수정이나 한 파일 수정은 적용 불필요.

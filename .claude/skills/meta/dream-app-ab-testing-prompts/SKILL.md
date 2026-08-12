@@ -22,8 +22,8 @@ description: >
 > - Bird et al., "The Ethics of Online Controlled Experiments (A/B Testing)", *Minds and Machines*, 2023 — https://link.springer.com/article/10.1007/s11023-023-09644-y
 > - Google SRE Workbook, Canarying Releases — https://sre.google/workbook/canarying-releases/
 >
-> 검증일: 2026-05-15
-> 대상 모델: Claude Opus 4.7 / Sonnet 4.6 / Haiku 4.5 기준
+> 검증일: 2026-08-11
+> 대상 모델: Claude Opus 4.8 / Sonnet 4.6 / Haiku 4.5 기준 (`.claude/rules/agent-design.md`)
 > 짝 스킬: `meta/dream-interpretation-prompt-engineering`, `meta/dream-safety-classifier-prompts`
 > 짝 에이전트: `validation/dream-interpretation-prompt-tester` (사전 평가), `research/data-analyst` (운영 분석)
 

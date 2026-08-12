@@ -6,7 +6,7 @@ description: 보유 식재료 기반 식단·레시피 추천 Claude 프롬프�
 # Meal Recommendation Prompt — 식재료 기반 식단 추천
 
 > 소스: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices
-> 검증일: 2026-06-26
+> 검증일: 2026-08-12
 
 ---
 
@@ -125,7 +125,7 @@ ${ingredientContext}
 `;
 
   const message = await client.messages.create({
-    model: 'claude-sonnet-4-6',
+    model: 'claude-sonnet-5',
     max_tokens: 2048,
     system: `당신은 한국 가정의 영양사 겸 요리 전문가입니다. 보유 식재료로 현실적인 한식 위주 식단을 추천하며, 소비기한 임박 재료를 우선 활용합니다. 응답은 반드시 JSON 형식으로만 반환합니다.`,
     messages: [{ role: 'user', content: prompt }],
@@ -149,7 +149,7 @@ const getMealRecommendationsStream = async (
   onChunk: (text: string) => void
 ) => {
   const stream = client.messages.stream({
-    model: 'claude-sonnet-4-6',
+    model: 'claude-sonnet-5',
     max_tokens: 2048,
     system: '...위와 동일...',
     messages: [{ role: 'user', content: buildMealPrompt(ingredients) }],

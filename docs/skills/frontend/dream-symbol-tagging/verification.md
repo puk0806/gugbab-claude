@@ -20,6 +20,7 @@ status: APPROVED
 | 스킬 이름 | `dream-symbol-tagging` |
 | 스킬 경로 | `.claude/skills/frontend/dream-symbol-tagging/SKILL.md` |
 | 검증일 | 2026-05-15 |
+| 모델 ID 한정 재감사일 | 2026-08-11 — 변경 없음 (아래 §8 참조) |
 | 검증자 | skill-creator (Claude Opus 4.7) |
 | 스킬 버전 | v1 |
 
@@ -232,3 +233,5 @@ SKILL.md §6-1 코드 예시 기반으로 `tools` + `tool_choice: {type:"tool", 
 | 2026-05-15 | v1 | 최초 작성 (룰·LLM·임베딩 3축 하이브리드, 6개 카테고리, 한국어 형태소 처리) | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 룰+LLM 하이브리드 흐름 / Q2 tool_use JSON 강제 패턴 / Q3 mecab-ko 형태소 분석 필요성) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | skill-tester |
 | 2026-06-19 | v1 | 카테고리 재분류 — "실사용 필수" → 라이브러리 사용법·패턴 스킬. verification-policy "content test PASS = APPROVED" 기준 적용, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-08-11 | v1 | **모델 ID 정기 감사 — 변경 없음.** SKILL.md §6-1의 `claude-sonnet-4-6`이 `.claude/rules/agent-design.md` 기준 현행임을 확인. §6-2 Structured Outputs 지원 범위 표기("Opus 4.5+/Sonnet 4.5+/Haiku 4.5")도 하한 서술로 유효(현행 Opus 4.8·Sonnet 4.6 포함). SKILL.md 미수정, 전체 검증일(2026-05-15)·status(APPROVED) 유지 | 모델 ID 정기 감사 |
+| 2026-08-12 | v1 | **모델 ID 세대 정렬.** §6-1 `tool_use` 심볼 추출 예제의 `claude-sonnet-4-6` → `claude-sonnet-5` 교체(1곳) — 2026-08-11 감사에서 "현행"으로 판정했으나 Sonnet 5 출시로 구세대가 되어 정정. §6-2 Structured Outputs 지원 범위 표기는 하한 서술이라 Sonnet 5 포함, 변경 없음. 샘플링 파라미터·`budget_tokens` 사용 없음 — 5 계열 400 이슈 해당 없음. 검증일 2026-05-15 → 2026-08-12. status **APPROVED 유지** | 모델 ID 세대 정렬 |

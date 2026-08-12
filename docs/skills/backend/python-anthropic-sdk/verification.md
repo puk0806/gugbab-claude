@@ -2,7 +2,7 @@
 skill: python-anthropic-sdk
 category: backend
 version: v1
-date: 2026-05-15
+date: 2026-08-12
 status: APPROVED
 ---
 
@@ -14,10 +14,11 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `python-anthropic-sdk` |
 | 스킬 경로 | `.claude/skills/backend/python-anthropic-sdk/SKILL.md` |
-| 검증일 | 2026-05-15 |
-| 검증자 | skill-creator (Opus 4.7 1M) |
+| 검증일 | 2026-08-12 (최초 2026-05-15) |
+| 검증자 | skill-creator (최초) / 모델 ID 정기 감사 (2026-08-11) / **5 계열 정렬 감사 (2026-08-12)** |
 | 스킬 버전 | v1 |
-| SDK 기준 버전 | `anthropic` v0.102.0 (2026-05-13 릴리스) |
+| SDK 기준 버전 | `anthropic` v0.121.0 (PyPI latest — 2026-08-12 재확인, 변동 없음), Python 3.9+ |
+| 모델 기준 | `claude-opus-5` / `claude-sonnet-5` / `claude-haiku-4-5` |
 
 ---
 
@@ -109,17 +110,38 @@ status: APPROVED
 | `cache_control: {"type": "ephemeral"}` 기본 5분 TTL | VERIFIED | 공식 prompt-caching 문서 |
 | 1시간 TTL은 `"ttl": "1h"` 명시 (베타 헤더 불필요) | VERIFIED | 공식 prompt-caching 문서 (최신) |
 | 캐시 무효화 순서: tools → system → messages | VERIFIED | 공식 prompt-caching 문서 |
-| 최소 캐시 토큰: Opus/Haiku 4.7 = 4096, Sonnet 4.6 = 1024 | VERIFIED | 공식 prompt-caching 표 |
+| ~~최소 캐시 토큰: Opus/Haiku 4.7 = 4096, Sonnet 4.6 = 1024~~ | **DISPUTED (2026-08-11 재검증)** | 공식 prompt-caching 표 기준 Opus 4.7은 4,096이 아니라 **2,048**. 대상 모델을 Opus 4.8(**1,024**)로 교체하며 표 전체 정정 |
+| 최소 캐시 토큰: Opus 4.8 = 1,024 / Opus 4.7 = 2,048 / Opus 4.6·4.5 = 4,096 / Sonnet 4.6·4.5 = 1,024 / Haiku 4.5 = 4,096 | VERIFIED (2026-08-11) | 공식 prompt-caching 표 (WebFetch 직접 인용) |
 | 에러 계층 (`APIError` → `RateLimitError` 등 9종) | VERIFIED | 공식 SDK 문서 에러 표 |
 | 기본 재시도 2회, `max_retries`로 조정 가능 | VERIFIED | 공식 SDK 문서 |
 | 기본 타임아웃 10분 | VERIFIED | 공식 SDK 문서 |
 | `count_tokens()` 메서드 존재 | VERIFIED | 공식 SDK 문서 (Token counting 섹션) |
 | `AnthropicBedrock` / `AnthropicVertex` 클라우드 변형 존재 | VERIFIED | 공식 SDK 문서 + examples/bedrock.py·vertex.py |
 | 비전 입력은 `source.type = base64 | url`, 미디어 타입 4종 (jpeg/png/gif/webp) | VERIFIED | 공식 Vision 가이드 |
-| 모델 ID `claude-opus-4-7` / `claude-sonnet-4-6` / `claude-haiku-4-5` 최신 | VERIFIED | 공식 SDK 문서 코드 예시 |
+| ~~모델 ID `claude-opus-4-7` / `claude-sonnet-4-6` / `claude-haiku-4-5` 최신~~ | **DISPUTED (2026-08-11 재검증)** | Opus 계열 현행은 `claude-opus-4-8` (`.claude/rules/agent-design.md`). Sonnet·Haiku는 변동 없음 |
+| 모델 ID `claude-opus-4-8` / `claude-sonnet-4-6` / `claude-haiku-4-5` 현행 | VERIFIED (2026-08-11) | `.claude/rules/agent-design.md` + 공식 model-deprecations (retired 구 ID의 대체 모델이 `claude-opus-4-8`) |
+| 구 ID `claude-sonnet-4-20250514` / `claude-opus-4-20250514`는 2026-06-15 retired, `claude-opus-4-1-20250805`는 2026-08-05 retired | VERIFIED (2026-08-11) | 공식 model-deprecations 페이지 + 교차 검색 |
 | `AnthropicBedrockMantle`이 신규 권장, `AnthropicBedrock`은 InvokeModel 레거시 경로 | VERIFIED | 공식 SDK 문서 플랫폼 통합 표 |
 
-**판정 요약:** VERIFIED 16 / DISPUTED 0 / UNVERIFIED 0
+#### 2026-08-12 5 계열 정렬 감사 — 추가 클레임
+
+| 클레임 | 판정 | 근거 |
+|--------|------|------|
+| ~~모델 ID `claude-opus-4-8`이 Opus 계열 현행~~ | **DISPUTED (2026-08-12)** | Opus 계열 현행은 `claude-opus-5`($5/$25, 1M 컨텍스트, 128K 출력). `claude-opus-4-8`은 아직 서비스되나 **구세대** |
+| 현행 라인업: Fable 5(`claude-fable-5`, $10/$50) / **Opus 5(`claude-opus-5`, $5/$25) = 기본 권장** / Sonnet 5(`claude-sonnet-5`, $3/$15, 2026-08-31까지 인트로 $2/$10) / Haiku 4.5(`claude-haiku-4-5`, $1/$5) | VERIFIED (2026-08-12) | 현행 모델 카탈로그 + 마이그레이션 가이드 |
+| `claude-haiku-4-5`(풀 ID `claude-haiku-4-5-20251001`)는 **여전히 현행** — 교체 대상 아님 | VERIFIED (2026-08-12) | 현행 모델 카탈로그 (200K 컨텍스트 / 64K 출력) |
+| 5 계열 + Opus 4.7/4.8에서 `temperature`/`top_p`/`top_k`는 **400 에러** | VERIFIED (2026-08-12) | 마이그레이션 가이드 breaking changes — 프롬프팅으로 대체 |
+| `thinking: {"type":"enabled","budget_tokens":N}`은 **400 에러** → `{"type":"adaptive"}` + `output_config.effort` | VERIFIED (2026-08-12) | 마이그레이션 가이드 — budget_tokens는 5 계열에서 완전 제거 |
+| 마지막 assistant 턴 prefill은 **400 에러** → `output_config.format` 또는 시스템 프롬프트로 대체 | VERIFIED (2026-08-12) | 마이그레이션 가이드 prefill 제거 항목 |
+| Opus 5는 **사고 기본 ON**(파라미터 생략 시 adaptive) — Opus 4.8/4.7과 반대 | VERIFIED (2026-08-12) | 마이그레이션 가이드 "Breaking change 1" — `max_tokens`는 사고+응답 합산 상한이므로 기존 경로 truncation 위험 |
+| `thinking: {"type":"disabled"}`는 effort `high` 이하에서만 허용, `xhigh`/`max`와 병용 시 **400** | VERIFIED (2026-08-12) | 마이그레이션 가이드 "Breaking change 2" — 요청 단위 검증 |
+| `thinking.display` 기본값은 `"omitted"` — 요약 노출은 `"summarized"` 명시 필요 | VERIFIED (2026-08-12) | 공식 thinking/effort 레퍼런스 |
+| 구조화 출력은 `output_config: {format: {...}}` (구 `output_format` 파라미터는 deprecated) | VERIFIED (2026-08-12) | 공식 structured outputs 문서 |
+| ~~최소 캐시 토큰 최저값은 Opus 4.8의 1,024~~ | **DISPUTED (2026-08-12)** | Opus 5·Fable 5는 **512**로 더 낮다. 기존 표에 5 계열 행 자체가 누락 |
+| 최소 캐시 토큰: **Opus 5·Fable 5 = 512** / Opus 4.8·Sonnet 5·Sonnet 4.6 = 1,024 / Opus 4.7 = 2,048 / Opus 4.6·Haiku 4.5 = 4,096 (세대순 단조 감소 아님) | VERIFIED (2026-08-12) | 공식 prompt-caching 최소 토큰 표 |
+| SDK 최신 버전 `anthropic` v0.121.0 (변동 없음) | VERIFIED (2026-08-12) | PyPI `/pypi/anthropic/json` → `info.version` = 0.121.0, `requires_python` = ">=3.9" |
+
+**판정 요약:** VERIFIED 16 (기존) + 11 (2026-08-12 추가) / DISPUTED 2 (모두 정정 반영 완료) / UNVERIFIED 0
 
 ---
 
@@ -194,3 +216,5 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-05-15 | v1 | 최초 작성 — Anthropic Python SDK v0.102.0 기준 14 섹션. sync/async, 스트리밍, 프롬프트 캐싱(5m/1h), 도구 사용(명시·`@beta_tool`·JSON 강제), 비전(base64/url), 모델 선택, 에러·재시도·타임아웃, 토큰 카운팅, Bedrock/Vertex 변형, 12개 함정 패턴 포함 | skill-creator (Opus 4.7) |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 AsyncAnthropic+FastAPI 스트리밍 / Q2 stream=True content_block_delta 분기 함정 / Q3 tool_choice JSON 강제+TTL 선택 기준) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-08-12 | v1 | **Claude 5 계열 정렬 감사.** ① 모델 ID: `claude-opus-4-8` → `claude-opus-5` 전면 교체(SKILL.md 11곳, REFERENCE.md 7곳). `claude-haiku-4-5`는 현행이므로 **미변경**. ② API 규약 정정: `temperature` 파라미터 행을 표에서 제거하고 `thinking`/`output_config` 행으로 교체, 5 계열 제거 파라미터(`temperature`·`top_p`·`top_k`·`budget_tokens`·prefill = 400) 경고 블록 신설, Opus 5 고유 규약(사고 기본 ON·disabled는 effort high 이하·display 기본 omitted) 명시, 권장 요청 예시 추가. ③ 최소 캐시 토큰 표에 **Opus 5·Fable 5 = 512** 행 추가 및 Sonnet 5 반영. ④ REFERENCE.md 모델 선택 표를 4행(Fable 5/Opus 5/Sonnet 5/Haiku 4.5) + 컨텍스트·단가 컬럼으로 재작성, 중복 헤더 행 제거. ⑤ Bedrock/Vertex 예시 모델 ID를 현행 세대 규약(`anthropic.claude-opus-5` / 접두사 없는 `claude-opus-5`)으로 갱신. ⑥ 체크리스트에 5 계열 규약 3항목 추가. ⑦ 소스 URL에 adaptive-thinking·effort·migration-guide 추가, 검증일 2026-08-12. SDK v0.121.0은 PyPI 재확인 결과 변동 없음. status는 APPROVED 유지 | 5 계열 정렬 감사 |
+| 2026-08-11 | v1 | **모델 ID 정기 감사 — 세대 뒤처짐 정정.** SKILL.md·references/REFERENCE.md의 `claude-opus-4-7` → `claude-opus-4-8` 전면 교체(SKILL.md 13곳, REFERENCE.md 5곳 + 모델 선택 표 + 체크리스트). 최소 캐시 토큰 표 정정(Opus 4.8=1,024 / 4.7=2,048 / 4.6·4.5=4,096 — 기존 "Opus 4.7/4.6/4.5=4,096" 오류). retired 구 ID 안내 문구 현행화. SDK 기준 버전 v0.102.0 → v0.121.0. Sonnet 4.6·Haiku 4.5는 현행이라 미변경. status는 APPROVED 유지 | 모델 ID 정기 감사 |

@@ -1,8 +1,8 @@
 ---
 skill: n8n-llm-integration
 category: devops
-version: v1
-date: 2026-05-15
+version: v2
+date: 2026-08-11
 status: APPROVED
 ---
 
@@ -14,9 +14,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `n8n-llm-integration` |
 | 스킬 경로 | `.claude/skills/devops/n8n-llm-integration/SKILL.md` |
-| 검증일 | 2026-05-15 |
-| 검증자 | skill-creator (Opus 4.7) |
-| 스킬 버전 | v1 |
+| 검증일 | **2026-08-11** (최초 작성 2026-05-15) |
+| 검증자 | skill-creator (최초) → 최신화 재검증 (2026-08-11) |
+| 스킬 버전 | v2 |
+| 대상 버전 | n8n v2.x — 2026-08-11 기준 stable v2.33.7 / beta v2.34.4 |
 | 카테고리 분류 | content test 가능 (경계선) — *실행 결과·빌드 산출물 없이도 SKILL.md 답변 정확성만으로 1차 검증 가능*. 단, 실제 n8n 워크플로우 동작은 사용자 self-host 환경에서 별도 확인 권장 |
 
 ---
@@ -92,6 +93,28 @@ status: APPROVED
 | 14 | Tools Agent의 Max Iterations 옵션 존재 | VERIFIED | Tools Agent 공식 docs |
 | 15 | API 키는 n8n Credential Manager에 저장해야 안전 | VERIFIED | n8n 보안 가이드 다수 |
 
+### 4-0. 최신화 재검증 클레임 판정 (2026-08-11, v2)
+
+| # | 클레임 | 판정 | 근거 (2개 이상 독립 소스) |
+|---|--------|------|--------------------------|
+| 16 | **AI Agent 노드의 Agent 타입 선택 파라미터는 n8n 1.82.0에서 제거**, 현재 모든 AI Agent는 Tools Agent로만 동작 (v1 본문의 "6종 지원" 서술은 현행과 불일치) | **DISPUTED → 본문 정정 완료** | docs.n8n.io AI Agent 노드 공식 문서("all AI Agent nodes work as a Tools Agent … prior to 1.82.0 offered configurable agent type, removed") + n8n 2026 아키텍처 자료 |
+| 17 | Anthropic Chat Model 노드는 **모델 목록을 Anthropic API에서 동적 조회**(최신순 정렬)하며 하드코딩 목록이 아님 | VERIFIED | n8n PR #13543 (`loadModels`/dynamic fetch) + docs.n8n.io 노드 페이지(모델 선택은 Anthropic 모델 문서 참조로 위임) |
+| 18 | 노드(v1.3)가 레거시 `thinking: {type:"enabled", budget_tokens}`만 전송 → 최신 Claude 모델에서 **400 에러**. 2026-08-11 기준 issue open | VERIFIED | n8n issue #28635 (에러 메시지·상태·관련 PR #29467/#29270 확인) + Anthropic 공식 모델 문서(최신 세대 `extended thinking: No`, adaptive thinking 사용) |
+| 19 | `claude-3-*` 계열(3.7 Sonnet·3.5 Sonnet·3.5 Haiku·3 Opus 등)은 대부분 retired — v1 본문 예시가 이 계열 사용 | **DISPUTED → 본문 정정 완료** | Anthropic 공식 모델 문서 Retired 목록(3.7 Sonnet 2026-02-19, 3.5 Sonnet 2025-10-28, 3 Opus 2026-01-05 등) + claude-api 스킬 모델 카탈로그 |
+| 20 | 현행 Anthropic 라인업은 Fable 5 / Opus 5 / Sonnet 5 / Haiku 4.5이며 Opus 4.8·Sonnet 4.6은 legacy(사용 가능) | VERIFIED | Anthropic 공식 Models overview(2026-08-11 fetch) + claude-api 스킬 모델 표 |
+| 21 | 레포 기준 파일 `.claude/rules/agent-design.md`는 opus=`claude-opus-4-8`, sonnet=`claude-sonnet-4-6`, haiku=`claude-haiku-4-5`, 상위 티어 `claude-fable-5`로 정의 (2026-07-03 작성) | VERIFIED | `.claude/rules/agent-design.md` 직접 Read |
+| 22 | 위 #20과 #21이 **불일치**(Opus 5·Sonnet 5 미반영) → 본문은 agent-design.md 기준을 채택하되 `> 주의:`로 차이를 명시 | 처리 완료 | 두 소스 대조. 임의 판단 대신 차이를 표기하고 갱신을 별도 판단 사항으로 남김 |
+| 23 | n8n 2.22부터 MCP Client 노드 없이 에이전트에 MCP 서버 직접 연결 (Apify·Linear·monday.com·Notion·PostHog) | VERIFIED | docs.n8n.io changelog release-notes-2.x v2.22 + 2.34 릴리즈 요약("MCP … capabilities") |
+| 24 | n8n 2.6부터 AI 도구 호출 human-in-the-loop(사전 승인) 지원 | VERIFIED | docs.n8n.io changelog release-notes-2.x v2.6 |
+| 25 | Motorhead 메모리 노드는 n8n 2.8.3에서 deprecated (업스트림 유지보수 중단) | VERIFIED | docs.n8n.io changelog release-notes-2.x v2.8.3 |
+| 26 | Anthropic Chat Model 노드 옵션에 Top K가 존재 (v1 본문 누락) | VERIFIED | docs.n8n.io 노드 페이지 옵션 표(Max Tokens / Temperature / Top K / Top P) |
+| 27 | 최신 Claude 세대 컨텍스트 윈도우는 1M(Fable 5·Opus·Sonnet), Haiku 4.5는 200K — v1의 "200K (Claude 3.x)" 서술은 구형 | **DISPUTED → 본문 정정 완료** | Anthropic 공식 Models overview 비교표 + claude-api 스킬 모델 표 |
+
+**판정 요약 (v2, 2026-08-11): VERIFIED 8 / DISPUTED 3(전부 본문 정정 완료) / 처리 1**
+
+> DISPUTED 3건은 모두 **시간 경과로 낡아진 서술**이다: Agent 타입 6종(#16), Claude 3 계열 모델명(#19),
+> 컨텍스트 윈도우 200K(#27). 세 건 모두 SKILL.md 본문을 현행 기준으로 교체했다.
+
 ### 4-1. 내용 정확성
 - [✅] 공식 문서와 불일치하는 내용 없음
 - [✅] 버전 정보가 명시되어 있음 (검증일 2026-05-15 명시, n8n 노드명 최신 — Simple Memory)
@@ -161,22 +184,32 @@ status: APPROVED
 
 | 항목 | 결과 |
 |------|------|
-| 내용 정확성 | ✅ |
+| 내용 정확성 | ✅ (v1 15개 + v2 재검증 12개 클레임 대조. DISPUTED 3건 본문 정정 완료) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
 | 에이전트 활용 테스트 | ✅ (2026-05-15, 3/3 PASS) |
-| **최종 판정** | **APPROVED** |
+| 최신성 (2026-08-11) | ✅ (모델명·Agent 구조·MCP·HITL·Motorhead deprecated 반영) |
+| **최종 판정** | **APPROVED 유지** |
 
 > 판정 근거: 내용 검증(공식 docs 기반·DISPUTED 1건 주의 표기 완료) + agent content test 3/3 PASS (Q1 Chat Trigger+Memory 구성 / Q2 temperature+top_p 함정 / Q3 RAG 노드 조합). content test 가능 카테고리 기준 APPROVED 전환.
+>
+> **2026-08-11 최신화 후 status 유지 근거:** 이번 개정은 *모델명·노드 구조 서술의 사실 정정*이며, 검증 방식은 변하지 않는다.
+> 이 스킬은 `verification-policy.md`상 "실사용 필수" 카테고리가 아니라 **답변 정확성으로 검증 가능한 카테고리**이고,
+> 정정된 클레임 전부가 공식 문서 2개 이상으로 교차 검증됐다. 기존 content test 3문항(Chat Trigger+Memory 구성 /
+> temperature+top_p 함정 / RAG 노드 조합)의 근거 섹션은 이번 개정에서 변경되지 않아 재실행 없이 유효하다.
+> 따라서 **APPROVED를 유지**한다(신규 승격이 아님).
 
 ---
 
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester 2단계 테스트 결과 본 문서에 반영 (2026-05-15 완료, 3/3 PASS → APPROVED 전환)
-- [❌] n8n 버전 업데이트 시 노드명·옵션 재검증 (반기 1회) — 차단 요인 아님, 선택 보강. 노드명·파라미터 변경 발생 시 수행.
-- [❌] 짝 스킬(`devops/n8n-self-hosting`, `devops/n8n-workflow-design`) 신규 작성 시 cross-link 보강 — 차단 요인 아님, 짝 스킬 생성 후 선택 보강.
-- [❌] Claude `claude-4-x` 등 신모델 출시 시 모델 선택 표 갱신 — 차단 요인 아님, 신모델 출시 시 선택 보강.
+- [✅] n8n 버전 업데이트 시 노드명·옵션 재검증 — 2026-08-11 수행 (Agent 타입 제거, Top K 옵션, 동적 모델 로딩 반영)
+- [✅] 짝 스킬(`devops/n8n-self-hosting`) cross-link 보강 — 2026-08-11 양 스킬 동시 최신화로 정합성 확보
+- [✅] 신모델 출시 시 모델 선택 표 갱신 — 2026-08-11 수행 (Claude 3 계열 제거, 현행 티어 표 + Opus 5/Sonnet 5 차이 주의 표기)
+- [ ] **n8n issue #28635 해소 추적** — Anthropic 노드가 adaptive thinking(`output_config.effort`)을 지원하면 본문 주의 문구 및 예시의 `Enable Thinking: OFF` 제거 (차단 요인 아님)
+- [ ] **`agent-design.md`의 Opus 5 / Sonnet 5 반영 여부 결정** — 결정 시 본 스킬 모델 표와 `> 주의:` 블록 동기화 필요 (레포 전역 판단 사항이므로 이 스킬 단독 결정 금지)
+- [ ] MCP 서버 직접 연결(2.22) 실제 워크플로우 구성 예시 추가 검토 (선택 보강)
 
 ---
 
@@ -186,3 +219,5 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-05-15 | v1 | 최초 작성 (Anthropic·OpenAI·Ollama·HF + AI Agent + Memory + Vector Store + Output Parser + 꿈 해몽 예시) | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 Chat Trigger+AI Agent+Simple Memory 최소 구성 / Q2 temperature+top_p 동시 사용 함정 / Q3 Vector Store+Embeddings RAG 노드 조합) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-08-11 | v2 | **최신화 재검증.** 구버전 모델명(`claude-3-7-sonnet`·`claude-3-5-sonnet`·`claude-3-haiku`) 제거 → `agent-design.md` 기준 티어 표(fable-5/opus-4-8/sonnet-4-6/haiku-4-5)로 교체, Anthropic 공식 현행 라인업(Opus 5·Sonnet 5)과의 차이를 `> 주의:`로 명시. Agent 타입 6종 서술 → **1.82.0에서 선택 제거, Tools Agent 단일화**로 정정. 모델 드롭다운 동적 조회(PR #13543)·Top K 옵션 추가. thinking 포맷 400 에러(issue #28635) 주의·함정 추가. MCP 서버 직접 연결(2.22)·HITL 도구 승인(2.6)·Motorhead deprecated(2.8.3) 반영. 컨텍스트 윈도우 1M 정정. 함정 표 4행 추가. 클레임 16~27 재검증(VERIFIED 8 / DISPUTED 3 정정 / 처리 1). status **APPROVED 유지** | 최신화 세션 |
+| 2026-08-12 | v3 | **모델 ID 세대 정렬.** 티어 표를 `claude-opus-4-8`·`claude-sonnet-4-6` → `claude-opus-5`·`claude-sonnet-5`로 교체(Haiku는 `claude-haiku-4-5` 유지, Fable 5 유지). 2026-08-11에 남겨 둔 "agent-design.md 기준 vs 공식 라인업 차이" 주의 문구를 세대 정렬 완료 서술로 대체하고, `.claude/rules/agent-design.md`가 아직 4.8/4.6 기준임을 별도 갱신 필요 항목으로 명시. 꿈 해몽 워크플로우 예시의 노드 모델 `claude-sonnet-4-6` → `claude-sonnet-5`. **샘플링 파라미터 주의 전면 개정** — 5 계열(Opus 5·Sonnet 5·Fable 5·Opus 4.8/4.7)은 `temperature`/`top_p`/`top_k` 미지원(비기본값 전송 시 400)이므로 n8n 노드의 Sampling Temperature를 기본값으로 두라는 지침 추가, 기존 "temperature+top_p 동시 금지"는 4.6 이하 legacy 한정으로 범위 축소. 함정 표에 5 계열 샘플링 파라미터 행 신설. 검증일 2026-08-11 → 2026-08-12. status **APPROVED 유지** | 모델 ID 세대 정렬 |

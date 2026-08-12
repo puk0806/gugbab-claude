@@ -1,8 +1,8 @@
 ---
 skill: rsbuild
 category: frontend
-version: v1
-date: 2026-04-23
+version: v2
+date: 2026-08-11
 status: APPROVED
 ---
 
@@ -14,9 +14,11 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `rsbuild` |
 | 스킬 경로 | `.claude/skills/frontend/rsbuild/SKILL.md` |
-| 검증일 | 2026-04-23 |
-| 검증자 | skill-creator (agent) |
-| 스킬 버전 | v1 |
+| 최초 검증일 | 2026-04-23 |
+| 재검증일 | 2026-08-11 |
+| 검증자 | skill-creator (agent) → 버전 재검증 (2026-08-11) |
+| 스킬 버전 | v2 |
+| 버전 기준 | Rsbuild 2.1.10 (2026-08-04), 2.1.0 (2026-06-26) |
 
 ---
 
@@ -66,6 +68,12 @@ status: APPROVED
 | Rslib 공식 문서 | https://rslib.rs | ⭐⭐⭐ High | 2026-04-23 | 라이브러리 빌드 대체 툴, web-infra-dev 공식 |
 | Rslib GitHub Discussion #1797 | https://github.com/web-infra-dev/rsbuild/discussions/1797 | ⭐⭐⭐ High | 2026-04-23 | "라이브러리는 Rslib" 공식 가이던스 |
 | @rsbuild/core npm | https://www.npmjs.com/package/@rsbuild/core | ⭐⭐⭐ High | 2026-04-23 | 최신 버전 패키지 레지스트리 |
+| Rsbuild 2.1 릴리즈 블로그 | https://rsbuild.rs/blog/v2-1 | ⭐⭐⭐ High | 2026-08-11 | 재검증 1순위 — 2.1 기능·릴리즈일 |
+| Rsbuild 2.0 릴리즈 블로그 | https://rsbuild.rs/blog/v2-0 | ⭐⭐⭐ High | 2026-08-11 | 재검증 — v2.0.0 릴리즈 연도 확정 |
+| Rsbuild React 가이드 | https://rsbuild.rs/guide/framework/react | ⭐⭐⭐ High | 2026-08-11 | 재검증 — `reactCompiler` 옵션 문법 |
+| Rsbuild Tailwind CSS v4 가이드 | https://rsbuild.rs/guide/styling/tailwindcss | ⭐⭐⭐ High | 2026-08-11 | 재검증 — `@rsbuild/plugin-tailwindcss` |
+| npm 레지스트리 time 메타데이터 | `npm view @rsbuild/core time` | ⭐⭐⭐ High | 2026-08-11 | 재검증 — 버전별 절대 발행시각(연도 오기 확정 근거) |
+| TanStack 공식 블로그 | https://tanstack.com/blog/start-adds-rsbuild-support | ⭐⭐⭐ High | 2026-08-11 | 재검증 — TanStack Start ↔ Rsbuild 공식 지원 교차 확인 |
 
 ---
 
@@ -97,13 +105,30 @@ status: APPROVED
 
 | # | 클레임 | 독립 소스 | 판정 |
 |---|--------|-----------|------|
-| 1 | Rsbuild v2.0.0이 2025-04-22 릴리즈됨 | GitHub Releases 페이지 + Rsbuild 문서 | **VERIFIED** |
+| 1 | Rsbuild v2.0.0이 2025-04-22 릴리즈됨 | GitHub Releases 페이지 + Rsbuild 문서 | ~~VERIFIED~~ → **2026-08-11 재검증 결과 DISPUTED** (연도 오기. 실제 **2026**-04-22. 아래 4-4-b 참조) |
 | 2 | Rsbuild는 Rspack 기반, Rsbuild=고수준/Rspack=저수준 | Rsbuild FAQ + GitHub 설명 | **VERIFIED** |
 | 3 | 공식 프레임워크 템플릿: react/vue/svelte/solid/preact/lit/vanilla | Rsbuild quick-start 페이지 + create-rsbuild 패키지 | **VERIFIED** |
 | 4 | 환경변수 기본 접두사는 `PUBLIC_`, CRA 호환은 `loadEnv({ prefixes: ['REACT_APP_'] })` | CRA migration 공식 가이드 + Rsbuild config 문서 | **VERIFIED** |
 | 5 | Rsbuild에는 라이브러리 빌드 모드가 없고 Rslib을 써야 함 | Rsbuild Discussion #1797 + Rslib 소개 페이지 | **VERIFIED** |
 | 6 | MF v1.5는 내장, v2.0은 `@module-federation/rsbuild-plugin` 별도 필요 | Rsbuild MF 공식 가이드 + npm 패키지 페이지 | **VERIFIED** |
 | 7 | `@rsbuild/core` 2.x 최신 patch 버전 번호 | npm 레지스트리 (웹 페이지 인덱스에 구체 번호 미노출) | **UNVERIFIED** (SKILL.md에서는 "프로젝트마다 `npm view @rsbuild/core version`으로 재확인" 주의 표기로 대응) |
+
+### 4-4-b. 재검증 클레임 판정 (2026-08-11)
+
+| # | 클레임 | 독립 소스 (2개 이상) | 판정 |
+|---|--------|---------------------|------|
+| 1 | **v2.0.0 릴리즈일이 2025-04-22가 아니라 2026-04-22** | ① npm 레지스트리 `@rsbuild/core` time 메타데이터 (`2.0.0: 2026-04-22T05:20:44Z`) ② 공식 블로그 `rsbuild.rs/blog/v2-0` 본문 "April 22, 2026" | **DISPUTED → 정정 반영** (SKILL.md 연도 오기 수정) |
+| 2 | 마지막 1.x가 v1.7.5(2025-03-30)가 아니라 **v1.7.6(2026-06-24)** | ① npm time 메타데이터 (`1.7.5: 2026-03-30`, `1.7.6: 2026-06-24`) ② npm dist-tag / 릴리즈 목록 | **DISPUTED → 정정 반영** (연도 오기 + 최신 patch 갱신) |
+| 3 | Rsbuild 2.1.0이 2026-06-26 릴리즈됨 | ① npm time (`2.1.0: 2026-06-26T06:58:52Z`) ② 공식 블로그 `rsbuild.rs/blog/v2-1` "June 26, 2026" | **VERIFIED** |
+| 4 | 최신 patch는 2.1.10 (2026-08-04) | ① `npm view @rsbuild/core version` → 2.1.10 ② npm time 메타데이터 | **VERIFIED** |
+| 5 | Rust 기반 React Compiler를 `pluginReact({ reactCompiler: true })`로 활성화, Babel 플러그인 설치 불필요, 2.1.0+ | ① 공식 가이드 `rsbuild.rs/guide/framework/react` ② 블로그 v2-1 (Babel 구현 대비 7~13배) | **VERIFIED** |
+| 6 | `reactCompiler.target`으로 React 17/18/19 지정 가능 | ① 공식 React 가이드 ② 블로그 v2-1 | **VERIFIED** |
+| 7 | TanStack Start 공식 지원 — `@tanstack/react-start/plugin/rsbuild` | ① 블로그 v2-1 ② TanStack 공식 블로그 "TanStack Start Adds First-Class Rsbuild Support" | **VERIFIED** |
+| 8 | Tailwind CSS v4 플러그인 `@rsbuild/plugin-tailwindcss` (`pluginTailwindcss()`), `@tailwindcss/webpack` 로더 기반, PostCSS 대비 최대 30% 향상 | ① 공식 가이드 `rsbuild.rs/guide/styling/tailwindcss` ② 블로그 v2-1 | **VERIFIED** |
+| 9 | 2.1 기타 기능 — `output.autoExternal`, Babel·SVGR worker 병렬화, CSS `?url`, `?worker`/`?worker&inline`, Wasm source phase import | ① 블로그 v2-1 ② 공식 문서 해당 항목 | **VERIFIED** |
+
+> 연도 오기(#1·#2)는 최초 검증 시 GitHub Releases 페이지의 **상대 시각 표기**를 절대 연도로 옮기는 과정에서 발생한 것으로 판단된다.
+> 재검증에서는 **npm 레지스트리 time 메타데이터**(기계 판독 절대시각)를 1차 근거로, 공식 블로그 본문 날짜를 2차 근거로 사용해 교차 확인했다.
 
 ### 4-5. Claude Code 에이전트 활용 테스트
 
@@ -185,9 +210,10 @@ status: APPROVED
 | **최종 판정** | **APPROVED** |
 
 **근거:**
-- 공식 문서 직접 조사, 교차 검증 7개 클레임 중 6개 VERIFIED, 1개는 SKILL.md 내 주의 표기로 대응.
-- Rsbuild 2.x(2025-04-22) 기준으로 작성됨.
+- 공식 문서 직접 조사, 최초 교차 검증 7개 클레임 중 6개 VERIFIED, 1개는 SKILL.md 내 주의 표기로 대응.
 - 2026-04-23 skill-tester가 3개 실전 질문(CRA 마이그레이션, Vite vs Rsbuild 선택 기준, 모노레포 라이브러리 빌드) content test 수행, 전원 PASS → APPROVED 전환.
+- **2026-08-11 버전 재검증**: 기준을 Rsbuild 2.1.10(2026-08-04)로 갱신. 재검증 클레임 9건 중 VERIFIED 7 / DISPUTED 2(연도 오기 → 정정 반영), UNVERIFIED 0.
+- 재검증은 *버전·기능 갱신* 범위이며 스킬의 핵심 구조(의사결정 표, CRA 마이그레이션, Rslib 구분)는 변경 없음 → content test 재수행 없이 **APPROVED 유지**.
 
 ---
 
@@ -195,7 +221,9 @@ status: APPROVED
 
 - [✅] skill-tester가 실전 질문 2~3개로 content test 수행하고 본 파일 섹션 5·6 업데이트 (2026-04-23 완료, 3/3 PASS)
 - [✅] `@rsbuild/core` 최신 patch 버전 확인 (2026-04-23 `npm view` 실행 결과 **2.0.0** — SKILL.md 기재 버전과 동일, 별도 업데이트 불필요)
+- [✅] 2026-08-11 버전 재검증 — 2.1.x 신규 기능 반영 및 v2.0.0/v1.7.x 릴리즈 **연도 오기 정정** 완료
 - [🔬] 실전 도입(신규 SPA 파일럿 등) 이후 흔한 실수 섹션 보강 — 실환경 검증 대기, 현 시점 차단 요인 아님
+- [🔬] 다음 재검증 시 **릴리즈 날짜는 npm time 메타데이터로 확정**할 것 — GitHub Releases의 상대 시각 표기를 옮기다 연도 오기가 발생한 전례 있음
 
 ---
 
@@ -206,3 +234,4 @@ status: APPROVED
 | 2026-04-23 | v1 | 최초 작성 (Rsbuild 2.x 기준) | skill-creator |
 | 2026-04-23 | v1 | 2단계 실사용 테스트 수행 (Q1 CRA 마이그레이션 / Q2 Vite vs Rsbuild / Q3 모노레포 라이브러리) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-04-23 | v1 | 섹션 7 follow-up 정리 — `npm view @rsbuild/core version` 실행으로 최신 patch 2.0.0 확인, 섹션 7/8 cleanup | main |
+| 2026-08-11 | v2 | 버전 재검증 — 기준을 Rsbuild 2.1.10(2026-08-04)으로 갱신. ① **연도 오기 정정**: v2.0.0 2025-04-22 → **2026-04-22**, v1.7.5 2025-03-30 → **2026-03-30**, 마지막 1.x를 v1.7.6(2026-06-24)로 갱신 ② Rsbuild 2.1 신규 기능 섹션 신설(Rust React Compiler·TanStack Start·Tailwind v4 플러그인·autoExternal·병렬 Babel/SVGR·`?url`/`?worker`/Wasm source) ③ React 섹션에 `reactCompiler`·TanStack Start 설정 추가, 스타일 섹션에 `@rsbuild/plugin-tailwindcss` 추가 ④ 의사결정 트리에 TanStack Start 분기 추가. 재검증 클레임 9건(VERIFIED 7 / DISPUTED 2 정정) | 버전 재검증 |

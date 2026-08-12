@@ -11,7 +11,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `mui-v9` (구: mui-v5) |
-| 스킬 경로 | `.claude/skills/frontend/mui-v5/SKILL.md` |
+| 스킬 경로 | `.claude/skills/frontend/mui-v9/SKILL.md` (2026-08-11 폴더 리네임: mui-v5 → mui-v9) |
 | 검증일 | 2026-06-19 |
 | 검증자 | Claude (Sonnet 4.6) |
 | 스킬 버전 | v2 (MUI v5 → v9 전면 재작성) |

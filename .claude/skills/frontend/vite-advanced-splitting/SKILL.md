@@ -6,7 +6,9 @@ description: Vite 고급 코드 스플리팅 — manualChunks 함수형, 모바�
 # Vite 고급 코드 스플리팅 & 빌드 자동화
 
 > 소스: https://vitejs.dev/config/build-options | https://vitejs.dev/guide/api-plugin | https://vitejs.dev/guide/build
-> 검증일: 2026-04-20
+> 검증일: 2026-08-11 (최초 작성 2026-04-20, Vite 8 대응 주의사항 추가)
+
+> **주의 (Vite 8+):** Vite 8부터 Rolldown이 기본 번들러로 전환되면서 `build.rollupOptions`는 `build.rolldownOptions`로 개명됨(기존 `rollupOptions`는 deprecated alias로 하위호환 유지, 당장 깨지지 않음). `output.manualChunks` **객체 형식은 더 이상 지원되지 않음**(함수 형식은 deprecated로 계속 동작). 이 문서의 예시는 Vite 6.x 기준. 출처: https://vite.dev/guide/migration
 
 ---
 
@@ -15,17 +17,19 @@ description: Vite 고급 코드 스플리팅 — manualChunks 함수형, 모바�
 ### 기본 형식 비교
 
 ```typescript
-// 객체 형식 — 명시적, 소규모 청크 분할에 적합
+// 객체 형식 — 명시적, 소규모 청크 분할에 적합 (Vite 8+에서는 미지원, 아래 "주의" 참조)
 manualChunks: {
   'react-vendor': ['react', 'react-dom'],
   'ui-vendor': ['@mui/material'],
 }
 
-// 함수 형식 — 동적 조건 처리, 대규모 분할에 적합
+// 함수 형식 — 동적 조건 처리, 대규모 분할에 적합 (Vite 8+에서도 동작, deprecated)
 manualChunks(id: string) {
   if (id.includes('node_modules')) { ... }
 }
 ```
+
+> **주의 (Vite 8+):** 객체 형식 `manualChunks`는 미지원으로 전환됨. 아래 "패키지명 기반 자동 분할"의 함수 형식을 사용할 것.
 
 ### 패키지명 기반 자동 분할
 

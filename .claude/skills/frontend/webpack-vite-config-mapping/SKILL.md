@@ -6,7 +6,9 @@ description: Webpack/Craco 설정을 Vite로 1:1 매핑하는 패턴. cacheGroup
 # Webpack/Craco → Vite 설정 매핑
 
 > 소스: https://vitejs.dev/config/ | https://vitejs.dev/guide/api-plugin | https://craco.js.org/docs/configuration/webpack/
-> 검증일: 2026-04-20
+> 검증일: 2026-08-11 (최초 작성 2026-04-20, Vite 8 대응 주의사항 추가)
+
+> **주의 (Vite 8+):** Vite 8부터 Rolldown이 기본 번들러로 전환되면서 `build.rollupOptions`는 `build.rolldownOptions`로 개명됨(기존 `rollupOptions`는 deprecated alias로 하위호환 유지, 당장 깨지지 않음). `output.manualChunks` **객체 형식은 더 이상 지원되지 않음**(함수 형식은 deprecated로 계속 동작). 아래 예시는 Vite 6.x 기준 — Vite 8+ 환경이면 객체 형식 대신 함수형을 쓰거나 `rolldownOptions.output.codeSplitting` 전환을 검토할 것. 출처: https://vite.dev/guide/migration
 
 > **배경:** Craco는 CRA의 webpack 설정을 커스터마이징하는 래퍼. CRA deprecated(2025-02)와 함께 Craco도 maintenance-only 상태. 이 스킬은 craco.config.js의 각 설정을 vite.config.ts로 1:1 매핑한다.
 
@@ -121,6 +123,8 @@ export default defineConfig({
 ```
 
 > **주의:** `manualChunks` 객체 형식에서 존재하지 않는 패키지명을 넣으면 빌드 에러. 실제 설치된 패키지명으로 정확히 작성.
+>
+> **주의 (Vite 8+):** 위 객체 형식 `manualChunks`는 Vite 8+에서 미지원. 아래 함수형 패턴을 사용할 것(함수형도 deprecated이나 현재까지는 동작).
 
 ---
 
@@ -161,6 +165,8 @@ export default defineConfig(({ mode }) => ({
 ```
 
 > **주의:** esbuild `drop: ['console']`은 `console.error`도 제거. 특정 메서드만 유지하려면 `pure` 옵션 사용.
+>
+> **주의 (Vite 8+):** Rolldown 전환 후 drop 옵션 위치는 `build.rolldownOptions.output.minify.compress.drop*`로 이동. 위 `esbuildOptions.drop`은 Vite 6/7 기준.
 
 ---
 

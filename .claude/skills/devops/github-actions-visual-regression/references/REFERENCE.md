@@ -36,7 +36,7 @@ on:
 jobs:
   vrt:
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha }}   # 포크의 코드 체크아웃
       - run: pnpm install   # 포크의 package.json 스크립트 실행 → RCE
@@ -67,18 +67,18 @@ macOS의 폰트 렌더링과 Ubuntu(GitHub-hosted runner)의 폰트 렌더링은
 ### 8-4. artifact 이름 충돌
 
 ```yaml
-# 금지 - upload-artifact@v4는 동일 이름 덮어쓰기 불가
+# 금지 - upload-artifact@v7는 동일 이름 덮어쓰기 불가 (v4 이후 artifact 불변)
 strategy:
   matrix:
     app: [mui, radix]
-- uses: actions/upload-artifact@v4
+- uses: actions/upload-artifact@v7
   with:
     name: vrt-results   # 두 매트릭스가 동시에 같은 이름 업로드 시도 → 실패
 ```
 
 ```yaml
 # 권장
-- uses: actions/upload-artifact@v4
+- uses: actions/upload-artifact@v7
   with:
     name: vrt-results-${{ matrix.app }}
 ```
@@ -97,7 +97,7 @@ strategy:
 
 ### 8-6. retention-days 무제한
 
-`actions/upload-artifact@v4`의 `retention-days` 기본은 레포 설정값(보통 90일). 시각 회귀 PNG는 PR 머지 후 가치가 거의 없으므로 **7~14일로 명시**하는 게 비용·스토리지 관점에서 유리합니다.
+`actions/upload-artifact@v7`의 `retention-days` 기본은 레포 설정값(보통 90일). 시각 회귀 PNG는 PR 머지 후 가치가 거의 없으므로 **7~14일로 명시**하는 게 비용·스토리지 관점에서 유리합니다.
 
 ---
 
@@ -151,8 +151,8 @@ jobs:
       mui: ${{ steps.f.outputs.mui }}
       radix: ${{ steps.f.outputs.radix }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: dorny/paths-filter@v3
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v4
         id: f
         with:
           filters: |
@@ -173,14 +173,14 @@ jobs:
       matrix:
         app: [storybook-mui, storybook-radix]
     steps:
-      - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
         with: { version: 9 }
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with: { node-version: 22, cache: 'pnpm' }
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter ${{ matrix.app }} build:storybook
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: storybook-static-${{ matrix.app }}
           path: apps/${{ matrix.app }}/storybook-static
@@ -199,27 +199,27 @@ jobs:
           - app: storybook-radix
             run: ${{ needs.changes.outputs.radix }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - if: matrix.run != 'true'
         run: echo "skip ${{ matrix.app }}" && exit 0
 
       - if: matrix.run == 'true'
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with: { version: 9 }
       - if: matrix.run == 'true'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with: { node-version: 22, cache: 'pnpm' }
       - if: matrix.run == 'true'
         run: pnpm install --frozen-lockfile
 
       - if: matrix.run == 'true'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: storybook-static-${{ matrix.app }}
           path: apps/${{ matrix.app }}/storybook-static
 
       - if: matrix.run == 'true'
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: apps/${{ matrix.app }}/__snapshots__
           key: vrt-${{ matrix.app }}-${{ runner.os }}-${{ hashFiles(format('apps/{0}/__snapshots__/**', matrix.app)) }}
@@ -236,7 +236,7 @@ jobs:
             "test-storybook --maxWorkers=2"
 
       - if: failure() && matrix.run == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: vrt-results-${{ matrix.app }}
           path: |

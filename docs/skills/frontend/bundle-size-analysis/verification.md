@@ -110,6 +110,54 @@ DISPUTED·UNVERIFIED 항목 없음.
 
 ## 5. 테스트 진행 기록
 
+### 2026-08-11 재검증
+
+**재검증일**: 2026-08-11
+**수행자**: skill-tester → general-purpose (WebSearch 재검증 + content test 재수행)
+**수행 방법**: SKILL.md 핵심 클레임 3개(패키지 최신 버전) WebSearch 재검증 + 실전 질문 3개 재수행 (2026-05-14와 다른 질문으로 갱신)
+
+#### WebSearch 재검증 (핵심 클레임 3개)
+
+| # | 클레임 | 검증 결과 |
+|---|--------|-----------|
+| 1 | rollup-plugin-visualizer 7.0.1 (2026-03-03) | ✅ 변동 없음 — 2026-08-11 기준에도 최신 (npm registry) |
+| 2 | vite-bundle-visualizer 1.2.1 | ✅ 변동 없음 (npm registry) |
+| 3 | size-limit 12.1.0 (2026-04-13) | ⚠️ **버전 드리프트 발견** — 2026-07-30에 **13.0.3**으로 메이저 업 (13.0.0에서 Node.js 20 지원 종료, `tinyglobby`/`jiti` 의존성 제거가 breaking change). SKILL.md 섹션 6의 설정 문법(`size-limit` 배열, `limit` 단위, brotli 기본 압축)은 breaking change 목록에 포함되지 않아 내용 자체는 여전히 유효하나, 버전 표기(frontmatter 및 소스 표)는 outdated |
+
+#### 실제 수행 테스트 (2026-08-11, 신규 질문)
+
+**Q1. Next.js 프로젝트 번들 크기 분석 패키지·설정**
+- ✅ PASS
+- 근거: SKILL.md "4-4. CRA / Next.js 통합" 섹션 — `@next/bundle-analyzer` 설치 + `withBundleAnalyzer` 래핑 + `ANALYZE=true npm run build`
+- 상세: 핵심 명령·절차 근거 충분. 경미한 gap: `next.config.js` 전체 코드 스니펫 미포함, App Router 대응 여부 미언급 (보강 권장, 차단 요인 아님)
+
+**Q2. 저사양 기기 JS parse/execute 시간 확인 시 봐야 할 지표**
+- ✅ PASS
+- 근거: SKILL.md "1-2. 언제 어떤 지표를 보나" 표 — "JS parse / execute 시간 → raw (parsed)" 행 + "브라우저는 압축 해제 후 raw 크기를 파싱한다" 설명
+- 상세: 정답(raw/parsed) 근거 명확. 경미한 gap: "raw (=stat/parsed)"(1-1)와 "stat≠parsed"(4-3, defaultSizes 기본값 'parsed')가 용어상 약간 혼용됨 — SKILL.md 내 표현 일관성 이슈 (차단 요인 아님, 보강 권장)
+
+**Q3. 동일 모듈 중복 설치(duplicate dependency) 진단·해결**
+- ✅ PASS
+- 근거: SKILL.md "7-3. duplicate dependency" 섹션 — `npm ls react` 진단, `npm dedupe` 자동 정리, Vite `resolve.dedupe` 강제 단일화
+- 상세: 진단·해결 근거 충분. 경미한 gap: `lodash`/`lodash-es`처럼 이름이 다른 중복 패키지는 `npm dedupe`로 해결 안 되는데 후속 조치 미언급, Webpack 프로젝트의 동등 해결책(`resolve.alias`) 부재 (보강 권장, 차단 요인 아님)
+
+#### 발견된 gap (2026-08-11 재검증)
+
+- **버전 드리프트**: size-limit 12.1.0 → 13.0.3 (SKILL.md 갱신 필요, 사용자 승인 후 진행 — breaking change는 Node 20 지원 종료뿐이라 설정 문법 자체는 안전)
+- raw/stat/parsed 용어 일관성 (선택 보강)
+- Next.js App Router 코드 스니펫, lodash-es 중복 해결·Webpack resolve.alias 언급 (선택 보강)
+
+#### 판정 (2026-08-11)
+
+- WebSearch 재검증: 3/3 클레임 확인, 1건 버전 드리프트 발견 (size-limit — SKILL.md 미수정 상태로 보고, 사용자 승인 대기)
+- agent content test: 3/3 PASS (신규 질문)
+- verification-policy 분류: 실사용 필수 카테고리 (visualizer 산출물·CI 결과로만 최종 검증 가능) — 재확인
+- 최종 상태: PENDING_TEST 유지 (content test 누적 6/6 PASS, 실사용 검증 전까지 APPROVED 보류 + size-limit 버전 갱신 별도 후속 필요)
+
+---
+
+### 2026-05-14 최초 테스트
+
 **수행일**: 2026-05-14
 **수행자**: skill-tester → frontend-developer (에이전트 존재 확인 후 SKILL.md 직접 대조 검증)
 **수행 방법**: SKILL.md Read 후 실전 질문 3개 답변, 근거 섹션 존재 여부 및 anti-pattern 회피 확인
@@ -190,17 +238,19 @@ PR마다 브로틀리 크기 200 KB 초과 시 자동 차단하고 싶다. 설�
 | 내용 정확성 | ✅ (12/12 VERIFIED) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-05-14 skill-tester 수행, 3/3 PASS) |
-| **최종 판정** | **PENDING_TEST 유지** (실사용 필수 카테고리 — content test 3/3 PASS, 실 프로젝트 적용 후 APPROVED 전환) |
+| 에이전트 활용 테스트 | ✅ (2026-05-14 3/3 PASS + 2026-08-11 재검증 3/3 PASS, 누적 6/6 PASS) |
+| WebSearch 재검증 (2026-08-11) | ⚠️ rollup-plugin-visualizer·vite-bundle-visualizer 변동 없음, size-limit 12.1.0→13.0.3 버전 드리프트 발견 |
+| **최종 판정** | **PENDING_TEST 유지** (실사용 필수 카테고리 — content test 누적 6/6 PASS, 실 프로젝트 적용 후 APPROVED 전환 + size-limit 버전 갱신 후속 필요) |
 
 ---
 
 ## 7. 개선 필요 사항
 
-- [✅] skill-tester가 content test 수행하고 섹션 5·6 업데이트 (2026-05-14 완료, 3/3 PASS)
+- [✅] skill-tester가 content test 수행하고 섹션 5·6 업데이트 (2026-05-14 완료, 3/3 PASS / 2026-08-11 재검증 3/3 PASS 추가 — Next.js 분석 패키지·raw/parsed 지표 선택·duplicate dependency 진단)
 - [❌] 실제 Vite 프로젝트에서 `vite-bundle-visualizer` 실행 → 산출 stats.html 확인 — 차단 요인 아님, 선택 보강 (실사용 필수 카테고리이므로 실 프로젝트 도입 시 자연히 검증됨)
 - [❌] 실제 size-limit + GitHub Action을 PR에서 fail/pass 시켜봐서 PR 코멘트 형식 검증 — 차단 요인 아님, 선택 보강 (도입 후 CI 실행으로 검증)
 - [❌] webpack-bundle-analyzer `defaultSizes: 'brotli'` 옵션이 모든 webpack 5.x 환경에서 동작하는지 확인 (zstd는 최근 추가 — 환경별 호환성 주의 필요) — 차단 요인 아님, 선택 보강
+- [❌] **(2026-08-11 신규)** size-limit 버전 표기를 12.1.0 → 13.0.3으로 갱신 (Node.js 20 지원 종료가 breaking change, 설정 문법 자체는 안전하나 frontmatter·소스 표 버전 outdated) — 차단 요인 아님이나 우선 보강 권장, SKILL.md 수정은 사용자 승인 후 별도 진행
 
 ---
 
@@ -210,3 +260,4 @@ PR마다 브로틀리 크기 200 KB 초과 시 자동 차단하고 싶다. 설�
 |------|------|-----------|--------|
 | 2026-05-14 | v1 | 최초 작성 (4개 공식 소스 기반, 12개 클레임 VERIFIED) | skill-creator |
 | 2026-05-14 | v1 | 2단계 실사용 테스트 수행 (Q1 rollup-plugin-visualizer gzip·brotli 옵션 활성화 / Q2 webpack-bundle-analyzer stat·parsed·gzip 의미 및 CI 임계치 기준 / Q3 size-limit GitHub Actions CI 설정) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | skill-tester |
+| 2026-08-11 | v1 | 재검증 — WebSearch 3건 중 size-limit 12.1.0→13.0.3 버전 드리프트 발견(설정 문법은 영향 없음) + content test 재수행 (Q1 Next.js 분석 패키지 / Q2 raw/parsed 지표 선택 / Q3 duplicate dependency 진단) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리 + 버전 갱신 후속 필요) | skill-tester |

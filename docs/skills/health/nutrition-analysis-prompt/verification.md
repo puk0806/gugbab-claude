@@ -161,3 +161,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-06-26 | v1 | 최초 작성 | skill-creator |
 | 2026-06-26 | v1 | 2단계 실사용 테스트 수행 (Q1 evaluation warning 조건 / Q2 confidence 필드 값 / Q3 나트륨 기본값 2300mg) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-08-12 | v1 | **모델 ID 세대 정렬.** 단일 음식 분석 / 하루 식단 분석 예제 2곳의 `claude-sonnet-4-6` → `claude-sonnet-5` 교체. Sonnet 4.6은 legacy, 현행 세대는 Sonnet 5. 샘플링 파라미터·`budget_tokens` 사용 없음 — 5 계열 400 이슈 해당 없음. 영양 분석 프롬프트·JSON 스키마 본문은 변경 없음. 검증일 2026-06-26 → 2026-08-12. status **APPROVED 유지** | 모델 ID 세대 정렬 |

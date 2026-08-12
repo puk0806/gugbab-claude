@@ -1,15 +1,18 @@
 ---
 name: ralph-loop
 user-invocable: false
-description: 명시적 종료 조건이 있는 자율 반복 루프 워크플로우. 검증·테스트·다듬기 작업을 *통과 기준 충족까지* 반복 실행하되 max_iterations·convergence·timeout으로 무한 루프 방지. Ouroboros Ralph 패턴(boulder never stops)을 우리 프로젝트 컨벤션에 맞게 정리한 메타 스킬
+description: 명시적 종료 조건이 있는 자율 반복 루프 워크플로우. 검증·테스트·다듬기 작업을 *통과 기준 충족까지* 반복 실행하되 max_iterations·convergence·timeout으로 무한 루프 방지. Geoffrey Huntley의 Ralph 기법을 우리 프로젝트 컨벤션에 맞게 종료 조건 중심으로 재정리한 메타 스킬
 ---
 
 # ralph-loop — 자율 반복 루프 워크플로우
 
-> 소스: Ouroboros Agent OS — https://github.com/Q00/ouroboros (skills/ralph 컨셉을 우리 프로젝트 컨벤션에 맞게 재정리)
-> 검증일: 2026-05-07
+> 소스: [1차·원 출처] Geoffrey Huntley, "Ralph Wiggum as a 'software engineer'" (2025-07-14) — https://ghuntley.com/ralph/
+> — 원 기법의 핵심은 `while :; do cat PROMPT.md | claude-code ; done` 형태의 단순 무한 루프다
+> 채택 사례: Ouroboros Agent OS — https://github.com/Q00/ouroboros (README "Ralph: The Loop That Never Stops" 섹션. Ralph의 *원조가 아니라* 이를 채택한 구현 사례이며, Huntley 원저를 크레딧하지는 않는다)
+> 주의: 이전 판이 인용하던 "boulder never stops" 문구는 위 1차·2차 출처 어디에서도 확인되지 않아 삭제했다
+> 검증일: 2026-08-12 (위 두 URL 실제 접속 확인)
 
-> 컨셉 출처: Ouroboros Agent OS의 Ralph 모드 ("The boulder never stops")
+> 본 스킬의 위치: 원 기법의 *무한* 루프에 명시적 종료 조건(max_iterations·convergence·timeout)을 덧붙여 제한한 변형
 > 적용 범위: 검증·테스트·다듬기 작업 가운데 *통과 기준이 명확*한 경우
 
 ## 언제 사용하나
@@ -177,4 +180,5 @@ timeout: 15분
 
 - **memory `feedback_no_static_paths.md`**: 본 스킬은 일반화된 워크플로우만 다루므로 로컬 경로 박지 않음
 - **memory `feedback_verification_md_rules.md`**: 본 스킬은 *워크플로우 카테고리*이므로 verification.md status는 `PENDING_TEST` 유지 (실 프로젝트 적용 후 APPROVED 전환)
-- **superpowers `/loop`과의 차이**: superpowers의 `/loop`는 *시간 간격* 기반 반복. 본 스킬은 *성공 기준* 기반 반복으로 종료 조건이 명확
+- **시간 간격 기반 반복과의 차이**: 본 스킬은 *성공 기준(PASS)* 도달로 종료되는 반복이다. 일정 시간마다 무조건 재실행하는 *interval 기반* 반복과는 종료 조건의 성격이 다르다
+  - 이전 판에 있던 "superpowers `/loop`는 시간 간격 기반 반복" 서술은 공식 저장소(obra/superpowers)에서 해당 커맨드의 존재를 확인하지 못해 **삭제**했다 (2026-08-12)

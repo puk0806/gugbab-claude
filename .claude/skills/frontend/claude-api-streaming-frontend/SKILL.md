@@ -8,9 +8,10 @@ description: >
 
 # Claude API Streaming — Frontend Pattern
 
-> 소스: https://platform.claude.com/docs/en/api/messages-streaming · https://platform.claude.com/docs/en/api/messages · https://platform.claude.com/docs/en/build-with-claude/prompt-caching · https://platform.claude.com/docs/en/api/errors · https://github.com/anthropics/anthropic-sdk-typescript · https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events
-> 검증일: 2026-05-14
-> 버전 기준: Messages API `anthropic-version: 2023-06-01`, TypeScript SDK `@anthropic-ai/sdk` v0.96.0, MDN SSE 표준
+> 소스: https://platform.claude.com/docs/en/api/messages-streaming · https://platform.claude.com/docs/en/api/messages · https://platform.claude.com/docs/en/build-with-claude/prompt-caching · https://platform.claude.com/docs/en/api/errors · https://platform.claude.com/docs/en/build-with-claude/adaptive-thinking · https://platform.claude.com/docs/en/about-claude/models/migration-guide · https://github.com/anthropics/anthropic-sdk-typescript · https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events
+> 검증일: 2026-08-12
+> 버전 기준: Messages API `anthropic-version: 2023-06-01`, TypeScript SDK `@anthropic-ai/sdk` v0.116.0 (npm latest, 2026-08-12 확인), MDN SSE 표준
+> 모델 기준: Claude Opus 5(`claude-opus-5`) / Sonnet 5(`claude-sonnet-5`) / Haiku 4.5(`claude-haiku-4-5`)
 > 짝 스킬: `frontend/chat-ui-pattern` (메시지 리스트·virtuoso·스크롤 동작) / `meta/dream-interpretation-prompt-engineering` (system 프롬프트 설계)
 
 ---
@@ -93,10 +94,16 @@ data: {"type":"message_stop"}
 |--------------|-----------|-----------|
 | `text_delta` | 일반 텍스트 응답 | `delta.text` 문자열 연결 |
 | `input_json_delta` | tool_use 입력 | `delta.partial_json` 연결 후 `content_block_stop`에서 `JSON.parse` |
-| `thinking_delta` | extended thinking | `delta.thinking` 연결 |
+| `thinking_delta` | adaptive thinking | `delta.thinking` 연결 |
 | `signature_delta` | thinking 종료 직전 | `delta.signature` 1회 (무결성 검증용) |
 
 > 주의: `message_delta.usage`의 토큰 카운트는 *누적값*이지 증분이 아니다.
+
+> **주의 — 5 계열에서 `thinking.display` 기본값은 `"omitted"`다.** Opus 5는 사고가 기본 ON이지만,
+> 기본 설정에서는 `thinking` 블록이 **빈 문자열**로 스트리밍된다. 프론트 입장에서는
+> *출력 시작 전 긴 정지*로 보이므로, 추론 요약을 사용자에게 보여주려면 백엔드 요청에
+> `thinking: { type: 'adaptive', display: 'summarized' }`를 **명시**해야 한다.
+> `display`는 노출 여부만 바꾸며, 사고 자체는 어느 설정에서든 동일하게 수행·과금된다.
 
 ---
 
@@ -284,7 +291,7 @@ export async function POST(req: Request) {
   const { prompt } = await req.json();
 
   const upstream = await client.messages.create({
-    model: 'claude-sonnet-4-6',
+    model: 'claude-sonnet-5',
     max_tokens: 1024,
     system: [
       {
@@ -359,7 +366,7 @@ const client = new Anthropic({
 });
 
 const stream = client.messages.stream({
-  model: 'claude-sonnet-4-6',
+  model: 'claude-sonnet-5',
   max_tokens: 1024,
   messages: [{ role: 'user', content: 'Hello' }],
 });

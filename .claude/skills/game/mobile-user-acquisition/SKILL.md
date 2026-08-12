@@ -15,9 +15,17 @@ description: >
 > - AppsFlyer Google Analytics(GA4) Integration: https://support.appsflyer.com/hc/en-us/articles/25707682812561
 > - Liftoff 2026 ROAS Benchmarks: https://liftoff.ai/blog/what-is-a-good-roas/
 > - Adjust Gaming App Insights Report 2026
+> - Singular — SKAN 4 네트워크별 채택률 트래커: https://www.singular.net/blog/skan-4-network-adoption/
+> - Singular — "SKAN 4 adoption is finally going up in 2025" (2025-09-29): https://www.singular.net/blog/skan-4-2025/
+> - Business of Apps — SKAdNetwork Adoption and Usage Rates (2026-01): https://www.businessofapps.com/data/skadnetwork-statistics/
+> - Adjust — Mobile App Trends 2026 (2026-02-18 발간, 데이터 기간 2024-01 ~ 2026-01)
+> - Google — Privacy Sandbox feature status (2025-10-17 갱신): https://privacysandbox.google.com/overview/status
+> - Autorité de la concurrence — 결정 25-D-02 (2025-03-31): https://www.autoritedelaconcurrence.fr/en/press-release/targeted-advertising-autorite-de-la-concurrence-imposes-fine-eu150000000-apple
 >
-> 검증일: 2026-06-10
-> 기준 시점: 2026년 상반기 (iOS 26 / SKAN 4.0 / ATT 5년 차)
+> 검증일: 2026-08-11
+> 기준 시점: 2026년 중반 (iOS 26 / SKAN 4.0 다수 전환 / ATT 5년 차)
+>
+> 2026-08-11 수정: SKAN 4 채택률 통계 전면 교체(구 "~5%" 오류), ATT opt-in rate 최신화, Apple ATT 제재 사실관계 정정, Android Privacy Sandbox 철회 반영
 
 ---
 
@@ -114,7 +122,7 @@ LTV / CPI = ROAS (cohort 기준)
 **핵심 운영 원칙 (2026):**
 - **AAA (Advantage+ App Campaigns)** — Meta의 자동화 캠페인 기본 사용
 - **Lookalike 타겟** — 기존 고가치 유저(IAP 결제자) 시드로 1~3% LAL 생성
-- **iOS 캠페인**: SKAN 4.0 + Meta AEM(Aggregated Event Measurement) 통합 운영. SKAN 4.0 채택률은 2026년 초 기준 약 5% 수준이라 실제로는 대부분 광고주가 여전히 SKAN 3.0 기반으로 운영 중
+- **iOS 캠페인**: SKAN 4.0 + Meta AEM(Aggregated Event Measurement) 통합 운영. Meta는 2025년 9월 기준 자사 SKAN postback의 **약 44%가 SKAN 4**이며(Singular 실측), 나머지는 여전히 SKAN 3로 나간다 → **SKAN 3 fallback과 SKAN 4를 동시에 상정한 CV schema**를 짜야 한다
 - **크리에이티브 다양성**: Reels(세로 9:16) + Feed(1:1) + Stories 형식 동시 운영
 
 **평균 CPI (2026):**
@@ -157,7 +165,7 @@ iOS App Store 검색 결과 상단 노출. *intent가 가장 높은* 유저를 �
 
 ---
 
-## 4. iOS 프라이버시 — ATT와 SKAdNetwork 4.0
+## 4. 모바일 프라이버시 — ATT · SKAdNetwork 4.0 · AAK · Android
 
 ### 4-1. App Tracking Transparency (ATT)
 
@@ -184,12 +192,21 @@ ATTrackingManager.requestTrackingAuthorization { status in
 - ATT 프롬프트는 *게임 첫 진입 또는 가치 제안 직후* 호출 (튜토리얼 직후가 일반적)
 - 앱 첫 실행 즉시 호출하면 opt-in rate가 낮아진다
 
-**2026년 ATT opt-in rate 현황:**
-- 게임 카테고리: 약 19% (다른 카테고리 평균 12%보다 높음)
-- 글로벌 평균: ~25~35% (Adjust Q2 2025 기준 ~35%)
-- **UA 예산 산정 시**: 게임은 opt-in 15%로 보수적 가정 권장
+**ATT opt-in rate 현황 (Adjust Mobile App Trends 2026, 2026-02-18 발간 / 데이터 2026-01까지):**
 
-> 주의: 2026년 Apple은 ATT 위반으로 EU에서 €150M 벌금 부과받음. iOS 26부터 fingerprinting 차단 강화 — IDFA 우회 트래킹 시도는 *기술적으로 더 어려워졌다*.
+| 구분 | opt-in rate | 기준 시점 |
+|------|------------|----------|
+| 전 산업 평균 | **38%** (2025 Q1 35% → 2026 Q1 38%) | 2026 Q1 |
+| **게임 카테고리** | **39%** (전 카테고리 중 최고) | 2026 Q1 |
+| 게임 서브장르 상위 | sports 50% / hyper casual 43% / action 40% / board 30% | 2025 Q2 |
+| 국가 상위 | 브라질 50% / UAE 49% / 튀르키예 42% | 2025 Q2 |
+
+- **UA 예산 산정 시**: 게임은 opt-in **30% 내외**로 보수적 가정 권장 (자사 실측치가 있으면 그 값 우선)
+- ATT 미동의 트래픽이 여전히 60% 이상이므로 **SKAN 기반 측정 설계는 그대로 필수**다
+
+> 주의 — 지표 정의 차이: 위 수치는 *앱 전체 유저 대비* opt-in 비율이다. "프롬프트를 실제로 본 유저 대비" 승낙률은 훨씬 높게(2026년 기준 약 70%) 보고된다. 벤더 리포트 비교 시 분모가 무엇인지 반드시 확인해야 한다.
+
+> 주의 — 사실관계 정정: Apple의 €150M ATT 제재는 **2025-03-31 프랑스 경쟁당국(Autorité de la concurrence) 결정 25-D-02**로, EU 집행위 제재가 아니다. 사유는 프라이버시 규정 위반이 아니라 *ATT 구현 방식의 시장지배적 지위 남용*(2021-04 ~ 2023-07 기간 행위)이다. 한편 WWDC 2026에서는 ATT·AdAttributionKit 관련 중대한 변경이 발표되지 않았다.
 
 ### 4-2. SKAdNetwork 4.0 (SKAN 4.0)
 
@@ -230,7 +247,47 @@ Postback 3 (8~35일, coarse):
 
 **구현 도구**: AppsFlyer SKAN Conversion Studio 또는 Adjust SKAN dashboard에서 conversion value schema 설정 → 어트리뷰션 SDK가 자동으로 `SKAdNetwork.updateConversionValue()` 호출.
 
-> 주의: SKAN 4.0 채택률(2026 초)은 광고주 중 약 5%다. 대부분 캠페인은 여전히 SKAN 3.0 단일 postback(0~2일)으로 운영된다. *4.0 적용 여부는 채널별로 확인 필요*.
+**SKAN 4 채택률 현황 — 채널별로 크게 다르다**
+
+채택률은 *광고주가 켜고 끄는 값*이 아니라 **광고 네트워크가 SKAN 4 클릭을 인코딩했는지 + 유저 단말이 iOS 16.1 이상인지**로 결정된다. 그래서 어떤 네트워크도 100%가 되지 않는다.
+
+| 시점 | 관측값 | 출처 |
+|------|--------|------|
+| 2023-04 | 전체 SKAN postback 중 SKAN 4 **약 5%** | Singular |
+| 2023-06 | 약 9% | Singular |
+| 2024-02-14 | **SKAN 4 43% / SKAN 3 57%** (생태계 전체) | Singular 트래커 |
+| 2025-09 | Meta 44% SKAN 4 — 이 시점에 **SKAN 4가 전체 postback의 과반으로 안정 전환** | Singular (2025-09-29) |
+| 2026 중반 | **SKAN 4가 다수 채택 단계**, SKAN 1·2는 사실상 소멸 | Kochava 2026 / Business of Apps 2026-01 |
+
+**네트워크별 SKAN 4 postback 비중 (Singular 트래커, 2024-02 관측):**
+
+| 네트워크 | SKAN 4 비중 |
+|----------|------------|
+| Reddit | 98% |
+| Unity | 81% |
+| AppLovin | 50% |
+| Moloco / Liftoff | 46% / 45% |
+| Meta | 42% (→ 2025-09 44%) |
+| Google | 22% — **가장 늦은 홀드아웃** |
+
+> 주의: 위 "약 5%"는 **2023년 4월** 수치이며, 이를 2026년 현황으로 인용하면 안 된다. 2026년 기준으로는 SKAN 4가 다수이고, 실무 판단은 "SKAN 4를 쓸지 말지"가 아니라 **"어느 채널이 아직 SKAN 3로 보내는지"**다. Google 비중이 큰 캠페인일수록 SKAN 3 postback 비율이 높으므로, CV schema는 **SKAN 4 3-postback과 SKAN 3 단일 postback 양쪽에서 모두 의미가 통하도록** 설계한다.
+
+> 주의: 네트워크별 수치는 Singular 실측 트래커 값으로 **주 단위로 변동**한다. 캠페인 설계 시 위 표를 그대로 믿지 말고 어트리뷰션 대시보드에서 자사 postback의 SKAN 버전 분포를 직접 확인한다.
+
+### 4-3. AdAttributionKit (AAK) — SKAN의 후속
+
+Apple은 SKAN 5 대신 **AdAttributionKit(AAK)**을 차세대 프레임워크로 내놓았다(재참여 어트리뷰션·복수 앱스토어·설정 가능한 윈도우 지원).
+
+- **2026년 기준 SKAN의 deprecation 일정은 발표되지 않았다.** SKAN 4와 AAK는 병행 운영된다
+- 업계 AAK 도입률은 아직 미미하다 — 신규 게임은 **SKAN 4를 주 측정 경로로 두고 AAK는 병행 테스트** 수준이 적절하다
+
+### 4-4. Android 참고 — Privacy Sandbox 철회
+
+- Google은 **2025-10-17자로 Privacy Sandbox on Android의 광고 API(Topics, Protected Audience, Attribution Reporting, SDK Runtime 등)를 phaseout 대상으로 전환**했다 (공식 status 페이지 기준)
+- 결과적으로 **GAID(Google Advertising ID)는 계속 동작**하며, Android에서 iOS ATT급 측정 붕괴는 당장 오지 않는다
+- 다만 유저 opt-out·규제 압력 방향은 그대로이므로, Android도 **결정론적 ID에만 의존하지 않는 측정 설계**(인크리멘털리티 테스트, MMM 병행)를 유지한다
+
+> 주의: 과거 자료의 "2026년까지 GAID 폐지 예정" 서술은 무효다. 철회 이후 기준으로 판단한다.
 
 ---
 
