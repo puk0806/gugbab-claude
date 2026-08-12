@@ -1,3 +1,9 @@
+---
+paths:
+  - "**/*.ts"
+  - "**/*.tsx"
+---
+
 # TypeScript / React 코딩 규칙
 
 이 파일은 TypeScript + React 코드 작성 시 준수해야 할 규칙입니다.
