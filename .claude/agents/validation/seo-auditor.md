@@ -178,7 +178,17 @@ model: sonnet
 - `<title>` 페이지마다 고유 여부
 - 이미지 `alt` 누락 — 의미 있는 이미지의 alt 부재
 - 폼 `<label>` 연결
-- 자세한 전수 점검은 `[[wcag-2.2-checklist]]` 또는 `a11y-auditor`에 위임
+- 자세한 전수 점검은 `frontend/wcag-2.2-checklist` 또는 `a11y-auditor`에 위임
+
+#### 2.11 커머스 SPA · 분리 모바일 URL (해당 시)
+대상이 CSR SPA(Vite/CRA)이거나 `m.`/`www.` 분리 호스트를 쓰는 커머스 사이트면 추가 점검한다. 2026-08-26 추가.
+- **렌더링 경로**: 프리렌더(Vike·vite-prerender-plugin)/SSR 산출물이 있는지. 없으면 "네이버·AI 크롤러는 JS 렌더 결과를 신뢰하기 어려움"을 Critical로 — 상품·카테고리·검색 랜딩 페이지가 CSR 전용이면 색인 자체가 불안정하다
+- **분리 모바일 URL**: PC 페이지 `<link rel="alternate" media="only screen and (max-width: 640px)" href="https://m.…">` ↔ 모바일 페이지 `<link rel="canonical" href="https://www.…">` **양방향** 교차 지정 여부, 두 버전의 콘텐츠·구조화 데이터·내부 링크 동등성, 모바일 우선 색인에서 모바일 버전이 색인 기준임을 반영했는지. 한쪽만 있거나 canonical이 자기참조면 High
+- **메타 일관성**: 페이지마다 `<Helmet>`을 따로 쓰는 구조면 공용 SEO 컴포넌트 부재를 Major로 — og/canonical 누락이 페이지별로 제각각 발생한다 (Helmet 사용 파일 수 vs `og:` 사용 파일 수 비율로 정량화)
+- **상품 구조화 데이터**: `Product` + `Offer`(`price`·`priceCurrency`·`availability`) + `AggregateRating` 존재, `shippingDetails`·`hasMerchantReturnPolicy` 등 Merchant 리스팅 요건은 `ecommerce-seo` 스킬 기준으로. `BreadcrumbList`·`Organization`·`WebSite`(SearchAction) 부재는 Major
+- **카카오 공유**: 카카오 SDK를 쓰면서 `og:image`·`og:title`이 없는 페이지 → 공유 미리보기 깨짐(High). `kakao-share-optimization` 스킬 기준
+- **네이버**: `naver-site-verification` 메타 또는 서치어드바이저 등록 흔적, sitemap/RSS 제출 여부. `naver-seo-specifics` 스킬 기준
+- **AI 크롤러 정책**: robots.txt에 GPTBot·OAI-SearchBot·ClaudeBot·PerplexityBot·Google-Extended 등 명시 정책이 있는지(허용/차단은 사업 판단이지만 *무정책*은 Medium), `llms.txt` 존재 여부. `geo-ai-discoverability` 스킬 기준
 
 ### 단계 3: 위험 패턴 그렙 검색 (프로젝트 경로 입력 시)
 
@@ -197,6 +207,10 @@ model: sonnet
 | `<a\s+[^>]*href=["']#["']` 다수 | 빈 앵커 (크롤러가 추적 못 함) | Medium |
 | `<img\s+(?![^>]*alt=)[^>]*>` | alt 속성 누락 이미지 | Medium |
 | `console\.log` 다수 in production build | 빌드 환경 점검 권장 | Low |
+| `<Helmet` 사용 파일 수 ≫ `property=["']og:` 사용 파일 수 | 페이지별 메타 제각각 — 공용 SEO 컴포넌트 부재 (2.11) | High |
+| `Kakao\.(Share|Link)` 사용 파일에 `og:image` 없음 | 카카오 공유 미리보기 깨짐 (2.11) | High |
+| `rel=["']alternate["'][^>]*media=` 부재 (PC) / `rel=["']canonical["']` 이 `m.` 자기참조 (모바일) | 분리 모바일 URL 교차 지정 누락 (2.11) | High |
+| robots.txt에 `GPTBot`·`ClaudeBot`·`OAI-SearchBot` 등 미언급 | AI 크롤러 무정책 (2.11) | Medium |
 
 Grep 결과는 *파일 경로:라인*까지 보고서에 첨부한다.
 
@@ -333,13 +347,13 @@ Grep 결과는 *파일 경로:라인*까지 보고서에 첨부한다.
 - 코드 수정: `frontend-developer` (Next.js 메타·JSON-LD 작성)·`devops-engineer` (robots.txt·sitemap 배포)
 - 추가 검증:
   - 성능 영향 측정 → `build-perf-benchmarker`
-  - 접근성 전수 점검 → `a11y-auditor` 또는 `[[wcag-2.2-checklist]]` 스킬
+  - 접근성 전수 점검 → `a11y-auditor` 또는 `frontend/wcag-2.2-checklist` 스킬
   - 보안 점검 → `security-auditor`
 - 외부 검증 도구 권장:
   - Google Rich Results Test — `https://search.google.com/test/rich-results`
   - schema.org Validator — `https://validator.schema.org/`
   - Google Search Console — URL Inspection·sitemap 제출
-- 참조 스킬: `[[seo-nextjs]]` · `[[seo-vite-spa]]` · `[[seo-static-html]]` · `[[schema-org-patterns]]` · `[[geo-ai-discoverability]]` · `[[i18n-seo]]`
+- 참조 스킬 (경로는 `.claude/skills/` 하위, 설치 템플릿에 따라 없을 수 있으므로 Glob 확인): 프레임워크별 `frontend/seo-nextjs` · `frontend/seo-vite-spa` · `frontend/seo-static-html` / 공통 `frontend/schema-org-patterns` · `frontend/geo-ai-discoverability` · `frontend/url-canonicalization-redirects` · `frontend/search-console-webmaster` / 커머스·한국 `frontend/ecommerce-seo` · `frontend/naver-seo-specifics` · `frontend/kakao-share-optimization` · `frontend/mobile-seo-pwa`(분리 모바일 URL) / 다국어 `frontend/i18n-seo`
 
 ---
 

@@ -37,30 +37,67 @@ model: sonnet
 ## 보유 스킬 참조
 
 코드 작성 시 프로젝트의 스킬 파일에서 패턴과 모범 사례를 확인한다.
+경로는 모두 `.claude/skills/` 하위이며, **설치된 스킬만 존재한다** — 표에 있어도 파일이 없으면 그 스킬은
+이 프로젝트 템플릿에 포함되지 않은 것이니 Glob으로 확인하고 없으면 건너뛴다.
+
+### 공통
 
 | 스킬 | 경로 | 활용 시점 |
 |------|------|-----------|
-| react-core | `.claude/skills/frontend/react-core/SKILL.md` | 훅, 상태 관리, Suspense |
-| nextjs | `.claude/skills/frontend/nextjs/SKILL.md` | App Router, Server Actions, 캐싱 |
-| typescript | `.claude/skills/frontend/typescript/SKILL.md` | 타입 정의, tsconfig, React 타입 |
-| state-management | `.claude/skills/frontend/state-management/SKILL.md` | Zustand, TanStack Query |
-| form-handling | `.claude/skills/frontend/form-handling/SKILL.md` | React Hook Form + Zod |
-| api-integration | `.claude/skills/frontend/api-integration/SKILL.md` | API 클라이언트, 에러 핸들링 |
-| component-design | `.claude/skills/frontend/component-design/SKILL.md` | Compound Component, 캡슐화 |
-| accessibility | `.claude/skills/frontend/accessibility/SKILL.md` | ARIA, 키보드 네비게이션 |
-| animation | `.claude/skills/frontend/animation/SKILL.md` | motion/react, CSS transition |
-| error-handling | `.claude/skills/frontend/error-handling/SKILL.md` | Error Boundary, TanStack Query |
-| performance | `.claude/skills/frontend/performance/SKILL.md` | 코드 스플리팅, 가상화 |
-| testing | `.claude/skills/frontend/testing/SKILL.md` | Vitest, React Testing Library |
-| sass | `.claude/skills/frontend/sass/SKILL.md` | SCSS, CSS Modules |
-| css-variables | `.claude/skills/frontend/css-variables/SKILL.md` | 테마, 다크 모드, JS 연동 |
-| intersection-observer | `.claude/skills/frontend/intersection-observer/SKILL.md` | 무한 스크롤, lazy load |
-| mutation-observer | `.claude/skills/frontend/mutation-observer/SKILL.md` | DOM 변경 감지 |
-| resize-observer | `.claude/skills/frontend/resize-observer/SKILL.md` | 요소 크기 감지 |
-| page-visibility | `.claude/skills/frontend/page-visibility/SKILL.md` | 탭 가시성 감지 |
-| seo | `.claude/skills/frontend/seo/SKILL.md` | Metadata API, JSON-LD |
+| nextjs | `frontend/nextjs/SKILL.md` | App Router, Server Actions, Cache Components |
+| state-management | `frontend/state-management/SKILL.md` | Zustand 전역 상태, 서버/클라이언트 상태 레이어 분리 |
+| tanstack-query | `frontend/tanstack-query/SKILL.md` | queryKey 설계, 캐시 수명, 낙관적 업데이트, 무한 스크롤, API 연동 |
+| form-handling | `frontend/form-handling/SKILL.md` | React Hook Form + Zod |
+| error-handling | `frontend/error-handling/SKILL.md` | Error Boundary, Suspense 조합, 쿼리 에러 처리 |
+| performance | `frontend/performance/SKILL.md` | React Compiler, 코드 스플리팅, 가상화, 메모이제이션 |
+| animation | `frontend/animation/SKILL.md` | motion/react, CSS transition |
+| design-token-scss | `frontend/design-token-scss/SKILL.md` | SCSS, CSS 변수, 디자인 토큰, 테마·다크 모드 |
+| testing | `frontend/testing/SKILL.md` | Jest/Vitest + React Testing Library |
+| e2e-testing | `frontend/e2e-testing/SKILL.md` | Playwright 시나리오 |
+| storybook | `frontend/storybook/SKILL.md` | CSF 3 스토리, play function |
+| code-convention | `frontend/code-convention/SKILL.md` | ESLint·Prettier·lint-staged 설정 |
+| wcag-2.2-checklist | `frontend/wcag-2.2-checklist/SKILL.md` | ARIA, 키보드 네비게이션, 대비·타깃 크기 |
+| media-accessibility | `frontend/media-accessibility/SKILL.md` | 자막·오디오 설명·미디어 컨트롤 |
+
+### 버전·스택에 따라 갈리는 스킬 — package.json을 먼저 확인하고 고른다
+
+| 조건 | 사용할 스킬 |
+|------|-------------|
+| `typescript` 5.x | `frontend/typescript-v5/SKILL.md` |
+| `typescript` 4.x | `frontend/typescript-v4/SKILL.md` |
+| `@mui/material` 5.x | `frontend/mui-v5/SKILL.md` |
+| `@mui/material` 9.x | `frontend/mui-v9/SKILL.md` |
+| Next.js 프로젝트의 SEO | `frontend/seo-nextjs/SKILL.md` |
+| Vite SPA의 SEO | `frontend/seo-vite-spa/SKILL.md` |
+| 정적 HTML의 SEO | `frontend/seo-static-html/SKILL.md` |
+
+### 라이브러리별 (해당 의존성이 있을 때만)
+
+| 스킬 | 경로 | 대상 패키지 |
+|------|------|-------------|
+| ag-grid | `frontend/ag-grid/SKILL.md` | `ag-grid-community` / `ag-grid-react` |
+| react-virtuoso | `frontend/react-virtuoso/SKILL.md` | `react-virtuoso` |
+| react-dnd | `frontend/react-dnd/SKILL.md` | `react-dnd` |
+| swiper | `frontend/swiper/SKILL.md` | `swiper` |
+| indexeddb-dexie | `frontend/indexeddb-dexie/SKILL.md` | `dexie` |
+
+### 마이그레이션 (전환 작업일 때)
+
+| 스킬 | 경로 | 전환 대상 |
+|------|------|-----------|
+| recoil-to-zustand-migration | `frontend/recoil-to-zustand-migration/SKILL.md` | Recoil → Zustand/Jotai |
+| tanstack-query-v4-to-v5-migration | `frontend/tanstack-query-v4-to-v5-migration/SKILL.md` | React Query v4 → v5 |
+| cra-to-vite-migration | `frontend/cra-to-vite-migration/SKILL.md` | CRA → Vite |
+
+### 도메인 구조 작업일 때
+
+폴더 재배치·모듈 경계·대규모 이동은 **구현이 아니라 구조 결정**이므로
+`frontend-domain-refactorer` 에이전트에 넘기고, 이 에이전트는 그 계획에 따른 개별 파일 수정만 수행한다.
+관련 스킬: `architecture/frontend-domain-structure`, `architecture/module-boundaries`, `architecture/incremental-refactoring`
 
 **스킬 참조 규칙:** 해당 기능을 처음 구현할 때 관련 스킬 파일을 Read로 읽고, 그 패턴을 따라 코드를 작성한다.
+React 훅·JSX·기본 브라우저 API(IntersectionObserver·ResizeObserver 등)처럼 스킬 파일이 없는 영역은
+내장 지식으로 처리하되, 프로젝트의 기존 코드 패턴을 먼저 확인해 그쪽에 맞춘다.
 
 ---
 

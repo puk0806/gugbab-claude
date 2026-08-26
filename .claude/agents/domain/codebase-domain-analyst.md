@@ -69,6 +69,18 @@ Glob으로 프로젝트 전체 구조를 탐색한다:
 - import/use/require 구문을 Grep으로 수집
 - 상위 → 하위 방향 역전 여부 확인 (예: domain이 infrastructure를 참조하는지)
 
+**프론트엔드(React/Next.js) 코드베이스 신호** — 위 백엔드 신호(Entity/Repository)가 없는 경우 이 표로 대체한다:
+
+| 관찰 대상 | layer-first 신호 (재구조화 후보) | domain-first 신호 |
+|-----------|-----------------------------------|-------------------|
+| 최상위 폴더 | `components/·hooks/·utils/·api/·types/·constants/·store/` 가 최상위이고 그 아래에 같은 도메인명이 반복 | `features/·domains/·entities/` 아래에 도메인 폴더, 각 폴더 안에 ui/model/api 세그먼트 |
+| import 방향 | `utils/` 가 `components/` 를 import, `api/` 가 `store/` 를 import 등 하위 레이어가 상위를 참조 | 도메인 → shared 단방향, 도메인 간 직접 import 없음 |
+| 배럴 파일 | 최상위 `index.ts` 가 전 도메인을 re-export (순환·번들 비대화 원인) | 도메인 루트 `index.ts` 하나만 public API |
+| 라우트 | Next `app/`·`pages/` 안에 비즈니스 로직·API 호출이 직접 들어감 | 라우트는 도메인 컴포넌트를 조립만 함 |
+| 상태 | 전역 스토어 하나에 전 도메인 atom/slice 혼재 | 도메인별 스토어 파일, 서버 상태는 TanStack Query로 분리 |
+
+프론트엔드 분석의 의존성 방향 기준은 `UI(components/pages) → hooks → api/store → shared` 이며, 도메인 간 import 는 순환 여부와 무관하게 위반으로 본다.
+
 ### 단계 3: 핵심 도메인 개념 추출
 
 코드에서 다음 DDD 요소를 역추출한다:
@@ -214,3 +226,4 @@ Glob으로 프로젝트 전체 구조를 탐색한다:
 - 코드가 너무 방대하면 핵심 도메인 디렉토리에 집중하고 분석 범위를 명시한다
 - 언어/프레임워크를 감지하지 못하면 사용자에게 알리고 수동 확인을 요청한다
 - 의존성 방향 파악이 어려운 동적 언어(JS/Python)는 import 구문 기반으로 정적 분석하고 한계를 명시한다
+- React/Next.js 코드베이스에서 요청의 목적이 진단이 아니라 **domain-first 재구조화의 실행 계획**(배치 순서·codemod·경계 규칙)이면, 이 보고서를 `docs/domain/codebase-analysis-YYYY-MM-DD.md`에 저장한 뒤 `frontend-domain-refactorer` 에이전트로 인계한다 — refactorer는 이 보고서가 있으면 진단 단계를 건너뛴다
