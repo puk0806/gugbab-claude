@@ -44,7 +44,7 @@
 
 | 카테고리 | 종류 | 링크 |
 |----------|------|------|
-| frontend (76종) | 프레임워크·상태관리·UI·빌드·테스트·성능·SEO·꿈 앱 UI | [→ frontend 스킬 목록](../skills/frontend/README.md) |
+| frontend (81종) | 프레임워크·상태관리·UI·빌드·테스트·성능·SEO·꿈 앱 UI | [→ frontend 스킬 목록](../skills/frontend/README.md) |
 | backend — Python (10종) | FastAPI·Pydantic·LlamaIndex·Anthropic SDK 등 | [→ backend 스킬 목록](../skills/backend/README.md) |
 | devops (9종) | Docker·GitHub Actions·n8n·SEO 운영 | [→ devops 스킬 목록](../skills/devops/README.md) |
 | architecture (2종) | DDD + dream-journal-data-modeling | [→ architecture 스킬 목록](../skills/architecture/README.md) |

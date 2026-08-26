@@ -55,7 +55,7 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 24종 = 실행 �
 
 | 훅 | 이벤트 | 설명 | 테스트 |
 |----|--------|------|:---:|
-| [typescript-quality.js](../../.claude/hooks/typescript-quality.js) | PostToolUse Write/Edit | .ts/.tsx 저장 시 tsc --noEmit 자동 실행 — 오류 있으면 차단 | ✅ |
+| [typescript-quality.js](../../.claude/hooks/typescript-quality.js) | PostToolUse Write/Edit | .ts/.tsx 저장 시 tsc --noEmit 자동 실행 — 오류 있으면 차단. `--changed-only`(레거시 프로파일): 증분 컴파일 + 베이스라인(직전 통과 시점 에러 집합) 대비 **새로 생긴 에러만** 차단(소비자 파일 회귀 포함), 타임아웃 180s. `--seed --project <dir>`로 베이스라인 선생성(설치 시 루트+패키지 전부 제안). 베이스라인은 키별 개수(multiset)로 `~/.claude/typescript-quality/`에 영속 보관. 타임아웃·도구 장애(로컬 tsc 없음 등)는 1회 경고, 연속 2회부터 차단. 컴파일러는 `npx --no-install`로 프로젝트 로컬만 사용 | ✅ |
 
 ---
 

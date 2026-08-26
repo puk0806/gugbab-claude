@@ -1,4 +1,4 @@
-# frontend 스킬 (76종)
+# frontend 스킬 (81종)
 
 React·Next.js·TypeScript·SEO·접근성·성능·PWA·꿈 앱 UI 등 프론트엔드 전 영역 스킬 모음.
 
@@ -17,6 +17,7 @@ React·Next.js·TypeScript·SEO·접근성·성능·PWA·꿈 앱 UI 등 프론�
 | 스킬 | 설명 | 검증 |
 |------|------|------|
 | [state-management](../../../.claude/skills/frontend/state-management/SKILL.md) | Zustand v5 전역 상태, TanStack Query v5 서버 상태·캐싱 — 무엇을 어디에 둘지 선택 기준 | [→](./state-management/verification.md) |
+| [recoil-to-zustand-migration](../../../.claude/skills/frontend/recoil-to-zustand-migration/SKILL.md) | Recoil(유지보수 중단) → Zustand/Jotai 전환 — 개념 대응표, async selector→TanStack Query 분리, 공존·브리지 점진 이행 | [→](./recoil-to-zustand-migration/verification.md) |
 | [tanstack-query](../../../.claude/skills/frontend/tanstack-query/SKILL.md) | TanStack Query v5 실전 — queryKey 설계·staleTime/gcTime·낙관적 업데이트·무한 스크롤·App Router SSR | [→](./tanstack-query/verification.md) |
 | [form-handling](../../../.claude/skills/frontend/form-handling/SKILL.md) | React Hook Form + Zod 유효성 검증, 재사용 필드 컴포넌트 | [→](./form-handling/verification.md) |
 | [error-handling](../../../.claude/skills/frontend/error-handling/SKILL.md) | React 19 Error Boundary, Suspense 조합, TanStack Query 에러 처리 | [→](./error-handling/verification.md) |
@@ -27,9 +28,11 @@ React·Next.js·TypeScript·SEO·접근성·성능·PWA·꿈 앱 UI 등 프론�
 |------|------|------|
 | [radix-ui](../../../.claude/skills/frontend/radix-ui/SKILL.md) | Radix UI Primitives — asChild/Slot, Compound Component, data-attribute 스타일링 | [→](./radix-ui/verification.md) |
 | [mui-v9](../../../.claude/skills/frontend/mui-v9/SKILL.md) | MUI v9 + Emotion — slots/slotProps, CSS Variables·colorSchemes, v5→v9 마이그레이션 | [→](./mui-v9/verification.md) |
+| [mui-v5](../../../.claude/skills/frontend/mui-v5/SKILL.md) | MUI v5(EOL, 최종 5.18.0) 레거시 고정용 — Emotion styled/sx, v5 Grid item/xs 문법, components/componentsProps, CSS 변수는 experimental, @mui/styles React 18 비호환, v6+ 업그레이드 경로 | [→](./mui-v5/verification.md) |
 | [animation](../../../.claude/skills/frontend/animation/SKILL.md) | motion 12.x 애니메이션 — CSS transition, useScroll, 드래그, LazyMotion | [→](./animation/verification.md) |
 | [swiper](../../../.claude/skills/frontend/swiper/SKILL.md) | Swiper 11.x 슬라이더 — React 컴포넌트, 핵심 모듈, 반응형, Next.js SSR | [→](./swiper/verification.md) |
 | [react-virtuoso](../../../.claude/skills/frontend/react-virtuoso/SKILL.md) | react-virtuoso 가상 스크롤 — 동적 높이, 무한 스크롤 | [→](./react-virtuoso/verification.md) |
+| [ag-grid](../../../.claude/skills/frontend/ag-grid/SKILL.md) | AG Grid v33 — ModuleRegistry 모듈 등록, Theming API, Community(MIT) vs Enterprise 경계, React 셀 렌더러·getRowId, Next.js App Router, row model별 성능 | [→](./ag-grid/verification.md) |
 | [react-dnd](../../../.claude/skills/frontend/react-dnd/SKILL.md) | react-dnd 드래그앤드롭 — useDrag/useDrop, 리스트 순서, @dnd-kit 비교 | [→](./react-dnd/verification.md) |
 | [design-token-scss](../../../.claude/skills/frontend/design-token-scss/SKILL.md) | 디자인 토큰 3계층 설계, Figma 추출, Style Dictionary v4 변환 | [→](./design-token-scss/verification.md) |
 | [srs-spaced-repetition](../../../.claude/skills/frontend/srs-spaced-repetition/SKILL.md) | 간격 반복 학습 알고리즘 — SM-2(Anki) + FSRS-5 비교 | [→](./srs-spaced-repetition/verification.md) |
@@ -43,6 +46,7 @@ React·Next.js·TypeScript·SEO·접근성·성능·PWA·꿈 앱 UI 등 프론�
 | [tsup](../../../.claude/skills/frontend/tsup/SKILL.md) | TypeScript 라이브러리 번들러 — CJS/ESM 동시 출력, DTS, 모노레포 패턴 | [→](./tsup/verification.md) |
 | [rsbuild](../../../.claude/skills/frontend/rsbuild/SKILL.md) | Rsbuild 2.x — Rspack 기반 웹 앱 빌드, CRA·webpack 마이그레이션 | [→](./rsbuild/verification.md) |
 | [cra-to-vite-migration](../../../.claude/skills/frontend/cra-to-vite-migration/SKILL.md) | CRA → Vite 마이그레이션 8단계 절차 | [→](./cra-to-vite-migration/verification.md) |
+| [tanstack-query-v4-to-v5-migration](../../../.claude/skills/frontend/tanstack-query-v4-to-v5-migration/SKILL.md) | React Query v4 → v5 — breaking change 전수(isPending·gcTime·throwOnError·useQuery 콜백 제거·initialPageParam), 공식 codemod, 타입 에러 없이 동작만 바뀌는 함정 | [→](./tanstack-query-v4-to-v5-migration/verification.md) |
 | [webpack-vite-config-mapping](../../../.claude/skills/frontend/webpack-vite-config-mapping/SKILL.md) | Webpack/Craco 설정 → Vite 1:1 매핑 | [→](./webpack-vite-config-mapping/verification.md) |
 | [vite-advanced-splitting](../../../.claude/skills/frontend/vite-advanced-splitting/SKILL.md) | Vite 고급 코드 스플리팅 — manualChunks 함수형, 멀티 빌드 | [→](./vite-advanced-splitting/verification.md) |
 | [vite-pwa-service-worker](../../../.claude/skills/frontend/vite-pwa-service-worker/SKILL.md) | Vite PWA/Service Worker — vite-plugin-pwa, generateSW/injectManifest | [→](./vite-pwa-service-worker/verification.md) |

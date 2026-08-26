@@ -22,6 +22,8 @@
 | meta | [project-scaffolder](../../.claude/agents/meta/project-scaffolder.md) | 결정된 스택으로 프로젝트 부트스트랩 |
 | frontend | [frontend-developer](../../.claude/agents/frontend/frontend-developer.md) | React/Next.js 컴포넌트·훅·API 연동 구현 |
 | frontend | [frontend-architect](../../.claude/agents/frontend/frontend-architect.md) | 프론트엔드 아키텍처 설계·기술 판단 |
+| backend | [build-error-resolver](../../.claude/agents/backend/build-error-resolver.md) | tsc·Vite/webpack 빌드·타입 에러 진단·최소 수정 (리팩터링 중 import 깨짐 대응) |
+| domain | [frontend-domain-refactorer](../../.claude/agents/domain/frontend-domain-refactorer.md) | layer-first → domain-first 재구조화 실행 계획 (경계 역추출·배치·codemod·경계 규칙) |
 | domain | [product-planner](../../.claude/agents/domain/product-planner.md) | 아이디어·요구사항 → PRD 작성 |
 | domain | [ui-ux-designer](../../.claude/agents/domain/ui-ux-designer.md) | PRD → 와이어프레임·디자인 토큰·컴포넌트 스펙 |
 | domain | [api-spec-designer](../../.claude/agents/domain/api-spec-designer.md) | PRD → OpenAPI 3.1 스펙·에러 코드 설계 |
@@ -40,7 +42,7 @@
 | 카테고리 | 종류 | 비고 |
 |----------|------|------|
 | health (5종) | nutrition-basics · korean-food-nutrition · ingredient-management · meal-recommendation-prompt · nutrition-analysis-prompt | 건강·식단 도메인 핵심 |
-| frontend (76종) | 프레임워크·상태관리·UI·빌드·테스트·성능·SEO·LLM | indexeddb-dexie · claude-api-streaming-frontend 포함 |
+| frontend (81종) | 프레임워크·상태관리·UI·빌드·테스트·성능·SEO·LLM | indexeddb-dexie · claude-api-streaming-frontend 포함 |
 | devops (9종) | Docker·GitHub Actions·n8n·SEO 운영 | |
 | architecture (2종) | DDD, 앱 데이터 모델 | |
 | meta (5종) | 워크플로우·프롬프트 엔지니어링 | |
