@@ -109,7 +109,10 @@ function makeTarget(root, opts = {}) {
       version: 1,
       memoryManaged: hookFiles.some((h) => /^memory-(pull|sync)/.test(h)),
       agents: [], skills: [], hooks: hookFiles,
-      hashes: { agents: {}, skills: {}, hooks: hookHashes },
+      // rules 도 설치 관리 파일로 기록 (2026-08-26) — 소유 증명 없이는 옵션 OFF 규칙을 지우지 않는다
+      rules: ruleFiles,
+      hashes: { agents: {}, skills: {}, hooks: hookHashes,
+        rules: Object.fromEntries(ruleFiles.map((r) => [r, sha256(`# ${r}\n`)])) },
     }, null, 2))
   }
 
@@ -391,6 +394,131 @@ console.log('\n[정상] 매니페스트가 관리하는 폐기 에이전트 → 
   assert('커스텀은 경고로 안내', out.includes('my-custom.md'), true)
 }
 
+console.log('\n[정상] 작성 규칙 5종 — --keep-authoring 없으면 소유 증명(매니페스트 해시 또는 소스 동일) 하에 삭제, 있으면 보존 (2026-08-26)')
+{
+  const src = makeSource(tmp('src'))
+  // 소스 레포에 규칙 원본 존재 (폴백 증명용)
+  const srcRules = path.join(src, '.claude', 'rules'); fs.mkdirSync(srcRules, { recursive: true })
+  fs.writeFileSync(path.join(srcRules, 'creation-workflow.md'), '# cw source\n')
+  const tgt = makeTarget(tmp('tgt'))
+  const rulesDir = path.join(tgt, '.claude', 'rules')
+  fs.writeFileSync(path.join(rulesDir, 'agent-design.md'), '# ad installed\n')      // 매니페스트 해시 일치
+  fs.writeFileSync(path.join(rulesDir, 'creation-workflow.md'), '# cw source\n')   // 매니페스트에 없지만 소스와 동일 (구버전 설치)
+  fs.writeFileSync(path.join(rulesDir, 'commands.md'), '# project own commands rule\n') // 매니페스트에 없고 소스와 다름 = 자체 규칙
+  fs.writeFileSync(path.join(rulesDir, 'readme-update.md'), '# edited\n')          // 매니페스트에 있지만 해시 불일치 = 로컬 수정
+  fs.writeFileSync(path.join(rulesDir, 'git.md'), '# git\n')
+  const m = JSON.parse(fs.readFileSync(path.join(tgt, '.claude', '.install-manifest.json'), 'utf8'))
+  m.rules = ['agent-design.md', 'readme-update.md']
+  m.hashes.rules = { 'agent-design.md': sha256('# ad installed\n'), 'readme-update.md': sha256('# original\n') }
+  fs.writeFileSync(path.join(tgt, '.claude', '.install-manifest.json'), JSON.stringify(m))
+  const { out } = run(tgt, src, tmp('glo'))
+  assert('매니페스트 해시 일치 → agent-design.md 삭제', fs.existsSync(path.join(rulesDir, 'agent-design.md')), false)
+  assert('구버전(미기록)이지만 소스와 동일 → creation-workflow.md 삭제', fs.existsSync(path.join(rulesDir, 'creation-workflow.md')), false)
+  assert('프로젝트 자체 규칙(미기록·소스와 다름) → commands.md 보존', fs.existsSync(path.join(rulesDir, 'commands.md')), true)
+  assert('로컬 수정본(해시 불일치) → readme-update.md 보존', fs.existsSync(path.join(rulesDir, 'readme-update.md')), true)
+  assert('보존 경고 출력', /commands\.md/.test(out) && /readme-update\.md/.test(out), true)
+  assert('공통 git.md 보존', fs.existsSync(path.join(rulesDir, 'git.md')), true)
+}
+
+console.log('\n[정상] settings 보존 경로에서 최상위 defaultMode → permissions.defaultMode 이관 (2026-08-26)')
+{
+  const src = makeSource(tmp('src'))
+  const tgt = makeTarget(tmp('tgt'), { hookFiles: ['bash-guard.js'], settings: { defaultMode: 'acceptEdits', permissions: { allow: ['Read'] }, hooks: {} } })
+  run(tgt, src, tmp('glo'))
+  const s = readSettings(tgt)
+  assert('permissions.defaultMode 로 이관', s.permissions.defaultMode, 'acceptEdits')
+  assert('최상위 defaultMode 제거', 'defaultMode' in s, false)
+  assert('기존 permissions.allow 보존', JSON.stringify(s.permissions.allow), '["Read"]')
+}
+{
+  // 둘 다 있으면 중첩 값이 우선 — 최상위만 제거
+  const src = makeSource(tmp('src'))
+  const tgt = makeTarget(tmp('tgt'), { hookFiles: ['bash-guard.js'], settings: { defaultMode: 'plan', permissions: { defaultMode: 'auto' }, hooks: {} } })
+  run(tgt, src, tmp('glo'))
+  const s = readSettings(tgt)
+  assert('중첩 값 유지(auto)', s.permissions.defaultMode, 'auto')
+  assert('최상위 제거', 'defaultMode' in s, false)
+}
+{
+  // 악성·경계: permissions 가 배열/문자열 등 객체가 아니면 객체로 교체하되 크래시 없음, defaultMode 가 문자열이 아니면 건드리지 않음
+  const src = makeSource(tmp('src'))
+  const tgt = makeTarget(tmp('tgt'), { hookFiles: ['bash-guard.js'], settings: { defaultMode: { evil: 1 }, permissions: 'oops', hooks: {} } })
+  const { code } = run(tgt, src, tmp('glo'))
+  const s = readSettings(tgt)
+  assert('비문자열 defaultMode 는 이관하지 않음(유지)', typeof s.defaultMode, 'object')
+  assert('exit 0', code, 0)
+}
+{
+  const src = makeSource(tmp('src'))
+  const tgt = makeTarget(tmp('tgt'))
+  fs.writeFileSync(path.join(tgt, '.claude', 'rules', 'agent-design.md'), '# a\n')
+  run(tgt, src, tmp('glo'), ['--keep-authoring'])
+  assert('--keep-authoring → agent-design.md 보존', fs.existsSync(path.join(tgt, '.claude/rules/agent-design.md')), true)
+}
+
+console.log('\n[정상] commands 정리 (2026-08-26) — 옵션 OFF·소스 폐기분은 소유 증명 시 삭제, 커스텀·수정본 보존')
+{
+  const src = makeSource(tmp('src'))
+  // 소스에 커맨드 3종 존재
+  const srcCmd = path.join(src, '.claude', 'commands')
+  fs.mkdirSync(srcCmd, { recursive: true })
+  for (const c of ['commit.md', 'codex-review.md', 'tdd-implement.md']) fs.writeFileSync(path.join(srcCmd, c), `# ${c}\n`)
+  const tgt = makeTarget(tmp('tgt'))
+  const tgtCmd = path.join(tgt, '.claude', 'commands')
+  fs.mkdirSync(tgtCmd, { recursive: true })
+  const body = (c) => `# ${c}\n`
+  for (const c of ['commit.md', 'codex-review.md', 'tdd-implement.md', 'retired-cmd.md']) fs.writeFileSync(path.join(tgtCmd, c), body(c))
+  fs.writeFileSync(path.join(tgtCmd, 'my-custom.md'), '# user custom\n')          // 매니페스트 밖
+  fs.writeFileSync(path.join(tgtCmd, 'create-plan.md'), '# user edited create-plan\n') // 관리분이지만 로컬 수정
+  fs.writeFileSync(path.join(tgt, '.claude', '.install-manifest.json'), JSON.stringify({
+    version: 1, memoryManaged: false, agents: [], skills: [], hooks: [],
+    commands: ['commit.md', 'codex-review.md', 'tdd-implement.md', 'retired-cmd.md', 'create-plan.md'],
+    hashes: { agents: {}, skills: {}, hooks: {}, commands: {
+      'commit.md': sha256(body('commit.md')), 'codex-review.md': sha256(body('codex-review.md')),
+      'tdd-implement.md': sha256(body('tdd-implement.md')), 'retired-cmd.md': sha256(body('retired-cmd.md')),
+      'create-plan.md': sha256('# original create-plan\n'),
+    } },
+  }))
+  // 재설치: codex OFF, dev OFF(util 다운그레이드)
+  const { out } = run(tgt, src, tmp('glo'))
+  assert('codex OFF → codex-review.md 삭제', fs.existsSync(path.join(tgtCmd, 'codex-review.md')), false)
+  assert('dev OFF → tdd-implement.md 삭제', fs.existsSync(path.join(tgtCmd, 'tdd-implement.md')), false)
+  assert('소스에서 폐기된 retired-cmd.md 삭제', fs.existsSync(path.join(tgtCmd, 'retired-cmd.md')), false)
+  assert('공통 commit.md 보존', fs.existsSync(path.join(tgtCmd, 'commit.md')), true)
+  assert('매니페스트 밖 커스텀 보존', fs.existsSync(path.join(tgtCmd, 'my-custom.md')), true)
+  assert('로컬 수정된 관리분(create-plan.md, 해시 불일치) 보존', fs.existsSync(path.join(tgtCmd, 'create-plan.md')), true)
+  assert('수정본 보존 경고 출력', out.includes('create-plan.md'), true)
+}
+{
+  // 옵션 유지 시에는 삭제하지 않음 (keep-codex + keep-dev)
+  const src = makeSource(tmp('src'))
+  const srcCmd = path.join(src, '.claude', 'commands'); fs.mkdirSync(srcCmd, { recursive: true })
+  for (const c of ['codex-review.md', 'tdd-implement.md']) fs.writeFileSync(path.join(srcCmd, c), `# ${c}\n`)
+  const tgt = makeTarget(tmp('tgt'))
+  const tgtCmd = path.join(tgt, '.claude', 'commands'); fs.mkdirSync(tgtCmd, { recursive: true })
+  for (const c of ['codex-review.md', 'tdd-implement.md']) fs.writeFileSync(path.join(tgtCmd, c), `# ${c}\n`)
+  fs.writeFileSync(path.join(tgt, '.claude', '.install-manifest.json'), JSON.stringify({
+    version: 1, memoryManaged: false, agents: [], skills: [], hooks: [],
+    commands: ['codex-review.md', 'tdd-implement.md'],
+    hashes: { agents: {}, skills: {}, hooks: {}, commands: { 'codex-review.md': sha256('# codex-review.md\n'), 'tdd-implement.md': sha256('# tdd-implement.md\n') } },
+  }))
+  run(tgt, src, tmp('glo'), ['--keep-codex', '--keep-dev'])
+  assert('keep-codex → codex-review.md 보존', fs.existsSync(path.join(tgtCmd, 'codex-review.md')), true)
+  assert('keep-dev → tdd-implement.md 보존', fs.existsSync(path.join(tgtCmd, 'tdd-implement.md')), true)
+}
+{
+  // 악성: 매니페스트에 commands 기록이 없는(구버전) 설치 → 옵션 OFF여도 소유 증명 불가 → 삭제하지 않고 경고
+  const src = makeSource(tmp('src'))
+  const srcCmd = path.join(src, '.claude', 'commands'); fs.mkdirSync(srcCmd, { recursive: true })
+  fs.writeFileSync(path.join(srcCmd, 'codex-review.md'), '# codex-review.md\n')
+  const tgt = makeTarget(tmp('tgt'))
+  const tgtCmd = path.join(tgt, '.claude', 'commands'); fs.mkdirSync(tgtCmd, { recursive: true })
+  fs.writeFileSync(path.join(tgtCmd, 'codex-review.md'), '# codex-review.md\n')
+  const { out } = run(tgt, src, tmp('glo'))
+  assert('commands 미기록 매니페스트 → codex-review.md 보존(증명 불가)', fs.existsSync(path.join(tgtCmd, 'codex-review.md')), true)
+  assert('미확인 잔재 경고', out.includes('codex-review.md'), true)
+}
+
 console.log('\n[악성 방어] 관리 파일이라도 로컬에서 수정됐으면(해시 불일치) 삭제하지 않음')
 {
   // 사용자가 설치된 파일을 고쳐서 쓰고 있는데 소스에서 폐기됐다고 지우면 수정분이 유실된다.
@@ -656,7 +784,8 @@ console.log('\n[경계] hooks 키 없는 settings (플러그인만) → 구조 �
   assert('exit 0', code, 0)
   const s = readSettings(tgt)
   assert('플러그인 제거', 'enabledPlugins' in s, false)
-  assert('defaultMode 보존', s.defaultMode, 'acceptEdits')
+  assert('최상위 defaultMode → permissions.defaultMode 이관', s.permissions.defaultMode, 'acceptEdits')
+  assert('최상위 defaultMode 제거', 'defaultMode' in s, false)
   assert('permissions 보존', JSON.stringify(s.permissions.allow), '["Read"]')
 }
 
@@ -677,7 +806,7 @@ console.log('\n[경계] 변경 사항이 없으면 settings.json을 다시 쓰�
   const tgt = makeTarget(tmp('tgt'), {
     hookFiles: ['bash-guard.js'],
     ruleFiles: ['git.md'],
-    settings: { defaultMode: 'acceptEdits', hooks: { PostToolUse: [{ matcher: 'Bash', hooks: [H('bash-guard.js')] }] } },
+    settings: { permissions: { defaultMode: 'acceptEdits' }, hooks: { PostToolUse: [{ matcher: 'Bash', hooks: [H('bash-guard.js')] }] } },
     marker: false,
     repoMemory: false,
   })
@@ -725,6 +854,89 @@ console.log('\n[정상] 템플릿 다운그레이드 — dev·TS 훅도 keep 없
   assert('--keep-dev → tdd-guard 보존', fs.existsSync(path.join(tgt, '.claude/hooks/tdd-guard.js')), true)
   assert('--keep-typescript → typescript-quality 보존', fs.existsSync(path.join(tgt, '.claude/hooks/typescript-quality.js')), true)
   assert('배선 보존', /tdd-guard\.js.*typescript-quality\.js/.test(flatHooks(s)), true)
+}
+
+console.log('\n[정상] 레거시 프로파일 재설치(--keep-dev --legacy) — 이전 일반 dev 설치의 tdd-guard만 정리, 나머지 dev 훅은 보존')
+{
+  const src = makeSource(tmp('src'))
+  const tgt = makeTarget(tmp('tgt'), {
+    hookFiles: ['tdd-guard.js', 'test-fake-guard.js', 'adversarial-test-guard.js', 'fake-impl-guard.js', 'typescript-quality.js'],
+    settings: {
+      defaultMode: 'acceptEdits',
+      hooks: {
+        PreToolUse: [{ matcher: 'Bash', hooks: [H('test-fake-guard.js')] }],
+        PostToolUse: [{ matcher: 'Write', hooks: [H('tdd-guard.js'), H('adversarial-test-guard.js'), H('fake-impl-guard.js'), H('typescript-quality.js')] }],
+      },
+    },
+  })
+  run(tgt, src, tmp('glo'), ['--keep-dev', '--keep-typescript', '--legacy'])
+  const s = readSettings(tgt)
+  assert('--legacy → tdd-guard.js 삭제', fs.existsSync(path.join(tgt, '.claude/hooks/tdd-guard.js')), false)
+  assert('--legacy → tdd-guard 배선 제거', /tdd-guard/.test(flatHooks(s)), false)
+  assert('--legacy → adversarial-test-guard 보존', fs.existsSync(path.join(tgt, '.claude/hooks/adversarial-test-guard.js')), true)
+  assert('--legacy → fake-impl-guard 보존', fs.existsSync(path.join(tgt, '.claude/hooks/fake-impl-guard.js')), true)
+  assert('--legacy → test-fake-guard 보존', fs.existsSync(path.join(tgt, '.claude/hooks/test-fake-guard.js')), true)
+  assert('--legacy → typescript-quality 보존', fs.existsSync(path.join(tgt, '.claude/hooks/typescript-quality.js')), true)
+  assert('--legacy → 나머지 dev·TS 배선 보존', /adversarial-test-guard\.js.*fake-impl-guard\.js.*typescript-quality\.js/.test(flatHooks(s)), true)
+}
+console.log('\n[정상] settings.json 보존(덮어쓰기 skip) 경로에서 --legacy 가 typescript-quality 배선을 --changed-only 로 재작성 (Codex R1)')
+{
+  const src = makeSource(tmp('src'))
+  const tgt = makeTarget(tmp('tgt'), {
+    hookFiles: ['typescript-quality.js', 'adversarial-test-guard.js'],
+    settings: {
+      defaultMode: 'acceptEdits',
+      hooks: { PostToolUse: [
+        { matcher: 'Write', hooks: [H('adversarial-test-guard.js'), H('typescript-quality.js')] },
+        { matcher: 'Edit',  hooks: [H('typescript-quality.js')] },
+      ] },
+    },
+  })
+  run(tgt, src, tmp('glo'), ['--keep-dev', '--keep-typescript', '--legacy'])
+  const s = readSettings(tgt)
+  const cmds = s.hooks.PostToolUse.flatMap(g => g.hooks.map(h => h.command)).filter(c => c.includes('typescript-quality'))
+  assert('typescript-quality 배선 2곳 모두 --changed-only 부착', cmds.length === 2 && cmds.every(c => c.endsWith('typescript-quality.js --changed-only')), true)
+  // 멱등: 다시 실행해도 --changed-only 가 중복되지 않음
+  run(tgt, src, tmp('glo'), ['--keep-dev', '--keep-typescript', '--legacy'])
+  const s2 = readSettings(tgt)
+  const cmds2 = s2.hooks.PostToolUse.flatMap(g => g.hooks.map(h => h.command)).filter(c => c.includes('typescript-quality'))
+  assert('재실행 멱등 (--changed-only 중복 없음)', cmds2.every(c => (c.match(/--changed-only/g) || []).length === 1), true)
+}
+{
+  // 반대 방향: 레거시 → 일반 dev 로 되돌리면 --changed-only 제거
+  const src = makeSource(tmp('src'))
+  const tgt = makeTarget(tmp('tgt'), {
+    hookFiles: ['typescript-quality.js'],
+    settings: { defaultMode: 'acceptEdits', hooks: { PostToolUse: [{ matcher: 'Write', hooks: [
+      { type: 'command', command: 'node $CLAUDE_PROJECT_DIR/.claude/hooks/typescript-quality.js --changed-only' },
+    ] }] } },
+  })
+  run(tgt, src, tmp('glo'), ['--keep-dev', '--keep-typescript'])
+  const s = readSettings(tgt)
+  const cmd = s.hooks.PostToolUse[0].hooks[0].command
+  assert('legacy 해제 → --changed-only 제거', cmd.endsWith('typescript-quality.js'), true)
+}
+{
+  // 악성·오남용: --legacy 만 있고 --keep-typescript 없으면 typescript-quality 는 삭제 대상 — 재작성이 아니라 제거돼야 함
+  const src = makeSource(tmp('src'))
+  const tgt = makeTarget(tmp('tgt'), {
+    hookFiles: ['typescript-quality.js'],
+    settings: { defaultMode: 'acceptEdits', hooks: { PostToolUse: [{ matcher: 'Write', hooks: [H('typescript-quality.js')] }] } },
+  })
+  run(tgt, src, tmp('glo'), ['--legacy'])
+  const s = readSettings(tgt)
+  assert('--legacy 단독(TS 미유지) → typescript-quality 배선 제거', /typescript-quality/.test(flatHooks(s)), false)
+}
+{
+  // 악성·오남용: --legacy 만 주고 --keep-dev 가 없으면 legacy 가 dev 훅을 "살리는" 쪽으로 작동해선 안 됨
+  const src = makeSource(tmp('src'))
+  const tgt = makeTarget(tmp('tgt'), {
+    hookFiles: ['tdd-guard.js', 'adversarial-test-guard.js'],
+    settings: { defaultMode: 'acceptEdits', hooks: { PostToolUse: [{ matcher: 'Write', hooks: [H('tdd-guard.js'), H('adversarial-test-guard.js')] }] } },
+  })
+  run(tgt, src, tmp('glo'), ['--legacy'])
+  assert('--legacy 단독 → tdd-guard 삭제 (dev 미유지)', fs.existsSync(path.join(tgt, '.claude/hooks/tdd-guard.js')), false)
+  assert('--legacy 단독 → adversarial-test-guard 도 삭제 (dev 미유지)', fs.existsSync(path.join(tgt, '.claude/hooks/adversarial-test-guard.js')), false)
 }
 
 console.log('\n[악성 방어] 관리 흔적 없는 memory/ 폴더 → 절대 이전·삭제하지 않음 (무관한 프로젝트 데이터 보호)')

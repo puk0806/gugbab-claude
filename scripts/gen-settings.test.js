@@ -60,7 +60,8 @@ console.log('\n[enabledPlugins] 다른 플래그 조합')
 console.log('\n[구조] 필수 필드')
 {
   const s = generate()
-  assert('defaultMode = acceptEdits', s.defaultMode, 'acceptEdits')
+  assert('permissions.defaultMode = acceptEdits (공식 문서 위치)', s.permissions?.defaultMode, 'acceptEdits')
+  assert('최상위 defaultMode 는 없음 (무시되는 잘못된 위치)', 'defaultMode' in s, false)
   assert('permissions.allow 존재', Array.isArray(s.permissions?.allow), true)
   assert('permissions.deny 존재', Array.isArray(s.permissions?.deny), true)
   assert('hooks.Stop 존재', Array.isArray(s.hooks?.Stop), true)
@@ -167,6 +168,44 @@ console.log('\n[적대적 테스트] adversarial-test-guard · fake-impl-guard �
   const utilWrite = utilWriteBlock ? utilWriteBlock.hooks.map(h => h.command).join(' ') : ''
   assert('util 모드에는 adversarial-test-guard 미배선', utilWrite.includes('adversarial-test-guard'), false)
   assert('util 모드에는 fake-impl-guard 미배선', utilWrite.includes('fake-impl-guard'), false)
+}
+
+// ── 레거시 대형 프로젝트 프로파일 (2026-08-26) ───────────────────────────
+console.log('\n[--legacy] tdd-guard 제외 · typescript-quality --changed-only')
+{
+  const cmds = (s, matcher) => {
+    const blk = s.hooks.PostToolUse.find(b => b.matcher === matcher)
+    return blk ? blk.hooks.map(h => h.command) : []
+  }
+  const s = generate('--dev', '--typescript', '--legacy')
+  const w = cmds(s, 'Write'), e = cmds(s, 'Edit')
+  assert('legacy: Write에 tdd-guard 미배선', w.some(c => c.includes('tdd-guard')), false)
+  assert('legacy: Edit에 tdd-guard 미배선', e.some(c => c.includes('tdd-guard')), false)
+  assert('legacy: adversarial-test-guard는 유지', w.some(c => c.includes('adversarial-test-guard')), true)
+  assert('legacy: fake-impl-guard는 유지', w.some(c => c.includes('fake-impl-guard')), true)
+  assert('legacy: test-fake-guard(PreToolUse Bash)는 유지',
+    JSON.stringify(s.hooks.PreToolUse).includes('test-fake-guard'), true)
+  const tsW = w.find(c => c.includes('typescript-quality'))
+  const tsE = e.find(c => c.includes('typescript-quality'))
+  assert('legacy: Write typescript-quality에 --changed-only 전달', (tsW || '').endsWith('typescript-quality.js --changed-only'), true)
+  assert('legacy: Edit typescript-quality에 --changed-only 전달', (tsE || '').endsWith('typescript-quality.js --changed-only'), true)
+
+  // 악성·오남용: --legacy 만 단독으로 줘도 dev 훅이 생기거나 사라지지 않아야 함 (dev 미선택 = 강제 훅 없음)
+  const only = generate('--legacy')
+  assert('--legacy 단독 → dev 훅 없음 (tdd/adversarial/fake-impl 전부 미배선)',
+    /tdd-guard|adversarial-test-guard|fake-impl-guard/.test(JSON.stringify(only.hooks)), false)
+  assert('--legacy 단독 → typescript-quality 없음 (--typescript 미선택)',
+    JSON.stringify(only.hooks).includes('typescript-quality'), false)
+
+  // 경계: legacy 없는 기본 dev+TS 는 기존 그대로 (회귀 방지)
+  const base = generate('--dev', '--typescript')
+  const bw = cmds(base, 'Write')
+  assert('legacy 없음 → tdd-guard 배선 유지', bw.some(c => c.includes('tdd-guard')), true)
+  assert('legacy 없음 → typescript-quality 인자 없음', bw.some(c => c.endsWith('typescript-quality.js')), true)
+
+  // util + legacy: util 은 강제 훅 자체가 없으므로 legacy 가 아무것도 추가하지 않아야 함
+  const u = generate('--util', '--legacy')
+  assert('util + legacy → typescript-quality 미배선', JSON.stringify(u.hooks).includes('typescript-quality'), false)
 }
 
 // ── 최종 ────────────────────────────────────────────────────────────────
