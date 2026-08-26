@@ -566,4 +566,25 @@ for (const kind of ['skills', 'agents', 'commands']) {
   }
 }
 
+// ── 6. 빈 디렉토리 정리 ─────────────────────────────────────────────────
+// 이전 재설치가 폐기 스킬의 SKILL.md 만 지우고 폴더를 남기면(2026-06 개편 잔재 등) 매니페스트 대상이
+// 아니라 위 루프가 건드리지 않는다. 빈 폴더는 내용이 없으니 소유 증명 없이 지워도 잃는 것이 없다.
+// 실프로젝트 사본 리허설에서 40개가 남아 있던 것을 계기로 추가 (2026-08-26).
+for (const kind of ['skills', 'agents', 'commands']) {
+  const root = path.join(target, '.claude', kind);
+  if (!fs.existsSync(root)) continue;
+  let removed = 0;
+  const sweep = (dir) => {
+    let entries;
+    try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
+    for (const e of entries) if (e.isDirectory()) sweep(path.join(dir, e.name));
+    if (dir === root) return;
+    try {
+      if (fs.readdirSync(dir).length === 0) { fs.rmdirSync(dir); removed++; }
+    } catch {}
+  };
+  sweep(root);
+  if (removed > 0) log(`빈 디렉토리 정리: .claude/${kind}/ 하위 ${removed}개`);
+}
+
 process.exit(0);

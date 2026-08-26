@@ -456,6 +456,36 @@ console.log('\n[정상] settings 보존 경로에서 최상위 defaultMode → p
   assert('--keep-authoring → agent-design.md 보존', fs.existsSync(path.join(tgt, '.claude/rules/agent-design.md')), true)
 }
 
+console.log('\n[정상] 빈 디렉토리 정리 — 폐기 스킬 폴더 잔재는 지우고, 파일 있는 폴더·루트는 보존 (2026-08-26)')
+{
+  const src = makeSource(tmp('src'))
+  const tgt = makeTarget(tmp('tgt'))
+  const sk = path.join(tgt, '.claude', 'skills')
+  fs.mkdirSync(path.join(sk, 'frontend', 'react-core'), { recursive: true })            // 빈 잔재
+  fs.mkdirSync(path.join(sk, 'frontend', 'old', 'references'), { recursive: true })     // 중첩 빈 잔재
+  fs.mkdirSync(path.join(sk, 'health'), { recursive: true })                           // 카테고리만 남은 빈 폴더
+  fs.mkdirSync(path.join(sk, 'frontend', 'nextjs'), { recursive: true })
+  fs.writeFileSync(path.join(sk, 'frontend', 'nextjs', 'SKILL.md'), '# keep\n')         // 파일 있음
+  fs.mkdirSync(path.join(tgt, '.claude', 'agents', 'meta'), { recursive: true })         // 빈 카테고리
+  const { code, out } = run(tgt, src, tmp('glo'))
+  assert('exit 0', code, 0)
+  assert('빈 잔재 폴더 삭제(react-core)', fs.existsSync(path.join(sk, 'frontend', 'react-core')), false)
+  assert('중첩 빈 잔재 삭제(old/references → old)', fs.existsSync(path.join(sk, 'frontend', 'old')), false)
+  assert('빈 카테고리 삭제(health)', fs.existsSync(path.join(sk, 'health')), false)
+  assert('파일 있는 폴더 보존(nextjs)', fs.existsSync(path.join(sk, 'frontend', 'nextjs', 'SKILL.md')), true)
+  assert('skills 루트 보존', fs.existsSync(sk), true)
+  assert('agents 빈 카테고리 삭제, 루트 보존', !fs.existsSync(path.join(tgt, '.claude', 'agents', 'meta')) && fs.existsSync(path.join(tgt, '.claude', 'agents')), true)
+  assert('정리 로그 출력', /빈 디렉토리 정리/.test(out), true)
+}
+{
+  // 악성·경계: 빈 폴더가 하나도 없으면 아무 것도 하지 않고 로그도 없음 / 심볼릭 링크 폴더는 건드리지 않음(readdir 실패 → 무시)
+  const src = makeSource(tmp('src'))
+  const tgt = makeTarget(tmp('tgt'))
+  const sk = path.join(tgt, '.claude', 'skills', 'frontend', 'x'); fs.mkdirSync(sk, { recursive: true }); fs.writeFileSync(path.join(sk, 'SKILL.md'), '# x\n')
+  const { out } = run(tgt, src, tmp('glo'))
+  assert('빈 폴더 없음 → 로그 없음', /빈 디렉토리 정리/.test(out), false)
+}
+
 console.log('\n[정상] commands 정리 (2026-08-26) — 옵션 OFF·소스 폐기분은 소유 증명 시 삭제, 커스텀·수정본 보존')
 {
   const src = makeSource(tmp('src'))
