@@ -190,3 +190,4 @@ SKILL.md의 클레임 9는 `> 주의:` 없이도 본문에서 "변경 가능, �
 |------|------|-----------|--------|
 | 2026-06-02 | v1 | 최초 작성 (공식 문서 8개 소스 교차 검증, 9개 핵심 클레임 VERIFIED) | skill-creator |
 | 2026-06-02 | v1 | 2단계 실사용 테스트 수행 (Q1 빌드 후 CI 자동 검증 / Q2 schema-dts·ajv·sdtt 단계별 선택 / Q3 RRT 통과인데 GSC rich result 미표시 진단) → agent content test 3/3 PASS, APPROVED 전환 | skill-tester (API 529로 메인이 대조) |
+| 2026-08-26 | v1.1 | freshness 재검증(85일 경과) — FAQ rich result 3단계 폐지 타임라인·RRT/SMV 공식 API 부재·URL Inspection API 유일 경로·Next.js JSON-LD 패턴 VERIFIED, 변경 없음. schema-dts 버전은 저위험으로 미재검증 | freshness-auditor + orchestrator |

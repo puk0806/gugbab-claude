@@ -286,7 +286,7 @@ function Button({ variant = 'primary' }: { variant: keyof typeof variants }) {
 
 **특징:** 빌드 타임에 static CSS 생성 → 런타임 오버헤드 없음
 
-> **주의:** `@vanilla-extract/css`의 webpack 플러그인은 현재 Turbopack에서 **미지원**. Turbopack 기반 Next.js 환경에서는 사용 불가.
+> **주의 (2026-08-26 갱신):** vanilla-extract의 Turbopack 지원은 **Next.js 16.x 이상에서만** 제공되며(`@vanilla-extract/next-plugin` 2.5.0+), 기본값이 꺼져 있어 `createVanillaExtractPlugin({ unstable_turbopack: { mode: 'auto' } })` 처럼 명시해야 켜진다. 공식 문서는 "experimental — non-major 버전에서도 breaking change 가능"으로 경고한다. Next.js 15.x 이하는 Webpack만 지원. 상세는 `frontend/vanilla-extract` 스킬 참조.
 
 ---
 

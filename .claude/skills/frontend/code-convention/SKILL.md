@@ -1,12 +1,17 @@
 ---
 name: code-convention
-description: ESLint 9+ flat config, Biome, Prettier, Husky, lint-staged, commitlint 설정 및 선택 기준
+description: ESLint 10+ flat config, Biome, Prettier, Husky, lint-staged, commitlint 설정 및 선택 기준
 ---
 
 # 코드 컨벤션 & 품질 도구 패턴
 
 > 소스: https://eslint.org/docs/latest | https://biomejs.dev/docs | https://prettier.io/docs
-> 검증일: 2026-03-27
+> 소스: https://eslint.org/blog/2026/02/eslint-v10.0.0-released/ | https://eslint.org/version-support/ | https://biomejs.dev/guides/upgrade-to-biome-v2/
+> 검증일: 2026-08-26 (최초 2026-03-27 · 08-26 freshness 재검증: ESLint 10.0.0(2026-02-06)에서 eslintrc 완전 제거·v9는 2026-08-06 EOL, Biome 2.5.x의 `organizeImports`→`assist` 이동 반영)
+
+> **버전 기준 (2026-08-26):** ESLint **10.x**(현행, v9.x는 2026-08-06부로 EOL, v8.x는 2024-10-05 EOL) · Biome **2.5.x** · Prettier 3.x · Husky 9 · lint-staged 최신.
+> ESLint 10은 `.eslintrc.*`·`.eslintignore`·`ESLINT_USE_FLAT_CONFIG`·`--no-eslintrc`·`--rulesdir`·`--ignore-path` 를 **전부 제거**했고 Node `^20.19.0 || ^22.13.0 || >=24` 를 요구한다. `eslint.config.*` 탐색 기준도 cwd가 아니라 **린트 대상 파일의 디렉토리**로 바뀌었다(모노레포에서 패키지별 config가 잡히는 방식이 달라짐).
+> **아직 ESLint 8 + `.eslintrc`를 쓰는 레거시 프로젝트**는 이 스킬의 flat config 예시를 그대로 적용할 수 없다 — 경계 규칙 등 v8 분기 설정은 `architecture/module-boundaries` 스킬(ESLint 8·9 양쪽 예시)을 참조하고, v10 이행은 eslintrc→flat config 변환(`@eslint/migrate-config`)을 선행한다.
 
 ---
 
@@ -18,25 +23,25 @@ description: ESLint 9+ flat config, Biome, Prettier, Husky, lint-staged, commitl
 │  └─ Biome (린트 + 포맷 통합, Rust 기반)
 │
 └─ 기존 ESLint 플러그인 생태계 필요 (ex. Next.js, Tailwind)
-   └─ ESLint 9+ flat config + Prettier
+   └─ ESLint 10+ flat config + Prettier
 ```
 
 | 도구 | 역할 | 속도 | 플러그인 생태계 |
 |------|------|------|--------------|
 | Biome | 린트 + 포맷 통합 | ⭐⭐⭐⭐ 매우 빠름 | 제한적 |
-| ESLint 9+ | 린트 전용 | ⭐⭐ | 풍부함 |
+| ESLint 10+ | 린트 전용 | ⭐⭐ | 풍부함 |
 | Prettier | 포맷 전용 | ⭐⭐⭐ | - |
 
 **모노레포 권장:** ESLint + Prettier (Next.js, eslint-config-next 호환성 때문)
 
 ---
 
-## ESLint 9+ Flat Config
+## ESLint 10+ Flat Config
 
 ### 기본 구조 (eslint.config.js)
 
 ```javascript
-// eslint.config.js (ESLint 9 기본 포맷)
+// eslint.config.js (ESLint 9부터 기본, 10부터 유일한 포맷)
 import js from '@eslint/js'
 import tseslint from 'typescript-eslint'
 import reactPlugin from 'eslint-plugin-react'
@@ -140,7 +145,7 @@ export const nextjs = tseslint.config(
 // biome.json
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-  "organizeImports": { "enabled": true },
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "linter": {
     "enabled": true,
     "rules": {
@@ -181,7 +186,8 @@ export const nextjs = tseslint.config(
 | 실행 속도 | 10-20x 빠름 | 기준 |
 | next-eslint 지원 | ❌ (직접 없음) | ✅ |
 | import 정렬 | ✅ 내장 | 플러그인 필요 |
-| 성숙도 | 비교적 신생 | 검증됨 |
+| 성숙도 | v2 안정 (2025-06-17 v2.0 → 2.5.x, 린트 룰 500개) | 검증됨 |
+| 타입 인지 린트 | v2부터 **tsc 없이** 자체 타입 추론으로 type-aware 룰 제공 (`typescript` 패키지 미설치도 가능) | `typescript-eslint` + `parserOptions.projectService` (tsc 프로그램 필요, 느림) |
 
 ---
 
@@ -418,7 +424,8 @@ jobs:
 
 ```javascript
 // ❌ ESLint 8 방식 (레거시 .eslintrc.json)
-// → ESLint 9에서는 flat config (eslint.config.js) 사용
+// → ESLint 9까지는 eslintrc 병행 지원(옵션), ESLint 10부터 완전 제거 — flat config (eslint.config.js)만 동작
+//   Biome v1 설정(`"organizeImports": { "enabled": true }`)도 v2에서 `assist.actions.source.organizeImports`로 이동 — `biome migrate --write`로 변환
 
 // ❌ prettier와 eslint 포맷 규칙 중복 설정
 // → eslint-config-prettier로 ESLint 포맷 규칙 비활성화 필수

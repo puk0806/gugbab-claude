@@ -178,3 +178,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-06-02 | v1 | 최초 작성. 11섹션 580줄. Next.js ImageResponse + satori + CJK 폰트 임베드 + 빌드/런타임 생성 + 캐시 전략 + 외부 서비스 + 실수 패턴 + 검증 도구 | skill-creator |
 | 2026-06-02 | v1 | 2단계 실사용 테스트 수행 (Q1 Next.js 동적 OG+한국어 폰트 / Q2 Vite SSG 사전 생성 / Q3 미리보기 디버깅+강제 갱신) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-08-26 | v1.1 | freshness 재검증(85일 경과) — 1200×630·X 1200×628·Next.js 16 Promise params VERIFIED. satori 0.27.0→**0.33.4**·@vercel/og **1.0.2**(npm dist-tags 직접 조회, 감사 에이전트가 보고한 0.29.0은 오기라 registry 값으로 정정). 카카오 규격은 공식 문서 부재로 1.91:1 유지 | freshness-auditor + orchestrator |

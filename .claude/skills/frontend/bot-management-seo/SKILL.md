@@ -8,7 +8,7 @@ description: >
 # 봇 관리(Bot Management)와 SEO 안전성
 
 > 소스: Google Search Central(developers.google.com/search), Cloudflare Bots Docs(developers.cloudflare.com/bots), AWS WAF Developer Guide(docs.aws.amazon.com/waf)
-> 검증일: 2026-06-04
+> 검증일: 2026-08-26 (최초 2026-06-04 · 08-26 freshness 재검증: 역DNS 검증·Cloudflare verified_bot·AWS Bot Control VERIFIED. Googlebot IP JSON 구경로 제거·common-crawlers.json 단일화, Cloudflare AI 크롤러 3분류·Bot Preference Sync 절(2.5) 추가)
 
 봇 관리 솔루션(Cloudflare Bot Fight Mode, AWS WAF Bot Control 등)은 악성 봇 차단에는 효과적이지만, 잘못 설정하면 Googlebot·Yeti·Bingbot 같은 정당한 검색 크롤러까지 차단해 색인 손실로 이어진다. 이 스킬은 (1) 주요 검색 엔진 크롤러를 식별하고 (2) Cloudflare·AWS WAF에서 안전하게 허용하며 (3) 차단 사고를 진단·복구하는 절차를 정리한다.
 
@@ -25,11 +25,12 @@ description: >
 | Googlebot-Image | `Googlebot-Image/1.0` | 이미지 검색 |
 | AdsBot-Google | `AdsBot-Google (+http://www.google.com/adsbot.html)` | 광고 품질 점수, robots.txt 전역 룰 무시 |
 
-**IP 범위 JSON (Google Search Central 공식):**
-- 공통 크롤러(Googlebot 등): `https://developers.google.com/static/search/apis/ipranges/googlebot.json`
-  - 또는 신규 경로: `https://developers.google.com/static/crawling/ipranges/common-crawlers.json`
+**IP 범위 JSON (Google Search Central 공식, 2026-08-26 경로 정정):**
+- 공통 크롤러(Googlebot 등): `https://developers.google.com/static/crawling/ipranges/common-crawlers.json` ← **이것만 사용**
 - 특수 크롤러(AdsBot 등): `https://developers.google.com/static/crawling/ipranges/special-crawlers.json`
-- 사용자 트리거 페처: `https://developers.google.com/static/crawling/ipranges/user-triggered-fetchers.json`
+- 사용자 트리거 페처: `https://developers.google.com/static/crawling/ipranges/user-triggered-fetchers.json` · `user-triggered-fetchers-google.json`
+
+> 주의: 구경로 `…/static/search/apis/ipranges/googlebot.json` 은 2026-03 Google Search Central 블로그 "New Location for the Google Crawlers' IP Range Files" 이후 공식 문서에서 **더 이상 안내되지 않는다**. 화이트리스트 동기화 스크립트가 구경로를 읽고 있으면 실제 IP 목록이 아닐 수 있으므로 즉시 `common-crawlers.json`으로 바꾼다.
 
 > 주의: Google은 JSON을 매일(UTC 자정 부근) 갱신하므로, 화이트리스트는 정적 IP가 아니라 자동 동기화로 관리한다.
 
@@ -89,6 +90,15 @@ WAF Custom Rules에서 `cf.verified_bot` 또는 `cf.verified_bot_category` 필�
 
 - Cloudflare Rate Limiting Rule이 IP 기준일 경우, Googlebot 단일 IP가 한도를 초과해 차단될 수 있다.
 - Rate Limit 룰에 `cf.verified_bot` 예외 조건 필수.
+
+### 2.5 AI 크롤러 정책 — Search / Agent / Training 3분류와 robots.txt 자동 동기화 (2026-08-26 추가)
+
+> 소스: https://blog.cloudflare.com/bot-preference-sync/ (2026-08-21)
+
+- Cloudflare는 2026-07-01부터 AI 트래픽을 **Search(검색 인용) / Agent(사용자 대신 방문) / Training(학습 수집)** 세 범주로 나눠 각각 허용·차단을 고를 수 있게 했다. 이 스킬의 원칙대로 **Search는 허용**이 기본 판단이다 — OAI-SearchBot·Claude-SearchBot·PerplexityBot 같은 검색·인용 크롤러를 막으면 AI 답변 인용(GEO)에서 사라진다(`frontend/geo-ai-discoverability`).
+- **Bot Preference Sync**(2026-08-21): 대시보드의 AI 정책을 **robots.txt에 자동 반영**한다. 기존 `Disallow` 앞에 *prepend* 하므로 손으로 관리하던 robots.txt와 충돌하지 않지만, 레포에서 robots.txt를 배포하는 프로젝트는 **Cloudflare가 붙인 블록과 원본이 다르게 보이는 것**을 알고 있어야 한다(감사 시 라이브 URL과 소스를 둘 다 확인).
+- **혼합 목적(mixed-use) 크롤러 주의**: 검색과 학습을 한 UA로 겸하는 크롤러가 있어, Training을 차단하는 설정이 검색 노출에 영향을 줄 수 있다. Training 차단을 켠 뒤에는 Search Console·네이버 서치어드바이저의 크롤링 통계로 정상 검색 봇이 막히지 않았는지 확인한다.
+- 기본값(신규 도메인에 어떤 범주가 기본 차단인지)은 Cloudflare가 공지로 바꿔 왔으므로 **가입 시점의 대시보드 값을 직접 확인**한다 — 이 스킬은 특정 날짜의 기본값을 단정하지 않는다.
 
 ---
 
@@ -257,7 +267,9 @@ WAF 룰을 프로덕션과 동일하게 staging에 적용하면 Googlebot이 sta
 
 - Google — Verify Google Crawlers: https://developers.google.com/search/docs/crawling-indexing/verifying-googlebot
 - Google — Common Crawlers: https://developers.google.com/search/docs/crawling-indexing/google-common-crawlers
-- Google — Googlebot IP JSON: https://developers.google.com/static/search/apis/ipranges/googlebot.json
+- Google — 크롤러 IP JSON (현행): https://developers.google.com/static/crawling/ipranges/common-crawlers.json
+- Google — 크롤러 검증 절차: https://developers.google.com/search/docs/crawling-indexing/verifying-googlebot
+- Cloudflare — Bot Preference Sync (AI 봇 정책 ↔ robots.txt): https://blog.cloudflare.com/bot-preference-sync/
 - Cloudflare — Verified Bots: https://developers.cloudflare.com/bots/concepts/bot/verified-bots/
 - Cloudflare — Super Bot Fight Mode: https://developers.cloudflare.com/bots/get-started/super-bot-fight-mode/
 - AWS WAF — Bot Control Rule Group: https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-bot.html

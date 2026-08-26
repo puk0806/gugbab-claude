@@ -17,8 +17,8 @@ description: >
 > - Kakao Developers — OG 캐시 초기화 도구: https://developers.kakao.com/tool/clear/og
 > - Kakao Developers — SDK Reference (Kakao.Share): https://developers.kakao.com/sdk/reference/js/release/Kakao.Share.html
 >
-> 검증일: 2026-06-04
-> SDK 기준 버전: **2.8.1** (2026-04-09 출시)
+> 검증일: 2026-08-26 (최초 2026-06-04 · 08-26 freshness 재검증: 이미지 규격·`Kakao.Share` API VERIFIED. SDK 2.8.1→2.8.2 갱신, CSR 대응책에서 Rendertron 제외·Edge og 주입 대안 추가)
+> SDK 기준 버전: **2.8.2** (2026-08-06 출시, 내부 개선 — 2.8.1과 API 동일. integrity 해시는 공식 다운로드 페이지에서 해당 버전 값으로 교체)
 
 ---
 
@@ -81,11 +81,11 @@ description: >
 
 ## 4. Kakao JavaScript SDK 공유 구현
 
-### SDK 로드 (2.8.1 기준)
+### SDK 로드 (2.8.2 기준)
 
 ```html
 <script
-  src="https://t1.kakaocdn.net/kakao_js_sdk/2.8.1/kakao.min.js"
+  src="https://t1.kakaocdn.net/kakao_js_sdk/2.8.2/kakao.min.js"
   integrity="${INTEGRITY_VALUE}"
   crossorigin="anonymous"
 ></script>
@@ -205,7 +205,9 @@ export async function getServerSideProps(ctx) {
 
 ### 순수 CSR React SPA
 
-- **prerender.io / rendertron / react-snap** 등 사전 렌더링 도구 도입
+- 빌드 타임 프리렌더(Vike·vite-prerender-plugin) 또는 SSR 도입 — 정공법 (`frontend/seo-vite-spa` 단계 4·5)
+- CDN/Edge(Cloudflare Worker·Vercel Edge)에서 카카오 스크래퍼 UA(`kakaotalk-scrap`)·페이스북·네이버 봇에만 `og:*` 메타를 주입한 HTML 셸을 응답 — 가장 가볍고 빠른 대안
+- ~~prerender.io / rendertron / react-snap~~ — **Rendertron은 2022년 Google이 archive 처리(유지보수 없음)**, 동적 렌더링 자체가 Google 기준 "권장 아님·임시 우회책". 이미 운영 중이 아니면 도입하지 않는다 (2026-08-26 정정)
 - **Cloudflare Workers / Vercel Edge Function**으로 크롤러 User-Agent 분기 응답
 - 가능하면 Next.js 같은 SSR/SSG 프레임워크로 마이그레이션
 

@@ -6,7 +6,7 @@ description: Jest/Vitest + React Testing Library 핵심 패턴, 캡슐화 기반
 # Testing — Jest/Vitest + React Testing Library
 
 > 소스: https://testing-library.com/docs/react-testing-library/intro | https://vitest.dev/guide/
-> 검증일: 2026-04-01
+> 검증일: 2026-08-26 (최초 2026-04-01 · 08-26 freshness 재검증: RTL 16부터 `@testing-library/dom`이 peerDependency로 분리되어 설치 커맨드에 명시 추가. Vitest 4.1 stable·RTL 16.3 기준 나머지 패턴 VERIFIED)
 
 ---
 
@@ -28,7 +28,7 @@ description: Jest/Vitest + React Testing Library 핵심 패턴, 캡슐화 기반
 ### Jest + Next.js
 
 ```bash
-pnpm add -D jest jest-environment-jsdom @testing-library/react @testing-library/jest-dom @testing-library/user-event
+pnpm add -D jest jest-environment-jsdom @testing-library/react @testing-library/dom @testing-library/jest-dom @testing-library/user-event
 ```
 
 ```js
@@ -50,7 +50,7 @@ import '@testing-library/jest-dom'
 ### Vitest + React
 
 ```bash
-pnpm add -D vitest @vitest/ui jsdom @testing-library/react @testing-library/jest-dom @testing-library/user-event
+pnpm add -D vitest @vitest/ui jsdom @testing-library/react @testing-library/dom @testing-library/jest-dom @testing-library/user-event
 ```
 
 ```ts

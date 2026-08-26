@@ -181,3 +181,4 @@ SKILL.md 4.7 섹션에서 node16/nodenext 모듈 해석 전략의 핵심 규칙(
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
 | 2026-04-20 | v1 | 최초 작성 — TS 4.0~4.9 버전별 핵심 기능 10개, tsconfig, React 타입 패턴, 마이그레이션 가이드 | skill-creator |
+| 2026-08-26 | v1.1 | freshness 재검증(128일 경과) — 기능 서술은 역사적 사실이라 변경 없음. 상단에 레거시 배너 추가(현행 TS 7.0 GA·6.0, 짝 스킬 `typescript-v5`로 역참조 — 기존에는 v5→v4 단방향만 존재). "EOL" 단정은 Microsoft 공식 일정 부재로 UNVERIFIED 처리해 미기재 | freshness-auditor + orchestrator |

@@ -95,7 +95,7 @@ Google-Extended는 *Gemini·Vertex AI 학습용 토큰*이지 *Googlebot이 아�
 
 ### 7-7. "llms.txt 만들면 AI에 인용된다"는 환상
 
-> 주의: 현재 어떤 메이저 AI 플랫폼도 llms.txt 사용을 공식 확인하지 않았다. *llms.txt는 미래 보험 + 사이트 자체 LLM 컨텍스트 정리 용도*로 보는 게 합리적이다. "이걸 만들면 ChatGPT에 인용된다"는 기대는 근거가 약하다.
+> 주의 (2026-08-26 정정): 정확한 서술은 **"llms.txt를 랭킹·인용 신호로 쓴다고 공식 확인한 메이저 AI 플랫폼은 없다"** 이다. *발행*은 다르다 — OpenAI·Anthropic·Google(Gemini)·Perplexity 모두 자사 개발자 문서에 llms.txt를 발행 중이고, Anthropic은 공식 엔지니어링 문서에서 *에이전트에 문서를 물릴 때의 표준 포맷*으로 권장한다. 반대로 **Google은 공식 문서로 "Google Search는 llms.txt를 사용하지 않는다"고 명시**했다. 결론: *llms.txt는 에이전트용 문서 인덱스*로 보는 게 맞고, "이걸 만들면 ChatGPT/구글 AI에 인용된다"는 기대는 여전히 근거가 없다. 상세는 SKILL.md §2-1.
 
 ---
 
@@ -127,8 +127,14 @@ Google-Extended는 *Gemini·Vertex AI 학습용 토큰*이지 *Googlebot이 아�
 - Applebot: https://support.apple.com/en-us/119829
 - Meta 크롤러: https://developers.facebook.com/docs/sharing/webmasters/crawler
 - Common Crawl: https://commoncrawl.org/ccbot
-- llms.txt 명세: https://llmstxt.org/
+- llms.txt 명세 (v2, 2026-08-10): https://llmstxt.org/
+- llms.txt v1→v2 변경점: https://llmstxt.org/changes.html
 - llms.txt 제안 글: https://www.answer.ai/posts/2024-09-03-llmstxt.html
+- Google 생성형 AI 최적화 가이드: https://developers.google.com/search/docs/fundamentals/ai-optimization-guide
+- Google AI 기능과 웹사이트: https://developers.google.com/search/docs/appearance/ai-features
+- Search Console 생성형 AI 제어(포함/제외): https://support.google.com/webmasters/answer/16908024
+- Search Console 생성형 AI 성능 보고서: https://support.google.com/webmasters/answer/16984139
+- Anthropic 봇 IP 목록: https://claude.com/crawling/bots.json
 - Princeton GEO 논문: https://arxiv.org/abs/2311.09735
 - schema.org FAQPage: https://schema.org/FAQPage
 - Google FAQPage 가이드: https://developers.google.com/search/docs/appearance/structured-data/faqpage

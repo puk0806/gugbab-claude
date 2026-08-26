@@ -137,3 +137,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-04-01 | v1 | 최초 작성 및 frontend-architect 활용 테스트 완료 | frontend-architect 에이전트 |
 | 2026-04-17 | v2 | verification.md 신규 8섹션 포맷으로 마이그레이션 | 메인 대화 오케스트레이션 |
+| 2026-08-26 | v2.1 | freshness 재검증(147일 경과) — RTL 16부터 `@testing-library/dom` peerDependency 분리(설치 커맨드 2곳에 추가, 근거: RTL npm·react-testing-library#906). Vitest 4.1 stable·쿼리 우선순위·renderHook 위치 VERIFIED | freshness-auditor + orchestrator |

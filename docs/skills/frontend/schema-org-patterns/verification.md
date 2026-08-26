@@ -205,3 +205,4 @@ content 검증 완료. 핵심 클레임 19개 VERIFIED + agent content test 3/3 
 |------|------|-----------|--------|
 | 2026-06-01 | v1 | 최초 작성 — 8종 schema.org 타입 카탈로그 + JSON-LD 예시 + deprecation 상태 반영 | skill-creator |
 | 2026-06-01 | v1 | 2단계 실사용 테스트 수행 (Q1 Article headline 글자수 제한 / Q2 FAQPage rich results 현황 / Q3 Product 가격 rich result 조건) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-08-26 | v1.1 | freshness 재검증(86일 경과) — FAQPage 폐지 타임라인·HowTo 제거·NewsArticle 110자 VERIFIED, 변경 없음. description의 8종 중 Product·VideoObject·WebSite가 본문이 아닌 `references/REFERENCE.md`에 있어 오해 소지 → 검증일 줄 아래에 위치 안내 + 커머스 Product 정본은 `ecommerce-seo` §2로 포인터 | freshness-auditor + orchestrator |

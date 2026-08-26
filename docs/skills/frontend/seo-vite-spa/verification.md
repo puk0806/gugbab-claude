@@ -215,3 +215,4 @@ react-helmet-async로 Product 페이지에 JSON-LD를 넣고 있는데, 사용�
 |------|------|-----------|--------|
 | 2026-06-01 | v1 | 최초 작성. Vite/CRA SPA SEO 토픽 7개(public 메타, react-helmet-async, @unhead/react, JSON-LD, sitemap, Vike 프리렌더, OG 이미지) + CRA 레거시 대응 절. 9개 핵심 클레임 VERIFIED. | skill-creator |
 | 2026-06-01 | v1 | 2단계 실사용 테스트 수행 (Q1 OG 미리보기 원인·해결 / Q2 CRA→Vite SEO 이전 / Q3 JSON-LD XSS 안전 삽입) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-08-26 | v1.1 | freshness 재검증(86일 경과) — react-helmet-async 3.0.0(2026-03-03, React 19 지원)·@unhead/react 3.x·Vike·CRA deprecated(2025-02-14) VERIFIED. **누락 2건 보강**: ① 동적 렌더링/Rendertron이 Google 기준 비권장 우회책이며 2022년 archive라는 주의 블록(전제와 한계 절) — `kakao-share-optimization`과 서술 일치 ② `vite-plugin-sitemap` 0.8.2가 2025-05-15 이후 무갱신(npm registry 직접 확인)이라 대형 커머스는 DB 기준 서버 생성 권고 | freshness-auditor + orchestrator |
