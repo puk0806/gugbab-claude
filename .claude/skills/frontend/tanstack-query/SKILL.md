@@ -7,7 +7,7 @@ description: TanStack Query(React Query) v5 실전 사용 패턴 — queryKey �
 
 > 소스: https://tanstack.com/query/latest/docs/framework/react (공식 문서)
 > 보조 소스: https://github.com/TanStack/query (공식 GitHub), https://registry.npmjs.org/@tanstack/react-query
-> 검증일: 2026-08-11
+> 검증일: 2026-08-26 (최초 2026-08-11 · 08-26에 v5.102 통합 메서드 deprecated 반영)
 > 기준 버전: `@tanstack/react-query` **5.101.4** (React 18+ / 19 지원)
 
 ---
@@ -403,6 +403,12 @@ const items = data?.pages.flatMap((p) => p.items) ?? []
 ---
 
 ## 10. SSR — Next.js App Router (prefetch + HydrationBoundary)
+
+> **주의 (2026-08-26 갱신, v5.102.0+):** `queryClient.prefetchQuery` / `fetchQuery` / `ensureQueryData` / `prefetchInfiniteQuery` / `fetchInfiniteQuery` / `ensureInfiniteQueryData` 는 **`@deprecated`** 표기되었고 통합 메서드 **`queryClient.query(options)` / `queryClient.infiniteQuery(options)`** 로 대체된다(v6에서 제거 예정, 공식 예제·QueryClient 레퍼런스는 이미 신규 메서드 기준). 이 절의 `prefetchQuery` 예시는 v5 전 구간에서 계속 동작하므로 당장 바꿀 필요는 없지만, **신규 코드는 `query()`를 쓴다.** 단순 이름 치환이 아니다:
+> - `prefetchQuery` 는 에러를 삼켰지만 `query()` 는 **throw 한다** → prefetch 용도면 `queryClient.query(opts).catch(() => {})`
+> - `ensureQueryData` 의 "무효화 무시" 의미는 `query({ ...opts, staleTime: 'static' })` 로 표현
+> - `staleTime` 존중은 동일
+> 소스: https://tanstack.com/query/v5/docs/react/guides/migrating-to-v5 (Imperative QueryClient methods) · https://github.com/TanStack/query/discussions/9135 · `packages/query-core/src/queryClient.ts` JSDoc
 
 ```typescript
 // app/get-query-client.ts

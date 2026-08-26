@@ -67,6 +67,11 @@ status: APPROVED
 |--------|-----|--------|
 | ESLint Flat Config 공식 | https://eslint.org/docs/latest/use/configure/configuration-files | ⭐⭐⭐ High |
 | eslint-config-prettier | https://github.com/prettier/eslint-config-prettier | ⭐⭐⭐ High |
+| ESLint v10.0.0 릴리즈 공지 (2026-08-26 추가) | https://eslint.org/blog/2026/02/eslint-v10.0.0-released/ | ⭐⭐⭐ High |
+| ESLint 버전 지원 정책 (v9 EOL 2026-08-06) | https://eslint.org/version-support/ | ⭐⭐⭐ High |
+| Biome v2 업그레이드 가이드 (`organizeImports`→`assist`) | https://biomejs.dev/guides/upgrade-to-biome-v2/ | ⭐⭐⭐ High |
+| Biome v2 발표 (type-aware, tsc 불필요) | https://biomejs.dev/blog/biome-v2/ | ⭐⭐⭐ High |
+| @biomejs/biome dist-tags (latest 2.5.10) | https://registry.npmjs.org/-/package/@biomejs/biome/dist-tags | ⭐⭐⭐ High |
 
 ---
 
@@ -136,3 +141,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-03-27 | v1 | 최초 작성 및 frontend-architect 활용 테스트 완료 | frontend-architect 에이전트 |
 | 2026-04-17 | v2 | verification.md 신규 8섹션 포맷으로 마이그레이션 | 메인 대화 오케스트레이션 |
+| 2026-08-26 | v3 | freshness 재검증(152일 경과) — OUTDATED 4건 정정: ① ESLint 9+→**10+** 기준(2026-02-06 출시, eslintrc·`.eslintignore`·`ESLINT_USE_FLAT_CONFIG`·`--no-eslintrc` 등 완전 제거, Node `^20.19||^22.13||>=24`, config 탐색이 파일 디렉토리 기준으로 변경), v9 EOL 2026-08-06·v8 EOL 2024-10-05 명시 ② "흔한 실수"의 "v9에서는 flat config"를 "v9 병행·v10 완전 제거"로 정정 ③ `biome.json` `organizeImports`→`assist.actions.source.organizeImports: "on"`(Biome 2.5.10), `biome migrate --write` 안내 ④ 비교표 "비교적 신생" 삭제, type-aware(tsc 불필요) 행 추가. ESLint 8 레거시 프로젝트는 `architecture/module-boundaries` v8 분기로 연결. Prettier 3.x·husky 9·lint-staged VERIFIED | freshness-auditor + orchestrator (skill-creator 위임분은 API 한도로 중단돼 직접 수행, 공식 소스 4건 WebFetch 재확인) |

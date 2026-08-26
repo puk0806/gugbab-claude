@@ -157,6 +157,59 @@ if is_dev_selected; then
   fi
 fi
 
+# ── 레거시 대형 프로젝트 프로파일 (dev + TypeScript 템플릿 전용) ───────
+# 테스트가 거의 없고 tsc가 느린 기존 코드베이스에 일반 dev 프로파일을 깔면
+# tdd-guard가 사실상 모든 편집을 차단하고 typescript-quality가 매 저장마다 타임아웃을 낸다.
+INCLUDE_LEGACY=false
+if is_dev_selected && is_ts_selected; then
+  echo ""
+  echo "레거시 대형 프로젝트 프로파일을 적용하시겠습니까?"
+  echo "  - tdd-guard 제외 (테스트 파일 없는 소스 편집 차단 해제)"
+  echo "  - typescript-quality --changed-only (증분 컴파일 + 방금 저장한 파일의 에러만 차단, 타임아웃 180s)"
+  echo "  - 대상: 소스 수천 개·테스트 수십 개, tsc --noEmit 30초 초과인 기존 프로젝트"
+  if ask_yn "  적용 (y/N): "; then
+    INCLUDE_LEGACY=true
+  fi
+fi
+
+# ── 프론트엔드 SEO·GEO 스킬 (react-spa·nextjs 템플릿 전용) ────────────
+# 검색 노출이 목적이 아닌 사내 어드민·커머스 백오피스에는 SEO 계열 20종이 노이즈다.
+INCLUDE_SEO=true   # true=전체 / commerce=커머스 프로파일 / false=제외
+if has_template "react-spa" || has_template "nextjs"; then
+  echo ""
+  echo "SEO·GEO 스킬(sitemap·robots·JSON-LD·네이버·카카오·GEO 등 20종 + writing 4종)을 어떻게 포함할까요?"
+  echo "  n — 제외 (로그인 뒤의 어드민·백오피스·사내 도구)"
+  echo "  c — 커머스·서비스 사이트 프로파일 (상품·카테고리·검색·카카오·네이버·GEO 중심. 로컬비즈니스·다국어·YMYL·VPAT·사이트 이전·Indexing API 제외)"
+  echo "  y — 전체 (블로그·미디어·다국어·로컬 비즈니스까지)"
+  while true; do
+    read -rp "  선택 (y/c/N): " _seo_ans
+    case "$_seo_ans" in
+      y|Y)    INCLUDE_SEO=true; break ;;
+      c|C)    INCLUDE_SEO=commerce; break ;;
+      n|N|"") INCLUDE_SEO=false; break ;;
+      *)      echo "  y, c 또는 n을 입력하세요. (엔터 = n)" ;;
+    esac
+  done
+fi
+
+# ── 스킬·에이전트 작성 도구 (전 템플릿, util 제외) ───────────────────────
+# 대상 프로젝트에서 자산을 직접 만들지 않으면 작성 규칙 5종(agent-design·creation-workflow·verification-policy·
+# commands·readme-update ≈ 세션당 6k 토큰)과 작성 에이전트 3종이 순수 노이즈다. 기본 n.
+INCLUDE_AUTHORING=false
+if ! is_util_only; then
+  echo ""
+  echo "이 프로젝트 안에서 스킬·에이전트를 직접 작성·검증할 계획이 있습니까?"
+  echo "  - y: 작성 규칙 5종 + agent-creator·skill-creator·skill-tester 포함"
+  echo "  - n: 제외 (자산은 원본 레포에서 만들고 export만 하는 경우 — 세션당 약 6k 토큰 절약)"
+  if ask_yn "  포함 (y/N): "; then
+    INCLUDE_AUTHORING=true
+  fi
+fi
+# 옵션 파생 제외 목록 — 에이전트·rules 루프보다 앞에 있어야 한다 (2026-08-26: 스킬 섹션에 두었다가 빈 배열로 평가되던 버그)
+SEO_AGENTS=("validation/seo-auditor.md" "validation/content-quality-reviewer.md")
+AUTHORING_AGENTS=("meta/agent-creator.md" "meta/skill-creator.md" "meta/skill-tester.md" "CLAUDE.md")
+AUTHORING_RULES=("agent-design.md" "creation-workflow.md" "verification-policy.md" "commands.md" "readme-update.md")
+
 # ── README 미업데이트 커밋 차단 (readme-guard) ─────────────────────────
 INCLUDE_README_GUARD=false
 if ! is_util_only; then
@@ -197,6 +250,9 @@ echo "템플릿: $TEMPLATE_DISPLAY"
 echo "memory 공유: $INCLUDE_MEMORY"
 echo "Superpowers: $INCLUDE_SUPERPOWERS"
 echo "Codex 리뷰: $INCLUDE_CODEX"
+echo "레거시 프로파일: $INCLUDE_LEGACY"
+echo "SEO 스킬: $INCLUDE_SEO"
+echo "작성 도구: $INCLUDE_AUTHORING"
 echo "README guard: $INCLUDE_README_GUARD"
 echo "Staleness guard: $INCLUDE_STALENESS_GUARD"
 echo "Branch protection: $INCLUDE_BRANCH_PROTECTION"
@@ -222,6 +278,8 @@ if [ -d "$TARGET/.claude" ]; then
   [ "$INCLUDE_README_GUARD" = "true" ]      && CLEANUP_KEEP="$CLEANUP_KEEP --keep-readme-guard"
   [ "$INCLUDE_STALENESS_GUARD" = "true" ]   && CLEANUP_KEEP="$CLEANUP_KEEP --keep-staleness-strict"
   is_dev_selected                            && CLEANUP_KEEP="$CLEANUP_KEEP --keep-dev"
+  [ "$INCLUDE_LEGACY" = "true" ]            && CLEANUP_KEEP="$CLEANUP_KEEP --legacy"
+  [ "$INCLUDE_AUTHORING" = "true" ]         && CLEANUP_KEEP="$CLEANUP_KEEP --keep-authoring"
   is_ts_selected                             && CLEANUP_KEEP="$CLEANUP_KEEP --keep-typescript"
 
   # 매니페스트가 없는 구버전 설치 → 1회 확인 후 소스에 없는 스킬·에이전트·폐지 훅 일괄 정리.
@@ -295,7 +353,12 @@ HOOKS_BRANCH_SET=("branch-protection.js")
 HOOKS=("${HOOKS_COMMON[@]}")
 
 if is_dev_selected; then
-  HOOKS+=("${HOOKS_DEV_ONLY[@]}")
+  if [ "$INCLUDE_LEGACY" = "true" ]; then
+    # 레거시 프로파일: tdd-guard 제외
+    for _h in "${HOOKS_DEV_ONLY[@]}"; do [ "$_h" != "tdd-guard.js" ] && HOOKS+=("$_h"); done
+  else
+    HOOKS+=("${HOOKS_DEV_ONLY[@]}")
+  fi
 fi
 
 if is_ts_selected; then
@@ -383,6 +446,7 @@ ACADEMIC_AGENTS=(
 DREAM_APP_AGENTS=(
   "frontend/frontend-developer.md"
   "frontend/frontend-architect.md"
+  "domain/frontend-domain-refactorer.md"
   "backend/python-backend-developer.md"
   "backend/python-backend-architect.md"
   "backend/database-architect.md"
@@ -446,17 +510,20 @@ EXCLUDE_AGENTS_FRONTEND=(
   "backend/python-backend-developer.md"
   "backend/python-backend-architect.md"
   "backend/database-architect.md"
-  "backend/build-error-resolver.md"
+  # build-error-resolver 는 tsc·Vite/webpack 에러도 담당하므로 프론트 템플릿에 포함한다
+  # (2026-08-26: 도메인 리팩터링 중 import 경로 깨짐 → tsc 에러 대량 발생 시 필요)
 )
 EXCLUDE_AGENTS_RUST=(
   "frontend/frontend-developer.md"
   "frontend/frontend-architect.md"
+  "domain/frontend-domain-refactorer.md"
   "backend/java-backend-developer.md"
   "backend/java-backend-architect.md"
 )
 EXCLUDE_AGENTS_JAVA=(
   "frontend/frontend-developer.md"
   "frontend/frontend-architect.md"
+  "domain/frontend-domain-refactorer.md"
   "backend/rust-backend-developer.md"
   "backend/rust-backend-architect.md"
   "backend/build-error-resolver.md"
@@ -464,6 +531,7 @@ EXCLUDE_AGENTS_JAVA=(
 EXCLUDE_AGENTS_GAME=(
   "frontend/frontend-developer.md"
   "frontend/frontend-architect.md"
+  "domain/frontend-domain-refactorer.md"
   "backend/rust-backend-developer.md"
   "backend/rust-backend-architect.md"
   "backend/java-backend-developer.md"
@@ -515,9 +583,19 @@ _agent_ok_for_tmpl() {
   return 0
 }
 
+# 옵션 파생 제외 (템플릿과 무관) — 재설치 시 정리 대상이 되도록 목록에도 기록
+OPTION_EXCLUDED_TMP=$(mktemp)
+_option_excluded_agent() {
+  local rel="$1"
+  [ "$INCLUDE_SEO" = "false" ]       && is_in_list "$rel" "${SEO_AGENTS[@]}"       && return 0
+  [ "$INCLUDE_AUTHORING" = "false" ] && is_in_list "$rel" "${AUTHORING_AGENTS[@]}" && return 0
+  return 1
+}
+
 # 선택된 템플릿 중 하나라도 포함하면 포함 (union)
 should_include_agent() {
   local rel="$1"
+  if _option_excluded_agent "$rel"; then echo "agents|$rel" >> "$OPTION_EXCLUDED_TMP"; return 1; fi
   for _tmpl in "${TEMPLATES[@]}"; do
     _agent_ok_for_tmpl "$rel" "$_tmpl" && return 0
   done
@@ -607,6 +685,7 @@ should_include_rule() {
   local name="$1"
   [ "$name" = "memory-sync.md" ]  && { [ "$INCLUDE_MEMORY" = "true" ] && return 0 || return 1; }
   [ "$name" = "codex-review.md" ] && { [ "$INCLUDE_CODEX" = "true" ]  && return 0 || return 1; }
+  [ "$INCLUDE_AUTHORING" = "false" ] && is_in_list "$name" "${AUTHORING_RULES[@]}" && return 1
   for _tmpl in "${TEMPLATES[@]}"; do
     _rule_ok_for_tmpl "$name" "$_tmpl" && return 0
   done
@@ -614,12 +693,14 @@ should_include_rule() {
 }
 
 mkdir -p "$TARGET/.claude/rules"
+MANIFEST_RULES_TMP=$(mktemp)
 for rule in "$REPO_DIR/.claude/rules"/*.md; do
   [ -f "$rule" ] || continue
   name="$(basename "$rule")"
   if ! should_include_rule "$name"; then continue; fi
   if cp -f "$rule" "$TARGET/.claude/rules/$name" 2>/dev/null; then
     echo "  → .claude/rules/$name"
+    echo "$name" >> "$MANIFEST_RULES_TMP"
   else
     echo "  ✗ .claude/rules/$name (복사 실패)"
   fi
@@ -629,8 +710,16 @@ done
 echo ""
 echo "[skills]"
 
-# skills/CLAUDE.md (스킬 작업 시 creation-workflow, info-verification 자동 로드)
-if [ -f "$REPO_DIR/.claude/skills/CLAUDE.md" ]; then
+# skills/CLAUDE.md (스킬 작업 시 creation-workflow, info-verification 자동 로드) — 작성 도구 선택 시에만.
+# 선택 해제 재설치면 이전 설치분을 정리하되, 소스와 동일(미수정)할 때만 삭제한다 (매니페스트 비대상 파일이라 cmp로 소유 증명)
+if [ "$INCLUDE_AUTHORING" = "false" ] && [ -f "$TARGET/.claude/skills/CLAUDE.md" ]; then
+  if cmp -s "$REPO_DIR/.claude/skills/CLAUDE.md" "$TARGET/.claude/skills/CLAUDE.md"; then
+    rm -f "$TARGET/.claude/skills/CLAUDE.md" && echo "  [prune] 작성 도구 제외로 삭제: .claude/skills/CLAUDE.md"
+  else
+    echo "  ⚠ .claude/skills/CLAUDE.md 가 소스와 달라 보존합니다 (로컬 수정본?)"
+  fi
+fi
+if [ "$INCLUDE_AUTHORING" = "true" ] && [ -f "$REPO_DIR/.claude/skills/CLAUDE.md" ]; then
   mkdir -p "$TARGET/.claude/skills"
   if cp -f "$REPO_DIR/.claude/skills/CLAUDE.md" "$TARGET/.claude/skills/CLAUDE.md" 2>/dev/null; then
     echo "  → .claude/skills/CLAUDE.md"
@@ -662,10 +751,110 @@ DREAM_HUMANITIES_SKILLS=(
 
 # dream-interpretation 전용 meta 스킬
 DREAM_META_SKILLS=(
-  "meta/dream-interpretation-ab-testing-prompts"
+  "meta/dream-app-ab-testing-prompts"   # 2026-08-26: 실제 폴더명으로 정정 (구 dream-interpretation-ab-testing-prompts — 오타로 제외가 안 되고 있었음)
   "meta/dream-interpretation-prompt-engineering"
   "meta/dream-safety-classifier-prompts"
 )
+
+# dream-interpretation 전용 architecture 스킬
+DREAM_ARCH_SKILLS=("architecture/dream-journal-data-modeling")
+
+# n8n 자동화 스킬 — LLM 워크플로우 템플릿(health·dream)과 백엔드에서만. 프론트(react-spa·nextjs)에는 노이즈 (2026-08-26)
+N8N_SKILLS=(
+  "devops/n8n-error-handling"
+  "devops/n8n-llm-integration"
+  "devops/n8n-self-hosting"
+  "devops/n8n-webhook-patterns"
+  "devops/n8n-workflow-design"
+)
+
+# SEO 옵트아웃 시 함께 빠지는 devops 스킬 (에이전트·규칙 목록은 옵션 질문 직후에 정의 — 에이전트·rules 루프가 먼저 돈다)
+SEO_DEVOPS_SKILLS=("devops/site-migration-seo")
+
+# 커머스 프로파일(INCLUDE_SEO=commerce)에서 제외 — 상품·서비스 사이트에 무관한 SEO 스킬 (2026-08-26)
+# google-indexing-api 는 공식적으로 JobPosting·BroadcastEvent 전용이라 상품 페이지에 쓰면 오남용
+SEO_NONCOMMERCE_SKILLS=(
+  "frontend/local-business-seo"
+  "frontend/i18n-seo"
+  "frontend/google-indexing-api"
+  "frontend/seo-monitoring-automation"
+  "writing/ymyl-content-seo"
+  "writing/multilingual-content-strategy"
+  "writing/accessibility-vpat-writing"
+  "devops/site-migration-seo"
+)
+
+# 프레임워크별 SEO 구현 스킬 — 템플릿과 맞지 않는 것은 프로파일과 무관하게 제외 (react-spa 에 seo-nextjs 가 딸려가던 노이즈)
+_seo_framework_skill_ok() {
+  local prefix="$1" tmpl="$2"
+  case "$prefix" in
+    frontend/seo-nextjs)      [ "$tmpl" = "nextjs" ] ;;
+    frontend/seo-vite-spa)    [ "$tmpl" = "react-spa" ] || [ "$tmpl" = "health" ] ;;
+    frontend/seo-static-html) return 1 ;;
+    *) return 0 ;;
+  esac
+}
+
+is_in_skill_list() { local p="$1"; shift; for s in "$@"; do [[ "$p" == "$s" ]] && return 0; done; return 1; }
+
+# dream-interpretation 전용 frontend 스킬 — react-spa·nextjs·health 템플릿에서 제외 (2026-08-26)
+# (꿈 일기 앱의 UI·음성·SRS·LLM 채팅 기능. 일반 프론트 프로젝트에는 노이즈)
+DREAM_FRONTEND_SKILLS=(
+  "frontend/dream-app-onboarding"
+  "frontend/dream-export-import"
+  "frontend/dream-image-generation"
+  "frontend/dream-privacy-consent-ui"
+  "frontend/dream-recurrence-detection"
+  "frontend/dream-sharing-anonymized"
+  "frontend/dream-statistics-visualization"
+  "frontend/dream-symbol-tagging"
+  "frontend/emotion-tagging-input"
+  "frontend/srs-spaced-repetition"
+  "frontend/voice-input-ui"
+  "frontend/web-speech-api-stt"
+  "frontend/web-speech-api-tts"
+  "frontend/whisper-api-integration"
+  "frontend/media-recorder-api"
+  "frontend/pwa-offline-llm-fallback"
+  "frontend/chat-ui-pattern"
+  "frontend/claude-api-streaming-frontend"
+)
+
+# SEO·GEO 계열 frontend 스킬 — INCLUDE_SEO=false 면 react-spa·nextjs에서 제외 (2026-08-26)
+SEO_FRONTEND_SKILLS=(
+  "frontend/bot-management-seo"
+  "frontend/ecommerce-seo"
+  "frontend/geo-ai-discoverability"
+  "frontend/google-indexing-api"
+  "frontend/i18n-seo"
+  "frontend/image-optimization-seo"
+  "frontend/kakao-share-optimization"
+  "frontend/local-business-seo"
+  "frontend/mobile-seo-pwa"
+  "frontend/naver-seo-specifics"
+  "frontend/og-image-generation"
+  "frontend/schema-org-patterns"
+  "frontend/search-console-webmaster"
+  "frontend/security-headers-seo"
+  "frontend/seo-monitoring-automation"
+  "frontend/seo-nextjs"
+  "frontend/seo-static-html"
+  "frontend/seo-vite-spa"
+  "frontend/structured-data-validation-api"
+  "frontend/url-canonicalization-redirects"
+)
+
+is_dream_frontend() {
+  local prefix="$1"
+  for s in "${DREAM_FRONTEND_SKILLS[@]}"; do [[ "$prefix" == "$s" ]] && return 0; done
+  return 1
+}
+
+is_seo_frontend() {
+  local prefix="$1"
+  for s in "${SEO_FRONTEND_SKILLS[@]}"; do [[ "$prefix" == "$s" ]] && return 0; done
+  return 1
+}
 
 is_seo_writing() {
   local prefix="$1"
@@ -756,6 +945,24 @@ _skill_ok_for_tmpl() {
     [[ "$skill_prefix" == "backend/claude-code-headless" ]] && return 0
     [[ "$rel" == backend/* || "$rel" == game/* || "$rel" == humanities/* ||
        "$rel" == education/* || "$rel" == research/* ]] && return 1
+    # 꿈 일기 앱 전용 스킬(frontend 18·meta 3·architecture 1)은 dream-interpretation 템플릿에서만
+    [[ "$rel" == frontend/* ]] && is_dream_frontend "$skill_prefix" && return 1
+    [[ "$rel" == meta/* ]] && is_dream_meta "$skill_prefix" && return 1
+    is_in_skill_list "$skill_prefix" "${DREAM_ARCH_SKILLS[@]}" && return 1
+    # n8n 자동화는 프론트 템플릿(react-spa·nextjs)에 노이즈 — health 는 LLM 워크플로우가 있어 유지
+    [[ "$tmpl" != "health" ]] && is_in_skill_list "$skill_prefix" "${N8N_SKILLS[@]}" && return 1
+    # SEO 계열은 사용자가 n 을 고르면 제외 (writing 4종·devops 1종 포함)
+    if [ "$INCLUDE_SEO" = "false" ]; then
+      [[ "$rel" == frontend/* ]] && is_seo_frontend "$skill_prefix" && return 1
+      [[ "$rel" == writing/* ]] && return 1
+      is_in_skill_list "$skill_prefix" "${SEO_DEVOPS_SKILLS[@]}" && return 1
+    fi
+    # 커머스 프로파일 — 무관 SEO 8종 제외
+    if [ "$INCLUDE_SEO" = "commerce" ]; then
+      is_in_skill_list "$skill_prefix" "${SEO_NONCOMMERCE_SKILLS[@]}" && return 1
+    fi
+    # 프레임워크에 안 맞는 SEO 구현 스킬 제외 (프로파일 무관)
+    _seo_framework_skill_ok "$skill_prefix" "$tmpl" || return 1
     [[ "$rel" == writing/* ]] && ! is_seo_writing "$skill_prefix" && return 1
     return 0
   fi
@@ -806,6 +1013,11 @@ for src_path in "$REPO_DIR/.claude/skills"/*/*/SKILL.md; do
   skill_prefix="${rel%/SKILL.md}"   # backend/foo
 
   if ! should_include_skill "$rel" "$skill_prefix"; then
+    # 이번 템플릿 범위인데 옵션(SEO n)·전용 스킬 누출 차단으로 빠진 것은 재설치 정리 목록에 기록
+    if is_ts_selected && { is_seo_frontend "$skill_prefix" || is_dream_frontend "$skill_prefix" || is_dream_meta "$skill_prefix" ||
+         is_in_skill_list "$skill_prefix" "${DREAM_ARCH_SKILLS[@]}" "${N8N_SKILLS[@]}" "${SEO_DEVOPS_SKILLS[@]}" "${SEO_WRITING_SKILLS[@]}" "${SEO_NONCOMMERCE_SKILLS[@]}"; }; then
+      echo "skills|$rel" >> "$OPTION_EXCLUDED_TMP"
+    fi
     echo "  skip .claude/skills/$rel" && continue
   fi
 
@@ -828,6 +1040,30 @@ for src_path in "$REPO_DIR/.claude/skills"/*/*/SKILL.md; do
     fi
   else
     echo "  ✗ .claude/skills/$rel (복사 실패)"
+  fi
+done
+
+# ── 4.5 commands (슬래시 커맨드) ──────────────────────────────────────────
+# 그동안 export 대상에서 빠져 있었다 (2026-08-26 추가). /commit·/create-pr 등은 rules/git.md 와
+# 짝이라 규칙만 가고 커맨드가 없으면 반쪽이다. util 은 git 계열만, codex-review 는 Codex 선택 시만.
+echo ""
+echo "[commands]"
+COMMANDS_UTIL=("commit.md" "create-pr.md" "context-prime.md")
+COMMANDS_DEV=("create-plan.md" "fix-pr.md" "update-docs.md" "tdd-implement.md" "agent-status.md" "sparc-refine.md")
+COMMANDS=("${COMMANDS_UTIL[@]}")
+is_util_only || COMMANDS+=("${COMMANDS_DEV[@]}")
+[ "$INCLUDE_CODEX" = "true" ] && COMMANDS+=("codex-review.md")
+# 레거시 프로파일에서 /tdd-implement 는 tdd-guard 없이도 동작하지만 강제 흐름이 아니라 안내용으로 남긴다
+mkdir -p "$TARGET/.claude/commands"
+MANIFEST_COMMANDS_TMP=$(mktemp)
+for cmd in "${COMMANDS[@]}"; do
+  if [ -f "$REPO_DIR/.claude/commands/$cmd" ]; then
+    if cp -f "$REPO_DIR/.claude/commands/$cmd" "$TARGET/.claude/commands/$cmd" 2>/dev/null; then
+      echo "  → .claude/commands/$cmd"
+      echo "$cmd" >> "$MANIFEST_COMMANDS_TMP"
+    else
+      echo "  ✗ .claude/commands/$cmd (복사 실패)"
+    fi
   fi
 done
 
@@ -895,6 +1131,7 @@ if [ ! -f "$SETTINGS_FILE" ] || ([ -f "$SETTINGS_FILE" ] && [ "$OVERWRITE_SETTIN
   is_dev_selected && GEN_FLAGS="$GEN_FLAGS --dev"
   # --typescript: TypeScript 템플릿 하나라도 포함 시
   is_ts_selected && GEN_FLAGS="$GEN_FLAGS --typescript"
+  [ "$INCLUDE_LEGACY" = "true" ]      && GEN_FLAGS="$GEN_FLAGS --legacy"
   [ "$INCLUDE_MEMORY" = "true" ]      && GEN_FLAGS="$GEN_FLAGS --memory"
   [ "$INCLUDE_SUPERPOWERS" = "true" ] && GEN_FLAGS="$GEN_FLAGS --superpowers"
   [ "$INCLUDE_CODEX" = "true" ]       && GEN_FLAGS="$GEN_FLAGS --codex"
@@ -904,6 +1141,7 @@ if [ ! -f "$SETTINGS_FILE" ] || ([ -f "$SETTINGS_FILE" ] && [ "$OVERWRITE_SETTIN
 
   if node "$REPO_DIR/scripts/gen-settings.js" $GEN_FLAGS > "$SETTINGS_FILE" 2>/dev/null; then
     _SUFFIX=""
+    [ "$INCLUDE_LEGACY" = "true" ]      && _SUFFIX="$_SUFFIX +legacy"
     [ "$INCLUDE_MEMORY" = "true" ]      && _SUFFIX="$_SUFFIX +memory"
     [ "$INCLUDE_SUPERPOWERS" = "true" ] && _SUFFIX="$_SUFFIX +superpowers"
     [ "$INCLUDE_CODEX" = "true" ]       && _SUFFIX="$_SUFFIX +codex"
@@ -1016,10 +1254,50 @@ fi
 # 설치 시점 sha256을 함께 기록한다. 재설치 시 cleanup이 이 목록으로 "설치 관리 파일 vs
 # 커스텀"을 추측 없이 판별하고, 해시가 일치하는(=손대지 않은) 파일만 폐기 삭제한다.
 # memoryManaged는 옵션값이 기본이되 memory 이전 미완 시 유지된다 — 상세: scripts/write-install-manifest.js
+# 옵션 제외분 정리 — 이전 설치가 복사했지만 이번에 옵션(SEO n·작성 도구 n)이나 전용 스킬 차단으로 빠진 파일을
+# 매니페스트 소유 증명(기록+해시 일치) 하에 삭제한다. 다른 템플릿 자산은 목록에 없으므로 건드리지 않는다.
+if [ -s "$OPTION_EXCLUDED_TMP" ]; then
+  echo ""
+  echo "[옵션 제외 정리]"
+  node "$REPO_DIR/scripts/prune-option-excluded.js" "$TARGET" "$OPTION_EXCLUDED_TMP" || echo "  ⚠ 옵션 제외 정리 실패 — 잔재는 다음 재설치에서 재시도"
+fi
+rm -f "$OPTION_EXCLUDED_TMP"
+
 node "$REPO_DIR/scripts/write-install-manifest.js" \
-  "$TARGET" "$MANIFEST_AGENTS_TMP" "$MANIFEST_SKILLS_TMP" "$INCLUDE_MEMORY" "$MANIFEST_HOOKS_TMP" || \
+  "$TARGET" "$MANIFEST_AGENTS_TMP" "$MANIFEST_SKILLS_TMP" "$INCLUDE_MEMORY" "$MANIFEST_HOOKS_TMP" "$MANIFEST_COMMANDS_TMP" "$MANIFEST_RULES_TMP" || \
   echo "  ⚠ 매니페스트 저장 실패 — 다음 재설치 시 잔재 확인 질문이 다시 표시됩니다"
-rm -f "$MANIFEST_AGENTS_TMP" "$MANIFEST_SKILLS_TMP" "$MANIFEST_HOOKS_TMP"
+rm -f "$MANIFEST_AGENTS_TMP" "$MANIFEST_SKILLS_TMP" "$MANIFEST_HOOKS_TMP" "$MANIFEST_COMMANDS_TMP" "$MANIFEST_RULES_TMP"
+
+# ── 레거시 프로파일: typescript-quality 베이스라인 시드 ─────────────────
+# --changed-only 는 "직전 통과 시점의 에러 집합"과 비교해 새 에러만 차단한다. 베이스라인이 없는 첫 저장은
+# 편집 파일의 에러로만 판정할 수밖에 없어 다른 파일의 회귀를 한 번 놓칠 수 있으므로 지금 만들어 둔다.
+if [ "$INCLUDE_LEGACY" = "true" ] && [ -f "$TARGET/.claude/hooks/typescript-quality.js" ]; then
+  echo ""
+  echo "[typescript-quality 베이스라인]"
+  # 훅은 편집 파일에서 가장 가까운 tsconfig 디렉토리를 프로젝트 루트로 삼는다. 루트 tsconfig 가 있어도 패키지마다
+  # 자체 tsconfig 가 있는 모노레포가 흔하므로 **루트 + 중첩 패키지(깊이 2~3) 전부**를 시드한다
+  # (2026-08-26 Codex 리뷰: 루트만 시드하면 패키지 안 첫 저장에서 소비자 회귀 공백이 다시 열린다).
+  _TS_ROOTS=()
+  [ -f "$TARGET/tsconfig.json" ] && _TS_ROOTS+=("$TARGET")
+  while IFS= read -r _f; do _TS_ROOTS+=("$(dirname "$_f")"); done < <(
+    find "$TARGET" -mindepth 2 -maxdepth 3 -name tsconfig.json -not -path '*/node_modules/*' -not -path '*/.claude/*' 2>/dev/null | sort)
+  if [ "${#_TS_ROOTS[@]}" -gt 0 ]; then
+    echo "  레거시 프로파일은 기존 TS 에러 집합(베이스라인)을 기준으로 새 에러만 차단합니다."
+    echo "  tsconfig.json 을 가진 루트 ${#_TS_ROOTS[@]}개를 각각 tsc --noEmit 1회로 시드하면 첫 저장부터 다른 파일의 회귀도 잡힙니다:"
+    for _d in "${_TS_ROOTS[@]}"; do echo "     - ${_d#$TARGET}"; done | sed 's|^     - $|     - (루트)|; s|^     - /|     - |'
+    echo "  (대형 프로젝트는 수 분 걸릴 수 있음. 건너뛰면 각 루트의 첫 저장 때 자동 생성되며, 그 한 번은 편집 파일만 판정)"
+    if ask_yn "  지금 실행 (y/N): "; then
+      for _d in "${_TS_ROOTS[@]}"; do
+        echo "  → ${_d#$TARGET/}"
+        node "$TARGET/.claude/hooks/typescript-quality.js" --seed --project "$_d" || \
+          echo "  ⚠ ${_d#$TARGET/} 베이스라인 생성 실패 — 나중에 직접: node .claude/hooks/typescript-quality.js --seed --project ${_d#$TARGET/}"
+      done
+    fi
+  else
+    echo "  ℹ tsconfig.json 을 찾지 못했습니다. TS 패키지에서 직접 실행하세요:"
+    echo "     node .claude/hooks/typescript-quality.js --seed --project <tsconfig 디렉토리>"
+  fi
+fi
 
 # ── 완료 ─────────────────────────────────────────────────────────────
 echo ""

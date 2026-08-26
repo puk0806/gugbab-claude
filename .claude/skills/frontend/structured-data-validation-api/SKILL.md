@@ -16,7 +16,7 @@ description: JSON-LD/Schema.org 구조화 데이터를 자동화 검증하기 �
 > - Next.js JSON-LD 가이드 — https://nextjs.org/docs/app/guides/json-ld
 > - iaincollins/structured-data-testing-tool — https://github.com/iaincollins/structured-data-testing-tool
 >
-> 검증일: 2026-06-02
+> 검증일: 2026-08-26 (최초 2026-06-02 · 08-26 freshness 재검증: FAQ rich result 3단계 폐지 타임라인(05-07 노출 중단·06 RRT 제거·08 API 제거)·RRT/SMV 공식 API 부재·URL Inspection API 유일 자동화 경로 전부 VERIFIED, 변경 없음)
 
 이 스킬은 *작성된* JSON-LD 마크업을 자동으로 검증하는 도구·API·CI 패턴을 다룬다.
 JSON-LD를 *어떻게 작성하는가*(카탈로그)는 별도 스킬 `frontend/schema-org-patterns`를 참조하라.

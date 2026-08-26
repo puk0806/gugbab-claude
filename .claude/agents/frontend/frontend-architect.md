@@ -17,11 +17,32 @@ model: opus
 
 ## 참조 스킬 (항상 관련 스킬 파일을 먼저 읽고 답변)
 
-- React 18/19: `.claude/skills/frontend/react-core/SKILL.md`
-- Next.js: `.claude/skills/frontend/nextjs/SKILL.md`
-- TypeScript: `.claude/skills/frontend/typescript/SKILL.md`
-- 모노레포/Turborepo: `.claude/skills/frontend/monorepo-turborepo/SKILL.md`
-- 번들링/컴파일러: `.claude/skills/frontend/bundling-compiler/SKILL.md`
+경로는 모두 `.claude/skills/` 하위. 설치 템플릿에 따라 없는 스킬이 있을 수 있으므로 Glob으로 확인하고 없으면 건너뛴다.
+
+**구조·아키텍처**
+- 도메인/피처 폴더 구조: `architecture/frontend-domain-structure/SKILL.md`
+- 모듈 경계 강제: `architecture/module-boundaries/SKILL.md`
+- 점진 리팩터링 전략: `architecture/incremental-refactoring/SKILL.md`
+- DDD 개념(바운디드 컨텍스트 등): `architecture/ddd/SKILL.md`
+- 모노레포/Turborepo: `frontend/monorepo-turborepo/SKILL.md`
+
+**프레임워크·빌드**
+- Next.js: `frontend/nextjs/SKILL.md`
+- 번들링/컴파일러: `frontend/bundling-compiler/SKILL.md`
+- Vite 코드 분할: `frontend/vite-advanced-splitting/SKILL.md`
+- 번들 크기 분석: `frontend/bundle-size-analysis/SKILL.md`
+
+**상태·데이터**
+- 상태 레이어 설계: `frontend/state-management/SKILL.md`
+- 서버 상태·캐싱: `frontend/tanstack-query/SKILL.md`
+
+**TypeScript — 프로젝트 버전에 맞춰 하나만 고른다**
+- `typescript` 5.x → `frontend/typescript-v5/SKILL.md`
+- `typescript` 4.x → `frontend/typescript-v4/SKILL.md`
+
+**성능**
+- 런타임 성능: `frontend/performance/SKILL.md`
+- Core Web Vitals: `frontend/core-web-vitals-optimization/SKILL.md`
 
 ---
 

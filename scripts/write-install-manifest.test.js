@@ -45,12 +45,15 @@ const listFile = (dir, rels) => {
   return f;
 };
 
-const run = (target, agentsRels, skillsRels, mem, hooksRels = []) => {
+const run = (target, agentsRels, skillsRels, mem, hooksRels = [], commandsRels = null, rulesRels = null) => {
   const scratch = tmp('lists');
-  const r = spawnSync('node', [
+  const args = [
     SCRIPT, target, listFile(scratch, agentsRels), listFile(scratch, skillsRels), mem,
     listFile(scratch, hooksRels),
-  ], { encoding: 'utf8' });
+  ];
+  if (commandsRels !== null) args.push(listFile(scratch, commandsRels));
+  if (rulesRels !== null) args.push(listFile(scratch, rulesRels));
+  const r = spawnSync('node', args, { encoding: 'utf8' });
   return { code: r.status, out: `${r.stdout}\n${r.stderr}` };
 };
 
@@ -201,6 +204,71 @@ console.log('\n[악성 방어] 이월 훅이 로컬 수정돼도 해시 재계�
   const m = readManifest(tgt);
   assert('이월 훅 유지', m.hooks, ['bash-guard.js']);
   assert('설치 시점 해시 보존', m.hashes.hooks['bash-guard.js'], originalHash);
+}
+
+console.log('\n[정상] commands 목록 기록 (2026-08-26) — 해시 포함, 이전 매니페스트 이월, 인자 생략 시 빈 배열');
+{
+  const tgt = makeTarget(tmp('tgt'), {});
+  const cmdDir = path.join(tgt, '.claude', 'commands');
+  fs.mkdirSync(cmdDir, { recursive: true });
+  fs.writeFileSync(path.join(cmdDir, 'commit.md'), '# commit\n');
+  fs.writeFileSync(path.join(cmdDir, 'codex-review.md'), '# codex\n');
+  run(tgt, [], [], 'false', [], ['commit.md', 'codex-review.md']);
+  let m = readManifest(tgt);
+  assert('commands 2건 기록(정렬)', JSON.stringify(m.commands), JSON.stringify(['codex-review.md', 'commit.md']));
+  assert('commands 해시 기록', m.hashes.commands['commit.md'], sha256('# commit\n'));
+  // 사용자가 commit.md 를 수정한 뒤 재설치(commit.md 미복사, codex-review 만 재복사) → 이월 항목 해시는 설치 시점 값 유지
+  fs.writeFileSync(path.join(cmdDir, 'commit.md'), '# commit (local edit)\n');
+  run(tgt, [], [], 'false', [], ['codex-review.md']);
+  m = readManifest(tgt);
+  assert('이월된 commit.md 유지', m.commands.includes('commit.md'), true);
+  assert('이월 항목은 재해싱하지 않음(설치 원본 해시 보존)', m.hashes.commands['commit.md'], sha256('# commit\n'));
+  // 파일이 사라진 이월 항목은 제거
+  fs.unlinkSync(path.join(cmdDir, 'codex-review.md'));
+  run(tgt, [], [], 'false', [], []);
+  m = readManifest(tgt);
+  assert('대상에 없는 이월 항목 제거', m.commands.includes('codex-review.md'), false);
+  // 경계: 6번째 인자 생략(구버전 호출) → commands 빈 배열, 크래시 없음
+  const { code } = run(tgt, [], [], 'false', []);
+  m = readManifest(tgt);
+  assert('인자 생략 호출도 성공', code, 0);
+  assert('인자 생략 → 기존 commands 이월(파일 존재분만)', JSON.stringify(m.commands), JSON.stringify(['commit.md']));
+}
+{
+  // 악성: 이전 매니페스트의 commands 가 배열이 아니거나 hashes.commands 가 오염돼도 크래시 없이 재생성
+  const tgt = makeTarget(tmp('tgt'), {});
+  fs.writeFileSync(path.join(tgt, '.claude', '.install-manifest.json'), JSON.stringify({
+    version: 1, agents: [], skills: [], hooks: [], commands: 'evil', hashes: { commands: 42 },
+  }));
+  const { code } = run(tgt, [], [], 'false', [], []);
+  const m = readManifest(tgt);
+  assert('오염된 commands 필드 → 빈 배열로 복구', JSON.stringify(m.commands), '[]');
+  assert('오염된 hashes.commands → 객체로 복구', typeof m.hashes.commands, 'object');
+  assert('종료 코드 0', code, 0);
+}
+
+console.log('\n[정상] rules 목록 기록 (2026-08-26) — 해시 포함, 인자 생략 시 빈 배열, 오염 필드 복구');
+{
+  const tgt = makeTarget(tmp('tgt'), {});
+  const rd = path.join(tgt, '.claude', 'rules'); fs.mkdirSync(rd, { recursive: true });
+  fs.writeFileSync(path.join(rd, 'git.md'), '# git\n');
+  fs.writeFileSync(path.join(rd, 'agent-design.md'), '# ad\n');
+  run(tgt, [], [], 'false', [], [], ['git.md', 'agent-design.md']);
+  let m = readManifest(tgt);
+  assert('rules 2건 기록(정렬)', JSON.stringify(m.rules), JSON.stringify(['agent-design.md', 'git.md']));
+  assert('rules 해시 기록', m.hashes.rules['git.md'], sha256('# git\n'));
+  fs.writeFileSync(path.join(rd, 'git.md'), '# git edited\n');
+  run(tgt, [], [], 'false', [], [], ['agent-design.md']);
+  m = readManifest(tgt);
+  assert('이월된 git.md 는 재해싱하지 않음', m.hashes.rules['git.md'], sha256('# git\n'));
+  const { code } = run(tgt, [], [], 'false');
+  m = readManifest(tgt);
+  assert('rules 인자 생략(구버전 호출) → 이월만, 성공', code === 0 && m.rules.includes('git.md'), true);
+  fs.writeFileSync(path.join(tgt, '.claude', '.install-manifest.json'), JSON.stringify({ version: 1, rules: 'evil', hashes: { rules: [] } }));
+  run(tgt, [], [], 'false', [], [], []);
+  m = readManifest(tgt);
+  assert('오염된 rules 필드 → 빈 배열', JSON.stringify(m.rules), '[]');
+  assert('오염된 hashes.rules → 객체', typeof m.hashes.rules === 'object' && !Array.isArray(m.hashes.rules), true);
 }
 
 console.log(`\n═══ 결과: ${pass} PASS / ${fail} FAIL ═══`);

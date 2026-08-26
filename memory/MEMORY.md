@@ -22,6 +22,11 @@
 - [네이밍은 이름만으로 의미 전달](feedback_naming_clarity.md) — Group A/B/C 같은 임시 라벨 금지. dream-app→dream-interpretation처럼 목적이 드러나는 이름 사용
 - [codex review 워크플로우 제약·패턴](feedback_codex_review_workflow.md) — --uncommitted+prompt 병용 불가(v0.122.0), isLoggedIn에 2>&1 필수, Stop훅 기본 600s로 별도 timeout 불필요
 - [적대적 테스트 강제](feedback_adversarial_testing.md) — 테스트는 정상 흐름만 아니라 악성 유저 방어·이상 경로까지 필수, 테스트 통과용 하드코딩 return 금지(A안 hard block). adversarial-test-guard·fake-impl-guard 훅
+- [실시간 이벤트 정보는 유저 인증 우선 검증](feedback_live_event_info_verification.md) — 유튜브·커뮤니티 인증 먼저, 언급 부재≠불가, 검색 AI 요약은 원문 검증 전 인용 금지
+- [사진 재현은 회전 방향 먼저 확정](feedback_pdf_photo_reproduction_rotation.md) — 180°(top→bottom)와 90° CCW(top→left) 혼동 시 행·열 전치. 기존 `pdf변환/` 스크립트부터 확인
+- [수정본은 새 파일명 + 미리보기 동봉](feedback_output_revision_delivery.md) — 같은 이름 덮어쓰기 금지(뷰어가 옛 버전 표시), 레이아웃 논쟁은 좌표로 제시
+- [라이브러리 스킬은 실제 사용량 실측 후 생성](feedback_verify_usage_before_library_skill.md) — package.json 의존성≠사용. import 파일 수 두 자리 이상일 때만 전용 스킬. vanilla-extract 죽은 devDep 사례
+- [토큰 95% 소진 시 일시 정지](feedback_pause_at_95_percent_tokens.md) — 장기 작업은 병렬 가능한 것만 병렬, 잔여 5% 이하면 새 작업 금지·완료/미완 목록+재개법 보고 후 멈춤
 
 ## Project — 컨벤션 자산 인프라
 
@@ -35,7 +40,9 @@
 - [MCP 미사용 결정](project_mcp_decision.md) — WebSearch/WebFetch만 사용, 팀 이식성 우선
 - [Claude Code 설치 환경·npm SSL 우회](project_claude_install_environment.md) — 단일 nvm-global 설치(2.1.226, 2026-08-10 이중화 재해소), 업데이트 후 버전 안 바뀌면 .npm-global 중복 의심, npm tgz가 SELF_SIGNED_CERT로 막히면 curl 우회 절차 사용
 - [PDF 빈칸 뚫기 워크플로우](project_pdf_blank_workflow.md) — 반복 요청 작업(첫 건 2026-07-13 종결). 글자(char) 단위 판정·줄별 분리·침범 금지 6대 주의사항 + 검증 6종. 파일은 사용 후 삭제됨 — 재요청 시 메모리 기준 재작성, 미세 침범 개선 반영해 시작
-- [PDF 근무표 양식 생성 워크플로우](project_pdf_schedule_form_workflow.md) — 반복 요청 작업(첫 건 2026-07-15 수용). 손글씨 표 사진 → PyMuPDF 재현: A4 가로·홀/주방 8행·굵은 구분선·화목토 교대 음영. 스크립트 전문 포함(파일 삭제 후 재작성용), 행 수는 매번 질문으로 확정
+- [PDF 근무표 양식 생성 워크플로우](project_pdf_schedule_form_workflow.md) — 반복 요청 작업(2026-07-15 첫 건, 2026-08-13 재요청). 요일=상단 가로 / 홀·주방=좌측 세로 8행이 불변 조건. 스크립트 전문 포함, 재요청 시 `pdf변환/make-schedule.py` 먼저 확인
+- [프론트 도메인 리팩터링 자산 정비 (2026-08-26)](project_frontend_domain_refactor_assets_2026-08-26.md) — 타깃 2개(lfos-ui Next16 모노레포 / lf-ui Vite+React18+Recoil+MUI5+TS4.7 레거시) 스택 실측표, 깨진 스킬 참조 수리, 신규 스킬 8종+에이전트 1종, `--legacy` 훅 프로파일·SEO 옵트아웃·commands export. 작업은 레포에서만, 타깃은 export 대상
+- [PDF 재고량 표 생성 워크플로우](project_pdf_inventory_form_workflow.md) — 2026-08-13 수용. A4 세로·품목/재고량(넓게)/기타 3열·여분 3줄·한 줄 걸러 음영. 품목 15종 리스트 포함
 
 ### 자산 이력 (커밋·푸시 완료)
 

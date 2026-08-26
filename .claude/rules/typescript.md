@@ -32,6 +32,7 @@ paths:
 - 로컬 UI 상태: `useState` / `useReducer`
 - 전역 클라이언트 상태: Zustand
 - 서버 상태·캐싱: TanStack Query — `useQuery`, `useMutation` 직접 사용
+- **전환 중인 프로젝트**(예: Recoil → Zustand, Query v4 → v5 진행 중): 이미 옮긴 도메인은 목표 라이브러리, 아직 안 옮긴 도메인은 **기존 라이브러리를 그대로** 쓴다. 한 도메인 안에 두 라이브러리를 섞지 않으며, 옮기는 순서는 `frontend-domain-refactorer`의 배치 계획을 따른다
 - Context는 테마·인증 등 변경 빈도가 낮은 값에만 사용
 
 ## 임포트 순서

@@ -49,6 +49,11 @@ const keep = {
   stalenessStrict: args.includes('--keep-staleness-strict'),
   dev: args.includes('--keep-dev'),               // dev 템플릿 선택 시 (tdd 계열 훅 유지)
   typescript: args.includes('--keep-typescript'), // TS 템플릿 선택 시
+  // --legacy: dev 유지하되 tdd-guard만 제외 (레거시 대형 프로젝트 프로파일). 이전 설치가 일반 dev였다면
+  // tdd-guard 파일·배선이 남아 계속 차단하므로 독립 옵션으로 정리한다
+  legacy: args.includes('--legacy'),
+  // --keep-authoring: 이 프로젝트에서 스킬·에이전트를 직접 작성할 때만 작성 규칙 5종 유지 (2026-08-26)
+  authoring: args.includes('--keep-authoring'),
 };
 
 // ── 옵션 → 산출물 매핑 ──────────────────────────────────────────────────
@@ -59,12 +64,18 @@ const OPTION_HOOKS = {
   memory: ['memory-pull', 'memory-sync'],
   codex: ['codex-review-guard'],
   branchProtection: ['branch-protection'],
-  dev: ['tdd-guard', 'test-fake-guard', 'adversarial-test-guard', 'fake-impl-guard'],
+  // legacy 프로파일이면 tdd-guard는 dev 유지 대상에서 빠진다 → 아래 tddGuard 항목으로 독립 정리
+  dev: ['test-fake-guard', 'adversarial-test-guard', 'fake-impl-guard'],
+  tddGuard: ['tdd-guard'],
   typescript: ['typescript-quality'],
 };
+// tdd-guard 유지 조건: dev 선택 AND legacy 아님
+keep.tddGuard = keep.dev && !keep.legacy;
 const OPTION_RULES = {
   memory: ['memory-sync.md'],
   codex: ['codex-review.md'],
+  // 스킬·에이전트 *작성* 규칙 — 대상 프로젝트에서 자산을 만들지 않으면 세션마다 ~6k 토큰 노이즈
+  authoring: ['agent-design.md', 'creation-workflow.md', 'verification-policy.md', 'commands.md', 'readme-update.md'],
 };
 const OPTION_PLUGINS = {
   codex: 'codex@openai-codex',
@@ -110,10 +121,15 @@ if (fs.existsSync(manifestFile)) {
       // 설치 시점 콘텐츠 sha256 — "설치 후 손대지 않았음"의 증거. 이 해시가 현재 파일과
       // 일치할 때만 폐기 삭제를 수행한다 (로컬 수정본을 지우면 사용자 작업이 유실된다).
       hooks: new Set(Array.isArray(m.hooks) ? m.hooks : []),
+      commands: new Set(Array.isArray(m.commands) ? m.commands : []),
+      // rules 는 2026-08-26부터 기록 — 없으면(구버전) null 로 두고 소스 동일성 폴백을 쓴다
+      rules: Array.isArray(m.rules) ? new Set(m.rules) : null,
       hashes: {
         agents: (hs.agents && typeof hs.agents === 'object') ? hs.agents : {},
         skills: (hs.skills && typeof hs.skills === 'object') ? hs.skills : {},
         hooks: (hs.hooks && typeof hs.hooks === 'object') ? hs.hooks : {},
+        commands: (hs.commands && typeof hs.commands === 'object') ? hs.commands : {},
+        rules: (hs.rules && typeof hs.rules === 'object') ? hs.rules : {},
       },
       memoryManaged: m.memoryManaged === true,
     };
@@ -324,17 +340,34 @@ try {
 } catch {} // hooks 폴더 없음 — 정리할 것 없음
 
 // ── 2. rules 정리 ───────────────────────────────────────────────────────
+// 소유 증명 없이 이름만으로 지우면 대상 프로젝트가 같은 이름으로 운영하는 자체 규칙이 날아간다
+// (2026-08-26 Codex 리뷰). 증명 = 매니페스트 rules 기록 + 설치 시점 해시 일치, 또는
+// (매니페스트에 rules 기록이 없는 구버전 설치) 소스 레포의 동일 파일과 내용이 완전히 같음.
+const ruleOwned = (rule) => {
+  const full = path.join(rulesDir, rule);
+  let current = null;
+  try { current = crypto.createHash('sha256').update(fs.readFileSync(full)).digest('hex'); } catch { return false; }
+  if (manifest && manifest.rules && manifest.rules.has(rule)) {
+    return manifest.hashes.rules[rule] === current;
+  }
+  if (manifestBroken) return false;
+  // 폴백: 소스와 바이트 단위로 같으면 설치본이 손대지 않은 관리 파일
+  try {
+    const src = crypto.createHash('sha256').update(fs.readFileSync(path.join(source, '.claude', 'rules', rule))).digest('hex');
+    return src === current;
+  } catch { return false; }
+};
 for (const [opt, rules] of Object.entries(OPTION_RULES)) {
   if (keep[opt]) continue;
   if (opt === 'memory' && !memorySafe) continue; // 마이그레이션 미완 — 재시도 증거 보존
   for (const rule of rules) {
     const full = path.join(rulesDir, rule);
-    try {
-      if (fs.existsSync(full)) {
-        fs.unlinkSync(full);
-        log(`잔재 rule 삭제: ${rule}`);
-      }
-    } catch {}
+    if (!fs.existsSync(full)) continue;
+    if (!ruleOwned(rule)) {
+      warn(`rule ${rule} 은(는) 이 설치가 만든 파일이라는 증명이 없어 보존합니다 (프로젝트 자체 규칙이거나 로컬 수정본) — 불필요하면 직접 삭제하세요`);
+      continue;
+    }
+    try { fs.unlinkSync(full); log(`잔재 rule 삭제: ${rule}`); } catch {}
   }
 }
 
@@ -353,6 +386,18 @@ try {
   {
     if (settings) {
       const before = JSON.stringify(settings);
+      // 구버전 설치의 최상위 `defaultMode` 는 무효 위치 — settings 덮어쓰기를 skip 해도 올바른 위치로 옮긴다
+      // (2026-08-26 Codex 리뷰: 이 이관이 없으면 보존 경로의 기존 설치가 영원히 깨진 스키마에 남는다)
+      if (typeof settings.defaultMode === 'string') {
+        if (!settings.permissions || typeof settings.permissions !== 'object') settings.permissions = {};
+        if (typeof settings.permissions.defaultMode !== 'string') {
+          settings.permissions.defaultMode = settings.defaultMode;
+          log(`settings.json: 최상위 defaultMode("${settings.defaultMode}") → permissions.defaultMode 로 이관`);
+        } else {
+          log(`settings.json: 무효한 최상위 defaultMode 제거 (permissions.defaultMode="${settings.permissions.defaultMode}" 유지)`);
+        }
+        delete settings.defaultMode;
+      }
       // 소유 미증명으로 파일을 보존한 훅은 배선도 남긴다 (반쪽 상태 방지)
       const wiringBases = [...removeBases].filter((b) => !preservedHookBases.has(b));
       const removeRe = wiringBases.length > 0
@@ -368,6 +413,17 @@ try {
         // staleness --strict: keep 아니면 다운그레이드
         if (!keep.stalenessStrict) {
           c = c.replace(/staleness-check\.js\s+--strict/, 'staleness-check.js');
+        }
+        // typescript-quality --changed-only: 레거시 프로파일 선택 여부에 맞춰 재작성
+        // (settings 덮어쓰기 skip 시 기존 전체 검사 배선이 그대로 남던 문제 — 2026-08-26 Codex 리뷰)
+        if (keep.typescript && c.includes('typescript-quality.js')) {
+          if (keep.legacy) {
+            if (!/typescript-quality\.js\s+--changed-only/.test(c)) {
+              c = c.replace(/typescript-quality\.js/, 'typescript-quality.js --changed-only');
+            }
+          } else {
+            c = c.replace(/typescript-quality\.js\s+--changed-only/, 'typescript-quality.js');
+          }
         }
         // readme-guard 재배선 (deliverable-guard 인자 조정)
         if (c.includes('deliverable-guard.js')) {
@@ -447,12 +503,22 @@ const listRel = (root) => {
   return acc;
 };
 
-for (const kind of ['skills', 'agents']) {
+// commands 는 옵션 파생 항목이 있다 — 옵션 OFF 시 소스에 파일이 있어도 폐기 대상 (2026-08-26 Codex 리뷰:
+// /codex-review 는 Codex OFF 후에도, dev 전용 커맨드는 util 다운그레이드 후에도 남아 오도한다).
+// 삭제 판정은 아래 skills/agents 와 동일한 소유 증명 규칙(매니페스트 + 해시 일치)을 그대로 적용한다.
+const COMMANDS_DEV = ['create-plan.md', 'fix-pr.md', 'update-docs.md', 'tdd-implement.md', 'agent-status.md', 'sparc-refine.md'];
+const optionOffCommands = new Set([
+  ...(keep.codex ? [] : ['codex-review.md']),
+  ...(keep.dev ? [] : COMMANDS_DEV),
+]);
+
+for (const kind of ['skills', 'agents', 'commands']) {
   const srcRoot = path.join(source, '.claude', kind);
   const tgtRoot = path.join(target, '.claude', kind);
   if (!fs.existsSync(tgtRoot)) continue;
   const srcSet = new Set(listRel(srcRoot));
-  const orphans = listRel(tgtRoot).filter((rel) => !srcSet.has(rel));
+  const orphans = listRel(tgtRoot).filter((rel) =>
+    !srcSet.has(rel) || (kind === 'commands' && optionOffCommands.has(rel)));
   if (orphans.length === 0) continue;
 
   // 삭제 판정 — 안전한 쪽으로만:
@@ -498,6 +564,27 @@ for (const kind of ['skills', 'agents']) {
     warn(`소스 레포에 없는 ${kind} ${unknown.length}건 발견 — 커스텀 파일 또는 미확인 잔재. 자동 삭제하지 않으니 직접 확인하세요:`);
     for (const rel of unknown) console.log(`      - .claude/${kind}/${rel}`);
   }
+}
+
+// ── 6. 빈 디렉토리 정리 ─────────────────────────────────────────────────
+// 이전 재설치가 폐기 스킬의 SKILL.md 만 지우고 폴더를 남기면(2026-06 개편 잔재 등) 매니페스트 대상이
+// 아니라 위 루프가 건드리지 않는다. 빈 폴더는 내용이 없으니 소유 증명 없이 지워도 잃는 것이 없다.
+// 실프로젝트 사본 리허설에서 40개가 남아 있던 것을 계기로 추가 (2026-08-26).
+for (const kind of ['skills', 'agents', 'commands']) {
+  const root = path.join(target, '.claude', kind);
+  if (!fs.existsSync(root)) continue;
+  let removed = 0;
+  const sweep = (dir) => {
+    let entries;
+    try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
+    for (const e of entries) if (e.isDirectory()) sweep(path.join(dir, e.name));
+    if (dir === root) return;
+    try {
+      if (fs.readdirSync(dir).length === 0) { fs.rmdirSync(dir); removed++; }
+    } catch {}
+  };
+  sweep(root);
+  if (removed > 0) log(`빈 디렉토리 정리: .claude/${kind}/ 하위 ${removed}개`);
 }
 
 process.exit(0);

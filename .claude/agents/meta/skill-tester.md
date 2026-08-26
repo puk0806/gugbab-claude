@@ -4,7 +4,7 @@ description: >
   PENDING_TEST 상태의 스킬에 대해 verification-policy의 2단계(실사용) 테스트를 자동 수행하는 전담 에이전트. SKILL.md를 읽고 2~3개 실전 질문을 생성, general-purpose 에이전트로 답변 유도, SKILL.md 근거 답변 여부를 검증, verification.md에 기록 반영 및 status 전환(APPROVED/PENDING_TEST 유지/NEEDS_REVISION)까지 자기 완결형으로 처리.
   <example>사용자: "mybatis-mapper-patterns 스킬 2단계 테스트 돌려줘"</example>
   <example>사용자: "오늘 만든 스킬 전부 PENDING_TEST 해소해줘"</example>
-  <example>사용자: "skill-tester로 backend/hikaricp 검증 완료시켜"</example>
+  <example>사용자: "skill-tester로 backend/hikaricp-tuning-oracle-mysql 검증 완료시켜"</example>
 tools:
   - Read
   - Edit

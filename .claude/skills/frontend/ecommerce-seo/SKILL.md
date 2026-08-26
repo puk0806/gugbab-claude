@@ -14,11 +14,17 @@ description: >
 > - Google Search Central — Faceted Navigation: https://developers.google.com/search/docs/crawling-indexing/crawling-managing-faceted-navigation
 > - Google Search Central — Product Structured Data: https://developers.google.com/search/docs/appearance/structured-data/product
 > - Google Search Central — Merchant Listing Structured Data: https://developers.google.com/search/docs/appearance/structured-data/merchant-listing
+> - Google Search Central — Merchant Return Policy (MerchantReturnPolicy): https://developers.google.com/search/docs/appearance/structured-data/return-policy
+> - Google Search Central — Merchant Shipping Policy (ShippingService): https://developers.google.com/search/docs/appearance/structured-data/shipping-policy
+> - Google Search Central — Mobile-first Indexing Best Practices (separate URLs): https://developers.google.com/search/docs/crawling-indexing/mobile/mobile-sites-mobile-first-indexing
+> - Google Merchant Center Help — Set up structured data for Merchant Center: https://support.google.com/merchants/answer/7331077
+> - Google Merchant Center Help — Automatic item updates: https://support.google.com/merchants/answer/12157888
+> - Google Merchant Center Help — Inaccurate price (feed ↔ 랜딩페이지 불일치): https://support.google.com/merchants/answer/9773429
 > - Google Search Central Blog — rel=prev/next 미사용 발표 (2019-03-21): https://twitter.com/googlewmc (Webmaster Trends Analyst 발표)
 > - schema.org — ItemAvailability: https://schema.org/ItemAvailability
 > - schema.org — Product: https://schema.org/Product
 > - Google Search Central — Block Indexing with noindex: https://developers.google.com/search/docs/crawling-indexing/block-indexing
-> 검증일: 2026-06-04
+> 검증일: 2026-08-26 (갱신 — §2에 `offers.shippingDetails`·`offers.hasMerchantReturnPolicy` 추가, §7 Merchant Center 피드↔페이지 불일치 지위 정정, §8 분리 모바일 호스트 canonical 추가, Organization↔Product `@graph` 참조 예시 추가. 최초 작성 2026-06-04)
 
 ---
 
@@ -73,7 +79,47 @@ description: >
     "price": 159000,
     "availability": "https://schema.org/InStock",
     "itemCondition": "https://schema.org/NewCondition",
-    "priceValidUntil": "2026-12-31"
+    "priceValidUntil": "2026-12-31",
+    "shippingDetails": {
+      "@type": "OfferShippingDetails",
+      "shippingRate": {
+        "@type": "MonetaryAmount",
+        "value": 3000,
+        "currency": "KRW"
+      },
+      "shippingDestination": {
+        "@type": "DefinedRegion",
+        "addressCountry": "KR"
+      },
+      "deliveryTime": {
+        "@type": "ShippingDeliveryTime",
+        "handlingTime": {
+          "@type": "QuantitativeValue",
+          "minValue": 0,
+          "maxValue": 1,
+          "unitCode": "DAY"
+        },
+        "transitTime": {
+          "@type": "QuantitativeValue",
+          "minValue": 1,
+          "maxValue": 3,
+          "unitCode": "DAY"
+        }
+      }
+    },
+    "hasMerchantReturnPolicy": {
+      "@type": "MerchantReturnPolicy",
+      "applicableCountry": "KR",
+      "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
+      "merchantReturnDays": 7,
+      "returnMethod": "https://schema.org/ReturnByMail",
+      "returnFees": "https://schema.org/ReturnShippingFees",
+      "returnShippingFeesAmount": {
+        "@type": "MonetaryAmount",
+        "value": 3000,
+        "currency": "KRW"
+      }
+    }
   },
   "aggregateRating": {
     "@type": "AggregateRating",
@@ -108,6 +154,83 @@ description: >
 
 - 미래 날짜 (YYYY-MM-DD 형식) 권장. 만료일 이후에는 Google이 리치 결과에서 가격을 제외할 수 있다.
 - 세일·할인 종료일을 명시하는 용도. 정상가는 보통 1년 후 날짜로 설정.
+
+### offers.shippingDetails (OfferShippingDetails)
+
+`shippingDetails` 자체는 `Offer`의 **recommended** 속성이다. 단, **넣기로 했다면** 아래 required 속성을 반드시 채워야 한다 (merchant listing 리치 결과의 배송비 표시 조건).
+
+| 속성 | 타입 | 지위 | 값 규칙 |
+|------|------|------|---------|
+| `shippingRate` | `MonetaryAmount` (`value`, `currency`) | Required | 배송비. 무료면 `value: 0` |
+| `shippingDestination` | `DefinedRegion` (`addressCountry`, 선택 `addressRegion`) | Required | `addressCountry`는 ISO 3166-1 alpha-2 (`"KR"`) |
+| `deliveryTime` | `ShippingDeliveryTime` | Recommended | 아래 `handlingTime`·`transitTime`을 담는 컨테이너 |
+| `deliveryTime.handlingTime` | `QuantitativeValue` (`minValue`·`maxValue`·`unitCode: "DAY"`) | Recommended | 주문 후 출고까지 영업일 |
+| `deliveryTime.transitTime` | `QuantitativeValue` (동일) | Recommended | 출고 후 도착까지 영업일 |
+| `shippingLabel` / `shippingOrigin` / `shippingSettingsLink` / `doesNotShip` | — | Recommended | 다중 배송 정책·미배송 지역 표기용 |
+
+- 배송 정책이 상품별로 다르지 않다면, Google은 **`Organization` 마크업의 전역 배송 정책**(`ShippingService` + `shippingConditions`)이나 Merchant Center 설정으로 제공하는 쪽을 권장한다. Offer 레벨 속성은 조직 레벨 속성의 **부분집합**이다.
+- `shippingDetails`는 배열로 여러 개 넣어 지역·요금제별로 나눌 수 있다.
+
+> 주의: Search Central의 merchant listing 문서는 `shippingRate`·`shippingDestination` 둘 다 required로 표기하지만, Merchant Center의 "지원되는 구조화 데이터 속성" 표는 `shippingDestination.addressCountry`만 required로 표기한다. 두 표기가 어긋나므로 **둘 다 채우는 것이 안전**하다.
+
+### offers.hasMerchantReturnPolicy (MerchantReturnPolicy)
+
+`hasMerchantReturnPolicy`도 `Offer`의 **recommended** 속성이며, 넣으면 아래 required 속성이 따라온다.
+
+| 속성 | 지위 | 값 규칙 |
+|------|------|---------|
+| `applicableCountry` | **Required** | 반품 정책이 적용되는(= 상품이 판매·반송 출발하는) 국가. ISO 3166-1 alpha-2. 배열 허용 |
+| `returnPolicyCategory` | **Required** | `https://schema.org/MerchantReturnFiniteReturnWindow` / `MerchantReturnNotPermitted` / `MerchantReturnUnlimitedWindow` |
+| `merchantReturnDays` | FiniteReturnWindow일 때 Required | 반품 가능 일수 (숫자) |
+| `returnMethod` | Recommended | `ReturnByMail` / `ReturnInStore` / `ReturnAtKiosk` |
+| `returnFees` | Recommended | `FreeReturn` / `ReturnShippingFees` / `ReturnFeesCustomerResponsibility` |
+| `returnShippingFeesAmount` | `returnFees`가 `ReturnShippingFees`일 때만 | `MonetaryAmount` |
+
+**`applicableCountry` vs `returnPolicyCountry`**
+
+- **required는 `applicableCountry`다.** `returnPolicyCountry`(상품을 실제로 반송해 보내는 국가)는 **recommended**이며, 조직(Organization) 레벨 반품 정책 마크업에서 지원된다.
+- Offer 레벨에서 Google이 지원하는 반품 속성은 조직 레벨의 **부분집합**이며, 여기에는 `returnPolicyCountry`가 포함되지 않는다. 판매국과 반송 도착국이 다른 크로스보더 판매라면 조직 레벨 마크업에 `returnPolicyCountry`를 추가한다.
+
+> 주의: 2025-03 시점 다수의 3rd-party 기사가 "`returnPolicyCountry`가 required가 됐다"고 보도했으나, 실제 문서 변경은 **Google이 예제 JSON-LD에 `returnPolicyCountry`를 추가한 것**이고 required 목록은 `applicableCountry` + `returnPolicyCategory`(또는 `merchantReturnLink`)로 유지되고 있다. 현행 공식 문서 기준으로 작성할 것.
+
+> 주의: 미검증 — "2025-03부터 모든 판매자에게 반품 정책 제공이 필수화됐다"는 취지의 **공식 발표는 확인되지 않았다**. 확인 가능한 것은 Merchant Center 가이드라인의 상시 요구사항("반품 정책 정보를 상품 데이터에 추가하고 웹사이트에서 쉽게 찾을 수 있게 할 것. 반품·환불을 제공하지 않더라도 그 사실을 명시할 것")뿐이다.
+
+### Organization ↔ Product `@id` 참조 (`@graph`)
+
+전역 정책(반품·배송)은 `Organization`/`OnlineStore`에 한 번 정의하고, 상품 페이지에서는 `@id`로 참조해 중복을 없앤다. (패턴 상세 → `frontend/schema-org-patterns`)
+
+```json
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "OnlineStore",
+      "@id": "https://example.com/#org",
+      "name": "예시 스토어",
+      "url": "https://example.com",
+      "hasMerchantReturnPolicy": {
+        "@type": "MerchantReturnPolicy",
+        "applicableCountry": "KR",
+        "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
+        "merchantReturnDays": 7
+      }
+    },
+    {
+      "@type": "Product",
+      "@id": "https://example.com/product/airmax-270-black#product",
+      "name": "에어맥스 270 블랙",
+      "offers": {
+        "@type": "Offer",
+        "url": "https://example.com/product/airmax-270-black",
+        "priceCurrency": "KRW",
+        "price": 159000,
+        "availability": "https://schema.org/InStock",
+        "seller": { "@id": "https://example.com/#org" }
+      }
+    }
+  ]
+}
+```
 
 ---
 
@@ -241,8 +364,23 @@ Disallow: /*?*brand=
 | 재입고 | `availability: InStock` | 페이지 그대로 유지 (URL 변경 금지) |
 | 단종 | `availability: Discontinued` 또는 301 | 대체 상품으로 301 권장 |
 
-- Google Merchant Center 피드와 페이지 Schema가 일치해야 한다. 불일치 시 Merchant 정책 위반으로 광고 차단 가능.
 - 동적 가격은 서버 렌더링 + Schema에 즉시 반영. CSR로 가격만 나중에 그리지 말 것.
+
+### Merchant Center 피드 ↔ 페이지 구조화 데이터 불일치의 현재 지위
+
+3rd-party 요약이 아니라 Merchant Center 공식 도움말 기준으로 정리하면 다음과 같다.
+
+| 항목 | 공식 내용 |
+|------|-----------|
+| 구조화 데이터 자체 | Search의 리치 결과와 달리, Merchant Center에서는 **랜딩페이지 구조화 데이터가 승인의 필수 조건은 아니다**. 구조화 데이터가 없거나 불완전하면 Google이 "advanced data extractors"로 페이지에서 값을 추출한다 |
+| 자동 항목 업데이트(automatic item updates) | 랜딩페이지에서 읽은 값으로 **`price`·`sale price`·`availability`·`condition`** 을 자동 보정한다. 이 4개가 자동 업데이트 대상 |
+| 자동 업데이트를 끄면 | "상품이 item-level 비승인 대상이 된다". 추출기가 가격·재고·상태를 판별하지 못하는 경우에도 동일하게 item-level 비승인 |
+| 피드 ↔ 랜딩페이지 불일치 | 가격 불일치 시 **상품 비승인 + 계정 경고**로 이어지며, 재심사에는 대기 기간이 있다. 공식 해결 가이드가 "가격·재고 속성을 랜딩페이지의 구조화 데이터(JSON-LD/Microdata)와 일치시키라"고 명시 |
+| 자동 업데이트가 커버하지 않는 것 | 제목·설명·GTIN·배송 속성 등은 자동 보정 대상이 아니므로 피드에서 직접 맞춰야 한다 |
+
+정리: **"불일치 = 즉시 광고 계정 정지"가 아니라, 상품 단위 비승인 + 계정 경고**가 기본 제재이며, 자동 항목 업데이트가 완충 장치로 동작한다. 자동 업데이트를 신뢰하지 말고 피드·페이지·구조화 데이터 세 곳의 `price`/`availability`를 동일 소스에서 렌더링하는 것이 정답이다.
+
+> 주의: 구조화 데이터의 값은 "사용자에게 실제로 보이는 값"과 같아야 한다. 할인가가 노출 중이면 구조화 데이터에도 할인가를 넣는다. 회원 등급·지역에 따라 가격이 달라지는 랜딩페이지는 Merchant Center가 매칭에 실패한다.
 
 ---
 
@@ -261,6 +399,11 @@ Disallow: /*?*brand=
 - 영문 소문자 + 하이픈: `airmax-270-black`
 - 한글 슬러그 (`/product/에어맥스-270`)는 URL 인코딩(`%EC%97%90...`)으로 변환되어 가독성·복사 시 문제. 영문 권장.
 - 슬러그에 상품 ID 포함 시 검색 키워드 우선 (예: `airmax-270-black-a1234` 보다 `airmax-270-black`).
+
+### 분리 모바일 호스트(m. / www.)
+
+- **`m.` 상품 페이지의 canonical은 대응하는 `www.` Product URL을 가리켜야 하고**, `www.` 쪽에는 `<link rel="alternate" media="only screen and (max-width: 640px)" href="https://m.example.com/...">`를 넣어 1:1 양방향 주석을 유지한다 (Google mobile-first indexing 가이드). 상세 → `frontend/mobile-seo-pwa`
+- 구조화 데이터는 두 호스트에 **동일하게** 넣되, 구조화 데이터 안의 URL은 각 호스트 URL로 맞춘다 (모바일 마크업의 `offers.url`은 `m.` URL).
 
 ### URL 변경 금지
 
@@ -290,6 +433,8 @@ Disallow: /*?*brand=
 
 - [ ] 상품 페이지: title 60자 이내, description 150~160자, H1 1개
 - [ ] Product Schema JSON-LD에 `name`, `image`, `offers.price`, `priceCurrency`, `availability` 포함
+- [ ] merchant listing 대상이면 `offers.shippingDetails`(`shippingRate`+`shippingDestination`)와 `offers.hasMerchantReturnPolicy`(`applicableCountry`+`returnPolicyCategory`, finite면 `merchantReturnDays`) 포함
+- [ ] 분리 모바일 호스트: `m.` 상품 페이지 canonical → `www.` Product URL, `www.`에 `rel="alternate" media=...`
 - [ ] `aggregateRating`은 실제 리뷰가 있을 때만 출력
 - [ ] 카테고리 페이지: H1 + 400단어 이상 설명 + BreadcrumbList
 - [ ] 페이지네이션: 모든 페이지 self-referencing canonical, noindex 없음

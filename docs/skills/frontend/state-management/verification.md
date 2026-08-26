@@ -137,3 +137,4 @@ status: APPROVED
 | 2026-03-27 | v1 | 최초 작성 및 frontend-architect 활용 테스트 완료 | frontend-architect 에이전트 |
 | 2026-04-17 | v2 | verification.md 신규 8섹션 포맷으로 마이그레이션 | 메인 대화 오케스트레이션 |
 | 2026-06-20 | v3 | 버전 재확인 — 변경 없음 (Zustand 5.0.14, TanStack Query 5.101.0 최신, SKILL.md 내용 이미 적합) | 버전 재검증 |
+| 2026-08-26 | v3.1 | freshness 재검증(67일 경과) — Zustand 5.0.15·TanStack Query 5.102.x, API 변경 없음(VERIFIED). v4→v5 표는 신설 `frontend/tanstack-query-v4-to-v5-migration`과 중복되므로 검증일 줄에 정본 포인터 추가(본문 삭제는 별도 정리 과제) | freshness-auditor + orchestrator |

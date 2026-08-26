@@ -222,3 +222,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-06-02 | v1 | 최초 작성. Google Search Central + MDN + Next.js 16.x + Vercel/Netlify/Cloudflare Pages + Nginx 공식 문서 기반. 7대 정규화 축, 301-308 결정 트리, 호스팅별 패턴 7종, 흔한 실수 8종 정리. 교차 검증 23 클레임 (VERIFIED 22 / DISPUTED 1). | skill-creator |
 | 2026-06-02 | v1 | 2단계 실사용 테스트 수행 (Q1 Next.js 호스트+슬래시 정규화 / Q2 Vercel Vite SPA 슬래시 제거 / Q3 redirect chain 4단 SEO 영향) → 2/3 PASS 1 PARTIAL, APPROVED 전환. 섹션 5·6·7·8 동기화. | skill-tester |
+| 2026-08-26 | v1.1 | freshness 재검증(85일 경과) — 신호 강도·rel=prev/next 폐기·308·Next.js 16 trailingSlash VERIFIED. **갭 발견**: 분리 모바일 호스트(m-dot) 정규화가 7대 축에 없음 → TL;DR 결정 트리에 행 추가(UA 리다이렉트 금지·양방향 교차 지정), 상세 코드는 `mobile-seo-pwa` 1-4절로 위임(Google mobile-first indexing 공식 문서 원문 확인) | freshness-auditor + orchestrator |

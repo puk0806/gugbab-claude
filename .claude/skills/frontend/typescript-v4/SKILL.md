@@ -6,7 +6,12 @@ description: TypeScript 4.x (4.0~4.9) 버전별 핵심 기능, 타입 시스템 
 # TypeScript 4.x 핵심 기능 가이드
 
 > 소스: https://www.typescriptlang.org/docs/handbook/release-notes/overview.html
-> 검증일: 2026-04-20
+> 검증일: 2026-08-26 (최초 2026-04-20 · 08-26 freshness 재검증: 4.0~4.9 기능 서술은 역사적 사실이라 변경 없음, 아래 레거시 배너 추가)
+
+> **주의: 이 스킬은 TypeScript 4.x(2020~2022, 4.0~4.9)에 고정된 레거시 프로젝트용 레퍼런스다.**
+> 현재 TypeScript는 6.0(2026-03, JS 기반 마지막 메이저)을 거쳐 **7.0(2026-07 GA, Go 네이티브 컴파일러)** 이 최신이며, 4.x는 최신 대비 메이저 3개 뒤처져 있다
+> (Microsoft는 버전별 공식 EOL 일정을 문서화하지 않으므로 "EOL"로 단정하지 않는다). 신규·현행 프로젝트와 5.x 이상으로의 업그레이드 경로는 `frontend/typescript-v5` 스킬을 참조한다.
+> `package.json`의 `typescript`가 4.x인 프로젝트에서만 이 스킬을 우선한다.
 
 ---
 

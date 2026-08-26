@@ -42,24 +42,19 @@ model: sonnet
 
 | 스킬 | 경로 | 활용 시점 |
 |------|------|-----------|
-| python-basics | `.claude/skills/backend/python-basics/SKILL.md` | Python 3.12+ 문법, PEP 695, match, dataclass, functools, pathlib |
 | python-uv-project-setup | `.claude/skills/backend/python-uv-project-setup/SKILL.md` | uv로 프로젝트 초기화, 의존성 추가, 락파일, 스크립트 실행 |
 | python-fastapi | `.claude/skills/backend/python-fastapi/SKILL.md` | FastAPI 라우터·Depends·SSE·multipart·TestClient·uvicorn |
 | python-pydantic-v2 | `.claude/skills/backend/python-pydantic-v2/SKILL.md` | Pydantic v2 Annotated Field·validator·model_dump·Settings |
 | python-async-asyncio | `.claude/skills/backend/python-async-asyncio/SKILL.md` | asyncio·TaskGroup·to_thread·httpx.AsyncClient·timeout·CancelledError |
-| python-pytest | `.claude/skills/backend/python-pytest/SKILL.md` | fixture·parametrize·pytest-asyncio·dependency_overrides·pytest-mock |
 | python-anthropic-sdk | `.claude/skills/backend/python-anthropic-sdk/SKILL.md` | Anthropic SDK sync/async·messages.stream()·cache_control·tool_choice |
 | python-langchain-current | `.claude/skills/backend/python-langchain-current/SKILL.md` | LangChain 1.x LCEL·ChatAnthropic — *Anthropic SDK 직접 사용 권장 시나리오 확인* |
 | python-llamaindex | `.claude/skills/backend/python-llamaindex/SKILL.md` | LlamaIndex Document/Node/Index, FunctionAgent (FunctionCallingAgent 대체) |
 | python-embeddings-vector-db | `.claude/skills/backend/python-embeddings-vector-db/SKILL.md` | 임베딩 모델·Chroma/Qdrant/pgvector, 청킹 전략 |
 | python-korean-nlp-konlpy | `.claude/skills/backend/python-korean-nlp-konlpy/SKILL.md` | KoNLPy + mecab-ko, ko-sbert-multitask |
-| python-pandas-fundamentals | `.claude/skills/backend/python-pandas-fundamentals/SKILL.md` | pandas 2.x CoW·.loc/.iloc·utf-8-sig |
 | python-cli-typer | `.claude/skills/backend/python-cli-typer/SKILL.md` | Typer CLI 작성 (관리 스크립트·배치 작업) |
-| python-web-scraping | `.claude/skills/backend/python-web-scraping/SKILL.md` | BeautifulSoup·Playwright·Scrapy·httpx·polite_get |
-| python-jupyter-notebook | `.claude/skills/backend/python-jupyter-notebook/SKILL.md` | JupyterLab, nbstripout, jupytext (실험·데이터 분석) |
-| python-data-visualization | `.claude/skills/backend/python-data-visualization/SKILL.md` | matplotlib·seaborn·plotly, 한국어 폰트 |
 
 **스킬 참조 규칙:** 해당 기능을 처음 구현할 때 관련 스킬 파일을 Read로 읽고, 그 패턴을 따라 코드를 작성한다. 관련 스킬이 없거나 모호하면 그 사실을 사용자에게 보고하고 진행 방향을 묻는다.
+Python 기본 문법·pytest 사용법·pandas·시각화·스크래핑·Jupyter는 전용 스킬이 없다(내장 지식과 중복되어 정리됨) — 내장 지식으로 처리하되, pytest 패턴은 `python-fastapi` 스킬의 TestClient 섹션과 `python-async-asyncio`의 pytest-asyncio 절을 우선 참조한다.
 
 ---
 
@@ -95,7 +90,7 @@ model: sonnet
 - 회원가입 엔드포인트 → `python-fastapi` + `python-pydantic-v2` + (SQLAlchemy 사용 시 architect 또는 코드베이스 확인)
 - Anthropic SSE → `python-anthropic-sdk` + `python-fastapi` (SSE 섹션)
 - 비동기 외부 API 병렬 호출 → `python-async-asyncio`
-- 테스트 추가 → `python-pytest`
+- 테스트 추가 → `python-fastapi`(TestClient 섹션) + `python-async-asyncio`(pytest-asyncio 절)
 
 ### 단계 3: 파일 변경 계획 (간단히)
 
@@ -270,7 +265,7 @@ uv run pytest tests/<대상> -vv --tb=short
 - pytest tests/users -x: 2/2 통과
 
 ## 참조 스킬
-- python-fastapi, python-pydantic-v2, python-async-asyncio, python-pytest
+- python-fastapi, python-pydantic-v2, python-async-asyncio
 ```
 
 에러 수정 작업이면:

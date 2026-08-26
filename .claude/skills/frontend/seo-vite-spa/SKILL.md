@@ -12,7 +12,7 @@ description: Vite / CRA 기반 React SPA의 SEO — react-helmet-async, @unhead/
 > - CRA deprecation: https://react.dev/blog/2025/02/14/sunsetting-create-react-app
 > - Googlebot JS rendering: https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics
 >
-> 검증일: 2026-06-01
+> 검증일: 2026-08-26 (최초 2026-06-01 · 08-26 freshness 재검증: react-helmet-async 3.0.0(React 19 지원)·@unhead/react 3.x·Vike·CRA deprecated VERIFIED. 동적 렌더링/Rendertron 비권장 주의 블록 추가, vite-plugin-sitemap 유지보수 정체(2025-05 이후 무갱신) 주의 추가)
 
 ---
 
@@ -27,6 +27,8 @@ description: Vite / CRA 기반 React SPA의 SEO — react-helmet-async, @unhead/
 - LLM 기반 크롤러(GPTBot, Claude-Web 등)는 대체로 정적 HTML만 읽는다. SPA의 초기 빈 셸만 본다.
 
 **결론:** SPA에서 SEO를 본격적으로 보장하려면 결국 **빌드 타임 프리렌더(SSG)** 또는 **SSR**이 필요하다. react-helmet-async/unhead만으로는 1차 크롤링에 잡히지 않는다.
+
+> **주의 — 동적 렌더링(Dynamic Rendering)·Rendertron은 더 이상 권장 경로가 아니다 (2026-08-26 추가):** 크롤러 UA만 골라 헤드리스 브라우저로 렌더한 HTML을 주는 방식(Rendertron·prerender.io 류)은 Google이 **"권장 방식이 아닌 임시 우회책(workaround)"** 으로 격하했고, Rendertron 저장소는 2022년 archive 처리돼 유지보수가 없다. 이미 운영 중이면 당장 걷어낼 필요는 없지만, **신규 도입은 하지 말고** 아래 4·5단계(Vike/vite-prerender-plugin 프리렌더 또는 SSR)로 간다. 카카오·페이스북 공유 미리보기만 급하면 CDN/Edge에서 `og:*` 메타만 주입하는 가벼운 분기가 대안이다(`frontend/kakao-share-optimization` 5절).
 
 > 주의: CRA(Create React App)는 2025-02-14 React 팀이 공식 deprecated 처리했다. 유지보수 모드로만 동작하며 신규 앱에는 사용하지 말 것. 기존 CRA 앱은 Vite + React Router 또는 Next.js로의 마이그레이션이 권장된다.
 
@@ -327,6 +329,8 @@ Sitemap: https://example.com/sitemap.xml
 ```
 
 ### 자동 생성 — vite-plugin-sitemap
+
+> 주의 (2026-08-26): `vite-plugin-sitemap`은 최신 0.8.2가 **2025-05-15 발행 이후 갱신이 없다**(npm registry 기준). 동작은 하지만 Vite 8(Rolldown) 호환은 직접 확인해야 하며, 라우트가 동적(상품·카테고리 수만 개)인 커머스는 어차피 **빌드 스크립트나 서버에서 DB 기준으로 sitemap을 생성**하는 편이 맞다 — 플러그인은 정적 라우트 수십 개 수준에서만 쓴다.
 
 라우트가 많거나 자주 추가되면 빌드 시 자동 생성이 안전하다.
 

@@ -9,7 +9,7 @@ description: DDD(Domain-Driven Design) 아키텍처 핵심 패턴 - 유비쿼터
 > 소스: Eric Evans, "Domain-Driven Design: Tackling Complexity in the Heart of Software" (Addison-Wesley, 2003)
 > 소스: Vaughn Vernon, "Implementing Domain-Driven Design" (Addison-Wesley, 2013)
 > 소스: https://www.domainlanguage.com/ddd/reference/ (Evans DDD Reference)
-> 검증일: 2026-04-17
+> 검증일: 2026-08-26 (최초 2026-04-17 · 08-26 freshness 재검증: 서적 기반이라 내용 변경 없음. 프론트엔드 폴더 구조에 바운디드 컨텍스트를 적용하는 절은 `architecture/frontend-domain-structure` 스킬이 담당)
 
 ---
 

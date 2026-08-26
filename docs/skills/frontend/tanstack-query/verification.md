@@ -196,3 +196,4 @@ status: APPROVED
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
 | 2026-08-11 | v1 | 최초 작성 — 공식 문서 21회 페치·6회 검색 기반, 12개 클레임 교차 검증(DISPUTED 1건 수정 반영), content test 3/3 PASS로 APPROVED | skill-creator |
+| 2026-08-26 | v1.1 | v5.102.0 통합 메서드 반영 — `prefetchQuery`/`fetchQuery`/`ensureQueryData` 계열 `@deprecated`(v6 제거 예정), `queryClient.query()`/`infiniteQuery()` 대체 및 동작 차이(throw·`staleTime: 'static'`) 주의 블록을 섹션 10에 추가. fact-checker 5개 독립 소스 VERIFIED(소스 JSDoc·마이그레이션 가이드·QueryClient 레퍼런스·RFC #9135·PR #11282). 기존 예시는 v5 내 유효하므로 유지 | orchestrator + fact-checker |

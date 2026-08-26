@@ -251,3 +251,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-04-20 | v1 | 최초 작성 — Playwright v1.59.1 기준 | Claude (skill-creator) |
 | 2026-04-20 | v1 | PENDING_TEST → APPROVED 전환 — WebSearch 재검증 3건 + 테스트 질문 2건 PASS | Claude (opus) |
+| 2026-08-26 | v1.1 | freshness 재검증(128일 경과) — 대상 버전 v1.59.1→v1.62.x 갱신. 로케이터 우선순위·네트워크 모킹·defineConfig·fixture 확장 전부 현행 API(VERIFIED), 코드 예제 변경 없음 | freshness-auditor + orchestrator |

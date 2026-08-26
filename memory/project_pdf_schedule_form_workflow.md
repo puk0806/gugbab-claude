@@ -5,6 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: f4092d88-c30f-4877-9451-e69fc9f153d4
+  modified: 2026-08-13T01:51:30.369Z
 ---
 
 # 근무표(홀/주방 주간표) PDF 생성 워크플로우 (2026-07-15 확립, 재요청 예정)
@@ -118,3 +119,14 @@ doc.save(OUT)
 1. 사진 Read → 구조 파악 → 이해 확인 + 행 수 등 AskUserQuestion으로 확정 후 착수
 2. venv 준비 → 스크립트 + test.py 작성 → 테스트 PASS → PDF 생성
 3. **생성 PDF를 PNG 렌더(dpi 110)해서 Read로 육안 대조** 후 결과 보고
+
+## 2026-08-13 재요청 (같은 양식, 사진 재전달)
+
+- 사용자가 **이 스크립트로 뽑은 인쇄본을 다시 사진으로 보냈다.** 새로 짜지 말고
+  `pdf변환/make-schedule.py`를 그대로 실행하면 되는 건이었다 — 산출물 폴더를 먼저 확인할 것
+- 사진이 90° CCW 회전이었는데 180°로 오판해 요일/구획을 전치한 표를 두 번 만들었다.
+  판별 규칙은 [[pdf-photo-reproduction-rotation]]
+- 이 양식의 불변 조건: **요일은 항상 상단 가로 7열, 홀·주방은 항상 좌측 세로 라벨**
+  (검증: 요일 span y≈44, 홀·주방 span x≈51)
+- venv는 `pdf변환/.venv` (PyMuPDF 1.28.2) — 시스템 python3에는 fitz 없음
+- 같은 가게 서식으로 재고량 표도 만듦 → [[pdf-inventory-form-workflow]]

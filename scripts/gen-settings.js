@@ -1,11 +1,16 @@
 #!/usr/bin/env node
 // gen-settings.js — project-install.sh에서 호출. 선택된 옵션에 따라 settings.json 생성
-// 사용: node scripts/gen-settings.js [--util] [--dev] [--typescript] [--memory] [--superpowers] [--codex] [--readme-guard] [--branch-protection]
+// 사용: node scripts/gen-settings.js [--util] [--dev] [--typescript] [--legacy] [--memory] [--superpowers] [--codex] [--readme-guard] [--branch-protection]
 
 const args = process.argv.slice(2);
 const isUtil               = args.includes('--util');
 const isDev                = args.includes('--dev');               // tdd-guard·adversarial-test-guard·fake-impl-guard 포함 (개발 템플릿)
 const withTs               = args.includes('--typescript');        // typescript-quality 포함
+// --legacy: 테스트가 거의 없고 tsc가 느린 기존 대형 코드베이스용 프로파일 (2026-08-26)
+//   ① tdd-guard 제외 — 소스 수천 개에 테스트 수십 개인 레포에서 사실상 모든 편집을 차단하던 문제
+//   ② typescript-quality를 --changed-only로 배선 — 증분 컴파일 + 방금 저장한 파일의 에러만 차단
+//   adversarial-test-guard·fake-impl-guard·test-fake-guard는 유지 (테스트를 *쓸 때*의 품질 규칙이라 무해)
+const isLegacy             = args.includes('--legacy');
 const withMemory           = args.includes('--memory');            // memory-* 훅 포함
 const withSuperpowers      = args.includes('--superpowers');       // superpowers@superpowers-marketplace 플러그인 활성화
 const withCodex            = args.includes('--codex');             // codex@openai-codex 플러그인 활성화
@@ -17,6 +22,9 @@ const H = (name) => ({ type: 'command', command: `node $CLAUDE_PROJECT_DIR/.clau
 
 // ── Permissions ─────────────────────────────────────────────────────────
 const permissions = {
+  // 시작 권한 모드 — 공식 문서 기준 `permissions.defaultMode` 가 올바른 위치. 최상위 `defaultMode` 는 무시된다
+  // (2026-08-10 doctor 지적, 2026-08-26 code.claude.com/docs/en/permission-modes 로 재확인 후 이동)
+  defaultMode: 'acceptEdits',
   allow: [
     'Bash(node*)', 'Bash(npx*)', 'Bash(pnpm*)', 'Bash(npm*)', 'Bash(codex*)',
     'Bash(git status*)', 'Bash(git diff*)', 'Bash(git log*)',
@@ -74,15 +82,22 @@ if (withBranchProtection) {
 
 // PostToolUse Write — deliverable-guard(세션 수정 파일 추적, 구 session-summary 역할)를
 // 체인 선두에 배치: 뒤의 exit 2 검증 훅이 체인을 중단시켜도 추적 기록은 보장
+const devWriteHooks = isLegacy
+  ? [H('adversarial-test-guard.js'), H('fake-impl-guard.js')]
+  : [H('tdd-guard.js'), H('adversarial-test-guard.js'), H('fake-impl-guard.js')];
+const tsHook = isLegacy
+  ? { type: 'command', command: 'node $CLAUDE_PROJECT_DIR/.claude/hooks/typescript-quality.js --changed-only' }
+  : H('typescript-quality.js');
+
 const writeHooks = [H('deliverable-guard.js')];
-if (isDev) writeHooks.push(H('tdd-guard.js'), H('adversarial-test-guard.js'), H('fake-impl-guard.js'));
-if (withTs) writeHooks.push(H('typescript-quality.js'));
+if (isDev) writeHooks.push(...devWriteHooks);
+if (withTs) writeHooks.push(tsHook);
 if (withMemory) writeHooks.push(H('memory-sync.js'));
 
 // PostToolUse Edit — 구조 검증 3종은 Edit만 사후 검증 (디스크 전체 재읽기, Write는 PreToolUse에서 사전 차단)
 const editHooks = [H('deliverable-guard.js'), H('verification-guard.js'), H('skill-md-guard.js'), H('agent-md-guard.js')];
-if (isDev) editHooks.push(H('tdd-guard.js'), H('adversarial-test-guard.js'), H('fake-impl-guard.js'));
-if (withTs) editHooks.push(H('typescript-quality.js'));
+if (isDev) editHooks.push(...devWriteHooks);
+if (withTs) editHooks.push(tsHook);
 if (withMemory) editHooks.push(H('memory-sync.js'));
 
 hooks.PostToolUse = [
@@ -168,7 +183,6 @@ const enabledPlugins = {
 };
 const hasPlugins = Object.keys(enabledPlugins).length > 0;
 const settings = {
-  defaultMode: 'acceptEdits',
   ...(hasPlugins ? { enabledPlugins } : {}),
   permissions,
   hooks,

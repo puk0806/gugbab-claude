@@ -21,8 +21,10 @@ Next.js App Router + TypeScript 프로젝트. 백엔드·게임·학술 스킬 �
 | meta | [project-scaffolder](../../.claude/agents/meta/project-scaffolder.md) | 결정된 스택으로 프로젝트 부트스트랩 |
 | frontend | [frontend-developer](../../.claude/agents/frontend/frontend-developer.md) | React/Next.js 컴포넌트·훅·API 연동 구현 |
 | frontend | [frontend-architect](../../.claude/agents/frontend/frontend-architect.md) | 프론트엔드 아키텍처 설계·기술 판단 |
+| backend | [build-error-resolver](../../.claude/agents/backend/build-error-resolver.md) | tsc·Vite/webpack 빌드·타입 에러 진단·최소 수정 (리팩터링 중 import 깨짐 대응) |
 | domain | [business-domain-analyst](../../.claude/agents/domain/business-domain-analyst.md) | 비즈니스 요구사항 → DDD 도메인 모델 도출 |
 | domain | [codebase-domain-analyst](../../.claude/agents/domain/codebase-domain-analyst.md) | 코드베이스 역분석 → 도메인 구조 진단 |
+| domain | [frontend-domain-refactorer](../../.claude/agents/domain/frontend-domain-refactorer.md) | layer-first → domain-first 재구조화 실행 계획 (경계 역추출·배치·codemod·경계 규칙) |
 | domain | [product-planner](../../.claude/agents/domain/product-planner.md) | 아이디어·요구사항 → PRD 작성 |
 | domain | [ui-ux-designer](../../.claude/agents/domain/ui-ux-designer.md) | PRD → 와이어프레임·디자인 토큰·컴포넌트 스펙 |
 | domain | [api-spec-designer](../../.claude/agents/domain/api-spec-designer.md) | PRD → OpenAPI 3.1 스펙·에러 코드·인증 설계 |
@@ -41,11 +43,13 @@ Next.js App Router + TypeScript 프로젝트. 백엔드·게임·학술 스킬 �
 
 ## 스킬
 
+> 설치 시 **SEO·GEO 스킬 포함 방식**을 묻는다 — `n` 제외(어드민·백오피스) / `c` **커머스·서비스 프로파일**(로컬비즈니스·다국어·YMYL·VPAT·사이트 이전·Indexing API·모니터링 자동화 8종 제외) / `y` 전체. 프레임워크에 안 맞는 구현 스킬(react-spa엔 `seo-nextjs`, nextjs엔 `seo-vite-spa`, 정적 HTML용)은 어느 선택이든 제외. 꿈 일기 앱 전용 frontend 18종·meta 3종·architecture 1종은 이 템플릿에서 항상 제외된다. SEO n이면 `seo-auditor`·`content-quality-reviewer` 에이전트와 `devops/site-migration-seo`도 함께 빠지고, 재설치 시 이전에 깔린 SEO·꿈 앱·n8n 자산은 매니페스트 소유 증명 하에 자동 정리된다. n8n 5종은 react-spa·nextjs에서 항상 제외.
+
 | 카테고리 | 종류 | 링크 |
 |----------|------|------|
-| frontend (76종) | 프레임워크·상태관리·UI·빌드·테스트·성능·SEO·LLM (Next.js·SSR·App Router 포함) | [→ 목록](../skills/frontend/README.md) |
+| frontend (81종) | 프레임워크·상태관리·UI·빌드·테스트·성능·SEO·LLM (Next.js·SSR·App Router 포함) | [→ 목록](../skills/frontend/README.md) |
 | devops (9종) | Docker·GitHub Actions·n8n·SEO 운영 | [→ 목록](../skills/devops/README.md) |
-| architecture (2종) | DDD, 꿈 앱 데이터 모델 | [→ 목록](../skills/architecture/README.md) |
+| architecture (5종) | DDD, 프론트 도메인 구조, 모듈 경계 강제, 점진 리팩터링, 꿈 앱 데이터 모델 | [→ 목록](../skills/architecture/README.md) |
 | meta (5종) | 워크플로우·프롬프트 엔지니어링 | [→ 목록](../skills/meta/README.md) |
 | writing (4종) | SEO 콘텐츠 품질 — content-eeat-quality·ymyl·multilingual·accessibility-vpat | [→ 목록](../skills/writing/README.md) |
 
@@ -76,20 +80,22 @@ Next.js App Router + TypeScript 프로젝트. 백엔드·게임·학술 스킬 �
 
 | 훅 | 이벤트 | 설명 |
 |----|--------|------|
-| [tdd-guard.js](../../.claude/hooks/tdd-guard.js) | PostToolUse Write/Edit | 소스 파일 수정 시 대응 테스트 파일 존재 여부 검사 (경고) |
+| [tdd-guard.js](../../.claude/hooks/tdd-guard.js) | PostToolUse Write/Edit | 소스 파일 수정 시 대응 테스트 파일 존재 여부 검사 — 없으면 차단. 설치 시 **레거시 프로파일** 선택 시 제외 |
 | [test-fake-guard.js](../../.claude/hooks/test-fake-guard.js) | PreToolUse Bash / PostToolUse Write | 가짜 테스트 패턴 탐지·차단 |
 
 ### TypeScript 전용 (1종)
 
 | 훅 | 이벤트 | 설명 |
 |----|--------|------|
-| [typescript-quality.js](../../.claude/hooks/typescript-quality.js) | PostToolUse Write/Edit | .ts/.tsx 저장 시 tsc --noEmit 자동 실행 — 오류 있으면 차단 |
+| [typescript-quality.js](../../.claude/hooks/typescript-quality.js) | PostToolUse Write/Edit | .ts/.tsx 저장 시 tsc --noEmit 자동 실행 — 오류 있으면 차단. 레거시 프로파일에서는 `--changed-only`(증분 컴파일·방금 저장한 파일의 에러만 차단·180s) |
 
 > Memory 훅(memory-pull·memory-sync)은 설치 시 Memory 공유 기능 선택 시 추가됩니다.
 
 ---
 
-## 규칙 (9종)
+## 규칙 (9종 — 작성 도구 n이면 4종)
+
+> 설치 시 **"스킬·에이전트 작성 도구 포함?"**(기본 n) — n이면 작성 규칙 5종(agent-design·creation-workflow·verification-policy·commands·readme-update)과 agent-creator·skill-creator·skill-tester, `agents/CLAUDE.md`·`skills/CLAUDE.md`가 빠진다(세션당 약 4k 토큰 절약). 자산은 원본 레포에서 만들고 export만 하는 프로젝트는 n.
 
 | 규칙 | 설명 |
 |------|------|
@@ -131,4 +137,4 @@ Next.js App Router + TypeScript 프로젝트. 백엔드·게임·학술 스킬 �
 | `permissions.deny` | `git push --force`, `rm -rf` 시스템 경로, `chmod 777`, curl\|bash 패턴 |
 | `permissions.additionalDirectories` | `/tmp`, `/private/tmp`, `/var/folders` |
 | `statusLine` | 브랜치·미커밋·PENDING_TEST 상태 표시 (`statusline.sh`) |
-| 훅 연결 | 공통 14종 + dev(tdd-guard·test-fake-guard) + TypeScript(typescript-quality) 전체 연결 |
+| 훅 연결 | 공통 14종 + dev(tdd-guard·test-fake-guard·adversarial-test-guard·fake-impl-guard) + TypeScript(typescript-quality) 전체 연결. **레거시 프로파일**(`--legacy`): tdd-guard 제외 + typescript-quality `--changed-only` |

@@ -170,3 +170,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-06-04 | v1 | 최초 작성. SDK 2.8.1 기준. 9개 핵심 클레임 교차 검증 완료 (VERIFIED 8 / DISPUTED 1 → 수정 반영 / UNVERIFIED 1 → placeholder) | skill-creator |
 | 2026-06-04 | v1 | 2단계 실사용 테스트 수행 (Q1 카카오 OG 캐시 초기화 / Q2 Kakao.Link→Kakao.Share 변경 / Q3 CSR SPA OG 미인식 원인) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-08-26 | v1.1 | freshness 재검증(83일 경과) — 이미지 규격·`Kakao.Share.sendDefault` VERIFIED. SDK 2.8.1→**2.8.2**(2026-08-06, 카카오 공식 다운로드 페이지 확인) CDN 경로 3곳 갱신. §5 CSR 대응책의 `prerender.io / rendertron / react-snap` 나열을 **OUTDATED**로 정정 — Rendertron은 2022년 archive, 동적 렌더링은 Google 기준 비권장 우회책. Vike/프리렌더 정공법 + Edge에서 스크래퍼 UA에만 og 주입하는 대안으로 교체(`seo-vite-spa`와 서술 일치) | freshness-auditor + orchestrator |

@@ -1,6 +1,6 @@
 # PENDING_TEST 졸업 체크리스트
 
-> 최종 갱신: 2026-08-12
+> 최종 갱신: 2026-08-26 (마이그레이션·리팩터링 워크플로우 3종 추가 — 17종)
 
 `PENDING_TEST`는 "**내용 검증은 끝났고 실사용 테스트만 남은**" 상태다. 사용은 가능하다.
 `verification-policy.md` 기준으로 **실행 결과·빌드 산출물로만 최종 확인 가능한 스킬**이 여기에 남는다 — content test가 PASS여도 그것만으로는 전환하지 않는다.
@@ -32,6 +32,9 @@
 | `game/unity-cicd-codemagic` | Codemagic에서 Unity 빌드 1회 성공 | Unity, Codemagic 계정 |
 | `meta/ralph-loop` | 실제 반복 루프 작업에 적용해 안전장치(파괴적 작업 배제)가 작동하는지 확인 | — (세션 내 적용 가능) |
 | `meta/riper-workflow` | 실제 작업에 5단계 워크플로우를 적용해 네이티브 Plan Mode와 충돌 없는지 확인 | — (세션 내 적용 가능) |
+| `architecture/incremental-refactoring` | 실제 대규모 코드베이스에서 배치 1개(리프 도메인)를 ts-morph codemod로 이동 → 타입체크·빌드·경계 규칙 게이트 통과 → 머지까지 1사이클 | TS 프로젝트(소스 수백 개 이상), dependency-cruiser |
+| `frontend/recoil-to-zustand-migration` | Recoil 사용 프로젝트에서 리프 atom 1개 이상을 공존 상태로 Zustand/Jotai로 옮기고 회귀 없음 확인 | Recoil 0.7 프로젝트 |
+| `frontend/tanstack-query-v4-to-v5-migration` | v4 프로젝트를 v5로 올려 codemod(remove-overloads) 실행 + `isLoading`/`gcTime`/콜백 제거 수동 정리 후 devtools로 캐시 동작 확인 | `@tanstack/react-query` 4.x 프로젝트 |
 
 ## 기록 방법
 

@@ -18,7 +18,7 @@ description: >
 > - Apple — Configuring Web Applications: https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/ConfiguringWebApplications/ConfiguringWebApplications.html
 > - Chrome for Developers — Viewport Resize Behavior: https://developer.chrome.com/blog/viewport-resize-behavior
 > - caniuse — Viewport unit variants: https://caniuse.com/viewport-unit-variants
-> 검증일: 2026-06-02
+> 검증일: 2026-08-26 (최초 2026-06-02 · 08-26 freshness 재검증: Mobile-First Indexing·dvh·iOS DMA·interactive-widget VERIFIED. 분리 모바일 URL(m-dot) canonical/alternate 교차 지정 상세 절(1-4) 신설 — Google 공식 문서 원문 기준)
 > 범위: 한국 사용자 환경(iPhone Safari + Android Chrome + Samsung Internet) 우선
 
 ---
@@ -52,7 +52,7 @@ description: >
 |------|--------------|
 | **반응형 (responsive)** | ⭐ 강력 권장. "구현·유지가 가장 쉬움" — 공식 문구 |
 | 동적 서빙 (Dynamic Serving) | 허용. `Vary: User-Agent` 필수 |
-| **M-dot 분리** (`m.example.com`) | 비권장. canonical/alternate 양방향 링크 필수, 운영 복잡 |
+| **M-dot 분리** (`m.example.com`) | 비권장. 이미 분리돼 있으면 canonical/alternate 양방향 교차 지정 필수 — **방향·코드는 1-4절**, 운영 복잡 |
 
 ### 1-3. 콘텐츠 패리티 (Content Parity) — 가장 흔한 함정
 
@@ -68,6 +68,35 @@ description: >
 - [ ] `robots.txt`로 모바일 리소스(JS/CSS) 차단하지 않았는가
 
 > 주의: "Read more" 접기·아코디언으로 숨겨도 인덱싱은 되지만, **lazy-load with intersection observer**로 DOM에 늦게 들어오는 콘텐츠는 Googlebot이 못 볼 수 있다. SSR/prerender로 초기 HTML에 포함시켜라.
+
+### 1-4. 분리 모바일 URL(m-dot) — 이미 `m.`/`www.`로 나뉜 사이트의 canonical/alternate 교차 지정 (2026-08-26 추가)
+
+> 소스: https://developers.google.com/search/docs/crawling-indexing/mobile/mobile-sites-mobile-first-indexing (Separate URLs 절)
+
+반응형 단일 URL이 최선이지만, 이미 호스트가 분리된 레거시 커머스·서비스 사이트는 **당장 합치기 어렵다**. 그 상태에서 Google이 요구하는 것은 **양방향 교차 지정**이며, 방향을 반대로 넣는 실수가 가장 흔하다.
+
+| 페이지 | 넣어야 할 `<link>` | 의미 |
+|--------|-------------------|------|
+| **데스크톱** `https://www.example.com/products/123` | `<link rel="canonical" href="https://www.example.com/products/123">` (자기참조) **+** `<link rel="alternate" media="only screen and (max-width: 640px)" href="https://m.example.com/products/123">` | "모바일 버전은 저기" |
+| **모바일** `https://m.example.com/products/123` | `<link rel="canonical" href="https://www.example.com/products/123">` | "정본은 데스크톱 URL" |
+
+```html
+<!-- www.example.com/products/123 (데스크톱) -->
+<link rel="canonical" href="https://www.example.com/products/123">
+<link rel="alternate" media="only screen and (max-width: 640px)" href="https://m.example.com/products/123">
+
+<!-- m.example.com/products/123 (모바일) -->
+<link rel="canonical" href="https://www.example.com/products/123">
+```
+
+**규칙:**
+- 모바일 우선 색인이 완료됐어도 Google은 **m-dot URL을 canonical로 바꾸지 말라**는 안내를 유지한다. 색인에 쓰이는 *콘텐츠*는 모바일 버전(Googlebot 스마트폰이 m.을 크롤)이지만, *정본 URL*은 데스크톱이다.
+- `media` 값은 Google 예시 그대로 `only screen and (max-width: 640px)`. 다른 값을 써도 힌트일 뿐이라 굳이 바꾸지 않는다.
+- 모바일 페이지의 canonical이 **자기참조(m.)** 거나 alternate만 있고 canonical이 없으면 두 URL이 중복 콘텐츠로 경쟁한다 — 감사 시 High.
+- 1-3의 **콘텐츠 패리티**가 여기서 더 중요하다: m.에 없는 본문·구조화 데이터·내부 링크는 색인에서 사라진다. 두 버전이 같은 JSON-LD(Product·BreadcrumbList)를 내야 하며, JSON-LD 안의 `url`·`@id`도 **데스크톱 URL**로 통일한다.
+- CSR SPA(react-helmet-async 등)에서 `<Helmet>`으로 넣는 경우, 페이지마다 흩어 쓰지 말고 **공용 SEO 컴포넌트 하나**가 현재 호스트를 보고 위 표를 자동 생성하게 한다. 그래야 `og:url`(카카오·페이스북 공유)도 canonical과 같은 데스크톱 URL로 일관된다.
+- Search Console: `m.example.com`과 `www.example.com`은 **속성을 각각 등록**한다(Domain 속성은 같은 루트 도메인의 서브도메인을 묶지만, 보고서는 분리해서 보는 편이 진단에 낫다). 사이트맵은 각 호스트의 URL만 담는다.
+- 장기 경로는 반응형 통합이며, 통합 시 m. → www. **301** + alternate 제거 순서로 진행한다(`frontend/url-canonicalization-redirects` 참조).
 
 ---
 

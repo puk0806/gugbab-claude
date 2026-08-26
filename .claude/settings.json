@@ -1,10 +1,10 @@
 {
-  "defaultMode": "acceptEdits",
   "enabledPlugins": {
     "codex@openai-codex": true,
     "superpowers@superpowers-marketplace": true
   },
   "permissions": {
+    "defaultMode": "acceptEdits",
     "allow": [
       "Bash(node*)",
       "Bash(npx*)",

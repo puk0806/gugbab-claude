@@ -20,7 +20,7 @@ description: >
 > - Cloudflare Pages — Redirects: https://developers.cloudflare.com/pages/configuration/redirects/
 > - Nginx 공식 — "If is evil": https://nginx.com/resources/wiki/start/topics/depth/ifisevil/
 >
-> 검증일: 2026-06-02
+> 검증일: 2026-08-26 (최초 2026-06-02 · 08-26 freshness 재검증: 신호 강도·rel=prev/next·308·Next.js 16 trailingSlash VERIFIED. 분리 모바일 호스트 결정 행 추가 — 상세는 mobile-seo-pwa 1-4절로 위임)
 > 검증 대상 버전: Next.js 16.x, Astro 5.x, Vercel/Netlify/Cloudflare Pages 2026-06 시점 문서
 
 ---
@@ -36,6 +36,7 @@ description: >
 | redirect chain | **1 hop이 이상**, 최대 **5 hops 미만** (Google John Mueller) |
 | 트래킹 파라미터(utm/fbclid) | 사용자에게 *redirect 하지 말 것*. canonical로 파라미터 없는 URL을 명시 |
 | 트레일링 슬래시 | 슬래시 유/무 어느 쪽이든 무방. **일관성**이 본질. 다른 형태는 301로 통일 |
+| 분리 모바일 호스트(`m.` / `www.`) | **redirect로 합치지 말 것**(UA 기반 리다이렉트는 크롤러 혼란). 데스크톱 = canonical 자기참조 + `rel="alternate" media` → m. / 모바일 = canonical → www. 의 양방향 교차 지정. 상세·코드는 `frontend/mobile-seo-pwa` 1-4절. 반응형 통합 시점에만 m. → www. 301 |
 
 ---
 

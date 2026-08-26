@@ -14,7 +14,7 @@ description: 전 세계·국가별 검색엔진(Google·Bing·Naver·Yandex·Bai
 > - IndexNow Documentation: https://www.indexnow.org/documentation
 > - Google Indexing API: https://developers.google.com/search/apis/indexing-api/v3/quickstart
 >
-> 검증일: 2026-06-02
+> 검증일: 2026-08-26 (최초 2026-06-02 · 08-26 freshness 재검증: URL Inspection API 한도·Indexing API 범위·Bing GSC Import·Naver IndexNow·속성 유형 전부 VERIFIED, 변경 없음. 분리 모바일 호스트는 `m.`·`www.` 속성을 각각 등록해 보고서를 분리하는 편이 진단에 유리 — `frontend/mobile-seo-pwa` 1-4절)
 
 ---
 

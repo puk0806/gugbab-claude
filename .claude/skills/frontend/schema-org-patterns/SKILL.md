@@ -13,7 +13,8 @@ description: >
 > - Sitelinks Search Box deprecation: https://developers.google.com/search/blog/2024/10/sitelinks-search-box
 > - HowTo/FAQ 변경: https://developers.google.com/search/blog/2023/08/howto-faq-changes
 >
-> 검증일: 2026-06-01
+> 검증일: 2026-08-26 (최초 2026-06-01 · 08-26 freshness 재검증: FAQPage 3단계 폐지·HowTo 제거·NewsArticle headline 110자 VERIFIED, 변경 없음)
+> 참고: 본문은 Article·BreadcrumbList·FAQPage·HowTo·Organization/LocalBusiness 5절이며, **Product·VideoObject·WebSite는 `references/REFERENCE.md`** 에 있다. 커머스 Product 스키마(배송·반품 필드 포함)의 정본은 `frontend/ecommerce-seo` §2.
 
 ---
 

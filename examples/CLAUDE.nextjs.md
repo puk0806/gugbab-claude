@@ -16,6 +16,7 @@ Next.js App Router (TypeScript) — {프로젝트 한 줄 설명}
 - `use client` 남용 금지 — Server Component 기본, 상호작용 필요한 부분만 클라이언트 컴포넌트
 - `any` 타입 사용 금지 — `unknown` + 타입 가드로 대체
 - `console.log` 프로덕션 코드에 남기지 않기
+- 모노레포(Turborepo)면 `apps/*`·`packages/*` 경계를 넘는 상대경로 import 금지 — workspace 패키지의 public export만 사용
 
 ---
 
@@ -27,6 +28,7 @@ Next.js App Router (TypeScript) — {프로젝트 한 줄 설명}
 | Git 커밋 컨벤션 | @.claude/rules/git.md |
 | 외부 정보 조사·검증 | @.claude/rules/info-verification.md |
 | TypeScript 코딩 규칙 | @.claude/rules/typescript.md |
+| 도메인 폴더 구조·모듈 경계·대규모 이동 | `frontend-domain-refactorer` 에이전트 + `.claude/skills/architecture/{frontend-domain-structure,module-boundaries,incremental-refactoring}` |
 | 에이전트 설계·작성 | @.claude/rules/agent-design.md |
 | 슬래시 커맨드 작성 | @.claude/rules/commands.md |
 | README 업데이트 | @.claude/rules/readme-update.md |

@@ -239,3 +239,4 @@ GSC 페이지 보고서에서 "크롤됨 - 현재 색인되지 않음"이 100개
 |------|------|-----------|--------|
 | 2026-06-02 | v1 | 최초 작성. 5개 검색엔진 콘솔 + IndexNow + Google Indexing API 통합 가이드 | skill-creator |
 | 2026-06-02 | v1 | 2단계 실사용 테스트 수행 (Q1 신규 사이트 등록 순서 / Q2 크롤됨-색인 안 됨 진단 / Q3 IndexNow 이득·Google 미지원) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-08-26 | v1.1 | freshness 재검증(85일 경과) — URL Inspection API 600/분·2,000/일, Indexing API JobPosting·BroadcastEvent 전용, Bing GSC Import, Naver IndexNow(2023-07), 속성 유형 5건 전부 VERIFIED. 분리 모바일 호스트 속성 분리 등록 안내를 검증일 줄에 추가 | freshness-auditor + orchestrator |

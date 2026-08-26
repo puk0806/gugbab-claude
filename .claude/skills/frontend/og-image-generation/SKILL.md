@@ -13,12 +13,13 @@ description: >
 > - https://ogp.me/ (OpenGraph Protocol)
 > - https://nextjs.org/docs/app/api-reference/file-conventions/metadata/opengraph-image (Next.js 16.2.7)
 > - https://nextjs.org/docs/app/api-reference/functions/image-response (Next.js 16.2.7)
-> - https://github.com/vercel/satori (v0.27.0, 2026-04-30)
+> - https://github.com/vercel/satori (v0.33.4, npm latest 2026-08 기준 — 0.x라 마이너 간 breaking 가능, 설치 시 changelog 확인)
+> - https://www.npmjs.com/package/@vercel/og (1.0.2 — Next.js 외 환경용 독립 패키지. Next.js에서는 `next/og` 내장)
 > - https://developer.x.com/en/docs/x-for-websites/cards/overview/summary-card-with-large-image
 > - https://developers.facebook.com/docs/sharing/webmasters/images
 >
-> 검증일: 2026-06-02
-> 대상 버전: Next.js 16.x · satori 0.27.0 · @vercel/og(현 `next/og`)
+> 대상 버전: Next.js 16.x · satori 0.33.x · @vercel/og 1.0.x(Next.js에서는 `next/og`)
+> 검증일: 2026-08-26 (최초 2026-06-02 · 08-26 freshness 재검증: 1200×630 규격·Next.js 16 Promise params VERIFIED, satori 0.27→0.33.4·@vercel/og 1.0.2 버전 갱신. 카카오·네이버 이미지 규격은 공식 문서 부재로 1.91:1 유지가 안전)
 
 OpenGraph 이미지는 링크가 공유될 때 카카오톡·Slack·X·페이스북·LinkedIn에서 표시되는 미리보기 카드의 핵심 비주얼이다. 정적 PNG 1장을 두는 방식도 가능하지만 글 제목·태그·작성자 같은 가변 정보를 담으려면 *동적 생성*이 표준이다.
 

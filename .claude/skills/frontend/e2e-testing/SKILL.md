@@ -6,8 +6,8 @@ description: Playwright E2E 테스트 — 설치, 설정, 로케이터, POM, 네
 # E2E Testing — Playwright
 
 > 소스: https://playwright.dev/docs/intro | https://playwright.dev/docs/best-practices
-> 검증일: 2026-04-20
-> 대상 버전: Playwright v1.59.1 (최신 안정)
+> 검증일: 2026-08-26 (최초 2026-04-20 · 08-26 freshness 재검증: 로케이터 우선순위·`page.route`·`defineConfig`·fixture 확장 전부 현행, 버전 문자열만 갱신)
+> 대상 버전: Playwright v1.62.x (최신 안정, 2026-08 기준)
 
 ---
 

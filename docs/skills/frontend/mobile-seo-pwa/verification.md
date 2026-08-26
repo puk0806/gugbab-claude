@@ -109,9 +109,9 @@ status: APPROVED
 
 ### 4-4. Claude Code 에이전트 활용 테스트
 
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-06-02, skill-tester → general-purpose 대체 수행)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (3/3 PASS)
-- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (gap 없음 — 보완 불필요)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-06-02, skill-tester → general-purpose 대체 수행 / 2026-08-26, skill-tester → frontend-developer로 1-4절 신설분 재수행)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (3/3 PASS — 2026-06-02, 3/3 PASS — 2026-08-26)
+- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (gap 없음 — 보완 불필요, 두 차례 모두)
 
 ---
 
@@ -140,6 +140,39 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-08-26
+**수행자**: skill-tester → frontend-developer
+**수행 방법**: 2026-08-26 신설된 "1-4. 분리 모바일 URL(m-dot) — canonical/alternate 교차 지정" 절 갱신분에 대한 content 재테스트. SKILL.md Read 후 1-4절 중심 실전 질문 3개 답변, 근거 섹션(줄 번호) 및 방향·값 정확성 검증
+
+### 재테스트 대상 (2026-08-26 신설분)
+
+**Q1. `m.example.com` / `www.example.com`으로 분리된 커머스에서 각 페이지에 넣을 `<link>` 태그(방향·media 값)는?**
+- ✅ PASS
+- 근거: SKILL.md "1-4절" 표(78-81줄) + 코드블록(83-90줄)
+- 상세: 데스크톱(`www.`) 페이지 = `rel="canonical"` 자기참조 + `rel="alternate" media="only screen and (max-width: 640px)"`로 모바일(`m.`) URL 지정. 모바일(`m.`) 페이지 = `rel="canonical"`만, href는 **반대쪽인 데스크톱 URL**. 방향·media 값 모두 SKILL.md 표·코드와 정확히 일치하게 답변함(방향을 반대로 넣는 흔한 실수를 피함)
+
+**Q2. 모바일 페이지 canonical을 `m.` 자기참조로 두면 무슨 일이 생기는가?**
+- ✅ PASS
+- 근거: SKILL.md "1-4절 규칙" 4번째 불릿(95줄), 93줄(m-dot을 canonical로 바꾸지 말라는 Google 안내)
+- 상세: "두 URL이 중복 콘텐츠로 경쟁한다 — 감사 시 High" 문장을 정확히 인용하고, Google의 "m-dot을 canonical로 바꾸지 말라"는 안내 위반이라는 점까지 근거로 제시
+
+**Q3. m./www. 분리 구조를 반응형(단일 URL)으로 통합할 때 작업 순서는?**
+- ✅ PASS (질문 자체에 대한 답은 정확 — 심화 실행 절차는 의도적으로 타 스킬에 위임된 범위)
+- 근거: SKILL.md "1-4절" 마지막 불릿(99줄) — "통합 시 m. → www. **301** + alternate 제거 순서로 진행"
+- 상세: "① m.→www. 301 리다이렉트 ② alternate 태그 제거" 순서를 정확히 답변. 에이전트가 자체적으로 "실행 세부(리다이렉트 롤아웃, GSC 속성 정리, 사이트맵 갱신 시점)는 `frontend/url-canonicalization-redirects` 스킬로 위임되어 이 파일만으로는 완결 안 됨"이라고 지적했으나, 이는 SKILL.md 0절이 명시한 의도된 역할 분리(스킬 간 책임 경계)이며 실제 질문("순서")에는 SKILL.md 근거로 정확히 답변함. 참조 스킬 `.claude/skills/frontend/url-canonicalization-redirects/SKILL.md` 실존 확인 완료
+
+### 발견된 gap
+
+없음(차단 요인). Q3에서 지적된 "심화 실행 절차 부재"는 스킬 0절의 의도된 범위 분리이며 참조 대상 스킬이 실존함을 확인했으므로 SKILL.md 수정 불필요.
+
+### 재테스트 판정
+
+- agent content test (1-4절 갱신분): 3/3 PASS
+- 기존 판정(2026-06-02, 3/3 PASS)과 합산해도 상태 변경 없음
+- 최종 상태: APPROVED 유지
+
+---
 
 **수행일**: 2026-06-02
 **수행자**: skill-tester → general-purpose (frontend-developer 에이전트 미등록으로 general-purpose 대체)
@@ -185,16 +218,17 @@ status: APPROVED
 | 내용 정확성 | ✅ (15/15 클레임 VERIFIED) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (3/3 PASS — 2026-06-02) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (3/3 PASS — 2026-06-02, 1-4절 신설분 재테스트 3/3 PASS — 2026-08-26) |
+| **최종 판정** | **APPROVED** (유지) |
 
 ---
 
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester를 통한 실전 질문 답변 테스트 (2026-06-02 완료, 3/3 PASS)
+- [✅] 1-4절(분리 모바일 URL m-dot canonical/alternate 교차 지정) 신설분 content 재테스트 (2026-08-26 완료, 3/3 PASS — skill-tester → frontend-developer)
 - [❌] 실제 PWA 프로젝트에서 manifest·apple-touch-icon 통합 검증 (실사용 검증) — 차단 요인 아님. 라이브러리/메타 정리형 스킬이므로 content test PASS로 APPROVED 전환 가능. 실제 앱 개발 이후 추가 보강 권장(선택)
-- [ ] iOS 18 신규 변경사항이 향후 등장하면 6절·6-3절 업데이트
+- [❌] iOS 18 신규 변경사항이 향후 등장하면 6절·6-3절 업데이트 — 차단 요인 아님. 향후 변경사항 발생 시에만 필요한 선택적 후속 과제
 
 ---
 
@@ -204,3 +238,5 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-06-02 | v1 | 최초 작성 — Mobile-First Indexing·viewport·dvh/svh/lvh·safe-area·Web App Manifest·iOS 메타·AMP deprecated·인터스티셜·SW SEO 14섹션 정리 | skill-creator |
 | 2026-06-02 | v1 | 2단계 실사용 테스트 수행 (Q1 100vh/dvh 주소창 잘림 / Q2 iPhone 홈화면 아이콘 깨짐 / Q3 AMP 2026 신규 도입 가치) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-08-26 | v2 | freshness 재검증(85일 경과) — Mobile-First Indexing 완료·dvh/svh·iOS DMA·interactive-widget VERIFIED. **1-2절 M-dot 행이 "양방향 링크 필수" 한 줄뿐이라 방향을 반대로 넣을 위험** → 1-4절 신설: 데스크톱=canonical 자기참조+`rel=alternate media="only screen and (max-width: 640px)"`, 모바일=canonical→데스크톱(Google 공식 문서 원문 인용), 패리티·JSON-LD url 통일·공용 SEO 컴포넌트·GSC 속성 분리·통합 시 301 순서 | freshness-auditor + orchestrator |
+| 2026-08-26 | v2 | 1-4절 신설분 content 재테스트 수행 (Q1 m./www. 분리 시 link 태그 방향·media / Q2 모바일 canonical 자기참조 시 결과 / Q3 반응형 통합 순서) → 3/3 PASS, APPROVED 유지 | skill-tester |
