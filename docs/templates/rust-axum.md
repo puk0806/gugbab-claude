@@ -49,9 +49,11 @@ Rust + Axum 백엔드 프로젝트. 프론트엔드·Java·게임·학술 스킬
 |----------|------|------|
 | backend — Rust (17종) | Axum·sqlx·thiserror·tokio·tower-http·serde·tracing 등 | [→ 목록](../skills/backend/README.md) |
 | backend — Python (10종) | FastAPI·Pydantic·LlamaIndex·Anthropic SDK 등 | [→ 목록](../skills/backend/README.md) |
-| devops (9종) | Docker·GitHub Actions·n8n·SEO 운영 | [→ 목록](../skills/devops/README.md) |
-| architecture (2종) | DDD, 꿈 앱 데이터 모델 | [→ 목록](../skills/architecture/README.md) |
-| meta (5종) | 워크플로우·프롬프트 엔지니어링 | [→ 목록](../skills/meta/README.md) |
+| devops (10종) | Docker·GitHub Actions(+VR)·n8n 5종·SEO 운영·Vercel Sandbox | [→ 목록](../skills/devops/README.md) |
+| architecture (3종) | ddd·incremental-refactoring·module-boundaries | [→ 목록](../skills/architecture/README.md) |
+| meta (3종) | claude-code-hook-authoring·ralph-loop·riper-workflow | [→ 목록](../skills/meta/README.md) |
+
+> 2026-08-31: dream 전용(meta 3·architecture 1)·frontend-domain-structure가 fallthrough로 딸려가던 누수를 차단했습니다.
 
 ---
 

@@ -42,9 +42,11 @@ Unity 6 LTS 2D 모바일 게임 개발 프로젝트. 웹 프론트엔드·서버
 | 카테고리 | 종류 | 링크 |
 |----------|------|------|
 | game (17종) | GDD·AI 에셋·Unity 핵심·수익화·출시·CI/CD | [→ game 스킬 목록](../skills/game/README.md) |
-| devops (9종) | Docker·GitHub Actions·n8n·SEO 운영 | [→ devops 스킬 목록](../skills/devops/README.md) |
-| architecture (2종) | DDD, 꿈 앱 데이터 모델 | [→ architecture 스킬 목록](../skills/architecture/README.md) |
-| meta (5종) | 워크플로우·프롬프트 엔지니어링 | [→ meta 스킬 목록](../skills/meta/README.md) |
+| devops (10종) | Docker·GitHub Actions(+VR)·n8n 5종·SEO 운영·Vercel Sandbox | [→ devops 스킬 목록](../skills/devops/README.md) |
+| architecture (3종) | ddd·incremental-refactoring·module-boundaries | [→ architecture 스킬 목록](../skills/architecture/README.md) |
+| meta (3종) | claude-code-hook-authoring·ralph-loop·riper-workflow | [→ meta 스킬 목록](../skills/meta/README.md) |
+
+> 2026-08-31: dream 전용(meta 3·architecture 1)·frontend-domain-structure가 fallthrough로 딸려가던 누수를 차단했습니다.
 
 ---
 
