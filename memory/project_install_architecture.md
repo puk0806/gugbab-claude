@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 9152b891-1df7-4c78-8301-10defaed293c
-  modified: 2026-08-12T00:33:30.915Z
+  modified: 2026-08-31T07:53:29.692Z
 ---
 
 gugbab-claude는 Claude Code 컨벤션 소스 레포. `project-install.sh`로 다른 프로젝트에 이식.
@@ -31,9 +31,12 @@ gugbab-claude는 Claude Code 컨벤션 소스 레포. `project-install.sh`로 �
 - `EXCLUDE_AGENTS_BACKEND` — rust-axum 시 제외 (프론트엔드 + Java 에이전트)
 - `EXCLUDE_AGENTS_JAVA` — java-spring-* 시 제외 (프론트엔드 + Rust 에이전트, build-error-resolver는 Rust/TS 전용)
 - `JAVA_SKILLS_COMMON` — java-spring-legacy/modern 양쪽에 포함 (현재 13종)
-- `JAVA_SKILLS_LEGACY_ONLY` — java-spring-legacy 전용 (현재 5종: spring-security-5, springfox-2, redisson-legacy, ehcache-2, aws-sdk-v1)
+- `JAVA_SKILLS_LEGACY_ONLY` — java-spring-legacy 전용 (현재 6종: spring-security-5, springfox-2, redisson-legacy, ehcache-2, aws-sdk-v1, **spring-boot-2-to-3-migration** — 2026-08-31 미등록 버그 수정으로 추가)
 - `JAVA_SKILLS_MODERN_ONLY` — java-spring-modern 전용 (현재 4종: spring-security-6, springdoc-3, redisson-modern, aws-sdk-v2)
 - `is_java_skill()` 함수 — backend/ 폴더 내에서 Java 스킬과 Rust 스킬 구분
+- **2026-08-31 누수 차단**: `is_java_noncore_excluded()`(java에서 dream meta 3·dream arch 1·n8n 5·site-migration-seo·VR·vercel-sandbox·frontend-domain-structure 제외), rust·unity 분기에도 dream+frontend-domain-structure 제외. `EXCLUDE_AGENTS_JAVA`에 seo-auditor·content-quality·a11y·perf 2종·frontend/CLAUDE.md 추가. prune 기록은 `is_only_java_selected`/`is_leakscope_only_selected`(java·rust·unity 조합) 조건 — ts·dream·health 혼합 시엔 소유 가능성 때문에 기록 안 함. java-legacy 설치본 = 스킬 27·에이전트 28
+- **references 복사 (2026-08-31)**: 스킬 복사 루프가 SKILL.md 외 부속 파일(references/)도 파일별 매니페스트 기록과 함께 복사. 제외 기록(`record_excluded_skill`)도 폴더 전체 파일 큐잉
+- **매니페스트 docs kind (2026-08-31)**: 짝 docs(docs/skills/**·docs/agents/**·공용 docs)를 `docs` kind로 기록(rel은 docs/ 루트 기준). prune이 docs 루트 지원 + 구버전 매니페스트(docs 섹션 없음) 대응으로 **docs 한정 소스 동일성 폴백 증명**(레포 원본과 바이트 동일할 때만 삭제). 회귀: `scripts/template-separation.test.js` — 6템플릿 실설치 E2E 12건(업그레이드 경로·파괴 방어·경계 포함)
 
 **기타 동작:**
 - `CLAUDE.md` / `settings.json`: 존재 시 덮어쓸지 사용자에게 질문 (기본 N)

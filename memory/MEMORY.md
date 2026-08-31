@@ -35,7 +35,8 @@
 - [Claude 구독 중계 서버(05_gugbab-claude-relay) 계획](project_claude_relay_plan.md) — Vercel Sandbox+claude -p 구독 인증 SSE 중계. 스킬 2종 APPROVED(2026-07-03), 스캐폴딩 미착수
 - [전수검사·정리 (2026-08-11)](project_full_audit_2026-08-11.md) — 스킬 209·에이전트 67 전수 감사, 에이전트 4종 정리(67→63), 긴급 스킬 7종 갱신, UPDATE 백로그 12건
 - [doctor 컨텍스트 최적화 (2026-08-10)](project_doctor_context_optimization.md) — rules 5종 paths 스코핑·auto 모드 적용, 스킬 209종 목록 미노출 발견(정리 작업 1단계)
-- [project-install.sh 이식 아키텍처](project_install_architecture.md) — 10개 템플릿(0~9), JAVA_SKILLS_* 필터, scripts/gen-settings.js로 settings.json 생성
+- [project-install.sh 이식 아키텍처](project_install_architecture.md) — 11개 템플릿(0~10), JAVA_SKILLS_* 필터, 2026-08-31 누수 차단(java·rust·unity)+references 복사+매니페스트 docs kind+template-separation E2E, gen-settings.js로 settings.json 생성
+- [lfcp-nxapi 설치 타깃 실측 (2026-08-31)](project_lfcp_nxapi_target.md) — 실무 Java 레거시 커머스 API. java-spring-legacy(5) 1:1 매칭, Oracle 전용·Redisson 2.15.2·Joda 269파일 실측, SAP JCo·log4j1 잔재 참고
 - [프로젝트 scope 전용 원칙](project_scope_only.md) — gugbab-claude 모든 산출물은 프로젝트 scope에만, 글로벌(~/.claude) 설정 금지
 - [MCP 미사용 결정](project_mcp_decision.md) — WebSearch/WebFetch만 사용, 팀 이식성 우선
 - [Claude Code 설치 환경·npm SSL 우회](project_claude_install_environment.md) — 단일 nvm-global 설치(2.1.226, 2026-08-10 이중화 재해소), 업데이트 후 버전 안 바뀌면 .npm-global 중복 의심, npm tgz가 SELF_SIGNED_CERT로 막히면 curl 우회 절차 사용
