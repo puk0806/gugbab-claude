@@ -91,6 +91,49 @@ has_template() {
   return 1
 }
 
+# 이번 실행이 java 템플릿만으로 구성됐는가 — java 고유 누수(n8n·SEO devops·에이전트)의 prune 기록 조건.
+# (react-spa 등 타 템플릿과 병행 설치 시엔 그 템플릿 소유 자산일 수 있어 prune 기록 금지 — 템플릿은 가산적)
+is_only_java_selected() {
+  for _tmpl in "${TEMPLATES[@]}"; do
+    case "$_tmpl" in
+      java-spring-legacy|java-spring-modern) ;;
+      *) return 1 ;;
+    esac
+  done
+  return 0
+}
+
+# 이번 실행의 모든 템플릿이 dream·프론트 아키텍처 스킬의 정당한 소유자가 아닌 조합(java·rust·unity)인가.
+# 이때만 해당 누수 잔재를 prune 기록해 rust/unity·혼합 재설치도 수렴한다 (2026-08-31 Codex R1).
+# ts·dream·health 템플릿이 섞이면 그쪽 소유일 수 있어 기록하지 않는다.
+is_leakscope_only_selected() {
+  for _tmpl in "${TEMPLATES[@]}"; do
+    case "$_tmpl" in
+      java-spring-legacy|java-spring-modern|rust-axum|unity-game) ;;
+      *) return 1 ;;
+    esac
+  done
+  return 0
+}
+
+# 제외 스킬을 prune 목록에 기록 — 대상에 이미 존재하는 짝 docs 파일도 함께 (2026-08-31 Codex R1: docs 잔존)
+# SKILL.md만이 아니라 스킬 폴더 아래 전체 파일(references/ 등)을 큐잉한다
+# (2026-08-31 Codex R2: references 복사 도입 후 SKILL.md만 prune하면 부속 파일이 영구 잔존).
+# 삭제 자체는 prune-option-excluded.js가 파일별 매니페스트 해시 증명으로만 수행한다.
+record_excluded_skill() {
+  local _rel="$1" _prefix="$2"
+  if [ -d "$TARGET/.claude/skills/$_prefix" ]; then
+    ( cd "$TARGET/.claude/skills" && find "$_prefix" -type f 2>/dev/null ) | \
+      sed 's/^/skills|/' >> "$OPTION_EXCLUDED_TMP"
+  else
+    echo "skills|$_rel" >> "$OPTION_EXCLUDED_TMP"
+  fi
+  if [ -d "$TARGET/docs/skills/$_prefix" ]; then
+    ( cd "$TARGET/docs" && find "skills/$_prefix" -type f 2>/dev/null ) | \
+      sed 's/^/docs|/' >> "$OPTION_EXCLUDED_TMP"
+  fi
+}
+
 # 개발 템플릿(코딩 작업)이 하나라도 선택되었는가
 is_dev_selected() {
   for _tmpl in "${TEMPLATES[@]}"; do
@@ -307,6 +350,7 @@ fi
 # 설치 마지막에 .claude/.install-manifest.json 으로 저장한다 (재설치 시 폐기 수렴 근거)
 MANIFEST_AGENTS_TMP=$(mktemp)
 MANIFEST_SKILLS_TMP=$(mktemp)
+MANIFEST_DOCS_TMP=$(mktemp)   # 짝 docs(docs/skills/**, docs/agents/**) — <target>/docs/ 기준 상대경로 (2026-08-31)
 MANIFEST_HOOKS_TMP=$(mktemp)
 
 # ── 1. hooks ────────────────────────────────────────────────────────────
@@ -527,6 +571,23 @@ EXCLUDE_AGENTS_JAVA=(
   "backend/rust-backend-developer.md"
   "backend/rust-backend-architect.md"
   "backend/build-error-resolver.md"
+  # 2026-08-31 누수 수정 — 프론트·SEO 전용 에이전트가 java 백엔드에 딸려가던 것 차단
+  # (java 템플릿에서는 SEO 옵트아웃 질문이 나오지 않아 INCLUDE_SEO=true 기본값이 항상 통과했음)
+  "frontend/CLAUDE.md"
+  "validation/seo-auditor.md"
+  "validation/content-quality-reviewer.md"
+  "validation/a11y-auditor.md"
+  "validation/build-perf-benchmarker.md"
+  "validation/perf-report-writer.md"
+)
+# 위 2026-08-31 추가분 — 순수 java 재설치 시 이전 설치 잔재 정리(prune) 기록 대상
+JAVA_AGENTS_NEWLY_EXCLUDED=(
+  "frontend/CLAUDE.md"
+  "validation/seo-auditor.md"
+  "validation/content-quality-reviewer.md"
+  "validation/a11y-auditor.md"
+  "validation/build-perf-benchmarker.md"
+  "validation/perf-report-writer.md"
 )
 EXCLUDE_AGENTS_GAME=(
   "frontend/frontend-developer.md"
@@ -595,11 +656,25 @@ _option_excluded_agent() {
 # 선택된 템플릿 중 하나라도 포함하면 포함 (union)
 should_include_agent() {
   local rel="$1"
-  if _option_excluded_agent "$rel"; then echo "agents|$rel" >> "$OPTION_EXCLUDED_TMP"; return 1; fi
+  if _option_excluded_agent "$rel"; then record_excluded_agent "$rel"; return 1; fi
   for _tmpl in "${TEMPLATES[@]}"; do
     _agent_ok_for_tmpl "$rel" "$_tmpl" && return 0
   done
+  # java 템플릿 누수 수정(2026-08-31)으로 새로 제외된 에이전트 — 순수 java 재설치에서 잔재 정리 기록
+  if is_only_java_selected && is_in_list "$rel" "${JAVA_AGENTS_NEWLY_EXCLUDED[@]}"; then
+    record_excluded_agent "$rel"
+  fi
   return 1
+}
+
+# 제외 에이전트를 prune 목록에 기록 — 짝 docs(문서·verification)도 함께 (2026-08-31 Codex R1)
+record_excluded_agent() {
+  local _rel="$1"
+  echo "agents|$_rel" >> "$OPTION_EXCLUDED_TMP"
+  [ -f "$TARGET/docs/agents/$_rel" ] && echo "docs|agents/$_rel" >> "$OPTION_EXCLUDED_TMP"
+  [ -f "$TARGET/docs/agents/${_rel%.md}-verification.md" ] && \
+    echo "docs|agents/${_rel%.md}-verification.md" >> "$OPTION_EXCLUDED_TMP"
+  return 0
 }
 
 for src_path in "$REPO_DIR/.claude/agents"/**/*.md "$REPO_DIR/.claude/agents"/*.md; do
@@ -622,8 +697,10 @@ for src_path in "$REPO_DIR/.claude/agents"/**/*.md "$REPO_DIR/.claude/agents"/*.
     if [ -f "$agent_doc_src" ]; then
       agent_doc_dest="$TARGET/docs/agents/$rel"
       mkdir -p "$(dirname "$agent_doc_dest")"
-      cp -f "$agent_doc_src" "$agent_doc_dest" 2>/dev/null && \
+      if cp -f "$agent_doc_src" "$agent_doc_dest" 2>/dev/null; then
         echo "  → docs/agents/$rel"
+        echo "agents/$rel" >> "$MANIFEST_DOCS_TMP"
+      fi
     fi
     # 2) docs/agents/{cat}/{name}-verification.md (접미사 형태)
     agent_name_no_ext="${rel%.md}"
@@ -632,8 +709,10 @@ for src_path in "$REPO_DIR/.claude/agents"/**/*.md "$REPO_DIR/.claude/agents"/*.
     if [ -f "$agent_verif_src" ]; then
       agent_verif_dest="$TARGET/docs/agents/$agent_verif_rel"
       mkdir -p "$(dirname "$agent_verif_dest")"
-      cp -f "$agent_verif_src" "$agent_verif_dest" 2>/dev/null && \
+      if cp -f "$agent_verif_src" "$agent_verif_dest" 2>/dev/null; then
         echo "  → docs/agents/$agent_verif_rel"
+        echo "agents/$agent_verif_rel" >> "$MANIFEST_DOCS_TMP"
+      fi
     fi
   else
     echo "  ✗ .claude/agents/$rel (복사 실패)"
@@ -896,6 +975,8 @@ JAVA_SKILLS_LEGACY_ONLY=(
   "backend/redis-redisson-legacy"
   "backend/ehcache-2-legacy"
   "backend/aws-sdk-v1-s3-rekognition"
+  # 2.5→3.x 탈출 경로는 레거시 템플릿의 핵심 유스케이스 (2026-08-31: 배열 미등록으로 탈락하던 버그 수정)
+  "backend/spring-boot-2-to-3-migration"
 )
 JAVA_SKILLS_MODERN_ONLY=(
   "backend/spring-security-6-jwt-jjwt12"
@@ -909,6 +990,25 @@ is_java_skill() {
   for s in "${JAVA_SKILLS_COMMON[@]}" "${JAVA_SKILLS_LEGACY_ONLY[@]}" "${JAVA_SKILLS_MODERN_ONLY[@]}"; do
     [[ "$prefix" == "$s" ]] && return 0
   done
+  return 1
+}
+
+# java 템플릿에서 제외할 backend 외 카테고리 스킬 (2026-08-31)
+# — "backend만 화이트리스트, 나머지 카테고리 fallthrough" 구조라 dream·n8n·SEO·frontend 계열이
+#   자바 백엔드 프로젝트에 흘러들던 누수 차단. docker-deployment·github-actions·ddd·
+#   incremental-refactoring·module-boundaries·meta 워크플로우 3종은 백엔드에도 유효해 유지.
+JAVA_EXCLUDED_EXTRA_SKILLS=(
+  "architecture/frontend-domain-structure"
+  "devops/site-migration-seo"
+  "devops/github-actions-visual-regression"
+  "devops/vercel-sandbox"
+)
+is_java_noncore_excluded() {
+  local prefix="$1"
+  is_dream_meta "$prefix" && return 0
+  is_in_skill_list "$prefix" "${DREAM_ARCH_SKILLS[@]}" && return 0
+  is_in_skill_list "$prefix" "${N8N_SKILLS[@]}" && return 0
+  is_in_skill_list "$prefix" "${JAVA_EXCLUDED_EXTRA_SKILLS[@]}" && return 0
   return 1
 }
 
@@ -970,12 +1070,17 @@ _skill_ok_for_tmpl() {
     [[ "$rel" == frontend/* || "$rel" == game/* || "$rel" == humanities/* ||
        "$rel" == education/* || "$rel" == research/* || "$rel" == writing/* ]] && return 1
     [[ "$rel" == backend/* ]] && is_java_skill "$skill_prefix" && return 1
+    # dream 전용·프론트 아키텍처 스킬 fallthrough 누수 차단 (2026-08-31, java와 동일 결함)
+    [[ "$rel" == meta/* ]] && is_dream_meta "$skill_prefix" && return 1
+    is_in_skill_list "$skill_prefix" "${DREAM_ARCH_SKILLS[@]}" && return 1
+    [[ "$skill_prefix" == "architecture/frontend-domain-structure" ]] && return 1
     return 0
   fi
   if [ "$tmpl" = "java-spring-legacy" ]; then
     [[ "$rel" == frontend/* || "$rel" == game/* || "$rel" == humanities/* ||
        "$rel" == education/* || "$rel" == research/* || "$rel" == writing/* ]] && return 1
     [[ "$rel" == backend/* ]] && ! is_java_skill "$skill_prefix" && return 1
+    is_java_noncore_excluded "$skill_prefix" && return 1
     for _m in "${JAVA_SKILLS_MODERN_ONLY[@]}"; do
       [[ "$skill_prefix" == "$_m" ]] && return 1
     done
@@ -985,6 +1090,7 @@ _skill_ok_for_tmpl() {
     [[ "$rel" == frontend/* || "$rel" == game/* || "$rel" == humanities/* ||
        "$rel" == education/* || "$rel" == research/* || "$rel" == writing/* ]] && return 1
     [[ "$rel" == backend/* ]] && ! is_java_skill "$skill_prefix" && return 1
+    is_java_noncore_excluded "$skill_prefix" && return 1
     for _l in "${JAVA_SKILLS_LEGACY_ONLY[@]}"; do
       [[ "$skill_prefix" == "$_l" ]] && return 1
     done
@@ -993,6 +1099,10 @@ _skill_ok_for_tmpl() {
   if [ "$tmpl" = "unity-game" ]; then
     [[ "$rel" == frontend/* || "$rel" == backend/* || "$rel" == humanities/* ||
        "$rel" == education/* || "$rel" == research/* || "$rel" == writing/* ]] && return 1
+    # dream 전용·프론트 아키텍처 스킬 fallthrough 누수 차단 (2026-08-31, java와 동일 결함)
+    [[ "$rel" == meta/* ]] && is_dream_meta "$skill_prefix" && return 1
+    is_in_skill_list "$skill_prefix" "${DREAM_ARCH_SKILLS[@]}" && return 1
+    [[ "$skill_prefix" == "architecture/frontend-domain-structure" ]] && return 1
     return 0
   fi
   return 1
@@ -1016,7 +1126,15 @@ for src_path in "$REPO_DIR/.claude/skills"/*/*/SKILL.md; do
     # 이번 템플릿 범위인데 옵션(SEO n)·전용 스킬 누출 차단으로 빠진 것은 재설치 정리 목록에 기록
     if is_ts_selected && { is_seo_frontend "$skill_prefix" || is_dream_frontend "$skill_prefix" || is_dream_meta "$skill_prefix" ||
          is_in_skill_list "$skill_prefix" "${DREAM_ARCH_SKILLS[@]}" "${N8N_SKILLS[@]}" "${SEO_DEVOPS_SKILLS[@]}" "${SEO_WRITING_SKILLS[@]}" "${SEO_NONCOMMERCE_SKILLS[@]}"; }; then
-      echo "skills|$rel" >> "$OPTION_EXCLUDED_TMP"
+      record_excluded_skill "$rel" "$skill_prefix"
+    fi
+    # 템플릿 누수 수정(2026-08-31)으로 제외된 스킬 — 소유자 없는 템플릿 조합의 재설치에서 잔재 정리 기록
+    if is_only_java_selected && is_java_noncore_excluded "$skill_prefix"; then
+      record_excluded_skill "$rel" "$skill_prefix"          # java 고유 누수 전체 (n8n·SEO devops 포함)
+    elif is_leakscope_only_selected && { { [[ "$rel" == meta/* ]] && is_dream_meta "$skill_prefix"; } ||
+         is_in_skill_list "$skill_prefix" "${DREAM_ARCH_SKILLS[@]}" ||
+         [[ "$skill_prefix" == "architecture/frontend-domain-structure" ]]; }; then
+      record_excluded_skill "$rel" "$skill_prefix"          # java·rust·unity 공통 누수 (혼합 조합 포함)
     fi
     echo "  skip .claude/skills/$rel" && continue
   fi
@@ -1027,6 +1145,21 @@ for src_path in "$REPO_DIR/.claude/skills"/*/*/SKILL.md; do
     echo "  → .claude/skills/$rel"
     echo "$rel" >> "$MANIFEST_SKILLS_TMP"
 
+    # SKILL.md 외 부속 파일(references/ 등)도 함께 복사 — 본문이 참조하는 파일 누락 방지 (2026-08-31)
+    # 파일별로 매니페스트에 기록해 재설치 정리(소유 증명) 대상에 포함한다
+    _skill_src_dir="$(dirname "$src_path")"
+    while IFS= read -r _extra; do
+      _extra_rel="${_extra#$REPO_DIR/.claude/skills/}"
+      _extra_dest="$TARGET/.claude/skills/$_extra_rel"
+      mkdir -p "$(dirname "$_extra_dest")"
+      if cp -f "$_extra" "$_extra_dest" 2>/dev/null; then
+        echo "  → .claude/skills/$_extra_rel"
+        echo "$_extra_rel" >> "$MANIFEST_SKILLS_TMP"
+      else
+        echo "  ✗ .claude/skills/$_extra_rel (복사 실패)"
+      fi
+    done < <(find "$_skill_src_dir" -type f ! -name 'SKILL.md' 2>/dev/null)
+
     # 같은 스킬의 docs 페어링 복사 (docs/skills/{cat}/{name}/)
     docs_src_dir="$REPO_DIR/docs/skills/$skill_prefix"
     if [ -d "$docs_src_dir" ]; then
@@ -1034,6 +1167,7 @@ for src_path in "$REPO_DIR/.claude/skills"/*/*/SKILL.md; do
       mkdir -p "$docs_dest_dir"
       if cp -Rf "$docs_src_dir/." "$docs_dest_dir/" 2>/dev/null; then
         echo "  → docs/skills/$skill_prefix/"
+        ( cd "$TARGET/docs" && find "skills/$skill_prefix" -type f 2>/dev/null ) >> "$MANIFEST_DOCS_TMP"
       else
         echo "  ✗ docs/skills/$skill_prefix/ (복사 실패)"
       fi
@@ -1085,16 +1219,19 @@ else
     if cp -f "$REPO_DIR/docs/skills/VERIFICATION_TEMPLATE.md" \
             "$TARGET/docs/skills/VERIFICATION_TEMPLATE.md" 2>/dev/null; then
       echo "  → docs/skills/VERIFICATION_TEMPLATE.md"
+      echo "skills/VERIFICATION_TEMPLATE.md" >> "$MANIFEST_DOCS_TMP"
     else
       echo "  ✗ docs/skills/VERIFICATION_TEMPLATE.md (복사 실패)"
     fi
   fi
 
   # docs/hooks/ (훅 문서 — 모든 템플릿이 동일한 훅 세트를 받으므로 통째 복사)
+  # 공용 docs도 매니페스트에 기록해 소유 증명을 남긴다 (2026-08-31 Codex R2 — 삭제 경로는 후속 과제)
   if [ -d "$REPO_DIR/docs/hooks" ]; then
     mkdir -p "$TARGET/docs/hooks"
     if cp -Rf "$REPO_DIR/docs/hooks/." "$TARGET/docs/hooks/" 2>/dev/null; then
       echo "  → docs/hooks/"
+      ( cd "$TARGET/docs" && find "hooks" -type f 2>/dev/null ) >> "$MANIFEST_DOCS_TMP"
     else
       echo "  ✗ docs/hooks/ (복사 실패)"
     fi
@@ -1259,14 +1396,14 @@ fi
 if [ -s "$OPTION_EXCLUDED_TMP" ]; then
   echo ""
   echo "[옵션 제외 정리]"
-  node "$REPO_DIR/scripts/prune-option-excluded.js" "$TARGET" "$OPTION_EXCLUDED_TMP" || echo "  ⚠ 옵션 제외 정리 실패 — 잔재는 다음 재설치에서 재시도"
+  node "$REPO_DIR/scripts/prune-option-excluded.js" "$TARGET" "$OPTION_EXCLUDED_TMP" "$REPO_DIR" || echo "  ⚠ 옵션 제외 정리 실패 — 잔재는 다음 재설치에서 재시도"
 fi
 rm -f "$OPTION_EXCLUDED_TMP"
 
 node "$REPO_DIR/scripts/write-install-manifest.js" \
-  "$TARGET" "$MANIFEST_AGENTS_TMP" "$MANIFEST_SKILLS_TMP" "$INCLUDE_MEMORY" "$MANIFEST_HOOKS_TMP" "$MANIFEST_COMMANDS_TMP" "$MANIFEST_RULES_TMP" || \
+  "$TARGET" "$MANIFEST_AGENTS_TMP" "$MANIFEST_SKILLS_TMP" "$INCLUDE_MEMORY" "$MANIFEST_HOOKS_TMP" "$MANIFEST_COMMANDS_TMP" "$MANIFEST_RULES_TMP" "$MANIFEST_DOCS_TMP" || \
   echo "  ⚠ 매니페스트 저장 실패 — 다음 재설치 시 잔재 확인 질문이 다시 표시됩니다"
-rm -f "$MANIFEST_AGENTS_TMP" "$MANIFEST_SKILLS_TMP" "$MANIFEST_HOOKS_TMP" "$MANIFEST_COMMANDS_TMP" "$MANIFEST_RULES_TMP"
+rm -f "$MANIFEST_AGENTS_TMP" "$MANIFEST_SKILLS_TMP" "$MANIFEST_HOOKS_TMP" "$MANIFEST_COMMANDS_TMP" "$MANIFEST_RULES_TMP" "$MANIFEST_DOCS_TMP"
 
 # ── 레거시 프로파일: typescript-quality 베이스라인 시드 ─────────────────
 # --changed-only 는 "직전 통과 시점의 에러 집합"과 비교해 새 에러만 차단한다. 베이스라인이 없는 첫 저장은
