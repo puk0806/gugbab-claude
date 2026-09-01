@@ -9,7 +9,8 @@
 //  - 악성·오남용: 구버전 누수 잔재 prune / 사용자 수정본·커스텀 파일 파괴 시도 방어
 //  - 경계: 손상된 매니페스트에서 어떤 삭제도 일어나지 않는지
 //
-// 느린 테스트: 설치 실행 8회(회당 수 초). 파일 복사만 하므로 병렬 없이 순차 실행.
+// 느린 테스트: 설치 실행 20여 회(회당 수 초). 파일 복사만 하므로 병렬 없이 순차 실행.
+// 2026-09-01: seo-geo(11) 애드온 템플릿 — 단독·java 병행(프로파일 전환 수렴)·nextjs 병행 케이스 추가.
 
 const { test } = require('node:test');
 const assert = require('node:assert');
@@ -27,9 +28,10 @@ const mktarget = (name) => {
   return d;
 };
 
-// 설치 실행 — 모든 y/N 질문은 빈 줄(기본값 N)로 응답
-function install(tmpl, dir) {
-  const input = `${dir}\n${tmpl}\n` + '\n'.repeat(60);
+// 설치 실행 — 모든 y/N 질문은 빈 줄(기본값 N)로 응답.
+// answers: 템플릿 입력 직후 이어지는 질문들에 순서대로 줄 응답 (예: ['', '', '', 'c'] = memory·superpowers·codex 기본 + SEO 프로파일 c)
+function install(tmpl, dir, answers = []) {
+  const input = `${dir}\n${tmpl}\n` + answers.map((a) => `${a}\n`).join('') + '\n'.repeat(60);
   const r = spawnSync('bash', [INSTALLER], { input, encoding: 'utf8', timeout: 120000 });
   assert.strictEqual(r.status, 0,
     `install(${tmpl}) 실패 status=${r.status}\n--- stdout tail ---\n${(r.stdout || '').slice(-800)}\n--- stderr tail ---\n${(r.stderr || '').slice(-400)}`);
@@ -390,6 +392,262 @@ test('업그레이드: docs 섹션이 없는 구버전 매니페스트에서도 
     assert.ok(!fs.existsSync(leakDest), '누수 스킬이 prune되지 않음');
     assert.ok(!fs.existsSync(docDest), '구버전 매니페스트의 미수정 짝 docs가 소스 동일 증명으로 삭제되지 않음');
     assert.ok(fs.existsSync(modDoc), '소스에 없는 사용자 docs가 삭제됨 — 파괴 방어 실패');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// ── seo-geo(11) 애드온 템플릿 (2026-09-01) ──────────────────────────────
+
+// seo-geo 소유 스킬 — 전체 프로파일 (설치 스크립트 SEO_GEO_SKILLS 와 동일해야 함)
+const SEO_GEO_FULL = [
+  'frontend/bot-management-seo', 'frontend/ecommerce-seo', 'frontend/geo-ai-discoverability',
+  'frontend/google-indexing-api', 'frontend/i18n-seo', 'frontend/image-optimization-seo',
+  'frontend/kakao-share-optimization', 'frontend/local-business-seo', 'frontend/mobile-seo-pwa',
+  'frontend/naver-seo-specifics', 'frontend/schema-org-patterns', 'frontend/search-console-webmaster',
+  'frontend/security-headers-seo', 'frontend/seo-monitoring-automation', 'frontend/seo-static-html',
+  'frontend/structured-data-validation-api', 'frontend/url-canonicalization-redirects',
+  'writing/content-eeat-quality', 'writing/multilingual-content-strategy', 'writing/ymyl-content-seo',
+  'writing/accessibility-vpat-writing', 'devops/site-migration-seo',
+].sort();
+// 커머스 프로파일(c)에서 빠지는 8종 (SEO_NONCOMMERCE_SKILLS)
+const SEO_NONCOMMERCE = [
+  'frontend/local-business-seo', 'frontend/i18n-seo', 'frontend/google-indexing-api',
+  'frontend/seo-monitoring-automation', 'writing/ymyl-content-seo', 'writing/multilingual-content-strategy',
+  'writing/accessibility-vpat-writing', 'devops/site-migration-seo',
+];
+const SEO_GEO_COMMERCE = SEO_GEO_FULL.filter((s) => !SEO_NONCOMMERCE.includes(s));
+// 프레임워크 종속 — seo-geo 가 소유하지 않는 SEO 스킬 (nextjs·react-spa 소유)
+const SEO_FRAMEWORK_BOUND = ['frontend/seo-nextjs', 'frontend/seo-vite-spa', 'frontend/og-image-generation'];
+const SEO_GEO_AGENTS = [
+  'meta/claude-code-guide.md', 'research/web-searcher.md', 'validation/content-quality-reviewer.md',
+  'validation/fact-checker.md', 'validation/seo-auditor.md', 'validation/source-validator.md',
+];
+
+test('seo-geo 단독(11): 소유 스킬 22종·에이전트 6종만, dev 훅 없음, SEO CLAUDE.md', () => {
+  const dir = mktarget('seo');
+  try {
+    // 질문 순서: memory·superpowers 기본(n) → SEO 프로파일(엔터 = y 전체) → 나머지 기본
+    install('11', dir);
+    assert.deepStrictEqual(skillDirs(dir), SEO_GEO_FULL, 'seo-geo 단독 스킬 집합이 소유 목록과 다름');
+    assert.deepStrictEqual(agentFiles(dir), SEO_GEO_AGENTS, 'seo-geo 단독 에이전트 집합이 화이트리스트와 다름');
+    const hooks = fs.readdirSync(path.join(dir, '.claude', 'hooks'));
+    assert.ok(!hooks.includes('tdd-guard.js') && !hooks.includes('typescript-quality.js'),
+      '비개발 템플릿인데 dev/TS 훅이 설치됨');
+    assert.ok(hooks.includes('deliverable-guard.js'), '공통 훅 누락');
+    const rules = fs.readdirSync(path.join(dir, '.claude', 'rules')).sort();
+    assert.deepStrictEqual(rules, ['git.md', 'info-verification.md', 'task-workflow.md']);
+    const claude = fs.readFileSync(path.join(dir, 'CLAUDE.md'), 'utf8');
+    assert.ok(/SEO·GEO 작업 원칙/.test(claude), 'seo-geo CLAUDE.md 도메인 섹션 누락');
+    assert.ok(/동적 렌더링·클로킹 금지/.test(claude), 'seo-geo 금지 사항 누락');
+    // 프로파일 n 입력은 거부되고 재질문된다 (제외가 필요하면 템플릿에서 빼라는 안내)
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('악성: seo-geo 프로파일에 n 을 넣어도 SEO 제외로 빠지지 않고 재질문 후 y 로 진행된다', () => {
+  const dir = mktarget('seo-n');
+  try {
+    // memory, superpowers 기본 → SEO 에 'n'(거부) → 'y' → 나머지 기본
+    const out = install('11', dir, ['', '', 'n', 'y']);
+    assert.ok(/SEO 제외\(n\)가 없습니다/.test(out), 'n 거부 안내 미출력');
+    assert.deepStrictEqual(skillDirs(dir), SEO_GEO_FULL, 'n 입력이 SEO 제외로 새어 들어감');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('java-spring-legacy + seo-geo (5,11) 커머스: java 코어 + SEO 커머스 14종, 프론트 전용 에이전트는 여전히 제외', () => {
+  const dir = mktarget('java-seo');
+  try {
+    // memory·superpowers·codex 기본 → SEO 프로파일 c → 나머지 기본
+    install('5,11', dir, ['', '', '', 'c']);
+    const s = skillDirs(dir);
+    for (const must of ['backend/spring-security-5-jwt-jjwt10', 'backend/xss-lucy-jsoup',
+      'backend/webflux-webclient-in-sync-app', 'backend/logback-mdc-tracing']) {
+      assert.ok(s.includes(must), `java 코어 스킬 누락: ${must}`);
+    }
+    for (const must of SEO_GEO_COMMERCE) assert.ok(s.includes(must), `SEO 커머스 스킬 누락: ${must}`);
+    for (const no of [...SEO_NONCOMMERCE, ...SEO_FRAMEWORK_BOUND]) assert.ok(!s.includes(no), `커머스 프로파일에 무관 SEO 잔존: ${no}`);
+    // java 누수 목록은 seo-geo 소유분(site-migration-seo — 커머스에선 어차피 제외) 외 전부 부재
+    for (const leak of JAVA_LEAKS) assert.ok(!s.includes(leak), `java 누수 잔존: ${leak}`);
+    // 그 외 frontend 스킬은 seo-geo 소유분뿐이어야 함
+    const fe = s.filter((x) => x.startsWith('frontend/'));
+    assert.deepStrictEqual(fe, SEO_GEO_COMMERCE.filter((x) => x.startsWith('frontend/')), 'frontend 스킬이 SEO 소유분 밖으로 확장됨');
+    const a = agentFiles(dir);
+    for (const must of ['validation/seo-auditor.md', 'validation/content-quality-reviewer.md',
+      'backend/java-backend-developer.md', 'backend/java-backend-architect.md']) {
+      assert.ok(a.includes(must), `필수 에이전트 누락: ${must}`);
+    }
+    for (const no of ['validation/a11y-auditor.md', 'validation/build-perf-benchmarker.md',
+      'validation/perf-report-writer.md', 'frontend/frontend-developer.md', 'frontend/CLAUDE.md']) {
+      assert.ok(!a.includes(no), `프론트 전용 에이전트 누수: ${no}`);
+    }
+    // dev 훅·java 규칙은 java 템플릿이 보탠다
+    const hooks = fs.readdirSync(path.join(dir, '.claude', 'hooks'));
+    assert.ok(hooks.includes('tdd-guard.js') && !hooks.includes('typescript-quality.js'));
+    const rules = fs.readdirSync(path.join(dir, '.claude', 'rules')).sort();
+    assert.deepStrictEqual(rules, ['adversarial-testing.md', 'git.md', 'info-verification.md', 'java.md', 'task-workflow.md']);
+    // CLAUDE.md: java 베이스 + seo-geo 도메인 섹션 append
+    const claude = fs.readFileSync(path.join(dir, 'CLAUDE.md'), 'utf8');
+    assert.ok(/`jakarta\.\*` import 금지/.test(claude), 'java 베이스 CLAUDE.md 아님');
+    assert.ok(/SEO·GEO 작업 원칙/.test(claude), 'seo-geo 도메인 섹션이 append 되지 않음');
+    // 애드온 금지 사항은 베이스 `## 금지 사항` 안에 병합돼야 한다 (Codex R3)
+    const prohibit = claude.split('## 금지 사항')[1].split('\n---')[0];
+    assert.ok(/동적 렌더링·클로킹 금지/.test(prohibit), 'seo-geo 금지 사항이 베이스 금지 사항에 병합되지 않음');
+    assert.ok(/`jakarta\.\*` import 금지/.test(prohibit), 'java 금지 사항이 병합 과정에서 밀려남');
+    assert.ok(!/<!-- common-rules -->/.test(claude), '자리표시자가 남음');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('업그레이드: 5,11 전체→커머스 프로파일 전환 재설치에서 무관 8종(짝 docs 포함)이 수렴하고 dream 잔재도 prune 된다', () => {
+  const dir = mktarget('java-seo-up');
+  try {
+    install('5,11', dir);                                    // 전체 프로파일 (엔터 = y)
+    const s0 = skillDirs(dir);
+    for (const must of SEO_GEO_FULL) assert.ok(s0.includes(must), `전제: 전체 프로파일 스킬 누락 ${must}`);
+    const i18nDoc = path.join(dir, 'docs', 'skills', 'frontend', 'i18n-seo', 'verification.md');
+    assert.ok(fs.existsSync(i18nDoc), '전제: i18n-seo 짝 docs 복사됨');
+    // 수리 전 설치가 남긴 dream 잔재 (소유 증명 부여) — seo-geo 병행 조합도 leakscope 라 수렴해야 함
+    const leakRel = 'architecture/dream-journal-data-modeling/SKILL.md';
+    const leakDest = path.join(dir, '.claude', 'skills', leakRel);
+    fs.mkdirSync(path.dirname(leakDest), { recursive: true });
+    fs.copyFileSync(path.join(REPO, '.claude', 'skills', leakRel), leakDest);
+    const mfPath = path.join(dir, '.claude', '.install-manifest.json');
+    const mf = JSON.parse(fs.readFileSync(mfPath, 'utf8'));
+    mf.skills.push(leakRel); mf.hashes.skills[leakRel] = sha(leakDest);
+    fs.writeFileSync(mfPath, JSON.stringify(mf, null, 2));
+    // 사용자가 로컬 수정한 SEO 스킬 — 프로파일 전환으로 빠지더라도 파괴 금지
+    const modSkill = path.join(dir, '.claude', 'skills', 'writing', 'ymyl-content-seo', 'SKILL.md');
+    fs.appendFileSync(modSkill, '\n<!-- 로컬 수정 -->\n');
+
+    install('5,11', dir, ['', '', '', 'c']);
+    const s1 = skillDirs(dir);
+    for (const gone of SEO_NONCOMMERCE.filter((x) => x !== 'writing/ymyl-content-seo')) {
+      assert.ok(!s1.includes(gone), `커머스 전환 후 무관 스킬 잔존: ${gone}`);
+    }
+    assert.ok(fs.existsSync(modSkill), '사용자 수정본이 프로파일 전환 prune 에 삭제됨 — 파괴 방어 실패');
+    assert.ok(!fs.existsSync(i18nDoc), '무관 스킬의 짝 docs 잔존 — docs 미수렴');
+    for (const keep of SEO_GEO_COMMERCE) assert.ok(s1.includes(keep), `커머스 소유 스킬이 과잉 prune: ${keep}`);
+    assert.ok(s1.includes('backend/spring-security-5-jwt-jjwt10'), 'java 코어가 프로파일 전환에 휘말림');
+    assert.ok(!fs.existsSync(leakDest), 'seo-geo 병행 조합에서 dream 잔재가 prune 되지 않음');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('nextjs + seo-geo (3,11): 프레임워크 종속 seo-nextjs 는 nextjs 가, seo-static-html 은 seo-geo 가 보태고 vite 전용은 없다', () => {
+  const dir = mktarget('next-seo');
+  try {
+    // memory·superpowers·codex·legacy 기본 → SEO 프로파일 엔터(y) → 나머지 기본
+    install('3,11', dir);
+    const s = skillDirs(dir);
+    assert.ok(s.includes('frontend/seo-nextjs'), 'nextjs 소유 seo-nextjs 누락');
+    assert.ok(s.includes('frontend/seo-static-html'), 'seo-geo 소유 seo-static-html 누락 (기존엔 어느 템플릿도 export 안 함)');
+    assert.ok(s.includes('frontend/og-image-generation'), 'nextjs 소유 og-image-generation 누락');
+    assert.ok(!s.includes('frontend/seo-vite-spa'), 'react-spa 전용 seo-vite-spa 누수');
+    for (const must of SEO_GEO_FULL) assert.ok(s.includes(must), `SEO 전체 프로파일 스킬 누락: ${must}`);
+    const hooks = fs.readdirSync(path.join(dir, '.claude', 'hooks'));
+    assert.ok(hooks.includes('typescript-quality.js'), 'nextjs 병행인데 TS 훅 없음');
+    // CLAUDE.md: nextjs 베이스 + seo-geo 도메인 섹션 append (macOS BSD sed 회귀 방지 — 2026-09-01 수정)
+    const claude = fs.readFileSync(path.join(dir, 'CLAUDE.md'), 'utf8');
+    assert.ok(/`use client` 남용 금지/.test(claude), 'nextjs 베이스 CLAUDE.md 아님');
+    assert.ok(/SEO·GEO 작업 원칙/.test(claude), 'seo-geo 도메인 섹션이 append 되지 않음');
+    assert.ok(/동적 렌더링·클로킹 금지/.test(claude.split('## 금지 사항')[1].split('\n---')[0]),
+      'seo-geo 금지 사항이 베이스 금지 사항에 병합되지 않음');
+    assert.ok(!/\n\n\n/.test(claude), 'CLAUDE.md 에 3연속 빈 줄 — 빈 줄 접기 미동작');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('악성·순서: 애드온을 먼저 쓴 11,5 도 java 가 CLAUDE.md 베이스가 되어 스택 가드레일이 유지된다 (Codex R1)', () => {
+  const dir = mktarget('addon-first');
+  try {
+    // 정규화 후 순서는 5,11 과 같으므로 질문 순서도 동일: memory·superpowers·codex 기본 → SEO c
+    const out = install('11,5', dir, ['', '', '', 'c']);
+    assert.ok(/애드온 템플릿\(seo-geo\)은 뒤로 정렬/.test(out), '순서 정규화 안내 미출력');
+    assert.ok(/CLAUDE\.md \(기본 템플릿: java-spring-legacy\)/.test(out), 'CLAUDE.md 베이스가 java 가 아님');
+    const claude = fs.readFileSync(path.join(dir, 'CLAUDE.md'), 'utf8');
+    assert.ok(/`jakarta\.\*` import 금지/.test(claude), 'java 금지 사항이 빠짐 — 애드온이 베이스가 됨');
+    assert.ok(/@\.claude\/rules\/java\.md/.test(claude), 'java 규칙 참조가 빠짐');
+    assert.ok(/SEO·GEO 작업 원칙/.test(claude), 'seo-geo 도메인 섹션 누락');
+    // 산출물 집합은 5,11 과 동일해야 한다
+    const s = skillDirs(dir);
+    for (const must of [...SEO_GEO_COMMERCE, 'backend/spring-security-5-jwt-jjwt10']) assert.ok(s.includes(must), `누락: ${must}`);
+    assert.deepStrictEqual(fs.readdirSync(path.join(dir, '.claude', 'rules')).sort(),
+      ['adversarial-testing.md', 'git.md', 'info-verification.md', 'java.md', 'task-workflow.md']);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('다운그레이드: 5,11 → 5 재설치에서 seo-geo 자산(스킬·짝 docs·에이전트)이 수렴하고 java 는 그대로다 (Codex R2)', () => {
+  const dir = mktarget('addon-removed');
+  try {
+    install('5,11', dir);                                    // 전체 프로파일
+    assert.ok(skillDirs(dir).includes('frontend/schema-org-patterns'), '전제: SEO 스킬 설치됨');
+    const seoDoc = path.join(dir, 'docs', 'skills', 'frontend', 'schema-org-patterns');
+    assert.ok(fs.existsSync(seoDoc), '전제: SEO 짝 docs 설치됨');
+    // 사용자가 로컬 수정한 SEO 스킬 — 애드온을 빼더라도 파괴 금지
+    const modSkill = path.join(dir, '.claude', 'skills', 'frontend', 'naver-seo-specifics', 'SKILL.md');
+    fs.appendFileSync(modSkill, '\n<!-- 로컬 수정 -->\n');
+
+    install('5', dir);
+    const s = skillDirs(dir);
+    for (const gone of SEO_GEO_FULL.filter((x) => x !== 'frontend/naver-seo-specifics')) {
+      assert.ok(!s.includes(gone), `애드온 제거 후 SEO 스킬 잔존: ${gone}`);
+    }
+    assert.ok(fs.existsSync(modSkill), '사용자 수정본이 애드온 제거 prune 에 삭제됨 — 파괴 방어 실패');
+    assert.ok(!fs.existsSync(seoDoc), 'SEO 짝 docs 잔존 — 스테일 문서');
+    const a = agentFiles(dir);
+    assert.ok(!a.includes('validation/seo-auditor.md') && !a.includes('validation/content-quality-reviewer.md'),
+      'SEO 에이전트 잔존');
+    assert.ok(s.includes('backend/spring-security-5-jwt-jjwt10') && a.includes('backend/java-backend-developer.md'),
+      'java 자산이 다운그레이드에 휘말림');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('다운그레이드: 11 → util 재설치에서 SEO 스킬·에이전트가 전부 수렴하고 util 소유 에이전트는 남는다 (Codex R2)', () => {
+  const dir = mktarget('seo-to-util');
+  try {
+    install('11', dir);
+    assert.ok(agentFiles(dir).includes('validation/seo-auditor.md'), '전제: seo-auditor 설치됨');
+    install('1', dir);
+    assert.deepStrictEqual(skillDirs(dir).filter((x) => SEO_GEO_FULL.includes(x)), [], 'util 다운그레이드 후 SEO 스킬 잔존');
+    const a = agentFiles(dir);
+    assert.ok(!a.includes('validation/seo-auditor.md') && !a.includes('validation/content-quality-reviewer.md'), 'SEO 에이전트 잔존');
+    for (const keep of ['validation/fact-checker.md', 'validation/source-validator.md', 'research/web-searcher.md', 'meta/claude-code-guide.md']) {
+      assert.ok(a.includes(keep), `util 소유 에이전트가 과잉 prune: ${keep}`);
+    }
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('seo-geo 단독 + 작성 도구 y: 화이트리스트와 무관하게 작성 에이전트 3종이 설치된다 (Codex R3)', () => {
+  const dir = mktarget('seo-authoring');
+  try {
+    // memory·superpowers 기본 → SEO 엔터(y) → 작성 도구 y → 나머지 기본
+    install('11', dir, ['', '', '', 'y']);
+    const a = agentFiles(dir);
+    for (const must of ['meta/agent-creator.md', 'meta/skill-creator.md', 'meta/skill-tester.md', 'CLAUDE.md']) {
+      assert.ok(a.includes(must), `작성 도구 y 인데 누락: ${must}`);
+    }
+    assert.deepStrictEqual(a.filter((x) => !['meta/agent-creator.md', 'meta/skill-creator.md', 'meta/skill-tester.md', 'CLAUDE.md'].includes(x)),
+      SEO_GEO_AGENTS, '작성 도구 외 에이전트가 화이트리스트를 벗어남');
+    const rules = fs.readdirSync(path.join(dir, '.claude', 'rules')).sort();
+    assert.ok(rules.includes('creation-workflow.md') && rules.includes('verification-policy.md'), '작성 규칙 누락');
+    assert.ok(fs.existsSync(path.join(dir, '.claude', 'skills', 'CLAUDE.md')), 'skills/CLAUDE.md 누락');
+    // 작성 도구 n 으로 재설치하면 3종은 빠지고(옵션 제외 기록) SEO 자산은 그대로
+    install('11', dir);
+    const a2 = agentFiles(dir);
+    assert.deepStrictEqual(a2, SEO_GEO_AGENTS, '작성 도구 n 재설치 후 집합이 화이트리스트로 수렴하지 않음');
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
