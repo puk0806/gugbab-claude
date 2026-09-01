@@ -44,6 +44,7 @@ Java 21 + Spring Boot 3.x + Jar/Native + MyBatis 모던 백엔드 프로젝트.
 > `build-error-resolver`는 Java 템플릿에서 제외됩니다 (Rust/TS 전용 기능).
 > 작성 도구 3종(agent-creator·skill-creator·skill-tester)은 설치 시 "작성 도구" 옵션 y일 때만 포함됩니다.
 > 2026-08-31: 프론트·SEO 계열(seo-auditor·content-quality-reviewer·a11y-auditor·build-perf-benchmarker·perf-report-writer·frontend/CLAUDE.md)이 java 템플릿에 딸려가던 누수를 차단했습니다.
+> 2026-09-01: Thymeleaf 등 서버 렌더 HTML로 **검색 노출을 담당하는 프로젝트**는 `6,11`로 [seo-geo 템플릿](./seo-geo.md)을 병행하세요 — seo-auditor·content-quality-reviewer 에이전트와 프레임워크 비종속 SEO·GEO 스킬(전체 22종/커머스 14종)이 union 으로 추가됩니다.
 
 ---
 
