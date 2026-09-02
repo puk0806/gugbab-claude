@@ -39,8 +39,9 @@ echo "   7/unity-game         — Unity 6 LTS 2D 모바일 게임"
 echo "   8/academic           — 논문·학술 작업"
 echo "   9/dream-interpretation — 꿈 해몽 앱 개발"
 echo "  10/health             — 건강·식단 PWA 앱"
+echo "  11/seo-geo            — SEO·GEO 검색 노출 (프레임워크 비종속 — 스택 템플릿과 병행 선택)"
 echo ""
-echo "  복수 선택 예시: react-spa,health  또는  2,10  또는  nextjs,java-spring-modern"
+echo "  복수 선택 예시: react-spa,health  또는  2,10  또는  java-spring-legacy,seo-geo (5,11)"
 echo ""
 
 _parse_template() {
@@ -57,6 +58,7 @@ _parse_template() {
     8|academic)             echo "academic" ;;
     9|dream-interpretation) echo "dream-interpretation" ;;
     10|health)              echo "health" ;;
+    11|seo-geo)             echo "seo-geo" ;;
     *) return 1 ;;
   esac
 }
@@ -78,6 +80,21 @@ while true; do
   echo "다시 입력해주세요."
 done
 
+# 애드온 템플릿(seo-geo)은 CLAUDE.md 베이스가 될 수 없다 — 베이스 예시는 첫 템플릿 것을 통째로 쓰고 나머지는
+# 도메인 섹션만 append 하므로, `11,5`처럼 애드온을 앞에 쓰면 Java 의 `## 금지 사항` 같은 스택 가드레일이 통째로
+# 빠진 채 조용히 설치된다 (2026-09-01 Codex R1). 입력 순서와 무관하게 스택 템플릿 → 애드온 순으로 정규화한다.
+ADDON_TEMPLATES=("seo-geo")
+_STACK_TMPLS=(); _ADDON_TMPLS=()
+for _t in "${TEMPLATES[@]}"; do
+  _is_addon=false
+  for _a in "${ADDON_TEMPLATES[@]}"; do [ "$_t" = "$_a" ] && _is_addon=true; done
+  if [ "$_is_addon" = true ]; then _ADDON_TMPLS+=("$_t"); else _STACK_TMPLS+=("$_t"); fi
+done
+if [ "${#_STACK_TMPLS[@]}" -gt 0 ] && [ "${#_ADDON_TMPLS[@]}" -gt 0 ] && [ "${TEMPLATES[0]}" != "${_STACK_TMPLS[0]}" ]; then
+  echo "  ℹ 애드온 템플릿(${_ADDON_TMPLS[*]})은 뒤로 정렬 — CLAUDE.md 베이스: ${_STACK_TMPLS[0]}"
+fi
+TEMPLATES=("${_STACK_TMPLS[@]}" "${_ADDON_TMPLS[@]}")
+
 TEMPLATE="${TEMPLATES[0]}"   # 첫 번째를 기본 템플릿으로 사용 (CLAUDE.md·docs 선택 기준)
 _TMPL_STR="${TEMPLATES[*]}"
 TEMPLATE_DISPLAY="${_TMPL_STR// /,}"  # 표시용 (쉼표 구분)
@@ -89,6 +106,52 @@ has_template() {
   local _t="$1"
   for _tmpl in "${TEMPLATES[@]}"; do [ "$_tmpl" = "$_t" ] && return 0; done
   return 1
+}
+
+# 이번 실행이 java 템플릿만으로 구성됐는가 — java 고유 누수(n8n·SEO devops·에이전트)의 prune 기록 조건.
+# (react-spa 등 타 템플릿과 병행 설치 시엔 그 템플릿 소유 자산일 수 있어 prune 기록 금지 — 템플릿은 가산적)
+# seo-geo(2026-09-01)는 java 누수 목록 중 자기 소유분(site-migration-seo·SEO 에이전트)만 갖는 애드온이라
+# 조합에 허용하되, 기록 시점에 seo-geo 소유 스킬은 is_seo_geo_skill 로 걸러낸다.
+is_only_java_selected() {
+  has_template "java-spring-legacy" || has_template "java-spring-modern" || return 1
+  for _tmpl in "${TEMPLATES[@]}"; do
+    case "$_tmpl" in
+      java-spring-legacy|java-spring-modern|seo-geo) ;;
+      *) return 1 ;;
+    esac
+  done
+  return 0
+}
+
+# 이번 실행의 모든 템플릿이 dream·프론트 아키텍처 스킬의 정당한 소유자가 아닌 조합(java·rust·unity·seo-geo)인가.
+# 이때만 해당 누수 잔재를 prune 기록해 rust/unity·혼합 재설치도 수렴한다 (2026-08-31 Codex R1).
+# ts·dream·health 템플릿이 섞이면 그쪽 소유일 수 있어 기록하지 않는다.
+is_leakscope_only_selected() {
+  for _tmpl in "${TEMPLATES[@]}"; do
+    case "$_tmpl" in
+      java-spring-legacy|java-spring-modern|rust-axum|unity-game|seo-geo) ;;
+      *) return 1 ;;
+    esac
+  done
+  return 0
+}
+
+# 제외 스킬을 prune 목록에 기록 — 대상에 이미 존재하는 짝 docs 파일도 함께 (2026-08-31 Codex R1: docs 잔존)
+# SKILL.md만이 아니라 스킬 폴더 아래 전체 파일(references/ 등)을 큐잉한다
+# (2026-08-31 Codex R2: references 복사 도입 후 SKILL.md만 prune하면 부속 파일이 영구 잔존).
+# 삭제 자체는 prune-option-excluded.js가 파일별 매니페스트 해시 증명으로만 수행한다.
+record_excluded_skill() {
+  local _rel="$1" _prefix="$2"
+  if [ -d "$TARGET/.claude/skills/$_prefix" ]; then
+    ( cd "$TARGET/.claude/skills" && find "$_prefix" -type f 2>/dev/null ) | \
+      sed 's/^/skills|/' >> "$OPTION_EXCLUDED_TMP"
+  else
+    echo "skills|$_rel" >> "$OPTION_EXCLUDED_TMP"
+  fi
+  if [ -d "$TARGET/docs/skills/$_prefix" ]; then
+    ( cd "$TARGET/docs" && find "skills/$_prefix" -type f 2>/dev/null ) | \
+      sed 's/^/docs|/' >> "$OPTION_EXCLUDED_TMP"
+  fi
 }
 
 # 개발 템플릿(코딩 작업)이 하나라도 선택되었는가
@@ -172,10 +235,25 @@ if is_dev_selected && is_ts_selected; then
   fi
 fi
 
-# ── 프론트엔드 SEO·GEO 스킬 (react-spa·nextjs 템플릿 전용) ────────────
+# ── SEO·GEO 스킬 프로파일 (react-spa·nextjs 템플릿 + seo-geo 템플릿) ────────────
 # 검색 노출이 목적이 아닌 사내 어드민·커머스 백오피스에는 SEO 계열 20종이 노이즈다.
+# seo-geo 템플릿(2026-09-01)은 SEO 자체가 목적이라 n(제외)을 받지 않는다 — 프로파일(전체/커머스)만 고른다.
 INCLUDE_SEO=true   # true=전체 / commerce=커머스 프로파일 / false=제외
-if has_template "react-spa" || has_template "nextjs"; then
+if has_template "seo-geo"; then
+  echo ""
+  echo "seo-geo 템플릿 SEO·GEO 프로파일을 선택하세요 (프레임워크 비종속 17종 + writing 4종 + site-migration-seo):"
+  echo "  c — 커머스·서비스 사이트 프로파일 (상품·카테고리·검색·카카오·네이버·GEO 중심. 로컬비즈니스·다국어·YMYL·VPAT·사이트 이전·Indexing API·모니터링 제외)"
+  echo "  y — 전체 (블로그·미디어·다국어·로컬 비즈니스까지)"
+  while true; do
+    read -rp "  선택 (Y/c): " _seo_ans
+    case "$_seo_ans" in
+      y|Y|"") INCLUDE_SEO=true; break ;;
+      c|C)    INCLUDE_SEO=commerce; break ;;
+      n|N)    echo "  seo-geo 템플릿은 SEO 제외(n)가 없습니다 — SEO가 필요 없으면 템플릿 목록에서 11을 빼세요." ;;
+      *)      echo "  y 또는 c를 입력하세요. (엔터 = y)" ;;
+    esac
+  done
+elif has_template "react-spa" || has_template "nextjs"; then
   echo ""
   echo "SEO·GEO 스킬(sitemap·robots·JSON-LD·네이버·카카오·GEO 등 20종 + writing 4종)을 어떻게 포함할까요?"
   echo "  n — 제외 (로그인 뒤의 어드민·백오피스·사내 도구)"
@@ -207,6 +285,16 @@ if ! is_util_only; then
 fi
 # 옵션 파생 제외 목록 — 에이전트·rules 루프보다 앞에 있어야 한다 (2026-08-26: 스킬 섹션에 두었다가 빈 배열로 평가되던 버그)
 SEO_AGENTS=("validation/seo-auditor.md" "validation/content-quality-reviewer.md")
+# seo-geo 템플릿 화이트리스트 (2026-09-01) — SEO 감사 2종 + 단독 설치 시에도 쓸 수 있는 조사·검증 최소 세트.
+# 스택 에이전트(java-backend-developer 등)는 병행 선택한 스택 템플릿이 union 으로 보탠다.
+SEO_GEO_AGENTS=(
+  "validation/seo-auditor.md"
+  "validation/content-quality-reviewer.md"
+  "validation/fact-checker.md"
+  "validation/source-validator.md"
+  "research/web-searcher.md"
+  "meta/claude-code-guide.md"
+)
 AUTHORING_AGENTS=("meta/agent-creator.md" "meta/skill-creator.md" "meta/skill-tester.md" "CLAUDE.md")
 AUTHORING_RULES=("agent-design.md" "creation-workflow.md" "verification-policy.md" "commands.md" "readme-update.md")
 
@@ -307,6 +395,7 @@ fi
 # 설치 마지막에 .claude/.install-manifest.json 으로 저장한다 (재설치 시 폐기 수렴 근거)
 MANIFEST_AGENTS_TMP=$(mktemp)
 MANIFEST_SKILLS_TMP=$(mktemp)
+MANIFEST_DOCS_TMP=$(mktemp)   # 짝 docs(docs/skills/**, docs/agents/**) — <target>/docs/ 기준 상대경로 (2026-08-31)
 MANIFEST_HOOKS_TMP=$(mktemp)
 
 # ── 1. hooks ────────────────────────────────────────────────────────────
@@ -527,6 +616,23 @@ EXCLUDE_AGENTS_JAVA=(
   "backend/rust-backend-developer.md"
   "backend/rust-backend-architect.md"
   "backend/build-error-resolver.md"
+  # 2026-08-31 누수 수정 — 프론트·SEO 전용 에이전트가 java 백엔드에 딸려가던 것 차단
+  # (java 템플릿에서는 SEO 옵트아웃 질문이 나오지 않아 INCLUDE_SEO=true 기본값이 항상 통과했음)
+  "frontend/CLAUDE.md"
+  "validation/seo-auditor.md"
+  "validation/content-quality-reviewer.md"
+  "validation/a11y-auditor.md"
+  "validation/build-perf-benchmarker.md"
+  "validation/perf-report-writer.md"
+)
+# 위 2026-08-31 추가분 — 순수 java 재설치 시 이전 설치 잔재 정리(prune) 기록 대상
+JAVA_AGENTS_NEWLY_EXCLUDED=(
+  "frontend/CLAUDE.md"
+  "validation/seo-auditor.md"
+  "validation/content-quality-reviewer.md"
+  "validation/a11y-auditor.md"
+  "validation/build-perf-benchmarker.md"
+  "validation/perf-report-writer.md"
 )
 EXCLUDE_AGENTS_GAME=(
   "frontend/frontend-developer.md"
@@ -560,6 +666,9 @@ _agent_ok_for_tmpl() {
   fi
   if [ "$tmpl" = "dream-interpretation" ]; then
     is_in_list "$rel" "${DREAM_APP_AGENTS[@]}" && return 0; return 1
+  fi
+  if [ "$tmpl" = "seo-geo" ]; then
+    is_in_list "$rel" "${SEO_GEO_AGENTS[@]}" && return 0; return 1
   fi
   if [ "$tmpl" = "all" ]; then return 0; fi
   # 개발 템플릿 공통: 학술·dream 전용 제외
@@ -595,11 +704,33 @@ _option_excluded_agent() {
 # 선택된 템플릿 중 하나라도 포함하면 포함 (union)
 should_include_agent() {
   local rel="$1"
-  if _option_excluded_agent "$rel"; then echo "agents|$rel" >> "$OPTION_EXCLUDED_TMP"; return 1; fi
+  if _option_excluded_agent "$rel"; then record_excluded_agent "$rel"; return 1; fi
+  # 작성 도구 y 는 템플릿 화이트리스트(seo-geo·academic·dream)보다 우선 — 질문이 약속한 에이전트 3종(+agents/CLAUDE.md)이
+  # 화이트리스트 템플릿 단독 설치에서 조용히 빠지던 계약 위반 수정 (2026-09-01 Codex R3). util 단독은 질문 자체가 없다.
+  if [ "$INCLUDE_AUTHORING" = "true" ] && is_in_list "$rel" "${AUTHORING_AGENTS[@]}"; then return 0; fi
   for _tmpl in "${TEMPLATES[@]}"; do
     _agent_ok_for_tmpl "$rel" "$_tmpl" && return 0
   done
+  # java 템플릿 누수 수정(2026-08-31)으로 새로 제외된 에이전트 — 순수 java 재설치에서 잔재 정리 기록
+  if is_only_java_selected && is_in_list "$rel" "${JAVA_AGENTS_NEWLY_EXCLUDED[@]}"; then
+    record_excluded_agent "$rel"
+  fi
+  # seo-geo 소유 에이전트가 빠졌다면(애드온 제거 `11→util`·`5,11→5`) 조합 조건 없이 기록 (2026-09-01 Codex R2).
+  # 여기 도달 = 선택된 어떤 템플릿도 포함하지 않음. 삭제는 매니페스트 해시 증명 하에서만.
+  if is_in_list "$rel" "${SEO_GEO_AGENTS[@]}"; then
+    record_excluded_agent "$rel"
+  fi
   return 1
+}
+
+# 제외 에이전트를 prune 목록에 기록 — 짝 docs(문서·verification)도 함께 (2026-08-31 Codex R1)
+record_excluded_agent() {
+  local _rel="$1"
+  echo "agents|$_rel" >> "$OPTION_EXCLUDED_TMP"
+  [ -f "$TARGET/docs/agents/$_rel" ] && echo "docs|agents/$_rel" >> "$OPTION_EXCLUDED_TMP"
+  [ -f "$TARGET/docs/agents/${_rel%.md}-verification.md" ] && \
+    echo "docs|agents/${_rel%.md}-verification.md" >> "$OPTION_EXCLUDED_TMP"
+  return 0
 }
 
 for src_path in "$REPO_DIR/.claude/agents"/**/*.md "$REPO_DIR/.claude/agents"/*.md; do
@@ -622,8 +753,10 @@ for src_path in "$REPO_DIR/.claude/agents"/**/*.md "$REPO_DIR/.claude/agents"/*.
     if [ -f "$agent_doc_src" ]; then
       agent_doc_dest="$TARGET/docs/agents/$rel"
       mkdir -p "$(dirname "$agent_doc_dest")"
-      cp -f "$agent_doc_src" "$agent_doc_dest" 2>/dev/null && \
+      if cp -f "$agent_doc_src" "$agent_doc_dest" 2>/dev/null; then
         echo "  → docs/agents/$rel"
+        echo "agents/$rel" >> "$MANIFEST_DOCS_TMP"
+      fi
     fi
     # 2) docs/agents/{cat}/{name}-verification.md (접미사 형태)
     agent_name_no_ext="${rel%.md}"
@@ -632,8 +765,10 @@ for src_path in "$REPO_DIR/.claude/agents"/**/*.md "$REPO_DIR/.claude/agents"/*.
     if [ -f "$agent_verif_src" ]; then
       agent_verif_dest="$TARGET/docs/agents/$agent_verif_rel"
       mkdir -p "$(dirname "$agent_verif_dest")"
-      cp -f "$agent_verif_src" "$agent_verif_dest" 2>/dev/null && \
+      if cp -f "$agent_verif_src" "$agent_verif_dest" 2>/dev/null; then
         echo "  → docs/agents/$agent_verif_rel"
+        echo "agents/$agent_verif_rel" >> "$MANIFEST_DOCS_TMP"
+      fi
     fi
   else
     echo "  ✗ .claude/agents/$rel (복사 실패)"
@@ -862,6 +997,41 @@ is_seo_writing() {
   return 1
 }
 
+# seo-geo 템플릿(11) 소유 스킬 (2026-09-01) — 프레임워크 비종속 SEO·GEO 17종 + writing 4종 + site-migration-seo.
+# 프레임워크 종속 3종(seo-nextjs·seo-vite-spa·og-image-generation[Next ImageResponse/satori])은 nextjs·react-spa 소유 유지 —
+# `3,11`처럼 병행 선택하면 union 으로 함께 온다. seo-static-html 은 그간 어느 템플릿도 소유하지 않아 export 되지 않던 스킬로,
+# JSP·Thymeleaf 등 서버 렌더 HTML 에 가장 가까워 이 템플릿이 소유한다.
+SEO_GEO_SKILLS=(
+  "frontend/bot-management-seo"
+  "frontend/ecommerce-seo"
+  "frontend/geo-ai-discoverability"
+  "frontend/google-indexing-api"
+  "frontend/i18n-seo"
+  "frontend/image-optimization-seo"
+  "frontend/kakao-share-optimization"
+  "frontend/local-business-seo"
+  "frontend/mobile-seo-pwa"
+  "frontend/naver-seo-specifics"
+  "frontend/schema-org-patterns"
+  "frontend/search-console-webmaster"
+  "frontend/security-headers-seo"
+  "frontend/seo-monitoring-automation"
+  "frontend/seo-static-html"
+  "frontend/structured-data-validation-api"
+  "frontend/url-canonicalization-redirects"
+  "writing/content-eeat-quality"
+  "writing/multilingual-content-strategy"
+  "writing/ymyl-content-seo"
+  "writing/accessibility-vpat-writing"
+  "devops/site-migration-seo"
+)
+
+is_seo_geo_skill() {
+  local prefix="$1"
+  for s in "${SEO_GEO_SKILLS[@]}"; do [[ "$prefix" == "$s" ]] && return 0; done
+  return 1
+}
+
 is_dream_humanities() {
   local prefix="$1"
   for s in "${DREAM_HUMANITIES_SKILLS[@]}"; do [[ "$prefix" == "$s" ]] && return 0; done
@@ -896,6 +1066,8 @@ JAVA_SKILLS_LEGACY_ONLY=(
   "backend/redis-redisson-legacy"
   "backend/ehcache-2-legacy"
   "backend/aws-sdk-v1-s3-rekognition"
+  # 2.5→3.x 탈출 경로는 레거시 템플릿의 핵심 유스케이스 (2026-08-31: 배열 미등록으로 탈락하던 버그 수정)
+  "backend/spring-boot-2-to-3-migration"
 )
 JAVA_SKILLS_MODERN_ONLY=(
   "backend/spring-security-6-jwt-jjwt12"
@@ -909,6 +1081,25 @@ is_java_skill() {
   for s in "${JAVA_SKILLS_COMMON[@]}" "${JAVA_SKILLS_LEGACY_ONLY[@]}" "${JAVA_SKILLS_MODERN_ONLY[@]}"; do
     [[ "$prefix" == "$s" ]] && return 0
   done
+  return 1
+}
+
+# java 템플릿에서 제외할 backend 외 카테고리 스킬 (2026-08-31)
+# — "backend만 화이트리스트, 나머지 카테고리 fallthrough" 구조라 dream·n8n·SEO·frontend 계열이
+#   자바 백엔드 프로젝트에 흘러들던 누수 차단. docker-deployment·github-actions·ddd·
+#   incremental-refactoring·module-boundaries·meta 워크플로우 3종은 백엔드에도 유효해 유지.
+JAVA_EXCLUDED_EXTRA_SKILLS=(
+  "architecture/frontend-domain-structure"
+  "devops/site-migration-seo"
+  "devops/github-actions-visual-regression"
+  "devops/vercel-sandbox"
+)
+is_java_noncore_excluded() {
+  local prefix="$1"
+  is_dream_meta "$prefix" && return 0
+  is_in_skill_list "$prefix" "${DREAM_ARCH_SKILLS[@]}" && return 0
+  is_in_skill_list "$prefix" "${N8N_SKILLS[@]}" && return 0
+  is_in_skill_list "$prefix" "${JAVA_EXCLUDED_EXTRA_SKILLS[@]}" && return 0
   return 1
 }
 
@@ -970,12 +1161,17 @@ _skill_ok_for_tmpl() {
     [[ "$rel" == frontend/* || "$rel" == game/* || "$rel" == humanities/* ||
        "$rel" == education/* || "$rel" == research/* || "$rel" == writing/* ]] && return 1
     [[ "$rel" == backend/* ]] && is_java_skill "$skill_prefix" && return 1
+    # dream 전용·프론트 아키텍처 스킬 fallthrough 누수 차단 (2026-08-31, java와 동일 결함)
+    [[ "$rel" == meta/* ]] && is_dream_meta "$skill_prefix" && return 1
+    is_in_skill_list "$skill_prefix" "${DREAM_ARCH_SKILLS[@]}" && return 1
+    [[ "$skill_prefix" == "architecture/frontend-domain-structure" ]] && return 1
     return 0
   fi
   if [ "$tmpl" = "java-spring-legacy" ]; then
     [[ "$rel" == frontend/* || "$rel" == game/* || "$rel" == humanities/* ||
        "$rel" == education/* || "$rel" == research/* || "$rel" == writing/* ]] && return 1
     [[ "$rel" == backend/* ]] && ! is_java_skill "$skill_prefix" && return 1
+    is_java_noncore_excluded "$skill_prefix" && return 1
     for _m in "${JAVA_SKILLS_MODERN_ONLY[@]}"; do
       [[ "$skill_prefix" == "$_m" ]] && return 1
     done
@@ -985,6 +1181,7 @@ _skill_ok_for_tmpl() {
     [[ "$rel" == frontend/* || "$rel" == game/* || "$rel" == humanities/* ||
        "$rel" == education/* || "$rel" == research/* || "$rel" == writing/* ]] && return 1
     [[ "$rel" == backend/* ]] && ! is_java_skill "$skill_prefix" && return 1
+    is_java_noncore_excluded "$skill_prefix" && return 1
     for _l in "${JAVA_SKILLS_LEGACY_ONLY[@]}"; do
       [[ "$skill_prefix" == "$_l" ]] && return 1
     done
@@ -993,6 +1190,17 @@ _skill_ok_for_tmpl() {
   if [ "$tmpl" = "unity-game" ]; then
     [[ "$rel" == frontend/* || "$rel" == backend/* || "$rel" == humanities/* ||
        "$rel" == education/* || "$rel" == research/* || "$rel" == writing/* ]] && return 1
+    # dream 전용·프론트 아키텍처 스킬 fallthrough 누수 차단 (2026-08-31, java와 동일 결함)
+    [[ "$rel" == meta/* ]] && is_dream_meta "$skill_prefix" && return 1
+    is_in_skill_list "$skill_prefix" "${DREAM_ARCH_SKILLS[@]}" && return 1
+    [[ "$skill_prefix" == "architecture/frontend-domain-structure" ]] && return 1
+    return 0
+  fi
+  if [ "$tmpl" = "seo-geo" ]; then
+    # 화이트리스트 방식 — 소유 목록 밖은 전부 제외 (스택 스킬은 병행 템플릿이 union 으로 보탠다)
+    is_seo_geo_skill "$skill_prefix" || return 1
+    # 커머스 프로파일: 상품·서비스 사이트에 무관한 8종 제외 (react-spa·nextjs 와 같은 기준)
+    [ "$INCLUDE_SEO" = "commerce" ] && is_in_skill_list "$skill_prefix" "${SEO_NONCOMMERCE_SKILLS[@]}" && return 1
     return 0
   fi
   return 1
@@ -1016,7 +1224,23 @@ for src_path in "$REPO_DIR/.claude/skills"/*/*/SKILL.md; do
     # 이번 템플릿 범위인데 옵션(SEO n)·전용 스킬 누출 차단으로 빠진 것은 재설치 정리 목록에 기록
     if is_ts_selected && { is_seo_frontend "$skill_prefix" || is_dream_frontend "$skill_prefix" || is_dream_meta "$skill_prefix" ||
          is_in_skill_list "$skill_prefix" "${DREAM_ARCH_SKILLS[@]}" "${N8N_SKILLS[@]}" "${SEO_DEVOPS_SKILLS[@]}" "${SEO_WRITING_SKILLS[@]}" "${SEO_NONCOMMERCE_SKILLS[@]}"; }; then
-      echo "skills|$rel" >> "$OPTION_EXCLUDED_TMP"
+      record_excluded_skill "$rel" "$skill_prefix"
+    fi
+    # seo-geo 소유 스킬이 이번에 빠졌다면 조합 조건 없이 기록 (2026-09-01, Codex R2: 애드온 제거 `5,11→5`·`11→util`
+    # 미수렴 지적 수용). should_include_skill 이 false 라는 것 자체가 "선택된 어떤 템플릿도 소유하지 않는다"는 뜻이라
+    # 프로파일 전환(전체→커머스)·애드온 제거 어느 경로든 안전하다. 삭제는 여전히 매니페스트 해시 증명 하에서만.
+    # ts 템플릿 병행 시 위 분기와 중복 기록될 수 있으나 prune 은 파일 단위 존재·해시 검사라 무해하다.
+    if is_seo_geo_skill "$skill_prefix"; then
+      record_excluded_skill "$rel" "$skill_prefix"
+    fi
+    # 템플릿 누수 수정(2026-08-31)으로 제외된 스킬 — 소유자 없는 템플릿 조합의 재설치에서 잔재 정리 기록
+    # (seo-geo 병행 시 그 소유분은 위에서 처리했거나 포함됐으므로 여기선 제외)
+    if is_only_java_selected && is_java_noncore_excluded "$skill_prefix" && ! is_seo_geo_skill "$skill_prefix"; then
+      record_excluded_skill "$rel" "$skill_prefix"          # java 고유 누수 전체 (n8n·SEO devops 포함)
+    elif is_leakscope_only_selected && { { [[ "$rel" == meta/* ]] && is_dream_meta "$skill_prefix"; } ||
+         is_in_skill_list "$skill_prefix" "${DREAM_ARCH_SKILLS[@]}" ||
+         [[ "$skill_prefix" == "architecture/frontend-domain-structure" ]]; }; then
+      record_excluded_skill "$rel" "$skill_prefix"          # java·rust·unity 공통 누수 (혼합 조합 포함)
     fi
     echo "  skip .claude/skills/$rel" && continue
   fi
@@ -1027,6 +1251,21 @@ for src_path in "$REPO_DIR/.claude/skills"/*/*/SKILL.md; do
     echo "  → .claude/skills/$rel"
     echo "$rel" >> "$MANIFEST_SKILLS_TMP"
 
+    # SKILL.md 외 부속 파일(references/ 등)도 함께 복사 — 본문이 참조하는 파일 누락 방지 (2026-08-31)
+    # 파일별로 매니페스트에 기록해 재설치 정리(소유 증명) 대상에 포함한다
+    _skill_src_dir="$(dirname "$src_path")"
+    while IFS= read -r _extra; do
+      _extra_rel="${_extra#$REPO_DIR/.claude/skills/}"
+      _extra_dest="$TARGET/.claude/skills/$_extra_rel"
+      mkdir -p "$(dirname "$_extra_dest")"
+      if cp -f "$_extra" "$_extra_dest" 2>/dev/null; then
+        echo "  → .claude/skills/$_extra_rel"
+        echo "$_extra_rel" >> "$MANIFEST_SKILLS_TMP"
+      else
+        echo "  ✗ .claude/skills/$_extra_rel (복사 실패)"
+      fi
+    done < <(find "$_skill_src_dir" -type f ! -name 'SKILL.md' 2>/dev/null)
+
     # 같은 스킬의 docs 페어링 복사 (docs/skills/{cat}/{name}/)
     docs_src_dir="$REPO_DIR/docs/skills/$skill_prefix"
     if [ -d "$docs_src_dir" ]; then
@@ -1034,6 +1273,7 @@ for src_path in "$REPO_DIR/.claude/skills"/*/*/SKILL.md; do
       mkdir -p "$docs_dest_dir"
       if cp -Rf "$docs_src_dir/." "$docs_dest_dir/" 2>/dev/null; then
         echo "  → docs/skills/$skill_prefix/"
+        ( cd "$TARGET/docs" && find "skills/$skill_prefix" -type f 2>/dev/null ) >> "$MANIFEST_DOCS_TMP"
       else
         echo "  ✗ docs/skills/$skill_prefix/ (복사 실패)"
       fi
@@ -1085,16 +1325,19 @@ else
     if cp -f "$REPO_DIR/docs/skills/VERIFICATION_TEMPLATE.md" \
             "$TARGET/docs/skills/VERIFICATION_TEMPLATE.md" 2>/dev/null; then
       echo "  → docs/skills/VERIFICATION_TEMPLATE.md"
+      echo "skills/VERIFICATION_TEMPLATE.md" >> "$MANIFEST_DOCS_TMP"
     else
       echo "  ✗ docs/skills/VERIFICATION_TEMPLATE.md (복사 실패)"
     fi
   fi
 
   # docs/hooks/ (훅 문서 — 모든 템플릿이 동일한 훅 세트를 받으므로 통째 복사)
+  # 공용 docs도 매니페스트에 기록해 소유 증명을 남긴다 (2026-08-31 Codex R2 — 삭제 경로는 후속 과제)
   if [ -d "$REPO_DIR/docs/hooks" ]; then
     mkdir -p "$TARGET/docs/hooks"
     if cp -Rf "$REPO_DIR/docs/hooks/." "$TARGET/docs/hooks/" 2>/dev/null; then
       echo "  → docs/hooks/"
+      ( cd "$TARGET/docs" && find "hooks" -type f 2>/dev/null ) >> "$MANIFEST_DOCS_TMP"
     else
       echo "  ✗ docs/hooks/ (복사 실패)"
     fi
@@ -1202,7 +1445,9 @@ if [ "$CLAUDE_WRITTEN" = true ]; then
       [ -f "$_add_src" ] || continue
 
       # 표준 섹션(# 헤더, ## 필수 원칙/금지 사항/규칙 참조, ---, <!-- common-rules -->)
-      # 을 제외한 도메인 전용 ## 섹션 추출
+      # 을 제외한 도메인 전용 ## 섹션 추출. 연속 빈 줄 접기는 awk 로 — 이전의
+      # `sed '/…/{ N; /…/d }'` 는 BSD sed(macOS)에서 "extra characters at the end of d command" 로 실패해
+      # 다중 템플릿 도메인 섹션이 macOS 에서 한 번도 append 되지 않고 있었다 (2026-09-01 seo-geo E2E 에서 발견).
       _domain_content=$(awk '
         /^# /                                         { skip=1; next }
         /^## (필수 원칙|금지 사항|규칙 참조)/         { skip=1; next }
@@ -1210,22 +1455,60 @@ if [ "$CLAUDE_WRITTEN" = true ]; then
         /^---/                                        { skip=0; next }
         /^<!-- common-rules -->/                      { skip=1; next }
         !skip                                         { print }
-      ' "$_add_src" | sed '/^[[:space:]]*$/{ N; /^\n[[:space:]]*$/d }')
+      ' "$_add_src" | awk '
+        NF        { if (!started) started=1; lines[++n]=$0; last=n; next }
+        started   { lines[++n]=$0 }
+        END       { blank=0
+                    for (i=1; i<=last; i++) {
+                      if (lines[i] ~ /^[[:space:]]*$/) { if (blank) continue; blank=1 } else blank=0
+                      print lines[i]
+                    } }')   # 앞뒤 빈 줄 제거 + 연속 빈 줄 접기
 
       if [ -n "$_domain_content" ]; then
-        # ## 규칙 참조 섹션 바로 앞에 도메인 섹션 삽입
+        # ## 규칙 참조 섹션 바로 앞에 "도메인 섹션 + ---" 삽입 (베이스 CLAUDE.md 의 `---` 다음 자리).
+        # `awk -v domain="<여러 줄>"` 은 BSD awk(macOS)가 "newline in string" 으로 거부하므로 임시 파일 + getline 으로 주입.
+        _DOMAIN_TMP=$(mktemp)
+        printf '%s\n' "$_domain_content" > "$_DOMAIN_TMP"
         TMP=$(mktemp)
-        awk -v domain="$_domain_content" -v added=0 '
+        awk -v dfile="$_DOMAIN_TMP" '
           /^## 규칙 참조/ && added==0 {
-            print "---"
+            while ((getline line < dfile) > 0) print line
+            close(dfile)
             print ""
-            print domain
+            print "---"
             print ""
             added=1
           }
           { print }
         ' "$CLAUDE_FILE" > "$TMP" && mv "$TMP" "$CLAUDE_FILE"
+        rm -f "$_DOMAIN_TMP"
         echo "  ✓ ${_add_tmpl} 도메인 섹션 추가"
+      fi
+
+      # 추가 템플릿의 `## 금지 사항` 항목은 버리지 않고 베이스 금지 사항 끝에 병합한다 (2026-09-01 Codex R3:
+      # seo-geo 의 클로킹·미검증 JSON-LD·robots 변경 금지 같은 핵심 가드레일이 `5,11` 에서 통째로 빠지던 문제).
+      # `<!-- common-rules -->` 자리표시자는 베이스에서 이미 주입됐으므로 `- ` 항목만 가져온다.
+      _domain_prohibitions=$(awk '
+        /^## 금지 사항/ { f=1; next }
+        /^## / || /^---/ { f=0 }
+        f && /^- /      { print }
+      ' "$_add_src")
+      if [ -n "$_domain_prohibitions" ] && grep -q "^## 금지 사항" "$CLAUDE_FILE" 2>/dev/null; then
+        _PROHIB_TMP=$(mktemp)
+        { echo "<!-- ${_add_tmpl} 금지 사항 -->"; printf '%s\n' "$_domain_prohibitions"; } > "$_PROHIB_TMP"
+        TMP=$(mktemp)
+        awk -v pfile="$_PROHIB_TMP" '
+          /^## 금지 사항/ { insec=1 }
+          insec && /^---/ && !done {
+            while ((getline line < pfile) > 0) print line
+            close(pfile)
+            print ""
+            done=1; insec=0
+          }
+          { print }
+        ' "$CLAUDE_FILE" > "$TMP" && mv "$TMP" "$CLAUDE_FILE"
+        rm -f "$_PROHIB_TMP"
+        echo "  ✓ ${_add_tmpl} 금지 사항 병합"
       fi
     done
   fi
@@ -1259,14 +1542,14 @@ fi
 if [ -s "$OPTION_EXCLUDED_TMP" ]; then
   echo ""
   echo "[옵션 제외 정리]"
-  node "$REPO_DIR/scripts/prune-option-excluded.js" "$TARGET" "$OPTION_EXCLUDED_TMP" || echo "  ⚠ 옵션 제외 정리 실패 — 잔재는 다음 재설치에서 재시도"
+  node "$REPO_DIR/scripts/prune-option-excluded.js" "$TARGET" "$OPTION_EXCLUDED_TMP" "$REPO_DIR" || echo "  ⚠ 옵션 제외 정리 실패 — 잔재는 다음 재설치에서 재시도"
 fi
 rm -f "$OPTION_EXCLUDED_TMP"
 
 node "$REPO_DIR/scripts/write-install-manifest.js" \
-  "$TARGET" "$MANIFEST_AGENTS_TMP" "$MANIFEST_SKILLS_TMP" "$INCLUDE_MEMORY" "$MANIFEST_HOOKS_TMP" "$MANIFEST_COMMANDS_TMP" "$MANIFEST_RULES_TMP" || \
+  "$TARGET" "$MANIFEST_AGENTS_TMP" "$MANIFEST_SKILLS_TMP" "$INCLUDE_MEMORY" "$MANIFEST_HOOKS_TMP" "$MANIFEST_COMMANDS_TMP" "$MANIFEST_RULES_TMP" "$MANIFEST_DOCS_TMP" || \
   echo "  ⚠ 매니페스트 저장 실패 — 다음 재설치 시 잔재 확인 질문이 다시 표시됩니다"
-rm -f "$MANIFEST_AGENTS_TMP" "$MANIFEST_SKILLS_TMP" "$MANIFEST_HOOKS_TMP" "$MANIFEST_COMMANDS_TMP" "$MANIFEST_RULES_TMP"
+rm -f "$MANIFEST_AGENTS_TMP" "$MANIFEST_SKILLS_TMP" "$MANIFEST_HOOKS_TMP" "$MANIFEST_COMMANDS_TMP" "$MANIFEST_RULES_TMP" "$MANIFEST_DOCS_TMP"
 
 # ── 레거시 프로파일: typescript-quality 베이스라인 시드 ─────────────────
 # --changed-only 는 "직전 통과 시점의 에러 집합"과 비교해 새 에러만 차단한다. 베이스라인이 없는 첫 저장은

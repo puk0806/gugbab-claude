@@ -19,7 +19,10 @@ const path = require('path');
 // 6번째 인자 commandsList — 슬래시 커맨드도 관리 파일로 기록한다 (2026-08-26 Codex 리뷰:
 // export만 하고 매니페스트에 없으면 옵션 OFF·다운그레이드 재설치 때 /codex-review 등이 영원히 남는다)
 // 7번째 인자 rulesList — 규칙도 소유 증명 대상 (2026-08-26 Codex 리뷰: 이름만으로 지우면 프로젝트 자체 규칙이 유실)
-const [target, agentsListFile, skillsListFile, mem, hooksListFile, commandsListFile, rulesListFile] = process.argv.slice(2);
+// 8번째 인자 docsListFile — 스킬·에이전트의 짝 docs(docs/skills/**, docs/agents/**)도 기록한다
+//   (2026-08-31 Codex 리뷰: 자산이 prune돼도 짝 docs가 영원히 남아 스테일 문서가 됨).
+//   docs 항목의 rel은 <target>/docs/ 기준 상대경로다 (.claude/ 하위가 아님 — build의 rootFor 참조)
+const [target, agentsListFile, skillsListFile, mem, hooksListFile, commandsListFile, rulesListFile, docsListFile] = process.argv.slice(2);
 if (!target) {
   console.error('사용법: write-install-manifest.js <target> <agentsList> <skillsList> <includeMemory>');
   process.exit(1);
@@ -36,7 +39,7 @@ const sha256File = (f) => {
 };
 
 // 이전 매니페스트 — 손상돼 있으면 무시하고 새로 만든다 (여기서는 삭제 판단을 하지 않으므로 안전)
-let prev = { agents: [], skills: [], hooks: [], commands: [], rules: [], hashes: { agents: {}, skills: {}, hooks: {}, commands: {}, rules: {} } };
+let prev = { agents: [], skills: [], hooks: [], commands: [], rules: [], docs: [], hashes: { agents: {}, skills: {}, hooks: {}, commands: {}, rules: {}, docs: {} } };
 try {
   const p = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
   const hs = (p.hashes && typeof p.hashes === 'object') ? p.hashes : {};
@@ -46,24 +49,29 @@ try {
     hooks: Array.isArray(p.hooks) ? p.hooks : [],
     commands: Array.isArray(p.commands) ? p.commands : [],
     rules: Array.isArray(p.rules) ? p.rules : [],
+    docs: Array.isArray(p.docs) ? p.docs : [],
     hashes: {
       agents: (hs.agents && typeof hs.agents === 'object') ? hs.agents : {},
       skills: (hs.skills && typeof hs.skills === 'object') ? hs.skills : {},
       hooks: (hs.hooks && typeof hs.hooks === 'object') ? hs.hooks : {},
       commands: (hs.commands && typeof hs.commands === 'object') ? hs.commands : {},
       rules: (hs.rules && typeof hs.rules === 'object') ? hs.rules : {},
+      docs: (hs.docs && typeof hs.docs === 'object') ? hs.docs : {},
     },
   };
 } catch { /* 없거나 손상 — 신규 생성 */ }
 
+// docs kind만 루트가 <target>/docs — 나머지는 <target>/.claude/<kind>
+const rootFor = (kind) => (kind === 'docs' ? path.join(target, 'docs') : path.join(target, '.claude', kind));
+
 const build = (kind, listF) => {
   const fresh = new Set(readList(listF));
-  const carried = prev[kind].filter((r) => fs.existsSync(path.join(target, '.claude', kind, r)));
+  const carried = prev[kind].filter((r) => fs.existsSync(path.join(rootFor(kind), r)));
   const rels = [...new Set([...carried, ...fresh])].sort();
   const hashes = {};
   for (const rel of rels) {
     if (fresh.has(rel)) {
-      const h = sha256File(path.join(target, '.claude', kind, rel));
+      const h = sha256File(path.join(rootFor(kind), rel));
       if (h) hashes[rel] = h;
     } else if (typeof prev.hashes[kind][rel] === 'string') {
       hashes[rel] = prev.hashes[kind][rel];
@@ -77,6 +85,7 @@ const skills = build('skills', skillsListFile);
 const hooks = build('hooks', hooksListFile); // 인자 생략 시 readList가 빈 목록 반환
 const commands = build('commands', commandsListFile);
 const rules = build('rules', rulesListFile);
+const docs = build('docs', docsListFile);
 
 // memoryManaged 판정 — install-cleanup.js와 동일한 관리 흔적 규칙을 쓴다
 const MEMORY_EVIDENCE_RE = /memory-(pull|sync|stop-guard)\.c?js/;
@@ -111,6 +120,7 @@ fs.writeFileSync(manifestFile, JSON.stringify({
   hooks: hooks.rels,
   commands: commands.rels,
   rules: rules.rels,
-  hashes: { agents: agents.hashes, skills: skills.hashes, hooks: hooks.hashes, commands: commands.hashes, rules: rules.hashes },
+  docs: docs.rels,
+  hashes: { agents: agents.hashes, skills: skills.hashes, hooks: hooks.hashes, commands: commands.hashes, rules: rules.hashes, docs: docs.hashes },
 }, null, 2) + '\n');
-console.log(`  → .claude/.install-manifest.json (agents ${agents.rels.length} / skills ${skills.rels.length} / hooks ${hooks.rels.length} / commands ${commands.rels.length} / rules ${rules.rels.length})`);
+console.log(`  → .claude/.install-manifest.json (agents ${agents.rels.length} / skills ${skills.rels.length} / hooks ${hooks.rels.length} / commands ${commands.rels.length} / rules ${rules.rels.length} / docs ${docs.rels.length})`);
