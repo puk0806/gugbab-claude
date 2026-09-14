@@ -40,6 +40,7 @@ echo "   8/academic           — 논문·학술 작업"
 echo "   9/dream-interpretation — 꿈 해몽 앱 개발"
 echo "  10/health             — 건강·식단 PWA 앱"
 echo "  11/seo-geo            — SEO·GEO 검색 노출 (프레임워크 비종속 — 스택 템플릿과 병행 선택)"
+echo "  12/fortune-app        — 사주·타로·손금 운세 앱 개발"
 echo ""
 echo "  복수 선택 예시: react-spa,health  또는  2,10  또는  java-spring-legacy,seo-geo (5,11)"
 echo ""
@@ -59,6 +60,7 @@ _parse_template() {
     9|dream-interpretation) echo "dream-interpretation" ;;
     10|health)              echo "health" ;;
     11|seo-geo)             echo "seo-geo" ;;
+    12|fortune-app)         echo "fortune-app" ;;
     *) return 1 ;;
   esac
 }
@@ -155,20 +157,33 @@ record_excluded_skill() {
 }
 
 # 개발 템플릿(코딩 작업)이 하나라도 선택되었는가
+# dream-interpretation·fortune-app 은 2026-09-11 부터 dev 템플릿 — 개발 에이전트(frontend/backend developer·qa-engineer)를
+# 설치하면서 dev 훅(adversarial-test-guard 등)이 없어 qa-engineer 본문("훅이 차단")과 어긋나던 비정합 수정 (감사 백로그 4)
 is_dev_selected() {
   for _tmpl in "${TEMPLATES[@]}"; do
     case "$_tmpl" in
-      react-spa|nextjs|rust-axum|java-spring-legacy|java-spring-modern|unity-game|health|all)
+      react-spa|nextjs|rust-axum|java-spring-legacy|java-spring-modern|unity-game|health|dream-interpretation|fortune-app|all)
         return 0 ;;
     esac
   done
   return 1
 }
 
+# SEO·GEO 옵트인 질문을 받는 템플릿 — 프론트 스택(react-spa·nextjs) + 웹 앱 도메인 템플릿(health·dream·fortune)
+# (2026-09-11 감사 백로그 3: health·dream·fortune 은 SEO 20종+writing 4종이 무조건 들어가 `12,11` 조합이 no-op 였다.
+#  health 는 스킬 필터가 INCLUDE_SEO 를 이미 읽고 있었지만 질문이 안 나와 기본값 true 가 항상 통과했다)
+is_seo_optin_selected() {
+  for _tmpl in "${TEMPLATES[@]}"; do
+    case "$_tmpl" in react-spa|nextjs|health|dream-interpretation|fortune-app) return 0 ;; esac
+  done
+  return 1
+}
+
 # TypeScript 대상 템플릿이 하나라도 선택되었는가
+# 도메인 웹앱 템플릿(health·dream·fortune)은 전부 TypeScript PWA 기반 — 스택 템플릿과 같은 TS 훅·규칙·레거시 프로파일 질문 (2026-09-11 dream·fortune 추가)
 is_ts_selected() {
   for _tmpl in "${TEMPLATES[@]}"; do
-    case "$_tmpl" in react-spa|nextjs|health|all) return 0 ;; esac
+    case "$_tmpl" in react-spa|nextjs|health|dream-interpretation|fortune-app|all) return 0 ;; esac
   done
   return 1
 }
@@ -253,10 +268,10 @@ if has_template "seo-geo"; then
       *)      echo "  y 또는 c를 입력하세요. (엔터 = y)" ;;
     esac
   done
-elif has_template "react-spa" || has_template "nextjs"; then
+elif is_seo_optin_selected; then
   echo ""
   echo "SEO·GEO 스킬(sitemap·robots·JSON-LD·네이버·카카오·GEO 등 20종 + writing 4종)을 어떻게 포함할까요?"
-  echo "  n — 제외 (로그인 뒤의 어드민·백오피스·사내 도구)"
+  echo "  n — 제외 (로그인 뒤의 어드민·백오피스·사내 도구, 검색 노출이 목적이 아닌 개인용·캐주얼 앱)"
   echo "  c — 커머스·서비스 사이트 프로파일 (상품·카테고리·검색·카카오·네이버·GEO 중심. 로컬비즈니스·다국어·YMYL·VPAT·사이트 이전·Indexing API 제외)"
   echo "  y — 전체 (블로그·미디어·다국어·로컬 비즈니스까지)"
   while true; do
@@ -560,6 +575,33 @@ DREAM_APP_AGENTS=(
   "meta/project-scaffolder.md"
 )
 
+# fortune-app: 사주·타로·손금 운세 앱 전용 에이전트 허용 목록 (dream-interpretation과 동일 패턴)
+FORTUNE_APP_AGENTS=(
+  "frontend/frontend-developer.md"
+  "frontend/frontend-architect.md"
+  "domain/frontend-domain-refactorer.md"
+  "backend/python-backend-developer.md"
+  "backend/python-backend-architect.md"
+  "backend/typescript-backend-developer.md"
+  "backend/typescript-backend-architect.md"
+  "backend/database-architect.md"
+  "devops/devops-engineer.md"
+  "domain/api-spec-designer.md"
+  "domain/product-planner.md"
+  "domain/ui-ux-designer.md"
+  "research/web-searcher.md"
+  "research/deep-researcher.md"
+  "research/research-reviewer.md"
+  "validation/fortune-interpretation-prompt-tester.md"
+  "validation/fact-checker.md"
+  "validation/source-validator.md"
+  "validation/qa-engineer.md"
+  "validation/security-auditor.md"
+  "meta/claude-code-guide.md"
+  "meta/tech-stack-advisor.md"
+  "meta/project-scaffolder.md"
+)
+
 # 특수 목적 에이전트 (일반 개발 템플릿에서 제외)
 SPECIAL_AGENTS_ACADEMIC=(
   "education/curriculum-2022-fact-checker.md"
@@ -580,6 +622,10 @@ SPECIAL_AGENTS_DREAM=(
   "validation/dream-image-safety-classifier.md"
   "validation/dream-interpretation-prompt-tester.md"
   "validation/dream-safety-classifier.md"
+)
+# 2026-09-11: 캐주얼 앱 결정으로 fortune-safety-classifier 삭제 — 전용 에이전트는 1종
+SPECIAL_AGENTS_FORTUNE=(
+  "validation/fortune-interpretation-prompt-tester.md"
 )
 SPECIAL_AGENTS_GAME=(
   "game/game-asset-ai-director.md"
@@ -608,6 +654,9 @@ EXCLUDE_AGENTS_RUST=(
   "domain/frontend-domain-refactorer.md"
   "backend/java-backend-developer.md"
   "backend/java-backend-architect.md"
+  # 2026-09-11 감사 백로그 2 — python 에이전트 2종이 rust·java·unity 배제 목록에서 빠져 있었다
+  "backend/python-backend-developer.md"
+  "backend/python-backend-architect.md"
 )
 EXCLUDE_AGENTS_JAVA=(
   "frontend/frontend-developer.md"
@@ -616,6 +665,8 @@ EXCLUDE_AGENTS_JAVA=(
   "backend/rust-backend-developer.md"
   "backend/rust-backend-architect.md"
   "backend/build-error-resolver.md"
+  "backend/python-backend-developer.md"
+  "backend/python-backend-architect.md"
   # 2026-08-31 누수 수정 — 프론트·SEO 전용 에이전트가 java 백엔드에 딸려가던 것 차단
   # (java 템플릿에서는 SEO 옵트아웃 질문이 나오지 않아 INCLUDE_SEO=true 기본값이 항상 통과했음)
   "frontend/CLAUDE.md"
@@ -643,6 +694,13 @@ EXCLUDE_AGENTS_GAME=(
   "backend/java-backend-developer.md"
   "backend/java-backend-architect.md"
   "backend/build-error-resolver.md"
+  "backend/python-backend-developer.md"
+  "backend/python-backend-architect.md"
+)
+# 위 python 2종 — rust·java·unity 재설치 시 이전 설치 잔재 정리(prune) 기록 대상 (2026-09-11)
+PYTHON_AGENTS_NEWLY_EXCLUDED=(
+  "backend/python-backend-developer.md"
+  "backend/python-backend-architect.md"
 )
 
 # 에이전트 포함 여부 확인 헬퍼
@@ -670,10 +728,14 @@ _agent_ok_for_tmpl() {
   if [ "$tmpl" = "seo-geo" ]; then
     is_in_list "$rel" "${SEO_GEO_AGENTS[@]}" && return 0; return 1
   fi
+  if [ "$tmpl" = "fortune-app" ]; then
+    is_in_list "$rel" "${FORTUNE_APP_AGENTS[@]}" && return 0; return 1
+  fi
   if [ "$tmpl" = "all" ]; then return 0; fi
-  # 개발 템플릿 공통: 학술·dream 전용 제외
+  # 개발 템플릿 공통: 학술·dream·fortune 전용 제외
   is_in_list "$rel" "${SPECIAL_AGENTS_ACADEMIC[@]}" && return 1
   is_in_list "$rel" "${SPECIAL_AGENTS_DREAM[@]}" && return 1
+  is_in_list "$rel" "${SPECIAL_AGENTS_FORTUNE[@]}" && return 1
   # unity-game 외 게임 에이전트 제외
   if [ "$tmpl" != "unity-game" ]; then
     is_in_list "$rel" "${SPECIAL_AGENTS_GAME[@]}" && return 1
@@ -715,9 +777,17 @@ should_include_agent() {
   if is_only_java_selected && is_in_list "$rel" "${JAVA_AGENTS_NEWLY_EXCLUDED[@]}"; then
     record_excluded_agent "$rel"
   fi
+  # python 에이전트 누수 수정(2026-09-11) — 여기 도달 = 선택된 어떤 템플릿도 python 을 소유하지 않으므로 조합 조건 없이 기록
+  if is_in_list "$rel" "${PYTHON_AGENTS_NEWLY_EXCLUDED[@]}"; then
+    record_excluded_agent "$rel"
+  fi
   # seo-geo 소유 에이전트가 빠졌다면(애드온 제거 `11→util`·`5,11→5`) 조합 조건 없이 기록 (2026-09-01 Codex R2).
   # 여기 도달 = 선택된 어떤 템플릿도 포함하지 않음. 삭제는 매니페스트 해시 증명 하에서만.
   if is_in_list "$rel" "${SEO_GEO_AGENTS[@]}"; then
+    record_excluded_agent "$rel"
+  fi
+  # fortune-app 전용 에이전트 2종도 동일 — 소유자는 fortune-app·all 뿐이라 `12→util` 다운그레이드가 수렴하도록 기록 (2026-09-10)
+  if is_in_list "$rel" "${SPECIAL_AGENTS_FORTUNE[@]}"; then
     record_excluded_agent "$rel"
   fi
   return 1
@@ -808,10 +878,12 @@ _rule_ok_for_tmpl() {
     rust.md)
       [[ "$tmpl" == all || "$tmpl" == rust-axum ]] && return 0 ;;
     typescript.md)
-      [[ "$tmpl" == all || "$tmpl" == react-spa || "$tmpl" == nextjs || "$tmpl" == health ]] && return 0 ;;
+      # is_ts_selected 와 동일 집합
+      [[ "$tmpl" == all || "$tmpl" == react-spa || "$tmpl" == nextjs || "$tmpl" == health ||
+         "$tmpl" == dream-interpretation || "$tmpl" == fortune-app ]] && return 0 ;;
     adversarial-testing.md)
-      # 적대적 테스트 강제 훅(adversarial-test-guard·fake-impl-guard)이 참조 — dev 템플릿 전체에 포함
-      case "$tmpl" in all|react-spa|nextjs|rust-axum|java-spring-legacy|java-spring-modern|unity-game|health) return 0 ;; esac ;;
+      # 적대적 테스트 강제 훅(adversarial-test-guard·fake-impl-guard)이 참조 — dev 템플릿 전체에 포함 (is_dev_selected 와 동일 집합)
+      case "$tmpl" in all|react-spa|nextjs|rust-axum|java-spring-legacy|java-spring-modern|unity-game|health|dream-interpretation|fortune-app) return 0 ;; esac ;;
   esac
   return 1
 }
@@ -893,6 +965,29 @@ DREAM_META_SKILLS=(
 
 # dream-interpretation 전용 architecture 스킬
 DREAM_ARCH_SKILLS=("architecture/dream-journal-data-modeling")
+
+# fortune-app 전용 스킬 (2026-09-10 신설 — 사주·타로·손금 운세 앱)
+# dream 계열과 달리 카테고리별 배열 대신 통합 목록 + 전역 게이트로 누출을 차단한다
+# (fortune-app·all 외 모든 템플릿에서 제외 — health/* 게이트와 동일 방식)
+# 2026-09-11: 캐주얼 앱 결정으로 안전 분류기 프롬프트·콘텐츠 윤리·정기결제 3종 삭제 (13→10)
+FORTUNE_APP_SKILLS=(
+  "humanities/korean-saju-tradition"
+  "humanities/tarot-history-symbolism"
+  "humanities/palmistry-limitations"
+  "meta/fortune-interpretation-prompt-engineering"
+  "architecture/saju-tarot-data-modeling"
+  "frontend/saju-chart-visualization"
+  "frontend/tarot-card-deck-ui"
+  "frontend/palm-photo-capture-vision"
+  "frontend/daily-fortune-retention-loop"
+  "backend/korean-lunar-calendar-manseryeok"
+)
+
+is_fortune_skill() {
+  local prefix="$1"
+  for s in "${FORTUNE_APP_SKILLS[@]}"; do [[ "$prefix" == "$s" ]] && return 0; done
+  return 1
+}
 
 # n8n 자동화 스킬 — LLM 워크플로우 템플릿(health·dream)과 백엔드에서만. 프론트(react-spa·nextjs)에는 노이즈 (2026-08-26)
 N8N_SKILLS=(
@@ -984,6 +1079,12 @@ is_dream_frontend() {
   for s in "${DREAM_FRONTEND_SKILLS[@]}"; do [[ "$prefix" == "$s" ]] && return 0; done
   return 1
 }
+# DREAM_FRONTEND_SKILLS 중 health(Claude 스트리밍 PWA)도 쓰는 공용 LLM PWA 스킬 (2026-09-11)
+HEALTH_LLM_FRONTEND_SKILLS=(
+  "frontend/claude-api-streaming-frontend"
+  "frontend/chat-ui-pattern"
+  "frontend/pwa-offline-llm-fallback"
+)
 
 is_seo_frontend() {
   local prefix="$1"
@@ -1103,6 +1204,31 @@ is_java_noncore_excluded() {
   return 1
 }
 
+# 프론트 프로젝트에만 의미 있는 devops 스킬 — rust·unity 에서도 제외 (2026-09-11 감사 백로그 2).
+# n8n·vercel-sandbox 는 rust 가 소유(혼합 재설치 테스트 전제)하므로 java 목록(JAVA_EXCLUDED_EXTRA_SKILLS)과 다르다.
+FRONTEND_ONLY_DEVOPS_SKILLS=(
+  "devops/site-migration-seo"
+  "devops/github-actions-visual-regression"
+)
+
+# dream·fortune 도메인 템플릿의 SEO 옵트인 판정 — react-spa·nextjs 블록과 같은 기준 (2026-09-11 백로그 3).
+# 0=포함 가능, 1=SEO 옵션으로 제외. 프레임워크 종속 SEO 구현 스킬(seo-nextjs·seo-vite-spa)은 두 도메인 앱이
+# Next.js/Vite 어느 쪽인지 모르므로 둘 다 두고, 정적 HTML 전용(seo-static-html)만 스택 템플릿과 같이 제외한다.
+_seo_optin_skill_ok() {
+  local rel="$1" prefix="$2"
+  [[ "$prefix" == "frontend/seo-static-html" ]] && return 1
+  if [ "$INCLUDE_SEO" = "false" ]; then
+    [[ "$rel" == frontend/* ]] && is_seo_frontend "$prefix" && return 1
+    [[ "$rel" == writing/* ]] && return 1
+    is_in_skill_list "$prefix" "${SEO_DEVOPS_SKILLS[@]}" && return 1
+  fi
+  if [ "$INCLUDE_SEO" = "commerce" ]; then
+    is_in_skill_list "$prefix" "${SEO_NONCOMMERCE_SKILLS[@]}" && return 1
+  fi
+  [[ "$rel" == writing/* ]] && ! is_seo_writing "$prefix" && return 1
+  return 0
+}
+
 # ── 다중 템플릿 스킬 포함 판정 ──────────────────────────────────────────
 
 # 단일 템플릿 기준으로 스킬 포함 여부 반환 (0=포함, 1=제외)
@@ -1111,24 +1237,50 @@ _skill_ok_for_tmpl() {
   if [ "$tmpl" = "all" ]; then return 0; fi
   # health 도메인 스킬(영양·식단 5종)은 health 템플릿에서만 — 그 외 전 템플릿(util·academic·dream·rust·java·unity·react·next) 누출 차단
   if [[ "$rel" == health/* && "$tmpl" != "health" ]]; then return 1; fi
+  # fortune-app 전용 스킬 13종은 fortune-app 템플릿에서만 — 동일 방식 전역 차단
+  if is_fortune_skill "$skill_prefix" && [ "$tmpl" != "fortune-app" ]; then return 1; fi
   if [ "$tmpl" = "util" ]; then
     [[ "$rel" == frontend/* || "$rel" == backend/* || "$rel" == devops/* ||
        "$rel" == architecture/* || "$rel" == game/* || "$rel" == humanities/* ||
        "$rel" == education/* || "$rel" == research/* || "$rel" == writing/* ]] && return 1
+    # dream 전용 meta 프롬프트 3종 누출 차단 (2026-09-11 백로그 6 — fortune meta 는 전역 게이트가 이미 막는다)
+    [[ "$rel" == meta/* ]] && is_dream_meta "$skill_prefix" && return 1
     return 0
   fi
   if [ "$tmpl" = "academic" ]; then
     [[ "$rel" == frontend/* || "$rel" == backend/* || "$rel" == devops/* || "$rel" == game/* ]] && return 1
     [[ "$rel" == humanities/* ]] && is_dream_humanities "$skill_prefix" && return 1
     [[ "$rel" == meta/* ]] && is_dream_meta "$skill_prefix" && return 1
+    # SEO writing 4종은 학술 글쓰기와 무관 (2026-09-11 백로그 6)
+    [[ "$rel" == writing/* ]] && is_seo_writing "$skill_prefix" && return 1
     [[ "$rel" == architecture/* ]] && [[ "$skill_prefix" != "architecture/ddd" ]] && return 1
     return 0
   fi
   if [ "$tmpl" = "dream-interpretation" ]; then
     [[ "$rel" == game/* || "$rel" == education/* || "$rel" == research/* ]] && return 1
     [[ "$rel" == humanities/* ]] && ! is_dream_humanities "$skill_prefix" && return 1
-    [[ "$rel" == writing/* ]] && ! is_seo_writing "$skill_prefix" && return 1
     [[ "$rel" == backend/* ]] && [[ "$skill_prefix" != backend/python-* ]] && return 1
+    _seo_optin_skill_ok "$rel" "$skill_prefix" || return 1
+    return 0
+  fi
+  if [ "$tmpl" = "fortune-app" ]; then
+    [[ "$rel" == game/* || "$rel" == education/* || "$rel" == research/* ]] && return 1
+    # humanities: fortune 3종만 (2026-09-11 캐주얼 결정 — 안전 분류기 짝이던 위기 자원 스킬 포함 제거)
+    if [[ "$rel" == humanities/* ]]; then
+      is_fortune_skill "$skill_prefix" && return 0
+      return 1
+    fi
+    # backend: python 계열 + fortune 전용(만세력)만
+    if [[ "$rel" == backend/* ]]; then
+      is_fortune_skill "$skill_prefix" && return 0
+      [[ "$skill_prefix" == backend/python-* ]] && return 0
+      return 1
+    fi
+    # dream 전용 스킬 누출 차단 (generic frontend 스킬은 공유)
+    [[ "$rel" == frontend/dream-* ]] && return 1
+    [[ "$rel" == meta/* ]] && is_dream_meta "$skill_prefix" && return 1
+    is_in_skill_list "$skill_prefix" "${DREAM_ARCH_SKILLS[@]}" && return 1
+    _seo_optin_skill_ok "$rel" "$skill_prefix" || return 1
     return 0
   fi
   if [[ "$tmpl" =~ ^(react-spa|nextjs|health)$ ]]; then
@@ -1136,8 +1288,13 @@ _skill_ok_for_tmpl() {
     [[ "$skill_prefix" == "backend/claude-code-headless" ]] && return 0
     [[ "$rel" == backend/* || "$rel" == game/* || "$rel" == humanities/* ||
        "$rel" == education/* || "$rel" == research/* ]] && return 1
-    # 꿈 일기 앱 전용 스킬(frontend 18·meta 3·architecture 1)은 dream-interpretation 템플릿에서만
-    [[ "$rel" == frontend/* ]] && is_dream_frontend "$skill_prefix" && return 1
+    # 꿈 일기 앱 전용 스킬(frontend 18·meta 3·architecture 1)은 dream-interpretation 템플릿에서만.
+    # 단 health 는 Claude 스트리밍 PWA 라 DREAM_FRONTEND_SKILLS 에 섞여 있는 *공용* LLM PWA 스킬 3종은 받는다
+    # (2026-09-11: health.md 가 "핵심 연동"으로 약속한 claude-api-streaming-frontend 가 실제로는 dream 게이트에 걸려 빠지던 결함.
+    #  fortune-app 은 dream-* 접두어만 걸러 이미 받고 있었다 — 도메인 앱 템플릿 간 비대칭 해소)
+    if [[ "$rel" == frontend/* ]] && is_dream_frontend "$skill_prefix"; then
+      if [ "$tmpl" = "health" ] && is_in_skill_list "$skill_prefix" "${HEALTH_LLM_FRONTEND_SKILLS[@]}"; then :; else return 1; fi
+    fi
     [[ "$rel" == meta/* ]] && is_dream_meta "$skill_prefix" && return 1
     is_in_skill_list "$skill_prefix" "${DREAM_ARCH_SKILLS[@]}" && return 1
     # n8n 자동화는 프론트 템플릿(react-spa·nextjs)에 노이즈 — health 는 LLM 워크플로우가 있어 유지
@@ -1161,6 +1318,9 @@ _skill_ok_for_tmpl() {
     [[ "$rel" == frontend/* || "$rel" == game/* || "$rel" == humanities/* ||
        "$rel" == education/* || "$rel" == research/* || "$rel" == writing/* ]] && return 1
     [[ "$rel" == backend/* ]] && is_java_skill "$skill_prefix" && return 1
+    # python 백엔드 스킬·Java 계열 redis-redisson-4(JAVA_SKILLS_* 미등록) 누수 차단 + 프론트 전용 devops (2026-09-11 백로그 2)
+    [[ "$skill_prefix" == backend/python-* || "$skill_prefix" == "backend/redis-redisson-4" ]] && return 1
+    is_in_skill_list "$skill_prefix" "${FRONTEND_ONLY_DEVOPS_SKILLS[@]}" && return 1
     # dream 전용·프론트 아키텍처 스킬 fallthrough 누수 차단 (2026-08-31, java와 동일 결함)
     [[ "$rel" == meta/* ]] && is_dream_meta "$skill_prefix" && return 1
     is_in_skill_list "$skill_prefix" "${DREAM_ARCH_SKILLS[@]}" && return 1
@@ -1190,6 +1350,7 @@ _skill_ok_for_tmpl() {
   if [ "$tmpl" = "unity-game" ]; then
     [[ "$rel" == frontend/* || "$rel" == backend/* || "$rel" == humanities/* ||
        "$rel" == education/* || "$rel" == research/* || "$rel" == writing/* ]] && return 1
+    is_in_skill_list "$skill_prefix" "${FRONTEND_ONLY_DEVOPS_SKILLS[@]}" && return 1   # 2026-09-11 백로그 2
     # dream 전용·프론트 아키텍처 스킬 fallthrough 누수 차단 (2026-08-31, java와 동일 결함)
     [[ "$rel" == meta/* ]] && is_dream_meta "$skill_prefix" && return 1
     is_in_skill_list "$skill_prefix" "${DREAM_ARCH_SKILLS[@]}" && return 1
@@ -1222,7 +1383,7 @@ for src_path in "$REPO_DIR/.claude/skills"/*/*/SKILL.md; do
 
   if ! should_include_skill "$rel" "$skill_prefix"; then
     # 이번 템플릿 범위인데 옵션(SEO n)·전용 스킬 누출 차단으로 빠진 것은 재설치 정리 목록에 기록
-    if is_ts_selected && { is_seo_frontend "$skill_prefix" || is_dream_frontend "$skill_prefix" || is_dream_meta "$skill_prefix" ||
+    if { is_ts_selected || is_seo_optin_selected; } && { is_seo_frontend "$skill_prefix" || is_dream_frontend "$skill_prefix" || is_dream_meta "$skill_prefix" ||
          is_in_skill_list "$skill_prefix" "${DREAM_ARCH_SKILLS[@]}" "${N8N_SKILLS[@]}" "${SEO_DEVOPS_SKILLS[@]}" "${SEO_WRITING_SKILLS[@]}" "${SEO_NONCOMMERCE_SKILLS[@]}"; }; then
       record_excluded_skill "$rel" "$skill_prefix"
     fi
@@ -1231,6 +1392,11 @@ for src_path in "$REPO_DIR/.claude/skills"/*/*/SKILL.md; do
     # 프로파일 전환(전체→커머스)·애드온 제거 어느 경로든 안전하다. 삭제는 여전히 매니페스트 해시 증명 하에서만.
     # ts 템플릿 병행 시 위 분기와 중복 기록될 수 있으나 prune 은 파일 단위 존재·해시 검사라 무해하다.
     if is_seo_geo_skill "$skill_prefix"; then
+      record_excluded_skill "$rel" "$skill_prefix"
+    fi
+    # fortune-app 전용 13종도 동일 — 소유자는 fortune-app·all 뿐이라 빠졌다는 것 자체가 "이번 조합에 소유자 없음".
+    # `12→util`·`12,2→2` 같은 다운그레이드 재설치가 수렴하도록 조합 조건 없이 기록 (2026-09-10)
+    if is_fortune_skill "$skill_prefix"; then
       record_excluded_skill "$rel" "$skill_prefix"
     fi
     # 템플릿 누수 수정(2026-08-31)으로 제외된 스킬 — 소유자 없는 템플릿 조합의 재설치에서 잔재 정리 기록
@@ -1513,6 +1679,22 @@ if [ "$CLAUDE_WRITTEN" = true ]; then
     done
   fi
 
+  # ── 미설치 규칙 참조 행 제거 (2026-09-11 감사 백로그 1) ──────────────────────
+  # 예제 CLAUDE.md 의 "규칙 참조" 표는 정적이라 작성도구 n·codex n·memory n 기본 설치에서
+  # agent-design·commands·readme-update·codex-review 같은 미설치 규칙을 `@.claude/rules/…` 로 가리킨 채 남았다.
+  # 실제 대상 `.claude/rules/` 를 기준으로, 존재하지 않는 규칙을 참조하는 *표 행*(`|` 로 시작)만 지운다.
+  # 본문 문장은 건드리지 않는다 — 항상 설치되는 RULES_COMMON 만 본문에서 참조한다는 전제(테스트 danglingRuleRefs 가 감시).
+  _RULE_REFS=$(grep -o '@\.claude/rules/[A-Za-z0-9._-]*\.md' "$CLAUDE_FILE" 2>/dev/null | sort -u)
+  _REMOVED_RULE_ROWS=""
+  for _ref in $_RULE_REFS; do
+    _rule_name="${_ref#@.claude/rules/}"
+    [ -f "$TARGET/.claude/rules/$_rule_name" ] && continue
+    TMP=$(mktemp)
+    grep -v "^|.*@\.claude/rules/${_rule_name//./\\.}" "$CLAUDE_FILE" > "$TMP"; mv "$TMP" "$CLAUDE_FILE"
+    _REMOVED_RULE_ROWS="$_REMOVED_RULE_ROWS $_rule_name"
+  done
+  [ -n "$_REMOVED_RULE_ROWS" ] && echo "  ✓ 미설치 규칙 참조 행 제거:$_REMOVED_RULE_ROWS"
+
   read -rp "  프로젝트명을 입력하세요 (Enter로 건너뜀): " PROJECT_NAME
   if [ -n "$PROJECT_NAME" ]; then
     TMP=$(mktemp)
@@ -1547,7 +1729,7 @@ fi
 rm -f "$OPTION_EXCLUDED_TMP"
 
 node "$REPO_DIR/scripts/write-install-manifest.js" \
-  "$TARGET" "$MANIFEST_AGENTS_TMP" "$MANIFEST_SKILLS_TMP" "$INCLUDE_MEMORY" "$MANIFEST_HOOKS_TMP" "$MANIFEST_COMMANDS_TMP" "$MANIFEST_RULES_TMP" "$MANIFEST_DOCS_TMP" || \
+  "$TARGET" "$MANIFEST_AGENTS_TMP" "$MANIFEST_SKILLS_TMP" "$INCLUDE_MEMORY" "$MANIFEST_HOOKS_TMP" "$MANIFEST_COMMANDS_TMP" "$MANIFEST_RULES_TMP" "$MANIFEST_DOCS_TMP" "$TEMPLATE_DISPLAY" || \
   echo "  ⚠ 매니페스트 저장 실패 — 다음 재설치 시 잔재 확인 질문이 다시 표시됩니다"
 rm -f "$MANIFEST_AGENTS_TMP" "$MANIFEST_SKILLS_TMP" "$MANIFEST_HOOKS_TMP" "$MANIFEST_COMMANDS_TMP" "$MANIFEST_RULES_TMP" "$MANIFEST_DOCS_TMP"
 

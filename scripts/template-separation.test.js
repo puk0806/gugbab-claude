@@ -83,6 +83,19 @@ const nonSkillMdFiles = (dir) => {
 
 const sha = (f) => crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex');
 
+// CLAUDE.md 가 `@.claude/rules/*.md` 로 참조하는 규칙은 전부 대상에 설치돼 있어야 한다.
+// (2026-09-11 감사 백로그 1: 예제 CLAUDE.md 규칙 표가 정적이라 작성도구 n·codex n 기본 설치에서
+//  agent-design·commands·readme-update·codex-review 참조가 깨진 채 남았다)
+const danglingRuleRefs = (dir) => {
+  const claude = fs.readFileSync(path.join(dir, 'CLAUDE.md'), 'utf8');
+  const refs = [...new Set([...claude.matchAll(/@\.claude\/rules\/([\w.-]+\.md)/g)].map((m) => m[1]))];
+  return refs.filter((r) => !fs.existsSync(path.join(dir, '.claude', 'rules', r)));
+};
+
+const PYTHON_AGENTS = ['backend/python-backend-developer.md', 'backend/python-backend-architect.md'];
+// 프론트 프로젝트에만 의미 있는 devops 스킬 — java 뿐 아니라 rust·unity 에서도 빠져야 한다 (백로그 2)
+const FRONTEND_ONLY_DEVOPS = ['devops/site-migration-seo', 'devops/github-actions-visual-regression'];
+
 // 어떤 dev 템플릿에도 있어선 안 되는 dream 전용 스킬 (dream-interpretation 템플릿 전용)
 const DREAM_ONLY = [
   'meta/dream-app-ab-testing-prompts',
@@ -137,6 +150,8 @@ test('java-spring-legacy: 코어 포함 + 누수 0 + references 복사 + rules/c
       assert.ok(a.includes(must), `필수 에이전트 누락: ${must}`);
     }
     assert.ok(!a.includes('meta/agent-creator.md'), '작성 도구 기본 n인데 agent-creator 설치됨');
+    for (const p of PYTHON_AGENTS) assert.ok(!a.includes(p), `python 에이전트가 java 템플릿에 설치됨: ${p}`);
+    assert.deepStrictEqual(danglingRuleRefs(dir), [], 'CLAUDE.md 가 미설치 규칙을 참조');
     // rules — 기본 5종 정확히
     const rules = fs.readdirSync(path.join(dir, '.claude', 'rules')).sort();
     assert.deepStrictEqual(rules,
@@ -145,6 +160,9 @@ test('java-spring-legacy: 코어 포함 + 누수 0 + references 복사 + rules/c
     const cmds = fs.readdirSync(path.join(dir, '.claude', 'commands'));
     assert.strictEqual(cmds.length, 9);
     assert.ok(!cmds.includes('codex-review.md'));
+    // 매니페스트에 설치 템플릿 기록 (2026-09-11) — 재설치 때 번호 역추적용
+    const manifest = JSON.parse(fs.readFileSync(path.join(dir, '.claude', '.install-manifest.json'), 'utf8'));
+    assert.deepStrictEqual(manifest.templates, ['java-spring-legacy']);
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
@@ -170,7 +188,7 @@ test('java-spring-modern: 모던 전용 포함 + 레거시 전용/누수 제외'
   }
 });
 
-test('rust-axum: java 스킬 제외 + dream·프론트 아키텍처 누수 0', () => {
+test('rust-axum: java·python 스킬 제외 + dream·프론트 아키텍처·프론트 devops 누수 0 + python 에이전트 없음', () => {
   const dir = mktarget('rust');
   try {
     install('4', dir);
@@ -178,15 +196,24 @@ test('rust-axum: java 스킬 제외 + dream·프론트 아키텍처 누수 0', (
     assert.ok(s.includes('backend/axum') && s.includes('backend/tokio'), 'rust 코어 스킬 누락');
     assert.ok(!s.includes('backend/mybatis-mapper-patterns') && !s.includes('backend/ehcache-2-legacy'),
       'java 스킬이 rust 템플릿에 설치됨');
-    for (const d of [...DREAM_ONLY, 'architecture/frontend-domain-structure']) {
+    // 2026-09-11 백로그 2: java 필터(is_java_skill)만 걸러 python 10종·Java 계열 redis-redisson-4 가 rust 로 새고 있었다
+    assert.ok(!s.some((x) => x.startsWith('backend/python-')), 'python 스킬이 rust 템플릿에 설치됨');
+    assert.ok(!s.includes('backend/redis-redisson-4'), 'Java 전용 redis-redisson-4 가 rust 템플릿에 설치됨');
+    for (const d of [...DREAM_ONLY, 'architecture/frontend-domain-structure', ...FRONTEND_ONLY_DEVOPS]) {
       assert.ok(!s.includes(d), `누수 스킬 잔존: ${d}`);
     }
+    // rust 는 n8n 자동화를 소유한다(혼합 재설치 테스트와 동일 전제) — 과잉 제외 감시
+    assert.ok(s.includes('devops/n8n-workflow-design'), 'rust 소유 n8n 스킬이 과잉 제외됨');
+    const a = agentFiles(dir);
+    for (const p of PYTHON_AGENTS) assert.ok(!a.includes(p), `python 에이전트가 rust 템플릿에 설치됨: ${p}`);
+    assert.ok(a.includes('backend/rust-backend-developer.md'), 'rust 코어 에이전트 누락');
+    assert.deepStrictEqual(danglingRuleRefs(dir), [], 'CLAUDE.md 가 미설치 규칙을 참조');
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
 
-test('unity-game: backend/frontend 카테고리 제외 + dream·프론트 아키텍처 누수 0', () => {
+test('unity-game: backend/frontend 카테고리 제외 + dream·프론트 아키텍처·프론트 devops 누수 0 + python 에이전트 없음', () => {
   const dir = mktarget('unity');
   try {
     install('7', dir);
@@ -194,9 +221,73 @@ test('unity-game: backend/frontend 카테고리 제외 + dream·프론트 아키
     assert.ok(s.some((x) => x.startsWith('game/')), 'game 스킬 누락');
     assert.ok(!s.some((x) => x.startsWith('backend/') || x.startsWith('frontend/')),
       'backend/frontend 스킬이 unity 템플릿에 설치됨');
-    for (const d of [...DREAM_ONLY, 'architecture/frontend-domain-structure']) {
+    for (const d of [...DREAM_ONLY, 'architecture/frontend-domain-structure', ...FRONTEND_ONLY_DEVOPS]) {
       assert.ok(!s.includes(d), `누수 스킬 잔존: ${d}`);
     }
+    const a = agentFiles(dir);
+    for (const p of PYTHON_AGENTS) assert.ok(!a.includes(p), `python 에이전트가 unity 템플릿에 설치됨: ${p}`);
+    assert.ok(a.includes('game/unity-developer.md'), 'unity 코어 에이전트 누락');
+    assert.deepStrictEqual(danglingRuleRefs(dir), [], 'CLAUDE.md 가 미설치 규칙을 참조');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('util(1): meta 는 공용만 — dream·fortune 전용 meta 프롬프트 스킬 누출 0 (백로그 6)', () => {
+  const dir = mktarget('util');
+  try {
+    install('1', dir);
+    const s = skillDirs(dir);
+    assert.ok(s.includes('meta/claude-code-hook-authoring'), 'util 공용 meta 스킬 누락');
+    const leaked = s.filter((x) => /^meta\/(dream-|fortune-)/.test(x));
+    assert.deepStrictEqual(leaked, [], `util 에 도메인 전용 meta 스킬 누출: ${leaked.join(', ')}`);
+    assert.deepStrictEqual(danglingRuleRefs(dir), [], 'CLAUDE.md 가 미설치 규칙을 참조');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('health(10): 도메인 5종 + dev/TS 훅 + SEO 옵트인 기본 n (다른 도메인 앱 템플릿과 같은 레벨) + 매니페스트 templates', () => {
+  const dir = mktarget('health');
+  try {
+    install('10', dir);
+    const s = skillDirs(dir);
+    assert.deepStrictEqual(s.filter((x) => x.startsWith('health/')).length, 5, 'health 도메인 스킬 5종 누락');
+    // health.md 가 핵심 연동으로 약속한 Claude 스트리밍 + 공용 LLM PWA 3종 — dream 게이트에 걸려 빠지던 결함 (2026-09-11 수정)
+    for (const must of ['frontend/indexeddb-dexie', 'frontend/claude-api-streaming-frontend', 'frontend/chat-ui-pattern', 'frontend/pwa-offline-llm-fallback']) {
+      assert.ok(s.includes(must), `health 핵심 프론트 스킬 누락: ${must}`);
+    }
+    // 진짜 dream 전용(dream-* 접두어·음성 입력 계열)은 여전히 없다
+    for (const d of ['frontend/dream-symbol-tagging', 'frontend/emotion-tagging-input', 'frontend/whisper-api-integration']) {
+      assert.ok(!s.includes(d), `health 에 dream 전용 프론트 스킬 누출: ${d}`);
+    }
+    // 2026-09-11: health 도 SEO 질문을 받는다 — 이전엔 질문 없이 INCLUDE_SEO=true 기본값이 항상 통과해 SEO 24종이 무조건 들어갔다
+    assert.ok(!s.some((x) => x.startsWith('writing/')), 'SEO 기본 n 인데 writing 스킬 설치');
+    assert.ok(!s.includes('frontend/geo-ai-discoverability') && !s.includes('devops/site-migration-seo'), 'SEO 기본 n 인데 SEO 스킬 설치');
+    for (const d of [...DREAM_ONLY, ...FORTUNE_REMOVED]) assert.ok(!s.includes(d), `health 에 타 도메인 스킬 누출: ${d}`);
+    const hooks = fs.readdirSync(path.join(dir, '.claude', 'hooks'));
+    assert.ok(hooks.includes('tdd-guard.js') && hooks.includes('adversarial-test-guard.js') && hooks.includes('typescript-quality.js'), 'health dev/TS 훅 누락');
+    assert.deepStrictEqual(fs.readdirSync(path.join(dir, '.claude', 'rules')).sort(),
+      ['adversarial-testing.md', 'git.md', 'info-verification.md', 'task-workflow.md', 'typescript.md']);
+    const manifest = JSON.parse(fs.readFileSync(path.join(dir, '.claude', '.install-manifest.json'), 'utf8'));
+    assert.deepStrictEqual(manifest.templates, ['health'], '매니페스트 templates 기록 누락');
+    assert.deepStrictEqual(danglingRuleRefs(dir), [], 'CLAUDE.md 가 미설치 규칙을 참조');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('academic(8): 학술 writing 은 포함되되 SEO writing 4종은 혼입되지 않는다 (백로그 6)', () => {
+  const dir = mktarget('academic');
+  try {
+    install('8', dir);
+    const s = skillDirs(dir);
+    assert.ok(s.some((x) => x.startsWith('writing/')), '학술 writing 스킬이 통째로 빠짐 — 과잉 제외');
+    for (const seo of ['writing/content-eeat-quality', 'writing/ymyl-content-seo',
+      'writing/multilingual-content-strategy', 'writing/accessibility-vpat-writing']) {
+      assert.ok(!s.includes(seo), `academic 에 SEO writing 혼입: ${seo}`);
+    }
+    assert.deepStrictEqual(danglingRuleRefs(dir), [], 'CLAUDE.md 가 미설치 규칙을 참조');
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
@@ -212,17 +303,52 @@ test('react-spa: backend는 claude-code-headless 예외 1종만 + dream frontend
     for (const d of DREAM_ONLY) assert.ok(!s.includes(d), `누수 스킬 잔존: ${d}`);
     assert.ok(!s.includes('frontend/dream-symbol-tagging'), 'dream frontend 스킬 잔존');
     assert.ok(nonSkillMdFiles(dir).length > 0, 'references 부속 파일 미복사');
+    // 기본 옵션(작성도구 n·codex n)이면 규칙 표의 agent-design·commands·readme-update·codex-review 행이 제거돼야 한다
+    const claude = fs.readFileSync(path.join(dir, 'CLAUDE.md'), 'utf8');
+    assert.ok(!/@\.claude\/rules\/codex-review\.md/.test(claude), 'codex n 인데 codex-review 규칙 참조 잔존');
+    assert.ok(!/@\.claude\/rules\/agent-design\.md/.test(claude), '작성도구 n 인데 agent-design 규칙 참조 잔존');
+    assert.ok(/@\.claude\/rules\/typescript\.md/.test(claude), '설치된 typescript 규칙 참조가 과잉 제거됨');
+    assert.deepStrictEqual(danglingRuleRefs(dir), [], 'CLAUDE.md 가 미설치 규칙을 참조');
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
 
-test('dream-interpretation(양성 대조): dream 전용 스킬이 실제로 포함된다', () => {
+test('react-spa + 작성도구 y + codex y: 규칙 표의 해당 행이 유지된다 (행 제거 과잉 방지)', () => {
+  const dir = mktarget('react-authoring');
+  try {
+    // memory n · superpowers n · codex y · legacy n · SEO n · 작성도구 y
+    install('2', dir, ['', '', 'y', '', '', 'y']);
+    const rules = fs.readdirSync(path.join(dir, '.claude', 'rules'));
+    assert.ok(rules.includes('codex-review.md') && rules.includes('agent-design.md'), '전제: 옵션 규칙 설치');
+    const claude = fs.readFileSync(path.join(dir, 'CLAUDE.md'), 'utf8');
+    assert.ok(/@\.claude\/rules\/codex-review\.md/.test(claude), 'codex y 인데 codex-review 규칙 행이 제거됨');
+    assert.ok(/@\.claude\/rules\/agent-design\.md/.test(claude), '작성도구 y 인데 agent-design 규칙 행이 제거됨');
+    assert.deepStrictEqual(danglingRuleRefs(dir), [], 'CLAUDE.md 가 미설치 규칙을 참조');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('dream-interpretation(양성 대조): dream 전용 스킬 포함 + dev 훅·adversarial 규칙 설치 + SEO 기본 n', () => {
   const dir = mktarget('dream');
   try {
     install('9', dir);
     const s = skillDirs(dir);
     for (const d of DREAM_ONLY) assert.ok(s.includes(d), `dream 템플릿인데 ${d} 누락 — 제외 필터 과잉`);
+    // 2026-09-11 백로그 4: qa-engineer 가 "훅이 차단"이라 명시하는데 dev 훅이 없던 비정합 — dev 템플릿으로 승격.
+    // 같은 날 사용자 결정 "도메인 앱 템플릿도 스택 템플릿과 같은 레벨" → TS 훅·규칙까지 health 와 동일하게
+    const hooks = fs.readdirSync(path.join(dir, '.claude', 'hooks'));
+    assert.ok(hooks.includes('adversarial-test-guard.js') && hooks.includes('tdd-guard.js'), 'dream 에 dev 훅 누락');
+    assert.ok(hooks.includes('typescript-quality.js'), 'dream 에 TS 훅 누락 (health 와 같은 TS PWA 템플릿)');
+    const rules = fs.readdirSync(path.join(dir, '.claude', 'rules')).sort();
+    assert.deepStrictEqual(rules, ['adversarial-testing.md', 'git.md', 'info-verification.md', 'task-workflow.md', 'typescript.md']);
+    const manifest = JSON.parse(fs.readFileSync(path.join(dir, '.claude', '.install-manifest.json'), 'utf8'));
+    assert.deepStrictEqual(manifest.templates, ['dream-interpretation'], '매니페스트 templates 기록 누락');
+    // 2026-09-11 백로그 3: SEO 20종+writing 4종 무조건 포함 → react·next 와 같은 옵트인 (기본 n)
+    assert.ok(!s.some((x) => x.startsWith('writing/')), 'SEO 기본 n 인데 writing 스킬 설치');
+    assert.ok(!s.includes('frontend/geo-ai-discoverability') && !s.includes('devops/site-migration-seo'), 'SEO 기본 n 인데 SEO 스킬 설치');
+    assert.deepStrictEqual(danglingRuleRefs(dir), [], 'CLAUDE.md 가 미설치 규칙을 참조');
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
@@ -667,6 +793,144 @@ test('경계: 매니페스트가 손상(JSON 깨짐)돼도 설치는 성공하�
     install('5', dir);
     // 소유 증명 불가 → 잔재조차 삭제하면 안 됨 (커스텀일 수 있음)
     assert.ok(fs.existsSync(leakDest), '손상 매니페스트 상태에서 파일이 삭제됨 — 증명 없는 삭제');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// ── fortune-app(12) 도메인 템플릿 — 2026-09-10 신설, 2026-09-11 캐주얼 방향으로 축소 ──────
+// 사주·타로·손금 운세 앱 전용 10종은 fortune-app·all 외 어디에도 없어야 하고(health/* 게이트와 동일 방식),
+// 반대로 fortune-app 안에는 dream 전용·java·health 가 없어야 한다. 다운그레이드 수렴은 seo-geo 와 같은
+// "조합 조건 없는 prune 기록" 경로를 쓴다.
+// 2026-09-11: 캐주얼 앱 결정으로 안전 분류기 스킬·에이전트, 콘텐츠 윤리·정기결제 스킬, 위기 자원 포함을 제거(13→10, 에이전트 24→23).
+
+const FORTUNE_ONLY = [
+  'architecture/saju-tarot-data-modeling',
+  'backend/korean-lunar-calendar-manseryeok',
+  'frontend/daily-fortune-retention-loop', 'frontend/palm-photo-capture-vision',
+  'frontend/saju-chart-visualization', 'frontend/tarot-card-deck-ui',
+  'humanities/korean-saju-tradition',
+  'humanities/palmistry-limitations', 'humanities/tarot-history-symbolism',
+  'meta/fortune-interpretation-prompt-engineering',
+];
+
+// 삭제된 안전 계열 자산 — 소스 레포에 없으니 어떤 템플릿에도 다시 나타나면 안 된다
+const FORTUNE_REMOVED = [
+  'meta/fortune-safety-classifier-prompts', 'humanities/fortune-content-ethics-korea', 'backend/web-subscription-payments-korea',
+];
+
+const FORTUNE_APP_AGENTS = [
+  'backend/database-architect.md', 'backend/python-backend-architect.md', 'backend/python-backend-developer.md',
+  'backend/typescript-backend-architect.md', 'backend/typescript-backend-developer.md',
+  'devops/devops-engineer.md',
+  'domain/api-spec-designer.md', 'domain/frontend-domain-refactorer.md', 'domain/product-planner.md', 'domain/ui-ux-designer.md',
+  'frontend/frontend-architect.md', 'frontend/frontend-developer.md',
+  'meta/claude-code-guide.md', 'meta/project-scaffolder.md', 'meta/tech-stack-advisor.md',
+  'research/deep-researcher.md', 'research/research-reviewer.md', 'research/web-searcher.md',
+  'validation/fact-checker.md', 'validation/fortune-interpretation-prompt-tester.md',
+  'validation/qa-engineer.md', 'validation/security-auditor.md', 'validation/source-validator.md',
+];
+
+test('fortune-app 단독(12, 양성 대조): 전용 10종 전부 포함 + dream·health·java·위기자원 제외 + 에이전트 23종 + dev 훅 + SEO 기본 n + 캐주얼 CLAUDE.md', () => {
+  const dir = mktarget('fortune');
+  try {
+    install('12', dir);
+    const s = skillDirs(dir);
+    for (const d of FORTUNE_ONLY) assert.ok(s.includes(d), `fortune-app 템플릿인데 ${d} 누락 — 제외 필터 과잉`);
+    for (const d of [...DREAM_ONLY, ...FORTUNE_REMOVED]) assert.ok(!s.includes(d), `fortune-app 에 제외 대상 ${d} 존재`);
+    const foreign = s.filter((x) => /^(health|game|education|research)\//.test(x) || /^frontend\/dream-/.test(x) ||
+      (/^backend\//.test(x) && !/^backend\/python-/.test(x) && !FORTUNE_ONLY.includes(x)));
+    assert.deepStrictEqual(foreign, [], `fortune-app 에 타 도메인 스킬 누출: ${foreign.join(', ')}`);
+    // 캐주얼 앱: 안전 분류기 짝이던 위기 자원 스킬은 더 이상 포함하지 않는다 (humanities 는 fortune 3종만)
+    assert.ok(!s.includes('humanities/crisis-intervention-resources-korea'), '위기 자원 스킬이 fortune-app 에 잔존');
+    assert.deepStrictEqual(s.filter((x) => x.startsWith('humanities/')).sort(),
+      ['humanities/korean-saju-tradition', 'humanities/palmistry-limitations', 'humanities/tarot-history-symbolism']);
+    assert.deepStrictEqual(agentFiles(dir), FORTUNE_APP_AGENTS, 'fortune-app 에이전트 집합이 화이트리스트와 다름');
+    // 백로그 4 + "스택 템플릿과 같은 레벨": dev 훅 4·TS 훅 1·adversarial/typescript 규칙 (health 와 동일 구성)
+    const hooks = fs.readdirSync(path.join(dir, '.claude', 'hooks'));
+    assert.ok(hooks.includes('adversarial-test-guard.js') && hooks.includes('tdd-guard.js'), 'fortune-app 에 dev 훅 누락');
+    assert.ok(hooks.includes('typescript-quality.js'), 'fortune-app 에 TS 훅 누락');
+    assert.ok(hooks.includes('deliverable-guard.js'), '공통 훅 누락');
+    assert.deepStrictEqual(fs.readdirSync(path.join(dir, '.claude', 'rules')).sort(),
+      ['adversarial-testing.md', 'git.md', 'info-verification.md', 'task-workflow.md', 'typescript.md']);
+    const manifest = JSON.parse(fs.readFileSync(path.join(dir, '.claude', '.install-manifest.json'), 'utf8'));
+    assert.deepStrictEqual(manifest.templates, ['fortune-app'], '매니페스트 templates 기록 누락');
+    // 백로그 3: SEO 옵트인 (기본 n)
+    assert.ok(!s.some((x) => x.startsWith('writing/')), 'SEO 기본 n 인데 writing 스킬 설치');
+    assert.ok(!s.includes('frontend/geo-ai-discoverability') && !s.includes('devops/site-migration-seo'), 'SEO 기본 n 인데 SEO 스킬 설치');
+    // 캐주얼 CLAUDE.md: 안전 분류기·위기 자원·YMYL 정책이 없어야 하고 면책·개인정보 최소화만 남는다
+    const claude = fs.readFileSync(path.join(dir, 'CLAUDE.md'), 'utf8');
+    for (const gone of ['1577-0199', 'YMYL', '안전 분류기', 'severe_distress', 'fortune-safety-classifier',
+      'fortune-content-ethics-korea', 'web-subscription-payments-korea', 'crisis-intervention']) {
+      assert.ok(!claude.includes(gone), `캐주얼 CLAUDE.md 에 안전 계열 잔존: ${gone}`);
+    }
+    assert.ok(/재미로 보는 운세/.test(claude), 'fortune-app CLAUDE.md "재미로 보는 운세" 고지 누락');
+    assert.ok(/검증된 예측이 아니/.test(claude), 'fortune-app CLAUDE.md 면책(검증된 예측 아님) 문구 누락');
+    assert.ok(/개인정보 최소화/.test(claude), 'fortune-app CLAUDE.md 개인정보 최소화 누락');
+    assert.deepStrictEqual(danglingRuleRefs(dir), [], 'CLAUDE.md 가 미설치 규칙을 참조');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('fortune-app + SEO y: 옵트인하면 SEO·writing 스킬이 들어오고 전용 10종은 그대로다', () => {
+  const dir = mktarget('fortune-seo');
+  try {
+    // memory n · superpowers n · codex n · legacy n · SEO y (dev+TS 템플릿이라 react-spa 와 같은 질문 순서)
+    install('12', dir, ['', '', '', '', 'y']);
+    const s = skillDirs(dir);
+    for (const d of FORTUNE_ONLY) assert.ok(s.includes(d), `SEO y 로 전용 스킬이 빠짐: ${d}`);
+    assert.ok(s.includes('frontend/geo-ai-discoverability') && s.includes('writing/content-eeat-quality'), 'SEO y 인데 SEO 스킬 미설치');
+    for (const d of FORTUNE_REMOVED) assert.ok(!s.includes(d), `삭제 자산 재출현: ${d}`);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('누수: fortune 전용 10종·에이전트 1종은 dream(9)·react-spa(2)·java-legacy(5) 어디에도 설치되지 않는다', () => {
+  for (const [tmpl, name] of [['9', 'dream'], ['2', 'react'], ['5', 'java']]) {
+    const dir = mktarget(`fortune-leak-${name}`);
+    try {
+      install(tmpl, dir);
+      const leaked = skillDirs(dir).filter((x) => FORTUNE_ONLY.includes(x) || FORTUNE_REMOVED.includes(x));
+      assert.deepStrictEqual(leaked, [], `템플릿 ${tmpl} 에 fortune 스킬 누출: ${leaked.join(', ')}`);
+      const a = agentFiles(dir);
+      assert.ok(!a.includes('validation/fortune-safety-classifier.md') && !a.includes('validation/fortune-interpretation-prompt-tester.md'),
+        `템플릿 ${tmpl} 에 fortune 전용 에이전트 누출`);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  }
+});
+
+test('다운그레이드: 12 → util 재설치에서 fortune 스킬·전용 에이전트가 전부 수렴하고 util 소유 에이전트는 남는다', () => {
+  const dir = mktarget('fortune-to-util');
+  try {
+    install('12', dir);
+    assert.ok(agentFiles(dir).includes('validation/fortune-interpretation-prompt-tester.md'), '전제: fortune 에이전트 설치됨');
+    install('1', dir);
+    assert.deepStrictEqual(skillDirs(dir).filter((x) => FORTUNE_ONLY.includes(x)), [], 'util 다운그레이드 후 fortune 스킬 잔존');
+    const a = agentFiles(dir);
+    assert.ok(!a.includes('validation/fortune-interpretation-prompt-tester.md'), 'fortune 에이전트 잔존');
+    for (const keep of ['validation/fact-checker.md', 'validation/source-validator.md', 'research/web-searcher.md', 'meta/claude-code-guide.md']) {
+      assert.ok(a.includes(keep), `util 소유 에이전트가 과잉 prune: ${keep}`);
+    }
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('악성·경계: 사용자가 손댄 fortune 스킬은 12 → util 다운그레이드에서도 삭제되지 않는다 (해시 증명 실패 = 보존)', () => {
+  const dir = mktarget('fortune-modified');
+  try {
+    install('12', dir);
+    const edited = path.join(dir, '.claude', 'skills', 'meta', 'fortune-interpretation-prompt-engineering', 'SKILL.md');
+    const untouched = path.join(dir, '.claude', 'skills', 'humanities', 'palmistry-limitations', 'SKILL.md');
+    assert.ok(fs.existsSync(edited) && fs.existsSync(untouched), '전제: fortune 스킬 설치됨');
+    fs.appendFileSync(edited, '\n<!-- 프로젝트 커스텀: 우리 앱 카테고리 추가 -->\n');
+    install('1', dir);
+    assert.ok(fs.existsSync(edited), '사용자 수정본이 다운그레이드 prune 에 삭제됨 — 해시 증명 없는 삭제');
+    assert.ok(!fs.existsSync(untouched), '미수정 fortune 스킬은 수렴(삭제)돼야 하는데 잔존');
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }

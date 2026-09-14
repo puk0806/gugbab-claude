@@ -22,7 +22,9 @@ const path = require('path');
 // 8번째 인자 docsListFile — 스킬·에이전트의 짝 docs(docs/skills/**, docs/agents/**)도 기록한다
 //   (2026-08-31 Codex 리뷰: 자산이 prune돼도 짝 docs가 영원히 남아 스테일 문서가 됨).
 //   docs 항목의 rel은 <target>/docs/ 기준 상대경로다 (.claude/ 하위가 아님 — build의 rootFor 참조)
-const [target, agentsListFile, skillsListFile, mem, hooksListFile, commandsListFile, rulesListFile, docsListFile] = process.argv.slice(2);
+// 9번째 인자 templatesCsv — 이번 설치에 쓴 템플릿 이름(쉼표 구분). 재설치 때 "무엇으로 깔았나"를 역추적하기 위한
+//   정보성 필드라 합집합이 아니라 최신값으로 교체한다. 인자 생략(구버전 호출) 시 이전 기록 이월 (2026-09-11).
+const [target, agentsListFile, skillsListFile, mem, hooksListFile, commandsListFile, rulesListFile, docsListFile, templatesCsv] = process.argv.slice(2);
 if (!target) {
   console.error('사용법: write-install-manifest.js <target> <agentsList> <skillsList> <includeMemory>');
   process.exit(1);
@@ -39,11 +41,16 @@ const sha256File = (f) => {
 };
 
 // 이전 매니페스트 — 손상돼 있으면 무시하고 새로 만든다 (여기서는 삭제 판단을 하지 않으므로 안전)
-let prev = { agents: [], skills: [], hooks: [], commands: [], rules: [], docs: [], hashes: { agents: {}, skills: {}, hooks: {}, commands: {}, rules: {}, docs: {} } };
+const TEMPLATE_NAME_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+const sanitizeTemplates = (arr) => (Array.isArray(arr) ? arr : [])
+  .map((t) => String(t).trim()).filter((t) => TEMPLATE_NAME_RE.test(t));
+
+let prev = { agents: [], skills: [], hooks: [], commands: [], rules: [], docs: [], templates: [], hashes: { agents: {}, skills: {}, hooks: {}, commands: {}, rules: {}, docs: {} } };
 try {
   const p = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
   const hs = (p.hashes && typeof p.hashes === 'object') ? p.hashes : {};
   prev = {
+    templates: sanitizeTemplates(p.templates),
     agents: Array.isArray(p.agents) ? p.agents : [],
     skills: Array.isArray(p.skills) ? p.skills : [],
     hooks: Array.isArray(p.hooks) ? p.hooks : [],
@@ -86,6 +93,8 @@ const hooks = build('hooks', hooksListFile); // 인자 생략 시 readList가 �
 const commands = build('commands', commandsListFile);
 const rules = build('rules', rulesListFile);
 const docs = build('docs', docsListFile);
+// templates — 인자가 오면 교체, 생략(구버전 호출)이면 이월. 쉼표 구분 CSV, 이름 규칙(kebab-case) 밖 항목은 버린다
+const templates = (typeof templatesCsv === 'string') ? sanitizeTemplates(templatesCsv.split(',')) : prev.templates;
 
 // memoryManaged 판정 — install-cleanup.js와 동일한 관리 흔적 규칙을 쓴다
 const MEMORY_EVIDENCE_RE = /memory-(pull|sync|stop-guard)\.c?js/;
@@ -115,6 +124,7 @@ fs.writeFileSync(manifestFile, JSON.stringify({
   version: 1,
   updatedAt: new Date().toISOString(),
   memoryManaged,
+  templates,
   agents: agents.rels,
   skills: skills.rels,
   hooks: hooks.rels,
@@ -123,4 +133,4 @@ fs.writeFileSync(manifestFile, JSON.stringify({
   docs: docs.rels,
   hashes: { agents: agents.hashes, skills: skills.hashes, hooks: hooks.hashes, commands: commands.hashes, rules: rules.hashes, docs: docs.hashes },
 }, null, 2) + '\n');
-console.log(`  → .claude/.install-manifest.json (agents ${agents.rels.length} / skills ${skills.rels.length} / hooks ${hooks.rels.length} / commands ${commands.rels.length} / rules ${rules.rels.length} / docs ${docs.rels.length})`);
+console.log(`  → .claude/.install-manifest.json (templates ${templates.join(',') || '-'} / agents ${agents.rels.length} / skills ${skills.rels.length} / hooks ${hooks.rels.length} / commands ${commands.rels.length} / rules ${rules.rels.length} / docs ${docs.rels.length})`);
