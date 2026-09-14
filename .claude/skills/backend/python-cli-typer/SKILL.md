@@ -13,7 +13,7 @@ description: >
 > 소스: https://typer.tiangolo.com/ , https://github.com/fastapi/typer , https://pypi.org/project/typer/
 > 검증일: 2026-05-15
 > 검증 버전: Typer 0.25.1 (2026-04-30 릴리즈)
-> 짝 스킬: `backend/python-uv-project-setup`, `backend/python-basics`
+> 짝 스킬: `backend/python-uv-project-setup`
 
 ---
 
