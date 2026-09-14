@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 326d382d-a205-4839-bf71-16d21252358a
-  modified: 2026-09-01T00:20:14.098Z
+  modified: 2026-09-10T06:42:56.901Z
 ---
 
 2026-07-10 사용자 요청으로 메모리 저장 구조를 개편했다.
@@ -40,3 +40,9 @@ push·PR 직전에는 memory·exports가 커밋된 상태여야 함 — delivera
 **deliverable-guard 푸시 게이트 (2026-08-31 실측):** 커밋과 push를 한 Bash
 명령에 &&로 묶으면 훅이 *명령 실행 전* 미커밋 memory/exports를 보고 통째로
 차단한다 — 커밋 명령과 push 명령을 별도 호출로 분리할 것.
+
+**세션 중 git pull 후 미러 함정 (2026-09-10 실측):** 레포 `memory/`가 pull로
+갱신된 직후 전역 memory 파일을 Edit하면 memory-sync가 *전역→레포* 방향으로
+복사해 pull로 들어온 최신 내용을 덮어쓴다(전역이 stale한 상태). pull 직후에는
+`diff -rq memory ~/.claude/projects/<해시>/memory`로 차이를 보고, 레포가 최신인
+파일은 그 내용을 전역에 Write로 먼저 옮긴 뒤 편집할 것.

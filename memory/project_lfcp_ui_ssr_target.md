@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 326d382d-a205-4839-bf71-16d21252358a
-  modified: 2026-09-01T08:36:15.334Z
+  modified: 2026-09-10T06:43:11.887Z
 ---
 
 `~/Desktop/workspace/05_lfcp-ui-ssr/lfcp-ui-ssr` — lfmall 검색 노출(SEO·GEO)용 **서버 렌더 페이지** 프로젝트. 2026-09-01 실측, `.claude/`·`CLAUDE.md` 미설치 상태였음. [[project-install-sh]] 템플릿 **`5,11` (java-spring-legacy + seo-geo)** 대상.
@@ -21,4 +21,6 @@ metadata:
 
 **참고(프로젝트 측, 레포 작업 아님):** build.gradle에 SonarQube·Nexus 자격증명 평문(nxapi와 동일 패턴), `WEB-INF/backup/` 구 HTML 잔재, crawler 패키지가 봇 UA 분기 렌더링 — Google이 권장하지 않는 동적 렌더링 패턴이라 seo-auditor 감사 시 첫 점검 항목.
 
-**How to apply:** 설치는 `./project-install.sh` → `5,11` → SEO 프로파일 `c`(커머스: 상품·카테고리·검색·카카오·네이버·GEO 중심). JSP/JSTL 서버사이드 SEO 전용 스킬은 아직 없음 — 필요 판단 시 [[verify-usage-before-library-skill]] 원칙대로 실측 후.
+**설치 완료 (2026-09-02):** `5,11` + 커머스 프로파일 `c`로 설치 — 스킬 41(java 27 + SEO 14)·에이전트 31·훅 19·규칙 5·커맨드 9, CLAUDE.md는 java 베이스 + seo-geo 금지 사항 병합 + "SEO·GEO 작업 원칙" 섹션 + 프로젝트명 기입까지 확인. 산출물은 대상 레포에 **미커밋** 상태로 남김(사내 레포 커밋은 사용자 판단).
+
+**How to apply:** 재설치·프로파일 변경은 `./project-install.sh` → `5,11` (전체↔커머스 전환 시 무관 스킬은 매니페스트 증명 하에 자동 수렴). JSP/JSTL 서버사이드 SEO 전용 스킬은 아직 없음 — 필요 판단 시 [[verify-usage-before-library-skill]] 원칙대로 실측 후.
