@@ -1,6 +1,6 @@
 # meta 스킬
 
-워크플로우·프롬프트 엔지니어링 스킬 모음 (총 5종).
+워크플로우·프롬프트 엔지니어링·훅 작성법 스킬 모음 (총 7종).
 
 | 스킬 | 설명 | 검증 |
 |------|------|------|
@@ -10,3 +10,4 @@
 | [dream-safety-classifier-prompts](../../../.claude/skills/meta/dream-safety-classifier-prompts/SKILL.md) | 꿈 앱 안전 분류기 프롬프트 — 자해·자살·트라우마 신호 이중 분류 패턴, 위기 자원 매핑 | [→](./dream-safety-classifier-prompts/verification.md) |
 | [dream-app-ab-testing-prompts](../../../.claude/skills/meta/dream-app-ab-testing-prompts/SKILL.md) | 꿈 해몽 앱 시스템 프롬프트 A/B 테스트 — 무작위 배정·통계 검정·점진적 롤아웃 설계 | [→](./dream-app-ab-testing-prompts/verification.md) |
 | [claude-code-hook-authoring](../../../.claude/skills/meta/claude-code-hook-authoring/SKILL.md) | Claude Code 훅 작성법 — 이벤트 카탈로그·exit 규약(stderr 전달)·matcher·settings.json 배선·차단형 훅 테스트 | [→](./claude-code-hook-authoring/verification.md) |
+| [fortune-interpretation-prompt-engineering](../../../.claude/skills/meta/fortune-interpretation-prompt-engineering/SKILL.md) | 운세 앱(사주·타로·손금) Claude 프롬프트 설계 — XML 구획·모드별 변형·few-shot, "상징 해석 허용 / YMYL 실행 조언 금지" 톤 경계, Structured Outputs, 프롬프트 캐싱 | [→](./fortune-interpretation-prompt-engineering/verification.md) |

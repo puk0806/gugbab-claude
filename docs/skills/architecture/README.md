@@ -1,6 +1,6 @@
 # architecture 스킬
 
-아키텍처·데이터 모델 설계 스킬 모음 (총 5종).
+아키텍처·데이터 모델 설계 스킬 모음 (총 6종).
 
 | 스킬 | 설명 | 검증 |
 |------|------|------|
@@ -9,3 +9,4 @@
 | [module-boundaries](../../../.claude/skills/architecture/module-boundaries/SKILL.md) | 도메인·레이어 의존 방향 강제 — dependency-cruiser, eslint-plugin-boundaries / import no-restricted-paths (ESLint 8·9 양쪽), 순환·barrel 정리, baseline 점진 도입 | [→](./module-boundaries/verification.md) |
 | [incremental-refactoring](../../../.claude/skills/architecture/incremental-refactoring/SKILL.md) | 수천 파일 코드베이스 무중단 재구조화 — Strangler Fig, ts-morph/jscodeshift codemod, 배치 분할·검증 게이트, 테스트 없는 코드의 안전망, 진행 지표 | [→](./incremental-refactoring/verification.md) |
 | [dream-journal-data-modeling](../../../.claude/skills/architecture/dream-journal-data-modeling/SKILL.md) | 꿈 일기 PWA 데이터 모델 설계 — Dream·Interpretation·Symbol·Tag 엔티티, Dexie 스키마 | [→](./dream-journal-data-modeling/verification.md) |
+| [saju-tarot-data-modeling](../../../.claude/skills/architecture/saju-tarot-data-modeling/SKILL.md) | 운세 앱 로컬 우선 데이터 모델 — 출생 입력/계산 결과 분리·계산 버전 캐시 무효화, 타로·손금·일일 운세 세션, 조회 대상(Subject) 분리, Dexie 4.x 스키마·마이그레이션, 생년월일시 암호화 | [→](./saju-tarot-data-modeling/verification.md) |

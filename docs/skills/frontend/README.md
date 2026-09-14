@@ -1,6 +1,6 @@
-# frontend 스킬 (81종)
+# frontend 스킬 (85종)
 
-React·Next.js·TypeScript·SEO·접근성·성능·PWA·꿈 앱 UI 등 프론트엔드 전 영역 스킬 모음.
+React·Next.js·TypeScript·SEO·접근성·성능·PWA·꿈 앱 UI·운세 앱 UI 등 프론트엔드 전 영역 스킬 모음.
 
 > 각 스킬 클릭 → SKILL.md (패턴·코드 예시) | 검증 → verification.md
 
@@ -129,3 +129,12 @@ React·Next.js·TypeScript·SEO·접근성·성능·PWA·꿈 앱 UI 등 프론�
 | [dream-privacy-consent-ui](../../../.claude/skills/frontend/dream-privacy-consent-ui/SKILL.md) | 꿈 데이터 동의 UI — 개인정보보호법 제23조, GDPR | [→](./dream-privacy-consent-ui/verification.md) |
 | [dream-export-import](../../../.claude/skills/frontend/dream-export-import/SKILL.md) | 꿈 일기 export·import — JSON/CSV/암호화 ZIP | [→](./dream-export-import/verification.md) |
 | [dream-sharing-anonymized](../../../.claude/skills/frontend/dream-sharing-anonymized/SKILL.md) | 꿈 익명 공유 — 옵트인, PII 마스킹, k-anonymity | [→](./dream-sharing-anonymized/verification.md) |
+
+## 운세 앱 UI (fortune-app 템플릿 전용)
+
+| 스킬 | 설명 | 검증 |
+|------|------|------|
+| [saju-chart-visualization](../../../.claude/skills/frontend/saju-chart-visualization/SKILL.md) | 사주 원국 표·오행 분포 차트·대운 타임라인 — 오방정색 WCAG 재조정, "오행 개수=우열" 오독 방지, CJK 서브셋, SVG vs 차트 라이브러리 | [→](./saju-chart-visualization/verification.md) |
+| [tarot-card-deck-ui](../../../.claude/skills/frontend/tarot-card-deck-ui/SKILL.md) | 타로 덱 UI — CSS 3D 플립·셔플, 스프레드 배치(1/3/켈틱크로스), 부채꼴 선택, Fisher-Yates + crypto 셔플, 접근성, 카드 에셋 전략 | [→](./tarot-card-deck-ui/verification.md) |
+| [palm-photo-capture-vision](../../../.claude/skills/frontend/palm-photo-capture-vision/SKILL.md) | 손바닥 촬영 → Claude Vision 파이프라인 — 후면 카메라·iOS Safari 제약, 촬영 가이드, 품질 검증, 리사이즈·압축, 손 아닌 이미지 거부, 원본 미보관 | [→](./palm-photo-capture-vision/verification.md) |
+| [daily-fortune-retention-loop](../../../.claude/skills/frontend/daily-fortune-retention-loop/SKILL.md) | 일일 운세 리텐션 루프 — 시간대 기준 service day key, write-once 캐싱(리롤 금지), 발송 시각 개인화 푸시, 스트릭·공유 카드, 과의존 조장 방지 가드 | [→](./daily-fortune-retention-loop/verification.md) |

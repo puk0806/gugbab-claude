@@ -1,4 +1,8 @@
 ---
+skill: storybook
+category: frontend
+version: v3
+date: 2026-08-11
 status: APPROVED
 ---
 

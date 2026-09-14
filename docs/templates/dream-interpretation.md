@@ -44,17 +44,19 @@
 
 | 카테고리 | 종류 | 링크 |
 |----------|------|------|
-| frontend (81종) | 프레임워크·상태관리·UI·빌드·테스트·성능·SEO·꿈 앱 UI | [→ frontend 스킬 목록](../skills/frontend/README.md) |
+| frontend (61종 / SEO y 시 81종) | 프레임워크·상태관리·UI·빌드·테스트·성능·꿈 앱 UI (+ SEO·GEO 20종은 옵트인) | [→ frontend 스킬 목록](../skills/frontend/README.md) |
 | backend — Python (10종) | FastAPI·Pydantic·LlamaIndex·Anthropic SDK 등 | [→ backend 스킬 목록](../skills/backend/README.md) |
-| devops (9종) | Docker·GitHub Actions·n8n·SEO 운영 | [→ devops 스킬 목록](../skills/devops/README.md) |
+| devops (9종 / SEO y 시 10종) | Docker·GitHub Actions·n8n·Vercel Sandbox (+ site-migration-seo 는 옵트인) | [→ devops 스킬 목록](../skills/devops/README.md) |
 | architecture (2종) | DDD + dream-journal-data-modeling | [→ architecture 스킬 목록](../skills/architecture/README.md) |
 | humanities (7종) | 꿈 관련 전용 (dream-psychology·korean-dream·attachment 등) | [→ humanities 스킬 목록](../skills/humanities/README.md) |
-| writing (4종) | SEO 콘텐츠 품질 (content-eeat-quality·ymyl·multilingual·accessibility-vpat) | [→ writing 스킬 목록](../skills/writing/README.md) |
+| writing (0종 / SEO y 시 4종) | SEO 콘텐츠 품질 (content-eeat-quality·ymyl·multilingual·accessibility-vpat) — 옵트인 | [→ writing 스킬 목록](../skills/writing/README.md) |
 | meta (5종) | 워크플로우 + 꿈 앱 프롬프트 엔지니어링 전체 | [→ meta 스킬 목록](../skills/meta/README.md) |
+
+> **SEO·GEO 옵트인 (2026-09-11)**: react-spa·nextjs와 같은 질문(`y` 전체 / `c` 커머스 / `n` 제외, 엔터 = n)을 받는다. 이전에는 SEO 20종 + writing 4종이 무조건 포함돼 seo-geo(11) 병행 선택이 무의미했다. 개인용·캐주얼 앱이면 n.
 
 ---
 
-## 훅 (14종)
+## 훅 (20종 — 공통 15 + 개발 전용 4 + TypeScript 1)
 
 ### 공통 (14종)
 
@@ -66,6 +68,7 @@
 | [parry.js](../../.claude/hooks/parry.js) | PreToolUse Write | 시크릿·프롬프트 인젝션 패턴 스캔 — 감지 시 저장 차단 |
 | [protect-secrets.js](../../.claude/hooks/protect-secrets.js) | PreToolUse Write/Edit | 민감 파일(.env, *.pem, *.key, credentials 등) 수정 차단 |
 | [session-start.js](../../.claude/hooks/session-start.js) | SessionStart | 세션 시작 시 브랜치·미커밋 파일·최근 커밋 요약 출력 |
+| [session-export.js](../../.claude/hooks/session-export.js) | Stop | 세션 대화 요약을 로컬 exports에 기록 |
 | [cc-notify.js](../../.claude/hooks/cc-notify.js) | Stop | 작업 완료 시 macOS 데스크탑 알림 |
 | [instructions-loaded.js](../../.claude/hooks/instructions-loaded.js) | InstructionsLoaded | CLAUDE.md 로드 완료 시 규칙 요약 출력 |
 | [deliverable-guard.js](../../.claude/hooks/deliverable-guard.js) | PostToolUse Write/Edit · PreToolUse Bash · Stop | 산출물 완결성 — 세션 수정 파일 추적 + README 동기화 검사 + PENDING_TEST 스킬 테스트 미수행 차단 |
@@ -74,17 +77,24 @@
 | [verification-guard.js](../../.claude/hooks/verification-guard.js) | PostToolUse Write | verification.md 필수 섹션 확인, UNVERIFIED 상태 차단 |
 | [staleness-check.js](../../.claude/hooks/staleness-check.js) | InstructionsLoaded | 스킬 검증일 경과 감지 — 30~59일 경고, 60일+ 재검증 강제 |
 | [statusline.sh](../../.claude/hooks/statusline.sh) | statusLine | 상태 바 — 브랜치·미커밋 수·PENDING_TEST 스킬 수 표시 |
+| [tdd-guard.js](../../.claude/hooks/tdd-guard.js) | PostToolUse Write/Edit | 소스 파일 수정 시 대응 테스트 파일 존재 여부 검사 — 없으면 차단 |
+| [test-fake-guard.js](../../.claude/hooks/test-fake-guard.js) | PreToolUse Bash / PostToolUse Write | 가짜 테스트 패턴 탐지·차단 |
+| [adversarial-test-guard.js](../../.claude/hooks/adversarial-test-guard.js) | PostToolUse Write/Edit | 테스트 파일이 정상 흐름만 담고 악성 유저 방어·이상 경로를 누락하면 차단 |
+| [fake-impl-guard.js](../../.claude/hooks/fake-impl-guard.js) | PostToolUse Write/Edit | 파라미터를 무시하고 테스트 기대 리터럴을 그대로 return하는 가짜 구현 차단 |
+| [typescript-quality.js](../../.claude/hooks/typescript-quality.js) | PostToolUse Write/Edit | tsc --noEmit 타입 검사 — 에러 시 차단 (레거시 프로파일 선택 시 --changed-only) |
 
-> 개발 전용(tdd-guard·test-fake-guard)·TypeScript(typescript-quality)·Memory 훅은 이 템플릿에 포함되지 않습니다.
+> **2026-09-11부터 스택 템플릿과 같은 레벨(dev + TypeScript)**: health(10)·fortune(12)과 동일하게 개발 전용 훅 4종 + TypeScript 훅 1종, `adversarial-testing.md`·`typescript.md` 규칙, Codex 적대적 리뷰·레거시 프로파일 옵션 질문을 받는다. 이전에는 개발 에이전트(frontend-developer·python-backend-developer·qa-engineer)를 설치하면서 훅이 없어 qa-engineer가 명시하는 "adversarial-test-guard가 차단"이 성립하지 않았다. Memory 훅은 옵션이다. (공통 훅 표에 `session-export.js`가 빠져 있었던 것도 함께 정정 — 실제 공통은 15종.)
 
 ---
 
-## 규칙 (8종)
+## 규칙 (10종 — 작성 도구 n이면 5종)
 
 | 규칙 | 설명 |
 |------|------|
 | [git.md](../../.claude/rules/git.md) | Git 커밋 컨벤션 — [category] Type: Subject 형식, 관심사별 커밋 분리 |
 | [info-verification.md](../../.claude/rules/info-verification.md) | 외부 정보 검증 원칙 — 공식 문서 1순위, 교차 검증 절차 |
+| [adversarial-testing.md](../../.claude/rules/adversarial-testing.md) | 적대적 테스트 원칙 — 테스트 3계층(정상/악성 유저 방어/이상·경계) 강제, 가짜 구현 금지 (dev 템플릿 공통, 2026-09-11 추가) |
+| [typescript.md](../../.claude/rules/typescript.md) | TypeScript 코딩 규칙 (TS 템플릿 공통, 2026-09-11 추가) |
 | [agent-design.md](../../.claude/rules/agent-design.md) | 에이전트 설계 규칙 — 모델 선택, 도구 부여 기준, 파일 작성 포맷 |
 | [commands.md](../../.claude/rules/commands.md) | 슬래시 커맨드 작성 규칙 — 파일 위치, 작성 원칙, 기존 목록 |
 | [creation-workflow.md](../../.claude/rules/creation-workflow.md) | 스킬·에이전트 생성 5단계 — 조사→교차검증→작성→검증문서→2단계테스트 |
@@ -92,7 +102,7 @@
 | [verification-policy.md](../../.claude/rules/verification-policy.md) | 검증 정책 — PENDING_TEST→APPROVED 전환 절차, 수정 도구 제한 |
 | [task-workflow.md](../../.claude/rules/task-workflow.md) | 작업 착수 전 확인 절차 — 이해 확인→작업 목록→승인 후 실행 |
 
-> 언어별 규칙(java.md·rust.md·typescript.md)은 이 템플릿에 포함되지 않습니다.
+> java.md·rust.md는 이 템플릿에 포함되지 않습니다. 작성 도구 n·codex n이면 CLAUDE.md 규칙 표에서 해당 미설치 규칙 행이 설치 시 자동 제거됩니다(2026-09-11).
 
 ---
 

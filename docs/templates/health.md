@@ -42,11 +42,14 @@
 | 카테고리 | 종류 | 비고 |
 |----------|------|------|
 | health (5종) | nutrition-basics · korean-food-nutrition · ingredient-management · meal-recommendation-prompt · nutrition-analysis-prompt | 건강·식단 도메인 핵심 |
-| frontend (81종) | 프레임워크·상태관리·UI·빌드·테스트·성능·SEO·LLM | indexeddb-dexie · claude-api-streaming-frontend 포함 |
-| devops (9종) | Docker·GitHub Actions·n8n·SEO 운영 | |
-| architecture (2종) | DDD, 앱 데이터 모델 | |
-| meta (5종) | 워크플로우·프롬프트 엔지니어링 | |
-| writing (4종) | SEO 콘텐츠 품질 | |
+| frontend (46종 / SEO y 시 64종) | 프레임워크·상태관리·UI·빌드·테스트·성능·LLM (+ SEO·GEO 는 옵트인) | indexeddb-dexie · claude-api-streaming-frontend · chat-ui-pattern · pwa-offline-llm-fallback 포함 (LLM PWA 공용 3종은 dream 목록에 섞여 있어 2026-09-11 전까지 실제로는 빠져 있었음) |
+| devops (9종 / SEO y 시 10종) | Docker·GitHub Actions·n8n·Vercel Sandbox (+ site-migration-seo 는 옵트인) | |
+| architecture (4종) | DDD·프론트 도메인 구조·모듈 경계·점진 리팩터링 | |
+| backend (1종) | claude-code-headless (Claude 구독 중계 연동용 예외) | |
+| meta (3종) | ralph-loop·riper-workflow·claude-code-hook-authoring | |
+| writing (0종 / SEO y 시 4종) | SEO 콘텐츠 품질 — 옵트인 | |
+
+> **SEO·GEO 옵트인 (2026-09-11)**: react-spa·nextjs와 같은 질문(`y` 전체 / `c` 커머스 / `n` 제외, 엔터 = n)을 받는다. 이전에는 스킬 필터가 SEO 옵션을 읽고 있었지만 질문이 나오지 않아 기본값(전체 포함)이 항상 통과했다. 개인용 PWA면 n. 기본 옵션 실측(2026-09-11): 스킬 68(SEO y 시 91) · 에이전트 30 · 훅 20 · 규칙 5 · 매니페스트 `templates: ["health"]`.
 
 ---
 
@@ -64,15 +67,15 @@ frontend/claude-api-streaming-frontend ← 프론트→Claude API 직접 호출
 
 ---
 
-## 훅 (17종)
+## 훅 (20종)
 
-### 공통 (14종)
+### 공통 (15종)
 
-react-spa 템플릿과 동일한 공통 훅 세트. 자세한 목록은 [react-spa.md](./react-spa.md) 참조.
+react-spa 템플릿과 동일한 공통 훅 세트. 자세한 목록은 [fortune-app.md](./fortune-app.md#훅-20종--공통-15--개발-전용-4--typescript-1) 참조.
 
-### 개발 전용 (2종)
+### 개발 전용 (4종)
 
-`tdd-guard.js` · `test-fake-guard.js`
+`tdd-guard.js` · `test-fake-guard.js` · `adversarial-test-guard.js` · `fake-impl-guard.js`
 
 ### TypeScript 전용 (1종)
 
@@ -88,11 +91,12 @@ react-spa 템플릿과 동일한 공통 훅 세트. 자세한 목록은 [react-s
 | info-verification.md | 항상 |
 | task-workflow.md | 항상 |
 | typescript.md | 항상 (PWA TypeScript 기반) |
-| agent-design.md | 항상 |
-| creation-workflow.md | 항상 |
-| commands.md | 항상 |
-| readme-update.md | 항상 |
-| verification-policy.md | 항상 |
+| adversarial-testing.md | 항상 (dev 템플릿 공통) |
+| agent-design.md | 작성 도구 y |
+| creation-workflow.md | 작성 도구 y |
+| commands.md | 작성 도구 y |
+| readme-update.md | 작성 도구 y |
+| verification-policy.md | 작성 도구 y |
 | memory-sync.md | memory 공유 선택 시 |
 | codex-review.md | Codex 선택 시 |
 
