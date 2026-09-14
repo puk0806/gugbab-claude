@@ -40,16 +40,15 @@ model: sonnet
 
 | 스킬 | 경로 | 활용 시점 |
 |------|------|-----------|
-| axum | `.claude/skills/axum/SKILL.md` | 라우터, 핸들러, 추출자 작성 |
-| tokio | `.claude/skills/tokio/SKILL.md` | 비동기 런타임, 태스크 관리 |
-| reqwest | `.claude/skills/reqwest/SKILL.md` | 외부 API 호출, HTTP 클라이언트 |
-| serde | `.claude/skills/serde/SKILL.md` | JSON 직렬화/역직렬화 |
-| tower-http | `.claude/skills/tower-http/SKILL.md` | CORS, 로깅, 압축 미들웨어 |
-| sse-streaming | `.claude/skills/sse-streaming/SKILL.md` | SSE 스트리밍 응답 |
-| multipart-upload | `.claude/skills/multipart-upload/SKILL.md` | 파일 업로드 처리 |
-| thiserror | `.claude/skills/thiserror/SKILL.md` | 에러 타입 정의 |
-| tracing | `.claude/skills/tracing/SKILL.md` | 구조화 로깅 |
-| dotenvy | `.claude/skills/dotenvy/SKILL.md` | 환경변수 로드 |
+| axum | `.claude/skills/backend/axum/SKILL.md` | 라우터, 핸들러, 추출자 작성 |
+| tokio | `.claude/skills/backend/tokio/SKILL.md` | 비동기 런타임, 태스크 관리 |
+| reqwest | `.claude/skills/backend/reqwest/SKILL.md` | 외부 API 호출, HTTP 클라이언트 |
+| serde | `.claude/skills/backend/serde/SKILL.md` | JSON 직렬화/역직렬화 |
+| tower-http | `.claude/skills/backend/tower-http/SKILL.md` | CORS, 로깅, 압축 미들웨어 |
+| sse-streaming | `.claude/skills/backend/sse-streaming/SKILL.md` | SSE 스트리밍 응답 |
+| multipart-upload | `.claude/skills/backend/multipart-upload/SKILL.md` | 파일 업로드 처리 |
+| thiserror | `.claude/skills/backend/thiserror/SKILL.md` | 에러 타입 정의 |
+| tracing | `.claude/skills/backend/tracing/SKILL.md` | 구조화 로깅 |
 
 **스킬 참조 규칙:** 해당 기능을 처음 구현할 때 관련 스킬 파일을 Read로 읽고, 그 패턴을 따라 코드를 작성한다.
 
@@ -116,7 +115,7 @@ Rust 컴파일 에러 수정 요청 시 다음 순서로 분석한다:
 
 Claude API 관련 코드 작성 시 다음을 준수한다:
 - reqwest 스킬 + sse-streaming 스킬 패턴을 함께 참조
-- API 키는 환경변수에서 로드 (dotenvy 스킬 참조)
+- API 키는 환경변수에서 로드 (dotenvy 크레이트 사용, 별도 스킬 없음)
 - 스트리밍 응답은 Axum SSE를 사용
 - 에러 시 적절한 HTTP 상태 코드와 에러 메시지 반환
 - 타임아웃 설정 필수

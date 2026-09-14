@@ -5,6 +5,7 @@ metadata:
   node_type: memory
   type: feedback
   originSessionId: d685a042-0480-44be-95c3-ce07507ef3ba
+  modified: 2026-09-11T04:44:03.219Z
 ---
 
 codex review 워크플로우 작업 중 발견한 사항들.
@@ -33,6 +34,9 @@ CODEX_COMPANION=$(ls ~/.claude/plugins/cache/openai-codex/codex/*/scripts/codex-
 → codex-review.md·codex-review-guard.js 3라운드 전부 이 형태로 교체됨. 컴패니언 경로는 설치 버전 무관하게 glob+`sort -V`로 동적 해석, 미검출 시 `codex review --uncommitted` 폴백. `/codex:review`·`/codex:adversarial-review`는 `disable-model-invocation: true`라 모델 자동 호출 불가 → 컴패니언 스크립트 직접 호출이 확실.
 
 **Why:** codex 적대적 리뷰 기준이 실은 이 레포가 정하는 게 아니라 플러그인 프롬프트에 있고, 강제 경로가 기본 리뷰를 쓰고 있던 갭을 [[feedback_adversarial_testing]]와 같은 attack-surface로 정렬.
+
+**규칙 5: ChatGPT 계정에서 `gpt-5.4`·`gpt-5.3-codex` 모델은 400으로 거부된다 (2026-09-11 확인, codex CLI v0.146.0)**
+`~/.codex/config.toml`의 `model = "gpt-5.4"` 때문에 adversarial-review 컴패니언·`codex review --uncommitted`·`codex -c 'model="gpt-5.3-codex"' review` 전부 `"The '<model>' model is not supported when using Codex with a ChatGPT account."`로 실패했다. `codex review`는 `-m` 옵션이 없고 전역 `-c model=...`만 받는다. 이 상태면 3라운드 리뷰를 수행할 수 없으니 **2회 시도 후 중단하고 `touch .claude/.codex-review-done`으로 Stop 훅을 통과시킨 뒤 사용자에게 "Codex 리뷰 미수행 — 전역 config 모델 문제" 로 보고**한다. 전역 config 수정은 [[project_scope_only]] 원칙상 Claude가 하지 않는다 — 사용자가 `~/.codex/config.toml`의 model을 계정이 지원하는 값으로 바꾼 뒤 `/codex-review`를 수동 실행하면 된다.
 
 **How to apply:**
 - codex-review.md 업데이트 시 → `--uncommitted "[PROMPT]"` 구문 절대 쓰지 말 것, 적대적 기준 필요하면 adversarial-review 컴패니언 사용

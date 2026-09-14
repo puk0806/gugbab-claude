@@ -38,7 +38,7 @@ description: >
 - 도구 실행 (pipx 대체)
 - 패키지 빌드·게시 (twine 대체)
 
-> **역할 분리:** 이 스킬은 *Python 전용 도구* 다룬다. Java 백엔드(Gradle/Maven), Rust 백엔드(Cargo)는 각자 패키지 매니저를 사용한다. 짝 스킬: `backend/python-basics`, `backend/python-fastapi`, `backend/python-pytest`.
+> **역할 분리:** 이 스킬은 *Python 전용 도구* 다룬다. Java 백엔드(Gradle/Maven), Rust 백엔드(Cargo)는 각자 패키지 매니저를 사용한다. 짝 스킬: `backend/python-fastapi`.
 
 ---
 

@@ -9,7 +9,7 @@ description: WCAG 2.2 A/AA 레벨 success criteria 전체 체크리스트, 자�
 > 보조 소스: https://www.w3.org/WAI/standards-guidelines/wcag/new-in-22/ , https://www.w3.org/WAI/WCAG22/Understanding/
 > 검증일: 2026-06-02
 
-이 스킬은 **WCAG 표준 자체와 직접 매핑되는 체크리스트**다. ARIA 패턴·키보드 핸들러 구현 코드는 별도 `frontend/accessibility` 스킬을 참조한다.
+이 스킬은 **WCAG 표준 자체와 직접 매핑되는 체크리스트**다. ARIA 패턴·키보드 핸들러 구현 코드는 이 스킬 범위 밖이다.
 
 ---
 
@@ -418,7 +418,7 @@ EU EAA 시행 이후로는 **VPAT 2.5 (INT/EU/Rev edition)** 가 EN 301 549 매�
 
 ## 11. 추가 참고
 
-- 컴포넌트 ARIA 구현 패턴 → `frontend/accessibility` 스킬 참조
+- 컴포넌트 ARIA 구현 패턴·키보드 핸들러 구현 코드는 이 스킬 범위 밖이다
 - 색상 대비 계산 → [WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/), Chrome DevTools 색상 피커
 - 한국형 표준 KWCAG는 WCAG와 SC 번호가 다를 수 있으므로 *국내 공공기관 납품 시* 한국지능정보사회진흥원 발표 최신 KWCAG 가이드라인을 별도 확인.
 

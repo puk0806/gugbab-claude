@@ -1,6 +1,6 @@
 # backend 스킬
 
-Rust · Java · Python · Claude Code CLI 백엔드 스킬 모음 (총 50종).
+Rust · Java · Python · Claude Code CLI · 운세 앱 백엔드 스킬 모음 (총 53종).
 
 ---
 
@@ -93,3 +93,11 @@ Rust · Java · Python · Claude Code CLI 백엔드 스킬 모음 (총 50종).
 | 스킬 | 설명 | 검증 |
 |------|------|------|
 | [claude-code-headless](../../../.claude/skills/backend/claude-code-headless/SKILL.md) | Claude Code headless(`claude -p`) — stream-json 파싱·SSE 중계, 구독(OAuth) 인증, 인증 우선순위 함정, 안전 가드 | [→](./claude-code-headless/verification.md) |
+
+---
+
+## 운세 앱 백엔드 (fortune-app 템플릿 전용, 1종)
+
+| 스킬 | 설명 | 검증 |
+|------|------|------|
+| [korean-lunar-calendar-manseryeok](../../../.claude/skills/backend/korean-lunar-calendar-manseryeok/SKILL.md) | 한국 음양력·만세력 계산 규칙 — 절기 기준 월주·입춘 기준 연주 경계, 표준시 변천·서머타임 이력, 진태양시 보정, 야자시/조자시, KASI 공식 데이터 대조 검증 | [→](./korean-lunar-calendar-manseryeok/verification.md) |

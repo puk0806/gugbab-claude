@@ -40,7 +40,7 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 24종 = 실행 �
 
 ---
 
-## 개발 전용 훅 (4종) — dev 템플릿 (react-spa·nextjs·rust-axum·java·unity)
+## 개발 전용 훅 (4종) — dev 템플릿 (react-spa·nextjs·rust-axum·java·unity·health·dream-interpretation·fortune-app)
 
 | 훅 | 이벤트 | 설명 | 테스트 |
 |----|--------|------|:---:|
@@ -51,7 +51,7 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 24종 = 실행 �
 
 ---
 
-## TypeScript 전용 훅 (1종) — react-spa·nextjs 템플릿
+## TypeScript 전용 훅 (1종) — react-spa·nextjs·health·dream-interpretation·fortune-app 템플릿
 
 | 훅 | 이벤트 | 설명 | 테스트 |
 |----|--------|------|:---:|
@@ -92,8 +92,8 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 24종 = 실행 �
 
 ```
 공통 (15종)      ← 모든 템플릿
-├── 개발 전용 (4종)  ← react-spa·nextjs·rust-axum·java-spring-*·unity-game
-│   └── TypeScript (1종)  ← react-spa·nextjs만 추가
+├── 개발 전용 (4종)  ← react-spa·nextjs·rust-axum·java-spring-*·unity-game·health·dream-interpretation·fortune-app
+│   └── TypeScript (1종)  ← react-spa·nextjs·health·dream-interpretation·fortune-app 추가
 ├── Memory (2종)    ← --memory 옵션 선택 시 추가
 ├── Codex (1종)     ← --codex 옵션 선택 시 추가
 └── Branch Protection (1종)  ← --branch-protection 옵션 선택 시 추가

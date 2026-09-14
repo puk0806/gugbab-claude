@@ -271,5 +271,36 @@ console.log('\n[정상] rules 목록 기록 (2026-08-26) — 해시 포함, 인�
   assert('오염된 hashes.rules → 객체', typeof m.hashes.rules === 'object' && !Array.isArray(m.hashes.rules), true);
 }
 
+console.log('\n[정상] templates 기록 (2026-09-11) — 설치에 쓴 템플릿을 남겨 재설치 때 번호를 역추적할 수 있게');
+{
+  const tgt = makeTarget(tmp('tgt'), {});
+  const scratch = tmp('lists');
+  const runT = (templatesCsv) => spawnSync('node', [
+    SCRIPT, tgt, listFile(scratch, []), listFile(scratch, []), 'false',
+    listFile(scratch, []), listFile(scratch, []), listFile(scratch, []), listFile(scratch, []),
+    ...(templatesCsv === null ? [] : [templatesCsv]),
+  ], { encoding: 'utf8' });
+  runT('java-spring-legacy,seo-geo');
+  let m = readManifest(tgt);
+  assert('templates 2건 기록(입력 순서 유지)', JSON.stringify(m.templates), JSON.stringify(['java-spring-legacy', 'seo-geo']));
+  // 구버전 호출(인자 생략) → 이전 기록 이월
+  let r = runT(null);
+  m = readManifest(tgt);
+  assert('templates 인자 생략(구버전 호출) → 이월, 성공', r.status === 0 && JSON.stringify(m.templates), JSON.stringify(['java-spring-legacy', 'seo-geo']));
+  // 재설치에서 템플릿이 바뀌면 덮어쓴다 (합집합 아님 — "지금 무엇으로 깔려 있나"가 의미)
+  runT('util');
+  m = readManifest(tgt);
+  assert('템플릿 변경 재설치 → 최신값으로 교체', JSON.stringify(m.templates), JSON.stringify(['util']));
+  // 악성: 경로 조작·공백·빈 항목이 섞인 CSV → 이름 규칙(kebab-case)에 맞는 항목만
+  runT('../evil, fortune-app ,,ALL,react-spa;rm');
+  m = readManifest(tgt);
+  assert('악성 CSV → 규칙에 맞는 이름만 기록', JSON.stringify(m.templates), JSON.stringify(['fortune-app']));
+  // 오염된 이전 필드
+  fs.writeFileSync(path.join(tgt, '.claude', '.install-manifest.json'), JSON.stringify({ version: 1, templates: 'evil' }));
+  r = runT(null);
+  m = readManifest(tgt);
+  assert('오염된 templates 필드 + 인자 생략 → 빈 배열, 성공', r.status === 0 && JSON.stringify(m.templates), '[]');
+}
+
 console.log(`\n═══ 결과: ${pass} PASS / ${fail} FAIL ═══`);
 process.exit(fail > 0 ? 1 : 0);

@@ -21,3 +21,4 @@
 | [dream-safety-classifier](../../../.claude/agents/validation/dream-safety-classifier.md) | 꿈 텍스트 위기 신호 5카테고리 분류 (자해·트라우마·폭력 등) → JSON 반환 |
 | [dream-interpretation-prompt-tester](../../../.claude/agents/validation/dream-interpretation-prompt-tester.md) | 꿈 해몽 Claude 프롬프트 5축 품질 평가 → PASS/NEEDS_REVISION/FAIL |
 | [dream-image-safety-classifier](../../../.claude/agents/validation/dream-image-safety-classifier.md) | 꿈 시각화 이미지·프롬프트 이중 안전 분류 (DALL-E/Imagen 정책 위반 포함) |
+| [fortune-interpretation-prompt-tester](../../../.claude/agents/validation/fortune-interpretation-prompt-tester.md) | 운세 해석 프롬프트 3축 평가 (톤·단정 회피·출력 포맷) → PASS/NEEDS_REVISION/FAIL |
