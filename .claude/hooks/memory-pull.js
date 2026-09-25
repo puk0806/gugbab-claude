@@ -31,19 +31,24 @@ try {
   // ── 2단계: 레포 memory/ → 전역 반영 ──
   if (fs.existsSync(repoMemory)) {
     for (const name of fs.readdirSync(repoMemory)) {
-      const src = path.join(repoMemory, name);
-      const dst = path.join(globalMemory, name);
-      if (!fs.statSync(src).isFile()) continue;
+      // 항목 하나(깨진 symlink 등)의 오류가 나머지 파일 동기화를 막지 않도록 격리
+      try {
+        const src = path.join(repoMemory, name);
+        const dst = path.join(globalMemory, name);
+        if (!fs.statSync(src).isFile()) continue;
 
-      let copy = false;
-      if (!fs.existsSync(dst)) {
-        copy = true; // 전역에 없음 (fresh clone / 새 파일)
-      } else {
-        const differs = fs.readFileSync(src, 'utf8') !== fs.readFileSync(dst, 'utf8');
-        // 내용이 다르고 레포 쪽이 최신이면 (git pull 직후) 전역 갱신
-        copy = differs && fs.statSync(src).mtimeMs > fs.statSync(dst).mtimeMs;
+        let copy = false;
+        if (!fs.existsSync(dst)) {
+          copy = true; // 전역에 없음 (fresh clone / 새 파일)
+        } else {
+          const differs = fs.readFileSync(src, 'utf8') !== fs.readFileSync(dst, 'utf8');
+          // 내용이 다르고 레포 쪽이 최신이면 (git pull 직후) 전역 갱신
+          copy = differs && fs.statSync(src).mtimeMs > fs.statSync(dst).mtimeMs;
+        }
+        if (copy) fs.copyFileSync(src, dst);
+      } catch {
+        // 개별 항목 오류는 건너뛰고 계속 진행
       }
-      if (copy) fs.copyFileSync(src, dst);
     }
   }
 } catch {

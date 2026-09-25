@@ -8,8 +8,23 @@ echo ""
 echo "=== gugbab-claude 프로젝트 설치 ==="
 echo ""
 
+# 대화형 입력 헬퍼 — `while true; read; …; done` 루프는 EOF(빈 stdin·파이프 종료)에서 read 가 실패해도
+# 빈 값으로 계속 돌아 오류 메시지를 무한 출력했다 (2026-09-25 감사: 4초 24만 줄·CPU 96%).
+# read 실패 시 값이 비어 있으면 명확한 에러와 함께 비0 종료한다. 개행 없이 끝나는 마지막 줄은 read 가 실패하면서도
+# 값을 채우므로 그 값은 정상 입력으로 수용한다.
+prompt_read() {
+  local __pr_prompt="$1" __pr_var="$2"
+  if ! read -rp "$__pr_prompt" "$__pr_var"; then
+    if [ -z "${!__pr_var}" ]; then
+      echo "" >&2
+      echo "오류: 입력이 종료되었습니다(EOF) — 대화형 응답이 필요한 설치입니다. 중단합니다." >&2
+      exit 1
+    fi
+  fi
+}
+
 while true; do
-  read -rp "프로젝트 경로를 입력하세요: " TARGET
+  prompt_read "프로젝트 경로를 입력하세요: " TARGET
   TARGET="${TARGET/#\~/$HOME}"  # ~ 를 절대경로로 변환
 
   if [ -z "$TARGET" ]; then
@@ -41,8 +56,9 @@ echo "   9/dream-interpretation — 꿈 해몽 앱 개발"
 echo "  10/health             — 건강·식단 PWA 앱"
 echo "  11/seo-geo            — SEO·GEO 검색 노출 (프레임워크 비종속 — 스택 템플릿과 병행 선택)"
 echo "  12/fortune-app        — 사주·타로·손금 운세 앱 개발"
+echo "  13/python-fastapi     — Python 3.12+ + FastAPI 백엔드"
 echo ""
-echo "  복수 선택 예시: react-spa,health  또는  2,10  또는  java-spring-legacy,seo-geo (5,11)"
+echo "  복수 선택 예시: react-spa,health  또는  2,10  또는  java-spring-legacy,seo-geo (5,11)  또는  python-fastapi,react-spa (13,2)"
 echo ""
 
 _parse_template() {
@@ -61,12 +77,13 @@ _parse_template() {
     10|health)              echo "health" ;;
     11|seo-geo)             echo "seo-geo" ;;
     12|fortune-app)         echo "fortune-app" ;;
+    13|python-fastapi)      echo "python-fastapi" ;;
     *) return 1 ;;
   esac
 }
 
 while true; do
-  read -rp "번호 또는 이름 입력 (쉼표로 구분): " TEMPLATE_INPUT
+  prompt_read "번호 또는 이름 입력 (쉼표로 구분): " TEMPLATE_INPUT
   TEMPLATES=()
   _VALID=true
   IFS=',' read -ra _RAW_LIST <<< "$TEMPLATE_INPUT"
@@ -125,13 +142,13 @@ is_only_java_selected() {
   return 0
 }
 
-# 이번 실행의 모든 템플릿이 dream·프론트 아키텍처 스킬의 정당한 소유자가 아닌 조합(java·rust·unity·seo-geo)인가.
+# 이번 실행의 모든 템플릿이 dream·프론트 아키텍처 스킬의 정당한 소유자가 아닌 조합(java·rust·unity·seo-geo·python-fastapi)인가.
 # 이때만 해당 누수 잔재를 prune 기록해 rust/unity·혼합 재설치도 수렴한다 (2026-08-31 Codex R1).
 # ts·dream·health 템플릿이 섞이면 그쪽 소유일 수 있어 기록하지 않는다.
 is_leakscope_only_selected() {
   for _tmpl in "${TEMPLATES[@]}"; do
     case "$_tmpl" in
-      java-spring-legacy|java-spring-modern|rust-axum|unity-game|seo-geo) ;;
+      java-spring-legacy|java-spring-modern|rust-axum|unity-game|seo-geo|python-fastapi) ;;
       *) return 1 ;;
     esac
   done
@@ -162,7 +179,7 @@ record_excluded_skill() {
 is_dev_selected() {
   for _tmpl in "${TEMPLATES[@]}"; do
     case "$_tmpl" in
-      react-spa|nextjs|rust-axum|java-spring-legacy|java-spring-modern|unity-game|health|dream-interpretation|fortune-app|all)
+      react-spa|nextjs|rust-axum|java-spring-legacy|java-spring-modern|unity-game|health|dream-interpretation|fortune-app|python-fastapi|all)
         return 0 ;;
     esac
   done
@@ -197,7 +214,7 @@ is_util_only() {
 ask_yn() {
   local _prompt="$1" _ans
   while true; do
-    read -rp "$_prompt" _ans
+    prompt_read "$_prompt" _ans
     case "$_ans" in
       y|Y)    return 0 ;;
       n|N|"") return 1 ;;
@@ -260,7 +277,7 @@ if has_template "seo-geo"; then
   echo "  c — 커머스·서비스 사이트 프로파일 (상품·카테고리·검색·카카오·네이버·GEO 중심. 로컬비즈니스·다국어·YMYL·VPAT·사이트 이전·Indexing API·모니터링 제외)"
   echo "  y — 전체 (블로그·미디어·다국어·로컬 비즈니스까지)"
   while true; do
-    read -rp "  선택 (Y/c): " _seo_ans
+    prompt_read "  선택 (Y/c): " _seo_ans
     case "$_seo_ans" in
       y|Y|"") INCLUDE_SEO=true; break ;;
       c|C)    INCLUDE_SEO=commerce; break ;;
@@ -275,7 +292,7 @@ elif is_seo_optin_selected; then
   echo "  c — 커머스·서비스 사이트 프로파일 (상품·카테고리·검색·카카오·네이버·GEO 중심. 로컬비즈니스·다국어·YMYL·VPAT·사이트 이전·Indexing API 제외)"
   echo "  y — 전체 (블로그·미디어·다국어·로컬 비즈니스까지)"
   while true; do
-    read -rp "  선택 (y/c/N): " _seo_ans
+    prompt_read "  선택 (y/c/N): " _seo_ans
     case "$_seo_ans" in
       y|Y)    INCLUDE_SEO=true; break ;;
       c|C)    INCLUDE_SEO=commerce; break ;;
@@ -627,6 +644,11 @@ SPECIAL_AGENTS_DREAM=(
 SPECIAL_AGENTS_FORTUNE=(
   "validation/fortune-interpretation-prompt-tester.md"
 )
+# health 전용 에이전트 (2026-09-25) — 특수 목록에 없으면 generic 경로로 java·rust 등 전 스택 템플릿에 새던 것 차단.
+# 소유자는 health·all 뿐 (SPECIAL_AGENTS_FORTUNE 과 동일 패턴)
+SPECIAL_AGENTS_HEALTH=(
+  "health/nutrition-prompt-tester.md"
+)
 SPECIAL_AGENTS_GAME=(
   "game/game-asset-ai-director.md"
   "game/game-design-document-writer.md"
@@ -645,10 +667,16 @@ EXCLUDE_AGENTS_FRONTEND=(
   "backend/python-backend-developer.md"
   "backend/python-backend-architect.md"
   "backend/database-architect.md"
+  # backend/CLAUDE.md 는 rust.md·java.md 임포트 + Rust·Java 에이전트 안내 — 프론트 템플릿엔 두 규칙이 없어 누수·깨진 임포트 (2026-09-25 감사 버그 3)
+  "backend/CLAUDE.md"
   # build-error-resolver 는 tsc·Vite/webpack 에러도 담당하므로 프론트 템플릿에 포함한다
   # (2026-08-26: 도메인 리팩터링 중 import 경로 깨짐 → tsc 에러 대량 발생 시 필요)
 )
 EXCLUDE_AGENTS_RUST=(
+  "frontend/CLAUDE.md"   # typescript.md 임포트 — rust 엔 TS 규칙 없음 (2026-09-25 감사 버그 3)
+  # Node.js/TS 백엔드 에이전트 2종 — Rust 전용 프로젝트 누수 (2026-09-25 감사 버그 2)
+  "backend/typescript-backend-developer.md"
+  "backend/typescript-backend-architect.md"
   "frontend/frontend-developer.md"
   "frontend/frontend-architect.md"
   "domain/frontend-domain-refactorer.md"
@@ -667,6 +695,8 @@ EXCLUDE_AGENTS_JAVA=(
   "backend/build-error-resolver.md"
   "backend/python-backend-developer.md"
   "backend/python-backend-architect.md"
+  "backend/typescript-backend-developer.md"   # 2026-09-25 감사 버그 2
+  "backend/typescript-backend-architect.md"
   # 2026-08-31 누수 수정 — 프론트·SEO 전용 에이전트가 java 백엔드에 딸려가던 것 차단
   # (java 템플릿에서는 SEO 옵트아웃 질문이 나오지 않아 INCLUDE_SEO=true 기본값이 항상 통과했음)
   "frontend/CLAUDE.md"
@@ -686,6 +716,11 @@ JAVA_AGENTS_NEWLY_EXCLUDED=(
   "validation/perf-report-writer.md"
 )
 EXCLUDE_AGENTS_GAME=(
+  # Unity C# 프로젝트에 Rust·Java·TS 코딩 규칙 임포트 파일 + Node.js 백엔드 에이전트 누수 (2026-09-25 감사 버그 2·3)
+  "backend/CLAUDE.md"
+  "frontend/CLAUDE.md"
+  "backend/typescript-backend-developer.md"
+  "backend/typescript-backend-architect.md"
   "frontend/frontend-developer.md"
   "frontend/frontend-architect.md"
   "domain/frontend-domain-refactorer.md"
@@ -697,10 +732,40 @@ EXCLUDE_AGENTS_GAME=(
   "backend/python-backend-developer.md"
   "backend/python-backend-architect.md"
 )
+# python-fastapi(13, 2026-09-25) — python 에이전트 2종의 스택 소유 템플릿. java 와 같은 수준으로
+# 프론트·타 언어 백엔드·프론트 전용 검증 에이전트를 막는다 (build-error-resolver 는 cargo·tsc·Vite 전담이라 제외)
+EXCLUDE_AGENTS_PYTHON=(
+  # backend/CLAUDE.md 는 rust.md·java.md 를 임포트 — python 단독 설치엔 두 규칙이 없어 깨진 임포트만 남는다
+  "backend/CLAUDE.md"
+  "frontend/CLAUDE.md"
+  "frontend/frontend-developer.md"
+  "frontend/frontend-architect.md"
+  "domain/frontend-domain-refactorer.md"
+  "backend/rust-backend-developer.md"
+  "backend/rust-backend-architect.md"
+  "backend/java-backend-developer.md"
+  "backend/java-backend-architect.md"
+  "backend/typescript-backend-developer.md"
+  "backend/typescript-backend-architect.md"
+  "backend/build-error-resolver.md"
+  "validation/seo-auditor.md"
+  "validation/content-quality-reviewer.md"
+  "validation/a11y-auditor.md"
+  "validation/build-perf-benchmarker.md"
+  "validation/perf-report-writer.md"
+)
 # 위 python 2종 — rust·java·unity 재설치 시 이전 설치 잔재 정리(prune) 기록 대상 (2026-09-11)
 PYTHON_AGENTS_NEWLY_EXCLUDED=(
   "backend/python-backend-developer.md"
   "backend/python-backend-architect.md"
+)
+# 2026-09-25 감사 버그 2·3 으로 새로 제외된 것 — 이전 설치(rust·java·unity 의 TS 에이전트, 프론트·unity 의 backend/CLAUDE.md,
+# rust·unity 의 frontend/CLAUDE.md) 잔재 정리 기록 대상. 여기 도달 = 선택된 어떤 템플릿도 소유하지 않음 → 조합 조건 없이 기록.
+AGENTS_NEWLY_EXCLUDED_2026_09_25=(
+  "backend/typescript-backend-developer.md"
+  "backend/typescript-backend-architect.md"
+  "backend/CLAUDE.md"
+  "frontend/CLAUDE.md"
 )
 
 # 에이전트 포함 여부 확인 헬퍼
@@ -736,6 +801,10 @@ _agent_ok_for_tmpl() {
   is_in_list "$rel" "${SPECIAL_AGENTS_ACADEMIC[@]}" && return 1
   is_in_list "$rel" "${SPECIAL_AGENTS_DREAM[@]}" && return 1
   is_in_list "$rel" "${SPECIAL_AGENTS_FORTUNE[@]}" && return 1
+  # health 전용은 health 템플릿에서만 (2026-09-25)
+  if [ "$tmpl" != "health" ]; then
+    is_in_list "$rel" "${SPECIAL_AGENTS_HEALTH[@]}" && return 1
+  fi
   # unity-game 외 게임 에이전트 제외
   if [ "$tmpl" != "unity-game" ]; then
     is_in_list "$rel" "${SPECIAL_AGENTS_GAME[@]}" && return 1
@@ -750,6 +819,8 @@ _agent_ok_for_tmpl() {
       is_in_list "$rel" "${EXCLUDE_AGENTS_JAVA[@]}" && return 1 ;;
     unity-game)
       is_in_list "$rel" "${EXCLUDE_AGENTS_GAME[@]}" && return 1 ;;
+    python-fastapi)
+      is_in_list "$rel" "${EXCLUDE_AGENTS_PYTHON[@]}" && return 1 ;;
   esac
   return 0
 }
@@ -781,6 +852,9 @@ should_include_agent() {
   if is_in_list "$rel" "${PYTHON_AGENTS_NEWLY_EXCLUDED[@]}"; then
     record_excluded_agent "$rel"
   fi
+  if is_in_list "$rel" "${AGENTS_NEWLY_EXCLUDED_2026_09_25[@]}"; then
+    record_excluded_agent "$rel"
+  fi
   # seo-geo 소유 에이전트가 빠졌다면(애드온 제거 `11→util`·`5,11→5`) 조합 조건 없이 기록 (2026-09-01 Codex R2).
   # 여기 도달 = 선택된 어떤 템플릿도 포함하지 않음. 삭제는 매니페스트 해시 증명 하에서만.
   if is_in_list "$rel" "${SEO_GEO_AGENTS[@]}"; then
@@ -788,6 +862,10 @@ should_include_agent() {
   fi
   # fortune-app 전용 에이전트 2종도 동일 — 소유자는 fortune-app·all 뿐이라 `12→util` 다운그레이드가 수렴하도록 기록 (2026-09-10)
   if is_in_list "$rel" "${SPECIAL_AGENTS_FORTUNE[@]}"; then
+    record_excluded_agent "$rel"
+  fi
+  # health 전용 에이전트도 동일 — 소유자는 health·all 뿐이라 `10→5`·`10→util` 다운그레이드가 수렴하도록 기록 (2026-09-25)
+  if is_in_list "$rel" "${SPECIAL_AGENTS_HEALTH[@]}"; then
     record_excluded_agent "$rel"
   fi
   return 1
@@ -883,7 +961,7 @@ _rule_ok_for_tmpl() {
          "$tmpl" == dream-interpretation || "$tmpl" == fortune-app ]] && return 0 ;;
     adversarial-testing.md)
       # 적대적 테스트 강제 훅(adversarial-test-guard·fake-impl-guard)이 참조 — dev 템플릿 전체에 포함 (is_dev_selected 와 동일 집합)
-      case "$tmpl" in all|react-spa|nextjs|rust-axum|java-spring-legacy|java-spring-modern|unity-game|health|dream-interpretation|fortune-app) return 0 ;; esac ;;
+      case "$tmpl" in all|react-spa|nextjs|rust-axum|java-spring-legacy|java-spring-modern|unity-game|health|dream-interpretation|fortune-app|python-fastapi) return 0 ;; esac ;;
   esac
   return 1
 }
@@ -912,6 +990,26 @@ for rule in "$REPO_DIR/.claude/rules"/*.md; do
     echo "  ✗ .claude/rules/$name (복사 실패)"
   fi
 done
+
+# ── 3.5 agents 디렉토리 CLAUDE.md 의 미설치 규칙 임포트 제거 (2026-09-25 감사 버그 3) ──
+# backend/CLAUDE.md 는 rust.md + java.md 를 함께 임포트한다. 소유 템플릿이 한쪽 언어만 설치하면(rust-axum 에 java.md,
+# java 에 rust.md) 나머지 임포트가 깨진 채 남는다. 누수 자체는 EXCLUDE_AGENTS_* 가 막고, 여기서는 설치된 사본에서
+# 대상에 없는 규칙을 가리키는 *임포트 전용 줄*(`@.claude/rules/x.md` 한 줄)만 지운다 — 루트 CLAUDE.md 표 행 제거(7절)와 같은 기준.
+# rules 루프 뒤에 있어야 한다(에이전트 루프가 먼저 돈다). 매니페스트 해시는 설치 마지막에 이 결과본으로 기록된다.
+while IFS= read -r _agent_md; do
+  _agent_md_path="$TARGET/.claude/agents/$_agent_md"
+  [ -f "$_agent_md_path" ] || continue
+  _stripped=""
+  for _ref in $(grep -o '^@\.claude/rules/[A-Za-z0-9._-]*\.md[[:space:]]*$' "$_agent_md_path" 2>/dev/null | sort -u); do
+    _rule_name="${_ref#@.claude/rules/}"
+    [ -f "$TARGET/.claude/rules/$_rule_name" ] && continue
+    TMP=$(mktemp)
+    # cat > 로 덮어써 원본 파일 권한 유지 (mv 는 mktemp 의 0600 을 그대로 가져온다)
+    grep -v "^@\.claude/rules/${_rule_name//./\\.}[[:space:]]*\$" "$_agent_md_path" > "$TMP"; cat "$TMP" > "$_agent_md_path"; rm -f "$TMP"
+    _stripped="$_stripped $_rule_name"
+  done
+  [ -n "$_stripped" ] && echo "  ✓ .claude/agents/$_agent_md 미설치 규칙 임포트 제거:$_stripped"
+done < <(grep -E '(^|/)CLAUDE\.md$' "$MANIFEST_AGENTS_TMP" 2>/dev/null)
 
 # ── 4. skills ────────────────────────────────────────────────────────────
 echo ""
@@ -1174,6 +1272,8 @@ JAVA_SKILLS_MODERN_ONLY=(
   "backend/spring-security-6-jwt-jjwt12"
   "backend/springdoc-openapi-3"
   "backend/redis-redisson-modern"
+  # Redisson 4.x — SB 3.x/4.x 대상 (2026-09-25: 배열 미등록으로 모던 템플릿에서 탈락하던 버그 수정)
+  "backend/redis-redisson-4"
   "backend/aws-sdk-v2-s3-rekognition"
 )
 
@@ -1194,6 +1294,7 @@ JAVA_EXCLUDED_EXTRA_SKILLS=(
   "devops/site-migration-seo"
   "devops/github-actions-visual-regression"
   "devops/vercel-sandbox"
+  "devops/vercel-workflow"
 )
 is_java_noncore_excluded() {
   local prefix="$1"
@@ -1209,6 +1310,27 @@ is_java_noncore_excluded() {
 FRONTEND_ONLY_DEVOPS_SKILLS=(
   "devops/site-migration-seo"
   "devops/github-actions-visual-regression"
+  "devops/vercel-workflow"
+)
+
+# Next.js + Vercel 서버리스 전용 스킬 (2026-09-17 PWA 예약 푸시 자산) — Route Handler 가 있는 nextjs·health 만.
+# 서버가 없는 react-spa(Vite SPA)와 python 백엔드 전제인 dream·fortune 에는 backend 쪽(drizzle)을 주지 않는다.
+VERCEL_SERVERLESS_SKILLS=(
+  "devops/vercel-workflow"
+  "backend/drizzle-neon-postgres"
+)
+
+# Node.js/TypeScript 백엔드 스킬 (2026-09-25 감사 버그 1) — typescript-backend-developer/architect 에이전트와 짝.
+# 소유 템플릿 = 그 에이전트가 설치되는 곳(react-spa·nextjs·health·fortune-app·all). 목록이 없던 동안 rust-axum 에
+# 통째로 새고(backend/* 가 java·python 만 걸러짐) 정작 짝 에이전트가 있는 템플릿엔 하나도 안 들어갔다.
+# drizzle-neon-postgres 는 prisma-orm 이 `../drizzle-neon-postgres/SKILL.md` 로 링크하는 ORM 비교 대상이라 함께 묶는다
+# (VERCEL_SERVERLESS_SKILLS 와 중복 소속 — react-spa·fortune-app 은 이 목록 경유로 받는다. vercel-workflow 는 여전히 nextjs·health 만).
+TS_BACKEND_SKILLS=(
+  "backend/hono-api-patterns"
+  "backend/prisma-orm"
+  "backend/zod-schema-validation"
+  "backend/better-auth"
+  "backend/drizzle-neon-postgres"
 )
 
 # dream·fortune 도메인 템플릿의 SEO 옵트인 판정 — react-spa·nextjs 블록과 같은 기준 (2026-09-11 백로그 3).
@@ -1270,10 +1392,11 @@ _skill_ok_for_tmpl() {
       is_fortune_skill "$skill_prefix" && return 0
       return 1
     fi
-    # backend: python 계열 + fortune 전용(만세력)만
+    # backend: python 계열 + fortune 전용(만세력) + TS 백엔드(짝 에이전트 typescript-backend-* 를 이 템플릿이 설치)
     if [[ "$rel" == backend/* ]]; then
       is_fortune_skill "$skill_prefix" && return 0
       [[ "$skill_prefix" == backend/python-* ]] && return 0
+      is_in_skill_list "$skill_prefix" "${TS_BACKEND_SKILLS[@]}" && return 0
       return 1
     fi
     # dream 전용 스킬 누출 차단 (generic frontend 스킬은 공유)
@@ -1286,6 +1409,13 @@ _skill_ok_for_tmpl() {
   if [[ "$tmpl" =~ ^(react-spa|nextjs|health)$ ]]; then
     # Claude 구독 중계(relay) 등 Next.js 프로젝트에서 쓰는 backend 예외 스킬
     [[ "$skill_prefix" == "backend/claude-code-headless" ]] && return 0
+    # TS 백엔드(Hono·Prisma·Zod·Better Auth + prisma 링크 대상 drizzle) — 짝 에이전트가 설치되는 세 템플릿 모두 (2026-09-25)
+    is_in_skill_list "$skill_prefix" "${TS_BACKEND_SKILLS[@]}" && return 0
+    # Vercel 서버리스 전용(Workflow 예약 푸시·Drizzle/Neon) — 서버 없는 react-spa 는 제외, nextjs·health 는 포함 (2026-09-17)
+    if is_in_skill_list "$skill_prefix" "${VERCEL_SERVERLESS_SKILLS[@]}"; then
+      [ "$tmpl" = "react-spa" ] && return 1
+      return 0
+    fi
     [[ "$rel" == backend/* || "$rel" == game/* || "$rel" == humanities/* ||
        "$rel" == education/* || "$rel" == research/* ]] && return 1
     # 꿈 일기 앱 전용 스킬(frontend 18·meta 3·architecture 1)은 dream-interpretation 템플릿에서만.
@@ -1318,9 +1448,12 @@ _skill_ok_for_tmpl() {
     [[ "$rel" == frontend/* || "$rel" == game/* || "$rel" == humanities/* ||
        "$rel" == education/* || "$rel" == research/* || "$rel" == writing/* ]] && return 1
     [[ "$rel" == backend/* ]] && is_java_skill "$skill_prefix" && return 1
-    # python 백엔드 스킬·Java 계열 redis-redisson-4(JAVA_SKILLS_* 미등록) 누수 차단 + 프론트 전용 devops (2026-09-11 백로그 2)
-    [[ "$skill_prefix" == backend/python-* || "$skill_prefix" == "backend/redis-redisson-4" ]] && return 1
+    # python 백엔드 스킬 누수 차단 + 프론트 전용 devops (2026-09-11 백로그 2)
+    # (redis-redisson-4 는 2026-09-25 JAVA_SKILLS_MODERN_ONLY 등록으로 위 is_java_skill 이 차단)
+    [[ "$skill_prefix" == backend/python-* ]] && return 1
     is_in_skill_list "$skill_prefix" "${FRONTEND_ONLY_DEVOPS_SKILLS[@]}" && return 1
+    is_in_skill_list "$skill_prefix" "${VERCEL_SERVERLESS_SKILLS[@]}" && return 1   # Next.js 전용 drizzle-neon-postgres (2026-09-17)
+    is_in_skill_list "$skill_prefix" "${TS_BACKEND_SKILLS[@]}" && return 1          # Node.js/TS 백엔드 4종 누수 차단 (2026-09-25)
     # dream 전용·프론트 아키텍처 스킬 fallthrough 누수 차단 (2026-08-31, java와 동일 결함)
     [[ "$rel" == meta/* ]] && is_dream_meta "$skill_prefix" && return 1
     is_in_skill_list "$skill_prefix" "${DREAM_ARCH_SKILLS[@]}" && return 1
@@ -1364,6 +1497,20 @@ _skill_ok_for_tmpl() {
     [ "$INCLUDE_SEO" = "commerce" ] && is_in_skill_list "$skill_prefix" "${SEO_NONCOMMERCE_SKILLS[@]}" && return 1
     return 0
   fi
+  if [ "$tmpl" = "python-fastapi" ]; then
+    # python 백엔드 스택 템플릿 (2026-09-25) — backend 는 python-* 10종만 소유 (java·rust·drizzle·claude-code-headless 차단).
+    # 프론트·게임·도메인(health·fortune 은 위 전역 게이트)·학술·SEO writing 카테고리는 통째로 제외.
+    [[ "$rel" == frontend/* || "$rel" == game/* || "$rel" == humanities/* ||
+       "$rel" == education/* || "$rel" == research/* || "$rel" == writing/* ]] && return 1
+    [[ "$rel" == backend/* ]] && [[ "$skill_prefix" != backend/python-* ]] && return 1
+    is_in_skill_list "$skill_prefix" "${FRONTEND_ONLY_DEVOPS_SKILLS[@]}" && return 1
+    is_in_skill_list "$skill_prefix" "${VERCEL_SERVERLESS_SKILLS[@]}" && return 1
+    # dream 전용·프론트 아키텍처 스킬 fallthrough 누수 차단 (rust·unity 와 동일)
+    [[ "$rel" == meta/* ]] && is_dream_meta "$skill_prefix" && return 1
+    is_in_skill_list "$skill_prefix" "${DREAM_ARCH_SKILLS[@]}" && return 1
+    [[ "$skill_prefix" == "architecture/frontend-domain-structure" ]] && return 1
+    return 0
+  fi
   return 1
 }
 
@@ -1397,6 +1544,21 @@ for src_path in "$REPO_DIR/.claude/skills"/*/*/SKILL.md; do
     # fortune-app 전용 13종도 동일 — 소유자는 fortune-app·all 뿐이라 빠졌다는 것 자체가 "이번 조합에 소유자 없음".
     # `12→util`·`12,2→2` 같은 다운그레이드 재설치가 수렴하도록 조합 조건 없이 기록 (2026-09-10)
     if is_fortune_skill "$skill_prefix"; then
+      record_excluded_skill "$rel" "$skill_prefix"
+    fi
+    # python 백엔드 스킬도 동일 — 소유자(python-fastapi·dream·fortune·all)가 이번 조합에 없을 때만 여기 도달하므로
+    # `13→4`·`9→5` 같은 전환 재설치가 수렴하도록 조합 조건 없이 기록 (2026-09-25). 삭제는 매니페스트 해시 증명 하에서만.
+    if [[ "$skill_prefix" == backend/python-* ]]; then
+      record_excluded_skill "$rel" "$skill_prefix"
+    fi
+    # health 도메인 5종도 동일 — 소유자는 health·all 뿐 (전역 게이트). `10→5`·`10→util` 다운그레이드에서 스킬만 남던
+    # 누락(에이전트는 SPECIAL_AGENTS_HEALTH 로 이미 수렴) 수정 (2026-09-25 감사 버그 4)
+    if [[ "$rel" == health/* ]]; then
+      record_excluded_skill "$rel" "$skill_prefix"
+    fi
+    # TS 백엔드 5종도 동일 — 소유자(react-spa·nextjs·health·fortune-app·all)가 이번 조합에 없을 때만 여기 도달.
+    # 목록 신설 전 rust-axum 이 받았던 누수 사본과 `3→4` 같은 전환 재설치가 수렴한다 (2026-09-25 감사 버그 1)
+    if is_in_skill_list "$skill_prefix" "${TS_BACKEND_SKILLS[@]}"; then
       record_excluded_skill "$rel" "$skill_prefix"
     fi
     # 템플릿 누수 수정(2026-08-31)으로 제외된 스킬 — 소유자 없는 템플릿 조합의 재설치에서 잔재 정리 기록
@@ -1520,7 +1682,7 @@ SETTINGS_FILE="$TARGET/.claude/settings.json"
 if [ -f "$SETTINGS_FILE" ]; then
   echo "  ⚠ settings.json 이미 존재합니다."
   while true; do
-    read -rp "  덮어쓸까요? (y/N): " OVERWRITE_SETTINGS
+    prompt_read "  덮어쓸까요? (y/N): " OVERWRITE_SETTINGS
     case "$OVERWRITE_SETTINGS" in
       y|Y) echo "  → settings.json 덮어쓰기"; break ;;
       n|N|"") echo "  → 건너뜀 (프로젝트 고유 설정 보존)"
@@ -1578,7 +1740,7 @@ CLAUDE_WRITTEN=false
 if [ -f "$CLAUDE_FILE" ]; then
   echo "  ⚠ CLAUDE.md 이미 존재합니다."
   while true; do
-    read -rp "  덮어쓸까요? (y/N): " OVERWRITE_CLAUDE
+    prompt_read "  덮어쓸까요? (y/N): " OVERWRITE_CLAUDE
     case "$OVERWRITE_CLAUDE" in
       y|Y) cp "$CLAUDE_SRC" "$CLAUDE_FILE"
            echo "  → CLAUDE.md 덮어쓰기 (기본 템플릿: $TEMPLATE)"
@@ -1683,14 +1845,18 @@ if [ "$CLAUDE_WRITTEN" = true ]; then
   # 예제 CLAUDE.md 의 "규칙 참조" 표는 정적이라 작성도구 n·codex n·memory n 기본 설치에서
   # agent-design·commands·readme-update·codex-review 같은 미설치 규칙을 `@.claude/rules/…` 로 가리킨 채 남았다.
   # 실제 대상 `.claude/rules/` 를 기준으로, 존재하지 않는 규칙을 참조하는 *표 행*(`|` 로 시작)만 지운다.
-  # 본문 문장은 건드리지 않는다 — 항상 설치되는 RULES_COMMON 만 본문에서 참조한다는 전제(테스트 danglingRuleRefs 가 감시).
+  # 본문 문장은 지우지 않고, 문장 끝 괄호 참조 ` (@.claude/rules/x.md)` 만 떼어낸다 (2026-09-25 감사 버그 5:
+  # all 템플릿 CLAUDE.template.md 의 "PENDING_TEST → APPROVED 일괄 전환 금지 (@…/verification-policy.md)" 가
+  # 작성도구 n 기본 설치에서 깨진 참조로 남았다 — verification-policy 는 RULES_COMMON 이면서 AUTHORING_RULES 라 기본 미설치).
   _RULE_REFS=$(grep -o '@\.claude/rules/[A-Za-z0-9._-]*\.md' "$CLAUDE_FILE" 2>/dev/null | sort -u)
   _REMOVED_RULE_ROWS=""
   for _ref in $_RULE_REFS; do
     _rule_name="${_ref#@.claude/rules/}"
     [ -f "$TARGET/.claude/rules/$_rule_name" ] && continue
+    _rule_re="${_rule_name//./\\.}"
     TMP=$(mktemp)
-    grep -v "^|.*@\.claude/rules/${_rule_name//./\\.}" "$CLAUDE_FILE" > "$TMP"; mv "$TMP" "$CLAUDE_FILE"
+    grep -v "^|.*@\.claude/rules/${_rule_re}" "$CLAUDE_FILE" | \
+      sed "s| *(@\.claude/rules/${_rule_re})||g" > "$TMP"; mv "$TMP" "$CLAUDE_FILE"
     _REMOVED_RULE_ROWS="$_REMOVED_RULE_ROWS $_rule_name"
   done
   [ -n "$_REMOVED_RULE_ROWS" ] && echo "  ✓ 미설치 규칙 참조 행 제거:$_REMOVED_RULE_ROWS"

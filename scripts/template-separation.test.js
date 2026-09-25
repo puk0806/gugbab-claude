@@ -94,7 +94,9 @@ const danglingRuleRefs = (dir) => {
 
 const PYTHON_AGENTS = ['backend/python-backend-developer.md', 'backend/python-backend-architect.md'];
 // 프론트 프로젝트에만 의미 있는 devops 스킬 — java 뿐 아니라 rust·unity 에서도 빠져야 한다 (백로그 2)
-const FRONTEND_ONLY_DEVOPS = ['devops/site-migration-seo', 'devops/github-actions-visual-regression'];
+const FRONTEND_ONLY_DEVOPS = ['devops/site-migration-seo', 'devops/github-actions-visual-regression', 'devops/vercel-workflow'];
+// Next.js + Vercel 서버리스 전용 스킬 (2026-09-17 PWA 예약 푸시 자산) — nextjs·health 에만, 서버 없는 react-spa 와 타 스택엔 없어야 한다
+const VERCEL_SERVERLESS_SKILLS = ['devops/vercel-workflow', 'backend/drizzle-neon-postgres'];
 
 // 어떤 dev 템플릿에도 있어선 안 되는 dream 전용 스킬 (dream-interpretation 템플릿 전용)
 const DREAM_ONLY = [
@@ -111,6 +113,7 @@ const JAVA_LEAKS = [
   'devops/n8n-webhook-patterns', 'devops/n8n-workflow-design',
   'devops/site-migration-seo', 'devops/github-actions-visual-regression', 'devops/vercel-sandbox',
   'architecture/frontend-domain-structure',
+  ...VERCEL_SERVERLESS_SKILLS,
 ];
 
 const JAVA_EXCLUDED_AGENTS = [
@@ -135,8 +138,9 @@ test('java-spring-legacy: 코어 포함 + 누수 0 + references 복사 + rules/c
     // 누수 제외
     for (const leak of JAVA_LEAKS) assert.ok(!s.includes(leak), `누수 스킬 잔존: ${leak}`);
     // 모던 전용 제외 + python 미설치 (backend 화이트리스트)
+    // 2026-09-25: redis-redisson-4(SB 3.x/4.x 대상)도 모던 전용 — 레거시(Redisson 2.15.2 고정)엔 없어야 한다
     for (const m of ['backend/spring-security-6-jwt-jjwt12', 'backend/springdoc-openapi-3',
-      'backend/redis-redisson-modern', 'backend/aws-sdk-v2-s3-rekognition']) {
+      'backend/redis-redisson-modern', 'backend/redis-redisson-4', 'backend/aws-sdk-v2-s3-rekognition']) {
       assert.ok(!s.includes(m), `모던 전용 스킬 잔존: ${m}`);
     }
     assert.ok(!s.some((x) => x.startsWith('backend/python-')), 'python 스킬이 java 템플릿에 설치됨');
@@ -173,8 +177,9 @@ test('java-spring-modern: 모던 전용 포함 + 레거시 전용/누수 제외'
   try {
     install('6', dir);
     const s = skillDirs(dir);
+    // 2026-09-25: redis-redisson-4 가 JAVA_SKILLS_* 미등록이라 모던 템플릿에서도 탈락하던 버그 (전체 설치에서만 들어갔다)
     for (const must of ['backend/spring-security-6-jwt-jjwt12', 'backend/springdoc-openapi-3',
-      'backend/redis-redisson-modern', 'backend/aws-sdk-v2-s3-rekognition']) {
+      'backend/redis-redisson-modern', 'backend/redis-redisson-4', 'backend/aws-sdk-v2-s3-rekognition']) {
       assert.ok(s.includes(must), `모던 전용 스킬 누락: ${must}`);
     }
     for (const l of ['backend/spring-security-5-jwt-jjwt10', 'backend/swagger-springfox-2',
@@ -199,6 +204,7 @@ test('rust-axum: java·python 스킬 제외 + dream·프론트 아키텍처·프
     // 2026-09-11 백로그 2: java 필터(is_java_skill)만 걸러 python 10종·Java 계열 redis-redisson-4 가 rust 로 새고 있었다
     assert.ok(!s.some((x) => x.startsWith('backend/python-')), 'python 스킬이 rust 템플릿에 설치됨');
     assert.ok(!s.includes('backend/redis-redisson-4'), 'Java 전용 redis-redisson-4 가 rust 템플릿에 설치됨');
+    assert.ok(!s.includes('backend/drizzle-neon-postgres'), 'Next.js 전용 drizzle-neon-postgres 가 rust 템플릿에 설치됨');
     for (const d of [...DREAM_ONLY, 'architecture/frontend-domain-structure', ...FRONTEND_ONLY_DEVOPS]) {
       assert.ok(!s.includes(d), `누수 스킬 잔존: ${d}`);
     }
@@ -257,6 +263,8 @@ test('health(10): 도메인 5종 + dev/TS 훅 + SEO 옵트인 기본 n (다른 �
     for (const must of ['frontend/indexeddb-dexie', 'frontend/claude-api-streaming-frontend', 'frontend/chat-ui-pattern', 'frontend/pwa-offline-llm-fallback']) {
       assert.ok(s.includes(must), `health 핵심 프론트 스킬 누락: ${must}`);
     }
+    // 2026-09-17: Next.js + Vercel 서버리스 PWA 라 예약 푸시(Workflow)·구독 저장(Drizzle/Neon) 스킬을 받는다
+    for (const must of VERCEL_SERVERLESS_SKILLS) assert.ok(s.includes(must), `health 에 Vercel 서버리스 스킬 누락: ${must}`);
     // 진짜 dream 전용(dream-* 접두어·음성 입력 계열)은 여전히 없다
     for (const d of ['frontend/dream-symbol-tagging', 'frontend/emotion-tagging-input', 'frontend/whisper-api-integration']) {
       assert.ok(!s.includes(d), `health 에 dream 전용 프론트 스킬 누출: ${d}`);
@@ -293,14 +301,17 @@ test('academic(8): 학술 writing 은 포함되되 SEO writing 4종은 혼입되
   }
 });
 
-test('react-spa: backend는 claude-code-headless 예외 1종만 + dream frontend 제외', () => {
+test('react-spa: backend는 claude-code-headless 예외 + TS 백엔드 5종(짝 에이전트 소유)만 + dream frontend 제외', () => {
   const dir = mktarget('react');
   try {
     install('2', dir);
     const s = skillDirs(dir);
     const backend = s.filter((x) => x.startsWith('backend/'));
-    assert.deepStrictEqual(backend, ['backend/claude-code-headless']);
+    // 2026-09-25 감사 버그 1: typescript-backend-* 에이전트를 받는 템플릿이라 Hono·Prisma·Zod·Better Auth(+prisma 링크 대상 drizzle)를 소유
+    assert.deepStrictEqual(backend, ['backend/claude-code-headless', ...TS_BACKEND_SKILLS, 'backend/drizzle-neon-postgres'].sort());
     for (const d of DREAM_ONLY) assert.ok(!s.includes(d), `누수 스킬 잔존: ${d}`);
+    // 서버가 없는 Vite SPA 에는 Vercel Workflow 가 의미 없다 (2026-09-17)
+    assert.ok(!s.includes('devops/vercel-workflow'), 'react-spa 에 vercel-workflow 누출');
     assert.ok(!s.includes('frontend/dream-symbol-tagging'), 'dream frontend 스킬 잔존');
     assert.ok(nonSkillMdFiles(dir).length > 0, 'references 부속 파일 미복사');
     // 기본 옵션(작성도구 n·codex n)이면 규칙 표의 agent-design·commands·readme-update·codex-review 행이 제거돼야 한다
@@ -308,6 +319,21 @@ test('react-spa: backend는 claude-code-headless 예외 1종만 + dream frontend
     assert.ok(!/@\.claude\/rules\/codex-review\.md/.test(claude), 'codex n 인데 codex-review 규칙 참조 잔존');
     assert.ok(!/@\.claude\/rules\/agent-design\.md/.test(claude), '작성도구 n 인데 agent-design 규칙 참조 잔존');
     assert.ok(/@\.claude\/rules\/typescript\.md/.test(claude), '설치된 typescript 규칙 참조가 과잉 제거됨');
+    assert.deepStrictEqual(danglingRuleRefs(dir), [], 'CLAUDE.md 가 미설치 규칙을 참조');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('nextjs(3): Vercel 서버리스 스킬(vercel-workflow·drizzle-neon-postgres) 포함 + backend 는 그 예외와 claude-code-headless 뿐 (2026-09-17)', () => {
+  const dir = mktarget('next');
+  try {
+    install('3', dir);
+    const s = skillDirs(dir);
+    for (const must of VERCEL_SERVERLESS_SKILLS) assert.ok(s.includes(must), `nextjs 에 Vercel 서버리스 스킬 누락: ${must}`);
+    assert.deepStrictEqual(s.filter((x) => x.startsWith('backend/')),
+      ['backend/claude-code-headless', 'backend/drizzle-neon-postgres', ...TS_BACKEND_SKILLS].sort());
+    for (const d of DREAM_ONLY) assert.ok(!s.includes(d), `누수 스킬 잔존: ${d}`);
     assert.deepStrictEqual(danglingRuleRefs(dir), [], 'CLAUDE.md 가 미설치 규칙을 참조');
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
@@ -839,7 +865,8 @@ test('fortune-app 단독(12, 양성 대조): 전용 10종 전부 포함 + dream�
     for (const d of FORTUNE_ONLY) assert.ok(s.includes(d), `fortune-app 템플릿인데 ${d} 누락 — 제외 필터 과잉`);
     for (const d of [...DREAM_ONLY, ...FORTUNE_REMOVED]) assert.ok(!s.includes(d), `fortune-app 에 제외 대상 ${d} 존재`);
     const foreign = s.filter((x) => /^(health|game|education|research)\//.test(x) || /^frontend\/dream-/.test(x) ||
-      (/^backend\//.test(x) && !/^backend\/python-/.test(x) && !FORTUNE_ONLY.includes(x)));
+      (/^backend\//.test(x) && !/^backend\/python-/.test(x) && !FORTUNE_ONLY.includes(x) &&
+        ![...TS_BACKEND_SKILLS, 'backend/drizzle-neon-postgres'].includes(x)));
     assert.deepStrictEqual(foreign, [], `fortune-app 에 타 도메인 스킬 누출: ${foreign.join(', ')}`);
     // 캐주얼 앱: 안전 분류기 짝이던 위기 자원 스킬은 더 이상 포함하지 않는다 (humanities 는 fortune 3종만)
     assert.ok(!s.includes('humanities/crisis-intervention-resources-korea'), '위기 자원 스킬이 fortune-app 에 잔존');
@@ -931,6 +958,428 @@ test('악성·경계: 사용자가 손댄 fortune 스킬은 12 → util 다운�
     install('1', dir);
     assert.ok(fs.existsSync(edited), '사용자 수정본이 다운그레이드 prune 에 삭제됨 — 해시 증명 없는 삭제');
     assert.ok(!fs.existsSync(untouched), '미수정 fortune 스킬은 수렴(삭제)돼야 하는데 잔존');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// ── health 전용 에이전트 (2026-09-25) ──────────────────────────────────────
+// nutrition-prompt-tester 는 특수 목록에 없으면 generic 경로로 java·rust 등 모든 스택 템플릿에 새어 나간다.
+// fortune-app 전용 에이전트(SPECIAL_AGENTS_FORTUNE)와 같은 패턴 — 소유자는 health·all 뿐.
+
+const HEALTH_AGENT = 'health/nutrition-prompt-tester.md';
+
+test('health 전용 에이전트: health(10)·all(0) 에는 설치, 그 외 1~12 모든 템플릿엔 미설치', () => {
+  for (const tmpl of ['10', '0']) {
+    const dir = mktarget(`health-agent-own-${tmpl}`);
+    try {
+      install(tmpl, dir);
+      assert.ok(agentFiles(dir).includes(HEALTH_AGENT), `템플릿 ${tmpl} 에 ${HEALTH_AGENT} 누락 — 과잉 제외`);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  }
+  for (const tmpl of ['1', '2', '3', '4', '5', '6', '7', '8', '9', '11', '12']) {
+    const dir = mktarget(`health-agent-leak-${tmpl}`);
+    try {
+      install(tmpl, dir);
+      assert.ok(!agentFiles(dir).includes(HEALTH_AGENT), `템플릿 ${tmpl} 에 health 전용 에이전트 누수`);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  }
+});
+
+test('다운그레이드: 10 → 5 재설치에서 health 전용 에이전트(짝 docs 포함)가 수렴하고, 사용자 수정본은 보존된다', () => {
+  const dir = mktarget('health-to-java');
+  try {
+    install('10', dir);
+    const agent = path.join(dir, '.claude', 'agents', HEALTH_AGENT);
+    const doc = path.join(dir, 'docs', 'agents', HEALTH_AGENT);
+    assert.ok(fs.existsSync(agent) && fs.existsSync(doc), '전제: health 에이전트·짝 docs 설치됨');
+    install('5', dir);
+    assert.ok(!fs.existsSync(agent), '10 → 5 다운그레이드 후 health 에이전트 잔존');
+    assert.ok(!fs.existsSync(doc), 'health 에이전트 짝 docs 잔존 — 스테일 문서');
+    assert.ok(agentFiles(dir).includes('backend/java-backend-developer.md'), 'java 자산 누락');
+
+    // 악성·경계: 사용자가 손댄 사본은 해시 증명 실패 → 다운그레이드에서도 보존
+    install('10', dir);
+    fs.appendFileSync(agent, '\n<!-- 프로젝트 커스텀 평가 축 -->\n');
+    install('1', dir);
+    assert.ok(fs.existsSync(agent), '사용자 수정본이 다운그레이드 prune 에 삭제됨 — 해시 증명 없는 삭제');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// ── python-fastapi(13) 스택 템플릿 (2026-09-25) ────────────────────────────
+// python 백엔드 스킬 10종·에이전트 2종은 그동안 도메인 앱 템플릿(9·12)으로만 설치됐다.
+// Java·Rust 처럼 독립 스택 템플릿이 소유하고, 프론트 전용·Java·Rust·Unity 자산은 새지 않아야 한다.
+
+const PYTHON_SKILLS = fs.readdirSync(path.join(REPO, '.claude', 'skills', 'backend'))
+  .filter((n) => n.startsWith('python-')).map((n) => `backend/${n}`).sort();
+
+const PYTHON_EXCLUDED_AGENTS = [
+  // backend/CLAUDE.md 는 rust.md·java.md 를 임포트 — python 단독 설치엔 두 규칙이 없어 깨진 임포트만 남는다
+  'backend/CLAUDE.md',
+  'frontend/CLAUDE.md', 'frontend/frontend-developer.md', 'frontend/frontend-architect.md',
+  'domain/frontend-domain-refactorer.md',
+  'backend/rust-backend-developer.md', 'backend/rust-backend-architect.md',
+  'backend/java-backend-developer.md', 'backend/java-backend-architect.md',
+  'backend/typescript-backend-developer.md', 'backend/typescript-backend-architect.md',
+  'backend/build-error-resolver.md',
+  'validation/seo-auditor.md', 'validation/content-quality-reviewer.md', 'validation/a11y-auditor.md',
+  'validation/build-perf-benchmarker.md', 'validation/perf-report-writer.md',
+  'validation/fortune-interpretation-prompt-tester.md', 'validation/dream-safety-classifier.md',
+  HEALTH_AGENT,
+];
+
+test('python-fastapi(13): python 스킬 10종·에이전트 2종 소유 + java·rust·unity·프론트 전용 누수 0 + dev 훅(TS 제외) + 매니페스트', () => {
+  const dir = mktarget('python');
+  try {
+    assert.strictEqual(PYTHON_SKILLS.length, 10, `전제: 레포 python 스킬 10종 (현재 ${PYTHON_SKILLS.length})`);
+    const out = install('13', dir);
+    assert.ok(/CLAUDE\.md \(기본 템플릿: python-fastapi\)/.test(out), 'python-fastapi CLAUDE.md 베이스 미사용');
+    const s = skillDirs(dir);
+    for (const must of PYTHON_SKILLS) assert.ok(s.includes(must), `python 스킬 누락: ${must}`);
+    // backend 는 python 계열만 — java·rust·drizzle·claude-code-headless·만세력 전부 부재
+    assert.deepStrictEqual(s.filter((x) => x.startsWith('backend/')), PYTHON_SKILLS, 'backend 스킬이 python 소유분 밖으로 확장됨');
+    const foreign = s.filter((x) => /^(frontend|game|health|humanities|education|research|writing)\//.test(x));
+    assert.deepStrictEqual(foreign, [], `python-fastapi 에 타 스택·도메인 스킬 누출: ${foreign.join(', ')}`);
+    for (const d of [...DREAM_ONLY, ...FORTUNE_ONLY, 'architecture/frontend-domain-structure',
+      ...FRONTEND_ONLY_DEVOPS, ...VERCEL_SERVERLESS_SKILLS]) {
+      assert.ok(!s.includes(d), `누수 스킬 잔존: ${d}`);
+    }
+    // 백엔드 공용 자산은 유지 — 과잉 제외 감시
+    for (const keep of ['architecture/ddd', 'devops/docker-deployment', 'devops/github-actions', 'meta/claude-code-hook-authoring']) {
+      assert.ok(s.includes(keep), `백엔드 공용 스킬이 과잉 제외됨: ${keep}`);
+    }
+    const a = agentFiles(dir);
+    for (const p of [...PYTHON_AGENTS, 'backend/database-architect.md', 'validation/qa-engineer.md', 'validation/security-auditor.md']) {
+      assert.ok(a.includes(p), `python-fastapi 필수 에이전트 누락: ${p}`);
+    }
+    for (const ex of PYTHON_EXCLUDED_AGENTS) assert.ok(!a.includes(ex), `누수 에이전트 잔존: ${ex}`);
+    assert.ok(!a.some((x) => x.startsWith('game/')), 'game 에이전트 누수');
+    const hooks = fs.readdirSync(path.join(dir, '.claude', 'hooks'));
+    assert.ok(hooks.includes('tdd-guard.js') && hooks.includes('adversarial-test-guard.js'), 'python-fastapi 에 dev 훅 누락');
+    assert.ok(!hooks.includes('typescript-quality.js'), 'TS 가 아닌 python 템플릿에 TS 훅 설치');
+    assert.deepStrictEqual(fs.readdirSync(path.join(dir, '.claude', 'rules')).sort(),
+      ['adversarial-testing.md', 'git.md', 'info-verification.md', 'task-workflow.md']);
+    const manifest = JSON.parse(fs.readFileSync(path.join(dir, '.claude', '.install-manifest.json'), 'utf8'));
+    assert.deepStrictEqual(manifest.templates, ['python-fastapi'], '매니페스트 templates 기록 누락');
+    const claude = fs.readFileSync(path.join(dir, 'CLAUDE.md'), 'utf8');
+    assert.ok(/Python \+ FastAPI/.test(claude), 'python-fastapi CLAUDE.md 아님');
+    assert.ok(!/<!-- common-rules -->/.test(claude), '공통 규칙 자리표시자가 남음');
+    assert.deepStrictEqual(danglingRuleRefs(dir), [], 'CLAUDE.md 가 미설치 규칙을 참조');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('회귀: python 소유권 이전 후에도 dream(9)·fortune(12) 은 python 스킬 10종·에이전트 2종을 계속 받는다', () => {
+  for (const tmpl of ['9', '12']) {
+    const dir = mktarget(`python-regress-${tmpl}`);
+    try {
+      install(tmpl, dir);
+      const s = skillDirs(dir);
+      for (const must of PYTHON_SKILLS) assert.ok(s.includes(must), `템플릿 ${tmpl} 에서 python 스킬 탈락: ${must}`);
+      const a = agentFiles(dir);
+      for (const p of PYTHON_AGENTS) assert.ok(a.includes(p), `템플릿 ${tmpl} 에서 python 에이전트 탈락: ${p}`);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  }
+});
+
+test('조합: python-fastapi + react-spa (13,2) 는 양쪽 소유 자산의 union — 프론트·python 모두 있고 java·rust 는 없다', () => {
+  const dir = mktarget('python-react');
+  try {
+    install('13,2', dir);
+    const s = skillDirs(dir);
+    for (const must of PYTHON_SKILLS) assert.ok(s.includes(must), `조합에서 python 스킬 누락: ${must}`);
+    assert.ok(s.includes('frontend/indexeddb-dexie'), 'react-spa 소유 frontend 스킬 누락');
+    // react-spa 의 SEO 옵트인 기본 n 은 조합에서도 유지 — python 병행이 SEO 를 끌어오지 않는다
+    assert.ok(!s.includes('frontend/seo-vite-spa') && !s.some((x) => x.startsWith('writing/')), '조합에서 SEO 기본 n 이 무시됨');
+    assert.ok(s.includes('backend/claude-code-headless'), 'react-spa 소유 backend 예외 스킬 누락');
+    assert.ok(!s.includes('backend/axum') && !s.includes('backend/mybatis-mapper-patterns'), 'java·rust 스킬 누수');
+    const a = agentFiles(dir);
+    for (const must of [...PYTHON_AGENTS, 'frontend/frontend-developer.md', 'backend/build-error-resolver.md']) {
+      assert.ok(a.includes(must), `조합에서 에이전트 누락: ${must}`);
+    }
+    for (const no of ['backend/java-backend-developer.md', 'backend/rust-backend-developer.md', HEALTH_AGENT]) {
+      assert.ok(!a.includes(no), `조합에 타 스택 에이전트 누수: ${no}`);
+    }
+    const rules = fs.readdirSync(path.join(dir, '.claude', 'rules'));
+    assert.ok(rules.includes('typescript.md'), 'react-spa 병행인데 typescript 규칙 없음');
+    const manifest = JSON.parse(fs.readFileSync(path.join(dir, '.claude', '.install-manifest.json'), 'utf8'));
+    assert.deepStrictEqual(manifest.templates, ['python-fastapi', 'react-spa']);
+    assert.deepStrictEqual(danglingRuleRefs(dir), [], 'CLAUDE.md 가 미설치 규칙을 참조');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('경계: 잘못된 번호(14)는 거부·재질문되고, 이름(python-fastapi) 입력도 13 과 같은 템플릿으로 해석된다', () => {
+  const dir = mktarget('python-name');
+  try {
+    const out = install('14\npython-fastapi', dir);
+    assert.ok(/알 수 없는 템플릿 '14'/.test(out), '존재하지 않는 템플릿 번호가 거부되지 않음');
+    const manifest = JSON.parse(fs.readFileSync(path.join(dir, '.claude', '.install-manifest.json'), 'utf8'));
+    assert.deepStrictEqual(manifest.templates, ['python-fastapi']);
+    assert.ok(PYTHON_SKILLS.every((p) => skillDirs(dir).includes(p)), '이름 입력으로 python 스킬 미설치');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('다운그레이드: 13 → 4(rust) 재설치에서 python 스킬(짝 docs)·에이전트가 수렴하고, 수정본은 보존된다', () => {
+  const dir = mktarget('python-to-rust');
+  try {
+    install('13', dir);
+    const edited = path.join(dir, '.claude', 'skills', 'backend', 'python-fastapi', 'SKILL.md');
+    const untouched = path.join(dir, '.claude', 'skills', 'backend', 'python-pydantic-v2', 'SKILL.md');
+    const untouchedDoc = path.join(dir, 'docs', 'skills', 'backend', 'python-pydantic-v2');
+    assert.ok(fs.existsSync(edited) && fs.existsSync(untouched) && fs.existsSync(untouchedDoc), '전제: python 스킬·docs 설치됨');
+    fs.appendFileSync(edited, '\n<!-- 프로젝트 커스텀 -->\n');
+    install('4', dir);
+    assert.ok(fs.existsSync(edited), '사용자 수정본이 다운그레이드 prune 에 삭제됨 — 해시 증명 없는 삭제');
+    assert.ok(!fs.existsSync(untouched), '미수정 python 스킬이 rust 다운그레이드 후 잔존');
+    assert.ok(!fs.existsSync(untouchedDoc), '미수정 python 스킬 짝 docs 잔존');
+    const a = agentFiles(dir);
+    for (const p of PYTHON_AGENTS) assert.ok(!a.includes(p), `rust 다운그레이드 후 python 에이전트 잔존: ${p}`);
+    assert.ok(skillDirs(dir).includes('backend/axum') && a.includes('backend/rust-backend-developer.md'), 'rust 자산 누락');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// ── 2026-09-25 export 감사 후속 (버그 1~6) ─────────────────────────────────
+
+// TS 백엔드 스킬 4종 — typescript-backend-developer/architect 가 설치되는 템플릿(2·3·10·12·0)이 소유한다.
+// prisma-orm 은 ../drizzle-neon-postgres/SKILL.md 를 링크하므로 소유 템플릿엔 drizzle 도 함께 있어야 한다.
+const TS_BACKEND_SKILLS = ['backend/hono-api-patterns', 'backend/prisma-orm', 'backend/zod-schema-validation', 'backend/better-auth'];
+const TS_BACKEND_AGENTS = ['backend/typescript-backend-developer.md', 'backend/typescript-backend-architect.md'];
+const TS_BACKEND_OWNERS = ['2', '3', '10', '12', '0'];
+const TS_BACKEND_NON_OWNERS = ['1', '4', '5', '6', '7', '8', '9', '11', '13'];
+
+// 설치된 스킬 .md 의 상대 링크 `](../x/SKILL.md)` 가 대상에서 실제로 열리는가 (부분 설치에서 링크 대상이 빠지는 문제 감시)
+const brokenSkillLinks = (dir) => {
+  const root = path.join(dir, '.claude', 'skills');
+  const out = [];
+  const walk = (d) => {
+    if (!fs.existsSync(d)) return;
+    for (const e of fs.readdirSync(d)) {
+      const full = path.join(d, e);
+      if (fs.statSync(full).isDirectory()) { walk(full); continue; }
+      if (!e.endsWith('.md')) continue;
+      for (const m of fs.readFileSync(full, 'utf8').matchAll(/\]\((\.\.\/[^)#\s]+\.md)(#[^)]*)?\)/g)) {
+        if (!fs.existsSync(path.join(path.dirname(full), m[1]))) out.push(`${path.relative(root, full)} -> ${m[1]}`);
+      }
+    }
+  };
+  walk(root);
+  return out;
+};
+
+// `.claude/agents/**/CLAUDE.md` 가 임포트하는 규칙이 전부 설치돼 있는가 (backend/CLAUDE.md 의 rust·java, frontend/CLAUDE.md 의 typescript)
+const danglingAgentDirRuleRefs = (dir) => {
+  const out = [];
+  for (const rel of agentFiles(dir).filter((f) => f === 'CLAUDE.md' || f.endsWith('/CLAUDE.md'))) {
+    const body = fs.readFileSync(path.join(dir, '.claude', 'agents', rel), 'utf8');
+    for (const m of body.matchAll(/@\.claude\/rules\/([\w.-]+\.md)/g)) {
+      if (!fs.existsSync(path.join(dir, '.claude', 'rules', m[1]))) out.push(`${rel} -> ${m[1]}`);
+    }
+  }
+  return out;
+};
+
+test('버그1·2: TS 백엔드 스킬 4종·에이전트 2종은 소유 템플릿(2·3·10·12·0)에만, prisma→drizzle 링크는 깨지지 않는다', () => {
+  for (const tmpl of TS_BACKEND_OWNERS) {
+    const dir = mktarget(`tsb-own-${tmpl}`);
+    try {
+      install(tmpl, dir);
+      const s = skillDirs(dir);
+      for (const must of TS_BACKEND_SKILLS) assert.ok(s.includes(must), `템플릿 ${tmpl} 에 TS 백엔드 스킬 누락: ${must}`);
+      assert.ok(s.includes('backend/drizzle-neon-postgres'), `템플릿 ${tmpl}: prisma-orm 링크 대상 drizzle-neon-postgres 누락`);
+      const a = agentFiles(dir);
+      for (const must of TS_BACKEND_AGENTS) assert.ok(a.includes(must), `템플릿 ${tmpl} 에 TS 백엔드 에이전트 누락: ${must}`);
+      assert.deepStrictEqual(brokenSkillLinks(dir), [], `템플릿 ${tmpl} 스킬 상대 링크 깨짐`);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  }
+  for (const tmpl of TS_BACKEND_NON_OWNERS) {
+    const dir = mktarget(`tsb-leak-${tmpl}`);
+    try {
+      install(tmpl, dir);
+      const s = skillDirs(dir);
+      const leaked = TS_BACKEND_SKILLS.filter((x) => s.includes(x));
+      assert.deepStrictEqual(leaked, [], `템플릿 ${tmpl} 에 TS 백엔드 스킬 누수`);
+      const a = agentFiles(dir);
+      const leakedAgents = TS_BACKEND_AGENTS.filter((x) => a.includes(x));
+      assert.deepStrictEqual(leakedAgents, [], `템플릿 ${tmpl} 에 TS 백엔드 에이전트 누수`);
+      assert.deepStrictEqual(brokenSkillLinks(dir), [], `템플릿 ${tmpl} 스킬 상대 링크 깨짐`);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  }
+});
+
+test('버그1·2 다운그레이드: 3 → 4 재설치에서 TS 백엔드 스킬(짝 docs)·에이전트가 수렴하고 수정본은 보존된다', () => {
+  const dir = mktarget('tsb-next-to-rust');
+  try {
+    install('3', dir);
+    const edited = path.join(dir, '.claude', 'skills', 'backend', 'hono-api-patterns', 'SKILL.md');
+    const untouched = path.join(dir, '.claude', 'skills', 'backend', 'zod-schema-validation', 'SKILL.md');
+    const untouchedDoc = path.join(dir, 'docs', 'skills', 'backend', 'zod-schema-validation');
+    const agent = path.join(dir, '.claude', 'agents', 'backend', 'typescript-backend-developer.md');
+    assert.ok(fs.existsSync(edited) && fs.existsSync(untouched) && fs.existsSync(untouchedDoc) && fs.existsSync(agent), '전제: TS 백엔드 자산 설치됨');
+    fs.appendFileSync(edited, '\n<!-- 프로젝트 커스텀 -->\n');
+    install('4', dir);
+    assert.ok(fs.existsSync(edited), '사용자 수정본이 다운그레이드 prune 에 삭제됨 — 해시 증명 없는 삭제');
+    assert.ok(!fs.existsSync(untouched), '미수정 TS 백엔드 스킬이 rust 재설치 후 잔존');
+    assert.ok(!fs.existsSync(untouchedDoc), '미수정 TS 백엔드 스킬 짝 docs 잔존');
+    const a = agentFiles(dir);
+    for (const p of TS_BACKEND_AGENTS) assert.ok(!a.includes(p), `rust 재설치 후 TS 백엔드 에이전트 잔존: ${p}`);
+    assert.ok(!a.includes('frontend/CLAUDE.md'), 'rust 재설치 후 frontend/CLAUDE.md 잔존');
+    assert.ok(skillDirs(dir).includes('backend/axum') && a.includes('backend/rust-backend-developer.md'), 'rust 자산 누락');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('버그3: agents 디렉토리 CLAUDE.md 는 누수되지 않고, 설치된 곳에서도 미설치 규칙 임포트가 없다 (0~13 + 조합)', () => {
+  const BACKEND_MD = 'backend/CLAUDE.md';
+  const FRONTEND_MD = 'frontend/CLAUDE.md';
+  const expect = {
+    // 템플릿: [backend/CLAUDE.md 있어야 하나, frontend/CLAUDE.md 있어야 하나, 남아야 할 임포트]
+    '0': [true, true, ['backend/CLAUDE.md -> rust.md', 'backend/CLAUDE.md -> java.md', 'frontend/CLAUDE.md -> typescript.md']],
+    '2': [false, true, ['frontend/CLAUDE.md -> typescript.md']],
+    '3': [false, true, ['frontend/CLAUDE.md -> typescript.md']],
+    '4': [true, false, ['backend/CLAUDE.md -> rust.md']],
+    '5': [true, false, ['backend/CLAUDE.md -> java.md']],
+    '6': [true, false, ['backend/CLAUDE.md -> java.md']],
+    '7': [false, false, []],
+    '10': [false, true, ['frontend/CLAUDE.md -> typescript.md']],
+    '13': [false, false, []],
+    '4,5': [true, false, ['backend/CLAUDE.md -> rust.md', 'backend/CLAUDE.md -> java.md']],
+  };
+  for (const tmpl of ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '4,5']) {
+    const dir = mktarget(`agentdir-${tmpl.replace(',', '-')}`);
+    try {
+      install(tmpl, dir);
+      const a = agentFiles(dir);
+      assert.deepStrictEqual(danglingAgentDirRuleRefs(dir), [], `템플릿 ${tmpl}: agents 디렉토리 CLAUDE.md 가 미설치 규칙을 임포트`);
+      if (!expect[tmpl]) continue;
+      const [wantBackend, wantFrontend, keptImports] = expect[tmpl];
+      assert.strictEqual(a.includes(BACKEND_MD), wantBackend, `템플릿 ${tmpl}: ${BACKEND_MD} 포함 여부 불일치`);
+      assert.strictEqual(a.includes(FRONTEND_MD), wantFrontend, `템플릿 ${tmpl}: ${FRONTEND_MD} 포함 여부 불일치`);
+      // 과잉 제거 방지 — 설치된 규칙의 임포트 라인은 유지돼야 한다
+      for (const k of keptImports) {
+        const [file, rule] = k.split(' -> ');
+        const body = fs.readFileSync(path.join(dir, '.claude', 'agents', file), 'utf8');
+        assert.ok(body.includes(`@.claude/rules/${rule}`), `템플릿 ${tmpl}: ${file} 의 설치된 규칙 임포트(${rule})가 과잉 제거됨`);
+      }
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  }
+});
+
+test('버그4 다운그레이드: 10 → 5 재설치에서 health 스킬 5종(짝 docs)이 수렴하고, 사용자 수정본은 보존된다', () => {
+  const dir = mktarget('health-skills-to-java');
+  try {
+    install('10', dir);
+    const hs = skillDirs(dir).filter((x) => x.startsWith('health/'));
+    assert.strictEqual(hs.length, 5, '전제: health 스킬 5종 설치');
+    const edited = path.join(dir, '.claude', 'skills', hs[0], 'SKILL.md');
+    const untouchedDoc = path.join(dir, 'docs', 'skills', hs[1]);
+    assert.ok(fs.existsSync(untouchedDoc), '전제: health 스킬 짝 docs 설치');
+    fs.appendFileSync(edited, '\n<!-- 프로젝트 커스텀 영양 기준 -->\n');
+    install('5', dir);
+    const left = skillDirs(dir).filter((x) => x.startsWith('health/'));
+    assert.deepStrictEqual(left, [hs[0]], `10 → 5 후 미수정 health 스킬 잔존: ${left.join(', ')}`);
+    assert.ok(fs.existsSync(edited), '사용자 수정본이 다운그레이드 prune 에 삭제됨 — 해시 증명 없는 삭제');
+    assert.ok(!fs.existsSync(untouchedDoc), 'health 스킬 짝 docs 잔존');
+    assert.ok(skillDirs(dir).includes('backend/mybatis-mapper-patterns'), 'java 자산 누락');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('버그5: 템플릿 0(all) 기본 설치의 루트 CLAUDE.md 에 미설치 규칙 참조가 없고, 작성도구 y 면 참조가 유지된다', () => {
+  const dir = mktarget('all-default');
+  try {
+    install('0', dir);
+    assert.ok(!fs.existsSync(path.join(dir, '.claude', 'rules', 'verification-policy.md')), '전제: 작성도구 n 이면 verification-policy 미설치');
+    assert.deepStrictEqual(danglingRuleRefs(dir), [], 'all CLAUDE.md 가 미설치 규칙을 참조');
+    const claude = fs.readFileSync(path.join(dir, 'CLAUDE.md'), 'utf8');
+    assert.ok(/PENDING_TEST → APPROVED 일괄 전환 금지/.test(claude), '금지 사항 본문 자체가 과잉 제거됨');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+  const dir2 = mktarget('all-authoring');
+  try {
+    // memory·superpowers·codex·legacy·SEO(없음: all 은 옵트인 대상 아님)·작성도구 y
+    install('all', dir2, ['', '', '', '', 'y']);
+    assert.ok(fs.existsSync(path.join(dir2, '.claude', 'rules', 'verification-policy.md')), '전제: 작성도구 y 면 verification-policy 설치');
+    const claude = fs.readFileSync(path.join(dir2, 'CLAUDE.md'), 'utf8');
+    assert.ok(/일괄 전환 금지[^\n]*@\.claude\/rules\/verification-policy\.md/.test(claude), '설치된 규칙의 본문 참조가 과잉 제거됨');
+    assert.deepStrictEqual(danglingRuleRefs(dir2), [], 'all+작성도구 CLAUDE.md 가 미설치 규칙을 참조');
+  } finally {
+    fs.rmSync(dir2, { recursive: true, force: true });
+  }
+});
+
+// 버그6: 대화형 입력 루프가 EOF 에서 무한 반복 — read 실패 시 즉시 비0 종료해야 한다
+function runEof(input) {
+  const t0 = Date.now();
+  const r = spawnSync('bash', [INSTALLER], { input, encoding: 'utf8', timeout: 15000 });
+  return { ...r, ms: Date.now() - t0 };
+}
+
+test('버그6: 빈 stdin(EOF) 이면 경로 입력 루프가 무한 반복하지 않고 에러와 함께 비0 종료한다', () => {
+  const r = runEof('');
+  assert.strictEqual(r.signal, null, `타임아웃으로 강제 종료됨(무한 루프) ms=${r.ms}`);
+  assert.notStrictEqual(r.status, 0, 'EOF 인데 성공(0) 종료');
+  assert.ok(r.ms < 5000, `종료가 너무 느림 ${r.ms}ms`);
+  assert.ok((r.stdout + r.stderr).split('\n').length < 50, '에러 메시지가 반복 출력됨');
+  assert.ok(/EOF|입력이 종료/.test(r.stdout + r.stderr), 'EOF 에러 메시지가 명확하지 않음');
+});
+
+test('버그6 악성·경계: 존재하지 않는 경로 뒤 EOF / 잘못된 템플릿 뒤 EOF / y·N 질문 중 EOF 모두 비0 즉시 종료, 대상 무변경', () => {
+  const dir = mktarget('eof');
+  try {
+    const cases = [
+      ['/nonexistent/path/xyz\n', '존재하지 않는 경로 뒤 EOF'],
+      [`${dir}\n99\n`, '잘못된 템플릿 뒤 EOF'],
+      [`${dir}\n5\ny`, 'y/N 질문 중 EOF (개행 없는 마지막 줄)'],
+      [`${dir}\n11\n\n\nn\n`, 'seo-geo 프로파일 루프에서 n 재질문 뒤 EOF'],
+    ];
+    for (const [input, label] of cases) {
+      const r = runEof(input);
+      assert.strictEqual(r.signal, null, `${label}: 타임아웃(무한 루프)`);
+      assert.notStrictEqual(r.status, 0, `${label}: 비0 종료가 아님`);
+      assert.ok(r.ms < 5000, `${label}: 종료가 너무 느림 ${r.ms}ms`);
+      assert.ok(/EOF|입력이 종료/.test(r.stdout + r.stderr), `${label}: EOF 에러 메시지 없음`);
+    }
+    assert.ok(!fs.existsSync(path.join(dir, '.claude')), '입력 중단인데 대상에 .claude 가 생성됨');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('버그6 정상: 개행 없이 끝나는 마지막 템플릿 입력도 값으로 인정된다 (EOF 가드 과잉 차단 방지)', () => {
+  const r = runEof('/nonexistent/path/xyz\n');
+  assert.ok(/디렉토리가 존재하지 않습니다/.test(r.stdout), '마지막 줄 경로 입력이 검증 단계까지 가지 않음');
+  const dir = mktarget('eof-partial');
+  try {
+    const r2 = runEof(`${dir}\n5`); // 템플릿 "5" 뒤에 개행 없음 → 값으로 수용 후 다음 질문에서 EOF
+    assert.ok(!/알 수 없는 템플릿|다시 입력해주세요/.test(r2.stdout), '개행 없는 마지막 템플릿 입력이 거부됨');
+    // (read -p 프롬프트는 비대화형 stdin 에선 출력되지 않으므로 echo 로 찍히는 다음 단계 안내문으로 진행을 확인)
+    const r3 = runEof(`${dir}\n5\ny`); // memory 질문 응답 "y" 뒤 개행 없음 → 수용 후 Superpowers 단계에서 EOF
+    assert.ok(/Superpowers 스킬·에이전트 시스템/.test(r3.stdout), '개행 없는 마지막 y/N 응답 뒤 다음 질문으로 진행하지 않음');
+    assert.notStrictEqual(r3.status, 0, '다음 질문의 EOF 에서 비0 종료가 아님');
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
