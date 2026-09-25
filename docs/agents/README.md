@@ -11,3 +11,4 @@
 | [devops](./devops/README.md) | 배포·CI/CD·인프라 |
 | [education](./education/README.md) | 교육과정 검증 |
 | [game](./game/README.md) | Unity 게임 개발·출시·수익화 |
+| [health](./health/README.md) | 건강·식단 앱 프롬프트 검증 |

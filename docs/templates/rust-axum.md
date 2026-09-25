@@ -8,21 +8,17 @@ Rust + Axum 백엔드 프로젝트. 프론트엔드·Java·게임·학술 스킬
 
 ---
 
-## 에이전트
+## 에이전트 (30종 — 작성 도구 y 시 33종)
 
 | 카테고리 | 에이전트 | 설명 |
 |----------|---------|------|
-| meta | [agent-creator](../../.claude/agents/meta/agent-creator.md) | 에이전트 MD 파일 대화형 생성 |
-| meta | [skill-creator](../../.claude/agents/meta/skill-creator.md) | 공식 문서 검증 후 SKILL.md 생성 |
-| meta | [skill-tester](../../.claude/agents/meta/skill-tester.md) | PENDING_TEST 스킬 2단계 실사용 테스트 |
 | meta | [freshness-auditor](../../.claude/agents/meta/freshness-auditor.md) | 에이전트·스킬 최신화 필요 항목 감사 |
 | meta | [claude-code-guide](../../.claude/agents/meta/claude-code-guide.md) | Claude Code CLI 사용법·설정 가이드 |
 | meta | [tech-stack-advisor](../../.claude/agents/meta/tech-stack-advisor.md) | 요구사항에 맞는 기술 스택 추천·비교 |
 | meta | [project-scaffolder](../../.claude/agents/meta/project-scaffolder.md) | 결정된 스택으로 프로젝트 부트스트랩 |
+| meta | [changelog-writer](../../.claude/agents/meta/changelog-writer.md) | git log → CHANGELOG.md 자동 작성 |
 | backend | [rust-backend-developer](../../.claude/agents/backend/rust-backend-developer.md) | Rust + Axum 백엔드 코드 구현 |
 | backend | [rust-backend-architect](../../.claude/agents/backend/rust-backend-architect.md) | Rust + Axum 백엔드 아키텍처 설계 |
-| backend | [python-backend-developer](../../.claude/agents/backend/python-backend-developer.md) | FastAPI 백엔드 코드 구현 |
-| backend | [python-backend-architect](../../.claude/agents/backend/python-backend-architect.md) | FastAPI 백엔드 아키텍처 설계 |
 | backend | [database-architect](../../.claude/agents/backend/database-architect.md) | DB 스키마·ERD·인덱싱 설계 |
 | backend | [build-error-resolver](../../.claude/agents/backend/build-error-resolver.md) | 빌드·컴파일·타입 에러 진단·수정 |
 | domain | [business-domain-analyst](../../.claude/agents/domain/business-domain-analyst.md) | 비즈니스 요구사항 → DDD 도메인 모델 도출 |
@@ -40,26 +36,37 @@ Rust + Axum 백엔드 프로젝트. 프론트엔드·Java·게임·학술 스킬
 | validation | [source-validator](../../.claude/agents/validation/source-validator.md) | URL·문서 신뢰도 판정 |
 | validation | [qa-engineer](../../.claude/agents/validation/qa-engineer.md) | E2E 테스트·Playwright 코드 생성 |
 | validation | [security-auditor](../../.claude/agents/validation/security-auditor.md) | OWASP·PIPA·LLM 리스크 보안 감사 |
+| validation | [pr-reviewer](../../.claude/agents/validation/pr-reviewer.md) | PR diff 리뷰 코멘트·판정 생성 |
+| validation | [a11y-auditor](../../.claude/agents/validation/a11y-auditor.md) | WCAG 2.2 접근성 자동 점검 |
+| validation | [build-perf-benchmarker](../../.claude/agents/validation/build-perf-benchmarker.md) | 빌드·번들·Lighthouse 성능 실측 |
+| validation | [perf-report-writer](../../.claude/agents/validation/perf-report-writer.md) | 성능 실측 결과 → 이해관계자용 보고서 작성 |
+| validation | [seo-auditor](../../.claude/agents/validation/seo-auditor.md) | SEO·GEO 상태 통합 감사 |
+| validation | [content-quality-reviewer](../../.claude/agents/validation/content-quality-reviewer.md) | 콘텐츠 E-E-A-T·신뢰 신호 진단 |
+
+> `typescript-backend-developer`·`typescript-backend-architect`·`python-backend-developer`·`python-backend-architect`는 rust 템플릿에서 제외됩니다 (2026-09-25 TS 에이전트 누수 차단, python은 2026-09-11부터).
+> 작성 도구 3종(agent-creator·skill-creator·skill-tester)은 "작성 도구" 옵션 y일 때만 포함됩니다 (기본 n).
+> validation의 SEO/성능 계열 5종(seo-auditor·content-quality-reviewer·a11y-auditor·build-perf-benchmarker·perf-report-writer)은 기본 옵션 설치에도 포함된다 — 2026-09-25 실측 확인, 프론트 전용 스킬(frontend/*)은 여전히 설치되지 않는다.
 
 ---
 
-## 스킬
+## 스킬 (32종)
 
 | 카테고리 | 종류 | 링크 |
 |----------|------|------|
-| backend — Rust (17종) | Axum·sqlx·thiserror·tokio·tower-http·serde·tracing 등 | [→ 목록](../skills/backend/README.md) |
-| backend — Python (10종) | FastAPI·Pydantic·LlamaIndex·Anthropic SDK 등 | [→ 목록](../skills/backend/README.md) |
-| devops (10종) | Docker·GitHub Actions(+VR)·n8n 5종·SEO 운영·Vercel Sandbox | [→ 목록](../skills/devops/README.md) |
+| backend — Rust (18종) | Axum·sqlx·thiserror·tokio·tower-http·serde·tracing 등 + claude-code-headless (Claude 구독 중계 연동용 예외) | [→ 목록](../skills/backend/README.md) |
+| devops (8종) | docker-deployment·github-actions·n8n 5종·vercel-sandbox | [→ 목록](../skills/devops/README.md) |
 | architecture (3종) | ddd·incremental-refactoring·module-boundaries | [→ 목록](../skills/architecture/README.md) |
 | meta (3종) | claude-code-hook-authoring·ralph-loop·riper-workflow | [→ 목록](../skills/meta/README.md) |
 
 > 2026-08-31: dream 전용(meta 3·architecture 1)·frontend-domain-structure가 fallthrough로 딸려가던 누수를 차단했습니다.
+> 2026-09-11: python 에이전트 2종(python-backend-developer·python-backend-architect)을 배제 목록에 추가 — Python 스킬은 원래 설치되지 않습니다 (rust 화이트리스트 방식).
+> 2026-09-25 실측: devops는 github-actions-visual-regression·site-migration-seo(프론트 전용)를 포함하지 않아 8종(이전 표의 10종은 과다 계상이었다).
 
 ---
 
-## 훅 (16종)
+## 훅 (19종)
 
-### 공통 (14종)
+### 공통 (15종)
 
 | 훅 | 이벤트 | 설명 |
 |----|--------|------|
@@ -69,6 +76,7 @@ Rust + Axum 백엔드 프로젝트. 프론트엔드·Java·게임·학술 스킬
 | [parry.js](../../.claude/hooks/parry.js) | PreToolUse Write | 시크릿·프롬프트 인젝션 패턴 스캔 — 감지 시 저장 차단 |
 | [protect-secrets.js](../../.claude/hooks/protect-secrets.js) | PreToolUse Write/Edit | 민감 파일(.env, *.pem, *.key, credentials 등) 수정 차단 |
 | [session-start.js](../../.claude/hooks/session-start.js) | SessionStart | 세션 시작 시 브랜치·미커밋 파일·최근 커밋 요약 출력 |
+| [session-export.js](../../.claude/hooks/session-export.js) | Stop | 세션 대화 요약을 로컬 exports에 기록 |
 | [cc-notify.js](../../.claude/hooks/cc-notify.js) | Stop | 작업 완료 시 macOS 데스크탑 알림 |
 | [instructions-loaded.js](../../.claude/hooks/instructions-loaded.js) | InstructionsLoaded | CLAUDE.md 로드 완료 시 규칙 요약 출력 |
 | [deliverable-guard.js](../../.claude/hooks/deliverable-guard.js) | PostToolUse Write/Edit · PreToolUse Bash · Stop | 산출물 완결성 — 세션 수정 파일 추적 + README 동기화 검사 + PENDING_TEST 스킬 테스트 미수행 차단 |
@@ -78,12 +86,14 @@ Rust + Axum 백엔드 프로젝트. 프론트엔드·Java·게임·학술 스킬
 | [staleness-check.js](../../.claude/hooks/staleness-check.js) | InstructionsLoaded | 스킬 검증일 경과 감지 — 30~59일 경고, 60일+ 재검증 강제 |
 | [statusline.sh](../../.claude/hooks/statusline.sh) | statusLine | 상태 바 — 브랜치·미커밋 수·PENDING_TEST 스킬 수 표시 |
 
-### 개발 전용 (2종)
+### 개발 전용 (4종)
 
 | 훅 | 이벤트 | 설명 |
 |----|--------|------|
 | [tdd-guard.js](../../.claude/hooks/tdd-guard.js) | PostToolUse Write/Edit | 소스 파일 수정 시 대응 테스트 파일 존재 여부 검사 (경고) |
 | [test-fake-guard.js](../../.claude/hooks/test-fake-guard.js) | PreToolUse Bash / PostToolUse Write | 가짜 테스트 패턴 탐지·차단 |
+| [adversarial-test-guard.js](../../.claude/hooks/adversarial-test-guard.js) | PostToolUse Write/Edit | 테스트에 악성 유저 방어·경계 계층 없으면 차단 |
+| [fake-impl-guard.js](../../.claude/hooks/fake-impl-guard.js) | PostToolUse Write/Edit | 테스트 기대 리터럴을 그대로 반환하는 가짜 구현 차단 |
 
 > TypeScript 훅(typescript-quality)·Memory 훅은 이 템플릿에 포함되지 않습니다.
 
@@ -131,4 +141,4 @@ Rust + Axum 백엔드 프로젝트. 프론트엔드·Java·게임·학술 스킬
 | `permissions.deny` | `git push --force`, `rm -rf` 시스템 경로, `chmod 777`, curl\|bash 패턴 |
 | `permissions.additionalDirectories` | `/tmp`, `/private/tmp`, `/var/folders` |
 | `statusLine` | 브랜치·미커밋·PENDING_TEST 상태 표시 (`statusline.sh`) |
-| 훅 연결 | 공통 14종 + dev(tdd-guard·test-fake-guard) 연결 (TypeScript 훅 제외) |
+| 훅 연결 | 공통 15종 + dev(tdd-guard·test-fake-guard·adversarial-test-guard·fake-impl-guard) 연결 (TypeScript 훅 제외) |

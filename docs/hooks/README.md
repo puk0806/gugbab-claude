@@ -28,11 +28,11 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 24종 = 실행 �
 | [skill-md-guard.js](../../.claude/hooks/skill-md-guard.js) | PreToolUse Write · PostToolUse Edit | SKILL.md 소스 URL·검증일·필수 섹션 검증 — **위반 시 저장 자체 차단** (Edit는 디스크 재읽기 사후 검증) | ✅ |
 | [agent-md-guard.js](../../.claude/hooks/agent-md-guard.js) | PreToolUse Write · PostToolUse Edit | 에이전트 .md name·description·tools·model·example 검증 — **위반 시 저장 자체 차단** | ✅ |
 | [verification-guard.js](../../.claude/hooks/verification-guard.js) | PreToolUse Write · PostToolUse Edit | verification.md 필수 섹션·UNVERIFIED·"내장 지식" 자백 검증 — **위반 시 저장 자체 차단** | ✅ |
-| [staleness-check.js](../../.claude/hooks/staleness-check.js) | InstructionsLoaded | 스킬 검증일 경과 감지 — 30~59일 경고, 60일+ 재검증 강제 지시 | — |
-| [instructions-loaded.js](../../.claude/hooks/instructions-loaded.js) | InstructionsLoaded | CLAUDE.md 로드 완료 시 규칙 요약 출력 | — |
-| [session-start.js](../../.claude/hooks/session-start.js) | SessionStart | 세션 시작 시 현재 브랜치·미커밋 파일·최근 커밋 요약 출력 | — |
+| [staleness-check.js](../../.claude/hooks/staleness-check.js) | InstructionsLoaded | 스킬 검증일 경과 감지 — 30~59일 경고, 60일+ 재검증 강제 지시 | ✅ |
+| [instructions-loaded.js](../../.claude/hooks/instructions-loaded.js) | InstructionsLoaded | CLAUDE.md 로드 완료 시 규칙 요약 출력 | ✅ |
+| [session-start.js](../../.claude/hooks/session-start.js) | SessionStart | 세션 시작 시 현재 브랜치·미커밋 파일·최근 커밋 요약 출력 | ✅ |
 | [session-export.js](../../.claude/hooks/session-export.js) | Stop | 세션 대화 요약(요청·응답·수정 파일·Codex 리뷰) 강제 보존 — Stop(매 턴)은 로컬 `~/.claude/projects/<해시>/exports/`에만 기록(레포 status 오염 없음), 커밋 배치의 `--refresh` 실행 시에만 레포 `exports/`에 전체 요약 생성(Y 프로젝트) (비차단) | ✅ |
-| [cc-notify.js](../../.claude/hooks/cc-notify.js) | Stop | 작업 완료 시 macOS 데스크탑 알림 (비차단, 타 플랫폼 silent) | — |
+| [cc-notify.js](../../.claude/hooks/cc-notify.js) | Stop | 작업 완료 시 macOS 데스크탑 알림 (비차단, 타 플랫폼 silent) | ✅ |
 | [statusline.sh](../../.claude/hooks/statusline.sh) | statusLine | 상태 바 — 브랜치 + 미커밋 수 + PENDING_TEST 스킬 수 표시 | — |
 
 > 테스트 "—" 항목은 차단하지 않는 관찰·알림·컨텍스트 주입 훅 (오탐 시 피해 없음).
@@ -40,7 +40,7 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 24종 = 실행 �
 
 ---
 
-## 개발 전용 훅 (4종) — dev 템플릿 (react-spa·nextjs·rust-axum·java·unity·health·dream-interpretation·fortune-app)
+## 개발 전용 훅 (4종) — dev 템플릿 (react-spa·nextjs·rust-axum·java·unity·health·dream-interpretation·fortune-app·python-fastapi)
 
 | 훅 | 이벤트 | 설명 | 테스트 |
 |----|--------|------|:---:|
@@ -67,8 +67,8 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 24종 = 실행 �
 
 | 훅 | 이벤트 | 설명 | 테스트 |
 |----|--------|------|:---:|
-| [memory-pull.js](../../.claude/hooks/memory-pull.js) | SessionStart | 전역 memory 실제 디렉토리 보장(구 symlink 자동 마이그레이션) + 레포 `memory/` → 전역 반영 (git 조작 없음) | — |
-| [memory-sync.js](../../.claude/hooks/memory-sync.js) | PostToolUse Write/Edit | memory 파일 변경 감지 → 전역↔레포 양방향 미러 복사 (git 커밋 없음) | — |
+| [memory-pull.js](../../.claude/hooks/memory-pull.js) | SessionStart | 전역 memory 실제 디렉토리 보장(구 symlink 자동 마이그레이션) + 레포 `memory/` → 전역 반영 (git 조작 없음) | ✅ |
+| [memory-sync.js](../../.claude/hooks/memory-sync.js) | PostToolUse Write/Edit | memory 파일 변경 감지 → 전역↔레포 양방향 미러 복사 (git 커밋 없음) | ✅ |
 
 ---
 
@@ -92,7 +92,7 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 24종 = 실행 �
 
 ```
 공통 (15종)      ← 모든 템플릿
-├── 개발 전용 (4종)  ← react-spa·nextjs·rust-axum·java-spring-*·unity-game·health·dream-interpretation·fortune-app
+├── 개발 전용 (4종)  ← react-spa·nextjs·rust-axum·java-spring-*·unity-game·health·dream-interpretation·fortune-app·python-fastapi
 │   └── TypeScript (1종)  ← react-spa·nextjs·health·dream-interpretation·fortune-app 추가
 ├── Memory (2종)    ← --memory 옵션 선택 시 추가
 ├── Codex (1종)     ← --codex 옵션 선택 시 추가

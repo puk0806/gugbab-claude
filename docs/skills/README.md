@@ -2,9 +2,9 @@
 
 | 카테고리 | 종류 | 설명 |
 |----------|------|------|
-| [frontend](./frontend/README.md) | 85종 | 프레임워크·상태관리·UI·빌드·테스트·성능·SEO·LLM·꿈/운세 앱 UI |
-| [backend](./backend/README.md) | 53종 | Rust·Java(레거시/모던)·Python·Claude Code CLI·만세력 백엔드 |
-| [devops](./devops/README.md) | 10종 | Docker·GitHub Actions·n8n·Vercel Sandbox·SEO 운영 |
+| [frontend](./frontend/README.md) | 86종 | 프레임워크·상태관리·UI·빌드·테스트·성능·SEO·LLM·i18n·꿈/운세 앱 UI |
+| [backend](./backend/README.md) | 58종 | Rust·Java(레거시/모던)·Python·TypeScript(Hono/Prisma/Zod/Better Auth/Drizzle/Neon)·Claude Code CLI·만세력 백엔드 |
+| [devops](./devops/README.md) | 11종 | Docker·GitHub Actions·n8n·Vercel Sandbox/Workflow·SEO 운영 |
 | [architecture](./architecture/README.md) | 6종 | DDD·프론트 도메인 구조·모듈 경계·점진 리팩터링·꿈/운세 앱 데이터 모델링 |
 | [humanities](./humanities/README.md) | 22종 | 인문학·도덕철학·꿈 심리학·사주/타로/손금 전통 |
 | [research](./research/README.md) | 4종 | 학술 DB·문헌 검토·사례연구·연구윤리 |

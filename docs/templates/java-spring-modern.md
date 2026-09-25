@@ -8,7 +8,7 @@ Java 21 + Spring Boot 3.x + Jar/Native + MyBatis 모던 백엔드 프로젝트.
 
 ---
 
-## 에이전트
+## 에이전트 (24종)
 
 | 카테고리 | 에이전트 | 설명 |
 |----------|---------|------|
@@ -19,10 +19,6 @@ Java 21 + Spring Boot 3.x + Jar/Native + MyBatis 모던 백엔드 프로젝트.
 | meta | [changelog-writer](../../.claude/agents/meta/changelog-writer.md) | git log → CHANGELOG.md 자동 작성 |
 | backend | [java-backend-developer](../../.claude/agents/backend/java-backend-developer.md) | Java + Spring Boot 백엔드 코드 구현 |
 | backend | [java-backend-architect](../../.claude/agents/backend/java-backend-architect.md) | Java + Spring Boot 백엔드 아키텍처 설계 |
-| backend | [python-backend-developer](../../.claude/agents/backend/python-backend-developer.md) | FastAPI 백엔드 코드 구현 |
-| backend | [python-backend-architect](../../.claude/agents/backend/python-backend-architect.md) | FastAPI 백엔드 아키텍처 설계 |
-| backend | [typescript-backend-developer](../../.claude/agents/backend/typescript-backend-developer.md) | Node.js + TS 백엔드 코드 구현 |
-| backend | [typescript-backend-architect](../../.claude/agents/backend/typescript-backend-architect.md) | Node.js + TS 백엔드 아키텍처 설계 |
 | backend | [database-architect](../../.claude/agents/backend/database-architect.md) | DB 스키마·ERD·인덱싱 설계 |
 | domain | [business-domain-analyst](../../.claude/agents/domain/business-domain-analyst.md) | 비즈니스 요구사항 → DDD 도메인 모델 도출 |
 | domain | [codebase-domain-analyst](../../.claude/agents/domain/codebase-domain-analyst.md) | 코드베이스 역분석 → 도메인 구조 진단 |
@@ -41,7 +37,7 @@ Java 21 + Spring Boot 3.x + Jar/Native + MyBatis 모던 백엔드 프로젝트.
 | validation | [qa-engineer](../../.claude/agents/validation/qa-engineer.md) | E2E 테스트·Playwright 코드 생성 |
 | validation | [security-auditor](../../.claude/agents/validation/security-auditor.md) | OWASP·PIPA·LLM 리스크 보안 감사 |
 
-> `build-error-resolver`는 Java 템플릿에서 제외됩니다 (Rust/TS 전용 기능).
+> `build-error-resolver`·`python-backend-developer`·`python-backend-architect`·`typescript-backend-developer`·`typescript-backend-architect`는 Java 템플릿에서 제외됩니다 (Rust/Python/TS 전용 기능 — 2026-09-25 TS 에이전트 누수 차단).
 > 작성 도구 3종(agent-creator·skill-creator·skill-tester)은 설치 시 "작성 도구" 옵션 y일 때만 포함됩니다.
 > 2026-08-31: 프론트·SEO 계열(seo-auditor·content-quality-reviewer·a11y-auditor·build-perf-benchmarker·perf-report-writer·frontend/CLAUDE.md)이 java 템플릿에 딸려가던 누수를 차단했습니다.
 > 2026-09-01: Thymeleaf 등 서버 렌더 HTML로 **검색 노출을 담당하는 프로젝트**는 `6,11`로 [seo-geo 템플릿](./seo-geo.md)을 병행하세요 — seo-auditor·content-quality-reviewer 에이전트와 프레임워크 비종속 SEO·GEO 스킬(전체 22종/커머스 14종)이 union 으로 추가됩니다.
@@ -53,15 +49,16 @@ Java 21 + Spring Boot 3.x + Jar/Native + MyBatis 모던 백엔드 프로젝트.
 | 카테고리 | 종류 | 링크 |
 |----------|------|------|
 | backend — Java 공통 (13종) | spring-boot-gradle-setup·mybatis·hikaricp·global-exception·logback·xss 등 | [→ 목록](../skills/backend/README.md) |
-| backend — Java 모던 전용 (4종) | spring-security-6·springdoc-openapi-3·redis-redisson-modern·aws-sdk-v2 | [→ 목록](../skills/backend/README.md) |
+| backend — Java 모던 전용 (5종) | spring-security-6·springdoc-openapi-3·redis-redisson-modern·redis-redisson-4·aws-sdk-v2 | [→ 목록](../skills/backend/README.md) |
 | devops (2종) | docker-deployment·github-actions | [→ 목록](../skills/devops/README.md) |
 | architecture (3종) | ddd·incremental-refactoring·module-boundaries | [→ 목록](../skills/architecture/README.md) |
 | meta (3종) | claude-code-hook-authoring·ralph-loop·riper-workflow | [→ 목록](../skills/meta/README.md) |
 
-총 **25종**. 각 스킬의 `references/` 부속 파일도 함께 복사됩니다 (2026-08-31: SKILL.md만 복사되던 버그 수정).
+총 **26종** (2026-09-25 실측 — `redis-redisson-4` JAVA_SKILLS_MODERN_ONLY 누락 버그 수정 반영). 각 스킬의 `references/` 부속 파일도 함께 복사됩니다 (2026-08-31: SKILL.md만 복사되던 버그 수정).
 
 > 레거시 전용 스킬(spring-security-5·swagger-springfox-2·redis-redisson-legacy·ehcache-2·aws-sdk-v1·spring-boot-2-to-3-migration) 제외.
 > 2026-08-31: dream 계열(meta 3·architecture 1)·n8n 5종·SEO(site-migration-seo)·프론트 전용(frontend-domain-structure·github-actions-visual-regression·vercel-sandbox)이 backend 외 카테고리 fallthrough로 딸려가던 누수를 차단했습니다. Python 스킬은 원래 설치되지 않습니다 (java 화이트리스트 방식).
+> 2026-09-11: python 에이전트 2종(python-backend-developer·python-backend-architect)을 배제 목록에 추가했습니다.
 
 ---
 
@@ -146,4 +143,4 @@ Java 21 + Spring Boot 3.x + Jar/Native + MyBatis 모던 백엔드 프로젝트.
 | `permissions.deny` | `git push --force`, `rm -rf` 시스템 경로, `chmod 777`, curl\|bash 패턴 |
 | `permissions.additionalDirectories` | `/tmp`, `/private/tmp`, `/var/folders` |
 | `statusLine` | 브랜치·미커밋·PENDING_TEST 상태 표시 (`statusline.sh`) |
-| 훅 연결 | 공통 14종 + dev(tdd-guard·test-fake-guard) 연결 (TypeScript 훅 제외) |
+| 훅 연결 | 공통 15종 + dev(tdd-guard·test-fake-guard·adversarial-test-guard·fake-impl-guard) 연결 (TypeScript 훅 제외) |

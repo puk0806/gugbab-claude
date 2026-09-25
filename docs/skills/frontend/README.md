@@ -1,4 +1,4 @@
-# frontend 스킬 (85종)
+# frontend 스킬 (86종)
 
 React·Next.js·TypeScript·SEO·접근성·성능·PWA·꿈 앱 UI·운세 앱 UI 등 프론트엔드 전 영역 스킬 모음.
 
@@ -11,6 +11,7 @@ React·Next.js·TypeScript·SEO·접근성·성능·PWA·꿈 앱 UI·운세 앱 
 | [nextjs](../../../.claude/skills/frontend/nextjs/SKILL.md) | Next.js 15/16 App Router, 데이터 페칭, 캐싱 전략, Server Actions | [→](./nextjs/verification.md) |
 | [typescript-v5](../../../.claude/skills/frontend/typescript-v5/SKILL.md) | TypeScript 5.x 버전별 신규 기능, tsconfig, React 타입 패턴 | [→](./typescript-v5/verification.md) |
 | [typescript-v4](../../../.claude/skills/frontend/typescript-v4/SKILL.md) | TypeScript 4.x 핵심 기능, 타입 시스템 고급 패턴 | [→](./typescript-v4/verification.md) |
+| [next-intl-i18n](../../../.claude/skills/frontend/next-intl-i18n/SKILL.md) | Next.js 16.3+ App Router 다국어(next-intl 4.14) — defineRouting·localePrefix, proxy.ts, next/root-params 기반 getRequestConfig, Server/Client 번역, ICU 복수형·날짜·숫자 포맷 | [→](./next-intl-i18n/verification.md) |
 
 ## 상태 관리·폼·에러
 
