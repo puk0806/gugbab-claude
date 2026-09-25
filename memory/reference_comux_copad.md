@@ -5,12 +5,25 @@ metadata:
   node_type: memory
   type: reference
   originSessionId: 062d20b7-4639-4671-bd42-324edc80d2b3
-  modified: 2026-08-07T08:16:00.550Z
+  modified: 2026-09-22T00:16:36.886Z
 ---
 
 # comux / copad 자료 + 사용법 (2026-08-07)
 
-개발자 marshallku가 만든 AI 에이전트 오케스트레이션 터미널 도구 세트. **사용자가 2026-08-07 맥에 comux 설치 완료, 레포별 세션 분리 워크플로우 학습 중.**
+개발자 marshallku가 만든 AI 에이전트 오케스트레이션 터미널 도구 세트. **사용자가 2026-08-07 맥에 comux 설치 완료, 레포별 세션 분리 워크플로우 학습 중.** 2026-09-17 v1.0.5 → v1.2.0 갱신 완료.
+
+## 설치 형태 · 업데이트 절차 (2026-09-17 실측)
+
+- **풀 설치**(install.sh 경로): `~/Applications/Copad.app` + `~/.local/bin/{comux,coctl,copadd}` + `~/Library/Application Support/copad/plugins/` + LaunchAgent `com.marshall.copad.daemon`. Homebrew 아님(v1.2.0부터 cask·formula 공개됐지만 기존 경로 유지).
+- 버전 확인: `coctl --version` (comux에는 `--version`·`version` 서브커맨드 없음, 바이너리 날짜로 판단). 상태바 `⬆ x.y.z` 마커 = 업데이트 있음.
+- 갱신: `curl -fsSL https://raw.githubusercontent.com/marshallku/copad/master/install.sh | bash` — Copad.app을 pkill·교체, 바이너리 3종 교체, copadd 데몬 bootout 후 재등록. **실행 중인 comux 서버는 안 건드림**(세션 유지).
+- **함정 1**: 스크립트의 `launchctl bootstrap`이 실패해 copadd가 내려간 채 끝날 수 있음 → `launchctl bootstrap gui/$UID ~/Library/LaunchAgents/com.marshall.copad.daemon.plist` 수동 실행하면 정상 기동(같은 명령인데 스크립트 안에서만 실패, 원인 미확인).
+- **함정 2**: 갱신 후에도 comux 서버 프로세스는 구버전 → `comux server restart`로 새 서버 띄워야 함(레이아웃·에이전트 `--resume` 복원). Claude 세션이 comux 안에서 돌고 있으면(`COPAD_MUX=1`) 재시작이 그 세션도 끊으니 사용자가 직접 타이밍 결정. `comux doctor`가 "health counters unavailable → server restart"로 알려줌.
+- **복사(클립보드) 구조**: comux 안 드래그 복사(v1.0.5부터)와 pane 내부 프로그램의 클립보드 쓰기(v1.2.0 OSC 52 패스스루, `osc52 = true` 기본, 읽기는 절대 응답 안 함) 모두 **OSC 52**로 호스트 터미널에 전달됨. 사용자는 macOS **Terminal.app**(`TERM_PROGRAM=Apple_Terminal`)에서 comux를 띄우는데 매뉴얼상 Terminal.app은 OSC 52 미지원 → 두 경로 다 클립보드에 안 들어감. 해법: Copad.app(`open -a Copad`, v1.2.0부터 OSC 52 기본 allow)·iTerm2(Settings→General→Selection "Applications in terminal may access clipboard" 켜기)·kitty/WezTerm/Ghostty 사용, 또는 Shift+드래그로 터미널 네이티브 선택.
+- **Terminal.app에서 Claude 답변 복사 (2026-09-17 안내)**: ① Claude Code `/export` → 클립보드(가장 깔끔) ② Fn 또는 Shift 누른 채 드래그 후 ⌘C(Terminal.app에서 어느 키가 통하는지 미검증) ③ `comux capture-pane <idx> -S 200 | pbcopy`(pbcopy는 로컬 프로세스라 OSC 52 불필요, 단 Claude TUI는 보이는 화면 ~60줄만 잡힘 — 실측) ④ `mux.toml`에 `mouse = false` + `comux reload`(휠·클릭 포커스 포기). 사용자는 mux.toml 없이 기본값 사용 중.
+- **2026-09-22 확인**: 설치 1.2.0 = GitHub latest v1.2.0(09-14 릴리스). 서버 프로세스도 갱신 후(09-17 07:41) 기동된 1.2.0. 릴리스 조회는 `gh release list -R marshallku/copad`(api.github.com curl은 403).
+- **"에이전트 생성" 전용 커맨드는 없음**: 에이전트 = pane에서 `claude`/`codex`를 실행하면 자동 감지. 사람은 새 세션(⌃b C)·탭(⌃b c)·분할(⌃b %)에서 `claude` 실행. 에이전트 안에서 다른 에이전트를 띄울 땐 `comux split --from "$COPAD_MUX_PANE"` → 토큰으로 `send "claude"` + `send $'\n'` → `wait-agent`/`capture-pane`. `comux skill > ~/.claude/skills/comux/SKILL.md`로 운영 가이드 설치 가능(`$COPAD_MUX` 없으면 실행 금지, 인덱스 말고 토큰 주소 사용).
+- v1.2.0 주요 추가: 내장 comux 에이전트 스킬, `capture-pane`·`wait-output`·`list-agents`·`wait-agent`·`close-tab`·`kill-session` 컨트롤 커맨드, 닫힌 에이전트 대화 resume 피커(⌃b R), 사이드바 attention 밴드·time-in-status, 호스트 CPU/메모리 탑바(옵션), 분할선 드래그 리사이즈, OSC 52 클립보드 패스스루, "panes inheriting Claude Code session markers" 버그 수정.
 
 ## 구성요소
 

@@ -1,15 +1,16 @@
 ---
 name: project-install-sh
-description: "gugbab-claude → 다른 프로젝트 이식 구조. 13개 템플릿(0~12, 11=seo-geo 애드온, 12=fortune-app), JAVA_SKILLS 필터, 도메인 스킬 카테고리는 소유 템플릿만 포함(누출 주의), settings.json 단일 source-of-truth"
+description: "gugbab-claude → 다른 프로젝트 이식 구조. 14개 템플릿(0~13, 11=seo-geo 애드온, 12=fortune-app, 13=python-fastapi), JAVA_SKILLS 필터, 도메인 스킬 카테고리는 소유 템플릿만 포함(누출 주의), settings.json 단일 source-of-truth"
 metadata: 
   node_type: memory
   type: project
   originSessionId: 9152b891-1df7-4c78-8301-10defaed293c
-  modified: 2026-09-11T07:13:41.593Z
+  modified: 2026-09-25T10:12:19.522Z
 ---
 
 gugbab-claude는 Claude Code 컨벤션 소스 레포. `project-install.sh`로 다른 프로젝트에 이식.
 
+> 2026-09-25 갱신: **템플릿 13 `python-fastapi` 신설**(python 스킬 10종·python 에이전트 소유, dev 질문만 받고 TS·SEO 질문 없음, `agents/backend/CLAUDE.md`는 rust/java 규칙 import라 제외, 13→다른 템플릿 재설치 시 python 자산 prune). `SPECIAL_AGENTS_HEALTH`로 health 전용 에이전트는 10·0에서만. `redis-redisson-4`는 `JAVA_SKILLS_MODERN_ONLY`. 같은 날 2차: `TS_BACKEND_SKILLS`(hono·prisma·zod·better-auth·drizzle-neon-postgres)는 react-spa·nextjs·health·fortune-app·all 소유, TS 백엔드 에이전트는 rust·java·unity 제외, 에이전트 디렉토리 CLAUDE.md는 소유 템플릿만 + 없는 규칙 import 줄 설치 시 제거, 입력 루프는 `prompt_read`(EOF → exit 1). 상세 → [[project_full_audit_2026-09-25]].
 > 2026-09-11 갱신: 매니페스트에 `templates` 필드(설치 템플릿 CSV → 배열, 재설치 시 최신값 교체·kebab-case 외 폐기·구버전 호출 시 이월) 추가. dream(9)·fortune(12)·health(10)은 스택 템플릿과 같은 dev+TS 레벨(훅 20·규칙 5)이고 SEO 옵트인 질문을 받는다. health는 `HEALTH_LLM_FRONTEND_SKILLS` 3종을 dream 게이트 예외로 받는다. 상세 → [[project_full_audit_2026-09-11]].
 
 **13개 템플릿 (2026-09-10 기준):**

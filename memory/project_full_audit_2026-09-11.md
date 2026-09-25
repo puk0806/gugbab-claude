@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 75f2c8a6-9ce3-47ab-8781-9e88fa61e2ec
-  modified: 2026-09-11T07:11:18.920Z
+  modified: 2026-09-14T00:53:09.973Z
 ---
 
 # 전수 감사 + export E2E (2026-09-11 오전 읽기 전용 → 오후 수정 완료)
@@ -34,6 +34,6 @@ metadata:
 
 **Why:** 운세 자산 커밋 전 품질 게이트. 이전 세션(2026-09-10)은 세션 한도 429 + macOS Desktop TCC 차단으로 중단돼 결과 유실 → 2026-09-11 재실행.
 
-**다음 세션 재개 절차 (2026-09-11 사용자 지시: "다른 세션에서 이어서 작업")**: ① `git status`로 운세 앱 미커밋 46건이 그대로인지 확인 ② 사용자에게 백로그 1~7 중 수정 범위 확인(아직 미결정) ③ 수정 후 `node --test scripts/template-separation.test.js` + 템플릿 12·4·7 단독 설치로 재검증 ④ 운세 앱 자산 커밋은 사용자 요청 시 `[skill]`·`[agent]`·`[config]`·`[docs]`·`[memory]` 분리, main 보호라 브랜치+PR.
+**종결 (2026-09-14)**: 위 수정 전부 PR #17(`feat/fortune-casual-and-audit-fixes`, 커밋 8건)로 main 머지. 남은 것은 아래 "미수행 후속 과제"뿐. 재개 절차(운세 미커밋 확인·수정 범위 결정)는 더 이상 유효하지 않음.
 
 **How to apply:** 수정 착수 시 위 번호 순. 1·2·4는 `project-install.sh` + `scripts/template-separation.test.js` 동시 수정(테스트가 소스 버그를 복제하고 있음 — `foreign` 필터·rust/unity agentFiles 검사 확장). 감사 서브에이전트는 sonnet으로 3축 병렬이 한도 안에서 안정적. 관련: [[project_full_audit_2026-08-11]], [[project_install_architecture]].
