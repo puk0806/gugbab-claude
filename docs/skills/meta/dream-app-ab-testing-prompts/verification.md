@@ -17,7 +17,7 @@ status: APPROVED
 | 검증일 | 2026-08-11 (최초 2026-05-15) |
 | 검증자 | skill-creator (최초) / 모델 ID 정기 감사 (2026-08-11) |
 | 스킬 버전 | v1 |
-| 대상 모델 | Claude Opus 4.8 / Sonnet 4.6 / Haiku 4.5 (`.claude/rules/agent-design.md`) |
+| 대상 모델 | Claude Opus 5.5 / Sonnet 5 / Haiku 4.5 (`.claude/rules/agent-design.md`, 2026-09-25 현행화) |
 
 ---
 
@@ -183,3 +183,4 @@ DISPUTED 0건. UNVERIFIED 0건. SKILL.md 본문 그대로 신뢰 가능.
 | 2026-05-15 | v1 | 최초 작성 — 12개 섹션, 8개 1차 소스 교차 검증, anti-pattern 10건 | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 안전 가드 A/B 금지 이유 / Q2 Kohavi 표본 크기 계산 / Q3 꿈 원문 수집 금지 항목 구분) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-08-11 | v1 | **모델 ID 정기 감사.** 헤더 "대상 모델" `Claude Opus 4.7` → `Claude Opus 4.8` 정정(`.claude/rules/agent-design.md` 기준). Sonnet 4.6·Haiku 4.5는 현행이라 미변경. 본문 A/B 설계·통계 내용은 모델 무관하므로 변경 없음. status는 APPROVED 유지 | 모델 ID 정기 감사 |
+| 2026-09-25 | v1 | **모델 ID 현행화(Opus 5.5/Fable 5.1).** 2026-08-12 세대 정렬에서 누락된 헤더 "대상 모델" Opus 4.8/Sonnet 4.6 → Opus 5.5/Sonnet 5, 모델 변형 예시 표 Sonnet 4.6 → Sonnet 5($2/$10) vs Haiku 4.5($1/$5, 비용 50% — Sonnet 5 단가 기준으로 수치 정합). 메타 표 동기화. A/B 설계·통계 본문 변경 없음, status APPROVED 유지 | 모델 ID 현행화 |

@@ -245,3 +245,4 @@ tilemap.SetTile(...)을 매번 호출하고 있다. 무엇이 문제인가?"
 |------|------|-----------|--------|
 | 2026-06-10 | v1 | 최초 작성 (BSP·CA·Perlin·WFC 4 알고리즘 + 시드·Tilemap·성능·실수 섹션) | skill-creator |
 | 2026-06-10 | v1 | 2단계 실사용 테스트 수행 (Q1 Perlin 오프셋·클램프 / Q2 SetTile 루프 freeze 해결 / Q3 시드 재현·중간 저장) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | skill-creator |

@@ -35,6 +35,35 @@ permissionMode: plan
 
 ---
 
+## 보유 스킬 참조
+
+작업 전 관련 스킬 파일을 Read로 확인하고 그 패턴을 따른다. 경로는 모두 `.claude/skills/` 하위이며,
+설치된 스킬만 존재한다 — 표에 있어도 파일이 없으면 이 프로젝트 템플릿에 포함되지 않은 것이니 건너뛴다.
+
+### 핵심 (Docker·CI/CD·Vercel 배포)
+
+| 스킬 | 경로 | 활용 시점 |
+|------|------|-----------|
+| docker-deployment | `devops/docker-deployment/SKILL.md` | Dockerfile 멀티스테이지 빌드, docker-compose, 이미지 최적화·보안, Vercel/Railway 배포 |
+| github-actions | `devops/github-actions/SKILL.md` | CI/CD 워크플로우 트리거·잡 의존성·매트릭스·캐싱·시크릿·모노레포 구성 |
+| github-actions-visual-regression | `devops/github-actions-visual-regression/SKILL.md` | Storybook + Playwright 시각 회귀를 GitHub Actions로 자동화할 때 |
+| vercel-workflow | `devops/vercel-workflow/SKILL.md` | Vercel Workflow SDK(durable 예약 작업·스케줄러) 배포 설정 시 |
+| vercel-sandbox | `devops/vercel-sandbox/SKILL.md` | Vercel Sandbox 마이크로VM에서 CLI·에이전트 실행 환경을 구성할 때 |
+
+### n8n — 자체호스팅·워크플로 요청 시에만 참조
+
+n8n은 별도 자동화 플랫폼이므로 사용자가 n8n 워크플로우 구축·운영을 명시적으로 요청할 때만 아래를 참조한다.
+
+| 스킬 | 경로 | 활용 시점 |
+|------|------|-----------|
+| n8n-self-hosting | `devops/n8n-self-hosting/SKILL.md` | n8n을 Docker·docker-compose로 self-host 운영할 때 |
+| n8n-workflow-design | `devops/n8n-workflow-design/SKILL.md` | n8n 워크플로우 구조·데이터 흐름을 설계할 때 |
+| n8n-webhook-patterns | `devops/n8n-webhook-patterns/SKILL.md` | n8n Webhook으로 외부 트리거·API 엔드포인트를 구축할 때 |
+| n8n-error-handling | `devops/n8n-error-handling/SKILL.md` | n8n 워크플로우의 에러 처리·재시도·알림을 설계할 때 |
+| n8n-llm-integration | `devops/n8n-llm-integration/SKILL.md` | n8n에서 LLM(AI Agent·RAG) 워크플로우를 구성할 때 |
+
+---
+
 ## 처리 절차
 
 ### 단계 1: 프로젝트 분석

@@ -370,3 +370,4 @@ Docker 멀티-stage에서 의존성 캐시 적중률을 높이는 방법은?
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 uv add vs uv sync / Q2 uv run 없이 실행 함정 / Q3 uv.lock vs requirements.txt + PEP 735) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | skill-tester |
 | 2026-08-11 | v1 | 재감사 — content test 3/3 PASS 재확인 + WebSearch 재검증(uv 0.11.14→0.12.3 드리프트, `uv init` 0.12.0 breaking change, `setup-uv@v3`→v9.0.0 구식) → 2건 DISPUTED, PENDING_TEST → **NEEDS_REVISION** 전환 (SKILL.md 수정은 사용자 승인 대기) | skill-tester |
 | 2026-08-12 | v2 | DISPUTED 정정 반영 — 버전 0.11.14→0.12.3, `uv init` 0.12.0 패키지형 기본 + 모드별 생성 파일 목록 대조, 0.11→0.12 마이그레이션 노트 신설, CI `setup-uv@v3`→v9.0.0 커밋 해시 핀 + 불변 태그 정책, Docker 태그 계열 표·`python:3.12-slim-trixie` 베이스·SHA256 핀 추가. 공식 문서+공식 릴리즈 2계열 교차 검증 4/4 VERIFIED → **NEEDS_REVISION → PENDING_TEST** 복귀 (실사용 필수 카테고리라 APPROVED는 실행 검증 후) | 정정 세션 |
+| 2026-09-25 | v2 | 레포 내 정합성 — CI 예제 `actions/checkout@v4` → `@v7`(레포 `devops/github-actions` 스킬 명시 버전 7.0.1과 통일). 외부 재검증 아님, status PENDING_TEST 유지 | 모델 ID 현행화 감사 |

@@ -13,7 +13,7 @@ tools:
   - Glob
   - Write
   - WebSearch  # 폴백 전용: web-searcher 실패 시에만 사용
-model: claude-fable-5
+model: claude-fable-5-1
 maxTurns: 50
 ---
 

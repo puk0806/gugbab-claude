@@ -91,7 +91,7 @@ status: PENDING_TEST
 - [✅] 흔한 실수 패턴 포함 (4가지)
 
 ### 4-3. 실용성
-- [✅] lf-ui의 기존 public/service-worker.js + swConfig.js 마이그레이션 시나리오에 직접 대응
+- [✅] 레거시 CRA→Vite 전환 사내 프로젝트의 기존 public/service-worker.js + swConfig.js 마이그레이션 시나리오에 직접 대응
 - [✅] 범용적으로 사용 가능 (특정 프로젝트 종속 X)
 
 ### 4-4. WebSearch 교차 검증 결과
@@ -200,7 +200,7 @@ status: PENDING_TEST
 
 - [✅] skill-tester가 agent content test 수행 및 섹션 5·6 업데이트 (2026-04-24 완료, 3/3 PASS)
 - [✅] SKILL.md에 반영된 vite-plugin-pwa 버전 업데이트 주의사항을 verification.md에 동기화 (2026-08-12 완료 — 섹션 4-4 클레임 판정표 #7 추가, content test 2/2 PASS)
-- [ ] 실전 프로젝트(lf-ui 등)에 실제 적용 후 APPROVED 전환 — **선택 보강** (차단 요인 아님, 빌드 설정·PWA 실동작 카테고리 정책에 따른 유보)
+- [ ] 실전 프로젝트(레거시 CRA→Vite 전환 사내 프로젝트 등)에 실제 적용 후 APPROVED 전환 — **선택 보강** (차단 요인 아님, 빌드 설정·PWA 실동작 카테고리 정책에 따른 유보)
 
 ---
 
@@ -208,6 +208,7 @@ status: PENDING_TEST
 
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
-| 2026-04-20 | v1 | 최초 작성, lf-ui public/service-worker.js 마이그레이션 시나리오 기반, WebSearch 6개 클레임 교차 검증 (전항목 VERIFIED) | 메인 대화 |
+| 2026-04-20 | v1 | 최초 작성, 레거시 CRA→Vite 전환 사내 프로젝트 public/service-worker.js 마이그레이션 시나리오 기반, WebSearch 6개 클레임 교차 검증 (전항목 VERIFIED) | 메인 대화 |
+| 2026-09-25 | v1.1 | 로컬 경로·프로젝트명 일반화 (내용 변경 없음) | docs cleanup |
 | 2026-04-24 | v1 | 2단계 실사용 테스트 수행 (Q1 generateSW runtimeCaching 설정 / Q2 injectionPoint undefined 마이그레이션 함정 / Q3 prompt 업데이트 UI 코드) → 3/3 PASS, PENDING_TEST 유지 (빌드 설정·실사용 필수 카테고리) | skill-tester |
 | 2026-08-12 | v1 | SKILL.md에 이미 반영된 vite-plugin-pwa 버전 업데이트 주의사항(0.20.x→1.3.0대, Vite 8 peer dependency 지원, 옵션 구조 변경 없음)을 verification.md에 동기화 — 클레임 판정표 #7 추가, content test 2/2 PASS. PENDING_TEST 유지 | 메인 대화 |

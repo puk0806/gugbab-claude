@@ -5,6 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 249f37f2-ab6f-4b6d-b2b2-7ec5126c3162
+  modified: 2026-09-14T00:53:38.949Z
 ---
 
 # Claude 구독 중계 서버 (05_gugbab-claude-relay) 계획
@@ -18,7 +19,7 @@ metadata:
 - 스택: Next.js 16 Route Handler(API 전용) + `@vercel/sandbox` + zod + pnpm/Biome/vitest. TS 선택 이유: Sandbox SDK가 TS 전용
 - 이름: `05_gugbab-claude-relay` (gateway 아닌 relay — 단일목적 중계)
 
-**완료**: 스킬 2종 생성·APPROVED — [[project-overhaul-progress]] 레포에 `devops/vercel-sandbox`, `backend/claude-code-headless`. README/docs 반영 완료 (스킬 209종). 커밋은 미실행(사용자 요청 대기).
+**완료**: 스킬 2종 생성·APPROVED — [[project-overhaul-progress]] 레포에 `devops/vercel-sandbox`, `backend/claude-code-headless`. README/docs 반영 완료. 커밋 `e31776b`로 main 반영됨(2026-09-14 확인 — 이전 "커밋 미실행" 서술 정정).
 
 **다음 단계**: ① 사용자가 `claude setup-token` 직접 실행(토큰 발급) → ② 05 프로젝트 스캐폴딩 → ③ /api/chat 구현 → ④ Vercel 배포+스모크 테스트 → ⑤ 04→03 순 전환.
 

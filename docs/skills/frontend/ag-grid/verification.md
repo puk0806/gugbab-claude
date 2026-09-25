@@ -235,3 +235,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-08-26 | v1 | 최초 작성 — 공식 문서 24회 페치·12회 검색 기반, 17개 클레임 교차 검증(DISPUTED 1건 수정 반영, 미검증 2건 `> 주의:` 표기). v33 기준 + v33→v36 breaking change 정리, Community/Enterprise 라이선스 경계표 포함. skill-tester 테스트는 오케스트레이터가 별도 수행 예정 | skill-creator |
 | 2026-08-26 | v1 | 2단계 실사용 테스트 수행 (Q1 라이선스 경계 / Q2 v33 모듈 미등록 에러 / Q3 Next.js App Router 컴포넌트 분리) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | skill-creator |

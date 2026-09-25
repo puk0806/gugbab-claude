@@ -216,3 +216,4 @@ Cinemachine 3과 Unity 6 LTS로 폭발 시 카메라 셰이크를 만들고 싶�
 |------|------|-----------|--------|
 | 2026-06-10 | v1 | 최초 작성. Unity 6 LTS + Cinemachine 3.1 + DOTween 1.2 기준. 13개 클레임 모두 VERIFIED | skill-creator |
 | 2026-06-10 | v1 | 2단계 실사용 테스트 수행 (Q1 Hit Stop WaitForSecondsRealtime / Q2 Cinemachine 3 카메라 셰이크 네임스페이스 / Q3 DOKill 대량 풀링 전략) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | Claude |

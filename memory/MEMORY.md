@@ -1,7 +1,7 @@
 # Memory Index
 
 ## Reference
-- [comux/copad 자료+사용법](reference_comux_copad.md) — AI 에이전트용 tmux 스타일 멀티플렉서. 사용자 맥 설치 완료(2026-08-07), 레포별 세션 분리·단축키·링크 정리
+- [comux/copad 자료+사용법](reference_comux_copad.md) — AI 에이전트용 tmux 스타일 멀티플렉서. 사용자 맥 풀 설치(install.sh 경로), 2026-09-17 v1.2.0 갱신. 업데이트 절차·copadd LaunchAgent 수동 bootstrap 함정·서버 재시작 필요 기록
 
 ## User
 - [사용자 프로필](user_profile.md) — 풀스택 개발자. 프론트엔드(lfos-ui Next.js 모노레포 + lf-ui CRA 레거시) + Java 레거시 백엔드(SB 2.5+MyBatis+Oracle+MySQL+Redisson 2+EhCache 2+AWS SDK v1) 운영
@@ -32,20 +32,23 @@
 
 - [하네스 평가 & 훅 다이어트 완료](project_hook_diet_plan.md) — 2026-07-04 5단계 완료 + PR #9 머지. 2026-07-10 메모리 개편(memory-stop-guard 삭제)으로 훅 22종. 후순위 중 플러그인 전환은 2026-07-09 계획 수립 착수
 - [메모리 저장 구조 (2026-07-10 개편)](project_memory_architecture.md) — 전역 실제 디렉토리 = 1차 저장, 레포 memory/ = 워킹트리 미러, 자동 커밋 전면 폐지(memory·exports), Y/N 판별 = 레포 memory/ 존재 여부. export --refresh는 `CLAUDE_PROJECT_DIR` env 필수(없으면 무음 no-op), push는 커밋과 별도 Bash 호출로
+- [PWA 예약 푸시 앱 계획 (2026-09-17)](project_pwa_scheduled_push_app.md) — 6명·하루 5회·지정 시각, Next.js PWA + Vercel Workflow(`sleep(Date)`, sleepUntil 없음) + web-push + Drizzle/Neon, 무료 운영. 스킬 2종 신설·APPROVED, 앱 프로젝트 미착수
 - [Claude 구독 중계 서버(05_gugbab-claude-relay) 계획](project_claude_relay_plan.md) — Vercel Sandbox+claude -p 구독 인증 SSE 중계. 스킬 2종 APPROVED(2026-07-03), 스캐폴딩 미착수
-- [전수감사 + 백로그 수정 완료 (2026-09-11)](project_full_audit_2026-09-11.md) — 오전 감사 백로그 7항을 오후에 TDD로 수정(CLAUDE.md 미설치 규칙 행 자동 제거·python 누수·dream/fortune dev 승격·SEO 옵트인·깨진 참조 8건), E2E 29/29. 후속 과제: docs 프루닝·statusline 배선·구 템플릿 문서 카운트
+- [전수 점검·모델 현행화 (2026-09-25)](project_full_audit_2026-09-25.md) — Opus 5.5/Fable 5.1 현행화(훅→규칙→에이전트→스킬 순), 신규 스킬 5·에이전트 1·템플릿 13 python-fastapi, 31종 references 분리, 삭제 0. worktree 격리·429 중단 복구 교훈, 후속 과제 목록
+- [전수감사 + 백로그 수정 완료 (2026-09-11, PR #17 머지 09-14)](project_full_audit_2026-09-11.md) — 감사 백로그 7항을 TDD로 수정(CLAUDE.md 미설치 규칙 행 자동 제거·python 누수·도메인 앱 3종 dev+TS 승격·SEO 옵트인·매니페스트 templates·깨진 참조 8건), E2E 30/30. 후속 과제: docs 프루닝·statusline 배선·구 템플릿 문서 카운트·Codex 리뷰(계정 모델 문제)
 - [전수검사·정리 (2026-08-11)](project_full_audit_2026-08-11.md) — 스킬 209·에이전트 67 전수 감사, 에이전트 4종 정리(67→63), 긴급 스킬 7종 갱신, UPDATE 백로그 12건
 - [doctor 컨텍스트 최적화 (2026-08-10)](project_doctor_context_optimization.md) — rules 5종 paths 스코핑·auto 모드 적용, 스킬 209종 목록 미노출 발견(정리 작업 1단계)
-- [project-install.sh 이식 아키텍처](project_install_architecture.md) — 13개 템플릿(0~12: 11 seo-geo 애드온·12 fortune-app), JAVA_SKILLS_* 필터, 2026-08-31 누수 차단(java·rust·unity)+references 복사+매니페스트 docs kind+template-separation E2E, gen-settings.js로 settings.json 생성. 2026-09-11: 매니페스트 `templates` 필드, 도메인 앱 3종(9·10·12) = dev+TS+SEO 옵트인
+- [project-install.sh 이식 아키텍처](project_install_architecture.md) — 14개 템플릿(0~13: 11 seo-geo 애드온·12 fortune-app·13 python-fastapi, 2026-09-25 신설), JAVA_SKILLS_* 필터, 2026-08-31 누수 차단(java·rust·unity)+references 복사+매니페스트 docs kind+template-separation E2E, gen-settings.js로 settings.json 생성. 2026-09-11: 매니페스트 `templates` 필드, 도메인 앱 3종(9·10·12) = dev+TS+SEO 옵트인
 - [lfcp-ui-ssr 설치 타깃 실측 (2026-09-01)](project_lfcp_ui_ssr_target.md) — lfmall SEO·GEO용 Java 11+SB 2.5+JSP 봇 대응 SSR. 템플릿 `5,11`(java-legacy + seo-geo 애드온, 커머스 프로파일 c). seo-geo 템플릿 신설 계기. 2026-09-02 설치 완료
 - [lfcp-nxapi 설치 타깃 실측 (2026-08-31)](project_lfcp_nxapi_target.md) — 실무 Java 레거시 커머스 API. java-spring-legacy(5) 1:1 매칭, Oracle 전용·Redisson 2.15.2·Joda 269파일 실측, SAP JCo·log4j1 잔재 참고
 - [프로젝트 scope 전용 원칙](project_scope_only.md) — gugbab-claude 모든 산출물은 프로젝트 scope에만, 글로벌(~/.claude) 설정 금지
 - [MCP 미사용 결정](project_mcp_decision.md) — WebSearch/WebFetch만 사용, 팀 이식성 우선
-- [Claude Code 설치 환경·npm SSL 우회](project_claude_install_environment.md) — 단일 nvm-global 설치(2.1.226, 2026-08-10 이중화 재해소), 업데이트 후 버전 안 바뀌면 .npm-global 중복 의심, npm tgz가 SELF_SIGNED_CERT로 막히면 curl 우회 절차 사용
+- [세션 일괄 메모리 저장·재시작 절차](project_multi_session_memory_save_restart.md) — 업데이트 후 ListAgents+SendMessage 병렬 요청, mtime으로 완료 확인, "진행할까요?" 멈춤 세션은 승인 메시지+notify_when_idle, 원격 재시작 불가(각 터미널 `/exit`→`claude -c`)
+- [Claude Code 설치 환경·npm SSL 우회](project_claude_install_environment.md) — 단일 nvm-global 설치(2.1.282, 2026-09-25), 업데이트 후 버전 안 바뀌면 .npm-global 중복 의심, npm tgz가 SELF_SIGNED_CERT로 막히면 curl 우회, `ENOTEMPTY rename`이면 `@anthropic-ai/.claude-code-XXXX` 잔재 삭제, postinstall 미완료 시 `claude` permission denied
 - [PDF 빈칸 뚫기 워크플로우](project_pdf_blank_workflow.md) — 반복 요청 작업(첫 건 2026-07-13 종결). 글자(char) 단위 판정·줄별 분리·침범 금지 6대 주의사항 + 검증 6종. 파일은 사용 후 삭제됨 — 재요청 시 메모리 기준 재작성, 미세 침범 개선 반영해 시작
 - [PDF 근무표 양식 생성 워크플로우](project_pdf_schedule_form_workflow.md) — 반복 요청 작업(2026-07-15 첫 건, 2026-08-13 재요청). 요일=상단 가로 / 홀·주방=좌측 세로 8행이 불변 조건. 스크립트 전문 포함, 재요청 시 `pdf변환/make-schedule.py` 먼저 확인
 - [프론트 도메인 리팩터링 자산 정비 (2026-08-26)](project_frontend_domain_refactor_assets_2026-08-26.md) — 타깃 2개(lfos-ui Next16 모노레포 / lf-ui Vite+React18+Recoil+MUI5+TS4.7 레거시) 스택 실측표, 깨진 스킬 참조 수리, 신규 스킬 8종+에이전트 1종, `--legacy` 훅 프로파일·SEO 옵트아웃·commands export. 작업은 레포에서만, 타깃은 export 대상
-- [운세 앱(fortune-app) 자산 (2026-09-10 신설 → 09-11 캐주얼 축소)](project_fortune_app_assets_2026-09-10.md) — 스킬 10종·에이전트 1종·템플릿 12(dev·SEO 옵트인), 미커밋. 안전 분류기·윤리·정기결제는 "캐주얼 앱" 결정으로 삭제(git 이력 없음). 병렬 생성 한도 문제·워크트리 회수 절차
+- [운세 앱(fortune-app) 자산 (2026-09-10 신설 → 09-11 캐주얼 축소 → 09-14 PR #17 머지)](project_fortune_app_assets_2026-09-10.md) — 스킬 10종·에이전트 1종·템플릿 12(dev+TS·SEO 옵트인), main 반영 완료·실제 프로젝트 export는 아직. 안전 분류기·윤리·정기결제는 "캐주얼 앱" 결정으로 삭제(git 이력 없음). 병렬 생성 한도 문제·워크트리 회수 절차
 - [PDF 재고량 표 생성 워크플로우](project_pdf_inventory_form_workflow.md) — 2026-08-13 수용. A4 세로·품목/재고량(넓게)/기타 3열·여분 3줄·한 줄 걸러 음영. 품목 15종 리스트 포함
 
 ### 자산 이력 (커밋·푸시 완료)

@@ -47,15 +47,28 @@ console.log('🔍 agent-md-guard 테스트 시작')
 console.log('\n── 유효한 에이전트 MD → exit 0 ──')
 test('model: sonnet', AGENT_PATH, validAgent('sonnet'), 0)
 test('model: opus', AGENT_PATH, validAgent('opus'), 0)
-test('model: claude-fable-5 (agent-design.md fable 티어)', AGENT_PATH, validAgent('claude-fable-5'), 0)
-test('model: claude-opus-5 (현행 Opus)', AGENT_PATH, validAgent('claude-opus-5'), 0)
+test('model: claude-fable-5-1 (현행 fable 티어)', AGENT_PATH, validAgent('claude-fable-5-1'), 0)
+test('model: claude-opus-5-5 (현행 Opus)', AGENT_PATH, validAgent('claude-opus-5-5'), 0)
+test('model: claude-fable-5 (구세대 — 레거시 대응용 허용)', AGENT_PATH, validAgent('claude-fable-5'), 0)
+test('model: claude-opus-5 (구세대 — 레거시 대응용 허용)', AGENT_PATH, validAgent('claude-opus-5'), 0)
 test('model: claude-sonnet-5 (현행 Sonnet)', AGENT_PATH, validAgent('claude-sonnet-5'), 0)
 test('model: claude-opus-4-8 (구세대 — 레거시 대응용 허용)', AGENT_PATH, validAgent('claude-opus-4-8'), 0)
+test('model: claude-opus-4-6 (구세대 — 레거시 대응용 허용)', AGENT_PATH, validAgent('claude-opus-4-6'), 0)
+test('model: claude-opus-4-7 (구세대 — 레거시 대응용 허용)', AGENT_PATH, validAgent('claude-opus-4-7'), 0)
+test('model: claude-sonnet-4-6 (구세대 — 레거시 대응용 허용)', AGENT_PATH, validAgent('claude-sonnet-4-6'), 0)
+test('model: claude-haiku-4-5 (현행 Haiku)', AGENT_PATH, validAgent('claude-haiku-4-5'), 0)
+test('model: claude-haiku-4-5-20251001 (현행 Haiku 날짜 고정판)', AGENT_PATH, validAgent('claude-haiku-4-5-20251001'), 0)
 
 console.log('\n── 구조 위반 → exit 2 ──')
 test('frontmatter 없음', AGENT_PATH, '# 제목뿐인 파일', 2)
 test('model 필드 없음', AGENT_PATH, '---\nname: x\ndescription: y\ntools:\n  - Read\n---\n<example>a</example>', 2)
 test('유효하지 않은 model (gpt-4)', AGENT_PATH, validAgent('gpt-4'), 2)
+test('실존하지 않는 model (claude-sonnet-4-7)', AGENT_PATH, validAgent('claude-sonnet-4-7'), 2)
+test('날짜 접미사 위조 model (claude-opus-5-5-20260901)', AGENT_PATH, validAgent('claude-opus-5-5-20260901'), 2)
+test('fable 별칭 불허 (fable)', AGENT_PATH, validAgent('fable'), 2)
+test('대소문자 변형 model (Claude-Opus-5-5)', AGENT_PATH, validAgent('Claude-Opus-5-5'), 2)
+test('은퇴된 model (claude-sonnet-4-20250514)', AGENT_PATH, validAgent('claude-sonnet-4-20250514'), 2)
+test('은퇴된 model (claude-3-haiku-20240307)', AGENT_PATH, validAgent('claude-3-haiku-20240307'), 2)
 test('example 태그 없음', AGENT_PATH, '---\nname: x\ndescription: y\ntools:\n  - Read\nmodel: sonnet\n---\n본문', 2)
 test('tools 필드 없음', AGENT_PATH, '---\nname: x\ndescription: y\nmodel: sonnet\n---\n<example>a</example>', 2)
 
@@ -84,6 +97,51 @@ runTest('PostToolUse Write → 무시 (사전 차단으로 이동됨)',
   'Write', { file_path: AGENT_PATH, content: '# frontmatter 없음' }, 0, 'PostToolUse')
 runTest('PreToolUse Edit → 무시 (사후 검증 담당)',
   'Edit', { file_path: AGENT_PATH, new_string: 'x' }, 0, 'PreToolUse')
+
+console.log('\n── agent-design.md ↔ VALID_MODELS 동기화 ──')
+{
+  const RULES = path.join(__dirname, '..', 'rules', 'agent-design.md')
+  const hookSrc = fs.readFileSync(HOOK, 'utf8')
+  const docSrc = fs.readFileSync(RULES, 'utf8')
+
+  // 훅 소스의 "구세대" 주석 이후 ~ Set 닫는 괄호(])) 사이의 'claude-...' 리터럴만 추출
+  const hookLegacyBlockMatch = hookSrc.match(/\/\/\s*아직 서비스되는 구세대[\s\S]*?\]\)/)
+  const hookLegacyIds = hookLegacyBlockMatch
+    ? Array.from(hookLegacyBlockMatch[0].matchAll(/'(claude-[^']+)'/g)).map(m => m[1]).sort()
+    : []
+
+  // 문서의 "구세대 ID를 ... 하드코딩하지 말 것" 문단에서 "은 아직 서비스되지만" 앞까지만 추출
+  // (같은 문단 뒤쪽의 `claude-opus-5-5`(권장 기본값)는 구세대가 아니므로 제외)
+  const docLegacySentenceMatch = docSrc.match(/하드코딩하지 말 것\.\*\*\s*([\s\S]*?)은\s*아직 서비스되지만/)
+  const docLegacyIds = docLegacySentenceMatch
+    ? Array.from(docLegacySentenceMatch[1].matchAll(/`(claude-[^`]+)`/g)).map(m => m[1]).sort()
+    : []
+
+  ok('훅 소스에서 구세대 ID 블록을 찾음', hookLegacyIds.length > 0)
+  ok('문서에서 구세대 ID 문장을 찾음', docLegacyIds.length > 0)
+  ok(
+    `구세대 ID 목록 일치 (훅: [${hookLegacyIds.join(', ')}] ↔ 문서: [${docLegacyIds.join(', ')}])`,
+    JSON.stringify(hookLegacyIds) === JSON.stringify(docLegacyIds)
+  )
+
+  // 문서에 등장하는 모든 claude-* ID(백틱 표기)가 훅의 VALID_MODELS 전체 집합에 존재하는지
+  // (문서가 훅이 거부할 ID를 "사용 가능"인 것처럼 잘못 안내하는 드리프트를 잡는다)
+  const setBlockMatch = hookSrc.match(/const VALID_MODELS = new Set\(\[([\s\S]*?)\]\)/)
+  const allValidModels = setBlockMatch
+    ? new Set(Array.from(setBlockMatch[1].matchAll(/'([^']+)'/g)).map(m => m[1]))
+    : new Set()
+  const allDocIds = Array.from(docSrc.matchAll(/`(claude-[a-zA-Z0-9.-]+)`/g)).map(m => m[1])
+  const unknownDocIds = allDocIds.filter(id => !allValidModels.has(id))
+  ok(
+    `문서에 등장하는 모든 claude-* ID가 훅 VALID_MODELS에 존재${unknownDocIds.length ? ` (누락: ${unknownDocIds.join(', ')})` : ''}`,
+    unknownDocIds.length === 0
+  )
+}
+
+function ok(desc, cond) {
+  console.log(`  ${cond ? '✅' : '❌'} ${desc}`)
+  cond ? passed++ : failed++
+}
 
 console.log(`\n결과: ${passed}/${passed + failed} 통과`)
 if (failed > 0) { console.log('❌ 일부 테스트 실패'); process.exit(1) }

@@ -45,7 +45,7 @@ status: PENDING_TEST
 
 - [✅] 공식 문서 1순위 소스 확인 (vitejs.dev, vite.dev/guide/api-plugin)
 - [✅] 핵심 패턴 정리 (manualChunks 함수형, 모드 분리, 플러그인 훅)
-- [✅] 코드 예시 작성 (실제 lf-ui 구조 기반)
+- [✅] 코드 예시 작성 (레거시 CRA→Vite 전환 사내 프로젝트 실제 구조 기반)
 - [✅] 흔한 실수 패턴 정리 (3가지)
 - [✅] WebSearch 교차 검증 (6개 클레임, VERIFIED 6, DISPUTED 0)
 - [✅] SKILL.md 파일 작성
@@ -90,7 +90,7 @@ status: PENDING_TEST
 - [✅] 흔한 실수 패턴 포함 (3가지)
 
 ### 4-3. 실용성
-- [✅] lf-ui의 27개 API 클라이언트 청크, Gulp 스크립트, 모바일/데스크톱 분리 빌드 상황에 직접 대응
+- [✅] 레거시 CRA→Vite 전환 사내 프로젝트의 27개 API 클라이언트 청크, Gulp 스크립트, 모바일/데스크톱 분리 빌드 상황에 직접 대응
 - [✅] 범용적으로 사용 가능 (특정 프로젝트 종속 X)
 
 ### 4-4. WebSearch 교차 검증 결과
@@ -200,7 +200,7 @@ status: PENDING_TEST
 
 - [✅] skill-tester가 content test 수행하고 섹션 5·6 업데이트 (2026-04-24 완료, 3/3 PASS)
 - [✅] SKILL.md에 반영된 Vite 8 대응 주의사항을 verification.md에 동기화 (2026-08-12 완료 — 섹션 4-4 클레임 판정표 #7 추가, content test 2/2 PASS)
-- [ ] 실제 프로젝트(lf-ui) 적용 후 빌드 결과물 확인 → APPROVED 전환 (차단 요인 아님, 선택 보강: 빌드 설정 카테고리 정책상 실사용 후 전환)
+- [ ] 실제 프로젝트(레거시 CRA→Vite 전환 사내 프로젝트) 적용 후 빌드 결과물 확인 → APPROVED 전환 (차단 요인 아님, 선택 보강: 빌드 설정 카테고리 정책상 실사용 후 전환)
 
 ---
 
@@ -208,6 +208,7 @@ status: PENDING_TEST
 
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
-| 2026-04-20 | v1 | 최초 작성, lf-ui 프로젝트 분석 기반, WebSearch 6개 클레임 교차 검증 (전항목 VERIFIED) | 메인 대화 |
+| 2026-04-20 | v1 | 최초 작성, 레거시 CRA→Vite 전환 사내 프로젝트 분석 기반, WebSearch 6개 클레임 교차 검증 (전항목 VERIFIED) | 메인 대화 |
+| 2026-09-25 | v1.1 | 로컬 경로·프로젝트명 일반화 (내용 변경 없음) | docs cleanup |
 | 2026-04-24 | v1 | 2단계 실사용 테스트 수행 (Q1 scoped 패키지 manualChunks 분류 / Q2 loadEnv 미사용 undefined 원인 / Q3 closeBundle vs writeBundle 선택) → 3/3 PASS, PENDING_TEST 유지 (빌드 설정 실사용 필수 카테고리) | skill-tester |
 | 2026-08-12 | v1 | SKILL.md에 이미 반영된 Vite 8 대응 주의사항(rollupOptions→rolldownOptions, manualChunks 객체 형식 미지원)을 verification.md에 동기화 — 클레임 판정표 #7 추가, content test 2/2 PASS. PENDING_TEST 유지 | 메인 대화 |

@@ -27,15 +27,16 @@ const NON_AGENT_BASENAMES = new Set(['CLAUDE.md', 'README.md'])
 
 // 유효한 model 값 (단축명 + 전체 ID) — agent-design.md 모델 표와 동기화
 // 'fable' 별칭은 불허 — agent-design.md 규정상 frontmatter에는 전체 ID
-// claude-fable-5만 사용 (별칭 해석 미보장)
+// claude-fable-5-1만 사용 (별칭 해석 미보장)
 const VALID_MODELS = new Set([
   'opus', 'sonnet', 'haiku',
   // 현행 세대 — agent-design.md 모델 표에 문서화된 ID만 허용한다.
-  // (claude-mythos-5는 Project Glasswing 전용이고 이 레포 문서에 없어 제외)
-  'claude-fable-5',
-  'claude-opus-5', 'claude-sonnet-5',
+  // (claude-mythos-5-1은 Project Glasswing 전용이고 이 레포 문서에 없어 제외)
+  'claude-fable-5-1',
+  'claude-opus-5-5', 'claude-sonnet-5',
   'claude-haiku-4-5', 'claude-haiku-4-5-20251001',
   // 아직 서비스되는 구세대 — 레거시 대응용으로 명시할 때만 허용
+  'claude-fable-5', 'claude-opus-5',
   'claude-opus-4-6', 'claude-opus-4-7', 'claude-opus-4-8',
   'claude-sonnet-4-6',
 ])

@@ -1,6 +1,6 @@
 # backend 스킬
 
-Rust · Java · Python · Claude Code CLI · 운세 앱 백엔드 스킬 모음 (총 53종).
+Rust · Java · Python · TypeScript(Hono/Prisma/Zod/Better Auth/Drizzle/Neon) · Claude Code CLI · 운세 앱 백엔드 스킬 모음 (총 58종).
 
 ---
 
@@ -85,6 +85,18 @@ Rust · Java · Python · Claude Code CLI · 운세 앱 백엔드 스킬 모음 
 | [python-langchain-current](../../../.claude/skills/backend/python-langchain-current/SKILL.md) | LangChain 1.x 균형 평가 — 아키텍처·장단점·LlamaIndex 비교·실전 사용 판단 기준 | [→](./python-langchain-current/verification.md) |
 | [python-korean-nlp-konlpy](../../../.claude/skills/backend/python-korean-nlp-konlpy/SKILL.md) | KoNLPy + Mecab-ko 한국어 NLP — 형태소 분석, 품사 태깅, 키워드 추출 | [→](./python-korean-nlp-konlpy/verification.md) |
 | [python-cli-typer](../../../.claude/skills/backend/python-cli-typer/SKILL.md) | Typer Python CLI 개발 — 타입 힌트 기반, 서브커맨드, 옵션/인자, Click 호환 | [→](./python-cli-typer/verification.md) |
+
+---
+
+## TypeScript 백엔드 (5종)
+
+| 스킬 | 설명 | 검증 |
+|------|------|------|
+| [hono-api-patterns](../../../.claude/skills/backend/hono-api-patterns/SKILL.md) | Hono 4.x TypeScript REST API — 체이닝 라우팅·app.route 분할, hono/validator·zod-validator, HTTPException·onError, RPC(hc), Node/Bun/Vercel 어댑터, Anthropic SSE 스트리밍 | [→](./hono-api-patterns/verification.md) |
+| [prisma-orm](../../../.claude/skills/backend/prisma-orm/SKILL.md) | Prisma ORM 7.x — prisma.config.ts·드라이버 어댑터 필수화 등 v7 브레이킹 체인지, schema 모델링·관계, migrate dev/deploy, 트랜잭션, N+1 회피, Neon·Vercel 서버리스/엣지 연결 | [→](./prisma-orm/verification.md) |
+| [zod-schema-validation](../../../.claude/skills/backend/zod-schema-validation/SKILL.md) | Zod 4 서버 경계 검증 — body/query/params, 환경변수, 외부 API 응답, 모노레포 FE/BE 스키마 공유, 악성 입력 방어(초장문·`__proto__`), Zod 3→4 변경점 | [→](./zod-schema-validation/verification.md) |
+| [better-auth](../../../.claude/skills/backend/better-auth/SKILL.md) | Better Auth 1.7.x — betterAuth() 서버 설정, Drizzle/Prisma 어댑터, 이메일·비밀번호+OAuth, 세션(쿠키·cookieCache), Next.js/Hono 통합, 보안 체크리스트 | [→](./better-auth/verification.md) |
+| [drizzle-neon-postgres](../../../.claude/skills/backend/drizzle-neon-postgres/SKILL.md) | Drizzle ORM + Neon Postgres 서버리스 — neon-http vs neon-serverless, 스키마·마이그레이션(풀드/언풀드 URL), upsert·batch, Vercel Marketplace 환경변수, Neon Free 한도 | [→](./drizzle-neon-postgres/verification.md) |
 
 ---
 

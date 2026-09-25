@@ -230,3 +230,4 @@ status: APPROVED
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
 | 2026-08-11 | v1 | 최초 작성. Redisson 4.0.0~4.7.0 기준 조사·교차검증(18 클레임, VERIFIED 16/DISPUTED 1/UNVERIFIED 1) 후 SKILL.md 생성, agent content test 3/3 PASS → APPROVED | skill-creator |
+| 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | skill-creator |

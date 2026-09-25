@@ -202,3 +202,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-05-15 | v1 | 최초 작성 — LangChain 1.x 균형 평가, Anthropic SDK·LlamaIndex 비교 포함 | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 패키지 아키텍처·설치 방식 / Q2 LCEL pipe·LangGraph 전환 기준 / Q3 Anthropic SDK 비교·AgentExecutor deprecated) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-25 | v1 | §5.3 `tool_choice="any"`/특정 도구 강제 예시에 주의 1개 추가 — Claude Opus 5.5·Fable 5.1은 강제 tool_choice 400(Sonnet 5·Haiku 4.5는 동작), 대안 `auto`+`strict: true`+프롬프트 지시 또는 structured outputs(`method="json_schema"`). 예제 코드 변경 없음. 근거: Claude API 공식 스킬(2026-09). status **APPROVED 유지** | 메인 대화 오케스트레이션 |

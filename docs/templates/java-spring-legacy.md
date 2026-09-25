@@ -8,7 +8,7 @@ Java 11 + Spring Boot 2.5 + WAR + MyBatis 레거시 백엔드 프로젝트.
 
 ---
 
-## 에이전트
+## 에이전트 (24종)
 
 | 카테고리 | 에이전트 | 설명 |
 |----------|---------|------|
@@ -19,10 +19,6 @@ Java 11 + Spring Boot 2.5 + WAR + MyBatis 레거시 백엔드 프로젝트.
 | meta | [changelog-writer](../../.claude/agents/meta/changelog-writer.md) | git log → CHANGELOG.md 자동 작성 |
 | backend | [java-backend-developer](../../.claude/agents/backend/java-backend-developer.md) | Java + Spring Boot 백엔드 코드 구현 |
 | backend | [java-backend-architect](../../.claude/agents/backend/java-backend-architect.md) | Java + Spring Boot 백엔드 아키텍처 설계 |
-| backend | [python-backend-developer](../../.claude/agents/backend/python-backend-developer.md) | FastAPI 백엔드 코드 구현 |
-| backend | [python-backend-architect](../../.claude/agents/backend/python-backend-architect.md) | FastAPI 백엔드 아키텍처 설계 |
-| backend | [typescript-backend-developer](../../.claude/agents/backend/typescript-backend-developer.md) | Node.js + TS 백엔드 코드 구현 |
-| backend | [typescript-backend-architect](../../.claude/agents/backend/typescript-backend-architect.md) | Node.js + TS 백엔드 아키텍처 설계 |
 | backend | [database-architect](../../.claude/agents/backend/database-architect.md) | DB 스키마·ERD·인덱싱 설계 |
 | domain | [business-domain-analyst](../../.claude/agents/domain/business-domain-analyst.md) | 비즈니스 요구사항 → DDD 도메인 모델 도출 |
 | domain | [codebase-domain-analyst](../../.claude/agents/domain/codebase-domain-analyst.md) | 코드베이스 역분석 → 도메인 구조 진단 |
@@ -41,7 +37,7 @@ Java 11 + Spring Boot 2.5 + WAR + MyBatis 레거시 백엔드 프로젝트.
 | validation | [qa-engineer](../../.claude/agents/validation/qa-engineer.md) | E2E 테스트·Playwright 코드 생성 |
 | validation | [security-auditor](../../.claude/agents/validation/security-auditor.md) | OWASP·PIPA·LLM 리스크 보안 감사 |
 
-> `build-error-resolver`는 Java 템플릿에서 제외됩니다 (Rust/TS 전용 기능).
+> `build-error-resolver`·`python-backend-developer`·`python-backend-architect`·`typescript-backend-developer`·`typescript-backend-architect`는 Java 템플릿에서 제외됩니다 (Rust/Python/TS 전용 기능 — 2026-09-25 TS 에이전트 누수 차단).
 > 작성 도구 3종(agent-creator·skill-creator·skill-tester)은 설치 시 "작성 도구" 옵션 y일 때만 포함됩니다.
 > 2026-08-31: 프론트·SEO 계열(seo-auditor·content-quality-reviewer·a11y-auditor·build-perf-benchmarker·perf-report-writer·frontend/CLAUDE.md)이 java 템플릿에 딸려가던 누수를 차단했습니다.
 > 2026-09-01: JSP 등 서버 렌더 HTML로 **검색 노출을 담당하는 프로젝트**(봇 대응 SSR·SEO 랜딩)는 `5,11`로 [seo-geo 템플릿](./seo-geo.md)을 병행하세요 — seo-auditor·content-quality-reviewer 에이전트와 프레임워크 비종속 SEO·GEO 스킬(전체 22종/커머스 14종)이 union 으로 추가됩니다.
@@ -146,4 +142,4 @@ Java 11 + Spring Boot 2.5 + WAR + MyBatis 레거시 백엔드 프로젝트.
 | `permissions.deny` | `git push --force`, `rm -rf` 시스템 경로, `chmod 777`, curl\|bash 패턴 |
 | `permissions.additionalDirectories` | `/tmp`, `/private/tmp`, `/var/folders` |
 | `statusLine` | 브랜치·미커밋·PENDING_TEST 상태 표시 (`statusline.sh`) |
-| 훅 연결 | 공통 14종 + dev(tdd-guard·test-fake-guard) 연결 (TypeScript 훅 제외) |
+| 훅 연결 | 공통 15종 + dev(tdd-guard·test-fake-guard·adversarial-test-guard·fake-impl-guard) 연결 (TypeScript 훅 제외) |

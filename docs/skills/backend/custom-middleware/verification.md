@@ -37,6 +37,7 @@ status: APPROVED
 | 스킬 경로 | .claude/skills/custom-middleware/SKILL.md |
 | 최초 작성일 | 2026-04-06 |
 | 갱신일 | 2026-04-08 |
+| 검증일 | 2026-06-20 (버전 재검증, 최초 2026-04-17) |
 | 검증 방법 | cargo check 컴파일 검증 (axum 0.8.8 실설치 기준) |
 | 버전 기준 | axum 0.8.x (실제 검증: 0.8.8) |
 | 현재 상태 | **PENDING_TEST** — cargo check 통과, 런타임 통합 테스트 미실시 |
@@ -172,3 +173,4 @@ cargo check 컴파일 검증 결과 (2026-04-08): axum 0.8.8 실설치 환경에
 | 2026-04-17 | v2 | verification.md 신규 8섹션 포맷으로 마이그레이션 | 메인 대화 오케스트레이션 |
 | 2026-04-17 | v3 | fact-checker WebSearch 교차 검증 완료 (VERIFIED 6, DISPUTED 1, UNVERIFIED 1); DISPUTED 1건 수정 반영: Next 제네릭 제거 기점 0.8 → 0.7 | WebSearch 직접 검증 |
 | 2026-06-20 | v4 | 버전 재검증 — axum 0.8.9 확인 (최신). SKILL.md는 0.8.x 범위 표기이므로 변경 없음. breaking change 없음 | 버전 재검증 작업 |
+| 2026-09-25 | v4 | 포맷 정합 — 메타 표에 "검증일" 라인 추가(기존엔 체크리스트 항목으로만 표기돼 자동 감사가 날짜를 못 읽음). 내용·status 변경 없음 | 모델 ID 현행화 감사 |

@@ -43,7 +43,7 @@
 
 ---
 
-## 스킬 (89종 — SEO 옵트인 y 시 113종)
+## 스킬 (96종 — SEO 옵트인 y 시 약 117종)
 
 ### 운세 앱 전용 (10종 — 이 템플릿과 `all`에서만 설치)
 
@@ -62,19 +62,20 @@
 
 > 2026-09-11 삭제 3종: `meta/fortune-safety-classifier-prompts`(안전 분류기 프롬프트)·`humanities/fortune-content-ethics-korea`(표시광고법·전자상거래법·개인정보 규제)·`backend/web-subscription-payments-korea`(정기결제) — 캐주얼 앱에 과잉. 필요해지면 git 이력(2026-09-10 신설 커밋 전 워킹트리)이 아니라 신규 작성으로 되살린다(미커밋 상태에서 삭제됨).
 
-### 공유 스킬 (79종 — SEO y 시 103종)
+### 공유 스킬 (86종 — SEO y 시 약 107종)
 
 | 카테고리 | 종류 | 링크 |
 |----------|------|------|
-| frontend (53종 / SEO y 시 72종) | 프레임워크·상태관리·UI·빌드·테스트·성능·LLM 스트리밍·PWA (dream-* 전용 제외, SEO·GEO 19종은 옵트인 — 정적 HTML 전용 `seo-static-html` 은 스택 템플릿과 같이 제외) | [→ frontend 스킬 목록](../skills/frontend/README.md) |
-| backend — Python (10종) | FastAPI·Pydantic·LlamaIndex·Anthropic SDK 등 | [→ backend 스킬 목록](../skills/backend/README.md) |
-| devops (9종 / SEO y 시 10종) | Docker·GitHub Actions·n8n·Vercel Sandbox (+ site-migration-seo 는 옵트인) | [→ devops 스킬 목록](../skills/devops/README.md) |
+| frontend (54종 / SEO y 시 약 73종) | 프레임워크·상태관리·UI·빌드·테스트·성능·LLM 스트리밍·PWA (dream-* 전용 제외, SEO·GEO 19종은 옵트인 — 정적 HTML 전용 `seo-static-html` 은 스택 템플릿과 같이 제외) | [→ frontend 스킬 목록](../skills/frontend/README.md) |
+| backend — Python + TypeScript (15종) | Python 10종(FastAPI·Pydantic·LlamaIndex·Anthropic SDK 등) + TS 백엔드 5종 — hono-api-patterns·prisma-orm·zod-schema-validation·better-auth·drizzle-neon-postgres (짝 에이전트 typescript-backend-* 소유, 2026-09-25 신설 — 이전 표는 Python 10종만 계상하던 누락이었다) | [→ backend 스킬 목록](../skills/backend/README.md) |
+| devops (10종 / SEO y 시 11종) | docker-deployment·github-actions·github-actions-visual-regression·n8n 5종·vercel-sandbox·vercel-workflow (+ site-migration-seo 는 옵트인) — vercel-workflow 는 사용자별 지정 시각 Web Push 예약용 (2026-09-17, 이전 표는 vercel-workflow 반영 전 9종이었다) | [→ devops 스킬 목록](../skills/devops/README.md) |
 | architecture (4종) | DDD·프론트 도메인 구조·모듈 경계·점진 리팩터링 | [→ architecture 스킬 목록](../skills/architecture/README.md) |
 | writing (0종 / SEO y 시 4종) | SEO 콘텐츠 품질 (content-eeat-quality·ymyl·multilingual·accessibility-vpat) — 옵트인 | [→ writing 스킬 목록](../skills/writing/README.md) |
 | meta (3종) | ralph-loop·riper-workflow·claude-code-hook-authoring | [→ meta 스킬 목록](../skills/meta/README.md) |
 
 > game·education·research·health 카테고리와 Java·Rust 백엔드, dream 전용 스킬(frontend `dream-*` 8종·meta 3종·`dream-journal-data-modeling`), humanities 공유 스킬(위기 자원 포함)은 제외된다.
 > **SEO·GEO 옵트인 (2026-09-11)**: react-spa·nextjs와 같은 질문(`y` 전체 / `c` 커머스 / `n` 제외, 엔터 = n)을 받는다. 이전에는 SEO 20종 + writing 4종이 무조건 포함돼 seo-geo(11) 병행 선택이 무의미했다. 캐주얼 앱이면 n.
+> 2026-09-25 실측(SEO n 기본 옵션): 스킬 96종(공유 86 + 운세 전용 10) · 에이전트 23종. SEO y 수치는 이전 표의 증분(+19 frontend·+4 writing·+1 devops)을 새 기준값에 반영한 추정치다.
 
 ---
 

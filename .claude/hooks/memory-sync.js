@@ -40,6 +40,10 @@ process.stdin.on('end', () => {
     else if (dir === repoMemory) dstDir = globalMemory;
     if (!dstDir || dstDir === dir) process.exit(0);
 
+    // N 프로젝트 방어: 레포 memory/ 가 애초에 없으면(= Y 프로젝트로 설정된 적 없음)
+    // 이 훅이 잘못 실행되더라도 레포에 memory/ 를 새로 만들지 않는다
+    if (dstDir === repoMemory && !fs.existsSync(repoMemory)) process.exit(0);
+
     fs.mkdirSync(dstDir, { recursive: true });
     fs.copyFileSync(written, path.join(dstDir, path.basename(written)));
   } catch {

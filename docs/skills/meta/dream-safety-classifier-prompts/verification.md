@@ -2,7 +2,7 @@
 skill: dream-safety-classifier-prompts
 category: meta
 version: v1
-date: 2026-05-15
+date: 2026-08-12
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `dream-safety-classifier-prompts` |
 | 스킬 경로 | `.claude/skills/meta/dream-safety-classifier-prompts/SKILL.md` |
-| 검증일 | 2026-05-15 |
+| 검증일 | 2026-08-12 (최초 2026-05-15) |
 | 검증자 | skill-creator (Claude Opus 4.7) |
 | 스킬 버전 | v1 |
 
@@ -226,3 +226,4 @@ DISPUTED 항목 없음. UNVERIFIED 항목 없음.
 | 2026-06-19 | v1 | 2단계 실사용 테스트 재수행 (Q1 분리 이유·운영흐름·fallback / Q2 일반흉몽 FP vs 자해신호 분류·temperature=0·few-shot 5개 근거) → 2/2 PASS, PENDING_TEST → APPROVED 전환 (사용자 지시: 프롬프트 패턴 스킬 content test PASS = APPROVED) | skill-tester |
 | 2026-08-11 | v1.1 | 모델 ID 한정 재감사 — §9 Prompt Caching 표의 `Claude Opus 4.7 / 4,096`을 **`Claude Opus 4.8 / 1,024`로 정정**(구세대 ID + 캐시 최소 토큰 값 오류). 동일 오류가 `backend/python-anthropic-sdk`·`frontend/claude-api-streaming-frontend`·`meta/dream-interpretation-prompt-engineering`에서도 발견되어 함께 정정됨. 근거: platform.claude.com prompt-caching 공식 문서 + `.claude/rules/agent-design.md` 현행 모델 기준. 본문 나머지(분류 카테고리·few-shot·평가 지표)는 변경 없어 status APPROVED 유지 | 전수검사 후속 |
 | 2026-08-12 | v1.2 | **모델 ID 세대 정렬.** §8 2단계 파이프라인 코드의 해몽 호출 `claude-sonnet-4-6` → `claude-sonnet-5`(주석 "Sonnet 4.6" → "Sonnet 5"), 비용 분석 표 해몽 행 모델명 동반 정정. §9 Prompt Caching 표를 `Sonnet 4.6/1,024` → `Sonnet 5/1,024`, `Opus 4.8/1,024` → **`Opus 5/512`**로 교체하고 선택 가이드·캐시 주의 문구의 Sonnet 4.6 표기도 Sonnet 5로 정렬. **1단계 분류기의 `temperature=0`은 유지** — 호출 모델이 `claude-haiku-4-5-20251001`이고 Haiku 4.5는 여전히 현행 세대이며 샘플링 파라미터를 정상 지원하므로 5 계열 400 제약 대상이 아니다(§4·§10의 temperature=0 근거 서술도 그대로 유효). 검증일 2026-05-15 → 2026-08-12. status **APPROVED 유지** | 모델 ID 세대 정렬 |
+| 2026-09-25 | v1.3 | **모델 ID 현행화(Opus 5.5/Fable 5.1).** SKILL.md 헤더 "대상 모델" Sonnet 4.6 → Sonnet 5, §1 비교표·§11 분리 원칙 표의 Sonnet 4.6 표기 → Sonnet 5, §8 비용 표 Sonnet 5 단가 $3/$15 → $2/$10(회당 ~$0.013 → ~$0.012, 가격 기준일 2026-09-25), §9 캐싱 표 Opus 행에 Opus 5.5 "미확인" 병기. §10-8에 5 계열 `temperature` 400 주의 추가(Haiku 4.5 분류기의 `temperature=0`은 유지). §10-9 안티패턴 예시의 형식 오류 ID `claude-haiku-4-20240307` → 실존 구 ID `claude-3-haiku-20240307`. 메타 날짜 정합 — frontmatter `date`·검증일이 2026-05-15로 남아 SKILL.md(2026-08-12)와 불일치하던 것을 2026-08-12로 동기화. status APPROVED 유지 | 모델 ID 현행화 |

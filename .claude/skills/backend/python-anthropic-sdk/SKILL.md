@@ -23,7 +23,8 @@ description: >
 > - 모델 마이그레이션: https://platform.claude.com/docs/en/about-claude/models/migration-guide
 > 검증일: 2026-08-12
 > SDK 기준 버전: `anthropic` v0.121.0 (PyPI latest, 2026-08-12 확인), Python 3.9+ 요구
-> 모델 기준: Claude Opus 5(`claude-opus-5`) 기본 권장 / Sonnet 5(`claude-sonnet-5`) / Haiku 4.5(`claude-haiku-4-5`)
+> 모델 기준 (2026-09-25 현행화): Claude Opus 5.5(`claude-opus-5-5`) 기본 권장 / Fable 5.1(`claude-fable-5-1`) / Sonnet 5(`claude-sonnet-5`) / Haiku 4.5(`claude-haiku-4-5`)
+> 구세대(서비스 중): Opus 5(`claude-opus-5`)·Fable 5(`claude-fable-5`)·Opus 4.8/4.7/4.6·Sonnet 4.6
 
 ---
 
@@ -92,7 +93,7 @@ async def main() -> None:
     message = await client.messages.create(
         max_tokens=1024,
         messages=[{"role": "user", "content": "Hello, Claude"}],
-        model="claude-opus-5",
+        model="claude-opus-5-5",
     )
     print(message.content)
 
@@ -123,7 +124,7 @@ client = Anthropic()  # 환경변수 자동 로드
 
 ```python
 message = client.messages.create(
-    model="claude-opus-5",
+    model="claude-opus-5-5",
     max_tokens=1024,
     messages=[
         {"role": "user", "content": "Hello, Claude"},
@@ -143,28 +144,36 @@ print(message._request_id)     # 디버깅용 request-id (공개 속성)
 | `max_tokens` | ✅ | 생성할 최대 출력 토큰 |
 | `messages` | ✅ | `{"role": "user"|"assistant", "content": ...}` 배열 |
 | `system` | | 시스템 프롬프트(문자열 또는 텍스트 블록 배열) |
-| `thinking` | | `{"type": "adaptive"}` — Opus 5는 **기본 ON**(생략 시 adaptive) |
-| `output_config` | | `{"effort": "low"\|"medium"\|"high"\|"xhigh"\|"max"}` — 사고 깊이·토큰 사용량 조절 |
+| `thinking` | | `{"type": "adaptive"}` — Opus 5.5·Opus 5는 **기본 ON**(생략 시 adaptive). Opus 5.5는 끌 수 없음 |
+| `output_config` | | `{"effort": "low"\|"medium"\|"high"\|"xhigh"\|"max"}` — 사고 깊이·토큰 사용량 조절. 기본값 Opus 5.5 = `medium`, Opus 5 = `high` |
 | `tools` | | 도구 정의 배열 (섹션 6) |
 | `stream` | | `True` 시 SSE 스트림 반환 |
 
-> **주의 — 5 계열(Opus 5·Sonnet 5·Fable 5)과 Opus 4.7/4.8에서 제거된 파라미터:**
+> **주의 — 5 계열(Opus 5.5·Opus 5·Sonnet 5·Fable 5.1·Fable 5)과 Opus 4.7/4.8에서 제거된 파라미터:**
 > - `temperature` / `top_p` / `top_k` → **400 에러**. 제거하고 프롬프팅으로 출력 성향을 유도한다.
 > - `thinking: {"type": "enabled", "budget_tokens": N}` → **400 에러**. `{"type": "adaptive"}` + `output_config.effort`로 대체한다.
 > - 마지막 assistant 턴 prefill → **400 에러**. `output_config.format`(structured outputs) 또는 시스템 프롬프트로 대체한다.
 >
-> **Opus 5 고유 규약:**
-> - 사고가 **기본 ON**이다(파라미터 생략 시 adaptive). `max_tokens`는 *사고 + 응답 텍스트* 합산 상한이므로, 기존에 사고 없이 돌던 경로는 `max_tokens`를 늘리지 않으면 응답이 잘린다.
-> - `thinking: {"type": "disabled"}`는 effort `high` 이하에서만 허용된다. `xhigh`/`max`와 함께 쓰면 **400 에러**.
+> **Opus 5.5 고유 규약 (2026-09-25 기본 권장 모델):**
+> - 사고를 **끌 수 없다** — `thinking: {"type": "disabled"}`와 `budget_tokens`는 effort 수준과 무관하게 **400 에러**. `thinking`은 생략하거나 `{"type": "adaptive"}`만 쓰고, 비용·지연은 `output_config.effort`(`low` 등)로만 줄인다.
+> - effort **기본값이 `medium`**(Opus 5는 `high`)이므로, Opus 5에서 옮겨온 경로는 effort를 명시한다.
+> - 강제 `tool_choice`(`{"type": "any"}`·`{"type": "tool", ...}`) → **400 에러**. `auto` + 도구의 `strict: true` 또는 structured outputs(`output_config.format` / `messages.parse`)로 대체한다(섹션 6.3). Fable 5.1도 동일.
+> - thinking 블록은 생성 모델·대화에 묶인다(preserved thinking) — 이전 턴을 편집하지 말고 append-only로 이어 붙인다.
+> - 컴퓨터 사용 도구는 `computer_toolset_20260801`만 허용(`computer_20251124`는 400).
+> - `max_tokens`는 *사고 + 응답 텍스트* 합산 상한이므로 여유를 둔다.
 > - `thinking.display` 기본값은 `"omitted"`(사고 텍스트가 빈 문자열). 사용자에게 추론 요약을 보여주려면 `{"type": "adaptive", "display": "summarized"}`를 명시한다.
+>
+> **Opus 5(구세대, 서비스 중) 규약 — 레거시 대응용:**
+> - 사고가 **기본 ON**(파라미터 생략 시 adaptive), effort 기본 `high`.
+> - `thinking: {"type": "disabled"}`는 effort `high` 이하에서만 허용된다. `xhigh`/`max`와 함께 쓰면 **400 에러**. 강제 `tool_choice`는 허용된다.
 
 ```python
 # 5 계열 권장 형태 — 샘플링 파라미터 없이 thinking + effort로 제어
 message = client.messages.create(
-    model="claude-opus-5",
+    model="claude-opus-5-5",
     max_tokens=16000,
     thinking={"type": "adaptive", "display": "summarized"},
-    output_config={"effort": "high"},
+    output_config={"effort": "high"},  # Opus 5.5 기본값은 medium — 필요 수준을 명시
     messages=[{"role": "user", "content": "단계적으로 분석해줘"}],
 )
 ```
@@ -183,7 +192,7 @@ from anthropic import Anthropic
 client = Anthropic()
 
 with client.messages.stream(
-    model="claude-opus-5",
+    model="claude-opus-5-5",
     max_tokens=1024,
     messages=[{"role": "user", "content": "Say hello there!"}],
 ) as stream:
@@ -205,7 +214,7 @@ client = AsyncAnthropic()
 
 async def main() -> None:
     async with client.messages.stream(
-        model="claude-opus-5",
+        model="claude-opus-5-5",
         max_tokens=1024,
         messages=[{"role": "user", "content": "Say hello there!"}],
     ) as stream:
@@ -224,7 +233,7 @@ asyncio.run(main())
 
 ```python
 stream = client.messages.create(
-    model="claude-opus-5",
+    model="claude-opus-5-5",
     max_tokens=1024,
     messages=[{"role": "user", "content": "Hello"}],
     stream=True,
@@ -264,7 +273,7 @@ client = AsyncAnthropic()
 async def chat(prompt: str):
     async def event_generator():
         async with client.messages.stream(
-            model="claude-opus-5",
+            model="claude-opus-5-5",
             max_tokens=1024,
             messages=[{"role": "user", "content": prompt}],
         ) as stream:
@@ -287,7 +296,7 @@ async def chat(prompt: str):
 
 ```python
 response = client.messages.create(
-    model="claude-opus-5",
+    model="claude-opus-5-5",
     max_tokens=1024,
     system=[
         {
@@ -362,11 +371,13 @@ system=[
 
 | 모델 | 최소 캐시 토큰 |
 |------|---------------|
-| **Claude Opus 5, Fable 5** | **512** |
+| **Claude Fable 5.1, Fable 5, Opus 5** | **512** |
 | Claude Opus 4.8, Sonnet 5, Sonnet 4.6 / 4.5 | 1,024 |
 | Claude Opus 4.7 | 2,048 |
 | Claude Opus 4.6 / 4.5 | 4,096 |
 | Claude Haiku 4.5 | 4,096 |
+
+> 주의: 미확인 — Claude Opus 5.5는 공식 캐싱 최소 토큰 표에 아직 별도 기재가 없다(2026-09-25). 인용 전 공식 문서를 확인하고, 실제 적용 여부는 `cache_creation_input_tokens`로 검증한다.
 
 > 주의: 최소 캐시 토큰은 세대 순으로 단조 감소하지 않는다. Opus 5는 512로 가장 낮지만
 > Opus 4.8은 1,024, Opus 4.7은 2,048, Opus 4.6은 4,096이다. 모델을 바꾸면 캐시 임계값도
@@ -402,7 +413,7 @@ tools = [
 ]
 
 response = client.messages.create(
-    model="claude-opus-5",
+    model="claude-opus-5-5",
     max_tokens=1024,
     tools=tools,
     messages=[{"role": "user", "content": "서울 날씨 알려줘"}],
@@ -414,7 +425,7 @@ while response.stop_reason == "tool_use":
     result = handle_tool(tool_use.name, tool_use.input)  # 사용자 정의
 
     response = client.messages.create(
-        model="claude-opus-5",
+        model="claude-opus-5-5",
         max_tokens=1024,
         tools=tools,
         messages=[
@@ -456,7 +467,7 @@ def get_weather(location: str) -> str:
     return json.dumps({"location": location, "temperature": "20°C", "condition": "Clear"})
 
 runner = client.beta.messages.tool_runner(
-    model="claude-opus-5",
+    model="claude-opus-5-5",
     max_tokens=1024,
     tools=[get_weather],
     messages=[{"role": "user", "content": "서울 날씨?"}],
@@ -468,33 +479,32 @@ for message in runner:
 
 ### 6.3 구조화된 JSON 출력 강제
 
-도구를 단일로 지정하고 `tool_choice`로 강제 호출하면 JSON 응답을 강제할 수 있다.
+JSON만 받으면 되는 경우 **structured outputs**(`messages.parse` + Pydantic)가 권장 경로다.
+
+> 주의: Opus 5.5·Fable 5.1은 강제 `tool_choice`(`{"type": "tool", ...}`·`{"type": "any"}`)를 **400으로 거부**한다.
+> 과거의 "단일 도구 + `tool_choice` 강제" 패턴은 Opus 5 이하 레거시 모델에서만 동작한다.
 
 ```python
-tools = [{
-    "name": "extract_info",
-    "description": "텍스트에서 이름과 이메일을 추출",
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "name": {"type": "string"},
-            "email": {"type": "string"},
-        },
-        "required": ["name", "email"],
-    },
-}]
+from pydantic import BaseModel
 
-response = client.messages.create(
-    model="claude-opus-5",
-    max_tokens=512,
-    tools=tools,
-    tool_choice={"type": "tool", "name": "extract_info"},
-    messages=[{"role": "user", "content": "홍길동, hong@example.com"}],
+class ContactInfo(BaseModel):
+    name: str
+    email: str
+
+response = client.messages.parse(
+    model="claude-opus-5-5",
+    max_tokens=16000,          # 사고 토큰 포함 상한 — 여유 있게
+    output_format=ContactInfo,
+    messages=[{"role": "user", "content": "홍길동, hong@example.com 에서 이름과 이메일을 추출해줘"}],
 )
 
-tool_use = next(b for b in response.content if b.type == "tool_use")
-print(tool_use.input)   # {"name": "홍길동", "email": "hong@example.com"}
+contact = response.parsed_output   # 검증된 ContactInfo 인스턴스
+print(contact.name, contact.email)  # 홍길동 hong@example.com
 ```
+
+도구 호출 형태를 유지해야 하면 `tool_choice={"type": "auto"}`(기본값) + 도구 정의에 `"strict": True`
+(스키마에 `"additionalProperties": False` 필수)를 두고, 프롬프트에서 해당 도구 사용을 지시한다.
+`stop_reason`이 `"tool_use"`가 아닐 수 있으므로 응답에 `tool_use` 블록이 없는 경우도 처리한다.
 
 ---
 

@@ -110,8 +110,9 @@ status: APPROVED
 | 5 | `clients.openWindow`는 `notificationclick` 핸들러 안에서만 가능, 밖이면 `InvalidAccessError` | MDN Clients.openWindow | MDN notificationclick + web-push-book | VERIFIED |
 | 6 | `web-push` 라이브러리는 `setVapidDetails` 후 `sendNotification` 호출 시 자동 암호화 | web-push GitHub README | npm web-push 페이지 | VERIFIED |
 | 7 | 페이지 진입 즉시 권한 요청은 안티패턴, Double Opt-in 권장 | web.dev permissions UX 2025-03-26 | web-push-book Permission UX | VERIFIED |
+| 8 | Declarative Web Push: `"web_push": 8030` + `notification.title/navigate` 필수, SW 불필요(`window.pushManager`), iOS 18.4+·Safari 18.5+ (2026-09-17 추가) | WebKit 블로그 "Meet Declarative Web Push" | WebKit "Features in Safari 18.4" + Apple WWDC25 세션 235 | VERIFIED |
 
-**총합: VERIFIED 7 / DISPUTED 0 / UNVERIFIED 0**
+**총합: VERIFIED 8 / DISPUTED 0 / UNVERIFIED 0**
 
 ---
 
@@ -269,3 +270,4 @@ DISPUTED: 0건 — SKILL.md 본문 클레임 자체는 모두 유효. 단, EU �
 | 2026-05-15 | v1 | 최초 작성 — 1단계(내용 검증) 완료, 2단계(skill-tester 호출) 메인 세션에 위임 | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 iOS 16.4 조건 / Q2 userVisibleOnly 필수 여부 / Q3 InvalidAccessError 원인·해결) → 3/3 PASS, 실사용 필수 카테고리로 PENDING_TEST 유지 | skill-tester |
 | 2026-08-11 | v1 | 재검증 수행 — WebSearch 재교차검증 3/3 VERIFIED(EU 지역 예외 gap 1건 발견, DISPUTED 0) + 신규 질문 content test (Q1 iOS 16.4 수신 조건 / Q2 openWindow InvalidAccessError / Q3 즉시 권한요청 금지) → 3/3 PASS. 카테고리 재판단: 범용 API 사용법 가이드로 재분류 → PENDING_TEST에서 **APPROVED 전환** | skill-tester |
+| 2026-09-17 | v1 | §8-1 Declarative Web Push(iOS 18.4+/Safari 18.5+) 보강 — WebKit 공식 블로그 WebFetch + Safari 18.4 릴리스 노트·WWDC25 교차 검증, 클레임 #8 VERIFIED. 기존 SW 경로 보완용으로 명시 | 메인 세션 |

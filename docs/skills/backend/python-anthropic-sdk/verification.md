@@ -18,7 +18,7 @@ status: APPROVED
 | 검증자 | skill-creator (최초) / 모델 ID 정기 감사 (2026-08-11) / **5 계열 정렬 감사 (2026-08-12)** |
 | 스킬 버전 | v1 |
 | SDK 기준 버전 | `anthropic` v0.121.0 (PyPI latest — 2026-08-12 재확인, 변동 없음), Python 3.9+ |
-| 모델 기준 | `claude-opus-5` / `claude-sonnet-5` / `claude-haiku-4-5` |
+| 모델 기준 | `claude-opus-5-5` / `claude-fable-5-1` / `claude-sonnet-5` / `claude-haiku-4-5` (2026-09-25 현행화) |
 
 ---
 
@@ -218,3 +218,4 @@ status: APPROVED
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 AsyncAnthropic+FastAPI 스트리밍 / Q2 stream=True content_block_delta 분기 함정 / Q3 tool_choice JSON 강제+TTL 선택 기준) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-08-12 | v1 | **Claude 5 계열 정렬 감사.** ① 모델 ID: `claude-opus-4-8` → `claude-opus-5` 전면 교체(SKILL.md 11곳, REFERENCE.md 7곳). `claude-haiku-4-5`는 현행이므로 **미변경**. ② API 규약 정정: `temperature` 파라미터 행을 표에서 제거하고 `thinking`/`output_config` 행으로 교체, 5 계열 제거 파라미터(`temperature`·`top_p`·`top_k`·`budget_tokens`·prefill = 400) 경고 블록 신설, Opus 5 고유 규약(사고 기본 ON·disabled는 effort high 이하·display 기본 omitted) 명시, 권장 요청 예시 추가. ③ 최소 캐시 토큰 표에 **Opus 5·Fable 5 = 512** 행 추가 및 Sonnet 5 반영. ④ REFERENCE.md 모델 선택 표를 4행(Fable 5/Opus 5/Sonnet 5/Haiku 4.5) + 컨텍스트·단가 컬럼으로 재작성, 중복 헤더 행 제거. ⑤ Bedrock/Vertex 예시 모델 ID를 현행 세대 규약(`anthropic.claude-opus-5` / 접두사 없는 `claude-opus-5`)으로 갱신. ⑥ 체크리스트에 5 계열 규약 3항목 추가. ⑦ 소스 URL에 adaptive-thinking·effort·migration-guide 추가, 검증일 2026-08-12. SDK v0.121.0은 PyPI 재확인 결과 변동 없음. status는 APPROVED 유지 | 5 계열 정렬 감사 |
 | 2026-08-11 | v1 | **모델 ID 정기 감사 — 세대 뒤처짐 정정.** SKILL.md·references/REFERENCE.md의 `claude-opus-4-7` → `claude-opus-4-8` 전면 교체(SKILL.md 13곳, REFERENCE.md 5곳 + 모델 선택 표 + 체크리스트). 최소 캐시 토큰 표 정정(Opus 4.8=1,024 / 4.7=2,048 / 4.6·4.5=4,096 — 기존 "Opus 4.7/4.6/4.5=4,096" 오류). retired 구 ID 안내 문구 현행화. SDK 기준 버전 v0.102.0 → v0.121.0. Sonnet 4.6·Haiku 4.5는 현행이라 미변경. status는 APPROVED 유지 | 모델 ID 정기 감사 |
+| 2026-09-25 | v1 | **모델 ID 현행화(Opus 5.5/Fable 5.1).** 예제 기본 모델 `claude-opus-5` → `claude-opus-5-5`(SKILL.md 12곳, REFERENCE.md 6곳, Bedrock `anthropic.claude-opus-5-5`·Vertex 포함 — 플랫폼 가용성 미확인 주의 추가). **§6.3 JSON 강제 예제를 코드까지 재작성** — Opus 5.5는 강제 `tool_choice` 400이므로 `messages.parse` + Pydantic structured outputs로 교체, `auto`+`strict` 대안 서술. §3에 Opus 5.5 규약(thinking 비활성·`budget_tokens` 400, effort 기본 `medium`, preserved thinking, `computer_toolset_20260801`) 신설, Opus 5 규약은 레거시로 분리. 캐시 최소 토큰 표에 Fable 5.1 = 512 추가, Opus 5.5는 "미확인" 표기. REFERENCE.md 모델 표를 Fable 5.1/Opus 5.5($4/$20)/Sonnet 5($2/$10)/Haiku 4.5 + 구세대 2행으로 재작성, 체크리스트 2항 갱신. Vertex `claude-opus-4-5@20251101`은 구세대 스냅샷 형식 예시라 유지. 클레임 표의 2026-08-12 판정 기록은 이력으로 보존. 내용 재검증 없음 — status APPROVED 유지 | 모델 ID 현행화 |

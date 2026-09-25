@@ -19,7 +19,7 @@ description: >
 > - 보건복지부 자살예방 상담전화 109 통합 — https://www.mohw.go.kr/board.es?mid=a10503010100&bid=0027
 >
 > 검증일: 2026-08-12
-> 대상 모델: Claude Opus 5 / Sonnet 5 / Haiku 4.5 (2026-08-12 현행 세대)
+> 대상 모델: Claude Opus 5.5 / Sonnet 5 / Haiku 4.5 (2026-09-25 현행 세대 — 예제 기본은 비용 효율상 Sonnet 5)
 
 이 스킬은 꿈 해몽 앱(소비자용 AI 코파일럿) 백엔드에서 Claude API를 호출할 때
 시스템 프롬프트·few-shot·안전 가드·JSON 응답·캐싱을 어떻게 조립할지에 대한
@@ -253,7 +253,8 @@ print(response.usage.cache_read_input_tokens, response.usage.cache_creation_inpu
 ```
 
 **최소 캐시 토큰 임계값 (공식 docs 2026-08-12 기준):**
-- Claude Opus 5: **512 tokens**
+- Claude Fable 5.1 / Fable 5 / Opus 5: **512 tokens**
+- Claude Opus 5.5: 주의: 미확인 — 공식 캐싱 표 미기재(2026-09-25), 인용 전 공식 문서 확인
 - Claude Sonnet 5 / Opus 4.8 / Sonnet 4.6 / Sonnet 4.5: **1,024 tokens**
 - Claude Opus 4.7: **2,048 tokens**
 - Claude Opus 4.6 / 4.5: **4,096 tokens**
@@ -383,9 +384,9 @@ Sonnet 5 사용을 권장.
 
 9. **모델 ID 하드코딩** — `claude-sonnet-4-20250514` / `claude-opus-4-20250514`는
    2026-06-15에 **retired** 되어 이미 호출 실패한다(`claude-opus-4-1-20250805`도
-   2026-08-05 retired). 날짜 접미사 없는 현행 별칭 ID(`claude-opus-5`·`claude-sonnet-5`·
-   `claude-haiku-4-5`)를 사용한다. 구세대 `claude-sonnet-4-6`·`claude-opus-4-8`은
-   아직 호출 가능한 legacy지만 신규 코드에는 쓰지 않는다.
+   2026-08-05 retired). 날짜 접미사 없는 현행 별칭 ID(`claude-opus-5-5`·`claude-sonnet-5`·
+   `claude-haiku-4-5`)를 사용한다. 구세대 `claude-opus-5`·`claude-sonnet-4-6`·`claude-opus-4-8`은
+   아직 호출 가능한 legacy지만 신규 코드에는 쓰지 않는다(2026-09-25 기준).
 
 10. **few-shot 예시에 PII** — 예시 안의 가상 인물 이름·번호도 실제 PII로
     오인될 수 있다. 모두 명백히 가상("홍길동", "01000000000")으로.

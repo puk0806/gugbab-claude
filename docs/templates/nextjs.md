@@ -8,20 +8,20 @@ Next.js App Router + TypeScript 프로젝트. 백엔드·게임·학술 스킬 �
 
 ---
 
-## 에이전트
+## 에이전트 (30종 — 작성 도구 y 시 33종)
 
 | 카테고리 | 에이전트 | 설명 |
 |----------|---------|------|
-| meta | [agent-creator](../../.claude/agents/meta/agent-creator.md) | 에이전트 MD 파일 대화형 생성 |
-| meta | [skill-creator](../../.claude/agents/meta/skill-creator.md) | 공식 문서 검증 후 SKILL.md 생성 |
-| meta | [skill-tester](../../.claude/agents/meta/skill-tester.md) | PENDING_TEST 스킬 2단계 실사용 테스트 |
 | meta | [freshness-auditor](../../.claude/agents/meta/freshness-auditor.md) | 에이전트·스킬 최신화 필요 항목 감사 |
 | meta | [claude-code-guide](../../.claude/agents/meta/claude-code-guide.md) | Claude Code CLI 사용법·설정 가이드 |
 | meta | [tech-stack-advisor](../../.claude/agents/meta/tech-stack-advisor.md) | 요구사항에 맞는 기술 스택 추천·비교 |
 | meta | [project-scaffolder](../../.claude/agents/meta/project-scaffolder.md) | 결정된 스택으로 프로젝트 부트스트랩 |
+| meta | [changelog-writer](../../.claude/agents/meta/changelog-writer.md) | git log → CHANGELOG.md 자동 작성 |
 | frontend | [frontend-developer](../../.claude/agents/frontend/frontend-developer.md) | React/Next.js 컴포넌트·훅·API 연동 구현 |
 | frontend | [frontend-architect](../../.claude/agents/frontend/frontend-architect.md) | 프론트엔드 아키텍처 설계·기술 판단 |
 | backend | [build-error-resolver](../../.claude/agents/backend/build-error-resolver.md) | tsc·Vite/webpack 빌드·타입 에러 진단·최소 수정 (리팩터링 중 import 깨짐 대응) |
+| backend | [typescript-backend-developer](../../.claude/agents/backend/typescript-backend-developer.md) | Node/TS 백엔드 구현 (Hono·Zod·Prisma/Drizzle) — 2026-09-25 신설, nextjs 소유 |
+| backend | [typescript-backend-architect](../../.claude/agents/backend/typescript-backend-architect.md) | Node/TS 백엔드 아키텍처 설계 |
 | domain | [business-domain-analyst](../../.claude/agents/domain/business-domain-analyst.md) | 비즈니스 요구사항 → DDD 도메인 모델 도출 |
 | domain | [codebase-domain-analyst](../../.claude/agents/domain/codebase-domain-analyst.md) | 코드베이스 역분석 → 도메인 구조 진단 |
 | domain | [frontend-domain-refactorer](../../.claude/agents/domain/frontend-domain-refactorer.md) | layer-first → domain-first 재구조화 실행 계획 (경계 역추출·배치·codemod·경계 규칙) |
@@ -38,6 +38,13 @@ Next.js App Router + TypeScript 프로젝트. 백엔드·게임·학술 스킬 �
 | validation | [source-validator](../../.claude/agents/validation/source-validator.md) | URL·문서 신뢰도 판정 |
 | validation | [qa-engineer](../../.claude/agents/validation/qa-engineer.md) | E2E 테스트·Playwright 코드 생성 |
 | validation | [security-auditor](../../.claude/agents/validation/security-auditor.md) | OWASP·PIPA·LLM 리스크 보안 감사 |
+| validation | [pr-reviewer](../../.claude/agents/validation/pr-reviewer.md) | PR diff 리뷰 코멘트·판정 생성 |
+| validation | [a11y-auditor](../../.claude/agents/validation/a11y-auditor.md) | WCAG 2.2 접근성 자동 점검 |
+| validation | [build-perf-benchmarker](../../.claude/agents/validation/build-perf-benchmarker.md) | 빌드·번들·Lighthouse 성능 실측 |
+| validation | [perf-report-writer](../../.claude/agents/validation/perf-report-writer.md) | 성능 실측 결과 → 이해관계자용 보고서 작성 |
+
+> 작성 도구 3종(agent-creator·skill-creator·skill-tester)은 "작성 도구" 옵션 y일 때만 포함됩니다 (기본 n).
+> 2026-09-25 실측: SEO n·작성도구 n·codex n 기본 옵션 설치 기준.
 
 ---
 
@@ -47,17 +54,20 @@ Next.js App Router + TypeScript 프로젝트. 백엔드·게임·학술 스킬 �
 
 | 카테고리 | 종류 | 링크 |
 |----------|------|------|
-| frontend (81종) | 프레임워크·상태관리·UI·빌드·테스트·성능·SEO·LLM (Next.js·SSR·App Router 포함) | [→ 목록](../skills/frontend/README.md) |
-| devops (9종) | Docker·GitHub Actions·n8n·SEO 운영 | [→ 목록](../skills/devops/README.md) |
-| architecture (5종) | DDD, 프론트 도메인 구조, 모듈 경계 강제, 점진 리팩터링, 꿈 앱 데이터 모델 | [→ 목록](../skills/architecture/README.md) |
-| meta (5종) | 워크플로우·프롬프트 엔지니어링 | [→ 목록](../skills/meta/README.md) |
-| writing (4종) | SEO 콘텐츠 품질 — content-eeat-quality·ymyl·multilingual·accessibility-vpat | [→ 목록](../skills/writing/README.md) |
+| frontend (44종 / SEO y 시 추가) | 프레임워크·상태관리·UI·빌드·테스트·성능·LLM (Next.js·SSR·App Router 포함, SEO·GEO 는 옵트인) | [→ 목록](../skills/frontend/README.md) |
+| devops (5종 / SEO y 시 6종) | Docker·GitHub Actions(+시각 회귀)·Vercel Sandbox·Vercel Workflow (+ site-migration-seo 는 옵트인) — vercel-workflow 는 사용자별 지정 시각 Web Push 예약용 (2026-09-17) | [→ 목록](../skills/devops/README.md) |
+| backend (6종) | claude-code-headless (Claude 구독 중계 연동용 예외) + TS 백엔드 5종 — hono-api-patterns·prisma-orm·zod-schema-validation·better-auth·drizzle-neon-postgres (짝 에이전트 typescript-backend-* 소유, 2026-09-25 신설) | [→ 목록](../skills/backend/README.md) |
+| architecture (4종) | DDD, 프론트 도메인 구조, 모듈 경계 강제, 점진 리팩터링 | [→ 목록](../skills/architecture/README.md) |
+| meta (3종) | ralph-loop·riper-workflow·claude-code-hook-authoring | [→ 목록](../skills/meta/README.md) |
+| writing (0종 / SEO y 시 4종) | SEO 콘텐츠 품질 — content-eeat-quality·ymyl·multilingual·accessibility-vpat (옵트인) | [→ 목록](../skills/writing/README.md) |
+
+총 **62종** (SEO n·기본 옵션). 위 수치는 기본 옵션(SEO n·작성도구 n·codex n) 설치 실측(2026-09-25, TS 백엔드 스킬 소유 템플릿 신설 반영). 이전 표는 그 이전 값이었다.
 
 ---
 
-## 훅 (17종)
+## 훅 (20종 — 공통 15 + 개발 전용 4 + TypeScript 1)
 
-### 공통 (14종)
+### 공통 (15종)
 
 | 훅 | 이벤트 | 설명 |
 |----|--------|------|
@@ -67,6 +77,7 @@ Next.js App Router + TypeScript 프로젝트. 백엔드·게임·학술 스킬 �
 | [parry.js](../../.claude/hooks/parry.js) | PreToolUse Write | 시크릿·프롬프트 인젝션 패턴 스캔 — 감지 시 저장 차단 |
 | [protect-secrets.js](../../.claude/hooks/protect-secrets.js) | PreToolUse Write/Edit | 민감 파일(.env, *.pem, *.key, credentials 등) 수정 차단 |
 | [session-start.js](../../.claude/hooks/session-start.js) | SessionStart | 세션 시작 시 브랜치·미커밋 파일·최근 커밋 요약 출력 |
+| [session-export.js](../../.claude/hooks/session-export.js) | Stop | 세션 대화 요약을 로컬 exports에 기록 |
 | [cc-notify.js](../../.claude/hooks/cc-notify.js) | Stop | 작업 완료 시 macOS 데스크탑 알림 |
 | [instructions-loaded.js](../../.claude/hooks/instructions-loaded.js) | InstructionsLoaded | CLAUDE.md 로드 완료 시 규칙 요약 출력 |
 | [deliverable-guard.js](../../.claude/hooks/deliverable-guard.js) | PostToolUse Write/Edit · PreToolUse Bash · Stop | 산출물 완결성 — 세션 수정 파일 추적 + README 동기화 검사 + PENDING_TEST 스킬 테스트 미수행 차단 |
@@ -76,12 +87,14 @@ Next.js App Router + TypeScript 프로젝트. 백엔드·게임·학술 스킬 �
 | [staleness-check.js](../../.claude/hooks/staleness-check.js) | InstructionsLoaded | 스킬 검증일 경과 감지 — 30~59일 경고, 60일+ 재검증 강제 |
 | [statusline.sh](../../.claude/hooks/statusline.sh) | statusLine | 상태 바 — 브랜치·미커밋 수·PENDING_TEST 스킬 수 표시 |
 
-### 개발 전용 (2종)
+### 개발 전용 (4종)
 
 | 훅 | 이벤트 | 설명 |
 |----|--------|------|
 | [tdd-guard.js](../../.claude/hooks/tdd-guard.js) | PostToolUse Write/Edit | 소스 파일 수정 시 대응 테스트 파일 존재 여부 검사 — 없으면 차단. 설치 시 **레거시 프로파일** 선택 시 제외 |
 | [test-fake-guard.js](../../.claude/hooks/test-fake-guard.js) | PreToolUse Bash / PostToolUse Write | 가짜 테스트 패턴 탐지·차단 |
+| [adversarial-test-guard.js](../../.claude/hooks/adversarial-test-guard.js) | PostToolUse Write/Edit | 테스트 파일이 정상 흐름만 담고 악성 유저 방어·이상 경로를 누락하면 차단 |
+| [fake-impl-guard.js](../../.claude/hooks/fake-impl-guard.js) | PostToolUse Write/Edit | 파라미터를 무시하고 테스트 기대 리터럴을 그대로 return하는 가짜 구현 차단 |
 
 ### TypeScript 전용 (1종)
 
@@ -137,4 +150,4 @@ Next.js App Router + TypeScript 프로젝트. 백엔드·게임·학술 스킬 �
 | `permissions.deny` | `git push --force`, `rm -rf` 시스템 경로, `chmod 777`, curl\|bash 패턴 |
 | `permissions.additionalDirectories` | `/tmp`, `/private/tmp`, `/var/folders` |
 | `statusLine` | 브랜치·미커밋·PENDING_TEST 상태 표시 (`statusline.sh`) |
-| 훅 연결 | 공통 14종 + dev(tdd-guard·test-fake-guard·adversarial-test-guard·fake-impl-guard) + TypeScript(typescript-quality) 전체 연결. **레거시 프로파일**(`--legacy`): tdd-guard 제외 + typescript-quality `--changed-only` |
+| 훅 연결 | 공통 15종 + dev(tdd-guard·test-fake-guard·adversarial-test-guard·fake-impl-guard) + TypeScript(typescript-quality) 전체 연결. **레거시 프로파일**(`--legacy`): tdd-guard 제외 + typescript-quality `--changed-only` |

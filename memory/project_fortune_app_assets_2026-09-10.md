@@ -5,15 +5,15 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 452e8161-d832-4361-8318-699231be5c03
-  modified: 2026-09-11T07:11:24.968Z
+  modified: 2026-09-14T00:53:36.579Z
 ---
 
-# 운세 앱(fortune-app) 자산 (2026-09-09 신설 → 09-11 캐주얼 축소, 커밋 전)
+# 운세 앱(fortune-app) 자산 (2026-09-09 신설 → 09-11 캐주얼 축소 → 09-14 PR #17 머지)
 
-**현재 상태(2026-09-11)**: 스킬 10종·에이전트 1종(`validation/fortune-interpretation-prompt-tester`, 3축 평가)·설치 템플릿 `12/fortune-app`(dev 템플릿·SEO 옵트인)·`examples/CLAUDE.fortune-app.md`(원칙 2항: 재미용 면책 + 개인정보 최소화)·`docs/templates/fortune-app.md`. 전체 스킬 230 / 에이전트 65 / APPROVED 212 / PENDING_TEST 18. 여전히 **미커밋**.
+**현재 상태(2026-09-14, main 반영 완료)**: 스킬 10종·에이전트 1종(`validation/fortune-interpretation-prompt-tester`, 3축 평가)·설치 템플릿 `12/fortune-app`(dev+TS 템플릿·SEO 옵트인)·`examples/CLAUDE.fortune-app.md`(원칙 2항: 재미용 면책 + 개인정보 최소화)·`docs/templates/fortune-app.md`. 전체 스킬 230 / 에이전트 65 / APPROVED 212 / PENDING_TEST 18. PR #17(커밋 8건: skill 2·agent 2·config 1·docs 1·memory 1·export 1)로 main에 머지됨 — 실제 운세 프로젝트는 아직 없음(export 미실행).
 
 **핵심 결정 — 캐주얼 앱, 안전 계열 불필요 (2026-09-11 사용자 지시 "막 캐주얼하게 하는거라 안전 이런 스킬은 필요 없어")**: 09-10에 꿈 앱과 다른 경계("상징 해석 허용 / 결정론적 단정·YMYL 조언 금지", 7카테고리 안전 분류기, severe_distress `response_policy` 단일 기준, `classifier_unavailable` 폴백)로 설계했던 안전 정책은 **전부 폐기**. Codex 3라운드로 정착시킨 불변식들도 삭제 자산과 함께 사라짐 — 되살릴 때는 이 메모리가 아니라 새로 설계.
-- 삭제: `meta/fortune-safety-classifier-prompts`·`humanities/fortune-content-ethics-korea`(법·규제)·`backend/web-subscription-payments-korea`(정기결제, PENDING_TEST였음)·에이전트 `validation/fortune-safety-classifier`. **untracked 상태에서 rm 했으므로 git 이력 없음** — 세션 스크래치패드 백업은 세션 종료 후 사라짐.
+- 삭제: `meta/fortune-safety-classifier-prompts`·`humanities/fortune-content-ethics-korea`(법·규제)·`backend/web-subscription-payments-korea`(정기결제, PENDING_TEST였음)·에이전트 `validation/fortune-safety-classifier`. **untracked 상태에서 rm 했으므로 git 이력 없음**(PR #17에도 포함되지 않음) — 되살리려면 신규 작성.
 - 축소: prompt-engineering(분류기 연동·위기 섹션 제거), prompt-tester(5축→3축: 톤·단정 회피·출력 포맷, 별자리 언급 제거), palmistry-limitations(건강 해석 금지 가드→엔터테인먼트 한 줄 고지), daily-fortune-retention-loop(과의존 가드 제거), CLAUDE.fortune-app.md(8항→2항).
 - 템플릿 12에서 `humanities/crisis-intervention-resources-korea` 포함 제거(dream 자산으로는 유지).
 

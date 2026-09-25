@@ -199,9 +199,13 @@ Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-m3")
 from llama_index.llms.anthropic import Anthropic
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
-Settings.llm = Anthropic(model="claude-sonnet-4-5")   # 응답 생성
+Settings.llm = Anthropic(model="claude-sonnet-5")   # 응답 생성 (현행 ID, 2026-09-25)
 Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-m3")  # 검색
 ```
+
+> 주의: 미확인 — Sonnet 5·Opus 5.5 등 5 계열은 `temperature`/`top_p`/`top_k`를 400으로 거부한다.
+> `llama-index-llms-anthropic` 버전에 따라 `temperature` 기본값을 요청에 실어 보낼 수 있으므로, 400이 나면
+> 통합 패키지를 최신으로 올리고 해당 파라미터 전송 여부를 확인한다.
 
 ---
 

@@ -283,3 +283,4 @@ motion 라이브러리를 쓰고 있어.
 |------|------|-----------|--------|
 | 2026-09-10 | v1 | 최초 작성. 셔플 랜덤성·CSS 3D 플립·부채꼴 인터랙션·스프레드 배치·접근성·이미지 에셋 6개 축. 14개 클레임 교차 검증(VERIFIED 12 / DISPUTED 2) | skill-creator |
 | 2026-09-10 | v1 | 2단계 실사용 테스트 수행 (Q1 셔플 랜덤성 / Q2 CSS 플립 깨짐 진단 / Q3 reduced-motion 접근성) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | main session |

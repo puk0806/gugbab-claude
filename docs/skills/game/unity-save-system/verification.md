@@ -211,3 +211,4 @@ SaveData 클래스에 새 필드 inventoryItems(List<string>)를 추가했어.
 |------|------|-----------|--------|
 | 2026-06-10 | v1 | 최초 작성 (Unity 6 / Cloud Save 3.2 / Newtonsoft 3.2 / IAP 4.x 기준) | skill-creator |
 | 2026-06-10 | v1 | 2단계 실사용 테스트 수행 (Q1 저장 방식 선택 / Q2 temp+rename+.bak 손상 방지 / Q3 saveVersion 마이그레이션) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | Claude |

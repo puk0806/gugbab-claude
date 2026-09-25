@@ -199,3 +199,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-06-09 | v1 | 최초 작성. v4(4.15.1) + v5(5.3.1) 양쪽 API 커버. 영수증 검증·iOS 복원·구독 관리·10개 anti-pattern 포함 | skill-creator |
 | 2026-06-09 | v1 | 2단계 실사용 테스트 수행 (Q1 ProcessPurchase Complete vs Pending / Q2 iOS 복원 버튼 미구현 / Q3 v4→v5 마이그레이션 변경점) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | Claude |

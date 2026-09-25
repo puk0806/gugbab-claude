@@ -240,3 +240,4 @@ status: PENDING_TEST
 |------|------|-----------|--------|
 | 2026-08-26 | v1 | 최초 작성 — 공식 마이그레이션 가이드(헤딩 35개 전수) 및 공식 레퍼런스·npm 레지스트리 기반, 18개 클레임 교차 검증(DISPUTED 2건 수정 반영·UNVERIFIED 1건 주의 표기). skill-tester 미수행으로 PENDING_TEST | skill-creator |
 | 2026-08-26 | v1 | 2단계 실사용 테스트 수행 (Q1 onSuccess 제거·대체 패턴 / Q2 `@tanstack/query-codemods` 패키지 미존재 안내 / Q3 isLoading v4↔v5 의미 변화 판별 / Q4 코어만 v5 부분 업그레이드 불가) → 4/4 PASS, 실사용 필수 카테고리(마이그레이션 가이드)이므로 PENDING_TEST 유지 | skill-tester |
+| 2026-09-25 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | |

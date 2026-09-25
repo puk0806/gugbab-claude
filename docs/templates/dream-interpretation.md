@@ -58,7 +58,7 @@
 
 ## 훅 (20종 — 공통 15 + 개발 전용 4 + TypeScript 1)
 
-### 공통 (14종)
+### 공통 (15종)
 
 | 훅 | 이벤트 | 설명 |
 |----|--------|------|
@@ -121,7 +121,7 @@
 
 ## settings.json
 
-`scripts/gen-settings.js` 플래그 없이 생성됩니다. (개발·TypeScript 훅 제외)
+`scripts/gen-settings.js --dev --typescript` 플래그로 생성됩니다 (health·fortune-app과 동일).
 
 이미 settings.json이 있으면 덮어쓸지 확인 후 처리합니다.
 
@@ -132,4 +132,4 @@
 | `permissions.deny` | `git push --force`, `rm -rf` 시스템 경로, `chmod 777`, curl\|bash 패턴 |
 | `permissions.additionalDirectories` | `/tmp`, `/private/tmp`, `/var/folders` |
 | `statusLine` | 브랜치·미커밋·PENDING_TEST 상태 표시 (`statusline.sh`) |
-| 훅 연결 | 공통 14종만 연결 (dev·TypeScript 훅 없음) |
+| 훅 연결 | 공통 15종 + 개발 전용 4종 + TypeScript 1종 전체 연결 |

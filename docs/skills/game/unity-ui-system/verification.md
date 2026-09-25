@@ -175,3 +175,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-06-10 | v1 | 최초 작성. Unity 6 LTS uGUI 전체 (Canvas/RectTransform/TMP/Safe Area/UI패턴/성능) 8 클레임 교차 검증. SKILL.md token 한도로 verification.md 분리 작성 | skill-creator (분리) |
 | 2026-06-10 | v1 | 2단계 실사용 테스트 수행 (Q1 Screen.safeArea 픽셀→앵커 정규화 / Q2 World Space Canvas Event Camera 미할당 성능 문제 / Q3 TMP Outline vs UI.Outline 성능 비교) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | skill-creator |

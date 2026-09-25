@@ -36,6 +36,7 @@ status: APPROVED
 | 스킬 이름 | testing-rust |
 | 스킬 경로 | .claude/skills/testing-rust/SKILL.md |
 | 최초 작성일 | 2026-04-07 |
+| 검증일 | 2026-06-20 (버전 재검증, 최초 2026-04-07) |
 | 검증 방법 | skill-creator 에이전트 (조사 + fact-checker 검증 완료) |
 | 버전 기준 | Rust 1.75+ / tokio 1.x / axum 0.8.x |
 | 현재 상태 | **VERIFIED** |
@@ -172,3 +173,4 @@ status: APPROVED
 | 2026-04-07 | v1 | 최초 작성, fact-checker 검증 및 rust-backend-developer 활용 테스트 완료 | rust-backend-developer 에이전트 |
 | 2026-04-17 | v2 | verification.md 신규 8섹션 포맷으로 마이그레이션 | 메인 대화 오케스트레이션 |
 | 2026-06-20 | v3 | 버전 재검증 — tower 0.5.3 확인 (변경 없음). axum 0.8.9 확인. ServiceExt::oneshot API 유지. SKILL.md 수정 없음 | 버전 재검증 작업 |
+| 2026-09-25 | v3 | 포맷 정합 — 메타 표에 "검증일" 라인 추가(기존엔 체크리스트 항목으로만 표기돼 자동 감사가 날짜를 못 읽음). 내용·status 변경 없음 | 모델 ID 현행화 감사 |

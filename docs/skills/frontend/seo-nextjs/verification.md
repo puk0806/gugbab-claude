@@ -185,3 +185,4 @@ status: APPROVED
 | 2026-04-17 | v2 | verification.md 신규 8섹션 포맷으로 마이그레이션 | 메인 대화 오케스트레이션 |
 | 2026-06-01 | v2 | SEO 스킬 분할 작업에 따라 seo → seo-nextjs 리네이밍. 동일 SKILL 내용 유지(범위가 Next.js 한정으로 명확). seo-vite-spa·seo-static-html이 별도 스킬로 분리됨 | 메인 대화 |
 | 2026-08-11 | v3 | **Next.js 15 → 16.3.0 기준 최신화(2메이저 갭 해소).** ① DISPUTED 1건 수정: `generateSitemaps`의 `id`가 v16.0.0부터 `Promise<string>` — 기존 `{ id: number }` 예제는 `NaN` 산출 ② §0 "15→16 SEO 영향 변경" 표 신설 ③ 신규 섹션: `metadataBase`/URL 합성, canonical·hreflang·alternates, 메타데이터 얕은 병합 규칙, 파일 기반 OG 이미지의 async params/id, Streaming metadata + `htmlLimitedBots`, Cache Components 하 `generateMetadata` 동작, 봇·크롤러 static shell 주의 ④ `robots.ts` `other` 필드(v16.3.0 신규)·Robots 타입 전체·per-agent 규칙 배열 반영 ⑤ 이미지/비디오/다국어 사이트맵 추가 ⑥ `PageProps` 타입 헬퍼 추가 ⑦ "흔한 실수 패턴" 섹션 신설 ⑧ `nextjs`·`url-canonicalization-redirects`와 역할 분리 상호 참조 명시 | 버전 재검증 (교차 검증 17 클레임) |
+| 2026-09-25 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | |

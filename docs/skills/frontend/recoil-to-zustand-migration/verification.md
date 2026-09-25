@@ -246,3 +246,4 @@ status: PENDING_TEST
 |------|------|-----------|--------|
 | 2026-08-26 | v1 | 최초 작성 — 공식 소스 약 30회 페치·6회 검색 기반, 14개 클레임 교차 검증(DISPUTED 1건 확정 반영, UNVERIFIED 서술 3건 제외). skill-tester 미수행으로 PENDING_TEST | skill-creator |
 | 2026-08-26 | v1 | 2단계 실사용 테스트 수행 (Q1 Recoil deprecated 상태 정확성 / Q2 selectorFamily async selector 이관 판정 / Q3 Loadable hasValue·contents Jotai 함정 / Q4 4천 파일 SPA 공존 이동 순서) → 4/4 PASS, 실사용 필수 카테고리(마이그레이션 가이드)라 PENDING_TEST 유지 | skill-tester |
+| 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | skill-creator |

@@ -1,6 +1,6 @@
 # devops 스킬
 
-Docker · GitHub Actions · n8n · Vercel Sandbox · SEO 운영 스킬 모음 (총 10종).
+Docker · GitHub Actions · n8n · Vercel Sandbox/Workflow · SEO 운영 스킬 모음 (총 11종).
 
 | 스킬 | 설명 | 검증 |
 |------|------|------|
@@ -14,3 +14,4 @@ Docker · GitHub Actions · n8n · Vercel Sandbox · SEO 운영 스킬 모음 (�
 | [n8n-self-hosting](../../../.claude/skills/devops/n8n-self-hosting/SKILL.md) | n8n self-host 운영 — Docker·docker-compose, PostgreSQL, 리버스 프록시, 큐 모드 | [→](./n8n-self-hosting/verification.md) |
 | [site-migration-seo](../../../.claude/skills/devops/site-migration-seo/SKILL.md) | 도메인 이전·URL 구조 변경·플랫폼 마이그레이션 SEO 운영 워크플로우 — D-30~D+90 | [→](./site-migration-seo/verification.md) |
 | [vercel-sandbox](../../../.claude/skills/devops/vercel-sandbox/SKILL.md) | Vercel Sandbox 마이크로VM — CLI 실행·SSE 중계, Persistent Sandbox·스냅샷, 과금·Hobby 한도 | [→](./vercel-sandbox/verification.md) |
+| [vercel-workflow](../../../.claude/skills/devops/vercel-workflow/SKILL.md) | Vercel Workflow SDK durable 예약 작업 — `use workflow`/`use step`, `sleep(Date)` 루프, 런 취소·재시작, Hobby 이벤트 한도·런 회전, Cron 비교, 사용자별 지정 시각 Web Push 스케줄러 | [→](./vercel-workflow/verification.md) |

@@ -191,6 +191,8 @@ model.bind_tools([GetWeather], tool_choice="any")     # 도구 호출 강제
 model.bind_tools([GetWeather], tool_choice="GetWeather")  # 특정 도구 강제
 ```
 
+> 주의: `ChatAnthropic`에서 `"any"`·특정 도구명 강제는 Anthropic `tool_choice` `{type:"any"}`/`{type:"tool"}`로 전달되며, **Claude Opus 5.5(`claude-opus-5-5`)·Fable 5.1(`claude-fable-5-1`)에서는 400**을 반환한다(Sonnet 5·Haiku 4.5에서는 동작). 해당 모델에선 `tool_choice="auto"` + 프롬프트로 도구 사용 지시(+ 도구 `strict: true`)하거나, JSON 추출 목적이면 Anthropic structured outputs(`output_config.format` — `with_structured_output(Schema, method="json_schema")`)를 쓴다. `with_structured_output` 기본 `function_calling` 방식은 내부적으로 강제 tool_choice를 쓸 수 있으니 해당 모델에서 method를 명시한다.
+
 > 주의: tool calling *루프 관리*(호출→실행→결과 재주입→재호출)는 *LangGraph의 `create_react_agent` 또는 직접 그래프*를 쓰는 것이 현재 권장이다. `AgentExecutor`는 *legacy* 취급이며 신규 개발 비권장.
 
 ---

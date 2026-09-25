@@ -9,19 +9,21 @@ CLAUDE.md와 agent-creator 모두 이 파일을 기준으로 삼습니다.
 
 | 모델 | 최신 ID | 적합한 경우 | 예시 |
 |------|---------|------------|------|
-| fable | `claude-fable-5` | 최고난도 **장기(long-horizon) 멀티에이전트 오케스트레이션** — 다수 서브에이전트를 장시간 지휘·종합 | deep-researcher, academic-researcher |
-| `opus` | `claude-opus-5` | 최고난도 판단·분석, 일반 오케스트레이터 | agent-creator, skill-creator |
+| fable | `claude-fable-5-1` | 최고난도 **장기(long-horizon) 멀티에이전트 오케스트레이션** — 다수 서브에이전트를 장시간 지휘·종합 | deep-researcher, academic-researcher |
+| `opus` | `claude-opus-5-5` | 최고난도 판단·분석, 일반 오케스트레이터 | agent-creator, skill-creator |
 | `sonnet` | `claude-sonnet-5` | 검색·코드 생성, 검증·판정 | web-searcher, fact-checker, rust-backend-developer |
 | `haiku` | `claude-haiku-4-5` | 단순 포맷 변환, 반복 작업 | 포맷터, 분류기 등 |
 
-> **참고 (2026-08-12 갱신):** Claude Fable 5는 Opus 상위 티어다(입·출력 단가 $10/$50 per MTok — Opus 5의 2배, 구독 한도 소모도 큼). fable 지정은 *장기 멀티에이전트 오케스트레이션*에 한정하고, frontmatter에는 별칭 대신 전체 ID `claude-fable-5`를 사용한다(에이전트 frontmatter에서의 별칭 해석 미보장). `opus`·`sonnet`·`haiku` 별칭은 현행 최신 모델(Opus 5·Sonnet 5·Haiku 4.5)로 자동 해석되므로 기존 에이전트의 ID 갱신은 불필요하다. 오케스트레이터 외에는 sonnet이 기본 선택.
+> **참고 (2026-09-25 갱신):** Claude Fable 5.1은 Opus 상위 티어다(입·출력 단가 $10/$50 per MTok — Opus 5.5($4/$20)의 2.5배, 구독 한도 소모도 큼). fable 지정은 *장기 멀티에이전트 오케스트레이션*에 한정하고, frontmatter에는 별칭 대신 전체 ID `claude-fable-5-1`을 사용한다(에이전트 frontmatter에서의 별칭 해석 미보장). `opus`·`sonnet`·`haiku` 별칭은 현행 최신 모델로 자동 해석되므로 별칭을 쓰는 에이전트는 ID 갱신이 불필요하다. 오케스트레이터 외에는 sonnet이 기본 선택.
 >
-> **구세대 ID를 스킬·코드에 하드코딩하지 말 것.** Opus 4.8(`claude-opus-4-8`)·Sonnet 4.6(`claude-sonnet-4-6`)은 아직 서비스되지만 현행 세대가 아니다. 예제 코드에는 `claude-opus-5`를 기본으로 쓰고, 레거시 스택 대응 등 구버전을 의도적으로 명시해야 하는 경우에만 사유와 함께 남긴다.
+> **구세대 ID를 스킬·코드에 하드코딩하지 말 것.** Fable 5(`claude-fable-5`)·Opus 5(`claude-opus-5`)·Opus 4.8(`claude-opus-4-8`)·Opus 4.7(`claude-opus-4-7`)·Opus 4.6(`claude-opus-4-6`)·Sonnet 4.6(`claude-sonnet-4-6`)은 아직 서비스되지만 현행 세대가 아니다. 예제 코드에는 `claude-opus-5-5`를 기본으로 쓰고, 레거시 스택 대응 등 구버전을 의도적으로 명시해야 하는 경우에만 사유와 함께 남긴다. (agent-md-guard 훅의 `VALID_MODELS`가 이 구세대 ID 목록의 최종 기준이며, 이 문서는 그와 동기화되어야 한다.)
 >
-> **캐시 최소 토큰은 모델마다 다르고 세대순이 아니다** — Fable 5·Opus 5는 512, Opus 4.8·Sonnet 5·Sonnet 4.6은 1,024, Opus 4.7은 2,048, Opus 4.6·Haiku 4.5는 4,096. 프롬프트 캐싱을 다루는 스킬에서 이 값을 인용할 때는 대상 모델을 명시한다.
+> **Opus 5.5 API 브레이킹 체인지 (예제 코드 작성 시 필수 반영):** ① thinking 비활성 불가 — `{type:"disabled"}`·`budget_tokens` 모두 400, 깊이는 `output_config.effort`로만 조절하며 **기본값이 `medium`**(Opus 5는 `high`) ② 강제 `tool_choice`(`any`/`tool`) 400 — `auto` + `strict: true` 또는 structured outputs 사용 ③ 컴퓨터 사용은 `computer_toolset_20260801`만 ④ thinking 블록은 생성 모델·대화에 묶임(preserved thinking). Fable 5.1도 ②④가 동일하다. 이 패턴을 쓰는 예제를 Opus 5.5로 옮길 때는 ID만 바꾸지 말고 코드도 함께 고친다.
+>
+> **캐시 최소 토큰은 모델마다 다르고 세대순이 아니다** — Fable 5.1·Fable 5·Opus 5는 512, Opus 4.8·Sonnet 5·Sonnet 4.6은 1,024, Opus 4.7은 2,048, Opus 4.6·Haiku 4.5는 4,096. Opus 5.5는 공식 캐싱 표에 아직 별도 기재가 없다(주의: 미확인 — 인용 전 공식 문서 확인). 프롬프트 캐싱을 다루는 스킬에서 이 값을 인용할 때는 대상 모델을 명시한다.
 
 **선택 기준:**
-- 다수 서브에이전트를 장시간 지휘하는 최고난도 리서치 오케스트레이터 → `claude-fable-5` (비용 감안해 최소 지정)
+- 다수 서브에이전트를 장시간 지휘하는 최고난도 리서치 오케스트레이터 → `claude-fable-5-1` (비용 감안해 최소 지정)
 - 그 외 오케스트레이터(Agent 도구 사용) → `opus` 또는 `sonnet` (단순 조합이면 sonnet)
 - 판단보다 검색/실행이 주된 작업 → `sonnet`
 - 입력을 정해진 형식으로 변환만 하는 작업 → `haiku`

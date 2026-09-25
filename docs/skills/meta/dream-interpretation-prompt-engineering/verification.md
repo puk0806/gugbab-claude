@@ -17,7 +17,7 @@ status: APPROVED
 | 검증일 | 2026-08-11 (최초 2026-05-14) |
 | 검증자 | skill-creator (최초) / 모델 ID 정기 감사 (2026-08-11) |
 | 스킬 버전 | v1 |
-| 대상 모델 | Claude Opus 4.8 / Sonnet 4.6 / Haiku 4.5 (`.claude/rules/agent-design.md`) |
+| 대상 모델 | Claude Opus 5.5 / Sonnet 5 / Haiku 4.5 (`.claude/rules/agent-design.md`, 2026-09-25 현행화) |
 
 ---
 
@@ -183,3 +183,4 @@ status: APPROVED
 | 2026-05-14 | v1 | 2단계 실사용 테스트 수행 (Q1 안전가드 system 배치 이유 / Q2 109 vs 1577-0199 구분 / Q3 Haiku 캐시 미스 원인·해결) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-08-11 | v1 | **모델 ID 정기 감사.** 헤더 "대상 모델" `Claude Opus 4.7` → `Claude Opus 4.8`. 최소 캐시 토큰 절(§6) 정정 — 기존 "Opus 4.7 = 4,096"은 오류로, Opus 4.8=1,024 / 4.7=2,048 / 4.6·4.5=4,096 / Haiku 4.5=4,096으로 교체. 함정 §9의 retired 모델 ID 안내를 "작동하지 않을 수 있다" → 실제 retired 사실로 현행화. 본문 코드의 `claude-sonnet-4-6`은 현행이라 미변경. Q3 테스트 근거(Haiku 4.5=4,096, Sonnet 4.6=1,024)는 정정 후에도 그대로 유효. status는 APPROVED 유지 | 모델 ID 정기 감사 |
 | 2026-08-12 | v1.1 | **모델 ID 세대 정렬.** 헤더 "대상 모델" `Claude Opus 4.8 / Sonnet 4.6 / Haiku 4.5` → `Claude Opus 5 / Sonnet 5 / Haiku 4.5`(Haiku는 현행 유지). 본문 캐싱 예제 코드의 `claude-sonnet-4-6` → `claude-sonnet-5`. §6 최소 캐시 토큰 표에 **Opus 5 = 512** 행 추가(Opus 4.8 대비 절반), Sonnet 5를 1,024 행에 편입, 임계값이 세대 순으로 단조롭지 않다는 주의 추가. 비용 효과 절 기준 모델 Sonnet 4.6 → Sonnet 5. 함정 §9의 모델 ID 하드코딩 항목을 현행 별칭(`claude-opus-5`·`claude-sonnet-5`·`claude-haiku-4-5`) 기준으로 재작성하고 4.8/4.6을 legacy로 표기. 샘플링 파라미터·`budget_tokens` 사용 없음 — 5 계열 400 이슈 해당 없음. 검증일 2026-08-11 → 2026-08-12. status **APPROVED 유지** | 모델 ID 세대 정렬 |
+| 2026-09-25 | v1.2 | **모델 ID 현행화(Opus 5.5/Fable 5.1).** 헤더 대상 모델 Opus 5 → Opus 5.5(예제 기본은 Sonnet 5 유지). §6 최소 캐시 토큰 512 행에 Fable 5.1/Fable 5 편입, Opus 5.5는 "미확인" 표기. 함정 §9 현행 ID를 `claude-opus-5-5`로, `claude-opus-5`를 legacy 목록에 추가. 메타 표 "대상 모델" 행(4.8/4.6 잔존) 동기화. 본문 코드에 thinking disabled·강제 `tool_choice` 없음 — Opus 5.5 브레이킹 해당 없음. status APPROVED 유지 | 모델 ID 현행화 |

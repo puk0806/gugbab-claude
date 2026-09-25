@@ -263,3 +263,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-09-10 | v1 | 최초 작성 — 원국 표·오행 분포 차트·대운 타임라인·오방정색 접근성 토큰·CJK 고정 문자셋 서브셋·다크모드. 교차 검증 18건 | skill-creator |
 | 2026-09-10 | v1 | 2단계 실사용 테스트 수행 (Q1 원국 표 div vs table + hourUnknown / Q2 레이더 0값 폴백 + 축 도메인 / Q3 오방정색 접근성 재매핑) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-09-25 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | |

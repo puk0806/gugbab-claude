@@ -44,7 +44,7 @@ status: PENDING_TEST
 ## 1. 작업 목록 (Task List)
 
 - [✅] 공식 문서 1순위 소스 확인 (vitejs.dev, craco.js.org)
-- [✅] lf-ui 프로젝트 craco.config.js 실제 분석 기반 작성
+- [✅] 레거시 CRA→Vite 전환 사내 프로젝트 craco.config.js 실제 분석 기반 작성
 - [✅] 핵심 매핑 패턴 정리 (cacheGroups → manualChunks, babel → esbuild, plugins)
 - [✅] 코드 예시 작성 (Before craco / After Vite 비교)
 - [✅] 흔한 실수 패턴 정리 (3가지)
@@ -91,7 +91,7 @@ status: PENDING_TEST
 - [✅] 흔한 실수 패턴 포함 (3가지)
 
 ### 4-3. 실용성
-- [✅] lf-ui 프로젝트 실제 craco.config.js 분석 기반으로 작성
+- [✅] 레거시 CRA→Vite 전환 사내 프로젝트 실제 craco.config.js 분석 기반으로 작성
 - [✅] 27개 API 클라이언트 청크 패턴을 manualChunks 함수형으로 재현
 - [✅] 범용적으로 사용 가능 (특정 프로젝트 종속 X)
 
@@ -201,7 +201,7 @@ status: PENDING_TEST
 
 - [✅] skill-tester가 agent content test 수행하고 섹션 5·6 업데이트 (2026-04-24 완료, 3/3 PASS)
 - [✅] SKILL.md에 반영된 Vite 8 대응 주의사항을 verification.md에 동기화 (2026-08-12 완료 — 섹션 4-4 클레임 판정표 #7 추가, content test 2/2 PASS)
-- [❌] 실제 프로젝트(lf-ui 또는 신규 Vite 프로젝트)에서 마이그레이션 적용 후 빌드 산출물 검증 → 차단 요인: APPROVED 전환 필수 조건 (빌드 설정 카테고리). 실전 도입 전까지 PENDING_TEST 유지.
+- [❌] 실제 프로젝트(레거시 CRA→Vite 전환 사내 프로젝트 또는 신규 Vite 프로젝트)에서 마이그레이션 적용 후 빌드 산출물 검증 → 차단 요인: APPROVED 전환 필수 조건 (빌드 설정 카테고리). 실전 도입 전까지 PENDING_TEST 유지.
 - [❌] esbuild `pure` vs `drop` 옵션 동작 차이를 실제 빌드로 확인 → 선택 보강 항목 (현재 SKILL.md 주의 문구로 충분히 안내됨)
 
 ---
@@ -210,6 +210,7 @@ status: PENDING_TEST
 
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
-| 2026-04-20 | v1 | 최초 작성, lf-ui craco.config.js 분석 기반, WebSearch 6개 클레임 교차 검증 (전항목 VERIFIED) | 메인 대화 |
+| 2026-04-20 | v1 | 최초 작성, 레거시 CRA→Vite 전환 사내 프로젝트 craco.config.js 분석 기반, WebSearch 6개 클레임 교차 검증 (전항목 VERIFIED) | 메인 대화 |
+| 2026-09-25 | v1.1 | 로컬 경로·프로젝트명 일반화 (내용 변경 없음) | docs cleanup |
 | 2026-04-24 | v1 | 2단계 실사용 테스트 수행 (Q1 cacheGroups→manualChunks / Q2 babel→esbuild console 제거 / Q3 vite:preloadError 청크 재시도) → 3/3 PASS, PENDING_TEST 유지 (빌드 설정 카테고리) | skill-tester |
 | 2026-08-12 | v1 | SKILL.md에 이미 반영된 Vite 8 대응 주의사항(rollupOptions→rolldownOptions, manualChunks 객체 형식 미지원, esbuild drop 위치 이동)을 verification.md에 동기화 — 클레임 판정표 #7 추가, content test 2/2 PASS. PENDING_TEST 유지 | 메인 대화 |

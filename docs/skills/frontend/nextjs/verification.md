@@ -193,3 +193,4 @@ status: APPROVED
 | 2026-04-17 | v2 | verification.md 신규 8섹션 포맷으로 마이그레이션 | 메인 대화 오케스트레이션 |
 | 2026-06-20 | v3 | 버전 재확인 — 변경 없음 (Next.js 16.2.9 최신, 내용 이미 반영) | 버전 재검증 |
 | 2026-08-11 | v4 | **Next.js 16.3.0(2026-08-03) 기준 최신화.** ① 16.3 신규 섹션 추가(메모리 -90%·빌드 캐시·TS7·SSR +22%·`catchError`·`next/root-params`·`import.meta.glob`·Instant Navigations·실험 플래그) ② DISPUTED 3건 수정: `use cache` 플래그 `experimental.dynamicIO`→`cacheComponents`, fetch 기본값 `no-store`→`auto no cache`, 캐싱 4계층 단독 서술→Cache Components/이전 모델 2-모델 병기 ③ v15→16 breaking change 표 전면 확충(제거 항목·`next/image` 기본값·병렬 라우트 `default.js`·Node/TS/브라우저 요구사항·`skipProxyUrlNormalize`) ④ `revalidateTag` 2-인자 필수·`updateTag`·`refresh` 추가 ⑤ `unstable_cache` 대체 표기 ⑥ v16.1 릴리즈 요약 추가, v16.2 AGENTS.md 서술 갱신 ⑦ `PageProps` 타입 헬퍼 추가 | 버전 재검증 (교차 검증 24 클레임) |
+| 2026-09-25 | v4 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | skill-creator |

@@ -41,7 +41,7 @@ import chromadb, json
 
 # 1. 임베딩·LLM 설정 — 한국어 특화
 Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-m3")
-Settings.llm = Anthropic(model="claude-sonnet-4-5")
+Settings.llm = Anthropic(model="claude-sonnet-5")  # 5 계열 temperature 400 주의 — SKILL.md "5. 임베딩 모델" 참조
 Settings.transformations = [SentenceSplitter(chunk_size=384, chunk_overlap=64)]
 # ↑ 사전 항목은 짧으므로 chunk_size를 default(1024)보다 작게
 
