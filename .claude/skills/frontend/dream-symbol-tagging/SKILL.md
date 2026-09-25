@@ -18,7 +18,7 @@ description: >
 > - Anthropic Cookbook (Tool Use JSON 추출): https://github.com/anthropics/anthropic-cookbook/blob/main/tool_use/extracting_structured_json.ipynb
 > - KoNLPy 공식: https://konlpy.org/en/latest/morph/
 > - mecab-ko (Eunjeon Project): https://bitbucket.org/eunjeon/mecab-ko/
-> 검증일: 2026-08-12
+> 검증일: 2026-09-25 (§6 Claude API JSON 강제 패턴 현행화)
 
 ---
 
@@ -48,7 +48,7 @@ description: >
 [1] 룰 기반 사전 매칭                  [2] LLM·임베딩 매칭
   - mecab-ko 형태소 분석                 - text-embedding-3-small
   - 사전 키워드/synonym 사전 비교          코사인 유사도 top-K
-  - 결정론·빠름·비용 0                   - Claude tool_use로 JSON 강제
+  - 결정론·빠름·비용 0                   - Claude Structured Outputs로 JSON 강제
         │                                       │
         └───────────────────┬───────────────────┘
                             ▼
@@ -158,18 +158,63 @@ export async function ruleMatch(
 
 ## 6. LLM 기반 추출 (Claude API)
 
-### 6-1. tool_use로 JSON 강제
+### 6-1. Structured Outputs로 JSON 강제 (권장)
 
-Anthropic 권장 패턴은 `tool_choice`로 특정 도구 호출을 강제하는 방식이다. 이 방법은 `input_schema`에 맞는 JSON을 디코더 단계에서 보장한다.
+JSON 추출이 목적이면 **Structured Outputs**(`output_config.format`)가 권장 패턴이다. GA 기능이라 베타 헤더가 필요 없고, 응답이 스키마에 맞는 JSON으로 디코딩 단계에서 제약된다. TypeScript SDK는 `messages.parse()` + `zodOutputFormat()` 헬퍼로 파싱·검증까지 처리한다.
 
 ```ts
 import Anthropic from "@anthropic-ai/sdk";
+import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
+import * as z from "zod";
 
 const client = new Anthropic();
 
+const SymbolExtraction = z.object({
+  symbols: z.array(
+    z.object({
+      id: z.string().describe("사전의 정규 ID. 사전에 없으면 'unknown' 접두사"),
+      surface: z.string().describe("본문에서 실제로 사용된 표현"),
+      category: z.enum(["natural", "animal", "person", "action", "sensation", "object"]),
+      // minimum/maximum은 API 스키마에서 미지원 — SDK가 전송 스키마에서 제거하고 클라이언트에서 검증한다
+      confidence: z.number().min(0).max(1),
+    })
+  ),
+});
+type ExtractedSymbol = z.infer<typeof SymbolExtraction>["symbols"][number];
+
+export async function llmExtract(dreamText: string): Promise<ExtractedSymbol[]> {
+  const res = await client.messages.parse({
+    model: "claude-sonnet-5",
+    max_tokens: 1024,
+    output_config: { format: zodOutputFormat(SymbolExtraction) },
+    messages: [
+      {
+        role: "user",
+        content: `다음 꿈 텍스트에서 상징을 추출하세요. 해석은 하지 말고 표면 표현과 카테고리만 분류합니다.\n\n${dreamText}`
+      }
+    ]
+  });
+
+  // refusal·max_tokens 중단 시 스키마 불일치 가능 → parsed_output이 null일 수 있다
+  if (res.stop_reason !== "end_turn" || !res.parsed_output) {
+    return []; // §6-3 fallback: 룰 결과만 사용
+  }
+  return res.parsed_output.symbols;
+}
+```
+
+> 주의: Structured Outputs 스키마는 모든 object에 `additionalProperties: false`가 필요하고(Zod 헬퍼가 자동 처리), `minimum`/`maximum`·`minLength`/`maxLength`·재귀 스키마는 API에서 미지원이다(SDK가 제거 후 클라이언트 측 검증). Citations와 함께 쓰면 400.
+> 구 `output_format` 파라미터와 `anthropic-beta: structured-outputs-2025-11-13` 헤더는 구형 방식이다 — 신규 코드는 `output_config.format`을 쓴다.
+
+### 6-2. 대안 — `tool_choice: auto` + `strict: true` 도구
+
+도구 호출 형태를 유지해야 하면(기존 파이프라인이 `tool_use` 블록을 소비하는 경우 등) 도구 정의에 `strict: true`를 두고 `tool_choice`는 `auto`로 둔 채 **프롬프트로 도구 사용을 지시**한다. `strict: true`가 `input`의 스키마 적합성을 보장하지만, `auto`는 호출 자체를 보장하지 않으므로 호출 여부를 확인하고 없으면 재시도한다.
+
+```ts
 const symbolExtractTool = {
   name: "extract_dream_symbols",
   description: "꿈 텍스트에서 상징을 추출해 표준 카테고리로 반환한다",
+  strict: true,
   input_schema: {
     type: "object",
     properties: {
@@ -184,49 +229,47 @@ const symbolExtractTool = {
               type: "string",
               enum: ["natural", "animal", "person", "action", "sensation", "object"]
             },
-            confidence: { type: "number", minimum: 0, maximum: 1 }
+            confidence: { type: "number", description: "0~1 (범위는 클라이언트에서 검증)" }
           },
-          required: ["id", "surface", "category", "confidence"]
+          required: ["id", "surface", "category", "confidence"],
+          additionalProperties: false
         }
       }
     },
-    required: ["symbols"]
+    required: ["symbols"],
+    additionalProperties: false
   }
 } as const;
 
-const res = await client.messages.create({
-  model: "claude-sonnet-5",
-  max_tokens: 1024,
-  tools: [symbolExtractTool],
-  tool_choice: { type: "tool", name: "extract_dream_symbols" },
-  messages: [
-    {
-      role: "user",
-      content: `다음 꿈 텍스트에서 상징을 추출하세요. 해석은 하지 말고 표면 표현과 카테고리만 분류합니다.\n\n${dreamText}`
-    }
-  ]
-});
+export async function llmExtractViaTool(dreamText: string): Promise<ExtractedSymbol[]> {
+  const res = await client.messages.create({
+    model: "claude-sonnet-5",
+    max_tokens: 1024,
+    tools: [symbolExtractTool],
+    tool_choice: { type: "auto" },
+    messages: [
+      {
+        role: "user",
+        content: `extract_dream_symbols 도구를 사용해 다음 꿈 텍스트의 상징을 추출하세요. 해석은 하지 말고 표면 표현과 카테고리만 분류합니다.\n\n${dreamText}`
+      }
+    ]
+  });
 
-// tool_use 블록에서 JSON 꺼내기
-const toolBlock = res.content.find((c) => c.type === "tool_use");
-if (toolBlock?.type !== "tool_use") throw new Error("tool_use 블록 없음");
-const { symbols } = toolBlock.input as { symbols: ExtractedSymbol[] };
+  const toolBlock = res.content.find((c) => c.type === "tool_use");
+  if (toolBlock?.type !== "tool_use") {
+    // auto는 호출을 보장하지 않는다 → 재시도 또는 §6-3 fallback
+    return [];
+  }
+  return safeParseSymbols(toolBlock.input); // confidence 0~1 범위 등은 여기서 검증
+}
 ```
 
-### 6-2. Structured Outputs (2025-11-13 베타)
-
-신규 API에서는 `output_format`으로도 JSON Schema 강제가 가능하다.
-
-```http
-POST /v1/messages
-anthropic-beta: structured-outputs-2025-11-13
-```
-
-> 주의: Structured Outputs는 베타 헤더가 필요하고 지원 모델이 한정적이다(Claude Opus 4.5+/Sonnet 4.5+/Haiku 4.5). 베타 헤더 미사용 환경에서는 위 `tool_use` 패턴을 사용한다.
+> 주의: 강제 `tool_choice`(`{ type: "tool", name }` / `{ type: "any" }`)는 **Claude Sonnet 5·Haiku 4.5 등에서만 동작**하고, **Claude Opus 5.5(`claude-opus-5-5`)·Fable 5.1(`claude-fable-5-1`)에서는 400**(`tool_choice: type "tool" and "any" are not supported for this model.`)을 반환한다. 모델 교체에 안전하려면 위 6-1 또는 6-2 패턴을 쓴다.
+> 5 계열(Opus 5/5.5, Sonnet 5, Fable)은 `temperature`/`top_p`/`top_k` 지정 시 400이므로 추출 결정성을 샘플링 파라미터로 확보하려 하지 않는다.
 
 ### 6-3. JSON 깨짐 fallback
 
-LLM이 schema 위반 응답을 내놓을 가능성은 0이 아니다 (특히 베타 미사용 시).
+Structured Outputs·strict 도구를 써도 schema 위반·누락 가능성은 0이 아니다 (`refusal`·`max_tokens` 중단, `auto`에서 도구 미호출, 클라이언트 측 범위 검증 실패 등).
 
 ```ts
 function safeParseSymbols(raw: unknown): ExtractedSymbol[] {
@@ -424,7 +467,7 @@ export async function tagDreamEntry(text: string): Promise<DreamEntry["tagDetail
 
 - [ ] 상징 사전을 ID·카테고리·동의어 구조로 정의했는가
 - [ ] mecab-ko 또는 KoNLPy로 한국어 형태소 처리를 거치는가
-- [ ] Claude API 호출 시 `tool_choice`로 JSON을 강제하는가
+- [ ] Claude API 호출 시 Structured Outputs(`output_config.format`) 또는 `auto` + `strict: true` 도구로 JSON을 강제하는가 (강제 `tool_choice`는 Opus 5.5·Fable 5.1에서 400)
 - [ ] JSON 파싱 실패 시 fallback(룰 결과만 사용)이 동작하는가
 - [ ] 임베딩 사전은 사전 계산·캐시되는가
 - [ ] 사용자 텍스트가 길다면 문장 단위로 분할 임베딩 후 max-pooling 하는가

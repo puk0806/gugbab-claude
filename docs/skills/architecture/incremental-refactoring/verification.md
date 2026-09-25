@@ -250,3 +250,4 @@ status: PENDING_TEST
 |------|------|-----------|--------|
 | 2026-08-26 | v1 | 최초 작성 — 원저자 1차 자료(Fowler bliki 3종·아티클) + 공식 문서(ts-morph·jscodeshift·dependency-cruiser·git·ESLint·GitHub·MS devblog) + npm registry 8종 조회 기반. 15개 클레임 교차 검증(DISPUTED 2건 공식 근거로 수정 반영). 단계 5(skill-tester)는 범위 제외 → PENDING_TEST | skill-creator |
 | 2026-08-26 | v1 | 2단계 실사용 테스트 수행 (Q1 순수이동 안전망 / Q2 move() alias 갱신 여부 / Q3 TS7 ts-morph 사용가능 여부 / Q4 PR 단위·머지직후 정상성) → 4/4 PASS, 워크플로우 스킬(실사용 필수)이므로 PENDING_TEST 유지 | skill-tester |
+| 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | skill-creator |

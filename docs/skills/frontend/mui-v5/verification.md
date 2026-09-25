@@ -235,3 +235,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-08-26 | v1 | 최초 작성 — v5 공식 문서·GitHub 소스/릴리스 API·npm registry 기반 30여 회 페치 및 5회 검색, 15개 클레임 교차 검증(DISPUTED 2건 수정 반영, UNVERIFIED 1건 지침 대체). skill-tester 미수행으로 PENDING_TEST | skill-creator |
 | 2026-08-26 | v1 | 2단계 실사용 테스트 수행 (Q1 반응형 2열 Grid `size` prop 오용 방지 / Q2 다크모드 `colorSchemes` 오용 방지 + 정식 방법 / Q3 `@mui/styles` React 18 비호환 / Q4 EOL 상태 + v5→v6 breaking change) → 4/4 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-09-25 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | |

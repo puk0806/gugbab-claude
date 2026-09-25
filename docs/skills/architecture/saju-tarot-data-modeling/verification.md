@@ -202,3 +202,5 @@ status: APPROVED
 | 2026-09-10 | v1 | 최초 작성. Dexie 4.4.5 기준, 클레임 13건 교차 검증(VERIFIED 10 / DISPUTED 2 / UNVERIFIED 1) | skill-creator |
 | 2026-09-10 | v1 | 2단계 실사용 테스트 수행 (Q1 엔진 변경 시 마이그레이션 / Q2 가족 사주 등록 설계 / Q3 boolean 인덱스 0건 버그) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-09-11 | v1.1 | 캐주얼 앱 방향 정리 — 삭제된 운세 콘텐츠 윤리 스킬 참조 3곳(description·짝 스킬 안내·개인정보 주의)을 생성 프롬프트·손금 스킬 참조로 대체. 데이터 모델 본문 변동 없음 | main session |
+| 2026-09-25 | v1.1 | 모델 ID 현행화(Opus 5.5/Fable 5.1) — `Reading.model` 필드 주석 예시값 `'claude-opus-5'` → `'claude-opus-5-5'`. 스키마·인덱스 변동 없음, status APPROVED 유지 | 모델 ID 현행화 |
+| 2026-09-25 | v1.1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | Claude (Sonnet 5) |

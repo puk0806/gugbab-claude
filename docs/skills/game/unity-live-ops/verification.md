@@ -237,3 +237,4 @@ Remote Config의 is_maintenance + maintenance_message + maintenance_end_utc 키 
 |------|------|-----------|--------|
 | 2026-06-10 | v1 | 최초 작성 (Unity 6 LTS / Addressables 2.x / Firebase Unity SDK / K8s / Railway / Fly.io 기반) | skill-creator |
 | 2026-06-10 | v1 | 2단계 실사용 테스트 수행 (Q1 점검 모드 자동 복귀 / Q2 롤링 배포 중 502/503 처리 / Q3 RC SetDefaultsAsync 호출 순서) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | Claude |

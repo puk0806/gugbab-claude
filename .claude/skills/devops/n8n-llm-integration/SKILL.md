@@ -74,16 +74,20 @@ n8n은 LangChain을 기반으로 **클러스터 노드(Cluster Nodes)** 구조�
 
 | 티어 | 모델 ID | 용도 |
 |------|---------|------|
-| 상위 티어 | `claude-fable-5` | 최고난도 장기 에이전트 작업 (단가 $10/$50 per MTok — 비용 감안해 최소 사용) |
-| 고성능 | `claude-opus-5` | 최고난도 판단·분석, 오케스트레이션 |
-| 균형 | `claude-sonnet-5` | 검색·코드 생성·검증 — n8n 워크플로우 기본 선택 |
-| 경량 | `claude-haiku-4-5` | 단순 분류·포맷 변환·라우팅 |
+| 상위 티어 | `claude-fable-5-1` | 최고난도 장기 에이전트 작업 (단가 $10/$50 per MTok — 비용 감안해 최소 사용) |
+| 고성능 | `claude-opus-5-5` | 최고난도 판단·분석, 오케스트레이션 ($4/$20) |
+| 균형 | `claude-sonnet-5` | 검색·코드 생성·검증 — n8n 워크플로우 기본 선택 ($2/$10) |
+| 경량 | `claude-haiku-4-5` | 단순 분류·포맷 변환·라우팅 ($1/$5) |
 
-> **세대 정렬 (2026-08-12):** 위 표는 Anthropic 현행 라인업(**Claude Fable 5 / Claude Opus 5 / Claude Sonnet 5 /
-> Claude Haiku 4.5**) 기준으로 갱신했다. 구세대 `claude-opus-4-8`·`claude-sonnet-4-6`은 여전히 호출 가능한
-> *legacy*지만 신규 워크플로우에는 쓰지 않는다. Haiku는 `claude-haiku-4-5`가 계속 현행이다.
-> 레포 규칙 파일 `.claude/rules/agent-design.md`는 아직 Opus 4.8·Sonnet 4.6 기준으로 남아 있으므로
-> **별도 갱신이 필요**하다. 신규 n8n 워크플로우 구성 시 드롭다운에 뜨는 최신 ID를 함께 확인한다.
+> **세대 정렬 (2026-09-25 갱신):** 위 표는 Anthropic 현행 라인업(**Claude Fable 5.1 / Claude Opus 5.5 / Claude Sonnet 5 /
+> Claude Haiku 4.5**) 기준이며 `.claude/rules/agent-design.md`와 일치한다. 구세대 `claude-fable-5`·`claude-opus-5`·
+> `claude-opus-4-8`·`claude-sonnet-4-6`은 여전히 호출 가능한 *legacy*지만 신규 워크플로우에는 쓰지 않는다.
+> Haiku는 `claude-haiku-4-5`가 계속 현행이다. 신규 n8n 워크플로우 구성 시 드롭다운에 뜨는 최신 ID를 함께 확인한다.
+>
+> **주의 — Opus 5.5·Fable 5.1 선택 시:** 두 모델은 강제 `tool_choice`(`any`/`tool`)를 400으로 거부하고, Opus 5.5는
+> thinking 비활성(`{type: "disabled"}`)도 400이다. n8n 노드/LangChain 내부가 구조화 출력 등을 위해 도구 호출을 강제하는
+> 경로를 쓰면 실패할 수 있으므로(주의: 미확인 — n8n 노드 버전별 동작 미검증), 400이 나면 `claude-sonnet-5`로 전환하거나
+> HTTP Request 노드로 직접 호출한다.
 
 > **구버전 모델명 금지:** `claude-3-7-sonnet`, `claude-3-5-sonnet`, `claude-3-haiku`, `claude-3-opus` 등 Claude 3 계열은
 > 대부분 **retired**(API 404)다. 과거 워크플로우 JSON에 이 문자열이 남아 있으면 실행이 실패하므로 일괄 점검 대상이다.
@@ -94,7 +98,7 @@ n8n은 LangChain을 기반으로 **클러스터 노드(Cluster Nodes)** 구조�
 > (에러: `"thinking.type.enabled" is not supported for this model`). 노드가 수정될 때까지 우회책은 **thinking을 끄거나
 > extended thinking을 지원하는 모델을 쓰는 것**뿐이다. 깊은 추론이 필요하면 HTTP Request 노드로 Messages API를 직접 호출한다.
 
-> **주의 — 샘플링 파라미터 (5 계열에서 제거됨):** Claude Opus 5·Sonnet 5·Fable 5·Opus 4.8/4.7은 `temperature`·`top_p`·`top_k`를
+> **주의 — 샘플링 파라미터 (5 계열에서 제거됨):** Claude Opus 5.5·Opus 5·Sonnet 5·Fable 5.1·Fable 5·Opus 4.8/4.7은 `temperature`·`top_p`·`top_k`를
 > **더 이상 받지 않는다** — 기본값이 아닌 값을 보내면 400이다. n8n Anthropic Chat Model 노드는 Sampling Temperature 필드를
 > 그대로 전송하므로, **5 계열 모델을 선택했다면 노드의 Sampling Temperature를 기본값으로 두고 프롬프트로 톤을 제어**한다.
 > 응답 다양성이나 결정성이 필요하면 `output_config.effort`를 쓰되 노드가 지원하지 않으므로 HTTP Request 노드로 직접 호출한다.
@@ -304,7 +308,7 @@ Chat Trigger ──▶ AI Agent ──▶ (Tool) Vector Store Retrieve
 | 기준 | Claude (Anthropic) | OpenAI GPT 계열 | Llama/Mistral via Ollama |
 |------|-------------------|-----------------|--------------------------|
 | 추론 품질 | 최상위권, 긴 컨텍스트·에이전트 작업 강함 | 최상위권, 함수 호출 안정 | 모델별 편차 큼 |
-| 컨텍스트 윈도우 | **1M** (Fable 5·Opus·Sonnet 최신 세대) / 200K (Haiku 4.5) | 모델별 | 모델별 (8K~128K) |
+| 컨텍스트 윈도우 | **1M** (Fable 5.1·Opus 5.5·Sonnet 5 등 최신 세대) / 200K (Haiku 4.5) | 모델별 | 모델별 (8K~128K) |
 | Tool calling | 안정 | 안정 (네이티브) | 모델별, Tools Agent 호환 모델 한정 |
 | 비용 | Haiku 저렴 → Sonnet 중간 → Opus 높음 → Fable 최상 | 티어별 상이 | self-host 운영비만 |
 | 데이터 주권 | API 호출 (외부) | API 호출 (외부) | 로컬 (self-host) |
@@ -415,7 +419,7 @@ Chat Trigger ──▶ AI Agent ──▶ (Tool) Vector Store Retrieve
 | **Memory 노드 누락** | 챗봇이 매번 처음처럼 대답 | Simple Memory 또는 Postgres Chat Memory 연결 |
 | **Tool description 모호** | LLM이 도구 호출 안 함 또는 잘못된 인자 전달 | "언제 호출하는가 + 입력 형식"을 명시 |
 | **`$ref` 사용 schema** | Structured Output Parser 에러 | 스키마를 inline 평탄화 |
-| **5 계열 모델 + Sampling Temperature 지정** | `400` — Opus 5·Sonnet 5·Fable 5·Opus 4.8/4.7은 `temperature`/`top_p`/`top_k` 미지원 | 노드 필드를 기본값으로 두고 프롬프트로 톤 제어 |
+| **5 계열 모델 + Sampling Temperature 지정** | `400` — Opus 5.5·Opus 5·Sonnet 5·Fable 5.1·Fable 5·Opus 4.8/4.7은 `temperature`/`top_p`/`top_k` 미지원 | 노드 필드를 기본값으로 두고 프롬프트로 톤 제어 |
 | **`temperature` + `top_p` 동시** (4.6 이하 legacy 한정) | Anthropic API 에러 | 한쪽만 지정 |
 | **Enable Thinking + 최신 Claude 모델** | `400 "thinking.type.enabled" is not supported` | thinking OFF, 또는 HTTP Request 노드로 Messages API 직접 호출 (issue #28635) |
 | **워크플로우에 Claude 3 계열 모델명 잔존** | 모델 404 / 실행 실패 | `claude-3-*` 문자열 일괄 검색 후 현행 모델로 교체 |

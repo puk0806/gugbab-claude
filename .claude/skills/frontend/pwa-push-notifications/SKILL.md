@@ -15,7 +15,8 @@ description: Web Push API + Notifications API — PWA 푸시 알림 구현(VAPID
 > - https://web.dev/articles/push-notifications-permissions-ux
 > - https://github.com/web-push-libs/web-push
 > - https://developer.apple.com/documentation/usernotifications/sending-web-push-notifications-in-web-apps-and-browsers
-> 검증일: 2026-05-15
+> - https://webkit.org/blog/16535/meet-declarative-web-push/ (Declarative Web Push, §8-1)
+> 검증일: 2026-05-15 (§8-1 Declarative Web Push 보강: 2026-09-17)
 > 짝 스킬: `frontend/vite-pwa-service-worker` (Service Worker 등록·precache는 그쪽 참조)
 
 ---
@@ -284,6 +285,31 @@ function IOSInstallGuide() {
   return null;
 }
 ```
+
+### 8-1. Declarative Web Push (iOS 18.4+ / Safari 18.5+) — 선택
+
+> 소스: https://webkit.org/blog/16535/meet-declarative-web-push/ · 검증일: 2026-09-17
+
+Service Worker 없이도 알림을 띄우는 WebKit 전용 확장. 푸시 본문을 아래 JSON으로 보내면 브라우저가 직접 알림을 표시한다.
+
+```json
+{
+  "web_push": 8030,
+  "notification": {
+    "title": "아침 알림",
+    "body": "오늘의 첫 리마인더입니다",
+    "navigate": "https://example.com/today"
+  }
+}
+```
+
+- `"web_push": 8030`은 선언형 파싱을 켜는 고정 매직 값. `title`(비어 있지 않아야 함)과 `navigate`(클릭 시 열 URL)는 필수
+- 구독은 SW 없이 `window.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey })`로 가능
+- SW가 있으면 `push` 이벤트에 제안된 알림이 함께 전달되고, 핸들러가 다른 알림을 띄우면 그것이 우선. 핸들러가 실패하면 선언형 알림이 폴백으로 표시됨
+- 구형 브라우저는 같은 JSON을 일반 payload로 받아 SW `push` 핸들러가 처리하므로, **서버는 이 형식 하나로 신·구 브라우저를 모두 커버**할 수 있다
+- 지원: iOS/iPadOS 18.4+ 홈 화면 웹앱, macOS Safari 18.5+. Chrome·Firefox는 미지원(일반 push 경로로 동작)
+
+> 주의: 기존 SW 기반 흐름(§2·§3)을 대체하는 것이 아니라 보완이다. 크로스 브라우저 앱은 SW 경로를 유지하고 payload만 위 형식으로 통일하는 것이 안전하다.
 
 ---
 

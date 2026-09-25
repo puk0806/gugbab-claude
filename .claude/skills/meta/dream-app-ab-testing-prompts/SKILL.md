@@ -23,7 +23,7 @@ description: >
 > - Google SRE Workbook, Canarying Releases — https://sre.google/workbook/canarying-releases/
 >
 > 검증일: 2026-08-11
-> 대상 모델: Claude Opus 4.8 / Sonnet 4.6 / Haiku 4.5 기준 (`.claude/rules/agent-design.md`)
+> 대상 모델: Claude Opus 5.5 / Sonnet 5 / Haiku 4.5 기준 (`.claude/rules/agent-design.md`, 2026-09-25 현행화)
 > 짝 스킬: `meta/dream-interpretation-prompt-engineering`, `meta/dream-safety-classifier-prompts`
 > 짝 에이전트: `validation/dream-interpretation-prompt-tester` (사전 평가), `research/data-analyst` (운영 분석)
 
@@ -75,7 +75,7 @@ If we change [variable], we expect [outcome] because [reasoning].
 | 학파 비율 | 전통:심리 = 50:50 | 70:30 |
 | 자기 성찰 질문 수 | 0개 (답변만 제공) | 2개 (대화 유도) |
 | JSON 스키마 | flat (key 5개) | nested (sections 배열) |
-| 모델 | Sonnet 4.6 | Haiku 4.5 (비용 50%) |
+| 모델 | Sonnet 5 ($2/$10) | Haiku 4.5 ($1/$5, 비용 50%) |
 
 ### 2-3. 무작위 배정
 

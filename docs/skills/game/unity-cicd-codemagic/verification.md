@@ -230,3 +230,4 @@ agent content test: 2026-08-11 재검증 3/3 PASS (gap: keystore 백업 위치 �
 | 2026-06-10 | v1 | 최초 작성 — Codemagic Unity Android/iOS 워크플로우, 라이선스, 자동 배포, 트리거, 흔한 실수 전반 | skill-creator |
 | 2026-06-10 | v1 | 2단계 실사용 테스트 수행 (Q1 Google Play 내부 테스트 배포 구성 / Q2 라이선스 시트 소진 원인·해결 / Q3 linux_x2 iOS 불가·TestFlight 설정) → 3/3 PASS, PENDING_TEST 유지 (빌드 설정 실사용 필수 카테고리) | skill-tester |
 | 2026-08-11 | v1 | 2단계 실사용 테스트 재수행 (Q1 keystore 관리 / Q2 TestFlight-only 자동배포 / Q3 라이선스 시트 소진 예방) → 3/3 PASS. 핵심 클레임 3개 WebSearch 재검증 → 2 VERIFIED, 1 경미 DISPUTED(SKILL.md 미참조 필드) — 문서·요금·스키마 변경 없음 확인, PENDING_TEST 유지(빌드 설정 실사용 필수 카테고리, 실제 빌드 미실행) | skill-tester |
+| 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | Claude |

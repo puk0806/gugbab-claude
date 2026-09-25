@@ -22,7 +22,7 @@ description: >
 > - Anthropic Protecting the wellbeing of our users — https://www.anthropic.com/news/protecting-well-being-of-users
 >
 > 검증일: 2026-08-12
-> 대상 모델: Claude Haiku 4.5 (분류기 권장) / Sonnet 4.6 (정확도 우선)
+> 대상 모델: Claude Haiku 4.5 (분류기 권장) / Sonnet 5 (정확도 우선) — 2026-09-25 현행 세대 기준
 
 이 스킬은 짝 스킬 `meta/dream-interpretation-prompt-engineering`(해몽 *생성*
 모델) 옆에 **두 번째 Claude 호출**로 배치되는 **안전 신호 분류기**의 프롬프트를
@@ -49,7 +49,7 @@ description: >
 | 평가 지표 | 톤 적절성, 두 관점 균형, 길이 | precision / recall, F1 |
 | 모델 부담 | 생성 + 분류 동시 → 분류 신뢰도 부차적 | 분류 단독 → 최적화 가능 |
 | 캐싱 효율 | 해몽 시스템 프롬프트 1개 캐시 | 분류기 짧은 프롬프트 1개 + 해몽 프롬프트 1개 (2개 캐시) |
-| 모델 선택 | 해석 품질이 핵심 → Sonnet 4.6+ | 분류만 하면 됨 → Haiku 4.5로 비용↓·속도↑ |
+| 모델 선택 | 해석 품질이 핵심 → Sonnet 5 | 분류만 하면 됨 → Haiku 4.5로 비용↓·속도↑ |
 | 장애 격리 | 한 호출 실패 = 둘 다 실패 | 분류기 실패 시 보수적(unsafe 가정)으로 fallback 가능 |
 | 이중 안전망 | 1차 방어선만 존재 | 1차(분류기) + 2차(해몽 모델 내 가드) = 이중망 |
 
@@ -347,12 +347,12 @@ def handle_dream(user_dream: str) -> dict:
     }
 ```
 
-**비용 분석 (per dream, 2026-05 공식 가격 기준):**
+**비용 분석 (per dream, 2026-09-25 공식 가격 기준):**
 
 | 호출 | 모델 | 입력 토큰 | 출력 토큰 | 단가 | 회당 비용 |
 |------|------|-----------|-----------|------|-----------|
 | 분류기 | Haiku 4.5 | ~700 (캐시 hit 시 ~50) | ~80 | $1.00 / $5.00 per MTok | ~$0.0005 |
-| 해몽 | Sonnet 5 | ~2,000 (캐시 hit 시 ~100) | ~800 | $3.00 / $15.00 per MTok | ~$0.013 |
+| 해몽 | Sonnet 5 | ~2,000 (캐시 hit 시 ~100) | ~800 | $2.00 / $10.00 per MTok | ~$0.012 |
 
 분류기는 해몽 비용의 **~4%** 수준 — 이중 안전망의 비용 부담은 무시 가능.
 
@@ -370,7 +370,7 @@ def handle_dream(user_dream: str) -> dict:
 |------|---------------|----------------|
 | Claude Haiku 4.5 | 4,096 | few-shot 7~10개로 확장하면 가능 |
 | Claude Sonnet 5 | 1,024 | 기본 템플릿(§3)으로 적용 가능 |
-| Claude Opus 5 | 512 | (분류기에 Opus는 과잉) |
+| Claude Opus 5.5 / Opus 5(구세대) | 미확인(공식 표 미기재) / 512 | (분류기에 Opus는 과잉) |
 
 **선택 가이드:**
 - 트래픽 < 1,000 req/day → 캐시 무시, Haiku 4.5 단순 호출
@@ -408,10 +408,11 @@ def handle_dream(user_dream: str) -> dict:
 7. **카테고리 정의 누락** — 카테고리 이름만 나열하고 정의를 빼면 모델이 자기
    해석을 만든다. 공식 가이드 권고대로 *정의 동봉* 필수 (§2).
 
-8. **temperature > 0** — 분류기는 *일관성*이 핵심. `temperature=0` 고정.
-   해몽 모델(생성)은 약간의 다양성을 위해 0.3~0.5도 허용되지만 분류기는 0.
+8. **temperature > 0** — 분류기는 *일관성*이 핵심. Haiku 4.5 분류기는 `temperature=0` 고정.
+   단, Sonnet 5·Opus 5.5 등 5 계열은 `temperature`/`top_p`/`top_k`를 **400으로 거부**하므로
+   분류기를 Sonnet 5로 운영할 때는 파라미터를 빼고 JSON 스키마·짧은 `max_tokens`로 일관성을 확보한다.
 
-9. **모델 ID 하드코딩** — `claude-haiku-4-20240307` 같은 구 모델 ID는
+9. **모델 ID 하드코딩** — `claude-3-haiku-20240307` 같은 구 모델 ID는
    deprecated. 현행은 `claude-haiku-4-5-20251001` (cookbook 사용) 또는
    별칭 `claude-haiku-4-5`. `agent-design.md` 참조.
 
@@ -430,7 +431,7 @@ def handle_dream(user_dream: str) -> dict:
 | 해석 안전 가드 | ❌ | ✅ 2차 방어 (분류기가 놓친 신호 잡기) |
 | 한국 자원 문구 | ❌ (카테고리만 반환) | ✅ (자원 카드 UI는 클라이언트 또는 해몽 응답 안에) |
 | 평가 지표 | precision / recall / F1 | 톤 / 균형 / hedging |
-| 권장 모델 | Haiku 4.5 (또는 캐시 적용 Sonnet 4.6) | Sonnet 4.6 |
+| 권장 모델 | Haiku 4.5 (또는 캐시 적용 Sonnet 5) | Sonnet 5 |
 
 이 분리는 *중복*이 아니라 *이중 안전망*이다. 분류기가 자해 신호를 놓쳐도,
 해몽 모델 내부 가드가 한 번 더 잡는다. 반대로 해몽 모델 내부 가드가 비활성화

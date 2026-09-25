@@ -11,7 +11,7 @@ image_url = "https://example.com/sample.jpg"
 image_data = base64.standard_b64encode(httpx.get(image_url).content).decode("utf-8")
 
 message = client.messages.create(
-    model="claude-opus-5",
+    model="claude-opus-5-5",
     max_tokens=1024,
     messages=[{
         "role": "user",
@@ -34,7 +34,7 @@ message = client.messages.create(
 
 ```python
 message = client.messages.create(
-    model="claude-opus-5",
+    model="claude-opus-5-5",
     max_tokens=1024,
     messages=[{
         "role": "user",
@@ -58,16 +58,19 @@ message = client.messages.create(
 
 | 모델 ID | 용도 | 컨텍스트 / 최대 출력 | 단가 (입력/출력, per MTok) |
 |---------|------|---------------------|---------------------------|
-| `claude-fable-5` | 최상위 티어 — 최고난도 추론, 장기 에이전트 | 1M / 128K | $10 / $50 |
-| **`claude-opus-5`** | **기본 권장** — 복잡한 에이전트 코딩·분석·오케스트레이션 | 1M / 128K | $5 / $25 |
-| `claude-sonnet-5` | 코드 생성, 일반 추론, 검증 — 속도·지능 균형 | 1M / 128K | $3 / $15 (2026-08-31까지 인트로 $2 / $10) |
+| `claude-fable-5-1` | 최상위 티어 — 최고난도 추론, 장기 에이전트 (강제 `tool_choice` 400) | 1M / 128K | $10 / $50 |
+| **`claude-opus-5-5`** | **기본 권장** — 복잡한 에이전트 코딩·분석·오케스트레이션 (thinking 비활성·강제 `tool_choice` 400, effort 기본 `medium`) | 1M / 128K | $4 / $20 |
+| `claude-sonnet-5` | 코드 생성, 일반 추론, 검증 — 속도·지능 균형 | 1M / 128K | $2 / $10 |
 | `claude-haiku-4-5` | 단순 포맷 변환, 분류, 짧은 요약 | 200K / 64K | $1 / $5 |
+| `claude-fable-5` | 구세대(서비스 중) — Fable 5.1의 전 세대 | 1M / 128K | $10 / $50 |
+| `claude-opus-5` | 구세대(서비스 중) — Opus 5.5의 전 세대, 레거시 대응용 | 1M / 128K | $5 / $25 |
 
-> 참고: 구형 모델 ID(`claude-sonnet-4-20250514`, `claude-opus-4-20250514`)는 2026-06-15에
+> 참고 (2026-09-25 현행화): 구형 모델 ID(`claude-sonnet-4-20250514`, `claude-opus-4-20250514`)는 2026-06-15에
 > **retired** 되어 더 이상 호출되지 않는다. `claude-opus-4-1-20250805`도 2026-08-05
-> retired(대체: `claude-opus-5`). 신규 코드는 위 별칭 ID를 사용한다.
-> `claude-opus-4-8` / `claude-sonnet-4-6` / `claude-opus-4-7`은 아직 서비스되지만 **구세대**다 —
-> 신규 코드는 5 계열을 쓰고, 기존 코드는 마이그레이션 가이드를 따라 옮긴다.
+> retired(당시 대체: `claude-opus-5`). 신규 코드는 위 현행 ID를 사용한다.
+> `claude-opus-5` / `claude-fable-5` / `claude-opus-4-8` / `claude-sonnet-4-6` / `claude-opus-4-7`은 아직 서비스되지만 **구세대**다 —
+> 신규 코드는 Opus 5.5·Fable 5.1·Sonnet 5를 쓰고, 기존 코드는 마이그레이션 가이드를 따라 옮긴다
+> (Opus 5 → 5.5 전환 시 thinking disabled·강제 `tool_choice` 제거, effort 명시 필요).
 > Haiku 4.5는 **여전히 현행**이므로 교체하지 않는다.
 > 모델 선택 기준은 `.claude/rules/agent-design.md`를 따른다.
 
@@ -85,7 +88,7 @@ client = Anthropic()
 
 try:
     message = client.messages.create(
-        model="claude-opus-5",
+        model="claude-opus-5-5",
         max_tokens=1024,
         messages=[{"role": "user", "content": "Hello"}],
     )
@@ -163,7 +166,7 @@ print(message.usage)
 
 ```python
 count = client.messages.count_tokens(
-    model="claude-opus-5",
+    model="claude-opus-5-5",
     messages=[{"role": "user", "content": "Hello, world"}],
 )
 print(count.input_tokens)   # 10
@@ -190,13 +193,14 @@ client = AnthropicBedrock(
 )
 
 message = client.messages.create(
-    model="anthropic.claude-opus-5",   # Bedrock 모델 ID 규약 — `anthropic.` 접두사
+    model="anthropic.claude-opus-5-5",   # Bedrock 모델 ID 규약 — `anthropic.` 접두사
     max_tokens=1024,
     messages=[{"role": "user", "content": "Hello!"}],
 )
 ```
 
-> 주의: Bedrock에서는 **모델 ID에 `anthropic.` 접두사가 붙는다** (현행 세대는 `anthropic.claude-opus-5` 형태,
+> 주의: 미확인 — Opus 5.5의 Bedrock·Vertex 제공 시점·ID는 이 스킬에서 검증하지 않았다. 카탈로그에 없으면 `claude-opus-5`(구세대, 서비스 중)로 대체한다.
+> 주의: Bedrock에서는 **모델 ID에 `anthropic.` 접두사가 붙는다** (현행 세대는 `anthropic.claude-opus-5-5` 형태,
 > 구세대 스냅샷은 `anthropic.{model}-{date}-v{n}:{revision}` 규약). 공식 Bedrock 모델 카탈로그를 확인.
 > 신규 프로젝트는 `AnthropicBedrockMantle` 사용 권장 (공식 문서). 레거시 InvokeModel 경로는 `AnthropicBedrock`.
 
@@ -215,7 +219,7 @@ client = AnthropicVertex(
 )
 
 message = client.messages.create(
-    model="claude-opus-5",   # Vertex 현행 세대는 접두사 없는 기본 ID 그대로 사용
+    model="claude-opus-5-5",   # Vertex 현행 세대는 접두사 없는 기본 ID 그대로 사용
     # (구세대 날짜 스냅샷만 `claude-opus-4-5@20251101` 형태의 @ 버전 구분자를 쓴다)
     max_tokens=1024,
     messages=[{"role": "user", "content": "Hello!"}],
@@ -274,8 +278,9 @@ message = client.messages.create(
 - [ ] `cache_control`은 *변하지 않는 마지막 블록* 뒤에 배치한다
 - [ ] 모델 최소 캐시 토큰을 충족하는지 확인한다
 - [ ] `RateLimitError`/`APIConnectionError`/`APITimeoutError` 분기 처리한다
-- [ ] 모델 ID는 `claude-opus-5` / `claude-sonnet-5` / `claude-haiku-4-5` 현행 ID를 사용한다
+- [ ] 모델 ID는 `claude-opus-5-5` / `claude-sonnet-5` / `claude-haiku-4-5` 현행 ID를 사용한다
+- [ ] Opus 5.5·Fable 5.1 요청에 `thinking: {"type": "disabled"}`·강제 `tool_choice`(`any`/`tool`)를 넣지 않는다 (400 에러)
 - [ ] `temperature` / `top_p` / `top_k` / `budget_tokens`를 5 계열 요청에 넣지 않는다 (400 에러)
 - [ ] 사고 깊이는 `thinking: {"type": "adaptive"}` + `output_config.effort`로 제어한다
-- [ ] Opus 5는 사고가 기본 ON이므로 `max_tokens`에 사고 토큰 여유를 둔다
+- [ ] Opus 5.5·Opus 5는 사고가 기본 ON이므로 `max_tokens`에 사고 토큰 여유를 둔다 (Opus 5.5 effort 기본값은 `medium`)
 - [ ] Bedrock/Vertex는 플랫폼별 모델 ID 규약을 확인한다

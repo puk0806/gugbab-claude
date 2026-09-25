@@ -88,7 +88,7 @@ interface Interpretation {
   source: InterpretationSource  // 출처
   content: string               // 해몽 본문
   prompt?: string               // LLM source일 때 입력 프롬프트
-  model?: string                // LLM source일 때 모델명("claude-sonnet-4-7" 등)
+  model?: string                // LLM source일 때 모델명("claude-sonnet-5" 등)
   createdAt: Date
   pinned?: boolean              // 사용자가 고정한 해몽
 }

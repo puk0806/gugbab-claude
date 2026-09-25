@@ -208,7 +208,7 @@ status: APPROVED
 - [✅] 짝 스킬(`devops/n8n-self-hosting`) cross-link 보강 — 2026-08-11 양 스킬 동시 최신화로 정합성 확보
 - [✅] 신모델 출시 시 모델 선택 표 갱신 — 2026-08-11 수행 (Claude 3 계열 제거, 현행 티어 표 + Opus 5/Sonnet 5 차이 주의 표기)
 - [ ] **n8n issue #28635 해소 추적** — Anthropic 노드가 adaptive thinking(`output_config.effort`)을 지원하면 본문 주의 문구 및 예시의 `Enable Thinking: OFF` 제거 (차단 요인 아님)
-- [ ] **`agent-design.md`의 Opus 5 / Sonnet 5 반영 여부 결정** — 결정 시 본 스킬 모델 표와 `> 주의:` 블록 동기화 필요 (레포 전역 판단 사항이므로 이 스킬 단독 결정 금지)
+- [✅] (2026-09-25 해소 — agent-design.md가 Opus 5.5/Fable 5.1 기준으로 갱신되어 본 스킬 표와 일치) **`agent-design.md`의 Opus 5 / Sonnet 5 반영 여부 결정** — 결정 시 본 스킬 모델 표와 `> 주의:` 블록 동기화 필요 (레포 전역 판단 사항이므로 이 스킬 단독 결정 금지)
 - [ ] MCP 서버 직접 연결(2.22) 실제 워크플로우 구성 예시 추가 검토 (선택 보강)
 
 ---
@@ -221,3 +221,4 @@ status: APPROVED
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 Chat Trigger+AI Agent+Simple Memory 최소 구성 / Q2 temperature+top_p 동시 사용 함정 / Q3 Vector Store+Embeddings RAG 노드 조합) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-08-11 | v2 | **최신화 재검증.** 구버전 모델명(`claude-3-7-sonnet`·`claude-3-5-sonnet`·`claude-3-haiku`) 제거 → `agent-design.md` 기준 티어 표(fable-5/opus-4-8/sonnet-4-6/haiku-4-5)로 교체, Anthropic 공식 현행 라인업(Opus 5·Sonnet 5)과의 차이를 `> 주의:`로 명시. Agent 타입 6종 서술 → **1.82.0에서 선택 제거, Tools Agent 단일화**로 정정. 모델 드롭다운 동적 조회(PR #13543)·Top K 옵션 추가. thinking 포맷 400 에러(issue #28635) 주의·함정 추가. MCP 서버 직접 연결(2.22)·HITL 도구 승인(2.6)·Motorhead deprecated(2.8.3) 반영. 컨텍스트 윈도우 1M 정정. 함정 표 4행 추가. 클레임 16~27 재검증(VERIFIED 8 / DISPUTED 3 정정 / 처리 1). status **APPROVED 유지** | 최신화 세션 |
 | 2026-08-12 | v3 | **모델 ID 세대 정렬.** 티어 표를 `claude-opus-4-8`·`claude-sonnet-4-6` → `claude-opus-5`·`claude-sonnet-5`로 교체(Haiku는 `claude-haiku-4-5` 유지, Fable 5 유지). 2026-08-11에 남겨 둔 "agent-design.md 기준 vs 공식 라인업 차이" 주의 문구를 세대 정렬 완료 서술로 대체하고, `.claude/rules/agent-design.md`가 아직 4.8/4.6 기준임을 별도 갱신 필요 항목으로 명시. 꿈 해몽 워크플로우 예시의 노드 모델 `claude-sonnet-4-6` → `claude-sonnet-5`. **샘플링 파라미터 주의 전면 개정** — 5 계열(Opus 5·Sonnet 5·Fable 5·Opus 4.8/4.7)은 `temperature`/`top_p`/`top_k` 미지원(비기본값 전송 시 400)이므로 n8n 노드의 Sampling Temperature를 기본값으로 두라는 지침 추가, 기존 "temperature+top_p 동시 금지"는 4.6 이하 legacy 한정으로 범위 축소. 함정 표에 5 계열 샘플링 파라미터 행 신설. 검증일 2026-08-11 → 2026-08-12. status **APPROVED 유지** | 모델 ID 세대 정렬 |
+| 2026-09-25 | v3.1 | **모델 ID 현행화(Opus 5.5/Fable 5.1).** 티어 표 `claude-fable-5` → `claude-fable-5-1`, `claude-opus-5` → `claude-opus-5-5`(단가 열 추가: $10/$50·$4/$20·$2/$10·$1/$5). "agent-design.md 별도 갱신 필요" 문구를 일치 서술로 교체하고 Fable 5/Opus 5를 legacy 목록에 편입. Opus 5.5·Fable 5.1의 강제 `tool_choice`/thinking disabled 400 주의 추가(n8n 노드 내부 동작은 미확인 표기). 샘플링 파라미터 주의·함정 표·컨텍스트 행에 Opus 5.5·Fable 5.1 포함. Claude 3 계열 금지 목록은 레거시 경고라 유지. 내용 재검증 없음 — status APPROVED 유지 | 모델 ID 현행화 |

@@ -178,3 +178,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-06-10 | v1 | 최초 작성 — Firebase Unity SDK 13.12.0 기준, Analytics/Crashlytics/Remote Config/FCM 4개 모듈 + EDM4U 설치 + 8개 트러블슈팅 패턴 | skill-creator |
 | 2026-06-10 | v1 | 2단계 실사용 테스트 수행 (Q1 Firebase 초기화 ContinueWithOnMainThread / Q2 Remote Config 필드명 오타·SetDefaultsAsync 순서 / Q3 Crashlytics SetUserId 타이밍 버그) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | Claude |

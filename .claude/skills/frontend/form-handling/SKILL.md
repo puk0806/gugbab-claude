@@ -5,8 +5,11 @@ description: React Hook Form + Zod 유효성 검증, 제어/비제어 폼 패턴
 
 # Form Handling — React Hook Form + Zod
 
-> 소스: https://react-hook-form.com/docs | https://zod.dev/
-> 검증일: 2026-04-01
+> 소스: https://react-hook-form.com/docs | https://zod.dev/ | https://zod.dev/v4/changelog
+> 검증일: 2026-09-25 (Zod 4 예제 현행화)
+> 기준 버전: react-hook-form 7.x · **zod 4.x (4.6 기준)** · @hookform/resolvers 5.x (`zodResolver`가 Zod 4 스키마를 자동 인식)
+>
+> 서버 측 검증(요청 body·환경변수·외부 API 응답·악성 입력 방어)과 Zod 3 → 4 변경점 상세는 `backend/zod-schema-validation` 스킬을 참조한다.
 
 ---
 
@@ -24,8 +27,10 @@ description: React Hook Form + Zod 유효성 검증, 제어/비제어 폼 패턴
 ## 기본 설정
 
 ```bash
-pnpm add react-hook-form zod @hookform/resolvers
+pnpm add react-hook-form zod @hookform/resolvers   # zod 4.x, @hookform/resolvers 5.x
 ```
+
+> 주의: Zod 4에서 `z.string().email()/.uuid()/.url()/.datetime()`은 deprecated(동작은 함)이며 top-level `z.email()/z.uuid()/z.url()/z.iso.datetime()`을 쓴다. 에러 메시지 옵션 `message` → `error`, `invalid_type_error`/`required_error`는 제거, `.flatten()/.format()` → `z.flattenError()/z.treeifyError()`.
 
 ---
 
@@ -34,20 +39,20 @@ pnpm add react-hook-form zod @hookform/resolvers
 ```tsx
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+import * as z from 'zod'
 
 // 1. 스키마 정의 (단일 진실 공급원)
 const SignupSchema = z.object({
-  email: z.string().email('올바른 이메일을 입력해주세요'),
+  email: z.email({ error: '올바른 이메일을 입력해주세요' }),
   password: z
     .string()
-    .min(8, '비밀번호는 8자 이상이어야 합니다')
-    .regex(/[A-Z]/, '대문자를 포함해야 합니다'),
+    .min(8, { error: '비밀번호는 8자 이상이어야 합니다' })
+    .regex(/[A-Z]/, { error: '대문자를 포함해야 합니다' }),
   passwordConfirm: z.string(),
-  age: z.number().min(14, '14세 이상만 가입 가능합니다').optional(),
+  age: z.number().min(14, { error: '14세 이상만 가입 가능합니다' }).optional(),
 }).refine(
   data => data.password === data.passwordConfirm,
-  { message: '비밀번호가 일치하지 않습니다', path: ['passwordConfirm'] }
+  { error: '비밀번호가 일치하지 않습니다', path: ['passwordConfirm'] }
 )
 
 // 2. 타입 자동 추론
@@ -157,9 +162,9 @@ import { useFieldArray } from 'react-hook-form'
 
 const Schema = z.object({
   members: z.array(z.object({
-    name: z.string().min(1, '이름을 입력해주세요'),
+    name: z.string().min(1, { error: '이름을 입력해주세요' }),
     role: z.string(),
-  })).min(1, '최소 1명이 필요합니다'),
+  })).min(1, { error: '최소 1명이 필요합니다' }),
 })
 
 function TeamForm() {
@@ -196,14 +201,15 @@ function TeamForm() {
 ```tsx
 // app/actions.ts (Next.js Server Action)
 'use server'
-import { z } from 'zod'
+import * as z from 'zod'
 
-const Schema = z.object({ email: z.string().email() })
+const Schema = z.object({ email: z.email() })
 
 export async function submitForm(formData: FormData) {
   const result = Schema.safeParse({ email: formData.get('email') })
   if (!result.success) {
-    return { error: result.error.flatten() }
+    // Zod 4: error.flatten() deprecated → z.flattenError() ({ formErrors, fieldErrors })
+    return { error: z.flattenError(result.error) }
   }
   // DB 저장 등...
   return { success: true }
@@ -250,16 +256,28 @@ z.string().transform(v => v === '' ? undefined : v).optional()
 // 숫자 입력 (input은 string으로 옴)
 z.coerce.number().min(0).max(100)
 
-// 날짜
-z.string().datetime()
+// 날짜 (Zod 4: z.string().datetime() deprecated → z.iso.datetime())
+z.iso.datetime()
+z.iso.date()          // 'YYYY-MM-DD' (<input type="date"> 값)
 z.coerce.date()
+
+// 문자열 포맷 (Zod 4 top-level)
+z.email()
+z.url()
+z.uuid()
 
 // enum
 z.enum(['admin', 'user', 'guest'])
 
 // 조건부 유효성
 z.discriminatedUnion('type', [
-  z.object({ type: z.literal('email'), email: z.string().email() }),
+  z.object({ type: z.literal('email'), email: z.email() }),
   z.object({ type: z.literal('phone'), phone: z.string().min(10) }),
 ])
+
+// 알 수 없는 키 거부/허용 (Zod 4: .strict()/.passthrough() 대신)
+z.strictObject({ name: z.string() })   // 추가 키 → 에러
+z.looseObject({ name: z.string() })    // 추가 키 통과
 ```
+
+> 주의: `z.coerce.*`·`.transform()`을 쓰면 스키마의 입력 타입과 출력 타입이 달라진다. 이 경우 `useForm<z.input<typeof S>, unknown, z.output<typeof S>>({ resolver: zodResolver(S) })`처럼 입력/출력 제네릭을 분리한다(@hookform/resolvers 5.x).

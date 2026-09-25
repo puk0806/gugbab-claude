@@ -17,7 +17,7 @@ status: APPROVED
 | 검증일 | 2026-09-10 |
 | 검증자 | skill-creator (Claude Code) |
 | 스킬 버전 | v1 |
-| 대상 기준 | Claude API 2026-09-10 현행 (Opus 5 / Sonnet 5 / Haiku 4.5) |
+| 대상 기준 | Claude API 2026-09-25 현행 (Opus 5.5 / Sonnet 5 / Haiku 4.5) — 최초 2026-09-10 Opus 5 기준 |
 | 포크 원본 | `.claude/skills/meta/dream-interpretation-prompt-engineering/SKILL.md` (구조 계승, 톤 룰 교체) |
 
 ---
@@ -103,7 +103,7 @@ status: APPROVED
 - [✅] 공식 문서와 불일치하는 내용 없음 (불일치 2건은 공식 값으로 정정 — 4-5 DISPUTED 참조)
 - [✅] 버전·모델 기준이 명시되어 있음 (Claude Opus 5 / Sonnet 5 / Haiku 4.5, 2026-09-10 현행)
 - [✅] deprecated된 패턴을 권장하지 않음 (assistant 프리필 → Structured Outputs 이관 명시)
-- [✅] 구세대 모델 ID 하드코딩 없음 (`claude-opus-5` / `claude-sonnet-5` / `claude-haiku-4-5`만 사용)
+- [✅] 구세대 모델 ID 하드코딩 없음 (`claude-opus-5-5` / `claude-sonnet-5` / `claude-haiku-4-5`만 사용 — 2026-09-25 현행화)
 - [✅] 코드 예시가 실행 가능한 형태임 (anthropic SDK `messages.create` + `output_config` + 2개 캐시 breakpoint)
 
 ### 4-2. 구조 완전성
@@ -295,3 +295,5 @@ status: APPROVED
 | 2026-09-10 | v1 | 2단계 실사용 테스트 수행 (Q1 사주 계산 책임 분리 / Q2 YMYL 3단 처리 / Q3 캐싱 breakpoint+Structured Outputs) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-09-10 | v1.1 | Codex 적대적 리뷰 R1 수용(PARTIAL) — 당시 짝이었던 안전 분류기 스킬의 단계별 정책(자해 신호는 풀이 생략 / 심각한 정서 고통은 완화 풀이 + 자원 병기)과 `<안전 가드>`를 동일 매핑으로 정합. 수명·사망 시점 질문은 의도·충동 결부 시에만 승격하도록 명시 (해당 섹션은 v2에서 제거됨) | main session (codex-review) |
 | 2026-09-11 | v2 | 캐주얼 앱 방향으로 안전 계열 섹션 축소·삭제 자산 참조 제거 — §3-3 실행 판단 3단 처리·§8 2층 안전 가드·위기 자원표·`safety_flag`/`topic_boundary_notice` 필드·안전 few-shot 2건 삭제. 톤 규칙은 "상징 해석 허용 / 결정론적 단정 회피 / 실행 판단은 사용자에게" 한 문장으로 통합, disclaimer는 "재미로 보는 운세" 고정 문구로 교체. 소스 목록에서 YMYL 정의·위기 전화 보도자료 제거. 짝 스킬 목록을 만세력·사주/타로 전통·손금 스킬로 정리 | main session |
+| 2026-09-25 | v2.1 | **모델 ID 현행화(Opus 5.5/Fable 5.1).** 헤더 대상 모델 Opus 5 → Opus 5.5(예제 기본 `claude-sonnet-5` 유지). §8 최소 캐시 토큰 표에 Opus 5.5 "미확인" 행, 비용 표에 Opus 5.5($4 input·cache read $0.20, write 배수는 가정 표기) 행 추가·Opus 5는 구세대 표기. 함정 §9 현행 ID `claude-opus-5-5`로 갱신 + Opus 5.5 강제 `tool_choice`·thinking disabled 400 주의. 메타 표·체크리스트 동기화. 클레임 표 1번(2026-09-10 판정)은 이력으로 보존. status APPROVED 유지 | 모델 ID 현행화 |
+| 2026-09-25 | v2.1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | skill-creator |

@@ -245,3 +245,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-05-14 | v1 | 최초 작성. 10개 섹션 + 10개 클레임 교차 검증 (VERIFIED 10/10) | skill-creator |
 | 2026-05-14 | v1 | 2단계 실사용 테스트 수행 (Q1 복합 인덱스+쿼리 / Q2 multi-entry distinct() / Q3 암호화+검색 공존) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-25 | v1 | 모델 ID 현행화(Opus 5.5/Fable 5.1 정렬 작업의 일환) — `Interpretation.model` 주석 예시의 실존하지 않는 ID `"claude-sonnet-4-7"` → 현행 `"claude-sonnet-5"`. 스키마 변동 없음, status APPROVED 유지 | 모델 ID 현행화 |

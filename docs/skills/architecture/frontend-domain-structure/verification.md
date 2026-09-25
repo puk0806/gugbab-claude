@@ -243,3 +243,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-08-26 | v1 | 최초 작성 — 공식 문서 21회 페치·7회 검색 기반, 17개 클레임 교차 검증(DISPUTED 2건 정정 반영, UNVERIFIED 1건 제거). 단계 1~4만 수행, skill-tester 미호출로 PENDING_TEST 유지 | skill-creator |
 | 2026-08-26 | v1 | 2단계 실사용 테스트 수행 (Q1 layer-first→domain-first 전환 첫 단계 / Q2 FSD 레이어 import 방향·slice 간 import 가능 여부 / Q3 Next.js private folder·route group 의미와 도메인 1:1 매핑 평가) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | Claude (Sonnet 5) |
