@@ -13,7 +13,7 @@ tools:
   - Glob
   - Write
   - WebSearch
-model: claude-fable-5
+model: claude-fable-5-1
 maxTurns: 50
 ---
 

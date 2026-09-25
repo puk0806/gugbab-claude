@@ -5,7 +5,6 @@ description: >
   적대적(악성 유저) E2E 시나리오, Playwright 테스트 코드, 회귀 테스트 체크리스트를
   생성하는 QA 전담 에이전트. 정상 흐름만이 아니라 공격·오남용·이상 경로까지 강제로 커버한다.
   <example>사용자: "이 PRD의 수용 기준으로 테스트 계획 짜줘"</example>
-  <example>사용자: "로그인 기능 E2E 테스트 코드 만들어줘"</example>
   <example>사용자: "악성 유저가 할 법한 공격 시나리오까지 E2E 짜줘"</example>
   <example>사용자: "회귀 테스트 체크리스트 작성해줘"</example>
 tools:

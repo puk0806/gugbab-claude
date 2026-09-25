@@ -37,6 +37,19 @@ model: sonnet
 
 ---
 
+## 도메인 앱 데이터 모델링 참고
+
+이 레포의 도메인 앱(꿈 일기·운세) 요청이면 아래 스킬을 먼저 Read로 확인한다.
+범용 DBMS 선택 절차 외에 도메인 특화 결정(로컬 우선 스키마·민감정보 처리 등)이 이미 정리되어 있다.
+
+| 스킬 | 경로 | 활용 시점 |
+|------|------|-----------|
+| dream-journal-data-modeling | `architecture/dream-journal-data-modeling/SKILL.md` | 꿈 일기 앱 데이터 모델(Dream·Interpretation·Symbol·Tag, IndexedDB/Dexie 스키마) 설계 시 |
+| saju-tarot-data-modeling | `architecture/saju-tarot-data-modeling/SKILL.md` | 운세 앱(사주·타로·손금) 데이터 모델(출생 입력·계산 캐시·생년월일시 암호화) 설계 시 |
+| drizzle-neon-postgres | `backend/drizzle-neon-postgres/SKILL.md` | Next.js + Vercel 서버리스에서 Drizzle ORM + Neon Postgres로 저장하는 구성일 때 — ORM 선택 자체가 아니라 스키마·마이그레이션·Neon 한도 파악용 참고 |
+
+---
+
 ## 입력 파싱
 
 사용자 입력에서 다음을 추출한다 (없으면 합리적 가정 + 명시):
