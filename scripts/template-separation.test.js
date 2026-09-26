@@ -1495,3 +1495,110 @@ test('훅 CJS 경계 악성·경계: 사용자 소유 hooks/package.json 은 덮
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+// ── 재설치 보존(N) 경로 · symlink · 공백 경로 (2026-09-26) ──────────────────
+const settingsOf = (dir) => JSON.parse(fs.readFileSync(path.join(dir, '.claude', 'settings.json'), 'utf8'));
+const evCmds = (s, ev) => (s.hooks?.[ev] || []).flatMap((g) => (g.hooks || []).map((h) => h.command));
+
+test('F3 업그레이드: settings 보존(N) 재설치가 구버전 InstructionsLoaded 배선 두 훅만 SessionStart 로 이관하고, 멱등이며 사용자 설정은 보존된다', () => {
+  const dir = mktarget('legacy-il');
+  try {
+    install('1', dir);
+    const sf = path.join(dir, '.claude', 'settings.json');
+    // 구버전(2026-09-25 이전) 배선 재현 + 사용자 커스텀
+    const s = settingsOf(dir);
+    const bareCmd = (n, extra = '') => ({ type: 'command', command: `node $CLAUDE_PROJECT_DIR/.claude/hooks/${n}${extra}` });
+    s.hooks.SessionStart = [{ hooks: [bareCmd('session-start.js')] }];
+    s.hooks.InstructionsLoaded = [{ hooks: [bareCmd('instructions-loaded.js'), bareCmd('staleness-check.js'), { type: 'command', command: 'echo my-il' }] }];
+    s.permissions.allow.push('Bash(make*)');
+    s.env = { MY_FLAG: 'keep' };
+    fs.writeFileSync(sf, JSON.stringify(s, null, 2));
+    const orig = fs.readFileSync(sf, 'utf8');
+
+    const out = install('1', dir); // 이후 질문 기본값 = N → 보존 경로
+    const a = settingsOf(dir);
+    const ss = evCmds(a, 'SessionStart');
+    assert.ok(ss.some((c) => /hooks\/instructions-loaded\.js$/.test(c)), `instructions-loaded 미이관: ${JSON.stringify(ss)}`);
+    assert.ok(ss.some((c) => /hooks\/staleness-check\.js$/.test(c)), 'staleness-check 미이관');
+    assert.deepStrictEqual(evCmds(a, 'InstructionsLoaded'), ['echo my-il'], '사용자 자체 InstructionsLoaded 훅이 사라지거나 대상 훅이 남음');
+    assert.ok(a.permissions.allow.includes('Bash(make*)') && a.env.MY_FLAG === 'keep', '사용자 커스텀 설정 파괴');
+    assert.strictEqual(fs.readFileSync(`${sf}.bak`, 'utf8'), orig, '.bak 백업이 원본과 다름');
+    assert.match(out, /InstructionsLoaded → SessionStart/, '이관 로그 없음');
+    assert.match(out, /따옴표 없는 \$CLAUDE_PROJECT_DIR/, '무따옴표 배선 경고 없음');
+
+    const after1 = fs.readFileSync(sf, 'utf8');
+    install('1', dir); // 멱등
+    assert.strictEqual(fs.readFileSync(sf, 'utf8'), after1, '2회차 재설치에서 settings 가 또 바뀜');
+    assert.ok(!fs.existsSync(`${sf}.bak.1`), '2회차에 불필요한 백업 생성');
+    assert.strictEqual(evCmds(settingsOf(dir), 'SessionStart').filter((c) => /staleness-check/.test(c)).length, 1, '중복 배선');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('F3 악성·경계: 보존 경로에서 깨진 settings.json 은 수정 없이 이관 불가 경고, 설치는 성공', () => {
+  const dir = mktarget('broken-settings');
+  try {
+    fs.mkdirSync(path.join(dir, '.claude'), { recursive: true });
+    const sf = path.join(dir, '.claude', 'settings.json');
+    fs.writeFileSync(sf, '{"hooks":{"InstructionsLoaded":[ ,, ');
+    const out = install('1', dir);
+    assert.strictEqual(fs.readFileSync(sf, 'utf8'), '{"hooks":{"InstructionsLoaded":[ ,, ', '깨진 settings 가 변경됨');
+    assert.match(out, /파싱 실패/, '이관 불가 경고 없음');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('F6 악성: .claude/hooks/package.json 이 (끊어진) symlink 면 링크 대상에 쓰지 않고 경고한다', () => {
+  const dir = mktarget('pj-symlink');
+  const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'pj-outside-'));
+  try {
+    install('1', dir);
+    const pj = path.join(dir, '.claude', 'hooks', 'package.json');
+    // (1) 끊어진 symlink → 대상 밖 경로
+    fs.unlinkSync(pj);
+    const danglingTarget = path.join(outside, 'created-by-installer.json');
+    fs.symlinkSync(danglingTarget, pj);
+    const out = install('1', dir);
+    assert.ok(!fs.existsSync(danglingTarget), '끊어진 symlink 를 따라 대상 밖에 파일을 생성함');
+    assert.ok(fs.lstatSync(pj).isSymbolicLink(), 'symlink 가 교체·삭제됨');
+    assert.match(out, /hooks\/package\.json 이 symlink/, 'symlink 경고 없음');
+    // (2) 살아 있는 symlink → 외부 파일 내용 불변
+    fs.unlinkSync(pj);
+    const liveTarget = path.join(outside, 'live.json');
+    fs.writeFileSync(liveTarget, '{"type":"module","owner":"someone-else"}');
+    fs.symlinkSync(liveTarget, pj);
+    install('1', dir);
+    assert.strictEqual(fs.readFileSync(liveTarget, 'utf8'), '{"type":"module","owner":"someone-else"}', 'symlink 대상 외부 파일이 덮어써짐');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(outside, { recursive: true, force: true });
+  }
+});
+
+test('공백 경로: 공백·괄호가 포함된 대상에 설치한 settings 의 모든 훅 명령이 실제 셸에서 모듈을 찾아 실행된다', () => {
+  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'tmpl sep space '));
+  const dir = path.join(base, 'my app (v2)');
+  fs.mkdirSync(dir);
+  try {
+    install('2', dir); // dev + TS — 배선 훅이 가장 많은 축
+    const s = settingsOf(dir);
+    const all = [];
+    for (const [ev, groups] of Object.entries(s.hooks)) for (const g of groups) for (const h of g.hooks) all.push([ev, h.command]);
+    all.push(['StatusLine', s.statusLine.command]);
+    assert.ok(all.length > 10, `배선 명령 수가 비정상: ${all.length}`);
+    for (const [ev, cmd] of all) {
+      const input = JSON.stringify({ hook_event_name: ev, session_id: 't', cwd: dir, source: 'startup',
+        tool_name: 'Read', tool_input: { file_path: path.join(dir, 'README.md') }, tool_response: {} });
+      const r = spawnSync('bash', ['-c', cmd], { cwd: dir, input, encoding: 'utf8', timeout: 60000,
+        env: { ...process.env, CLAUDE_PROJECT_DIR: dir } });
+      const err = `${r.stderr || ''}`;
+      assert.ok(!/Cannot find module|MODULE_NOT_FOUND|No such file or directory/.test(err),
+        `[${ev}] ${cmd}\n공백 경로에서 훅 스크립트를 찾지 못함:\n${err.slice(0, 300)}`);
+      assert.notStrictEqual(r.status, 127, `[${ev}] ${cmd} — command not found`);
+    }
+  } finally {
+    fs.rmSync(base, { recursive: true, force: true });
+  }
+});

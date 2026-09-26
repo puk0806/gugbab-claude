@@ -147,5 +147,94 @@ if (savedProjectDir === undefined) delete process.env.CLAUDE_PROJECT_DIR;
 else process.env.CLAUDE_PROJECT_DIR = savedProjectDir;
 fs.rmSync(fakeRepo, { recursive: true, force: true });
 
+// ── 프로젝트 경로 인코딩 (2026-09-26 실측 기준) ─────────────────────────
+// Claude Code 2.1.282 에서 `claude -p` 를 해당 경로에서 실행해 생성된 ~/.claude/projects 디렉토리명을 그대로 기대값으로 쓴다
+// (구현 로직을 복제하지 않는다 — 기대값은 실측 문자열).
+const { encodeProjectPath, projectStoreDir, resolveProjectDir } = require('./session-export.js');
+check('인코딩 실측: 일반 경로 (/ · _ → -)', () => {
+  assert.strictEqual(encodeProjectPath('/Users/lf/Desktop/gugbab-workspace/00_gugbab-claude'),
+    '-Users-lf-Desktop-gugbab-workspace-00-gugbab-claude');
+});
+check('인코딩 실측: 점·공백·한글·@·+ 는 각각 - (구 규칙은 / _ 만 치환해 불일치)', () => {
+  assert.strictEqual(
+    encodeProjectPath('/private/tmp/claude-501/-Users-lf-Desktop-gugbab-workspace-00-gugbab-claude/64863110-4333-4f2b-963a-d8c76a43ec50/scratchpad/enc test.v1 한글_x@y+z'),
+    '-private-tmp-claude-501--Users-lf-Desktop-gugbab-workspace-00-gugbab-claude-64863110-4333-4f2b-963a-d8c76a43ec50-scratchpad-enc-test-v1----x-y-z');
+});
+check('인코딩 실측: 이모지(서로게이트 쌍)는 - 2개', () => {
+  assert.strictEqual(encodeProjectPath('/a/e😀m'), '-a-e--m');
+});
+check('인코딩 악성: ../ 가 섞여도 결과에 경로 구분자·점이 남지 않는다 (projects 밖 탈출 불가)', () => {
+  const e = encodeProjectPath('/x/../../etc');
+  assert.ok(!/[/.\\]/.test(e), e);
+});
+check('인코딩 경계: 빈 값·비문자열은 null', () => {
+  for (const v of [undefined, null, '', 42, {}]) assert.strictEqual(encodeProjectPath(v), null);
+});
+
+check('저장소 경로: transcript_path 가 projects 바로 아래면 그 디렉토리를 그대로 쓴다 (인코딩 추측보다 우선)', () => {
+  const home = '/h';
+  assert.strictEqual(projectStoreDir(home, '/any/proj', '/h/.claude/projects/-real-dir/abc.jsonl'), '/h/.claude/projects/-real-dir');
+});
+check('저장소 경로 악성: projects 밖·상위 탈출·중첩 transcript_path 는 무시하고 인코딩으로 폴백', () => {
+  const home = '/h';
+  const want = path.join('/h/.claude/projects', '-p-q');
+  for (const tp of ['/etc/passwd', '/h/.claude/projects/../../evil/x.jsonl', '/h/.claude/projects/a/b/x.jsonl', '/h/.claude/projects/x.jsonl', 42]) {
+    assert.strictEqual(projectStoreDir(home, '/p/q', tp), want, String(tp));
+  }
+});
+check('저장소 경로 경계: 프로젝트 경로도 transcript 도 없으면 null', () => {
+  assert.strictEqual(projectStoreDir('/h', null, null), null);
+});
+
+// resolveProjectDir: env → git toplevel → cwd
+const { execSync } = require('child_process');
+const gitRepo = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'se-git-')));
+execSync('git init -q', { cwd: gitRepo });
+fs.mkdirSync(path.join(gitRepo, 'sub', 'deep'), { recursive: true });
+const outside = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'se-nogit-')));
+check('프로젝트 루트: env 가 있으면 env', () => {
+  assert.strictEqual(resolveProjectDir({ CLAUDE_PROJECT_DIR: '/from/env' }, gitRepo), '/from/env');
+});
+check('프로젝트 루트: env 없음 + 서브디렉토리 cwd → git toplevel', () => {
+  assert.strictEqual(fs.realpathSync(resolveProjectDir({}, path.join(gitRepo, 'sub', 'deep'))), gitRepo);
+});
+check('프로젝트 루트: env 빈 문자열은 없음으로 취급', () => {
+  assert.strictEqual(fs.realpathSync(resolveProjectDir({ CLAUDE_PROJECT_DIR: '' }, gitRepo)), gitRepo);
+});
+check('프로젝트 루트: 레포 밖 cwd → cwd 그대로', () => {
+  assert.strictEqual(resolveProjectDir({}, outside), outside);
+});
+
+// --refresh CLI 통합: Bash 도구처럼 CLAUDE_PROJECT_DIR 없이, 레포 서브디렉토리에서 실행
+const { spawnSync } = require('child_process');
+const HOOK = path.join(__dirname, 'session-export.js');
+const cliHome = fs.mkdtempSync(path.join(os.tmpdir(), 'se-cli-home-'));
+fs.mkdirSync(path.join(gitRepo, 'memory'));
+const store = path.join(cliHome, '.claude', 'projects', encodeProjectPath(gitRepo));
+fs.mkdirSync(store, { recursive: true });
+const tline = (o) => JSON.stringify(o);
+fs.writeFileSync(path.join(store, 'sess1234-aaaa.jsonl'), [
+  tline({ type: 'user', timestamp: '2026-09-26T01:00:00Z', message: { content: 'refresh 폴백 테스트 요청' } }),
+  tline({ type: 'assistant', timestamp: '2026-09-26T01:00:05Z', message: { content: [{ type: 'text', text: '응답' }] } }),
+].join('\n'));
+const envNoProj = { ...process.env, HOME: cliHome };
+delete envNoProj.CLAUDE_PROJECT_DIR;
+check('--refresh: env 없이 서브디렉토리에서 실행해도 레포 exports/ 에 생성 (무음 no-op 회귀 방지)', () => {
+  const r = spawnSync('node', [HOOK, '--refresh'], { cwd: path.join(gitRepo, 'sub', 'deep'), env: envNoProj, encoding: 'utf8' });
+  assert.strictEqual(r.status, 0, r.stderr);
+  const out = path.join(gitRepo, 'exports');
+  assert.ok(fs.existsSync(out) && fs.readdirSync(out).some((f) => f.endsWith('-sess1234.md')), `exports 미생성: ${r.stdout}${r.stderr}`);
+  assert.match(r.stdout, /refresh 완료/);
+});
+check('--refresh 경계: 레포 밖·트랜스크립트 없는 cwd 에서는 아무것도 쓰지 않고 이유를 알린 뒤 exit 0', () => {
+  const r = spawnSync('node', [HOOK, '--refresh'], { cwd: outside, env: envNoProj, encoding: 'utf8' });
+  assert.strictEqual(r.status, 0);
+  assert.ok(!fs.existsSync(path.join(outside, 'exports')), '레포 밖에 exports 생성');
+  assert.match(r.stdout + r.stderr, /refresh 대상 세션을 찾지 못함/);
+});
+fs.rmSync(cliHome, { recursive: true, force: true });
+fs.rmSync(gitRepo, { recursive: true, force: true });
+fs.rmSync(outside, { recursive: true, force: true });
+
 console.log(`\nsession-export.test.js: ${pass} pass / ${fail} fail`);
 process.exit(fail ? 1 : 0);

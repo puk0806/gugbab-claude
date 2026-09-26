@@ -3,7 +3,7 @@
 순서:
 0. **메모리·세션 요약 클린 확인 (필수)** — PR에는 메모리 정리가 끝난 상태의 모든 정보가 함께 올라가야 한다:
    - `git status --porcelain memory/ exports/` 결과가 있으면 → 메모리 정리 후
-     `node $CLAUDE_PROJECT_DIR/.claude/hooks/session-export.js --refresh`로 세션 요약 최신화 →
+     `R="$(git rev-parse --show-toplevel)" && CLAUDE_PROJECT_DIR="$R" node "$R/.claude/hooks/session-export.js" --refresh`로 세션 요약 최신화 (Bash 도구엔 `CLAUDE_PROJECT_DIR`가 없어 git 최상위로 명시) →
      `[memory]`/`[export]` 커밋으로 포함 (절차: `.claude/rules/memory-sync.md` — memory 공유 옵션 설치된 경우)
    - 미커밋 상태로 push·PR 시도하면 deliverable-guard 훅이 차단한다
 1. `git log main...HEAD --oneline` 으로 커밋 목록 확인

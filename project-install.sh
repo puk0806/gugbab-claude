@@ -518,7 +518,10 @@ if [ -f "$_hooks_pj_src" ]; then
     const fs = require("fs"), crypto = require("crypto");
     const [src, dest, mfPath] = process.argv.slice(1);
     const sha = (b) => crypto.createHash("sha256").update(b).digest("hex");
-    if (!fs.existsSync(dest)) { console.log("install"); process.exit(0); }
+    // symlink(끊어진 링크 포함)면 cp -f 가 링크 대상(대상 프로젝트 밖일 수 있음)에 쓴다 → 건드리지 않음 (2026-09-26 F6)
+    let lst = null; try { lst = fs.lstatSync(dest); } catch {}
+    if (lst && lst.isSymbolicLink()) { console.log("symlink"); process.exit(0); }
+    if (!lst) { console.log("install"); process.exit(0); }
     const cur = fs.readFileSync(dest);
     if (cur.equals(fs.readFileSync(src))) { console.log("same"); process.exit(0); }
     try {  // 이전 설치가 만든 사본(해시 일치) → 원본 갱신 반영
@@ -542,6 +545,8 @@ if [ -f "$_hooks_pj_src" ]; then
       fi ;;
     keep-ok)
       echo "  · .claude/hooks/package.json 사용자 파일 보존 (type=commonjs 확인)" ;;
+    symlink)
+      echo "  ⚠ .claude/hooks/package.json 이 symlink 입니다 — 링크 대상에 쓰지 않도록 건드리지 않았습니다. 일반 파일 {\"type\": \"commonjs\"} 로 교체하지 않으면 루트가 \"type\":\"module\" 인 프로젝트에서 훅이 크래시할 수 있습니다" ;;
     *)
       echo "  ⚠ .claude/hooks/package.json 사용자 파일 보존 — \"type\": \"commonjs\" 가 아니어서(또는 JSON 오류) 루트가 \"type\":\"module\" 인 프로젝트에서 훅이 require 에러로 크래시할 수 있습니다. 직접 \"type\": \"commonjs\" 로 수정하세요" ;;
   esac
@@ -1731,6 +1736,12 @@ if [ -f "$SETTINGS_FILE" ]; then
       *) echo "  y 또는 n을 입력하세요." ;;
     esac
   done
+  # 보존(N) 경로 최소 이관 (2026-09-26) — 구버전 InstructionsLoaded 배선(instructions-loaded·staleness-check)만
+  # SessionStart 로 옮기고(.bak 백업), 무따옴표 $CLAUDE_PROJECT_DIR 배선은 경고한다. 그 외 사용자 설정은 불변.
+  if [ "$OVERWRITE_SETTINGS" = "skip" ]; then
+    node "$REPO_DIR/scripts/migrate-settings.js" --settings "$SETTINGS_FILE" || \
+      echo "  ⚠ settings.json 이관 스크립트 실행 실패 — 구버전 InstructionsLoaded 배선이 남아 있을 수 있습니다"
+  fi
 fi
 
 if [ ! -f "$SETTINGS_FILE" ] || ([ -f "$SETTINGS_FILE" ] && [ "$OVERWRITE_SETTINGS" != "skip" ]); then

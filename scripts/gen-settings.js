@@ -18,7 +18,9 @@ const withReadmeGuard      = args.includes('--readme-guard');      // git commit
 const withStalenessGuard   = args.includes('--staleness-guard');   // 60일 초과 스킬 강제 재검증 지시 주입
 const withBranchProtection = args.includes('--branch-protection'); // main push 금지 + 피처→피처 브랜치 생성 금지
 
-const H = (name) => ({ type: 'command', command: `node $CLAUDE_PROJECT_DIR/.claude/hooks/${name}` });
+// 공식 문서(hooks "Reference scripts by path"): 셸 형태에서는 placeholder 를 큰따옴표로 감싼다 —
+// 무따옴표면 공백 포함 프로젝트 경로에서 단어 분리로 Cannot find module → 모든 가드가 fail-open (2026-09-26)
+const H = (name) => ({ type: 'command', command: `node "$CLAUDE_PROJECT_DIR"/.claude/hooks/${name}` });
 
 // ── Permissions ─────────────────────────────────────────────────────────
 const permissions = {
@@ -69,7 +71,7 @@ if (isDev) {
 // PreToolUse Bash — readme-guard 선택 시 (git commit/push 직전 README 미업데이트 차단)
 // deliverable-guard가 구 readme-guard + pending-test-guard + 세션 파일 추적 통합 훅
 // memory 선택 시에는 README 검사 없이도 push/PR 직전 memory·exports 클린 검사가 필요 → --no-readme로 배선
-const deliverablePreBash = { type: 'command', command: 'node $CLAUDE_PROJECT_DIR/.claude/hooks/deliverable-guard.js --no-readme' };
+const deliverablePreBash = { type: 'command', command: 'node "$CLAUDE_PROJECT_DIR"/.claude/hooks/deliverable-guard.js --no-readme' };
 if (withReadmeGuard) {
   hooks.PreToolUse.push({ matcher: 'Bash', hooks: [H('deliverable-guard.js')] });
 } else if (withMemory) {
@@ -80,13 +82,14 @@ if (withBranchProtection) {
   hooks.PreToolUse.push({ matcher: 'Bash', hooks: [H('branch-protection.js')] });
 }
 
-// PostToolUse Write — deliverable-guard(세션 수정 파일 추적, 구 session-summary 역할)를
-// 체인 선두에 배치: 뒤의 exit 2 검증 훅이 체인을 중단시켜도 추적 기록은 보장
+// PostToolUse Write — deliverable-guard(세션 수정 파일 추적, 구 session-summary 역할) 포함.
+// 공식 문서: "All matching hooks run in parallel." — 배열 순서는 실행 순서가 아니며, 다른 훅의 exit 2 가
+// 이 훅의 실행을 막지도 않는다. 각 훅은 서로의 결과에 의존하지 않도록 유지한다 (2026-09-26 주석 정정)
 const devWriteHooks = isLegacy
   ? [H('adversarial-test-guard.js'), H('fake-impl-guard.js')]
   : [H('tdd-guard.js'), H('adversarial-test-guard.js'), H('fake-impl-guard.js')];
 const tsHook = isLegacy
-  ? { type: 'command', command: 'node $CLAUDE_PROJECT_DIR/.claude/hooks/typescript-quality.js --changed-only' }
+  ? { type: 'command', command: 'node "$CLAUDE_PROJECT_DIR"/.claude/hooks/typescript-quality.js --changed-only' }
   : H('typescript-quality.js');
 
 const writeHooks = [H('deliverable-guard.js')];
@@ -111,10 +114,11 @@ hooks.PostToolUse = [
 // 공식 문서상 InstructionsLoaded 는 관측 전용(출력 폐기)이라 경고가 아무에게도 전달되지 않았다.
 // SessionStart 는 stdout·additionalContext 를 컨텍스트로 주입하며 /clear 시에도(source:"clear") 발생한다.
 const stalenessHook = withStalenessGuard
-  ? { type: 'command', command: 'node $CLAUDE_PROJECT_DIR/.claude/hooks/staleness-check.js --strict' }
+  ? { type: 'command', command: 'node "$CLAUDE_PROJECT_DIR"/.claude/hooks/staleness-check.js --strict' }
   : H('staleness-check.js');
 const sessionStartHooks = [];
-if (withMemory) sessionStartHooks.push(H('memory-pull.js'));   // 최신 memory 반영이 경고 산출보다 먼저
+// 같은 이벤트 훅은 병렬 실행(순서 보장 없음). memory-pull 과 경고 훅 2종은 서로 독립 — memory 를 읽지 않는다
+if (withMemory) sessionStartHooks.push(H('memory-pull.js'));
 sessionStartHooks.push(H('session-start.js'));
 sessionStartHooks.push(H('instructions-loaded.js'));
 sessionStartHooks.push(stalenessHook);
@@ -124,7 +128,7 @@ hooks.SessionStart = [{ hooks: sessionStartHooks }];
 // --readme-guard 미선택 시 README 검사는 끄고 PENDING_TEST 검사만 수행 (opt-in 의미 보존)
 const deliverableStop = withReadmeGuard
   ? H('deliverable-guard.js')
-  : { type: 'command', command: 'node $CLAUDE_PROJECT_DIR/.claude/hooks/deliverable-guard.js --no-readme' };
+  : { type: 'command', command: 'node "$CLAUDE_PROJECT_DIR"/.claude/hooks/deliverable-guard.js --no-readme' };
 const stopHooks = [deliverableStop];
 if (withCodex) stopHooks.push(H('codex-review-guard.js'));
 // memory-stop-guard는 2026-07-10 제거 — 자동 커밋 폐지로 존재 이유 소멸 (memory-sync가 미러 복사 담당)
@@ -170,7 +174,7 @@ if (isUtil) {
       H('cc-notify.js'),
     ] },
   ];
-  // InstructionsLoaded / PermissionRequest 유지
+  // SessionStart(위 공통 배선) / PermissionRequest 유지 — InstructionsLoaded 는 2026-09-25 폐지
 }
 
 // ── Output ───────────────────────────────────────────────────────────────
@@ -183,6 +187,6 @@ const settings = {
   ...(hasPlugins ? { enabledPlugins } : {}),
   permissions,
   hooks,
-  statusLine: { type: 'command', command: 'bash $CLAUDE_PROJECT_DIR/.claude/hooks/statusline.sh' },
+  statusLine: { type: 'command', command: 'bash "$CLAUDE_PROJECT_DIR"/.claude/hooks/statusline.sh' },
 };
 process.stdout.write(JSON.stringify(settings, null, 2) + '\n');
