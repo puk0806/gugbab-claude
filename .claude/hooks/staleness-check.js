@@ -1,4 +1,4 @@
-// InstructionsLoaded — 스킬 검증일 경과 감지
+// SessionStart (레거시: InstructionsLoaded) — 스킬 검증일 경과 감지
 // 사용: node staleness-check.js [--strict]
 //
 // --strict 모드 (export 선택 시 활성화):
@@ -6,7 +6,7 @@
 //   30~59일   → stderr 재검증 권고
 //
 // 일반 모드:
-//   60일 초과 → stderr 경고 + Claude 지시 (사용자 확인 요청)
+//   60일 초과 → 경고 + 참고 안내 (SessionStart: 현재 요청 우선, 응답 끝에 재검증 안내 — 질문 강요 없음)
 //   30~59일   → 무시
 //
 // SessionStart 모드 (stdin hook_event_name === 'SessionStart', 정확 일치):
@@ -29,10 +29,18 @@ function readEvent() {
     const raw = fs.readFileSync(0, 'utf8').trim();
     if (!raw) return null;
     const j = JSON.parse(raw);
-    return j && typeof j.hook_event_name === 'string' ? j.hook_event_name : null;
+    return j && typeof j === 'object' ? j : null;
   } catch { return null; }
 }
-const SESSION_START = readEvent() === 'SessionStart';
+const EVENT = readEvent();
+const SESSION_START = !!EVENT && EVENT.hook_event_name === 'SessionStart';
+// source 분기 (공식 source: startup | resume | clear | compact | fork)
+//   startup·clear → Claude 지시(additionalContext) + 사용자 요약(systemMessage) — 새 대화의 시작점
+//   compact       → 무출력 — 자동 압축은 작업 도중 발생. 요약에 이전 대화가 보존되고, 매번 지시하면 작업이 끊긴다
+//   resume·fork   → 사용자 요약만 — 이전 대화에 이미 안내됐고, 이어받은 작업을 질문으로 끊지 않는다
+//   누락·알 수 없는 값·타입 위장 → 사용자 요약만(보수적: 작업을 끊는 지시는 명시된 startup/clear 에서만)
+const SOURCE = EVENT && typeof EVENT.source === 'string' ? EVENT.source : null;
+const INSTRUCT_SOURCES = new Set(['startup', 'clear']);
 const clip = (s) => (s.length > CAP ? s.slice(0, CAP - 20) + '\n  ... (생략)' : s);
 const STALE_DAYS = 60;
 const WARN_DAYS  = 30;
@@ -83,6 +91,8 @@ try {
 
   // ── SessionStart 모드: stdout JSON 1개 ─────────────────────────────────
   if (SESSION_START) {
+    if (SOURCE === 'compact') process.exit(0);
+    const instruct = INSTRUCT_SOURCES.has(SOURCE);
     const out = {};
     const userLines = [];
     if (stale.length > 0) {
@@ -93,10 +103,11 @@ try {
            '[staleness-check → 필수 질문] 지금 즉시 사용자에게 다음을 물어보세요:', q,
            `YES → freshness-auditor 에이전트를 실행하세요. 대상: 검증일 ${WARN_DAYS}일 초과 스킬 전체(${all.length}종).`,
            'NO  → 그냥 진행하세요.', '(이 질문은 생략하지 마세요)']
+        // 일반 모드 = "경고만"(설치 안내: 60일+ 강제 질문은 strict 전용) — 작업을 끊는 질문 강요 금지
         : [head, '', formatList(stale), '',
-           '[staleness-check → Claude 지시] 사용자에게 질문하세요:', q,
-           `YES면 freshness-auditor 에이전트를 실행하고(대상: ${WARN_DAYS}일 초과 전체), NO면 그냥 진행하세요.`];
-      out.hookSpecificOutput = { hookEventName: 'SessionStart', additionalContext: clip(ctx.join('\n')) };
+           '[staleness-check → 참고] 사용자의 현재 요청을 먼저 처리하세요. 작업을 중단하지 말고,',
+           `응답을 마칠 때 한 줄로 재검증(freshness-auditor, 대상: ${WARN_DAYS}일 초과 전체) 가능 여부를 안내하면 충분합니다.`];
+      if (instruct) out.hookSpecificOutput = { hookEventName: 'SessionStart', additionalContext: clip(ctx.join('\n')) };
       userLines.push(head + ':', formatList(stale));
     }
     if (warn.length > 0) {

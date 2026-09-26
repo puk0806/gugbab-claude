@@ -124,8 +124,39 @@ test('초장문 커밋 메시지(50KB) → additionalContext 10,000자 상한 �
 })
 test('stdout 은 JSON 한 덩어리만 (평문 혼입 없음)', '{}', cleanRepo, { stderrIncludes: '브랜치: main' })
 
+console.log('\n── 경계 — 1글자·공백 파일명 (-z 출력 trim 으로 첫 항목 선행 공백 " M" 이 사라지던 버그) ──')
+const extraRepos = []
+const repoWith = (setup) => {
+  const d = makeGitRepo({ commits: true })
+  extraRepos.push(d)
+  setup(d)
+  return d
+}
+const commitFiles = (d, files) => {
+  for (const f of files) fs.writeFileSync(path.join(d, f), 'orig\n')
+  sh('git add -A', d); sh('git commit -q -m files', d)
+}
+test('tracked 1글자 파일 "a" 수정(첫 항목 " M a") → 미커밋 파일 1개', '{}',
+  repoWith((d) => { commitFiles(d, ['a']); fs.writeFileSync(path.join(d, 'a'), 'mod\n') }),
+  { stderrIncludes: '미커밋 파일: 1개' })
+test('tracked "a"·"b" 수정 → 미커밋 파일 2개', '{}',
+  repoWith((d) => { commitFiles(d, ['a', 'b']); fs.writeFileSync(path.join(d, 'a'), 'm\n'); fs.writeFileSync(path.join(d, 'b'), 'm\n') }),
+  { stderrIncludes: '미커밋 파일: 2개' })
+test('tracked "a" 수정 + untracked "b" → 미커밋 파일 2개', '{}',
+  repoWith((d) => { commitFiles(d, ['a']); fs.writeFileSync(path.join(d, 'a'), 'm\n'); fs.writeFileSync(path.join(d, 'b'), 'n\n') }),
+  { stderrIncludes: '미커밋 파일: 2개' })
+test('공백 파일명 " " 수정 → 미커밋 파일 1개', '{}',
+  repoWith((d) => { commitFiles(d, [' ']); fs.writeFileSync(path.join(d, ' '), 'm\n') }),
+  { stderrIncludes: '미커밋 파일: 1개' })
+test('선행 공백 파일명 " x" + 1글자 "a" 수정 → 미커밋 파일 2개', '{}',
+  repoWith((d) => { commitFiles(d, [' x', 'a']); fs.writeFileSync(path.join(d, ' x'), 'm\n'); fs.writeFileSync(path.join(d, 'a'), 'm\n') }),
+  { stderrIncludes: '미커밋 파일: 2개' })
+test('1글자 rename "a" → "b" (staged, 원경로 토큰 1개 추가) → 미커밋 파일 1개', '{}',
+  repoWith((d) => { commitFiles(d, ['a']); sh('git mv a b', d) }),
+  { stderrIncludes: '미커밋 파일: 1개' })
+
 // cleanup
-for (const d of [cleanRepo, dirtyRepo, emptyRepo, notARepo, injectRepo, nlRepo, longRepo]) {
+for (const d of [cleanRepo, dirtyRepo, emptyRepo, notARepo, injectRepo, nlRepo, longRepo, ...extraRepos]) {
   try { fs.rmSync(d, { recursive: true, force: true }) } catch {}
 }
 

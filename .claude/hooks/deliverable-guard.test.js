@@ -125,6 +125,59 @@ const stopClean = runHook(
 )
 assert('위반 없음 → exit 0', stopClean.status, 0)
 
+// ─── Stop 루프 방지 (stop_hook_active) ───────────────────────────
+// 공식: stop_hook_active=true 는 "이미 Stop 훅 때문에 계속 진행 중" — 해소 불가 조건으로 반복 차단 금지(8회 캡).
+// 설계: 연쇄(사용자 턴)마다 같은 사유는 1회만 차단, 재시도 시 사용자 systemMessage 경고 후 통과.
+section('Stop 루프 방지 — stop_hook_active')
+{
+  const stTmp = fs.mkdtempSync(path.join(os.tmpdir(), 'dg-loop-tmp-')) // 상태 파일 격리
+  const envL = { ...process.env, CLAUDE_PROJECT_DIR: tmpRoot, TMPDIR: stTmp }
+  const stopL = (extra, root = tmpRoot) => {
+    const r = spawnSync('node', [HOOK, '--no-readme'], {
+      input: JSON.stringify({ hook_event_name: 'Stop', cwd: root, ...extra }), encoding: 'utf8', timeout: 5000, cwd: root, env: { ...envL, CLAUDE_PROJECT_DIR: root },
+    })
+    let j = null; try { j = r.stdout.trim() ? JSON.parse(r.stdout) : null } catch { j = 'INVALID' }
+    return { ...r, j }
+  }
+  let r = stopL({ session_id: 'L1', stop_hook_active: false })
+  assert('1차 Stop(active=false) + PENDING_TEST 미완 → exit 2', r.status, 2)
+  r = stopL({ session_id: 'L1', stop_hook_active: true })
+  assert('계속 진행 중(active=true) + 같은 사유 → 재차단 없이 exit 0', r.status, 0)
+  assert('  └ 사용자 systemMessage 로 미완결 경고(스킬 경로 포함)', !!(r.j && typeof r.j.systemMessage === 'string' && r.j.systemMessage.includes('no-record')), true)
+  assert('  └ 차단 필드(decision) 없음', !!(r.j && !('decision' in r.j)), true)
+  r = stopL({ session_id: 'L1', stop_hook_active: false })
+  assert('새 사용자 턴(active=false) → 다시 1회 차단', r.status, 2)
+  r = stopL({ session_id: 'L2', stop_hook_active: true })
+  assert('다른 훅이 계속시킨 연쇄(이 훅 미차단 상태) → 1회 차단', r.status, 2)
+  // 사유가 바뀌면(새 위반 추가) 같은 연쇄라도 1회 더 차단 — 진전/신규 문제는 알려야 함
+  const extra = path.join(tmpRoot, 'docs/skills/backend/new-one/verification.md')
+  r = stopL({ session_id: 'L3', stop_hook_active: false })
+  fs.mkdirSync(path.dirname(extra), { recursive: true })
+  fs.writeFileSync(extra, fullDoc('PENDING_TEST', '\n(없음)\n'))
+  r = stopL({ session_id: 'L3', stop_hook_active: true })
+  assert('같은 연쇄에서 새 위반 추가(사유 변경) → 1회 더 차단', r.status, 2)
+  r = stopL({ session_id: 'L3', stop_hook_active: true })
+  assert('  └ 그 사유로 재시도 → 경고 후 통과', r.status, 0)
+  fs.rmSync(path.dirname(extra), { recursive: true, force: true })
+  r = stopL({ session_id: 'L4', stop_hook_active: 'true' })
+  assert('stop_hook_active 문자열 "true"(타입 위장) → 새 연쇄로 취급, 차단', r.status, 2)
+  r = stopL({ stop_hook_active: true })
+  assert('session_id 없음 + active=true → 추적 불가, 루프 방지 우선(exit 0 + systemMessage)', r.status === 0 && !!(r.j && r.j.systemMessage), true)
+  r = stopL({ stop_hook_active: false })
+  assert('session_id 없음 + active=false → 차단', r.status, 2)
+  r = stopL({ session_id: '../../../../dg-escape', stop_hook_active: false })
+  assert('session_id 경로 순회 → 상태 파일이 TMPDIR 밖에 생기지 않음',
+    r.status === 2 && !fs.readdirSync(path.dirname(stTmp)).some(f => f.includes('dg-escape')), true)
+  for (const f of fs.readdirSync(stTmp)) { try { fs.writeFileSync(path.join(stTmp, f), '{corrupt') } catch {} }
+  r = stopL({ session_id: 'L1', stop_hook_active: true })
+  assert('상태 파일 손상 → 크래시 없이 차단 쪽(exit 2)', r.status, 2)
+  // 위반 해소 후 새 턴에서 상태 초기화 → 이후 다른 훅 연쇄에서 새로 생긴 위반은 1회 차단
+  const cleanR = stopL({ session_id: 'L5', stop_hook_active: false }, cleanRoot)
+  r = stopL({ session_id: 'L5', stop_hook_active: true })
+  assert('위반 없는 턴 뒤 다른 훅 연쇄에서 위반 → 1회 차단', cleanR.status === 0 && r.status === 2, true)
+  fs.rmSync(stTmp, { recursive: true, force: true })
+}
+
 const postToolUse = runHook(
   { hook_event_name: 'PostToolUse', session_id: SID, tool_name: 'Write', tool_input: { file_path: '/tmp/x.md' } },
 )
@@ -210,7 +263,13 @@ assert('클린 상태 push → 통과 (출력 없음)', !preBash('git push origi
 fs.writeFileSync(path.join(memRoot, 'memory', 'fact.md'), 'v2 (미커밋)')
 assert('memory 미커밋 push → deny', preBash('git push origin main').stdout.includes('"permissionDecision":"deny"'), true)
 assert('memory 미커밋 gh pr create → deny', preBash('gh pr create --title x').stdout.includes('"permissionDecision":"deny"'), true)
-assert('차단 메시지에 refresh 조치 포함', preBash('git push').stdout.includes('session-export.js --refresh'), true)
+{
+  // 안내 명령은 Bash 도구에서 그대로 실행 가능해야 한다 — CLAUDE_PROJECT_DIR 미설정 환경이므로 git 최상위로 명시
+  const msg = JSON.parse(preBash('git push').stdout).hookSpecificOutput?.permissionDecisionReason || ''
+  assert('차단 메시지에 refresh 조치 포함', msg.includes('session-export.js') && msg.includes('--refresh'), true)
+  assert('refresh 안내가 git 최상위 기준(env 미의존)', msg.includes('git rev-parse --show-toplevel'), true)
+  assert('refresh 안내에 따옴표 없는 $CLAUDE_PROJECT_DIR 경로 없음', msg.includes('node $CLAUDE_PROJECT_DIR'), false)
+}
 {
   // 메시지 채널: PreToolUse JSON deny 는 exit 0 + stdout JSON(hookSpecificOutput.permissionDecisionReason) 이어야 한다.
   // exit 2 와 섞으면 JSON 이 무시될 수 있고, stderr 에 사유를 쓰면 이중 전달된다.

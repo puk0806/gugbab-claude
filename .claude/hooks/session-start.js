@@ -11,15 +11,18 @@ const { execSync } = require('child_process');
 const MAX_CHARS = 9000;       // 10,000 상한 여유
 const MAX_LINE = 200;         // 커밋 제목 1줄 상한
 
-function run(cmd) {
+function runRaw(cmd) {
   try {
-    return execSync(cmd, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'], maxBuffer: 64 * 1024 * 1024 }).trim();
+    return execSync(cmd, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'], maxBuffer: 64 * 1024 * 1024 });
   } catch {
     return '';
   }
 }
+const run = (cmd) => runRaw(cmd).trim();
 
 // -z: NUL 구분 — 개행 포함 파일명을 여러 개로 세지 않음. rename/copy 는 원경로 토큰 1개 추가 → 스킵
+// 입력은 trim 하지 않은 원본이어야 한다 — 첫 항목의 선행 공백(" M a")이 사라지면 "XY 경로" 형식이 깨져
+// 1글자 경로 항목이 길이 필터(<4)에 걸려 누락된다
 function countChanged(raw) {
   const tokens = raw.split('\0');
   let n = 0;
@@ -37,7 +40,7 @@ const clip = (s, n) => (s.length > n ? s.slice(0, n - 1) + '…' : s);
 let text = '';
 try {
   const branch = run('git branch --show-current') || 'unknown';
-  const changed = countChanged(run('git status --porcelain -z'));
+  const changed = countChanged(runRaw('git status --porcelain -z'));
   const log = run('git log --oneline -3');
 
   const lines = [`[Session Start] 브랜치: ${clip(branch, MAX_LINE)}`];

@@ -329,6 +329,47 @@ section('SessionStart 모드 — stdout JSON(additionalContext=Claude, systemMes
   }
 }
 
+// ── SessionStart source 별 분기 ──────────────────────────────────────
+// 공식 문서: SessionStart source = startup | resume | clear | compact | fork.
+// compact(자동 압축)·resume·fork 마다 "즉시 질문" 지시를 주입하면 진행 중 작업이 끊긴다 → startup·clear 에서만 Claude 지시.
+section('SessionStart source 분기 — startup·clear 만 Claude 지시, compact 무출력, resume·fork·누락·위장 = 사용자 요약만')
+{
+  const parse = (r) => { try { return r.stdout.trim() ? JSON.parse(r.stdout) : null } catch { return 'INVALID' } }
+  const ctx = (j) => (j && j.hookSpecificOutput) ? j.hookSpecificOutput.additionalContext : undefined
+  const root = mkRoot('sc-src-')
+  mkSkill(root, 'backend', 'src-stale', verifDoc(isoDaysAgo(90)))
+  mkSkill(root, 'backend', 'src-warn', verifDoc(isoDaysAgo(40)))
+  const run = (inputObj, args = ['--strict']) => parse(runHook(root, args, { input: typeof inputObj === 'string' ? inputObj : JSON.stringify(inputObj) }))
+
+  for (const src of ['startup', 'clear']) {
+    const j = run({ hook_event_name: 'SessionStart', source: src })
+    ok(`${src}: additionalContext(필수 질문) + systemMessage`, (ctx(j) || '').includes('필수 질문') && typeof j?.systemMessage === 'string')
+  }
+  {
+    const r = runHook(root, ['--strict'], { input: JSON.stringify({ hook_event_name: 'SessionStart', source: 'compact' }) })
+    ok('compact: stdout·stderr 모두 비어있음(작업 중 압축마다 끼어들지 않음)', r.stdout.trim() === '' && r.stderr.trim() === '' && r.status === 0)
+  }
+  for (const src of ['resume', 'fork']) {
+    const j = run({ hook_event_name: 'SessionStart', source: src })
+    ok(`${src}: Claude 지시 없음, 사용자 systemMessage 만`, j && j !== 'INVALID' && ctx(j) === undefined && !('hookSpecificOutput' in j) && (j.systemMessage || '').includes('src-stale'))
+  }
+  // 누락·알 수 없는 값·타입 위장 — 작업을 끊는 지시는 명시된 startup/clear 에서만 (보수적 기본값)
+  for (const [label, src] of [['source 누락', undefined], ['알 수 없는 값 "reload"', 'reload'], ['대문자 위장 "STARTUP"', 'STARTUP'],
+    ['배열 위장 ["startup"]', ['startup']], ['객체 위장', { toString: 'startup' }], ['null', null], ['공백 패딩 " startup "', ' startup ']]) {
+    const input = { hook_event_name: 'SessionStart' }
+    if (src !== undefined) input.source = src
+    const j = run(input)
+    ok(`${label}: Claude 지시 없음, 사용자 요약만`, j && j !== 'INVALID' && ctx(j) === undefined && (j.systemMessage || '').includes('src-stale'))
+  }
+  // 비strict 기본 문구 — 설치 안내("60일+ 강제는 strict")와 정렬: 질문 강요·작업 중단 지시 금지
+  {
+    const j = run({ hook_event_name: 'SessionStart', source: 'startup' }, [])
+    const c = ctx(j) || ''
+    ok('비strict startup: 목록은 전달하되 "질문하세요"/"생략하지 마세요" 강제 문구 없음', c.includes('src-stale') && !c.includes('질문하세요') && !c.includes('생략하지 마세요'))
+    ok('비strict startup: 현재 요청 우선 처리 안내 포함', c.includes('현재 요청'))
+  }
+}
+
 // ── 정리 ──────────────────────────────────────────────────────────────
 for (const r of tmpRoots) { try { fs.rmSync(r, { recursive: true, force: true }) } catch {} }
 

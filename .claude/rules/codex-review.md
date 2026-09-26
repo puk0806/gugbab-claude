@@ -13,8 +13,9 @@
 # 1. Codex CLI 설치 확인
 which codex >/dev/null 2>&1 || { echo "[codex-review] codex CLI 없음 — 건너뜀"; exit 0; }
 
-# 2. 로그인 상태 확인
-codex login status 2>&1 | grep -qi "logged in" || { echo "[codex-review] codex 미로그인 — 건너뜀"; exit 0; }
+# 2. 로그인 상태 확인 — 종료코드 0 AND "Not logged in" 문구 없음 (grep "logged in" 단독은 "Not logged in"에도 매치)
+CODEX_LOGIN=$(codex login status 2>&1) && ! printf '%s\n' "$CODEX_LOGIN" | grep -qi "not logged in" \
+  || { echo "[codex-review] codex 미로그인 — 건너뜀"; exit 0; }
 
 # 3. 프로젝트 플러그인 활성화 확인
 node -e "const s=require('./.claude/settings.json');process.exit(s.enabledPlugins?.['codex@openai-codex']?0:1)" 2>/dev/null \

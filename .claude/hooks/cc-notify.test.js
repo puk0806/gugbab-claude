@@ -61,12 +61,30 @@ if (process.platform !== 'darwin') {
 }
 
 console.log('\n── 정상 흐름 ──')
-test('정상 stop_reason(other) → 완료 메시지로 알림 호출',
-  JSON.stringify({ stop_reason: 'other' }),
-  { notifyCalled: process.platform === 'darwin', logIncludes: process.platform === 'darwin' ? '작업이 완료됐어요' : undefined })
-test('정상 stop_reason(error) → 오류 메시지로 알림 호출',
+// 공식 Stop 입력: stop_hook_active, last_assistant_message, background_tasks, session_crons (stop_reason 없음)
+const isMac = process.platform === 'darwin'
+test('정상 Stop(stop_hook_active=false) → 완료 메시지로 알림 호출',
+  JSON.stringify({ hook_event_name: 'Stop', stop_hook_active: false, last_assistant_message: '끝', background_tasks: [], session_crons: [] }),
+  { notifyCalled: isMac, logIncludes: isMac ? '작업이 완료됐어요' : undefined })
+test('stop_hook_active=true(다른 Stop 훅이 차단해 계속 진행 중) → 완료 알림 안 보냄',
+  JSON.stringify({ hook_event_name: 'Stop', stop_hook_active: true }),
+  { notifyCalled: false })
+test('background_tasks 진행 중 → "완료" 대신 백그라운드 대기 알림',
+  JSON.stringify({ hook_event_name: 'Stop', stop_hook_active: false, background_tasks: [{ id: 't1', type: 'shell', status: 'running' }] }),
+  { notifyCalled: isMac, logIncludes: isMac ? '백그라운드 작업' : undefined, logExcludes: '작업이 완료됐어요' })
+test('존재하지 않는 필드 stop_reason="error" → 무시(오류 분기 없음), 완료 메시지',
   JSON.stringify({ stop_reason: 'error' }),
-  { notifyCalled: process.platform === 'darwin', logIncludes: process.platform === 'darwin' ? '오류가 발생했어요' : undefined })
+  { notifyCalled: isMac, logIncludes: isMac ? '작업이 완료됐어요' : undefined, logExcludes: '오류가 발생했어요' })
+
+console.log('\n── 악성/경계 — 필드 타입 위장 ──')
+test('stop_hook_active 문자열 "true" → 불리언 아님, 완료 알림(크래시 없음)',
+  JSON.stringify({ stop_hook_active: 'true' }), { notifyCalled: isMac, logIncludes: isMac ? '작업이 완료됐어요' : undefined })
+test('background_tasks 가 배열 아님(문자열·객체) → 무시, 완료 알림',
+  JSON.stringify({ background_tasks: 'running', session_crons: { a: 1 } }), { notifyCalled: isMac, logIncludes: isMac ? '작업이 완료됐어요' : undefined })
+test('last_assistant_message 에 셸 메타문자 → 알림 문구에 반영 안 됨(고정 리터럴)',
+  JSON.stringify({ last_assistant_message: `"'; touch /tmp/cc-notify-pwned-${Date.now()}; '` }),
+  { notifyCalled: isMac, logIncludes: isMac ? '작업이 완료됐어요' : undefined, logExcludes: 'pwned' })
+test('JSON null → exit 0, 알림 호출 안 함(크래시 없음)', 'null', { notifyCalled: false })
 
 console.log('\n── 악성/경계 — stdin 조작 ──')
 test('빈 stdin → JSON.parse 실패 → exit 0, 알림 호출 안 함', '', { notifyCalled: false })

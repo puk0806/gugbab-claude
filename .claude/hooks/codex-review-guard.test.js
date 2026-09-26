@@ -33,6 +33,12 @@ const noRepo = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-test-'))
 
 test('빈 stdin → exit 0 (스킵)', null, 0, noRepo, 'stdin')
 test('Stop 아닌 이벤트 → exit 0 (스킵)', { hook_event_name: 'SessionStart' }, 0, noRepo, '이벤트 아님')
+for (const raw of ['null', '[1,2]', '"str"', '42']) {
+  const r = spawnSync('node', [HOOK], { input: raw, encoding: 'utf8', timeout: 10000, cwd: noRepo })
+  const pass = r.status === 0
+  console.log(`  ${pass ? '✅' : '❌'} 비객체 JSON 입력 ${raw} → 크래시 없이 exit 0 → ${pass ? 'PASS' : `FAIL (exit ${r.status})`}`)
+  pass ? passed++ : failed++
+}
 test('git 레포 아님 → exit 0 (스킵)', { hook_event_name: 'Stop' }, 0, noRepo, 'git 레포 아님')
 
 fs.rmSync(noRepo, { recursive: true, force: true })
@@ -62,7 +68,26 @@ console.log('\n── 차단 경로 (codex 스텁) → exit 2 + stderr 사유 �
     pass ? passed++ : failed++
   }
   runBlock('코드 변경 + 로그인 → 리뷰 요구 사유는 stderr', 'yes', '적대적 리뷰 필요')
-  runBlock('코드 변경 + 미로그인 → 로그인 요구 사유는 stderr', 'no', '로그인 필요')
+  // 미로그인은 Claude 가 해소 불가(대화형 브라우저 로그인) → 차단하면 8회 연속 루프. 규칙 codex-review.md
+  // "3가지 중 하나라도 실패 → 조용히 건너뜀"과 일치하게 통과(차단·Claude 지시 없음)
+  {
+    const r = spawnSync('node', [HOOK], { input: JSON.stringify({ hook_event_name: 'Stop' }), encoding: 'utf8', timeout: 20000, cwd: repo, env: env('no') })
+    const pass = r.status === 0 && !r.stderr.includes('codex login') && (r.stdout || '').trim() === ''
+    console.log(`  ${pass ? '✅' : '❌'} 코드 변경 + 미로그인(exit 1 "Not logged in") → 조용히 통과(exit 0, 'codex login' 지시 없음) → ${pass ? 'PASS' : `FAIL (exit ${r.status}, stderr: ${r.stderr.slice(0, 80)})`}`)
+    pass ? passed++ : failed++
+  }
+  {
+    // 종료코드 0 인데 "Not logged in" 출력 — /logged in/ 부분 매치로 로그인 판정하면 안 됨
+    const stub2 = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-bin-nl-'))
+    fs.writeFileSync(path.join(stub2, 'codex'), '#!/bin/sh\necho "Not logged in"\nexit 0\n')
+    fs.chmodSync(path.join(stub2, 'codex'), 0o755)
+    const r = spawnSync('node', [HOOK], { input: JSON.stringify({ hook_event_name: 'Stop' }), encoding: 'utf8', timeout: 20000, cwd: repo,
+      env: { ...process.env, PATH: `${stub2}:${process.env.PATH}` } })
+    const pass = r.status === 0 && !r.stderr.includes('리뷰 필요')
+    console.log(`  ${pass ? '✅' : '❌'} "Not logged in" + exit 0 → 미로그인으로 판정(부분 매치 오판 금지) → ${pass ? 'PASS' : `FAIL (exit ${r.status})`}`)
+    pass ? passed++ : failed++
+    fs.rmSync(stub2, { recursive: true, force: true })
+  }
 
   // 마커가 변경보다 최신이면 통과 (차단 사유 출력 없음)
   const marker = path.join(repo, '.claude', '.codex-review-done')
@@ -142,6 +167,98 @@ console.log('\n── 경로 파싱 (공백·한글·따옴표·개행·rename·
   scenario('변경 없음(빈 상태) → 통과', { change: () => {}, expect: 0 })
 
   fs.rmSync(bin, { recursive: true, force: true })
+}
+
+console.log('\n── stop_hook_active 루프 방지 — 같은 사유 재차단 금지, 사용자 systemMessage 로 경고 후 통과 ──')
+{
+  const { execSync } = require('child_process')
+  const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-loop-'))
+  const bin = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-loop-bin-'))
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-loop-tmp-')) // 훅 상태 파일 격리(TMPDIR)
+  execSync('git init -q', { cwd: repo })
+  fs.mkdirSync(path.join(repo, '.claude'), { recursive: true })
+  fs.writeFileSync(path.join(repo, '.claude', 'settings.json'), JSON.stringify({ enabledPlugins: { 'codex@openai-codex': true } }))
+  fs.writeFileSync(path.join(repo, 'app.js'), 'x\n')
+  fs.writeFileSync(path.join(bin, 'codex'), '#!/bin/sh\necho "Logged in using ChatGPT"\n')
+  fs.chmodSync(path.join(bin, 'codex'), 0o755)
+  const env = { ...process.env, PATH: `${bin}:${process.env.PATH}`, TMPDIR: tmp }
+  const stop = (extra) => {
+    const r = spawnSync('node', [HOOK], { input: JSON.stringify({ hook_event_name: 'Stop', ...extra }), encoding: 'utf8', timeout: 20000, cwd: repo, env })
+    let j = null; try { j = r.stdout.trim() ? JSON.parse(r.stdout) : null } catch { j = 'INVALID' }
+    return { ...r, j }
+  }
+  const check = (desc, cond, r) => {
+    console.log(`  ${cond ? '✅' : '❌'} ${desc} → ${cond ? 'PASS' : `FAIL (exit ${r.status}, stdout: ${(r.stdout || '').slice(0, 100)}, stderr: ${r.stderr.slice(0, 80)})`}`)
+    cond ? passed++ : failed++
+  }
+  let r = stop({ session_id: 's1', stop_hook_active: false })
+  check('1차 Stop(active=false) → 차단 exit 2', r.status === 2 && r.stderr.includes('적대적 리뷰 필요'), r)
+  r = stop({ session_id: 's1', stop_hook_active: true })
+  check('계속 진행 중(active=true) + 같은 사유 → 재차단 없이 exit 0 + 사용자 systemMessage 경고', r.status === 0 && r.j && typeof r.j.systemMessage === 'string' && r.j.systemMessage.includes('codex-review-guard') && !('decision' in r.j), r)
+  r = stop({ session_id: 's1', stop_hook_active: true })
+  check('같은 연쇄에서 반복 시도 → 계속 통과(루프 없음)', r.status === 0, r)
+  r = stop({ session_id: 's1', stop_hook_active: false })
+  check('새 사용자 턴(active=false) → 다시 1회 차단', r.status === 2, r)
+  r = stop({ session_id: 's2', stop_hook_active: true })
+  check('다른 훅이 계속시킨 연쇄(이 훅은 아직 미차단) → 이 사유로 1회 차단', r.status === 2, r)
+  r = stop({ session_id: 's3', stop_hook_active: 'true' })
+  check('stop_hook_active 문자열 "true"(타입 위장) → 불리언 true 아님 → 정상 차단', r.status === 2, r)
+  r = stop({ session_id: 's3', stop_hook_active: 1 })
+  check('stop_hook_active 숫자 1(타입 위장) → 정상 차단', r.status === 2, r)
+  r = stop({ session_id: '../../../../escape', stop_hook_active: false })
+  const escaped = fs.existsSync(path.join(os.tmpdir(), '..', 'escape')) || fs.readdirSync(path.dirname(tmp)).some(f => f.includes('escape'))
+  check('session_id 경로 순회 → 상태 파일이 TMPDIR 밖에 생기지 않음', r.status === 2 && !escaped, r)
+  r = stop({ stop_hook_active: true })
+  check('session_id 없음 + active=true → 추적 불가라 루프 방지 우선(exit 0 + systemMessage)', r.status === 0 && r.j && typeof r.j.systemMessage === 'string', r)
+  // 이전 턴의 서명이 남아 다른 연쇄에서 오판하지 않도록: 위반 없는 새 연쇄(active=false)에서 상태 초기화
+  r = stop({ session_id: 's4', stop_hook_active: false })
+  const mk = path.join(repo, '.claude', '.codex-review-done')
+  fs.writeFileSync(mk, ''); const fut = new Date(Date.now() + 60000); fs.utimesSync(mk, fut, fut)
+  const rSkip = stop({ session_id: 's4', stop_hook_active: false })
+  fs.rmSync(mk)
+  r = stop({ session_id: 's4', stop_hook_active: true })
+  check('이전 턴 서명 → 위반 없는 새 턴에서 초기화 → 다른 훅이 계속시킨 연쇄에서 1회 차단', rSkip.status === 0 && r.status === 2, r)
+  fs.writeFileSync(path.join(tmp, 'garbage'), 'x')
+  for (const f of fs.readdirSync(tmp)) { try { fs.writeFileSync(path.join(tmp, f), '{corrupt') } catch {} }
+  r = stop({ session_id: 's1', stop_hook_active: true })
+  check('상태 파일 손상 → 크래시 없이 차단 쪽으로(exit 2)', r.status === 2, r)
+  for (const d of [repo, bin, tmp]) fs.rmSync(d, { recursive: true, force: true })
+}
+
+console.log('\n── git status 실패 — 변경 있음으로 간주(fail-closed), -uall 만 실패 시 일반 status 로 폴백 ──')
+{
+  const { execSync } = require('child_process')
+  const realGit = execSync('command -v git', { encoding: 'utf8' }).trim()
+  const bin = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-gitfail-bin-'))
+  fs.writeFileSync(path.join(bin, 'codex'), '#!/bin/sh\necho "Logged in using ChatGPT"\n')
+  fs.writeFileSync(path.join(bin, 'git'), `#!/bin/sh\nfor a in "$@"; do case "$a" in status) [ "$FAIL_MODE" = all ] && exit 128;; -uall) [ "$FAIL_MODE" = uall ] && exit 128;; esac; done\nexec "${realGit}" "$@"\n`)
+  fs.chmodSync(path.join(bin, 'codex'), 0o755); fs.chmodSync(path.join(bin, 'git'), 0o755)
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-gitfail-tmp-'))
+  const mkRepo = (setup) => {
+    const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-gitfail-'))
+    execSync('git init -q && git config user.email t@t && git config user.name t', { cwd: repo })
+    fs.mkdirSync(path.join(repo, '.claude'), { recursive: true })
+    fs.writeFileSync(path.join(repo, '.claude', 'settings.json'), JSON.stringify({ enabledPlugins: { 'codex@openai-codex': true } }))
+    fs.writeFileSync(path.join(repo, '.gitignore'), '.claude/\n')
+    fs.writeFileSync(path.join(repo, 'notes.md'), 'a\n')
+    execSync('git add -A && git commit -qm init', { cwd: repo })
+    setup(repo)
+    return repo
+  }
+  const run = (desc, mode, setup, expect, needle) => {
+    const repo = mkRepo(setup)
+    const r = spawnSync('node', [HOOK], { input: JSON.stringify({ hook_event_name: 'Stop', session_id: 'gf-' + Math.random(), stop_hook_active: false }), encoding: 'utf8', timeout: 20000, cwd: repo,
+      env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, TMPDIR: tmp, FAIL_MODE: mode } })
+    const pass = r.status === expect && (!needle || r.stderr.includes(needle))
+    console.log(`  ${pass ? '✅' : '❌'} ${desc} → ${pass ? 'PASS' : `FAIL (기대 ${expect}, 실제 ${r.status}, stderr: ${r.stderr.slice(0, 100)})`}`)
+    pass ? passed++ : failed++
+    fs.rmSync(repo, { recursive: true, force: true })
+  }
+  run('status 전면 실패 + 비코드 변경만 → 확인 불가라 리뷰 요구(조용한 생략 금지)', 'all', (repo) => fs.writeFileSync(path.join(repo, 'notes.md'), 'b\n'), 2, '변경 목록 확인 실패')
+  run('-uall 만 실패(대형 untracked) + tracked 비코드 변경 → 폴백으로 정확 판정 → 통과', 'uall', (repo) => fs.writeFileSync(path.join(repo, 'notes.md'), 'b\n'), 0)
+  run('-uall 만 실패 + 새 디렉토리 안 untracked 코드 → 폴백의 "dir/" 항목을 코드 가능성으로 간주 → 리뷰 요구', 'uall', (repo) => { fs.mkdirSync(path.join(repo, 'src')); fs.writeFileSync(path.join(repo, 'src', 'a.js'), 'x\n') }, 2)
+  run('-uall 만 실패 + tracked 코드 변경 → 리뷰 요구', 'uall', (repo) => fs.writeFileSync(path.join(repo, 'app.ts'), 'x\n'), 2)
+  for (const d of [bin, tmp]) fs.rmSync(d, { recursive: true, force: true })
 }
 
 console.log(`\n결과: ${passed}/${passed + failed} 통과`)
