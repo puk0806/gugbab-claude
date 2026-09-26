@@ -2,7 +2,7 @@
 skill: zod-schema-validation
 category: backend
 version: v1
-date: 2026-09-25
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -94,6 +94,9 @@ status: APPROVED
 | 14 | 교차 검증 소스 일부의 "deprecated API 사용 시 경고 로그 출력" 주장 | 공식 문서에는 해당 서술 없음 (JSDoc deprecated) | DISPUTED → SKILL.md에서는 "deprecated (동작은 함)"로만 기술, 경고 로그 주장 배제 |
 | — | Valibot 최신 1.5.0 (2026-09) | 다수 dependabot PR, WebSearch | VERIFIED (보조 클레임) |
 | — | `zodResolver`가 Zod 3.25+/4 자동 감지 | resolvers 문서, DeepWiki | VERIFIED (보조 클레임) |
+| 15 | `z.stringbool()`은 3.25.0(2025-05-19)부터 존재 | `npm pack zod@<버전>` 직접 다운로드 후 dist 내 문자열 검색으로 버전 이분 탐색 (1차 데이터) | VERIFIED |
+| 16 | `z.record(z.string(), z.any())`는 zod 4.6.5에서 `__proto__` 키를 결과에 복사하지 않고 프로토타입도 오염시키지 않음 | 로컬 `npm i zod@4`(4.6.5) 후 직접 실행 실측 (1차 데이터) | VERIFIED (단일 버전 실측, 과거 이슈 #2227 재현 안 됨) |
+| 17 | 422 Unprocessable Content는 RFC 9110 §15.5.21에 정의(원 출처 RFC 4918 WebDAV) | RFC 9110 공식 문서 목차 확인 | VERIFIED |
 
 ### 3-1. 내용 정확성
 - [✅] 공식 문서와 불일치하는 내용 없음
@@ -115,13 +118,45 @@ status: APPROVED
 - [✅] 범용적으로 사용 가능 (프레임워크 무관 `Request`/`Response` 예시)
 
 ### 3-4. Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-09-25)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-09-25)
-- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 — 잘못된 응답 없음, 보완 불필요 (2026-09-25)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-09-25, 2026-09-26 재테스트)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-09-25, 2026-09-26 재테스트)
+- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 — 잘못된 응답 없음, 보완 불필요 (2026-09-25, 2026-09-26)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-09-26 (재테스트)
+**수행자**: skill-tester → general-purpose (TypeScript 백엔드 개발자 역할, domain-specific 에이전트 미등록으로 대체 사용)
+**수행 방법**: 2026-09-26 섹션 4-2·4-1·10-2 보강 내용을 겨냥해 SKILL.md Read 후 실전 질문 3개 재답변, 근거 섹션 및 anti-pattern 회피 확인
+
+### 재테스트 (2026-09-26, 보강 내용 타깃)
+
+**Q1(재). zod 3.24.x 프로젝트에서 `z.stringbool()` 사용 가능 여부 — 도입 버전 판단형**
+- ✅ PASS
+- 근거: SKILL.md 섹션 4-2 146줄(`z.stringbool()` 도입 버전 3.25.0(2025-05-19))
+- 상세: "3.24.x는 해당 안 되고 3.25.0 이상부터 사용 가능"이라고 정확히 답변. 스킬 상단(9줄) npm dist-tag 히스토리 실측 출처까지 인용해 신뢰도 근거 제시.
+
+**Q2(재). 회원가입 API — JSON 파싱 실패 vs 필드 검증 실패의 상태 코드 구분 근거**
+- ✅ PASS
+- 근거: SKILL.md 섹션 4-1 105·111·121줄(400 vs 422 코드 예시 및 RFC 9110 §15.5.21/RFC 4918 설명), 섹션 9 293줄(외부 API 응답 실패는 502/500)
+- 상세: 구문 오류(400)와 의미 오류(422)를 RFC 근거와 함께 정확히 구분. "강제 표준이 아니며 일관성이 핵심"이라는 단서까지 그대로 전달(과잉 확신 없음). 외부 API 응답 실패는 이 규칙과 별개(502/500)임을 스스로 구분해 범위 오적용을 피함.
+
+**Q3(재). `z.record(z.string(), z.string())` 동적 라벨 맵 — `__proto__` 오염 위험, 검증 여부 판단형**
+- ✅ PASS
+- 근거: SKILL.md 섹션 10-2 312~345줄(`__proto__` 오염 방어 + 2026-09-26 z.record 실측 갱신)
+- 상세: zod 4.6.5 기준 실측으로 오염 없음이 확인됐으나 "단일 버전·단일 케이스" 한정이고 공식 changelog가 `z.record` 경로를 명시적으로 언급하지 않는다는 한계까지 정확히 전달. 실측 결과와 무관하게 `SafeKey.refine`으로 `__proto__`/`constructor`/`prototype`을 원천 차단하는 방어 원칙도 함께 제시 — 과신(anti-pattern) 회피 확인.
+
+### 재테스트 판정
+
+- agent content test (2026-09-26 보강분 타깃): 3/3 PASS
+- 발견된 gap: 없음 (기존 2026-09-25 gap 2건은 이번 보강으로 이미 해소됨 — `z.stringbool()` 버전 명시, 422/400 근거 텍스트 추가)
+- verification-policy 분류: 라이브러리 사용법 스킬 — 실사용 필수 카테고리 아님, content test PASS로 APPROVED 가능
+- 최종 상태: **APPROVED** (PENDING_TEST → APPROVED 재전환)
+
+---
+
+### 최초 테스트 (2026-09-25, 참고 보존)
 
 **수행일**: 2026-09-25
 **수행자**: skill-tester → general-purpose (TypeScript 백엔드 개발자 역할, domain-specific 에이전트 미등록으로 대체 사용)
@@ -187,17 +222,20 @@ status: APPROVED
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (3/3 PASS, 2026-09-25) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (최초 3/3 PASS 2026-09-25 → 2026-09-26 섹션 4-1·4-2·10-2 보강분 타깃 재테스트 3/3 PASS) |
+| **최종 판정** | **APPROVED** (2026-09-26 재테스트 완료로 재전환) |
 
 ---
 
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester로 2단계 content test 수행 (2026-09-25 완료, general-purpose 3/3 PASS — domain-specific 에이전트 미등록으로 general-purpose 대체 사용)
-- [❌] `z.record`의 `__proto__` 키 처리 — 현행 소스(`$ZodRecord` 파싱 경로)로 실측 확인 후 섹션 10-2 주의 문구 갱신 — 선택 보강(차단 요인 아님, Q3 테스트에서 SKILL.md가 이미 미검증으로 정직하게 표기하고 있어 오답 유발 없음 확인됨)
+- [✅] `z.record`의 `__proto__` 키 처리 — 2026-09-26 로컬 임시 디렉터리에 `npm i zod@4`(설치된 버전 4.6.5) 후 직접 실측 완료. `z.record(z.string(), z.any()).parse(JSON.parse('{"name":"a","__proto__":{"isAdmin":true}}'))` 결과 own key는 `["name"]`뿐이고 `Object.getPrototypeOf(result) === Object.prototype`(오염 없음), 전역 `Object.prototype`도 안전함을 확인. SKILL.md 섹션 10-2를 "미검증"에서 실측 결과 기반 설명으로 갱신(단, 단일 버전·단일 케이스 실측이라 업그레이드 시 재확인 권장 문구는 유지)
 - [✅] `backend/hono-api-patterns` 스킬 생성 완료 후 상호 링크 경로 유효성 확인 — 2026-09-25 hono-api-patterns 생성·레포 반영 완료
 - [✅] `frontend/form-handling`의 Zod 3 스타일 예시를 Zod 4 형식으로 갱신 — 2026-09-25 form-handling 현행화 완료, 본 스킬 SKILL.md 상단 주의 문구도 함께 정정
+- [✅] (2026-09-26 추가 보강) `z.stringbool()` 도입 버전 — npm dist-tag 히스토리를 `npm pack`으로 비교(`npm pack zod@<버전> --pack-destination` 후 dist 내 "stringbool" grep)한 결과 **3.25.0(2025-05-19, 패키지 루트가 Zod 4 베타를 처음 export한 버전)** 부터 이미 포함. SKILL.md 섹션 4-2에 반영
+- [✅] (2026-09-26 추가 보강) 422 vs 400 상태 코드 선택 근거 — RFC 9110 §15.5.21(422 Unprocessable Content, 원 출처 RFC 4918 WebDAV)과 400의 "구문 오류" 대 "의미 오류" 구분을 SKILL.md 섹션 4-1에 설명 추가. 업계에서 400 통일도 정당한 대안이며 "일관성"이 핵심이라는 점도 명시
+- [✅] 2026-09-26 보강분(z.stringbool 버전·422 vs 400·z.record 실측)에 대한 skill-tester 재테스트 수행 — Q1·Q2·Q3 모두 보강 내용을 직접 겨냥한 질문으로 재실행, 3/3 PASS. 발견된 gap 없음(기존 2건 gap은 이번 보강으로 해소 확인). PENDING_TEST → APPROVED 재전환
 
 ---
 
@@ -207,3 +245,5 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-09-25 | v1 | 최초 작성 (zod 4.6.5 기준) | skill-creator |
 | 2026-09-25 | v1 | 2단계 실사용 테스트 수행 (Q1 body strictObject+422 / Q2 query boolean 함정 / Q3 z.record `__proto__` 판단형) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-09-26 | v1 | 섹션 7 선택 보강 3건 반영: `z.stringbool()` 도입 버전(3.25.0) 명시, 422 vs 400 선택 근거 설명 추가, `z.record` `__proto__` 처리 로컬 실측으로 "미검증"→실측 결과 갱신. 내용 변경으로 APPROVED → PENDING_TEST 재전환(재테스트 대기) | Claude (Sonnet 5) |
+| 2026-09-26 | v1 | 2단계 재테스트 수행 (Q1 z.stringbool 도입 버전 / Q2 422 vs 400 RFC 근거 / Q3 z.record `__proto__` 실측 판단형) — 보강 내용 전부 타깃, 3/3 PASS → PENDING_TEST → APPROVED 재전환 | skill-tester |

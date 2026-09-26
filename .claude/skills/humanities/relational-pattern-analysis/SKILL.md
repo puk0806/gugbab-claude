@@ -12,7 +12,7 @@ description: >
 
 > 소스: Gottman Institute(https://www.gottman.com/) · ICEEFT(https://iceeft.com/) · Dr. Sue Johnson(https://drsuejohnson.com/) · Center for Nonviolent Communication(https://www.cnvc.org/) · PuddleDancer Press(https://nonviolentcommunication.com/)
 > 학술 1차 문헌: Gottman & Levenson (1992) *J. Personality & Social Psychology* 63(2); Gottman, Coan, Carrere & Swanson (1998) *J. Marriage & Family* 60; Gottman & Levenson (2000) *J. Family Psychology* 14(1); Johnson, S. M. (2008/2019) *Hold Me Tight: Seven Conversations for a Lifetime of Love* · *Attachment Theory in Practice*; Rosenberg, M. B. (2003/2015) *Nonviolent Communication: A Language of Life*
-> 검증일: 2026-07-04
+> 검증일: 2026-09-26 (재검증 — Dr. Sue Johnson 별세 정보 추가, 그 외 변경 없음)
 > 짝 스킬: `humanities/attachment-theory-basics` (EFT 이론 기반) · `meta/dream-interpretation-prompt-engineering` (꿈 해몽 후 관계 조언 참조)
 
 ---
@@ -67,6 +67,8 @@ Gottman 임상 관찰: Criticism → Contempt → Defensiveness → Stonewalling
 - **John Bowlby·Mary Ainsworth 애착 이론**을 부부치료에 본격 적용한 최초의 체계적 모델 중 하나.
 - 1998년 Sue Johnson, 캐나다 오타와에 **ICEEFT (International Centre for Excellence in Emotionally Focused Therapy)** 설립.
 - 학술 1차 문헌: Johnson, S. M. (1996/2004) *The Practice of Emotionally Focused Couple Therapy*; Johnson (2008) *Hold Me Tight: Seven Conversations for a Lifetime of Love*; Johnson (2019) *Attachment Theory in Practice*.
+
+> 주의 (2026-09-26 재검증 확인): **Dr. Sue Johnson은 2024-04-23 별세**했다(ICEEFT 공식 부고, iceeft.com/obituary). EFT 이론·ICEEFT 기관·자격 인증은 사후에도 T. Leanne Campbell 등 후속 트레이너들을 통해 계속 운영되고 있으며, 2027-05 밴쿠버에서 EFT World Summit 개최 예정. 학위논문 등에서 Johnson을 현재형으로 서술하지 말고 "EFT 창시자(2024년 별세)"로 표기 권장.
 
 ### 2.2 핵심 가정
 

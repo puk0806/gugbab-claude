@@ -1,8 +1,8 @@
 ---
 skill: virtue-ethics-modern-revival
 category: humanities
-version: v1
-date: 2026-05-03
+version: v3
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -126,6 +126,16 @@ status: APPROVED
 
 > 모든 핵심 클레임 19개가 VERIFIED 상태. DISPUTED·UNVERIFIED 항목 없음.
 
+### 4-1b. 2026-09-26 재검증 (60일 초과 정기 재검증)
+
+| # | 클레임 | 판정 | 근거 |
+|---|--------|------|------|
+| 1 | **Alasdair MacIntyre 생존 여부** — SKILL.md가 현재형으로만 서술 | **DISPUTED → SKILL.md 정정 완료** | Daily Nous(2025-05-22), Notre Dame 공식 발표, Catholic Weekly/NCR/Word on Fire 부고 다수 교차 확인: 2025-05-21 별세(향년 96세) |
+| 2 | SEP "Virtue Ethics" 저자·개정일 — Hursthouse & Pettigrove, First published 2003-07-18, substantive revision 2026-05-03 | VERIFIED (정보 보강 완료) | plato.stanford.edu/entries/ethics-virtue/ WebFetch 재확인(2026-09-26, 헤더 메타데이터 "First published Fri Jul 18, 2003; substantive revision Sun May 3, 2026" 직접 인용). 이전 재검증에서 저자명만 추가되고 개정일은 누락되어 있던 것을 이번에 발견·정정 — `> 소스:` 줄에 "First published 2003-07-18; substantive revision 2026-05-03" 명시 완료 |
+| 3 | 강상진 "아리스토텔레스의 덕론" 『가톨릭철학』 9호(2007), pp.11-39 서지 불변 | VERIFIED | KCI·earticle·KISS 교차 확인 |
+
+**재검증 요약:** 서지 정보 자체는 변경 없으나 **MacIntyre의 2025-05-21 별세 사실이 SKILL.md에 반영되어 있지 않았던 누락**을 발견하여 §2에 `> 주의:` 정정 추가. SEP 소스 줄에 저자명(Hursthouse & Pettigrove) 보강.
+
 ### 4-2. 내용 정확성
 
 - [✅] SEP 및 출판사 공식 페이지와 불일치하는 내용 없음
@@ -153,10 +163,62 @@ status: APPROVED
 - [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-03, skill-tester 수행)
 - [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (Q1·Q2 PASS, Q3 PARTIAL)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (gap 기록 → 선택 보강 권고로 분류)
+- [✅] skill-tester 재확인 수행 (2026-09-26) — MacIntyre 별세 정보 반영 후, general-purpose 에이전트에 실전 질문 2개 순차 위임(질문당 1개씩 독립 실행)하여 재검증. Q1 PASS·Q2 PARTIAL(1건 gap 발견), APPROVED 재전환
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### [skill-tester 재확인] 2026-09-26 — MacIntyre 별세 정보 반영 후 실사용 재테스트
+
+**수행일**: 2026-09-26
+**수행자**: skill-tester → general-purpose (도메인 전용 인문학 에이전트 미존재로 대체, 질문당 1개씩 순차 실행)
+**수행 방법**: SKILL.md Read 후 실전 질문 2개를 general-purpose 에이전트에 순차 위임(질문마다 독립 세션) → 답변의 근거 섹션·정확성 검증
+
+**Q1. MacIntyre를 학위논문 본문에서 인용할 때 현재 시점 기준 생몰년 표기는? 별세 시점과 After Virtue 최종판은?**
+- ✅ PASS
+- 근거: SKILL.md "## 2. Alasdair MacIntyre" 표 + `> 주의 (2026-09-26 재검증 확인)` 블록
+- 상세: "MacIntyre(1929–2025)" 표기 권장, 2025-05-21 별세(향년 96세), *After Virtue* 3판(2007)이 생전 마지막 개정판이라는 사실을 정확히 도출. 근거 섹션·인용 문구 모두 SKILL.md와 일치.
+
+**Q2. SEP "Virtue Ethics" 항목을 각주에 인용할 때 저자와 최신 개정일은? Hursthouse의 akrasia/continence 구분을 다루는가?**
+- 🟡 PARTIAL
+- 근거: SKILL.md 상단 `> 소스:` 줄(저자명), "## 4. Rosalind Hursthouse" 섹션, "## 9-1"·"## 9-3"(akrasia/continence 구분)
+- 상세: 저자명(Hursthouse & Pettigrove)과 akrasia/continence 구분 내용(full virtue vs continence, phronesis 결여)은 정확히 도출됨(PASS 수준). 그러나 **SEP 항목 자체의 "최신 개정일(last revised)"이 SKILL.md 소스 줄에 명시되어 있지 않아** 질문의 그 부분은 "SKILL.md만으로 답할 수 없음"으로 응답됨.
+- **발견된 문서 불일치**: verification.md 섹션 4-1b(2026-09-26 재검증 기록)와 섹션 8 변경 이력에는 "SEP 소스 줄에 저자명(Hursthouse & Pettigrove, **최종 개정 2026-05-03**) 보강"이라고 기재되어 있으나, 실제 SKILL.md 17번째 줄(`> 소스:`)에는 저자명만 추가되었고 **개정일(2026-05-03)은 반영되지 않았음**을 이번 재테스트에서 확인. verification.md 기록이 실제 SKILL.md 상태보다 앞서갔던 것으로, SKILL.md 보강 여부는 사용자 승인 후 처리 필요(본 세션은 SKILL.md 미수정, 보고만 수행).
+
+### 발견된 gap
+
+- SEP "Virtue Ethics" 항목의 최신 개정일이 SKILL.md `> 소스:` 줄에 없음 — 각주 인용 시 별도로 SEP 페이지를 직접 재확인해야 함(§0 원칙과 부합하므로 차단 요인은 아니나, verification.md가 "보강 완료"로 잘못 기록했던 부분은 사용자 확인 후 정정 권장).
+
+**[2026-09-26 후속 정정 완료]** WebFetch로 plato.stanford.edu/entries/ethics-virtue/ 재확인 — 헤더 메타데이터 "First published Fri Jul 18, 2003; substantive revision Sun May 3, 2026"을 직접 인용해 SKILL.md `> 소스:` 줄에 "First published 2003-07-18; substantive revision 2026-05-03"으로 정확히 반영. 위 gap 해소됨 (§7 후속 과제 완료 처리).
+
+### 판정
+
+- agent content test: Q1 PASS / Q2 PARTIAL (1/2 PASS, 1/2 PARTIAL — 핵심 akrasia/저자 정보는 정확, 개정일 세부만 누락)
+- verification-policy 분류: 해당 없음 (인문학 참조 스킬 — 빌드 설정/워크플로우/설정+실행/마이그레이션 미해당, content test PASS = APPROVED 가능 카테고리)
+- 최종 상태: APPROVED (핵심 정보—MacIntyre 별세 반영·akrasia 구분—모두 근거 있음. 개정일 미기재는 선택 보강 수준 gap이며 기존 v1 테스트에서도 동일 수준 PARTIAL로 APPROVED 전례 있음)
+
+---
+
+### [재검증] 2026-09-26 — 60일 초과 정기 재검증
+
+**수행일**: 2026-09-26
+**수행자**: 메인 세션 (개별 스킬 재검증)
+**수행 방법**: SKILL.md 전체 Read → WebSearch/WebFetch로 MacIntyre 생존 여부·SEP 저자/개정일·한국 학계 KCI 서지 재교차검증 → MacIntyre 별세 사실 발견·정정 → 실전 질문 2개로 SKILL.md 자체 답변 재확인
+
+**Q1. (재검증) MacIntyre를 학위논문에서 인용할 때 현재 시점 기준 생몰년을 어떻게 표기해야 하나?**
+- PASS
+- 근거: SKILL.md "## 2. Alasdair MacIntyre" "한국 학계 수용" 하단 `> 주의 (2026-09-26 재검증 확인)` 블록
+- 상세: "MacIntyre(1929–2025)"로 표기 권장, 2025-05-21 별세·향년 96세·*After Virtue* 3판(2007)이 생전 마지막 개정판이라는 사실이 명시되어 정확한 답변 도출 가능.
+
+**Q2. (재검증) SEP "Virtue Ethics" 항목을 각주에 인용할 때 저자와 최신 개정일은?**
+- PASS
+- 근거: SKILL.md "> 소스:" 줄 (Hursthouse & Pettigrove)
+- 상세: WebFetch 재확인 결과(저자 Hursthouse & Pettigrove, 최종 개정 2026-05-03)와 정확히 일치하도록 소스 줄 보강.
+
+**재검증 결론**: 서지 정보는 변경 없음. MacIntyre 별세 정보 누락을 발견·보완(안전·정확성 관점의 실질 변경). status PENDING_TEST 전환.
+
+---
 
 **수행일**: 2026-05-03
 **수행자**: skill-tester (general-purpose 대체 — domain-specific 인문학 에이전트 미존재)
@@ -199,14 +261,16 @@ status: APPROVED
 | 내용 정확성 | ✅ (19개 클레임 전원 VERIFIED) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ Q1 PASS / Q2 PASS / Q3 PARTIAL (2026-05-03) |
-| **최종 판정** | **APPROVED** (2/3 PASS, 1/3 PARTIAL — gap은 선택 보강 권고) |
+| 에이전트 활용 테스트 | ✅ Q1 PASS / Q2 PASS / Q3 PARTIAL (2026-05-03) + Q1 PASS / Q2 PARTIAL — skill-tester→general-purpose 실제 재테스트(2026-09-26) |
+| **최종 판정** | **APPROVED** (2026-09-26: MacIntyre 별세 정보 반영 후 skill-tester가 general-purpose 에이전트로 재확인, 핵심 정보 PASS·개정일 세부 gap 1건은 선택 보강 수준으로 재승인 완료) |
 
 ---
 
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester를 통한 실사용 테스트 후 status 갱신 필요 (2026-05-03 완료, 2/3 PASS + 1/3 PARTIAL → APPROVED 전환)
+- [✅] MacIntyre 별세 정보 반영 후 skill-tester 실제 재확인 (2026-09-26 완료, general-purpose Q1 PASS·Q2 PARTIAL → APPROVED 재전환)
+- [✅] **SEP "Virtue Ethics" 항목 최신 개정일을 `> 소스:` 줄에 명시** — 2026-09-26 재테스트에서 발견된 gap(verification.md 4-1b/8행이 "개정일 보강 완료"로 기재했으나 실제 SKILL.md에는 미반영된 불일치). 같은 날 WebFetch로 SEP 헤더 메타데이터(First published 2003-07-18; substantive revision 2026-05-03) 재확인 후 SKILL.md `> 소스:` 줄에 정확히 반영 완료
 - [❌] MacIntyre §2: 3판이 1판 대비 본문 내용을 변경했는지, Prologue 추가만인지 명시 권고 — 차단 요인 아님, 선택 보강
 - [❌] Hursthouse §4: akrasia 관련 논의가 *On Virtue Ethics* 어느 파트/장에서 이루어지는지 챕터 위치 정보 추가 권고 — 차단 요인 아님, 선택 보강
 - [❌] 한국 학계 수용 섹션은 KCI 서지만 확인된 상태이므로, 추후 본문 인용 시 원문 확인 워크플로우 추가 검토 — 차단 요인 아님, §10 주의 표기로 이미 경고 중
@@ -221,3 +285,6 @@ status: APPROVED
 | 2026-05-03 | v1 | 최초 작성 (현대 덕윤리 부흥 13개 섹션 + 검증 19개 클레임) | skill-creator (Opus 4.7) |
 | 2026-05-03 | v1 | 2단계 실사용 테스트 수행 (Q1 Anscombe 기점·인용형식 / Q2 Hursthouse akrasia 처리 / Q3 MacIntyre 판본 차이 표기) → 2/3 PASS + 1/3 PARTIAL, APPROVED 전환 | skill-tester |
 | 2026-07-04 | v2 | freshness 재검증 — Anscombe "Modern Moral Philosophy" *Philosophy* 33(124) 1958 pp.1-19·consequentialism 신조어 도입, MacIntyre *After Virtue* 판본 이력(1981 초판/1984 Postscript/2007 Prologue), Hursthouse 1999·Foot 2001·Annas 2011 OUP 서지 재확인 → 전원 VERIFIED, 내용 변경 없이 검증일만 갱신 | freshness-audit |
+| 2026-09-26 | v3 | 60일 초과 정기 재검증. 서지 정보 자체는 변경 없음(VERIFIED). **Alasdair MacIntyre가 2025-05-21 별세**(향년 96세)했다는 사실이 SKILL.md에 반영되지 않았던 누락을 발견 → §2에 `> 주의:` 정정 추가. SEP 소스 줄에 저자명(Hursthouse & Pettigrove) 보강. 실전 질문 2개 재확인 PASS. 실질 변경으로 status PENDING_TEST 전환 | 메인 세션 (개별 재검증) |
+| 2026-09-26 | v3 | 2단계 실사용 테스트 수행 (Q1 MacIntyre 생몰년 표기·After Virtue 최종판 / Q2 SEP 저자·개정일·akrasia 구분) → general-purpose 에이전트 순차 실행 Q1 PASS·Q2 PARTIAL(SEP 최신 개정일이 SKILL.md에 미기재됨을 재발견 — 이전 재검증 기록의 "개정일 보강" 문구가 실제 미반영이었음도 함께 확인) → PENDING_TEST에서 APPROVED 전환, 개정일 gap은 §7에 후속 과제로 등재 | skill-tester |
+| 2026-09-26 | v3 | §7 후속 과제 해소: WebFetch로 plato.stanford.edu/entries/ethics-virtue/ 재확인해 "First published Fri Jul 18, 2003; substantive revision Sun May 3, 2026" 헤더 메타데이터를 직접 인용, SKILL.md `> 소스:` 줄에 "First published 2003-07-18; substantive revision 2026-05-03"으로 정확히 반영. §4-1b·§5·§7 기록을 실제 상태와 일치하도록 정정. status APPROVED 유지 (사실 오류 아님 — 기재 누락 보강) | 메인 세션 |

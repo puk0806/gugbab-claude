@@ -1,7 +1,7 @@
 # Prisma 7 — Neon 서버리스 드라이버 & 엣지 런타임 코드
 
-> 소스: https://neon.com/docs/guides/prisma , https://neon.com/docs/serverless/serverless-driver , https://www.prisma.io/docs/orm/v7/prisma-client/deployment/edge/deploy-to-vercel , https://www.prisma.io/docs/guides/v7/deployment/cloudflare-workers , `@prisma/adapter-neon@7.10.0` README
-> 검증일: 2026-09-25
+> 소스: https://neon.com/docs/guides/prisma , https://neon.com/docs/serverless/serverless-driver , https://www.prisma.io/docs/orm/v7/prisma-client/deployment/edge/deploy-to-vercel , https://www.prisma.io/docs/guides/v7/deployment/cloudflare-workers , `@prisma/adapter-neon@7.10.0` README , https://unpkg.com/@prisma/adapter-neon@7.10.0/dist/index.d.ts (PrismaNeonHttp 원본 타입 선언, 2026-09-26 실측)
+> 검증일: 2026-09-25 (HTTP 변형 생성자는 2026-09-26 갱신)
 
 ## Neon 서버리스 드라이버 (Node에서 WebSocket)
 
@@ -56,4 +56,20 @@ Prisma 공식 Cloudflare Workers 가이드는 `PrismaPg`로 같은 요청 단위
 
 ## HTTP 변형(PrismaNeonHttp)
 
-> 주의: HTTP 모드는 트랜잭션을 지원하지 않는다 — 배치 `$transaction`, 중첩 쓰기, 내부적으로 트랜잭션을 여는 `createMany`/`updateMany`가 "Transactions are not supported in HTTP mode"로 실패한다는 이슈 보고가 있다. v7 생성자 시그니처는 공식 문서에서 확인되지 않아(미검증) 예시를 싣지 않는다.
+> 주의: HTTP 모드는 트랜잭션을 지원하지 않는다 — 배치 `$transaction`, 중첩 쓰기, 내부적으로 트랜잭션을 여는 `createMany`/`updateMany`가 "Transactions are not supported in HTTP mode"로 실패한다는 이슈 보고가 있다. 트랜잭션이 필요 없는 단발성 읽기 위주 엣지 함수에서만 고려한다.
+
+v7 생성자 시그니처는 공식 문서에는 없지만 `@prisma/adapter-neon@7.10.0`의 `dist/index.d.ts` 원본으로 직접 확인했다(2026-09-26, 이전 "미검증" 갱신):
+
+```ts
+// @prisma/adapter-neon@7.10.0 dist/index.d.ts 원문
+// export declare class PrismaNeonHttp implements SqlDriverAdapterFactory {
+//   constructor(connectionString: string, options: neon.HTTPQueryOptions<boolean, boolean>);
+// }
+import { PrismaNeonHttp } from '@prisma/adapter-neon';
+import { PrismaClient } from './generated/prisma/client';
+
+const adapter = new PrismaNeonHttp(process.env.DATABASE_URL!, {});
+export const prisma = new PrismaClient({ adapter });
+```
+
+- `HTTPQueryOptions<boolean, boolean>`는 두 번째 인자로 타입상 필수지만, 내부 필드(`arrayMode`·`fullResults`·`fetchOptions`·`authToken`·`types`·`disableWarningInBrowsers`)가 전부 선택값(`@neondatabase/serverless`의 `HTTPQueryOptions` 인터페이스, 2026-09-26 확인)이라 빈 객체 `{}`로 충분하다.

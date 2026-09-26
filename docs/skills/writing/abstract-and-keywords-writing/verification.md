@@ -190,6 +190,28 @@ status: APPROVED
 
 ---
 
+### 재검증 (2026-09-26, 60일 경과 정기 재검증)
+
+**수행일**: 2026-09-26
+**수행 방법**: SKILL.md 전체 Read 후 핵심 클레임 3개 WebSearch 재확인, 실전 질문 2개 셀프 검증
+
+**클레임 재검증**
+
+| # | 클레임 | 재확인 결과 | 판정 |
+|---|--------|-------------|------|
+| 1 | APA 7판 abstract 150-250단어, 키워드 3-5개 | 2026-09 기준 APA 8판 미출시, 7판이 현행 공식 기준으로 확인됨. 수치 동일 | VERIFIED |
+| 2 | Springer Nature abstract 200단어 이내 가이드, 키워드 4-6개 | 2026-09 기준 Springer 공식 가이드 동일 유지(단, 학술지별로 150-250단어 등 예외가 있을 수 있음은 기존 SKILL.md의 "주의" 문구와 일치) | VERIFIED |
+| 3 | KCI는 초록·키워드 작성에 대한 통일된 공식 규정을 공개하지 않으며 학술지별 투고규정이 우선 | 2026-09 재검색에서도 KCI 통합 작성 규정 문서 확인 안 됨 — 기존 SKILL.md의 "학술지마다 다름 우선 확인" 서술과 일치 | VERIFIED |
+
+**재검증 질문(셀프 검증)**
+
+Q1. "지금(2026) APA 최신판이 8판으로 바뀌어서 초록 분량 기준이 달라졌는가?" → SKILL.md는 APA 7판을 명시하고 있고, 2026-09 재검색으로도 7판이 현행 최신임을 확인했으므로 SKILL.md 그대로 정확한 답변 가능 — PASS
+Q2. "Springer 논문에 키워드 몇 개, 초록 몇 단어로 맞춰야 하는가?" → SKILL.md §2·§5-1(Springer Nature 200단어 이내, 4-6개)로 정확히 답변 가능, 학술지별 예외 가능성도 "주의" 문구로 이미 커버됨 — PASS
+
+**결론**: 클레임 3개 모두 VERIFIED, 공식 기준 변경 없음 → SKILL.md 본문 수정 없이 `> 검증일:` 라인만 2026-09-26으로 갱신. status는 APPROVED 유지.
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -222,3 +244,4 @@ status: APPROVED
 | 2026-05-03 | v1 | 최초 작성. APA/MLA/Springer/Elsevier/PhilPapers/UKSG 공식 소스 9개 + 한국어 보조 소스 3개 교차 검증. 11개 핵심 클레임 중 9 VERIFIED / 1 DISPUTED(수정) / 1 UNVERIFIED(주의 표기). | skill-creator (Claude Opus 4.7) |
 | 2026-05-03 | v1 | 2단계 실사용 테스트 수행 (Q1 KCI 한국어 초록 5요소 / Q2 ASEO 키워드 한·영 조합 / Q3 초록 인용 정책 Springer·APA·KCI 비교) → 2/3 PASS + 1/3 PARTIAL, APPROVED 전환 | skill-tester |
 | 2026-07-04 | v2 | freshness 재검증 — APA 7판 150-250단어·3-5 키워드 / Springer Nature 200단어 이내·4-6 키워드 / Elsevier 구조화 초록 250단어 이내(Background·Methods·Results·Conclusion) 모두 현행 공식 가이드와 일치 확인(VERIFIED 3/3). 내용 수정 없음, SKILL.md 검증일만 갱신 | freshness-audit |
+| 2026-09-26 | v2 | 60일 경과 정기 재검증: 핵심 클레임 3개 재확인(APA 7판 현행·Springer 기준·KCI 무통일규정, VERIFIED 3/3). 사실 변동 없음 — 검증일만 갱신, status APPROVED 유지 | Claude |

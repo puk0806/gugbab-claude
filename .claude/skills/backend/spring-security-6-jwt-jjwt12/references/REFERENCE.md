@@ -209,7 +209,7 @@ public class SecurityConfig {
 ### ❌ 3. `antMatchers()` / `authorizeRequests()` 사용
 
 ```java
-// 금지 — deprecated, Security 7에서 제거 예정
+// 금지 — Security 6에서 deprecated, Security 7.0(2026-09 기준 GA)에서 실제로 제거됨
 http.authorizeRequests()
     .antMatchers("/admin/**").hasRole("ADMIN");
 
@@ -240,7 +240,7 @@ Claims claims = Jwts.parser()
 ### ❌ 5. `.and()` 체이닝
 
 ```java
-// 금지 — 람다 DSL로 통합됨. Security 7에서 제거 예정
+// 금지 — 람다 DSL로 통합됨. Security 7.0(2026-09 기준 GA)에서 `.and()` 체이닝 자체가 컴파일 불가로 제거됨
 http.authorizeHttpRequests().anyRequest().authenticated()
     .and()
     .sessionManagement()...

@@ -8,10 +8,11 @@ description: Better Auth(TypeScript 인증 라이브러리) 1.7.x 통합 패턴 
 > 소스:
 > - 공식 문서: https://www.better-auth.com/docs/installation , https://www.better-auth.com/docs/basic-usage , https://www.better-auth.com/docs/concepts/session-management , https://www.better-auth.com/docs/concepts/rate-limit , https://www.better-auth.com/docs/concepts/oauth , https://www.better-auth.com/docs/concepts/client , https://www.better-auth.com/docs/concepts/api , https://www.better-auth.com/docs/concepts/cli , https://www.better-auth.com/docs/reference/options , https://www.better-auth.com/docs/reference/security
 > - 통합·어댑터: https://www.better-auth.com/docs/integrations/next , https://www.better-auth.com/docs/integrations/hono , https://www.better-auth.com/docs/adapters/drizzle , https://www.better-auth.com/docs/adapters/prisma
-> - 인증·플러그인: https://www.better-auth.com/docs/authentication/email-password , https://www.better-auth.com/docs/authentication/google , https://www.better-auth.com/docs/plugins/2fa , https://www.better-auth.com/docs/plugins/organization
+> - 인증·플러그인: https://www.better-auth.com/docs/authentication/email-password , https://www.better-auth.com/docs/authentication/google , https://www.better-auth.com/docs/plugins/2fa , https://www.better-auth.com/docs/plugins/organization , https://www.better-auth.com/docs/plugins/admin
+> - 세션·저장소 상세(2026-09-26 추가): https://www.better-auth.com/docs/concepts/database (Secondary Storage 인터페이스·Redis 예시), npm `@better-auth/redis-storage`
 > - GitHub: https://github.com/better-auth/better-auth (releases, `packages/better-auth/package.json`), 1.7 릴리스 블로그 https://better-auth.com/blog/1-7
 >
-> 검증일: 2026-09-25
+> 검증일: 2026-09-25 (섹션 6·9·10 rate limit 키·secondaryStorage·강제 로그아웃 항목은 2026-09-26 보강)
 > 기준 버전: `better-auth` **1.7.6** (npm dist-tag `latest`, 2026-09-24). 1.6 계열은 `release-1.6` 태그(1.6.33)로 유지보수 중.
 > peer 범위(1.7.6 package.json): `next` ^14 / ^15 / ^16, `react` ^18 / ^19, `drizzle-orm` ^0.45.2 또는 >=1.0.0-rc.1, `@prisma/client` ^5 / ^6 / ^7
 
@@ -266,6 +267,32 @@ session: {
 
 > 주의: cookieCache를 켜면 **세션을 revoke해도 다른 기기에서는 `maxAge`까지 유효**하다(서버가 타 기기 쿠키를 지울 수 없음). 즉시 무효화가 중요한 화면은 `authClient.getSession({ query: { disableCookieCache: true } })`로 DB를 강제 조회한다.
 
+- **`auth.api.getSession()`(서버)도 cookieCache 적용 대상이다.** 공식 문서는 `disableCookieCache: true`를 `authClient.getSession()`뿐 아니라 서버의 `auth.api.getSession({ query: { disableCookieCache: true }, headers })` 예시로도 제시한다 — 옵션이 서버 호출에도 존재한다는 것 자체가 서버 경로도 기본적으로 캐시를 거친다는 뜻이다. 따라서 Next.js 서버 컴포넌트에서 `auth.api.getSession()`으로 "진짜 보호"를 한다고 해도, cookieCache가 켜져 있으면 그 검증 결과 자체가 최대 `maxAge`만큼 오래된 값일 수 있다. **revoke 직후 즉시 반영이 필요한 서버 경로**(관리자 강제 로그아웃 직후 재검증 등)는 `disableCookieCache: true`를 명시한다.
+
+### 6-1. secondaryStorage — Redis 설정 예시
+
+```bash
+npm i @better-auth/redis-storage ioredis   # 공식 Redis 저장소 패키지 (better-auth 팀 유지보수)
+```
+
+```ts
+// lib/auth.ts
+import { betterAuth } from "better-auth";
+import { Redis } from "ioredis";
+import { redisStorage } from "@better-auth/redis-storage";
+
+const redis = new Redis(process.env.REDIS_URL!);
+
+export const auth = betterAuth({
+  // ...
+  secondaryStorage: redisStorage({ client: redis, keyPrefix: "better-auth:" }),
+});
+```
+
+- `secondaryStorage`를 설정하면 세션·rate limit 카운터 등 자주 읽고 쓰는 값이 DB 대신 여기로 간다(공식 문서: "session data, rate limit counters" 등).
+- 공식 패키지 없이 직접 구현할 때는 `get`/`set`/`delete`(+`getAndDelete`/`increment`) 메서드를 갖춘 객체를 넘긴다. Redis라면 `set(key, value, "EX", ttl)`처럼 TTL을 반드시 함께 넘기고, 다른 앱과 같은 Redis를 공유한다면 `keyPrefix`로 키를 분리한다.
+- Vercel·Workers 등 서버리스에서 `storage: "database"` 대신(또는 함께) 쓸 수 있는 선택지다 — 스키마 마이그레이션 없이 rate limit·세션을 외부화하고 싶을 때 더 가볍다.
+
 ### 세션 조회·폐기
 
 ```ts
@@ -277,6 +304,24 @@ await authClient.revokeSessions();
 ```
 
 타입: `typeof auth.$Infer.Session` (`session.user`, `session.session`).
+
+### 관리자용 서버사이드 강제 로그아웃
+
+클라이언트 `authClient.revoke*`는 **본인 세션만** 대상이다. 관리자가 *다른 사용자*의 세션을 서버에서 강제로 끊으려면 `auth.api`를 직접 호출한다(호출하는 쪽이 관리자 권한인지는 앱 코드가 검사해야 한다 — Better Auth가 대신 인가하지 않음):
+
+```ts
+// 특정 토큰 하나만 무효화
+await auth.api.revokeUserSession({ body: { sessionToken }, headers: await headers() });
+
+// 특정 유저의 모든 세션 무효화 ("전 기기 강제 로그아웃")
+await auth.api.revokeUserSessions({ body: { userId }, headers: await headers() });
+
+// 계정 정지 + 기존 세션 전부 무효화 (admin 플러그인)
+await auth.api.banUser({ body: { userId, banReason: "ToS 위반" }, headers: await headers() });
+```
+
+- `revokeUserSessions`는 admin 플러그인 없이도 존재하는 서버 API다(§9의 `admin` 플러그인은 역할·권한 관리를 추가할 뿐).
+- cookieCache가 켜져 있으면 강제 로그아웃 직후에도 대상 유저의 다른 기기가 `maxAge`까지 낙관적으로 유효할 수 있다 — 즉시 차단이 요구사항이면 위 cookieCache 주의사항과 함께 검토한다.
 
 ---
 
@@ -401,7 +446,8 @@ export const authClient = createAuthClient({
 - [ ] **CSRF**: Origin 검증 + Fetch Metadata(`Sec-Fetch-*`) + `SameSite=Lax` 쿠키가 기본. `advanced.disableCSRFCheck: true`는 켜지 않는다(공식 문서: CSRF 공격에 노출)
 - [ ] **쿠키**: httpOnly + (HTTPS에서) Secure + SameSite=Lax 기본값 유지. cross-site가 꼭 필요할 때만 `defaultCookieAttributes`로 `sameSite: "none"` + `secure: true`
 - [ ] **rate limit**: 프로덕션에서 기본 활성(개발에선 비활성) — 60초/100회, `/sign-in/email`은 10초/3회. 초과 시 429 + `X-Retry-After`. `customRules`로 경로별 조정
-- [ ] **rate limit 저장소**: 기본 `memory`는 **서버리스에서 무의미**(인스턴스마다 초기화). Vercel·Workers는 `storage: "database"`(스키마 필요) 또는 `secondaryStorage`(Redis 등)
+- [ ] **rate limit 판정 키**: 계정(이메일 등) 기준이 아니라 **연결 IP 주소** 기준(공식 문서: "Rate limiting uses the connecting IP address to track the number of requests"). IP는 `x-forwarded-for`(기본, 헤더명은 `advanced.ipAddress.ipAddressHeaders`로 조정) 헤더에서 추출하고, IPv6는 `/64` 서브넷 단위로 정규화해 우회를 막는다. **로그인 실패를 계정 단위로 잠그는 기능이 아니므로**, 같은 계정을 여러 IP로 공격하는 시나리오까지 막으려면 앱 레벨에서 계정 기준 잠금을 추가해야 한다
+- [ ] **rate limit 저장소**: 기본 `memory`는 **서버리스에서 무의미**(인스턴스마다 초기화). Vercel·Workers는 `storage: "database"`(스키마 필요) 또는 `secondaryStorage`(Redis 등, §6-1 예시)
 - [ ] **IP 헤더**: 프록시 뒤라면 `advanced.ipAddress.ipAddressHeaders`(예: `cf-connecting-ip`)를 설정하되, **최종 사용자가 그 헤더를 위조할 수 없는** 구성인지 확인
 - [ ] **이메일 인증·열거 방지**: `requireEmailVerification: true` 권장, 메일 발송은 await 없이(서버리스는 `waitUntil`)
 - [ ] **보호 리소스**: 매 서버 핸들러에서 `auth.api.getSession()`으로 검증. 쿠키 존재 체크(`getSessionCookie`)만으로 인가 금지. 소유권(IDOR) 검사는 앱 코드 책임

@@ -224,6 +224,28 @@ spring:
 
 ---
 
+### 재검증 (2026-09-26, 60일 경과 정기 재검증)
+
+**수행일**: 2026-09-26
+**수행 방법**: SKILL.md 전체 + references/REFERENCE.md Read 후 핵심 클레임 3개 WebSearch 재확인, 실전 질문 2개 셀프 검증
+
+**클레임 재검증**
+
+| # | 클레임 | 재확인 결과 | 판정 |
+|---|--------|-------------|------|
+| 1 | Spring Security 7에서 `authorizeRequests()`/`.and()` 체이닝이 "제거 예정" | 2026-08 기준 **Spring Boot 4.1.1(Spring Security 7.1.1 번들)이 GA로 이미 출시**되었고, Security 7.0에서 `authorizeRequests()`와 `.and()` 체이닝이 실제로 제거되어 컴파일 불가 상태임을 확인. "제거 예정"(미래형) 표현이 더 이상 정확하지 않음 | DISPUTED → 정정 완료 |
+| 2 | jjwt 0.12.7 또는 0.13.0이 권장 버전 | 0.13.0은 여전히 Maven Central 최신이나, jjwt 프로젝트 자체가 0.13.0을 "legacy"로 표기하고 신규 개발은 0.14.0+ 브랜치에서 진행됨을 확인 | VERIFIED (참고 캐비엇 추가) |
+| 3 | Spring Boot 3.5는 2026-06-30 OSS EOL, Security 6.5는 2027-07-31까지 지원 | Boot 3.5 EOL은 재확인됨(VERIFIED). Security 6.5의 정확한 종료일은 공식 페이지에서 재확인되지 않았고, "3개 라인(7.1/7.0/6.5) 동시 지원 중, 최소 12개월 지원 원칙"으로 확인됨 — 특정 종료일(2027-07-31) 자체는 재확인 불가 | DISPUTED → SKILL.md에서 확정 날짜 대신 "공식 종료일 미확정, 2026-09 기준 현역"으로 수정 |
+
+**재검증 질문(셀프 검증)**
+
+Q1. "지금(2026-09) 신규 프로젝트에도 이 스킬(Boot 3.5+Security 6.5) 그대로 써도 되는가?" → SKILL.md 상단 2026-09-26 캐비엇(Boot 4.1.1/Security 7.1.1이 현행 최신 GA, 신규 프로젝트는 최신 스킬 확인 권장)으로 정확히 답변 가능 — PASS
+Q2. "`.and()` 체이닝을 계속 안 쓰는 이유가 아직도 '나중에 제거될 예정이라서'인가?" → SKILL.md 본문(SecurityFilterChain 섹션 + REFERENCE.md 안티패턴 #3·#5)이 "Security 7.0에서 실제로 제거됨(GA)"로 정정되어 정확히 답변 가능 — PASS
+
+**결론**: 클레임 1·3에서 사실 변동(Security 7 GA 출시, 관련 문구가 미래형에서 과거/현재형으로 바뀌어야 함)을 확인하여 SKILL.md 본문 및 REFERENCE.md 2곳의 "제거 예정" 표현을 "실제로 제거됨(GA)"으로 정정하고, 상단·표에 2026-09-26 캐비엇을 추가했다. 코드 예시(lambda DSL, authorizeHttpRequests 사용)는 애초부터 Security 7 호환 패턴이라 **수정 불필요**. 실질적인 구현 권고 자체는 바뀌지 않았으므로 status는 APPROVED 유지, 검증일 갱신.
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -252,3 +274,4 @@ spring:
 |------|------|-----------|--------|
 | 2026-04-22 | v1 | 최초 작성: Spring Boot 3.5 + Security 6.5 + jjwt 0.12.x 모던 패턴 스킬. 교차 검증 13건 수행 (VERIFIED 12 / DISPUTED 1). | skill-creator |
 | 2026-07-04 | v2 | freshness 재검증 — Spring Boot 3.5 OSS EOL(2026-06-30, 최종 3.5.16)·Security 6.5.11(OSS 2027-07-31까지)·jjwt 0.12.7 반영. 0.12.x 파서/빌더 API·SecurityFilterChain 람다 DSL 패턴 변화 없음 확인 | freshness-audit |
+| 2026-09-26 | v2 | 60일 경과 정기 재검증: Spring Boot 4.1.1/Security 7.1.1 GA 출시 확인 → "Security 7 제거 예정" 표현을 "실제로 제거됨"으로 정정(SKILL.md + REFERENCE.md 2곳), Security 6.5 종료일 미확정 표기로 정정, jjwt 0.13.0 legacy 표기 캐비엇 추가. 코드 예시 변경 없음, status APPROVED 유지 | Claude |

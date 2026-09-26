@@ -13,8 +13,8 @@ description: >
 
 # 현대 덕윤리(Virtue Ethics) 부흥
 
-> 소스: SEP "Virtue Ethics" (https://plato.stanford.edu/entries/ethics-virtue/), Oxford Academic / Cambridge Core / Notre Dame Press 공식 페이지, PhilPapers, KCI(한국학술지인용색인)
-> 검증일: 2026-07-04
+> 소스: SEP "Virtue Ethics" (Hursthouse & Pettigrove, First published 2003-07-18; substantive revision 2026-05-03, https://plato.stanford.edu/entries/ethics-virtue/), Oxford Academic / Cambridge Core / Notre Dame Press 공식 페이지, PhilPapers, KCI(한국학술지인용색인)
+> 검증일: 2026-09-26 (재검증 — MacIntyre 별세 정보 추가 + SEP 개정일(2026-05-03) 소스 줄에 실제 반영. 그 외 변경 없음)
 
 ---
 
@@ -68,6 +68,8 @@ description: >
 ### 한국 학계 수용
 
 KCI 검색 결과 다수 연구자들이 MacIntyre의 공동체주의·실천 개념을 도덕교육·덕윤리 맥락에서 다룬다. 구체 인용은 §10 참조.
+
+> 주의 (2026-09-26 재검증 확인): **Alasdair MacIntyre는 2025-05-21 별세**했다(향년 96세, Notre Dame 대학 명예교수 신분으로 사망 — Daily Nous·Notre Dame 공식 발표·다수 부고 기사 교차 확인). 학위논문 등에서 그를 현재형으로 서술하지 말고 "MacIntyre(1929–2025)"로 표기 권장. *After Virtue*는 3판(2007)이 생전 마지막 개정판으로 확정되었다.
 
 ---
 

@@ -31,6 +31,8 @@ pnpm add react-hook-form zod @hookform/resolvers   # zod 4.x, @hookform/resolver
 ```
 
 > 주의: Zod 4에서 `z.string().email()/.uuid()/.url()/.datetime()`은 deprecated(동작은 함)이며 top-level `z.email()/z.uuid()/z.url()/z.iso.datetime()`을 쓴다. 에러 메시지 옵션 `message` → `error`, `invalid_type_error`/`required_error`는 제거, `.flatten()/.format()` → `z.flattenError()/z.treeifyError()`.
+>
+> **deprecated 패턴의 실제 런타임 동작 (zod.dev/v4/changelog 확인, 2026-09-26):** 공식 changelog는 "The method forms (`z.string().email()`) still exist and work as before, but are now deprecated."라고 명시한다. 즉 `z.string().email()`을 그대로 써도 **런타임 예외는 발생하지 않고 기존과 동일하게 동작한다** — 에디터·타입체커의 deprecated 취소선 경고만 뜬다. 급하게 마이그레이션할 필요는 없지만, 신규 코드는 top-level 형태를 쓴다.
 
 ---
 
@@ -281,3 +283,137 @@ z.looseObject({ name: z.string() })    // 추가 키 통과
 ```
 
 > 주의: `z.coerce.*`·`.transform()`을 쓰면 스키마의 입력 타입과 출력 타입이 달라진다. 이 경우 `useForm<z.input<typeof S>, unknown, z.output<typeof S>>({ resolver: zodResolver(S) })`처럼 입력/출력 제네릭을 분리한다(@hookform/resolvers 5.x).
+
+---
+
+## coerce 스키마 — useForm 3-제네릭 전체 예제
+
+> 소스: https://react-hook-form.com/ts (useForm 제네릭 3개: `TFieldValues`·`TContext`·`TTransformedValues`) | https://github.com/react-hook-form/resolvers (`z.input`/`z.output` 분리 예시)
+> 검증일: 2026-09-26
+
+`useForm<T>`처럼 제네릭 하나만 주면 입력·출력 타입이 같은 것으로 고정돼 `zodResolver`(입출력을 각각 추론)와 충돌한다. `z.coerce.number()`처럼 입력(`unknown`/`string`)과 출력(`number`)이 다른 필드가 있으면 제네릭을 생략해 추론에 맡기거나, 아래처럼 셋 다 명시한다.
+
+```tsx
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import * as z from 'zod'
+
+// 입력: 브라우저 <input>은 항상 문자열을 준다 → age는 string으로 들어옴
+// 출력: coerce 후 number로 검증·제출됨
+const AgeGateSchema = z.object({
+  nickname: z.string().min(1, { error: '닉네임을 입력해주세요' }),
+  age: z.coerce.number().min(14, { error: '14세 이상만 가입 가능합니다' }).max(120),
+})
+
+type AgeGateInput = z.input<typeof AgeGateSchema>   // { nickname: string; age: unknown } — coerce라 정확한 입력 타입은 unknown
+type AgeGateOutput = z.output<typeof AgeGateSchema> // { nickname: string; age: number }
+
+function AgeGateForm() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<AgeGateInput, unknown, AgeGateOutput>({
+    resolver: zodResolver(AgeGateSchema),
+    defaultValues: { nickname: '', age: '' as unknown as number }, // defaultValues는 입력 타입 기준 — 빈 input 값은 문자열
+  })
+
+  // onSubmit이 받는 data는 TTransformedValues(AgeGateOutput) — age는 이미 number로 변환된 상태
+  async function onSubmit(data: AgeGateOutput) {
+    await registerUser({ nickname: data.nickname, age: data.age })
+  }
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <input {...register('nickname')} placeholder="닉네임" />
+      {errors.nickname && <p role="alert">{errors.nickname.message}</p>}
+
+      {/* register('age')는 입력 타입(AgeGateInput) 기준이라 문자열 입력을 그대로 받는다 */}
+      <input type="number" {...register('age')} placeholder="나이" />
+      {errors.age && <p role="alert">{errors.age.message}</p>}
+
+      <button type="submit" disabled={isSubmitting}>가입하기</button>
+    </form>
+  )
+}
+```
+
+> 세 번째 제네릭(`TTransformedValues`)을 생략하면 `TFieldValues`와 같다고 가정되어 `handleSubmit`의 콜백 파라미터가 coerce 이전 타입(문자열)으로 잘못 추론된다 — coerce·transform이 있는 스키마는 반드시 셋 다 명시하거나, 제네릭을 전부 생략해 `resolver`에서 추론시킨다.
+
+---
+
+## 서버 검증 에러 → RHF setError 통합 매핑
+
+> 소스: https://zod.dev/error-formatting (`z.flattenError()` 반환 형태) | https://react-hook-form.com/docs/useform/setError
+> 검증일: 2026-09-26
+
+`z.flattenError(error)`는 `{ formErrors: string[], fieldErrors: Record<string, string[]> }` 형태를 반환한다. 서버 액션이 이 형태로 응답하면, 클라이언트는 `fieldErrors`의 각 키를 RHF `setError`로 순회 매핑해 필드별 에러를 그대로 재사용할 수 있다 — 클라이언트·서버가 동일 스키마를 쓰므로 필드명이 항상 일치한다.
+
+```tsx
+// app/actions.ts (Next.js Server Action)
+'use server'
+import * as z from 'zod'
+
+const SignupServerSchema = z.object({
+  email: z.email(),
+  password: z.string().min(8),
+})
+
+export async function submitSignup(input: unknown) {
+  const result = SignupServerSchema.safeParse(input)
+  if (!result.success) {
+    return { ok: false as const, errors: z.flattenError(result.error) }
+  }
+  // 이메일 중복 등 스키마로 못 잡는 비즈니스 규칙 에러도 같은 형태로 맞춘다
+  const existing = await findUserByEmail(result.data.email)
+  if (existing) {
+    return {
+      ok: false as const,
+      errors: { formErrors: [], fieldErrors: { email: ['이미 사용 중인 이메일입니다'] } },
+    }
+  }
+  await createUser(result.data)
+  return { ok: true as const }
+}
+```
+
+```tsx
+import { useForm, type FieldValues, type Path } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+
+function SignupForm() {
+  const { register, handleSubmit, setError, formState: { errors, isSubmitting } } =
+    useForm<z.infer<typeof SignupServerSchema>>({ resolver: zodResolver(SignupServerSchema) })
+
+  async function onSubmit(data: z.infer<typeof SignupServerSchema>) {
+    const result = await submitSignup(data)
+    if (!result.ok) {
+      // fieldErrors 키를 그대로 RHF 필드명으로 사용해 매핑 — 스키마가 같으므로 키가 어긋날 일이 없다
+      for (const [field, messages] of Object.entries(result.errors.fieldErrors)) {
+        if (messages?.[0]) {
+          setError(field as Path<typeof data>, { type: 'server', message: messages[0] })
+        }
+      }
+      // path가 없는(formErrors) 전역 에러는 폼 최상단에 별도로 표시
+      if (result.errors.formErrors.length > 0) {
+        setError('root.serverError' as Path<typeof data>, { type: 'server', message: result.errors.formErrors[0] })
+      }
+      return
+    }
+    // 성공 처리
+  }
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      {errors.root?.serverError && <p role="alert">{errors.root.serverError.message}</p>}
+      <input {...register('email')} placeholder="이메일" />
+      {errors.email && <p role="alert">{errors.email.message}</p>}
+      <input type="password" {...register('password')} />
+      {errors.password && <p role="alert">{errors.password.message}</p>}
+      <button type="submit" disabled={isSubmitting}>가입하기</button>
+    </form>
+  )
+}
+```
+
+> `setError(field, ...)`의 `field`는 `register`에 쓴 것과 같은 dot-path 문자열이어야 값이 실제 필드에 연결된다. 서버·클라이언트가 스키마를 공유하지 않는다면(별도 패키지가 아니라면) 필드명 오타로 매핑이 조용히 실패할 수 있으니, 공유 스키마(`backend/zod-schema-validation` 스킬의 서버 검증과 동일 스키마)를 쓰는 것을 권장한다.

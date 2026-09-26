@@ -24,7 +24,8 @@ description: >
 > - Random number primer: https://blog.unity.com/technology/a-primer-on-repeatable-random-numbers
 >
 > 대상 버전: Unity 6 LTS (6000.0 ~ 6000.3) / C# 9 호환 / 2D Tilemap + 2D Tilemap Extras 2.2
-> 검증일: 2026-06-10
+> **주의(2026-09-26 재검증)**: 2D Tilemap Extras 패키지는 2.2 이후 3.0/4.0/8.0/9.0까지 올라갔다(2026-09 기준 최신 9.0.x). 본 스킬이 다루는 RuleTile 사용법(9슬롯 인접 패턴 에디터 자산, 벽/바닥 2종 배치)은 에디터 자산 워크플로로 버전 간 변경 없이 유효하나, 스크립트로 `GetMatchingNeighboringTiles()` 등 RuleTile 내부 API를 직접 호출한다면 최신 패키지 문서를 별도 확인할 것(해당 API는 이후 버전에서 삭제된 사례가 있음). 본 스킬은 해당 API를 사용하지 않으므로 본문 수정은 하지 않는다.
+> 검증일: 2026-09-26
 
 ---
 

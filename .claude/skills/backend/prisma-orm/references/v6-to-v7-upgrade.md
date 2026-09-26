@@ -49,6 +49,37 @@ const prisma = new PrismaClient({ adapter }).$extends({
 });
 ```
 
+### 로깅·감사 미들웨어 전환 — 전체 예시 (2026-09-26 추가)
+
+공식 문서(`prisma-client/client-extensions/query`)의 쿼리 소요시간 로깅 예시를 v7 어댑터 패턴에 맞춰 조정한 것. `$use`가 하던 "모든 연산 가로채기"는 최상위 `query.$allOperations`로 대체된다(raw 쿼리까지 포함 — 모델 연산만 가로채려면 `query.$allModels.$allOperations`):
+
+```ts
+// src/db.ts
+import { PrismaClient } from './generated/prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import util from 'node:util';
+
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+
+export const prisma = new PrismaClient({ adapter }).$extends({
+  query: {
+    async $allOperations({ model, operation, args, query }) {
+      const start = performance.now();
+      const result = await query(args);            // 실제 쿼리 실행 — 반드시 await 후 반환
+      const time = performance.now() - start;
+      console.log(
+        util.inspect({ model, operation, args, time }, { showHidden: false, depth: null, colors: true }),
+      );
+      return result;
+    },
+  },
+});
+```
+
+- `model`은 raw 쿼리 등 모델에 속하지 않는 연산에서 `undefined`일 수 있다.
+- `$extends()`는 **새 클라이언트 인스턴스**를 반환한다 — 확장된 인스턴스를 export해서 앱 전체가 같은 확장을 타게 한다.
+- 실패도 감사해야 하면 `try/finally`로 감싸고, `query(args)`가 던진 에러는 삼키지 말고 다시 던진다(트랜잭션 롤백 신호 보존).
+
 ## v6 풀 타임아웃과 동일하게 맞추기
 
 ```ts

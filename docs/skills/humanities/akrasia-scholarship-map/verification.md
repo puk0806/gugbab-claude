@@ -111,6 +111,16 @@ status: APPROVED
 | 19 | 마시멜로 실험의 장기 예측력 약화 (Watts et al. 2018) | **VERIFIED** (보조 클레임) | 2018년 Psychological Science 재현 연구 — 본문에서 `> 주의:` 표기 |
 | 20 | 이창우 — 가톨릭대 / 김재홍 — 정암학당·관동대 / 강상진 — 서울대 | **VERIFIED** | 교수신문, 한국교원대 등 다중 소스 확인 |
 
+### 4-1b. 2026-09-26 재검증 (60일 초과 정기 재검증)
+
+| # | 클레임 | 판정 | 근거 |
+|---|--------|------|------|
+| 1 | SEP "Weakness of Will" 저자 Stroud & Svirsky, 최종 개정 2025-09-18에서 추가 개정 없음 | VERIFIED | plato.stanford.edu/entries/weakness-will/ WebFetch 직접 확인 (First published 2008-05-14 / Substantive revision 2025-09-18, 불변) |
+| 2 | 박재주, "아크라시아와 도덕교육", 『초등도덕교육』 36집(2011), DOI 10.17282/ethics.2011..36.1 서지 불변 | VERIFIED | KCI·KISS·RISS 교차 확인 |
+| 3 | 2025~2026년 사이 akrasia 연구 지형에 본 스킬의 핵심 서지·논쟁 구도를 대체할 신간·반박 없음 | VERIFIED (변경 불필요) | WebSearch: Graz대 현상학적 akrasia 연구 프로젝트, arXiv AI akrasia benchmark(2025) 등 확인 — 모두 본 스킬 범위 밖 응용 분야, 본문 6개 학파(고대·현대분석·한국·도덕심리학) 서술과 충돌 없음 |
+
+**재검증 요약:** 핵심 서지·논쟁 구도에 변경 없음. SKILL.md `검증일`만 2026-09-26으로 갱신, 본문 수정 없음.
+
 ### 4-2. 내용 정확성
 
 - [✅] 공식 문서·1차 문헌과 불일치하는 내용 없음
@@ -141,6 +151,26 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+### [재검증] 2026-09-26 — 60일 초과 정기 재검증
+
+**수행일**: 2026-09-26
+**수행자**: 메인 세션 (개별 스킬 재검증)
+**수행 방법**: SKILL.md 전체 Read → WebFetch(SEP 원문)·WebSearch(KCI 서지·최신 연구 동향)로 핵심 클레임 3건 재교차검증 → 실전 질문 2개로 SKILL.md 자체 답변 재확인
+
+**Q1. (재검증) SEP "Weakness of Will" 항목을 각주에 인용할 때 최신 개정일과 저자 표기는?**
+- PASS
+- 근거: SKILL.md "## 6. 표준 입문서·핸드북" 표, "## 7. 인용·문헌 검색 실용 팁" §4 Chicago 인용 양식
+- 상세: Stroud & Svirsky, 최종 개정 2025-09-18, URL까지 SKILL.md 인용 양식 그대로 재확인됨. WebFetch 직접 확인 결과와 100% 일치.
+
+**Q2. (재검증) 한국 도덕교육 학계에서 아크라시아를 다룬 KCI 등재 논문의 정확한 서지는?**
+- PASS
+- 근거: SKILL.md "## 3-2. 도덕윤리교육 분야 — 검증된 KCI 논문"
+- 상세: 박재주, 『초등도덕교육』 36집(2011), 1-30쪽, DOI 10.17282/ethics.2011..36.1 — KCI·KISS·RISS 재검색 결과와 정확히 일치.
+
+**재검증 결론**: 핵심 서지·논쟁 구도 변경 없음. status APPROVED 유지.
+
+---
 
 **수행일**: 2026-05-03
 **수행자**: skill-tester → general-purpose (도메인 전용 에이전트 없어 대체 수행)
@@ -235,3 +265,4 @@ status: APPROVED
 | 2026-05-03 | v1 | 최초 작성 — 고대 2, 현대 분석철학 6, 한국 학계 4, 도덕심리학 4, 핸드북 4 항목 검증 후 작성 | skill-creator (Opus 4.7) |
 | 2026-05-03 | v1 | 2단계 실사용 테스트 수행 (Q1 소크라테스 vs 아리스토텔레스 텍스트 위치 / Q2 Davidson ATC 논증 및 현대 논쟁 위상 / Q3 ego depletion·마시멜로 재현성 논란 주의 확인) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-07-04 | v2 | freshness 재검증 — SEP "Weakness of Will" 저자(Stroud & Svirsky)·최종 개정일(2025-09-18), Davidson 1969 Feinberg 편 원 게재·1980 *Essays on Actions and Events* Ch.2 재수록, Wiggins PAS Vol.79 pp.251-278, NE VII.7 1150b19 이하 propeteia/astheneia 구분 재확인 → 전원 VERIFIED, 내용 변경 없이 검증일만 갱신 | freshness-audit |
+| 2026-09-26 | v3 | 60일 초과 정기 재검증. SEP 개정일 불변(2025-09-18)·박재주 KCI 서지 불변·최신 연구 동향(2025-26) 확인 결과 본 스킬 서술과 충돌 없음(VERIFIED 3/3). 실전 질문 2개 재확인 PASS. 내용 변경 없음, 검증일만 갱신, APPROVED 유지 | 메인 세션 (개별 재검증) |

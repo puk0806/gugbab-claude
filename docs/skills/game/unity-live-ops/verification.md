@@ -172,6 +172,28 @@ status: APPROVED
 
 ---
 
+### 재검증 (2026-09-26, 60일 경과 정기 재검증)
+
+**수행일**: 2026-09-26
+**수행 방법**: SKILL.md 전체 + references/REFERENCE.md Read 후 핵심 클레임 3개 WebSearch 재확인, 실전 질문 2개 셀프 검증
+
+**클레임 재검증**
+
+| # | 클레임 | 재확인 결과 | 판정 |
+|---|--------|-------------|------|
+| 1 | Firebase Remote Config Unity 기본 minimumFetchInterval은 12시간(43,200,000ms) | 2026-09 기준 공식 문서(Get started/API reference) 동일하게 12시간 명시 — 변경 없음 | VERIFIED |
+| 2 | CcdManager는 static 클래스이며 EnvironmentName/BucketId/Badge 3속성, 첫 Addressables 호출 이전 설정 필요 | Addressables 2.8.0(현행) 및 1.20~2.8 전 버전 문서 동일 — 변경 없음 | VERIFIED |
+| 3 | Unity 6 LTS 표기가 현행 세대와 부합하는가 | 2026-09 기준 Unity 6.3 LTS(6000.3.x, 2027-12까지 지원)가 최신 LTS로 출시됨. 스킬 본문은 특정 마이너 버전(6.0)을 명시하지 않고 "Unity 6 LTS"로만 표기하므로 오류는 아니나, Unity 6.0 LTS는 2026-10 지원 종료 예정 | VERIFIED (스킬 표기 자체는 유효, 하위 버전 지원 종료 임박은 참고 사항) |
+
+**재검증 질문(셀프 검증)**
+
+Q1. "CCD Badge 기반 Remote LoadPath를 쓸 때 런타임에 A/B 테스트용으로 다른 Bucket을 태우려면?" → SKILL.md §1-4 CcdManager 패턴(첫 Addressables 호출 전 EnvironmentName/BucketId/Badge 설정)으로 정확히 답변 가능 — PASS
+Q2. "Firebase Remote Config를 매 씬 진입마다 fetch해도 되는가?" → SKILL.md §2-2 호출 시점 가이드 + §8 흔한 실수 #6("12시간 캐시에 막혀 의미 없음")으로 정확히 답변 가능 — PASS
+
+**결론**: 클레임 3개 모두 VERIFIED, 공식 문서 대비 변경된 사실 없음 → SKILL.md 본문 수정 없이 `> 검증일:` 라인만 2026-09-26으로 갱신. status는 APPROVED 유지.
+
+---
+
 > (아래는 기존 예정 템플릿 참고용으로 보존)
 
 ### 테스트 케이스 1: (완료)
@@ -238,3 +260,4 @@ Remote Config의 is_maintenance + maintenance_message + maintenance_end_utc 키 
 | 2026-06-10 | v1 | 최초 작성 (Unity 6 LTS / Addressables 2.x / Firebase Unity SDK / K8s / Railway / Fly.io 기반) | skill-creator |
 | 2026-06-10 | v1 | 2단계 실사용 테스트 수행 (Q1 점검 모드 자동 복귀 / Q2 롤링 배포 중 502/503 처리 / Q3 RC SetDefaultsAsync 호출 순서) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | Claude |
+| 2026-09-26 | v1 | 60일 경과 정기 재검증: 핵심 클레임 3개 재확인(VERIFIED 3/3), 사실 변동 없음 → 검증일만 갱신, status APPROVED 유지 | Claude |

@@ -2,7 +2,7 @@
 skill: next-intl-i18n
 category: frontend
 version: v1
-date: 2026-09-25
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -95,7 +95,7 @@ status: APPROVED
 | 15 | ICU plural `#`·`=0`·`other` 필수, selectordinal, select `other` 필수 | next-intl translations 문서 + FormatJS ICU 문서 | VERIFIED |
 | 16 | 한국어(ko)는 CLDR 복수 범주가 `other` 하나뿐 | CLDR plural rules 차트 + 복수 가이드(Locize 등) 검색 | VERIFIED |
 | 17 | `global-not-found.tsx`로 `[locale]` root layout 앱의 전역 404 처리 | Next.js not-found 문서 — 15.4.0 도입이며 **여전히 experimental**, `experimental.globalNotFound: true` 필요 | DISPUTED → SKILL.md에 "experimental·플래그 필요"로 정정 표기 |
-| 18 | 16.3 미만에서는 `experimental.rootParams` 플래그로 root-params 사용 가능 | next-intl setup 문서에만 언급, Next.js 16.3 문서 version history에는 이전 experimental 이력 미기재 | UNVERIFIED → SKILL.md 1장에 한 줄로만 언급, 레거시 경로는 `setRequestLocale`로 안내 |
+| 18 | 16.3 미만에서는 `experimental.rootParams` 플래그로 root-params 사용 가능 | next-intl setup 문서에만 언급, Next.js 16.3 문서 version history에는 이전 experimental 이력 미기재 | 최초 UNVERIFIED → 2026-09-26 재확인: next-intl 공식 routing/setup 문서가 "In earlier versions, it needs to be enabled via `experimental.rootParams`"로 명시(1차 소스), Next.js 자체 GitHub PR `vercel/next.js#72837`("feat: rootParams (experimental)")로 독립 소스 2개 이상 교차 검증 완료 → **VERIFIED로 전환**. 다만 레거시 버전 안정성은 별도 이슈이므로 SKILL.md는 여전히 7-2 `setRequestLocale` 경로를 레거시 권장 경로로 유지 |
 
 ### 3-1. 내용 정확성
 - [✅] 공식 문서와 불일치하는 내용 없음
@@ -117,13 +117,45 @@ status: APPROVED
 - [✅] 범용적으로 사용 가능 (특정 프로젝트 종속 X)
 
 ### 3-4. Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-09-25)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-09-25)
-- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 — 잘못된 응답 없음, 경미한 gap만 발견 (2026-09-25)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-09-25, 2026-09-26 재테스트)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-09-25, 2026-09-26 재테스트)
+- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 — 잘못된 응답 없음, 경미한 gap만 발견 (2026-09-25, 2026-09-26)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-09-26 (재테스트)
+**수행자**: skill-tester → general-purpose (domain-specific 에이전트 대체 사용)
+**수행 방법**: 2026-09-26 섹션 1·4·5 보강 내용(Server Action hasLocale 실패 처리, AppConfig tsconfig include, rootParams experimental 플래그 판단형)을 겨냥해 SKILL.md Read 후 실전 질문 3개 재답변, 근거 섹션 및 anti-pattern 회피 확인
+
+### 재테스트 (2026-09-26, 보강 내용 타깃)
+
+**Q1(재). Server Action `hasLocale` 검증 실패 시 처리 — 폴백 금지 이유 + Route Handler 차이**
+- ✅ PASS
+- 근거: SKILL.md §5 348~371줄("재검증 실패 시 처리" 코드 신설)
+- 상세: "기본 로케일로 조용히 폴백 금지, throw로 거부" + 이유(370줄, silent failure로 사용자가 잘못된 언어 응답을 인지 못함)를 정확히 인용. Route Handler는 `throw` 대신 `Response.json(..., {status:400})`로 다르게 처리해야 함(371줄)까지 정확. request.ts 경로(`notFound()`)와 Server Action 경로(`throw Error`)의 차이를 스스로 구분해 혼동 없음(anti-pattern 회피 확인).
+
+**Q2(재). AppConfig로 메시지 타입 좁혔는데 `t('없는키')`가 타입 에러로 안 잡히는 원인 — tsconfig 연관**
+- ✅ PASS
+- 근거: SKILL.md §4 258~268줄(`global.ts` tsconfig `include` 요구사항 신설)
+- 상세: "`global.ts`가 tsconfig `include` 범위 안에 있어야 declare module 선언이 전역 반영된다"는 핵심 원인과, 기본 `create-next-app` 템플릿은 보통 문제없지만 `src/` 밖에 두거나 `include`를 좁힌 프로젝트는 명시적 추가가 필요하다는 조건부 설명을 정확히 인용. `tsc --noEmit`으로 진단하라는 절차까지 정확.
+
+**Q3(재). Next.js 16.2(16.3 미만)에서 root-params 도입 가능 여부 + 안전성 판단형**
+- ✅ PASS
+- 근거: SKILL.md §1 41줄(`experimental.rootParams` 16.3 미만 조건, UNVERIFIED→VERIFIED 전환 반영), §7-2(레거시 setRequestLocale 유지 권장)
+- 상세: "기술적으로 가능(`experimental: { rootParams: true }`)하지만 SKILL.md 자체가 '레거시 버전은 안정성 문제로 setRequestLocale 경로가 더 검증된 선택'이라고 명시하므로 대기 권장"이라고 정확히 판단. 16.3 업그레이드 시 §7-2 마이그레이션 체크리스트로 연결하는 답변까지 제시 — 판단형 질문에 대해 SKILL.md의 명시적 권고를 과장 없이 그대로 전달.
+
+### 재테스트 판정
+
+- agent content test (2026-09-26 보강분 타깃): 3/3 PASS
+- 발견된 gap: 없음(기존 2026-09-25 gap 2건은 이번 보강으로 해소됨 — Server Action 처리 코드 예시, AppConfig tsconfig include 예시)
+- verification-policy 분류: 라이브러리 사용법 스킬(next-intl) — 실사용 필수 카테고리 아님. content test PASS만으로 APPROVED 가능
+- 최종 상태: **APPROVED** (PENDING_TEST → APPROVED 재전환)
+
+---
+
+### 최초 테스트 (2026-09-25, 참고 보존)
 
 **수행일**: 2026-09-25
 **수행자**: skill-tester → general-purpose (domain-specific 에이전트 대체 사용)
@@ -199,11 +231,11 @@ Server Action 안에서 getTranslations('Form')를 호출했더니 로케일을 
 
 | 항목 | 결과 |
 |------|------|
-| 내용 정확성 | ✅ |
-| 구조 완전성 | ✅ |
+| 내용 정확성 | ✅ (클레임 #18 UNVERIFIED → VERIFIED 전환, 2026-09-26) |
+| 구조 완전성 | ✅ (500줄 유지 위해 §8 컴포넌트 전문을 references/locale-switcher.md로 이동) |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (3/3 PASS, 2026-09-25 수행) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (최초 3/3 PASS 2026-09-25 → 2026-09-26 §1·§4·§5 보강분 타깃 재테스트 3/3 PASS) |
+| **최종 판정** | **APPROVED** (2026-09-26 재테스트 완료로 재전환) |
 
 ---
 
@@ -212,9 +244,10 @@ Server Action 안에서 getTranslations('Form')를 호출했더니 로케일을 
 - [✅] skill-tester로 2단계 content test 수행 후 섹션 5·6 갱신 (2026-09-25 완료, 3/3 PASS)
 - [❌] Next.js root-params의 Route Handler 지원이 추가되면 5장 "Server Action / Route Handler" 섹션 갱신 — 차단 요인 아님, Next.js 측 기능 출시 시점에 맞춰 선택 갱신
 - [❌] `global-not-found`가 stable로 전환되면 3-7 섹션의 experimental 표기 갱신 — 차단 요인 아님, Next.js 측 stable 전환 시점에 맞춰 선택 갱신
-- [❌] 클레임 #18(`experimental.rootParams` 16.3 미만 지원 범위) 추가 확인 — 차단 요인 아님, SKILL.md에 이미 "주의: 미검증" 표기로 리스크 고지됨. 정확한 범위 확인은 선택 보강
-- [❌] Server Action `hasLocale` 재검증 실패 시 처리 코드 예시 보강 — 차단 요인 아님, 원칙은 명시되어 있고 코드 예시만 부재(content test Q2에서 발견된 선택 보강 항목)
-- [❌] `AppConfig` 타입 적용을 위한 tsconfig include 구체 예시 보강 — 차단 요인 아님, 선택 보강(content test Q1에서 발견)
+- [✅] 클레임 #18(`experimental.rootParams` 16.3 미만 지원 범위) 추가 확인 — 2026-09-26 next-intl 공식 문서(routing/setup)가 "In earlier versions, it needs to be enabled via `experimental.rootParams`"로 명시함을 직접 확인, Next.js 자체 PR(vercel/next.js#72837 "feat: rootParams (experimental)")로 독립 소스 교차 검증 완료 → UNVERIFIED에서 VERIFIED로 전환, SKILL.md 1장 표 갱신
+- [✅] Server Action `hasLocale` 재검증 실패 시 처리 코드 예시 보강 — 2026-09-26 SKILL.md §5에 재검증 실패 시 `throw`(Server Action)/`Response.json(..., {status:400})`(Route Handler) 예시와 "폴백 대신 거부" 근거 추가(content test Q2 gap)
+- [✅] `AppConfig` 타입 적용을 위한 tsconfig include 구체 예시 보강 — 2026-09-26 SKILL.md §4에 `tsconfig.json`의 `include`에 `global.ts`를 명시하는 예시와 기본 `create-next-app` 템플릿에서는 보통 불필요한 이유(와일드카드 패턴이 이미 포함) 추가(content test Q1 gap)
+- [✅] 2026-09-26 보강분(Server Action hasLocale 실패 처리, AppConfig tsconfig include, rootParams experimental 플래그)에 대한 skill-tester 재테스트 수행 — Q1·Q2·Q3 모두 보강 내용을 직접 겨냥한 질문으로 재실행, 3/3 PASS. 발견된 gap 없음(기존 2건 gap 전부 해소 확인). PENDING_TEST → APPROVED 재전환
 
 ---
 
@@ -225,3 +258,5 @@ Server Action 안에서 getTranslations('Form')를 호출했더니 로케일을 
 | 2026-09-25 | v1 | 최초 작성 (next-intl 4.14.7 / Next.js 16.3.x 기준) | skill-creator |
 | 2026-09-25 | v1 | 2단계 실사용 테스트 수행 (Q1 신규 설정 / Q2 Server Action 함정 / Q3 15→16.3 마이그레이션) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-09-25 | v1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |
+| 2026-09-26 | v1 | 섹션 7 선택 보강 3건 반영: 클레임 #18(`experimental.rootParams`) UNVERIFIED→VERIFIED 전환(next-intl 공식 문서 + Next.js PR 교차 검증), Server Action `hasLocale` 재검증 실패 처리 코드 예시(§5) 추가, `AppConfig` tsconfig include 예시(§4) 추가. 500줄 유지 위해 §8 컴포넌트 전문을 references/locale-switcher.md로 분리. 내용 변경으로 APPROVED → PENDING_TEST 재전환(재테스트 대기) | Claude (Sonnet 5) |
+| 2026-09-26 | v1 | 2단계 재테스트 수행 (Q1 Server Action hasLocale 실패 처리+Route Handler 차이 / Q2 AppConfig tsconfig include 원인 진단 / Q3 16.2에서 rootParams 도입 판단형) — 보강 내용 전부 타깃, 3/3 PASS → PENDING_TEST → APPROVED 재전환 | skill-tester |

@@ -161,6 +161,28 @@ status: APPROVED
 
 ---
 
+### 재검증 (2026-09-26, 60일 경과 정기 재검증)
+
+**수행일**: 2026-09-26
+**수행 방법**: SKILL.md 전체 + references/REFERENCE.md Read 후 핵심 클레임 3개 WebSearch 재확인, 실전 질문 2개 셀프 검증
+
+**클레임 재검증**
+
+| # | 클레임 | 재확인 결과 | 판정 |
+|---|--------|-------------|------|
+| 1 | `Tilemap.SetTilesBlock`이 batch 처리로 공식 권장되며 bounds size = array length 필요 | 2026-09 기준 공식 ScriptReference 동일 내용 유지, deprecated 표시 없음 | VERIFIED |
+| 2 | 2D Tilemap Extras 2.2의 RuleTile(9슬롯 인접 패턴 에디터 자산) 사용법 | 패키지가 2.2 → 3.0/4.0/8.0/9.0까지 올라감(2026-09 기준 최신 9.0.x). 에디터 자산 기반 RuleTile 사용법 자체는 버전 간 변경 없음. 단, `GetMatchingNeighboringTiles()` 등 일부 내부 스크립트 API는 이후 버전에서 삭제된 사례 확인(본 스킬은 해당 API 미사용) | VERIFIED (버전 표기 갱신 필요 — DISPUTED 아님, 캐비엇 추가) |
+| 3 | Unity 6 LTS 버전대(6000.0~6000.3) 표기 유효성 | 2026-09 기준 Unity 6.3 LTS(6000.3.x)가 최신 LTS로 출시되어 스킬이 다루는 범위(6000.0~6000.3) 내에 포함됨 — 변경 없음 | VERIFIED |
+
+**재검증 질문(셀프 검증)**
+
+Q1. "큰 맵에 SetTile을 루프로 돌리면 왜 느린가, 대안은?" → SKILL.md §8 + §10 안티패턴 #1로 정확히 답변 가능(SetTilesBlock/SetTiles batch 권장, 공식 문서 근거) — PASS
+Q2. "RuleTile로 벽/바닥 보더 자동 처리할 때 패키지 버전이 스킬 문서와 다르면 문제되나?" → SKILL.md §8 RuleTile 섹션 + 2026-09-26 추가된 `> 주의` 캐비엇(에디터 자산 워크플로는 버전 무관 동일, 스크립트로 내부 API 직접 호출 시에만 최신 문서 확인 필요)으로 정확히 답변 가능 — PASS
+
+**결론**: 클레임 1·3은 VERIFIED로 변경 없음. 클레임 2(RuleTile)는 패키지 버전 표기가 2.2로 고정되어 있고 현재 최신은 9.0.x임을 확인 → SKILL.md 상단에 `> 주의(2026-09-26 재검증)` 캐비엇 추가(에디터 자산 사용법은 영향 없음을 명시). 실질적 가이드 변경은 없으므로 status는 APPROVED 유지, `> 검증일:` 라인만 갱신.
+
+---
+
 > 아래는 skill-creator가 작성한 예정 테스트 케이스 (참고용 보존)
 
 > 본 단계는 skill-tester 에이전트에 의해 별도로 수행됩니다.
@@ -246,3 +268,4 @@ tilemap.SetTile(...)을 매번 호출하고 있다. 무엇이 문제인가?"
 | 2026-06-10 | v1 | 최초 작성 (BSP·CA·Perlin·WFC 4 알고리즘 + 시드·Tilemap·성능·실수 섹션) | skill-creator |
 | 2026-06-10 | v1 | 2단계 실사용 테스트 수행 (Q1 Perlin 오프셋·클램프 / Q2 SetTile 루프 freeze 해결 / Q3 시드 재현·중간 저장) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | skill-creator |
+| 2026-09-26 | v1 | 60일 경과 정기 재검증: 핵심 클레임 3개 재확인(VERIFIED 3/3). 2D Tilemap Extras 패키지 버전(2.2→최신 9.0.x) 드리프트 발견 → `> 주의` 캐비엇 추가(가이드 자체는 영향 없음), 검증일 갱신, status APPROVED 유지 | Claude |

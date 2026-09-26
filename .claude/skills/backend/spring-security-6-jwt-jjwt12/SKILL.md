@@ -6,20 +6,21 @@ description: Spring Boot 3.x + Spring Security 6.x + jjwt 0.12.x 기반 모던 J
 # Spring Security 6 + JWT (jjwt 0.12.x) 모던 인증 패턴
 
 > 소스: https://docs.spring.io/spring-security/reference/servlet/ | https://github.com/jwtk/jjwt | https://spring.io/projects/spring-boot
-> 검증일: 2026-07-04
+> 검증일: 2026-09-26
 
-> 주의: 이 문서는 Spring Boot 3.5.x + Spring Security 6.5.x + jjwt 0.12.7 (또는 0.13.0) + Java 17+ 기준입니다. Spring Boot 3.5는 2026-06-30 OSS EOL(최종 패치 3.5.16)이며 현행 OSS 지원 라인은 Boot 4.x입니다. 단, Spring Security 6.5는 2027-07-31까지 OSS 지원됩니다. 레거시 Spring Security 5.x/`WebSecurityConfigurerAdapter` 패턴은 별도 스킬을 참조하세요.
+> 주의: 이 문서는 Spring Boot 3.5.x + Spring Security 6.5.x + jjwt 0.12.7 (또는 0.13.0) + Java 17+ 기준입니다. Spring Boot 3.5는 2026-06-30 OSS EOL(최종 패치 3.5.16)이며, Spring Security 6.5는 3개 동시 지원 라인 중 하나로 계속 OSS 지원됩니다(공식 종료일 미확정 — 최소 12개월 지원 원칙, 2026-09 기준 현역).
+> **주의(2026-09-26 재검증)**: 2026-08 기준 **Spring Boot 4.1.1(Spring Security 7.1.1 번들)이 현행 최신 GA 라인**입니다. Spring Security **7.0에서 `authorizeRequests()`와 `.and()` 체이닝이 실제로 제거**되었습니다(본 스킬 작성 시점엔 "제거 예정"으로 기술 — 현재는 기정사실). 본 스킬의 코드 예시는 처음부터 `authorizeHttpRequests()` + 람다 DSL만 사용하므로 **코드 변경은 불필요**하지만, Boot 4.x/Security 7.x로 넘어가는 신규 프로젝트는 별도 최신 스킬 확인을 권장합니다. 레거시 Spring Security 5.x/`WebSecurityConfigurerAdapter` 패턴은 별도 스킬을 참조하세요.
 
 ---
 
 ## 적용 범위
 
-| 항목 | 최소 버전 | 권장 버전 (2026-07 기준) |
+| 항목 | 최소 버전 | 권장 버전 (2026-07 기준, 본 스킬 대상 라인) |
 |------|-----------|--------------------------|
 | Java | 17 | 21 (Virtual Threads 사용 시) |
-| Spring Boot | 3.2 | 3.5.16 (3.5 라인 최종 OSS 패치) |
-| Spring Security | 6.2 | 6.5.11 (Boot 3.5에 번들, OSS 지원 2027-07-31까지) |
-| jjwt | 0.12.0 | 0.12.7 (또는 0.13.0) |
+| Spring Boot | 3.2 | 3.5.16 (3.5 라인 최종 OSS 패치. **2026-09 기준 현행 최신 GA는 4.1.1 — 별도 최신 스킬 확인 권장**) |
+| Spring Security | 6.2 | 6.5.11 (Boot 3.5에 번들. **2026-09 기준 현행 최신은 7.1.1**) |
+| jjwt | 0.12.0 | 0.12.7 (또는 0.13.0 — 0.13.0은 자체적으로 "legacy" 표기, 신규 개발은 0.14.0+에서 진행) |
 | Jakarta Servlet | 5.0+ (`jakarta.servlet`) | 6.0 (Boot 3.x 기본) |
 
 > 주의: `javax.servlet.*` 패키지는 Spring Boot 3.x에서 제거되었습니다. 반드시 `jakarta.servlet.*`를 사용합니다.
@@ -137,7 +138,7 @@ public class SecurityConfig {
 
 ### 핵심 포인트
 
-- **`authorizeHttpRequests()`**: Security 6에서 deprecated된 `authorizeRequests()`의 대체. Spring Security 7에서 람다 DSL만 허용됩니다.
+- **`authorizeHttpRequests()`**: Security 6에서 deprecated된 `authorizeRequests()`의 대체. **Spring Security 7.0(2026-09 기준 GA)에서 `authorizeRequests()`와 `.and()` 체이닝이 실제로 제거**되어 람다 DSL만 허용됩니다.
 - **`requestMatchers()`**: Security 5의 `antMatchers()`/`mvcMatchers()`를 모두 대체합니다.
 - **`hasRole("ADMIN")`** vs **`hasAuthority("ROLE_ADMIN")`**: `hasRole`은 자동으로 `ROLE_` 접두사를 붙입니다. 커스텀 권한명(`invoice:read` 등)은 `hasAuthority()`를 사용합니다.
 - **`csrf(csrf -> csrf.disable())`**: STATELESS + 토큰 기반 API는 CSRF 보호가 불필요합니다.

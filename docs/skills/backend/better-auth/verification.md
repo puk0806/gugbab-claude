@@ -2,7 +2,7 @@
 skill: better-auth
 category: backend
 version: v1
-date: 2026-09-25
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -97,6 +97,10 @@ status: APPROVED
 | 12 | Hono: `auth.handler(c.req.raw)`, CORS 먼저·명시 origin·credentials, trustedOrigins 동기화 | 공식 Hono 문서 원문, installation 문서, GitHub 이슈 #7434 | VERIFIED |
 | 13 | 서버 에러 처리 `isAPIError` / `APIError` from `better-auth/api` | 공식 API 문서, GitHub PR #9211·#8734 | VERIFIED |
 | 14 | Drizzle 어댑터가 neon-http(트랜잭션 미지원)에서 내부 트랜잭션을 요구하는지 | 확인 소스 없음 | UNVERIFIED → SKILL.md에 `> 주의: 미검증` 표기 |
+| 15 | rate limit은 계정이 아니라 연결 IP 주소 기준으로 판정, IPv6는 `/64` 서브넷 정규화 | 공식 rate-limit 문서 ("Rate limiting uses the connecting IP address") | VERIFIED |
+| 16 | 관리자 서버사이드 강제 로그아웃: `auth.api.revokeUserSession`(토큰 단위)·`revokeUserSessions`(유저 전체)·`banUser`(정지+세션 무효화) | 공식 session-management·admin 플러그인 문서 | VERIFIED |
+| 17 | 공식 Redis 저장소 패키지 `@better-auth/redis-storage`(ioredis 기반) 존재 | npm registry 실측(1.7.6, better-auth 팀 유지보수) + 공식 database 문서 언급 | VERIFIED |
+| 18 | `auth.api.getSession()`(서버)도 cookieCache 대상 — `disableCookieCache` 옵션이 서버 호출 예시로도 제시됨 | 공식 session-management 문서의 서버측 예시 코드 | VERIFIED (문서가 "적용된다"를 평서문으로 못박진 않았으나, 서버 호출에 옵션을 노출한 것 자체가 근거) |
 
 추가 제거·완화 항목 (초안 단계에서 근거 부족으로 제외):
 - "쿠키가 기본으로 암호화된다"(security 페이지 요약에 등장했으나 session_token 서명과 혼동 가능) → 미기재
@@ -124,13 +128,45 @@ status: APPROVED
 - [✅] 범용적으로 사용 가능 (특정 프로젝트 종속 X)
 
 ### 4-4. Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-09-25)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-09-25)
-- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 — FAIL 없음, 선택 보강 항목만 기록 (2026-09-25)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-09-25, 2026-09-26 재테스트)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-09-25, 2026-09-26 재테스트)
+- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 — FAIL 없음, 선택 보강 항목만 기록 (2026-09-25, 2026-09-26)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-09-26 (재테스트)
+**수행자**: skill-tester → general-purpose (도메인 전용 에이전트 부재로 대체, 대체 사실 명시)
+**수행 방법**: 2026-09-26 섹션 6·9·10 보강 내용(rate limit 키, 관리자 강제 로그아웃, secondaryStorage Redis, getSession cookieCache)을 겨냥해 SKILL.md Read 후 실전 질문 3개 재답변, 근거 섹션 및 anti-pattern 회피 확인
+
+### 재테스트 (2026-09-26, 보강 내용 타깃)
+
+**Q1(재). rate limit 판정 키(IP vs 계정) — 계정 분산 공격 방어 가능 여부**
+- ✅ PASS
+- 근거: SKILL.md §10 449줄("rate limit 판정 키" — 연결 IP 주소 기준, IPv6 `/64` 정규화), 448줄(60초/100회, `/sign-in/email` 10초/3회)
+- 상세: "계정 기준이 아니라 IP 기준"임을 정확히 인용하고, "같은 계정을 여러 IP로 공격하는 시나리오는 기본 rate limit만으로 막을 수 없다"는 SKILL.md의 명시적 한계 서술(449줄)까지 그대로 전달. 서버 액션 경유 시 rate limit 자체가 제외된다는 점(136·474줄)도 함께 지적해 범위를 정확히 넓힘.
+
+**Q2(재). 관리자 서버사이드 강제 로그아웃(전 기기) — 클라이언트 API로 가능한지 판단형**
+- ✅ PASS
+- 근거: SKILL.md §6 "관리자용 서버사이드 강제 로그아웃" 308~324줄
+- 상세: "`authClient.revokeOtherSessions()`는 본인 세션만 대상이며 관리자용이 아니다"를 정확히 구분하고, `auth.api.revokeUserSessions({ body: { userId } })`를 정답으로 제시. "Better Auth가 대신 인가하지 않으므로 호출자가 관리자인지 앱 코드가 검사해야 한다"는 인가 책임 분리 원칙과 admin 플러그인 불필요 사실(323줄)까지 정확히 인용.
+
+**Q3(재). Vercel 서버리스 secondaryStorage(Redis) 설정 + getSession() cookieCache 적용 여부**
+- ✅ PASS
+- 근거: SKILL.md §6-1 272~294줄(secondaryStorage Redis 예시), §6 270줄(`auth.api.getSession()`도 cookieCache 적용 대상)
+- 상세: `redisStorage({ client, keyPrefix })` 설정 코드와 "DB 마이그레이션 없이 세션·rate limit 카운터 외부화" 근거(294줄)를 정확히 제시. cookieCache 관련 질문에는 "기본적으로 캐시된 값을 돌려주며 항상 DB를 직접 조회하지 않는다"고 270줄을 정확히 인용, 즉시 무효화가 필요하면 `disableCookieCache: true` 필요함을 정확히 연결.
+
+### 재테스트 판정
+
+- agent content test (2026-09-26 보강분 타깃): 3/3 PASS
+- 발견된 gap: 없음(기존 2026-09-25 gap 4건은 이번 보강으로 전부 해소됨 — rate limit 키, 관리자 강제 로그아웃 API, secondaryStorage 예시, getSession cookieCache 적용 여부 명시)
+- verification-policy 분류: 라이브러리 사용법 스킬 — 실사용 필수 카테고리 아님, content test PASS로 APPROVED 가능
+- 최종 상태: **APPROVED** (PENDING_TEST → APPROVED 재전환)
+
+---
+
+### 최초 테스트 (2026-09-25, 참고 보존)
 
 **수행일**: 2026-09-25
 **수행자**: skill-tester → general-purpose (도메인 전용 에이전트 부재로 대체, 대체 사실 명시)
@@ -214,8 +250,8 @@ Vercel에 배포한 Hono + Better Auth에서 로그인 무차별 대입 방어�
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (3/3 PASS, 2026-09-25) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (최초 3/3 PASS 2026-09-25 → 2026-09-26 섹션 6·9·10 보강분 타깃 재테스트 3/3 PASS) |
+| **최종 판정** | **APPROVED** (2026-09-26 재테스트 완료로 재전환) |
 
 ---
 
@@ -224,11 +260,12 @@ Vercel에 배포한 Hono + Better Auth에서 로그인 무차별 대입 방어�
 - [✅] skill-tester로 content test 수행 후 섹션 5·6 갱신 (2026-09-25 완료, 3/3 PASS → APPROVED)
 - [❌] neon-http 드라이버와 Drizzle 어댑터 트랜잭션 호환 여부 확인 (클레임 #14) — 선택 보강, 차단 요인 아님(현재 `> 주의: 미검증` 표기로 리스크 고지 완료, 실제 Neon HTTP 드라이버 프로젝트 도입 시점에 재확인)
 - [❌] Better Auth 1.8 출시 시 어댑터 import 경로·CLI 변경 재확인 — 선택 보강, 신규 마이너 릴리스 발생 시에만 필요
-- [❌] `backend/hono-api-patterns`, `backend/prisma-orm`, `backend/zod-schema-validation` 생성 완료 후 링크 유효성 확인 — 선택 보강, 해당 스킬들 신설 시점에 일괄 확인
-- [❌] rate limit 판정 키(IP/계정) 명시 — 선택 보강, content test Q2에서 발견된 gap
-- [❌] 관리자용 서버사이드 강제 로그아웃(`auth.api` 대응 메서드) 보강 — 선택 보강, content test Q2에서 발견된 gap
-- [❌] `secondaryStorage`(Redis) 설정 코드 예시 추가 — 선택 보강, content test Q2에서 발견된 gap
-- [❌] `auth.api.getSession()`의 cookieCache 적용 여부 명시 — 선택 보강, content test Q3에서 발견된 gap
+- [✅] `backend/hono-api-patterns`, `backend/prisma-orm`, `backend/zod-schema-validation` 생성 완료 후 링크 유효성 확인 — 세 스킬 모두 레포에 존재 확인(2026-09-26)
+- [✅] rate limit 판정 키(IP/계정) 명시 — 2026-09-26 공식 문서(`concepts/rate-limit`)로 확인: **연결 IP 주소** 기준(계정 기준 아님), IPv6는 `/64` 서브넷 정규화. SKILL.md §10에 반영
+- [✅] 관리자용 서버사이드 강제 로그아웃(`auth.api` 대응 메서드) 보강 — 2026-09-26 공식 문서(`concepts/session-management`, `plugins/admin`)로 `auth.api.revokeUserSession`(단일 토큰)·`auth.api.revokeUserSessions`(유저 전체)·`auth.api.banUser`(정지+세션 무효화) 확인, SKILL.md §6에 "관리자용 서버사이드 강제 로그아웃" 절 신설
+- [✅] `secondaryStorage`(Redis) 설정 코드 예시 추가 — 2026-09-26 공식 패키지 `@better-auth/redis-storage`(npm 실측, 1.7.6, better-auth 팀 유지보수 확인) 기반 예시를 SKILL.md §6-1에 신설. 수동 구현 시의 `get`/`set`/`delete` 인터페이스도 함께 기재
+- [✅] `auth.api.getSession()`의 cookieCache 적용 여부 명시 — 2026-09-26 공식 문서(`concepts/session-management`)가 `disableCookieCache` 옵션을 서버 `auth.api.getSession({ query: { disableCookieCache: true } })` 예시로도 제시하는 것을 근거로 "서버 경로도 기본적으로 cookieCache를 탄다"고 SKILL.md §6에 명시(공식 문서가 명시적 평서문으로 확언하지는 않아 근거는 "옵션 존재 자체가 함의"임을 함께 밝힘)
+- [✅] 2026-09-26 보강분(rate limit 키·관리자 강제 로그아웃·secondaryStorage Redis·getSession cookieCache)에 대한 skill-tester 재테스트 수행 — Q1·Q2·Q3 모두 보강 내용을 직접 겨냥한 질문으로 재실행, 3/3 PASS. 발견된 gap 없음(기존 4건 gap 전부 해소 확인). PENDING_TEST → APPROVED 재전환
 
 ---
 
@@ -238,3 +275,5 @@ Vercel에 배포한 Hono + Better Auth에서 로그인 무차별 대입 방어�
 |------|------|-----------|--------|
 | 2026-09-25 | v1 | 최초 작성 (better-auth 1.7.6 기준) | skill-creator |
 | 2026-09-25 | v1 | 2단계 실사용 테스트 수행 (Q1 Next.js+Drizzle+Google 로그인 설정 / Q2 서버리스 rate limit·모든 기기 로그아웃 / Q3 cookieCache revoke 지연 대응) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-09-26 | v1 | 섹션 7 선택 보강 4건 반영: rate limit 판정 키(IP) 명시, 관리자 강제 로그아웃 API(`revokeUserSession(s)`/`banUser`) 추가, `secondaryStorage` Redis 예시(§6-1) 신설, `auth.api.getSession()` cookieCache 적용 여부 명시. 내용 변경으로 APPROVED → PENDING_TEST 재전환(재테스트 대기) | Claude (Sonnet 5) |
+| 2026-09-26 | v1 | 2단계 재테스트 수행 (Q1 rate limit 판정 키 / Q2 관리자 강제 로그아웃 / Q3 secondaryStorage Redis + getSession cookieCache) — 보강 내용 전부 타깃, 3/3 PASS → PENDING_TEST → APPROVED 재전환 | skill-tester |

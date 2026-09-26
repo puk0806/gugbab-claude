@@ -142,6 +142,16 @@ status: APPROVED
 |---|--------|------|
 | 25 | 5축(prohairesis·hexis·회복·후회·이성)은 학계 표준 분석틀 | DISPUTED → 정정 명기 | 5축 표준은 아니며, Bostock 2000 + Pakaluk 2005 + Broadie-Rowe 2002 종합. SKILL.md 7장에 "5축은 본 논문의 정리"임을 명기 |
 
+### 4-1b. 2026-09-26 재검증 (60일 초과 정기 재검증)
+
+| # | 클레임 | 판정 | 근거 |
+|---|--------|------|------|
+| 1 | Bywater 1894 OCT(Aristotelis Ethica Nicomachea, Clarendon Press) 서지·판본 계보(1901/1962/2010 재간) 불변 | VERIFIED | Internet Archive, Paideia Institute, Amazon/AbeBooks ISBN 019814511X 교차 확인 |
+| 2 | NE VII.8 1151a20-28(akrates의 ἀρχή 보존) 해석 — 최근 학술 문헌(Nielsen *Vice in the NE*, Oxford ORA)에서도 "akratic agent가 principle을 보존"이라는 표준 해석 유지, SKILL.md 정정 내용과 상충 없음 | VERIFIED | ora.ox.ac.uk(Nielsen), BMCR 2009.08.58 | 
+| 3 | 강상진·김재홍·이창우 공역, 길(2011), ISBN 9788964450383, 488쪽 | VERIFIED | 교보문고·예스24·알라딘·인터파크 교차 확인 |
+
+**재검증 요약:** 1차 텍스트 서지·Bekker 행수 해석·한국어 표준판 정보 모두 변경 없음. 새로운 반박 학설 없음. SKILL.md 검증일만 갱신.
+
 ### 4-6. 구조 완전성
 
 - [✅] YAML frontmatter (name, description) 포함
@@ -173,6 +183,24 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+### [재검증] 2026-09-26 — 60일 초과 정기 재검증
+
+**수행일**: 2026-09-26
+**수행자**: 메인 세션 (개별 스킬 재검증)
+**수행 방법**: SKILL.md 전체 Read → WebSearch로 Bywater OCT 서지·1151a 구간 최신 학술 해석·한국어 표준판 서지 재교차검증 → 실전 질문 2개로 SKILL.md 자체 답변 재확인
+
+**Q1. (재검증) akrates가 ἀρχή를 보존한다는 명제의 정확한 Bekker 위치와 최근 학계에서도 통용되는 해석인가?**
+- PASS
+- 근거: SKILL.md "## 5. NE VII.8 정밀 분해" "1151a5-19: 도덕적 원리(ἀρχή)·실천지(phronesis) 비교", "## 7. 5축 차이" prohairesis 행
+- 상세: 1151a11-19(보존) + 1151a20-28(prohairesis 차이) 이원 구조가 SKILL.md에 정확히 구분되어 있으며, 2026-09-26 재검증에서 확인한 Nielsen(Oxford)의 최근 논의("principle이 preserved된 akratic agent")와도 정합. 정본 정정 사항(2026-05-06 fact-checker 반영분: 1151a5-8이 핵심 대조 명제)도 그대로 유지되어 있음.
+
+**Q2. (재검증) 한국어 표준판(강상진·김재홍·이창우, 길 2011) 서지 정보로 학위논문에 인용하려면?**
+- PASS
+- 근거: SKILL.md "## 12. 인용 권장 양식" 한국어 표준판 블록
+- 상세: "강상진·김재홍·이창우 옮김 (서울: 길, 2011)" 인용 양식이 ISBN 9788964450383·488쪽 서지와 함께 재확인됨(교보문고·예스24·알라딘·인터파크 교차).
+
+**재검증 결론**: Bekker 행수·서지·학계 해석 모두 변경 없음. status APPROVED 유지.
 
 ---
 
@@ -308,3 +336,4 @@ status: APPROVED
 | 2026-05-06 | v1 | 2단계 실사용 테스트 수행 (Q1 prohairesis·NE위치·교정전략 / Q2 ἁπλῶς akrasia·분노·명예·Bekker 위치 / Q3 Hursthouse 연속체·위상·도덕교육 함의) → 3/3 PASS, APPROVED 전환. 섹션 6·7·8 동기화 완료. | skill-tester |
 | 2026-05-06 | v1.1 | **fact-checker 추가 검증 정정 3건** (Perseus/Callard 2017/Broadie PhilPapers 교차): (a) prohairesis 대조 *핵심 명제*는 **1151a5-8** (akrasia↔vice 직접 대조), 1151a20-28은 부수 논거(akrates의 ἀρχή 보존) — 두 위치 분리 표기 (b) Bywater OCT 1894 챕터 분할상 1150b29는 **VII.7 결미 행**, **VII.8 본문은 1150b30부터** — 챕터 귀속 명시 시 정확화 (c) akolasia 본격 도입은 **III.10 1117b23**부터, III.11은 신체적 즐거움 한정 심화. 사전 정정 박스에 항목 6-8 추가 + 5축 차이표·핵심 어휘표·권별 분담표 동기화. APPROVED 유지(정정 후 신뢰도 상승). | fact-checker + main |
 | 2026-07-04 | v1.2 | freshness 재검증 — ἡμιπόνηρος("절반의 악") NE VII.10 1152a15-18 구간 내 위치, 1150b29-32 후회(μεταμελητικός/ἀμεταμέλητος)·치유 가능성(ἰατός/ἀνίατος) 대조 및 수종·결핵 vs 간질 비유, 1151a의 παρὰ/κατὰ τὴν προαίρεσιν 대조 명제(akrasia↔kakia) 재확인 → 전원 VERIFIED, 내용 변경 없이 검증일만 갱신 | freshness-audit |
+| 2026-09-26 | v1.3 | 60일 초과 정기 재검증. Bywater OCT 서지·1151a ἀρχή 보존 해석(최근 Nielsen 등 학술 문헌과도 정합)·한국어 표준판(길 2011) 서지 재확인(VERIFIED 3/3). 실전 질문 2개 재확인 PASS. 내용 변경 없음, 검증일만 갱신, APPROVED 유지 | 메인 세션 (개별 재검증) |

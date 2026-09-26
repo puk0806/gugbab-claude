@@ -10,8 +10,9 @@ description: Prisma ORM 7.x(TypeScript) 사용 패턴 — prisma-client 제너�
 > - Prisma 릴리즈: https://www.prisma.io/docs/orm/release-status , https://www.prisma.io/changelog/2026-03-11 , https://github.com/prisma/orm/releases , https://www.prisma.io/blog/testing-series-1-8eRB5p0Y8o
 > - Neon: https://neon.com/docs/guides/prisma , https://neon.com/docs/serverless/serverless-driver , https://neon.com/docs/guides/vercel-connection-methods
 > - Vercel: https://vercel.com/kb/guide/connection-pooling-with-functions
+> - 2026-09-26 보강: https://www.prisma.io/docs/orm/prisma-client/client-extensions/query ($extends 로깅 전체 예시), https://neon.com/docs/guides/prisma (connect_timeout 위치), https://neon.com/docs/guides/vercel-managed-integration (Vercel-Neon 환경변수명), https://unpkg.com/@prisma/adapter-neon@7.10.0/dist/index.d.ts (PrismaNeonHttp 생성자 원본 확인)
 >
-> 검증일: 2026-09-25
+> 검증일: 2026-09-25 (섹션 5·7·9·10 보강은 2026-09-26)
 > 기준 버전: **Prisma ORM 7.10.0** (`@prisma/client`·`@prisma/adapter-*` dist-tag `latest` = 7.10.0, GitHub "Latest" = 7.10.0, 2026-08-25)
 > 최소 요구: Node.js **20.19.0+** (22.x 권장), TypeScript **5.4.0+** (5.9.x 권장)
 
@@ -228,7 +229,7 @@ if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 export default prisma;
 ```
 
-미들웨어(`$use`)가 필요했던 로깅·감사 등은 `$extends({ query: { $allModels: { async $allOperations({ args, query }) { ... return query(args); } } } })`로 옮긴다.
+미들웨어(`$use`)가 필요했던 로깅·감사 등은 `$extends({ query: { $allOperations(...) {...} } })`로 옮긴다(raw 쿼리 포함 전체 — 모델 연산만이면 `query: { $allModels: { $allOperations } }`). `model`·`operation`·`args`·`query`를 받아 소요시간을 재는 완전한 로깅 예시(공식 문서 기반, v7 어댑터 패턴 반영) → [references/v6-to-v7-upgrade.md](references/v6-to-v7-upgrade.md) "로깅·감사 미들웨어 전환" 절.
 
 ---
 
@@ -286,6 +287,13 @@ const posts = await prisma.post.findMany({ where: { authorId: { in: userIds } } 
 
 // ✅ 같은 tick의 findUnique는 Prisma 데이터로더가 자동 배치 (GraphQL resolver에 유용)
 const posts = await prisma.user.findUnique({ where: { id } }).posts();
+
+// ✅ 역방향 include — 게시글 목록에 작성자 붙이기 (N+1의 가장 흔한 실제 사례)
+const posts = await prisma.post.findMany({
+  where: { published: true },
+  include: { author: { select: { id: true, name: true } } }, // to-one 관계는 select만 중첩 가능
+  take: 20,
+});
 ```
 
 - **같은 레벨에서 `include`와 `select`를 함께 쓸 수 없다.** `include` 안에 중첩 `select`는 가능.
@@ -375,7 +383,8 @@ export default defineConfig({
 ```
 
 - v7에는 `directUrl`이 없다. **"CLI용 URL은 config, 런타임 URL은 어댑터"**로 역할이 갈린다.
-- Neon scale-to-zero 후 첫 연결이 늦을 수 있으므로 연결 문자열에 `connect_timeout=15`를 붙이는 것이 Neon 공식 권장이다.
+- **`connect_timeout`은 풀드 URL(`DATABASE_URL`, 런타임 어댑터가 쓰는 쪽)에 붙인다.** Neon 공식 문서(`neon.com/docs/guides/prisma` 트러블슈팅)는 "Prisma 쿼리 엔진이 Neon 컴퓨트가 깨어나기 전에 타임아웃된다"는 문제에 대해 `DATABASE_URL="postgresql://...?sslmode=require&connect_timeout=15"` 형태로 **풀드 연결 문자열**에 붙이는 예시를 제시한다(scale-to-zero 웨이크업은 런타임 요청 시점에 발생하므로 다이렉트/마이그레이션 URL이 아니라 런타임 URL 쪽 문제). `0`은 타임아웃 비활성화.
+- **Vercel 통합의 실제 환경변수명**: Vercel의 Neon 통합(Vercel-Managed·Neon-Managed 공통)은 `DATABASE_URL`(풀드, PgBouncer)·`DATABASE_URL_UNPOOLED`(다이렉트)를 자동 주입한다 — 이 스킬이 쓰는 이름 그대로다. 구 Vercel Postgres 템플릿과의 호환을 위해 `POSTGRES_URL`·`POSTGRES_URL_NON_POOLING` 등 `POSTGRES_*` 별칭도 함께 주입되지만 **레거시 호환용**이므로 신규 코드는 `DATABASE_URL`/`DATABASE_URL_UNPOOLED`를 기준으로 삼는다.
 
 ### 9-3. Vercel Fluid compute (Node 런타임)
 
@@ -397,7 +406,7 @@ export const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
 - **엣지(Workers/Vercel Edge)는 요청마다 `new PrismaClient({ adapter })` → 끝나면 `ctx.waitUntil(prisma.$disconnect())`.** 전역 재사용 시 요청 간 I/O 객체 접근 오류.
 - Vercel Edge는 `export const runtime = 'edge'`일 때만(기본은 Node), `pg` 미지원, Hobby 번들 1 MB 제한.
 
-> 주의: HTTP 변형(`PrismaNeonHttp`)은 **트랜잭션 미지원**(배치 `$transaction`·중첩 쓰기·`createMany`/`updateMany` 실패 이슈 보고). v7 생성자는 미검증이라 예시를 싣지 않는다 — 기본은 `PrismaNeon`.
+- HTTP 변형(`PrismaNeonHttp`)은 **트랜잭션 미지원**(배치 `$transaction`·중첩 쓰기·`createMany`/`updateMany` 실패 이슈 보고)이므로 기본은 `PrismaNeon`(WebSocket)이다. v7 생성자 시그니처는 2026-09-26에 패키지 원본(`dist/index.d.ts`)으로 실측 확인 완료(이전 "미검증" 갱신) — 코드 예시는 [references/serverless-edge.md](references/serverless-edge.md) 참조.
 
 코드 전문 → [references/serverless-edge.md](references/serverless-edge.md)
 

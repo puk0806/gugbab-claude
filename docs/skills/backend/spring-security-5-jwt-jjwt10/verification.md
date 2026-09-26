@@ -215,6 +215,28 @@ JWT를 매 요청마다 검증해서 SecurityContext에 인증 정보를 주입�
 
 ---
 
+### 재검증 (2026-09-26, 60일 경과 정기 재검증)
+
+**수행일**: 2026-09-26
+**수행 방법**: SKILL.md 전체 + references/REFERENCE.md Read 후 핵심 클레임 3개 WebSearch 재확인, 실전 질문 2개 셀프 검증
+
+**클레임 재검증**
+
+| # | 클레임 | 재확인 결과 | 판정 |
+|---|--------|-------------|------|
+| 1 | `WebSecurityConfigurerAdapter`는 Spring Security 5.7부터 deprecated, 5.5.x에서는 표준 패턴 | 2026-09 기준 재확인 — 5.7 deprecated 사실 유지. 추가로 **Spring Security 6.x에서 완전히 제거**됨을 확인(기존 SKILL.md에는 "제거" 언급 없이 "deprecated"만 기재) | VERIFIED (보강 필요 — 제거 사실 추가) |
+| 2 | jjwt 0.10.x는 `Jwts.parser().setSigningKey(key).parseClaimsJws(token)` 패턴, `Keys.hmacShaKeyFor(byte[])`로 HS256 최소 256-bit 키 생성 | API 자체는 역사적으로 고정된 버전이므로 변경 없음. 다만 jjwt에 CVE-2024-31033(String 기반 `setSigningKey`/`signWith` 오버로드가 일부 문자를 무시할 수 있다는 지적, 메인테이너는 "정상 사용 시 미발생"으로 반박) 보고 확인. 본 스킬은 byte[] 기반 `Keys.hmacShaKeyFor`만 사용하므로 해당 CVE의 영향 범위 밖 | VERIFIED (참고 캐비엇 추가, 코드 변경 불필요) |
+| 3 | Spring Boot 2.5는 Spring Security 5.5.x를 번들하며 레거시 유지보수 전용 환경이다 | 2026-09 기준 Spring Boot 2.x 전체가 OSS 공식 지원 종료(EOL) 상태로 확인됨. 신규 CVE 패치가 나오지 않으므로 순수 유지보수 용도로만 한정해야 함이 더 명확해짐 | VERIFIED (EOL 상태 캐비엇 추가) |
+
+**재검증 질문(셀프 검증)**
+
+Q1. "Spring Boot 2.5 레거시 프로젝트에서 이 스킬을 계속 써도 되는가, 주의할 점은?" → SKILL.md 상단 2026-09-26 추가 `> 주의` 캐비엇(Spring Boot 2.x OSS 지원 종료, 신규 CVE 미패치)으로 정확히 답변 가능 — PASS
+Q2. "jjwt 0.10.7 쓰는데 보안 이슈 없는가?" → SKILL.md 상단 CVE-2024-31033 캐비엇(String 오버로드 이슈, 본 스킬은 byte[] 기반이라 영향 없음)으로 정확히 답변 가능 — PASS
+
+**결론**: 클레임 3개 모두 VERIFIED. 핵심 코드 패턴·권장 사항 자체는 변경 없음. 다만 (a) WebSecurityConfigurerAdapter가 5.7 이후 Spring Security 6.x에서 완전히 제거된 사실, (b) Spring Boot 2.5의 OSS 지원 종료(EOL), (c) jjwt CVE-2024-31033(본 스킬 영향 없음) 3가지를 `> 주의` 캐비엇으로 SKILL.md 상단에 추가. 실질 가이드 변경은 아니므로 status는 APPROVED 유지, 검증일만 갱신.
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -242,3 +264,4 @@ JWT를 매 요청마다 검증해서 SecurityContext에 인증 정보를 주입�
 |------|------|-----------|--------|
 | 2026-04-22 | v1 | 최초 작성. Spring Boot 2.5 + Security 5.5 + jjwt 0.10.7 레거시 패턴 전 범위 포함 | skill-creator |
 | 2026-07-04 | v2 | freshness 재검증 — WebSecurityConfigurerAdapter deprecation(5.7)·jjwt 0.10↔0.11 파서 API 이력·jjwt 0.10.7 최종 유지 재확인. 내용 변화 없음, 검증일만 갱신 | freshness-audit |
+| 2026-09-26 | v2 | 60일 경과 정기 재검증: 핵심 클레임 3개 재확인(VERIFIED 3/3). WebSecurityConfigurerAdapter의 Security 6.x 완전 제거, Spring Boot 2.5 OSS EOL, jjwt CVE-2024-31033(영향 없음) 3건을 `> 주의` 캐비엇으로 추가. 코드 패턴 변경 없음, status APPROVED 유지 | Claude |
