@@ -63,7 +63,8 @@ fs.writeFileSync(path.join(tmp, 'src', 'orphan2.ts'), 'export const q = 1')
   })
   const r = spawnSync('node', [HOOK], { input, encoding: 'utf8', timeout: 5000 })
   const pass = r.status === 2 && r.stderr.includes('[tdd-guard]') && r.stderr.includes('테스트 파일 없음')
-  console.log(`  ${pass ? '✅' : '❌'} 차단 시 stderr에 사유 포함 → ${pass ? 'PASS' : `FAIL (exit ${r.status}, stderr: ${JSON.stringify(r.stderr)})`}`)
+    && !(r.stdout || '').includes('[tdd-guard]')
+  console.log(`  ${pass ? '✅' : '❌'} 차단 시 stderr에 사유 포함 + stdout에 사유 없음 →${pass ? 'PASS' : `FAIL (exit ${r.status}, stderr: ${JSON.stringify(r.stderr)})`}`)
   pass ? passed++ : failed++
 }
 

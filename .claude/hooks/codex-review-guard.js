@@ -42,13 +42,35 @@ function isLoggedIn() {
   } catch { return false; }
 }
 
-function hasCodeChanges() {
-  const CODE_EXT = /\.(ts|tsx|js|jsx|mjs|cjs|rs|java|py|go|rb|c|cpp|h|hpp|cs|swift|kt)$/;
+const CODE_EXT = /\.(ts|tsx|js|jsx|mjs|cjs|rs|java|py|go|rb|c|cpp|h|hpp|cs|swift|kt)$/;
+
+/**
+ * 변경 엔트리 목록 — `git status --porcelain -z -uall`
+ * -z: NUL 구분·경로 무따옴표(공백·한글·따옴표·개행 파일명 그대로), 선행 공백 보존(trim 금지)
+ * -uall: untracked 디렉토리를 "dir/" 한 줄이 아닌 개별 파일로 전개
+ * rename/copy(X=R|C)는 "XY 새경로\0원경로\0" — 원경로 토큰은 건너뛴다
+ */
+function getChangedEntries(repoRoot) {
+  let out;
   try {
-    const status = execSync('git status --porcelain', { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] }).trim();
-    if (!status) return false;
-    return status.split('\n').map(l => l.slice(3).trim()).some(f => CODE_EXT.test(f));
-  } catch { return false; }
+    out = execSync('git status --porcelain -z -uall', {
+      cwd: repoRoot, encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'], maxBuffer: 64 * 1024 * 1024,
+    });
+  } catch { return []; }
+  const tokens = out.split('\0');
+  const entries = [];
+  for (let i = 0; i < tokens.length; i++) {
+    const t = tokens[i];
+    if (t.length < 4) continue;
+    const x = t[0], y = t[1];
+    entries.push({ x, y, file: t.slice(3) });
+    if (x === 'R' || x === 'C') i++; // 원경로 스킵
+  }
+  return entries;
+}
+
+function hasCodeChanges(repoRoot) {
+  return getChangedEntries(repoRoot).some(e => CODE_EXT.test(e.file));
 }
 
 function getMarkerPath(repoRoot) {
@@ -56,32 +78,18 @@ function getMarkerPath(repoRoot) {
 }
 
 function hasCodeChangesNewerThan(repoRoot, markerMtime) {
-  const CODE_EXT = /\.(ts|tsx|js|jsx|mjs|cjs|rs|java|py|go|rb|c|cpp|h|hpp|cs|swift|kt)$/;
-  try {
-    const status = execSync('git status --porcelain', { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] }).trim();
-    if (!status) return false;
-    return status.split('\n').some(line => {
-      const flag = line.slice(0, 2).trim();
-      const f = line.slice(3).trim();
-      // R (renamed): "old -> new" — extract the new path after " -> "
-      const actualFile = flag.startsWith('R') ? (f.split(' -> ').pop() || f) : f;
-      if (!CODE_EXT.test(actualFile)) return false;
-      if (flag === 'D') {
-        // deleted: .git/index mtime은 git status 자체가 갱신하므로 사용 금지 → parent dir mtime으로만 판단
-        try {
-          const dirMtime = fs.statSync(path.join(repoRoot, path.dirname(actualFile))).mtime.getTime();
-          return dirMtime > markerMtime;
-        } catch {}
-        return false;
-      }
-      if (flag.startsWith('R')) {
-        // renamed: 마커 이후 신규 코드 변경 아님
-        return false;
-      }
-      try { return fs.statSync(path.join(repoRoot, actualFile)).mtime.getTime() > markerMtime; }
+  return getChangedEntries(repoRoot).some(({ x, y, file }) => {
+    if (!CODE_EXT.test(file)) return false;
+    if (x === 'D' || y === 'D') {
+      // deleted: .git/index mtime은 git status 자체가 갱신하므로 사용 금지 → parent dir mtime으로만 판단
+      try { return fs.statSync(path.join(repoRoot, path.dirname(file))).mtime.getTime() > markerMtime; }
       catch { return false; }
-    });
-  } catch { return false; }
+    }
+    // renamed(내용 무변경): 마커 이후 신규 코드 변경 아님. RM(rename+수정)은 mtime 판단
+    if ((x === 'R' || x === 'C') && y !== 'M') return false;
+    try { return fs.statSync(path.join(repoRoot, file)).mtime.getTime() > markerMtime; }
+    catch { return false; }
+  });
 }
 
 const raw = (() => {
@@ -101,7 +109,7 @@ if (!repoRoot) skip('git 레포 아님');
 if (isOptedOut()) skip('codex.skipReview=true');
 if (!isCodexAvailable()) skip('codex CLI 없음');
 if (!isPluginEnabled(repoRoot)) skip('플러그인 비활성화');
-if (!hasCodeChanges()) skip('미커밋 코드 변경 없음');
+if (!hasCodeChanges(repoRoot)) skip('미커밋 코드 변경 없음');
 
 const marker = getMarkerPath(repoRoot);
 if (fs.existsSync(marker)) {

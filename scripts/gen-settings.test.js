@@ -208,6 +208,31 @@ console.log('\n[--legacy] tdd-guard 제외 · typescript-quality --changed-only'
   assert('util + legacy → typescript-quality 미배선', JSON.stringify(u.hooks).includes('typescript-quality'), false)
 }
 
+// ── 신선도·규칙 경고 훅 배선 (2026-09-25) ────────────────────────────────
+// 공식 문서: InstructionsLoaded 는 관측 전용(출력 폐기) → SessionStart(stdout·additionalContext 주입)로 이동
+console.log('\n[SessionStart] instructions-loaded · staleness-check 는 SessionStart 에 배선, InstructionsLoaded 미배선')
+{
+  const hookCmds = (s, ev) => JSON.stringify((s.hooks[ev] || []).flatMap(g => g.hooks.map(h => h.command)))
+  for (const flags of [[], ['--dev'], ['--util'], ['--memory'], ['--staleness-guard'], ['--util', '--staleness-guard']]) {
+    const s = generate(...flags)
+    const label = flags.join(' ') || '(기본)'
+    const ss = hookCmds(s, 'SessionStart')
+    assert(`${label} → SessionStart 에 instructions-loaded`, ss.includes('instructions-loaded.js'), true)
+    assert(`${label} → SessionStart 에 staleness-check`, ss.includes('staleness-check.js'), true)
+    assert(`${label} → InstructionsLoaded 이벤트 미배선 (출력 폐기 이벤트)`, s.hooks.InstructionsLoaded, undefined)
+    // 경계: 중복 배선 금지 — 같은 훅이 두 번 실행되면 경고가 두 번 뜬다
+    assert(`${label} → staleness-check 1회만 배선`, (ss.match(/staleness-check\.js/g) || []).length, 1)
+  }
+  // --staleness-guard 옵션은 --strict 로 전달, 미선택 시 --strict 없음
+  assert('--staleness-guard → --strict 전달', hookCmds(generate('--staleness-guard'), 'SessionStart').includes('staleness-check.js --strict'), true)
+  assert('기본 → --strict 없음', hookCmds(generate(), 'SessionStart').includes('--strict'), false)
+  // 순서: memory-pull 이 먼저 돌아야 최신 memory 기준으로 경고가 산출된다
+  const m = hookCmds(generate('--memory'), 'SessionStart')
+  assert('--memory → memory-pull 이 staleness-check 보다 앞', m.indexOf('memory-pull.js') < m.indexOf('staleness-check.js'), true)
+  // 악성 입력: 알 수 없는 플래그가 배선을 깨뜨리지 않음
+  assert('알 수 없는 플래그 → SessionStart 배선 유지', hookCmds(generate('--unknown-flag'), 'SessionStart').includes('staleness-check.js'), true)
+}
+
 // ── 최종 ────────────────────────────────────────────────────────────────
 console.log(`\n결과: ${passed} passed, ${failed} failed`)
 process.exit(failed > 0 ? 1 : 0)

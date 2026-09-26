@@ -43,16 +43,31 @@ function runHook(stdinRaw, cwd) {
   return spawnSync('node', [HOOK], { input: stdinRaw, encoding: 'utf8', timeout: 5000, cwd })
 }
 
+// 공식 문서(code.claude.com/docs/en/hooks): "Stderr from a hook that exits 0 goes to the debug log only,
+// never the transcript, and Claude never sees it." → SessionStart 는 stdout JSON
+// hookSpecificOutput.additionalContext(Claude) + systemMessage(사용자) 로 전달해야 한다.
+function parseOut(r) {
+  try {
+    const j = JSON.parse(r.stdout)
+    if (j?.hookSpecificOutput?.hookEventName !== 'SessionStart') return null
+    const ctx = j.hookSpecificOutput.additionalContext
+    if (typeof ctx !== 'string' || typeof j.systemMessage !== 'string') return null
+    return { ctx, msg: j.systemMessage }
+  } catch { return null }
+}
+
 function test(desc, stdinRaw, cwd, opts = {}) {
   const r = runHook(stdinRaw, cwd)
-  let pass = r.status === 0
+  const out = parseOut(r)
+  let pass = r.status === 0 && out !== null && r.stderr === ''
   if (pass && opts.stderrIncludes) {
-    for (const s of [].concat(opts.stderrIncludes)) pass = pass && r.stderr.includes(s)
+    for (const s of [].concat(opts.stderrIncludes)) pass = pass && out.ctx.includes(s) && out.msg.includes(s)
   }
   if (pass && opts.stderrExcludes) {
-    for (const s of [].concat(opts.stderrExcludes)) pass = pass && !r.stderr.includes(s)
+    for (const s of [].concat(opts.stderrExcludes)) pass = pass && !out.ctx.includes(s)
   }
-  console.log(`  ${pass ? '✅' : '❌'} ${desc} → ${pass ? 'PASS' : `FAIL (exit ${r.status}, stderr: ${JSON.stringify(r.stderr).slice(0, 300)})`}`)
+  if (pass && opts.check) pass = opts.check(out)
+  console.log(`  ${pass ? '✅' : '❌'} ${desc} → ${pass ? 'PASS' : `FAIL (exit ${r.status}, stdout: ${JSON.stringify(r.stdout).slice(0, 200)}, stderr: ${JSON.stringify(r.stderr).slice(0, 120)})`}`)
   pass ? passed++ : failed++
 }
 
@@ -98,8 +113,19 @@ for (const marker of ['pwned', 'pwned2', 'pwned3']) {
   }
 }
 
+console.log('\n── 경계 — 출력 채널·크기 ──')
+const nlRepo = makeGitRepo({ commits: true })
+fs.writeFileSync(path.join(nlRepo, 'a\nb.txt'), 'x')
+test('개행 포함 파일명 1개 → 미커밋 파일 1개 (줄 수로 세지 않음)', '{}', nlRepo, { stderrIncludes: '미커밋 파일: 1개' })
+const longRepo = makeGitRepo({ commits: true })
+execSync('git commit -q --allow-empty -F -', { cwd: longRepo, input: 'L'.repeat(50_000) + '\n', stdio: ['pipe', 'pipe', 'pipe'] })
+test('초장문 커밋 메시지(50KB) → additionalContext 10,000자 상한 이내', '{}', longRepo, {
+  check: (o) => o.ctx.length <= 10000 && o.msg.length <= 10000,
+})
+test('stdout 은 JSON 한 덩어리만 (평문 혼입 없음)', '{}', cleanRepo, { stderrIncludes: '브랜치: main' })
+
 // cleanup
-for (const d of [cleanRepo, dirtyRepo, emptyRepo, notARepo, injectRepo]) {
+for (const d of [cleanRepo, dirtyRepo, emptyRepo, notARepo, injectRepo, nlRepo, longRepo]) {
   try { fs.rmSync(d, { recursive: true, force: true }) } catch {}
 }
 

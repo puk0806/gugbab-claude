@@ -115,6 +115,8 @@ const stopViolation = runHook(
 )
 assert('PENDING_TEST 위반 → exit 2', stopViolation.status, 2)
 assert('차단 메시지에 스킬 경로 포함', stopViolation.stderr.includes('no-record'), true)
+// 메시지 채널: Stop exit 2 는 stderr 가 "계속해야 하는 이유"로 전달 — stdout 에 사유가 새면 안 됨
+assert('Stop 차단 사유는 stderr 전용 (stdout 비어 있음)', stopViolation.stdout.trim(), '')
 
 const cleanRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dg-clean-'))
 const stopClean = runHook(
@@ -153,6 +155,37 @@ const noReadmePre = spawnSync('node', [HOOK, '--no-readme'], {
 assert('--no-readme면 commit 직전 README 검사 생략 (exit 0, 출력 없음)',
   noReadmePre.status === 0 && !noReadmePre.stdout.trim(), true)
 
+// ─── README 미갱신 commit 차단 — 메시지 채널 ──────────────────────
+section('README 미갱신 commit → JSON deny (메시지 채널)')
+{
+  const RSID = 'dg-readme-chan'
+  try { fs.unlinkSync(sessionFilePath(RSID)) } catch {}
+  recordModifiedFile(RSID, 'Write', { file_path: '/proj/.claude/skills/x/y/SKILL.md' })
+  const rRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dg-readme-'))
+  spawnSync('git', ['-C', rRoot, 'init', '-q'])
+  const pre = (command, sid = RSID) => runHook(
+    { hook_event_name: 'PreToolUse', session_id: sid, tool_name: 'Bash', tool_input: { command } },
+    { cwd: rRoot, env: { ...process.env, CLAUDE_PROJECT_DIR: rRoot } },
+  )
+  const r = pre('git commit -m x')
+  let j = null
+  try { j = JSON.parse(r.stdout) } catch {}
+  assert('README 미갱신 commit → exit 0 + permissionDecision deny',
+    r.status === 0 && j?.hookSpecificOutput?.permissionDecision === 'deny', true)
+  assert('사유는 permissionDecisionReason 에 (SKILL 경로 포함)',
+    (j?.hookSpecificOutput?.permissionDecisionReason || '').includes('SKILL.md'), true)
+  assert('README deny: stderr 에 사유 없음', r.stderr.trim(), '')
+  // 경계: 세션에 README 도 기록되면 통과 (출력 없음)
+  recordModifiedFile(RSID, 'Edit', { file_path: path.join(rRoot, 'README.md') })
+  const ok = pre('git commit -m x')
+  assert('README 함께 수정 → 통과 (출력 없음)', ok.status === 0 && !ok.stdout.trim(), true)
+  // 이상 입력: 기록 없는 세션 → 통과
+  const none = pre('git commit -m x', 'dg-readme-none')
+  assert('기록 없는 세션 → 통과 (출력 없음)', none.status === 0 && !none.stdout.trim(), true)
+  try { fs.unlinkSync(sessionFilePath(RSID)) } catch {}
+  fs.rmSync(rRoot, { recursive: true, force: true })
+}
+
 // ─── memory·exports 클린 검사 — push/PR 차단 ─────────────────────
 section('memory·exports 클린 검사 — push / gh pr create 차단')
 const memRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dg-mem-'))
@@ -178,6 +211,18 @@ fs.writeFileSync(path.join(memRoot, 'memory', 'fact.md'), 'v2 (미커밋)')
 assert('memory 미커밋 push → deny', preBash('git push origin main').stdout.includes('"permissionDecision":"deny"'), true)
 assert('memory 미커밋 gh pr create → deny', preBash('gh pr create --title x').stdout.includes('"permissionDecision":"deny"'), true)
 assert('차단 메시지에 refresh 조치 포함', preBash('git push').stdout.includes('session-export.js --refresh'), true)
+{
+  // 메시지 채널: PreToolUse JSON deny 는 exit 0 + stdout JSON(hookSpecificOutput.permissionDecisionReason) 이어야 한다.
+  // exit 2 와 섞으면 JSON 이 무시될 수 있고, stderr 에 사유를 쓰면 이중 전달된다.
+  const r = preBash('git push origin main')
+  let j = null
+  try { j = JSON.parse(r.stdout) } catch {}
+  assert('push deny: exit 0 + stdout 이 유효 JSON', r.status === 0 && j !== null, true)
+  assert('push deny: hookEventName=PreToolUse', j?.hookSpecificOutput?.hookEventName, 'PreToolUse')
+  assert('push deny: permissionDecisionReason 비어있지 않음',
+    typeof j?.hookSpecificOutput?.permissionDecisionReason === 'string' && j.hookSpecificOutput.permissionDecisionReason.length > 0, true)
+  assert('push deny: stderr 에 사유 없음', r.stderr.trim(), '')
+}
 assert('--no-readme여도 memory 검사는 동작', spawnSync('node', [HOOK, '--no-readme'], {
   input: JSON.stringify({ hook_event_name: 'PreToolUse', session_id: 'dg-mem', tool_name: 'Bash', tool_input: { command: 'git push' } }),
   encoding: 'utf8', timeout: 5000, ...memEnv,

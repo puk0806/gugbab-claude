@@ -33,6 +33,8 @@ function test(desc, filePath, expectedExit, hookArgs = [], env = {}, stderrCheck
   const r = run(filePath, hookArgs, env)
   let pass = r.status === expectedExit
   if (pass && stderrCheck) pass = stderrCheck(r.stderr || '')
+  // 메시지 채널 단언 — PostToolUse exit 2 는 stderr 만 Claude 에게 전달된다 (stdout 은 debug log 행)
+  if (pass && expectedExit === 2) pass = (r.stderr || '').includes('[typescript-quality]') && !(r.stdout || '').includes('[typescript-quality]')
   console.log(`  ${pass ? '✅' : '❌'} ${desc} → ${pass ? 'PASS' : `FAIL (기대 exit ${expectedExit}, 실제 ${r.status})\n     stderr: ${(r.stderr || '').trim().slice(0, 200)}`}`)
   pass ? passed++ : failed++
 }

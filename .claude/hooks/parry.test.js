@@ -21,8 +21,13 @@ function run(toolName, filePath, content) {
 
 function test(desc, toolName, filePath, content, expectedExit) {
   const r = run(toolName, filePath, content)
-  const pass = r.status === expectedExit
-  console.log(`  ${pass ? '✅' : '❌'} ${desc} → ${pass ? 'PASS' : `FAIL (기대 exit ${expectedExit}, 실제 ${r.status})`}`)
+  // 메시지 채널 단언 — PreToolUse exit 2 는 stderr 가 차단 사유로 Claude 에게 전달된다
+  const TAG = '[parry]', out = r.stdout || '', err = r.stderr || ''
+  const chanErr = expectedExit === 2
+    ? (!err.includes(TAG) ? 'stderr 에 차단 사유 없음' : out.includes(TAG) ? 'stdout 에 차단 사유가 섞임' : '')
+    : ((out + err).includes(TAG) ? '통과인데 차단 사유 출력' : '')
+  const pass = r.status === expectedExit && !chanErr
+  console.log(`  ${pass ? '✅' : '❌'} ${desc} → ${pass ? 'PASS' : `FAIL (기대 exit ${expectedExit}, 실제 ${r.status}${chanErr ? ', ' + chanErr : ''})`}`)
   pass ? passed++ : failed++
 }
 

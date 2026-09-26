@@ -4,7 +4,7 @@
  * 실행: node .claude/hooks/bash-guard.test.js
  */
 
-const { execSync } = require('child_process')
+const { execSync, spawnSync } = require('child_process')
 const path = require('path')
 const HOOK = path.join(__dirname, 'bash-guard.js')
 const PROJECT_ROOT = path.resolve(__dirname, '..', '..')
@@ -35,10 +35,25 @@ function getDecision(result, eventName) {
   return result?.hookSpecificOutput?.permissionDecision ?? 'null'
 }
 
+// 원시 실행 — exit code·stdout·stderr 를 모두 본다 (메시지 채널 단언용)
+function runHookRaw(toolName, toolInput = {}, eventName = 'PreToolUse') {
+  const input = JSON.stringify({ hook_event_name: eventName, tool_name: toolName, tool_input: toolInput })
+  const r = spawnSync('node', [HOOK], { input, encoding: 'utf8', timeout: 3000 })
+  let json = null
+  try { json = r.stdout.trim() ? JSON.parse(r.stdout.trim()) : null } catch {}
+  return { status: r.status, stdout: r.stdout || '', stderr: r.stderr || '', json }
+}
+
 function test(desc, toolName, toolInput, expected, eventName = 'PreToolUse', stdinExtra = {}) {
   const result = runHook(toolName, toolInput, eventName, stdinExtra)
   const actual = getDecision(result, eventName)
-  const pass = actual === expected
+  let pass = actual === expected
+  // 메시지 채널 단언 — PreToolUse deny 는 exit 0 + stdout JSON 의 permissionDecisionReason 로만 사유 전달
+  if (pass && expected === 'deny' && eventName === 'PreToolUse') {
+    const raw = runHookRaw(toolName, toolInput, eventName)
+    const reason = raw.json?.hookSpecificOutput?.permissionDecisionReason
+    pass = raw.status === 0 && typeof reason === 'string' && reason.length > 0 && !raw.stderr.trim()
+  }
   console.log(`  ${pass ? '✅' : '❌'} ${desc} → ${pass ? 'PASS' : `FAIL (기대: ${expected}, 실제: ${actual})`}`)
   if (!pass) console.log(`     출력: ${JSON.stringify(result)}`)
   pass ? passed++ : failed++
@@ -497,6 +512,24 @@ test('rm -rf 절대경로/.claude', 'Bash', { command: 'rm -rf /Users/x/project/
 test('rm -rf ~/.ssh', 'Bash', { command: 'rm -rf ~/.ssh' }, 'deny')
 test('rm 일반 파일 → null', 'Bash', { command: 'rm .claude/hooks/old-hook.js' }, 'null')
 test('rm -rf 하위 일반 경로 → null', 'Bash', { command: 'rm -rf /tmp/scratch-dir' }, 'null')
+
+section('PostToolUse — .claude/ 삭제·이동 후 README 동기화 피드백 (메시지 채널)')
+{
+  // PostToolUse 는 exit 0 + stdout JSON {decision:"block", reason} 으로 사유를 Claude 에게 전달한다
+  const chk = (desc, command, expectBlock) => {
+    const r = runHookRaw('Bash', { command }, 'PostToolUse')
+    const ok = expectBlock
+      ? r.status === 0 && r.json?.decision === 'block' && typeof r.json?.reason === 'string' && r.json.reason.length > 0 && !r.stderr.trim()
+      : r.status === 0 && !r.stdout.trim() && !r.stderr.trim()
+    console.log(`  ${ok ? '✅' : '❌'} ${desc} → ${ok ? 'PASS' : `FAIL (exit ${r.status}, stdout: ${r.stdout.slice(0, 100)}, stderr: ${r.stderr.slice(0, 100)})`}`)
+    ok ? passed++ : failed++
+  }
+  chk('rm .claude/skills/ 경로 → decision block + reason', 'rm -rf .claude/skills/x/y', true)
+  chk('mv .claude/agents/ 경로 → decision block + reason', 'mv .claude/agents/a.md .claude/agents/b.md', true)
+  chk('일반 rm → 출력 없음', 'rm -rf /tmp/scratch-dir', false)
+  chk('인용 텍스트 속 rm .claude/skills (echo) → 출력 없음 (오탐 방지)', 'echo "rm -rf .claude/skills/x"', false)
+  chk('빈 명령 → 출력 없음', '', false)
+}
 
 console.log(`\n${'─'.repeat(40)}`)
 console.log(`결과: ${passed}/${passed + failed} 통과 ${failed > 0 ? `(${failed}개 실패)` : ''}`)

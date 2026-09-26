@@ -124,7 +124,8 @@ try {
   if (categories >= 2) process.exit(0)
 
   const rel = path.relative(process.cwd(), filePath)
-  process.stdout.write([
+  // PostToolUse exit 2 → stderr 가 Claude 에게 전달된다 (stdout 은 debug log 전용)
+  process.stderr.write([
     `[adversarial-test-guard] ❌ 적대적 테스트 커버리지 부족: ${rel}`,
     '',
     `  테스트 케이스 ${cases}개 중 적대적 커버리지 카테고리가 ${categories}개뿐입니다 (2개 이상 필요).`,

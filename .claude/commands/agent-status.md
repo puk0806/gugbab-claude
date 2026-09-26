@@ -20,9 +20,9 @@ PENDING_TEST 스킬 수:
 grep -rl "PENDING_TEST" .claude/skills/ | wc -l
 ```
 
-오늘 수정된 파일:
+오늘 작업한 파일 (오늘 커밋된 파일 + 현재 미커밋 변경의 합집합 — README mtime 기준 아님):
 ```bash
-find . -name "*.md" -newer README.md -not -path "*/node_modules/*" | head -10
+{ git log --since=midnight --name-only --pretty=format:; git status --porcelain | cut -c4-; } | grep -v '^$' | sort -u | head -10
 ```
 
 ## 출력 형식

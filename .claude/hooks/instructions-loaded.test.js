@@ -95,6 +95,43 @@ if (fs.existsSync(markerPath)) {
   passed++
 }
 
+// ── SessionStart 모드 ──
+// 공식 문서: InstructionsLoaded 는 "Claude Code discards their JSON output fields", exit 0 stderr 는
+// "debug log only ... Claude never sees it" → 경고가 전달되려면 SessionStart 에서 stdout JSON 으로 내보내야 한다
+console.log('\n── SessionStart 모드 (stdout JSON: additionalContext + systemMessage) ──')
+const ssStdin = (source = 'startup') => JSON.stringify({ hook_event_name: 'SessionStart', source })
+function ssTest(desc, stdinRaw, projectDir, check) {
+  const r = runHook(stdinRaw, projectDir)
+  let j = null
+  try { j = r.stdout.trim() ? JSON.parse(r.stdout) : null } catch { j = 'INVALID' }
+  const pass = r.status === 0 && j !== 'INVALID' && r.stderr.trim() === '' && check(j)
+  console.log(`  ${pass ? '✅' : '❌'} ${desc} → ${pass ? 'PASS' : `FAIL (exit ${r.status}, stdout: ${JSON.stringify(r.stdout).slice(0, 160)}, stderr: ${JSON.stringify(r.stderr).slice(0, 120)})`}`)
+  pass ? passed++ : failed++
+}
+const ctxOf = (j) => j?.hookSpecificOutput?.hookEventName === 'SessionStart' ? j.hookSpecificOutput.additionalContext : null
+ssTest('누락 3개 + SessionStart(startup) → additionalContext·systemMessage 에 누락 목록', ssStdin(), partialDir,
+  (j) => { const c = ctxOf(j); return typeof c === 'string' && c.includes('누락된 rules/ 파일 감지 (3개)') && c.includes('info-verification.md') && typeof j.systemMessage === 'string' && j.systemMessage.includes('(3개)') })
+ssTest('/clear 후(source=clear) 에도 동일하게 주입', ssStdin('clear'), partialDir, (j) => (ctxOf(j) || '').includes('(3개)'))
+ssTest('누락 없음 + SessionStart → stdout 비어있음(불필요 주입 금지)', ssStdin(), fullDir, (j) => j === null)
+ssTest('rules/ 없음 + SessionStart → stdout 비어있음', ssStdin(), noRulesDir, (j) => j === null)
+for (const [label, raw] of [
+  ['hook_event_name 이 객체', JSON.stringify({ hook_event_name: { toString: 1 } })],
+  ['hook_event_name 대소문자 위장 "sessionstart"', JSON.stringify({ hook_event_name: 'sessionstart' })],
+  ['hook_event_name 에 개행 주입 "SessionStart\\n"', JSON.stringify({ hook_event_name: 'SessionStart\n' })],
+]) {
+  const r = runHook(raw, partialDir)
+  const pass = r.status === 0 && r.stdout.trim() === ''
+  console.log(`  ${pass ? '✅' : '❌'} ${label} → SessionStart 로 취급 안 함, stdout 비어있음 → ${pass ? 'PASS' : `FAIL (stdout: ${r.stdout.slice(0, 80)})`}`)
+  pass ? passed++ : failed++
+}
+{
+  // InstructionsLoaded(레거시) 경로는 stdout 에 JSON 을 쓰지 않아야 함(이벤트 불일치 hookSpecificOutput 금지)
+  const r = runHook(validStdin, partialDir)
+  const pass = r.status === 0 && r.stdout.trim() === ''
+  console.log(`  ${pass ? '✅' : '❌'} InstructionsLoaded 입력 → stdout 비어있음(이벤트 불일치 JSON 미출력) → ${pass ? 'PASS' : 'FAIL'}`)
+  pass ? passed++ : failed++
+}
+
 // cleanup
 for (const d of [fullDir, partialDir, emptyRulesDir, noRulesDir, injectDir]) {
   try { fs.rmSync(d, { recursive: true, force: true }) } catch {}

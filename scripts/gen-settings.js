@@ -107,21 +107,18 @@ hooks.PostToolUse = [
 ];
 
 // SessionStart — 핸드오프 주입은 네이티브 resume이 커버하므로 제거 (2026-07 훅 다이어트)
-const sessionStartHooks = [];
-if (withMemory) sessionStartHooks.push(H('memory-pull.js'));
-sessionStartHooks.push(H('session-start.js'));
-hooks.SessionStart = [{ hooks: sessionStartHooks }];
-
-// InstructionsLoaded — /clear 포함 모든 컨텍스트 초기화 시 동작
+// 2026-09-25: instructions-loaded·staleness-check 를 InstructionsLoaded → SessionStart 로 이동.
+// 공식 문서상 InstructionsLoaded 는 관측 전용(출력 폐기)이라 경고가 아무에게도 전달되지 않았다.
+// SessionStart 는 stdout·additionalContext 를 컨텍스트로 주입하며 /clear 시에도(source:"clear") 발생한다.
 const stalenessHook = withStalenessGuard
   ? { type: 'command', command: 'node $CLAUDE_PROJECT_DIR/.claude/hooks/staleness-check.js --strict' }
   : H('staleness-check.js');
-hooks.InstructionsLoaded = [{
-  hooks: [
-    H('instructions-loaded.js'),
-    stalenessHook, // 세션 시작 + /clear 양쪽 커버
-  ],
-}];
+const sessionStartHooks = [];
+if (withMemory) sessionStartHooks.push(H('memory-pull.js'));   // 최신 memory 반영이 경고 산출보다 먼저
+sessionStartHooks.push(H('session-start.js'));
+sessionStartHooks.push(H('instructions-loaded.js'));
+sessionStartHooks.push(stalenessHook);
+hooks.SessionStart = [{ hooks: sessionStartHooks }];
 
 // Stop — 산출물 완결성(deliverable-guard) + 선택 훅만 (스태킹 최소화)
 // --readme-guard 미선택 시 README 검사는 끄고 PENDING_TEST 검사만 수행 (opt-in 의미 보존)
