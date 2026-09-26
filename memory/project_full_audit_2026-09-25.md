@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 64863110-4333-4f2b-963a-d8c76a43ec50
-  modified: 2026-09-25T10:33:20.028Z
+  modified: 2026-09-26T06:25:30.453Z
 ---
 
 2026-09-25 사용자 요청 "현재 모델(Opus 5.5)에 맞게 전체 점검·불필요 제거·필요한 것 생성". 점검 결과 **삭제·병합 근거 있는 자산 0** (버전별 분리 스킬은 의도된 설계) → 작업은 현행화·배선·신규 생성 중심.
@@ -26,5 +26,7 @@ metadata:
 **교훈**: 새 스킬을 만들면 project-install.sh 소유 템플릿 등록까지가 한 세트 — 스킬 생성과 설치 스크립트 수정을 병렬로 돌리면 연결이 빠진다.
 
 **머지**: 커밋 7개(config·agent·skill Add·skill Modify·docs·memory·export)로 분리해 브랜치 `chore/model-refresh-audit-2026-09-25` → PR #18, 2026-09-25 main 머지 완료. 이 변경분은 Codex 리뷰 미수행 상태로 머지됨(계정 모델 문제).
+
+**2026-09-26 후속(브랜치 fix/peer-reported-hook-stderr-2026-09-25, 미머지)**: 01 세션 역류 요청 처리 + 재검토 3종으로 가드 우회·훅 규약·Stop 루프·설치 잔재 수정, health 안전 결함·만료 10종 재검증·신규 스킬 보강 완료(아래 후속 과제 중 health gap·moral 외 대부분 해소). 04_gugbab-health는 복사본 재설치 검증 결과 "머지 후 settings Y로 재설치" 권장 — 실제 재설치는 사용자 지시 대기. 잔여: 기존 references 보유 스킬 4종(python-anthropic-sdk·mui-v9·radix-ui·storybook) SKILL.md 500줄 초과.
 
 **후속 과제(미처리)**: health 스킬 gap(meal-recommendation 알레르기 기본 흐름 부재·만료 식재료 미필터, nutrition-analysis 면책 필드 없음), 신규 스킬 선택 보강 gap들(각 verification.md 섹션 7), moral-curriculum 도덕과 부분개정 포함 여부 미확인. 관련: [[project_full_audit_2026-09-11]].
