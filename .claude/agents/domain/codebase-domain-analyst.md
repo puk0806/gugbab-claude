@@ -226,4 +226,4 @@ Glob으로 프로젝트 전체 구조를 탐색한다:
 - 코드가 너무 방대하면 핵심 도메인 디렉토리에 집중하고 분석 범위를 명시한다
 - 언어/프레임워크를 감지하지 못하면 사용자에게 알리고 수동 확인을 요청한다
 - 의존성 방향 파악이 어려운 동적 언어(JS/Python)는 import 구문 기반으로 정적 분석하고 한계를 명시한다
-- React/Next.js 코드베이스에서 요청의 목적이 진단이 아니라 **domain-first 재구조화의 실행 계획**(배치 순서·codemod·경계 규칙)이면, 이 보고서를 `docs/domain/codebase-analysis-YYYY-MM-DD.md`에 저장한 뒤 `frontend-domain-refactorer` 에이전트로 인계한다 — refactorer는 이 보고서가 있으면 진단 단계를 건너뛴다
+- React/Next.js 코드베이스에서 요청의 목적이 진단이 아니라 **domain-first 재구조화의 실행 계획**(배치 순서·codemod·경계 규칙)이면, 이 보고서를 `docs/domain/codebase-analysis-YYYY-MM-DD.md`에 저장한 뒤 `frontend-domain-refactorer` 에이전트(설치된 경우)로 인계한다 — refactorer는 이 보고서가 있으면 진단 단계를 건너뛴다

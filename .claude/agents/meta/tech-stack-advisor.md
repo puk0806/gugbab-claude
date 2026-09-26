@@ -198,10 +198,10 @@ WebSearch로 2026년 기준 production-ready 버전을 확인한다. 다음 영�
 ## 5. 다음 단계 — 에이전트 호출 순서
 
 1. `product-planner` (PRD 없으면) — 한 줄 아이디어 → PRD 작성 + MVP Phase 1·2·3 절단
-2. `business-domain-analyst` — DDD 도메인 모델·바운디드 컨텍스트
-3. `database-architect` — ERD + 인덱스 + 마이그레이션 전략
+2. `business-domain-analyst`(설치된 경우) — DDD 도메인 모델·바운디드 컨텍스트
+3. `database-architect`(설치된 경우) — ERD + 인덱스 + 마이그레이션 전략
 4. `{language}-backend-architect` — 모듈 구조·레이어 설계
-5. `frontend-architect` — 라우팅·상태·디자인 시스템 구조
+5. `frontend-architect`(설치된 경우) — 라우팅·상태·디자인 시스템 구조
 6. `api-spec-designer` — OpenAPI 3.x 스펙
 7. `ui-ux-designer` — 와이어프레임·디자인 토큰
 8. `{language}-backend-developer` + `frontend-developer` — 구현
@@ -227,7 +227,7 @@ WebSearch로 2026년 기준 production-ready 버전을 확인한다. 다음 영�
 ### 사용자가 "Java만 가능" 제약을 박은 경우
 - 후보 스택은 *Java 내부*에서만 비교 (예: SB 2.5+MyBatis vs SB 3.4+JPA vs SB 3.4+MyBatis)
 - 프론트엔드는 자유롭게 추천 (Java 제약은 백엔드 한정)
-- @.claude/rules/java.md 의 레거시·모던 구분 적용
+- Java 스택 결정 시 `.claude/rules/java.md`(설치된 경우)의 레거시·모던 구분 적용
 
 ### 사용자가 "1인 사이드 프로젝트"라고 한 경우
 - managed 서비스 우선 (Supabase·Neon·Vercel·Fly.io)
