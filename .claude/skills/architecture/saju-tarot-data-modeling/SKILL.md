@@ -25,7 +25,7 @@ description: 운세 앱(사주·타로·손금)의 로컬 우선 데이터 모�
 > 검증일: 2026-09-10
 > 대상 버전: Dexie 4.4.5 (2026-09 기준 최신 안정, v5 없음)
 
-> **짝 스킬 안내**
+> **짝 스킬 안내 (설치된 경우 참조)**
 > - `frontend/indexeddb-dexie` — Dexie API 사용법 자체(스키마 문법·쿼리·트랜잭션·`useLiveQuery`)
 > - `architecture/dream-journal-data-modeling` — 같은 계열의 로컬 우선 도메인 모델링(꿈 일기). 공통 패턴은 중복 설명하지 않는다
 > - `meta/fortune-interpretation-prompt-engineering` — 운세 *콘텐츠* 톤("재미로 보는" 한 줄 고지·hedging). 본 스킬의 `disclaimerVersion`·동의 필드는 그 고지 문구 버전을 데이터로 고정하기 위한 것이다

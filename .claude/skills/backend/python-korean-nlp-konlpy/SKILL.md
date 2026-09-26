@@ -20,7 +20,7 @@ description: >
 > - KLUE 벤치마크: https://github.com/KLUE-benchmark/KLUE
 >
 > 검증일: 2026-05-15
-> 짝 스킬: `frontend/dream-symbol-tagging` (프론트엔드 시도) · `backend/python-fastapi` (예정)
+> 짝 스킬(설치된 경우 참조): `frontend/dream-symbol-tagging` (프론트엔드 시도) · `backend/python-fastapi` (예정)
 
 ---
 

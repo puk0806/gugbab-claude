@@ -431,7 +431,7 @@ if result["is_recurrent"]:
     print(f"반복 꿈 감지! 유사 사례 {len(result['matches'])}건")
 ```
 
-> 짝 스킬:
+> 짝 스킬 (설치된 경우 참조):
 > - `backend/python-korean-nlp-konlpy` — 형태소 단위 전처리(불용어·표제어) 필요 시
 > - `backend/python-llamaindex` — 다단계 RAG·쿼리 엔진 추상화가 필요할 때
 > - `frontend/dream-recurrence-detection` — 위 백엔드에 대응하는 프론트 UI

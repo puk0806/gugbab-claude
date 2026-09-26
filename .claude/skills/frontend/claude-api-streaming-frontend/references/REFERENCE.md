@@ -137,7 +137,7 @@ async function retryWithBackoff<T>(
 
 ---
 
-## 9. 짝 스킬과의 연계
+## 9. 짝 스킬과의 연계 (설치된 경우 참조)
 
 - `frontend/chat-ui-pattern` — 메시지 리스트 렌더링·자동 스크롤·virtuoso는 이쪽 스킬에서 다룬다. 본 스킬은 *데이터 흐름*에만 집중
 - `meta/dream-interpretation-prompt-engineering` — system 프롬프트 설계(역할·예시·제약). 캐시 가능한 큰 system 블록은 거기서 설계 후 본 스킬의 캐싱 패턴에 투입

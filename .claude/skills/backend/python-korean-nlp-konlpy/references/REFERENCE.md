@@ -67,9 +67,9 @@ print(cos_sim(embeddings[0], embeddings[2]))  # ~0.15 (무관)
 
 ---
 
-## 12. 예시 — `dream-symbol-tagging` 백엔드 (꿈 텍스트 핵심 명사 추출)
+## 12. 예시 — `dream-symbol-tagging` 백엔드 (꿈 텍스트 핵심 명사 추출, 설치된 경우 참조)
 
-프론트엔드 `frontend/dream-symbol-tagging` 스킬이 사용자에게 꿈 일기 입력 UI를 제공하면, 백엔드는 텍스트에서 **꿈 상징어**를 추출한다.
+프론트엔드 `frontend/dream-symbol-tagging` 스킬(설치된 경우)이 사용자에게 꿈 일기 입력 UI를 제공하면, 백엔드는 텍스트에서 **꿈 상징어**를 추출한다.
 
 ### 12.1 도메인 사용자 사전
 
@@ -167,7 +167,7 @@ def test_extract_dream_keywords():
 
 ---
 
-## 정합성 메모
+## 정합성 메모 (짝 스킬은 설치된 경우 참조)
 
 - **프론트엔드 짝 스킬**: `frontend/dream-symbol-tagging`은 사용자 입력 UI와 결과 시각화를 담당한다. 본 백엔드 스킬의 `/dreams/extract-keywords` API를 호출한다.
 - **백엔드 짝 스킬(예정)**: `backend/python-fastapi`가 FastAPI 라우터·의존성 주입·테스트 패턴을 제공한다. 본 스킬은 그 위에서 NLP 처리만 담당한다.

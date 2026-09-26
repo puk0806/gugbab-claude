@@ -38,7 +38,7 @@ description: >
 └──────────────────────────────────────────────────────────┘
 ```
 
-이 스킬은 짝 스킬과 함께 사용:
+이 스킬은 짝 스킬과 함께 사용(설치된 경우 참조):
 - `frontend/vite-pwa-service-worker` — Service Worker 빌드·등록 인프라
 - `humanities/korean-dream-interpretation-tradition` — 로컬 폴백 응답의 콘텐츠 소스(전통 해몽 사전)
 
@@ -168,7 +168,7 @@ async function triggerFallback(input: string, reason: FallbackReason): Promise<L
 
 ## 3. 로컬 Fallback 1 — 전통 해몽 사전 (IndexedDB)
 
-콘텐츠 정의는 짝 스킬 `humanities/korean-dream-interpretation-tradition` 참조. 여기서는 *검색 메커니즘*만 다룬다.
+콘텐츠 정의는 짝 스킬 `humanities/korean-dream-interpretation-tradition`(설치된 경우) 참조. 여기서는 *검색 메커니즘*만 다룬다.
 
 ### 데이터 모델
 
@@ -457,7 +457,7 @@ LLM 기능 추가 시 *반드시* 확인:
 | 5 | `BackgroundSyncPlugin`만 등록하고 SW 미등록 | 큐 적재 안 됨 (SW가 fetch를 가로채지 못함) | `registerRoute` 전 SW가 실제 활성화됐는지 확인 |
 | 6 | 429 응답을 그대로 사용자에게 노출 | "API 오류 429"가 화면에 표시 | 사용자 메시지는 일반화 |
 | 7 | `maxRetentionTime` 기본값 의존 | 기본값(24시간) 넘은 큐 항목 자동 폐기 → 사용자 모름 | 폐기 알림 또는 `maxRetentionTime` 명시 |
-| 8 | 전통 해몽 사전을 단정적 톤으로 표시 | "당신의 꿈은 X를 의미합니다" → 미신 강화 | `humanities/korean-dream-interpretation-tradition` hedging 톤 강제 |
+| 8 | 전통 해몽 사전을 단정적 톤으로 표시 | "당신의 꿈은 X를 의미합니다" → 미신 강화 | `humanities/korean-dream-interpretation-tradition`(설치된 경우) hedging 톤 강제 |
 | 9 | `precacheAndRoute(self.__WB_MANIFEST)` 누락 | injectManifest 빌드 시 manifest 주입 실패 | vite-pwa injectManifest 설정 확인 |
 | 10 | 큐 적재 결과를 사용자에게 안 알림 | 사용자가 응답을 영영 못 받았다고 생각 | UX 패턴(섹션 6) Toast/Banner 노출 |
 

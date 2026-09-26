@@ -28,7 +28,7 @@ description: >
 
 ---
 
-## 짝 스킬 (Companion Skills)
+## 짝 스킬 (Companion Skills, 설치된 경우 참조)
 
 - `backend/python-fastapi` — Python 백엔드 프레임워크
 - `backend/python-async-asyncio` — 비동기 동작 (AsyncAnthropic 사용 시 필수 이해)
@@ -284,7 +284,7 @@ async def chat(prompt: str):
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 ```
 
-> 프론트엔드 측 EventSource/Fetch 스트림 처리는 `frontend/claude-api-streaming-frontend` 스킬을 참조한다.
+> 프론트엔드 측 EventSource/Fetch 스트림 처리는 `frontend/claude-api-streaming-frontend` 스킬(설치된 경우)을 참조한다.
 
 ---
 

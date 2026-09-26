@@ -27,7 +27,7 @@ disable-model-invocation: true
 > 검증일: 2026-08-12
 > 대상 버전: n8n v2.x (2026-08-11 기준 stable v2.33.7 / beta v2.34.4)
 
-> 짝 스킬: `devops/n8n-self-hosting`, `devops/n8n-workflow-design`, `backend/python-anthropic-sdk`
+> 짝 스킬(설치된 경우 참조): `devops/n8n-self-hosting`, `devops/n8n-workflow-design`, `backend/python-anthropic-sdk`
 
 ---
 
@@ -433,7 +433,7 @@ Chat Trigger ──▶ AI Agent ──▶ (Tool) Vector Store Retrieve
 
 ---
 
-## 14. 짝 스킬과의 관계
+## 14. 짝 스킬과의 관계 (설치된 경우 참조)
 
 | 스킬 | 다루는 범위 |
 |------|-------------|
@@ -442,4 +442,4 @@ Chat Trigger ──▶ AI Agent ──▶ (Tool) Vector Store Retrieve
 | `devops/n8n-workflow-design` | 일반 워크플로우 설계 원칙, 에러 처리, 모듈화 |
 | `backend/python-anthropic-sdk` | n8n 외부에서 직접 Anthropic SDK 호출(파이썬), Tool Use·streaming |
 
-> n8n 워크플로우 내에서 LLM을 *시각적 노드 조합*으로 다룰 때는 본 스킬을, 직접 SDK 호출이 필요한 영역(복잡한 도구 체인·테스트 코드)은 `backend/python-anthropic-sdk`를 참조한다.
+> n8n 워크플로우 내에서 LLM을 *시각적 노드 조합*으로 다룰 때는 본 스킬을, 직접 SDK 호출이 필요한 영역(복잡한 도구 체인·테스트 코드)은 `backend/python-anthropic-sdk`(설치된 경우)를 참조한다.

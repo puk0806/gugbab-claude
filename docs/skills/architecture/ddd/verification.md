@@ -231,3 +231,4 @@ DDD SKILL.md를 참조하여 분석.
 | 2026-04-17 | v2 | 테스트 케이스 2 추가 (가상 이커머스 요구사항 텍스트 기반 분석 PASS), APPROVED 전환 | 메인 대화 오케스트레이션 |
 | 2026-08-26 | v2.1 | freshness 재검증(131일 경과) — 서적 기반(Evans 2003·Vernon 2013) 클레임 3건 VERIFIED, 변경 없음. 프론트엔드 적용 절 부재는 신설된 `architecture/frontend-domain-structure`가 담당하므로 검증일 줄에 포인터만 추가 | freshness-auditor + orchestrator |
 | 2026-09-25 | v2.2 | 로컬 경로·프로젝트명 일반화 (내용 변경 없음) | docs cleanup |
+| 2026-09-25 | v2.2 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |

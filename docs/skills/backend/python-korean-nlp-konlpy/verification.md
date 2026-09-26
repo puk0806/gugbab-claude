@@ -177,3 +177,4 @@ status: APPROVED
 | 2026-05-15 | v1 | 최초 작성 (KoNLPy 0.6.0 / mecab-ko 1.0.2 / ko-sbert-multitask 기준) | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 5개 분석기 속도 비교·선택 기준 / Q2 Windows Mecab 미지원 대안·userdic / Q3 사용자 사전 CSV 형식·컴파일·ko-sbert 임베딩) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리로 오분류) | skill-tester |
 | 2026-06-19 | v1 | 카테고리 재분류 + 추가 content test 수행 (Q4 TF-IDF tokenizer·TfidfVectorizer 연결·빈도 기반 차이) → 4/4 PASS, PENDING_TEST → APPROVED 전환 (라이브러리 사용법 스킬, content test PASS = APPROVED 가능) | skill-tester |
+| 2026-09-25 | v1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |

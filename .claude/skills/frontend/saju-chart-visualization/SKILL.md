@@ -33,7 +33,7 @@ description: >
 > 버전 기준: Recharts **3.10.1**, visx **4.0.0**, React 19, WCAG 2.2
 > 검증일: 2026-09-10
 >
-> 짝 스킬:
+> 짝 스킬 (설치된 경우 참조):
 > - `frontend/font-optimization` — CJK 서브셋·`font-display`·`unicode-range` 원본 카탈로그. 본 스킬 7절은 그 위에 *사주 전용 고정 문자셋*만 얹는다
 > - `frontend/dream-statistics-visualization` — 같은 레포의 차트 스킬. **라이브러리 선택(Recharts=표준 차트 / visx=비표준 시각화)을 본 스킬도 그대로 따른다**
 > - `frontend/wcag-2.2-checklist` — 접근성 판정 기준 원본
@@ -133,7 +133,7 @@ export function ElementTallyCaption({ scope }: { scope: 'surface8' | 'withHidden
 
 ### 3-1. 레포 기존 결론 승계
 
-같은 레포의 `frontend/dream-statistics-visualization`이 세운 기준을 그대로 따른다.
+같은 레포의 `frontend/dream-statistics-visualization`(설치된 경우)이 세운 기준을 그대로 따른다.
 
 > **표준 차트(라인·바·파이·레이더) → Recharts / 표준형이 없는 시각화(워드클라우드·히트맵·커스텀 타임라인) → visx**
 

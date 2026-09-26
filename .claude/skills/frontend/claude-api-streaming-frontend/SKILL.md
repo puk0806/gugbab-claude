@@ -12,7 +12,7 @@ description: >
 > 검증일: 2026-08-12
 > 버전 기준: Messages API `anthropic-version: 2023-06-01`, TypeScript SDK `@anthropic-ai/sdk` v0.116.0 (npm latest, 2026-08-12 확인), MDN SSE 표준
 > 모델 기준 (2026-09-25 현행화): Claude Opus 5.5(`claude-opus-5-5`) / Fable 5.1(`claude-fable-5-1`) / Sonnet 5(`claude-sonnet-5`) / Haiku 4.5(`claude-haiku-4-5`) — 예제 코드는 채팅용 `claude-sonnet-5` 사용
-> 짝 스킬: `frontend/chat-ui-pattern` (메시지 리스트·virtuoso·스크롤 동작) / `meta/dream-interpretation-prompt-engineering` (system 프롬프트 설계)
+> 짝 스킬(설치된 경우 참조): `frontend/chat-ui-pattern` (메시지 리스트·virtuoso·스크롤 동작) / `meta/dream-interpretation-prompt-engineering` (system 프롬프트 설계)
 
 ---
 

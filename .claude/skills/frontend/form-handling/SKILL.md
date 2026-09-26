@@ -9,7 +9,7 @@ description: React Hook Form + Zod 유효성 검증, 제어/비제어 폼 패턴
 > 검증일: 2026-09-25 (Zod 4 예제 현행화)
 > 기준 버전: react-hook-form 7.x · **zod 4.x (4.6 기준)** · @hookform/resolvers 5.x (`zodResolver`가 Zod 4 스키마를 자동 인식)
 >
-> 서버 측 검증(요청 body·환경변수·외부 API 응답·악성 입력 방어)과 Zod 3 → 4 변경점 상세는 `backend/zod-schema-validation` 스킬을 참조한다.
+> 서버 측 검증(요청 body·환경변수·외부 API 응답·악성 입력 방어)과 Zod 3 → 4 변경점 상세는 `backend/zod-schema-validation` 스킬(설치된 경우)을 참조한다.
 
 ---
 

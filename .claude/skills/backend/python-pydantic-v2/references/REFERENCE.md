@@ -202,4 +202,4 @@ sku: str = Field(pattern=r"^[A-Z]{3}-\d{4}$")
 - pydantic-settings: https://docs.pydantic.dev/latest/concepts/pydantic_settings/
 - TypeAdapter: https://docs.pydantic.dev/latest/concepts/type_adapter/
 - bump-pydantic: https://github.com/pydantic/bump-pydantic
-- 짝 스킬: `backend/python-fastapi` (FastAPI 통합), `backend/python-basics` (Python 기본 패턴)
+- 짝 스킬: `backend/python-fastapi` (FastAPI 통합), `backend/python-basics` (Python 기본 패턴, 해당 스킬이 추후 생성될 경우)

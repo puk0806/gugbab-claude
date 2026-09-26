@@ -233,3 +233,4 @@ status: PENDING_TEST
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
 | 2026-08-11 | v1 | 최초 작성. 공식 소스 12건 조사 + 핵심 클레임 16개 교차 검증(VERIFIED 14 / DISPUTED 2 해소) + content test 5/5 PASS. status: PENDING_TEST(실사용 필수 카테고리) | skill-creator |
+| 2026-09-25 | v1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |

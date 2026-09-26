@@ -158,8 +158,8 @@ status: APPROVED
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester로 agent content test 수행 (Q1~Q3 PASS 확인) (2026-06-02 완료, 3/3 PASS)
-- [❌] YMYL 분야별 디테일은 별도 스킬 `seo/ymyl-content-seo`로 분리 검토 — 차단 요인 아님, 선택 보강 (본 스킬 프레임워크 수준으로 충분)
-- [❌] GEO·AI 검색과의 시너지 부분은 별도 스킬 `seo/geo-ai-discoverability`로 분리 검토 — 차단 요인 아님, 선택 보강 (본 스킬 섹션 10에서 개요 수준 커버)
+- [❌] YMYL 분야별 디테일은 별도 스킬 `writing/ymyl-content-seo`로 분리 검토 — 차단 요인 아님, 선택 보강 (본 스킬 프레임워크 수준으로 충분)
+- [❌] GEO·AI 검색과의 시너지 부분은 별도 스킬 `frontend/geo-ai-discoverability`로 분리 검토 — 차단 요인 아님, 선택 보강 (본 스킬 섹션 10에서 개요 수준 커버)
 - [❌] 2026년 새 QRG 업데이트(연 1~2회 발생) 시점에 스킬 재검증 — 차단 요인 아님, 정기 유지보수 항목 (현행 QRG 2025-09-11판 기준 APPROVED)
 
 ---
@@ -170,3 +170,5 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-06-02 | v1 | 최초 작성. Google QRG 2025-09-11판 + Helpful Content 2024-03 통합본 + Gen AI 가이드 기반. 12개 핵심 클레임 모두 VERIFIED. | skill-creator |
 | 2026-06-02 | v1 | 2단계 실사용 테스트 수행 (Q1 AI 양산 블로그 안전 사용법 / Q2 의료 YMYL E-E-A-T 강화 / Q3 E-E-A-T 랭킹 신호 여부+최상위 요소) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-09-25 | v1 | 깨진 스킬 경로 참조 수정: `seo/ymyl-content-seo` → `writing/ymyl-content-seo`, `seo/geo-ai-discoverability` → `frontend/geo-ai-discoverability` (실존 경로 기준, project-install.sh 부분 설치본 참조 오류 감사) | Claude |
+| 2026-09-25 | v1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |

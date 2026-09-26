@@ -18,7 +18,7 @@ description: 프론트엔드 코드베이스에서 도메인·레이어 간 의�
 
 폴더를 도메인별로 나누는 것만으로는 경계가 유지되지 않는다. **import 방향을 CI에서 실패시키지 않으면** 몇 달 안에 다시 뒤엉킨다. 이 스킬은 "규칙을 코드로 만들고 CI 게이트에 올리는" 절차를 다룬다.
 
-> ESLint·Prettier·husky·lint-staged **기본 설정 자체**는 이 스킬에서 다루지 않는다 → `frontend/code-convention` 스킬 참조.
+> ESLint·Prettier·husky·lint-staged **기본 설정 자체**는 이 스킬에서 다루지 않는다 → `frontend/code-convention` 스킬(설치된 경우) 참조.
 > 레이어 개념(Domain/Application/Infrastructure)의 **의미**는 `architecture/ddd` 스킬 참조. 이 스킬은 그 레이어를 **강제하는 도구** 쪽만 다룬다.
 
 ---

@@ -204,3 +204,4 @@ status: APPROVED
 | 2026-09-11 | v1.1 | 캐주얼 앱 방향 정리 — 삭제된 운세 콘텐츠 윤리 스킬 참조 3곳(description·짝 스킬 안내·개인정보 주의)을 생성 프롬프트·손금 스킬 참조로 대체. 데이터 모델 본문 변동 없음 | main session |
 | 2026-09-25 | v1.1 | 모델 ID 현행화(Opus 5.5/Fable 5.1) — `Reading.model` 필드 주석 예시값 `'claude-opus-5'` → `'claude-opus-5-5'`. 스키마·인덱스 변동 없음, status APPROVED 유지 | 모델 ID 현행화 |
 | 2026-09-25 | v1.1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | Claude (Sonnet 5) |
+| 2026-09-25 | v1.1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |

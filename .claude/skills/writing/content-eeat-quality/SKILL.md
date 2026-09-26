@@ -28,7 +28,7 @@ description: >
 - Google 코어 업데이트 이후 트래픽이 빠진 사이트의 원인을 진단할 때
 - SEO/GEO 작업과 함께 콘텐츠 품질 baseline을 정의할 때
 
-학술 논문 작성·인용은 다루지 않는다(별도 스킬군: `writing/academic-paper-structure-humanities` 등).
+학술 논문 작성·인용은 다루지 않는다(별도 스킬군: `writing/academic-paper-structure-humanities`(설치된 경우) 등).
 
 ---
 
@@ -303,7 +303,7 @@ E-E-A-T 강한 매체가 갖는 페이지:
 
 ### 6-3. YMYL은 별도 스킬에서 더 자세히
 
-→ 별도 스킬 `seo/ymyl-content-seo`(가칭)에서 분야별 디테일 다룸. 본 스킬은 *프레임워크* 수준에서만 다룬다.
+→ 별도 스킬 `writing/ymyl-content-seo`에서 분야별 디테일 다룸. 본 스킬은 *프레임워크* 수준에서만 다룬다.
 
 ---
 

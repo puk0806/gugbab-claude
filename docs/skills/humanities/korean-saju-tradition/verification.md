@@ -237,3 +237,4 @@ status: APPROVED
 | 2026-09-10 | v1 | 최초 작성. 3대 원전 계보·개념 체계·조선 명과학 수용사·현대 대중화·검증 가능성·앱 톤 가이드(YMYL 포함). 클레임 22건 교차 검증(VERIFIED 13 / DISPUTED 7 / PARTIAL 1) | skill-creator |
 | 2026-09-10 | v1 | 2단계 실사용 테스트 수행 (Q1 연해자평 저자 오표기 방어 / Q2 재물운·투자 YMYL 방어 / Q3 마케팅 과장·대운 계산 범위 판단) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-09-11 | v1.1 | 캐주얼 앱 방향 정리 — §6.3을 "YMYL 절대 금지 영역"(7행 해석 거부 + 전문가 안내 표)에서 "소재 범위 — 재미로 보는 앱이 다루지 않는 것"(3행: 실행 조언·수명/사망·타인 판정은 상징 서술까지만, 판단은 사용자에게)으로 교체, 위기 신호 전환 문구와 §9 위기 자원 스킬 참조 제거(`meta/fortune-interpretation-prompt-engineering` 참조로 대체), description의 "YMYL 금지 규칙 강제" 문구 정정. 문헌·개념·역사 본문 변동 없음, Q1~Q3 근거 섹션 유효 | main session |
+| 2026-09-25 | v1.1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |

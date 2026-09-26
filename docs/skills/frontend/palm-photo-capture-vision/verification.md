@@ -327,3 +327,4 @@ Claude Vision 통합 패턴 스킬이라 general-purpose로 충분하다고 판�
 | 2026-09-10 | v1 | 2단계 실사용 테스트 수행 (Q1 후면 카메라 constraints+권한 거부 처리 / Q2 리사이즈·압축·quality 값 / Q3 손 아님 거부 게이트+금지 카피) → 3/3 PASS, PENDING_TEST → APPROVED 전환. README 동기화는 여전히 미수행(별도 배치 필요) | skill-tester |
 | 2026-09-11 | v1.1 | 캐주얼 앱 방향 정리 — 삭제된 운세 콘텐츠 윤리 스킬 참조 2곳(짝 스킬 안내·§7 카피 규칙)을 `humanities/palmistry-limitations` 단일 참조로 정리. 촬영·비전 파이프라인 본문 변동 없음 | main session |
 | 2026-09-25 | v1.1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | skill-creator |
+| 2026-09-25 | v1.1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |

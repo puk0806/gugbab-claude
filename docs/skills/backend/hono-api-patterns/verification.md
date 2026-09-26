@@ -233,3 +233,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-09-25 | v1 | 최초 작성 (hono 4.13.9 기준, 테스트 전체 예시 references/testing-examples.md 분리) | skill-creator |
 | 2026-09-25 | v1 | 2단계 실사용 테스트 수행 (Q1 RPC 201/400 타입 구분 / Q2 streamSSE abort·thinking 비활성 불가 / Q3 Hono 선택 기준·node-server 버전 함정) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-09-25 | v1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |

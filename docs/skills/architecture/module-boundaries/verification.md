@@ -242,3 +242,4 @@ status: APPROVED
 | 2026-08-26 | v1 | 최초 작성 — 공식 문서 30여 회 페치·8회 검색 기반, 핵심 클레임 21건 교차 검증(DISPUTED 3건 주의 표기 반영). 단계 1~4만 수행, skill-tester 테스트는 오케스트레이터 별도 수행 예정 | skill-creator |
 | 2026-08-26 | v1 | 2단계 실사용 테스트 수행 (Q1 ESLint 8 레거시 boundaries 버전 / Q2 dependency-cruiser 점진 도입 / Q3 barrel 순환·번들 메커니즘+optimizePackageImports 한계) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | Claude (Sonnet 5) |
+| 2026-09-25 | v1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |

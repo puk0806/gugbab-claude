@@ -504,7 +504,7 @@ async function revealCard(card: DrawnCard) {
 
 ### 7-5. 포맷·전달
 
-- AVIF/WebP를 우선하고 `<picture>`로 폴백을 둔다. 상세는 `frontend/image-optimization-seo`.
+- AVIF/WebP를 우선하고 `<picture>`로 폴백을 둔다. 상세는 `frontend/image-optimization-seo`(설치된 경우).
 - 78장을 스프라이트 시트 하나로 묶는 방식은 **권장하지 않는다.** 총 용량이 항상 전부 다운로드되고, 반응형 해상도 분기가 불가능하며, 카드 하나만 필요한 리딩 화면에서 낭비가 크다.
 
 ### 7-6. 저작권 — 반드시 확인

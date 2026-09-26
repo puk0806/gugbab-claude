@@ -249,7 +249,6 @@ description: >
 
 - `frontend/i18n-seo` — hreflang·sitemap·canonical 상세 패턴
 - `frontend/naver-seo-specifics` — 네이버 SEO 세부
-- `writing/seo-content-structure` (있는 경우) — 콘텐츠 구조 SEO
 
 ---
 

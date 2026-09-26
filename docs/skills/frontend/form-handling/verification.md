@@ -137,3 +137,4 @@ status: APPROVED
 | 2026-04-01 | v1 | 최초 작성 및 frontend-architect 활용 테스트 완료 | frontend-architect 에이전트 |
 | 2026-04-17 | v2 | verification.md 신규 8섹션 포맷으로 마이그레이션 | 메인 대화 오케스트레이션 |
 | 2026-09-25 | v3 | **Zod 4 예제 현행화 — 재테스트 권장.** 기준 버전 명시(RHF 7.x·zod 4.x(4.6)·@hookform/resolvers 5.x). `z.string().email()`→`z.email()`, `z.string().datetime()`→`z.iso.datetime()`, 메시지 옵션 `message`→`{ error }`, `error.flatten()`→`z.flattenError()`, `import * as z`, `z.strictObject/z.looseObject`·coerce 시 input/output 제네릭 주의 추가. 서버 검증 상세는 `backend/zod-schema-validation` 링크. 근거: https://zod.dev/v4/changelog. 코드 예제 실질 변경이나 status **APPROVED 유지**(재테스트 권장) | 메인 대화 오케스트레이션 |
+| 2026-09-25 | v3 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |

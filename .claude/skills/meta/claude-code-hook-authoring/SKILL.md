@@ -292,7 +292,7 @@ const r = spawnSync('node', [HOOK], { input, encoding: 'utf8', timeout: 5000 })
 const pass = r.status === 2 && r.stderr.includes('[tdd-guard]')
 ```
 
-필수 3계층 (@.claude/rules/adversarial-testing.md):
+필수 3계층 (`.claude/rules/adversarial-testing.md`, 설치된 경우):
 - 정상: 통과해야 하는 입력 → `exit 0`
 - 차단: 위반 입력 → `exit 2` **그리고 stderr에 사유 포함**(stdout 유실 회귀 방지)
 - 경계·오탐 방지: 빈 stdin, 깨진 JSON, `file_path` 없음, 검사 제외 대상(설정 파일·훅 자신·테스트 파일 자체) → `exit 0`
@@ -309,7 +309,7 @@ const pass = r.status === 2 && r.stderr.includes('[tdd-guard]')
 
 ### 8-2. 오탐이 훅 폐기로 이어진 사례 (task-plan-guard · confirmation-gate)
 
-두 훅은 "복잡한 작업 요청 시 계획 확인 절차를 강제"하는 차단형이었다. 단순 요청까지 계획 확인을 요구하는 **오탐이 반복되면서 제거**되고, 그 자리는 네이티브 **Plan Mode**와 규칙 문서(@.claude/rules/task-workflow.md)로 대체됐다. 2026-07 훅 다이어트에서 훅 29→22종으로 정리된 흐름의 일부다.
+두 훅은 "복잡한 작업 요청 시 계획 확인 절차를 강제"하는 차단형이었다. 단순 요청까지 계획 확인을 요구하는 **오탐이 반복되면서 제거**되고, 그 자리는 네이티브 **Plan Mode**와 규칙 문서(`.claude/rules/task-workflow.md`, 설치된 경우)로 대체됐다. 2026-07 훅 다이어트에서 훅 29→22종으로 정리된 흐름의 일부다.
 
 교훈:
 - 자연어 의도(=회색지대)를 정규식으로 판정하는 차단형 훅은 오탐률이 구조적으로 높다. **구조적으로 판정 가능한 대상**(파일 경로, 명령 문자열, 파일 존재 여부)만 차단형으로 만든다.

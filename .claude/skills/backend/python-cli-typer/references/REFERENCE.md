@@ -83,7 +83,7 @@ def test_prompt():
 | `result.output` | stdout + stderr 합쳐진 출력 |
 | `result.exception` | 발생한 예외 (있을 시) |
 
-> 짝 스킬 `backend/python-pytest` 참조 — pytest 기반 테스트 구조.
+> 짝 스킬 `backend/python-pytest` 참조 — pytest 기반 테스트 구조 (해당 스킬이 추후 생성될 경우).
 
 ---
 
@@ -211,4 +211,4 @@ hello("Camila")  # TypeError
 - 공식 문서: https://typer.tiangolo.com/
 - GitHub: https://github.com/fastapi/typer
 - PyPI: https://pypi.org/project/typer/
-- 짝 스킬: `backend/python-uv-project-setup` (프로젝트 셋업), `backend/python-basics` (Python 기초)
+- 짝 스킬: `backend/python-uv-project-setup` (프로젝트 셋업), `backend/python-basics` (Python 기초, 해당 스킬이 추후 생성될 경우)

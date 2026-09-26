@@ -300,3 +300,4 @@ Ekman, Plutchik, Russell 중 어떤 체계가 적합하고 왜 그런지 알려�
 | 2026-05-15 | v1 | 최초 작성 — 학술 3종(Ekman/Plutchik/Russell) + UX(Hick) + 접근성(WCAG/WAI-ARIA) + 꿈 감정(Hall & Van de Castle, Perogamvros 2024) 통합 | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 분류체계 선택기준 / Q2 WCAG+이모지 접근성 / Q3 Hick's law+이모지 문화차이) → 3/3 PASS, PENDING_TEST 유지 (실사용 UX 검증 필요 카테고리) | skill-tester |
 | 2026-06-20 | v1 | 2단계 실사용 테스트 재수행 (Q1 이모지 칩 접근성 / Q2 LLM 자동 매핑 anti-pattern / Q3 Russell 2D 슬라이더 라벨링·aria-valuetext) → 3/3 PASS, PENDING_TEST → APPROVED 전환 (UI 패턴 스킬 — content test PASS = APPROVED 가능 카테고리 재판정) | skill-tester |
+| 2026-09-25 | v1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |

@@ -271,3 +271,4 @@ Chroma에서 user_id로 필터링하면서 코사인 유사도 top-5를 가져�
 | 2026-05-15 | v1 | 최초 작성 — 임베딩 모델·Vector DB·메트릭·인덱스·청킹·메타 필터·비용·반복 꿈 감지 예시 + anti-pattern 10건 | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 정규화 cosine=dot 등가성 / Q2 OpenAI Matryoshka 1536dim / Q3 ko-sbert-multitask 768dim KorSTS / Q4 Chroma vs pgvector 선택) → 4/4 PASS, PENDING_TEST 유지 (사용자 명시 요청) | skill-tester |
 | 2026-06-19 | v1 | 2단계 실사용 테스트 2차 수행 (Q1 한국어 단문 1만건 모델+DB 선택+코드 스켈레톤 / Q2 Chroma 복합 필터+distance→similarity 변환+메타 필터 함정) → 2/2 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-25 | v1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |

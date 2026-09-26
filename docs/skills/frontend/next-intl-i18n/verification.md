@@ -224,3 +224,4 @@ Server Action 안에서 getTranslations('Form')를 호출했더니 로케일을 
 |------|------|-----------|--------|
 | 2026-09-25 | v1 | 최초 작성 (next-intl 4.14.7 / Next.js 16.3.x 기준) | skill-creator |
 | 2026-09-25 | v1 | 2단계 실사용 테스트 수행 (Q1 신규 설정 / Q2 Server Action 함정 / Q3 15→16.3 마이그레이션) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-09-25 | v1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |

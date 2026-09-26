@@ -224,3 +224,4 @@ status: APPROVED
 | 2026-05-15 | v1 | 최초 작성. LlamaIndex 0.14.22 기준. Anthropic 임베딩·FunctionCallingAgent 2건 정정 반영 | skill-creator (Claude) |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 Document/Node/Index 구조 / Q2 Anthropic 임베딩 함정 / Q3 FunctionCallingAgent deprecated) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-09-25 | v1 | 모델 ID 현행화(Opus 5.5/Fable 5.1 정렬 작업의 일환) — 2026-08-12 세대 정렬에서 누락된 `Anthropic(model="claude-sonnet-4-5")` → `claude-sonnet-5`(SKILL.md §5, REFERENCE.md 1곳). 5 계열의 `temperature` 400과 통합 패키지 기본 temperature 전송 가능성에 대한 `> 주의: 미확인` 추가. 내용 재검증 없음 — status APPROVED 유지 | 모델 ID 현행화 |
+| 2026-09-25 | v1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |

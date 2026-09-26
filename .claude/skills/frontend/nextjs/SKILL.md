@@ -390,7 +390,7 @@ function PostForm() {
 ## 메타데이터 API
 
 > 여기서는 프레임워크 관점의 기본형만 다룬다. OpenGraph·JSON-LD·sitemap·robots·canonical 등
-> **SEO 관점의 상세**는 `frontend/seo-nextjs` 스킬을 참조한다.
+> **SEO 관점의 상세**는 `frontend/seo-nextjs` 스킬(설치된 경우)을 참조한다.
 
 ### 정적 메타데이터
 

@@ -205,7 +205,7 @@ export async function getServerSideProps(ctx) {
 
 ### 순수 CSR React SPA
 
-- 빌드 타임 프리렌더(Vike·vite-prerender-plugin) 또는 SSR 도입 — 정공법 (`frontend/seo-vite-spa` 단계 4·5)
+- 빌드 타임 프리렌더(Vike·vite-prerender-plugin) 또는 SSR 도입 — 정공법 (`frontend/seo-vite-spa`(설치된 경우) 단계 4·5)
 - CDN/Edge(Cloudflare Worker·Vercel Edge)에서 카카오 스크래퍼 UA(`kakaotalk-scrap`)·페이스북·네이버 봇에만 `og:*` 메타를 주입한 HTML 셸을 응답 — 가장 가볍고 빠른 대안
 - ~~prerender.io / rendertron / react-snap~~ — **Rendertron은 2022년 Google이 archive 처리(유지보수 없음)**, 동적 렌더링 자체가 Google 기준 "권장 아님·임시 우회책". 이미 운영 중이 아니면 도입하지 않는다 (2026-08-26 정정)
 - **Cloudflare Workers / Vercel Edge Function**으로 크롤러 User-Agent 분기 응답

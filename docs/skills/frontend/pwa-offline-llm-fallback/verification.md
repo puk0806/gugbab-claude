@@ -244,3 +244,4 @@ DISPUTED: 0건 — 2026-05-14 시점 검증 내용이 3개월 후에도 그대�
 | 2026-05-14 | v1 | 최초 작성 — 공식 MDN·web.dev·developer.chrome.com·platform.claude.com 기반, 클레임 10건 VERIFIED | skill-creator |
 | 2026-05-14 | v1 | 2단계 실사용 테스트 수행 (Q1 navigator.onLine false positive / Q2 iOS Safari Background Sync 대안 / Q3 Retry-After + maxRetentionTime 단위) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | skill-tester |
 | 2026-08-11 | v1 | 재검증 수행 — WebSearch 재교차검증 3/3 VERIFIED(0 DISPUTED) + 신규 질문 content test (Q1 529 처리 / Q2 iOS 수동 flush / Q3 LAN false positive) → 3/3 PASS. 카테고리 재판단: API 사용법 패턴 스킬로 재분류 → PENDING_TEST에서 **APPROVED 전환** | skill-tester |
+| 2026-09-25 | v1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |
