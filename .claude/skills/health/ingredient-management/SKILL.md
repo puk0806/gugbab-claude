@@ -82,19 +82,64 @@ type IngredientStatus =
   | 'expired'   // 만료
   | 'no_expiry'; // 소비기한 없음 (장기 보관 가능)
 
-const getIngredientStatus = (ingredient: Ingredient): IngredientStatus => {
-  if (!ingredient.expiryDate) return 'no_expiry';
+// 기기 시간대와 무관하게 한국 날짜로 판정 (health/meal-recommendation-prompt와 동일 패턴)
+const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
 
-  const today = new Date();
-  const expiry = new Date(ingredient.expiryDate);
-  const daysLeft = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+export const todayInSeoul = (now: Date = new Date()): string =>
+  new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(now); // 'YYYY-MM-DD'
+
+// 'YYYY-MM-DD' -> UTC epoch ms. 형식 오류·존재하지 않는 날짜(2026-02-30 등)는 null
+const parseDateOnly = (s: unknown): number | null => {
+  if (typeof s !== 'string') return null;
+  const m = DATE_RE.exec(s.trim());
+  if (!m) return null;
+  const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  const t = Date.UTC(y, mo - 1, d);
+  const dt = new Date(t);
+  if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== mo - 1 || dt.getUTCDate() !== d) return null;
+  return t;
+};
+
+const getIngredientStatus = (ingredient: Ingredient, now: Date = new Date()): IngredientStatus => {
+  // 소비기한 "없음"은 필드 자체가 없을 때(undefined/null)만. 빈 문자열 ''은 입력 오류로 보고 아래에서 expired 처리
+  if (ingredient.expiryDate === undefined || ingredient.expiryDate === null) return 'no_expiry';
+
+  const today = parseDateOnly(todayInSeoul(now))!; // todayInSeoul은 항상 유효한 YYYY-MM-DD를 반환
+  const expiry = parseDateOnly(ingredient.expiryDate);
+  if (expiry === null) return 'expired'; // 빈 값·형식 오류·2026-02-30 같은 존재하지 않는 날짜는 안전하게 만료 취급
+
+  const daysLeft = Math.round((expiry - today) / 86_400_000); // 달력 날짜 단위 정수 비교 (시각 정보 배제)
 
   if (daysLeft < 0) return 'expired';
-  if (daysLeft <= 3) return 'urgent';
+  if (daysLeft <= 3) return 'urgent';  // 당일(0)도 urgent — "오늘까지 사용하세요" 알림과 동일 기준
   if (daysLeft <= 7) return 'warning';
   return 'fresh';
 };
 ```
+
+**❌ 금지 패턴 (KST 날짜 경계에서 최대 ±1일 오차 — 방향은 대칭이 아니다)**
+
+> 오차 방향은 시각에 따라 달라진다: KST 오전(UTC 전날)에는 남은 일수가 **적게** 계산돼 `warning`이 `urgent`로 과경보되고, `Math.ceil` 반올림과 겹치면 반대로 만료 당일이 `urgent`(=-0)로 남아 **덜 급하게** 보일 수 있다. 어느 쪽이든 경계가 흔들리므로 아래 패턴은 쓰지 않는다.
+
+```ts
+// new Date('YYYY-MM-DD')는 UTC 자정으로 파싱되고, new Date()는 현재 시각(시:분 포함)이다.
+// "오늘 몇 시인지"에 따라 두 인스턴트 사이에 최대 9시간 오차가 생겨
+// daysLeft가 실제 KST 달력 날짜 차이와 어긋난다 (예: urgent가 warning으로 밀림).
+// 이 오차는 기기 OS 시간대 설정과 무관하게(Date는 항상 UTC 인스턴트) 발생한다.
+const today = new Date();
+const expiry = new Date(ingredient.expiryDate);
+const daysLeft = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+```
+
+| 경계 | 처리 |
+|------|------|
+| 소비기한 = 오늘 (KST) | `daysLeft: 0` → `urgent` — "오늘까지 사용하세요" 알림과 동일 기준 |
+| 소비기한 < 오늘 (KST) | `expired` |
+| 자정 전후(KST 00:30 등) | `todayInSeoul`(Intl `timeZone: 'Asia/Seoul'`)로 판정 — `new Date('YYYY-MM-DD')` UTC 파싱 + 로컬 `getTime()` 비교 금지 |
+| 소비기한 빈 문자열·형식 오류(`26/9/30`)·존재하지 않는 날짜(`2026-02-30`)·시각 포함 문자열 | `expired`로 안전 처리 — `expiryDate`는 `YYYY-MM-DD`만 저장, UI에서 재입력 유도 |
+| 소비기한 필드 없음(`undefined`/`null`) | `no_expiry` — 소금·설탕 등 장기 보관 품목. 빈 문자열과 구분 |
 
 ---
 
@@ -139,11 +184,12 @@ class FridgeDatabase extends Dexie {
 ### 핵심 쿼리 패턴
 
 ```ts
-// 소비기한 임박 순 정렬
+// 소비기한 임박 순 정렬 — 오름차순(가장 먼저 만료되는 것이 앞). expiryDate 없는 항목은 제외됨
 const getSortedByExpiry = () =>
   db.ingredients
     .where('expiryDate')
-    .above('') // expiryDate 있는 것만
+    .above('') // expiryDate 있는 것만 — IndexedDB는 인덱스 키가 undefined인 레코드를 인덱스에 넣지 않으므로
+               // where('expiryDate') 범위 쿼리에서 소비기한 없는(no_expiry) 품목은 자동으로 빠진다
     .sortBy('expiryDate');
 
 // 위치별 필터
@@ -154,13 +200,21 @@ const getByLocation = (location: StorageLocation) =>
 const getByCategory = (category: IngredientCategory) =>
   db.ingredients.where('category').equals(category).toArray();
 
-// 전체 (소비기한 만료 제외)
+// 전체 (소비기한 만료 제외, KST 기준)
 const getAvailable = async () => {
   const all = await db.ingredients.toArray();
-  const today = new Date().toISOString().split('T')[0];
-  return all.filter(i => !i.expiryDate || i.expiryDate >= today);
+  // new Date().toISOString()은 UTC 기준 날짜라 KST 자정 전후로 하루 밀린다 — todayInSeoul 사용
+  const today = todayInSeoul();
+  // 판정은 getIngredientStatus 한 곳에 위임한다 — 문자열 비교(expiryDate >= today)를 따로 두면
+  // 빈 문자열·형식 오류('26/9/30'은 사전순으로 today보다 커서 통과)가 여기서만 새어 나간다
+  return all.filter(i => getIngredientStatus(i) !== 'expired');
 };
 ```
+
+> `getAvailable`과 `getIngredientStatus`가 서로 다른 규칙으로 판정하면 목록에는 보이는데 상태는 "만료"인 불일치가 생긴다. 만료 판정 로직은 `getIngredientStatus` 하나로 유지한다.
+
+> Dexie 버전: 위 스키마 API(`version().stores()`, `Table<T>`, `where().above().sortBy()`)는 Dexie 3.x·4.x 공통이다. 4.x에서 `Table` 타입은 `import { Dexie, type Table } from 'dexie'`로 가져온다.
+> 주의: Dexie 4.x import 경로는 설치 버전의 타입 정의로 확인할 것.
 
 ---
 
