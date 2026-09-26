@@ -23,6 +23,33 @@
 const fs = require('fs')
 const path = require('path')
 
+// 프로젝트 밖 파일에는 발동하지 않는다 — 코드 품질/테스트 강제 훅은 CLAUDE_PROJECT_DIR(없으면 cwd)
+// 하위 산출물에만 적용한다. symlink·`..`·대소문자(macOS)·상대경로·루트 접두 충돌까지 realpath로 정규화한다.
+function realCanonical(p) {
+  try { return fs.realpathSync(p) } catch {}
+  try { return path.join(fs.realpathSync(path.dirname(p)), path.basename(p)) } catch {}
+  return path.resolve(p)
+}
+function resolveProjectRoot(baseCwd) {
+  const raw = process.env.CLAUDE_PROJECT_DIR || baseCwd || process.cwd()
+  return realCanonical(raw)
+}
+// realpath는 symlink만 풀 뿐 대소문자를 온디스크 표기로 정규화하지 않는다(실측 확인) —
+// macOS(APFS 기본: 대소문자 구분 없음)·Windows 대비 darwin/win32에서는 비교 직전 소문자로 접어
+// 대소문자만 다른 CLAUDE_PROJECT_DIR도 같은 디렉토리로 인식하게 한다.
+const CASE_INSENSITIVE_FS = process.platform === 'darwin' || process.platform === 'win32'
+function isInsideProject(targetPath, baseCwd) {
+  if (!targetPath) return false
+  const base = baseCwd || process.cwd()
+  const abs = path.isAbsolute(targetPath) ? targetPath : path.resolve(base, targetPath)
+  const real = realCanonical(abs)
+  const root = resolveProjectRoot(baseCwd)
+  const foldedReal = CASE_INSENSITIVE_FS ? real.toLowerCase() : real
+  const foldedRoot = CASE_INSENSITIVE_FS ? root.toLowerCase() : root
+  const rel = path.relative(foldedRoot, foldedReal)
+  return rel === '' || (rel !== '..' && !rel.startsWith('..' + path.sep) && !path.isAbsolute(rel))
+}
+
 const SOURCE_EXTS = ['.ts', '.tsx', '.js', '.jsx', '.py', '.rs', '.go', '.java', '.rb']
 
 // 테스트 파일 판별
@@ -104,6 +131,7 @@ try {
   const input = JSON.parse(fs.readFileSync('/dev/stdin', 'utf8'))
   const filePath = input.tool_input?.file_path || input.tool_input?.path
   if (!filePath) process.exit(0)
+  if (!isInsideProject(filePath, input.cwd)) process.exit(0)
 
   // 레포 인프라(훅·커맨드·스크립트)는 제품 코드가 아니므로 제외 (tdd-guard와 동일 철학)
   if (/\.claude\/(?:hooks|commands)\//.test(filePath) || /(?:^|\/)scripts\//.test(filePath)) process.exit(0)

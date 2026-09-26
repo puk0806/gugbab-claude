@@ -20,19 +20,41 @@ process.env.TSQ_STATE_DIR = STATE_DIR
 
 let passed = 0, failed = 0
 
-function run(filePath, hookArgs = [], env = {}) {
+// 훅이 CLAUDE_PROJECT_DIR(없으면 cwd) 밖 파일을 스킵하므로, 기존 테스트(프로젝트 픽스처 다수를
+// tmp에 흩어 생성)가 계속 같은 의미로 통과하려면 각 호출의 CLAUDE_PROJECT_DIR을 그 파일의
+// tsconfig 조상 디렉토리로 기본 지정해야 한다(호출자가 명시적으로 지정한 경우는 그대로 둔다).
+function defaultProjectDirFor(filePath) {
+  if (!filePath) return null
+  let dir = path.dirname(filePath)
+  for (let i = 0; i < 8; i++) {
+    try { if (fs.existsSync(path.join(dir, 'tsconfig.json'))) return dir } catch {}
+    const parent = path.dirname(dir)
+    if (parent === dir) break
+    dir = parent
+  }
+  return null
+}
+
+function run(filePath, hookArgs = [], env = {}, cwd) {
   const input = JSON.stringify({
-    hook_event_name: 'PostToolUse', tool_name: 'Write', tool_input: { file_path: filePath },
+    hook_event_name: 'PostToolUse', tool_name: 'Write', tool_input: { file_path: filePath }, cwd,
   })
+  const mergedEnv = { ...process.env, ...env }
+  if (mergedEnv.CLAUDE_PROJECT_DIR === undefined) {
+    const d = defaultProjectDirFor(filePath)
+    if (d) mergedEnv.CLAUDE_PROJECT_DIR = d
+  }
   return spawnSync('node', [HOOK, ...hookArgs], {
-    input, encoding: 'utf8', timeout: 20000, env: { ...process.env, ...env },
+    input, encoding: 'utf8', timeout: 20000, env: mergedEnv,
   })
 }
 
 function test(desc, filePath, expectedExit, hookArgs = [], env = {}, stderrCheck = null) {
   const r = run(filePath, hookArgs, env)
   let pass = r.status === expectedExit
-  if (pass && stderrCheck) pass = stderrCheck(r.stderr || '')
+  // exit 0의 "1회 경고"는 stdout JSON(hookSpecificOutput.additionalContext)으로 전달되므로
+  // (exit 0 + stderr는 Claude에게 보이지 않는다 — 공식 문서) 두 채널을 합쳐서 검사한다.
+  if (pass && stderrCheck) pass = stderrCheck((r.stderr || '') + (r.stdout || ''))
   // 메시지 채널 단언 — PostToolUse exit 2 는 stderr 만 Claude 에게 전달된다 (stdout 은 debug log 행)
   if (pass && expectedExit === 2) pass = (r.stderr || '').includes('[typescript-quality]') && !(r.stdout || '').includes('[typescript-quality]')
   console.log(`  ${pass ? '✅' : '❌'} ${desc} → ${pass ? 'PASS' : `FAIL (기대 exit ${expectedExit}, 실제 ${r.status})\n     stderr: ${(r.stderr || '').trim().slice(0, 200)}`}`)
@@ -242,6 +264,22 @@ console.log('\n── --seed / 타임아웃 정책 (Codex R2) ──')
   try { fs.unlinkSync(timeoutsFile) } catch {}
   test('타임아웃 1회 → 경고만 exit 0', editedS, 0, ['--changed-only', '--timeout-ms=500'], slow,
     (se) => se.includes('1회 경고'))
+  {
+    // exit 0 + stderr는 Claude에게 전달되지 않는다(공식 문서) — "1회 경고"는 stdout JSON의
+    // hookSpecificOutput.additionalContext로 나가야 Claude가 실제로 볼 수 있다. 구조 자체를 검증.
+    // (직전 호출로 타임아웃 카운터가 1이 됐으므로 리셋 — 그렇지 않으면 이번이 연속 2회째로 차단된다)
+    try { fs.unlinkSync(timeoutsFile) } catch {}
+    const r = run(editedS, ['--changed-only', '--timeout-ms=500'], slow)
+    let json = null
+    try { json = JSON.parse(r.stdout) } catch {}
+    const pass = r.status === 0 && json && json.hookSpecificOutput
+      && json.hookSpecificOutput.hookEventName === 'PostToolUse'
+      && typeof json.hookSpecificOutput.additionalContext === 'string'
+      && json.hookSpecificOutput.additionalContext.includes('1회 경고')
+      && (r.stdout || '').trim() === JSON.stringify(json) // stdout엔 JSON만 있어야 한다(문서 요구사항)
+    console.log(`  ${pass ? '✅' : '❌'} 1회 경고가 stdout JSON hookSpecificOutput.additionalContext로 전달됨 → ${pass ? 'PASS' : `FAIL (stdout: ${JSON.stringify(r.stdout)})`}`)
+    pass ? passed++ : failed++
+  }
   test('타임아웃 연속 2회 → exit 2 (무검사 통과 차단)', editedS, 2, ['--changed-only', '--timeout-ms=500'], slow,
     (se) => se.includes('2회 연속'))
   test('타임아웃 연속 3회 → 계속 exit 2', editedS, 2, ['--changed-only', '--timeout-ms=500'], slow)
@@ -289,7 +327,7 @@ console.log('\n── --seed / 타임아웃 정책 (Codex R2) ──')
     const key = crypto.createHash('sha1').update(projH).digest('hex').slice(0, 12)
     const homeDir = path.join(os.homedir(), '.claude', 'typescript-quality')
     const homeBaseline = path.join(homeDir, `claude-tsq-${key}.baseline.json`)
-    const env = { ...process.env, TSC_STUB_OUT: errIn('src/other.ts'), TSC_STUB_EXIT: '2' }
+    const env = { ...process.env, TSC_STUB_OUT: errIn('src/other.ts'), TSC_STUB_EXIT: '2', CLAUDE_PROJECT_DIR: projH }
     delete env.TSQ_STATE_DIR
     const r = spawnSync('node', [HOOK, '--changed-only'], { input: JSON.stringify({ tool_input: { file_path: editedH } }), encoding: 'utf8', timeout: 20000, env })
     const ok = r.status === 0 && fs.existsSync(homeBaseline)
@@ -320,6 +358,94 @@ test('--changed-only: 파일이 tsconfig 루트 밖(../)을 가리켜도 크래�
   { TSC_STUB_OUT: errIn('src/edited.ts'), TSC_STUB_EXIT: '2' })
 
 fs.rmSync(proj, { recursive: true, force: true })
+
+console.log('\n── 프로젝트 밖 파일은 통과(스킵) — 경로 정규화 적대적 테스트 ──')
+{
+  const projScope = makeProject('scope')
+  const editedScope = path.join(projScope, 'src', 'edited.ts')
+  const outsideRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'tsq-outside-'))
+  const failStub = { TSC_STUB_OUT: errIn('src/edited.ts'), TSC_STUB_EXIT: '2' }
+
+  resetBaseline(projScope)
+  test('CLAUDE_PROJECT_DIR이 무관한 디렉토리(에러 있는 파일, 원래는 차단) → 프로젝트 밖이라 exit 0',
+    editedScope, 0, ['--changed-only'], { ...failStub, CLAUDE_PROJECT_DIR: outsideRoot })
+
+  resetBaseline(projScope)
+  test('CLAUDE_PROJECT_DIR 미지정(기본: tsconfig 조상) → 원래대로 exit 2 (차단 유지)',
+    editedScope, 2, ['--changed-only'], failStub)
+
+  resetBaseline(projScope)
+  test('..로 CLAUDE_PROJECT_DIR을 벗어나는 실제 파일 위치(에러 있음) → exit 0',
+    path.join(projScope, '..', path.basename(outsideRoot), 'src', 'edited.ts'), 0, [],
+    { ...failStub, CLAUDE_PROJECT_DIR: outsideRoot })
+
+  const scopeEvil = projScope + '-evil'
+  fs.mkdirSync(path.join(scopeEvil, 'src'), { recursive: true })
+  fs.writeFileSync(path.join(scopeEvil, 'src', 'edited.ts'), 'export const a = 1')
+  resetBaseline(scopeEvil)
+  test('프로젝트 루트 접두 충돌(scope vs scope-evil, 에러 있음) → exit 0',
+    path.join(scopeEvil, 'src', 'edited.ts'), 0, ['--changed-only'], { ...failStub, CLAUDE_PROJECT_DIR: projScope })
+
+  // symlink: 프로젝트 밖 실제 파일을 프로젝트 안으로 심볼릭 링크 — realpath로 풀면 밖이어야 한다.
+  {
+    const outSrcDir = path.join(outsideRoot, 'linked-src')
+    fs.mkdirSync(outSrcDir, { recursive: true })
+    const outFile = path.join(outSrcDir, 'linked.ts')
+    fs.writeFileSync(outFile, 'export const a = 1')
+    const linkPath = path.join(projScope, 'src', 'linked.ts')
+    try {
+      fs.symlinkSync(outFile, linkPath)
+      resetBaseline(projScope)
+      test('심볼릭 링크로 프로젝트 안에 들어온 밖의 파일(에러 있음) → realpath 기준 exit 0',
+        linkPath, 0, ['--changed-only'], { TSC_STUB_OUT: errIn('src/linked.ts'), TSC_STUB_EXIT: '2', CLAUDE_PROJECT_DIR: projScope })
+    } catch (e) {
+      console.log(`  ⚠️  symlink 생성 실패로 스킵: ${e.message}`)
+    }
+  }
+
+  // 상대경로: 훅 입력 cwd 필드 + 실제 spawn cwd를 일치시켜(하네스와 동일 조건) 해석 기준을 검증한다.
+  {
+    const input = JSON.stringify({
+      hook_event_name: 'PostToolUse', tool_name: 'Write', tool_input: { file_path: 'src/edited.ts' }, cwd: projScope,
+    })
+    resetBaseline(projScope)
+    const r = spawnSync('node', [HOOK, '--changed-only'], {
+      input, encoding: 'utf8', timeout: 20000, cwd: projScope,
+      env: { ...process.env, ...failStub, CLAUDE_PROJECT_DIR: outsideRoot },
+    })
+    const pass = r.status === 0
+    console.log(`  ${pass ? '✅' : '❌'} 상대경로 file_path + 프로젝트 밖 CLAUDE_PROJECT_DIR(에러 있음) → exit 0 → ${pass ? 'PASS' : `FAIL (${r.status})`}`)
+    pass ? passed++ : failed++
+  }
+  {
+    const input = JSON.stringify({
+      hook_event_name: 'PostToolUse', tool_name: 'Write', tool_input: { file_path: 'src/edited.ts' }, cwd: projScope,
+    })
+    resetBaseline(projScope)
+    const r = spawnSync('node', [HOOK, '--changed-only'], {
+      input, encoding: 'utf8', timeout: 20000, cwd: projScope,
+      env: { ...process.env, ...failStub, CLAUDE_PROJECT_DIR: projScope },
+    })
+    const pass = r.status === 2
+    console.log(`  ${pass ? '✅' : '❌'} 상대경로 file_path + 프로젝트 안 CLAUDE_PROJECT_DIR(에러 있음) → 원래대로 exit 2 (차단 유지) → ${pass ? 'PASS' : `FAIL (${r.status})`}`)
+    pass ? passed++ : failed++
+  }
+
+  // 대소문자(macOS 케이스 무시 파일시스템): CLAUDE_PROJECT_DIR을 실제와 다른 대소문자로 지정해도
+  // 여전히 "프로젝트 안"으로 판정돼야 한다(차단 유지).
+  const scopeUpper = projScope.toUpperCase() === projScope ? null : projScope.toUpperCase()
+  if (scopeUpper && fs.existsSync(scopeUpper)) {
+    resetBaseline(projScope)
+    test('대소문자만 다른 CLAUDE_PROJECT_DIR(실제로는 같은 디렉토리, 에러 있음) → 여전히 exit 2',
+      editedScope, 2, ['--changed-only'], { ...failStub, CLAUDE_PROJECT_DIR: scopeUpper })
+  } else {
+    console.log('  ⚠️  이 파일시스템은 대소문자 구분(case-sensitive) — 대소문자 정규화 테스트 스킵')
+  }
+
+  fs.rmSync(projScope, { recursive: true, force: true })
+  fs.rmSync(scopeEvil, { recursive: true, force: true })
+  fs.rmSync(outsideRoot, { recursive: true, force: true })
+}
 
 fs.rmSync(STATE_DIR, { recursive: true, force: true })
 console.log(`\n결과: ${passed}/${passed + failed} 통과`)

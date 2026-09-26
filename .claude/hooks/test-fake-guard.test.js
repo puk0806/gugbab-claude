@@ -5,16 +5,24 @@
  */
 
 const { spawnSync } = require('child_process')
+const fs = require('fs')
+const os = require('os')
 const path = require('path')
 const HOOK = path.join(__dirname, 'test-fake-guard.js')
 
 let passed = 0, failed = 0
 
-function test(desc, command, expectedExit) {
+function test(desc, command, expectedExit, opts = {}) {
+  const { cwd, projectDir } = opts
   const input = JSON.stringify({
-    hook_event_name: 'PreToolUse', tool_name: 'Bash', tool_input: { command },
+    hook_event_name: 'PreToolUse', tool_name: 'Bash', tool_input: { command }, cwd,
   })
-  const r = spawnSync('node', [HOOK], { input, encoding: 'utf8', timeout: 5000 })
+  const env = { ...process.env }
+  if (projectDir !== undefined) {
+    if (projectDir === null) delete env.CLAUDE_PROJECT_DIR
+    else env.CLAUDE_PROJECT_DIR = projectDir
+  }
+  const r = spawnSync('node', [HOOK], { input, encoding: 'utf8', timeout: 5000, env })
   // 메시지 채널 단언 — PreToolUse exit 2 는 stderr 가 차단 사유로 Claude 에게 전달된다
   const TAG = '[test-fake-guard]', out = r.stdout || '', err = r.stderr || ''
   const chanErr = expectedExit === 2
@@ -54,6 +62,50 @@ console.log('\n── 대상 외 → exit 0 ──')
   const pass = r.status === 0
   console.log(`  ${pass ? '✅' : '❌'} PostToolUse 이벤트는 검사 안 함 → ${pass ? 'PASS' : 'FAIL'}`)
   pass ? passed++ : failed++
+}
+
+console.log('\n── 프로젝트 밖 cwd는 통과(스킵) — 경로 정규화 적대적 테스트 ──')
+{
+  const tmp = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'tfg-scope-')))
+  const root = path.join(tmp, 'proj-root')
+  fs.mkdirSync(root, { recursive: true })
+  const outside = path.join(tmp, 'outside-dir')
+  fs.mkdirSync(outside, { recursive: true })
+
+  test('완전히 다른 cwd(가짜 통과 위장, 원래는 차단) → 프로젝트 밖이라 exit 0',
+    'echo "All tests passed"', 0, { cwd: outside, projectDir: root })
+
+  test('..로 프로젝트 루트를 벗어나는 cwd(가짜 통과 위장) → exit 0',
+    'echo "All tests passed"', 0, { cwd: path.join(root, '..', 'outside-dir'), projectDir: root })
+
+  const rootEvil = root + '-evil'
+  fs.mkdirSync(rootEvil, { recursive: true })
+  test('프로젝트 루트 접두 충돌(proj-root vs proj-root-evil, 가짜 통과 위장) → exit 0',
+    'echo "All tests passed"', 0, { cwd: rootEvil, projectDir: root })
+
+  const outSideReal = path.join(outside, 'real')
+  fs.mkdirSync(outSideReal, { recursive: true })
+  const linkCwd = path.join(root, 'linked-cwd')
+  try {
+    fs.symlinkSync(outSideReal, linkCwd)
+    test('심볼릭 링크로 프로젝트 안에 들어온 밖의 디렉토리(가짜 통과 위장) → realpath 기준 exit 0',
+      'echo "All tests passed"', 0, { cwd: linkCwd, projectDir: root })
+  } catch (e) {
+    console.log(`  ⚠️  symlink 생성 실패로 스킵: ${e.message}`)
+  }
+
+  test('프로젝트 안 cwd(가짜 통과 위장) → 원래대로 exit 2 (차단 유지)',
+    'echo "All tests passed"', 2, { cwd: root, projectDir: root })
+
+  const rootUpper = root.toUpperCase() === root ? null : root.toUpperCase()
+  if (rootUpper && fs.existsSync(rootUpper)) {
+    test('대소문자만 다른 CLAUDE_PROJECT_DIR(실제로는 같은 디렉토리, 가짜 통과 위장) → 여전히 exit 2',
+      'echo "All tests passed"', 2, { cwd: root, projectDir: rootUpper })
+  } else {
+    console.log('  ⚠️  이 파일시스템은 대소문자 구분(case-sensitive) — 대소문자 정규화 테스트 스킵')
+  }
+
+  fs.rmSync(tmp, { recursive: true, force: true })
 }
 
 console.log(`\n결과: ${passed}/${passed + failed} 통과`)
