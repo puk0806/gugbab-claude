@@ -566,6 +566,62 @@ console.log('\n[악성 방어] 관리 파일이라도 로컬에서 수정됐으�
   assert('수정 감지 경고 출력', out.includes('planner.md'), true)
 }
 
+console.log('\n[악성 방어] 폐기 스킬 디렉토리는 한 단위 — SKILL.md 수정본이면 원본 references 도 보존 (2026-09-25)')
+{
+  // 소스에서 통째로 폐기된 스킬: SKILL.md 는 로컬 수정본(보존)인데 references 만 해시 일치로 지워지면
+  // 본문이 참조하는 부속 파일이 사라진 "깨진 스킬"이 남는다 → 스킬 디렉토리 단위로 보존.
+  const mk = (skillBody, refBody, extra = {}) => {
+    const src = makeSource(tmp('src'))
+    const tgt = makeTarget(tmp('tgt'))
+    const d = path.join(tgt, '.claude', 'skills', 'backend', 'retired skill')   // 공백 경로
+    fs.mkdirSync(path.join(d, 'references'), { recursive: true })
+    fs.writeFileSync(path.join(d, 'SKILL.md'), skillBody)
+    fs.writeFileSync(path.join(d, 'references', 'REF.md'), refBody)
+    const S = 'backend/retired skill/SKILL.md', R = 'backend/retired skill/references/REF.md'
+    fs.writeFileSync(path.join(tgt, '.claude', '.install-manifest.json'), JSON.stringify({
+      version: 1, agents: [], skills: [S, R, ...(extra.skills || [])], memoryManaged: true,
+      hashes: { skills: { [S]: sha256('# s\n'), [R]: sha256('# r\n'), ...(extra.hashes || {}) } },
+    }))
+    return { src, tgt, d }
+  }
+  {
+    const { src, tgt, d } = mk('# s edited\n', '# r\n')
+    const { out } = run(tgt, src, tmp('glo'))
+    assert('수정된 폐기 SKILL.md 보존', fs.existsSync(path.join(d, 'SKILL.md')), true)
+    assert('같은 스킬의 원본 references 도 보존(깨진 스킬 방지)', fs.existsSync(path.join(d, 'references', 'REF.md')), true)
+    assert('짝 단위 보존 경고', /짝 단위/.test(out), true)
+  }
+  {
+    const { src, tgt, d } = mk('# s\n', '# r edited\n')
+    run(tgt, src, tmp('glo'))
+    assert('references 만 수정 → SKILL.md 도 보존', fs.existsSync(path.join(d, 'SKILL.md')), true)
+    assert('references 수정본 보존', fs.existsSync(path.join(d, 'references', 'REF.md')), true)
+  }
+  {
+    const { src, tgt, d } = mk('# s\n', '# r\n')
+    run(tgt, src, tmp('glo'))
+    assert('전부 원본 → 폐기 스킬 디렉토리 전체 삭제', fs.existsSync(d), false)
+  }
+  {
+    // 소스에 SKILL.md 가 살아 있는 스킬에서 references 한 개만 폐기된 경우 — 단위 차단 없이 파일 단위 정리
+    const { src, tgt, d } = mk('# s\n', '# r\n')
+    const srcD = path.join(src, '.claude', 'skills', 'backend', 'retired skill')
+    fs.mkdirSync(srcD, { recursive: true })
+    fs.writeFileSync(path.join(srcD, 'SKILL.md'), '# s\n')
+    run(tgt, src, tmp('glo'))
+    assert('현행 스킬 SKILL.md 는 고아 아님 → 보존', fs.existsSync(path.join(d, 'SKILL.md')), true)
+    assert('현행 스킬의 폐기 references(원본) 는 삭제', fs.existsSync(path.join(d, 'references', 'REF.md')), false)
+  }
+  {
+    // 커스텀 파일(매니페스트 밖)은 보존만 하고 원본 폐기 스킬 삭제를 막지 않는다
+    const { src, tgt, d } = mk('# s\n', '# r\n')
+    fs.writeFileSync(path.join(d, 'my-notes.md'), '# mine\n')
+    run(tgt, src, tmp('glo'))
+    assert('커스텀 파일 보존', fs.existsSync(path.join(d, 'my-notes.md')), true)
+    assert('원본 SKILL.md 는 삭제', fs.existsSync(path.join(d, 'SKILL.md')), false)
+  }
+}
+
 console.log('\n[경계] 매니페스트에 해시 기록이 없는 관리 파일 → 보수적으로 보존')
 {
   // 해시 없이는 "설치 후 안 건드렸다"를 증명할 수 없으므로 삭제하지 않는다.

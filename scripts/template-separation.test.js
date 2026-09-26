@@ -549,6 +549,36 @@ test('업그레이드: docs 섹션이 없는 구버전 매니페스트에서도 
   }
 });
 
+test('짝 단위(2026-09-25 보고 버그): 구버전 매니페스트에서 SKILL.md 수정본이 보존되면 소스 동일 짝 docs 도 보존된다', () => {
+  const dir = mktarget('pair-unit');
+  try {
+    install('5', dir);
+    const mfPath = path.join(dir, '.claude', '.install-manifest.json');
+    const mf = JSON.parse(fs.readFileSync(mfPath, 'utf8'));
+    delete mf.docs;                                          // docs 섹션 없는 구버전 매니페스트
+    delete mf.hashes.docs;
+    const leakRel = 'meta/dream-safety-classifier-prompts/SKILL.md';
+    const leakDest = path.join(dir, '.claude', 'skills', leakRel);
+    fs.mkdirSync(path.dirname(leakDest), { recursive: true });
+    fs.copyFileSync(path.join(REPO, '.claude', 'skills', leakRel), leakDest);
+    mf.skills.push(leakRel);
+    mf.hashes.skills[leakRel] = sha(leakDest);               // 설치 시점 해시 기록 후
+    fs.appendFileSync(leakDest, '\n<!-- 프로젝트 로컬 수정 -->\n'); // 사용자가 수정 → 해시 불일치
+    const docRel = 'skills/meta/dream-safety-classifier-prompts/verification.md';
+    const docDest = path.join(dir, 'docs', docRel);
+    fs.mkdirSync(path.dirname(docDest), { recursive: true });
+    fs.copyFileSync(path.join(REPO, 'docs', docRel), docDest); // 소스 동일 사본
+    fs.writeFileSync(mfPath, JSON.stringify(mf, null, 2));
+
+    const out = install('5', dir);
+    assert.ok(fs.existsSync(leakDest), '사용자 수정 SKILL.md 가 삭제됨 — 파괴 방어 실패');
+    assert.ok(fs.existsSync(docDest), '스킬은 보존됐는데 짝 verification.md 만 삭제됨 — "검증 문서 없는 스킬" 재발');
+    assert.ok(/짝 단위 보존/.test(out), '짝 단위 보존 경고 부재');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 // ── seo-geo(11) 애드온 템플릿 (2026-09-01) ──────────────────────────────
 
 // seo-geo 소유 스킬 — 전체 프로파일 (설치 스크립트 SEO_GEO_SKILLS 와 동일해야 함)
@@ -1007,6 +1037,8 @@ test('다운그레이드: 10 → 5 재설치에서 health 전용 에이전트(�
     fs.appendFileSync(agent, '\n<!-- 프로젝트 커스텀 평가 축 -->\n');
     install('1', dir);
     assert.ok(fs.existsSync(agent), '사용자 수정본이 다운그레이드 prune 에 삭제됨 — 해시 증명 없는 삭제');
+    // 짝 단위(2026-09-25): 에이전트가 보존되면 짝 docs 도 보존 — 문서 없는 에이전트 방지
+    assert.ok(fs.existsSync(doc), '에이전트는 보존됐는데 짝 docs 만 삭제됨 — 짝 단위 위반');
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
@@ -1380,6 +1412,85 @@ test('버그6 정상: 개행 없이 끝나는 마지막 템플릿 입력도 값�
     const r3 = runEof(`${dir}\n5\ny`); // memory 질문 응답 "y" 뒤 개행 없음 → 수용 후 Superpowers 단계에서 EOF
     assert.ok(/Superpowers 스킬·에이전트 시스템/.test(r3.stdout), '개행 없는 마지막 y/N 응답 뒤 다음 질문으로 진행하지 않음');
     assert.notStrictEqual(r3.status, 0, '다음 질문의 EOF 에서 비0 종료가 아님');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// ── 훅 CJS 경계 (2026-09-25) ─────────────────────────────────────────────
+// 대상 루트 package.json 이 "type":"module" 이면 plain .js(CJS) 훅이 require 에러로 전부 크래시한다.
+// .claude/hooks/package.json = {"type":"commonjs"} 로 가장 가까운 package.json 을 훅 폴더에 고정한다.
+const runHook = (dir, hook) => spawnSync('node', [path.join(dir, '.claude', 'hooks', hook)],
+  { cwd: dir, input: '', encoding: 'utf8', timeout: 20000, env: { ...process.env, CLAUDE_PROJECT_DIR: dir } });
+
+test('훅 CJS 경계: 루트 "type":"module" 프로젝트에서도 설치된 훅이 require 에러 없이 실행된다', () => {
+  const dir = mktarget('esm-root');
+  try {
+    fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ name: 'esm-app', type: 'module' }));
+    install('1', dir);
+    for (const hook of ['agent-md-guard.js', 'bash-guard.js']) {
+      const r = runHook(dir, hook);
+      const err = `${r.stderr}${r.stdout}`;
+      assert.ok(!/require is not defined|ERR_REQUIRE_ESM|ES module scope/.test(err), `${hook}: ESM 경계 크래시\n${err.slice(0, 300)}`);
+      assert.strictEqual(r.status, 0, `${hook}: 빈 입력에서 비0 종료 ${r.status}\n${err.slice(0, 300)}`);
+    }
+    const pj = JSON.parse(fs.readFileSync(path.join(dir, '.claude', 'hooks', 'package.json'), 'utf8'));
+    assert.strictEqual(pj.type, 'commonjs', '.claude/hooks/package.json type 이 commonjs 가 아님');
+    const mf = JSON.parse(fs.readFileSync(path.join(dir, '.claude', '.install-manifest.json'), 'utf8'));
+    assert.ok(mf.hooks.includes('package.json') && typeof mf.hashes.hooks['package.json'] === 'string',
+      '매니페스트에 hooks/package.json 소유 기록(해시) 없음');
+    // 재설치 멱등: 다시 설치해도 유지·정상 실행
+    install('1', dir);
+    assert.strictEqual(runHook(dir, 'agent-md-guard.js').status, 0, '재설치 후 훅 실행 실패');
+    assert.ok(fs.existsSync(path.join(dir, '.claude', 'hooks', 'package.json')), '재설치에서 hooks/package.json 이 정리됨');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('훅 CJS 경계 악성·경계: 사용자 소유 hooks/package.json 은 덮어쓰지 않고, 깨진 파일·타입 누락은 경고한다', () => {
+  const dir = mktarget('esm-user-pj');
+  try {
+    // (1) 사용자가 커스텀 훅 의존성까지 적어 둔 commonjs package.json → 보존 (내용 파괴 금지)
+    const hooksDir = path.join(dir, '.claude', 'hooks');
+    fs.mkdirSync(hooksDir, { recursive: true });
+    const userPj = JSON.stringify({ type: 'commonjs', dependencies: { 'my-lib': '1.0.0' } }, null, 2);
+    fs.writeFileSync(path.join(hooksDir, 'package.json'), userPj);
+    install('1', dir);
+    assert.strictEqual(fs.readFileSync(path.join(hooksDir, 'package.json'), 'utf8'), userPj, '사용자 hooks/package.json 이 덮어써짐');
+    const mf = JSON.parse(fs.readFileSync(path.join(dir, '.claude', '.install-manifest.json'), 'utf8'));
+    assert.ok(!mf.hooks.includes('package.json'), '사용자 소유 파일이 설치 관리 파일로 기록됨 — 이후 정리 대상이 될 위험');
+
+    // (2) 사용자 파일이 "type":"module" 이면 훅이 깨지므로 경고만 하고 보존 (자동 수정 금지)
+    fs.writeFileSync(path.join(hooksDir, 'package.json'), JSON.stringify({ type: 'module' }));
+    const out2 = install('1', dir);
+    assert.ok(/hooks\/package\.json/.test(out2) && /commonjs/.test(out2), 'type 불일치 사용자 파일에 대한 경고 부재');
+    assert.strictEqual(JSON.parse(fs.readFileSync(path.join(hooksDir, 'package.json'), 'utf8')).type, 'module', '사용자 파일이 무단 수정됨');
+
+    // (3) 깨진 JSON — 설치는 성공(exit 0)하고 파일은 보존
+    fs.writeFileSync(path.join(hooksDir, 'package.json'), '{broken');
+    install('1', dir);
+    assert.strictEqual(fs.readFileSync(path.join(hooksDir, 'package.json'), 'utf8'), '{broken', '깨진 사용자 파일이 덮어써짐');
+
+    // (4) 이전 설치가 만든 사본(매니페스트 해시 일치)은 원본 변경 시 갱신 대상 — 삭제하고 재설치하면 새로 설치
+    fs.unlinkSync(path.join(hooksDir, 'package.json'));
+    install('1', dir);
+    assert.strictEqual(JSON.parse(fs.readFileSync(path.join(hooksDir, 'package.json'), 'utf8')).type, 'commonjs', '부재 시 신규 설치 안 됨');
+    fs.writeFileSync(path.join(hooksDir, 'package.json'), '{"type":"commonjs"}\n'); // 내용 다른 사용자 편집본(매니페스트 해시 불일치)
+    install('1', dir);
+    assert.strictEqual(fs.readFileSync(path.join(hooksDir, 'package.json'), 'utf8'), '{"type":"commonjs"}\n', '해시 불일치(사용자 편집) 사본이 덮어써짐');
+
+    // (5) 구버전 설치 사본(매니페스트 해시 일치, 원본과 다름) → 원본으로 갱신 + 소유 기록 유지
+    const oldCopy = '{"type":"commonjs","_old":true}\n';
+    fs.writeFileSync(path.join(hooksDir, 'package.json'), oldCopy);
+    const mfPath = path.join(dir, '.claude', '.install-manifest.json');
+    const m5 = JSON.parse(fs.readFileSync(mfPath, 'utf8'));
+    if (!m5.hooks.includes('package.json')) m5.hooks.push('package.json');
+    m5.hashes.hooks['package.json'] = crypto.createHash('sha256').update(oldCopy).digest('hex');
+    fs.writeFileSync(mfPath, JSON.stringify(m5, null, 2));
+    install('1', dir);
+    assert.strictEqual(fs.readFileSync(path.join(hooksDir, 'package.json'), 'utf8'),
+      fs.readFileSync(path.join(REPO, '.claude', 'hooks', 'package.json'), 'utf8'), '소유 증명된 구버전 사본이 갱신되지 않음');
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }

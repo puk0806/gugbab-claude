@@ -507,6 +507,46 @@ for hook in "${HOOKS[@]}"; do
   fi
 done
 
+# 훅 CJS 경계 (2026-09-25) — 대상 루트 package.json 이 "type":"module" 이면 plain .js(CJS) 훅 전체가
+# "require is not defined in ES module scope" 로 크래시한다. 훅 폴더에 {"type":"commonjs"} 를 두어
+# 가장 가까운 package.json 을 고정한다. 템플릿·옵션과 무관하게 항상 설치.
+# 사용자 소유 파일(매니페스트 해시 증명 없음·원본과 다름)은 덮어쓰지 않는다 — 커스텀 훅 의존성 등 보존.
+_hooks_pj_src="$REPO_DIR/.claude/hooks/package.json"
+_hooks_pj_dest="$TARGET/.claude/hooks/package.json"
+if [ -f "$_hooks_pj_src" ]; then
+  _hooks_pj_action=$(node -e '
+    const fs = require("fs"), crypto = require("crypto");
+    const [src, dest, mfPath] = process.argv.slice(1);
+    const sha = (b) => crypto.createHash("sha256").update(b).digest("hex");
+    if (!fs.existsSync(dest)) { console.log("install"); process.exit(0); }
+    const cur = fs.readFileSync(dest);
+    if (cur.equals(fs.readFileSync(src))) { console.log("same"); process.exit(0); }
+    try {  // 이전 설치가 만든 사본(해시 일치) → 원본 갱신 반영
+      const m = JSON.parse(fs.readFileSync(mfPath, "utf8"));
+      const h = m && m.hashes && m.hashes.hooks && m.hashes.hooks["package.json"];
+      if (Array.isArray(m.hooks) && m.hooks.includes("package.json") && typeof h === "string" && h === sha(cur)) {
+        console.log("update"); process.exit(0);
+      }
+    } catch {}
+    let t = null;
+    try { const j = JSON.parse(cur.toString("utf8")); t = j && typeof j === "object" ? j.type : null; } catch {}
+    console.log(t === "commonjs" ? "keep-ok" : "keep-bad");
+  ' "$_hooks_pj_src" "$_hooks_pj_dest" "$TARGET/.claude/.install-manifest.json" 2>/dev/null) || _hooks_pj_action="keep-bad"
+  case "$_hooks_pj_action" in
+    install|update|same)
+      if [ "$_hooks_pj_action" = "same" ] || cp -f "$_hooks_pj_src" "$_hooks_pj_dest" 2>/dev/null; then
+        echo "  → .claude/hooks/package.json (CJS 경계)"
+        echo "package.json" >> "$MANIFEST_HOOKS_TMP"
+      else
+        echo "  ✗ .claude/hooks/package.json (복사 실패)"
+      fi ;;
+    keep-ok)
+      echo "  · .claude/hooks/package.json 사용자 파일 보존 (type=commonjs 확인)" ;;
+    *)
+      echo "  ⚠ .claude/hooks/package.json 사용자 파일 보존 — \"type\": \"commonjs\" 가 아니어서(또는 JSON 오류) 루트가 \"type\":\"module\" 인 프로젝트에서 훅이 require 에러로 크래시할 수 있습니다. 직접 \"type\": \"commonjs\" 로 수정하세요" ;;
+  esac
+fi
+
 # git 훅 (.githooks/pre-commit) — util 단독 제외
 if ! is_util_only; then
   if [ -d "$REPO_DIR/.githooks" ]; then

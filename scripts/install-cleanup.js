@@ -548,6 +548,25 @@ for (const kind of ['skills', 'agents', 'commands']) {
       unknown.push(rel);
     }
   }
+  // 폐기 스킬 디렉토리는 한 단위 (2026-09-25): 소스에서 SKILL.md 까지 폐기된 스킬에서 SKILL.md 가
+  // 보존(수정본·미증명)되거나 부속 파일(references/ 등) 중 수정본이 있으면 같은 디렉토리의 삭제 가능
+  // 파일도 보존한다 — SKILL.md 만 남고 references 가 사라진 "깨진 스킬"(또는 그 반대 고아) 방지.
+  // 커스텀(매니페스트 밖) 부속 파일은 보존만 하고 단위를 막지 않는다. 보존 쪽으로만 작동한다.
+  if (kind === 'skills') {
+    const orphanSet = new Set(orphans);
+    const unitOf = (rel) => { const s = rel.split('/'); return s.length >= 3 ? s.slice(0, 2).join('/') : path.posix.dirname(rel); };
+    const retiredUnit = (rel) => orphanSet.has(`${unitOf(rel)}/SKILL.md`);
+    const blocked = new Map();
+    for (const rel of localEdits) if (retiredUnit(rel) && !blocked.has(unitOf(rel))) blocked.set(unitOf(rel), rel);
+    for (const rel of unknown) if (path.posix.basename(rel) === 'SKILL.md' && !blocked.has(unitOf(rel))) blocked.set(unitOf(rel), rel);
+    for (let i = removed.length - 1; i >= 0; i--) {
+      const u = unitOf(removed[i]);
+      if (retiredUnit(removed[i]) && blocked.has(u)) {
+        warn(`짝 단위 보존(같은 스킬의 .claude/skills/${blocked.get(u)} 보존) → 보존: .claude/skills/${removed[i]}`);
+        removed.splice(i, 1);
+      }
+    }
+  }
   for (const rel of removed) {
     try {
       fs.unlinkSync(path.join(tgtRoot, rel));

@@ -13,12 +13,20 @@ let pass = 0, fail = 0;
 const assert = (d, a, e) => { const ok = a === e; console.log(`  ${ok ? '✅' : '❌'} ${d}${ok ? '' : ` (기대 ${e}, 실제 ${a})`}`); ok ? pass++ : fail++; };
 const tmp = (n) => fs.mkdtempSync(path.join(os.tmpdir(), `prune-${n}-`));
 const sha = (s) => crypto.createHash('sha256').update(s).digest('hex');
-const run = (target, lines) => {
+const run = (target, lines, sourceDir) => {
   const lf = path.join(tmp('list'), 'list.txt');
   fs.writeFileSync(lf, lines.join('\n') + '\n');
-  const r = spawnSync('node', [SCRIPT, target, lf], { encoding: 'utf8' });
+  const r = spawnSync('node', [SCRIPT, target, lf, ...(sourceDir ? [sourceDir] : [])], { encoding: 'utf8' });
   return { code: r.status, out: `${r.stdout}\n${r.stderr}` };
 };
+// <root>/docs/<rel> 작성 (대상·소스 공용)
+const putDoc = (root, rel, body) => {
+  const f = path.join(root, 'docs', rel);
+  fs.mkdirSync(path.dirname(f), { recursive: true });
+  fs.writeFileSync(f, body);
+  return f;
+};
+const ex = (f) => fs.existsSync(f);
 const put = (target, kind, rel, body) => {
   const f = path.join(target, '.claude', kind, rel);
   fs.mkdirSync(path.dirname(f), { recursive: true });
@@ -84,6 +92,190 @@ console.log('\n[악성 방어] 커스텀·수정본·매니페스트 부재는 �
   assert('../ 경로 무시 → 밖의 파일 보존', fs.existsSync(outside), true);
   assert('알 수 없는 kind(hooks)·깨진 줄 무시, exit 0', code, 0);
   assert('정상 항목 아닌 것은 건드리지 않음', fs.existsSync(path.join(t, '.claude/skills/a/SKILL.md')), true);
+}
+
+// ── 짝 단위 처리 (2026-09-25): 스킬 디렉토리 + 짝 docs, 에이전트 + 짝 docs 는 한 단위 ─────────────
+// 버그: docs 섹션 없는 구버전 매니페스트 재설치에서 SKILL.md 는 수정본이라 보존됐는데 짝 verification.md 는
+// "소스 동일" 폴백으로 삭제돼 "검증 문서 없는 스킬" 31종이 생겼다. 단위 중 하나라도 보존되면 단위 전체 보존.
+const SK = 'health/meal-plan';                   // 스킬 prefix
+const skLines = (extra = []) => [
+  `skills|${SK}/SKILL.md`,
+  `skills|${SK}/references/REF.md`,
+  `docs|skills/${SK}/verification.md`,
+  ...extra,
+];
+const skFixture = ({ skillBody = '# skill\n', refBody = '# ref\n', docBody = '# verif\n', docsInManifest = false } = {}) => {
+  const t = tmp('tgt'); const src = tmp('src');
+  const skill = put(t, 'skills', `${SK}/SKILL.md`, skillBody);
+  const ref = put(t, 'skills', `${SK}/references/REF.md`, refBody);
+  const doc = putDoc(t, `skills/${SK}/verification.md`, docBody);
+  putDoc(src, `skills/${SK}/verification.md`, '# verif\n');   // 레포 원본
+  const m = { skills: [`${SK}/SKILL.md`, `${SK}/references/REF.md`],
+    hashes: { skills: { [`${SK}/SKILL.md`]: sha('# skill\n'), [`${SK}/references/REF.md`]: sha('# ref\n') } } };
+  if (docsInManifest) { m.docs = [`skills/${SK}/verification.md`]; m.hashes.docs = { [`skills/${SK}/verification.md`]: sha('# verif\n') }; }
+  manifest(t, m);                                              // docsInManifest=false = docs 섹션 없는 구버전 매니페스트
+  return { t, src, skill, ref, doc };
+};
+
+console.log('\n[악성 방어] 짝 단위 — 스킬 수정본이면 소스 동일 docs 도 보존 (보고된 버그)');
+{
+  const { t, src, skill, ref, doc } = skFixture({ skillBody: '# skill edited locally\n' });
+  const { out } = run(t, skLines(), src);
+  assert('(a) 수정된 SKILL.md 보존', ex(skill), true);
+  assert('(a) 짝 verification.md 도 보존 (소스 동일이어도)', ex(doc), true);
+  assert('(a) 같은 스킬의 references 도 보존', ex(ref), true);
+  assert('(a) 짝 단위 보존 경고 출력', /짝/.test(out), true);
+}
+{
+  // SKILL.md 가 매니페스트 밖(커스텀·해시 미기록) → 스킬 보존 → 짝 docs 보존
+  const { t, src, skill, doc } = skFixture();
+  manifest(t, { skills: [], hashes: { skills: {} } });
+  run(t, skLines(), src);
+  assert('(a2) 매니페스트 밖 SKILL.md 보존', ex(skill), true);
+  assert('(a2) 짝 docs 도 보존', ex(doc), true);
+}
+{
+  // references 만 수정 → 스킬 단위 전체 보존 (SKILL.md 만 지워 references 가 고아가 되는 것도 방지)
+  const { t, src, skill, ref, doc } = skFixture({ refBody: '# ref edited\n' });
+  run(t, skLines(), src);
+  assert('(a3) references 수정 → SKILL.md 보존', ex(skill), true);
+  assert('(a3) references 수정본 보존', ex(ref), true);
+  assert('(a3) references 수정 → 짝 docs 보존', ex(doc), true);
+}
+
+console.log('\n[정상] 짝 단위 — 전부 원본이면 전부 삭제');
+{
+  const { t, src, skill, ref, doc } = skFixture();
+  run(t, skLines(), src);
+  assert('(b) SKILL.md 삭제', ex(skill), false);
+  assert('(b) references 삭제', ex(ref), false);
+  assert('(b) 소스 동일 docs 삭제', ex(doc), false);
+  assert('(b) 빈 docs 디렉토리 정리', ex(path.dirname(doc)), false);
+}
+
+console.log('\n[악성 방어] 짝 단위 — docs 만 수정돼도 스킬까지 보존');
+{
+  const { t, src, skill, ref, doc } = skFixture({ docBody: '# verif — 프로젝트 실사용 기록 추가\n' });
+  run(t, skLines(), src);
+  assert('(c) 원본 SKILL.md 도 보존', ex(skill), true);
+  assert('(c) 원본 references 도 보존', ex(ref), true);
+  assert('(c) 수정된 docs 보존', ex(doc), true);
+}
+
+console.log('\n[회귀] 매니페스트 docs 섹션 있는 설치 — 해시 증명 경로도 단위 적용');
+{
+  const { t, src, skill, doc } = skFixture({ docsInManifest: true });
+  run(t, skLines(), src);
+  assert('(d) 둘 다 해시 일치 → SKILL.md 삭제', ex(skill), false);
+  assert('(d) 둘 다 해시 일치 → docs 삭제', ex(doc), false);
+}
+{
+  const { t, src, skill, doc } = skFixture({ docsInManifest: true, skillBody: '# edited\n' });
+  run(t, skLines(), src);
+  assert('(d2) SKILL.md 수정 → 해시 일치 docs 도 보존', ex(skill) && ex(doc), true);
+}
+{
+  const { t, src, skill, doc } = skFixture({ docsInManifest: true, docBody: '# edited doc\n' });
+  run(t, skLines(), src);
+  assert('(d3) docs 해시 불일치 → SKILL.md 도 보존', ex(skill) && ex(doc), true);
+}
+{
+  // 단위 격리: 다른 스킬의 수정본이 무관한 스킬 삭제를 막지 않는다
+  const { t, src, skill, doc } = skFixture();
+  const other = put(t, 'skills', 'health/other/SKILL.md', '# other edited\n');
+  const m = JSON.parse(fs.readFileSync(path.join(t, '.claude', '.install-manifest.json'), 'utf8'));
+  m.skills.push('health/other/SKILL.md'); m.hashes.skills['health/other/SKILL.md'] = sha('# other\n');
+  manifest(t, m);
+  run(t, [...skLines(), 'skills|health/other/SKILL.md'], src);
+  assert('(d4) 수정된 다른 스킬 보존', ex(other), true);
+  assert('(d4) 무관한 원본 스킬·docs 는 삭제', `${ex(skill)},${ex(doc)}`, 'false,false');
+}
+
+console.log('\n[악성 방어·정상] 짝 단위 — 에이전트 + 짝 docs(문서·verification)');
+const AG = 'health/nutrition-tester.md';
+const agLines = [`agents|${AG}`, `docs|agents/${AG}`, `docs|agents/health/nutrition-tester-verification.md`];
+const agFixture = ({ agentBody = '# agent\n', verifBody = '# av\n' } = {}) => {
+  const t = tmp('tgt'); const src = tmp('src');
+  const agent = put(t, 'agents', AG, agentBody);
+  const doc = putDoc(t, `agents/${AG}`, '# adoc\n');
+  const verif = putDoc(t, 'agents/health/nutrition-tester-verification.md', verifBody);
+  putDoc(src, `agents/${AG}`, '# adoc\n');
+  putDoc(src, 'agents/health/nutrition-tester-verification.md', '# av\n');
+  manifest(t, { agents: [AG], hashes: { agents: { [AG]: sha('# agent\n') } } });
+  return { t, src, agent, doc, verif };
+};
+{
+  const { t, src, agent, doc, verif } = agFixture({ agentBody: '# agent + 커스텀 평가 축\n' });
+  run(t, agLines, src);
+  assert('(e) 수정된 에이전트 보존', ex(agent), true);
+  assert('(e) 짝 문서 보존', ex(doc), true);
+  assert('(e) 짝 -verification.md 보존', ex(verif), true);
+}
+{
+  const { t, src, agent, doc, verif } = agFixture();
+  run(t, agLines, src);
+  assert('(e2) 전부 원본 → 에이전트·문서·verification 모두 삭제', `${ex(agent)},${ex(doc)},${ex(verif)}`, 'false,false,false');
+}
+{
+  const { t, src, agent, doc, verif } = agFixture({ verifBody: '# av edited\n' });
+  run(t, agLines, src);
+  assert('(e3) verification 만 수정 → 에이전트·문서도 보존', `${ex(agent)},${ex(doc)},${ex(verif)}`, 'true,true,true');
+}
+
+console.log('\n[경계] 짝 단위 — 고아 docs·공백 경로·커스텀 docs·중복 줄·단위 라벨 조작');
+{
+  // SKILL.md 가 이미 없는 고아 docs — 막을 스킬이 없으므로 증명되면 삭제
+  const t = tmp('tgt'); const src = tmp('src');
+  const doc = putDoc(t, `skills/${SK}/verification.md`, '# verif\n');
+  putDoc(src, `skills/${SK}/verification.md`, '# verif\n');
+  manifest(t, { skills: [], hashes: {} });
+  const { code } = run(t, [`skills|${SK}/SKILL.md`, `docs|skills/${SK}/verification.md`], src);
+  assert('고아 docs(스킬 부재) → 소스 동일이면 삭제', ex(doc), false);
+  assert('고아 docs → exit 0', code, 0);
+}
+{
+  // 경로에 공백 — 단위 매칭·삭제가 깨지지 않아야 함
+  const P = 'my cat/my skill';
+  const t = tmp('tgt'); const src = tmp('src');
+  const skill = put(t, 'skills', `${P}/SKILL.md`, '# s\n');
+  const doc = putDoc(t, `skills/${P}/verification.md`, '# v\n');
+  putDoc(src, `skills/${P}/verification.md`, '# v\n');
+  manifest(t, { skills: [`${P}/SKILL.md`], hashes: { skills: { [`${P}/SKILL.md`]: sha('# s\n') } } });
+  run(t, [`skills|${P}/SKILL.md`, `docs|skills/${P}/verification.md`], src);
+  assert('공백 경로 — 전부 원본 → 둘 다 삭제', `${ex(skill)},${ex(doc)}`, 'false,false');
+  const skill2 = put(t, 'skills', `${P}/SKILL.md`, '# s edited\n');
+  const doc2 = putDoc(t, `skills/${P}/verification.md`, '# v\n');
+  run(t, [`skills|${P}/SKILL.md`, `docs|skills/${P}/verification.md`], src);
+  assert('공백 경로 — 수정본이면 둘 다 보존', `${ex(skill2)},${ex(doc2)}`, 'true,true');
+}
+{
+  // 같은 폴더의 커스텀 docs(소스에도 매니페스트에도 없음)는 보존하되 단위 삭제를 막지 않는다 (기존 E2E 계약)
+  const { t, src, skill, doc } = skFixture();
+  const custom = putDoc(t, `skills/${SK}/my-notes.md`, '# 사용자 메모\n');
+  run(t, skLines([`docs|skills/${SK}/my-notes.md`]), src);
+  assert('커스텀 docs 보존', ex(custom), true);
+  assert('커스텀 docs 가 있어도 원본 스킬·docs 는 삭제', `${ex(skill)},${ex(doc)}`, 'false,false');
+}
+{
+  // 중복 줄(여러 분기가 같은 스킬을 기록) — 삭제 실패 경고 없이 1회 처리
+  const { t, src, skill } = skFixture();
+  const { out } = run(t, [...skLines(), ...skLines()], src);
+  assert('중복 줄 → 삭제', ex(skill), false);
+  assert('중복 줄 → 삭제 실패 경고 없음', /삭제 실패/.test(out), false);
+}
+{
+  // 접두어 충돌(a/x vs a/xy)·경로 조작 줄이 단위 판정을 오염시키지 않는다
+  const t = tmp('tgt'); const src = tmp('src');
+  const edited = put(t, 'skills', 'a/x/SKILL.md', '# edited\n');
+  const other = put(t, 'skills', 'a/xy/SKILL.md', '# y\n');
+  const otherDoc = putDoc(t, 'skills/a/xy/verification.md', '# yv\n');
+  putDoc(src, 'skills/a/xy/verification.md', '# yv\n');
+  const outside = path.join(t, 'outside.md'); fs.writeFileSync(outside, 'x');
+  manifest(t, { skills: ['a/x/SKILL.md', 'a/xy/SKILL.md'], hashes: { skills: { 'a/x/SKILL.md': sha('# x\n'), 'a/xy/SKILL.md': sha('# y\n') } } });
+  run(t, ['skills|a/x/SKILL.md', 'skills|a/xy/SKILL.md', 'docs|skills/a/xy/verification.md', 'docs|skills/a/x/../../../outside.md'], src);
+  assert('접두어 충돌 → 수정본 a/x 보존', ex(edited), true);
+  assert('접두어 충돌 → 원본 a/xy 스킬·docs 는 삭제', `${ex(other)},${ex(otherDoc)}`, 'false,false');
+  assert('../ 줄 무시 → 밖의 파일 보존', ex(outside), true);
 }
 
 console.log('\n[경계] 빈 목록·없는 파일·목록 파일 없음');
