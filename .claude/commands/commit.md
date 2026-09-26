@@ -2,7 +2,7 @@
 
 ## 0단계 — 메모리 정리 (커밋 실행 전 필수)
 
-커밋·푸시 요청을 받으면 실행 전에 항상 아래를 수행한다 (@.claude/rules/memory-sync.md):
+커밋·푸시 요청을 받으면 실행 전에 항상 아래를 수행한다 (`.claude/rules/memory-sync.md` — memory 공유 옵션 설치된 경우. 레포에 `memory/`가 없으면 0단계 전체를 건너뛴다):
 
 1. 이번 작업으로 낡아진 memory 서술이 있는지 스캔 → Write/Edit로 갱신
 2. 기록할 가치 있는 신규 결정·피드백이 있으면 memory 파일로 저장 (+ MEMORY.md 인덱스)

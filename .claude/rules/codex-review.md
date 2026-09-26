@@ -67,7 +67,7 @@ node -e "const s=require('./.claude/settings.json');process.exit(s.enabledPlugin
 > - **스탠스**: 배포를 막을 가장 강한 이유를 찾는다. happy path에서만 동작하면 그 자체가 결함. 선의·부분 수정 크레딧 없음
 > - **공격 표면**: 인증·권한·테넌트 격리·신뢰 경계 / 데이터 손실·손상·비가역 상태 / 롤백·재시도·부분 실패·멱등성 / 레이스·순서 가정·재진입 / empty·null·timeout·의존성 degrade / 버전 skew·스키마 drift·마이그레이션 / 관측성 공백
 > - **finding 문턱**: 스타일·네이밍·저가치 클린업 제외, 근거 있는 material finding만
-> - **출력**: `needs-attention`(막을 위험) / `approve`(적대적 결함 0). 이 attack-surface는 @.claude/rules/adversarial-testing.md 의 테스트 기준과 동일 축으로 정렬됨
+> - **출력**: `needs-attention`(막을 위험) / `approve`(적대적 결함 0). 이 attack-surface는 `.claude/rules/adversarial-testing.md`(dev 템플릿 설치 시)의 테스트 기준과 동일 축으로 정렬됨
 
 ### Round 1 — 초기 적대적 리뷰
 
