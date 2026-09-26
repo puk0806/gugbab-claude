@@ -422,6 +422,90 @@ test('악성·경계: 순수 java 재설치 시 누수 잔재만 prune, 수정�
   }
 });
 
+test('악성·경계: 레포에서 폐기된 스킬·에이전트는 재설치 시 짝 docs 까지 단위로 수렴, 수정본 단위·미증명 docs 는 보존 (2026-09-26)', () => {
+  const dir = mktarget('retired pair'); // 공백 경로
+  try {
+    install('5', dir);
+    const mfPath = path.join(dir, '.claude', '.install-manifest.json');
+    const plant = (root, rel, body) => {
+      const f = path.join(dir, root, rel);
+      fs.mkdirSync(path.dirname(f), { recursive: true });
+      fs.writeFileSync(f, body);
+      return f;
+    };
+    // (1) 폐기 스킬 + 짝 docs (전부 원본) → 단위 삭제
+    const sGone = plant('.claude/skills', 'backend/zz-retired-skill/SKILL.md', '# retired\n');
+    const sGoneDoc = plant('docs', 'skills/backend/zz-retired-skill/verification.md', '# rv\n');
+    // (2) 폐기 에이전트 + 짝 docs + verification (전부 원본) → 단위 삭제
+    const aGone = plant('.claude/agents', 'meta/zz-retired-agent.md', '# ra\n');
+    const aGoneDoc = plant('docs', 'agents/meta/zz-retired-agent.md', '# rad\n');
+    const aGoneVer = plant('docs', 'agents/meta/zz-retired-agent-verification.md', '# rav\n');
+    // (3) 폐기 스킬이지만 짝 docs 를 사용자가 수정 → 본체·docs 단위 보존
+    const sKeep = plant('.claude/skills', 'backend/zz-edited-docs/SKILL.md', '# keep\n');
+    const sKeepDoc = plant('docs', 'skills/backend/zz-edited-docs/verification.md', '# kv\n');
+    // (4) 매니페스트 밖 고아 docs (증명 불가) → 보존
+    const custom = plant('docs', 'skills/backend/zz-my-notes/verification.md', '# mine\n');
+
+    const mf = JSON.parse(fs.readFileSync(mfPath, 'utf8'));
+    const rec = (kind, rel, f) => { mf[kind].push(rel); mf.hashes[kind][rel] = sha(f); };
+    rec('skills', 'backend/zz-retired-skill/SKILL.md', sGone);
+    rec('skills', 'backend/zz-edited-docs/SKILL.md', sKeep);
+    rec('agents', 'meta/zz-retired-agent.md', aGone);
+    rec('docs', 'skills/backend/zz-retired-skill/verification.md', sGoneDoc);
+    rec('docs', 'skills/backend/zz-edited-docs/verification.md', sKeepDoc);
+    rec('docs', 'agents/meta/zz-retired-agent.md', aGoneDoc);
+    rec('docs', 'agents/meta/zz-retired-agent-verification.md', aGoneVer);
+    fs.writeFileSync(mfPath, JSON.stringify(mf, null, 2));
+    fs.appendFileSync(sKeepDoc, '\n<!-- 사용자 수정 -->\n');
+
+    const out = install('5', dir);
+    for (const f of [sGone, sGoneDoc, aGone, aGoneDoc, aGoneVer]) assert.ok(!fs.existsSync(f), `폐기 단위 잔존: ${f}`);
+    assert.ok(!fs.existsSync(path.dirname(sGoneDoc)), '폐기 스킬 docs 빈 디렉토리 잔존');
+    assert.ok(fs.existsSync(sKeep) && fs.existsSync(sKeepDoc), '짝 docs 수정본 단위가 삭제됨 — 파괴 방어 실패');
+    assert.ok(fs.existsSync(custom), '증명 불가 고아 docs 가 삭제됨');
+    assert.ok(/짝 단위/.test(out), '짝 단위 보존 경고 부재');
+    // 재설치 후 매니페스트에서 사라진 단위는 기록도 수렴, 보존 단위는 기록 유지
+    const mf2 = JSON.parse(fs.readFileSync(mfPath, 'utf8'));
+    assert.ok(!mf2.docs.includes('skills/backend/zz-retired-skill/verification.md'), '삭제된 docs 가 매니페스트에 잔존');
+    assert.ok(mf2.docs.includes('skills/backend/zz-edited-docs/verification.md'), '보존 docs 의 매니페스트 기록 유실');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('악성·경계: 매니페스트 없는 구버전 설치본의 템플릿 외 누수는 레포 원본과 동일하면 짝 단위로 수렴, 한 파일이라도 다르면 단위 보존 (2026-09-26 감사 A)', () => {
+  const dir = mktarget('legacy-leak');
+  try {
+    install('5', dir);
+    fs.rmSync(path.join(dir, '.claude', '.install-manifest.json')); // 구버전(매니페스트 이전) 설치 시뮬레이션
+    const copy = (root, rel) => {
+      const dest = path.join(dir, root, rel);
+      fs.mkdirSync(path.dirname(dest), { recursive: true });
+      fs.copyFileSync(path.join(REPO, root, rel), dest);
+      return dest;
+    };
+    // (1) 레포 원본과 동일한 누수 스킬 + 짝 docs → 삭제
+    const leak = copy('.claude/skills', 'meta/dream-safety-classifier-prompts/SKILL.md');
+    const leakDoc = copy('docs', 'skills/meta/dream-safety-classifier-prompts/verification.md');
+    // (2) references 한 파일만 수정된 누수 스킬 → 폴더 단위 보존
+    const modSkill = copy('.claude/skills', 'architecture/dream-journal-data-modeling/SKILL.md');
+    const modRef = copy('.claude/skills', 'architecture/dream-journal-data-modeling/references/REFERENCE.md');
+    fs.appendFileSync(modRef, '\n<!-- 사용자 로컬 수정 -->\n');
+    // (3) 레포에 없는 사용자 스킬 → 보존
+    const custom = path.join(dir, '.claude', 'skills', 'meta', 'my-own-skill', 'SKILL.md');
+    fs.mkdirSync(path.dirname(custom), { recursive: true });
+    fs.writeFileSync(custom, '# mine\n');
+
+    const out = install('5', dir);
+    assert.ok(!fs.existsSync(leak) && !fs.existsSync(leakDoc), '원본 동일 누수 스킬·짝 docs 가 구버전 설치본에서 수렴하지 않음');
+    assert.ok(fs.existsSync(modSkill) && fs.existsSync(modRef), '한 파일 수정된 누수 스킬 폴더가 삭제됨 — 단위 보존 실패');
+    assert.ok(fs.existsSync(custom), '레포에 없는 사용자 스킬이 삭제됨');
+    assert.ok(/수동 확인/.test(out), '보존 단위 수동 확인 안내 부재');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 // ── 업그레이드 경로 (2026-08-31 Codex R1: 순수 java 외 경로 미수렴 지적 반영) ──
 
 test('업그레이드: 수리 전 rust 설치가 남긴 dream 잔재(references 포함)가 rust 재설치에서 수렴한다', () => {
@@ -1510,6 +1594,9 @@ test('F3 업그레이드: settings 보존(N) 재설치가 구버전 Instructions
     const bareCmd = (n, extra = '') => ({ type: 'command', command: `node $CLAUDE_PROJECT_DIR/.claude/hooks/${n}${extra}` });
     s.hooks.SessionStart = [{ hooks: [bareCmd('session-start.js')] }];
     s.hooks.InstructionsLoaded = [{ hooks: [bareCmd('instructions-loaded.js'), bareCmd('staleness-check.js'), { type: 'command', command: 'echo my-il' }] }];
+    // 감사 B: 파일 없는 폐지 훅 배선(session-handoff-inject·pre-compact) + 사용자 자체 무따옴표 명령
+    s.hooks.Stop = [...(s.hooks.Stop || []), { hooks: [bareCmd('session-handoff-inject.js'), bareCmd('pre-compact.js')] },
+      { hooks: [{ type: 'command', command: 'node $CLAUDE_PROJECT_DIR/scripts/mine.js' }] }];
     s.permissions.allow.push('Bash(make*)');
     s.env = { MY_FLAG: 'keep' };
     fs.writeFileSync(sf, JSON.stringify(s, null, 2));
@@ -1522,9 +1609,18 @@ test('F3 업그레이드: settings 보존(N) 재설치가 구버전 Instructions
     assert.ok(ss.some((c) => /hooks\/staleness-check\.js$/.test(c)), 'staleness-check 미이관');
     assert.deepStrictEqual(evCmds(a, 'InstructionsLoaded'), ['echo my-il'], '사용자 자체 InstructionsLoaded 훅이 사라지거나 대상 훅이 남음');
     assert.ok(a.permissions.allow.includes('Bash(make*)') && a.env.MY_FLAG === 'keep', '사용자 커스텀 설정 파괴');
-    assert.strictEqual(fs.readFileSync(`${sf}.bak`, 'utf8'), orig, '.bak 백업이 원본과 다름');
+    // .bak 은 migrate 직전 상태 — 폐지 훅 배선은 그보다 앞선 install-cleanup 이 이미 걷어내므로 orig 와 바이트 비교 대신
+    // 이관 대상(InstructionsLoaded 원 배선)과 사용자 설정이 백업에 온전한지 확인한다
+    const bak = JSON.parse(fs.readFileSync(`${sf}.bak`, 'utf8'));
+    assert.deepStrictEqual(bak.hooks.InstructionsLoaded, JSON.parse(orig).hooks.InstructionsLoaded, '.bak 에 이관 전 배선이 없음');
+    assert.deepStrictEqual(bak.env, { MY_FLAG: 'keep' }, '.bak 에 사용자 설정 누락');
     assert.match(out, /InstructionsLoaded → SessionStart/, '이관 로그 없음');
-    assert.match(out, /따옴표 없는 \$CLAUDE_PROJECT_DIR/, '무따옴표 배선 경고 없음');
+    // 감사 B (2026-09-26): 우리 훅의 무따옴표 배선은 교정, 사용자 자체 명령은 경고만, 파일 없는 폐지 훅 배선 제거
+    const allCmds = Object.keys(a.hooks).flatMap((ev) => evCmds(a, ev));
+    assert.ok(!allCmds.some((c) => /(^|\s)\$CLAUDE_PROJECT_DIR\/\.claude\/hooks\//.test(c)), `우리 훅 무따옴표 배선 잔존: ${allCmds.filter((c) => /\s\$CLAUDE/.test(c))}`);
+    assert.ok(allCmds.includes('node $CLAUDE_PROJECT_DIR/scripts/mine.js'), '사용자 자체 명령이 수정·삭제됨');
+    assert.match(out, /따옴표 없는 \$CLAUDE_PROJECT_DIR/, '사용자 명령 무따옴표 경고 없음');
+    assert.ok(!allCmds.some((c) => /session-handoff-inject|pre-compact/.test(c)), '파일 없는 폐지 훅 배선 잔존');
 
     const after1 = fs.readFileSync(sf, 'utf8');
     install('1', dir); // 멱등

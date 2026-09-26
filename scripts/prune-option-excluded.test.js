@@ -278,6 +278,117 @@ console.log('\n[경계] 짝 단위 — 고아 docs·공백 경로·커스텀 doc
   assert('../ 줄 무시 → 밖의 파일 보존', ex(outside), true);
 }
 
+// ── 매니페스트 이전(구버전) 설치본의 템플릿 외 자산 — 레포 원본 바이트 동일 폴백 (2026-09-26 감사 A) ──
+// 매니페스트가 없거나 항목 기록이 없으면 docs 에만 쓰던 "레포 원본과 바이트 동일" 증명을 스킬(폴더 단위)·
+// 에이전트(+짝 docs 단위)에도 적용한다. 하나라도 다르면(수정본 또는 레포 원본이 그 사이 바뀜) 단위 전체 보존.
+const legacyUnit = (opts = {}) => {
+  const t = tmp('tgt'); const src = tmp('src');
+  const files = {
+    skill: ['skills', 'frontend/dream-x/SKILL.md', '# dream\n'],
+    ref: ['skills', 'frontend/dream-x/references/R.md', '# ref\n'],
+    agent: ['agents', 'validation/dream-y.md', '# agent\n'],
+  };
+  const f = {};
+  for (const [k, [kind, rel, body]] of Object.entries(files)) {
+    f[k] = put(t, kind, rel, body);
+    if (!(opts.notInSource || []).includes(k)) put(src, kind, rel, body);
+  }
+  f.sdoc = putDoc(t, 'skills/frontend/dream-x/verification.md', '# sv\n'); putDoc(src, 'skills/frontend/dream-x/verification.md', '# sv\n');
+  f.adoc = putDoc(t, 'agents/validation/dream-y.md', '# ad\n'); putDoc(src, 'agents/validation/dream-y.md', '# ad\n');
+  f.aver = putDoc(t, 'agents/validation/dream-y-verification.md', '# av\n'); putDoc(src, 'agents/validation/dream-y-verification.md', '# av\n');
+  if (opts.manifest) manifest(t, opts.manifest);
+  for (const k of opts.edit || []) fs.appendFileSync(f[k], '<!-- local -->\n');
+  const lines = ['skills|frontend/dream-x/SKILL.md', 'skills|frontend/dream-x/references/R.md', 'docs|skills/frontend/dream-x/verification.md',
+    'agents|validation/dream-y.md', 'docs|agents/validation/dream-y.md', 'docs|agents/validation/dream-y-verification.md', ...(opts.extraLines || [])];
+  return { t, src, f, lines };
+};
+const exAll = (...ps) => ps.map(ex).join(',');
+
+console.log('\n[정상] 매니페스트 없음(구버전 설치) + 레포 원본과 동일 → 스킬 폴더·에이전트 단위(짝 docs 포함) 삭제');
+{
+  const { t, src, f, lines } = legacyUnit();
+  const { code, out } = run(t, lines, src);
+  assert('exit 0', code, 0);
+  assert('스킬 SKILL.md·references·docs 삭제', exAll(f.skill, f.ref, f.sdoc), 'false,false,false');
+  assert('스킬 빈 폴더 정리', ex(path.join(t, '.claude/skills/frontend/dream-x')), false);
+  assert('에이전트 + 짝 docs + verification 삭제', exAll(f.agent, f.adoc, f.aver), 'false,false,false');
+  assert('소스 동일 증명 로그', /소스 동일 증명/.test(out), true);
+}
+{
+  // 매니페스트는 있으나(신버전 재설치 이후) 해당 항목 기록이 없는 경우도 같은 폴백
+  const { t, src, f, lines } = legacyUnit({ manifest: { skills: [], agents: [], docs: [] } });
+  run(t, lines, src);
+  assert('매니페스트 무기록 항목 → 원본 동일이면 삭제', exAll(f.skill, f.ref, f.agent, f.aver), 'false,false,false,false');
+}
+
+console.log('\n[악성 방어] 폴백 증명 단위 — 한 파일이라도 다르면 단위 전체 보존 + 수동 확인 안내');
+{
+  const { t, src, f, lines } = legacyUnit({ edit: ['ref'] });
+  const { out } = run(t, lines, src);
+  assert('references 수정 → SKILL.md·references·docs 전부 보존', exAll(f.skill, f.ref, f.sdoc), 'true,true,true');
+  assert('보존 경고에 수동 확인 안내', /수동 확인/.test(out), true);
+  assert('다른 단위(에이전트)는 원본이라 삭제', ex(f.agent), false);
+}
+{
+  const { t, src, f, lines } = legacyUnit({ edit: ['aver'] });
+  run(t, lines, src);
+  assert('에이전트 verification 수정 → 에이전트·짝 docs 전부 보존', exAll(f.agent, f.adoc, f.aver), 'true,true,true');
+}
+{
+  // 레포 원본이 그 사이 바뀐 경우 = 설치본과 불일치 → 안전 쪽(보존)
+  const { t, src, f, lines } = legacyUnit();
+  fs.appendFileSync(path.join(src, '.claude/skills/frontend/dream-x/SKILL.md'), '\n## 레포 갱신\n');
+  run(t, lines, src);
+  assert('레포 원본 변경 → 구버전 사본 단위 보존', exAll(f.skill, f.ref, f.sdoc), 'true,true,true');
+}
+{
+  // 레포에 없는 사용자 자산 → 증명 불가 → 보존
+  const { t, src, f, lines } = legacyUnit({ notInSource: ['skill', 'ref', 'agent'] });
+  run(t, lines, src);
+  assert('레포에 없는 스킬·에이전트 보존', exAll(f.skill, f.ref, f.agent), 'true,true,true');
+  assert('본체가 보존되면 원본 동일 docs 도 보존(짝 단위)', exAll(f.sdoc, f.adoc, f.aver), 'true,true,true');
+}
+{
+  // 폴더 안에 레포에 없는 사용자 파일이 섞이면 "폴더 전체가 원본" 이 아니므로 단위 보존
+  const { t, src, f, lines } = legacyUnit({ extraLines: ['skills|frontend/dream-x/my-notes.md'] });
+  const notes = put(t, 'skills', 'frontend/dream-x/my-notes.md', '# mine\n');
+  run(t, lines, src);
+  assert('사용자 파일 섞인 폴백 스킬 폴더 → 전체 보존', exAll(f.skill, f.ref, notes), 'true,true,true');
+}
+{
+  // 손상 매니페스트는 폴백도 금지 (조작 가능성)
+  const { t, src, f, lines } = legacyUnit();
+  fs.mkdirSync(path.join(t, '.claude'), { recursive: true });
+  fs.writeFileSync(path.join(t, '.claude', '.install-manifest.json'), '{ broken');
+  run(t, lines, src);
+  assert('손상 매니페스트 → 원본 동일이어도 삭제 없음', exAll(f.skill, f.agent, f.sdoc), 'true,true,true');
+}
+{
+  // 소스 인자 없이 매니페스트 없음 → 종전대로 삭제 없음
+  const { t, f, lines } = legacyUnit();
+  run(t, lines);
+  assert('sourceDir 없음 + 매니페스트 없음 → 삭제 없음', exAll(f.skill, f.agent), 'true,true');
+}
+{
+  // symlink 스킬 파일(레포 원본을 가리켜 내용 동일) → 따라가 해시·삭제하지 않음
+  const t = tmp('tgt'); const src = tmp('src');
+  const real = put(src, 'skills', 'frontend/dream-z/SKILL.md', '# z\n');
+  const link = path.join(t, '.claude/skills/frontend/dream-z/SKILL.md');
+  fs.mkdirSync(path.dirname(link), { recursive: true });
+  fs.symlinkSync(real, link);
+  run(t, ['skills|frontend/dream-z/SKILL.md'], src);
+  assert('symlink 스킬 파일 보존', !!fs.lstatSync(link, { throwIfNoEntry: false }), true);
+  assert('symlink 대상(레포 원본) 보존', ex(real), true);
+}
+{
+  // 경로 조작 줄은 폴백 경로에서도 무시
+  const { t, src, lines } = legacyUnit();
+  const outside = path.join(t, 'outside.md'); fs.writeFileSync(outside, '# o\n');
+  fs.writeFileSync(path.join(src, 'outside.md'), '# o\n');
+  run(t, [...lines, 'skills|../../outside.md', `skills|${outside}`], src);
+  assert('../·절대경로 줄 → 대상 밖 파일 보존', ex(outside), true);
+}
+
 console.log('\n[경계] 빈 목록·없는 파일·목록 파일 없음');
 {
   const t = tmp('tgt');

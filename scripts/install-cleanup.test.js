@@ -1170,6 +1170,244 @@ console.log('\n[악성 방어] 매니페스트에 기록됐어도 로컬 수정(
   assert('보존 경고 출력', out.includes('memory-stop-guard'), true)
 }
 
+// ═══════════════════════════════════════════════════════════════════════
+// 폐기 자산의 짝 docs 정리 (2026-09-26) — prune-option-excluded 와 같은 짝 단위 원칙
+// ═══════════════════════════════════════════════════════════════════════
+// 폐기 스킬 `backend/old skill`(공백 경로) + 짝 docs, 폐기 에이전트 `meta/old-agent.md` + 짝 docs 2종.
+// opts.edit: 설치 후 수정할 대상 키 목록 / opts.noDocsSection: 구버전 매니페스트(docs 섹션 없음)
+// opts.srcDocs: 소스 레포에 둘 docs (구버전 폴백 증명용) — { rel: body }
+function mkRetiredPair(opts = {}) {
+  const src = makeSource(tmp('src'))
+  const tgt = makeTarget(tmp('tgt'))
+  const P = {
+    skill: ['.claude/skills', 'backend/old skill/SKILL.md', '# s\n'],
+    sref: ['.claude/skills', 'backend/old skill/references/R.md', '# r\n'],
+    sdoc: ['docs', 'skills/backend/old skill/verification.md', '# sv\n'],
+    agent: ['.claude/agents', 'meta/old-agent.md', '# a\n'],
+    adoc: ['docs', 'agents/meta/old-agent.md', '# ad\n'],
+    averif: ['docs', 'agents/meta/old-agent-verification.md', '# av\n'],
+  }
+  const f = {}
+  for (const [k, [root, rel, body]] of Object.entries(P)) {
+    f[k] = path.join(tgt, root, rel)
+    fs.mkdirSync(path.dirname(f[k]), { recursive: true })
+    fs.writeFileSync(f[k], body)
+  }
+  const m = {
+    version: 1, memoryManaged: true,
+    agents: [P.agent[1]], skills: [P.skill[1], P.sref[1]],
+    hashes: {
+      agents: { [P.agent[1]]: sha256(P.agent[2]) },
+      skills: { [P.skill[1]]: sha256(P.skill[2]), [P.sref[1]]: sha256(P.sref[2]) },
+    },
+  }
+  if (!opts.noDocsSection) {
+    m.docs = [P.sdoc[1], P.adoc[1], P.averif[1]]
+    m.hashes.docs = Object.fromEntries(['sdoc', 'adoc', 'averif'].map((k) => [P[k][1], sha256(P[k][2])]))
+  }
+  fs.writeFileSync(path.join(tgt, '.claude', '.install-manifest.json'), JSON.stringify(m))
+  for (const [rel, body] of Object.entries(opts.srcDocs || {})) {
+    const s = path.join(src, 'docs', rel)
+    fs.mkdirSync(path.dirname(s), { recursive: true })
+    fs.writeFileSync(s, body)
+  }
+  for (const k of opts.edit || []) fs.appendFileSync(f[k], '<!-- 사용자 수정 -->\n')
+  return { src, tgt, f }
+}
+const exs = (...ps) => ps.map((p) => fs.existsSync(p)).join(',')
+
+console.log('\n[정상] 폐기 스킬 + 원본 동일 짝 docs → 단위 전체 삭제 + 빈 디렉토리 정리 (2026-09-26)')
+{
+  const { src, tgt, f } = mkRetiredPair()
+  const { out } = run(tgt, src, tmp('glo'))
+  assert('(a) 폐기 스킬 본체·references 삭제', exs(f.skill, f.sref), 'false,false')
+  assert('(a) 짝 docs 삭제', fs.existsSync(f.sdoc), false)
+  assert('(a) 짝 docs 빈 디렉토리 정리', fs.existsSync(path.dirname(f.sdoc)), false)
+  assert('(a) docs 루트는 보존', fs.existsSync(path.join(tgt, 'docs')), true)
+  assert('(a) 삭제 로그에 짝 docs 경로', out.includes('docs/skills/backend/old skill/verification.md'), true)
+  assert('(d) 폐기 에이전트 + 짝 docs + verification 전부 삭제', exs(f.agent, f.adoc, f.averif), 'false,false,false')
+}
+
+console.log('\n[악성 방어] 짝 docs 만 수정본 → 본체·docs 단위 전체 보존 + 경고')
+{
+  const { src, tgt, f } = mkRetiredPair({ edit: ['sdoc', 'averif'] })
+  const { out } = run(tgt, src, tmp('glo'))
+  assert('(b) 수정된 짝 docs 보존', fs.existsSync(f.sdoc), true)
+  assert('(b) 원본 스킬 본체도 보존(검증 문서만 남는 고아 방지)', exs(f.skill, f.sref), 'true,true')
+  assert('(b) verification 수정 → 에이전트·에이전트 docs 도 보존', exs(f.agent, f.adoc, f.averif), 'true,true,true')
+  assert('(b) 짝 단위 보존 경고', /짝 단위/.test(out), true)
+}
+
+console.log('\n[악성 방어] 본체 수정본 → 원본 짝 docs 도 보존')
+{
+  const { src, tgt, f } = mkRetiredPair({ edit: ['skill', 'agent'] })
+  run(tgt, src, tmp('glo'))
+  assert('(c) 수정된 SKILL.md 보존', fs.existsSync(f.skill), true)
+  assert('(c) 원본 짝 docs 보존(문서 없는 스킬 방지)', fs.existsSync(f.sdoc), true)
+  assert('(c) 수정된 에이전트 → 짝 docs·verification 보존', exs(f.agent, f.adoc, f.averif), 'true,true,true')
+}
+{
+  // references 만 수정돼도 스킬 단위(짝 docs 포함) 전체 보존
+  const { src, tgt, f } = mkRetiredPair({ edit: ['sref'] })
+  run(tgt, src, tmp('glo'))
+  assert('(c) references 수정 → SKILL.md·짝 docs 보존', exs(f.skill, f.sdoc), 'true,true')
+}
+
+console.log('\n[경계] 구버전 매니페스트(docs 섹션 없음) → 레포 원본 바이트 동일 폴백 증명')
+{
+  const srcDocs = {
+    'skills/backend/old skill/verification.md': '# sv\n',
+    'agents/meta/old-agent.md': '# ad\n', 'agents/meta/old-agent-verification.md': '# av\n',
+  }
+  {
+    const { src, tgt, f } = mkRetiredPair({ noDocsSection: true, srcDocs })
+    run(tgt, src, tmp('glo'))
+    assert('(e) 소스 동일 docs → 본체와 함께 삭제', exs(f.skill, f.sdoc, f.agent, f.adoc, f.averif), 'false,false,false,false,false')
+  }
+  {
+    const { src, tgt, f } = mkRetiredPair({ noDocsSection: true, srcDocs, edit: ['sdoc'] })
+    run(tgt, src, tmp('glo'))
+    assert('(e) 소스와 다른 docs(수정본) → 본체·docs 보존', exs(f.skill, f.sdoc), 'true,true')
+  }
+  {
+    // 소스에도 매니페스트에도 없는 docs = 사용자 커스텀 → 보존만, 본체 삭제는 막지 않음
+    const { src, tgt, f } = mkRetiredPair({ noDocsSection: true })
+    run(tgt, src, tmp('glo'))
+    assert('(e) 증명 불가 docs 는 보존', exs(f.sdoc, f.adoc, f.averif), 'true,true,true')
+    assert('(e) 원본 본체는 삭제', exs(f.skill, f.agent), 'false,false')
+  }
+}
+
+console.log('\n[경계] 본체가 이미 없는 고아 docs — 소스에도 없고 매니페스트 증명 시에만 삭제')
+{
+  {
+    const { src, tgt, f } = mkRetiredPair()
+    for (const k of ['skill', 'sref', 'agent']) fs.unlinkSync(f[k])   // 이전 재설치가 본체만 지운 상태
+    run(tgt, src, tmp('glo'))
+    assert('(f) 증명된 고아 docs 삭제', exs(f.sdoc, f.adoc, f.averif), 'false,false,false')
+  }
+  {
+    const { src, tgt, f } = mkRetiredPair({ noDocsSection: true })
+    for (const k of ['skill', 'sref', 'agent']) fs.unlinkSync(f[k])
+    run(tgt, src, tmp('glo'))
+    assert('(f) 증명 없는 고아 docs 보존', exs(f.sdoc, f.adoc, f.averif), 'true,true,true')
+  }
+  {
+    const { src, tgt, f } = mkRetiredPair({ edit: ['sdoc'] })
+    for (const k of ['skill', 'sref', 'agent']) fs.unlinkSync(f[k])
+    run(tgt, src, tmp('glo'))
+    assert('(f) 수정된 고아 docs 보존', fs.existsSync(f.sdoc), true)
+  }
+  {
+    // 레포에 스킬·에이전트가 살아 있으면(현행 단위) 설치본에 본체가 없어도 docs 를 건드리지 않는다
+    const { src, tgt, f } = mkRetiredPair()
+    for (const k of ['skill', 'sref', 'agent']) fs.unlinkSync(f[k])
+    for (const [rel, body] of [['.claude/skills/backend/old skill/SKILL.md', '# s\n'], ['.claude/agents/meta/old-agent.md', '# a\n']]) {
+      fs.mkdirSync(path.dirname(path.join(src, rel)), { recursive: true })
+      fs.writeFileSync(path.join(src, rel), body)
+    }
+    run(tgt, src, tmp('glo'))
+    assert('(f) 레포 현행 단위의 docs 는 보존', exs(f.sdoc, f.adoc, f.averif), 'true,true,true')
+  }
+  {
+    // 짝이 아닌 docs(카테고리 README·템플릿)는 매니페스트 증명이 있어도 고아로 보지 않는다
+    const src = makeSource(tmp('src'))
+    const tgt = makeTarget(tmp('tgt'))
+    const rels = ['agents/meta/README.md', 'agents/README.md', 'skills/VERIFICATION_TEMPLATE.md', 'skills/backend/README.md']
+    for (const r of rels) { fs.mkdirSync(path.dirname(path.join(tgt, 'docs', r)), { recursive: true }); fs.writeFileSync(path.join(tgt, 'docs', r), '# x\n') }
+    fs.writeFileSync(path.join(tgt, '.claude', '.install-manifest.json'), JSON.stringify({
+      version: 1, memoryManaged: true, agents: [], skills: [], docs: rels,
+      hashes: { docs: Object.fromEntries(rels.map((r) => [r, sha256('# x\n')])) },
+    }))
+    run(tgt, src, tmp('glo'))
+    assert('(f) 짝이 아닌 docs(README·템플릿) 보존', rels.every((r) => fs.existsSync(path.join(tgt, 'docs', r))), true)
+  }
+}
+
+console.log('\n[악성 방어] 매니페스트 손상·부재 → 짝 docs 도 삭제 없음')
+{
+  {
+    const { src, tgt, f } = mkRetiredPair()
+    fs.writeFileSync(path.join(tgt, '.claude', '.install-manifest.json'), '{ broken')
+    run(tgt, src, tmp('glo'))
+    assert('손상 매니페스트 → 본체·docs 전부 보존', exs(f.skill, f.sdoc, f.agent, f.adoc), 'true,true,true,true')
+  }
+  {
+    const { src, tgt, f } = mkRetiredPair({ srcDocs: { 'skills/backend/old skill/verification.md': '# sv\n' } })
+    fs.unlinkSync(path.join(tgt, '.claude', '.install-manifest.json'))
+    run(tgt, src, tmp('glo'))
+    assert('매니페스트 없음 + 무플래그 → 소스 동일 docs 도 보존', exs(f.skill, f.sdoc), 'true,true')
+  }
+  {
+    const { src, tgt, f } = mkRetiredPair({ srcDocs: { 'skills/backend/old skill/verification.md': '# sv\n' } })
+    fs.unlinkSync(path.join(tgt, '.claude', '.install-manifest.json'))
+    run(tgt, src, tmp('glo'), ['--delete-orphans'])
+    assert('매니페스트 없음 + --delete-orphans → 소스 동일 docs 는 본체와 함께 삭제', exs(f.skill, f.sdoc), 'false,false')
+    assert('매니페스트 없음 + --delete-orphans → 증명 불가 에이전트 docs 보존', exs(f.adoc, f.averif), 'true,true')
+  }
+}
+
+console.log('\n[악성 방어] 경로 조작·symlink docs — 대상 밖은 절대 삭제하지 않음')
+{
+  {
+    // 매니페스트 docs 에 ../ 항목 + 해시 일치 — 대상 밖 파일 보존
+    const { src, tgt, f } = mkRetiredPair()
+    const outside = path.join(tgt, 'outside.md'); fs.writeFileSync(outside, '# out\n')
+    const mfp = path.join(tgt, '.claude', '.install-manifest.json')
+    const m = JSON.parse(fs.readFileSync(mfp, 'utf8'))
+    m.docs.push('skills/backend/old skill/../../../outside.md')
+    m.hashes.docs['skills/backend/old skill/../../../outside.md'] = sha256('# out\n')
+    fs.writeFileSync(mfp, JSON.stringify(m))
+    run(tgt, src, tmp('glo'))
+    assert('../ 매니페스트 항목 → 대상 밖 파일 보존', fs.existsSync(outside), true)
+    assert('../ 항목이 있어도 정상 짝 docs 는 정리', fs.existsSync(f.sdoc), false)
+  }
+  {
+    // symlink 파일: 해시가 링크 대상 내용과 일치해도 링크·대상 모두 보존
+    const { src, tgt, f } = mkRetiredPair()
+    const ext = tmp('ext'); const extFile = path.join(ext, 'secret.md'); fs.writeFileSync(extFile, '# secret\n')
+    const link = path.join(path.dirname(f.sdoc), 'link.md')
+    fs.symlinkSync(extFile, link)
+    const mfp = path.join(tgt, '.claude', '.install-manifest.json')
+    const m = JSON.parse(fs.readFileSync(mfp, 'utf8'))
+    m.docs.push('skills/backend/old skill/link.md'); m.hashes.docs['skills/backend/old skill/link.md'] = sha256('# secret\n')
+    fs.writeFileSync(mfp, JSON.stringify(m))
+    run(tgt, src, tmp('glo'))
+    assert('symlink docs 대상 파일 보존', fs.existsSync(extFile), true)
+    assert('symlink docs 링크 자체도 보존(증명 불가)', !!fs.lstatSync(link, { throwIfNoEntry: false }), true)
+  }
+  {
+    // symlink 디렉토리: docs/skills/evil → 대상 밖. 매니페스트가 그 안 파일을 증명해도 따라가지 않음
+    const { src, tgt } = mkRetiredPair()
+    const ext = tmp('ext'); fs.mkdirSync(path.join(ext, 'x'), { recursive: true })
+    const extFile = path.join(ext, 'x', 'verification.md'); fs.writeFileSync(extFile, '# ev\n')
+    fs.symlinkSync(ext, path.join(tgt, 'docs', 'skills', 'evil'))
+    const mfp = path.join(tgt, '.claude', '.install-manifest.json')
+    const m = JSON.parse(fs.readFileSync(mfp, 'utf8'))
+    m.docs.push('skills/evil/x/verification.md'); m.hashes.docs['skills/evil/x/verification.md'] = sha256('# ev\n')
+    fs.writeFileSync(mfp, JSON.stringify(m))
+    run(tgt, src, tmp('glo'))
+    assert('symlink 디렉토리 밖 파일 보존', fs.existsSync(extFile), true)
+  }
+  {
+    // docs 루트 자체가 대상 밖을 가리키는 symlink → 어떤 docs 도 삭제하지 않음
+    const { src, tgt, f } = mkRetiredPair()
+    const ext = tmp('ext')
+    fs.renameSync(path.join(tgt, 'docs'), path.join(ext, 'docs'))
+    fs.symlinkSync(path.join(ext, 'docs'), path.join(tgt, 'docs'))
+    run(tgt, src, tmp('glo'))
+    assert('docs 루트 symlink → 밖의 docs 보존', fs.existsSync(path.join(ext, 'docs', 'skills', 'backend', 'old skill', 'verification.md')), true)
+    assert('docs 루트 symlink 여도 본체는 정리', fs.existsSync(f.skill), false)
+  }
+  {
+    // 빈 디렉토리 정리는 지운 파일의 상위 경로만 — 사용자의 무관한 빈 docs 폴더는 보존
+    const { src, tgt } = mkRetiredPair()
+    const userEmpty = path.join(tgt, 'docs', 'my-empty'); fs.mkdirSync(userEmpty)
+    run(tgt, src, tmp('glo'))
+    assert('무관한 빈 docs 폴더 보존', fs.existsSync(userEmpty), true)
+  }
+}
+
 // ── 결과 ────────────────────────────────────────────────────────────────
 console.log(`\n═══ 결과: ${passed} PASS / ${failed} FAIL ═══`)
 process.exit(failed > 0 ? 1 : 0)

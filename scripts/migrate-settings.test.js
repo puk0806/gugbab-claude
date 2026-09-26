@@ -57,7 +57,8 @@ test('정상: 두 훅만 SessionStart 로 이관, 인자(--strict) 보존, 사�
   assert.deepStrictEqual(cmds(s, 'InstructionsLoaded'), ['node ./my-own-il-hook.js'], '사용자 IL 훅이 삭제·이동됨');
   assert.deepStrictEqual(s.permissions, { allow: ['Read', 'Bash(make*)'] });
   assert.deepStrictEqual(s.env, { MY_VAR: '1' });
-  assert.deepStrictEqual(cmds(s, 'Stop'), cmds(legacy(), 'Stop'));
+  // 다른 훅은 이관하지 않는다 — 무따옴표 우리 훅 배선의 따옴표 교정(감사 B)만 적용
+  assert.deepStrictEqual(cmds(s, 'Stop'), ['node "$CLAUDE_PROJECT_DIR"/.claude/hooks/cc-notify.js']);
   assert.strictEqual(fs.readFileSync(`${f}.bak`, 'utf8'), orig, '.bak 이 원본과 다름');
   assert.match(r.stdout, /InstructionsLoaded → SessionStart/);
   fs.rmSync(dir, { recursive: true, force: true });
@@ -188,12 +189,14 @@ test('경계: 인자 누락은 exit 1', () => {
   assert.strictEqual(r.status, 1);
 });
 
-test('따옴표: 무따옴표 $CLAUDE_PROJECT_DIR 배선이 남아 있으면 경고(수정은 안 함), 따옴표·exec 형식이면 경고 없음', () => {
+test('따옴표: 우리 훅 배선(.claude/hooks/)의 무따옴표 $CLAUDE_PROJECT_DIR 는 교정, statusLine·사용자 명령은 경고만 (2026-09-26 감사 B)', () => {
   const { dir, f } = setup({ hooks: { Stop: [{ hooks: [OLD('cc-notify.js')] }] }, statusLine: { type: 'command', command: 'bash $CLAUDE_PROJECT_DIR/.claude/hooks/statusline.sh' } });
-  const before = fs.readFileSync(f, 'utf8');
   const r = run(f);
-  assert.match(r.stdout, /⚠.*따옴표.*2개/s);
-  assert.strictEqual(fs.readFileSync(f, 'utf8'), before, '따옴표 경고 경로가 파일을 수정함');
+  const s = JSON.parse(fs.readFileSync(f, 'utf8'));
+  assert.deepStrictEqual(cmds(s, 'Stop'), ['node "$CLAUDE_PROJECT_DIR"/.claude/hooks/cc-notify.js']);
+  assert.strictEqual(s.statusLine.command, 'bash $CLAUDE_PROJECT_DIR/.claude/hooks/statusline.sh', 'statusLine 이 수정됨');
+  assert.match(r.stdout, /⚠.*따옴표.*1개/s);
+  assert.ok(fs.existsSync(`${f}.bak`), '교정인데 .bak 없음');
   fs.rmSync(dir, { recursive: true, force: true });
 
   const ok = setup({ hooks: { Stop: [{ hooks: [
@@ -204,4 +207,116 @@ test('따옴표: 무따옴표 $CLAUDE_PROJECT_DIR 배선이 남아 있으면 경
   const r2 = run(ok.f);
   assert.doesNotMatch(r2.stdout, /따옴표/);
   fs.rmSync(ok.dir, { recursive: true, force: true });
+});
+
+// ── 감사 B (2026-09-26): 보존(N) 경로 잔재 — 따옴표 교정 + 설치본에 파일 없는 폐지 훅 배선 제거 ──
+const H2 = (c) => ({ type: 'command', command: c });
+const withHooks = (s0, hookFiles = []) => {
+  const x = setup(s0);
+  const hd = path.join(x.dir, '.claude', 'hooks');
+  fs.mkdirSync(hd, { recursive: true });
+  for (const h of hookFiles) fs.writeFileSync(path.join(hd, h), '// hook\n');
+  return x;
+};
+
+test('B 정상: 따옴표 교정 — $VAR·${VAR} 두 형태, 인자 보존, 이미 따옴표/exec 형식은 불변', () => {
+  const s0 = { hooks: { PreToolUse: [{ matcher: 'Bash', hooks: [
+    H2('node $CLAUDE_PROJECT_DIR/.claude/hooks/bash-guard.js'),
+    H2('node ${CLAUDE_PROJECT_DIR}/.claude/hooks/deliverable-guard.js --no-readme'),
+    H2('node "$CLAUDE_PROJECT_DIR"/.claude/hooks/auto-approve.js'),
+    { type: 'command', command: '${CLAUDE_PROJECT_DIR}/.claude/hooks/y.sh', args: [] },
+  ] }] } };
+  const { dir, f } = withHooks(s0, ['bash-guard.js', 'deliverable-guard.js', 'auto-approve.js']);
+  assert.strictEqual(run(f).status, 0);
+  const c = cmds(JSON.parse(fs.readFileSync(f, 'utf8')), 'PreToolUse');
+  assert.deepStrictEqual(c, [
+    'node "$CLAUDE_PROJECT_DIR"/.claude/hooks/bash-guard.js',
+    'node "${CLAUDE_PROJECT_DIR}"/.claude/hooks/deliverable-guard.js --no-readme',
+    'node "$CLAUDE_PROJECT_DIR"/.claude/hooks/auto-approve.js',
+    '${CLAUDE_PROJECT_DIR}/.claude/hooks/y.sh',
+  ]);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('B 악성: 따옴표 교정은 우리 훅 경로·단순 명령만 — 사용자 명령·중첩 따옴표·이스케이프는 불변(경고만)', () => {
+  const user = [
+    'node $CLAUDE_PROJECT_DIR/scripts/my-hook.js',                          // 사용자 자체 경로
+    'bash -c "node $CLAUDE_PROJECT_DIR/.claude/hooks/cc-notify.js"',        // 중첩 따옴표 — 교정하면 오히려 분할됨
+    "sh -c 'node $CLAUDE_PROJECT_DIR/.claude/hooks/cc-notify.js'",
+    'echo \\$CLAUDE_PROJECT_DIR/.claude/hooks/cc-notify.js',                // 이스케이프(리터럴)
+    'node $CLAUDE_PROJECT_DIRX/.claude/hooks/cc-notify.js',                 // 다른 변수명
+  ];
+  const { dir, f } = withHooks({ hooks: { Stop: [{ hooks: user.map(H2) }] } }, ['cc-notify.js']);
+  const before = fs.readFileSync(f, 'utf8');
+  const r = run(f);
+  assert.strictEqual(fs.readFileSync(f, 'utf8'), before, '사용자 명령이 수정됨');
+  assert.ok(!fs.existsSync(`${f}.bak`), '변경 없음인데 백업 생성');
+  assert.match(r.stdout, /⚠.*따옴표/s);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('B 정상: 설치본에 파일 없는 폐지 훅(memory-stop-guard 등) 배선 제거 — 빈 그룹·이벤트 정리, 나머지 보존', () => {
+  const s0 = { permissions: { allow: ['Read'] }, hooks: {
+    Stop: [{ hooks: [OLD('deliverable-guard.js'), OLD('memory-stop-guard.js'), OLD('session-export.js')] }],
+    SessionStart: [{ hooks: [H2('node "$CLAUDE_PROJECT_DIR"/.claude/hooks/session-handoff-inject.js')] }],
+    UserPromptSubmit: [{ hooks: [OLD('confirmation-gate.cjs')] }, { hooks: [H2('node ./mine.js')] }],
+  } };
+  const { dir, f } = withHooks(s0, ['deliverable-guard.js', 'session-export.js']);
+  const r = run(f);
+  assert.strictEqual(r.status, 0);
+  const s = JSON.parse(fs.readFileSync(f, 'utf8'));
+  assert.deepStrictEqual(cmds(s, 'Stop'), ['node "$CLAUDE_PROJECT_DIR"/.claude/hooks/deliverable-guard.js', 'node "$CLAUDE_PROJECT_DIR"/.claude/hooks/session-export.js']);
+  assert.strictEqual(s.hooks.SessionStart, undefined, '비워진 이벤트가 남음');
+  assert.deepStrictEqual(s.hooks.UserPromptSubmit, [{ hooks: [H2('node ./mine.js')] }], '사용자 그룹 변경 또는 빈 그룹 잔존');
+  assert.deepStrictEqual(s.permissions, { allow: ['Read'] });
+  assert.match(r.stdout, /폐지 훅 배선 제거.*memory-stop-guard/s);
+  assert.ok(fs.existsSync(`${f}.bak`));
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('B 악성: 파일이 설치본에 있거나·사용자 자체 이름·위장 이름·복합 명령이면 배선을 절대 제거하지 않는다', () => {
+  const keep = [
+    'node "$CLAUDE_PROJECT_DIR"/.claude/hooks/memory-stop-guard.js',        // 파일 존재 → 보존
+    'node "$CLAUDE_PROJECT_DIR"/.claude/hooks/my-team-guard.js',            // 우리 레포에 없던 이름(파일 없음)
+    'node "$CLAUDE_PROJECT_DIR"/.claude/hooks/xreadme-guard.js',            // 위장 이름
+    'node "$CLAUDE_PROJECT_DIR"/.claude/hooks/readme-guard.js.evil',
+    'node ./tools/readme-guard.js',                                         // 다른 경로
+    'node "$CLAUDE_PROJECT_DIR"/.claude/hooks/readme-guard.js && node ./mine.js', // 복합 — 사용자 부분 유실 방지
+  ];
+  const { dir, f } = withHooks({ hooks: { Stop: [{ hooks: keep.map(H2) }] } }, ['memory-stop-guard.js']);
+  const before = fs.readFileSync(f, 'utf8');
+  assert.strictEqual(run(f).status, 0);
+  assert.strictEqual(fs.readFileSync(f, 'utf8'), before, '보존해야 할 배선이 제거·변경됨');
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('B 경계: 교정+제거 후 2회차 실행은 바이트 동일·추가 백업 없음(멱등), 깨진 JSON 은 무수정', () => {
+  const s0 = { hooks: { Stop: [{ hooks: [OLD('memory-stop-guard.js'), OLD('cc-notify.js')] }] } };
+  const { dir, f } = withHooks(s0, ['cc-notify.js']);
+  run(f);
+  const once = fs.readFileSync(f, 'utf8');
+  run(f);
+  assert.strictEqual(fs.readFileSync(f, 'utf8'), once);
+  assert.ok(!fs.existsSync(`${f}.bak.1`), '2회차 불필요한 백업');
+  fs.rmSync(dir, { recursive: true, force: true });
+
+  const bad = withHooks(null);
+  fs.writeFileSync(bad.f, '{ "hooks": { "Stop": [ node $CLAUDE_PROJECT_DIR/.claude/hooks/memory-stop-guard.js');
+  const b0 = fs.readFileSync(bad.f, 'utf8');
+  assert.strictEqual(run(bad.f).status, 0);
+  assert.strictEqual(fs.readFileSync(bad.f, 'utf8'), b0);
+  fs.rmSync(bad.dir, { recursive: true, force: true });
+});
+
+test('B 악성: symlink settings 는 교정·제거 대상이어도 링크 대상에 쓰지 않는다', () => {
+  const { dir, f } = withHooks(null);
+  const outside = path.join(dir, 'outside.json');
+  fs.writeFileSync(outside, JSON.stringify({ hooks: { Stop: [{ hooks: [OLD('memory-stop-guard.js')] }] } }));
+  fs.symlinkSync(outside, f);
+  const before = fs.readFileSync(outside, 'utf8');
+  const r = run(f);
+  assert.strictEqual(r.status, 0);
+  assert.strictEqual(fs.readFileSync(outside, 'utf8'), before);
+  assert.match(r.stdout, /⚠.*symlink/);
+  fs.rmSync(dir, { recursive: true, force: true });
 });
