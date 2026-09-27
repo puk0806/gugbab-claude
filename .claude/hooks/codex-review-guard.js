@@ -137,6 +137,61 @@ function getMarkerPath(repoRoot) {
   return path.join(repoRoot, '.claude', '.codex-review-done');
 }
 
+// ── codex 사용 불가 마커 (계정/모델 400 등 환경 오류) ──────────────────
+// codex-review.md 워크플로우에서 "계정이 설정 모델을 지원하지 않음"(400) 등 Claude 가 해소할 수
+// 없는 환경 오류를 만나면 .claude/.codex-unavailable 에 감지 시각 + config.toml 해시 + codex
+// 버전을 기록한다. 이 훅은 마커가 있고 현재 config·버전이 기록값과 "그대로"일 때만 차단 대신
+// 세션당 1회 안내 후 통과한다. config 나 codex 버전이 바뀌면(=사용자가 조치했을 가능성) 마커는
+// 자동 무효화되어 리뷰 요구가 재개된다.
+function getUnavailableMarkerPath(repoRoot) {
+  return path.join(repoRoot, '.claude', '.codex-unavailable');
+}
+function getCodexHome() {
+  return process.env.CODEX_HOME || path.join(os.homedir(), '.codex');
+}
+function getCodexConfigPath() {
+  return path.join(getCodexHome(), 'config.toml');
+}
+// 파일 없음/읽기 실패는 리터럴 문자열 'MISSING' — 마커 기록 시점(코덱스 rule 의 node -e 스니펫)과
+// 동일한 상수를 써야 "config 없음" 상태끼리도 정확히 비교된다.
+function hashCodexConfig() {
+  try {
+    const content = fs.readFileSync(getCodexConfigPath(), 'utf8');
+    return crypto.createHash('sha256').update(content).digest('hex');
+  } catch { return 'MISSING'; }
+}
+function getCodexVersionString() {
+  try { return execSync('codex --version', { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'], timeout: 15000 }).trim(); }
+  catch { return null; }
+}
+// 마커 검증: 형식이 깨졌거나(JSON 파싱 실패·필드 누락) 심볼릭 링크로 위장됐거나(lstat.isFile()===false),
+// codex --version 자체가 실패해 판단 불가능하면 전부 "무효(=마커 없는 것처럼)"로 취급 — fail-closed.
+function isUnavailableMarkerValid(repoRoot) {
+  const marker = getUnavailableMarkerPath(repoRoot);
+  let st;
+  try { st = fs.lstatSync(marker); } catch { return false; }
+  if (!st.isFile()) return false; // 심볼릭 링크·디렉토리 등 위장 무시
+  let data;
+  try { data = JSON.parse(fs.readFileSync(marker, 'utf8')); } catch { return false; }
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return false;
+  if (typeof data.configHash !== 'string' || typeof data.codexVersion !== 'string') return false;
+  const curVersion = getCodexVersionString();
+  if (curVersion === null) return false; // 버전 확인 불가 → 판단 불가 → 마커 무효(정상 리뷰 요구 흐름)
+  return data.configHash === hashCodexConfig() && data.codexVersion === curVersion;
+}
+// "이미 안내함" 세션당 1회 상태 — stop_hook_active 루프 방지용 stateFile 과는 별개 목적(사유가 다름)이라
+// 별도 파일에 기록한다. session_id 는 해시로만 사용(경로 순회 차단), 동일 패턴은 stateFile() 참고.
+function unavailStateFile(sessionId) {
+  const h = crypto.createHash('sha256').update(String(sessionId)).digest('hex').slice(0, 32);
+  return path.join(os.tmpdir(), `claude-codexunavail-${h}.json`);
+}
+function wasUnavailableNotified(sessionId) {
+  try { return fs.existsSync(unavailStateFile(sessionId)); } catch { return false; }
+}
+function markUnavailableNotified(sessionId) {
+  try { fs.writeFileSync(unavailStateFile(sessionId), JSON.stringify({ at: Date.now() })); } catch {}
+}
+
 function hasCodeChangesNewerThan(repoRoot, markerMtime) {
   const entries = getChangedEntries(repoRoot);
   if (entries === null) return true; // 확인 불가 → 마커 이후 변경 있음으로 간주(fail-closed)
@@ -185,6 +240,20 @@ if (fs.existsSync(marker)) {
 // 미로그인: `codex login` 은 대화형(브라우저) 로그인이라 Claude 가 해소할 수 없다 → 차단하면 8회 연속 루프.
 // 규칙 codex-review.md "3가지 중 하나라도 실패 → 조용히 건너뜀" 과 동일하게 통과.
 if (!isLoggedIn()) skip('codex 미로그인');
+
+// codex 사용 불가 마커 — config·버전이 감지 시점과 그대로면 차단 대신 세션당 1회 안내 후 통과
+if (isUnavailableMarkerValid(repoRoot)) {
+  const sid = typeof input.session_id === 'string' && input.session_id ? input.session_id : null;
+  if (sid && wasUnavailableNotified(sid)) skip('codex 사용 불가 마커 확인 (이미 안내함)');
+  if (sid) markUnavailableNotified(sid);
+  passWithWarning([
+    '⚠ codex-review-guard: Codex 리뷰가 현재 계정·모델 조합에서 사용 불가로 감지되었습니다.',
+    `  (${getUnavailableMarkerPath(repoRoot)} 마커 확인 — ~/.codex/config.toml 의 model 설정을 확인하세요)`,
+    '  config.toml 의 model 값을 ChatGPT 계정이 지원하는 모델로 변경하면, 다음 실행부터 마커가',
+    '  자동 무효화되어 리뷰가 다시 요구됩니다. (config·codex 버전이 그대로인 동안만 통과)',
+    '  이 프로젝트 영구 제외: git config codex.skipReview true',
+  ].join('\n'));
+}
 
 const statusFailed = getChangedEntries(repoRoot) === null;
 const sig = statusFailed ? 'review-required:status-failed' : 'review-required';

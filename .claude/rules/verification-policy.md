@@ -51,6 +51,18 @@ Write 또는 Edit 도구로 다음을 수정한다:
 - 섹션 6 (검증 결과 요약) 최종 판정 변경
 
 **일괄 치환(sed 등)으로 여러 파일의 status를 한 번에 바꾸는 것은 금지.**
+
+---
+
+## 재검증(검증일 갱신) 시 함께 갱신할 위치
+
+정기 재검증·freshness 재검증으로 검증일을 바꿀 때는 **아래를 한 번에 모두** 갱신한다 (Edit 도구):
+- SKILL.md 줄 시작 인용 `> 검증일: YYYY-MM-DD`
+- verification.md 메타 표 `| 검증일 | YYYY-MM-DD |` (이전 날짜는 `(재검증, 이전 YYYY-MM-DD)`로 병기 가능)
+- verification.md frontmatter `date:`
+- verification.md 섹션 8 변경 이력에 "재검증" 문구가 들어간 행 추가
+
+`staleness-check` 훅은 이 신뢰 소스들의 최신 날짜를 검증일로 본다. 체크리스트·백틱 안 예시 날짜는 무시되므로 검증일로 쓰지 않는다.
 각 스킬별로 1~4단계를 개별 수행해야 한다.
 
 ---
@@ -67,7 +79,7 @@ Write 또는 Edit 도구로 다음을 수정한다:
 위 *실사용 필수 카테고리*에 해당하지 않는 스킬은 Claude 자체 content test(skill-tester가 SKILL.md 기반 실전 질문 답변 검증)만으로 APPROVED 전환이 가능하다.
 
 대표 예시:
-- 라이브러리 사용법 스킬 (dayjs, react-virtuoso 등) — content test로 충분
+- 라이브러리 사용법 스킬 (dayjs, swiper 등) — content test로 충분
 - API 패턴 스킬 (REST 설계 등) — content test로 충분
 - 개념·이론 정리 스킬 (DDD, 디자인 패턴 등) — content test로 충분
 

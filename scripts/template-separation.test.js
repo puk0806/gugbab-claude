@@ -198,7 +198,11 @@ test('rust-axum: java·python 스킬 제외 + dream·프론트 아키텍처·프
   try {
     install('4', dir);
     const s = skillDirs(dir);
-    assert.ok(s.includes('backend/axum') && s.includes('backend/tokio'), 'rust 코어 스킬 누락');
+    assert.ok(s.includes('backend/axum') && s.includes('backend/sqlx'), 'rust 코어 스킬 누락');
+    // 2026-09-26 스킬 정리로 삭제된 rust 스킬 — 재등장(소스 잔재·설치 누수) 차단
+    for (const gone of ['tokio', 'serde', 'thiserror', 'tracing', 'design-patterns-rust', 'dependency-injection', 'repository-pattern', 'custom-middleware']) {
+      assert.ok(!s.includes(`backend/${gone}`), `삭제된 스킬이 설치됨: backend/${gone}`);
+    }
     assert.ok(!s.includes('backend/mybatis-mapper-patterns') && !s.includes('backend/ehcache-2-legacy'),
       'java 스킬이 rust 템플릿에 설치됨');
     // 2026-09-11 백로그 2: java 필터(is_java_skill)만 걸러 python 10종·Java 계열 redis-redisson-4 가 rust 로 새고 있었다

@@ -261,6 +261,169 @@ console.log('\n── git status 실패 — 변경 있음으로 간주(fail-clos
   for (const d of [bin, tmp]) fs.rmSync(d, { recursive: true, force: true })
 }
 
+console.log('\n── codex 사용 불가 마커 (.claude/.codex-unavailable) — 계정/모델 400 등 환경 오류 ──')
+{
+  const { execSync } = require('child_process')
+  const crypto = require('crypto')
+
+  // codex 스텁: login status / --version 을 인자별로 구분 응답
+  const makeCodexBin = (version) => {
+    const bin = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-unavail-bin-'))
+    fs.writeFileSync(path.join(bin, 'codex'),
+      '#!/bin/sh\n' +
+      'if [ "$1" = "login" ] && [ "$2" = "status" ]; then echo "Logged in using ChatGPT"; exit 0; fi\n' +
+      `if [ "$1" = "--version" ]; then echo "${version}"; exit 0; fi\n`)
+    fs.chmodSync(path.join(bin, 'codex'), 0o755)
+    return bin
+  }
+  const VERSION = 'codex-cli 0.146.0'
+  const bin = makeCodexBin(VERSION)
+
+  const mkCodexHome = (configBody) => {
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-codexhome-'))
+    fs.writeFileSync(path.join(home, 'config.toml'), configBody)
+    return home
+  }
+  const configHashOf = (body) => crypto.createHash('sha256').update(body).digest('hex')
+  const CONFIG_A = 'model = "gpt-5.4"\n'
+  const CONFIG_B = 'model = "gpt-5.4-turbo"\n'
+
+  const mkRepo = () => {
+    const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-unavail-repo-'))
+    execSync('git init -q', { cwd: repo })
+    fs.mkdirSync(path.join(repo, '.claude'), { recursive: true })
+    fs.writeFileSync(path.join(repo, '.claude', 'settings.json'), JSON.stringify({ enabledPlugins: { 'codex@openai-codex': true } }))
+    fs.writeFileSync(path.join(repo, 'app.js'), 'x\n')
+    return repo
+  }
+  const writeMarker = (repo, { configHash, codexVersion } = {}) => {
+    fs.writeFileSync(path.join(repo, '.claude', '.codex-unavailable'), JSON.stringify({
+      detectedAt: new Date().toISOString(),
+      configHash: configHash === undefined ? configHashOf(CONFIG_A) : configHash,
+      codexVersion: codexVersion === undefined ? VERSION : codexVersion,
+    }))
+  }
+  const runStop = (repo, home, extra, tmp) => {
+    const r = spawnSync('node', [HOOK], {
+      input: JSON.stringify({ hook_event_name: 'Stop', ...extra }), encoding: 'utf8', timeout: 20000, cwd: repo,
+      env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, CODEX_HOME: home, TMPDIR: tmp || fs.mkdtempSync(path.join(os.tmpdir(), 'crg-unavail-tmp-')) },
+    })
+    let j = null; try { j = r.stdout.trim() ? JSON.parse(r.stdout) : null } catch { j = 'INVALID' }
+    return { ...r, j }
+  }
+  const check = (desc, cond, r) => {
+    console.log(`  ${cond ? '✅' : '❌'} ${desc} → ${cond ? 'PASS' : `FAIL (exit ${r.status}, stdout: ${(r.stdout || '').slice(0, 120)}, stderr: ${r.stderr.slice(0, 100)})`}`)
+    cond ? passed++ : failed++
+  }
+
+  // 1) 마커 + config·버전 일치 → 세션 첫 Stop: exit 0 + systemMessage 안내(차단 아님)
+  {
+    const repo = mkRepo(); const home = mkCodexHome(CONFIG_A)
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-unavail-tmp-')) // 세션 상태 파일을 두 호출이 공유해야 dedup 검증 가능
+    writeMarker(repo)
+    const r = runStop(repo, home, { session_id: 'u1', stop_hook_active: false }, tmp)
+    check('마커 유효(config·버전 일치) → exit 0 + systemMessage 안내(차단 없음)',
+      r.status === 0 && r.j && typeof r.j.systemMessage === 'string' && r.j.systemMessage.includes('codex-review-guard') && !('decision' in r.j), r)
+    // 2) 같은 세션 재호출 → 조용히 통과(중복 안내 금지)
+    const r2 = runStop(repo, home, { session_id: 'u1', stop_hook_active: false }, tmp)
+    check('같은 세션 재호출 → 조용히 통과(exit 0, 안내 반복 없음)', r2.status === 0 && (!r2.j || typeof r2.j.systemMessage !== 'string'), r2)
+    fs.rmSync(repo, { recursive: true, force: true }); fs.rmSync(home, { recursive: true, force: true }); fs.rmSync(tmp, { recursive: true, force: true })
+  }
+
+  // 3) config 변경(모델 값 변경) → 마커 무효화 → 다시 차단
+  {
+    const repo = mkRepo(); const home = mkCodexHome(CONFIG_B) // 마커는 CONFIG_A 해시로 기록됨
+    writeMarker(repo)
+    const r = runStop(repo, home, { session_id: 'u2', stop_hook_active: false })
+    check('config.toml 변경 → 마커 무효 → 다시 차단(exit 2)', r.status === 2 && r.stderr.includes('적대적 리뷰 필요'), r)
+    fs.rmSync(repo, { recursive: true, force: true }); fs.rmSync(home, { recursive: true, force: true })
+  }
+
+  // 4) codex 버전 변경 → 마커 무효화 → 다시 차단
+  {
+    const repo = mkRepo(); const home = mkCodexHome(CONFIG_A)
+    writeMarker(repo, { codexVersion: 'codex-cli 0.999.0' })
+    const r = runStop(repo, home, { session_id: 'u3', stop_hook_active: false })
+    check('codex 버전 변경 → 마커 무효 → 다시 차단(exit 2)', r.status === 2 && r.stderr.includes('적대적 리뷰 필요'), r)
+    fs.rmSync(repo, { recursive: true, force: true }); fs.rmSync(home, { recursive: true, force: true })
+  }
+
+  // 5) 마커 형식 깨짐(JSON 파싱 실패) → 무시하고 기존 차단 동작
+  {
+    const repo = mkRepo(); const home = mkCodexHome(CONFIG_A)
+    fs.writeFileSync(path.join(repo, '.claude', '.codex-unavailable'), '{not valid json')
+    const r = runStop(repo, home, { session_id: 'u4', stop_hook_active: false })
+    check('마커 JSON 파싱 실패 → 무시 → 기존 차단(exit 2)', r.status === 2 && r.stderr.includes('적대적 리뷰 필요'), r)
+    fs.rmSync(repo, { recursive: true, force: true }); fs.rmSync(home, { recursive: true, force: true })
+  }
+
+  // 6) 마커 필드 누락(configHash 없음) → 무시하고 기존 차단 동작
+  {
+    const repo = mkRepo(); const home = mkCodexHome(CONFIG_A)
+    fs.writeFileSync(path.join(repo, '.claude', '.codex-unavailable'), JSON.stringify({ detectedAt: 'x' }))
+    const r = runStop(repo, home, { session_id: 'u5', stop_hook_active: false })
+    check('마커 필드 누락 → 무시 → 기존 차단(exit 2)', r.status === 2 && r.stderr.includes('적대적 리뷰 필요'), r)
+    fs.rmSync(repo, { recursive: true, force: true }); fs.rmSync(home, { recursive: true, force: true })
+  }
+
+  // 7) 마커가 심볼릭 링크로 위장(다른 경로의 유효한 마커를 가리킴) → 무시하고 기존 차단 동작
+  {
+    const repo = mkRepo(); const home = mkCodexHome(CONFIG_A)
+    const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-unavail-outside-'))
+    const realMarker = path.join(outside, 'real-marker.json')
+    fs.writeFileSync(realMarker, JSON.stringify({ configHash: configHashOf(CONFIG_A), codexVersion: VERSION }))
+    fs.symlinkSync(realMarker, path.join(repo, '.claude', '.codex-unavailable'))
+    const r = runStop(repo, home, { session_id: 'u6', stop_hook_active: false })
+    check('마커 심볼릭 링크 위장 → 무시(lstat.isFile()===false) → 기존 차단(exit 2)', r.status === 2 && r.stderr.includes('적대적 리뷰 필요'), r)
+    fs.rmSync(repo, { recursive: true, force: true }); fs.rmSync(home, { recursive: true, force: true }); fs.rmSync(outside, { recursive: true, force: true })
+  }
+
+  // 8) 마커 없음(기본 상태) → 기존 차단 동작 그대로
+  {
+    const repo = mkRepo(); const home = mkCodexHome(CONFIG_A)
+    const r = runStop(repo, home, { session_id: 'u7', stop_hook_active: false })
+    check('마커 없음 → 기존 차단 동작(exit 2)', r.status === 2 && r.stderr.includes('적대적 리뷰 필요'), r)
+    fs.rmSync(repo, { recursive: true, force: true }); fs.rmSync(home, { recursive: true, force: true })
+  }
+
+  // 9) 미로그인 + 마커 유효 → 미로그인 경로가 우선(조용히 통과, 마커 관련 안내 없음)
+  {
+    const repo = mkRepo(); const home = mkCodexHome(CONFIG_A)
+    writeMarker(repo)
+    const noLoginBin = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-unavail-nologin-'))
+    fs.writeFileSync(path.join(noLoginBin, 'codex'), '#!/bin/sh\necho "Not logged in"\nexit 1\n')
+    fs.chmodSync(path.join(noLoginBin, 'codex'), 0o755)
+    const r = spawnSync('node', [HOOK], {
+      input: JSON.stringify({ hook_event_name: 'Stop', session_id: 'u8', stop_hook_active: false }), encoding: 'utf8', timeout: 20000, cwd: repo,
+      env: { ...process.env, PATH: `${noLoginBin}:${process.env.PATH}`, CODEX_HOME: home },
+    })
+    const pass = r.status === 0 && (r.stdout || '').trim() === '' && !r.stderr.includes('사용 불가')
+    console.log(`  ${pass ? '✅' : '❌'} 미로그인 + 마커 유효 → 미로그인 경로 우선(조용히 통과, 마커 안내 없음) → ${pass ? 'PASS' : `FAIL (exit ${r.status}, stdout: ${(r.stdout || '').slice(0, 80)})`}`)
+    pass ? passed++ : failed++
+    fs.rmSync(repo, { recursive: true, force: true }); fs.rmSync(home, { recursive: true, force: true }); fs.rmSync(noLoginBin, { recursive: true, force: true })
+  }
+
+  // 10) codex --version 자체가 실패(구버전 등) → 판단 불가 → 마커 무효 취급 → 기존 차단
+  {
+    const repo = mkRepo(); const home = mkCodexHome(CONFIG_A)
+    writeMarker(repo)
+    const noVersionBin = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-unavail-noversion-'))
+    fs.writeFileSync(path.join(noVersionBin, 'codex'),
+      '#!/bin/sh\nif [ "$1" = "login" ] && [ "$2" = "status" ]; then echo "Logged in using ChatGPT"; exit 0; fi\nexit 1\n')
+    fs.chmodSync(path.join(noVersionBin, 'codex'), 0o755)
+    const r = spawnSync('node', [HOOK], {
+      input: JSON.stringify({ hook_event_name: 'Stop', session_id: 'u9', stop_hook_active: false }), encoding: 'utf8', timeout: 20000, cwd: repo,
+      env: { ...process.env, PATH: `${noVersionBin}:${process.env.PATH}`, CODEX_HOME: home },
+    })
+    const pass = r.status === 2 && r.stderr.includes('적대적 리뷰 필요')
+    console.log(`  ${pass ? '✅' : '❌'} codex --version 실패 → 판단 불가 → 마커 무효 → 기존 차단(exit 2) → ${pass ? 'PASS' : `FAIL (exit ${r.status})`}`)
+    pass ? passed++ : failed++
+    fs.rmSync(repo, { recursive: true, force: true }); fs.rmSync(home, { recursive: true, force: true }); fs.rmSync(noVersionBin, { recursive: true, force: true })
+  }
+
+  fs.rmSync(bin, { recursive: true, force: true })
+}
+
 console.log(`\n결과: ${passed}/${passed + failed} 통과`)
 if (failed > 0) { console.log('❌ 일부 테스트 실패'); process.exit(1) }
 console.log('✅ 모든 테스트 통과')

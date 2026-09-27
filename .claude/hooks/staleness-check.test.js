@@ -4,8 +4,10 @@
  * 실행: node .claude/hooks/staleness-check.test.js
  *
  * 대상: staleness-check.js (InstructionsLoaded 훅, --strict 옵션)
- *   docs/skills/**\/verification.md 의 "> 검증일: YYYY-MM-DD" 를 스캔해
- *   30일 초과(재검증 권고) / 60일 초과(필수 질문 주입)를 안내한다.
+ *   docs/skills/**\/verification.md 마다 신뢰 소스(SKILL.md 줄 시작 "> 검증일:", verification.md 줄 시작
+ *   "> 검증일:"·메타 표 "| 검증일 |"·frontmatter date·섹션 8 재검증 행)의 최신 날짜를 검증일로 삼아
+ *   30일 초과(재검증 권고) / 60일 초과·판독 불가(필수 질문 주입)를 안내한다.
+ *   각 소스 안에서는 첫 매치만 사용(중복 추가로 신선 위장 방지), 체크리스트·백틱·코드펜스·미래 날짜는 무시.
  *
  * 중요 동작 특성(실제 훅 소스 기준, 이 파일 전체가 이를 전제로 테스트를 짠다):
  *   - stdin 은 hook_event_name 판별에만 사용 — 'SessionStart' 정확 일치 시 stdout JSON 모드,
@@ -53,6 +55,29 @@ function mkSkill(root, category, name, content) {
   fs.mkdirSync(dir, { recursive: true })
   fs.writeFileSync(path.join(dir, 'verification.md'), content)
   return dir
+}
+
+// 레포 실제 verification.md 구조를 재현하는 빌더 (frontmatter / 메타 표 / 체크리스트 / 섹션 8 변경 이력)
+function metaDoc({ fm, meta, metaRaw, bq, checklist, history, extra = '' } = {}) {
+  let s = ''
+  if (fm) s += `---\nskill: x\ncategory: y\nversion: v1\ndate: ${fm}\nstatus: APPROVED\n---\n\n`
+  s += '# x — 검증 기록\n\n'
+  if (bq) s += `> 검증일: ${bq}\n\n`
+  if (meta || metaRaw) s += `## 메타 정보\n\n| 항목 | 내용 |\n|------|------|\n| 스킬 이름 | \`x\` |\n| 검증일 | ${metaRaw ?? meta} |\n\n`
+  if (checklist) s += `## 7. 개선 체크리스트\n\n- [✅] 소스 URL과 검증일 명시 (\`> 소스:\` + \`> 검증일: ${checklist}\`)\n\n`
+  s += extra
+  if (history) {
+    s += '\n## 8. 변경 이력\n\n| 날짜 | 버전 | 변경 내용 | 변경자 |\n|------|------|-----------|--------|\n'
+    for (const [d, msg] of history) s += `| ${d} | v1 | ${msg} | Claude |\n`
+  }
+  return s
+}
+
+// <root>/.claude/skills/category/name/SKILL.md 생성
+function mkSkillMd(root, category, name, content) {
+  const dir = path.join(root, '.claude', 'skills', category, name)
+  fs.mkdirSync(dir, { recursive: true })
+  fs.writeFileSync(path.join(dir, 'SKILL.md'), content)
 }
 
 function runHook(root, args = [], opts = {}) {
@@ -139,35 +164,166 @@ section('경계 — STALE_DAYS(60일) 경계값')
 }
 
 // ── 미래 날짜 ────────────────────────────────────────────────────────
-section('미래 날짜 — 음수 경과일, 크래시/오탐 없어야 함')
+// 미래 날짜는 "영원히 신선" 위장이 되므로 후보에서 제외한다(하루 허용오차 = 타임존).
+section('미래 날짜 — 신선 위장 불가: 후보에서 제외, 유일 후보면 판독 불가로 보고')
 {
   const root = mkRoot('sc-future-')
   mkSkill(root, 'backend', 'future-skill', verifDoc(isoDaysAgo(-10)))
   const r = runHook(root, ['--strict'])
-  ok('미래 날짜 → exit 0', r.status === 0)
-  ok('미래 날짜 → 출력 없음(음수 days는 임계값 미달)', r.stdout.trim() === '' && r.stderr.trim() === '')
+  ok('미래 날짜만 → exit 0', r.status === 0)
+  ok('미래 날짜만 → 조용히 누락되지 않고 판독 불가로 보고', r.stdout.includes('판독 불가') && r.stdout.includes('future-skill'))
+}
+{
+  const root = mkRoot('sc-future-mask-')
+  mkSkill(root, 'backend', 'future-mask', metaDoc({ meta: isoDaysAgo(-400), bq: isoDaysAgo(90) }))
+  const r = runHook(root, ['--strict'])
+  ok('메타 표 미래 날짜 + 90일 전 인용 → 미래 날짜가 stale을 가리지 못함', r.stdout.includes('60일 초과 스킬 1종 감지') && r.stdout.includes('future-mask'))
+}
+{
+  const root = mkRoot('sc-future-tz-')
+  mkSkill(root, 'backend', 'tomorrow', metaDoc({ meta: isoDaysAgo(-1) }))
+  const r = runHook(root, ['--strict'])
+  ok('하루 뒤 날짜(타임존 오차) → 유효 후보로 인정, 출력 없음', r.stdout.trim() === '' && r.stderr.trim() === '')
 }
 
 // ── 날짜 형식 깨짐 ───────────────────────────────────────────────────
-section('날짜 형식 깨짐 — 정규식 불일치, 조용히 스킵되어야 함')
+section('날짜 형식 깨짐 — 조용히 누락 금지: 판독 불가로 보고')
 {
   const root = mkRoot('sc-badfmt-')
   mkSkill(root, 'backend', 'slash-date', '# 문서\n\n> 검증일: 2026/01/01\n')
   mkSkill(root, 'backend', 'text-date', '# 문서\n\n> 검증일: 작년 언젠가\n')
   mkSkill(root, 'backend', 'no-marker', '# 문서\n\n검증일 표기가 아예 없음\n')
+  mkSkill(root, 'backend', 'feb-30', metaDoc({ meta: '2026-02-30' }))
+  mkSkill(root, 'backend', 'month-13', metaDoc({ meta: '2026-13-01', fm: '2026-00-10' }))
   const r = runHook(root, ['--strict'])
   ok('날짜 형식 깨짐 전부 → exit 0', r.status === 0)
-  ok('날짜 형식 깨짐 전부 → 매칭 실패로 조용히 스킵(출력 없음)', r.stdout.trim() === '' && r.stderr.trim() === '')
+  ok('날짜 형식 깨짐 5종 → 판독 불가 5종으로 보고', r.stdout.includes('판독 불가 스킬 5종'))
+  for (const n of ['slash-date', 'text-date', 'no-marker', 'feb-30', 'month-13']) {
+    ok(`판독 불가 목록에 ${n} 포함`, r.stdout.includes(n))
+  }
+  ok('판독 불가만 있어도 필수 질문 지시(재검증 유도)', r.stdout.includes('필수 질문'))
 }
 
 // ── 빈 파일 ──────────────────────────────────────────────────────────
-section('빈 파일 — 크래시 없이 스킵')
+section('빈 파일 — 크래시 없이 판독 불가로 보고')
 {
   const root = mkRoot('sc-empty-')
   mkSkill(root, 'backend', 'empty-verif', '')
   const r = runHook(root, ['--strict'])
   ok('빈 verification.md → exit 0', r.status === 0)
-  ok('빈 verification.md → 출력 없음', r.stdout.trim() === '' && r.stderr.trim() === '')
+  ok('빈 verification.md → 판독 불가로 보고(조용히 누락 금지)', r.stdout.includes('판독 불가') && r.stdout.includes('empty-verif'))
+  const rN = runHook(root, [])
+  ok('일반 모드에서도 판독 불가가 stderr로 보고', rN.stderr.includes('판독 불가') && rN.stderr.includes('empty-verif'))
+}
+
+// ── 검증일 소스 선택 (2026-09-26 버그 회귀) ─────────────────────────
+// 버그: verification.md 에서 "처음 매칭되는 > 검증일:" 을 읽어 체크리스트 문장 안의 옛 날짜를 채택,
+//       재검증으로 갱신된 SKILL.md·메타 표·변경 이력을 무시했다.
+section('검증일 소스 — 신뢰 소스(SKILL.md 인용 줄·메타 표·frontmatter·재검증 이력)의 최신값')
+{
+  const root = mkRoot('sc-src-checklist-')
+  mkSkill(root, 'game', 'checklist-trap', metaDoc({ meta: isoDaysAgo(3), checklist: isoDaysAgo(100) }))
+  const r = runHook(root, ['--strict'])
+  ok('체크리스트 안 옛 날짜(100일) + 메타 표 새 날짜(3일) → 새 날짜 채택(출력 없음)', r.stdout.trim() === '' && r.stderr.trim() === '')
+}
+{
+  const root = mkRoot('sc-src-checklist-only-')
+  mkSkill(root, 'game', 'checklist-only', metaDoc({ checklist: isoDaysAgo(3) }))
+  const r = runHook(root, ['--strict'])
+  ok('체크리스트·백틱 안 날짜만 있음 → 신뢰 소스 아님 → 판독 불가 보고', r.stdout.includes('판독 불가') && r.stdout.includes('checklist-only'))
+}
+{
+  const root = mkRoot('sc-src-skillmd-')
+  mkSkill(root, 'game', 'skillmd-new', metaDoc({ meta: isoDaysAgo(100), fm: isoDaysAgo(100) }))
+  mkSkillMd(root, 'game', 'skillmd-new', `# 스킬\n\n> 소스: https://example.com\n> 검증일: ${isoDaysAgo(2)}\n\n본문\n`)
+  const r = runHook(root, ['--strict'])
+  ok('verification.md 전부 옛 날짜 + SKILL.md 인용 줄만 새 날짜 → 새 날짜 채택', r.stdout.trim() === '' && r.stderr.trim() === '')
+}
+{
+  const root = mkRoot('sc-src-skillmd-inline-')
+  mkSkill(root, 'game', 'skillmd-inline', metaDoc({ meta: isoDaysAgo(100) }))
+  mkSkillMd(root, 'game', 'skillmd-inline',
+    `# 스킬\n\n본문에 \`> 검증일: ${isoDaysAgo(1)}\` 같은 인라인 언급\n\n\`\`\`md\n> 검증일: ${isoDaysAgo(1)}\n\`\`\`\n`)
+  const r = runHook(root, ['--strict'])
+  ok('SKILL.md 의 인라인·코드펜스 안 날짜는 무시 → 100일 stale 보고', r.stdout.includes('60일 초과 스킬 1종 감지') && r.stdout.includes('skillmd-inline'))
+}
+{
+  const root = mkRoot('sc-src-fence-')
+  mkSkill(root, 'game', 'verif-fence', metaDoc({ meta: isoDaysAgo(100), extra: `\n\`\`\`\n| 검증일 | ${isoDaysAgo(1)} |\n> 검증일: ${isoDaysAgo(1)}\n\`\`\`\n` }))
+  const r = runHook(root, ['--strict'])
+  ok('verification.md 코드펜스 안 표·인용 날짜는 무시 → stale 보고', r.stdout.includes('verif-fence') && r.stdout.includes('60일 초과'))
+}
+{
+  const root = mkRoot('sc-src-fm-')
+  mkSkill(root, 'game', 'fm-new', metaDoc({ meta: isoDaysAgo(100), fm: isoDaysAgo(4) }))
+  const r = runHook(root, ['--strict'])
+  ok('frontmatter date 가 최신 → 채택(출력 없음)', r.stdout.trim() === '' && r.stderr.trim() === '')
+}
+{
+  const root = mkRoot('sc-src-fm-body-')
+  mkSkill(root, 'game', 'fm-body', metaDoc({ meta: isoDaysAgo(100) }) + `\ndate: ${isoDaysAgo(1)}\n`)
+  const r = runHook(root, ['--strict'])
+  ok('본문의 "date:" 줄은 frontmatter 가 아님 → 무시(stale 보고)', r.stdout.includes('fm-body'))
+}
+{
+  const root = mkRoot('sc-src-cell-')
+  mkSkill(root, 'game', 'cell-multi', metaDoc({ metaRaw: `${isoDaysAgo(100)} (최초) / **${isoDaysAgo(6)}** 갱신` }))
+  const r = runHook(root, ['--strict'])
+  ok('메타 표 셀에 날짜 여러 개("최초 / 갱신") → 셀 내 최신값 채택', r.stdout.trim() === '' && r.stderr.trim() === '')
+}
+{
+  const root = mkRoot('sc-src-hist-')
+  mkSkill(root, 'game', 'hist-reverify', metaDoc({ meta: isoDaysAgo(100), history: [[isoDaysAgo(100), '최초 작성'], [isoDaysAgo(2), '60일 경과 정기 재검증: VERIFIED 3/3']] }))
+  mkSkill(root, 'game', 'hist-freshness', metaDoc({ meta: isoDaysAgo(100), history: [[isoDaysAgo(3), 'Freshness audit 반영']] }))
+  const r = runHook(root, ['--strict'])
+  ok('섹션 8 "재검증"·"freshness" 행 최신 날짜 → 채택(출력 없음)', r.stdout.trim() === '' && r.stderr.trim() === '')
+}
+{
+  const root = mkRoot('sc-src-hist-other-')
+  mkSkill(root, 'game', 'hist-restructure', metaDoc({ meta: isoDaysAgo(100), history: [[isoDaysAgo(1), '구조 개편: references 분리 (내용 변경 없음)']] }))
+  const r = runHook(root, ['--strict'])
+  ok('섹션 8 의 비검증 행(구조 개편)은 검증일로 인정하지 않음 → stale', r.stdout.includes('hist-restructure'))
+}
+{
+  const root = mkRoot('sc-src-hist-outside-')
+  mkSkill(root, 'game', 'hist-outside', metaDoc({ meta: isoDaysAgo(100), extra: `\n## 7. 기타\n\n| 날짜 | 내용 |\n|---|---|\n| ${isoDaysAgo(1)} | 재검증 예정 |\n` }))
+  const r = runHook(root, ['--strict'])
+  ok('섹션 8 밖 표의 "재검증" 행은 무시 → stale', r.stdout.includes('hist-outside'))
+}
+{
+  // 실제 레포 구조 재현(game/unity-live-ops): frontmatter·메타 표·체크리스트는 옛 날짜, 이력·SKILL.md 만 갱신
+  const root = mkRoot('sc-src-real-')
+  const old = isoDaysAgo(108)
+  mkSkill(root, 'game', 'unity-live-ops', metaDoc({ fm: old, meta: old, checklist: old, history: [[old, '최초 작성'], [isoDaysAgo(0), '60일 경과 정기 재검증: 핵심 클레임 3개 재확인']] }))
+  mkSkillMd(root, 'game', 'unity-live-ops', `# s\n\n> 검증일: ${isoDaysAgo(0)}\n`)
+  const r = runHook(root, ['--strict'])
+  ok('실제 버그 재현 — 재검증 완료 스킬은 60일 초과로 보고되지 않음', r.stdout.trim() === '' && r.stderr.trim() === '')
+}
+{
+  const root = mkRoot('sc-src-symlink-')
+  const outside = mkRoot('sc-src-symlink-out-')
+  fs.writeFileSync(path.join(outside, 'SKILL.md'), `> 검증일: ${isoDaysAgo(0)}\n`)
+  mkSkill(root, 'game', 'linked-skillmd', metaDoc({ meta: isoDaysAgo(100) }))
+  const sdir = path.join(root, '.claude', 'skills', 'game', 'linked-skillmd')
+  fs.mkdirSync(sdir, { recursive: true })
+  fs.symlinkSync(path.join(outside, 'SKILL.md'), path.join(sdir, 'SKILL.md'))
+  const r = runHook(root, ['--strict'])
+  ok('심볼릭 링크 SKILL.md(외부 파일) 는 신뢰하지 않음 → stale', r.stdout.includes('linked-skillmd'))
+}
+{
+  const root = mkRoot('sc-src-traversal-')
+  // 카테고리 이름에 경로 조작 문자열 — rel 경로가 .claude/skills 밖으로 새지 않아야 함(크래시 없음)
+  mkSkill(root, '..', 'escape', metaDoc({ meta: isoDaysAgo(100) }))
+  const r = runHook(root, ['--strict'])
+  ok('경로 조작형 디렉토리명 → exit 0', r.status === 0)
+}
+{
+  const root = mkRoot('sc-src-ss-')
+  mkSkill(root, 'game', 'undated-ss', '# 문서\n')
+  const r = runHook(root, ['--strict'], { input: JSON.stringify({ hook_event_name: 'SessionStart', source: 'startup' }) })
+  let j = null; try { j = JSON.parse(r.stdout) } catch {}
+  ok('SessionStart: 판독 불가 스킬도 additionalContext·systemMessage 에 포함',
+    j && (j.hookSpecificOutput?.additionalContext || '').includes('undated-ss') && (j.systemMessage || '').includes('판독 불가'))
 }
 
 // ── 잘못된 JSON stdin ────────────────────────────────────────────────

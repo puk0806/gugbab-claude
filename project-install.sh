@@ -1095,8 +1095,7 @@ DREAM_HUMANITIES_SKILLS=(
   "humanities/dream-psychology-jung-freud"
   "humanities/korean-dream-interpretation-tradition"
   "humanities/crisis-intervention-resources-korea"
-  "humanities/attachment-theory-basics"
-  "humanities/relational-pattern-analysis"
+  "humanities/attachment-theory-basics"   # 2026-09-26: 관계 패턴(Gottman·EFT·NVC) 스킬 병합 흡수
 )
 
 # dream-interpretation 전용 meta 스킬
@@ -1185,7 +1184,6 @@ DREAM_FRONTEND_SKILLS=(
   "frontend/srs-spaced-repetition"
   "frontend/voice-input-ui"
   "frontend/web-speech-api-stt"
-  "frontend/web-speech-api-tts"
   "frontend/whisper-api-integration"
   "frontend/media-recorder-api"
   "frontend/pwa-offline-llm-fallback"
