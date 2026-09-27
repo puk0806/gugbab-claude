@@ -1,8 +1,8 @@
 ---
 skill: recoil-to-zustand-migration
 category: frontend
-version: v1
-date: 2026-08-26
+version: v1.1
+date: 2026-09-26
 status: PENDING_TEST
 ---
 
@@ -14,10 +14,10 @@ status: PENDING_TEST
 |------|------|
 | 스킬 이름 | `recoil-to-zustand-migration` |
 | 스킬 경로 | `.claude/skills/frontend/recoil-to-zustand-migration/SKILL.md` |
-| 검증일 | 2026-08-26 |
+| 검증일 | 2026-09-26 (30~60일 주기 재검증, 이전 검증 2026-08-26) |
 | 검증자 | skill-creator |
-| 스킬 버전 | v1 |
-| 기준 버전 | `recoil` 0.7.7 / `zustand` 5.0.15 / `jotai` 2.20.3 / `valtio` 2.3.2 (React 18 기준, React 19 비호환 경로 포함) |
+| 스킬 버전 | v1.1 |
+| 기준 버전 | `recoil` 0.7.7 / `zustand` 5.0.15 / `jotai` **3.0.0**(2026-09-26 확인 시 신규 릴리스, 이전 검증 시 2.20.3) / `valtio` 2.3.2 (React 18 기준, React 19 비호환 경로 포함) |
 
 ---
 
@@ -214,6 +214,32 @@ status: PENDING_TEST
 
 ---
 
+### 5-1. 2026-09-26 재검증 (30~60일 주기, verification-policy.md 절차) — Jotai v3 발견
+
+**수행일**: 2026-09-26
+**수행 방법**: SKILL.md + references/REFERENCE.md 전체 Read → 핵심 클레임 4개(zustand·jotai 최신 버전, Recoil 아카이브 상태 불변, Jotai atomFamily/loadable API 변경 여부) WebSearch/WebFetch 재검증 → 실전 질문 2개로 SKILL.md 자체 답변 재확인
+
+**재검증 클레임**:
+| # | 클레임 | 재확인 결과 |
+|---|--------|------|
+| R1 | zustand 최신 버전 5.0.15 | npm registry 재확인 → ✅ VERIFIED, 변동 없음 |
+| R2 | jotai 최신 버전 2.20.3 | npm registry 재확인 → **⚠️ 3.0.0으로 메이저 업**(2026-09 릴리스). WebSearch로 InfoQ·공식 뉴스레터·GitHub PR 다수 교차 확인 | ⚠️ **실질 변경 발견** |
+| R3 | jotai v3의 breaking change가 이 스킬 예시(atomFamily·loadable)에 영향을 주는가 | 공식 마이그레이션 가이드(`github.com/pmndrs/jotai/blob/main/docs/guides/migrating-to-v3.mdx`) 원문 확인 → **`atomFamily`는 `jotai-family` 패키지로 이동, `loadable`은 완전 제거(대체 패키지 없음, `unwrap`+직접 구현 필요)**. `atomWithReset`/`atomWithStorage`는 `jotai/utils`에 그대로 유지 확인 | ⚠️ **VERIFIED, SKILL.md 정정 필요** |
+| R4 | Recoil 저장소 아카이브 상태·React 19 미해결 이슈 | 저장소가 read-only이므로 상태 변경 불가능 — 재확인 결과 변동 없음(구조적으로 변할 수 없음) | ✅ VERIFIED, 변동 없음 |
+
+**Q1(재검증). "Recoil에서 Jotai로 지금 새로 전환을 시작하는데 최신 jotai를 설치해도 되나?"**
+- 정정 전 SKILL.md: 버전 표에 2.20.3만 기재, v3 관련 안내 없음
+- 정정 후 SKILL.md: §0에 "jotai@2 API 기준 예시" 명시 + 신설 §3-5에 v3 이관표(atomFamily→jotai-family, loadable 제거) 반영. `jotai@3`을 새로 설치하면 이 스킬의 `atomFamily`/`loadable` 코드 예시가 그대로 컴파일되지 않는다는 점을 명시적으로 경고
+- **판정: ✅ PASS (정정 반영 후)** — 재검증으로 메이저 버전 변경과 breaking change를 발견해 반영
+
+**Q2(재검증). "atomFamily를 Jotai v3에서 쓰려면 어떻게 해야 하나?"**
+- SKILL.md 답변(정정 후): `npm install jotai-family` 후 `import { atomFamily } from 'jotai-family'`로 교체(§3-5). API 자체는 동일
+- **판정: ✅ PASS**
+
+**재검증 결과**: 4개 클레임 중 1개(jotai 버전)에서 **메이저 버전업 + 이 스킬의 핵심 코드 예시에 영향을 주는 breaking change**를 발견 → SKILL.md §0·§3-1·§3-3(REFERENCE)·§6-2·§6-3(REFERENCE) 정정. 실질적 내용 변경 발생. **status는 기존에도 PENDING_TEST(실사용 필수 카테고리)였으므로 변동 없이 유지**하되, 변경 이력에 상세 기록.
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -223,7 +249,8 @@ status: PENDING_TEST
 | 실용성 | ✅ (5개 변환 시나리오 × 2개 도착지 대비, 인벤토리·검증 명령 포함, 프로젝트 비종속) |
 | 기존 스킬과의 중복 | ✅ 분리 완료 (state-management = Zustand 사용법 / tanstack-query = 서버 상태 / 이 스킬 = 전환 경로, 상호 참조 삽입) |
 | 에이전트 활용 테스트 | ✅ 4/4 PASS (2026-08-26, skill-tester → frontend-developer, Q1~Q4 전부 SKILL.md 근거 명시·anti-pattern 회피 확인) |
-| **최종 판정** | **PENDING_TEST 유지** (content test 4/4 PASS, 실사용 필수 카테고리라 실제 전환 검증 전까지 APPROVED 보류) |
+| freshness 재검증 (2026-09-26) | ⚠️ Jotai 3.0.0 메이저 릴리스 발견 — `atomFamily`(→`jotai-family` 패키지)·`loadable`(완전 제거) breaking change를 SKILL.md §0·§3-1·§3-5(신설)·REFERENCE.md §3-3·§6-2·§6-3에 반영 |
+| **최종 판정** | **PENDING_TEST 유지** (content test 4/4 PASS + 실사용 필수 카테고리라 원래도 APPROVED 보류 상태였음. 이번 재검증으로 Jotai v3 관련 내용 정정 추가) |
 
 > 이 스킬은 `verification-policy.md`의 **"실사용 필수 스킬 — 마이그레이션 가이드"** 카테고리에 해당한다. 따라서 content test를 통과하더라도 실제 코드베이스 전환 결과로 검증되기 전까지는 PENDING_TEST 유지가 원칙이다. content test 자체(2단계)는 2026-08-26에 완료됨 — 섹션 5 참조.
 
@@ -247,3 +274,4 @@ status: PENDING_TEST
 | 2026-08-26 | v1 | 최초 작성 — 공식 소스 약 30회 페치·6회 검색 기반, 14개 클레임 교차 검증(DISPUTED 1건 확정 반영, UNVERIFIED 서술 3건 제외). skill-tester 미수행으로 PENDING_TEST | skill-creator |
 | 2026-08-26 | v1 | 2단계 실사용 테스트 수행 (Q1 Recoil deprecated 상태 정확성 / Q2 selectorFamily async selector 이관 판정 / Q3 Loadable hasValue·contents Jotai 함정 / Q4 4천 파일 SPA 공존 이동 순서) → 4/4 PASS, 실사용 필수 카테고리(마이그레이션 가이드)라 PENDING_TEST 유지 | skill-tester |
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | skill-creator |
+| 2026-09-26 | v1.1 | 30~60일 주기 재검증. **Jotai 3.0.0 메이저 릴리스 발견** — `atomFamily`가 `jotai-family` 패키지로 이동, `loadable`이 완전 제거됨을 확인해 SKILL.md에 신규 §3-5(v3 이관표) 추가 + §0·§3-1·REFERENCE.md §3-3·§6-2·§6-3에 v2/v3 구분 주의문 반영. status PENDING_TEST 유지(원래도 실사용 필수 카테고리) | 메인 세션 |

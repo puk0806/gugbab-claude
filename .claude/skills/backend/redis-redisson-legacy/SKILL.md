@@ -6,9 +6,11 @@ description: Redis + Redisson 2.15.2 레거시 스택 - Spring Boot 2.5 + Java 1
 # Redis + Redisson 2.15.2 레거시 스킬
 
 > 소스: https://github.com/redisson/redisson/wiki | https://github.com/redisson/redisson/milestone/89 | https://github.com/redisson/redisson/blob/master/CHANGELOG.md | https://redisson.pro/docs/integration-with-spring/
-> 검증일: 2026-04-23
+> 검증일: 2026-09-26 (2026-04-23 최초 검증 · 재검증 이력은 8절 참조)
 
 > **주의 — 레거시 경고:** Redisson 2.15.2는 2019년 2월 릴리스된 매우 오래된 버전입니다(GitHub milestone #89는 2019-02-14 종료). 보안 패치·버그 수정이 오래 중단됐으며, 최신 Valkey·Redis 7.x 기능을 지원하지 않습니다. **가능하면 Redisson 3.x로 업그레이드를 강력히 권장**합니다. 이 스킬은 기존 스택이 Redisson 2.15.2에 고정된 프로젝트(업그레이드 전까지의 유지보수·신규 기능 추가)를 위한 패턴 가이드입니다.
+>
+> **⚠️ 주의 — CVE (2026-09-26 추가):** Redisson **3.22.0 미만 전 버전**(2.15.2 포함)에는 **CVE-2023-42809**(안전하지 않은 역직렬화) 취약점이 있습니다. Redis 서버 응답에 포함된 Java 객체를 클라이언트가 추가 검증 없이 역직렬화하는 구조라, 공격자가 클라이언트를 악성 서버에 연결시키면 임의 코드 실행으로 이어질 수 있습니다. 신뢰할 수 없는 네트워크·멀티테넌트 환경에서 Redis 서버를 운용한다면 이 CVE가 직접적인 리스크입니다 — **3.x(3.22.0+)로 업그레이드가 최우선 대응책**이며, 당장 불가능하다면 최소한 Redis 서버 접근을 신뢰된 네트워크로 제한하세요.
 
 > **주의 — 버전 매트릭스 이해:** 사용자 스택은 **Spring Boot 2.5 + Java 11 + spring-data-redis 2.6.0 + Redisson 2.15.2** 조합입니다. Redisson 2.x와 Spring Boot 2.5는 공식 호환 매트릭스에 포함되지 않은 조합이며, **`redisson-spring-boot-starter` 2.x 버전은 Spring Boot 1.5~2.0 시절에 맞춰져 있어 2.5와 직접 연동이 까다롭습니다**. 이 문서에서는 스타터 대신 **core `org.redisson:redisson:2.15.2`를 직접 의존하고 `RedissonClient`를 수동 `@Bean`으로 등록**하는 방식을 표준으로 소개합니다. 스타터를 꼭 써야 한다면 Redisson 3.x 업그레이드 경로를 우선 검토하세요.
 

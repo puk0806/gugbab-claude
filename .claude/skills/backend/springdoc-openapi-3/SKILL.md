@@ -6,7 +6,7 @@ description: Springdoc OpenAPI 2.x 기반 모던 API 문서화 - Spring Boot 3.x
 # Springdoc OpenAPI 2.x (Spring Boot 3.x / Java 17+)
 
 > 소스: https://springdoc.org/ | https://github.com/springdoc/springdoc-openapi | https://springdoc.org/faq.html | https://springdoc.org/migrating-from-springfox.html
-> 검증일: 2026-04-23
+> 검증일: 2026-09-26 (재검증)
 
 > 주의: 이 문서는 **springdoc-openapi 2.x (2.8.x 기준)** + **Spring Boot 3.2 ~ 3.5** + **Java 17+** 환경을 기준으로 합니다. Spring Boot 2.x는 `springdoc-openapi v1.8.0` (별도 스킬)을 사용하고, Spring Boot 4.x는 `springdoc-openapi v3.x`를 사용합니다. 사실상의 표준이 된 Springfox 대체재이며, 레거시 Springfox(`@Api`, `@ApiOperation` 등) 어노테이션은 이 스킬에서 다루지 않습니다.
 
@@ -21,16 +21,16 @@ description: Springdoc OpenAPI 2.x 기반 모던 API 문서화 - Spring Boot 3.x
 <dependency>
     <groupId>org.springdoc</groupId>
     <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-    <version>2.8.17</version>
+    <version>2.9.1</version>
 </dependency>
 ```
 
 ```kotlin
 // build.gradle.kts
-implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.17")
+implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.9.1")
 ```
 
-- 2.8.17 (2025-04-11) 기준. Spring Boot 3.5.x, swagger-core 2.2.47, swagger-ui 5.32.2 포함
+- 2.9.1 기준. swagger-core 2.2.55, swagger-ui 5.32.14 포함 (2.8.17도 Spring Boot 3.5.x 환경에서 여전히 유효하나 최신 패치는 2.9.x)
 - JSON만 필요하면 `springdoc-openapi-starter-webmvc-api` (UI 제외)
 
 ### WebFlux (리액티브)
@@ -39,7 +39,7 @@ implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.17")
 <dependency>
     <groupId>org.springdoc</groupId>
     <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
-    <version>2.8.17</version>
+    <version>2.9.1</version>
 </dependency>
 ```
 
@@ -48,8 +48,8 @@ implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.17")
 | Spring Boot | springdoc-openapi | 비고 |
 |-------------|-------------------|------|
 | 1.5.x / 2.x | **v1.8.0** (레거시) | Jakarta 미전환. 이 스킬 범위 밖 |
-| 3.0 ~ 3.5   | **v2.x** (2.8.17 최신) | Jakarta EE 9+, Java 17+ |
-| 4.0+        | **v3.x** (3.0.3+) | 별도 라인 |
+| 3.0 ~ 3.5   | **v2.x** (2.9.1 최신) | Jakarta EE 9+, Java 17+ |
+| 4.0+        | **v3.x** (3.1.1 최신) | 별도 라인 |
 
 > 주의: springdoc 2.x는 마이너 릴리스마다 Spring Boot 의존 버전을 끌어올리므로, 프로젝트가 고정된 Spring Boot 버전을 쓰고 있다면 springdoc 버전을 임의로 최신으로 올리기 전에 호환성을 확인해야 한다.
 
@@ -445,9 +445,9 @@ springdoc:
 
 ## springdoc-openapi v3.x (Spring Boot 4.x 대응)
 
-> 기준: springdoc-openapi 3.0.3 / Spring Boot 4.0+ / Spring Framework 7.0
+> 기준: springdoc-openapi 3.1.1 / Spring Boot 4.0+ ~ 4.1.x / Spring Framework 7.0
 > 소스: https://springdoc.org/v4/
-> 검증일: 2026-06-19
+> 검증일: 2026-09-26 (재검증)
 
 > 주의: 이 스킬(v2.x)은 Spring Boot 3.0~3.5 전용이다. Spring Boot 4.0+에서는 **springdoc-openapi 3.x**를 사용한다.
 
@@ -456,8 +456,8 @@ springdoc:
 | Spring Boot | springdoc-openapi |
 |-------------|-------------------|
 | 2.x | v1.8.0 (레거시) |
-| 3.0 ~ 3.5 | **v2.x** (이 스킬) |
-| **4.0+** | **v3.x** (3.0.3+) |
+| 3.0 ~ 3.5 | **v2.x** (이 스킬, 2.9.1 최신) |
+| **4.0+** | **v3.x** (3.1.1 최신, Spring Boot 4.1.0 대응) |
 
 ### Spring Boot 4.x 의존성 변경
 
@@ -465,7 +465,7 @@ springdoc:
 
 ```kotlin
 // Spring Boot 4.x — WebMVC
-implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3")
+implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1")
 ```
 
 ### v2.x → v3.x 주요 차이점

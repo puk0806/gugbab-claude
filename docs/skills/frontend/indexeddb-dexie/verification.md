@@ -2,7 +2,7 @@
 skill: indexeddb-dexie
 category: frontend
 version: v1
-date: 2026-05-07
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `indexeddb-dexie` |
 | 스킬 경로 | `.claude/skills/frontend/indexeddb-dexie/SKILL.md` |
-| 검증일 | 2026-05-07 |
+| 검증일 | 2026-09-26 (재검증, 최초 2026-05-07) |
 | 검증자 | Claude (Opus 4.7) |
 | 스킬 버전 | v1 |
 | 카테고리 | 라이브러리 사용법 + 마이그레이션 (실 PWA 검증 권장) |
@@ -99,6 +99,25 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+### 재검증 (2026-09-26)
+
+**수행일**: 2026-09-26
+**수행 방법**: SKILL.md Read 후 핵심 클레임 3개 WebFetch(registry.npmjs.org, GitHub releases) 재검증 + 실전 질문 2개 자체 답변 확인 (WebSearch는 세션 한도 소진으로 WebFetch 대체)
+
+클레임 재검증:
+| # | 클레임 | 판정 | 비고 |
+|---|--------|------|------|
+| 1 | dexie 최신 버전은 4.4.2 | DISPUTED(패치) | registry.npmjs.org 확인 결과 4.4.6으로 패치 버전 갱신. GitHub releases(4.4.3~4.4.6) 검토 결과 API breaking change 없음(버그 수정 위주) → SKILL.md 버전 표기만 갱신 |
+| 2 | dexie-react-hooks 최신 버전은 4.2.0 | DISPUTED(마이너) | registry.npmjs.org 확인 결과 4.4.0. useLiveQuery 시그니처·의존성 배열 동작은 변경 없음(4.4.4에서 결과 deep-clone 버그 수정만 추가) → SKILL.md 버전 표기 갱신 + 주의 문구 추가 |
+| 3 | 복합 인덱스 `[a+b]` 표기·`.upgrade()` trans.modify 패턴 | VERIFIED | Dexie 공식 문서·GitHub releases 재확인, 변경 없음 |
+
+Q1. "Dexie 최신 버전이 몇이고 업그레이드해도 되나?" — SKILL.md 갱신된 버전(4.4.6) 기준 답변: 안전, breaking change 없음(버그 수정 위주). PASS
+Q2. "useLiveQuery로 가져온 객체를 직접 수정해서 put()해도 되나?" — SKILL.md 신규 주의 문구 기반 답변: 4.4.4부터 deep clone되어 캐시 오염 버그는 해결되었으나, 직접 mutate 패턴 자체는 권장하지 않음(기존 CRUD 섹션의 `update()` 패턴 사용). PASS
+
+agent content test: 2/2 PASS. 버전은 패치·마이너 갱신뿐이고 문서의 API 예제·패턴 자체는 변경 불필요 → status APPROVED 유지.
+
+---
 
 **수행일**: 2026-06-19
 **수행자**: skill-tester → general-purpose
@@ -198,7 +217,7 @@ verification-policy.md의 *실사용 필수 카테고리(빌드 설정·마이�
 | 검증 방법 | Dexie 공식 문서 + GitHub + npm 버전 + Compound Index 문서 교차 검증 |
 | 클레임 판정 | 핵심 클레임 6건 모두 VERIFIED (4.4.2 버전·복합 인덱스 표기·.upgrade trans.modify·transaction 모드·useLiveQuery deps·multi-window sync) |
 | 에이전트 활용 테스트 | 수행 완료 (2026-05-08 3/3 PASS + 2026-06-19 3/3 PASS — useLiveQuery 의존성·*tags multi-entry·트랜잭션 원자성) |
-| 최종 판정 | **APPROVED** (라이브러리 사용법 스킬 — content test 3/3 PASS, 2026-06-19 전환) |
+| 최종 판정 | **APPROVED** (라이브러리 사용법 스킬 — content test 3/3 PASS, 2026-06-19 전환. 2026-09-26 재검증: 버전 4.4.2→4.4.6, dexie-react-hooks 4.2.0→4.4.0 갱신, breaking change 없음 확인 후 APPROVED 유지) |
 
 ---
 
@@ -219,3 +238,4 @@ verification-policy.md의 *실사용 필수 카테고리(빌드 설정·마이�
 | 2026-05-07 | v1 | 최초 작성 — Dexie 4.4.2 + dexie-react-hooks 4.2.0 기준. 스키마·인덱스·마이그레이션·트랜잭션·쿼리 5종·useLiveQuery·차단 환경 폴백·PWA 영속화·TypeScript 타입·호환성 매트릭스. PRD 요구사항 모두 커버. 9가지 흔한 실수 | Claude (Opus 4.7) |
 | 2026-05-08 | v1 | 2단계 실사용 테스트 수행 (Q1 복합 인덱스 쿼리 / Q2 마이그레이션 누락 함정 / Q3 트랜잭션 abort + useLiveQuery 의존성) → 3/3 PASS, PENDING_TEST 유지 (실 PWA 검증 대기) | skill-tester |
 | 2026-06-19 | v1 | 2단계 실사용 테스트 재수행 (Q1 useLiveQuery 의존성·undefined 로딩 / Q2 *tags multi-entry 인덱스 쿼리 / Q3 트랜잭션 원자성·외부 await 금지) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-26 | v1 | 재검증. dexie 4.4.2→4.4.6, dexie-react-hooks 4.2.0→4.4.0 버전 갱신(breaking change 없음, 버그 수정 위주). useLiveQuery 4.4.4 deep-clone 동작 변경 주의 문구 추가. APPROVED 유지 | 수동 검증 |

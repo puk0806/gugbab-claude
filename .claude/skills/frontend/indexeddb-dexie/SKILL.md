@@ -6,9 +6,10 @@ description: Dexie.js 4.x 기반 IndexedDB 사용 패턴. db.version().stores() 
 # indexeddb-dexie — Dexie 4.x로 IndexedDB 다루기
 
 > 소스: Dexie.js 공식 문서 — https://dexie.org/
-> 검증일: 2026-05-07
+> 검증일: 2026-09-26
 
-> Dexie 버전: 4.4.x (2026-05 기준 안정. dexie-react-hooks 4.2.0)
+> Dexie 버전: 4.4.x (2026-09-26 기준 최신 4.4.6. dexie-react-hooks 4.4.0)
+> 주의: Dexie 4.4.4부터 useLiveQuery 결과가 deep clone되어 반환된다 — 조회한 객체를 직접 mutate한 뒤 `put()`하던 기존 코드가 캐시를 오염시키던 버그가 수정됨(공식 릴리즈 노트). 이 스킬의 예시는 원래도 조회 결과를 직접 mutate하지 않으므로 영향 없음.
 > 제공: Minimalistic IndexedDB Wrapper. 표준 IDB API 위에 약 5KB(gzip) 추상화.
 
 ## 언제 사용하나
@@ -427,5 +428,5 @@ const cards: Card[] = await db.cards.where('level').equals(1).toArray()
 - useLiveQuery 문서: https://dexie.org/docs/dexie-react-hooks/useLiveQuery()
 - Compound Index 문서: https://dexie.org/docs/Compound-Index
 - React 튜토리얼: https://dexie.org/docs/Tutorial/React
-- npm dexie: https://www.npmjs.com/package/dexie (4.4.x)
-- npm dexie-react-hooks: https://www.npmjs.com/package/dexie-react-hooks (4.2.0)
+- npm dexie: https://www.npmjs.com/package/dexie (4.4.6)
+- npm dexie-react-hooks: https://www.npmjs.com/package/dexie-react-hooks (4.4.0)

@@ -2,7 +2,7 @@
 skill: incremental-refactoring
 category: architecture
 version: v1
-date: 2026-08-26
+date: 2026-09-26
 status: PENDING_TEST
 ---
 
@@ -14,7 +14,7 @@ status: PENDING_TEST
 |------|------|
 | 스킬 이름 | `incremental-refactoring` |
 | 스킬 경로 | `.claude/skills/architecture/incremental-refactoring/SKILL.md` |
-| 검증일 | 2026-08-26 |
+| 검증일 | 2026-09-26 (30~60일 주기 재검증, 최초 검증 2026-08-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 | 기준 버전 | ts-morph 28.0.0 / jscodeshift 17.4.0 / dependency-cruiser 18.2.0 / eslint-plugin-boundaries 7.2.0 / tsconfig-paths 4.2.0 / size-limit 13.0.3 / TypeScript 7.0.2(6.0.2 병행) |
@@ -211,6 +211,32 @@ status: PENDING_TEST
 
 ---
 
+### 5-1. 2026-09-26 재검증 (30~60일 주기, verification-policy.md 절차)
+
+**수행일**: 2026-09-26
+**수행 방법**: SKILL.md + references/REFERENCE.md 전체 Read → 핵심 클레임 4개 WebSearch/WebFetch 재검증 → 실전 질문 2개로 SKILL.md 자체 답변 재확인
+
+**재검증 클레임**:
+| # | 클레임 | 재확인 결과 |
+|---|--------|------|
+| R1 | TypeScript 최신은 여전히 **7.0.2**, 7.1은 아직 미출시 | npm registry `typescript/latest` 재확인(7.0.2) + WebSearch로 7.1 iteration plan 확인(Beta 10-06/RC 11-10/Stable 11-24, 모두 2026-09-26 시점 미도래) → ✅ VERIFIED, 변동 없음 |
+| R2 | ts-morph 최신은 여전히 **28.0.0** | npm registry `ts-morph/latest` 재확인 → ✅ VERIFIED, 변동 없음 |
+| R3 | jscodeshift 최신은 여전히 **17.4.0** | npm registry `jscodeshift/latest` 재확인 → ✅ VERIFIED, 변동 없음 |
+| R4 | dependency-cruiser 최신 버전 | npm registry 재확인 결과 **18.2.0 → 18.4.0**로 마이너 업데이트됨 → SKILL.md 0절 버전 표 갱신 |
+| R5 | ts-morph 이슈 #927(별칭 import → SourceFile 해석 미구현) 여전히 open인가 | GitHub 이슈 재확인 → 여전히 **open**, PR 없음 → ✅ VERIFIED, 변동 없음(3-3의 `move()` 별칭 미갱신 서술 그대로 유효) |
+
+**Q1(재검증). "TypeScript 7.1이 나왔으니 ts-morph의 side-by-side 우회책(§0)이 이제 필요 없나?"**
+- SKILL.md 답변: 아니다. 2026-09-26 기준 TypeScript 7.1은 아직 stable 출시 전(예정 2026-11-24)이므로 side-by-side 회피책이 여전히 유효한 최선의 방법이다(§0에 재검증 주의문 추가).
+- **판정: ✅ PASS**
+
+**Q2(재검증). "dependency-cruiser 버전이 18.4.0으로 올랐는데 baseline·`--ignore-known` 사용법이 바뀌었나?"**
+- SKILL.md 답변: 마이너 버전 업데이트(18.2.0→18.4.0)이며 CLI 문서상 baseline 리포터·`--ignore-known` 동작 방식 변경 없음. 버전 표기만 갱신.
+- **판정: ✅ PASS**
+
+**재검증 결과**: 5개 클레임 중 4개 VERIFIED(변동 없음), 1개(dependency-cruiser 버전)는 마이너 버전 갱신 — 동작·API 변경 없는 단순 버전 넘버 갱신이므로 실질적 내용 변경 아님. **status PENDING_TEST 유지**(원래 사유인 "워크플로우 스킬 실사용 필수 카테고리"는 이번 재검증과 무관하게 그대로 유지).
+
+---
+
 ### (참고, 기존 예정 템플릿)
 
 이번 작업은 최초 `creation-workflow.md`의 단계 1~4(조사 → 교차 검증 → 작성 → 검증 문서 저장)까지만 skill-creator가 수행했고, 단계 5(skill-tester 호출을 통한 2단계 실사용 테스트)는 위 기록대로 skill-tester가 별도로 수행 완료했다.
@@ -251,3 +277,4 @@ status: PENDING_TEST
 | 2026-08-26 | v1 | 최초 작성 — 원저자 1차 자료(Fowler bliki 3종·아티클) + 공식 문서(ts-morph·jscodeshift·dependency-cruiser·git·ESLint·GitHub·MS devblog) + npm registry 8종 조회 기반. 15개 클레임 교차 검증(DISPUTED 2건 공식 근거로 수정 반영). 단계 5(skill-tester)는 범위 제외 → PENDING_TEST | skill-creator |
 | 2026-08-26 | v1 | 2단계 실사용 테스트 수행 (Q1 순수이동 안전망 / Q2 move() alias 갱신 여부 / Q3 TS7 ts-morph 사용가능 여부 / Q4 PR 단위·머지직후 정상성) → 4/4 PASS, 워크플로우 스킬(실사용 필수)이므로 PENDING_TEST 유지 | skill-tester |
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | skill-creator |
+| 2026-09-26 | v1 | 30~60일 주기 재검증. TS 7.1 미출시·ts-morph/jscodeshift 버전 유지 확인, dependency-cruiser 18.2.0→18.4.0 버전 표기 갱신(동작 변경 없음). status PENDING_TEST 유지(워크플로우 스킬 실사용 필수 카테고리) | 메인 세션 |

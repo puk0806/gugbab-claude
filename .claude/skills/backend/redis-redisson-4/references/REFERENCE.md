@@ -132,7 +132,7 @@ User v   = bucket.getAndExpire(Duration.ofMinutes(5));
 | `getMapCacheNative(name)` | **엔트리별 TTL** | **Redis 7.4+ / Valkey 9.0+** | 서버 측 필드 만료 사용, eviction 태스크 없음 |
 | `getLocalCachedMap(...)` | 옵션 | — | 로컬 near-cache로 읽기 지연 최소화, 무효화 메시지 전파 |
 
-> 주의: `getMapCacheNative()`·`getMapCacheNativeV2()`는 공식 docs 표에서 **Redisson PRO** 기능으로 표기된다. 커뮤니티 에디션 프로젝트라면 `getMapCache()`(스크립트 eviction) 또는 TTL 필요 엔트리를 개별 `RBucket`으로 분리하는 설계를 택한다.
+> 주의(2026-09-26 정정): 기본판 `getMapCacheNative()`(Redis 7.4+/Valkey 9.0+)는 **커뮤니티 에디션에서도 사용 가능**하다 — 이전 버전 문서에서 PRO 전용으로 잘못 기재했던 항목. 단 `getMapCacheNativeV2()`(사이즈 제한)와 클러스터 대응 변종은 공식 docs에서 **Redisson PRO 전용**으로 명시된다. 고급 변종이 필요 없다면 기본 `getMapCacheNative()`로 충분하고, PRO 기능이 필요한 경우에만 `getMapCache()`(스크립트 eviction) 또는 개별 `RBucket` 분리 설계로 대체한다.
 
 ```java
 RMap<String, User> users = redisson.getMap("users");

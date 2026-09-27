@@ -2,8 +2,8 @@
 skill: tsup
 category: frontend
 version: v2
-date: 2026-04-20
-status: APPROVED
+date: 2026-09-26
+status: PENDING_TEST
 ---
 
 ## 메타 정보
@@ -12,10 +12,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | tsup |
 | 스킬 경로 | .claude/skills/frontend/tsup/SKILL.md |
-| 검증일 | 2026-04-20 |
+| 검증일 | 2026-09-26 (재검증, 최초 2026-04-20) |
 | 검증자 | Claude (WebSearch + WebFetch) |
 | 스킬 버전 | v2 |
-| 버전 기준 | tsup 8.5.1 (2024-11-12) |
+| 버전 기준 | tsup 8.5.1 (2024-11-12, 변경 없음 — 유지보수 종료·tsdown 권장) |
 
 ---
 
@@ -90,6 +90,25 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
+### 재검증 (2026-09-26)
+
+**수행일**: 2026-09-26
+**수행 방법**: SKILL.md Read 후 핵심 클레임 3개 WebSearch/WebFetch 재검증 + 실전 질문 2개 자체 답변 확인
+
+클레임 재검증:
+| # | 클레임 | 판정 | 비고 |
+|---|--------|------|------|
+| 1 | tsup 최신 안정 버전은 8.5.1 | VERIFIED(단, DISPUTED 성격 추가 발견) | npm 최신 버전은 여전히 8.5.1(변경 없음). 단 공식 GitHub README에 "This project is not actively maintained anymore. Please consider using tsdown instead." 유지보수 중단 공지 신규 확인 → SKILL.md 상단에 `> 주의` 추가 |
+| 2 | CJS/ESM 동시 출력 시 확장자는 `.js`(ESM)/`.cjs`(CJS), dts는 `.d.ts`/`.d.cts` | VERIFIED | 오늘(2026-09-26) bundling-compiler 스킬 재검증에서 tsup@8.5.1 실빌드로 재확인. 추가로 `outExtension`이 dts 확장자에는 반영되지 않는 공식 이슈(egoist/tsup#939, 미해결) 확인 → SKILL.md DTS 섹션에 `> 주의` 추가 |
+| 3 | package.json exports 조건에서 `types`는 `default`보다 먼저 와야 함 | VERIFIED | TypeScript 공식 모듈 해석 문서 재확인, 변경 없음 |
+
+Q1. "tsup 신규 프로젝트 시작해도 되나?" — SKILL.md 신규 주의 문구 기반 답변: 최신 버전은 안정적이나 공식적으로 유지보수 종료·tsdown 권장 상태이므로 신규 프로젝트는 tsdown을 우선 검토해야 한다. PASS
+Q2. "`outExtension`으로 dts 파일 확장자도 바꿀 수 있나?" — SKILL.md DTS 섹션 답변: 불가, 공식 이슈 #939로 미해결. PASS
+
+agent content test: 2/2 PASS. tsup 유지보수 중단 공지는 실행 가능한 예제 코드 자체를 깨뜨리지 않지만 "적합한 경우" 권장이 바뀌는 수준의 실질 변경이라 판단해 status를 PENDING_TEST로 되돌린다.
+
+---
+
 ### 테스트 케이스 1: CJS/ESM 듀얼 패키지 설정 요청
 
 **입력 (질문/요청):**
@@ -157,8 +176,8 @@ peerDependencies에도 넣어야 external 처리된다는 올바른/잘못된 �
 | 내용 정확성 | ✅ (WebSearch 교차 검증 완료, tsup 8.5.1 기준) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2건 PASS) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (2026-04-20 2건 PASS + 2026-09-26 재검증 2건 PASS) |
+| **최종 판정** | **PENDING_TEST** (2026-09-26 재검증: tsup 유지보수 종료·tsdown 권장 공지 반영, dts 확장자 outExtension 미반영 이슈 추가) |
 
 ---
 
@@ -176,3 +195,4 @@ peerDependencies에도 넣어야 external 처리된다는 올바른/잘못된 �
 |------|------|-----------|--------|
 | 2026-04-20 | v1 | 최초 작성 (내장 지식 기반, 실시간 검증 미실시) | skill-creator |
 | 2026-04-20 | v2 | WebSearch + WebFetch 공식 문서 조사·교차 검증 반영, tsup 8.5.1 버전 확인, d.cts 타입 파일 패턴 추가, exports 조건 순서 오류 사례 추가 | Claude |
+| 2026-09-26 | v2 | 재검증. tsup GitHub README 유지보수 중단·tsdown 권장 공지 신규 확인 → SKILL.md 상단 주의 추가. `outExtension`이 dts 확장자에 미반영되는 공식 이슈(#939) 확인 → DTS 섹션 주의 추가. APPROVED → PENDING_TEST | 수동 검증 |

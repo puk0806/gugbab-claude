@@ -1,8 +1,8 @@
 ---
 skill: moral-curriculum-2022-achievement-standards
 category: education
-version: v1
-date: 2026-05-03
+version: v2
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -145,6 +145,34 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
+### [재검증] 2026-09-26 — references/akrasia-curriculum-link.md 병합분 content test
+
+**수행일**: 2026-09-26
+**수행자**: skill-tester → general-purpose (도메인 전용 에이전트 미등록으로 대체)
+**수행 방법**: SKILL.md §4-3 포인터를 통해 references/akrasia-curriculum-link.md를 함께 Read하도록 지시, 2개 실전 질문 답변(병합분 겨냥), 근거 섹션 및 anti-pattern 회피 확인
+
+**Q1. (병합분 겨냥) akrasia 논문 3장 — 2022 개정 3범주(지식·이해/과정·기능/가치·태도)와 akrasia 연결 챕터 구성**
+- PASS
+- 근거: references/akrasia-curriculum-link.md §4(3범주 매핑), §7-1(입장표), §7-2(4축 프레임), §8-1(챕터 템플릿), §8-2·§10(인용 주의), SKILL.md §3-1·§4-1(✓검증 성취기준)
+- 상세: 3범주-akrasia 매핑표, 4축 분석 프레임, 챕터 템플릿(1~4절)을 정확히 재현. `✓ 검증` 성취기준만 인용 가능하다는 SKILL.md §8-1 제약과 2022 교과역량 미확정(§5-2) 주의를 정확히 반영해 anti-pattern(미확정 항목 단정 인용) 회피.
+
+**Q2. (병합분 겨냥) 박장호(2009) vs 박재주(2011) 서지·입장 차이**
+- PASS
+- 근거: references/akrasia-curriculum-link.md §9-4(핵심 기존 연구), §7-1(입장표), §7-2 축4
+- 상세: 두 논문의 정확한 서지(윤리연구 72호/한국윤리학회, 초등도덕교육 36집 pp.1-30/한국초등도덕교육학회 ART001575952)와 "콜버그 비판(박장호)" vs "온건한 내재주의(박재주)" 입장 차이를 정확히 재구성. 박재주 인용 시 발행 학회명 명기 필수 경고도 반영.
+
+### 발견된 gap (병합분)
+
+- 3-3(중학교 사회·공동체/자연 영역)·고등학교 전 과목 성취기준이 여전히 `[NCIC 원문 직접 확인 필요]` 상태라 references 프레임만으로 3장 전체를 완성할 수 없음 — 기존 §7 개선 필요 사항에 이미 기재된 한계와 동일, 신규 gap 아님
+
+### 판정 (2026-09-26 재검증)
+
+- agent content test: 2/2 PASS (references/akrasia-curriculum-link.md 병합분 포함)
+- verification-policy 분류: 해당 없음 (성취기준 참조+연결 프레임 정보 스킬 — 답변 정확성으로 검증 가능, content test PASS = APPROVED 가능. 2026-06-19 분류와 일관)
+- 최종 상태: APPROVED (본문 §1-8 기존 3/3 PASS(2026-06-19) + references 병합분 2/2 PASS 종합)
+
+---
+
 **수행일**: 2026-06-19
 **수행자**: skill-tester → general-purpose
 **수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
@@ -242,8 +270,8 @@ status: APPROVED
 | 영역명 공식 표기 NCIC 원문 대조 | ⚠️ (주의 표기) |
 | 2024 부분 개정 확인 | ⚠️ (주의 표기) |
 | 12현윤/12윤사/12인윤/12윤탐 전문 수록 | ❌ (전 항목 미확인 — NCIC 직접 확인 필요로 표기) |
-| 에이전트 활용 테스트 | ✅ (2026-06-19, skill-tester → general-purpose 3회 호출, Q1/Q2/Q3 3/3 PASS) |
-| **최종 판정** | **APPROVED** (content test 3/3 PASS, 2026-06-19 전환) |
+| 에이전트 활용 테스트 | ✅ (2026-06-19, 3/3 PASS) / references 병합분 2/2 PASS (2026-09-26, general-purpose 대체) |
+| **최종 판정** | **APPROVED** (2026-09-26 references/akrasia-curriculum-link.md 병합분 content test 2/2 PASS로 재전환 완료. 병합 이력은 섹션 10 참조) |
 
 ---
 
@@ -258,6 +286,7 @@ status: APPROVED
 - [❌] 인용 형식 학회별(KCI/APA-K/한국교육학회/한국윤리교육학회) 변형 추가
 - [✅] skill-tester가 content test 수행하고 섹션 5·6 업데이트 (2026-05-03 완료, 3/3 PASS)
 - [✅] skill-tester 재수행으로 APPROVED 전환 (2026-06-19 완료, 3/3 PASS, 섹션 5·6·7·8 동기화)
+- [✅] references/akrasia-curriculum-link.md 병합분 content test 수행 (2026-09-26 완료, 2/2 PASS)
 
 ---
 
@@ -269,6 +298,8 @@ status: APPROVED
 | 2026-05-03 | v1 | 2단계 실사용 테스트 수행 (Q1 [6도01-01] 전문+인용 형식 / Q2 akrasia 논문 활용 초등 성취기준 3개 / Q3 ✓검증 vs [NCIC 원문 직접 확인 필요] 차이와 학위논문 가이드) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | skill-tester |
 | 2026-06-19 | v1 | 2단계 실사용 테스트 재수행 (Q1 [9도01-01] 전문+각주 인용 형식 / Q2 [4도02-01] 2015 vs 2022 혼동 위험 및 인용 가부 판단 / Q3 akrasia 논문 인지-행동 괴리 맥락 직접 인용 가능 성취기준 2개 선별) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-09-25 | v1 | "2024년 부분 개정 고시 여부 미확정" 플래그 재검증(섹션 9 참조). 부분 개정 고시 자체의 존재는 VERIFIED, 도덕과 [별책 6] 포함 여부·성취기준 전문 변경 여부는 UNVERIFIED로 남아 SKILL.md 섹션 1-2·8을 갱신(고시 번호·소스 URL 명시). 성취기준 전문·인용 가이드 내용 변경 없음 → status APPROVED 유지 | 메인 세션 (Claude) |
+| 2026-09-26 | v2 | 스킬 정리 — `education/moral-education-curriculum-link` 병합: 원 §3(akrasia 접점 문단)·§4·§5·§7·§8·§9·§10과 §2 과목 체계 차이 문단을 `references/akrasia-curriculum-link.md`로 원문 이관(원 절 번호 유지), SKILL.md §4-3 포인터·description 보강. status PENDING_TEST 전환(섹션 10 참조) | 메인 세션 (스킬 정리) |
+| 2026-09-26 | v2 | 2단계 실사용 테스트 수행 (Q1 references §4·§7·§8 3범주-akrasia 챕터 구성 / Q2 references §9-4 박장호·박재주 서지·입장 비교) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
 
 ---
 
@@ -295,3 +326,16 @@ status: APPROVED
 ### 결론 및 권고
 
 기존 플래그("2024년 도덕과 부분 개정 고시 여부와 구체적 변경 내용은 확정하지 못함")는 **부분적으로만 해소됨**: 부분 개정 고시 자체는 이제 구체적 번호·날짜로 특정되어 추적 가능해졌으나, 도덕과 포함 여부는 여전히 원문 대조가 필요하다. SKILL.md 섹션 1-2에 고시 번호·소스 URL을 반영해 향후 확인 작업의 진입점을 명확히 함. 성취기준 전문(섹션 3)·인용 가이드(섹션 5)는 이번 재검증으로 변경된 바 없어 status는 APPROVED를 유지함.
+
+---
+
+## 10. 병합 이력 (2026-09-26)
+
+| 항목 | 내용 |
+|------|------|
+| 원 스킬 | `education/moral-education-curriculum-link` (제거 — 메타정보·과목 체계·영역·성취기준 코드 체계(원 §1–3, §6)가 본 스킬 §1–2와 중복) |
+| 이관 범위 | 원 §3 akrasia 접점 문단, §4 내용 체계 3범주, §5 교과 역량(2015 6대 역량 + 2022 검증 한계), §7 akrasia 연결 프레임(입장표·4축), §8 챕터 템플릿, §9 선행연구 키워드·학술지·핵심 선행연구, §10 흔한 실수, §2 2015↔2022 과목 체계 차이 문단 → `references/akrasia-curriculum-link.md` (원 절 번호 유지 — akrasia-scholarship-map 등이 §9-4를 참조) |
+| 원 소스 | 교육부 고시 제2022-33호 [별책 6], NCIC (https://ncic.re.kr/), KCI ART003175761·ART002856514·ART002932579, 박장호(2009) KCI ART001330038, 박재주(2011) KCI ART001575952 |
+| 이관 클레임 판정 (원 verification.md, 2026-05-03) | 내용 체계 3범주 신설(지식·이해/과정·기능/가치·태도) — VERIFIED / 4대 내용 영역 — VERIFIED / 고등 선택과목 체계 — VERIFIED / 박장호 2009 『윤리연구』 72호 — VERIFIED / 박재주 2011 『초등도덕교육』 36집 pp.1–30 — VERIFIED / **2022 개정 도덕과 교과역량 명칭 유지 여부 — UNVERIFIED**(references §5-2 `주의`로 유지) |
+| 에이전트·스킬 참조 교체 | `agents/education/curriculum-2022-fact-checker.md` 단계 1, `skills/education/akrasia-classroom-application-guide` §0·§1-1, `skills/humanities/akrasia-scholarship-map` §3-2 → 본 스킬 references |
+| 상태 | APPROVED — references 병합분 content test 2/2 PASS (2026-09-26) 완료 |

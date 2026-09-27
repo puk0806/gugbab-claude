@@ -2,7 +2,7 @@
 skill: jasypt-encrypted-config
 category: backend
 version: v1
-date: 2026-04-22
+date: 2026-09-26 (최초: 2026-04-22)
 status: APPROVED
 ---
 
@@ -18,7 +18,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `jasypt-encrypted-config` |
 | 스킬 경로 | `.claude/skills/backend/jasypt-encrypted-config/SKILL.md` |
-| 검증일 | 2026-04-22 |
+| 검증일 | 2026-04-22 (재검증: 2026-09-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 | 기준 버전 | jasypt-spring-boot-starter 3.0.x / 4.0.x, Jasypt core 1.9.3 |
@@ -87,6 +87,23 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
+### 2026-09-26 — 재검증 (60일 초과 정기 재검증)
+
+**수행일**: 2026-09-26
+**수행 방법**: SKILL.md 전체 Read, WebSearch로 jasypt-spring-boot-starter 최신 버전 재확인.
+
+**Q1. 2026-09 기준 jasypt-spring-boot-starter 4.0.4가 여전히 Spring Boot 3.5+ 권장 버전인가?**
+- PASS(재검증). WebSearch 결과 4.0.4가 여전히 최신 안정 버전으로 확인(신규 4.0.5/4.1 릴리스 없음). SKILL.md 버전 매트릭스 변경 불필요.
+
+**Q2. `ENC(...)` 구문·`PBEWITHHMACSHA512ANDAES_256` 기본 알고리즘 권장이 여전히 유효한가?**
+- PASS(재검증). Jasypt 코어(1.9.3)와 알고리즘 권장 사항에 변경 없음. CVE 신규 보고 없음.
+
+**재검증 결론**: 클레임 전부 VERIFIED 유지, 내용 변경 없음. status 변경 없음(APPROVED 유지).
+
+---
+
+### 2026-04-23 — 원 수행 기록
+
 **수행일**: 2026-04-23
 **수행 방법**: general-purpose 에이전트에게 SKILL.md만 Read한 뒤 2개 실전 질문 답변.
 
@@ -141,3 +158,4 @@ status: APPROVED
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
 | 2026-04-22 | v1 | 최초 작성 — Jasypt + Spring Boot 2.x/3.x 통합, ENC() 구문, 키 주입 전략, CLI | skill-creator |
+| 2026-09-26 | v1 | 재검증 — jasypt-spring-boot-starter 4.0.4 최신 유지 확인, 변경 사항 없음 | 메인 세션 |

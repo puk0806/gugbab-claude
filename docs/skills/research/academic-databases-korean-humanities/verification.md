@@ -153,7 +153,37 @@ status: APPROVED
 
 ---
 
-## 5. 테스트 진행 기록
+## 5. 테스트 진행 기록 (2026-09-26 재검증 — 체계적 문헌 검토 스킬 병합분)
+
+**수행일**: 2026-09-26
+**수행자**: skill-tester → general-purpose
+**수행 방법**: SKILL.md Read 후 실전 질문 2개 답변(핵심 기능 1개 + §8 병합 내용 대상 1개), 근거 섹션·anti-pattern 회피 확인
+
+### 실제 수행 테스트 (재검증)
+
+**Q1. akrasia 선행연구 국내·국제 DB 결합 검색 순서 + "아크라시아" 단일 검색 금지 이유**
+- ✅ PASS
+- 근거: SKILL.md §5(검색 워크플로우 7단계), §4.5(RISS 학위논문 역추적), §4.1(한국어 키워드 조합 표), §6(흔한 실수 패턴)
+- 상세: KCI→RISS→DBpia/교보스콜라→PhilPapers→JSTOR+MUSE→Google Scholar→Citeasy 7단계 순서와 §4.1 번역어 분화(아크라시아/자제력 없음/의지박약 등)를 정확히 근거로 연결해 OR 조합 검색 필요성을 설명.
+
+**Q2. (병합분 대상) SLR 방식 선행연구 챕터 작성 — 보조 한국어 DB(KISS·eArticle) + 단일 연구자 지도교수 협의 절차**
+- ✅ PASS
+- 근거: SKILL.md §8-1(315행, KISS·eArticle), §8-3(346행, 단일 연구자 편향 완화 — 지도교수 협의 후 부록 기록), §8-4 체크리스트
+- 상세: KISS·eArticle 보조 DB를 정확히 인용하고, "불일치 시 지도교수와 협의 → 논문 부록에 기록" 절차를 정확히 답변. gap: 협의 후에도 불일치 지속 시 최종 채택 기준 미명시(선택 보강).
+
+### 발견된 gap (재검증)
+
+- §8-3 지도교수 협의 후에도 판정이 불일치할 경우의 최종 채택 기준 미명시. 차단 요인 아님, 선택 보강.
+
+### 판정 (재검증)
+
+- agent content test: 2/2 PASS (병합분 §8 포함)
+- verification-policy 분류: research 카테고리 — 실사용 필수 카테고리 아님
+- 최종 상태: **APPROVED** (재전환 완료)
+
+---
+
+## 5-1. 최초 테스트 진행 기록 (2026-05-03, 보존)
 
 **수행일**: 2026-05-03
 **수행자**: skill-tester (general-purpose 에이전트 대체 — 동일 세션 내 직접 SKILL.md 대조 검증)
@@ -230,8 +260,8 @@ PhilPapers에서 weakness of will 관련 자료를 효율적으로 찾으려면?
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-05-03 수행, Q1 PASS / Q2 PASS / Q3 PARTIAL) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (2026-05-03 Q1 PASS/Q2 PASS/Q3 PARTIAL, 2026-09-26 재검증 2/2 PASS — §8 병합분 포함) |
+| **최종 판정** | **APPROVED** (2026-09-26 체계적 문헌 검토 병합분 content test 완료, §9 참조) |
 
 ---
 
@@ -241,6 +271,8 @@ PhilPapers에서 weakness of will 관련 자료를 효율적으로 찾으려면?
 - [❌] 학술지 ISSN이 일부 검증되지 않은 항목(「철학」, 「철학연구」 2종)은 KCI 포털 재방문으로 보강 검토 — 선택 보강(차단 요인 아님, APPROVED 전환에 영향 없음)
 - [❌] PhilPapers 외 SEP(Stanford Encyclopedia of Philosophy)도 akrasia 항목이 있어 보조 자료로 추가 가능 검토 — 선택 보강(차단 요인 아님)
 - [❌] SKILL.md 섹션 1.1에 sereId 파라미터 활용법(`poCitaView.kci?sereId=...`) 안내 추가 검토 — Q3 PARTIAL 원인, 선택 보강(차단 요인 아님)
+- [✅] 체계적 문헌 검토 스킬 병합분(§8) content test 수행 및 APPROVED 재전환 (2026-09-26 완료, 2/2 PASS)
+- [❌] §8-3 지도교수 협의 후에도 판정 불일치 지속 시 최종 채택 기준 미명시 — content test 중 발견. 차단 요인 아님, 선택 보강
 
 ---
 
@@ -250,3 +282,17 @@ PhilPapers에서 weakness of will 관련 자료를 효율적으로 찾으려면?
 |------|------|-----------|--------|
 | 2026-05-03 | v1 | 최초 작성 (국내 4종 + 국제 4종 + 학술지 7종 + 검색 전략) | skill-creator |
 | 2026-05-03 | v1 | 2단계 실사용 테스트 수행 (Q1 RISS 학위논문 역추적 / Q2 「철학연구」 동명 학술지 인용 구분 / Q3 KCI 등재 확인법) → 2/3 PASS + 1 PARTIAL, APPROVED 전환 | skill-tester |
+| 2026-09-26 | v2 | 스킬 정리 — `research/systematic-literature-review` 병합: 원 §0 PRISMA 적용 한계 주의·§3 단계 2 사전 결정 사항·한국어 보조 DB(KISS·eArticle)·검색식 예시·PRESS 권고·단계 3 포함/배제 기준 표·단일 연구자 주의·§8 도덕윤리교육 체크리스트를 SKILL.md §8로 이관. status PENDING_TEST 전환 | 메인 세션 (스킬 정리) |
+| 2026-09-26 | v2 | 2단계 실사용 재검증 수행 (Q1 국내·국제 DB 결합 검색 순서·번역어 OR 조합 / Q2 병합분 대상 — SLR 보조 DB·단일 연구자 지도교수 협의) → 2/2 PASS, PENDING_TEST → APPROVED 재전환 | skill-tester |
+
+---
+
+## 9. 병합 이력 (2026-09-26)
+
+| 항목 | 내용 |
+|------|------|
+| 원 스킬 | `research/systematic-literature-review` (제거 — PRISMA 2020 27항목·Flow Diagram·SPIDER/SPICE·CASP·thematic synthesis·meta-ethnography·Concept Matrix 개론은 모델 기본 지식) |
+| 이관 범위 | 원 §0 PRISMA 본 용도·인문학 변형 주의 → §8 상단 / §3 단계 2 사전 결정 6항목·한국어 DB(KISS·eArticle)·검색식 예시·PRESS → §8-1·§8-2 / §3 단계 3 포함/배제 기준 표·단일 연구자 주의 → §8-3 / §8 체크리스트 → §8-4 |
+| 원 소스 | PRISMA 2020 https://www.prisma-statement.org/ (BMJ https://doi.org/10.1136/bmj.n71), Cooke 외 2012 SPIDER https://journals.sagepub.com/doi/10.1177/1049732312452938, Webster & Watson 2002 https://web.njit.edu/~egan/Writing_A_Literature_Review.pdf, PRESS 2015 https://pubmed.ncbi.nlm.nih.gov/27005575/ |
+| 이관 클레임 판정 (원 verification.md, 2026-05-03) | PRISMA 2020 Page MJ et al. 2021 BMJ/PLoS Med — VERIFIED / PRISMA 본래 의학 인터벤션용·사회·교육 적용 가능 명시 — VERIFIED / SPIDER Cooke·Smith·Booth 2012 *QHR* 22(10):1435-1443 — VERIFIED / Webster & Watson 2002 *MIS Quarterly* 26(2) concept-centric — VERIFIED / PRESS 2015 *J Clin Epidemiol* 75:40-46 — VERIFIED / RISS·KCI·DBpia 운영 주체 — VERIFIED (원 스킬 20개 클레임 전원 VERIFIED) |
+| 상태 | **APPROVED** (2026-09-26 재검증 완료 — §8 병합분 content test 2/2 PASS) |

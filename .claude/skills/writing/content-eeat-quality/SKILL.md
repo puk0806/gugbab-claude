@@ -10,13 +10,15 @@ description: >
 # 콘텐츠 E-E-A-T 품질 — Google Quality Rater Guidelines 기반 신뢰성 강화
 
 > 소스:
-> - Google Search Quality Rater Guidelines (현행 PDF): https://services.google.com/fh/files/misc/hsw-sqrg.pdf
+> - Google Search Quality Rater Guidelines 전문 (현행 2025-09-11판, 182쪽): https://static.googleusercontent.com/media/guidelines.raterhub.com/en//searchqualityevaluatorguidelines.pdf
+> - QRG *요약본* "Search Quality Rater Guidelines: An Overview" (2023-11, 36쪽): https://services.google.com/fh/files/misc/hsw-sqrg.pdf
+>   > 주의 (2026-09-26 정정): 이전 판은 hsw-sqrg.pdf를 "현행 QRG PDF"로 표기했으나 이는 2023-11 **개요 문서**다. 인용·쪽수는 위 전문 PDF 기준.
 > - 2022-12 E-E-A-T 도입 공식 블로그: https://developers.google.com/search/blog/2022/12/google-raters-guidelines-e-e-a-t
 > - Helpful Content / People-First Content: https://developers.google.com/search/docs/fundamentals/creating-helpful-content
 > - 생성 AI 콘텐츠 가이드라인: https://developers.google.com/search/docs/fundamentals/using-gen-ai-content
 > - QRG 업데이트 블로그(2023-11): https://developers.google.com/search/blog/2023/11/search-quality-rater-guidelines-update
-> 검증일: 2026-06-02
-> 적용 범위: Quality Rater Guidelines 2025-09-11판 기준
+> 검증일: 2026-09-26
+> 적용 범위: Quality Rater Guidelines 2025-09-11판 기준 (2026-09-26 전문 PDF 재확인 시에도 최신판)
 
 ---
 
@@ -47,11 +49,13 @@ description: >
 
 | 시점 | 변화 |
 |------|------|
-| 2014 | E-A-T 최초 도입 (Expertise·Authoritativeness·Trustworthiness) |
-| 2022-12-15 | Experience(E) 추가 → E-E-A-T 4요소로 확장 |
-| 2023-11 | QRG 업데이트 — E-E-A-T 적용 예시 확장 |
-| 2024-03 | Helpful Content System이 코어 알고리즘에 통합, scaled content abuse 정책 도입 |
-| 2025-09-11 | 현행 QRG 182쪽 — YMYL Government/Civics/Society 정의 추가, AI Overviews 평가 챕터 신설 |
+| 2014 | E-A-T 최초 도입 (Expertise·Authoritativeness·Trustworthiness) — 연도는 2026-09-26 1차 미대조 |
+| 2022-12-15 | Experience(E) 추가 → E-E-A-T 4요소로 확장 (Google Search Central Blog, 2022-12-15 원문 확인) |
+| 2023-11 | QRG 업데이트 + 개요 문서(An Overview) 발행 |
+| 2024-03-05 | March 2024 core update — "There's no longer one signal or system" (helpfulness 판단이 코어 랭킹 시스템 여러 신호로 흡수), scaled content abuse 등 신규 스팸 정책 3종 (Google Blog 2024-03-05 원문) |
+| 2025-09-11 | 현행 QRG 182쪽 — §2.3 YMYL을 Health or Safety / Financial Security / Government, Civics & Society / Other 4유형으로 기술 |
+
+> 주의 (2026-09-26 정정): 이전 판의 "2025-09-11판에 AI Overviews 평가 챕터 신설"은 전문 PDF(182쪽)에서 "AI Overview" 문구가 한 번도 나오지 않아 삭제했다. 생성형 AI는 §2.x 정의·Lowest 품질(scaled content abuse) 판단 부분에서 다룬다.
 
 ### 1-3. **E-E-A-T는 직접 랭킹 신호가 아니다**
 
@@ -71,7 +75,7 @@ Google 공식 입장:
 ### 2-1. Google 공식 표현
 
 > "Trust is the most important member of the E-E-A-T family because untrustworthy pages have low E-E-A-T no matter how Experienced, Expert, or Authoritative they may seem."
-> — Quality Rater Guidelines (Section 3.4 부근)
+> — Quality Rater Guidelines 2025-09-11판, §3.4 "Experience, Expertise, Authoritativeness, and Trust (E-E-A-T)" (2026-09-26 전문 PDF 원문 대조 — 바로 뒤에 "a financial scam is untrustworthy, even if the content creator is a highly experienced and expert scammer" 예시)
 
 ### 2-2. 시각 모델
 
@@ -228,7 +232,7 @@ Google 공식 입장:
 
 ### 5-1. "Who, Why, How" 프레임워크
 
-Google이 헬프 문서에서 직접 제시하는 3가지 질문:
+Google이 헬프 문서("Creating helpful, reliable, people-first content" — "Ask 'Who, How, and Why' about your content", 2026-09-26 원문 확인)에서 직접 제시하는 3가지 질문:
 
 - **Who** — 누가 이 콘텐츠를 만들었는가? (저자 byline, 회사 소개)
 - **Why** — 왜 이 콘텐츠를 만들었는가? (사명, 독자에게 어떤 도움)
@@ -243,7 +247,7 @@ Google이 헬프 문서에서 직접 제시하는 3가지 질문:
 - 광고·제휴·후원 정책 공개
 - 외부 인증·수상·언론 인용
 
-> 주의: 한 문단짜리 About Us는 Google 평가자 기준에서 *불충분*하다.
+> 주의: 한 문단짜리 About Us는 신뢰 신호로 약하다(실무 권장). QRG §2.5.3은 About Us·연락처·고객서비스 정보를 *목적에 비해 충분한지* 보라고 할 뿐 분량 기준을 두지 않는다 — "불충분"은 QRG 문구가 아닌 권장 해석이다(2026-09-26 보완).
 
 ### 5-3. Contact 페이지 최소 요건
 
@@ -281,16 +285,16 @@ E-E-A-T 강한 매체가 갖는 페이지:
 
 ## 6. YMYL 콘텐츠 — 더 엄격한 E-E-A-T
 
-### 6-1. YMYL 영역 (QRG 2025-09 기준)
+### 6-1. YMYL 영역 (QRG 2025-09-11판 §2.3 원문 기준)
 
-| 카테고리 | 예시 |
-|----------|------|
-| **Health & Safety** | 의료, 약물, 정신건강, 응급 처치 |
-| **Financial** | 투자, 세금, 대출, 보험, 암호화폐 |
-| **Legal** | 법률 자문, 비자, 권리, 분쟁 |
-| **Government/Civics/Society** | 투표, 공공 서비스, 법규 (2025-09 명칭 명확화) |
-| **News & Current Events** | 정치·국제·중대 사건 |
-| **Shopping (고가)** | 결제 정보가 오가는 큰 거래 |
+| 유형 (QRG 원문) | 원문 정의 요약 | 예시 |
+|----------|------|------|
+| **YMYL Health or Safety** | 정신·신체·정서 건강 또는 물리적·온라인 안전을 해칠 수 있는 주제 | 심장마비 증상, 약물, 지진 시 대처 |
+| **YMYL Financial Security** | 자신과 가족을 부양할 능력을 해칠 수 있는 주제 | 투자 방법, 대출, 세금 |
+| **YMYL Government, Civics & Society** | 집단·공공 이익·공공기관 신뢰·선거와 투표 정보 등 | 투표 자격, 운전면허 취득 요건 |
+| **YMYL Other** | 사람을 해치거나 사회 복리에 부정적인 기타 주제 | — |
+
+> 주의 (2026-09-26 정정): 이전 판의 6분류(Health & Safety / Financial / **Legal / News & Current Events / Shopping**)는 **구판 QRG 분류**다. 현행판은 위 4유형이며, 법률·뉴스·쇼핑은 해당 주제가 위 유형의 피해를 줄 수 있을 때 YMYL로 판단한다. 또한 QRG는 YMYL을 "스펙트럼"으로 보고 "Many or most topics are not YMYL"이라고 명시한다.
 
 ### 6-2. YMYL 강화 체크리스트
 
@@ -311,7 +315,7 @@ E-E-A-T 강한 매체가 갖는 페이지:
 
 ### 7-1. Google 공식 입장 (2023-02 블로그 + 현행 가이드)
 
-> "AI 사용 자체는 페널티가 아니다. 핵심은 *Helpful Content*다."
+> AI 사용 자체는 페널티가 아니며, 핵심은 *Helpful Content*다. (Google 입장의 **요약** — 따옴표 직접 인용 아님. QRG 원문: "the use of Generative AI tools alone does not determine the level of effort or Page Quality rating")
 
 | 행위 | Google 평가 |
 |------|-------------|
@@ -322,9 +326,11 @@ E-E-A-T 강한 매체가 갖는 페이지:
 
 ### 7-2. Scaled Content Abuse 정책 (2024-03)
 
-- 정의: "랭킹 조작 목적의 대량 콘텐츠 생산 — 자동화·사람·혼합 무관"
-- 2024-03 코어 업데이트로 강제 — 영향 받은 일부 사이트 50~80% 트래픽 감소
+- 정의 (Google Blog 2024-03-05 원문): "Scaled content abuse is when many pages are generated for the primary purpose of manipulating Search rankings and not helping users … no matter how it's created."
+- 2024-03-05 발표된 신규 스팸 정책 3종 중 하나 (기존 automatically-generated content 정책을 확장)
 - 핵심 기준: **양이 아니라 의도와 결과 가치**
+
+> 주의: 미검증 — 이전 판의 "영향 받은 일부 사이트 50~80% 트래픽 감소"는 출처가 없어 삭제했다(2026-09-26).
 
 ### 7-3. AI 안전 사용 워크플로우
 

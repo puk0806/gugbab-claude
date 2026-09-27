@@ -6,7 +6,7 @@ description: Springfox 기반 레거시 Swagger 2 API 문서화 패턴 - @Enable
 # Springfox 레거시 Swagger 2 API 문서화
 
 > 소스: https://github.com/springfox/springfox | https://github.com/springfox/springfox/issues/3462 | https://github.com/springfox/springfox/issues/3955 | https://github.com/springfox/springfox/issues/3982 | https://springfox.github.io/springfox/docs/current/ | https://springdoc.org/migrating-from-springfox.html | https://central.sonatype.com/artifact/io.springfox/springfox-swagger2/2.9.2 | https://mvnrepository.com/artifact/io.springfox/springfox-boot-starter/3.0.0
-> 검증일: 2026-04-23
+> 검증일: 2026-09-26 (2026-04-23 최초 검증 · 재검증 이력은 8절 참조. 재검증 결과 변동 없음 — Springfox는 여전히 3.0.0(2020-07-14)이 마지막 릴리스이며 신규 릴리스 없음)
 
 > 주의 (EOL 상태): Springfox는 **2020-07-14 3.0.0 릴리즈 이후 신규 릴리즈가 없고 사실상 유지보수 중단(EOL) 상태**입니다. Spring Boot 2.6+ 에서 `NullPointerException`을 일으키는 공식 이슈(#3462, #3955, #3982)도 해결되지 않았습니다. **신규 프로젝트는 반드시 Springdoc(`springdoc-openapi`)을 사용**하세요. 이 스킬은 레거시 유지보수 목적(이미 Springfox로 작성된 프로젝트) 전용입니다.
 

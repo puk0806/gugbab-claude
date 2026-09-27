@@ -12,7 +12,7 @@ description: >
 # 아리스토텔레스 1차 텍스트 인용 가이드
 
 > 소스: 아래 각 섹션 하단 참조 URL 명시
-> 검증일: 2026-05-03
+> 검증일: 2026-05-03 (§7-1 NE VII 장 매핑은 2026-09-26 Perseus Bywater XML 원문 대조로 정정)
 > 대상 독자: 도덕윤리교육 전공 대학원생(석/박사), akrasia 주제 학위논문/KCI 등재지 작성
 
 ---
@@ -294,16 +294,20 @@ Aristotle. Nicomachean Ethics. Translated by Roger Crisp. Rev. ed.
 
 | 위치 (Bekker) | NE 권/장 | 내용 |
 |---------------|----------|------|
-| 1145a15–35 | VII.1 | akrasia 논의 도입. 피해야 할 세 상태(악덕·akrasia·짐승같음) 제시. |
-| 1145b21–1146b8 | VII.2 | aporiai(난문) — 소크라테스 입장(akrasia 불가능론) 비판적 검토. |
+| 1145a15–1145b20 | VII.1 | akrasia 논의 도입. 피해야 할 세 상태(악덕·akrasia·짐승같음, 1145a15–35) 제시 + 통념(endoxa) 목록(1145b8–20). |
+| 1145b21–1146b7 | VII.2 | aporiai(난문) — 소크라테스 입장(akrasia 불가능론) 비판적 검토. |
 | **1146b8–1147b19** | **VII.3** | **핵심 논의.** 지식의 두 의미("가지고 있음" vs "사용함"), 실천 추론(practical syllogism), 술 취한 자·잠든 자 비유. |
 | 1147a24–b5 | VII.3 | 술 취한 자·잠든 자 비유의 핵심 단락. |
-| 1147b20–1148b14 | VII.4 | akrasia의 두 종류: **propeteia(성급함)** vs **astheneia(나약함)**. |
-| 1148b15–1149a24 | VII.5 | 짐승같음(thēriotēs)과 병적 akrasia 구분. |
+| 1147b20–1148b14 | VII.4 | 단적(ἁπλῶς) akrasia vs 부분적(κατὰ μέρος, 대상 한정) akrasia. 단적 akrasia는 akolasia와 같은 신체적 즐거움 영역. |
+| 1148b15–1149a23 | VII.5 | 짐승같음(thēriotēs)과 병적 akrasia 구분. |
 | 1149a24–1150a8 | VII.6 | 분노(thymos)에 의한 akrasia vs 욕구(epithymia)에 의한 akrasia. |
-| 1150a9–1151a28 | VII.7 | enkrateia(자제력)와 karteria(인내) 비교. |
-| 1151a29–1152a36 | VII.8–10 | akrasia와 phronēsis(실천적 지혜)의 관계. 결론. |
+| 1150a9–1150b28 | VII.7 | enkrateia(자제력)·karteria(인내) vs akrasia·malakia(유약함). akrasia의 두 종류 **propeteia(성급함) vs astheneia(나약함)**: 구분·정의 1150b19–22, 성급한 유형(ὀξεῖς·μελαγχολικοί) 설명까지 논의 전체 1150b19–28. |
+| 1150b29–1151a28 | VII.8 | akolastos(후회 없음·치료 불가) vs akrates(후회·치료 가능), prohairesis 대조(1151a5–7), akrates의 ἀρχή 보존(1151a25–26). |
+| 1151a29–1152a5 | VII.9 | enkrates는 어떤 logos든 고수하는가 — 고집 센 자와의 구별, enkrateia와 sophrosyne. |
+| 1152a6–36 | VII.10 | akrasia와 phronēsis(실천적 지혜)의 양립 불가, "절반의 악"(ἡμιπόνηρος, 1152a17). 결론. |
 
+> **장 경계 기준 (2026-09-26 원문 대조 정정):** 장 번호·시작 위치는 **Bywater OCT(1894)의 장 구분**을 기준으로 한다. Perseus canonical-greekLit `tlg0086.tlg010.perseus-grc2.xml`(Bywater 1894)의 VII권 장 div(XML상 `subtype="section"`, n=1–14)와 Bekker 5행 표지 사이 어수 보간으로 확인한 장 시작: VII.1 1145a15 · VII.2 1145b21 · VII.3 1146b8 · VII.4 1147b20 · VII.5 1148b15 · VII.6 1149a24 · VII.7 1150a9 · VII.8 1150b29 · VII.9 1151a29 · VII.10 1152a6 (±1행; VII.11–14는 즐거움 논의 1152b1–1154b34). 예: VII.8은 "ἔστι δʼ ὁ μὲν ἀκόλαστος … οὐ μεταμελητικός"(1150b29)로 시작한다. Bekker 1831·Susemihl 등 구판과 일부 번역본(Ross 원본 등)은 장 번호가 다를 수 있으므로 **인용의 절대 기준은 Bekker 행**이다.
+>
 > **주의 (Bekker 행 번호 인용 시 DISPUTED 처리):** 위 표는 Bywater OCT(1894) 표준 비평본 기준이다. **실천 추론 결정적 논의 범위**는 학자마다 다르게 인용된다 — `1147a10-b13` (Burnyeat 등), `1146b35-1147b13` (Charles, Bostock 등), `1147a24-b9` 등. 논문에서 인용할 때는 (1) 사용한 비평본·번역본의 실제 행 번호를 직접 확인하고, (2) 가능하면 사용한 학자(Burnyeat 1980, Bostock 2009, Symposium Aristotelicum 2009 등)의 인용 범위를 따라 인용 범위를 명시한다. fact-checker 검증(2026-05-03) 결과 DISPUTED 항목.
 
 ### 7-2. 비교 참조 위치
@@ -327,7 +331,7 @@ Aristotle. Nicomachean Ethics. Translated by Roger Crisp. Rev. ed.
 ```
 아리스토텔레스는 akrasia를 두 종류로 구분한다.
 숙고한 뒤에 따르지 못하는 "나약함(astheneia)"과
-숙고 없이 정념에 휩쓸리는 "성급함(propeteia)"이 그것이다 (NE VII.7, 1150b19-28).
+숙고 없이 정념에 휩쓸리는 "성급함(propeteia)"이 그것이다 (NE VII.7, 1150b19-22).
 
 특히 그는 akrates가 지식을 "가지고는 있으나 사용하지는 못하는" 상태,
 즉 술 취한 자나 잠든 자와 비슷한 상태에 있다고 본다 (NE VII.3, 1147a10-24).
@@ -363,7 +367,7 @@ Aristotle, NE VII.3, 1147a24-b5
 도입:        NE VII.1, 1145a15-35
 난문(aporiai): NE VII.2, 1145b21-1146b8
 실천 추론:    NE VII.3, 1146b31-1147b19   ← akrasia 논의 정점
-두 종류:      NE VII.7, 1150b19-28        ← astheneia / propeteia
+두 종류:      NE VII.7, 1150b19-22        ← astheneia / propeteia 구분·정의 (논의 전체 1150b19-28)
 결론:        NE VII.10, 1152a25-36
 
 [표준 비평본]
@@ -405,3 +409,52 @@ Bostock, David. "Akrasia, or Failure of Self-Control (Nicomachean
    Guide, edited by Jon Miller, 233–256. Cambridge: Cambridge
    University Press, 2011.
 ```
+
+---
+
+## 11. 그리스어 원문 확인 — Perseus 접근·핵심 어휘
+
+> 2026-09-26 병합(이력은 verification.md §9). LSJ·Logeion·Smyth·TLG 일반 안내는 제거하고, 식별자·URL·어휘 분석처럼 정확성이 필요한 부분만 옮겼다. 원 검증일 2026-05-03 (Perseus ID·Bekker URL 패턴·어원 VERIFIED).
+
+### 11-1. Perseus Digital Library — *니코마코스 윤리학* 접근 URL
+
+| 종류 | URL |
+|------|-----|
+| 그리스어(Bywater 텍스트, Perseus ID) | `https://www.perseus.tufts.edu/hopper/text?doc=Perseus:text:1999.01.0054` |
+| 영역(Rackham, Loeb 기반) | `https://www.perseus.tufts.edu/hopper/text?doc=Perseus:text:1999.01.0053` |
+| Scaife Viewer | `https://scaife.perseus.org/library/urn:cts:greekLit:tlg0086.tlg010/` |
+| Perseus Catalog (CTS URN) | `urn:cts:greekLit:tlg0086.tlg010` |
+
+**Bekker 페이지 직접 이동 URL 패턴:**
+
+```
+https://www.perseus.tufts.edu/hopper/text?doc=Perseus:text:1999.01.0054:bekker+page%3D{PAGE}
+```
+
+예시 (akrasia 핵심 구간 NE VII):
+- 1145a (Book VII 시작): `?doc=Perseus:text:1999.01.0054:bekker+page%3D1145a`
+- 1147a (akratic syllogism): `?doc=Perseus:text:1999.01.0054:bekker+page%3D1147a`
+- 1150b (propeteia/astheneia 구분): `?doc=Perseus:text:1999.01.0054:bekker+page%3D1150b`
+
+> **주의 (Bekker URL 행 번호 한계):** `bekker+page%3D1147a` 형식은 **페이지 단위(1147a)만** 지원하며, **행 번호(예: 1147a24)를 URL로 직접 지정할 수 없다**. 1147a 페이지에 진입한 후 본문에서 행 번호를 시각적으로 찾아야 한다 (Perseus는 5행마다 행 번호를 본문에 표시함). 학위논문에서 정밀한 위치 인용이 필요하면 **사용한 비평본의 페이지·행 번호를 직접 확인하고 Bekker 표준 표기(`1147a24-b5`)로 본문에 명시**한다.
+
+> 주의: Perseus의 NE 그리스어 본문은 **Bywater(OCT, 1894)** 기반이다. 다른 비평본과 차이가 있을 수 있어, 학위논문에서는 본문 인용 시 비평본을 명시하는 것이 안전하다.
+
+### 11-2. akrasia 핵심 어휘 분석 예시
+
+> 어원·의미는 LSJ + Aristotle 표준 해설(Stanford Encyclopedia of Philosophy, *Aristotle's Ethics* 항목 등)을 교차 확인한 결과.
+
+| 그리스어 (다음 행: 음역) | 의미 | NE 주요 출처 |
+|--------------|------|--------------|
+| **ἀκρασία** / akrasía | 자제력 없음 (alpha privative ἀ- + κράτος "힘·통제"). "힘없음" 직역. | NE VII 전반 |
+| **ἐγκράτεια** / enkráteia | 자제력. akrasia의 반대. ἐν- "안에" + κράτος → "자기 안에 통제력을 가짐". | NE VII.1-10 |
+| **προπέτεια** / propéteia | 성급함. 어원: **πρό-**(앞으로) + **πίπτω**(쓰러지다, 떨어지다) 계열 → "앞으로 쓰러져 떨어짐"의 의미. 숙고(deliberation) 없이 정념에 끌려 행동하는 akrasia 유형. | NE VII.7, 1150b19-22 / LSJ s.v. προπέτεια |
+| **ἀσθένεια** / asthéneia | 약함. 숙고하여 결정해 놓고도 정념에 굴복하는 akrasia 유형 (= para proairesin). | NE VII.7, 1150b19-22 |
+| **φρόνησις** / phrónēsis | 실천적 지혜(practical wisdom). 실천적 사안에 관한 올바른 추론 능력. | NE VI 전반 |
+| **ἕξις** / héxis | 성품·습성(disposition). 덕(arete)의 범주. "behave in the right way" 하는 안정된 성향. | NE II.5 |
+
+**음역 표기 주의:**
+- 본 표는 ALA-LC를 단순화한 형태(rough breathing의 h, 장음 표시 ē/ō 사용)이다.
+- 정식 ALA-LC 표기에서는 거친 숨표(῾)는 모음/이중모음 앞에 `h`로 옮기되, **부드러운 숨표·악센트·iota subscript는 음역에서 생략**한다.
+
+> 주의: Perseus의 형태소 분석은 lemma 후보를 모두 제시하지만, 문맥상 어느 것이 옳은지는 인간 판단이 필요하다. 특히 동음이의어(예: αἱρέω의 능동형 vs 중수동형 의미 차이)는 본문 맥락과 비평본 주석을 함께 봐야 한다.

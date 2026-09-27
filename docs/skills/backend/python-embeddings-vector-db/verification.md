@@ -2,8 +2,8 @@
 skill: python-embeddings-vector-db
 category: backend
 version: v1
-date: 2026-05-15
-status: APPROVED
+date: 2026-09-26
+status: PENDING_TEST
 ---
 
 # python-embeddings-vector-db 검증 기록
@@ -14,8 +14,8 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `python-embeddings-vector-db` |
 | 스킬 경로 | `.claude/skills/backend/python-embeddings-vector-db/SKILL.md` |
-| 검증일 | 2026-05-15 |
-| 검증자 | skill-creator |
+| 검증일 | 2026-09-26 (최초 2026-05-15) |
+| 검증자 | skill-creator → 2026-09-26 재검증: 메인 오케스트레이션 (Claude Sonnet 5) |
 | 스킬 버전 | v1 |
 
 ---
@@ -117,6 +117,31 @@ UNVERIFIED: 0
 ---
 
 ## 5. 테스트 진행 기록
+
+### 재검증 (2026-09-26)
+
+**수행일**: 2026-09-26
+**수행자**: 메인 대화 오케스트레이션 (Claude Sonnet 5) — verification-policy.md 재검증 절차
+**수행 방법**: SKILL.md 전체 Read → WebSearch로 핵심 클레임 재대조 → 실전 질문 2개 자체 답변
+
+**재검증한 핵심 클레임**
+- chromadb 1.5.9가 2026-09 시점도 최신 — 재확인, 변동 없음 (VERIFIED, PyPI 공식)
+- "pgvector 0.8.2" → **DISPUTED, 수정 반영**: 최신은 0.8.6(2026-07-29). 연산자(`<->`/`<=>`/`<#>`)·HNSW 옵션은 0.8.x 내에서 변동 없어 본문 코드는 그대로 유효, 기준 버전 표기만 갱신 (VERIFIED, PostgreSQL 공식 뉴스 + GitHub releases)
+- "OpenAI text-embedding-4" 존재 주장 — WebSearch에서 cloudprice.net 등 신뢰도 낮은 출처(⭐⭐ 미만)로만 발견, OpenAI 공식 문서 접근 실패(403) → **UNVERIFIED, 반영하지 않음**. info-verification.md 기준상 저신뢰 단일 출처는 추가 금지
+
+**Q1. "지금(2026-09) pgvector 최신 버전이 몇이고, 이 스킬의 SQL 예시가 여전히 유효한가?"**
+- PASS
+- 근거: SKILL.md 갱신된 "기준 버전" 표기(pgvector 0.8.6) + 섹션 2-4 SQL 예시(연산자·HNSW 인덱스)는 0.8.x 전반에서 동일 동작.
+
+**Q2. "OpenAI에 text-embedding-4라는 새 모델이 나왔다는데 이 스킬에 반영해야 하나?"**
+- PASS (반영 보류가 올바른 판단)
+- 근거: 공식 소스(OpenAI 문서)로 확인 불가, 저신뢰 출처 1곳만 존재 → info-verification.md 기준상 미검증 상태로 스킬에 반영하지 않는 것이 맞는 판단. SKILL.md는 검증된 text-embedding-3 계열만 유지.
+
+**판정**: pgvector 버전 정정 → 내용 변경 있음 → status `PENDING_TEST`로 되돌림 (2026-06-19 APPROVED 상태에서 재하향).
+
+---
+
+### 2차 테스트 (2026-06-19, 참고 보존)
 
 **수행일**: 2026-06-19
 **수행자**: skill-tester → general-purpose
@@ -248,8 +273,8 @@ Chroma에서 user_id로 필터링하면서 코사인 유사도 top-5를 가져�
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-05-15 4/4 PASS + 2026-06-19 2/2 PASS) |
-| **최종 판정** | **APPROVED** (라이브러리 사용법 + API 패턴 — content test PASS = APPROVED 가능. 2026-06-19 사용자 요청으로 전환) |
+| 에이전트 활용 테스트 | ✅ (2026-05-15 4/4 PASS + 2026-06-19 2/2 PASS + 2026-09-26 재검증 2/2 PASS) |
+| **최종 판정** | **PENDING_TEST** (2026-09-26 pgvector 버전 정정(0.8.2→0.8.6)으로 내용 변경 — 재검증 필요. 그 외 서술은 재검증 결과 유효) |
 
 ---
 
@@ -272,3 +297,4 @@ Chroma에서 user_id로 필터링하면서 코사인 유사도 top-5를 가져�
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 정규화 cosine=dot 등가성 / Q2 OpenAI Matryoshka 1536dim / Q3 ko-sbert-multitask 768dim KorSTS / Q4 Chroma vs pgvector 선택) → 4/4 PASS, PENDING_TEST 유지 (사용자 명시 요청) | skill-tester |
 | 2026-06-19 | v1 | 2단계 실사용 테스트 2차 수행 (Q1 한국어 단문 1만건 모델+DB 선택+코드 스켈레톤 / Q2 Chroma 복합 필터+distance→similarity 변환+메타 필터 함정) → 2/2 PASS, APPROVED 전환 | skill-tester |
 | 2026-09-25 | v1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |
+| 2026-09-26 | v1 | 재검증 — pgvector 기준 버전 0.8.2→0.8.6 정정(연산자·API 변동 없음), OpenAI text-embedding-4 관련 저신뢰 출처는 미반영 처리 → PENDING_TEST | 메인 오케스트레이션 (Claude Sonnet 5) |

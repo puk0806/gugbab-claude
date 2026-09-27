@@ -18,7 +18,7 @@ description: >
 > - Google AdMob — Anchored adaptive banners (Unity): https://developers.google.com/admob/unity/banner/anchored-adaptive
 > - Unity Releases — Unity 6 LTS Support: https://unity.com/releases/unity-6/support
 >
-> 검증일: 2026-06-10
+> 검증일: 2026-09-26 (재검증. 본문 사실성만 재검증 — references/REFERENCE.md은 2026-09-25 분리로 별도 재검증 대상 아님. Canvas/RectTransform/Screen.safeArea/TextMeshPro 통합 등 핵심 API는 안정적 기반 기능으로 변동 근거 없음. 세션 WebSearch/WebFetch 한도 도달로 uGUI vs UI Toolkit 비교표의 최신 변경 여부만 추가 재확인하지 못함 — 다음 재검증 시 우선 확인 권장)
 > 적용 버전: **Unity 6.0 LTS / 6.3 LTS** (uGUI 패키지 2.0+ / TextMeshPro 통합)
 
 ---

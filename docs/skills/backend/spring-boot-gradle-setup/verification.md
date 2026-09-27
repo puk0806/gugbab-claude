@@ -2,7 +2,7 @@
 skill: spring-boot-gradle-setup
 category: backend
 version: v1
-date: 2026-06-19
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `spring-boot-gradle-setup` |
 | 스킬 경로 | `.claude/skills/backend/spring-boot-gradle-setup/SKILL.md` |
-| 검증일 | 2026-04-22 |
+| 검증일 | 2026-09-26 (재검증) |
 | 검증자 | skill-creator agent |
 | 스킬 버전 | v1 |
 
@@ -137,6 +137,27 @@ status: APPROVED
 
 ---
 
+### 재검증 (2026-09-26)
+
+**수행자**: 메인 세션 (Sonnet 5), 서브에이전트 미사용(사용자 지시)
+**수행 방법**: SKILL.md + REFERENCE.md 전체 Read → 핵심 클레임 3건 WebSearch 교차 검증 → 실전 질문 2개 재확인
+
+**교차 검증 클레임:**
+1. Spring Boot 4.0 최소 Gradle 요구사항이 8.14 이상(또는 9.x) — WebSearch로 공식 4.0 Release Notes 인용 확인 → **VERIFIED**
+2. Spring Boot 4.0의 Jackson 3.0 Group ID 변경(`com.fasterxml.jackson` → `tools.jackson`, `jackson-annotations`만 예외) — 복수 기술 블로그 교차 확인, SKILL.md 본문과 일치 → **VERIFIED**
+3. Spring Boot 4.0/Spring Framework 7의 GraalVM Native Image 최소 요구가 25로 상향 — `paketo-buildpacks/spring-boot` 이슈 #562 등에서 확인 → **VERIFIED**
+4. (부가) Spring Boot 최신 안정 버전 — 2026-09 기준 4.1.1(2026-08-21 릴리즈) 확인. 본문 상단 "2026-04 기준 4.0.5" 각주를 4.1.1로 갱신.
+
+**Q1 (재확인). "Spring Boot 4.0으로 올릴 때 Jackson 관련 그룹 ID를 직접 관리하고 있다면 무엇을 바꿔야 하나?"**
+- PASS — SKILL.md 섹션 9.4 "Jackson 3.0 Group ID 변경"으로 `com.fasterxml.jackson` → `tools.jackson` 정확히 답변 가능. BOM 사용 시 자동 관리된다는 본문 설명도 최신 공식 정보와 일치.
+
+**Q2 (재확인). "Spring Boot 4.0 Gradle 빌드가 실패하는데 Gradle 버전이 원인일 수 있나?"**
+- PASS — 섹션 9.2 "Gradle 8.14 이상 또는 9.x" 요구사항으로 정확히 답변 가능.
+
+**status**: 실질 내용 변경 없음(상단 버전 각주만 갱신) → APPROVED 유지
+
+---
+
 ### (참고) 초기 작성 시 제시한 권장 테스트 케이스
 
 ### 테스트 케이스 1: 레거시 WAR 셋업
@@ -228,3 +249,4 @@ Spring Boot 3.4, Java 21, Kotlin DSL로 REST API 프로젝트의 build.gradle.kt
 | 2026-04-22 | v1 | 최초 작성 (레거시 2.5.12 + 모던 3.4 양쪽 커버) | skill-creator |
 | 2026-06-19 | v1 | Spring Boot 4.x 마이그레이션 섹션 추가 (섹션 9 — Gradle 8.14+, Jackson 3.0 Group ID 변경, Undertow 제거, 마이그레이션 순서). 검증일 갱신. | Claude (Sonnet 4.6) |
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | Claude (Sonnet 5) |
+| 2026-09-26 | v1 | 정기 재검증 — Gradle 8.14+/Jackson 3.0 group id/GraalVM 25+ 재확인, 최신 안정 버전 각주만 4.1.1로 갱신 | Claude (Sonnet 5) |

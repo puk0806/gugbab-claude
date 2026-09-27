@@ -6,9 +6,11 @@ description: Jackson + 자바 시간 API 통합 — Joda-Time(레거시)에서 j
 # Jackson + 자바 시간 API 마이그레이션
 
 > 소스: https://github.com/FasterXML/jackson-modules-java8 | https://github.com/FasterXML/jackson-datatype-joda | https://github.com/JodaOrg/joda-time | https://blog.joda.org/2014/11/converting-from-joda-time-to-javatime.html | https://docs.spring.io/spring-boot/appendix/application-properties/index.html
-> 검증일: 2026-04-22
+> 검증일: 2026-04-22 (재검증: 2026-09-26)
 
-> 주의: 이 문서는 Spring Boot 2.5 (Jackson 2.12.x 번들) + Joda-Time 2.10.10 레거시 환경 → Spring Boot 2.7/3.x (Jackson 2.13+ / 2.17+) + java.time 모던 환경으로의 전환을 전제로 합니다. 핵심 API는 Jackson 2.5 이후 안정적이므로 2.12 ~ 2.21 범위에서 동일하게 동작합니다.
+> 주의: 이 문서는 Spring Boot 2.5 (Jackson 2.12.x 번들) + Joda-Time 2.10.10 레거시 환경 → Spring Boot 2.7/3.x (Jackson 2.13+ / 2.17+) + java.time 모던 환경으로의 전환을 전제로 합니다. 핵심 API는 Jackson 2.5 이후 안정적이므로 2.12 ~ 2.22 범위에서 동일하게 동작합니다.
+>
+> 주의(2026-09-26 재검증): `jackson-datatype-jsr310` 최신 버전은 2.22.2(Maven Central)입니다. `JavaTimeModule` 등록 방식·`spring.jackson.*` 프로퍼티·타입 매핑 표는 전부 그대로 유효하며 breaking change 없음을 확인했습니다.
 
 ---
 

@@ -6,7 +6,9 @@ description: tsup 패키지 번들러 — esbuild 기반 TypeScript 라이브러
 # tsup 패키지 번들러
 
 > 소스: https://tsup.egoist.dev | https://github.com/egoist/tsup/releases
-> 검증일: 2026-04-20
+> 검증일: 2026-09-26
+
+> 주의(2026-09-26): tsup 공식 GitHub README에 "This project is not actively maintained anymore. Please consider using tsdown instead."라는 유지보수 중단 공지가 게시되어 있다(마이그레이션 가이드: tsdown.dev). 최신 버전은 여전히 8.5.1(2024-11-12, 약 10개월째 릴리즈 없음)로 patch 변경은 없지만, **신규 프로젝트는 후속 도구 tsdown 채택을 우선 검토**해야 한다. 기존 tsup 프로젝트나 tsdown 전환이 어려운 경우 이 문서의 8.5.1 기준 내용은 계속 유효하다.
 
 ---
 
@@ -14,7 +16,7 @@ description: tsup 패키지 번들러 — esbuild 기반 TypeScript 라이브러
 
 tsup은 **esbuild** 기반의 TypeScript/JavaScript 라이브러리 번들러다. 설정이 최소화되어 있고, CJS/ESM 동시 출력과 TypeScript declaration 파일 생성을 지원한다.
 
-**최신 안정 버전: 8.5.1** (2024-11-12 릴리즈)
+**최신 안정 버전: 8.5.1** (2024-11-12 릴리즈, 유지보수 종료 — 위 주의 참고)
 
 **적합한 경우:**
 - npm에 배포하는 라이브러리/패키지
@@ -165,6 +167,8 @@ export default defineConfig({
   },
 });
 ```
+
+> 주의: `outExtension`으로 JS 출력 확장자를 커스터마이징해도 `.d.ts`/`.d.cts` 등 dts 파일 확장자에는 반영되지 않는다(공식 GitHub 이슈 egoist/tsup#939, 2026-09-26 기준 미해결). dts 확장자는 항상 포맷(cjs/esm) 기준 기본값(`.d.ts`/`.d.cts`)을 따른다.
 
 ### 느린 DTS 빌드 분리 패턴
 

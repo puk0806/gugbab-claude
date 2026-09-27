@@ -2,7 +2,7 @@
 skill: spring-multi-datasource-oracle-mysql
 category: backend
 version: v1
-date: 2026-04-22
+date: 2026-09-26 (최초: 2026-04-22)
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `spring-multi-datasource-oracle-mysql` |
 | 스킬 경로 | `.claude/skills/backend/spring-multi-datasource-oracle-mysql/SKILL.md` |
-| 검증일 | 2026-04-22 |
+| 검증일 | 2026-04-22 (재검증: 2026-09-26) |
 | 검증자 | skill-creator (Claude Code) |
 | 스킬 버전 | v1 |
 
@@ -115,6 +115,23 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
+### 2026-09-26 — 재검증 (60일 초과 정기 재검증)
+
+**수행일**: 2026-09-26
+**수행 방법**: SKILL.md + REFERENCE.md 전체 Read, WebSearch로 mysql-connector-j·ojdbc11 버전 변동 재확인.
+
+**Q1. mysql-connector-j 버전 표기가 9.x에서 크게 바뀐 것 같은데(26.7.0), 기존 코드가 깨지는가?**
+- PASS(재검증). MySQL이 2026-07 릴리스부터 캘린더 버전(YY.M.P)으로 전환해 버전 번호만 바뀐 것이며, 드라이버 클래스명(`com.mysql.cj.jdbc.Driver`)·JDBC URL 포맷·`sslMode` 설정은 변경 없음을 공식 릴리스 노트로 확인.
+
+**Q2. ojdbc11 최신 버전(21.22.x/23.26.x 등)에서도 SKILL.md의 DataSource 설정이 그대로 맞는가?**
+- PASS(재검증). `oracle.jdbc.OracleDriver` 클래스명·Maven 좌표(`com.oracle.database.jdbc:ojdbc11`)는 패치 버전 무관하게 동일.
+
+**재검증 결론**: 핵심 클레임 VERIFIED 유지. mysql-connector-j 버전 체계 전환을 주의문으로 반영. status 변경 없음(APPROVED 유지).
+
+---
+
+### 2026-04-22 — 원 수행 기록
+
 **수행일**: 2026-04-22
 **수행 방법**: general-purpose 에이전트에게 SKILL.md만 Read한 뒤 2개 실전 질문 답변.
 
@@ -198,3 +215,4 @@ Oracle에 주문 저장하고 MySQL에 로그 남기는데, 한 트랜잭션으�
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
 | 2026-04-22 | v1 | 최초 작성 | skill-creator (Claude Code) |
+| 2026-09-26 | v1 | 재검증 — mysql-connector-j 캘린더 버전 전환(26.7.0), ojdbc11 신규 패치 반영, 핵심 설정 변경 없음 확인 | 메인 세션 |

@@ -2,8 +2,8 @@
 skill: python-langchain-current
 category: backend
 version: v1
-date: 2026-05-15
-status: APPROVED
+date: 2026-09-26
+status: PENDING_TEST
 ---
 
 # python-langchain-current 검증 기록
@@ -14,10 +14,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `python-langchain-current` |
 | 스킬 경로 | `.claude/skills/backend/python-langchain-current/SKILL.md` |
-| 검증일 | 2026-05-15 |
-| 검증자 | skill-creator |
+| 검증일 | 2026-09-26 (최초 2026-05-15) |
+| 검증자 | skill-creator → 2026-09-25 메인 오케스트레이션(부분 갱신) → 2026-09-26 재검증: 메인 오케스트레이션 (Claude Sonnet 5) |
 | 스킬 버전 | v1 |
-| 검증 기준 버전 | langchain-core 1.4.0 / langchain 1.3.x / langchain-community 0.4.x / langgraph 1.x |
+| 검증 기준 버전 | langchain-core 1.4.8 (최초 검증 시점 1.4.0에서 갱신) / langchain 1.3.x / langchain-community 0.4.x / langgraph 1.x |
 
 ---
 
@@ -136,6 +136,31 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
+### 재검증 (2026-09-26)
+
+**수행일**: 2026-09-26
+**수행자**: 메인 대화 오케스트레이션 (Claude Sonnet 5) — verification-policy.md 재검증 절차
+**수행 방법**: SKILL.md 전체 Read → WebSearch로 핵심 클레임 재대조 → 실전 질문 2개 자체 답변
+
+**재검증한 핵심 클레임**
+- "langchain-core 1.4.0(2026-05-11)" → **버전 갱신**: 최신은 1.4.8(2026-06-18), 패치 성격 업데이트로 breaking change 없음 확인 (VERIFIED, PyPI/GitHub releases)
+- LangChain 1.0 GA 정확한 날짜(2025-10-22) 및 "2.0 전까지 breaking change 없음" 공식 정책 — 최초 검증 시 UNVERIFIED로 남겼던 항목 중 안정성 관련 부분이 이번에 공식 확인됨, SKILL.md 문구 보강 (VERIFIED, langchain.com 공식 블로그 "LangChain and LangGraph Agent Frameworks Reach v1.0 Milestones")
+- **신규 발견**: `AgentExecutor` deprecated 관련 "2026-12까지 LangGraph로 마이그레이션 권장"이라는 구체적 기한 존재 — SKILL.md에 반영 (VERIFIED)
+
+**Q1. "지금(2026-09) LangChain 버전이 안정적인가, 아니면 또 breaking change가 곧 오나?"**
+- PASS
+- 근거: SKILL.md 상단 주의 문구 — "2.0 이전까지 breaking change 없음이 공식 정책, 2026-09-26 기준 위반 사례 없음"으로 명확히 답변 가능.
+
+**Q2. "AgentExecutor를 아직 쓰고 있는데 언제까지 LangGraph로 옮기면 되나?"**
+- PASS
+- 근거: SKILL.md 상단 신규 주의 문구 — "2026-12까지 LangGraph로 마이그레이션 권장"이라는 구체적 기한 제공.
+
+**판정**: langchain-core 버전 갱신 + AgentExecutor 마이그레이션 기한 신규 반영 → 내용 변경 있음 → status `PENDING_TEST`로 되돌림.
+
+---
+
+### 최초 테스트 (2026-05-15)
+
 **수행일**: 2026-05-15
 **수행자**: skill-tester → general-purpose
 **수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
@@ -181,8 +206,8 @@ status: APPROVED
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
 | 핵심 클레임 교차 검증 | ✅ (VERIFIED 12 / UNVERIFIED 1 — SKILL에 보수적 기술 / DISPUTED 0) |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-15 수행) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-15 수행) + ✅ 2/2 PASS (2026-09-26 재검증) |
+| **최종 판정** | **PENDING_TEST** (2026-09-26 langchain-core 버전 갱신 + AgentExecutor 마이그레이션 기한 신규 반영 — 재검증 필요) |
 
 > 카테고리 판정: LangChain은 *라이브러리 사용법 스킬* 카테고리에 해당하나, **API 변동성이 매우 크다**는 특수성이 있다. content test PASS만으로 APPROVED 전환 가능하나, 6개월 단위 재검증 권장을 §7에 기록한다.
 
@@ -203,3 +228,4 @@ status: APPROVED
 | 2026-05-15 | v1 | 최초 작성 — LangChain 1.x 균형 평가, Anthropic SDK·LlamaIndex 비교 포함 | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 패키지 아키텍처·설치 방식 / Q2 LCEL pipe·LangGraph 전환 기준 / Q3 Anthropic SDK 비교·AgentExecutor deprecated) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-09-25 | v1 | §5.3 `tool_choice="any"`/특정 도구 강제 예시에 주의 1개 추가 — Claude Opus 5.5·Fable 5.1은 강제 tool_choice 400(Sonnet 5·Haiku 4.5는 동작), 대안 `auto`+`strict: true`+프롬프트 지시 또는 structured outputs(`method="json_schema"`). 예제 코드 변경 없음. 근거: Claude API 공식 스킬(2026-09). status **APPROVED 유지** | 메인 대화 오케스트레이션 |
+| 2026-09-26 | v1 | 재검증 — langchain-core 1.4.0→1.4.8 버전 갱신, LangChain 1.0 GA 날짜(2025-10-22) 및 "2.0 전 breaking change 없음" 공식 정책 반영, AgentExecutor→LangGraph 마이그레이션 기한(2026-12) 신규 추가 → PENDING_TEST | 메인 오케스트레이션 (Claude Sonnet 5) |

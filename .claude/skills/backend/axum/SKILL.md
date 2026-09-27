@@ -6,9 +6,9 @@ description: Rust Axum 웹 프레임워크 핵심 패턴 - 라우팅, 상태 공
 # Axum 웹 프레임워크 핵심 패턴
 
 > 소스: https://docs.rs/axum/latest/axum/ | https://github.com/tokio-rs/axum
-> 검증일: 2026-06-20
+> 검증일: 2026-09-26 (재검증)
 
-> 주의: 이 문서는 axum 0.8.x 기준으로 작성되었습니다. 0.7에서 0.8로의 마이그레이션 시 Breaking Change가 있으므로 공식 changelog를 반드시 확인하세요.
+> 주의: 이 문서는 axum 0.8.x(최신 0.8.9, 2026-09 기준 0.9 미출시) 기준으로 작성되었습니다. 0.7에서 0.8로의 마이그레이션 시 Breaking Change가 있으므로 공식 changelog를 반드시 확인하세요.
 
 ---
 
@@ -22,7 +22,7 @@ tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tower = "0.5"
-tower-http = { version = "0.6", features = ["cors", "trace"] }
+tower-http = { version = "0.7", features = ["cors", "trace"] }  # 2026-09 기준 최신 0.7.1. 0.6.x도 여전히 호환 가능
 ```
 
 ---
@@ -389,6 +389,26 @@ async fn create_user(
 ```
 
 ---
+
+## 커스텀 미들웨어 (from_fn / from_fn_with_state)
+
+> 2026-09-26 구 `custom-middleware` 스킬 병합. 전체 원문(요청/응답 가로채기·본문 재구성·API 키·Extensions 전달 예시)은 [`references/custom-middleware.md`](references/custom-middleware.md).
+
+> 주의: axum 0.8.x 기준. 0.6 이하에서는 `Next<B>` 제네릭 파라미터가 필요했으나, 0.7부터 `Next`는 제네릭 없이 사용한다.
+
+> 주의: 미들웨어 함수의 `Request` 타입은 반드시 `axum::extract::Request`를 사용해야 한다. `axum::http::Request`는 제네릭(`Request<T>`)이므로 그대로 쓰면 컴파일 에러가 발생한다.
+
+| 상황 | 선택 |
+|------|------|
+| CORS, 압축, 트레이싱, 타임아웃 등 범용 기능 | tower-http 기성 미들웨어 |
+| 비즈니스 로직이 포함된 인증/인가 | 커스텀 미들웨어 (`from_fn`) |
+| 앱 State 접근이 필요한 미들웨어 | `from_fn_with_state` |
+| 복잡한 상태 머신, 커넥션 풀링 등 | Tower `Service` 트레이트 직접 구현 |
+
+- 함수 시그니처 순서: `State(state)`(및 기타 추출자) → `request: Request` → `next: Next`. State 추출자는 반드시 `Request`, `Next`보다 **앞**.
+- `next.run(request)`은 한 번만 호출. 호출하지 않으면 요청이 핸들러에 도달하지 않는다(요청 차단 패턴).
+- 인증 미들웨어는 `.route_layer()` — `.layer()`는 fallback 포함 모든 요청에 적용돼 404가 인증 에러로 바뀐다.
+- `.layer()` 호출 순서와 실행 순서는 역순. 선언 순서대로 실행하려면 `tower::ServiceBuilder`로 묶는다.
 
 ---
 

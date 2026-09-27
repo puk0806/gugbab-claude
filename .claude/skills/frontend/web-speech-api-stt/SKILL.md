@@ -1,6 +1,6 @@
 ---
 name: web-speech-api-stt
-description: 브라우저 내장 Web Speech API의 SpeechRecognition(STT) 사용 패턴. window.SpeechRecognition || window.webkitSpeechRecognition prefix 처리, lang/continuous/interimResults/maxAlternatives 옵션, onresult event.resultIndex로 interim+final 분리 처리, transcript/confidence 추출, 마이크 권한(getUserMedia) 사전 확인, Chrome·Safari 지원/ Firefox·Edge 미지원 graceful degradation, iOS Safari 백그라운드 중단·연속 인식 timeout, abort() vs stop() 차이, 한국어(ko-KR) 인식 팁, React useSpeechRecognition 훅 패턴
+description: 브라우저 내장 Web Speech API의 SpeechRecognition(STT)과 SpeechSynthesis(TTS) 사용 패턴. TTS는 getVoices() 비동기 로딩(voiceschanged)·voice 선택(localService)·rate/pitch/volume 범위·speak 큐와 cancel·iOS Safari 백그라운드 중단·브라우저 차이를 다룬다. STT는 window.SpeechRecognition || window.webkitSpeechRecognition prefix 처리, lang/continuous/interimResults/maxAlternatives 옵션, onresult event.resultIndex로 interim+final 분리 처리, transcript/confidence 추출, 마이크 권한(getUserMedia) 사전 확인, Chrome·Safari 지원/ Firefox·Edge 미지원 graceful degradation, iOS Safari 백그라운드 중단·연속 인식 timeout, abort() vs stop() 차이, 한국어(ko-KR) 인식 팁, React useSpeechRecognition 훅 패턴
 ---
 
 # web-speech-api-stt — 브라우저 내장 STT 사용 패턴
@@ -13,14 +13,14 @@ description: 브라우저 내장 Web Speech API의 SpeechRecognition(STT) 사용
 
 ---
 
-## TTS 스킬과의 관계
+## STT와 TTS의 관계
 
-이 스킬은 **Speech-to-Text(음성 → 텍스트)**다. **Text-to-Speech**는 `frontend/web-speech-api-tts` 별개 스킬을 참조한다.
+이 스킬의 본문(1~11절)은 **Speech-to-Text(음성 → 텍스트)**다. **Text-to-Speech**는 14절에 있다 (2026-09-26 구 `web-speech-api-tts` 스킬을 흡수, 12~13절·TTS React 훅 15절은 references/REFERENCE.md).
 
-| 스킬 | 인터페이스 | 용도 | 권한 |
+| 영역 | 인터페이스 | 용도 | 권한 |
 |------|-----------|------|------|
-| `web-speech-api-tts` | `SpeechSynthesis` + `SpeechSynthesisUtterance` | 텍스트 → 음성 출력 | 권한 불필요 |
-| `web-speech-api-stt` (이 문서) | `SpeechRecognition` (+ webkit prefix) | 음성 → 텍스트 변환 | 마이크 권한 필요 |
+| TTS (14절) | `SpeechSynthesis` + `SpeechSynthesisUtterance` | 텍스트 → 음성 출력 | 권한 불필요 |
+| STT (1~11절) | `SpeechRecognition` (+ webkit prefix) | 음성 → 텍스트 변환 | 마이크 권한 필요 |
 
 같은 *Web Speech API* 표준 산하지만 두 API는 **완전히 독립**적이다. 한쪽 지원이 다른 쪽 지원을 보장하지 않는다 (예: Safari iOS는 둘 다 부분 지원, Firefox는 TTS만 동작·STT는 flag 뒤에 disabled).
 
@@ -344,6 +344,79 @@ document.addEventListener('visibilitychange', () => {
 4. **대안 후보 활용**: `maxAlternatives = 3~5`로 받아 사용자 의도와 매칭 (예: 단어 평가 시 정답 단어가 후보 안에 있으면 PASS)
 5. **숫자·영어 혼용 발화**: Chrome은 한국어 lang에서도 영어 단어를 비교적 잘 처리. Safari는 더 약함
 6. **외래어 표기 불일치**: "프론트엔드" / "프론트앤드" / "프론트엔드" 등 다양하게 인식 — 후처리 normalize 필요
+
+---
+
+## 14. TTS — SpeechSynthesis 함정과 브라우저 차이
+
+> 소스: https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis · https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis/voiceschanged_event · https://bugs.webkit.org/show_bug.cgi?id=198277
+> 검증일: 2026-05-07 (구 `web-speech-api-tts`), 2026-09-26 이 스킬로 병합
+> 호환성: caniuse 기준 Baseline 2018-09 — STT와 달리 모든 주요 브라우저 지원. 비용 0·서버 호출 0이라 MVP·오프라인 PWA에 적합하지만, 음성 품질·기기 간 음성 일관성이 결정적이면 Cloud TTS·Polly·ElevenLabs 등 SaaS를 쓴다.
+
+### 14-1. getVoices()는 처음에 빈 배열일 수 있다
+
+브라우저가 voice 목록을 비동기로 로드하므로 즉시 호출하면 `[]`가 나온다. `voiceschanged`를 기다린다.
+
+```javascript
+function loadVoices() {
+  return new Promise((resolve) => {
+    const voices = window.speechSynthesis.getVoices()
+    if (voices.length > 0) return resolve(voices)
+    window.speechSynthesis.addEventListener(
+      'voiceschanged',
+      () => resolve(window.speechSynthesis.getVoices()),
+      { once: true }
+    )
+  })
+}
+
+// voice 선택 우선순위: en-US localService → en-US → en-* localService → 첫 en-*
+function pickVoice(voices, lang = 'en-US') {
+  const base = lang.split('-')[0]
+  const cands = voices.filter((v) => v.lang.startsWith(base + '-'))
+  return (
+    cands.find((v) => v.lang === lang && v.localService) ||
+    cands.find((v) => v.lang === lang) ||
+    cands.find((v) => v.localService) ||
+    cands[0] || null
+  )
+}
+```
+
+`localService: true`는 OS 내장 voice(오프라인 동작), `false`는 원격 서버 voice(네트워크 필요)다.
+
+### 14-2. 속성 범위·큐·취소
+
+- `rate` 0.1~10, `pitch` 0~2, `volume` 0~1 (기본 모두 1). 범위를 벗어난 입력은 브라우저가 무시하거나 에러를 내므로 **사용자 입력은 clamp**한다.
+- `lang`(BCP 47)을 빠뜨리면 시스템 기본 언어로 읽는다 — 영어 문장이 한국어 발음으로 들린다.
+- `speak()`를 여러 번 부르면 큐에 쌓여 **직렬 재생**된다. 새로 시작하려면 `cancel()` 후 `speak()`한다.
+- 상태: `speaking`·`pending`·`paused` boolean. 이벤트 7종: `start`·`end`·`pause`·`resume`·`error`·`mark`(SSML)·`boundary`(단어/문장).
+- 미지원 감지: `'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window`. 확인 없이 `new SpeechSynthesisUtterance()`를 호출하면 ReferenceError로 UI가 깨진다.
+
+### 14-3. iOS Safari 백그라운드 자동 중단
+
+탭이 백그라운드로 가거나 기기가 잠기면 진행 중인 utterance가 중단되고, 사용자 재상호작용 없이는 재개되지 않는다.
+
+```javascript
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && window.speechSynthesis.speaking) {
+    window.speechSynthesis.cancel() // 깔끔히 종료 → 복귀 시 다시 시작
+  }
+})
+// 긴 문장은 잘리는 위치를 예측하기 어려우므로 짧은 utterance(~100자)로 나눠 큐에 넣는다
+```
+
+> 백그라운드·잠금 상태에서도 끊김 없는 음성 재생이 **기능 요구사항**이면 Web Speech API로는 충족할 수 없다. 사전 녹음 오디오(Web Audio API/`<audio>`)나 네이티브 앱이 필요하다. STT와 함께 쓸 때 `speak()` 직후 `recognition.start()`는 오디오 세션이 충돌하므로 100~300ms 지연을 둔다(10절).
+
+### 14-4. 브라우저별 TTS 차이
+
+| 브라우저 | 지원 | 비고 |
+|---------|------|------|
+| Chrome (Desktop·Android) | ✅ | OS voice + Google 원격 voice |
+| Firefox | ✅ | OS voice. Linux는 speech-dispatcher 필요 (STT는 미지원인 것과 대조) |
+| Safari (macOS) | ✅ | 일부 환경에서 getVoices() 즉시 빈 배열 |
+| Safari (iOS) | ⚠️ | 백그라운드/잠금 시 자동 중단, getVoices() empty 사례 |
+| Edge·Opera | ✅ | Chromium 기반 (STT는 no-op인 것과 대조) |
 
 ---
 

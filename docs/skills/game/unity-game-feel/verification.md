@@ -2,7 +2,7 @@
 skill: unity-game-feel
 category: game
 version: v1
-date: 2026-06-10
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `unity-game-feel` |
 | 스킬 경로 | `.claude/skills/game/unity-game-feel/SKILL.md` |
-| 검증일 | 2026-06-10 |
+| 검증일 | 2026-09-26 (최초 2026-06-10) |
 | 검증자 | skill-creator (Claude) |
 | 스킬 버전 | v1 |
 | 대상 버전 | Unity 6 LTS (6000.0.x ~ 6000.3.x), Cinemachine 3.1.x, DOTween 1.2.x, URP 17.x |
@@ -136,11 +136,28 @@ UNVERIFIED: 0건 (본문에 포함된 모든 핵심 클레임)
 
 없음. 3개 질문 모두 SKILL.md에서 충분한 근거 섹션과 anti-pattern 경고를 찾을 수 있었다.
 
+### 2026-09-26 재검증 (본문 사실성만 — references/REFERENCE.md은 재검증 대상 아님)
+
+**수행일**: 2026-09-26
+**수행 방법**: WebSearch로 핵심 클레임 3개 재확인 + SKILL.md 자체 답변 확인 질문 2개
+
+- 클레임1. DOTween 버전 1.2.x — WebSearch 재확인 → **갱신 필요**: 최신은 **1.3.x**(DOTween Pro 1.0.430, 2026-06-23 기준 DOTween v1.3.030 반영). SKILL.md 버전 표기 갱신
+- 클레임2. Cinemachine 3.1.x 계열 — WebSearch 재확인 → **VERIFIED(패치만 진행)**: 3.1.7까지 패치, 메이저 API 변경 없음
+- 클레임3. DOPunch/DOShake/SetUpdate/ObjectPool API 시그니처 — 재확인 → **VERIFIED** (변동 없음)
+
+**Q1(재검증). "지금(2026-09) DOTween을 새로 설치하면 몇 버전대인가?"**
+- SKILL.md 답변 경로: 상단 메타 "대상: ... DOTween 1.3.x"
+- 판정: PASS
+
+**Q2. "Cinemachine 3에서 카메라 셰이크를 만들 때 쓰는 컴포넌트와 네임스페이스는?"**
+- SKILL.md 답변 경로: "3-1. Cinemachine 3 Impulse 시스템" — `using Unity.Cinemachine`, `CinemachineImpulseSource`/`CinemachineImpulseListener`
+- 판정: PASS (변동 없음)
+
 ### 판정
 
-- agent content test: 3/3 PASS
+- agent content test: 3/3 PASS (최초) + 재검증 2/2 PASS
 - verification-policy 분류: 코드 패턴 + 라이브러리 사용법 (실사용 필수 카테고리 아님)
-- 최종 상태: APPROVED
+- DOTween 패치 버전 표기만 갱신(1.2.x→1.3.x), API·동작 변경 없음 → APPROVED 유지
 
 ---
 
@@ -195,8 +212,8 @@ Cinemachine 3과 Unity 6 LTS로 폭발 시 카메라 셰이크를 만들고 싶�
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-06-10 수행, 3/3 PASS) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (2026-06-10, 3/3 PASS) + ✅ (2026-09-26 재검증, 2/2 PASS) |
+| **최종 판정** | **APPROVED** (유지) |
 
 > 본 스킬은 "코드 패턴 + 라이브러리 사용법" 카테고리로, verification-policy.md 기준 content test PASS 시 APPROVED 전환 가능하다. 단 *실제 Unity 프로젝트에서 빌드/런타임 검증*까지 필요한 *실사용 필수 스킬*은 아니다(Cinemachine·DOTween API 시그니처는 공식 문서로 100% 검증됨).
 
@@ -217,3 +234,4 @@ Cinemachine 3과 Unity 6 LTS로 폭발 시 카메라 셰이크를 만들고 싶�
 | 2026-06-10 | v1 | 최초 작성. Unity 6 LTS + Cinemachine 3.1 + DOTween 1.2 기준. 13개 클레임 모두 VERIFIED | skill-creator |
 | 2026-06-10 | v1 | 2단계 실사용 테스트 수행 (Q1 Hit Stop WaitForSecondsRealtime / Q2 Cinemachine 3 카메라 셰이크 네임스페이스 / Q3 DOKill 대량 풀링 전략) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | Claude |
+| 2026-09-26 | v1 | 재검증(98개 일괄 재검증 대상, 본문만). DOTween 1.2.x→1.3.x 버전 표기 갱신, Cinemachine·API 시그니처는 변동 없음 확인 → APPROVED 유지 | Claude Code |

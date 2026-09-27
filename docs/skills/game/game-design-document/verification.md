@@ -2,8 +2,8 @@
 skill: game-design-document
 category: game
 version: v1
-date: 2026-06-07
-status: APPROVED
+date: 2026-09-26
+status: PENDING_TEST
 ---
 
 # game-design-document 스킬 검증
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `game-design-document` |
 | 스킬 경로 | `.claude/skills/game/game-design-document/SKILL.md` |
-| 검증일 | 2026-06-07 |
+| 검증일 | 2026-09-26 (최초 2026-06-07) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 
@@ -145,11 +145,28 @@ status: APPROVED
 
 없음
 
+### 2026-09-26 재검증
+
+**수행일**: 2026-09-26
+**수행 방법**: WebSearch로 핵심 클레임 3개 재확인 + SKILL.md 자체 답변 확인 질문 2개
+
+- 클레임1. Unity 6 LTS 지원 기간(6.0 LTS 2년/6.3 LTS 2027-12) — WebSearch 재확인 → **DISPUTED(시점 경과)**: 6.0 LTS는 2026-10 지원 종료 임박(현재 거의 만료), 2026-09-01 Unity 6.6(비LTS) 출시, 6.7 LTS가 2026년 내 예정. SKILL.md 2.7절·해설 각주를 "6.3 LTS 권장 + 6.0 LTS 종료 임박 + 6.6/6.7 언급"으로 수정
+- 클레임2. 하이퍼캐주얼/캐주얼/하이브리드/미드코어 광고·IAP 비율 결정 트리 — WebSearch 재확인 → **부분 갱신**: 하이퍼캐주얼 85~95% 광고는 유지, 하이브리드캐주얼은 2026년 하위 장르별 세분화 데이터(라이프스타일·퍼즐 IAP 59%, 스포츠·레이싱 IAP 71%, 액션·전략 IAP 82%) 확인 → SKILL.md 4.1절에 "주의(2026-09 갱신)" 추가, 기존 결정 트리 방향성은 유지
+- 클레임3. 소프트런치 국가(캐나다·필리핀·인도네시아 1단계, 호주·뉴질랜드 2단계) — WebSearch 재확인 → **VERIFIED** (2026년에도 동일 국가가 표준 소프트런치 시장으로 재확인됨)
+
+**Q1(재검증). "지금(2026-09) 신규 Unity 2D 모바일 프로젝트를 시작하는데 어떤 LTS 버전을 GDD 기술사양에 적어야 하나?"**
+- SKILL.md 답변 경로: 2.7절 표 "Unity 6.3 LTS 권장(2027-12까지 지원)... Unity 6.0 LTS는 2026-10 지원 종료 임박 — 신규 프로젝트는 6.3 LTS로 시작"
+- 판정: PASS (수정 후 정확한 답 도출)
+
+**Q2. "미드코어 전략 게임과 하이퍼캐주얼 게임의 수익화 구조 차이는?"**
+- SKILL.md 답변 경로: 4.1절 결정 트리 — 미드코어 IAP 80%/광고 20%, 하이퍼캐주얼 광고 90%/IAP 10%, 2026 갱신 주의문으로 하위 장르별 세분화 수치도 참고 가능
+- 판정: PASS
+
 ### 판정
 
-- agent content test: 3/3 PASS
+- agent content test: 3/3 PASS (최초) + 재검증 2/2 PASS
 - verification-policy 분류: 해당 없음 (방법론·가이드라인 카테고리 — content test PASS = APPROVED 가능)
-- 최종 상태: APPROVED
+- Unity LTS 권장 버전 변경 + 수익화 벤치마크 갱신이라는 실질 내용 변경이 있었으므로 PENDING_TEST로 전환 (verification-policy.md 절차에 따름). 차기 재검증 또는 skill-tester 재테스트 시 APPROVED 재전환 검토
 
 ---
 
@@ -161,11 +178,11 @@ status: APPROVED
 
 | 항목 | 결과 |
 |------|------|
-| 내용 정확성 | ✅ (DISPUTED 1건은 "휴리스틱" 표기로 반영) |
+| 내용 정확성 | ✅ (2026-09-26 재검증: Unity LTS 버전 갱신, 수익화 벤치마크 보강) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-07) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-07) + 2/2 PASS (2026-09-26 재검증) |
+| **최종 판정** | **PENDING_TEST** (실질 내용 변경으로 재테스트 대기) |
 
 ---
 
@@ -183,3 +200,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-06-07 | v1 | 최초 작성 — Unity 2D 모바일 캐주얼 GDD 8섹션 + 3계층 루프 + 수익화 결정 트리 + 소프트런치 전략 + 안티패턴 | skill-creator |
 | 2026-06-07 | v1 | 2단계 실사용 테스트 수행 (Q1 GDD 8섹션 구조 / Q2 "X처럼" 안티패턴 수정법 / Q3 장르별 수익화+에너지 시스템 판단) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-26 | v1 | 재검증(98개 일괄 재검증 대상). Unity 6.0 LTS 지원 종료 임박 반영해 6.3 LTS 권장으로 수정, 2026년 하이브리드캐주얼 하위 장르별 수익화 벤치마크 보강, 소프트런치 국가는 변동 없음 확인 → 실질 내용 변경으로 PENDING_TEST 전환 | Claude Code |

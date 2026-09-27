@@ -1,9 +1,9 @@
 ---
 skill: moral-education-pedagogy-models
 category: education
-version: v1
-date: 2026-05-03
-status: APPROVED
+version: v2
+date: 2026-09-26
+status: PENDING_TEST
 ---
 
 # 검증 문서: moral-education-pedagogy-models
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `moral-education-pedagogy-models` |
 | 스킬 경로 | `.claude/skills/education/moral-education-pedagogy-models/SKILL.md` |
-| 검증일 | 2026-05-03 |
-| 검증자 | skill-creator (Claude) |
-| 스킬 버전 | v1 |
+| 검증일 | 2026-09-26 |
+| 검증자 | skill-creator (Claude) / 2026-09-26 재검증: 메인 세션 (1차 서지 직접 대조) |
+| 스킬 버전 | v2 |
 
 ---
 
@@ -123,17 +123,17 @@ status: APPROVED
 | 7 | Gilligan 3단계: 이기심→책임→비폭력 | **VERIFIED** | Wikipedia + ethicsofcare.org + study.com 일치 |
 | 8 | Lickona *Educating for Character* = 1991 Bantam | **VERIFIED** | ERIC ED337451 + SciRP + Amazon 9780553075700 일치 |
 | 9 | Lickona "knowing-feeling-acting" 3요소 통합 | **VERIFIED** | ERIC + cyc-net 정리 + 다수 2차 문헌 일치 |
-| 10 | Eleven Principles 원출처 = JME 25(1), 1996 | **VERIFIED** | Tandfonline DOI 10.1080/0305724960250110 |
+| 10 | Eleven Principles 원출처 = JME 25(1), 1996 | **DISPUTED→수정 (2026-09-26)** | JME 논문은 Lickona **단독** 저자, pp. 93–100 (Tandfonline + ERIC EJ533384). 3인 공저 표기 정정 |
 | 11 | Noddings *Caring* 초판 = 1984 UC Press, 2003/2013 개정 | **VERIFIED** | UC Press 페이지 직접 확인 (2003 preface, 2013 2nd ed ISBN 9780520275706) |
 | 12 | Noddings 4 components: modelling/dialogue/practice/confirmation | **VERIFIED** | infed.org + Frontiers 2025 + 다수 일치 |
 | 13 | Bohlin & Ryan *Building Character in Schools* = 1999 Jossey-Bass | **VERIFIED** | ERIC ED423501 + Amazon 9780787962449 |
-| 14 | Simon/Howe/Kirschenbaum *Values Clarification* = 1972 | **VERIFIED** | WorldCat + Amazon 9780396084709 + 76개 활동 일치 |
+| 14 | Simon/Howe/Kirschenbaum *Values Clarification* = 1972 | **DISPUTED→수정 (2026-09-26)** | 1972 Hart는 일치. 수록 전략 수는 **79개**(ERIC ED069585) — "76개" 정정 |
 | 15 | 가치화 과정 7 하위과정 (choosing/prizing/acting) | **VERIFIED** | Kirschenbaum SAGE 1976 + 다수 정리 문헌 일치 |
-| 16 | Blatt & Kohlberg (1975) JME 4(2) — 도덕 토론으로 단계 상승 | **VERIFIED** | structural-learning + simply psychology + Lind KMDD PDF 일치 |
-| 17 | Johnson & Johnson Constructive Controversy 절차(5단계) | **VERIFIED** | karlsmithmn.org PDF (Johnson 1997 chapter) + ERIC EJ611489 일치 |
+| 16 | Blatt & Kohlberg (1975) JME 4(2) — 도덕 토론으로 단계 상승 | **VERIFIED (서지) / UNVERIFIED (수치)** | 2026-09-26 Tandfonline·ERIC EJ115272: 4(2) 129–161, 12주 12시간 토론 확인. "1/3 상승·1년 후 유지" 수치는 원문 미확인 → `주의: 미검증` |
+| 17 | Johnson & Johnson Constructive Controversy 절차(5단계) | **DISPUTED→수정 (2026-09-26)** | *Change* 2000 논문은 Johnson·Johnson·**Smith** 3인, 32(1) 28–37, DOI 10.1080/00091380009602706 (ERIC EJ611489 + karlsmithmn.org 원문 PDF) |
 | 18 | Rest *Moral Development: Advances in Research and Theory* = 1986 Praeger | **VERIFIED** | Wikipedia James Rest + ResearchGate 일치 |
 | 19 | Rest 4-Component Model: sensitivity/judgment/motivation/character | **VERIFIED** | Griffith Repo + Wikipedia + Mercer Law Review 일치 |
-| 20 | DIT 12 issues 평정·순위 방식 | **VERIFIED** | Wikipedia DIT 항목 |
+| 20 | DIT 12 issues 평정·순위 방식 | **VERIFIED (표현 보완 2026-09-26)** | "딜레마 6개 × 쟁점 12개"로 구조 명확화 (DIT-2는 딜레마 5개) |
 | 21 | Narvaez *Embodied Morality* = 2016 Palgrave Macmillan, ISBN 9781137553980 | **VERIFIED** | Palgrave 페이지 + Amazon + Notre Dame 사이트 일치 |
 | 22 | TEM 3 ethics: Self-Protectionism / Engagement / Imagination | **VERIFIED** | sites.nd.edu/darcianarvaez TEM PDF (2016) |
 | 23 | MacIntyre *After Virtue* 3rd ed = 2007 Notre Dame Press, "After Virtue after a Quarter of a Century" 신서문 | **VERIFIED** | undpress.nd.edu 직접 확인 + Wikipedia 일치 |
@@ -147,8 +147,12 @@ status: APPROVED
 | 31 | SEP "Moral Education" 별도 항목 존재 여부 | **DISPUTED→수정** | SEP에 "Moral Education" 단독 항목 없음. "Philosophy of Education" (Curren) 항목 §3·§4가 moral/character education 다룸. SKILL.md에 SEP "Philosophy of Education" 인용으로 수정 |
 | 32 | "추기철" 인격교육 한국화 | **UNVERIFIED→수정** | KCI 검색에서 "추기철"은 일치 없음, "추병완"이 인격교육 다수 발표. 사용자 요청의 "추기철"은 오기 가능성 → SKILL.md에 추병완으로 수정 + 주의 표기 |
 | 33 | "이택휘" 가치명료화 비판 | **UNVERIFIED** | KCI 검색에서 정확 일치 항목 미확인 → SKILL.md에 미검증 항목으로 명시, 인용 금지 |
-| 34 | 박병기 도덕교육 통합 KCI 논문 존재 | **VERIFIED** | KCI ART002138615, ART002668543 등 확인 |
-| 35 | 추병완 인격교육 KCI 논문 존재 | **VERIFIED** | KCI ART001787294 확인 |
+| 34 | 박병기 도덕교육 통합 KCI 논문 존재 | **DISPUTED→수정 (2026-09-26)** | KCI 서지 직접 대조: ART002138615 = 차승한 외 5인(2016, 『도덕윤리과교육』 52), ART002668543 = 이정렬·류수·전영준(2020, 『초등도덕교육』 70). 박병기 저작 아님 → 저자 정정 |
+| 35 | 추병완 인격교육 KCI 논문 존재 | **DISPUTED→수정 (2026-09-26)** | KCI 서지 직접 대조: ART001787294 = 조난심(2013, 『교육철학연구』 35(2) 93–117). 추병완 저작 아님 → 저자 정정 |
+| 38 | Kristjánsson *Virtuous Emotions* 다루는 정서 | **VERIFIED (보완 2026-09-26)** | OUP 목차: gratitude·pity·shame·jealousy·grief·awe — 누락된 gratitude 추가 |
+| 39 | Bohlin 현 소속 Harvard Human Flourishing Program | **UNVERIFIED (2026-09-26)** | 공식 페이지 미확인 → 삭제 후 `주의: 미검증` |
+| 40 | Kristjánsson Jubilee Centre 교수·JME 편집인 | **VERIFIED (2026-09-26 재확인)** | jubileecentre.ac.uk 프로필 |
+| 41 | Handbook 3rd ed. 2024 Nucci·Krettenauer·Thompson | **VERIFIED (2026-09-26 재확인)** | Routledge 9781032438849 |
 | 36 | 2022 개정 도덕과 4영역 + 3차원 내용체계 | **VERIFIED** | KCI ART002932579, ART002882858 + 교육과정 정책 자료 일치 |
 | 37 | Routledge *Handbook of Moral and Character Education* 3rd ed = 2024, Nucci/Krettenauer/Thompson | **VERIFIED** | Routledge 9781032438849 페이지 |
 
@@ -177,6 +181,22 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+### 재검증 기록 (2026-09-26)
+
+**수행일**: 2026-09-26
+**수행자**: 메인 세션 재검증 (1차 서지 직접 대조 후 SKILL.md 자체 답변 확인)
+**수행 방법**: Tandfonline·ERIC·KCI 서지 원문 대조 10건 → 오류 정정 → 정정본 SKILL.md로 실전 질문 2개 답변
+
+- 대조 10건: Eleven Principles(JME 1996) / Constructive Controversy(Change 2000) / Blatt-Kohlberg 1975 / Values Clarification 1972 / Virtuous Emotions 목차 / Kristjánsson 직위 / Handbook 3판 / KCI ART001787294 / ART002138615 / ART002668543
+- 오류 6건: Eleven Principles 저자(3인→Lickona 단독), Change 2000 저자(2인→3인), 79개 전략(76 오기), KCI 3편 저자 오귀속(추병완·박병기 아님) — 정정. 미검증 2건(Blatt 수치, Bohlin 소속) `주의:` 처리
+
+Q1. "Lickona 11원리 원출처를 APA 7로 참고문헌에 쓰면?" — PASS (근거: §2.1 정정 서지 "Lickona, T. (1996)… 25(1), 93–100" + CEP 3인 판 혼동 주의)
+Q2. "한국 인격교육 선행연구로 추병완 논문 ART001787294를 인용해도 되나?" — PASS (근거: §8.1 정정 주의 — 해당 ID는 조난심(2013), 추병완 인용은 KCI 재검색 필요)
+
+agent content test: 2/2 PASS (재검증 기록). 실질 서지 정정으로 status PENDING_TEST 전환.
+
+### 최초 테스트 (2026-05-03)
 
 **수행일**: 2026-05-03
 **수행자**: skill-tester → general-purpose (대체: 도메인별 에이전트 없음, general-purpose 사용)
@@ -223,18 +243,19 @@ status: APPROVED
 
 | 항목 | 결과 |
 |------|------|
-| 내용 정확성 | ✅ (37개 클레임 중 VERIFIED 33, DISPUTED→수정반영 2, UNVERIFIED→삭제·주의표기 2) |
+| 내용 정확성 | ⚠️→✅ 2026-09-26 재검증: 1차 서지 대조 10건 중 오류 6건 정정(저자 오귀속 5·수치 1), 미검증 2건 주의 표기 |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-05-03, 3문항 수행: 2 PASS / 1 PARTIAL) |
-| **최종 판정** | **APPROVED** (2 PASS / 1 PARTIAL — PARTIAL 항목은 선택 보강 사항, 차단 요인 아님) |
+| 에이전트 활용 테스트 | ✅ (2026-05-03 3문항 2 PASS/1 PARTIAL, 2026-09-26 재검증 2/2 PASS) |
+| **최종 판정** | **PENDING_TEST** (2026-09-26 실질 서지 정정 — skill-tester 재테스트 후 APPROVED 재전환) |
 
 ---
 
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester content test 수행 및 섹션 5·6 업데이트 (2026-05-03 완료, 2/3 PASS + 1 PARTIAL)
-- [❌] 한국 도덕교육 적용 사례(8절)는 KCI 직접 검색 후 풍부화 가능. 현재는 보수적으로 추병완·박병기 두 명만 명시. — **선택 보강(차단 요인 아님)**
+- [❌] 한국 도덕교육 적용 사례(8절)는 KCI 직접 검색 후 풍부화 가능. 2026-09-26 기존 추병완·박병기 귀속이 오류로 확인되어 실제 저자(조난심·차승한 외·이정렬 외)로 정정함. — **선택 보강(차단 요인 아님)**
+- [❌] Blatt & Kohlberg (1975) 단계 상승 비율은 원문 전문(표)으로 확인 필요 (2026-09-26 미검증 표기)
 - [❌] "이택휘 가치명료화 비판"은 KCI/RISS/DBpia에서 정확 1차 출처 확인 시 추가 가능. — **선택 보강(차단 요인 아님)**
 - [❌] Kohlberg JusCom의 한국 적용 사례(KCI 검증된 것)를 추가하면 학위논문 활용도 상승. 또한 "KCI에 사례가 없을 때 학위논문 서술 방법"(한계 절 기재, 제안적 적용 명시 등) 가이드 보강 권장. — **선택 보강(Q2 PARTIAL 원인, 차단 요인 아님)**
 - [❌] Lickona 11원리 원문 정확 표현은 Tandfonline DOI 10.1080/0305724960250110에서 PDF 직접 확인 필요. — **선택 보강(차단 요인 아님)**
@@ -248,3 +269,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-05-03 | v1 | 최초 작성 — 12개 핵심 모델 + 18종 1차 서지 + akrasia 매핑표 + 학파 간 논쟁 정리 | skill-creator (Claude) |
 | 2026-05-03 | v1 | 2단계 실사용 테스트 수행 (Q1 Lickona vs Kristjánsson akrasia 비교 / Q2 JusCom 한국 적용 KCI 사례 처리 / Q3 Narvaez 4-component 2022 도덕과 매핑) → 2/3 PASS 1 PARTIAL, APPROVED 전환 | skill-tester |
+| 2026-09-26 | v2 | 재검증 — 1차 서지 대조 10건, 오류 6건 정정(Eleven Principles 단독 저자·Change 2000 3인 공저·79개 전략·KCI 3편 저자 오귀속), 미검증 2건 주의 표기, 실전 질문 2/2 PASS → PENDING_TEST | 메인 세션 (재검증) |

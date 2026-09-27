@@ -1,9 +1,9 @@
 ---
 skill: multilingual-content-strategy
 category: writing
-version: v1
-date: 2026-06-04
-status: APPROVED
+version: v2
+date: 2026-09-26
+status: PENDING_TEST
 ---
 
 # 검증 문서 — multilingual-content-strategy
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `multilingual-content-strategy` |
 | 스킬 경로 | `.claude/skills/writing/multilingual-content-strategy/SKILL.md` |
-| 검증일 | 2026-06-04 |
-| 검증자 | skill-creator |
-| 스킬 버전 | v1 |
+| 검증일 | 2026-09-26 |
+| 검증자 | skill-creator / 2026-09-26 재검증: 메인 세션 (Google Search Central 원문 직접 대조) |
+| 스킬 버전 | v2 |
 
 ---
 
@@ -93,6 +93,10 @@ status: APPROVED
 | 2 | "Baidu SEO: 중국 본토 호스팅·ICP 라이선스 권장" | **VERIFIED** (조건부) | ICP는 본토 호스팅에 법적 필수. Baidu 직접 랭킹 요건은 아니지만 ICP 없으면 유기 노출 저하 — Hilborn·Sinorbis·Dragon Metrics 다수 일치 |
 | 3 | "Google Scaled content abuse 정책 — 자동 번역 명시 포함 (March 2024)" | **VERIFIED** | Google Search Central Blog 2024-03 공식 게시. "automated transformations like synonymizing, translating" 원문 포함 |
 | 4 | "hreflang zh-CN vs zh-TW 분리 / zh-Hans·zh-Hant 스크립트 코드도 유효" | **VERIFIED** | Google Search Central 공식 — ISO 639-1 + ISO 3166-1 Alpha-2 + ISO 15924 모두 지원. zh-Hans-US 같은 조합도 명시 |
+| R1 | #3 scaled content abuse 인용문 | Spam policies 문서 원문(2026-08-28 수정본) | **DISPUTED→수정 (2026-09-26)** — 구절은 "Scraping feeds … (including through automated transformations like … translating …)"로 *스크래핑 변형* 예시. 앞부분 누락 인용 교정, 출처를 blog→spam policies 문서로 정정 |
+| R2 | #4 hreflang 규칙 | localized-versions 문서 원문(2026-09-21 수정본) | VERIFIED — es-419 미지원·대소문자 무관 보완 |
+| R3 | #1 Yahoo Japan 2010 Google 기반·2025 만료·NAVER 검토 | JFTC 페이지 접속 차단, 영문 위키백과(2차) | 2010 기반: 기존 판정 유지 / **2025 이후 상태 UNVERIFIED→`주의: 미검증`** |
+| R4 | 일본어 문체 용어 "상체" | 일본어 문법 용어 敬体/常体 | **DISPUTED→수정** (표기 오류) |
 
 ### 4-5. Claude Code 에이전트 활용 테스트
 
@@ -103,6 +107,19 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+### 재검증 기록 (2026-09-26)
+
+**수행일**: 2026-09-26
+**수행자**: 메인 세션 재검증 (공식 문서 대조 후 SKILL.md 자체 답변 확인)
+**수행 방법**: §4-4 #3·#4·R1~R4 대조 → 정정 2건 → 실전 질문 2개
+
+Q1. "우리 블로그 글을 DeepL로 번역해 올리면 Google 스팸 정책 위반이야?" — PASS (근거: §5-2 정정 — 원문 예시는 스크래핑 콘텐츠의 자동 변형 대량 생산. 자체 콘텐츠 번역 자체는 금지 아님, 단 가치 없는 대량 배포는 위험 → 후편집)
+Q2. "중남미 스페인어 페이지에 hreflang='es-419' 써도 돼?" — PASS (근거: §5-1 — Google은 ISO 3166-1 Alpha-2만 지원, es-419 미지원 원문 명시)
+
+agent content test: 2/2 PASS (재검증 기록). 인용 맥락 정정으로 status PENDING_TEST 전환.
+
+### 최초 테스트 (2026-06-04)
 
 **수행일**: 2026-06-04
 **수행자**: skill-tester → general-purpose
@@ -154,8 +171,8 @@ status: APPROVED
 | 내용 정확성 | ✅ (DISPUTED 1건 수정 반영, 주의 표기) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-04 수행) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-04 수행) / 2026-09-26 재검증 2/2 PASS |
+| **최종 판정** | **PENDING_TEST** (2026-09-26 재검증: 공식 문서 대조 5건 중 정정 2건(인용 맥락·용어)·미검증 1건 — skill-tester 재테스트 후 APPROVED 재전환) |
 
 ---
 
@@ -174,3 +191,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-06-04 | v1 | 최초 작성. Yahoo Japan 클레임 DISPUTED 판정 반영, 4개 핵심 클레임 교차 검증 완료 | skill-creator |
 | 2026-06-04 | v1 | 2단계 실사용 테스트 수행 (Q1 Translation/Transcreation 선택 / Q2 hreflang 영국 코드 / Q3 MT 대량 배포 정책) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-26 | v2 | 재검증 — Google localized-versions(2026-09-21)·spam policies(2026-08-28) 원문 대조 5건, 정정 2건(scaled content abuse 인용 앞부분 누락·출처, 일본어 문체 용어), 미검증 1건(Yahoo Japan 2025 이후 상태), es-419 미지원 보완, 실전 질문 2/2 PASS → PENDING_TEST | 메인 세션 (재검증) |

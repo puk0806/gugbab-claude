@@ -2,8 +2,8 @@
 skill: unity-firebase
 category: game
 version: v1
-date: 2026-06-10
-status: APPROVED
+date: 2026-09-26
+status: PENDING_TEST
 ---
 
 # Unity Firebase SDK 통합 스킬 검증 문서
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `unity-firebase` |
 | 스킬 경로 | `.claude/skills/game/unity-firebase/SKILL.md` |
-| 검증일 | 2026-06-10 |
+| 검증일 | 2026-09-26 (최초 2026-06-10) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 | 대상 SDK 버전 | Firebase Unity SDK 13.12.0 (2026-06-04 릴리즈) |
@@ -136,11 +136,28 @@ status: APPROVED
 
 없음. 3개 질문 모두 SKILL.md에서 근거 섹션 및 코드 예시를 완전히 도출 가능.
 
+### 2026-09-26 재검증 (본문 사실성만 — references/REFERENCE.md은 재검증 대상 아님)
+
+**수행일**: 2026-09-26
+**수행 방법**: WebSearch로 핵심 클레임 3개 재확인 + SKILL.md 자체 답변 확인 질문 2개
+
+- 클레임1. Firebase Unity SDK 최신 버전 13.12.0 — WebSearch 재확인 → **갱신 필요**: 최신은 **13.17.0**(직전 13.16.0에 Firebase AI/FCM/Remote Config 갱신 포함). SKILL.md 버전 표기 전체 갱신
+- 클레임2. 초기화 패턴(`FirebaseApp.CheckAndFixDependenciesAsync` + `ContinueWithOnMainThread`) — 재확인 → **VERIFIED** (API 변동 없음)
+- 클레임3. Remote Config `SetDefaultsAsync → SetConfigSettingsAsync → FetchAndActivateAsync` 순서 및 필드명 — 재확인 → **VERIFIED** (변동 없음)
+
+**Q1(재검증). "지금(2026-09) Firebase Unity SDK를 새로 설치하면 몇 버전이 뜨나?"**
+- SKILL.md 답변 경로: "0. 버전·환경 요구사항" 표 "Firebase Unity SDK: 13.17.0(최신 안정/2026-09 기준)"
+- 판정: PASS
+
+**Q2. "Firebase 초기화 콜백에서 Unity UI를 갱신하려는데 ContinueWith와 ContinueWithOnMainThread 중 뭘 써야 하나?"**
+- SKILL.md 답변 경로: "2. 초기화 패턴" 주의문 — "ContinueWithOnMainThread는 Firebase.Extensions... 일반 ContinueWith는 백그라운드 스레드 실행되어 NullReferenceException 발생"
+- 판정: PASS
+
 ### 판정
 
-- agent content test: 3/3 PASS
+- agent content test: 3/3 PASS (최초) + 재검증 2/2 PASS
 - verification-policy 분류: 라이브러리 사용법 스킬 (content test PASS = APPROVED 가능)
-- 최종 상태: APPROVED
+- 버전 번호(13.12.0→13.17.0) 갱신이라는 실질 내용 변경이 있었으므로 PENDING_TEST 전환. 차기 skill-tester 재테스트 시 APPROVED 재검토
 
 ---
 
@@ -158,8 +175,8 @@ status: APPROVED
 | 내용 정확성 | ✅ (공식 문서 11개 클레임 VERIFIED, 1개 UNVERIFIED는 본문 명시) |
 | 구조 완전성 | ✅ (8개 섹션 + 체크리스트 완비) |
 | 실용성 | ✅ (실 게임 시나리오 기반 복붙 가능 코드) |
-| 에이전트 활용 테스트 | ✅ (2026-06-10 수행, 3/3 PASS) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (2026-06-10, 3/3 PASS) + ✅ (2026-09-26 재검증, 2/2 PASS) |
+| **최종 판정** | **PENDING_TEST** (SDK 버전 갱신, 재테스트 대기) |
 
 ---
 
@@ -179,3 +196,4 @@ status: APPROVED
 | 2026-06-10 | v1 | 최초 작성 — Firebase Unity SDK 13.12.0 기준, Analytics/Crashlytics/Remote Config/FCM 4개 모듈 + EDM4U 설치 + 8개 트러블슈팅 패턴 | skill-creator |
 | 2026-06-10 | v1 | 2단계 실사용 테스트 수행 (Q1 Firebase 초기화 ContinueWithOnMainThread / Q2 Remote Config 필드명 오타·SetDefaultsAsync 순서 / Q3 Crashlytics SetUserId 타이밍 버그) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | Claude |
+| 2026-09-26 | v1 | 재검증(98개 일괄 재검증 대상, 본문만). Firebase Unity SDK 13.12.0→13.17.0 버전 갱신, 초기화·Remote Config API는 변동 없음 확인 → 실질 내용 변경으로 PENDING_TEST 전환 | Claude Code |

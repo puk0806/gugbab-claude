@@ -2,7 +2,7 @@
 skill: hikaricp-tuning-oracle-mysql
 category: backend
 version: v1
-date: 2026-06-19
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -16,7 +16,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `hikaricp-tuning-oracle-mysql` |
 | 스킬 경로 | `.claude/skills/backend/hikaricp-tuning-oracle-mysql/SKILL.md` |
-| 검증일 | 2026-04-22 |
+| 검증일 | 2026-09-26 (재검증) |
 | 검증자 | skill-creator (Claude) |
 | 스킬 버전 | v1 |
 | 대상 버전 | HikariCP 3.4.5 ~ 5.x (통합) |
@@ -153,6 +153,28 @@ status: APPROVED
 
 ---
 
+### 재검증 (2026-09-26)
+
+**수행자**: 메인 세션 (Sonnet 5), 서브에이전트 미사용(사용자 지시)
+**수행 방법**: SKILL.md + REFERENCE.md 전체 Read → 핵심 클레임 WebSearch/WebFetch 3건 교차 검증 → 실전 질문 2개 재확인
+
+**교차 검증 클레임:**
+1. HikariCP 최신 안정 버전 — WebSearch(mvnrepository) 결과 7.0.2(2025-08-19) 확인, 이후 7.1.0(dependabot PR 다수 확인)도 릴리즈됨. CHANGES 파일(WebFetch, `raw.githubusercontent.com/.../dev/CHANGES`) 확인 결과 7.0.x~7.1.1 어디에도 `maximumPoolSize`/`minimumIdle`/`connectionTimeout`/`idleTimeout`/`maxLifetime`/`keepaliveTime`/`validationTimeout`/`leakDetectionThreshold`/`autoCommit` 설정 키 변경 없음 → **VERIFIED** (본문 "설정 키 변경 없음" 클레임 유지 타당)
+2. Spring Boot 4.0 GA가 HikariCP 7.0 계열을 번들 — WebSearch로 "Spring Boot 4.0.0 available now"(2025-11-20, spring.io 공식 블로그) 및 GitHub 이슈 #46739("Upgrade to HikariCP 7.0.1")로 확인 → **VERIFIED**
+3. HikariCredentialsProvider가 7.0.0 신규 기능 — CHANGES 파일에서 "fixed #1294 add support for HikariCredentialsProvider class"(7.0.0) 확인 → **VERIFIED**
+
+**판정**: 본문 내용 변경 없음(정확). 다만 verification.md 섹션 4-4 클레임 #14의 "최신 안정 버전 7.0.2(2026-04 기준)"는 현재 기준 7.1.0까지 출시되어 있어 시점 표기이므로 그대로 두되 아래 재검증 각주로 갱신.
+
+**Q1 (재확인). "Spring Boot 4.1 환경에서 HikariCP 설정 키가 3.x 시절과 달라졌는가?"**
+- PASS — SKILL.md 섹션 11.2 "설정 키 변경 없음 — 기존 yml 그대로 동작"으로 정확히 답변 가능. WebFetch로 확인한 CHANGES 내용과 일치.
+
+**Q2 (재확인). "HikariCP 최신 버전에서 AWS Secrets Manager 같은 동적 자격증명을 쓰려면?"**
+- PASS — SKILL.md 섹션 11.3 `HikariCredentialsProvider` 예시로 정확히 답변 가능. 7.0.0에 실제 추가된 기능임을 CHANGES로 재확인.
+
+**status**: 실질 내용 변경 없음 → APPROVED 유지
+
+---
+
 ### (참고) 권장 테스트 케이스 (SKILL.md 작성 시 제시된 케이스 — 향후 실사용 시 수행)
 
 ### (예정) 테스트 케이스 1: 기본 풀 사이징 질문
@@ -242,3 +264,4 @@ Oracle DB 재시작 후 HikariCP 커넥션 복구가 오래 걸린다
 | 2026-04-24 | v1 | 섹션 1 ❌ 마커·섹션 6 중복 요약표 cleanup (APPROVED 상태와 일관되도록 정리) | 메인 오케스트레이션 |
 | 2026-06-19 | v1 | Spring Boot 4.x / HikariCP 7.0 마이그레이션 섹션 추가 (섹션 11 — HikariCP 번들 버전표, 설정 키 변경 없음, HikariCredentialsProvider, Virtual Thread 고려사항). 검증일 갱신. | Claude (Sonnet 4.6) |
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | Claude (Sonnet 5) |
+| 2026-09-26 | v1 | 정기 재검증 — HikariCP 7.0.x~7.1.x 설정 키 변경 없음·HikariCredentialsProvider 확인, 본문 변경 없음 | Claude (Sonnet 5) |

@@ -2,7 +2,7 @@
 skill: module-boundaries
 category: architecture
 version: v1
-date: 2026-08-26
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -17,7 +17,8 @@ status: APPROVED
 | 검증일 | 2026-08-26 |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
-| 기준 버전 | dependency-cruiser 18.2.0 / eslint-plugin-boundaries·@boundaries/eslint-plugin 7.2.0(레거시 4.2.2) / eslint-plugin-import 2.32.0 / eslint-plugin-import-x 4.17.1 / eslint-import-resolver-typescript 4.4.5 / madge 8.0.0 / ESLint 10.9.1(8·9 호환 경로 병기) |
+| 기준 버전 | dependency-cruiser 18.4.0(2026-09-26 갱신, 최초 18.2.0) / eslint-plugin-boundaries·@boundaries/eslint-plugin 7.2.0(레거시 4.2.2, 변동 없음) / eslint-plugin-import 2.32.0 / eslint-plugin-import-x 4.17.1 / eslint-import-resolver-typescript 4.4.5 / madge 8.0.0 / ESLint 10.11.0(2026-09-26 갱신, 최초 10.9.1)(8·9 호환 경로 병기) |
+| 검증일 | 2026-09-26 (30~60일 주기 재검증, 최초 검증 2026-08-26) |
 
 ---
 
@@ -209,6 +210,31 @@ status: APPROVED
 
 ---
 
+### 5-1. 2026-09-26 재검증 (30~60일 주기, verification-policy.md 절차)
+
+**수행일**: 2026-09-26
+**수행 방법**: SKILL.md + references/REFERENCE.md 전체 Read → 핵심 클레임 4개 WebSearch/WebFetch 재검증 → 실전 질문 2개로 SKILL.md 자체 답변 재확인
+
+**재검증 클레임**:
+| # | 클레임 | 재확인 결과 |
+|---|--------|------|
+| R1 | dependency-cruiser 최신 버전 | npm registry 재확인 → **18.2.0 → 18.4.0** 마이너 갱신, breaking change 없음 |
+| R2 | ESLint 최신 버전, v10 eslintrc 제거 유지 | npm registry 재확인 → **10.9.1 → 10.11.0** 마이너 갱신, eslintrc 제거는 그대로 |
+| R3 | `@boundaries/eslint-plugin` 버전 및 구 이름과의 병존 | npm registry 재확인 → 여전히 **7.2.0**, 변동 없음 |
+| R4 | `boundaries/dependencies` 정책 배열 키 `rules` vs `policies` 문서 불일치 | jsboundaries.dev 룰 레퍼런스(`rules`) vs quick-start(`policies`) 재확인 → **불일치 여전히 존재**, SKILL.md `> 주의:` 표기 그대로 유효 |
+
+**Q1(재검증). "dependency-cruiser를 18.4.0으로 올렸는데 baseline·CI 게이트 사용법이 바뀌었나?"**
+- SKILL.md 답변: 아니다. 마이너 버전 갱신이며 `--ignore-known`·baseline 리포터 동작 방식 변경 없음(R1).
+- **판정: ✅ PASS**
+
+**Q2(재검증). "`boundaries/dependencies` 설정에서 정책 배열 키로 `rules`와 `policies` 중 뭘 써야 하나?"**
+- SKILL.md 답변: 공식 문서 간 표기가 여전히 불일치한다(룰 레퍼런스=`rules`, quick-start=`policies`). SKILL.md는 룰 레퍼런스를 따라 `rules:`를 채택했고, 실제 적용 시 설치 버전의 타입 정의(`DependenciesRuleOptions`)로 최종 확인하라는 지침 그대로 유효(§3-4(a) 주의문, R4).
+- **판정: ✅ PASS**
+
+**재검증 결과**: 4개 클레임 모두 실질 동작 변경 없음(버전 번호만 마이너 갱신, 기존 DISPUTED 표기 여전히 유효). **status APPROVED 유지.**
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -243,3 +269,4 @@ status: APPROVED
 | 2026-08-26 | v1 | 2단계 실사용 테스트 수행 (Q1 ESLint 8 레거시 boundaries 버전 / Q2 dependency-cruiser 점진 도입 / Q3 barrel 순환·번들 메커니즘+optimizePackageImports 한계) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | Claude (Sonnet 5) |
 | 2026-09-25 | v1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |
+| 2026-09-26 | v1 | 30~60일 주기 재검증. dependency-cruiser 18.2.0→18.4.0, ESLint 10.9.1→10.11.0 버전 표기 갱신(동작 변경 없음), `rules`/`policies` 문서 불일치 여전히 존재 확인. status APPROVED 유지 | 메인 세션 |

@@ -2,7 +2,7 @@
 skill: testing-rust
 category: backend
 version: v2
-date: 2026-06-20
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -36,7 +36,7 @@ status: APPROVED
 | 스킬 이름 | testing-rust |
 | 스킬 경로 | .claude/skills/testing-rust/SKILL.md |
 | 최초 작성일 | 2026-04-07 |
-| 검증일 | 2026-06-20 (버전 재검증, 최초 2026-04-07) |
+| 검증일 | 2026-09-26 (재검증, 최초 2026-04-07) |
 | 검증 방법 | skill-creator 에이전트 (조사 + fact-checker 검증 완료) |
 | 버전 기준 | Rust 1.75+ / tokio 1.x / axum 0.8.x |
 | 현재 상태 | **VERIFIED** |
@@ -99,7 +99,7 @@ status: APPROVED
 | axum 공식 문서 | https://docs.rs/axum/0.8/axum/ | High |
 | tower::ServiceExt 문서 | https://docs.rs/tower/latest/tower/trait.ServiceExt.html | High |
 | axum GitHub examples | https://github.com/tokio-rs/axum/tree/main/examples | High |
-| repository-pattern 스킬 | .claude/skills/repository-pattern/SKILL.md | Internal |
+| project-structure 스킬 (구 repository-pattern 스킬 대체, 2026-09-26 삭제) | .claude/skills/backend/project-structure/SKILL.md | Internal |
 
 ---
 
@@ -148,6 +148,26 @@ status: APPROVED
 
 ---
 
+### 재검증 (2026-09-26)
+
+**수행자**: 메인 세션 (Sonnet 5), 서브에이전트 미사용(사용자 지시)
+**수행 방법**: SKILL.md + REFERENCE.md 전체 Read → 핵심 클레임 3건 WebSearch 교차 검증 → 실전 질문 2개로 SKILL.md 자체 답변 확인
+
+**교차 검증 클레임:**
+1. `tower` 크레이트 버전 "0.5" 예시 — WebSearch 결과 최신 0.5.3(2026-01-12) 유지, 0.6 메이저 미출시 → **VERIFIED**
+2. `http-body-util` 버전 "0.1" 예시 — WebSearch 결과 최신 0.1.5 유지 → **VERIFIED**
+3. axum 최신이 여전히 0.8.x(0.8.9) — axum 스킬 재검증(같은 날 수행)과 교차 확인, `tower::ServiceExt::oneshot` 기반 테스트 패턴에 영향 없음 → **VERIFIED**
+
+**Q1 (재확인). "axum 핸들러를 서버 안 띄우고 테스트하려면?"**
+- PASS — SKILL.md "Axum 핸들러 테스트(tower::ServiceExt)" 절의 `oneshot` 패턴과 Cargo.toml dev-dependencies(`tower 0.5`, `http-body-util 0.1`)가 최신 버전에서도 그대로 유효함을 확인.
+
+**Q2 (재확인). "같은 테스트에서 여러 요청을 보내려면 oneshot을 어떻게 우회하나?"**
+- PASS — SKILL.md "oneshot의 제약: 여러 요청 보내기" 절의 `into_service()` + `ServiceExt::ready()` 패턴으로 정확히 답변 가능.
+
+**status**: 내용 변경 없음 → APPROVED 유지
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -174,3 +194,5 @@ status: APPROVED
 | 2026-04-17 | v2 | verification.md 신규 8섹션 포맷으로 마이그레이션 | 메인 대화 오케스트레이션 |
 | 2026-06-20 | v3 | 버전 재검증 — tower 0.5.3 확인 (변경 없음). axum 0.8.9 확인. ServiceExt::oneshot API 유지. SKILL.md 수정 없음 | 버전 재검증 작업 |
 | 2026-09-25 | v3 | 포맷 정합 — 메타 표에 "검증일" 라인 추가(기존엔 체크리스트 항목으로만 표기돼 자동 감사가 날짜를 못 읽음). 내용·status 변경 없음 | 모델 ID 현행화 감사 |
+| 2026-09-26 | v3 | 삭제된 repository-pattern 스킬 참조를 project-structure로 교체(SKILL.md In-Memory Mock 절 제목·관련 스킬 1줄). 내용·status 변경 없음 | 스킬 정리 작업 |
+| 2026-09-26 | v4 | 정기 재검증 — tower 0.5.3/http-body-util 0.1.5/axum 0.8.9 유지 확인, 내용 변경 없음 | Claude (Sonnet 5) |

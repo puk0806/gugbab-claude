@@ -19,8 +19,8 @@ description: >
 > - FCM: https://firebase.google.com/docs/cloud-messaging/unity/get-started
 > - Troubleshooting: https://firebase.google.com/docs/unity/troubleshooting-faq
 >
-> 검증일: 2026-06-10
-> 대상 버전: Firebase Unity SDK 13.12.0 (2026-06-04 릴리즈, C++ SDK 13.8.0 / Android BoM 34.14.0 / iOS Cocoapods 12.14.0)
+> 검증일: 2026-09-26 (재검증. 본문 사실성만 재검증 — references/REFERENCE.md은 2026-09-25 분리로 별도 재검증 대상 아님. Firebase Unity SDK 13.12.0 → **13.17.0**으로 최신 버전 갱신, 초기화·Analytics·Crashlytics·Remote Config API는 변동 없음 확인)
+> 대상 버전: Firebase Unity SDK 13.17.0 (2026-09 기준 최신, C++ SDK 13.11.0 / Android BoM 34.18.0 / iOS Cocoapods 12.18.0 — 13.16.0 릴리즈 노트 기준 근사치)
 
 ---
 
@@ -28,7 +28,7 @@ description: >
 
 | 항목 | 요구 |
 |------|------|
-| Firebase Unity SDK | 13.12.0 (최신 안정 / 2026-06 기준) |
+| Firebase Unity SDK | 13.17.0 (최신 안정 / 2026-09 기준) |
 | Unity Editor | 2021 LTS 이상 (공식 최소 지원) |
 | Unity 6 LTS | 공식 문서에 "Unity 6 명시 지원" 표기는 없지만 2021 LTS 이상 정책상 호환. 실 빌드 시 EDM4U 최신 버전 유지 권장 |
 | iOS | 15+, Xcode 26.2+, CocoaPods 1.12.0+ |
@@ -66,11 +66,11 @@ description: >
   ],
   "dependencies": {
     "com.google.external-dependency-manager": "1.2.183",
-    "com.google.firebase.app": "13.12.0",
-    "com.google.firebase.analytics": "13.12.0",
-    "com.google.firebase.crashlytics": "13.12.0",
-    "com.google.firebase.remote-config": "13.12.0",
-    "com.google.firebase.messaging": "13.12.0"
+    "com.google.firebase.app": "13.17.0",
+    "com.google.firebase.analytics": "13.17.0",
+    "com.google.firebase.crashlytics": "13.17.0",
+    "com.google.firebase.remote-config": "13.17.0",
+    "com.google.firebase.messaging": "13.17.0"
   }
 }
 ```

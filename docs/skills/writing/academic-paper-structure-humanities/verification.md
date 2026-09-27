@@ -1,7 +1,7 @@
 ---
 skill: academic-paper-structure-humanities
 category: writing
-version: v1
+version: v4
 date: 2026-05-03
 status: APPROVED
 ---
@@ -121,6 +121,62 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
+### [재검증] 2026-09-26 — Perseus 원문 대조 정정 2건 재테스트
+
+**수행일**: 2026-09-26
+**수행자**: skill-tester → general-purpose (도메인 전용 에이전트 미등록으로 대체)
+**수행 방법**: SKILL.md + references/introduction-writing.md Read 후 §10 원문 대조 정정 2건(§5 목차 예시 VII.2 장 번호, references 예시의 원문에 없는 따옴표 인용 교체)을 각각 겨냥한 질문 2개, 근거 섹션 및 anti-pattern 회피 확인
+
+**Q1. (정정 겨냥) §5 목차 예시 "소크라테스적 입장 비판" 절의 정확한 장(章)·Bekker 번호**
+- PASS
+- 근거: SKILL.md "5. akrasia 주제 학부 논문 작성 예시 흐름" 3-1절("소크라테스적 입장 비판 (VII.2, 1145b21–28) ← 2026-09-26 원문 대조: 1145b21은 VII.2 시작(VII.3은 1146b8부터)")
+- 상세: 정정된 "VII.2, 1145b21–28"을 정확히 인용하고, VII.3은 1146b8부터 시작한다는 근거로 VII.2/VII.3 경계를 정확히 구분. §4-1의 별개 예시(NE VII.3, 1147a24–b5)와 혼동하지 않고 서로 다른 지점을 가리킴을 명확히 인지 — anti-pattern(구 버전 VII.3 오기) 회피 확인.
+
+**Q2. (정정 겨냥) references 예시의 NE 1145b21-27 인용 시 "더 좋은 것을 알면서도 더 나쁜 것을 행한다" 직접인용 가부**
+- PASS
+- 근거: references/introduction-writing.md §5 "좋은 예시" 본문 + "분석" 섹션 정정 각주("원문에 없는 표현이므로 원문 기반 문구로 교체. 따옴표 안에는 원문 번역만 넣는다")
+- 상세: 현재 예시 본문에는 "옳게 판단하면서도 어떻게 자제력 없이 행위할 수 있는가"(그리스어 원문 병기)만 따옴표 안에 있고, 과거 표현("더 좋은 것을 알면서도...")은 원문 불일치로 이미 교체되었음을 정확히 인용. anti-pattern(원문에 없는 재구성 문구를 직접인용으로 표기) 정확히 회피. SKILL.md 본문(§4-4)에는 이 원칙이 일반화되어 있지 않다는 gap을 스스로 지적(차단 요인 아님, 선택 보강).
+
+### 발견된 gap (Perseus 정정 재테스트)
+
+- "직접인용 시 원문에 없는 표현을 재구성해 따옴표로 묶지 말 것"이라는 원칙이 references 파일의 사례별 각주에만 있고 SKILL.md 본문 §4-4·§6(흔한 실수)에 일반 원칙으로 승격되어 있지 않음 (차단 요인 아님, 선택 보강)
+
+### 판정 (Perseus 정정 재테스트)
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 해당 없음 (writing 카테고리 — 빌드/워크플로우/설정+실행/마이그레이션 아님)
+- 최종 상태: APPROVED (PENDING_TEST → APPROVED 전환)
+
+---
+
+### [재검증] 2026-09-26 — 서론 작성 스킬 병합분 content test
+
+**수행일**: 2026-09-26
+**수행자**: skill-tester → general-purpose
+**수행 방법**: SKILL.md + references/introduction-writing.md Read 후 실전 질문 2개 답변(핵심 기능 1개 + 병합 내용 대상 1개), 근거 섹션·anti-pattern 회피 확인
+
+### 실제 수행 테스트 (재검증)
+
+**Q1. 한국철학회식 저자-연도 각주에서 여러 문헌 동시 인용 + 동일 저자 동일 연도 구분법**
+- ✅ PASS
+- 근거: SKILL.md 섹션 2-7(세미콜론 연결 예시), 섹션 6-6·2-8(`2007a`/`2007b` 구분 규칙)
+- 상세: "김재권 (2007), 35쪽; 박이문 (2001), 50쪽." 세미콜론 연결 형식과 동일 저자·동일 연도 a/b 구분 규칙을 SKILL.md 문구 그대로 인용해 정확히 답변. 나열 순서 기준(언급순/연도순) 미명시는 선택 보강 gap으로 지적됨.
+
+**Q2. (병합분 대상) 서론에서 IMRaD처럼 결론을 미리 예고해도 되는지 — KCI vs IMRaD 관행 차이**
+- ✅ PASS
+- 근거: references/introduction-writing.md §2 IMRaD vs 인문학 전통 비교표 "결과 예고" 행 + 주의 문단, §5 좋은 예시 Move 3 분석("결론 누설 회피" 표기)
+- 상세: "한국 인문학 관행상 결론을 그대로 누설하면 본문 읽을 동기가 약화된다"는 주의 문단을 정확히 근거로 제시하고, IMRaD Move 3B(결과 예고)와의 관행 차이를 명확히 구분해 답변. SKILL.md §1-5 포인터 → references 파일 연결이 정상 작동함을 확인.
+
+### 판정 (재검증)
+
+- agent content test: 2/2 PASS (병합분 포함, general-purpose 대체 사용 명시)
+- verification-policy 분류: writing 카테고리 — 실사용 필수 카테고리(빌드/워크플로우/설정+실행/마이그레이션) 해당 없음
+- 최종 상태: **APPROVED** (재전환 완료)
+
+---
+
+## 5-1. 최초 테스트 진행 기록 (2026-05-03, 보존)
+
 **수행일**: 2026-05-03
 **수행자**: skill-tester → general-purpose (대체)
 **수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
@@ -205,8 +261,8 @@ Bekker 번호 사용. 예: NE VII.3, 1147a24–b5
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-05-03, 3/3 PASS) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (2026-05-03 3/3 PASS, 2026-09-26 병합분 재검증 2/2 PASS, 2026-09-26 Perseus 원문 대조 정정 재테스트 2/2 PASS) |
+| **최종 판정** | **APPROVED** (2026-09-26 Perseus 원문 대조 정정 2건 반영 재테스트 2/2 PASS 완료 — PENDING_TEST → APPROVED 전환) |
 
 ---
 
@@ -218,6 +274,10 @@ Bekker 번호 사용. 예: NE VII.3, 1147a24–b5
 - [❌] 학부생용 LaTeX/MS Word 템플릿 링크 추가 검토 — 선택 보강
 - [✅] skill-tester 실행하여 APPROVED 전환 (2026-05-03 완료, 3/3 PASS)
 - [❌] SKILL.md 섹션 3(Chicago NB)에 편저 수록 논문(chapter in edited volume) 형식 추가 — content test 중 발견된 gap. 차단 요인 아님, 선택 보강
+- [✅] 서론 작성 스킬 병합분(references/introduction-writing.md) content test 수행 및 APPROVED 재전환 (2026-09-26 완료, 2/2 PASS)
+- [❌] references §4 "KCI 등재지 인문학 서론 8~12%" UNVERIFIED 표기 — 공식 통계 확인 시 보강. 차단 요인 아님, 선택 보강
+- [✅] Perseus 원문 대조 정정 2건(§5 목차 VII.2 장 번호, references 예시 따옴표 인용 교체) 재테스트 수행 (2026-09-26 완료, 2/2 PASS, APPROVED 재전환)
+- [❌] "직접인용 시 원문에 없는 표현을 재구성해 따옴표로 묶지 말 것" 원칙을 SKILL.md §4-4·§6 일반 원칙으로 승격 — 현재 references 사례별 각주에만 존재. 차단 요인 아님, 선택 보강
 
 ---
 
@@ -227,3 +287,37 @@ Bekker 번호 사용. 예: NE VII.3, 1147a24–b5
 |------|------|-----------|--------|
 | 2026-05-03 | v1 | 최초 작성 | skill-creator (Opus 4.7) |
 | 2026-05-03 | v1 | 2단계 실사용 테스트 수행 (Q1 한국철학회vs도덕윤리과교육학회 각주 차이 / Q2 박재주 KCI 논문 각주 표기 / Q3 Davidson 1969 Chicago NB 인용) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-26 | v2 | 스킬 정리 — `writing/introduction-writing-humanities` 병합: 원 §1(5요소·비율)·§2 인문학 적용 유의·§3(KCI 전통 구조·비교표)·§5(1인칭)·§6(분량)·§7 함정 5 주의·§8(akrasia 첫 단락 예시)·§9 5문장 점검을 `references/introduction-writing.md`로 이관, SKILL.md §1-5 포인터 추가(500줄 한도로 references 분리). 예시의 "Charles(2009)" → "Charles(1984)" 정정. status PENDING_TEST 전환 | 메인 세션 (스킬 정리) |
+| 2026-09-26 | v2 | 2단계 실사용 재검증 수행 (Q1 한국철학회식 각주 세미콜론·a/b 구분 / Q2 병합분 대상 — KCI vs IMRaD 결과 예고 관행 차이) → 2/2 PASS, PENDING_TEST → APPROVED 재전환 | skill-tester |
+| 2026-09-26 | v3 | **Perseus 원문 대조 정정 2건** (§10): SKILL.md 목차 예시 "NE VII.3 분석 / 3-1 소크라테스 비판(1145b21–27)" → VII.2–3·VII.2 명시, references/introduction-writing.md 예시의 원문에 없는 따옴표 인용("더 좋은 것을 알면서도 더 나쁜 것을 행한다") → 원문 "πῶς ὑπολαμβάνων ὀρθῶς ἀκρατεύεταί τις"(1145b21-22) 기반 문구로 교체. status APPROVED → PENDING_TEST | 메인 세션 (원문 대조) |
+| 2026-09-26 | v4 | 2단계 실사용 재검증 수행 (Q1 §5 목차 "소크라테스적 입장 비판" 절 VII.2 장 번호 정정 겨냥 / Q2 references 예시 따옴표 인용 교체 정정 겨냥) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+
+---
+
+## 9. 병합 이력 (2026-09-26)
+
+| 항목 | 내용 |
+|------|------|
+| 원 스킬 | `writing/introduction-writing-humanities` (제거 — CARS 모델·서론 5요소·Relevance 정당화 4패턴·일반 함정은 일반 지식) |
+| 이관 범위 | 원 §1 5요소 표·비율 → references §1 / §2 "인문학 적용 시 유의" → §1 주의 / §3 KCI 전통 구조·비교표 → §2 / §7 함정 5(결론 누설) 주의 → §2 주의 / §5 1인칭·3인칭 → §3 / §6 분량 표 → §4 / §8 첫 단락 예시·분석 + §9 단계 1 5문장 점검 → §5 |
+| 병합 시 정정 | 좋은 예시의 "Charles(2009)" → "Charles(1984)". Charles의 행위론 단행본은 *Aristotle's Philosophy of Action* (Duckworth 1984)이고, 2009년 *Symposium Aristotelicum* NE VII권 편자는 Carlo Natali (`aristotle-nicomachean-ethics-vii-detail` VERIFIED 서지와 대조) |
+| 원 소스 | Swales (1990) *Genre Analysis*, CUP / Swales (2004) *Research Genres*, CUP / Hyland (2000; Michigan Classics 2004) *Disciplinary Discourses* / 한국철학회 『철학』 투고규정 |
+| 이관 클레임 판정 (원 verification.md, 2026-05-05) | Swales 1990·2004 CUP 서지 — VERIFIED / CARS 1990 3 Moves — VERIFIED / Hyland 2004 UMich Press — VERIFIED / 인문학 학위논문 서론 10~15% — VERIFIED / 한국철학회 『철학』 200자 원고지 120매 이내 — VERIFIED / 영문 인문학 1인칭 사용 자유 — VERIFIED / **KCI 등재지 인문학 서론 8~12%** — UNVERIFIED(references §4 `주의`로 명시) |
+| 상태 | **APPROVED** (2026-09-26 재검증 완료 — references 병합분 content test 2/2 PASS; 같은 날 원문 대조 정정으로 PENDING_TEST 전환 후, Perseus 정정 재테스트 2/2 PASS로 APPROVED 재전환 — §5·§10 참조) |
+
+---
+
+## 10. 원문 대조 기록 (2026-09-26)
+
+- 1차 원문: Perseus `tlg0086.tlg010.perseus-grc2.xml` (Bywater 1894)
+
+| # | 클레임 (기존) | 원문 대조 결과 | 판정 |
+|---|---|---|---|
+| 1 | 원어 제목 『니코마코스 윤리학』(Ἠθικὰ Νικομάχεια) | Perseus XML 제목 "Ἠθικὰ Νικομάχεια" 일치 | VERIFIED |
+| 2 | 예시 "NE VII.3, 1147a24–b5" | VII.3(1146b8–1147b19) 내부 | VERIFIED |
+| 3 | 목차 예시 "VII권에서의 정의 (1145b8 이하)" | 1145b8부터 ἔνδοξα 나열 | VERIFIED |
+| 4 | 목차 예시 "NE VII.3 분석 — 3-1 소크라테스적 입장 비판 (1145b21–27)" | 1145b21은 VII.2 시작 | 정정 |
+| 5 | references 예시 따옴표 "더 좋은 것을 알면서도 더 나쁜 것을 행한다"(1145b21-27) | 원문에 해당 어구 없음 — 원문은 "πῶς ὑπολαμβάνων ὀρθῶς ἀκρατεύεταί τις" | 정정 |
+| 6 | 예시 "1147a24–b5 (강상진 외 역, 길, 2011, 280쪽)" 쪽수 | 인쇄본 대조 불가 — 양식 예시로만 사용 | 미검증(양식 예시) |
+
+**합계: 대조 6건 / 정정 2건.** 실질 정정이므로 PENDING_TEST → 재테스트(§5) 2/2 PASS 완료 후 APPROVED.

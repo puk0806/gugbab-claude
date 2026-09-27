@@ -2,7 +2,7 @@
 skill: aristotle-akrasia-translations-comparison
 category: humanities
 version: v1
-date: 2026-05-03
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -147,17 +147,47 @@ status: APPROVED
 - [✅] 학술 논문 작성에 즉시 활용 가능 (3중 표기, 각주 양식 포함)
 - [✅] 번역본 우열 단정 회피 (사용자 요구 사항 준수)
 - [✅] [검증 필요] 항목 솔직히 명시 (사용자 요구 사항 준수)
-- [✅] 관련 스킬 3종(aristotle-primary-citation, akrasia-scholarship-map, aristotle-greek-text-tools) 참조
+- [✅] 관련 스킬 참조(aristotle-primary-citation, akrasia-scholarship-map — 구 aristotle-greek-text-tools는 2026-09-26 aristotle-primary-citation §11로 병합)
 
 ### 4-6. Claude Code 에이전트 활용 테스트
 
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-03)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-05-03)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-03; 재검증 2026-09-26)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-05-03 3/3 PASS; 2026-09-26 재검증 2/2 PASS)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 — 보완 불필요, 3/3 PASS (2026-05-03)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-09-26 (재검증)
+**수행자**: skill-tester → general-purpose (대체)
+**수행 방법**: 2026-09-26 Perseus/Ross 원문 대조 정정(§10, 5건) 반영 후 재검증. SKILL.md Read 후 정정된 Ross 인용을 써야만 답할 수 있는 실전 질문 2개 답변
+
+### 재검증 수행 테스트 (2026-09-26)
+
+**Q1. Ross(1908) 번역 "The case of those affected by wine or sleep or madness is similar; for it is plain that knowledge in such cases is not present…"를 1147a24-b5 인용으로 사용 가능한지**
+- ✅ PASS
+- 근거: SKILL.md §3-1 Ross 인용 정정 각주
+- 상세: 에이전트가 해당 문장은 Ross 공개본(MIT Internet Classics Archive)에 존재하지 않는 가짜 인용이며, 실제 Ross 문장("It is plain, then, that incontinent people must be said to be in a similar condition to men asleep, mad, or drunk.")과 정확한 위치(1147a10-24 구간)를 SKILL.md 근거로 정확히 답변.
+
+**Q2. Ross가 "αἴσθησις ... κυρία"를 "control over"로 번역했다고 인용 가능한지**
+- ✅ PASS
+- 근거: SKILL.md §3-1 "kuria" 번역 정정 각주
+- 상세: 에이전트가 "Ross 'control over'" 기술은 SKILL.md에서 이미 정정된 오류이며, Ross 공개본은 "within the sphere of perception"류로 풀어 옮겨 "control" 어휘를 쓰지 않는다는 점을 정확히 답변. Irwin·Crisp 해당 구절은 미검증 표기임도 함께 확인.
+
+### 재검증 발견 gap
+
+- 없음(2/2 PASS). 두 질문 모두 SKILL.md가 이미 DISPUTED로 판정·정정한 항목과 정확히 일치.
+
+### 재검증 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 해당 없음 (개념·번역 비교 스킬 — content test PASS로 APPROVED 가능)
+- 최종 상태: APPROVED (PENDING_TEST → APPROVED, 원문 정정 5건 반영 검증 완료)
+
+---
+
+> (이전 최초 검증 기록 — 2026-05-03)
 
 **수행일**: 2026-05-03
 **수행자**: skill-tester → general-purpose (대체)
@@ -227,8 +257,8 @@ status: APPROVED
 | 구조 완전성 | ✅ 9개 섹션 + 빠른 참조 카드 + 참고 자료 |
 | 실용성 | ✅ 3중 표기, Chicago Style, 충돌 패턴, 흔한 실수 모두 포함 |
 | 한계 | ⚠️ 천병희 숲 2013판 세부 어휘 5종은 [검증 필요] (출판사 미리보기 미공개) |
-| 에이전트 활용 테스트 | ✅ PASS 3/3 (2026-05-03, skill-tester 수행) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (2026-05-03 3/3 PASS; 2026-09-26 재검증 2/2 PASS) |
+| **최종 판정** | **APPROVED** (2026-09-26 원문 대조 정정 5건 반영 후 skill-tester 재검증 완료, §5·§10 참조) |
 
 ---
 
@@ -243,6 +273,7 @@ status: APPROVED
   - 실제 인쇄본 7권 본문에서 직접 확인 권장
 - [❌] **NE VII.3 1147a24-b5 핵심 구절 영역본 4종 본문 직접 옮김** — 선택 보강 (차단 요인 아님. 본문 인용은 사용자 직접 확인 안내로 대체됨. 인쇄본 접근 시 v2에 반영)
 - [✅] **skill-tester 호출 후 실제 활용 테스트 수행** (2026-05-03 완료, 3/3 PASS)
+- [✅] **skill-tester 2단계 재검증 테스트** (2026-09-26 완료, 2/2 PASS — Ross 인용 정정 5건 반영 확인, 가짜 인용문·"control over" 오역 정정 회피 검증)
 
 ---
 
@@ -252,3 +283,26 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-05-03 | v1 | 최초 작성. 영역본 4종 + 국역본 2종 비교표 작성. 천병희 세부 어휘 5종은 [검증 필요] 처리 | skill-creator |
 | 2026-05-03 | v1 | 2단계 실사용 테스트 수행 (Q1 akolasia 번역어 4종 비교 / Q2 hexis 첫 등장 표기 및 [검증 필요] 이유 / Q3 akrasia↔akolasia 구분 표기) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-26 | v2 | **원문 대조 정정 5건** (§10 표): 1147a24 그리스어 인용 불일치(δὲ 첨가·ἐπιβλέψειεν·ἡ μὲν), 1150b19 그리스어 인용 불일치(τῆς δ' ἀκρασίας → ἀκρασίας δὲ, οἱ → οἳ), Ross 공개본에 존재하지 않는 영역문 삭제·실제 문장으로 교체, Ross 1150b19 영역문 문구 원문대로 교정, Ross "control over"(κυρία) 기술 정정. Irwin 1150b19 영역문은 미검증 표기(직접 인용 금지). status APPROVED → PENDING_TEST | 메인 세션 (원문 대조) |
+| 2026-09-26 | v2 | **2단계 재검증 테스트 수행** (Q1 Ross 가짜 인용문 회피 / Q2 "control over" 오역 정정 확인) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+
+---
+
+## 10. 원문 대조 기록 (2026-09-26)
+
+- 1차 원문: Perseus `tlg0086.tlg010.perseus-grc2.xml` (Bywater 1894). Ross 영역: MIT Internet Classics Archive Book VII (https://classics.mit.edu/Aristotle/nicomachaen.7.vii.html)
+
+| # | 클레임 (기존) | 원문 대조 결과 | 판정 |
+|---|---|---|---|
+| 1 | 1147a24 "ἔτι δὲ καὶ ὧδε … ἐπιβλέψειεν … ἡ μὲν γὰρ καθόλου δόξα" | 원문 "ἔτι καὶ ὧδε φυσικῶς ἄν τις ἐπιβλέψειε τὴν αἰτίαν. ἣ μὲν γὰρ καθόλου δόξα" 1147a24-25 | 정정 |
+| 2 | "ὧν αἴσθησις ἤδη κυρία" | 1147a25-26 일치 | VERIFIED |
+| 3 | Ross "The case of those affected by wine or sleep or madness is similar…" | Ross 공개본에 없음. 실제: "incontinent people must be said to be in a similar condition to men asleep, mad, or drunk" | 정정 |
+| 4 | 1150b19 "τῆς δ' ἀκρασίας τὸ μὲν προπέτεια…" | 원문 "ἀκρασίας δὲ τὸ μὲν προπέτεια τὸ δʼ ἀσθένεια. οἳ μὲν γὰρ …" | 정정 |
+| 5 | Ross 1150b19 영역 "…while others are led by their emotion because…" | 원문 "…others because they have not deliberated are led by their emotion" | 정정 |
+| 6 | Irwin 1150b19 영역 | 인쇄본 대조 불가, 구조상 의역 의심 | > 주의: 미검증 표기 |
+| 7 | Ross κυρία = "control over" | Ross는 "within the sphere of perception"류로 풀이 | 정정 |
+| 8 | 1150b29-31 akolastos 서술 (VII.8) | "ὁ μὲν ἀκόλαστος … οὐ μεταμελητικός· ἐμμένει γὰρ τῇ προαιρέσει" 1150b29-31 | VERIFIED |
+| 9 | VII.3 = 1147a24-b5, VII.7 = 1150b19-28 장 표기 | 장 경계 일치 | VERIFIED |
+| 10 | Ross OWC rev. Brown 2009, Irwin 2019, Crisp 2014, Bartlett & Collins 2011 | 기존 검증과 충돌 없음 | VERIFIED |
+
+**합계: 대조 10건 / 정정 5건 / 미검증 1건.** 실질 정정이므로 PENDING_TEST.

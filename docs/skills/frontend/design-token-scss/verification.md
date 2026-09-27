@@ -2,8 +2,8 @@
 skill: design-token-scss
 category: frontend
 version: v1
-date: 2026-04-17
-status: APPROVED
+date: 2026-09-26
+status: PENDING_TEST
 ---
 
 # design-token-scss 스킬 검증 문서
@@ -37,8 +37,9 @@ status: APPROVED
 | 스킬 이름 | design-token-scss |
 | 스킬 경로 | .claude/skills/frontend/design-token-scss/SKILL.md |
 | 최초 작성일 | 2026-04-17 |
+| 검증일 | 2026-09-26 (재검증) |
 | 검증 방법 | WebSearch 교차 검증 (메인 대화 오케스트레이션) |
-| 버전 기준 | Style Dictionary v4.x / DTCG 2025.10 stable 스펙 |
+| 버전 기준 | Style Dictionary v5.5.x(2026-09-26 최신) / v4 API 하위 호환 / DTCG 2025.10 stable 스펙 |
 
 ---
 
@@ -121,7 +122,26 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
-> APPROVED — 2026-04-20 테스트 완료
+### 재검증 (2026-09-26)
+
+**수행일**: 2026-09-26
+**수행 방법**: SKILL.md + references/REFERENCE.md Read 후 핵심 클레임 3개 WebSearch/WebFetch 재검증 + 실전 질문 2개 자체 답변 확인
+
+클레임 재검증:
+| # | 클레임 | 판정 | 비고 |
+|---|--------|------|------|
+| 1 | Style Dictionary 최신 버전은 v4.x | DISPUTED | 실제 최신은 v5.5.x(npm). `new StyleDictionary(config)`/`hooks.transforms`/`scss·css` 포맷명은 v5에서도 호환(공식 v5 마이그레이션 가이드에 breaking으로 명시 안 됨). v5 실제 변경점: Node 22+ 요구, 토큰 참조 leaf-only 제한, 참조 구분자 커스터마이징 제거 → SKILL.md 섹션 3에 `> 주의:` 추가 |
+| 2 | Figma Variables REST API는 Enterprise plan 전용 | VERIFIED | Figma 공식 포럼·developers.figma.com 재확인, 변경 없음 |
+| 3 | DTCG 스펙은 2025.10 첫 stable, `$value`/`$type` 키 사용 | VERIFIED | W3C DTCG 공식 발표(2025-10-28) 재확인, 변경 없음 |
+
+Q1. "Style Dictionary로 SCSS 변수 파일 만들 때 지금도 `new StyleDictionary(config)` 방식을 써야 하나?" — SKILL.md 섹션 3 답변: 그렇다, v4/v5 공통 API(신규 프로젝트는 v5 설치 권장). PASS
+Q2. "Figma Variables를 REST API로 뽑고 싶은데 Professional 플랜인데 가능한가?" — SKILL.md 섹션 2 답변: 불가, Enterprise 전용. PASS
+
+agent content test: 2/2 PASS. 단, 클레임 1이 DISPUTED(권장 버전 변경)로 판정되어 status는 PENDING_TEST로 유지한다.
+
+---
+
+> 이전 기록 (2026-04-20 최초 APPROVED 테스트)
 
 ### 테스트 1: 미디어 쿼리에 CSS 변수 사용 문제
 - **질문**: "`@media (min-width: var(--breakpoint-md))` 형태로 CSS 변수를 미디어 쿼리에 사용했는데 동작하지 않는다. 왜?"
@@ -149,8 +169,8 @@ status: APPROVED
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (3개 테스트 PASS) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (2026-04-20 3개 PASS + 2026-09-26 재검증 2개 PASS) |
+| **최종 판정** | **PENDING_TEST** (2026-09-26 재검증: 권장 버전 v4→v5 변경 반영, SKILL.md v5 호환 주석 추가) |
 
 ---
 
@@ -166,3 +186,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-04-17 | v1 | 최초 작성, WebSearch 6개 클레임 교차 검증, DISPUTED 1건 수정 (Figma Variables API Enterprise 전용) | 메인 대화 오케스트레이션 |
 | 2026-04-20 | v1 | PENDING_TEST → APPROVED 전환. WebSearch로 3개 핵심 클레임 재검증(SD v4 hooks API, DTCG $value/$type, CSS 변수 미디어 쿼리 제한), 테스트 질문 3개 수행 전체 PASS | 수동 검증 |
+| 2026-09-26 | v1 | 재검증. Style Dictionary 최신 버전 v4→v5.5.x 확인(핵심 API는 호환) → SKILL.md에 v5 주의사항 주석 추가, description·검증일 갱신. Figma Enterprise·DTCG 2025.10 클레임은 변경 없음 확인. 권장 버전 변경으로 APPROVED → PENDING_TEST | 수동 검증 |

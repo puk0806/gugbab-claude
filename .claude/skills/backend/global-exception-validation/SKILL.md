@@ -12,9 +12,11 @@ description: Spring Boot 글로벌 예외 처리 + Bean Validation 패턴 - @Res
 > - https://docs.hibernate.org/validator/8.0/reference/en-US/html_single/
 > - https://docs.spring.io/spring-boot/reference/actuator/tracing.html
 >
-> 검증일: 2026-04-22
+> 검증일: 2026-04-22 (재검증: 2026-09-26)
 
-> 주의: Spring Boot 3.x 기준 jakarta 네임스페이스가 기본입니다. Spring Boot 2.x (javax 네임스페이스)도 함께 다루며, 각 섹션에서 차이점을 명시합니다. Spring Boot 3.4.x는 2025-12-31 EOL, 현재 활성 지원은 3.5.x와 4.0.x입니다.
+> 주의: Spring Boot 3.x 기준 jakarta 네임스페이스가 기본입니다. Spring Boot 2.x (javax 네임스페이스)도 함께 다루며, 각 섹션에서 차이점을 명시합니다.
+>
+> 주의(2026-09-26 갱신): Spring Boot 3.5.x는 2026-06-30 OSS EOL(마지막 패치 3.5.16), 3.4.x는 이미 2025-12-31 EOL입니다. 현재 활성 지원은 **4.0.x**(2026-12-31까지)와 **4.1.x**(최신 4.1.1, 2026-08-21)이며, 신규 프로젝트는 4.1.x 기준으로 시작하는 것을 권장합니다. `@RestControllerAdvice`/`MethodArgumentNotValidException`/`ConstraintViolationException` 처리 패턴과 Bean Validation API 자체는 4.x에서도 변경 없이 그대로 유효합니다.
 
 ---
 

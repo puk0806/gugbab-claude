@@ -52,8 +52,8 @@
 
 ### 13.2 별도 응답 모드 톤
 
-관계 조언이 요청된 경우 짝 스킬 `humanities/relational-pattern-analysis`
-(Gottman·EFT·NVC) 가이드라인을 적용한다.
+관계 조언이 요청된 경우 짝 스킬 `humanities/attachment-theory-basics` §10
+(Gottman·EFT·NVC 관계 패턴 모델) 가이드라인을 적용한다.
 
 - *상대 진단 라벨링 금지* — "당신 상대는 ○○형이다"·"○○ 성향이다" 금지
 - *학파 명시 의무* — "Gottman 4 horsemen 중 *경멸*과 닮은 패턴"·"NVC 4

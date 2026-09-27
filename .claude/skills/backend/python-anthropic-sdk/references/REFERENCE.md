@@ -284,3 +284,141 @@ message = client.messages.create(
 - [ ] 사고 깊이는 `thinking: {"type": "adaptive"}` + `output_config.effort`로 제어한다
 - [ ] Opus 5.5·Opus 5는 사고가 기본 ON이므로 `max_tokens`에 사고 토큰 여유를 둔다 (Opus 5.5 effort 기본값은 `medium`)
 - [ ] Bedrock/Vertex는 플랫폼별 모델 ID 규약을 확인한다
+
+---
+
+## 15. 비동기 클라이언트 생성 예제
+
+```python
+import os
+import asyncio
+from anthropic import AsyncAnthropic
+
+client = AsyncAnthropic(
+    api_key=os.environ.get("ANTHROPIC_API_KEY"),
+)
+
+async def main() -> None:
+    message = await client.messages.create(
+        max_tokens=1024,
+        messages=[{"role": "user", "content": "Hello, Claude"}],
+        model="claude-opus-5-5",
+    )
+    print(message.content)
+
+asyncio.run(main())
+```
+
+---
+
+## 16. 원시 이벤트 스트림 예제
+
+```python
+stream = client.messages.create(
+    model="claude-opus-5-5",
+    max_tokens=1024,
+    messages=[{"role": "user", "content": "Hello"}],
+    stream=True,
+)
+
+for event in stream:
+    # event.type: "message_start" | "content_block_start" | "content_block_delta"
+    #           | "content_block_stop" | "message_delta" | "message_stop" | "ping"
+    print(event.type)
+```
+
+---
+
+## 17. SSE 이벤트 타입 표
+
+| 이벤트 | 의미 |
+|--------|------|
+| `message_start` | 응답 시작, 빈 Message 객체 포함 |
+| `content_block_start` | 콘텐츠 블록 시작 (text / tool_use 등) |
+| `content_block_delta` | 블록 내 증분 (`text_delta`, `input_json_delta`) |
+| `content_block_stop` | 콘텐츠 블록 종료 |
+| `message_delta` | top-level 메시지 변경 (stop_reason, usage 등) |
+| `message_stop` | 응답 종료 |
+| `ping` | 연결 유지 신호 |
+
+---
+
+## 18. FastAPI 스트리밍 통합 예제
+
+```python
+from fastapi import FastAPI
+from fastapi.responses import StreamingResponse
+from anthropic import AsyncAnthropic
+
+app = FastAPI()
+client = AsyncAnthropic()
+
+@app.post("/chat")
+async def chat(prompt: str):
+    async def event_generator():
+        async with client.messages.stream(
+            model="claude-opus-5-5",
+            max_tokens=1024,
+            messages=[{"role": "user", "content": prompt}],
+        ) as stream:
+            async for text in stream.text_stream:
+                yield f"data: {text}\n\n"
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+```
+
+---
+
+## 19. 명시적 도구 정의 + tool_use 루프 예제
+
+```python
+tools = [
+    {
+        "name": "get_weather",
+        "description": "주어진 도시의 현재 날씨를 조회합니다.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "location": {
+                    "type": "string",
+                    "description": "도시명 (예: Seoul)",
+                },
+            },
+            "required": ["location"],
+        },
+    }
+]
+
+response = client.messages.create(
+    model="claude-opus-5-5",
+    max_tokens=1024,
+    tools=tools,
+    messages=[{"role": "user", "content": "서울 날씨 알려줘"}],
+)
+
+# tool_use 응답 처리 루프
+while response.stop_reason == "tool_use":
+    tool_use = next(b for b in response.content if b.type == "tool_use")
+    result = handle_tool(tool_use.name, tool_use.input)  # 사용자 정의
+
+    response = client.messages.create(
+        model="claude-opus-5-5",
+        max_tokens=1024,
+        tools=tools,
+        messages=[
+            {"role": "user", "content": "서울 날씨 알려줘"},
+            {"role": "assistant", "content": response.content},
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "tool_result",
+                        "tool_use_id": tool_use.id,
+                        "content": result,
+                    }
+                ],
+            },
+        ],
+    )
+```

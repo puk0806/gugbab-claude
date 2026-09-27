@@ -1,7 +1,7 @@
 ---
 skill: akrasia-classroom-application-guide
 category: education
-version: v1
+version: v1.5
 date: 2026-05-06
 status: APPROVED
 ---
@@ -53,7 +53,7 @@ status: APPROVED
 |------|------|-----------|-----------|
 | 템플릿 확인 | Read | docs/skills/VERIFICATION_TEMPLATE.md | 8섹션 구조 확인 |
 | 중복 확인 | Glob | .claude/skills/**/akrasia-classroom-application-guide/SKILL.md | 신규 스킬 (중복 없음) |
-| 연계 스킬 확인 | Read | moral-education-curriculum-link, moral-education-pedagogy-models | 「자신과의 관계」 영역 매핑·8모형 카탈로그 확인 |
+| 연계 스킬 확인 | Read | 교육과정 연결 스킬(2026-09-26 moral-curriculum-2022-achievement-standards references로 병합), moral-education-pedagogy-models | 「자신과의 관계」 영역 매핑·8모형 카탈로그 확인 |
 | 1차 검증 | WebSearch | Kristjánsson 2015, Lickona 1991, Duhigg 2012, Jubilee Centre framework | 4개 클레임 VERIFIED |
 | 2차 검증 | WebSearch | Blatt-Kohlberg 1975, 2022 개정 도덕과 [9도01], 박재주 2011, Noddings 1984 | 4개 클레임 VERIFIED |
 | 3차 검증 | WebSearch | 21일 습관 신화, 박장호 2009, ego depletion 재현, Lickona 11원리 | 4개 클레임 VERIFIED (재현 위기 명시 포함) |
@@ -140,7 +140,7 @@ status: APPROVED
 | ego depletion 재현 실패 (Hagger 2016) | VERIFIED | Frontiers + PMC 다중 출처 |
 | 21일 습관 형성 신화 (Maltz 출처) | VERIFIED | 다수 한국어 매체 + Lally 비교 |
 | 한국 학교급 차시 시간 (40/45/50) | VERIFIED | 교육부 행복한교육 |
-| 2022 개정 도덕과 「자신과의 관계」 영역 | VERIFIED | 연계 스킬(moral-education-curriculum-link) 검증분 + 검색 결과 일치 |
+| 2022 개정 도덕과 「자신과의 관계」 영역 | VERIFIED | 연계 스킬(교육과정 연결 스킬 — 현 moral-curriculum-2022-achievement-standards references/akrasia-curriculum-link.md) 검증분 + 검색 결과 일치 |
 | [9도01-01] 성취기준 본문 일부 | UNVERIFIED 처리 | NCIC 별책 6 직접 확인 권장 (검증 한계 절에 명시) |
 
 ### 4-5. Claude Code 에이전트 활용 테스트
@@ -152,6 +152,35 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+### [재검증] 2026-09-26 — Perseus 원문 대조 정정 1건(§9-3 번역본 서지) 재테스트
+
+**수행일**: 2026-09-26
+**수행자**: skill-tester → general-purpose (도메인 전용 에이전트 미등록으로 대체)
+**수행 방법**: SKILL.md Read 후 §10 원문 대조 정정 1건("이창우 외, 2006, 길" → 강상진·김재홍·이창우 옮김, 길, 2011)을 겨냥한 질문 1개 + 핵심 기능(akrates/akolastos 구분 활동 설계) 질문 1개, 근거 섹션 및 anti-pattern 회피 확인
+
+**Q1. (정정 겨냥) 교사 준비도용 니코마코스 윤리학 한국어 번역본 정확한 서지(역자 순서·출판사·연도)**
+- PASS
+- 근거: SKILL.md "9-3. 교사 준비도" 표 "akrasia 이론 기초" 행
+- 상세: "강상진·김재홍·이창우 옮김, 길, 2011 — 학술 인용 표준판 / 초판: 이제이북스, 2006"과 "기존 '2006, 길'은 출판사·연도 불일치로 정정(2026-09-26)"이라는 정정 이력을 정확히 인용해, 연도-출판사가 일치하는 조합(2011+길 또는 2006+이제이북스)으로 서지를 재구성함. anti-pattern(2006+길 혼용) 정확히 회피.
+
+**Q2. (핵심 기능) 중학교 1학년 4차시 단원에서 akrates·akolastos 구분 활동 설계 + 동일 교정 전략 적용 가부**
+- PASS
+- 근거: SKILL.md "7-2. 차시별 설계"(2차시), "7-4. 2차시 핵심 비교표", "3-1. 활동 카탈로그"(시뮬레이션·역할극), "3-2. 활동 설계 시 핵심 원칙", "8. 흔한 실수" 표
+- 상세: 2차시 비교표+역할극 활동을 정확히 인용하고, "akrates와 akolastos를 구분 안 하고 동일 교정 전략 적용" anti-pattern과 올바른 처리("akolastos는 가치관 재형성 필요 — akrates용 자기조절 전략은 부적합")를 정확히 근거로 제시.
+
+### 발견된 gap (Perseus 정정 재테스트)
+
+- 절 7-4 비교표에 실제 정답 예시 문구가 없고 "절 6-2+5축 참조"로만 지시됨 — 교사가 직접 재구성해야 함 (차단 요인 아님, 선택 보강)
+- akolastos "가치관 재형성"이 절 3-1의 5개 활동 중 어느 것에 해당하는지 명시적 매핑 없음 (차단 요인 아님, 선택 보강)
+
+### 판정 (Perseus 정정 재테스트)
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 해당 없음 (교육 적용 가이드 — 빌드/워크플로우/설정+실행/마이그레이션 아님)
+- 최종 상태: APPROVED (PENDING_TEST → APPROVED 전환)
+
+---
 
 **수행일**: 2026-05-06
 **수행자**: skill-tester (general-purpose 대체 — humanities/education 전용 에이전트 미등록)
@@ -199,8 +228,8 @@ status: APPROVED
 | 내용 정확성 | ✅ (14개 클레임 VERIFIED, 1개 UNVERIFIED는 NCIC 직접 확인 권장 명시 처리) |
 | 구조 완전성 | ✅ (14개 절 + 학년별 변환표 + 차시 지도안 예시 + 인용 양식) |
 | 실용성 | ✅ (5장 챕터 구성·차시 지도안·평가 매트릭스 직접 활용 가능) |
-| 에이전트 활용 테스트 | ✅ (2026-05-06 완료 — 3/3 PASS) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (2026-05-06 완료 — 3/3 PASS) / Perseus 원문 대조 정정 재테스트 2/2 PASS (2026-09-26, general-purpose 대체) |
+| **최종 판정** | **APPROVED** (2026-09-26 Perseus 원문 대조 정정 1건 반영 재테스트 2/2 PASS 완료 — PENDING_TEST → APPROVED 전환) |
 
 ---
 
@@ -211,6 +240,7 @@ status: APPROVED
 - [❌] 단원 지도안 예시를 초등 5-6학년·고등학교 「현대사회와 윤리」용으로 추가 (중학교 1학년 사례 외)
 - [❌] 자기 성찰 일지·동료평가지·관찰 체크리스트 등 평가 도구 양식을 부록으로 추가
 - [✅] skill-tester를 통한 2단계 실사용 테스트 수행 (2026-05-06 완료, 3/3 PASS, APPROVED 전환)
+- [✅] Perseus 원문 대조 정정 1건(§9-3 번역본 서지) 재테스트 수행 (2026-09-26 완료, 2/2 PASS, APPROVED 재전환)
 
 ---
 
@@ -221,3 +251,20 @@ status: APPROVED
 | 2026-05-06 | v1 | 최초 작성 — 14개 절 / 학년별 변환표 / 4차시 지도안 예시 / 평가 매트릭스 / 8모형 결합표 / 학생 안전 주의사항 / 5장 챕터 구성 | skill-creator (Claude Opus 4.7) |
 | 2026-05-06 | v1.1 | **fact-checker 추가 검증 정정 2건** (Routledge 공식 + ResearchGate + Tandfonline + DigitalCommons UNO 교차): (a) Kristjánsson 2015 출판지 "Abingdon: Routledge" → **"London: Routledge"** (학술 인용 표준; "Abingdon" 표기도 혼용되나 다수 DB는 London) (b) "Lickona, Schaps & Lewis 1996 JME" → **Lickona 단독 저자** JME 25(1) 93-100. Schaps & Lewis 공저는 Character Education Partnership 보고서(1995/2002, 별개 문건). 본문 §5·§참고문헌·§소스 모두 정정 + 두 문건 혼동 금지 명시. APPROVED 미전환(skill-tester 2단계 실사용 테스트 대기). | fact-checker + main |
 | 2026-05-06 | v1.2 | 2단계 실사용 테스트 수행 (Q1 중학교 4차시 지도안 / Q2 2022 개정 교육과정 학교급별 연결 / Q3 수치심·낙인·평가공정성) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-09-26 | v1.3 | 존재하지 않는 참조 스킬 `moral-philosophy-akrasia-aristotle`(레포에 없음) 발견 → 실제 존재하는 `humanities/aristotle-akrasia-vs-akolasia-distinction`(akrasia·akolasia 이론 정밀 분석 스킬, 목적상 가장 적합)로 교체. §0·§13 두 곳 수정. 내용 실질 변경 아님(깨진 링크 수리) — APPROVED 유지 | 메인 세션 |
+| 2026-09-26 | v1.4 | **원문·서지 대조 정정 1건** (§10): 권장 자료 "이창우 외, 2006, 길" → 강상진·김재홍·이창우 옮김, 길, 2011 (초판 이제이북스 2006) — 출판사·연도 불일치. status APPROVED → PENDING_TEST | 메인 세션 (원문 대조) |
+| 2026-09-26 | v1.5 | 2단계 실사용 재검증 수행 (Q1 §9-3 번역본 서지 정정 겨냥 / Q2 akrates·akolastos 구분 활동 설계+동일 교정전략 적용 가부) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+
+---
+
+## 10. 원문 대조 기록 (2026-09-26)
+
+- 1차 원문: Perseus `tlg0086.tlg010.perseus-grc2.xml` (Bywater 1894). 서지: DBpia(이제이북스 2006 3인 공역 서평)
+
+| # | 클레임 (기존) | 원문 대조 결과 | 판정 |
+|---|---|---|---|
+| 1 | 두 전제 결합 모델 (NE VII.3) | 1146b35–1147b19, VII.3 내부 | VERIFIED |
+| 2 | NE VII.4 1147b20–1148b14 | VII.4 시작 "πότερον δʼ ἐστί τις ἁπλῶς ἀκρατὴς" 1147b20, VII.5 1148b15 | VERIFIED |
+| 3 | "NE VII.1–10 한국어 번역본 (이창우 외, 2006, 길)" | 2006 = 이제이북스(3인 공역 초판), 길 = 2011 개정판 | 정정 |
+
+**합계: 대조 3건 / 정정 1건.** 서지 사실 정정이므로 PENDING_TEST → 재테스트(§5) 2/2 PASS 완료 후 APPROVED.

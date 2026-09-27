@@ -144,7 +144,33 @@ status: APPROVED
 
 ---
 
-## 5. 테스트 진행 기록
+## 5. 테스트 진행 기록 (2026-09-26 재검증 — 학술 영어 스킬 이관분)
+
+**수행일**: 2026-09-26
+**수행자**: skill-tester → general-purpose
+**수행 방법**: SKILL.md Read 후 실전 질문 2개 답변(핵심 기능 1개 + §1-1 이관 내용 대상 1개), 근거 섹션·anti-pattern 회피 확인
+
+### 실제 수행 테스트 (재검증)
+
+**Q1. Major revision response letter 작성 핵심 원칙 + 코멘트 누락 시 결과**
+- ✅ PASS
+- 근거: SKILL.md §6-2(337~343줄) 작성 5대 원칙, §7-4(400~405줄) 이견 표명 절대 금지 사항
+- 상세: "모든 코멘트 응답·원문 그대로 인용·3인칭·페이지/줄 명시·수정 발췌 포함" 5대 원칙과 "빠뜨린 코멘트는 reject 사유"(339줄)를 정확히 인용. gap: "reject 사유" 클레임의 개별 출처 매핑 부재(선택 보강).
+
+**Q2. (이관분 대상) 영문 초록 문장 교정 — 관사·data 복수 처리**
+- ✅ PASS
+- 근거: SKILL.md §1-1(75행 "The honesty is a virtue." → "Honesty is a virtue.", 78·80행 data 복수 처리)
+- 상세: "the honesty" → "Honesty"(추상명사 일반론 무관사), "data is" → "data are"(학술 영어 복수 권장) 둘 다 정확히 근거를 들어 교정. "a professor"는 올바른 용법으로 정확히 구분.
+
+### 판정 (재검증)
+
+- agent content test: 2/2 PASS (§1-1 이관분 포함)
+- verification-policy 분류: writing 카테고리 — 실사용 필수 카테고리 아님
+- 최종 상태: **APPROVED** (재전환 완료)
+
+---
+
+## 5-1. 최초 테스트 진행 기록 (2026-05-03, 보존)
 
 **수행일**: 2026-05-03
 **수행자**: skill-tester → general-purpose (직접 검증 방식)
@@ -193,14 +219,16 @@ status: APPROVED
 | 내용 정확성 | ✅ (20개 핵심 클레임 모두 VERIFIED) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-05-03 수행 — 3/3 PASS) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (2026-05-03 3/3 PASS, 2026-09-26 재검증 2/2 PASS — §1-1 이관분 포함) |
+| **최종 판정** | **APPROVED** (2026-09-26 학술 영어 이관분 content test 완료, §9 참조) |
 
 ---
 
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester로 2단계 실사용 테스트 수행 후 APPROVED 전환 검토 (2026-05-03 완료, 3/3 PASS → APPROVED)
+- [✅] 학술 영어 스킬 이관분(§1-1) content test 수행 및 APPROVED 재전환 (2026-09-26 완료, 2/2 PASS)
+- [❌] §6-2 "빠뜨린 코멘트는 reject 사유" 클레임의 개별 출처 매핑 보강 — content test 중 발견. 차단 요인 아님, 선택 보강
 - [❌] 학술지별 IF·심사 기간 등 수치 변동 시 (연 1회) 본 스킬 재검증 (특히 매년 6월 JCR 갱신 후) — 차단 요인 아님, 선택적 정기 보강
 - [❌] COPE 2026 신규 Code of Conduct 발표 시 §4-3 AI 정책 재검증 — 차단 요인 아님, 발표 후 선택적 갱신
 - [❌] 한국연구재단 학술지 평가 정책 변경 시 §5-2 KCI 4단계 분류 재검증 — 차단 요인 아님, 정책 변경 시 선택적 갱신
@@ -213,3 +241,17 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-05-03 | v1 | 최초 작성. COPE/DOAJ/Think Check Submit/Elsevier/Springer/APA Style/KCI/JAMS 16개 소스 직접 검증 | skill-creator |
 | 2026-05-03 | v1 | 2단계 실사용 테스트 수행 (Q1 cover letter 영문/KCI 차이 / Q2 심사위원 이견 정중 반박 / Q3 predatory journal 검증 도구) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-09-26 | v2 | 스킬 정리 — `writing/academic-english-writing-humanities` 제거에 따라 §7(한국어 화자 흔한 실수)을 SKILL.md §1-1로 원문 이관. status PENDING_TEST 전환 | 메인 세션 (스킬 정리) |
+| 2026-09-26 | v2 | 2단계 실사용 재검증 수행 (Q1 major revision response letter 5대 원칙 / Q2 이관분 대상 — 영문 초록 관사·data 복수 교정) → 2/2 PASS, PENDING_TEST → APPROVED 재전환 | skill-tester |
+
+---
+
+## 9. 병합 이력 (2026-09-26)
+
+| 항목 | 내용 |
+|------|------|
+| 원 스킬 | `writing/academic-english-writing-humanities` (제거 — 시제·hedging·signposting·Phrasebank 등 학술 영어 일반론은 모델 기본 지식으로 충분하다는 판정) |
+| 이관 범위 | 원 §7 "한국어 화자 특화 — 흔한 실수"(관사·단복수·번역투·전치사) → 본 스킬 §1-1 |
+| 원 소스 | Manchester Academic Phrasebank (https://www.phrasebank.manchester.ac.uk/), Swales & Feak (2012) *Academic Writing for Graduate Students* 3rd ed., Cell Press "Is data plural?" (https://crosstalk.cell.com/blog/is-data-plural) |
+| 이관 클레임 판정 (원 verification.md, 2026-05-03) | 한국어 화자 영어 오류 1순위 = 관사 — VERIFIED (언어교육학 연구 다수) / "data is" 단수 허용 — DISPUTED → 학술 출판 plural 권장으로 정정(`> 주의:` 유지) |
+| 상태 | **APPROVED** (2026-09-26 재검증 완료 — §1-1 이관분 content test 2/2 PASS) |

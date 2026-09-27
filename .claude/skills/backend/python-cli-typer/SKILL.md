@@ -11,9 +11,14 @@ description: >
 # Python CLI: Typer
 
 > 소스: https://typer.tiangolo.com/ , https://github.com/fastapi/typer , https://pypi.org/project/typer/
-> 검증일: 2026-05-15
-> 검증 버전: Typer 0.25.1 (2026-04-30 릴리즈)
+> 검증일: 2026-09-26 (2026-05-15 최초 검증 · 재검증 이력은 8절 참조)
+> 검증 버전: Typer 0.27.2 (2026-08-28 릴리즈, 2026-05-15 검증 시점의 0.25.1에서 갱신)
 > 짝 스킬: `backend/python-uv-project-setup`
+>
+> **주의 (2026-09-26 추가) — 0.26.0/0.27.0 Breaking Change:**
+> - **0.26.0**: Typer가 더 이상 Click을 서드파티 의존성으로 두지 않고 **자체 vendoring**한다. 이 과정에서 일부 Click 헬퍼가 제거되었으므로, 코드에서 Click 컴포넌트를 직접 import해 쓰던 프로젝트는 `click`을 **직접 의존성으로 추가**하고 그쪽에서 import해야 한다.
+> - **0.27.0**: `metavar` 출력 형식이 변경되었다(breaking). 자동 생성되는 `--help` 텍스트를 스냅샷 테스트하는 프로젝트는 스냅샷 갱신이 필요하다.
+> - 위 두 변경 모두 본 문서의 코드 예시(타입 힌트 기반 커맨드 정의, `Annotated` 패턴)에는 영향이 없다 — Typer의 공개 API 표면은 유지된다.
 
 ---
 
@@ -24,7 +29,7 @@ description: >
 | 항목 | 내용 |
 |------|------|
 | 제작자 | Sebastián Ramírez (tiangolo) |
-| 최신 버전 | 0.25.1 (2026-04-30) |
+| 최신 버전 | 0.27.2 (2026-08-28) |
 | 기반 | Click (내부 의존), Rich (출력), Shellingham (셸 감지) |
 | Python 지원 | >=3.10 (3.10 ~ 3.14) |
 | 라이선스 | MIT |

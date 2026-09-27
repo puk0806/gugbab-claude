@@ -17,7 +17,7 @@ description: 소스 파일 수천 개 규모 프론트엔드 코드베이스를 
 > 소스: https://github.com/sverweij/dependency-cruiser/blob/main/doc/cli.md (dependency-cruiser 18.2.0 CLI 문서)
 > 소스: https://git-scm.com/docs/git-mv , https://git-scm.com/docs/git-diff , https://git-scm.com/docs/git-blame , https://git-scm.com/docs/git-log
 > 소스: https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/ (TypeScript 7.0, 2026-07-08)
-> 검증일: 2026-08-26
+> 검증일: 2026-09-26 (30~60일 주기 재검증, 최초 검증 2026-08-26)
 
 이 스킬은 **"도메인 폴더로 옮기기로 결정했다" 다음 단계**를 다룬다.
 어떤 구조가 옳은지(레이어드 vs 기능 슬라이스 vs 도메인)는 다루지 않는다 — 그건 `architecture/ddd` 참조.
@@ -27,11 +27,11 @@ description: 소스 파일 수천 개 규모 프론트엔드 코드베이스를 
 
 ## 0. 버전 기준
 
-| 도구 | 최신 안정 버전 (2026-08-26) | 역할 |
+| 도구 | 최신 안정 버전 (2026-09-26 재확인) | 역할 |
 |------|------|------|
-| `ts-morph` | **28.0.0** (`@ts-morph/common` 0.29.0) | TypeScript 컴파일러 API 래퍼. 타입/모듈 해석이 필요한 codemod |
-| `jscodeshift` | **17.4.0** (Node >= 16) | Babel/recast 기반 AST codemod 러너. 순수 구문 변환 |
-| `dependency-cruiser` | **18.2.0** (Node ^22 \|\| ^24 \|\| >=26) | 의존 규칙 검증 + baseline(알려진 위반) 관리 |
+| `ts-morph` | **28.0.0** (`@ts-morph/common` 0.29.0, 변동 없음) | TypeScript 컴파일러 API 래퍼. 타입/모듈 해석이 필요한 codemod |
+| `jscodeshift` | **17.4.0** (Node >= 16, 변동 없음) | Babel/recast 기반 AST codemod 러너. 순수 구문 변환 |
+| `dependency-cruiser` | **18.4.0** (2026-08-26 확인 시 18.2.0 → 마이너 갱신, Node ^22 \|\| ^24 \|\| >=26) | 의존 규칙 검증 + baseline(알려진 위반) 관리 |
 | `eslint-plugin-boundaries` | **7.2.0** (peer eslint >=6) | ESLint 레벨 아키텍처 경계 규칙 |
 | `tsconfig-paths` | **4.2.0** | codemod 안에서 `paths` 별칭을 직접 해석할 때 |
 | `size-limit` | **13.0.3** | 번들 크기 게이트 |
@@ -58,6 +58,8 @@ TypeScript 7.0(2026-07-08 릴리즈, Go 네이티브 포트)은 **프로그래�
 `@typescript/typescript6` 패키지는 `tsc6` 실행 파일을 제공하고 **TypeScript 6.0 API를 re-export** 한다.
 
 > 주의: `jscodeshift`는 Babel 파서(`@babel/parser` + `@babel/preset-typescript`)를 쓰기 때문에 이 문제의 영향을 받지 않는다. TS7 전환기 프로젝트에서 codemod 도구를 고를 때 실질적인 판단 근거가 된다.
+
+> 재검증(2026-09-26): TypeScript 7.1의 신규 프로그래매틱 API는 **아직 출시되지 않았다**(공식 iteration plan 기준 7.1 Beta 2026-10-06 / RC 2026-11-10 / Stable 2026-11-24 예정). 즉 이 절의 side-by-side 회피책은 2026-09-26 현재도 여전히 유효한 최선의 방법이다. 7.1 stable 출시 시 이 절 전체를 재검증해야 한다.
 
 ---
 

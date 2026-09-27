@@ -20,9 +20,11 @@ description: >
 > - ChatAnthropic 통합 문서: https://docs.langchain.com/oss/python/integrations/chat/anthropic
 > - LangSmith Observability: https://docs.langchain.com/langsmith/observability
 >
-> 검증일: 2026-05-15
-> 검증 기준 버전: langchain-core 1.4.0 (2026-05-11 release) / langchain 1.3.x / langchain-community 0.4.x
+> 검증일: 2026-09-26 (2026-05-15 최초 검증 · 재검증 이력은 후술)
+> 검증 기준 버전: langchain-core 1.4.8 (2026-06-18 release, 2026-05-15 검증 시점의 1.4.0에서 갱신) / langchain 1.3.x / langchain-community 0.4.x
 > 짝 스킬: `backend/python-anthropic-sdk` (직접 호출 비교) · `backend/python-llamaindex` (RAG 대안)
+>
+> **주의 (2026-09-26 갱신):** LangChain·LangGraph 모두 2025-10-22 GA로 1.0에 도달했고, **2.0 이전까지는 breaking change를 내지 않겠다는 정책**을 공식화했다(semantic versioning 준수). `AgentExecutor`는 여전히 deprecated이며, **2026-12까지 LangGraph로 마이그레이션을 권장**하는 공식 가이드가 나와 있다 — §7·§12.1의 "legacy" 권고가 이제 구체적 기한을 갖는다.
 
 > 핵심 입장: **무조건 LangChain을 쓰지 말 것.** 추상화 비용·API 변동성·디버깅 난이도라는 *명확한 비용*이 있고,
 > 그 비용을 정당화하는 *명확한 이득*이 있을 때만 채택한다. 의사결정 표는 §10·§11을 보라.
@@ -31,8 +33,8 @@ description: >
 
 ## 1. LangChain 1.x 아키텍처
 
-> 주의: LangChain은 2024-10 v0.3, 2025-10경 v1.0 GA를 거쳐 2026-05 기준 `langchain-core 1.4.0`이 안정 버전이다.
-> *0.x 시절의 잦은 breaking change 평판*은 사실이며, 1.0 이후 안정성을 약속했지만 신뢰는 *축적 중*이다.
+> 주의: LangChain은 2024-10 v0.3, **2025-10-22 v1.0 GA**(공식 확정일)를 거쳐 2026-09 기준 `langchain-core 1.4.8`이 안정 버전이다.
+> *0.x 시절의 잦은 breaking change 평판*은 사실이며, 1.0 GA와 함께 **"2.0 이전까지 breaking change 없음"이 공식 정책으로 명문화**되었다(semantic versioning 준수 선언, 2026-09-26 기준 아직 위반 사례 없음).
 
 ### 1.1 패키지 분리 구조
 
@@ -375,7 +377,7 @@ LangChain/LangGraph 코드는 **코드 변경 없이** 모든 chain·tool·model
 
 | 비판 | 사실 여부 | 1.x 시점 보정 |
 |------|----------|--------------|
-| "잦은 breaking change" | **사실** (0.x 시기 특히) | 1.0 GA 후 stable 약속, 신뢰는 *축적 중*. partner package 버전 따로 추적 필요 |
+| "잦은 breaking change" | **사실** (0.x 시기 특히) | 1.0 GA(2025-10-22)와 함께 "2.0 전까지 breaking change 없음"이 공식 정책화. partner package 버전은 여전히 따로 추적 필요 |
 | "추상화 누수(leaky abstraction)" | **부분 사실** | 공급자 고유 기능 사용 시 우회 코드 필요. 단순 LCEL 체인은 안정적 |
 | "디버깅이 어렵다 / 스택트레이스가 깊다" | **사실** | LangSmith로 *상당 부분 완화*. 단, LangSmith 없이는 여전히 고통 |
 | "의존성 비대" | **부분 사실** | 1.x partner package 분리로 *필요한 것만* 설치 가능 |

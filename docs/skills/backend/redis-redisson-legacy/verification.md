@@ -2,8 +2,8 @@
 skill: redis-redisson-legacy
 category: backend
 version: v1
-date: 2026-04-23
-status: APPROVED
+date: 2026-09-26
+status: PENDING_TEST
 ---
 
 # redis-redisson-legacy 검증 문서
@@ -40,8 +40,8 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `redis-redisson-legacy` |
 | 스킬 경로 | `.claude/skills/backend/redis-redisson-legacy/SKILL.md` |
-| 검증일 | 2026-04-23 |
-| 검증자 | skill-creator (Claude Code) |
+| 검증일 | 2026-09-26 (최초 2026-04-23) |
+| 검증자 | skill-creator (Claude Code) → 2026-09-26 재검증: 메인 오케스트레이션 (Claude Sonnet 5) |
 | 스킬 버전 | v1 |
 | 대상 버전 | Redisson 2.15.2 (2019-02 릴리스) / Spring Boot 2.5.x / Java 11 / spring-data-redis 2.6.0 |
 
@@ -159,7 +159,32 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
-> CLI에서 에이전트를 통한 실사용 테스트는 아직 수행되지 않았습니다.
+### 재검증 (2026-09-26)
+
+**수행일**: 2026-09-26
+**수행자**: 메인 대화 오케스트레이션 (Claude Sonnet 5) — verification-policy.md 재검증 절차
+**수행 방법**: SKILL.md + REFERENCE.md 전체 Read → WebSearch로 핵심 클레임 재대조 → 실전 질문 2개 자체 답변
+
+**재검증한 핵심 클레임**
+- Redisson 2.15.2 릴리스 시점(2019-02) — 재확인, 변동 없음 (VERIFIED)
+- **신규 발견**: Redisson 3.22.0 미만(2.15.2 포함)에 **CVE-2023-42809**(안전하지 않은 역직렬화) 존재 — 기존 SKILL.md에 없던 내용이라 `> 주의:` 경고 신규 추가 (VERIFIED, GitLab Advisory Database + OSV.dev 교차 확인)
+- Redisson 3.x 라인은 2025-09 3.52.0을 끝으로 2025-12 Redisson 4.0.0(Spring Boot 4 대응)으로 이관 — 참고용 확인, 본 스킬(2.x 레거시) 서술에는 영향 없음 (VERIFIED)
+
+**Q1. "2.15.2를 쓰는 레거시 서비스인데 알려진 보안 취약점이 있나?"**
+- PASS
+- 근거: SKILL.md 상단 경고 박스에 CVE-2023-42809 설명·영향 범위(3.22.0 미만)·대응책(3.x 업그레이드 또는 네트워크 격리)이 명확히 존재.
+
+**Q2. "지금 당장 3.x로 못 올리는데 임시 완화책은?"**
+- PASS
+- 근거: SKILL.md 신규 주의 문구의 "최소한 Redis 서버 접근을 신뢰된 네트워크로 제한" 권고.
+
+**판정**: CVE 경고 신규 반영 → 내용 변경 있음 → status `PENDING_TEST`로 되돌림.
+
+---
+
+> 최초 작성 시(2026-04-23) 기록은 아래에 보존.
+
+### 최초 작성 시 계획 (2026-04-23, 참고용 보존)
 
 ### 테스트 케이스 1: 분산 락 코드 생성 (예정)
 
@@ -237,8 +262,8 @@ RedisCacheManager와 RedissonSpringCacheManager 중 뭘 써야 해?
 | 내용 정확성 | ✅ (DISPUTED/UNVERIFIED 항목은 `> 주의:` 표기로 처리) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-04-23, 2문항 PASS — RLock tryLock+try-finally+leaseTime 패턴, spring-data-redis 역할 분담 + RedisCacheManager 선택 근거 정확) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (2026-04-23, 2문항 PASS) + ✅ (2026-09-26 재검증, 2문항 PASS — CVE-2023-42809 설명 + 완화책 확인) |
+| **최종 판정** | **PENDING_TEST** (2026-09-26 CVE-2023-42809 주의 문구 추가로 내용 변경 — 재검증 필요) |
 
 ---
 
@@ -257,3 +282,4 @@ RedisCacheManager와 RedissonSpringCacheManager 중 뭘 써야 해?
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
 | 2026-04-23 | v1 | 최초 작성 — Redisson 2.15.2 기반 Spring Boot 2.5 + Java 11 레거시 스킬 | skill-creator |
+| 2026-09-26 | v1 | 재검증 — CVE-2023-42809(안전하지 않은 역직렬화, 3.22.0 미만 영향) 주의 문구 신규 추가 → PENDING_TEST | 메인 오케스트레이션 (Claude Sonnet 5) |

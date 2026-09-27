@@ -1,9 +1,9 @@
 ---
 skill: eastern-vs-western-moral-philosophy
 category: humanities
-version: v1
-date: 2026-05-03
-status: APPROVED
+version: v2
+date: 2026-09-26
+status: PENDING_TEST
 ---
 
 # 검증 문서 — 동·서양 도덕철학 비교 (akrasia ↔ 유교 자기수양)
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `eastern-vs-western-moral-philosophy` |
 | 스킬 경로 | `.claude/skills/humanities/eastern-vs-western-moral-philosophy/SKILL.md` |
-| 검증일 | 2026-05-03 |
-| 검증자 | skill-creator (Claude Code) |
-| 스킬 버전 | v1 |
+| 검증일 | 2026-09-26 |
+| 검증자 | skill-creator (Claude Code) / 2026-09-26 재검증: 메인 세션 (1차 원문·서지 직접 대조) |
+| 스킬 버전 | v2 |
 
 ---
 
@@ -114,16 +114,40 @@ status: APPROVED
 | 2 | 朱子 居敬窮理는 "두 갈래 수양 노력" 구조 | SEP Zhu Xi | Cambridge *Confucian Ethics* 자기수양 섹션 | VERIFIED |
 | 3 | "吾日三省吾身"은 *논어* 學而 4, 증자 발언 | 5000yan.com 원문 + 명륜 *논어간설* | 다수 한문 사이트 일치 | VERIFIED |
 | 4 | "克己復禮爲仁"은 *논어* 顏淵 1, 안연 질문에 대한 답 | The Discourses Yan Yuan 12 | confucius.page Analects 12.1 + 다수 사이트 일치 | VERIFIED |
-| 5 | 愼獨의 "獨" 해석에 학설 차이가 있다 | Tao Liang, *Dao* 13(4) 2014 | Springer Link 학술 논문 | VERIFIED (논쟁 사실 자체) |
+| 5 | 愼獨의 "獨" 해석에 학설 차이가 있다 | Liang Tao, *Dao* 2014 | Springer Link 학술 논문 | VERIFIED (논쟁 사실 자체) / **서지 DISPUTED→수정 (2026-09-26)**: Crossref DOI 10.1007/s11712-014-9395-9 = *Dao* **13(3)**, 305–321 ("13(4)" 오기) |
 | 6 | Tu Weiming *Confucian Thought* — SUNY Press 1985, xi+203pp. | SUNY Press 공식 페이지 | Cambridge Royal Asiatic Society 서평(1985 PDF) | VERIFIED |
 | 7 | Hall & Ames *Thinking Through Confucius* — SUNY 1987, *Thinking from the Han* — SUNY 1998 | SUNY Press 공식 페이지 | Amazon ISBN, philpapers, Goodreads 일치 | VERIFIED |
 | 8 | *性理大全*은 주자의 1차 저작 | (사용자 요청 원문) | SEP Zhu Xi에서는 *朱子語類*·*朱子文集*만을 1차 저작으로 분류. *性理大全*은 1415년 명대 호광 등 편찬 | DISPUTED → SKILL.md에서 "후대 종합서"로 정정 + `> 주의:` 표기 |
+
+| 9 | *論語* 學而 4 / 顏淵 1 원문, *中庸* 1장 愼獨 원문 | zh.wikisource 『論語』 學而第一 一之四·顏淵第十二 1, 『中庸章句』 第一章 (2026-09-26) | — | VERIFIED (글자 일치) |
+| 10 | SEP Wang Yangming 인용문 "There never have been people who know but do not act…" | SEP "Wang Yangming" (Van Norden, 2024-09-17 개정판) 원문 | — | VERIFIED (2026-09-26 직접 대조) |
+| 11 | *Protagoras* 358b–c 주지주의 | Perseus Prot. 358c ("yielding to oneself is nothing but ignorance"), 358c–d ("no one willingly goes after evil") | — | VERIFIED — 위치 358b–d로 보완 (2026-09-26) |
+| 12 | 성학십도 1568, 68세 퇴계·17세 선조, 10도 순서 | 위키백과·디지털안동문화대전·우리문화신문 (2026-09-26) | — | VERIFIED |
+| 13 | KCI 논문 3편 (ART002394470·ART001070974·ART002110639) | KCI 서지 원문 (2026-09-26) | — | VERIFIED (제목 일치) — 저자 진성수·박홍식·장동익 및 권호 보완, 학자 표와 무관함 명시 |
+| 14 | May Sim 2007 CUP / Shun & Wong 2004 CUP / Hall & Ames *Thinking from the Han* SUNY | Crossref 서지 (2026-09-26) | — | VERIFIED (*Thinking from the Han* Crossref 발행일 1997-12, 판권 1998 주기) |
+| 15 | 윤사순 고려대 명예교수·학술원 회원·중국사회과학원 명예교수 | 고려대학교출판문화원 저자 소개 (2026-09-26) | — | VERIFIED |
 
 **DISPUTED 처리:** 사용자 요청에는 "주자의 *性理大全*"으로 적혀 있었으나, SEP Zhu Xi 항목 및 학술 표준에서는 *性理大全*을 명대 영락제 시기(1415) 호광 등이 편찬한 후대 종합서로 분류한다. SKILL.md §3에서 "*性理大全*은 명대 편찬된 송원 성리학 종합서"로 정정하고 `> 주의:` 표기로 명시.
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### 재검증 기록 (2026-09-26)
+
+**수행일**: 2026-09-26
+**수행자**: 메인 세션 재검증 (1차 원문·서지 직접 대조 후 SKILL.md 자체 답변 확인)
+**수행 방법**: wikisource 한문 원문·SEP 원문·Perseus·Crossref·KCI 서지 대조 11건 → 정정 → 실전 질문 2개
+
+- 대조 11건: 學而 4 / 顏淵 1 / 中庸 1 / SEP 王陽明 인용 / Prot. 358 / 성학십도 / Liang Tao *Dao* / KCI 3편 / Sim·Shun & Wong·Hall & Ames 서지
+- 오류 1건: Liang Tao *Dao* 13(4) → 13(3), 305–321 정정. 보완: KCI 3편 저자·권호, Prot. 위치 358b–d
+
+Q1. "愼獨 해석 학설사를 각주로 달 때 Liang Tao 논문 서지는?" — PASS (근거: §2-3 주의 — *Dao* 13(3), 2014, 305–321, DOI)
+Q2. "KCI 논문 '덕 윤리, 유교 윤리 그리고 도덕 교육'을 황경식 논문으로 인용해도 되나?" — PASS (근거: §8 — 저자는 장동익(2016), 학자 표와 연결 금지 주의)
+
+agent content test: 2/2 PASS (재검증 기록). 서지 정정으로 status PENDING_TEST 전환.
+
+### 최초 테스트 (2026-05-03)
 
 **수행일**: 2026-05-03
 **수행자**: skill-tester (general-purpose 대체 수행)
@@ -173,8 +197,8 @@ status: APPROVED
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-05-03 skill-tester 수행, 3/3 PASS) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (2026-05-03 skill-tester 수행, 3/3 PASS / 2026-09-26 재검증 2/2 PASS) |
+| **최종 판정** | **PENDING_TEST** (2026-09-26 재검증: 대조 11건 중 서지 오류 1건 정정 — skill-tester 재테스트 후 APPROVED 재전환) |
 
 판정 사유: 1단계(내용 검증)는 SEP·SUNY·Cambridge·KCI 1순위 소스로 완료. 2단계(실사용 테스트)는 2026-05-03 skill-tester가 3개 실전 질문(王陽明↔소크라테스 비교, 朱子 居敬窮理↔hexis 비교, *논어* 인용 형식)을 수행하여 3/3 PASS 확인. APPROVED 전환.
 
@@ -198,3 +222,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-05-03 | v1 | 최초 작성. SEP 4개 항목 + SUNY Press 3종 + Cambridge UP 1종 + KCI + 한국민족문화대백과사전 검증 후 SKILL.md·verification.md 동시 작성. *性理大全* 1차 저작 분류 클레임은 DISPUTED 판정 후 정정. | skill-creator |
 | 2026-05-03 | v1 | 2단계 실사용 테스트 수행 (Q1 王陽明↔소크라테스 단순 등치 회피 / Q2 居敬窮理↔hexis 비교·차이 / Q3 *논어* 학이 4장 인용 형식) → 3/3 PASS, PENDING_TEST → APPROVED 전환. 섹션 5·6·7·8 전체 동기화. | skill-tester |
+| 2026-09-26 | v2 | 재검증 — 1차 원문·서지 대조 11건, 오류 1건 정정(Liang Tao *Dao* 13(3)), KCI 3편 저자 보완, 실전 질문 2/2 PASS → PENDING_TEST | 메인 세션 (재검증) |

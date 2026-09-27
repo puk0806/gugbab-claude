@@ -22,7 +22,7 @@ description: >
 ## 0. 사용 안내
 
 - 본 스킬은 **학위논문 5장 "akrasia 이론의 현대 도덕교육 적용"** 집필 및 실제 도덕수업 설계에 사용한다.
-- akrasia 이론적 근거는 별도 스킬(`moral-philosophy-akrasia-aristotle`, `moral-education-curriculum-link`, `moral-education-pedagogy-models`, `moral-curriculum-2022-achievement-standards`)에서 다룬다. 본 스킬은 **교실 적용**에 한정한다.
+- akrasia 이론적 근거는 별도 스킬(`humanities/aristotle-akrasia-vs-akolasia-distinction`, `moral-education-pedagogy-models`, `moral-curriculum-2022-achievement-standards` — akrasia 연결 프레임은 `education/moral-curriculum-2022-achievement-standards/references/akrasia-curriculum-link.md`)에서 다룬다. 본 스킬은 **교실 적용**에 한정한다.
 - 차시 시간은 **초등 40분 / 중학교 45분 / 고등학교 50분** 기준(교육부 운영 표준).
 - 본문에 인용된 원전·논문은 모두 1차 출처(공식 출판사·KCI·ERIC) 검증을 거쳤다.
 
@@ -41,7 +41,7 @@ description: >
 | 사회·공동체와의 관계 | 03 | ★★ 보조 — 시민적 자제·디지털 환경 자제력 |
 | 자연과의 관계 | 04 | ★ 간접 — 환경 윤리적 자기 절제 |
 
-> 「자신과의 관계」 영역의 핵심 주제(자아·정체성·자기 성찰·자기 관리·도덕적 의지)는 akrasia가 진단하는 "도덕적 앎–의지–행동 연계"의 직접 대응 지점이다(`moral-education-curriculum-link` 스킬 §3 참조).
+> 「자신과의 관계」 영역의 핵심 주제(자아·정체성·자기 성찰·자기 관리·도덕적 의지)는 akrasia가 진단하는 "도덕적 앎–의지–행동 연계"의 직접 대응 지점이다(`education/moral-curriculum-2022-achievement-standards/references/akrasia-curriculum-link.md` §3 참조).
 
 ### 1-2. 학교급별 적용 과목
 
@@ -264,7 +264,7 @@ description: >
 
 | 준비 영역 | 권장 자료 |
 |----------|---------|
-| akrasia 이론 기초 | NE VII.1–10 한국어 번역본 (이창우 외, 2006, 길) |
+| akrasia 이론 기초 | NE VII.1–10 한국어 번역본 (강상진·김재홍·이창우 옮김, 길, 2011 — 학술 인용 표준판 / 초판: 이제이북스, 2006). 기존 "2006, 길"은 출판사·연도 불일치로 정정(2026-09-26) |
 | 도덕교육 모형 | `moral-education-pedagogy-models` 스킬 §1–8 / Lickona(1991) Bantam |
 | 2022 개정 도덕과 | NCIC 별책 6 PDF 직접 확인 |
 | 활동 설계 | Kristjánsson(2015) Routledge / Jubilee Centre Framework PDF |
@@ -384,7 +384,7 @@ Hagger, M. S., et al. (2016). A Multilab Preregistered Replication of the
 
 다음 상황에서는 사용하지 않는다.
 
-- akrasia 이론 자체 분석 → `moral-philosophy-akrasia-aristotle` 등 이론 스킬 참조
+- akrasia 이론 자체 분석 → `humanities/aristotle-akrasia-vs-akolasia-distinction` 등 이론 스킬 참조
 - 2022 개정 도덕과 성취기준 전문(全文) 인용 → `moral-curriculum-2022-achievement-standards` + NCIC 직접 확인
 - 도덕교육 모형 원전 분석 → `moral-education-pedagogy-models` 스킬 참조
 - 한국 도덕교육 학자 KCI 인용 → `research/academic-databases-korean-humanities` 스킬 참조

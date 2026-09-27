@@ -2,8 +2,8 @@
 skill: unity-6-2d-fundamentals
 category: game
 version: v1
-date: 2026-06-08
-status: APPROVED
+date: 2026-09-26
+status: PENDING_TEST
 ---
 
 # unity-6-2d-fundamentals 검증 문서
@@ -16,7 +16,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `unity-6-2d-fundamentals` |
 | 스킬 경로 | `.claude/skills/game/unity-6-2d-fundamentals/SKILL.md` |
-| 검증일 | 2026-06-08 |
+| 검증일 | 2026-09-26 (최초 2026-06-08) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 
@@ -152,11 +152,28 @@ status: APPROVED
 
 없음.
 
+### 2026-09-26 재검증
+
+**수행일**: 2026-09-26
+**수행 방법**: WebSearch로 핵심 클레임 3개 재확인 + SKILL.md 자체 답변 확인 질문 2개
+
+- 클레임1. Google Play Target API 요구사항 — WebSearch 재확인 → **DISPUTED(구버전)**: 2026-08-31부터 신규 앱·업데이트는 **API 36(Android 16)** 필수(기존 앱은 API 35 이상 유지, 유예 시 2026-11-01까지). SKILL.md는 기존에 "최신 (35/36 지원)"으로 모호하게 서술 → 구체적 수치·시행일로 수정
+- 클레임2. Unity 6 LTS 최신 상태 — WebSearch 재확인 → **갱신 필요**: Unity 6.0 LTS 지원이 2026-10 종료 임박, 2026-09-01 Unity 6.6(비LTS) 출시, 6.7 LTS 2026년 내 예정 → SKILL.md 섹션 1에 주의문 추가, 6.3 LTS 사용 권장 강화
+- 클레임3. Rigidbody2D.linearVelocity / Slide() API — WebSearch 재확인 → **VERIFIED** (2026-08-12 빌드 공식 문서 기준 시그니처·동작 변동 없음)
+
+**Q1(재검증). "2026년 9월 지금 Android 앱을 Google Play에 신규 제출하려면 Target API Level을 몇으로 잡아야 하나?"**
+- SKILL.md 답변 경로: 8-2절 표 "Target API Level: API 36(Android 16) 필수 — 2026-08-31부터 신규 앱·업데이트에 요구"
+- 판정: PASS (갱신 후 정확한 답 도출. 갱신 전 "최신 (35/36)" 표현으로는 정확한 숫자 답변 불가)
+
+**Q2. "지금 신규 Unity 2D 모바일 프로젝트를 시작하는데 Unity 6.0 LTS를 써도 되나?"**
+- SKILL.md 답변 경로: 섹션 1 주의문 "Unity 6.0 LTS는 2026-10 지원 종료 임박 — 신규·진행 중 프로젝트는 6.3 LTS 사용 권장"
+- 판정: PASS
+
 ### 판정
 
-- agent content test: 3/3 PASS
+- agent content test: 3/3 PASS (최초) + 재검증 2/2 PASS
 - verification-policy 분류: 라이브러리 사용법·API 패턴 (해당 없음 — 실사용 필수 카테고리 아님)
-- 최종 상태: APPROVED
+- Google Play Target API 구체 수치 갱신 + Unity LTS 상태 갱신이라는 실질 내용 변경이 있었으므로 PENDING_TEST 전환. 차기 skill-tester 재테스트 시 APPROVED 재검토
 
 ---
 
@@ -173,8 +190,8 @@ status: APPROVED
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (3/3 PASS, 2026-06-08) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (3/3 PASS, 2026-06-08) + ✅ (2/2 PASS, 2026-09-26 재검증) |
+| **최종 판정** | **PENDING_TEST** (Google Play API 36·Unity LTS 상태 갱신, 재테스트 대기) |
 
 ---
 
@@ -191,3 +208,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-06-08 | v1 | 최초 작성. Unity 6.3 LTS 기준, 11개 핵심 클레임 교차 검증 완료. Android API Level 26 → 23 수정 반영 | skill-creator |
 | 2026-06-08 | v1 | 2단계 실사용 테스트 수행 (Q1 velocity→linearVelocity Breaking Change / Q2 Input System PlayerInput 이벤트 구독 패턴 / Q3 iOS vs Android 빌드 설정 + IL2CPP 강제 판단) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-26 | v1 | 재검증(98개 일괄 재검증 대상). Google Play Target API 36 요구(2026-08-31 시행) 반영, Unity 6.0 LTS 종료 임박·6.6/6.7 LTS 갱신, Rigidbody2D API는 변동 없음 확인 → 실질 내용 변경으로 PENDING_TEST 전환 | Claude Code |

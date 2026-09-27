@@ -1,9 +1,9 @@
 ---
 skill: ymyl-content-seo
 category: writing
-version: v1
-date: 2026-06-03
-status: APPROVED
+version: v2
+date: 2026-09-26
+status: PENDING_TEST
 ---
 
 # ymyl-content-seo 스킬 검증 문서
@@ -18,9 +18,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `ymyl-content-seo` |
 | 스킬 경로 | `.claude/skills/writing/ymyl-content-seo/SKILL.md` |
-| 검증일 | 2026-06-03 |
-| 검증자 | skill-creator (Claude Opus 4.7) |
-| 스킬 버전 | v1 |
+| 검증일 | 2026-09-26 |
+| 검증자 | skill-creator (Claude Opus 4.7) / 2026-09-26 재검증: 메인 세션 (QRG 전문·현행 법령·schema.org 원문 직접 대조) |
+| 스킬 버전 | v2 |
 
 ---
 
@@ -139,11 +139,42 @@ status: APPROVED
 | 13 | Healthline은 "Medically reviewed by ..." byline 패턴, Mayo Clinic은 byline 미사용 정책 | itisreliable.com Healthline 리뷰 | Mayo Clinic Health Information Policy 페이지 | VERIFIED |
 | 14 | HONcode 인증은 2022년 운영 종료 | HON 공식 발표 (별도 검색) | 다수 의료 SEO 매체 정리 | DISPUTED → 본문에서 "2022년 운영 종료" 표기로 정리 (정확한 종료 시점은 추가 확인 필요 시 `> 주의:` 처리 검토) |
 
+### 4-B. 2026-09-26 재검증 — 1차 원문 직접 대조 (12건)
+
+| # | 클레임 | 1차 소스 | 판정 |
+|---|---|---|---|
+| R1 | QRG YMYL 범주에 News and Current Events·Shopping 포함 (SKILL §1.1 표) | QRG 전문 PDF 2025-09-11 §2.3 | **DISPUTED→수정** — 현행 4유형(Health or Safety / Financial Security / Government, Civics & Society / Other) |
+| R2 | #3 "highest E-E-A-T standards" 따옴표 인용 | QRG 전문 182쪽 전체 검색 | **DISPUTED→수정** — 문구 없음. 원문 "the most scrutiny", "high/very high level of E-E-A-T"로 교체 |
+| R3 | #1 "2025-09-11 AI Overview 관련 갱신" | QRG 전문 — "AI Overview" 0회 | **DISPUTED** (SKILL 본문엔 해당 서술 없음, 기록만 정정) |
+| R4 | #5 의료법 제56조 주체 제한·금지 유형 | 현행 의료법 제56조 ①② 1~15호 | VERIFIED — "우월 비교"→"비교", 누락 호(6·8·10·11·14) 보완 |
+| R5 | #6 "2025년 가이드: 블로그·유튜브·인스타 원칙 포함" | 의료법 제57조 + 시행령 제24조(10만 명 기준, SNS 2018. 9. 28.) | **DISPUTED→수정** — 기준은 2018년 시행령, "2025 가이드" 근거 미확인 |
+| R6 | 금소법 제22조 광고 규제·필수 표기 | 현행 금소법 제22조 ①②③ | VERIFIED (조문 요지 보완) / 심의필번호 표시는 협회 규정 소관 `미검증` |
+| R7 | "변호사 아닌 자 법률 광고 = 변호사법 제109조" | 현행 변호사법 제112조 제3호 | **DISPUTED→수정** — 제112조 제3호 |
+| R8 | #4 MedicalWebPage 예시 속성 | schema.org/MedicalWebPage | **부분 정정** — `mainContentOfPage`는 WebPageElement 기대 → 문자열 배열 삭제, `medicalAudience` 사용. lastReviewed·reviewedBy VERIFIED |
+| R9 | #11 Attorney deprecated | schema.org/Attorney 원문 | VERIFIED |
+| R10 | #12 InvestmentOrDeposit `amount` | schema.org/InvestmentOrDeposit | VERIFIED |
+| R11 | #9 scaled content abuse 2024-03 | Google Blog 2024-03-05 원문 정의 | VERIFIED / "2025-06 manual action 본격화"·"50~80% 하락" **UNVERIFIED→삭제** |
+| R12 | #14 HONcode 대안 "NHS Information Standard" | 1차 확인 불가 | **UNVERIFIED→`주의`** (종료된 제도로 알려짐) |
+| R13 | #8 변호사 광고 규정 AI 표기 / #10 공정위 심사지침 2024-06 | 협회·공정위 원문 미대조 | UNVERIFIED (주의 표기 유지) |
+
 > 클레임 14 (HONcode 종료)는 본 검증에서 충분한 1차 소스 직접 확인을 하지 못함. SKILL.md에서는 "2022년 운영 종료. 대안: NHS Information Standard …"로 *대안 인증 안내*를 중심으로 정리해 위험 축소. 운영자가 인용 시점에 HON 후속 사이트에서 직접 재확인 권장.
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### 재검증 기록 (2026-09-26)
+
+**수행일**: 2026-09-26
+**수행자**: 메인 세션 재검증 (1차 원문 대조 후 SKILL.md 자체 답변 확인)
+**수행 방법**: §4-B R1~R13 대조 → 오류 6건 정정 → 실전 질문 2개
+
+Q1. "병원 인스타그램 게시물도 의료광고 사전심의를 받아야 해? 근거 조문은?" — PASS (근거: §4.2 정정 — 의료법 제57조 ① 5호 + 시행령 제24조 ② "직전 3개월 일일 평균 이용자 10만 명 이상 SNS", 면제 사항 제57조 ③)
+Q2. "고가 가전 구매 가이드는 QRG상 YMYL 'Shopping' 범주지?" — PASS (근거: §1.1 정정 — 현행 QRG엔 Shopping 범주 없음, 피해 유형(Financial Security 등)과 스펙트럼으로 판단, "Many or most topics are not YMYL")
+
+agent content test: 2/2 PASS (재검증 기록). 범주·조문 정정으로 status PENDING_TEST 전환.
+
+### 최초 테스트 (2026-06-03)
 
 **수행일**: 2026-06-03
 **수행자**: skill-tester → general-purpose (세션 내 직접 검증)
@@ -242,8 +273,8 @@ ISA 계좌를 비교하는 글에 schema.org를 적용하려고 합니다. YMYL 
 | 내용 정확성 | ✅ (14개 클레임 중 13 VERIFIED, 1 DISPUTED → 본문 보수적 정리) |
 | 구조 완전성 | ✅ (14개 섹션, frontmatter/소스/검증일/cross-link 모두 포함) |
 | 실용성 | ✅ (체크리스트 4분류 + 실수 패턴 6사례 + JSON-LD 3예시) |
-| 에이전트 활용 테스트 | ✅ (2026-06-03 수행, 3/3 PASS) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (2026-06-03 수행, 3/3 PASS / 2026-09-26 재검증 2/2 PASS) |
+| **최종 판정** | **PENDING_TEST** (2026-09-26 재검증: 1차 원문 대조 13건 중 오류 6건 정정·미검증 4건 — skill-tester 재테스트 후 APPROVED 재전환) |
 
 ---
 
@@ -264,3 +295,4 @@ ISA 계좌를 비교하는 글에 schema.org를 적용하려고 합니다. YMYL 
 |------|------|-----------|--------|
 | 2026-06-03 | v1 | 최초 작성. Google QRG 2025-09-11 / schema.org 의료·금융·법률 / 한국 의료법·금소법·변호사법·공정위 표시광고 / 자살예방 109+1577-0199 기준으로 14개 섹션 구성 | skill-creator |
 | 2026-06-03 | v1 | 2단계 실사용 테스트 수행 (Q1 건강 블로그 AI 초안 안전 사용법 / Q2 금융 어필리에이트 신뢰성 강화 / Q3 법률 일반 정보 vs 법적 조언 구분 기준) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-26 | v2 | 재검증 — QRG 전문·의료법/시행령·금소법·변호사법·schema.org 원문 대조 13건, 오류 6건 정정(YMYL 범주 News·Shopping 삭제, "highest E-E-A-T standards" 비원문 인용, 2025 사전심의 가이드 근거, 변호사법 제109조→제112조 제3호, MedicalWebPage mainContentOfPage 오용, 근거 없는 2025-06 manual action·트래픽 수치), 미검증 4건, 실전 질문 2/2 PASS → PENDING_TEST | 메인 세션 (재검증) |

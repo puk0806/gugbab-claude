@@ -2,8 +2,8 @@
 skill: redis-redisson-modern
 category: backend
 version: v1
-date: 2026-04-23
-status: APPROVED
+date: 2026-09-26
+status: PENDING_TEST
 ---
 
 # 스킬 검증 문서 — redis-redisson-modern
@@ -16,10 +16,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `redis-redisson-modern` |
 | 스킬 경로 | `.claude/skills/backend/redis-redisson-modern/SKILL.md` |
-| 검증일 | 2026-04-23 |
-| 검증자 | skill-creator |
+| 검증일 | 2026-09-26 (최초 2026-04-23) |
+| 검증자 | skill-creator → 2026-09-26 재검증: 메인 오케스트레이션 (Claude Sonnet 5) |
 | 스킬 버전 | v1 |
-| 대상 버전 | Redisson 3.18.1 ~ 3.51.0, Spring Boot 3.x, Java 17+ |
+| 대상 버전 | Redisson 3.18.1 ~ 3.52.0, Spring Boot 3.x, Java 17+ (Redisson 4.x/Spring Boot 4.x는 범위 밖) |
 
 ---
 
@@ -121,6 +121,29 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
+### 재검증 (2026-09-26)
+
+**수행일**: 2026-09-26
+**수행자**: 메인 대화 오케스트레이션 (Claude Sonnet 5) — verification-policy.md 재검증 절차
+**수행 방법**: SKILL.md + REFERENCE.md 전체 Read → WebSearch/WebFetch로 핵심 클레임 재대조 → 실전 질문 2개 자체 답변
+
+**재검증한 핵심 클레임**
+- "최신 3.x 안정판 3.51.0(2024-08-22)" → **DISPUTED, 수정 반영**: 실제로는 3.52.0(2025-09-25)이 3.x 라인의 마지막 릴리스. SKILL.md·의존성 예시 전체를 3.52.0으로 정정
+- **신규 발견**: Redisson이 2025-12-16 `4.0.0`으로 메이저 버전을 올려 Spring Boot 4.0을 지원하기 시작(`RLock`/`RMap`/`RTopic`/`@Cacheable` 등 애플리케이션 API는 변경 없음, 배포 클래스 경로·deprecated 제거 등은 Breaking) — SKILL.md 상단에 4.x 이관 안내 추가 (VERIFIED, GitHub Release `redisson-4.0.0` + redisson.pro 공식 블로그)
+- `getRedLock` deprecated → `getMultiLock` 권장 — 재확인, 변동 없음 (VERIFIED)
+
+**Q1. "Spring Boot 3.4 프로젝트에 Redisson 최신 3.x를 넣으려면 버전이 몇이어야 하나?"**
+- PASS
+- 근거: SKILL.md 버전·호환성 매트릭스 "Redisson 3.x 최종 안정판 3.52.0(2025-09-25)" — 의존성 예시도 3.52.0으로 일치.
+
+**Q2. "Redisson 4.0.0으로 올리면 Spring Boot 4 API가 완전히 다시 짜지나?"**
+- PASS
+- 근거: SKILL.md 상단 주의 문구 — "`RLock`/`RMap`/`RTopic`/`@Cacheable` 등 애플리케이션 코드에서 쓰는 API 자체는 변경 없음"이라고 명확히 구분해서 답변 가능.
+
+**판정**: 3.x 최신판 정정 + 4.x GA 이관 안내 신규 추가 → 내용 변경 있음 → status `PENDING_TEST`로 되돌림.
+
+---
+
 ### 테스트 케이스 1: 분산 락으로 주문 중복 생성 방지
 
 **입력 (질문/요청):**
@@ -189,8 +212,8 @@ Redisson에서 @RedissonLock 어노테이션을 메서드에 붙이면 자동으
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-04-23, 2문항 PASS — tryLock + RFuture/Reactive API + 2.x→3.x 마이그레이션 차이표·yaml 키 이동 정확) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (2026-04-23, 2문항 PASS) + ✅ (2026-09-26 재검증, 2문항 PASS — 3.x 최신판 정정 + 4.x GA API 영향 범위 확인) |
+| **최종 판정** | **PENDING_TEST** (2026-09-26 최신 3.x 버전 정정(3.51.0→3.52.0) + Redisson 4.x GA 이관 안내 추가로 내용 변경 — 재검증 필요) |
 
 ---
 
@@ -209,3 +232,4 @@ Redisson에서 @RedissonLock 어노테이션을 메서드에 붙이면 자동으
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
 | 2026-04-23 | v1 | 최초 작성 — Redisson 3.18.1 ~ 3.51.0, Spring Boot 3.x + Java 17+ 기준 | skill-creator |
+| 2026-09-26 | v1 | 재검증 — 최신 3.x 안정판 3.51.0→3.52.0 정정, Redisson 4.0.0 GA(Spring Boot 4 지원) 이관 안내 신규 추가 → PENDING_TEST | 메인 오케스트레이션 (Claude Sonnet 5) |

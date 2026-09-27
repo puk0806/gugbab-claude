@@ -62,6 +62,38 @@ description: >
 
 > 단순 자료 제공자, 자금 지원자, 부서장은 저자가 아닌 **acknowledgment**에 명시한다.
 
+### 1-1. 영문 원고 — 한국어 화자 빈출 오류 점검
+
+> 2026-09-26 이관: 학술 영어 일반론(시제·hedging·signposting)은 모델 기본 지식으로 충분해 별도 스킬을 제거하고, 한국어 화자 특화 오류 점검만 이 절로 옮겼다(이력은 verification.md §9). 원 검증: 관사 오류 1순위(VERIFIED, 영어교육학 연구 다수), data 복수 처리(DISPUTED → plural 권장으로 정정).
+
+**관사** — 한국어 화자 1순위 실수:
+
+| 실수 | 수정 | 설명 |
+|------|------|------|
+| "I read book yesterday." | "I read **the** book yesterday." | 특정 책: the |
+| "He is professor." | "He is **a** professor." | 직업: a/an |
+| "The honesty is a virtue." | "Honesty is a virtue." | 추상명사 일반론: 무관사 |
+| "Aristotle wrote a Nicomachean Ethics." | "Aristotle wrote **the** *Nicomachean Ethics*." | 특정 작품: the |
+
+**단·복수 일치:** **data**는 학술 영어에서 **복수** 권장(APA, Cell Press 표준 — "These data **suggest**"), **research / literature / evidence**는 불가산("Research **shows**", NOT "researches show"), **criteria / phenomena**는 복수(단수: criterion / phenomenon).
+
+> 주의 (DISPUTED 정정): 한국어 화자가 흔히 "data is"로 쓰는 경우가 있으나, 학술 출판(APA, Taylor & Francis, 인문·사회과학 표준)에서는 **data를 복수로 처리**하는 것이 안전하다. 일부 IT·구어체에서는 단수 사용이 늘었지만, 인문 학술지 투고에서는 plural을 권장한다. ([APA / Cell Press 가이드](https://crosstalk.cell.com/blog/is-data-plural))
+
+**번역투·중복 표현:**
+
+| 한국어식 영어 | 학술 영어 |
+|--------------|----------|
+| "However, but ..." (중복) | "However, ..." 또는 "But ..." 중 하나 |
+| "Until now, ..." | "**To date**, ..." / "So far, ..." |
+| "It is thought that ~" 과용 | 능동태로 — "Scholars argue that ..." |
+| "There is no doubt that ..." | "**Arguably**, ..." (hedged) |
+| "As we all know, ..." | 삭제 또는 "As [Author] has noted, ..." |
+| "I want to say that ..." | "**I argue that** ..." |
+| "very important" | "**crucial / critical / significant**" |
+| "a lot of studies" | "**numerous studies / a substantial body of research**" |
+
+**전치사:** "research **about** X" → "research **on** X" / "discuss **about** X" → "discuss X" / "different **with**" → "different **from**".
+
 ---
 
 ## 2. 학술지 선정 — Predatory Journal 회피

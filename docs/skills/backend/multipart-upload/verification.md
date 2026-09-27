@@ -2,7 +2,7 @@
 skill: multipart-upload
 category: backend
 version: v2
-date: 2026-06-20
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -36,7 +36,7 @@ status: APPROVED
 | 스킬 이름 | multipart-upload |
 | 스킬 경로 | .claude/skills/multipart-upload/SKILL.md |
 | 최초 작성일 | 2026-04-06 |
-| 재검증일 | 2026-04-08 |
+| 재검증일 | 2026-09-26 (직전 재검증 2026-06-20) |
 | 검증 방법 | rust-backend-developer 활용 테스트 |
 | 버전 기준 | axum 0.8.x |
 
@@ -131,6 +131,28 @@ status: APPROVED
 
 ---
 
+### 재검증 (2026-09-26)
+
+**수행자**: 메인 세션 (Sonnet 5), 서브에이전트 미사용(사용자 지시)
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임 3건 WebFetch로 docs.rs 재확인 → 실전 질문 2개로 SKILL.md 자체 답변 확인
+
+**교차 검증 클레임:**
+1. axum 기본 바디 크기 제한 2MB — WebFetch(docs.rs/axum/latest DefaultBodyLimit, axum 0.8.9 문서) "Bytes will, by default, not accept bodies larger than 2MB" 재확인 → **VERIFIED**
+2. `Multipart`는 `multipart` cargo feature 필요 — WebFetch(docs.rs/axum/latest Multipart, axum 0.8.9) "Available on crate feature multipart only" 재확인 → **VERIFIED**
+3. `DefaultBodyLimit::max()` / `DefaultBodyLimit::disable()` 존재 — 동일 문서에서 재확인 → **VERIFIED**
+
+axum 최신 버전이 여전히 0.8.9(2026-09-22 릴리즈)임도 확인 — SKILL.md 버전 표기(0.8.x) 그대로 유효.
+
+**Q1 (재확인). "axum에서 큰 파일 업로드 시 기본 2MB 제한을 10MB로 늘리려면?"**
+- PASS — SKILL.md "5. 파일 크기 제한 > DefaultBodyLimit" 절의 `DefaultBodyLimit::max(10 * 1024 * 1024)` 코드로 정확히 답변 가능.
+
+**Q2 (재확인). "Multipart를 쓰는데 컴파일 에러가 난다. 왜?"**
+- PASS — SKILL.md 상단 "주의: `Multipart`는 기본 feature가 아니므로 Cargo.toml에 반드시 명시해야 합니다" + `features = ["multipart"]` 예시로 정확히 답변 가능.
+
+**status**: 내용 변경 없음 → APPROVED 유지
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -157,3 +179,4 @@ status: APPROVED
 | 2026-04-17 | v2 | verification.md 신규 8섹션 포맷으로 마이그레이션 | 메인 대화 오케스트레이션 |
 | 2026-04-17 | v3 | WebSearch 교차 검증 완료 (7개 클레임, DISPUTED 0건) — 섹션 1·2·4-4 업데이트 | 메인 대화 오케스트레이션 |
 | 2026-06-20 | v4 | 버전 재검증 — axum 0.8.9 확인. Multipart API 변경 없음. SKILL.md 버전 표기는 0.8.x 범위이므로 변경 없음 | 버전 재검증 작업 |
+| 2026-09-26 | v5 | 정기 재검증 — axum 0.8.9(2026-09-22 릴리즈) 유지 확인, DefaultBodyLimit 2MB/multipart feature 요구사항 변경 없음 | Claude (Sonnet 5) |

@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `crisis-intervention-resources-korea` |
 | 스킬 경로 | `.claude/skills/humanities/crisis-intervention-resources-korea/SKILL.md` |
-| 검증일 | 2026-07-04 |
+| 검증일 | 2026-09-26 (재검증, 이전 2026-07-04) |
 | 검증자 | skill-creator (Claude) |
 | 스킬 버전 | v1 |
 | 재검증 주기 | 연 1회 (정부 번호 통합·변경 가능성) |

@@ -2,7 +2,7 @@
 skill: abstract-and-keywords-writing
 category: writing
 version: v1
-date: 2026-05-03
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `abstract-and-keywords-writing` |
 | 스킬 경로 | `.claude/skills/writing/abstract-and-keywords-writing/SKILL.md` |
-| 검증일 | 2026-07-04 |
+| 검증일 | 2026-09-26 (재검증, 이전 2026-07-04) |
 | 검증자 | skill-creator (Claude Opus 4.7) |
 | 스킬 버전 | v1 |
 

@@ -14,11 +14,11 @@ description: Spring Boot 프로젝트 초기 셋업 - 레거시(2.5.12/Java 11/W
 > - https://endoflife.date/spring-boot
 > - https://plugins.gradle.org/plugin/org.springframework.boot
 >
-> 검증일: 2026-04-22
+> 검증일: 2026-09-26 (재검증, 내용 변경 없음)
 
 > 주의: Spring Boot 2.5.x는 OSS 지원이 종료된 상태(2.5 EOL ≈ 2023-02)이며, 2.7.x만 상용 Extended 지원이 연장되어 있습니다. 레거시 스택 유지 보수 용도로만 사용하고, 신규 프로젝트에는 3.4+ 또는 4.0+를 선택하세요.
 >
-> 주의: 2026-04 기준 Spring Boot 최신 안정은 4.0.5입니다. 본 스킬은 사용자가 요청한 3.4+를 기준으로 작성하되, 4.0+는 Spring Framework 7.0 기반으로 또 다른 마이그레이션 포인트가 있으므로 별도 확인이 필요합니다.
+> 주의: 2026-09 기준 Spring Boot 최신 안정은 4.1.1(2026-08-21 릴리즈, Spring Framework 7 기반)입니다. 본 스킬은 사용자가 요청한 3.4+를 메인으로 작성하되, 4.0+/4.1+ 마이그레이션 포인트는 섹션 9(references/REFERENCE.md)에서 별도로 다룹니다.
 
 ---
 

@@ -1,9 +1,9 @@
 ---
 skill: moral-education-self-control-modern-issues
 category: education
-version: v1
-date: 2026-05-06
-status: APPROVED
+version: v1.5
+date: 2026-09-26
+status: PENDING_TEST
 ---
 
 # 검증 문서: moral-education-self-control-modern-issues
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `moral-education-self-control-modern-issues` |
 | 스킬 경로 | `.claude/skills/education/moral-education-self-control-modern-issues/SKILL.md` |
-| 검증일 | 2026-05-06 |
-| 검증자 | skill-creator (Claude Opus 4.7) |
-| 스킬 버전 | v1 |
+| 검증일 | 2026-09-26 |
+| 검증자 | skill-creator (Claude Opus 4.7) / 2026-09-26 재검증: 메인 세션 (Crossref DOI·KCI 서지 직접 대조) |
+| 스킬 버전 | v1.5 |
 
 ---
 
@@ -100,9 +100,14 @@ status: APPROVED
 | 3 | ADHD 환자 2024년 약 149,272명, 4년간 약 2배 증가 | VERIFIED | 헤럴드경제 + 메디칼타임즈 + 인사이트 3중 일치 |
 | 4 | Baumeister & Vohs (2007) SPPC, 1(1), 115–128 | VERIFIED | psycnet APA + Roy Baumeister 본인 사이트 + scirp 일치 |
 | 5 | Hagger 2016 다중연구 23개 실험실 재현 실패 (N=2,141) | VERIFIED | Wikipedia ego depletion + Inzlicht 본인 글 + 다수 논문 일치 |
-| 6 | Carter 2015 메타분석 출판편향 통제 시 d≈0.2 | VERIFIED | PMC 메타분석 + Wikipedia + Frontiers 논평 일치 |
+| 6 | Carter 2015 메타분석 출판편향 통제 시 d≈0.2 | VERIFIED (서지: Crossref JEP:G 144(4) 796–815) / **수치 UNVERIFIED (2026-09-26)** | 원문 표 미대조 — "0과 구별 안 됨"만 유지, d값은 `주의` 처리 |
 | 7 | Mischel, Shoda, Rodriguez (1989) *Science*, 244(4907), 933–938 | VERIFIED | Science 직접 + PubMed + APA psycnet 일치 |
-| 8 | Watts, Duncan, Quan (2018) *Psychological Science*, 29(7), 1159–1177 | VERIFIED | SAGE + PMC + APS 옵저버 일치 |
+| 8 | Watts, Duncan, Quan (2018) *Psychological Science*, 29(7), 1159–1177 | 서지 VERIFIED / **효과 서술 DISPUTED→수정 (2026-09-26)** | Crossref 초록: 이변량 상관이 원 연구의 **절반**, 통제변수 투입 시 **2/3 감소**. SKILL.md의 "통제 시 1/2 → 추가 통제 후 2/3 추가 약화" 순서 오기 정정 |
+| R1 | 박장호 2009 서지("저자명 추가 검색 필요") | **정정 (2026-09-26)** | KCI ART001330038: 박장호(경성대), 倫理硏究 1(72), 131–161, 2009 — §4.1·§4.3·출처 보완 |
+| R2 | Kahneman "2017년 사과 서한" | **DISPUTED→`주의: 미검증` (2026-09-26)** | 2012 공개 서한과 2017 공개 인정이 섞인 표현. 1차 매체 미확인 |
+| R3 | Falk, Kosse, Pinger (2020) *Psych Sci* | VERIFIED (2026-09-26) | Crossref 10.1177/0956797619861720, 31(1) 100–104 (권호 보완) |
+| R4 | MFT 6토대 최신성 | 보완 (2026-09-26) | Atari et al. 2023 *JPSP* 125(5) 1157–1188 MFQ-2 (Equality·Proportionality 분리) 개정 동향 추가 |
+| R5 | Hagger 2010·2016, Baumeister & Vohs 2007, Inzlicht & Schmeichel 2012, Mischel 1989, Duckworth 2007, Credé 2017 서지 | VERIFIED (2026-09-26) | Crossref DOI 메타데이터 권호·쪽수 일치 |
 | 9 | Duckworth (2007) *JPSP*, 92(6), 1087–1101 | VERIFIED | psycnet + PubMed + scirp 일치 |
 | 10 | Credé (2017) *JPSP*, 113(3), 492–511 — *PPSci* 아님 | DISPUTED → 정정 | 사용자 노트의 *Perspectives on Psychological Science* 게재는 오류. *JPSP*가 정확 (psycnet + scirp + ResearchGate 일치). SKILL.md에서 정정 표기. |
 | 11 | Kahneman *Thinking, Fast and Slow* (2011, FSG) | VERIFIED | Macmillan 공식 + Wikipedia + APA psycnet 일치 |
@@ -147,6 +152,20 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+---
+
+### 재검증 기록 (2026-09-26)
+
+**수행일**: 2026-09-26
+**수행자**: 메인 세션 재검증 (Crossref DOI 메타데이터·KCI 서지 직접 대조 후 SKILL.md 자체 답변 확인)
+**수행 방법**: 도덕심리학 서지 12건 Crossref 대조 + KCI 박장호 서지 + (§10) Perseus 4건 → 정정 2건(Watts 효과 서술, 박장호 서지 확정)·미검증 2건(Carter d값, Kahneman 서한) → 실전 질문 2개
+**미재대조**: 한국 공공통계(NIA·여가부·교육부·심평원) 수치는 이번 재검증에서 원 보도자료를 다시 열지 못함 — 2026-05-06 교차검증 결과 유지
+
+Q1. "마시멜로 테스트 재현 연구(Watts 2018)를 한 문장으로 인용하면?" — PASS (근거: §2.1 정정 — 이변량 상관이 원 연구의 절반, 가족배경·초기 인지능력·가정환경 통제 시 2/3 감소 + Falk 2020 반론 병기)
+Q2. "박장호(2009)를 참고문헌에 쓰려면?" — PASS (근거: §4.1 — 倫理硏究 72, 131–161, DOI 10.15801/je.1.72.200903.131)
+
+agent content test: 2/2 PASS (재검증 기록). 효과 서술 정정으로 status PENDING_TEST 전환.
 
 ---
 
@@ -258,7 +277,8 @@ SKILL.md §3 매핑 표 + §6 체크리스트에 따라 "직접 등치 금지, �
 | 실용성 (research notes) | ✅ |
 | 에이전트 활용 테스트 (최초) | PARTIAL (Q1 PASS / Q2 PARTIAL / Q3 PARTIAL, 2026-05-06 수행) |
 | 에이전트 활용 테스트 (재테스트) | PASS (Q1 PASS / Q2 PASS / Q3 PASS, 2026-05-06 수행) |
-| **최종 판정** | **APPROVED** |
+| 재검증 (2026-09-26) | 대조 17건(Crossref 12·KCI 1·Perseus 4), 정정 2·미검증 2, 실전 질문 2/2 PASS |
+| **최종 판정** | **PENDING_TEST** (2026-09-26 Watts 효과 서술 정정 — skill-tester 재테스트 후 APPROVED 재전환) |
 
 **판정 근거:**
 - 한국 1차 공공통계 4종, 도덕심리학 1차 출처 8종, 재현성 비판 4종, KCI 등재 선행연구, Jubilee Centre 공식 자료 모두 교차 검증 완료
@@ -277,7 +297,8 @@ SKILL.md §3 매핑 표 + §6 체크리스트에 따라 "직접 등치 금지, �
 - [✅] **[차단 요인 해소]** Hursthouse (1999) *On Virtue Ethics*의 유비 방법론 핵심 내용 보강 (2026-05-06 SKILL.md §3 보강 완료 — 좋은 모델 이유 + *OVE* 5장·9장 참고 추가, 재테스트 Q2 PASS)
 - [✅] skill-tester 재테스트 수행 (2026-05-06 완료, 3/3 PASS → APPROVED 전환)
 - [❌] **[선택 보강]** Hursthouse 1999 *On Virtue Ethics* 내 akrasia/continence 절 정확한 페이지 확인 — 사용자 직독 권장 (차단 요인 아님, APPROVED 전환에 영향 없음)
-- [❌] **[선택 보강]** 박장호 2009 정확한 서지정보 사용자 메모 대조
+- [✅] **[선택 보강]** 박장호 2009 정확한 서지정보 — 2026-09-26 KCI ART001330038로 확정
+- [❌] **[재검증 잔여]** Carter 2015 보정 효과크기·Kahneman 2012/2017 1차 매체 확인, 한국 공공통계 원 보도자료 재대조
 - [❌] **[선택 보강]** 한국청소년정책연구원 NYPI 게임·SNS 중독 세부 통계 추가 (본 검증에서는 메인 출처 한정)
 - [❌] **[선택 보강]** 코로나19 이후 자기조절 KCI 실증 연구 5편 이상 추가 발굴
 - [❌] **[선택 보강]** 2022 개정 도덕과 교육과정 *고시문* 원문(교육부 고시 제2022-33호 [별책 6]) 직접 확인 후 §5-C 보강
@@ -293,3 +314,20 @@ SKILL.md §3 매핑 표 + §6 체크리스트에 따라 "직접 등치 금지, �
 | 2026-05-06 | v1.1 | **fact-checker 추가 검증 — 5건 모두 VERIFIED**: Hagger 2010 *Psychological Bulletin* 136(4) 495-525 / Hagger 2016 *Perspectives on Psychological Science* 11(4) 546-573 23 labs N=2141 d=0.04 / Watts 2018 *Psychological Science* 29(7) 1159-1177 SES 통제 후 효과 2/3 감소 / Credé 2017 *Journal of Personality and Social Psychology* 113(3) 492-511 (skill-creator 학술지 정정 정확) / Duckworth 2007 *Journal of Personality and Social Psychology* 92(6) 1087-1101 (skill-creator 학술지 정정 정확). PubMed + APA PsycNet + SAGE Journals 교차 검증. 추가 정정 사항 없음. APPROVED 미전환(skill-tester 2단계 실사용 테스트 대기). | fact-checker |
 | 2026-05-06 | v1.2 | 2단계 실사용 테스트 수행 (Q1 디지털 환경 통계+도덕심리학 결합 / Q2 grit 비판 및 도덕교육 활용 / Q3 akrasia 유비 비교 및 Hursthouse 방법론) → 1/3 PASS, 2/3 PARTIAL, NEEDS_REVISION 전환. 차단 요인 2건: grit 도덕교육 활용 처방 부재, Hursthouse 유비 방법론 핵심 논지 미수록. | skill-tester |
 | 2026-05-06 | v1.3 | SKILL.md 보강 후 재테스트 수행 (Q1 grit 비판+처방 4항목 / Q2 Hursthouse 좋은 모델 이유+OVE 5·9장 / Q3 한국 통계+도덕심리학 결합 흐름) → 3/3 PASS, NEEDS_REVISION → APPROVED 전환. 섹션 5·6·7·8 전체 동기화 완료. | skill-tester |
+| 2026-09-26 | v1.4 | Perseus 원문 대조(NE Bekker 위치·장 번호 4건) → 전원 VERIFIED, 내용 변경 없음, APPROVED 유지 (§10) | 메인 세션 (원문 대조) |
+| 2026-09-26 | v1.5 | 재검증 — Crossref 12건·KCI 1건 대조, 정정 2건(Watts 2018 효과 서술 순서, 박장호 2009 서지 확정), 미검증 2건(Carter d값, Kahneman 서한), Falk 2020·Atari 2023 보완, 실전 질문 2/2 PASS → PENDING_TEST | 메인 세션 (재검증) |
+
+---
+
+## 10. 원문 대조 기록 (2026-09-26)
+
+- 1차 원문: Perseus `tlg0086.tlg010.perseus-grc2.xml` (Bywater 1894)
+
+| # | 클레임 | 원문 대조 결과 | 판정 |
+|---|---|---|---|
+| 1 | 분노형 akrasia NE VII.6, 1149a25– | "ἀκούειν μέν τι τοῦ λόγου, παρακούειν δέ" 1149a25-26, VII.6 시작 1149a24 | VERIFIED |
+| 2 | propeteia NE VII.7, 1150b19– | "ἀκρασίας δὲ τὸ μὲν προπέτεια" 1150b19 | VERIFIED |
+| 3 | astheneia NE VII.7, 1150b19– | 같은 문장 "τὸ δʼ ἀσθένεια" | VERIFIED |
+| 4 | 두 전제 결합 모델 NE VII.3, 1147a24– | "ἣ μὲν γὰρ καθόλου δόξα" 1147a25, VII.3 내부 | VERIFIED |
+
+**합계: 대조 4건 / 정정 0건.** 그리스어 원문 인용 없음. APPROVED 유지.

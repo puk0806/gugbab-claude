@@ -1,8 +1,8 @@
 ---
 skill: akrasia-scholarship-map
 category: humanities
-version: v1
-date: 2026-05-03
+version: v7
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `akrasia-scholarship-map` |
 | 스킬 경로 | `.claude/skills/humanities/akrasia-scholarship-map/SKILL.md` |
-| 검증일 | 2026-07-04 |
+| 검증일 | 2026-09-26 (재검증, 이전 2026-07-04) |
 | 검증자 | skill-creator (Opus 4.7) |
 | 스킬 버전 | v1 |
 | 대상 사용자 | 도덕윤리교육 전공 학부생 |
@@ -152,6 +152,63 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
+### [재검증] 2026-09-26 — Perseus 원문 대조 정정 3건 재테스트
+
+**수행일**: 2026-09-26
+**수행자**: skill-tester → general-purpose (도메인 전용 에이전트 미등록으로 대체)
+**수행 방법**: SKILL.md Read 후 §10 원문 대조 정정 3건(비유 위치 1147a10-24, 소크라테스 비판 VII.2, "οὐδεὶς ἑκὼν ἁμαρτάνει" 비원문 표시)을 겨냥한 실전 질문 2개 답변, 근거 섹션 및 anti-pattern 회피 확인
+
+**Q1. (정정 겨냥) "잠든 자·미친 자·취한 자" 비유 위치 + 소크라테스 비판이 나오는 장(章)·Bekker 번호**
+- PASS
+- 근거: SKILL.md "1-2. 아리스토텔레스 입장" (비유 1147a10-24, 원문 어구 1147a13-14), "8. 흔한 오류 패턴" 두 번째 항목(NE VII.2, 1145b21–28 — 기존 VII.3 오류 정정)
+- 상세: 비유 위치를 정정된 1147a10-24로, 소크라테스 비판·계승 논의를 정정된 "NE VII.2, 1145b21–28"로 정확히 인용. 장 번호 오류(VII.3→VII.2) 정정 사실까지 명시적으로 인용해 anti-pattern(구 버전 VII.3 오기) 회피 확인. 비유 구절의 정확한 장 번호가 본문에 별도 명기되어 있지 않다는 gap을 스스로 지적함(§1-2 도입부는 "VII권 1–10장" 범위만 제시) — 차단 요인 아님, 선택 보강.
+
+**Q2. (정정 겨냥) 소크라테스 주지주의 핵심 테제 "οὐδεὶς ἑκὼν ἁμαρτάνει" 원문 직접인용 가부**
+- PASS
+- 근거: SKILL.md "1-1. 소크라테스 입장" 두 번째 불릿(학계 관용 요약 표현 명시 + 원문 근거 *Prt.* 345e·358c-d)
+- 상세: "οὐδεὶς ἑκὼν ἁμαρτάνει"는 원문 직접인용이 아니라 학계 관용 요약이라는 정정 사실을 정확히 인용하고, 실제 원문 근거(345e "οὐδένα ἀνθρώπων ἑκόντα ἐξαμαρτάνειν", 358c-d "ἐπί γε τὰ κακὰ οὐδεὶς ἑκὼν ἔρχεται")를 정확히 제시. anti-pattern(관용 요약을 원문 직접인용으로 오표기)을 정확히 회피.
+
+### 발견된 gap (Perseus 정정 재테스트)
+
+- "잠든 자·미친 자·취한 자" 비유(1147a10-24)의 정확한 장(章) 번호가 SKILL.md 본문에 명기되어 있지 않음 — §8에서 "판본별 인용 범위 차이"를 이유로 의도적으로 장 번호를 못박지 않은 설계로 보이나, 명시적 장 번호 한 줄 추가하면 더 친절함 (차단 요인 아님, 선택 보강)
+
+### 판정 (Perseus 정정 재테스트)
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 해당 없음 (도메인 지식 스킬, 실사용 필수 카테고리 아님)
+- 최종 상태: APPROVED (PENDING_TEST → APPROVED 전환)
+
+---
+
+### [재검증] 2026-09-26 — §9·§10 병합분(virtue-ethics-modern-revival) content test
+
+**수행일**: 2026-09-26
+**수행자**: skill-tester → general-purpose (도메인 전용 에이전트 미등록으로 대체)
+**수행 방법**: SKILL.md Read 후 2개 실전 질문 답변(§9·§10 병합분 겨냥), 근거 섹션 및 anti-pattern 회피 확인
+
+**Q1. (병합분 §9 겨냥) 신아리스토텔레스주의(Hursthouse)의 akrasia-enkrateia 관계 + MacIntyre 생몰년 표기**
+- PASS
+- 근거: SKILL.md "9-1. akrasia는 '덕 부족'인가, 별도 현상인가?", "9-3. 자제(continence)와 akrasia의 비대칭성", §9 상단 "주의(2026-09-26 재검증 확인)" MacIntyre 별세 표기
+- 상세: enkrateia-akrasia가 "미덕 발달의 연속체" 위에 있다는 서술과 방향성 비대칭(§9-3)을 정확히 근거로 제시. MacIntyre(1929–2025) 생몰년 표기 권고도 정확히 인용. anti-pattern(MacIntyre 현재형 서술)을 정확히 피함.
+
+**Q2. (병합분 §10 겨냥) 황경식·강상진의 한국 덕윤리 KCI 서지**
+- PASS
+- 근거: SKILL.md "10-1. 황경식", "10-2. 강상진" 표
+- 상세: 황경식 3건(『인간·환경·미래』 5호 2010 pp.3-22, 아카넷 2012·2015 단행본)과 강상진 1건(『가톨릭철학』 9호 2007 pp.11-39) 서지를 정확히 인용. §10 도입부의 "학위논문 인용 전 KCI 직접 재확인" 경고도 함께 반영해 anti-pattern(미재확인 서지 단정 인용) 회피.
+
+### 발견된 gap (§9·§10 병합분)
+
+- 강상진 항목에 발행 학회명이 명시되지 않음(게재지명만 존재) — 차단 요인 아님, 선택 보강
+- §10-3 "기타 KCI 확인 자료" 목록에 저자명 누락 — 인용 불가 상태로 이미 명확히 참고 목록으로만 기재되어 있어 오용 위험 낮음, 선택 보강
+
+### 판정 (2026-09-26 재검증)
+
+- agent content test: 2/2 PASS (병합분 §9·§10 포함)
+- verification-policy 분류: 해당 없음 (도메인 지식 스킬)
+- 최종 상태: APPROVED (병합 전 §0-8 기존 3/3 PASS + 병합분 §9·§10 2/2 PASS 종합)
+
+---
+
 ### [재검증] 2026-09-26 — 60일 초과 정기 재검증
 
 **수행일**: 2026-09-26
@@ -243,14 +300,16 @@ status: APPROVED
 | 내용 정확성 | ✅ (20개 핵심 클레임 모두 VERIFIED) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-03, skill-tester → general-purpose) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-03) / §9·§10 병합분 2/2 PASS (2026-09-26, general-purpose 대체) / Perseus 원문 대조 정정 재테스트 2/2 PASS (2026-09-26, general-purpose 대체) |
+| **최종 판정** | **APPROVED** (2026-09-26 Perseus 원문 대조 정정 3건 반영 재테스트 2/2 PASS 완료 — PENDING_TEST → APPROVED 전환) |
 
 ---
 
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester 별도 호출하여 실사용 테스트 수행 (2026-05-03 완료, 3/3 PASS)
+- [✅] §9·§10 병합분(현대 덕윤리 접점·한국 학계 수용) content test 수행 (2026-09-26 완료, 2/2 PASS)
+- [✅] Perseus 원문 대조 정정 3건(비유 위치·소크라테스 비판 장 번호·관용 요약 표시) 재테스트 수행 (2026-09-26 완료, 2/2 PASS, APPROVED 재전환)
 - [❌] 한국 도덕교육 분야 후속 KCI 논문(2012~2025) 추가 발굴 — 박재주 외에도 존재할 가능성 있음, 다음 개정 시 KCI/DBpia 정밀 검색 필요 (차단 요인 아님, 선택 보강)
 - [❌] 플라톤 『고르기아스』·『법률』의 아크라시아 관련 논의 보강 — 현재 섹션 8 오류 패턴에서 언급만 하고 내용 없음 (차단 요인 아님, 선택 보강)
 - [❌] 아리스토텔레스 측 영어권 주석서(Burnyeat, Broadie) 추가 검토 (차단 요인 아님, 선택 보강)
@@ -266,3 +325,38 @@ status: APPROVED
 | 2026-05-03 | v1 | 2단계 실사용 테스트 수행 (Q1 소크라테스 vs 아리스토텔레스 텍스트 위치 / Q2 Davidson ATC 논증 및 현대 논쟁 위상 / Q3 ego depletion·마시멜로 재현성 논란 주의 확인) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-07-04 | v2 | freshness 재검증 — SEP "Weakness of Will" 저자(Stroud & Svirsky)·최종 개정일(2025-09-18), Davidson 1969 Feinberg 편 원 게재·1980 *Essays on Actions and Events* Ch.2 재수록, Wiggins PAS Vol.79 pp.251-278, NE VII.7 1150b19 이하 propeteia/astheneia 구분 재확인 → 전원 VERIFIED, 내용 변경 없이 검증일만 갱신 | freshness-audit |
 | 2026-09-26 | v3 | 60일 초과 정기 재검증. SEP 개정일 불변(2025-09-18)·박재주 KCI 서지 불변·최신 연구 동향(2025-26) 확인 결과 본 스킬 서술과 충돌 없음(VERIFIED 3/3). 실전 질문 2개 재확인 PASS. 내용 변경 없음, 검증일만 갱신, APPROVED 유지 | 메인 세션 (개별 재검증) |
+| 2026-09-26 | v4 | 스킬 정리 — `humanities/virtue-ethics-modern-revival` 병합: 원 §9(akrasia 접점)·§10(KCI 수용)을 SKILL.md §9·§10으로 원문 이관, MacIntyre 별세 주의·SEP "Virtue Ethics" 개정일 소스 줄 유지. `moral-education-curriculum-link` 병합에 따른 참조 경로 교체. status PENDING_TEST 전환 | 메인 세션 (스킬 정리) |
+| 2026-09-26 | v5 | 2단계 실사용 테스트 수행 (Q1 §9 Hursthouse akrasia-enkrateia 관계+MacIntyre 생몰년 / Q2 §10 황경식·강상진 KCI 서지) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-09-26 | v6 | **Perseus 원문 대조 정정 3건** (§10 표): 잠든 자·취한 자·미친 자 비유 위치 1147a24-b5 → 1147a10-24(a13-14), 소크라테스 비판 "NE VII.3, 1145b21-27" → VII.2, "οὐδεὶς ἑκὼν ἁμαρτάνει"를 원문 인용 아닌 관용 요약으로 표시. status APPROVED → PENDING_TEST | 메인 세션 (원문 대조) |
+| 2026-09-26 | v7 | 2단계 실사용 재검증 수행 (Q1 비유 위치+소크라테스 비판 장 번호 정정 겨냥 / Q2 "οὐδεὶς ἑκὼν ἁμαρτάνει" 원문 직접인용 가부 정정 겨냥) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+
+---
+
+## 9. 병합 이력 (2026-09-26)
+
+| 항목 | 내용 |
+|------|------|
+| 원 스킬 | `humanities/virtue-ethics-modern-revival` (제거 — Anscombe·MacIntyre·Foot·Hursthouse·Slote·Annas·Nussbaum·Swanton 개론은 모델 기본 지식) |
+| 이관 범위 | 원 §9 akrasia와 현대 덕윤리의 접점 → §9 (서지 좌표 1줄 요약 추가) / 원 §10 한국 학계 수용(KCI) → §10 / 원 §2 MacIntyre 별세 `주의` → §9 상단 / SEP "Virtue Ethics" 개정일 → 소스 줄 |
+| 병합 시 정정 | 원 §9-1의 "무절제(akrasia, 욕구에 굴복)" → "자제력 없음(akrasia, 욕구에 굴복)". 무절제는 akolasia 번역어(한국 학술 표준)라 akrasia에 붙이면 오류 |
+| 원 소스 | SEP "Virtue Ethics" (Hursthouse & Pettigrove, substantive revision 2026-05-03) https://plato.stanford.edu/entries/ethics-virtue/, KCI, Daily Nous·Notre Dame 부고 |
+| 이관 클레임 판정 (원 verification.md) | 서지 19건(Anscombe 1958 *Philosophy* 33(124) pp.1-19, *After Virtue* 판본 이력, Foot 2001, Hursthouse 1999, Slote 2001/2007, Annas 2011, Swanton 2003, 황경식 2010 *인간·환경·미래* 5호 pp.3-22, 황경식 2012 아카넷, 강상진 2007 *가톨릭철학* 9호 pp.11-39 등) — VERIFIED / Hursthouse full virtue vs continence 구분 — VERIFIED / 2026-09-26 재검증: MacIntyre 2025-05-21 별세 — DISPUTED(현재형 서술) → 정정 반영 / SEP 개정일 2026-05-03 — VERIFIED |
+| 상태 | APPROVED — §9·§10 content test 2/2 PASS (2026-09-26) 완료 (같은 날 원문 대조 정정으로 PENDING_TEST 전환 후, Perseus 정정 재테스트 2/2 PASS로 APPROVED 재전환 — §5·§10 참조) |
+
+---
+
+## 10. 원문 대조 기록 (2026-09-26)
+
+- 1차 원문: Perseus `tlg0086.tlg010.perseus-grc2.xml` (Bywater 1894), Plato *Prt.* `tlg0059.tlg022`
+
+| # | 클레임 (기존) | 원문 대조 결과 | 판정 |
+|---|---|---|---|
+| 1 | *Prt.* 352b-358d 범위 | 352c "περιελκομένης", 358c-d 결론 포함 | VERIFIED |
+| 2 | "οὐδεὶς ἑκὼν ἁμαρτάνει" | 원문 어구 아님 — *Prt.* 345e / 358c-d 근거로 요약 표시 | 정정 |
+| 3 | NE VII 1-10장 = 1145a15-1152a36 | 장 경계 일치 | VERIFIED |
+| 4 | "1147a24-b5에서 잠든 자·취한 자·미친 자 비유" | 비유는 1147a13-14 (1147a10-24), 1147a24-b5는 φυσικῶς 분석 | 정정 |
+| 5 | VII.7 1150b19-28 두 종류 분류 | "ἀκρασίας δὲ τὸ μὲν προπέτεια τὸ δʼ ἀσθένεια" 1150b19 | VERIFIED |
+| 6 | "NE VII.3, 1145b21-27" 소크라테스 변형·계승 | 1145b21은 VII.2 시작 | 정정 |
+| 7 | 서지 표본 (Davidson 1969/1980, Mele 1987·2012, Wiggins PAS 79, Charlton 1988, Rorty *Inquiry* 23 1980, Holton 2009, 이제이북스 2006 3인 공역) | 기존 검증과 충돌 없음 | VERIFIED |
+
+**합계: 대조 7건 / 정정 3건.** 실질 정정이므로 PENDING_TEST → 재테스트(§5) 2/2 PASS 완료 후 APPROVED.

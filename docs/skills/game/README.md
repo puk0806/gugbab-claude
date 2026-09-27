@@ -1,6 +1,6 @@
 # game 스킬
 
-Unity 6 LTS 2D 모바일 게임 개발 스킬 모음 (총 17종).
+Unity 6 LTS 2D 모바일 게임 개발 스킬 모음 (총 16종).
 
 ---
 
@@ -14,7 +14,7 @@ Unity 6 LTS 2D 모바일 게임 개발 스킬 모음 (총 17종).
 
 ---
 
-## Unity 핵심 개발 (8종)
+## Unity 핵심 개발 (7종)
 
 | 스킬 | 설명 | 검증 |
 |------|------|------|
@@ -23,7 +23,6 @@ Unity 6 LTS 2D 모바일 게임 개발 스킬 모음 (총 17종).
 | [unity-addressables](../../../.claude/skills/game/unity-addressables/SKILL.md) | Addressables 에셋 관리 — 런타임 비동기 로드·해제, AssetReference, CCD 연동 | [→](./unity-addressables/verification.md) |
 | [unity-save-system](../../../.claude/skills/game/unity-save-system/SKILL.md) | 저장 시스템 — PlayerPrefs·JSON+File I/O·AES 암호화·Unity Cloud Save, 마이그레이션 | [→](./unity-save-system/verification.md) |
 | [unity-game-feel](../../../.claude/skills/game/unity-game-feel/SKILL.md) | 게임 감각(Game Feel/Juice) 구현 — 히트 이펙트, 카메라 쉐이크, 슬로우 모션, DOTween | [→](./unity-game-feel/verification.md) |
-| [unity-procedural-generation](../../../.claude/skills/game/unity-procedural-generation/SKILL.md) | 절차적 콘텐츠 생성(PCG) — WFC, BSP, Cellular Automata, 로그라이크 맵 생성 | [→](./unity-procedural-generation/verification.md) |
 | [unity-mobile-optimization](../../../.claude/skills/game/unity-mobile-optimization/SKILL.md) | 모바일 최적화 — 렌더링·메모리·CPU·빌드, Sprite Atlas, SRP Batcher, Addressables | [→](./unity-mobile-optimization/verification.md) |
 | [unity-firebase](../../../.claude/skills/game/unity-firebase/SKILL.md) | Firebase Unity SDK 13.x 통합 — Analytics, Remote Config, Crashlytics, FCM | [→](./unity-firebase/verification.md) |
 

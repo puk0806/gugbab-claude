@@ -2,8 +2,8 @@
 skill: unity-mobile-optimization
 category: game
 version: v1
-date: 2026-06-08
-status: APPROVED
+date: 2026-09-26
+status: PENDING_TEST
 ---
 
 # unity-mobile-optimization 스킬 검증
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `unity-mobile-optimization` |
 | 스킬 경로 | `.claude/skills/game/unity-mobile-optimization/SKILL.md` |
-| 검증일 | 2026-06-08 |
+| 검증일 | 2026-09-26 (최초 2026-06-08) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 | 기준 버전 | Unity 6 (6000.x LTS), URP 17, Addressables 2.0+ |
@@ -163,11 +163,28 @@ status: APPROVED
 
 없음. 3개 질문 모두 SKILL.md 내에서 충분한 근거와 판단 기준이 제공됨.
 
+### 2026-09-26 재검증
+
+**수행일**: 2026-09-26
+**수행 방법**: WebSearch로 핵심 클레임 3개 재확인 + SKILL.md 자체 답변 확인 질문 2개
+
+- 클레임1. "Android 모바일은 ASTC 6×6이 Unity 6 기본값" — WebSearch 재확인 → **DISPUTED(부정확)**: Unity 공식 문서 기준 Android **실제 기본 포맷은 ETC2**(RGBA)/ETC(RGB)이며 ASTC는 Texture Compression Targeting으로 추가 지정하는 권장 포맷. SKILL.md 2-1절 표·설명을 "ASTC 권장 + ETC2 기본 폴백" 구조로 정정
+- 클레임2. Google Play Target API 요구사항 — WebSearch 재확인 → **갱신 필요**: 2026-08-31부터 신규 앱·업데이트에 Target API 36(Android 16) 필수. SKILL.md "적용 대상" 표에 반영
+- 클레임3. SRP Batcher/GPU Instancing 동시 불가, ObjectPool 내장 API, FixedUpdate 50Hz 등 나머지 핵심 클레임 — 재확인 → **VERIFIED** (변동 없음)
+
+**Q1(재검증). "Android 텍스처 압축을 아무 설정 안 하면 기본으로 뭐가 쓰이나?"**
+- SKILL.md 답변 경로: 2-1절 "Unity Android 문서상 실제 기본값은 ETC2(RGBA)/ETC(RGB) — ASTC는 Texture Compression Targeting으로 추가 포맷 지정 필요"
+- 판정: PASS (정정 후 정확한 답변 가능. 정정 전에는 "ASTC가 기본값"이라는 부정확한 답이 나왔을 것)
+
+**Q2. "지금(2026-09) Google Play에 신규 게임을 출시하려면 Target API를 몇으로 잡아야 하나?"**
+- SKILL.md 답변 경로: "적용 대상" 표 "Target API 36 필수 — Google Play 2026-08-31부터 시행"
+- 판정: PASS
+
 ### 판정
 
-- agent content test: 3/3 PASS
+- agent content test: 3/3 PASS (최초) + 재검증 2/2 PASS
 - verification-policy 분류: 라이브러리 사용법·최적화 패턴 — content test PASS = APPROVED 가능
-- 최종 상태: APPROVED
+- Android 텍스처 압축 기본값 정정 + Target API 36 반영이라는 실질 내용 변경이 있었으므로 PENDING_TEST 전환. 차기 skill-tester 재테스트 시 APPROVED 재검토
 
 ---
 
@@ -178,8 +195,8 @@ status: APPROVED
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (3/3 PASS, 2026-06-08) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (3/3 PASS, 2026-06-08) + ✅ (2/2 PASS, 2026-09-26 재검증) |
+| **최종 판정** | **PENDING_TEST** (ASTC 기본값 정정·Target API 36 반영, 재테스트 대기) |
 
 ---
 
@@ -198,3 +215,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-06-08 | v1 | 최초 작성 — Unity 6 + URP 17 + Addressables 2.0+ 기준 모바일 2D 최적화 가이드. 14개 핵심 클레임 교차 검증 (VERIFIED 12 / DISPUTED 1 → 일반화 / UNVERIFIED 1 → 일반화) | skill-creator |
 | 2026-06-08 | v1 | 2단계 실사용 테스트 수행 (Q1 Draw Call+SRP Batcher+GPU Instancing 동시 불가 / Q2 ObjectPool 내장 API 구조 / Q3 Managed Stripping High 위험·대처) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-26 | v1 | 재검증(98개 일괄 재검증 대상). Android 텍스처 압축 기본값(ASTC→실제 ETC2) 정정, Google Play Target API 36(2026-08-31 시행) 반영 → 실질 내용 변경으로 PENDING_TEST 전환 | Claude Code |

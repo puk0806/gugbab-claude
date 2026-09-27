@@ -13,7 +13,7 @@ description: >
 # 아리스토텔레스 덕윤리 세부 가이드 — NE I–VI · VIII–X (akrasia 논문 보조 자료)
 
 > 소스: Stanford Encyclopedia of Philosophy "Aristotle's Ethics" (Kraut), Cambridge Companion to NE (Polansky ed., 2014), Bywater OCT (1894), Wikipedia "Nicomachean Ethics", Internet Classics Archive
-> 검증일: 2026-05-03
+> 검증일: 2026-05-03 (Bekker 위치·장 번호 원문 대조 재검증: 2026-09-26, Perseus tlg0086.tlg010.perseus-grc2.xml = Bywater 1894, 행 ±1)
 > 대상 독자: 도덕윤리교육 전공 대학원생(석/박사), akrasia 학위논문/KCI 등재지 1차 텍스트 챕터 작성자
 > 자매 스킬: `aristotle-primary-citation` (인용 형식), `aristotle-nicomachean-ethics-vii-detail` (NE VII 본문 분석 — 신규), `akrasia-scholarship-map` (학계 지형도)
 
@@ -86,7 +86,7 @@ description: >
 
 > 1103a17 어원 연결: ēthikē(품성적)는 ethos(습관)의 약간의 변형이다.
 
-품성적 덕은 자연으로부터 오지 않는다. 자연은 그 가능성만 부여하고 **습관화(ethismos)**로 완성된다(1103a18–26). "정의로운 행위를 함으로써 정의로운 사람이 된다."
+품성적 덕은 자연으로부터 오지 않는다. 자연은 그 가능성만 부여하고 **습관화(ethismos)**로 완성된다(1103a18–26). "정의로운 행위를 함으로써 정의로운 사람이 된다"(1103a34–b2; 원문 "τὰ μὲν δίκαια πράττοντες δίκαιοι γινόμεθα" 1103b1 — 2026-09-26 원문 대조로 위치 정정).
 
 #### (b) 덕은 품성 상태(hexis) (NE II.5, 1105b19–1106a13)
 영혼에서 일어나는 것은 세 가지: **감정(pathos), 능력(dynamis), 품성 상태(hexis)**.
@@ -101,7 +101,7 @@ description: >
 - **우리에 대한 중용(meson pros hēmas)** — 상황·주체에 따라 결정되는 실천적 중간
 
 덕의 정의 (**1106b36–1107a8**):
-> "덕은 우리에 대한 중용에 있는 품성 상태(hexis)로, 합리적 원리(logos)에 의해 규정되며, 실천적 지혜를 가진 자(phronimos)가 규정할 그러한 원리에 의해 규정된다."
+> "덕은 선택과 관련된(προαιρετική) 품성 상태(hexis)로서 우리에 대한 중용에 있으며, 합리적 원리(logos)에 의해 규정되며, 실천적 지혜를 가진 자(phronimos)가 규정할 그러한 원리에 의해 규정된다."
 
 #### (d) 자발성·비자발성 도입 (NE II.7 끝–III.1 시작은 III권 본격 논의로 이어짐)
 
@@ -147,7 +147,7 @@ description: >
 #### (c) 숙고(bouleusis) (NE III.3, 1112a18–1113a14)
 숙고는 **목적이 아니라 수단**에 대해 한다(1112b11–28). "의사는 치료할지 숙고하지 않고, 어떻게 치료할지 숙고한다."
 
-숙고의 종결점이 곧 선택이다: "숙고된 것과 선택된 것은 동일하다"(1113a4).
+숙고의 종결점이 곧 선택이다: "숙고된 것과 선택된 것은 동일하다"(1113a2–3; 원문 "βουλευτὸν δὲ καὶ προαιρετὸν τὸ αὐτό").
 
 #### (d) 용기(andreia) (NE III.6–9, 1115a4–1117b22)
 공포(phobos)와 대담함(tharsos)에 관한 중용. 진정한 용기 vs 다섯 가지 유사 용기.
@@ -297,6 +297,8 @@ description: >
 
 **1144b30–1145a2**:
 > "phronēsis 없이는 본래 덕(kyrios aretē)이 있을 수 없고, phronēsis는 품성적 덕 없이 있을 수 없다."
+>
+> (요약 번역 — 원문 인용 아님. 원문 1144b30–32: "οὐχ οἷόν τε ἀγαθὸν εἶναι κυρίως ἄνευ φρονήσεως, οὐδὲ φρόνιμον ἄνευ τῆς ἠθικῆς ἀρετῆς" = "phronēsis 없이는 본래 의미에서 좋은 사람일 수 없고, 품성적 덕 없이는 phronimos일 수 없다")
 
 **자연적 덕(aretē physikē) vs 본래 덕(kyrios aretē)**:
 - 자연적 덕 = 어린이·동물도 가진 성향
@@ -306,7 +308,7 @@ description: >
 
 | 활용 지점 | 인용 위치 |
 |---|---|
-| **akrates는 phronimos가 될 수 없다** — 본 논문의 핵심 명제 | NE VI.13, 1144b30–1145a2 + NE VII.10, 1146a4–9, 1152a8–9 |
+| **akrates는 phronimos가 될 수 없다** — 본 논문의 핵심 명제 | NE VI.13, 1144b30–1145a2 + NE VII.2, 1146a4–9 + NE VII.10, 1152a6–9 |
 | akrasia = phronēsis 결핍 vs phronēsis 보유의 의미 (실천적 추론 vs 실천) | NE VI.5, 1140a24–b30 |
 | 도덕교육은 phronēsis 함양을 통해 akrasia 극복을 지향 | NE VI.13 + NE X.9 |
 | 형평·양식(gnōmē)이 akrates의 자기 인식과 회복에 기여 | NE VI.11, 1143a19–24 |
@@ -338,7 +340,7 @@ description: >
 |---|---|
 | NE VI.5, 1140a24–b30 | phronēsis = 인간적 좋음에 관한 실천적 hexis |
 | NE VI.13, 1144b30–1145a2 | phronēsis와 품성적 덕은 상호 함축 |
-| **NE VII.10, 1146a4–9** | **akrates는 phronimos일 수 없다 — 결정적 명제** |
+| **NE VII.2, 1146a4–9** | **akrates는 phronimos일 수 없다 — aporia로 제기**("ἔσται γὰρ ὁ αὐτὸς ἅμα φρόνιμος καὶ ἀκρατής" 1146a6–7; 기존 "VII.10" 표기는 장 번호 오류 — VII.2가 정확) |
 | NE VII.10, 1152a6–14 | phronimos는 akrates일 수 없다 — 같은 결론의 다른 방향 |
 
 #### (c) 습관화(ethismos, II권) ↔ akrasia 극복
@@ -363,7 +365,7 @@ description: >
 | **VI** | phronēsis, sophia, nous | 1140a24, 1141a9, 1144b30 | **akrasia ↔ 실천적 지혜 결핍 — 핵심** |
 | **VII** | akrasia | 1145a15–1152a36 | **본 연구 핵심** |
 | **VIII–IX** | philia | 1155a3–1172a15 | 도덕교육의 사회적 차원 (또래·교사) |
-| **X** | hēdonē, theōria, paideia | 1172a16–1181b23 | 도덕교육의 정점 + 입법론 |
+| **X** | hēdonē, theōria, paideia | 1172a19–1181b23 | 도덕교육의 정점 + 입법론 |
 
 ---
 

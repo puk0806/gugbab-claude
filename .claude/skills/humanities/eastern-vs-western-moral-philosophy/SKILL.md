@@ -19,7 +19,7 @@ description: >
 > - 한국민족문화대백과사전(encykorea.aks.ac.kr) — 성학십도, 이이
 > - Cambridge Univ. Press "Confucian Ethics: A Comparative Study of Self, Autonomy, and Community" (Shun & Wong eds.)
 >
-> 검증일: 2026-05-03
+> 검증일: 2026-09-26
 
 ---
 
@@ -79,7 +79,7 @@ description: >
 - 출처: *中庸* 1장, *大學* 6장(「誠意」장)
 - 핵심: **타인의 시선이 없는 상황에서도 도덕적 일관성 유지**
 
-> 주의: 愼獨의 "獨" 해석에는 학설 차이가 있다. 漢代 鄭玄(정현)은 "혼자 있을 때(공간적 고독)"로 풀었고, 朱子는 "타인이 모르고 자신만 아는 내면의 상태"로 확장했다. 출토 죽간·백서 자료 발견 후에는 "獨이 본디 공간적 고독을 가리키지 않는다"는 해석이 제기되어 있다(Tao Liang, *Dao* 13(4), 2014). 논문에서 인용 시 어느 해석을 채택했는지 명시할 것.
+> 주의: 愼獨의 "獨" 해석에는 학설 차이가 있다. 漢代 鄭玄(정현)은 "혼자 있을 때(공간적 고독)"로 풀었고, 朱子는 "타인이 모르고 자신만 아는 내면의 상태"로 확장했다. 출토 죽간·백서 자료 발견 후에는 "獨이 본디 공간적 고독을 가리키지 않는다"는 해석이 제기되어 있다(Liang Tao, "The Significance of *Shendu* in the Interpretation of Classical Learning and Zhu Xi's Misreading", *Dao* 13(3), 2014, 305–321, DOI 10.1007/s11712-014-9395-9 — 이전 판의 "13(4)"는 오기, 2026-09-26 Crossref 서지로 정정). 논문에서 인용 시 어느 해석을 채택했는지 명시할 것.
 
 ### 2-4. 誠意正心(성의정심) — *대학* 8조목
 
@@ -122,13 +122,13 @@ akrasia 비교 시 활용: "의지(意)의 진실성"과 "마음의 흔들림" �
 | **致良知** | 양지(良知, 본래 갖춘 도덕적 자각)를 사태에 미루어 실현. |
 | **표준 전거** | *傳習錄* (전습록, *Chuanxilu*) — 왕양명 어록 |
 
-**SEP 인용(원문 직접):**
+**SEP 인용(원문 직접 — SEP "Wang Yangming", Bryan Van Norden, 2024-09-17 개정판 확인):**
 > "There never have been people who know but do not act. Those who 'know' but do not act simply do not yet know."
 >
 > "안다고 하면서 행하지 않는 사람은 일찍이 없었다. '안다'면서 행하지 않는 자는 단지 아직 알지 못한 것이다."
 
 **akrasia와의 관계:**
-- 王陽明의 입장은 소크라테스(*프로타고라스* 358b–c)의 주지주의와 **결론은 유사**(akrasia 부정)하지만, **근거는 다르다**:
+- 王陽明의 입장은 소크라테스(*프로타고라스* 358b–d — 358c "자기에게 지는 것은 무지", 358c–d "누구도 자발적으로 악으로 나아가지 않는다")의 주지주의와 **결론은 유사**(akrasia 부정)하지만, **근거는 다르다**:
   - 소크라테스: 진정한 지식은 곧 최선의 행위를 결정한다(합리적 인지). 잘못된 행위는 무지(ignorance)에서 비롯된다.
   - 王陽明: 진정한 앎은 **즉각적 정서적 동기**를 동반한다. "아름다운 색을 좋아하고 악취를 싫어하는" 즉각적·체현적 반응이 知行 통합의 모델이다.
 - 따라서 "동서양에서 모두 akrasia를 부정한 사상가가 있었다"는 단순 등치는 표면적 결론이고, 학위논문에서는 **근거의 차이(인지주의 vs 체현적 정감주의)**를 짚어야 한다.
@@ -208,7 +208,7 @@ akrasia 비교 시 활용: "의지(意)의 진실성"과 "마음의 흔들림" �
 |------|------|------|-----------|
 | **Tu Weiming(杜維明)** | *Confucian Thought: Selfhood as Creative Transformation* | SUNY Press, 1985 (SUNY Series in Philosophy, xi+203pp.) | 유교 자아관·수양론의 현대적 해석. 자기수양을 "창조적 변형"으로 재구성. |
 | **David L. Hall & Roger T. Ames** | *Thinking Through Confucius* | SUNY Press, 1987 (SUNY Series in Systematic Philosophy, 416pp.) | 공자 사상의 비교철학적 재해석. 서양 철학 범주 적용 시 주의점 제시. |
-| **David L. Hall & Roger T. Ames** | *Thinking from the Han: Self, Truth, and Transcendence in Chinese and Western Culture* | SUNY Press, 1998 | 자아·진리·초월의 동서 비교 — akrasia 관련 자아관 비교에 직접 활용 가능. |
+| **David L. Hall & Roger T. Ames** | *Thinking from the Han: Self, Truth, and Transcendence in Chinese and Western Culture* | SUNY Press, 1998 (Crossref 발행일 1997-12, 판권 1998 — 서지 표기는 판권면 기준) | 자아·진리·초월의 동서 비교 — akrasia 관련 자아관 비교에 직접 활용 가능. |
 | **Kwong-loi Shun & David B. Wong (eds.)** | *Confucian Ethics: A Comparative Study of Self, Autonomy, and Community* | Cambridge Univ. Press, 2004 | "Self and Self-Cultivation" 섹션이 비교 자아·수양론 표준 참조. |
 | **Jiyuan Yu** | *The Ethics of Confucius and Aristotle: Mirrors of Virtue* | Routledge, 2007 | 공자·아리스토텔레스 윤리 비교 표준 저작 — 학위논문에서 가장 직접적 참조. |
 | **May Sim** | *Remastering Morals with Aristotle and Confucius* | Cambridge Univ. Press, 2007 | 두 전통의 덕윤리 비교. |
@@ -223,10 +223,12 @@ akrasia 비교 시 활용: "의지(意)의 진실성"과 "마음의 흔들림" �
 | 황경식 | (서울대 철학과 명예교수로 알려져 있으나, 인용 시 본인이 KCI/소속기관 확인 필수) | 윤리학·덕윤리 일반 |
 | 정인재 | (서강대 철학과 명예교수로 알려져 있으나, 인용 시 KCI/소속기관 확인 필수) | 양명학·중국철학 |
 
-KCI 자체 검색에서 확인된 관련 논문 사례:
-- "한국 유교 현황과 현대화 전략" (KCI, ART002394470)
-- "유교의 본질과 역사, 그리고 미래 전망 — 한국 유교를 중심으로" (KCI, ART001070974)
-- "덕 윤리, 유교 윤리 그리고 도덕 교육" (KCI, ART002110639)
+KCI 자체 검색에서 확인된 관련 논문 사례 (2026-09-26 KCI 서지 원문으로 저자·권호 보완):
+- 진성수 (2018). "한국 유교 현황과 현대화 전략". 『유교사상문화연구』 73, 185–216. (KCI ART002394470)
+- 박홍식 (2007). "유교의 본질과 역사, 그리고 미래 전망 — 한국 유교를 중심으로". 『동양철학연구』 50, 113–128. (KCI ART001070974)
+- 장동익 (2016). "덕 윤리, 유교 윤리 그리고 도덕 교육". 『도덕윤리과교육』 51, 59–79. (KCI ART002110639)
+
+> 주의: 위 세 편은 위 표의 윤사순·황경식·정인재의 저작이 **아니다**. 학자 표와 논문 목록을 연결해 인용하지 말 것.
 
 > 주의: 학자 이름 + 분야만으로 논문을 인용하지 말 것. 반드시 KCI에서 정확한 서지(저자·논문명·학술지·권호·연도·페이지)를 확인한 후 인용한다. 추측 인용은 학위논문 심사에서 치명적 결함이 된다.
 

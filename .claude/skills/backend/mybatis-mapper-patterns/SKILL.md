@@ -6,9 +6,11 @@ description: MyBatis Mapper 작성 패턴 - 인터페이스·XML 매퍼, 어노�
 # MyBatis Mapper 작성 패턴
 
 > 소스: https://mybatis.org/mybatis-3/ | https://github.com/mybatis/spring-boot-starter | https://github.com/mybatis/mybatis-3/wiki/FAQ
-> 검증일: 2026-04-22
+> 검증일: 2026-04-22 (재검증: 2026-09-26)
 
 > 주의: 이 문서는 MyBatis 3.5.x (3.5.16 ~ 3.5.19) 기준이며, Spring Boot 2.5 / 3.x 양쪽 통합을 다룹니다. MyBatis 3.5.4 이후 3.5.19까지 Mapper API는 안정적입니다.
+>
+> 주의(2026-09-26 재검증): `mybatis-spring-boot-starter`에 Spring Boot 4.0용 `4.0.x` 브랜치와 Spring Boot 4.1용 `master`(MyBatis-Spring 4.1) 라인이 추가되었습니다. Mapper 인터페이스·XML·동적 SQL·resultMap 등 본 문서의 핵심 패턴은 4.x 브랜치에서도 변경 없이 그대로 유효합니다. 2.3.x(Spring Boot 2.7용)는 여전히 2.3.2가 마지막 릴리스입니다.
 
 ---
 

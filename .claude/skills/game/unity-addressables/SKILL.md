@@ -15,9 +15,9 @@ description: >
 > - 공식 문서: https://docs.unity3d.com/Packages/com.unity.addressables@latest/
 > - 공식 GitHub 미러: https://github.com/needle-mirror/com.unity.addressables
 > - UniTask Addressables 연동: https://github.com/Cysharp/UniTask
-> 검증일: 2026-06-08
-> 대상 버전: Unity 6 LTS (6000.0 / 6000.3) + `com.unity.addressables` **2.11.1** (Unity 6용 권장 2.x 최신)
-> 참고: 3.1.0이 절대 최신이지만 Unity 6 LTS에서는 2.x 계열이 공식 권장 (Unity Discussions 확인)
+> 검증일: 2026-09-26 (재검증. Addressables 2.11.1 → **2.11.2**로 패치 버전 갱신 확인, Unity 6 LTS 권장 2.x 계열·API(LoadAssetAsync/ReleaseInstance/Reference Counting) 동작은 변동 없음)
+> 대상 버전: Unity 6 LTS (6000.0 / 6000.3 / 6000.6) + `com.unity.addressables` **2.11.2** (Unity 6용 권장 2.x 최신)
+> 참고: 3.x 계열이 절대 최신이지만 Unity 6 LTS에서는 2.x 계열이 공식 권장 (Unity Discussions 확인)
 
 ---
 
@@ -28,7 +28,7 @@ description: >
 Package Manager → Window → Package Manager → "Addressables" 검색 → Install.
 
 ```
-com.unity.addressables : 2.11.1   // Unity 6 LTS 권장
+com.unity.addressables : 2.11.2   // Unity 6 LTS 권장
 ```
 
 설치 직후 `Window > Asset Management > Addressables > Groups`에서 `Create Addressables Settings` 클릭하면 `Assets/AddressableAssetsData/` 폴더와 기본 그룹이 생성된다.
@@ -478,7 +478,7 @@ Window → Asset Management → Addressables → Groups → `Play Mode Script`:
 
 배포 전 확인:
 
-- [ ] Addressables 버전 2.x (Unity 6 LTS 호환)
+- [ ] Addressables 버전 2.x, 가능하면 2.11.2 이상 (Unity 6 LTS 호환)
 - [ ] 모든 `LoadAssetAsync` 호출에 대응하는 `Release` 호출 있음
 - [ ] 모든 `InstantiateAsync` 호출에 대응하는 `ReleaseInstance` 호출 있음
 - [ ] `Build > New Build > Default Build Script` 실행 후 플레이어 빌드

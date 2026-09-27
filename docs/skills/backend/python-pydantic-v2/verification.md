@@ -2,7 +2,7 @@
 skill: python-pydantic-v2
 category: backend
 version: v1
-date: 2026-05-15
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -14,8 +14,8 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `python-pydantic-v2` |
 | 스킬 경로 | `.claude/skills/backend/python-pydantic-v2/SKILL.md` |
-| 검증일 | 2026-05-15 |
-| 검증자 | skill-creator |
+| 검증일 | 2026-09-26 (최초 2026-05-15) |
+| 검증자 | skill-creator → 2026-09-26 재검증: 메인 오케스트레이션 (Claude Sonnet 5) |
 | 스킬 버전 | v1 |
 | 대상 라이브러리 버전 | Pydantic 2.13.4, pydantic-settings 2.14.1 |
 
@@ -111,6 +111,31 @@ DISPUTED 0건 / UNVERIFIED 0건.
 
 ## 5. 테스트 진행 기록
 
+### 재검증 (2026-09-26)
+
+**수행일**: 2026-09-26
+**수행자**: 메인 대화 오케스트레이션 (Claude Sonnet 5) — verification-policy.md 재검증 절차
+**수행 방법**: SKILL.md + REFERENCE.md 전체 Read → WebSearch로 핵심 클레임 재대조 → 실전 질문 2개 자체 답변
+
+**재검증한 핵심 클레임**
+- Pydantic 2.13.4가 2026-09 시점도 최신 안정판인지 — 재확인, 2.14.0은 아직 베타(2.14.0b1급) 단계이고 stable GA 미발표. 변동 없음 (VERIFIED, GitHub releases + pydantic.dev changelog)
+- `model_dump()`/`model_validate()` 등 v2 API 시그니처 — 재확인, 변동 없음 (VERIFIED)
+- `pydantic-settings`가 여전히 별도 패키지로 분리되어 있는지 — 재확인, 변동 없음 (VERIFIED)
+
+**Q1. "지금(2026-09) Pydantic 최신 stable이 2.14인가?"**
+- PASS
+- 근거: SKILL.md 상단 재검증 문구 — "2.13.4가 2026-09 시점도 최신 안정판, 2.14.0은 아직 베타"로 정확히 정정된 답변 제공 가능.
+
+**Q2. "v1 `@validator`를 v2로 옮길 때 지금도 `@field_validator` + `@classmethod` 조합이 맞나?"**
+- PASS
+- 근거: SKILL.md 섹션 5·14.4 — 여전히 유효한 API로 재확인.
+
+**판정**: 재검증 결과 변동 없음 → status `APPROVED` 유지.
+
+---
+
+### 최초 테스트 (2026-05-15)
+
 **수행일**: 2026-05-15
 **수행자**: skill-tester → general-purpose (Python 도메인 전용 에이전트 미등록으로 대체)
 **수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 존재 여부·anti-pattern 회피 확인
@@ -175,8 +200,8 @@ DISPUTED 0건 / UNVERIFIED 0건.
 | 내용 정확성 | ✅ (공식 문서 교차 검증 7/7 VERIFIED) |
 | 구조 완전성 | ✅ (16개 섹션, 함정·사용 기준 포함) |
 | 실용성 | ✅ (FastAPI 통합·마이그레이션 도구 포함) |
-| 에이전트 활용 테스트 | ✅ (2026-05-15 수행, 3/3 PASS) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (2026-05-15 수행, 3/3 PASS) + ✅ (2026-09-26 재검증, 2/2 PASS) |
+| **최종 판정** | **APPROVED** (2026-09-26 재검증 완료, 변동 없음) |
 
 **카테고리 분류**: *content test로 충분*한 라이브러리 사용법 스킬 (마이그레이션 가이드 일부 포함되나 핵심은 API 사용법). agent content test 3/3 PASS → APPROVED 전환.
 
@@ -195,3 +220,4 @@ DISPUTED 0건 / UNVERIFIED 0건.
 |------|------|-----------|--------|
 | 2026-05-15 | v1 | 최초 작성 (Pydantic 2.13.4 기준, 16개 섹션, 함정 8건, FastAPI 통합 패턴 포함) | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 v1 dict→model_dump + Annotated 패턴 / Q2 model_validator before·after 시그니처 / Q3 pydantic-settings 분리 패키지) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-26 | v1 | 재검증 — 최신 안정판 2.13.4 유지(2.14는 베타) 확인, 핵심 API 변동 없음 → APPROVED 유지 | 메인 오케스트레이션 (Claude Sonnet 5) |

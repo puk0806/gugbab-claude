@@ -2,8 +2,8 @@
 skill: python-cli-typer
 category: backend
 version: v1
-date: 2026-05-15
-status: APPROVED
+date: 2026-09-26
+status: PENDING_TEST
 ---
 
 # python-cli-typer 검증 문서
@@ -14,8 +14,8 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `python-cli-typer` |
 | 스킬 경로 | `.claude/skills/backend/python-cli-typer/SKILL.md` |
-| 검증일 | 2026-05-15 |
-| 검증자 | skill-creator |
+| 검증일 | 2026-09-26 (최초 2026-05-15) |
+| 검증자 | skill-creator → 2026-09-26 재검증: 메인 오케스트레이션 (Claude Sonnet 5) |
 | 스킬 버전 | v1 |
 | 짝 스킬 | `backend/python-uv-project-setup`, `backend/python-basics` |
 
@@ -119,6 +119,32 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
+### 재검증 (2026-09-26)
+
+**수행일**: 2026-09-26
+**수행자**: 메인 대화 오케스트레이션 (Claude Sonnet 5) — verification-policy.md 재검증 절차
+**수행 방법**: SKILL.md + REFERENCE.md 전체 Read → WebFetch/WebSearch로 핵심 클레임 재대조 → 실전 질문 2개 자체 답변
+
+**재검증한 핵심 클레임**
+- "최신 버전 0.25.1(2026-04-30)" → **DISPUTED, 수정 반영**: 실제 최신은 0.27.2(2026-08-28). SKILL.md 버전 표기 전체 갱신 (VERIFIED, PyPI 공식 페이지 직접 확인)
+- **신규 발견**: 0.26.0에서 Click을 서드파티 의존성에서 제거하고 자체 vendoring — Click 헬퍼 일부 제거로 Click을 직접 import하던 코드는 `click`을 별도 의존성 추가 필요 (VERIFIED, GitHub Release 0.26.0 + release-notes.md)
+- **신규 발견**: 0.27.0에서 `metavar` 출력 형식 변경(breaking) — `--help` 스냅샷 테스트 영향 가능 (VERIFIED, GitHub Release 0.27.0)
+- 본 SKILL.md의 `Annotated` 기반 커맨드 정의 패턴·`app.add_typer(name=...)` 필수 등 핵심 API는 0.26/0.27에서도 변동 없음 (VERIFIED)
+
+**Q1. "지금 프로젝트에 Typer를 새로 추가하는데 버전을 몇으로 고정해야 하나?"**
+- PASS
+- 근거: SKILL.md 갱신된 "최신 버전 0.27.2(2026-08-28)" 표기 + 상단 breaking change 주의 문구.
+
+**Q2. "기존에 Click 컴포넌트를 직접 import해서 커스터마이징하던 Typer 프로젝트를 0.26+로 올리면 뭐가 깨지나?"**
+- PASS
+- 근거: SKILL.md 신규 주의 문구 — "Click을 서드파티 의존성으로 두지 않고 vendoring... `click`을 직접 의존성으로 추가"가 정확한 원인·대응을 제공.
+
+**판정**: 최신 버전 정정 + 0.26/0.27 breaking change 신규 반영 → 내용 변경 있음 → status `PENDING_TEST`로 되돌림.
+
+---
+
+### 최초 테스트 (2026-05-15)
+
 **수행일**: 2026-05-15
 **수행자**: skill-tester → general-purpose
 **수행 방법**: SKILL.md Read 후 실전 질문 3개 답변, 근거 섹션 존재 여부·anti-pattern 회피 확인
@@ -166,8 +192,8 @@ status: APPROVED
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
 | 핵심 클레임 교차 검증 | ✅ (11/11 VERIFIED) |
-| 에이전트 활용 테스트 | ✅ (3/3 PASS, 2026-05-15) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (3/3 PASS, 2026-05-15) + ✅ (2/2 PASS, 2026-09-26 재검증) |
+| **최종 판정** | **PENDING_TEST** (2026-09-26 최신 버전 정정(0.25.1→0.27.2) + 0.26/0.27 breaking change 신규 반영 — 재검증 필요) |
 
 > 카테고리 판정: *content test로 충분*한 라이브러리 사용법 스킬 (실사용 필수 카테고리 아님). agent content test 3/3 PASS → APPROVED 전환 완료.
 
@@ -186,3 +212,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-05-15 | v1 | 최초 작성, Typer 0.25.1 기준 | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 Annotated+envvar / Q2 typer.Exit vs typer.Abort / Q3 CliRunner 프롬프트 시뮬레이션) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-26 | v1 | 재검증 — 최신 버전 0.25.1→0.27.2 정정, 0.26.0(Click vendoring) + 0.27.0(metavar 출력 변경) breaking change 신규 반영 → PENDING_TEST | 메인 오케스트레이션 (Claude Sonnet 5) |

@@ -1,9 +1,9 @@
 ---
 skill: citation-style-international
 category: writing
-version: v1
-date: 2026-05-03
-status: APPROVED
+version: v3
+date: 2026-09-26
+status: PENDING_TEST
 ---
 
 # citation-style-international 검증 문서
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `citation-style-international` |
 | 스킬 경로 | `.claude/skills/writing/citation-style-international/SKILL.md` |
-| 검증일 | 2026-05-03 |
-| 검증자 | skill-creator (Claude Code) |
-| 스킬 버전 | v1 |
+| 검증일 | 2026-09-26 |
+| 검증자 | skill-creator (Claude Code) / 2026-09-26 재검증: 메인 세션 (APA·CMOS·Zotero·EndNote 공식 문서 직접 대조) |
+| 스킬 버전 | v3 |
 
 ---
 
@@ -107,7 +107,7 @@ status: APPROVED
 | 5 | Chicago 17판은 NB와 Author-Date 두 시스템을 제공한다 | VERIFIED | chicagomanualofstyle.org 공식 |
 | 6 | Chicago 17판부터 ibid. 사용을 권장하지 않는다 | VERIFIED | CMOS Shop Talk 공식 블로그 + Simmons/Duquesne 도서관 |
 | 7 | Chicago 18판은 2024년 9월에 출시되었다 | VERIFIED | CMOS Shop Talk 2024-04-16 발표 + 다수 대학 도서관 |
-| 8 | Zotero 7은 2024년 8월 9일 출시되었다 | VERIFIED | Zotero 공식 블로그 |
+| 8 | Zotero 7은 2024년 8월 9일 출시되었다 | VERIFIED (출시일) / **DISPUTED→수정 (2026-09-26)**: "최신 버전 = 7"은 구버전 — 공식 changelog 기준 최신 10.0.4(2026-09-22), 8(2026-01-22)·9(2026-04-10)·10.0(2026-08-17) | Zotero 공식 블로그·changelog |
 | 9 | Zotero 7은 Word/LibreOffice/Google Docs 플러그인을 자동 설치한다 | VERIFIED | Zotero Word Processor Integration 공식 문서 |
 | 10 | Mendeley Desktop은 개발 중단되고 RM이 후속이다 | VERIFIED | Elsevier 공식 LibGuide + 위키피디아 |
 | 11 | EndNote 최신 버전은 EndNote 2025이다 | VERIFIED | Clarivate 공식 Release Notes |
@@ -117,9 +117,15 @@ status: APPROVED
 | 15 | APA 7판 번역서는 (원저년도/번역년도) + Original work published 형식 | VERIFIED | APA 공식 블로그 + 다수 대학 가이드 |
 | 16 | MLA 9판 번역서는 저자 중심 vs 번역자 중심 형식이 다르다 | VERIFIED | MLA Style Center FAQ + 다수 대학 가이드 |
 | 17 | Harvard 스타일은 단일 공식 표준이 없다 | VERIFIED | 다수 학술 가이드 (Anglia, AGSM, Cite Them Right 등 변형 다수) |
-| 18 | APA 고전 인용에서 reference list 등록은 필수가 아니다 | VERIFIED | APA 공식 블로그 명시 |
+| 18 | APA 고전 인용에서 reference list 등록은 필수가 아니다 | **DISPUTED→수정 (2026-09-26)** | 이는 APA **6판**(2009) 규정. 7판은 고전을 republished work로 참고문헌에 등록 (APA 블로그 "Citing classical and religious works" + ULethbridge·Notre Dame AU·Lehigh APA 7 가이드) |
+| 19 | §3 Chicago 예시(Kwon·Yu·Dittmar·Binder)는 17판 형식 | **DISPUTED→수정 (2026-09-26)** | CMOS 공식 Quick Guide 원문 대조: **18판** 예시(출판지 불요 명시). 17판용 출판지 예시 추가, Binder 부제 보완 |
+| 20 | APA 번역 고전 예시 `(Aristotle, ca. 350 B.C.E./1994)` | VERIFIED (2026-09-26) | APA 공식 예시(Poetics, Butcher 역) 재현 가이드 |
+| 21 | 고전 인용 예시의 `"Being happy takes a complete lifetime"` | **DISPUTED→수정 (2026-09-26)** | 표준 번역에 없는 요약 문구를 따옴표 인용으로 제시 → 교체 + 주의 표기 |
+| 22 | EndNote 2025 라이브러리 공유 최대 1,000명 | VERIFIED (2026-09-26) | docs.endnote.com EndNote 2025 "About Shared Libraries" |
+| 23 | CMOS 18 변경점(출판지 불요·AI 인용·한국어 로마자 절) | VERIFIED (2026-09-26) | chicagomanualofstyle.org What's New + CMOS 18 목차 |
+| 24 | JME = APA author-date | VERIFIED (2026-09-26) | T&F 참조 스타일 가이드 + EndNote JME 스타일 |
 
-**판정 합계**: VERIFIED 18 / DISPUTED 0 / UNVERIFIED 0
+**판정 합계**: VERIFIED 18 / DISPUTED 0 / UNVERIFIED 0 (최초) → 2026-09-26 재검증: 대조 10건(#8·18~24 + §10 Bekker 4건 별도), DISPUTED→수정 4건
 
 ### 4-2. 내용 정확성
 - [✅] 공식 문서와 불일치하는 내용 없음
@@ -148,6 +154,19 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+### 재검증 기록 (2026-09-26)
+
+**수행일**: 2026-09-26
+**수행자**: 메인 세션 재검증 (공식 문서 직접 대조 후 SKILL.md 자체 답변 확인)
+**수행 방법**: APA 공식 예시·CMOS Quick Guide 원문·Zotero changelog·EndNote 2025 문서 대조 → 오류 4건 정정 → 실전 질문 2개
+
+Q1. "APA 7판 학위논문에서 Ross 역 *니코마코스 윤리학*을 참고문헌에 넣어야 하나?" — PASS (근거: §6-2 정정 — 7판은 republished work로 등록, "Original work published ca. 350 B.C.E." 부기. 6판 규정과 구분)
+Q2. "Chicago 17판을 요구하는 학술지에 Quick Guide 도서 예시를 그대로 써도 되나?" — PASS (근거: §3 주의 — Quick Guide 예시는 18판(출판지 없음), 17판은 출판지 추가 예시 제공)
+
+agent content test: 2/2 PASS (재검증 기록). 실질 정정(APA 7 고전 등록 규정 등)으로 status PENDING_TEST 전환.
+
+### 최초 테스트 (2026-05-03)
 
 **수행일**: 2026-05-03
 **수행자**: skill-tester → general-purpose (직접 수행)
@@ -208,7 +227,7 @@ status: APPROVED
 | 구조 완전성 | ✅ (frontmatter·소스·검증일·10개 섹션 모두 포함) |
 | 실용성 | ✅ (도덕윤리교육 워크플로우 반영, 고전·번역 예시 충실) |
 | 에이전트 활용 테스트 | ✅ 수행 완료 (2026-05-03, Q1 PASS / Q2 PARTIAL / Q3 PARTIAL, 핵심 정확 — gap은 보강 권장 수준) |
-| **최종 판정** | **APPROVED** (3/3 핵심 정보 정확, PARTIAL gap 모두 차단 요인 아님) |
+| **최종 판정** | **PENDING_TEST** (2026-09-26 재검증: APA 7 고전 참고문헌 규정·CMOS 판 귀속·Zotero 최신판·비원문 따옴표 인용 4건 정정 — skill-tester 재테스트 후 APPROVED 재전환. 최초 판정: APPROVED 3/3) |
 
 ---
 
@@ -233,3 +252,20 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-05-03 | v1 | 최초 작성 (APA 7·MLA 9·Chicago 17/18·Harvard·Vancouver + 고전·번역·인용관리 도구·CSL) | skill-creator |
 | 2026-05-03 | v1 | 2단계 실사용 테스트 수행 (Q1 NE 1147a24-b5 세 스타일 인용 / Q2 강상진 외 한국어 번역서 APA 영문 표기 / Q3 Zotero KCI CSL 적용) → Q1 PASS / Q2 PARTIAL / Q3 PARTIAL, 핵심 정확 — APPROVED 전환 | skill-tester |
+| 2026-09-26 | v2 | Perseus 원문 대조(Bekker 예시 4건) → 전원 VERIFIED, 내용 변경 없음, APPROVED 유지 (§10) | 메인 세션 (원문 대조) |
+| 2026-09-26 | v3 | 재검증 — 공식 문서 대조 10건, 오류 4건 정정(APA 7 고전 참고문헌 등록·Chicago 예시 18판 귀속·Zotero 최신 10.0.4·비원문 따옴표 인용), 실전 질문 2/2 PASS → PENDING_TEST | 메인 세션 (재검증) |
+
+---
+
+## 10. 원문 대조 기록 (2026-09-26)
+
+- 1차 원문: Perseus `tlg0086.tlg010.perseus-grc2.xml` (NE, Bywater 1894), `tlg0086.tlg025.perseus-grc2.xml` (Metaphysics)
+
+| # | 클레임 (인용 예시) | 원문 대조 결과 | 판정 |
+|---|---|---|---|
+| 1 | NE 1.7, 1098a16 | I.7(1097a15–1098b7) 내부, ergon 결론 1098a16 | VERIFIED |
+| 2 | NE 1094a1-2 | I.1 첫 문장 | VERIFIED |
+| 3 | *Metaphysics* 1.9, 991b9-20 | A.9(990a33–993a10) 내부 | VERIFIED |
+| 4 | NE VII.3 / 7.3, 1147a24-b5 | VII.3(1146b8–1147b19) 내부 | VERIFIED |
+
+**합계: 대조 4건 / 정정 0건.** APPROVED 유지.

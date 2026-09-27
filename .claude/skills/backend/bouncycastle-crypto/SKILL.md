@@ -6,9 +6,18 @@ description: BouncyCastle 암호화 - 의존성(jdk15on vs jdk18on), Provider �
 # BouncyCastle 암호화 스킬
 
 > 소스: https://www.bouncycastle.org/ | https://github.com/bcgit/bc-java | https://downloads.bouncycastle.org/java/docs/bcprov-jdk18on-javadoc/ | https://mvnrepository.com/artifact/org.bouncycastle
-> 검증일: 2026-04-23
+> 검증일: 2026-04-23 (재검증: 2026-09-26)
 
 > 주의: 이 문서는 두 가지 라인을 모두 다룹니다 — **레거시** `bcprov-jdk15on:1.64` (2019-11 릴리스, Java 8+ / Spring Boot 2.5 대응)와 **최신** `bcprov-jdk18on:1.78.x` 이상 (Java 8+, Spring Boot 3.x 권장). 2026년 4월 기준 BC의 최신 안정 버전은 1.84이며, 가능한 모든 프로젝트에서 **최신 jdk18on으로 업그레이드를 권장**합니다. 1.64는 이후 수정된 다수 CVE(예: CVE-2020-28052 OpenBSDBCrypt 비교 결함, CVE-2023-33201 LDAP 인젝션, CVE-2023-33202 PEMParser DoS)에 노출됩니다.
+>
+> **주의 (2026-09-26 재검증 — 신규 CVE 다수 발견, 버전 권고 갱신 필수):** BC Java 최신 안정 버전은 **1.86**(2026-09-12, 사이드채널/타이밍 공격 강화 릴리스)입니다. 이 문서가 "최신"으로 안내했던 **1.78.1 / 1.84 모두 이후 공개된 CVE에 노출**되어 있으므로 신규 배포 전 반드시 1.86(최소 1.85) 이상으로 올리세요.
+> - **CVE-2026-0636** (LDAP 인젝션, `LDAPStoreHelper.java`): **1.74 ~ 1.83** 영향 → 1.84에서 패치. 이 문서가 예시로 든 `1.78.1`은 **영향 범위에 포함**됩니다.
+> - **CVE-2026-13506** (지연 평가 ASN.1 시퀀스가 중첩 깊이 가드를 우회): **1.85 미만** 영향 → 1.85에서 패치. `1.84`도 영향 범위에 포함됩니다.
+> - **CVE-2026-59651** (BKS 키스토어가 16비트 무결성 MAC 키를 쓰는 legacy 버전을 허용): **1.85 미만** 영향.
+> - **CVE-2026-13586** (PKCS#12 MAC·bag 복호화 KDF 반복 횟수 상한 없음 → DoS, 2026-08-03 공개).
+> - **CVE-2026-5598** (`FrodoEngine`의 sample/sample_matrix 타이밍 공격 — PQC 알고리즘 사용 시에만 해당).
+>
+> **결론: 본 문서의 `bcprov-jdk18on:1.78.1` / `1.84` 코드 예시는 버전 번호만 `1.86`(또는 그 시점 최신)으로 교체해 사용하세요. Provider 등록·AES-GCM/CBC·RSA-OAEP·서명 API 자체는 변경되지 않았습니다.**
 
 ---
 
@@ -45,7 +54,7 @@ BouncyCastle은 JDK 타겟에 따라 아티팩트를 분리해 배포합니다.
 - `bcprov`: JCA/JCE provider + 저수준 암호 API
 - `bcpkix`: CMS, PKCS, EAC, TSP, CMP, CRMF, OCSP, 인증서 생성 등 PKI 관련
 
-> 주의: 1.64는 CVE-2019-17359(ASN.1 파서 OOM)를 수정한 버전이지만, 그 이후 발견된 CVE는 방치됩니다. 가능하면 **`bcprov-jdk15to18:1.78.x`** 이상으로 이식을 권장(Java 5~8 호환 유지).
+> 주의: 1.64는 CVE-2019-17359(ASN.1 파서 OOM)를 수정한 버전이지만, 그 이후 발견된 CVE(CVE-2020-28052, CVE-2023-33201/33202, CVE-2026-0636 등)는 방치됩니다. 가능하면 **`bcprov-jdk15to18:1.86`** 이상으로 이식을 권장(Java 5~8 호환 유지).
 
 ### 1-3. Spring Boot 3.x + Java 17+ (최신 권장)
 
@@ -53,30 +62,30 @@ BouncyCastle은 JDK 타겟에 따라 아티팩트를 분리해 배포합니다.
 <dependency>
     <groupId>org.bouncycastle</groupId>
     <artifactId>bcprov-jdk18on</artifactId>
-    <version>1.78.1</version>
+    <version>1.86</version>
 </dependency>
 <dependency>
     <groupId>org.bouncycastle</groupId>
     <artifactId>bcpkix-jdk18on</artifactId>
-    <version>1.78.1</version>
+    <version>1.86</version>
 </dependency>
 <!-- 필요 시 -->
 <dependency>
     <groupId>org.bouncycastle</groupId>
     <artifactId>bcutil-jdk18on</artifactId>
-    <version>1.78.1</version>
+    <version>1.86</version>
 </dependency>
 ```
 
 - `bcutil-jdk18on`: ASN.1 확장·유틸리티 API (bcpkix·bctls가 내부 사용)
-- 1.78.1은 4개 CVE 패치(2024-04)를 포함. 1.84가 2026-04 기준 최신.
+- 2026-09-26 재검증: **1.86**이 최신(2026-09-12 릴리스, 사이드채널 하드닝). 과거 이 문서가 권장했던 `1.78.1`은 CVE-2026-0636(LDAP 인젝션, 1.74~1.83 영향)에, `1.84`는 CVE-2026-13506/CVE-2026-59651(1.85 미만 영향)에 각각 노출되므로 **1.86 미만 버전은 사용하지 마세요.**
 
 ### 1-4. Gradle (Kotlin DSL)
 
 ```kotlin
 dependencies {
-    implementation("org.bouncycastle:bcprov-jdk18on:1.78.1")
-    implementation("org.bouncycastle:bcpkix-jdk18on:1.78.1")
+    implementation("org.bouncycastle:bcprov-jdk18on:1.86")
+    implementation("org.bouncycastle:bcpkix-jdk18on:1.86")
 }
 ```
 

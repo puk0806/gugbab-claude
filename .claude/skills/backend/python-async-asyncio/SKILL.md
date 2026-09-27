@@ -11,8 +11,8 @@ description: >
 # Python asyncio + async/await 패턴
 
 > 소스: https://docs.python.org/3/library/asyncio-task.html · https://docs.python.org/3/library/asyncio-sync.html · https://peps.python.org/pep-0492/ · https://peps.python.org/pep-0525/ · https://www.python-httpx.org/async/
-> 검증일: 2026-05-15
-> 대상 버전: Python 3.11 / 3.12 (3.11+ 권장 — `asyncio.timeout`, `TaskGroup` 사용)
+> 검증일: 2026-09-26 (2026-05-15 최초 검증 · 재검증 이력은 8절 참조)
+> 대상 버전: Python 3.11 / 3.12 (3.11+ 권장 — `asyncio.timeout`, `TaskGroup` 사용). Python 3.13(2024-10)·3.14(2025-10)가 이미 정식 릴리스되어 있으며, 본 문서 내용은 3.13/3.14에서도 그대로 유효(3.14의 free-threaded 공식 지원·asyncio 스레드 안전성 강화는 11절 참조)
 > 짝 스킬: `backend/python-fastapi`, `backend/python-anthropic-sdk`
 
 ---

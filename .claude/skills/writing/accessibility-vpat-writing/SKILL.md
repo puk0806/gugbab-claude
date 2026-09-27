@@ -12,8 +12,8 @@ description: VPAT(Voluntary Product Accessibility Template) 및 ACR(Accessibilit
 > - EN 301 549 V3.2.1 (ETSI): https://www.etsi.org/deliver/etsi_en/301500_301599/301549/03.02.01_60/en_301549v030201p.pdf
 > - 한국형 KWCAG 2.2 (KS X OT0003): https://a11ykr.github.io/kwcag22/
 >
-> 검증일: 2026-06-02
-> 기준 버전: **VPAT 2.5Rev (ITI, 2025-04 발행)**
+> 검증일: 2026-09-26
+> 기준 버전: **VPAT 2.5Rev (ITI, 2025-04-24 발행 — 2026-09-26 ITI 공식 페이지 재확인 시에도 최신판, 4개 에디션 + Change Tracking 문서)**
 
 ---
 
@@ -22,10 +22,11 @@ description: VPAT(Voluntary Product Accessibility Template) 및 ACR(Accessibilit
 **VPAT(Voluntary Product Accessibility Template)** 은 IT 제품·서비스의 접근성 적합성을 공급자가 자체 평가하여 기록하는 표준 양식이다.
 
 - **발행 주체**: ITI (Information Technology Industry Council)
-- **시작**: 1998년 미국 연방 조달(Section 508) 대응 목적
+- **시작**: 미국 연방 조달(Section 508) 대응 목적 — Section 508 문서화 도구로 설계됨
+  > 주의: 미검증 — 이전 판의 "1998년 시작"은 Section 508 개정 연도(1998)와 VPAT 제작 연도를 혼동했을 수 있다. VPAT 최초 발행 연도는 2026-09-26 재검증에서 1차 확인하지 못했다.
 - **현재 위치**: 글로벌 사실상 표준. 공공조달·대형 B2B 거래에서 사실상 필수
 - **법적 성격**: "Voluntary" — 법적 의무는 아니지만, 미국 연방·주정부·대학·대기업 조달 RFP에서 거의 항상 요구됨
-- **가격**: ITI가 무료(.doc)로 배포. ITI 멤버십 불필요
+- **가격**: ITI가 무료로 배포. ITI 멤버십 불필요 ("The VPAT is offered free of charge. Membership in ITI is not required" — ITI 공식 페이지). 단 VPAT 명칭·양식은 ITI 등록 서비스마크로 **무단 변경 금지**
 - **공식 입장**: ITI는 작성된 VPAT을 *검토·승인하지 않음*. 인증·로고 없음. 모두 *자기 평가*
 
 > 주의: ITI는 작성된 VPAT의 내용을 검증해주지 않는다. 허위 기재는 전적으로 작성자 책임이며 거래 신뢰 손실·계약 분쟁의 사유가 된다.
@@ -54,11 +55,13 @@ ITI는 시장별로 4가지 에디션을 제공한다. 작성자는 *대상 시�
 
 | 에디션 | 기준 표준 | 대상 시장 |
 |--------|-----------|-----------|
-| **VPAT 2.5 WCAG** | WCAG 2.2 (A/AA/AAA) | 글로벌 일반, 한국 기업 글로벌 B2B 기본값 |
+| **VPAT 2.5 WCAG** | WCAG 2.0 / 2.1 / 2.2 (2.2까지 포함) | 글로벌 일반, 한국 기업 글로벌 B2B 기본값 |
 | **VPAT 2.5 508** | Revised Section 508 + WCAG 2.0 | 미국 연방 조달 |
-| **VPAT 2.5 EU** | EN 301 549 v3.2.1 + WCAG 2.1 AA | 유럽 공공 조달 |
+| **VPAT 2.5 EU** | EN 301 549 + WCAG 2.1 | 유럽 공공 조달 |
 | **VPAT 2.5 INT** | 위 세 가지 모두 통합 | 글로벌 전 시장 동시 대응 |
 
+> ITI 공식 페이지(2026-09-26 대조): "WCAG 2.0 is incorporated into the 508 edition / WCAG 2.1 is incorporated into the EU edition / WCAG 2.2 is incorporated into the WCAG and INT editions".
+>
 > 한국 기업이 글로벌 B2B SaaS 진출 시: **WCAG Edition** 기본 + 미국 연방 고객 있으면 **INT Edition**.
 >
 > 주의: 한국 국내 컴플라이언스(KS X OT0003 / KWCAG 2.2 / 디지털포용법 제21조)는 VPAT과 *별개 트랙*이다. 국내 인증(한국디지털접근성진흥원 웹접근성 품질마크)은 KWCAG 기준으로 별도 진행한다.
@@ -67,13 +70,13 @@ ITI는 시장별로 4가지 에디션을 제공한다. 작성자는 *대상 시�
 
 ## 4. VPAT 2.5Rev 변경점 요약
 
-VPAT 2.5는 2023-09에 발표되어 WCAG 2.2 정렬(success criterion 9개 추가)했고, 2025-04에 2.5Rev로 소폭 개정되었다.
+VPAT 2.5는 WCAG 2.2 정렬(success criterion 9개 추가)을 반영했고, 2025-04-24에 2.5Rev로 개정되었다(ITI는 변경 사항을 "Change Tracking (April 2025)" 문서로 별도 배포).
 
 - WCAG 및 INT 에디션에 WCAG 2.2 신규 9개 SC 포함
 - 4가지 conformance level 표기 강제
 - "Essential Requirements for Authors" 섹션이 정의의 권원
 
-> 다음 버전(2.6) 예정 없음. WCAG 3.0 또는 EN 301 549·Section 508 대규모 개정 시 갱신 전망.
+> 주의: 미검증 — VPAT 2.5 최초 발표 월(이전 판 "2023-09")과 "다음 버전(2.6) 예정 없음"은 2026-09-26 재검증에서 1차 확인하지 못했다. ITI는 "global developments … 에 계속 대응"한다고만 밝힌다. 작성 직전 ITI 페이지에서 최신판을 확인할 것.
 
 ---
 
@@ -93,7 +96,7 @@ VPAT은 다음 순서로 구성된다.
 
 ### 5.1 표지 7개 필수 항목
 
-Section508.gov가 누락 빈도가 가장 높다고 지적하는 항목들:
+표지에 들어가야 하는 핵심 항목들 (이전 판의 "Section508.gov가 누락 빈도가 가장 높다고 지적"은 2026-09-26 FAQ 원문에서 확인되지 않아 삭제):
 
 - 제품명·버전 (Product Name & Version)
 - 보고서 날짜 (Report Date) — `YYYY-MM-DD`
@@ -117,9 +120,12 @@ VPAT의 Conformance 컬럼에는 반드시 다음 4개 용어 중 하나만 사�
 | **Not Applicable** | 해당 기준이 제품에 적용되지 않음 | 예: 비디오 없는 제품의 1.2.x 자막 |
 
 추가 표기:
-- **Not Evaluated** — AAA 수준이거나 평가 범위 밖일 때 (선택적, 표기 시 사유 필수)
+- **Not Evaluated** — **WCAG Level AAA 기준에만** 사용 가능 (ITI Essential Requirements). A/AA 기준을 "평가 범위 밖"이라는 이유로 Not Evaluated 처리하면 안 된다.
+  > 주의 (2026-09-26 정정): 이전 판의 "AAA 수준이거나 평가 범위 밖일 때"는 사용 범위를 넓게 잘못 적었다. VPAT 2.5Rev WCAG Edition 템플릿 원문: "Not Evaluated: The product has not been evaluated against the criterion. This can only be used in WCAG Level AAA criteria."
+- 템플릿 원문의 Supports 정의: "The functionality of the product has at least one method that meets the criterion without known defects or meets with equivalent facilitation."
+- 템플릿 주석: 적용 대상 콘텐츠가 없으면 WCAG 관례상 'Not Applicable' 대신 **'Supports'로 응답할 수도 있다**(WCAG 2.0 Understanding Conformance 인용). 조직 내 표기 방침을 정해 일관되게 쓸 것.
 
-> 주의: "Partially Supports" 또는 "Does Not Support"인 경우 **Remarks and Explanations 컬럼에 무엇이 미충족인지·어떤 페이지/기능에서 발생하는지를 반드시 설명**해야 한다. ITI 공식 요구사항.
+> 주의: "Partially Supports" 또는 "Does Not Support"인 경우 **Remarks and Explanations 컬럼에 무엇이 미충족인지·어떤 페이지/기능에서 발생하는지를 반드시 설명**해야 한다 (Section508.gov FAQ: "you should provide a comment in the Remarks and Explanations column that indicates how the standard is not met/fully met").
 
 ---
 
@@ -164,7 +170,8 @@ ACR의 신뢰성을 좌우하는 핵심 컬럼이다.
 - **Lighthouse Accessibility** — Chrome DevTools 내장
 - **Pa11y CI** — 헤드리스 자동화
 
-> 주의: 자동 도구는 WCAG SC의 약 **30%만 커버**한다 (Deque, WebAIM 공통 추정). 자동 도구만으로 "Supports"를 주장하는 것은 흔한 실수다. 반드시 수동 점검과 병행한다.
+> 주의: 자동 도구는 WCAG SC의 일부만 판정할 수 있다(흔히 "SC 기준 약 30%"로 인용). 자동 도구만으로 "Supports"를 주장하는 것은 흔한 실수다. 반드시 수동 점검과 병행한다.
+> 주의: 미검증 — "약 30%" 수치와 "Deque·WebAIM 공통 추정" 출처는 2026-09-26 재검증에서 1차 확인하지 못했다(측정 기준이 SC 수인지 이슈 건수인지에 따라 수치가 크게 달라짐). 수치 인용 시 원 보고서를 명시할 것.
 
 ### 9.2 수동 점검
 
@@ -245,7 +252,7 @@ ACR의 신뢰성을 좌우하는 핵심 컬럼이다.
 | 패턴 | 문제 |
 |------|------|
 | "Supports" 남발 | 실제 점검 안 한 채 모두 Supports로 표기 → 신뢰성 즉시 손실 |
-| 자동 도구만으로 "Fully Supports" 주장 | 자동 도구는 SC의 ~30%만 커버. 수동 점검 필수 |
+| 자동 도구만으로 "Fully Supports" 주장 | "Fully Supports"는 공식 용어도 아니며, 자동 도구는 SC 일부만 판정. 수동 점검 필수 |
 | Remarks 비어 둠 | Partially/Does Not Support인데 설명 없음 → ITI 공식 요구사항 위반 |
 | 평가일·버전 갱신 누락 | 작년 ACR을 신제품 v2.5에 재사용 → 즉시 거절됨 |
 | 잘못된 WCAG 버전 표기 | WCAG 2.0 기준으로 점검하고 "WCAG 2.2 Supports" 표기 |

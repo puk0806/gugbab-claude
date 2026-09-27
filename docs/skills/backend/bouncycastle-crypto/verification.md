@@ -2,7 +2,7 @@
 skill: bouncycastle-crypto
 category: backend
 version: v1
-date: 2026-04-23
+date: 2026-09-26 (최초: 2026-04-23)
 status: APPROVED
 ---
 
@@ -18,10 +18,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `bouncycastle-crypto` |
 | 스킬 경로 | `.claude/skills/backend/bouncycastle-crypto/SKILL.md` |
-| 검증일 | 2026-04-23 |
+| 검증일 | 2026-04-23 (재검증: 2026-09-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
-| 대상 버전 | BC 1.64 (`bcprov-jdk15on`) 레거시 / BC 1.78.1 (`bcprov-jdk18on`) 최신, 현재 최신 안정 1.84 |
+| 대상 버전 | BC 1.64 (`bcprov-jdk15on`) 레거시 / **BC 1.86** (`bcprov-jdk18on`, 2026-09-26 재검증으로 1.78.1→1.86 갱신) |
 
 ---
 
@@ -117,8 +117,14 @@ status: APPROVED
 | 14 | CVE-2023-33201 (LDAP injection, <1.74), CVE-2023-33202 (PEMParser DoS, <1.73) | VERIFIED | bc-java Issue #1563, NVD |
 | 15 | JKS 대신 PKCS#12 권장, Java 9+부터 기본 | VERIFIED | Oracle KeyStore 문서, OpenJDK JEP |
 | 16 | BC 1.69는 Java 17에서 PKCS#12 "pad block corrupted" 버그 | VERIFIED | bc-java Issue #1018 |
+| 17 (2026-09-26 추가) | BC 최신 안정 버전은 1.86 (2026-09-12, 사이드채널 하드닝 릴리스) | VERIFIED | bouncycastle.org 공식 릴리스 노트 |
+| 18 (2026-09-26 추가) | CVE-2026-0636 (LDAP 인젝션, `LDAPStoreHelper.java`)은 1.74~1.83 영향, 1.84에서 패치 — 본 스킬이 예시로 든 1.78.1 포함 | VERIFIED | GitHub Advisory GHSA-c3fc-8qff-9hwx, GitLab Advisory, SentinelOne |
+| 19 (2026-09-26 추가) | CVE-2026-13506(ASN.1 중첩 깊이 가드 우회), CVE-2026-59651(BKS 16비트 MAC 키 허용)은 1.85 미만 영향 — 1.84도 포함 | VERIFIED | Snyk/keycloak Issue #52973·#278 |
+| 20 (2026-09-26 추가) | CVE-2026-13586 (PKCS#12 MAC/bag KDF 반복 횟수 상한 없음, DoS, 2026-08-03 공개) | VERIFIED | Snyk 취약점 DB |
+| 21 (2026-09-26 추가) | CVE-2026-5598 (FrodoEngine 샘플링 타이밍 공격, PQC 알고리즘 한정) | VERIFIED | Snyk SNYK-JAVA-ORGBOUNCYCASTLE-16074612 |
 
-교차 검증 결과: **VERIFIED 16 / DISPUTED 0 / UNVERIFIED 0**
+교차 검증 결과 (최초): **VERIFIED 16 / DISPUTED 0 / UNVERIFIED 0**
+교차 검증 결과 (2026-09-26 재검증 추가분): **VERIFIED 5 / DISPUTED 0 / UNVERIFIED 0** — 신규 CVE 5건 전부 확인, SKILL.md 버전 권고를 1.78.1/1.84 → 1.86으로 갱신
 
 ### 4-3. 구조 완전성
 
@@ -147,7 +153,22 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
-> 실사용 테스트는 미수행. PENDING_TEST 상태. 이후 실제 에이전트 활용 후 아래 케이스 채울 것.
+### 2026-09-26 — 재검증 (60일 초과 정기 재검증, 신규 CVE 발견으로 내용 갱신)
+
+**수행일**: 2026-09-26
+**수행 방법**: SKILL.md + REFERENCE.md 전체 Read, WebSearch로 BC 최신 버전·CVE 현황 재확인 → SKILL.md 버전 권고 갱신(1.78.1/1.84 → 1.86) → 갱신된 SKILL.md 자체 근거로 질문 2개 재답변.
+
+**Q1. 지금(2026-09) 신규 Spring Boot 3.x 프로젝트에 BouncyCastle을 추가한다면 어떤 버전을 써야 하는가?**
+- PASS(재검증). 갱신된 SKILL.md 섹션 1-3 근거로 `bcprov-jdk18on:1.86` + `bcpkix-jdk18on:1.86`을 정확히 제시하고, 구버전(1.78.1/1.84)이 CVE-2026-0636·CVE-2026-13506·CVE-2026-59651에 노출된다는 근거까지 인용 가능함을 확인.
+
+**Q2. 기존에 BC 1.78.1을 쓰던 프로젝트는 왜 업그레이드해야 하는가?**
+- PASS(재검증). 상단 주의문 근거로 CVE-2026-0636(LDAP 인젝션, 1.74~1.83 영향) 노출 사실과 1.86 이상으로 업그레이드해야 하는 근거를 정확히 설명 가능.
+
+**재검증 결론**: 정기 재검증 중 신규 CVE 5건(2026-09-26 발견) 확인 → **실질적 내용 변경**(버전 권고 1.78.1/1.84 → 1.86, CVE 경고 추가) 발생. 갱신 후 content test 2/2 PASS로 즉시 재검증 완료. 대상이 "라이브러리 사용법 스킬" 카테고리(실사용 필수 아님)이므로 content test PASS만으로 APPROVED 유지 가능(verification-policy.md 기준).
+
+---
+
+### (원 기록) 실사용 테스트는 미수행. 이후 2026-04-23 대체 테스트로 PASS 처리(섹션 6 참고)
 
 ### 테스트 케이스 1 (예정): BC 1.64 레거시 프로젝트 의존성 설정
 
@@ -198,9 +219,10 @@ BouncyCastle PEMParser로 OpenSSL 스타일 PEM 개인키를 읽어서 java.secu
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 교차 검증 (16개 클레임) | ✅ VERIFIED 16 / DISPUTED 0 / UNVERIFIED 0 |
+| 교차 검증 (16개 클레임 + 재검증 5개) | ✅ VERIFIED 21 / DISPUTED 0 / UNVERIFIED 0 |
 | 에이전트 활용 테스트 | ✅ (2026-04-23, 2문항 PASS — AES-256-GCM 유틸 + BC Provider 등록, KISA ARIA-256-GCM 권장 근거 + Cipher.getInstance 호출 정확) |
-| **최종 판정** | **APPROVED** |
+| 재검증 (2026-09-26) | ✅ 신규 CVE 5건 확인·버전 권고 1.86으로 갱신, content test 2/2 PASS |
+| **최종 판정** | **APPROVED** (재검증 완료, 버전 권고 갱신 반영) |
 
 ---
 
@@ -219,3 +241,4 @@ BouncyCastle PEMParser로 OpenSSL 스타일 PEM 개인키를 읽어서 java.secu
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
 | 2026-04-23 | v1 | 최초 작성. BC 1.64 레거시 + 1.78.1 최신 양쪽 커버, KISA 표준(SEED/ARIA/LEA) 포함, CVE 알림 반영 | skill-creator |
+| 2026-09-26 | v1 | 재검증 — 신규 CVE 5건 발견(CVE-2026-0636/13506/59651/13586/5598), 권장 버전 1.78.1/1.84 → **1.86**으로 갱신, content test 2/2 PASS | 메인 세션 |

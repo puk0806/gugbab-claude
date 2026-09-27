@@ -2,8 +2,8 @@
 skill: game-audio-ai-tools
 category: game
 version: v1
-date: 2026-06-08
-status: APPROVED
+date: 2026-09-26
+status: PENDING_TEST
 ---
 
 # game-audio-ai-tools 스킬 검증 기록
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `game-audio-ai-tools` |
 | 스킬 경로 | `.claude/skills/game/game-audio-ai-tools/SKILL.md` |
-| 검증일 | 2026-06-08 |
+| 검증일 | 2026-09-26 (최초 2026-06-08) |
 | 검증자 | skill-creator (자동) |
 | 스킬 버전 | v1 |
 
@@ -146,11 +146,28 @@ status: APPROVED
 
 - 없음. 3개 질문 모두 SKILL.md 내 명확한 근거 섹션 존재. anti-pattern도 모두 섹션 7에 포함.
 
+### 2026-09-26 재검증
+
+**수행일**: 2026-09-26
+**수행 방법**: WebSearch로 핵심 클레임 3개 재확인 + SKILL.md 자체 답변 확인 질문 2개
+
+- 클레임1. Suno 요금제(Free/Pro $10·Premier $30, 크레딧·상업권) — WebSearch 재확인 → **부분 변경**: 가격·크레딧 구조는 VERIFIED(변동 없음)이나, 2026-09-03부터 Free 플랜에 "평생 7회 다운로드(개인용)" 제한이 신설됨 → SKILL.md 2-1절에 반영
+- 클레임2. FMOD Indie 무료 라이선스(연 수익 $200K 미만, 개발 예산 $600K 미만) — WebSearch 재확인 → **VERIFIED** (FMOD 공식 라이선스 티어 구조와 일치, 변동 없음)
+- 클레임3. ElevenLabs Music 상업 라이선스(학습 데이터 클리어, 유료 플랜 상업 사용 가능) — WebSearch 재확인 → **VERIFIED** (변동 없음, 과금 단위가 크레딧/분당 방식으로 세분화됐으나 상업 라이선스 정책 자체는 동일)
+
+**Q1(재검증). "Suno Free 플랜으로 만든 BGM을 개인 포트폴리오용으로 다운로드해서 보관하려는데 제약이 있나?"**
+- SKILL.md 답변 경로: 2-1절 "주의(2026-09-03부터 신설): Free 플랜은 평생 7회 다운로드(개인 용도 한정)로 추가 제한됨"
+- 판정: PASS (갱신 후 정확한 답 도출. 갱신 전에는 이 제한이 SKILL.md에 없어 답변 불가능했을 것)
+
+**Q2. "FMOD를 무료로 쓸 수 있는 인디 게임의 기준은?"**
+- SKILL.md 답변 경로: 4-1절 "FMOD Free Indie License: 연 수익 $200K(USD) 미만, 개발 예산 $600K 미만"
+- 판정: PASS
+
 ### 판정
 
-- agent content test: 3/3 PASS
+- agent content test: 3/3 PASS (최초) + 재검증 2/2 PASS
 - verification-policy 분류: 라이브러리/도구 사용법 + 의사결정 가이드 — "실사용 검증이 필요 없는 스킬"
-- 최종 상태: APPROVED
+- Suno Free 다운로드 제한 신설이라는 실질 내용 변경이 있었으므로 PENDING_TEST로 전환. 차기 skill-tester 재테스트 시 APPROVED 재검토
 
 ---
 
@@ -161,8 +178,8 @@ status: APPROVED
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-08) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-08) + 2/2 PASS (2026-09-26 재검증) |
+| **최종 판정** | **PENDING_TEST** (Suno Free 다운로드 제한 신설 반영, 재테스트 대기) |
 
 ---
 
@@ -181,3 +198,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-06-08 | v1 | 최초 작성 (공식 소스 11개 클레임 VERIFIED) | skill-creator |
 | 2026-06-08 | v1 | 2단계 실사용 테스트 수행 (Q1 AudioCraft 상업 라이선스 / Q2 Unity Load Type 선택 / Q3 NPC TTS 런타임 호출 anti-pattern) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-26 | v1 | 재검증(98개 일괄 재검증 대상). Suno Free 플랜 2026-09-03 신설 다운로드 제한(평생 7회) 반영, FMOD·ElevenLabs Music 라이선스는 변동 없음 확인 → 실질 내용 변경으로 PENDING_TEST 전환 | Claude Code |

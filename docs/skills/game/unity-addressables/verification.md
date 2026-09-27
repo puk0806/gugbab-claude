@@ -2,7 +2,7 @@
 skill: unity-addressables
 category: game
 version: v1
-date: 2026-06-08
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `unity-addressables` |
 | 스킬 경로 | `.claude/skills/game/unity-addressables/SKILL.md` |
-| 검증일 | 2026-06-08 |
+| 검증일 | 2026-09-26 (최초 2026-06-08) |
 | 검증자 | skill-creator (Claude) |
 | 스킬 버전 | v1 |
 
@@ -112,11 +112,28 @@ status: APPROVED
 
 없음. 3개 질문 모두 SKILL.md 내 근거 섹션이 명확히 존재하며 anti-pattern 경고까지 포함.
 
+### 2026-09-26 재검증
+
+**수행일**: 2026-09-26
+**수행 방법**: WebSearch로 핵심 클레임 3개 재확인 + SKILL.md 자체 답변 확인 질문 2개
+
+- 클레임1. Addressables Unity 6 LTS 권장 버전(2.11.1) — WebSearch 재확인 → **경미한 갱신**: 2.11.2로 패치 버전 상승(6000.6 기준), 2.x 계열이 여전히 Unity 6 LTS 공식 권장. SKILL.md 버전 표기를 2.11.2로 갱신
+- 클레임2. LoadAssetAsync/Release 참조 카운팅 원칙 — WebSearch 재확인 → **VERIFIED** (동작·API 변동 없음, 관련 breaking change는 모두 구버전(0.8~1.x)에 국한됨)
+- 클레임3. InstantiateAsync → ReleaseInstance 필수, Destroy 금지 anti-pattern — WebSearch 재확인 → **VERIFIED** (변동 없음)
+
+**Q1(재검증). "지금(2026-09) Unity 6 LTS 프로젝트에 Addressables 패키지를 새로 설치하면 몇 버전이 뜨나?"**
+- SKILL.md 답변 경로: 상단 메타 "대상 버전: com.unity.addressables 2.11.2 (Unity 6용 권장 2.x 최신)"
+- 판정: PASS
+
+**Q2. "LoadAssetAsync를 handle 저장 없이 호출하면 무슨 문제가 생기나?"**
+- SKILL.md 답변 경로: 3.4절 "안티패턴 1 — handle 분실... 절대 release 못 함 → 누수 확정"
+- 판정: PASS
+
 ### 판정
 
-- agent content test: PASS (3/3)
+- agent content test: PASS (3/3, 최초) + 재검증 2/2 PASS
 - verification-policy 분류: 라이브러리 사용법 스킬 — content test PASS = APPROVED 가능
-- 최종 상태: APPROVED
+- 패치 버전 번호만 경미하게 갱신(2.11.1→2.11.2), API·동작 변경 없음 → APPROVED 유지
 
 ---
 
@@ -135,8 +152,8 @@ status: APPROVED
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-06-08, 3/3 PASS) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (2026-06-08, 3/3 PASS) + ✅ (2026-09-26 재검증, 2/2 PASS) |
+| **최종 판정** | **APPROVED** (유지) |
 
 ---
 
@@ -166,3 +183,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-06-08 | v1 | 최초 작성 (Unity 6 LTS + Addressables 2.11.1 / 3.1.0 기준) | skill-creator |
 | 2026-06-08 | v1 | 2단계 실사용 테스트 수행 (Q1 InstantiateAsync 해제 패턴 / Q2 LoadAssetAsync 3회 ref-count / Q3 Labels Intersection + 해제) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-26 | v1 | 재검증(98개 일괄 재검증 대상). Addressables 2.11.1→2.11.2 패치 버전 갱신, API·Reference Counting 동작은 변동 없음 확인 → APPROVED 유지 | Claude Code |

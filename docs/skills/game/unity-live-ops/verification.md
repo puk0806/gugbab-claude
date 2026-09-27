@@ -2,7 +2,7 @@
 skill: unity-live-ops
 category: game
 version: v1
-date: 2026-06-10
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -18,7 +18,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `unity-live-ops` |
 | 스킬 경로 | `.claude/skills/game/unity-live-ops/SKILL.md` |
-| 검증일 | 2026-06-10 |
+| 검증일 | 2026-09-26 (재검증, 이전 2026-06-10) |
 | 검증자 | skill-creator (Claude) |
 | 스킬 버전 | v1 |
 | 대상 기술 | Unity 6 LTS, Addressables 2.x, Firebase Unity SDK (Remote Config / Crashlytics / FCM), Cloud Content Delivery, Kubernetes / Railway / Render / Fly.io |

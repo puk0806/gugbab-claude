@@ -293,3 +293,69 @@ description: >
 | Google Scholar | BibTeX, EndNote, RefMan, RefWorks | 인용 아이콘 클릭 |
 
 > **권장**: 학부 논문은 Zotero(무료) + 학교가 제공하는 EndNote 중 택일. DBpia Citeasy는 한국어 인용 형식이 정확해 한국어 논문 작성에 유리.
+
+---
+
+## 8. 체계적 문헌 검토(SLR)를 선행연구 챕터에 적용할 때 (2026-09-26 병합)
+
+> PRISMA 2020·SPIDER·thematic synthesis 등 방법론 일반은 제외하고, 한국어 DB 검색식·포함/배제 기준·도덕윤리교육 학위논문 체크리스트만 옮겼다(이력은 verification.md §9). 원 검증일 2026-05-03.
+> 소스: PRISMA 2020 (Page MJ et al., *BMJ* 372:n71, 2021) https://www.prisma-statement.org/ · Webster & Watson (2002) *MIS Quarterly* 26(2) · Cooke, Smith, Booth (2012) *Qualitative Health Research* 22(10):1435-1443(SPIDER)
+
+> 주의: PRISMA 2020은 **본래 보건 인터벤션 체계적 문헌 검토용 보고 지침**이다(statement 본문이 사회·교육 인터벤션 적용 가능성을 인정). 인문학 학위논문에서는 효과측도·메타분석 항목(Item 12·19·20)을 N/A로 두고 정성적 종합으로 대체하며, 이 한계를 방법론 절에 명시한다.
+
+### 8-1. 필수 사전 결정 사항 (PRISMA Item 6·7)
+
+1. 데이터베이스 목록 (최소 3개 이상, 한국어 + 영어)
+2. 검색어와 동의어 집합
+3. Boolean 연산자 조합 (AND, OR, NOT)
+4. 검색 기간 (예: 2000-01-01 ~ 검색일)
+5. 언어 제한 (한국어/영어/기타)
+6. 자료 유형 (학술지·학위논문·단행본·정부보고서)
+
+본 스킬 §1의 4종 외 한국어 보조 DB: **KISS**(한국학술정보, https://kiss.kstudy.com) · **eArticle**(학술교육원, 인문사회 학술지, https://www.earticle.net). ERIC(교육학 전문)은 영문 교육학 보강용.
+
+### 8-2. 검색식 작성 예시 (akrasia 주제)
+
+```
+# RISS 한국어 검색식
+("의지박약" OR "자제력 결여" OR "아크라시아" OR "akrasia") 
+AND ("도덕교육" OR "도덕과" OR "윤리교육") 
+NOT ("의학" OR "약물")
+검색 기간: 2000-01-01 ~ 2026-05-03
+자료유형: 학위논문, 국내학술지
+
+# PhilPapers/JSTOR 영문 검색식  
+("akrasia" OR "weakness of will" OR "incontinence") 
+AND ("moral education" OR "ethics education" OR "character education") 
+AND ("Aristotle" OR "Socrates" OR "Davidson")
+Filters: peer-reviewed, English, 2000-2026
+```
+
+> 검색식은 재현 가능하게 **부록에 그대로 공개**한다(PRISMA Item 7). 가능하면 사서 검토를 받는다(PRESS 2015, McGowan et al. 2016 *J Clin Epidemiol* 75:40-46).
+
+### 8-3. 포함/배제 기준 작성 예시
+
+| 기준 | 포함 (Inclusion) | 배제 (Exclusion) |
+|------|------------------|------------------|
+| 주제 | 도덕적 의지박약 직접 다룬 연구 | 일반 의지력·자기통제 (도덕 무관) |
+| 연구 유형 | 학술지 논문, 학위논문 | 학회 발표문, 신문 기사, 블로그 |
+| 언어 | 한국어, 영어 | 그 외 |
+| 기간 | 2000-01-01 ~ 2026-05-03 | 그 이전 |
+| 학문 영역 | 도덕교육, 윤리학, 교육철학 | 임상심리, 신경과학, 약리학 |
+
+> 주의: 단일 연구자 SLR(석·박사 논문)에서는 2명 독립 검토가 어려우므로 **불일치 시 지도교수와 협의**하는 절차를 명시하고 논문 부록에 기록한다(편향 완화).
+
+### 8-4. 도덕윤리교육 학위논문 선행연구 챕터 체크리스트
+
+- [ ] 연구 질문이 SPIDER 또는 SPICE 프레임으로 정리되었는가
+- [ ] 검색식이 부록에 그대로 재현 가능하게 공개되었는가 (PRISMA Item 7)
+- [ ] 검색 데이터베이스가 최소 3개 이상이고 한국어 + 영어 모두 포함되었는가
+- [ ] 포함/배제 기준이 사전에 명시되고 그대로 적용되었는가 (Item 5)
+- [ ] PRISMA 2020 Flow Diagram이 본문 또는 부록에 포함되었는가 (Item 16a)
+- [ ] 단순 author-centric 나열이 아니라 concept-centric 종합인가 (Webster & Watson 2002)
+- [ ] Concept Matrix 또는 동등한 종합 표가 있는가
+- [ ] 연구 갭이 명시적으로 도출되고 본 연구의 위치가 정당화되었는가
+- [ ] 단일 연구자의 한계가 인정되고 동료검토 절차가 명시되었는가
+- [ ] 질 평가 도구(CASP 등 또는 분야 고유 기준)가 적용되었는가
+- [ ] 종합 방법(thematic / meta-ethnography / narrative)이 명시되었는가
+- [ ] PRISMA의 의학 본 용도와 인문학 적용 한계가 방법론 절에 언급되었는가

@@ -12,7 +12,7 @@ description: >
 # 도덕교육 교수·학습 모델 카탈로그
 
 > 소스: 각 절에 출판사 공식 페이지·SEP·Jubilee Centre·KCI 등 1차 검증 URL 표기
-> 검증일: 2026-05-03
+> 검증일: 2026-09-26
 > 대상 독자: 도덕윤리교육 대학원생(학위논문 집필자)
 
 ---
@@ -104,7 +104,8 @@ description: >
 ### 2.1 Thomas Lickona — *Educating for Character* (1991)
 
 > 소스: Lickona, T. (1991). *Educating for Character: How Our Schools Can Teach Respect and Responsibility*. New York: Bantam Books.
-> ERIC ED337451; Lickona, T., Schaps, E., & Lewis, C. (1996). "Eleven Principles of Effective Character Education", *Journal of Moral Education*, 25(1).
+> ERIC ED337451; Lickona, T. (1996). "Eleven Principles of Effective Character Education", *Journal of Moral Education*, 25(1), 93–100. (ERIC EJ533384)
+> 주의: JME 1996 논문은 **Lickona 단독 저자**다(Tandfonline·ERIC EJ533384 서지). Lickona·Schaps·Lewis 3인 공저는 Character Education Partnership이 발행한 별도 문서(CEP 판)이므로 둘을 혼동하지 말 것 (2026-09-26 정정).
 
 #### 핵심: 도덕적 앎–감정–행동(Knowing–Feeling–Acting) 3요소 통합
 
@@ -162,7 +163,8 @@ Lickona는 좋은 인격(good character)을 다음 세 차원의 통합으로 �
 핵심 명제:
 - 인격교육의 목표를 "좋은 것을 **알고(know), 사랑하고(love), 행하는(do)** 것"으로 정의 — Lickona 3요소와 유사한 통합 구조.
 - 교사 자질, 교육과정 통합, 학교 문화, 가정·지역 협력의 실무 매뉴얼 성격.
-- Bohlin은 보스턴대 Center for the Advancement of Ethics and Character 출신 (현 Harvard Human Flourishing Program 소속).
+- Bohlin은 보스턴대 Center for the Advancement of Ethics and Character 출신.
+> 주의: 미검증 — Bohlin의 현 소속(이전 판의 "Harvard Human Flourishing Program")은 2026-09-26 재검증에서 공식 페이지로 확인하지 못했다. 인용 시 본인 공식 소개 직접 확인.
 
 ---
 
@@ -170,8 +172,8 @@ Lickona는 좋은 인격(good character)을 다음 세 차원의 통합으로 �
 
 ### 3.1 Raths–Harmin–Simon → Simon–Howe–Kirschenbaum
 
-> 소스: Simon, S. B., Howe, L. W., & Kirschenbaum, H. (1972). *Values Clarification: A Handbook of Practical Strategies for Teachers and Students*. New York: Hart Publishing. (76개 실습 활동 포함)
-> 이론적 토대: Raths, L., Harmin, M., & Simon, S. B. (1966). *Values and Teaching*.
+> 소스: Simon, S. B., Howe, L. W., & Kirschenbaum, H. (1972). *Values Clarification: A Handbook of Practical Strategies for Teachers and Students*. New York: Hart Publishing. (79개 전략 수록 — ERIC ED069585; 이전 판의 "76개"는 오기, 2026-09-26 정정)
+> 이론적 토대: Raths, L. E., Harmin, M., & Simon, S. B. (1966). *Values and Teaching*. Columbus, OH: Charles E. Merrill.
 
 #### 가치화 과정(Valuing Process) 7단계
 
@@ -205,12 +207,14 @@ Raths/Simon 계열에서 정의되며 Kirschenbaum이 정리한 7개 하위 과�
 
 ### 4.1 Blatt–Kohlberg 효과
 
-> 소스: Blatt, M. M., & Kohlberg, L. (1975). "The effects of classroom moral discussion upon children's level of moral judgment", *Journal of Moral Education*, 4(2).
+> 소스: Blatt, M. M., & Kohlberg, L. (1975). "The effects of classroom moral discussion upon children's level of moral judgment", *Journal of Moral Education*, 4(2), 129–161. (ERIC EJ115272)
 
 핵심 발견:
-- 학생들의 현재 단계보다 **+1단계 위의 추론**에 노출시키는 도덕 딜레마 토론이 단계 상승을 유도한다.
+- 실험집단은 12주간 12시간의 도덕 문제 토론 후 통제집단보다 높은 단계로 이동하는 경향을 보였다(초록 기준).
+- 학생들의 현재 단계보다 **+1단계 위의 추론**에 노출시키는 도덕 딜레마 토론이 단계 상승을 유도한다는 것이 후속 문헌의 일반적 요약이다.
 - +2단계는 너무 추상적이라 효과 적음, 동일 단계는 기존 사고 강화에 그침.
-- 대략 **참가자의 1/3이 한 단계 상승**, 1년 후 추적에서도 효과 유지.
+- 참가자 중 한 단계 상승 비율·1년 후 추적 결과는 원문 표로 확인할 것.
+> 주의: 미검증 — 이전 판의 "참가자의 1/3이 한 단계 상승" 수치는 2026-09-26 재검증에서 원문 초록·서지로 확인되지 않았다. 원문 전문 확인 전 수치 인용 금지.
 - 청소년기(중학생)가 도덕 토론 프로그램의 **최적기**로 평가.
 
 교육적 함의:
@@ -222,7 +226,8 @@ Raths/Simon 계열에서 정의되며 Kirschenbaum이 정리한 7개 하위 과�
 ### 4.2 Constructive Controversy (Johnson & Johnson)
 
 > 소스: Johnson, D. W., & Johnson, R. T. (1979 이래 다수). *Cooperative Learning Institute*. — co-operation.org
-> Johnson, D. W., & Johnson, R. T. (2000). "Constructive Controversy: The Educative Power of Intellectual Conflict", *Change*, ERIC EJ611489.
+> Johnson, D. W., Johnson, R. T., & Smith, K. A. (2000). "Constructive Controversy: The Educative Power of Intellectual Conflict", *Change*, 32(1), 28–37. https://doi.org/10.1080/00091380009602706 (ERIC EJ611489)
+> 주의: 2000년 *Change* 논문은 Karl A. Smith를 포함한 **3인 공저**다(이전 판 2인 표기 정정, 2026-09-26).
 
 절차:
 1. 협동 맥락 안에서 양 입장 팀 구성.
@@ -268,7 +273,7 @@ Raths/Simon 계열에서 정의되며 Kirschenbaum이 정리한 7개 하위 과�
 #### Defining Issues Test (DIT)
 
 - Kohlberg의 면접 측정의 한계를 보완한 **객관식 측정 도구**.
-- 12개 도덕적 쟁점에 대한 중요도 평정·순위로 단계 추정.
+- 원판 DIT는 딜레마 6개, 각 딜레마마다 12개 쟁점 진술(issue statements)의 중요도를 평정하고 상위 4개를 순위화하는 방식(DIT-2는 딜레마 5개).
 - 후속 DIT-2, **N2 점수** 등 정교화.
 
 ---
@@ -332,7 +337,7 @@ Raths/Simon 계열에서 정의되며 Kirschenbaum이 정리한 7개 하위 과�
 핵심:
 - **phronesis(실천적 지혜)** 와 **hexis(품성 상태)** 형성을 인격교육의 중심에 놓는 신아리스토텔레스적 모델.
 - 덕은 **반복적 실천(habituation)** 으로 형성되지만, 이는 **인지적으로 풍부하고 자율성을 지지하는** 방식이어야 한다(SEP "Philosophy of Education" 인용).
-- *Virtuous Emotions* — 외경(awe), 슬픔(grief), 질투(jealousy), 부끄러움(shame), 연민(pity) 등 아리스토텔레스가 명시하지 않거나 평가절하한 정서를 **덕적 정서**로 재정당화.
+- *Virtuous Emotions* — 장별로 감사(gratitude), 연민(pity), 부끄러움(shame), 질투(jealousy), 슬픔(grief), 외경(awe)을 다룬다(OUP 목차). 아리스토텔레스가 언급하지 않았거나(awe·grief·jealousy) 반덕으로 격하했거나(shame) 폄하했거나(gratitude) 명시적으로 거부한(pity) 정서를 **덕적 정서**로 재정당화 (NDPR 서평·OUP 소개).
 
 Jubilee Centre Framework:
 - "Building Blocks of Character" — 지적 덕(intellectual virtues), 도덕적 덕(moral virtues), 시민적 덕(civic virtues), 수행적 덕(performance virtues), **phronesis (메타-덕)**.
@@ -367,13 +372,16 @@ Jubilee Centre Framework:
 
 ### 8.1 검증된 KCI 자료(예시)
 
-- **추병완** — 「학교 인격교육의 재음미」(KCI ART001787294 등 다수). 인격교육의 한국 학교 적용·재해석 연구를 다수 발표.
-- **박병기** — 「2015 개정 중학교 도덕과의 기능 구현을 위한 교수·학습 방법 및 평가 방향」(KCI ART002138615), 「새로운 도덕과 공통교육과정 내용 체계 원리에 대한 탐색」(KCI ART002668543) 등 도덕과 교육과정·교수학습 연구.
+> 주의: 2026-09-26 KCI 서지 직접 대조 결과, 이전 판이 **추병완·박병기**의 논문으로 적었던 세 편은 모두 **저자가 다른 논문**이었다. 아래는 KCI 서지 원문 기준으로 정정한 것이다. 추병완·박병기의 논문을 인용하려면 KCI에서 저자명으로 다시 검색할 것.
+
+- 조난심 (2013). 「학교 인격교육의 재음미」. 『교육철학연구』 35(2), 93–117. (KCI ART001787294)
+- 차승한·이슬비·오은석·정종삼·김혜진·윤영돈 (2016). 「2015 개정 중학교 도덕과의 기능 구현을 위한 교수·학습 방법 및 평가 방향」. 『도덕윤리과교육』 52, 275–301. (KCI ART002138615)
+- 이정렬·류수·전영준 (2020). 「새로운 도덕과 공통교육과정 내용 체계 원리에 대한 탐색」. 『초등도덕교육』 70, 117–154. (KCI ART002668543)
 
 ### 8.2 미검증·확인 필요 항목
 
 - "이택휘 가치명료화 비판" — KCI 직접 검색에서 본 카탈로그 작성 시점에 일치 항목을 확인하지 못함. **인용 전 KCI/RISS 직접 검색 필수.**
-- 사용자 요청에 등장한 "추기철"은 "추병완"의 오기일 가능성. **인용 전 본인 학적·논문 확인 필수.**
+- 사용자 요청에 등장한 "추기철"은 "추병완"의 오기일 가능성. **인용 전 본인 학적·논문 확인 필수.** (추병완의 구체 논문은 본 카탈로그에서 검증된 항목이 없다.)
 
 > 위 두 항목은 학위논문에서 그대로 인용해서는 안 된다. 직접 확인 후 사용 여부를 결정할 것.
 
@@ -429,16 +437,17 @@ Jubilee Centre Framework:
 
 ```
 Blatt, M. M., & Kohlberg, L. (1975). The effects of classroom moral discussion upon
-    children's level of moral judgment. Journal of Moral Education, 4(2).
+    children's level of moral judgment. Journal of Moral Education, 4(2), 129-161.
 Gilligan, C. (1982). In a Different Voice. Cambridge, MA: Harvard University Press.
-Johnson, D. W., & Johnson, R. T. (2000). Constructive Controversy. Change.
+Johnson, D. W., Johnson, R. T., & Smith, K. A. (2000). Constructive controversy: The
+    educative power of intellectual conflict. Change, 32(1), 28-37.
 Kohlberg, L. (1981). Essays on Moral Development, Vol. 1. San Francisco: Harper & Row.
 Kohlberg, L. (1984). Essays on Moral Development, Vol. 2. San Francisco: Harper & Row.
 Kristjánsson, K. (2015). Aristotelian Character Education. London: Routledge.
 Kristjánsson, K. (2018). Virtuous Emotions. Oxford: Oxford University Press.
 Lickona, T. (1991). Educating for Character. New York: Bantam Books.
-Lickona, T., Schaps, E., & Lewis, C. (1996). Eleven Principles of Effective
-    Character Education. Journal of Moral Education, 25(1).
+Lickona, T. (1996). Eleven principles of effective character education.
+    Journal of Moral Education, 25(1), 93-100.
 MacIntyre, A. (1981/2007). After Virtue (3rd ed.). Notre Dame: Univ. of Notre Dame Press.
 Narvaez, D. (2016). Embodied Morality. London: Palgrave Macmillan.
 Noddings, N. (1984/2003/2013). Caring (2nd/3rd ed.). Berkeley: Univ. of California Press.
@@ -459,6 +468,6 @@ Turiel, E. (1983). The Development of Social Knowledge: Morality and Convention.
 
 1. **2차 인용 금지** — 본 카탈로그는 학위논문 1차 자료 검색의 출발점이다. 인용 시 원전 직접 확인.
 2. **연도·판본 확인** — Noddings *Caring*은 1984/2003/2013 세 시점 판본이 있다. 인용 시 판본 명시.
-3. **한국 학자 검증** — KCI/RISS에서 직접 확인된 것만 인용. 본 카탈로그가 단정 인용한 한국 학자 항목은 없다.
+3. **한국 학자 검증** — KCI/RISS에서 직접 확인된 것만 인용. §8.1의 3편은 KCI 서지로 저자를 확인했으나, 그 외 한국 학자 항목은 단정 인용하지 않는다.
 4. **akrasia 매핑은 추론** — 9·10절 매핑은 본 카탈로그 작성자(혹은 사용자)의 해석적 연결이지 원저자 명시 주장이 아니다.
 5. **번역어 주의** — 'character education'은 한국에서 "인격교육" 또는 "인성교육"으로 번역. 학위논문 일관성 유지 필요.

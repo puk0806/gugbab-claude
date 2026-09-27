@@ -2,7 +2,7 @@
 skill: swagger-springfox-2
 category: backend
 version: v1
-date: 2026-04-23
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -32,8 +32,8 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `swagger-springfox-2` |
 | 스킬 경로 | `.claude/skills/backend/swagger-springfox-2/SKILL.md` |
-| 검증일 | 2026-04-23 |
-| 검증자 | skill-creator |
+| 검증일 | 2026-09-26 (최초 2026-04-23) |
+| 검증자 | skill-creator → 2026-09-26 재검증: 메인 오케스트레이션 (Claude Sonnet 5) |
 | 스킬 버전 | v1 |
 
 ---
@@ -138,6 +138,29 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
+### 재검증 (2026-09-26)
+
+**수행일**: 2026-09-26
+**수행자**: 메인 대화 오케스트레이션 (Claude Sonnet 5) — verification-policy.md 재검증 절차
+**수행 방법**: SKILL.md + REFERENCE.md 전체 Read → WebSearch로 핵심 클레임 재대조 → 실전 질문 2개 자체 답변
+
+**재검증한 핵심 클레임**
+- Springfox 3.0.0(2020-07-14)이 여전히 마지막 릴리스 — 재확인, 신규 릴리스 없음 (VERIFIED)
+- Springfox가 Spring Boot 3.x(Jakarta EE)를 지원하지 않아 사실상 obsolete 상태 — 재확인, 변동 없음 (VERIFIED, 2026-09 시점 커뮤니티 합의)
+- Springdoc이 정식 대체재로 자리잡음(2025-09 springdoc-openapi 2.8.13, OpenAPI 3.1 + Spring Boot 3.5.5 지원) — 참고 확인, 본 스킬은 매핑 표만 제공하므로 서술에 영향 없음 (VERIFIED)
+
+**Q1. "Spring Boot 2.6.3 + Springfox 3.0.0에서 기동 시 NPE가 나는데 원인과 해결책은?"**
+- PASS
+- 근거: SKILL.md "Spring Boot 2.6+ 호환성 이슈" 섹션 — PathPatternParser 전환이 원인, `spring.mvc.pathmatch.matching-strategy=ant_path_matcher`가 해결책으로 명시. 재검증 결과에도 변동 없음.
+
+**Q2. "지금(2026-09) 신규로 Springfox를 도입해도 되나?"**
+- PASS
+- 근거: SKILL.md 상단 EOL 경고 — "신규 프로젝트는 반드시 Springdoc을 사용" 명시. Springfox가 여전히 신규 릴리스 없이 방치 상태임을 재확인해 답변 근거로 사용.
+
+**판정**: 재검증 결과 사실 변경 없음 → status `APPROVED` 유지.
+
+---
+
 ### 테스트 케이스 1: (미실시)
 
 **입력 (질문/요청):**
@@ -182,8 +205,8 @@ application.properties에 spring.mvc.pathmatch.matching-strategy=ant_path_matche
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-04-23, general-purpose 2문항 PASS — SB 2.6+ NPE 해결책 + Springfox→Springdoc 매핑 정확) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (2026-04-23, 2문항 PASS) + ✅ (2026-09-26 재검증, 2문항 PASS — NPE 해결책 + EOL 상태 재확인, 변동 없음) |
+| **최종 판정** | **APPROVED** (2026-09-26 재검증 완료, 변동 없음) |
 
 ---
 
@@ -201,3 +224,4 @@ application.properties에 spring.mvc.pathmatch.matching-strategy=ant_path_matche
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
 | 2026-04-23 | v1 | 최초 작성. Springfox 2.9.2 / 3.0.0 의존성, @EnableSwagger2 + Docket 설정, 어노테이션(@Api/@ApiOperation/@ApiParam/@ApiResponse/@ApiModel/@ApiModelProperty), Docket 그룹화, 전역 JWT 헤더(2.9.2 globalOperationParameters / 3.0.0 globalRequestParameters), Spring Boot 2.6+ PathPatternParser NPE 이슈 + 해결책(ant_path_matcher), Swagger UI/JSON 경로, Security permitAll 화이트리스트, Springdoc 전환 매핑 표, 흔한 실수 11개 포함 | skill-creator |
+| 2026-09-26 | v1 | 재검증 — 핵심 클레임 전부 변동 없음 확인(Springfox 3.0.0 마지막 릴리스, Spring Boot 3.x 미지원, 2.6+ NPE 해결책). 내용 변경 없음 → APPROVED 유지 | 메인 오케스트레이션 (Claude Sonnet 5) |

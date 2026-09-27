@@ -2,8 +2,8 @@
 skill: webflux-webclient-in-sync-app
 category: backend
 version: v1
-date: 2026-04-23
-status: APPROVED
+date: 2026-09-26
+status: PENDING_TEST
 ---
 
 # 스킬 검증: webflux-webclient-in-sync-app
@@ -18,8 +18,8 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `webflux-webclient-in-sync-app` |
 | 스킬 경로 | `.claude/skills/backend/webflux-webclient-in-sync-app/SKILL.md` |
-| 검증일 | 2026-04-23 |
-| 검증자 | skill-creator (자동) |
+| 검증일 | 2026-09-26 (최초 2026-04-23) |
+| 검증자 | skill-creator (자동) → 2026-09-26 재검증: 메인 오케스트레이션 (Claude Sonnet 5) |
 | 스킬 버전 | v1 |
 
 ---
@@ -131,6 +131,29 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
+### 재검증 (2026-09-26)
+
+**수행일**: 2026-09-26
+**수행자**: 메인 대화 오케스트레이션 (Claude Sonnet 5) — verification-policy.md 재검증 절차
+**수행 방법**: SKILL.md + REFERENCE.md 전체 Read → WebSearch로 핵심 클레임 재대조 → 실전 질문 2개 자체 답변
+
+**재검증한 핵심 클레임**
+- "Spring 7.0(2025 하반기)에서 RestTemplate deprecated로 향하고 있음" → **정밀도 보정**: Spring 7.0은 2025-11 실제 GA되어 "deprecation 의도" 발표(아직 `@Deprecated` 미표시), 정식 `@Deprecated`는 Spring 7.1(2026-11 잠정)에서 예정 — SKILL.md·표를 이 타임라인으로 갱신 (VERIFIED, Spring 공식 GitHub wiki "Spring Framework 7.0 Release Notes" + spring.io 블로그)
+- RestTemplate 오픈소스 지원 2029년까지 유지 — 신규 확인, SKILL.md에 추가 (VERIFIED)
+- WebClient `.block()` 기반 동기 사용·`Mono.zip` 병렬 패턴은 여전히 Spring 공식 권장 — 재확인, 변동 없음 (VERIFIED)
+
+**Q1. "지금(2026-09) 기준으로 RestTemplate이 실제로 @Deprecated 표시가 붙었나?"**
+- PASS
+- 근거: SKILL.md 상단 주의 문구 — "Spring 7.0은 이미 GA되어 deprecation 의도를 발표했고(아직 `@Deprecated` 표시는 아님), Spring 7.1(2026-11 잠정)에서 정식 `@Deprecated` 처리" — 시점 구분이 명확.
+
+**Q2. "RestTemplate 쓰는 기존 코드를 올해 안에 급하게 걷어내야 하나?"**
+- PASS
+- 근거: SKILL.md "RestTemplate 자체는 2029년까지 오픈소스 지원 유지" 문구로 급하지 않다는 답변 근거 제공.
+
+**판정**: RestTemplate deprecation 타임라인 정밀도 보정 → 내용 변경 있음 → status `PENDING_TEST`로 되돌림.
+
+---
+
 > PENDING_TEST 상태이므로 실제 에이전트 활용 테스트는 실시되지 않았습니다. 아래는 권장 테스트 케이스입니다.
 
 ### 테스트 케이스 1: 타임아웃 설정 질문
@@ -199,8 +222,8 @@ WebClient를 써야 하나요, RestTemplate을 써야 하나요?
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-04-23, 2문항 PASS — HttpClient 3+5초 타임아웃 + onStatus + Retry.backoff + .block(Duration) 방어선, MockWebServer + @DynamicPropertySource 통합 테스트 정확) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (2026-04-23, 2문항 PASS) + ✅ (2026-09-26 재검증, 2문항 PASS — RestTemplate deprecation 타임라인 정밀도 확인) |
+| **최종 판정** | **PENDING_TEST** (2026-09-26 RestTemplate deprecation 타임라인 정밀도 보정으로 내용 변경 — 재검증 필요) |
 
 ---
 
@@ -218,3 +241,4 @@ WebClient를 써야 하나요, RestTemplate을 써야 하나요?
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
 | 2026-04-23 | v1 | 최초 작성 | skill-creator |
+| 2026-09-26 | v1 | 재검증 — RestTemplate deprecation 타임라인 정밀도 보정(Spring 7.0 GA 완료 반영, 7.1/8.0 시점 구분, 2029년까지 지원 명시) → PENDING_TEST | 메인 오케스트레이션 (Claude Sonnet 5) |

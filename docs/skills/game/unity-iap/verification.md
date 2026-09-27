@@ -2,8 +2,8 @@
 skill: unity-iap
 category: game
 version: v1
-date: 2026-06-09
-status: APPROVED
+date: 2026-09-26
+status: PENDING_TEST
 ---
 
 # 스킬 검증 문서 — game/unity-iap
@@ -19,7 +19,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `unity-iap` |
 | 스킬 경로 | `.claude/skills/game/unity-iap/SKILL.md` |
-| 검증일 | 2026-06-09 |
+| 검증일 | 2026-09-26 (최초 2026-06-09) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 | 대상 패키지 버전 | Unity IAP **5.3.1** (2026-05-27 권장) / **4.15.1** (2026-04-21 레거시 호환) |
@@ -142,11 +142,28 @@ status: APPROVED
 
 없음. 3개 질문 모두 SKILL.md에서 완전한 근거 제시 가능.
 
+### 2026-09-26 재검증 (본문 사실성만 — references/REFERENCE.md은 재검증 대상 아님)
+
+**수행일**: 2026-09-26
+**수행 방법**: WebSearch로 핵심 클레임 3개 재확인 + SKILL.md 자체 답변 확인 질문 2개
+
+- 클레임1. Unity IAP 최신 안정 버전 5.3.1 — WebSearch 재확인 → **갱신 필요**: 최신은 **5.4.3**(Unity 6000.3 대응). SKILL.md 버전 표기 갱신
+- 클레임2. Google Play Billing Library v5.x → BL 8 자동 지원 — WebSearch 재확인 → **부분 갱신**: BL 8 자동 지원은 유지되나 2026-05-19 **BL 9** 출시, Google Play는 2026-08-31부터 신규/업데이트 앱에 BL 8 이상 필수(유예 2026-11-01) — SKILL.md에 시행일·BL 9 반영
+- 클레임3. Android Target API Level 34 이상(Google Play 2026 요구사항) — WebSearch 재확인 → **DISPUTED(구버전)**: 2026-08-31 시행 기준 **Target API 36** 필수 → SKILL.md 정정
+
+**Q1(재검증). "지금(2026-09) Unity 6 프로젝트에 IAP 패키지를 새로 설치하면 몇 버전이 뜨고, Billing Library는 뭘 쓰나?"**
+- SKILL.md 답변 경로: "1. Unity IAP 개요" 표 "최신 안정 버전: 5.4.3", "Google Play Billing Library: v5.4.x → BL 8 자동 지원(BL 9는 2026-05-19 출시)"
+- 판정: PASS (갱신 후 정확)
+
+**Q2. "Google Play에 신규 게임을 출시하려는데 Android Target API Level을 몇으로 잡아야 IAP 포함 빌드가 게시되나?"**
+- SKILL.md 답변 경로: "2. SDK 설치 및 초기 설정 > Android 빌드 사전 설정" — "Target API Level: 36 이상(Google Play 2026-08-31 시행 요구사항)"
+- 판정: PASS
+
 ### 판정
 
-- agent content test: 3/3 PASS
+- agent content test: 3/3 PASS (최초) + 재검증 2/2 PASS
 - verification-policy 분류: 라이브러리 사용법 스킬 — content test PASS = APPROVED 가능
-- 최종 상태: APPROVED
+- Unity IAP 버전·BL 9·Target API 36 갱신이라는 실질 내용 변경이 있었으므로 PENDING_TEST 전환. 차기 skill-tester 재테스트 시 APPROVED 재검토
 
 ---
 
@@ -161,8 +178,8 @@ status: APPROVED
 | 내용 정확성 | ✅ 공식 문서 기반 작성, 9개 클레임 교차 검증 완료 |
 | 구조 완전성 | ✅ frontmatter·소스·검증일·예제·실수 패턴 모두 포함 |
 | 실용성 | ✅ 실제 게임 IAP 통합에 바로 사용 가능 수준 |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-09 skill-tester 수행) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-09) + ✅ 2/2 PASS (2026-09-26 재검증) |
+| **최종 판정** | **PENDING_TEST** (버전·BL 9·Target API 36 갱신, 재테스트 대기) |
 
 ---
 
@@ -200,3 +217,4 @@ status: APPROVED
 | 2026-06-09 | v1 | 최초 작성. v4(4.15.1) + v5(5.3.1) 양쪽 API 커버. 영수증 검증·iOS 복원·구독 관리·10개 anti-pattern 포함 | skill-creator |
 | 2026-06-09 | v1 | 2단계 실사용 테스트 수행 (Q1 ProcessPurchase Complete vs Pending / Q2 iOS 복원 버튼 미구현 / Q3 v4→v5 마이그레이션 변경점) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | Claude |
+| 2026-09-26 | v1 | 재검증(98개 일괄 재검증 대상, 본문만). Unity IAP 5.3.1→5.4.3, BL 9 출시 반영, Android Target API 34→36(2026-08-31 시행) 정정 → 실질 내용 변경으로 PENDING_TEST 전환 | Claude Code |

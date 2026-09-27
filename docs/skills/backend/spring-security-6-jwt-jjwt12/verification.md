@@ -2,7 +2,7 @@
 skill: spring-security-6-jwt-jjwt12
 category: backend
 version: v1
-date: 2026-04-22
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -19,7 +19,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `spring-security-6-jwt-jjwt12` |
 | 스킬 경로 | `.claude/skills/backend/spring-security-6-jwt-jjwt12/SKILL.md` |
-| 검증일 | 2026-07-04 |
+| 검증일 | 2026-09-26 (재검증, 이전 2026-07-04) |
 | 검증자 | skill-creator (자동) |
 | 스킬 버전 | v1 |
 

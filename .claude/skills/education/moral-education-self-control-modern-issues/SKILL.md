@@ -7,7 +7,7 @@ description: 학위논문 4장 — 현대 도덕교육에서 자제력 교육의
 # 현대 도덕교육과 자제력 교육 — 4장 자료 노트
 
 > 소스: 한국 교육부·여성가족부·한국지능정보사회진흥원·건강보험심사평가원 2024 공식 통계 + Baumeister/Mischel/Duckworth/Kahneman/Greene/Haidt 1차 출처 및 재현성 비판(Hagger 2016, Carter 2015, Watts 2018, Credé 2017) + KCI 등재지(박재주 2011 외) + Jubilee Centre for Character and Virtues (University of Birmingham). 본문 §출처 절에 URL 전체 수록.
-> 검증일: 2026-05-06
+> 검증일: 2026-09-26
 > 사용자: 아리스토텔레스 akrasia/akolasia 학위논문 4장 (도덕윤리교육, KCI 투고 목표)
 > 형식: research notes — 본문은 사용자가 직접 작성, 본 문서는 표·통계·인용 위치·선행연구 지도 제공
 
@@ -87,12 +87,12 @@ description: 학위논문 4장 — 현대 도덕교육에서 자제력 교육의
 
 | 학자 | 핵심 개념 | 1차 출처 | 재현성 상태 (CRITICAL) |
 |------|----------|---------|----------------------|
-| Roy F. Baumeister | ego depletion (자아 고갈), willpower as muscle | Baumeister & Vohs (2007), *Soc Pers Psychol Compass*, 1(1), 115–128. 단행본: *Willpower* (Penguin, 2011) | **Hagger et al. (2010) 메타분석 d=0.62 효과 지지 → Carter, Kofler, Forster, McCullough (2015) 출판편향 통제 시 d≈0.2로 0과 구별 안 됨 → Hagger et al. (2016) 23개 실험실 사전등록 다중연구 (N=2,141) 효과 재현 실패. Inzlicht & Schmeichel (2012) 자원모델 대안 process model 제안. 인용 시 반드시 재현성 논란 표기.** |
-| Walter Mischel | delayed gratification, marshmallow test | Mischel, Shoda, Rodriguez (1989), *Science*, 244(4907), 933–938. 단행본: *The Marshmallow Test* (Little, Brown, 2014) | **Watts, Duncan, Quan (2018), *Psychological Science*, 29(7), 1159–1177이 가족배경·초기인지능력·가정환경 통제 시 효과 약 1/2로 축소, 추가 통제 후 약 2/3 추가 약화 보고. SES 변수가 강함. Falk, Kosse, Pinger (2020), *Psychological Science*가 직접 비교 논평. 인용 시 재현 한계 표기.** |
+| Roy F. Baumeister | ego depletion (자아 고갈), willpower as muscle | Baumeister & Vohs (2007), *Soc Pers Psychol Compass*, 1(1), 115–128. 단행본: *Willpower* (Penguin, 2011) | **Hagger et al. (2010) 메타분석 d=0.62 효과 지지 → Carter, Kofler, Forster, McCullough (2015) 출판편향 보정 메타분석에서 효과가 0과 구별되지 않음(구체 d값은 원문 표 확인 — 이전 판 "d≈0.2"는 2026-09-26 재검증에서 미확인) → Hagger et al. (2016) 23개 실험실 사전등록 다중연구 (N=2,141) 효과 재현 실패. Inzlicht & Schmeichel (2012) 자원모델 대안 process model 제안. 인용 시 반드시 재현성 논란 표기.** |
+| Walter Mischel | delayed gratification, marshmallow test | Mischel, Shoda, Rodriguez (1989), *Science*, 244(4907), 933–938. 단행본: *The Marshmallow Test* (Little, Brown, 2014) | **Watts, Duncan, Quan (2018), *Psychological Science*, 29(7), 1159–1177 (어머니가 대졸 미만인 아동 표본 중심): 이변량 상관이 원 연구의 약 절반 크기였고, 가족배경·초기 인지능력·가정환경을 통제하면 약 2/3 감소 (Crossref 초록 기준 — 이전 판은 "통제 시 1/2, 추가 통제 후 2/3 추가 약화"로 순서를 뒤섞어 2026-09-26 정정). Falk, Kosse, Pinger (2020), *Psychological Science*, 31(1), 100–104 "Re-Revisiting the Marshmallow Test"가 직접 비교 반론, Watts 등의 재반론 31(1), 105–108. 인용 시 재현 한계 표기.** |
 | Angela Duckworth | grit (passion + perseverance) | Duckworth, Peterson, Matthews, Kelly (2007), *J. Personality and Social Psychology*, 92(6), 1087–1101. 단행본: *Grit* (Scribner, 2016) | **Credé, Tynan, Harms (2017), *J. Personality and Social Psychology*, 113(3), 492–511 메타분석(584 effect sizes, 88 samples, N=66,807): grit의 위계 구조 확인 안 됨, 성과·유지율과 중간 정도 상관, conscientiousness와 매우 강한 상관(jangle fallacy). 인용 시 비판 함께 표기.** ※ 사용자 노트의 *Perspectives on Psychological Science* 게재는 *JPSP* 정정.<br><br>**도덕교육에서 grit의 제한적 활용 처방** (비판 인지 후 권장 방향): (1) **단독 측정 도구로 grit Scale 사용 금지** — Big Five conscientiousness가 더 안정적 예측 변수. (2) **별개 구성개념으로 단정 금지** — Credé 2017 r≈.84(jangle fallacy)를 인용하며 "비록 conscientiousness와 강한 상관을 보이나 도덕교육적 의의는…" 식으로 전제. (3) **akrasia 회복 가능성과의 유비**로만 활용 — Duckworth의 "perseverance" 개념은 akrates의 πεισθεὶς μεταβάλλει(설득되면 변함)와 *느슨한* 유비. 동일시는 금지. (4) **passion 측면**은 phronēsis의 정향(orientation) 차원과 부분적으로 겹치나, grit의 passion은 "장기 목표 추구"로 한정되고 phronēsis는 "삶 전체의 좋음"을 향하므로 범위 차이 명시. |
-| Daniel Kahneman | dual-process (System 1·2) | Kahneman (2011), *Thinking, Fast and Slow* (Farrar, Straus and Giroux) | priming 일부 효과 재현 실패 (Kahneman 본인이 2017년 사과 서한). dual-process 골격 자체는 안정적. 인용 시 priming 부분만 주의. |
+| Daniel Kahneman | dual-process (System 1·2) | Kahneman (2011), *Thinking, Fast and Slow* (Farrar, Straus and Giroux) | priming 일부 효과 재현 실패. Kahneman은 2012년 priming 연구자들에게 재현 문제를 경고하는 공개 서한을 보냈고, 2017년에는 책 4장(priming)에 소표본 연구를 과신했다고 공개 인정했다. dual-process 골격 자체는 안정적. 인용 시 priming 부분만 주의. > 주의: 미검증 — 2012 서한·2017 인정의 매체·원문은 2026-09-26 재검증에서 1차 확인하지 못함(이전 판 "2017년 사과 서한"은 두 사건을 섞은 표현). |
 | Joshua Greene | dual-process moral judgment, fMRI 트롤리 | Greene (2013), *Moral Tribes: Emotion, Reason, and the Gap Between Us and Them* (Penguin) | 일부 fMRI 결과·전제(emotion=deontology)에 대한 비판(Kahane 등) 있으나 이중처리 모델은 표준. *Moral Tribes*은 자비롭고 충실한 해설. |
-| Jonathan Haidt | social intuitionism, moral foundations theory | Haidt (2012), *The Righteous Mind: Why Good People Are Divided by Politics and Religion* (Pantheon) | MFT는 문화비교·통계적 구조 측면에서 검증·반박 진행 중. 인용 시 6개 토대(care/harm, fairness/cheating, loyalty/betrayal, authority/subversion, sanctity/degradation, liberty/oppression) 정확히 표기. |
+| Jonathan Haidt | social intuitionism, moral foundations theory | Haidt (2012), *The Righteous Mind: Why Good People Are Divided by Politics and Religion* (Pantheon) | MFT는 문화비교·통계적 구조 측면에서 검증·반박 진행 중. 인용 시 6개 토대(care/harm, fairness/cheating, loyalty/betrayal, authority/subversion, sanctity/degradation, liberty/oppression) 정확히 표기. **개정 동향**: Atari, Haidt, Graham 외 (2023), *JPSP*, 125(5), 1157–1188 "Morality beyond the WEIRD"는 MFQ-2로 fairness를 **Equality·Proportionality**로 분리하고 Care·Loyalty·Authority·Purity를 유지한 6토대 측정 체계를 제시(2026-09-26 추가). 어느 판(2012 vs MFQ-2)을 따르는지 명시. |
 
 ### 2.2 인용 방식 — 1차+비판 페어 표기
 
@@ -149,7 +149,9 @@ Journal of Personality and Social Psychology, 113(3), 492–511.
 | 저자 | 제목 | 학술지 | 연도 | KCI URL |
 |------|------|------|------|---------|
 | 박재주 | 아크라시아와 도덕교육 — 도덕적 앎과 도덕적 행위 사이의 연계성을 위한 도덕교육 | 초등도덕교육 36권 | 2011 | https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=ART001575952 |
-| (저자명 추가 검색 필요) | 아크라시아와 도덕교육: 도덕적 지식의 의미 | (KCI 등재) | (확인 필요) | https://www.kci.go.kr/kciportal/landing/article.kci?arti_id=ART001330038 |
+| 박장호 (경성대) | 아크라시아와 도덕교육: 도덕적 지식의 의미 | 倫理硏究 1권 72호, 131–161 | 2009 | https://www.kci.go.kr/kciportal/landing/article.kci?arti_id=ART001330038 (DOI 10.15801/je.1.72.200903.131) |
+
+> 2026-09-26 KCI 서지 대조로 저자·권호 확정(이전 판 "저자명 추가 검색 필요"). §4.3의 "박장호 2009"가 바로 이 논문이다.
 
 > 박재주(2011)의 핵심 입장: moderate internalism — 정당화 이유와 동기 이유를 모두 인정. akrasia 상태 설명에서 동기 이유를 강조. 인성교육과 연결.
 
@@ -166,7 +168,7 @@ Journal of Personality and Social Psychology, 113(3), 492–511.
 
 ### 4.3 박장호 관련 (§ 사용자 노트의 박장호 2009 직접 검증 시 재확인 권장)
 
-검색 결과: 박장호, 『도덕적으로 의미 있는 삶』, 윤리교육연구 35호, 253–286(2014) / 박장호, 『윤리상담 — 이론적 토대에 대한 검토』, 윤리교육연구 34호, 1–37(2014) 확인. 사용자가 보유한 "박장호 2009"는 별도 논문일 수 있으므로 본인 메모와 대조 후 인용.
+검색 결과: 박장호, 『도덕적으로 의미 있는 삶』, 윤리교육연구 35호, 253–286(2014) / 박장호, 『윤리상담 — 이론적 토대에 대한 검토』, 윤리교육연구 34호, 1–37(2014) 확인. "박장호 2009"는 §4.1의 KCI ART001330038(『倫理硏究』 72, 131–161)로 확인되었다(2026-09-26). 위 2014년 두 편은 별개 논문이며 2026-09-26 재검증에서 재대조하지 못했으므로 인용 전 KCI 서지를 확인할 것.
 
 ---
 
@@ -218,7 +220,7 @@ Journal of Personality and Social Psychology, 113(3), 492–511.
 본 스킬에서 부분적으로 또는 미수록한 것 — 사용자가 직접 KCI/RISS에서 보강:
 
 - KCI 자제력·자기조절 도덕교육 선행연구 5–10편 추가 발굴 (2020년 이후 우선)
-- 박장호 2009 정확한 서지정보 (사용자 보유 메모 재확인)
+- ~~박장호 2009 정확한 서지정보~~ → 2026-09-26 확인 완료(§4.1)
 - 한국청소년정책연구원 NYPI 게임·SNS 중독 *세부 통계* (본 검증에서는 메인 출처 한정)
 - 코로나19 이후 자기조절 능력 저하 KCI 실증 연구
 - 2022 개정 도덕과 교육과정 *고시문* 원문 (교육부 고시 제2022-33호 [별책 6])
@@ -238,11 +240,16 @@ Journal of Personality and Social Psychology, 113(3), 492–511.
 ### 도덕심리학 1차·재현 비판
 
 - Baumeister, R. F., & Vohs, K. D. (2007). *Soc Pers Psychol Compass*, 1(1), 115–128. — https://compass.onlinelibrary.wiley.com/doi/10.1111/j.1751-9004.2007.00001.x
-- Hagger, M. S., et al. (2016). A multilab preregistered replication of the ego-depletion effect. *Perspectives on Psychological Science*, 11(4), 546–573.
+- Hagger, M. S., Wood, C., Stiff, C., & Chatzisarantis, N. L. D. (2010). Ego depletion and the strength model of self-control: A meta-analysis. *Psychological Bulletin*, 136(4), 495–525. https://doi.org/10.1037/a0019486
+- Hagger, M. S., et al. (2016). A multilab preregistered replication of the ego-depletion effect. *Perspectives on Psychological Science*, 11(4), 546–573. https://doi.org/10.1177/1745691616652873
 - Carter, E. C., Kofler, L. M., Forster, D. E., & McCullough, M. E. (2015). *J. Experimental Psychology: General*, 144(4), 796–815.
 - Inzlicht, M., & Schmeichel, B. J. (2012). *Perspectives on Psychological Science*, 7(5), 450–463. — https://journals.sagepub.com/doi/10.1177/1745691612454134
 - Mischel, W., Shoda, Y., & Rodriguez, M. L. (1989). *Science*, 244(4907), 933–938. — https://www.science.org/doi/10.1126/science.2658056
 - Watts, T. W., Duncan, G. J., & Quan, H. (2018). *Psychological Science*, 29(7), 1159–1177. — https://journals.sagepub.com/doi/10.1177/0956797618761661
+- Falk, A., Kosse, F., & Pinger, P. (2020). Re-revisiting the marshmallow test. *Psychological Science*, 31(1), 100–104. https://doi.org/10.1177/0956797619861720
+- Atari, M., Haidt, J., Graham, J., et al. (2023). Morality beyond the WEIRD. *Journal of Personality and Social Psychology*, 125(5), 1157–1188. https://doi.org/10.1037/pspp0000470
+
+> 위 도덕심리학 서지 12건은 2026-09-26 Crossref DOI 메타데이터로 권호·쪽수를 재대조했다.
 - Duckworth, A. L., Peterson, C., Matthews, M. D., & Kelly, D. R. (2007). *J. Personality and Social Psychology*, 92(6), 1087–1101. — https://psycnet.apa.org/record/2007-07951-009
 - Credé, M., Tynan, M. C., & Harms, P. D. (2017). *J. Personality and Social Psychology*, 113(3), 492–511. — https://psycnet.apa.org/record/2016-29674-001
 - Kahneman, D. (2011). *Thinking, Fast and Slow*. New York: Farrar, Straus and Giroux. — https://us.macmillan.com/books/9780374533557/thinkingfastandslow/
@@ -251,7 +258,8 @@ Journal of Personality and Social Psychology, 113(3), 492–511.
 
 ### 한국 KCI 선행연구
 
-- 박재주 (2011), 『아크라시아와 도덕교육 — 도덕적 앎과 도덕적 행위 사이의 연계성을 위한 도덕교육』, 초등도덕교육 36 — https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=ART001575952
+- 박재주 (2011), 『아크라시아와 도덕교육 — 도덕적 앎과 도덕적 행위 사이의 연계성을 위한 도덕교육』, 초등도덕교육 36, 1–30 — https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=ART001575952
+- 박장호 (2009), 「아크라시아와 도덕교육: 도덕적 지식의 의미」, 倫理硏究 72, 131–161 — https://www.kci.go.kr/kciportal/landing/article.kci?arti_id=ART001330038
 - 학술지 『도덕윤리과교육』 — https://www.kci.go.kr/kciportal/po/search/poCitaView.kci?sereId=001279
 - 2022 개정 초등 도덕과 교육과정 자신과의 관계 영역 — https://www.kci.go.kr/kciportal/landing/article.kci?arti_id=ART002882858
 

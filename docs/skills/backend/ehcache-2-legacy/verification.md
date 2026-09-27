@@ -2,8 +2,8 @@
 skill: ehcache-2-legacy
 category: backend
 version: v1
-date: 2026-04-23
-status: APPROVED
+date: 2026-09-26
+status: PENDING_TEST
 ---
 
 # EhCache 2.x Legacy 스킬 검증 문서
@@ -18,8 +18,8 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `ehcache-2-legacy` |
 | 스킬 경로 | `.claude/skills/backend/ehcache-2-legacy/SKILL.md` |
-| 검증일 | 2026-04-23 |
-| 검증자 | skill-creator (Claude) |
+| 검증일 | 2026-09-26 (최초 2026-04-23) |
+| 검증자 | skill-creator (Claude) → 2026-09-26 재검증: 메인 오케스트레이션 (Claude Sonnet 5) |
 | 스킬 버전 | v1 |
 | 기준 버전 | EhCache 2.10.9.2 (net.sf.ehcache), Spring Boot 2.5, Java 11 |
 
@@ -134,7 +134,32 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
-> 실제 에이전트 활용 테스트는 PENDING 상태. 아래는 기대 테스트 케이스.
+### 재검증 (2026-09-26)
+
+**수행일**: 2026-09-26
+**수행자**: 메인 대화 오케스트레이션 (Claude Sonnet 5) — verification-policy.md 재검증 절차
+**수행 방법**: SKILL.md + REFERENCE.md 전체 Read → WebSearch로 핵심 클레임 재대조 → 실전 질문 2개 자체 답변
+
+**재검증한 핵심 클레임**
+- EhCache 2.x FOSS 유지보수 종료(2023-09 이후) 상태 — 재확인, 변동 없음 (VERIFIED, 2026-09-26 WebSearch)
+- `net.sf.ehcache:ehcache:2.10.9.2`가 여전히 2.10 브랜치 마지막 공개 릴리스 — 재확인, 신규 2.x 릴리스 없음 (VERIFIED)
+- **신규 발견**: 구버전(2.10.6 등)에 번들된 `jackson-databind 2.9.6`에 공개 CVE 다수 — SKILL.md에 없던 내용이라 `> 주의:` 경고 추가 (VERIFIED, Snyk `net.sf.ehcache:management-ehcache-v1` 어드바이저리 기준)
+
+**Q1. "EhCache 2.10.9.2를 그대로 쓰고 있는데 보안 점검에서 뭘 봐야 하나?"**
+- PASS
+- 근거: SKILL.md 상단 경고 박스의 신규 CVE 주의 문구 — 번들 `jackson-databind` 버전을 `mvn dependency:tree`로 직접 확인하고 필요 시 override 하라는 지침이 명확히 존재.
+
+**Q2. "EhCache 2.x가 아직도 최신 Java(17/21)에서 패치를 받고 있나?"**
+- PASS
+- 근거: SKILL.md 경고 박스 "2023년 9월 이후 오픈소스 2.x 라인은 더 이상 유지되지 않는다", REFERENCE.md 9절 "알려진 제한·이슈" — 신규 CVE 패치 기대 불가 명시.
+
+**판정**: 재검증 결과 기존 서술은 사실성 유지, CVE 관련 보강 1건 반영 → 내용 변경 있음 → status는 `PENDING_TEST`로 되돌림 (verification-policy.md 기준, 셀프 검증만으로 APPROVED 유지 불가).
+
+---
+
+> 최초 작성 시(2026-04-23) 기록은 아래에 보존.
+
+### 최초 작성 시 계획 (2026-04-23, 참고용 보존)
 
 ### 테스트 케이스 1 (계획): 기본 캐시 설정 생성
 
@@ -192,8 +217,8 @@ products 캐시에 힙 10000 / 디스크 100000 오버플로우를 설정하고,
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-04-23, 2문항 PASS — ehcache.xml users/shortLived 2종 + CacheEventListener Factory 등록 정확) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (2026-04-23, 2문항 PASS) + ✅ (2026-09-26 재검증, 2문항 PASS — CVE 점검 지침 + 유지보수 종료 상태 확인) |
+| **최종 판정** | **PENDING_TEST** (2026-09-26 CVE 주의 문구 추가로 내용 변경 — 재검증 필요) |
 
 ---
 
@@ -211,3 +236,4 @@ products 캐시에 힙 10000 / 디스크 100000 오버플로우를 설정하고,
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
 | 2026-04-23 | v1 | 최초 작성 — EhCache 2.10.9.2 기준, Spring Boot 2.5 / Java 11 레거시 유지보수용 | skill-creator |
+| 2026-09-26 | v1 | 재검증 — EOL 상태·버전 재확인(변동 없음), 구버전 번들 jackson-databind CVE 주의 문구 신규 추가 → PENDING_TEST | 메인 오케스트레이션 (Claude Sonnet 5) |

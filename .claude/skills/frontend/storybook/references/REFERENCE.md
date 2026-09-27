@@ -410,3 +410,150 @@ const meta = { component: Form, args: { onSubmit: fn() } } satisfies Meta<typeof
 - 비즈니스 로직 단위 테스트 → Vitest/Jest 단독 사용
 - 컴포넌트가 극소수인 소규모 프로젝트 → 오버헤드 대비 효과 낮음
 - Node 20.19 미만 환경에서 업그레이드 불가한 레거시 프로젝트 → Storybook 8.x 유지 후 Node 먼저 올린다
+
+---
+
+## 12. Vite 수동 설정 main.ts 예제
+
+```typescript
+import type { StorybookConfig } from '@storybook/react-vite';
+
+const config: StorybookConfig = {
+  stories: ['../src/**/*.mdx', '../src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
+  addons: [
+    '@storybook/addon-docs',   // autodocs·MDX 문서화
+    '@storybook/addon-a11y',   // 접근성 검사 (선택)
+  ],
+  framework: '@storybook/react-vite',  // 문자열 축약형 가능
+};
+
+export default config;
+```
+
+---
+
+## 13. CSF 3 기본 구조 전체 예제
+
+```typescript
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Button } from './Button';
+
+// Meta: 컴포넌트 수준 설정
+const meta = {
+  title: 'Components/Button',
+  component: Button,
+  tags: ['autodocs'], // 자동 문서 페이지 생성
+  parameters: {
+    layout: 'centered', // 'centered' | 'fullscreen' | 'padded'
+  },
+  argTypes: {
+    variant: {
+      control: 'select',
+      options: ['primary', 'secondary', 'danger'],
+      description: '버튼 스타일 변형',
+    },
+    size: {
+      control: 'radio',
+      options: ['sm', 'md', 'lg'],
+    },
+    disabled: {
+      control: 'boolean',
+    },
+    onClick: {
+      action: 'clicked', // Actions 패널에 이벤트 로깅
+    },
+  },
+} satisfies Meta<typeof Button>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+// 각 스토리는 named export
+export const Primary: Story = {
+  args: {
+    variant: 'primary',
+    children: 'Primary Button',
+  },
+};
+
+export const Secondary: Story = {
+  args: {
+    variant: 'secondary',
+    children: 'Secondary Button',
+  },
+};
+
+export const Large: Story = {
+  args: {
+    ...Primary.args,
+    size: 'lg',
+  },
+};
+```
+
+---
+
+## 14. argTypes 컨트롤 커스터마이징 예제
+
+```typescript
+argTypes: {
+  // 컨트롤 숨김
+  className: { control: false },
+  // 범위 제한
+  count: {
+    control: { type: 'range', min: 0, max: 100, step: 5 },
+  },
+  // 테이블 설명 추가
+  variant: {
+    control: 'select',
+    options: ['primary', 'secondary'],
+    description: '버튼 변형',
+    table: {
+      type: { summary: 'string' },
+      defaultValue: { summary: 'primary' },
+    },
+  },
+},
+```
+
+---
+
+## 15. play function 핵심 API 치트시트 예제
+
+```typescript
+import { expect, fn, userEvent, within, waitFor, screen, spyOn } from 'storybook/test';
+
+// 컨텍스트에서 바로 받기 (권장)
+play: async ({ canvas, userEvent, args, step, canvasElement }) => { /* ... */ }
+
+// canvas: 스토리 루트에 스코프된 Testing Library 쿼리
+canvas.getByRole('button');
+await canvas.findByText('Loaded');
+
+// screen: 캔버스 밖(포털·다이얼로그 등)까지 쿼리해야 할 때
+await expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+// userEvent: 사용자 이벤트 (모두 await 필수)
+await userEvent.click(element);
+await userEvent.type(input, 'text');
+await userEvent.clear(input);
+await userEvent.selectOptions(select, 'value');
+await userEvent.hover(element);
+await userEvent.keyboard('{Enter}');
+
+// fn(): Vitest mock 함수 / spyOn(): 기존 메서드 감시
+const mockFn = fn();
+
+// expect: jest-dom matcher 포함 (모두 await 권장)
+await expect(element).toBeInTheDocument();
+await expect(element).toHaveTextContent('text');
+await expect(mockFn).toHaveBeenCalledWith(args);
+
+// waitFor: 비동기 대기
+await waitFor(() => expect(element).toBeVisible());
+
+// step: 인터랙션 패널 그룹핑
+await step('로그인 폼 입력', async () => {
+  await userEvent.type(canvas.getByLabelText('Email'), 'user@example.com');
+});
+```

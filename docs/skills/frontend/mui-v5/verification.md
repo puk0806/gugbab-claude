@@ -2,7 +2,7 @@
 skill: mui-v5
 category: frontend
 version: v1
-date: 2026-08-26
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `mui-v5` |
 | 스킬 경로 | `.claude/skills/frontend/mui-v5/SKILL.md` |
-| 검증일 | 2026-08-26 |
+| 검증일 | 2026-09-26 (30~60일 주기 재검증, 최초 검증 2026-08-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 | 기준 버전 | `@mui/material` 5.x 라인 (최종 릴리스 5.18.0 / 2025-07-08), Emotion 11, React 17~19 |
@@ -203,6 +203,30 @@ status: APPROVED
 
 ---
 
+### 5-1. 2026-09-26 재검증 (30~60일 주기, verification-policy.md 절차)
+
+**수행일**: 2026-09-26
+**수행 방법**: SKILL.md + references/REFERENCE.md 전체 Read → 핵심 클레임 3개 WebSearch/WebFetch 재검증 → 실전 질문 2개로 SKILL.md 자체 답변 재확인
+
+**재검증 클레임**:
+| # | 클레임 | 재확인 결과 |
+|---|--------|------|
+| R1 | v5 최종 릴리스는 여전히 **5.18.0**(새 패치 없음) | npm registry dist-tags 재확인 → `latest-v5: 5.18.0` 그대로 → ✅ VERIFIED, 변동 없음(v5는 동결) |
+| R2 | 지원 상태(v9 stable / v7 LTS / v6·v5 EOL) | mui.com 공식 지원 페이지 재확인 → 표 그대로(v9 ✅ / v7 ⚠️ LTS / v6·v5 ❌) → ✅ VERIFIED, 변동 없음 |
+| R3 | 현재 stable 메이저(참고용) | npm dist-tags `latest` 재확인 → 9.3.1 → **9.4.0** 마이너 갱신(v5 스킬 범위 밖이라 본문 영향 없음) | 정보성 참고, SKILL.md 미변경 |
+
+**Q1(재검증). "v5가 지금도 여전히 지원 종료 상태인가, 그새 패치가 나왔나?"**
+- SKILL.md 답변: 그렇다. v5는 5.18.0(2025-07-08)에서 동결되어 새 패치가 없고, 공식 지원 표에서도 계속 ❌(지원 종료)다.
+- **판정: ✅ PASS**
+
+**Q2(재검증). "지금 신규로 v6를 도입해도 되나?"**
+- SKILL.md 답변: 권장하지 않는다. v6도 이미 지원 종료(❌)이며 v7(LTS)이나 v9(stable)로 가는 것이 맞다(섹션 0·10 그대로 유효).
+- **판정: ✅ PASS**
+
+**재검증 결과**: 3개 클레임 모두 변동 없음(v5는 동결된 레거시 버전이라 재검증 대상 자체가 안정적). **status APPROVED 유지.**
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -235,4 +259,5 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-08-26 | v1 | 최초 작성 — v5 공식 문서·GitHub 소스/릴리스 API·npm registry 기반 30여 회 페치 및 5회 검색, 15개 클레임 교차 검증(DISPUTED 2건 수정 반영, UNVERIFIED 1건 지침 대체). skill-tester 미수행으로 PENDING_TEST | skill-creator |
 | 2026-08-26 | v1 | 2단계 실사용 테스트 수행 (Q1 반응형 2열 Grid `size` prop 오용 방지 / Q2 다크모드 `colorSchemes` 오용 방지 + 정식 방법 / Q3 `@mui/styles` React 18 비호환 / Q4 EOL 상태 + v5→v6 breaking change) → 4/4 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
-| 2026-09-25 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | |
+| 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | skill-creator |
+| 2026-09-26 | v1 | 30~60일 주기 재검증. v5 5.18.0 동결 유지, EOL/LTS/stable 지원 표 변동 없음 확인. status APPROVED 유지 | 메인 세션 |

@@ -7,7 +7,7 @@ description: WCAG 2.2 A/AA 레벨 success criteria 전체 체크리스트, 자�
 
 > 소스: https://www.w3.org/TR/WCAG22/ (W3C Recommendation, 2023-10-05)
 > 보조 소스: https://www.w3.org/WAI/standards-guidelines/wcag/new-in-22/ , https://www.w3.org/WAI/WCAG22/Understanding/
-> 검증일: 2026-06-02
+> 검증일: 2026-06-02 (2026-09-26 구 `media-accessibility` 스킬의 미디어 SC 고유분 병합 — 5.9절)
 
 이 스킬은 **WCAG 표준 자체와 직접 매핑되는 체크리스트**다. ARIA 패턴·키보드 핸들러 구현 코드는 이 스킬 범위 밖이다.
 
@@ -296,6 +296,35 @@ button:focus-visible {
   </body>
 </html>
 ```
+
+### 5.9 미디어 — 자막·음성 해설·스크립트 (1.2.x / 1.4.2)
+
+> 2026-09-26 구 `frontend/media-accessibility` 스킬에서 흡수. 소스: https://www.w3.org/TR/WCAG22/ · https://webaim.org/techniques/captions/ · https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/track
+
+**1.2.3 vs 1.2.5 — 자주 틀리는 구분**
+
+| SC | Level | 요구 |
+|----|-------|------|
+| 1.2.3 Audio Description or Media Alternative | A | 사전 녹화 비디오에 음성 해설 **또는** 완전한 텍스트 대체본 |
+| 1.2.5 Audio Description (Prerecorded) | AA | 음성 해설 **자체**를 요구 (텍스트 대체본으로 대신할 수 없음) |
+
+→ AA가 목표면 텍스트 대체본만으로 1.2.3을 채우고 끝내면 안 된다. 실무 최소선(A+AA)은 사실상 모든 사전 녹화 비디오에 **captions + audio description**이다. 1.2.1(오디오 전용 → transcript), 1.2.2(captions), 1.2.4(라이브 captions, AA), 1.4.2(3초 넘는 자동 재생 오디오는 정지·음량 제어)도 함께 본다.
+
+**Captions ≠ Subtitles — 한국어 "자막"의 함정**
+
+| 구분 | Captions (`<track kind="captions">`) | Subtitles (`kind="subtitles"`) |
+|------|------------------------------|-------------------------------|
+| 대상 | 청각장애·난청 사용자 | 소리는 들리지만 언어를 모르는 사용자 |
+| 내용 | 대사 + **화자 식별** + **소리 효과**(`[전화벨 울림]`) | 대사 번역만 |
+| 1.2.2 충족 | ✅ | ❌ |
+
+> 주의 — 흔한 오해 교정: **한국어 콘텐츠를 한국어 사용자에게 제공할 때도 captions은 필요하다.** "외국어 번역이 아니니 자막이 필요 없다"는 틀렸다. 1.2.2의 대상은 번역이 아니라 청각장애 사용자다.
+
+**감사 시 체크 포인트**
+- `<track>`의 `kind="captions"`·`srclang`·`label`이 있는지, `default`는 한 트랙에만 붙었는지. `<track>`은 WebVTT(`.vtt`)만 받는다(SRT는 변환 필요).
+- 자동 생성 자막(YouTube·Whisper 등)은 정확도가 검증되지 않으면 1.2.2를 충족하지 못한다 → 사람 교정·화자 식별·소리 효과 추가 여부를 확인한다.
+- `kind="descriptions"` 텍스트 트랙은 브라우저 지원이 일관되지 않으므로, 1.2.5는 해설이 더빙된 별도 비디오 버전으로 충족하는 편이 안전하다.
+- WebAIM 권고: 대부분의 웹 비디오는 captions과 transcript를 **둘 다** 제공한다(transcript는 점자 단말기 사용자·SEO에도 필요).
 
 ---
 

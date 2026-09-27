@@ -179,7 +179,75 @@ function VoiceInput() {
 
 ---
 
+## 15. TTS React 통합 패턴 — `useSpeech` (구 `web-speech-api-tts` 흡수)
+
+```typescript
+// useSpeech.ts
+import { useState, useEffect, useCallback } from 'react'
+
+export function useSpeech(lang = 'en-US') {
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([])
+  const [speaking, setSpeaking] = useState(false)
+  const supported =
+    typeof window !== 'undefined' &&
+    'speechSynthesis' in window &&
+    'SpeechSynthesisUtterance' in window
+
+  useEffect(() => {
+    if (!supported) return
+    const load = () => {
+      const v = window.speechSynthesis.getVoices()
+      if (v.length > 0) setVoices(v)
+    }
+    load()
+    window.speechSynthesis.addEventListener('voiceschanged', load)
+    return () => window.speechSynthesis.removeEventListener('voiceschanged', load)
+  }, [supported])
+
+  const speak = useCallback(
+    (text: string) => {
+      if (!supported) return
+      const synth = window.speechSynthesis
+      synth.cancel() // 기존 큐 비우고 새로 시작
+      const u = new SpeechSynthesisUtterance(text)
+      u.lang = lang
+      const voice = voices.find((v) => v.lang.startsWith(lang.split('-')[0]))
+      if (voice) u.voice = voice
+      u.onstart = () => setSpeaking(true)
+      u.onend = () => setSpeaking(false)
+      u.onerror = () => setSpeaking(false)
+      synth.speak(u)
+    },
+    [supported, voices, lang]
+  )
+
+  const stop = useCallback(() => {
+    if (!supported) return
+    window.speechSynthesis.cancel()
+    setSpeaking(false)
+  }, [supported])
+
+  return { speak, stop, speaking, voices, supported }
+}
+```
+
+**TTS 흔한 실수**
+
+| 실수 | 결과 |
+|------|------|
+| `getVoices()` 즉시 호출 후 빈 배열 무시 | voice 미선택 → OS 기본 음성으로 재생 |
+| `speak()` 연속 호출 시 큐 동작 망각 / `cancel()` 없이 새 utterance | 의도치 않은 직렬 재생, 이전 utterance 끝까지 대기 |
+| iOS Safari에서 긴 문장 한 번에 재생 | 백그라운드 진입 시 잘림 |
+| BCP 47 `lang` 누락 | 영어 텍스트가 한국어 발음으로 들림 |
+| 미지원 브라우저에서 `new SpeechSynthesisUtterance()` 직접 호출 | ReferenceError → UI 깨짐 |
+
+---
+
 ## 참고 링크
+
+- MDN SpeechSynthesisUtterance (TTS): https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesisUtterance
+- MDN voiceschanged (TTS): https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis/voiceschanged_event
+- WebKit bug 198277 (iOS TTS 백그라운드 중단): https://bugs.webkit.org/show_bug.cgi?id=198277
 
 - MDN Web Speech API: https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API
 - MDN SpeechRecognition: https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition

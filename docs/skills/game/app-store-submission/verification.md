@@ -2,8 +2,8 @@
 skill: app-store-submission
 category: game
 version: v1
-date: 2026-06-10
-status: APPROVED
+date: 2026-09-26
+status: PENDING_TEST
 ---
 
 # 스킬 검증 문서 — game/app-store-submission
@@ -19,7 +19,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `app-store-submission` |
 | 스킬 경로 | `.claude/skills/game/app-store-submission/SKILL.md` |
-| 검증일 | 2026-06-10 |
+| 검증일 | 2026-09-26 (최초 2026-06-10) |
 | 검증자 | skill-creator (token 한도로 verification.md 분리 작성) |
 | 스킬 버전 | v1 |
 | 대상 | Google Play Console (2026) / App Store Connect (iOS 26 SDK) |
@@ -134,11 +134,28 @@ status: APPROVED
 
 없음 — 3개 질문 모두 SKILL.md의 해당 섹션에서 정확한 근거를 제시함
 
+### 2026-09-26 재검증
+
+**수행일**: 2026-09-26
+**수행 방법**: WebSearch로 핵심 클레임 3개 재확인 + SKILL.md 자체 답변 확인 질문 2개
+
+- 클레임1. Google Play Target API 36 요구(2026-08-31부터) — WebSearch 재확인 → **VERIFIED, 시제만 정정**: 데드라인이 이미 지나 "현재 시행 중" 상태. 유예 시 2026-11-01까지 연장 가능함을 추가
+- 클레임2. iOS 26 SDK/Xcode 26 의무(2026-04-28부터) — WebSearch 재확인 → **VERIFIED, 시제만 정정**: 이미 시행 중이며 구버전 툴체인 빌드는 업로드 시 자동 거부(유예 없음)
+- 클레임3. Apple 연령 등급 신설문 데드라인(2026-01-31) — WebSearch 재확인 → **VERIFIED, 시제만 정정**: 데드라인 경과, 미응답 앱은 현재 즉시 제출 차단 상태
+
+**Q1(재검증). "지금(2026-09) Google Play에 앱을 새로 올리는데 Target API를 몇으로 잡아야 하고, 유예 신청은 가능한가?"**
+- SKILL.md 답변 경로: 1-2절 "2026-08-31부터(현재 시행 중): API 36 이상 필수(유예 신청 시 2026-11-01까지 연장 가능)"
+- 판정: PASS (시제 정정 후 정확)
+
+**Q2. "iOS 앱을 오래된 Xcode로 빌드해서 업로드하려는데 지금도 통과되나?"**
+- SKILL.md 답변 경로: 2-2절 "2026-04-28부터 이미 시행 중... 구버전 툴체인 빌드는 업로드 시 자동 거부, 별도 유예 기간 없음"
+- 판정: PASS
+
 ### 판정
 
-- agent content test: 3/3 PASS
+- agent content test: 3/3 PASS (최초) + 재검증 2/2 PASS
 - verification-policy 분류: 해당 없음 (라이브러리/API 사용법 스킬 — content test로 APPROVED 가능)
-- 최종 상태: APPROVED
+- 핵심 수치·정책 자체는 변동 없으나 데드라인 경과에 따른 시제 정정(예정→시행 중)이 실질적 정보 정확성에 영향을 주므로 PENDING_TEST 전환. 차기 skill-tester 재테스트 시 APPROVED 재검토
 
 ---
 
@@ -149,8 +166,8 @@ status: APPROVED
 | 내용 정확성 | ✅ 공식 문서 기반, 14 클레임 교차 검증 완료 |
 | 구조 완전성 | ✅ 체크리스트·사양 표·거절 사유·실수 패턴 모두 포함 |
 | 실용성 | ✅ 제출 직전 체크리스트까지 완비 |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-10 skill-tester 수행) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-10) + ✅ 2/2 PASS (2026-09-26 재검증) |
+| **최종 판정** | **PENDING_TEST** (데드라인 경과 시제 정정, 재테스트 대기) |
 
 ### 핵심 클레임 검증 표
 
@@ -187,3 +204,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-06-10 | v1 | 최초 작성. Google Play / App Store 양쪽 체크리스트, 에셋 사양, 심사 거절 사유 14 클레임 교차 검증. DISPUTED 2건 정정 반영 | skill-creator (token 한도로 분리 작성) |
 | 2026-06-10 | v1 | 2단계 실사용 테스트 수행 (Q1 App Store 스크린샷 필수 사양 / Q2 iOS 아이콘 알파+부제목 자수 함정 / Q3 CI versionCode 자동 증가) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-26 | v1 | 재검증(98개 일괄 재검증 대상). Target API 36·iOS 26 SDK·연령 등급 데드라인이 모두 경과해 시제를 "예정"→"시행 중"으로 정정 → 실질 내용 변경으로 PENDING_TEST 전환 | Claude Code |

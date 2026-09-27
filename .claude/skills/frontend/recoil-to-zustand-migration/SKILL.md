@@ -5,8 +5,8 @@ description: 유지보수 중단된 Recoil 0.7에서 Zustand v5 / Jotai v2로 �
 
 # Recoil 탈출 마이그레이션 (→ Zustand v5 / Jotai v2)
 
-> 소스: https://github.com/facebookexperimental/Recoil | https://recoiljs.org/docs | https://jotai.org/docs | https://zustand.docs.pmnd.rs | https://react.dev/blog/2024/04/25/react-19-upgrade-guide
-> 검증일: 2026-08-26
+> 소스: https://github.com/facebookexperimental/Recoil | https://recoiljs.org/docs | https://jotai.org/docs | https://zustand.docs.pmnd.rs | https://react.dev/blog/2024/04/25/react-19-upgrade-guide | https://github.com/pmndrs/jotai/releases (v3 마이그레이션 가이드)
+> 검증일: 2026-09-26 (30~60일 주기 재검증 — **Jotai 3.0.0 신규 릴리스 반영**, 이전 검증 2026-08-26)
 
 ---
 
@@ -20,14 +20,16 @@ description: 유지보수 중단된 Recoil 0.7에서 Zustand v5 / Jotai v2로 �
 | TanStack Query v5 캐시·무효화·낙관적 업데이트·SSR | `frontend/tanstack-query` |
 | **Recoil에서 무엇을 어떤 순서로 어떻게 빼낼 것인가** | **이 스킬** |
 
-기준 버전 (2026-08-26 확인):
+기준 버전 (2026-09-26 재확인):
 
 | 패키지 | 버전 | React peer |
 |---|---|---|
-| `recoil` | **0.7.7** (2023-03-01, 마지막 릴리스) | `>=16.13.1` |
-| `zustand` | 5.0.15 | `>=18.0.0` |
-| `jotai` | 2.20.3 | `>=17.0.0` |
-| `valtio` | 2.3.2 | `>=18.0.0` |
+| `recoil` | **0.7.7** (2023-03-01, 마지막 릴리스, 변동 없음) | `>=16.13.1` |
+| `zustand` | 5.0.15 (변동 없음) | `>=18.0.0` |
+| `jotai` | **3.0.0** (2026-09 릴리스 — 2026-08-26 확인 시 2.20.3, **메이저 업 + 이 스킬 예제에 영향 있는 breaking change 포함**, §3-5 참조) | `>=18.0.0` (v3에서 상향, 이전 `>=17.0.0`) |
+| `valtio` | 2.3.2 (변동 없음) | `>=18.0.0` |
+
+> 이 스킬의 Jotai 코드 예시(2-3-3-1, 6-2, 6-3)는 **Jotai v2 API**로 작성되어 있다. `jotai@2.x`를 그대로 설치하면 예시가 정확히 동작한다. `jotai@3`를 새로 설치하는 경우 §3-5의 이관 표를 반드시 적용한다 — 특히 `atomFamily`·`loadable`은 **import 경로 자체가 바뀌거나 삭제**되어 예시를 그대로 복붙하면 컴파일이 안 된다.
 
 ---
 
@@ -117,13 +119,13 @@ Recoil 상태 인벤토리
 | `atom({key, default})` | 스토어의 필드 1개 + setter | `atom(initialValue)` | Jotai는 **key 불필요** — `key` 문자열 전부 삭제 대상 |
 | `selector({key, get})` | 셀렉터 함수 `(s) => ...` (그래프 노드 아님) | `atom((get) => ...)` (읽기 전용 파생 atom) | Zustand는 캐시가 없음 → 매 렌더 재계산 |
 | `selector({key, get, set})` (쓰기 가능 selector) | 스토어 액션 함수 | `atom(read, write)` (read-write atom) | Jotai write 시그니처: `(get, set, ...args)` |
-| `atomFamily({key, default})` | **대응물 없음** → `Map`/레코드를 스토어에 보관 | `atomFamily((param) => atom(...))` (`jotai/utils`) | 파라미터 비교 규칙이 다름 (3-3) |
+| `atomFamily({key, default})` | **대응물 없음** → `Map`/레코드를 스토어에 보관 | `atomFamily((param) => atom(...))` (**v2**: `jotai/utils` / **v3**: `jotai-family` 패키지 — 3-5) | 파라미터 비교 규칙이 다름 (3-3) |
 | `selectorFamily({key, get})` | 셀렉터 팩토리 `(id) => (s) => ...` + `useCallback` | `atomFamily((param) => atom((get) => ...))` | Zustand는 팩토리를 렌더마다 새로 만들면 안 됨 |
 | `useRecoilState(a)` | `useStore((s) => s.v)` + `useStore((s) => s.setV)` | `useAtom(a)` | Jotai가 시그니처까지 동일 |
 | `useRecoilValue(a)` | `useStore((s) => s.v)` | `useAtomValue(a)` | |
 | `useSetRecoilState(a)` | `useStore((s) => s.setV)` | `useSetAtom(a)` | 값 구독 없이 쓰기만 → 리렌더 회피 목적 동일 |
 | `useResetRecoilState(a)` | 액션에 `reset()` 직접 구현 | `useResetAtom(a)` + `atomWithReset` (`jotai/utils`) | Jotai는 **일반 atom에는 못 씀** — `atomWithReset`으로 선언해야 함 |
-| `useRecoilValueLoadable(a)` | 대응물 없음 (TanStack Query로) | `loadable(a)` (`jotai/utils`) | **상태 문자열이 다름** (3-2) |
+| `useRecoilValueLoadable(a)` | 대응물 없음 (TanStack Query로) | `loadable(a)` (**v2**: `jotai/utils` / **v3**: 제거됨, `unwrap` + 직접 구현 — 3-5) | **상태 문자열이 다름** (3-2) |
 | `useRecoilCallback(({snapshot, set}) => ...)` | `store.getState()` / `store.setState()` | `useAtomCallback` 또는 `useStore()` + `store.get/set` | |
 | `<RecoilRoot>` | 불필요 (제거) | `<Provider>` (선택) 또는 provider-less | RecoilRoot는 **필수**였지만 Jotai Provider는 선택 |
 | `<RecoilRoot override>` 중첩 스코프 | 스토어 인스턴스를 Context로 주입 | `createStore()` + `<Provider store={...}>` | 테스트 격리에서 자주 쓰이던 패턴 |
@@ -191,6 +193,51 @@ Recoil `Snapshot`은 "an immutable snapshot of the state of Recoil atoms"이며 
 | 전체 상태 덤프/복원 (에러 리포트 첨부 등) | 대상 상태를 명시적으로 나열하는 직렬화 함수를 손으로 작성 |
 
 > 타임트래블·전체 덤프에 Snapshot을 쓰고 있었다면 **이 항목이 마이그레이션에서 가장 비싼 부분**이다. 인벤토리 단계에서 먼저 찾아내 별도 태스크로 분리하라.
+
+### 3-5. Jotai v3(2026-09 릴리스) — 이 스킬 예시에 영향 있는 breaking change
+
+Recoil → Jotai로 갈 때 "Jotai 최신을 설치하자"고 무심코 `jotai@3`를 넣으면, 이 스킬의 v2 기반 예시가 **그대로 깨진다.** 공식 마이그레이션 가이드 기준 변경 사항:
+
+| 항목 | v2 | v3 | 이 스킬에서 영향받는 곳 |
+|---|---|---|---|
+| **`atomFamily`** | `import { atomFamily } from 'jotai/utils'` | 별도 패키지로 이동 — `npm i jotai-family` 후 `import { atomFamily } from 'jotai-family'` | 3-3·6-2·6-3 (atomFamily 관련 코드 전부) |
+| **`loadable`** | `import { loadable } from 'jotai/utils'` | **완전 제거, 직접 대체 패키지 없음.** `unwrap` 유틸 + `atom()` + try/catch로 직접 구현해야 함 | 3-2·4-2·6-3 (loadable 관련 코드 전부) |
+| `atomWithReset` / `atomWithStorage` (`jotai/utils`) | 유지 | **변동 없음** — 계속 `jotai/utils`에서 import | 영향 없음 |
+| read 함수의 `setSelf` | 지원 | **직접 대체 없음** — `onMount` 또는 `jotai-effect`로 재구현 | 이 스킬에서는 미사용(Recoil 개념) |
+| 모듈 포맷 | CJS/UMD/ESM | **ESM 전용** (CJS·UMD·SystemJS 빌드 제거) | 번들러 미사용 환경이면 `NODE_ENV` 수동 정의 필요 |
+| 최소 요구 | React 17 / TS 3.8 / Node 12.20 | **React 18 / TS 5.5 / Node ≥22.12.0** | React 17 프로젝트는 v3 설치 불가 |
+
+```ts
+// ❌ v3에서 그대로 쓰면 컴파일 에러 — 'jotai/utils'에 atomFamily 없음
+import { atomFamily } from 'jotai/utils'
+
+// ✅ v3
+import { atomFamily } from 'jotai-family'   // npm install jotai-family 필요
+```
+
+```ts
+// ❌ v3에서 'jotai/utils'에 loadable이 없음
+import { loadable } from 'jotai/utils'
+
+// ✅ v3 — unwrap + 직접 구현 (공식 가이드 권장 패턴)
+import { atom } from 'jotai'
+import { unwrap } from 'jotai/utils'
+
+function myLoadable<T>(asyncAtom: ReturnType<typeof atom<Promise<T>>>) {
+  return atom((get) => {
+    try {
+      const data = unwrap(asyncAtom, (prev) => prev)(get)
+      return data === undefined
+        ? ({ state: 'loading' } as const)
+        : ({ state: 'hasData', data } as const)
+    } catch (e) {
+      return { state: 'hasError', error: e } as const
+    }
+  })
+}
+```
+
+> **판단 기준**: 신규로 Recoil → Jotai 전환을 시작한다면 `jotai@3`으로 바로 가고 위 이관표를 적용한다. 이미 `jotai@2`로 전환을 진행 중이라면, 전환이 끝날 때까지 v2에 머무르고(2.20.3은 계속 npm에 남아 있다) 전환 완료 후 별도 태스크로 v3 업그레이드를 진행하는 편이 안전하다 — 전환과 메이저 업그레이드를 같은 PR에 섞지 않는다(9장 원칙과 동일).
 
 ---
 

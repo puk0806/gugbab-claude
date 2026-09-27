@@ -1,8 +1,8 @@
 ---
 skill: claude-code-headless
 category: backend
-version: v1
-date: 2026-07-03
+version: v2
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `claude-code-headless` |
 | 스킬 경로 | `.claude/skills/backend/claude-code-headless/SKILL.md` |
-| 검증일 | 2026-07-03 |
+| 검증일 | 2026-09-26 (재검증, 최초 2026-07-03) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 
@@ -172,6 +172,29 @@ status: APPROVED
 
 ---
 
+### 재검증 (2026-09-26)
+
+**수행자**: 메인 세션 (Sonnet 5), 서브에이전트 미사용(사용자 지시)
+**수행 방법**: SKILL.md 전체 Read → code.claude.com 공식 문서(cli-reference, authentication, headless, agent-sdk/overview) WebFetch로 핵심 클레임 재검증 → 실전 질문 2개로 SKILL.md 자체 답변 확인
+
+**교차 검증 클레임 (실질 오류 발견 → 본문 수정 반영):**
+1. `--resume`의 세션 조회 범위가 "현재 프로젝트 디렉터리(및 git worktree)로 한정"된다는 기존 서술 — WebFetch(code.claude.com/docs/en/headless "Continue conversations" 절) 결과 **v2.1.223부터 이 제약이 사라져 이 머신의 모든 프로젝트에서 세션 ID로 조회 가능**함을 확인. 2026-09 기준 최신 CLI(v2.1.28x)는 이미 이 제약이 없음 → **DISPUTED(구버전 동작 기준 오기재) → 수정 반영**: 주의 문구를 버전 조건부로 정정, `.jsonl` 경로로도 이어갈 수 있다는 내용 추가
+2. 인증 우선순위 6단계 목록 — WebFetch(authentication 문서 "Authentication precedence" 절) 결과 공식 목록이 **7단계**(Cloud provider → ANTHROPIC_AUTH_TOKEN → ANTHROPIC_API_KEY → apiKeyHelper → CLAUDE_CODE_OAUTH_TOKEN → **Anthropic profile/federation 자격증명(신규 확인)** → 구독 OAuth)임을 확인, 게이트웨이 세션은 이 목록 밖에서 최우선으로 별도 작동 → **DISPUTED(누락) → 수정 반영**: 6번 항목(profile/federation) 및 게이트웨이 참고 문구 추가
+3. `--bare` 관련 서술 — 기존 내용(OAuth 미독, ANTHROPIC_API_KEY/apiKeyHelper 필요)은 여전히 정확하나, 공식 문서가 신규로 "`--bare`가 스크립트·SDK 호출 권장 모드이며 향후 `-p`의 기본값이 될 예정"이라고 고지하는 것을 확인 → **정보 누락 → 수정 반영**: 구독 토큰 중계 서버 운영자를 위한 사전 대비 주의 문구 추가
+4. `--tools` 플래그 존재 여부 — WebFetch(cli-reference) 결과 `--allowedTools` 설명 내 "실제로 사용 가능한 도구를 제한하려면 `--tools`를 대신 사용" 문구로 존재 재확인 → **VERIFIED** (본문 유지)
+5. Agent SDK 패키지명(`@anthropic-ai/claude-agent-sdk`, `claude-agent-sdk`) 및 제3자 서비스에 claude.ai 로그인/레이트리밋 제공 금지 정책 — WebFetch(agent-sdk/overview) 재확인 → **VERIFIED** (본문 유지)
+6. `claude setup-token` 1년 만료·Pro/Max/Team/Enterprise 필요·inference 전용(Remote Control·connector 불가) — WebFetch(authentication "Generate a long-lived token") 재확인 → **VERIFIED** (본문 유지)
+
+**Q1 (재확인). "다른 서버 인스턴스(다른 디렉터리)에서 세션 ID로 대화를 이어갈 수 있나?"**
+- PASS (구버전 지식이면 FAIL이었을 질문) — 갱신된 SKILL.md 주의 문구로 "v2.1.223부터 가능, 이전엔 같은 디렉터리 필요"를 정확히 답변 가능. 수정 전이었다면 "같은 디렉터리에서만 가능"이라는 오답을 냈을 것.
+
+**Q2 (재확인). "ANTHROPIC_PROFILE로 WIF profile을 설정해뒀는데 CLAUDE_CODE_OAUTH_TOKEN보다 우선하나?"**
+- PASS — 갱신된 "4. 인증 우선순위" 섹션의 6번 항목(named profile은 `/login`보다 위, 그러나 CLAUDE_CODE_OAUTH_TOKEN(5번)보다는 아래)으로 정확히 답변 가능.
+
+**status**: 실질 오류(구버전 `--resume` 제약, 인증 우선순위 항목 누락) 수정 + content test 2건 PASS → **PENDING_TEST에서 APPROVED로 전환** (CLI 사용법 스킬 = content test로 충분한 카테고리, verification-policy 기준)
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -179,7 +202,7 @@ status: APPROVED
 | 내용 정확성 | ✅ (공식 문서 5종 + 교차 검증 18/18 VERIFIED) |
 | 구조 완전성 | ✅ (frontmatter·소스·검증일·8섹션·예시·흔한 실수 포함) |
 | 실용성 | ✅ (중계 서버 관점 실행·파싱·안전 가드 예시) |
-| 에이전트 활용 테스트 | ✅ (3/3 PASS — 2026-07-03, general-purpose 에이전트 수행) |
+| 에이전트 활용 테스트 | ✅ (3/3 PASS — 2026-07-03, general-purpose 에이전트 수행 / 2026-09-26 재검증 2/2 PASS) |
 | **최종 판정** | **APPROVED** |
 
 ---
@@ -197,3 +220,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-07-03 | v1 | 최초 작성. 공식 문서 5종 기반, 18개 클레임 전량 VERIFIED | skill-creator |
 | 2026-07-03 | v1 | 2단계 실사용 테스트 수행 (Q1 --bare+OAuth 조합 / Q2 stream-json 텍스트 추출 / Q3 인증 우선순위 함정) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-26 | v2 | 정기 재검증 — `--resume` 디렉터리 제약이 v2.1.223부터 해제된 것을 반영(구버전 동작 기준 오기재 수정), 인증 우선순위에 누락된 6번째 항목(Anthropic profile/federation) 추가, `--bare` 향후 기본값화 고지 추가. content test 2/2 PASS | Claude (Sonnet 5) |

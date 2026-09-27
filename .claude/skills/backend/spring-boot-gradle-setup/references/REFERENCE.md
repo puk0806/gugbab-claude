@@ -140,7 +140,7 @@ Spring Boot 3부터 **Sleuth는 삭제됨** (Sleuth GitHub Issue #2239). Microme
 > 소스: https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Release-Notes
 >       https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide
 >       https://endoflife.date/spring-boot
-> 검증일: 2026-06-19
+> 검증일: 2026-09-26 (재검증, 내용 변경 없음 — Gradle 8.14+/Jackson 3.0 group id/GraalVM 25+ 요건 재확인)
 
 > 주의: Spring Boot 3.5의 OSS 지원은 2026-06-30 종료. 신규 프로젝트는 4.1을 선택하거나, OSS 지원 연장이 필요하면 3.5 상용 LTS 지원을 검토할 것.
 

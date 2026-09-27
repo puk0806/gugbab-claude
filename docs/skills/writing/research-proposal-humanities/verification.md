@@ -1,8 +1,8 @@
 ---
 skill: research-proposal-humanities
 category: writing
-version: v1
-date: 2026-05-05
+version: v5
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -109,6 +109,63 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
+### [재검증] 2026-09-26 — Perseus 원문 대조 정정 1건(예시 RQ Bekker 위치) 재테스트
+
+**수행일**: 2026-09-26
+**수행자**: skill-tester → general-purpose (도메인 전용 에이전트 미등록으로 대체)
+**수행 방법**: SKILL.md Read 후 §10 원문 대조 정정 1건(§9 예시 RQ의 propeteia/astheneia 위치 "1145b21–1147b19" → NE VII.7 1150b19–28)을 겨냥한 질문 1개 + 핵심 기능(RQ 좁히기 5단계) 질문 1개, 근거 섹션 및 anti-pattern 회피 확인
+
+**Q1. (정정 겨냥) §9 예시 RQ의 propeteia/astheneia 구분 정확한 위치 + "specific" 기준 충족 여부**
+- PASS
+- 근거: SKILL.md §9-3 하단 각주("2026-09-26 원문 대조 정정: ... NE VII.7 1150b19–28에 있다. 기존 예시의 '1145b21–1147b19'... 위치 오류"), §9-1 [5단계] 최종 RQ, §4 specific 정의
+- 상세: 정정된 위치(NE VII.7 1150b19–28)를 정확히 인용하고, §1·§9-1·§9-3 전반에 이 값이 일관되게 반영되어 있음을 확인. specific 기준도 "1150b19–28 + 2022 교육과정" 명시로 충족 판정. 정정 각주의 문서 내 배치가 다소 어색하다는 gap을 스스로 지적(차단 요인 아님).
+
+**Q2. (핵심 기능) 큰 주제 → RQ로 좁히는 5단계 + Booth 3단계 템플릿 akrasia 적용**
+- PASS
+- 근거: SKILL.md "1. 큰 주제를 RQ로 좁히는 5단계", §9-1 예시
+- 상세: 5단계(Interest→Topic→Question→Problem→최종 RQ) 전체와 Booth 3단계 템플릿을 정확히 재현. 정정된 Bekker 위치(1150b19–28)를 최종 RQ 예시에 일관되게 사용해 anti-pattern(구 오류 위치 재사용) 회피.
+
+### 발견된 gap (Perseus 정정 재테스트)
+
+- §9-3 정정 각주가 체크리스트 불릿 목록 중간에 삽입되어 가독성이 떨어짐 — §9-2와 §9-3 사이 또는 §9-3 하단으로 이동 권장 (차단 요인 아님, 선택 보강)
+
+### 판정 (Perseus 정정 재테스트)
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 해당 없음 (writing 카테고리 — 빌드/워크플로우/설정+실행/마이그레이션 아님)
+- 최종 상태: APPROVED (PENDING_TEST → APPROVED 전환)
+
+---
+
+### [재검증] 2026-09-26 — references/methodology-precedents.md 병합분 content test
+
+**수행일**: 2026-09-26
+**수행자**: skill-tester → general-purpose (도메인 전용 에이전트 미등록으로 대체)
+**수행 방법**: SKILL.md §5 포인터를 통해 references/methodology-precedents.md를 함께 Read하도록 지시, 2개 실전 질문 답변(병합분 겨냥), 근거 섹션 및 anti-pattern 회피 확인
+
+**Q1. (병합분 겨냥) 박재주(2011) 선행 적용 사례를 인용하며 방법론 챕터에서 차별점 서술하기**
+- PASS
+- 근거: references/methodology-precedents.md §1.1(박재주 2011 사례+인용 템플릿), §1.2(방법론 공식 채택 단정 금지 경고), §1.3(도덕윤리교육 분야 방법론 챕터 특수성), §2(방법론 후보 서지)
+- 상세: "명시적 방법론 선언 없음"을 먼저 인정한 뒤 "본 연구는 이를 발전시켜 [X] 방법론을 명시적으로 채택한다" 템플릿(§1.1)을 정확히 재현. §1.2의 "공식 채택 단정 금지" 경고를 반영해 박재주를 특정 방법론자로 단정하지 않음.
+
+**Q2. (병합분 겨냥) Haslanger "개념 공학자" 단정 인용 가부 + Quine(1951)·Gettier(1963) 서지**
+- PASS
+- 근거: references/methodology-precedents.md §2 표 및 하단 "주의"(Haslanger 자기 분류 논쟁 — Pinder 2022)
+- 상세: Haslanger를 "개념 공학자"로 단정하지 말고 학계 논쟁(Pinder 2022)을 함께 명시하라는 §2 하단 주의를 정확히 인용해 단정 표현을 회피. Quine 1951(*Philosophical Review* 60(1))·Gettier 1963(*Analysis* 23(6)) 서지도 표에서 정확히 인용.
+
+### 발견된 gap (병합분)
+
+- SKILL.md §5 본문이 "§3 참조"로 표기하나 §3 제목은 "인문학 RQ 5유형"(연구질문 유형)이라 "연구방법 유형"과 혼동 가능 — 문서 내 상호참조 표현 정리 권장 (차단 요인 아님, 선택 보강)
+- references §2 표의 Quine(1951)·Gettier(1963) 항목에 페이지 범위 미기재 — 통상 알려진 범위(Quine pp.20-43, Gettier pp.121-123)는 이 스킬 자료로 검증되지 않아 인용 시 별도 확인 필요 (차단 요인 아님, 선택 보강)
+
+### 판정 (2026-09-26 재검증)
+
+- agent content test: 2/2 PASS (references/methodology-precedents.md 병합분 포함)
+- verification-policy 분류: 해당 없음 (writing 카테고리 — 빌드/워크플로우/설정+실행/마이그레이션 아님)
+- 최종 상태: APPROVED (본문 §0-8 기존 3/3 PASS + references 병합분 2/2 PASS 종합)
+
+---
+
 **수행일**: 2026-05-05
 **수행자**: skill-tester → general-purpose (대체)
 **수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
@@ -184,8 +241,8 @@ status: APPROVED
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-05-05 수행, 3/3 PASS) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (2026-05-05 수행, 3/3 PASS) / references 병합분 2/2 PASS (2026-09-26, general-purpose 대체) / Perseus 원문 대조 정정 재테스트 2/2 PASS (2026-09-26, general-purpose 대체) |
+| **최종 판정** | **APPROVED** (2026-09-26 Perseus 원문 대조 정정 1건(4곳) 반영 재테스트 2/2 PASS 완료 — PENDING_TEST → APPROVED 전환) |
 
 ### 핵심 클레임 교차 검증 결과
 
@@ -212,6 +269,8 @@ status: APPROVED
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester로 2단계 실사용 테스트 수행 — agent content test (2026-05-05 완료, 3/3 PASS)
+- [✅] references/methodology-precedents.md 병합분 content test 수행 (2026-09-26 완료, 2/2 PASS)
+- [✅] Perseus 원문 대조 정정 1건(§9 예시 RQ Bekker 위치) 재테스트 수행 (2026-09-26 완료, 2/2 PASS, APPROVED 재전환)
 - [❌] 도덕윤리교육 외 다른 인문학 분야(미학·역사학·언어학 등)에 적용했을 때 5단계가 잘 작동하는지 추가 케이스 테스트 — 선택 보강 (APPROVED 전환에 차단 요인 아님)
 - [❌] Booth 5판 4부 흐름(Interest→Topic→Question→Problem)을 5단계로 재구성한 것에 대해 도덕윤리교육 전공 실제 학생의 피드백 수렴 — 선택 보강 (실전 적용 후 수렴 권장)
 - [❌] 한국 학과별 양식 차이(서울대·고려대·이화여대·공주대 등)를 부록으로 추가할지 검토 — 선택 보강 (현재 서울대·동국대 2개 소스 기반으로 충분)
@@ -224,3 +283,33 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-05-05 | v1 | 최초 작성. Booth 5판(2024) 기준. 사용자 입력 "4판 2024" 정정 반영. | skill-creator |
 | 2026-05-05 | v1 | 2단계 실사용 테스트 수행 (Q1 akrasia 1쪽 요약 / Q2 RQ 좁히는 5단계 / Q3 한국 vs 미국 proposal 차이) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-09-26 | v2 | 스킬 정리 — `humanities/concept-analysis-methods` 병합: 원 §10(한국 도덕교육 선행 적용 사례)·§11(1차 서지)·§9.2(도덕윤리교육 분야 특수성)를 `references/methodology-precedents.md`로 원문 이관, SKILL.md 섹션 5에 포인터 추가(SKILL.md 500줄 한도 때문에 references 분리). status PENDING_TEST 전환 | 메인 세션 (스킬 정리) |
+| 2026-09-26 | v3 | 2단계 실사용 테스트 수행 (Q1 references §1.1-1.3 박재주 2011 인용+차별점 서술 / Q2 references §2 Haslanger 단정 인용 금지+Quine·Gettier 서지) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-09-26 | v4 | **Perseus 원문 대조 정정 1건(4곳)**: 예시 RQ의 propeteia/astheneia 구분 위치 "1145b21–1147b19" → NE VII.7 1150b19–28 (§10). status APPROVED → PENDING_TEST | 메인 세션 (원문 대조) |
+| 2026-09-26 | v5 | 2단계 실사용 재검증 수행 (Q1 §9 예시 RQ Bekker 위치 정정 겨냥+specific 기준 / Q2 큰 주제→RQ 5단계+Booth 3단계 템플릿 akrasia 적용) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+
+---
+
+## 9. 병합 이력 (2026-09-26)
+
+| 항목 | 내용 |
+|------|------|
+| 원 스킬 | `humanities/concept-analysis-methods` (제거 — 분석철학 개념 분석·Quine·Wittgenstein·반성적 평형·해석학·Skinner·현상학·개념사 개론은 일반 방법론 지식) |
+| 이관 범위 | 원 §10 선행 적용 사례(박재주 2011, 한국 아리스토텔레스 학계) → references §1.1–1.2 / 원 §9.2 도덕윤리교육 분야 특수성 + §8.1 결합 시 역할 분담 문장 → references §1.3 / 원 §11 1차 서지 표 + §3.2 Haslanger 주의 → references §2 |
+| 원 소스 | SEP 각 항목(Moore's Moral Philosophy·Reflective Equilibrium·Hermeneutics·Gadamer 등), OUP·Harvard UP 공식 페이지, KCI(박재주 2011 ART001575952) |
+| 이관 클레임 판정 (원 verification.md, 2026-05-03) | 서지 13건(Moore 1903, Quine 1951 *Phil Review* 60(1), Wittgenstein 1953, Gettier 1963 *Analysis* 23(6), Heidegger 1927, Gadamer 1960, Skinner 1969 *History and Theory* 8(1), Rawls 1971, Koselleck 1972–1997, Haslanger 2012, Cappelen 2018 ISBN, Burgess 외 2020) — VERIFIED / 박재주 2011 『초등도덕교육』 36호 pp.1–30 서지·온건 내재주의 입장 — VERIFIED(KCI 직접 조회) / 강상진 외 길 2011 — VERIFIED / Haslanger 자기 분류 — CAVEATED(`주의` 유지) |
+| 에이전트 참조 교체 | `.claude/agents/research/defense-question-simulator.md` L237 → 본 스킬 references/methodology-precedents.md |
+| 상태 | APPROVED — references 병합분 content test 2/2 PASS (2026-09-26) 완료 (같은 날 원문 대조 정정으로 PENDING_TEST 전환 후, Perseus 정정 재테스트 2/2 PASS로 APPROVED 재전환 — §5·§10 참조) |
+
+---
+
+## 10. 원문 대조 기록 (2026-09-26)
+
+- 1차 원문: Perseus `tlg0086.tlg010.perseus-grc2.xml` (Bywater 1894)
+
+| # | 클레임 (기존) | 원문 대조 결과 | 판정 |
+|---|---|---|---|
+| 1 | NE 7권 1145a15–1154b34 (Bywater 1894 OCT) | VII.1 시작 1145a15, VII.14 끝 1154b34 | VERIFIED |
+| 2 | "1145b21–1147b19에서 제시한 propeteia/astheneia 구분" (SKILL.md 4곳) | 해당 구분은 "ἀκρασίας δὲ τὸ μὲν προπέτεια τὸ δʼ ἀσθένεια" 1150b19–28 (VII.7). 1145b21–1147b19는 VII.2–3 | 정정 |
+
+**합계: 대조 2건 / 정정 1건(4곳).** 예시 RQ의 텍스트 위치 오류로 실질 정정 → PENDING_TEST → 재테스트(§5) 2/2 PASS 완료 후 APPROVED.

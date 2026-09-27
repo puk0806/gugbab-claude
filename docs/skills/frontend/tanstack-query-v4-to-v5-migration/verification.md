@@ -2,7 +2,7 @@
 skill: tanstack-query-v4-to-v5-migration
 category: frontend
 version: v1
-date: 2026-08-26
+date: 2026-09-26
 status: PENDING_TEST
 ---
 
@@ -14,10 +14,10 @@ status: PENDING_TEST
 |------|------|
 | 스킬 이름 | `tanstack-query-v4-to-v5-migration` |
 | 스킬 경로 | `.claude/skills/frontend/tanstack-query-v4-to-v5-migration/SKILL.md` |
-| 검증일 | 2026-08-26 |
+| 검증일 | 2026-09-26 (30~60일 주기 재검증, 이전 검증 2026-08-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
-| 기준 버전 | 출발 = `@tanstack/react-query` 4.44.0 (v4 마지막) / 도착 = 5.102.4 (v5 최신) |
+| 기준 버전 | 출발 = `@tanstack/react-query` 4.44.0 (v4 마지막, 변동 없음) / 도착 = 5.104.0 (v5 최신, 2026-08-26 확인 시 5.102.4) |
 
 ---
 
@@ -206,6 +206,30 @@ status: PENDING_TEST
 
 ---
 
+### 5-1. 2026-09-26 재검증 (30~60일 주기, verification-policy.md 절차)
+
+**수행일**: 2026-09-26
+**수행 방법**: SKILL.md + references/REFERENCE.md 전체 Read → 핵심 클레임 3개 WebSearch/WebFetch 재검증 → 실전 질문 2개로 SKILL.md 자체 답변 재확인
+
+**재검증 클레임**:
+| # | 클레임 | 재확인 결과 |
+|---|--------|------|
+| R1 | v5 최신 버전 5.102.4 | npm registry 재확인 → **5.102.4 → 5.104.0** 마이너 갱신, breaking change 없음 |
+| R2 | v4 마지막 버전 4.44.0(변동 없음, v4는 더 이상 릴리스 안 됨) | npm dist-tag `previous` 재확인 → ✅ VERIFIED, 변동 없음 |
+| R3 | React Query에 v6가 존재하는가(§3-8의 "v6에서 제거 예정" 서술 재확인) | WebSearch 재확인 — **React Query 코어는 여전히 v5.**"v6" 표기는 Solid/Svelte 어댑터 한정 RC이며 React 어댑터에는 v6가 없음. `fetchQuery`/`prefetchQuery` 등은 여전히 deprecated 상태로 유지, `query()`/`infiniteQuery()` 통합은 계획대로 v6에서 제거 예정(미출시) | ✅ VERIFIED, 변동 없음 |
+
+**Q1(재검증). "TanStack Query v6가 나왔다는데 이 스킬이 여전히 유효한가?"**
+- SKILL.md 답변: React Query에는 아직 v6가 없다(2026-09-26 기준). "v6"라는 표기는 Solid/Svelte 어댑터 RC에 한정된 것이며, React 코어는 여전히 v5.104.0이다. 스킬의 v4→v5 전환 내용과 §3-8의 "v6 제거 예정" 경고 모두 그대로 유효.
+- **판정: ✅ PASS**
+
+**Q2(재검증). "지금 v5로 올리면 몇 버전을 쓰면 되나?"**
+- SKILL.md 답변: 5.104.0(2026-09-26 기준 최신, 5.102.4에서 마이너 갱신, breaking change 없음)
+- **판정: ✅ PASS**
+
+**재검증 결과**: 3개 클레임 모두 실질 변경 없음(버전 번호만 마이너 갱신). **status PENDING_TEST 유지**(원래 사유인 "실사용 필수 카테고리 — 마이그레이션 가이드"는 이번 재검증과 무관하게 그대로 유지).
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -240,4 +264,5 @@ status: PENDING_TEST
 |------|------|-----------|--------|
 | 2026-08-26 | v1 | 최초 작성 — 공식 마이그레이션 가이드(헤딩 35개 전수) 및 공식 레퍼런스·npm 레지스트리 기반, 18개 클레임 교차 검증(DISPUTED 2건 수정 반영·UNVERIFIED 1건 주의 표기). skill-tester 미수행으로 PENDING_TEST | skill-creator |
 | 2026-08-26 | v1 | 2단계 실사용 테스트 수행 (Q1 onSuccess 제거·대체 패턴 / Q2 `@tanstack/query-codemods` 패키지 미존재 안내 / Q3 isLoading v4↔v5 의미 변화 판별 / Q4 코어만 v5 부분 업그레이드 불가) → 4/4 PASS, 실사용 필수 카테고리(마이그레이션 가이드)이므로 PENDING_TEST 유지 | skill-tester |
-| 2026-09-25 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | |
+| 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | skill-creator |
+| 2026-09-26 | v1 | 30~60일 주기 재검증. v5 5.102.4→5.104.0 버전 갱신(breaking change 없음), React Query v6 미출시 확인(Solid/Svelte 어댑터 한정). status PENDING_TEST 유지 | 메인 세션 |

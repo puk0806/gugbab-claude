@@ -100,6 +100,10 @@ description: >
 
 도덕윤리교육 전공 논문의 경우 결론 직전 또는 결론 안에 **"도덕교육적 함의" 또는 "교육적 시사점"** 절을 두는 것이 관례다.
 
+### 1-5. 서론 작성 (KCI 관행)
+
+서론 5요소(문제제기·선행연구 위치·연구문제·방법·범위·구성 안내 — CARS 3 Moves 확장), IMRaD vs KCI 전통 구조 비교(선행연구 위치·서술형 연구질문·결론 누설 회피 관행), "본 연구는/필자는" 1인칭 관행, 학위·학술지별 서론 분량, akrasia 첫 단락 좋은/나쁜 예시 → [`references/introduction-writing.md`](references/introduction-writing.md) (2026-09-26 병합, 이력은 verification.md §9)
+
 ---
 
 ## 2. 한국 인문학 통용 인용 표기 (각주 방식)
@@ -352,8 +356,8 @@ Liu Xinwu. The Wedding Party. Translated by Jeremy Tiang. Amazon Crossing, 2021.
    2-2. 『니코마코스 윤리학』 VII권에서의 정의 (1145b8 이하)
    2-3. enkrateia(자제)와의 대비
 
-3. 아크라시아의 발생 메커니즘 — NE VII.3 분석
-   3-1. 소크라테스적 입장 비판 (1145b21–27)
+3. 아크라시아의 발생 메커니즘 — NE VII.2–3 분석
+   3-1. 소크라테스적 입장 비판 (VII.2, 1145b21–28)   ← 2026-09-26 원문 대조: 1145b21은 VII.2 시작(VII.3은 1146b8부터)
    3-2. 실천적 추론(practical syllogism)에서의 단절
    3-3. 욕구가 지식을 가리는 방식
 

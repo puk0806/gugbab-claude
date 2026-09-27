@@ -24,8 +24,8 @@ description: >
 > - [Changelog (5.0.4)](https://docs.unity3d.com/Packages/com.unity.purchasing@5.0/changelog/CHANGELOG.html)
 > - [Why upgrade to IAP v5.x (Unity Support)](https://support.unity.com/hc/en-us/articles/47757890052372-Why-you-should-upgrade-to-Unity-In-App-Purchasing-IAP-v5-x)
 > - GitHub Releases: [needle-mirror/com.unity.purchasing](https://github.com/needle-mirror/com.unity.purchasing/releases)
-> 검증일: 2026-06-09
-> 대상 버전: Unity IAP **5.3.1** (2026-05-27 릴리스) 권장, 레거시 호환은 **4.15.1** (2026-04-21). Unity 6 LTS / Unity 2022.3 LTS 호환
+> 검증일: 2026-09-26 (재검증. 본문 사실성만 재검증 — references/REFERENCE.md은 2026-09-25 분리로 별도 재검증 대상 아님. Unity IAP 5.3.1 → **5.4.3**으로 최신 버전 갱신, Google Play Billing Library 8 자동 지원 확인 및 BL 9 출시(2026-05-19) 반영, Android Target API Level 34 → **36**으로 갱신(Google Play 2026-08-31 시행))
+> 대상 버전: Unity IAP **5.4.3** (2026 릴리스) 권장, 레거시 호환은 **4.15.1** (2026-04-21). Unity 6 LTS / Unity 2022.3 LTS 호환
 
 ---
 
@@ -36,12 +36,12 @@ Unity IAP는 Google Play / App Store / Amazon / Mac App Store 등 다중 스토�
 | 항목 | 내용 |
 |------|------|
 | 공식 패키지명 | `com.unity.purchasing` |
-| 최신 안정 버전 | **5.3.1** (2026-05-27) — v5 신 API 권장 |
+| 최신 안정 버전 | **5.4.3** (2026, Unity 6000.3 대응) — v5 신 API 권장 |
 | 레거시 안정 버전 | **4.15.1** (2026-04-21) — v4 레거시 API 호환 유지 |
 | 지원 Unity Editor | Unity 6 LTS (6000.x), Unity 2022.3 LTS |
 | 지원 스토어 | Google Play, App Store, Amazon Appstore, Mac App Store, UDP, Windows Store |
 | Unity Gaming Services | 선택(IAP Catalog 클라우드 동기화·Analytics 통합 시 활성화) |
-| Google Play Billing Library | v5.x → BL 8 자동 지원, v4.14+ → BL 7 지원 |
+| Google Play Billing Library | v5.4.x → BL 8 자동 지원(BL 9는 2026-05-19 출시, Google 권장 최신). Google Play는 2026-08-31부터 신규/업데이트 앱에 **BL 8 이상 필수**(유예 시 2026-11-01까지), v4.14+ → BL 7 지원(BL 7은 신규 게시 불가 시점 도래) |
 | Apple StoreKit | v5.x → StoreKit 2 자동, v4.x → StoreKit 1 |
 
 ### 두 가지 API 세대 — 신규 프로젝트는 v5 사용
@@ -77,7 +77,7 @@ Unity IAP는 Google Play / App Store / Amazon / Mac App Store 등 다중 스토�
 ### Android 빌드 사전 설정
 
 1. `Edit > Project Settings > Player > Android > Other Settings`
-   - Target API Level: 34 이상 (Google Play 2026 요구사항)
+   - Target API Level: **36 이상** (Google Play 2026-08-31 시행 요구사항, 유예 시 2026-11-01까지)
    - Scripting Backend: IL2CPP, Target Architectures: ARMv7 + ARM64
 2. `Publishing Settings`에서 **Custom Main Gradle Template** / **Custom Main Manifest** 활성화(필요 시)
 3. Google Play Console에서 앱 등록 후 **App signing key** SHA-1 등록 → 상품 등록(`Monetize > In-app products`)
@@ -362,7 +362,7 @@ public void CheckBattlePass()
 
 ### Google Play
 
-- `build.gradle` 자동 생성: IAP 패키지가 Billing Library를 의존성에 자동 추가 (v5.x → BL 8, v4.15+ → BL 7)
+- `build.gradle` 자동 생성: IAP 패키지가 Billing Library를 의존성에 자동 추가 (v5.4.x → BL 8, v4.15+ → BL 7 — 단 2026-08-31부터 신규 게시는 BL 8 이상 필수)
 - App Bundle(`.aab`)로 빌드, **업로드 키 + 앱 서명 키** 정확히 설정
 - 라이선스 키: `Play Console > Monetize > License keys` → `CrossPlatformValidator`용 obfuscator에 입력
 - 테스트: **내부 테스트 트랙** 업로드 후 **License Testers** 등록한 Google 계정으로 디바이스 로그인

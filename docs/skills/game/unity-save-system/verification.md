@@ -2,7 +2,7 @@
 skill: unity-save-system
 category: game
 version: v1
-date: 2026-06-10
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `unity-save-system` |
 | 스킬 경로 | `.claude/skills/game/unity-save-system/SKILL.md` |
-| 검증일 | 2026-06-10 |
+| 검증일 | 2026-09-26 (최초 2026-06-10) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 | 대상 버전 | Unity 6 (6000.x) / Cloud Save SDK 3.2 / com.unity.nuget.newtonsoft-json 3.2 / Unity IAP 4.x |
@@ -133,11 +133,28 @@ status: APPROVED
 
 없음 — 3개 질문 모두 SKILL.md 내 직접 근거 섹션·코드 확인됨.
 
+### 2026-09-26 재검증 (본문 사실성만 — references/REFERENCE.md은 재검증 대상 아님)
+
+**수행일**: 2026-09-26
+**수행 방법**: WebFetch로 핵심 클레임 재확인(WebSearch 세션 한도 소진으로 WebFetch 대체) + SKILL.md 자체 답변 확인 질문 2개
+
+- 클레임1. `com.unity.nuget.newtonsoft-json` 버전 3.2 — WebFetch 재확인(공식 리다이렉트 대상 확인) → **VERIFIED** (변동 없음)
+- 클레임2. Cloud Save SDK 3.2 — WebFetch 재확인 → **VERIFIED(범위 유지)**: 공식 Get Started 문서는 "버전 3 이상에서 동작"만 명시, 3.2 표기와 배치되지 않음
+- 클레임3. "IAP 4.x" 단독 표기 — 이번 재검증 세션에서 별도로 확인한 unity-iap 스킬 재검증 결과 Unity IAP 최신은 5.x대(5.4.3)로 확인됨 → SKILL.md 표기를 "IAP 4.x·5.x 공통"으로 정정(서버 미검증 원칙은 버전 무관 사실이라 실질 영향 없음)
+
+**Q1(재검증). "Unity Cloud Save로 세이브 데이터를 로드할 때 쓰는 패키지 버전은?"**
+- SKILL.md 답변 경로: 상단 메타 "Cloud Save SDK 3.2+"
+- 판정: PASS
+
+**Q2. "Unity IAP를 쓰는데 영수증을 서버에서 검증해주는 기능이 SDK에 내장돼 있나?"**
+- SKILL.md 답변 경로: "7. 인앱 구매(IAP) 연계" — "Unity IAP는 서버 측 원격 검증을 자체 제공하지 않는다. 자체 서버 또는 third-party 솔루션이 필요하다"
+- 판정: PASS (버전(4.x/5.x)과 무관하게 유효한 사실)
+
 ### 판정
 
-- agent content test: 3/3 PASS
+- agent content test: 3/3 PASS (최초) + 재검증 2/2 PASS
 - verification-policy 분류: 라이브러리 사용법 스킬 (content test PASS = APPROVED 가능)
-- 최종 상태: APPROVED
+- 버전 표기 정정(IAP 4.x→4.x·5.x)만 있었고 핵심 API·원칙 변경 없음 → APPROVED 유지
 
 ---
 
@@ -191,8 +208,8 @@ SaveData 클래스에 새 필드 inventoryItems(List<string>)를 추가했어.
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-10) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-10) + ✅ 2/2 PASS (2026-09-26 재검증) |
+| **최종 판정** | **APPROVED** (유지) |
 
 ---
 
@@ -212,3 +229,4 @@ SaveData 클래스에 새 필드 inventoryItems(List<string>)를 추가했어.
 | 2026-06-10 | v1 | 최초 작성 (Unity 6 / Cloud Save 3.2 / Newtonsoft 3.2 / IAP 4.x 기준) | skill-creator |
 | 2026-06-10 | v1 | 2단계 실사용 테스트 수행 (Q1 저장 방식 선택 / Q2 temp+rename+.bak 손상 방지 / Q3 saveVersion 마이그레이션) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | Claude |
+| 2026-09-26 | v1 | 재검증(98개 일괄 재검증 대상, 본문만). Newtonsoft/Cloud Save 버전 변동 없음 확인, IAP 버전 표기를 4.x→4.x·5.x로 정정 → APPROVED 유지 | Claude Code |

@@ -41,7 +41,7 @@ status: APPROVED
 |------|------|-----------|-----------|
 | 템플릿 확인 | Read | `docs/skills/VERIFICATION_TEMPLATE.md` | 8개 섹션 구조 확인 |
 | 기존 스킬 확인 | Glob | `.claude/skills/frontend/web-speech-api-*/SKILL.md` | TTS 스킬 1건 발견 → 차별성 섹션 추가 결정 |
-| TTS 스킬 참조 | Read | `.claude/skills/frontend/web-speech-api-tts/SKILL.md` | 톤·구조 일관성 확보 |
+| TTS 스킬 참조 | Read | `.claude/skills/frontend/web-speech-api-tts/SKILL.md` | 톤·구조 일관성 확보 (TTS 스킬은 2026-09-26 본 스킬 14절로 병합·제거 — 당시 기록) |
 | 조사 | WebFetch | MDN SpeechRecognition 페이지 | 인터페이스 속성·메서드·이벤트 10종 확인 |
 | 조사 | WebFetch | MDN SpeechRecognitionResult | isFinal·length·item() 구조 확인 |
 | 조사 | WebFetch | MDN error_event | 8개 에러 코드 정리 |
@@ -126,10 +126,48 @@ status: APPROVED
 - [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-14 수행)
 - [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (3/3 PASS — 보완 불필요)
+- [✅] 2026-09-26 `web-speech-api-tts` 병합 반영분 포함 재테스트 (frontend-developer, 3/3 PASS)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-09-26
+**수행자**: skill-tester → frontend-developer
+**수행 방법**: SKILL.md Read 후 실전 질문 3개 답변(구 `web-speech-api-tts` 스킬 병합 반영분인 14절 TTS 함정·브라우저 차이를 겨냥한 질문 포함), 근거 섹션 및 anti-pattern 회피 확인. frontend-developer에게 Read 도구만 허용하고 WebSearch·WebFetch·자기 지식 사용을 금지해 SKILL.md 근거만으로 답하도록 제한.
+
+### 실제 수행 테스트
+
+**Q1. STT 완료/취소/언마운트 시 stop() vs abort() 구분**
+- ✅ PASS
+- 근거: SKILL.md "7. abort() vs stop() 차이" 섹션(표+"언제 어느 것"+React cleanup 코드)
+- 상세: 완료→stop(), 취소→abort(), 언마운트→abort()를 정확히 구분해 답변. onerror에서 'aborted'를 정상 처리해야 한다는 6절 연계까지 근거로 제시.
+
+**Q2. TTS getVoices() 빈 배열 버그 원인·수정 + 브라우저별(Chrome/Firefox/Safari iOS/Edge) TTS 차이 + STT/TTS 지원 비대칭 (병합 반영분 겨냥)**
+- ✅ PASS
+- 근거: SKILL.md "14-1. getVoices()는 처음에 빈 배열일 수 있다"(voiceschanged 대기 패턴), "14-4. 브라우저별 TTS 차이" 표, "STT와 TTS의 관계" 섹션(STT/TTS 완전 독립 지원)
+- 상세: voiceschanged 비동기 로딩이 원인임을 정확히 지목하고 loadVoices()/pickVoice() 패턴으로 수정법 제시. Firefox·Edge에서 TTS는 되지만 STT는 안 되는 비대칭을 정확히 구분해 답변 — 병합의 핵심 목적(STT/TTS 관계 명시)이 실제로 답변에 반영됨을 확인.
+
+**Q3. TTS 직후 STT 시작 시 iOS Safari에서 인식 실패·앞부분 손실 (STT+TTS 통합 시나리오, 병합 반영분 겨냥)**
+- ✅ PASS
+- 근거: SKILL.md "10. iOS Safari 함정 모음"(오디오 세션 충돌 100~300ms 지연, 권한 후 2~3초 지연), "14-3. iOS Safari 백그라운드 자동 중단" 마지막 문장(10절 연계)
+- 상세: 오디오 세션 충돌 + 권한 지연 두 원인을 모두 지목하고 onend 이후 setTimeout 지연 패턴으로 정확히 답변. 10절과 14-3절이 서로 참조하도록 병합된 구조가 실제로 통합 질문에 잘 작동함을 확인.
+
+### 발견된 gap (SKILL.md 보강 권장 — 이번 세션에서 직접 수정하지 않음. 다른 작업자가 frontend 참조 정리 중이라 보고만)
+
+- stop() 실패 시 UX 처리·취소 시 화면의 interim 텍스트 초기화 안내 없음 — 선택 보강, 차단 요인 아님
+- pickVoice()가 null 반환 시 utterance.voice=null의 실제 동작(기본 음성 사용) 미기재, voiceschanged 미발생 브라우저의 타임아웃 폴백 없음 — 선택 보강, 차단 요인 아님
+- "100~300ms 지연"의 근거(실측 vs 경험칙) 미기재, 오디오 세션 충돌의 구체적 에러 증상(no-speech/aborted 등) 미기재 — 선택 보강, 차단 요인 아님
+
+### 판정
+
+- agent content test: 3/3 PASS (frontend-developer 사용 — Read 외 도구 사용 금지 지시로 SKILL.md 근거만 사용하도록 제한)
+- verification-policy 분류: 라이브러리 사용법 스킬(2026-06-19 재분류 유지) — content test PASS = APPROVED 가능 카테고리
+- 최종 상태: APPROVED (병합 반영분 포함 3/3 PASS로 재확인)
+
+---
+
+### (참고) 이전 테스트 기록
 
 **수행일**: 2026-05-14
 **수행자**: skill-tester → general-purpose (frontend-developer 에이전트 미등록으로 general-purpose 대체)
@@ -219,8 +257,8 @@ iOS Safari에서 SpeechRecognition을 continuous = true로 켜고 받아쓰기�
 | 내용 정확성 | ✅ (DISPUTED 2건 정정 완료) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-14 수행) |
-| **최종 판정** | **APPROVED** (content test 3/3 PASS. 2026-06-19 카테고리 재분류 → 라이브러리 사용법 스킬로 content test만으로 APPROVED 전환 가능) |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-14 수행) + ✅ 3/3 PASS (2026-09-26 재테스트, TTS 병합 반영분 포함) |
+| **최종 판정** | **APPROVED** (2026-09-26 재검증 완료 — TTS 병합 반영분 포함 3/3 PASS) |
 
 > 2026-06-19 재분류: 초기 "실사용 필수 카테고리" 분류를 재검토한 결과, Web Speech API STT는 라이브러리 사용법 스킬(prefix 처리·옵션·이벤트·결과 처리 패턴)로 분류되며 **답변 정확성 검증**만으로 충분하다. 실 브라우저+마이크 동작은 API 자체 검증으로 SKILL.md 내용 정확성 범위를 벗어난다. verification-policy.md "content test PASS = APPROVED 가능" 기준 적용.
 
@@ -232,6 +270,9 @@ iOS Safari에서 SpeechRecognition을 continuous = true로 켜고 받아쓰기�
 - [✅] APPROVED 전환 (2026-06-19 완료. 카테고리 재분류 → content test 충분 카테고리로 변경, PENDING_TEST → APPROVED 전환)
 - [❌] confidence 0 반환 사례(Safari) 실측 후 SKILL.md 보강 여부 결정 — **선택 보강**: SKILL.md에 이미 "주의" 표기 있음. 실측 데이터 추가 시 보강 가능. APPROVED 차단 요인 아님.
 - [❌] W3C draft의 `processLocally`, `phrases`, static `available()`/`install()` 메서드는 구현 브라우저가 거의 없어 본 스킬에서 제외 — **선택 보강**: 구현 브라우저 등장 시 추가. 현재는 불필요.
+- [✅] (2026-09-26 완료, 3/3 PASS) `web-speech-api-tts` 병합 반영분 포함 skill-tester 재테스트 → 섹션 5·6 업데이트, PENDING_TEST → APPROVED 재전환
+- [❌] (선택 보강, 차단 요인 아님) TTS voice 선택 실패 시 fallback 동작·voiceschanged 미발생 브라우저 타임아웃 처리 보강
+- [❌] (선택 보강, 차단 요인 아님) iOS 오디오 세션 충돌 100~300ms 지연값의 근거·구체 에러 증상 보강
 
 ---
 
@@ -242,3 +283,5 @@ iOS Safari에서 SpeechRecognition을 continuous = true로 켜고 받아쓰기�
 | 2026-05-14 | v1 | 최초 작성. MDN + W3C draft + caniuse + MDN BCD issue 기반 13개 섹션 작성. DISPUTED 2건(Safari iOS 14.5+ vs "16+", Edge no-op vs "안정") 정정 반영. TTS 스킬과의 차별성 섹션 포함. | skill-creator |
 | 2026-05-14 | v1 | 2단계 실사용 테스트 수행 (Q1 prefix+한국어 초기화 / Q2 resultIndex 함정+transcript 중복 / Q3 iOS Safari continuous+Firefox/Edge degradation) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | skill-tester |
 | 2026-06-19 | v1 | verification-policy.md 기준 카테고리 재검토 → "실사용 필수"에서 "content test 충분(라이브러리 사용법)" 카테고리로 재분류. 기존 3/3 PASS 유효, PENDING_TEST → APPROVED 전환. | skill-tester |
+| 2026-09-26 | v2 | **병합**: 구 `frontend/web-speech-api-tts` 스킬 제거(스킬 트리아지 MERGE 판정 — STT/TTS 짝 과분할)하면서 TTS 고유분을 이관. SKILL.md 14절(getVoices 비동기+voiceschanged, localService 우선 voice 선택, rate/pitch/volume 범위·clamp, speak 큐·cancel, iOS Safari 백그라운드 중단, 브라우저별 TTS 차이), references/REFERENCE.md 15절(useSpeech 훅·TTS 흔한 실수). description에 TTS 포함, 스킬명은 유지. 출처: https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis , https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis/voiceschanged_event , https://bugs.webkit.org/show_bug.cgi?id=198277 (구 tts verification.md: 핵심 클레임 5건 VERIFIED — rate 범위·voiceschanged·iOS 백그라운드·localService·BCP 47, 검증일 2026-05-07, APPROVED). status APPROVED → PENDING_TEST | 메인 대화 (스킬 정리) |
+| 2026-09-26 | v3 | 2단계 실사용 테스트 재수행 (Q1 STT stop/abort 구분 / Q2 TTS getVoices 비동기+브라우저별 차이+STT·TTS 지원 비대칭 / Q3 TTS→STT 연속 사용 시 iOS 오디오 세션 충돌·권한 지연) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |

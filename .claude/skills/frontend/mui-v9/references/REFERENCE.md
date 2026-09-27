@@ -323,3 +323,188 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 | Next.js App Router에서 ThemeProvider가 서버 컴포넌트에 있음 | 'use client' + ThemeRegistry 패턴 |
 | Button `variant="text"` 인데 색상이 안 보임 | `color` prop 확인 (기본 primary) |
 | `@mui/material`과 `@mui/system` 버전 불일치 | 모든 @mui/* 패키지 버전 통일 |
+
+---
+
+## 11. CSS Variables + colorSchemes 예제
+
+```tsx
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import InitColorSchemeScript from '@mui/material/InitColorSchemeScript';
+
+const theme = createTheme({
+  cssVariables: true,
+  colorSchemes: {
+    light: {
+      palette: { primary: { main: '#1976d2' } },
+    },
+    dark: {
+      palette: { primary: { main: '#90caf9' } },
+    },
+  },
+});
+
+// Next.js App Router: layout.tsx
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html suppressHydrationWarning>
+      <body>
+        <InitColorSchemeScript />  {/* SSR 깜빡임 방지 */}
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          {children}
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+---
+
+## 12. 다크 모드 토글 훅 예제
+
+```tsx
+import { useColorScheme } from '@mui/material/styles';
+
+function ModeToggle() {
+  const { mode, setMode } = useColorScheme();
+  return (
+    <button onClick={() => setMode(mode === 'dark' ? 'light' : 'dark')}>
+      현재: {mode}
+    </button>
+  );
+}
+```
+
+---
+
+## 13. styled() 컴포넌트 예제
+
+```tsx
+import { styled } from '@mui/material/styles';
+import { Button } from '@mui/material';
+
+// 기본
+const PrimaryButton = styled(Button)(({ theme }) => ({
+  borderRadius: theme.spacing(1),
+  padding: theme.spacing(1.5, 3),
+}));
+
+// 다크 모드 대응 (applyStyles)
+const ThemedCard = styled('div')(({ theme }) => ({
+  backgroundColor: theme.palette.background.paper,
+  ...theme.applyStyles('dark', {
+    backgroundColor: theme.palette.grey[900],
+  }),
+}));
+
+// 조건부 스타일 (variant prop)
+const StyledButton = styled(Button, {
+  shouldForwardProp: (prop) => prop !== 'rounded',
+})<{ rounded?: boolean }>(({ theme, rounded }) => ({
+  ...(rounded && { borderRadius: theme.spacing(3) }),
+}));
+```
+
+---
+
+## 14. 커스텀 테마 예제 모음 — palette/typography/breakpoints/단계적 확장
+
+### palette 확장
+
+```tsx
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#1976d2',
+      light: '#42a5f5',
+      dark: '#1565c0',
+      contrastText: '#fff',
+    },
+    // 커스텀 색상
+    custom: {
+      highlight: '#f5f5f5',
+    },
+  },
+});
+```
+
+### typography 커스터마이징
+
+```tsx
+const theme = createTheme({
+  typography: {
+    fontFamily: '"Pretendard", "Roboto", sans-serif',
+    h1: { fontSize: '2.5rem', fontWeight: 700 },
+    body1: { fontSize: '1rem', lineHeight: 1.6 },
+    // 커스텀 variant
+    caption2: { fontSize: '0.625rem', color: 'text.secondary' },
+  },
+});
+```
+
+### breakpoints & spacing
+
+```tsx
+const theme = createTheme({
+  spacing: 8,  // theme.spacing(1) = '8px'
+  breakpoints: {
+    values: { xs: 0, sm: 600, md: 900, lg: 1200, xl: 1536 },
+  },
+});
+
+// 사용
+theme.spacing(2)        // '16px'
+theme.breakpoints.up('md')  // '@media (min-width: 900px)'
+```
+
+### 단계적 테마 확장 (의존 관계)
+
+```tsx
+let theme = createTheme({
+  palette: { primary: { main: '#0052cc' } },
+});
+theme = createTheme(theme, {
+  palette: {
+    info: { main: theme.palette.primary.main },
+  },
+});
+```
+
+---
+
+## 15. theme.components 글로벌 오버라이드 예제
+
+```tsx
+const theme = createTheme({
+  components: {
+    MuiButton: {
+      defaultProps: {
+        disableRipple: true,
+        variant: 'contained',
+      },
+      styleOverrides: {
+        root: ({ theme }) => ({
+          borderRadius: 8,
+          textTransform: 'none',
+          // 다크 모드 대응
+          ...theme.applyStyles('dark', {
+            boxShadow: 'none',
+          }),
+          // variants API (v6+)
+          variants: [
+            {
+              props: { variant: 'dashed' },
+              style: { border: '2px dashed currentColor' },
+            },
+          ],
+        }),
+      },
+    },
+    MuiTextField: {
+      defaultProps: { size: 'small', variant: 'outlined' },
+    },
+  },
+});
+```

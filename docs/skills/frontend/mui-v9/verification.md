@@ -144,3 +144,4 @@ agent content test: 3/3 PASS
 |------|------|-----------|--------|
 | 2026-04-20 | v1 | 최초 작성 — MUI v5 기준 핵심 패턴 | skill-creator |
 | 2026-06-19 | v2 | MUI v9 기준 전면 재작성 — System props 제거, Grid size prop, slots/slotProps, cssVariables+colorSchemes, applyStyles, v5→v9 Breaking Changes 표 추가. 검증일 갱신. | Claude (Sonnet 4.6) |
+| 2026-09-26 | v2 | SKILL.md 500줄 초과 해소 — CSS Variables+colorSchemes·다크모드 토글 훅·styled() 컴포넌트·커스텀 테마(palette/typography/breakpoints/단계적 확장)·theme.components 오버라이드 예제를 references/REFERENCE.md §11~§15로 이동(내용 변경 없음, 이동만). SKILL.md 530→389줄. 내용·검증 상태 변경 없음 | Claude (Sonnet 5) |

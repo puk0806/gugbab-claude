@@ -15,7 +15,12 @@ description: LLM 챗봇용 React 채팅 UI 패턴 — 메시지 버블·가상 �
 > 검증일: 2026-05-14
 > 버전 기준: react-markdown 10.1.0 · remark-gfm 4.0.1 · rehype-highlight 7.0.2 · react-virtuoso 4.x
 
-> **상호 보완 스킬:** 메시지 리스트 가상 스크롤은 별도 스킬 `frontend/react-virtuoso`를 참조한다. 본 스킬은 채팅 도메인에 특화된 사용 패턴만 다룬다.
+> 소스: https://virtuoso.dev/react-virtuoso/ (react-virtuoso 4.18.5 기준 — 2026-09-26 구 `frontend/react-virtuoso` 스킬 흡수)
+> 소스: https://virtuoso.dev/virtuoso-api/interfaces/VirtuosoProps/ (`firstItemIndex`/`startReached` 공식 정의, 2026-09-26 확인)
+> 소스: https://github.com/petyosi/react-virtuoso/discussions/1032 (firstItemIndex 큰 오프셋 값 안전성, 메인테이너 확인)
+> 소스: https://virtuoso.dev/message-list/ (`VirtuosoMessageList` 상용 라이선스 확인)
+>
+> **가상 스크롤:** react-virtuoso 채팅 패턴은 3절, 범용 API 요약(컴포넌트 선택·높이 측정 props·성능 옵션·라이브러리 비교·흔한 실수)은 references/REFERENCE.md 16절에 있다.
 
 ---
 
@@ -97,23 +102,38 @@ export function MessageBubble({ message }: MessageBubbleProps) {
 
 ## 3. 메시지 리스트 가상 스크롤
 
-긴 대화(100건 이상)에서는 react-virtuoso로 가상화한다. 자세한 API는 별도 스킬을 참조하고, 채팅 특화 패턴만 여기서 정리한다.
+긴 대화(100건 이상)에서는 react-virtuoso로 가상화한다. 범용 API는 references/REFERENCE.md 16절을 보고, 여기서는 채팅 특화 패턴만 정리한다.
+
+**가상화가 무효가 되는 실수 3가지 (먼저 확인):**
+- **높이 미지정** — `style={{ height }}` 또는 부모 CSS 높이가 없으면 모든 아이템이 렌더링된다 (`useWindowScroll`이면 불필요).
+- **`components.List`에 ref 미전달** — 커스텀 List는 `React.forwardRef`로 감싸 ref를 넘겨야 스크롤이 동작한다.
+- **`startReached`/`endReached` 중복 호출** — `if (!loading && hasMore)` 가드 없이 부르면 요청이 중복된다. **과거 메시지 추가 로드는 `endReached`가 아니라 `startReached`다** — 아래 참조.
+
+> 주의 (2026-09-26 정정): 이전 버전은 "과거 메시지 추가 로드"를 `endReached`로 설명했으나 틀렸다. `initialTopMostItemIndex`로 하단(최신 메시지)에서 시작하는 채팅에서 위로 스크롤해 과거 메시지를 불러오는 것은 **상단 도달**이므로 `startReached` + `firstItemIndex` 감소 패턴이 react-virtuoso 공식 API 의도다(virtuoso.dev `VirtuosoProps` 레퍼런스: "firstItemIndex는 역방향 무한 스크롤 구현 시 데이터 prepend와 함께 감소시켜 사용"). `endReached`는 **하단 무한 스크롤**(예: 리드 온리 스레드에서 아래로 더 불러오기) 전용으로 남겨둔다.
 
 ```tsx
 // src/components/chat/MessageList.tsx
 import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ChatMessage } from '@/types/chat';
 import { MessageBubble } from './MessageBubble';
+
+// firstItemIndex 초기 오프셋. 실제 배열 크기와 무관한 내부 인덱스 값일 뿐이라
+// 큰 수를 잡아도 undefined 아이템 배열이 생기지 않는다 (petyosi/react-virtuoso 메인테이너 확인).
+const START_INDEX = 1_000_000;
 
 interface MessageListProps {
   messages: ChatMessage[];
   isStreaming: boolean;
+  hasMoreOlder?: boolean;
+  onLoadOlder?: () => Promise<ChatMessage[]>; // 과거 메시지를 반환 (호출부에서 messages 앞에 붙임)
 }
 
-export function MessageList({ messages, isStreaming }: MessageListProps) {
+export function MessageList({ messages, isStreaming, hasMoreOlder, onLoadOlder }: MessageListProps) {
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const atBottomRef = useRef(true);
+  const loadingOlderRef = useRef(false);
+  const [firstItemIndex, setFirstItemIndex] = useState(START_INDEX);
 
   // 스트리밍 중 새 토큰이 추가될 때 사용자가 바닥에 있으면 자동 추적
   useEffect(() => {
@@ -126,16 +146,29 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
     }
   }, [messages]);
 
+  // 상단 도달 → 과거 메시지 prepend.
+  // firstItemIndex를 prepend한 개수만큼 감소시켜야 Virtuoso가 점프 없이
+  // 스크롤 위치를 유지한 채 위쪽에 새 아이템을 붙인다 (공식 firstItemIndex 의도).
+  const handleStartReached = useCallback(async () => {
+    if (loadingOlderRef.current || !hasMoreOlder || !onLoadOlder) return;
+    loadingOlderRef.current = true;
+    const older = await onLoadOlder();
+    setFirstItemIndex((prev) => prev - older.length);
+    loadingOlderRef.current = false;
+  }, [hasMoreOlder, onLoadOlder]);
+
   return (
     <Virtuoso
       ref={virtuosoRef}
       data={messages}
+      firstItemIndex={firstItemIndex}
+      initialTopMostItemIndex={messages.length - 1}
+      startReached={handleStartReached}
       itemContent={(_, message) => <MessageBubble message={message} />}
       followOutput={isStreaming ? 'smooth' : 'auto'}
       atBottomStateChange={(atBottom) => {
         atBottomRef.current = atBottom;
       }}
-      initialTopMostItemIndex={messages.length - 1}
       role="log"
       aria-live="polite"
       aria-atomic="false"
@@ -150,9 +183,14 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
 |------|-----|------|
 | `followOutput` | `'smooth'` 또는 `'auto'` 또는 함수 | 새 아이템 추가 시 자동으로 바닥 추적. 사용자가 위로 스크롤하면 자동으로 중단됨 |
 | `atBottomStateChange` | `(atBottom) => void` | 바닥 여부 변경 감지 → "맨 아래로" 버튼 표시 트리거 |
-| `initialTopMostItemIndex` | `messages.length - 1` | 첫 렌더 시 마지막 메시지부터 표시 |
+| `initialTopMostItemIndex` | `messages.length - 1` | 첫 렌더 시 마지막 메시지부터 표시 (하단 시작) |
+| `firstItemIndex` | 큰 초기값(예: `1_000_000`)에서 prepend 개수만큼 감소 | **과거 메시지를 위로 prepend할 때 필수.** 이 값 없이 `data`만 앞에 추가하면 스크롤 위치가 튄다 |
+| `startReached` | `() => void \| Promise<void>` | **상단 도달 시 과거 메시지 로드.** 항상 `firstItemIndex` 갱신과 짝을 이뤄야 한다. 로딩 가드 필수 |
+| `endReached` | `() => void \| Promise<void>` | 하단 도달 콜백. 이 채팅 패턴(최신 메시지가 맨 아래)에서는 보통 쓰이지 않음 — 아래로 더 불러오는 리드 온리 피드에만 사용 |
 
 > 주의: react-virtuoso의 `role`/`aria-live` 적용 가능 여부는 버전에 따라 다르다. 적용이 안 되면 외부 `<div role="log" aria-live="polite">`로 래핑하고 그 안에 `<Virtuoso>`를 배치한다.
+
+> 참고: react-virtuoso 팀은 채팅 전용 컴포넌트 `VirtuosoMessageList`(`@virtuoso.dev/message-list`)도 별도로 제공한다. 여기서 다루는 `Virtuoso`(오픈소스, MIT)와 달리 **상용 라이선스**(license key 필요)이며 무료가 아니다. 이 스킬은 무료 오픈소스 `Virtuoso` 컴포넌트 기준으로 작성됐다.
 
 ---
 

@@ -1,9 +1,9 @@
 ---
 skill: content-eeat-quality
 category: writing
-version: v1
-date: 2026-06-02
-status: APPROVED
+version: v2
+date: 2026-09-26
+status: PENDING_TEST
 ---
 
 # content-eeat-quality 스킬 검증 문서
@@ -18,9 +18,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `content-eeat-quality` |
 | 스킬 경로 | `.claude/skills/writing/content-eeat-quality/SKILL.md` |
-| 검증일 | 2026-06-02 |
-| 검증자 | skill-creator |
-| 스킬 버전 | v1 |
+| 검증일 | 2026-09-26 |
+| 검증자 | skill-creator / 2026-09-26 재검증: 메인 세션 (QRG 전문 PDF·Google Search Central 원문 직접 대조) |
+| 스킬 버전 | v2 |
 
 ---
 
@@ -87,13 +87,18 @@ status: APPROVED
 | 2 | Trust가 E-E-A-T의 most important member | Google QRG Section 3.4 | 다수 SEO 권위 매체 인용 | VERIFIED |
 | 3 | E-E-A-T는 직접 랭킹 신호가 아님 | Google 공식 입장 (블로그) | Search Engine Land, Yoast | VERIFIED |
 | 4 | QRG 현행판은 2025-09-11 발행 | broworks.net / seo-kreativ.de (업계 매체) | services.google.com/fh PDF 페이지수 | VERIFIED |
-| 5 | 2025-09 QRG에 AI Overview 평가 챕터 추가 | 업계 매체 다수 | seo-kreativ.de | VERIFIED |
-| 6 | YMYL Society → "Government, Civics & Society"로 명칭 변경 (2025-09) | 업계 매체 분석 | broworks.net | VERIFIED |
-| 7 | 2024-03 코어 업데이트로 Helpful Content가 코어에 통합 | Google 공식 블로그 (2024-03) | Amsive, Animalz | VERIFIED |
+| 5 | 2025-09 QRG에 AI Overview 평가 챕터 추가 | 업계 매체 다수 | seo-kreativ.de | **DISPUTED→삭제 (2026-09-26)** — QRG 전문 PDF(2025-09-11, 182쪽)에 "AI Overview" 문구 0회, 목차에도 해당 장 없음 |
+| 6 | YMYL Society → "Government, Civics & Society"로 명칭 변경 (2025-09) | 업계 매체 분석 | broworks.net | VERIFIED (2026-09-26 QRG §2.3 원문 "YMYL Government, Civics & Society" 확인) |
+| 7 | 2024-03 코어 업데이트로 Helpful Content가 코어에 통합 | Google 공식 블로그 (2024-03) | Amsive, Animalz | VERIFIED (2026-09-26 원문 "There's no longer one signal or system used to do this") |
 | 8 | 2024-03에 scaled content abuse 정책 도입 | Google 공식 spam policies | Search Engine Land, digitalapplied.com | VERIFIED |
 | 9 | AI 콘텐츠 자체는 페널티 아님 | Google Gen AI Content 공식 문서 | Search Atlas, contentellect | VERIFIED |
-| 10 | Helpful Content 자가 점검은 4개 묶음(Content·Expertise·Presentation·People-First) | Google Helpful Content 공식 문서 | Amsive, immwit | VERIFIED |
-| 11 | YMYL 카테고리 = Health/Financial/Legal/Gov·Civics·Society/News/큰 거래 Shopping | QRG | Semrush, Clearscope, Taboola | VERIFIED |
+| 10 | Helpful Content 자가 점검은 4개 묶음(Content·Expertise·Presentation·People-First) | Google Helpful Content 공식 문서 | Amsive, immwit | **DISPUTED→수정 (2026-09-26)** — 현행 문서(최종 수정 2025-12-10) 원문 집계: Content and quality 12 / Expertise 4 / People-first 5 / Search engine-first 10 / Who·How 각 3. Presentation 묶음 없음 |
+| 11 | YMYL 카테고리 = Health/Financial/Legal/Gov·Civics·Society/News/큰 거래 Shopping | QRG | Semrush, Clearscope, Taboola | **DISPUTED→수정 (2026-09-26)** — QRG 2025-09-11 §2.3 원문은 Health or Safety / Financial Security / Government, Civics & Society / Other 4유형 (2차 매체가 구판 분류 인용) |
+| R1 | "현행 QRG PDF" = services.google.com/fh/files/misc/hsw-sqrg.pdf | PDF 원문: "Search Quality Rater Guidelines: An Overview" (2023-11, 36쪽) | — | **DISPUTED→수정 (2026-09-26)** — 개요 문서. 전문은 guidelines.raterhub.com PDF (2025-09-11, 182쪽) |
+| R2 | Trust "most important member" 문구·위치 | QRG 전문 PDF §3.4 | — | VERIFIED (2026-09-26 문구 일치) |
+| R3 | 2022-12-15 E-E-A-T 도입 블로그 | Google Search Central Blog 원문 | — | VERIFIED (2026-09-26) |
+| R4 | scaled content abuse 정의·2024-03-05 | Google Blog 원문 | — | VERIFIED (원문 정의로 교체) / "50~80% 트래픽 감소" **UNVERIFIED→삭제** |
+| R5 | "Who, How, and Why" 프레임 | Google 헬프 문서 원문 | — | VERIFIED (2026-09-26) |
 | 12 | 한국 사이트는 사업자 정보·통신판매업 신고번호 푸터 표시가 법적 의무 | 정부24 / 공정위 | 토스페이먼츠 가이드, Shopify KR | VERIFIED |
 
 **최종 판정 분포:** VERIFIED 12 / DISPUTED 0 / UNVERIFIED 0
@@ -101,6 +106,19 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+### 재검증 기록 (2026-09-26)
+
+**수행일**: 2026-09-26
+**수행자**: 메인 세션 재검증 (Google 공식 원문 대조 후 SKILL.md 자체 답변 확인)
+**수행 방법**: QRG 전문 PDF(2025-09-11)·개요 PDF·helpful content 문서·Google Blog 2022-12/2024-03 대조 10건 → 오류 5건 정정 → 실전 질문 2개
+
+Q1. "법률 상담 블로그는 QRG상 어떤 YMYL 카테고리야?" — PASS (근거: §6-1 정정 — 현행 QRG 4유형에는 'Legal' 독립 유형이 없고, 피해 유형(Financial Security·Government, Civics & Society 등)으로 판단 + 스펙트럼 판단)
+Q2. "QRG 원문을 인용하려는데 어떤 PDF를 봐야 해?" — PASS (근거: 소스 정정 — 전문 guidelines.raterhub.com PDF(2025-09-11, 182쪽), hsw-sqrg.pdf는 2023-11 개요)
+
+agent content test: 2/2 PASS (재검증 기록). 분류·출처 정정으로 status PENDING_TEST 전환.
+
+### 최초 테스트 (2026-06-02)
 
 **수행일**: 2026-06-02
 **수행자**: skill-tester → general-purpose (writing 전용 에이전트 미존재, general-purpose 대체)
@@ -150,8 +168,8 @@ status: APPROVED
 | 내용 정확성 | ✅ (12/12 VERIFIED) |
 | 구조 완전성 | ✅ (frontmatter, 소스, 검증일, 14개 섹션) |
 | 실용성 | ✅ (30문항 체크리스트 + 7일 액션 플랜 포함) |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-02, skill-tester → general-purpose) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-02, skill-tester → general-purpose) / 2026-09-26 재검증 2/2 PASS |
+| **최종 판정** | **PENDING_TEST** (2026-09-26 재검증: Google 공식 원문 대조 10건 중 오류 5건 정정 — skill-tester 재테스트 후 APPROVED 재전환) |
 
 ---
 
@@ -172,3 +190,4 @@ status: APPROVED
 | 2026-06-02 | v1 | 2단계 실사용 테스트 수행 (Q1 AI 양산 블로그 안전 사용법 / Q2 의료 YMYL E-E-A-T 강화 / Q3 E-E-A-T 랭킹 신호 여부+최상위 요소) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-09-25 | v1 | 깨진 스킬 경로 참조 수정: `seo/ymyl-content-seo` → `writing/ymyl-content-seo`, `seo/geo-ai-discoverability` → `frontend/geo-ai-discoverability` (실존 경로 기준, project-install.sh 부분 설치본 참조 오류 감사) | Claude |
 | 2026-09-25 | v1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |
+| 2026-09-26 | v2 | 재검증 — QRG 전문 PDF·Google 공식 문서 원문 대조 10건, 오류 5건 정정(QRG PDF 링크=개요 문서, YMYL 구판 6분류→현행 4유형, "AI Overviews 챕터 신설" 삭제, helpful content 질문 묶음 구성, 근거 없는 50~80% 트래픽 수치 삭제), SKILL.md·REFERENCE.md 반영, 실전 질문 2/2 PASS → PENDING_TEST | 메인 세션 (재검증) |

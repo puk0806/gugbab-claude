@@ -11,7 +11,7 @@ description: >
 # 국제 학술 인용 스타일 비교 + 인용관리 도구
 
 > 소스: APA Style(https://apastyle.apa.org/), MLA Style Center(https://style.mla.org/), Chicago Manual of Style(https://www.chicagomanualofstyle.org/), Zotero(https://www.zotero.org/), Citation Style Language(https://citationstyles.org/)
-> 검증일: 2026-05-03
+> 검증일: 2026-09-26
 > 대상: 도덕윤리교육 전공 대학원생 (영문 학술지 투고·국제 학회 발표)
 > 한국 KCI 등재지 형식은 별도 스킬 참조 → `writing/academic-paper-structure-humanities`
 
@@ -163,12 +163,14 @@ Reck, Michael, translator. The Iliad. By Homer, HarperCollins, 1994.
 
 ---
 
-## 3. Chicago 17판 (Chicago Manual of Style)
+## 3. Chicago 17/18판 (Chicago Manual of Style)
 
 > 출처: https://www.chicagomanualofstyle.org/tools_citationguide.html
-> Chicago Manual of Style 17th edition (2017)
+> Chicago Manual of Style 17th edition (2017) / 18th edition (2024)
 
-> 주의: Chicago Manual of Style 18판이 2024년 9월에 출시되었다. 18판 주요 변경사항은 인용 출판지(publication location) 생략 권장, AI 생성 텍스트·이미지 인용 양식 추가, 한국어 표기 가이드 확장 등이다. 학술지 투고 시 18판 사용 여부를 편집자에게 확인할 것.
+> 주의: Chicago Manual of Style 18판이 2024년 9월에 출시되었다(온라인판 2024-08). 18판 주요 변경사항은 도서 인용의 출판지(place of publication) 불요(1900년 이전 도서는 예외), AI 도구 인용 지침, 서지 항목 저자 6명까지 표기(7명 이상이면 첫 3명 + et al.), 한국어 로마자 표기(RR vs McCune–Reischauer) 절 포함 등이다. 학술지 투고 시 17판/18판 중 어느 판을 쓰는지 편집자 가이드를 확인할 것.
+
+> 주의 (2026-09-26 정정): 아래 3-1·3-2 예시는 **CMOS 공식 Quick Guide의 18판 예시**다(출판지 없음). 이전 판은 이를 "17판"으로 표기했다. 17판을 요구하는 학술지라면 도서에 출판지를 넣는다 — 예: `Charles Yu, Interior Chinatown (New York: Pantheon Books, 2020), 45.`
 
 Chicago는 두 가지 시스템이 공존한다:
 - **Notes-Bibliography (NB)**: 인문학(문학·역사·예술·철학) 전통
@@ -236,7 +238,8 @@ Dittmar, Emily L., and Douglas W. Schemske. 2023. "Temporal Variation in
 **Reference List 항목**
 ```
 Binder, Amy J., and Jeffrey L. Kidder. 2022. The Channels of Student
-    Activism. University of Chicago Press.
+    Activism: How the Left and Right Are Winning (and Losing) in Campus
+    Politics Today. University of Chicago Press.
 ```
 
 **본문 내 인용**: `(Binder and Kidder 2022, 117–18)`
@@ -285,15 +288,18 @@ Binder, Amy J., and Jeffrey L. Kidder. 2022. The Channels of Student
 
 > 출처: https://apastyle.apa.org/blog/citing-classical-religious-works
 
-> APA는 고대 그리스 텍스트를 참고문헌에 반드시 등록할 필요가 없다고 명시하지만, 본문에서 사용한 판본을 명확히 밝히면 된다. 다만 학위 논문에서는 일반적으로 reference list에 포함하는 것을 권장한다.
+> **APA 7판에서는 고대 그리스·로마 고전도 참고문헌(reference list)에 등록한다.** 고전은 "재출판 저작(republished work)"으로 취급해, 사용한 판본의 연도를 날짜 요소에 쓰고 끝에 `(Original work published ca. 350 B.C.E.)`를 붙인다.
+> 주의 (2026-09-26 정정): 이전 판의 "APA는 고전을 참고문헌에 등록할 필요가 없다"는 **APA 6판(2009) 규정**이다. 7판에서 바뀌었다(APA Style 블로그 "Citing classical and religious works" 및 다수 대학 APA 7 가이드).
 
-**본문 내 인용 형식**:
+**본문 내 인용 형식** (APA 공식 예시: 참고문헌 `Aristotle. (1994). Poetics (S. H. Butcher, Trans.). The Internet Classics Archive. http://classics.mit.edu/Aristotle/poetics.html (Original work published ca. 350 B.C.E.)`, 본문 `(Aristotle, ca. 350 B.C.E./1994)`):
 ```
-"Being happy takes a complete lifetime" (Aristotle, Nicomachean Ethics,
-    1.7, 1098a16).
+... activity of soul in accordance with virtue (Aristotle, ca. 350 B.C.E./2009,
+    Nicomachean Ethics 1.7, 1098a16).
 
 (Plato, Phaedrus, 274c)
 ```
+
+> 주의 (2026-09-26): 이전 판의 `"Being happy takes a complete lifetime"`은 어떤 표준 번역의 문장도 아닌 **요약 문구를 따옴표로 감싼 것**이었다(NE I.7에서 "완전한 생애"는 1098a18 부근). 직접 인용 따옴표에는 반드시 실제 사용한 번역본의 문장을 넣을 것. 위 예시의 인용 문구도 형식 시연용이며 번역문을 확인해 교체해야 한다.
 
 - `1.7`은 책·장 번호, `1098a16`이 Bekker 페이지·단·줄.
 - 페이지 번호 대신 **canonically numbered parts**(책, 장, 절, 행, 칸토 등)를 사용한다.
@@ -312,7 +318,7 @@ Plato. Republic. Translated by G. M. A. Grube, revised by C. D. C. Reeve,
     Hackett, 1992.
 ```
 
-### 6-4. Chicago 17판 — 고전 인용
+### 6-4. Chicago 17/18판 — 고전 인용
 
 각주에 표준 약어 사용 권장:
 
@@ -350,8 +356,9 @@ Plato. Republic. Translated by G. M. A. Grube, revised by C. D. C. Reeve,
 
 ### 7-1. Zotero (가장 권장) — 무료·오픈소스
 
-> 출처: https://www.zotero.org/
-> 최신 버전: Zotero 7 (2024년 8월 9일 출시)
+> 출처: https://www.zotero.org/ , https://www.zotero.org/support/changelog
+> 최신 버전: **Zotero 10.0.4 (2026-09-22)** — Zotero 7(2024-08-09) 이후 8(2026-01-22)·9(2026-04-10)·10.0(2026-08-17)으로 6~10주 주기 빠른 릴리스 체제 전환 (2026-09-26 재검증. 이전 판 "최신 = Zotero 7"은 구버전)
+> 주의: 아래 기능 설명은 Zotero 7 기준으로 작성되었다. 10.0에서 Sync 설정 창이 "Account"로 이름이 바뀌는 등 메뉴 명칭이 달라졌을 수 있으니 현재 버전 문서로 확인할 것.
 
 **핵심 기능**:
 - 브라우저 확장(Zotero Connector)으로 학술 DB·웹사이트의 메타데이터·PDF 자동 수집
@@ -395,7 +402,7 @@ Plato. Republic. Translated by G. M. A. Grube, revised by C. D. C. Reeve,
 
 **현황**:
 - EndNote 21 → EndNote 2025로 업데이트
-- 라이브러리 공유 최대 1,000명 (대규모 팀 연구 적합)
+- 라이브러리 공유 최대 1,000명 (EndNote 2025 공식 문서 "About Shared Libraries", 2026-09-26 확인)
 - 활동 피드(Activity Feed) 기능
 - Word 통합, EndNote Click(브라우저 확장)
 
@@ -414,7 +421,7 @@ Plato. Republic. Translated by G. M. A. Grube, revised by C. D. C. Reeve,
 
 | 도구 | 스타일 변경 방법 |
 |------|-----------------|
-| Zotero 7 (2024.8 이후) | Edit → **Settings** → Cite → Styles → "Get additional styles…" (구버전은 Edit → **Preferences**, 기능 동일) — CSL 파일 직접 설치는 "+" 버튼으로 로컬 .csl 파일 추가 가능 |
+| Zotero 7 이상 (2024.8 이후, 현재 10.x) | Edit → **Settings** → Cite → Styles → "Get additional styles…" (구버전은 Edit → **Preferences**, 기능 동일) — CSL 파일 직접 설치는 "+" 버튼으로 로컬 .csl 파일 추가 가능 |
 | Mendeley Reference Manager | Mendeley Cite (Word) → Citation Style |
 | EndNote | Tools → Output Styles → Open Style Manager |
 | BibTeX | `\bibliographystyle{}` 명령 또는 BibLaTeX `style=` 옵션 |
@@ -465,7 +472,7 @@ Plato. Republic. Translated by G. M. A. Grube, revised by C. D. C. Reeve,
 
 ## 10. 도덕윤리교육 분야 실전 권장 워크플로우
 
-1. **투고 전**: 대상 학술지의 Author Guidelines 확인 → 스타일 결정 (예: *Journal of Moral Education*은 APA 7판 사용)
+1. **투고 전**: 대상 학술지의 Author Guidelines 확인 → 스타일 결정 (예: *Journal of Moral Education*은 Taylor & Francis APA author-date 스타일 사용 — 세부는 T&F Reference Style A(APA) 가이드 확인)
 2. **자료 수집**: Zotero Connector로 PhilPapers, JSTOR, ERIC, Google Scholar 등에서 메타데이터 자동 수집
 3. **고전 텍스트**: Aristotle/Plato 등은 직접 입력 — Bekker/Stephanus 번호로 본문 인용
 4. **번역서**: 원저자 + 번역자 + 원저 발행 연도 모두 입력

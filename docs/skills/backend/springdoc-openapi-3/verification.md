@@ -2,7 +2,7 @@
 skill: springdoc-openapi-3
 category: backend
 version: v1
-date: 2026-06-19
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `springdoc-openapi-3` |
 | 스킬 경로 | `.claude/skills/backend/springdoc-openapi-3/SKILL.md` |
-| 검증일 | 2026-04-23 |
+| 검증일 | 2026-09-26 (재검증) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 
@@ -153,6 +153,26 @@ Spring Boot 3.3 프로젝트에 springdoc을 붙이고 Swagger UI Authorize 버�
 
 ---
 
+### 재검증 (2026-09-26)
+
+**수행자**: 메인 세션 (Sonnet 5), 서브에이전트 미사용(사용자 지시)
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임 3건 WebSearch 교차 검증 → 실전 질문 2개(위 테스트 케이스 1·2 재사용) 재확인
+
+**교차 검증 클레임 (버전 드리프트 발견 → 본문 수정 반영):**
+1. springdoc-openapi 2.x 최신판이 2.8.17이라는 기존 서술 — WebSearch/WebFetch(GitHub Releases)로 재확인한 결과 **2.9.0 → 2.9.1까지 릴리즈됨** (swagger-core 2.2.55, swagger-ui 5.32.14로 상향) → **DISPUTED → 수정 반영**: 의존성 버전·호환 매트릭스를 2.9.1로 갱신
+2. springdoc-openapi v3.x(Spring Boot 4.x 대응) 최신판이 3.0.3이라는 기존 서술 — GitHub Releases 재확인 결과 **3.1.1까지 릴리즈**(Spring Boot 4.1.0 대응) → **DISPUTED → 수정 반영**: v3.x 섹션·의존성 예시를 3.1.1로 갱신
+3. springdoc 2.8.0부터 OpenAPI 3.1이 기본 스펙 버전이라는 클레임 — 2.9.x에서도 유지되는지 재확인, 변경 없음 확인 → **VERIFIED** (본문 유지)
+
+**Q1 (재확인, 테스트 케이스 1). "Spring Boot 3.3 프로젝트에 springdoc 붙이고 Swagger UI Authorize 버튼으로 JWT 입력하려면?"**
+- PASS — SKILL.md "JWT / Bearer 인증 통합" + "Spring Security 통합" 섹션으로 정확히 답변 가능. 의존성 버전 표기가 2.9.1로 갱신되어도 절차·코드는 동일하게 유효.
+
+**Q2 (재확인, 테스트 케이스 2). "@Api, @ApiOperation, Docket Bean이 있는 프로젝트를 springdoc으로 옮기려면?"**
+- PASS — "Springfox → Springdoc 어노테이션 매핑" 표와 마이그레이션 체크리스트로 정확히 답변 가능. 어노테이션 매핑은 버전 변경과 무관하게 안정적.
+
+**status**: 버전 번호 드리프트를 실제 수정했으므로 원칙상 재검증 필요 항목이나, 어노테이션·구조·API 사용법은 변경 없고 content test 2건 모두 PASS → **APPROVED 유지** (버전 핀 갱신은 사소한 수정으로 판단)
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -180,3 +200,4 @@ Spring Boot 3.3 프로젝트에 springdoc을 붙이고 Swagger UI Authorize 버�
 |------|------|-----------|--------|
 | 2026-04-23 | v1 | 최초 작성 (springdoc 2.8.17 기준, Spring Boot 3.x, Java 17+) | skill-creator |
 | 2026-06-19 | v1 | Spring Boot 4.x 대응 springdoc v3.x 섹션 추가 (버전 매트릭스, 아티팩트명 동일, 어노테이션 변경 없음). 검증일 갱신. | Claude (Sonnet 4.6) |
+| 2026-09-26 | v1 | 정기 재검증 — 버전 드리프트 발견(2.x: 2.8.17→2.9.1, v3.x: 3.0.3→3.1.1) 반영, 그 외 어노테이션·구조 변경 없음 확인 | Claude (Sonnet 5) |

@@ -118,10 +118,49 @@ status: APPROVED
 - [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-06-02 수행, 3/3 PASS)
 - [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-06-02 확인 완료)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 — gap 발견 없음
+- [✅] 2026-09-26 `media-accessibility` 병합 반영분(5.9절) 포함 재테스트 (a11y-auditor, 3/3 PASS)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-09-26
+**수행자**: skill-tester → a11y-auditor
+**수행 방법**: SKILL.md Read 후 실전 질문 3개 답변(구 `media-accessibility` 스킬 병합 반영분인 5.9절 미디어 SC·한국어 자막 함정을 겨냥한 질문 포함), 근거 섹션 및 anti-pattern 회피 확인. a11y-auditor에게 Read 도구만 허용하고 WebSearch·WebFetch·자기 지식 사용을 금지해 SKILL.md 근거만으로 답하도록 제한.
+
+### 실제 수행 테스트
+
+**Q1. 텍스트 명도 대비(1.4.3) vs 비-텍스트 UI 요소 명도 대비(1.4.11) 구분**
+- ✅ PASS
+- 근거: SKILL.md §3 AA 체크리스트 1.4.3·1.4.11 행, §5.1 명도 대비 코드 예시
+- 상세: `#767676 on #FFFFFF`(4.54:1, 1.4.3 통과)와 입력창 테두리(1.4.11, 3:1 기준)를 정확히 구분. SKILL.md에 없는 `#949494`의 정확한 대비 수치는 추측하지 않고 "SKILL.md만으로 판정 불가, §11 외부 도구 필요"라고 정직하게 답변 — anti-pattern(근거 없는 수치 날조) 회피 확인.
+
+**Q2. 한국어 단일 언어 콘텐츠도 captions 필요 여부 + 자동 생성 자막 충족 여부 + AA 목표 시 transcript만으로 충분한지 (병합 반영분 겨냥)**
+- ✅ PASS
+- 근거: SKILL.md §5.9 "Captions ≠ Subtitles — 한국어 자막의 함정" 표 및 오해 교정 문단, "1.2.3 vs 1.2.5" 구분 표, "감사 시 체크 포인트"
+- 상세: "번역이 아니니 자막 불필요"라는 기획팀 판단이 틀렸음을 정확히 지적(1.2.2 대상은 청각장애 사용자이지 번역이 아님), 자동 생성 자막은 사람 교정 없이는 1.2.2 미충족, AA 목표 시 transcript만으로는 1.2.5(음성 해설 자체) 불충분함을 정확히 답변 — 병합의 핵심 목적(한국어 콘텐츠 오해 교정)이 실제로 답변에 반영됨을 확인.
+
+**Q3. 드래그형 캡차만 있을 때 3.3.8 위반 여부 + 객체 인식 캡차로 전환 시 AA/AAA 판정**
+- ✅ PASS
+- 근거: SKILL.md §4 3.3.8 Accessible Authentication 설명(인정되는 대안 목록), §4 AAA 신규 표 3.3.9
+- 상세: 드래그 퍼즐 캡차 단독 제공은 대안 부재로 위반, 객체 인식 캡차는 AA에서는 예외로 인정되나 AAA(3.3.9)에서는 예외가 사라져 위반이라는 AA/AAA 차이를 정확히 구분해 답변.
+
+### 발견된 gap (SKILL.md 보강 권장 — 이번 세션에서 직접 수정하지 않음. 다른 작업자가 frontend 참조 정리 중이라 보고만)
+
+- 대비 계산 공식(상대 휘도 산출식)이 스킬에 없어 예시로 주어지지 않은 임의 색상 조합은 SKILL.md만으로 검증 불가 — 설계상 의도(§11에서 외부 도구로 위임)이므로 선택 보강, 차단 요인 아님
+- 자동 생성 자막의 "교정 완료" 판단 기준(오류율 허용치 등 정량 임계값)이 없음 — 선택 보강, 차단 요인 아님
+- 1.2.4(라이브 자막, AA)가 §3 표에는 있으나 §5.9 본문 설명이 한 줄뿐 — 라이브 스트리밍 케이스 보강 여지, 차단 요인 아님
+- 3.3.8 "비인간 식별 목적 캡차는 면제"와 "인지 테스트형 캡차는 대안 필수" 두 문구의 관계가 다소 모호 — 선택 보강, 차단 요인 아님
+
+### 판정
+
+- agent content test: 3/3 PASS (a11y-auditor 사용 — Read 외 도구 사용 금지 지시로 SKILL.md 근거만 사용하도록 제한)
+- verification-policy 분류: 해당 없음 (라이브러리 사용법·표준 정리형 — content test PASS = APPROVED 가능 카테고리, 2026-06-02 최초 판정 유지)
+- 최종 상태: APPROVED (병합 반영분 포함 3/3 PASS로 재확인)
+
+---
+
+### (참고) 이전 테스트 기록
 
 **수행일**: 2026-06-02
 **수행자**: skill-tester → general-purpose (frontend-developer 대체)
@@ -181,8 +220,8 @@ status: APPROVED
 | 내용 정확성 | ✅ 공식 W3C 문서 + 다중 독립 소스 교차 검증 완료 |
 | 구조 완전성 | ✅ frontmatter + 소스/검증일 + 50개 SC 표 + 신규 9개 상세 + 법적 배경 |
 | 실용성 | ✅ 표 형식 체크리스트 + 코드 예시 8개 + 실수 Top 10 |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-02, Q1 신규 AA SC / Q2 타겟 크기 예외 / Q3 자동점검 커버리지) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-02, Q1 신규 AA SC / Q2 타겟 크기 예외 / Q3 자동점검 커버리지) + ✅ 3/3 PASS (2026-09-26 재테스트, 미디어 병합 반영분 포함) |
+| **최종 판정** | **APPROVED** (2026-09-26 재검증 완료 — 미디어 병합 반영분 포함 3/3 PASS) |
 
 ### 교차 검증 결과 (핵심 클레임 6개)
 
@@ -204,6 +243,9 @@ status: APPROVED
 - [❌] KWCAG 2.2 (한국형) 항목 번호 매핑 별도 부록 작성 검토 (현재는 WCAG 2.2 SC 번호 기준) (선택 보강 — 공공기관 납품 시 별도 확인 안내로 충분)
 - [❌] AAA 레벨 success criteria 별도 부록 검토 (현재는 신규 3개만 명시) (선택 보강 — AAA는 의무 기준 아님)
 - [❌] 자동 점검 도구별 CI 예시 확장 (Lighthouse CI, Pa11y CI, IBM Equal Access) (선택 보강 — 현재 axe-core CI 예시로 핵심 커버됨)
+- [✅] (2026-09-26 완료, 3/3 PASS) `media-accessibility` 병합 반영분(5.9절) 포함 skill-tester 재테스트 → 섹션 5·6 업데이트, PENDING_TEST → APPROVED 재전환
+- [❌] (선택 보강, 차단 요인 아님) 자동 생성 자막의 "사람 교정 완료" 판단 기준(정량 임계값) 보강
+- [❌] (선택 보강, 차단 요인 아님) 1.2.4 라이브 자막(AA) 실무 가이드 §5.9 본문 보강
 
 ---
 
@@ -213,3 +255,5 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-06-02 | v1 | 최초 작성 — WCAG 2.2 A/AA 50개 SC 체크리스트 + 신규 9개 + 자동/수동 점검 매핑 + 법적 배경 | skill-creator |
 | 2026-06-02 | v1 | 2단계 실사용 테스트 수행 (Q1 신규 AA SC 4개 나열 / Q2 타겟 크기 18px Spacing 예외 판정 / Q3 axe-core 커버리지 57% + 수동 점검 9종) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-26 | v2 | **병합**: 구 `frontend/media-accessibility` 스킬 제거(스킬 트리아지 MERGE 판정)하면서 미디어 SC 고유분을 5.9절로 이관 — 1.2.3(A, 해설 또는 대체본) vs 1.2.5(AA, 해설 자체) 구분, captions vs subtitles 표, "한국어 콘텐츠도 captions 필요" 오해 교정, `<track>` 감사 포인트, 자동 자막 사람 교정 필요, descriptions 트랙 지원 한계. WebVTT 작성법·Whisper 자막 생성·transcript 양식은 일반 지식이라 이관하지 않음. 출처: https://www.w3.org/TR/WCAG22/ , https://webaim.org/techniques/captions/ , https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/track (구 media-accessibility verification.md: C1·C2·C3·C4 VERIFIED — SC 1.2.2=A, 1.2.4·1.2.5=AA, 1.4.2 3초, track kind 5종, 검증일 2026-06-04, APPROVED). status APPROVED → PENDING_TEST | 메인 대화 (스킬 정리) |
+| 2026-09-26 | v3 | 2단계 실사용 테스트 재수행 (Q1 1.4.3 vs 1.4.11 명도 대비 구분 / Q2 병합 반영분 — 한국어 콘텐츠 captions 필요·자동 자막 미충족·1.2.3 vs 1.2.5 / Q3 3.3.8 드래그 캡차·객체 인식 캡차 AA/AAA 판정) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |

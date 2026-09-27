@@ -1,6 +1,8 @@
 ## 8. Helpful Content System — Google 공식 자가 점검 질문
 
-2022년 시작, 2024-03에 코어 알고리즘에 통합. 현행 Google Search Central 문서에 게시된 32개 자가 점검 질문은 4개 묶음으로 나뉜다.
+2022년 시작, 2024-03 코어 업데이트부터 "단일 신호·시스템이 아닌" 코어 랭킹 시스템의 여러 신호로 흡수.
+
+> 주의 (2026-09-26 정정): 현행 "Creating helpful, reliable, people-first content" 문서(최종 수정 2025-12-10)의 질문 묶음은 **Content and quality(12) / Expertise(4) / Focus on people-first content(5) / Avoid creating search engine-first content(10) / Who·How(각 3)** 이다(원문 목록 집계). 이전 판의 "32개 질문 4묶음, Presentation and Production 묶음"은 구판 구성이며 현행 문서에 Presentation and Production 묶음은 없다(페이지 경험은 "Provide a great page experience" 단락으로 서술). 아래 8-3은 구판 참고용으로만 남긴다.
 
 ### 8-1. Content and Quality (콘텐츠·품질)
 
@@ -17,7 +19,7 @@
 - 저자가 해당 주제의 *인정받는 권위자*인가?
 - 사실 오류가 쉽게 발견되는가?
 
-### 8-3. Presentation and Production (표현·제작)
+### 8-3. Presentation and Production (표현·제작) — *구판 묶음, 현행 문서에 없음*
 
 - 맞춤법·문법 오류가 없는가?
 - 대량 자동 생산처럼 보이지 않는가?
@@ -107,7 +109,7 @@
 | 게시일만 있고 업데이트일 없음 | 오래된 정보가 그대로 노출 → Trust ↓ |
 | 통계 인용에 출처 링크 없음 | Expertise 검증 불가 |
 | 저자 프로필 페이지 없이 byline만 | 평가자가 자격 확인 불가 |
-| About Us 한 문단 | QRG 기준에서 *부족* |
+| About Us 한 문단 | 신뢰 신호로 약함 (QRG는 분량 기준이 아닌 *목적 대비 충분성*을 봄) |
 | YMYL 분야에 면책 조항 없음 | 책임 회피 — 신뢰 감점 |
 | 한국 사이트 사업자 정보 숨김 | 법적 의무 위반 + 신뢰 직격타 |
 | 환불·교환 정책 모호 | 이커머스 Trust 핵심 약점 |
@@ -186,7 +188,8 @@
 
 ## 14. 참고
 
-- Google Search Quality Rater Guidelines PDF: https://services.google.com/fh/files/misc/hsw-sqrg.pdf
+- Google Search Quality Rater Guidelines 전문 PDF (2025-09-11판): https://static.googleusercontent.com/media/guidelines.raterhub.com/en//searchqualityevaluatorguidelines.pdf
+- QRG 개요 문서 (2023-11): https://services.google.com/fh/files/misc/hsw-sqrg.pdf
 - Google: Creating Helpful Content: https://developers.google.com/search/docs/fundamentals/creating-helpful-content
 - Google: Generative AI Content Guidance: https://developers.google.com/search/docs/fundamentals/using-gen-ai-content
 - 2022-12 E-E-A-T 도입 블로그: https://developers.google.com/search/blog/2022/12/google-raters-guidelines-e-e-a-t

@@ -2,8 +2,8 @@
 skill: python-async-asyncio
 category: backend
 version: v1
-date: 2026-05-15
-status: APPROVED
+date: 2026-09-26
+status: PENDING_TEST
 ---
 
 # python-async-asyncio 검증 문서
@@ -32,10 +32,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `python-async-asyncio` |
 | 스킬 경로 | `.claude/skills/backend/python-async-asyncio/SKILL.md` |
-| 검증일 | 2026-05-15 |
-| 검증자 | skill-creator |
+| 검증일 | 2026-09-26 (최초 2026-05-15) |
+| 검증자 | skill-creator → 2026-09-26 재검증: 메인 오케스트레이션 (Claude Sonnet 5) |
 | 스킬 버전 | v1 |
-| 대상 버전 | Python 3.11 / 3.12 (3.11+ 권장) |
+| 대상 버전 | Python 3.11 / 3.12 (3.11+ 권장), 3.13/3.14 GA 반영 |
 | 짝 스킬 | `backend/python-fastapi`, `backend/python-anthropic-sdk` |
 
 ---
@@ -128,6 +128,31 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
+### 재검증 (2026-09-26)
+
+**수행일**: 2026-09-26
+**수행자**: 메인 대화 오케스트레이션 (Claude Sonnet 5) — verification-policy.md 재검증 절차
+**수행 방법**: SKILL.md 전체 Read → WebSearch로 핵심 클레임 재대조 → 실전 질문 2개 자체 답변
+
+**재검증한 핵심 클레임**
+- Python 3.14 릴리스일 2025-10-07 — 신규 확인, SKILL.md 대상 버전 표기에 반영 (VERIFIED, python.org 공식)
+- Python 3.14부터 asyncio가 free-threaded Python을 공식 지원(스레드 안전성 강화), `python -m asyncio ps/pstree` CLI 추가 — 신규 확인이나 본 SKILL.md 11절 "3.14: create_task(eager_start=True) 지원" 서술과 상충 없음, 추가 보강 여지는 있으나 기존 서술은 오류 아님 (VERIFIED)
+- `asyncio.timeout()`/`TaskGroup`(3.11+) API 시그니처 — 재확인, 변동 없음 (VERIFIED)
+
+**Q1. "지금(2026-09) 최신 Python에서 이 스킬 내용이 여전히 유효한가?"**
+- PASS
+- 근거: SKILL.md 상단 "대상 버전" 표기 — 3.13/3.14 GA 사실을 반영했고, 본문 API(TaskGroup·timeout·to_thread 등)는 3.11+ 전체에서 동일하게 유효함을 명시.
+
+**Q2. "Python 3.14의 free-threaded 지원이 이 스킬의 GIL 관련 설명과 충돌하나?"**
+- PASS
+- 근거: SKILL.md "3. 동기 함수를 비동기에서 호출" 절의 "GIL을 우회하지 않는다... free-threaded Python 빌드를 사용" 문구가 이미 free-threaded 대안을 정확히 언급하고 있어 3.14 공식 지원과 상충하지 않음.
+
+**판정**: 대상 버전 표기에 3.13/3.14 GA 사실 추가 → 내용 변경 있음 → status `PENDING_TEST`로 되돌림.
+
+---
+
+### 최초 테스트 (2026-05-15)
+
 **수행일**: 2026-05-15
 **수행자**: skill-tester → general-purpose (domain-specific python 에이전트 미존재로 대체)
 **수행 방법**: SKILL.md Read 후 4개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
@@ -173,8 +198,8 @@ status: APPROVED
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-05-15, 4/4 PASS) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (2026-05-15, 4/4 PASS) + ✅ (2026-09-26 재검증, 2/2 PASS — 3.13/3.14 GA 반영 확인) |
+| **최종 판정** | **PENDING_TEST** (2026-09-26 대상 버전에 3.13/3.14 GA 사실 추가로 내용 변경 — 재검증 필요) |
 
 > content test 가능 카테고리 (`verification-policy.md`의 "라이브러리 사용법 스킬"). skill-tester 통과 시 APPROVED 전환 가능.
 
@@ -193,3 +218,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-05-15 | v1 | 최초 작성 — Python 3.12 기준, asyncio·httpx·PEP 492/525 통합 | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 time.sleep vs asyncio.sleep / Q2 to_thread vs run_in_executor / Q3 timeout vs wait_for 버전 분기 / Q4 CancelledError 재전파) → 4/4 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-26 | v1 | 재검증 — Python 3.13/3.14 GA 사실을 대상 버전에 반영(본문 API 서술은 변동 없음) → PENDING_TEST | 메인 오케스트레이션 (Claude Sonnet 5) |

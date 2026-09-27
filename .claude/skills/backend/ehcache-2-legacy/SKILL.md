@@ -6,7 +6,7 @@ description: EhCache 2.10.x 레거시 로컬 인메모리 캐시 스킬 - Spring
 # EhCache 2.10.x 레거시 스킬 (Spring Boot 2.5 + Java 11)
 
 > 소스: https://www.ehcache.org/documentation/2.8/ | https://www.ehcache.org/apidocs/2.10.4/ | https://github.com/ehcache/ehcache2 | https://docs.spring.io/spring-boot/docs/2.1.6.RELEASE/reference/html/boot-features-caching.html
-> 검증일: 2026-04-23
+> 검증일: 2026-09-26 (2026-04-23 최초 검증 · 재검증 이력은 8절 참조)
 
 > **⚠️ 중요 경고 — 신규 프로젝트 금지**
 >
@@ -14,6 +14,7 @@ description: EhCache 2.10.x 레거시 로컬 인메모리 캐시 스킬 - Spring
 > - 2.10.9.2 (2021-04-24 릴리스)가 사실상 마지막 OSS 패치이며, 이후 보안 패치도 매우 드물다.
 > - **신규 프로젝트는 반드시 EhCache 3.x(JSR-107) 또는 Caffeine을 사용하라.** 이 스킬은 이미 EhCache 2.x로 운영 중인 Spring Boot 2.5 / Java 11 **레거시 시스템의 유지·보수**를 위한 것이다.
 > - 클러스터(Terracotta) 구성은 상용 라이선스 이슈가 있다 — Fast Restartability(`LOCALRESTARTABLE`), BigMemory 등은 엔터프라이즈 상용 제품 기능이며 OSS에서는 `LOCALTEMPSWAP` 및 non-clustered 로컬 캐시만 자유롭게 사용 가능.
+> - **주의 (CVE, 2026-09-26 추가):** `net.sf.ehcache:ehcache:2.10.6` 등 구버전에는 재패키징된 `jackson-databind 2.9.6`이 번들되어 있고, 이 버전대에는 다수의 공개 CVE(역직렬화 계열)가 존재한다. 2.10.9.2를 쓰더라도 번들 `jackson-databind`가 최신인지 `mvn dependency:tree`로 직접 확인하고, 필요하면 `<dependencyManagement>`로 안전한 버전을 강제 override할 것 — EhCache 2.x는 더 이상 이 의존성을 갱신하지 않는다.
 
 ---
 

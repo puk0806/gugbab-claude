@@ -14,9 +14,9 @@ description: >
 # 아리스토텔레스 akrasia 핵심 어휘 번역어 비교표
 
 > 소스: 각 출판사 공식 페이지 · BMCR 서평 · LSJ · Perseus · 국역본 출판사 페이지 (각 섹션 하단 명시)
-> 검증일: 2026-05-03
+> 검증일: 2026-05-03 (그리스어 인용·Ross 인용 원문 대조: 2026-09-26, Perseus tlg0086.tlg010.perseus-grc2.xml + MIT Internet Classics Archive Ross 역)
 > 대상 독자: 도덕윤리교육 대학원생, akrasia 주제 논문 작성자
-> 관련 스킬: `humanities/aristotle-primary-citation`, `humanities/akrasia-scholarship-map`, `humanities/aristotle-greek-text-tools`
+> 관련 스킬: `humanities/aristotle-primary-citation`(Perseus 원문 접근 §11 포함), `humanities/akrasia-scholarship-map`
 
 ---
 
@@ -105,13 +105,17 @@ description: >
 **그리스어 (Bywater OCT 1894 기준):**
 
 ```
-ἔτι δὲ καὶ ὧδε φυσικῶς ἄν τις ἐπιβλέψειεν τὴν αἰτίαν.
-ἡ μὲν γὰρ καθόλου δόξα, ἡ δ' ἑτέρα περὶ τῶν καθ' ἕκαστά ἐστιν,
-ὧν αἴσθησις ἤδη κυρία· ... (1147a24-)
+ἔτι καὶ ὧδε φυσικῶς ἄν τις ἐπιβλέψειε τὴν αἰτίαν.
+ἣ μὲν γὰρ καθόλου δόξα, ἡ δʼ ἑτέρα περὶ τῶν καθʼ ἕκαστά ἐστιν,
+ὧν αἴσθησις ἤδη κυρία· ... (1147a24-26)
 ```
 
-**Ross (1908, OWC 개정판):**
-> "The case of those affected by wine or sleep or madness is similar; for it is plain that **knowledge** in such cases is **not present** in the way that the term implies." (1147a10-24 일대 — Ross는 "knowledge"와 "having knowledge but not using it"의 구분을 명시적으로 부각)
+> 2026-09-26 Perseus Bywater XML 원문 대조 정정: 기존 "ἔτι δὲ καὶ … ἐπιβλέψειεν … ἡ μὲν γὰρ"은 원문과 불일치(원문에 δὲ 없음, ἐπιβλέψειε, 관계대명사 ἣ).
+
+**Ross (1908, MIT Internet Classics Archive 공개본):**
+> "It is plain, then, that incontinent people must be said to be in a similar condition to men asleep, mad, or drunk." (1147a17-18 일대)
+>
+> 2026-09-26 정정: 기존에 Ross 번역으로 제시한 "The case of those affected by wine or sleep or madness is similar; for it is plain that knowledge in such cases is not present…"는 Ross 공개본에 존재하지 않는 문장이라 삭제하고 Ross 공개본의 실제 문장으로 교체. 또한 이 문장은 1147a24-b5가 아니라 그 앞 구간(1147a10-24)에 속한다.
 
 **Irwin (Hackett 3rd ed., 2019):**
 > Irwin은 "having (knowledge) versus using (knowledge)" 구분을 본문에 명시적으로 살리는 번역을 채택. 1147b 부근에서 "the appetitive part of the soul" 같은 심리학적 구분을 강조.
@@ -134,7 +138,7 @@ description: >
 |------|-------------|
 | 술 취한 자 비유의 강조 | Ross / Irwin은 "knowledge but not using"을 본문에 명시. Crisp는 자연 영어로 풀어냄. |
 | "ἐνέργεια" vs "ἕξις" 구분 | Irwin / Bartlett & Collins는 그리스어 술어 일대일 대응 시도. Crisp / Ross는 문맥 풀이. |
-| "kuria"(αἴσθησις ... κυρία) 번역 | Ross "control over"로, Irwin "have control over", Crisp "have authority over" 등 가변. |
+| "kuria"(αἴσθησις ... κυρία) 번역 | 역자별 가변. Ross 공개본은 "here we come to something within the sphere of perception"류로 풀어 옮겨 "control" 어휘를 쓰지 않는다(기존 "Ross 'control over'" 기술 정정). Irwin·Crisp 어휘는 > 주의: 미검증 — 인쇄본 확인. |
 
 > **주의:** 위 본문 인용은 무료 공개본(Ross 1908)과 출판사·서평 정보로 확인된 일반 경향이다. **학위논문 인용 시에는 본인이 사용한 인쇄본의 해당 행을 직접 옮겨 적을 것.** 본 스킬은 어떤 번역본의 어느 페이지를 어떻게 옮기라고 지시하지 않는다.
 
@@ -143,17 +147,21 @@ description: >
 **그리스어 (Bywater OCT 1894 기준):**
 
 ```
-τῆς δ' ἀκρασίας τὸ μὲν προπέτεια τὸ δ' ἀσθένεια.
-οἱ μὲν γὰρ βουλευσάμενοι οὐκ ἐμμένουσιν οἷς ἐβουλεύσαντο
-διὰ τὸ πάθος, οἱ δὲ διὰ τὸ μὴ βουλεύσασθαι ἄγονται ὑπὸ τοῦ πάθους·
+ἀκρασίας δὲ τὸ μὲν προπέτεια τὸ δʼ ἀσθένεια.
+οἳ μὲν γὰρ βουλευσάμενοι οὐκ ἐμμένουσιν οἷς ἐβουλεύσαντο
+διὰ τὸ πάθος, οἳ δὲ διὰ τὸ μὴ βουλεύσασθαι ἄγονται ὑπὸ τοῦ πάθους·
 ... (1150b19-22)
 ```
 
-**Ross:**
-> "Of incontinence one kind is impetuosity, another weakness. For some men after deliberating fail, owing to their emotion, to stand by the conclusions of their deliberation, while others are led by their emotion because they have not deliberated."
+> 2026-09-26 원문 대조 정정: 기존 "τῆς δ' ἀκρασίας"는 원문에 없는 관사·어순(원문 "ἀκρασίας δὲ"), "οἱ μὲν/οἱ δὲ"는 Bywater 표기 "οἳ μὲν/οἳ δὲ"로 교정.
+
+**Ross (MIT 공개본 원문 그대로):**
+> "Of incontinence one kind is impetuosity, another weakness. For some men after deliberating fail, owing to their emotion, to stand by the conclusions of their deliberation, others because they have not deliberated are led by their emotion"
 
 **Irwin (3rd ed.):**
 > "There are two species of incontinence — impetuosity and weakness. For some are weak because they have deliberated, but then their feelings make them abandon the result of their deliberation, whereas others — impetuous people — are led on by their feelings because they have not deliberated."
+>
+> 주의: 미검증 — Irwin 인쇄본 원문과 대조하지 못함. 문장 구조("some are weak because they have deliberated")가 그리스어 원문과 어긋나 재구성·의역일 가능성이 높으므로 **직접 인용 금지**, 인쇄본에서 채록할 것.
 
 **Crisp (rev. ed.):**
 > 동일 구조를 자연 영어로 풀이하며 "impetuosity"와 "weakness" 술어 채택.

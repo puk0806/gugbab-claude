@@ -2,7 +2,7 @@
 skill: frontend-domain-structure
 category: architecture
 version: v1
-date: 2026-08-26
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `frontend-domain-structure` |
 | 스킬 경로 | `.claude/skills/architecture/frontend-domain-structure/SKILL.md` |
-| 검증일 | 2026-08-26 |
+| 검증일 | 2026-09-26 (30~60일 주기 재검증, 최초 검증 2026-08-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 | 기준 버전 | FSD 스펙 2.1 (2024-11-13 릴리즈) / Next.js 16.3.3 (문서 기준일 2026-07-21) / Turborepo 2.10.12 / React 18·19 |
@@ -204,6 +204,30 @@ status: APPROVED
 
 ---
 
+### 5-1. 2026-09-26 재검증 (30~60일 주기, verification-policy.md 절차)
+
+**수행일**: 2026-09-26
+**수행 방법**: SKILL.md + references/REFERENCE.md 전체 Read → 핵심 클레임 3개 WebSearch/WebFetch 재검증 → 실전 질문 2개로 SKILL.md 자체 답변 재확인
+
+**재검증 클레임**:
+| # | 클레임 | 재확인 결과 |
+|---|--------|------|
+| R1 | FSD 현재 스펙은 여전히 **2.1** (2.2 미출시) | `feature-sliced.design` 공식 사이트 버전 셀렉터 재확인 → ✅ VERIFIED, 변동 없음 |
+| R2 | Steiger는 여전히 **beta** 단계 | GitHub `feature-sliced/steiger` README 재확인 — "The project is in beta and in active development" 그대로 존재 → ✅ VERIFIED, 변동 없음 |
+| R3 | `optimizePackageImports`는 여전히 **experimental·production 비권장** | Next.js 공식 문서 재조회(문서 버전 16.3.3→**16.3.6**로 갱신, lastUpdated 2025-12-19) — "currently experimental... not recommended for production" 문구 동일 → ✅ VERIFIED, 문서 버전 번호만 갱신(내용 변경 없음) |
+
+**Q1(재검증). "layer-first에서 domain-first로 전환할 때 FSD 2.2 같은 신버전 스펙을 새로 반영해야 하나?"**
+- SKILL.md 답변: 아니다. FSD 현재 스펙은 여전히 2.1이며 변경되지 않았다(§2, R1). 기존 pages-first·@x 크로스임포트 규칙 그대로 적용 가능.
+- **판정: ✅ PASS**
+
+**Q2(재검증). "Steiger를 CI 게이트로 도입해도 안전한가?"**
+- SKILL.md 답변: §2-7의 주의문대로 Steiger는 여전히 beta이므로 **버전을 고정**해서 CI에 넣어야 한다(R2로 재확인, 변동 없음).
+- **판정: ✅ PASS**
+
+**재검증 결과**: 3개 클레임 모두 VERIFIED, 실질 내용 변경 없음(Next.js 문서 버전 번호만 16.3.3→16.3.6로 갱신). **status APPROVED 유지.**
+
+---
+
 ### 이전 상태 (참고, 해소됨)
 
 과거 기록: 본 스킬 생성 작업은 `creation-workflow.md`의 단계 1~4(조사→교차 검증→작성→검증 문서 저장)까지만 범위가 지정되어 skill-tester 호출(단계 5)이 미수행 상태였다. 위 2026-08-26 기록으로 해소되었다.
@@ -244,3 +268,4 @@ status: APPROVED
 | 2026-08-26 | v1 | 최초 작성 — 공식 문서 21회 페치·7회 검색 기반, 17개 클레임 교차 검증(DISPUTED 2건 정정 반영, UNVERIFIED 1건 제거). 단계 1~4만 수행, skill-tester 미호출로 PENDING_TEST 유지 | skill-creator |
 | 2026-08-26 | v1 | 2단계 실사용 테스트 수행 (Q1 layer-first→domain-first 전환 첫 단계 / Q2 FSD 레이어 import 방향·slice 간 import 가능 여부 / Q3 Next.js private folder·route group 의미와 도메인 1:1 매핑 평가) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | Claude (Sonnet 5) |
+| 2026-09-26 | v1 | 30~60일 주기 재검증. FSD 2.1 유지, Steiger beta 유지, `optimizePackageImports` experimental 유지 확인 — 실질 변경 없음, Next.js 문서 버전 표기만 16.3.3→16.3.6 갱신, status APPROVED 유지 | 메인 세션 |

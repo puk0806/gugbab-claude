@@ -2,8 +2,8 @@
 skill: unity-levelplay-ads
 category: game
 version: v1
-date: 2026-06-09
-status: APPROVED
+date: 2026-09-26
+status: PENDING_TEST
 ---
 
 # 스킬 검증 보고서 — unity-levelplay-ads
@@ -18,7 +18,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `unity-levelplay-ads` |
 | 스킬 경로 | `.claude/skills/game/unity-levelplay-ads/SKILL.md` |
-| 검증일 | 2026-06-09 |
+| 검증일 | 2026-09-26 (최초 2026-06-09) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 | 대상 SDK 버전 | LevelPlay Unity Package 9.4.3 (2026-05-25 릴리스) |
@@ -162,11 +162,28 @@ status: APPROVED
 
 없음.
 
+### 2026-09-26 재검증
+
+**수행일**: 2026-09-26
+**수행 방법**: WebSearch로 핵심 클레임 3개 재확인 + SKILL.md 자체 답변 확인 질문 2개
+
+- 클레임1. LevelPlay 최신 안정 버전 9.4.3 — WebSearch 재확인 → **갱신 필요**: 최신은 **9.5.1**. SKILL.md 버전 표기 갱신
+- 클레임2. Android API 33+에서 `AD_ID` 권한 필요 — WebSearch 재확인 → **DISPUTED(범위 부정확)**: 공식 근거상 **API 31(Android 12) 타겟부터** 이미 필요하며 33+에 한정된 요구가 아님 → SKILL.md 전체 표기를 "API 31+ 타겟"으로 정정
+- 클레임3. LevelPlay Android SDK 배포 경로 — WebSearch 재확인 → **신규 사실 확인**: LevelPlay Android/Ad Quality SDK가 Maven Central로 이전, IS.com 저장소 미지원 → SKILL.md에 참고 항목 추가
+
+**Q1(재검증). "지금(2026-09) LevelPlay 패키지를 새로 설치하면 몇 버전이 뜨나?"**
+- SKILL.md 답변 경로: "1. Unity LevelPlay 개요" 표 "최신 안정 버전: 9.5.1"
+- 판정: PASS
+
+**Q2. "Android 앱을 API 31(Android 12)로 타겟팅만 해도 AD_ID 권한을 추가해야 하나, 아니면 API 33부터인가?"**
+- SKILL.md 답변 경로: "2. SDK 설치 > Android 빌드 사전 설정" — "API 31(Android 12) 이상을 타겟하면... 추가(API 33+에서도 동일하게 필요)"
+- 판정: PASS (정정 후 정확한 답변. 정정 전에는 "API 33+"로만 서술돼 있어 31~32 타겟 시 답이 틀렸을 것)
+
 ### 판정
 
-- agent content test: PASS (3/3)
+- agent content test: PASS (3/3, 최초) + 재검증 2/2 PASS
 - verification-policy 분류: 라이브러리 사용법 스킬 — 실사용 필수 카테고리 해당 없음
-- 최종 상태: APPROVED
+- 버전 갱신 + AD_ID 권한 요구 범위 정정이라는 실질 내용 변경이 있었으므로 PENDING_TEST 전환. 차기 skill-tester 재테스트 시 APPROVED 재검토
 
 ---
 
@@ -182,8 +199,8 @@ status: APPROVED
 | 내용 정확성 | ✅ (DISPUTED 2건 반영 완료) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-06-09 skill-tester 수행, 3/3 PASS) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (2026-06-09, 3/3 PASS) + ✅ (2026-09-26 재검증, 2/2 PASS) |
+| **최종 판정** | **PENDING_TEST** (버전·AD_ID 권한 범위 갱신, 재테스트 대기) |
 
 ---
 
@@ -201,3 +218,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-06-09 | v1 | 최초 작성 (LevelPlay 9.4.3 기준, 신 API 우선) | skill-creator |
 | 2026-06-09 | v1 | 2단계 실사용 테스트 수행 (Q1 보상형 광고 콜백 / Q2 OnApplicationPause 신 API 처리 / Q3 AdMob iOS 크래시 원인) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-26 | v1 | 재검증(98개 일괄 재검증 대상). LevelPlay 9.4.3→9.5.1 버전 갱신, AD_ID 권한 요구 범위를 API 33+→API 31+로 정정, Maven Central 이전 반영 → 실질 내용 변경으로 PENDING_TEST 전환 | Claude Code |
