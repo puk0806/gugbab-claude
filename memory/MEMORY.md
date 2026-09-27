@@ -45,7 +45,7 @@
 - [프로젝트 scope 전용 원칙](project_scope_only.md) — gugbab-claude 모든 산출물은 프로젝트 scope에만, 글로벌(~/.claude) 설정 금지
 - [MCP 미사용 결정](project_mcp_decision.md) — WebSearch/WebFetch만 사용, 팀 이식성 우선
 - [세션 일괄 메모리 저장·재시작 절차](project_multi_session_memory_save_restart.md) — 업데이트 후 ListAgents+SendMessage 병렬 요청, mtime으로 완료 확인, "진행할까요?" 멈춤 세션은 승인 메시지+notify_when_idle, 원격 재시작 불가(각 터미널 `/exit`→`claude -c`)
-- [Claude Code 설치 환경·npm SSL 우회](project_claude_install_environment.md) — 단일 nvm-global 설치(2.1.282, 2026-09-25), 업데이트 후 버전 안 바뀌면 .npm-global 중복 의심, npm tgz가 SELF_SIGNED_CERT로 막히면 curl 우회, `ENOTEMPTY rename`이면 `@anthropic-ai/.claude-code-XXXX` 잔재 삭제, postinstall 미완료 시 `claude` permission denied
+- [Claude Code 설치 환경·npm SSL 우회](project_claude_install_environment.md) — 단일 nvm-global 설치(2.1.283, 2026-09-26 자동 업데이트 — 업데이트 순간 일시적 "native binary not installed"), 업데이트 후 버전 안 바뀌면 .npm-global 중복 의심, npm tgz가 SELF_SIGNED_CERT로 막히면 curl 우회, `ENOTEMPTY rename`이면 `@anthropic-ai/.claude-code-XXXX` 잔재 삭제, postinstall 미완료 시 `claude` permission denied
 - [PDF 빈칸 뚫기 워크플로우](project_pdf_blank_workflow.md) — 반복 요청 작업(첫 건 2026-07-13 종결). 글자(char) 단위 판정·줄별 분리·침범 금지 6대 주의사항 + 검증 6종. 파일은 사용 후 삭제됨 — 재요청 시 메모리 기준 재작성, 미세 침범 개선 반영해 시작
 - [PDF 근무표 양식 생성 워크플로우](project_pdf_schedule_form_workflow.md) — 반복 요청 작업(2026-07-15 첫 건, 2026-08-13 재요청). 요일=상단 가로 / 홀·주방=좌측 세로 8행이 불변 조건. 스크립트 전문 포함, 재요청 시 `pdf변환/make-schedule.py` 먼저 확인
 - [프론트 도메인 리팩터링 자산 정비 (2026-08-26)](project_frontend_domain_refactor_assets_2026-08-26.md) — 타깃 2개(lfos-ui Next16 모노레포 / lf-ui Vite+React18+Recoil+MUI5+TS4.7 레거시) 스택 실측표, 깨진 스킬 참조 수리, 신규 스킬 8종+에이전트 1종, `--legacy` 훅 프로파일·SEO 옵트아웃·commands export. 작업은 레포에서만, 타깃은 export 대상

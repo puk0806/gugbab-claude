@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: feedback
   originSessionId: 64863110-4333-4f2b-963a-d8c76a43ec50
-  modified: 2026-09-26T04:32:54.575Z
+  modified: 2026-09-26T08:28:52.910Z
 ---
 
 2026-09-25 전수 점검·최신화 직후, 설치본(01) 세션이 "원본 재설치로 현지 수정 2건이 덮여 버그 재발"을 보고했다. 추가 조사로 같은 유형이 더 나왔다. 감사가 놓친 이유와 앞으로의 감사 축:
@@ -17,7 +17,15 @@ metadata:
 
 5. **(2026-09-26 재검토에서 추가) 보안 가드 우회·Stop 루프.** bash-guard가 명령 선두만 보고 판정해 `true | git push`, `bash -c`, `git -C . push` 등으로 push/commit 확인을 우회했고, PermissionRequest가 `rm -rf ~`·`reset --hard`까지 자동 승인했다. Stop 훅은 `stop_hook_active`를 안 읽어 해소 불가 조건(codex 계정 오류)에서 매 턴 재차단. 훅을 다른 이벤트로 옮기면 그 이벤트의 모든 `source`(compact·resume)에서 도는지까지 확인할 것 — SessionStart 이동 직후 compaction마다 "즉시 질문" 주입 회귀가 났다.
 
+6. **(2026-09-26) staleness-check가 사실상 218/237 스킬을 조용히 누락.** verification.md 줄 시작 `> 검증일:`을 찾았는데 그런 파일이 0개 — 체크리스트 백틱 안 옛 날짜를 읽거나 아예 못 읽음. "경고가 안 뜬다 = 신선하다"로 오판. 고친 뒤 실제 60일 초과는 135종으로 드러남.
+
+7. **(2026-09-26) 학술 인용 스킬의 원문 환각.** 아리스토텔레스·플라톤 스킬 15종을 Perseus canonical-greekLit XML(Bywater NE 등)과 대조하니 12종에서 오류 — 원문에 없는 그리스어 구절(πεισθεὶς μεταβάλλει, ἔχει πως καὶ οὐκ ἔχει 등), Bekker 행·장 경계 오기(VII.8은 1150b29 시작), 서지 편자 오기(Symposium Aristotelicum 2009 = Natali 편). 기존 verification.md는 "VERIFIED"였음 — WebSearch 2차 요약 교차만으로는 원문 인용을 검증할 수 없다. 학술 인용 스킬은 **1차 원문 파일 대조**가 필수.
+
+**병렬 작업 금지 사항**: 같은 워킹트리에서 서브에이전트 여러 개가 동시에 편집할 때 `git stash`·`git checkout -- .`·`git reset` 금지 — 다른 작업자의 미커밋 편집을 날린다(2026-09-26 실제 발생, radix-ui SKILL.md 충돌). 회귀 비교는 `git show HEAD:<path>`나 `git worktree`로.
+
 **How to apply:**
+- 서브에이전트 프롬프트에 "git stash/checkout/reset 금지" 명시.
+- "검출 0건"인 감사 훅은 판독 가능 비율부터 확인(무음 누락 방지 — 판독 불가 항목은 보고).
 - 가드 훅은 "정상 명령 판정"이 아니라 **우회 벡터 목록**(파이프·체인·서브셸·`-c`·git 전역 옵션·따옴표 분할·유니코드 공백)으로 적대적 테스트.
 - Stop 훅은 `stop_hook_active`로 같은 사유 재차단 금지, 환경 문제(미로그인·계정)는 조용히 통과.
 - 훅을 만들거나 감사할 때: 이벤트별 공식 규약(code.claude.com/docs/en/hooks)을 먼저 확인하고, 테스트는 exit code뿐 아니라 **메시지 채널**까지 단언.
