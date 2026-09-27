@@ -159,8 +159,7 @@ maxTurns: 20
 
 다음 스킬이 `.claude/skills/`에 존재하면 단계 1 진입 전 Glob → Read로 우선 참조한다. 동일 정보가 있으면 재조사하지 않고 인용한다.
 
-- `humanities/aristotle-greek-text-tools` — Perseus URL 패턴, Bywater OCT 비평본, ALA-LC 음역 표준
-- `humanities/aristotle-akrasia-translations-comparison` — akrasia 핵심 어휘 8종(akrasia/enkrateia/propeteia/astheneia/akolasia/hexis/phronēsis/orexis) 번역어 사전 비교표
+- `humanities/aristotle-primary-citation` §4·§11 — Perseus URL 패턴, Bywater OCT 비평본, ALA-LC 음역 표준- `humanities/aristotle-akrasia-translations-comparison` — akrasia 핵심 어휘 8종(akrasia/enkrateia/propeteia/astheneia/akolasia/hexis/phronēsis/orexis) 번역어 사전 비교표
 - `humanities/aristotle-primary-citation` — Bekker 번호 표기 규칙, 작품 표준 약어, 비평본·번역본 ISBN
 
 ### Perseus 그리스어 원문 fetch — 정확한 URL 패턴

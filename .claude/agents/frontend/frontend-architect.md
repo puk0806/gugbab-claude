@@ -41,7 +41,7 @@ model: opus
 - `typescript` 4.x → `frontend/typescript-v4/SKILL.md`
 
 **성능**
-- 런타임 성능: `frontend/performance/SKILL.md`
+- 런타임 성능(React Compiler와 수동 메모 판단): `frontend/bundling-compiler/SKILL.md` "React Compiler 사용 중에도 수동 메모가 필요한 경우"
 - Core Web Vitals: `frontend/core-web-vitals-optimization/SKILL.md`
 
 ---

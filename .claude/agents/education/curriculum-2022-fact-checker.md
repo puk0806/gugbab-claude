@@ -68,7 +68,7 @@ maxTurns: 20
 
 - 프로젝트 내 보조 스킬이 있는지 우선 확인:
   - `.claude/skills/education/moral-curriculum-2022-achievement-standards/SKILL.md`
-  - `.claude/skills/education/moral-education-curriculum-link/SKILL.md`
+  - `.claude/skills/education/moral-curriculum-2022-achievement-standards/references/akrasia-curriculum-link.md` (3범주·교과역량·akrasia 연결 프레임)
 - 스킬이 존재하면 `Read`로 로드하여 1차 대조 자료로 활용
 - 스킬이 없거나 정보가 불충분하면 NCIC 원문(WebFetch) 또는 WebSearch로 보완
 

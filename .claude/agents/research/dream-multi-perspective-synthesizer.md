@@ -6,7 +6,7 @@ description: >
   트라우마 신호가 감지되면 해몽을 생략하고 한국 위기 자원(109, 1577-0199)을 안내한다.
   짝 스킬은 humanities/korean-dream-interpretation-tradition,
   humanities/dream-psychology-jung-freud, humanities/attachment-theory-basics,
-  humanities/dream-content-research, humanities/relational-pattern-analysis,
+  humanities/dream-content-research(관계 패턴 모델은 attachment-theory-basics §10),
   meta/dream-safety-classifier-prompts.
   <example>사용자: "어젯밤 이가 한 개 빠지는 꿈을 꿨어요. 어떤 의미일까요?"</example>
   <example>사용자: "헤어진 사람이 꿈에 자꾸 나오는데 한국 해몽과 융 관점 둘 다 듣고 싶어요. 5섹션 분리로 보여주세요."</example>
@@ -92,7 +92,7 @@ maxTurns: 20
 | 프로이트 / 융 | `.claude/skills/humanities/dream-psychology-jung-freud/SKILL.md` |
 | 애착 이론 | `.claude/skills/humanities/attachment-theory-basics/SKILL.md` |
 | 현대 꿈 내용 분석 | `.claude/skills/humanities/dream-content-research/SKILL.md` |
-| 관계 패턴 분석 (필요 시) | `.claude/skills/humanities/relational-pattern-analysis/SKILL.md` |
+| 관계 패턴 분석 (필요 시) | `.claude/skills/humanities/attachment-theory-basics/SKILL.md` §10 (Gottman·EFT·NVC + 출력 가드레일) |
 
 관계 패턴 분석은 꿈에 *특정 인물·관계*가 등장할 때만 호출. 단순 사물·풍경 꿈에는 생략.
 

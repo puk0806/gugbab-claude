@@ -48,16 +48,14 @@ model: sonnet
 | state-management | `frontend/state-management/SKILL.md` | Zustand 전역 상태, 서버/클라이언트 상태 레이어 분리 |
 | tanstack-query | `frontend/tanstack-query/SKILL.md` | queryKey 설계, 캐시 수명, 낙관적 업데이트, 무한 스크롤, API 연동 |
 | form-handling | `frontend/form-handling/SKILL.md` | React Hook Form + Zod |
-| error-handling | `frontend/error-handling/SKILL.md` | Error Boundary, Suspense 조합, 쿼리 에러 처리 |
-| performance | `frontend/performance/SKILL.md` | React Compiler, 코드 스플리팅, 가상화, 메모이제이션 |
+| bundling-compiler | `frontend/bundling-compiler/SKILL.md` | React Compiler와 수동 메모 판단, 코드 스플리팅, Tree Shaking |
 | animation | `frontend/animation/SKILL.md` | motion/react, CSS transition |
 | design-token-scss | `frontend/design-token-scss/SKILL.md` | SCSS, CSS 변수, 디자인 토큰, 테마·다크 모드 |
 | testing | `frontend/testing/SKILL.md` | Jest/Vitest + React Testing Library |
 | e2e-testing | `frontend/e2e-testing/SKILL.md` | Playwright 시나리오 |
 | storybook | `frontend/storybook/SKILL.md` | CSF 3 스토리, play function |
 | code-convention | `frontend/code-convention/SKILL.md` | ESLint·Prettier·lint-staged 설정 |
-| wcag-2.2-checklist | `frontend/wcag-2.2-checklist/SKILL.md` | ARIA, 키보드 네비게이션, 대비·타깃 크기 |
-| media-accessibility | `frontend/media-accessibility/SKILL.md` | 자막·오디오 설명·미디어 컨트롤 |
+| wcag-2.2-checklist | `frontend/wcag-2.2-checklist/SKILL.md` | ARIA, 키보드 네비게이션, 대비·타깃 크기, 미디어 자막·음성 해설(5.9절) |
 
 ### 버전·스택에 따라 갈리는 스킬 — package.json을 먼저 확인하고 고른다
 
@@ -76,8 +74,7 @@ model: sonnet
 | 스킬 | 경로 | 대상 패키지 |
 |------|------|-------------|
 | ag-grid | `frontend/ag-grid/SKILL.md` | `ag-grid-community` / `ag-grid-react` |
-| react-virtuoso | `frontend/react-virtuoso/SKILL.md` | `react-virtuoso` |
-| react-dnd | `frontend/react-dnd/SKILL.md` | `react-dnd` |
+| chat-ui-pattern | `frontend/chat-ui-pattern/SKILL.md` (범용 API는 references/REFERENCE.md 16절) | `react-virtuoso` |
 | swiper | `frontend/swiper/SKILL.md` | `swiper` |
 | indexeddb-dexie | `frontend/indexeddb-dexie/SKILL.md` | `dexie` |
 

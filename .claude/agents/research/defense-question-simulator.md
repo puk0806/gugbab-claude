@@ -233,8 +233,8 @@ argument-reviewer 에이전트의 5항목 평가 기준(명확성·타당성·�
 작업 중 다음 에이전트·스킬 산출물이 있으면 참조한다(없으면 무시).
 
 - **`argument-reviewer` 에이전트**: 약점 분석 시 전제·결론 매핑 + 5항목 평가 기준 활용
-- **`writing/thesis-structure-graduate` 스킬**: 심사 절차 일반(예비심사 행동 가이드 포함)
-- **`humanities/concept-analysis-methods` 스킬**: 방법론 카테고리 질문에 대한 답변 방향
+- **`writing/thesis-structure-graduate` 스킬**: 심사 절차 일반(예비심사 행동 가이드 포함) + 디펜스 형식·수정보완·등록 행정(§11)
+- **`writing/research-proposal-humanities` 스킬 (`references/methodology-precedents.md`)**: 방법론 카테고리 질문에 대한 답변 방향(방법론 선택 정당화·한국 선행 적용 사례)
 - **`humanities/aristotle-primary-citation` 스킬**: 1차 텍스트 해석 카테고리(Bekker 위치)
 - **`humanities/akrasia-scholarship-map` 스킬**: 선행연구 카테고리(한국 학계 누락 점검)
 - **`education/moral-curriculum-2022-achievement-standards` 스킬**: 적용·함의 카테고리(도덕윤리교육 박사논문)

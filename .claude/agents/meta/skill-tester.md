@@ -149,6 +149,8 @@ verification.md를 Edit 도구로 수정한다. **Write로 전체 재작성 금�
 | YYYY-MM-DD | v1 | 2단계 실사용 테스트 수행 (Q1 {요약} / Q2 {요약} / Q3 {요약}) → N/N PASS, {APPROVED/PENDING_TEST 유지/NEEDS_REVISION} 전환 | skill-tester |
 ```
 
+7. **재검증 테스트인 경우**: SKILL.md `> 검증일:`을 갱신했다면 verification.md 메타 표 `| 검증일 |`과 frontmatter `date:`도 **함께** 같은 날짜로 갱신하고, 섹션 8 행에 "재검증" 문구를 넣는다 (verification-policy.md "재검증(검증일 갱신) 시 함께 갱신할 위치").
+
 ### 단계 5.5: verification.md 재확인 (Read — 필수)
 
 Edit 작업이 끝난 직후 verification.md를 Read로 **전체 다시 읽고** 다음을 확인한다.
