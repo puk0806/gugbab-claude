@@ -52,11 +52,11 @@ Unity 6 LTS 2D 모바일 게임 개발 프로젝트. 웹 프론트엔드·서버
 
 ---
 
-## 스킬 (31종)
+## 스킬 (30종)
 
 | 카테고리 | 종류 | 링크 |
 |----------|------|------|
-| game (17종) | GDD·AI 에셋·Unity 핵심·수익화·출시·CI/CD | [→ game 스킬 목록](../skills/game/README.md) |
+| game (16종) | GDD·AI 에셋·Unity 핵심·수익화·출시·CI/CD (절차적 생성 PCG 스킬은 2026-09-26 제거) | [→ game 스킬 목록](../skills/game/README.md) |
 | devops (8종) | docker-deployment·github-actions·n8n 5종·vercel-sandbox | [→ devops 스킬 목록](../skills/devops/README.md) |
 | architecture (3종) | ddd·incremental-refactoring·module-boundaries | [→ architecture 스킬 목록](../skills/architecture/README.md) |
 | meta (3종) | claude-code-hook-authoring·ralph-loop·riper-workflow | [→ meta 스킬 목록](../skills/meta/README.md) |

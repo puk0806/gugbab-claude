@@ -8,7 +8,7 @@
 
 ---
 
-## 에이전트 (19종)
+## 에이전트 (18종)
 
 | 카테고리 | 에이전트 | 설명 |
 |----------|---------|------|
@@ -37,12 +37,14 @@
 
 | 카테고리 | 종류 | 링크 |
 |----------|------|------|
-| humanities (12종) | 아리스토텔레스·덕윤리·도덕철학 (꿈 관련 7종 제외) | [→ humanities 스킬 목록](../skills/humanities/README.md) |
-| research (4종) | 학술 DB·체계적 문헌 검토·사례연구·연구윤리 | [→ research 스킬 목록](../skills/research/README.md) |
-| writing (16종) | 학술 글쓰기 + SEO 콘텐츠 품질 | [→ writing 스킬 목록](../skills/writing/README.md) |
-| education (5종) | 도덕과 교육과정·수업 적용 | [→ education 스킬 목록](../skills/education/README.md) |
+| humanities (9종) | 아리스토텔레스·덕윤리·도덕철학 (꿈 관련 6종·운세 3종 제외) | [→ humanities 스킬 목록](../skills/humanities/README.md) |
+| research (2종) | 학술 DB(+선행연구 SLR 검색식)·연구윤리(+표절 검사 절차) | [→ research 스킬 목록](../skills/research/README.md) |
+| writing (7종) | 학술 글쓰기 (SEO 콘텐츠 품질 4종은 제외 — 2026-09-26 실설치 기준) | [→ writing 스킬 목록](../skills/writing/README.md) |
+| education (4종) | 도덕과 교육과정·수업 적용 | [→ education 스킬 목록](../skills/education/README.md) |
+
+> 2026-09-26 스킬 정리: 모델 기본 지식과 겹치는 학술 스킬 13종을 제거·병합(고유 부분은 가까운 스킬로 이관). 실설치 점검 결과 academic 스킬 총 26종.
 | architecture (1종) | DDD만 포함 (dream-journal-data-modeling 제외) | [→ architecture 스킬 목록](../skills/architecture/README.md) |
-| meta (2종) | ralph-loop·riper-workflow (dream 전용 meta 제외) | [→ meta 스킬 목록](../skills/meta/README.md) |
+| meta (3종) | claude-code-hook-authoring·ralph-loop·riper-workflow (dream·fortune 전용 meta 제외) | [→ meta 스킬 목록](../skills/meta/README.md) |
 
 ---
 

@@ -54,7 +54,7 @@
 | 카테고리 | 종류 | 비고 |
 |----------|------|------|
 | health (5종) | nutrition-basics · korean-food-nutrition · ingredient-management · meal-recommendation-prompt · nutrition-analysis-prompt | 건강·식단 도메인 핵심 |
-| frontend (47종 / SEO y 시 65종) | 프레임워크·상태관리·UI·빌드·테스트·성능·LLM (+ SEO·GEO 는 옵트인) | indexeddb-dexie · claude-api-streaming-frontend · chat-ui-pattern · pwa-offline-llm-fallback 포함 (LLM PWA 공용 3종은 dream 목록에 섞여 있어 2026-09-11 전까지 실제로는 빠져 있었음) |
+| frontend (41종 / SEO y 시 59종) | 프레임워크·상태관리·UI·빌드·테스트·성능·LLM (+ SEO·GEO 는 옵트인) | indexeddb-dexie · claude-api-streaming-frontend · chat-ui-pattern · pwa-offline-llm-fallback 포함 (LLM PWA 공용 3종은 dream 목록에 섞여 있어 2026-09-11 전까지 실제로는 빠져 있었음) |
 | devops (10종 / SEO y 시 11종) | Docker·GitHub Actions·n8n·Vercel Sandbox·Vercel Workflow (+ site-migration-seo 는 옵트인) | vercel-workflow 는 사용자별 지정 시각 Web Push 예약용 (2026-09-17) |
 | architecture (4종) | DDD·프론트 도메인 구조·모듈 경계·점진 리팩터링 | |
 | backend (6종) | claude-code-headless (Claude 구독 중계 연동용 예외) + TS 백엔드 5종 — hono-api-patterns·prisma-orm·zod-schema-validation·better-auth·drizzle-neon-postgres (짝 에이전트 typescript-backend-* 소유, 2026-09-25 신설) | |

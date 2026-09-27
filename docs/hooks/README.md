@@ -78,7 +78,7 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 24종 = 실행 �
 
 | 훅 | 이벤트 | 설명 | 테스트 |
 |----|--------|------|:---:|
-| [codex-review-guard.js](../../.claude/hooks/codex-review-guard.js) | Stop | 미커밋 코드 변경 감지 시 Codex 적대적 리뷰 3라운드 강제 — 로그인 미완료 시 로그인 선행 요구 | ✅ |
+| [codex-review-guard.js](../../.claude/hooks/codex-review-guard.js) | Stop | 미커밋 코드 변경 감지 시 Codex 적대적 리뷰 3라운드 강제 — 로그인 미완료 시 로그인 선행 요구 + 계정·모델 조합이 400 등으로 사용 불가한 환경 오류는 `.claude/.codex-unavailable` 마커(config.toml 해시 + codex 버전 기록)로 감지해 config·버전이 그대로인 동안만 세션당 1회 안내 후 통과(변경 시 마커 자동 무효화) | ✅ |
 
 ---
 

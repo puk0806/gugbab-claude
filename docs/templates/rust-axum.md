@@ -49,11 +49,11 @@ Rust + Axum 백엔드 프로젝트. 프론트엔드·Java·게임·학술 스킬
 
 ---
 
-## 스킬 (32종)
+## 스킬 (24종)
 
 | 카테고리 | 종류 | 링크 |
 |----------|------|------|
-| backend — Rust (18종) | Axum·sqlx·thiserror·tokio·tower-http·serde·tracing 등 + claude-code-headless (Claude 구독 중계 연동용 예외) | [→ 목록](../skills/backend/README.md) |
+| backend — Rust (10종) | axum·sqlx·tower-http·reqwest·jwt-auth·multipart-upload·sse-streaming·project-structure·testing-rust + claude-code-headless (Claude 구독 중계 연동용 예외) | [→ 목록](../skills/backend/README.md) |
 | devops (8종) | docker-deployment·github-actions·n8n 5종·vercel-sandbox | [→ 목록](../skills/devops/README.md) |
 | architecture (3종) | ddd·incremental-refactoring·module-boundaries | [→ 목록](../skills/architecture/README.md) |
 | meta (3종) | claude-code-hook-authoring·ralph-loop·riper-workflow | [→ 목록](../skills/meta/README.md) |
@@ -61,6 +61,7 @@ Rust + Axum 백엔드 프로젝트. 프론트엔드·Java·게임·학술 스킬
 > 2026-08-31: dream 전용(meta 3·architecture 1)·frontend-domain-structure가 fallthrough로 딸려가던 누수를 차단했습니다.
 > 2026-09-11: python 에이전트 2종(python-backend-developer·python-backend-architect)을 배제 목록에 추가 — Python 스킬은 원래 설치되지 않습니다 (rust 화이트리스트 방식).
 > 2026-09-25 실측: devops는 github-actions-visual-regression·site-migration-seo(프론트 전용)를 포함하지 않아 8종(이전 표의 10종은 과다 계상이었다).
+> 2026-09-26 스킬 정리: serde·thiserror·tokio·tracing·design-patterns-rust·dependency-injection·repository-pattern 삭제(모델 기본 지식), custom-middleware는 axum에 병합 — 실설치 실측 24종. 기존 설치처의 폐기 사본은 재설치 시 install-cleanup이 짝 단위로 정리합니다.
 
 ---
 

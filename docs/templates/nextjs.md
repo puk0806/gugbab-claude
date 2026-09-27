@@ -54,14 +54,14 @@ Next.js App Router + TypeScript 프로젝트. 백엔드·게임·학술 스킬 �
 
 | 카테고리 | 종류 | 링크 |
 |----------|------|------|
-| frontend (44종 / SEO y 시 추가) | 프레임워크·상태관리·UI·빌드·테스트·성능·LLM (Next.js·SSR·App Router 포함, SEO·GEO 는 옵트인) | [→ 목록](../skills/frontend/README.md) |
+| frontend (38종 / SEO y 시 추가) | 프레임워크·상태관리·UI·빌드·테스트·성능·LLM (Next.js·SSR·App Router 포함, SEO·GEO 는 옵트인) | [→ 목록](../skills/frontend/README.md) |
 | devops (5종 / SEO y 시 6종) | Docker·GitHub Actions(+시각 회귀)·Vercel Sandbox·Vercel Workflow (+ site-migration-seo 는 옵트인) — vercel-workflow 는 사용자별 지정 시각 Web Push 예약용 (2026-09-17) | [→ 목록](../skills/devops/README.md) |
 | backend (6종) | claude-code-headless (Claude 구독 중계 연동용 예외) + TS 백엔드 5종 — hono-api-patterns·prisma-orm·zod-schema-validation·better-auth·drizzle-neon-postgres (짝 에이전트 typescript-backend-* 소유, 2026-09-25 신설) | [→ 목록](../skills/backend/README.md) |
 | architecture (4종) | DDD, 프론트 도메인 구조, 모듈 경계 강제, 점진 리팩터링 | [→ 목록](../skills/architecture/README.md) |
 | meta (3종) | ralph-loop·riper-workflow·claude-code-hook-authoring | [→ 목록](../skills/meta/README.md) |
 | writing (0종 / SEO y 시 4종) | SEO 콘텐츠 품질 — content-eeat-quality·ymyl·multilingual·accessibility-vpat (옵트인) | [→ 목록](../skills/writing/README.md) |
 
-총 **62종** (SEO n·기본 옵션). 위 수치는 기본 옵션(SEO n·작성도구 n·codex n) 설치 실측(2026-09-25, TS 백엔드 스킬 소유 템플릿 신설 반영). 이전 표는 그 이전 값이었다.
+총 **56종** (SEO n·기본 옵션). 위 수치는 기본 옵션(SEO n·작성도구 n·codex n) 설치 실측(2026-09-26, frontend 스킬 정리 반영 — 이전 2026-09-25 실측 62종). 이전 표는 그 이전 값이었다.
 
 ---
 

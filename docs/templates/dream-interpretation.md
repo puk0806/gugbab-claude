@@ -44,11 +44,11 @@
 
 | 카테고리 | 종류 | 링크 |
 |----------|------|------|
-| frontend (61종 / SEO y 시 81종) | 프레임워크·상태관리·UI·빌드·테스트·성능·꿈 앱 UI (+ SEO·GEO 20종은 옵트인) | [→ frontend 스킬 목록](../skills/frontend/README.md) |
+| frontend (55종 / SEO y 시 75종) | 프레임워크·상태관리·UI·빌드·테스트·성능·꿈 앱 UI (+ SEO·GEO 20종은 옵트인) | [→ frontend 스킬 목록](../skills/frontend/README.md) |
 | backend — Python (10종) | FastAPI·Pydantic·LlamaIndex·Anthropic SDK 등 | [→ backend 스킬 목록](../skills/backend/README.md) |
 | devops (9종 / SEO y 시 10종) | Docker·GitHub Actions·n8n·Vercel Sandbox (+ site-migration-seo 는 옵트인) | [→ devops 스킬 목록](../skills/devops/README.md) |
 | architecture (2종) | DDD + dream-journal-data-modeling | [→ architecture 스킬 목록](../skills/architecture/README.md) |
-| humanities (7종) | 꿈 관련 전용 (dream-psychology·korean-dream·attachment 등) | [→ humanities 스킬 목록](../skills/humanities/README.md) |
+| humanities (6종) | 꿈 관련 전용 (dream-psychology·korean-dream·attachment(관계 패턴 Gottman·EFT·NVC 포함) 등) | [→ humanities 스킬 목록](../skills/humanities/README.md) |
 | writing (0종 / SEO y 시 4종) | SEO 콘텐츠 품질 (content-eeat-quality·ymyl·multilingual·accessibility-vpat) — 옵트인 | [→ writing 스킬 목록](../skills/writing/README.md) |
 | meta (5종) | 워크플로우 + 꿈 앱 프롬프트 엔지니어링 전체 | [→ meta 스킬 목록](../skills/meta/README.md) |
 

@@ -66,7 +66,7 @@
 
 | 카테고리 | 종류 | 링크 |
 |----------|------|------|
-| frontend (54종 / SEO y 시 약 73종) | 프레임워크·상태관리·UI·빌드·테스트·성능·LLM 스트리밍·PWA (dream-* 전용 제외, SEO·GEO 19종은 옵트인 — 정적 HTML 전용 `seo-static-html` 은 스택 템플릿과 같이 제외) | [→ frontend 스킬 목록](../skills/frontend/README.md) |
+| frontend (51종 / SEO y 시 약 70종) | 프레임워크·상태관리·UI·빌드·테스트·성능·LLM 스트리밍·PWA (dream-* 전용 제외, SEO·GEO 19종은 옵트인 — 정적 HTML 전용 `seo-static-html` 은 스택 템플릿과 같이 제외) | [→ frontend 스킬 목록](../skills/frontend/README.md) |
 | backend — Python + TypeScript (15종) | Python 10종(FastAPI·Pydantic·LlamaIndex·Anthropic SDK 등) + TS 백엔드 5종 — hono-api-patterns·prisma-orm·zod-schema-validation·better-auth·drizzle-neon-postgres (짝 에이전트 typescript-backend-* 소유, 2026-09-25 신설 — 이전 표는 Python 10종만 계상하던 누락이었다) | [→ backend 스킬 목록](../skills/backend/README.md) |
 | devops (10종 / SEO y 시 11종) | docker-deployment·github-actions·github-actions-visual-regression·n8n 5종·vercel-sandbox·vercel-workflow (+ site-migration-seo 는 옵트인) — vercel-workflow 는 사용자별 지정 시각 Web Push 예약용 (2026-09-17, 이전 표는 vercel-workflow 반영 전 9종이었다) | [→ devops 스킬 목록](../skills/devops/README.md) |
 | architecture (4종) | DDD·프론트 도메인 구조·모듈 경계·점진 리팩터링 | [→ architecture 스킬 목록](../skills/architecture/README.md) |
@@ -75,7 +75,7 @@
 
 > game·education·research·health 카테고리와 Java·Rust 백엔드, dream 전용 스킬(frontend `dream-*` 8종·meta 3종·`dream-journal-data-modeling`), humanities 공유 스킬(위기 자원 포함)은 제외된다.
 > **SEO·GEO 옵트인 (2026-09-11)**: react-spa·nextjs와 같은 질문(`y` 전체 / `c` 커머스 / `n` 제외, 엔터 = n)을 받는다. 이전에는 SEO 20종 + writing 4종이 무조건 포함돼 seo-geo(11) 병행 선택이 무의미했다. 캐주얼 앱이면 n.
-> 2026-09-25 실측(SEO n 기본 옵션): 스킬 96종(공유 86 + 운세 전용 10) · 에이전트 23종. SEO y 수치는 이전 표의 증분(+19 frontend·+4 writing·+1 devops)을 새 기준값에 반영한 추정치다.
+> 2026-09-26 실측(SEO n 기본 옵션): 스킬 89종(공유 79 + 운세 전용 10) · 에이전트 23종 — frontend 스킬 정리(제거 3·병합 4) 반영. SEO y 수치는 이전 표의 증분(+19 frontend·+4 writing·+1 devops)을 새 기준값에 반영한 추정치다.
 
 ---
 
