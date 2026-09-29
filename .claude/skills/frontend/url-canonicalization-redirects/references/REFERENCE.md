@@ -260,6 +260,7 @@ sitemap의 URL과 canonical 메타가 불일치하면 Google이 어느 것이 �
 - Next.js — Middleware: https://nextjs.org/docs/app/api-reference/file-conventions/middleware
 - Next.js — generateMetadata: https://nextjs.org/docs/app/api-reference/functions/generate-metadata
 - Vercel — Configuration Redirects: https://vercel.com/docs/routing/redirects/configuration-redirects
+- Vercel — vercel.json `trailingSlash` (정적 프리렌더 슬래시 제어, 2026-09-28 확인): https://vercel.com/docs/project-configuration/vercel-json#trailingslash
 - Netlify — Redirect options: https://docs.netlify.com/manage/routing/redirects/redirect-options/
 - Cloudflare Pages — Redirects: https://developers.cloudflare.com/pages/configuration/redirects/
 - Nginx — If is Evil: https://nginx.com/resources/wiki/start/topics/depth/ifisevil/

@@ -142,7 +142,7 @@ response = client.messages.create(
 | 모델 | 최소 토큰 |
 |------|----------|
 | Claude Opus 5 (및 Fable 5.1 / Mythos 5.1 / Fable 5 / Mythos 5) | **512** |
-| Claude Opus 5.5 | 주의: 미확인 — 공식 표 미기재(2026-09-25) |
+| Claude Opus 5.5 | **512** (2026-09-28 공식 표 등재 확인 — Opus 5와 동일) |
 | Claude Sonnet 5 (및 Opus 4.8 / Sonnet 4.6 / Sonnet 4.5) | **1,024** |
 | Claude Opus 4.7 | **2,048** |
 | Claude Opus 4.6 / 4.5, Claude Haiku 4.5 | **4,096** |
@@ -152,11 +152,12 @@ response = client.messages.create(
 > 무시**되므로 `usage` 필드로 반드시 확인한다.
 
 **비용 배수 (공식):** 5분 캐시 쓰기 1.25x / 1시간 캐시 쓰기 2x / 캐시 읽기 0.1x.
+> 단, **Claude Opus 5.5는 캐시 읽기 0.05x**(표준 0.1x보다 우대, 아래 표) — 2026-09-28 공식 가격표(platform.claude.com/docs/en/about-claude/pricing) 확인.
 
 | 모델 | 기본 input | 5m write | 1h write | cache read |
 |------|-----------|----------|----------|-----------|
 | Claude Sonnet 5 | $2 / MTok | $2.50 | $4 | $0.20 |
-| Claude Opus 5.5 | $4 / MTok | $5 (주의: 1.25x 배수 적용 가정) | $8 (주의: 2x 가정) | $0.20 (0.1x 아님 — 공식 발표가) |
+| Claude Opus 5.5 | $4 / MTok | $5 | $8 | $0.20 (0.05x 배수 — 표준 0.1x보다 우대) |
 | Claude Opus 5 (구세대) | $5 / MTok | $6.25 | $10 | $0.50 |
 
 **적중 확인:**

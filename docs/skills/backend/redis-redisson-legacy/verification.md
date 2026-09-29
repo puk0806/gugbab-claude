@@ -3,7 +3,7 @@ skill: redis-redisson-legacy
 category: backend
 version: v1
 date: 2026-09-26
-status: PENDING_TEST
+status: APPROVED
 ---
 
 # redis-redisson-legacy 검증 문서
@@ -151,13 +151,42 @@ status: PENDING_TEST
 
 ### 4-4. Claude Code 에이전트 활용 테스트
 
-- [❌] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (CLI 테스트 단계에서 진행)
-- [❌] 에이전트가 스킬 내용을 올바르게 활용하는지 확인
-- [❌] 잘못된 응답이 나오는 경우 스킬 내용 보완
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-09-28)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-09-28)
+- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (발견 없음)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose
+**수행 방법**: SKILL.md Read 후 2개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인. 질문 1개는 2026-09-26 재검증에서 추가된 CVE-2023-42809 경고 문구를 정확히 겨냥.
+
+### 실제 수행 테스트
+
+**Q1. "Spring Boot 2.5 + Redisson 2.15.2 환경에서 재고 차감 로직에 분산 락(waitTime 3초, leaseTime 10초)을 걸어줘"**
+- ✅ PASS
+- 근거: SKILL.md "4-1. 기본 사용 패턴 (try-finally + tryLock + leaseTime)" 섹션
+- 상세: `tryLock(3, 10, TimeUnit.SECONDS)` + try-finally + `isHeldByCurrentThread()` 체크 후 unlock 패턴을 정확히 재현. 락 키 네임스페이스 규칙(`"lock:stock:"+productId`)도 원문 관례를 그대로 적용.
+
+**Q2. "Redisson 2.15.2에 알려진 CVE가 있나? 신뢰 불가 네트워크에 노출 시 위험은?" (2026-09-26 CVE-2023-42809 정정분 겨냥)**
+- ✅ PASS
+- 근거: SKILL.md 상단 "⚠️ 주의 — CVE (2026-09-26 추가)" 문구
+- 상세: CVE-2023-42809(안전하지 않은 역직렬화, 3.22.0 미만 영향), 공격 메커니즘(악성 서버 연결 시 임의 코드 실행), 대응책(3.x 업그레이드 또는 신뢰된 네트워크로 제한)까지 정확히 인용. 옛 내용과 모순되지 않고 정정 내용이 유일한 근거로 반영됨을 확인.
+
+### 발견된 gap
+
+- CVE 상세 출처(NVD 링크 등)가 SKILL.md 내에 직접 인용되어 있지 않음 — 선택 보강, 차단 요인 아님
+- CVE-2023-42809 외 추가 CVE 존재 여부는 SKILL.md 범위 밖 — 선택 보강
+
+### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 라이브러리 사용법 스킬 → 실사용 필수 카테고리 해당 없음 (content test PASS로 APPROVED 가능)
+- 최종 상태: APPROVED
+
+---
 
 ### 재검증 (2026-09-26)
 
@@ -262,13 +291,14 @@ RedisCacheManager와 RedissonSpringCacheManager 중 뭘 써야 해?
 | 내용 정확성 | ✅ (DISPUTED/UNVERIFIED 항목은 `> 주의:` 표기로 처리) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-04-23, 2문항 PASS) + ✅ (2026-09-26 재검증, 2문항 PASS — CVE-2023-42809 설명 + 완화책 확인) |
-| **최종 판정** | **PENDING_TEST** (2026-09-26 CVE-2023-42809 주의 문구 추가로 내용 변경 — 재검증 필요) |
+| 에이전트 활용 테스트 | ✅ (2026-04-23, 2문항 PASS) + ✅ (2026-09-26 재검증 셀프, 2문항 PASS) + ✅ (2026-09-28 skill-tester → general-purpose, 2/2 PASS — CVE-2023-42809 정정분 겨냥) |
+| **최종 판정** | **APPROVED** (2026-09-28 재테스트로 CVE 정정 내용 반영 확인, 모순 없음) |
 
 ---
 
 ## 7. 개선 필요 사항
 
+- [✅] skill-tester content test 수행 및 섹션 5·6 업데이트 — 2026-09-28 완료, 2/2 PASS (CVE-2023-42809 정정분 겨냥 포함)
 - [🔬] 실제 SB 2.5 + Redisson 2.15.2 `RLock.tryLock` 예외 시나리오 동작 확인 — 실환경 검증 대기 (agent content test는 2026-04-23 PASS)
 - [🔬] `redisson-spring-boot-starter:2.15.2`와 SB 2.5 조합의 실질 동작 여부 — 실환경 검증 대기, 현재 `> 주의:` 표기로 회피
 - [⏸️] `MessageListener` 경로(`org.redisson.api.listener` vs `org.redisson.core`) 2.15.2 javadoc 직접 확인 — 검증 보강 선택 사항
@@ -283,3 +313,4 @@ RedisCacheManager와 RedissonSpringCacheManager 중 뭘 써야 해?
 |------|------|-----------|--------|
 | 2026-04-23 | v1 | 최초 작성 — Redisson 2.15.2 기반 Spring Boot 2.5 + Java 11 레거시 스킬 | skill-creator |
 | 2026-09-26 | v1 | 재검증 — CVE-2023-42809(안전하지 않은 역직렬화, 3.22.0 미만 영향) 주의 문구 신규 추가 → PENDING_TEST | 메인 오케스트레이션 (Claude Sonnet 5) |
+| 2026-09-28 | v1 | 2단계 실사용 재테스트 수행 (Q1 재고 차감 분산 락 / Q2 CVE-2023-42809 정정분) → 2/2 PASS, APPROVED 전환 | skill-tester |

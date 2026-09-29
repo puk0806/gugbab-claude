@@ -3,7 +3,7 @@ skill: python-langchain-current
 category: backend
 version: v1
 date: 2026-09-26
-status: PENDING_TEST
+status: APPROVED
 ---
 
 # python-langchain-current 검증 기록
@@ -130,11 +130,39 @@ status: PENDING_TEST
 - [✅] 균형 잡힌 평가(권장·비권장 둘 다 명확)
 
 ### 4-5. Claude Code 에이전트 활용 테스트
-- [✅] skill-tester 호출 (2026-05-15 수행 — 3/3 PASS)
+- [✅] skill-tester 호출 (2026-05-15 수행 — 3/3 PASS, 2026-09-28 재테스트 — 2/2 PASS)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### 2단계 재테스트 (2026-09-28)
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (2개 병렬 호출)
+**수행 방법**: SKILL.md Read 후 2개 실전 질문 답변, 근거 섹션·anti-pattern 회피 확인. 2026-09-26 재검증에서 정정된 부분(langchain-core 1.4.8, AgentExecutor→LangGraph 2026-12 마이그레이션 기한, 2.0 전 breaking change 없음 정책)을 겨냥한 질문 포함
+
+**Q1. "AgentExecutor 아직 쓰는데 언제까지 옮겨야 하고, 신규 도입 시 breaking change 위험 있나?"**
+- ✅ PASS
+- 근거: SKILL.md 상단 "주의 (2026-09-26 갱신)"(27행) + §1(36-37행) + §7(242-244, 280행) + §11 표(385행) + §12.1(391-408행)
+- 상세: 2026-12 마이그레이션 기한, "2.0 이전까지 breaking change 없음" 공식 정책, langchain-community는 여전히 0.x라 변동성 잔존한다는 단서까지 정확히 반영되어 균형 있게 답변됨.
+
+**Q2. "langchain+langchain-anthropic 버전 핀 없이 설치해도 되나 + Opus 5.5에서 tool_choice='any'"**
+- ✅ PASS
+- 근거: SKILL.md §12.2(410-417행) + §5.3(188-196행)
+- 상세: 버전 핀 필요성(위험한 안티패턴으로 명시)과 Opus 5.5/Fable 5.1에서 tool_choice="any"/특정 도구 강제가 400을 반환한다는 최근 추가 내용(2026-09-25)이 정확히 답변에 반영됨.
+
+### 발견된 gap (2026-09-28)
+
+없음 — 2개 질문 모두 최근 정정·추가된 내용이 기존 서술과 모순 없이 답변에 반영됨.
+
+### 판정 (2026-09-28)
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 라이브러리 사용법 스킬 (content test PASS = APPROVED 가능)
+- 최종 상태: APPROVED
+
+---
 
 ### 재검증 (2026-09-26)
 
@@ -206,8 +234,8 @@ status: PENDING_TEST
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
 | 핵심 클레임 교차 검증 | ✅ (VERIFIED 12 / UNVERIFIED 1 — SKILL에 보수적 기술 / DISPUTED 0) |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-15 수행) + ✅ 2/2 PASS (2026-09-26 재검증) |
-| **최종 판정** | **PENDING_TEST** (2026-09-26 langchain-core 버전 갱신 + AgentExecutor 마이그레이션 기한 신규 반영 — 재검증 필요) |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-15 수행) + ✅ 2/2 PASS (2026-09-26 재검증) + ✅ 2/2 PASS (2026-09-28 재테스트) |
+| **최종 판정** | **APPROVED** (2026-09-28 재테스트: langchain-core 1.4.8 + AgentExecutor 마이그레이션 기한 반영 내용이 정확히 답변에 활용됨 확인 — 2/2 PASS) |
 
 > 카테고리 판정: LangChain은 *라이브러리 사용법 스킬* 카테고리에 해당하나, **API 변동성이 매우 크다**는 특수성이 있다. content test PASS만으로 APPROVED 전환 가능하나, 6개월 단위 재검증 권장을 §7에 기록한다.
 
@@ -215,7 +243,7 @@ status: PENDING_TEST
 
 ## 7. 개선 필요 사항
 
-- [✅] skill-tester로 2~3개 실전 질문 테스트 수행 (2026-05-15 완료, 3/3 PASS)
+- [✅] skill-tester로 2~3개 실전 질문 테스트 수행 (2026-05-15 완료, 3/3 PASS; 2026-09-28 재테스트 완료, 2/2 PASS)
 - [❌] 6개월 주기 재검증 — LangChain은 API 변동성 큰 라이브러리이므로 langchain-core·langgraph 마이너 버전 변경 시 deprecated 목록 갱신 필요 (차단 요인 아님 — APPROVED 전환 후 선택 보강)
 - [❌] LangSmith self-hosted 옵션 세부 조건 확인 후 SKILL.md §9 보강 (차단 요인 아님 — 현재 "별도 enterprise 계약 필요"로 보수적 기술로 충분, 선택 보강)
 
@@ -229,3 +257,4 @@ status: PENDING_TEST
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 패키지 아키텍처·설치 방식 / Q2 LCEL pipe·LangGraph 전환 기준 / Q3 Anthropic SDK 비교·AgentExecutor deprecated) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-09-25 | v1 | §5.3 `tool_choice="any"`/특정 도구 강제 예시에 주의 1개 추가 — Claude Opus 5.5·Fable 5.1은 강제 tool_choice 400(Sonnet 5·Haiku 4.5는 동작), 대안 `auto`+`strict: true`+프롬프트 지시 또는 structured outputs(`method="json_schema"`). 예제 코드 변경 없음. 근거: Claude API 공식 스킬(2026-09). status **APPROVED 유지** | 메인 대화 오케스트레이션 |
 | 2026-09-26 | v1 | 재검증 — langchain-core 1.4.0→1.4.8 버전 갱신, LangChain 1.0 GA 날짜(2025-10-22) 및 "2.0 전 breaking change 없음" 공식 정책 반영, AgentExecutor→LangGraph 마이그레이션 기한(2026-12) 신규 추가 → PENDING_TEST | 메인 오케스트레이션 (Claude Sonnet 5) |
+| 2026-09-28 | v1 | 2단계 재테스트 수행 (Q1 AgentExecutor 마이그레이션 기한+안정성 정책 / Q2 버전 핀+Opus 5.5 tool_choice 400) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |

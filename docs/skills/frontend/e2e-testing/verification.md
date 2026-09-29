@@ -1,8 +1,8 @@
 ---
 skill: e2e-testing
 category: frontend
-version: v1
-date: 2026-04-20
+version: v2
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -51,9 +51,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `e2e-testing` |
 | 스킬 경로 | `.claude/skills/frontend/e2e-testing/SKILL.md` |
-| 검증일 | 2026-04-20 |
-| 검증자 | Claude (skill-creator) |
-| 스킬 버전 | v1 |
+| 검증일 | 2026-09-28 (재검증, 이전 2026-08-26) |
+| 검증자 | Claude (skill-creator) · 2026-09-28 재검증: Claude (Sonnet 5) |
+| 스킬 버전 | v2 |
 
 ---
 
@@ -141,6 +141,50 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
+### [2026-09-28] 재검증(2차) — 적대적 E2E 시나리오 절(§7) 신설
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 + REFERENCE.md 전체 Read → 핵심 클레임 3개를 1차 소스(npm registry, 공식 문서)와 대조, 레포 규칙(`.claude/rules/adversarial-testing.md`) E2E 계층 기준 보강 검토
+
+**클레임 대조 결과**:
+1. Playwright 최신 안정 버전은 v1.62.x → **DISPUTED(정정)**: npm registry `@playwright/test@latest` = **1.63.0**(2026-09-04 릴리스). v1.63부터 Ubuntu 20.04 미지원으로 전환 (playwright.dev 릴리스 노트)
+2. `getByRole` 최우선 로케이터 권장 기조 유지 → VERIFIED (playwright.dev/docs/best-practices, 변동 없음)
+3. `test.use({ storageState: { cookies: [], origins: [] } })`로 인증 상태를 완전히 제거해 비로그인 시나리오를 재현하는 패턴이 공식 지원되는가 → VERIFIED (playwright.dev/docs/auth "clear storage state" 패턴, 커뮤니티 가이드 교차 확인)
+
+**보강(ADD)·축소**: SKILL.md에 "## 7. 적대적 E2E 시나리오 (보안·이상 경로)" 절 신설 — 레포 규칙 `.claude/rules/adversarial-testing.md`의 E2E 계층에 맞춰 4개 시나리오 코드 예시 추가: ① 비로그인 상태로 보호 페이지·API 접근(로그인 리다이렉트/401), ② IDOR — 타 유저 리소스 접근 시도(403, API 직접 호출 + UI 접근 거부 양쪽), ③ 단계 건너뛰기 — 결제 없이 완료 페이지 URL 직접 접근(서버 재검증 리다이렉트), ④ XSS 입력 — `<script>`/`onerror=` 페이로드가 이스케이프되어 실행되지 않는지 `page.evaluate`로 전역 오염 여부 확인. 대상 버전 문자열을 v1.62.x → v1.63.x로 갱신. 축소 없음.
+
+**실전 질문 재검증**:
+- Q1. "로그인 없이 보호된 대시보드에 접근하면 어떻게 테스트하는가?" → SKILL.md §7 "비로그인 상태로 보호 페이지·API 접근" 근거로 PASS (`test.use({ storageState: { cookies: [], origins: [] } })`로 인증 제거 후 리다이렉트 검증)
+- Q2. "다른 유저의 주문 ID로 API를 직접 호출하는 IDOR 테스트는 어떻게 짜는가?" → SKILL.md §7 "IDOR" 근거로 PASS (`request.get` 직접 호출 + 403 검증, UI 레벨 접근 거부 문구 검증 양쪽 제시)
+
+**재검증 최종 판정**: status **PENDING_TEST 전환** (신규 §7 보강 — skill-tester 재테스트 대상. 참고: 2026-08-26 freshness 재검증이 SKILL.md 헤더에는 기록되었으나 본 verification.md 섹션 5·8에는 당시 누락되어 있었음 — 별도 backfill은 이번 재검증 범위 밖으로 두고 보고만 함)
+
+---
+
+### [2026-09-28] skill-tester 실제 에이전트 content test — §7 적대적 E2E 시나리오 겨냥
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (2건, Agent 도구로 실제 서브에이전트 호출)
+**수행 방법**: SKILL.md만 근거로 답하도록 위임, 신규 §7 "적대적 E2E 시나리오" 절(비로그인 접근·IDOR·단계 건너뛰기)을 직접 겨냥한 실전 질문 2개 수행
+
+**Q1. 비로그인 유저의 보호된 대시보드·보호 API(`/api/orders/me`) 접근을 Playwright E2E로 어떻게 테스트하는가? 인증 상태를 완전히 제거하는 설정은?**
+- ✅ PASS
+- 근거: SKILL.md §7 "비로그인 상태로 보호 페이지·API 접근" (줄 371-388) + 각주(줄 450)
+- 상세: `test.use({ storageState: { cookies: [], origins: [] } })`로 인증 완전 제거, 페이지 리다이렉트(`/login`)와 API 401 양쪽 검증 코드를 정확히 인용. §5의 파일 기반 `storageState`(로그인 상태)와 §7의 빈 객체 `storageState`(인증 제거)를 정확히 구분. 경미한 gap: `request` 픽스처가 `baseURL`을 상속하는 메커니즘 자체는 SKILL.md에 설명 없음(선택 보강)
+
+**Q2. 결제 없이 완료 페이지 URL로 직접 접근하는 단계 건너뛰기, 타 유저 주문 ID로 접근하는 IDOR를 각각 어떻게 테스트하는가?**
+- ✅ PASS
+- 근거: SKILL.md §7 "단계 건너뛰기" (줄 413-429) + "IDOR" (줄 390-411)
+- 상세: 결제 API 미호출 상태로 완료 페이지 URL 직접 이동 → 서버 재검증으로 결제 페이지 리다이렉트 검증 코드, IDOR는 API 직접 호출(403) + 화면 접근 거부 + 타인 데이터 미노출(`not.toBeVisible()`) 양쪽 검증 코드를 정확히 인용. 레포 규칙(`.claude/rules/adversarial-testing.md`) 체크리스트 대응 관계까지 정확히 도출
+
+**판정**: 2/2 PASS. §7 신규 적대적 E2E 시나리오가 실전 질문에서 올바른 답을 도출시킴을 확인. 기존 §5(인증) 패턴과 §7의 인증 제거 패턴 사이 모순 없음 — storageState 두 형태(파일 경로 vs 빈 객체)를 에이전트가 정확히 구분.
+
+**최종 판정**: 실사용 필수 카테고리 아님(테스트 프레임워크 패턴 스킬 — 답변 정확성만으로 검증 가능) — content test 2/2 PASS로 **PENDING_TEST → APPROVED 전환**
+
+---
+
+## 5-1. 이전 테스트 진행 기록 (2026-04-20, 보존)
+
 > 실제로 어떻게 테스트했고 결과가 어떠했는지 기록
 
 ### 교차 검증 1: Playwright 최신 버전
@@ -227,11 +271,11 @@ status: APPROVED
 
 | 항목 | 결과 |
 |------|------|
-| 내용 정확성 | ✅ |
-| 구조 완전성 | ✅ |
+| 내용 정확성 | ✅ (Playwright v1.62.x → v1.63.0 DISPUTED 수정 반영) |
+| 구조 완전성 | ✅ (§7 적대적 E2E 시나리오 절 신설) |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ PASS (2026-04-20) + ✅ 2/2 PASS (2026-09-28 skill-tester→general-purpose, §7 적대적 E2E 시나리오 겨냥) |
+| **최종 판정** | **APPROVED** (2026-09-28 skill-tester content test 2/2 PASS, 실사용 필수 카테고리 아님) |
 
 ---
 
@@ -239,9 +283,11 @@ status: APPROVED
 
 > 검증 과정에서 발견된 문제점 및 TODO
 
-- [✅] CLI 에이전트 테스트 수행 후 APPROVED 전환
+- [✅] CLI 에이전트 테스트 수행 후 APPROVED 전환 (2026-04-20)
 - [📅] v1.57의 Chrome for Testing 전환 세부 영향 모니터링 — 기존 테스트 호환성 주기적 점검
 - [⏸️] WebFetch SSL 오류로 공식 문서 본문 직접 확인 불가 — WebSearch 요약 인용으로 대체 완료, 재검증은 선택 사항
+- [✅] **(2026-09-28 완료, 2/2 PASS)** skill-tester로 §7 적대적 E2E 시나리오(비로그인 접근·IDOR·단계 건너뛰기) content test 수행 → APPROVED 전환 (XSS 시나리오는 질문 대상에서 다루지 않았으나 §7 코드 자체 검증은 재검증 단계에서 확인됨 — 후속 실사용 중 이상 발견 시 재검증)
+- [ ] (선택 보강, 차단 요인 아님) v1.63 Ubuntu 20.04 미지원 전환이 REFERENCE.md §9 CI 예시(`ubuntu-latest` 사용 중이라 영향 없음)에 실제 영향 없는지 CI 실행으로 재확인
 
 ---
 
@@ -252,3 +298,5 @@ status: APPROVED
 | 2026-04-20 | v1 | 최초 작성 — Playwright v1.59.1 기준 | Claude (skill-creator) |
 | 2026-04-20 | v1 | PENDING_TEST → APPROVED 전환 — WebSearch 재검증 3건 + 테스트 질문 2건 PASS | Claude (opus) |
 | 2026-08-26 | v1.1 | freshness 재검증(128일 경과) — 대상 버전 v1.59.1→v1.62.x 갱신. 로케이터 우선순위·네트워크 모킹·defineConfig·fixture 확장 전부 현행 API(VERIFIED), 코드 예제 변경 없음 | freshness-auditor + orchestrator |
+| 2026-09-28 | v2 | 재검증(2차) — Playwright v1.62.x → v1.63.0 갱신(Ubuntu 20.04 미지원 전환 반영). "§7 적대적 E2E 시나리오" 절 신설(비로그인 접근·IDOR·단계 건너뛰기·XSS, `.claude/rules/adversarial-testing.md` E2E 계층 대응). status APPROVED → PENDING_TEST | Claude (Sonnet 5) |
+| 2026-09-28 | v2 | skill-tester 실사용 재테스트 — general-purpose 에이전트로 §7 적대적 E2E 시나리오(비로그인 접근·IDOR·단계 건너뛰기) 겨냥 질문 2개 수행 → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |

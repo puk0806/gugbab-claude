@@ -1,8 +1,8 @@
 ---
 skill: security-headers-seo
 category: frontend
-version: v1
-date: 2026-06-04
+version: v2
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `security-headers-seo` |
 | 스킬 경로 | `.claude/skills/frontend/security-headers-seo/SKILL.md` |
-| 검증일 | 2026-06-04 |
+| 검증일 | 2026-09-28 (재검증, 최초 2026-06-04) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 
@@ -104,13 +104,43 @@ status: APPROVED
 - [✅] 범용적으로 사용 가능 (특정 프로젝트 종속 X)
 
 ### 4-5. Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-06-04)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-06-04)
-- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (gap 없음, 3/3 PASS)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-06-04, 2026-09-28 skill-tester → general-purpose 재검증 수행)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-06-04, 2026-09-28)
+- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (누계 5/5 PASS, gap 없음)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### 3차 테스트 (2026-09-28) — report-to 정정 반영 재검증
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (2개 독립 서브에이전트, 각각 SKILL.md만 근거로 답변)
+**수행 방법**: 정정된 SKILL.md(Firefox report-to 지원 반영판)를 각 서브에이전트가 Read 후 실전 질문 1개씩 답변, 근거 섹션·정정 내용 반영 여부 확인.
+
+**Q1. "CSP report-to를 Firefox에서도 쓸 수 있나? 두 디렉티브를 실무에서 어떻게 같이 설정하나?" — 정정 내용 직접 검증**
+- ✅ PASS
+- 근거: §2-3 "보고 엔드포인트 — report-uri vs report-to" (99~108행)
+- 상세: 상단 정정 문구("Firefox 149부터 report-to 지원, Baseline 2026, 전역 94.78%")를 정확히 인용해 "Firefox도 이제 report-to로 받을 수 있다"고 올바르게 답변. `report-uri`+`report-to` 병행 설정 코드(`Reporting-Endpoints` 헤더 포함)까지 정확히 제시. 정정 전이었다면 "Firefox는 미지원"이라는 낡은 정보로 FAIL이었을 질문이 정정 후 PASS로 전환 — 이번 재테스트의 핵심 초점 확인 완료.
+
+**Q2. HSTS Preload 등록 전 확인사항·비가역성**
+- ✅ PASS
+- 근거: §1 HSTS 섹션(47~58행) + §13 도입 체크리스트(362행) + §12 흔한 실수(354행)
+- 상세: `max-age>=31536000`·`includeSubDomains`·`preload`·전 서브도메인 HTTPS 필수 조건과 "등록 해제는 수개월~수년" 비가역성 경고를 모두 정확히 인용. anti-pattern(모든 서브도메인 HTTPS 확인 없이 서둘러 등록)을 명확히 차단.
+
+### 발견된 gap (2026-09-28, 3차)
+
+없음. 2개 질문 모두 SKILL.md 근거로 명확히 답변 가능했고, report-to 정정 내용이 올바르게 반영되어 있음을 확인.
+
+### 판정 (2026-09-28, 3차)
+
+- agent content test: 2/2 PASS (누계 5/5 PASS)
+- verification-policy 분류: 라이브러리·패턴 정리형 스킬 — content test PASS = APPROVED 가능 (기존 분류 유지)
+- 최종 상태: **APPROVED** (정정 반영 확인 완료, PENDING_TEST → APPROVED 복귀)
+
+---
+
+### 1차 테스트 (2026-06-04)
 
 **수행일**: 2026-06-04
 **수행자**: skill-tester → general-purpose
@@ -141,7 +171,25 @@ status: APPROVED
 
 - agent content test: 3/3 PASS
 - verification-policy 분류: 라이브러리·패턴 정리형 스킬 — content test PASS = APPROVED 가능
-- 최종 상태: APPROVED
+- 최종 상태: APPROVED (2026-09-28 재검증에서 PENDING_TEST로 재전환 — 아래 참조)
+
+### 재검증 (2026-09-28) — DISPUTED 발견 및 정정
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read 후 핵심 클레임 3개 1차 소스 대조(WebFetch, WebSearch 세션 한도 소진으로 대체) + 실전 질문 2개 답변 검증
+
+**클레임 대조:**
+- **DISPUTED → 정정**: "Firefox는 report-to를 CSP에서 지원하지 않음" — MDN CSP report-to 페이지 WebFetch 재확인 결과 "Baseline 2026 (2026-03부터 최신 브라우저 전반 지원)" 상태로 변경되어 있었고, caniuse.com WebFetch 재확인 결과 **Firefox 149부터 지원, Chrome 70+, Safari 16.4+ — 전역 지원 약 94.78%**로 확인. 최초 작성 시점(2026-06-04, Baseline 달성 이후)에도 이미 구식 정보였을 가능성이 있음. SKILL.md §2-3을 `> 주의: 정정(2026-09-28)` 표기와 함께 갱신
+- CSP `frame-ancestors`가 X-Frame-Options를 CSP Level 2에서 사실상 대체: 표준 사양 확정 사실로 재변동 없음
+- RFC 9116 security.txt 필수 필드(Contact/Expires): IETF 표준 RFC로 고정, 재변동 없음
+
+Q1. "CSP report-to를 Firefox에서도 쓸 수 있어, 아니면 아직도 report-uri만 믿어야 해?"
+— 재검증 전 SKILL.md 기준 답변은 FAIL(오래된 정보로 "Firefox 미지원"이라 잘못 답변했을 것). 정정 후 SKILL.md 기준으로는 PASS — "Firefox 149+·Chrome·Safari 16.4+ 모두 지원(Baseline 2026), 다만 구형 브라우저 호환을 위해 report-uri 병행 권장"으로 정확히 답변 가능해짐.
+
+Q2. "CSP frame-ancestors 설정하면 X-Frame-Options는 이제 안 넣어도 되나?"
+— PASS. 근거: SKILL.md §3 "CSP frame-ancestors가 등장한 이후 X-Frame-Options는 CSP Level 2에서 사실상 대체" + "구버전 클라이언트 호환을 위해 함께 두는 패턴은 여전히 안전" — 변경 없음, 여전히 정확.
+
+**판정**: report-to 브라우저 지원 클레임이 DISPUTED로 확인되어 SKILL.md 정정 완료. 예제·권장 내용이 실질적으로 변경되었으므로 **status를 PENDING_TEST로 재전환**한다 (verification-policy.md 절차상 예제/권장 변경 시 PENDING_TEST 유지 원칙). 정정된 SKILL.md 기준으로 다음 재검증 세션에서 content test 재수행 필요.
 
 ---
 
@@ -166,14 +214,14 @@ status: APPROVED
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-04) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ 누계 5/5 PASS (2026-06-04 3/3 + 2026-09-28 skill-tester 재검증 2/2, report-to 정정 반영 확인) |
+| **최종 판정** | **APPROVED** (2026-09-28 skill-tester 재검증 — report-to 정정 내용 content test 통과, PENDING_TEST → APPROVED 복귀) |
 
 ---
 
 ## 7. 개선 필요 사항
 
-- [✅] skill-tester로 2~3개 실전 질문 수행 후 섹션 5·6 업데이트 (2026-06-04 완료, 3/3 PASS)
+- [✅] skill-tester로 2~3개 실전 질문 수행 후 섹션 5·6 업데이트 (2026-06-04 완료, 3/3 PASS; 2026-09-28 report-to 정정 반영 재검증 완료, 2/2 PASS → 누계 5/5 PASS, APPROVED 재확인)
 - [❌] CSP nonce 동적 생성 Middleware 전체 예시는 향후 별도 스킬로 분리 검토 — 차단 요인 아님, 선택 보강 (현재 섹션 9 주의 표기로 충분히 가이드됨)
 - [❌] COEP `credentialless` 모드 실무 도입 사례가 늘어나면 별도 섹션 추가 — 차단 요인 아님, 선택 보강 (현재 섹션 6 표에 값 설명 포함됨)
 
@@ -185,3 +233,5 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-06-04 | v1 | 최초 작성. HSTS·CSP·XFO·Referrer-Policy·Permissions-Policy·COEP/COOP·security.txt·X-Robots-Tag 13개 섹션. 8개 핵심 클레임 모두 VERIFIED | skill-creator |
 | 2026-06-04 | v1 | 2단계 실사용 테스트 수행 (Q1 HSTS Preload 등록 요건 / Q2 frame-ancestors vs XFO 우선순위 / Q3 Referrer-Policy와 GA4 referral 영향) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-28 | v2 | 재검증 중 DISPUTED 발견: "Firefox는 report-to 미지원" → Firefox 149+ 지원 확인(Baseline 2026, 전역 94.78%)으로 SKILL.md §2-3 정정. status APPROVED → PENDING_TEST (다음 세션 skill-tester 재수행 필요) | 메인 세션 |
+| 2026-09-28 | v2 | 정정 반영 2단계 실사용 테스트 수행 (skill-tester → general-purpose, Q1 report-to Firefox 지원 정정 직접 검증 / Q2 HSTS Preload 비가역성) → 2/2 PASS, 누계 5/5 PASS, gap 없음. PENDING_TEST → **APPROVED** 복귀 | skill-tester |

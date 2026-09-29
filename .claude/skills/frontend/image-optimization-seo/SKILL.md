@@ -9,8 +9,8 @@ description: >
 
 # Image Optimization & SEO
 
-> 소스: [MDN Responsive Images](https://developer.mozilla.org/en-US/docs/Web/HTML/Guides/Responsive_images), [Google Search Central — Image SEO](https://developers.google.com/search/docs/appearance/google-images), [Google — Image Sitemaps](https://developers.google.com/search/docs/crawling-indexing/sitemaps/image-sitemaps), [Next.js Image (16.x)](https://nextjs.org/docs/app/api-reference/components/image), [web.dev — Browser-level lazy loading](https://web.dev/articles/browser-level-image-lazy-loading), [web.dev — Fetch Priority](https://web.dev/articles/fetch-priority), [sharp 0.34](https://sharp.pixelplumbing.com/)
-> 검증일: 2026-06-03
+> 소스: [MDN Responsive Images](https://developer.mozilla.org/en-US/docs/Web/HTML/Guides/Responsive_images), [Google Search Central — Image SEO](https://developers.google.com/search/docs/appearance/google-images), [Google — Image Sitemaps](https://developers.google.com/search/docs/crawling-indexing/sitemaps/image-sitemaps), [Next.js Image (16.x)](https://nextjs.org/docs/app/api-reference/components/image), [web.dev — Browser-level lazy loading](https://web.dev/articles/browser-level-image-lazy-loading), [web.dev — Fetch Priority](https://web.dev/articles/fetch-priority), [sharp 0.35](https://sharp.pixelplumbing.com/)
+> 검증일: 2026-09-28 (최초 2026-06-03)
 > 범위: 콘텐츠 이미지 / 제품 이미지 / 히어로 이미지 (OG/소셜 이미지는 [[og-image-generation]], LCP 최적화 심화는 [[core-web-vitals-optimization]]에 위임)
 
 ---

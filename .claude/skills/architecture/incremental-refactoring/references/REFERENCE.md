@@ -80,9 +80,17 @@ ts-morph의 진짜 강점. 공식 문서 원문:
 > `move()`: "If necessary, this will automatically update the module specifiers of the **relative** import and export declarations **in the moving file and the relative import and export declarations in other files** to point to the new location."
 > `copy()`: 갱신 범위가 **복사된 파일 내부로 한정**된다. 다른 파일은 갱신하지 않는다.
 
+> **⚠️ 실행 검증(2026-09-28)으로 정정**: `move(filePath)`의 공식 타입 시그니처 JSDoc은 대상 경로를
+> **"relative to the ORIGINAL file, or an absolute path"** 로 명시한다(ts-morph.d.ts 원문, ts-morph.com/details/source-files와 동일 표현).
+> 즉 아래처럼 `MOVES` 배열에 **프로젝트 루트 기준 상대경로**(`"src/features/order/ui/OrderCard.tsx"`)를 그대로 넘기면,
+> `move()`는 이를 **이동 대상 파일 자신의 디렉터리 기준 상대경로**로 해석해버려 `src/components/src/features/order/ui/OrderCard.tsx`
+> 같은 **중첩된 잘못된 경로**로 이동한다 — 실제 프로젝트에 이 스니펫을 그대로 실행해 재현 확인됨.
+> 반드시 `to`를 **절대 경로로 변환(`path.resolve(to)`)한 뒤** `move()`에 넘긴다.
+
 ```ts
 // scripts/codemod/move-to-feature.ts
 import { Project } from "ts-morph";
+import { resolve } from "node:path";
 
 const project = new Project({ tsConfigFilePath: "tsconfig.json" });
 
@@ -96,7 +104,7 @@ const missing: string[] = [];
 for (const [from, to] of MOVES) {
   const sf = project.getSourceFile(from);
   if (!sf) { missing.push(from); continue; }
-  sf.move(to);              // 참조하던 다른 파일들의 '상대 경로' 지정자까지 갱신됨
+  sf.move(resolve(to));     // ← 절대 경로로 변환 필수(위 주의 참조). 참조하던 다른 파일들의 '상대 경로' 지정자까지 갱신됨
 }
 
 if (missing.length) {

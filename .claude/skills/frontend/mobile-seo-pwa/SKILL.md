@@ -14,11 +14,12 @@ description: >
 > - Google Search Central — Intrusive Interstitials: https://developers.google.com/search/docs/appearance/avoid-intrusive-interstitials
 > - MDN — Viewport meta tag: https://developer.mozilla.org/en-US/docs/Web/HTML/Viewport_meta_tag
 > - MDN — env() CSS function: https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Values/env
-> - W3C — Web Application Manifest: https://www.w3.org/TR/appmanifest/ (Working Draft 2026-05-07)
+> - W3C — Web Application Manifest: https://www.w3.org/TR/appmanifest/ (Working Draft 2026-08-13)
 > - Apple — Configuring Web Applications: https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/ConfiguringWebApplications/ConfiguringWebApplications.html
+> - Apple Developer — Changes for apps in the European Union: https://developer.apple.com/support/dma-and-apps-in-the-eu/
 > - Chrome for Developers — Viewport Resize Behavior: https://developer.chrome.com/blog/viewport-resize-behavior
 > - caniuse — Viewport unit variants: https://caniuse.com/viewport-unit-variants
-> 검증일: 2026-08-26 (최초 2026-06-02 · 08-26 freshness 재검증: Mobile-First Indexing·dvh·iOS DMA·interactive-widget VERIFIED. 분리 모바일 URL(m-dot) canonical/alternate 교차 지정 상세 절(1-4) 신설 — Google 공식 문서 원문 기준)
+> 검증일: 2026-09-28 (최초 2026-06-02 · 08-26 재검증: Mobile-First Indexing·dvh·interactive-widget VERIFIED, 분리 모바일 URL(m-dot) canonical/alternate 교차 지정 상세 절(1-4) 신설 · 09-28 재검증: **iOS DMA/EU PWA 제약 서술 DISPUTED→정정**(Apple이 2024-03-01 iOS 17.4 출시 전 EU 홈 화면 웹 앱 제한 계획을 철회, 현재 EU에서도 PWA 전체 기능 정상 동작), W3C manifest WD 날짜 2026-08-13로 갱신)
 > 범위: 한국 사용자 환경(iPhone Safari + Android Chrome + Samsung Internet) 우선
 
 ---
@@ -354,9 +355,10 @@ iOS Safari는 Web App Manifest를 **부분 지원**한다 (2018년 이후). mani
 <meta name="apple-mobile-web-app-title" content="꿈해몽">
 ```
 
-### 6-3. iOS 17.4+ EU 제약 (2024-03부터)
+### 6-3. iOS DMA/EU 관련 — 제약 아님 (2024-03 철회로 정리됨)
 
-> 주의: 2024-03 Apple은 DMA 컴플라이언스를 이유로 EU 지역에서 PWA 기능 일부를 제한. EU 사용자는 홈 화면에 추가해도 일반 Safari 탭으로 열리고 푸시 알림 미지원. EU 외 지역은 영향 없음. 한국 서비스라면 영향 없음.
+> **주의(정정)**: 2024-02 Apple은 DMA 컴플라이언스를 이유로 iOS 17.4에서 EU 지역 홈 화면 웹 앱(PWA)을 일반 Safari 탭으로 강등하고 독립 실행·푸시 알림을 제거하겠다고 예고했으나, 개발자 커뮤니티(Open Web Advocacy 등)의 반발과 유럽위원회 개입으로 **iOS 17.4 정식 출시 전인 2024-03-01에 계획을 전면 철회**했다. 이후 현재(2026)까지 EU 사용자도 홈 화면 웹 앱이 다른 지역과 동일하게 독립 실행(standalone)·푸시 알림을 포함해 정상 동작한다. **한국 서비스는 물론 EU 서비스도 이 항목으로 인한 PWA 기능 제약은 없다.**
+> 출처: https://developer.apple.com/support/dma-and-apps-in-the-eu/ (2026 시점 페이지에 EU 전용 PWA 제약 언급 없음), TechCrunch/9to5Mac/MacRumors 2024-03-01 일제 보도
 
 ### 6-4. 필수 메타 세트 (한국 서비스 기준)
 

@@ -6,7 +6,7 @@ description: Zustand v5 전역 상태관리, TanStack Query v5 서버 상태/캐
 # 상태 관리 패턴 (Zustand v5 + TanStack Query v5)
 
 > 소스: https://zustand.docs.pmnd.rs | https://tanstack.com/query/v5/docs
-> 검증일: 2026-08-26 (최초 2026-06-20 · 08-26 freshness 재검증: Zustand 5.0.15·TanStack Query 5.102 최신, API 변경 없음. v4→v5 전환 상세는 `frontend/tanstack-query-v4-to-v5-migration`이 정본)
+> 검증일: 2026-09-28 (최초 2026-06-20 · 08-26/09-28 재검증: Zustand 5.0.15·TanStack Query 5.104.0 최신, Zustand API 변경 없음. TanStack Query 사용법 상세는 `frontend/tanstack-query`, v4→v5 전환은 `frontend/tanstack-query-v4-to-v5-migration`이 정본 — 본문 중복 절 축소 완료(2026-09-28))
 
 ---
 
@@ -169,188 +169,15 @@ const { open, close } = useStore(
 
 ---
 
-## TanStack Query v5
+## TanStack Query v5 — 이 스킬의 범위
 
-### 기본 설정 (Next.js App Router)
+이 스킬은 **상태 분류 기준**(무엇을 서버 상태/Zustand/지역 상태로 볼지)과 **Zustand ↔ TanStack Query 조합 패턴**까지만 다룬다.
+쿼리 키 팩토리·`useQuery` 핵심 옵션·`useMutation`(낙관적 업데이트 포함)·`useInfiniteQuery`·Next.js SSR prefetch 같은 TanStack Query 사용법 상세와 v4→v5 마이그레이션은 아래 정본 스킬에만 싣는다 (중복 방지 — 특히 낙관적 업데이트 콜백 시그니처는 v5.89.0에서 `(err, variables, onMutateResult, context)`로 확장되었으므로 반드시 정본 쪽을 따른다).
 
-```typescript
-// providers/query-provider.tsx
-'use client'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-import { useState } from 'react'
-
-export function QueryProvider({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            staleTime: 60 * 1000,    // 1분: 데이터 신선도 유지 시간
-            gcTime: 5 * 60 * 1000,  // 5분: 캐시 보관 시간 (v4의 cacheTime)
-            retry: 1,
-            refetchOnWindowFocus: false,
-          },
-        },
-      })
-  )
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-      <ReactQueryDevtools initialIsOpen={false} />
-    </QueryClientProvider>
-  )
-}
-```
-
-### TanStack Query v4 → v5 주요 변경사항
-
-```typescript
-// ❌ v4
-const { data, isLoading } = useQuery(['users'], fetchUsers)
-const { data } = useQuery(['user', id], () => fetchUser(id), {
-  onSuccess: (data) => console.log(data),  // v5에서 제거됨
-  onError: (err) => console.error(err),   // v5에서 제거됨
-})
-
-// ✅ v5
-const { data, isLoading } = useQuery({
-  queryKey: ['users'],
-  queryFn: fetchUsers,
-})
-const { data } = useQuery({
-  queryKey: ['user', id],
-  queryFn: () => fetchUser(id),
-  // onSuccess/onError 대신 useEffect나 useMutation callbacks 사용
-})
-```
-
-### Query Key 관리 패턴
-
-```typescript
-// queries/user.keys.ts — 키 팩토리 패턴
-export const userKeys = {
-  all: ['users'] as const,
-  lists: () => [...userKeys.all, 'list'] as const,
-  list: (filters: UserFilter) => [...userKeys.lists(), filters] as const,
-  details: () => [...userKeys.all, 'detail'] as const,
-  detail: (id: string) => [...userKeys.details(), id] as const,
-}
-
-// 사용
-useQuery({ queryKey: userKeys.detail(userId), queryFn: () => fetchUser(userId) })
-
-// 관련 캐시 전체 무효화
-queryClient.invalidateQueries({ queryKey: userKeys.all })
-// 목록만 무효화
-queryClient.invalidateQueries({ queryKey: userKeys.lists() })
-```
-
-### useQuery 핵심 옵션
-
-```typescript
-const { data, isPending, isError, error, isFetching, isStale } = useQuery({
-  queryKey: ['posts', filters],
-  queryFn: () => fetchPosts(filters),
-
-  staleTime: 5 * 60 * 1000,   // 5분간 캐시 신선도 유지 (refetch 안 함)
-  gcTime: 10 * 60 * 1000,     // 10분 후 캐시 가비지 컬렉션
-  enabled: !!userId,           // userId 있을 때만 실행
-  placeholderData: keepPreviousData,  // 페이지 전환 시 이전 데이터 유지
-  select: (data) => data.items,       // 데이터 변환/선택
-  refetchInterval: 30 * 1000,         // 30초마다 폴링
-})
-
-// isPending vs isLoading (v5 차이)
-// isPending: 캐시 데이터도 없고 fetching 중
-// isLoading: isPending && isFetching (= 첫 번째 로딩)
-```
-
-### useMutation + 캐시 업데이트
-
-```typescript
-// queries/post.mutations.ts
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { postKeys } from './post.keys'
-
-export function useCreatePost() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (data: CreatePostInput) => createPost(data),
-
-    // 성공 후 관련 캐시 무효화
-    onSuccess: (newPost) => {
-      queryClient.invalidateQueries({ queryKey: postKeys.lists() })
-    },
-
-    // 낙관적 업데이트
-    onMutate: async (newData) => {
-      await queryClient.cancelQueries({ queryKey: postKeys.lists() })
-      const previous = queryClient.getQueryData(postKeys.lists())
-
-      queryClient.setQueryData(postKeys.lists(), (old: Post[]) => [
-        ...old,
-        { ...newData, id: 'temp', createdAt: new Date() },
-      ])
-
-      return { previous }  // rollback용 컨텍스트
-    },
-
-    onError: (err, newData, context) => {
-      // 실패 시 롤백
-      queryClient.setQueryData(postKeys.lists(), context?.previous)
-    },
-
-    onSettled: () => {
-      // 성공/실패 무관 최종 동기화
-      queryClient.invalidateQueries({ queryKey: postKeys.lists() })
-    },
-  })
-}
-```
-
-### 무한 스크롤 (useInfiniteQuery)
-
-```typescript
-const {
-  data,
-  fetchNextPage,
-  hasNextPage,
-  isFetchingNextPage,
-} = useInfiniteQuery({
-  queryKey: ['posts', 'infinite'],
-  queryFn: ({ pageParam }) => fetchPosts({ cursor: pageParam, limit: 20 }),
-  initialPageParam: undefined as string | undefined,
-  getNextPageParam: (lastPage) => lastPage.nextCursor,  // undefined면 마지막 페이지
-})
-
-// 전체 아이템 flatten
-const posts = data?.pages.flatMap((page) => page.items) ?? []
-```
-
-### Next.js App Router + Prefetching (SSR)
-
-```typescript
-// app/posts/page.tsx (Server Component)
-import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query'
-
-async function PostsPage() {
-  const queryClient = new QueryClient()
-
-  await queryClient.prefetchQuery({
-    queryKey: postKeys.lists(),
-    queryFn: fetchPosts,
-  })
-
-  return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <PostList />  {/* Client Component에서 useQuery → 캐시 히트 */}
-    </HydrationBoundary>
-  )
-}
-```
+| 필요한 것 | 정본 스킬 |
+|-----------|-----------|
+| `useQuery`/`useMutation`/`useInfiniteQuery` 사용법, 쿼리 키 팩토리, SSR prefetch, 낙관적 업데이트 | `frontend/tanstack-query` |
+| v4 → v5 전환(콜백 제거·객체 문법·`cacheTime`→`gcTime` 등) | `frontend/tanstack-query-v4-to-v5-migration` |
 
 ---
 
@@ -366,9 +193,10 @@ const useAuthStore = create<AuthStore>(...)
 const { data: posts } = useQuery({ queryKey: ['posts'], queryFn: fetchPosts })
 
 // 조합 예시: 선택된 유저 ID는 Zustand, 유저 데이터는 Query
+// (쿼리 키 팩토리 패턴은 frontend/tanstack-query 참조)
 const selectedUserId = useStore((s) => s.selectedUserId)
 const { data: user } = useQuery({
-  queryKey: userKeys.detail(selectedUserId),
+  queryKey: ['user', selectedUserId],
   queryFn: () => fetchUser(selectedUserId),
   enabled: !!selectedUserId,  // 선택된 유저 있을 때만 페칭
 })

@@ -1,8 +1,8 @@
 ---
 skill: search-console-webmaster
 category: frontend
-version: v1
-date: 2026-06-02
+version: v1.2
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `search-console-webmaster` |
 | 스킬 경로 | `.claude/skills/frontend/search-console-webmaster/SKILL.md` |
-| 검증일 | 2026-06-02 |
+| 검증일 | 2026-09-28 (최초 2026-06-02 · 1차 재검증 2026-08-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 
@@ -213,6 +213,27 @@ GSC 페이지 보고서에서 "크롤됨 - 현재 색인되지 않음"이 100개
 
 ---
 
+### [2026-09-28] 재검증(2차) — IndexNow·Naver·Google Indexing API 공식 원문 재대조
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임 4개를 1차 소스 원문(curl로 공식 페이지 직접 조회)과 대조, 보강·축소 검토. WebSearch·WebFetch가 세션 한도로 사용 불가하여 Bash(curl)로 공식 문서 HTML을 직접 가져와 grep 대조하는 방식으로 대체 수행.
+
+**클레임 대조 결과**:
+1. IndexNow 참여 검색엔진 = Bing·Naver·Seznam.cz·Yandex·Yep, Google 미참여 → **VERIFIED** (indexnow.org 홈페이지 원문: "has support from Microsoft Bing, Naver, Seznam.cz, Yandex, Yep." — Google 언급 없음)
+2. IndexNow 키 파일 규격(8~128자, hex a-z/A-Z/0-9/대시), 요청당 최대 10,000 URL, 응답코드 200/202/403/429 → **VERIFIED** (indexnow.org/documentation 원문 grep: "minimum of 8 and a maximum of 128 hexadecimal characters... lowercase... uppercase... numbers... dashes", "up to 10,000 URLs per post", 응답 코드 표에 202/403/429 확인)
+3. Google Indexing API는 JobPosting·BroadcastEvent 콘텐츠 유형에만 공식 지원, 기본 할당량 200 publish/일·180 read/분(project 기준) → **VERIFIED** (developers.google.com/search/apis/indexing-api/v3/quota-pricing 원문, "Last updated 2026-07-16" 명시: "default daily quota of 200 publish requests and 180 read-only requests per minute per project... use the API with JobPosting or BroadcastEvent, a form must be completed" — 2026-07-16 공식 갱신 후에도 범위·수치 불변. 참고: 전체 엔드포인트 기준 380 req/분 한도가 추가로 명시되어 있으나 SKILL.md 미기재 상태 — 사소한 보강 후보이나 이번 재검증에서는 기존 서술의 정확성에 영향 없어 반영 보류)
+4. Naver Search Advisor의 IndexNow 지원(API Key 발급·갱신 요청·FAQ)이 현재도 유지되는가 → **VERIFIED** (searchadvisor.naver.com/guide 내비게이션에 "IndexNow" 메뉴 섹션이 4개 하위 페이지(소개·API Key 생성·페이지 갱신 요청·FAQ)로 활성 상태. indexnow-api-key 페이지 원문에서 "key는 16진수에 사용되는 문자, 숫자, - 만 이용... a-f, A-F, 0-9, -... 최소 8자, 최대 128자" 확인 — indexnow.org 스펙과 일치)
+
+**보강(ADD)·축소**: 없음. 4개 클레임 모두 VERIFIED로 기존 서술과 일치하며 정정·보강·축소 필요 없음.
+
+**실전 질문 재검증**:
+- Q1. "Naver가 아직도 IndexNow를 지원하나? 언제부터인가?" → SKILL.md "3.4 IndexNow 지원(2023-07-25부터)" 근거로 PASS (searchadvisor.naver.com 가이드 메뉴의 IndexNow 4개 하위 페이지가 여전히 활성 상태로 뒷받침)
+- Q2. "블로그 글에 Google Indexing API를 써도 되나?" → SKILL.md "1.8 Google Indexing API의 한계" 근거로 PASS (Google 공식 quota-pricing 문서가 2026-07-16 갱신에도 JobPosting·BroadcastEvent 전용 범위를 유지함을 재확인)
+
+**재검증 최종 판정**: status **APPROVED 유지**
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -221,6 +242,7 @@ GSC 페이지 보고서에서 "크롤됨 - 현재 색인되지 않음"이 100개
 | 구조 완전성 | ✅ 12개 섹션 + 결정 트리 + 체크리스트 포함 |
 | 실용성 | ✅ 한국 운영자 우선순위 명시, D-Day 체크리스트 제공 |
 | 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-02 skill-tester 수행) |
+| 2차 재검증 (2026-09-28) | ✅ IndexNow·Naver·Google Indexing API 핵심 클레임 4건 공식 원문 재대조, 전부 VERIFIED, 변경 없음 |
 | **최종 판정** | **APPROVED** |
 
 ---
@@ -240,3 +262,4 @@ GSC 페이지 보고서에서 "크롤됨 - 현재 색인되지 않음"이 100개
 | 2026-06-02 | v1 | 최초 작성. 5개 검색엔진 콘솔 + IndexNow + Google Indexing API 통합 가이드 | skill-creator |
 | 2026-06-02 | v1 | 2단계 실사용 테스트 수행 (Q1 신규 사이트 등록 순서 / Q2 크롤됨-색인 안 됨 진단 / Q3 IndexNow 이득·Google 미지원) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-08-26 | v1.1 | freshness 재검증(85일 경과) — URL Inspection API 600/분·2,000/일, Indexing API JobPosting·BroadcastEvent 전용, Bing GSC Import, Naver IndexNow(2023-07), 속성 유형 5건 전부 VERIFIED. 분리 모바일 호스트 속성 분리 등록 안내를 검증일 줄에 추가 | freshness-auditor + orchestrator |
+| 2026-09-28 | v1.2 | 2차 재검증(33일 경과) — IndexNow 참여 검색엔진 목록·키 파일 규격, Google Indexing API 할당량·범위(2026-07-16 공식 문서 갱신 이후 기준), Naver Search Advisor IndexNow 메뉴 활성 상태 4건을 공식 원문(curl 직접 조회) 재대조, 전부 VERIFIED·변경 없음 | 재검증 담당 에이전트 |

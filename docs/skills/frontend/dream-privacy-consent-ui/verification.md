@@ -2,7 +2,7 @@
 skill: dream-privacy-consent-ui
 category: frontend
 version: v1
-date: 2026-05-15
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `dream-privacy-consent-ui` |
 | 스킬 경로 | `.claude/skills/frontend/dream-privacy-consent-ui/SKILL.md` |
-| 검증일 | 2026-05-15 |
+| 검증일 | 2026-05-15 (최초) / 2026-09-28 재검증 |
 | 검증자 | skill-creator (agent) |
 | 스킬 버전 | v1 |
 | 적용 법령 기준 | 한국 개인정보 보호법(2024년 9월 15일 시행령 적용) · GDPR(2016/679) · ePrivacy Directive |
@@ -135,6 +135,33 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
+**수행일**: 2026-09-28
+**수행자**: Claude (Sonnet 5) — 정기 재검증(서브에이전트 금지 지시 하 직접 수행), 국가법령정보센터 Open API 원문 대조 포함
+**수행 방법**: 법령 원문(law.go.kr DRF API, 개인정보 보호법 MST=283839·시행령 MST=289537, 시행일 2026-09-11) 직접 대조 후 SKILL.md Read, 실전 질문 2개 답변
+
+**Q1. 꿈 데이터가 한국법상 민감정보로 분류될 때 시행령 근거 조항과 4가지 항목은?**
+- PASS
+- 근거: SKILL.md §2.1 민감정보 종류 목록 + 법령 원문 대조 결과
+- 상세: 시행령 제18조(민감정보의 범위) 원문 확인 결과 1.유전정보 2.범죄경력자료 3.생체인식정보(특정식별목적) 4.인종·민족 4개 항목이 정확히 일치. SKILL.md가 법 제23조 본문 목록(사상·신념 등)과 시행령 목록을 구분 없이 통합 제시하고 있으나 내용 자체는 원문과 불일치 없음.
+
+**Q2. 국외이전(OpenAI·Anthropic) 별도 동의 시 명시해야 할 항목은 몇 가지이며 법적 근거는?**
+- PASS
+- 근거: SKILL.md §10.1 "국외이전 별도 동의 (제28조의8)" 목록
+- 상세: 법령 원문(제28조의8 제2항) 대조 결과 "이전되는 개인정보 항목·이전되는 국가/시기/방법·이전받는 자의 성명·이전받는 자의 이용목적 및 보유기간" 등 SKILL.md 목록과 일치. 제28조의8은 이번 개정에서 조문변경여부 "N"(미변경) 확인.
+
+### 발견된 gap
+
+없음 — 법령 원문 직접 대조 결과 SKILL.md의 법적 클레임에 오류·구식 정보 없음. dream-content-privacy-ethics 스킬에서 발견된 "시행령 제18조 인종·민족 누락" 유형의 오류가 본 스킬에는 없음(§2.1에 이미 정확히 포함되어 있었음).
+
+### 판정 (2026-09-28)
+
+- content test: 2/2 PASS
+- 법령 원문 재검증 결과 변경 사항 없음 → status APPROVED 유지 (패치 수준 변경 없음, 오히려 원문과 완전 일치 재확인)
+
+---
+
+> (참고용 — 2026-05-15 최초 테스트 기록)
+
 **수행일**: 2026-05-15
 **수행자**: skill-tester → general-purpose (도메인 에이전트 미지정, general-purpose 대체)
 **수행 방법**: SKILL.md Read 후 실전 질문 3개 답변, 근거 섹션 및 anti-pattern 회피 확인
@@ -178,8 +205,8 @@ status: APPROVED
 | 내용 정확성 | ✅ 11/11 VERIFIED (복수 공식 소스 교차 검증) |
 | 구조 완전성 | ✅ 13/13 항목 충족 |
 | 실용성 | ✅ 7/7 항목 충족 |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-15, skill-tester → general-purpose) |
-| **최종 판정** | **APPROVED** (agent content test 3/3 PASS — 2026-06-20 사용자 명시 지시로 APPROVED 전환) |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-15) + 2/2 PASS (2026-09-28 재검증, 법령 원문 직접 대조 포함) |
+| **최종 판정** | **APPROVED** (agent content test 통과 — 2026-06-20 사용자 명시 지시 + 2026-09-28 법령 원문 재검증으로 변경 없음 확인) |
 
 ---
 
@@ -200,3 +227,4 @@ status: APPROVED
 | 2026-05-15 | v1 | 최초 작성. 한국 PIPL + GDPR 통합 동의 UI 패턴. 민감정보·분리 동의·다크 패턴·미성년자·국외이전·동의 기록 보관·UX 패턴 종합 | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 한국법 제23조 민감정보 별도 동의 / Q2 GDPR Art.9 explicit consent vs Art.6(a) / Q3 만 14세 미만 법정대리인 + 다크 패턴) → 3/3 PASS, PENDING_TEST 유지 (사용자 명시 지시) | skill-tester |
 | 2026-06-20 | v1 | PENDING_TEST → APPROVED 전환 — content test 3/3 PASS 확인 + 실사용 필수 카테고리 미해당 + 사용자 명시 지시 | skill-tester |
+| 2026-09-28 | v1 | **정기 재검증** — 국가법령정보센터 Open API로 개인정보 보호법·시행령 원문(시행일 2026-09-11) 직접 대조. §2.1(제23조+시행령 제18조 민감정보 4항목, 인종·민족 포함 확인)·§7.1(제22조의2)·§10.1(제28조의8) 모두 원문과 일치, 변경 없음. content test 2/2 PASS. SKILL.md에 재검증 메모 추가, status APPROVED 유지 | Claude (Sonnet 5) |

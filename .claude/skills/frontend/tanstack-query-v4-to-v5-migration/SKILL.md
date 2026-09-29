@@ -162,49 +162,60 @@ v5 서브패키지의 peerDependency는 `@tanstack/react-query`를 **`^5.102.4`�
 
 ## 2. 공식 codemod — 무엇이 자동이고 무엇이 수동인가
 
-v5는 **오버로드 제거(위치 인자 → 오브젝트 인자)** 만을 대상으로 하는 codemod를 패키지 안에 동봉한다.
+v5는 **5종의 codemod**를 패키지 안에 동봉한다(`remove-overloads`·`rename-properties`·`keep-previous-data`·`is-loading`·`rename-hydrate`).
 별도 npm 패키지가 아니라 **설치된 `@tanstack/react-query` 안의 파일**을 jscodeshift로 실행한다.
+
+> **실행 검증(2026-09-28, `@tanstack/react-query` 5.104.0 설치본 기준)**: 이 코드모드들은 **v5 패키지 안에만** 존재한다 —
+> v4.44.0을 설치한 상태에서는 `node_modules/@tanstack/react-query/codemods/`에 `v4/`(v3→v4용) 디렉터리만 있고 `v5/`는 없다.
+> 따라서 "1단계에서 v4를 유지한 채 코드모드를 돌린다"는 것은 **런타임 의존성은 v4로 유지하되, 코드모드 스크립트 자체는 v5 패키지를 먼저 설치(또는 `npm pack`으로 tarball만 내려받아)해서 얻어야 한다**는 뜻이다 — v4 설치본만으로는 아래 명령이 파일을 찾지 못해 실패한다.
 
 ```bash
 # TypeScript / TSX  ← --parser=tsx 를 빼면 변환이 적용되지 않는다
+# 경로 주의: `build/codemods/v5/...` — `src/` 세그먼트는 없다 (설치본 실측으로 정정, 2026-09-28)
 npx jscodeshift@latest ./path/to/src/ \
   --extensions=ts,tsx \
   --parser=tsx \
-  --transform=./node_modules/@tanstack/react-query/build/codemods/src/v5/remove-overloads/remove-overloads.cjs
+  --transform=./node_modules/@tanstack/react-query/build/codemods/v5/remove-overloads/remove-overloads.cjs
 
 # JavaScript / JSX
 npx jscodeshift@latest ./path/to/src/ \
   --extensions=js,jsx \
-  --transform=./node_modules/@tanstack/react-query/build/codemods/src/v5/remove-overloads/remove-overloads.cjs
+  --transform=./node_modules/@tanstack/react-query/build/codemods/v5/remove-overloads/remove-overloads.cjs
 ```
 
 > **주의:** `@tanstack/query-codemods`라는 npm 패키지는 **존재하지 않는다**(레지스트리 404).
 > 공식 경로는 위의 `node_modules/@tanstack/react-query/build/codemods/...` 하나뿐이다.
 > 확장자도 `.js`가 아니라 **`.cjs`** 를 써야 한다 — `.js`로 실행하면 `ERR_REQUIRE_ESM`이 난다.
 
+다른 4종도 같은 방식으로 실행한다(`--transform=` 경로만 교체):
+`v5/rename-properties/rename-properties.cjs` · `v5/keep-previous-data/keep-previous-data.cjs` · `v5/is-loading/is-loading.cjs` · `v5/rename-hydrate/rename-hydrate.cjs`
+
 ### 2-1. 자동 / 수동 경계
+
+> 2026-09-28 실행 검증: 실제 설치본(`@tanstack/react-query` 5.104.0)의 코드모드 소스를 직접 실행·대조해 아래 표를 정정했다.
+> 이전 버전은 `cacheTime`·`useErrorBoundary`·`keepPreviousData`·`Hydrate`를 전부 "❌ 수동"으로 서술했는데, 실제로는 전용 코드모드가 존재한다.
 
 | 항목 | codemod가 해주나 |
 |------|:---:|
-| `useQuery(key, fn, options)` → 오브젝트 | ✅ |
-| `useInfiniteQuery(key, fn, options)` → 오브젝트 | ✅ |
-| `useIsFetching(key, filters)` / `useIsMutating` → 오브젝트 | ✅ |
-| `queryClient.invalidateQueries(key, filters, options)` 류 → 오브젝트 | ✅ |
+| `useQuery(key, fn, options)` → 오브젝트 | ✅ (`remove-overloads`) |
+| `useIsFetching(key, filters)` / `useIsMutating` → 오브젝트 | ✅ (`remove-overloads`) |
+| `queryClient.invalidateQueries(key, filters, options)` 류 → 오브젝트 | ✅ (`remove-overloads`) |
 | `useMutation(fn, options)` → 오브젝트 | ⚠️ **불완전** (미처리 사례 보고 다수 — 반드시 육안 확인) |
-| `cacheTime` → `gcTime` | ❌ 수동 |
-| `useErrorBoundary` → `throwOnError` | ❌ 수동 |
-| `keepPreviousData` → `placeholderData` | ❌ 수동 |
-| `isLoading` → `isPending`, `status: 'loading'` → `'pending'` | ❌ 수동 (**의미 판별 필요** — 섹션 4-1) |
+| `useInfiniteQuery(key, fn, options)` → 오브젝트 | ❌ **수동** — `remove-overloads`가 대상으로 삼는 hook은 `useQuery`/`useIsFetching`/`useMutation`/`useIsMutating` **뿐**이다(코드모드 소스의 hook 목록 실측 확인, 2026-09-28). `useInfiniteQuery`는 항상 조용히 건너뛴다(에러·경고도 없음) |
+| `cacheTime` → `gcTime` | ✅ (`rename-properties` — 별도 코드모드, 범용 객체 프로퍼티명 치환) |
+| `useErrorBoundary` → `throwOnError` | ✅ (`rename-properties`, 위와 동일 코드모드) |
+| `keepPreviousData` → `placeholderData` | ✅ **부분** (`keep-previous-data`) — `keepPreviousData: true` 리터럴 형태만 `placeholderData: keepPreviousData`로 변환(+import 자동 삽입). `true`가 아닌 값이면 콘솔 경고만 남기고 건너뛴다 |
+| `isLoading` → `isPending`, `status: 'loading'` → `'pending'` | ⚠️ 코드모드(`is-loading`)는 **존재하나 맹목적 구문 치환**이다 — `enabled` 여부에 따른 의미 판별(섹션 4-1)을 하지 않는다. **그대로 돌리면 "지연 쿼리 스피너" 용도가 깨질 수 있어 권장하지 않는다** — 4-1 판별 후 수동 적용 또는 판별 결과에 맞춰 부분 적용 |
 | `onSuccess`/`onError`/`onSettled` 제거 및 대체 | ❌ 수동 |
 | `initialPageParam` 추가 | ❌ 수동 |
 | `refetchPage` → `maxPages` | ❌ 수동 |
-| `Hydrate` → `HydrationBoundary` | ❌ 수동 |
+| `Hydrate` → `HydrationBoundary` | ✅ (`rename-hydrate` — import specifier + JSX 태그명 모두 치환, alias import도 인식) |
 | `context` prop → `queryClient` 인자 | ❌ 수동 |
 | devtools / persist 옵션 | ❌ 수동 |
 
 **운용 규칙:**
-1. codemod는 **1단계에서 v4를 유지한 채** 돌린다(오브젝트 문법은 v4에서도 유효하므로 안전하다).
-2. "best efforts" 도구다. 추론에 실패하면 **파일명·라인 번호를 콘솔에 남기고 건너뛴다** — 이 로그를 반드시 수거해 수동 처리 목록으로 만든다.
+1. codemod 스크립트는 v5 패키지에서 얻되, **적용은 1단계에서 v4를 유지한 채** 한다(오브젝트 문법·프로퍼티명 모두 v4에서도 유효하므로 안전하다).
+2. "best efforts" 도구다. 추론에 실패하면 **파일명·라인 번호를 콘솔에 남기고 건너뛴다** — 이 로그를 반드시 수거해 수동 처리 목록으로 만든다. `useInfiniteQuery`처럼 **경고 없이 조용히 건너뛰는 hook도 있다** — "0 errors"라고 전부 처리됐다고 믿지 말고 표에서 대상 hook을 먼저 확인한다.
 3. 실행 직후 Prettier/ESLint로 포맷을 복구한다(codemod 출력은 포맷이 깨진다).
 4. 나머지 이름 치환은 codemod가 아니라 **타입 에러 + grep**으로 잡는 것이 확실하다 (섹션 6-1).
 
@@ -223,8 +234,8 @@ npx jscodeshift@latest ./path/to/src/ \
 |---|------|---------|---------|------|
 | 1 | **`isLoading`** | 캐시 데이터 없음 (= v5의 `isPending`) | `isPending && isFetching` | `enabled: false` 쿼리에서 **스켈레톤이 안 뜨거나** 반대로 계속 뜬다. **타입 에러 없음** |
 | 2 | `status === 'loading'` 문자열 비교 | 참 | 항상 거짓 (`'pending'`) | 로딩 분기 통째로 죽음. TS면 잡히지만 **JS·`String(status)`·로깅·테스트 픽스처는 안 잡힘** |
-| 3 | `getNextPageParam`이 `null` 반환 | "다음 페이지 있음"으로 취급 → 계속 fetch | **"페이지 없음"으로 종료** | 무한스크롤이 **조기에 멈춤**(또는 v4의 과잉 fetch가 사라짐) |
-| 4 | `useQuery`의 `onSuccess`/`onError` | 가끔 실행(캐시 히트 시 스킵) | **옵션 자체가 무시됨** | 토스트·분석 이벤트·로컬 state 갱신이 **조용히 사라짐** |
+| 3 | `getNextPageParam`이 `null` 반환 | `hasNextPage` 플래그 자체는 v4.44.0에서도 이미 `null`을 "페이지 없음"으로 판정한다(`nextPageParam !== null` 조건 포함 — UI가 `hasNextPage`만 보면 함정 없음). **진짜 함정은 `fetchNextPage()`를 `hasNextPage` 확인 없이 직접 호출했을 때**: v4의 내부 `fetchPage()` 가드는 `typeof param === 'undefined'`만 검사해 `null`을 통과시키므로 **실제 네트워크 요청이 한 번 더 나간다**(과잉 fetch) | 동일 가드가 `param == null`이라 `null`·`undefined` 모두 차단 — 과잉 fetch 없음 | `IntersectionObserver` 콜백처럼 `hasNextPage`를 매번 확인하지 않는 트리거에서 **마지막 페이지 이후 요청이 한 번 더 나간다**(v4). 실행 검증: `@tanstack/query-core` 4.44.0/5.104.0 `infiniteQueryBehavior.js` 소스 직접 대조, 2026-09-28 |
+| 4 | `useQuery`의 `onSuccess`/`onError` | 가끔 실행(캐시 히트 시 스킵) | **옵션 자체가 무시됨** | 토스트·분석 이벤트·로컬 state 갱신이 **조용히 사라짐**. ⚠️ **"타입 에러 없음"은 옵션 객체가 콜사이트의 인라인 리터럴이 아닐 때만 정확하다** — `useQuery({ ..., onSuccess: ... })`처럼 **흔한 인라인 리터럴 형태는 TS 초과 프로퍼티 검사(excess property check)에 걸려 `TS2769` 컴파일 에러가 난다**(실행 검증: tsc 5.6.3 + `@tanstack/react-query` 5.104.0, 2026-09-28). 옵션을 변수에 먼저 담았다가 넘기는 형태(`const opts = {...}; useQuery(opts)`)일 때만 초과 프로퍼티 검사가 적용되지 않아 실제로 "타입 에러 없이" 조용히 무시된다 |
 | 5 | `dehydrateQueries`/`dehydrateMutations` | 동작 | **알 수 없는 키로 무시** | persist가 의도치 않은 데이터까지 저장/미저장 |
 | 6 | 창 포커스 refetch | `focus` + `visibilitychange` | **`visibilitychange`만** | 같은 탭에서 다른 앱 갔다 와도 refetch가 **덜 일어남** |
 | 7 | 오프라인 판정 | `navigator.onLine` 사용 | **미사용**, 기본 `online: true` + online/offline 이벤트 | 오프라인 배너·`fetchStatus: 'paused'` 타이밍 변화 |

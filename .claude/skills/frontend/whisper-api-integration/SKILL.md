@@ -11,8 +11,9 @@ description: OpenAI 음성 전사(STT) API 통합 패턴. POST /v1/audio/transcr
 > - OpenAI API Reference / Create transcription — https://developers.openai.com/api/reference/resources/audio/subresources/transcriptions/methods/create
 > - OpenAI Models — https://developers.openai.com/api/docs/models/gpt-transcribe, https://developers.openai.com/api/docs/models/gpt-live-transcribe, https://developers.openai.com/api/docs/models/gpt-4o-transcribe, https://developers.openai.com/api/docs/models/whisper-1
 > - OpenAI Pricing — https://openai.com/api/pricing/
+> - openai-python (PyPI) — https://pypi.org/pypi/openai/json · openai-node (npm) — https://registry.npmjs.org/openai · GitHub 소스: https://github.com/openai/openai-python/blob/main/src/openai/resources/audio/transcriptions.py · https://github.com/openai/openai-node/blob/master/src/resources/audio/transcriptions.ts
 >
-> 검증일: 2026-08-11
+> 검증일: 2026-09-28 (재검증 2차, 이전 2026-08-11) — 갱신 사유: `keywords`·`languages` 파라미터가 openai-python(latest 3.19.2)·openai-node(latest 7.23.0) 최신 SDK에서 `create()` 최상위 타입 인자로 정식 노출됨을 GitHub 소스로 직접 확인 — 기존 "SDK 타입 지연" 주의를 "extra_body는 관행적 표기이며 최신 SDK는 직접 인자 지원"으로 정정(§3). 모델 라인업·가격·포맷·25MB 제한·response_format 제약은 공식 가이드 재조회 결과 변경 없음(VERIFIED)
 >
 > **2026-08-11 갱신 요지**: OpenAI가 **`gpt-transcribe`**(2026-07-28 출시)를 파일 전사의 **권장 모델**로 지정.
 > 공식 가이드 원문 — *"Start with `gpt-transcribe`. This is the recommended model for transcribing recorded speech in its original language."*
@@ -111,7 +112,7 @@ POST https://api.openai.com/v1/audio/translations
 
 > **주의 (`keywords` 오남용):** 공식 문구 — *"Keywords are hints, not required output. Include only relevant terms."* 실제 등장하지 않을 단어를 넣으면 모델이 없는 말을 만들어낼 수 있다. 또한 keywords 값에 `<`, `>`, CR, LF 문자를 넣을 수 없다.
 
-> **주의 (SDK 타입 지연):** OpenAI 공식 Cookbook 예제는 `keywords`·`languages`를 Python SDK에서 `extra_body={...}`로 전달한다. SDK 버전에 따라 최상위 인자로 아직 노출되지 않을 수 있으므로, 타입 에러가 나면 `extra_body`(Python) / raw multipart 필드(fetch)로 우회하라.
+> **주의 (SDK 지원 현황 — 2026-09-28 재확인):** `keywords`·`languages`는 현재 **openai-python(latest 3.19.2, 2026-09-24 배포)**·**openai-node(latest 7.23.0, 2026-09-23 배포)** 양쪽 SDK 모두에서 `create()`의 **최상위 타입 인자**로 정식 노출돼 있다(GitHub 소스 직접 확인: Python `TranscriptionCreateParamsBase`, Node `TranscriptionCreateParamsBase`에 `keywords: SequenceNotStr[str]`/`languages: SequenceNotStr[str]`, `languages?: Array<string>` 필드 존재) — `client.audio.transcriptions.create({ ..., keywords: [...], languages: [...] })` 처럼 **직접 인자로 전달하면 된다**. 다만 OpenAI 공식 가이드·Cookbook 예제는 여전히 Python은 `extra_body={...}`로, Node는 요청 바디 스프레드로 전달하는 코드를 보여준다(구버전 SDK 호환을 위한 관행적 표기로 추정). SDK가 오래돼 타입 에러가 나면 `extra_body`(Python)/raw multipart 필드(fetch)로 우회할 수 있으나, 최신 SDK로 올리는 쪽이 정석이다.
 
 > **주의:** 모델·파라미터 조합 제약(특히 response_format ↔ timestamp_granularities ↔ logprobs)이 자주 바뀐다. 신규 도입 시 https://developers.openai.com/api/reference/resources/audio/subresources/transcriptions/methods/create 에서 현재 매트릭스 재확인.
 

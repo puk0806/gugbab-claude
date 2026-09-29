@@ -1,8 +1,8 @@
 ---
 skill: fortune-interpretation-prompt-engineering
 category: meta
-version: v1
-date: 2026-09-10
+version: v3
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `fortune-interpretation-prompt-engineering` |
 | 스킬 경로 | `.claude/skills/meta/fortune-interpretation-prompt-engineering/SKILL.md` |
-| 검증일 | 2026-09-10 |
-| 검증자 | skill-creator (Claude Code) |
-| 스킬 버전 | v1 |
+| 검증일 | 2026-09-28 (최초 2026-09-10, 2026-09-11·2026-09-25·2026-09-28 재검증) |
+| 검증자 | skill-creator (Claude Code) → Claude (Sonnet 5, 2026-09-28 재검증) |
+| 스킬 버전 | v3 |
 | 대상 기준 | Claude API 2026-09-25 현행 (Opus 5.5 / Sonnet 5 / Haiku 4.5) — 최초 2026-09-10 Opus 5 기준 |
 | 포크 원본 | `.claude/skills/meta/dream-interpretation-prompt-engineering/SKILL.md` (구조 계승, 톤 룰 교체) |
 
@@ -160,6 +160,40 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
+### [2026-09-28] 선택 보강 반영
+
+2026-09-28 skill-tester 재테스트에서 발견된 gap 반영: REFERENCE.md §8 상단 요약 문장("캐시 읽기 0.1x")에 "단, Opus 5.5는 0.05x(아래 표)" 예외를 명시(하단 표에는 이미 있던 사실을 상단 요약에도 반영해 오독 방지). 근거: 2026-09-28 공식 가격표(https://platform.claude.com/docs/en/about-claude/pricing) 재확인 — "Cache hits and refreshes ... 0.05x on Claude Opus 5.5. All other models use the standard 0.1x multiplier." 기존에 이미 검증된 사실을 다른 위치에 반복 명시한 것이라 신규 사실 추가로 보지 않음 — status 영향 없음.
+
+**[2026-09-28] skill-tester 재테스트 — 2차 재검증(Opus 5.5 캐시 수치 보강) 반영분 대상**
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (domain-specific 에이전트 미등록으로 대체)
+**수행 방법**: SKILL.md + references/REFERENCE.md Read 후 2개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인. 질문 1개는 2026-09-28 재검증(2차)에서 보강된 Opus 5.5 캐시 최소 토큰·비용 확정치를 직접 겨냥
+
+### 실제 수행 테스트
+
+**Q1. Opus 5.5 캐시 최소 토큰·캐시 읽기 비용 정정 확인** ("Opus 5.5로 올리면 프롬프트 캐시 최소 토큰과 캐시 읽기 비용이 어떻게 되나요? Opus 5(구세대)와 다른가요?")
+- ✅ PASS
+- 근거: REFERENCE.md §8 "최소 캐시 토큰" 표 + "비용 배수(공식)" 표
+- 상세: 최소 캐시 토큰 512(Opus 5와 동일, 변화 없음), 캐시 읽기는 표준 0.1x가 아니라 **0.05x 우대**로 $0.20/MTok(구세대 Opus 5는 $0.50/MTok)라는 2026-09-28 보강 수치를 정확히 인용. input 단가 $5→$4/MTok 하락도 함께 지적.
+
+**Q2. 캐시 breakpoint 구성 + JSON 강제 + 프리필 금지** ("사주·타로·손금 3모드 프롬프트를 캐시 breakpoint 몇 개로 어떻게 나누고, JSON은 어떻게 강제하나요? assistant 프리필을 써도 되나요?")
+- ✅ PASS
+- 근거: SKILL.md §2 "전체 프롬프트 구조" + REFERENCE.md §6-2·§12-8
+- 상세: 공통 코어/모드 블록 2-breakpoint 구조, `output_config.format` Structured Outputs, `mode` enum 단일 스키마 권장, Claude 4.6+ assistant 프리필 400 에러이므로 금지라는 점까지 정확히 재현. SKILL.md만으로 부족해 REFERENCE.md §6-2까지 찾아간 것을 스스로 명시(설계대로 동작).
+
+### 발견된 gap (선택 보강, 차단 요인 아님)
+
+- REFERENCE.md §8 상단 요약 문장("캐시 읽기 0.1x")과 하단 Opus 5.5 비용표 행("0.05x 배수 — 표준보다 우대")이 같은 섹션에서 다른 숫자를 제시해, 표를 안 보고 본문 요약 문장만 읽으면 오독 가능. "단, Opus 5.5는 0.05x 예외"를 본문 요약 문장에도 명시하면 더 명확해짐.
+
+### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 해당 없음 (API 패턴 스킬 — content test PASS로 APPROVED 가능)
+- 최종 상태: **APPROVED** (2026-09-28 재검증(2차) 보강분 반영 확인 완료)
+
+---
+
 **수행일**: 2026-09-10
 **수행자**: skill-tester → general-purpose (domain-specific 에이전트 미등록으로 대체, 대체 사실 명시)
 **수행 방법**: SKILL.md Read 후 아래 예정 테스트 케이스 3건을 그대로 사용해 general-purpose 에이전트 3개에 개별 답변시키고, 근거 섹션 실재 여부·anti-pattern 회피 여부를 SKILL.md 원문과 대조 검증
@@ -192,6 +226,27 @@ status: APPROVED
 - 최종 상태: APPROVED
 
 **2026-09-11 갱신 (v2 축소 반영)**: 캐주얼 앱 방향으로 §3-3(실행 판단 3단 처리)·§8(2층 안전 가드)·`safety_flag`/`topic_boundary_notice` 필드·위기 자원표를 제거하고 삭제된 짝 스킬 참조를 정리했다. Q2의 근거 섹션(§3-3)이 사라져 해당 문항은 이력으로만 남기고, Q1(§5-1 계산 책임 분리)·Q3(§2 2단 구조·§6-2 Structured Outputs·§8 캐싱)의 근거 섹션은 그대로 유효하므로 APPROVED를 유지한다.
+
+---
+
+### [2026-09-28] 재검증(2차) — Structured Outputs·Opus 5.5 캐시 임계값 공식 확정 반영
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 + references/REFERENCE.md Read → 핵심 클레임 3개를 platform.claude.com 1차 소스로 대조
+
+**클레임 대조 결과**:
+1. Structured Outputs — `output_config.format`(GA), `output_format`(구 beta, deprecated), `additionalProperties: false` 필수, `minLength`/`maximum` 등 길이·수치 제약 미지원, 스키마 변경 시 프롬프트 캐시 무효화 → **VERIFIED** (공식 문서 원문과 REFERENCE.md §6-2 서술 완전 일치, 변경 없음)
+2. Claude Opus 5.5 프롬프트 캐시 최소 토큰 = 512 (기존 REFERENCE.md는 "주의: 미확인 — 공식 표 미기재"로 표기) → **보강(ADD)**: 공식 문서(prompt-caching.md)에 "512 tokens" 그룹으로 Opus 5.5가 명시적으로 등재됨을 확인(Opus 5와 동일 그룹). "미확인" 표기를 512로 확정 반영
+3. Claude Opus 5.5 캐시 비용(입력 $4/MTok, 5m 쓰기 $5, 1h 쓰기 $8, 캐시 읽기 $0.20 = 0.05x 배수) — 기존 REFERENCE.md는 "가정"으로 표기 → **보강(ADD)**: 공식 pricing 페이지 표에서 정확히 일치 확인(각주: "0.05x on Claude Opus 5.5"). "가정" 표기를 확정치로 반영
+4. (부가 확인) Opus 5.5 강제 `tool_choice`(any/tool) 400·`thinking: disabled`/`budget_tokens` 400·`computer_toolset_20260801` 요구 — 공식 마이그레이션 가이드 원문으로 재확인, REFERENCE.md §12-9 서술과 일치 → VERIFIED (변경 없음)
+
+**보강(ADD)·축소**: REFERENCE.md §8 캐시 최소 토큰 표의 Opus 5.5 행을 "미확인" → "512"로, 비용 표의 Opus 5.5 캐시 쓰기/읽기 값을 "가정"/"공식 발표가" 임시 표기에서 공식 확정치로 정정. 그 외 축소 없음(도메인 안전·함정 목록 유지).
+
+**실전 질문 재검증**:
+- Q1. "운세 앱에서 3모드 프롬프트 breakpoint 구성과 JSON 강제 방법은?" → SKILL.md §2·REFERENCE.md §6-2·§8 근거로 PASS (Structured Outputs·2-breakpoint 구조 불변 확인)
+- Q2. "Opus 5.5로 모델을 올릴 때 이 스킬의 캐싱 설계에서 바뀌는 게 있나?" → REFERENCE.md §8 정정된 표(최소 토큰 512, 캐시 읽기 0.05x=$0.20) 근거로 PASS
+
+**재검증 최종 판정**: status **PENDING_TEST 전환** (REFERENCE.md 수치 보강 반영 — 메인 세션의 skill-tester 재테스트 대기)
 
 ---
 
@@ -269,8 +324,8 @@ status: APPROVED
 | 실용성 | ✅ (복붙 가능한 시스템 프롬프트 템플릿·3모드 입력 스키마·Python 호출 예제·평가 지표 5종) |
 | 공식 소스 비중 | ✅ (Anthropic 공식 4건 + 공식 정책 1건 + 플랫폼/기관 1차 소스 5건) |
 | 최신성 | ✅ (2026-09-10 현행 모델 ID·가격·캐시 임계값, 구세대 ID 하드코딩 없음) |
-| 에이전트 활용 테스트 | ✅ (2026-09-10 skill-tester → general-purpose 3건, 3/3 PASS — 근거 섹션 §5-1·§2/§6-2/§8 정합 확인. Q2 근거였던 §3-3은 2026-09-11 축소로 제거, 이력으로만 유지) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (2026-09-10 skill-tester → general-purpose 3건, 3/3 PASS — 근거 섹션 §5-1·§2/§6-2/§8 정합 확인. Q2 근거였던 §3-3은 2026-09-11 축소로 제거, 이력으로만 유지) — 2026-09-28 skill-tester 재테스트 2/2 PASS (Opus 5.5 캐시 수치 보강 반영 확인 완료) |
+| **최종 판정** | **APPROVED** (2026-09-28 skill-tester 재테스트 2/2 PASS 완료 — Opus 5.5 캐시 임계값/비용 확정치 보강 반영 확인) |
 
 ---
 
@@ -284,6 +339,9 @@ status: APPROVED
 - [❌] 톤 경계 정규식(§11-2, §11-3)의 한국어 false positive 실측 — 선택 보강(차단 요인 아님, 실전 도입 후 흔한 오탐 사례로 보강 권장)
 - [❌] §6-2 코드 예시에 few-shot(§7) 삽입 지점 명시 — 선택 보강(2026-09-10 content test Q3에서 발견된 경미한 gap, 답변 정확성에는 영향 없었음)
 - [❌] README.md 스킬 목록·업데이트 로그 반영 (이번 작업에서 의도적으로 제외 — 병렬 생성 충돌 방지, 별도 정리 작업에서 처리 예정)
+- [✅] (2026-09-28 완료) REFERENCE.md §8 Opus 5.5 캐시 최소 토큰·비용 "미확인"/"가정" 표기를 공식 확정치(512 / $5 / $8 / $0.20=0.05x)로 정정
+- [✅] (2026-09-28 완료) skill-tester 재테스트 수행 — 2/2 PASS, PENDING_TEST → APPROVED 전환
+- [✅] (2026-09-28 반영) REFERENCE.md §8 상단 요약 문장에 "Opus 5.5는 0.05x 예외" 한 줄 명시 — 2026-09-28 재테스트에서 발견, 공식 가격표로 재확인 후 반영 완료(status 영향 없음 — 기존 검증 사실의 위치 보강)
 
 ---
 
@@ -297,3 +355,6 @@ status: APPROVED
 | 2026-09-11 | v2 | 캐주얼 앱 방향으로 안전 계열 섹션 축소·삭제 자산 참조 제거 — §3-3 실행 판단 3단 처리·§8 2층 안전 가드·위기 자원표·`safety_flag`/`topic_boundary_notice` 필드·안전 few-shot 2건 삭제. 톤 규칙은 "상징 해석 허용 / 결정론적 단정 회피 / 실행 판단은 사용자에게" 한 문장으로 통합, disclaimer는 "재미로 보는 운세" 고정 문구로 교체. 소스 목록에서 YMYL 정의·위기 전화 보도자료 제거. 짝 스킬 목록을 만세력·사주/타로 전통·손금 스킬로 정리 | main session |
 | 2026-09-25 | v2.1 | **모델 ID 현행화(Opus 5.5/Fable 5.1).** 헤더 대상 모델 Opus 5 → Opus 5.5(예제 기본 `claude-sonnet-5` 유지). §8 최소 캐시 토큰 표에 Opus 5.5 "미확인" 행, 비용 표에 Opus 5.5($4 input·cache read $0.20, write 배수는 가정 표기) 행 추가·Opus 5는 구세대 표기. 함정 §9 현행 ID `claude-opus-5-5`로 갱신 + Opus 5.5 강제 `tool_choice`·thinking disabled 400 주의. 메타 표·체크리스트 동기화. 클레임 표 1번(2026-09-10 판정)은 이력으로 보존. status APPROVED 유지 | 모델 ID 현행화 |
 | 2026-09-25 | v2.1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | skill-creator |
+| 2026-09-28 | v3 | 재검증(2차) — Structured Outputs(`output_config.format`) 서술 VERIFIED(변경 없음). REFERENCE.md §8 Opus 5.5 캐시 최소 토큰 "미확인" → **512**(공식 표 등재 확인), 캐시 비용 "가정" 표기 → 공식 확정치($5/$8/$0.20=0.05x)로 정정. Opus 5.5 강제 tool_choice·thinking disabled 400 재확인(변경 없음). status APPROVED → PENDING_TEST (skill-tester 재테스트 대기) | Claude (Sonnet 5) |
+| 2026-09-28 | v3 | 2단계 실사용 재테스트 수행 (Q1 Opus 5.5 캐시 최소 토큰·비용 정정 확인 / Q2 캐시 breakpoint 구성·JSON 강제·프리필 금지) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-09-28 | v3 | 선택 보강 반영 — REFERENCE.md §8 상단 요약 문장에 "Opus 5.5는 캐시 읽기 0.05x 예외" 한 줄 추가(공식 가격표 재확인). 기존 검증 사실의 표기 위치 보강이라 status 영향 없음, APPROVED 유지 | Claude (Opus 5.5) |

@@ -2,7 +2,7 @@
 skill: docker-deployment
 category: devops
 version: v1
-date: 2026-04-20
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -51,8 +51,8 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `docker-deployment` |
 | 스킬 경로 | `.claude/skills/devops/docker-deployment/SKILL.md` |
-| 검증일 | 2026-04-20 |
-| 검증자 | Claude (Opus 4.6) |
+| 검증일 | 2026-09-28 (최초 검증 2026-04-20) |
+| 검증자 | Claude (Opus 4.6) / 재검증: Claude (Sonnet 5) |
 | 스킬 버전 | v1 |
 
 ---
@@ -230,6 +230,23 @@ SKILL.md "docker-compose.yml (개발 / 프로덕션)" 섹션에서 정확한 패
 
 ---
 
+### 재검증 테스트 (2026-09-28)
+
+**수행일**: 2026-09-28
+**수행 방법**: Docker Engine/Compose 공식 릴리즈노트 재조사 후 SKILL.md 대조, 실전 질문 2개로 content 재확인
+
+**Q1. 현재(2026-09) Docker Engine·Compose 최신 버전이 SKILL.md가 다루는 범위(v29.x/v5.x)에 여전히 속하나?**
+- 판정: PASS
+- 근거: docs.docker.com/engine/release-notes/ → v29.8.1(2026-09-15), github.com/docker/compose/releases → v5.5.1(2026-09-03) 모두 확인. SKILL.md 헤더의 "Docker Engine v29.x, Docker Compose v5.x" 범위 내 패치 버전.
+
+**Q2. HEALTHCHECK 옵션·멀티스테이지 빌드 문법이 최신 Dockerfile reference와 여전히 일치하나?**
+- 판정: PASS
+- 근거: 2026-04-20 최초 검증 시 확인한 `docs.docker.com/reference/dockerfile/` 기준 HEALTHCHECK 5개 옵션(interval/timeout/start-period/start-interval/retries) 및 `COPY --from` 멀티스테이지 패턴은 Docker 공식 문서에서 안정적으로 유지되는 핵심 문법이며, v29.8.1 릴리즈노트에 관련 breaking change 없음.
+
+재검증 결과: 내용 변경 없음, status APPROVED 유지.
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -258,3 +275,4 @@ SKILL.md "docker-compose.yml (개발 / 프로덕션)" 섹션에서 정확한 패
 |------|------|-----------|--------|
 | 2026-04-20 | v1 | 최초 작성 | Claude (Opus 4.6) |
 | 2026-04-20 | v1.1 | PENDING_TEST → APPROVED 전환: 핵심 클레임 3종 교차 검증(HEALTHCHECK --start-interval, Compose 환경변수 우선순위, railway.toml 필드) + 테스트 질문 3종 수행 완료 | Claude (Opus 4.6) |
+| 2026-09-28 | v1 | 재검증: Docker Engine 공식 릴리즈노트(docs.docker.com/engine/release-notes/) → v29.8.1(2026-09-15) 확인, Docker Compose(github.com/docker/compose/releases) → v5.5.1(2026-09-03) 확인. 둘 다 SKILL.md 명시 범위(v29.x/v5.x) 내 패치 버전 갱신이며 API·베스트프랙티스 변경 없음. 내용 수정 없음, status APPROVED 유지 | Claude (Sonnet 5) |

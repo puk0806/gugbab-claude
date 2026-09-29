@@ -16,7 +16,7 @@ description: 꿈 일기 PWA를 위한 데이터 모델 설계 스킬. Dream·Int
 > - Fuse.js — https://fusejs.io/
 > - MiniSearch — https://lucaong.github.io/minisearch/
 >
-> 검증일: 2026-05-14
+> 검증일: 2026-09-28 (최초 작성 2026-05-14)
 
 > **짝 스킬 안내**: `frontend/indexeddb-dexie`는 Dexie API 사용법 자체(스키마·쿼리·트랜잭션·`useLiveQuery`)를 다룬다. 본 스킬은 꿈 일기 *도메인* 데이터 모델 설계 결정(엔티티 분할·인덱스 선택·동기화 전략·민감 정보 처리)을 다룬다. 함께 참조하면 좋다.
 

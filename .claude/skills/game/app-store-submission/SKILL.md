@@ -6,7 +6,7 @@ description: Unity 2D 모바일 게임을 Google Play와 App Store에 제출하�
 # Unity 2D 모바일 게임 — Google Play / App Store 제출 가이드
 
 > 소스: Google Play Console Help, Android Developers, Apple Developer (App Store Connect Help, App Review Guidelines)
-> 검증일: 2026-09-26 (재검증. 2026-08-31 Target API 36 시행·2026-04-28 iOS 26 SDK 의무화·2026-01-31 연령 등급 신설문 데드라인이 모두 **이미 지난 시점**이므로 본문 시제를 "예정"에서 "시행 중"으로 정정. 핵심 수치·정책 변동 없음 확인)
+> 검증일: 2026-09-28 (재검증, 이전 2026-09-26. Target API 36 유예 신청 자격·방법 명확화 — 신규 앱은 유예 불가, 기존 앱 업데이트만 Play Console Policy status 페이지에서 신청 가능함을 Google Play Console 고객센터 공식 문서로 확인해 반영. 이전 재검증: 2026-08-31 Target API 36 시행·2026-04-28 iOS 26 SDK 의무화·2026-01-31 연령 등급 신설문 데드라인이 모두 **이미 지난 시점**이므로 본문 시제를 "예정"에서 "시행 중"으로 정정)
 > 대상 버전: Google Play Console (2026), App Store Connect (iOS 26 SDK / Xcode 26 기준)
 
 ---
@@ -21,7 +21,8 @@ description: Unity 2D 모바일 게임을 Google Play와 App Store에 제출하�
 
 ### 1-2. Target API Level (매년 상향, 2026-09 현재 기준)
 - **2025-08-31 ~ 2026-08-30 기간**: 신규 앱·업데이트는 Android 15 (API 35) 이상 target 필수였음 (이 기간은 종료됨)
-- **2026-08-31부터 (현재 시행 중)**: 신규 앱·업데이트는 **Android 16 (API 36) 이상** target 필수 (유예 신청 시 2026-11-01까지 연장 가능, Wear OS·Android TV는 API 35)
+- **2026-08-31부터 (현재 시행 중)**: 신규 앱·업데이트는 **Android 16 (API 36) 이상** target 필수 (Wear OS·Android TV는 API 35)
+- **유예(2026-11-01까지) 신청 자격**: **신규 앱 제출에는 유예가 없다** — 신규 앱은 2026-08-31부터 예외 없이 API 36 필수. 유예는 **이미 게시된 기존 앱을 상위 target API로 업데이트할 계획이 있는 개발자**에게만 허용되며, Play Console **Policy status** 페이지의 해당 경고/이슈 상세에서 신청 양식(Request more time)에 접근한다 (출처: Google Play Console 고객센터 "Target API level requirements for Google Play apps")
 - Unity에서: **Player Settings → Other Settings → Target API Level**
 - 정책: 신규/업데이트는 최신 메이저 Android 출시 후 1년 이내 target 갱신, 기존 앱은 2년 이내
 
@@ -229,7 +230,7 @@ PlayerSettings.iOS.buildNumber = (int.Parse(PlayerSettings.iOS.buildNumber) + 1)
 
 ### Google Play
 - [ ] AAB 빌드 (APK 아님)
-- [ ] Target API Level **36+** (2026-08-31부터 시행 중, 유예 시 2026-11-01까지)
+- [ ] Target API Level **36+** (2026-08-31부터 시행 중 — 신규 앱은 유예 불가. 기존 앱 업데이트만 Policy status 페이지에서 신청 시 2026-11-01까지 연장 가능)
 - [ ] ARM64 포함, IL2CPP backend
 - [ ] versionCode 이전 빌드보다 증가
 - [ ] 512×512 아이콘, 1024×500 Feature Graphic

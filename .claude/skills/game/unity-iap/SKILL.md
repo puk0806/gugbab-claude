@@ -3,7 +3,7 @@ name: unity-iap
 description: >
   Unity In-App Purchasing(IAP) SDK를 Unity 2D 모바일 게임에 통합하는 방법.
   소모품(Consumable)/비소모품(Non-Consumable)/구독(Subscription) 3종 + 영수증 검증 + iOS 복원.
-  Unity 6 LTS 호환 IAP 5.3.x 신 API(StoreController / OnPurchasePending)와 4.15.x 레거시 API(IStoreListener / ProcessPurchase) 모두 다룸.
+  Unity 6 LTS 호환 IAP 5.x(최신 5.4.3) 신 API(StoreController / OnPurchasePending)와 4.15.x 레거시 API(IStoreListener / ProcessPurchase) 모두 다룸.
   <example>사용자: "Unity 모바일 게임에 인앱결제 붙이려면?"</example>
   <example>사용자: "IAP에서 ProcessPurchase에서 Complete를 반환해야 하나 Pending을 반환해야 하나?"</example>
   <example>사용자: "iOS 인앱결제 심사 거절됐는데 구매 복원 버튼이 필요하다는데?"</example>
@@ -46,7 +46,7 @@ Unity IAP는 Google Play / App Store / Amazon / Mac App Store 등 다중 스토�
 
 ### 두 가지 API 세대 — 신규 프로젝트는 v5 사용
 
-| 구분 | v4 (4.15.1, 레거시) | v5 (5.3.1, 권장) |
+| 구분 | v4 (4.15.1, 레거시) | v5 (5.4.3, 권장) |
 |------|---------------------|-------------------|
 | 진입점 | `UnityPurchasing.Initialize(listener, builder)` | `UnityIAPServices.StoreController()` |
 | 콜백 모델 | `IStoreListener` 인터페이스 구현 | 이벤트 핸들러(`OnPurchasePending` 등) |
@@ -392,7 +392,7 @@ public void CheckBattlePass()
 
 | 상황 | 권장 패턴 |
 |------|-----------|
-| 신규 프로젝트, Unity 6 LTS | **IAP v5 (5.3.x)** + v5 신 API |
+| 신규 프로젝트, Unity 6 LTS | **IAP v5 (5.4.x)** + v5 신 API |
 | 기존 v4 코드 유지보수만 | **IAP 4.15.1** + `IStoreListener` (BL 7 자동 지원) |
 | 코인·에너지 등 반복 구매 | `ProductType.Consumable` + 서버 검증 + Pending 패턴 |
 | 광고 제거·캐릭터 해금 | `ProductType.NonConsumable` + `CrossPlatformValidator` |

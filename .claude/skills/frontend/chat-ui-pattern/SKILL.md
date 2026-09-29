@@ -12,7 +12,7 @@ description: LLM 챗봇용 React 채팅 UI 패턴 — 메시지 버블·가상 �
 > 소스: https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-live
 > 소스: https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Guides/Live_regions
 > 소스: https://www.w3.org/WAI/WCAG21/Techniques/aria/ARIA23
-> 검증일: 2026-05-14
+> 검증일: 2026-09-28 (재검증 — 버전 3종 npm registry 대조, 변동 없음)
 > 버전 기준: react-markdown 10.1.0 · remark-gfm 4.0.1 · rehype-highlight 7.0.2 · react-virtuoso 4.x
 
 > 소스: https://virtuoso.dev/react-virtuoso/ (react-virtuoso 4.18.5 기준 — 2026-09-26 구 `frontend/react-virtuoso` 스킬 흡수)

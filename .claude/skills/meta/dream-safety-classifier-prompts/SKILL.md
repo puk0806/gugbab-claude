@@ -17,11 +17,12 @@ description: >
 > - Anthropic Content moderation use case guide — https://platform.claude.com/docs/en/about-claude/use-case-guides/content-moderation
 > - Anthropic Building moderation filter (cookbook) — https://github.com/anthropics/anthropic-cookbook/blob/main/misc/building_moderation_filter.ipynb
 > - Anthropic Increase output consistency — https://platform.claude.com/docs/en/docs/test-and-evaluate/strengthen-guardrails/increase-consistency
+> - Anthropic Structured outputs — https://platform.claude.com/docs/en/build-with-claude/structured-outputs
 > - Anthropic Prompt caching — https://platform.claude.com/docs/en/build-with-claude/prompt-caching
 > - Anthropic Building safeguards for Claude — https://www.anthropic.com/news/building-safeguards-for-claude
 > - Anthropic Protecting the wellbeing of our users — https://www.anthropic.com/news/protecting-well-being-of-users
 >
-> 검증일: 2026-08-12
+> 검증일: 2026-09-28 (최초 2026-05-15, 이전 2026-08-12)
 > 대상 모델: Claude Haiku 4.5 (분류기 권장) / Sonnet 5 (정확도 우선) — 2026-09-25 현행 세대 기준
 
 이 스킬은 짝 스킬 `meta/dream-interpretation-prompt-engineering`(해몽 *생성*
@@ -294,6 +295,11 @@ False positive 多          False negative 多
 
 ## 8. 운영 패턴 — 호출 순서와 비용
 
+스키마 강제는 `output_config.format`(Structured Outputs, GA)을 쓴다. constrained
+decoding으로 5개 카테고리 enum 밖의 값이나 필드 누락 자체를 원천 차단하므로,
+분류기처럼 *다운스트림 분기 로직이 스키마에 그대로 의존*하는 경우 특히 유용하다.
+`claude-haiku-4-5-20251001`은 Claude API에서 Structured Outputs를 공식 지원한다.
+
 ```python
 import anthropic, json
 
@@ -302,6 +308,21 @@ client = anthropic.Anthropic()
 SAFETY_CLASSIFIER_SYSTEM = """...§3 템플릿 전체..."""
 
 DREAM_INTERPRETER_SYSTEM = """...짝 스킬의 해몽 시스템 프롬프트..."""
+
+CLASSIFIER_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "category": {
+            "type": "string",
+            "enum": ["null", "self_harm", "trauma", "violence_toward_others", "severe_distress"],
+        },
+        "confidence": {"type": "number"},
+        "signals": {"type": "array", "items": {"type": "string"}},
+        "rationale": {"type": "string"},
+    },
+    "required": ["category", "confidence", "signals", "rationale"],
+    "additionalProperties": False,
+}
 
 def handle_dream(user_dream: str) -> dict:
     # 1단계: 분류기 (Haiku 4.5, 빠르고 저렴)
@@ -314,9 +335,10 @@ def handle_dream(user_dream: str) -> dict:
             "text": SAFETY_CLASSIFIER_SYSTEM,
             "cache_control": {"type": "ephemeral"},
         }],
+        output_config={"format": {"type": "json_schema", "schema": CLASSIFIER_SCHEMA}},
         messages=[{"role": "user", "content": user_dream}],
     )
-    classification = json.loads(safety.content[0].text)
+    classification = json.loads(safety.content[0].text)  # constrained decoding — 스키마 위반 없음
 
     # 분기
     if classification["category"] != "null":
@@ -347,6 +369,9 @@ def handle_dream(user_dream: str) -> dict:
     }
 ```
 
+> 주의: `output_config.format`을 바꾸면 해당 스레드의 프롬프트 캐시가 무효화된다.
+> `CLASSIFIER_SCHEMA`는 카테고리 enum이 늘어나지 않는 한 고정으로 유지한다.
+
 **비용 분석 (per dream, 2026-09-25 공식 가격 기준):**
 
 | 호출 | 모델 | 입력 토큰 | 출력 토큰 | 단가 | 회당 비용 |
@@ -370,7 +395,7 @@ def handle_dream(user_dream: str) -> dict:
 |------|---------------|----------------|
 | Claude Haiku 4.5 | 4,096 | few-shot 7~10개로 확장하면 가능 |
 | Claude Sonnet 5 | 1,024 | 기본 템플릿(§3)으로 적용 가능 |
-| Claude Opus 5.5 / Opus 5(구세대) | 미확인(공식 표 미기재) / 512 | (분류기에 Opus는 과잉) |
+| Claude Opus 5.5 / Opus 5(구세대) | 512 / 512 (2026-09-28 공식 표 재확인) | (분류기에 Opus는 과잉) |
 
 **선택 가이드:**
 - 트래픽 < 1,000 req/day → 캐시 무시, Haiku 4.5 단순 호출
@@ -397,9 +422,10 @@ def handle_dream(user_dream: str) -> dict:
    결정하면 *회색 영역*(confidence 0.5~0.7)을 잡지 못한다. 두 차원(category +
    confidence)을 모두 분기 조건에 사용.
 
-5. **JSON 파싱 실패 무시** — Claude가 JSON 외 텍스트를 섞을 가능성은 낮지만
-   0이 아니다. `try/except json.JSONDecodeError` + retry 1회 + fallback
-   (unsafe로 처리)을 둘 것. 분류기 fallback은 *보수적 unsafe*가 정답.
+5. **JSON 파싱 실패 무시** — §8처럼 `output_config.format`(Structured Outputs)로
+   스키마를 강제하면 이 위험이 크게 줄지만 API 호출 자체 실패(네트워크·429 등)는
+   여전히 발생한다. `try/except` + retry 1회 + fallback(unsafe로 처리)을 둘 것.
+   분류기 fallback은 *보수적 unsafe*가 정답.
 
 6. **분류기 프롬프트에 자원 안내문 혼합** — "self_harm이면 109 안내 문구
    생성"을 분류기에 시키면, *분류 평가가 어려워지고*, *문구 품질도 떨어진다*.

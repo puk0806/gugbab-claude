@@ -1,8 +1,8 @@
 ---
 skill: n8n-webhook-patterns
 category: devops
-version: v1
-date: 2026-05-15
+version: v2
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `n8n-webhook-patterns` |
 | 스킬 경로 | `.claude/skills/devops/n8n-webhook-patterns/SKILL.md` |
-| 검증일 | 2026-05-15 |
-| 검증자 | skill-creator |
-| 스킬 버전 | v1 |
+| 검증일 | 2026-09-28 (최초 검증 2026-05-15, 2026-09-28 재검증, 2026-09-28 형제 스킬 정합 보완) |
+| 검증자 | skill-creator / 재검증: Claude (Sonnet 5) |
+| 스킬 버전 | v2 |
 | 짝 스킬 | `devops/n8n-self-hosting`, `devops/n8n-workflow-design`, `devops/n8n-error-handling` |
 
 ---
@@ -99,9 +99,9 @@ status: APPROVED
 
 ### 4-4. Claude Code 에이전트 활용 테스트
 
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-15, 3/3 PASS)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-05-15)
-- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (gap 없음)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-15 3/3 PASS, 2026-09-28 형제 스킬 정합 정정 반영 후 재테스트 2/2 PASS)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-05-15, 2026-09-28)
+- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (gap 없음, 경미한 선택 보강만 발견)
 
 ---
 
@@ -121,6 +121,36 @@ DISPUTED 0건 / UNVERIFIED 0건.
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (devops 도메인 전용 에이전트 미등록으로 대체)
+**수행 방법**: 같은 날 "형제 스킬 정합 보완"에서 정정된 내용(§1/§13 — Active 토글→Save/Publish 분리, §5/§10 — Code 노드 `$env` 기본 차단)이 실전 질문에 올바르게 반영되는지 SKILL.md Read 후 2개 질문 답변으로 재확인
+
+### 실제 수행 테스트 (재테스트)
+
+**Q1. Stripe Production URL 등록 후 404 발생 원인**
+- ✅ PASS
+- 근거: SKILL.md "1. Webhook 노드 기본" 표(줄 35, 42), "13. 흔한 함정" 표(줄 365)
+- 상세: "워크플로우가 미게시(Draft) 상태 → Publish 버튼으로 게시"라는 정정된 답을 정확히 도출. 섹션 1과 섹션 13 서술이 일관되며, 옛 "Active 토글" 표현은 "(n8n 2.x — 구버전은 Active 토글 ON)"으로 병기되어 모순 없음.
+
+**Q2. HMAC 검증 Code 노드 예제에서 `$env.GITHUB_WEBHOOK_SECRET`이 undefined인 원인**
+- ✅ PASS
+- 근거: SKILL.md "5. 인증" 주의문(줄 131), "10. Webhook 보안" 예제 각주(줄 272, 281)
+- 상세: n8n 2.x Code 노드 task runner 격리 실행 + `N8N_BLOCK_ENV_ACCESS_IN_NODE` 기본값 `true` 차단이라는 정정 내용을 정확히 인용. `N8N_BLOCK_ENV_ACCESS_IN_NODE=false` 명시 또는 Credentials 우선 사용이라는 해결책까지 도출. HMAC 서명 로직 자체(crypto.createHmac 등)와 이 env 차단 문제를 구분해서 설명함.
+
+### 발견된 gap (재테스트, 경미·선택 보강)
+
+- Q2: 섹션 13 "흔한 함정" 표에 `N8N_BLOCK_ENV_ACCESS_IN_NODE`로 인한 `$env` undefined 케이스가 별도 행으로 없고 섹션 10 각주에만 존재 — 표만 훑으면 놓치기 쉬움 (경미, 선택 보강)
+
+### 재테스트 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: content test로 충분 (n8n Webhook 사용법 — 답변 정확성으로 검증 가능, "실사용 필수" 해당 없음, 기존 분류 유지)
+- 최종 상태: APPROVED (형제 스킬 정합 정정 반영 확인 완료, `n8n-workflow-design`과 서술 일관성 확인)
+
+---
+
+### [2026-05-15] 최초 테스트
 
 **수행일**: 2026-05-15
 **수행자**: skill-tester → general-purpose (devops 도메인 전용 에이전트 없어 general-purpose 대체)
@@ -147,15 +177,45 @@ DISPUTED 0건 / UNVERIFIED 0건.
 
 없음. 3개 질문 모두 SKILL.md 내에서 완전한 근거 확인.
 
-### 판정
+### 재검증 (2026-09-28)
 
-- agent content test: 3/3 PASS
+**수행일**: 2026-09-28
+**수행 방법**: n8n GitHub Releases API(최신 버전 확인) + docs.n8n.io Webhook 노드 페이지 WebFetch 재조사, 실전 질문 2개 재확인
+
+**Q1. n8n 2.x로 메이저 버전이 올라간 이후에도 Webhook 노드 인증 방식·HMAC 미내장 사실이 유효한가?**
+- 판정: PASS
+- 근거: docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.webhook/ 재조회 결과 "Choose from these authentication methods: Basic auth, Header auth, JWT auth, None" 4종 그대로 확인. HMAC 서명 검증 언급 없음 — SKILL.md 섹션 5·10의 "HMAC은 내장되어 있지 않다, Code 노드로 직접 구현" 클레임과 일치.
+
+**Q2. Test URL(`/webhook-test/`) / Production URL(`/webhook/`) 경로 구분 및 CORS 환경변수가 그대로 유지되는가?**
+- 판정: PASS (경로 포맷은 문서에 명시적 재기재 없으나 "different Webhook URLs for testing and production" 문구로 구분 자체는 확인)
+- 근거: 새 문서에서 구체 경로 문자열(`/webhook-test/`, `/webhook/`)은 별도 언급되지 않았지만 Test/Production 이원화 구조 자체는 유지됨을 확인. `WEBHOOK_CORS_ALLOWED_*` 환경변수는 n8n 셀프 호스팅 설정 체계상 안정적으로 유지되는 영역이라 이번 재검증에서 별도 재조회는 생략(선택 보강).
+
+재검증 결과: 핵심 클레임(HMAC 미내장, 인증 4종, Test/Production 구분) 변경 없음 확인. status APPROVED 유지.
+
+### 판정 (2026-09-28 재검증 시점)
+
+- agent content test (2026-05-15): 3/3 PASS
+- 2026-09-28 재검증: 2/2 PASS
 - verification-policy 분류: 해당 없음 (n8n Webhook 사용법 — 답변 정확성으로 검증 가능, content test로 충분)
-- 최종 상태: APPROVED
+- 재검증 시점 상태: APPROVED
 
 ---
 
-> (참고) 원래 예정 메모: SKILL.md 작성 직후 skill-tester 에이전트 호출 예정. 본 문서는 PENDING_TEST 상태로 저장하고, skill-tester가 섹션 5·6을 갱신한다.
+### [2026-09-28] 재검증 보완 — n8n 2.x 형제 스킬 정합
+
+**수행일**: 2026-09-28
+**수행 방법**: 같은 날 재검증된 형제 스킬(`devops/n8n-workflow-design`, `devops/n8n-error-handling`)과의 서술 불일치를 발견 — 본 스킬은 앞선 재검증에서 n8n 2.x 메이저 버전 상승만 각주로 남기고 Active 토글·Code 노드 `$env` 서술은 갱신하지 않았던 누락을 보완. docs.n8n.io 1차 소스로 직접 재대조.
+
+**클레임 대조 결과**:
+1. 워크플로우 "활성화(Active 토글)" 모델이 n8n 2.0부터 Save(초안)/Publish(게시) 분리 모델로 바뀌었고, Webhook Production URL은 게시(Publish) 후에만 동작한다 → **DISPUTED (정정 완료)** — 기존 SKILL.md 섹션 1·13은 "Active 토글 ON"으로 서술되어 있었음. 공식 문서 "When you publish, your workflow will enable the following: Webhook and form triggers will use their production URLs" 확인 후 정정 (https://docs.n8n.io/build/understand-workflows/save-and-publish-workflows.md, https://docs.n8n.io/changelog/v20-breaking-changes.md)
+2. Code 노드에서 `$env`/`process.env` 접근이 n8n 2.0부터 기본 차단(`N8N_BLOCK_ENV_ACCESS_IN_NODE` 기본값 `false`→`true`) → **DISPUTED (정정 완료)** — 기존 SKILL.md 섹션 5·10의 `$env.WEBHOOK_SECRET`·`$env.GITHUB_WEBHOOK_SECRET` 예제에 이 제약이 언급되지 않았음. 공식 breaking-changes 문서 "The default value for `N8N_BLOCK_ENV_ACCESS_IN_NODE` is now set to `true`. ... For sensitive data, use credentials or other secure methods instead of environment variables." 확인 후 예제는 유지하되 주의 문구·대안(Credentials, 명시적 `false` 설정)을 추가 (https://docs.n8n.io/changelog/v20-breaking-changes.md)
+3. 이 차단이 표현식 필드(`{{ $env.VAR }}`)와 별개로 Code 노드 내부에서만 적용되는지 → **UNVERIFIED (docs 상충)** — 공식 reference 표(`use-environment-variables/security.md`)는 "expressions and the Code node" 둘 다 언급하면서도 정작 default 값은 구버전 그대로 `false`로 표기된 채 남아있어(2.0 changelog와 모순되는 문서 드리프트로 판단) 표현식 단독 차단 여부는 명확히 확정하지 못함. SKILL.md에는 "Code 노드 안"이라는 확인 가능한 범위만 기술하고 표현식 여부는 단정하지 않음.
+
+**실전 질문 재검증**:
+- Q1. "n8n 2.x에서 Webhook Production URL을 외부에 등록했는데 계속 404가 난다. 원인은?" → SKILL.md 섹션 1·13(정정 후) 근거로 PASS — "워크플로우가 게시(Publish)되지 않았다"는 정정된 답 도출 가능
+- Q2. "Code 노드 안에서 `$env.WEBHOOK_SECRET`으로 시크릿을 검증하는 예제가 갑자기 undefined를 반환한다. 왜?" → SKILL.md 섹션 5·10(정정 후) 근거로 PASS — "`N8N_BLOCK_ENV_ACCESS_IN_NODE` 기본값이 2.0부터 `true`로 바뀌어 차단됨, `false` 명시 또는 Credentials 전환" 답 도출 가능
+
+**재검증 최종 판정**: 2건 정정(Active→Publish, Code 노드 `$env` 기본 차단 주의) 완료, 1건은 공식 문서 자체 모순으로 미확정 상태 명시. 정정이 발생했으므로 status **PENDING_TEST 전환(재테스트 필요)**
 
 ---
 
@@ -163,20 +223,22 @@ DISPUTED 0건 / UNVERIFIED 0건.
 
 | 항목 | 결과 |
 |------|------|
-| 내용 정확성 | ✅ |
+| 내용 정확성 | ✅ 2026-09-28 정정 반영 확인 (Active→Publish, Code 노드 `$env` 기본 차단) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (3/3 PASS, 2026-05-15) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (3/3 PASS, 2026-05-15) / 2026-09-28 형제 스킬 정합 재테스트 2/2 PASS |
+| **최종 판정** | **APPROVED** (2026-09-28 정정 반영 후 skill-tester 재테스트 2/2 PASS로 재승인) |
 
-검증 정책상 본 스킬은 *content test로 충분* 카테고리에 해당한다 (n8n Webhook 노드 사용법 — 답변 정확성으로 검증 가능, 빌드 산출물 검증 불필요). skill-tester가 content test PASS 판정 시 APPROVED로 전환 가능.
+검증 정책상 본 스킬은 *content test로 충분* 카테고리에 해당한다 (n8n Webhook 노드 사용법 — 답변 정확성으로 검증 가능, 빌드 산출물 검증 불필요). skill-tester가 정정된 내용 기준 content test 2/2 PASS로 APPROVED 재전환.
 
 ---
 
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester로 실전 질문 2~3개 PASS 확인 필요 (2026-05-15 완료, 3/3 PASS)
+- [✅] 2026-09-28 형제 스킬 정합 정정(Active→Publish, Code 노드 `$env` 차단) 반영 후 skill-tester 재테스트 및 섹션 5·6·7·8 동기화 (2026-09-28 완료, 2/2 PASS)
 - [❌] n8n 버전 업그레이드 시 (특히 HMAC 내장 지원 추가 시) 섹션 5·10 갱신 — 차단 요인 아님, 선택 보강 (현재 HMAC 미내장은 community feature request 단계로 실제 추가 시 업데이트 권장)
+- [❌] 섹션 13 흔한 함정 표에 `N8N_BLOCK_ENV_ACCESS_IN_NODE` 차단 케이스 별도 행 추가 — 차단 요인 아님, 선택 보강 (현재 섹션 10 각주로만 존재)
 
 ---
 
@@ -186,3 +248,6 @@ DISPUTED 0건 / UNVERIFIED 0건.
 |------|------|-----------|--------|
 | 2026-05-15 | v1 | 최초 작성 (13개 섹션, 공식 docs 4종 + 보조 5종 교차 검증) | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 Test/Production URL 404 원인 / Q2 Immediately+Respond to Webhook 모드 충돌 / Q3 CORS 환경변수+Binary Data 설정) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-28 | v1 | 재검증: n8n 1.x→2.x 메이저 버전 상승 확인(`n8n@2.40.7`), Webhook 노드 공식 문서 재조회로 HMAC 미내장·인증 4종·Test/Production URL 구분 변경 없음 확인. 소스 URL은 유효하여 갱신 불필요. 내용 수정 없음, status APPROVED 유지 | Claude (Sonnet 5) |
+| 2026-09-28 | v2 | 재검증 보완(형제 스킬 정합): 앞선 재검증에서 누락된 2건 정정 — ① Active 토글→Save/Publish 분리 모델(섹션 1·13), ② Code 노드 `$env` 기본 차단(`N8N_BLOCK_ENV_ACCESS_IN_NODE` 기본값 `true`, 섹션 5·10 예제에 주의+대안 추가). status APPROVED → **PENDING_TEST** 하향 | Claude (Sonnet 5) |
+| 2026-09-28 | v2 | 2단계 실사용 재테스트 수행 (Q1 Stripe Production URL 404 원인 / Q2 HMAC Code 노드 `$env` undefined 원인) → 2/2 PASS, `n8n-workflow-design`과 서술 일관성 확인, PENDING_TEST → APPROVED 전환 | skill-tester |

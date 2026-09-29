@@ -315,6 +315,7 @@ git log --oneline main...HEAD    # 커밋 3종 분리 확인
 | **`--extensions` 기본값(js) 그대로 jscodeshift 실행** | "0 files transformed"인데 성공한 줄 알고 넘어감 | `--extensions=ts,tsx --parser=tsx` 명시 (4-2) |
 | **shared를 마지막에 "정의"** | 도메인을 옮길 때마다 shared 기준이 흔들려 재작업이 도메인 수만큼 곱해짐 | shared는 **경계를 먼저**, **이동은 마지막에** (7-2) |
 | **`move()`가 별칭 import까지 고쳐줄 거라 가정** | 공식 문서 보장 범위는 **상대 경로 지정자**뿐 → 별칭 참조가 끊긴 채 남음 | `move()` 다음에 경로 재작성 codemod를 이어서 실행 (3-3) |
+| **`move()`에 프로젝트 루트 기준 상대경로를 그대로 넘김** (실행 검증 2026-09-28로 발견) | `move(filePath)`의 대상 경로는 **이동 대상 파일 자신의 디렉터리 기준 상대경로 또는 절대경로**만 인정한다 — 프로젝트 루트 기준 문자열(`"src/features/order/ui/X.tsx"`)을 그대로 넘기면 `src/components/src/features/order/ui/X.tsx` 같은 **중첩된 잘못된 위치**로 이동해버린다(경고·에러 없이 조용히 성공한 것처럼 보임) | `to`를 `path.resolve(to)`로 절대경로 변환 후 `move()`에 전달 (REFERENCE.md 3-3) |
 | **TS7 환경에서 ts-morph가 안 되니 codemod 자체를 포기** | 6.0 API side-by-side로 해결 가능한 문제 | `@typescript/typescript6` 별칭 설치 또는 jscodeshift로 대체 (0절) |
 
 ---

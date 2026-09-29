@@ -1,8 +1,8 @@
 ---
 skill: unity-cicd-codemagic
 category: game
-version: v1
-date: 2026-06-10
+version: v2
+date: 2026-09-28
 status: PENDING_TEST
 ---
 
@@ -14,10 +14,10 @@ status: PENDING_TEST
 |------|------|
 | 스킬 이름 | `unity-cicd-codemagic` |
 | 스킬 경로 | `.claude/skills/game/unity-cicd-codemagic/SKILL.md` |
-| 검증일 | 2026-06-10 |
-| 검증자 | skill-creator |
-| 스킬 버전 | v1 |
-| 대상 버전 | Codemagic 2026-06 기준 / Unity 6 LTS (6.0 / 6.3) |
+| 검증일 | **2026-09-28** (최초 2026-06-10, 재검증 2026-08-11 / 2026-09-28) |
+| 검증자 | skill-creator (최초) → skill-tester+fact-checker (2026-08-11) → 2차 재검증 (2026-09-28) |
+| 스킬 버전 | v2 |
+| 대상 버전 | Codemagic 2026-09 기준 (스키마·요금 변경 없음) / **Unity 6.3 LTS(6000.3.x) 기본** — 6.0 LTS(6000.0.x)는 2026-10 EOL |
 
 ---
 
@@ -190,6 +190,42 @@ agent content test: 2026-08-11 재검증 3/3 PASS (gap: keystore 백업 위치 �
 - verification-policy 분류: 빌드 설정 스킬 (실사용 필수 카테고리)
 - 최종 상태: PENDING_TEST 유지 (content test PASS이나 실사용 필수 카테고리 해당)
 
+### [2026-09-28] 재검증(2차) — Unity 6.0 LTS EOL 임박 반영, Codemagic 요금 재확인
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 + references/REFERENCE.md Read → 핵심 클레임 3개를 1차 소스와 대조, 보강 검토 (배정 지침: 예제 기본값 Unity 6.0 → 6.3 LTS 전환 + EOL 경고, Codemagic 요금 재확인)
+
+**클레임 대조 결과**:
+1. Unity 6.0 LTS 지원 종료는 2026-10, Unity 6.3 LTS는 2027-12까지(Enterprise/Industry +1년) — `unity.com/releases/unity-6/support` 공식 페이지 직접 확인 → VERIFIED (검증일 기준 EOL까지 1개월 미만으로 임박)
+2. Unity 6.3 LTS 최초 릴리스는 `6000.3.0f1`, 2025-12-03 배포 — `unity.com/releases/editor/whats-new/6000.3.0` 공식 페이지 직접 확인 → VERIFIED. 이후 패치(`6000.3.x`)가 계속 나오므로 실제 파이프라인은 최신 패치를 핀 고정해야 한다는 점을 SKILL.md에 명시(비공식 소스로만 확인된 특정 최신 패치 번호는 **인용하지 않음** — 미확인 클레임 기재 금지 원칙)
+3. Codemagic 무료 플랜(월 500분, mac_mini_m2 기준, 팀 계정 무료분 없음)·초과 요금($0.095/분)·유료 플랜 구조 — `codemagic.io/pricing/` 공식 페이지 직접 재확인 → VERIFIED, 2026-06-10/2026-08-11 대비 변경 없음
+
+**보강(ADD)**: SKILL.md 10절 "Unity 6 LTS 버전 지정"을 기본 예시 `6000.0.32f1`→`6000.3.0f1`로 교체하고 6.0 LTS EOL 임박(2026-10) 경고 블록 신설. 2절 codemagic.yaml 기본 구조 예시도 동일 반영. references/REFERENCE.md 4-4·5-4 전체 워크플로우 예시 2건의 `unity:` 값 동기화, 11절 흔한 실수 표에 "Unity 6.0 LTS 고정 → EOL 이후 패치 미제공" 행 추가. 소스 목록에 Unity 6 지원 일정 URL 추가. 축소는 없음 — 라이선스 활성화/반환, 서명, 배포 필드 등 기존 내용 전부 유지.
+
+**실전 질문 재검증**:
+- Q1. "codemagic.yaml에서 Unity 버전을 몇으로 지정해야 하나?" → SKILL.md "10. Unity 6 LTS 버전 지정" 근거로 PASS (6.3 LTS 기본값 + 6.0 EOL 경고 명확)
+- Q2. "keystore 파일을 repo에 커밋하면 안 되는 이유는?" (기존 Q1 재확인, 변경 없는 항목 회귀 검증) → SKILL.md "4-2. keystore 업로드" + 11절 흔한 실수 표 근거로 PASS
+
+**재검증 최종 판정**: status **PENDING_TEST 유지** (빌드 설정 실사용 필수 카테고리 — 내용 재검증만으로는 APPROVED 불가)
+
+### skill-tester 에이전트 content test (2026-09-28, 독립 재테스트)
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose × 2 (도메인 에이전트 미등록으로 대체, 자체 재검증이 아닌 별도 서브에이전트 위임)
+**수행 방법**: SKILL.md(및 references/REFERENCE.md) Read 후 2차 재검증에서 정정된 내용(Unity 6.3 LTS 기본값·6.0 EOL 경고, references 분리 후 참조 일관성)을 겨냥한 질문 2개를 각각 독립 general-purpose 서브에이전트에게 위임(자기 지식 사용 금지, SKILL.md 근거 인용 필수)
+
+**Q1. 새 codemagic.yaml의 environment.unity 필드에 어떤 버전을 지정해야 하며 6000.0.32f1을 피해야 하는 이유는?**
+- ✅ PASS
+- 근거: SKILL.md §2(기본 구조 예시)·§10(Unity 6 LTS 버전 지정)
+- 상세: 6.3 LTS(6000.3.0f1) 기본값과 6.0 LTS EOL(2026-10) 경고를 정확히 인용, "최신 패치는 외부 링크로 확인 필요"라는 의도된 설계까지 정확히 파악
+
+**Q2. Android AAB 빌드 전체 워크플로우 예시는 어디서 확인하며, 그 예시의 Unity 버전이 SKILL.md 10절과 일치하는가?**
+- ✅ PASS
+- 근거: SKILL.md §4-4(→ references/REFERENCE.md §4-4로 참조) — 실제 REFERENCE.md를 Read하여 확인
+- 상세: REFERENCE.md 4-4·5-4·11절 모두 `6000.3.0f1`로 SKILL.md 10절과 일치, 참조 분리(2026-09-25 구조 개편) 이후에도 참조 링크를 따라가면 정확한 답이 나오고 본문·상세 예제 간 모순 없음을 독립 에이전트가 재확인
+
+agent content test: 2/2 PASS (독립 general-purpose 서브에이전트 수행 — 자체 재검증이 아닌 실제 skill-tester 절차로 보강)
+
 ---
 
 > 참고 (수행 예정 템플릿):
@@ -206,8 +242,10 @@ agent content test: 2026-08-11 재검증 3/3 PASS (gap: keystore 백업 위치 �
 | 내용 정확성 | ✅ (12 클레임 중 11 VERIFIED, 1 DISPUTED 수정 반영) |
 | 구조 완전성 | ✅ (frontmatter, 소스, 검증일, 코드 예시, 흔한 실수 모두 포함) |
 | 실용성 | ✅ (공식 샘플 기반 실제 사용 가능한 yaml) |
-| 에이전트 활용 테스트 | ✅ (2026-06-10 최초 3/3 PASS + 2026-08-11 재검증 3/3 PASS, 누적 6/6) |
+| 에이전트 활용 테스트 | ✅ (2026-06-10 최초 3/3 PASS + 2026-08-11 재검증 3/3 PASS + 2026-09-28 독립 에이전트 재테스트 2/2 PASS, 누적 8/8) |
 | 클레임 재검증(2026-08-11) | 2 VERIFIED, 1 DISPUTED(SKILL.md 미참조 필드 관련, 실질 영향 없음) — 최초 검증일 대비 문서·요금·스키마 변경 없음 |
+| 클레임 재검증(2026-09-28, 2차) | ✅ (Unity 6.0 LTS EOL 임박 반영, 6.3 LTS 기본값 전환, Codemagic 요금 변경 없음 재확인 — 3/3 VERIFIED) |
+| 독립 에이전트 content test(2026-09-28) | ✅ (Q1 6.3 LTS 기본값·6.0 EOL / Q2 references 참조 일관성 — 2/2 PASS, general-purpose 서브에이전트 수행) |
 | **최종 판정** | **PENDING_TEST 유지** (빌드 설정 실사용 필수 카테고리 — content test·재검증 모두 PASS이나 실제 Codemagic 빌드 실행 검증 전까지 APPROVED 전환 보류) |
 
 ---
@@ -216,7 +254,9 @@ agent content test: 2026-08-11 재검증 3/3 PASS (gap: keystore 백업 위치 �
 
 - [✅] skill-tester로 2단계 에이전트 활용 테스트 수행 (2026-06-10 완료, 3/3 PASS)
 - [✅] 핵심 클레임 재검증 — 문서·요금·스키마 최신성 확인 (2026-08-11 완료, 2 VERIFIED + 1 경미 DISPUTED — SKILL.md 실질 영향 없음)
-- [❌] 실제 Unity 6.0 LTS 또는 6.3 LTS 프로젝트로 빌드 성공 여부 확인 (실사용 검증) — **차단 요인**: 실사용 필수 카테고리 APPROVED 전환 필수 조건. 실제 Codemagic 빌드 성공 확인 후 APPROVED 전환 가능
+- [✅] 2026-09-28 2차 재검증 — Unity 6.0 LTS EOL(2026-10) 임박 반영, 예제 기본값 6.3 LTS 전환, Codemagic 요금 변경 없음 재확인
+- [✅] 2026-09-28 2차 재검증 내용에 대한 독립 에이전트(general-purpose) content test 재수행 완료 (2/2 PASS — 셀프 검증이 아닌 별도 서브에이전트 위임)
+- [❌] 실제 Unity 6.3 LTS(6000.3.x) 프로젝트로 빌드 성공 여부 확인 (실사용 검증) — **차단 요인**: 실사용 필수 카테고리 APPROVED 전환 필수 조건. 실제 Codemagic 빌드 성공 확인 후 APPROVED 전환 가능
 - [❌] Unity Cloud Build와의 비교 섹션 추가 검토 (필요 시) — **선택 보강**: 차단 요인 아님, 도입 검토 시 유용할 수 있음
 
 > **참고**: 이 스킬은 "실사용 필수 스킬" 카테고리에 해당 — 실제 Codemagic 빌드를 돌려보기 전까지 PENDING_TEST 유지가 권장된다 (verification-policy.md "실사용 필수 스킬" 항목).
@@ -231,3 +271,5 @@ agent content test: 2026-08-11 재검증 3/3 PASS (gap: keystore 백업 위치 �
 | 2026-06-10 | v1 | 2단계 실사용 테스트 수행 (Q1 Google Play 내부 테스트 배포 구성 / Q2 라이선스 시트 소진 원인·해결 / Q3 linux_x2 iOS 불가·TestFlight 설정) → 3/3 PASS, PENDING_TEST 유지 (빌드 설정 실사용 필수 카테고리) | skill-tester |
 | 2026-08-11 | v1 | 2단계 실사용 테스트 재수행 (Q1 keystore 관리 / Q2 TestFlight-only 자동배포 / Q3 라이선스 시트 소진 예방) → 3/3 PASS. 핵심 클레임 3개 WebSearch 재검증 → 2 VERIFIED, 1 경미 DISPUTED(SKILL.md 미참조 필드) — 문서·요금·스키마 변경 없음 확인, PENDING_TEST 유지(빌드 설정 실사용 필수 카테고리, 실제 빌드 미실행) | skill-tester |
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | Claude |
+| 2026-09-28 | v2 | **2차 재검증.** Unity 6.0 LTS 지원 종료(2026-10) 임박 확인 → 예제 기본값 `6000.0.32f1`→`6000.3.0f1`(6.3 LTS)로 전환, EOL 경고 블록 신설(SKILL.md 10절 + REFERENCE.md 흔한 실수 표). REFERENCE.md 4-4·5-4 전체 워크플로우 예시 동기화. Codemagic 요금(무료 500분·mac_mini_m2·팀 무료분 없음) 재확인 — 변경 없음. 클레임 3개 재검증(전부 VERIFIED). 축소 없음. status는 실사용 필수 카테고리로 **PENDING_TEST 유지** | 2차 재검증 세션 |
+| 2026-09-28 | v2 | skill-tester 독립 에이전트(general-purpose) content test 재수행 (Q1 Unity 6.3 기본값·6.0 EOL / Q2 references 참조 일관성) → 2/2 PASS, PENDING_TEST 유지 (빌드 설정 실사용 필수 카테고리) | skill-tester |

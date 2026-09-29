@@ -22,8 +22,8 @@ description: >
 > Michael Dummett & Sylvia Mann, *The Game of Tarot*(Duckworth, 1980) / Decker·Depaulis·Dummett, *A Wicked Pack of Cards*(1996),
 > Helen Farley, *A Cultural History of Tarot*(I.B. Tauris, 2009),
 > C. G. Jung, *The Archetypes of the Collective Unconscious*(CW 9i, §81) · *Visions: Notes of the Seminar 1930–1934*(Princeton UP, 1997, p.923)
-> 검증일: 2026-09-10
-> 검증 상태: 역사·구조·저작권 본문 VERIFIED, 앱 톤 가이드 포함 skill-tester content test 3/3 PASS → APPROVED (2026-09-10)
+> 검증일: 2026-09-28 (최초 2026-09-10, 2026-09-28 재검증)
+> 검증 상태: 역사·구조·저작권 본문 VERIFIED, 앱 톤 가이드 포함 skill-tester content test 3/3 PASS → APPROVED (2026-09-10, 2026-09-28 재검증 유지)
 
 ---
 

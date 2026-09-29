@@ -3,7 +3,7 @@ skill: ymyl-content-seo
 category: writing
 version: v2
 date: 2026-09-26
-status: PENDING_TEST
+status: APPROVED
 ---
 
 # ymyl-content-seo 스킬 검증 문서
@@ -163,6 +163,32 @@ status: PENDING_TEST
 
 ## 5. 테스트 진행 기록
 
+### skill-tester 재테스트 (2026-09-28, 2026-09-26 정정 6건 반영 확인)
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (writing 전용 에이전트 미존재, general-purpose 대체) x2
+**수행 방법**: SKILL.md만 근거로 답하도록 지시한 general-purpose 서브에이전트 2개에 질문 위임. 2026-09-26 정정 6건(①YMYL 범주 News·Shopping 삭제 ②"highest E-E-A-T standards" 비원문 인용 정정 ③2025 사전심의 가이드 근거 미검증 표기 ④변호사법 제109조→제112조 제3호 ⑤MedicalWebPage mainContentOfPage 오용→medicalAudience 교체 ⑥근거 없는 2025-06 manual action·트래픽 수치 삭제) 중 ①③은 2026-09-26 재검증 기록 Q1·Q2로 이미 확인됨. 이번 재테스트는 ②④⑤⑥ 집중 확인
+
+**Q1. "변호사 아닌 자가 '법률사무소' 표시 + 이익 목적 법률 상담 시 변호사법 몇 조 위반이야? YMYL은 QRG에서 'highest E-E-A-T standards'로 직접 요구된다는 게 맞아?"**
+- ✅ PASS
+- 근거: SKILL.md §6.2(189행) "변호사법 제112조 제3호" / §2(55~56행) "이전 판의 따옴표 인용 'highest E-E-A-T standards'는 QRG 전문에 없는 문구"
+- 상세: 옛 오류(제109조, 허위 인용구)를 긍정하지 않고 정정된 조문(제112조 제3호)·정정된 QRG 표현("the most scrutiny"/"a high level of E-E-A-T")을 정확히 인용. 정정 ②④ 모두 정확히 반영, 옛 내용과의 모순 없음.
+
+**Q2. "MedicalWebPage에 mainContentOfPage로 문자열 배열 넣어도 돼? Google이 2025-06부터 의료·금융 사이트 manual action 본격화해서 트래픽 50~80% 빠진 사례 있다는데 맞아?"**
+- ✅ PASS
+- 근거: SKILL.md §9.1 코드 직후 주의문(290행) "mainContentOfPage 문자열 배열은 부적절 ... medicalAudience로 교체" / §10.2(366행) "이전 판의 '2025-06 manual action 본격화'·'50~80% 트래픽 하락'은 출처를 확인하지 못해 삭제"
+- 상세: 옛 스키마 오용 패턴과 근거 없는 수치·시점 클레임을 그대로 긍정하지 않고, SKILL.md의 정정 각주를 정확히 인용해 반박. 정정 ⑤⑥ 모두 정확히 반영.
+
+### 발견된 gap (2026-09-28)
+
+없음 — 6건 정정(①~⑥) 모두 2026-09-26 재검증 기록(①③) + 이번 재테스트(②④⑤⑥)로 전체 커버리지 확인, 옛 내용 잔존·모순 없음.
+
+### 판정 (2026-09-28)
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 해당 없음 (법규·프레임워크 정리 스킬 — content test PASS = APPROVED)
+- 최종 상태: APPROVED (2026-09-26 정정 6건 전체 반영 확인 완료)
+
 ### 재검증 기록 (2026-09-26)
 
 **수행일**: 2026-09-26
@@ -273,14 +299,15 @@ ISA 계좌를 비교하는 글에 schema.org를 적용하려고 합니다. YMYL 
 | 내용 정확성 | ✅ (14개 클레임 중 13 VERIFIED, 1 DISPUTED → 본문 보수적 정리) |
 | 구조 완전성 | ✅ (14개 섹션, frontmatter/소스/검증일/cross-link 모두 포함) |
 | 실용성 | ✅ (체크리스트 4분류 + 실수 패턴 6사례 + JSON-LD 3예시) |
-| 에이전트 활용 테스트 | ✅ (2026-06-03 수행, 3/3 PASS / 2026-09-26 재검증 2/2 PASS) |
-| **최종 판정** | **PENDING_TEST** (2026-09-26 재검증: 1차 원문 대조 13건 중 오류 6건 정정·미검증 4건 — skill-tester 재테스트 후 APPROVED 재전환) |
+| 에이전트 활용 테스트 | ✅ (2026-06-03 수행, 3/3 PASS / 2026-09-26 재검증 2/2 PASS / 2026-09-28 skill-tester 재테스트 2/2 PASS) |
+| **최종 판정** | **APPROVED** (2026-09-26 재검증 정정 6건 — ①③은 2026-09-26 재검증 Q1·Q2, ②④⑤⑥은 2026-09-28 skill-tester 재테스트 Q1·Q2로 전체 반영 확인 완료) |
 
 ---
 
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester가 content test 수행하고 섹션 5·6 업데이트 (2026-06-03 완료, 3/3 PASS)
+- [✅] 2026-09-26 재검증 정정 6건에 대한 skill-tester 재테스트 (2026-09-28 완료, 2/2 PASS — ②QRG 인용구 정정 ④변호사법 제112조 제3호 ⑤MedicalWebPage 속성 교체 ⑥근거 없는 수치·시점 삭제 반영 확인)
 - [❌] HONcode 운영 종료 시점·후속 인증 체계 1차 소스 재확인 후 본문 정리 (선택 보강 — APPROVED 차단 요인 아님. DISPUTED 클레임이지만 SKILL.md에서 "대안 안내" 중심으로 보수적 정리됨)
 - [❌] 네이버 의료 검색 평가 알고리즘에 대한 *공식* 발표 자료 추가 확인 (선택 보강 — 업계 관측 위주이나 SKILL.md에서 "세부 미공개" 명시로 위험 관리됨)
 - [❌] 미국 FDA/FTC 가이드라인 짧은 참조 추가 검토 (선택 보강 — 글로벌 운영 시 필요, 한국 중심 스킬로 현재 범위 충분)
@@ -296,3 +323,4 @@ ISA 계좌를 비교하는 글에 schema.org를 적용하려고 합니다. YMYL 
 | 2026-06-03 | v1 | 최초 작성. Google QRG 2025-09-11 / schema.org 의료·금융·법률 / 한국 의료법·금소법·변호사법·공정위 표시광고 / 자살예방 109+1577-0199 기준으로 14개 섹션 구성 | skill-creator |
 | 2026-06-03 | v1 | 2단계 실사용 테스트 수행 (Q1 건강 블로그 AI 초안 안전 사용법 / Q2 금융 어필리에이트 신뢰성 강화 / Q3 법률 일반 정보 vs 법적 조언 구분 기준) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-09-26 | v2 | 재검증 — QRG 전문·의료법/시행령·금소법·변호사법·schema.org 원문 대조 13건, 오류 6건 정정(YMYL 범주 News·Shopping 삭제, "highest E-E-A-T standards" 비원문 인용, 2025 사전심의 가이드 근거, 변호사법 제109조→제112조 제3호, MedicalWebPage mainContentOfPage 오용, 근거 없는 2025-06 manual action·트래픽 수치), 미검증 4건, 실전 질문 2/2 PASS → PENDING_TEST | 메인 세션 (재검증) |
+| 2026-09-28 | v2 | 2단계 실사용 재테스트 수행 (Q1 변호사법 조문+QRG 인용 검증 / Q2 MedicalWebPage schema+scaled content abuse 수치 검증) → 2/2 PASS, 2026-09-26 정정 6건 전체 반영 확인, PENDING_TEST → APPROVED 전환 | skill-tester |

@@ -16,7 +16,7 @@ description: >
 > - 정보통신망법 제44조의2: https://casenote.kr/법령/정보통신망_이용촉진_및_정보보호_등에_관한_법률/제44조의2
 > - 개인정보보호법 제22조의2(아동 보호): https://www.privacy.go.kr/front/contents/cntntsView.do?contsNo=94
 > - 콘텐츠 모더레이션 베스트 프랙티스: https://sightengine.com/self-harm-mental-health-suicide-moderation-guide
-> 검증일: 2026-05-15
+> 검증일: 2026-09-28 (최초 2026-05-15)
 
 > 주의 (법적 자문): 이 스킬은 *기술 패턴* 가이드다. 상업 출시 전에는 반드시 변호사 자문을 받아 정보통신망법·개인정보보호법·청소년보호법 적합성을 확인하라. 법령은 개정될 수 있으며 본 스킬의 인용 시점(2026-05-15) 이후 변경되었을 수 있다.
 
@@ -236,7 +236,7 @@ function handleSelfHarmContent(userId: string) {
   showCrisisResource({
     region: 'KR',
     resources: [
-      { name: '자살예방상담전화', tel: '1393' },
+      { name: '자살예방상담전화', tel: '109' }, // 2024-01부 1393 통합, 1393은 착신전환 후 폐지 예정 — 109 사용
       { name: '청소년 사이버상담센터', url: 'https://www.cyber1388.kr/' },
     ],
   });

@@ -1,8 +1,8 @@
 ---
 skill: saju-tarot-data-modeling
 category: architecture
-version: v1
-date: 2026-09-10
+version: v1.3
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,10 +14,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `saju-tarot-data-modeling` |
 | 스킬 경로 | `.claude/skills/architecture/saju-tarot-data-modeling/SKILL.md` |
-| 검증일 | 2026-09-10 |
+| 검증일 | 2026-09-28 (최초 2026-09-10 · 09-25 모델ID 현행화 · 09-28 재검증) |
 | 검증자 | skill-creator (Claude Code) |
-| 스킬 버전 | v1 |
-| 대상 버전 기준 | Dexie 4.4.5 (2026-09 최신 안정, v5 없음) / 개인정보 보호법·시행령 현행 |
+| 스킬 버전 | v1.2 |
+| 대상 버전 기준 | Dexie 4.4.6 (2026-09-28 기준 최신 안정 — 최초 검증 시점 4.4.5, v5 없음) / 개인정보 보호법·시행령 현행 |
 
 ---
 
@@ -129,6 +129,74 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
+### [2026-09-28] skill-tester 재테스트 — 선택 보강분(중복 구분선 제거·dexie-encrypted 버전 명시) 반영 확인
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (도메인 전용 에이전트 부재로 대체, 2개 병렬 호출)
+**수행 방법**: SKILL.md + references/REFERENCE.md Read 후 실전 질문 2개 답변. 질문 1개는 REFERENCE.md §10.2에 신규 반영된 `dexie-encrypted` 버전·유지보수 상태(npm 안정판 2.0.0 정체·베타 4.2.0-beta.2 유지보수 중)를 직접 겨냥, 질문 1개는 SKILL.md 축소(상세 내용 REFERENCE.md 분리) 후에도 §4.1 참조 링크를 따라가면 답이 나오는지·본문 간 모순이 없는지 확인
+
+**Q1. dexie-encrypted 설치 시 버전 주의점 ("최신 버전을 그냥 설치하면 되나?")**
+- ✅ PASS
+- 근거: REFERENCE.md §10.2 "버전·유지보수 상태(2026-09-28 확인)" 문단(428행)
+- 상세: npm `latest` 태그(2.0.0, Dexie 3.x 세대 기준)를 그냥 설치하면 안 되고 Dexie 4.x 프로젝트는 베타 태그(`4.2.0-beta.x`)를 명시적으로 설치해야 한다고 정확히 답변. 인덱스 암호화 불가 원칙(NON_INDEXED_FIELDS 등)까지 정확히 인용
+
+**Q2. 켈틱크로스 위치 설명 문구 수정이 과거 리딩에 소급 적용되는 버그 원인·스키마 설계**
+- ✅ PASS
+- 근거: REFERENCE.md §4.1 "왜 스프레드를 데이터로 두고 버전까지 붙이나" + §4.2 `TarotSession.spreadVersion` 스냅샷 필드
+- 상세: `SpreadDefinition`을 append-only로 다루지 않고(기존 레코드 `put`으로 덮어씀) 수정한 것이 원인이며, 문구 수정 시 새 `version`으로 추가해야 함을 정확히 도출. SKILL.md 축소(REFERENCE.md 분리) 후에도 참조 링크를 따라가 정확한 근거를 찾음 — 축소가 답변 품질에 영향을 주지 않음을 확인
+
+### 발견된 gap (2026-09-28 재테스트, 선택 보강)
+
+- REFERENCE.md §4.1/§9.3에 "마스터 데이터(`SpreadDefinition`·`Deck`)도 append-only로 다뤄야 한다"는 규칙이 암묵적으로만 있고 명시 문장이 없음 — Q2 답변 에이전트가 직접 지적. 차단 요인 아님(§9.3 append-only 철학에서 유추 가능한 수준), 선택 보강으로 기록
+
+### 판정 (2026-09-28 재테스트)
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 실사용 필수 카테고리 아님(데이터 모델링 설계 가이드 — 답변 정확성만으로 검증 가능)
+- 최종 상태: **APPROVED** (선택 보강분이 실전 질문에 정확히 반영됨을 확인, 축소 후에도 참조 링크로 답이 나옴을 확인)
+
+---
+
+### [2026-09-28] 선택 보강 반영
+
+2026-09-28 skill-tester 재테스트에서 발견된 gap 2건 반영:
+
+1. **SKILL.md 292~293행 중복 구분선(`---`) 제거** — 서식 오류 수정, 내용 변경 없음, 소스 확인 불필요, status 영향 없음.
+2. **REFERENCE.md §10.2 `dexie-encrypted` 버전·유지보수 상태 명시** — npm registry(`https://registry.npmjs.org/dexie-encrypted`)·GitHub API(`https://github.com/dexie/dexie-encrypted`)로 1차 소스 확인: npm 안정 태그는 `2.0.0`(2020-11 배포, 정체)이지만 GitHub는 archived 아님, `4.2.0-beta.2`(2026-03 배포, Dexie 3.x/4.x 공통 지원)까지 베타로 유지보수 중(최종 push 2026-03, open issues 2건). §10.2에 "npm 안정판은 Dexie 3.x 세대 기준 — Dexie 4.x 프로젝트는 베타 태그 명시적 설치 필요" 문구로 반영.
+
+판정: 두 건 다 사실 보강(②는 신규 사실 추가)이라 PENDING_TEST 전환 → 같은 날 skill-tester 재테스트 2/2 PASS로 APPROVED 복귀(섹션 8 참조).
+
+**[2026-09-28] skill-tester 재테스트 — 2차 재검증(Dexie 4.4.5→4.4.6 버전 정정) 반영분 대상**
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (도메인 전용 에이전트 부재로 대체)
+**수행 방법**: SKILL.md + references/REFERENCE.md Read 후 2개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인. 질문 1개는 2026-09-28 재검증(2차)에서 정정된 Dexie 4.4.6 버전 표기를 직접 겨냥, 질문 1개는 SKILL.md 축소(REFERENCE.md 분리) 후에도 참조 링크를 따라가면 답이 나오는지 확인
+
+### 실제 수행 테스트
+
+**Q1. Dexie 4.4.6 업그레이드 시 기존 스키마 문법·마이그레이션 코드 재작성 필요 여부** ("Dexie를 4.4.6으로 업그레이드했는데 `&[subjectId+date+kind]` 같은 유니크 복합 인덱스 문법이나 `.upgrade()` 코드를 다시 짜야 하나요?")
+- ✅ PASS
+- 근거: SKILL.md 상단 메타(`> 대상 버전: Dexie 4.4.6 ... patch 릴리스로 스키마 문법·API 변경 없음. v5 없음`)
+- 상세: 재작성 불필요하다고 정확히 답변, Dexie 버전 자체는 마이그레이션 트리거가 아니며 이 스킬 기준 무효화 대상은 `EngineStamp`(계산 로직/룰셋/절기 데이터 버전)라는 점까지 정확히 구분. SKILL.md 본문에 `&[a+b]` 구문 정의나 `.upgrade()` 코드가 없어(REFERENCE.md로 분리됨) 실제 코드 검증은 SKILL.md만으로는 안 된다는 점도 스스로 명시 — 설계된 분리 구조가 의도대로 인지됨.
+
+**Q2. 민감 필드 암호화 — dexie-encrypted 사용 시 주의점** ("생년월일시·질문 텍스트처럼 민감한 필드를 암호화할 때 dexie-encrypted를 쓰면 뭘 주의해야 하나요?")
+- ✅ PASS
+- 근거: REFERENCE.md §10 "개인정보·암호화 전략"(10.1~10.4), §7 "반드시 피할 것 — boolean 인덱스", §12 "흔한 실수"
+- 상세: 인덱스는 암호화 불가(`where()` 쿼리 불가능해지므로) → 민감 필드는 애초에 비인덱싱해야 한다는 §10.3 핵심 원칙, `NON_INDEXED_FIELDS`/`UNENCRYPTED_LIST`/`ENCRYPT_LIST` 3종 설정, 기본 구현 TweetNaCl(WebCrypto 아님) 근거까지 정확히 인용. SKILL.md 본문에는 암호화 내용이 전혀 없어 REFERENCE.md §10까지 찾아가야 답이 나옴을 스스로 명시 — 참조 링크 체계가 의도대로 동작.
+
+### 발견된 gap (선택 보강, 차단 요인 아님)
+
+- [✅] (2026-09-28 반영) SKILL.md 292~293번째 줄에 구분선(`---`)이 중복 삽입되어 있음(포맷 사소 오류, 내용상 영향 없음) — 제거 완료
+- [✅] (2026-09-28 반영) REFERENCE.md §10.2의 `dexie-encrypted` 최신 버전·유지보수 상태가 구체 명시되어 있지 않아 "도입 전 확인하라"는 지침에 의존해야 함 — npm registry·GitHub API로 확인해 구체 상태(안정판 2.0.0 정체, 베타 4.2.0-beta.2로 유지보수 중) 명시 완료
+
+### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 실사용 필수 카테고리 아님(데이터 모델링 설계 가이드 — 답변 정확성만으로 검증 가능)
+- 최종 상태: **APPROVED** (2026-09-28 재검증(2차) Dexie 버전 정정 반영 확인 완료)
+
+---
+
 **수행일**: 2026-09-10
 **수행자**: skill-tester → general-purpose (도메인 전용 에이전트 부재로 대체)
 **수행 방법**: SKILL.md Read 후 실전 질문 3개 답변, 근거 섹션 및 anti-pattern 회피 확인
@@ -173,25 +241,49 @@ status: APPROVED
 
 ---
 
+### [2026-09-28] 재검증(2차) — Dexie 패치 버전 정정(4.4.5→4.4.6), 그 외 변경 없음
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 + REFERENCE.md Read → 핵심 클레임 3개를 npm registry(`curl registry.npmjs.org`)·WebSearch로 1차 소스 대조
+
+**클레임 대조 결과**:
+1. Dexie 최신 안정 버전 — DISPUTED(정정) → npm registry 확인 결과 4.4.6이 최신(4.4.5 이후 patch, 2026-09-10 배포). 릴리스 노트는 Service Worker 크래시 수정·HMR 보호·primary key 처리·로그아웃 시 sync state 보존 등 patch 성격 — 섹션 7의 스키마 문법(`++`/`&`/`*`/`[a+b]`)·업그레이드 트랜잭션 제약에는 영향 없음. v5는 여전히 없음
+2. `dexie-encrypted`의 인덱스 암호화 불가·TweetNaCl 기본·3종 설정(NON_INDEXED_FIELDS/UNENCRYPTED_LIST/ENCRYPT_LIST) — VERIFIED (npm registry 최신은 2.0.0으로 6년 전 배포 그대로, 변경 없음)
+3. IndexedDB 유효 키 타입에 boolean 미포함(C4·C5) — VERIFIED (스펙 레벨 사실, 2026-09 기준 변경 없음 — MDN 재확인은 08-10 검증 시점과 동일 출처이므로 이번엔 npm/registry 확인에 집중, 별도 재검색 없이 스펙 안정성 근거로 유지)
+
+**보강(ADD)·축소**: SKILL.md 상단 `> 대상 버전` 줄과 verification.md 메타 표를 4.4.6으로 정정. 본문 스키마 예시·API 시그니처는 4.4.5/4.4.6 간 차이 없어 그대로 유지(축소 없음)
+
+**실전 질문 재검증**:
+- Q1. "Dexie 버전이 올라갔는데 `&[a+b]` 유니크 복합 인덱스 문법이 여전히 유효한가?" → SKILL.md 섹션 7 근거로 PASS (4.4.6에서도 동일 문법, breaking change 없음)
+- Q2. "손금 사진 원본을 왜 기본으로 저장하지 않는가?" → SKILL.md 섹션 5 근거로 PASS (법적 위험·용량·가치 대비 3가지 근거 그대로 유효)
+
+**재검증 최종 판정**: status **PENDING_TEST 전환** (버전 정정 반영 — 메인이 skill-tester로 재테스트)
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
 |------|------|
-| 내용 정확성 | ✅ (VERIFIED 10 / DISPUTED 2 수정 반영 / UNVERIFIED 1 주의 표기) |
+| 내용 정확성 | ✅ (VERIFIED 10 / DISPUTED 2 수정 반영 / UNVERIFIED 1 주의 표기) — 2026-09-28 재검증에서 Dexie 버전 정정(4.4.5→4.4.6) 1건 추가 |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-09-10, skill-tester → general-purpose) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-09-10, skill-tester → general-purpose) — 2026-09-28 skill-tester 재테스트 2/2 PASS (Dexie 4.4.6 버전 정정 반영 확인 완료) — 2026-09-28 skill-tester 재테스트(선택 보강분) 2/2 PASS (dexie-encrypted 버전 명시·축소 후 참조 링크 확인 완료) |
+| 2026-09-28 선택 보강 | 중복 구분선 제거(서식) + `dexie-encrypted` 버전·유지보수 상태 명시(npm/GitHub 1차 소스 확인) |
+| **최종 판정** | **APPROVED** (2026-09-28 재테스트 2/2 PASS — 선택 보강분이 실전 질문에 정확히 반영됨을 확인) |
 
 ---
 
 ## 7. 개선 필요 사항
 
 - [✅] `skill-tester` 2단계 테스트 수행 후 섹션 5·6 갱신 및 APPROVED 전환 판단 (2026-09-10 완료, 3/3 PASS)
+- [✅] (2026-09-28 완료) skill-tester 재테스트 수행 — 2/2 PASS, Dexie 4.4.6 버전 정정 반영분 재확인, PENDING_TEST → APPROVED 전환
 - [✅] 2026-09-11 상호 참조 정리 — 삭제된 운세 콘텐츠 윤리 스킬 참조를 `meta/fortune-interpretation-prompt-engineering`(고지 문구 톤)·`humanities/palmistry-limitations` §6(손 사진 개인정보)로 대체
 - [❌] 한국 표준시 변경 이력·서머타임 구간(C13)을 IANA tzdb 원문(`Asia/Seoul` Zone/Rule 항목)으로 1차 확인 — 선택 보강: SKILL.md 본문이 이미 `> 주의(부분 미검증)` 표기와 IANA tz 위임 권고로 우회 처리했으므로 사용에는 지장 없음
 - [❌] 사주 계산 라이브러리(KASI 데이터 기반 JS 패키지) 실사용 비교는 본 스킬 범위 밖 — 선택 보강: 필요 시 별도 스킬로 분리, 본 스킬의 완성도와 무관
 - [❌] README.md / docs/skills/README.md 반영 (이번 작업에서 수정 금지 지시로 제외됨) — 차단 요인: 별도 배치에서 반드시 일괄 정리 필요 (README 업데이트 규칙 위반 상태로 남아 있음)
+- [✅] 2026-09-28 선택 보강 반영분(중복 구분선 제거·dexie-encrypted 버전 명시)에 대한 skill-tester 2단계 재테스트 (2026-09-28 완료, 2/2 PASS — PENDING_TEST → APPROVED 전환)
+- [❌] REFERENCE.md §4.1/§9.3에 "마스터 데이터(SpreadDefinition·Deck)도 append-only로 다뤄야 한다"는 규칙을 명시 문장으로 보강 — 선택 보강, 비차단(2026-09-28 재테스트에서 발견, §9.3 append-only 철학에서 유추 가능한 수준)
 
 ---
 
@@ -205,3 +297,7 @@ status: APPROVED
 | 2026-09-25 | v1.1 | 모델 ID 현행화(Opus 5.5/Fable 5.1) — `Reading.model` 필드 주석 예시값 `'claude-opus-5'` → `'claude-opus-5-5'`. 스키마·인덱스 변동 없음, status APPROVED 유지 | 모델 ID 현행화 |
 | 2026-09-25 | v1.1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | Claude (Sonnet 5) |
 | 2026-09-25 | v1.1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |
+| 2026-09-28 | v1.2 | 재검증(2차) — Dexie 대상 버전 정정(4.4.5→4.4.6, patch·스키마 문법 영향 없음). status APPROVED → PENDING_TEST(재테스트 대기) | Claude (Sonnet 5) |
+| 2026-09-28 | v1.2 | 2단계 실사용 재테스트 수행 (Q1 Dexie 4.4.6 업그레이드 시 스키마·마이그레이션 재작성 필요 여부 / Q2 dexie-encrypted 암호화 주의점) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-09-28 | v1.3 | 선택 보강 반영 — SKILL.md 292~293행 중복 구분선 제거(서식), REFERENCE.md §10.2에 `dexie-encrypted` 버전·유지보수 상태 명시(npm registry·GitHub API 1차 소스 확인: 안정판 2.0.0 정체·베타 4.2.0-beta.2 유지보수 중). 신규 사실 추가로 status APPROVED → PENDING_TEST(재테스트 대기) | Claude (Opus 5.5) |
+| 2026-09-28 | v1.3 | 2단계 재테스트 수행 (Q1 dexie-encrypted 설치 버전 주의점 / Q2 켈틱크로스 위치 문구 수정 소급 적용 버그 원인·스키마 설계) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |

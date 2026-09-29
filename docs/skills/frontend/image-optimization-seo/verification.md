@@ -2,7 +2,7 @@
 skill: image-optimization-seo
 category: frontend
 version: v1
-date: 2026-06-03
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `image-optimization-seo` |
 | 스킬 경로 | `.claude/skills/frontend/image-optimization-seo/SKILL.md` |
-| 검증일 | 2026-06-03 |
+| 검증일 | 2026-09-28 (재검증, 최초 2026-06-03) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 
@@ -175,6 +175,25 @@ status: APPROVED
 - verification-policy 분류: "라이브러리 사용법·API 패턴" 혼합형 — 해당 없음 (실사용 필수 카테고리 아님)
 - 최종 상태: APPROVED
 
+### 재검증 (2026-09-28)
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md + references/REFERENCE.md 전체 Read 후 핵심 클레임 4개 1차 소스 대조(WebFetch·curl, WebSearch 세션 한도 소진으로 대체) + 실전 질문 2개 답변 검증
+
+**클레임 대조:**
+- Next.js 16에서 `priority` deprecated → `preload`: 공식 문서(nextjs.org/docs/app/api-reference/components/image, 문서 버전 16.3.6, lastUpdated 2026-08-25) WebFetch 재확인 → "Starting with Next.js 16, the `priority` property has been deprecated in favor of the `preload` property" 원문 그대로 확인, v16.0.0 변경 로그에도 명시. **VERIFIED, 변경 없음**
+- AVIF/WebP 전역 브라우저 지원률(약 95%/97%): caniuse.com WebFetch 재확인 → AVIF 95.36%, WebP 96.82% — SKILL.md 수치와 사실상 동일. **VERIFIED, 변경 없음**
+- sharp 최신 버전: `npm view sharp version` → 0.35.5 (SKILL.md·REFERENCE.md의 "0.34" 표기 갱신 필요, `resize`/`toFormat` 등 사용 API는 0.34→0.35 사이 breaking change 없음)
+- Google image sitemap `image:caption`·`image:title` 등 deprecated(2022-08-06): 과거 확정 정책이므로 재변동 없는 사실
+
+Q1. "Next.js 16 최신 버전에서도 히어로 이미지에 priority를 쓰면 되나?"
+— PASS. 근거: SKILL.md §4-2가 정확히 현재 공식 문서(16.3.6)와 일치 — `priority` deprecated, `preload` 권장, 대부분은 `loading="eager"`+`fetchPriority="high"` 권장까지 문서 원문과 일치.
+
+Q2. "AVIF/WebP 지금도 거의 다 지원되나? sharp 스크립트 최신 버전 써도 그대로 동작해?"
+— PASS. 근거: SKILL.md §2-1 수치가 caniuse 최신 값과 일치. sharp는 0.34→0.35.5로 버전 표기만 갱신, REFERENCE.md §9 스크립트의 `resize`/`toFormat` API는 무변경.
+
+**판정**: 핵심 API 클레임(Next.js `priority`→`preload`) 재확인, sharp 버전 표기만 0.34→0.35 갱신, 그 외 변경 없음 → status APPROVED 유지.
+
 ---
 
 > **아래는 skill-creator가 사전 작성한 예정 케이스 (참고용 보존)**
@@ -269,3 +288,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-06-03 | v1 | 최초 작성 — 14섹션, 20 클레임 VERIFIED, PENDING_TEST | skill-creator |
 | 2026-06-03 | v1 | 2단계 실사용 테스트 수행 (Q1 Next.js 16 LCP/priority deprecated / Q2 picture 폴백 체인 / Q3 alt 키워드 스터핑) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-28 | v1 | 재검증: Next.js 16.3.6 공식 문서로 `priority`→`preload` deprecation 재확인, caniuse AVIF/WebP 수치 재확인, sharp 버전 표기 0.34→0.35 갱신. status APPROVED 유지 | 메인 세션 |

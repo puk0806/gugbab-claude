@@ -1,8 +1,8 @@
 ---
 skill: python-uv-project-setup
 category: backend
-version: v2
-date: 2026-08-12
+version: v3
+date: 2026-09-28
 status: PENDING_TEST
 ---
 
@@ -14,10 +14,10 @@ status: PENDING_TEST
 |------|------|
 | 스킬 이름 | `python-uv-project-setup` |
 | 스킬 경로 | `.claude/skills/backend/python-uv-project-setup/SKILL.md` |
-| 검증일 | 2026-08-12 (최초 2026-05-15) |
-| 검증자 | skill-creator → skill-tester(재감사) → 정정 반영 |
-| 스킬 버전 | v2 |
-| 검증 대상 버전 | uv 0.12.3 (2026-08-07 릴리즈) / astral-sh/setup-uv v9.0.0 |
+| 검증일 | 2026-09-28 (재검증, 이전 2026-08-12) (최초 2026-05-15) |
+| 검증자 | skill-creator → skill-tester(재감사) → 정정 반영 → 2차 재검증(2026-09-28) |
+| 스킬 버전 | v3 |
+| 검증 대상 버전 | uv 0.12.19 (2026-09-24 릴리즈) / astral-sh/setup-uv v9.0.0 (공식 CI 가이드 예시 기준, GitHub Releases상 v10 계열 존재) |
 
 ---
 
@@ -100,10 +100,83 @@ status: PENDING_TEST
 - [✅] 잘못된 응답 발견 시 보완 (3/3 PASS — 보완 불필요)
 - [✅] 2026-08-11 재감사: content test 3/3 PASS 재확인 + WebSearch 최신 문서 재대조 → **버전 드리프트 DISPUTED 2건 발견** (섹션 5 하단 참조)
 - [✅] 2026-08-12 정정 반영: DISPUTED 2건 + 선택 보강 2건 모두 SKILL.md에 반영 완료 (섹션 5 "2026-08-12 정정 반영" 참조)
+- [✅] 2026-09-28 skill-tester 재테스트: `uv init` 패키지형 레이아웃(0.12.19 재확인) + setup-uv 태그 정책/v10 존재 여부 판단 / CI `--locked` 누락·`uv pip install` 안티패턴(REFERENCE.md) → 2/2 PASS, PENDING_TEST 유지(실사용 필수 카테고리)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-09-28] 실사용(실행) 검증
+
+**수행일**: 2026-09-28
+**수행 방법**: 격리된 실험 공간에 `python3 -m venv` + `pip install uv`로 uv 0.12.19(bea138450, 2026-09-24)를 로컬 설치(전역 설치 없음). 실제 새 프로젝트를 4종 생성(`uv init` 기본/`--no-package`/`--lib`/`--bare`)해 파일 목록을 비교하고, 한 프로젝트에서 `uv add requests`(런타임)·`uv add --dev pytest ruff`(dev 그룹)·`uv sync`·`uv run python -c ...`·`uv run pytest --version`·`uv sync --locked`을 정상 상태와, `pyproject.toml`을 직접 편집해 lockfile을 의도적으로 stale하게 만든 상태 양쪽에서 실행. SKILL.md §9의 GitHub Actions YAML 예시는 PyYAML로 파싱해 문법 검증(실제 GHA 실행은 CI 환경이 필요해 미수행)
+**실행 결과**:
+- `uv --version` = `uv 0.12.19 (bea138450 2026-09-24 aarch64-apple-darwin)` — SKILL.md 헤더가 명시한 검증 버전과 **정확히 일치**
+- `uv init`(기본, 0.12+ 패키지형): 생성 파일 = `.gitignore`, `.python-version`, `pyproject.toml`(`[build-system]` `uv_build` + `[project.scripts]` 진입점 포함), `README.md`, `src/<name>/__init__.py`, `.git/` → §3 "생성되는 파일 (0.12.0+ 기본)" 서술과 **완전 일치**
+- `uv init --no-package`: `pyproject.toml`(`[build-system]` 없음), `.python-version`, `README.md`, `main.py` → §3 "생성되는 파일 (`--no-package`)" 서술과 **완전 일치**
+- `uv init --lib`: `src/<name>/__init__.py` + `src/<name>/py.typed` → §3 서술과 일치
+- `uv init --bare`: `pyproject.toml` 단독 생성(`.python-version`·`README`·VCS 생략) → §3 서술과 일치
+- `uv add requests`: `pyproject.toml`에 `dependencies = ["requests>=2.34.2"]` 기록 + `uv.lock` 생성, `uv add --dev pytest ruff`: `[dependency-groups]\ndev = [...]` 구조로 기록 → §3·§4 PEP 621/735 서술과 일치
+- `uv sync`, `uv run python -c "import requests"`, `uv run pytest --version` 전부 정상 동작 — `.venv`에 패키지 설치 확인
+- **`uv sync --locked` 이중 검증**: (1) lockfile이 최신인 상태 → 통과(exit 0). (2) `pyproject.toml`을 `uv add`/`uv sync` 없이 직접 편집해 의존성을 추가한 뒤(lockfile과 불일치 유발) → `uv sync --locked` 실행 결과 `error: The lockfile at uv.lock needs to be updated, but --locked was provided.`로 **실패(exit code 1)** — §9 "`--locked`... 최신이 아니면 빌드 실패시킨다" 서술과 **정확히 일치** (재현 가능한 실측)
+- GitHub Actions YAML(§9): PyYAML `safe_load`로 문법 파싱 성공 — 유효한 YAML. (`on:` 키가 PyYAML 1.1 규칙상 boolean `True`로 파싱되는 현상은 GH Actions 파일의 잘 알려진 파서 차이일 뿐 파일 자체의 문법 오류 아님 — GitHub 실제 파서는 `on:`을 리터럴 키로 처리함)
+- 네트워크: 샌드박스 기본 상태에서 PyPI 접속 시 `invalid peer certificate: UnknownIssuer`(사내 프록시 TLS) 발생 → `UV_SYSTEM_CERTS=1` + `SSL_CERT_FILE=<사내 프록시 CA>`로 우회해 실제 패키지 설치까지 재현. (SKILL.md 서술과 무관한 로컬 네트워크 환경 이슈)
+**졸업 조건 충족 여부**: **부분** — `uv init`(4개 변형) 생성 파일 완전 일치, `uv add`·`uv sync`·`uv run`·`--locked` 성공/실패 양쪽 동작 실측 확인, GHA YAML 문법 검증 완료. 남은 것: GitHub Actions 워크플로우의 **실제 CI 실행**(matrix 테스트, `setup-uv` 액션 캐시 적중, 실제 GitHub 러너)과 Docker 멀티스테이지 빌드 실행 검증 — 로컬 lab 환경에서는 CI 러너·Docker 데몬을 모사할 수 없어 수행 불가
+**판정**: **PENDING_TEST 유지** — `uv init`/`add`/`sync`/`run`은 실제 실행으로 완전히 검증됐으나(내용 오류 0건), verification-policy상 "실사용 필수 카테고리" 졸업 조건에 포함된 GitHub Actions 실제 실행이 로컬 lab에서 불가능해 전체 졸업 조건 충족은 아님. 콘텐츠 정정 사항 없음(SKILL.md 미수정)
+
+---
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (도메인 전용 에이전트 미설치로 대체 사용)
+**수행 방법**: 2026-09-28 2차 재검증(아래 "[2026-09-28] 재검증(2차)" 블록)에서 갱신된 버전(0.12.19)·setup-uv 태그 정책/v10 참고 문구를 겨냥해 SKILL.md + references/REFERENCE.md Read 후 실전 질문 2개 답변, 근거 파일·섹션 대조 및 참조 링크(REFERENCE.md) 실제 필요 여부 확인
+
+### 실제 수행 테스트 (2026-09-28)
+
+**Q1. uv 0.12.19 시점 `uv init` 기본 레이아웃 + CI `astral-sh/setup-uv` 태그 정책·v10 도입 여부**
+- ✅ PASS
+- 근거: SKILL.md §3 "새 프로젝트"(줄 99-114, 123) + §9 "setup-uv 태그 정책"(줄 336-341)
+- 상세: 0.12.0+ 기본은 패키지형(`src/<name>/` + `uv_build`), `--no-package`로 구 평면 레이아웃 복귀 가능함을 정확히 답변. 커밋 해시+버전 주석 핀 방식과 "@v9 같은 축약 태그는 v8.0.0부터 resolve 자체가 안 됨"이라는 이유도 정확히 인용. v10 계열 존재를 언급하되 "공식 CI 가이드가 아직 v9.0.0을 유지하므로 지금 바로 도입할 필요는 없다"는 SKILL.md의 "미검증 세부, 참고용" 판단을 그대로 반영해 임의로 도입을 권하지 않음 — 2026-09-28 보강 문구가 의도대로 동작.
+
+**Q2. CI `--locked` 누락 시 문제 + `uv pip install`을 새 프로젝트 기본으로 쓰면 안 되는 이유 (흔한 함정, REFERENCE.md 대조)**
+- ✅ PASS
+- 근거: SKILL.md §9(줄 334) + §10(줄 443) / REFERENCE.md §11-5·§11-7
+- 상세: `--locked` 누락 시 stale lockfile 상태에서도 CI가 조용히 통과해 의도치 않은 버전 변경이 재현성을 깨뜨린다는 점, `uv pip install`은 `pyproject.toml`/`uv.lock`을 갱신하지 않는 호환 레이어일 뿐이므로 `uv add`를 써야 한다는 점을 정확히 답변. 핵심 근거는 SKILL.md 본문에 이미 있었고 REFERENCE.md는 ❌/✅ 예제로 확신도만 보강(참조 링크 필수는 아니었음).
+
+### 발견된 gap
+
+- 없음 — 2/2 PASS, SKILL.md 자체 결함 없음. (경미) `--locked` 누락 시 내부적으로 lockfile을 재계산하는지 무시하는지의 메커니즘 설명이 없다는 지적이 있었으나 결과 서술("실패시킨다")은 충분해 차단 요인 아님.
+
+### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 설정+실행 인프라 (프로젝트 셋업·실행 워크플로우) → 실사용 필수 카테고리
+- 최종 상태: PENDING_TEST 유지 (content test PASS, 실 프로젝트 실행 검증 잔여)
+
+---
+
+> (기존 기록, 참고용 보존)
+
+### [2026-09-28] 재검증(2차) — uv 0.12.3→0.12.19 버전 갱신, 핵심 클레임 전부 VERIFIED 유지
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임 5개를 1차 소스(docs.astral.sh, github.com/astral-sh/uv, github.com/astral-sh/setup-uv)와 WebFetch/WebSearch로 대조, 보강·축소 검토
+
+**클레임 대조 결과**:
+1. uv 최신 버전 = 0.12.3(2026-08-07) → **DISPUTED(정정)**: 현재 최신은 **0.12.19(2026-09-24)**. github.com/astral-sh/uv/releases 직접 대조. SKILL.md 헤더·섹션1·섹션9 CI·Docker 이미지 태그 5곳 전부 갱신 반영.
+2. `uv init` 0.12.0 패키지형 기본 + `--no-package` breaking change 설명 → VERIFIED (변동 없음). docs.astral.sh/uv/concepts/projects/init/ 재확인 — "Prior to v0.12, uv did not define a build system for applications by default" 문구로 재확인, `--lib`은 항상 패키지형·`--no-package` 불가, `--bare`는 최소 생성이라는 SKILL.md 서술과 일치.
+3. `astral-sh/setup-uv` CI 예시(커밋 해시 + `# v9.0.0`) → VERIFIED (유지) — docs.astral.sh/uv/guides/integration/github/ 재확인 결과 동일 커밋 해시(`c771a70e...`)·`v9.0.0` 예시 그대로 유지. 단 github.com/astral-sh/setup-uv/releases 자체에는 **v10 계열**(cache-poisoning 방지 목적으로 `enable-cache: auto` 기본값이 `pull_request_target`/`workflow_run`/`release` 이벤트에서 캐시를 자동 비활성화하는 breaking change)이 이미 존재함을 확인 — 공식 CI 가이드가 아직 v9.0.0 예시를 유지하므로 본문 예시는 그대로 두고 참고용 "주의" 문구만 추가(섹션 9).
+4. Docker 공식 예시(`ghcr.io/astral-sh/uv:{version}`, `python:3.12-slim-trixie`, SHA256 다이제스트 핀 최상위 권장, `--no-install-project`/`UV_LINK_MODE=copy`/`UV_COMPILE_BYTECODE`) → VERIFIED (유지) — docs.astral.sh/uv/guides/integration/docker/ 재확인. 단 공식 문서의 pinned-version 예시 태그가 `ghcr.io/astral-sh/uv:0.12.19`로 자체 갱신되어 있어 SKILL.md 예시 버전도 동일하게 맞춤.
+5. `[dependency-groups]` = PEP 735 표준, uv가 읽기/쓰기 지원 → VERIFIED (유지, 강화) — PEP 735는 2024-10 accepted로 안정화됐고(WebSearch 교차 확인), pip 25.1·Poetry 2.2+·Hatch 1.16+ 등 생태계 전반에 채택되어 2026-09 기준으로도 표준 지위 변동 없음.
+
+**보강(ADD)·축소**: 섹션 9에 setup-uv v10 존재·breaking change 요지를 "주의(미검증 세부, 참고용)" 문구로 1건 추가(ADD). 그 외 축소 없음 — 레거시 버전 고정·함정 목록(섹션 11)·마이그레이션 노트(섹션 3) 전부 그대로 보존.
+
+**실전 질문 재검증**:
+- Q1. "지금(2026-09-28) 시점에 uv로 새 FastAPI 프로젝트를 uv init으로 만들면 어떤 레이아웃이 기본으로 생성되나?" → SKILL.md "3. 프로젝트 초기화" 근거로 PASS — 패키지형(`src/<name>/` + `uv_build`)이 기본, `--no-package`로 구 레이아웃 복귀 가능하다는 서술이 여전히 정확
+- Q2. "CI에서 astral-sh/setup-uv를 핀할 때 왜 `@v9` 축약이 아니라 커밋 해시를 쓰나?" → SKILL.md "9. CI 통합" 근거로 PASS — v8.0.0부터의 불변 태그 정책과 커밋 해시+버전 주석 방식이 공식 문서 재확인 결과와 일치
+
+**재검증 최종 판정**: status **PENDING_TEST 유지 (실사용 필수 카테고리)** — 이번 재검증은 버전 번호 갱신(0.12.3→0.12.19)과 참고용 주의 문구 1건 추가만 있었고, 실 프로젝트에서의 `uv init`→`uv add`→`uv run`/Docker/GHA 실행 검증은 여전히 미수행이므로 APPROVED 전환 사유 없음.
+
+---
 
 ### 2026-08-12 — DISPUTED 정정 반영 (v1 → v2)
 
@@ -332,17 +405,17 @@ Docker 멀티-stage에서 의존성 캐시 적중률을 높이는 방법은?
 
 | 항목 | 결과 |
 |------|------|
-| 내용 정확성 | ✅ (2026-08-12 정정 반영 — 2026-08-11 DISPUTED 2건 해소, 공식 소스 4/4 VERIFIED) |
-| 구조 완전성 | ✅ (frontmatter·소스·검증일·예시·함정 모두 포함 + 0.11→0.12 마이그레이션 노트 신설) |
-| 실용성 | ✅ (FastAPI/Docker/GHA 실전 예시 포함, CI·Docker 예시 모두 현행 공식 권장 형태로 갱신) |
-| 에이전트 활용 테스트 | ✅ 완료 (2026-05-15 3/3 PASS, 2026-08-11 재확인 3/3 PASS) |
-| 실사용(실행) 검증 | ❌ 미수행 (실 프로젝트 init·빌드·CI 실행 필요) |
-| **최종 판정** | **PENDING_TEST** (내용 검증 완료, 실사용 필수 카테고리이므로 실행 검증 후 APPROVED 전환) |
+| 내용 정확성 | ✅ (2026-09-28 2차 재검증 — 핵심 클레임 5개 중 버전 번호 1건 DISPUTED→정정, 나머지 4건 VERIFIED 유지) |
+| 구조 완전성 | ✅ (frontmatter·소스·검증일·예시·함정 모두 포함 + 0.11→0.12 마이그레이션 노트 유지) |
+| 실용성 | ✅ (FastAPI/Docker/GHA 실전 예시 포함, 버전 번호 현행화로 실용성 유지) |
+| 에이전트 활용 테스트 | ✅ 완료 (2026-05-15 3/3 PASS, 2026-08-11 재확인 3/3 PASS, 2026-09-28 자체 재검증 2/2 PASS + **2026-09-28 skill-tester 재테스트 2/2 PASS** — uv init 레이아웃·setup-uv 태그정책/v10 판단, CI `--locked`·`uv pip` 안티패턴) |
+| 실사용(실행) 검증 | 🟡 부분 수행 (2026-09-28) — `uv init` 4변형·`uv add`·`uv sync`·`uv run`·`--locked` 성공/실패 양쪽 실측 완전 일치, GHA YAML 문법 검증 완료. 잔여: GitHub Actions 실제 CI 실행·Docker 실제 빌드(로컬 lab에서 불가) |
+| **최종 판정** | **PENDING_TEST** (내용 검증 완료 + 로컬에서 가능한 실행 검증 대부분 완료, 잔여 CI/Docker 실행 후 APPROVED 전환) |
 
 **판정 사유:**
-- 이 스킬은 *프로젝트 셋업·빌드 설정* 성격이므로 `verification-policy.md`의 "실사용 필수 스킬" 분류(빌드/설정 변환이 실제로 작동하는지 확인 필요)에 해당한다. 따라서 content test PASS만으로는 APPROVED 전환이 불가하며 **PENDING_TEST가 정상 상태**다.
-- 2026-08-11 NEEDS_REVISION 전환 사유였던 콘텐츠 오류 3건(버전 드리프트 / `uv init` 0.12.0 breaking change 미반영 / `setup-uv@v3` 구식)은 2026-08-12 정정으로 **모두 해소**됐고, 미완이던 Docker 태그 점검까지 완료했다. 공식 문서(docs.astral.sh)와 공식 GitHub 릴리즈 두 계열에서 교차 검증했다.
-- 검증하지 못해 남긴 항목은 없다(잔존 사항 2건은 문구 다듬기·예시 보강 수준으로 차단 요인 아님). 따라서 NEEDS_REVISION 유지 사유가 없으며 **PENDING_TEST로 복귀**한다.
+- 이 스킬은 *프로젝트 셋업·빌드 설정* 성격이므로 `verification-policy.md`의 "실사용 필수 스킬" 분류(빌드/설정 변환이 실제로 작동하는지 확인 필요)에 해당한다. 따라서 content test PASS만으로는 APPROVED 전환이 불가하며 **PENDING_TEST가 정상 상태**다 — 2026-09-28 2차 재검증에서도 이 분류는 변경되지 않았다.
+- 2026-08-11 NEEDS_REVISION 전환 사유였던 콘텐츠 오류 3건은 2026-08-12 정정으로 이미 모두 해소됐고, 2026-09-28 2차 재검증에서는 검증일 7일 초과에 따라 uv 최신 버전(0.12.3→0.12.19)을 포함한 5개 핵심 클레임을 공식 문서·공식 GitHub 릴리즈로 재대조했다. 버전 번호 갱신 외 콘텐츠 오류는 발견되지 않았다.
+- 참고용으로 `astral-sh/setup-uv` v10 계열 존재(캐시 기본값 보안 변경)를 SKILL.md 섹션 9에 "주의" 문구로 추가했으나, 공식 CI 가이드가 여전히 v9.0.0 예시를 유지하므로 본문 예시는 변경하지 않았다. 따라서 PENDING_TEST를 유지한다.
 
 ---
 
@@ -352,10 +425,12 @@ Docker 멀티-stage에서 의존성 캐시 적중률을 높이는 방법은?
 - [✅] **(해소)** 섹션 3 "생성되는 파일" 목록을 uv 0.12.0+ 기본 동작(패키지형 프로젝트, `--no-package` 옵션)에 맞게 갱신 — 2026-08-12 공식 init 문서와 모드별 대조 후 반영 완료 + 0.11→0.12 마이그레이션 노트 신설
 - [✅] **(해소)** 섹션 9 CI 예시 `astral-sh/setup-uv@v3` → v9.0.0 커밋 해시 핀(불변 태그 정책)으로 갱신 — 2026-08-12 반영 완료
 - [✅] **(해소)** 섹션 9 Docker 이미지 태그 점검 — 2026-08-12 반영 완료 (태그 계열 표, `python:3.12-slim-trixie` 베이스, SHA256 다이제스트 핀 권장)
-- [❌] 실 FastAPI 프로젝트에서 uv 셋업 검증 (uv init → uv add → uv run uvicorn) — 차단 요인: 실사용 필수 카테고리. 실 프로젝트 도입 후 APPROVED 전환 가능
+- [✅] **(2026-09-28 완료)** skill-tester 2단계 재테스트 — general-purpose 대체 수행, 2/2 PASS (uv init 레이아웃·setup-uv 태그정책/v10 판단 / CI `--locked`·`uv pip` 안티패턴), PENDING_TEST 유지(실사용 필수 카테고리)
+- [✅] **(2026-09-28 실행 검증 완료)** `uv init`(기본/`--no-package`/`--lib`/`--bare` 4변형) → 생성 파일 SKILL.md 서술과 완전 일치, `uv add`(런타임+`--dev`)·`uv sync`·`uv run`·`uv sync --locked`(정상/stale lockfile 양쪽 실패 재현) 전부 실측 확인 — 격리된 venv에 uv 0.12.19 로컬 설치해 수행
+- [❌] 실 FastAPI 프로젝트(uvicorn 서버 기동까지)에서의 종단 검증 — 선택 보강, 위 명령 단위 검증으로 핵심 서술은 이미 실측됨
 - [❌] `uv sync --frozen` 설명 문구 정확화 (`--frozen`은 lockfile 갱신·검증 없이 그대로 사용) — 이번 정정 범위 밖, 다음 개정 시 정리
 - [❌] Docker multi-stage 빌드 실제 실행 검증 (이미지 사이즈, 빌드 시간) — 차단 요인: 실 Docker 빌드 필요
-- [❌] GitHub Actions 워크플로우 실제 실행 검증 (matrix 테스트, 캐시 적중) — 차단 요인: 실 GHA 실행 필요
+- [🟡] GitHub Actions 워크플로우 — 2026-09-28 YAML 문법 검증(PyYAML 파싱 성공)까지 완료, 실제 GHA 러너에서의 matrix 테스트·캐시 적중 실행은 로컬 lab 환경 한계로 미수행. 차단 요인: 실 GHA 실행 필요
 - [❌] Poetry → uv 마이그레이션 실제 케이스 검증 (캐럿 버전 변환 결과 확인) — 선택 보강 (content test에서 변환 규칙은 PASS 확인됨)
 - [❌] 짝 스킬 (python-basics, python-fastapi, python-pytest) 생성 후 상호 참조 검증 — 선택 보강 (짝 스킬 미생성 상태)
 - [✅] **(해소)** 섹션 1 "최신 버전 0.11.14" 표기를 현재 버전(0.12.3, 2026-08-07)으로 갱신 — 2026-08-12 반영 완료
@@ -371,3 +446,6 @@ Docker 멀티-stage에서 의존성 캐시 적중률을 높이는 방법은?
 | 2026-08-11 | v1 | 재감사 — content test 3/3 PASS 재확인 + WebSearch 재검증(uv 0.11.14→0.12.3 드리프트, `uv init` 0.12.0 breaking change, `setup-uv@v3`→v9.0.0 구식) → 2건 DISPUTED, PENDING_TEST → **NEEDS_REVISION** 전환 (SKILL.md 수정은 사용자 승인 대기) | skill-tester |
 | 2026-08-12 | v2 | DISPUTED 정정 반영 — 버전 0.11.14→0.12.3, `uv init` 0.12.0 패키지형 기본 + 모드별 생성 파일 목록 대조, 0.11→0.12 마이그레이션 노트 신설, CI `setup-uv@v3`→v9.0.0 커밋 해시 핀 + 불변 태그 정책, Docker 태그 계열 표·`python:3.12-slim-trixie` 베이스·SHA256 핀 추가. 공식 문서+공식 릴리즈 2계열 교차 검증 4/4 VERIFIED → **NEEDS_REVISION → PENDING_TEST** 복귀 (실사용 필수 카테고리라 APPROVED는 실행 검증 후) | 정정 세션 |
 | 2026-09-25 | v2 | 레포 내 정합성 — CI 예제 `actions/checkout@v4` → `@v7`(레포 `devops/github-actions` 스킬 명시 버전 7.0.1과 통일). 외부 재검증 아님, status PENDING_TEST 유지 | 모델 ID 현행화 감사 |
+| 2026-09-28 | v3 | 재검증(2차, 검증일 7일 초과분) — uv 최신 버전 0.12.3→0.12.19 갱신(헤더·섹션1·섹션9 CI·Docker 이미지 태그 5곳), `astral-sh/setup-uv` v10 계열 존재 참고 문구 추가(본문 예시는 공식 가이드가 유지하는 v9.0.0 그대로). `uv init` 0.12 breaking change·PEP 735 dependency-groups·Docker 공식 예시는 재확인 결과 VERIFIED 유지. status **PENDING_TEST 유지** (실사용 필수 카테고리) | 2차 재검증 |
+| 2026-09-28 | v3 | **2단계 실사용 테스트 재수행(skill-tester → general-purpose).** Q1 uv init 패키지형 레이아웃 + setup-uv 태그정책/v10 도입 판단 / Q2 CI `--locked` 누락 + `uv pip install` 안티패턴(REFERENCE.md 대조) → 2/2 PASS. 실사용 필수 카테고리(설정+실행 인프라)이므로 **PENDING_TEST 유지** | skill-tester |
+| 2026-09-28 | v3 | **실사용(실행) 검증 — 격리 lab venv에 uv 0.12.19 로컬 설치, `uv init` 4변형·`uv add`·`uv sync`·`uv run`·`--locked`(정상/stale 양쪽) 전부 실측하여 SKILL.md 서술과 완전 일치 확인, GHA YAML 문법 검증(PyYAML) 완료.** 콘텐츠 오류 없음(SKILL.md 미수정). GitHub Actions 실제 CI 실행·Docker 실빌드는 로컬 lab 환경 한계로 잔여 → **PENDING_TEST 유지** | 실사용 검증 세션 |

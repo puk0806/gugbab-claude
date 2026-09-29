@@ -16,9 +16,10 @@ description: >
 > - Anthropic Prompt engineering overview — https://platform.claude.com/docs/en/docs/build-with-claude/prompt-engineering/overview
 > - Anthropic Prompting best practices — https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices
 > - Anthropic Prompt caching — https://platform.claude.com/docs/en/build-with-claude/prompt-caching
+> - Anthropic Structured outputs — https://platform.claude.com/docs/en/build-with-claude/structured-outputs
 > - 보건복지부 자살예방 상담전화 109 통합 — https://www.mohw.go.kr/board.es?mid=a10503010100&bid=0027
 >
-> 검증일: 2026-08-12
+> 검증일: 2026-09-28 (최초 2026-05-14)
 > 대상 모델: Claude Opus 5.5 / Sonnet 5 / Haiku 4.5 (2026-09-25 현행 세대 — 예제 기본은 비용 효율상 Sonnet 5)
 
 이 스킬은 꿈 해몽 앱(소비자용 AI 코파일럿) 백엔드에서 Claude API를 호출할 때
@@ -135,8 +136,63 @@ JSON 스키마(아래)를 따릅니다. 추가 텍스트·markdown 코드펜스 
 - `"trauma"` — 반복 외상 패턴 감지, 위와 유사 처리
 - `"violence"` — 타인 가해 구체 묘사
 
-> 주의: Anthropic 공식 API는 "JSON만 반환" 같은 지시를 따르지만 100% 보장은
-> 아니다. 클라이언트에서 JSON 파싱 실패 시 fallback(자유 텍스트로 다시 호출)을 둘 것.
+### 3-1. 스키마 강제 방식 — Structured Outputs (권장)
+
+`output_config.format`으로 JSON 스키마를 강제하는 것이 현행 권장 방식이다(GA,
+constrained decoding으로 스키마 위반 자체를 차단 — "JSON만 반환" 프롬프트 지시보다
+신뢰도가 높다).
+
+```python
+import anthropic, json
+
+client = anthropic.Anthropic()
+
+DREAM_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "summary": {"type": "string"},
+        "traditional": {"type": "string"},
+        "psychological": {"type": "string"},
+        "self_reflection_question": {"type": "array", "items": {"type": "string"}},
+        "safety_flag": {"type": ["string", "null"], "enum": ["self_harm", "trauma", "violence", None]},
+        "disclaimer": {"type": "string"},
+    },
+    "required": [
+        "summary", "traditional", "psychological",
+        "self_reflection_question", "safety_flag", "disclaimer",
+    ],
+    "additionalProperties": False,
+}
+
+response = client.messages.create(
+    model="claude-sonnet-5",
+    max_tokens=1024,
+    system=[{
+        "type": "text",
+        "text": SYSTEM_PROMPT,
+        "cache_control": {"type": "ephemeral"},
+    }],
+    output_config={"format": {"type": "json_schema", "schema": DREAM_SCHEMA}},
+    messages=[{"role": "user", "content": user_dream_text}],
+)
+result = json.loads(response.content[0].text)  # constrained decoding — 파싱 실패 사실상 없음
+```
+
+**스키마 작성 시 공식 제약(위반 시 400):**
+- `additionalProperties`는 객체마다 `false`여야 한다.
+- `minLength`/`maxLength`, `minimum`/`maximum` 같은 길이·수치 제약은 **미지원** →
+  "3–5줄" 같은 분량 제약(§2 톤 규칙)은 스키마가 아니라 **프롬프트**로 건다.
+- 재귀 스키마, 외부 `$ref`(URL)는 미지원. `enum`은 문자열·숫자·불리언·null만 가능.
+- **`output_config.format`을 바꾸면 해당 스레드의 프롬프트 캐시가 무효화된다** →
+  스키마는 한 번 고정하면 바꾸지 않는다(§6 캐싱과 충돌 방지).
+
+### 3-2. 폴백 — 프롬프트 지시 + 재시도
+
+Structured Outputs를 쓸 수 없는 환경(구버전 SDK·클라이언트 제약)에서는 기존 방식을
+폴백으로 둔다: system prompt에 "추가 텍스트·코드펜스 없이 JSON만 반환" 지시(§2
+출력 포맷)를 유지하고, 클라이언트에서 JSON 파싱 실패 시 한 번 더 호출(retry) 또는
+자유 텍스트 fallback을 둔다. Anthropic 공식 API는 이 지시를 따르지만 100% 보장은
+아니므로, 가능하면 §3-1 Structured Outputs를 우선 사용한다.
 
 ---
 
@@ -234,7 +290,7 @@ client = anthropic.Anthropic()
 SYSTEM_PROMPT = """당신은 한국 전통 해몽과 융/프로이트 심리학 ... (위 템플릿)"""
 
 response = client.messages.create(
-    model="claude-sonnet-5",  # 비용 효율 권장 모델 (2026-08-12 기준)
+    model="claude-sonnet-5",  # 비용 효율 권장 모델 (2026-09-28 기준)
     max_tokens=1024,
     system=[
         {
@@ -252,15 +308,15 @@ response = client.messages.create(
 print(response.usage.cache_read_input_tokens, response.usage.cache_creation_input_tokens)
 ```
 
-**최소 캐시 토큰 임계값 (공식 docs 2026-08-12 기준):**
-- Claude Fable 5.1 / Fable 5 / Opus 5: **512 tokens**
-- Claude Opus 5.5: 주의: 미확인 — 공식 캐싱 표 미기재(2026-09-25), 인용 전 공식 문서 확인
+**최소 캐시 토큰 임계값 (공식 docs 2026-09-28 재확인):**
+- Claude Fable 5.1 / Fable 5 / Opus 5.5 / Opus 5: **512 tokens** (Opus 5.5도 공식 표에
+  512로 명시됨을 재확인 — 2026-09-25 시점엔 표에 없어 "미확인"이었으나 이후 반영됨)
 - Claude Sonnet 5 / Opus 4.8 / Sonnet 4.6 / Sonnet 4.5: **1,024 tokens**
 - Claude Opus 4.7: **2,048 tokens**
 - Claude Opus 4.6 / 4.5: **4,096 tokens**
 - Claude Haiku 4.5: **4,096 tokens**
 
-> 임계값은 세대 순으로 단조롭지 않다 — Opus 5가 512로 가장 낮고 Opus 4.6·Haiku 4.5가 4,096으로 가장 높다.
+> 임계값은 세대 순으로 단조롭지 않다 — Opus 5.5·Opus 5가 512로 가장 낮고 Opus 4.6·Haiku 4.5가 4,096으로 가장 높다.
 
 few-shot 3개 + 안전 가드 + 톤 규칙을 모두 포함한 시스템 프롬프트는 한국어
 기준 대략 1,500–2,500 tokens 이므로 **Sonnet 5 에서는 캐시 적용 가능**,
@@ -326,7 +382,9 @@ Sonnet 5 사용을 권장.
 
 ## 9. 출력 후처리
 
-1. **JSON 파싱 (필수)** — 실패 시 한 번 더 호출(retry) 또는 자유 텍스트 fallback
+1. **JSON 파싱 (필수)** — Structured Outputs(§3-1) 사용 시 스키마 위반 자체가
+   차단되어 파싱 실패가 사실상 없다. §3-2 폴백 경로를 쓸 때만 실패 시 한 번 더
+   호출(retry) 또는 자유 텍스트 fallback을 둔다
 2. **금칙어 필터** — 욕설·혐오 표현 정규식 차단 (Claude가 생성할 가능성은
    낮지만 사용자 입력을 그대로 echo하는 케이스 방지)
 3. **markdown 안전 렌더링** — Claude 출력의 `**굵게**`만 허용, `<script>` 등
@@ -390,6 +448,9 @@ Sonnet 5 사용을 권장.
 
 10. **few-shot 예시에 PII** — 예시 안의 가상 인물 이름·번호도 실제 PII로
     오인될 수 있다. 모두 명백히 가상("홍길동", "01000000000")으로.
+
+11. **`output_config.format`을 자주 바꿈** — Structured Outputs(§3-1) 스키마 변경은
+    해당 스레드의 프롬프트 캐시를 무효화한다. 스키마는 한 번 고정하면 바꾸지 않는다.
 
 ---
 

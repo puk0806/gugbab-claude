@@ -99,6 +99,13 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
+### [2026-09-28] 선택 보강 반영
+
+3차 재검증(2026-09-26)에서 발견된 선택 보강 gap 2건을 오늘 1차 소스 재확인 후 최종 반영·기록 마감(SKILL.md 본문은 2026-09-26에 이미 수정되어 있었음 — 오늘은 그 내용의 출처 검증과 verification.md 섹션 5·7 동기화):
+
+1. **"최대 ±1일 오차" 방향 비대칭성 명시** — SKILL.md 122~124행에 이미 반영됨("오차 방향은 시각에 따라 달라진다..."). 이는 외부 사실이 아니라 SKILL.md 자체 코드(`Math.ceil` vs `Math.round`, KST/UTC 오프셋)로부터 도출되는 논리적 설명이라 별도 1차 소스 불필요(내부 명확화).
+2. **Dexie/IndexedDB가 인덱스 값이 `undefined`인 레코드를 range 쿼리에서 제외하는 동작 명시** — SKILL.md 190~192행에 이미 반영됨("IndexedDB는 인덱스 키가 undefined인 레코드를 인덱스에 넣지 않으므로..."). 오늘 MDN(IndexedDB 공식 웹 표준 문서)으로 1차 소스 확인: "Adding objects that don't have a `name` property still succeeds, but the objects won't appear in the 'name' index." (인덱스 키 경로에 해당 프로퍼티가 없는 레코드는 그 인덱스에 포함되지 않음 — Dexie는 IndexedDB 위에 구축되어 이 동작을 그대로 상속). 근거 URL: https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API/Using_IndexedDB
+
 **수행일**: 2026-09-26
 **수행자**: skill-tester → general-purpose
 **수행 방법**: 직전 회차(v2 재검증) NEEDS_REVISION 사유 — 빈 문자열 expiryDate가 106행 `!ingredient.expiryDate` falsy 체크로 no_expiry 반환되어 110행 주석·138행 표("빈 값...expired 안전 처리")와 불일치했던 결함 — 를 메인이 수정. SKILL.md Read 후 실전 질문 3개(빈 문자열·undefined 구분 / KST 자정 직후 만료 판정(daysLeft 수치 추적) / getAvailable 문자열비교 안티패턴과 getIngredientStatus 위임 근거) 답변, 근거 코드 대조 및 SKILL.md 코드-표 내부 정합성 재확인. 질문 답변 에이전트(general-purpose)는 1개씩 순차 실행
@@ -220,7 +227,7 @@ status: APPROVED
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
 | 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-09-26 3차 재검증 — Q1 빈 문자열/undefined 구분, Q2 KST 자정 경계+금지패턴 대조, Q3 getAvailable 위임 근거) |
-| **최종 판정** | **APPROVED** (2026-09-26 3차 재검증에서 차단 결함 해소 확인, 잔여 gap 2건은 선택 보강·비차단) |
+| **최종 판정** | **APPROVED** (2026-09-26 3차 재검증에서 차단 결함 해소 확인, 잔여 gap 2건은 2026-09-28 선택 보강 반영으로 해소 — status 유지, 순수 서식/내부 명확화·기존 반영 사실의 출처 보강) |
 
 ---
 
@@ -232,8 +239,8 @@ status: APPROVED
 - [✅] 선택 보강 — getAvailable()의 문자열 비교 안전성 근거 및 형식 오류 레코드가 getAvailable/getIngredientStatus 중 어느 단계에서 걸러지는지 문서에 명시 완료 (2026-09-26, 205~206행·211행 주석 추가, Q3 재검증에서 확인)
 - [✅] 선택 보강 — Dexie 버전 호환성 문서화 완료 (2026-09-26, 3.x/4.x 공통 명시 + 4.x import 경로 확인 안내 추가). 단, 설치 버전별 실측은 아직이므로 실사용 시 재확인 권장(비차단)
 - [✅] 선택 보강 — getSortedByExpiry 정렬 방향(오름차순) 코드 주석 명시 완료 (2026-09-26)
-- [❌] 선택 보강, 비차단 — "최대 ±1일 오차" 문구에 오차 방향(더 급하게 vs 덜 급하게 오분류) 대칭성이 케이스에 따라 다를 수 있음을 명시 (2026-09-26 3차 재검증 Q2에서 발견)
-- [❌] 선택 보강, 비차단 — Dexie가 인덱스 값이 `undefined`인 레코드를 range 쿼리에서 제외하는 동작 자체를 SKILL.md에 명시 (2026-09-26 3차 재검증 Q3에서 발견)
+- [✅] (2026-09-28 반영) 선택 보강, 비차단 — "최대 ±1일 오차" 문구에 오차 방향(더 급하게 vs 덜 급하게 오분류) 대칭성이 케이스에 따라 다를 수 있음을 명시 (2026-09-26 3차 재검증 Q2에서 발견, SKILL.md 122~124행에 반영 완료, 내부 로직 명확화라 소스 확인 불필요)
+- [✅] (2026-09-28 반영) 선택 보강, 비차단 — Dexie가 인덱스 값이 `undefined`인 레코드를 range 쿼리에서 제외하는 동작 자체를 SKILL.md에 명시 (2026-09-26 3차 재검증 Q3에서 발견, SKILL.md 190~192행에 반영 완료, 2026-09-28 MDN IndexedDB 공식 문서로 1차 소스 확인 — https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API/Using_IndexedDB)
 
 ---
 
@@ -248,3 +255,4 @@ status: APPROVED
 | 2026-09-26 | v2 | NEEDS_REVISION 사유 수정 — `getIngredientStatus()` undefined/null만 no_expiry로 엄격화(빈 문자열은 expired), `getAvailable()`이 `getIngredientStatus`에 판정 위임(문자열 비교 제거), getSortedByExpiry 정렬 방향 주석·Dexie 버전 호환성 주의 추가. 메인이 경계 케이스 12개를 TZ=UTC·Asia/Seoul 양쪽에서 실행해 전부 기대값 확인 | Claude |
 | 2026-09-26 | v2 | 3차 실사용 재검증 수행 (Q1 빈 문자열/undefined 구분 / Q2 KST 자정 직후 만료 판정+금지패턴 대조(daysLeft 수치 추적) / Q3 getAvailable 문자열비교 안티패턴과 getIngredientStatus 위임 근거) → 3/3 PASS, NEEDS_REVISION → APPROVED 전환 (차단 결함 해소 확인, 잔여 gap 2건은 선택 보강·비차단) | skill-tester → general-purpose |
 | 2026-09-26 | v2 | 선택 보강 2건 반영: 금지 패턴 오차 방향의 비대칭성 설명, IndexedDB가 undefined 인덱스 키 레코드를 범위 쿼리에서 제외하는 동작 주석 (코드 변경 없음, status 유지) | Claude (Opus 5.5) |
+| 2026-09-28 | v2 | 위 2026-09-26 선택 보강 반영분의 출처 검증 마감 및 verification.md 섹션 5·7 동기화 — MDN IndexedDB 공식 문서로 undefined 인덱스 제외 동작 1차 소스 확인, 오차 방향 비대칭성은 내부 로직 명확화로 판정 (코드 변경 없음, status 유지) | Claude (Opus 5.5) |

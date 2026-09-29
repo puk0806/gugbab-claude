@@ -1,8 +1,8 @@
 ---
 skill: python-anthropic-sdk
 category: backend
-version: v1
-date: 2026-08-12
+version: v2
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,10 +14,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `python-anthropic-sdk` |
 | 스킬 경로 | `.claude/skills/backend/python-anthropic-sdk/SKILL.md` |
-| 검증일 | 2026-08-12 (최초 2026-05-15) |
-| 검증자 | skill-creator (최초) / 모델 ID 정기 감사 (2026-08-11) / **5 계열 정렬 감사 (2026-08-12)** |
-| 스킬 버전 | v1 |
-| SDK 기준 버전 | `anthropic` v0.121.0 (PyPI latest — 2026-08-12 재확인, 변동 없음), Python 3.9+ |
+| 검증일 | 2026-09-28 (재검증, 이전 2026-08-12 / 최초 2026-05-15) |
+| 검증자 | skill-creator (최초) / 모델 ID 정기 감사 (2026-08-11) / 5 계열 정렬 감사 (2026-08-12) / **2차 재검증 — SDK 1.0 메이저 업그레이드 반영 (2026-09-28)** |
+| 스킬 버전 | v2 |
+| SDK 기준 버전 | `anthropic` v1.8.0 (PyPI latest — 2026-09-28 확인, **2026-08-20 v1.0.0 메이저 업그레이드**), **Python 3.10+** (v1.0.0부터 3.9 지원 종료) |
 | 모델 기준 | `claude-opus-5-5` / `claude-fable-5-1` / `claude-sonnet-5` / `claude-haiku-4-5` (2026-09-25 현행화) |
 
 ---
@@ -95,8 +95,8 @@ status: APPROVED
 
 ### 4-4. Claude Code 에이전트 활용 테스트
 
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-15 수행)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (3/3 PASS)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-15 수행 + 2026-09-28 재검증 정정분 타깃 skill-tester 재테스트)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-05-15 3/3 PASS, 2026-09-28 2/2 PASS)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (gap 없음, 수정 불필요)
 
 ### 4-5. 클레임 교차 검증 결과
@@ -143,9 +143,56 @@ status: APPROVED
 
 **판정 요약:** VERIFIED 16 (기존) + 11 (2026-08-12 추가) / DISPUTED 2 (모두 정정 반영 완료) / UNVERIFIED 0
 
+#### 2026-09-28 2차 재검증 — SDK 1.0 메이저 업그레이드 반영 (추가 클레임)
+
+| 클레임 | 판정 | 근거 |
+|--------|------|------|
+| ~~SDK 최신 버전은 `anthropic` v0.121.0~~ | **DISPUTED (2026-09-28)** | 2026-08-20 v1.0.0 메이저 업그레이드 발생, 현재 최신은 **v1.8.0**(2026-09-22) |
+| SDK 최신 버전 `anthropic` v1.8.0 | VERIFIED (2026-09-28) | PyPI `/pypi/anthropic/json` 직접 curl → `info.version` = `1.8.0` |
+| ~~Python 3.9+ 요구~~ | **DISPUTED (2026-09-28)** | v1.0.0부터 **3.10+**로 상향, 3.9 지원 종료 |
+| Python 3.10+ 요구 (v1.0.0부터) | VERIFIED (2026-09-28) | PyPI `info.requires_python` = `>=3.10` (직접 curl 확인) |
+| v1.0.0에서 HTTP 레이어가 `httpx` → `httpx2`(Pydantic 유지보수 fork)로 이관, 기존 `httpx.Timeout` 등 직접 생성 객체는 `httpx2.Timeout`으로 교체 필요(또는 `alias_httpx()`) | VERIFIED (2026-09-28) | 공식 GitHub MIGRATION.md (WebFetch 직접 인용) + 독립 기술 블로그 교차 검색 다수 |
+| Text Completions API(`client.completions.create()`, `HUMAN_PROMPT`/`AI_PROMPT`)는 v1.0.0에서 완전 제거 | VERIFIED (2026-09-28) | 공식 MIGRATION.md |
+| 샘플링 파라미터(`temperature`/`top_p`/`top_k`, 구형 모델용)는 `messages.create()` 메서드 시그니처에서 제거 — `extra_body`로 전달해야 함 | VERIFIED (2026-09-28) | 공식 MIGRATION.md |
+| `AnthropicBedrock`은 v1.0.0부터 `aws_region` 명시 필수(이전은 `us-east-1` 암묵 기본값) | VERIFIED (2026-09-28) | 공식 MIGRATION.md |
+| `client.messages.parse()`(non-beta, structured outputs)는 v1.x에서도 안정 인터페이스로 유지 — 스킬 §6.3 예제 코드 유효 | VERIFIED (2026-09-28) | 공식 structured-outputs 문서 교차 검색 |
+| `@beta_tool` 데코레이터 + `client.beta.messages.tool_runner()`는 v1.x에서도 계속 제공 — 스킬 §6.2 예제 코드 유효 | VERIFIED (2026-09-28) | 공식 GitHub tools.md + tool-runner 문서 교차 검색 |
+
+**2차 재검증 판정 요약:** VERIFIED 7 / DISPUTED 2 (모두 정정 반영 완료) / UNVERIFIED 0
+
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (Python 백엔드 도메인)
+**수행 방법**: 2026-09-28 재검증(2차)에서 반영된 SDK v1.0 메이저 업그레이드(httpx2 이관·Python 3.10+·Opus 5.5 최소 캐시 토큰 512)를 겨냥한 실전 질문 2개를 SKILL.md(+REFERENCE.md)만 근거로 답변, 근거 섹션 및 anti-pattern 회피 확인
+
+### 실제 수행 테스트
+
+**Q1. Opus 4.8 → Opus 5.5로 모델 변경 시 프롬프트 캐싱 최소 토큰 기준 변화**
+- ✅ PASS
+- 근거: SKILL.md "5.4 최소 캐시 토큰" 표 + 그 아래 두 개의 `> 주의:` 문단
+- 상세: Opus 4.8(1,024) → Opus 5.5(512)로 임계값이 절반이 됨을 표와 두 차례의 주의 문단(2026-09-28 검증 문구 포함)에서 정확히 도출. "기존에 캐시 안 되던 짧은 프롬프트가 코드 변경 없이 캐시될 수 있다"는 실질적 함의까지 짚음.
+
+**Q2. Python 3.9 서버에서 SDK 설치 실패 원인 + 기존 `httpx.Timeout` 코드의 마이그레이션**
+- ✅ PASS (경미한 gap)
+- 근거: SKILL.md "1. 설치"(Python 요구 버전) · "1.1 v0.x → v1.x 마이그레이션" 표 및 주의문 · REFERENCE.md §9.3
+- 상세: v1.0.0부터 Python 3.10+ 요구·3.9는 `anthropic>=0.125,<1` 핀 필요, `httpx` → `httpx2`(alias_httpx() 또는 타입 교체) 전환 경로를 정확히 도출. pip의 정확한 실패 동작(resolver 메시지 형태)과 `alias_httpx()`의 예외 타입 커버리지 세부는 SKILL.md에 없어 추론 필요했다는 점을 에이전트가 스스로 지적 — 차단 요인 아님.
+
+### 발견된 gap
+
+- (선택 보강, 차단 요인 아님) `pip install -U anthropic`이 Python 3.9에서 정확히 어떤 형태로 실패하는지(resolver 에러 메시지)와 `alias_httpx()`의 커버리지 범위(예외 타입 포함 여부)에 대한 세부가 없음.
+
+### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 라이브러리 사용법 스킬 — 실사용 필수 카테고리 해당 없음
+- 최종 상태: APPROVED
+
+---
+
+### 2026-05-15 최초 content test (참고용 보존)
 
 **수행일**: 2026-05-15
 **수행자**: skill-tester → general-purpose (Python 백엔드 도메인)
@@ -180,6 +227,34 @@ status: APPROVED
 
 ---
 
+### [2026-09-28] 재검증(2차) — SDK 0.121.0 → 1.8.0(v1.0 메이저) 반영, Python 3.10+ 상향, httpx2 이관
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md + references/REFERENCE.md 전체 Read → 핵심 클레임 9개를 PyPI(`curl`) + 공식 GitHub MIGRATION.md(WebFetch) + 공식 문서 교차 검색으로 대조, 보강 반영
+
+**클레임 대조 결과**:
+1. SDK 최신 버전 `anthropic` v0.121.0 → **DISPUTED(정정)**: 2026-08-20 v1.0.0 메이저 업그레이드, 현재 v1.8.0 (PyPI `info.version` 직접 확인)
+2. Python 3.9+ 요구 → **DISPUTED(정정)**: v1.0.0부터 3.10+ (PyPI `info.requires_python` 직접 확인)
+3. HTTP 레이어 `httpx` 그대로 사용 가능 → **DISPUTED(정정)**: v1.0.0에서 `httpx2` fork로 이관, 스킬 §9.3(REFERENCE.md) `httpx.Timeout` 예제가 신규 설치 기준 깨질 수 있어 버전별 분기 예제로 교체 (공식 MIGRATION.md)
+4. Text Completions API(`HUMAN_PROMPT`/`AI_PROMPT`) 잔존 여부 → VERIFIED: v1.0.0에서 완전 제거 확인 (공식 MIGRATION.md) — 본 스킬은 애초에 다루지 않아 반영 대상 없음
+5. 샘플링 파라미터 처리 방식 → VERIFIED: 구형 모델용 `temperature` 등은 `extra_body`로 전달해야 함(메서드 시그니처에서 제거) — 스킬은 이미 5 계열 기준 해당 파라미터를 제거 권고 중이라 상충 없음, 레거시 각주만 유효
+6. `AnthropicBedrock` region 기본값 → **DISPUTED(정정)**: v1.0.0부터 `aws_region` 명시 필수(이전 `us-east-1` 암묵) — §11.1 예제 주석 보강
+7. `client.messages.parse()` structured outputs 안정성 → VERIFIED: v1.x에서도 유지, 스킬 §6.3 예제 그대로 유효
+8. `@beta_tool`/`tool_runner` 유지 여부 → VERIFIED: v1.x에서도 계속 제공, 스킬 §6.2 예제 그대로 유효
+9. 모델 카탈로그(Opus 5.5 등) 최신성 → 범위 밖(직전 2026-09-25 현행화 별도 감사에서 처리) — 이번 재검증 대상에서 제외
+10. Claude Opus 5.5 최소 캐시 토큰(2026-09-25 감사에서 "미확인"으로 표기) → **DISPUTED(정정)**: 공식 prompt-caching 문서(Cache limitations 섹션)에 **512**로 명시됨을 WebFetch(공식 문서 직접 인용) + WebSearch 교차 확인 — Fable 5.1·Opus 5·Fable 5와 동일 티어
+
+**보강(ADD)**: SKILL.md §1.1 신설 — v0.x→v1.x 마이그레이션 표(httpx2·Python 3.10+·Completions API 제거·샘플링 파라미터·output_format·비동기 raw response·Bedrock region·헤더 대소문자). REFERENCE.md §9.3 타임아웃 예제를 SDK 버전별(`httpx2` vs 레거시 `httpx`) 분기 예제로 교체. §11.1 Bedrock 예제에 `aws_region` 필수화 주석 추가. §12 흔한 함정 표에 "httpx2 이관으로 트레이싱 조용히 끊김", "완전 제거된 Completions API 계속 사용" 2행 추가. §5.4 최소 캐시 토큰 표에 Opus 5.5를 512 행에 합류(기존 "미확인" 각주 제거, 확인된 근거로 교체). **축소 없음.**
+
+**실전 질문 재검증**:
+- Q1. "기존에 `import httpx; Anthropic(timeout=httpx.Timeout(...))`로 짜둔 코드를 `pip install -U anthropic` 했더니 타입이 안 맞는다는 느낌인데 뭐가 바뀐 거야?" → SKILL.md §1.1 + REFERENCE.md §9.3 근거로 PASS (httpx2 이관, `httpx2.Timeout` 또는 `alias_httpx()` 안내)
+- Q2. "Python 3.9 서버에서 최신 anthropic 패키지가 설치되다가 실패하는데 왜 그래?" → SKILL.md §1 + §1.1 근거로 PASS (v1.0.0부터 3.10+ 요구, 3.9는 `anthropic>=0.125,<1` 핀 안내)
+- Q3. "AnthropicBedrock() 만들 때 region을 안 넣었더니 이전엔 되던 게 이제 에러난다" → REFERENCE.md §11.1 주석 근거로 PASS (v1.0+ `aws_region` 명시 필수)
+
+**재검증 최종 판정**: status **PENDING_TEST 전환** (SDK 버전·Python 요구사항·httpx2 마이그레이션 등 실질적 정정·보강이 있었으므로 skill-tester 재테스트 필요)
+
+---
+
 > (아래는 skill-creator가 남긴 예정 템플릿 — 참고용으로 보존)
 >
 > 2단계 테스트(skill-tester 호출)는 메인 에이전트가 별도로 수행한다.
@@ -194,17 +269,17 @@ status: APPROVED
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-05-15 수행, 3/3 PASS) |
+| 에이전트 활용 테스트 | ✅ 2026-05-15 3/3 PASS + **skill-tester 재검증 content test 2/2 PASS (2026-09-28, SDK 1.0 반영분 타깃)** |
 | **최종 판정** | **APPROVED** |
 
-내용 검증 완료. 모든 핵심 클레임이 공식 문서로 VERIFIED. 2단계 실사용 테스트(skill-tester) 3/3 PASS 완료 → APPROVED 전환.
+2026-09-28 2차 재검증: `anthropic` SDK가 0.121.0 → 1.8.0(2026-08-20 v1.0.0 메이저 업그레이드)으로 갱신되며 Python 3.10+ 상향·httpx2 이관·Completions API 제거·Bedrock region 필수화 등 실질적 정정·보강이 발생했다. skill-tester가 SDK 1.0 반영분(§1.1, §9.3)을 겨냥한 실전 질문 2개로 재테스트해 2/2 PASS를 확인했다 — 라이브러리 사용법 스킬(실사용 필수 카테고리 아님)이므로 content test PASS로 **APPROVED** 재전환.
 
 ---
 
 ## 7. 개선 필요 사항
 
-- [✅] 2단계 content test 수행 (2026-05-15 완료, 3/3 PASS) — APPROVED 전환 완료
-- [❌] `@beta_tool` 데코레이터 시그니처가 SDK 마이너 버전에서 변경될 가능성 — v0.102.0 기준으로 작성됨. 향후 버전 업 시 재검증 필요. **차단 요인 아님 — 선택 보강 (베타 기능이므로 사용 시 SDK 핀 권장)**
+- [✅] 2단계 content test 수행 (2026-05-15 완료, 3/3 PASS, 당시 SDK v0.102.0 기준) — **2026-09-28 SDK 1.0 반영분 재테스트 완료, 2/2 PASS, APPROVED 재전환**
+- [❌] `@beta_tool` 데코레이터 시그니처가 SDK 마이너 버전에서 변경될 가능성 — v1.8.0(2026-09-28 확인)에서도 여전히 베타. 향후 버전 업 시 재검증 필요. **차단 요인 아님 — 선택 보강 (베타 기능이므로 사용 시 SDK 핀 권장)**
 - [❌] `count_tokens()` 응답 객체 필드는 SDK 베타 영역이므로 안정화 시 추가 필드 반영 필요. **차단 요인 아님 — 선택 보강**
 - [❌] Bedrock 모델 ID 카탈로그는 AWS 측 갱신 주기에 따라 변경 — 사용 시 AWS Bedrock 공식 모델 카탈로그 별도 확인 필요. **차단 요인 아님 — 사용 시점에 개별 확인 필요한 외부 의존성**
 
@@ -221,3 +296,5 @@ status: APPROVED
 | 2026-09-25 | v1 | **모델 ID 현행화(Opus 5.5/Fable 5.1).** 예제 기본 모델 `claude-opus-5` → `claude-opus-5-5`(SKILL.md 12곳, REFERENCE.md 6곳, Bedrock `anthropic.claude-opus-5-5`·Vertex 포함 — 플랫폼 가용성 미확인 주의 추가). **§6.3 JSON 강제 예제를 코드까지 재작성** — Opus 5.5는 강제 `tool_choice` 400이므로 `messages.parse` + Pydantic structured outputs로 교체, `auto`+`strict` 대안 서술. §3에 Opus 5.5 규약(thinking 비활성·`budget_tokens` 400, effort 기본 `medium`, preserved thinking, `computer_toolset_20260801`) 신설, Opus 5 규약은 레거시로 분리. 캐시 최소 토큰 표에 Fable 5.1 = 512 추가, Opus 5.5는 "미확인" 표기. REFERENCE.md 모델 표를 Fable 5.1/Opus 5.5($4/$20)/Sonnet 5($2/$10)/Haiku 4.5 + 구세대 2행으로 재작성, 체크리스트 2항 갱신. Vertex `claude-opus-4-5@20251101`은 구세대 스냅샷 형식 예시라 유지. 클레임 표의 2026-08-12 판정 기록은 이력으로 보존. 내용 재검증 없음 — status APPROVED 유지 | 모델 ID 현행화 |
 | 2026-09-25 | v1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |
 | 2026-09-26 | v1 | SKILL.md 500줄 초과 해소 — 비동기 클라이언트·원시 이벤트 스트림·SSE 이벤트 표·FastAPI 통합·명시적 도구 정의 예제를 references/REFERENCE.md §15~§19로 이동(내용 변경 없음, 이동만). SKILL.md 513→405줄. 내용·검증 상태 변경 없음 | Claude (Sonnet 5) |
+| 2026-09-28 | v2 | **재검증(2차) — SDK v0.121.0 → v1.8.0(2026-08-20 v1.0.0 메이저 업그레이드) 반영.** ① SDK 기준 버전·Python 요구사항(3.9+ → **3.10+**) 갱신. ② SKILL.md §1.1 신설 — v0.x→v1.x 마이그레이션 표(httpx2 이관·Completions API 제거·샘플링 파라미터 extra_body·output_config·비동기 raw response await·Bedrock region 필수·헤더 대소문자 무관). ③ REFERENCE.md §9.3 타임아웃 예제를 SDK 버전별(`httpx2` 신규 vs 레거시 `httpx` 핀) 분기 예제로 교체 — 기존 예제가 v1.0+ 신규 설치 기준 깨질 수 있었음. ④ §11.1 Bedrock 예제에 `aws_region` v1.0+ 필수화 주석 추가. ⑤ §12 흔한 함정에 "httpx2 이관 트레이싱 단절"·"제거된 Completions API 계속 사용" 2행 추가. ⑥ §6.2·§6.3 예제(`@beta_tool`·`messages.parse`)는 v1.x에서도 유효함을 교차 검증만 하고 코드 변경 없음. ⑦ §5.4 최소 캐시 토큰 표 — 2026-09-25 감사에서 "미확인"으로 남겨뒀던 **Claude Opus 5.5 최소 캐시 토큰**을 공식 prompt-caching 문서(Cache limitations 섹션, WebFetch 직접 인용) + WebSearch 교차 확인으로 **512**임을 확정, 표에 합류시키고 "미확인" 각주 제거. 축소 없음. status APPROVED → **PENDING_TEST** (skill-tester 재테스트 대기) | 2차 재검증 |
+| 2026-09-28 | v2 | 2단계 실사용 테스트 수행(재검증 정정분 타깃) — Q1 Opus 4.8→5.5 최소 캐시 토큰 변화(512) / Q2 Python 3.9 설치 실패+httpx2 마이그레이션 → 2/2 PASS, PENDING_TEST → **APPROVED** 전환 | skill-tester |

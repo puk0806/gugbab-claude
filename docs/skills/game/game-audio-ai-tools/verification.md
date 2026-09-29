@@ -2,8 +2,8 @@
 skill: game-audio-ai-tools
 category: game
 version: v1
-date: 2026-09-26
-status: PENDING_TEST
+date: 2026-09-28
+status: APPROVED
 ---
 
 # game-audio-ai-tools 스킬 검증 기록
@@ -14,7 +14,7 @@ status: PENDING_TEST
 |------|------|
 | 스킬 이름 | `game-audio-ai-tools` |
 | 스킬 경로 | `.claude/skills/game/game-audio-ai-tools/SKILL.md` |
-| 검증일 | 2026-09-26 (최초 2026-06-08) |
+| 검증일 | 2026-09-28 (재검증, 이전 2026-09-26 / 최초 2026-06-08) |
 | 검증자 | skill-creator (자동) |
 | 스킬 버전 | v1 |
 
@@ -72,6 +72,7 @@ status: PENDING_TEST
 | FMOD Licensing | https://www.fmod.com/licensing | ⭐⭐⭐ High | 2026-06-08 | 공식 |
 | FMOD for Unity | https://www.fmod.com/unity | ⭐⭐⭐ High | 2026-06-08 | 공식 |
 | Meta AI AudioCraft Blog | https://ai.meta.com/blog/audiocraft-musicgen-audiogen-encodec-generative-ai-audio/ | ⭐⭐⭐ High | 2026-06-08 | 공식 발표 |
+| Suno 공식 도움말 — 다운로드 제한 FAQ | https://help.suno.com/en/articles/13614785 | ⭐⭐⭐ High | 2026-09-28 | 공식, "Up to 7 total (lifetime) trial downloads" — 계정 단위 확인 |
 
 ---
 
@@ -115,11 +116,76 @@ status: PENDING_TEST
 - [✅] Unity 2D 모바일에 특화 (PC 게임에는 일부만 적용)
 
 ### 4-5. Claude Code 에이전트 활용 테스트
-- [✅] skill-tester 호출 — 2026-06-08 수행 완료 (3/3 PASS)
+- [✅] skill-tester 호출 — 2026-06-08 수행 완료 (3/3 PASS), 2026-09-28 재검증 정정분 재테스트 완료 (2/2 PASS), 2026-09-28 2차 실제 재테스트 완료 (2/2 PASS)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-09-28] skill-tester 2차 실제 재테스트 (real Agent 호출)
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (Agent 도구로 독립 서브에이전트 2회 실제 비동기 호출, 완료 로그 확인)
+**수행 방법**: 아래 "[2026-09-28] 선택 보강 반영" 절의 정정 내용(Suno Free "평생 7회 다운로드"가 계정 단위임)을 겨냥한 질문 1개 + 핵심 기능(Unity Load Type 선택) 질문 1개를 각각 독립 general-purpose 서브에이전트에 위임.
+
+**Q1. "Suno Free 플랜 '평생 7회 다운로드'가 곡 하나당 7회인가, 계정 전체로 7회인가?"**
+- ✅ PASS
+- 근거: SKILL.md "2-1. Suno" 표 하단 주의문(줄 45)
+- 상세: 서브에이전트가 "계정 단위(계정 전체를 통틀어 평생 7회), 곡 단위 아님"을 정확히 도출. "개인 용도 한정"·Free 플랜 자체가 상업 사용 금지라는 부가 정보까지 정확히 연결.
+
+**Q2. "모바일 퍼즐 게임의 BGM(2~3분 루프)과 UI 클릭 SFX 각각 Load Type을 뭘로 설정해야 하나? 반대로 설정하면 어떤 문제가 생기나?"**
+- ✅ PASS
+- 근거: SKILL.md "3-2. Load Type 선택" 표 + "6-2. 퍼즐" 장르 가이드 + "7. 흔한 실수 패턴"
+- 상세: BGM→Streaming, SFX→Decompress On Load를 정확히 도출. 반대로 설정 시 "BGM Decompress On Load→RAM 10배 증가", "SFX Streaming→CPU 부하 폭증·재생 지연" 두 anti-pattern을 섹션 7에서 정확히 인용.
+
+### 발견된 gap (2차 재테스트)
+
+- 경미: Suno 7회 소진 후 리셋 여부(시점), Decompress/Compressed In Memory 경계의 정량적 파일 크기 기준이 SKILL.md에 없음 — 차단 요인 아님, 선택 보강
+
+### 판정 (2차 재테스트)
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 해당 없음 (라이브러리·도구 사용법 스킬 — content test로 충분)
+- **최종 상태: APPROVED**
+
+---
+
+### [2026-09-28] 선택 보강 반영
+
+- **반영 내용**: Suno Free 플랜 "평생 7회 다운로드" 제한이 곡 단위가 아닌 **계정 단위**임을 SKILL.md "2-1. Suno" 표 하단 주의문에 명확화.
+- **근거**: Suno 공식 도움말 "Upcoming Changes FAQ: Downloads, Models, and Terms of Service" — https://help.suno.com/en/articles/13614785 (원문: "Free: Up to 7 total (lifetime) trial downloads for personal, non-commercial use only")
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (Agent 도구 실제 서브에이전트 호출)
+**수행 방법**: 2026-09-26 재검증에서 정정된 내용(Suno Free 플랜 평생 7회 다운로드 제한)을 겨냥한 질문 1개 + 핵심 기능 질문 1개를 general-purpose 서브에이전트에게 "SKILL.md만 근거로 답하라"는 조건으로 위임, 답변과 근거 섹션을 대조 검증
+
+### 실제 수행 테스트
+
+**Q1. Suno Free 플랜 개인 포트폴리오 다운로드 제약**
+- ✅ PASS
+- 근거: SKILL.md "2-1. Suno" 표 하단 주의문 ("2026-09-03부터 신설... 평생 7회 다운로드")
+- 상세: 에이전트가 "평생 7회, 개인 용도 한정" 제약을 정확히 도출. Free 플랜 자체가 상업 사용 금지라는 부가 정보까지 스스로 연결해 답변.
+
+**Q2. AudioCraft AudioGen SFX 상업 게임 사용 가능 여부**
+- ✅ PASS
+- 근거: SKILL.md "1. 도구 분류" 주의문, "2-2. Meta AudioCraft" 라이선스 소단락, "5. 상업 라이선스 종합 비교" 표, "7. 흔한 실수 패턴"
+- 상세: 코드(MIT)/가중치(CC-BY-NC 4.0) 라이선스 분리, "그대로 사용 시 위반 소지" 경고, 3가지 대안(재학습/관대한 fork/후처리 가공) 모두 정확히 인용.
+
+### 발견된 gap
+
+- 경미: "평생 7회"가 계정 단위인지 곡 단위인지, AudioCraft "충분한 가공"의 정량 기준이 SKILL.md에 없음 — 차단 요인 아님, 선택 보강
+
+### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 해당 없음 (라이브러리·도구 사용법 스킬 — 실사용 필수 카테고리 아님)
+- 2026-09-26 재검증 정정 내용(Suno Free 다운로드 제한 신설)이 실제 서브에이전트 답변에 정확히 반영됨을 확인 → APPROVED 전환
+
+---
+
+> (2026-09-26 시점 기록 — 아래 보존)
+
+## 5-구. (2026-09-26 시점) 테스트 진행 기록
 
 **수행일**: 2026-06-08
 **수행자**: skill-tester → general-purpose (세션 내 직접 수행)
@@ -178,17 +244,19 @@ status: PENDING_TEST
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-08) + 2/2 PASS (2026-09-26 재검증) |
-| **최종 판정** | **PENDING_TEST** (Suno Free 다운로드 제한 신설 반영, 재테스트 대기) |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-08) + 2/2 PASS (2026-09-26 자체 재검증) + 2/2 PASS (2026-09-28 skill-tester 2차 실제 서브에이전트 재테스트) |
+| **최종 판정** | **APPROVED** (2026-09-28 skill-tester 2차 실제 재테스트 2/2 PASS — Suno 다운로드 제한 단위 정정분 반영 확인 완료) |
 
 ---
 
 ## 7. 개선 필요 사항
 
-- [✅] skill-tester content test 수행 및 섹션 5·6 업데이트 (2026-06-08 완료, 3/3 PASS)
+- [✅] skill-tester content test 수행 및 섹션 5·6 업데이트 (2026-06-08 완료, 3/3 PASS / 2026-09-28 재검증 정정분 재테스트 완료, 2/2 PASS)
 - [ ] AudioCraft 모델 가중치 라이선스 회피 대안(자체 학습/관대 라이선스 fork) 실제 사례 추가 검토 — 선택 보강 (차단 요인 아님, content test에서 대안 3가지는 SKILL.md에 이미 명시됨)
 - [ ] Suno 외 Udio 가격·라이선스도 비교 섹션에 추가 검토 (현재는 Suno 중심) — 선택 보강 (차단 요인 아님)
 - [ ] iOS/Android 별 audio session 설정 차이는 별도 스킬로 분리 가능 (현 스킬은 임포트까지) — 선택 보강, 별도 스킬 분리 시 참조
+- [✅] Suno "평생 7회 다운로드"가 계정 단위인지 곡 단위인지 명확화 (2026-09-28 반영 — Suno 공식 도움말로 확인: 계정 단위, 곡 단위 아님)
+- [✅] skill-tester 2차 실제 재테스트 수행 (2026-09-28 완료, 2/2 PASS)
 
 ---
 
@@ -199,3 +267,6 @@ status: PENDING_TEST
 | 2026-06-08 | v1 | 최초 작성 (공식 소스 11개 클레임 VERIFIED) | skill-creator |
 | 2026-06-08 | v1 | 2단계 실사용 테스트 수행 (Q1 AudioCraft 상업 라이선스 / Q2 Unity Load Type 선택 / Q3 NPC TTS 런타임 호출 anti-pattern) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-09-26 | v1 | 재검증(98개 일괄 재검증 대상). Suno Free 플랜 2026-09-03 신설 다운로드 제한(평생 7회) 반영, FMOD·ElevenLabs Music 라이선스는 변동 없음 확인 → 실질 내용 변경으로 PENDING_TEST 전환 | Claude Code |
+| 2026-09-28 | v1 | 2단계 실사용 테스트 재수행 (Q1 Suno Free 다운로드 제한 / Q2 AudioCraft 상업 사용 가능 여부) → 2/2 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-28 | v1 | 재검증(선택 보강). Suno Free "평생 7회 다운로드" 제한이 계정 단위임을 Suno 공식 도움말로 확인 후 SKILL.md 2-1절 갱신 → 실질 내용 추가로 PENDING_TEST 전환 | Claude Code |
+| 2026-09-28 | v1 | 2단계 실사용 테스트 2차 재수행 (Q1 Suno 7회 다운로드 계정 단위 확인 / Q2 Unity Load Type 선택+anti-pattern) → 2/2 PASS, APPROVED 전환 | skill-tester |

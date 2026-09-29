@@ -7,7 +7,7 @@ description: >
 # Dream Recurrence Detection
 
 > 소스: 학술 — Zadra (1996) *Trauma and Dreams* ch.17 (Harvard UP) https://www.degruyter.com/document/doi/10.4159/9780674270534-019/html / Zadra & Pihl (1997) *Psychotherapy and Psychosomatics* 66, 50-55 / Domhoff (2003) *The Scientific Study of Dreams* (APA) https://dreams.ucsc.edu/TSSOD/The_Scientific_Study_of_Dreams_2003.pdf · 기술 — OpenAI Embeddings https://developers.openai.com/api/docs/guides/embeddings / Dexie MultiEntry Index https://dexie.org/docs/MultiEntry-Index
-> 검증일: 2026-05-15
+> 검증일: 2026-09-28 (최초 2026-05-15)
 > 짝 스킬: `frontend/dream-symbol-tagging`, `architecture/dream-journal-data-modeling`, `humanities/dream-content-research`
 
 ---

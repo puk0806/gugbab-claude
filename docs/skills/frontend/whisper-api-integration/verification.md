@@ -1,8 +1,8 @@
 ---
 skill: whisper-api-integration
 category: frontend
-version: v2
-date: 2026-08-11
+version: v2.1
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -15,9 +15,9 @@ status: APPROVED
 | 스킬 이름 | `whisper-api-integration` |
 | 스킬 경로 | `.claude/skills/frontend/whisper-api-integration/SKILL.md` |
 | 최초 검증일 | 2026-05-14 |
-| 최신 검증일 | **2026-08-11** (모델 라인업 최신화 재검증) |
+| 최신 검증일 | 2026-08-11 (모델 라인업 최신화 재검증) / **2026-09-28 (재검증 2차 — SDK 지원 현황)** |
 | 검증자 | skill-creator |
-| 스킬 버전 | v2 |
+| 스킬 버전 | v2.1 |
 
 ---
 
@@ -146,6 +146,17 @@ status: APPROVED
 | Artificial Analysis (WER 벤치) | https://x.com/ArtificialAnlys/status/1902907556118532399 | ⭐⭐ Medium | 2025-03 | gpt-4o-transcribe vs whisper-v3 WER 비교 |
 | OpenAI Whisper GitHub Discussions | https://github.com/openai/whisper/discussions | ⭐⭐ Medium | 다수 | 포맷 지원 확인 (에러 메시지 인용) |
 
+### 2026-09-28 재검증(2차) 추가 소스
+
+| 소스명 | URL | 신뢰도 | 날짜 | 비고 |
+|--------|-----|--------|------|------|
+| PyPI `openai` (curl) | https://pypi.org/pypi/openai/json | ⭐⭐⭐ High | 2026-09-28 조회 | latest 3.19.2, 배포일 2026-09-24 |
+| npm `openai` (curl) | https://registry.npmjs.org/openai | ⭐⭐⭐ High | 2026-09-28 조회 | latest 7.23.0, 배포일 2026-09-23 |
+| openai-python GitHub 소스 | https://github.com/openai/openai-python/blob/main/src/openai/resources/audio/transcriptions.py | ⭐⭐⭐ High | 2026-09-28 조회 | `TranscriptionCreateParamsBase`에 `keywords`·`languages` 최상위 필드로 존재 직접 확인 |
+| openai-node GitHub 소스 | https://github.com/openai/openai-node/blob/master/src/resources/audio/transcriptions.ts | ⭐⭐⭐ High | 2026-09-28 조회 | `TranscriptionCreateParamsBase`에 `keywords?: Array<string>`·`languages?: Array<string>` 타입 필드 확인 |
+| OpenAI File transcription Guide (재확인) | https://developers.openai.com/api/docs/guides/speech-to-text | ⭐⭐⭐ High | 2026-09-28 조회 | 권장 모델·포맷 7종·25MB 제한·response_format 매트릭스 변경 없음(VERIFIED). 공식 예제는 여전히 Python `extra_body`/Node 바디 스프레드로 `keywords`/`languages` 전달 |
+| OpenAI Pricing | https://openai.com/api/pricing/ | — | 2026-09-28 시도 | HTTP 403(WebFetch 차단) — 재확인 실패, 기존 가격 유지(SKILL.md 자체에 "가격은 변동된다" 주의 이미 있음) |
+
 ---
 
 ## 4. 검증 체크리스트 (Test List)
@@ -182,13 +193,43 @@ status: APPROVED
 - [✅] 범용적으로 사용 가능 (특정 프로젝트 종속 X)
 
 ### 4-4. Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-14 수행)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (3/3 PASS)
-- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (gap 없음, 보완 불필요)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-14 수행, 재테스트 2026-09-28)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-08-11 3/3 PASS, 2026-09-28 2/2 PASS)
+- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (두 차례 모두 gap 없음, 보완 불필요)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-09-28] skill-tester 재테스트 — 2차 재검증(keywords·languages SDK 지원 현황 정정) 대응
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (도메인 에이전트 미설치로 대체)
+**수행 방법**: SKILL.md + references/REFERENCE.md Read 후 2026-09-28 재검증(2차)에서 정정된 내용(`keywords`/`languages` 최신 SDK 직접 인자 지원)을 겨냥한 질문 1개 + 기존 SRT 마이그레이션 anti-pattern을 재확인하는 질문 1개를 general-purpose 서브에이전트에 위임, 근거 섹션·파일 인용 여부 확인
+
+#### 실제 수행 테스트
+
+**Q1. 최신 openai-node로 `create({ keywords, languages })` 직접 호출 — 타입 에러가 나야 정상인가**
+- ✅ PASS
+- 근거: SKILL.md §3 "주의 (SDK 지원 현황 — 2026-09-28 재확인)" + REFERENCE.md §6.3(§7 인접) 코드 예시
+- 상세: "직접 인자 전달이 정상이며 타입 에러가 나면 오히려 SDK가 구버전이라는 신호"라고 정확히 판단. 재검증(2차)에서 정정된 "extra_body는 구버전 폴백" 서술이 답변에 정확히 반영됨
+
+**Q2. 한국어 강의 SRT 자막 — `gpt-transcribe`로 model만 교체 가능한가**
+- ✅ PASS
+- 근거: SKILL.md §2 모델 표·선택 기준 결정 트리, §3 response_format 제약 주의, §14 마이그레이션 표("전환 불가")
+- 상세: `gpt-transcribe`는 SRT/VTT 미지원이라 model만 바꾸면 400이 난다는 anti-pattern을 정확히 차단, `whisper-1` + `response_format=srt` 유지가 정답임을 정확히 제시. §7-1의 모델별 언어 힌트 필드 차이(`languages` vs 레거시 `language`)까지 함께 반영
+
+#### 발견된 gap
+
+- minor: `extra_body` 폴백이 정확히 어느 SDK 버전 미만부터 필요한지 최소 버전 문턱이 SKILL.md에 없음 — 선택 보강, 차단 요인 아님(실무 영향 적음)
+
+#### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 라이브러리 사용법 스킬 — content test PASS = APPROVED 가능 (기존 분류 유지)
+- 최종 상태: **APPROVED** (PENDING_TEST → APPROVED 복귀)
+
+---
 
 **수행일**: 2026-08-11
 **수행자**: skill-tester → general-purpose (3개 질문 병렬 실행)
@@ -354,6 +395,24 @@ status: APPROVED
 
 **판정:** (미수행)
 
+### [2026-09-28] 재검증(2차) — keywords·languages SDK 지원 현황 재확인
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 + references/REFERENCE.md Read → 핵심 클레임 3개를 1차 소스(PyPI/npm registry curl, GitHub 소스 WebFetch, 공식 가이드 재조회)와 대조, 보강·축소 검토
+
+**클레임 대조 결과**:
+1. "`keywords`·`languages`가 SDK 타입에 아직 없을 수 있다"(기존 §3 주의) → **DISPUTED(현재는 지원됨) → 정정** — openai-python(latest 3.19.2, 2026-09-24)·openai-node(latest 7.23.0, 2026-09-23) 양쪽 GitHub 소스에서 `TranscriptionCreateParamsBase`에 두 필드가 최상위 타입 인자로 존재함을 직접 확인. `extra_body`/바디 스프레드는 더 이상 "우회"가 아니라 공식 예제가 여전히 채택한 "관행적 표기"로 재서술
+2. 파일 전사 권장 모델·가격·포맷 7종·25MB 제한·response_format 매트릭스 → VERIFIED (공식 가이드 재조회 결과 2026-08-11 이후 변경 없음)
+3. gpt-4o-transcribe 퇴역 상태·gpt-live-transcribe 가격 등 나머지 모델 라인업 → 재조사 범위 밖(이번 라운드는 브리핑 지시 범위인 SDK 파라미터 지원 여부에 집중) — 기존 2026-08-11 기록 유지
+
+**보강(ADD)·축소**: SKILL.md §3 "SDK 타입 지연" 주의를 "SDK 지원 현황" 주의로 교체(직접 인자 전달 코드 예시 추가), REFERENCE.md §7 코드 예시에 Python/TS 직접 전달 예시 신설 + 기존 `extra_body` 예시는 "구버전 폴백"으로 재배치. 축소는 없음.
+
+**실전 질문 재검증**:
+- Q1. "최신 openai-node로 `client.audio.transcriptions.create({ keywords: [...] })`라고 바로 썼는데 타입 에러가 나야 정상 아닌가?" → SKILL.md §3 주의(2026-09-28 재확인, 최신 SDK는 직접 인자 지원) 근거로 PASS — 타입 에러가 안 나는 것이 정상이라고 정확히 답변 가능
+- Q2. "OpenAI 공식 Cookbook은 왜 아직도 `extra_body`를 쓰나?" → SKILL.md §3(구버전 SDK 호환을 위한 관행적 표기로 추정) 근거로 PASS
+
+**재검증 최종 판정**: status **PENDING_TEST 전환** (SDK 지원 현황 정정 발생 — verification-policy에 따라 메인이 skill-tester 재테스트 필요. 기존 분류(라이브러리 사용법 스킬, content test PASS = APPROVED 가능) 유지)
+
 ---
 
 ## 6. 검증 결과 요약
@@ -363,9 +422,10 @@ status: APPROVED
 | 내용 정확성 | ✅ (2026-08-11 재검증 — 공식 소스 6종 직접 확인) |
 | 구조 완전성 | ✅ (14장 마이그레이션 신설) |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-08-11, 3/3 PASS — v2 갱신 내용(gpt-transcribe·keywords[]/languages[]·마이그레이션 14장) 기준으로 재수행 완료. 2026-06-20 기록은 갱신 이전 내용 기준이라 참고용으로만 보존) |
+| 에이전트 활용 테스트 | ✅ (2026-08-11 3/3 PASS — v2 갱신 내용(gpt-transcribe·keywords[]/languages[]·마이그레이션 14장) 기준으로 재수행 완료. 2026-06-20 기록은 갱신 이전 내용 기준이라 참고용으로만 보존. 2026-09-28 skill-tester 재테스트 2/2 PASS) |
 | 최신성 | ✅ (2026-08-11 기준 현행 라인업 반영) |
-| **최종 판정** | **APPROVED 유지** (2026-08-11 내용 검증 11개 클레임 VERIFIED 8/with note 2/UNVERIFIED 1(주의 표기) + 같은 날 신규 내용 기준 content test 3/3 PASS 모두 완료) |
+| freshness 재검증 2차 | ✅ 2026-09-28 — `keywords`/`languages` SDK 지원 현황 정정(openai-python 3.19.2·openai-node 7.23.0 최상위 인자 확인), 나머지 모델·가격·포맷 재확인 결과 변경 없음 |
+| **최종 판정** | **APPROVED** (2026-09-28 skill-tester 재테스트 2/2 PASS — PENDING_TEST → APPROVED 복귀. 11개 클레임 VERIFIED 8/with note 2/UNVERIFIED 1 + content test 누적 8/8 PASS) |
 
 **상태 사유**: 2026-06-19 verification-policy 적용으로 "라이브러리 사용법 스킬"(답변 정확성만으로 검증 가능) 분류 → content test PASS로 APPROVED. 2026-08-11 갱신(모델 라인업 최신화)에 대해서도 같은 날 신규 내용 기준 content test 3/3 PASS를 재수행 완료했으므로 APPROVED를 유지한다.
 
@@ -388,10 +448,16 @@ status: APPROVED
 
 - [✅] **갱신 내용 기준 skill-tester content test 재수행** — 2026-08-11 완료. 신규 모델(`gpt-transcribe`)·신규 파라미터(`keywords`/`languages`)·14장 마이그레이션을 대상으로 실전 질문 3개 재수행, 3/3 PASS (섹션 5 "2026-08-11 v2 갱신분 재검증" 참조)
 - [❌] WER 벤치마크 공식 원문 재확보 — openai.com 발표 페이지 403. 접근 가능해지면 수치 확정 후 `> 주의:` 해제
-- [❌] `gpt-transcribe` 실 호출로 응답 스키마(`text` + `languages`) 및 `keywords`/`languages` 멀티파트 전송 방식 확인 — 특히 fetch에서 `languages[]` 반복 필드가 맞는지 vs JSON 배열 문자열인지 실측 필요
+- [❌] `gpt-transcribe` 실 호출로 응답 스키마(`text` + `languages`) 및 `keywords`/`languages` 멀티파트 전송 방식 확인 — 특히 fetch에서 `languages[]` 반복 필드가 맞는지 vs JSON 배열 문자열인지 실측 필요 (SDK 경로는 2026-09-28 해소 — `create()` 직접 인자 사용 시 SDK가 멀티파트 인코딩을 처리하므로 이 항목은 raw fetch 경로에만 해당)
+- [✅] `keywords`/`languages`가 최신 SDK(openai-python/openai-node)에서 최상위 타입 인자로 지원되는지 확인 — 2026-09-28 GitHub 소스 직접 확인 완료, SKILL.md·REFERENCE.md 정정 반영
 - [❌] Azure 채널 gpt-4o-transcribe 퇴역 날짜 확정 — 퇴역 스케줄 페이지 URL이 변경되어 404. 개별 스케줄 재확인 후 SKILL.md 주의 갱신
 - [❌] 공식 API 레퍼런스의 model enum에 `gpt-transcribe` 반영 여부 재확인 — 2026-08-11 시점 미반영(문서 지연). 반영되면 3장 링크 주석 정리
 - [❌] `gpt-live-transcribe` 실시간 세션 연결 패턴은 본 스킬 범위 밖 — 별도 스킬 분리 검토 (선택 보강)
+
+### 2026-09-28 재검증(2차) 후속
+
+- [✅] 2026-09-28 재검증(2차)에 대한 skill-tester content test 재수행 완료 — SDK 지원 현황 정정(Q1)·SRT 마이그레이션 anti-pattern(Q2) 2/2 PASS, APPROVED 복귀 (섹션 5 "[2026-09-28] skill-tester 재테스트" 참조)
+- [❌] `extra_body` 폴백이 필요한 SDK 최소 버전 문턱 명시 — 선택 보강, 차단 요인 아님
 
 ---
 
@@ -406,3 +472,5 @@ status: APPROVED
 | 2026-08-11 | v2 | **모델 라인업 최신화 재검증.** 공식 소스 6종(STT 가이드·Cookbook 마이그레이션·모델 페이지 3종·API 레퍼런스) 직접 확인. `gpt-transcribe`(권장 기본값·$0.0045/min)·`gpt-live-transcribe` 추가, 결정 트리 재작성, 신규 파라미터 `keywords`/`languages` 반영(`language` 병용 금지 경고), 모델별 response_format 매트릭스 정정, 가격표 전면 갱신, 예제 코드 4종 전환, 14장 마이그레이션 신설. WER 수치는 공식 원문 403으로 UNVERIFIED 표기, 포맷 목록 불일치·Azure 퇴역은 with note 처리. status APPROVED 유지 | skill-creator |
 | 2026-08-11 | v2 | 2단계 실사용 테스트 재수행 — v2 갱신 내용(신규 모델·`keywords[]`/`languages[]`·마이그레이션 14장) 대상 (Q1 신규 개발 모델·언어힌트 선택 / Q2 whisper-1→gpt-transcribe 마이그레이션 흔한 실수 / Q3 SRT 자막 서비스 model만 교체 가능 여부+비용) → 3/3 PASS, APPROVED 유지. 기존 2026-06-20 기록은 갱신 이전 내용 기준으로 참고용 보존 표기 | skill-tester |
 | 2026-09-25 | v2 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | skill-creator |
+| 2026-09-28 | v2.1 | **재검증(2차)** — `keywords`·`languages` 파라미터가 openai-python(latest 3.19.2)·openai-node(latest 7.23.0) 최신 SDK에서 `create()` 최상위 타입 인자로 정식 지원됨을 GitHub 소스로 직접 확인. 기존 "SDK 타입 지연 → extra_body로 우회" 주의를 "최신 SDK는 직접 인자 지원, extra_body는 공식 예제의 관행적 표기"로 정정(SKILL.md §3, REFERENCE.md §7 코드 예시에 Python/TS 직접 전달 예시 신설). 모델 라인업·가격·포맷·25MB 제한은 재확인 결과 변경 없음(VERIFIED). status **PENDING_TEST**로 전환(SDK 지원 현황 정정 — skill-tester 재테스트 대기) | skill-creator (재검증) |
+| 2026-09-28 | v2.1 | 2단계 실사용 재테스트 수행 (Q1 최신 SDK `keywords`/`languages` 직접 인자 정상 동작 확인 / Q2 SRT 자막에서 `gpt-transcribe` model만 교체 불가 anti-pattern) → 2/2 PASS, **APPROVED** 전환 | skill-tester |

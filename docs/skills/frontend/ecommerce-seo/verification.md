@@ -1,8 +1,8 @@
 ---
 skill: ecommerce-seo
 category: frontend
-version: v2
-date: 2026-08-26
+version: v2.1
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `ecommerce-seo` |
 | 스킬 경로 | `.claude/skills/frontend/ecommerce-seo/SKILL.md` |
-| 검증일 | 2026-08-26 (갱신) / 2026-06-04 (최초) |
+| 검증일 | 2026-09-28 (재검증) / 2026-08-26 (갱신) / 2026-06-04 (최초) |
 | 검증자 | skill-creator |
-| 스킬 버전 | v2 |
+| 스킬 버전 | v2.1 |
 
 ---
 
@@ -225,15 +225,35 @@ status: APPROVED
 
 ---
 
+### [2026-09-28] 재검증(2차) — 변경 없음, 검증일 갱신
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임 3개를 1차 소스(Google Search Central 공식 문서)와 대조, 보강·축소 검토
+
+**클레임 대조 결과**:
+1. `returnPolicyCountry`가 여전히 recommended이고 `applicableCountry`가 required인가 → **VERIFIED** — return-policy 문서 2026-09-08 갱신본 직접 확인, 33일 전 판정과 동일
+2. `merchantReturnDays`가 `returnPolicyCategory: MerchantReturnFiniteReturnWindow`일 때만 조건부 required인가 → **VERIFIED** — 동일 문서 원문 인용("This property is only required if returnPolicyCategory equals MerchantReturnFiniteReturnWindow") 확인, SKILL.md 표기와 일치
+3. 2026년 신규 Merchant Center 피드 스펙 변경(이미지 해상도 500×500, `handling_cutoff_time`·`minimum_order_value`·로열티 라벨 등)이 이 스킬이 다루는 *랜딩페이지 JSON-LD 구조화 데이터*에 영향을 주는가 → **VERIFIED(범위 밖)** — 해당 변경은 Merchant Center *상품 피드(feed)* 속성 스펙이며, 이 스킬이 다루는 페이지 내 `Product`/`Offer` JSON-LD 요구사항과는 별개 메커니즘. 스킬 범위(SEO용 페이지 구조화 데이터) 밖이므로 추가하지 않음
+
+**보강(ADD)·축소**: 없음 — 33일 전 심층 재검증(v2) 이후 핵심 클레임 변경 없음을 재확인. 축소 없음.
+
+**실전 질문 재검증**:
+- Q1. "반품 정책 구조화 데이터에서 `returnPolicyCountry` 안 넣으면 승인 안 되나?" → SKILL.md "offers.hasMerchantReturnPolicy" 섹션 근거로 PASS (recommended이지 required 아님, 크로스보더 판매 시에만 조직 레벨에 추가 권장)
+- Q2. "유한 반품 기간인데 `merchantReturnDays`를 안 넣어도 되나?" → SKILL.md 표 근거로 PASS (FiniteReturnWindow면 required)
+
+**재검증 최종 판정**: status **APPROVED 유지** (변경 없음 — 검증일 갱신만)
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
 |------|------|
-| 내용 정확성 | ✅ |
+| 내용 정확성 | ✅ (2026-09-28 재검증에서도 핵심 클레임 변경 없음 재확인) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
 | 에이전트 활용 테스트 | ✅ (2026-06-04, 3/3 PASS · v2 갱신분 재테스트 2026-08-26, 3/3 PASS) |
-| **최종 판정** | **APPROVED** (v2 갱신 후에도 유지) |
+| **최종 판정** | **APPROVED** (2026-09-28 재검증 후에도 유지 — 변경 없음) |
 
 ---
 
@@ -256,3 +276,4 @@ status: APPROVED
 | 2026-06-04 | v1 | 2단계 실사용 테스트 수행 (Q1 일시 품절 페이지 처리 / Q2 페이지네이션 canonical + rel=prev/next / Q3 Faceted navigation URL 폭발 처리) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-08-26 | v2 | freshness 감사 OUTDATED 항목 갱신 — §2에 `offers.shippingDetails`(OfferShippingDetails)·`offers.hasMerchantReturnPolicy`(MerchantReturnPolicy) 예시·필드표 추가 및 `applicableCountry`(required) vs `returnPolicyCountry`(recommended) 확정, §7 Merchant Center 피드↔랜딩페이지 불일치 지위를 공식 근거(item-level 비승인 + 계정 경고, 자동 항목 업데이트 4속성)로 정정, §8에 분리 모바일 호스트 canonical·alternate 및 `frontend/mobile-seo-pwa` 참조 추가, Organization↔Product `@id` `@graph` 예시 추가(`frontend/schema-org-patterns` 연결), 체크리스트 2줄 보강. 클레임 판정 VERIFIED 5 / DISPUTED 1 / UNVERIFIED 1 | skill-creator |
 | 2026-08-26 | v2 | v2 갱신분 2단계 실사용 재테스트 (Q1 hasMerchantReturnPolicy required 속성 `applicableCountry` vs `returnPolicyCountry` / Q2 Merchant Center 피드-페이지 불일치 실제 제재 수준 / Q3 분리 모바일 호스트 `offers.url` vs canonical 방향) → 3/3 PASS, APPROVED 유지 | skill-tester |
+| 2026-09-28 | v2.1 | 재검증(2차, 33일 경과) — `returnPolicyCountry`(recommended)·`merchantReturnDays`(finite 조건부 required) 등 핵심 클레임 1차 소스 재대조, 변경 없음 확인. 2026년 신규 Merchant Center 피드 스펙 변경(이미지 해상도·배송 속성 등)은 스킬 범위(랜딩페이지 JSON-LD) 밖으로 판단해 미반영. status APPROVED 유지, 검증일만 갱신 | orchestrator (2차 재검증 배치) |

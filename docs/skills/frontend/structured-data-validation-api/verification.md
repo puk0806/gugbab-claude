@@ -1,8 +1,8 @@
 ---
 skill: structured-data-validation-api
 category: frontend
-version: v1
-date: 2026-06-02
+version: v1.2
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `structured-data-validation-api` |
 | 스킬 경로 | `.claude/skills/frontend/structured-data-validation-api/SKILL.md` |
-| 검증일 | 2026-06-02 |
+| 검증일 | 2026-09-28 (재검증, 이전 2026-06-02 · 2026-08-26) |
 | 검증자 | skill-creator |
-| 스킬 버전 | v1 |
+| 스킬 버전 | v1.2 |
 
 ---
 
@@ -162,6 +162,29 @@ SKILL.md의 클레임 9는 `> 주의:` 없이도 본문에서 "변경 가능, �
 
 ---
 
+### [2026-09-28] 재검증(2차) — 핵심 클레임 4개 1차 소스 대조, 변경 없음
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임 4개를 1차 소스(developers.google.com 직접 WebFetch, WebSearch 교차 확인)와 대조, 보강·축소 검토
+
+**클레임 대조 결과**:
+1. Google Rich Results Test는 여전히 공식 도구이며 Google이 별도 공식 API를 제공하지 않는다 → VERIFIED (`developers.google.com/search/docs/appearance/structured-data` 직접 fetch: "The official Google tool for testing your structured data..." 문구 확인 + 다수 소스 교차: "Google does not provide a direct public API for the Rich Results Test itself")
+2. Schema Markup Validator(validator.schema.org)는 schema.org 전체 스펙 기반으로 Google 기능 경고 없이 검증하며 공식 API가 없다 → VERIFIED (동일 공식 페이지 인용: "Validate all Schema.org-based structured data that's embedded in web pages, without Google feature specific warnings." + validator.schema.org 직접 fetch로 서비스 현행 운영 확인)
+3. GSC URL Inspection API 응답의 `richResultsResult` 필드가 rich result 인식 결과(`detectedItems`, 이슈 심각도 등)를 담는다 → VERIFIED (WebSearch 교차: "richResultsResult field returns information about structured data used for rich results... detectedItems... RichResultsIssue severities")
+4. FAQ rich result 3단계 폐지 타임라인(2026-05-07 노출 중단 · 2026-06 RRT 지원/GSC 보고서 제거 · 2026-08 Search Console API 제거)이 실제로 발생했다 → VERIFIED (Search Engine Journal·Search Engine Land 등 복수 소스가 동일 날짜·순서로 사후 보도. 최초 작성 시점(2026-06-02)에는 "예정"이었으나 이번 재검증 시점(2026-09-28)에는 전부 지난 일로 실측 확인됨)
+
+미재검증(세션 도구 한도로 재확인 못함, 기존 판정 유지): §7의 "Google does not guarantee..." 공식 문구(sd-policies) 재-fetch, URL Inspection API rate limit 수치(기존에도 UNVERIFIED로 표기됨) — 둘 다 이전 검증 회차에서 이미 소스 확인됐거나 미검증으로 명시돼 있어 본문 변경 없음.
+
+**보강(ADD)·축소**: 없음 — 4개 클레임 전부 VERIFIED, 본문과 실제 현황 간 불일치 없음. 축소도 하지 않음(도구 비교·CI 패턴·안티패턴 표는 레포 재참조 가치가 있어 유지).
+
+**실전 질문 재검증**:
+- Q1. "Google RRT 공식 API 없이 빌드 후 CI에서 JSON-LD를 자동 검증하려면?" → SKILL.md §2(자동화 한계)·§6(CI 통합 4패턴)·§6.3(GitHub Actions 예시) 근거로 PASS
+- Q2. "FAQPage 마크업을 지금(2026-09-28) 새로 추가해도 되는가?" → §2(2026 변경 사항, 3단계 폐지 전부 완료됨)·§9(안티패턴 "FAQPage 새로 추가") 근거로 PASS — 폐지 타임라인이 실제로 지난 시점이므로 경고가 여전히 유효함을 재확인
+
+**재검증 최종 판정**: status **APPROVED 유지**
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -170,7 +193,7 @@ SKILL.md의 클레임 9는 `> 주의:` 없이도 본문에서 "변경 가능, �
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
 | 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-02) |
-| **최종 판정** | **APPROVED** |
+| **최종 판정** | **APPROVED** (2026-09-28 2차 재검증 — 핵심 클레임 4개 VERIFIED, 변경 없음 → 유지) |
 
 라이브러리·도구 사용 패턴 카탈로그 카테고리로 content test PASS = APPROVED 전환 완료.
 
@@ -191,3 +214,4 @@ SKILL.md의 클레임 9는 `> 주의:` 없이도 본문에서 "변경 가능, �
 | 2026-06-02 | v1 | 최초 작성 (공식 문서 8개 소스 교차 검증, 9개 핵심 클레임 VERIFIED) | skill-creator |
 | 2026-06-02 | v1 | 2단계 실사용 테스트 수행 (Q1 빌드 후 CI 자동 검증 / Q2 schema-dts·ajv·sdtt 단계별 선택 / Q3 RRT 통과인데 GSC rich result 미표시 진단) → agent content test 3/3 PASS, APPROVED 전환 | skill-tester (API 529로 메인이 대조) |
 | 2026-08-26 | v1.1 | freshness 재검증(85일 경과) — FAQ rich result 3단계 폐지 타임라인·RRT/SMV 공식 API 부재·URL Inspection API 유일 경로·Next.js JSON-LD 패턴 VERIFIED, 변경 없음. schema-dts 버전은 저위험으로 미재검증 | freshness-auditor + orchestrator |
+| 2026-09-28 | v1.2 | 2차 재검증(33일 경과) — RRT 공식 API 부재·Schema Markup Validator 현행·GSC URL Inspection API `richResultsResult` 필드·FAQ rich result 3단계 폐지 타임라인 실제 발생 여부(사후 확인) 4개 클레임 1차 소스 재대조, 전부 VERIFIED·변경 없음. status APPROVED 유지 | orchestrator |

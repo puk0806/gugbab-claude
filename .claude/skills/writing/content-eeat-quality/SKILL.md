@@ -30,7 +30,7 @@ description: >
 - Google 코어 업데이트 이후 트래픽이 빠진 사이트의 원인을 진단할 때
 - SEO/GEO 작업과 함께 콘텐츠 품질 baseline을 정의할 때
 
-학술 논문 작성·인용은 다루지 않는다(별도 스킬군: `writing/academic-paper-structure-humanities`(설치된 경우) 등).
+학술 논문 작성·인용은 다루지 않는다.
 
 ---
 
@@ -316,6 +316,8 @@ E-E-A-T 강한 매체가 갖는 페이지:
 ### 7-1. Google 공식 입장 (2023-02 블로그 + 현행 가이드)
 
 > AI 사용 자체는 페널티가 아니며, 핵심은 *Helpful Content*다. (Google 입장의 **요약** — 따옴표 직접 인용 아님. QRG 원문: "the use of Generative AI tools alone does not determine the level of effort or Page Quality rating")
+
+> Helpful Content System의 Google 공식 자가 점검 질문 5묶음(Content and quality / Expertise / Focus on people-first content / Avoid search engine-first content / Who·How)은 `references/REFERENCE.md` §8 참조.
 
 | 행위 | Google 평가 |
 |------|-------------|

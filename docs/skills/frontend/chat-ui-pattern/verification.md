@@ -1,8 +1,8 @@
 ---
 skill: chat-ui-pattern
 category: frontend
-version: v5
-date: 2026-05-14
+version: v6
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `chat-ui-pattern` |
 | 스킬 경로 | `.claude/skills/frontend/chat-ui-pattern/SKILL.md` |
-| 검증일 | 2026-05-14 |
-| 검증자 | skill-creator |
-| 스킬 버전 | v1 |
+| 검증일 | 2026-09-28 (최초 2026-05-14, 2026-09-26 병합·정정, 2026-09-28 재검증) |
+| 검증자 | skill-creator → Claude (Sonnet 5, 2026-09-28 재검증) |
+| 스킬 버전 | v6 |
 
 ---
 
@@ -336,6 +336,25 @@ react-markdown으로 LLM 응답을 렌더링할 때 XSS가 걱정되는데 sanit
 
 ---
 
+### [2026-09-28] 재검증 — 원본 본문 사실성 위주 (병합·정정 부분 제외)
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md + REFERENCE.md 전체 Read → 2026-09-26 병합·정정(startReached/firstItemIndex, VirtuosoMessageList 라이선스)은 이미 재검증 완료 상태이므로 제외하고, 원본(2026-05-14) 본문의 핵심 클레임 3개를 npm registry로 1차 소스 대조.
+
+**클레임 대조 결과**:
+1. react-markdown 최신 버전 10.1.0 → VERIFIED (npm registry latest = 10.1.0, 변동 없음)
+2. remark-gfm 최신 버전 4.0.1 → VERIFIED (npm registry latest = 4.0.1, 변동 없음)
+3. rehype-highlight 최신 버전 7.0.2 → VERIFIED (npm registry latest = 7.0.2, 변동 없음)
+4. (참고) react-virtuoso — SKILL.md는 "4.x"로만 표기해 영향 없음. REFERENCE.md 16절 상단의 구체 버전 "4.18.5"는 npm registry 확인 결과 현재 4.18.15로 패치 버전만 올라감(API 변동 없음, 정정 불필요)
+
+**실전 질문 재검증**:
+- Q1. "react-markdown v10에서 XSS 방어가 기본으로 되는가?" → SKILL.md 5-4절 "secure by default" 근거로 PASS (버전·보안 정책 모두 불변 확인)
+- Q2. "긴 대화에서 과거 메시지를 로드하려면 어떤 prop을 쓰나?" → SKILL.md 3절 `startReached`+`firstItemIndex` 근거로 PASS (2026-09-26 정정 유지 확인)
+
+**재검증 최종 판정**: 원본 본문 핵심 클레임 3건 모두 VERIFIED, 변경 없음. 패치 버전 차이(react-virtuoso 4.18.5→4.18.15)만 발견되어 status는 **APPROVED 유지**.
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -375,3 +394,4 @@ react-markdown으로 LLM 응답을 렌더링할 때 XSS가 걱정되는데 sanit
 | 2026-09-26 | v3 | 2단계 실사용 테스트 재수행 (Q1 SSE 스트리밍 stale state+AbortError 구분 / Q2 병합 반영분 — react-virtuoso 무한 스크롤 중복 요청·role/aria-live 미반영·fixedItemHeight / Q3 가상 스크롤 라이브러리 선택 기준+LogLevel 브레이킹 체인지) → 3/3 PASS, PENDING_TEST → APPROVED 전환. Q2 과정에서 `endReached`/`startReached` 방향성 확인 필요 항목 발견 — SKILL.md는 수정하지 않고 보고만 함(다른 작업자 frontend 참조 정리 중) | skill-tester |
 | 2026-09-26 | v4 | Q2에서 발견된 `endReached`/`startReached` 방향성 이슈 정정: virtuoso.dev `VirtuosoProps` 공식 레퍼런스 + GitHub discussions #1032 교차 검증 후 SKILL.md 3절(코드·표·주의 문단)과 REFERENCE.md 16-3·16-5를 `startReached` + `firstItemIndex` 감소 패턴으로 수정, `VirtuosoMessageList`(상용 라이선스) 구분 각주 추가. status APPROVED → PENDING_TEST (재테스트 필요) | 메인 대화 (정정 작업) |
 | 2026-09-26 | v5 | 2단계 실사용 테스트 재수행 (Q1 정정된 `startReached`/`firstItemIndex` 패턴 겨냥 / Q2 SSE 스트리밍 AbortController 중단 구분 / Q3 `VirtuosoMessageList` 상용 라이선스 판단) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-09-28 | v6 | 재검증(원본 본문 사실성 위주) — react-markdown/remark-gfm/rehype-highlight 버전 npm registry 재대조 전부 VERIFIED, react-virtuoso 패치 버전만 확인(4.18.5→4.18.15, 영향 없음). status APPROVED 유지 | Claude (Sonnet 5) |

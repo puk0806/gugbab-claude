@@ -3,7 +3,7 @@ skill: python-cli-typer
 category: backend
 version: v1
 date: 2026-09-26
-status: PENDING_TEST
+status: APPROVED
 ---
 
 # python-cli-typer 검증 문서
@@ -97,7 +97,7 @@ status: PENDING_TEST
 
 ### 4-5. 에이전트 활용 테스트
 
-- [✅] skill-tester 호출 후 general-purpose 에이전트로 content test 수행 (2026-05-15)
+- [✅] skill-tester 호출 후 general-purpose 에이전트로 content test 수행 (2026-05-15, 2026-09-28 재테스트 2/2 PASS)
 
 ### 4-4. 핵심 클레임 교차 검증
 
@@ -118,6 +118,34 @@ status: PENDING_TEST
 ---
 
 ## 5. 테스트 진행 기록
+
+### 2단계 재테스트 (2026-09-28)
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (2개 병렬 호출)
+**수행 방법**: SKILL.md Read 후 2개 실전 질문 답변, 근거 섹션·anti-pattern 회피 확인. 2026-09-26 재검증에서 정정된 부분(0.25.1→0.27.2 최신 버전, 0.26.0 Click vendoring, 0.27.0 metavar 변경)을 겨냥한 질문 포함
+
+**Q1. "0.25 기준 Click 컴포넌트 직접 import 프로젝트를 최신으로 올리면 뭐가 깨지나, 신규 고정 버전은?"**
+- ✅ PASS
+- 근거: SKILL.md 상단 "주의 (2026-09-26 추가)" 블록(18-21행) + "1. Typer 소개" 표(29-36행)
+- 상세: 0.26.0 Click vendoring으로 인한 직접 import 코드 영향, `click` 직접 의존성 추가 대응, 0.27.0 metavar 변경, 신규 고정 버전 0.27.2 모두 정확히 답변에 반영됨. 정정된 최신 버전 내용이 옛 0.25.1 서술과 모순 없이 잘 반영됨.
+
+**Q2. "app.add_typer() 흔한 실수 + 사용자 취소 vs 실제 에러 구분"**
+- ✅ PASS
+- 근거: SKILL.md "8. 서브커맨드" 섹션(211-257행, 특히 257행 `name=` 필수 경고) + "11. 에러 핸들링" 섹션(342-372행)
+- 상세: `name=` 생략 실수, `typer.Abort()`(사용자 거부)와 `typer.Exit(code=1)`(실제 에러) 구분이 표와 코드 예시로 명확히 답변됨.
+
+### 발견된 gap (2026-09-28)
+
+없음 — 2개 질문 모두 정정된 최신 정보(0.27.2, breaking change)와 기존 핵심 API 서술이 모순 없이 답변에 반영됨.
+
+### 판정 (2026-09-28)
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 라이브러리 사용법 스킬 — content test로 충분 (실사용 필수 카테고리 아님)
+- 최종 상태: APPROVED
+
+---
 
 ### 재검증 (2026-09-26)
 
@@ -192,8 +220,8 @@ status: PENDING_TEST
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
 | 핵심 클레임 교차 검증 | ✅ (11/11 VERIFIED) |
-| 에이전트 활용 테스트 | ✅ (3/3 PASS, 2026-05-15) + ✅ (2/2 PASS, 2026-09-26 재검증) |
-| **최종 판정** | **PENDING_TEST** (2026-09-26 최신 버전 정정(0.25.1→0.27.2) + 0.26/0.27 breaking change 신규 반영 — 재검증 필요) |
+| 에이전트 활용 테스트 | ✅ (3/3 PASS, 2026-05-15) + ✅ (2/2 PASS, 2026-09-26 재검증) + ✅ (2/2 PASS, 2026-09-28 재테스트) |
+| **최종 판정** | **APPROVED** (2026-09-28 재테스트: 0.27.2 최신 버전 + 0.26/0.27 breaking change 반영 내용이 정확히 답변에 활용됨 확인 — 2/2 PASS) |
 
 > 카테고리 판정: *content test로 충분*한 라이브러리 사용법 스킬 (실사용 필수 카테고리 아님). agent content test 3/3 PASS → APPROVED 전환 완료.
 
@@ -201,7 +229,7 @@ status: PENDING_TEST
 
 ## 7. 개선 필요 사항
 
-- [✅] skill-tester 호출 후 섹션 5 실제 테스트 결과 채우기 (2026-05-15 완료, 3/3 PASS)
+- [✅] skill-tester 호출 후 섹션 5 실제 테스트 결과 채우기 (2026-05-15 완료, 3/3 PASS; 2026-09-28 재테스트 완료, 2/2 PASS)
 - [❌] Click과의 차이 비교는 메인 정리만 다룸 — 깊은 마이그레이션이 필요하면 별도 스킬로 분리 검토 (선택 보강, 차단 요인 아님)
 
 ---
@@ -213,3 +241,4 @@ status: PENDING_TEST
 | 2026-05-15 | v1 | 최초 작성, Typer 0.25.1 기준 | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 Annotated+envvar / Q2 typer.Exit vs typer.Abort / Q3 CliRunner 프롬프트 시뮬레이션) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-09-26 | v1 | 재검증 — 최신 버전 0.25.1→0.27.2 정정, 0.26.0(Click vendoring) + 0.27.0(metavar 출력 변경) breaking change 신규 반영 → PENDING_TEST | 메인 오케스트레이션 (Claude Sonnet 5) |
+| 2026-09-28 | v1 | 2단계 재테스트 수행 (Q1 0.26/0.27 breaking change + 신규 고정 버전 / Q2 add_typer name= 실수 + Abort/Exit 구분) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |

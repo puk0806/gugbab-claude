@@ -1,8 +1,8 @@
 ---
 skill: swiper
 category: frontend
-version: v3
-date: 2026-08-11
+version: v4
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -12,10 +12,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | swiper |
 | 스킬 경로 | .claude/skills/frontend/swiper/SKILL.md |
-| 검증일 | 2026-08-11 (v3 최신화) / 2026-04-20 (v2 최초 검증) |
-| 검증자 | Claude (WebSearch + WebFetch 기반 공식 문서 직접 조사) |
-| 스킬 버전 | v3 |
-| 버전 기준 | Swiper 14.1.0 (2026-08-06) — v14.0.0은 2026-06-26, v13은 릴리즈되지 않음 |
+| 검증일 | 2026-09-28 (재검증) / 2026-08-11 (v3 최신화) / 2026-04-20 (v2 최초 검증) |
+| 검증자 | Claude (WebSearch + WebFetch 기반 공식 문서 직접 조사) (2026-09-28 재검증: Claude, Sonnet 5) |
+| 스킬 버전 | v4 |
+| 버전 기준 | Swiper 14.2.0 (2026-08-26) — v14.0.0은 2026-06-26, v13은 릴리즈되지 않음 |
 
 ---
 
@@ -97,9 +97,9 @@ status: APPROVED
 - [✅] 범용적으로 사용 가능 (특정 프로젝트 종속 X)
 
 ### 4-4. Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인
-- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (REFERENCE.md 네비게이션 CSS 예시 교정 반영)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-08-11, 2026-09-28 재테스트)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (3/3 PASS + 2026-09-28 재테스트 2/2 PASS)
+- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (REFERENCE.md 네비게이션 CSS 예시 교정 반영, 2026-09-28 재테스트 보완 불필요)
 
 ### 교차 검증 클레임 결과 (2026-08-11 최신화분)
 
@@ -124,6 +124,36 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (frontend-developer 미설치/미확인으로 대체)
+**수행 방법**: SKILL.md(+참조 링크 references/REFERENCE.md) Read 후 2개 실전 질문 답변(2026-09-28 재검증(2차)의 14.2.0 신규 파라미터 보강분을 직접 겨냥), 근거 섹션 및 anti-pattern 회피 확인
+
+### 실제 수행 테스트 (2026-09-28 재테스트)
+
+**Q1. 반응형 상품 캐러셀 구현 (핵심 기능)**
+- ✅ PASS
+- 근거: SKILL.md "반응형 breakpoints"(205~227줄), "기본 설정"(52~87줄)
+- 상세: breakpoints의 min-width 방식을 정확히 적용, `Navigation` 모듈 import 및 CSS import 누락 없이 완전한 코드 산출.
+
+**Q2. lazyPreload·fadeEffect.mode 신규 파라미터 (2026-09-28 정정·보강분 직접 겨냥, 참조 링크 추적)**
+- ✅ PASS
+- 근거: SKILL.md 494줄(마이그레이션 노트 v14.2.0 행) + SKILL.md 381~387줄(EffectFade 섹션) + references/REFERENCE.md "Lazy Loading" 섹션(19~24줄)
+- 상세: `lazyPreload`는 SKILL.md 본문엔 표로만 언급되고 실제 코드 예시는 REFERENCE.md에 있음을 정확히 인지해 참조 링크를 따라가 `lazyPreload={false}` 코드를 정확히 인용(축소·참조 위임 구조가 문제없이 작동함을 확인). `fadeEffect={{ mode: 'out-in' }}`도 SKILL.md 본문 코드 그대로 재현.
+
+### 발견된 gap (2026-09-28)
+
+- 경미: `lazyPreload={false}` 사용 시 커스텀 프리로더 UI 렌더링 책임 범위가 문서에 명시 안 됨 — 선택 보강 항목, 차단 요인 아님.
+
+### 판정 (2026-09-28)
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 해당 없음 (라이브러리 사용법 스킬 — content test PASS로 APPROVED 전환 가능 카테고리)
+- 최종 상태: APPROVED
+
+---
+
+### [2026-08-11] 최초 2단계 테스트 기록
+
 **수행일**: 2026-08-11
 **수행자**: skill-creator(본 최신화 세션) — SKILL.md 갱신본 기준 실전 질문 답변 검증
 **수행 방법**: 갱신된 SKILL.md만 근거로 실전 질문 3개에 답변 → 공식 문서와 대조
@@ -143,6 +173,30 @@ agent content test: 3/3 PASS
 
 ---
 
+### [2026-09-28] 재검증(2차) — 14.1→14.2 버전 갱신 + 신규 파라미터 보강
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md + references/REFERENCE.md 전체 Read → 핵심 클레임 3개를 1차 소스(npm registry, GitHub 공식 CHANGELOG.md, GitHub 이슈/PR 원문)와 대조
+
+**클레임 대조 결과**:
+1. 최신 안정 버전은 14.1.0 → 14.2.0으로 갱신 필요 → **정정 반영** (`curl https://registry.npmjs.org/swiper/latest` → 14.2.0, `curl https://raw.githubusercontent.com/nolimits4web/swiper/master/CHANGELOG.md` → "14.2.0 (2026-08-26)")
+2. 14.1.0→14.2.0이 breaking change 없이 버그 수정 + 신규 파라미터만 포함하는가 → VERIFIED — 공식 CHANGELOG.md에 "Bug Fixes"·"Features" 두 섹션만 존재, "Breaking Changes" 섹션 없음
+3. engines.node(>= 4.7.0)가 14.2.0에서도 유지되는가(v14 릴리즈 노트의 "Node 20.19+"는 툴체인 기준이라는 기존 DISPUTED 판정이 여전히 유효한가) → VERIFIED — `curl https://registry.npmjs.org/swiper/latest`의 `engines.node`가 여전히 `>= 4.7.0`, 기존 정정 서술 그대로 유효
+
+**보강(ADD)**: 14.2.0 신규 파라미터 2건을 GitHub 원문(이슈 #7570 + PR #7638, 이슈 #8051)으로 확인 후 반영.
+- `lazyPreload: false` — Swiper가 `loading="lazy"` 이미지에 자동으로 붙이는 내장 `load` 리스너(프리로더 표시용)를 끄는 옵트인 파라미터. 커스텀 lazy 로딩 로직과 충돌 회피 목적(이슈 #7570 원문 확인). REFERENCE.md "Lazy Loading" 섹션에 주의 문단 + 코드 예시로 추가
+- `fadeEffect.mode: 'out-in'` — 기본값 `in-out`(크로스페이드)과 달리 이전 슬라이드가 완전히 사라진 뒤 다음 슬라이드가 나타남(Vue `<Transition>` mode 참고, 이슈 #8051 원문 확인). SKILL.md EffectFade 코드 예시에 추가
+
+**축소**: 없음.
+
+**실전 질문 재검증**:
+- Q1. "Swiper 최신 안정 버전은?" → SKILL.md 상단 인용구 "14.2.0 (2026-08-26 릴리즈)" 근거로 PASS
+- Q2. "커스텀 lazy 로딩 로직을 쓰는데 Swiper 내장 프리로더 리스너가 충돌한다" → REFERENCE.md Lazy Loading 섹션의 `lazyPreload={false}` 근거로 PASS
+
+**재검증 최종 판정**: status **PENDING_TEST 전환** (버전 갱신 + 신규 파라미터 2건 보강 — 다음 skill-tester 재테스트 필요)
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -150,10 +204,10 @@ agent content test: 3/3 PASS
 | 내용 정확성 | ✅ (Swiper 14.1.0 기준 재검증) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (3/3 PASS) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ 누적 5/5 PASS (2026-08-11 3/3 + 2026-09-28 재테스트 2/2, `lazyPreload`/`fadeEffect.mode` 보강분 포함) |
+| **최종 판정** | **APPROVED** (2026-09-28 skill-tester 재테스트 2/2 PASS로 14.1→14.2 갱신·신규 파라미터 보강분 검증 완료) |
 
-> 판정 근거: 라이브러리 사용법 스킬이므로 `verification-policy.md`의 "실사용 검증이 필요 없는 스킬 — content test PASS = APPROVED" 카테고리에 해당. 다만 SKILL.md의 마이그레이션 노트 섹션은 실제 업그레이드 수행으로만 최종 확인 가능하므로 아래 개선 항목에 실환경 검증 대기로 남긴다.
+> 판정 근거: 라이브러리 사용법 스킬이므로 `verification-policy.md`의 "실사용 검증이 필요 없는 스킬 — content test PASS = APPROVED" 카테고리에 해당. 2026-09-28 재검증에서 버전 갱신(14.1→14.2)과 `lazyPreload`/`fadeEffect.mode` 보강이 반영되었고, 같은 날 skill-tester가 보강분을 직접 겨냥한 2개 질문(참조 링크 추적 포함)으로 재테스트해 2/2 PASS를 확인했으므로 APPROVED로 전환한다. 다만 SKILL.md의 마이그레이션 노트 섹션은 실제 업그레이드 수행으로만 최종 확인 가능하므로 아래 개선 항목에 실환경 검증 대기로 남긴다.
 
 ---
 
@@ -162,9 +216,10 @@ agent content test: 3/3 PASS
 - [✅] Swiper 14.1.0 기준 최신화 — 버전·baseline·v12/v14 breaking change 반영 (3개 메이저 지연 해소)
 - [✅] v12 SCSS 제거·SVG 네비게이션 아이콘 반영 (v2 검증 시 "정식 가이드 공개 시 반영" 항목이었음)
 - [✅] REFERENCE.md의 폰트 아이콘 전제 CSS 예시 교정
-- [🔬] v11 → v14 실제 업그레이드 실환경 검증 (마이그레이션 체크리스트 6항목 적용 결과) — 대기
-- [🔬] React 19 + Swiper 14 조합 실사용 검증 — 대기
-- [📅] 차기 메이저(v15) 릴리즈 시 baseline·타입 변경 재확인
+- [🔬] v11 → v14 실제 업그레이드 실환경 검증 (마이그레이션 체크리스트 6항목 적용 결과) — 선택 보강 항목(실제 마이그레이션 수행 필요), 차단 요인 아님(라이브러리 사용법 스킬은 content test PASS로 APPROVED 유지 가능)
+- [🔬] React 19 + Swiper 14 조합 실사용 검증 — 선택 보강 항목, 차단 요인 아님
+- [📅] 차기 메이저(v15) 릴리즈 시 baseline·타입 변경 재확인 — 선택 보강 항목, 차단 요인 아님
+- [✅] skill-tester content test 재수행 (2026-09-28 완료, 2/2 PASS — 14.2.0 `lazyPreload`/`fadeEffect.mode` 보강분 검증, 참조 링크 정상 작동 확인, PENDING_TEST → APPROVED 전환)
 
 ---
 
@@ -176,3 +231,5 @@ agent content test: 3/3 PASS
 | 2026-04-20 | v2 | WebSearch로 공식 문서 직접 재조사·재작성 — SwiperRef/SwiperClass 타입 분리, useSwiper 훅 추가, loopedSlides 제거 반영, Swiper 12 지원 여부 확인, EffectFade slidesPerView 주의사항 추가, DISPUTED 항목 재검토 | Claude (WebSearch) |
 | 2026-04-20 | v2 | PENDING_TEST → APPROVED 전환 — WebSearch 교차 검증 3개 클레임 VERIFIED, 테스트 질문 2건 PASS, 테스트 케이스 3건 기록 | Claude (WebSearch 검증) |
 | 2026-08-11 | v3 | **Swiper 14.1.0 기준 최신화 (11.x → 14.x, 3개 메이저 지연 해소)** — 브라우저 baseline 섹션 신설, v12 CSS-only·SVG 네비게이션 아이콘(addIcons)·navigation CSS 변수·snapToSlideEdge 추가, v14 타입 엄격화 주의 추가, "마이그레이션 노트 (v11 → v14)" 섹션 신설, Node 20.19 요구를 툴체인 기준으로 정정(DISPUTED 반영), REFERENCE.md 폰트 아이콘 CSS 예시 교정. 12개 클레임 교차 검증(VERIFIED 11 / DISPUTED 1), content test 3/3 PASS로 APPROVED 유지 | Claude (WebSearch + WebFetch) |
+| 2026-09-28 | v4 | 재검증(2차) — 최신 안정 버전 14.1.0→14.2.0 갱신(breaking change 없음, 공식 CHANGELOG.md 확인). 신규 파라미터 2건 보강: `lazyPreload: false`(내장 lazy 프리로더 리스너 비활성화, REFERENCE.md Lazy Loading 섹션), `fadeEffect.mode: 'out-in'`(EffectFade 코드 예시, SKILL.md). engines.node `>= 4.7.0` 유지 재확인. status APPROVED → PENDING_TEST (skill-tester 재테스트 필요) | Claude (Sonnet 5) |
+| 2026-09-28 | v4 | skill-tester 재테스트(2차 재검증분) 수행 (Q1 반응형 상품 캐러셀 구현 / Q2 lazyPreload·fadeEffect.mode 신규 파라미터, 참조 링크 추적 확인) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |

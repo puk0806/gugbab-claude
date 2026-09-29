@@ -17,7 +17,7 @@ description: >
 > - Google Search Central Blog (2019): Making Review Rich Results more helpful — https://developers.google.com/search/blog/2019/09/making-review-rich-results-more-helpful
 > - Naver Business — https://business.naver.com
 >
-> 검증일: 2026-06-04
+> 검증일: 2026-09-28 (최초 2026-06-04)
 
 오프라인 매장·지역 서비스업이 Google·네이버·카카오 지역 검색에서 노출되기 위한 통합 가이드. 한국 시장 특성(네이버 점유율·영수증 리뷰·국제 전화번호 형식)을 반영한다.
 

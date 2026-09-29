@@ -17,8 +17,8 @@ description: Vercel Workflow SDK(`workflow` 패키지)로 durable 예약 작업�
 >   /cookbook/common-patterns/scheduling, /cookbook/advanced/child-workflows, /cookbook/agent-patterns/agent-cancellation
 > - https://github.com/vercel/workflow , https://registry.npmjs.org/workflow/latest
 >
-> 검증일: 2026-09-17
-> 기준 버전: `workflow` **4.8.9** (npm latest, Apache-2.0). 과금·한도는 Vercel 문서 2026-06-16 갱신본 기준
+> 검증일: 2026-09-28 (최초 2026-09-17 · 재검증 09-28: `workflow` npm latest 4.8.9 그대로, Hobby 한도·sleep(Date) API 변경 없음)
+> 기준 버전: `workflow` **4.8.9** (npm latest, Apache-2.0). 과금·한도는 Vercel 문서 2026-06-16 갱신본 기준(09-28 재확인, 수치 변경 없음)
 > 대상 시나리오: 개인용 PWA에서 **사용자 6명 / 사용자당 하루 최대 5회** 지정 시각에 Web Push를 보내는 스케줄러.
 > 사용자마다 워크플로 런 1개가 `다음 시각까지 sleep → 발송 스텝 → 반복` 루프를 돌고, 시각 변경 시 기존 런을 취소하고 재시작한다. **Vercel Hobby(무료)** 운영.
 

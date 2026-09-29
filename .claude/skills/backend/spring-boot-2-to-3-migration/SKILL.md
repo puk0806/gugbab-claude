@@ -18,16 +18,20 @@ description: Spring Boot 2.5(Java 11) → 3.x(Java 17/21) 마이그레이션 실
 > - https://github.com/mybatis/spring-boot-starter
 > - https://github.com/apache/tomcat-jakartaee-migration
 > - https://docs.openrewrite.org/recipes/java/spring/boot3/upgradespringboot_3_0-community-edition
+> - https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide (§1.1 4.0 이행 체크포인트 근거)
 >
-> 검증일: 2026-08-11
+> 검증일: 2026-09-28 (최초 2026-08-11)
 
 > 주의: 이 스킬은 **경로(path) 스킬**이다. 각 목적지 기술의 사용법은 이 문서에서 반복하지 않고 짝 스킬로 연결한다.
 > "무엇을, 어떤 순서로, 어디까지 자동화하고, 언제 되돌릴지"만 다룬다.
 
 > 주의: 2026-08 기준 Spring Boot 3.5 라인의 OSS 지원은 2026-06-30 종료되었고 현행 OSS 라인은 4.x다.
 > 그럼에도 2.x → 4.x **직행은 권장되지 않는다**. 공식 업그레이드 정책은 "현재 라인의 최신 마이너 → 다음 메이저"이므로
-> 2.5 → 2.7.18 → **3.x** → (필요 시) 4.x 순서를 밟는다. 3.x → 4.x 구간은
-> `.claude/skills/backend/spring-boot-gradle-setup/SKILL.md` 9장을 참조한다.
+> 2.5 → 2.7.18 → **3.x** → (필요 시) 4.x 순서를 밟는다. "3.5에 머물지 4.x로 갈지"의 판단 기준은 1.1절 참조.
+> 3.x → 4.x 세부 절차 중 **Gradle 빌드 설정 관점**(Gradle 최소 버전·플러그인 좌표·Jackson 3 group id·Starter 이름 변경 등)은
+> `backend/spring-boot-gradle-setup` 9장(`references/REFERENCE.md` §9, 2026-09-28 확인 시점 기준 §9.1~9.7)에 있다.
+> 다만 Jackson 3·Security 7·Framework 7의 **API 레벨 전환**(클래스명·애노테이션·설정 코드 변경)은 그 스킬의 범위 밖이라
+> 여전히 별도 스킬·문서가 필요하다(2026-09-28 확인 시점 기준 레포에 아직 없음).
 
 ---
 
@@ -86,6 +90,21 @@ description: Spring Boot 2.5(Java 11) → 3.x(Java 17/21) 마이그레이션 실
 
 > 3.x를 건너뛰고 4.x로 직행하면 Jakarta 전환 + Spring Framework 7 + Jackson 3 + Security 7 변경이 **한 배포에 겹친다.**
 > 장애 원인 분리가 불가능해지므로 권장하지 않는다.
+
+### 1.1 4.0 이행 체크포인트 — "3.5에서 멈출지 4.x까지 갈지" (공식 Migration Guide 기준)
+
+Boot 3.5.x에 안정화된 뒤 4.x로 넘어갈지는 아래 조건으로 판단한다(출처: Spring Boot 4.0 Migration Guide, 2026-09-28 확인).
+
+| 조건 | 4.x로 전환 가능 | 3.5.x에 머문다 |
+|------|----------------|----------------|
+| 사전 조건 | 공식 가이드가 요구하는 **"최신 3.5.x로 먼저 업그레이드"** 후 deprecated 메서드 호출 정리 완료 | 아직 3.5.x 최신 패치에 못 미침 |
+| Java | 17 이상(Boot 4.0 최소 요구사항 — 3.x와 동일선상, 21 LTS 이상 권장은 그대로 유효) | Java 17 미만 |
+| 서블릿 컨테이너 | Jakarta EE 11 / Servlet 6.1 대응 가능 | **Undertow 사용** — Boot 4에서 지원 제거 |
+| JSON 라이브러리 | Jackson 3(`tools.jackson.*`)로 전환 준비 완료, 또는 과도기 `spring-boot-jackson2` 호환 모듈로 유예 | **Jersey 사용** — Jackson 3 미지원이라 궁합이 안 맞음 |
+| 배치 | 해당 없음 또는 이관 완료 | Spring Batch가 **DB 메타데이터 저장소**에 의존 |
+| 기타 | 모든 의존성이 Boot 4 호환 + 모듈형 스타터 구조 수용 가능 | — |
+
+> 주의: Jackson 2→3은 그룹ID(`com.fasterxml.jackson` → `tools.jackson`)·클래스명(예: `Jackson2ObjectMapperBuilderCustomizer` → `JsonMapperBuilderCustomizer`)·애노테이션(`@JsonComponent` → `@JacksonComponent`)이 바뀌는 **별도의 큰 마이그레이션**이다. Boot 4는 과도기용 `spring-boot-jackson2` 모듈(사용 중단 예정)을 제공한다. 그룹ID 변경과 관련 Starter 이름 변경(`spring-boot-starter-web`→`-webmvc` 등)은 `backend/spring-boot-gradle-setup` §9.4·§9.7(build.gradle 좌표 관점)에서 다룬다. 이 스킬의 범위는 2.5→3.x까지이며, 4.x 전환이 확정된 뒤의 Jackson 3·Security 7·Framework 7 **API 레벨** 세부 절차(클래스명·애노테이션·설정 코드 변경)는 이 문서에서 다루지 않는다 — 별도 스킬·문서 신설 필요(2026-09-28 확인 시점 기준 레포에 아직 없음).
 
 ---
 
@@ -174,6 +193,14 @@ tasks.withType(JavaCompile) { options.compilerArgs << '-parameters' }  // ← Fr
 ### 4.3 Phase 3: Spring Security 5.8 선행 (효과가 가장 큰 단계)
 
 Spring Security 5.8에서 6.0 스타일로 **미리** 바꿔 두면, Phase 4에서 남는 작업은 import 치환뿐이다.
+
+> 주의(실행 검증, 2026-09-29): Boot 2.7.x가 관리하는 Spring Security 버전은 **2.7.18 기준 5.7.11**까지이며, 5.8에서
+> 추가된 `requestMatchers(String...)` 오버로드가 없어 컴파일이 안 된다(`RequestMatcher...`만 받는 구버전 시그니처와 충돌).
+> Boot 2.7 라인에 머문 채 Security 5.8 스타일로 먼저 전환하려면 `ext['spring-security.version'] = '5.8.x'`(Gradle)
+> 또는 동일한 Maven `<properties>` 오버라이드로 **관리 버전을 수동 상향**해야 한다. 5.8.x는 Spring Framework 5.3.22+를
+> 요구하는데 2.7.18이 관리하는 Framework 버전이 이를 충족하므로 오버라이드만으로 별다른 부작용 없이 동작한다(작은 샘플
+> 프로젝트로 확인).
+> `.and()`/`authorizeRequests()` 자체는 5.7.11에도 이미 있어 컴파일되지만, `requestMatchers()`를 쓰려면 위 오버라이드가 필수다.
 
 - `WebSecurityConfigurerAdapter` 상속 제거 → `SecurityFilterChain` **Bean** (5.7.0-M2에서 deprecated, **6.0에서 제거**)
 - `configure(WebSecurity)` → `WebSecurityCustomizer` Bean

@@ -13,13 +13,19 @@ description: >
 
 > 소스:
 > - OpenAI Images API: https://developers.openai.com/api/docs/guides/image-generation
-> - DALL-E 3 모델 문서: https://developers.openai.com/api/docs/models/dall-e-3
+> - OpenAI 모델 문서 (GPT Image 2.5): https://developers.openai.com/api/docs/models/gpt-image-2.5-flare
 > - Stability AI API: https://platform.stability.ai/docs/api-reference
-> - Google Imagen API: https://ai.google.dev/gemini-api/docs/imagen
+> - Google Gemini 이미지 생성(Nano Banana) 문서: https://ai.google.dev/gemini-api/docs/image-generation
+> - Google Gemini API 가격: https://ai.google.dev/gemini-api/docs/pricing
 > - OpenAI Usage Policies: https://openai.com/policies/usage-policies/
-> 검증일: 2026-05-15
+> 검증일: 2026-05-15 (최초) / 2026-09-28 재검증 — **모델 세대 교체 반영, 문서 상단 "중대 변경" 주의·§3.4·§5 참조**
 > 짝 스킬: `meta/dream-interpretation-prompt-engineering` (시각화 프롬프트 설계)
 > 짝 에이전트: `validation/dream-image-safety-classifier` (안전 분류, 미생성 시 본 스킬 §6 가드라인으로 대체)
+
+> **주의 (2026-09-28 재검증 — 중대 변경):** 2026-05-15 검증 시점 기준으로 작성된 아래 §2·§3·§5의 **DALL-E 3와 Google Imagen 4는 2026-09-28 기준 모두 서비스 종료**되었다.
+> - **DALL-E 3는 OpenAI API에서 deprecated·제거됨.** 공식 문서: "DALL·E 3 has been deprecated and removed from the API." 후속 모델은 **GPT Image 2.5**(`gpt-image-2.5-sunburst`·`gpt-image-2.5-flare`).
+> - **Google Imagen API는 완전히 종료됨.** 공식 문서: "Imagen is Google's legacy image generation model. It is now shut down and no longer available in the Gemini API." 후속 모델은 **Nano Banana 계열**(`gemini-3.1-flash-image` 등, Gemini API 소속). 레거시 `gemini-2.5-flash-image`(구 Nano Banana)도 **2026-10-02부로 deprecated 예정**.
+> - 아래 §3·§5의 DALL-E 3·Imagen 4 코드는 **더는 동작하지 않는다.** 신규 구현 시 §3-4(GPT Image 2.5)·§5(Nano Banana)를 사용할 것. 기존 코드는 마이그레이션 참고용으로만 유지한다.
 
 ---
 
@@ -36,27 +42,35 @@ description: >
 
 ---
 
-## 2. 제공자 비교 (2026-05 기준)
+## 2. 제공자 비교
 
-| 제공자 | 모델 | 1024×1024 가격 | 응답 시간 | 한국어 직접 입력 | 비고 |
+> **주의 (2026-09-28 갱신):** 아래 표는 2026-05-15 최초 조사 당시의 DALL-E 3·Imagen 4 값을 **취소선 없이 그대로 두되 "폐기"로 표시**한다 — 마이그레이션 시 "이전에 뭘 썼는지" 참고용. **신규 구현은 반드시 GPT Image 2.5 / Nano Banana 계열을 사용한다.**
+
+| 제공자 | 모델 | 가격 | 응답 시간 | 한국어 직접 입력 | 비고 |
 |--------|------|----------------|----------|----------------|------|
-| OpenAI | `dall-e-3` standard | $0.040 | 5~15초 | 약함 (영어 변환 권장) | 내부 자동 prompt revision |
-| OpenAI | `dall-e-3` hd | $0.080 | 10~25초 | 동일 | 디테일·텍스처 우수 |
-| OpenAI | GPT Image (`gpt-image-2`) | 별도 책정 | 가변 | 더 나음 | 모더레이션 `low/auto` |
+| OpenAI | ~~`dall-e-3`~~ (**폐기 — API 제거됨**) | ~~$0.040~~ | — | — | 후속: GPT Image 2.5 |
+| OpenAI | **`gpt-image-2.5-flare`** (일상용, 빠름) | 토큰 기반 — 이미지 출력 $30/1M 토큰 | 가변 | 더 나음 | quality: low~max·auto |
+| OpenAI | **`gpt-image-2.5-sunburst`** (편집 정밀도 우선) | 토큰 기반, 동일 단가 | 가변 | 더 나음 | 인페인팅 등 편집 특화 |
 | Stability AI | Stable Image Ultra | 8 credits ≈ $0.08 | 5~10초 | 영어 권장 | 신용 기반 |
 | Stability AI | Stable Diffusion 3.5 Large | 6.5 credits ≈ $0.065 | 3~7초 | 영어 권장 | |
 | Stability AI | SD 3.5 Medium | 3.5 credits ≈ $0.035 | 2~5초 | 영어 권장 | 저예산 |
-| Google | `imagen-4.0-generate-001` | $0.04 | 3~8초 | 다국어 비교적 양호 | SynthID 워터마크 |
-| Google | `imagen-4.0-fast-generate-001` | $0.02 | 2~5초 | 동일 | Batch 50% 할인 가능 |
+| Google | ~~`imagen-4.0-generate-001`~~ (**폐기 — Imagen API 완전 종료**) | ~~$0.04~~ | — | — | 후속: Nano Banana |
+| Google | **`gemini-3.1-flash-image`** (Nano Banana 2) | 입력 $0.50/1M·출력 $60/1M 토큰 (이미지당 약 $0.045~0.151) | 가변 | 다국어 양호 | SynthID 워터마크, 4K 지원 |
+| Google | **`gemini-3.1-flash-lite-image`** (Nano Banana 2 Lite) | 입력 $0.25/1M·출력 $30/1M 토큰 (최저가) | 빠름 | 다국어 양호 | 1K 해상도 한정 |
+| Google | **`gemini-3-pro-image`** (Nano Banana Pro) | 입력 $2.00/1M·출력 $120/1M 토큰 | 느림(고품질) | 다국어 양호 | 고급 편집·브랜드 일관성 |
+| Google | ~~`gemini-2.5-flash-image`~~ (구 Nano Banana, 레거시) | $0.039/이미지 | — | 다국어 양호 | **2026-10-02부로 deprecated 예정** |
 | Replicate | stability-ai/stable-diffusion 등 | 모델별 | 2~10초 + 콜드스타트 | 모델별 | 폴링 또는 webhook |
 
-> 주의: Stability AI 신용 환산은 1 credit = $0.01 기준이며, 모델·해상도에 따라 정확한 소비량은 공식 가격표를 다시 확인할 것.
+> 주의: Stability AI 신용 환산은 1 credit = $0.01 기준이며, 모델·해상도에 따라 정확한 소비량은 공식 가격표를 다시 확인할 것. Stability AI는 2026-09-28 기준 서비스 지속 여부를 직접 확인하지 못함(페이지 JS 렌더링으로 WebFetch 불가) → **재도입 전 공식 페이지 재확인 필요**.
+> 주의: GPT Image 2.5·Nano Banana 가격은 토큰 기반 과금이라 이미지 1장당 정확한 비용은 해상도·품질·프롬프트 길이에 따라 달라진다. 위 "이미지당" 환산값은 공식 계산기 미제공 상태에서의 근사치이니 실제 사용 전 공식 pricing 페이지로 재확인할 것.
 
 ---
 
 ## 3. OpenAI Images API — DALL-E 3 / DALL-E 2 / GPT Image
 
-### 3.1 DALL-E 3 파라미터
+> **주의 (2026-09-28): 아래 §3.1·§3.2는 폐기된 모델(DALL-E 3/2) 코드다.** 공식 문서가 "DALL·E 3 has been deprecated and removed from the API"라고 명시했다. 신규 구현은 **§3.4 GPT Image 2.5**로 바로 이동할 것. §3.1·§3.2는 기존 코드 마이그레이션 참고용으로만 보존한다.
+
+### 3.1 DALL-E 3 파라미터 (폐기됨 — 마이그레이션 참고용)
 
 ```ts
 // 백엔드(예: Next.js Route Handler)에서 호출 — 클라이언트 직접 호출 금지
@@ -84,7 +98,7 @@ const revisedPrompt = result.data[0].revised_prompt; // OpenAI가 다시 쓴 프
 - `response_format='url'` 응답 URL은 **1시간 후 만료** → 곧바로 다운로드/저장 권장.
 - DALL-E 3는 입력 프롬프트를 자체적으로 풍부하게 다시 쓰며 그 결과를 `revised_prompt`로 반환한다. 그대로 두지 않고 그대로 쓰게 하려면 프롬프트 앞에 `"I NEED to test how the tool works with extremely simple prompts. DO NOT add any detail, just use it AS-IS:"` 같은 명시 지시를 넣는다 (OpenAI Cookbook 권장).
 
-### 3.2 DALL-E 2 차이
+### 3.2 DALL-E 2 차이 (폐기됨 — 마이그레이션 참고용)
 
 | 항목 | DALL-E 2 |
 |------|----------|
@@ -94,14 +108,46 @@ const revisedPrompt = result.data[0].revised_prompt; // OpenAI가 다시 쓴 프
 | 가격 | $0.020 (1024×1024), $0.018 (512×512), $0.016 (256×256) |
 | 용도 | 저비용 변형(variation)·인페인팅(`images.edit`) |
 
-### 3.3 GPT Image (신모델)
+### 3.3 GPT Image (2026-05 시점 세대 — 구버전)
 
 - 모델: `gpt-image-2`, `gpt-image-1.5`, `gpt-image-1`, `gpt-image-1-mini`
 - 응답은 PNG/JPEG/WebP base64 (`output_format` + `output_compression`)
 - 품질: `low | medium | high | auto`
 - `moderation`: `auto` (기본) 또는 `low` (덜 제한적이지만 정책 위반 여전히 거부)
 
-> 주의: GPT Image는 빠르게 진화 중이며 본 스킬 검증일(2026-05-15) 이후 파라미터가 추가될 수 있음. 신규 도입 시 공식 문서 재확인 필수.
+> 주의: 2026-09-28 기준 이 세대(`gpt-image-2` 등)는 **`gpt-image-2.5-flare`/`gpt-image-2.5-sunburst`로 대체**되었다(§3.4 참조). 기존 `gpt-image-2` 코드는 당분간 동작할 수 있으나 신규 구현은 2.5 세대를 사용할 것.
+
+### 3.4 GPT Image 2.5 (현행, 2026-09-28 기준 권장)
+
+DALL-E 3의 공식 후속 모델. 두 변형이 있다:
+
+| 모델 | 용도 |
+|------|------|
+| `gpt-image-2.5-flare` | 빠른 일상 생성 — 꿈 시각화처럼 매번 새 이미지를 만드는 용도에 적합 |
+| `gpt-image-2.5-sunburst` | 편집 정밀도 우선 — 기존 이미지 인페인팅·수정에 적합 |
+
+```ts
+// 백엔드에서 호출 — 클라이언트 직접 호출 금지
+import OpenAI from 'openai';
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+const result = await openai.images.generate({
+  model: 'gpt-image-2.5-flare',
+  prompt: '<영어로 변환된 시각화 프롬프트>',
+  size: '1024x1024',          // 권장 치수 또는 WIDTHxHEIGHT(16 배수, 1:3~3:1, 최대 3840px)
+  quality: 'medium',          // 'low' | 'medium' | 'high' | 'xhigh' | 'max' | 'auto'
+  output_format: 'png',       // 'png' | 'jpeg' | 'webp'
+  moderation: 'auto',         // 'auto' | 'low'
+});
+
+const b64 = result.data[0].b64_json;
+```
+
+**핵심 제약 (DALL-E 3와의 차이)**
+- 과금이 **토큰 기반**이다 (이미지 출력 $30/1M 토큰). "1장당 $0.04" 같은 고정 단가가 아니므로 예산 설계 시 프롬프트 길이·해상도·품질을 함께 고려한다.
+- `n` 파라미터로 여러 장 동시 생성 가능 (DALL-E 3의 `n=1` 고정 제약이 해제됨). 단 비용은 토큰 소비량에 정비례하므로 무분별한 배치 생성은 여전히 주의.
+- `revised_prompt` 필드 존재 여부·정확한 텍스트 렌더링 개선 폭은 공식 문서에 상세 명시가 없어 **도입 전 실측 권장**.
 
 ---
 
@@ -147,29 +193,42 @@ const blob = await res.blob(); // PNG 바이너리 (Accept가 image/*인 경우)
 
 ---
 
-## 5. Google Imagen 4
+## 5. Google 이미지 생성 — Nano Banana (Gemini API, 2026-09-28 기준)
+
+> **주의 (2026-09-28 — 중대 변경): Google Imagen API는 완전히 종료(shut down)되었다.** 공식 문서: "Imagen is Google's legacy image generation model. It is now shut down and no longer available in the Gemini API." 아래 `imagen-4.0-generate-001` 코드는 **더는 동작하지 않는다.** 후속 모델은 Gemini API 소속의 **Nano Banana** 계열이다.
+
+### 5.1 Nano Banana 모델 라인업
+
+| 모델 ID | 별칭 | 용도 | 해상도 |
+|---------|------|------|--------|
+| `gemini-3.1-flash-lite-image` | Nano Banana 2 Lite | 최저가·최고속 | 1K 한정 |
+| `gemini-3.1-flash-image` | Nano Banana 2 | 범용, 텍스트 렌더링 우수 | 최대 4K |
+| `gemini-3-pro-image` | Nano Banana Pro | 고급 편집·브랜드 일관성 | 최대 4K |
+| ~~`gemini-2.5-flash-image`~~ | 구 Nano Banana (레거시) | — | **2026-10-02부로 deprecated 예정** |
+
+### 5.2 호출 예시 (현행)
 
 ```ts
 import { GoogleGenAI } from '@google/genai';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-const response = await ai.models.generateImages({
-  model: 'imagen-4.0-generate-001',
-  prompt: '<프롬프트>',
-  config: {
-    numberOfImages: 1,         // 1~4
-    aspectRatio: '1:1',        // '1:1' | '3:4' | '4:3' | '9:16' | '16:9'
-    imageSize: '1K',           // '1K' | '2K'
-    personGeneration: 'allow_adult', // 'dont_allow' | 'allow_adult' | 'allow_all'
-  },
+const response = await ai.models.generateContent({
+  model: 'gemini-3.1-flash-image',
+  contents: '<프롬프트>',
+  // 정확한 이미지 생성 config 파라미터(aspectRatio·해상도·personGeneration 등)는
+  // Imagen 4 시절과 스키마가 다를 수 있으므로 공식 image-generation 가이드로 재확인할 것
 });
-// response.generatedImages[i].image.imageBytes (base64)
+// response 내 이미지 바이트 추출 방식은 Imagen 4와 다름 — 공식 문서 예제 코드 직접 확인 필수
 ```
 
-**특이사항**
-- 모든 생성 이미지에 **SynthID 워터마크**가 자동 삽입됨 — 꿈 일기 시각화 같은 개인용 콘텐츠에도 포함.
-- `personGeneration: 'allow_all'`은 EU/UK/CH/MENA 지역에서 거부됨.
-- Imagen 3는 deprecated. 신규 코드에서는 Imagen 4 변종을 사용한다.
+> **주의:** Nano Banana는 `ai.models.generateImages()`가 아니라 Gemini의 일반 `generateContent()` 계열 API로 통합되었을 가능성이 높다(멀티모달 출력). 위 코드는 마이그레이션 방향을 보여주는 **개략적 스케치**이며, 실제 요청/응답 스키마(멀티 이미지 참조 최대 14장, 4K 해상도 옵션, 배치 할인 등)는 **도입 직전 공식 문서(`https://ai.google.dev/gemini-api/docs/image-generation`)로 반드시 재확인**한다.
+
+### 5.3 특이사항
+
+- 모든 생성 이미지에 **SynthID 워터마크**가 여전히 자동 삽입됨 — 꿈 일기 시각화 같은 개인용 콘텐츠에도 포함.
+- Nano Banana 2/Pro는 최대 **14장의 참조 이미지**로 구성·캐릭터 일관성을 유지하는 기능 지원.
+- `personGeneration` 파라미터의 현행 옵션·지역 제한(구 Imagen 4 기준 EU/UK/CH/MENA `allow_all` 거부)은 **공식 문서에서 재확인 필요** — 2026-09-28 조사 시점에는 명시 확인 못 함.
+- 레거시 `gemini-2.5-flash-image`(구 Nano Banana)는 2026-10-02 deprecated 예정이므로 신규 코드에서 채택 금지.
 
 ---
 
@@ -294,18 +353,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'content_policy' }, { status: 422 });
   }
 
-  // 5. 호출
+  // 5. 호출 — 현행 GPT Image 2.5 (§3.4). dall-e-3 는 API 에서 제거됨
   const result = await openai.images.generate({
-    model: 'dall-e-3',
+    model: 'gpt-image-2.5-flare',
     prompt,
-    n: 1,
     size: '1024x1024',
-    response_format: 'b64_json',
+    quality: 'medium',
+    output_format: 'png',       // GPT Image 는 response_format 대신 output_format, 항상 b64_json 반환
   });
 
   return NextResponse.json({
     image: result.data[0].b64_json,
-    revisedPrompt: result.data[0].revised_prompt,
   });
 }
 ```
@@ -341,7 +399,7 @@ await db.dreamImages.add({
   id: dreamId,
   createdAt: Date.now(),
   blob: b64ToBlob(response.image),       // Blob 그대로 저장
-  prompt: response.revisedPrompt,
+  prompt: visualPrompt,                  // §8 템플릿으로 만들어 §9.1 에 보낸 시각화 프롬프트(호출 측 변수) (§9.1 응답엔 revised_prompt 없음 — §3.4)
   // ❌ 이 필드는 인덱스에 넣지 말 것 — 대용량 바이너리 인덱싱은 성능 저하
 });
 
@@ -373,16 +431,20 @@ URL.revokeObjectURL(objectUrl);
 
 ## 11. 비용·지연 요약 (꿈 일기 앱 1일 1000사용자 가정)
 
-| 시나리오 | 호출 수 | 모델 | 일일 비용 추정 |
-|---------|--------|------|----------------|
-| 모든 일기에 이미지 1장 | 1000 | DALL-E 3 standard | $40 |
-| 모든 일기에 이미지 1장 | 1000 | Imagen 4 Fast | $20 (배치 시 $10) |
-| 모든 일기에 이미지 1장 | 1000 | SD 3.5 Medium | ~$35 |
-| 사용자가 명시 요청 시만 (20%) | 200 | DALL-E 3 hd | $16 |
+> **주의 (2026-09-28):** 아래 표는 **2026-05-15 당시 DALL-E 3·Imagen 4 고정 단가 기준**이라 2026-09-28 현재는 참고용 과거값이다. 후속 모델(GPT Image 2.5·Nano Banana)은 **토큰 기반 과금**이라 "이미지 1장당 고정가"로 단순 환산하기 어렵다. 실제 예산 산정은 프롬프트 길이·해상도·품질 설정을 반영해 공식 계산기 또는 실측으로 재산정할 것.
 
-지연(평균):
-- DALL-E 3 standard: 5~15초, hd: 10~25초
-- Imagen 4 Fast: 2~5초
+| 시나리오 | 호출 수 | 모델 (2026-05 기준, 폐기됨) | 일일 비용 추정 (과거값) |
+|---------|--------|------|----------------|
+| 모든 일기에 이미지 1장 | 1000 | ~~DALL-E 3 standard~~ | ~~$40~~ |
+| 모든 일기에 이미지 1장 | 1000 | ~~Imagen 4 Fast~~ | ~~$20 (배치 시 $10)~~ |
+| 모든 일기에 이미지 1장 | 1000 | SD 3.5 Medium (Stability는 현재도 유지 가능성 높으나 2026-09-28 시점 직접 미확인) | ~$35 |
+| 사용자가 명시 요청 시만 (20%) | 200 | ~~DALL-E 3 hd~~ | ~~$16~~ |
+
+**Nano Banana 2 Lite** 기준 이미지당 약 $0.03(1K, 토큰 소비량에 따라 변동) — 가장 저렴한 현행 옵션. GPT Image 2.5는 공식 계산기 미제공으로 이미지당 정확한 값 산정 불가 (§2 참조).
+
+지연(평균, 2026-09-28 기준 미실측 — 마이그레이션 후 재측정 필요):
+- ~~DALL-E 3 standard: 5~15초, hd: 10~25초~~ (폐기)
+- ~~Imagen 4 Fast: 2~5초~~ (폐기)
 - SD 3.5 Medium: 2~5초 (Stability 공식 인프라 기준, Replicate 콜드스타트는 +5~30초)
 
 UI는 **항상 비동기 + 로딩 상태 + 재시도 가능**으로 설계한다.
@@ -390,6 +452,8 @@ UI는 **항상 비동기 + 로딩 상태 + 재시도 가능**으로 설계한다
 ---
 
 ## 12. 흔한 함정
+
+> **주의 (2026-09-28):** 아래 1·2·4·7·9번은 모델 세대와 무관한 원칙이라 그대로 유효하다. 5·8번은 DALL-E 3 고유 제약(`n=1` 고정·`revised_prompt`)에 대한 설명이므로 **GPT Image 2.5로 마이그레이션 시 재검증 필요**(§3.4 참조 — `n` 제약이 다를 수 있음).
 
 1. **API 키를 `NEXT_PUBLIC_OPENAI_KEY`로 두는 실수** — 빌드 후 클라이언트에 그대로 박힘. §9 백엔드 프록시 강제.
 2. **한국어 그대로 DALL-E 3에 입력** — 사람·세부묘사 누락 잦음. 영어 변환 거쳐라.
@@ -412,7 +476,7 @@ UI는 **항상 비동기 + 로딩 상태 + 재시도 가능**으로 설계한다
 - [ ] 시각화 프롬프트에 실명·브랜드명·폭력 동사 제거 로직
 - [ ] OpenAI/Stability moderation 또는 `dream-image-safety-classifier` 호출
 - [ ] 응답 b64_json → Blob 변환 후 IndexedDB 저장
-- [ ] `revised_prompt` / `seed` / `model` / `cost` 메타데이터 함께 저장
+- [ ] 사용한 프롬프트 / `seed` / `model` / `cost` 메타데이터 함께 저장 (`revised_prompt`는 DALL-E 3 전용 — GPT Image 2.5는 필드 유무 실측 후 있으면 함께 저장, §3.4)
 - [ ] `URL.createObjectURL` revoke 패턴 적용
 - [ ] 비용 모니터링 대시보드 (사용자별·일별)
 - [ ] content_policy 거부 시 톤다운 1회 재시도 후 UX 안내

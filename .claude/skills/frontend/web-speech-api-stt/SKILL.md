@@ -6,7 +6,7 @@ description: 브라우저 내장 Web Speech API의 SpeechRecognition(STT)과 Spe
 # web-speech-api-stt — 브라우저 내장 STT 사용 패턴
 
 > 소스: MDN Web Docs — https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition
-> 검증일: 2026-05-14
+> 검증일: 2026-09-28 (재검증 — caniuse speech-recognition 데이터 최신본 대조, 호환성 표 변동 없음)
 
 > 표준: Web Speech API (W3C/WICG Community Group draft) — https://webaudio.github.io/web-speech-api/
 > 호환성: caniuse 기준 *Limited availability* (Baseline 미달). Chrome·Safari·Samsung Internet만 부분 지원, Firefox·Edge 사실상 미지원.

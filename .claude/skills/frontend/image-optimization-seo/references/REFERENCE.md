@@ -75,7 +75,7 @@ web.dev 공식 권고:
 
 ## 9. 빌드 시 자동 최적화 — sharp 스크립트
 
-`sharp` 0.34 기준. 원본 1장 → AVIF/WebP/JPEG 3종 × 4 크기 = 12개 생성.
+`sharp` 0.35 기준(2026-09-28 재검증, 0.34에서 API 변경 없음). 원본 1장 → AVIF/WebP/JPEG 3종 × 4 크기 = 12개 생성.
 
 ```js
 // scripts/optimize-images.mjs

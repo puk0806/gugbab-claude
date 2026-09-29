@@ -3,7 +3,7 @@ skill: ehcache-2-legacy
 category: backend
 version: v1
 date: 2026-09-26
-status: PENDING_TEST
+status: APPROVED
 ---
 
 # EhCache 2.x Legacy 스킬 검증 문서
@@ -126,13 +126,42 @@ status: PENDING_TEST
 - [✅] 범용적 사용 가능 (특정 프로젝트 종속 없음)
 
 ### 4-5. Claude Code 에이전트 활용 테스트
-- [❌] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (실사용 전)
-- [❌] 에이전트가 스킬 내용을 올바르게 활용하는지 확인
-- [❌] 잘못된 응답이 나오는 경우 스킬 내용 보완
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-09-28)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-09-28)
+- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (발견 없음)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose
+**수행 방법**: SKILL.md Read 후 2개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인. 질문 1개는 2026-09-26 재검증에서 추가된 CVE(jackson-databind) 경고 문구를 정확히 겨냥.
+
+### 실제 수행 테스트
+
+**Q1. "Spring Boot 2.5 레거시 프로젝트에서 EhCache 2.x로 'orders' 캐시(TTL 20분, 최대 힙 3000건, LRU)를 추가하려면?"**
+- ✅ PASS
+- 근거: SKILL.md "2. `ehcache.xml` 설정" 기본 형태 예시 + "4-3. `@Cacheable`/`@CacheEvict`/`@CachePut`" 섹션
+- 상세: `maxEntriesLocalHeap="3000"`, `timeToLiveSeconds="1200"`, `memoryStoreEvictionPolicy="LRU"` 값을 정확히 도출하고 `@Cacheable(value="orders", ...)` 코드까지 정확히 작성. `timeToIdleSeconds` 생략 시 정확한 동작이 SKILL.md에 명시되어 있지 않다는 사소한 gap 발견(차단 요인 아님).
+
+**Q2. "net.sf.ehcache:ehcache:2.10.6을 쓰는데 보안팀 CVE 점검에서 뭘 봐야 하나?" (2026-09-26 CVE 경고 정정분 겨냥)**
+- ✅ PASS
+- 근거: SKILL.md 상단 "⚠️ 중요 경고" 박스의 "주의 (CVE, 2026-09-26 추가)" 문구
+- 상세: 번들 `jackson-databind 2.9.6` CVE 노출, `mvn dependency:tree` 확인 및 `<dependencyManagement>` override 필요성, EhCache 2.x가 더 이상 이 의존성을 갱신하지 않는다는 사실까지 정확히 인용. 옛 내용(CVE 언급 없음)과 모순되지 않고 정정 내용이 유일한 근거로 반영됨을 확인.
+
+### 발견된 gap
+
+- `timeToIdleSeconds` 생략 시 정확한 동작(무기한 유지 여부) 미명시 — 선택 보강, 차단 요인 아님
+- CVE 구체적 식별자(CVE 번호)가 SKILL.md에 없음 — "다수의 공개 CVE"로만 서술, 필요 시 NVD 참조 문구 보강 권장. 차단 요인 아님
+
+### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 라이브러리 사용법 스킬 → 실사용 필수 카테고리 해당 없음 (content test PASS로 APPROVED 가능)
+- 최종 상태: APPROVED
+
+---
 
 ### 재검증 (2026-09-26)
 
@@ -217,13 +246,14 @@ products 캐시에 힙 10000 / 디스크 100000 오버플로우를 설정하고,
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-04-23, 2문항 PASS) + ✅ (2026-09-26 재검증, 2문항 PASS — CVE 점검 지침 + 유지보수 종료 상태 확인) |
-| **최종 판정** | **PENDING_TEST** (2026-09-26 CVE 주의 문구 추가로 내용 변경 — 재검증 필요) |
+| 에이전트 활용 테스트 | ✅ (2026-04-23, 2문항 PASS) + ✅ (2026-09-26 재검증 셀프, 2문항 PASS) + ✅ (2026-09-28 skill-tester → general-purpose, 2/2 PASS — CVE 정정분 겨냥) |
+| **최종 판정** | **APPROVED** (2026-09-28 재테스트로 CVE 정정 내용 반영 확인, 모순 없음) |
 
 ---
 
 ## 7. 개선 필요 사항
 
+- [✅] skill-tester content test 수행 및 섹션 5·6 업데이트 — 2026-09-28 완료, 2/2 PASS (CVE 정정분 겨냥 포함)
 - [⏸️] Spring Boot 캐시 프로바이더 자동 감지 순서 1차 소스 재확인 — 검증 보강 선택 사항
 - [⏸️] 2계층 캐시(L1 EhCache + L2 Redis) 구현 예시 — 현재 개념만, 선택 보강
 - [🔬] Java 17/21 환경에서의 EhCache 2.10.9.2 호환성 실측 — 실환경 검증 대기
@@ -237,3 +267,4 @@ products 캐시에 힙 10000 / 디스크 100000 오버플로우를 설정하고,
 |------|------|-----------|--------|
 | 2026-04-23 | v1 | 최초 작성 — EhCache 2.10.9.2 기준, Spring Boot 2.5 / Java 11 레거시 유지보수용 | skill-creator |
 | 2026-09-26 | v1 | 재검증 — EOL 상태·버전 재확인(변동 없음), 구버전 번들 jackson-databind CVE 주의 문구 신규 추가 → PENDING_TEST | 메인 오케스트레이션 (Claude Sonnet 5) |
+| 2026-09-28 | v1 | 2단계 실사용 재테스트 수행 (Q1 orders 캐시 설정 / Q2 CVE 점검 정정분) → 2/2 PASS, APPROVED 전환 | skill-tester |

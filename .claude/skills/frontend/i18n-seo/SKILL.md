@@ -11,8 +11,8 @@ description: >
 
 # 다국어·다지역 사이트 SEO (i18n SEO)
 
-> 소스: Google Search Central (specialty/international/*), W3C RFC 5646 (BCP 47), Yandex Webmaster Docs, Next.js 16.2 / @astrojs/sitemap 공식 문서
-> 검증일: 2026-06-02
+> 소스: Google Search Central (specialty/international/*), W3C RFC 5646 (BCP 47), Yandex Webmaster Docs, Next.js 16.3 / @astrojs/sitemap 공식 문서
+> 검증일: 2026-09-28
 > 적용 범위: 다국어(언어만 다름) + 다지역(언어×국가) 모두
 
 ---

@@ -3,7 +3,7 @@ skill: dream-content-research
 category: humanities
 version: v2
 date: 2026-09-26
-status: PENDING_TEST
+status: APPROVED
 ---
 
 # 스킬 검증 — dream-content-research
@@ -147,6 +147,17 @@ status: PENDING_TEST
 
 ## 5. 테스트 진행 기록
 
+### skill-tester 재테스트 (2026-09-28)
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (도메인 전담 에이전트 미등록으로 대체)
+**수행 방법**: 1차 원문·DOI 대조 재검증(2026-09-26, §4-2 서지 오류 2건 정정)으로 PENDING_TEST 전환된 스킬 재테스트. SKILL.md Read 후 실전 질문 2개(모두 정정된 사실 겨냥) 답변, 서지 근거·정정 반영 확인
+
+Q1 (정정된 사실 겨냥). "학업 스트레스·반복 꿈 연구를 Zadra & Robert (2003)로 인용해도 되나요?" — PASS (근거: 소스 목록·§3.2 — "이전 판은 Zadra & Robert et al. (2003)로 적었으나 Crossref DOI 메타데이터상 저자는 Duke & Davidson, 연도는 2002" 정정을 정확히 답변에 반영, 잘못된 인용 거부)
+Q2 (정정된 사실 겨냥). "Hobson (2009) 'The AIM Model of Dreaming, Sleeping, and Waking Consciousness'로 인용해도 되나요?" — PASS (근거: 소스 목록·§6.1 — 해당 서지는 특정 불가로 삭제, Hobson et al.(2000) BBS 23(6) + Hobson(2009) Nat Rev Neurosci 10(11)로 교체됐음을 정확히 답변에 반영)
+
+agent content test: 2/2 PASS (2026-09-28 실제 agent 기반 재테스트). 2026-09-26 재검증으로 정정된 서지 오류 2건(학업 스트레스 논문 저자, Hobson AIM 논문 서지)이 SKILL.md에 정확히 반영되었음을 확인. PENDING_TEST → APPROVED 전환.
+
 ### 재검증 기록 (2026-09-26)
 
 **수행일**: 2026-09-26
@@ -211,8 +222,8 @@ agent content test: 2/2 PASS (재검증 기록). 서지 정정으로 status PEND
 | 내용 정확성 | ✅ (12/12 클레임 VERIFIED) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-15 — Q1 10개 카테고리·정서 5종·금지 척도 / Q2 연속성 가설 개인 단정 anti-pattern / Q3 Hobson-Solms 대립점) / 2026-09-26 재검증 2/2 PASS |
-| **최종 판정** | **PENDING_TEST** (2026-09-26 재검증: 대조 12건 중 서지 오류 2건 정정·미검증 2건 — skill-tester 재테스트 후 APPROVED 재전환) |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-15 — Q1 10개 카테고리·정서 5종·금지 척도 / Q2 연속성 가설 개인 단정 anti-pattern / Q3 Hobson-Solms 대립점) / 2026-09-26 메인 세션 재검증 2/2 PASS / 2026-09-28 skill-tester 실제 agent 재테스트 2/2 PASS |
+| **최종 판정** | **APPROVED** (2026-09-28 skill-tester 재테스트: 서지 정정 2건이 SKILL.md에 정확히 반영됨을 agent content test로 확인, 2/2 PASS) |
 
 ---
 
@@ -221,6 +232,7 @@ agent content test: 2/2 PASS (재검증 기록). 서지 정정으로 status PEND
 - [✅] skill-tester 정식 호출 (2026-05-15 완료, 3/3 PASS — APPROVED 전환)
 - [❌] 한국 표본 norms 자료가 발견되면 §1.4 주의 박스에 추가 비교 (현재 미발견) — 선택 보강 (차단 요인 아님)
 - [❌] DreamBank.net 데이터 직접 활용 예시 코드(JS/Python)는 별도 frontend 스킬(`dream-recurrence-detection`)에서 다룸 — 본 스킬은 *학술 근거* 영역에 집중 (선택 보강, 차단 요인 아님)
+- [✅] skill-tester 실제 agent 재테스트 수행 및 섹션 5·6·7·8 동기화 (2026-09-28 완료, 2/2 PASS) — APPROVED 재전환
 
 ---
 
@@ -231,3 +243,4 @@ agent content test: 2/2 PASS (재검증 기록). 서지 정정으로 status PEND
 | 2026-05-15 | v1 | 최초 작성 — Hall/Van de Castle 코드북·Domhoff 연속성 가설·Zadra/Robert 반복 꿈·Schredl DRF·Hobson AIM·Solms 정리, 앱 적용 가이드 + 함정 5종 + 짝 스킬 관계 | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 Hall/Van de Castle 10개 카테고리·정서 5종·금지 척도 / Q2 연속성 가설 개인 단정 anti-pattern / Q3 Hobson AIM vs Solms 대립점) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-09-26 | v2 | 재검증 — DreamResearch.net 원문·Crossref 대조 12건, 서지 오류 2건 정정(학업 스트레스 논문 저자 Zadra & Robert 2003 → Duke & Davidson 2002, Hobson "AIM Model" 불특정 서지 교체), Norms 수치 보강, 미검증 2건(DRF r=0.85, 반복 꿈 60~75%), 실전 질문 2/2 PASS → PENDING_TEST | 메인 세션 (재검증) |
+| 2026-09-28 | v2 | skill-tester 실제 agent 재테스트 수행 (Q1 Duke & Davidson 2002 서지 정정 확인 / Q2 Hobson AIM 서지 교체 확인) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |

@@ -31,7 +31,7 @@ description: >
 > - 위키백과 대운(사주팔자): https://ko.wikipedia.org/wiki/대운_(사주팔자)
 >
 > 버전 기준: Recharts **3.10.1**, visx **4.0.0**, React 19, WCAG 2.2
-> 검증일: 2026-09-10
+> 검증일: 2026-09-28 (최초 2026-09-10)
 >
 > 짝 스킬 (설치된 경우 참조):
 > - `frontend/font-optimization` — CJK 서브셋·`font-display`·`unicode-range` 원본 카탈로그. 본 스킬 7절은 그 위에 *사주 전용 고정 문자셋*만 얹는다

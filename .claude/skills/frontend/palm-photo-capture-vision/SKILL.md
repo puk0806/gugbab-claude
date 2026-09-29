@@ -27,7 +27,7 @@ description: >
 > - Britannica "Palmistry": https://www.britannica.com/topic/palmistry
 > - Pech-Pacheco et al., *Diatom autofocusing in brightfield microscopy: a comparative study* (ICPR 2000) — variance-of-Laplacian 원저
 >
-> 검증일: 2026-09-10
+> 검증일: 2026-09-28 (최초 2026-09-10)
 >
 > 짝 스킬 (상호 참조, 설치된 경우):
 > - `frontend/dream-app-onboarding` — **맥락적 권한 요청 시점** 패턴의 원본. 본 스킬은 "카메라 권한을

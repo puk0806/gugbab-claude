@@ -1,8 +1,8 @@
 ---
 skill: geo-ai-discoverability
 category: frontend
-version: v1.1
-date: 2026-08-26
+version: v1.2
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `geo-ai-discoverability` |
 | 스킬 경로 | `.claude/skills/frontend/geo-ai-discoverability/SKILL.md` |
-| 검증일 | 2026-06-01 (최초) / **2026-08-26 (freshness 갱신)** |
+| 검증일 | 2026-06-01 (최초) / 2026-08-26 (재검증 1차) / **2026-09-28 (재검증 2차)** |
 | 검증자 | skill-creator |
-| 스킬 버전 | v1.1 |
+| 스킬 버전 | v1.2 |
 
 ---
 
@@ -94,6 +94,20 @@ status: APPROVED
 | Cloudflare Verified Bots 정책 | https://developers.cloudflare.com/bots/concepts/bot/verified-bots/ | ⭐⭐⭐ High | 2026-08-26 조회 | verified 조건에 robots.txt 준수 포함, ByteDance 크롤러 미등재 확인 |
 | TollBit — State of the Bots (2026 H1) | https://tollbit.com/bots/25q2/ | ⭐⭐ Medium (측정 주체 1차) | 2026-08 공개 | "Robots.txt and the Bypassing Problem" 섹션 존재 확인. 수치는 매체 요약 경유 |
 
+### 3-2. 2026-09-28 재검증(2차) 시 추가 조사 소스
+
+| 소스명 | URL | 신뢰도 | 날짜 | 비고 |
+|--------|-----|--------|------|------|
+| OpenAI 크롤러 문서 (재확인) | https://developers.openai.com/api/docs/bots | ⭐⭐⭐ High | 2026-09-28 조회 | GPTBot/OAI-SearchBot 1.3→1.4 버전업 확인(정책 변경 없음), ChatGPT-User "robots.txt rules may not apply" 원문 재확인 |
+| Anthropic 크롤러 문서 (재확인) | https://support.claude.com/en/articles/8896518 | ⭐⭐⭐ High | 2026-09-28 조회(문서일 2026-04-07 유지) | ClaudeBot/Claude-User/Claude-SearchBot 3종 변경 없음 |
+| Perplexity 크롤러 문서 (재확인) | https://docs.perplexity.ai/docs/resources/perplexity-crawlers | ⭐⭐⭐ High | 2026-09-28 조회 | PerplexityBot/Perplexity-User 변경 없음 |
+| llmstxt.org (재확인) | https://llmstxt.org/ | ⭐⭐ Medium | 2026-09-28 조회 | v2(2026-08-10)에서 버전 변경 없음. "thousands of sites publish llms.txt", OpenAI·Anthropic·Gemini 발행 지속, Chrome Lighthouse가 agentic browsing 점검 항목으로 llms.txt 존재를 감사한다는 신규 서술 확인(랭킹·인용 신호 아님, 도구 단의 점검) |
+| Google 크롤링 문서 신 URL 체계 | https://developers.google.com/crawling/docs/crawlers-fetchers/google-common-crawlers | ⭐⭐⭐ High | 2026-07-14 갱신 | Google-Extended 정의가 이 페이지의 앵커로 통합됨을 직접 확인. 구 `search/docs/crawling-indexing/google-extended` curl 404 확인 |
+| Google 크롤링 문서 changelog | https://developers.google.com/crawling/docs/changelog | ⭐⭐⭐ High | 2026-09-28 조회 | 2025-11 URL 체계 이전(검색 외 제품 공유 사유), 2026-03-20 Google-Agent 신설, 2026-05 Web Bot Auth 문서화, 2026-02 IP 대역 경로 이전 확인 |
+| Google-Agent 공식 문서 (신규) | https://developers.google.com/crawling/docs/crawlers-fetchers/google-agent | ⭐⭐⭐ High | 2026-08-19 갱신 | UA 문자열, "사용자 요청 fetch → robots.txt 일반적으로 무시" 원문 확인 |
+| Google 생성형 AI 최적화 가이드·AI 기능·Search Console 제어·성능 보고서 (재확인 4건) | (§3-1과 동일 URL) | ⭐⭐⭐ High | 2026-09-28 조회(200 OK, curl 확인) | 내용 변경 없음 |
+| Cloudflare·TollBit·arXiv·Anthropic llms.txt 실물(재확인 7건) | (§3-1과 동일 URL) | — | 2026-09-28 조회(전부 200 OK) | 링크 유효성만 재확인, 내용 재조사는 없음(§1 범위 밖) |
+
 ---
 
 ## 4. 검증 체크리스트 (Test List)
@@ -121,9 +135,9 @@ status: APPROVED
 - [✅] 정책 결정자(사이트 운영자)와 개발자 양쪽 관점 균형
 
 ### 4-4. Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-06-01 skill-tester → general-purpose 수행)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (3/3 PASS)
-- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (gap 없음, 보완 불필요)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-06-01 skill-tester → general-purpose 수행 / 2026-09-28 skill-tester → general-purpose로 Google-Agent 신설·Google-Extended URL 정정분 재수행)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (3/3 PASS — 2026-06-01, 2/2 PASS — 2026-09-28)
+- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (gap 없음, 세 번의 테스트 모두 보완 불필요 — 2026-09-28 Q2에서 표 프레이밍상 가독성 개선 여지만 발견, 사실 오류 아님)
 
 ### 4-5. 2026-08-26 갱신분 클레임 교차 검증 결과
 
@@ -181,6 +195,34 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose
+**수행 방법**: SKILL.md Read 후 2개 실전 질문(Google-Agent 신설·Google-Extended URL 정정분 겨냥 1개 + bot-management-seo와의 크롤러 목록 교차검증 1개) 답변, 근거 섹션 및 anti-pattern 회피 확인
+
+### 실제 수행 테스트 (2026-09-28, Google-Agent 신설·URL 정정 재테스트)
+
+**Q1. Google이 사용자 요청으로 우리 사이트를 대신 방문·조회하는 새 에이전트 크롤러를 냈다는데 뭐고, robots.txt로 통제 가능한가? Google-Extended 공식 문서 URL이 최근 404 뜨는 이유는?**
+- ✅ PASS
+- 근거: SKILL.md "1-1절" 표(45줄) + 56줄(Google-Agent 서술) + 9줄·54줄(URL 이전 사유)
+- 상세: `Google-Agent`(2026-03-20 도입, Project Mariner 등 user-triggered fetcher)가 robots.txt를 일반적으로 무시한다는 공식 문구를 정확히 인용했고, Google-Extended 구 URL이 2025-11 문서 체계 이전으로 `google-common-crawlers` 페이지 앵커로 통합돼 404가 되는 이유까지 정확히 답변
+
+**Q2. bot-management-seo와 geo-ai-discoverability의 AI 크롤러 목록·분류가 서로 모순되지 않는지 (특히 Google-Extended 서술)**
+- ✅ PASS
+- 근거: SKILL.md "1-2절" 83줄("Google-Extended는 크롤러가 아니라 robots.txt 토큰") + bot-management-seo SKILL.md "1.4절" 65줄
+- 상세: bot-management-seo가 "Google-Extended가 common-crawlers.json에 포함"이라 한 것과 이 스킬이 "크롤러가 아니라 토큰, 실제 크롤링은 Googlebot"이라 한 것이 모순이 아니라 상호 보완 관계(토큰이라 별도 IP가 없어 Googlebot IP 목록을 그대로 참조)라고 정확히 판정. 나머지 크롤러 명칭·분류도 두 파일 간 일치 확인
+
+### 발견된 gap (2026-09-28, 선택적 개선)
+
+- geo-ai-discoverability Q2: bot-management-seo SKILL.md 1.4절 표가 Google-Extended를 다른 실제 크롤러(GPTBot 등)와 같은 행 형식("봇 이름" 열)으로 나열해 독자가 "독립 크롤러"로 오인할 여지가 있음. **차단 요인 아님** — 본문(용도 셀)에 "opt-out 전용 토큰"이라 명시돼 있어 사실관계 오류는 아님. bot-management-seo 쪽 선택 보강 사항으로 별도 기록.
+
+### 판정 (2026-09-28)
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 해당 없음 (표준·정책 정리형 — content test PASS = APPROVED 전환 가능)
+- 최종 상태: APPROVED (유지)
+
+---
+
 **수행일**: 2026-06-01
 **수행자**: skill-tester → general-purpose (도메인 에이전트 미등록, general-purpose로 대체)
 **수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
@@ -220,6 +262,27 @@ status: APPROVED
 status는 PENDING_TEST로 유지하며, 별도 세션에서 skill-tester로 검증 예정이었음.
 (위 "실제 수행 테스트" 섹션이 해당 보류를 해소한 기록이다.)
 
+### [2026-09-28] 재검증(2차) — AI 크롤러 UA·llms.txt 현행 재확인
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 + references/REFERENCE.md Read → 핵심 클레임 6개를 1차 소스(WebFetch·curl)와 대조, 보강·축소 검토
+
+**클레임 대조 결과**:
+1. OpenAI GPTBot/OAI-SearchBot/ChatGPT-User/OAI-AdsBot 정책 및 robots.txt 적용 여부 → VERIFIED (버전만 1.3→1.4로 소폭 변경, 정책 동일) — https://developers.openai.com/api/docs/bots
+2. Anthropic ClaudeBot/Claude-User/Claude-SearchBot 3종 구성 및 IP 목록 → VERIFIED (변경 없음, 문서일 2026-04-07 유지) — https://support.claude.com/en/articles/8896518
+3. Perplexity PerplexityBot/Perplexity-User 및 robots.txt 무시 문구 → VERIFIED (변경 없음) — https://docs.perplexity.ai/docs/resources/perplexity-crawlers
+4. `Google-Extended` 공식 문서 URL(`developers.google.com/search/docs/crawling-indexing/google-extended`) → **DISPUTED(URL 실효 → 정정)** — 2025-11 Google 크롤링 문서 URL 체계 이전으로 구 URL이 404 (curl 확인). 현재는 `developers.google.com/crawling/docs/crawlers-fetchers/google-common-crawlers#google-extended`로 통합. SKILL.md·REFERENCE.md 링크 정정 반영
+5. llms.txt v2(2026-08-10) 명세가 현재도 최신인가 → VERIFIED (v3 등 후속 개정 없음, llmstxt.org 재조회로 확인. Chrome Lighthouse의 agentic browsing 점검 항목에 llms.txt 존재 여부가 포함된다는 신규 서술 확인 — 랭킹·인용 신호가 아니라 브라우저 도구 단의 점검이므로 본문 §2-1 "소비(랭킹·인용 반영)" 구분과 충돌하지 않아 별도 수정 없이 그대로 둠)
+6. Google이 2026-03 이후 신설한 AI 관련 크롤러 UA가 있는가 → **ADD** — `Google-Agent`(2026-03-20 공식 도입, Project Mariner 등 에이전트용 user-triggered fetcher, robots.txt 일반적으로 무시)를 공식 문서로 확인 — https://developers.google.com/crawling/docs/crawlers-fetchers/google-agent
+
+**보강(ADD)·축소**: `Google-Agent` 크롤러를 §1-1 표·§1-2 분류·§1-3 robots.txt 템플릿 2종·§1-4 robots.txt 무시 공식 사례·§4-2 로그 grep 및 REFERENCE.md §6-1·§7-5에 추가 반영. `Google-Extended` 공식 문서 URL을 신 URL 체계로 정정하고 Google 문서 이전 사실(2025-11)을 SKILL.md에 주의 문구로 명시. 축소는 없음(레거시 크롤러·주의 목록 유지).
+
+**실전 질문 재검증**:
+- Q1. "Google이 사이트를 대신 방문해 사용자 요청을 처리하는 새 크롤러를 냈다는데, robots.txt로 막을 수 있나?" → SKILL.md §1-1(Google-Agent 행)·§1-4(robots.txt 일반적으로 무시 공식 인용) 근거로 PASS
+- Q2. "Google-Extended 공식 문서 링크가 갑자기 404가 뜨는데 왜 그런가?" → SKILL.md §1-1 각주(2025-11 URL 이전 설명) 근거로 PASS
+
+**재검증 최종 판정**: status **PENDING_TEST 전환** (ADD 1건 + URL 정정 1건 발생 — verification-policy에 따라 메인이 skill-tester 재테스트 필요. 실사용 필수 카테고리 아님 → content test PASS 시 APPROVED 복귀 가능)
+
 ---
 
 ## 6. 검증 결과 요약
@@ -230,8 +293,10 @@ status는 PENDING_TEST로 유지하며, 별도 세션에서 skill-tester로 검�
 | 구조 완전성 | ✅ (skill-md-guard 훅 통과) |
 | 실용성 | ✅ (robots.txt·JSON-LD·서버 로그 grep 즉시 사용 가능) |
 | 에이전트 활용 테스트 | ✅ (2026-06-01 skill-tester 수행, 3/3 PASS) |
-| freshness 재검증 | ✅ 2026-08-26 — Bytespider 추가, llms.txt v2·플랫폼 입장 정정, Google AI 기능 2026 변경 반영. VERIFIED 22건 / DISPUTED 4건(정정 또는 한계 명시 후 게재) / UNVERIFIED 3건(본문 미기재) |
-| **최종 판정** | **APPROVED** (2026-08-26 재검증 후에도 유지) |
+| freshness 재검증 1차 | ✅ 2026-08-26 — Bytespider 추가, llms.txt v2·플랫폼 입장 정정, Google AI 기능 2026 변경 반영. VERIFIED 22건 / DISPUTED 4건(정정 또는 한계 명시 후 게재) / UNVERIFIED 3건(본문 미기재) |
+| freshness 재검증 2차 | ✅ 2026-09-28 — `Google-Agent` 신규 크롤러 추가(ADD), `Google-Extended` 공식 문서 URL 정정(구 URL 404, DISPUTED→정정). VERIFIED 5건 / DISPUTED 1건(정정) / ADD 1건 |
+| 에이전트 활용 재테스트 | ✅ 2026-09-28 — Q1 Google-Agent+URL 정정 / Q2 bot-management-seo 교차검증(모순 없음) → 2/2 PASS |
+| **최종 판정** | **APPROVED** (2026-09-28 skill-tester 재테스트 완료, 2/2 PASS — 크롤러 목록 교차검증 모순 없음 확인) |
 
 ---
 
@@ -239,8 +304,10 @@ status는 PENDING_TEST로 유지하며, 별도 세션에서 skill-tester로 검�
 
 - [✅] skill-tester를 통한 실사용 테스트 (2026-06-01 완료, 3/3 PASS)
 - [✅] 정기 재검증 1회차 수행 (2026-08-26) — 크롤러 표·llms.txt·Google AI 기능 전면 재확인
+- [✅] 정기 재검증 2회차 수행 (2026-09-28) — Google-Extended URL 정정, Google-Agent 신규 크롤러 반영, 나머지 크롤러 UA·llms.txt v2 변경 없음 확인
+- [✅] Google-Agent 신설·Google-Extended URL 정정분 content 재테스트 + bot-management-seo 크롤러 목록 교차검증 (2026-09-28 완료, 2/2 PASS — skill-tester → general-purpose, 모순 없음 확인)
 - [✅] llms.txt 채택률·플랫폼 입장 변화 추적 → v2 명세(2026-08-10) 및 Google 공식 부정 문구 반영 완료
-- [❌] **다음 정기 재검증 권장일 2027-02-26** (분기 단위 정책 변동. 차단 요인 아님)
+- [❌] **다음 정기 재검증 권장일 2027-03-28** (분기 단위 정책 변동. 차단 요인 아님)
 - [❌] ByteDance 공식 크롤러 문서·IP 목록 공개 여부 추적 — 공개 시 `1차 소스 미검증` 표기 해소 (차단 요인 아님)
 - [❌] Bytespider robots.txt 준수에 대한 **독립 인프라 사업자(Cloudflare 등) 전용 보고서** 확보 시 §1-4 근거 승급 (차단 요인 아님)
 - [❌] Search Console 생성형 AI 성능 보고서의 **클릭 지표 포함 여부** 확인 후 §4-0 보강 (현재 미검증이라 서술 제외)
@@ -257,3 +324,5 @@ status는 PENDING_TEST로 유지하며, 별도 세션에서 skill-tester로 검�
 | 2026-06-01 | v1 | 최초 작성 — 7개 회사 14종 AI 크롤러 정책, llms.txt 표준 비공식 상태, 인용 친화 콘텐츠 구조, GEO 측정 한계, 윤리·법적 이슈, 흔한 실수 7종 포함 | skill-creator |
 | 2026-06-01 | v1 | 2단계 실사용 테스트 수행 (Q1 robots.txt 크롤러 독립 제어 / Q2 llms.txt vs robots.txt 차이 / Q3 SaaS 인용 전략 + llms.txt 환상 검증) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-08-26 | v1.1 | **freshness 갱신** — ① §1-1에 `Bytespider`(+`OAI-AdsBot`) 추가, UA·용도·**공식 문서 부재** 주의 명시 / §1-2·§1-3 템플릿 2종·§4-2 로그 grep에 반영 ② §1-4에 "회사가 공식 명시한 미준수"(ChatGPT-User·Perplexity-User)와 "제3자 측정 보고"(Bytespider/TollBit) 분리 신설 ③ **§1-5 신설** — Search Console `Search generative AI` 제어(2026-06) ④ §2 llms.txt 전면 재검증: *발행/권장/소비/명시적 부정* 4분할로 기존 단정 정정, **v2 명세(2026-08-10)** 반영, `llms-ctx*.txt` 서술 정정, §2-4 v1→v2 변경표 신설(기존 2-4 → 2-5) ⑤ **§3-5 신설** — Google 생성형 AI 최적화 공식 가이드(2026-07-10) ⑥ **§3-6 신설** — 네이버 AI 브리핑 요약 + `naver-seo-specifics` §2-2 포인터(중복 서술 없음) ⑦ **§4-0 신설** — Search Console 생성형 AI 성능 보고서 ⑧ `references/REFERENCE.md` §7-7 llms.txt 단정 정정 + 부록 공식 URL 8건 추가. UNVERIFIED 3건(Claude/Perplexity의 llms.txt 소비 주장, 성능 보고서 클릭 지표)은 본문 미기재. status APPROVED 유지 | skill-creator |
+| 2026-09-28 | v1.2 | **재검증(2차)** — ① `Google-Extended` 공식 문서 URL 정정: 2025-11 Google 크롤링 문서 URL 체계 이전(`search/docs/crawling-indexing/*` → `crawling/docs/*`)으로 구 URL 404 확인, SKILL.md §1-1·REFERENCE.md 부록 링크 및 주의 문구 갱신 ② **`Google-Agent` 신규 크롤러 추가(ADD)** — 2026-03-20 공식 도입, 사용자 요청 시 Google 인프라 에이전트(Project Mariner 등)의 웹 탐색·행동, robots.txt 일반적으로 무시(공식 문서 원문 확인) — §1-1·§1-2·§1-3(템플릿 2종)·§1-4·§4-2 및 REFERENCE.md §6-1·§7-5에 반영 ③ OpenAI GPTBot/OAI-SearchBot 버전 1.3→1.4 확인(정책 변경 없음, 본문 수정 불필요) ④ 나머지 크롤러 UA·llms.txt v2·Google AI 기능 정책은 재확인 결과 변경 없음(VERIFIED). status **PENDING_TEST**로 전환(ADD·URL 정정 발생 — skill-tester 재테스트 대기) | skill-creator (재검증) |
+| 2026-09-28 | v1.2 | 2단계 재테스트 수행 (Q1 Google-Agent 신설·Google-Extended URL 정정 / Q2 bot-management-seo와의 크롤러 목록 교차검증 — 모순 없음 확인) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |

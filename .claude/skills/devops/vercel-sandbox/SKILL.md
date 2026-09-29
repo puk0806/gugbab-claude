@@ -5,9 +5,9 @@ description: Vercel Sandbox(@vercel/sandbox) 마이크로VM에서 CLI·에이전
 
 # Vercel Sandbox — 마이크로VM에서 CLI/에이전트 실행 & 출력 중계
 
-> 소스: https://vercel.com/docs/sandbox (개요·pricing·sdk-reference·persistent-sandboxes·snapshots·authentication), https://vercel.com/kb/guide/how-to-use-snapshots-for-faster-sandbox-startup, https://vercel.com/blog/optimizing-vercel-sandbox-snapshots, https://vercel.com/changelog/run-claude-managed-agents-with-vercel-sandbox
-> 검증일: 2026-07-03
-> 기준 버전: `@vercel/sandbox` v2 (Persistent 기본), 과금·한도는 2026-06 기준
+> 소스: https://vercel.com/docs/sandbox (개요·pricing·sdk-reference·persistent-sandboxes·snapshots·authentication·concepts/regions), https://vercel.com/kb/guide/how-to-use-snapshots-for-faster-sandbox-startup, https://vercel.com/blog/optimizing-vercel-sandbox-snapshots, https://vercel.com/changelog/run-claude-managed-agents-with-vercel-sandbox
+> 검증일: 2026-09-28 (최초 2026-07-03)
+> 기준 버전: `@vercel/sandbox` v3 (npm 최신 3.5.0, Persistent 기본), 과금·한도는 2026-09 기준. `runtime` 옵션은 **deprecated** — `image` 사용 권장(예: `vercel/sandbox/universal`)
 > 대상 시나리오: Next.js API Route가 Vercel Sandbox 안에서 Claude Code CLI를 실행하고 stdout을 SSE로 클라이언트에 중계하는 개인용 중계 서버
 
 ---
@@ -16,10 +16,11 @@ description: Vercel Sandbox(@vercel/sandbox) 마이크로VM에서 CLI·에이전
 
 Vercel Sandbox는 **Firecracker 마이크로VM**에서 임의 코드를 격리 실행하는 compute primitive다.
 
-- 런타임: Amazon Linux 2023, `node26` / `node24`(기본) / `node22` / `python3.13`. `sudo` 사용 가능, 기본 작업 디렉터리 `/vercel/sandbox`
-- 리전: **`iad1` 전용** (다른 리전 선택 불가)
-- 기본 타임아웃: **5분** (`timeout` 옵션으로 조정, `extendTimeout()`으로 연장)
-- 기본 리소스: **2 vCPU / 4GB** (vCPU당 2048MB 고정), 임시 NVMe 디스크 32GB
+- 이미지: 기본 이미지 `vercel/sandbox/universal`(현재 Node.js LTS·Python 3.14·코딩 에이전트·유틸리티 포함). Vercel Managed Image 또는 커스텀 OCI 이미지(Vercel Container Registry)도 선택 가능. `sudo` 사용 가능, 기본 작업 디렉터리 `/vercel/sandbox`
+  > 주의: `runtime: 'node24'` 같은 개별 런타임 지정 방식(`node26`/`node24`/`node22`/`python3.13`)은 **deprecated** — `image` 옵션을 쓴다. 레거시 `runtime` 경유로 생성하면 디스크가 32GB만 할당된다(아래 참고).
+- 리전: 기본 `iad1`. 총 **19개 리전** 중 `region` 옵션으로 선택 가능(2026-07 전 리전 개방). Pro/Enterprise는 `failoverRegions`로 주 리전 장애 시 대체 리전을 지정할 수 있다(Hobby·Pro 체험판은 리전 선택은 가능하나 failover 설정 불가 — `payment_required` 오류)
+- 기본 타임아웃: **5분** (`timeout` 옵션으로 조정, `extendTimeout()`으로 연장). 이 한도는 세션(단일 실행) 단위이며, persistent 샌드박스는 재개마다 리셋되어 수명 자체는 사실상 무제한
+- 기본 리소스: **2 vCPU / 4GB** (vCPU당 2048MB 고정). `@vercel/sandbox` 3.0.0+ 또는 커스텀 이미지로 생성 시 임시 NVMe 디스크 **64GB**, 레거시 `runtime` 경유 생성은 32GB
 - 인증: Vercel OIDC 토큰(권장) 또는 Access 토큰
 
 설치:
@@ -29,7 +30,7 @@ npm i @vercel/sandbox
 
 ---
 
-## 2. 핵심 API (@vercel/sandbox v2)
+## 2. 핵심 API (@vercel/sandbox v3)
 
 ### Sandbox.create()
 ```ts
@@ -37,13 +38,14 @@ import { Sandbox } from '@vercel/sandbox';
 
 const sandbox = await Sandbox.create({
   name: 'claude-relay',            // 프로젝트 내 유일. 생략 시 자동 생성, 생성 후 변경 불가
-  runtime: 'node24',
+  image: 'vercel/sandbox/universal', // runtime(deprecated) 대신 image 사용
   resources: { vcpus: 2 },         // 기본 2 (2048MB/vCPU)
   timeout: 5 * 60 * 1000,          // 기본 5분(ms)
+  region: 'iad1',                  // 생략 시 프로젝트 기본 리전 → 없으면 iad1. 19개 리전 중 선택 가능
   // persistent: true 가 기본 — stop 시 자동 스냅샷 & 다음 resume 때 복원
 });
 ```
-주요 옵션: `name`, `runtime`, `resources.vcpus`, `timeout`(ms), `ports`(최대 15), `source`(git/tarball/snapshot), `env`, `networkPolicy`(`allow-all` 기본/`deny-all`/커스텀), `persistent`(기본 true), `snapshotExpiration`, `keepLastSnapshots`.
+주요 옵션: `name`, `image`(권장, 예: `vercel/sandbox/universal`) / `runtime`(**deprecated**), `resources.vcpus`, `timeout`(ms), `region`(기본 `iad1`, 19개 리전 중 선택), `failoverRegions`(Pro/Enterprise 전용), `ports`(최대 15), `source`(git/tarball/snapshot), `env`, `networkPolicy`(`allow-all` 기본/`deny-all`/커스텀 — 변경은 `sandbox.update({ networkPolicy })`, `updateNetworkPolicy()`는 deprecated), `persistent`(기본 true), `snapshotExpiration`, `keepLastSnapshots`.
 
 ### runCommand() — 블로킹 & 스트리밍
 ```ts
@@ -78,9 +80,9 @@ console.log(sandbox.timeout);           // 남은 시간(ms). 짧으면 아래�
 await sandbox.extendTimeout(60_000);    // 60초 연장 (플랜 최대 한도까지)
 
 const stopped = await sandbox.stop();   // VM 정지. persistent면 자동 스냅샷
-console.log(stopped.snapshot?.id, stopped.activeCpuUsageMs, stopped.networkTransfer);
+console.log(stopped.snapshot?.id, stopped.activeCpuDurationMs, stopped.networkTransfer); // networkTransfer: { ingress, egress }
 ```
-`stop()`은 여러 번 호출해도 안전하며, 정지 시 실제 과금 지표(`activeCpuUsageMs`, `networkTransfer`)를 반환한다.
+`stop()`은 여러 번 호출해도 안전하며, 정지 시 실제 과금 지표(`activeCpuDurationMs`, `networkTransfer`)를 반환한다.
 
 ### 인증
 | 시나리오 | 방법 | 필요한 값 |
@@ -102,7 +104,7 @@ console.log(stopped.snapshot?.id, stopped.activeCpuUsageMs, stopped.networkTrans
 // 최초 1회만 onCreate 실행(CLI 설치), 재개마다 onResume 실행
 const sandbox = await Sandbox.getOrCreate({
   name: 'claude-relay',
-  runtime: 'node24',
+  image: 'vercel/sandbox/universal', // runtime(deprecated) 대신 image — §2와 동일
   onCreate: async (sbx) => {
     await sbx.runCommand('npm', ['install', '-g', '@anthropic-ai/claude-code']); // CLI 1회 설치
   },
@@ -141,12 +143,13 @@ const fresh = await Sandbox.create({
 | **Active CPU** | CPU를 실제 사용한 시간. **I/O 대기(네트워크·DB·AI 모델 호출)는 미과금** | $0.128/시간 |
 | **Provisioned Memory** | 할당 메모리(GB) × 실행 시간(시간). vCPU당 2GB. **최소 1분 단위 과금** | $0.0212/GB-hour |
 | **Sandbox Creations** | `Sandbox.create()` 호출 횟수 (실행 시간 무관) | $0.60 / 1M회 |
-| **Data Transfer** | 인/아웃 네트워크 전송량 | $0.15/GB |
+| **Data Transfer** (Network) | 샌드박스가 인터넷으로 보내는 트래픽(egress) + 개방 포트 인/아웃 트래픽. **인터넷에서 다운로드하는 트래픽(npm 패키지·git clone 등)은 무료**(2026-07 정책 변경) | $0.15/GB |
 | **Snapshot Storage** | 스냅샷 저장 용량 | $0.08/GB-month |
 
 메모리 예시: 4 vCPU(8GB) 30분 실행 = `8GB × 0.5h = 4 GB-hours`.
 
 > Active CPU는 100% 사용 가정 추정치보다 실제로는 낮은 경우가 많다. Claude CLI가 모델 응답을 기다리는 시간은 I/O 대기라 Active CPU에 계상되지 않기 때문이다.
+> Active CPU·Provisioned Memory·Data Transfer 요율은 리전마다 다르다. 위 표는 기본 `iad1` 기준이며, 다른 리전 사용 시 공식 pricing 페이지의 Regional pricing을 확인한다.
 
 ---
 
@@ -159,10 +162,10 @@ const fresh = await Sandbox.create({
 | Sandbox Creations | **5,000회/월** | $0.60/1M |
 | Data Transfer | 20 GB/월 | $0.15/GB |
 | Snapshot Storage | 15 GB(lifetime) | $0.08/GB-month |
-| 동시 실행 | **10개** | 2,000개 |
+| 동시 실행 | **10개** | 10,000개 |
 | 최대 실행 시간 | **45분** | **24시간** |
 | 최대 리소스 | **4 vCPU / 8GB** | 8 vCPU / 16GB |
-| vCPU 생성 속도 | 40 vCPU / 10분 | 200 vCPU / 분 |
+| vCPU 생성 속도 | 시작 20/분 → 최대 40/분(동적 쿼터, 10분 유휴 시 초기화) | 시작 150/분 → 최대 5,000/분(동적 쿼터) |
 | 포함 크레딧 | — | **$20/월** |
 
 **초과 시 동작**: Hobby는 한도 초과 시 **과금 없이 샌드박스 생성이 일시정지**되며, 최초 사용 후 30일이 지나 다음 청구 주기가 오면 재개된다. 계속 쓰려면 Pro로 업그레이드한다. Pro는 $20 크레딧 소진 후 초과분이 요율대로 과금된다(Spend Management로 알림·중지 설정 가능).
@@ -235,15 +238,17 @@ Hobby 메모리 한도는 **420 GB-hours/월**이다. 최소 구성인 1 vCPU(2G
 | 시크릿을 커맨드 라인 인자로 전달 | `args`는 프로세스 목록·로그에 노출됨 | `runCommand({ env: { API_KEY } })` 또는 `Sandbox.create({ env })`로 환경변수 주입 |
 | Hobby에서 샌드박스 상시 유지 | 45분 최대 실행·420 GB-hours 한도로 불가능 | 요청 단위 resume→실행→stop |
 | persistent인데 스냅샷 방치 | stop마다 스냅샷 누적 → Snapshot Storage 증가 | `keepLastSnapshots: { count: 1 }`로 최신만 유지 |
-| 다른 리전 기대 | Sandbox는 `iad1` 전용 | 레이턴시 민감 시 앱도 iad1 근처에 배치 |
+| 리전 미지정 후 지연시간 불평 | 미지정 시 프로젝트 기본(없으면 `iad1`)으로 생성됨 | 데이터 소스에 가까운 리전을 `region`으로 명시 지정(19개 리전 중 선택), Pro/Enterprise는 `failoverRegions`로 장애 대비 |
+| 스냅샷을 다른 리전에서 재사용 시도 | 스냅샷은 생성된 리전에서만 사용 가능 — 다른 리전 지정 시 `snapshot_region_mismatch` 오류 | 다른 리전에서 쓰려면 해당 리전에서 새로 생성·설치 후 재스냅샷 |
 
 ---
 
 ## 요약 체크리스트
 
-- [ ] `@vercel/sandbox` v2, 인증은 배포 환경이면 OIDC 자동 / 외부면 `VERCEL_TOKEN`+`TEAM_ID`+`PROJECT_ID`
+- [ ] `@vercel/sandbox` v3, `image`(권장) 사용 — `runtime`은 deprecated. 인증은 배포 환경이면 OIDC 자동 / 외부면 `VERCEL_TOKEN`+`TEAM_ID`+`PROJECT_ID`
 - [ ] CLI는 `onCreate` 또는 수동 스냅샷으로 1회만 설치 → 이름으로 재개
 - [ ] SSE 중계는 `runCommand({ detached: true })` + `command.logs()`
 - [ ] 시크릿은 `env`로만 전달 (커맨드 인자 금지)
 - [ ] 응답 완료 시 즉시 `stop()`, `keepLastSnapshots: { count: 1 }`
-- [ ] Hobby 한도(45분·420 GB-hours·동시 10개·iad1·최대 4vCPU/8GB) 인지, 상시 실행 금지
+- [ ] 리전은 기본 `iad1`(19개 리전 중 `region`으로 선택 가능), 스냅샷은 생성된 리전에서만 재사용 가능
+- [ ] Hobby 한도(45분·420 GB-hours·동시 10개·최대 4vCPU/8GB) 인지, 상시 실행 금지

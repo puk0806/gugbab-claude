@@ -13,7 +13,7 @@ description: >
 > - Sitelinks Search Box deprecation: https://developers.google.com/search/blog/2024/10/sitelinks-search-box
 > - HowTo/FAQ 변경: https://developers.google.com/search/blog/2023/08/howto-faq-changes
 >
-> 검증일: 2026-08-26 (최초 2026-06-01 · 08-26 freshness 재검증: FAQPage 3단계 폐지·HowTo 제거·NewsArticle headline 110자 VERIFIED, 변경 없음)
+> 검증일: 2026-09-28 (최초 2026-06-01 · 08-26 freshness 재검증: FAQPage 3단계 폐지·HowTo 제거·NewsArticle headline 110자 VERIFIED, 변경 없음(※ 09-28 재검증에서 이 판정 정정됨) · 09-28 2차 재검증: FAQPage/HowTo 종료 상태·QAPage 지원 현황 VERIFIED 변경 없음, "NewsArticle만 110자 제한 유지" 클레임은 공식 문서·원 인용 소스 재확인 결과 DISPUTED로 정정(아래 "headline 길이" 참조))
 > 참고: 본문은 Article·BreadcrumbList·FAQPage·HowTo·Organization/LocalBusiness 5절이며, **Product·VideoObject·WebSite는 `references/REFERENCE.md`** 에 있다. 커머스 Product 스키마(배송·반품 필드 포함)의 정본은 `frontend/ecommerce-seo` §2.
 
 ---
@@ -100,10 +100,13 @@ JSON-LD를 `<script>`에 주입할 때 본문 데이터에 `</script>`가 포함
 
 ### headline 길이
 
-- `Article` / `BlogPosting`: 2023년 1월 Google이 110자 제한 가이드를 제거. 다만 "긴 제목은 일부 기기에서 잘릴 수 있다"고 권고.
-- `NewsArticle`: **110자 제한이 여전히 유효**. 초과 시 structured data 검증 실패.
+> **정정 (2026-09-28 2차 재검증)**: 2026-08-26까지 이 스킬은 "NewsArticle만 110자 제한이 남아있다"고 기재했으나 **DISPUTED로 정정**한다. Google 공식 Article 구조화 데이터 문서는 Article·NewsArticle·BlogPosting을 한 페이지에서 공통 `headline` 속성으로 다루며, 2026-09-28 기준 이 문서 어디에도 "110" 또는 타입별 예외 언급이 없다(Wayback 스냅샷으로 2023-01~2026-09 구간 대조, 모두 부재 확인). 원래 인용했던 2차 소스(Search Engine Land, 2023-01-04)도 "Article structured data 문서"의 110자 하드 제한 제거를 **Article/NewsArticle/BlogPosting 공통**으로 설명하며, NewsArticle 예외를 언급하지 않는다.
 
-> 주의: NewsArticle headline 110자 초과 금지. Article은 제한 없음.
+- 세 타입(`Article`/`NewsArticle`/`BlogPosting`) 모두 **하드 캐릭터 제한 없음** (2023년 1월 제거).
+- 공식 가이드는 "간결한 제목 사용 권장 — 길면 일부 기기에서 잘릴 수 있다"는 권고만 제공.
+- 소스: https://developers.google.com/search/docs/appearance/structured-data/article (2026-09-28 확인 — headline 속성 설명에 "110" 문구 없음)
+
+> 주의: 위 정정 이전 버전(~2026-08-26)을 참조한 기록이 있다면 "NewsArticle 110자 제한"은 근거 없는 클레임이었음을 인지할 것.
 
 ### image 요구사항
 
@@ -169,7 +172,7 @@ function ArticleJsonLd({ article }) {
 
 - `datePublished`만 넣고 `dateModified` 누락 → 수정 이력 추적 안 됨
 - `author`를 문자열로 작성 → 반드시 `Person` 또는 `Organization` 객체
-- NewsArticle headline 110자 초과
+- 지나치게 긴 headline → 하드 제한은 없지만 기기에 따라 잘릴 수 있어 간결하게 작성 권장 (NewsArticle에만 별도 글자수 제한이 있다는 것은 2026-09-28 재검증에서 근거 없음으로 확인됨)
 - `image`를 단일 URL로만 제공 (가능하면 여러 비율 배열로)
 
 ---
@@ -229,7 +232,7 @@ function ArticleJsonLd({ article }) {
 
 ## 3. FAQPage
 
-> **주의 (2026-06-01 기준)**: Google은 2026년 5월 7일자로 FAQ rich results 표시를 중단했다. 2026년 6월 중 Rich Results Test 지원, 8월 중 Search Console API 지원이 제거된다. 그 이전(2023년 8월부터)에도 정부·의료 등 공인 사이트에만 표시되도록 제한되어 있었다.
+> **주의 (2026-06-01 최초 작성, 2026-09-28 재확인 — 변경 없음)**: Google은 2026년 5월 7일자로 FAQ rich results 표시를 중단했다. 2026년 6월 중 Rich Results Test 지원, 8월 중 Search Console API 지원이 제거된다. 그 이전(2023년 8월부터)에도 정부·의료 등 공인 사이트에만 표시되도록 제한되어 있었다. (2026-09-28 재확인: Google Search Gallery 목록에 FAQ 부재 확인, developers.google.com/search/docs/appearance/structured-data/faqpage 는 changelog 앵커로 리다이렉트되며 별도 안내 페이지로 남아있음)
 >
 > 그럼에도 schema.org `FAQPage` 자체는 여전히 **유효한 표준**이며, 다음 용도로 의미가 있다:
 > - 일반 정부·의료 사이트 등 일부 도메인에서 잔존 가능성
@@ -282,7 +285,7 @@ function ArticleJsonLd({ article }) {
 
 ## 4. HowTo
 
-> **주의 (2026-06-01 기준)**: Google은 HowTo rich results를 2023년 8월(모바일)·9월(데스크톱)에 완전 제거했다. 현재 어떤 SERP 표면에도 표시되지 않는다.
+> **주의 (2026-06-01 최초 작성, 2026-09-28 재확인 — 변경 없음)**: Google은 HowTo rich results를 2023년 8월(모바일)·9월(데스크톱)에 완전 제거했다. 현재 어떤 SERP 표면에도 표시되지 않는다. (2026-09-28 재확인: Google Search Gallery 목록에 HowTo 부재 확인 — 참고로 QAPage(Q&A)는 HowTo·FAQPage와 달리 2026-09-28 기준 여전히 지원되는 rich result다. 단 QAPage는 본 카탈로그 8종 범위 밖이라 별도 섹션은 추가하지 않음)
 >
 > schema.org `HowTo`는 여전히 유효 스펙이며 LLM·접근성 도구·다른 검색 엔진이 활용할 수 있다. 단 Google SERP 노출 목적이면 추가 가치가 없다.
 >

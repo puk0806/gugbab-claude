@@ -17,8 +17,8 @@ description: >
 > - Vite 캐시 가이드: https://vite.dev/guide/dep-pre-bundling
 > - Turborepo 캐싱 가이드: https://turborepo.dev/docs/crafting-your-repository/caching
 >
-> 검증일: 2026-05-14
-> 대상 버전: hyperfine v1.20.0 (2025-11-18 릴리즈)
+> 검증일: 2026-09-28 (최초 2026-05-14)
+> 대상 버전: hyperfine v1.20.0 (2025-11-18 릴리즈), 리포트 예시는 Vite v8.3.1(2026-03 Rolldown 기반 출시) 기준
 
 ---
 
@@ -132,6 +132,8 @@ print(f"p95 = {np.percentile(times, 95):.3f}s")
 | **Next.js** | `rm -rf .next` | `.next` 폴더가 빌드 산출물 + 캐시 |
 | **TypeScript (tsc)** | `rm -f tsconfig.tsbuildinfo` | incremental build info 파일 |
 | **Webpack** | `rm -rf node_modules/.cache/webpack` | filesystem cache 기본 위치 |
+
+> Vite 8(Rolldown 기반)에서도 pre-bundle 캐시 위치(`node_modules/.vite`)와 `--force` 동작은 바뀌지 않았다 — 위 Vite 행을 그대로 쓴다(2026-09-28 공식 마이그레이션 가이드 https://vite.dev/guide/migration 대조, 바뀐 것은 dep pre-bundling 엔진 esbuild→Rolldown뿐).
 
 ### 4.3 hyperfine 명령 패턴
 
@@ -249,7 +251,7 @@ CLI 표는 median이 빠지므로 JSON에서 추출해 다음 표를 함께 첨�
 - **측정일**: YYYY-MM-DD
 - **측정자**: @user
 - **머신**: MacBook Pro M3 Pro, 36GB RAM, macOS 14.5
-- **런타임**: Node v22.11.0, pnpm v9.12.3, Vite v5.4.10
+- **런타임**: Node v24.21.0 (LTS), pnpm v12.6.0, Vite v8.3.1 (Rolldown 기반)
 - **측정 도구**: hyperfine v1.20.0
 - **runs**: 10, **warmup**: 2
 - **빌드 유형**: cold build (--prepare로 .vite·dist 매번 삭제)
@@ -280,7 +282,7 @@ CLI 표는 median이 빠지므로 JSON에서 추출해 다음 표를 함께 첨�
 3. **cold와 warm을 한 표에 섞기** — Mean이 cold 1회 + warm 9회처럼 섞이면 의미 없는 평균이 나온다.
 4. **before/after 다른 머신에서 측정** — CI 머신 변경, 노트북 ↔ 데스크톱, 다른 시간대 측정은 비교 불가.
 5. **백그라운드 프로세스 미통제** — Docker·Spotlight·webpack-dev-server가 켜진 채 측정. outlier 경고:
-   > "Statistical outliers were detected. Consider re-running this benchmark on a quiet PC without any interferences from other programs."
+   > "Statistical outliers were detected. Consider re-running this benchmark on a quiet system without any interferences from other programs."
 6. **thermal throttling 무시** — runs 30회 돌리는 동안 후반 5회는 throttling 상태로 측정되어 stddev가 커진다.
 7. **mean만 보고 median 안 보기** — outlier 1회로 mean이 흔들렸는데 그걸로 결론.
 8. **`--shell=none`을 빌드 명령에 잘못 적용** — 빌드는 셸 통한 PATH 해석·env 확장이 필요하므로 `-N` 옵션을 쓰면 안 된다. `-N`은 sub-millisecond 명령용.
@@ -343,8 +345,10 @@ hyperfine --warmup 2 --runs 10 'pnpm build'
 
 ## 9. 참고 (hyperfine outlier 경고 메시지 원문)
 
-> "Warning: The first benchmarking run for this command was significantly slower than the rest (...). This could be caused by (filesystem) caches that were not filled until after the first run. You should consider using the '--warmup' option to fill those caches before the actual benchmark. Alternatively, use the '--prepare' option to clear the caches before each timing run."
+> "Warning: The first benchmarking run for this command was significantly slower than the rest (...). This could be caused by (filesystem) caches that were not filled until after the first run. It might help to use the '--warmup' or '--prepare' options."
 
-> "Warning: Statistical outliers were detected. Consider re-running this benchmark on a quiet PC without any interferences from other programs. It might help to use the '--warmup' or '--prepare' options."
+> "Warning: Statistical outliers were detected. Consider re-running this benchmark on a quiet system without any interferences from other programs. It might help to use the '--warmup' or '--prepare' options."
 
 이 경고가 뜨면 결과를 신뢰하지 말고 환경을 정리한 뒤 재측정한다.
+
+> 실행 검증 (2026-09-28, hyperfine 1.20.0 실제 실행 + 바이너리 strings 대조): 위 두 인용문은 v1.20.0 기준 정정된 원문이다. 이전 판(v2 이전)에는 "quiet **PC**"로 잘못 인용돼 있었으나 실제 바이너리·라이브 재현 모두 "quiet **system**"이었다. first-run 경고도 "You should consider using the '--warmup' option ... Alternatively, use the '--prepare' option to clear the caches before each timing run."로 더 길게 인용돼 있었으나 실제 바이너리 문자열은 위처럼 더 짧다(라이브 재현은 못했으나 설치된 동일 버전 바이너리의 strings 추출로 확인). outlier 경고는 warm build(20회, warmup 3) 측정 중 실제로 발동해 라이브 재현까지 확인됨.

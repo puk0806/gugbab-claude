@@ -1,8 +1,8 @@
 ---
 skill: web-speech-api-stt
 category: frontend
-version: v1
-date: 2026-05-14
+version: v3
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `web-speech-api-stt` |
 | 스킬 경로 | `.claude/skills/frontend/web-speech-api-stt/SKILL.md` |
-| 검증일 | 2026-05-14 |
-| 검증자 | skill-creator |
-| 스킬 버전 | v1 |
+| 검증일 | 2026-09-28 (최초 2026-05-14, 2026-09-26 TTS 병합) |
+| 검증자 | skill-creator → Claude (Sonnet 5, 2026-09-28 재검증) |
+| 스킬 버전 | v3 |
 | 검증 정책 분류 | **content test 충분 카테고리** (라이브러리 사용법 스킬 — 2026-06-19 재분류. 초기 분류는 실사용 필수였으나 verification-policy.md 기준 재검토 결과 API 사용 패턴·답변 정확성으로 검증 가능, APPROVED 전환 가능) |
 
 ---
@@ -131,6 +131,24 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+### 재검증 (2026-09-28) — 원본 본문 사실성 위주
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read → 2026-09-26 TTS 병합·정정 부분은 이미 재검증 완료 상태이므로 제외하고, 원본(2026-05-14) STT 본문의 핵심 클레임 3개를 caniuse(Fyrd/caniuse `speech-recognition.json`) 1차 소스로 재대조.
+
+**클레임 대조 결과**:
+1. "Chrome 25+ webkit prefix로 부분 지원" → VERIFIED (caniuse: Chrome 최초 지원 버전 25, `a x #1` 프리픽스+부분 지원 태그 불변)
+2. "Safari macOS 14.1+ / iOS 14.5+ 부분 지원 (Siri 활성화 필요, SafariViewController·홈 화면 웹앱 미지원)" → VERIFIED (caniuse notes #4가 정확히 동일 문구로 명시, 최신 Safari 27.2/iOS 27.2까지 동일 태그 유지)
+3. "Firefox는 flag 있어도 실제 인식 미동작, Edge는 API 객체는 있으나 이벤트가 발생하지 않는 no-op" → VERIFIED (caniuse notes #2·#3이 각각 정확히 동일 취지로 명시, 최신 버전까지 `n` 유지)
+
+**실전 질문 재검증**:
+- Q1. "Safari iOS에서 SpeechRecognition을 쓰려면 어떤 전제조건이 있는가?" → SKILL.md 9절 표에는 "Siri 활성화 필요, 홈 화면 웹앱·SafariViewController에서는 불가"까지는 없음 → **gap 발견**(선택 보강: caniuse에만 있는 세부조건, 차단 요인 아님).
+- Q2. "Edge에서 SpeechRecognition 객체가 있는데 결과가 안 온다 — 왜?" → SKILL.md 8·9절 "API 객체 존재하나 결과 반환 안 함(no-op)" 근거로 PASS.
+
+**재검증 최종 판정**: 원본 STT 핵심 클레임 3건 모두 VERIFIED, 변경 없음. gap 1건(Siri 활성화 전제조건·SafariViewController 제약 미기재)은 선택 보강으로 기록, status **APPROVED 유지**.
+
+---
 
 **수행일**: 2026-09-26
 **수행자**: skill-tester → frontend-developer
@@ -285,3 +303,4 @@ iOS Safari에서 SpeechRecognition을 continuous = true로 켜고 받아쓰기�
 | 2026-06-19 | v1 | verification-policy.md 기준 카테고리 재검토 → "실사용 필수"에서 "content test 충분(라이브러리 사용법)" 카테고리로 재분류. 기존 3/3 PASS 유효, PENDING_TEST → APPROVED 전환. | skill-tester |
 | 2026-09-26 | v2 | **병합**: 구 `frontend/web-speech-api-tts` 스킬 제거(스킬 트리아지 MERGE 판정 — STT/TTS 짝 과분할)하면서 TTS 고유분을 이관. SKILL.md 14절(getVoices 비동기+voiceschanged, localService 우선 voice 선택, rate/pitch/volume 범위·clamp, speak 큐·cancel, iOS Safari 백그라운드 중단, 브라우저별 TTS 차이), references/REFERENCE.md 15절(useSpeech 훅·TTS 흔한 실수). description에 TTS 포함, 스킬명은 유지. 출처: https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis , https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis/voiceschanged_event , https://bugs.webkit.org/show_bug.cgi?id=198277 (구 tts verification.md: 핵심 클레임 5건 VERIFIED — rate 범위·voiceschanged·iOS 백그라운드·localService·BCP 47, 검증일 2026-05-07, APPROVED). status APPROVED → PENDING_TEST | 메인 대화 (스킬 정리) |
 | 2026-09-26 | v3 | 2단계 실사용 테스트 재수행 (Q1 STT stop/abort 구분 / Q2 TTS getVoices 비동기+브라우저별 차이+STT·TTS 지원 비대칭 / Q3 TTS→STT 연속 사용 시 iOS 오디오 세션 충돌·권한 지연) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-09-28 | v3 | 재검증(원본 STT 본문 사실성 위주) — caniuse speech-recognition 최신 데이터로 Chrome 25+/Safari 14.1+·iOS 14.5+/Firefox·Edge no-op 전부 재확인, 변경 없음. gap 1건(Siri 활성화 전제조건 미기재) 발견·선택 보강 기록. status APPROVED 유지 | Claude (Sonnet 5) |

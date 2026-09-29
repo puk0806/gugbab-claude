@@ -15,8 +15,15 @@ description: Next.js 16.x App Router 핵심 패턴, 데이터 페칭, Cache Comp
 > - 캐싱(Cache Components): https://nextjs.org/docs/app/getting-started/caching
 > - fetch API 레퍼런스: https://nextjs.org/docs/app/api-reference/functions/fetch
 >
-> 검증일: 2026-08-11
-> 검증 대상 버전: **Next.js 16.3.0** (2026-08-03 릴리즈, 현재 최신 stable)
+> 검증일: 2026-09-28 (최초 2026-08-11)
+> 검증 대상 버전: **Next.js 16.3.6** (2026-09-22 릴리즈, 16.3.0의 패치 — 현재 최신 stable. 16.4.0은 아직 canary 단계)
+>
+> **주의(2026-09-28 확인, GitHub 공식 advisory 원문 대조) — 반드시 16.3.6 이상으로 사용한다.** 16.3.0~16.3.5 사이에는 **치명적(Critical) 보안 취약점** 3건이 있었고, 그중 1건만 Windows 호스팅에 한정된다:
+> - **GHSA-p293-qw3h-jr36 — Windows 호스팅 서버 한정** 경로 순회(Path Traversal) → 미인증 RCE. "Windows 파일시스템을 사용하는 서버에 호스팅된 경우"로 명시된 취약점이며 다른 OS는 영향 없음. (13.4.0~15.5.23, 16.0.0~16.3.2 영향 → 15.5.24 / 16.3.3에서 패치)
+> - **GHSA-2xp9-vwfh-vxw4 — 플랫폼 무관** AVIF 이미지 최적화 RCE. `sharp`가 쓰는 `libheif` 라이브러리 결함이 원인이라 **호스팅 OS와 무관하게** 영향받는다. (10.0.0~15.5.23, 16.0.0~16.3.2 영향 → 15.5.24 / 16.3.3에서 패치)
+> - **GHSA-vcvr-r3jv-pc5j — 플랫폼 무관** `next/og` `ImageResponse`(Node.js 런타임 한정, Edge 구현은 영향 없음) RCE — Satori 의존성의 SVG 이스케이프 결함으로 공격자 제어 값이 SVG content/속성/style에 들어가면 발동. (16.2.0~16.3.5 영향 → 16.3.6에서 패치)
+>
+> Cache Components·proxy.ts의 동작·API 서술 자체는 16.3.0~16.3.6 사이에 변경되지 않았다(패치는 보안·버그 수정 위주).
 
 ---
 

@@ -1,8 +1,8 @@
 ---
 skill: python-llamaindex
 category: backend
-version: v1
-date: 2026-05-15
+version: v2
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,10 +14,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `python-llamaindex` |
 | 스킬 경로 | `.claude/skills/backend/python-llamaindex/SKILL.md` |
-| 검증일 | 2026-05-15 |
+| 검증일 | 2026-09-28 (재검증, 이전 2026-05-15) |
 | 검증자 | skill-creator (Claude) |
-| 스킬 버전 | v1 |
-| 대상 라이브러리 버전 | llama-index **0.14.22** (2026-05-14 PyPI 릴리즈) |
+| 스킬 버전 | v2 |
+| 대상 라이브러리 버전 | llama-index **0.14.25** (2026-09-21 PyPI 릴리즈, 재검증 시점 최신) — 최초 검증 시 0.14.22 |
 
 ---
 
@@ -170,6 +170,30 @@ status: APPROVED
 
 ---
 
+### [2026-09-28] 재검증(2차) — llama-index 0.14.25 최신화, Voyage AI 임베딩 파트너 보강
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md·references/REFERENCE.md 전체 Read → 핵심 클레임 4개를 1차 소스(PyPI JSON API, developers.llamaindex.ai 공식 문서, platform.claude.com)와 대조, 보강·축소 검토
+
+**클레임 대조 결과**:
+1. llama-index 최신 stable 버전 — 최초 검증 시 0.14.22(2026-05-14) → 현재 **0.14.25**(2026-09-21) → VERIFIED (PyPI `pypi.org/pypi/llama-index/json` 릴리즈 이력 직접 조회). 0.14.9~0.14.25 전부 0.14.x 라인의 patch 릴리즈이며 API breaking change 없음 (developers.llamaindex.ai deprecated_terms 페이지에 신규 항목 추가 없음)
+2. `FunctionCallingAgent`/`AgentRunner`/`AgentWorker`/`ReActAgentWorker`/`QueryPipeline`은 deprecated, `FunctionAgent`/`ReActAgent`/`CodeActAgent`/`AgentWorkflow`(`llama_index.core.agent.workflow` 경로)로 대체 → VERIFIED (developers.llamaindex.ai/python/framework/changes/deprecated_terms/, .../module_guides/deploying/agents/ 공식 페이지 재확인. SKILL.md §8.3 내용과 정확히 일치)
+3. `Settings.chunk_size` 기본값 1024, `chunk_overlap` 기본값 20, `ServiceContext` deprecated → `Settings` 싱글톤 대체 → VERIFIED (docs.llamaindex.ai/en/stable/module_guides/supporting_modules/settings/)
+4. Anthropic은 임베딩 모델을 제공하지 않는다 → 여전히 VERIFIED (platform.claude.com/docs 임베딩 안내 페이지가 Voyage AI를 공식 파트너로 명시. 최초 검증 시 SKILL.md는 "OpenAI·HuggingFace·Cohere 등"만 나열하고 Anthropic 공식 추천 파트너(Voyage AI)는 미기재 상태였음)
+
+**보강(ADD)·축소**:
+- §5.3에 "Anthropic 공식 문서가 임베딩 대안으로 명시 추천하는 파트너는 Voyage AI" 1줄 + `llama-index-embeddings-voyageai` 패키지·import 경로 추가 (SKILL.md)
+- references/REFERENCE.md §14 패키지 설치 목록에 `pip install llama-index-embeddings-voyageai` 행 추가
+- 축소 없음 — 기존 한국어 특화·함정·비용 섹션은 그대로 보존
+
+**실전 질문 재검증**:
+- Q1. "Claude(Anthropic)로 LLM을 쓰면서 임베딩은 Anthropic 자체 모델을 쓸 수 있나?" → SKILL.md "§5.3 Anthropic 임베딩에 관한 주의" 근거로 PASS (여전히 임베딩 미제공 + 이번에 추가된 Voyage AI 공식 파트너 안내까지 정확히 답변 가능)
+- Q2. "0.14.22 기준으로 작성된 예제가 지금(0.14.25) 그대로 동작하나?" → SKILL.md 헤더 "검증 버전" 주석 근거로 PASS (patch 버전 업만 있었고 import 경로·API 시그니처 변경 없음을 명시)
+
+**재검증 최종 판정**: status **APPROVED 유지**
+
+---
+
 ### 참고 — 원래 예정 테스트 케이스 (실제 수행으로 대체됨)
 
 **테스트 케이스 1: 한국 전통 해몽 사전 RAG 구성**
@@ -207,12 +231,14 @@ status: APPROVED
 
 **판정 근거:** 공식 문서 12개 클레임 VERIFIED, 2개 DISPUTED는 본문에 명시 정정. 카테고리상 본 스킬은 "라이브러리 사용법 스킬"이므로 verification-policy.md 기준 content test PASS = APPROVED 가능. 2026-05-15 skill-tester에 의해 3개 실전 질문 수행, 전부 PASS → APPROVED 전환.
 
+**2026-09-28 재검증(2차):** llama-index 0.14.22→0.14.25(patch, breaking change 없음), FunctionAgent/AgentWorkflow·Settings·Anthropic 임베딩 미제공 4개 클레임 모두 VERIFIED 재확인. Voyage AI(Anthropic 공식 추천 임베딩 파트너) 1건 보강 반영. 실전 질문 2개 재검증 PASS → status APPROVED 유지.
+
 ---
 
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester로 위 3개 테스트 케이스 수행 후 PASS 시 APPROVED 전환 (2026-05-15 완료, 3/3 PASS)
-- [❌] llama-index 0.15 릴리즈 시 재검증 (현재 0.14.22) — 차단 요인 아님, 선택 보강 (버전 변경 시 재검증 권장)
+- [❌] llama-index 0.15 릴리즈 시 재검증 (현재 0.14.25, 2026-09-28 확인) — 차단 요인 아님, 선택 보강 (버전 변경 시 재검증 권장)
 - [❌] PropertyGraphIndex 활용 예시 추가 검토 (현재 표만 언급, 상세 미작성) — 차단 요인 아님, 선택 보강
 
 ---
@@ -225,3 +251,4 @@ status: APPROVED
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 Document/Node/Index 구조 / Q2 Anthropic 임베딩 함정 / Q3 FunctionCallingAgent deprecated) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-09-25 | v1 | 모델 ID 현행화(Opus 5.5/Fable 5.1 정렬 작업의 일환) — 2026-08-12 세대 정렬에서 누락된 `Anthropic(model="claude-sonnet-4-5")` → `claude-sonnet-5`(SKILL.md §5, REFERENCE.md 1곳). 5 계열의 `temperature` 400과 통합 패키지 기본 temperature 전송 가능성에 대한 `> 주의: 미확인` 추가. 내용 재검증 없음 — status APPROVED 유지 | 모델 ID 현행화 |
 | 2026-09-25 | v1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |
+| 2026-09-28 | v2 | 재검증(2차). llama-index 0.14.22→0.14.25 확인(patch만, breaking change 없음), FunctionAgent/AgentWorkflow·Settings·Anthropic 임베딩 미제공 4개 클레임 재검증 VERIFIED. Voyage AI(Anthropic 공식 임베딩 파트너) 보강(§5.3, REFERENCE.md §14). status APPROVED 유지 | Claude (Sonnet 5) |

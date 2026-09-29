@@ -1,9 +1,9 @@
 ---
 skill: tanstack-query-v4-to-v5-migration
 category: frontend
-version: v1
-date: 2026-09-26
-status: PENDING_TEST
+version: v1.1
+date: 2026-09-28
+status: APPROVED
 ---
 
 # tanstack-query-v4-to-v5-migration 스킬 검증 문서
@@ -167,6 +167,53 @@ status: PENDING_TEST
 
 ## 5. 테스트 진행 기록
 
+### [2026-09-28] skill-tester 재테스트 — 실사용 검증에서 정정된 codemod 경로·경계표·트랩 #3/#4 서술 확인
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose
+**수행 방법**: SKILL.md Read 후 2개 실전 질문 답변, 근거 섹션 존재 여부 확인. 직전 실사용(실행) 검증(2026-09-28, lab 샘플 v4→v5 실전환)에서 정정된 3가지 서술(codemod 경로·자동/수동 경계표·트랩 #3/#4)이 content test로도 정확히 반영되는지 확인.
+
+### 실제 수행 테스트
+
+**Q1. `useInfiniteQuery(key, fn, options)` 위치 인자와 `cacheTime` 옵션이 codemod로 자동 변환되는가**
+- ✅ PASS
+- 근거: SKILL.md "2-1. 자동/수동 경계" 표(200~214행)
+- 상세: `useInfiniteQuery`는 `remove-overloads`의 대상 hook(`useQuery`/`useIsFetching`/`useMutation`/`useIsMutating`)에 없어 **경고 없이 조용히 건너뛴다**(❌ 수동)는 것과, `cacheTime`→`gcTime`은 별도 `rename-properties` 코드모드가 **자동 처리**(✅)한다는 것을 정정된 표 그대로 정확히 구분. 6-1 grep 재확인 필요성까지 근거로 제시. 정정 전 서술(둘 다 반대로 기재)이 남아있지 않음을 확인.
+
+**Q2. `hasNextPage` 확인 없이 `fetchNextPage()`를 직접 호출하는 코드가 v4→v5에서 문제가 되는가, "hasNextPage 플래그의 null 처리 오류"로 이해하면 맞는가**
+- ✅ PASS
+- 근거: SKILL.md "섹션 4 함정표 #3"(237행)
+- 상세: "hasNextPage 플래그 자체는 v4.44.0에서도 이미 null을 정확히 판정한다"는 정정된 서술을 정확히 인용해 질문의 오해("hasNextPage 자체 문제")를 **틀렸다고 정정**하고, 진짜 원인이 `fetchNextPage()` 내부 `fetchPage()` 가드 차이(v4 `typeof param==='undefined'` vs v5 `param==null`)임을 정확히 답변. 이전 버전의 부정확한 서술(hasNextPage 플래그 문제로 기재)이 남아있지 않음을 확인.
+
+### 발견된 gap
+
+- 없음. 2문항 모두 2026-09-28 실행 검증으로 정정된 서술을 그대로 반영하고 있으며, 정정 전 내용과 모순되는 잔재가 없음을 확인.
+
+### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 실사용 필수 카테고리(마이그레이션 가이드)이나, 직전 2026-09-28 실사용(실행) 검증으로 이미 졸업 조건을 충족해 APPROVED 상태 — 이번 재테스트는 그 정정 내용의 content test 재확인
+- 최종 상태: **APPROVED 유지** (정정된 codemod 경계표·트랩 #3/#4 서술 재테스트 2/2 PASS)
+
+---
+
+### [2026-09-28] 실사용(실행) 검증
+
+**수행일**: 2026-09-28
+**수행 방법**: Node v22.23.1 / npm 10.9.8 / lab 격리 폴더에 Vite5+React18+TS5.6 샘플 프로젝트 신규 생성(`@tanstack/react-query` 4.44.0 baseline). 샘플은 스킬이 다루는 패턴을 전부 포함: `useQuery`/`useInfiniteQuery`/`useMutation` 위치 인자 오버로드, `cacheTime`, `useErrorBoundary`, `onSuccess` 콜백(useQuery), `keepPreviousData`/`isPreviousData`, `status==='loading'` 문자열 비교, `getNextPageParam` null 반환, devtools v4 props(`position`/`panelPosition`). v4 베이스라인에서 `tsc --noEmit`·`vite build`·vitest(5개, RTL 렌더 기반 실제 캐시/네트워크 동작 검증) 전부 통과 확인 후, ① `npx jscodeshift` 로 공식 `remove-overloads` codemod 실행 → ② 실행 중 발견한 추가 공식 codemod 4종(`rename-properties`/`keep-previous-data`/`is-loading`/`rename-hydrate`) 중 적용 가능한 2종(`rename-properties`,`keep-previous-data`) 실행 → ③ 나머지는 스킬 절차대로 수동 정리(`useInfiniteQuery` 오브젝트화+`initialPageParam`, `onSuccess`→파생값 useEffect 치환, `isLoading`→`isPending`/`status`→`'pending'`, `isPreviousData`→`isPlaceholderData`, devtools prop 재배치) → ④ 패키지를 5.104.0으로 전환 → ⑤ `tsc --noEmit`·`vite build`·vitest 5개 재실행.
+**실행 결과**:
+- v4 baseline: tsc 통과, build 통과, vitest 5/5 통과(캐시 GC 실측·infinite query 과잉 fetch 실측 포함).
+- codemod 실행 결과, **SKILL.md 서술과 3가지 불일치 발견** → SKILL.md 최소 정정 완료(Edit, 아래 3항목):
+  1. **codemod 경로 오류 + 소스 오해**: 서술된 경로 `build/codemods/src/v5/remove-overloads/remove-overloads.cjs`는 `src/` 세그먼트가 실재하지 않는다(정확한 경로: `build/codemods/v5/remove-overloads/remove-overloads.cjs`). 더 중요하게, 이 codemod들은 **v5 패키지에만 존재**한다 — v4.44.0 설치본에는 `codemods/v4/`(v3→v4용)만 있고 `v5/`가 없다. "1단계에서 v4 유지한 채 codemod 실행"이라는 서술이 마치 v4 설치본만으로 가능한 것처럼 읽히나, 실제로는 v5 패키지를 먼저 설치(또는 코드모드 스크립트만 확보)해야 한다.
+  2. **자동/수동 경계표 5항목 오류**: `useInfiniteQuery`는 `remove-overloads`의 대상 hook 목록(`useQuery`/`useIsFetching`/`useMutation`/`useIsMutating`)에 **없어 조용히 건너뛴다**(경고조차 없음) — 표는 ✅로 잘못 기재. 반대로 `cacheTime→gcTime`·`useErrorBoundary→throwOnError`는 별도 `rename-properties` codemod가, `keepPreviousData→placeholderData`(리터럴 `true`인 경우)는 `keep-previous-data` codemod가, `Hydrate→HydrationBoundary`는 `rename-hydrate` codemod가 **자동으로 처리**하는데 표는 전부 ❌ 수동으로 기재. `isLoading→isPending`도 `is-loading` codemod가 존재하나 섹션 4-1의 의미 판별 없이 맹목적으로 치환하므로 그대로 쓰면 위험하다는 경고를 추가.
+  3. **트랩 표 #3·#4 부정확**: #3은 `hasNextPage` 플래그 자체가 아니라(v4.44.0도 이미 null-aware) **`hasNextPage`를 거치지 않고 `fetchNextPage()`를 직접 호출했을 때**의 내부 `fetchPage()` 가드 차이(`typeof param==='undefined'` vs `param==null`)가 실제 원인임을 실행으로 확인(query-core 4.44.0/5.104.0 소스 대조 + RTL 테스트로 재현: v4는 과잉 fetch 발생(호출 4회), v5는 미발생(3회)). #4의 "타입 에러 없음"은 옵션 객체가 콜사이트 인라인 리터럴일 때는 **거짓**(tsc가 `TS2769`로 실제로 잡음, 실행 확인) — 옵션을 변수로 감싼 경우에만 참. 두 케이스 모두 SKILL.md에 정확히 반영.
+- 수동 정리 + codemod 적용 후 v5.104.0: **tsc 통과, vite build 통과, vitest 5/5 통과**(동일 5개 테스트, 그 중 2개는 v4/v5 간 기대값이 실제로 뒤바뀌는 것까지 확인 — infinite query 과잉 fetch 4→3회, `hasNextPage` 가드는 양쪽 다 정상).
+- `npm ls @tanstack/query-core` 단일 버전 확인(섹션 6-1 ②), grep 기반 v4 잔재 검색(섹션 6-1 ③~⑤) 0건 확인.
+**졸업 조건 충족 여부**: **충족** — PENDING_TEST.md 표의 요구("v4 프로젝트를 v5로 올려 codemod(remove-overloads) 실행 + isLoading/gcTime/콜백 제거 수동 정리 후 devtools로 캐시 동작 확인")를 전부 실행. devtools "육안 확인" 대신 **테스트 코드로 캐시 동작(GC 수명, 무한쿼리 과잉 fetch 유무)을 재현 가능하게 검증**했다(브리프의 "가능하면 테스트로 캐시 동작 확인"에 해당, devtools 렌더 자체는 런타임 에러 없이 표시되는 것도 build/typecheck로 간접 확인).
+**판정**: **APPROVED 전환** (서술 오류 3건은 실행 근거로 SKILL.md에 이미 정정 반영, 재실행까지 통과 확인)
+
+---
+
 **수행일**: 2026-08-26
 **수행자**: skill-tester → frontend-developer (domain-specific 에이전트, 세션 registry 존재하여 general-purpose 대체 불필요)
 **수행 방법**: SKILL.md Read 후 실전 질문 4개 답변, 근거 섹션 및 anti-pattern 회피 확인
@@ -239,11 +286,12 @@ status: PENDING_TEST
 | 실용성 | ✅ (실행 가능한 codemod/grep 명령, PR 분할표, 롤백 기준, 프로젝트 비종속) |
 | 기존 스킬과의 중복 | ✅ 분리 완료 (`frontend/tanstack-query` = v5 사용법 / `frontend/state-management` = 상태 분류 · v4→v5 요약 / 이 스킬 = 전환 정본) |
 | 에이전트 활용 테스트 | ✅ 수행 완료 (2026-08-26, skill-tester → frontend-developer 4문항, 4/4 PASS) |
-| **최종 판정** | **PENDING_TEST 유지** (content test 4/4 PASS, 단 실사용 필수 카테고리라 실제 빌드·런타임 검증 전까지 APPROVED 보류) |
+| 실사용(실행) 검증 (2026-09-28) | ✅ v4.44.0→v5.104.0 샘플 프로젝트 실전환 완료 — codemod 5종 중 3종 적용(`remove-overloads`+`rename-properties`+`keep-previous-data`), 나머지 수동 정리, tsc·build·vitest(5/5) 전부 통과. 서술 오류 3건 발견 후 SKILL.md 정정 반영 |
+| skill-tester content test 재테스트 (2026-09-28) | ✅ 정정된 codemod 자동/수동 경계표 + 트랩 #3/#4 서술 2문항 재테스트 2/2 PASS — 정정 전 오류 잔재 없음 확인 |
+| **최종 판정** | **APPROVED 유지** — content test(2026-08-26) + 실사용 실행 검증(2026-09-28) + skill-tester 정정분 재테스트(2026-09-28) 모두 완료 |
 
-> 이 스킬은 `verification-policy.md`의 **"실사용 필수 스킬 — 마이그레이션 가이드"** 카테고리에 해당한다.
-> 실제 코드베이스에서 전환을 수행해 빌드·런타임 결과를 확인하기 전까지는 content test가 PASS해도 `PENDING_TEST`를 유지하는 것이 원칙이다.
-> (2026-08-26 갱신) content test는 4/4 PASS로 완료됐다 — 남은 것은 *실제 v4→v5 전환 실행 결과 확인*뿐이다.
+> 이 스킬은 `verification-policy.md`의 **"실사용 필수 스킬 — 마이그레이션 가이드"** 카테고리였다.
+> 2026-09-28에 실제 v4→v5 전환을 lab 샘플 프로젝트에서 수행해 빌드·타입체크·테스트(캐시 GC·무한쿼리 과잉 fetch 재현)로 결과를 확인했고, 그 과정에서 SKILL.md의 codemod 자동/수동 경계·트랩 서술 오류 3건을 발견해 정정했다. 이로써 실사용 필수 카테고리의 졸업 조건을 충족해 `APPROVED`로 전환한다.
 
 ---
 
@@ -253,8 +301,10 @@ status: PENDING_TEST
 - [❌] `queryClient.query()`/`infiniteQuery()`의 정확한 도입 5.x 패치 버전 확인 → 확인되면 섹션 3-8의 "미검증" 표기 해제 및 `frontend/tanstack-query` 스킬(현재 `prefetchQuery` 사용)과의 정합 재검토 — **차단 요인 아님(선택 보강)**: 현재도 "미검증" 명시 + 2단계에서는 기존 이름 유지 안내로 안전하게 우회되어 있음
 - [❌] v4의 `isInitialLoading`·`structuralSharing` 함수형 도입 패치 버전 확인 (패치 단위 CHANGELOG 대조 필요) — **차단 요인 아님(선택 보강)**: "4.44.0 선행 업그레이드" 권고로 실용상 우회됨
 - [❌] v5 devtools에서 `panelProps`/`toggleButtonProps`/`closeButtonProps` 제거 여부는 **v5 문서 옵션 목록에 부재**한다는 간접 근거로 판단함 → 타입 정의(d.ts) 직접 대조로 확정 필요 — **차단 요인 아님(선택 보강)**
-- [❌] persist `buster` 변경 권고는 공식 문서 명시 사항이 아닌 도출된 예방 조치 → 실제 v4 캐시를 v5로 복원하는 재현 테스트로 확증 필요 — **PENDING_TEST 유지의 핵심 근거**: 실사용(실제 코드베이스 전환) 시 반드시 재확인해야 하는 항목
+- [❌] persist `buster` 변경 권고는 공식 문서 명시 사항이 아닌 도출된 예방 조치 → 실제 v4 캐시를 v5로 복원하는 재현 테스트로 확증 필요 — **차단 요인 아님(선택 보강)**: 2026-09-28 실행 검증의 샘플에는 `PersistQueryClientProvider`를 포함하지 않아 이 항목은 검증 범위 밖. PENDING_TEST.md 졸업 조건 문구(codemod+isLoading/gcTime/콜백 수동정리+캐시 동작 확인) 자체에는 persist 재현이 포함되지 않아 APPROVED 판정에는 영향 없으나, persist 실사용 시에는 별도로 재현 검증 권장
 - [❌] React 어댑터 v6가 정식 출시되면 섹션 3-8(v6 제거 예정 항목)과 이 스킬의 도착 버전 기준 전면 재검증 필요 — **차단 요인 아님(미래 이벤트 트리거형 후속 과제)**
+- [✅] 실제 v4→v5 전환 실행 결과 확인 (2026-09-28 완료) — lab 샘플 프로젝트로 codemod 5종 확인·적용 3종·수동 정리·tsc/build/vitest 전부 통과. 과정에서 SKILL.md 서술 오류 3건(codemod 경로·자동/수동 경계표·트랩 #3·#4) 발견 후 정정
+- [✅] skill-tester가 정정된 codemod 경계표·트랩 #3/#4 서술을 content test로 재확인 (2026-09-28 완료, 2/2 PASS — 정정 전 오류 잔재 없음 확인)
 
 ---
 
@@ -266,3 +316,5 @@ status: PENDING_TEST
 | 2026-08-26 | v1 | 2단계 실사용 테스트 수행 (Q1 onSuccess 제거·대체 패턴 / Q2 `@tanstack/query-codemods` 패키지 미존재 안내 / Q3 isLoading v4↔v5 의미 변화 판별 / Q4 코어만 v5 부분 업그레이드 불가) → 4/4 PASS, 실사용 필수 카테고리(마이그레이션 가이드)이므로 PENDING_TEST 유지 | skill-tester |
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | skill-creator |
 | 2026-09-26 | v1 | 30~60일 주기 재검증. v5 5.102.4→5.104.0 버전 갱신(breaking change 없음), React Query v6 미출시 확인(Solid/Svelte 어댑터 한정). status PENDING_TEST 유지 | 메인 세션 |
+| 2026-09-28 | v1.1 | 실사용(실행) 검증 완료 — lab 샘플로 v4.44.0→v5.104.0 실전환(codemod 5종 확인, 3종 실행, 나머지 수동 정리, tsc/build/vitest 5/5 통과). 서술 오류 3건 발견 후 SKILL.md 정정: ① codemod 경로(`build/codemods/src/v5/...`→`build/codemods/v5/...`, v5 패키지 전용) ② 자동/수동 경계표(`useInfiniteQuery` ✅→❌, `cacheTime`·`useErrorBoundary`·`keepPreviousData`·`Hydrate` ❌→✅, `isLoading` 코드모드 존재하나 맹목적 치환 경고 추가) ③ 트랩 #3(`hasNextPage`가 아니라 `fetchNextPage()` 내부 가드 차이가 원인) · #4("타입 에러 없음"은 인라인 리터럴이 아닐 때만 참, 인라인은 tsc가 TS2769로 잡음). status PENDING_TEST → **APPROVED** | 메인 세션(fe-migrate lab) |
+| 2026-09-28 | v1.1 | 2단계 실사용 재테스트 수행 (Q1 codemod 자동/수동 경계표 `useInfiniteQuery`/`cacheTime` 정정 확인 / Q2 트랩 #3 `hasNextPage` vs `fetchNextPage()` 가드 정정 확인) → 2/2 PASS, 정정 전 오류 잔재 없음 확인, **APPROVED 유지**. 섹션 5·6·7·8 동기화 | skill-tester |

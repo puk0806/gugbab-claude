@@ -20,8 +20,9 @@ disable-model-invocation: true
 > - Webhook node: https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.webhook/
 > - Execute Sub-workflow: https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.executeworkflow/
 >
-> 검증일: 2026-05-15
+> 검증일: 2026-09-28 (최초 2026-05-15)
 > 짝 스킬: `devops/n8n-self-hosting`, `devops/n8n-llm-integration`, `devops/n8n-webhook-patterns`, `devops/n8n-error-handling`
+> 참고: n8n은 2026-05 이후 **메이저 버전 2.x**로 올라갔다. 워크플로우 "활성화(Active)" 모델이 **Save/Publish 분리 모델**로 바뀌었고(아래 §3, §15, §16 참고), Code 노드는 task runner 기반 격리 실행이 기본이며 `$env` 접근이 기본 차단된다(§11 참고).
 
 ---
 
@@ -71,13 +72,13 @@ disable-model-invocation: true
 | `*/15 * * * *` | 15분마다 |
 | `0 0 1 * *` | 매월 1일 00:00 |
 
-> 주의: Schedule Trigger는 워크플로우가 **저장 + 활성화(Active)** 되어야 동작한다. Workflow timezone이 미설정이면 인스턴스 timezone을 사용한다.
+> 주의(n8n 2.x): 예전에는 "저장 + 활성화(Active)"만으로 스케줄이 프로덕션에 즉시 반영됐지만, 2.0부터 **Save(초안 보존)와 Publish(라이브 반영) 가 분리**됐다. Schedule Trigger는 워크플로우를 **게시(Publish)** 해야 자동 실행되기 시작한다. Workflow timezone이 미설정이면 인스턴스 timezone을 사용한다.
 
 ### Webhook 사용 순서
 
 1. Webhook 노드 추가 → HTTP Method·Path 지정
 2. **Test URL** 복사 → 외부에서 호출 → 캔버스에서 데이터 확인
-3. 워크플로우 활성화 → **Production URL**로 자동 전환
+3. 워크플로우 **게시(Publish)** — n8n 2.x부터 구버전의 "활성화(Active)" 토글을 대체 — → **Production URL**로 자동 전환
 4. 응답은 기본 즉시 응답 또는 "Respond to Webhook" 노드로 커스터마이즈
 
 ---
@@ -304,6 +305,8 @@ sub-workflow는 트리거로 **"Execute Workflow Trigger"** (또는 "Execute Sub
 | **Environment Variables** | n8n 인스턴스 환경변수 | `{{ $env.VAR_NAME }}` (self-hosted 한정) |
 
 > **흔한 함정**: Credentials를 노드 필드(예: HTTP Headers)에 직접 박지 않는다. 워크플로우 export 시 평문으로 노출되고 팀 공유 시 사고가 난다. 항상 Credentials Manager에 등록한다.
+>
+> **주의(n8n 2.x)**: Code 노드는 기본적으로 task runner(격리 환경)에서 실행되며, **Code 노드 내부에서 `$env`/`process.env` 접근이 기본 차단**된다(`N8N_BLOCK_ENV_ACCESS_IN_NODE` 기본값 `true`). Code 노드에서 환경변수가 꼭 필요하면 인스턴스 설정으로 `N8N_BLOCK_ENV_ACCESS_IN_NODE=false`를 명시해야 하며, 가능하면 환경변수 대신 Credentials를 우선 사용한다. (표현식 필드의 `{{ $env.VAR_NAME }}`은 이 제한과 별개.)
 
 ---
 
@@ -388,7 +391,7 @@ sub-workflow는 트리거로 **"Execute Workflow Trigger"** (또는 "Execute Sub
 | **에러 처리 분리** | 메인 흐름과 에러 처리를 Error Workflow로 분리. 메인이 단순해진다 |
 | **Credentials 분리** | 항상 Credentials Manager 사용. 노드 필드에 평문 박지 않기 |
 | **Code 노드 최소화** | Edit Fields/IF/Switch로 가능하면 코드 없이 처리 |
-| **워크플로우 활성화 후 테스트** | Schedule/Webhook은 Active 상태에서만 동작 |
+| **워크플로우 게시(Publish) 후 테스트** | Schedule/Webhook은 게시된 상태에서만 프로덕션 동작 (n8n 2.x — 구버전 "Active" 상태와 동일 취지) |
 | **버전 관리** | Workflow → "Download" JSON export로 Git 관리 가능 |
 
 ---
@@ -427,9 +430,9 @@ return [{ json: { result: "ok" } }];
 
 IF의 한쪽 분기만 실행될 거라고 가정하지 않는다. Merge는 다른 분기를 트리거해 양쪽이 모두 실행될 수 있다. Switch + 명시적 통합을 우선 검토.
 
-### 5. Schedule Trigger 비활성 상태
+### 5. Schedule Trigger 미게시(draft) 상태
 
-저장만 하고 활성화(Active 토글)를 안 켜면 동작하지 않는다. 활성화 + Webhook은 production URL로 전환되는 점도 잊지 않는다.
+n8n 2.x부터는 저장(Save)만 해서는 프로덕션에 반영되지 않는다 — **게시(Publish)** 해야 Schedule Trigger가 실제로 자동 실행되고, Webhook도 production URL로 전환된다. (2.0 이전 자료의 "활성화(Active 토글)"는 현재의 "게시(Publish)"에 해당한다.)
 
 ### 6. 자동 반복 무시하고 Loop 남용
 

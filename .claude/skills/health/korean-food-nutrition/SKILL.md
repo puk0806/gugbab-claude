@@ -5,9 +5,9 @@ description: 한국 식품 영양 데이터 — 식품안전나라 DB·농촌진
 
 # Korean Food Nutrition — 한국 식품 영양 데이터
 
-> 소스: https://various.foodsafetykorea.go.kr/nutrient/ | https://koreanfood.rda.go.kr | https://www.data.go.kr
-> 기준: 식품안전나라 식품영양성분 DB (2024 업데이트) / 농촌진흥청 국가표준식품성분표 10개정판
-> 검증일: 2026-06-26
+> 소스: https://various.foodsafetykorea.go.kr/nutrient/ | https://www.nics.go.kr/food/kfi/fct/fctFoodSrch/list (구 koreanfood.rda.go.kr, 301 리다이렉트) | https://www.data.go.kr/data/15127578/openapi.do
+> 기준: 식품안전나라 식품영양성분DB (매월 업데이트되는 상시 플랫폼) / 농촌진흥청(국립식량과학원) 국가표준식품성분표 제10개정판(2022, DB는 연 1회 이상 갱신 — 2026-09 기준 11개정판 미발간)
+> 검증일: 2026-09-28 (최초 2026-06-26, 2026-09-28 재검증)
 
 ---
 
@@ -15,9 +15,9 @@ description: 한국 식품 영양 데이터 — 식품안전나라 DB·농촌진
 
 | 소스 | URL | 특징 |
 |------|-----|------|
-| 식품안전나라 영양성분 DB | https://various.foodsafetykorea.go.kr/nutrient/ | 가공식품 포함, 분기 업데이트 |
+| 식품안전나라 영양성분 DB | https://various.foodsafetykorea.go.kr/nutrient/ | 가공식품 포함, 매월 업데이트 |
 | 공공데이터포털 API | https://www.data.go.kr/data/15127578/openapi.do | REST API 제공 |
-| 농촌진흥청 국가표준식품성분표 | https://koreanfood.rda.go.kr/kfi/fct/fctFoodSrch/list | 농·축·수산물 중심 |
+| 농촌진흥청 국가표준식품성분표 | https://www.nics.go.kr/food/kfi/fct/fctFoodSrch/list (구 도메인 koreanfood.rda.go.kr는 301 리다이렉트로 계속 작동) | 농·축·수산물 중심, 제10개정판(2022) |
 | 공공데이터 음식 성분 | https://www.data.go.kr/data/15100070/standard.do | 음식(조리 후) 기준 |
 
 ---
@@ -132,18 +132,20 @@ description: 한국 식품 영양 데이터 — 식품안전나라 DB·농촌진
 
 ### 식품의약품안전처 식품영양성분DB API
 
+> 2026-09-28 재검증: 기존에 기재된 엔드포인트(`FoodNtrIrdntInfoService1/getFoodNtrItdntList1`)는 data.go.kr(15127578) 현재 API 명세와 불일치 확인. 실제 서비스명은 `FoodNtrCpntDbInfo03`(오퍼레이션 `getFoodNtrCpntDbInq03`, v03)이며, data.go.kr에 공개된 Swagger 응답 스키마를 직접 대조한 결과 `AMT_NUM17`=나트륨·`AMT_NUM22`=비타민C라는 기존 기재도 오류로 확인(실제 `AMT_NUM17`=베타카로틴, `AMT_NUM22`=비타민D). 아래는 정정된 값.
+
 ```
-기본 URL: https://apis.data.go.kr/1471000/FoodNtrIrdntInfoService1/getFoodNtrItdntList1
+기본 URL: https://apis.data.go.kr/1471000/FoodNtrCpntDbInfo03/getFoodNtrCpntDbInq03
 인증: 공공데이터포털 API Key 필요
 
 주요 파라미터:
-- ServiceKey: API 인증키
+- serviceKey: API 인증키 (공식 파라미터명은 소문자 시작 — 대소문자 구분됨)
 - pageNo: 페이지 번호
 - numOfRows: 페이지당 결과 수 (최대 100)
 - FOOD_NM_KR: 식품명 (한글 검색)
 - FOOD_CD: 식품 코드
 
-응답 필드:
+응답 필드 (AMT_NUM1~157 중 자주 쓰는 항목 — 전체 목록은 data.go.kr 상세페이지 Swagger 참고):
 - FOOD_NM_KR: 식품명
 - AMT_NUM1: 에너지 (kcal)
 - AMT_NUM2: 수분 (g)
@@ -155,16 +157,21 @@ description: 한국 식품 영양 데이터 — 식품안전나라 DB·농촌진
 - AMT_NUM8: 식이섬유 (g)
 - AMT_NUM9: 칼슘 (mg)
 - AMT_NUM10: 철 (mg)
-- AMT_NUM17: 나트륨 (mg)
-- AMT_NUM22: 비타민C (mg)
+- AMT_NUM11: 인 (mg)
+- AMT_NUM12: 칼륨 (mg)
+- AMT_NUM13: 나트륨 (mg)  ← (정정: 기존 AMT_NUM17은 오류)
+- AMT_NUM21: 비타민 C (mg)  ← (정정: 기존 AMT_NUM22는 오류)
+- AMT_NUM22: 비타민 D (μg)
+- AMT_NUM23: 콜레스테롤 (mg)
+- AMT_NUM24: 포화지방산 (g)
 ```
 
 ### 요청 예시 (JavaScript)
 
 ```js
 const searchFood = async (foodName) => {
-  const url = new URL('https://apis.data.go.kr/1471000/FoodNtrIrdntInfoService1/getFoodNtrItdntList1');
-  url.searchParams.set('ServiceKey', process.env.FOOD_API_KEY);
+  const url = new URL('https://apis.data.go.kr/1471000/FoodNtrCpntDbInfo03/getFoodNtrCpntDbInq03');
+  url.searchParams.set('serviceKey', process.env.FOOD_API_KEY);
   url.searchParams.set('pageNo', '1');
   url.searchParams.set('numOfRows', '20');
   url.searchParams.set('FOOD_NM_KR', foodName);
@@ -172,9 +179,11 @@ const searchFood = async (foodName) => {
 
   const res = await fetch(url.toString());
   const data = await res.json();
-  return data.body.items; // 영양성분 배열
+  return data.response.body.items; // 영양성분 배열 (아래 "응답 JSON 구조" 참고)
 };
 ```
+
+> **응답 JSON 구조**: 공공데이터포털(data.go.kr) API는 공통적으로 최상위를 `response`로 감싸고, 그 안에 `header`(resultCode·resultMsg)와 `body`(items·numOfRows·pageNo·totalCount)를 중첩한다 — 즉 `data.body.items`가 아니라 `data.response.body.items`. `items` 내부가 `item` 배열로 한 번 더 감싸이는지(`items.item[]`) 단일 배열로 오는지는 서비스·`type`(json/xml) 파라미터에 따라 달라질 수 있으므로, 실제 연동 전 해당 서비스의 data.go.kr 상세페이지 Swagger 응답 예시로 반드시 재확인할 것.
 
 ---
 

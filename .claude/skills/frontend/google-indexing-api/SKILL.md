@@ -12,7 +12,7 @@ description: Google Indexing API의 사용 자격·호출법·할당량·검증�
 > - https://developers.google.com/search/apis/indexing-api/v3/quota-pricing
 > - https://developers.google.com/search/apis/indexing-api/v3/reference/indexing/rest/v3/urlNotifications/publish
 >
-> 검증일: 2026-06-02
+> 검증일: 2026-09-28 (최초 2026-06-02, 2026-09-28 재검증 — 변경 없음. JobPosting/BroadcastEvent 한정 정책, 200/day·180/min·380/min 할당량 모두 공식 문서와 일치 재확인)
 
 ---
 

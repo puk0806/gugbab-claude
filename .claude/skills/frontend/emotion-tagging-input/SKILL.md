@@ -11,7 +11,7 @@ description: >
 # 꿈 일기 — 감정 태깅 입력 UI 스킬
 
 > 소스: Ekman 1992 *Cognition and Emotion* 6(3/4), 169-200 / Plutchik 1980 *Emotion: Theory, Research, and Experience* (Academic Press) ch. 1 / Russell 1980 *J. Pers. Soc. Psychol.* 39(6), 1161-1178 / W3C WCAG 2.1 SC 1.4.1 / WAI-ARIA / Hick 1952
-> 검증일: 2026-05-15
+> 검증일: 2026-09-28 (최초 2026-05-15)
 
 ---
 

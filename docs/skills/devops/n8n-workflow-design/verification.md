@@ -1,8 +1,8 @@
 ---
 skill: n8n-workflow-design
 category: devops
-version: v1
-date: 2026-05-15
+version: v2
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `n8n-workflow-design` |
 | 스킬 경로 | `.claude/skills/devops/n8n-workflow-design/SKILL.md` |
-| 검증일 | 2026-05-15 |
-| 검증자 | skill-creator (Claude Opus 4.7) |
-| 스킬 버전 | v1 |
+| 검증일 | 2026-09-28 (최초 2026-05-15, 2026-09-28 재검증) |
+| 검증자 | skill-creator (Claude Opus 4.7) → Claude (Sonnet 5, 2026-09-28 재검증) |
+| 스킬 버전 | v2 (2026-09-28 재검증 정정 반영) |
 | 카테고리 분류 | content test 가능 (라이브러리/패턴 설명 스킬) |
 
 ---
@@ -118,13 +118,44 @@ status: APPROVED
 - [✅] 범용적으로 사용 가능 (특정 프로젝트 종속 X)
 
 ### 4-4. Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-15 skill-tester 수행)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-15 skill-tester 수행, 2026-09-28 재검증 정정 반영 후 재테스트 수행)
 - [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인
-- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (보완 필요 없음, 3/3 PASS)
+- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (보완 필요 없음, 2026-05-15 3/3 PASS + 2026-09-28 재테스트 2/2 PASS)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (devops 도메인 전용 에이전트 미등록으로 대체)
+**수행 방법**: 2026-09-28 재검증에서 정정된 내용(§3/§11/§15/§16 — Active 토글→Save/Publish 분리, Code 노드 `$env` 기본 차단)이 실전 질문에 올바르게 반영되는지 SKILL.md Read 후 2개 질문 답변으로 재확인
+
+### 실제 수행 테스트 (재테스트)
+
+**Q1. Schedule Trigger 워크플로우를 Save만 하고 Publish 안 한 상태에서 자동 실행되는가**
+- ✅ PASS
+- 근거: SKILL.md "3. 트리거 노드 — Schedule Trigger" 주의문(줄 75), "15. 모범 사례" 표(줄 394), "16. 흔한 함정 §5"(줄 433-435)
+- 상세: "Save만으로는 프로덕션에 반영되지 않고 게시(Publish)해야 자동 실행된다"는 정정된 답을 정확히 도출. 세 섹션 서술이 서로 일관되며 옛 "Active" 서술과 충돌 없음(모두 "n8n 2.x — 구버전 Active와 동일 취지"로 병기).
+
+**Q2. Code 노드에서 `process.env.API_KEY`가 undefined로 나오는 원인**
+- ✅ PASS
+- 근거: SKILL.md "11. 변수·환경 — Credentials와 Variables" 주의문(줄 305, 309)
+- 상세: n8n 2.x부터 Code 노드가 task runner 격리 실행이 기본이며 `N8N_BLOCK_ENV_ACCESS_IN_NODE` 기본값이 `true`로 바뀌어 차단된다는 정정 내용을 정확히 인용. 해결책(`N8N_BLOCK_ENV_ACCESS_IN_NODE=false` 명시 또는 Credentials 우선 사용)까지 도출. 표현식 필드의 `{{ $env.VAR }}`는 이 제한과 별개라는 구분도 정확히 반영.
+
+### 발견된 gap (재테스트, 경미·선택 보강)
+
+- Q1: Publish 버튼의 정확한 UI 위치, 재게시 시 다음 실행 시각 처리 방식은 SKILL.md에 없음 (경미, 선택 보강)
+- Q2: `N8N_BLOCK_ENV_ACCESS_IN_NODE` 값을 실제로 어디서(환경변수 파일·Docker Compose 등) 설정하는지는 짝 스킬 `devops/n8n-self-hosting` 범위로 위임되어 있어 본 스킬만으로는 답할 수 없음 (설계상 의도된 역할 분리, 차단 아님)
+
+### 재테스트 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: content test로 충분 (n8n 워크플로우 설계 패턴 가이드 — 답변 정확성으로 검증 가능, 빌드/실행 산출물 검증이 필요한 "워크플로우 스킬"(CI/CD 등) 카테고리와는 다름 — 사용자의 실제 n8n 실행 로그가 아니라 공식 문서 대조로 정확성 검증 가능하므로 "실사용 필수" 해당 없음)
+- 최종 상태: APPROVED (기존 2026-05-15 3/3 PASS + 금번 재테스트 2/2 PASS, 정정 반영 확인 완료)
+
+---
+
+### [2026-05-15] 최초 테스트
 
 **수행일**: 2026-05-15
 **수행자**: skill-tester → general-purpose (직접 SKILL.md 대조 검증)
@@ -159,6 +190,26 @@ status: APPROVED
 
 ---
 
+### [2026-09-28] 재검증 — n8n 메이저 버전 2.x 승격, Save/Publish 모델·Code 노드 격리 실행 변경 발견 (PENDING_TEST 전환)
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임 5개를 docs.n8n.io 공식 changelog·블로그·커뮤니티 교차 검증으로 재대조.
+
+**클레임 대조 결과**:
+1. n8n 최신 메이저 버전 1.x → **DISPUTED(정정)**: docs.n8n.io changelog에 "Release notes 2.x" 페이지 신설 확인 — 2026-05-15 이후 메이저 버전 2.0 출시 (소스: docs.n8n.io/changelog/release-notes-2.x)
+2. "저장 + 활성화(Active)"로 프로덕션 즉시 반영 → **DISPUTED(정정)**: n8n 2.0부터 Save(초안 보존)/Publish(라이브 반영) 모델로 분리, Schedule Trigger·Webhook 모두 Publish해야 프로덕션 동작 (소스: blog.n8n.io/introducing-n8n-2-0/, n8n 커뮤니티 포럼 다수 확인)
+3. Code 노드에서 `{{ $env.VAR_NAME }}` 자유롭게 접근 가능 → **DISPUTED(정정)**: n8n 2.0부터 Code 노드는 task runner(격리 환경)에서 기본 실행되며 `N8N_BLOCK_ENV_ACCESS_IN_NODE` 기본값이 `true`로 바뀌어 Code 노드 내부 `$env`/`process.env` 접근이 기본 차단됨 (소스: n8n 공식 hosting 문서 task-runners.md, GitHub issue #29603/커뮤니티 확인)
+4. `$('NodeName')` 신규 문법 vs `$node[...]` 레거시 — VERIFIED (변경 근거 없음, 유지)
+5. Loop Over Items 기본 배치 크기 1, IF 2-출력/Switch 4+-출력, Merge 부작용 — VERIFIED (n8n 2.0 changelog에 관련 breaking change 언급 없음, 유지)
+
+**실전 질문 재검증**:
+- Q1. "n8n 2.x에서 워크플로우를 저장만 하면 Webhook production URL이 바로 동작하는가?" → 정정 전 SKILL.md 기준 "활성화하면 됨"으로 오답 유도 — 정정 후 "Publish까지 해야 동작" 근거로 PASS
+- Q2. "Code 노드에서 `process.env.API_KEY`를 읽으려는데 에러가 난다" → 정정 후 SKILL.md 11절 "N8N_BLOCK_ENV_ACCESS_IN_NODE 기본 차단" 근거로 원인 설명 PASS
+
+**재검증 최종 판정**: 핵심 클레임 5건 중 3건 DISPUTED(메이저 버전 2.x 승격·Save/Publish 모델 전환·Code 노드 환경변수 기본 차단) 정정 반영, 2건 VERIFIED(변경 없음). 워크플로우 활성화 모델이라는 핵심 개념이 바뀌어 실전 질문 결과가 달라지므로 status **PENDING_TEST 전환**(메인 대화가 skill-tester로 재테스트 수행 필요).
+
+---
+
 > 아래는 skill-creator가 남긴 원본 참고 안내 (보존):
 > skill-creator 작성 직후, skill-tester 메인 호출 예정. 본 섹션은 skill-tester가 채워 넣는다.
 
@@ -171,17 +222,19 @@ status: APPROVED
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-05-15 3/3 PASS) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (2026-05-15 3/3 PASS, 2026-09-28 정정 반영 후 재테스트 2/2 PASS) |
+| **최종 판정** | **APPROVED** (2026-09-28 재검증에서 n8n 2.x Save/Publish 모델·Code 노드 환경변수 차단 등 정정 반영 후 skill-tester 재테스트 2/2 PASS로 재승인) |
 
-content test 가능 카테고리 (라이브러리/패턴 설명) — skill-tester content test 3/3 PASS → APPROVED 전환 완료.
+content test 가능 카테고리 (라이브러리/패턴 설명) — 2026-05-15 skill-tester content test 3/3 PASS로 APPROVED 전환, 2026-09-28 재검증에서 핵심 클레임 정정으로 PENDING_TEST 재전환했다가, 같은 날 skill-tester 재테스트 2/2 PASS로 APPROVED 재전환.
 
 ---
 
 ## 7. 개선 필요 사항
 
-- [x] skill-tester 호출 후 섹션 5·6 갱신 (2026-05-15 완료, 3/3 PASS)
+- [✅] skill-tester 호출 후 섹션 5·6 갱신 (2026-05-15 완료, 3/3 PASS)
+- [✅] 2026-09-28 재검증 정정(Save/Publish 분리, Code 노드 `$env` 차단) 반영 후 skill-tester 재테스트 및 섹션 5·6·7·8 동기화 (2026-09-28 완료, 2/2 PASS)
 - [ ] 짝 스킬 4종(`n8n-self-hosting`, `n8n-llm-integration`, `n8n-webhook-patterns`, `n8n-error-handling`) 작성 후 상호 링크 검증 — 차단 요인 아님, 선택 보강 (짝 스킬 미작성이어도 본 스킬 단독 사용에 지장 없음)
+- [ ] Publish 버튼 UI 위치·재게시 시 다음 실행 시각 처리, `N8N_BLOCK_ENV_ACCESS_IN_NODE` 설정 위치(짝 스킬 `n8n-self-hosting` 범위) 보강 — 차단 요인 아님, 선택 보강
 
 ---
 
@@ -191,3 +244,5 @@ content test 가능 카테고리 (라이브러리/패턴 설명) — skill-teste
 |------|------|-----------|--------|
 | 2026-05-15 | v1 | 최초 작성 (16개 섹션, 11개 핵심 클레임 교차 검증 VERIFIED) | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 Code 노드 반환 형식 / Q2 `$('NodeName')` vs `$node[...]` 참조 문법 / Q3 Sub-workflow Execute Workflow Trigger 설정) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-28 | v2 | 재검증 — n8n 메이저 버전 1.x→2.x 승격 확인, 핵심 클레임 3건 DISPUTED 정정: "저장+활성화(Active)" 즉시 반영 모델 → Save(초안)/Publish(라이브) 분리 모델(§3 Schedule Trigger·Webhook 사용 순서, §15 모범 사례, §16 함정5), Code 노드 `$env` 자유 접근 → task runner 격리 실행 기본 + `N8N_BLOCK_ENV_ACCESS_IN_NODE` 기본 차단(§11). status APPROVED → PENDING_TEST(재테스트 필요) | Claude (Sonnet 5) |
+| 2026-09-28 | v2 | 2단계 실사용 재테스트 수행 (Q1 Schedule Trigger Save만으로 자동 실행 여부 / Q2 Code 노드 `process.env` undefined 원인) → 2/2 PASS, 정정 내용이 형제 스킬과 모순 없이 반영됨을 확인, PENDING_TEST → APPROVED 전환 | skill-tester |

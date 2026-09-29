@@ -12,7 +12,7 @@ description: GSC API · Naver Search Advisor · IndexNow · GitHub Actions cron 
 > - IndexNow Documentation — https://www.indexnow.org/documentation
 > - 네이버 서치어드바이저 IndexNow 가이드 — https://searchadvisor.naver.com/guide/indexnow-request
 > - GitHub Actions Workflow Syntax — https://docs.github.com/actions/using-workflows/workflow-syntax-for-github-actions
-> 검증일: 2026-06-04
+> 검증일: 2026-09-28 (최초 2026-06-04)
 > 기준 버전: Search Console API v1 (구 v3 alias 유지), IndexNow v1, GitHub Actions 현행 스키마
 
 ---
@@ -334,7 +334,7 @@ jobs:
 - 최소 실행 간격: **5분**
 - 모든 cron은 **UTC** 기준. KST는 +9시간 환산 필요
 - GitHub 부하 시 **지연 가능** (정시 트리거 보장 X). 시간 민감 작업은 워크플로우 시작 시 시간 재확인
-- 60일간 레포 활동이 없으면 schedule이 자동 비활성화됨 → `workflow_dispatch`로 주기적 수동 트리거 권장
+- **퍼블릭 레포**에서 60일간 활동이 없으면 schedule이 자동 비활성화됨 (GitHub 공식 문서 명시 — 프라이빗 레포는 별도 확인 필요) → `workflow_dispatch`로 주기적 수동 트리거 권장
 
 ---
 
@@ -456,4 +456,4 @@ for endpoint in (
 | URL Inspection을 대량 루프로 호출 | 600/분 한도 초과 → 429 | 배치 사이 `sleep(0.1s)`, 일일 2,000 한도 분배 |
 | Google에 IndexNow 호출 | 무시됨 | Google은 IndexNow 미참여 — GSC API 사이트맵/URL 검사 사용 |
 | Search Analytics 50,000행 초과 기대 | 25,000 × 2 페이지로 잘림 | 필터(`dimensionFilterGroups`)로 분할 조회 |
-| 60일간 레포 활동 없음 | schedule cron 자동 비활성화 | `workflow_dispatch`로 주기적 ping |
+| 퍼블릭 레포 60일간 활동 없음 | schedule cron 자동 비활성화 | `workflow_dispatch`로 주기적 ping |

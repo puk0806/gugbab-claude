@@ -1,8 +1,8 @@
 ---
 skill: pwa-offline-llm-fallback
 category: frontend
-version: v1
-date: 2026-05-14
+version: v2
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `pwa-offline-llm-fallback` |
 | 스킬 경로 | `.claude/skills/frontend/pwa-offline-llm-fallback/SKILL.md` |
-| 검증일 | 2026-05-14 |
+| 검증일 | 2026-09-28 (재검증, 이전 2026-05-14) |
 | 검증자 | skill-creator (자동) |
-| 스킬 버전 | v1 |
+| 스킬 버전 | v2 |
 
 ---
 
@@ -207,6 +207,26 @@ DISPUTED: 0건 — 2026-05-14 시점 검증 내용이 3개월 후에도 그대�
 
 ---
 
+### [2026-09-28] 재검증(2차) — Workbox 버전·Background Sync 브라우저 지원·Claude API 에러 코드 재확인
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임 3개를 1차 소스(npm registry curl, WebSearch)와 대조, 보강·축소 검토
+
+**클레임 대조 결과**:
+1. `workbox-background-sync` 최신 버전이 7.x대 → **VERIFIED** (`curl -s https://registry.npmjs.org/workbox-background-sync/latest` 결과 `7.4.1`, SKILL.md의 "Workbox 7.x" 서술과 일치, 변경 불필요)
+2. Background Sync API가 iOS Safari·Firefox에서 여전히 미지원(로드맵 없음) → **VERIFIED** (WebSearch 2026-09 기준 caniuse/testmuai/lambdatest 교차 확인 — Safari·iOS Safari·Firefox 전 버전 미지원 유지, Apple/Mozilla 공개 포지션 없음)
+3. Claude API 429(`rate_limit_error`, Retry-After 헤더 포함)·529(`overloaded_error`, billing 제외) 에러 코드 체계 → **VERIFIED** (WebSearch로 platform.claude.com/docs/en/api/errors 기준 재확인, SKILL.md 섹션 11 서술과 일치)
+
+**보강(ADD)·축소**: 없음 — 3개 클레임 모두 VERIFIED, DISPUTED/UNVERIFIED 없음. 도메인 안전 가드(오프라인 UX 문구·기술 스택 비노출)·함정 목록은 축소 대상 아니므로 유지.
+
+**실전 질문 재검증**:
+- Q1. "Workbox 7.x에서 BackgroundSyncPlugin의 maxRetentionTime 단위와 iOS Safari 미지원 시 대안은?" → SKILL.md 섹션 4-1·4-3·9(함정 #4) 근거로 PASS
+- Q2. "Claude API 529 발생 시 사용자에게 어떤 메시지를 보여줘야 하고 재시도 로직은 어떻게 해야 하나?" → SKILL.md 섹션 2·6·11 근거로 PASS
+
+**재검증 최종 판정**: status **APPROVED 유지** (내용 변경 없음, 검증일만 갱신)
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -245,3 +265,4 @@ DISPUTED: 0건 — 2026-05-14 시점 검증 내용이 3개월 후에도 그대�
 | 2026-05-14 | v1 | 2단계 실사용 테스트 수행 (Q1 navigator.onLine false positive / Q2 iOS Safari Background Sync 대안 / Q3 Retry-After + maxRetentionTime 단위) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | skill-tester |
 | 2026-08-11 | v1 | 재검증 수행 — WebSearch 재교차검증 3/3 VERIFIED(0 DISPUTED) + 신규 질문 content test (Q1 529 처리 / Q2 iOS 수동 flush / Q3 LAN false positive) → 3/3 PASS. 카테고리 재판단: API 사용법 패턴 스킬로 재분류 → PENDING_TEST에서 **APPROVED 전환** | skill-tester |
 | 2026-09-25 | v1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |
+| 2026-09-28 | v2 | 재검증(2차) — Workbox 7.4.1·Background Sync 브라우저 지원(iOS Safari/Firefox 미지원 유지)·Claude API 429/529 에러 코드 재확인, 3/3 VERIFIED·DISPUTED 0, 내용 변경 없음 → APPROVED 유지 | Claude (Sonnet 5) |

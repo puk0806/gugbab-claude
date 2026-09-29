@@ -106,6 +106,12 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
+### [2026-09-28] 선택 보강 반영
+
+- 반영 내용: "package.json exports 설정" 코드 예시 바로 앞에 "아래 exports 예시는 이 불일치를 그대로 반영한 결과다 — `.d.ts` 하나로 겸용하지 않고 `import`는 `.d.mts`, `require`는 `.d.ts`로 조건별 분리했다"는 연결 문장 추가
+- 근거: 기존 "주의" 문단(tsup 8.5.1 실측, egoist/tsup#939)과 코드 예시 자체의 재설명 — 새 사실 추가 없는 **내부 명확화** (creation-workflow.md "문서 내부 명확화는 소스 확인 불필요" 적용)
+- status 영향: 없음 — 순수 서술 연결 문장이며 사실·코드 변경이 아니므로 APPROVED 유지
+
 **수행일**: 2026-09-26
 **수행자**: skill-tester → general-purpose (frontend-architect 세션 registry 부재로 대체 사용)
 **수행 방법**: tsup `outExtension`↔dts 확장자 불일치 실측 정정(exports를 import/require 조건별 `types`+`default` 분리)이 SKILL.md에 반영된 뒤 재테스트. Read 후 실전 질문 2개 답변(Q1 tsup dual 패키지 exports 설정, Q2는 정정된 부분을 직접 겨냥한 흔한 함정 시나리오), 근거 섹션 및 anti-pattern 회피 확인. 에이전트에게 Read 도구만 허용하고 WebSearch·WebFetch·자기 지식 사용을 금지해 SKILL.md 근거만으로 답하도록 제한.
@@ -262,7 +268,7 @@ status: APPROVED
 - ❌ (선택 보강, 차단 요인 아님) Next.js 15 프로덕션 Turbopack 지원 여부·16 Webpack 롤백 방법·`babel-plugin-react-compiler` 설치 안내 보강
 - ✅ (2026-09-26 완료) "React Compiler 활성화 시 변경되는 것" 예시의 `items.sort(...)` mutate 결함 정정 — `[...items].sort(...)`(useMemo 경로) / `items.toSorted(...)`(Node 20+·2023-07~ 브라우저, Compiler 자동 처리 경로)로 교체, mutate가 Rules of React 위반인 이유 1줄 추가. (2026-09-26 재테스트 완료, 3/3 PASS → APPROVED 전환)
 - ✅ (2026-09-26 완료) frontmatter/헤더의 "검증일: 2026-06-20"과 "2026-09-26 병합" 併記 정리 — SKILL.md `> 검증일:`을 실제 마지막 검증일(2026-09-26)로 단일화, 병합 이력은 본 verification.md 8절에만 기록
-- ❌ (선택 보강, 차단 요인 아님) "package.json exports 설정" 예시 코드가 바로 위 "주의" 문단을 반영한 결과임을 명시하는 연결 문장 추가 (2026-09-26 v9 재테스트에서 general-purpose가 암시적이라고 지적)
+- ✅ (2026-09-28 반영) "package.json exports 설정" 예시 코드가 바로 위 "주의" 문단을 반영한 결과임을 명시하는 연결 문장 추가 (2026-09-26 v9 재테스트에서 general-purpose가 암시적이라고 지적)
 - ❌ (선택 보강, 차단 요인 아님) `"type": "module"` 프로젝트의 반대 케이스(ESM `.d.ts`/CJS `.d.cts`) exports 예제 코드 추가 — 현재는 주의 문단에 규칙만 서술, 별도 코드 예시 없음
 
 ---
@@ -280,3 +286,4 @@ status: APPROVED
 | 2026-09-26 | v7 | 2단계 실사용 테스트 재수행 (Q1 tsup ESM/CJS 라이브러리 설정 / Q2 정정된 `items.sort` → `[...items].sort`/`toSorted` 겨냥 / Q3 Next.js Turbopack 선택+Webpack 플러그인 비호환 이유) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-09-26 | v8 | tsup `outExtension`↔dts 확장자 불일치를 임시 디렉토리에서 `tsup@8.5.1`+`typescript@5.7.3` 실제 빌드 4회로 실측(무 type field·`"commonjs"`·`"module"`·outExtension 조합) 후 GitHub `egoist/tsup#939`로 교차 확인: `outExtension`의 `js` 오버라이드는 dts 확장자에 전파되지 않고 package.json `"type"` 기본 규칙만 따름. SKILL.md "package.json exports 설정" 예시를 `import`/`require` 조건별 `types`+`default` 분리로 정정하고 실측 근거 주의문 추가, 상단 "검증일" 併記(2026-06-20/2026-09-26 병합)를 2026-09-26 단일 표기로 정리(병합 이력은 본 문서 8절에 보존). status APPROVED → PENDING_TEST (exports 예시 실질 정정으로 재테스트 필요) | 메인 대화 (실측 정정 작업) |
 | 2026-09-26 | v9 | 재검증: 2단계 실사용 테스트 재수행 (Q1 tsup ESM/CJS 라이브러리 dual-package exports 설정 / Q2 정정된 부분을 직접 겨냥한 흔한 함정 — outExtension이 dts에 전파된다는 착각으로 `.d.cts` 오기재) → 2/2 PASS(general-purpose 대체 사용), PENDING_TEST → APPROVED 전환. 선택 보강 gap 2건(exports-주의문 연결 문장, `"type":"module"` 반대 케이스 예제) 섹션 7에 기록 | skill-tester |
+| 2026-09-28 | v9 | 선택 보강 반영 — "package.json exports 설정" 예시 앞에 "이 불일치를 그대로 반영한 결과" 연결 문장 추가 (내부 명확화, 사실 변경 없음, status 유지) | orchestrator (선택 보강 반영 배치) |

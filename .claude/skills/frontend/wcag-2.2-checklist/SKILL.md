@@ -7,7 +7,7 @@ description: WCAG 2.2 A/AA 레벨 success criteria 전체 체크리스트, 자�
 
 > 소스: https://www.w3.org/TR/WCAG22/ (W3C Recommendation, 2023-10-05)
 > 보조 소스: https://www.w3.org/WAI/standards-guidelines/wcag/new-in-22/ , https://www.w3.org/WAI/WCAG22/Understanding/
-> 검증일: 2026-06-02 (2026-09-26 구 `media-accessibility` 스킬의 미디어 SC 고유분 병합 — 5.9절)
+> 검증일: 2026-09-28 (최초 2026-06-02, 2026-09-26 구 `media-accessibility` 스킬의 미디어 SC 고유분 병합 — 5.9절)
 
 이 스킬은 **WCAG 표준 자체와 직접 매핑되는 체크리스트**다. ARIA 패턴·키보드 핸들러 구현 코드는 이 스킬 범위 밖이다.
 
@@ -451,4 +451,4 @@ EU EAA 시행 이후로는 **VPAT 2.5 (INT/EU/Rev edition)** 가 EN 301 549 매�
 - 색상 대비 계산 → [WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/), Chrome DevTools 색상 피커
 - 한국형 표준 KWCAG는 WCAG와 SC 번호가 다를 수 있으므로 *국내 공공기관 납품 시* 한국지능정보사회진흥원 발표 최신 KWCAG 가이드라인을 별도 확인.
 
-> 검증일: 2026-06-02 | 기준 표준: WCAG 2.2 W3C Recommendation (2023-10-05)
+> 검증일: 2026-09-28 | 기준 표준: WCAG 2.2 W3C Recommendation (2023-10-05)

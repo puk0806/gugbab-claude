@@ -1,8 +1,8 @@
 ---
 skill: mobile-user-acquisition
 category: game
-version: v2
-date: 2026-08-11
+version: v3
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -15,9 +15,9 @@ status: APPROVED
 | 스킬 이름 | `mobile-user-acquisition` |
 | 스킬 경로 | `.claude/skills/game/mobile-user-acquisition/SKILL.md` |
 | 최초 검증일 | 2026-06-10 |
-| 최종 재검증일 | **2026-08-11** (사실 오류 감사 대응) |
-| 검증자 | skill-creator (v1) / skill-creator 재검증 (v2) |
-| 스킬 버전 | v2 |
+| 최종 재검증일 | **2026-09-28** (2차 재검증 — ATT·SKAN·AAK 최신 정책 수치 재확인, 이전 재검증 2026-08-11) |
+| 검증자 | skill-creator (v1) / skill-creator 재검증 (v2, 2026-08-11) / 2차 재검증 (v3, 2026-09-28) |
+| 스킬 버전 | v3 |
 
 ---
 
@@ -278,6 +278,58 @@ Q4. "Apple이 ATT로 EU에서 제재받았다던데 근거는?" — **PASS**
 
 ---
 
+## 5-3. 재검증(2차, v3) — 2026-09-28
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임 4개를 WebSearch/WebFetch로 재확인 (배정 지침: ATT·SKAdNetwork/AdAttributionKit 최신 정책 수치 재확인)
+
+**클레임 대조 결과**:
+1. ATT opt-in rate(게임 39%·전산업 38%, Adjust 2026 Q1)가 2026-09 기준 가장 최근 종합 벤치마크인지 — PocketGamer.biz "37%" 기사를 원문 재확인한 결과 **2023-07-03 발행**(Adjust 2023년 상반기 데이터)으로 확인, Business of Apps 페이지는 403으로 직접 열람 불가 → 기존 SKILL.md 수치(2026-02-18 발행 Adjust 2026 리포트)가 여전히 **가장 최신** → VERIFIED (변경 없음)
+2. AAK(AdAttributionKit)의 SKAN deprecation 일정 미발표 상태 — WebSearch 교차 확인(moburst.com 2026, aarki.com, rockpapermarketing.io 2026-04-28 등 다수 2차 소스가 "2026-09 기준 미발표"로 일치) → VERIFIED (변경 없음). 단, Apple 공식 AdAttributionKit 문서는 WebFetch로 본문을 가져오지 못해(JS 렌더링) 1차 소스 직접 재확인은 실패 — 2차 소스 다중 일치로 잠정 VERIFIED 유지
+3. AAK가 iOS 18.4(WWDC 2025)부터 기능 확장됐다는 서술 — moburst.com·adexchanger.com 2건에서만 확인, Apple 공식 문서 직접 확인 실패 → **UNVERIFIED** (SKILL.md에 "주의: 미검증" 표기로 추가, 확정 서술 아님)
+4. SKAN 4 네트워크별 채택 비중(Meta 44%, Google 최후 홀드아웃) — Singular가 2025-09-29 이후 신규 트래커 업데이트를 발행하지 않아 실측값 자체는 갱신 불가. 다만 2026년 발행 2차 소스 다수(rockpapermarketing.io 2026-04-28 등)가 "Google이 SKAN 4 전환에 가장 뒤처짐"이라는 방향성에는 동일하게 동의 → 기존 VERIFIED 유지, SKILL.md에 "표는 2025-09-29 시점 고정, 최신값 아님" caveat 추가
+
+**보강(ADD)**: SKILL.md 4-3에 AAK 관련 미검증 caveat 문단 추가(iOS 18.4 기능 확장설 — 1차 소스 미확인). 4-2에 "재확인(2026-09-28)" 문단 추가 — 2차 소스 간 SKAN 3/4 비중 서술 불일치를 인지하고 있으며 결론(양쪽 대응 CV schema 설계)은 변하지 않음을 명시. 헤더 검증일 갱신.
+
+**실전 질문 재검증**:
+- Q1. "지금(2026-09) 기준으로 SKAN이 곧 없어지나?" → SKILL.md 4-3 근거로 "아니오, deprecation 일정 미발표" PASS
+- Q2. "ATT opt-in을 몇 %로 가정해야 하나?" (회귀 검증, 변경 없는 항목) → SKILL.md 4-1 표 근거로 PASS
+
+**재검증 최종 판정**: status **PENDING_TEST 전환** (미검증 caveat 신설 + 2차 소스 불일치 반영이라는 보강이 있었으므로 verification-policy 절차상 skill-tester 재테스트 전까지 PENDING_TEST. 실사용 필수 카테고리는 아니므로 content test PASS 시 다시 APPROVED 가능)
+
+---
+
+## 5-4. skill-tester 재테스트 (2026-09-28) — v3 AAK caveat·SKAN 수치 시점 반영분 대상
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (domain-specific game 에이전트 미등록으로 대체)
+**수행 방법**: SKILL.md Read 후 2개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인. 질문 1개는 5-3에서 신설된 AAK "주의: 미검증" caveat을, 질문 1개는 SKAN 채택률 수치의 관측 시점 한계 caveat을 직접 겨냥
+
+### 실제 수행 테스트
+
+**Q1. AAK 도입 시 SKAN 완전 대체 여부 + iOS 18.4 기능 확장설 확정 여부** ("AdAttributionKit을 도입하면 SKAN을 완전히 대체하고 그만 신경 써도 되나요? AAK가 iOS 18.4부터 기능이 확장됐다는 게 확정된 사실인가요?")
+- ✅ PASS
+- 근거: SKILL.md 4-3 "AdAttributionKit (AAK) — SKAN의 후속"
+- 상세: "SKAN deprecation 일정 미발표, SKAN 4와 AAK 병행 운영, 신규 게임은 SKAN 4를 주 측정 경로로 두고 AAK는 병행 테스트 수준"이라는 확정 서술과, "iOS 18.4 기능 확장설은 2차 소스 다수 보도이나 Apple 공식 문서 재확인 실패로 `> 주의: 미검증` 표기"를 명확히 구분해서 답변. 확정 사실과 미검증 사실을 뒤섞지 않음.
+
+**Q2. SKAN 4 채택 비중 수치의 최신성** ("지금(2026년 하반기) 기준으로 Meta·Google 등 네트워크별 SKAN 4 채택 비중이 얼마이고, 이 수치를 그대로 캠페인 설계에 써도 되나요?")
+- ✅ PASS
+- 근거: SKILL.md 4-2 "SKAN 4 채택률 현황" 표 + "네트워크별 SKAN 4 postback 비중" 표 + 두 개의 `> 주의` 문단 + "재확인 (2026-09-28)" 문단
+- 상세: 네트워크별 세부표는 2024-02 시점, "과반 전환" 근거인 Meta 44%는 2025-09-29 시점 값이며 "Singular가 이후 신규 트래커를 발행하지 않아 최신 수치 자체를 갱신하지 못했다"는 한계를 정확히 인용. 표를 그대로 믿지 말고 자사 어트리뷰션 대시보드로 직접 확인하라는 지침까지 도출. "Google이 SKAN 4 전환에 가장 뒤처졌다"는 정성적 결론만 신뢰도 높다고 구분해서 답변.
+
+### 발견된 gap (선택 보강, 차단 요인 아님)
+
+- Q1: AAK가 구체적으로 "무엇이" 확장됐는지(재참여 어트리뷰션 외 세부 항목) 서술이 없어, 미검증 사유(JS 렌더링으로 자동 조회 실패)만 확인 가능하고 세부 내용은 사용자가 직접 공식 문서를 봐야 함.
+- Q2: 네트워크별 세부 비중표(Reddit 98%, Unity 81% 등)가 2024-02 단일 스냅샷뿐이라 "2026 하반기 각 네트워크별" 구체 수치는 SKILL.md에 아예 없음(정성적 순위 방향성만 신뢰 가능) — 다음 정기 점검 시 갱신 필요(섹션 7에 이미 기록됨).
+
+### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 개념·전략 정리 스킬 (content test PASS = APPROVED 가능, 실사용 필수 카테고리 아님)
+- 최종 상태: **APPROVED** (2026-09-28 재검증(2차) AAK caveat·SKAN 수치 시점 표기 반영 확인 완료)
+
+---
+
 > 아래는 skill-creator가 작성한 원본 테스트 케이스 템플릿 (참고용 보존)
 
 ### 테스트 케이스 1 (원본 템플릿)
@@ -354,9 +406,11 @@ Google App Campaigns / Meta Ads / Apple Search Ads에 어떻게 배분해야 할
 | 실용성 | ✅ |
 | 에이전트 활용 테스트 | ✅ (2026-06-10 3/3 PASS + 2026-08-11 재검증 4/4 PASS) |
 | 교차 검증 | ✅ (v1 23건 + v2 재검증 7건, 1차 출처 2건 포함) |
-| **최종 판정** | **APPROVED** (v2, 2026-08-11 기준) |
+| 2차 재검증(2026-09-28) | ✅ (클레임 4개 재확인 — 3 VERIFIED 유지 + 1 UNVERIFIED 신규 caveat 추가) |
+| skill-tester 재테스트(2026-09-28) | ✅ 2/2 PASS (Q1 AAK 확정/미검증 구분 · Q2 SKAN 채택률 시점 한계 인지) |
+| **최종 판정** | **APPROVED** (v3, 2026-09-28 — skill-tester 재테스트 2/2 PASS 완료, AAK caveat·SKAN 수치 시점 표기 반영 확인) |
 
-**APPROVED 유지 근거**: 지적된 사실 오류 3건(SKAN 4 채택률·ATT opt-in rate·Apple 제재 사실관계)이 모두 1차 또는 고신뢰 출처 교차 검증을 거쳐 SKILL.md에 수정 반영됐고, 수정 섹션에 대한 content test 4/4 PASS를 확인했다. 나머지 섹션(채널 운영·LTV/CPI·크리에이티브·어트리뷰션)은 v1 검증 결과가 유효하다. verification-policy 분류상 *개념·전략 정리 스킬*이므로 실사용 필수 카테고리에 해당하지 않아 content test PASS로 APPROVED 유지가 가능하다.
+**APPROVED 전환 근거**: 2026-09-28 재검증에서 기존 클레임은 모두 변경 없음(VERIFIED 유지)으로 확인됐으나, AAK의 iOS 18.4 기능 확장 서술을 1차 소스(Apple 공식 문서) 재확인 실패로 **UNVERIFIED** 표기와 함께 신설 추가했고, SKAN 3/4 비중에 대한 2차 소스 간 서술 불일치를 인지하는 caveat도 추가했다. 이에 따라 일시 PENDING_TEST로 전환했으며, 같은 날 skill-tester가 신설 caveat을 직접 겨냥한 실전 질문 2건으로 content test를 수행해 2/2 PASS를 확인했다. 실사용 필수 카테고리가 아니므로 content test PASS로 APPROVED 전환한다.
 
 ---
 
@@ -368,6 +422,8 @@ Google App Campaigns / Meta Ads / Apple Search Ads에 어떻게 배분해야 할
 - [✅] Apple ATT 제재 사실관계 정정 (2026-08-11 완료 — 프랑스 경쟁당국 2025-03-31)
 - [✅] Android Privacy Sandbox 철회 반영 (2026-08-11 완료 — Google 공식 status 기준)
 - [❌] `skill-tester`로 v2 전문 대상 content test 1회 추가 수행 — 다음 정기 점검 시. 수정 섹션 재검증(4/4 PASS)은 완료돼 차단 요인 아님
+- [✅] (2026-09-28 완료) `skill-tester`로 v3(2026-09-28 신설 AAK caveat 포함) content test 수행 — 2/2 PASS, PENDING_TEST → APPROVED 전환
+- [❌] AAK iOS 18.4 기능 확장 서술의 Apple 공식 문서 1차 확인 — 현재 UNVERIFIED 표기 상태. JS 렌더링 페이지라 자동 조회 실패, 수동 확인 또는 다른 조회 도구 필요
 - [❌] 실 광고 운영 결과(스튜디오 사례)를 추후 보강 가능 (Unity 2D 게임 + 실제 캠페인 데이터) — 선택 보강. 차단 요인 아님
 - [❌] **채택률·opt-in 수치는 분기 단위로 변동** — 최소 6개월마다 Singular 트래커·Adjust 연간 리포트로 재확인 필요. 인용 시 반드시 관측 시점 병기
 - [❌] AAK(AdAttributionKit) 도입률이 유의미해지거나 Apple이 SKAN deprecation 일정을 발표하면 섹션 4-3 전면 개편 필요
@@ -382,3 +438,5 @@ Google App Campaigns / Meta Ads / Apple Search Ads에 어떻게 배분해야 할
 | 2026-06-10 | v1 | 최초 작성 (3대 채널 + ATT/SKAN 4.0 + LTV/CPI + 크리에이티브 + 어트리뷰션 + Unity 2D 특이사항) | skill-creator |
 | 2026-06-10 | v1 | 2단계 실사용 테스트 수행 (Q1 소프트런치 KPI 미달 UA 금지 / Q2 SKAN 4.0 CV 매핑+채택률 주의 / Q3 Google UAC 예산·입찰 단계) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-08-11 | v2 | **사실 오류 감사 대응 재검증.** DISPUTED 3건 수정: ① SKAN 4 채택률 "2026 초 ~5%" → 연도별 추이표(2023-04 5% / 2024-02 43% / 2025-09 과반 전환 / 2026 다수) + 네트워크별 비중표로 교체 ② ATT opt-in "게임 19%·예산 15% 가정" → "게임 39%·전산업 38%(Adjust 2026 Q1)·예산 30% 가정" ③ Apple €150M 제재 "2026 EU" → "2025-03-31 프랑스 경쟁당국 결정 25-D-02, 지배적 지위 남용". 신규 추가: AAK 현황(4-3), Android Privacy Sandbox 철회(4-4). 섹션 4 구조를 템플릿 기준(4-1~4-4)으로 정리. 재검증 content test 4/4 PASS → status APPROVED 유지 | skill-creator |
+| 2026-09-28 | v3 | **2차 재검증.** ATT opt-in rate(변경 없음, 기존 Adjust 2026 Q1 수치가 여전히 최신 확인) 및 AAK의 SKAN deprecation 미발표 상태(변경 없음) 재확인. 신규: AAK가 iOS 18.4부터 기능 확장됐다는 2차 소스 서술을 1차 소스 미확인 상태로 "주의: 미검증" 표기 추가(4-3). SKAN 3/4 네트워크별 비중 표에 "2025-09-29 시점 고정, 2차 소스 간 서술 불일치 존재" caveat 추가(4-2) — Google이 가장 뒤처졌다는 방향성은 모든 소스 일치라 결론 불변. 클레임 4개 재확인(3 VERIFIED 유지 + 1 UNVERIFIED 신규). status는 신설 caveat으로 인해 **PENDING_TEST 전환**(skill-tester 재테스트 대기) | 2차 재검증 세션 |
+| 2026-09-28 | v3 | 2단계 실사용 재테스트 수행 (Q1 AAK 도입 시 SKAN 완전 대체 여부·iOS 18.4 확정/미검증 구분 / Q2 SKAN 4 채택 비중 수치의 관측 시점 한계 인지) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |

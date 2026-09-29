@@ -22,7 +22,7 @@ description: >
 > - [web-vitals npm](https://github.com/GoogleChrome/web-vitals)
 > - [Partytown](https://partytown.builder.io/)
 >
-> 검증일: 2026-06-02
+> 검증일: 2026-09-28 (최초 2026-06-02, 2026-09-28 재검증 — 변경 없음)
 
 ---
 

@@ -69,7 +69,7 @@ export default defineConfig({
 
 ### package.json exports 설정
 
-> **주의 (2026-09-26 실측, tsup 8.5.1):** `outExtension`의 `js` 오버라이드(`.mjs`/`.cjs`)는 **dts 확장자에 전파되지 않는다.** dts 확장자는 항상 package.json `"type"` 필드 기본 규칙(무/`"commonjs"` → ESM `.d.mts` / CJS `.d.ts`, `"module"` → ESM `.d.ts` / CJS `.d.cts`)을 따른다. `outExtension`에 `dts` 속성을 함께 반환해도 적용되지 않는 tsup 자체 제약(egoist/tsup#939, 미해결)이 있어, 위 "다중 Entry 패턴"처럼 `js`만 `.mjs`/`.cjs`로 강제한 경우 실제 산출물은 `index.mjs` + `index.cjs` + `index.d.mts`(ESM용) + `index.d.ts`(CJS용)가 된다 — exports는 조건별로 타입 파일을 분리해야 한다.
+> **주의 (2026-09-26 실측, tsup 8.5.1):** `outExtension`의 `js` 오버라이드(`.mjs`/`.cjs`)는 **dts 확장자에 전파되지 않는다.** dts 확장자는 항상 package.json `"type"` 필드 기본 규칙(무/`"commonjs"` → ESM `.d.mts` / CJS `.d.ts`, `"module"` → ESM `.d.ts` / CJS `.d.cts`)을 따른다. `outExtension`에 `dts` 속성을 함께 반환해도 적용되지 않는 tsup 자체 제약(egoist/tsup#939, 미해결)이 있어, 위 "다중 Entry 패턴"처럼 `js`만 `.mjs`/`.cjs`로 강제한 경우 실제 산출물은 `index.mjs` + `index.cjs` + `index.d.mts`(ESM용) + `index.d.ts`(CJS용)가 된다 — exports는 조건별로 타입 파일을 분리해야 한다. 아래 exports 예시는 이 불일치를 그대로 반영한 결과다 — `.d.ts` 하나로 겸용하지 않고 `import`는 `.d.mts`, `require`는 `.d.ts`로 조건별 분리했다.
 
 ```json
 {

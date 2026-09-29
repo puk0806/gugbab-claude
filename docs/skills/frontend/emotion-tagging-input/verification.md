@@ -1,8 +1,8 @@
 ---
 skill: emotion-tagging-input
 category: frontend
-version: v1
-date: 2026-05-15
+version: v2
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `emotion-tagging-input` |
 | 스킬 경로 | `.claude/skills/frontend/emotion-tagging-input/SKILL.md` |
-| 검증일 | 2026-05-15 |
-| 검증자 | skill-creator (Claude Opus 4.7) |
-| 스킬 버전 | v1 |
+| 검증일 | 2026-09-28 (최초 2026-05-15, 2026-09-28 재검증) |
+| 검증자 | skill-creator (Claude Opus 4.7) → Claude (Sonnet 5, 2026-09-28 재검증) |
+| 스킬 버전 | v2 |
 
 ---
 
@@ -151,6 +151,24 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
+### [2026-09-28] 재검증 — 학술 인용·WCAG 기준 원문 대조
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임 3개를 WebSearch로 1차 소스 대조
+
+**클레임 대조 결과**:
+1. Ekman (1992) "An argument for basic emotions", *Cognition and Emotion* 6(3/4), 169-200 → **VERIFIED** — Tandfonline·SciRP 등 복수 소스 교차 확인 결과 권/호/페이지 전부 일치
+2. Russell (1980) "A circumplex model of affect", *Journal of Personality and Social Psychology* 39(6), 1161-1178 + 8 reference points(pleasure 0°·excitement 45°·arousal 90°·distress 135°·displeasure 180°·depression 225°·sleepiness 270°·relaxation 315°) → **VERIFIED** — 원문 PDF 기반 요약과 SKILL.md ASCII 다이어그램 배치 일치
+3. WCAG SC 1.4.1 (Use of Color, Level A) — "색상만으로 정보를 전달하지 않는다" → **VERIFIED** — W3C 공식 Understanding 문서 재대조 결과 기준 번호·레벨·요구사항 문구 그대로 유지, WCAG 2.2로 넘어가도 동일 기준 번호로 존속 (WCAG는 하위 호환 유지 방식)
+
+**실전 질문 재검증**:
+- Q1. "이모지 감정 칩에 색상만으로 긍/부정을 구분해도 되는가?" → SKILL.md "3.2 색상 단독 금지 (WCAG 1.4.1)" 근거로 "색+아이콘+텍스트 병행 필요" 정확히 도출, 재대조 결과와 일치 — PASS
+- Q2. "Plutchik 8과 Russell 2D 중 꿈 일기 앱에 뭐가 더 적합한가?" → SKILL.md "1.4 꿈 일기 앱 권장 선택" 근거로 Plutchik 8 1순위 정확히 도출 — PASS
+
+**재검증 최종 판정**: 3개 클레임 전부 VERIFIED, 본문 수정 불필요. status **APPROVED 유지**
+
+---
+
 **수행일**: 2026-06-20
 **수행자**: skill-tester → general-purpose
 **수행 방법**: SKILL.md Read 후 실전 질문 3개 답변, 근거 섹션 및 anti-pattern 회피 확인
@@ -275,8 +293,8 @@ Ekman, Plutchik, Russell 중 어떤 체계가 적합하고 왜 그런지 알려�
 | 실용성 | ✅ React/TS 코드 + 권장 기본값 + 체크리스트 |
 | 학술 근거 | ✅ Ekman·Plutchik·Russell 1차 원문 PDF + 인용 교차 검증 |
 | 접근성 | ✅ WCAG 2.1 + WAI-ARIA 공식 + MDN 교차 |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-15 / 2026-06-20 재수행, skill-tester → general-purpose) |
-| **최종 판정** | **APPROVED** (content test 3/3 PASS, UI 패턴·접근성 스킬 — 실사용 필수 카테고리 해당 없음) |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-15 / 2026-06-20 재수행, skill-tester → general-purpose) / 재검증 2026-09-28 |
+| **최종 판정** | **APPROVED** (content test 3/3 PASS, UI 패턴·접근성 스킬 — 실사용 필수 카테고리 해당 없음 / 2026-09-28 재검증 3개 클레임 전부 VERIFIED로 APPROVED 유지) |
 
 ---
 
@@ -301,3 +319,4 @@ Ekman, Plutchik, Russell 중 어떤 체계가 적합하고 왜 그런지 알려�
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 분류체계 선택기준 / Q2 WCAG+이모지 접근성 / Q3 Hick's law+이모지 문화차이) → 3/3 PASS, PENDING_TEST 유지 (실사용 UX 검증 필요 카테고리) | skill-tester |
 | 2026-06-20 | v1 | 2단계 실사용 테스트 재수행 (Q1 이모지 칩 접근성 / Q2 LLM 자동 매핑 anti-pattern / Q3 Russell 2D 슬라이더 라벨링·aria-valuetext) → 3/3 PASS, PENDING_TEST → APPROVED 전환 (UI 패턴 스킬 — content test PASS = APPROVED 가능 카테고리 재판정) | skill-tester |
 | 2026-09-25 | v1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |
+| 2026-09-28 | v2 | 재검증(135일 경과) — Ekman 1992·Russell 1980 인용, WCAG SC 1.4.1 기준을 WebSearch/WebFetch로 원문 재대조. 3개 클레임 전부 VERIFIED, 본문 수정 없음. status APPROVED 유지 | Claude (Sonnet 5) |

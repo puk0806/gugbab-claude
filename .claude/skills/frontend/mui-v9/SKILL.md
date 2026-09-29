@@ -8,7 +8,7 @@ description: MUI v9 (Material UI) 핵심 패턴 — ThemeProvider + CSS Variable
 > 소스: https://mui.com/material-ui/getting-started/
 >       https://mui.com/blog/introducing-material-ui-v9/
 >       https://mui.com/material-ui/migration/upgrade-to-v9/
-> 검증일: 2026-06-19
+> 검증일: 2026-09-28 (최초 2026-06-19)
 
 > 참고: v5 → v6 → v7 → v9 순서로 출시됨 (v8은 존재하지 않음 — MUI X와 버전 번호를 맞추기 위한 의도적 스킵).
 > 참고: 프로젝트가 **`@mui/material` 5.x에 고정**된 레거시라면 이 스킬의 Grid `size` prop·`colorSchemes`·`theme.applyStyles()`는 동작하지 않는다 — `frontend/mui-v5` 스킬을 먼저 참조할 것.

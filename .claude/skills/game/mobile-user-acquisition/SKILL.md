@@ -22,10 +22,11 @@ description: >
 > - Google — Privacy Sandbox feature status (2025-10-17 갱신): https://privacysandbox.google.com/overview/status
 > - Autorité de la concurrence — 결정 25-D-02 (2025-03-31): https://www.autoritedelaconcurrence.fr/en/press-release/targeted-advertising-autorite-de-la-concurrence-imposes-fine-eu150000000-apple
 >
-> 검증일: 2026-08-11
+> 검증일: 2026-09-28 (최초 2026-06-10, 재검증 2026-08-11 / 2026-09-28)
 > 기준 시점: 2026년 중반 (iOS 26 / SKAN 4.0 다수 전환 / ATT 5년 차)
 >
 > 2026-08-11 수정: SKAN 4 채택률 통계 전면 교체(구 "~5%" 오류), ATT opt-in rate 최신화, Apple ATT 제재 사실관계 정정, Android Privacy Sandbox 철회 반영
+> 2026-09-28 재확인: ATT opt-in rate·SKAN deprecation 미발표 상태 변경 없음 재확인. AAK(AdAttributionKit) 기능 확장 동향 미검증 표기로 추가
 
 ---
 
@@ -274,12 +275,16 @@ Postback 3 (8~35일, coarse):
 
 > 주의: 네트워크별 수치는 Singular 실측 트래커 값으로 **주 단위로 변동**한다. 캠페인 설계 시 위 표를 그대로 믿지 말고 어트리뷰션 대시보드에서 자사 postback의 SKAN 버전 분포를 직접 확인한다.
 
+> 재확인 (2026-09-28): 2026년 상반기 이후 발행된 2차 소스(마케팅 매체) 중 일부는 "Meta·Google·Snap이 여전히 SKAN 3 위주"라고 서술해 위 표(Singular, 2025-09-29 기준 Meta 44%)와 배치되는 것처럼 보인다. 다만 Singular가 2025-09-29 이후 신규 실측 업데이트를 공개 발행하지 않아 **최신 트래커 수치 자체는 갱신하지 못했다** — 표는 마지막 실측 시점(2025-09-29) 기준으로 유지하고 최신값이 아님을 표기한다. 다만 여러 2차 소스가 공통적으로 "**Google이 SKAN 4 전환에 가장 뒤처진 네트워크**"라고 보고하는 점은 기존 서술과 일치해 추가 검증 없이도 신뢰도가 높다. 결론은 바뀌지 않는다 — SKAN 3/4 양쪽에서 통하는 CV schema를 설계하고, 실제 비중은 자사 대시보드로 확인할 것.
+
 ### 4-3. AdAttributionKit (AAK) — SKAN의 후속
 
 Apple은 SKAN 5 대신 **AdAttributionKit(AAK)**을 차세대 프레임워크로 내놓았다(재참여 어트리뷰션·복수 앱스토어·설정 가능한 윈도우 지원).
 
-- **2026년 기준 SKAN의 deprecation 일정은 발표되지 않았다.** SKAN 4와 AAK는 병행 운영된다
+- **2026-09-28 재확인 기준으로도 SKAN의 deprecation 일정은 발표되지 않았다.** SKAN 4와 AAK는 계속 병행 운영된다
 - 업계 AAK 도입률은 아직 미미하다 — 신규 게임은 **SKAN 4를 주 측정 경로로 두고 AAK는 병행 테스트** 수준이 적절하다
+
+> 주의: 미검증 — 업계 2차 소스(마케팅 매체) 다수가 "AAK가 iOS 18.4부터(WWDC 2025 발표분) 재참여 어트리뷰션 등 기능이 확장됐다"고 보도하나, Apple 공식 문서에서 직접 재확인하지 못했다(공식 페이지가 JS 렌더링이라 자동 조회 도구로 본문을 가져오지 못함). 구체적 캠페인 설계에 반영하기 전 [Apple 공식 AdAttributionKit 문서](https://developer.apple.com/documentation/adattributionkit)에서 직접 확인할 것.
 
 ### 4-4. Android 참고 — Privacy Sandbox 철회
 

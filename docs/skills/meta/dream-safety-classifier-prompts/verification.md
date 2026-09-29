@@ -1,8 +1,8 @@
 ---
 skill: dream-safety-classifier-prompts
 category: meta
-version: v1
-date: 2026-08-12
+version: v1.5
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `dream-safety-classifier-prompts` |
 | 스킬 경로 | `.claude/skills/meta/dream-safety-classifier-prompts/SKILL.md` |
-| 검증일 | 2026-08-12 (최초 2026-05-15) |
-| 검증자 | skill-creator (Claude Opus 4.7) |
-| 스킬 버전 | v1 |
+| 검증일 | 2026-09-28 (최초 2026-05-15, 이전 2026-08-12) |
+| 검증자 | skill-creator (Claude Opus 4.7) / 재검증 2차 (2026-09-28) / skill-tester 재테스트 (2026-09-28) |
+| 스킬 버전 | v1.5 |
 
 ---
 
@@ -103,6 +103,54 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
+### [2026-09-28] skill-tester 재테스트 (2차 재검증 대응)
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose
+**수행 방법**: SKILL.md Read 후 2026-09-28 재검증(2차)에서 반영된 §8 Structured
+Outputs(`output_config.format`+`CLASSIFIER_SCHEMA`)·§9 캐시 임계값 정정(Opus 5.5
+512)을 직접 겨냥한 실전 질문 2개 답변, 근거 섹션 인용 및 anti-pattern 회피 확인
+
+**Q1. 이 안전 분류기 응답의 JSON 파싱 실패 위험을 원천적으로 줄이려면 어떻게
+구현해야 하는가?**
+- ✅ PASS
+- 근거: SKILL.md "8. 운영 패턴 — 호출 순서와 비용" (`output_config.format` +
+  `CLASSIFIER_SCHEMA` 코드) / "10. 흔한 함정" 5번·10번
+- 상세: Structured Outputs(constrained decoding)로 스키마 위반 자체를 원천
+  차단한다는 §8 서술과 `CLASSIFIER_SCHEMA`(enum 5종 + `additionalProperties: False`)
+  코드를 정확히 인용. 다만 API 호출 자체 실패(네트워크·429)는 별개이므로
+  `try/except` + retry 1회 + 보수적 unsafe fallback(fail-closed)이 필요하다는
+  §10 함정 5·10번의 anti-pattern 회피(fail-open 금지)까지 정확히 답변에 반영.
+
+**Q2. Haiku 4.5로 분류기를 캐싱하려는데 최소 캐시 토큰은? 분류기 시스템 프롬프트
+(~700~900 tokens)만으로 캐시가 적용되는가? Opus 5.5로 운영하면 임계값이 어떻게
+달라지는가?**
+- ✅ PASS
+- 근거: SKILL.md "8. 운영 패턴" 하단 주의 문구 / "9. Prompt Caching 전략" 표
+- 상세: Haiku 4.5 최소 4,096 tokens, 분류기 프롬프트(~700~900 tokens)는 단독으로
+  캐시 미적용(§8 주의 문구 그대로 인용)이라고 정확히 답변. Opus 5.5는 §9 표의
+  2026-09-28 정정값 512 tokens를 인용하며, 이 값이면 분류기 프롬프트 자체로도
+  캐시 조건을 충족한다는 점까지 도출(단, "분류기에 Opus는 과잉"이라는 SKILL.md의
+  판단도 함께 인용해 모델 선택 권고와 캐시 임계값을 혼동하지 않음).
+
+**발견된 gap(교차 파일 불일치 — SKILL.md 결함 아님)**: 테스트 에이전트가 `.claude/rules/agent-design.md`의
+"Opus 5.5는 공식 캐싱 표에 아직 별도 기재가 없다(주의: 미확인)"라는 구절과 본
+SKILL.md §9의 "Opus 5.5 = 512 (2026-09-28 공식 표 재확인)"이 서로 다른 결론을
+내고 있다는 점을 지적함. 확인 결과 SKILL.md·짝 스킬
+`meta/dream-interpretation-prompt-engineering` 양쪽 모두 2026-09-28에 WebFetch로
+공식 prompt-caching 표를 직접 재조회해 512임을 확인한 반면, `agent-design.md`는
+2026-09-25 감사 시점의 "미확인" 문구가 그대로 남아 있어 **규칙 파일이 스킬보다
+갱신이 뒤처진 상태**로 보인다. 이 규칙 파일은 본 재테스트의 배정 범위(3개 스킬의
+verification.md) 밖이므로 수정하지 않고, 최종 보고에서 사용자에게 별도 후속
+조치 항목으로 전달한다. SKILL.md 자체는 이 불일치와 무관하게 자기 완결적으로
+정확하므로 PASS 판정에는 영향 없음.
+
+**판정**: agent content test 2/2 PASS → verification-policy 분류(안전 분류기,
+2026-06-19 사용자 지시로 content test PASS = APPROVED 기조 유지) → **최종 상태
+APPROVED**
+
+---
+
 **수행일**: 2026-05-15
 **수행자**: skill-tester → general-purpose (domain-specific 에이전트 미사용, meta 카테고리이므로 general-purpose로 대체)
 **수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
@@ -186,15 +234,52 @@ DISPUTED 항목 없음. UNVERIFIED 항목 없음.
 
 ---
 
+### [2026-09-28] 재검증(2차) — §8 Structured Outputs 반영 + 캐시 임계값 정정
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임 3개를 1차 소스(platform.claude.com)와
+대조, ADD 항목(§8 Structured Outputs) 반영
+
+**클레임 대조 결과**:
+1. §8의 `classification = json.loads(safety.content[0].text)`가 스키마 강제 없이
+   자유 텍스트 파싱에 의존하던 기존 서술 → **DISPUTED(보강 반영)**. Anthropic
+   Structured Outputs(`output_config.format`, `type: "json_schema"`)가 GA이며
+   `claude-haiku-4-5-20251001`이 Claude API에서 공식 지원됨을 확인 (소스:
+   https://platform.claude.com/docs/en/build-with-claude/structured-outputs). §8
+   코드에 `CLASSIFIER_SCHEMA`(category enum 5종 + confidence/signals/rationale)를
+   추가하고 `output_config.format`으로 호출하도록 정정.
+2. §9 "Claude Opus 5.5 / Opus 5(구세대) — 미확인(공식 표 미기재) / 512" →
+   **DISPUTED(정정)**. 2026-09-28 재조회 결과 공식 prompt-caching 표에 Opus 5.5도
+   **512 tokens**로 명시되어 있음을 확인. 표를 "512 / 512"로 정정.
+3. Haiku 4.5 prompt cache 최소 4,096 tokens (§8 인용) → **VERIFIED** (공식
+   prompt-caching 표 재확인, 변경 없음).
+
+**보강(ADD)·축소**: §8 코드에 Structured Outputs 스키마 추가 + 캐시 무효화 주의 문구,
+§9 캐싱 표 정정, §10 함정 5번에 Structured Outputs 반영 후에도 API 호출 실패 자체는
+별도 처리 필요하다는 단서 추가. 카테고리 정의·false positive/negative 회피 기준·
+한국 위기 자원 매핑(§2·§6)은 전혀 축소하지 않음.
+
+**실전 질문 재검증**:
+- Q1. "분류기 응답의 JSON 파싱이 실패할 위험을 원천적으로 줄이려면?" → PASS
+  (근거: SKILL.md "8. 운영 패턴" Structured Outputs 단락 + 코드의 `CLASSIFIER_SCHEMA`)
+- Q2. "Haiku 4.5로 분류기를 Structured Outputs와 함께 캐싱하려는데 캐시 최소 토큰은?"
+  → PASS (근거: SKILL.md "9. Prompt Caching 전략" 표 — Haiku 4.5 4,096 그대로,
+  Opus 5.5/Opus 5는 512로 정정됨)
+
+**재검증 최종 판정**: status **PENDING_TEST 전환** (§8 코드 변경 + §9 캐싱 표 정정으로
+실사용 재테스트 필요)
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
 |------|------|
-| 내용 정확성 | ✅ |
+| 내용 정확성 | ✅ (2026-09-28 재검증 — §8 Structured Outputs 반영, §9 Opus 5.5 캐시 임계값 정정) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-15, skill-tester 수행, general-purpose 대체) |
-| **최종 판정** | **APPROVED** (2026-06-19, content test 2/2 PASS, 사용자 지시에 따라 전환) |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-15, skill-tester 수행, general-purpose 대체) + 2026-09-28 skill-tester 재테스트 2/2 PASS (§8 Structured Outputs·§9 캐시 정정 겨냥) |
+| **최종 판정** | **APPROVED** (2026-09-28 skill-tester 재테스트 2/2 PASS — Structured Outputs·캐시 임계값 정정 반영 확인) |
 
 **판정 근거:**
 - 8개 핵심 클레임 모두 Anthropic 공식 문서 + 공식 cookbook + 공식 발표 블로그
@@ -212,8 +297,14 @@ DISPUTED 항목 없음. UNVERIFIED 항목 없음.
 - [❌] 실 운영 골든셋 200~500건 구축 후 precision/recall 측정 결과 추가 (사용자 영역 — 선택 보강, 차단 요인 아님)
 - [❌] 사용자가 짝 스킬 `humanities/crisis-intervention-resources-korea` 분리 생성 시
        본 스킬 §6 자원 표를 그 스킬 참조로 단순화 가능 (선택 보강 — 차단 요인 아님)
-- [❌] 분류기를 Claude Structured Outputs(JSON schema 강제) 기능으로 마이그레이션
-       시 §5 JSON 파싱 fallback 코드 단순화 가능 (선택 보강 — 차단 요인 아님)
+- [✅] 분류기를 Claude Structured Outputs(JSON schema 강제) 기능으로 마이그레이션
+       완료 (2026-09-28 재검증 2차 — §8 `output_config.format` + `CLASSIFIER_SCHEMA` 반영)
+- [✅] 2026-09-28 재검증(2차)에서 §8 Structured Outputs 반영 + §9 캐시 표 정정 →
+  skill-tester 재테스트 완료 (2026-09-28, 2/2 PASS) — APPROVED 전환
+- [❌] `.claude/rules/agent-design.md`가 "Opus 5.5 캐싱 최소 토큰 미확인"으로
+  남아 있어 본 SKILL.md·짝 스킬의 "512 확인" 서술과 불일치 — 규칙 파일 갱신은
+  본 스킬 배정 범위 밖, 메인 에이전트/사용자 후속 조치 필요 (차단 요인 아님, 별도
+  후속 과제)
 
 ---
 
@@ -227,3 +318,5 @@ DISPUTED 항목 없음. UNVERIFIED 항목 없음.
 | 2026-08-11 | v1.1 | 모델 ID 한정 재감사 — §9 Prompt Caching 표의 `Claude Opus 4.7 / 4,096`을 **`Claude Opus 4.8 / 1,024`로 정정**(구세대 ID + 캐시 최소 토큰 값 오류). 동일 오류가 `backend/python-anthropic-sdk`·`frontend/claude-api-streaming-frontend`·`meta/dream-interpretation-prompt-engineering`에서도 발견되어 함께 정정됨. 근거: platform.claude.com prompt-caching 공식 문서 + `.claude/rules/agent-design.md` 현행 모델 기준. 본문 나머지(분류 카테고리·few-shot·평가 지표)는 변경 없어 status APPROVED 유지 | 전수검사 후속 |
 | 2026-08-12 | v1.2 | **모델 ID 세대 정렬.** §8 2단계 파이프라인 코드의 해몽 호출 `claude-sonnet-4-6` → `claude-sonnet-5`(주석 "Sonnet 4.6" → "Sonnet 5"), 비용 분석 표 해몽 행 모델명 동반 정정. §9 Prompt Caching 표를 `Sonnet 4.6/1,024` → `Sonnet 5/1,024`, `Opus 4.8/1,024` → **`Opus 5/512`**로 교체하고 선택 가이드·캐시 주의 문구의 Sonnet 4.6 표기도 Sonnet 5로 정렬. **1단계 분류기의 `temperature=0`은 유지** — 호출 모델이 `claude-haiku-4-5-20251001`이고 Haiku 4.5는 여전히 현행 세대이며 샘플링 파라미터를 정상 지원하므로 5 계열 400 제약 대상이 아니다(§4·§10의 temperature=0 근거 서술도 그대로 유효). 검증일 2026-05-15 → 2026-08-12. status **APPROVED 유지** | 모델 ID 세대 정렬 |
 | 2026-09-25 | v1.3 | **모델 ID 현행화(Opus 5.5/Fable 5.1).** SKILL.md 헤더 "대상 모델" Sonnet 4.6 → Sonnet 5, §1 비교표·§11 분리 원칙 표의 Sonnet 4.6 표기 → Sonnet 5, §8 비용 표 Sonnet 5 단가 $3/$15 → $2/$10(회당 ~$0.013 → ~$0.012, 가격 기준일 2026-09-25), §9 캐싱 표 Opus 행에 Opus 5.5 "미확인" 병기. §10-8에 5 계열 `temperature` 400 주의 추가(Haiku 4.5 분류기의 `temperature=0`은 유지). §10-9 안티패턴 예시의 형식 오류 ID `claude-haiku-4-20240307` → 실존 구 ID `claude-3-haiku-20240307`. 메타 날짜 정합 — frontmatter `date`·검증일이 2026-05-15로 남아 SKILL.md(2026-08-12)와 불일치하던 것을 2026-08-12로 동기화. status APPROVED 유지 | 모델 ID 현행화 |
+| 2026-09-28 | v1.4 | **재검증(2차) — Structured Outputs 반영.** §8 `json.loads(safety.content[0].text)`만 쓰던 코드에 `output_config.format`(Structured Outputs, GA) + `CLASSIFIER_SCHEMA`(category enum 5종) 추가, `claude-haiku-4-5-20251001` Claude API 지원 확인. §9 캐싱 표의 "Opus 5.5 미확인"을 **512로 정정**(공식 표 갱신 확인). §10-5에 API 호출 실패 자체는 별도 처리 필요하다는 단서 추가. 5개 카테고리 정의·FP/FN 회피 기준·한국 위기 자원 매핑은 축소 없음. status **PENDING_TEST 전환** | 재검증 2차 |
+| 2026-09-28 | v1.5 | 2단계 실사용 재테스트 수행 (Q1 Structured Outputs로 파싱 실패 원천 차단 + fail-closed fallback / Q2 Haiku 4.5·Opus 5.5 캐시 최소 토큰) → 2/2 PASS, PENDING_TEST → APPROVED 전환. 부수적으로 `.claude/rules/agent-design.md`의 Opus 5.5 캐시 임계값 "미확인" 서술이 본 스킬·짝 스킬의 "512 확인" 서술과 불일치함을 발견 — 규칙 파일 수정은 배정 범위 밖이라 후속 과제로 기록 | skill-tester |

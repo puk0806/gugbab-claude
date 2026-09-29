@@ -13,7 +13,9 @@ description: >
 # 꿈 해몽 앱 시스템 프롬프트 A/B 테스트 설계
 
 > 소스:
-> - Anthropic Evaluation tool — https://docs.anthropic.com/en/docs/test-and-evaluate/eval-tool
+> - Anthropic Evaluation tool — https://platform.claude.com/docs/en/docs/test-and-evaluate/eval-tool
+>   (구 URL `docs.anthropic.com/en/docs/test-and-evaluate/eval-tool`은 2026-09-28 재확인 시
+>   301로 이 경로로 영구 리다이렉트됨 — 내용은 동일, 도메인만 이전)
 > - Anthropic A statistical approach to model evaluations — https://www.anthropic.com/research/statistical-approach-to-model-evals
 > - Kohavi/Tang/Xu, *Trustworthy Online Controlled Experiments*, Cambridge UP, 2020 — https://books.google.com/books?id=TFjPDwAAQBAJ
 > - Braintrust, "A/B testing for LLM prompts: A practical guide" — https://www.braintrust.dev/articles/ab-testing-llm-prompts
@@ -22,7 +24,7 @@ description: >
 > - Bird et al., "The Ethics of Online Controlled Experiments (A/B Testing)", *Minds and Machines*, 2023 — https://link.springer.com/article/10.1007/s11023-023-09644-y
 > - Google SRE Workbook, Canarying Releases — https://sre.google/workbook/canarying-releases/
 >
-> 검증일: 2026-08-11
+> 검증일: 2026-09-28 (최초 2026-05-15, 이전 2026-08-11)
 > 대상 모델: Claude Opus 5.5 / Sonnet 5 / Haiku 4.5 기준 (`.claude/rules/agent-design.md`, 2026-09-25 현행화)
 > 짝 스킬: `meta/dream-interpretation-prompt-engineering`, `meta/dream-safety-classifier-prompts`
 > 짝 에이전트: `validation/dream-interpretation-prompt-tester` (사전 평가), `research/data-analyst` (운영 분석)

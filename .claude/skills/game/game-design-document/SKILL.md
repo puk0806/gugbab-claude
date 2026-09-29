@@ -26,7 +26,7 @@ status: PENDING_TEST
 # Unity 2D 모바일 게임 기획서(GDD) 작성 방법론
 
 > 소스: 본문 frontmatter `sources` 참조 (Unity 공식 GDD 템플릿, Unity Learn, Game Developer, Kevuru Games, Ludo.ai, GameAnalytics, Deconstructor of Fun, Tenjin, Airflux, Mobile Gamer Biz, Unity 6 LTS 공식 페이지)
-> 검증일: 2026-09-26 (재검증. Unity 6.0 LTS 지원 종료 임박(2026-10)으로 6.3 LTS 권장으로 갱신, 하이브리드 수익화 2026년 세부 장르별 비율 보강, 소프트런치 국가(캐나다·필리핀·인도네시아)는 변동 없음 확인)
+> 검증일: 2026-09-28 (재검증 시도, 이전 2026-09-26. 4.1절 하이브리드캐주얼 하위 장르 분류 기준의 원 출처를 Sensor Tower "State of Gaming 2026"으로 확인했으나, 공식 무료 페이지에 분류 기준 원문이 없어 본문 미수정·보류. 이전 재검증: Unity 6.0 LTS 지원 종료 임박(2026-10)으로 6.3 LTS 권장으로 갱신, 하이브리드 수익화 2026년 세부 장르별 비율 보강, 소프트런치 국가(캐나다·필리핀·인도네시아)는 변동 없음 확인)
 > 적용 범위: Unity 2D 캐주얼·하이퍼캐주얼·하이브리드 캐주얼 모바일 게임 (iOS/Android)
 
 ---

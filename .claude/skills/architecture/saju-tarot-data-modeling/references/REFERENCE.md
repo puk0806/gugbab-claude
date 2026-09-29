@@ -424,6 +424,8 @@ const uploadable = await db.subjects
 **`dexie-encrypted`의 결정적 제약**: **인덱스는 암호화할 수 없다.** 암호화하면 `where()`가 불가능해지기 때문이다. 설정은 테이블별로 `NON_INDEXED_FIELDS`(인덱스 제외 전부 암호화), `UNENCRYPTED_LIST`(지정 필드만 평문), `ENCRYPT_LIST`(지정 필드만 암호화) 중에서 고른다. 기본 암호 구현은 TweetNaCl이며(WebCrypto는 동기 API가 없어 IndexedDB 트랜잭션과 궁합이 나쁘다는 것이 공식 설명), 커스텀 암복호 함수를 주입할 수도 있다.
 
 > 도입 전 최신 릴리스·유지보수 상태를 확인한다. 요구가 단순하면 직접 구현(암호문 `Uint8Array` 필드 저장)이 통제하기 쉽다.
+>
+> **버전·유지보수 상태(2026-09-28 확인)**: npm 안정 태그는 `2.0.0`(2020-11 배포, ~5년 경과)에 머물러 있지만, GitHub(`dexie/dexie-encrypted`)는 archived 상태가 아니며 `4.2.0-beta.2`(2026-03 배포, Dexie 3.x/4.x 공통 지원)까지 베타 채널로 유지보수가 이어지고 있다(2026-03 최종 push, open issues 2건). 즉 **npm 최신 안정판(2.0.0)은 Dexie 3.x 세대 기준이라 Dexie 4.x 프로젝트에서 쓰려면 베타 태그(`4.2.0-beta.x`)를 명시적으로 설치**하거나 직접 구현을 검토해야 한다. 근거: `https://registry.npmjs.org/dexie-encrypted`(npm registry), `https://github.com/dexie/dexie-encrypted`(GitHub API).
 
 ### 10.3 그래서 인덱스 설계가 곧 프라이버시 설계다
 

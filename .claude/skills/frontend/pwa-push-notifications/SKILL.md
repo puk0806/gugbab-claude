@@ -16,7 +16,7 @@ description: Web Push API + Notifications API — PWA 푸시 알림 구현(VAPID
 > - https://github.com/web-push-libs/web-push
 > - https://developer.apple.com/documentation/usernotifications/sending-web-push-notifications-in-web-apps-and-browsers
 > - https://webkit.org/blog/16535/meet-declarative-web-push/ (Declarative Web Push, §8-1)
-> 검증일: 2026-05-15 (§8-1 Declarative Web Push 보강: 2026-09-17)
+> 검증일: 2026-09-28 (최초 2026-05-15, §8-1 Declarative Web Push 보강: 2026-09-17)
 > 짝 스킬: `frontend/vite-pwa-service-worker` (Service Worker 등록·precache는 그쪽 참조)
 
 ---
@@ -264,7 +264,7 @@ export async function unsubscribePush(): Promise<void> {
 | **OS 버전** | iOS/iPadOS 16.4 이상 |
 | **설치 형태** | **반드시 "홈 화면에 추가"로 설치한 PWA만** 지원. Safari 브라우저 안에서는 **불가** |
 | **권한 트리거** | 사용자 탭(click) 이벤트 *동기* 컨텍스트에서만 `Notification.requestPermission` 호출 가능 |
-| **manifest.json** | `display: "standalone"` 필요 |
+| **manifest.json** | `display: "standalone"` 또는 `"fullscreen"` 필요(둘 다 홈 화면 웹앱 요건 충족 — WebKit 공식 블로그) |
 | **무시되는 옵션** | `icon`(앱 아이콘 강제), `tag`(매번 새 알림), `actions`(액션 버튼 없음) |
 | **Service Worker** | 일반 SW 동작하지만 백그라운드 실행 제한 있음 |
 

@@ -22,8 +22,8 @@ description: 운세 앱(사주·타로·손금)의 로컬 우선 데이터 모�
 > - 사주팔자 / 대운 (한국어 위키백과) — https://ko.wikipedia.org/wiki/사주팔자 , https://ko.wikipedia.org/wiki/대운_(사주팔자)
 > - Rider–Waite Tarot (Wikipedia) — https://en.wikipedia.org/wiki/Rider–Waite_Tarot
 >
-> 검증일: 2026-09-10
-> 대상 버전: Dexie 4.4.5 (2026-09 기준 최신 안정, v5 없음)
+> 검증일: 2026-09-28 (최초 2026-09-10)
+> 대상 버전: Dexie 4.4.6 (2026-09-28 기준 최신 안정 — 09-10 시점 4.4.5, patch 릴리스로 스키마 문법·API 변경 없음. v5 없음)
 
 > **짝 스킬 안내 (설치된 경우 참조)**
 > - `frontend/indexeddb-dexie` — Dexie API 사용법 자체(스키마 문법·쿼리·트랜잭션·`useLiveQuery`)
@@ -286,8 +286,6 @@ export async function getChart(subjectId: string): Promise<SajuChart> {
 - 룰셋별로 결과를 **함께 보관**할 수 있게 `[subjectId+rulesetId]`를 키로 잡았다. 사용자가 "야자시 적용"으로 토글해도 이전 결과가 남아 비교가 가능하다.
 
 > **주의**: `computeSaju`는 반드시 **순수 함수**여야 한다(같은 입력 + 같은 스탬프 → 같은 출력). `new Date()`·로케일·기기 타임존을 함수 내부에서 읽으면 캐시 검증이 성립하지 않는다.
-
----
 
 ---
 

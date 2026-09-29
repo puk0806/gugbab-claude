@@ -223,4 +223,4 @@ claude -p "$USER_PROMPT" --tools "" \
 | 샌드박스에 `ANTHROPIC_API_KEY` 잔존 | 구독 대신 API 키로 청구됨 | `unset ANTHROPIC_API_KEY`, `/status` 확인 |
 | stream-json에 `--verbose` 누락 | 스트리밍 이벤트 안 나옴 | `--verbose --include-partial-messages` 추가 |
 | 채팅 중계에 도구 미차단 | 임의 파일·명령 실행 위험 | `--tools ""` 또는 `--disallowedTools "*"` |
-| `--resume`를 다른 디렉터리에서 호출 | 세션 못 찾음 | 첫 호출과 같은 디렉터리에서 실행 |
+| v2.1.223 미만 CLI에서 `--resume`를 다른 디렉터리에서 호출 | 세션 못 찾음 | CLI를 v2.1.223 이상으로 올리거나, 첫 호출과 같은 디렉터리에서 실행 (v2.1.223+는 디렉터리 제약 없음 — 위 "주의" 참조) |

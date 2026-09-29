@@ -3,7 +3,7 @@ skill: unity-firebase
 category: game
 version: v1
 date: 2026-09-26
-status: PENDING_TEST
+status: APPROVED
 ---
 
 # Unity Firebase SDK 통합 스킬 검증 문서
@@ -111,6 +111,36 @@ status: PENDING_TEST
 
 ## 5. 테스트 진행 기록
 
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (Agent 도구 실제 서브에이전트 호출)
+**수행 방법**: 2026-09-26 재검증에서 정정된 내용(SDK 버전 13.17.0)을 겨냥한 질문 1개 + 핵심 기능 질문 1개를 general-purpose 서브에이전트에게 "SKILL.md만 근거로 답하라"는 조건으로 위임, 답변과 근거 섹션을 대조 검증
+
+### 실제 수행 테스트 (2026-09-28)
+
+**Q1. 2026-09 신규 설치 시 Firebase Unity SDK 버전**
+- ✅ PASS
+- 근거: SKILL.md "0. 버전·환경 요구사항" 표 + 검증일 각주
+- 상세: "13.17.0"을 정확히 도출. 부수 버전(C++ SDK 등)이 "근사치"라는 스스로의 불확실성 표기까지 인지하고 언급.
+
+**Q2. Firebase 초기화 콜백 ContinueWith vs ContinueWithOnMainThread**
+- ✅ PASS
+- 근거: SKILL.md "2. 초기화 패턴" 코드 예시 + 주의문
+- 상세: "ContinueWithOnMainThread 필수, 일반 ContinueWith는 백그라운드 스레드 실행되어 NullReferenceException 발생" 정확히 인용.
+
+### 발견된 gap (2026-09-28)
+
+- 없음
+
+### 판정 (2026-09-28)
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 해당 없음 (라이브러리 사용법 스킬 — 실사용 필수 카테고리 아님)
+- 2026-09-26 재검증 정정 내용(SDK 버전 13.12.0→13.17.0)이 실제 서브에이전트 답변에 정확히 반영됨을 확인 → APPROVED 전환
+
+---
+
+### (2026-06-10 시점 기록 — 아래 보존)
+
 **수행일**: 2026-06-10
 **수행자**: skill-tester → general-purpose (도메인 에이전트 대체)
 **수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
@@ -175,14 +205,14 @@ status: PENDING_TEST
 | 내용 정확성 | ✅ (공식 문서 11개 클레임 VERIFIED, 1개 UNVERIFIED는 본문 명시) |
 | 구조 완전성 | ✅ (8개 섹션 + 체크리스트 완비) |
 | 실용성 | ✅ (실 게임 시나리오 기반 복붙 가능 코드) |
-| 에이전트 활용 테스트 | ✅ (2026-06-10, 3/3 PASS) + ✅ (2026-09-26 재검증, 2/2 PASS) |
-| **최종 판정** | **PENDING_TEST** (SDK 버전 갱신, 재테스트 대기) |
+| 에이전트 활용 테스트 | ✅ (2026-06-10, 3/3 PASS) + ✅ (2026-09-26 자체 재검증, 2/2 PASS) + ✅ (2026-09-28 skill-tester 실제 서브에이전트 재테스트, 2/2 PASS) |
+| **최종 판정** | **APPROVED** (2026-09-28 재테스트로 전환) |
 
 ---
 
 ## 7. 개선 필요 사항
 
-- [✅] skill-tester로 실전 질문 2~3개 답변 검증 수행 (2026-06-10 완료, 3/3 PASS)
+- [✅] skill-tester로 실전 질문 2~3개 답변 검증 수행 (2026-06-10 완료, 3/3 PASS / 2026-09-28 재검증 정정분 재테스트 완료, 2/2 PASS)
 - [❌] Unity 6 LTS 공식 호환성 명시되면 본문 업데이트 (현재는 "2021 LTS 이상" 정책상 호환으로만 기재) — 차단 요인 아님, 공식 문서 업데이트 시 선택 보강
 - [❌] Firebase AI(Gemini) 통합이 게임 시나리오에 필요해지면 별도 섹션 추가 (현재 스킬 범위 밖) — 차단 요인 아님, 사용 요구 발생 시 선택 보강
 - [❌] iOS StoreKit 2 트랜잭션(LogAppleTransactionAsync)의 실제 사용 사례 코드 보강 — 차단 요인 아님, 실 사용 사례 발생 시 선택 보강
@@ -197,3 +227,4 @@ status: PENDING_TEST
 | 2026-06-10 | v1 | 2단계 실사용 테스트 수행 (Q1 Firebase 초기화 ContinueWithOnMainThread / Q2 Remote Config 필드명 오타·SetDefaultsAsync 순서 / Q3 Crashlytics SetUserId 타이밍 버그) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | Claude |
 | 2026-09-26 | v1 | 재검증(98개 일괄 재검증 대상, 본문만). Firebase Unity SDK 13.12.0→13.17.0 버전 갱신, 초기화·Remote Config API는 변동 없음 확인 → 실질 내용 변경으로 PENDING_TEST 전환 | Claude Code |
+| 2026-09-28 | v1 | 2단계 실사용 테스트 재수행 (Q1 Firebase Unity SDK 버전 / Q2 ContinueWith vs ContinueWithOnMainThread) → 2/2 PASS, APPROVED 전환 | skill-tester |

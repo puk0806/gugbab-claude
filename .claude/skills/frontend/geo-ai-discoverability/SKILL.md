@@ -6,7 +6,7 @@ description: 생성형 AI 답변(ChatGPT, Claude, Perplexity, Google AI Overview
 # GEO — AI 검색·답변 엔진 발견 가능성 최적화
 
 > 소스: 각 AI 회사 공식 크롤러 문서(OpenAI, Anthropic, Google, Perplexity, Apple, Meta) + Princeton GEO 논문(arXiv:2311.09735, KDD 2024) + llmstxt.org 명세 **v2 (2026-08-10)** + Google 생성형 AI 최적화 공식 가이드 https://developers.google.com/search/docs/fundamentals/ai-optimization-guide + Google AI 기능 문서 https://developers.google.com/search/docs/appearance/ai-features + Cloudflare 블로그·Radar
-> 검증일: 2026-08-26 (갱신 사유: ① Bytespider 추가 ② llms.txt v2 명세 반영 및 "어느 플랫폼도 공식 확인 안 함" 단정 정정 ③ Google AI 기능 2026 변경(공식 최적화 가이드·Search Console 생성형 AI 제어·성능 보고서) 반영 ④ 네이버 AI 브리핑 포인터 추가 / 최초 작성·검증 2026-06-01)
+> 검증일: 2026-09-28 (재검증 2차, 이전 2026-08-26 / 최초 작성·검증 2026-06-01) — 갱신 사유: ① Google이 크롤러 문서를 `developers.google.com/search/docs/crawling-indexing/*` → `developers.google.com/crawling/docs/*`로 이전(2025-11)하며 `google-extended` 단독 페이지가 폐지되고 `google-common-crawlers` 페이지의 앵커로 통합됨 — 구 URL 404 확인, 링크 정정 ② **Google-Agent** 신규 추가(2026-03-20 공식 발표, 문서 최종 갱신 2026-08-19) — Project Mariner 등 Google 인프라 위 에이전트가 사용자 요청으로 웹을 탐색·행동하는 user-triggered fetcher, robots.txt를 일반적으로 무시한다고 공식 명시 ③ OpenAI GPTBot·OAI-SearchBot 버전 1.3→1.4 확인(동작·정책 변경 없음) ④ 그 외 크롤러 UA·llms.txt v2·Google AI 기능 정책은 재확인 결과 8월 26일 기재 내용과 동일(VERIFIED 유지)
 > **이 영역은 표준화 진행 중**입니다. 본 문서는 "현재 시점의 합의된 권장사항"으로 한정해 작성됐으며, 6~12개월 단위로 재검증이 필요합니다.
 
 ---
@@ -41,7 +41,8 @@ description: 생성형 AI 답변(ChatGPT, Claude, Perplexity, Google AI Overview
 | Anthropic | `ClaudeBot` | AI 모델 학습 | support.claude.com (8896518) |
 | Anthropic | `Claude-User` | 사용자 요청 시 실시간 fetch | 동일 |
 | Anthropic | `Claude-SearchBot` | 검색 품질 개선 | 동일 |
-| Google | `Google-Extended` | Gemini·Vertex AI 학습·grounding | developers.google.com/search/docs/crawling-indexing/google-extended |
+| Google | `Google-Extended` | Gemini·Vertex AI 학습·grounding | developers.google.com/crawling/docs/crawlers-fetchers/google-common-crawlers#google-extended |
+| Google | `Google-Agent` | 사용자 요청 시 Google 인프라상 에이전트(예: Project Mariner)의 웹 탐색·행동 수행 | developers.google.com/crawling/docs/crawlers-fetchers/google-agent |
 | Perplexity | `PerplexityBot` | 검색 인덱스 구축 | docs.perplexity.ai/docs/resources/perplexity-crawlers |
 | Perplexity | `Perplexity-User` | 사용자 요청 시 실시간 fetch | 동일 |
 | Apple | `Applebot-Extended` | Apple Intelligence 학습 | support.apple.com/en-us/119829 |
@@ -49,6 +50,10 @@ description: 생성형 AI 답변(ChatGPT, Claude, Perplexity, Google AI Overview
 | Meta | `Meta-ExternalFetcher` | 사용자 요청 시 link preview·AI fetch | 동일 |
 | Common Crawl | `CCBot` | 공개 웹 크롤 데이터셋(다수 LLM 학습에 사용) | commoncrawl.org |
 | ByteDance | `Bytespider` | 검색·추천 인덱스 + Doubao 등 자사 LLM 학습 데이터 수집 | **접근 가능한 공식 문서 없음** (아래 주의) |
+
+> 주의 (2026-09-28 확인): Google은 크롤러 문서 체계를 2025-11부로 `developers.google.com/search/docs/crawling-indexing/*` 에서 `developers.google.com/crawling/docs/*` 로 이전했다. "Google의 크롤링 인프라가 검색 외 여러 제품에 공유되기 때문"이라는 것이 공식 사유다. 이 과정에서 `google-extended` 전용 페이지는 폐지되고 `google-common-crawlers` 페이지의 앵커(`#google-extended`)로 통합됐다 — 구 URL은 2026-09-28 기준 404. 다른 스킬·문서에서 구 `search/docs/crawling-indexing/google-extended` URL을 인용하고 있다면 갱신 대상이다.
+
+**Google-Agent** (2026-03-20 공식 도입, 문서 최종 갱신 2026-08-19): Google 인프라 위에서 동작하는 에이전트(예: Project Mariner)가 *사용자 요청*으로 웹을 탐색·행동할 때 쓰는 user-triggered fetcher다. UA 문자열에 `(compatible; Google-Agent; +https://developers.google.com/crawling/docs/crawlers-fetchers/google-agent)`가 포함된다. Googlebot·Google-Extended와 별도 분류이며, 공식 문서가 *"Because the fetch was requested by a user, these fetchers generally ignore robots.txt rules."* 라고 명시해 ChatGPT-User·Perplexity-User와 같은 계열(§1-2 "사용자 요청 시 fetch")로 분류된다.
 
 **Bytespider User-Agent** (서버 로그 기준):
 ```
@@ -69,7 +74,7 @@ Mozilla/5.0 (Linux; Android 5.0) AppleWebKit/537.36 (KHTML, like Gecko) Mobile S
 |------|------|--------------|
 | **학습용** | `GPTBot`, `ClaudeBot`, `Google-Extended`, `Applebot-Extended`, `Meta-ExternalAgent`, `CCBot`, `Bytespider` | 모델 학습에 미사용 — 다만 **AI 답변 인용에는 영향이 없거나 적음** |
 | **인덱싱·검색용** | `OAI-SearchBot`, `Claude-SearchBot`, `PerplexityBot` | **차단하면 AI 검색 결과·인용에서 사라짐** |
-| **사용자 요청 시 fetch** | `ChatGPT-User`, `Claude-User`, `Perplexity-User`, `Meta-ExternalFetcher` | 사용자가 명시적으로 URL 요청 시 동작 — robots.txt를 *무시할 수 있다*고 명시하는 회사도 있음(Perplexity 등) |
+| **사용자 요청 시 fetch** | `ChatGPT-User`, `Claude-User`, `Perplexity-User`, `Meta-ExternalFetcher`, `Google-Agent` | 사용자가 명시적으로 URL 요청 시 동작 — robots.txt를 *무시할 수 있다*고 명시하는 회사도 있음(Perplexity·Google 등) |
 
 > 주의: `Bytespider`는 위 3분류에 깔끔히 들어가지 않는다. ByteDance는 이 UA 하나로 *검색·추천 인덱싱과 학습 데이터 수집을 함께* 수행하는 것으로 관측되며, 학습용/인용용을 분리하는 별도 UA를 공개하지 않았다. 따라서 "학습만 차단" 전략을 쓸 수 없고, 차단 여부는 *Doubao·Toutiao 등 ByteDance 서비스 노출을 포기할 것인가*라는 사업 판단으로 결정해야 한다.
 
@@ -129,6 +134,9 @@ Allow: /
 User-agent: Perplexity-User
 Allow: /
 
+User-agent: Google-Agent
+Allow: /
+
 # 일반 검색 엔진은 그대로
 User-agent: *
 Allow: /
@@ -155,6 +163,7 @@ User-agent: Meta-ExternalAgent
 User-agent: Meta-ExternalFetcher
 User-agent: CCBot
 User-agent: Bytespider
+User-agent: Google-Agent
 Disallow: /
 ```
 
@@ -166,6 +175,7 @@ Disallow: /
 
 - **OpenAI `ChatGPT-User`**: OpenAI 공식 크롤러 문서가 직접 명시한다 — *"Because these actions are initiated by a user, robots.txt rules may not apply."* 같은 문서에서 `GPTBot`·`OAI-SearchBot`·`OAI-AdsBot`은 robots.txt를 준수한다고 밝힌 것과 대비된다.
 - **Perplexity `Perplexity-User`**: 공식 문서가 *"generally ignores robots.txt rules"*라고 명시한다.
+- **Google `Google-Agent`**: 공식 문서(2026-08-19 갱신)가 *"Because the fetch was requested by a user, these fetchers generally ignore robots.txt rules."* 라고 명시한다 — 위 두 회사와 동일한 논리·문구다.
 
 → 즉 **사용자 요청 fetch 계열은 robots.txt로 막히지 않는 것이 회사의 공식 입장**이다. 이 계열을 실제로 막으려면 WAF·IP·인증 레벨 통제가 필요하다.
 
@@ -473,7 +483,7 @@ Google은 2026-06-03 **Search Generative AI performance report**를 Search Conso
 
 ```bash
 # AI 크롤러 방문 추출
-grep -E "GPTBot|OAI-SearchBot|OAI-AdsBot|ChatGPT-User|ClaudeBot|Claude-User|Claude-SearchBot|PerplexityBot|Perplexity-User|Applebot-Extended|Meta-ExternalAgent|Meta-ExternalFetcher|CCBot|Bytespider" /var/log/nginx/access.log
+grep -E "GPTBot|OAI-SearchBot|OAI-AdsBot|ChatGPT-User|ClaudeBot|Claude-User|Claude-SearchBot|PerplexityBot|Perplexity-User|Applebot-Extended|Meta-ExternalAgent|Meta-ExternalFetcher|CCBot|Bytespider|Google-Agent" /var/log/nginx/access.log
 ```
 
 ### 4-3. GA4 커스텀 채널 그룹

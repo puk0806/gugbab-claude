@@ -1,8 +1,8 @@
 ---
 skill: dream-recurrence-detection
 category: frontend
-version: v1
-date: 2026-05-15
+version: v2
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `dream-recurrence-detection` |
 | 스킬 경로 | `.claude/skills/frontend/dream-recurrence-detection/SKILL.md` |
-| 검증일 | 2026-05-15 |
-| 검증자 | skill-creator (Claude) |
-| 스킬 버전 | v1 |
+| 검증일 | 2026-09-28 (최초 2026-05-15, 2026-09-28 재검증) |
+| 검증자 | skill-creator (Claude) → Claude (Sonnet 5, 2026-09-28 재검증) |
+| 스킬 버전 | v2 |
 | 카테고리 분류 | **content test 충분** — 알고리즘 설계 가이드·Dexie 쿼리 패턴·hedging UX 등 답변 정확성으로 검증 가능. content test PASS = APPROVED 가능 카테고리. |
 
 ---
@@ -126,6 +126,24 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
+### [2026-09-28] 재검증 — 학술 인용·OpenAI 임베딩·Dexie API 원문 대조
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임 3개를 WebFetch/WebSearch로 1차 소스 대조
+
+**클레임 대조 결과**:
+1. Zadra (1996) "Recurrent dreams and their relation to life events", *Trauma and Dreams* (Barrett 편, Harvard University Press) pp.231-247 → **VERIFIED** — WebSearch 교차 확인 결과 챕터명·수록서·출판사·페이지 전부 일치 (다수 학술 서지 소스 일관)
+2. OpenAI `text-embedding-3-small` — 여전히 현행 모델로 제공, 기본 차원 1536, length-1 정규화(cosine=dot product), v3 이후 신규 임베딩 모델 미출시 → **VERIFIED** — https://developers.openai.com/api/docs/guides/embeddings WebFetch 직접 대조 결과 SKILL.md 서술과 완전 일치
+3. Dexie multiEntry index — `*필드명` 문법, `where().equals()` 쿼리 시 `distinct()` 공식 권장(중복 매치 제거) → **VERIFIED** — https://dexie.org/docs/MultiEntry-Index WebFetch 직접 대조 결과 공식 문구("It is therefore a good practice to always use Collection.distinct()")까지 일치
+
+**실전 질문 재검증**:
+- Q1. "다중 태그를 가진 꿈이 multiEntry 쿼리에서 중복 카운팅되는 걸 막으려면?" → SKILL.md "§2-1"·"§5-2" `distinct()` 코드 근거로 정확히 도출 — PASS
+- Q2. "OpenAI 임베딩으로 cosine 유사도 계산 시 dot product만 써도 되는 이유는?" → SKILL.md "§2-2" "정규화: OpenAI 임베딩은 length 1로 정규화" 근거로 정확히 도출 — PASS
+
+**재검증 최종 판정**: 3개 클레임 전부 VERIFIED, 본문 수정 불필요. status **APPROVED 유지**
+
+---
+
 **수행일**: 2026-05-15
 **수행자**: skill-tester → general-purpose
 **수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
@@ -186,7 +204,7 @@ status: APPROVED
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
 | 에이전트 활용 테스트 | ✅ (2026-05-15, 3/3 PASS — content test 완료) |
-| **최종 판정** | **APPROVED** (2026-06-20 재분류 — content test 충분 카테고리, 3/3 PASS → APPROVED 전환) |
+| **최종 판정** | **APPROVED** (2026-06-20 재분류 — content test 충분 카테고리, 3/3 PASS → APPROVED 전환 / 2026-09-28 재검증 3개 클레임 전부 VERIFIED로 APPROVED 유지) |
 
 ---
 
@@ -209,3 +227,4 @@ status: APPROVED
 | 2026-05-15 | v1 | 최초 작성. 학술 인용 1건 정정(Zadra 1996 챕터로 수정). 알고리즘 3종·Dexie 패턴·hedging UX·개인정보 동의·흔한 함정 7종 포함 | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 Dexie multiEntry distinct() 쿼리 / Q2 cosine 임계치 0.65 판정 + 보정 주의 / Q3 N<5 알림 문구 + 임베딩 동의 UX) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | skill-tester |
 | 2026-06-20 | v1 | 카테고리 재분류 — 알고리즘 설계 가이드는 답변 정확성으로 검증 가능(content test 충분), 기존 3/3 PASS 기록 인정 → PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-09-28 | v2 | 재검증(135일 경과) — Zadra 1996 인용·OpenAI text-embedding-3-small 사양·Dexie multiEntry distinct() 권장을 WebFetch/WebSearch로 원문 재대조. 3개 클레임 전부 VERIFIED, 본문 수정 없음. status APPROVED 유지 | Claude (Sonnet 5) |

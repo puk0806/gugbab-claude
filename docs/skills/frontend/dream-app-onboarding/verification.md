@@ -1,14 +1,15 @@
 ---
 skill: dream-app-onboarding
 category: frontend
-version: v1
-date: 2026-05-15
+version: v2
+date: 2026-09-28
 status: APPROVED
 ---
 
 # dream-app-onboarding 스킬 검증 문서
 
-> 실사용 필수 스킬 (UX 흐름·완료율은 실 사용자 행동으로만 검증 가능)으로 분류되어 PENDING_TEST 유지
+> (2026-06-20 재분류) 라이브러리 사용법·UX 패턴 스킬 — content test PASS = APPROVED 가능 카테고리로 재분류됨 (당초 "실사용 필수" 분류는 철회).
+> 2026-09-28 재검증에서 `intro.js-react` 버전 표기 오류(존재하지 않는 "7.x")가 발견되어 정정, PENDING_TEST로 일시 전환 후 skill-tester 재테스트(2/2 PASS)로 정정 반영을 확인하여 APPROVED로 재승격 완료.
 
 ---
 
@@ -18,9 +19,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `dream-app-onboarding` |
 | 스킬 경로 | `.claude/skills/frontend/dream-app-onboarding/SKILL.md` |
-| 검증일 | 2026-05-15 |
-| 검증자 | skill-creator |
-| 스킬 버전 | v1 |
+| 검증일 | 2026-09-28 (최초 2026-05-15, 2026-09-28 재검증) |
+| 검증자 | skill-creator → Claude (Sonnet 5, 2026-09-28 재검증) |
+| 스킬 버전 | v2 |
 
 ---
 
@@ -104,13 +105,62 @@ status: APPROVED
 
 ### 4-4. Claude Code 에이전트 활용 테스트
 
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-15 — 3/3 PASS)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (섹션 2, 3, 4 근거 정확히 도출)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-15 — 3/3 PASS; 2026-09-28 §2-2 라이선스 정정 후 재테스트 — 2/2 PASS)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (섹션 2, 3, 4 근거 정확히 도출; 2026-09-28 §2-2 코어/래퍼 라이선스 구분 정확히 도출)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (gap 없음 — 보완 불필요)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-09-28] skill-tester 재테스트 — intro.js-react 라이선스 정정(§2-2) 반영 확인
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (2개 독립 서브에이전트)
+**수행 방법**: 정정된 SKILL.md Read 후 실전 질문 2개 답변, 근거 섹션 및 정정 반영 여부 확인
+
+**Q1. 풀스크린 5단계 온보딩 구현 방식 + 3·4단계 스킵 차단 로직**
+- ✅ PASS
+- 근거: SKILL.md "2-3. 선택 가이드" + "2-1" 표 + "1. 온보딩 5단계 구조" 표 + "7-1. 스킵 버튼" + "11. 직접 구현 스켈레톤"(`NON_SKIPPABLE` Set)
+- 상세: 풀스크린 5단계는 직접 구현 권장(react-joyride는 과함), `NON_SKIPPABLE = new Set([3, 4])` 패턴·`Esc` 무시까지 코드 근거로 정확히 도출.
+
+**Q2. 상용 앱에서 intro.js-react 사용 가능 여부 (§2-2 라이선스 정정 타겟)**
+- ✅ PASS
+- 근거: SKILL.md "2-2" 표(`intro.js (코어) / React 래퍼 intro.js-react` 행 — "8.x (코어, 래퍼는 별도 버전 0.x~1.x)" / "AGPL-3.0(코어) / 상용 별도 구매 — 래퍼 자체는 MIT이나 AGPL 코어를 그대로 번들") + "주의 (라이선스)" 문단
+- 상세: 정정 후 표 그대로 "코어 AGPL-3.0·래퍼는 MIT이나 AGPL 코어 번들"을 정확히 구분해 인용, "상용이면 회피" 결론 정확히 도출. 정정 전 존재했던 오표기("intro.js-react 7.x")가 답변에 전혀 등장하지 않고, 코어/래퍼 버전 구분(8.x vs 0.x~1.x)까지 정확히 반영됨을 확인.
+
+### 발견된 gap
+
+없음 — 2개 질문 모두 SKILL.md에서 충분한 근거를 찾을 수 있었고, §2-2 정정 내용(코어/래퍼 라이선스 구분)이 실전 답변에 정확히 반영됨을 확인.
+
+### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 라이브러리 사용법·UX 패턴 스킬 — content test PASS = APPROVED 가능 카테고리
+- 최종 상태: APPROVED (intro.js-react 라이선스 정정 반영 재확인 완료)
+
+---
+
+### [2026-09-28] 재검증 — 투어 라이브러리 버전·라이선스 npm 대조
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임 4개를 npm registry(`curl registry.npmjs.org`) + GitHub API로 1차 소스 대조
+
+**클레임 대조 결과**:
+1. react-joyride 최신 버전 3.1.0(MIT) → **VERIFIED (사소한 drift)** — npm 최신 3.2.0(2026-07-09, MIT 유지). 릴리스 노트 확인 결과 의존성 업그레이드·리팩터링뿐 breaking change 없음. SKILL.md는 "3.1.0 (2026-04)"로 특정 시점 버전을 인용한 것이라 오기록 아님 — 수정 불필요 (https://github.com/gilbarbara/react-joyride/releases/latest)
+2. @reactour/tour 최신 버전 3.8.0(MIT) → **VERIFIED** — npm 대조 결과 동일 (https://registry.npmjs.org/@reactour/tour/latest)
+3. shepherd.js 15.x, AGPL-3.0 → **VERIFIED** — npm 최신 15.3.0, license 필드 AGPL-3.0 확인 (https://registry.npmjs.org/shepherd.js/latest)
+4. intro.js-react 7.x, AGPL-3.0, 22.9k stars → **DISPUTED** — npm에 "7.x" 버전의 `intro.js-react`는 존재한 적 없음(공식 HiDeoo/intro.js-react 포함 모든 동명 패키지가 0.x~1.x 범위, 최신 1.0.0·MIT). AGPL-3.0·상용 라이선스 필요는 실제로는 코어 라이브러리 `usablica/intro.js`(현재 8.6.0, license 필드 AGPL-3.0 확인)를 가리킴 — React 래퍼(`intro.js-react`)는 MIT이지만 AGPL 코어를 그대로 번들하므로 상용 앱은 여전히 라이선스 구매 필요, 결론은 유효하나 버전·패키지 표기가 부정확했음. star 수도 22.9k → 23.4k로 갱신 (https://registry.npmjs.org/intro.js/latest , https://api.github.com/repos/usablica/intro.js)
+
+**정정 반영**: SKILL.md "2-2. 기존 화면 위 코치 마크 투어" 표의 `intro.js-react` 행을 "intro.js (코어) / React 래퍼 `intro.js-react`" + "8.x (코어, 래퍼는 별도 버전 0.x~1.x)" + "AGPL-3.0(코어)/래퍼는 MIT이나 AGPL 코어를 그대로 번들"로 수정, 검증일 갱신.
+
+**실전 질문 재검증**:
+- Q1. "상용 꿈 해몽 앱에서 intro.js-react를 써도 되는가?" → SKILL.md "2-2" 표·"주의(라이선스)" 문단 근거로 "코어가 AGPL이라 상용은 라이선스 구매 또는 회피 필요" 결론은 정정 후에도 동일하게 도출 — PASS
+- Q2. "react-joyride vs @reactour/tour 중 더 가벼운 선택은?" → SKILL.md "2-2" 표 근거로 @reactour/tour 정확히 도출 — PASS
+
+**재검증 최종 판정**: 4개 클레임 중 3 VERIFIED / 1 DISPUTED(버전·패키지 표기 정정, 결론 자체는 불변). SKILL.md 정정 반영 완료, status **PENDING_TEST 전환(재테스트 필요)** — 정정 부분이 라이선스 판단의 근거 표라 skill-tester 재확인 권장.
+
+---
 
 **수행일**: 2026-06-20
 **수행자**: skill-tester → general-purpose
@@ -172,19 +222,19 @@ status: APPROVED
 
 | 항목 | 결과 |
 |------|------|
-| 내용 정확성 | ✅ (공식 문서 10개 교차 검증) |
+| 내용 정확성 | ✅ (2026-09-28 재검증에서 intro.js-react 버전·패키지 표기 DISPUTED → 정정 완료, 재테스트로 반영 확인, 결론 불변) |
 | 구조 완전성 | ✅ (frontmatter·소스·예시·함정·체크리스트 모두 포함) |
 | 실용성 | ✅ (복사 가능한 스켈레톤·체크리스트 12항) |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-15, skill-tester 수행) / 재판정 2026-06-20 |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-15, skill-tester 수행) / 재판정 2026-06-20 / ✅ 재테스트 2026-09-28 (skill-tester → general-purpose, 2/2 PASS — intro.js-react 라이선스 정정 반영 확인) |
+| **최종 판정** | **APPROVED** (2026-09-28 intro.js-react 라이선스 정정 반영 + skill-tester 재테스트 2/2 PASS 완료) |
 
-**판정 근거:** 2026-06-20 재판정 — 이 스킬은 라이브러리 사용 패턴·UX 설계 가이드·권한 요청 패턴 스킬로 "빌드 설정/워크플로우/마이그레이션" 카테고리에 해당하지 않는다. verification-policy.md 기준 "답변 정확성으로 검증 가능" → content test 3/3 PASS = APPROVED 조건 충족.
+**판정 근거:** 2026-06-20 재판정 — 이 스킬은 라이브러리 사용 패턴·UX 설계 가이드·권한 요청 패턴 스킬로 "빌드 설정/워크플로우/마이그레이션" 카테고리에 해당하지 않는다. verification-policy.md 기준 "답변 정확성으로 검증 가능" → content test 3/3 PASS = APPROVED 조건 충족. 2026-09-28 재검증에서 라이선스 비교표 정정이 발생해 APPROVED → PENDING_TEST로 일시 전환했으나, skill-tester 재테스트(2/2 PASS)로 정정 반영을 확인하여 다시 APPROVED로 재승격.
 
 ---
 
 ## 7. 개선 필요 사항
 
-- [✅] skill-tester가 content test 수행하고 섹션 5·6 업데이트 (2026-05-15 완료, 3/3 PASS)
+- [✅] skill-tester가 content test 수행하고 섹션 5·6 업데이트 (2026-05-15 완료, 3/3 PASS; 2026-09-28 intro.js-react 라이선스 정정 후 재테스트 완료, 2/2 PASS)
 - [❌] 실 사용자 데이터 확보 시 — 단계별 이탈률·완료 시간·권한 허용률을 측정 지표 섹션에 *실측값*으로 추가 (차단 요인 아님, 실사용 이후 선택 보강)
 - [❌] 라이브러리 비교에 driver.js·Tour Kit 등 신규 옵션 검토 (조사 시 등장했으나 본 스킬 범위에서는 react-joyride·@reactour/tour로 충분 — 차단 요인 아님, 선택 보강)
 - [❌] 청소년 페르소나에 대한 추가 검증 — 보호자 동의 화면 흐름이 `dream-privacy-consent-ui` 짝 스킬에 정확히 매칭되는지 짝 스킬 작성 후 재확인 (차단 요인 아님, 짝 스킬 완성 후 선택 보강)
@@ -198,3 +248,5 @@ status: APPROVED
 | 2026-05-15 | v1 | 최초 작성 — react-joyride v3.1.0 / @reactour/tour 3.8.0 / NN/G·web.dev·WCAG 기반, 짝 스킬 3종(voice-input-ui·dream-privacy-consent-ui·humanities/crisis-intervention-resources-korea) 정합성 확보 | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 라이선스·라이브러리 선택 / Q2 마이크 권한 priming / Q3 학술 한계 친화 톤) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | skill-tester |
 | 2026-06-20 | v1 | PENDING_TEST → APPROVED 재판정 — 라이브러리 사용법·UX 패턴 스킬로 재분류, content test 3/3 PASS 기반 APPROVED 전환 | skill-tester |
+| 2026-09-28 | v2 | 재검증(135일 경과) — react-joyride/@reactour/tour/shepherd.js 버전·라이선스 npm 대조 VERIFIED, `intro.js-react "7.x"` 표기 DISPUTED로 정정(실제로는 코어 `intro.js` 8.x/AGPL-3.0, 래퍼는 MIT). SKILL.md 2-2절 표 수정, 검증일 4곳 갱신. APPROVED → PENDING_TEST(재테스트 필요) | Claude (Sonnet 5) |
+| 2026-09-28 | v2 | 2단계 실사용 재테스트 수행 (Q1 풀스크린 5단계 구현 방식·스킵 차단 로직 / Q2 intro.js-react 상용 사용 가능 여부 — §2-2 라이선스 정정 타겟) → 2/2 PASS, 코어/래퍼 라이선스 구분 정정이 실전 답변에 정확히 반영됨을 확인. PENDING_TEST → APPROVED 재전환. 섹션 5·6·7 동기화 완료 | skill-tester |

@@ -135,16 +135,35 @@ client.with_options(max_retries=0).messages.create(...)
 기본 타임아웃은 10분. 짧게 조정하거나 세분화 가능:
 
 ```python
-import httpx
 from anthropic import Anthropic
 
-client = Anthropic(timeout=20.0)   # 20초
+client = Anthropic(timeout=20.0)   # 20초 — 숫자만 넘기면 SDK 버전 무관하게 동작
+```
+
+세분화된 `Timeout` 객체를 직접 구성할 때는 SDK 버전에 따라 임포트가 다르다:
+
+```python
+# anthropic >= 1.0 (httpx2로 이관됨, 2026-08-20 v1.0.0)
+import httpx2
+from anthropic import Anthropic
+
+client = Anthropic(
+    timeout=httpx2.Timeout(60.0, read=5.0, write=10.0, connect=2.0)
+)
+
+# 또는 기존 `import httpx` 코드를 그대로 유지하려면 진입점 최상단에서:
+# import httpx2; httpx2.alias_httpx()   # 이후 `import httpx`는 httpx2를 가리킴
+
+# anthropic < 1.0 (레거시 핀, Python 3.9 등) — 기존 httpx 그대로
+import httpx
+from anthropic import Anthropic
 
 client = Anthropic(
     timeout=httpx.Timeout(60.0, read=5.0, write=10.0, connect=2.0)
 )
 ```
 
+> 주의: v1.0.0부터 SDK의 HTTP 레이어가 `httpx`에서 **`httpx2`**(Pydantic 팀이 유지보수하는 fork)로 이관되었다. SDK가 반환하는 객체는 동일한 속성을 갖는 httpx2 타입이지만, `Timeout`처럼 **직접 생성해서 넘기는 객체**는 `httpx2.Timeout`을 써야 한다(또는 `alias_httpx()`로 우회). `isinstance`/타입 힌트로 `httpx.Response` 등을 참조하는 코드도 `httpx2`로 교체해야 한다.
 > 주의: 비스트리밍에서 `max_tokens`가 커서 약 10분 초과가 예상되면 SDK가 `ValueError`를 던진다. 긴 응답은 **반드시 스트리밍 사용**.
 
 ---
@@ -188,7 +207,7 @@ pip install "anthropic[bedrock]"
 from anthropic import AnthropicBedrock
 
 client = AnthropicBedrock(
-    aws_region="us-east-1",
+    aws_region="us-east-1",   # anthropic >= 1.0: 명시 필수(또는 AWS_REGION 환경변수) — 미지정 시 에러. v0.x는 미지정 시 us-east-1 암묵 사용이었음
     # aws_profile / aws_access_key / aws_secret_key / aws_session_token 선택 지정
 )
 
@@ -251,6 +270,8 @@ message = client.messages.create(
 | **에러 처리 없이 운영** | 최소한 `RateLimitError`, `APIConnectionError`, `APITimeoutError`는 분기. 429는 백오프 |
 | **Bedrock/Vertex 모델 ID에 직접 API ID 사용** | 플랫폼별 모델 ID 규약 다름. 공식 카탈로그 참조 |
 | **로그에 `messages` 전체 출력** | PII·민감 정보 노출. 요청 단위는 `message._request_id`만 로깅 권장 |
+| **`anthropic>=1.0` 업그레이드 후 트레이싱/APM이 조용히 끊김** | httpx → httpx2 이관으로 모듈명 기준 `httpx` 패치(트레이싱 라이브러리·mock 테스트) 무효화. httpx2 기준으로 계측 갱신하거나 `httpx2.alias_httpx()` 사용 |
+| **`client.completions.create()` / `HUMAN_PROMPT` / `AI_PROMPT` 계속 사용** | v1.0.0에서 완전 제거됨(레거시 Text Completions API). `client.messages.create()` + 문자열 프롬프트로 이관 |
 
 ---
 

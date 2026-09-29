@@ -13,8 +13,8 @@ description: Next.js 16 App Router SEO — Metadata API, canonical/hreflang, Ope
 > - v15 → v16 업그레이드 가이드: https://nextjs.org/docs/app/guides/upgrading/version-16
 > - 캐싱(Cache Components): https://nextjs.org/docs/app/getting-started/caching
 >
-> 검증일: 2026-08-11
-> 검증 대상 버전: **Next.js 16.3.0** (2026-08-03 릴리즈, 현재 최신 stable)
+> 검증일: 2026-09-28 (최초 2026-08-11, 2차 재검증 — 공식 문서 대조 결과 변경 없음)
+> 검증 대상 버전: **Next.js 16.3.x** (16.3.0에서 API 확정, 2026-09-22 16.3.6까지 보안 패치만 — 본 스킬이 다루는 API 표면은 무변경)
 
 > 이 스킬은 **SEO 메타/구조화 데이터** 범위만 다룬다. App Router 일반(데이터 페칭·캐싱 모델·proxy 등)은
 > `frontend/nextjs`, URL 정규화·리다이렉트는 `frontend/url-canonicalization-redirects` 스킬을 참조한다.

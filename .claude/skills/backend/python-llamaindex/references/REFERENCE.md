@@ -174,6 +174,7 @@ pip install llama-index-vector-stores-chroma           # Chroma
 pip install llama-index-vector-stores-postgres         # pgvector
 pip install llama-index-vector-stores-qdrant           # Qdrant
 pip install llama-index-embeddings-huggingface         # HuggingFace 임베딩
+pip install llama-index-embeddings-voyageai            # Voyage AI 임베딩 (Anthropic 공식 추천 파트너)
 pip install llama-index-llms-anthropic                 # Claude
 pip install llama-index-postprocessor-cohere-rerank    # Cohere Reranker
 pip install llama-index-retrievers-bm25                # BM25

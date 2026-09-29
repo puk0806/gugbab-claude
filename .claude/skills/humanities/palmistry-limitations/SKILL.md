@@ -26,7 +26,7 @@ description: >
 > - Apple App Review Guidelines (1.1.6 / 4.3) — https://developer.apple.com/app-store/review/guidelines/
 > - 개인정보 보호법 제23조·시행령 제18조 (국가법령정보센터) — https://www.law.go.kr/LSW/lsInfoP.do?lsId=011468
 >
-> 검증일: 2026-09-10 (2026-09-11 캐주얼 앱 방향으로 가드레일 섹션 축소)
+> 검증일: 2026-09-28 (최초 2026-09-10, 2026-09-11 캐주얼 앱 방향으로 가드레일 섹션 축소, 2026-09-28 재검증)
 
 ---
 

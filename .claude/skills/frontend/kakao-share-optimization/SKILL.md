@@ -14,11 +14,11 @@ description: >
 > - Kakao Developers — JavaScript SDK Download: https://developers.kakao.com/docs/latest/ko/javascript/download
 > - Kakao Developers — 카카오톡 공유 JavaScript: https://developers.kakao.com/docs/latest/ko/kakaotalk-share/js-link
 > - Kakao Developers — 메시지 템플릿 공통: https://developers.kakao.com/docs/latest/ko/message-template/common
-> - Kakao Developers — OG 캐시 초기화 도구: https://developers.kakao.com/tool/clear/og
+> - Kakao Developers — 공유 디버거(OG 캐시 초기화): https://developers.kakao.com/tool/debugger/sharing
 > - Kakao Developers — SDK Reference (Kakao.Share): https://developers.kakao.com/sdk/reference/js/release/Kakao.Share.html
 >
-> 검증일: 2026-08-26 (최초 2026-06-04 · 08-26 freshness 재검증: 이미지 규격·`Kakao.Share` API VERIFIED. SDK 2.8.1→2.8.2 갱신, CSR 대응책에서 Rendertron 제외·Edge og 주입 대안 추가)
-> SDK 기준 버전: **2.8.2** (2026-08-06 출시, 내부 개선 — 2.8.1과 API 동일. integrity 해시는 공식 다운로드 페이지에서 해당 버전 값으로 교체)
+> 검증일: 2026-09-28 (재검증 2차, 이전 2026-08-26 / 최초 2026-06-04) — 갱신 사유: ① SDK 2.8.2→**2.8.3**(2026-09-03 출시) 갱신, CDN 경로 반영 ② **OG 캐시 초기화 도구 URL 변경**: 구 `tool/clear/og`는 현재 `tool/debugger/sharing`("공유 디버거")로 리다이렉트 — 기능(도메인 입력→캐시 초기화)은 동일, 명칭·경로만 변경. §3·소스 링크 갱신 ③ 메시지 템플릿 이미지 최소 크기 규정을 **기본 템플릿(200×200) vs 사용자 정의 템플릿(400×400)** 으로 세분화해 반영(공식 문서 확인) ④ `Kakao.Share`/`sendDefault`/`sendCustom`/`sendScrap`·objectType 5종·`Kakao.Link`→`Kakao.Share` 변경 공지는 재확인 결과 동일(VERIFIED)
+> SDK 기준 버전: **2.8.3** (2026-09-03 출시, 내부 개선 — 이전 버전과 API 동일. integrity 해시는 공식 다운로드 페이지에서 해당 버전 값으로 교체)
 
 ---
 
@@ -46,7 +46,7 @@ description: >
 | 항목 | 값 | 근거 |
 |------|-----|------|
 | 권장 크기 | **800 × 400 px** (가로:세로 2:1) | 카카오 데브톡 공식 답변 — 스크랩 시 800×400으로 자동 스마트 크롭 |
-| 최소 크기 | **200 × 200 px** | 메시지 템플릿 공식 사양 |
+| 최소 크기 | **200 × 200 px** (기본 템플릿·`sendDefault`) / **400 × 400 px** (사용자 정의 템플릿·`sendCustom`, 콘솔에서 만든 템플릿) | 메시지 템플릿 공식 사양 |
 | 최대 파일 크기 | **5 MB** | 메시지 템플릿 공식 사양 |
 | 프로토콜 | **HTTPS 절대 URL 필수** | HTTP 이미지는 무시될 수 있음 |
 | 권장 형식 | **JPEG / PNG** | 카카오 메시지 API는 JPG/JPEG/PNG/PDF 업로드 허용 |
@@ -54,6 +54,8 @@ description: >
 > 주의: 카카오 공식 문서에는 **SVG/WebP 지원 여부가 명문화돼 있지 않다**. 실무 보고와 메시지 템플릿 업로드 허용 형식을 종합하면 SVG는 미리보기가 안 뜨는 사례가 다수다. 안전하게 **JPEG 또는 PNG**를 쓴다.
 
 > 주의: OG 이미지 크기 가이드는 페이스북·카카오를 모두 만족시키려고 **1200 × 630 (1.91:1)** 을 쓰는 경우도 많다. 카카오 단독 최적화는 **800 × 400 (2:1)**, 멀티플랫폼 호환은 **1200 × 630**.
+
+> 주의: `sendCustom`(콘솔에서 만든 커스텀 템플릿)은 이미지 최소 크기가 `sendDefault`(기본 템플릿)보다 엄격하다 — **400×400 이상**. `sendDefault`용 800×400 이미지를 그대로 커스텀 템플릿에 재사용해도 최소치는 만족하지만, 커스텀 템플릿 설계 시 이 기준으로 별도 검증한다.
 
 ### 카카오 스마트 크롭
 
@@ -67,9 +69,11 @@ description: >
 
 ### 초기화 방법 (공식 도구)
 
-1. https://developers.kakao.com/tool/clear/og 접속 (카카오 계정 로그인 필요)
+1. https://developers.kakao.com/tool/debugger/sharing ("공유 디버거") 접속 (카카오 계정 로그인 필요)
 2. 입력 칸에 대상 URL 입력 — **`http`/`https` 정확히 구분**, SSL 사이트는 반드시 `https`
 3. 현재 캐시된 OG 정보 확인 후 **캐시 초기화** 버튼 클릭
+
+> 주의 (2026-09-28 확인): 이 도구의 URL이 구 `developers.kakao.com/tool/clear/og`에서 `developers.kakao.com/tool/debugger/sharing`("공유 디버거")로 변경됐다. 구 URL은 접속 시 신 URL로 리다이렉트되지만, 즐겨찾기·문서에 구 URL을 박아둔 경우 갱신을 권장한다. 기능(도메인 입력 → 캐시 초기화)은 동일하다.
 
 > 주의: 초기화 후에도 반영까지 수 분~수십 분 지연이 발생할 수 있다. 급한 경우 `og:image` URL에 쿼리스트링(`?v=2`)을 추가해 우회한다. 다만 CDN 캐시도 함께 갱신해야 의미가 있다.
 
@@ -81,11 +85,11 @@ description: >
 
 ## 4. Kakao JavaScript SDK 공유 구현
 
-### SDK 로드 (2.8.2 기준)
+### SDK 로드 (2.8.3 기준)
 
 ```html
 <script
-  src="https://t1.kakaocdn.net/kakao_js_sdk/2.8.2/kakao.min.js"
+  src="https://t1.kakaocdn.net/kakao_js_sdk/2.8.3/kakao.min.js"
   integrity="${INTEGRITY_VALUE}"
   crossorigin="anonymous"
 ></script>
@@ -233,7 +237,7 @@ export async function getServerSideProps(ctx) {
 1. **HTTPS 절대 URL인가** — `og:image`와 `og:url`이 HTTP거나 상대경로면 무시될 수 있다
 2. **SSR/SSG로 OG가 응답 HTML에 포함되는가** — `curl https://example.com/post/123 | grep og:` 결과 확인
 3. **이미지 사양 — 5MB 이하, 200×200 이상, JPEG/PNG인가**
-4. **카카오 OG 캐시가 옛날 값을 들고 있는가** — `developers.kakao.com/tool/clear/og`로 초기화
+4. **카카오 OG 캐시가 옛날 값을 들고 있는가** — `developers.kakao.com/tool/debugger/sharing`(공유 디버거)로 초기화
 5. **`og:url`이 실제 공유 URL과 일치하는가** — 불일치 시 클릭 시 다른 페이지로 갈 수 있음
 6. **리다이렉트 체인이 과한가** — 카카오 크롤러는 리다이렉트 다수에서 실패할 수 있음
 7. **SDK 호출 시 콘솔 에러** — `Kakao.isInitialized()` 결과, `Kakao.init` 키 종류 확인

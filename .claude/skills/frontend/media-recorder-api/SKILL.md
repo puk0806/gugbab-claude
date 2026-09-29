@@ -16,7 +16,9 @@ description: >
 > - W3C MediaStream Recording: https://www.w3.org/TR/mediastream-recording/
 > - OpenAI Speech to text 가이드: https://platform.openai.com/docs/guides/speech-to-text
 >
-> 검증일: 2026-05-14
+> 검증일: 2026-09-28
+
+> 주의 (2026-09-28 재검증 — DISPUTED→정정): OpenAI 공식 문서(현재 developers.openai.com/api/docs/guides/speech-to-text) 재확인 결과, Transcriptions API가 받는 입력 포맷이 **`mp3`·`mp4`·`mpeg`·`mpga`·`m4a`·`wav`·`webm` 7종**으로 명시되어 있다 — 이전 버전 본문의 `flac`·`ogg`는 현재 공식 문서에 더 이상 나열되지 않는다(과거엔 포함됐을 수 있으나 현재 시점 확인 불가/미지원 가능성). §6·§7의 표·본문을 이에 맞춰 정정. **`audio/ogg;codecs=opus`로 녹음된 오디오를 Whisper에 그대로 보내는 경로는 더 이상 안전하지 않다** — §2의 MIME 폴백 사슬에서 ogg가 선택된 경우 서버 변환을 고려할 것.
 >
 > 짝 스킬:
 > - `frontend/voice-input-ui` — 녹음 *중* 사용자에게 보여줄 시각 피드백·상태 머신. 본 스킬은 그 *내부*에서 실제로 오디오 비트를 모으는 부분을 담당한다.
@@ -116,7 +118,7 @@ function pickSupportedMimeType(): string {
 | iOS Safari 18.4+ | `audio/webm;codecs=opus` 또는 `audio/mp4` |
 | macOS Safari | `audio/mp4`, 일부 빌드에서 `audio/webm` |
 
-Whisper API는 `webm`·`mp4`·`m4a`·`wav`·`ogg` 등 주요 포맷을 모두 받으므로, 위 사슬로 잡힌 무엇이든 그대로 보내면 된다(아래 §6).
+Whisper API는 `webm`·`mp4`·`m4a`·`wav` 등 주요 포맷을 받는다(아래 §6 — 2026-09-28 기준 `ogg`는 공식 지원 목록에서 빠졌으므로 §2 사슬에서 `audio/ogg;codecs=opus`가 선택되는 경우만 예외적으로 서버 변환을 고려한다).
 
 ---
 
@@ -169,7 +171,7 @@ recorder.resume(); // state: 'recording', 같은 Blob에 계속 누적
 ```ts
 async function sendToWhisper(audio: Blob): Promise<string> {
   // 1) Blob에 파일명을 붙여 File 로 감싸기 — 일부 서버는 filename 헤더를 요구
-  //    확장자는 MIME 에 맞춰서 (webm/mp4/m4a/wav/ogg)
+  //    확장자는 MIME 에 맞춰서 (webm/mp4/m4a/wav — ogg는 §2·§6 표 참고: Whisper 비공식 지원이라 서버 변환 고려)
   const ext = blobExt(audio.type); // 예: 'webm'
   const file = new File([audio], `voice.${ext}`, { type: audio.type });
 
@@ -193,6 +195,8 @@ async function sendToWhisper(audio: Blob): Promise<string> {
 function blobExt(mime: string): string {
   if (mime.includes('webm')) return 'webm';
   if (mime.includes('mp4')) return 'm4a';
+  // ogg는 §2 폴백 사슬의 최후 후보라 실제로 선택되는 경우가 드물다. 파일명 확장자만 매핑할 뿐,
+  // Whisper 공식 지원 목록(§6 표)에는 없으므로 이 분기로 들어오면 서버에서 변환 후 전송해야 한다.
   if (mime.includes('ogg')) return 'ogg';
   if (mime.includes('wav')) return 'wav';
   return 'bin';
@@ -201,7 +205,7 @@ function blobExt(mime: string): string {
 
 | 항목 | 값 |
 |------|-----|
-| 지원 입력 포맷 | flac, mp3, mp4, mpeg, mpga, m4a, ogg, wav, webm |
+| 지원 입력 포맷 | mp3, mp4, mpeg, mpga, m4a, wav, webm (2026-09-28 기준 공식 문서 — `flac`·`ogg`는 현재 목록에 없음, 아래 주의 참조) |
 | 파일 크기 한도 | 25 MB (실제로는 multipart 오버헤드 고려해 24 MB 이하 권장) |
 | Content-Type | `multipart/form-data` — `fetch` 자동 설정. **직접 박지 말 것** |
 

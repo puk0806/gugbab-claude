@@ -1,8 +1,8 @@
 ---
 skill: core-web-vitals-optimization
 category: frontend
-version: v1
-date: 2026-06-02
+version: v2
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `core-web-vitals-optimization` |
 | 스킬 경로 | `.claude/skills/frontend/core-web-vitals-optimization/SKILL.md` |
-| 검증일 | 2026-06-02 |
-| 검증자 | skill-creator |
-| 스킬 버전 | v1 |
+| 검증일 | 2026-09-28 (최초 2026-06-02, 2026-09-28 재검증) |
+| 검증자 | skill-creator → Claude (Sonnet 5, 2026-09-28 재검증) |
+| 스킬 버전 | v2 |
 
 ---
 
@@ -167,6 +167,24 @@ status: APPROVED
 
 ---
 
+### [2026-09-28] 재검증 — 변경 없음
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md + references/REFERENCE.md 전체 Read → 핵심 클레임 3개를 1차 소스와 대조
+
+**클레임 대조 결과**:
+1. CWV 임계값 — LCP Good ≤2.5s/Poor >4.0s, INP Good ≤200ms/Poor >500ms, CLS Good ≤0.1/Poor >0.25, 75퍼센타일 기준 → VERIFIED (https://web.dev/articles/vitals, https://web.dev/articles/defining-core-web-vitals-thresholds)
+2. Next.js 16에서 `Image`의 `priority` prop이 deprecated되고 `preload` prop으로 대체(단일 LCP 후보에만 부여 원칙 포함) → VERIFIED (https://nextjs.org/docs/app/api-reference/components/image, vercel/next.js PR #98597 — deprecated prop 어노테이션 확인)
+3. `scheduler.yield()`는 Chrome/Edge 129(2024-09)부터 stable, Safari·Firefox 미지원(fallback 필요) → VERIFIED (https://developer.chrome.com/blog/use-scheduler-yield)
+
+**실전 질문 재검증**:
+- Q1. "Next.js 16 hero 이미지 LCP 처방은?" → SKILL.md §2.3 "Next.js 16 — priority deprecated → preload" 근거로 PASS (deprecation 여전히 유효 확인)
+- Q2. "INP 개선에 scheduler.yield를 쓸 때 주의점은?" → SKILL.md §3.3 fallback 코드 근거로 PASS (Chrome 129+ 외 브라우저 fallback 필요성 불변 확인)
+
+**재검증 최종 판정**: 3개 클레임 모두 VERIFIED, 변경 없음. status **APPROVED 유지**.
+
+---
+
 > (참고용 — 원래 예정 케이스)
 
 > **Q1.** LCP가 4.2초 나오는 Next.js 16 페이지에서 hero 이미지 처방은?
@@ -190,8 +208,8 @@ status: APPROVED
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-06-02, 3/3 PASS) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (2026-06-02, 3/3 PASS) + ✅ (2026-09-28 재검증, 클레임 3/3 VERIFIED) |
+| **최종 판정** | **APPROVED** (2026-09-28 재검증 — 변경 없음) |
 
 > content test 3/3 PASS. 라이브러리/메트릭 사용법 카탈로그 카테고리 — content test로 APPROVED 전환 완료.
 
@@ -212,3 +230,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-06-02 | v1 | 최초 작성 — LCP/INP/CLS 진단·처방 카탈로그. 14개 클레임 VERIFIED | skill-creator |
 | 2026-06-02 | v1 | 2단계 실사용 테스트 수행 (Q1 LCP hero 이미지 처방 / Q2 INP React API 우선순위 / Q3 CLS 원인·수정) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-28 | v2 | 재검증 — CWV 임계값(LCP/INP/CLS)·Next.js 16 `priority`→`preload` deprecation·`scheduler.yield` Chrome 129+ stable 1차 소스 재대조 전부 VERIFIED, 변경 없음. status APPROVED 유지 | Claude (Sonnet 5) |

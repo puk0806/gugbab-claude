@@ -8,7 +8,7 @@ description: TypeScript 5.x (5.0~5.9) 버전별 신규 기능과 tsconfig·React
 > 소스: https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-0.html
 > 소스: https://devblogs.microsoft.com/typescript/announcing-typescript-6-0/
 > 소스: https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/
-> 검증일: 2026-08-11
+> 검증일: 2026-09-28 (최초 2026-04-20 · 08-11 v2 · 09-28 재검증(2차))
 
 ---
 
@@ -19,7 +19,7 @@ description: TypeScript 5.x (5.0~5.9) 버전별 신규 기능과 tsconfig·React
 | 5.0 ~ 5.8 | 2023 ~ 2025 | 이 스킬 본문의 범위. 현대 TS 타입 시스템 기능 대부분이 여기서 도입됨 |
 | 5.9 | 2025-08 | 5.x의 마지막. `import defer`, `--module node20`, 최소화된 `tsc --init` |
 | **6.0** | **2026-03-23** | **JavaScript 기반 컴파일러의 마지막 메이저.** 새 문법보다 *deprecation + 기본값 변경*이 핵심 — 7.0으로 가는 다리 |
-| **7.0** | **2026-07-08** | **Go 네이티브 컴파일러(코드명 Corsa).** 전체 빌드 기준 통상 8~12배(공칭 "약 10배") 빠름 |
+| **7.0** | **2026-07-08** | **Go 네이티브 컴파일러(코드명 Corsa).** 전체 빌드 기준 통상 8~12배(공칭 "약 10배") 빠름. 2026-09-28 기준 최신 patch는 **7.0.2**(npm), 7.1은 아직 dev 프리릴리즈만 존재(정식·베타 미출시) |
 
 **핵심: 5.x의 *타입 시스템* 지식은 7.0에서도 그대로 유효하다.**
 공식 발표 기준 "TypeScript 6.0에서 깨끗하게 컴파일되는 코드는 사실상 7.0에서도 동일하게 컴파일된다" — 7.0은 *언어 변경*이 아니라 *컴파일러 재작성*이다. 바뀐 것은 **컴파일러 구현·tsconfig 기본값·deprecated 옵션·툴링 API**이지, `const` 타입 매개변수·`NoInfer`·`using`·타입 서술어 추론 같은 문법·타입 규칙이 아니다.
@@ -451,6 +451,68 @@ console.log(result) // 에러: 모든 경로에서 초기화되지 않음
 | 네임스페이스의 레거시 `module` 문법 | `namespace` 키워드 |
 
 전환 기간에는 6.0에서 `"ignoreDeprecations": "6.0"`으로 경고를 유예할 수 있으나, 7.0에서는 통하지 않는다.
+
+**7.0에서 새로 확인된 추가 breaking change (2026-09-28 재검증, 공식 발표문 원문 재대조로 확인 + 예시 보강):**
+
+> 주의(정정): 아래 표의 "값 위치의 enum을 타입 위치에 사용" 항목은 **일반 `.ts`/`.tsx` 파일과는 무관**하다. 공식 발표문에서 이 항목은 "JavaScript Differences"(JSDoc 기반 `.js` 파일 지원 재작성) 섹션의 항목 중 하나로, **JSDoc으로 타입을 다는 순수 `.js` 파일**에만 적용된다. `.ts` 파일에서 값을 타입 위치에 쓰려면 이전부터 항상 `typeof`가 필요했으며 이는 7.0에서도 변하지 않았다. 세 번째 행("JSDoc 기반 JS 분석")과 사실상 같은 공식 섹션(같은 글머리 기호 목록)에 속한 항목이다.
+
+| 항목 | 내용 |
+|------|------|
+| (JSDoc `.js` 전용) 값 위치의 enum을 타입 위치에 사용 | 6.0까지는 `/** @enum */`으로 선언한 객체를 타입 이름으로 바로 참조할 수 있었으나, 7.0부터는 더 이상 자동 인정되지 않음 — `typeof someValue`를 명시해야 함(공식 문구: "Values cannot be used where types are expected – instead, write `typeof someValue`") |
+| Template Literal Types의 유니코드 처리 | 이모지 등 서로게이트 쌍을 UTF-16 코드 유닛 단위로 쪼개지 않고 코드 포인트 단위로 처리 — UTF-16 분할을 전제로 한 타입 레벨 문자열 조작(예: 일부 `Length` 유틸리티)은 깨질 수 있음 |
+| JSDoc 기반 JS 분석 | `.ts` 파일 분석과 일관되도록 재작성됨. `@enum` 태그 특수 인식 제거(`@typedef`로 대체), Closure 스타일 함수 문법(`function(string): void`) 미지원 — TS 화살표 함수 표기(`(s: string) => void`)로 대체 |
+
+**before/after 예시 — JSDoc `@enum` (6.0 → 7.0, 공식 발표문 + 공식 JSDoc 레퍼런스 문서 기반):**
+
+```js
+// 6.0까지 — 순수 .js 파일, @enum 선언 후 이름을 타입으로 직접 참조 가능
+/** @enum {number} */
+const JSDocState = {
+  BeginningOfLine: 0,
+  SawAsterisk: 1,
+  SavingComments: 2,
+}
+
+/** @param {JSDocState} state */
+function processState(state) { /* ... */ }
+```
+
+```js
+// 7.0 — @enum 특수 인식 제거. @typedef + typeof로 대체해야 함
+/** @typedef {(typeof JSDocState)[keyof typeof JSDocState]} JSDocState */
+const JSDocState = {
+  BeginningOfLine: 0,
+  SawAsterisk: 1,
+  SavingComments: 2,
+}
+
+/** @param {JSDocState} state */
+function processState(state) { /* ... */ }
+```
+
+**before/after 예시 — Template Literal Types 유니코드 처리 (공식 발표문 코드 예시 그대로):**
+
+```ts
+type HeadTail<S> = S extends `${infer Head}${infer Tail}` ? [Head, Tail] : never
+
+type Result = HeadTail<"😀abc">
+// 6.0까지: ["\ud83d", "\ude00abc"]  — UTF-16 코드 유닛(서로게이트 쌍)을 쪼갬
+// 7.0:     ["😀", "abc"]           — 코드 포인트 단위로 처리
+```
+
+**before/after 예시 — JSDoc Closure 스타일 함수 문법 (공식 발표문 예시 그대로):**
+
+```js
+// 6.0까지 — Closure 스타일 함수 타입 문법 인식
+/** @type {function(string): void} */
+let callback
+```
+
+```js
+// 7.0 — Closure 스타일 미지원. TS 화살표 함수 표기로 대체
+/** @type {(s: string) => void} */
+let callback
+```
 
 ### 9-3. `--stableTypeOrdering`
 

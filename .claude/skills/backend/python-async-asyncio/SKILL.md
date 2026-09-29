@@ -11,8 +11,8 @@ description: >
 # Python asyncio + async/await 패턴
 
 > 소스: https://docs.python.org/3/library/asyncio-task.html · https://docs.python.org/3/library/asyncio-sync.html · https://peps.python.org/pep-0492/ · https://peps.python.org/pep-0525/ · https://www.python-httpx.org/async/
-> 검증일: 2026-09-26 (2026-05-15 최초 검증 · 재검증 이력은 8절 참조)
-> 대상 버전: Python 3.11 / 3.12 (3.11+ 권장 — `asyncio.timeout`, `TaskGroup` 사용). Python 3.13(2024-10)·3.14(2025-10)가 이미 정식 릴리스되어 있으며, 본 문서 내용은 3.13/3.14에서도 그대로 유효(3.14의 free-threaded 공식 지원·asyncio 스레드 안전성 강화는 11절 참조)
+> 검증일: 2026-09-28 (2026-05-15 최초 검증 · 재검증 이력은 8절 참조)
+> 대상 버전: Python 3.11 / 3.12 (3.11+ 권장 — `asyncio.timeout`, `TaskGroup` 사용). Python 3.13(2024-10)·3.14(2025-10)가 이미 정식 릴리스되어 있으며, 본 문서 내용은 3.13/3.14에서도 그대로 유효(3.13/3.14의 asyncio API 변경점은 11절, free-threaded 빌드와 CPU 바운드 처리는 3절 주의 참조)
 > 짝 스킬: `backend/python-fastapi`, `backend/python-anthropic-sdk`
 
 ---
@@ -128,7 +128,7 @@ async def main():
 - CPU 바운드 → `ProcessPoolExecutor` + `run_in_executor()`
 - 커스텀 pool 크기·재사용 → `run_in_executor()`
 
-> 주의: `to_thread`/`run_in_executor`는 **GIL을 우회하지 않는다**. CPU 바운드에는 ProcessPoolExecutor를 쓰거나 free-threaded Python 빌드를 사용.
+> 주의: `to_thread`/`run_in_executor`는 **GIL을 우회하지 않는다**(표준 GIL 활성 빌드 기준). CPU 바운드에는 ProcessPoolExecutor를 쓰거나 free-threaded Python 빌드를 사용 — free-threading(PEP 703)은 Python 3.13에서 **실험적** 지원이었다(별도 실행 파일 `python3.13t`/`--disable-gil` 빌드, 단일 스레드 성능 저하 큼, 기본 비활성). Python 3.14부터 **PEP 779**로 **공식 지원**으로 전환되어 공식 배포 바이너리가 제공되고 단일 스레드 성능 저하가 약 5~10%로 축소됐다. free-threaded 빌드에서도 C 확장 모듈이 `Py_mod_gil` 등으로 지원을 명시하지 않으면 해당 확장 임포트 시 GIL이 자동 재활성화된다.
 
 ---
 
@@ -455,12 +455,23 @@ async def good():
 
 ---
 
-## 11. Python 3.12+ 개선 사항
+## 11. Python 3.12+ 개선 사항 (3.13·3.14 포함)
 
 - **asyncio 성능 대폭 개선**: 일부 벤치마크 ~75% 속도 향상 (Task 생성, `current_task()` C 구현, 소켓 쓰기 최적화).
 - **Eager Task Factory**: `loop.set_task_factory(asyncio.eager_task_factory)` 설정 시 코루틴이 Task 생성 시점에 동기적으로 시작되어, blocking 없이 끝나면 루프 스케줄 비용을 건너뜀 (use case에 따라 2~5배 빨라짐).
-- **3.13**: `as_completed()`가 async iterator로도 사용 가능. `task.uncancel()`이 카운트 0일 때 대기 중 취소를 무효화.
-- **3.14**: `create_task(eager_start=True)` 지원.
+
+### 3.13 (2024-10 GA)
+
+- `as_completed()`가 **async iterator**로도 사용 가능해짐(기존 plain iterator 겸용) — async 순회 시 완료된 Task/Future 원본 객체를 그대로 넘겨줘 결과와 태스크를 연결하기 쉬워짐.
+- `task.uncancel()`이 취소 카운트가 0이 될 때 `_must_cancel` 플래그를 리셋 — 대기 중이던 취소 요청이 실제로 무효화됨.
+- `asyncio.Queue.shutdown()` / `QueueShutDown` 신설 — 큐를 명시적으로 종료 처리(`immediate=False`면 남은 아이템 소비 후 종료, `True`면 즉시 `QueueShutDown` 발생).
+- `TaskGroup` 취소 처리 개선 — 외부 취소와 내부 취소가 겹칠 때 부모 Task의 `cancel()`을 호출해 다음 `await`에서 `CancelledError`가 확실히 발생하도록 보장, `cancelling()` 카운트도 보존.
+- `create_task()` / `loop.create_task()` / `TaskGroup.create_task()`가 `**kwargs`를 받아 Task 생성자로 전달 가능.
+
+### 3.14 (2025-10 GA)
+
+- `loop.create_task(coro, *, name=None, context=None, eager_start=None, **kwargs)` — 3.14부터 모든 kwargs가 그대로 전달되고, `eager_start` 인자가 eager task factory와 실제로 연동되도록 변경됨(공식 문서 "Changed in version 3.14"). 즉 전역 `set_task_factory(eager_task_factory)` 설정 없이도 `asyncio.create_task(coro, eager_start=True)`처럼 호출 단위로 eager 실행 여부를 지정할 수 있게 됨.
+- 비동기 호출 그래프 인트로스펙션 도구 신설: `asyncio.capture_call_graph()` / `asyncio.print_call_graph()`, CLI `python -m asyncio ps <PID>` / `python -m asyncio pstree <PID>` — 실행 중인 프로세스의 멈춘 Task·코루틴 대기 관계를 그대로 확인 가능(await 그래프에 순환이 있으면 에러로 검출).
 
 > 주의: Python 3.11과 3.12 사이에 일부 asyncio 동작(특히 eager execution 관련)이 바뀌어 코드 동작이 달라질 수 있다. 라이브러리 업그레이드 시 회귀 테스트 권장.
 

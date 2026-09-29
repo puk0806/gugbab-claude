@@ -1,8 +1,8 @@
 ---
 skill: ddd
 category: architecture
-version: v1
-date: 2026-04-17
+version: v2.3
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -35,9 +35,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `ddd` |
 | 스킬 경로 | `.claude/skills/architecture/ddd/SKILL.md` |
-| 검증일 | 2026-04-17 |
+| 검증일 | 2026-09-28 (최초 2026-04-17 · 재검증 08-26, 09-28) |
 | 검증자 | fact-checker 서브에이전트 (메인 대화 오케스트레이션) |
-| 스킬 버전 | v1 |
+| 스킬 버전 | v2.3 |
 
 ---
 
@@ -204,6 +204,26 @@ DDD SKILL.md를 참조하여 분석.
 
 ---
 
+### [2026-09-28] 재검증(2차) — 서적 기반 클레임 재대조, 변경 없음
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임 3개를 1차 소스와 WebSearch로 대조
+
+**클레임 대조 결과**:
+1. 컨텍스트 맵 9패턴(Shared Kernel/Customer-Supplier/Conformist/ACL/OHS/PL/Separate Ways/Partnership/Big Ball of Mud) — VERIFIED (Evans DDD Reference PDF, domainlanguage.com/wp-content/uploads/2016/05/DDD_Reference_2015-03.pdf 목록과 일치)
+2. Vernon Aggregate 설계 4원칙(진짜 불변식만 경계로/작게 설계/ID 참조/결과적 일관성, 트랜잭션당 Aggregate 1개) — VERIFIED (dddcommunity.org/library/vernon_2011/ Effective Aggregate Design)
+3. Domain Events — Evans 원저(2003) 미공식화, Vernon IDDD(2013) 체계화, Evans DDD Reference(2015 개정)에서 공식 전술 패턴 추가 — VERIFIED (기존 출처 재확인, 변경 없음)
+
+**보강(ADD)·축소**: 없음 — 서적(2003/2013) 및 2015 개정 Reference 기반 콘텐츠로 그사이 변경 사항 없음
+
+**실전 질문 재검증**:
+- Q1. "Aggregate 간 참조는 어떻게 해야 하는가?" → SKILL.md "5. Aggregate와 Aggregate Root" 근거로 PASS (ID로만 참조, Vernon 강조)
+- Q2. "컨텍스트 맵에서 하류가 상류 모델에 전혀 협조받지 못할 때 쓰는 패턴은?" → SKILL.md "4. 컨텍스트 맵" 표 근거로 PASS (Conformist)
+
+**재검증 최종 판정**: status **APPROVED 유지**
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -232,3 +252,4 @@ DDD SKILL.md를 참조하여 분석.
 | 2026-08-26 | v2.1 | freshness 재검증(131일 경과) — 서적 기반(Evans 2003·Vernon 2013) 클레임 3건 VERIFIED, 변경 없음. 프론트엔드 적용 절 부재는 신설된 `architecture/frontend-domain-structure`가 담당하므로 검증일 줄에 포인터만 추가 | freshness-auditor + orchestrator |
 | 2026-09-25 | v2.2 | 로컬 경로·프로젝트명 일반화 (내용 변경 없음) | docs cleanup |
 | 2026-09-25 | v2.2 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |
+| 2026-09-28 | v2.3 | 재검증(2차) — 핵심 클레임 3건 1차 소스 재대조, 변경 없음(검증일만 갱신) | Claude (Sonnet 5) |

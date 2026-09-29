@@ -1,8 +1,8 @@
 ---
 skill: dream-interpretation-prompt-engineering
 category: meta
-version: v1
-date: 2026-08-11
+version: v1.4
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `dream-interpretation-prompt-engineering` |
 | 스킬 경로 | `.claude/skills/meta/dream-interpretation-prompt-engineering/SKILL.md` |
-| 검증일 | 2026-08-11 (최초 2026-05-14) |
-| 검증자 | skill-creator (최초) / 모델 ID 정기 감사 (2026-08-11) |
-| 스킬 버전 | v1 |
+| 검증일 | 2026-09-28 (최초 2026-05-14, 이전 2026-08-12) |
+| 검증자 | skill-creator (최초) / 모델 ID 정기 감사 (2026-08-11) / 재검증 2차 (2026-09-28) / skill-tester 재테스트 (2026-09-28) |
+| 스킬 버전 | v1.4 |
 | 대상 모델 | Claude Opus 5.5 / Sonnet 5 / Haiku 4.5 (`.claude/rules/agent-design.md`, 2026-09-25 현행화) |
 
 ---
@@ -119,6 +119,42 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
+### [2026-09-28] skill-tester 재테스트 (2차 재검증 대응)
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose
+**수행 방법**: SKILL.md Read 후 2026-09-28 재검증(2차)에서 반영된 Structured
+Outputs(§3-1/3-2)·캐시 임계값 정정(§6)을 직접 겨냥한 실전 질문 2개 답변, 근거
+섹션 및 anti-pattern 회피 확인
+
+**Q1. 꿈 해몽 앱에서 JSON 응답 스키마를 강제하는 현재 권장 방식은? 예전 "프롬프트로
+JSON만 반환 지시 + 실패 시 재시도" 방식은 이제 어떤 위치인가?**
+- ✅ PASS
+- 근거: SKILL.md "3-1. 스키마 강제 방식 — Structured Outputs (권장)" / "3-2. 폴백
+  — 프롬프트 지시 + 재시도"
+- 상세: `output_config.format`(Structured Outputs, GA, constrained decoding)이
+  현행 권장 방식이며, 기존 "JSON만 반환 + 재시도" 방식은 §3-2 폴백으로 정확히
+  위치시켜 답변. 2026-09-28 재검증에서 신설된 §3-1/3-2 구분이 답변에 그대로
+  반영됨 — 옛 서술이 남아 모순을 일으키지 않음을 확인.
+
+**Q2. Opus 5.5로 이 시스템 프롬프트를 캐싱하려는데 최소 캐시 토큰은 몇 개인가?
+Structured Outputs 스키마를 자주 바꿔도 되는가?**
+- ✅ PASS
+- 근거: SKILL.md "6. 프롬프트 캐싱 활용" 최소 캐시 토큰 표 / §3-1 하단 공식 제약
+  / §11 흔한 함정 11번
+- 상세: Opus 5.5 최소 캐시 토큰 = 512 tokens로 2026-09-28 정정된 값을 정확히
+  인용. "스키마를 바꾸면 캐시가 무효화되므로 고정 유지" 원칙도 §3-1·§11 두
+  곳에서 일관되게 인용해 모순 없이 답변.
+
+**발견된 gap**: 없음. 2/2 PASS. (에이전트 코멘트: Opus 5.5 512 각주가 "재확인"
+서술 방식이라 원 공식 표 캡처가 SKILL.md 자체엔 없다는 사소한 지적 — 소스 URL은
+상단에 명시되어 있고 이미 WebFetch로 재확인된 사안이라 gap으로 간주하지 않음.)
+
+**판정**: agent content test 2/2 PASS → verification-policy 분류(프롬프트 패턴
+스킬, content test PASS = APPROVED 가능) 재확인 → **최종 상태 APPROVED**
+
+---
+
 **수행일**: 2026-05-14
 **수행자**: skill-tester → general-purpose (도메인 특화 에이전트 미등록으로 대체)
 **수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
@@ -152,16 +188,62 @@ status: APPROVED
 
 ---
 
+### [2026-09-28] 재검증(2차) — Structured Outputs 반영 + 캐시 임계값 정정 + 검증일 불일치 정리
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임 3개를 1차 소스(platform.claude.com)와
+대조, ADD 항목(Structured Outputs) 반영 및 캐시 임계값 보강 검토
+
+**클레임 대조 결과**:
+1. "JSON만 반환" 프롬프트 지시 + 클라이언트 재시도가 여전히 현행 유일 방식이라는
+   기존 서술 → **DISPUTED(보강 반영)**. Anthropic Structured Outputs
+   (`output_config.format`, `type: "json_schema"`)가 GA이며 constrained decoding으로
+   스키마 위반을 원천 차단한다. `claude-haiku-4-5-20251001`·`claude-sonnet-5`·
+   `claude-opus-5-5` 모두 Claude API에서 지원 확인 (소스:
+   https://platform.claude.com/docs/en/build-with-claude/structured-outputs). 기존
+   "JSON만 반환 + 재시도" 방식은 §3-2 폴백으로 재배치.
+2. "Claude Opus 5.5 최소 캐시 토큰: 주의: 미확인 — 공식 캐싱 표 미기재(2026-09-25)"
+   → **DISPUTED(정정)**. 2026-09-28 재조회 결과 공식 prompt-caching 표에 Opus 5.5가
+   **512 tokens**로 명시되어 있음을 확인 (소스:
+   https://platform.claude.com/docs/en/build-with-claude/prompt-caching). §6 표와
+   "세대 순 비단조" 문구 정정.
+3. Structured Outputs 스키마 제약(`additionalProperties: false` 필수,
+   `minLength`/`minimum` 등 미지원, `output_config.format` 변경 시 캐시 무효화) →
+   **VERIFIED** (동일 공식 문서, 같은 레포 `meta/fortune-interpretation-prompt-engineering`
+   REFERENCE.md §6-2와 표기 방식 일치 확인 — 읽기만, 수정 없음).
+
+**보강(ADD)·축소**:
+- §3에 3-1(Structured Outputs, 스키마 예제 코드 + 공식 제약)·3-2(폴백: 기존 JSON
+  지시+재시도) 신설. 안전 가드·한국 자원 안내 등 도메인 안전 콘텐츠는 전혀 축소하지
+  않음.
+- §6 최소 캐시 토큰 표의 Opus 5.5 "미확인" → "512"로 정정, 비단조성 설명 문구도
+  Opus 5.5 포함하도록 수정.
+- §9 출력 후처리 1번에 "Structured Outputs 사용 시 파싱 실패 사실상 없음" 단서 추가.
+- §11에 함정 11번("`output_config.format`을 자주 바꿈") 추가.
+- 검증일 불일치 정리: SKILL.md는 2026-08-12, verification.md 메타 표는 2026-08-11로
+  어긋나 있었음 → 양쪽 모두 2026-09-28로 통일, frontmatter `date`·버전(v1.3)도 동기화.
+
+**실전 질문 재검증**:
+- Q1. "꿈 해몽 앱에서 JSON 응답 스키마를 강제하는 현행 권장 방식은? 예전 '재시도' 방식은
+  언제 쓰는가?" → PASS (근거: SKILL.md "3-1 Structured Outputs (권장)" / "3-2 폴백")
+- Q2. "Opus 5.5로 이 시스템 프롬프트를 캐싱하려는데 최소 토큰이 몇인가?" → PASS
+  (근거: SKILL.md "6. 프롬프트 캐싱 활용" 최소 캐시 토큰 표 — 512 tokens)
+
+**재검증 최종 판정**: status **PENDING_TEST 전환** (Structured Outputs 신규 코드
+예제 추가 + 캐시 표 정정으로 실사용 재테스트 필요)
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
 |------|------|
-| 내용 정확성 | ✅ |
+| 내용 정확성 | ✅ (2026-09-28 재검증 — Opus 5.5 캐시 임계값 정정 반영) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 핵심 클레임 교차 검증 | ✅ (VERIFIED 9 / DISPUTED 1 수정반영 / UNVERIFIED 0) |
-| 에이전트 활용 테스트 | ✅ (2026-05-14 수행, 3/3 PASS) |
-| **최종 판정** | **APPROVED** |
+| 핵심 클레임 교차 검증 | ✅ (VERIFIED 9 / DISPUTED 1 수정반영 / UNVERIFIED 0, 2026-05-14) + 2026-09-28 재검증 3건(정정 2·검증 1) |
+| 에이전트 활용 테스트 | ✅ (2026-05-14 수행, 3/3 PASS) + 2026-09-28 skill-tester 재테스트 2/2 PASS (Structured Outputs·캐시 정정 겨냥) |
+| **최종 판정** | **APPROVED** (2026-09-28 skill-tester 재테스트 2/2 PASS — Structured Outputs 보강·캐시 임계값 정정 반영 확인) |
 
 > 본 스킬은 *프롬프트 패턴* 카테고리로, `verification-policy.md` 기준 "content test PASS = APPROVED 가능". 운영 환경의 *톤 일관성·안전 가드 발동률* 같은 실측 메트릭 검증은 사용자 영역.
 
@@ -172,6 +254,8 @@ status: APPROVED
 - [✅] 사용자 초안의 "KCC 콜센터 1577-0199" → "보건복지부 정신건강상담전화 1577-0199 + 자살 위험은 109" 로 정정 반영 완료
 - [❌] 짝 스킬(`humanities/korean-dream-interpretation-tradition`, `humanities/dream-psychology-jung-freud`) 미생성 상태 — 본 스킬 단독 사용은 가능하지만 *해몽 콘텐츠*는 짝 스킬과 함께 사용해야 효과적. 해당 스킬 생성 시 본 스킬에 cross-link 점검
 - [✅] **skill-tester content test 수행 완료** (2026-05-14, 3/3 PASS) — APPROVED 전환
+- [✅] 2026-09-28 재검증(2차)에서 Structured Outputs §3-1·3-2 신설 + 캐시 표 정정 →
+  skill-tester 재테스트 완료 (2026-09-28, 2/2 PASS) — APPROVED 전환
 
 ---
 
@@ -184,3 +268,5 @@ status: APPROVED
 | 2026-08-11 | v1 | **모델 ID 정기 감사.** 헤더 "대상 모델" `Claude Opus 4.7` → `Claude Opus 4.8`. 최소 캐시 토큰 절(§6) 정정 — 기존 "Opus 4.7 = 4,096"은 오류로, Opus 4.8=1,024 / 4.7=2,048 / 4.6·4.5=4,096 / Haiku 4.5=4,096으로 교체. 함정 §9의 retired 모델 ID 안내를 "작동하지 않을 수 있다" → 실제 retired 사실로 현행화. 본문 코드의 `claude-sonnet-4-6`은 현행이라 미변경. Q3 테스트 근거(Haiku 4.5=4,096, Sonnet 4.6=1,024)는 정정 후에도 그대로 유효. status는 APPROVED 유지 | 모델 ID 정기 감사 |
 | 2026-08-12 | v1.1 | **모델 ID 세대 정렬.** 헤더 "대상 모델" `Claude Opus 4.8 / Sonnet 4.6 / Haiku 4.5` → `Claude Opus 5 / Sonnet 5 / Haiku 4.5`(Haiku는 현행 유지). 본문 캐싱 예제 코드의 `claude-sonnet-4-6` → `claude-sonnet-5`. §6 최소 캐시 토큰 표에 **Opus 5 = 512** 행 추가(Opus 4.8 대비 절반), Sonnet 5를 1,024 행에 편입, 임계값이 세대 순으로 단조롭지 않다는 주의 추가. 비용 효과 절 기준 모델 Sonnet 4.6 → Sonnet 5. 함정 §9의 모델 ID 하드코딩 항목을 현행 별칭(`claude-opus-5`·`claude-sonnet-5`·`claude-haiku-4-5`) 기준으로 재작성하고 4.8/4.6을 legacy로 표기. 샘플링 파라미터·`budget_tokens` 사용 없음 — 5 계열 400 이슈 해당 없음. 검증일 2026-08-11 → 2026-08-12. status **APPROVED 유지** | 모델 ID 세대 정렬 |
 | 2026-09-25 | v1.2 | **모델 ID 현행화(Opus 5.5/Fable 5.1).** 헤더 대상 모델 Opus 5 → Opus 5.5(예제 기본은 Sonnet 5 유지). §6 최소 캐시 토큰 512 행에 Fable 5.1/Fable 5 편입, Opus 5.5는 "미확인" 표기. 함정 §9 현행 ID를 `claude-opus-5-5`로, `claude-opus-5`를 legacy 목록에 추가. 메타 표 "대상 모델" 행(4.8/4.6 잔존) 동기화. 본문 코드에 thinking disabled·강제 `tool_choice` 없음 — Opus 5.5 브레이킹 해당 없음. status APPROVED 유지 | 모델 ID 현행화 |
+| 2026-09-28 | v1.3 | **재검증(2차) — Structured Outputs 반영.** §3에 3-1(Structured Outputs `output_config.format` 스키마 강제, GA, Haiku 4.5/Sonnet 5/Opus 5.5 지원 확인)·3-2(기존 "JSON만 반환+재시도"를 폴백으로 재배치) 신설. §6 최소 캐시 토큰 표의 "Opus 5.5 미확인"을 **512로 정정**(공식 표 갱신 확인). §9 출력 후처리·§11 함정에 Structured Outputs 관련 단서 추가. SKILL.md(2026-08-12)·verification.md 메타 표(2026-08-11) 검증일 불일치를 2026-09-28로 통일. 안전 가드·한국 자원 안내는 축소 없음. status **PENDING_TEST 전환** | 재검증 2차 |
+| 2026-09-28 | v1.4 | 2단계 실사용 재테스트 수행 (Q1 Structured Outputs 현행 권장 방식·폴백 위치 / Q2 Opus 5.5 캐시 최소 토큰·스키마 변경 시 캐시 무효화) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |

@@ -20,7 +20,7 @@ user-invocable: false
 > - TC39 proposal-temporal: https://github.com/tc39/proposal-temporal
 > - HTTP Cache-Control: https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cache-Control
 >
-> 검증일: 2026-09-10 (2026-09-11 캐주얼 앱 방향으로 과의존 가드 섹션 제거)
+> 검증일: 2026-09-28 (최초 2026-09-10, 2026-09-11 캐주얼 앱 방향으로 과의존 가드 섹션 제거)
 
 ---
 

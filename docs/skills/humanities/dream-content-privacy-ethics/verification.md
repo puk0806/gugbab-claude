@@ -3,7 +3,7 @@ skill: dream-content-privacy-ethics
 category: humanities
 version: v2
 date: 2026-09-26
-status: PENDING_TEST
+status: APPROVED
 ---
 
 # 검증 문서 — dream-content-privacy-ethics
@@ -144,6 +144,17 @@ status: PENDING_TEST
 
 ## 5. 테스트 진행 기록
 
+### skill-tester 재테스트 (2026-09-28)
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (도메인 전담 에이전트 미등록으로 대체)
+**수행 방법**: 1차 법령 대조 재검증(2026-09-26, §4-1-R 오류 8건 정정)으로 PENDING_TEST 전환된 스킬 재테스트. SKILL.md Read 후 실전 질문 2개(정정된 사실 겨냥) 답변, 조문 근거·anti-pattern 회피 확인
+
+Q1. "해외 LLM API로 꿈 텍스트를 전송하려면 반드시 국외 이전 별도 동의를 받아야 하나요?" — PASS (근거: §3-1 표 — 제28조의8 예외 5가지 중 별도 동의는 1개, 계약 이행 처리위탁·보관은 처리방침 공개/통지로도 가능함을 정확히 답변)
+Q2 (정정된 사실 겨냥). "동의 철회는 어떤 조문 근거이며, 파기는 30일 이내에 해야 하나요?" — PASS (근거: §5-1 표 — 동의 철회는 제37조 제1항[이전 판 "제22조" 오류 정정 확인], §6-2 "지체 없이"[이전 판 "30일 이내" 근거 없어 삭제 확인] — 두 정정 사실 모두 정확히 반영해 답변)
+
+agent content test: 2/2 PASS (2026-09-28 실제 agent 기반 재테스트). 2026-09-26 재검증으로 정정된 8건 오류(시행령 제18조 인종·민족 누락, 제28조의8 예외, 제26조 "신고" 오기재, 제37조의2·제35조의2 시행 서술, 동의 철회 조문, 30일 파기 근거 없음, PMC8382275 결과 과장)가 SKILL.md에 정확히 반영되었음을 확인. PENDING_TEST → APPROVED 전환.
+
 ### 재검증 기록 (2026-09-26)
 
 **수행일**: 2026-09-26
@@ -204,8 +215,8 @@ agent content test: 2/2 PASS (재검증 기록). 법령 조문 정정으로 stat
 | 내용 정확성 | ✅ (공식 법령·공식 가이드·EDPB 자료 다중 출처 교차 검증) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-05-15, 3/3 PASS / 2026-09-26 재검증 2/2 PASS) |
-| **최종 판정** | **PENDING_TEST** (2026-09-26 재검증: 법령·원문 대조 15건 중 오류 8건 정정·미검증 2건 — skill-tester 재테스트 후 APPROVED 재전환) |
+| 에이전트 활용 테스트 | ✅ (2026-05-15, 3/3 PASS / 2026-09-26 메인 세션 재검증 2/2 PASS / 2026-09-28 skill-tester 실제 agent 재테스트 2/2 PASS) |
+| **최종 판정** | **APPROVED** (2026-09-28 skill-tester 재테스트: 법령 정정 8건이 SKILL.md에 정확히 반영됨을 agent content test로 확인, 2/2 PASS) |
 
 ---
 
@@ -214,6 +225,7 @@ agent content test: 2/2 PASS (재검증 기록). 법령 조문 정정으로 stat
 - [✅] skill-tester content test 수행 후 섹션 5·6·7·8 업데이트 (2026-05-15 완료, 3/3 PASS)
 - [❌] (선택·비차단) 한국 *판례*나 *개인정보보호위 의결례* 중 꿈·심리 관련 직접 사례 발견 시 추가 — APPROVED 상태에 영향 없음, 실전 도입 이후 보강 가능
 - [❌] (선택·비차단) 2026년 PIPA 추가 개정 시행 시점 재검토 (자동화된 의사결정 거부권 등) — 법령 개정 시 스킬 갱신 필요하나 현재 v1 내용은 2026-05-15 기준 정확
+- [✅] skill-tester 실제 agent 재테스트 수행 및 섹션 5·6·7·8 동기화 (2026-09-28 완료, 2/2 PASS) — APPROVED 재전환
 
 ---
 
@@ -224,3 +236,4 @@ agent content test: 2/2 PASS (재검증 기록). 법령 조문 정정으로 stat
 | 2026-05-15 | v1 | 최초 작성 (한국 PIPA·GDPR·HIPAA·APA·IRB 종합, AI/LLM 시대 위험 포함) | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 꿈=민감정보 학술 논의 / Q2 k-anonymity 한계+재식별 / Q3 APA Ethics 임상+만 14세 미만) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-09-26 | v2 | 재검증 — 현행 개인정보 보호법(법률 제21445호)·시행령·eCFR·GDPR·PMC 대조 15건, 오류 8건 정정(시행령 제18조 인종·민족 누락, 제28조의8 예외, 제26조 "신고", 제37조의2·제35조의2 시행 서술, 동의 철회 조문, 30일 파기, PMC8382275 결과 과장), 미검증 2건, 실전 질문 2/2 PASS → PENDING_TEST | 메인 세션 (재검증) |
+| 2026-09-28 | v2 | skill-tester 실제 agent 재테스트 수행 (Q1 국외 이전 예외 5가지 / Q2 동의 철회 제37조·30일 파기 근거 없음 정정 확인) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |

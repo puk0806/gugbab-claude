@@ -1,8 +1,8 @@
 ---
 skill: spring-boot-2-to-3-migration
 category: backend
-version: v1
-date: 2026-08-11
+version: v2
+date: 2026-09-28
 status: PENDING_TEST
 ---
 
@@ -14,9 +14,9 @@ status: PENDING_TEST
 |------|------|
 | 스킬 이름 | `spring-boot-2-to-3-migration` |
 | 스킬 경로 | `.claude/skills/backend/spring-boot-2-to-3-migration/SKILL.md` |
-| 검증일 | 2026-08-11 |
-| 검증자 | skill-creator |
-| 스킬 버전 | v1 |
+| 검증일 | 2026-09-28 (재검증, 이전 2026-08-11) |
+| 검증자 | skill-creator (최초), 재검증 2차 작업(2026-09-28) |
+| 스킬 버전 | v2 |
 | 기준 버전 | Spring Boot 2.5/2.7.18 → 3.x(3.5.x 목표), Java 11 → 17/21, Spring Framework 5.3 → 6.0+, Spring Security 5.5 → 6.x |
 
 ---
@@ -149,6 +149,48 @@ status: PENDING_TEST
 
 ## 5. 테스트 진행 기록
 
+### [2026-09-29] 실사용(실행) 검증
+
+**수행일**: 2026-09-29
+**수행 방법**: 격리된 실험 lab 폴더(`sb-migrate/`)에 OpenJDK 17(레포 환경에 11 미설치) + Gradle Wrapper(services.gradle.org 배포본 7.6.4, 부트스트랩용 Gradle 배포본은 로컬 lab 안에서만 사용, 전역 설치 없음)로 작은 Spring Boot 프로젝트를 만들어 SKILL.md의 Phase 순서를 그대로 밟았다.
+샘플 규모: 컨트롤러 2개(공개 ping + JPA CRUD 1건), `javax.servlet.Filter` 구현 1개(+`javax.annotation.PostConstruct`/`PreDestroy`), `WebSecurityConfigurerAdapter` 기반 Security 설정 1개, JPA 엔티티/리포지토리 1쌍(H2 인메모리), MockMvc 기반 테스트 7개(정상 2 · 인가 회귀 2 · 검증 실패 1 · public 1 · 트레일링 슬래시 404 회귀 1). 각 Phase 전환마다 로컬 git(레포 밖, lab 전용)으로 커밋해 자동/수동 변경을 diff로 분리 보존.
+
+**실행 결과 (Phase별)**:
+- **Phase 0** (SB 2.5.15, sourceCompatibility 11, JVM은 17 — JDK 11 미설치로 처음부터 17에서 실행): `./gradlew build` GREEN, 6/6 테스트 통과.
+- **Phase 1** (2.5.15→2.7.18 + `properties-boot-migrator` 임시 추가): 기동 로그에 프로퍼티 경고 0건 확인(샘플이 단순해 실제 rename 케이스는 없었음) → SKILL.md 서술과 일치.
+- **Phase 2** (Java 11→17 + `-parameters`): 빌드·6/6 테스트 GREEN. **한계**: JDK 11이 환경에 없어 "11에서 17로 바뀌는 실제 전환 효과"(리플렉션 예외 등)는 검증 못 함 — sourceCompatibility 값만 바꿨고 JVM은 애초부터 17이었다.
+- **Phase 3** (Security 5.8 선행 — `WebSecurityConfigurerAdapter`→`SecurityFilterChain` Bean, `antMatchers`→`requestMatchers`, `.and()`→람다): **서술과 실행 결과 불일치 발견** — Boot 2.7.18이 관리하는 Spring Security는 5.7.11이며 `requestMatchers(String...)` 오버로드가 없어(5.8.0부터 추가) 컴파일 실패. `ext['spring-security.version']='5.8.16'` 수동 오버라이드 후 컴파일·6/6 테스트 GREEN. SKILL.md 4.3절에 이 오버라이드 필요성을 명시하는 주의문을 추가(최소 정정, 아래 8장 참조).
+- **Phase 4** (SB 3.x + javax→jakarta): OpenRewrite Gradle 플러그인으로 `UpgradeSpringBoot_3_0`(rewrite-spring 5.24.0) 실행 → 2.7.18→3.0.13 자동 상향 + `javax.servlet`/`javax.annotation`/`javax.persistence`/`javax.validation` 전부 `jakarta.*`로 자동 치환 + `@Bean` 메서드 public 제거 + 단일 생성자 `@Autowired` 제거까지 SKILL.md 10장 "자동화 경계표"가 예고한 항목이 정확히 그대로 나타남. 동일 rewrite-spring 버전에는 `UpgradeSpringBoot_3_5` 레시피가 없어(`UpgradeSpringBoot_3_2`까지만 존재) 그 레시피로 3.2.12까지 추가 자동 상향 후, 3.5.16(스킬 권장 목표 라인)까지는 **수동으로** 버전 문자열만 교체 — "OpenRewrite 결과물은 리뷰 대상 PR이지 최종 산출물이 아니다"(10장)와 정확히 일치하는 경험. 최종 빌드 GREEN, `grep -rn "import javax\." src/` = 0건, 7/7 테스트 GREEN. Security 6.5.11 / Hibernate 6.6.53으로 정상 기동.
+- **부가 확인**: SKILL.md 7장 "로그 날짜 포맷이 ISO-8601로 변경" — Boot 2.x 로그(`2026-09-28 09:36:47.765`, 공백 구분)와 Boot 3.5.16 로그(`2026-09-29T09:03:47.208+09:00`, `T`+타임존)를 실제 로그로 대조해 확인(VERIFIED). "트레일링 슬래시 매칭 기본값 false"도 3.5.16에서 `/api/public/ping/` 요청이 실제로 404가 됨을 MockMvc 테스트로 확인(VERIFIED).
+- **Phase 5~8 (라이브러리 교체·설정 프로퍼티·WAR/Tomcat·카나리)**: 샘플에 Springfox/Sleuth/EhCache2/Redisson/WAR 배포가 없어 **검증 범위 밖** — 진행하지 않음(과장 없이 명시). Phase 9(properties-migrator 제거)는 Phase 4 마무리 시점에 함께 제거해 확인.
+
+**졸업 조건 충족 여부**: **부분**. 충족: Phase 0~4(+9) 전 구간을 실제 빌드·테스트로 실행해 GREEN 확인, OpenRewrite 자동화 경계 서술과 실제 동작 일치 확인, 서술 오류 1건(Security 5.8 오버라이드 누락) 발견·정정.
+남은 것: (1) Java 11 환경 부재로 "11→17 전환의 실제 효과" 미검증, (2) Phase 5 라이브러리 교체 매트릭스(Springfox/Sleuth/EhCache2/Redisson) 미검증, (3) Phase 7 WAR/Tomcat 10.1 배포 미검증, (4) Phase 8 카나리·부하 테스트·롤백 리허설은 로컬 lab 환경 특성상 검증 불가, (5) MyBatis 경로(JPA만 선택) 미검증.
+
+**판정**: **PENDING_TEST 유지** — "실제 SB 2.5 프로젝트"라는 졸업 조건을 소규모 샘플로 부분 충족했을 뿐, 전체 라이브러리 매트릭스·WAR 배포·실환경 카나리까지는 확인하지 못했다. 다만 이번 실행으로 Phase 0~4의 핵심 경로(버전 상향·Java 전환·Security DSL 전환·jakarta 전환·OpenRewrite 경계)는 실제 근거로 뒷받침됨.
+
+---
+
+### [2026-09-28] skill-tester 독립 재테스트 — §1.1 4.0 이행 체크포인트 + 깨진 참조 정정분 검증
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (도메인 특화 에이전트 부재로 대체)
+**수행 방법**: SKILL.md만 근거로 답하도록 지시한 general-purpose 에이전트 2건을 병렬 실행. 2026-09-28 2차 재검증에서 신설된 §1.1(4.0 이행 체크포인트)과 정정된 "spring-boot-gradle-setup 9장" 참조를 겨냥한 질문으로 설계.
+
+**Q8. "Boot 3.5.x 안정화 후 4.x로 갈지 검토 중인데 Undertow와 Jersey를 일부 쓰고 있다. 4.x 전환 가능한가?"**
+- ✅ PASS
+- 근거: SKILL.md §1.1 "4.0 이행 체크포인트" 표 (서블릿 컨테이너·JSON 라이브러리 행)
+- 상세: 표의 "3.5.x에 머문다" 칸(Undertow 사용 / Jersey 사용)에 정확히 해당함을 지적하고 "지금 상태로는 4.x 전환 권장 안 됨, 두 조건 해소 후 재판단" 결론 도출. 사전 조건·배치 조건도 추가로 확인하라고 정확히 안내. anti-pattern(조건 무시하고 바로 전환 권장) 회피.
+
+**Q9. "4.0 이행 체크포인트 표로 전환 가능 판단했다. Jackson 3 포함 3.x→4.x 세부 절차는 `spring-boot-gradle-setup` 9장에 있다고 들었는데 맞나?"**
+- ✅ PASS
+- 근거: SKILL.md 30~32행 상단 주의 블록, §1.1 하단 각주(105행), 9장 각주(384행)
+- 상세: "9장에 있다"는 전제 자체를 SKILL.md 근거로 반박 — "3.x→4.x 세부 절차는 이 스킬 범위 밖이며, 2026-09-28 확인 시점 기준 spring-boot-gradle-setup에는 해당 절이 아직 없음"이라는 정정된 문구를 정확히 인용. 384행의 "9장" 언급은 이 SKILL.md 자신의 9장(WAR/Tomcat)이지 다른 스킬의 9장이 아님까지 정확히 구분. **정정 전 상태였다면 존재하지 않는 참조를 그대로 안내했을 자리에서, 정정이 답변에 정확히 반영됨을 확인.**
+
+**agent content test: 2/2 PASS** (기존 2026-08-11 5/5 PASS 누적 — 합산 7/7 PASS)
+
+---
+
 **수행일**: 2026-08-11
 **수행자**: skill-creator (backend 도메인 content test)
 **수행 방법**: SKILL.md Read 후 레거시 Spring Boot 유지보수 상황에서 실제로 들어올 법한 질문 5개를 만들고, SKILL.md만을 근거로 답변이 도출되는지 + 안티패턴을 회피하는지 확인
@@ -193,35 +235,57 @@ status: PENDING_TEST
 
 ---
 
+### [2026-09-28] 재검증(2차) — Boot 4.0 이행 체크포인트 보강 + 깨진 참조 정정
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임을 공식 소스(GitHub wiki Spring Boot 4.0 Migration Guide, endoflife.date/spring-boot)와 대조, 레포 내부 상호 참조 정합성 확인
+
+**클레임 대조 결과**:
+1. "Spring Boot 3.5 라인 OSS 지원 2026-06-30 종료, 현행 GA 라인은 4.x" → VERIFIED (endoflife.date/spring-boot 재확인 — 2026-09-28 기준 최신 GA는 4.1)
+2. "3.x → 4.x 세부 절차는 `spring-boot-gradle-setup` 9장을 참조" → **DISPUTED(정정)**. 해당 스킬의 SKILL.md를 직접 확인한 결과 섹션은 1~5장까지만 존재하고 9장은 없음 — 깨진 참조였다. SKILL.md 본문에서 특정 절 번호 인용을 제거하고 "레포에 아직 없음, 별도 스킬 신설 필요"로 정정
+3. "Spring Boot 4.0은 Java 17 이상 요구, Jakarta EE 11/Servlet 6.1, Jackson 3가 기본 JSON 라이브러리로 전환(그룹ID `tools.jackson`), Undertow 제거, Jersey는 Jackson 3 미지원" → VERIFIED (GitHub 공식 wiki `Spring-Boot-4.0-Migration-Guide` 직접 인용 확인: "Spring Boot 4.0 requires Java 17 or later", "Jakarta EE 11, Servlet 6.1", "Spring Boot now uses Jackson 3 as its preferred JSON library", Undertow/Jersey 관련 3.5 유지 조건 명시)
+4. "Boot 4.0 전환 전 최신 3.5.x로 먼저 업그레이드 권장, 과도기용 `spring-boot-jackson2` 호환 모듈 제공(사용 중단 예정)" → VERIFIED (동일 공식 wiki 직접 확인)
+
+**보강(ADD)**: §1.1 "4.0 이행 체크포인트" 신설 — "3.5에 머물지 4.x로 갈지"를 공식 Migration Guide 조건(사전 조건/Java/서블릿 컨테이너/JSON 라이브러리/배치)으로 판단하는 표 + Jackson 2→3 그룹ID·클래스명·애노테이션 변경 요약. **정정**: 존재하지 않는 `spring-boot-gradle-setup` "9장" 참조 2곳을 실제 상태(해당 절 없음, 레포에 아직 미신설)로 수정. 축소 없음(레거시 버전 고정·주의사항·실전 예제 전부 유지).
+
+**실전 질문 재검증**:
+- Q6. "Boot 3.5까지 올렸는데 4.x로 넘어가도 되는지 어떻게 판단하나?" → SKILL.md "1.1 4.0 이행 체크포인트" 표 근거로 PASS (Undertow/Jersey/Java 버전/Jackson 3 준비 여부로 판단)
+- Q7. "Jackson 2→3 전환이 왜 별도 작업으로 분리되어 있나?" → SKILL.md 1.1절 주의문 근거로 PASS (그룹ID·클래스명·애노테이션 변경 + `spring-boot-jackson2` 과도기 모듈)
+
+**재검증 최종 판정**: status **PENDING_TEST 유지** (실사용 필수 카테고리 — 마이그레이션 가이드. 보강·정정 있었으나 실사용 검증 전까지 APPROVED 불가라는 기존 판정 근거는 변경 없음)
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
 |------|------|
-| 내용 정확성 | ✅ (VERIFIED 14 / DISPUTED 2 반영 완료 / UNVERIFIED 0) |
+| 내용 정확성 | ✅ (VERIFIED 14 / DISPUTED 2 반영 완료 / UNVERIFIED 0). 2026-09-28 재검증에서 깨진 내부 참조 1건 추가 정정 |
 | 구조 완전성 | ✅ |
-| 실용성 | ✅ |
+| 실용성 | ✅ (4.0 이행 체크포인트 보강) |
 | 요구 항목 커버리지 | ✅ (요청 11개 항목 전부 반영) |
-| 에이전트 활용 테스트(content test) | ✅ 5/5 PASS |
-| 실사용(빌드·배포) 검증 | ❌ 미실시 |
-| **최종 판정** | **PENDING_TEST** |
+| 에이전트 활용 테스트(content test) | ✅ 7/7 PASS 누적 (2026-08-11 5/5 + 2026-09-28 skill-tester 독립 재테스트 2/2 — §1.1 보강분·깨진 참조 정정분 모두 반영 확인) |
+| 실사용(빌드·배포) 검증 | 🟡 **부분 실시** (2026-09-29, 소규모 lab 샘플로 Phase 0~4+9 실제 빌드·테스트 GREEN 확인 — 섹션 5 "[2026-09-29] 실사용(실행) 검증" 참조). Phase 5·7·8은 샘플 범위 밖 |
+| **최종 판정** | **PENDING_TEST** (유지) |
 
 > 판정 근거: `.claude/rules/verification-policy.md`의 "실사용 필수 스킬" 정의 중 **마이그레이션 가이드**에 해당한다.
-> 내용 검증과 content test는 통과했으나, 실제 레거시 프로젝트에서 빌드·기동·배포 결과로 확인되기 전까지 APPROVED로 전환하지 않는다.
+> 2026-09-29 실행 검증으로 Phase 0~4(+9)의 핵심 경로(버전 상향·Java 전환·Security DSL·jakarta 전환·OpenRewrite 경계)는 실제 근거로 뒷받침됐고, 서술 오류 1건(Security 5.8 오버라이드 누락, SKILL.md 4.3절 수정 완료)을 발견·정정했다.
+> 다만 "실제 SB 2.5/2.7 + Java 11 프로젝트"·Phase 5(라이브러리 매트릭스)·Phase 7(WAR/Tomcat 10.1)·Phase 8(카나리·부하·롤백 리허설)까지는 확인하지 못해 APPROVED 전환 조건 전부를 충족하지 못했다 — PENDING_TEST 유지.
 
 ### APPROVED 전환 조건
 
-1. 실제 SB 2.5/2.7 + Java 11 프로젝트에 Phase 1~3을 적용해 빌드·테스트 GREEN 확인
-2. Phase 4~7 적용 후 기동 성공 + 인증/인가 회귀 테스트 통과
-3. WAR 운영 프로젝트라면 Tomcat 10.1 배포 성공 확인
-4. 위 결과를 섹션 5에 추가 기록 후 status 전환
+1. 실제 SB 2.5/2.7 + Java 11 프로젝트에 Phase 1~3을 적용해 빌드·테스트 GREEN 확인 — 🟡 부분(Java 11 환경 없이 소규모 샘플로만 확인, 2026-09-29)
+2. Phase 4~7 적용 후 기동 성공 + 인증/인가 회귀 테스트 통과 — 🟡 부분(Phase 4만 확인, Phase 5·6·7 미실시, 2026-09-29)
+3. WAR 운영 프로젝트라면 Tomcat 10.1 배포 성공 확인 — ❌ 미실시
+4. 위 결과를 섹션 5에 추가 기록 후 status 전환 — 위 1~3이 전부 충족되기 전까지는 status 전환하지 않음
 
 ---
 
 ## 7. 개선 필요 사항
 
 - [❌] **README.md 스킬 목록·스킬 수·업데이트 로그 반영** — 이번 작업에서 명시적으로 범위 제외(병렬 작업 README 충돌 방지). 메인 세션에서 일괄 반영 필요
-- [❌] `skill-tester` 에이전트를 통한 독립 재검증 — 본 에이전트는 Agent 도구 미보유. 메인 세션에서 `Agent(subagent_type="skill-tester", prompt="backend/spring-boot-2-to-3-migration")` 실행 권장
-- [❌] 실사용 검증(섹션 6의 APPROVED 전환 조건 1~3)
+- [✅] `skill-tester` 에이전트를 통한 독립 재검증 — 2026-09-28 완료. general-purpose 2건(§1.1 체크포인트 판단 / 깨진 참조 정정 반영 확인) 2/2 PASS (섹션 5 "[2026-09-28] skill-tester 독립 재테스트" 참조)
+- [🟡] 실사용 검증(섹션 6의 APPROVED 전환 조건 1~3) — **부분 진행**(2026-09-29, 소규모 lab 샘플로 Phase 0~4+9 GREEN 확인). 남은 차단 요인: Java 11 실환경, Phase 5 라이브러리 매트릭스(Springfox/Sleuth/EhCache2/Redisson), Phase 7 WAR/Tomcat 10.1, Phase 8 카나리·롤백 리허설, MyBatis 경로 — 이들 확인 전까지 APPROVED 불가
 - [❌] EhCache 2 → EhCache 3 전환 전용 스킬 부재 — 현재는 "별도 확인"으로만 연결됨. 모던 캐시 스킬 신설 검토
 - [❌] Lucy XSS servlet filter의 jakarta 대체 구현 패턴이 `xss-lucy-jsoup` 스킬에 SB 3 기준으로 보강되면 이 스킬의 C등급 리스크 항목에서 링크 갱신 필요
 - [❌] Boot 3.5 OSS EOL(2026-06-30) 이후 상황이므로, 3.x 도달 후 4.x 경로를 다루는 후속 스킬(`spring-boot-3-to-4-migration`) 신설 검토
@@ -234,3 +298,7 @@ status: PENDING_TEST
 |------|------|-----------|--------|
 | 2026-08-11 | v1 | 최초 작성. 공식 소스 12건 조사 + 핵심 클레임 16개 교차 검증(VERIFIED 14 / DISPUTED 2 해소) + content test 5/5 PASS. status: PENDING_TEST(실사용 필수 카테고리) | skill-creator |
 | 2026-09-25 | v1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |
+| 2026-09-28 | v2 | **재검증(2차) — Boot 4.0 Migration Guide 공식 소스로 §1.1 "4.0 이행 체크포인트" 신설, 깨진 내부 참조 정정.** `spring-boot-gradle-setup` "9장" 참조 2곳이 실제로 존재하지 않는 절이었음을 확인해 정정. status **PENDING_TEST 유지**(실사용 필수 카테고리) | 재검증(2차) 작업 |
+| 2026-09-28 | v2 | 2단계 실사용(content) 재테스트 수행 (Q8 §1.1 4.0 이행 체크포인트 판단 / Q9 깨진 참조 정정 반영 확인) → 2/2 PASS, 누적 7/7 PASS. PENDING_TEST 유지(마이그레이션 가이드 — 실사용 검증 전까지 APPROVED 불가) | skill-tester |
+| 2026-09-28 | v2 | **재교차확인 — 앞선 "9장 없음" 판정은 오판이었음.** `spring-boot-gradle-setup`을 SKILL.md만 보고 판단해 §9(references/REFERENCE.md, 2026-06-19 신설)를 놓쳤다. 해당 절은 실재하며 §9.1~9.7(Gradle 최소버전·플러그인 좌표·Jackson 3 group id·Starter 이름 변경)까지 다룬다. SKILL.md 30~32행·105행 인용 문구를 "그 스킬 §9(빌드 설정 관점)는 존재/참조, Jackson·Security·Framework 7 API 레벨 세부만 별도 스킬 필요"로 재정정 | Claude (Sonnet 5) |
+| 2026-09-29 | v2 | **실사용(실행) 검증 — 부분.** 격리 lab(OpenJDK 17 + Gradle Wrapper 7.6.4/services.gradle.org)에 SB 2.5.15 소규모 샘플(Web+javax 필터/컨트롤러+`WebSecurityConfigurerAdapter`+JPA+테스트 7개)을 만들어 Phase 0→1→2→3→4(+9)를 실제 실행. 전 구간 GREEN. 서술 오류 1건 발견·정정: SKILL.md 4.3절에 "Boot 2.7.18의 관리 Security는 5.7.11까지라 `requestMatchers(String...)`가 없고 `ext['spring-security.version']='5.8.x'` 수동 오버라이드가 필요하다"는 주의문 추가. OpenRewrite `UpgradeSpringBoot_3_0`→`UpgradeSpringBoot_3_2`(rewrite-spring 5.24.0 기준 최대치)까지 자동 전환 확인, 3.5.16까지는 수동 상향(10장 서술과 일치). "ISO-8601 로그 포맷"·"트레일링 슬래시 404" 클레임도 실행 로그·테스트로 추가 확인(VERIFIED). Phase 5·7·8과 Java 11 실환경·MyBatis 경로는 샘플 범위 밖이라 미검증 — status **PENDING_TEST 유지** | Claude (Sonnet 5) |

@@ -5,10 +5,12 @@ description: tsup 패키지 번들러 — esbuild 기반 TypeScript 라이브러
 
 # tsup 패키지 번들러
 
-> 소스: https://tsup.egoist.dev | https://github.com/egoist/tsup/releases
-> 검증일: 2026-09-26
+> 소스: https://tsup.egoist.dev | https://github.com/egoist/tsup/releases | https://github.com/egoist/tsup/issues/1405
+> 검증일: 2026-09-29
 
 > 주의(2026-09-26): tsup 공식 GitHub README에 "This project is not actively maintained anymore. Please consider using tsdown instead."라는 유지보수 중단 공지가 게시되어 있다(마이그레이션 가이드: tsdown.dev). 최신 버전은 여전히 8.5.1(2024-11-12, 약 10개월째 릴리즈 없음)로 patch 변경은 없지만, **신규 프로젝트는 후속 도구 tsdown 채택을 우선 검토**해야 한다. 기존 tsup 프로젝트나 tsdown 전환이 어려운 경우 이 문서의 8.5.1 기준 내용은 계속 유효하다.
+
+> **주의 (2026-09-29 실행 검증으로 확인, 차단급): `typescript` 최신(npm `latest` 태그 = 7.0.2)과 `dts: true` 조합은 빌드가 크래시한다.** tsup 8.5.1은 `rollup-plugin-dts@6.1.1`을 자기 dist에 번들링해 사용하는데, 이 번들 버전이 TypeScript 7의 컴파일러 API 변경(`useCaseSensitiveFileNames` 접근 방식 등)과 맞지 않아 `TypeError: Cannot read properties of undefined (reading 'useCaseSensitiveFileNames')`로 DTS 빌드 단계에서 죽는다(JS 번들 자체는 정상 생성됨). 공식 이슈로 확인됨: https://github.com/egoist/tsup/issues/1405 . tsup 자체 dist에 번들된 구버전이라 프로젝트에서 `rollup-plugin-dts`를 별도로 올려도 소용없다. **회피책**: ① `typescript`를 5.x(예: `^5.7.3`)로 고정 설치하거나, ② `dts: false`로 끄고 아래 "느린 DTS 빌드 분리 패턴"의 `tsc --emitDeclarationOnly`로 declaration만 별도 생성(이 경우 tsc가 프로젝트의 TypeScript 버전을 그대로 쓰므로 TS 7에서도 정상 동작). `npm install tsup typescript --save-dev`를 그대로 실행하면 오늘(2026-09-29) 기준 TS 7.0.2가 깔려 바로 이 문제에 부딪히므로, 아래 "설치" 섹션에서 버전 고정을 권장한다.
 
 ---
 
@@ -34,12 +36,14 @@ tsup은 **esbuild** 기반의 TypeScript/JavaScript 라이브러리 번들러다
 ## 설치
 
 ```bash
-# npm
-npm install tsup typescript --save-dev
+# npm — dts: true를 쓸 계획이면 typescript를 5.x로 고정할 것(위 "주의" 참조 — TS 7 + dts 조합 크래시)
+npm install tsup typescript@^5.7.3 --save-dev
 
 # pnpm
-pnpm add -D tsup typescript
+pnpm add -D tsup typescript@^5.7.3
 ```
+
+> `typescript`를 버전 고정 없이 설치하면 오늘(2026-09-29) 기준 `latest` 태그가 7.0.2라 곧바로 위 DTS 크래시를 겪는다. 이미 TypeScript 7로 마이그레이션한 프로젝트라면 `dts: false` + `tsc --emitDeclarationOnly`(아래 "느린 DTS 빌드 분리 패턴")로 우회한다.
 
 ---
 
@@ -170,9 +174,18 @@ export default defineConfig({
 
 > 주의: `outExtension`으로 JS 출력 확장자를 커스터마이징해도 `.d.ts`/`.d.cts` 등 dts 파일 확장자에는 반영되지 않는다(공식 GitHub 이슈 egoist/tsup#939, 2026-09-26 기준 미해결). dts 확장자는 항상 포맷(cjs/esm) 기준 기본값(`.d.ts`/`.d.cts`)을 따른다.
 
-### 느린 DTS 빌드 분리 패턴
+### 느린 DTS 빌드 분리 패턴 (TypeScript 7 환경에서는 필수 우회책)
 
 DTS 생성은 esbuild가 아닌 TypeScript 컴파일러를 사용하므로 느릴 수 있다. 빌드 속도가 중요하면 분리 실행:
+
+```typescript
+// tsup.config.ts — dts는 반드시 설정 파일에서 false로 끌 것
+export default defineConfig({
+  entry: ['src/index.ts'],
+  format: ['cjs', 'esm'],
+  dts: false, // 주의: CLI 플래그 `tsup --dts false`는 tsup.config.ts의 dts: true를 덮어쓰지 못한다(2026-09-29 실행 검증으로 확인 — config 파일이 우선). 반드시 이 필드 자체를 false로 설정할 것
+})
+```
 
 ```json
 {
@@ -182,6 +195,8 @@ DTS 생성은 esbuild가 아닌 TypeScript 컴파일러를 사용하므로 느�
   }
 }
 ```
+
+> **TypeScript 7 사용 시**: 위 "주의(2026-09-29)"에서 확인한 `dts: true` 크래시(egoist/tsup#1405) 때문에 이 분리 패턴이 단순 속도 최적화가 아니라 **필수 우회책**이 된다 — `tsup.config.ts`에서 `dts: false`로 끄고(CLI 플래그가 아니라 설정 파일에서) `tsc --emitDeclarationOnly`가 프로젝트의 TypeScript 7을 그대로 사용해 declaration을 생성하게 한다.
 
 ---
 

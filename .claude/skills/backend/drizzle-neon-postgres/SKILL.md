@@ -11,9 +11,9 @@ description: Next.js(App Router) + Vercel 서버리스에서 Drizzle ORM + Neon 
 > - Vercel: https://vercel.com/docs/cli/env , https://vercel.com/docs/global-config
 > - GitHub: https://github.com/neondatabase/serverless , https://github.com/drizzle-team/drizzle-orm
 >
-> 검증일: 2026-09-17
-> 기준 버전: `drizzle-orm` **0.45.2**(2026-03-27, dist-tag `latest`) / `drizzle-kit` **0.31.10**(2026-03-17) / `@neondatabase/serverless` **1.1.0**(2026-04-17) / Next.js 16.x App Router
-> Neon 무료 티어 한도는 2026-09-17 기준 공식 plans 페이지 값
+> 검증일: 2026-09-28 (최초 2026-09-17)
+> 기준 버전: `drizzle-orm` **0.45.3**(2026-09-21, dist-tag `latest`) / `drizzle-kit` **0.31.11**(2026-09-21) / `@neondatabase/serverless` **1.1.0**(2026-04-17, 변경 없음) / Next.js 16.x App Router
+> Neon 무료 티어 한도는 2026-09-28 기준 공식 plans 페이지 값으로 재확인 — 09-17 시점과 수치 변경 없음
 >
 > 대상 시나리오: **개인용 PWA 푸시 알림 앱(사용자 6명)**. Web Push 구독(endpoint·p256dh·auth)과 사용자별 알림 시각 목록을 저장. Vercel Hobby + Neon Free로 운영.
 
@@ -42,7 +42,7 @@ npm i -D drizzle-kit tsx dotenv
 - `@neondatabase/serverless`는 **HTTP(`neon()`)와 WebSocket(`Pool`/`Client`)을 모두 포함**하는 단일 패키지다. 드라이버 선택은 import 경로(`drizzle-orm/neon-http` vs `drizzle-orm/neon-serverless`)로 한다.
 - Node.js 환경에서 WebSocket 경로를 쓸 때만 `ws`(+선택 `bufferutil`)가 추가로 필요하다. Vercel Edge/Workers 등 WebSocket 내장 환경에서는 불필요.
 
-> **주의(버전 정책):** Drizzle 공식 get-started 문서는 현재 `npm i drizzle-orm@rc` / `drizzle-kit@rc`(= v1.0.0-rc 계열, 최신 rc.5는 2026-09-09)를 안내한다. 그러나 **dist-tag `latest`는 여전히 0.45.2**이며 v1은 RC 단계다. v1에서는 마이그레이션 폴더 구조가 바뀌고(`journal.json` 제거, `drizzle-kit drop` 삭제, `drizzle-kit up`으로 구조 이전) 관계형 쿼리 API도 바뀐다. 개인 프로젝트를 안정적으로 굴릴 목적이면 **0.45.x + drizzle-kit 0.31.x 고정**을 기본값으로 삼고, v1 RC는 의도적으로 선택할 때만 쓴다. 이 문서의 코드는 0.45.x 기준이다.
+> **주의(버전 정책):** Drizzle 공식 get-started 문서는 현재 `npm i drizzle-orm@rc` / `drizzle-kit@rc`(= v1.0.0-rc 계열, 공식 `rc` dist-tag는 1.0.0-rc.4, 프리릴리즈 빌드 기준 최신은 rc.5 계열 2026-09-09 배포)를 안내한다. 그러나 **dist-tag `latest`는 09-28 기준 0.45.3**이며(0.45.x 라인은 09-21에도 패치됨 — Netlify DB 드라이버 추가 등, 이 스킬이 다루는 Neon/스키마 API에는 영향 없음) v1은 여전히 RC 단계다. v1에서는 마이그레이션 폴더 구조가 바뀌고(`journal.json` 제거, `drizzle-kit drop` 삭제, `drizzle-kit up`으로 구조 이전) 관계형 쿼리 API도 바뀐다. 개인 프로젝트를 안정적으로 굴릴 목적이면 **0.45.x + drizzle-kit 0.31.x 고정**을 기본값으로 삼고, v1 RC는 의도적으로 선택할 때만 쓴다. 이 문서의 코드는 0.45.x 기준이다.
 
 ---
 

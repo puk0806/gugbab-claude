@@ -1,8 +1,8 @@
 ---
 skill: claude-api-streaming-frontend
 category: frontend
-version: v1
-date: 2026-08-12
+version: v1.1
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,11 +14,12 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `claude-api-streaming-frontend` |
 | 스킬 경로 | `.claude/skills/frontend/claude-api-streaming-frontend/SKILL.md` |
-| 검증일 | 2026-08-12 (최초 2026-05-14) |
-| 검증자 | skill-creator (최초) / 모델 ID 정기 감사 (2026-08-11) / **5 계열 정렬 감사 (2026-08-12)** |
-| 스킬 버전 | v1 |
-| SDK 기준 버전 | `@anthropic-ai/sdk` v0.116.0 (npm latest — 2026-08-12 재확인, 변동 없음) |
+| 검증일 | 2026-08-12 (최초 2026-05-14) / **2026-09-28 (재검증 2차)** |
+| 검증자 | skill-creator (최초) / 모델 ID 정기 감사 (2026-08-11) / 5 계열 정렬 감사 (2026-08-12) / **재검증 2차 (2026-09-28)** |
+| 스킬 버전 | v1.1 |
+| SDK 기준 버전 | `@anthropic-ai/sdk` v0.128.0 (npm latest — 2026-09-28 확인, 0.116.0에서 갱신) |
 | 모델 기준 | `claude-opus-5-5` / `claude-fable-5-1` / `claude-sonnet-5` / `claude-haiku-4-5` (2026-09-25 현행화) |
+| 프레임워크 기준 | Next.js 16.3 (Route Handler 기본 런타임 `nodejs`, `edge`는 deprecated — 2026-09-28 확인) |
 
 ---
 
@@ -56,6 +57,17 @@ status: APPROVED
 | MDN SSE 가이드 | https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events | ⭐⭐⭐ High | 2026-05-14 | 표준 문서 (data: prefix · \n\n 구분) |
 | OWASP API Top 10 2026 | https://blog.axway.com/learning-center/digital-security/risk-management/owasps-api-security | ⭐⭐ Medium | 2026-05-14 | API 키 노출 보안 권고 보강 |
 
+### 3-1. 2026-09-28 재검증(2차) 시 추가 조사 소스
+
+| 소스명 | URL | 신뢰도 | 날짜 | 비고 |
+|--------|-----|--------|------|------|
+| npm registry `@anthropic-ai/sdk` | https://registry.npmjs.org/@anthropic-ai/sdk (curl) | ⭐⭐⭐ High | 2026-09-28 조회 | latest = 0.128.0, 배포일 2026-09-22 |
+| Anthropic TS SDK CHANGELOG (GitHub) | https://raw.githubusercontent.com/anthropics/anthropic-sdk-typescript/main/CHANGELOG.md | ⭐⭐⭐ High | 2026-09-28 조회 | 0.116.0→0.128.0 구간 전 버전 변경사항 확인 — 본 스킬 범위(Messages/Streaming/캐싱) breaking change 없음 |
+| Anthropic Prompt Caching (재확인) | https://platform.claude.com/docs/en/build-with-claude/prompt-caching | ⭐⭐⭐ High | 2026-09-28 조회 | 최소 캐시 토큰 표 원문 확인: **Opus 5.5 = 512 tokens**(Fable 5.1·Opus 5·Fable 5와 동일) — 이전 "미확인" 표기 해소 |
+| Next.js Route Segment Config `runtime` | https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config/runtime | ⭐⭐⭐ High | 2026-09-28 조회 | `'nodejs'`(기본) / `'edge'`(deprecated) 원문 확인 |
+| Next.js Edge Runtime Deprecated 안내 | https://nextjs.org/docs/messages/edge-runtime-deprecated | ⭐⭐⭐ High | 2026-09-28 조회 | "Remove the `runtime` export... Node.js runtime is the default, so no replacement is needed" 원문 확인 |
+| Next.js 16 업그레이드 가이드·릴리스 노트 | https://nextjs.org/docs/app/guides/upgrading/version-16 · https://nextjs.org/blog/next-16 | ⭐⭐⭐ High | 2026-09-28 조회 | `middleware.ts`→`proxy.ts`(Node.js 전용) 등 배경 확인. Route Handler edge 폐기는 별도 페이지(위 2건)에서 확인 |
+
 ---
 
 ## 4. 검증 체크리스트
@@ -84,9 +96,9 @@ status: APPROVED
 
 ### 4-4. Claude Code 에이전트 활용 테스트
 
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-14 수행)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-05-14 수행, 3/3 PASS)
-- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (발견된 gap 없음)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-14 수행, 재테스트 2026-09-28)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-05-14 3/3 PASS, 2026-09-28 2/2 PASS)
+- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (두 차례 모두 발견된 gap 없음)
 
 ### 4-5. 핵심 클레임 교차 검증 결과
 
@@ -137,6 +149,36 @@ UNVERIFIED 없음.
 
 ## 5. 테스트 진행 기록
 
+### [2026-09-28] skill-tester 재테스트 — 2차 재검증(Next.js 16·최소 캐시 토큰) 대응
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (도메인 에이전트 미설치로 대체)
+**수행 방법**: SKILL.md + references/REFERENCE.md Read 후 2026-09-28 재검증(2차)에서 정정된 내용(Next.js 16 Edge Runtime deprecated, Opus 5.5 최소 캐시 토큰 512 확정)을 겨냥한 실전 질문 2개를 general-purpose 서브에이전트에 위임, 근거 섹션·파일 인용 여부 확인
+
+#### 실제 수행 테스트
+
+**Q1. Next.js 15용 `export const runtime = 'edge'` 코드를 Next.js 16으로 올렸더니 배포 시 경고 — 원인과 수정 방법, SSE 로직 변경 필요 여부**
+- ✅ PASS
+- 근거: SKILL.md §4-1 "Next.js 16 Route Handler (Node.js runtime)" 주의 문구(공식 문서 인용 포함)
+- 상세: `runtime = 'edge'`가 16.1부터 deprecated, 기본값이 `nodejs`로 전환됐음을 정확히 인용. "그 줄만 지우면 되고 SSE `ReadableStream`/`for await` 로직은 변경 불필요"까지 정확히 답변 — 재검증(2차)에서 정정된 내용이 그대로 정답 근거로 활용됨
+
+**Q2. Opus 5.5로 500토큰짜리 system 프롬프트 블록을 캐싱하려는데 가능한가**
+- ✅ PASS
+- 근거: REFERENCE.md §6 "프롬프트 캐싱" 최소 캐시 크기 표(Opus 5.5 = 512 tokens)
+- 상세: 500 < 512이므로 캐시가 조용히 무시된다고 정확히 판단. "이전 버전 미확인 표기 정정" 이력까지 인지하고 답변에 반영 — 재검증(2차)에서 확정된 512 수치가 정답 근거로 정확히 활용됨
+
+#### 발견된 gap
+
+없음. 두 질문 모두 SKILL.md/REFERENCE.md 본문에 공식 문서 인용을 포함한 정확한 근거가 있어 추가 조사 없이 답변 가능했음을 테스트 에이전트가 명시.
+
+#### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 라이브러리/API 사용법 — content test PASS = APPROVED 가능
+- 최종 상태: **APPROVED** (PENDING_TEST → APPROVED 복귀)
+
+---
+
 **수행일**: 2026-05-14
 **수행자**: skill-tester → general-purpose (도메인 에이전트 대체)
 **수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
@@ -174,6 +216,24 @@ UNVERIFIED 없음.
 > 수행 방법: 1단계(공식 문서 기반 작성) + 2단계(교차 검증 15건) 완료. agent content test는 메인에서 별도 수행 예정.
 > 본 스킬은 content test로 충분 카테고리(라이브러리/API 사용법). 실 API 호출까지 검증되면 APPROVED로 전환 가능.
 
+### [2026-09-28] 재검증(2차) — SDK 버전·Next.js 16·최소 캐시 토큰 재확인
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 + references/REFERENCE.md Read → 핵심 클레임 3개를 1차 소스(npm registry curl, GitHub CHANGELOG, 공식 문서 WebFetch)와 대조, 보강·축소 검토
+
+**클레임 대조 결과**:
+1. `@anthropic-ai/sdk` 최신 버전 0.116.0 → **DISPUTED(버전 갱신) → 정정** — 0.128.0(2026-09-22 배포)로 갱신. CHANGELOG 0.117~0.128 전 버전 확인 결과 본 스킬이 다루는 Messages/Streaming API·delta 타입·프롬프트 캐싱에 breaking change 없음(https://registry.npmjs.org/@anthropic-ai/sdk, https://raw.githubusercontent.com/anthropics/anthropic-sdk-typescript/main/CHANGELOG.md)
+2. §4-1 "Next.js 15 Route Handler (Edge runtime)" 예제가 현행 권장과 일치하는가 → **DISPUTED(권장 변경) → 정정** — Next.js는 16.1부터 Route Handler `runtime = 'edge'`를 공식 deprecated 처리, 기본값 `'nodejs'`로 전환. 공식 문서 원문 *"Remove the `runtime` export from your route files... The Node.js runtime is the default, so no replacement is needed."* 확인(https://nextjs.org/docs/messages/edge-runtime-deprecated, https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config/runtime) — 제목·코드에서 `runtime = 'edge'` 제거, 주의 문구 신설
+3. references/REFERENCE.md의 "Opus 5.5 캐시 최소 토큰 미확인" → **DISPUTED(미확인 해소) → 정정** — 공식 prompt-caching 문서 원문에 "512 tokens for Claude Fable 5.1, Claude Mythos 5.1, Claude Opus 5.5, Claude Opus 5, Claude Fable 5..."로 명시되어 있음을 WebFetch로 직접 확인, **512**로 기재 정정(https://platform.claude.com/docs/en/build-with-claude/prompt-caching)
+
+**보강(ADD)·축소**: ① 헤더·§4-1에 SDK 버전(0.128.0)·Next.js 16 Node.js 런타임 전환 반영 ② REFERENCE.md 최소 캐시 토큰 목록에 Opus 5.5=512 확정 반영, "미확인" 주의 문구 삭제. 축소는 없음(5 계열 API 규약·흔한 함정 8종 등 전부 유지).
+
+**실전 질문 재검증**:
+- Q1. "Next.js 15 예제 그대로 Next.js 16에 붙였더니 배포 시 경고가 뜬다" → SKILL.md §4-1 주의 문구(edge deprecated, runtime export 제거) 근거로 PASS
+- Q2. "Opus 5.5로 system 프롬프트 캐싱하려는데 500 토큰짜리 블록도 캐시되나?" → REFERENCE.md §6 최소 캐시 토큰 표(Opus 5.5=512) 근거로 PASS(500 < 512이므로 캐시 안 됨을 정확히 판단 가능)
+
+**재검증 최종 판정**: status **PENDING_TEST 전환** (버전·프레임워크 권장 정정 3건 발생 — verification-policy에 따라 메인이 skill-tester 재테스트 필요. 실사용 필수 카테고리 아님(라이브러리/API 사용법) → content test PASS 시 APPROVED 복귀 가능)
+
 ---
 
 ## 6. 검증 결과 요약
@@ -183,14 +243,17 @@ UNVERIFIED 없음.
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-05-14 수행, 3/3 PASS) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (2026-05-14 3/3 PASS, 2026-09-28 skill-tester 재테스트 2/2 PASS) |
+| freshness 재검증 2차 | ✅ 2026-09-28 — SDK 0.116.0→0.128.0, Next.js 16 Edge Runtime deprecated 반영, Opus 5.5 최소 캐시 토큰(512) 확정. DISPUTED 3건(모두 정정) |
+| **최종 판정** | **APPROVED** (2026-09-28 skill-tester 재테스트 2/2 PASS — PENDING_TEST → APPROVED 복귀) |
 
 ---
 
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester 호출 후 verification.md 섹션 5·6 업데이트 (2026-05-14 완료, 3/3 PASS)
+- [✅] 정기 재검증 2회차 수행 (2026-09-28) — SDK 버전·Next.js 16 권장·최소 캐시 토큰 재확인
+- [✅] 2026-09-28 재검증(2차)에 대한 skill-tester content test 재수행 완료 (2/2 PASS, APPROVED 복귀)
 - [❌] 실 API 호출로 SSE 파싱 코드 동작 확인 (선택 보강 — 차단 요인 아님. content test PASS로 APPROVED 전환 완료)
 - [❌] 모델 ID는 시기별 갱신 필요 — SKILL에 명시한 "2026 frontier" 표기는 향후 재검토 (차단 요인 아님. SKILL 내에 "작업 전 공식 문서 확인 필수" 주의 이미 명시)
 
@@ -206,3 +269,5 @@ UNVERIFIED 없음.
 | 2026-08-11 | v1 | **모델 ID 정기 감사.** SKILL.md 본문 모델 ID(`claude-sonnet-4-6`)는 현행이라 미변경. references/REFERENCE.md의 `claude-opus-4-7` → `claude-opus-4-8` 교체(모델 선택 표), 최소 캐시 토큰 목록 정정(Opus 4.8=1,024 / 4.7=2,048 / 4.6·4.5·Haiku 4.5=4,096 — 기존 "Opus 4.7/4.6/4.5/Haiku 4.5=4,096" 오류). SDK 기준 버전 v0.96.0 → v0.116.0. status는 APPROVED 유지 | 모델 ID 정기 감사 |
 | 2026-09-25 | v1 | **모델 ID 현행화(Opus 5.5/Fable 5.1).** SKILL.md 헤더 모델 기준을 Opus 5.5/Fable 5.1/Sonnet 5/Haiku 4.5로 갱신(예제 코드는 원래 `claude-sonnet-5`라 변경 없음), thinking.display 주의에 Opus 5.5(사고 비활성 불가) 반영. REFERENCE.md 모델 표를 Fable 5.1·Opus 5.5($4/$20)·Sonnet 5($2/$10)·Haiku 4.5 + 구세대 행으로 재작성, 5 계열 API 규약에 Opus 5.5 항목(thinking disabled·`budget_tokens`·강제 `tool_choice` 400, effort 기본 `medium`, append-only) 추가, 최소 캐시 목록에 Fable 5.1 = 512·Opus 5.5 미확인 표기. 내용 재검증 없음 — status APPROVED 유지 | 모델 ID 현행화 |
 | 2026-09-25 | v1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |
+| 2026-09-28 | v1.1 | **재검증(2차)** — ① `@anthropic-ai/sdk` 0.116.0→**0.128.0** 갱신, 0.116~0.128 구간 CHANGELOG 전수 확인 결과 본 스킬 범위(Messages/Streaming/캐싱)에 breaking change 없음 ② **§4-1 Next.js 16 갱신** — Route Handler `export const runtime = 'edge'`가 Next.js 16.1부터 공식 deprecated, 기본 런타임 `nodejs`로 전환됨을 반영해 예제에서 `runtime` export 제거 + 주의 문구 신설 ③ **REFERENCE.md 최소 캐시 토큰 정정** — Opus 5.5 "미확인" → 공식 문서 확인 결과 **512**로 확정(Fable 5.1·Opus 5·Fable 5와 동일). status **PENDING_TEST**로 전환(버전·프레임워크 권장 정정 발생 — skill-tester 재테스트 대기) | skill-creator (재검증) |
+| 2026-09-28 | v1.1 | 2단계 실사용 재테스트 수행 (Q1 Next.js 16 Edge Runtime deprecated 대응 / Q2 Opus 5.5 최소 캐시 토큰 512 판단) → 2/2 PASS, **APPROVED** 전환 | skill-tester |

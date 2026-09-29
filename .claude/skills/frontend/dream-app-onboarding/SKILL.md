@@ -24,7 +24,7 @@ description: >
 > - WCAG 2.1.1 Keyboard: https://www.w3.org/WAI/WCAG21/Understanding/keyboard.html
 > - WCAG `prefers-reduced-motion` (C39): https://www.w3.org/WAI/WCAG21/Techniques/css/C39
 >
-> 검증일: 2026-05-15
+> 검증일: 2026-09-28 (최초 2026-05-15)
 >
 > 짝 스킬:
 > - `frontend/voice-input-ui` — 마이크 권한 요청·상태 머신·시각 피드백 구현. 본 스킬은 *권한 요청 시점*만 다루고, 실제 마이크 UI는 voice-input-ui를 따른다.
@@ -101,7 +101,7 @@ NN/G는 *첫 실행 온보딩 자체를 가능한 한 피하라*고 권고하지
 |-----------|-----------|---------|:--------------------:|------|
 | **react-joyride** | 3.1.0 (2026-04) | MIT | ✅ (공식 명시) | 가장 보편적. React 16.8+~19 지원. `useJoyride` 훅 (v3 신규) / Floating UI / SVG spotlight. 상용 무제한 가능. |
 | @reactour/tour | 3.8.0 | MIT | ✅ (포커스 트랩 지원) | react-joyride 대비 더 가벼움. 모노레포(`@reactour/popover` 등) 구조. |
-| intro.js-react | 7.x | **AGPL-3.0** / 상용 별도 구매 | △ (키보드 일부) | 22.9k stars로 가장 인기지만 *상용 앱은 라이선스 비용 발생*. 꿈 해몽 앱이 상용이면 회피. |
+| intro.js (코어) / React 래퍼 `intro.js-react` | 8.x (코어, 래퍼는 별도 버전 0.x~1.x) | **AGPL-3.0** (코어) / 상용 별도 구매 — 래퍼 자체는 MIT이나 AGPL 코어를 그대로 번들 | △ (키보드 일부) | 23k+ stars(usablica/intro.js)로 가장 인기지만 *상용 앱은 라이선스 비용 발생*. 꿈 해몽 앱이 상용이면 회피. |
 | shepherd.js | 15.x | **AGPL-3.0** / 상용 별도 구매 | ✅ | Floating UI 기반. intro.js와 동일하게 상용 라이선스 이슈. |
 
 > 주의 (라이선스): **intro.js와 shepherd.js는 AGPL-3.0이다.** 무료 앱·오픈소스 학습 프로젝트면 문제없지만, *상용 앱·수익 모델 있는 앱*은 상용 라이선스 구매가 필요하다. 라이선스 비용을 피하려면 MIT인 react-joyride 또는 @reactour/tour를 선택한다.

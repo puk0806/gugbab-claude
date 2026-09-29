@@ -3,7 +3,7 @@ skill: multilingual-content-strategy
 category: writing
 version: v2
 date: 2026-09-26
-status: PENDING_TEST
+status: APPROVED
 ---
 
 # 검증 문서 — multilingual-content-strategy
@@ -108,6 +108,32 @@ status: PENDING_TEST
 
 ## 5. 테스트 진행 기록
 
+### skill-tester 재테스트 (2026-09-28, 2026-09-26 정정 2건 반영 확인)
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (writing 전용 에이전트 미존재, general-purpose 대체) x2
+**수행 방법**: SKILL.md만 근거로 답하도록 지시한 general-purpose 서브에이전트 2개에 질문 위임. 2026-09-26 정정 2건(①scaled content abuse 인용 앞부분 누락·출처 정정 ②일본어 문체 용어 "상체"→敬体/常体 정정) 각각을 직접 겨냥
+
+**Q1. "です/ます체와 だ/である체를 일본어 문법 용어로 각각 뭐라고 불러? 'です/ます체'는 '상체'라고 부르는 게 맞아?"**
+- ✅ PASS
+- 근거: SKILL.md §2-3(71행) "です/ます체(敬体, 정중체) vs だ/である체(常体, 보통체) ... (이전 판 '상체' 표기 정정)"
+- 상세: 옛 오기 "상체"를 긍정하지 않고 정정된 용어(敬体/정중체, 常体/보통체)를 정확히 인용해 반박. 정정 ②가 답변에 정확히 반영됨, 옛 용어와의 혼동 없음.
+
+**Q2. "March 2024 spam policy의 '자동 번역(translating)' 언급이 정확히 어떤 맥락이야? DeepL로 자체 콘텐츠 번역해서 올리는 것도 위반이야?"**
+- ✅ PASS
+- 근거: SKILL.md §5-2(186~189행) 원문 인용 "Scraping feeds ... including through automated transformations like synonymizing, translating ..." + "이 예시는 남의 콘텐츠를 긁어와 ... 본인 콘텐츠의 번역 자체를 금지하는 문장은 아니다" + "MT 자체가 자동 페널티 대상은 아니다"
+- 상세: 문장 구조(scraping이 핵심 행위, translating은 변형 수법 중 하나)를 정확히 분해해 "자동 번역=무조건 스팸"이 아님을 도출. 정정 ①(인용 앞부분 누락 교정)이 답변에 정확히 반영됨. 사람 검토 없는 대량 MT 배포는 별도 위험(생성형 AI 무가치 대량생산 조항)이라는 균형 잡힌 부연도 SKILL.md 근거로 정확히 인용.
+
+### 발견된 gap (2026-09-28)
+
+없음 — 정정 2건(①②) 모두 재테스트 Q1·Q2로 직접 확인, 옛 내용(상체·인용 누락) 잔존·모순 없음.
+
+### 판정 (2026-09-28)
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 해당 없음 (라이브러리·패턴 정리형 스킬 — content test PASS = APPROVED)
+- 최종 상태: APPROVED (2026-09-26 정정 2건 전체 반영 확인 완료)
+
 ### 재검증 기록 (2026-09-26)
 
 **수행일**: 2026-09-26
@@ -171,8 +197,8 @@ agent content test: 2/2 PASS (재검증 기록). 인용 맥락 정정으로 stat
 | 내용 정확성 | ✅ (DISPUTED 1건 수정 반영, 주의 표기) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-04 수행) / 2026-09-26 재검증 2/2 PASS |
-| **최종 판정** | **PENDING_TEST** (2026-09-26 재검증: 공식 문서 대조 5건 중 정정 2건(인용 맥락·용어)·미검증 1건 — skill-tester 재테스트 후 APPROVED 재전환) |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-04 수행) / 2026-09-26 재검증 2/2 PASS / 2026-09-28 skill-tester 재테스트 2/2 PASS |
+| **최종 판정** | **APPROVED** (2026-09-26 재검증 정정 2건을 2026-09-28 skill-tester 재테스트 Q1·Q2로 각각 직접 확인 완료) |
 
 ---
 
@@ -182,6 +208,7 @@ agent content test: 2/2 PASS (재검증 기록). 인용 맥락 정정으로 stat
 - [❌] Baidu SEO 세부 가이드를 별도 스킬(`frontend/baidu-seo-specifics`)로 분리 검토
 - [❌] 시장별 색상 의미 매핑은 일반화된 경향만 기록 — 산업·세대별 실증 자료 추가 시 보강
 - [✅] skill-tester 2단계 테스트 수행 (2026-06-04 완료, 3/3 PASS)
+- [✅] 2026-09-26 재검증 정정 2건에 대한 skill-tester 재테스트 (2026-09-28 완료, 2/2 PASS — ①scaled content abuse 인용 맥락 ②일본어 문체 용어 반영 확인)
 
 ---
 
@@ -192,3 +219,4 @@ agent content test: 2/2 PASS (재검증 기록). 인용 맥락 정정으로 stat
 | 2026-06-04 | v1 | 최초 작성. Yahoo Japan 클레임 DISPUTED 판정 반영, 4개 핵심 클레임 교차 검증 완료 | skill-creator |
 | 2026-06-04 | v1 | 2단계 실사용 테스트 수행 (Q1 Translation/Transcreation 선택 / Q2 hreflang 영국 코드 / Q3 MT 대량 배포 정책) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-09-26 | v2 | 재검증 — Google localized-versions(2026-09-21)·spam policies(2026-08-28) 원문 대조 5건, 정정 2건(scaled content abuse 인용 앞부분 누락·출처, 일본어 문체 용어), 미검증 1건(Yahoo Japan 2025 이후 상태), es-419 미지원 보완, 실전 질문 2/2 PASS → PENDING_TEST | 메인 세션 (재검증) |
+| 2026-09-28 | v2 | 2단계 실사용 재테스트 수행 (Q1 일본어 문체 용어 정정 확인 / Q2 scaled content abuse 인용 맥락 정정 확인) → 2/2 PASS, 2026-09-26 정정 2건 전체 반영 확인, PENDING_TEST → APPROVED 전환 | skill-tester |

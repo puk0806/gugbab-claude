@@ -10,7 +10,13 @@ disable-model-invocation: true
 > 소스: https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.respondtowebhook/
 > 소스: https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.webhook/common-issues/
 > 소스: https://docs.n8n.io/integrations/builtin/credentials/webhook/
-> 검증일: 2026-05-15
+> 검증일: 2026-09-28 (최초 작성 2026-05-15)
+
+> 주의 (2026-09-28 재검증): n8n이 1.x에서 **2.x로 메이저 버전이 올라갔다**(최신 릴리즈 `n8n@2.40.7`, GitHub Releases API 확인). Webhook 노드 공식 문서를 재확인한 결과 Test/Production URL 구분·인증 4종(None/Basic/Header/JWT)·**HMAC 서명 검증 미내장**은 그대로 확인됐다. 단, n8n 1.103.0부터 HTML 응답을 `<iframe>`으로 자동 래핑하는 보안 메커니즘과 AI Agent용 스트리밍 응답 기능이 추가된 것을 새로 확인했다 — 두 항목 모두 본 스킬의 기존 설명과 상충하지 않으므로 별도 섹션 추가는 보류하고 이 각주로 남긴다.
+>
+> 주의 (2026-09-28 형제 스킬 정합 보완): 공식 문서 재대조 결과 **2건의 정정**을 반영했다.
+> ① **워크플로우 "활성화(Active 토글)" 모델이 n8n 2.0부터 Save(자동 초안 저장)/Publish(게시 — 라이브 반영) 분리 모델로 바뀌었다.** Production URL은 워크플로우를 **게시(Publish)** 해야만 동작한다 — "n8n will enable the following: Webhook and form triggers will use their production URLs" (https://docs.n8n.io/build/understand-workflows/save-and-publish-workflows.md, https://docs.n8n.io/changelog/v20-breaking-changes.md "Saving and publishing workflows"). 섹션 1·13을 이에 맞춰 갱신했다.
+> ② **Code 노드는 n8n 2.0부터 task runner 격리 실행이 기본**이며, `N8N_BLOCK_ENV_ACCESS_IN_NODE` 기본값이 `false`→**`true`로 변경**되어 Code 노드 내부의 `$env`/`process.env` 접근이 기본 차단된다 — "The default value for `N8N_BLOCK_ENV_ACCESS_IN_NODE` is now set to `true`. ... For sensitive data, use credentials or other secure methods instead of environment variables." (https://docs.n8n.io/changelog/v20-breaking-changes.md "Block environment variable access from Code Node by default"). 이 제한은 **Code 노드 안**에서의 접근에 적용되며, 필요 시 인스턴스 환경변수로 `N8N_BLOCK_ENV_ACCESS_IN_NODE=false`를 명시하면 되지만 시크릿은 가급적 **Credentials**로 관리하는 것이 공식 권장이다. 섹션 5·10 코드 예제에 주의를 추가했다 (예제 자체는 유지 — 여전히 유효한 패턴이며 2.x에서는 환경변수 플래그 조정 또는 Credentials 전환이 필요할 뿐이다).
 
 짝 스킬:
 - `devops/n8n-self-hosting` — 셀프 호스팅 환경에서 `WEBHOOK_URL`·CORS 환경변수 설정
@@ -26,14 +32,14 @@ disable-model-invocation: true
 | 항목 | Test URL | Production URL |
 |------|----------|----------------|
 | 경로 | `/webhook-test/{path}` | `/webhook/{path}` |
-| 등록 시점 | 에디터에서 "Listen for Test Event" 버튼 클릭 시 | 워크플로우 Active 상태일 때 |
+| 등록 시점 | 에디터에서 "Listen for Test Event" 버튼 클릭 시 | 워크플로우가 **게시(Publish)**된 상태일 때 (n8n 2.x — 구버전은 Active 토글 ON) |
 | 동작 | 한 번만 동작 후 만료 | 상시 동작 |
 | 결과 표시 | 에디터 캔버스에 즉시 표시 | Executions 탭에서 확인 |
 | 용도 | 개발·디버깅 | 운영 |
 
 **중요 함정:**
 - Test URL은 "Listen" 후 한 번 호출되면 만료된다. 다시 호출하려면 Listen 버튼을 또 눌러야 한다.
-- Production URL은 워크플로우가 **Active 토글 ON**이어야만 응답한다. Inactive 상태면 404.
+- Production URL은 워크플로우를 **게시(Publish)**해야만 응답한다. 미게시(Draft) 상태면 404. (n8n 2.x — 구버전의 "Active 토글 ON"에 해당)
 - 한 path + method 조합은 워크플로우 하나에만 등록 가능 (`Only one webhook per path and method`).
 
 ---
@@ -121,6 +127,8 @@ if (received !== expected) {
 }
 return $input.all();
 ```
+
+> 주의 (n8n 2.x): Code 노드는 task runner 격리 실행이 기본이며 `N8N_BLOCK_ENV_ACCESS_IN_NODE` 기본값이 `true`로 바뀌어 Code 노드 안의 `$env` 접근이 기본 차단된다. 이 예제를 쓰려면 인스턴스에 `N8N_BLOCK_ENV_ACCESS_IN_NODE=false`를 명시하거나, 시크릿은 환경변수 대신 **Credentials**로 관리하는 것이 공식 권장이다.
 
 ---
 
@@ -261,6 +269,8 @@ if (token !== $env.WEBHOOK_SECRET) {
 return $input.all();
 ```
 
+> 주의 (n8n 2.x): 위 예제의 `$env` 접근은 `N8N_BLOCK_ENV_ACCESS_IN_NODE` 기본값(`true`)에서 Code 노드 안에서는 차단된다. `N8N_BLOCK_ENV_ACCESS_IN_NODE=false`를 명시하거나, `$env.WEBHOOK_SECRET` 대신 Credentials에 시크릿을 등록해 Code 노드가 아닌 노드 Authentication 단계에서 검증하는 방식을 우선 고려한다.
+
 ### HMAC-SHA256 서명 검증 (Stripe·GitHub 스타일)
 
 ```javascript
@@ -268,7 +278,7 @@ return $input.all();
 const crypto = require('crypto');
 const rawBody = $input.first().json.rawBody;  // Raw Body ON일 때 사용 가능
 const signature = $input.first().json.headers['x-hub-signature-256'];
-const secret = $env.GITHUB_WEBHOOK_SECRET;
+const secret = $env.GITHUB_WEBHOOK_SECRET;  // n8n 2.x: N8N_BLOCK_ENV_ACCESS_IN_NODE=false 필요(기본 true로 차단) — 가능하면 Credentials 사용 권장
 
 const expected = 'sha256=' + crypto
   .createHmac('sha256', secret)
@@ -352,7 +362,7 @@ Stripe·GitHub·Slack은 반드시 **Raw Body 옵션 ON** + Code 노드로 검�
 | 함정 | 증상 | 해결 |
 |------|------|------|
 | Test URL 만료 | 한 번 호출 후 404·"Webhook not registered" | 에디터에서 "Listen for Test Event" 재클릭 |
-| Production URL 404 | Active 토글이 꺼져 있음 | 워크플로우 우상단 Active 토글 ON |
+| Production URL 404 | 워크플로우가 미게시(Draft) 상태 | 워크플로우 우상단 **Publish** 버튼으로 게시 (n8n 2.x — 구버전은 Active 토글 ON) |
 | `WEBHOOK_URL` 누락 (reverse proxy) | webhook URL에 `:5678` 포트 노출 | `WEBHOOK_URL=https://n8n.example.com/` 설정 |
 | 도메인 변경 후 외부 서비스 깨짐 | Stripe·GitHub 등에 등록된 URL이 옛 도메인 | 외부 서비스 대시보드에서 webhook URL 모두 갱신 |
 | CORS preflight 실패 | 브라우저 콘솔 `No Access-Control-Allow-Origin` | `WEBHOOK_CORS_ALLOWED_ORIGINS` 환경변수 설정 또는 reverse proxy에서 OPTIONS 응답 |

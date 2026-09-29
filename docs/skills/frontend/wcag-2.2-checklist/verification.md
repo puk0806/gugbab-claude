@@ -1,8 +1,8 @@
 ---
 skill: wcag-2.2-checklist
 category: frontend
-version: v1
-date: 2026-06-02
+version: v3
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `wcag-2.2-checklist` |
 | 스킬 경로 | `.claude/skills/frontend/wcag-2.2-checklist/SKILL.md` |
-| 검증일 | 2026-06-02 |
+| 검증일 | 2026-09-28 (재검증, 최초 2026-06-02) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 | 대상 표준 | WCAG 2.2 (W3C Recommendation, 2023-10-05) |
@@ -160,6 +160,26 @@ status: APPROVED
 
 ---
 
+### 재검증 (2026-09-28)
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read 후 핵심 클레임 3개 1차 소스 대조(WebSearch 세션 한도 소진으로 WebFetch 위주) + 실전 질문 2개 답변 검증
+
+**클레임 대조:**
+- axe-core 자동 점검 커버리지(실 이슈 약 57%): Deque 공식 페이지(deque.com/automated-accessibility-coverage-report) WebFetch 재확인 → "57.38%" 그대로 유지, 변경 없음. 다만 Deque 자체가 "SC 개수 기준 20~30%"보다 "이슈 볼륨 기준 57%"가 더 의미 있는 지표라고 강조하는 뉘앙스 확인 — SKILL.md는 이미 두 수치(57% / SC 단위 29.5%)를 구분해 기술하고 있어 정정 불필요
+- WCAG 2.2가 여전히 최신 W3C Recommendation인지(WCAG 2.3 초안 진행 여부): WebSearch 세션 한도 소진으로 교차 검증 불가 → `> 주의: WCAG 2.3 진행 상태 미검증(2026-09-28 기준 WebSearch 한도 소진)`으로 표기 필요하나, WCAG 2.2는 W3C Recommendation으로 발표된 이상 2.3이 나와도 2.2 자체 내용(SC 정의)은 불변이므로 본 체크리스트 실용성에는 영향 없음
+- EU EAA 2025-06-28 시행: 과거 시행일(이미 지난 날짜)이므로 재변동 없는 역사적 사실
+
+Q1. "axe-core로 자동 점검하면 WCAG 위반의 몇 %나 잡을 수 있어? 최신 수치 맞아?"
+— PASS. 근거: SKILL.md §6.1 "실 이슈 57%, SC 단위 29.5% 완전 자동" — Deque 공식 페이지 재조회 결과 57.38%로 일치.
+
+Q2. "WCAG 2.2가 지금도 최신 기준이야, 아니면 2.3 같은 게 나왔어?"
+— PASS(부분). SKILL.md에는 2.2가 현재 기준이라는 전제만 있고 2.3 동향은 다루지 않음. 답변 시 "WCAG 2.2가 2023-10-05 W3C Recommendation으로 확정된 표준이며, 이후 개정판 발표 여부는 SKILL.md 범위 밖 — 별도 확인 필요"로 정직하게 한계를 밝히는 것이 올바른 답변(추측 금지 원칙 준수).
+
+**판정**: 핵심 수치(axe-core 커버리지) 불변 확인, WCAG 2.3 동향은 WebSearch 한도로 미검증(체크리스트 자체의 유효성에는 영향 없음) → status APPROVED 유지.
+
+---
+
 ### (참고) 이전 테스트 기록
 
 **수행일**: 2026-06-02
@@ -257,3 +277,4 @@ status: APPROVED
 | 2026-06-02 | v1 | 2단계 실사용 테스트 수행 (Q1 신규 AA SC 4개 나열 / Q2 타겟 크기 18px Spacing 예외 판정 / Q3 axe-core 커버리지 57% + 수동 점검 9종) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-09-26 | v2 | **병합**: 구 `frontend/media-accessibility` 스킬 제거(스킬 트리아지 MERGE 판정)하면서 미디어 SC 고유분을 5.9절로 이관 — 1.2.3(A, 해설 또는 대체본) vs 1.2.5(AA, 해설 자체) 구분, captions vs subtitles 표, "한국어 콘텐츠도 captions 필요" 오해 교정, `<track>` 감사 포인트, 자동 자막 사람 교정 필요, descriptions 트랙 지원 한계. WebVTT 작성법·Whisper 자막 생성·transcript 양식은 일반 지식이라 이관하지 않음. 출처: https://www.w3.org/TR/WCAG22/ , https://webaim.org/techniques/captions/ , https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/track (구 media-accessibility verification.md: C1·C2·C3·C4 VERIFIED — SC 1.2.2=A, 1.2.4·1.2.5=AA, 1.4.2 3초, track kind 5종, 검증일 2026-06-04, APPROVED). status APPROVED → PENDING_TEST | 메인 대화 (스킬 정리) |
 | 2026-09-26 | v3 | 2단계 실사용 테스트 재수행 (Q1 1.4.3 vs 1.4.11 명도 대비 구분 / Q2 병합 반영분 — 한국어 콘텐츠 captions 필요·자동 자막 미충족·1.2.3 vs 1.2.5 / Q3 3.3.8 드래그 캡차·객체 인식 캡차 AA/AAA 판정) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-09-28 | v3 | 재검증: axe-core 커버리지(57.38%) Deque 공식 페이지 재대조로 불변 확인. WCAG 2.3 동향은 WebSearch 세션 한도 소진으로 미검증(체크리스트 유효성 영향 없음). status APPROVED 유지 | 메인 세션 |

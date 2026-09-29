@@ -2,8 +2,8 @@
 skill: game-design-document
 category: game
 version: v1
-date: 2026-09-26
-status: PENDING_TEST
+date: 2026-09-28
+status: APPROVED
 ---
 
 # game-design-document 스킬 검증
@@ -14,7 +14,7 @@ status: PENDING_TEST
 |------|------|
 | 스킬 이름 | `game-design-document` |
 | 스킬 경로 | `.claude/skills/game/game-design-document/SKILL.md` |
-| 검증일 | 2026-09-26 (최초 2026-06-07) |
+| 검증일 | 2026-09-28 (재검증, 이전 2026-09-26 / 최초 2026-06-07) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 
@@ -66,6 +66,7 @@ status: PENDING_TEST
 | Verve — Hybrid Monetization | https://verve.com/blog/hybrid-monetization-in-casual-games-how-beresnev-strikes-the-right-balance/ | ⭐⭐ Medium | 2026-06-07 | 하이브리드 수익화 케이스 |
 | Mobile Gamer Biz — Soft Launch List | https://mobilegamer.biz/the-soft-launch-games-you-need-to-know-about/ | ⭐⭐⭐ High | 2026-06-07 | 모바일 게임 산업 전문 매체, 소프트런치 시장 사례 다수 |
 | Antom — Philippines Gaming Report | https://knowledge.antom.com/philippines-gaming-payment-trends-report-active-value-driven-players-power-growth-as-digital-wallets-take-centre-stage | ⭐⭐ Medium | 2026-06-07 | 필리핀 게이밍 시장 통계 |
+| Sensor Tower — State of Gaming 2026 (블로그/랜딩) | https://sensortower.com/blog/state-of-gaming-2026 , https://sensortower.com/report/state-of-gaming-2026 | ⭐⭐⭐ High (단, 하위 장르 분류 기준은 무료 페이지에 미공개) | 2026-09-28 | 하이브리드캐주얼 하위 장르 수익화 수치의 원 출처로 확인. 분류 기준 원문은 확인 불가(보류) |
 
 ---
 
@@ -112,13 +113,49 @@ status: PENDING_TEST
 
 ### 4-4. Claude Code 에이전트 활용 테스트
 
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-06-07, skill-tester → general-purpose)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (Q1/Q2/Q3 모두 SKILL.md 근거 섹션 명시)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-06-07, skill-tester → general-purpose, 2026-09-28 재검증 정정분 재테스트 완료)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (Q1/Q2/Q3 모두 SKILL.md 근거 섹션 명시, 재검증 2/2 PASS)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (gap 없음, 보완 불필요)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-09-28] 선택 보강 시도 — 보류
+
+- **시도 내용**: 하이브리드캐주얼 하위 장르(라이프스타일·퍼즐/스포츠·레이싱/액션·전략) 분류 기준을 SKILL.md 4.1절 인용 출처의 원문으로 확인 시도.
+- **조사 결과**: 해당 수치(라이프스타일·퍼즐 IAP 59%/광고 41%, 스포츠·레이싱 IAP 71%/광고 29%, 액션·전략 IAP 82%/광고 18%)의 출처는 **Sensor Tower "State of Gaming 2026"** 리포트로 확인됨(WebSearch 교차 확인, 수치가 정확히 일치: 59.0/41.0, 71.0/29.0, 81.9/18.1). 그러나 Sensor Tower 공식 블로그(https://sensortower.com/blog/state-of-gaming-2026)와 리포트 랜딩 페이지(https://sensortower.com/report/state-of-gaming-2026)를 WebFetch로 직접 확인한 결과, **세 클러스터의 장르 분류 기준(어떤 세부 장르가 각 클러스터에 포함되는지)은 무료 공개 페이지에 명시되어 있지 않음** — 전체 리포트는 별도 다운로드/게이팅 필요.
+- **판정**: **보류** — 1차 소스(Sensor Tower 공식 페이지)에서 분류 기준 원문을 확인할 수 없어 정보-검증 원칙("확인 못 하면 추가하지 않음")에 따라 SKILL.md 미수정. 차기 재검증 시 Sensor Tower 전체 리포트(PDF) 확보 후 재시도 필요.
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (Agent 도구 실제 서브에이전트 호출)
+**수행 방법**: 2026-09-26 재검증에서 정정된 내용(Unity LTS 권장 버전, 하이브리드캐주얼 수익화 벤치마크 세분화)을 겨냥한 질문 2개를 general-purpose 서브에이전트에게 "SKILL.md만 근거로 답하라"는 조건으로 위임, 답변과 근거 섹션을 대조 검증
+
+### 실제 수행 테스트 (2026-09-28)
+
+**Q1. 2026-09 신규 프로젝트의 GDD 기술 사양에 적을 Unity 버전**
+- ✅ PASS
+- 근거: SKILL.md "2.7 기술 사양" 표 및 부연 문구
+- 상세: "Unity 6.3 LTS 권장, Unity 6.0 LTS는 2026-10 지원 종료 임박"을 정확히 도출, 이유(개발 기간 중 지원 종료 vs 2027-12까지 지원)까지 논리적으로 설명.
+
+**Q2. 하이브리드캐주얼 광고/IAP 비율 + 하위 장르별 차이**
+- ✅ PASS
+- 근거: SKILL.md "4.1 광고 vs IAP vs 하이브리드" 결정 트리 + "주의(2026-09 갱신)" 세분화 수치
+- 상세: 기본 결정 트리(광고40%/IAP60%)와 2026-09 갱신 세분화 수치(라이프스타일·퍼즐 IAP59%, 스포츠·레이싱 IAP71%, 액션·전략 IAP82%)를 모두 정확히 인용. 기본값과 세분화 수치 간 편차를 스스로 인지하고 "정확한 비율은 자사 데이터로 재확인" 경고까지 반영해 답변.
+
+### 발견된 gap (2026-09-28)
+
+- 경미: 하이브리드캐주얼 하위 장르(라이프스타일·퍼즐/스포츠·레이싱/액션·전략) 분류 기준이 SKILL.md에 정의되어 있지 않아, 자기 게임이 어느 하위 장르에 해당하는지 판단할 근거 부족 — 차단 요인 아님, 선택 보강
+
+### 판정 (2026-09-28)
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 해당 없음 (방법론·가이드라인 카테고리 — 실사용 필수 카테고리 아님)
+- 2026-09-26 재검증 정정 내용(LTS 권장 버전, 수익화 벤치마크 세분화)이 실제 서브에이전트 답변에 정확히 반영됨을 확인 → APPROVED 전환
+
+---
+
+### (2026-06-07 시점 기록 — 아래 보존)
 
 **수행일**: 2026-06-07
 **수행자**: skill-tester → general-purpose
@@ -181,16 +218,17 @@ status: PENDING_TEST
 | 내용 정확성 | ✅ (2026-09-26 재검증: Unity LTS 버전 갱신, 수익화 벤치마크 보강) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-07) + 2/2 PASS (2026-09-26 재검증) |
-| **최종 판정** | **PENDING_TEST** (실질 내용 변경으로 재테스트 대기) |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-07) + 2/2 PASS (2026-09-26 자체 재검증) + 2/2 PASS (2026-09-28 skill-tester 실제 서브에이전트 재테스트) |
+| **최종 판정** | **APPROVED** (2026-09-28 재테스트로 전환) |
 
 ---
 
 ## 7. 개선 필요 사항
 
-- [✅] skill-tester가 content test 수행하고 섹션 5·6 업데이트 (2026-06-07 완료, 3/3 PASS)
+- [✅] skill-tester가 content test 수행하고 섹션 5·6 업데이트 (2026-06-07 완료, 3/3 PASS / 2026-09-28 재검증 정정분 재테스트 완료, 2/2 PASS)
 - [❌] Unity 공식 GDD 템플릿 PDF의 정확한 섹션 헤딩을 다음 라운드에 PDF 텍스트 추출 도구로 재확인 (현재는 Unity Learn 튜토리얼의 4섹션 구조를 1차 근거로 사용) — 선택 보강, 차단 요인 아님
 - [❌] 소프트런치 KPI 임계값(D1 35%, D7 12% 등) 수치를 매년 GameAnalytics/AppsFlyer 최신 벤치마크와 동기화 — 선택 보강, 차단 요인 아님
+- [❌] 하이브리드캐주얼 하위 장르(라이프스타일·퍼즐/스포츠·레이싱/액션·전략) 분류 기준 정의 추가 — **보류** (2026-09-28: 출처가 Sensor Tower "State of Gaming 2026"임을 확인했으나, 공식 무료 공개 페이지에 분류 기준 원문이 없어 1차 소스로 확인 불가. 전체 리포트 확보 후 재시도 필요) — 선택 보강, 차단 요인 아님
 
 ---
 
@@ -201,3 +239,5 @@ status: PENDING_TEST
 | 2026-06-07 | v1 | 최초 작성 — Unity 2D 모바일 캐주얼 GDD 8섹션 + 3계층 루프 + 수익화 결정 트리 + 소프트런치 전략 + 안티패턴 | skill-creator |
 | 2026-06-07 | v1 | 2단계 실사용 테스트 수행 (Q1 GDD 8섹션 구조 / Q2 "X처럼" 안티패턴 수정법 / Q3 장르별 수익화+에너지 시스템 판단) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-09-26 | v1 | 재검증(98개 일괄 재검증 대상). Unity 6.0 LTS 지원 종료 임박 반영해 6.3 LTS 권장으로 수정, 2026년 하이브리드캐주얼 하위 장르별 수익화 벤치마크 보강, 소프트런치 국가는 변동 없음 확인 → 실질 내용 변경으로 PENDING_TEST 전환 | Claude Code |
+| 2026-09-28 | v1 | 2단계 실사용 테스트 재수행 (Q1 신규 프로젝트 Unity LTS 버전 선택 / Q2 하이브리드캐주얼 수익화 비율+하위 장르 세분화) → 2/2 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-28 | v1 | 재검증(선택 보강 시도, 보류). 하이브리드캐주얼 하위 장르 분류 기준 출처를 Sensor Tower "State of Gaming 2026"으로 확인했으나 공식 무료 페이지에 분류 기준 원문이 없어 SKILL.md 미수정, 보류 사유 기록 | Claude Code |

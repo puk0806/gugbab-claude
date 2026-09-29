@@ -93,7 +93,7 @@ curl -H "X-FIGMA-TOKEN: ${FIGMA_TOKEN}" \
 | Figma 네이티브 통합 | 별도 플러그인 | 네이티브 |
 | SD 호환성 | 직접 호환 | 변환 필요 |
 | 팀 협업 | GitHub 연동 | API 자동화 |
-| 비용 | 무료/Pro | Professional plan 이상 |
+| 비용 | 무료/Pro | Enterprise plan 전용 (REST API — 아래 주의 참조) |
 
 ---
 

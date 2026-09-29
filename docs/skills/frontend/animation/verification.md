@@ -1,8 +1,8 @@
 ---
 skill: animation
 category: frontend
-version: v5
-date: 2026-08-11
+version: v7
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -35,10 +35,10 @@ status: APPROVED
 | 스킬 이름 | `animation` |
 | 스킬 경로 | `.claude/skills/frontend/animation/SKILL.md` |
 | 최초 작성일 | 2026-03-27 |
-| 재검증일 | 2026-08-11 (직전 2026-04-20) |
-| 검증자 | puk0806 |
-| 스킬 버전 | v5 |
-| 대상 버전 | motion **13.x** (최신: 13.1.0, 2026-08-10 릴리즈) |
+| 재검증일 | 2026-09-28 (직전 2026-08-11, 2026-04-20) |
+| 검증자 | puk0806 (2026-09-28 재검증: Claude, Sonnet 5) |
+| 스킬 버전 | v7 |
+| 대상 버전 | motion **13.x** (최신: 13.4.4, 2026-09-25 릴리즈) |
 
 ---
 
@@ -117,13 +117,35 @@ status: APPROVED
 - [✅] 범용적으로 사용 가능 (특정 프로젝트 종속 X)
 
 ### 3-4. Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-04-20)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2개 테스트 PASS)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-04-20, 2026-09-28 재테스트)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-04-20: 2개 PASS / 2026-09-28: 2개 PASS)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (보완 불필요)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-09-28] 재테스트 (skill-tester) — AnimateView 정식 이동 + CSS-in-JS 파괴적 변경 반영 확인
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (domain-specific 프론트엔드 에이전트 미설치로 대체)
+**수행 방법**: SKILL.md Read 후 실전 질문 2개 답변, 근거 섹션 인용 및 anti-pattern 회피 확인. 질문 1개는 2026-09-28 재검증(2차)에서 정정된 AnimateView 정식 이동 내용을 직접 겨냥.
+
+**Q1. Next.js(React 19.4) 프로젝트에서 React용 AnimateView로 페이지 전환 — Motion+ 멤버십/토큰 필요 여부, import 경로, 요구 React 버전**
+- ✅ PASS
+- 근거: SKILL.md "animateView / AnimateView — 페이지·뷰 전환" 절, "업데이트(2026-09-28 확인)" 인용 블록
+- 상세: "Motion+ 멤버십·액세스 토큰 불필요", import `motion/react-animate-view`, React/React DOM 19.3+ 요구를 정확히 인용. 옛 서술(Early Access·canary 요구)로 답하지 않음 — 정정이 제대로 반영됨을 확인. `startTransition` 필요성도 언급.
+
+**Q2. styled-components + motion.create()에서 motion 13 업그레이드 후 스타일 전용 props가 DOM에 그대로 렌더링되는 문제**
+- ✅ PASS
+- 근거: SKILL.md "motion 13 업그레이드 (v12 → v13)" 절 (`@emotion/is-prop-valid` 자동 사용 제거)
+- 상세: 원인(CSS-in-JS 자동 필터링 제거)과 해결책 2가지(`MotionConfig isValidProp` 명시 주입 / 합성 순서 반전) 모두 정확히 인용. "CSS Module만 쓰는 컴포넌트는 조치 불필요" 문구까지 정확히 반영해 과잉 조치를 권하지 않음(anti-pattern 회피).
+
+**발견된 gap**: 두 해결책 중 우선순위 가이드 부재(경미, 차단 요인 아님) — SKILL.md 자체 결함 아님, 선택 보강 후보로만 기록.
+
+**판정**: agent content test 2/2 PASS. AnimateView 정식 이동 정정이 답변에 정확히 반영됨(구 서술과 모순 없음).
+
+---
 
 ### 교차 검증 클레임 목록
 
@@ -231,6 +253,27 @@ m.div 사용법, 비동기 loadFeatures 패턴, strict 모드까지 포함. 올�
 
 ---
 
+### [2026-09-28] 재검증(2차) — 13.1→13.4.4 버전 갱신 + AnimateView 정식 이동 반영
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md + references/REFERENCE.md 전체 Read → 핵심 클레임 3개를 1차 소스(npm registry, GitHub 공식 CHANGELOG.md, motion.dev 공식 문서 원문)와 대조
+
+**클레임 대조 결과**:
+1. 최신 안정 버전은 13.1.0 → 13.4.4로 갱신 필요 → **정정 반영** (`curl https://registry.npmjs.org/motion/latest` → 13.4.4, `curl https://registry.npmjs.org/motion`의 `time` 객체로 13.1.0~13.4.4 릴리스 일자 전체 확인)
+2. 13.1→13.4 구간에 React API 파괴적 변경이 있는가 → 공식 GitHub CHANGELOG.md(`raw.githubusercontent.com/motiondivision/motion/main/CHANGELOG.md`) 확인 결과 **breaking change 없음** — 13.2.0(비-DOM effect 구동·Three.js/WebGPU 모듈), 13.3.0(성능 개선), 13.4.0(AnimateView 이동)은 전부 추가·개선이며 기존 API 제거 없음
+3. React용 `<AnimateView>`가 여전히 "아직 실험적·Motion+ Early Access 전용·React canary 요구"인가 → **DISPUTED → 수정 반영**: 13.4.0(2026-09-14)에서 Motion+ Early Access를 벗어나 메인 `motion` 패키지로 정식 이동함을 motion.dev 공식 문서(`motion.dev/docs/react-animate-view`) 원문으로 확인 — "AnimateView was originally in Motion+ early access... no longer requires a Motion+ membership or access token", "requires React and React DOM 19.3 or later", import 경로가 `motion/react-animate-view`(별도 엔트리포인트, `motion/react`에서 export 안 됨)로 확정. `framer-motion` 별칭 패키지도 동일 버전(13.4.4)으로 계속 배포되며 `deprecated` 플래그 여전히 없음(기존 서술과 일치, 변경 없음)
+
+**보강(ADD)**: SKILL.md "최근 버전 변경 요약" 표에 13.1.1~13.4.4 행 추가. "animateView / AnimateView" 절의 React `AnimateView` 설명을 Early Access 상태 서술에서 정식 이동 내용(요구사항 React/React DOM 19.3+, import 경로 `motion/react-animate-view`, 마이그레이션 방법, `startTransition` 사용 예제)으로 전면 교체. 13.2.0의 `motion/three`·`motion/vgpu`(3D/WebGPU 이펙트 구동)는 이 스킬의 CSS/React UI 애니메이션 범위 밖임을 명시하고 표에만 기재(본문 섹션 신설은 하지 않음 — 스킬 범위 밖 판단).
+**축소**: 없음.
+
+**실전 질문 재검증**:
+- Q1. "motion 최신 안정 버전은?" → SKILL.md 상단 인용구 "v13.4.4 (2026-09-25 릴리즈)" 근거로 PASS
+- Q2. "React 프로젝트에서 페이지 전환에 AnimateView를 써도 되는가?" → SKILL.md 신규 주의 블록(React/React DOM 19.3+ 요구, `motion/react-animate-view` import, 최근 릴리스라 React 18 프로젝트는 `AnimatePresence mode="wait"` 권장) 근거로 PASS
+
+**재검증 최종 판정**: status **PENDING_TEST 전환** (버전 갱신 + AnimateView 정식 이동 반영 — 다음 skill-tester 재테스트 필요)
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -238,16 +281,18 @@ m.div 사용법, 비동기 loadFeatures 패턴, strict 모드까지 포함. 올�
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2개 PASS) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (2026-04-20: 2개 PASS / 2026-09-28 재테스트: 2개 PASS — AnimateView 정정 반영 확인) |
+| **최종 판정** | **APPROVED** (2026-09-28 skill-tester 재테스트 2/2 PASS — 버전 갱신 13.1→13.4.4 + AnimateView 정식 이동 정정이 답변에 정확히 반영됨을 확인) |
 
 ---
 
 ## 7. 개선 필요 사항
 
 - [✅] 에이전트 활용 테스트 — motion 마이그레이션 + LazyMotion 2건 PASS, APPROVED 전환 완료 (2026-04-14)
-- [🔬] 실제 Next.js 프로젝트에서 motion/react-client 패턴 동작 확인 — 실환경 검증 대기
-- [🔬] LazyMotion strict 모드에서 motion.div 사용 시 경고 확인 — 실환경 검증 대기
+- [✅] 2026-09-28 재검증(2차) 보강분(AnimateView 정식 이동·버전 13.4.4) content test 수행 — 2/2 PASS, APPROVED 재전환 완료 (2026-09-28)
+- [🔬] 실제 Next.js 프로젝트에서 motion/react-client 패턴 동작 확인 — 차단 요인 아님, 실환경 검증 대기(선택)
+- [🔬] LazyMotion strict 모드에서 motion.div 사용 시 경고 확인 — 차단 요인 아님, 실환경 검증 대기(선택)
+- [❌] 두 CSS-in-JS 해결책(MotionConfig 명시 주입 vs 합성 순서 반전) 중 우선순위 가이드 추가 — 차단 요인 아님, 선택 보강
 
 ---
 
@@ -260,3 +305,5 @@ m.div 사용법, 비동기 loadFeatures 패턴, strict 모드까지 포함. 올�
 | 2026-04-17 | v3 | verification.md 8섹션 포맷 마이그레이션 | 메인 대화 |
 | 2026-04-20 | v4 | WebSearch+WebFetch 조사 기반 전면 재작성. motion 12.38.0 기준 반영. layout="x"/"y", dragSnapToOrigin 축별, skipInitialAnimation, whileTap 키보드 접근성, motion/react-client, useAnimate 권장 패턴, 교차 검증 17개 클레임 추가 | puk0806 |
 | 2026-08-11 | v5 | **메이저 버전 갭 최신화 (12.38.0 → 13.1.0)**. npm registry 메타데이터 + motion.dev 공식 문서 2소스 교차 검증 13개 클레임 전항목 VERIFIED. motion 13 파괴적 변경(`@emotion/is-prop-valid` 제거 → `MotionConfig isValidProp`) 절 신설, framer-motion 별칭 현황 + npm deprecated 플래그 부재 주의 표기, v12.40~13.1 변경 요약표, `animateView`/React `AnimateView`(실험적) 절 추가. **기존 API 전량 현행 유효 — 본문 유지**. status APPROVED 유지 (기존 테스트 2건의 대상 패턴 stagger·LazyMotion 모두 무변경) | 최신화 재검증 |
+| 2026-09-28 | v6 | 재검증(2차) — 최신 안정 버전 13.1.0→13.4.4 갱신(breaking change 없음, 공식 CHANGELOG.md 확인). **React용 `<AnimateView>`가 13.4.0에서 Motion+ Early Access를 벗어나 메인 패키지로 정식 이동**함을 공식 문서 원문으로 확인·정정 반영(요구사항 React/React DOM 19.3+, import 경로 `motion/react-animate-view`, 마이그레이션 안내, `startTransition` 예제). 13.1.1~13.4.4 변경 요약표 보강(13.2.0 `motion/three`/`motion/vgpu`는 스킬 범위 밖으로 표에만 기재). status APPROVED → PENDING_TEST (skill-tester 재테스트 필요) | Claude (Sonnet 5) |
+| 2026-09-28 | v7 | 2단계 재테스트 수행 (Q1 AnimateView 정식 이동 반영 확인 / Q2 CSS-in-JS `@emotion/is-prop-valid` 파괴적 변경 대응) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |

@@ -1,8 +1,8 @@
 ---
 skill: storybook-visual-testing
 category: frontend
-version: v1.1
-date: 2026-08-11
+version: v1.2
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -48,10 +48,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `storybook-visual-testing` |
 | 스킬 경로 | `.claude/skills/frontend/storybook-visual-testing/SKILL.md` |
-| 검증일 | 2026-08-11 (최초 2026-04-29) |
-| 검증자 | Claude (skill-creator) |
-| 스킬 버전 | v1.1 |
-| 대상 버전 | Storybook 10.5.x · @storybook/test-runner 0.x · Playwright v1.59.x |
+| 검증일 | 2026-09-28 (최초 2026-04-29, 2026-09-28 재검증) |
+| 검증자 | Claude (skill-creator) (2026-09-28 재검증: Claude, Sonnet 5) |
+| 스킬 버전 | v1.2 |
+| 대상 버전 | Storybook 10.6.x · @storybook/test-runner 0.24.x · Playwright v1.63.x |
 
 ---
 
@@ -127,13 +127,43 @@ status: APPROVED
 - [✅] 범용적으로 사용 가능 (특정 프로젝트 종속 X)
 
 ### 4-4. Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 — 2026-04-29 수행 (3/3 PASS)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 — 2026-04-29 확인 완료
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 — 2026-04-29 수행 (3/3 PASS) + 2026-09-28 재테스트 (2/2 PASS)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 — 2026-04-29 확인 완료 + 2026-09-28 재확인
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 — gap 없음, 보완 불필요
 
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (frontend-developer 미설치/미확인으로 대체)
+**수행 방법**: SKILL.md Read 후 2개 실전 질문 답변(2026-09-28 재검증(2차)의 Playwright v1.63/test-runner 0.24.x 버전 갱신분을 직접 겨냥), 근거 섹션 및 anti-pattern 회피 확인
+
+### 실제 수행 테스트 (2026-09-28 재테스트)
+
+**Q1. a11y + 시각 회귀 동시 검사 test-runner 설정 작성 (핵심 기능)**
+- ✅ PASS
+- 근거: SKILL.md 섹션 2 "test-runner.ts 설정"·섹션 3 "axe-playwright로 a11y 자동 검증"·섹션 4 "패턴 A: postVisit에서 직접 스크린샷"
+- 상세: `preVisit`/`postVisit`(비-deprecated) 훅으로 axe 주입·검사 후 `waitForPageReady`+`toHaveScreenshot`을 같은 `postVisit` 안에서 결합. deprecated된 `preRender`/`postRender`는 사용하지 않음(anti-pattern 회피 확인).
+
+**Q2. macOS/Linux baseline 불일치 진단 + Docker 이미지 태그 (2026-09-28 정정분 직접 겨냥)**
+- ✅ PASS
+- 근거: SKILL.md 섹션 5 "환경 일관성 — 가장 중요" (320~334줄)
+- 상세: OS별 파일명(`-darwin`/`-linux`) 자동 포함과 폰트 렌더링·서브픽셀 차이를 원인으로 정확히 지목하고, 2026-09-28 재검증에서 정정된 Docker 태그 `mcr.microsoft.com/playwright:v1.63.0-jammy`(구 `v1.59.1-jammy` 아님)를 정확히 인용.
+
+### 발견된 gap (2026-09-28)
+
+- 경미: Docker 이미지(`-jammy`)와 GitHub Actions 러너(`ubuntu-latest`) 간 폰트 패키지 구성이 완전히 동일함을 보장하는지는 SKILL.md에 명시 없음 — 선택 보강 항목, 차단 요인 아님.
+
+### 판정 (2026-09-28)
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 해당 없음 (자체 CI 테스트 셋업 가이드 — 라이브러리/툴 사용법 스킬로 분류, 기존 판정과 동일하게 content test PASS로 APPROVED 전환 가능 카테고리 유지)
+- 최종 상태: APPROVED
+
+---
+
+### [2026-04-29] 최초 2단계 테스트 기록
 
 > 실제로 어떻게 테스트했고 결과가 어떠했는지 기록
 
@@ -233,6 +263,28 @@ status: APPROVED
 
 ---
 
+### [2026-09-28] 재검증(2차) — test-runner·Playwright 버전 갱신(1.59→1.63)
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md + references/REFERENCE.md 전체 Read → 핵심 클레임 3개를 1차 소스(npm registry, 공식 문서·릴리스 노트)와 대조
+
+**클레임 대조 결과**:
+1. Playwright 최신 버전은 v1.59.x → **v1.63.0으로 정정 반영** (`curl https://registry.npmjs.org/@playwright/test/latest`, `.../playwright/latest` 모두 1.63.0, 2026-09-04 릴리스)
+2. `@storybook/test-runner`가 Storybook 10.6.x와 호환되는가 → VERIFIED — 최신 버전 0.24.5의 `peerDependencies.storybook`이 `^10.6.0-0`·`^11.0.0-0`까지 포함(`curl https://registry.npmjs.org/@storybook/test-runner/latest`)
+3. Playwright 1.60~1.63에 시각 회귀(`toHaveScreenshot`) 관련 breaking change가 있는가 → WebSearch+WebFetch(공식 릴리스 노트) 확인 결과 **1.60~1.63 구간 자체에는 breaking change 없음**. `updateSnapshots: 'all'`이 실패분만이 아니라 전체 스냅샷을 갱신하도록 의미가 바뀐 변경은 이미 v1.50에서 있었던 것으로(v1.59 검증 시점에도 이미 반영된 상태) 이번 버전 갱신과 무관 — 정보로만 확인, SKILL.md 반영 불필요
+4. Docker 이미지 태그 `mcr.microsoft.com/playwright:v1.59.1-jammy` → **`v1.63.0-jammy`로 정정 반영** (공식 Docker 문서: `-jammy`/`-noble` 태그 계속 제공 확인)
+
+**보강(ADD)**: 없음(브리핑 범위는 버전 갱신 확인으로 한정).
+**축소**: 없음.
+
+**실전 질문 재검증**:
+- Q1. "Storybook 10.6 프로젝트에서 test-runner를 그대로 써도 되는가?" → SKILL.md 1절 신규 주의 문장(peerDependencies `^10.6.0-0`·`^11.0.0-0` 확인) 근거로 PASS
+- Q2. "CI Docker 이미지로 어떤 Playwright 버전 태그를 쓰나?" → SKILL.md 5절 `mcr.microsoft.com/playwright:v1.63.0-jammy` 근거로 PASS
+
+**재검증 최종 판정**: status **PENDING_TEST 전환** (버전 갱신 3건 반영 — 다음 skill-tester 재테스트 필요)
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -240,10 +292,10 @@ status: APPROVED
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-04-29) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ 누적 5/5 PASS (2026-04-29 3/3 + 2026-09-28 재테스트 2/2, 버전 갱신분 포함) |
+| **최종 판정** | **APPROVED** (2026-09-28 skill-tester 재테스트 2/2 PASS로 test-runner/Playwright 버전 갱신분 검증 완료) |
 
-> 1단계(오프라인 검증) 완료. 공식 문서 기반으로 작성되었으며 핵심 클레임 4건 중 3건 VERIFIED, 1건 DISPUTED는 정정 후 `> 주의:` 표기로 반영. 2026-04-29 skill-tester로 2단계 실사용 테스트 수행 완료 (Q1 preRender deprecated 함정 / Q2 OS baseline 일관성 / Q3 SaaS vs 자체 호스팅 의사결정 — 3/3 PASS).
+> 1단계(오프라인 검증) 완료. 공식 문서 기반으로 작성되었으며 핵심 클레임 4건 중 3건 VERIFIED, 1건 DISPUTED는 정정 후 `> 주의:` 표기로 반영. 2026-04-29 skill-tester로 2단계 실사용 테스트 수행 완료 (Q1 preRender deprecated 함정 / Q2 OS baseline 일관성 / Q3 SaaS vs 자체 호스팅 의사결정 — 3/3 PASS). 2026-09-28 재검증에서 Playwright v1.59→v1.63, test-runner 0.24.5 호환 확인 반영, 같은 날 skill-tester가 정정분을 겨냥한 2개 질문으로 재테스트해 2/2 PASS를 확인했으므로 APPROVED로 전환한다.
 
 ---
 
@@ -256,6 +308,7 @@ status: APPROVED
 - [✅] Storybook 10.4 stable 릴리스 시 변경점 모니터링 (2026-08-11 확인 — 10.5.x가 최신 안정. 10.4~10.5 변경점은 Vite 8 / Next.js 16.2 지원 등으로 시각 테스트 셋업에 직접 영향 없음)
 - [📅] @storybook/test-runner의 Vitest addon 대체 흐름 모니터링 — 공식 docs가 Vite 기반 SB에 Vitest addon 권장 시작. Playwright 기반 시각 회귀가 그래도 표준이지만, 차후 Vitest browser mode + visual 테스트로 대체될 가능성 있음. 선택 보강 항목, 차단 요인 아님
 - [⏸️] DISPUTED였던 Node 버전(20.16+/22.19+ vs 20.19+/22.12+)의 정확한 차이 출처를 Storybook 코어 팀이 명확화하면 SKILL.md 재정리 — 선택 보강 항목, 차단 요인 아님
+- [✅] skill-tester content test 재수행 (2026-09-28 완료, 2/2 PASS — Playwright v1.63/test-runner 0.24.x 버전 갱신분 검증, PENDING_TEST → APPROVED 전환)
 
 ---
 
@@ -266,3 +319,5 @@ status: APPROVED
 | 2026-04-29 | v1 | 최초 작성 — Storybook 10.3 + @storybook/test-runner + Playwright v1.59.x 기준, 8개 필수 토픽 모두 포함, 핵심 클레임 4건 교차 검증 (VERIFIED 3 / DISPUTED 1) | Claude (skill-creator) |
 | 2026-04-29 | v1 | 2단계 실사용 테스트 수행 (Q1 preRender deprecated 함정 + a11y/스크린샷 동시 설정 / Q2 macOS baseline vs CI Linux 1px 깨짐 / Q3 자체 호스팅 vs Chromatic 의사결정) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-08-11 | v1.1 | 짝 스킬 정합성 정정: ① `.storybook/main.ts` 예시에서 v9 제거 패키지 `@storybook/addon-essentials` 삭제 → `@storybook/addon-docs` + `@storybook/addon-a11y`로 교체 + essentials·interactions 잔존 시 에러 경고 추가 ② SB9→10 비교표의 "a11y addon 내장" 서술 정정(여전히 별도 패키지, Recommended 설치에 기본 포함) ③ 섹션 3의 "SB9 이상 a11y 내장" 문구를 addon 패널 vs CI 게이팅 구분으로 정정 ④ 대상 버전 10.3.x→10.5.x·검증일 갱신 ⑤ `frontend/storybook` 참조 문구의 "Storybook 8.x" 잔재 제거 ⑥ CI 예시의 `actions/setup-node@v4`→`@v7`(`devops/github-actions` 동일자 갱신과 정합). 코드 예시·정책 서술 외 구조 변경 없음, status APPROVED 유지 | Claude (Opus 5) |
+| 2026-09-28 | v1.2 | 재검증(2차) — 최신 안정 버전 갱신: Storybook 10.5.x→10.6.x, Playwright v1.59.x→v1.63.x, `@storybook/test-runner` 0.x→0.24.x(peerDeps로 Storybook 10.6/11 호환 재확인). Docker 이미지 태그 `v1.59.1-jammy`→`v1.63.0-jammy`(SKILL.md·REFERENCE.md 동반 수정). status APPROVED → PENDING_TEST (skill-tester 재테스트 필요) | Claude (Sonnet 5) |
+| 2026-09-28 | v1.2 | skill-tester 재테스트(2차 재검증분) 수행 (Q1 a11y+시각회귀 test-runner 설정 / Q2 macOS/Linux baseline 진단 + Docker 태그 v1.63.0-jammy 정정 확인) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |

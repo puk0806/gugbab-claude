@@ -11,9 +11,9 @@ description: 프론트엔드 번들 크기 측정·시각화·비교 방법론 �
 > - webpack-bundle-analyzer: https://github.com/webpack-contrib/webpack-bundle-analyzer
 > - size-limit: https://github.com/ai/size-limit
 >
-> 검증일: 2026-08-11
-> 버전 기준: rollup-plugin-visualizer 7.0.1 (2026-03-03) / vite-bundle-visualizer 1.2.1 / size-limit 13.0.3
-> 주의: size-limit 13.0.0에서 Node 20 지원이 종료됐다(breaking change). 설정 파일 문법 자체는 12.x와 동일하므로 아래 예시는 그대로 유효하다.
+> 검증일: 2026-09-28 (최초 2026-05-14)
+> 버전 기준: rollup-plugin-visualizer 7.1.1 (2026-09) / vite-bundle-visualizer 1.2.1 / size-limit 14.1.0 (2026-09-27)
+> 주의: size-limit 13.0.0에서 Node 20 지원이 종료됐고, 14.0.0(2026-09-15)에서 `@size-limit/preset-small-lib`가 기본 번들러를 `rolldown`으로 전환했다(본 스킬이 쓰는 `@size-limit/preset-app`은 대상 아님). 14.x는 Node 버전 요건이 `^22.19.0 || ^24.5.0 || >=26.0.0`으로 더 좁아졌다(구 22.x 전체 허용 아님 — 22.19 미만이면 업그레이드 필요). `size-limit` 설정 배열 문법·limit 단위·brotli 기본 압축은 12.x부터 변경 없이 그대로 유효하다.
 
 이 스킬은 **측정·비교 방법론**을 다룬다. 분할 *전략*은 `vite-advanced-splitting` 스킬을 참조한다.
 
@@ -109,6 +109,8 @@ export default defineConfig({
 ### 2-4. 환경 요구사항
 
 > **주의:** rollup-plugin-visualizer 7.x는 **Node.js ≥ 22**를 요구한다. 더 낮은 Node 버전을 쓰는 프로젝트는 6.x 계열로 핀 고정한다.
+>
+> **주의 (ADD, Vite 8 사용자 필수):** 7.1.0 이전 버전은 배포된 타입 선언이 `rollup` 패키지를 직접 import하도록 되어 있어, `rollup`을 설치하지 않고 `rolldown`만 있는 프로젝트에서 타입이 `any`로 조용히 깨지거나(`skipLibCheck` 켠 경우) `TS2307`(모듈 찾을 수 없음) 에러가 났다. **Vite 8은 내부적으로 rolldown을 쓰고 `rollup`을 아예 설치하지 않으므로 Vite 8 프로젝트는 전원 영향받았다.** 7.1.0(2026-09)에서 타입이 `rollup`/`rolldown`/`vite` 중 무엇이 설치돼 있어도 해석되도록 수정됐다 — Vite 8 + TypeScript 조합이면 반드시 `rollup-plugin-visualizer@^7.1.0` 이상을 쓴다.
 
 ---
 
@@ -287,6 +289,8 @@ npm install -D size-limit @size-limit/preset-app
   - 시간 단위 (`"300 ms"`, `"1 s"`) — 헤드리스 브라우저로 실 실행 시간 측정 (preset-app 필요)
 - **glob 지원** — `dist/assets/index-*.js`처럼 해시 들어간 파일 매칭
 - **`--why` 플래그** — 한도 초과 시 Statoscope로 원인 분석
+
+> **주의 (ADD, 버전 14 갱신):** size-limit은 13.0.0에서 Node 20 지원을 종료했고, 14.0.0(2026-09-15)에서는 `@size-limit/preset-small-lib`의 기본 번들러가 `rolldown`으로 바뀌었다 — 이 스킬의 예시가 쓰는 `@size-limit/preset-app`은 해당 변경 대상이 아니므로 위 설정 예시는 그대로 유효하다. 14.x는 Node 버전 요건이 `^22.19.0 || ^24.5.0 || >=26.0.0`으로 좁아져(13.x의 "22 이상 전체" 대비 패치 버전까지 강제), CI 러너의 Node 버전이 22.19/24.5 미만이면 업그레이드가 필요하다. 13.1.0부터 `rolldown`/`rolldown-why` 전용 플러그인이 추가됐으나 preset-app 사용자에게는 선택 사항이다.
 
 ### 6-3. GitHub Actions 통합
 

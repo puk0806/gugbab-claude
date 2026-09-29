@@ -2,8 +2,8 @@
 skill: app-store-submission
 category: game
 version: v1
-date: 2026-09-26
-status: PENDING_TEST
+date: 2026-09-28
+status: APPROVED
 ---
 
 # 스킬 검증 문서 — game/app-store-submission
@@ -19,7 +19,7 @@ status: PENDING_TEST
 |------|------|
 | 스킬 이름 | `app-store-submission` |
 | 스킬 경로 | `.claude/skills/game/app-store-submission/SKILL.md` |
-| 검증일 | 2026-09-26 (최초 2026-06-10) |
+| 검증일 | 2026-09-28 (재검증, 이전 2026-09-26 / 최초 2026-06-10) |
 | 검증자 | skill-creator (token 한도로 verification.md 분리 작성) |
 | 스킬 버전 | v1 |
 | 대상 | Google Play Console (2026) / App Store Connect (iOS 26 SDK) |
@@ -72,6 +72,7 @@ status: PENDING_TEST
 | Apple 연령 등급 업데이트 | https://developer.apple.com/news/upcoming-requirements/?id=07242025a | ⭐⭐⭐ High | 2026-06-10 |
 | Apple SDK 최소 요구사항 (2026-04-28) | https://developer.apple.com/news/upcoming-requirements/?id=02212025a | ⭐⭐⭐ High | 2026-06-10 |
 | Unity PlayerSettings API | https://docs.unity3d.com/ScriptReference/PlayerSettings.Android-bundleVersionCode.html | ⭐⭐⭐ High | 2026-06-10 |
+| Google Play Target API level requirements (유예 신청 자격·방법) | https://support.google.com/googleplay/android-developer/answer/11926878 | ⭐⭐⭐ High | 2026-09-28 |
 
 ---
 
@@ -101,13 +102,77 @@ status: PENDING_TEST
 
 ### 4-4. Claude Code 에이전트 활용 테스트
 
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-06-10 skill-tester 수행)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-06-10 skill-tester 수행, 2026-09-28 재검증 정정분 재테스트 완료, 2026-09-28 2차 실제 재테스트 완료)
 - [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인
-- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (보완 사항 없음 — 3/3 PASS)
+- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (보완 사항 없음 — 3/3 PASS, 재검증 2/2 PASS, 2차 재테스트 2/2 PASS)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-09-28] skill-tester 2차 실제 재테스트 (real Agent 호출)
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (Agent 도구로 독립 서브에이전트 2회 실제 비동기 호출, 완료 로그 확인)
+**수행 방법**: 아래 "[2026-09-28] 선택 보강 반영" 절의 정정 내용(Target API 36 유예 신청 자격·방법)을 겨냥한 질문 1개 + 핵심 심사 거절 사유(IAP Restore·계정 삭제) 질문 1개를 각각 독립 general-purpose 서브에이전트에 위임. 짝 스킬 `game/unity-6-2d-fundamentals`에도 동일한 유예 자격 질문을 별도 서브에이전트에 위임해 두 스킬 서술이 일치하는지 교차검증.
+
+**Q1. "완전히 새로운 앱을 2026-09에 처음 제출하는데 Target API Level을 몇으로 맞춰야 하고, 유예 신청이 가능한가? 기존 앱 업데이트와는 어떻게 다른가?"**
+- ✅ PASS
+- 근거: SKILL.md "1-2. Target API Level" (줄 22-27) + "9. 제출 직전 최종 체크리스트" (줄 233)
+- 상세: 서브에이전트가 "신규 앱은 API 36 필수·유예 불가 / 기존 앱 업데이트만 Play Console Policy status 페이지에서 2026-11-01까지 연장 신청 가능"을 정확히 구분해 답변. 신청 경로(Policy status 페이지 → 경고 상세 → Request more time)까지 정확히 인용.
+- **교차검증**: 짝 스킬 `unity-6-2d-fundamentals` SKILL.md에 동일 취지 질문을 위임한 결과, "신규 앱 불가·기존 앱 업데이트만 Policy status 페이지 신청"으로 완전히 일치하는 답변을 받음. 두 스킬의 유예 관련 서술 사이에 모순 없음 확인.
+
+**Q2. "IAP(비소비성) 앱에서 Restore Purchases 버튼을 안 넣었다. 문제되는가? 계정 삭제를 플래그만 세팅해도 되는가?"**
+- ✅ PASS
+- 근거: SKILL.md "5-1. Apple App Store Review Guidelines" 표(3.1.1·5.1.1 행) + "추가" 항목 + "8. 흔한 실수 패턴"
+- 상세: Guideline 3.1.1(Restore 버튼 필수) 및 5.1.1(v)(단순 플래그 금지, 실제 데이터 삭제 필요)을 정확히 도출. 세 섹션(5-1 표·추가 항목·8절) 간 서로 모순 없이 일관됨을 서브에이전트가 직접 확인.
+
+### 발견된 gap (2차 재테스트)
+
+- 경미: 유예 신청 양식의 구체적 승인 심사 기준, 계정 삭제 시 법적 보관 의무 데이터 예외 처리가 SKILL.md에 없음 — 차단 요인 아님, 선택 보강
+
+### 판정 (2차 재테스트)
+
+- agent content test: 2/2 PASS (+ 짝 스킬 `unity-6-2d-fundamentals`와 교차검증 결과 일치 확인)
+- verification-policy 분류: 해당 없음 (제출 절차·체크리스트 가이드 — content test로 충분)
+- **최종 상태: APPROVED**
+
+---
+
+### [2026-09-28] 선택 보강 반영
+
+- **반영 내용**: Target API 36 유예(2026-11-01까지) 신청 자격·방법을 명확화 — 유예는 **신규 앱 제출에는 적용되지 않으며**, 이미 게시된 기존 앱을 업데이트할 계획이 있는 개발자만 Play Console **Policy status** 페이지에서 신청 가능함을 SKILL.md 1-2절 및 9절 체크리스트에 추가.
+- **근거**: Google Play Console 고객센터 공식 문서 "Target API level requirements for Google Play apps" — https://support.google.com/googleplay/android-developer/answer/11926878 (원문: "New apps and app updates must target Android 16 (API level 36) or higher to be submitted to Google Play"; "If you plan to update this app to a higher target API level, you can submit an extension request to continue getting distributed to all users on Google Play until November 1, 2026"; "The extension form is available through the details page of the warning or issue on the Policy status page in Play Console")
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (Agent 도구 실제 서브에이전트 호출)
+**수행 방법**: 2026-09-26 재검증에서 시제 정정된 내용(Target API 36·iOS 26 SDK가 "예정"에서 "시행 중"으로 전환)을 겨냥한 질문 2개를 general-purpose 서브에이전트에게 "SKILL.md만 근거로 답하라"는 조건으로 위임, 답변과 근거 섹션을 대조 검증
+
+### 실제 수행 테스트 (2026-09-28)
+
+**Q1. 2026-09 Google Play 신규 제출 시 Target API Level + 유예 가능 여부**
+- ✅ PASS
+- 근거: SKILL.md "1-2. Target API Level" + "9. 제출 직전 최종 체크리스트"
+- 상세: "API 36 이상, 현재 시행 중, 유예 신청 시 2026-11-01까지 연장 가능"을 정확히 도출. 다만 에이전트가 "유예 신청 자격 조건·신청 방법이 SKILL.md에 없다"는 점을 gap으로 지적함(아래 참조).
+
+**Q2. 구버전 Xcode로 빌드한 iOS 앱 업로드 통과 여부**
+- ✅ PASS
+- 근거: SKILL.md "2-2. Xcode SDK 요구사항" + "8. 흔한 실수 패턴"
+- 상세: "2026-04-28부터 시행 중, 유예 없음, 구버전 툴체인 빌드는 자동 거부"를 정확히 도출. 빌드 SDK와 deployment target이 별개라는 점까지 정확히 구분해 답변.
+
+### 발견된 gap (2026-09-28)
+
+- 경미: Target API 36 유예 신청(2026-11-01 연장)의 신청 자격·방법(신규 앱도 포함되는지 등)이 SKILL.md에 없음 — 차단 요인 아님, 선택 보강
+
+### 판정 (2026-09-28)
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 해당 없음 (제출 절차·체크리스트 가이드 — 실행 결과물이 아닌 정책 정보 정확성으로 검증 가능, content test로 충분)
+- 2026-09-26 재검증 정정 내용(데드라인 경과에 따른 "예정"→"시행 중" 시제 정정)이 실제 서브에이전트 답변에 정확히 반영됨을 확인 → APPROVED 전환
+
+---
+
+### (2026-06-10 시점 기록 — 아래 보존)
 
 **수행일**: 2026-06-10
 **수행자**: skill-tester → general-purpose (도메인 전용 에이전트 미등록으로 general-purpose 대체)
@@ -166,8 +231,8 @@ status: PENDING_TEST
 | 내용 정확성 | ✅ 공식 문서 기반, 14 클레임 교차 검증 완료 |
 | 구조 완전성 | ✅ 체크리스트·사양 표·거절 사유·실수 패턴 모두 포함 |
 | 실용성 | ✅ 제출 직전 체크리스트까지 완비 |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-10) + ✅ 2/2 PASS (2026-09-26 재검증) |
-| **최종 판정** | **PENDING_TEST** (데드라인 경과 시제 정정, 재테스트 대기) |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-10) + ✅ 2/2 PASS (2026-09-26 자체 재검증) + ✅ 2/2 PASS (2026-09-28 skill-tester 2차 실제 서브에이전트 재테스트, 짝 스킬 교차검증 일치) |
+| **최종 판정** | **APPROVED** (2026-09-28 skill-tester 2차 실제 재테스트 2/2 PASS — 유예 신청 자격·방법 정정분 및 짝 스킬 `unity-6-2d-fundamentals` 서술 일치 확인 완료) |
 
 ### 핵심 클레임 검증 표
 
@@ -192,9 +257,10 @@ status: PENDING_TEST
 
 ## 7. 개선 필요 사항
 
-- [✅] skill-tester로 에이전트 활용 테스트 수행 (2026-06-10 완료, 3/3 PASS)
+- [✅] skill-tester로 에이전트 활용 테스트 수행 (2026-06-10 완료, 3/3 PASS / 2026-09-28 재검증 정정분 재테스트 완료, 2/2 PASS / 2026-09-28 2차 실제 재테스트 완료, 2/2 PASS + 짝 스킬 교차검증 일치)
 - [❌] (선택) Target API Level 정책 매년 갱신 — 2027년 기준 변경 시 섹션 1-2 업데이트 필요 (차단 요인 아님, 선택 보강)
 - [❌] (선택) App Store 스크린샷 사양 — 신규 iPhone 모델 출시 시 크기 추가 필요 (차단 요인 아님, 선택 보강)
+- [✅] Target API 36 유예 신청 자격·방법(신규 앱 포함 여부 등) 명확화 (2026-09-28 반영 — Google Play Console 고객센터 공식 문서로 확인: 신규 앱은 유예 불가, 기존 앱 업데이트만 Policy status 페이지에서 신청 가능)
 
 ---
 
@@ -205,3 +271,6 @@ status: PENDING_TEST
 | 2026-06-10 | v1 | 최초 작성. Google Play / App Store 양쪽 체크리스트, 에셋 사양, 심사 거절 사유 14 클레임 교차 검증. DISPUTED 2건 정정 반영 | skill-creator (token 한도로 분리 작성) |
 | 2026-06-10 | v1 | 2단계 실사용 테스트 수행 (Q1 App Store 스크린샷 필수 사양 / Q2 iOS 아이콘 알파+부제목 자수 함정 / Q3 CI versionCode 자동 증가) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-09-26 | v1 | 재검증(98개 일괄 재검증 대상). Target API 36·iOS 26 SDK·연령 등급 데드라인이 모두 경과해 시제를 "예정"→"시행 중"으로 정정 → 실질 내용 변경으로 PENDING_TEST 전환 | Claude Code |
+| 2026-09-28 | v1 | 2단계 실사용 테스트 재수행 (Q1 Target API 36+유예 가능 여부 / Q2 구버전 Xcode 빌드 업로드 통과 여부) → 2/2 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-28 | v1 | 재검증(선택 보강). Target API 36 유예 신청 자격·방법 명확화(신규 앱 불가·기존 앱 업데이트만 가능) — Google Play Console 고객센터 공식 문서 확인 후 SKILL.md 1-2절·9절 갱신 → 실질 내용 추가로 PENDING_TEST 전환 | Claude Code |
+| 2026-09-28 | v1 | 2단계 실사용 테스트 2차 재수행 (Q1 신규앱 유예 자격 + 짝 스킬 unity-6-2d-fundamentals 교차검증 / Q2 IAP Restore·계정삭제) → 2/2 PASS, 짝 스킬 서술 일치 확인, APPROVED 전환 | skill-tester |

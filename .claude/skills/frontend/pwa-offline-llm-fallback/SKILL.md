@@ -18,7 +18,7 @@ description: >
 > - Offline Cookbook (Jake Archibald, web.dev): https://web.dev/articles/offline-cookbook
 > - Claude API Errors: https://platform.claude.com/docs/en/api/errors
 > - Background Sync 호환성: https://caniuse.com/background-sync
-> 검증일: 2026-05-14
+> 검증일: 2026-09-28 (최초 2026-05-14)
 
 ---
 

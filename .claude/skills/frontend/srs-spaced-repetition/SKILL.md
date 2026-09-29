@@ -6,10 +6,13 @@ description: 간격 반복 학습(SRS) 알고리즘 정리 — SM-2(Anki 베이�
 # srs-spaced-repetition — 간격 반복 학습 알고리즘 (SM-2 / FSRS-5)
 
 > 소스: SM-2 — Wozniak 1990 SuperMemo paper / Anki 공식 매뉴얼; FSRS — open-spaced-repetition GitHub
-> 검증일: 2026-05-07
+> 검증일: 2026-09-28
+
+> 주의 (2026-09-28 재검증): **FSRS-6**이 FSRS-5를 대체한 최신 버전이다(21 trainable parameters, retrievability 공식도 변경됨). 본 스킬은 여전히 FSRS-5(19 parameters) 기준으로 작성되어 있다 — FSRS-5는 구식은 아니지만(Anki 23.10~24.x 기본값), 신규 구현 시 FSRS-6 채택 여부를 별도 확인할 것. 아래 retrievability 공식(`R = exp(ln(0.9) * t / S)`)은 FSRS v4 이전(지수 감쇠) 공식이며, **FSRS-4.5·FSRS-5는 거듭제곱 감쇠 공식** `R(t,S) = (1 + t/(9·S))^(-1)` 을 사용한다 — 정정판을 아래 FSRS-5 섹션에 반영함.
 
 > 다루는 알고리즘: **SM-2** (Anki 4.x 이전 베이스, 가장 단순) / **FSRS-5** (Anki 23.10+ 기본, 2024 표준)
 > 우선 권장: 신규 구현은 **FSRS-5** — 정확도가 SM-2 대비 통계적으로 우수
+> (단, **FSRS-6**이 최신 버전이다 — 21 trainable parameters, retrievability 공식 변경. 위 "주의" 참조. 신규 구현이면 FSRS-6 채택 여부를 먼저 확인할 것 — 본 스킬은 FSRS-5 기준으로 작성됨)
 > 단순성 우선: 학습/프로토타입은 **SM-2** — 1990 논문 한 페이지로 정의 가능
 
 ## 언제 사용하나
@@ -115,8 +118,10 @@ Anki는 EF 최소값 1.3 + Hard에서 EF 감소 등 *튜닝*을 더했다.
 R(retrievability)은 매번 계산되며, 다음 식으로 결정된다:
 
 ```
-R = exp(ln(0.9) * t / S)
+R(t, S) = (1 + t / (9 * S)) ** -1
 ```
+
+> 주의(2026-09-28 정정): 이전 버전 본문의 `R = exp(ln(0.9) * t / S)`(지수 감쇠)는 **FSRS v4 이전 공식**이며 오기였다. FSRS-4.5·FSRS-5는 위의 **거듭제곱(power-law) 감쇠 공식**을 쓴다(출처: open-spaced-repetition awesome-fsrs wiki "The Algorithm"). FSRS-6은 감쇠 지수 자체를 학습 파라미터(w20)로 만든 `R(t,S) = (1 + factor·t/S)^(-w20)` 형태로 또 한 번 바뀌었다 — FSRS-6 적용 시 별도 확인 필요.
 
 여기서 `t`는 마지막 review로부터 경과 일수, `S`는 stability. R = 0.9가 되는 시점이 *due date*다.
 
@@ -194,6 +199,8 @@ const result = f.next(card, new Date(), Rating.Good)
 | 카드 상태 모델 | 암묵적 (n=0/1/≥2) | 명시적 (New/Learning/Review/Relearning) |
 | 실패 처리 | n=0, I=1로 reset | Relearning 단계 + S 감소 |
 | 추천 사용처 | 학습/프로토타입/MVP | 프로덕션 학습 앱·정확도 우선 |
+
+> 위 표는 FSRS-5(19 weights) 기준이다. **FSRS-6**(21 trainable parameters, retrievability 공식 변경)이 최신 버전이므로 신규 구현은 FSRS-6 채택 여부를 먼저 확인할 것 — 상단 "주의" 참조.
 
 ---
 

@@ -29,7 +29,7 @@ description: >
 > - Next.js — headers(): https://nextjs.org/docs/app/api-reference/config/next-config-js/headers
 > - OWASP Secure Headers Project: https://owasp.org/www-project-secure-headers/
 >
-> 검증일: 2026-06-04
+> 검증일: 2026-09-28 (최초 2026-06-04, 2026-09-28 report-to 브라우저 지원 현황 정정)
 
 ---
 
@@ -96,9 +96,11 @@ Content-Security-Policy-Report-Only: default-src 'self'; report-to csp-endpoint
 
 ### 2-3. 보고 엔드포인트 — report-uri vs report-to
 
-- `report-uri` — CSP Level 3에서 **deprecated**. 단 Firefox는 2026년 초 기준 `report-to`를 CSP에서 지원하지 않음
-- `report-to` — Reporting API v1 기반, Chrome·Edge 지원
-- **실무 권장**: 두 디렉티브를 모두 명시 (브라우저가 지원하는 쪽을 선택)
+> 주의: 정정(2026-09-28) — 최초 작성 시 "Firefox는 report-to 미지원"으로 기술했으나, Firefox 149부터 `report-to`를 지원하며 2026-03 기준 Chrome·Edge·Firefox·Safari(16.4+) 전체에서 **Baseline 2026**(전역 지원 약 94.78%)을 달성했다. 아래 내용을 최신 상태로 정정한다.
+
+- `report-uri` — CSP Level 3에서 **deprecated**. `report-to`가 지원되는 브라우저는 `report-uri`를 무시한다
+- `report-to` — Reporting API 기반, 2026-03 기준 Chrome·Edge·Firefox(149+)·Safari(16.4+) 전 브라우저 지원 (Baseline 2026)
+- **실무 권장**: 구형 브라우저 호환을 위해 여전히 두 디렉티브를 모두 명시 (`report-to`가 지원되면 그쪽이 우선 적용되고 `report-uri`는 무시됨)
 
 ```http
 Content-Security-Policy: default-src 'self'; report-uri /csp-report; report-to csp-endpoint

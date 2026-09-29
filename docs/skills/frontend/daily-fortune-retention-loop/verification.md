@@ -1,8 +1,8 @@
 ---
 skill: daily-fortune-retention-loop
 category: frontend
-version: v1
-date: 2026-09-10
+version: v3
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `daily-fortune-retention-loop` |
 | 스킬 경로 | `.claude/skills/frontend/daily-fortune-retention-loop/SKILL.md` |
-| 검증일 | 2026-09-10 |
+| 검증일 | 2026-09-28 (재검증, 이전 2026-09-10) |
 | 검증자 | skill-creator |
-| 스킬 버전 | v1 |
+| 스킬 버전 | v3 (frontmatter가 2026-09-11 변경 이후에도 `v1`로 남아있던 것을 변경 이력의 실제 진행에 맞춰 정정) |
 | 소스 유형 | 복합 — 웹 표준 스펙(MDN/TC39) + 심리학 연구 + 국내 법령/규제 + 제품 설계 관행 |
 
 ---
@@ -231,6 +231,28 @@ status: APPROVED
 
 ---
 
+### [2026-09-28] 재검증(2차) — Temporal 브라우저 지원·Intl.DateTimeFormat·Cache-Control 재확인
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md·references/REFERENCE.md 전체 Read → 핵심 클레임 3개를 1차 소스(MDN WebFetch, WebSearch)와 대조, 보강·축소 검토
+
+**클레임 대조 결과**:
+1. Temporal이 여전히 **Baseline 아님**(Safari 미지원으로 차단) → **VERIFIED (변동 없음)** — WebFetch로 MDN `Temporal` 페이지 재확인 결과 "Limited availability — this feature is not Baseline because it does not work in some of the most widely-used browsers"가 그대로 유지됨. WebSearch로 Firefox 139+(2025-05)·Chrome 144+(2026-01)·Edge는 네이티브 지원하지만 **Safari는 Technical Preview 플래그 뒤에만 있고 안정판 미지원**임을 재확인. SKILL.md §1-4의 "아직 쓰지 마라" 권고를 바꿀 이유 없음
+2. `Intl.DateTimeFormat.resolvedOptions().timeZone`이 IANA 타임존을 반환하며 Baseline widely available 상태 유지 → **VERIFIED** (API 자체는 2017-09부터 안정 상태이며 이후 변경 이력 없음, 재조사에서도 동일)
+3. 개인화 응답에 `Cache-Control: private` 필수라는 HTTP 시맨틱 유지 → **VERIFIED** (RFC 9111/MDN 기준 변경 없는 안정된 시맨틱)
+
+**보강(ADD)·축소**: 없음 — 3개 클레임 모두 VERIFIED, DISPUTED/UNVERIFIED 없음. 운세 톤 가드(§3-5)·스트릭 설계(§4)·"재미로 보는" 고지(§5)·오프라인 원칙(§6)은 축소하지 않음.
+
+**버전 표기 정정**: frontmatter `version`이 2026-09-11 캐주얼 앱 축소 변경(변경 이력에는 "v2"로 기록됨) 이후에도 `v1`로 남아 있던 불일치를 발견 — 이번 재검증에서 `v3`로 정정해 실제 변경 횟수와 맞춤 (내용 재검증과 무관한 표기 정정).
+
+**실전 질문 재검증**:
+- Q1. "2026-09 현재 Temporal을 폴리필 없이 프로덕션에 써도 되나?" → SKILL.md §1-4 근거로 PASS(여전히 금지, Safari 미지원)
+- Q2. "개인화된 오늘의 운세 응답에 CDN 캐시를 걸어도 되나?" → SKILL.md §2-3 근거로 PASS(`private` 필수)
+
+**재검증 최종 판정**: status **APPROVED 유지** (내용 변경 없음, 검증일과 버전 표기 정정만)
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -264,3 +286,4 @@ status: APPROVED
 | 2026-09-11 | v2 | 캐주얼 앱 방향으로 과의존 가드 섹션 제거·삭제 자산 참조 정리 — 구 §5(근거 문헌·조회 상한 표·전자상거래법 다크패턴 6유형·역지표 계측)와 §5-5 생성 단계 계약 삭제. 리롤 UI는 §2-2, 푸시 문구 톤 표는 §3-5, "재미로 보는" 한 줄 고지는 새 §5로 이동. 바넘 효과·JCR 연구·다크패턴 법령 소스 제거. 날짜 경계·캐싱·푸시·스트릭·공유·오프라인 코드는 변동 없음 | main session |
 | 2026-09-25 | v2 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | Claude |
 | 2026-09-25 | v2 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |
+| 2026-09-28 | v3 | 재검증(2차) — Temporal Baseline 상태(Safari 미지원 지속)·Intl.DateTimeFormat·Cache-Control 재확인, 3/3 VERIFIED·DISPUTED 0, 내용 변경 없음 → APPROVED 유지. frontmatter 버전 표기 불일치(v1로 방치)를 v3로 정정 | Claude (Sonnet 5) |

@@ -1,10 +1,12 @@
 ---
 skill: tsup
 category: frontend
-version: v2
-date: 2026-09-26
-status: PENDING_TEST
+version: v3
+date: 2026-09-29
+status: APPROVED
 ---
+
+> 상태 참고: 본 스킬은 verification-policy.md "실사용 필수 스킬" 중 **빌드 설정 스킬(출력 결과물 검증 필요)** 카테고리였다. 2026-09-29 lab에서 실제 빌드 산출물(ESM/CJS/.d.ts, outExtension 결과) 검증을 완료해 APPROVED로 전환.
 
 ## 메타 정보
 
@@ -90,6 +92,17 @@ status: PENDING_TEST
 
 ## 5. 테스트 진행 기록
 
+### [2026-09-29] 실사용(실행) 검증
+
+**수행일**: 2026-09-29
+**수행 방법**: lab 폴더에 `npm init -y` + `tsup`(`npm view tsup version` = 8.5.1, SKILL.md와 일치) + `typescript` 설치, 작은 TS 라이브러리(`src/index.ts`: 함수 1개 + interface 1개) 작성. `tsup.config.ts`에 `format: ['cjs','esm']`, `dts: true`, `outExtension`(커스텀: cjs→`.cjs.js`, esm→`.mjs.js`)을 설정해 `npx tsup` 빌드 2회 실행 — ① `typescript@5.7.3`(SKILL.md 기준 버전 계열) ② `typescript@latest`(오늘 npm `latest` 태그 = **7.0.2**).
+**실행 결과**:
+- TypeScript 5.7.3: 빌드 성공. `index.cjs.js`/`index.mjs.js`(outExtension 커스텀 반영) + `index.d.ts`/`index.d.mts`(dts 확장자는 outExtension 영향 없이 포맷 표준값 유지) 모두 생성 — SKILL.md의 "outExtension은 dts 확장자에 반영 안 됨"(egoist/tsup#939) 서술과 정확히 일치.
+- TypeScript **7.0.2**(오늘 `npm install typescript` 기본값): JS 번들(CJS/ESM)은 정상 생성되나 **DTS 빌드 단계에서 크래시** — `TypeError: Cannot read properties of undefined (reading 'useCaseSensitiveFileNames')`(tsup이 자기 dist에 번들링한 `rollup-plugin-dts@6.1.1`이 TypeScript 7의 컴파일러 API 변경과 불일치). WebSearch로 공식 이슈 https://github.com/egoist/tsup/issues/1405 (2026-09 기준 미해결) 확인해 재현성·원인 교차 검증. 회피책(`dts: false` + `tsc --emitDeclarationOnly --outDir dist`)도 동일 lab에서 재실행해 정상 동작 확인(`index.d.ts` 정상 생성, JS 번들과 함께 완전한 산출물 구성).
+**서술과 불일치 발견 및 정정**: SKILL.md는 "유지보수 종료"만 언급하고 TypeScript 7과의 구체적 비호환(크래시)은 다루지 않았음 — 오늘 `npm install tsup typescript --save-dev`를 그대로 실행하면 바로 이 크래시에 부딪히는 **차단급 문제**라 SKILL.md 상단에 새 `> 주의` 추가(원인·공식 이슈 링크·회피책 2가지) + "설치" 섹션에 `typescript@^5.7.3` 버전 고정 예시로 변경 + "느린 DTS 빌드 분리 패턴" 섹션에 "TypeScript 7 환경에서는 필수 우회책" 문구 추가(Edit 완료, 근거: lab 실행 재현 2회 + WebSearch 공식 이슈 대조). 추가로 회피책을 처음 `"build": "tsup --dts false"` CLI 플래그로 문서화했다가, lab에서 재검증한 결과 **CLI `--dts false`는 `tsup.config.ts`의 `dts: true`를 덮어쓰지 못하고 그대로 크래시함**을 확인(config 파일이 우선) → SKILL.md를 `tsup.config.ts`에서 직접 `dts: false`로 끄는 방식으로 재정정(2차 정정, 같은 세션 내 자체 발견·수정).
+**졸업 조건 충족 여부**: 충족 (PENDING_TEST.md: "ESM/CJS·`.d.ts` 산출물과 `outExtension` 결과가 스킬 서술과 일치하는지 확인" — 일치 확인 + 추가로 TS7 비호환이라는 새 불일치를 발견해 정정까지 완료)
+**판정**: APPROVED 전환 (SKILL.md 정정 포함)
+
 ### 재검증 (2026-09-26)
 
 **수행일**: 2026-09-26
@@ -106,6 +119,34 @@ Q1. "tsup 신규 프로젝트 시작해도 되나?" — SKILL.md 신규 주의 �
 Q2. "`outExtension`으로 dts 파일 확장자도 바꿀 수 있나?" — SKILL.md DTS 섹션 답변: 불가, 공식 이슈 #939로 미해결. PASS
 
 agent content test: 2/2 PASS. tsup 유지보수 중단 공지는 실행 가능한 예제 코드 자체를 깨뜨리지 않지만 "적합한 경우" 권장이 바뀌는 수준의 실질 변경이라 판단해 status를 PENDING_TEST로 되돌린다.
+
+---
+
+### 2단계 재테스트 (2026-09-28)
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (2개 병렬 호출)
+**수행 방법**: SKILL.md Read 후 2개 실전 질문 답변, 근거 섹션·anti-pattern 회피 확인. 2026-09-26 재검증에서 정정된 부분(tsup 유지보수 중단·tsdown 권장, outExtension이 dts 확장자 미반영)을 겨냥한 질문 포함
+
+**Q1. "신규 프로젝트에 tsup 채택해도 되나? outExtension으로 .d.ts 확장자도 바꿀 수 있나?"**
+- ✅ PASS
+- 근거: SKILL.md 상단 주의문(11행) + "최신 안정 버전" 서술(19행) + "TypeScript Declaration 파일 생성" 주의(171행)
+- 상세: 유지보수 중단·tsdown 우선 검토 권고와 outExtension이 dts 확장자에 미반영되는 공식 이슈(#939)가 모두 정확히 답변됨.
+
+**Q2. "React가 번들에 포함되는 이유+해결 + exports types 조건 순서 이유"**
+- ✅ PASS
+- 근거: SKILL.md "External 패키지 설정" 기본 동작(192행) + package.json exports 필드 주의(379행)
+- 상세: devDependencies vs peerDependencies 자동 external 동작, types가 default보다 먼저 와야 하는 이유 모두 정확히 답변됨.
+
+### 발견된 gap (2026-09-28)
+
+없음 — 2개 질문 모두 정정된 최신 내용(유지보수 중단·outExtension 이슈)과 기존 핵심 API 서술이 모순 없이 답변에 반영됨.
+
+### 판정 (2026-09-28)
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: **빌드 설정 스킬 (실사용 필수 카테고리)** — 출력 결과물(빌드 산출물) 실사용 검증 필요, content test PASS만으로 APPROVED 전환하지 않음
+- 최종 상태: PENDING_TEST 유지 (content test는 통과했으나 실사용 필수 카테고리이므로 실제 프로젝트 빌드 검증 전까지 유지)
 
 ---
 
@@ -176,14 +217,17 @@ peerDependencies에도 넣어야 external 처리된다는 올바른/잘못된 �
 | 내용 정확성 | ✅ (WebSearch 교차 검증 완료, tsup 8.5.1 기준) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-04-20 2건 PASS + 2026-09-26 재검증 2건 PASS) |
-| **최종 판정** | **PENDING_TEST** (2026-09-26 재검증: tsup 유지보수 종료·tsdown 권장 공지 반영, dts 확장자 outExtension 미반영 이슈 추가) |
+| 에이전트 활용 테스트 | ✅ (2026-04-20 2건 PASS + 2026-09-26 재검증 2건 PASS + 2026-09-28 재테스트 2건 PASS) |
+| 실사용(실행) 검증(2026-09-29) | ✅ lab 샘플에서 tsup 8.5.1 빌드 → CJS/ESM/.d.ts·outExtension 모두 서술과 일치. **신규 발견**: TypeScript 7(npm latest)과 `dts: true` 조합 크래시(egoist/tsup#1405) → SKILL.md에 주의·회피책 추가 |
+| **최종 판정** | **APPROVED** (2026-09-29 실사용 실행 검증 완료 — 빌드 산출물이 SKILL.md 서술과 일치, TS7 비호환 발견분은 SKILL.md 정정 반영) |
 
 ---
 
 ## 7. 개선 필요 사항
 
-- [✅] 에이전트 활용 테스트 — CJS/ESM 듀얼 + React external 2건 PASS (섹션 5 기록, 2026-04-20)
+- [✅] 에이전트 활용 테스트 — CJS/ESM 듀얼 + React external 2건 PASS (섹션 5 기록, 2026-04-20); 2026-09-28 재테스트 2/2 PASS 추가 수행
+- [✅] 실사용(실제 프로젝트 빌드 산출물) 검증 완료 (2026-09-29) — lab 샘플에서 CJS/ESM/.d.ts·outExtension 전부 서술과 일치 확인 → APPROVED 전환
+- [✅] TypeScript 7 + `dts: true` 크래시 신규 발견 → SKILL.md 상단 주의·설치 섹션 버전 고정·DTS 분리 패턴 섹션에 회피책 반영 (2026-09-29, 근거: lab 재현 2회 + egoist/tsup#1405 대조)
 - [⏸️] tsup.egoist.dev 공식 문서 직접 접속 재시도 (SSL 이슈 해결 후) — 검증 보강 선택 사항
 - [⏸️] 공식 문서의 전체 Options 인터페이스 항목 완전 수집 후 비교 — 검증 보강 선택 사항
 
@@ -196,3 +240,5 @@ peerDependencies에도 넣어야 external 처리된다는 올바른/잘못된 �
 | 2026-04-20 | v1 | 최초 작성 (내장 지식 기반, 실시간 검증 미실시) | skill-creator |
 | 2026-04-20 | v2 | WebSearch + WebFetch 공식 문서 조사·교차 검증 반영, tsup 8.5.1 버전 확인, d.cts 타입 파일 패턴 추가, exports 조건 순서 오류 사례 추가 | Claude |
 | 2026-09-26 | v2 | 재검증. tsup GitHub README 유지보수 중단·tsdown 권장 공지 신규 확인 → SKILL.md 상단 주의 추가. `outExtension`이 dts 확장자에 미반영되는 공식 이슈(#939) 확인 → DTS 섹션 주의 추가. APPROVED → PENDING_TEST | 수동 검증 |
+| 2026-09-28 | v2 | 2단계 재테스트 수행 (Q1 유지보수 중단+outExtension 이슈 / Q2 React external+exports types 순서) → 2/2 PASS. 빌드 설정 스킬(실사용 필수 카테고리)로 판단해 PENDING_TEST 유지 | skill-tester |
+| 2026-09-29 | v3 | 실사용(실행) 검증 — lab 샘플(작은 TS 라이브러리)에서 tsup 8.5.1 빌드로 CJS/ESM/.d.ts·outExtension 확인, TypeScript 5.7.3/7.0.2 두 버전 비교 빌드로 TS7+dts 크래시(egoist/tsup#1405) 신규 발견·SKILL.md 정정(주의·설치 버전 고정·DTS 분리 필수화). status APPROVED 전환 | Claude (Sonnet 5) |

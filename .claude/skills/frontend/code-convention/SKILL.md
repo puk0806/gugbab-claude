@@ -7,9 +7,9 @@ description: ESLint 10+ flat config, Biome, Prettier, Husky, lint-staged, commit
 
 > 소스: https://eslint.org/docs/latest | https://biomejs.dev/docs | https://prettier.io/docs
 > 소스: https://eslint.org/blog/2026/02/eslint-v10.0.0-released/ | https://eslint.org/version-support/ | https://biomejs.dev/guides/upgrade-to-biome-v2/
-> 검증일: 2026-08-26 (최초 2026-03-27 · 08-26 freshness 재검증: ESLint 10.0.0(2026-02-06)에서 eslintrc 완전 제거·v9는 2026-08-06 EOL, Biome 2.5.x의 `organizeImports`→`assist` 이동 반영)
+> 검증일: 2026-09-28 (최초 2026-03-27 · 08-26 freshness 재검증: ESLint 10.0.0(2026-02-06)에서 eslintrc 완전 제거·v9는 2026-08-06 EOL, Biome 2.5.x의 `organizeImports`→`assist` 이동 반영 · 09-28 재검증(2차): ESLint 10.11.0·Biome 2.5.14까지 breaking change 없음 확인)
 
-> **버전 기준 (2026-08-26):** ESLint **10.x**(현행, v9.x는 2026-08-06부로 EOL, v8.x는 2024-10-05 EOL) · Biome **2.5.x** · Prettier 3.x · Husky 9 · lint-staged 최신.
+> **버전 기준 (2026-09-28):** ESLint **10.x**(현행 10.11.0, v9.x는 2026-08-06부로 EOL, v8.x는 2024-10-05 EOL) · Biome **2.5.x**(현행 2.5.14) · Prettier 3.x(3.9.9) · Husky 9(9.1.7) · lint-staged 최신(17.6.0).
 > ESLint 10은 `.eslintrc.*`·`.eslintignore`·`ESLINT_USE_FLAT_CONFIG`·`--no-eslintrc`·`--rulesdir`·`--ignore-path` 를 **전부 제거**했고 Node `^20.19.0 || ^22.13.0 || >=24` 를 요구한다. `eslint.config.*` 탐색 기준도 cwd가 아니라 **린트 대상 파일의 디렉토리**로 바뀌었다(모노레포에서 패키지별 config가 잡히는 방식이 달라짐).
 > **아직 ESLint 8 + `.eslintrc`를 쓰는 레거시 프로젝트**는 이 스킬의 flat config 예시를 그대로 적용할 수 없다 — 경계 규칙 등 v8 분기 설정은 `architecture/module-boundaries` 스킬(ESLint 8·9 양쪽 예시)을 참조하고, v10 이행은 eslintrc→flat config 변환(`@eslint/migrate-config`)을 선행한다.
 

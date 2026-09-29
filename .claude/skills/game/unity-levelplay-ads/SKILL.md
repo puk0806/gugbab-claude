@@ -21,7 +21,7 @@ description: >
 > - [Changelog](https://docs.unity.com/en-us/grow/levelplay/sdk/unity/changelog)
 > - [Google AdMob integration](https://docs.unity.com/en-us/grow/levelplay/sdk/android/networks/guides/google-admob)
 > - GitHub: [ironsource-mobile/Unity-sdk](https://github.com/ironsource-mobile/Unity-sdk)
-> 검증일: 2026-09-26 (재검증. LevelPlay 9.4.3 → **9.5.1**로 최신 버전 갱신, Android `AD_ID` 권한 요구 시점을 API 33+ → **API 31(Android 12)+ 타겟 시부터**로 정정, LevelPlay Android SDK가 Maven Central로 이전(IS.com 저장소는 더 이상 미지원)됨을 추가 반영)
+> 검증일: 2026-09-28 (재검증, 이전 2026-09-26. 보상형 광고 서버 측 중복 지급·재전송 방어 지침(S2S 서명 검증·EVENT_ID 중복 체크·멱등 처리) 신설 — Unity LevelPlay 공식 S2S 콜백 문서로 확인해 반영. 이전 재검증: LevelPlay 9.4.3 → **9.5.1**로 최신 버전 갱신, Android `AD_ID` 권한 요구 시점을 API 33+ → **API 31(Android 12)+ 타겟 시부터**로 정정, LevelPlay Android SDK가 Maven Central로 이전(IS.com 저장소는 더 이상 미지원)됨을 추가 반영)
 > 대상 버전: LevelPlay Unity Package **9.5.1** (2026 릴리스), Unity 6 LTS / Unity 2022.3 LTS 호환
 
 ---
@@ -255,6 +255,16 @@ void OnAdClosed(LevelPlayAdInfo adInfo)
 **올바른 패턴**: 보상은 반드시 `OnAdRewarded` 콜백에서만 지급한다. `OnAdRewarded`는 사용자가 보상 조건(보통 끝까지 시청)을 충족했을 때만 호출된다.
 
 > 주의: `OnAdRewarded`와 `OnAdClosed`는 비동기이고, 광고 네트워크에 따라 발생 순서가 다를 수 있다(`OnAdClosed`가 먼저 올 수도 있음). 따라서 두 콜백은 독립적으로 처리하며, 보상 지급 로직만 `OnAdRewarded`에 둔다.
+
+### 4-1. 서버 측 보상 검증 — 중복 지급·재전송 방어 (프로덕션 권장)
+
+위 `OnAdRewarded` 클라이언트 콜백만으로 재화를 직접 지급하면(`GameProgress.AddCurrency` 직접 호출) 메모리 조작·에뮬레이터 후킹으로 위조 호출이 가능하다. 실제 재화가 걸린 보상(유료 재화·희귀 아이템 등)은 **Server-to-Server(S2S) 콜백**으로 서버가 직접 검증 후 지급해야 한다.
+
+- LevelPlay(ironSource)는 광고 시청 완료 시 지정한 서버 URL로 GET 콜백을 보낸다. Play Console/LevelPlay 대시보드가 아니라 **자체 백엔드**가 아래 두 가지를 반드시 확인해야 한다:
+  1. **서명(signature) 검증**: `signature = md5([TIMESTAMP][EVENTID][USER_ID][REWARDS][PRIVATE_KEY])` — private key는 발급자와 ironSource만 아는 값. 서버에서 동일 공식으로 재계산해 URL의 `signature` 파라미터와 일치하는지 확인 후 불일치 시 지급 거부(출처: Unity LevelPlay 공식 문서 "Server-to-server callback settings")
+  2. **`[EVENT_ID]` 중복 체크**: EVENT_ID는 ironSource가 완료 이벤트마다 생성하는 고유 식별자. 서버는 이미 처리한 EVENT_ID를 저장해 두고, 재수신 시 재지급하지 않는다(출처: 위 문서 "A unique identifier of the completed event... so you can verify that you have not already rewarded the user for the event")
+- **재전송(retry) 주의**: LevelPlay는 서버가 HTTP 200과 함께 응답 본문에 `[EVENT_ID]:OK` 문자열을 포함해 반환할 때까지 **동일 콜백을 주기적으로 재호출**한다(공식 문서). 따라서 콜백 핸들러는 멱등(idempotent)하게 구현해야 한다 — 이미 처리한 EVENT_ID면 재지급 없이 곧바로 `[EVENT_ID]:OK`를 반환한다.
+- 클라이언트 `OnAdRewarded`는 UX 피드백(즉시 애니메이션 등) 용도로만 쓰고, 실제 재화 확정은 S2S 콜백 처리 후 서버 상태를 클라이언트가 조회하는 구조를 권장한다.
 
 ---
 

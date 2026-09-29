@@ -18,7 +18,7 @@ description: >
 > - Core Web Vitals: https://web.dev/articles/vitals
 > - TBT 임계치(Chrome for Developers): https://developer.chrome.com/docs/lighthouse/performance/lighthouse-total-blocking-time
 >
-> 검증일: 2026-05-14
+> 검증일: 2026-09-28 (최초 2026-05-14) — @lhci/cli 0.15.1·treosh action v12.6.2·Core Web Vitals 임계치(LCP 2.5s/INP 200ms/CLS 0.1) 모두 변동 없음 재확인
 > 기준 버전: `@lhci/cli@0.15.1` (2025-06-26 릴리즈), `treosh/lighthouse-ci-action@v12`
 > Node.js: 18 이상 권장 (공식 quick-start에서 `node-version: 18` 사용)
 

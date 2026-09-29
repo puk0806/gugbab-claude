@@ -13,8 +13,8 @@ description: >
 > 소스: https://docs.astral.sh/uv/ , https://github.com/astral-sh/uv/releases ,
 > https://docs.astral.sh/uv/concepts/projects/init/ , https://docs.astral.sh/uv/guides/integration/github/ ,
 > https://docs.astral.sh/uv/guides/integration/docker/ , https://github.com/astral-sh/setup-uv/releases
-> 검증일: 2026-08-12
-> 검증 버전: uv 0.12.3 (2026-08-07 릴리즈) / astral-sh/setup-uv v9.0.0 / 베이스 이미지 `python:3.12-slim-trixie`
+> 검증일: 2026-09-28 (최초 2026-05-15)
+> 검증 버전: uv 0.12.19 (2026-09-24 릴리즈) / astral-sh/setup-uv v9.0.0 (공식 CI 가이드 예시 기준) / 베이스 이미지 `python:3.12-slim-trixie`
 
 ---
 
@@ -26,7 +26,7 @@ description: >
 |------|------|
 | 제작사 | Astral (ruff·ty 제작사) |
 | 언어 | Rust (코드베이스 98.1% Rust) |
-| 최신 버전 | 0.12.3 (2026-08-07) |
+| 최신 버전 | 0.12.19 (2026-09-24) |
 | 대체 대상 | `pip`, `pip-tools`, `pipx`, `poetry`, `pyenv`, `virtualenv`, `twine` |
 | 라이선스 | MIT or Apache-2.0 |
 
@@ -320,7 +320,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
-          version: "0.12.3"           # uv 버전 핀 권장
+          version: "0.12.19"          # uv 버전 핀 권장
           enable-cache: true          # ~/.cache/uv 자동 캐싱
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
@@ -335,14 +335,16 @@ jobs:
 
 > **⚠️ setup-uv 태그 정책 (v8.0.0부터):** 공급망 공격 방지를 위해 **이동 태그(moving tag) 발행이 중단**됐다.
 > `@v8`·`@v8.0` 같은 축약 메이저·마이너 태그는 더 이상 resolve되지 않으므로 **풀버전 태그(`@v9.0.0`)
-> 또는 커밋 해시**를 써야 한다. 공식 uv 문서 예시는 위처럼 **커밋 해시 + `# v9.0.0` 주석** 방식을 권장한다.
+> 또는 커밋 해시**를 써야 한다. 공식 uv 문서 예시는 위처럼 **커밋 해시 + `# v9.0.0` 주석** 방식을 권장한다(2026-09-28 재확인 — docs.astral.sh 현재도 동일 커밋 해시·태그 예시 유지).
 > 과거 예시에서 흔히 보이는 `astral-sh/setup-uv@v3`는 다수 메이저 뒤처진 구식 표기다.
+>
+> **주의(미검증 세부, 참고용):** `astral-sh/setup-uv` 자체 GitHub Releases에는 v9.0.0 이후 **v10 계열**(cache-poisoning 방지를 위해 `enable-cache: auto` 기본값이 `pull_request_target`/`workflow_run`/`release` 이벤트에서 캐시를 자동 비활성화하는 breaking change 포함)이 존재한다. 다만 uv 공식 CI 가이드(docs.astral.sh)는 이 재검증 시점에도 여전히 v9.0.0 커밋 해시를 예시로 유지하고 있어 위 예시는 그대로 둔다. v10 도입을 검토한다면 릴리즈 노트를 직접 확인할 것.
 
 ### Docker (multi-stage)
 
 ```dockerfile
 # syntax=docker/dockerfile:1.7
-FROM ghcr.io/astral-sh/uv:0.12.3 AS uv
+FROM ghcr.io/astral-sh/uv:0.12.19 AS uv
 
 FROM python:3.12-slim-trixie AS builder
 COPY --from=uv /uv /uvx /bin/
@@ -382,11 +384,11 @@ CMD ["python", "-m", "my_project"]
 
 | 태그 계열 | 예시 | 용도 |
 |-----------|------|------|
-| distroless (uv 바이너리만) | `ghcr.io/astral-sh/uv:0.12.3` | 위 예시처럼 `COPY --from`으로 uv만 꺼내 쓸 때 |
+| distroless (uv 바이너리만) | `ghcr.io/astral-sh/uv:0.12.19` | 위 예시처럼 `COPY --from`으로 uv만 꺼내 쓸 때 |
 | Python 동봉 | `ghcr.io/astral-sh/uv:python3.12-trixie-slim`, `ghcr.io/astral-sh/uv:python3.12-alpine` | uv + Python이 함께 필요한 단일 스테이지 빌드 |
 | 베이스 이미지 | `python:3.12-slim-trixie` | uv를 `COPY --from`으로 주입할 때의 런타임 베이스 |
 
-> **태그 핀 고정 (공식 권장):** `:latest` 대신 `:{major}.{minor}.{patch}`(예: `0.12.3`)로 핀한다.
+> **태그 핀 고정 (공식 권장):** `:latest` 대신 `:{major}.{minor}.{patch}`(예: `0.12.19`)로 핀한다.
 > 재현 가능한 빌드가 필요하면 태그는 다른 커밋 SHA로 **이동될 수 있으므로** SHA256 다이제스트까지 핀하는 것이
 > 공식 문서의 최상위 권장이다:
 > ```dockerfile

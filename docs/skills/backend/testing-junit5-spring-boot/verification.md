@@ -1,8 +1,8 @@
 ---
 skill: testing-junit5-spring-boot
 category: backend
-version: v1
-date: 2026-06-19
+version: v2
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -16,9 +16,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `testing-junit5-spring-boot` |
 | 스킬 경로 | `.claude/skills/backend/testing-junit5-spring-boot/SKILL.md` |
-| 검증일 | 2026-04-22 |
-| 검증자 | skill-creator (agent) |
-| 스킬 버전 | v1 |
+| 검증일 | 2026-09-28 (재검증, 이전 2026-08-11) |
+| 검증자 | skill-creator (최초), 재검증 2차 작업(2026-09-28) |
+| 스킬 버전 | v2 |
 
 ---
 
@@ -90,10 +90,54 @@ status: APPROVED
 - [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 — `@MockitoBean` 대체, `@MybatisTest` 활용 정확히 설명
 - [✅] 2026-06-20 재테스트 수행 (Spring Boot 4.x 섹션 추가 이후 신규 content test 3/3 PASS) — skill-tester → general-purpose
 - [✅] 2026-08-11 재감사: content test 3/3 PASS + WebSearch 핵심 클레임 3/3 VERIFIED → **카테고리 재분류 후 APPROVED 전환** (섹션 5 하단 참조)
+- [✅] 2026-09-28 skill-tester 독립 재테스트: Testcontainers 2.0 좌표 변경 + JUnit 6 GA 날짜 정정분 2/2 PASS → **APPROVED 재전환** (섹션 5 최상단 참조)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-09-28] skill-tester 독립 재테스트 — Testcontainers 좌표·JUnit 6 GA 날짜 정정분 검증
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (도메인 특화 에이전트 부재로 대체)
+**수행 방법**: SKILL.md(+ REFERENCE.md) 만 근거로 답하도록 지시한 general-purpose 에이전트 2건을 병렬 실행. 바로 아래 "재검증(2차)" 블록에서 정정된 두 클레임(Testcontainers 2.0 모듈 좌표, JUnit 6 GA 날짜)을 직접 겨냥.
+
+**Q4-재. "Testcontainers로 MySQL·Oracle 통합 테스트 의존성을 추가하려는데 `org.testcontainers:mysql`/`org.testcontainers:oracle-free` 좌표를 그대로 쓰면 되는가?"**
+- ✅ PASS
+- 근거: SKILL.md "의존성 설정" 46~64행 + 68행 주의문, REFERENCE.md 217~237행
+- 상세: 구 좌표를 그대로 쓰면 안 된다고 정확히 반박하고, `testcontainers-{module}` 신규 좌표(`testcontainers-mysql`, `testcontainers-oracle-free`, 버전 2.0.5)를 정확히 제시. 패키지 경로는 불변임까지 정확히 구분. 낡은 좌표가 남아 모순을 일으키지 않음을 확인.
+
+**Q5-재. "JUnit 6이 GA 되었다는데 언제이고 최소 Java 버전은? 지금 SB 2.5/3.x 프로젝트를 바로 올려야 하나?"**
+- ✅ PASS
+- 근거: SKILL.md 11행 주의문, 379~430행 "Spring Boot 4.x 테스트 마이그레이션" 섹션
+- 상세: 정정된 GA 날짜(2025-09-30, 과거 "2026-02 GA" 오기재였음을 스스로 밝힌 문구까지 인용)와 최소 Java 17을 정확히 답변. 기존 SB 2.5/3.x 프로젝트는 JUnit 5.x 유지가 안전하다는 결론도 정확히 도출 — 옛 날짜가 남아 혼란을 주지 않음을 확인.
+
+**agent content test: 2/2 PASS** (기존 누적 3/3 PASS와 합산 5/5 PASS)
+
+**재검증 최종 판정**: status **PENDING_TEST → APPROVED 재전환**. 이 스킬은 기존에 "API 사용법/테스트 작성 패턴 스킬"로 재분류되어 content test만으로 APPROVED 전환이 가능한 카테고리다(2026-08-11 판정 근거 유지). 2026-09-28 정정분(Testcontainers 좌표·JUnit 6 GA 날짜)이 content test 2/2 PASS로 재확인되었으므로 재전환 조건을 충족한다.
+
+---
+
+### [2026-09-28] 재검증(2차) — Testcontainers 2.0 좌표 변경 발견 + 버전 정정
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md + references/REFERENCE.md 전체 Read → 핵심 클레임을 Maven Central `maven-metadata.xml` 직접 조회(`repo1.maven.org`)로 대조, mybatis-spring-boot-starter 공식 README 버전 매트릭스 재확인
+
+**클레임 대조 결과**:
+1. "JUnit 5.14.x가 LTS, JUnit 6.x는 2025-09-30 GA" → VERIFIED, 단 SKILL.md 11행에 남아있던 "JUnit 6.x(2026-02 GA)" 오기재를 **이번에 정정**(2026-08-11 재감사에서 발견만 되고 미반영 상태였음). Maven Central `junit-jupiter` 최신은 6.1.3(2026-08-07), 5.x 라인 최신은 5.14.4
+2. "mybatis-spring-boot-starter-test 3.0.3 (SB 3.x)" → **DISPUTED(정정)**. Maven Central 확인 결과 3.0.x 라인의 최신 패치는 3.0.5. 공식 README 매트릭스 재확인: 3.0.x = MyBatis-Spring 3.0, Java 17+, SB 3.2~3.5 (기존 판정과 동일, 버전만 갱신)
+3. "testcontainers junit-jupiter/oracle-free/mysql 1.20.4" → **DISPUTED(정정, 영향 큼)**. Testcontainers는 **2.0.0부터 모듈 아티팩트ID가 `org.testcontainers:{module}` → `org.testcontainers:testcontainers-{module}`로 전면 변경**됨(GitHub 릴리스 노트 직접 확인: "All modules are now prefixed with `testcontainers-`"). 구 좌표는 1.21.4에서 멈춰 있고 갱신되지 않는다. 신규 좌표 최신은 2.0.5. 2.0.5 jar를 직접 다운로드해 클래스 목록 확인한 결과 `org.testcontainers.junit.jupiter.{Testcontainers,Container}`, `org.testcontainers.oracle.OracleContainer`, `org.testcontainers.containers.MySQLContainer` 패키지 경로는 불변 — 기존 코드 예제는 좌표만 바꾸면 그대로 동작
+4. "Spring Boot 4.0 GA 2025-11-30" → VERIFIED (endoflife.date 재확인 — 4.1은 2026-06-30 GA로 추가 확인)
+
+**보강(ADD)·축소**: (1) Testcontainers 2.0 좌표 변경을 SKILL.md·REFERENCE.md 양쪽 의존성 블록과 주의문에 반영(패키지 경로 불변 확인도 함께 명시). (2) mybatis-spring-boot-starter-test 버전 3.0.3→3.0.5(SB 3.x), SB 4.x 절에 "mybatis-spring-boot-starter-test도 4.0.x/4.1.0으로 함께 올려야 한다"는 주의문 신설(공식 매트릭스 4.0.x=SB4.0, master/4.1=SB4.1 확인). (3) JUnit 6 GA 날짜 오기재("2026-02"→"2025-09-30") 정정 — 2026-08-11에 발견만 되고 미반영이었던 항목. 축소는 없음(레거시 2.5 절·흔한 실수 목록 등 전부 유지).
+
+**실전 질문 재검증**:
+- Q4. "Testcontainers로 Oracle 통합 테스트 의존성을 추가하려는데 `org.testcontainers:oracle-free`가 최신 맞나?" → SKILL.md "의존성 설정" 주의문 근거로 PASS (2.0부터 `testcontainers-oracle-free`로 이름이 바뀌었음을 답변에 반영해야 정답)
+- Q5. "SB 4.x로 MyBatis 슬라이스 테스트를 옮기는데 뭘 더 확인해야 하나?" → SKILL.md "Spring Boot 4.x 테스트 마이그레이션" 보강 문구 근거로 PASS (`mybatis-spring-boot-starter-test`도 4.0.x/4.1.0으로 동반 업그레이드)
+
+**재검증 최종 판정**: status **PENDING_TEST 전환** (Testcontainers 좌표 변경은 실제 빌드에 영향을 주는 정정이라 skill-tester 재테스트 필요 — 기존 "content test로 충분" 재분류 판단 자체는 유지하되, 이번 정정분은 재테스트 대상)
+
+---
 
 ### 2026-08-11 — 재감사 + APPROVED 전환 판정
 
@@ -280,11 +324,11 @@ assertThatThrownBy로 실패 케이스 검증
 
 | 항목 | 결과 |
 |------|------|
-| 내용 정확성 | ✅ (2026-08-11 WebSearch 재검증 2/3 완전 VERIFIED, 1/3 핵심 내용 VERIFIED·GA 날짜 표기만 경미한 오류) |
+| 내용 정확성 | 2026-09-28 재검증에서 Testcontainers 2.0 좌표 변경 반영 + mybatis/JUnit 버전·GA 날짜 정정 (아래 8. 참조) |
 | 구조 완전성 | ✅ |
-| 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ agent content test 3/3 PASS (2026-04-22 / 2026-06-20 / 2026-08-11 누적 3회 전부 PASS) |
-| **최종 판정** | **APPROVED** (API 사용법/테스트 작성 패턴 스킬로 재분류 — content test PASS만으로 전환 가능) |
+| 실용성 | ✅ (SB 4.x mybatis 버전 안내 보강) |
+| 에이전트 활용 테스트 | ✅ agent content test 5/5 PASS 누적 (2026-04-22 / 2026-06-20 / 2026-08-11 3건 + 2026-09-28 skill-tester 독립 재테스트 2건) — Testcontainers 좌표·JUnit 6 GA 날짜 정정분 재테스트 완료 |
+| **최종 판정** | **APPROVED** (정정분 재테스트 통과로 재전환) |
 
 ---
 
@@ -292,7 +336,9 @@ assertThatThrownBy로 실패 케이스 검증
 
 - [✅] skill-tester content test 수행 (2026-06-20 완료 3/3 PASS, 2026-08-11 재확인 3/3 PASS — Q1 MyBatis Mapper Mock 단위 테스트 / Q2 @MockitoBean 마이그레이션 1:1 치환 여부 / Q3 SB 4.x 마이그레이션 체크리스트)
 - [✅] 실사용 검증 카테고리 판단 — 2026-08-11 재검토 결과 "API 사용법/테스트 작성 패턴 스킬"로 재분류, 실 JUnit 실행 없이 content test PASS만으로 APPROVED 전환 완료 (verification-policy.md 판정 기준: 답변 정확성만으로 검증 가능)
-- [❌] SKILL.md 11행 "JUnit 6.x(2026-02 GA)" 날짜 표기를 실제 공식 GA일(2025-09-30)로 정정 — 선택 보강, 차단 요인 아님 (2026-08-11 WebSearch 재검증에서 발견, annotation·마이그레이션 지침에는 영향 없음, 사용자 승인 후 SKILL.md 수정)
+- [✅] SKILL.md 11행 "JUnit 6.x(2026-02 GA)" 날짜 표기를 실제 공식 GA일(2025-09-30)로 정정 완료 (2026-09-28 재검증 2차)
+- [✅] Testcontainers 모듈 좌표 `org.testcontainers:{junit-jupiter,mysql,oracle-free}` → `org.testcontainers:testcontainers-{module}` 전환 반영 완료 (2026-09-28 재검증 2차, SKILL.md + REFERENCE.md)
+- [✅] skill-tester 독립 재테스트로 정정분(Testcontainers 좌표·JUnit 6 GA 날짜) 검증 완료 (2026-09-28, 2/2 PASS) → APPROVED 재전환
 - [⏸️] `@MockitoBean`이 `@Configuration`/`@Component` 클래스에서 동작하지 않는 케이스 구체 코드 예시 추가 — 선택 보강, 차단 요인 아님
 - [⏸️] `TestRestTemplate` → `WebTestClient` 전환 구체적 코드 예시 추가 — 선택 보강, 차단 요인 아님 (2026-06-20 Q3에서 gap으로 확인)
 - [⏸️] SB 2.5 → 3.x 마이그레이션 시 테스트 코드 변환 포인트 별도 섹션화 — 현재 인라인 주석 위주, 선택 보강
@@ -308,3 +354,5 @@ assertThatThrownBy로 실패 케이스 검증
 | 2026-06-19 | v1 | Spring Boot 4.x 테스트 마이그레이션 섹션 추가 (@MockBean 완전 제거→@MockitoBean, JUnit 6, TestRestTemplate 대체). 검증일 갱신. PENDING_TEST 유지 (세션 한도로 skill-tester 대기). | Claude (Sonnet 4.6) |
 | 2026-06-20 | v1 | 2단계 실사용 테스트 수행 (Q1 @MockitoBean 마이그레이션 / Q2 MyBatis Mapper 단위 테스트 / Q3 SB 4.x 체크리스트) → 3/3 PASS, PENDING_TEST 유지 (워크플로우 스킬 — 실 JUnit 실행 대기) | skill-tester |
 | 2026-08-11 | v1 | 재감사 (Q1 MyBatis Mapper Mock 단위 테스트 / Q2 @MockitoBean 마이그레이션 / Q3 SB 4.x 체크리스트) → 3/3 PASS + WebSearch 3/3 VERIFIED(GA 날짜 표기 경미한 오류 1건) → "API 사용법 스킬"로 재분류, PENDING_TEST → **APPROVED** 전환 | skill-tester |
+| 2026-09-28 | v2 | **재검증(2차) — Maven Central 직접 대조로 Testcontainers 2.0 모듈 좌표 전면 변경 발견.** `org.testcontainers:{junit-jupiter,mysql,oracle-free}`(1.21.4에서 정지) → `org.testcontainers:testcontainers-{module}`(2.0.5)로 SKILL.md·REFERENCE.md 갱신(패키지 경로는 불변 확인). mybatis-spring-boot-starter-test 3.0.3→3.0.5, SB4.x용 4.0.x/4.1.0 안내 신설. JUnit 6 GA 날짜 오기재("2026-02"→"2025-09-30") 정정. status APPROVED → **PENDING_TEST** | 재검증(2차) 작업 |
+| 2026-09-28 | v2 | 2단계 실사용(content) 재테스트 수행 (Q4-재 Testcontainers 좌표 정정 반영 / Q5-재 JUnit 6 GA 날짜 정정 반영) → 2/2 PASS, 누적 5/5 PASS. PENDING_TEST → **APPROVED** 재전환 | skill-tester |

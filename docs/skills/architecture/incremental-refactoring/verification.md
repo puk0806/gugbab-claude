@@ -1,8 +1,8 @@
 ---
 skill: incremental-refactoring
 category: architecture
-version: v1
-date: 2026-09-26
+version: v1.1
+date: 2026-09-28
 status: PENDING_TEST
 ---
 
@@ -172,6 +172,52 @@ status: PENDING_TEST
 
 ## 5. 테스트 진행 기록
 
+### [2026-09-28] skill-tester 재테스트 — REFERENCE.md §3-3 정정분(path.resolve) + §10 신규 실패 패턴 행 검증
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (도메인 특화 에이전트 부재로 대체, 대체 사실 명시)
+**수행 방법**: SKILL.md + references/REFERENCE.md Read 후, 같은 날 "실사용(실행) 검증"에서 발견·정정된 ts-morph `move()` 절대경로 버그(§3-3, §10 신규 행)를 직접 겨냥한 실전 질문 2개를 general-purpose 에이전트에게 실행. SKILL.md/REFERENCE.md만 근거로 답하도록 지시하고 근거 섹션 명시를 요구.
+
+### 실제 수행 테스트
+
+**Q1. order 도메인 6개 파일을 `src/features/order/`로 옮기는 ts-morph `MOVES` 배열 작성 시 흔한 실수**
+- ✅ PASS
+- 근거: SKILL.md 3-3절 정정 문단 + 10절 신규 실패 패턴 행 / REFERENCE.md 3-3절 `MOVES`·`resolve(to)` 코드
+- 상세: `to`를 `path.resolve(to)`로 절대경로 변환하지 않고 프로젝트 루트 기준 상대경로를 그대로 넘기면 `move()`가 이동 대상 파일 자신의 디렉터리 기준으로 재해석해 `src/components/src/features/order/ui/OrderCard.tsx` 같은 중첩된 잘못된 경로로 이동한다는 점을 정확히 답변. "경고·에러 없이 조용히 성공한 것처럼 보인다"는 정정 내용까지 정확히 인용. 경미한 gap: 이 오류를 5-2절의 어느 검증 게이트가 잡아내는지는 SKILL.md에 명시가 없어 에이전트가 추론으로 보완함.
+
+**Q2. 이동 스크립트 실행 후 tsc·depcruise가 모두 통과했는데도 파일이 잘못된 위치로 이동했을 수 있는 이유**
+- ✅ PASS
+- 근거: SKILL.md 5-2절 게이트 표("못 잡는 것" 열) + 10절 신규 실패 패턴 행 / REFERENCE.md 3-3절 `move()` 공식 문서 인용
+- 상세: `move()`가 참조 파일들의 상대 import 지정자까지 "잘못된 새 위치"에 맞춰 self-consistent하게 갱신해버리므로 타입체크가 끊긴 import를 발견하지 못하고, depcruise는 의존 방향만 검사하지 파일 트리 배치 자체의 타당성은 검사 대상이 아니라는 점을 정확히 근거와 함께 도출. git diff/status로 실제 경로를 직접 대조해야 한다는 대응책까지 5-4·5-5절 원칙을 유추 적용해 제시.
+
+### 발견된 gap
+
+- 경미: SKILL.md 5-2절 게이트 표가 "파일 물리적 배치 오류"를 어느 게이트가 잡는지(혹은 못 잡는지) 명시적으로 연결하지 않음 — 10절 신규 행에 "타입체크·경계규칙 모두 통과하지만 실제 위치는 틀릴 수 있다"는 문구를 보강하면 더 명확해짐. 차단 요인 아님(선택 보강).
+
+### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 워크플로우 스킬(실제 실행 결과 확인 필요) — 실사용 필수 카테고리
+- 최종 상태: PENDING_TEST 유지 (§3-3·§10 정정분 content test 통과, 대규모 코드베이스 실전 사이클 미충족은 기존과 동일)
+
+---
+
+### [2026-09-28] 실사용(실행) 검증 — 부분 실행 (졸업 조건 미충족, PENDING_TEST 유지)
+
+**수행일**: 2026-09-28
+**수행 방법**: Node v22.23.1 / lab 격리 폴더에 layer-first 구조의 TS 샘플 프로젝트(20개 파일: types/utils/api/hooks/components에 `order`·`user` 두 도메인이 섞여 있고 `order`는 리프 도메인 — 다른 도메인이 의존하지 않음)를 신규 작성. **주의: 졸업 조건이 요구하는 "소스 수백 개 이상의 실제 대규모 코드베이스"에는 크게 못 미치는 규모다 — 이 실행은 "부분"이며 졸업 조건 완전 충족이 아니다.** ① 베이스라인 `tsc --noEmit` 통과 확인 ② `.dependency-cruiser.cjs`에 `features/order ↔ features/user` 상호 금지 규칙 작성, 베이스라인 depcruise 통과(규칙 대상 경로가 아직 없어 0건, 예상된 결과) ③ SKILL.md references/REFERENCE.md §3-3의 `move-to-feature.ts` 예제 스크립트를 **원문 그대로** 실행해 `order` 도메인 6개 파일을 `src/features/order/`로 배치 이동 ④ 이동 후 `tsc --noEmit`·depcruise 재실행 ⑤ depcruise 규칙이 실제로 발동하는지 검증하기 위해 `src/features/user/probe.ts`를 임시 생성하고 `useOrder.ts`에서 크로스 도메인 import를 임시로 추가해 위반 1건이 정확히 잡히는지 확인 후 원복.
+**실행 결과**:
+- 베이스라인: tsc 통과, depcruise 0건(23 modules, 38 dependencies).
+- **REFERENCE.md §3-3 예제 스크립트를 원문 그대로 실행한 결과, 서술과 다른 결과 발견**: `MOVES` 배열의 대상 경로(`"src/features/order/ui/OrderCard.tsx"` 등 프로젝트 루트 기준 상대경로)를 그대로 `sf.move(to)`에 넘기자, 파일이 의도한 위치가 아니라 `src/components/src/features/order/ui/OrderCard.tsx`처럼 **이동 전 파일 자신의 디렉터리를 기준으로 재해석된 중첩 경로**로 이동했다(에러·경고 없이 "성공"으로 보임). 원인: ts-morph 공식 타입 정의(`ts-morph.d.ts`) JSDoc이 `move(filePath)`의 인자를 "New file path. Can be relative to the **original file** or an absolute path"로 명시 — 프로젝트 루트 기준 상대경로는 애초에 지원 대상이 아니다. **references/REFERENCE.md의 예제 자체가 이 실패를 그대로 재현하는 코드였다.**
+- 수정(`resolve(to)`로 절대경로 변환 후 `.move()` 호출)한 스크립트로 재실행한 결과: 6개 파일 모두 의도한 위치로 정확히 이동, `App.tsx`·`types/index.ts`(배럴) 등 **다른 파일들의 상대 경로 import/export까지 정확히 갱신됨**(공식 문서의 핵심 주장 자체는 검증됨 — 문제는 "그 주장을 어떻게 호출해야 실현되는가"의 예제 오류였다). 이동 후 `tsc --noEmit` 통과, depcruise 0건(23 modules, 38 dependencies) 유지.
+- 경계 게이트가 실제로 작동하는지 임시 위반을 주입해 확인 — `no-order-to-user` 규칙이 정확히 1건의 위반(`src/features/order/useOrder.ts → src/features/user/probe.ts`)을 잡아냄. 위반 코드 원복 후 재실행하여 다시 0건 확인.
+- SKILL.md §10 흔한 실패 패턴 표에 신규 행 추가 + references/REFERENCE.md §3-3 예제를 `path.resolve()` 사용으로 수정, 발견 경위를 주석으로 남김.
+- **실행하지 못한 범위**: 빌드 게이트(④, 샘플에 번들러 미구성)·번들 diff 게이트(⑤)·테스트 게이트(③, 샘플에 테스트 없음)·`git mv` 기반 히스토리 보존(5-4, lab에 git 미사용)·실제 PR 단위 커밋 3종 분리(레포/PR 워크플로우 자체는 재현 불가)는 이번 실행 범위 밖.
+**졸업 조건 충족 여부**: **부분 — 미충족**. PENDING_TEST.md 표가 명시한 "실제 대규모 코드베이스(소스 수백 개 이상), dependency-cruiser"라는 환경 조건을 20개 파일 lab 샘플로는 충족할 수 없다. 다만 ts-morph codemod 실행 → tsc·dependency-cruiser 경계 게이트 통과라는 **절차 자체가 실제로 도는지**는 확인했고, 그 과정에서 스킬 자체의 예제 버그를 발견·수정했다.
+**판정**: **PENDING_TEST 유지** (원칙대로 — 부분 실행을 완전 실행으로 취급하지 않음). 발견된 서술 오류(REFERENCE.md §3-3 예제 + SKILL.md §10)는 실행 근거로 정정 완료.
+
+---
+
 **수행일**: 2026-08-26
 **수행자**: skill-tester → general-purpose (domain-specific 프론트엔드 에이전트 부재로 대체, 대체 사실 명시)
 **수행 방법**: SKILL.md Read 후 실전 질문 4개 답변, 근거 섹션 및 anti-pattern(DISPUTED #8, #15) 회피 여부 확인
@@ -252,10 +298,11 @@ status: PENDING_TEST
 | 요구 주제 커버리지 | ✅ (요구된 7개 주제 전부 대응 섹션 존재) |
 | 실용성 | ✅ (복사 가능한 codemod 4종·게이트 명령·PR 템플릿·지표 스크립트, 프로젝트 비종속) |
 | 기존 스킬과의 중복 | ✅ 없음 (`architecture/ddd`와 역할 분리 명시, dependency-cruiser·Strangler 주제는 레포 최초) |
-| 에이전트 활용 테스트 | ✅ 2026-08-26 수행, general-purpose 대체, Q1~Q4 전부 PASS (섹션 5 참조) |
+| 에이전트 활용 테스트 | ✅ 2026-08-26 수행(general-purpose 대체, Q1~Q4 4/4 PASS) + 2026-09-28 재테스트(§3-3/§10 정정분 겨냥, Q1~Q2 2/2 PASS) — 섹션 5 참조 |
+| 실사용(실행) 검증 (2026-09-28, 부분) | ⚠️ 20파일 lab 샘플에서 ts-morph 배치 이동 + tsc + dependency-cruiser 경계 게이트까지 절차 실행. **REFERENCE.md §3-3 예제 스크립트의 실제 버그 발견**(`move()` 대상 경로가 프로젝트 루트 기준이 아니라 이동 파일 자신 기준으로 해석되어 잘못된 위치로 이동) → 수정 반영. "소스 수백 개" 조건 미충족으로 졸업 조건은 여전히 미충족 |
 | **최종 판정** | **PENDING_TEST (유지)** |
 
-> 판정 근거: 내용 검증(단계 1~4) + 2단계 content test(단계 5, 4/4 PASS) 모두 완료되어 스킬 내용 자체는 정확하다. 다만 `verification-policy.md`상 "워크플로우 스킬(실제 실행 결과 확인 필요)"은 실사용 필수 카테고리로 분류되어, content test PASS만으로는 `APPROVED`로 전환하지 않고 실제 대규모 프로젝트에서 이동 PR 사이클을 1회 이상 수행해 결과를 확인한 뒤 전환한다.
+> 판정 근거: 내용 검증(단계 1~4) + 2단계 content test(단계 5, 4/4 PASS) 모두 완료되어 스킬 내용 자체는 정확하다. 2026-09-28에 20파일 규모 lab 샘플로 ts-morph 배치 이동·tsc·dependency-cruiser 게이트 절차를 실제로 실행해봤고, 그 과정에서 REFERENCE.md 예제 스크립트의 실행 버그를 발견해 수정했다(SKILL.md §10에도 실패 패턴 신규 행 추가). 다만 이 실행은 **"소스 수백 개 이상의 실제 대규모 코드베이스"라는 졸업 조건을 충족하지 못하는 부분 실행**이므로, `verification-policy.md`상 "워크플로우 스킬(실제 실행 결과 확인 필요)" 실사용 필수 카테고리 기준에 따라 `PENDING_TEST`를 유지한다.
 
 ---
 
@@ -267,6 +314,10 @@ status: PENDING_TEST
 - [❌] ts-morph가 별칭(비상대) 지정자 갱신을 지원하게 되면 3-3의 ⚠️ 블록과 10절 실패 패턴 행을 재검토 (관련 이슈 #927 open 상태 추적)
 - [❌] 4-2 barrel 해체 codemod의 `path.replace(...nodes)` 가변 인자 사용은 ast-types NodePath 규약에 의존한다 — jscodeshift 메이저 업그레이드 시 회귀 확인 필요
 - [❌] `size-limit` 기반 번들 diff 예시는 스냅샷 스크립트를 직접 작성하는 형태다. 레포에 `frontend/bundle-size-analysis` 스킬이 있으므로, 추후 상호 참조 포인터 삽입 검토
+- [✅] REFERENCE.md §3-3 `move-to-feature.ts` 예제의 경로 버그 수정 (2026-09-28 완료) — `path.resolve(to)` 적용, SKILL.md §10 실패 패턴 표에 신규 행 추가
+- [✅] §3-3·§10 정정분에 대한 skill-tester content test 수행 (2026-09-28 완료, general-purpose 대체, 2/2 PASS — 섹션 5 참조)
+- [❌] 실제 대규모 코드베이스(소스 수백 개 이상)에서의 전체 사이클 실행 — **차단 요인(APPROVED 전환의 핵심 남은 조건)**: 2026-09-28에 20파일 규모 lab 샘플로 절차 자체(ts-morph 배치 이동·tsc·dependency-cruiser 게이트)는 실행해 확인했으나, 졸업 조건이 요구하는 규모에는 크게 못 미친다. 실제 프로젝트에서 리프 도메인 배치 1개를 이동→머지까지 1사이클 수행하기 전까지 PENDING_TEST 유지
+- [❌] 빌드 게이트·번들 diff 게이트·테스트 게이트·`git mv` 히스토리 보존은 2026-09-28 실행 범위 밖(샘플에 번들러/테스트/git 미구성) — 실제 대규모 코드베이스 실행 시 함께 확인 필요
 
 ---
 
@@ -277,4 +328,6 @@ status: PENDING_TEST
 | 2026-08-26 | v1 | 최초 작성 — 원저자 1차 자료(Fowler bliki 3종·아티클) + 공식 문서(ts-morph·jscodeshift·dependency-cruiser·git·ESLint·GitHub·MS devblog) + npm registry 8종 조회 기반. 15개 클레임 교차 검증(DISPUTED 2건 공식 근거로 수정 반영). 단계 5(skill-tester)는 범위 제외 → PENDING_TEST | skill-creator |
 | 2026-08-26 | v1 | 2단계 실사용 테스트 수행 (Q1 순수이동 안전망 / Q2 move() alias 갱신 여부 / Q3 TS7 ts-morph 사용가능 여부 / Q4 PR 단위·머지직후 정상성) → 4/4 PASS, 워크플로우 스킬(실사용 필수)이므로 PENDING_TEST 유지 | skill-tester |
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | skill-creator |
+| 2026-09-28 | v1.1 | 실사용(실행) 검증 부분 수행 — 20파일 lab 샘플로 ts-morph 배치 이동+tsc+dependency-cruiser 게이트 절차 실행(졸업 조건이 요구하는 "소스 수백 개" 규모에는 미달, PENDING_TEST 유지). 과정에서 REFERENCE.md §3-3 예제 스크립트의 실제 버그 발견(`move()` 대상 경로 해석 오류) → `path.resolve()` 적용해 수정, SKILL.md §10 실패 패턴 표에 신규 행 추가 | 메인 세션(fe-migrate lab) |
 | 2026-09-26 | v1 | 30~60일 주기 재검증. TS 7.1 미출시·ts-morph/jscodeshift 버전 유지 확인, dependency-cruiser 18.2.0→18.4.0 버전 표기 갱신(동작 변경 없음). status PENDING_TEST 유지(워크플로우 스킬 실사용 필수 카테고리) | 메인 세션 |
+| 2026-09-28 | v1.1 | 2단계 실사용 테스트 재수행 (Q1 MOVES 배열 절대경로 변환 실수 / Q2 tsc·depcruise가 §3-3 버그를 못 잡는 이유) → 2/2 PASS, 워크플로우 스킬(실사용 필수 카테고리)이므로 PENDING_TEST 유지 | skill-tester |

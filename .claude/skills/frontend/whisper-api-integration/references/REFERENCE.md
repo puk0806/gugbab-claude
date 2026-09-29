@@ -185,7 +185,30 @@ app.post('/api/transcribe', upload.single('file'), async (req, res, next) => {
 ```
 
 > 공식 `openai` SDK 사용 시: `await client.audio.transcriptions.create({ file, model: 'gpt-transcribe', response_format: 'json' })` — `file`은 `fs.createReadStream` 또는 `File` 객체.
-> `keywords`/`languages`가 SDK 타입에 아직 없으면 공식 Cookbook 방식대로 `extra_body`(Python) 또는 raw multipart 필드로 전달한다:
+>
+> **`keywords`/`languages` — 2026-09-28 재확인**: openai-python(latest 3.19.2)·openai-node(latest 7.23.0) 최신 SDK는 두 파라미터를 `create()`의 **최상위 타입 인자**로 정식 지원한다(GitHub 소스 `TranscriptionCreateParamsBase`에 `keywords`/`languages` 필드 직접 확인). 즉 아래처럼 **직접 전달하면 된다**:
+>
+> ```python
+> result = client.audio.transcriptions.create(
+>     model="gpt-transcribe",
+>     file=audio,
+>     prompt="A customer support call about billing.",
+>     keywords=["AC-42", "Premium Plus"],
+>     languages=["en", "fr"],
+> )
+> ```
+>
+> ```ts
+> const result = await client.audio.transcriptions.create({
+>   model: 'gpt-transcribe',
+>   file,
+>   prompt: 'A customer support call about billing.',
+>   keywords: ['AC-42', 'Premium Plus'],
+>   languages: ['en', 'fr'],
+> });
+> ```
+>
+> OpenAI 공식 가이드·Cookbook 예제는 여전히 Python에서 `extra_body={...}`, Node에서 요청 바디 스프레드로 전달하는 코드를 보여준다(구버전 SDK 호환을 위한 관행적 표기로 추정). SDK가 오래돼 위 직접 전달 방식이 타입 에러를 내면, 과거 방식대로 우회할 수 있다:
 >
 > ```python
 > result = client.audio.transcriptions.create(

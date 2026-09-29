@@ -1,8 +1,8 @@
 ---
 skill: github-actions-visual-regression
 category: devops
-version: v1.1
-date: 2026-08-11
+version: v1.2
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -41,9 +41,9 @@ status: APPROVED
 | 스킬 이름 | `github-actions-visual-regression` |
 | 스킬 경로 | `.claude/skills/devops/github-actions-visual-regression/SKILL.md` |
 | 최초 검증일 | 2026-04-29 |
-| 최종 재검증일 | 2026-08-11 (액션 메이저 버전·checkout v7 보안 기본값 반영) |
-| 검증자 | Claude (Opus 4.7 최초 / Opus 5 재검증) |
-| 스킬 버전 | v1.1 |
+| 최종 재검증일 | 2026-09-28 (08-11 액션 메이저 버전·checkout v7 보안 기본값 반영 → 09-28 전수 재확인, pnpm/action-setup 패치 정정) |
+| 검증자 | Claude (Opus 4.7 최초 / Opus 5 → Sonnet 5 재검증) |
+| 스킬 버전 | v1.2 |
 
 ---
 
@@ -182,13 +182,44 @@ DISPUTED / UNVERIFIED 항목: 없음.
 
 ### 4-4. Claude Code 에이전트 활용 테스트
 
-- [✅] skill-tester 호출 완료 (2026-04-29, general-purpose 에이전트로 대체 수행)
-- [✅] 테스트 질문 3개 수행 결과 반영 (3/3 PASS)
+- [✅] skill-tester 호출 완료 (2026-04-29, general-purpose 에이전트로 대체 수행 / 2026-08-11 회귀 4회 / 2026-09-28 재검증 정정분 2회)
+- [✅] 테스트 질문 수행 결과 반영 (2026-04-29 3/3, 08-11 회귀 4/4, 09-28 재테스트 2/2 PASS)
 - [✅] 잘못된 응답 없음 — SKILL.md 내용으로 모든 질문에 완전한 답변 도출 가능
 
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-09-28 (재테스트)
+**수행자**: skill-tester → general-purpose (2회 병렬 호출, devops-engineer 미등록으로 대체)
+**수행 방법**: 2026-09-28 재검증(2차)에서 정정된 pnpm/action-setup 패치(6.0.10→6.1.0)와 나머지 9종 액션 무변경 확인 내용을 겨냥해 SKILL.md + REFERENCE.md Read 후 실전 질문 2개 답변, 근거 줄번호 확인
+
+### 실제 수행 테스트 (재테스트)
+
+**Q1. `pnpm/action-setup@v6` + `version: 9` 조합을 6.1.0 패치 이후에도 그대로 둬도 되는지, `version` 입력 생략 조건, 다른 액션들의 메이저 변경 여부**
+- ✅ PASS
+- 근거: SKILL.md 상단 "주의" 박스(21-25행), §3 "핵심 포인트"(191행), 464행
+- 상세: 6.1.0은 `@v6` 부동 태그 내 패치라 워크플로우 수정 불필요함을 정확히 지적했고, `package.json`에 `packageManager`/`devEngines.packageManager` 필드가 있으면 `version` 입력 생략 가능하다는 조건, checkout·upload-artifact·download-artifact 등 나머지 9종은 09-28 재확인 결과 메이저·패치 변경이 없음을 정확히 인용.
+
+**Q2. `actions/github-script@v9`에서 `require('@actions/github')`로 옥토킷을 가져오던 예전 코드가 동작하는지, 셀프호스트 러너 추가 확인 사항**
+- ✅ PASS
+- 근거: SKILL.md §6 379행, 464행, 423-446행 코드 예시
+- 상세: v9는 `@actions/github` v9(ESM 전용)로 `require()`가 동작하지 않고 사전 주입된 `github`/`context` 전역 변수를 써야 한다는 점, `getOctokit` 재선언 시 `SyntaxError`가 난다는 점, 셀프호스트 러너는 Actions Runner v2.327.1 이상 필요(Node 24 실행)하다는 점을 정확히 인용.
+
+### 재테스트 발견 gap (보강 권장, 차단 요인 아님)
+
+- Q1: `version` 입력 생략 가능 여부 판단에 필요한 `package.json` 확인은 스킬 범위 밖(사용자가 직접 확인 필요) — 문서 결함은 아님.
+- Q2: 셀프호스트 러너 버전 미달 시 정확한 에러 증상(스텝 실패 vs 워크플로우 파싱 실패) 서술 없음.
+
+### 재테스트 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: "워크플로우/CI 설정" 성격이나, 2026-04-29 최초 검증부터 content test PASS 기준으로 APPROVED 전환해온 기존 이력을 유지
+- 최종 상태: APPROVED
+
+---
+
+### 최초 테스트 기록 (2026-04-29, 참고용)
 
 **수행일**: 2026-04-29
 **수행자**: skill-tester → general-purpose (devops-engineer 에이전트 미등록으로 대체)
@@ -236,16 +267,36 @@ DISPUTED / UNVERIFIED 항목: 없음.
 
 ---
 
+### [2026-09-28] 재검증(2차) — 액션 태그 전수 재확인, pnpm/action-setup 패치 정정
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read → 본문에 등장하는 액션 10종의 최신 메이저·패치를 `curl api.github.com/repos/<owner>/<repo>/releases/latest`로 전수 대조 (devops/github-actions 재검증과 동일 방법)
+
+**클레임 대조 결과**:
+1. `actions/checkout`(v7.0.1)·`actions/cache`(v6.1.0)·`actions/upload-artifact`(v7.0.1)·`actions/download-artifact`(v8.0.1)·`actions/setup-node`(v7.0.0)·`actions/github-script`(v9.0.0)·`dorny/paths-filter`(v4.0.3)·`peter-evans/create-pull-request`(v8.1.1)·`thollander/actions-comment-pull-request`(v3.0.1) — VERIFIED, 08-11 시점과 완전히 동일(메이저·패치 변경 없음)
+2. `pnpm/action-setup` — DISPUTED(정정) → 08-11 기록은 6.0.10, 09-28 확인 결과 6.1.0(같은 메이저 v6, 패치만 진행) — SKILL.md 상단 버전 줄 정정
+3. checkout v7 포크 PR 체크아웃 차단 정책(섹션 2·8-1) — VERIFIED, 정책 변경 없음(2026-06-18 GA 이후 추가 변경 없음)
+
+**보강(ADD)·축소**: 없음 — 버전 숫자 1건 정정 외 본문 구조·anti-pattern·워크플로우 예시 변경 없음
+
+**실전 질문 재검증**:
+- Q1. "matrix 잡에서 upload-artifact를 쓸 때 이름 충돌을 피하려면?" → SKILL.md 섹션 3 + REFERENCE.md 8-4 근거로 PASS (그대로 유효, 액션 버전 변경 없음)
+- Q2. "pnpm/action-setup 버전을 올렸는데 `version` 입력을 계속 명시해야 하나?" → SKILL.md 섹션 3 근거로 PASS (`packageManager` 필드 있으면 생략 가능, 6.1.0에서도 동일)
+
+**재검증 최종 판정**: status **PENDING_TEST 전환** (버전 정정 반영 — 메인이 skill-tester로 재테스트)
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
 |------|------|
-| 내용 정확성 | ✅ |
+| 내용 정확성 | ✅ — 2026-09-28 재검증에서 pnpm/action-setup 버전 정정(6.0.10→6.1.0) 1건, 나머지 9종 액션은 변경 없음 확인 |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-04-29, 3/3 PASS) |
-| 최신성 재검증 | ✅ (2026-08-11, 클레임 10건 전부 VERIFIED / 회귀 확인 4/4 PASS) |
-| **최종 판정** | **APPROVED** (유지) |
+| 에이전트 활용 테스트 | ✅ (2026-04-29 3/3 PASS, 2026-08-11 회귀 4/4 PASS, 2026-09-28 재테스트 2/2 PASS) |
+| 최신성 재검증 | ✅ (2026-08-11 클레임 10건 VERIFIED / 09-28 10종 액션 전수 재확인, 1건 패치 정정) |
+| **최종 판정** | **APPROVED** (재검증 정정분 재테스트 완료) |
 
 > 1단계(오프라인 검증) + 2단계(skill-tester content test) 모두 완료.
 > 3개 실전 질문(artifact 이름 충돌 회피 / pull_request_target 위험 / 로컬 baseline false positive) 모두 PASS.
@@ -262,6 +313,7 @@ DISPUTED / UNVERIFIED 항목: 없음.
 - [⏸️] 동적 matrix 패턴(앱 5개 이상일 때) 보강 — 차단 요인 아님, 실제 필요해질 때 추가 (선택 보강)
 - [⏸️] Chromatic / Percy / Argos SaaS 연동 비교 가이드 — 현재는 self-managed CI 전용, 필요 시 별도 스킬로 분리 (선택 보강)
 - [✅] 액션 메이저 버전·checkout v7 보안 기본값 반영 (2026-08-11)
+- [✅] skill-tester 2단계 content test 재수행 — 2026-09-28 재검증(pnpm/action-setup 패치 정정)분 겨냥 2/2 PASS (2026-09-28 완료 — general-purpose)
 - [✅] `references/REFERENCE.md`의 액션 버전 표기(섹션 8-1 anti-pattern 예시·섹션 10 전체 워크플로우 예시)를 SKILL.md와 동기화 (2026-08-11 완료 — checkout v5→v7, upload-artifact v4→v7, download-artifact v4→v8, cache v4→v6, setup-node v4→v7, pnpm/action-setup v4→v6, paths-filter v3→v4. thollander/actions-comment-pull-request@v3은 SKILL.md와 이미 일치하여 유지)
 
 ---
@@ -273,3 +325,5 @@ DISPUTED / UNVERIFIED 항목: 없음.
 | 2026-04-29 | v1 | 최초 작성: 시각 회귀 CI 워크플로우 구조, paths-filter 트리거, Storybook 빌드 artifact 전달, test-runner + start-server-and-test 실행, baseline 캐시 + 별도 PR 갱신, 결과 PNG/HTML 업로드, github-script/thollander 코멘트, matrix 병렬, 6가지 anti-pattern (pull_request_target, baseline drift, 로컬 baseline, artifact 이름 충돌, 전체 브라우저 설치, retention 무제한) | Claude (Opus 4.7) |
 | 2026-04-29 | v1 | 2단계 실사용 테스트 수행 (Q1: matrix artifact 이름 충돌 회피 / Q2: pull_request_target 보안 위험 및 대안 / Q3: 로컬 baseline false positive 원인과 갱신 방법) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-08-11 | v1.1 | 최신화: "v5/v4 LTS 라인 유지" 전제 폐기 후 최신 메이저로 갱신(checkout v5→v7, cache v4→v6, upload-artifact v4→v7, download-artifact v4→v8, setup-node v4→v7, github-script v7→v9, paths-filter v3→v4, pnpm/action-setup v4→v6, create-pull-request v7→v8). checkout v7 포크 PR 체크아웃 기본 차단·2026-07-20 백포트 경고 추가, download-artifact v8 `digest-mismatch`·github-script v9 ESM 주의 추가. 클레임 10건 교차 검증 전부 VERIFIED, 회귀 확인 4/4 PASS. status APPROVED 유지 | Claude (Opus 5) |
+| 2026-09-28 | v1.2 | 재검증(2차) — 액션 10종 전수 재확인, pnpm/action-setup 6.0.10→6.1.0 패치 정정(메이저 변경 없음), 나머지 9종은 08-11과 동일 확인. status APPROVED → PENDING_TEST(재테스트 대기) | Claude (Sonnet 5) |
+| 2026-09-28 | v1.2 | 2단계 재테스트 수행 (Q1 pnpm/action-setup 패치·다른 액션 무변경 확인 / Q2 github-script v9 ESM breaking change·셀프호스트 러너 조건) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
