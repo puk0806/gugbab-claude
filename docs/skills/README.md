@@ -2,17 +2,15 @@
 
 | 카테고리 | 종류 | 설명 |
 |----------|------|------|
-| [frontend](./frontend/README.md) | 79종 | 프레임워크·상태관리·UI·빌드·테스트·성능·SEO·LLM·i18n·꿈/운세 앱 UI |
+| [frontend](./frontend/README.md) | 78종 | 프레임워크·상태관리·UI·빌드·테스트·성능·SEO·LLM·i18n·꿈/운세 앱 UI |
 | [backend](./backend/README.md) | 50종 | Rust·Java(레거시/모던)·Python·TypeScript(Hono/Prisma/Zod/Better Auth/Drizzle/Neon)·Claude Code CLI·만세력 백엔드 |
 | [devops](./devops/README.md) | 11종 | Docker·GitHub Actions·n8n·Vercel Sandbox/Workflow·SEO 운영 |
 | [architecture](./architecture/README.md) | 6종 | DDD·프론트 도메인 구조·모듈 경계·점진 리팩터링·꿈/운세 앱 데이터 모델링 |
-| [humanities](./humanities/README.md) | 18종 | 인문학·도덕철학·꿈 심리학·사주/타로/손금 전통 |
-| [research](./research/README.md) | 2종 | 학술 DB·연구윤리 |
-| [writing](./writing/README.md) | 11종 | 학술 글쓰기·SEO 콘텐츠 품질 |
-| [education](./education/README.md) | 4종 | 도덕과 교육과정·수업 적용 |
+| [humanities](./humanities/README.md) | 9종 | 꿈 심리학·애착 이론·위기 개입·사주/타로/손금 전통 |
+| [writing](./writing/README.md) | 4종 | SEO 콘텐츠 품질 |
 | [game](./game/README.md) | 16종 | Unity 2D 게임 개발·출시·수익화 |
 | [health](./health/README.md) | 5종 | 건강·식단·영양 (KDRIs·한국 식품 DB·식단 프롬프트) |
-| [meta](./meta/README.md) | 7종 | 워크플로우·프롬프트 엔지니어링(꿈·운세)·훅 작성법 |
+| [meta](./meta/README.md) | 5종 | 프롬프트 엔지니어링(꿈·운세)·훅 작성법 |
 
 ---
 

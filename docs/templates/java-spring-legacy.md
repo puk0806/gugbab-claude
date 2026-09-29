@@ -52,7 +52,7 @@ Java 11 + Spring Boot 2.5 + WAR + MyBatis 레거시 백엔드 프로젝트.
 | backend — Java 레거시 전용 (6종) | spring-security-5·swagger-springfox-2·redis-redisson-legacy·ehcache-2·aws-sdk-v1·spring-boot-2-to-3-migration | [→ 목록](../skills/backend/README.md) |
 | devops (2종) | docker-deployment·github-actions | [→ 목록](../skills/devops/README.md) |
 | architecture (3종) | ddd·incremental-refactoring·module-boundaries | [→ 목록](../skills/architecture/README.md) |
-| meta (3종) | claude-code-hook-authoring·ralph-loop·riper-workflow | [→ 목록](../skills/meta/README.md) |
+| meta (1종) | claude-code-hook-authoring | [→ 목록](../skills/meta/README.md) |
 
 총 **27종**. 각 스킬의 `references/` 부속 파일도 함께 복사됩니다 (2026-08-31: SKILL.md만 복사되던 버그 수정).
 

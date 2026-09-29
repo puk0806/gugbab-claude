@@ -1,4 +1,4 @@
-# frontend 스킬 (79종)
+# frontend 스킬 (78종)
 
 React·Next.js·TypeScript·SEO·접근성·성능·PWA·꿈 앱 UI·운세 앱 UI 등 프론트엔드 전 영역 스킬 모음.
 
@@ -42,7 +42,6 @@ React·Next.js·TypeScript·SEO·접근성·성능·PWA·꿈 앱 UI·운세 앱 
 | [monorepo-turborepo](../../../.claude/skills/frontend/monorepo-turborepo/SKILL.md) | 모노레포 구조, Turborepo 파이프라인 | [→](./monorepo-turborepo/verification.md) |
 | [tsup](../../../.claude/skills/frontend/tsup/SKILL.md) | TypeScript 라이브러리 번들러 — CJS/ESM 동시 출력, DTS, 모노레포 패턴 | [→](./tsup/verification.md) |
 | [rsbuild](../../../.claude/skills/frontend/rsbuild/SKILL.md) | Rsbuild 2.x — Rspack 기반 웹 앱 빌드, CRA·webpack 마이그레이션 | [→](./rsbuild/verification.md) |
-| [cra-to-vite-migration](../../../.claude/skills/frontend/cra-to-vite-migration/SKILL.md) | CRA → Vite 마이그레이션 8단계 절차 | [→](./cra-to-vite-migration/verification.md) |
 | [tanstack-query-v4-to-v5-migration](../../../.claude/skills/frontend/tanstack-query-v4-to-v5-migration/SKILL.md) | React Query v4 → v5 — breaking change 전수(isPending·gcTime·throwOnError·useQuery 콜백 제거·initialPageParam), 공식 codemod, 타입 에러 없이 동작만 바뀌는 함정 | [→](./tanstack-query-v4-to-v5-migration/verification.md) |
 | [webpack-vite-config-mapping](../../../.claude/skills/frontend/webpack-vite-config-mapping/SKILL.md) | Webpack/Craco 설정 → Vite 1:1 매핑 | [→](./webpack-vite-config-mapping/verification.md) |
 | [vite-advanced-splitting](../../../.claude/skills/frontend/vite-advanced-splitting/SKILL.md) | Vite 고급 코드 스플리팅 — manualChunks 함수형, 멀티 빌드 | [→](./vite-advanced-splitting/verification.md) |

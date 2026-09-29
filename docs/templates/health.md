@@ -58,7 +58,7 @@
 | devops (10종 / SEO y 시 11종) | Docker·GitHub Actions·n8n·Vercel Sandbox·Vercel Workflow (+ site-migration-seo 는 옵트인) | vercel-workflow 는 사용자별 지정 시각 Web Push 예약용 (2026-09-17) |
 | architecture (4종) | DDD·프론트 도메인 구조·모듈 경계·점진 리팩터링 | |
 | backend (6종) | claude-code-headless (Claude 구독 중계 연동용 예외) + TS 백엔드 5종 — hono-api-patterns·prisma-orm·zod-schema-validation·better-auth·drizzle-neon-postgres (짝 에이전트 typescript-backend-* 소유, 2026-09-25 신설) | |
-| meta (3종) | ralph-loop·riper-workflow·claude-code-hook-authoring | |
+| meta (1종) | claude-code-hook-authoring | |
 | writing (0종 / SEO y 시 4종) | SEO 콘텐츠 품질 — 옵트인 | |
 
 > **SEO·GEO 옵트인 (2026-09-11)**: react-spa·nextjs와 같은 질문(`y` 전체 / `c` 커머스 / `n` 제외, 엔터 = n)을 받는다. 이전에는 스킬 필터가 SEO 옵션을 읽고 있었지만 질문이 나오지 않아 기본값(전체 포함)이 항상 통과했다. 개인용 PWA면 n. 기본 옵션 실측(2026-09-25, TS 백엔드 스킬 소유 템플릿 신설 반영): 스킬 75(SEO y 시 98) · 에이전트 31 · 훅 20 · 규칙 5 · 매니페스트 `templates: ["health"]`.

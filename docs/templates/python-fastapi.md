@@ -54,7 +54,7 @@ rust·java·typescript 백엔드 에이전트 6종, build-error-resolver(cargo·
 | backend — Python (10종) | python-fastapi · python-pydantic-v2 · python-async-asyncio · python-uv-project-setup · python-anthropic-sdk · python-langchain-current · python-llamaindex · python-embeddings-vector-db · python-korean-nlp-konlpy · python-cli-typer | [→ 목록](../skills/backend/README.md) |
 | devops (8종) | docker-deployment · github-actions · n8n 5종 · vercel-sandbox | [→ 목록](../skills/devops/README.md) |
 | architecture (3종) | ddd · incremental-refactoring · module-boundaries | [→ 목록](../skills/architecture/README.md) |
-| meta (3종) | claude-code-hook-authoring · ralph-loop · riper-workflow | [→ 목록](../skills/meta/README.md) |
+| meta (1종) | claude-code-hook-authoring | [→ 목록](../skills/meta/README.md) |
 
 **차단**: backend 는 `backend/python-*` 만 (java·rust·drizzle-neon-postgres·claude-code-headless·만세력 제외),
 frontend·game·humanities·education·research·writing 카테고리 전체, 프론트 전용 devops 3종(site-migration-seo·github-actions-visual-regression·vercel-workflow),

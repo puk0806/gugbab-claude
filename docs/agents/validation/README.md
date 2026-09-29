@@ -1,6 +1,6 @@
 # validation 에이전트
 
-사실 검증, 보안 감사, 성능 측정, 학술 심사, SEO·접근성 점검 등 다양한 검증·평가 작업 전담 에이전트 모음.
+사실 검증, 보안 감사, 성능 측정, SEO·접근성 점검 등 다양한 검증·평가 작업 전담 에이전트 모음.
 
 | 에이전트 | 설명 |
 |---------|------|
@@ -14,10 +14,6 @@
 | [content-quality-reviewer](../../../.claude/agents/validation/content-quality-reviewer.md) | E-E-A-T·Helpful Content 기준 콘텐츠 품질 진단 + 초안 코칭·네이버 특화 점검 (구 seo-content-writer-coach 통합) |
 | [build-perf-benchmarker](../../../.claude/agents/validation/build-perf-benchmarker.md) | hyperfine·번들 분석기·lhci로 빌드·번들·dev 서버·Lighthouse 성능 측정 |
 | [perf-report-writer](../../../.claude/agents/validation/perf-report-writer.md) | 벤치마크 결과 → Executive Summary·통계 해석·권고 포함 이해관계자용 보고서 |
-| [abstract-reviewer](../../../.claude/agents/validation/abstract-reviewer.md) | 학술 초록·키워드 평가 (KCI/APA/Springer/Elsevier 기준 PASS/NEEDS_REVISION) |
-| [argument-reviewer](../../../.claude/agents/validation/argument-reviewer.md) | 철학·인문학 논문 전제-결론 연결·순환 논증·논리 오류 탐지 |
-| [citation-checker](../../../.claude/agents/validation/citation-checker.md) | 학술 논문 본문 인용 ↔ 참고문헌 누락·불일치·표기 오류 대조 |
-| [peer-review-simulator](../../../.claude/agents/validation/peer-review-simulator.md) | KCI·JME 등 학술지 익명 동료 심사 시뮬레이션 (Accept~Reject + point-by-point) |
 | [dream-safety-classifier](../../../.claude/agents/validation/dream-safety-classifier.md) | 꿈 텍스트 위기 신호 5카테고리 분류 (자해·트라우마·폭력 등) → JSON 반환 |
 | [dream-interpretation-prompt-tester](../../../.claude/agents/validation/dream-interpretation-prompt-tester.md) | 꿈 해몽 Claude 프롬프트 5축 품질 평가 → PASS/NEEDS_REVISION/FAIL |
 | [dream-image-safety-classifier](../../../.claude/agents/validation/dream-image-safety-classifier.md) | 꿈 시각화 이미지·프롬프트 이중 안전 분류 (DALL-E/Imagen 정책 위반 포함) |

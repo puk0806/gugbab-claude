@@ -62,7 +62,7 @@ SEO·GEO(생성형 AI 검색 노출) 애드온 템플릿. 프레임워크 비종
 
 ## 훅 (공통 15종)
 
-단독 설치 시 공통 훅만 들어간다(academic·dream 과 동일). dev 훅(tdd-guard·test-fake-guard·adversarial-test-guard·fake-impl-guard)·TypeScript 훅은 **병행한 스택 템플릿**이 결정한다 — `5,11`이면 java 가 dev 4종을, `3,11`이면 nextjs 가 dev 4종 + typescript-quality 를 보탠다.
+단독 설치 시 공통 훅만 들어간다(util 과 동일). dev 훅(tdd-guard·test-fake-guard·adversarial-test-guard·fake-impl-guard)·TypeScript 훅은 **병행한 스택 템플릿**이 결정한다 — `5,11`이면 java 가 dev 4종을, `3,11`이면 nextjs 가 dev 4종 + typescript-quality 를 보탠다.
 
 공통 15종 목록은 [java-spring-legacy 템플릿 문서](./java-spring-legacy.md#훅-19종)의 공통 섹션과 같다.
 

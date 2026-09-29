@@ -52,7 +52,7 @@ Java 21 + Spring Boot 3.x + Jar/Native + MyBatis 모던 백엔드 프로젝트.
 | backend — Java 모던 전용 (5종) | spring-security-6·springdoc-openapi-3·redis-redisson-modern·redis-redisson-4·aws-sdk-v2 | [→ 목록](../skills/backend/README.md) |
 | devops (2종) | docker-deployment·github-actions | [→ 목록](../skills/devops/README.md) |
 | architecture (3종) | ddd·incremental-refactoring·module-boundaries | [→ 목록](../skills/architecture/README.md) |
-| meta (3종) | claude-code-hook-authoring·ralph-loop·riper-workflow | [→ 목록](../skills/meta/README.md) |
+| meta (1종) | claude-code-hook-authoring | [→ 목록](../skills/meta/README.md) |
 
 총 **26종** (2026-09-25 실측 — `redis-redisson-4` JAVA_SKILLS_MODERN_ONLY 누락 버그 수정 반영). 각 스킬의 `references/` 부속 파일도 함께 복사됩니다 (2026-08-31: SKILL.md만 복사되던 버그 수정).
 

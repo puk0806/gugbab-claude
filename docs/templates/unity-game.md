@@ -59,7 +59,7 @@ Unity 6 LTS 2D 모바일 게임 개발 프로젝트. 웹 프론트엔드·서버
 | game (16종) | GDD·AI 에셋·Unity 핵심·수익화·출시·CI/CD (절차적 생성 PCG 스킬은 2026-09-26 제거) | [→ game 스킬 목록](../skills/game/README.md) |
 | devops (8종) | docker-deployment·github-actions·n8n 5종·vercel-sandbox | [→ devops 스킬 목록](../skills/devops/README.md) |
 | architecture (3종) | ddd·incremental-refactoring·module-boundaries | [→ architecture 스킬 목록](../skills/architecture/README.md) |
-| meta (3종) | claude-code-hook-authoring·ralph-loop·riper-workflow | [→ meta 스킬 목록](../skills/meta/README.md) |
+| meta (1종) | claude-code-hook-authoring | [→ meta 스킬 목록](../skills/meta/README.md) |
 
 > 2026-08-31: dream 전용(meta 3·architecture 1)·frontend-domain-structure가 fallthrough로 딸려가던 누수를 차단했습니다.
 > 2026-09-25 실측: devops는 github-actions-visual-regression·site-migration-seo(프론트 전용)를 포함하지 않아 8종(이전 표의 10종은 과다 계상이었다).

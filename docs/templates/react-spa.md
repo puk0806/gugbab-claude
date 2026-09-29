@@ -58,7 +58,7 @@ React SPA + TypeScript 프론트엔드 프로젝트. 백엔드·게임·학술 �
 | backend (6종) | claude-code-headless (Claude 구독 중계 연동용 예외) + TS 백엔드 5종 — hono-api-patterns·prisma-orm·zod-schema-validation·better-auth·drizzle-neon-postgres (짝 에이전트 typescript-backend-* 소유, 2026-09-25 신설) | [→ 목록](../skills/backend/README.md) |
 | devops (4종 / SEO y 시 5종) | docker-deployment·github-actions·github-actions-visual-regression·vercel-sandbox (+ site-migration-seo 는 옵트인) | [→ 목록](../skills/devops/README.md) |
 | architecture (4종) | ddd·frontend-domain-structure·incremental-refactoring·module-boundaries | [→ 목록](../skills/architecture/README.md) |
-| meta (3종) | ralph-loop·riper-workflow·claude-code-hook-authoring | [→ 목록](../skills/meta/README.md) |
+| meta (1종) | claude-code-hook-authoring | [→ 목록](../skills/meta/README.md) |
 | writing (0종 / SEO y 시 4종) | SEO 콘텐츠 품질 — content-eeat-quality·ymyl·multilingual·accessibility-vpat (옵트인) | [→ 목록](../skills/writing/README.md) |
 
 총 **55종** (SEO n·기본 옵션, 2026-09-26 실측 — frontend 스킬 정리 반영, 이전 2026-09-25 실측 61종). 이전 표(81종 단일 행)는 SEO 옵트인 도입(2026-09-11) 전 값이었다.

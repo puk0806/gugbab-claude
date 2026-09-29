@@ -56,7 +56,7 @@ Rust + Axum 백엔드 프로젝트. 프론트엔드·Java·게임·학술 스킬
 | backend — Rust (10종) | axum·sqlx·tower-http·reqwest·jwt-auth·multipart-upload·sse-streaming·project-structure·testing-rust + claude-code-headless (Claude 구독 중계 연동용 예외) | [→ 목록](../skills/backend/README.md) |
 | devops (8종) | docker-deployment·github-actions·n8n 5종·vercel-sandbox | [→ 목록](../skills/devops/README.md) |
 | architecture (3종) | ddd·incremental-refactoring·module-boundaries | [→ 목록](../skills/architecture/README.md) |
-| meta (3종) | claude-code-hook-authoring·ralph-loop·riper-workflow | [→ 목록](../skills/meta/README.md) |
+| meta (1종) | claude-code-hook-authoring | [→ 목록](../skills/meta/README.md) |
 
 > 2026-08-31: dream 전용(meta 3·architecture 1)·frontend-domain-structure가 fallthrough로 딸려가던 누수를 차단했습니다.
 > 2026-09-11: python 에이전트 2종(python-backend-developer·python-backend-architect)을 배제 목록에 추가 — Python 스킬은 원래 설치되지 않습니다 (rust 화이트리스트 방식).

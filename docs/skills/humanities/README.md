@@ -1,22 +1,6 @@
 # humanities 스킬
 
-인문학·철학·심리학·꿈·운세 관련 도메인 지식 스킬 모음 (총 18종).
-
----
-
-## 아리스토텔레스·도덕철학 (9종)
-
-| 스킬 | 설명 | 검증 |
-|------|------|------|
-| [akrasia-scholarship-map](../../../.claude/skills/humanities/akrasia-scholarship-map/SKILL.md) | akrasia 학술 논쟁 구도·주요 연구자·문헌 빠른 파악 — 도덕윤리교육 대학원 전공 지식, 현대 덕윤리 접점·KCI 수용 | [→](./akrasia-scholarship-map/verification.md) |
-| [aristotelian-virtue-ethics-detail](../../../.claude/skills/humanities/aristotelian-virtue-ethics-detail/SKILL.md) | 아리스토텔레스 덕 윤리학 NE I–VI권 심화 — akrasia 논문 1차 텍스트 챕터 작성 지원 | [→](./aristotelian-virtue-ethics-detail/verification.md) |
-| [aristotle-akrasia-translations-comparison](../../../.claude/skills/humanities/aristotle-akrasia-translations-comparison/SKILL.md) | akrasia 핵심 어휘 8종 번역본 비교 — Ross/Irwin/강상진 등 한·영 번역 차이 분석 | [→](./aristotle-akrasia-translations-comparison/verification.md) |
-| [aristotle-akrasia-vs-akolasia-distinction](../../../.claude/skills/humanities/aristotle-akrasia-vs-akolasia-distinction/SKILL.md) | akrasia(자제력없음)와 akolasia(무절제) 5축 차이 — 학위논문 용어 정밀 정리 | [→](./aristotle-akrasia-vs-akolasia-distinction/verification.md) |
-| [aristotle-nicomachean-ethics-vii-detail](../../../.claude/skills/humanities/aristotle-nicomachean-ethics-vii-detail/SKILL.md) | NE VII권(자제력없음·즐거움) 절별 정밀 독해 — Bekker 번호·Bywater OCT 비평 기준 | [→](./aristotle-nicomachean-ethics-vii-detail/verification.md) |
-| [aristotle-primary-citation](../../../.claude/skills/humanities/aristotle-primary-citation/SKILL.md) | 아리스토텔레스 1차 텍스트 인용 — Bekker 번호, 작품 표준 약어, KCI 각주 표기, Perseus 원문 접근·핵심 어휘 | [→](./aristotle-primary-citation/verification.md) |
-| [eastern-vs-western-moral-philosophy](../../../.claude/skills/humanities/eastern-vs-western-moral-philosophy/SKILL.md) | 동·서양 도덕철학 비교 — akrasia와 유교 자기수양(克己·知行合一·敬·誠意正心) | [→](./eastern-vs-western-moral-philosophy/verification.md) |
-| [korean-moral-education-thinkers](../../../.claude/skills/humanities/korean-moral-education-thinkers/SKILL.md) | 한국 도덕교육 사상가 시대별 계보 — 개화기부터 현대까지 학위논문 선행연구용 | [→](./korean-moral-education-thinkers/verification.md) |
-| [socratic-akrasia-denial-detail](../../../.claude/skills/humanities/socratic-akrasia-denial-detail/SKILL.md) | 소크라테스 akrasia 부정론 — 플라톤 대화편·크세노폰·아리스토텔레스 비판 종합 | [→](./socratic-akrasia-denial-detail/verification.md) |
+꿈 심리학·위기 대응·운세 전통 관련 도메인 지식 스킬 모음 (총 9종).
 
 ---
 
