@@ -1,14 +1,16 @@
 ---
 name: project-install-sh
-description: "gugbab-claude → 다른 프로젝트 이식 구조. 14개 템플릿(0~13, 11=seo-geo 애드온, 12=fortune-app, 13=python-fastapi), JAVA_SKILLS 필터, 도메인 스킬 카테고리는 소유 템플릿만 포함(누출 주의), settings.json 단일 source-of-truth"
+description: "gugbab-claude → 다른 프로젝트 이식 구조. 템플릿 13개(0~13 중 8 academic은 2026-09-28 폐지·번호 재사용 안 함, 11=seo-geo 애드온, 12=fortune-app, 13=python-fastapi), JAVA_SKILLS 필터, 도메인 스킬 카테고리는 소유 템플릿만 포함(누출 주의), settings.json 단일 source-of-truth"
 metadata: 
   node_type: memory
   type: project
   originSessionId: 9152b891-1df7-4c78-8301-10defaed293c
-  modified: 2026-09-26T03:01:56.845Z
+  modified: 2026-09-27T20:26:21.141Z
 ---
 
 gugbab-claude는 Claude Code 컨벤션 소스 레포. `project-install.sh`로 다른 프로젝트에 이식.
+
+> 2026-09-28 갱신: **템플릿 8 `academic` 폐지** — 사용자 결정으로 철학·도덕교육·학술 자산(스킬 22·에이전트 10) 삭제에 따라 메뉴·`_parse_template`·`ACADEMIC_AGENTS`·스킬 분기·`examples/CLAUDE.academic.md`·`docs/templates/academic.md` 제거. **번호 8은 재사용하지 않는다**(기존 조합 번호 `5,11`·`12` 등 보존) — `8`/`academic` 입력은 "알 수 없는 템플릿"으로 거부. `SPECIAL_AGENTS_ACADEMIC` → `SPECIAL_AGENTS_UTIL_ONLY`(socratic-interviewer 1종, util·all 전용, 개발 템플릿 제외 유지). template-separation E2E 56건.
 
 > 2026-09-25 갱신: **템플릿 13 `python-fastapi` 신설**(python 스킬 10종·python 에이전트 소유, dev 질문만 받고 TS·SEO 질문 없음, `agents/backend/CLAUDE.md`는 rust/java 규칙 import라 제외, 13→다른 템플릿 재설치 시 python 자산 prune). `SPECIAL_AGENTS_HEALTH`로 health 전용 에이전트는 10·0에서만. `redis-redisson-4`는 `JAVA_SKILLS_MODERN_ONLY`. 같은 날 2차: `TS_BACKEND_SKILLS`(hono·prisma·zod·better-auth·drizzle-neon-postgres)는 react-spa·nextjs·health·fortune-app·all 소유, TS 백엔드 에이전트는 rust·java·unity 제외, 에이전트 디렉토리 CLAUDE.md는 소유 템플릿만 + 없는 규칙 import 줄 설치 시 제거, 입력 루프는 `prompt_read`(EOF → exit 1). 2026-09-26: prune은 스킬 폴더+references+docs / 에이전트+docs+verification을 **한 단위**로 판정(하나라도 수정본이면 전체 보존), `.claude/hooks/package.json`({"type":"commonjs"}) 항상 설치(ESM 대상 크래시 방지), instructions-loaded·staleness-check는 SessionStart 배선(InstructionsLoaded는 출력 폐기). 상세 [[feedback_audit_blind_spots]]. 상세 → [[project_full_audit_2026-09-25]].
 > 2026-09-11 갱신: 매니페스트에 `templates` 필드(설치 템플릿 CSV → 배열, 재설치 시 최신값 교체·kebab-case 외 폐기·구버전 호출 시 이월) 추가. dream(9)·fortune(12)·health(10)은 스택 템플릿과 같은 dev+TS 레벨(훅 20·규칙 5)이고 SEO 옵트인 질문을 받는다. health는 `HEALTH_LLM_FRONTEND_SKILLS` 3종을 dream 게이트 예외로 받는다. 상세 → [[project_full_audit_2026-09-11]].
@@ -22,7 +24,7 @@ gugbab-claude는 Claude Code 컨벤션 소스 레포. `project-install.sh`로 �
 - `5` java-spring-legacy — Java 11 + Spring Boot 2.5 + WAR + MyBatis
 - `6` java-spring-modern — Java 21 + Spring Boot 3.x + Jar/Native + MyBatis
 - `7` unity-game — Unity 6 LTS 2D 모바일 게임 (game/* 스킬 17종 + 게임 에이전트 6종)
-- `8` academic — 학술·논문·인문학 특화 (humanities·education·research·writing + ACADEMIC_AGENTS 19종 화이트리스트)
+- ~~`8` academic~~ — **2026-09-28 폐지** (번호 결번 유지)
 - `9` dream-interpretation — 꿈 해몽 도메인 특화 (dream 스킬 전체 + DREAM_INTERPRETATION_AGENTS 25종 화이트리스트)
 - `10` health — 건강·식단 PWA (프론트엔드/TS 그룹 = react-spa·nextjs와 같은 프론트 스킬셋 + health/* 도메인 스킬 5종 전용)
 - `11` seo-geo (2026-09-01 신설) — **애드온 템플릿**: 프레임워크 비종속 SEO·GEO 스킬 17종 + writing 4종 + site-migration-seo(=22종, 커머스 프로파일 c면 SEO_NONCOMMERCE 8종 빠져 14종) + 에이전트 6종 화이트리스트(seo-auditor·content-quality-reviewer·fact-checker·source-validator·web-searcher·claude-code-guide). 스택 템플릿과 `5,11`·`3,11`처럼 병행하는 게 기본 용법. 프레임워크 종속 3종(seo-nextjs·seo-vite-spa·og-image-generation)은 nextjs·react-spa 소유 유지. **사용자 결정: java 분기에 SEO 조건을 덧대지 말고 템플릿으로 분리해 union 조합** — 조건 분기 제안은 기각됨. 프로파일 질문은 n 없이 y(기본)/c만. `seo-static-html`은 이전까지 어느 템플릿도 소유 안 해 export 안 되던 죽은 스킬 → seo-geo 소유로 해소. 첫 타깃: [[lfcp-ui-ssr-target]]. **Codex 3라운드 반영 규칙**: `ADDON_TEMPLATES` 정규화(애드온은 입력 순서 무관 뒤로 → CLAUDE.md 베이스는 항상 스택), seo-geo 소유 자산은 제외되면 조합 조건 없이 prune 기록(제외 = 어떤 선택 템플릿도 미소유), 작성 도구 y는 화이트리스트 템플릿(seo-geo·academic·dream)보다 우선, 병행 설치 시 추가 템플릿 `## 금지 사항`을 베이스에 병합. E2E 21건
@@ -68,7 +70,7 @@ gugbab-claude는 Claude Code 컨벤션 소스 레포. `project-install.sh`로 �
   - `--util` 플래그 → 유틸 템플릿용 (구조 검증 3종 제외)
   - `--dev` 플래그 → dev 템플릿용 (tdd-guard·test-fake-guard + 2026-07-21 신설 adversarial-test-guard·fake-impl-guard 포함) — HOOKS_DEV_ONLY 4종
   - `--typescript` → typescript-quality 훅 추가
-  - 플래그 없음 → 공통 훅만 (academic·dream-interpretation·fortune-app 등)
+  - 플래그 없음 → 공통 훅만 (util·seo-geo 단독 등)
   - 회귀 방지: `scripts/gen-settings.test.js` 17 케이스 (플래그 조합·구조 검증)
 
 **Why:** 팀원은 프로젝트만 git clone하면 동일한 Claude Code 환경 사용 가능. gugbab-claude 자체를 공유하지 않음. gen-settings.js로 중앙화한 이유는 템플릿별 settings.json 변경 누락을 방지하기 위함.
