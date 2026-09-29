@@ -289,19 +289,38 @@ test('health(10): 도메인 5종 + dev/TS 훅 + SEO 옵트인 기본 n (다른 �
   }
 });
 
-test('academic(8): 학술 writing 은 포함되되 SEO writing 4종은 혼입되지 않는다 (백로그 6)', () => {
-  const dir = mktarget('academic');
-  try {
-    install('8', dir);
-    const s = skillDirs(dir);
-    assert.ok(s.some((x) => x.startsWith('writing/')), '학술 writing 스킬이 통째로 빠짐 — 과잉 제외');
-    for (const seo of ['writing/content-eeat-quality', 'writing/ymyl-content-seo',
-      'writing/multilingual-content-strategy', 'writing/accessibility-vpat-writing']) {
-      assert.ok(!s.includes(seo), `academic 에 SEO writing 혼입: ${seo}`);
+// 2026-09-28: academic(8) 템플릿 폐지 — 학술·철학·도덕교육 스킬/에이전트 삭제. 번호 8 은 재사용하지 않는다(기존 조합 번호 보존).
+test('폐지된 academic(8) 입력은 거부되고 재입력한 템플릿만 설치된다', () => {
+  for (const retired of ['8', 'academic']) {
+    const dir = mktarget(`retired-${retired}`);
+    try {
+      const out = install(retired, dir, ['1']);
+      assert.ok(out.includes(`알 수 없는 템플릿 '${retired}'`), `폐지 템플릿 '${retired}' 이 조용히 수용됨`);
+      const manifest = JSON.parse(fs.readFileSync(path.join(dir, '.claude', '.install-manifest.json'), 'utf8'));
+      assert.deepStrictEqual(manifest.templates, ['util'], '폐지 템플릿이 매니페스트에 기록됨');
+      const s = skillDirs(dir);
+      for (const cat of ['education/', 'research/']) assert.ok(!s.some((x) => x.startsWith(cat)), `삭제된 카테고리 잔존: ${cat}`);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
     }
-    assert.deepStrictEqual(danglingRuleRefs(dir), [], 'CLAUDE.md 가 미설치 규칙을 참조');
+  }
+});
+
+test('socratic-interviewer 는 academic 폐지 후 util 로 이관되고 개발 템플릿엔 새지 않는다', () => {
+  const util = mktarget('util-socratic');
+  const react = mktarget('react-socratic');
+  try {
+    install('1', util);
+    const ua = agentFiles(util);
+    assert.ok(ua.includes('research/socratic-interviewer.md'), 'util 에 socratic-interviewer 누락 — 설치 경로 소실');
+    for (const gone of ['research/academic-researcher.md', 'validation/citation-checker.md', 'education/curriculum-2022-fact-checker.md']) {
+      assert.ok(!ua.includes(gone), `삭제된 학술 에이전트 잔존: ${gone}`);
+    }
+    install('2', react);
+    assert.ok(!agentFiles(react).includes('research/socratic-interviewer.md'), 'react-spa 에 util 전용 에이전트 누출');
   } finally {
-    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(util, { recursive: true, force: true });
+    fs.rmSync(react, { recursive: true, force: true });
   }
 });
 
@@ -1097,7 +1116,7 @@ test('health 전용 에이전트: health(10)·all(0) 에는 설치, 그 외 1~12
       fs.rmSync(dir, { recursive: true, force: true });
     }
   }
-  for (const tmpl of ['1', '2', '3', '4', '5', '6', '7', '8', '9', '11', '12']) {
+  for (const tmpl of ['1', '2', '3', '4', '5', '6', '7', '9', '11', '12']) { // 8(academic) 은 2026-09-28 폐지
     const dir = mktarget(`health-agent-leak-${tmpl}`);
     try {
       install(tmpl, dir);
@@ -1280,7 +1299,7 @@ test('다운그레이드: 13 → 4(rust) 재설치에서 python 스킬(짝 docs)
 const TS_BACKEND_SKILLS = ['backend/hono-api-patterns', 'backend/prisma-orm', 'backend/zod-schema-validation', 'backend/better-auth'];
 const TS_BACKEND_AGENTS = ['backend/typescript-backend-developer.md', 'backend/typescript-backend-architect.md'];
 const TS_BACKEND_OWNERS = ['2', '3', '10', '12', '0'];
-const TS_BACKEND_NON_OWNERS = ['1', '4', '5', '6', '7', '8', '9', '11', '13'];
+const TS_BACKEND_NON_OWNERS = ['1', '4', '5', '6', '7', '9', '11', '13']; // 8(academic) 폐지
 
 // 설치된 스킬 .md 의 상대 링크 `](../x/SKILL.md)` 가 대상에서 실제로 열리는가 (부분 설치에서 링크 대상이 빠지는 문제 감시)
 const brokenSkillLinks = (dir) => {
@@ -1384,7 +1403,7 @@ test('버그3: agents 디렉토리 CLAUDE.md 는 누수되지 않고, 설치된 
     '13': [false, false, []],
     '4,5': [true, false, ['backend/CLAUDE.md -> rust.md', 'backend/CLAUDE.md -> java.md']],
   };
-  for (const tmpl of ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '4,5']) {
+  for (const tmpl of ['0', '1', '2', '3', '4', '5', '6', '7', '9', '10', '11', '12', '13', '4,5']) { // 8(academic) 폐지
     const dir = mktarget(`agentdir-${tmpl.replace(',', '-')}`);
     try {
       install(tmpl, dir);

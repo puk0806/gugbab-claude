@@ -51,7 +51,6 @@ echo "   4/rust-axum          — Rust + Axum 백엔드"
 echo "   5/java-spring-legacy — Java 11 + Spring Boot 2.5 + MyBatis"
 echo "   6/java-spring-modern — Java 21 + Spring Boot 3.x + MyBatis"
 echo "   7/unity-game         — Unity 6 LTS 2D 모바일 게임"
-echo "   8/academic           — 논문·학술 작업"
 echo "   9/dream-interpretation — 꿈 해몽 앱 개발"
 echo "  10/health             — 건강·식단 PWA 앱"
 echo "  11/seo-geo            — SEO·GEO 검색 노출 (프레임워크 비종속 — 스택 템플릿과 병행 선택)"
@@ -72,7 +71,6 @@ _parse_template() {
     5|java-spring-legacy)   echo "java-spring-legacy" ;;
     6|java-spring-modern)   echo "java-spring-modern" ;;
     7|unity-game)           echo "unity-game" ;;
-    8|academic)             echo "academic" ;;
     9|dream-interpretation) echo "dream-interpretation" ;;
     10|health)              echo "health" ;;
     11|seo-geo)             echo "seo-geo" ;;
@@ -455,7 +453,7 @@ HOOKS_COMMON=(
   "statusline.sh"
 )
 
-# 개발 전용 (util·academic·dream 제외)
+# 개발 전용 (util·dream 제외)
 HOOKS_DEV_ONLY=("tdd-guard.js" "test-fake-guard.js" "adversarial-test-guard.js" "fake-impl-guard.js")
 
 # TypeScript 전용 (react-spa·nextjs만)
@@ -574,6 +572,7 @@ echo "[agents]"
 # 유틸: 범용 에이전트만 허용 (비개발자도 사용 가능한 것)
 UTIL_AGENTS=(
   "meta/claude-code-guide.md"
+  "research/socratic-interviewer.md"
   "research/deep-researcher.md"
   "research/web-searcher.md"
   "research/research-reviewer.md"
@@ -584,28 +583,6 @@ UTIL_AGENTS=(
   "validation/qa-engineer.md"
   "domain/product-planner.md"
   "domain/ui-ux-designer.md"
-)
-
-# academic: 논문·학술 전용 에이전트 허용 목록
-ACADEMIC_AGENTS=(
-  "education/curriculum-2022-fact-checker.md"
-  "research/academic-researcher.md"
-  "research/defense-question-simulator.md"
-  "research/literature-review-synthesizer.md"
-  "research/research-proposal-coach.md"
-  "research/research-reviewer.md"
-  "research/socratic-interviewer.md"
-  "research/translation-comparison.md"
-  "research/web-searcher.md"
-  "research/deep-researcher.md"
-  "validation/abstract-reviewer.md"
-  "validation/argument-reviewer.md"
-  "validation/citation-checker.md"
-  "validation/fact-checker.md"
-  "validation/peer-review-simulator.md"
-  "validation/source-validator.md"
-  "meta/claude-code-guide.md"
-  "meta/freshness-auditor.md"
 )
 
 # dream-interpretation: 꿈 앱 전용 에이전트 허용 목록
@@ -665,18 +642,9 @@ FORTUNE_APP_AGENTS=(
 )
 
 # 특수 목적 에이전트 (일반 개발 템플릿에서 제외)
-SPECIAL_AGENTS_ACADEMIC=(
-  "education/curriculum-2022-fact-checker.md"
-  "research/academic-researcher.md"
-  "research/defense-question-simulator.md"
-  "research/literature-review-synthesizer.md"
-  "research/research-proposal-coach.md"
+# 요구사항 면담 에이전트 — util·all 전용 (2026-09-28 academic 템플릿 폐지로 util 로 이관, 개발 템플릿 제외는 유지)
+SPECIAL_AGENTS_UTIL_ONLY=(
   "research/socratic-interviewer.md"
-  "research/translation-comparison.md"
-  "validation/abstract-reviewer.md"
-  "validation/argument-reviewer.md"
-  "validation/citation-checker.md"
-  "validation/peer-review-simulator.md"
 )
 SPECIAL_AGENTS_DREAM=(
   "research/dream-journal-coach.md"
@@ -829,9 +797,6 @@ _agent_ok_for_tmpl() {
   if [ "$tmpl" = "util" ]; then
     is_in_list "$rel" "${UTIL_AGENTS[@]}" && return 0; return 1
   fi
-  if [ "$tmpl" = "academic" ]; then
-    is_in_list "$rel" "${ACADEMIC_AGENTS[@]}" && return 0; return 1
-  fi
   if [ "$tmpl" = "dream-interpretation" ]; then
     is_in_list "$rel" "${DREAM_APP_AGENTS[@]}" && return 0; return 1
   fi
@@ -842,8 +807,8 @@ _agent_ok_for_tmpl() {
     is_in_list "$rel" "${FORTUNE_APP_AGENTS[@]}" && return 0; return 1
   fi
   if [ "$tmpl" = "all" ]; then return 0; fi
-  # 개발 템플릿 공통: 학술·dream·fortune 전용 제외
-  is_in_list "$rel" "${SPECIAL_AGENTS_ACADEMIC[@]}" && return 1
+  # 개발 템플릿 공통: util 전용·dream·fortune 전용 제외
+  is_in_list "$rel" "${SPECIAL_AGENTS_UTIL_ONLY[@]}" && return 1
   is_in_list "$rel" "${SPECIAL_AGENTS_DREAM[@]}" && return 1
   is_in_list "$rel" "${SPECIAL_AGENTS_FORTUNE[@]}" && return 1
   # health 전용은 health 템플릿에서만 (2026-09-25)
@@ -883,7 +848,7 @@ _option_excluded_agent() {
 should_include_agent() {
   local rel="$1"
   if _option_excluded_agent "$rel"; then record_excluded_agent "$rel"; return 1; fi
-  # 작성 도구 y 는 템플릿 화이트리스트(seo-geo·academic·dream)보다 우선 — 질문이 약속한 에이전트 3종(+agents/CLAUDE.md)이
+  # 작성 도구 y 는 템플릿 화이트리스트(seo-geo·dream)보다 우선 — 질문이 약속한 에이전트 3종(+agents/CLAUDE.md)이
   # 화이트리스트 템플릿 단독 설치에서 조용히 빠지던 계약 위반 수정 (2026-09-01 Codex R3). util 단독은 질문 자체가 없다.
   if [ "$INCLUDE_AUTHORING" = "true" ] && is_in_list "$rel" "${AUTHORING_AGENTS[@]}"; then return 0; fi
   for _tmpl in "${TEMPLATES[@]}"; do
@@ -1088,7 +1053,7 @@ SEO_WRITING_SKILLS=(
   "writing/accessibility-vpat-writing"
 )
 
-# dream-interpretation 전용 humanities 스킬 (academic 템플릿에서 제외)
+# dream-interpretation 전용 humanities 스킬
 DREAM_HUMANITIES_SKILLS=(
   "humanities/dream-content-privacy-ethics"
   "humanities/dream-content-research"
@@ -1400,7 +1365,7 @@ _seo_optin_skill_ok() {
 _skill_ok_for_tmpl() {
   local rel="$1" skill_prefix="$2" tmpl="$3"
   if [ "$tmpl" = "all" ]; then return 0; fi
-  # health 도메인 스킬(영양·식단 5종)은 health 템플릿에서만 — 그 외 전 템플릿(util·academic·dream·rust·java·unity·react·next) 누출 차단
+  # health 도메인 스킬(영양·식단 5종)은 health 템플릿에서만 — 그 외 전 템플릿(util·dream·rust·java·unity·react·next) 누출 차단
   if [[ "$rel" == health/* && "$tmpl" != "health" ]]; then return 1; fi
   # fortune-app 전용 스킬 13종은 fortune-app 템플릿에서만 — 동일 방식 전역 차단
   if is_fortune_skill "$skill_prefix" && [ "$tmpl" != "fortune-app" ]; then return 1; fi
@@ -1410,15 +1375,6 @@ _skill_ok_for_tmpl() {
        "$rel" == education/* || "$rel" == research/* || "$rel" == writing/* ]] && return 1
     # dream 전용 meta 프롬프트 3종 누출 차단 (2026-09-11 백로그 6 — fortune meta 는 전역 게이트가 이미 막는다)
     [[ "$rel" == meta/* ]] && is_dream_meta "$skill_prefix" && return 1
-    return 0
-  fi
-  if [ "$tmpl" = "academic" ]; then
-    [[ "$rel" == frontend/* || "$rel" == backend/* || "$rel" == devops/* || "$rel" == game/* ]] && return 1
-    [[ "$rel" == humanities/* ]] && is_dream_humanities "$skill_prefix" && return 1
-    [[ "$rel" == meta/* ]] && is_dream_meta "$skill_prefix" && return 1
-    # SEO writing 4종은 학술 글쓰기와 무관 (2026-09-11 백로그 6)
-    [[ "$rel" == writing/* ]] && is_seo_writing "$skill_prefix" && return 1
-    [[ "$rel" == architecture/* ]] && [[ "$skill_prefix" != "architecture/ddd" ]] && return 1
     return 0
   fi
   if [ "$tmpl" = "dream-interpretation" ]; then
