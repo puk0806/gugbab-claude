@@ -84,7 +84,6 @@ model: sonnet
 |------|------|-----------|
 | recoil-to-zustand-migration | `frontend/recoil-to-zustand-migration/SKILL.md` | Recoil → Zustand/Jotai |
 | tanstack-query-v4-to-v5-migration | `frontend/tanstack-query-v4-to-v5-migration/SKILL.md` | React Query v4 → v5 |
-| cra-to-vite-migration | `frontend/cra-to-vite-migration/SKILL.md` | CRA → Vite |
 | webpack-vite-config-mapping | `frontend/webpack-vite-config-mapping/SKILL.md` | Webpack/Craco 설정(cacheGroups·플러그인 등)을 Vite 설정으로 1:1 매핑할 때 |
 
 ### 도메인 구조 작업일 때
