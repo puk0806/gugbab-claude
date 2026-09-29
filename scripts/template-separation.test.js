@@ -198,7 +198,11 @@ test('rust-axum: java·python 스킬 제외 + dream·프론트 아키텍처·프
   try {
     install('4', dir);
     const s = skillDirs(dir);
-    assert.ok(s.includes('backend/axum') && s.includes('backend/tokio'), 'rust 코어 스킬 누락');
+    assert.ok(s.includes('backend/axum') && s.includes('backend/sqlx'), 'rust 코어 스킬 누락');
+    // 2026-09-26 스킬 정리로 삭제된 rust 스킬 — 재등장(소스 잔재·설치 누수) 차단
+    for (const gone of ['tokio', 'serde', 'thiserror', 'tracing', 'design-patterns-rust', 'dependency-injection', 'repository-pattern', 'custom-middleware']) {
+      assert.ok(!s.includes(`backend/${gone}`), `삭제된 스킬이 설치됨: backend/${gone}`);
+    }
     assert.ok(!s.includes('backend/mybatis-mapper-patterns') && !s.includes('backend/ehcache-2-legacy'),
       'java 스킬이 rust 템플릿에 설치됨');
     // 2026-09-11 백로그 2: java 필터(is_java_skill)만 걸러 python 10종·Java 계열 redis-redisson-4 가 rust 로 새고 있었다
@@ -285,19 +289,38 @@ test('health(10): 도메인 5종 + dev/TS 훅 + SEO 옵트인 기본 n (다른 �
   }
 });
 
-test('academic(8): 학술 writing 은 포함되되 SEO writing 4종은 혼입되지 않는다 (백로그 6)', () => {
-  const dir = mktarget('academic');
-  try {
-    install('8', dir);
-    const s = skillDirs(dir);
-    assert.ok(s.some((x) => x.startsWith('writing/')), '학술 writing 스킬이 통째로 빠짐 — 과잉 제외');
-    for (const seo of ['writing/content-eeat-quality', 'writing/ymyl-content-seo',
-      'writing/multilingual-content-strategy', 'writing/accessibility-vpat-writing']) {
-      assert.ok(!s.includes(seo), `academic 에 SEO writing 혼입: ${seo}`);
+// 2026-09-28: academic(8) 템플릿 폐지 — 학술·철학·도덕교육 스킬/에이전트 삭제. 번호 8 은 재사용하지 않는다(기존 조합 번호 보존).
+test('폐지된 academic(8) 입력은 거부되고 재입력한 템플릿만 설치된다', () => {
+  for (const retired of ['8', 'academic']) {
+    const dir = mktarget(`retired-${retired}`);
+    try {
+      const out = install(retired, dir, ['1']);
+      assert.ok(out.includes(`알 수 없는 템플릿 '${retired}'`), `폐지 템플릿 '${retired}' 이 조용히 수용됨`);
+      const manifest = JSON.parse(fs.readFileSync(path.join(dir, '.claude', '.install-manifest.json'), 'utf8'));
+      assert.deepStrictEqual(manifest.templates, ['util'], '폐지 템플릿이 매니페스트에 기록됨');
+      const s = skillDirs(dir);
+      for (const cat of ['education/', 'research/']) assert.ok(!s.some((x) => x.startsWith(cat)), `삭제된 카테고리 잔존: ${cat}`);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
     }
-    assert.deepStrictEqual(danglingRuleRefs(dir), [], 'CLAUDE.md 가 미설치 규칙을 참조');
+  }
+});
+
+test('socratic-interviewer 는 academic 폐지 후 util 로 이관되고 개발 템플릿엔 새지 않는다', () => {
+  const util = mktarget('util-socratic');
+  const react = mktarget('react-socratic');
+  try {
+    install('1', util);
+    const ua = agentFiles(util);
+    assert.ok(ua.includes('research/socratic-interviewer.md'), 'util 에 socratic-interviewer 누락 — 설치 경로 소실');
+    for (const gone of ['research/academic-researcher.md', 'validation/citation-checker.md', 'education/curriculum-2022-fact-checker.md']) {
+      assert.ok(!ua.includes(gone), `삭제된 학술 에이전트 잔존: ${gone}`);
+    }
+    install('2', react);
+    assert.ok(!agentFiles(react).includes('research/socratic-interviewer.md'), 'react-spa 에 util 전용 에이전트 누출');
   } finally {
-    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(util, { recursive: true, force: true });
+    fs.rmSync(react, { recursive: true, force: true });
   }
 });
 
@@ -417,6 +440,90 @@ test('악성·경계: 순수 java 재설치 시 누수 잔재만 prune, 수정�
     assert.ok(fs.existsSync(modDest), '사용자 수정본이 삭제됨 — 파괴 방어 실패');
     assert.ok(fs.existsSync(customDest), '커스텀 스킬이 삭제됨 — 파괴 방어 실패');
     assert.ok(/prune/.test(out), 'prune 로그 부재');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('악성·경계: 레포에서 폐기된 스킬·에이전트는 재설치 시 짝 docs 까지 단위로 수렴, 수정본 단위·미증명 docs 는 보존 (2026-09-26)', () => {
+  const dir = mktarget('retired pair'); // 공백 경로
+  try {
+    install('5', dir);
+    const mfPath = path.join(dir, '.claude', '.install-manifest.json');
+    const plant = (root, rel, body) => {
+      const f = path.join(dir, root, rel);
+      fs.mkdirSync(path.dirname(f), { recursive: true });
+      fs.writeFileSync(f, body);
+      return f;
+    };
+    // (1) 폐기 스킬 + 짝 docs (전부 원본) → 단위 삭제
+    const sGone = plant('.claude/skills', 'backend/zz-retired-skill/SKILL.md', '# retired\n');
+    const sGoneDoc = plant('docs', 'skills/backend/zz-retired-skill/verification.md', '# rv\n');
+    // (2) 폐기 에이전트 + 짝 docs + verification (전부 원본) → 단위 삭제
+    const aGone = plant('.claude/agents', 'meta/zz-retired-agent.md', '# ra\n');
+    const aGoneDoc = plant('docs', 'agents/meta/zz-retired-agent.md', '# rad\n');
+    const aGoneVer = plant('docs', 'agents/meta/zz-retired-agent-verification.md', '# rav\n');
+    // (3) 폐기 스킬이지만 짝 docs 를 사용자가 수정 → 본체·docs 단위 보존
+    const sKeep = plant('.claude/skills', 'backend/zz-edited-docs/SKILL.md', '# keep\n');
+    const sKeepDoc = plant('docs', 'skills/backend/zz-edited-docs/verification.md', '# kv\n');
+    // (4) 매니페스트 밖 고아 docs (증명 불가) → 보존
+    const custom = plant('docs', 'skills/backend/zz-my-notes/verification.md', '# mine\n');
+
+    const mf = JSON.parse(fs.readFileSync(mfPath, 'utf8'));
+    const rec = (kind, rel, f) => { mf[kind].push(rel); mf.hashes[kind][rel] = sha(f); };
+    rec('skills', 'backend/zz-retired-skill/SKILL.md', sGone);
+    rec('skills', 'backend/zz-edited-docs/SKILL.md', sKeep);
+    rec('agents', 'meta/zz-retired-agent.md', aGone);
+    rec('docs', 'skills/backend/zz-retired-skill/verification.md', sGoneDoc);
+    rec('docs', 'skills/backend/zz-edited-docs/verification.md', sKeepDoc);
+    rec('docs', 'agents/meta/zz-retired-agent.md', aGoneDoc);
+    rec('docs', 'agents/meta/zz-retired-agent-verification.md', aGoneVer);
+    fs.writeFileSync(mfPath, JSON.stringify(mf, null, 2));
+    fs.appendFileSync(sKeepDoc, '\n<!-- 사용자 수정 -->\n');
+
+    const out = install('5', dir);
+    for (const f of [sGone, sGoneDoc, aGone, aGoneDoc, aGoneVer]) assert.ok(!fs.existsSync(f), `폐기 단위 잔존: ${f}`);
+    assert.ok(!fs.existsSync(path.dirname(sGoneDoc)), '폐기 스킬 docs 빈 디렉토리 잔존');
+    assert.ok(fs.existsSync(sKeep) && fs.existsSync(sKeepDoc), '짝 docs 수정본 단위가 삭제됨 — 파괴 방어 실패');
+    assert.ok(fs.existsSync(custom), '증명 불가 고아 docs 가 삭제됨');
+    assert.ok(/짝 단위/.test(out), '짝 단위 보존 경고 부재');
+    // 재설치 후 매니페스트에서 사라진 단위는 기록도 수렴, 보존 단위는 기록 유지
+    const mf2 = JSON.parse(fs.readFileSync(mfPath, 'utf8'));
+    assert.ok(!mf2.docs.includes('skills/backend/zz-retired-skill/verification.md'), '삭제된 docs 가 매니페스트에 잔존');
+    assert.ok(mf2.docs.includes('skills/backend/zz-edited-docs/verification.md'), '보존 docs 의 매니페스트 기록 유실');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('악성·경계: 매니페스트 없는 구버전 설치본의 템플릿 외 누수는 레포 원본과 동일하면 짝 단위로 수렴, 한 파일이라도 다르면 단위 보존 (2026-09-26 감사 A)', () => {
+  const dir = mktarget('legacy-leak');
+  try {
+    install('5', dir);
+    fs.rmSync(path.join(dir, '.claude', '.install-manifest.json')); // 구버전(매니페스트 이전) 설치 시뮬레이션
+    const copy = (root, rel) => {
+      const dest = path.join(dir, root, rel);
+      fs.mkdirSync(path.dirname(dest), { recursive: true });
+      fs.copyFileSync(path.join(REPO, root, rel), dest);
+      return dest;
+    };
+    // (1) 레포 원본과 동일한 누수 스킬 + 짝 docs → 삭제
+    const leak = copy('.claude/skills', 'meta/dream-safety-classifier-prompts/SKILL.md');
+    const leakDoc = copy('docs', 'skills/meta/dream-safety-classifier-prompts/verification.md');
+    // (2) references 한 파일만 수정된 누수 스킬 → 폴더 단위 보존
+    const modSkill = copy('.claude/skills', 'architecture/dream-journal-data-modeling/SKILL.md');
+    const modRef = copy('.claude/skills', 'architecture/dream-journal-data-modeling/references/REFERENCE.md');
+    fs.appendFileSync(modRef, '\n<!-- 사용자 로컬 수정 -->\n');
+    // (3) 레포에 없는 사용자 스킬 → 보존
+    const custom = path.join(dir, '.claude', 'skills', 'meta', 'my-own-skill', 'SKILL.md');
+    fs.mkdirSync(path.dirname(custom), { recursive: true });
+    fs.writeFileSync(custom, '# mine\n');
+
+    const out = install('5', dir);
+    assert.ok(!fs.existsSync(leak) && !fs.existsSync(leakDoc), '원본 동일 누수 스킬·짝 docs 가 구버전 설치본에서 수렴하지 않음');
+    assert.ok(fs.existsSync(modSkill) && fs.existsSync(modRef), '한 파일 수정된 누수 스킬 폴더가 삭제됨 — 단위 보존 실패');
+    assert.ok(fs.existsSync(custom), '레포에 없는 사용자 스킬이 삭제됨');
+    assert.ok(/수동 확인/.test(out), '보존 단위 수동 확인 안내 부재');
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
@@ -544,6 +651,36 @@ test('업그레이드: docs 섹션이 없는 구버전 매니페스트에서도 
     assert.ok(!fs.existsSync(leakDest), '누수 스킬이 prune되지 않음');
     assert.ok(!fs.existsSync(docDest), '구버전 매니페스트의 미수정 짝 docs가 소스 동일 증명으로 삭제되지 않음');
     assert.ok(fs.existsSync(modDoc), '소스에 없는 사용자 docs가 삭제됨 — 파괴 방어 실패');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('짝 단위(2026-09-25 보고 버그): 구버전 매니페스트에서 SKILL.md 수정본이 보존되면 소스 동일 짝 docs 도 보존된다', () => {
+  const dir = mktarget('pair-unit');
+  try {
+    install('5', dir);
+    const mfPath = path.join(dir, '.claude', '.install-manifest.json');
+    const mf = JSON.parse(fs.readFileSync(mfPath, 'utf8'));
+    delete mf.docs;                                          // docs 섹션 없는 구버전 매니페스트
+    delete mf.hashes.docs;
+    const leakRel = 'meta/dream-safety-classifier-prompts/SKILL.md';
+    const leakDest = path.join(dir, '.claude', 'skills', leakRel);
+    fs.mkdirSync(path.dirname(leakDest), { recursive: true });
+    fs.copyFileSync(path.join(REPO, '.claude', 'skills', leakRel), leakDest);
+    mf.skills.push(leakRel);
+    mf.hashes.skills[leakRel] = sha(leakDest);               // 설치 시점 해시 기록 후
+    fs.appendFileSync(leakDest, '\n<!-- 프로젝트 로컬 수정 -->\n'); // 사용자가 수정 → 해시 불일치
+    const docRel = 'skills/meta/dream-safety-classifier-prompts/verification.md';
+    const docDest = path.join(dir, 'docs', docRel);
+    fs.mkdirSync(path.dirname(docDest), { recursive: true });
+    fs.copyFileSync(path.join(REPO, 'docs', docRel), docDest); // 소스 동일 사본
+    fs.writeFileSync(mfPath, JSON.stringify(mf, null, 2));
+
+    const out = install('5', dir);
+    assert.ok(fs.existsSync(leakDest), '사용자 수정 SKILL.md 가 삭제됨 — 파괴 방어 실패');
+    assert.ok(fs.existsSync(docDest), '스킬은 보존됐는데 짝 verification.md 만 삭제됨 — "검증 문서 없는 스킬" 재발');
+    assert.ok(/짝 단위 보존/.test(out), '짝 단위 보존 경고 부재');
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
@@ -979,7 +1116,7 @@ test('health 전용 에이전트: health(10)·all(0) 에는 설치, 그 외 1~12
       fs.rmSync(dir, { recursive: true, force: true });
     }
   }
-  for (const tmpl of ['1', '2', '3', '4', '5', '6', '7', '8', '9', '11', '12']) {
+  for (const tmpl of ['1', '2', '3', '4', '5', '6', '7', '9', '11', '12']) { // 8(academic) 은 2026-09-28 폐지
     const dir = mktarget(`health-agent-leak-${tmpl}`);
     try {
       install(tmpl, dir);
@@ -1007,6 +1144,8 @@ test('다운그레이드: 10 → 5 재설치에서 health 전용 에이전트(�
     fs.appendFileSync(agent, '\n<!-- 프로젝트 커스텀 평가 축 -->\n');
     install('1', dir);
     assert.ok(fs.existsSync(agent), '사용자 수정본이 다운그레이드 prune 에 삭제됨 — 해시 증명 없는 삭제');
+    // 짝 단위(2026-09-25): 에이전트가 보존되면 짝 docs 도 보존 — 문서 없는 에이전트 방지
+    assert.ok(fs.existsSync(doc), '에이전트는 보존됐는데 짝 docs 만 삭제됨 — 짝 단위 위반');
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
@@ -1160,7 +1299,7 @@ test('다운그레이드: 13 → 4(rust) 재설치에서 python 스킬(짝 docs)
 const TS_BACKEND_SKILLS = ['backend/hono-api-patterns', 'backend/prisma-orm', 'backend/zod-schema-validation', 'backend/better-auth'];
 const TS_BACKEND_AGENTS = ['backend/typescript-backend-developer.md', 'backend/typescript-backend-architect.md'];
 const TS_BACKEND_OWNERS = ['2', '3', '10', '12', '0'];
-const TS_BACKEND_NON_OWNERS = ['1', '4', '5', '6', '7', '8', '9', '11', '13'];
+const TS_BACKEND_NON_OWNERS = ['1', '4', '5', '6', '7', '9', '11', '13']; // 8(academic) 폐지
 
 // 설치된 스킬 .md 의 상대 링크 `](../x/SKILL.md)` 가 대상에서 실제로 열리는가 (부분 설치에서 링크 대상이 빠지는 문제 감시)
 const brokenSkillLinks = (dir) => {
@@ -1264,7 +1403,7 @@ test('버그3: agents 디렉토리 CLAUDE.md 는 누수되지 않고, 설치된 
     '13': [false, false, []],
     '4,5': [true, false, ['backend/CLAUDE.md -> rust.md', 'backend/CLAUDE.md -> java.md']],
   };
-  for (const tmpl of ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '4,5']) {
+  for (const tmpl of ['0', '1', '2', '3', '4', '5', '6', '7', '9', '10', '11', '12', '13', '4,5']) { // 8(academic) 폐지
     const dir = mktarget(`agentdir-${tmpl.replace(',', '-')}`);
     try {
       install(tmpl, dir);
@@ -1382,5 +1521,203 @@ test('버그6 정상: 개행 없이 끝나는 마지막 템플릿 입력도 값�
     assert.notStrictEqual(r3.status, 0, '다음 질문의 EOF 에서 비0 종료가 아님');
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// ── 훅 CJS 경계 (2026-09-25) ─────────────────────────────────────────────
+// 대상 루트 package.json 이 "type":"module" 이면 plain .js(CJS) 훅이 require 에러로 전부 크래시한다.
+// .claude/hooks/package.json = {"type":"commonjs"} 로 가장 가까운 package.json 을 훅 폴더에 고정한다.
+const runHook = (dir, hook) => spawnSync('node', [path.join(dir, '.claude', 'hooks', hook)],
+  { cwd: dir, input: '', encoding: 'utf8', timeout: 20000, env: { ...process.env, CLAUDE_PROJECT_DIR: dir } });
+
+test('훅 CJS 경계: 루트 "type":"module" 프로젝트에서도 설치된 훅이 require 에러 없이 실행된다', () => {
+  const dir = mktarget('esm-root');
+  try {
+    fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ name: 'esm-app', type: 'module' }));
+    install('1', dir);
+    for (const hook of ['agent-md-guard.js', 'bash-guard.js']) {
+      const r = runHook(dir, hook);
+      const err = `${r.stderr}${r.stdout}`;
+      assert.ok(!/require is not defined|ERR_REQUIRE_ESM|ES module scope/.test(err), `${hook}: ESM 경계 크래시\n${err.slice(0, 300)}`);
+      assert.strictEqual(r.status, 0, `${hook}: 빈 입력에서 비0 종료 ${r.status}\n${err.slice(0, 300)}`);
+    }
+    const pj = JSON.parse(fs.readFileSync(path.join(dir, '.claude', 'hooks', 'package.json'), 'utf8'));
+    assert.strictEqual(pj.type, 'commonjs', '.claude/hooks/package.json type 이 commonjs 가 아님');
+    const mf = JSON.parse(fs.readFileSync(path.join(dir, '.claude', '.install-manifest.json'), 'utf8'));
+    assert.ok(mf.hooks.includes('package.json') && typeof mf.hashes.hooks['package.json'] === 'string',
+      '매니페스트에 hooks/package.json 소유 기록(해시) 없음');
+    // 재설치 멱등: 다시 설치해도 유지·정상 실행
+    install('1', dir);
+    assert.strictEqual(runHook(dir, 'agent-md-guard.js').status, 0, '재설치 후 훅 실행 실패');
+    assert.ok(fs.existsSync(path.join(dir, '.claude', 'hooks', 'package.json')), '재설치에서 hooks/package.json 이 정리됨');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('훅 CJS 경계 악성·경계: 사용자 소유 hooks/package.json 은 덮어쓰지 않고, 깨진 파일·타입 누락은 경고한다', () => {
+  const dir = mktarget('esm-user-pj');
+  try {
+    // (1) 사용자가 커스텀 훅 의존성까지 적어 둔 commonjs package.json → 보존 (내용 파괴 금지)
+    const hooksDir = path.join(dir, '.claude', 'hooks');
+    fs.mkdirSync(hooksDir, { recursive: true });
+    const userPj = JSON.stringify({ type: 'commonjs', dependencies: { 'my-lib': '1.0.0' } }, null, 2);
+    fs.writeFileSync(path.join(hooksDir, 'package.json'), userPj);
+    install('1', dir);
+    assert.strictEqual(fs.readFileSync(path.join(hooksDir, 'package.json'), 'utf8'), userPj, '사용자 hooks/package.json 이 덮어써짐');
+    const mf = JSON.parse(fs.readFileSync(path.join(dir, '.claude', '.install-manifest.json'), 'utf8'));
+    assert.ok(!mf.hooks.includes('package.json'), '사용자 소유 파일이 설치 관리 파일로 기록됨 — 이후 정리 대상이 될 위험');
+
+    // (2) 사용자 파일이 "type":"module" 이면 훅이 깨지므로 경고만 하고 보존 (자동 수정 금지)
+    fs.writeFileSync(path.join(hooksDir, 'package.json'), JSON.stringify({ type: 'module' }));
+    const out2 = install('1', dir);
+    assert.ok(/hooks\/package\.json/.test(out2) && /commonjs/.test(out2), 'type 불일치 사용자 파일에 대한 경고 부재');
+    assert.strictEqual(JSON.parse(fs.readFileSync(path.join(hooksDir, 'package.json'), 'utf8')).type, 'module', '사용자 파일이 무단 수정됨');
+
+    // (3) 깨진 JSON — 설치는 성공(exit 0)하고 파일은 보존
+    fs.writeFileSync(path.join(hooksDir, 'package.json'), '{broken');
+    install('1', dir);
+    assert.strictEqual(fs.readFileSync(path.join(hooksDir, 'package.json'), 'utf8'), '{broken', '깨진 사용자 파일이 덮어써짐');
+
+    // (4) 이전 설치가 만든 사본(매니페스트 해시 일치)은 원본 변경 시 갱신 대상 — 삭제하고 재설치하면 새로 설치
+    fs.unlinkSync(path.join(hooksDir, 'package.json'));
+    install('1', dir);
+    assert.strictEqual(JSON.parse(fs.readFileSync(path.join(hooksDir, 'package.json'), 'utf8')).type, 'commonjs', '부재 시 신규 설치 안 됨');
+    fs.writeFileSync(path.join(hooksDir, 'package.json'), '{"type":"commonjs"}\n'); // 내용 다른 사용자 편집본(매니페스트 해시 불일치)
+    install('1', dir);
+    assert.strictEqual(fs.readFileSync(path.join(hooksDir, 'package.json'), 'utf8'), '{"type":"commonjs"}\n', '해시 불일치(사용자 편집) 사본이 덮어써짐');
+
+    // (5) 구버전 설치 사본(매니페스트 해시 일치, 원본과 다름) → 원본으로 갱신 + 소유 기록 유지
+    const oldCopy = '{"type":"commonjs","_old":true}\n';
+    fs.writeFileSync(path.join(hooksDir, 'package.json'), oldCopy);
+    const mfPath = path.join(dir, '.claude', '.install-manifest.json');
+    const m5 = JSON.parse(fs.readFileSync(mfPath, 'utf8'));
+    if (!m5.hooks.includes('package.json')) m5.hooks.push('package.json');
+    m5.hashes.hooks['package.json'] = crypto.createHash('sha256').update(oldCopy).digest('hex');
+    fs.writeFileSync(mfPath, JSON.stringify(m5, null, 2));
+    install('1', dir);
+    assert.strictEqual(fs.readFileSync(path.join(hooksDir, 'package.json'), 'utf8'),
+      fs.readFileSync(path.join(REPO, '.claude', 'hooks', 'package.json'), 'utf8'), '소유 증명된 구버전 사본이 갱신되지 않음');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// ── 재설치 보존(N) 경로 · symlink · 공백 경로 (2026-09-26) ──────────────────
+const settingsOf = (dir) => JSON.parse(fs.readFileSync(path.join(dir, '.claude', 'settings.json'), 'utf8'));
+const evCmds = (s, ev) => (s.hooks?.[ev] || []).flatMap((g) => (g.hooks || []).map((h) => h.command));
+
+test('F3 업그레이드: settings 보존(N) 재설치가 구버전 InstructionsLoaded 배선 두 훅만 SessionStart 로 이관하고, 멱등이며 사용자 설정은 보존된다', () => {
+  const dir = mktarget('legacy-il');
+  try {
+    install('1', dir);
+    const sf = path.join(dir, '.claude', 'settings.json');
+    // 구버전(2026-09-25 이전) 배선 재현 + 사용자 커스텀
+    const s = settingsOf(dir);
+    const bareCmd = (n, extra = '') => ({ type: 'command', command: `node $CLAUDE_PROJECT_DIR/.claude/hooks/${n}${extra}` });
+    s.hooks.SessionStart = [{ hooks: [bareCmd('session-start.js')] }];
+    s.hooks.InstructionsLoaded = [{ hooks: [bareCmd('instructions-loaded.js'), bareCmd('staleness-check.js'), { type: 'command', command: 'echo my-il' }] }];
+    // 감사 B: 파일 없는 폐지 훅 배선(session-handoff-inject·pre-compact) + 사용자 자체 무따옴표 명령
+    s.hooks.Stop = [...(s.hooks.Stop || []), { hooks: [bareCmd('session-handoff-inject.js'), bareCmd('pre-compact.js')] },
+      { hooks: [{ type: 'command', command: 'node $CLAUDE_PROJECT_DIR/scripts/mine.js' }] }];
+    s.permissions.allow.push('Bash(make*)');
+    s.env = { MY_FLAG: 'keep' };
+    fs.writeFileSync(sf, JSON.stringify(s, null, 2));
+    const orig = fs.readFileSync(sf, 'utf8');
+
+    const out = install('1', dir); // 이후 질문 기본값 = N → 보존 경로
+    const a = settingsOf(dir);
+    const ss = evCmds(a, 'SessionStart');
+    assert.ok(ss.some((c) => /hooks\/instructions-loaded\.js$/.test(c)), `instructions-loaded 미이관: ${JSON.stringify(ss)}`);
+    assert.ok(ss.some((c) => /hooks\/staleness-check\.js$/.test(c)), 'staleness-check 미이관');
+    assert.deepStrictEqual(evCmds(a, 'InstructionsLoaded'), ['echo my-il'], '사용자 자체 InstructionsLoaded 훅이 사라지거나 대상 훅이 남음');
+    assert.ok(a.permissions.allow.includes('Bash(make*)') && a.env.MY_FLAG === 'keep', '사용자 커스텀 설정 파괴');
+    // .bak 은 migrate 직전 상태 — 폐지 훅 배선은 그보다 앞선 install-cleanup 이 이미 걷어내므로 orig 와 바이트 비교 대신
+    // 이관 대상(InstructionsLoaded 원 배선)과 사용자 설정이 백업에 온전한지 확인한다
+    const bak = JSON.parse(fs.readFileSync(`${sf}.bak`, 'utf8'));
+    assert.deepStrictEqual(bak.hooks.InstructionsLoaded, JSON.parse(orig).hooks.InstructionsLoaded, '.bak 에 이관 전 배선이 없음');
+    assert.deepStrictEqual(bak.env, { MY_FLAG: 'keep' }, '.bak 에 사용자 설정 누락');
+    assert.match(out, /InstructionsLoaded → SessionStart/, '이관 로그 없음');
+    // 감사 B (2026-09-26): 우리 훅의 무따옴표 배선은 교정, 사용자 자체 명령은 경고만, 파일 없는 폐지 훅 배선 제거
+    const allCmds = Object.keys(a.hooks).flatMap((ev) => evCmds(a, ev));
+    assert.ok(!allCmds.some((c) => /(^|\s)\$CLAUDE_PROJECT_DIR\/\.claude\/hooks\//.test(c)), `우리 훅 무따옴표 배선 잔존: ${allCmds.filter((c) => /\s\$CLAUDE/.test(c))}`);
+    assert.ok(allCmds.includes('node $CLAUDE_PROJECT_DIR/scripts/mine.js'), '사용자 자체 명령이 수정·삭제됨');
+    assert.match(out, /따옴표 없는 \$CLAUDE_PROJECT_DIR/, '사용자 명령 무따옴표 경고 없음');
+    assert.ok(!allCmds.some((c) => /session-handoff-inject|pre-compact/.test(c)), '파일 없는 폐지 훅 배선 잔존');
+
+    const after1 = fs.readFileSync(sf, 'utf8');
+    install('1', dir); // 멱등
+    assert.strictEqual(fs.readFileSync(sf, 'utf8'), after1, '2회차 재설치에서 settings 가 또 바뀜');
+    assert.ok(!fs.existsSync(`${sf}.bak.1`), '2회차에 불필요한 백업 생성');
+    assert.strictEqual(evCmds(settingsOf(dir), 'SessionStart').filter((c) => /staleness-check/.test(c)).length, 1, '중복 배선');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('F3 악성·경계: 보존 경로에서 깨진 settings.json 은 수정 없이 이관 불가 경고, 설치는 성공', () => {
+  const dir = mktarget('broken-settings');
+  try {
+    fs.mkdirSync(path.join(dir, '.claude'), { recursive: true });
+    const sf = path.join(dir, '.claude', 'settings.json');
+    fs.writeFileSync(sf, '{"hooks":{"InstructionsLoaded":[ ,, ');
+    const out = install('1', dir);
+    assert.strictEqual(fs.readFileSync(sf, 'utf8'), '{"hooks":{"InstructionsLoaded":[ ,, ', '깨진 settings 가 변경됨');
+    assert.match(out, /파싱 실패/, '이관 불가 경고 없음');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('F6 악성: .claude/hooks/package.json 이 (끊어진) symlink 면 링크 대상에 쓰지 않고 경고한다', () => {
+  const dir = mktarget('pj-symlink');
+  const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'pj-outside-'));
+  try {
+    install('1', dir);
+    const pj = path.join(dir, '.claude', 'hooks', 'package.json');
+    // (1) 끊어진 symlink → 대상 밖 경로
+    fs.unlinkSync(pj);
+    const danglingTarget = path.join(outside, 'created-by-installer.json');
+    fs.symlinkSync(danglingTarget, pj);
+    const out = install('1', dir);
+    assert.ok(!fs.existsSync(danglingTarget), '끊어진 symlink 를 따라 대상 밖에 파일을 생성함');
+    assert.ok(fs.lstatSync(pj).isSymbolicLink(), 'symlink 가 교체·삭제됨');
+    assert.match(out, /hooks\/package\.json 이 symlink/, 'symlink 경고 없음');
+    // (2) 살아 있는 symlink → 외부 파일 내용 불변
+    fs.unlinkSync(pj);
+    const liveTarget = path.join(outside, 'live.json');
+    fs.writeFileSync(liveTarget, '{"type":"module","owner":"someone-else"}');
+    fs.symlinkSync(liveTarget, pj);
+    install('1', dir);
+    assert.strictEqual(fs.readFileSync(liveTarget, 'utf8'), '{"type":"module","owner":"someone-else"}', 'symlink 대상 외부 파일이 덮어써짐');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(outside, { recursive: true, force: true });
+  }
+});
+
+test('공백 경로: 공백·괄호가 포함된 대상에 설치한 settings 의 모든 훅 명령이 실제 셸에서 모듈을 찾아 실행된다', () => {
+  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'tmpl sep space '));
+  const dir = path.join(base, 'my app (v2)');
+  fs.mkdirSync(dir);
+  try {
+    install('2', dir); // dev + TS — 배선 훅이 가장 많은 축
+    const s = settingsOf(dir);
+    const all = [];
+    for (const [ev, groups] of Object.entries(s.hooks)) for (const g of groups) for (const h of g.hooks) all.push([ev, h.command]);
+    all.push(['StatusLine', s.statusLine.command]);
+    assert.ok(all.length > 10, `배선 명령 수가 비정상: ${all.length}`);
+    for (const [ev, cmd] of all) {
+      const input = JSON.stringify({ hook_event_name: ev, session_id: 't', cwd: dir, source: 'startup',
+        tool_name: 'Read', tool_input: { file_path: path.join(dir, 'README.md') }, tool_response: {} });
+      const r = spawnSync('bash', ['-c', cmd], { cwd: dir, input, encoding: 'utf8', timeout: 60000,
+        env: { ...process.env, CLAUDE_PROJECT_DIR: dir } });
+      const err = `${r.stderr || ''}`;
+      assert.ok(!/Cannot find module|MODULE_NOT_FOUND|No such file or directory/.test(err),
+        `[${ev}] ${cmd}\n공백 경로에서 훅 스크립트를 찾지 못함:\n${err.slice(0, 300)}`);
+      assert.notStrictEqual(r.status, 127, `[${ev}] ${cmd} — command not found`);
+    }
+  } finally {
+    fs.rmSync(base, { recursive: true, force: true });
   }
 });

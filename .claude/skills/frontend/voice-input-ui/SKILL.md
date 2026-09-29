@@ -16,7 +16,7 @@ description: >
 > - Navigator.vibrate: https://developer.mozilla.org/en-US/docs/Web/API/Navigator/vibrate
 > - Permissions API: https://developer.mozilla.org/en-US/docs/Web/API/Permissions_API
 >
-> 검증일: 2026-05-14
+> 검증일: 2026-09-28 (재검증 — vibrate/Permissions API 최신 caniuse 데이터 대조, 변동 없음)
 >
 > 짝 스킬:
 > - `frontend/web-speech-api-stt` — Web Speech API 기반 음성 → 텍스트 변환 (interimResults, continuous 등 인식 엔진 사용법). 본 스킬은 그 결과를 *어떻게 사용자에게 보여줄지*를 다룬다.

@@ -2,7 +2,7 @@
 skill: seo-monitoring-automation
 category: frontend
 version: v1
-date: 2026-06-04
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `seo-monitoring-automation` |
 | 스킬 경로 | `.claude/skills/frontend/seo-monitoring-automation/SKILL.md` |
-| 검증일 | 2026-06-04 |
+| 검증일 | 2026-09-28 (재검증, 최초 2026-06-04) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 
@@ -136,6 +136,24 @@ status: APPROVED
 - verification-policy 분류: 라이브러리·패턴 정리형 스킬 — content test PASS = APPROVED 전환 가능
 - 최종 상태: APPROVED
 
+### 재검증 (2026-09-28)
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read 후 핵심 클레임 3개 1차 소스 WebFetch 재대조 + 실전 질문 2개 답변 검증
+
+**클레임 대조:**
+- IndexNow 키 파일 규격(8~128자 hex+대시, UTF-8) + 요청당 최대 10,000 URL: indexnow.org/documentation WebFetch 재확인 → 동일 규격 그대로 확인. **VERIFIED, 변경 없음**
+- GitHub Actions cron 최소 간격 5분 + 60일 비활동 시 schedule 자동 비활성화: docs.github.com WebFetch 재확인 결과 문구 동일하되, 공식 문서가 "In a **public repository**, scheduled workflows are automatically disabled..."로 **퍼블릭 레포 한정** 조건임을 명시하고 있음을 재확인. SKILL.md가 이 조건을 명시하지 않고 있어 §7-2·§11에 "퍼블릭 레포" 조건을 추가해 정밀도 개선(정정이라기보다 누락 보강 — 기존 안내가 틀린 것은 아니며 사설 레포 한정 여부만 명확화)
+- GSC API scope(`webmasters.readonly`/`webmasters`) 체계: Google API 인증 체계는 안정적 표준이라 재검증 시급성 낮음(변경 이력 없음 확인)
+
+Q1. "GitHub Actions cron이 60일 지나면 꺼진다는데, 프라이빗 레포도 그래?"
+— 재검증 전 SKILL.md는 이 구분을 명시하지 않아 부정확할 수 있었음. 정정 후 SKILL.md 기준으로는 PASS — "퍼블릭 레포는 공식 문서에 명시, 프라이빗은 별도 확인 필요"로 정확히 한계를 밝히며 답변 가능.
+
+Q2. "IndexNow 키 파일 8자 미만으로 짧게 만들어도 되나?"
+— PASS. 근거: SKILL.md §6-2 "8~128자" 규격이 indexnow.org 공식 문서와 정확히 일치 — 8자 미만은 위반이라고 정확히 답변 가능.
+
+**판정**: 핵심 클레임(IndexNow 규격) 불변 확인, GitHub Actions 60일 규칙에 "퍼블릭 레포 한정" 조건 보강(오류 정정이 아닌 정밀도 개선) → status APPROVED 유지.
+
 ---
 
 ### (참고) 최초 예정 테스트 케이스 (skill-creator 작성)
@@ -174,3 +192,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-06-04 | v1 | 최초 작성. GSC API + IndexNow + GitHub Actions cron 통합. 사용자 입력 중 네이버 엔드포인트(DISPUTED 1건) 공식 엔드포인트로 수정 반영 | skill-creator |
 | 2026-06-04 | v1 | 2단계 실사용 테스트 수행 (Q1 GSC 50,000행 페이지네이션 / Q2 403 PERMISSION_DENIED 원인 해결 / Q3 IndexNow 키 파일 규격·Google 미참여 확인) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-28 | v1 | 재검증: IndexNow 규격 불변 확인, GitHub Actions 60일 자동 비활성화가 "퍼블릭 레포 한정"임을 공식 문서로 재확인해 §7-2·§11에 조건 보강. status APPROVED 유지 | 메인 세션 |

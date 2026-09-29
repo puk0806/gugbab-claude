@@ -12,7 +12,7 @@ description: MUI v5 (Material UI 5.x) 레거시 프로젝트 전용 패턴 — E
 >       https://v5.mui.com/system/styles/basics/ (@mui/styles 레거시)
 >       https://v5.mui.com/system/getting-started/usage/ (성능 트레이드오프)
 >       https://github.com/mui/material-ui/releases/tag/v5.18.0
-> 검증일: 2026-08-26
+> 검증일: 2026-09-26 (30~60일 주기 재검증, 최초 검증 2026-08-26 — v5 최종판·EOL 상태·v7 LTS·v9 stable 전부 변동 없음 재확인)
 
 > **이 스킬은 v5.x에 고정된 레거시 프로젝트 전용이다.** 최신 버전(v9)으로 신규 개발하거나 업그레이드를 진행 중이라면
 > [`frontend/mui-v9`](../mui-v9/SKILL.md) 스킬을 사용한다. v9의 `size` prop Grid, `slots`/`slotProps`,

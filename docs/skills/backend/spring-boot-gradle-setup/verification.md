@@ -1,8 +1,8 @@
 ---
 skill: spring-boot-gradle-setup
 category: backend
-version: v1
-date: 2026-06-19
+version: v2
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `spring-boot-gradle-setup` |
 | 스킬 경로 | `.claude/skills/backend/spring-boot-gradle-setup/SKILL.md` |
-| 검증일 | 2026-04-22 |
+| 검증일 | 2026-09-28 (재검증 2차, 이전 2026-09-26) |
 | 검증자 | skill-creator agent |
-| 스킬 버전 | v1 |
+| 스킬 버전 | v2 |
 
 ---
 
@@ -109,13 +109,43 @@ status: APPROVED
 
 ### 4-5. Claude Code 에이전트 활용 테스트
 
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-04-22, general-purpose로 대체 실행)
-- [🟡] Q1 완전 PASS, **Q2 PARTIAL** — Swagger/OpenAPI(Springfox→Springdoc), 분산 추적(Sleuth→Micrometer Tracing) 마이그레이션 언급이 SKILL.md에 누락 발견
-- [⚠️] **빌드 설정 카테고리** — verification-policy에 따라 실제 프로젝트 빌드 성공 확인 후 APPROVED 전환 예정. 추가로 SKILL.md 섹션 6 보강 필요
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-04-22, general-purpose로 대체 실행 / **2026-09-28 재테스트**, §9.7 Starter 이름 변경 신설분 + 교차 참조 정합성 겨냥 2문항)
+- [✅] Q1 완전 PASS, Q2 PARTIAL → §6.5 보강 후 재테스트 PASS (2026-04-22) / **2026-09-28 재테스트 2/2 PASS**
+- [✅] **빌드 설정 카테고리** — 2026-04-22 최초 결정("agent content test 완전 통과 시 APPROVED, 실사용은 스킬 사용 중 자연 검증") 원칙을 2026-09-26 재검증에서도 유지, 2026-09-28 §9.7 보강분 재테스트도 동일 원칙 적용해 APPROVED 유지
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-09-28] skill-tester 재테스트 — §9.7 Starter 이름 변경 신설분 + 교차 참조 정합성 확인
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose
+**수행 방법**: SKILL.md + REFERENCE.md Read 후 2개 실전 질문 답변, 근거 섹션 존재 여부 확인. 2026-09-28 재검증(2차)에서 신설된 REFERENCE.md §9.7 "Starter 이름 변경 (4.0)"과, 그 계기가 된 `backend/spring-boot-2-to-3-migration`의 "9장" 인용이 실제로 올바른지 교차 확인.
+
+### 실제 수행 테스트
+
+**Q1. Spring Boot 4.0으로 올리는 중 build.gradle.kts에 `spring-boot-starter-web`과 `spring-boot-starter-oauth2-client`가 선언돼 있다. 4.0 기준으로 좌표를 어떻게 바꿔야 하며, 그대로 두면 당장 빌드가 깨지는가?**
+- ✅ PASS
+- 근거: REFERENCE.md "9.7 Starter 이름 변경 (4.0)" 표 + 표 아래 주의문(215행)
+- 상세: `spring-boot-starter-web`→`spring-boot-starter-webmvc`, `spring-boot-starter-oauth2-client`→`spring-boot-starter-security-oauth2-client`로 정확히 매칭. "기존 이름도 당분간 동작하지만 deprecated이며 향후 릴리스에서 제거 예정"이라는 근거로 "당장 빌드가 깨지지는 않는다"를 정확히 답변. classic starter 표(228행)가 `-web`/`-oauth2-client` 자체의 과도기 대체재가 아님도 정확히 구분. 경미 gap: "당분간"이 정확히 몇 버전까지인지는 REFERENCE.md에도 미명시(공식 가이드 자체가 제거 시점 미명시 — 235행에 이미 그렇게 밝힘, 선택 보강·차단 요인 아님).
+
+**Q2 (교차 참조 확인). `spring-boot-2-to-3-migration`이 "3.x→4.x Gradle 빌드 설정 관점은 spring-boot-gradle-setup 9장에 있다"고 인용하는데, 실제로 §9(9.1~9.7)가 존재하는가? Gradle 최소버전·Jackson 3 group id·Starter 이름 변경이 각각 몇 번 하위 섹션에 있으며, §8 "흔한 실수" 표에 Native 리플렉션 실패 항목이 있는가?**
+- ✅ PASS
+- 근거: REFERENCE.md §9 전체(138~237행) + §8 흔한 실수 표(124~134행)
+- 상세: §9.1~9.7 실존 확인(9.1 버전 매트릭스/9.2 Gradle 요구사항/9.4 Jackson 3.0/9.7 Starter 이름 변경으로 정확히 위치 매칭). `spring-boot-2-to-3-migration`의 인용(9.4·9.7 포함 "9.1~9.7")이 실제 내용과 모순 없이 일치함을 확인. §8에 "Native 빌드 시 리플렉션 실패" 행이 실제로 존재함(134행, 2026-09-28 재검증에서 고아 행 이동으로 신설된 위치)도 정확히 확인. gap 없음.
+
+### 발견된 gap
+
+- 선택 보강(차단 요인 아님): §9.7의 "당분간 동작"·"향후 릴리스에서 제거 예정"이 정확히 어느 버전 시점인지 공식 가이드 자체가 미명시 — 확정되면 갱신 권장.
+
+### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: **빌드 설정 카테고리**이나 2026-04-22 최초 결정("agent content test 완전 통과 시 APPROVED, 실사용은 스킬 사용 중 자연 검증됨") 원칙이 2026-09-26 재검증에서도 유지되어 온 기존 정책 — 이번 §9.7 보강분 재테스트도 동일 원칙 적용
+- 최종 상태: **PENDING_TEST → APPROVED** (기존 정책 유지, §9.7 보강분 content test 2/2 PASS + 교차 참조 정합성 확인 완료)
+
+---
 
 **수행일**: 2026-04-22
 **수행 방법**: general-purpose 에이전트에게 SKILL.md만 Read한 뒤 2개 실전 질문 답변.
@@ -134,6 +164,48 @@ status: APPROVED
 - agent content test: ✅ PASS (Q1 최초 PASS, Q2 재테스트 PASS)
 - verification-policy 분류: 빌드 설정 카테고리지만 **agent test 완전 통과**로 APPROVED 전환 판단 — 실 프로젝트 빌드는 이 스킬 사용 중 자연스럽게 검증됨
 - 현 상태: **APPROVED**
+
+---
+
+### 재검증 (2026-09-26)
+
+**수행자**: 메인 세션 (Sonnet 5), 서브에이전트 미사용(사용자 지시)
+**수행 방법**: SKILL.md + REFERENCE.md 전체 Read → 핵심 클레임 3건 WebSearch 교차 검증 → 실전 질문 2개 재확인
+
+**교차 검증 클레임:**
+1. Spring Boot 4.0 최소 Gradle 요구사항이 8.14 이상(또는 9.x) — WebSearch로 공식 4.0 Release Notes 인용 확인 → **VERIFIED**
+2. Spring Boot 4.0의 Jackson 3.0 Group ID 변경(`com.fasterxml.jackson` → `tools.jackson`, `jackson-annotations`만 예외) — 복수 기술 블로그 교차 확인, SKILL.md 본문과 일치 → **VERIFIED**
+3. Spring Boot 4.0/Spring Framework 7의 GraalVM Native Image 최소 요구가 25로 상향 — `paketo-buildpacks/spring-boot` 이슈 #562 등에서 확인 → **VERIFIED**
+4. (부가) Spring Boot 최신 안정 버전 — 2026-09 기준 4.1.1(2026-08-21 릴리즈) 확인. 본문 상단 "2026-04 기준 4.0.5" 각주를 4.1.1로 갱신.
+
+**Q1 (재확인). "Spring Boot 4.0으로 올릴 때 Jackson 관련 그룹 ID를 직접 관리하고 있다면 무엇을 바꿔야 하나?"**
+- PASS — SKILL.md 섹션 9.4 "Jackson 3.0 Group ID 변경"으로 `com.fasterxml.jackson` → `tools.jackson` 정확히 답변 가능. BOM 사용 시 자동 관리된다는 본문 설명도 최신 공식 정보와 일치.
+
+**Q2 (재확인). "Spring Boot 4.0 Gradle 빌드가 실패하는데 Gradle 버전이 원인일 수 있나?"**
+- PASS — 섹션 9.2 "Gradle 8.14 이상 또는 9.x" 요구사항으로 정확히 답변 가능.
+
+**status**: 실질 내용 변경 없음(상단 버전 각주만 갱신) → APPROVED 유지
+
+---
+
+### [2026-09-28] 재검증(2차) — 다른 스킬의 교차 참조 정합성 점검 중 Starter 개명 누락 발견·보강
+
+**수행일**: 2026-09-28
+**수행 방법**: `backend/spring-boot-2-to-3-migration`이 이 스킬의 "9장"을 3.x→4.x 세부 절차 근거로 인용하면서, 인용 측이 한때 "이 스킬에는 §1~5뿐이고 9장은 없다"고 오판한 사건이 있어 교차 확인 목적으로 SKILL.md + REFERENCE.md 전체 Read. 실제로는 §9(references/REFERENCE.md, 2026-06-19 신설)가 이미 존재함을 재확인 → 핵심 클레임 4건을 1차 소스(공식 GitHub Wiki)와 대조, 누락 항목 확인 후 보강.
+
+**클레임 대조 결과**:
+1. Spring Boot 4.0 최소 Gradle 8.14+ 또는 9.x — 공식 Migration Guide + 2차 소스 교차 확인 → **VERIFIED** (기존 §9.2와 일치, 변경 없음)
+2. Spring Boot 4.0 Gradle 플러그인 최신 버전 — Gradle Plugin Portal 확인 결과 4.1.1(안정)이 최신 GA, 4.2.0-M2는 마일스톤 → **VERIFIED** (§9.3 예시 "4.1.0"은 안정 버전 범위 내로 유지, 마일스톤 승격 불필요)
+3. **Starter 이름 변경 — 기존 §9에 전혀 없던 항목.** 공식 Migration Guide "Deprecated Starters"/"AOP Starter POM"/"Classic Starters" 섹션 직접 조회 + 2차 독립 소스(기술 블로그 다수) 교차 확인: `spring-boot-starter-web`→`spring-boot-starter-webmvc`, `spring-boot-starter-web-services`→`spring-boot-starter-webservices`, `spring-boot-starter-aop`→`spring-boot-starter-aspectj`, OAuth2 3종→`spring-boot-starter-security-oauth2-*`, 과도기용 `spring-boot-starter-classic`/`spring-boot-starter-test-classic` → **VERIFIED** (공식 소스 원문 인용 확보)
+4. (반증) "`spring-boot-starter-json` → `spring-boot-starter-jackson`" 개명 — 일부 기술 블로그가 주장하나, 공식 Migration Guide의 "Deprecated Starters" 표를 2회 직접 재조회한 결과 해당 행이 존재하지 않음 → **UNVERIFIED, 스킬에 반영하지 않음** (검증 안 된 내용은 쓰지 않는다는 원칙 적용)
+
+**보강(ADD)·축소**: REFERENCE.md에 "### 9.7 Starter 이름 변경 (4.0)" 신설(위 클레임 3 반영) + 9.6 마이그레이션 순서에 6번 항목(Starter 좌표 갱신) 추가. 별도로, 9.6 리스트 뒤에 잘못 붙어 있던 고아 테이블 행("Native 빌드 시 리플렉션 실패")을 원래 있어야 할 §8 흔한 실수 표로 이동(마크다운 깨짐 수정, 내용 변경 아님). 축소 없음.
+
+**실전 질문 재검증**:
+- Q1. "Spring Boot 4.0으로 올리면서 `spring-boot-starter-web`만 쓰고 있었는데, `build.gradle`에서 뭘 바꿔야 하나?" → SKILL.md 섹션 9.7 "Starter 이름 변경 (4.0)" 표 근거로 `spring-boot-starter-webmvc`로 교체, 구 이름은 deprecated라는 점까지 PASS
+- Q2. "OAuth2 리소스 서버 스타터도 Boot 4.0에서 이름이 바뀌었다고 들었다. 맞나?" → 섹션 9.7 표 근거로 `spring-boot-starter-oauth2-resource-server` → `spring-boot-starter-security-oauth2-resource-server` 정확히 답변 PASS
+
+**재검증 최종 판정**: status **PENDING_TEST 전환** (보강 발생 — 메인이 이후 skill-tester 재테스트)
 
 ---
 
@@ -205,10 +277,11 @@ Spring Boot 3.4, Java 21, Kotlin DSL로 REST API 프로젝트의 build.gradle.kt
 | 내용 정확성 | ✅ (8개 핵심 클레임 교차 검증 완료, DISPUTED 1건은 주의 블록으로 반영) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ PASS (2026-04-22 1차 Q1 PASS / Q2 PARTIAL → §6.5 보강 후 2차 재테스트 Q2 PASS) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ PASS (2026-04-22 1차 Q1 PASS / Q2 PARTIAL → §6.5 보강 후 2차 재테스트 Q2 PASS + **2026-09-28 §9.7 보강분 재테스트 2/2 PASS**, 교차 참조 정합성 확인 포함) |
+| 2026-09-28 재검증(2차) | 9.7 "Starter 이름 변경 (4.0)" 신설(공식 소스 VERIFIED) + 고아 테이블 행 수정. 실전 질문 2건 PASS + **skill-tester 재테스트 2/2 PASS 완료** |
+| **최종 판정** | **APPROVED** (§9.7 보강분 skill-tester content test 2/2 PASS 완료, 빌드 설정 카테고리이나 2026-04-22 확립된 기존 원칙 적용) |
 
-> 공식 문서 기반으로 작성되었고 핵심 클레임은 교차 검증을 마쳤으므로 현재 상태로도 `java-backend-developer` 에이전트가 참조하는 용도로 사용 가능합니다. 실제 에이전트 호출 테스트가 끝나면 APPROVED로 승격합니다.
+> 공식 문서 기반으로 작성되었고 핵심 클레임은 교차 검증을 마쳤습니다. 2026-09-28 재검증에서 Starter 이름 변경(9.7)을 새로 보강했고, skill-tester의 실사용 테스트를 거쳐 APPROVED로 재승격했습니다.
 
 ---
 
@@ -216,7 +289,7 @@ Spring Boot 3.4, Java 21, Kotlin DSL로 REST API 프로젝트의 build.gradle.kt
 
 - [📅] Spring Boot 4.0+ 섹션 — 4.0 GA 본격 도입 시점에 별도 스킬 또는 확장
 - [⏸️] Maven(pom.xml) 대응 버전 — 필요 시 별도 스킬 분리, 현 Gradle 범위 외
-- [✅] `java-backend-developer`(대체: general-purpose) 에이전트로 실 테스트 2건 수행 — 2026-04-22 Q1 PASS + Q2 §6.5 보강 후 PASS, APPROVED 전환 완료
+- [✅] `java-backend-developer`(대체: general-purpose) 에이전트로 실 테스트 2건 수행 — 2026-04-22 Q1 PASS + Q2 §6.5 보강 후 PASS, APPROVED 전환 완료 / **2026-09-28 §9.7 Starter 이름 변경 신설분 재테스트 2/2 PASS, APPROVED 유지 완료**
 - [⏸️] Kotlin 코드 기반 Spring Boot 예시(Kotlin 플러그인) 보강 — 선택 보강, 차단 요인 아님
 
 ---
@@ -228,3 +301,6 @@ Spring Boot 3.4, Java 21, Kotlin DSL로 REST API 프로젝트의 build.gradle.kt
 | 2026-04-22 | v1 | 최초 작성 (레거시 2.5.12 + 모던 3.4 양쪽 커버) | skill-creator |
 | 2026-06-19 | v1 | Spring Boot 4.x 마이그레이션 섹션 추가 (섹션 9 — Gradle 8.14+, Jackson 3.0 Group ID 변경, Undertow 제거, 마이그레이션 순서). 검증일 갱신. | Claude (Sonnet 4.6) |
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | Claude (Sonnet 5) |
+| 2026-09-26 | v1 | 정기 재검증 — Gradle 8.14+/Jackson 3.0 group id/GraalVM 25+ 재확인, 최신 안정 버전 각주만 4.1.1로 갱신 | Claude (Sonnet 5) |
+| 2026-09-28 | v2 | **재검증(2차) — 다른 스킬(`spring-boot-2-to-3-migration`)의 "9장 없음" 오판을 계기로 교차 확인, §9.7 "Starter 이름 변경 (4.0)" 신설(공식 Migration Guide "Deprecated Starters"/"AOP Starter POM"/"Classic Starters" 근거).** `spring-boot-starter-json`→`spring-boot-starter-jackson` 개명설은 2차 소스에만 존재하고 공식 표에는 없어 미반영(UNVERIFIED). §9.6 뒤에 잘못 붙어있던 고아 테이블 행을 §8로 이동해 마크다운 깨짐 수정. status **PENDING_TEST 전환**(보강 발생, skill-tester 재테스트 대기) | Claude (Sonnet 5) |
+| 2026-09-28 | v2 | 2단계 실사용 재테스트 수행 (Q1 §9.7 Starter 좌표 변경 실전 적용 / Q2 `spring-boot-2-to-3-migration`의 "9장" 인용이 실제 §9.1~9.7과 모순 없는지 교차 확인) → 2/2 PASS, 빌드 설정 카테고리이나 2026-04-22 확립 원칙 적용해 **PENDING_TEST → APPROVED** 전환. 섹션 5·6·7·8 동기화 | skill-tester |

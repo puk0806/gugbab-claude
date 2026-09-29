@@ -1,8 +1,8 @@
 ---
 skill: code-convention
 category: frontend
-version: v1
-date: 2026-04-14
+version: v3.1
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -35,9 +35,9 @@ status: APPROVED
 | 스킬 이름 | code-convention |
 | 스킬 경로 | `.claude/skills/frontend/code-convention/SKILL.md` |
 | 최초 작성일 | 2026-03-27 |
-| 재검증일 | 2026-04-14 |
-| 검증 방법 | frontend-architect 활용 테스트 |
-| 버전 기준 | ESLint 9, Biome 최신, Husky v9 |
+| 검증일 | 2026-09-28 (재검증(2차)) / 2026-08-26 (v3) / 2026-04-14 (v1) |
+| 검증 방법 | frontend-architect 활용 테스트 (v1) → freshness 재검증(v3) → 재검증(2차) |
+| 버전 기준 | ESLint 10.11.0, Biome 2.5.14, Prettier 3.9.9, Husky 9.1.7, lint-staged 17.6.0 |
 
 ---
 
@@ -117,6 +117,26 @@ status: APPROVED
 
 ---
 
+### [2026-09-28] 재검증(2차) — ESLint 10.11.0·Biome 2.5.14 현행화, breaking change 없음 확인
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임 3개를 1차 소스(GitHub Releases, npm registry, changeset CHANGELOG.md)와 대조
+
+**클레임 대조 결과**:
+1. ESLint 최신 버전과, 10.0(2026-02-06) 이후 flat-config-only 등 breaking change가 추가로 있었는가 → VERIFIED (`npm eslint@latest`=10.11.0. `api.github.com/repos/eslint/eslint/releases`의 v10.0.1~v10.11.0 릴리즈 노트 전수 스캔 결과 "breaking" 언급 없음 — 10.0 이후 신규 breaking change 없음)
+2. Biome 최신 버전과, 2.5.10(직전 검증 시점) 이후 `assist.actions.source.organizeImports` 등 설정 스키마가 또 바뀌었는가 → VERIFIED (`npm @biomejs/biome@latest`=2.5.14. `raw.githubusercontent.com/biomejs/biome/main/packages/@biomejs/biome/CHANGELOG.md`의 2.5.11~2.5.14 항목은 전부 신규 nursery 규칙 추가·버그 fix이며 기존 설정 스키마(`assist`/`linter`/`formatter`) breaking change 없음)
+3. Prettier·Husky·lint-staged 메이저가 그대로인가 → VERIFIED (npm registry latest: Prettier 3.9.9, Husky 9.1.7, lint-staged 17.6.0 — 모두 SKILL.md 표기 메이저와 일치)
+
+**보강(ADD)·축소**: 없음 (버전 번호만 갱신)
+
+**실전 질문 재검증**:
+- Q1. "지금 ESLint 10에서 `.eslintrc.json`을 쓸 수 있나?" → SKILL.md 상단 배너·"흔한 실수" 섹션 근거로 "완전 제거, flat config만" — PASS
+- Q2. "Biome 2.5 최신 patch에서 organizeImports 설정 위치가 또 바뀌었나?" → SKILL.md `biome.json` 예시(`assist.actions.source.organizeImports`) + 재검증 기록 근거로 "2.5.10 이후 변경 없음" — PASS
+
+**재검증 최종 판정**: status **APPROVED 유지** (내용 변경 없음, 버전 번호만 갱신)
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -125,7 +145,7 @@ status: APPROVED
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
 | 에이전트 활용 테스트 | ✅ PASS (frontend-architect) |
-| **최종 판정** | **APPROVED** |
+| **최종 판정** | **APPROVED** (2026-09-28 재검증에서도 유지) |
 
 ---
 
@@ -142,3 +162,4 @@ status: APPROVED
 | 2026-03-27 | v1 | 최초 작성 및 frontend-architect 활용 테스트 완료 | frontend-architect 에이전트 |
 | 2026-04-17 | v2 | verification.md 신규 8섹션 포맷으로 마이그레이션 | 메인 대화 오케스트레이션 |
 | 2026-08-26 | v3 | freshness 재검증(152일 경과) — OUTDATED 4건 정정: ① ESLint 9+→**10+** 기준(2026-02-06 출시, eslintrc·`.eslintignore`·`ESLINT_USE_FLAT_CONFIG`·`--no-eslintrc` 등 완전 제거, Node `^20.19||^22.13||>=24`, config 탐색이 파일 디렉토리 기준으로 변경), v9 EOL 2026-08-06·v8 EOL 2024-10-05 명시 ② "흔한 실수"의 "v9에서는 flat config"를 "v9 병행·v10 완전 제거"로 정정 ③ `biome.json` `organizeImports`→`assist.actions.source.organizeImports: "on"`(Biome 2.5.10), `biome migrate --write` 안내 ④ 비교표 "비교적 신생" 삭제, type-aware(tsc 불필요) 행 추가. ESLint 8 레거시 프로젝트는 `architecture/module-boundaries` v8 분기로 연결. Prettier 3.x·husky 9·lint-staged VERIFIED | freshness-auditor + orchestrator (skill-creator 위임분은 API 한도로 중단돼 직접 수행, 공식 소스 4건 WebFetch 재확인) |
+| 2026-09-28 | v3.1 | 재검증(2차) — ESLint 10.11.0·Biome 2.5.14·Prettier 3.9.9·Husky 9.1.7·lint-staged 17.6.0 확인. GitHub Releases/CHANGELOG 전수 대조 결과 10.0/2.5.10 이후 breaking change 없음. 버전 번호만 갱신, status APPROVED 유지 | 재검증(2차) |

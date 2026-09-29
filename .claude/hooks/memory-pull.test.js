@@ -193,6 +193,55 @@ section('경계 — CLAUDE_PROJECT_DIR 없음')
   assert('exit 0 (아무 동작 안 함)', r.status, 0)
 }
 
+// ─── 경로 인코딩 (2026-09-26 실측: 영숫자 외 모든 문자 → '-') ─────────────
+function runHookInput({ home, repoDir, input }) {
+  const env = { ...process.env, HOME: home, CLAUDE_PROJECT_DIR: repoDir }
+  return spawnSync('node', [HOOK], { input, encoding: 'utf8', timeout: 5000, env })
+}
+section('인코딩 — 점·공백·한글이 있는 프로젝트 경로는 Claude Code 실제 디렉토리명으로 매핑')
+{
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'mpull-home-'))
+  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'mpull-repo-'))
+  const repo = path.join(base, 'my.app v2 한글')
+  fs.mkdirSync(path.join(repo, 'memory'), { recursive: true })
+  fs.writeFileSync(path.join(repo, 'memory', 'MEMORY.md'), 'idx')
+  const r = runHookInput({ home, repoDir: repo, input: '' })
+  assert('exit 0', r.status, 0)
+  const measured = path.join(home, '.claude', 'projects', repo.replace(/[^A-Za-z0-9]/g, '-'), 'memory')
+  const legacy = path.join(home, '.claude', 'projects', repo.replace(/[/_]/g, '-'), 'memory')
+  assert('실측 규칙 디렉토리에 반영', fs.existsSync(path.join(measured, 'MEMORY.md')), true)
+  assert('구 규칙(/ _ 만 치환) 디렉토리는 만들지 않음', fs.existsSync(legacy), false)
+  cleanup(home, base)
+}
+section('transcript_path 우선 — 훅 입력의 실제 저장소 디렉토리를 사용')
+{
+  const { home, repo, repoMemory } = mkFixture()
+  fs.mkdirSync(repoMemory, { recursive: true })
+  fs.writeFileSync(path.join(repoMemory, 'a.md'), 'A')
+  const realStore = path.join(home, '.claude', 'projects', '-actual-store-dir')
+  fs.mkdirSync(realStore, { recursive: true })
+  const input = JSON.stringify({ hook_event_name: 'SessionStart', source: 'startup', transcript_path: path.join(realStore, 's.jsonl') })
+  runHookInput({ home, repoDir: repo, input })
+  assert('transcript_path 디렉토리의 memory/ 로 반영', fs.readFileSync(path.join(realStore, 'memory', 'a.md'), 'utf8'), 'A')
+  cleanup(home, repo)
+}
+section('악성 — projects 밖·상위 탈출 transcript_path 는 무시 (임의 경로에 memory 생성 금지)')
+{
+  const { home, repo, repoMemory, globalMemory } = mkFixture()
+  fs.mkdirSync(repoMemory, { recursive: true })
+  fs.writeFileSync(path.join(repoMemory, 'a.md'), 'A')
+  const evil = fs.mkdtempSync(path.join(os.tmpdir(), 'mpull-evil-'))
+  for (const tp of [path.join(evil, 'x.jsonl'), path.join(home, '.claude', 'projects', '..', '..', path.basename(evil), 'x.jsonl')]) {
+    const r = runHookInput({ home, repoDir: repo, input: JSON.stringify({ transcript_path: tp }) })
+    assert(`exit 0 (${path.basename(tp)})`, r.status, 0)
+  }
+  assert('악성 경로에 memory/ 미생성', fs.existsSync(path.join(evil, 'memory')), false)
+  assert('인코딩 폴백 경로로 반영', fs.readFileSync(path.join(globalMemory, 'a.md'), 'utf8'), 'A')
+  const r2 = runHookInput({ home, repoDir: repo, input: '{not json' })
+  assert('깨진 stdin JSON 에도 exit 0', r2.status, 0)
+  cleanup(home, repo, evil)
+}
+
 console.log(`\n${'─'.repeat(40)}`)
 console.log(`결과: ${passed}/${passed + failed} 통과 ${failed > 0 ? `(${failed}개 실패)` : ''}`)
 if (failed === 0) console.log('✅ 모든 테스트 통과')

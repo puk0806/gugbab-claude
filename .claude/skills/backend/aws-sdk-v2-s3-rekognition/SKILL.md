@@ -19,9 +19,11 @@ description: AWS SDK for Java v2 (software.amazon.awssdk) S3·Rekognition 모던
 > - OpenRewrite Recipe: https://docs.openrewrite.org/recipes/software/amazon/awssdk/v2migration/awssdkjavav1tov2
 > - Spring Cloud AWS: https://github.com/awspring/spring-cloud-aws
 >
-> 검증일: 2026-04-23
+> 검증일: 2026-04-23 (재검증: 2026-09-26)
 
 > 주의: 본 문서는 AWS SDK for Java `2.42.x`(2026-04 기준 최신, 2.42.39) 기준입니다. AWS SDK for Java v1(`com.amazonaws:aws-java-sdk-*`)은 **2025-12-31 end-of-support**를 맞이했습니다. 신규 프로젝트는 반드시 v2를 사용하고, 기존 v1 코드는 마이그레이션 대상입니다.
+>
+> 주의(2026-09-26 재검증): `software.amazon.awssdk:bom` 최신 버전은 **2.55.x대**(2026-09 기준)로 계속 활발히 릴리스되고 있습니다. 빌더 API·`*Response` 네이밍·`S3Presigner`/`S3TransferManager`/CRT 클라이언트 사용법·예외 계층(`SdkException` → `AwsServiceException` → `S3Exception`)은 마이너 업그레이드로 변경되지 않았습니다. 실제 프로젝트에는 `2.42.39` 대신 BOM의 최신 안정 버전을 확인해 적용하세요.
 
 > 관련 스킬: v1 전용 패턴은 `aws-sdk-v1-s3-rekognition` 스킬 참조.
 

@@ -2,7 +2,7 @@
 skill: unity-iap
 category: game
 version: v1
-date: 2026-06-09
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -19,7 +19,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `unity-iap` |
 | 스킬 경로 | `.claude/skills/game/unity-iap/SKILL.md` |
-| 검증일 | 2026-06-09 |
+| 검증일 | 2026-09-26 (최초 2026-06-09) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 | 대상 패키지 버전 | Unity IAP **5.3.1** (2026-05-27 권장) / **4.15.1** (2026-04-21 레거시 호환) |
@@ -109,13 +109,66 @@ status: APPROVED
 
 ### 4-4. Claude Code 에이전트 활용 테스트
 
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-06-09 skill-tester 수행)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (3/3 PASS)
-- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (gap 없음, 보완 불필요)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-06-09 skill-tester 수행, 2026-09-28 재검증 정정분 재테스트 완료)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (3/3 PASS, 재검증 2/2 PASS)
+- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (gap 없음, 보완 불필요 — 단 섹션 11 표 버전 표기 사소한 불일치 발견, 아래 기록)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (Agent 도구 실제 서브에이전트 호출)
+**수행 방법**: 2026-09-26 재검증에서 정정된 내용(IAP 버전 5.4.3, BL 8/9, Target API 36)을 겨냥한 질문 1개 + 핵심 기능 질문 1개를 general-purpose 서브에이전트에게 "SKILL.md만 근거로 답하라"는 조건으로 위임, 답변과 근거 섹션을 대조 검증
+
+### 실제 수행 테스트 (2026-09-28)
+
+**Q1. 2026-09 신규 설치 시 IAP 버전 및 Billing Library**
+- ✅ PASS
+- 근거: SKILL.md "1. Unity IAP 개요" 표 (최신 안정 버전 5.4.3, Billing Library v5.4.x → BL 8 자동 지원)
+- 상세: 버전·BL 8 자동 지원·BL 9 출시일까지 정확히 인용. 단, 에이전트가 "§11 빠른 의사결정 표에는 여전히 'IAP v5(5.3.x)'로 남아 있어 §1(5.4.3)과 내부 불일치가 있다"는 점을 스스로 발견해 보고함 — 아래 gap 참조.
+
+**Q2. 서버 인벤토리 소모품 — Complete vs Pending**
+- ✅ PASS
+- 근거: SKILL.md "5.2 구매 완료 처리" 표 + 주의문
+- 상세: "Pending 반환 + 서버 응답 후 ConfirmPendingPurchase 호출" 필수, "Complete 그냥 반환 시 결제만 되고 미지급 사고" 위험을 정확히 인용. v5 신 API의 동일 안전장치(OnPurchasePending → 서버 검증 성공 시에만 ConfirmPurchase)까지 연결해 답변.
+
+### 발견된 gap (2026-09-28)
+
+- SKILL.md "11. 빠른 의사결정 표"에 "IAP v5 (5.3.x)"로 구버전 표기가 남아 있음. 2026-09-26 재검증 시 "1. 개요" 섹션은 5.4.3으로 갱신했으나 §11 표는 갱신 누락. 답변 자체는 §1을 근거로 정확했으므로 PASS 처리하되, SKILL.md 자체의 내부 일관성 보강이 필요 — 차단 요인 아님(사용자 승인 후 별도 수정 권장)
+
+### 판정 (2026-09-28)
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 해당 없음 (라이브러리 사용법 스킬 — 실사용 필수 카테고리 아님)
+- 2026-09-26 재검증 정정 내용(버전·BL9·Target API 36)이 실제 서브에이전트 답변에 정확히 반영됨을 확인 → APPROVED 전환 (단, §11 표기 불일치는 발견된 gap으로 별도 기록)
+
+---
+
+### [2026-09-28] skill-tester 2단계 재테스트 — description·§1·§11 버전 5.3.x→5.4.x 일괄 정정분 검증
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose
+**수행 방법**: 위에서 발견된 gap(§11 "IAP v5 (5.3.x)" 표기 불일치)을 메인 대화가 SKILL.md의 description·§1 비교표·§11 의사결정표 전체에서 5.3.x → 5.4.x(최신 5.4.3)로 일괄 정정한 직후, 세 위치의 버전 표기 정합성을 직접 겨냥한 실전 질문 1개로 재테스트
+
+**Q1. description·§1 개요 표·§11 의사결정 표 세 군데의 권장 버전이 서로 일치하는가?**
+- ✅ PASS
+- 근거: SKILL.md description(6행), §1 "Unity IAP 개요" 표(39~40행), §11 "빠른 의사결정 표"(395행), 대상 버전 표기(28행)
+- 상세: 세 곳 모두 5.4.3(또는 5.4.x)으로 일치함을 정확히 확인·답변. "신규 Unity 6 LTS 프로젝트 → Unity IAP 5.4.3 설치" 결론 정확. 이전 gap이었던 "§11에 5.3.x 잔재" 문제가 해소되었음을 간접 검증. 경미한 표기 정밀도 차이(§11만 `5.4.x` 약식, 나머지는 `5.4.3` 정확 patch)는 의미상 모순이 아니라고 정확히 판단
+
+### 발견된 gap (2026-09-28, 정정 후)
+
+- 없음(실질) — 단 §11 표만 `5.4.x`로 약식 표기되어 있어 patch 버전 정밀도가 §1·description(`5.4.3`)과 다름. 의미상 충돌은 아니므로 차단 요인 아님(선택 보강)
+
+### 판정 (2026-09-28, 정정 후)
+
+- agent content test: 1/1 PASS
+- verification-policy 분류: 해당 없음 (라이브러리 사용법 스킬 — 변경 없음)
+- 최종 상태: **APPROVED 유지**
+
+---
+
+### (2026-06-09 시점 기록 — 아래 보존)
 
 **수행일**: 2026-06-09
 **수행자**: skill-tester → general-purpose (domain-specific 에이전트 미등록으로 대체)
@@ -142,11 +195,28 @@ status: APPROVED
 
 없음. 3개 질문 모두 SKILL.md에서 완전한 근거 제시 가능.
 
+### 2026-09-26 재검증 (본문 사실성만 — references/REFERENCE.md은 재검증 대상 아님)
+
+**수행일**: 2026-09-26
+**수행 방법**: WebSearch로 핵심 클레임 3개 재확인 + SKILL.md 자체 답변 확인 질문 2개
+
+- 클레임1. Unity IAP 최신 안정 버전 5.3.1 — WebSearch 재확인 → **갱신 필요**: 최신은 **5.4.3**(Unity 6000.3 대응). SKILL.md 버전 표기 갱신
+- 클레임2. Google Play Billing Library v5.x → BL 8 자동 지원 — WebSearch 재확인 → **부분 갱신**: BL 8 자동 지원은 유지되나 2026-05-19 **BL 9** 출시, Google Play는 2026-08-31부터 신규/업데이트 앱에 BL 8 이상 필수(유예 2026-11-01) — SKILL.md에 시행일·BL 9 반영
+- 클레임3. Android Target API Level 34 이상(Google Play 2026 요구사항) — WebSearch 재확인 → **DISPUTED(구버전)**: 2026-08-31 시행 기준 **Target API 36** 필수 → SKILL.md 정정
+
+**Q1(재검증). "지금(2026-09) Unity 6 프로젝트에 IAP 패키지를 새로 설치하면 몇 버전이 뜨고, Billing Library는 뭘 쓰나?"**
+- SKILL.md 답변 경로: "1. Unity IAP 개요" 표 "최신 안정 버전: 5.4.3", "Google Play Billing Library: v5.4.x → BL 8 자동 지원(BL 9는 2026-05-19 출시)"
+- 판정: PASS (갱신 후 정확)
+
+**Q2. "Google Play에 신규 게임을 출시하려는데 Android Target API Level을 몇으로 잡아야 IAP 포함 빌드가 게시되나?"**
+- SKILL.md 답변 경로: "2. SDK 설치 및 초기 설정 > Android 빌드 사전 설정" — "Target API Level: 36 이상(Google Play 2026-08-31 시행 요구사항)"
+- 판정: PASS
+
 ### 판정
 
-- agent content test: 3/3 PASS
+- agent content test: 3/3 PASS (최초) + 재검증 2/2 PASS
 - verification-policy 분류: 라이브러리 사용법 스킬 — content test PASS = APPROVED 가능
-- 최종 상태: APPROVED
+- Unity IAP 버전·BL 9·Target API 36 갱신이라는 실질 내용 변경이 있었으므로 PENDING_TEST 전환. 차기 skill-tester 재테스트 시 APPROVED 재검토
 
 ---
 
@@ -161,8 +231,8 @@ status: APPROVED
 | 내용 정확성 | ✅ 공식 문서 기반 작성, 9개 클레임 교차 검증 완료 |
 | 구조 완전성 | ✅ frontmatter·소스·검증일·예제·실수 패턴 모두 포함 |
 | 실용성 | ✅ 실제 게임 IAP 통합에 바로 사용 가능 수준 |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-09 skill-tester 수행) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-09) + ✅ 2/2 PASS (2026-09-26 자체 재검증) + ✅ 2/2 PASS (2026-09-28 skill-tester 실제 서브에이전트 재테스트) + ✅ 1/1 PASS (2026-09-28 §11 버전 표기 일괄 정정 후 재테스트, 누적 8/8) |
+| **최종 판정** | **APPROVED** (2026-09-28 description·§1·§11 버전 5.3.x→5.4.x 일괄 정정 후 정합성 재테스트 1/1 PASS — APPROVED 유지) |
 
 ---
 
@@ -187,9 +257,11 @@ status: APPROVED
 
 ## 7. 개선 필요 사항
 
-- [✅] 메인 세션에서 skill-tester로 실전 질문 답변 검증 완료 (2026-06-09, 3/3 PASS)
+- [✅] 메인 세션에서 skill-tester로 실전 질문 답변 검증 완료 (2026-06-09, 3/3 PASS / 2026-09-28 재검증 정정분 재테스트 완료, 2/2 PASS / 2026-09-28 §11 버전 표기 정정 후 재테스트 완료, 1/1 PASS)
 - [❌] (선택 — 차단 요인 아님) 향후 v5.4 이상 릴리스 시 Changelog 추적해 deprecated API 추가 반영 필요
 - [❌] (선택 — 차단 요인 아님) Amazon Appstore·UDP 등 부가 스토어 통합 예제는 별도 스킬로 분리 가능
+- [✅] (2026-09-28 완료) description·"11. 빠른 의사결정 표"의 "IAP v5 (5.3.x)" 표기를 "1. 개요" 섹션과 일치하도록 5.4.x/5.4.3으로 일괄 갱신 — 정합성 재테스트 1/1 PASS
+- [❌] (선택 — 차단 요인 아님) §11 표만 `5.4.x` 약식 표기 — §1·description의 정확한 patch(`5.4.3`)와 정밀도 통일 권장
 
 ---
 
@@ -200,3 +272,6 @@ status: APPROVED
 | 2026-06-09 | v1 | 최초 작성. v4(4.15.1) + v5(5.3.1) 양쪽 API 커버. 영수증 검증·iOS 복원·구독 관리·10개 anti-pattern 포함 | skill-creator |
 | 2026-06-09 | v1 | 2단계 실사용 테스트 수행 (Q1 ProcessPurchase Complete vs Pending / Q2 iOS 복원 버튼 미구현 / Q3 v4→v5 마이그레이션 변경점) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | Claude |
+| 2026-09-26 | v1 | 재검증(98개 일괄 재검증 대상, 본문만). Unity IAP 5.3.1→5.4.3, BL 9 출시 반영, Android Target API 34→36(2026-08-31 시행) 정정 → 실질 내용 변경으로 PENDING_TEST 전환 | Claude Code |
+| 2026-09-28 | v1 | 2단계 실사용 테스트 재수행 (Q1 IAP 버전+Billing Library / Q2 서버 인벤토리 소모품 Complete vs Pending) → 2/2 PASS, APPROVED 전환. §11 표 버전 표기 불일치 gap 발견 | skill-tester |
+| 2026-09-28 | v1 | description·§1 비교표·§11 의사결정표의 구버전 "5.3.x" 표기를 "5.4.x"(최신 5.4.3)로 일괄 정정 후 버전 정합성 재테스트 수행 (Q1) → 1/1 PASS, APPROVED 유지 | 메인 대화 → skill-tester |

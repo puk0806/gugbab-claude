@@ -2,7 +2,7 @@
 skill: font-optimization
 category: frontend
 version: v1
-date: 2026-06-03
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `font-optimization` |
 | 스킬 경로 | `.claude/skills/frontend/font-optimization/SKILL.md` |
-| 검증일 | 2026-06-03 |
+| 검증일 | 2026-09-28 (재검증, 최초 2026-06-03) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 
@@ -165,6 +165,24 @@ status: APPROVED
 - verification-policy 분류: 해당 없음 (라이브러리·CSS 패턴 카탈로그형 — content test PASS = APPROVED 가능)
 - 최종 상태: APPROVED
 
+### 재검증 (2026-09-28)
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read 후 핵심 클레임 3개 1차 소스 대조(WebFetch, WebSearch 세션 한도 소진으로 대체) + 실전 질문 2개 답변 검증
+
+**클레임 대조:**
+- `next/font` API (`localFont`, `weight`, `variable`, `preload`, `adjustFontFallback`): 공식 문서(nextjs.org/docs/app/getting-started/fonts, 문서 버전 16.3.6, lastUpdated 2026-05-27) WebFetch 재확인 → `next/font/local`·`next/font/google` 사용법·옵션 구조 동일, breaking change 없음. SKILL.md의 "v16.2.7" 표기만 최신(16.3.6, `npm view next version`으로 확인)으로 정정 필요
+- `size-adjust`/`ascent-override` 등 메트릭 오버라이드 브라우저 지원(Chromium 87+, Firefox 89+, Safari 17+): 모든 evergreen 브라우저가 이미 해당 버전을 상회하므로 재검증 무의미(하한선 사실 고정)
+- Google Fonts CDN GDPR 위반 판결(2022-01 LG München I): 과거 확정 판결이므로 재변동 없는 역사적 사실
+
+Q1. "next/font/local 옵션(weight, variable, preload, adjustFontFallback)이 최신 Next.js에서도 그대로 동작해?"
+— PASS. 근거: SKILL.md §13 코드 예시가 공식 문서 16.3.6 버전의 `localFont` 사용 패턴과 구조 동일함을 확인(옵션 이름 변경 없음).
+
+Q2. "Google Fonts를 CDN으로 직접 붙이면 지금도 GDPR 문제가 되나?"
+— PASS. 근거: SKILL.md §12 "2022-01 LG München I 판결" 서술이 확정 판결 기반이라 여전히 유효. `next/font/google`이 빌드 시 자동 셀프 호스팅하는 것도 문서상 변화 없음.
+
+**판정**: 예제 버전 표기(16.2.7→16.3.6)만 갱신, API·정책 변경 없음 → status APPROVED 유지.
+
 ---
 
 ### 참고: 최초 작성 시 테스트 케이스 템플릿 (이력 보존)
@@ -201,3 +219,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-06-03 | v1 | 최초 작성. core-web-vitals/og-image/seo-vite-spa에 분산된 폰트 토픽 통합. CJK 특수성·next/font·size-adjust·unicode-range 카탈로그화 | skill-creator |
 | 2026-06-03 | v1 | 2단계 실사용 테스트 수행 (Q1 next/font local + variable font / Q2 font-display swap vs optional 선택 기준 / Q3 Google Fonts CDN GDPR + Next.js 대안) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-28 | v1 | 재검증: Next.js 16.3.6 공식 문서 대조로 `next/font` API 무변경 확인(예제 버전 표기만 갱신), GDPR 판결·브라우저 지원 하한선 재확인. status APPROVED 유지 | 메인 세션 |

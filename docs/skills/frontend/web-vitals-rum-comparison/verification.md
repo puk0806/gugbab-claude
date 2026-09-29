@@ -1,8 +1,8 @@
 ---
 skill: web-vitals-rum-comparison
 category: frontend
-version: v1
-date: 2026-05-14
+version: v3
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `web-vitals-rum-comparison` |
 | 스킬 경로 | `.claude/skills/frontend/web-vitals-rum-comparison/SKILL.md` |
-| 검증일 | 2026-05-14 |
-| 검증자 | skill-creator |
-| 스킬 버전 | v1 |
+| 검증일 | 2026-09-28 (최초 2026-05-14, 2026-09-28 재검증) |
+| 검증자 | skill-creator → Claude (Sonnet 5, 2026-09-28 재검증) |
+| 스킬 버전 | v3 |
 
 ---
 
@@ -114,8 +114,8 @@ status: APPROVED
 - [✅] 범용적으로 사용 가능 (특정 프로젝트 종속 X — Sentry/Datadog 양쪽 커버)
 
 ### 4-5. Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-14 skill-tester 수행)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (3/3 PASS)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-14 skill-tester 수행, 2026-09-28 재검증 정정분 재테스트)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (누적 5/5 PASS)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (gap 없음 — 보완 불필요)
 
 ---
@@ -174,6 +174,54 @@ status: APPROVED
 
 ---
 
+### [2026-09-28] 재검증 (2차) — 이전 세션에서 "미검증"으로 남겨둔 항목 확인 완료 + 신규 DISPUTED 발견
+
+**수행일**: 2026-09-28
+**수행 방법**: 이전(같은 날) 세션이 남긴 미완결 재검증(헤더 `> 주의`에 `interactionsSampleRate`·`enableInp` v11 동작을 "미검증"으로 표기)을 이어받아, `git diff`로 직전 변경 확인 후 공식 마이그레이션 가이드·GitHub 이슈로 1차 소스 재대조 수행.
+
+**클레임 대조 결과**:
+1. `@sentry/browser` v11에서 `enableInp` 옵션 상태 → **DISPUTED → 수정 반영**: v11부터 **deprecated** 확인 (공식 마이그레이션 가이드 "Deprecated in SDK version 11. Use `webVitals: { ignore: ['inp'] }` to disable INP."). SKILL.md §4-1 코드 주석과 주의문을 이 내용으로 정정 (소스: https://docs.sentry.io/platforms/javascript/migration/v10-to-v11/)
+2. `interactionsSampleRate` 옵션이 v11에서 어떻게 동작하는지 → **DISPUTED → 수정 반영**: 이 옵션은 v11이 아니라 **이미 v8에서 제거**됨(SDK 7.110.0에서 도입 후 v8 GA 시 삭제, GitHub `getsentry/sentry-javascript` issue #12006, 2024-05 보고 확인 + 현재 공식 문서 https://docs.sentry.io/platforms/javascript/tracing/instrumentation/automatic-instrumentation/ 에 해당 옵션 언급 전혀 없음). 즉 SKILL.md §7-7의 "tracesSampleRate × interactionsSampleRate 곱셈으로 INP 캡처율 계산" 서술은 **이 스킬이 원래 기준으로 삼은 8.x에서도 이미 부정확했던 클레임**이었음 — INP span은 `tracesSampleRate` 단독으로만 샘플링되도록 §7-7 전체를 정정
+3. `@sentry/browser` v11 bfcache 기본 리포트 변경("Report web vitals for bfcache restores by default") → VERIFIED, 확인 완료 (직전 세션은 "미검증"으로 남김 — 공식 마이그레이션 가이드로 재확인해 §7-4 주의문에서 "미검증" 표기 제거)
+4. npm registry 기준 최신 버전 재확인: `web-vitals` 6.2.2 / `@sentry/browser` 11.0.0 / `@datadog/browser-rum` 7.14.0 → VERIFIED (변동 없음, 직전 세션 확인치와 일치)
+
+**실전 질문 재검증**:
+- Q1. "Sentry INP 캡처율을 트래픽 작은 사이트에서 어떻게 늘리나?" → 정정 전 SKILL.md는 존재하지 않는 `interactionsSampleRate: 1.0` 상향을 안내했을 것 — 정정 후 §7-7 "`tracesSampleRate` 자체를 올린다" 근거로 PASS
+- Q2. "v11로 마이그레이션하는데 `enableInp: true`를 그대로 둬도 되나?" → SKILL.md §4-1 주의문 "v11부터 deprecated, `webVitals: { ignore: ['inp'] }`로 대체" 근거로 PASS
+
+**재검증 최종 판정**: DISPUTED 2건(§4-1 `enableInp` deprecated 여부, §7-7 `interactionsSampleRate` 이미 v8 제거) 신규 발견·수정 반영 + 헤더의 "미검증" 표기 전부 해소. **status PENDING_TEST 유지** (§4-1·§7-7·§7-4 정정 부분을 겨냥한 skill-tester 재테스트 필요 — 아직 미수행).
+
+---
+
+### [2026-09-28] skill-tester 2단계 재테스트 — §4-1 enableInp·§7-7 interactionsSampleRate 정정분 검증
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (2개 질문, 병렬 실행)
+**수행 방법**: SKILL.md Read 후 2026-09-28 재검증 정정분(§4-1 `enableInp` v11 deprecated, §7-7 `interactionsSampleRate` v8 제거·`tracesSampleRate` 단독 샘플링)을 겨냥한 실전 질문 2개 답변, 근거 섹션 및 anti-pattern 회피 확인
+
+**Q1. `@sentry/browser` v11 마이그레이션 시 `enableInp: true`를 그대로 둬도 되나?**
+- ✅ PASS
+- 근거: SKILL.md §4-1 코드 주석 + 바로 아래 "주의(2026-09-28 재검증, 확인 완료)" 문단
+- 상세: `enableInp`는 v8~v10 기준이고 v11부터 deprecated임을 정확히 인용. 옵션 생략(기본 INP 포함) 또는 `webVitals: { ignore: ['inp'] }`로 명시 비활성화하는 두 가지 올바른 방법 모두 정확히 답변. `interactionsIntegration` 분리, §7-4 bfcache 기본 리포트 변경까지 연계 답변
+
+**Q2. INP 데이터가 적을 때 `interactionsSampleRate: 1.0`으로 올리면 되나?**
+- ✅ PASS
+- 근거: SKILL.md §7-7 "INP 캡처율은 `tracesSampleRate` 단독 제어 — 구 `interactionsSampleRate`는 이미 제거됨"
+- 상세: `interactionsSampleRate`는 v8에서 이미 제거되어 존재하지 않는 옵션임을 정확히 답변 — anti-pattern(제거된 옵션 사용 권유) 회피 성공. 올바른 대처(`tracesSampleRate` 자체를 올리되 전체 트랜잭션 샘플링도 함께 늘어남을 유의) 정확히 제시
+
+### 발견된 gap (있으면)
+
+- `webVitals: { ignore: [...] }` 옵션에 `inp` 외 다른 값(lcp·cls 등) 지정 가능 여부 미기술 (선택 보강)
+- `tracesSampleRate` 상향 시 구체적 권장 수치·쿼터/비용 영향 가이드 부재 (선택 보강, §8 범위 밖과 일부 겹침)
+
+### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: "해당 없음" (RUM 패턴·쿼리 작성법 — content test로 APPROVED 가능, 기존 분류 유지)
+- 최종 상태: APPROVED
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -181,10 +229,10 @@ status: APPROVED
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-05-14 skill-tester 수행, 3/3 PASS) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ 누적 5/5 PASS (2026-05-14 3/3 + 2026-09-28 재테스트 2/2 — §4-1·§7-4·§7-7 정정분 반영 확인) |
+| **최종 판정** | **APPROVED** (2026-09-28 skill-tester 재테스트 2/2 PASS — §4-1 `enableInp` deprecated·§7-7 `interactionsSampleRate` 제거 정정분 검증 완료) |
 
-> RUM 패턴·쿼리 작성법은 content test로 검증 완료. 실 RUM 대시보드 데이터(Sentry/Datadog 운영 환경에서의 실제 p75 수치 확인)는 사용자 운영 환경에서만 가능하며, 이는 SKILL.md 사용 범위가 아닌 사용자 운영 영역임.
+> RUM 패턴·쿼리 작성법은 2026-05-14 content test로 검증 완료. 실 RUM 대시보드 데이터(Sentry/Datadog 운영 환경에서의 실제 p75 수치 확인)는 사용자 운영 환경에서만 가능하며, 이는 SKILL.md 사용 범위가 아닌 사용자 운영 영역임. 2026-09-28 재테스트로 §4-1·§7-4·§7-7 정정 부분의 답변 정확성까지 확인 완료.
 
 ---
 
@@ -193,7 +241,9 @@ status: APPROVED
 - [✅] skill-tester content test 수행 및 섹션 5·6 업데이트 (2026-05-14 완료, 3/3 PASS)
 - [❌] Sentry Discover 쿼리에서 사용 가능한 정확한 `measurements.*` 키 목록을 SDK 8.x 기준 공식 표로 추가 검증 필요 (Sentry docs에 분산돼 있음) — 차단 요인 아님, 선택 보강
 - [❌] Datadog RUM Monitor 알람 쿼리 syntax (`p75:@view.largest_contentful_paint{...}`) 정확성 — 별도 Datadog Monitors 문서 교차 검증 권장 — 차단 요인 아님, 선택 보강
-- [❌] `interactionsSampleRate`가 Sentry 8.x에서 여전히 곱셈 방식인지 9.x 출시 시 재확인 — 차단 요인 아님, 버전 업 시 재확인 과제
+- [✅] (2026-09-28 완료) `interactionsSampleRate`가 Sentry 8.x~11.x에서 여전히 곱셈 방식인지 재확인 → **이미 v8에서 제거**되어 있었음을 확인, §7-7 전체 정정
+- [✅] (2026-09-28 완료) SKILL.md §4-1·§7-4·§7-7 정정 반영분을 겨냥한 skill-tester 재테스트 → 2/2 PASS, status APPROVED 전환
+- [❌] `webVitals: { ignore: [...] }` 옵션에 `inp` 외 다른 값 지정 가능 여부 미기술 (선택 보강 — 차단 요인 아님)
 
 ---
 
@@ -203,3 +253,6 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-05-14 | v1 | 최초 작성 (web-vitals v5 + Sentry 8.x + Datadog v7.1.0 기준) | skill-creator |
 | 2026-05-14 | v1 | 2단계 실사용 테스트 수행 (Q1 onINP 콜백 시점·SPA 누락 / Q2 Sentry INP p75 Discover 비교 / Q3 Datadog LCP p75 쿼리·트래픽 분포 함정) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-28 | v2 | 재검증(1차) — web-vitals v5→v6·Sentry 8.x→11.x·Datadog v7.1.0→v7.14.0 버전 갱신 확인, `@astrojs` 등 무관. §4-1(`enableInp`)·§7-4(bfcache) 헤더에 "미검증" 주의문 추가하고 중단. status APPROVED → PENDING_TEST | 메인 대화 (재검증 작업, 미완결) |
+| 2026-09-28 | v3 | 재검증(2차) — 1차가 "미검증"으로 남긴 항목을 공식 마이그레이션 가이드·GitHub 이슈로 확인 완료: `enableInp` v11 deprecated 확정(§4-1 정정), `interactionsSampleRate`는 v11이 아니라 **이미 v8에서 제거**되어 있었음을 신규 발견(§7-7 전체 재작성), bfcache 기본 리포트 변경 VERIFIED(§7-4 "미검증" 제거). status PENDING_TEST 유지 (skill-tester 재테스트 필요) | Claude (Sonnet 5) |
+| 2026-09-28 | v3 | 2단계 실사용 재테스트 수행 (Q1 enableInp v11 deprecated 대응 / Q2 interactionsSampleRate 제거·tracesSampleRate 단독 샘플링) → 2/2 PASS, APPROVED 전환 | skill-tester |

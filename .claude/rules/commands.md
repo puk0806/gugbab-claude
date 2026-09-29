@@ -34,12 +34,12 @@
 |--------|------|------|
 | `/commit` | commit.md | git.md 컨벤션에 맞는 커밋 자동 실행 |
 | `/create-pr` | create-pr.md | GitHub PR 제목·본문 작성 + gh pr create |
-| `/context-prime` | context-prime.md | 새 세션 컨텍스트 초기화 (CLAUDE.md·rules·git 상태 로드) |
+| `/context-prime` | context-prime.md | 새 세션 컨텍스트 초기화 (CLAUDE.md·*존재하는* rules·git 상태 로드) |
 | `/create-plan` | create-plan.md | Requirements→Design→Tasks 3단계 계획 작성 |
-| `/fix-pr` | fix-pr.md | PR 리뷰 코멘트 자동 수정 반영 |
-| `/update-docs` | update-docs.md | 코드 변경 후 README·docs/ 동기화 |
+| `/fix-pr` | fix-pr.md | PR 리뷰 코멘트(대화·라인·미해결 스레드) 조회 → 확인 후 수정 반영. 커밋은 하지 않음(`/commit`) |
+| `/update-docs` | update-docs.md | 최근 커밋+미커밋 변경 기준 README·docs/ 동기화 (커밋 1개 레포 폴백) |
 | `/tdd-implement` | tdd-implement.md | Red-Green-Refactor 사이클 강제 실행 |
-| `/agent-status` | agent-status.md | 현재 브랜치·미커밋 파일·PENDING_TEST 스킬 현황 요약 |
+| `/agent-status` | agent-status.md | 현재 브랜치·미커밋 파일·PENDING_TEST 스킬 현황 요약 (verification.md frontmatter `status:` 기준) |
 | `/sparc-refine` | sparc-refine.md | SPARC 5단계(Spec→Pseudocode→Arch→Refine→Complete) 리팩터링 |
 | `/codex-review` | codex-review.md | Codex 적대적 코드 리뷰 수동 실행 (최대 3라운드 핑퐁) |
 

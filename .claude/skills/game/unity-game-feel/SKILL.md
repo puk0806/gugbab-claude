@@ -17,8 +17,8 @@ description: >
 > - URP Bloom Volume Override — https://docs.unity3d.com/6000.0/Documentation/Manual/urp/post-processing-bloom.html
 > - Rigidbody2D.AddForce — https://docs.unity3d.com/6000.3/Documentation/ScriptReference/Rigidbody2D.AddForce.html
 > - Time.timeScale — https://docs.unity3d.com/ScriptReference/Time-timeScale.html
-> 검증일: 2026-06-10
-> 대상: Unity 6 LTS (6000.0.x ~ 6000.3.x), Cinemachine 3.1.x, DOTween 1.2.x, URP 17.x
+> 검증일: 2026-09-26 (재검증. 본문 사실성만 재검증 — references/REFERENCE.md은 2026-09-25 분리로 별도 재검증 대상 아님. DOTween 1.2.x → **1.3.x**(Pro 1.0.430, 2026-06-23 기준)로 갱신, Cinemachine은 3.1.7까지 패치 진행되었으나 3.1.x 계열 유지. API 시그니처(GenerateImpulse·DOPunch·DOShake·SetUpdate·ObjectPool)는 변동 없음 확인)
+> 대상: Unity 6 LTS (6000.0.x ~ 6000.3.x), Cinemachine 3.1.x(최신 3.1.7), DOTween 1.3.x, URP 17.x
 
 ---
 

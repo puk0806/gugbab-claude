@@ -22,7 +22,7 @@ description: >
 > - Railway Healthchecks — https://docs.railway.com/deployments/healthchecks
 > - Fly.io Seamless Deployments — https://fly.io/docs/blueprints/seamless-deployments/ / https://fly.io/docs/reference/health-checks/
 >
-> 검증일: 2026-06-10
+> 검증일: 2026-09-26
 > 대상: Unity 6 LTS + Addressables 2.x + Firebase Unity SDK + REST API 백엔드(Firebase/UGS/자체 서버 혼용)
 
 ---

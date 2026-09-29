@@ -1,9 +1,9 @@
 ---
 skill: vite-advanced-splitting
 category: frontend
-version: v1
-date: 2026-04-20
-status: PENDING_TEST
+version: v3
+date: 2026-09-28
+status: APPROVED
 ---
 
 # vite-advanced-splitting 스킬 검증 문서
@@ -36,8 +36,9 @@ status: PENDING_TEST
 | 스킬 이름 | vite-advanced-splitting |
 | 스킬 경로 | .claude/skills/frontend/vite-advanced-splitting/SKILL.md |
 | 최초 작성일 | 2026-04-20 |
-| 검증 방법 | WebSearch 교차 검증 (메인 대화) |
-| 버전 기준 | Vite 6.x / Rollup 4.x |
+| 검증일 | 2026-09-28 (재검증, 이전 2026-08-11) |
+| 검증 방법 | WebSearch 교차 검증 (메인 대화) + 2026-09-28 재검증(2차, npm registry·공식 마이그레이션 가이드 대조) |
+| 버전 기준 | Vite 8.3.1(주 경로: `rolldownOptions.output.codeSplitting`) / 레거시 Vite 6.x·Rollup 4.x(`manualChunks`) |
 
 ---
 
@@ -114,6 +115,67 @@ status: PENDING_TEST
 
 ## 5. 테스트 진행 기록
 
+### [2026-09-28] 실사용(실행) 검증
+
+**수행일**: 2026-09-28
+**수행 방법**: lab 폴더에 `npm create vite@latest -- --template react-ts` + Vite 8.3.1(`npm view vite version`로 확인) + `react-router-dom`·`swiper` 설치. 라우트 4개(Home/About/Gallery/Contact, `React.lazy`)와 `console.log` 3곳을 포함한 샘플 작성. `vite.config.ts`에 SKILL.md 1절 "Vite 8+ 주 경로" 예시를 그대로 적용(`rolldownOptions.output.codeSplitting.groups` — common-react-dom(priority 30)/common-swiper(priority 20)/vendor catch-all, `minify.compress.dropConsole: true`). `npx vite build` 실행.
+**실행 결과**: 빌드 성공(34 modules, 339ms). 출력 청크가 그룹 설정대로 정확히 분리됨 — `common-react-dom-*.js`(218.57kB, react/react-dom 포함), `common-swiper-*.js`(77.84kB + css), `vendor-*.js`(38.25kB, 나머지 node_modules), 라우트별 lazy 청크(`Home-*.js`/`About-*.js`/`Contact-*.js`/`Gallery-*.js`)가 각각 별도 생성. `dist/assets/js/*.js` 전체에서 `console.log` grep 결과 0건 — `dropConsole: true`로 완전히 제거됨을 확인(Home.js 등 산출물에 로그 흔적 없음). SKILL.md 서술과 100% 일치.
+**졸업 조건 충족 여부**: 충족 (PENDING_TEST.md: "manualChunks 적용 후 번들 분할 결과가 의도대로인지 확인" — Vite 8+ 주 경로 `codeSplitting.groups` 기준으로 충족. 대규모 코드베이스 조건은 명시되지 않았고 라우트 3~4개+벤더 2종 소규모 샘플로 충분히 검증)
+**판정**: APPROVED 전환
+
+### [2026-09-28] skill-tester 2단계 content test (재구성분 검증)
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (frontend-developer 세션 미등록으로 대체)
+**수행 방법**: SKILL.md Read 후 같은 날 재검증(2차)에서 재구성된 §1(`codeSplitting.groups` 주 경로 vs `manualChunks` 레거시)·§5(빌드 출력 최적화)를 겨냥한 실전 질문 2개 답변, 근거 섹션 및 anti-pattern 회피 확인
+
+### 실제 수행 테스트
+
+**Q1. Vite 8.3.1 프로젝트에서 react/react-dom/react-router-dom 공통 벤더 청크 분리 + console.log 제거 설정법**
+- ✅ PASS
+- 근거: SKILL.md "1. 코드 스플리팅 전략 > Vite 8+ 주 경로"(17-42행) + "5. 빌드 출력 최적화 > Vite 8+ 주 경로"(343-369행)
+- 상세: `rolldownOptions.output.codeSplitting.groups`에 정규식 `test`로 react 계열을 묶고 catch-all `vendor` 그룹을 마지막에 두는 패턴, `minify.compress.dropConsole`로 console 제거하는 패턴 모두 정확히 답변. 경미한 gap: `minify` 옵션이 boolean이 아닌 `compress` 하위 객체 형태라는 스키마 세부 설명이 코드 한 줄로만 제시된다는 지적(선택 보강).
+
+**Q2. 객체 형식 manualChunks를 쓰던 Vite 6 프로젝트를 Vite 8로 올리면 그대로 빌드되는가, 함수형은?**
+- ✅ PASS
+- 근거: SKILL.md 헤더 "버전 분기" 주의문(11행) + "레거시 (Vite 6/7, Rollup 기반) — manualChunks"(46-61행)
+- 상세: 객체 형식은 Vite 8+ 미지원이라 그대로면 깨짐 → `codeSplitting.groups` 정규식 그룹으로 재작성 필요, 함수형은 deprecated 상태로 당장은 동작(즉시 깨지지 않음)한다고 정확히 구분해 답변. anti-pattern(객체 형식을 그대로 유지)에 빠지지 않음.
+
+### 발견된 gap
+
+- Q1에서 지적된 `minify.compress.dropConsole` 값 형태(boolean 아닌 compress 하위 객체) 설명이 코드 스니펫 한 줄뿐이라는 점 — 경미, 차단 요인 아님(선택 보강)
+
+### 판정
+
+- agent content test: PASS (2/2)
+- verification-policy 분류: 빌드 설정 스킬 — 실사용 필수 카테고리
+- 최종 상태: PENDING_TEST 유지 (2026-09-28 재구성분 content test 통과, 실제 빌드 산출물 검증 후 APPROVED 전환 대상이라는 기존 판정 변동 없음)
+
+---
+
+### [2026-09-28] 재검증(2차) — Vite 8.3.1 `codeSplitting.groups` 주 경로 전환
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임 4개를 1차 소스(npm registry, 공식 Vite/Rolldown 문서)와 대조, 보강·재구성 검토
+
+**클레임 대조 결과**:
+1. Vite 최신 버전은 6.x → **DISPUTED(정정)**: npm registry `vite@latest` = **8.3.1**. `build.rollupOptions`는 `build.rolldownOptions`로 개명(`rollupOptions`는 deprecated alias) — VERIFIED (vite.dev/guide/migration 공식 마이그레이션 가이드)
+2. `output.manualChunks` 객체 형식은 Vite 8+ 미지원, 함수 형식은 deprecated로만 동작 → VERIFIED (vite.dev/guide/migration: "The object form output.manualChunks option is not supported anymore. The function form output.manualChunks is deprecated.")
+3. Vite 8+의 대체 경로는 `rolldownOptions.output.codeSplitting.groups`(name/test/priority/minSize 등)이며 `test`는 함수가 아닌 정규식만 지원 → VERIFIED (rolldown.rs/reference/OutputOptions.codeSplitting 타입 시그니처 확인)
+4. `vite:preloadError` 이벤트(청크 로드 실패 재시도)는 Vite 8·Rolldown 전환 후에도 동일하게 동작 → VERIFIED (커뮤니티 확인 — Rolldown은 번들러 백엔드만 교체, 브라우저 런타임 이벤트는 영향 없음)
+
+**보강(ADD)·축소**: SKILL.md 1절("manualChunks 전략")을 "코드 스플리팅 전략 — `codeSplitting.groups`(주 경로) vs `manualChunks`(레거시)"로 재구성 — Vite 8+ `codeSplitting.groups` 예시(name/test/priority/minSize 등 필드 설명 포함)를 주 경로로 전진 배치, 기존 객체/함수형 `manualChunks` 예시는 "레거시(Vite 6/7)" 하위 절로 격하하고 "신규 작성 금지" 주의문 추가. 5절("빌드 출력 최적화")도 Vite 8+ 예시(`rolldownOptions.output.codeSplitting` + `minify.compress.dropConsole`)를 주 경로로 추가하고 기존 rollupOptions 예시는 레거시 하위 절로 분리. "흔한 실수 패턴 1"도 두 경로 공통 주의사항으로 갱신. 헤더 소스 목록에 vite.dev/guide/migration·rolldown.rs 레퍼런스 추가. 축소 없음(Gulp 플러그인 전환·모바일/데스크톱 분리 빌드·preloadError 재시도 섹션은 Rolldown 전환과 무관해 그대로 유지).
+
+**실전 질문 재검증**:
+- Q1. "Vite 8 프로젝트에서 node_modules의 react/react-dom을 별도 청크로 분리하려면 어떻게 하는가?" → SKILL.md 1절 "Vite 8+ 주 경로" 근거로 PASS (`rolldownOptions.output.codeSplitting.groups`에 `{ name, test: /node_modules[\/](react|react-dom)[\/]/, priority }` 형태로 작성)
+- Q2. "기존 Vite 6 프로젝트의 함수형 manualChunks를 Vite 8로 올리면 당장 빌드가 깨지는가?" → SKILL.md 1절 "레거시" 주의문 근거로 PASS (함수형은 deprecated 상태로 계속 동작 — 당장 깨지지 않으나 신규 작성은 금지, 객체 형식만 미지원되어 깨짐)
+
+**재검증 최종 판정**: status **PENDING_TEST 유지** (원래 실사용 필수 카테고리 — 빌드 설정 스킬은 실제 빌드 산출물 검증 후 APPROVED. 이번 재검증으로 본문 대폭 보강 발생 → skill-tester 재테스트 필요)
+
+---
+
+## 5-1. 이전 테스트 진행 기록 (2026-08-12, 보존)
+
 **수행일**: 2026-08-12
 **수행자**: 메인 대화 직접 수행 (skill-tester 서브에이전트 미호출 — SKILL.md에 이미 반영된 Vite 8 대응 주의사항 동기화 목적의 단발 점검)
 **수행 방법**: SKILL.md에 2026-08-11 추가된 "Vite 8+" 주의사항(rollupOptions→rolldownOptions 개명, manualChunks 객체 형식 미지원)이 verification.md에 미기록 상태였던 것을 확인 → 신규 내용 기반 실전 질문 2개를 직접 답변·근거 대조
@@ -142,7 +204,7 @@ status: PENDING_TEST
 
 ---
 
-## 5-1. 이전 테스트 진행 기록 (2026-04-24, 보존)
+## 5-2. 이전 테스트 진행 기록 (2026-04-24, 보존)
 
 **수행일**: 2026-04-24
 **수행자**: skill-tester → general-purpose (대체 사용: java-backend-developer 미해당, frontend-developer 미등록)
@@ -187,12 +249,13 @@ status: PENDING_TEST
 
 | 항목 | 결과 |
 |------|------|
-| 내용 정확성 | ✅ |
-| 구조 완전성 | ✅ |
+| 내용 정확성 | ✅ (Vite 6.x → 8.3.1 DISPUTED 수정 반영, `codeSplitting.groups` 주 경로 전환) |
+| 구조 완전성 | ✅ (1·5절 주 경로/레거시 구조로 재편) |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ PASS (3/3, 2026-04-24 / 2026-08-12 Vite 8 신규 내용 2/2 PASS 추가) |
+| 에이전트 활용 테스트 | ✅ PASS (3/3, 2026-04-24 / 2026-08-12 Vite 8 신규 내용 2/2 PASS / 2026-09-28 재구성분 skill-tester content test 2/2 PASS) |
 | Vite 8 대응 주의사항 동기화(2026-08-12) | ✅ SKILL.md 반영 내용 클레임 판정표(4-4 #7) 기록 + content test 2/2 PASS |
-| **최종 판정** | **PENDING_TEST** (빌드 설정 실사용 필수 카테고리, content test PASS, 2026-08-12 동기화에도 유지) |
+| 실사용(실행) 검증(2026-09-28) | ✅ lab 샘플 프로젝트에서 `codeSplitting.groups` 그대로 빌드 → 청크 분할·dropConsole 모두 서술과 일치 |
+| **최종 판정** | **APPROVED** (2026-09-28 실사용 실행 검증 완료 — 빌드 산출물이 SKILL.md 서술과 일치) |
 
 ---
 
@@ -200,7 +263,9 @@ status: PENDING_TEST
 
 - [✅] skill-tester가 content test 수행하고 섹션 5·6 업데이트 (2026-04-24 완료, 3/3 PASS)
 - [✅] SKILL.md에 반영된 Vite 8 대응 주의사항을 verification.md에 동기화 (2026-08-12 완료 — 섹션 4-4 클레임 판정표 #7 추가, content test 2/2 PASS)
-- [ ] 실제 프로젝트(레거시 CRA→Vite 전환 사내 프로젝트) 적용 후 빌드 결과물 확인 → APPROVED 전환 (차단 요인 아님, 선택 보강: 빌드 설정 카테고리 정책상 실사용 후 전환)
+- [✅] Vite 6 예시를 `codeSplitting.groups` 주 경로로 전면 재구성, `manualChunks`는 레거시로 격하 (2026-09-28 완료 — 2/2 PASS)
+- [✅] skill-tester로 2026-09-28 재구성분(§1·§5 주 경로/레거시 구조) content test 수행 완료 (2026-09-28, 2/2 PASS)
+- [✅] 실사용(실행) 검증 완료 (2026-09-28) — lab 샘플(Vite 8.3.1 + React TS, 라우트 4개 + swiper)에서 `codeSplitting.groups` 그대로 빌드 → 청크 분할·dropConsole 모두 서술과 일치 → APPROVED 전환
 
 ---
 
@@ -212,3 +277,6 @@ status: PENDING_TEST
 | 2026-09-25 | v1.1 | 로컬 경로·프로젝트명 일반화 (내용 변경 없음) | docs cleanup |
 | 2026-04-24 | v1 | 2단계 실사용 테스트 수행 (Q1 scoped 패키지 manualChunks 분류 / Q2 loadEnv 미사용 undefined 원인 / Q3 closeBundle vs writeBundle 선택) → 3/3 PASS, PENDING_TEST 유지 (빌드 설정 실사용 필수 카테고리) | skill-tester |
 | 2026-08-12 | v1 | SKILL.md에 이미 반영된 Vite 8 대응 주의사항(rollupOptions→rolldownOptions, manualChunks 객체 형식 미지원)을 verification.md에 동기화 — 클레임 판정표 #7 추가, content test 2/2 PASS. PENDING_TEST 유지 | 메인 대화 |
+| 2026-09-28 | v2 | 재검증(2차) — Vite 6.x → 8.3.1 갱신, SKILL.md 1·5절을 `rolldownOptions.output.codeSplitting.groups`(주 경로) / `manualChunks`(레거시, Vite 6/7) 구조로 재편. 흔한 실수 패턴 1도 공통 주의사항으로 갱신. status PENDING_TEST 유지 | Claude (Sonnet 5) |
+| 2026-09-28 | v2 | 2단계 실사용 테스트 수행 (재검증(2차) 재구성분 대상 — Q1 Vite 8 벤더청크+dropConsole 설정 / Q2 객체형 manualChunks Vite 8 마이그레이션 가능 여부) → 2/2 PASS, PENDING_TEST 유지 (빌드 설정 실사용 필수 카테고리) | skill-tester |
+| 2026-09-28 | v3 | 실사용(실행) 검증 — lab 샘플 프로젝트(Vite 8.3.1 + React TS, 라우트 4개+swiper)에서 `codeSplitting.groups` 주 경로 그대로 빌드 → 청크 분할(common-react-dom/common-swiper/vendor/라우트별 lazy)·`dropConsole` 모두 서술과 일치 확인. status APPROVED 전환 | Claude (Sonnet 5) |

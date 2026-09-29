@@ -6,11 +6,11 @@ description: Spring WebFlux WebClient를 블로킹(WebMVC) 애플리케이션에
 # WebFlux WebClient를 동기 앱에서 사용하는 패턴
 
 > 소스: https://docs.spring.io/spring-framework/reference/web/webflux-webclient.html | https://docs.spring.io/spring-framework/reference/web/webflux-webclient/client-synchronous.html | https://docs.spring.io/spring-framework/reference/web/webflux-webclient/client-builder.html | https://docs.spring.io/spring-framework/reference/web/webflux-webclient/client-filter.html | https://docs.spring.io/projectreactor/reactor-netty/docs/current/reference/html/http-client.html | https://github.com/square/okhttp/tree/master/mockwebserver | https://spring.io/blog/2025/09/30/the-state-of-http-clients-in-spring/
-> 검증일: 2026-04-23
+> 검증일: 2026-09-26 (2026-04-23 최초 검증 · 재검증 이력은 8절 참조)
 
 > 주의: 이 문서는 **Spring Boot 2.5 ~ 3.x** 범위에서 **WebMVC(블로킹) 애플리케이션**이 `spring-boot-starter-webflux`를 **WebClient 목적으로만** 함께 포함하는 시나리오를 다룹니다. 앱 자체의 WebFlux 전면 도입(리액티브 스택 전환)은 범위 밖입니다.
 
-> 주의: Spring 7.0(2025 하반기)에서 RestTemplate은 deprecated로 향하고 있고, 동기 스택에서는 Spring 6.1+의 `RestClient`가 Spring 팀의 1순위 권장입니다. 그럼에도 WebClient를 선택하는 합리적 이유는 ① 이미 `spring-boot-starter-webflux`가 포함되어 있음 ② 부분적으로 리액티브 조합(`Mono.zip` 등)을 사용해 외부 호출을 병렬화하고 싶음 ③ 스트리밍/backpressure가 필요함 ④ Spring Boot 2.5처럼 RestClient가 없는 버전 등입니다. RestTemplate 대비 WebClient가 권장되는 것은 변함없습니다.
+> 주의: **(2026-09-26 갱신)** Spring Framework 7.0은 2025-11에 이미 GA되어 RestTemplate "deprecation 의도"를 공식 발표했고(아직 `@Deprecated` 표시는 아님), Spring 7.1(2026-11 잠정)에서 정식 `@Deprecated` 처리, 8.0에서 완전 제거가 예정되어 있습니다. RestTemplate 자체는 2029년까지 오픈소스 지원이 유지되므로 기존 코드의 즉각 마이그레이션이 급한 것은 아닙니다. 동기 스택에서는 Spring 6.1+의 `RestClient`가 Spring 팀의 1순위 권장입니다. 그럼에도 WebClient를 선택하는 합리적 이유는 ① 이미 `spring-boot-starter-webflux`가 포함되어 있음 ② 부분적으로 리액티브 조합(`Mono.zip` 등)을 사용해 외부 호출을 병렬화하고 싶음 ③ 스트리밍/backpressure가 필요함 ④ Spring Boot 2.5처럼 RestClient가 없는 버전 등입니다. RestTemplate 대비 WebClient가 권장되는 것은 변함없습니다.
 
 ---
 
@@ -75,9 +75,9 @@ Spring Boot BOM이 Spring 6.x + Reactor Netty를 관리한다. 별도 버전 명
 
 ## RestTemplate / WebClient / RestClient 선택 기준
 
-| 클라이언트 | 스택 | 상태 (2026-04 기준) | 주요 용도 |
+| 클라이언트 | 스택 | 상태 (2026-09 기준) | 주요 용도 |
 |-----------|------|------|-----------|
-| `RestTemplate` | 동기 | Spring 5.0+ **유지보수 모드**, Spring 7.0에서 deprecated 진행, 8.0에서 제거 예정 | 레거시 유지 |
+| `RestTemplate` | 동기 | Spring 5.0+ **유지보수 모드**. Spring 7.0(2025-11 GA)이 deprecation 의도 발표, 7.1(2026-11 잠정)에서 정식 `@Deprecated`, 8.0에서 제거 예정. 오픈소스 지원은 2029년까지 | 레거시 유지 |
 | `RestClient` | 동기 | Spring 6.1+ / Boot 3.2+ 권장 | 동기 앱의 기본 선택 |
 | `WebClient` | 리액티브 (동기 사용 가능) | 활발히 유지됨 | 리액티브/스트리밍/병렬 조합 |
 

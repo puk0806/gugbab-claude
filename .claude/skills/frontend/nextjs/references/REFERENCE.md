@@ -155,10 +155,12 @@ const nextConfig: NextConfig = {
 - `adapterPath`(Build Adapters)가 최상위 stable 옵션으로 승격
 - 성능: dev 서버 시작 ~400% 빠름, 렌더링 ~50% 빠름(RSC payload 역직렬화 개선), Server Fast Refresh 도입
 
-## Next.js 16.3 주요 변경사항 (2026-08-03, 현재 최신)
+## Next.js 16.3 주요 변경사항 (2026-08-03 최초 릴리즈, 2026-09-28 기준 최신 패치는 16.3.6)
 
-> 소스: https://nextjs.org/blog/next-16-3
+> 소스: https://nextjs.org/blog/next-16-3 | https://github.com/vercel/next.js/releases
 > **Breaking change 없음** — 애플리케이션 코드 변경 없이 업그레이드하면 성능 이득을 얻는다.
+>
+> **주의(2026-09-28 확인, GitHub 공식 advisory 원문 대조) — 16.3.6 이상 사용 필수.** 16.3.0~16.3.5 사이에 치명적(Critical) 미인증 RCE 취약점 3건이 있었다: GHSA-p293-qw3h-jr36(**Windows 호스팅 서버 한정** 경로 순회 RCE, 16.3.3 패치), GHSA-2xp9-vwfh-vxw4(**플랫폼 무관** AVIF 이미지 최적화 RCE — `sharp`/`libheif` 결함, 16.3.3 패치), GHSA-vcvr-r3jv-pc5j(**플랫폼 무관**, Node.js 런타임 한정 `next/og` `ImageResponse` RCE — Edge 구현은 영향 없음, 16.3.6 패치). 상세는 `SKILL.md` 상단 주의 문단 참조. 16.3.x 패치들은 보안 수정 외에 `use cache` 프리렌더 신호 유지 버그, `headers()` 라이브 뷰 복원, 캐시 태그 무효화 로직 정교화 등 버그 수정 위주이며 이 절의 API·동작 서술(캐시 모델, `catchError`, `next/root-params`, Instant Navigations 등)에는 영향 없다.
 
 ### 코드 변경 없이 얻는 개선
 

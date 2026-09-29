@@ -1,9 +1,9 @@
 ---
 skill: build-perf-benchmarking
 category: frontend
-version: v1
-date: 2026-05-14
-status: PENDING_TEST
+version: v3
+date: 2026-09-28
+status: APPROVED
 ---
 
 # build-perf-benchmarking 스킬 검증 문서
@@ -32,9 +32,9 @@ status: PENDING_TEST
 |------|------|
 | 스킬 이름 | `build-perf-benchmarking` |
 | 스킬 경로 | `.claude/skills/frontend/build-perf-benchmarking/SKILL.md` |
-| 검증일 | 2026-05-14 |
+| 검증일 | 2026-09-28 (재검증, 이전 2026-05-14) |
 | 검증자 | skill-creator agent |
-| 스킬 버전 | v1 |
+| 스킬 버전 | v2 |
 | 대상 도구 버전 | hyperfine v1.20.0 (2025-11-18 릴리즈) |
 
 ---
@@ -152,6 +152,96 @@ status: PENDING_TEST
 
 ## 5. 테스트 진행 기록
 
+### [2026-09-28] 실사용(실행) 검증
+
+**수행일**: 2026-09-28
+**수행 방법**: 실험 공간(레포 밖 lab 폴더, `fe-perf/app`)에 `npm create vite@latest -- --template react-ts`로 Vite 8.3.1 + React 19 샘플 생성(dayjs 의존성 추가 + `React.lazy` 코드 분할 1개 포함, 23 모듈). Node v22.23.1 / npm v10.9.8 / hyperfine 1.20.0, Apple M1 Pro 10코어 16GB RAM, macOS 27.0에서 SKILL.md §4.3 명령 그대로 cold build(`--runs 10 --warmup 0 --prepare 'rm -rf node_modules/.vite dist tsconfig*.tsbuildinfo'`)와 warm build(`--runs 20 --warmup 3`)를 `--export-markdown`+`--export-json` 둘 다 켜서 실행. JSON에서 median·p95(선형보간)를 §3.2 방식대로 직접 계산해 §6.3 헤더 템플릿 형식의 보고서 작성.
+**실행 결과**: cold build median 1.288s / p95 1.389s (n=10, outlier 없음). warm build median 1.231s / p95 1.530s (n=20) — **실제로 hyperfine outlier 경고가 발동**해 §7.1 함정 5·§9의 "outlier 경고" 클레임이 라이브로 재현 확인됨. 단, 실제 경고 원문이 "quiet **system**"인데 SKILL.md §9·§7.1이 "quiet **PC**"로 인용하고 있었고, first-run-slower 경고 원문도 실제 설치 바이너리(strings 추출)와 다르게 인용돼 있어 **SKILL.md 최소 정정**(두 인용문 교정 + 검증 각주 추가, v2→v3) 수행. 그 외 방법론(cold/warm 분리 명령, JSON에서 median/p95 추출, `--export-markdown`+`--export-json` 동시 산출)은 서술과 전부 일치.
+**졸업 조건 충족 여부**: 충족 — PENDING_TEST.md의 "hyperfine으로 실제 빌드 10회 측정, 보고서 형식대로 산출" 조건을 cold 10회+warm 20회로 초과 충족, §6.3 형식 보고서 산출 완료.
+**판정**: APPROVED 전환 (서술 오류 1건은 실행 중 발견해 즉시 최소 정정, 방법론 자체는 실행으로 100% 재현 확인)
+
+---
+
+### [2026-09-28] skill-tester content test 재테스트(3차) — SKILL.md 4.2 보강 반영 확인
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose
+**수행 방법**: SKILL.md Read 후 2개 실전 질문 답변, 근거 섹션 존재 여부 및 anti-pattern 회피 확인. Q1은 직전 재테스트(2차)에서 PARTIAL 원인이었던 "4.2 섹션에 Rolldown 무관 확인 문구 누락" 갭이 메인 세션의 SKILL.md 보강(136행 각주 추가)으로 해소되었는지 직접 겨냥.
+
+### 실제 수행 테스트
+
+**Q1. Vite 8(Rolldown) 프로젝트에서 cold build 캐시 정리 명령이 예전과 달라지는가**
+- ✅ PASS
+- 근거: SKILL.md "4.2 도구별 캐시 정리 명령" 표(128~134행) + 136행 각주("Vite 8(Rolldown 기반)에서도 pre-bundle 캐시 위치(`node_modules/.vite`)와 `--force` 동작은 바뀌지 않았다")
+- 상세: 직전 재테스트(2차)에서 지적된 gap — "재검증 기록과 스킬 본문 간 정정 내용 미동기화" — 이 136행 각주 추가로 해소됨. 에이전트가 SKILL.md만 근거로 "달라지지 않는다"고 명확히 답변, 근거 URL(vite.dev/guide/migration)까지 인용.
+
+**Q2. cold/warm build 분리 측정 방법 + `--warmup`/`--prepare` 목적 차이**
+- ✅ PASS
+- 근거: SKILL.md "4.1 정의" + "4.2 도구별 캐시 정리 명령" + "4.3 hyperfine 명령 패턴" + "2. 핵심 옵션" 주의 문단 + "7.1 함정"
+- 상세: cold(`--warmup 0` + `--prepare`)·warm(`--warmup 3`) 명령, warmup(캐시 채움)·prepare(캐시 비움) 목적 차이 정확히 근거 제시. gap 없음.
+
+### 발견된 gap
+
+없음 — 직전 재테스트의 유일한 gap(4.2 Rolldown 무관 확인 문구 누락)이 해소되어 2개 질문 모두 PASS.
+
+### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 실사용 필수 카테고리 (빌드 워크플로우 / 측정 도구 실행 결과로만 최종 검증 가능)
+- 최종 상태: **NEEDS_REVISION 해제 → PENDING_TEST 복귀** (content test 2/2 PASS이나 실사용 필수 카테고리라 APPROVED는 실제 hyperfine 실행 검증 후로 보류)
+
+---
+
+### [2026-09-28] skill-tester content test 재수행 (Vite 8/Rolldown 정정 반영 확인)
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose
+**수행 방법**: SKILL.md Read 후 2개 실전 질문 답변, 근거 섹션 존재 여부 및 anti-pattern 회피 확인. Q1은 아래 2026-09-28 재검증(2차)의 Vite 8(Rolldown) 정정·보강 내용을 직접 겨냥.
+
+### 실제 수행 테스트
+
+**Q1. Vite 8(Rolldown) 프로젝트의 보고서 헤더 런타임 버전 예시 + cold build 캐시 정리 명령이 Rolldown 전환으로 달라지는지**
+- 🟡 PARTIAL
+- 근거: SKILL.md "6.3 보고서 헤더 템플릿"(252행, `Vite v8.3.1 (Rolldown 기반)`)은 정확히 근거 제시되어 PASS.
+- 상세(gap): 캐시 정리 명령 질문에는 SKILL.md "4.2 도구별 캐시 정리 명령" 표가 Rolldown 채택 여부와 무관하게 `rm -rf node_modules/.vite dist` 단일 규칙만 제시할 뿐, "Rolldown 전환과 무관하게 캐시 디렉터리 동일하다"는 재확인 문구가 **SKILL.md 본문에는 없다**. 이 내용은 verification.md 섹션 5의 2026-09-28 재검증(2차) 기록에는 "확인됨"으로 적혀 있으나, 그 결론이 SKILL.md 4.2 섹션에 실제로 반영·기술되지 않아 에이전트가 SKILL.md만 근거로는 "달라지지 않는다"고 확답하지 못했다. **재검증 기록과 스킬 본문 간 정정 내용 미동기화** — SKILL.md 보강 필요(4.2 표 또는 그 하단에 "Rolldown 전환과 무관하게 캐시 위치·명령 변경 없음" 주석 추가 권장).
+
+**Q2. cold/warm build 분리 측정 방법 + `--warmup`/`--prepare` 목적 차이 + 흔한 실수**
+- ✅ PASS
+- 근거: SKILL.md "4.1 정의" + "4.2 도구별 캐시 정리 명령" + "4.3 hyperfine 명령 패턴" + "2. 핵심 옵션" 주의 문단 + "7.1 함정"/"7.2 안티패턴"
+- 상세: cold(`--warmup 0` + `--prepare`)·warm(`--warmup 3`) 명령 패턴, warmup(캐시 채움)·prepare(캐시 비움) 목적 차이, 11개 함정/안티패턴(1회 측정, cold/warm 혼합, `-N` 오용, `--ignore-failure` 남용, git stash 오버헤드 등)까지 정확히 근거 제시. gap 없음.
+
+### 발견된 gap
+
+- **(차단 요인 아님이나 정정 동기화 이슈)** Q1에서 드러난 대로, 2026-09-28 재검증(2차)에서 "Vite 8/Rolldown 전환이 캐시 정리 명령에 영향 없음"을 확인했다고 verification.md에는 기록했으나 이 결론 문장이 SKILL.md "4.2 도구별 캐시 정리 명령" 섹션에는 누락되어 있다. SKILL.md만 보는 에이전트는 이 질문에 확답할 수 없다 — 다음 SKILL.md 수정 시 4.2에 한 줄 보강 필요(본 세션은 SKILL.md 수정 없이 보고만 함, retest-brief 원칙에 따름).
+
+### 판정
+
+- agent content test: 1/2 PASS, 1/2 PARTIAL
+- verification-policy 분류: 실사용 필수 카테고리 (빌드 워크플로우 / 측정 도구 실행 결과로만 최종 검증 가능)
+- 최종 상태: NEEDS_REVISION (PARTIAL 발견 — SKILL.md 4.2 섹션에 Rolldown 무관 확인 문구 보강 필요, 사용자 승인 후 반영 권장)
+
+---
+
+### [2026-09-28] 재검증(2차) — Vite 8(Rolldown) 리포트 예시 버전 갱신
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임 3개를 1차 소스와 대조, 보강 검토
+
+**클레임 대조 결과**:
+1. hyperfine 최신 안정 버전 v1.20.0 (2025-11-18) → VERIFIED (GitHub Releases API, 변동 없음)
+2. Vite dep pre-bundling 캐시 위치 `node_modules/.vite` (재최적화 트리거 조건 포함) → VERIFIED (https://vite.dev/guide/dep-pre-bundling — Vite 8/Rolldown 전환 후에도 캐시 위치·트리거 로직 불변)
+3. Turborepo 로컬 캐시 위치 `.turbo/cache` 및 `--force` 동작 → VERIFIED (https://turborepo.dev/docs/crafting-your-repository/caching, 변동 없음)
+
+**보강(ADD)·축소**: 섹션 6.3 "보고서 헤더 템플릿" 예시 런타임 버전을 Vite 8 기준으로 갱신 — `Vite v5.4.10` → `Vite v8.3.1 (Rolldown 기반)`, Node/pnpm 예시 버전도 현재 최신(Node v24.21.0 LTS, pnpm v12.6.0)으로 함께 갱신. 상단 소스 인용의 "대상 버전" 줄에 Vite 8(2026-03 Rolldown 기반 출시) 기준임을 명시. Vite 8은 esbuild(dev)+Rollup(prod)를 Rolldown(Rust 번들러)으로 대체했으나, 캐시 디렉터리 경로·cold/warm 측정 방법론 자체는 영향받지 않음(스킬 본문 4.2 캐시 정리 명령 변경 불필요 — 확인됨). 축소 없음(실사용 필수 스킬 — 함정/체크리스트 유지).
+
+**실전 질문 재검증**:
+- Q1. "Vite 8(Rolldown) 프로젝트에서 cold build 측정 시 캐시 정리 명령이 예전과 달라지는가?" → SKILL.md "4.2 도구별 캐시 정리 명령"(`rm -rf node_modules/.vite dist`) 근거로 PASS — Rolldown 전환과 무관하게 캐시 디렉터리 동일
+- Q2. "빌드 벤치마크 보고서 헤더에 넣을 현재 기준 런타임 버전 예시는?" → SKILL.md "6.3 보고서 헤더 템플릿"(Node v24.21.0, pnpm v12.6.0, Vite v8.3.1) 근거로 PASS
+
+**재검증 최종 판정**: status **PENDING_TEST 유지** (실사용 필수 카테고리 — 실제 hyperfine 실행·산출물 검증 전까지 APPROVED 보류)
+
+---
+
 ### 2026-08-11 재검증
 
 **재검증일**: 2026-08-11
@@ -241,18 +331,19 @@ status: PENDING_TEST
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-05-14 3/3 PASS + 2026-08-11 재검증 3/3 PASS, 누적 6/6 PASS) |
+| 에이전트 활용 테스트 | ✅ (2026-05-14 3/3 PASS + 2026-08-11 재검증 3/3 PASS + 2026-09-28 WebSearch 재검증 2/2 PASS + 2026-09-28 content test 재수행 1/2 PASS·1/2 PARTIAL + **2026-09-28 재테스트(3차) 2/2 PASS** — SKILL.md 4.2 보강(136행 각주) 후 Rolldown 갭 해소 확인) |
 | WebSearch 재검증 (2026-08-11) | ✅ hyperfine v1.20.0·옵션·Vite 캐시 위치 3건 모두 변동 없음 |
-| 실사용 테스트 (hyperfine 실제 실행) | ❌ (실사용 필수 카테고리 — 측정 도구 출력 검증 필요) |
-| **최종 판정** | **PENDING_TEST** (content test 누적 6/6 PASS, 실사용 검증 후 APPROVED 전환 예정) |
+| WebSearch 재검증 (2026-09-28) | ✅ hyperfine v1.20.0·Vite 캐시 경로(Rolldown 전환 후에도 불변)·Turborepo 캐시 경로 3건 모두 변동 없음. 리포트 예시 버전 Vite 8 기준 갱신 |
+| 실사용 테스트 (hyperfine 실제 실행) | ✅ **(2026-09-28 완료)** lab 샘플(Vite 8+React 19)에서 cold(n=10)·warm(n=20) 실제 실행, median/p95 추출 성공, outlier 경고 라이브 재현. 경고 원문 인용 오류 1건 발견 즉시 정정 |
+| **최종 판정** | **APPROVED** (2026-09-28 실사용 실행 검증 완료 — 방법론 전부 일치 확인, 인용 오류 정정 후 전환) |
 
 ---
 
 ## 7. 개선 필요 사항
 
-- [✅] skill-tester로 content test 수행 (2026-05-14 완료, 3/3 PASS — cold/warm 분리·median/p95 추출·runs/warmup 권장값·warmup vs prepare 목적 차이 시나리오 포함 / 2026-08-11 재검증 3/3 PASS 추가 — Turborepo git stash 대안·first-run 경고 대응·혼동변수 필수 항목)
-- [❌] 실제 프로젝트에서 hyperfine v1.20.0 실행해 markdown/JSON 출력 형식이 스킬 설명과 일치하는지 확인 (차단 요인: 실사용 필수 카테고리 조건 미충족 — 실제 실행 전까지 PENDING_TEST 유지)
-- [❌] macOS/Linux/Windows 각 OS에서 `--prepare` 명령 동작 확인 (선택 보강: 특히 Windows에서 `rm -rf` 대체 명령 추가 필요, APPROVED 전환 조건은 아님)
+- [✅] skill-tester로 content test 수행 (2026-05-14 완료, 3/3 PASS — cold/warm 분리·median/p95 추출·runs/warmup 권장값·warmup vs prepare 목적 차이 시나리오 포함 / 2026-08-11 재검증 3/3 PASS 추가 — Turborepo git stash 대안·first-run 경고 대응·혼동변수 필수 항목 / 2026-09-28 재수행 1/2 PASS·1/2 PARTIAL / **2026-09-28 재테스트(3차) 2/2 PASS 완료** — SKILL.md 4.2에 Rolldown 무관 확인 문구(136행) 보강 후 갭 해소)
+- [✅] **(2026-09-28 완료)** 실제 프로젝트(lab Vite 8+React 19 샘플)에서 hyperfine v1.20.0 실행 — cold(n=10)/warm(n=20) markdown+JSON 출력 형식 스킬 설명과 일치 확인, outlier 경고 라이브 재현, 경고 원문 인용 오류 2건 발견해 SKILL.md §7.1·§9 정정
+- [❌] macOS/Linux/Windows 각 OS에서 `--prepare` 명령 동작 확인 (선택 보강: 특히 Windows에서 `rm -rf` 대체 명령 추가 필요, APPROVED 전환 조건은 아님 — 이번 실행 검증은 macOS만 수행)
 - [❌] turborepo 모노레포에서 `--filter=` 옵션과 hyperfine 조합 측정 검증 + 워크트리별 `.turbo` 캐시 격리 방법 (선택 보강: 실전 도입 이후 추가 검증 권장)
 
 ---
@@ -264,3 +355,7 @@ status: PENDING_TEST
 | 2026-05-14 | v1 | 최초 작성 — hyperfine v1.20.0 기준, cold/warm 분리·median/p95 보고·혼동변수 통제·안티패턴 9개 포함 | skill-creator |
 | 2026-05-14 | v1 | 2단계 실사용 테스트 수행 (Q1 Vite cold/warm 분리 측정 / Q2 median·p95 추출 방법 / Q3 45초 빌드 runs/warmup 권장값 + warmup vs prepare 목적 차이) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | skill-tester |
 | 2026-08-11 | v1 | 재검증 — WebSearch 3건(hyperfine 버전·옵션·Vite 캐시 위치) 모두 변동 없음 확인 + content test 재수행 (Q1 Turborepo git stash 대안 / Q2 first-run 경고 대응 / Q3 혼동변수 필수 항목) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | skill-tester |
+| 2026-09-28 | v2 | 재검증(2차) — WebSearch 3건(hyperfine 버전·Vite 캐시 경로·Turborepo 캐시 경로) 모두 변동 없음 확인 + 보고서 헤더 템플릿(6.3) 예시 버전을 Vite 8.3.1(Rolldown)·Node v24.21.0·pnpm v12.6.0으로 갱신 + content test 2/2 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | 메인 세션 |
+| 2026-09-28 | v2 | 2단계 실사용 테스트 재수행 (Q1 Vite 8/Rolldown 헤더 버전+캐시 명령 변경 여부 / Q2 cold/warm 분리+warmup·prepare 차이) → 1/2 PASS, 1/2 PARTIAL(Rolldown 캐시 확인 문구가 SKILL.md 4.2에 미반영) → **NEEDS_REVISION 전환** (SKILL.md는 수정하지 않고 gap만 보고, 사용자 승인 대기) | skill-tester |
+| 2026-09-28 | v2 | SKILL.md 4.2 섹션에 "Vite 8/Rolldown 전환과 무관하게 캐시 위치·정리 명령 변경 없음" 확인 각주(136행) 보강 반영 확인 후 2단계 실사용 테스트 재테스트(3차) 수행 (Q1 Rolldown 캐시 명령 변경 여부 재확인 / Q2 cold/warm 분리+warmup·prepare 차이) → 2/2 PASS, **NEEDS_REVISION 해제 → PENDING_TEST 복귀** (실사용 필수 카테고리, hyperfine 실제 실행 검증 전까지 APPROVED 보류) | skill-tester |
+| 2026-09-28 | v3 | **실사용(실행) 검증 완료** — lab Vite 8+React 19 샘플에서 hyperfine 1.20.0 cold(n=10)/warm(n=20) 실제 실행, median/p95 JSON 추출, outlier 경고 라이브 재현. §7.1·§9의 hyperfine 경고 원문 인용 오류 2건("quiet PC"→"quiet system", first-run 경고 문구 축약) 발견해 최소 정정 + 검증 각주 추가. status **PENDING_TEST → APPROVED** | 실행검증 세션 |

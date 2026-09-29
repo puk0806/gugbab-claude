@@ -2,7 +2,7 @@
 // PostToolUse (Write|Edit): memory 파일 변경 감지 → 전역↔레포 미러 복사 (git 커밋 없음)
 //
 // 저장 구조 (memory 공유 = Y 프로젝트):
-//   1차 저장소: ~/.claude/projects/<인코딩된-경로>/memory  ← Claude 전역 메모리 (항상 저장)
+//   1차 저장소: ~/.claude/projects/<인코딩된-경로>/memory  ← Claude 전역 메모리 (항상 저장, 영숫자 외 문자 → '-')
 //   2차 미러:   <레포>/memory/                              ← 워킹트리 복사만, 커밋·푸시는 사용자가 직접
 // 어느 쪽 파일이 수정되든 반대쪽으로 복사해 양쪽을 같은 내용으로 유지한다.
 // (N 프로젝트는 이 훅이 설치되지 않으므로 전역 메모리에만 저장되는 기본 동작)
@@ -26,9 +26,12 @@ process.stdin.on('end', () => {
     if (!projectDir) process.exit(0);
 
     const repoMemory = norm(path.join(projectDir, 'memory'));
-    // Claude 인코딩: / 와 _ 를 모두 - 로 치환
-    const encoded = projectDir.replace(/[/\_]/g, '-');
-    const globalMemory = norm(path.join(os.homedir(), '.claude', 'projects', encoded, 'memory'));
+    // 전역 저장소: transcript_path 디렉토리(실제 저장소) 우선, 없으면 Claude Code 인코딩 규칙
+    // (session-export.js 공통 함수 — 2026-09-26 실측 규칙으로 통일, projects 밖 transcript_path 는 무시)
+    const { projectStoreDir } = require('./session-export.js');
+    const storeDir = projectStoreDir(os.homedir(), projectDir, data?.transcript_path);
+    if (!storeDir) process.exit(0);
+    const globalMemory = norm(path.join(storeDir, 'memory'));
 
     const written = norm(filePath);
     if (!fs.existsSync(written)) process.exit(0);

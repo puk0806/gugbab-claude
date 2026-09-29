@@ -1,8 +1,8 @@
 ---
 skill: seo-static-html
 category: frontend
-version: v1
-date: 2026-06-01
+version: v2
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `seo-static-html` |
 | 스킬 경로 | `.claude/skills/frontend/seo-static-html/SKILL.md` |
-| 검증일 | 2026-06-01 |
-| 검증자 | skill-creator |
-| 스킬 버전 | v1 |
+| 검증일 | 2026-09-28 (최초 2026-06-01, 2026-09-28 재검증) |
+| 검증자 | skill-creator → Claude (Sonnet 5, 2026-09-28 재검증) |
+| 스킬 버전 | v2 |
 
 ---
 
@@ -181,6 +181,24 @@ status: APPROVED
 
 ---
 
+### [2026-09-28] 재검증 — 변경 없음
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md + references/REFERENCE.md 전체 Read → 핵심 클레임 3개를 1차 소스와 대조
+
+**클레임 대조 결과**:
+1. Google `robots` 메타태그 디렉티브 전체 목록(`noindex`/`nofollow`/`nosnippet`/`max-snippet`/`max-image-preview`/`max-video-preview`/`notranslate`/`noimageindex`/`indexifembedded` 등)이 여전히 유효하고 추가·제거된 디렉티브 없음 → VERIFIED (https://developers.google.com/search/docs/crawling-indexing/robots-meta-tag)
+2. sitemap 단일 파일 50,000 URL / 50MB(52,428,800 bytes) 한계, sitemap index도 동일 한계 → VERIFIED, 2016년 10MB→50MB 상향 이후 변동 없음 (https://www.sitemaps.org/protocol.html)
+3. `@astrojs/sitemap`의 `entryLimit` 기본값 45000 → VERIFIED (npm registry 최신 버전 3.7.4, 공식 문서 https://docs.astro.build/en/guides/integrations-guide/sitemap/ 기본값 문구 동일)
+
+**실전 질문 재검증**:
+- Q1. "noindex 메타태그가 있는데 robots.txt로도 차단하면 검색 결과에서 빠지는가?" → SKILL.md 섹션 5 "흔한 실수 — noindex와 Disallow 동시 사용" 근거로 PASS (원리·경고 문구 불변 확인)
+- Q2. "URL 60,000개짜리 Astro 사이트의 sitemap 분할 기준은?" → SKILL.md 섹션 4 "크기·개수 제한"+"sitemap index" 및 `entryLimit` 기본값 45000 근거로 PASS
+
+**재검증 최종 판정**: 3개 클레임 모두 VERIFIED, 변경 없음. status **APPROVED 유지**.
+
+---
+
 *(아래는 생성 시 작성된 향후 테스트 권장 케이스 참고용 보존)*
 
 ### 테스트 케이스 참고 (보존)
@@ -219,8 +237,8 @@ SKILL.md 섹션 4 "크기·개수 제한" + "sitemap index" 인용해야 한다.
 | 내용 정확성 | ✅ (24/24 클레임 VERIFIED) |
 | 구조 완전성 | ✅ (모든 필수 항목 포함, 9개 섹션) |
 | 실용성 | ✅ (실제 코드 예시 + 흔한 실수 13건 + 발행 전 체크리스트) |
-| 에이전트 활용 테스트 | ✅ (3/3 PASS, 2026-06-01, skill-tester → general-purpose) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (3/3 PASS, 2026-06-01, skill-tester → general-purpose) + ✅ (2026-09-28 재검증, 클레임 3/3 VERIFIED) |
+| **최종 판정** | **APPROVED** (2026-09-28 재검증 — 변경 없음) |
 
 ---
 
@@ -240,3 +258,4 @@ SKILL.md 섹션 4 "크기·개수 제한" + "sitemap index" 인용해야 한다.
 |------|------|-----------|--------|
 | 2026-06-01 | v1 | 최초 작성. 공식 문서 9개 + 보조 8개 소스에서 24개 클레임 교차 검증 완료. PENDING_TEST 상태로 저장 (skill-tester 호출은 사용자 지시로 보류) | skill-creator |
 | 2026-06-01 | v1 | 2단계 실사용 테스트 수행 (Q1 noindex+Disallow 충돌 / Q2 OG+TwitterCard property vs name / Q3 50,000 URL 초과 sitemap) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-28 | v2 | 재검증 — robots 메타태그 디렉티브 전체 목록·sitemap 50,000/50MB 한계·`@astrojs/sitemap` entryLimit 45000 기본값 1차 소스 재대조 전부 VERIFIED, 변경 없음. status APPROVED 유지 | Claude (Sonnet 5) |

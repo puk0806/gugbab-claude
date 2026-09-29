@@ -231,6 +231,44 @@ section('git 조작을 절대 하지 않음 확인')
   cleanup(home, repo)
 }
 
+// ─── 경로 인코딩 · transcript_path (2026-09-26) ──────────────────────────
+section('인코딩 — 점·공백·한글 경로의 전역 쓰기가 레포로 미러된다 (구 규칙이면 매칭 실패)')
+{
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'msync-home-'))
+  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'msync-repo-'))
+  const repo = path.join(base, 'my.app v2 한글')
+  fs.mkdirSync(path.join(repo, 'memory'), { recursive: true })
+  const gm = path.join(home, '.claude', 'projects', repo.replace(/[^A-Za-z0-9]/g, '-'), 'memory')
+  fs.mkdirSync(gm, { recursive: true })
+  fs.writeFileSync(path.join(gm, 'n.md'), 'N')
+  const r = runHook({ file_path: path.join(gm, 'n.md') }, { home, repoDir: repo })
+  assert('exit 0', r.status, 0)
+  assert('레포 memory/ 로 복사', fs.existsSync(path.join(repo, 'memory', 'n.md')) && fs.readFileSync(path.join(repo, 'memory', 'n.md'), 'utf8'), 'N')
+  cleanup(home, base)
+}
+section('transcript_path 우선 / 악성 transcript_path 무시')
+{
+  const { home, repo, repoMemory, globalMemory } = mkFixture()
+  fs.mkdirSync(repoMemory, { recursive: true })
+  const realStore = path.join(home, '.claude', 'projects', '-actual-store-dir')
+  fs.mkdirSync(path.join(realStore, 'memory'), { recursive: true })
+  fs.writeFileSync(path.join(realStore, 'memory', 't.md'), 'T')
+  const mk = (tp, fp) => spawnSync('node', [HOOK], { input: JSON.stringify({ hook_event_name: 'PostToolUse', tool_name: 'Write',
+    tool_input: { file_path: fp }, transcript_path: tp }), encoding: 'utf8', timeout: 5000,
+    env: { ...process.env, HOME: home, CLAUDE_PROJECT_DIR: repo } })
+  mk(path.join(realStore, 's.jsonl'), path.join(realStore, 'memory', 't.md'))
+  assert('transcript_path 저장소의 memory 쓰기 → 레포 미러', fs.existsSync(path.join(repoMemory, 't.md')), true)
+  // 악성: 공격자 디렉토리를 transcript 로 위장해 그 안의 memory 파일을 레포로 끌어오려는 시도
+  const evil = fs.mkdtempSync(path.join(os.tmpdir(), 'msync-evil-'))
+  fs.mkdirSync(path.join(evil, 'memory'))
+  fs.writeFileSync(path.join(evil, 'memory', 'evil.md'), 'EVIL')
+  const r = mk(path.join(evil, 'x.jsonl'), path.join(evil, 'memory', 'evil.md'))
+  assert('악성 transcript_path: exit 0', r.status, 0)
+  assert('악성 경로 파일은 레포로 복사되지 않음', fs.existsSync(path.join(repoMemory, 'evil.md')), false)
+  assert('악성 경로 기준으로 전역 디렉토리 생성 안 함', fs.existsSync(globalMemory) && fs.readdirSync(globalMemory).includes('evil.md'), false)
+  cleanup(home, repo, evil)
+}
+
 console.log(`\n${'─'.repeat(40)}`)
 console.log(`결과: ${passed}/${passed + failed} 통과 ${failed > 0 ? `(${failed}개 실패)` : ''}`)
 if (failed === 0) console.log('✅ 모든 테스트 통과')

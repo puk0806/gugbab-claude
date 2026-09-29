@@ -28,8 +28,8 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 24종 = 실행 �
 | [skill-md-guard.js](../../.claude/hooks/skill-md-guard.js) | PreToolUse Write · PostToolUse Edit | SKILL.md 소스 URL·검증일·필수 섹션 검증 — **위반 시 저장 자체 차단** (Edit는 디스크 재읽기 사후 검증) | ✅ |
 | [agent-md-guard.js](../../.claude/hooks/agent-md-guard.js) | PreToolUse Write · PostToolUse Edit | 에이전트 .md name·description·tools·model·example 검증 — **위반 시 저장 자체 차단** | ✅ |
 | [verification-guard.js](../../.claude/hooks/verification-guard.js) | PreToolUse Write · PostToolUse Edit | verification.md 필수 섹션·UNVERIFIED·"내장 지식" 자백 검증 — **위반 시 저장 자체 차단** | ✅ |
-| [staleness-check.js](../../.claude/hooks/staleness-check.js) | InstructionsLoaded | 스킬 검증일 경과 감지 — 30~59일 경고, 60일+ 재검증 강제 지시 | ✅ |
-| [instructions-loaded.js](../../.claude/hooks/instructions-loaded.js) | InstructionsLoaded | CLAUDE.md 로드 완료 시 규칙 요약 출력 | ✅ |
+| [staleness-check.js](../../.claude/hooks/staleness-check.js) | SessionStart | 스킬 검증일 경과 감지 — 30~59일 경고, 60일+ 재검증 강제 지시 | ✅ |
+| [instructions-loaded.js](../../.claude/hooks/instructions-loaded.js) | SessionStart | CLAUDE.md 로드 완료 시 규칙 요약 출력 | ✅ |
 | [session-start.js](../../.claude/hooks/session-start.js) | SessionStart | 세션 시작 시 현재 브랜치·미커밋 파일·최근 커밋 요약 출력 | ✅ |
 | [session-export.js](../../.claude/hooks/session-export.js) | Stop | 세션 대화 요약(요청·응답·수정 파일·Codex 리뷰) 강제 보존 — Stop(매 턴)은 로컬 `~/.claude/projects/<해시>/exports/`에만 기록(레포 status 오염 없음), 커밋 배치의 `--refresh` 실행 시에만 레포 `exports/`에 전체 요약 생성(Y 프로젝트) (비차단) | ✅ |
 | [cc-notify.js](../../.claude/hooks/cc-notify.js) | Stop | 작업 완료 시 macOS 데스크탑 알림 (비차단, 타 플랫폼 silent) | ✅ |
@@ -40,11 +40,13 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 24종 = 실행 �
 
 ---
 
-## 개발 전용 훅 (4종) — dev 템플릿 (react-spa·nextjs·rust-axum·java·unity·health·dream-interpretation·fortune-app·python-fastapi)
+## 개발 전용 훅 (4종, `--legacy` 프로파일은 3종) — dev 템플릿 (react-spa·nextjs·rust-axum·java·unity·health·dream-interpretation·fortune-app·python-fastapi)
+
+> **`--legacy` 프로파일 예외**: tdd-guard.js는 레거시 프로파일에서 복사·배선되지 않는다(레거시 코드베이스는 기존 테스트 커버리지가 불완전해 "소스 수정 시 대응 테스트 파일 필수" 차단이 오탐을 유발하기 때문). `--legacy` 선택 시 개발 전용 훅은 3종(test-fake-guard·adversarial-test-guard·fake-impl-guard)만 설치된다.
 
 | 훅 | 이벤트 | 설명 | 테스트 |
 |----|--------|------|:---:|
-| [tdd-guard.js](../../.claude/hooks/tdd-guard.js) | PostToolUse Write/Edit | 소스 파일 수정 시 대응 테스트 파일 존재 여부 검사 — 없으면 차단 (hooks/commands/scripts/ 제외) | ✅ |
+| [tdd-guard.js](../../.claude/hooks/tdd-guard.js) | PostToolUse Write/Edit | 소스 파일 수정 시 대응 테스트 파일 존재 여부 검사 — 없으면 차단 (hooks/commands/scripts/ 제외). **`--legacy` 프로파일 제외** | ✅ |
 | [test-fake-guard.js](../../.claude/hooks/test-fake-guard.js) | PreToolUse Bash | echo/printf/true로 테스트 결과를 흉내내는 가짜 테스트 실행 차단 | ✅ |
 | [adversarial-test-guard.js](../../.claude/hooks/adversarial-test-guard.js) | PostToolUse Write/Edit | 테스트 파일이 정상 흐름만 담고 악성 유저 방어·이상 경로를 누락하면 차단 — 테스트 2케이스↑ & 적대적 커버리지(에러/보안/경계) 2카테고리↓, RED 초기 1케이스·waiver 예외 | ✅ |
 | [fake-impl-guard.js](../../.claude/hooks/fake-impl-guard.js) | PostToolUse Write/Edit | 파라미터를 무시하고 테스트 기대 리터럴(문자열/숫자)을 그대로 return하는 가짜 구현 차단 — boolean·상수 getter·waiver 제외 | ✅ |
@@ -76,7 +78,7 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 24종 = 실행 �
 
 | 훅 | 이벤트 | 설명 | 테스트 |
 |----|--------|------|:---:|
-| [codex-review-guard.js](../../.claude/hooks/codex-review-guard.js) | Stop | 미커밋 코드 변경 감지 시 Codex 적대적 리뷰 3라운드 강제 — 로그인 미완료 시 로그인 선행 요구 | ✅ |
+| [codex-review-guard.js](../../.claude/hooks/codex-review-guard.js) | Stop | 미커밋 코드 변경 감지 시 Codex 적대적 리뷰 3라운드 강제 — 로그인 미완료 시 로그인 선행 요구 + 계정·모델 조합이 400 등으로 사용 불가한 환경 오류는 `.claude/.codex-unavailable` 마커(config.toml 해시 + codex 버전 기록)로 감지해 config·버전이 그대로인 동안만 세션당 1회 안내 후 통과(변경 시 마커 자동 무효화) | ✅ |
 
 ---
 

@@ -2,7 +2,7 @@
 skill: python-embeddings-vector-db
 category: backend
 version: v1
-date: 2026-05-15
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -14,8 +14,8 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `python-embeddings-vector-db` |
 | 스킬 경로 | `.claude/skills/backend/python-embeddings-vector-db/SKILL.md` |
-| 검증일 | 2026-05-15 |
-| 검증자 | skill-creator |
+| 검증일 | 2026-09-26 (최초 2026-05-15) |
+| 검증자 | skill-creator → 2026-09-26 재검증: 메인 오케스트레이션 (Claude Sonnet 5) |
 | 스킬 버전 | v1 |
 
 ---
@@ -110,13 +110,66 @@ UNVERIFIED: 0
 
 ### 4-5. Claude Code 에이전트 활용 테스트
 
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-15 초회 수행, 2026-06-19 2차 수행)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-05-15 4/4 PASS, 2026-06-19 2/2 PASS)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-15 초회 수행, 2026-06-19 2차 수행, 2026-09-28 3차 재테스트)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-05-15 4/4 PASS, 2026-06-19 2/2 PASS, 2026-09-28 2/2 PASS)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 — gap 없음, 보완 불필요
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### 3차 재테스트 (2026-09-28)
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (2개 병렬 호출)
+**수행 방법**: SKILL.md Read 후 2개 실전 질문 답변, 근거 섹션·anti-pattern 회피 확인. 2026-09-26 재검증에서 정정된 부분(pgvector 0.8.2→0.8.6)을 겨냥한 질문 포함
+
+**Q1. "새 프로젝트에 pgvector 도입 시 기준 버전 + HNSW SQL 문법이 최신에서도 유효한가?"**
+- ✅ PASS
+- 근거: SKILL.md 상단 "기준 버전" 표기(24행, pgvector 0.8.6) + "2-4. pgvector" 섹션(159-190행)
+- 상세: 정정된 0.8.6 버전과 HNSW 인덱스 SQL·연산자 표(`<->`/`<=>`/`<#>`)가 모두 유효하다고 정확히 답변됨. 정정 전후 내용 모순 없음.
+
+**Q2. "다른 임베딩 모델로 잘못 추가된 문서 문제 + 메타 필터 0건 흔한 원인"**
+- ✅ PASS
+- 근거: SKILL.md "9. 흔한 함정" 표(441-455행) + "6-3. 메타 필터 누락 함정"(328-332행)
+- 상세: 모델 불일치·차원 불일치 문제와 예방(컬렉션 메타 기록)·복구(전체 재임베딩), 메타 필터 타입 불일치 원인이 모두 근거와 함께 정확히 답변됨.
+
+### 발견된 gap (2026-09-28)
+
+- (경미) 모델이 섞여버린 후 어떤 문서가 다른 모델로 들어갔는지 식별·부분 롤백하는 구체적 절차는 SKILL.md에 없음(전체 재임베딩만 언급) — 선택 보강, 차단 요인 아님
+
+### 판정 (2026-09-28)
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 라이브러리 사용법 + API 패턴 (실사용 필수 카테고리 아님)
+- 최종 상태: APPROVED
+
+---
+
+### 재검증 (2026-09-26)
+
+**수행일**: 2026-09-26
+**수행자**: 메인 대화 오케스트레이션 (Claude Sonnet 5) — verification-policy.md 재검증 절차
+**수행 방법**: SKILL.md 전체 Read → WebSearch로 핵심 클레임 재대조 → 실전 질문 2개 자체 답변
+
+**재검증한 핵심 클레임**
+- chromadb 1.5.9가 2026-09 시점도 최신 — 재확인, 변동 없음 (VERIFIED, PyPI 공식)
+- "pgvector 0.8.2" → **DISPUTED, 수정 반영**: 최신은 0.8.6(2026-07-29). 연산자(`<->`/`<=>`/`<#>`)·HNSW 옵션은 0.8.x 내에서 변동 없어 본문 코드는 그대로 유효, 기준 버전 표기만 갱신 (VERIFIED, PostgreSQL 공식 뉴스 + GitHub releases)
+- "OpenAI text-embedding-4" 존재 주장 — WebSearch에서 cloudprice.net 등 신뢰도 낮은 출처(⭐⭐ 미만)로만 발견, OpenAI 공식 문서 접근 실패(403) → **UNVERIFIED, 반영하지 않음**. info-verification.md 기준상 저신뢰 단일 출처는 추가 금지
+
+**Q1. "지금(2026-09) pgvector 최신 버전이 몇이고, 이 스킬의 SQL 예시가 여전히 유효한가?"**
+- PASS
+- 근거: SKILL.md 갱신된 "기준 버전" 표기(pgvector 0.8.6) + 섹션 2-4 SQL 예시(연산자·HNSW 인덱스)는 0.8.x 전반에서 동일 동작.
+
+**Q2. "OpenAI에 text-embedding-4라는 새 모델이 나왔다는데 이 스킬에 반영해야 하나?"**
+- PASS (반영 보류가 올바른 판단)
+- 근거: 공식 소스(OpenAI 문서)로 확인 불가, 저신뢰 출처 1곳만 존재 → info-verification.md 기준상 미검증 상태로 스킬에 반영하지 않는 것이 맞는 판단. SKILL.md는 검증된 text-embedding-3 계열만 유지.
+
+**판정**: pgvector 버전 정정 → 내용 변경 있음 → status `PENDING_TEST`로 되돌림 (2026-06-19 APPROVED 상태에서 재하향).
+
+---
+
+### 2차 테스트 (2026-06-19, 참고 보존)
 
 **수행일**: 2026-06-19
 **수행자**: skill-tester → general-purpose
@@ -248,15 +301,15 @@ Chroma에서 user_id로 필터링하면서 코사인 유사도 top-5를 가져�
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-05-15 4/4 PASS + 2026-06-19 2/2 PASS) |
-| **최종 판정** | **APPROVED** (라이브러리 사용법 + API 패턴 — content test PASS = APPROVED 가능. 2026-06-19 사용자 요청으로 전환) |
+| 에이전트 활용 테스트 | ✅ (2026-05-15 4/4 PASS + 2026-06-19 2/2 PASS + 2026-09-26 재검증 2/2 PASS + 2026-09-28 재테스트 2/2 PASS) |
+| **최종 판정** | **APPROVED** (2026-09-28 재테스트: pgvector 0.8.6 정정 내용이 정확히 답변에 반영됨 확인 — 2/2 PASS) |
 
 ---
 
 ## 7. 개선 필요 사항
 
-- [✅] skill-tester content test 수행 및 섹션 5·6 업데이트 (2026-05-15 1차 4/4 PASS, 2026-06-19 2차 2/2 PASS)
-- [✅] PENDING_TEST → APPROVED 전환 (2026-06-19 완료, 사용자 요청)
+- [✅] skill-tester content test 수행 및 섹션 5·6 업데이트 (2026-05-15 1차 4/4 PASS, 2026-06-19 2차 2/2 PASS, 2026-09-28 3차 재테스트 2/2 PASS)
+- [✅] PENDING_TEST → APPROVED 전환 (2026-06-19 완료, 사용자 요청; 2026-09-26 pgvector 버전 정정으로 재하향 후 2026-09-28 재테스트로 재전환)
 - [❌] (조건부) Chroma 1.6+ 릴리즈 시 multimodal/regex 키워드 검색 섹션 보강 — 차단 요인 아님, 선택 보강
 - [❌] (조건부) sentence-transformers v5.x에서 새로 도입된 sparse encoder 패턴 추가 검토 — 차단 요인 아님, 선택 보강
 - [❌] (조건부) pgvector 0.9+ 릴리즈 시 인덱스 옵션 업데이트 — 차단 요인 아님, 릴리즈 후 갱신
@@ -271,3 +324,6 @@ Chroma에서 user_id로 필터링하면서 코사인 유사도 top-5를 가져�
 | 2026-05-15 | v1 | 최초 작성 — 임베딩 모델·Vector DB·메트릭·인덱스·청킹·메타 필터·비용·반복 꿈 감지 예시 + anti-pattern 10건 | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 정규화 cosine=dot 등가성 / Q2 OpenAI Matryoshka 1536dim / Q3 ko-sbert-multitask 768dim KorSTS / Q4 Chroma vs pgvector 선택) → 4/4 PASS, PENDING_TEST 유지 (사용자 명시 요청) | skill-tester |
 | 2026-06-19 | v1 | 2단계 실사용 테스트 2차 수행 (Q1 한국어 단문 1만건 모델+DB 선택+코드 스켈레톤 / Q2 Chroma 복합 필터+distance→similarity 변환+메타 필터 함정) → 2/2 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-25 | v1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |
+| 2026-09-26 | v1 | 재검증 — pgvector 기준 버전 0.8.2→0.8.6 정정(연산자·API 변동 없음), OpenAI text-embedding-4 관련 저신뢰 출처는 미반영 처리 → PENDING_TEST | 메인 오케스트레이션 (Claude Sonnet 5) |
+| 2026-09-28 | v1 | 3차 재테스트 수행 (Q1 pgvector 0.8.6 기준 버전 + SQL 유효성 / Q2 모델 불일치 함정 + 메타 필터 0건 원인) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |

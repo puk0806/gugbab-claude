@@ -26,14 +26,13 @@ await client.messages.create({
 - output: 변동 없음
 
 **최소 캐시 크기 (이하면 캐시 안 됨, 에러 없이 silently 무시):**
-- **512 tokens — Fable 5.1 / Fable 5 / Opus 5**
-- 주의: 미확인 — Opus 5.5는 공식 캐싱 표에 아직 별도 기재 없음(2026-09-25). 인용 전 공식 문서 확인
+- **512 tokens — Opus 5.5 / Fable 5.1 / Opus 5 / Fable 5** (공식 prompt-caching 문서 확인, 2026-09-28 — 이전 버전의 "Opus 5.5 미확인" 표기 정정)
 - 1,024 tokens — Opus 4.8 / Sonnet 5 / Sonnet 4.6 / Sonnet 4.5
 - 2,048 tokens — Opus 4.7
 - 4,096 tokens — Opus 4.6 / 4.5 / Haiku 4.5
 
 > 주의: 세대가 올라간다고 임계값이 낮아지지만은 않는다(Opus 4.6 4,096 → 4.7 2,048 →
-> 4.8 1,024 → Opus 5 512). 모델을 바꾸면 캐시 임계값을 다시 확인한다.
+> 4.8 1,024 → Opus 5 512, Opus 5.5도 동일 512). 모델을 바꾸면 캐시 임계값을 다시 확인한다.
 > Opus 4.8 → Opus 5 전환 시 임계값이 절반(1,024 → 512)이 되므로, 기존에 "너무 짧다"고
 > 판단해 캐시를 포기했던 system 블록이 코드 변경 없이 캐시될 수 있다.
 
@@ -137,7 +136,7 @@ async function retryWithBackoff<T>(
 
 ---
 
-## 9. 짝 스킬과의 연계
+## 9. 짝 스킬과의 연계 (설치된 경우 참조)
 
 - `frontend/chat-ui-pattern` — 메시지 리스트 렌더링·자동 스크롤·virtuoso는 이쪽 스킬에서 다룬다. 본 스킬은 *데이터 흐름*에만 집중
 - `meta/dream-interpretation-prompt-engineering` — system 프롬프트 설계(역할·예시·제약). 캐시 가능한 큰 system 블록은 거기서 설계 후 본 스킬의 캐싱 패턴에 투입

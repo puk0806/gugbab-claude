@@ -54,14 +54,14 @@ React SPA + TypeScript 프론트엔드 프로젝트. 백엔드·게임·학술 �
 
 | 카테고리 | 종류 | 링크 |
 |----------|------|------|
-| frontend (44종 / SEO y 시 추가) | 프레임워크·상태관리·UI·빌드·테스트·성능·LLM (SEO·GEO 는 옵트인) | [→ 목록](../skills/frontend/README.md) |
+| frontend (38종 / SEO y 시 추가) | 프레임워크·상태관리·UI·빌드·테스트·성능·LLM (SEO·GEO 는 옵트인) | [→ 목록](../skills/frontend/README.md) |
 | backend (6종) | claude-code-headless (Claude 구독 중계 연동용 예외) + TS 백엔드 5종 — hono-api-patterns·prisma-orm·zod-schema-validation·better-auth·drizzle-neon-postgres (짝 에이전트 typescript-backend-* 소유, 2026-09-25 신설) | [→ 목록](../skills/backend/README.md) |
 | devops (4종 / SEO y 시 5종) | docker-deployment·github-actions·github-actions-visual-regression·vercel-sandbox (+ site-migration-seo 는 옵트인) | [→ 목록](../skills/devops/README.md) |
 | architecture (4종) | ddd·frontend-domain-structure·incremental-refactoring·module-boundaries | [→ 목록](../skills/architecture/README.md) |
-| meta (3종) | ralph-loop·riper-workflow·claude-code-hook-authoring | [→ 목록](../skills/meta/README.md) |
+| meta (1종) | claude-code-hook-authoring | [→ 목록](../skills/meta/README.md) |
 | writing (0종 / SEO y 시 4종) | SEO 콘텐츠 품질 — content-eeat-quality·ymyl·multilingual·accessibility-vpat (옵트인) | [→ 목록](../skills/writing/README.md) |
 
-총 **61종** (SEO n·기본 옵션, 2026-09-25 실측). 이전 표(81종 단일 행)는 SEO 옵트인 도입(2026-09-11) 전 값이었다.
+총 **55종** (SEO n·기본 옵션, 2026-09-26 실측 — frontend 스킬 정리 반영, 이전 2026-09-25 실측 61종). 이전 표(81종 단일 행)는 SEO 옵트인 도입(2026-09-11) 전 값이었다.
 
 ---
 
@@ -79,12 +79,12 @@ React SPA + TypeScript 프론트엔드 프로젝트. 백엔드·게임·학술 �
 | [session-start.js](../../.claude/hooks/session-start.js) | SessionStart | 세션 시작 시 브랜치·미커밋 파일·최근 커밋 요약 출력 |
 | [session-export.js](../../.claude/hooks/session-export.js) | Stop | 세션 대화 요약을 로컬 exports에 기록 |
 | [cc-notify.js](../../.claude/hooks/cc-notify.js) | Stop | 작업 완료 시 macOS 데스크탑 알림 |
-| [instructions-loaded.js](../../.claude/hooks/instructions-loaded.js) | InstructionsLoaded | CLAUDE.md 로드 완료 시 규칙 요약 출력 |
+| [instructions-loaded.js](../../.claude/hooks/instructions-loaded.js) | SessionStart | CLAUDE.md 로드 완료 시 규칙 요약 출력 |
 | [deliverable-guard.js](../../.claude/hooks/deliverable-guard.js) | PostToolUse Write/Edit · PreToolUse Bash · Stop | 산출물 완결성 — 세션 수정 파일 추적 + README 동기화 검사 + PENDING_TEST 스킬 테스트 미수행 차단 |
 | [skill-md-guard.js](../../.claude/hooks/skill-md-guard.js) | PostToolUse Write | SKILL.md 소스 URL·검증일·필수 섹션 검증 |
 | [agent-md-guard.js](../../.claude/hooks/agent-md-guard.js) | PostToolUse Write | 에이전트 .md name·description·tools·model·example 형식 검증 |
 | [verification-guard.js](../../.claude/hooks/verification-guard.js) | PostToolUse Write | verification.md 필수 섹션 확인, UNVERIFIED 상태 차단 |
-| [staleness-check.js](../../.claude/hooks/staleness-check.js) | InstructionsLoaded | 스킬 검증일 경과 감지 — 30~59일 경고, 60일+ 재검증 강제 |
+| [staleness-check.js](../../.claude/hooks/staleness-check.js) | SessionStart | 스킬 검증일 경과 감지 — 30~59일 경고, 60일+ 재검증 강제 |
 | [statusline.sh](../../.claude/hooks/statusline.sh) | statusLine | 상태 바 — 브랜치·미커밋 수·PENDING_TEST 스킬 수 표시 |
 
 ### 개발 전용 (4종)

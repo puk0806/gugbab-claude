@@ -2,7 +2,7 @@
 skill: ai-game-asset-pipeline
 category: game
 version: v1
-date: 2026-06-07
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -18,7 +18,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `ai-game-asset-pipeline` |
 | 스킬 경로 | `.claude/skills/game/ai-game-asset-pipeline/SKILL.md` |
-| 검증일 | 2026-06-07 |
+| 검증일 | 2026-09-26 (최초 2026-06-07) |
 | 검증자 | skill-creator (Claude Code) |
 | 스킬 버전 | v1 |
 
@@ -140,6 +140,25 @@ status: APPROVED
 
 없음. 3개 질문 모두 SKILL.md 내 근거가 충분했으며 답변 품질에 gap 없음.
 
+### 2026-09-26 재검증
+
+**수행일**: 2026-09-26
+**수행 방법**: WebSearch로 핵심 클레임 3개 공식/신뢰 소스 대조 + SKILL.md 자체 답변 확인 질문 2개
+
+- 클레임1. Midjourney 요금제(Basic $10/Standard $30/Pro $60/Mega $120, 연 20% 할인, $1M 매출 시 Pro·Mega 필수) — WebSearch 교차 검증 → **VERIFIED** (변동 없음)
+- 클레임2. Leonardo.ai 요금제(Apprentice $12/Artisan $30/Maestro $60) — WebSearch 교차 검증 → **VERIFIED** (변동 없음)
+- 클레임3. Scenario.gg 요금제(Starter $15/Pro $45/Max $75) + Unity ASTC 권장 블록 사이즈(6×6 균형점) — WebSearch 교차 검증 → **VERIFIED** (변동 없음)
+
+**Q1(재검증). "회사 매출이 $1M을 막 넘긴 스타트업이 Midjourney Basic으로 상업 작업 중인데 문제 없나?"**
+- SKILL.md 답변 경로: 8.1절 "회사 직전 회계연도 매출 $1M USD 이상이면 Pro($60/월) 또는 Mega($120/월) 필수" — Basic 유지 시 라이선스 위반, Pro 이상 업그레이드 필요
+- 판정: PASS (2026-09-26 WebSearch로 $1M 임계·Pro/Mega 요구 재확인, SKILL.md 내용과 일치)
+
+**Q2(재검증). "모바일 타깃으로 일반 캐릭터·배경 스프라이트의 ASTC 압축 포맷을 뭘로 잡아야 하나?"**
+- SKILL.md 답변 경로: 6.4절 표 — "ASTC 6×6, 3.56 bpp, 균형점, 일반 캐릭터·배경(모바일 기본)"
+- 판정: PASS (2026-09-26 WebSearch로 "ASTC 6×6 for most gameplay sprites" 재확인, SKILL.md 권장과 일치)
+
+재검증 결과 내용 변경 없음 — SKILL.md 본문 수정 없이 검증일만 갱신.
+
 ### 판정
 
 - agent content test: 3/3 PASS
@@ -175,3 +194,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-06-07 | v1 | 최초 작성. 5단계 워크플로우 (조사 16건 + 교차 검증 3건) 수행 후 SKILL.md/verification.md 동시 생성. Scenario "Creator" → 공식 "Starter/Pro/Max" 보정 | skill-creator |
 | 2026-06-07 | v1 | 2단계 실사용 테스트 수행 (Q1 Unity 임포트 설정 전체 / Q2 Midjourney 라이선스 함정 / Q3 Leonardo.ai 스타일 일관성 전략) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-26 | v1 | 재검증(98개 일괄 재검증 대상). 핵심 클레임 3개(Midjourney·Leonardo.ai·Scenario.gg 요금제, Unity ASTC 권장값) WebSearch 재확인 → 전부 VERIFIED, 변동 없음. SKILL.md 본문 수정 없이 검증일만 갱신 | Claude Code |

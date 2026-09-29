@@ -13,7 +13,7 @@ disable-model-invocation: true
 > - John Mueller — redirect chain hops 권장: https://www.searchenginejournal.com/googles-john-mueller-recommends-less-than-5-hops-per-redirect-chain/344664/
 > - John Mueller — staggered migration 경고 (2025-12): https://www.searchenginejournal.com/google-staggered-site-migrations/563346/
 >
-> 검증일: 2026-06-02
+> 검증일: 2026-09-28 (최초 2026-06-02, 2026-09-28 재검증 — GSC International Targeting 보고서 완전 폐지 반영, Change of Address 도메인 변형 전체 등록 권장사항 추가)
 
 이 스킬은 사이트 이전 *전체 라이프사이클*(준비 → D-Day → 회복)을 다룬다. 301 redirect 문법·canonical 헤더 등 *구체 구현*은 [[url-canonicalization-redirects]] 스킬에 위임한다.
 
@@ -175,13 +175,15 @@ old.com/a → new.com/posts/a
 
 도메인 변경에 한해 다음 절차를 수행한다.
 
-1. 신·구 도메인 *모두* GSC에 등록 + 소유권 확인
+1. 신·구 도메인 *모두* GSC에 등록 + 소유권 확인 — **구 도메인의 www/non-www·서브도메인 변형(예: `example.com`, `www.example.com`, `en.example.com`)까지 전부 검증**해 둔다 (2026 Google 공식 가이드 갱신: 현재 사용하지 않는 변형도 포함)
 2. 동일한 Google 계정으로 두 속성 관리
 3. 구 도메인 속성 > 설정 > "주소 변경" 도구 진입
 4. 신 도메인 선택, 301 redirect·HTTPS 정상 작동 자동 점검
-5. 신청 후 **180일간** 신호 이전 + 알림 표시
+5. **검증된 구 도메인 변형마다 개별적으로 Change of Address 제출** (예: `example.com`→신도메인, `www.example.com`→신도메인 각각)
+6. 신청 후 **180일간** 신호 이전 + 알림 표시 (180일 후에는 Google이 신·구 사이트 간 관계를 인식하지 않음)
 
 > **주의**: Change of Address는 *도메인 수준 속성*에만 적용. URL 접두사 속성(`http://example.com/petstore/`)에는 불가.
+> **주의 (2026 갱신)**: 서브도메인·www/non-www 변형을 빠뜨리면 그 변형으로 유입되는 신호가 이전되지 않는다 — Search Console 공식 문서가 "적극적으로 사용하지 않는 변형도 포함해 전부 제출" 하도록 명시.
 
 ---
 
@@ -231,7 +233,7 @@ old.com/a → new.com/posts/a
 - 신 사이트의 hreflang이 *신 URL* 기준으로 모두 일관성 있게 cross-reference (return tag 양방향)
 - ISO 639-1 언어 코드 + ISO 3166-1 Alpha-2 지역 코드 정확히 사용
 - `x-default` hreflang 설정 유지 또는 의도적으로 변경
-- GSC > Legacy tools > International Targeting 보고서로 에러 모니터링 (현재 GSC 신버전에서는 일부 기능 deprecated 가능, WebSearch로 최신 상태 확인 권장)
+- GSC의 **International Targeting 보고서는 2022-09-22 완전 폐지되어 더 이상 존재하지 않는다** (Google 공식: "little value for the ecosystem"). hreflang 에러는 GSC 내장 보고서로 확인할 수 없으므로 Screaming Frog·Ahrefs 등 외부 크롤러 또는 sitemap/hreflang 검증 전용 도구로 모니터링한다. 국가 타겟팅도 이제 수동 설정 불가 — ccTLD·hreflang·서버 위치·본문 콘텐츠 신호로 Google이 자동 판단
 
 다국어 sitemap은 *언어별 분리* 또는 *통합* 둘 다 가능. 이전 시 기존 구조를 유지하는 것이 변수를 줄인다.
 

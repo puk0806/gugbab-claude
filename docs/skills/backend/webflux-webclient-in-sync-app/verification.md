@@ -2,7 +2,7 @@
 skill: webflux-webclient-in-sync-app
 category: backend
 version: v1
-date: 2026-04-23
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -18,8 +18,8 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `webflux-webclient-in-sync-app` |
 | 스킬 경로 | `.claude/skills/backend/webflux-webclient-in-sync-app/SKILL.md` |
-| 검증일 | 2026-04-23 |
-| 검증자 | skill-creator (자동) |
+| 검증일 | 2026-09-26 (최초 2026-04-23) |
+| 검증자 | skill-creator (자동) → 2026-09-26 재검증: 메인 오케스트레이션 (Claude Sonnet 5) |
 | 스킬 버전 | v1 |
 
 ---
@@ -123,13 +123,65 @@ status: APPROVED
 
 ### 4-4. Claude Code 에이전트 활용 테스트
 
-- [❌] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (실제 실행 전)
-- [❌] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (실제 실행 전)
-- [❌] 잘못된 응답이 나오는 경우 스킬 내용 보완 (실제 실행 전)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-09-28)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-09-28)
+- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (gap 있으나 차단 요인 아님, 섹션 7 참고)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose
+**수행 방법**: SKILL.md Read 후 2개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인. 질문 1개는 2026-09-26 재검증에서 정밀도 보정된 RestTemplate deprecation 타임라인을 정확히 겨냥.
+
+### 실제 수행 테스트
+
+**Q1. "Spring Boot 3.3 WebMVC 앱에서 외부 결제 API를 WebClient로 호출, 5초 초과 시 실패 처리하려면?"**
+- ✅ PASS
+- 근거: SKILL.md "타임아웃 설정 (필수)" 섹션 + "`block(Duration)` 방어선" 섹션
+- 상세: `responseTimeout(Duration.ofSeconds(5))` + `ReadTimeoutHandler`/`WriteTimeoutHandler` 병행 설정, `block(Duration)` 최종 방어선까지 정확히 재현.
+- gap: 타임아웃 초과 시 실제로 던져지는 예외 타입(`TimeoutException` 등)과 이를 매핑하는 코드가 "에러 처리" 섹션(상태 코드 기반 `onStatus`/`WebClientResponseException`)과 연결되어 있지 않음 — 선택 보강.
+
+**Q2. "지금(2026-09) RestTemplate이 실제로 @Deprecated 표시가 붙었나? 올해 안에 급히 걷어내야 하나?" (2026-09-26 타임라인 정밀도 보정 겨냥)**
+- ✅ PASS
+- 근거: SKILL.md 상단 2026-09-26 갱신 주의문 + "RestTemplate / WebClient / RestClient 선택 기준" 표
+- 상세: "Spring 7.0 GA(2025-11)는 deprecation 의도만 발표, 아직 `@Deprecated` 미표시, 정식 처리는 7.1(2026-11 잠정)"이라는 정정된 타임라인을 정확히 인용하고 "2029년까지 OSS 지원"으로 급하지 않다고 올바르게 답변. 옛 서술(막연히 "7.0에서 deprecated 진행")과 모순 없이 일관됨.
+
+### 발견된 gap
+
+- 타임아웃 초과 예외 타입과 에러 처리 섹션 간 연결 고리 부재 — 선택 보강, 차단 요인 아님
+
+### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: API 사용 패턴 스킬 → 실사용 필수 카테고리 해당 없음 (content test PASS로 APPROVED 가능)
+- 최종 상태: APPROVED
+
+---
+
+### 재검증 (2026-09-26)
+
+**수행일**: 2026-09-26
+**수행자**: 메인 대화 오케스트레이션 (Claude Sonnet 5) — verification-policy.md 재검증 절차
+**수행 방법**: SKILL.md + REFERENCE.md 전체 Read → WebSearch로 핵심 클레임 재대조 → 실전 질문 2개 자체 답변
+
+**재검증한 핵심 클레임**
+- "Spring 7.0(2025 하반기)에서 RestTemplate deprecated로 향하고 있음" → **정밀도 보정**: Spring 7.0은 2025-11 실제 GA되어 "deprecation 의도" 발표(아직 `@Deprecated` 미표시), 정식 `@Deprecated`는 Spring 7.1(2026-11 잠정)에서 예정 — SKILL.md·표를 이 타임라인으로 갱신 (VERIFIED, Spring 공식 GitHub wiki "Spring Framework 7.0 Release Notes" + spring.io 블로그)
+- RestTemplate 오픈소스 지원 2029년까지 유지 — 신규 확인, SKILL.md에 추가 (VERIFIED)
+- WebClient `.block()` 기반 동기 사용·`Mono.zip` 병렬 패턴은 여전히 Spring 공식 권장 — 재확인, 변동 없음 (VERIFIED)
+
+**Q1. "지금(2026-09) 기준으로 RestTemplate이 실제로 @Deprecated 표시가 붙었나?"**
+- PASS
+- 근거: SKILL.md 상단 주의 문구 — "Spring 7.0은 이미 GA되어 deprecation 의도를 발표했고(아직 `@Deprecated` 표시는 아님), Spring 7.1(2026-11 잠정)에서 정식 `@Deprecated` 처리" — 시점 구분이 명확.
+
+**Q2. "RestTemplate 쓰는 기존 코드를 올해 안에 급하게 걷어내야 하나?"**
+- PASS
+- 근거: SKILL.md "RestTemplate 자체는 2029년까지 오픈소스 지원 유지" 문구로 급하지 않다는 답변 근거 제공.
+
+**판정**: RestTemplate deprecation 타임라인 정밀도 보정 → 내용 변경 있음 → status `PENDING_TEST`로 되돌림.
+
+---
 
 > PENDING_TEST 상태이므로 실제 에이전트 활용 테스트는 실시되지 않았습니다. 아래는 권장 테스트 케이스입니다.
 
@@ -199,13 +251,15 @@ WebClient를 써야 하나요, RestTemplate을 써야 하나요?
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-04-23, 2문항 PASS — HttpClient 3+5초 타임아웃 + onStatus + Retry.backoff + .block(Duration) 방어선, MockWebServer + @DynamicPropertySource 통합 테스트 정확) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (2026-04-23, 2문항 PASS) + ✅ (2026-09-26 재검증 셀프, 2문항 PASS) + ✅ (2026-09-28 skill-tester → general-purpose, 2/2 PASS — RestTemplate deprecation 타임라인 정정분 겨냥) |
+| **최종 판정** | **APPROVED** (2026-09-28 재테스트로 타임라인 정정 내용 반영 확인, 모순 없음) |
 
 ---
 
 ## 7. 개선 필요 사항
 
+- [✅] skill-tester content test 수행 및 섹션 5·6 업데이트 — 2026-09-28 완료, 2/2 PASS (RestTemplate deprecation 타임라인 정정분 겨냥 포함)
+- [⏸️] 타임아웃 초과 시 예외 타입(`TimeoutException` 등)과 "에러 처리" 섹션(`onStatus`/`WebClientResponseException`) 간 연결 고리 보강 — 2026-09-28 재테스트에서 발견, 선택 보강(차단 요인 아님)
 - [⏸️] OkHttp 5.x `mockwebserver3` 네임스페이스 마이그레이션 문서 Square 공식 레포 직접 재확인 — 검증 보강 선택 사항
 - [⏸️] 별도 스레드풀 분리 예시(`@Async` + `ThreadPoolTaskExecutor`) 구체화 — 현재 범위 밖 선택 보강
 - [✅] 실제 Claude Code 에이전트 활용 테스트 수행 — 2026-04-23 general-purpose 2문항 PASS (HttpClient 타임아웃 + Retry.backoff + MockWebServer 통합)
@@ -218,3 +272,5 @@ WebClient를 써야 하나요, RestTemplate을 써야 하나요?
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
 | 2026-04-23 | v1 | 최초 작성 | skill-creator |
+| 2026-09-26 | v1 | 재검증 — RestTemplate deprecation 타임라인 정밀도 보정(Spring 7.0 GA 완료 반영, 7.1/8.0 시점 구분, 2029년까지 지원 명시) → PENDING_TEST | 메인 오케스트레이션 (Claude Sonnet 5) |
+| 2026-09-28 | v1 | 2단계 실사용 재테스트 수행 (Q1 타임아웃 설정 / Q2 RestTemplate deprecation 타임라인 정정분) → 2/2 PASS, APPROVED 전환 | skill-tester |

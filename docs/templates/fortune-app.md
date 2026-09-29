@@ -66,16 +66,16 @@
 
 | 카테고리 | 종류 | 링크 |
 |----------|------|------|
-| frontend (54종 / SEO y 시 약 73종) | 프레임워크·상태관리·UI·빌드·테스트·성능·LLM 스트리밍·PWA (dream-* 전용 제외, SEO·GEO 19종은 옵트인 — 정적 HTML 전용 `seo-static-html` 은 스택 템플릿과 같이 제외) | [→ frontend 스킬 목록](../skills/frontend/README.md) |
+| frontend (51종 / SEO y 시 약 70종) | 프레임워크·상태관리·UI·빌드·테스트·성능·LLM 스트리밍·PWA (dream-* 전용 제외, SEO·GEO 19종은 옵트인 — 정적 HTML 전용 `seo-static-html` 은 스택 템플릿과 같이 제외) | [→ frontend 스킬 목록](../skills/frontend/README.md) |
 | backend — Python + TypeScript (15종) | Python 10종(FastAPI·Pydantic·LlamaIndex·Anthropic SDK 등) + TS 백엔드 5종 — hono-api-patterns·prisma-orm·zod-schema-validation·better-auth·drizzle-neon-postgres (짝 에이전트 typescript-backend-* 소유, 2026-09-25 신설 — 이전 표는 Python 10종만 계상하던 누락이었다) | [→ backend 스킬 목록](../skills/backend/README.md) |
 | devops (10종 / SEO y 시 11종) | docker-deployment·github-actions·github-actions-visual-regression·n8n 5종·vercel-sandbox·vercel-workflow (+ site-migration-seo 는 옵트인) — vercel-workflow 는 사용자별 지정 시각 Web Push 예약용 (2026-09-17, 이전 표는 vercel-workflow 반영 전 9종이었다) | [→ devops 스킬 목록](../skills/devops/README.md) |
 | architecture (4종) | DDD·프론트 도메인 구조·모듈 경계·점진 리팩터링 | [→ architecture 스킬 목록](../skills/architecture/README.md) |
 | writing (0종 / SEO y 시 4종) | SEO 콘텐츠 품질 (content-eeat-quality·ymyl·multilingual·accessibility-vpat) — 옵트인 | [→ writing 스킬 목록](../skills/writing/README.md) |
-| meta (3종) | ralph-loop·riper-workflow·claude-code-hook-authoring | [→ meta 스킬 목록](../skills/meta/README.md) |
+| meta (1종) | claude-code-hook-authoring | [→ meta 스킬 목록](../skills/meta/README.md) |
 
 > game·education·research·health 카테고리와 Java·Rust 백엔드, dream 전용 스킬(frontend `dream-*` 8종·meta 3종·`dream-journal-data-modeling`), humanities 공유 스킬(위기 자원 포함)은 제외된다.
 > **SEO·GEO 옵트인 (2026-09-11)**: react-spa·nextjs와 같은 질문(`y` 전체 / `c` 커머스 / `n` 제외, 엔터 = n)을 받는다. 이전에는 SEO 20종 + writing 4종이 무조건 포함돼 seo-geo(11) 병행 선택이 무의미했다. 캐주얼 앱이면 n.
-> 2026-09-25 실측(SEO n 기본 옵션): 스킬 96종(공유 86 + 운세 전용 10) · 에이전트 23종. SEO y 수치는 이전 표의 증분(+19 frontend·+4 writing·+1 devops)을 새 기준값에 반영한 추정치다.
+> 2026-09-26 실측(SEO n 기본 옵션): 스킬 89종(공유 79 + 운세 전용 10) · 에이전트 23종 — frontend 스킬 정리(제거 3·병합 4) 반영. SEO y 수치는 이전 표의 증분(+19 frontend·+4 writing·+1 devops)을 새 기준값에 반영한 추정치다.
 
 ---
 
@@ -91,12 +91,12 @@
 | [session-start.js](../../.claude/hooks/session-start.js) | SessionStart | 세션 시작 시 브랜치·미커밋 파일·최근 커밋 요약 출력 |
 | [session-export.js](../../.claude/hooks/session-export.js) | Stop | 세션 대화 요약을 로컬 exports에 기록 |
 | [cc-notify.js](../../.claude/hooks/cc-notify.js) | Stop | 작업 완료 시 macOS 데스크탑 알림 |
-| [instructions-loaded.js](../../.claude/hooks/instructions-loaded.js) | InstructionsLoaded | CLAUDE.md 로드 완료 시 규칙 요약 출력 |
+| [instructions-loaded.js](../../.claude/hooks/instructions-loaded.js) | SessionStart | CLAUDE.md 로드 완료 시 규칙 요약 출력 |
 | [deliverable-guard.js](../../.claude/hooks/deliverable-guard.js) | PostToolUse Write/Edit · PreToolUse Bash · Stop | 산출물 완결성 — 세션 수정 파일 추적 + README 동기화 검사 + PENDING_TEST 스킬 테스트 미수행 차단 |
 | [skill-md-guard.js](../../.claude/hooks/skill-md-guard.js) | PreToolUse Write | SKILL.md 소스 URL·검증일·필수 섹션 검증 |
 | [agent-md-guard.js](../../.claude/hooks/agent-md-guard.js) | PreToolUse Write | 에이전트 .md name·description·tools·model·example 형식 검증 |
 | [verification-guard.js](../../.claude/hooks/verification-guard.js) | PreToolUse Write | verification.md 필수 섹션 확인, UNVERIFIED 상태 차단 |
-| [staleness-check.js](../../.claude/hooks/staleness-check.js) | InstructionsLoaded | 스킬 검증일 경과 감지 — 30~59일 경고, 60일+ 재검증 강제 |
+| [staleness-check.js](../../.claude/hooks/staleness-check.js) | SessionStart | 스킬 검증일 경과 감지 — 30~59일 경고, 60일+ 재검증 강제 |
 | [statusline.sh](../../.claude/hooks/statusline.sh) | statusLine | 상태 바 — 브랜치·미커밋 수·PENDING_TEST 스킬 수 표시 |
 | [tdd-guard.js](../../.claude/hooks/tdd-guard.js) | PostToolUse Write/Edit | 소스 파일 수정 시 대응 테스트 파일 존재 여부 검사 — 없으면 차단 |
 | [test-fake-guard.js](../../.claude/hooks/test-fake-guard.js) | PreToolUse Bash / PostToolUse Write | 가짜 테스트 패턴 탐지·차단 |

@@ -70,7 +70,7 @@ git log를 분석해 CHANGELOG.md를 작성·업데이트하는 에이전트다.
 - 슬래시 커맨드 7종 추가 (/commit, /create-pr, /context-prime 등)
 - 훅 4종 추가 (tdd-guard, typescript-quality, parry, cc-notify)
 - 에이전트 3종 추가 (spec-writer, pr-reviewer, changelog-writer)
-- riper-workflow 스킬 추가
+- 스킬 2종 추가 (tanstack-query, nextjs)
 
 ### Changed
 - settings.json 훅 등록 업데이트

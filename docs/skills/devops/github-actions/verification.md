@@ -1,8 +1,8 @@
 ---
 skill: github-actions
 category: devops
-version: v1.2
-date: 2026-08-11
+version: v1.3
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -52,9 +52,9 @@ status: APPROVED
 | 스킬 이름 | `github-actions` |
 | 스킬 경로 | `.claude/skills/devops/github-actions/SKILL.md` |
 | 최초 검증일 | 2026-04-20 |
-| 최종 재검증일 | 2026-08-11 (액션 메이저 버전·checkout v7 보안 기본값 반영) |
-| 검증자 | Claude (Opus 4.6 최초 / Opus 5 재검증) |
-| 스킬 버전 | v1.2 |
+| 최종 재검증일 | 2026-09-28 (08-11 액션 메이저 버전·checkout v7 보안 기본값 반영 → 09-28 docker/*·aws-actions 메이저 태그 정정) |
+| 검증자 | Claude (Opus 4.6 최초 / Opus 5 → Sonnet 5 재검증) |
+| 스킬 버전 | v1.3 |
 
 ---
 
@@ -185,13 +185,44 @@ DISPUTED / UNVERIFIED 항목: 없음.
 - [✅] 범용적으로 사용 가능 (특정 프로젝트 종속 X)
 
 ### 4-4. Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인
-- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-04-20 3회 / 2026-08-11 회귀 4회 / 2026-09-28 재검증 정정분 2회)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-09-28: general-purpose 2/2 근거 줄번호 정확 인용)
+- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (FAIL 없음)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-09-28 (재테스트)
+**수행자**: skill-tester → general-purpose (2회 병렬 호출, devops-engineer 미등록으로 대체)
+**수행 방법**: 2026-09-28 재검증(2차)에서 정정된 docker/*·aws-actions 메이저 태그(v3→v4, v5→v6, v6→v7, v4→v6, Node 24 런타임 전환)를 겨냥해 SKILL.md + REFERENCE.md Read 후 실전 질문 2개 답변, 근거 줄번호 확인
+
+### 실제 수행 테스트 (재테스트)
+
+**Q1. GHCR Docker 빌드 워크플로우에서 `docker/login-action@v3`·`metadata-action@v5`·`build-push-action@v6`를 그대로 써도 되는지, Node 24 런타임 전환의 의미**
+- ✅ PASS
+- 근거: SKILL.md 상단 "주의" 박스(16-23행), REFERENCE.md "Docker 빌드 + GHCR 푸시" 예제(40-93행)
+- 상세: v4/v6/v7로 올려야 함을 정확히 지적했고, Node 24 런타임 전환이 핵심이며 표준 입력(`registry`/`images`/`tags`/`context` 등)은 무변경이라는 점, 셀프호스트 러너는 Actions Runner v2.327.1 이상 필요, `build-push-action` v7에서 `DOCKER_BUILD_NO_SUMMARY`/`DOCKER_BUILD_EXPORT_RETENTION_DAYS` 환경변수 제거를 정확히 인용.
+
+**Q2. `aws-actions/configure-aws-credentials@v4` deprecation 경고 — 올릴 버전과 입력 파라미터 변경 여부, 셀프호스트 러너 주의사항**
+- ✅ PASS
+- 근거: SKILL.md 상단 "주의" 박스(17행, 21행, 23행), REFERENCE.md AWS ECR+ECS 예제(163-166행)
+- 상세: v6로 올려야 하고 `role-to-assume`/`aws-region` 입력은 그대로 유지된다는 점, 셀프호스트 러너는 Actions Runner v2.327.1 이상 필요하다는 점을 정확히 인용.
+
+### 재테스트 발견 gap (보강 권장, 차단 요인 아님)
+
+- Q1: Node 24 런타임 전환 자체가 어떤 하위 동작 변화를 일으키는지(성능·API deprecation 등) 상세 설명 없음, "표준 입력 무변경" 결론만 제공.
+- Q2: 셀프호스트 러너의 실제 버전 확인 명령(`./config.sh --version` 등)이나 업그레이드 절차는 문서 범위 밖.
+
+### 재테스트 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: "워크플로우/CI 설정" 성격이나, 2026-04-20 최초 검증부터 content test PASS 기준으로 APPROVED 전환해온 기존 이력을 유지 — YAML 워크플로우 정확성은 실제 CI 실행 없이도 액션 버전·입력 시그니처 대조로 검증 가능하다고 판단
+- 최종 상태: APPROVED
+
+---
+
+### 최초 테스트 기록 (2026-04-20, 참고용)
 
 ### 테스트 케이스 1: Node.js/pnpm CI 워크플로우 생성
 
@@ -284,19 +315,41 @@ docker/build-push-action@v6 (cache-from/cache-to: type=gha), permissions: packag
 
 ---
 
+### [2026-09-28] 재검증(2차) — docker/*·aws-actions 액션 메이저 태그 정정
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md + REFERENCE.md 전체 Read → 15개 액션의 최신 메이저 태그를 `curl api.github.com/repos/<owner>/<repo>/releases/latest`로 전수 대조, 메이저가 오른 4건은 WebSearch로 breaking change 확인
+
+**클레임 대조 결과** (액션 태그 최신 메이저 확인 — 요청된 ADD 항목):
+1. `actions/checkout`(v7.0.1)·`actions/cache`(v6.1.0)·`actions/setup-node`(v7.0.0)·`actions/upload-artifact`(v7.0.1)·`actions/download-artifact`(v8.0.1)·`actions/github-script`(v9.0.0)·`dorny/paths-filter`(v4.0.3)·`Swatinem/rust-cache`(v2.9.2)·`aws-actions/amazon-ecr-login`(v2.1.7)·`aws-actions/amazon-ecs-deploy-task-definition`(v2.6.3) — VERIFIED, 메이저 변경 없음(패치만 진행)
+2. `pnpm/action-setup` — 06-08-11 문서상 6.0.10 → 09-28 확인 결과 6.1.0(같은 메이저, 패치) — VERIFIED, 정정 반영
+3. **`docker/login-action`(v3→v4)·`docker/metadata-action`(v5→v6)·`docker/build-push-action`(v6→v7)·`aws-actions/configure-aws-credentials`(v4→v6)** — DISPUTED(정정) → REFERENCE.md가 각각 구 메이저를 사용 중이었음. GitHub Releases API로 신규 메이저 확인 후 WebSearch로 각 breaking change 조사 결과 **전부 Node 24 런타임 전환**이 핵심이며 표준 입력(`registry`/`username`/`password`, `images`/`tags`, `context`/`push`/`tags`/`cache-from`/`cache-to`, `role-to-assume`/`aws-region`)은 무변경. `build-push-action` v7은 `DOCKER_BUILD_NO_SUMMARY`/`DOCKER_BUILD_EXPORT_RETENTION_DAYS` 환경변수만 제거. 셀프호스트 러너는 Actions Runner v2.327.1 이상 필요 — REFERENCE.md 예시 4곳(login-action·metadata-action·build-push-action·configure-aws-credentials) 태그 갱신 + SKILL.md 상단에 Node 24 공통 주의문 추가
+
+**보강(ADD)·축소**: SKILL.md 상단 버전 목록에 docker/*·aws-actions 6종 추가 및 Node 24 런타임 공통 주의문 신설(보강). 기존 YAML 예시 구조·안티패턴·트리거/캐싱 섹션은 변경 없음(축소 없음)
+
+**실전 질문 재검증**:
+- Q1. "GHCR Docker 빌드 워크플로우에 `docker/login-action@v3`를 그대로 써도 되나?" → SKILL.md 상단 주의문 + REFERENCE.md Docker 섹션 근거로 PASS (v4로 갱신 필요, 셀프호스트면 러너 버전 확인)
+- Q2. "AWS ECS 배포에서 `configure-aws-credentials@v4`가 deprecation 경고를 낸다" → REFERENCE.md AWS 섹션 근거로 PASS (v6로 갱신, `role-to-assume`/`aws-region` 입력 그대로 유지)
+
+**재검증 최종 판정**: status **PENDING_TEST 전환** (액션 메이저 태그 정정 반영 — 메인이 skill-tester로 재테스트)
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
 |------|------|
-| 내용 정확성 | ✅ |
+| 내용 정확성 | ✅ — 2026-09-28 재검증에서 docker/*·aws-actions 4건 메이저 태그 정정(v3→v4, v5→v6, v6→v7, v4→v6) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-04-20 content test 3건 PASS) |
-| 최신성 재검증 | ✅ (2026-08-11, 클레임 10건 전부 VERIFIED / 회귀 확인 4/4 PASS) |
-| **최종 판정** | **APPROVED** (유지) |
+| 에이전트 활용 테스트 | ✅ (2026-04-20 3/3 PASS, 2026-08-11 회귀 4/4 PASS, 2026-09-28 재테스트 2/2 PASS) |
+| 최신성 재검증 | ✅ (2026-08-11 클레임 10건 VERIFIED / 09-28 15개 액션 전수 대조, 4건 정정) |
+| **최종 판정** | **APPROVED** (재검증 정정분 재테스트 완료) |
 
 > 2026-08-11 재검증: 액션 메이저 버전이 대거 올라갔고 `actions/checkout` v7에서 보안 기본값이 바뀌었으나,
-> 스킬 본문을 최신 버전·보안 서술로 갱신해 불일치가 해소됨. 상태는 APPROVED 유지.
+> 스킬 본문을 최신 버전·보안 서술로 갱신해 불일치가 해소됨.
+> 2026-09-28 재검증: 08-11 갱신 대상에서 빠졌던 docker/*·aws-actions 4개 액션의 메이저 버전이 실제로는 이미 더 올라가 있었음을 확인해 정정.
+> verification-policy 분류: "워크플로우/CI 설정" 성격이나, 2026-04-20부터 content test PASS 기준으로 APPROVED 전환해온 기존 이력 유지.
 
 ---
 
@@ -305,6 +358,7 @@ docker/build-push-action@v6 (cache-from/cache-to: type=gha), permissions: packag
 - [✅] 에이전트 활용 테스트 실시 후 APPROVED로 상태 변경 (2026-04-20)
 - [✅] 액션 메이저 버전·checkout v7 보안 기본값 반영 (2026-08-11)
 - [✅] `references/REFERENCE.md`의 액션 버전 표기를 SKILL.md와 동기화 (2026-08-11 완료 — checkout v5→v7, setup-node v4→v7, pnpm/action-setup v4→v6, paths-filter v3→v4. docker/*·aws-actions/*·vercel-action은 SKILL.md 표기 대상이 아니므로 미변경)
+- [✅] skill-tester 2단계 content test 재수행 — 2026-09-28 재검증(docker/*·aws-actions 메이저 정정)분 겨냥 2/2 PASS (2026-09-28 완료 — general-purpose)
 - [⏸️] self-hosted runner 설정 패턴 추가 검토 — 선택 보강, 차단 요인 아님
 - [⏸️] GitHub Actions OIDC (id-token) 기반 클라우드 인증 심화 패턴 — 선택 보강, 차단 요인 아님
 
@@ -317,3 +371,5 @@ docker/build-push-action@v6 (cache-from/cache-to: type=gha), permissions: packag
 | 2026-04-20 | v1 | 최초 작성: 워크플로우 구조, 트리거, 잡 의존성, 매트릭스, 캐싱, 시크릿, Node.js/Rust CI, Docker GHCR, 배포, 재사용 워크플로우, Composite Action, 모노레포 변경 감지 | Claude (Opus 4.6) |
 | 2026-04-20 | v1.1 | PENDING_TEST → APPROVED 전환: 테스트 3건 수행 (Node.js/pnpm CI, 모노레포 변경 감지, Docker GHCR 푸시), 핵심 클레임 3건 WebSearch 교차 검증 완료 | Claude (Opus 4.6) |
 | 2026-08-11 | v1.2 | 최신화: 액션 버전 갱신(checkout v5→v7, cache v4→v6, setup-node v4→v7, pnpm/action-setup v4→v6, paths-filter v3→v4 표기), "포크 PR 보안 — checkout v7 pwn request 차단" 섹션 신설, 클레임 10건 교차 검증 전부 VERIFIED, 회귀 확인 4/4 PASS. status APPROVED 유지 | Claude (Opus 5) |
+| 2026-09-28 | v1.3 | 재검증(2차) — 15개 액션 태그 전수 대조, docker/login-action(v3→v4)·docker/metadata-action(v5→v6)·docker/build-push-action(v6→v7)·aws-actions/configure-aws-credentials(v4→v6) 메이저 정정(Node 24 런타임 전환, 표준 입력 무변경). pnpm/action-setup 6.0.10→6.1.0 패치 반영. status APPROVED → PENDING_TEST(재테스트 대기) | Claude (Sonnet 5) |
+| 2026-09-28 | v1.3 | 2단계 재테스트 수행 (Q1 GHCR Docker 액션 메이저 정정·Node 24 런타임 / Q2 AWS configure-aws-credentials 메이저 정정·셀프호스트 러너 조건) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |

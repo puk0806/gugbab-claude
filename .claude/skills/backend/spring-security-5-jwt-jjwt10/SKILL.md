@@ -6,11 +6,13 @@ description: Spring Security 5.5.x + jjwt 0.10.7 레거시 JWT 인증 - WebSecur
 # Spring Security 5 + jjwt 0.10.x 레거시 JWT 인증
 
 > 소스: https://docs.spring.io/spring-security/site/docs/5.5.x-SNAPSHOT/reference/html5/ | https://github.com/jwtk/jjwt/tree/0.10.7 | https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-2.5-Release-Notes
-> 검증일: 2026-07-04
+> 검증일: 2026-09-26
 
 > 주의: 이 스킬은 **Spring Boot 2.5.x + Spring Security 5.5.x + jjwt 0.10.7 + Java 11 + javax.\*** 레거시 환경 전용입니다.
 > 신규 프로젝트는 Spring Security 6 + jjwt 0.12.x (parserBuilder, jakarta.\*) 기반 모던 스킬을 사용하세요.
-> `WebSecurityConfigurerAdapter`는 Spring Security 5.7부터 deprecated되었으며, 5.5.x에서는 아직 표준 패턴입니다.
+> `WebSecurityConfigurerAdapter`는 Spring Security 5.7부터 deprecated, **Spring Security 6.x에서 완전히 제거**되었습니다(2026-09 재확인). 5.5.x에서는 여전히 표준 패턴입니다.
+> **주의(2026-09-26 재검증)**: Spring Boot 2.5는 OSS 오픈소스 지원이 완전히 종료된 상태입니다(공식 EOL). 신규 CVE에 대한 공식 패치가 나오지 않으므로, 이 스킬은 **기존 레거시 프로젝트 유지보수 전용**으로만 사용하고 신규 기능 확장 시 업그레이드 경로(하단 표) 검토를 권장합니다.
+> **주의(2026-09-26 재검증)**: jjwt에는 CVE-2024-31033(`setSigningKey()`/`signWith()`의 String 오버로드가 일부 문자를 무시할 수 있다는 지적, jjwt 메인테이너는 "정상 사용 시 발생 안 함"으로 반박·비공식 판정)이 보고되어 있습니다. 이 스킬의 `Keys.hmacShaKeyFor(byte[])` 기반 키 생성 패턴은 해당 String 오버로드를 사용하지 않으므로 영향 없습니다 — 코드 예시 변경 불필요.
 
 ---
 

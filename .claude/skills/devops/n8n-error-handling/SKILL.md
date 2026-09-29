@@ -10,14 +10,18 @@ disable-model-invocation: true
 # n8n Error Handling (에러 처리 패턴)
 
 > 소스:
-> - https://docs.n8n.io/flow-logic/error-handling/
+> - https://docs.n8n.io/build/flow-logic/handle-errors-gracefully.md (구 https://docs.n8n.io/flow-logic/error-handling/ — 2026-09 n8n 문서 사이트 개편으로 경로 변경)
 > - https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.errortrigger/
 > - https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.stopanderror/
 > - https://docs.n8n.io/integrations/builtin/rate-limits/
 > - https://docs.n8n.io/hosting/configuration/configuration-examples/execution-timeout/
 > - https://docs.n8n.io/workflows/settings/
-> 검증일: 2026-05-15
+> 검증일: 2026-09-28 (최초 작성 2026-05-15)
 > 짝 스킬: `devops/n8n-workflow-design` (워크플로우 설계 기본), `devops/n8n-self-hosting` (셀프 호스팅 환경 변수·확장)
+
+> 주의 (2026-09-28 재검증): n8n이 1.x에서 **2.x로 메이저 버전이 올라갔다**(최신 릴리즈 `n8n@2.40.7`, 2026-09-25 기준 — GitHub Releases API로 확인). 공식 문서 사이트도 URL 구조가 개편되었다(`/flow-logic/...` → `/build/flow-logic/...`). 본 문서에서 재확인 가능했던 핵심 항목(HMAC 미내장, 인증 4종, Test/Production URL 구분)은 변경 없음을 확인했으나, `Max Tries`(5)·`Wait Between Tries`(5000ms) UI 한계치와 On Error 3모드 세부 동작은 새 문서 구조상 직접 재대조하지 못했다 — 2.x 환경에서 실제 값과 다를 경우 이 문서를 업데이트할 것.
+>
+> 주의 (2026-09-28 형제 스킬 정합 보완): 짝 스킬(`devops/n8n-webhook-patterns`, `devops/n8n-workflow-design`) 재검증에서 확인된 n8n 2.0 변경사항 중 본 문서와 겹치는 항목을 반영했다. 워크플로우 "활성화(Active 토글)" 모델이 2.0부터 **Save(자동 초안 저장)/Publish(게시) 분리 모델**로 바뀌었다 — "n8n will enable the following: ... Events from connected apps will trigger this workflow" (https://docs.n8n.io/build/understand-workflows/save-and-publish-workflows.md, https://docs.n8n.io/changelog/v20-breaking-changes.md "Saving and publishing workflows"). 섹션 13.5의 "Active 상태" 서술을 이에 맞춰 정정했다. 본 문서에는 Code 노드 `$env` 예제가 없어 `N8N_BLOCK_ENV_ACCESS_IN_NODE` 관련 정정은 해당 없음.
 
 ---
 
@@ -53,7 +57,7 @@ disable-model-invocation: true
 1. **새 워크플로우 생성** → 첫 노드로 `Error Trigger` 추가
 2. 워크플로우 이름을 `Error Handler` 등으로 지정
 3. **본 워크플로우의 Settings → Error Workflow** 에서 위 워크플로우 선택
-4. Error Workflow 자체는 **비활성(deactivated) 상태로 둔다** — 자동 호출되므로 활성화 불필요
+4. Error Workflow 자체는 **게시(Publish)하지 않아도 된다** — 자기 자신의 트리거로 실행되는 게 아니라 다른 워크플로우의 에러 발생 시 내부적으로 호출되므로 Publish 불필요 (n8n 2.x — 구버전의 "비활성 상태로 둔다"와 동일 취지. 공식 가이드도 Error Trigger 워크플로우 생성 시 "Select Save"만 안내)
 
 ### 2.2 Error Trigger가 받는 데이터 구조
 
@@ -421,7 +425,7 @@ n8n 자체는 Circuit Breaker 노드가 없으므로 Redis·Postgres로 상태�
 
 ### 13.5 수동 실행에서 Error Trigger 테스트 시도
 - Error Workflow는 *자동 실행*에서만 트리거된다. 수동(Manual) 실행에서는 동작 안함
-- **테스트 방법**: Production에서 Active 상태로 두고 Stop And Error 노드로 강제 실패 유발 → Error Workflow 실행 확인
+- **테스트 방법**: Production에서 워크플로우를 **게시(Publish)**한 상태로 두고 Stop And Error 노드로 강제 실패 유발 → Error Workflow 실행 확인 (n8n 2.x — 구버전은 Active 상태)
 
 ### 13.6 `Continue using error output`인데 에러 분기 미연결
 - 에러 분기에 후속 노드를 안 두면 일부 버전에서 의도치 않은 동작

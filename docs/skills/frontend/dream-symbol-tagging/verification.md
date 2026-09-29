@@ -1,15 +1,15 @@
 ---
 skill: dream-symbol-tagging
 category: frontend
-version: v1
-date: 2026-05-15
+version: v2
+date: 2026-09-26
 status: APPROVED
 ---
 
 # dream-symbol-tagging 스킬 검증
 
 > 새 스킬 추가 검증 기록. 실 LLM 호출·임베딩 측정·실제 한국어 형태소 분석기 통합은
-> 운영 환경 도입 시 측정해야 하므로 최종 판정은 `PENDING_TEST` 유지.
+> 운영 환경 도입 후 선택 보강 대상(§7 참조)이며, content test PASS 기준으로 `APPROVED`.
 
 ---
 
@@ -19,10 +19,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `dream-symbol-tagging` |
 | 스킬 경로 | `.claude/skills/frontend/dream-symbol-tagging/SKILL.md` |
-| 검증일 | 2026-05-15 |
+| 검증일 | 2026-09-26 (최초 2026-05-15) |
 | 모델 ID 한정 재감사일 | 2026-08-11 — 변경 없음 (아래 §8 참조) |
-| 검증자 | skill-creator (Claude Opus 4.7) |
-| 스킬 버전 | v1 |
+| 검증자 | skill-creator (Claude Opus 4.7) → 2026-09-26 skill-tester 재테스트 |
+| 스킬 버전 | v2 |
 
 ---
 
@@ -99,7 +99,8 @@ status: APPROVED
 
 ### 4-4. 에이전트 활용 테스트
 
-- [✅] skill-tester → general-purpose 실전 질문 3개 수행 (2026-05-15)
+- [✅] skill-tester → general-purpose 실전 질문 3개 수행 (2026-05-15, v1)
+- [✅] §6 구조화 출력 전환(v2) 재테스트 수행 — 실전 질문 2개 (2026-09-26)
 
 ### 4-5. 교차 검증한 핵심 클레임
 
@@ -121,6 +122,37 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-09-26
+**수행자**: skill-tester → general-purpose (v2 §6 구조화 출력 전환 재테스트)
+**수행 방법**: SKILL.md(v2) Read 후 실전 질문 2개 답변(Structured Outputs 권장 이유·강제 tool_choice 400, tool_choice:auto+strict 미호출 대응), 근거 §번호 확인
+
+### 실제 수행 테스트 (v2, 2026-09-26)
+
+**Q1. Claude API로 JSON을 안정적으로 받는 권장 방식 + 강제 `tool_choice`를 claude-opus-5-5에 쓰면 어떻게 되는가**
+- ✅ PASS
+- 근거: SKILL.md §6-1 "Structured Outputs로 JSON 강제 (권장)", §6-2 하단 주의 문구, §13 체크리스트
+- 상세: `output_config.format` + `messages.parse()`가 권장 패턴임을 정확히 인용하고, 강제 `tool_choice`(`{type:"tool"}`/`{type:"any"}`)가 Claude Opus 5.5·Fable 5.1에서 400을 반환한다는 §6-2 주의 문구를 정확히 근거로 제시
+
+**Q2. `tool_choice: auto` + `strict: true` 사용 시 도구 미호출 가능성과 코드 대응, Structured Outputs 대비 권장도**
+- ✅ PASS
+- 근거: SKILL.md §6-2 본문·코드(`llmExtractViaTool`), §6-3 "JSON 깨짐 fallback", §13 체크리스트
+- 상세: `strict: true`는 호출된 입력의 스키마 적합성만 보장하고 호출 자체는 보장하지 않음을 정확히 설명, `toolBlock?.type !== "tool_use"` 분기에서 재시도 또는 §6-3 fallback으로 전환하는 코드를 정확히 인용. §6-1이 기본 권장이고 §6-2는 기존 tool_use 파이프라인 제약이 있을 때의 "대안"임을 정확히 구분
+
+### 발견된 gap (v2)
+
+- §6-2 미호출 시 "재시도"의 구체 방법(횟수·백오프)이 코드로 구현되어 있지 않고 주석 언급뿐 — 선택 보강, 비차단
+- 강제 `tool_choice` 400 에러를 SDK에서 캐치해 자동 폴백시키는 try/catch 코드 예시 없음 — 선택 보강, 비차단
+
+### 판정 (v2)
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 라이브러리 사용법 스킬 — content test PASS = APPROVED 가능
+- 최종 상태: APPROVED 유지 (2026-09-25 "재테스트 권장" 표기 해소, 2026-09-26 재테스트 완료)
+
+---
+
+## 5-이전. v1 테스트 진행 기록 (2026-05-15, 참고용)
 
 **수행일**: 2026-05-15
 **수행자**: skill-tester → general-purpose
@@ -208,8 +240,8 @@ SKILL.md §6-1 코드 예시 기반으로 `tools` + `tool_choice: {type:"tool", 
 | 내용 정확성 | ✅ (공식 문서 10개 클레임 모두 VERIFIED) |
 | 구조 완전성 | ✅ (frontmatter·소스·검증일·코드·함정 모두 포함) |
 | 실용성 | ✅ (실제 SDK 호출 코드와 fallback 분기까지 포함) |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-15, skill-tester → general-purpose) |
-| **최종 판정** | **APPROVED** (2026-06-19 재판정 — 라이브러리 사용법·패턴 스킬로 재분류, content test 3/3 PASS 충족) |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-15, v1) / ✅ 2/2 PASS (2026-09-26, v2 §6 재테스트) |
+| **최종 판정** | **APPROVED** (2026-09-26 v2 구조화 출력 전환분 재테스트 완료) |
 
 ---
 
@@ -217,6 +249,9 @@ SKILL.md §6-1 코드 예시 기반으로 `tools` + `tool_choice: {type:"tool", 
 
 - [✅] skill-tester content test 수행 및 섹션 5·6 업데이트 (2026-05-15 완료, 3/3 PASS)
 - [✅] PENDING_TEST → APPROVED 재판정 (2026-06-19 완료 — 라이브러리 사용법 스킬로 재분류, verification-policy 기준 content test PASS = APPROVED)
+- [✅] §6 구조화 출력 전환(v2) 재테스트 — 완료 (2026-09-26, 2/2 PASS, "재테스트 권장" 해소)
+- [✅] §6-2 도구 미호출 시 재시도 로직 코드 구현 (2026-09-26, 상한 있는 재시도 루프 `llmExtractViaToolWithRetry` — `references/tool-choice-retry-fallback.md`)
+- [✅] 강제 `tool_choice` 400 에러 캐치·자동 폴백 코드 예시 추가 (2026-09-26, `Anthropic.BadRequestError` catch → auto 경로 폴백, 공식 GitHub `src/core/error.ts`로 에러 클래스명 확인 — `references/tool-choice-retry-fallback.md`)
 - [❌] 실 OpenAI API 호출로 사전 100개·꿈 텍스트 50건 임베딩 매칭 정확도 측정 — **차단 요인 아님**, 운영 도입 후 선택 보강
 - [❌] Claude API `tool_use` 실호출로 JSON 스키마 위반율(% 단위) 측정 — **차단 요인 아님**, 운영 도입 후 선택 보강
 - [❌] 임계값(코사인 0.45) 도메인 튜닝 — 한국어 꿈 텍스트 코퍼스 기반 — **차단 요인 아님**, 선택 보강
@@ -236,3 +271,5 @@ SKILL.md §6-1 코드 예시 기반으로 `tools` + `tool_choice: {type:"tool", 
 | 2026-08-11 | v1 | **모델 ID 정기 감사 — 변경 없음.** SKILL.md §6-1의 `claude-sonnet-4-6`이 `.claude/rules/agent-design.md` 기준 현행임을 확인. §6-2 Structured Outputs 지원 범위 표기("Opus 4.5+/Sonnet 4.5+/Haiku 4.5")도 하한 서술로 유효(현행 Opus 4.8·Sonnet 4.6 포함). SKILL.md 미수정, 전체 검증일(2026-05-15)·status(APPROVED) 유지 | 모델 ID 정기 감사 |
 | 2026-08-12 | v1 | **모델 ID 세대 정렬.** §6-1 `tool_use` 심볼 추출 예제의 `claude-sonnet-4-6` → `claude-sonnet-5` 교체(1곳) — 2026-08-11 감사에서 "현행"으로 판정했으나 Sonnet 5 출시로 구세대가 되어 정정. §6-2 Structured Outputs 지원 범위 표기는 하한 서술이라 Sonnet 5 포함, 변경 없음. 샘플링 파라미터·`budget_tokens` 사용 없음 — 5 계열 400 이슈 해당 없음. 검증일 2026-05-15 → 2026-08-12. status **APPROVED 유지** | 모델 ID 세대 정렬 |
 | 2026-09-25 | v2 | **§6 JSON 강제 패턴 예제 현행화 — 재테스트 권장.** 강제 `tool_choice`를 "Anthropic 권장 패턴"으로 서술한 부분 정정: §6-1 권장 = Structured Outputs(`output_config.format`, GA·베타 헤더 불필요, TS `messages.parse()`+`zodOutputFormat`), §6-2 대안 = `tool_choice: auto` + `strict: true` + 프롬프트 지시·호출 여부 확인. 강제 `tool_choice`는 Sonnet 5·Haiku 4.5에서만 동작, Opus 5.5·Fable 5.1은 400 주의 추가. 구 §6-2 "Structured Outputs는 베타 헤더 필요" 서술을 GA로 정정(구 `output_format`/`structured-outputs-2025-11-13`은 구형 표기). 스키마 제약(`additionalProperties:false`, min/max 미지원) 주의, 5 계열 샘플링 파라미터 400 주의, §2 다이어그램·§13 체크리스트 동기화. 근거: Claude API 공식 스킬(2026-09). 검증일 → 2026-09-25. status **APPROVED 유지**(재테스트 권장) | 메인 대화 오케스트레이션 |
+| 2026-09-26 | v2 | 2단계 실사용 재테스트 수행 (Q1 Structured Outputs 권장·강제 tool_choice 400 / Q2 tool_choice:auto+strict 미호출 대응·권장도 비교) → 2/2 PASS, "재테스트 권장" 해소·APPROVED 유지, frontmatter version/date를 이력과 동기화(v1→v2, 2026-09-26) | skill-tester |
+| 2026-09-26 | v2 | **선택 보강 — skill-tester 지적 gap 해소.** `auto` 미호출 시 재시도 로직(상한 있는 루프 `llmExtractViaToolWithRetry`), 강제 `tool_choice` 400을 `Anthropic.BadRequestError`로 캐치해 auto 경로로 폴백하는 코드(`llmExtractForcedWithFallback`) 추가. 에러 클래스명은 공식 GitHub `anthropic-sdk-typescript/src/core/error.ts`로 확인. 500줄 초과로 `references/tool-choice-retry-fallback.md` 신설, SKILL.md는 요지+링크로 축약. 기존 판정과 모순 없어 status **APPROVED 유지** | 메인 대화 오케스트레이션 |

@@ -145,11 +145,9 @@ async function main() {
       : '위 항목을 수정하세요. (참조: @.claude/rules/agent-design.md)',
   ].join('\n')
 
-  if (blocked) {
-    process.stderr.write(message + '\n')
-  } else {
-    process.stdout.write(JSON.stringify({ reason: message }) + '\n')
-  }
+  // exit 2 의 메시지 채널은 stderr — PreToolUse: 도구 실행 차단 사유 / PostToolUse: Claude 에게 수정 요구 피드백.
+  // (stdout {reason} 단독은 decision:"block" 이 없어 blocking 사유로 쓰이지 않고 유실됨 — 공식 hooks 문서 Exit code 2)
+  process.stderr.write(message + '\n')
   process.exit(2)
 }
 

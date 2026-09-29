@@ -5,10 +5,10 @@ description: Rust sqlx 비동기 SQL 툴킷 - Pool 연결, query 매크로, 트�
 
 # sqlx 비동기 SQL 툴킷 핵심 패턴
 
-> 소스: https://docs.rs/sqlx/latest/sqlx/ | https://github.com/launchbadge/sqlx
-> 검증일: 2026-06-20
+> 소스: https://docs.rs/sqlx/latest/sqlx/ | https://github.com/transact-rs/sqlx (구 github.com/launchbadge/sqlx — 저장소가 transact-rs 조직으로 이전됨, 기존 URL은 리다이렉트)
+> 검증일: 2026-09-26 (재검증)
 
-> 주의: 이 문서는 sqlx 0.8.x 기준으로 작성되었습니다. 0.9.0이 2026-05-21 릴리즈되어 있으며 Breaking Change가 다수 있으므로 공식 CHANGELOG를 반드시 확인하세요. 신규 프로젝트는 0.9 도입을 검토하되 마이그레이션 노트를 참조하세요.
+> 주의: 이 문서는 sqlx 0.8.x 기준으로 작성되었습니다. 0.9.0이 2026-05월 릴리즈되어 있으며(2026-09 기준 후속 패치 없이 0.9.0 유지) Breaking Change가 다수 있으므로 공식 CHANGELOG를 반드시 확인하세요. sqlx 저장소는 LaunchBadge, LLC 소유가 아니게 되어 2026-05월 `transact-rs` 조직으로 이전되었습니다(관리 주체 변경, API에는 영향 없음). 신규 프로젝트는 0.9 도입을 검토하되 마이그레이션 노트를 참조하세요.
 
 > **sqlx 0.9로의 마이그레이션 시 주요 Breaking Change (0.8 → 0.9):**
 > - `query*()` 계열 함수의 `&str` 파라미터가 `SqlSafeStr` 트레이트로 변경 — 기존 동적 쿼리 문자열 전달 시 `AssertSqlSafe(..)` 래핑 필요

@@ -17,8 +17,8 @@ description: >
 > - Cloud Save SDK API: https://docs.unity.com/ugs/en-us/packages/com.unity.services.cloudsave/3.2/api/Unity.Services.CloudSave.Internal.IDataService
 > - IAP Receipt Validation: https://docs.unity3d.com/Manual/UnityIAPValidatingReceipts.html
 >
-> 검증일: 2026-06-10
-> 대상 버전: Unity 6 (6000.x) / Cloud Save SDK 3.2 / Newtonsoft Json 3.2 (com.unity.nuget.newtonsoft-json) / IAP 4.x
+> 검증일: 2026-09-26 (재검증. 본문 사실성만 재검증 — references/REFERENCE.md은 2026-09-25 분리로 별도 재검증 대상 아님. Newtonsoft Json 패키지는 3.2로 변동 없음 확인, Cloud Save SDK는 "버전 3 이상" 호환 문구만 확인되어 3.2 표기 유지, Unity IAP는 최신이 5.x대(5.4.3)로 갱신되었으므로 "4.x" 단독 표기를 "4.x/5.x" 로 정정 — 서버 검증 미제공 원칙 자체는 버전 무관하게 유효)
+> 대상 버전: Unity 6 (6000.x) / Cloud Save SDK 3.2+ / Newtonsoft Json 3.2 (com.unity.nuget.newtonsoft-json) / IAP 4.x·5.x 공통
 
 ---
 

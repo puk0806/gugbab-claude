@@ -2,7 +2,7 @@
 skill: mybatis-mapper-patterns
 category: backend
 version: v1
-date: 2026-04-22
+date: 2026-09-26 (최초: 2026-04-22)
 status: APPROVED
 ---
 
@@ -16,7 +16,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `mybatis-mapper-patterns` |
 | 스킬 경로 | `.claude/skills/backend/mybatis-mapper-patterns/SKILL.md` |
-| 검증일 | 2026-04-22 |
+| 검증일 | 2026-04-22 (재검증: 2026-09-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 | 기준 버전 | MyBatis 3.5.16 ~ 3.5.19, mybatis-spring-boot-starter 2.3.2 / 3.0.5 |
@@ -111,6 +111,23 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
+### 2026-09-26 — 재검증 (60일 초과 정기 재검증)
+
+**수행일**: 2026-09-26
+**수행 방법**: SKILL.md + REFERENCE.md 전체 Read, WebSearch로 mybatis-spring-boot-starter 브랜치 현황 재확인.
+
+**Q1. Spring Boot 4.1 프로젝트에 mybatis-spring-boot-starter를 붙이려면?**
+- PASS(재검증). GitHub 저장소에 `master`(Spring Boot 4.1 대상, MyBatis-Spring 4.1)와 `4.0.x`(Spring Boot 4.0 대상) 브랜치가 신설된 것을 확인. `@Mapper`/`@MapperScan`, XML 매퍼 구조는 브랜치와 무관하게 동일.
+
+**Q2. 동적 SQL(`<if>`/`<where>`/`<foreach>`)이 최신 MyBatis에서도 동일하게 동작하는가?**
+- PASS(재검증). MyBatis 3.5.x 라인에 breaking change 없음. 3.5.19 이후 신규 마이너 릴리스도 Mapper API 안정성 유지.
+
+**재검증 결론**: 핵심 클레임 VERIFIED 유지. Spring Boot 4.x 대응 브랜치 정보만 주의문에 추가. status 변경 없음(APPROVED 유지).
+
+---
+
+### 2026-04-22 — 원 수행 기록
+
 **수행일**: 2026-04-22
 **수행 방법**: general-purpose 에이전트에게 SKILL.md만 Read한 후 답변하도록 요청 (java-backend-developer가 세션 로드 전이라 general-purpose로 대체, 동일 기능)
 
@@ -178,3 +195,4 @@ MySQL `id BIGINT AUTO_INCREMENT PK` INSERT 후 Java 객체에 생성 id 채우�
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
 | 2026-04-22 | v1 | 최초 작성 — MyBatis 3.5.x + Spring Boot 2.5/3.x 통합 패턴, 동적 SQL, resultMap, TypeHandler, Oracle/MySQL 특화, 페이징, N+1 방지, SQL 인젝션 방지 포함 | skill-creator |
+| 2026-09-26 | v1 | 재검증 — mybatis-spring-boot-starter Spring Boot 4.0/4.1 대응 브랜치 반영, 핵심 패턴 변경 없음 확인 | 메인 세션 |

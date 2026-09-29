@@ -226,13 +226,15 @@ logging:
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers-bom</artifactId>
-            <version>1.20.4</version>
+            <version>2.0.5</version>
             <type>pom</type>
             <scope>import</scope>
         </dependency>
     </dependencies>
 </dependencyManagement>
 ```
+
+> 주의(2026-09-28, Maven Central 직접 확인): Testcontainers 2.0부터 개별 모듈 아티팩트ID가 `org.testcontainers:mysql` → `org.testcontainers:testcontainers-mysql`처럼 `testcontainers-` 접두사가 붙는다. BOM으로 버전을 관리하더라도 `pom.xml`/`build.gradle`의 `<artifactId>` 자체는 새 이름으로 바꿔야 한다.
 
 ### MySQL 예시
 
@@ -295,7 +297,7 @@ class UserOracleIntegrationTest {
 }
 ```
 
-> 주의: `oracle-free` 모듈은 2023년 추가되었습니다. 구버전 Oracle XE가 필요하다면 `org.testcontainers:oracle-xe` 모듈을 사용합니다. 이미지 태그는 Oracle의 [공식 gvenzl 이미지](https://hub.docker.com/r/gvenzl/oracle-free)에서 확인해 최신을 사용하세요.
+> 주의: `oracle-free` 모듈은 2023년 추가되었습니다(Testcontainers 2.0부터 좌표는 `org.testcontainers:testcontainers-oracle-free`). 구버전 Oracle XE가 필요하다면 `org.testcontainers:testcontainers-oracle-xe`(2.0 이전은 `oracle-xe`) 모듈을 사용합니다. 이미지 태그는 Oracle의 [공식 gvenzl 이미지](https://hub.docker.com/r/gvenzl/oracle-free)에서 확인해 최신을 사용하세요.
 
 ### @Container 필드 범위
 

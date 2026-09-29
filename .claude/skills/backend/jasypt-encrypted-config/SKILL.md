@@ -6,7 +6,7 @@ description: Jasypt로 Spring Boot application.yml 설정값 암호화 - ENC() �
 # Jasypt 암호화 설정값 관리
 
 > 소스: https://github.com/ulisesbocchio/jasypt-spring-boot | https://github.com/ulisesbocchio/jasypt-spring-boot/releases | http://www.jasypt.org/cli.html
-> 검증일: 2026-04-22
+> 검증일: 2026-04-22 (재검증: 2026-09-26 — jasypt-spring-boot-starter 4.0.4가 여전히 최신, 변경 없음)
 
 > 주의: 이 문서는 `com.github.ulisesbocchio:jasypt-spring-boot-starter` 3.0.x / 4.0.x 기준이며, Jasypt 코어는 1.9.3입니다. 버전 호환성은 아래 매트릭스를 따르세요.
 

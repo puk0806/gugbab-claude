@@ -24,7 +24,7 @@ description: >
 > - schema.org — ItemAvailability: https://schema.org/ItemAvailability
 > - schema.org — Product: https://schema.org/Product
 > - Google Search Central — Block Indexing with noindex: https://developers.google.com/search/docs/crawling-indexing/block-indexing
-> 검증일: 2026-08-26 (갱신 — §2에 `offers.shippingDetails`·`offers.hasMerchantReturnPolicy` 추가, §7 Merchant Center 피드↔페이지 불일치 지위 정정, §8 분리 모바일 호스트 canonical 추가, Organization↔Product `@graph` 참조 예시 추가. 최초 작성 2026-06-04)
+> 검증일: 2026-09-28 (최초 2026-06-04 · 08-26 갱신: §2에 `offers.shippingDetails`·`offers.hasMerchantReturnPolicy` 추가, §7 Merchant Center 피드↔페이지 불일치 지위 정정, §8 분리 모바일 호스트 canonical 추가, Organization↔Product `@graph` 참조 예시 추가 · 09-28 재검증: `returnPolicyCountry`(recommended)·`merchantReturnDays`(finite 조건부 required) 등 핵심 클레임 재확인, 내용 변경 없음(VERIFIED 유지))
 
 ---
 

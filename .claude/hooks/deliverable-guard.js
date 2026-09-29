@@ -22,7 +22,7 @@
  *   2. 오늘 생성·수정된 PENDING_TEST 스킬의 2단계 테스트 미수행 검사
  *      → verification.md 섹션 5에 "수행일" 라인 + 진짜 테스트 흔적 키워드 필요
  *      → "skill-tester 호출 미수행" 등 자백 라인만 있으면 차단
- *   위반 시 exit 2 (세션 종료 차단)
+ *   위반 시 exit 2 (세션 종료 차단) — 단 stop_hook_active 연쇄에서 같은 사유는 1회만(재시도 시 systemMessage 경고 후 통과)
  *
  * 스캔 제외: .claude/worktrees/ (워크트리 잔재 오탐 방지), node_modules/
  * 안전장치: 에러 발생 시 exit 0 (차단 않음)
@@ -36,6 +36,7 @@ const fs = require('fs')
 const os = require('os')
 const path = require('path')
 const { execSync } = require('child_process')
+const crypto = require('crypto')
 
 // ── 세션 파일 추적 (구 session-summary) ─────────────────────────────
 
@@ -187,7 +188,7 @@ function buildMemoryExportReason(dirtyLines, action) {
     '',
     '조치 순서:',
     '  1. 낡은 memory 서술 갱신·신규 결정 기록 (Write/Edit)',
-    '  2. node $CLAUDE_PROJECT_DIR/.claude/hooks/session-export.js --refresh  ← 세션 요약 최신화',
+    '  2. R="$(git rev-parse --show-toplevel)" && CLAUDE_PROJECT_DIR="$R" node "$R/.claude/hooks/session-export.js" --refresh  ← 세션 요약 최신화',
     '  3. [memory] / [export] 커밋으로 포함 후 push·PR 재시도',
     '',
     '참고: @.claude/rules/memory-sync.md — 커밋 시 메모리 정리',
@@ -357,6 +358,52 @@ function buildPendingTestReason(missing) {
   ].join('\n')
 }
 
+// ── Stop 루프 방지 (stop_hook_active) ────────────────────────────
+// 공식 문서(code.claude.com/docs/en/hooks): stop_hook_active 는 "Claude Code is already continuing as a result of
+// a stop hook" 일 때 true — "Check this value ... to avoid blocking on a condition that will never resolve".
+// Claude Code 자체 연속 8회 캡이 최후 방어선이지만, 그 전에 같은 사유로 8번 차단하는 것은 토큰 낭비 + 해소 불가 루프.
+// 설계 — 연쇄(사용자 턴)마다 같은 사유는 1회만 차단:
+//   active=false(새 연쇄)          → 위반 있으면 차단 + 사유 서명 기록 / 없으면 서명 삭제
+//   active=true + 같은 서명 기록됨 → 이미 안내했는데 해소 못 함 → 사용자 systemMessage 경고 후 통과
+//   active=true + 서명 없음/다름   → 다른 훅이 계속시켰거나 새 사유 → 1회 차단(8회 캡 안에서 유한)
+//   session_id 없음 + active=true  → 추적 불가 → 루프 방지 우선(경고 후 통과)
+// active 는 불리언 true 만 인정(문자열·숫자 위장은 새 연쇄 취급 → 차단 쪽, fail-closed)
+function stopStatePath(sessionId) {
+  const h = crypto.createHash('sha256').update(String(sessionId)).digest('hex').slice(0, 32)
+  return path.join(os.tmpdir(), `claude-stopguard-deliverable-${h}.json`)
+}
+
+function loadStopSig(sessionId) {
+  try {
+    const j = JSON.parse(fs.readFileSync(stopStatePath(sessionId), 'utf8'))
+    return j && typeof j.sig === 'string' ? j.sig : null
+  } catch { return null }
+}
+
+function saveStopSig(sessionId, sig) {
+  try {
+    if (sig === null) fs.rmSync(stopStatePath(sessionId), { force: true })
+    else fs.writeFileSync(stopStatePath(sessionId), JSON.stringify({ sig, at: Date.now() }))
+  } catch {}
+}
+
+// 반환: 'block' | 'warn' | 'pass'
+function decideStop(input, messages) {
+  const active = input.stop_hook_active === true
+  const sid = typeof input.session_id === 'string' && input.session_id ? input.session_id : null
+  if (messages.length === 0) {
+    if (sid && !active) saveStopSig(sid, null)
+    return 'pass'
+  }
+  const sig = crypto.createHash('sha256').update(messages.join('\n\n')).digest('hex')
+  if (!sid) return active ? 'warn' : 'block'
+  if (active && loadStopSig(sid) === sig) return 'warn'
+  saveStopSig(sid, sig)
+  return 'block'
+}
+
+const STOP_WARN_CAP = 9000 // systemMessage 10,000자 상한 여유
+
 // ── 진입점 ───────────────────────────────────────────────────────
 
 async function readStdin() {
@@ -438,7 +485,18 @@ async function main() {
     const pendingMissing = getPendingTestViolations(cwd)
     if (pendingMissing.length > 0) messages.push(buildPendingTestReason(pendingMissing))
 
-    if (messages.length === 0) return process.exit(0)
+    const decision = decideStop(input, messages)
+    if (decision === 'pass') return process.exit(0)
+    if (decision === 'warn') {
+      const body = messages.join('\n\n')
+      const text = [
+        '⚠ deliverable-guard: 산출물이 미완결인 채 종료합니다 — 같은 사유로 이미 1회 차단했으므로 반복 차단하지 않습니다(stop_hook_active 루프 방지).',
+        '',
+        body.length > STOP_WARN_CAP ? body.slice(0, STOP_WARN_CAP) + '\n  ... (생략)' : body,
+      ].join('\n')
+      process.stdout.write(JSON.stringify({ systemMessage: text }))
+      return process.exit(0)
+    }
 
     process.stderr.write(messages.join('\n\n'))
     return process.exit(2)
@@ -466,6 +524,9 @@ module.exports = {
   // memory·exports 클린 검사
   getMemoryExportViolations,
   buildMemoryExportReason,
+  // Stop 루프 방지
+  decideStop,
+  stopStatePath,
   // PENDING_TEST 검사
   extractStatus,
   extractSection5,

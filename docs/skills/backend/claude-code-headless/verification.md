@@ -1,8 +1,8 @@
 ---
 skill: claude-code-headless
 category: backend
-version: v1
-date: 2026-07-03
+version: v2
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `claude-code-headless` |
 | 스킬 경로 | `.claude/skills/backend/claude-code-headless/SKILL.md` |
-| 검증일 | 2026-07-03 |
+| 검증일 | 2026-09-26 (재검증, 최초 2026-07-03) — SKILL.md `> 검증일:` 갱신 없이 2026-09-28 "흔한 실수" 표 모순 정정·재테스트만 수행 |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 
@@ -85,6 +85,7 @@ status: APPROVED
 - [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-07-03)
 - [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-07-03)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (발견 없음)
+- [✅] skill-tester → general-purpose 모순 정정 재테스트 수행 (2026-09-28, "흔한 실수" 표 `--resume` 행 모순 해소 겨냥 2/2 PASS)
 
 ### 4-5. 교차 검증한 클레임 판정
 
@@ -114,6 +115,38 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+### 모순 정정 재테스트 (2026-09-28, 두 번째 라운드)
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (도메인 전용 에이전트 미설치로 대체)
+**수행 방법**: 2026-09-28 첫 라운드 재테스트에서 발견된 "흔한 실수" 표 `--resume` 행과 상단 정정 문구 간 모순을, 메인 세션이 `> v2.1.223 미만 CLI에서 --resume를 다른 디렉터리에서 호출 → 세션 못 찾음 (v2.1.223+는 디렉터리 제약 없음 — 위 "주의" 참조)`로 조건부 정정한 뒤 재확인. 실전 질문 2개(핵심 기능 1개 + 모순 해소 겨냥 1개) 수행.
+
+### 실제 수행 테스트 (모순 정정 재테스트)
+
+**Q1. stream-json 출력에서 텍스트 토큰만 SSE로 추출하는 방법**
+- ✅ PASS
+- 근거: SKILL.md "2. stream-json 출력 구조 & SSE 중계 파싱" 섹션(59~90줄)
+- 상세: `--verbose --include-partial-messages` 필수 플래그, `stream_event`/`text_delta` 필터 jq 예시를 정확히 인용. 회귀 없음.
+
+**Q2. v2.1.250 CLI에서 다른 디렉터리에서 세션 ID로 `--resume` 가능한가? "흔한 실수" 표와 모순되지 않는가?**
+- ✅ PASS
+- 근거: SKILL.md 2절 "주의(2026-09 갱신)" 문단(98~101줄) + 하단 "흔한 실수" 표 마지막 행(226줄, 정정판)
+- 상세: 에이전트가 "가능하다"고 정확히 답하고, 정정된 표 행이 "v2.1.223 미만" 조건과 "위 '주의' 참조" 각주로 상단 문구와 **모순 없이 상호 참조**하도록 고쳐졌음을 명시적으로 확인. 이전 라운드(2026-09-28 첫 번째)에서 지적된 내부 모순이 해소됨.
+
+### 발견된 gap
+
+- 없음. 이전 라운드에서 발견된 모순이 SKILL.md 정정으로 해소되었고 재테스트로 확인됨.
+
+### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: CLI 사용법 스킬 → 실사용 필수 카테고리 해당 없음
+- 최종 상태: NEEDS_REVISION → APPROVED
+
+---
+
+### 첫 번째 라운드 테스트 (2026-07-03)
 
 **수행일**: 2026-07-03
 **수행자**: skill-tester → general-purpose (domain-specific 에이전트 대체)
@@ -172,21 +205,74 @@ status: APPROVED
 
 ---
 
+### 재검증 (2026-09-26)
+
+**수행자**: 메인 세션 (Sonnet 5), 서브에이전트 미사용(사용자 지시)
+**수행 방법**: SKILL.md 전체 Read → code.claude.com 공식 문서(cli-reference, authentication, headless, agent-sdk/overview) WebFetch로 핵심 클레임 재검증 → 실전 질문 2개로 SKILL.md 자체 답변 확인
+
+**교차 검증 클레임 (실질 오류 발견 → 본문 수정 반영):**
+1. `--resume`의 세션 조회 범위가 "현재 프로젝트 디렉터리(및 git worktree)로 한정"된다는 기존 서술 — WebFetch(code.claude.com/docs/en/headless "Continue conversations" 절) 결과 **v2.1.223부터 이 제약이 사라져 이 머신의 모든 프로젝트에서 세션 ID로 조회 가능**함을 확인. 2026-09 기준 최신 CLI(v2.1.28x)는 이미 이 제약이 없음 → **DISPUTED(구버전 동작 기준 오기재) → 수정 반영**: 주의 문구를 버전 조건부로 정정, `.jsonl` 경로로도 이어갈 수 있다는 내용 추가
+2. 인증 우선순위 6단계 목록 — WebFetch(authentication 문서 "Authentication precedence" 절) 결과 공식 목록이 **7단계**(Cloud provider → ANTHROPIC_AUTH_TOKEN → ANTHROPIC_API_KEY → apiKeyHelper → CLAUDE_CODE_OAUTH_TOKEN → **Anthropic profile/federation 자격증명(신규 확인)** → 구독 OAuth)임을 확인, 게이트웨이 세션은 이 목록 밖에서 최우선으로 별도 작동 → **DISPUTED(누락) → 수정 반영**: 6번 항목(profile/federation) 및 게이트웨이 참고 문구 추가
+3. `--bare` 관련 서술 — 기존 내용(OAuth 미독, ANTHROPIC_API_KEY/apiKeyHelper 필요)은 여전히 정확하나, 공식 문서가 신규로 "`--bare`가 스크립트·SDK 호출 권장 모드이며 향후 `-p`의 기본값이 될 예정"이라고 고지하는 것을 확인 → **정보 누락 → 수정 반영**: 구독 토큰 중계 서버 운영자를 위한 사전 대비 주의 문구 추가
+4. `--tools` 플래그 존재 여부 — WebFetch(cli-reference) 결과 `--allowedTools` 설명 내 "실제로 사용 가능한 도구를 제한하려면 `--tools`를 대신 사용" 문구로 존재 재확인 → **VERIFIED** (본문 유지)
+5. Agent SDK 패키지명(`@anthropic-ai/claude-agent-sdk`, `claude-agent-sdk`) 및 제3자 서비스에 claude.ai 로그인/레이트리밋 제공 금지 정책 — WebFetch(agent-sdk/overview) 재확인 → **VERIFIED** (본문 유지)
+6. `claude setup-token` 1년 만료·Pro/Max/Team/Enterprise 필요·inference 전용(Remote Control·connector 불가) — WebFetch(authentication "Generate a long-lived token") 재확인 → **VERIFIED** (본문 유지)
+
+**Q1 (재확인). "다른 서버 인스턴스(다른 디렉터리)에서 세션 ID로 대화를 이어갈 수 있나?"**
+- PASS (구버전 지식이면 FAIL이었을 질문) — 갱신된 SKILL.md 주의 문구로 "v2.1.223부터 가능, 이전엔 같은 디렉터리 필요"를 정확히 답변 가능. 수정 전이었다면 "같은 디렉터리에서만 가능"이라는 오답을 냈을 것.
+
+**Q2 (재확인). "ANTHROPIC_PROFILE로 WIF profile을 설정해뒀는데 CLAUDE_CODE_OAUTH_TOKEN보다 우선하나?"**
+- PASS — 갱신된 "4. 인증 우선순위" 섹션의 6번 항목(named profile은 `/login`보다 위, 그러나 CLAUDE_CODE_OAUTH_TOKEN(5번)보다는 아래)으로 정확히 답변 가능.
+
+**status**: 실질 오류(구버전 `--resume` 제약, 인증 우선순위 항목 누락) 수정 + content test 2건 PASS → **PENDING_TEST에서 APPROVED로 전환** (CLI 사용법 스킬 = content test로 충분한 카테고리, verification-policy 기준)
+
+---
+
+### 재테스트 (2026-09-28) — SKILL.md 내부 모순 발견, NEEDS_REVISION으로 하향
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose
+**수행 방법**: SKILL.md Read 후 2개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인. 질문 1개는 2026-09-26 재검증에서 정정된 "`--resume` 디렉터리 제약 v2.1.223부터 해제" 내용을 정확히 겨냥.
+
+**Q1. "claude -p stream-json 출력에서 텍스트 토큰만 SSE로 추출하려면?"**
+- ✅ PASS
+- 근거: SKILL.md "2. stream-json 출력 구조 & SSE 중계 파싱" 섹션
+- 상세: `--verbose --include-partial-messages` 필수 플래그와 `stream_event`/`text_delta` 필터 jq 예시를 정확히 인용.
+
+**Q2. "다른 디렉터리에서 세션 ID로 --resume 가능한가? CLAUDE_CODE_OAUTH_TOKEN보다 우선하는 인증 항목이 있나?" (2026-09-26 `--resume` 제약 해제 정정분 겨냥)**
+- 🟡 PARTIAL
+- 근거: SKILL.md "2. stream-json..." 섹션 하단 98~101줄 주의문(정정된 최신 내용) + "4. 인증 우선순위" 섹션
+- 상세: 에이전트는 98~101줄의 정정된 내용("v2.1.223부터 디렉터리 제약 해제")과 인증 우선순위 6단계(Cloud provider/ANTHROPIC_AUTH_TOKEN/ANTHROPIC_API_KEY/apiKeyHelper가 CLAUDE_CODE_OAUTH_TOKEN보다 우선, gateway 세션은 목록 밖 최우선)를 정확히 인용해 **질문 자체에는 올바르게 답변**했다.
+- **그러나 에이전트가 SKILL.md 자체의 내부 모순을 발견**: 문서 맨 아래 "흔한 실수" 표(파일 끝부분, `> --resume를 다른 디렉터리에서 호출 | 세션 못 찾음 | 첫 호출과 같은 디렉터리에서 실행`)가 98~101줄에서 정정된 "v2.1.223부터 제약 해제" 내용과 **정면으로 모순**된다. 2026-09-26 재검증 시 상단 주의문은 갱신했으나 하단 "흔한 실수" 표의 해당 행을 함께 수정하지 않아 **옛 내용이 남아 모순을 일으키는 사례**로 확인됨 (이번 재테스트의 핵심 목적이었던 "옛 내용 잔존 모순 확인"에서 실제로 발견).
+
+### 발견된 gap (SKILL.md 보강 필요 — 차단 요인)
+
+- **"흔한 실수" 표의 `--resume` 관련 행이 2026-09-26 정정 이전 내용(디렉터리 제약 있음)을 그대로 유지하고 있어, 상단 주의문(제약 v2.1.223부터 해제)과 모순**. 표 행을 삭제하거나 "v2.1.223 미만에 한함" 등으로 조건을 명시하는 수정이 필요함. 원칙 4(FAIL/PARTIAL 시 SKILL.md 즉시 수정 금지, 사용자 승인 후 수정)에 따라 이번 세션에서는 SKILL.md를 수정하지 않고 보고만 함.
+
+### 판정
+
+- agent content test: 1/2 PASS, 1/2 PARTIAL (SKILL.md 내부 모순 발견)
+- verification-policy 분류: CLI 사용법 스킬 → 실사용 필수 카테고리 해당 없음
+- 최종 상태: **NEEDS_REVISION** (내용 자체의 정확성은 문제 없으나 문서 내 모순 존재 — 사용자 승인 후 "흔한 실수" 표 수정 필요)
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
 |------|------|
-| 내용 정확성 | ✅ (공식 문서 5종 + 교차 검증 18/18 VERIFIED) |
+| 내용 정확성 | ✅ (공식 문서 5종 + 교차 검증 18/18 VERIFIED) — 2026-09-28 첫 라운드에서 발견된 문서 내부 모순 1건은 "흔한 실수" 표 조건부 정정으로 해소 |
 | 구조 완전성 | ✅ (frontmatter·소스·검증일·8섹션·예시·흔한 실수 포함) |
 | 실용성 | ✅ (중계 서버 관점 실행·파싱·안전 가드 예시) |
-| 에이전트 활용 테스트 | ✅ (3/3 PASS — 2026-07-03, general-purpose 에이전트 수행) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (3/3 PASS — 2026-07-03 / 2026-09-26 재검증 2/2 PASS / 2026-09-28 첫 라운드 1/2 PASS+1/2 PARTIAL → 모순 정정 후 2026-09-28 두 번째 라운드 2/2 PASS) |
+| **최종 판정** | **APPROVED** (2026-09-28 — "흔한 실수" 표 `--resume` 행을 "v2.1.223 미만" 조건부로 정정 후 재테스트 2/2 PASS, 모순 해소 확인 → NEEDS_REVISION에서 재전환) |
 
 ---
 
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester로 2단계 실사용 테스트 수행 후 섹션 5·6 업데이트 (2026-07-03 완료, 3/3 PASS)
+- [✅] **"흔한 실수" 표의 `--resume` 디렉터리 제약 행이 상단 2026-09-26 정정 문구와 모순** — 2026-09-28 첫 라운드에서 발견, "v2.1.223 미만 CLI에서…"로 조건부 정정 완료 후 2026-09-28 두 번째 라운드 재테스트 2/2 PASS로 해소 확인
 - [❌] CLI 버전 업데이트 시 플래그 명칭 재확인 (`--tools`/`--disallowedTools` 변동 가능성) — 차단 요인 아님, 선택적 유지보수 항목
 
 ---
@@ -197,3 +283,6 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-07-03 | v1 | 최초 작성. 공식 문서 5종 기반, 18개 클레임 전량 VERIFIED | skill-creator |
 | 2026-07-03 | v1 | 2단계 실사용 테스트 수행 (Q1 --bare+OAuth 조합 / Q2 stream-json 텍스트 추출 / Q3 인증 우선순위 함정) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-26 | v2 | 정기 재검증 — `--resume` 디렉터리 제약이 v2.1.223부터 해제된 것을 반영(구버전 동작 기준 오기재 수정), 인증 우선순위에 누락된 6번째 항목(Anthropic profile/federation) 추가, `--bare` 향후 기본값화 고지 추가. content test 2/2 PASS | Claude (Sonnet 5) |
+| 2026-09-28 | v2 | 2단계 실사용 재테스트 수행 (Q1 stream-json 파싱 / Q2 --resume 디렉터리 제약 정정분) → 1/2 PASS + 1/2 PARTIAL. **"흔한 실수" 표가 상단 정정 문구와 모순되는 SKILL.md 내부 오류 발견** → APPROVED에서 NEEDS_REVISION으로 하향 (SKILL.md는 미수정, 보고만 함) | skill-tester |
+| 2026-09-28 | v2 | "흔한 실수" 표 `--resume` 행을 "v2.1.223 미만 CLI에서…"로 조건부 정정(메인 세션) 후 모순 해소 재테스트 수행 (Q1 stream-json 파싱 / Q2 모순 해소 확인) → 2/2 PASS, NEEDS_REVISION → APPROVED 전환 | skill-tester |

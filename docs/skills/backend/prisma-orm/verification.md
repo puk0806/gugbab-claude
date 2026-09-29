@@ -2,7 +2,7 @@
 skill: prisma-orm
 category: backend
 version: v1
-date: 2026-09-25
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -116,7 +116,10 @@ status: APPROVED
 | 19 | PostgreSQL·Prisma 모두 FK 인덱스 자동 생성 안 함 | GitHub 이슈 #16543·토론 #25783 | PostgreSQL 일반 동작(검색 결과) | VERIFIED |
 | 20 | Neon: config에 `DATABASE_URL_UNPOOLED`, 런타임 풀드 URL, `connect_timeout=15` | Neon Prisma 가이드 | Prisma v7 PostgreSQL 커넥터(-pooler) + config 레퍼런스(directUrl 제거) | VERIFIED. 단 Neon 가이드의 import 경로 `./generated/prisma`는 Prisma 공식(`/client`)과 **DISPUTED → 공식 경로 채택** |
 | 21 | Vercel Fluid: `pg` Pool + `attachDatabasePool` + `PrismaPg(pool)` / Edge: pg 미지원, 엣지·Workers는 요청 단위 생성 | Prisma deploy-to-vercel·edge·cloudflare 문서 | Vercel KB, Neon vercel-connection-methods, Neon serverless driver | VERIFIED |
-| 22 | `PrismaNeonHttp` v7 생성자 시그니처 | 2차 검색 요약(`neon()` 객체 전달형, v6 시절 형태) | 공식 v7 문서 미확인 | **UNVERIFIED** → 코드 제거, 트랜잭션 미지원 사실만 `> 주의:`로 기재 |
+| 22 | `PrismaNeonHttp` v7 생성자 시그니처 | 2차 검색 요약(`neon()` 객체 전달형, v6 시절 형태) | 공식 v7 문서 미확인 | 최초 **UNVERIFIED** → 2026-09-26 `@prisma/adapter-neon@7.10.0`의 `dist/index.d.ts` 원본(1차 데이터, `curl`로 직접 확인)으로 **VERIFIED 전환**: `constructor(connectionString: string, options: neon.HTTPQueryOptions<boolean, boolean>)`, `HTTPQueryOptions` 필드 전부 optional(`@neondatabase/serverless@1.1.0` `index.d.ts`) |
+| 23 | `$extends({ query: { $allOperations } })` 로깅 예시 — `model`·`operation`·`args`·`query`·`performance.now()`·`util.inspect` 사용 | 공식 문서 `prisma-client/client-extensions/query` | VERIFIED |
+| 24 | Neon 공식 트러블슈팅: `connect_timeout`은 풀드 URL(`DATABASE_URL`)에 부착, 값 `0`은 타임아웃 비활성화 | Neon 공식 `guides/prisma` 문서 | VERIFIED |
+| 25 | Vercel의 Neon 통합(Vercel-Managed·Neon-Managed 공통)이 `DATABASE_URL`(풀드)·`DATABASE_URL_UNPOOLED`(다이렉트)를 주입, `POSTGRES_*`는 구 Vercel Postgres 템플릿 호환용 별칭 | Neon 공식 Vercel 통합 문서 + WebSearch 교차 확인(Neon Previews 통합 문서) | VERIFIED |
 
 보조 확인: `$queryRaw` 태그드 템플릿 파라미터화·`$queryRawUnsafe` 위험(공식 raw-queries), 에러 판별은 `Prisma.PrismaClientKnownRequestError`를 생성 클라이언트에서 import(공식 문서 — 2차 자료의 `@prisma/client/runtime/library` 경로는 채택하지 않음), P2002 `meta.target` 형태 변경은 이슈 1건 근거라 `> 주의:`로만 기재.
 
@@ -140,13 +143,45 @@ status: APPROVED
 - [✅] 범용적으로 사용 가능 (특정 프로젝트 종속 X)
 
 ### 4-4. Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-09-25)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-09-25)
-- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (해당 없음 — 3/3 PASS, 보완 불필요)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-09-25, 2026-09-26 재테스트)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-09-25, 2026-09-26 재테스트)
+- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (해당 없음 — 최초 3/3, 재테스트 3/3 PASS, 보완 불필요)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-09-26 (재테스트)
+**수행자**: skill-tester → general-purpose (TypeScript 백엔드 개발자 역할, domain-specific 에이전트 세션 registry 미등록으로 대체 사용)
+**수행 방법**: 2026-09-26 섹션 5·7·9·10 보강 내용(`$extends` 로깅 전체 예시, connect_timeout 위치·Vercel-Neon 환경변수명, 역방향 include, `PrismaNeonHttp` v7 생성자)을 겨냥해 SKILL.md(+references/) Read 후 실전 질문 3개 재답변, 근거 섹션·줄 번호 명시 및 anti-pattern 회피 확인
+
+### 재테스트 (2026-09-26, 보강 내용 타깃)
+
+**Q1(재). v6→v7 `$use` 로깅 미들웨어 → `$extends` 완전한 코드 전환**
+- ✅ PASS
+- 근거: SKILL.md §5 232줄(참조 안내) + references/v6-to-v7-upgrade.md "로깅·감사 미들웨어 전환" 절(52-81줄)
+- 상세: `$extends({ query: { $allOperations({...}) {...} } })` 완전한 코드(어댑터 생성 포함)를 정확히 인용. `model`이 raw 쿼리에서 undefined일 수 있음, 확장된 인스턴스를 export해야 함, 에러를 삼키지 말고 rethrow해야 함까지 정확히 반영. gap: SKILL.md 본문의 `$allModels` 축약 표기와 참조 파일 실제 코드(전역 로깅이라 `$allModels` 생략)가 형태상 다르다는 점을 스스로 지적 — 사소한 표기 불일치, 차단 요인 아님.
+
+**Q2(재). Vercel+Neon 콜드 스타트 타임아웃 — connect_timeout 부착 위치 + Vercel 자동 환경변수명**
+- ✅ PASS
+- 근거: SKILL.md §9-2 386~387줄
+- 상세: "풀드 URL(`DATABASE_URL`)에 connect_timeout을 붙인다"(다이렉트 아님)와 그 이유(런타임 요청 시점 웨이크업 문제)를 정확히 인용. Vercel 자동 주입 환경변수명(`DATABASE_URL`/`DATABASE_URL_UNPOOLED`, 레거시 `POSTGRES_*` 별칭)까지 정확히 답변.
+
+**Q3(재). 역방향 include(게시글+작성자 N+1) + `PrismaNeonHttp` v7 생성자·트랜잭션 지원 여부**
+- ✅ PASS
+- 근거: SKILL.md §7 291~296줄(역방향 include), §9-4 409줄 + references/serverless-edge.md 57~75줄(`PrismaNeonHttp` 생성자·HTTP 모드 트랜잭션 미지원)
+- 상세: `post.findMany({ include: { author: { select } } })` 정확히 제시. `PrismaNeonHttp(connectionString, options: HTTPQueryOptions<boolean, boolean>)` 시그니처와 옵션 전부 optional(`{}` 가능)임을 패키지 원본 실측 근거와 함께 정확히 인용. "HTTP 모드는 트랜잭션 미지원 → 기본은 WebSocket(`PrismaNeon`)" 결론도 정확.
+
+### 재테스트 판정
+
+- agent content test (2026-09-26 보강분 타깃): 3/3 PASS
+- 발견된 gap: SKILL.md 본문 `$allModels` 표기와 참조 파일 코드 형태 불일치(경미, 차단 아님). 그 외 2026-09-25 gap 3건은 이번 보강으로 전부 해소됨.
+- verification-policy 분류: 라이브러리 사용법 스킬(ORM 사용 패턴) — content test PASS로 APPROVED 전환 가능한 카테고리
+- 최종 상태: **APPROVED** (PENDING_TEST → APPROVED 재전환)
+
+---
+
+### 최초 테스트 (2026-09-25, 참고 보존)
 
 **수행일**: 2026-09-25
 **수행자**: skill-tester → typescript-backend-developer (도메인 특화 에이전트, 3회 순차 실행)
@@ -194,11 +229,11 @@ status: APPROVED
 
 | 항목 | 결과 |
 |------|------|
-| 내용 정확성 | ✅ (DISPUTED 3건 정정 반영, UNVERIFIED 1건 코드 제거) |
-| 구조 완전성 | ✅ |
+| 내용 정확성 | ✅ (DISPUTED 3건 정정 반영, UNVERIFIED 1건은 2026-09-26 패키지 원본 실측으로 VERIFIED 전환) |
+| 구조 완전성 | ✅ (500줄 유지 위해 §5·§9 코드 예시 일부를 references/로 이동) |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-09-25 typescript-backend-developer 3/3 PASS) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (최초 2026-09-25 typescript-backend-developer 3/3 PASS → 2026-09-26 §5·§7·§9·§10 보강분 타깃 재테스트 3/3 PASS) |
+| **최종 판정** | **APPROVED** (2026-09-26 재테스트 완료로 재전환) |
 
 ---
 
@@ -206,9 +241,12 @@ status: APPROVED
 
 - [✅] skill-tester로 2단계 content test 수행 후 섹션 5·6 갱신 (2026-09-25 완료, 3/3 PASS)
 - [❌] Prisma 8 GA(2026-10 목표) 이후: npm `latest` 태그·지원 정책 재확인, v8 전용 스킬 분리 여부 판단 — 차단 요인 아님, GA 시점 도래 후 선택 갱신
-- [❌] `PrismaNeonHttp` v7 생성자 시그니처가 공식 문서에 게시되면 references/serverless-edge.md에 예시 추가 — 차단 요인 아님, 공식 문서 게시 대기 중인 선택 보강
+- [✅] `PrismaNeonHttp` v7 생성자 시그니처가 공식 문서에 게시되면 references/serverless-edge.md에 예시 추가 — 2026-09-26 공식 문서 대신 **패키지 원본**(`@prisma/adapter-neon@7.10.0`의 `dist/index.d.ts`, 1차 데이터)으로 직접 확인: `constructor(connectionString: string, options: neon.HTTPQueryOptions<boolean, boolean>)`. `HTTPQueryOptions`(`@neondatabase/serverless`)의 전 필드가 optional임도 확인해 `{}` 사용 가능함을 명시. references/serverless-edge.md에 코드 추가, SKILL.md §9-4 "미검증" 표기 제거
 - [❌] P2002 `meta.target` v7 형태 변경 이슈(#28953) 해결 여부 추적 — 차단 요인 아님, 상류 이슈 추적용 선택 보강
-- [❌] (2026-09-25 content test 발견) §5 `$extends` 로깅 미들웨어 완전한 코드 예시 추가, §9-2 `connect_timeout` 부착 위치 명시, §7 Post 기준 역방향 include 예시 추가 — 3건 모두 경미한 gap으로 차단 요인 아님, 선택 보강
+- [✅] (2026-09-25 content test 발견) §5 `$extends` 로깅 미들웨어 완전한 코드 예시 추가 — 2026-09-26 공식 문서(`client-extensions/query`)의 `$allOperations` 로깅 예시를 v7 어댑터 패턴으로 조정해 references/v6-to-v7-upgrade.md에 전문 추가, SKILL.md §5에서 링크
+- [✅] (2026-09-25 content test 발견) §9-2 `connect_timeout` 부착 위치 명시 — 2026-09-26 Neon 공식 문서(`guides/prisma` 트러블슈팅)로 **풀드 URL(`DATABASE_URL`)에 부착**함을 확인(런타임 요청 시점의 scale-to-zero 웨이크업 문제이므로). 동시에 Vercel-Neon 통합의 실제 환경변수명(`DATABASE_URL`/`DATABASE_URL_UNPOOLED`, 레거시 호환용 `POSTGRES_*`)도 Neon 공식 Vercel 통합 문서로 확인해 SKILL.md §9-2에 반영
+- [✅] (2026-09-25 content test 발견) §7 Post 기준 역방향 include 예시 추가 — SKILL.md §7에 `post.findMany({ include: { author: { select } } })` 예시 신설(코드 예시라 별도 외부 검증 불필요)
+- [✅] 2026-09-26 보강분(`$extends` 로깅·connect_timeout 위치·Vercel-Neon 환경변수명·역방향 include·`PrismaNeonHttp` v7 생성자)에 대한 skill-tester 재테스트 수행 — Q1·Q2·Q3 모두 보강 내용을 직접 겨냥한 질문으로 재실행, 3/3 PASS. 경미한 표기 불일치(`$allModels`) 1건 외 gap 없음. PENDING_TEST → APPROVED 재전환
 
 ---
 
@@ -218,3 +256,6 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-09-25 | v1 | 최초 작성 (Prisma ORM 7.10.0 기준, references 2종 분리) | skill-creator |
 | 2026-09-25 | v1 | 2단계 실사용 테스트 수행 (Q1 v6→v7 마이그레이션 / Q2 Vercel+Neon 풀드 URL 분리 / Q3 N+1+인덱스) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-09-26 | v1 | 섹션 7 선택 보강 4건 반영: `$extends` 로깅 전체 예시(references/v6-to-v7-upgrade.md 신설 절), `connect_timeout` 부착 위치(풀드 URL)·Vercel-Neon 환경변수명 명시, 역방향 include 예시(§7), `PrismaNeonHttp` v7 생성자 UNVERIFIED→VERIFIED 전환(패키지 원본 실측, references/serverless-edge.md). 500줄 유지 위해 코드 예시 일부를 references/로 이동. 내용 변경으로 APPROVED → PENDING_TEST 재전환(재테스트 대기) | Claude (Sonnet 5) |
+| 2026-09-26 | v1 | 2단계 재테스트 수행 (Q1 `$extends` 로깅 완전 코드 / Q2 connect_timeout 위치+Vercel-Neon 환경변수 / Q3 역방향 include+`PrismaNeonHttp` v7 생성자·트랜잭션) — 보강 내용 전부 타깃, 3/3 PASS → PENDING_TEST → APPROVED 재전환 | skill-tester |
+| 2026-09-26 | v1 | 표기 정합: SKILL.md 본문의 `$allModels.$allOperations` 축약 표기를 references 실제 코드(최상위 `query.$allOperations`, raw 쿼리 포함)와 일치시키고 두 형태의 범위 차이를 명시 (코드 변경 없음, status 유지) | Claude (Opus 5.5) |

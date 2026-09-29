@@ -1,8 +1,8 @@
 ---
 skill: vercel-workflow
 category: devops
-version: v1
-date: 2026-09-17
+version: v1.1
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,10 +14,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `vercel-workflow` |
 | 스킬 경로 | `.claude/skills/devops/vercel-workflow/SKILL.md` |
-| 검증일 | 2026-09-17 |
+| 검증일 | 2026-09-28 (최초 2026-09-17 · 09-25 구조 개편 · 09-28 재검증) |
 | 검증자 | skill-creator |
-| 스킬 버전 | v1 |
-| 기준 버전 | `workflow` v4.8.9 (npm latest, Apache-2.0) / Workflows 과금·한도 문서 2026-06-16 갱신본 / Cron 문서 2026-07-15 갱신본 |
+| 스킬 버전 | v1.1 |
+| 기준 버전 | `workflow` v4.8.9 (npm latest, Apache-2.0, 09-28 재확인 동일) / Workflows 과금·한도 문서 2026-06-16 갱신본(09-28 수치 변경 없음 확인) / Cron 문서 2026-07-15 갱신본(09-28 수치 변경 없음 확인) |
 
 ---
 
@@ -197,15 +197,35 @@ status: APPROVED
 
 ---
 
+### [2026-09-28] 재검증(2차) — 변경 없음
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md + REFERENCE.md 전체 Read → 핵심 클레임 3개를 `curl registry.npmjs.org` + WebSearch로 1차 소스 재대조 (ADD 항목: workflow SDK 4.8.x, `sleep(Date)`)
+
+**클레임 대조 결과**:
+1. `workflow` npm dist-tag `latest` — VERIFIED, 09-17 확인 시점과 동일하게 여전히 **4.8.9**(4.8.x 라인, ADD 요청과 일치). 5.x는 여전히 beta 라인
+2. `sleep(Date)` 오버로드 및 `sleepUntil()` 부재 — VERIFIED, workflow-sdk.dev sleep 레퍼런스 재확인 결과 duration 문자열/ms/Date 오버로드 그대로이고 `sleepUntil`은 여전히 이 SDK에 없음(Mastra 등 타 엔진에만 존재 — 09-17 DISPUTED 정정 사항 그대로 유효)
+3. Vercel Workflows Hobby 한도(50,000 events/월, Data Written 1GB, Data Retained 미제공) + Cron Jobs Hobby(하루 1회, ±59분 정밀도) — VERIFIED, 09-17 시점과 수치 동일
+
+**보강(ADD)·축소**: 없음 — 3개 클레임 전부 VERIFIED·변경 없음
+
+**실전 질문 재검증**:
+- Q1. "`workflow` 4.8.9에서 `sleepUntil()`을 써도 되나?" → SKILL.md §2 근거로 PASS (여전히 존재하지 않는 API, `sleep(date)` 오버로드 사용)
+- Q2. "Hobby로 6명×하루5회 스케줄러를 돌리면 이벤트 한도를 넘기나?" → SKILL.md §4-4 근거로 PASS (월 약 7,250/50,000 = 14.5%, 한도 변경 없음)
+
+**재검증 최종 판정**: status **APPROVED 유지**
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
 |------|------|
-| 내용 정확성 | ✅ |
+| 내용 정확성 | ✅ — 2026-09-28 재검증에서 workflow 4.8.9·sleep(Date)·Hobby 한도 3건 전부 VERIFIED, 변경 없음 |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
 | 에이전트 활용 테스트 | ✅ (2026-09-17 수행, 3/3 PASS) |
-| **최종 판정** | **APPROVED** |
+| **최종 판정** | **APPROVED** (유지) |
 
 ---
 
@@ -228,3 +248,4 @@ status: APPROVED
 | 2026-09-17 | v1 | 최초 작성 (Vercel 공식 문서 4페이지 + workflow-sdk.dev 13페이지 + GitHub·npm·web-push 교차 검증, 30개 클레임: VERIFIED 26 / DISPUTED 1 / UNVERIFIED 3) | skill-creator |
 | 2026-09-17 | v1 | 2단계 실사용 테스트 수행 (Q1 sleep(Date) vs sleepUntil / Q2 취소·재시작 순서·중복 방지 / Q3 이벤트 한도·회전·Hobby 예산 계산) → 3/3 PASS, "실사용 검증 불필요 — content test로 충분" 카테고리 판정, PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | Claude (Sonnet 5) |
+| 2026-09-28 | v1.1 | 재검증(2차) — workflow npm latest 4.8.9·sleep(Date)/sleepUntil 부재·Hobby 한도 3건 재대조, 전부 VERIFIED 변경 없음. status APPROVED 유지 | Claude (Sonnet 5) |

@@ -26,25 +26,29 @@
 - [사진 재현은 회전 방향 먼저 확정](feedback_pdf_photo_reproduction_rotation.md) — 180°(top→bottom)와 90° CCW(top→left) 혼동 시 행·열 전치. 기존 `pdf변환/` 스크립트부터 확인
 - [수정본은 새 파일명 + 미리보기 동봉](feedback_output_revision_delivery.md) — 같은 이름 덮어쓰기 금지(뷰어가 옛 버전 표시), 레이아웃 논쟁은 좌표로 제시
 - [라이브러리 스킬은 실제 사용량 실측 후 생성](feedback_verify_usage_before_library_skill.md) — package.json 의존성≠사용. import 파일 수 두 자리 이상일 때만 전용 스킬. vanilla-extract 죽은 devDep 사례
+- [전수 감사 사각지대 4유형](feedback_audit_blind_spots.md) — 훅 I/O 규약 공식 문서 대조·설치본 현지 수정 역류 점검·템플릿별 실설치 참조 스캔·짝 단위 처리. 2026-09-25 감사 직후 설치본 보고로 드러남
+- [삭제 요청은 범위를 좁게](feedback_deletion_scope_narrow.md) — 확정/경계/유지로 나눠 경계는 질문, 검색·검증 범용 에이전트는 휩쓸어 지우지 않음, 남는 자산의 설치 경로 이관
 - [토큰 95% 소진 시 일시 정지](feedback_pause_at_95_percent_tokens.md) — 장기 작업은 병렬 가능한 것만 병렬, 잔여 5% 이하면 새 작업 금지·완료/미완 목록+재개법 보고 후 멈춤
 
 ## Project — 컨벤션 자산 인프라
+
+- [★ 재개 지점 (2026-09-28 완료, 커밋 전 정지)](project_resume_2026-09-28.md) — 재검증·재테스트 완료(60일 초과 0·NEEDS_REVISION 0), 철학·학술 자산 삭제(스킬 209→187·에이전트 66→56·템플릿 8 폐지) + 2차: 7일 초과 71종 재검증, ralph-loop·riper-workflow·cra-to-vite 삭제(→184), 7일 초과 0 + 3차(09-29): PENDING_TEST 실행 검증 17→8. 남은 것: 사용자 요청 시 커밋·푸시·PR → 01·04 재설치
 
 - [하네스 평가 & 훅 다이어트 완료](project_hook_diet_plan.md) — 2026-07-04 5단계 완료 + PR #9 머지. 2026-07-10 메모리 개편(memory-stop-guard 삭제)으로 훅 22종. 후순위 중 플러그인 전환은 2026-07-09 계획 수립 착수
 - [메모리 저장 구조 (2026-07-10 개편)](project_memory_architecture.md) — 전역 실제 디렉토리 = 1차 저장, 레포 memory/ = 워킹트리 미러, 자동 커밋 전면 폐지(memory·exports), Y/N 판별 = 레포 memory/ 존재 여부. export --refresh는 `CLAUDE_PROJECT_DIR` env 필수(없으면 무음 no-op), push는 커밋과 별도 Bash 호출로
 - [PWA 예약 푸시 앱 계획 (2026-09-17)](project_pwa_scheduled_push_app.md) — 6명·하루 5회·지정 시각, Next.js PWA + Vercel Workflow(`sleep(Date)`, sleepUntil 없음) + web-push + Drizzle/Neon, 무료 운영. 스킬 2종 신설·APPROVED, 앱 프로젝트 미착수
 - [Claude 구독 중계 서버(05_gugbab-claude-relay) 계획](project_claude_relay_plan.md) — Vercel Sandbox+claude -p 구독 인증 SSE 중계. 스킬 2종 APPROVED(2026-07-03), 스캐폴딩 미착수
-- [전수 점검·모델 현행화 (2026-09-25)](project_full_audit_2026-09-25.md) — Opus 5.5/Fable 5.1 현행화(훅→규칙→에이전트→스킬 순), 신규 스킬 5·에이전트 1·템플릿 13 python-fastapi, 31종 references 분리, 삭제 0. worktree 격리·429 중단 복구 교훈, 후속 과제 목록
+- [전수 점검·모델 현행화 (2026-09-25, PR #18 머지)](project_full_audit_2026-09-25.md) — Opus 5.5/Fable 5.1 현행화(훅→규칙→에이전트→스킬 순), 신규 스킬 5·에이전트 1·템플릿 13 python-fastapi, 31종 references 분리, 삭제 0. worktree 격리·429 중단 복구 교훈, 후속 과제 목록
 - [전수감사 + 백로그 수정 완료 (2026-09-11, PR #17 머지 09-14)](project_full_audit_2026-09-11.md) — 감사 백로그 7항을 TDD로 수정(CLAUDE.md 미설치 규칙 행 자동 제거·python 누수·도메인 앱 3종 dev+TS 승격·SEO 옵트인·매니페스트 templates·깨진 참조 8건), E2E 30/30. 후속 과제: docs 프루닝·statusline 배선·구 템플릿 문서 카운트·Codex 리뷰(계정 모델 문제)
 - [전수검사·정리 (2026-08-11)](project_full_audit_2026-08-11.md) — 스킬 209·에이전트 67 전수 감사, 에이전트 4종 정리(67→63), 긴급 스킬 7종 갱신, UPDATE 백로그 12건
 - [doctor 컨텍스트 최적화 (2026-08-10)](project_doctor_context_optimization.md) — rules 5종 paths 스코핑·auto 모드 적용, 스킬 209종 목록 미노출 발견(정리 작업 1단계)
-- [project-install.sh 이식 아키텍처](project_install_architecture.md) — 14개 템플릿(0~13: 11 seo-geo 애드온·12 fortune-app·13 python-fastapi, 2026-09-25 신설), JAVA_SKILLS_* 필터, 2026-08-31 누수 차단(java·rust·unity)+references 복사+매니페스트 docs kind+template-separation E2E, gen-settings.js로 settings.json 생성. 2026-09-11: 매니페스트 `templates` 필드, 도메인 앱 3종(9·10·12) = dev+TS+SEO 옵트인
+- [project-install.sh 이식 아키텍처](project_install_architecture.md) — 템플릿 13개(0~13, 8 academic은 2026-09-28 폐지·결번 유지: 11 seo-geo 애드온·12 fortune-app·13 python-fastapi, 2026-09-25 신설), JAVA_SKILLS_* 필터, 2026-08-31 누수 차단(java·rust·unity)+references 복사+매니페스트 docs kind+template-separation E2E, gen-settings.js로 settings.json 생성. 2026-09-11: 매니페스트 `templates` 필드, 도메인 앱 3종(9·10·12) = dev+TS+SEO 옵트인
 - [lfcp-ui-ssr 설치 타깃 실측 (2026-09-01)](project_lfcp_ui_ssr_target.md) — lfmall SEO·GEO용 Java 11+SB 2.5+JSP 봇 대응 SSR. 템플릿 `5,11`(java-legacy + seo-geo 애드온, 커머스 프로파일 c). seo-geo 템플릿 신설 계기. 2026-09-02 설치 완료
 - [lfcp-nxapi 설치 타깃 실측 (2026-08-31)](project_lfcp_nxapi_target.md) — 실무 Java 레거시 커머스 API. java-spring-legacy(5) 1:1 매칭, Oracle 전용·Redisson 2.15.2·Joda 269파일 실측, SAP JCo·log4j1 잔재 참고
 - [프로젝트 scope 전용 원칙](project_scope_only.md) — gugbab-claude 모든 산출물은 프로젝트 scope에만, 글로벌(~/.claude) 설정 금지
 - [MCP 미사용 결정](project_mcp_decision.md) — WebSearch/WebFetch만 사용, 팀 이식성 우선
 - [세션 일괄 메모리 저장·재시작 절차](project_multi_session_memory_save_restart.md) — 업데이트 후 ListAgents+SendMessage 병렬 요청, mtime으로 완료 확인, "진행할까요?" 멈춤 세션은 승인 메시지+notify_when_idle, 원격 재시작 불가(각 터미널 `/exit`→`claude -c`)
-- [Claude Code 설치 환경·npm SSL 우회](project_claude_install_environment.md) — 단일 nvm-global 설치(2.1.282, 2026-09-25), 업데이트 후 버전 안 바뀌면 .npm-global 중복 의심, npm tgz가 SELF_SIGNED_CERT로 막히면 curl 우회, `ENOTEMPTY rename`이면 `@anthropic-ai/.claude-code-XXXX` 잔재 삭제, postinstall 미완료 시 `claude` permission denied
+- [Claude Code 설치 환경·npm SSL 우회](project_claude_install_environment.md) — 단일 nvm-global 설치(2.1.283, 2026-09-26 자동 업데이트 — 업데이트 순간 일시적 "native binary not installed"), 업데이트 후 버전 안 바뀌면 .npm-global 중복 의심, npm tgz가 SELF_SIGNED_CERT로 막히면 curl 우회, `ENOTEMPTY rename`이면 `@anthropic-ai/.claude-code-XXXX` 잔재 삭제, postinstall 미완료 시 `claude` permission denied
 - [PDF 빈칸 뚫기 워크플로우](project_pdf_blank_workflow.md) — 반복 요청 작업(첫 건 2026-07-13 종결). 글자(char) 단위 판정·줄별 분리·침범 금지 6대 주의사항 + 검증 6종. 파일은 사용 후 삭제됨 — 재요청 시 메모리 기준 재작성, 미세 침범 개선 반영해 시작
 - [PDF 근무표 양식 생성 워크플로우](project_pdf_schedule_form_workflow.md) — 반복 요청 작업(2026-07-15 첫 건, 2026-08-13 재요청). 요일=상단 가로 / 홀·주방=좌측 세로 8행이 불변 조건. 스크립트 전문 포함, 재요청 시 `pdf변환/make-schedule.py` 먼저 확인
 - [프론트 도메인 리팩터링 자산 정비 (2026-08-26)](project_frontend_domain_refactor_assets_2026-08-26.md) — 타깃 2개(lfos-ui Next16 모노레포 / lf-ui Vite+React18+Recoil+MUI5+TS4.7 레거시) 스택 실측표, 깨진 스킬 참조 수리, 신규 스킬 8종+에이전트 1종, `--legacy` 훅 프로파일·SEO 옵트아웃·commands export. 작업은 레포에서만, 타깃은 export 대상

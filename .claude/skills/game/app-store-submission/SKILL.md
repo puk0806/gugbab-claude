@@ -6,7 +6,7 @@ description: Unity 2D 모바일 게임을 Google Play와 App Store에 제출하�
 # Unity 2D 모바일 게임 — Google Play / App Store 제출 가이드
 
 > 소스: Google Play Console Help, Android Developers, Apple Developer (App Store Connect Help, App Review Guidelines)
-> 검증일: 2026-06-09
+> 검증일: 2026-09-28 (재검증, 이전 2026-09-26. Target API 36 유예 신청 자격·방법 명확화 — 신규 앱은 유예 불가, 기존 앱 업데이트만 Play Console Policy status 페이지에서 신청 가능함을 Google Play Console 고객센터 공식 문서로 확인해 반영. 이전 재검증: 2026-08-31 Target API 36 시행·2026-04-28 iOS 26 SDK 의무화·2026-01-31 연령 등급 신설문 데드라인이 모두 **이미 지난 시점**이므로 본문 시제를 "예정"에서 "시행 중"으로 정정)
 > 대상 버전: Google Play Console (2026), App Store Connect (iOS 26 SDK / Xcode 26 기준)
 
 ---
@@ -19,9 +19,10 @@ description: Unity 2D 모바일 게임을 Google Play와 App Store에 제출하�
 - AAB는 배포 전용 포맷 — 디바이스 직접 설치 불가, Google Play가 디바이스별 APK로 분할 전달
 - Unity에서: **Player Settings → Publishing Settings → Build → Build App Bundle (Google Play) 체크**
 
-### 1-2. Target API Level (매년 상향, 2026년 기준)
-- **2025-08-31부터 현재 기준**: 신규 앱·업데이트는 **Android 15 (API 35) 이상** target 필수
-- **2026-08-31부터**: **Android 16 (API 36) 이상** target 필수 (Wear OS·Android TV는 API 35)
+### 1-2. Target API Level (매년 상향, 2026-09 현재 기준)
+- **2025-08-31 ~ 2026-08-30 기간**: 신규 앱·업데이트는 Android 15 (API 35) 이상 target 필수였음 (이 기간은 종료됨)
+- **2026-08-31부터 (현재 시행 중)**: 신규 앱·업데이트는 **Android 16 (API 36) 이상** target 필수 (Wear OS·Android TV는 API 35)
+- **유예(2026-11-01까지) 신청 자격**: **신규 앱 제출에는 유예가 없다** — 신규 앱은 2026-08-31부터 예외 없이 API 36 필수. 유예는 **이미 게시된 기존 앱을 상위 target API로 업데이트할 계획이 있는 개발자**에게만 허용되며, Play Console **Policy status** 페이지의 해당 경고/이슈 상세에서 신청 양식(Request more time)에 접근한다 (출처: Google Play Console 고객센터 "Target API level requirements for Google Play apps")
 - Unity에서: **Player Settings → Other Settings → Target API Level**
 - 정책: 신규/업데이트는 최신 메이저 Android 출시 후 1년 이내 target 갱신, 기존 앱은 2년 이내
 
@@ -61,9 +62,9 @@ description: Unity 2D 모바일 게임을 Google Play와 App Store에 제출하�
 2. Xcode에서 **Product → Archive** → Organizer에서 **Distribute App → App Store Connect → Upload**
 3. 대안: 빌드 산출물(`.ipa`)을 **Transporter 앱**으로 직접 업로드
 
-### 2-2. Xcode SDK 요구사항 (2026-04-28 이후)
-- App Store Connect 업로드 빌드는 **iOS 26 SDK / Xcode 26 이상**으로 빌드되어야 함 (2026-04-28부터)
-- 단, 이는 *빌드 SDK*이지 *deployment target*이 아님 — 앱 실행 가능한 최소 iOS 버전은 별도 설정 (iOS 16/17 등 유지 가능)
+### 2-2. Xcode SDK 요구사항 (2026-04-28부터 시행 중 — 유예 없음)
+- App Store Connect 업로드 빌드는 **iOS 26 SDK / Xcode 26 이상**으로 빌드되어야 함 (2026-04-28부터 이미 시행 중. 구버전 툴체인 빌드는 업로드 시 자동 거부, 별도 유예 기간 없음)
+- 단, 이는 *빌드 SDK*이지 *deployment target*이 아님 — 앱 실행 가능한 최소 iOS 버전은 별도 설정 (iOS 16/17 등 유지 가능, 기존 사용자 영향 없음)
 
 ### 2-3. Bundle ID 정합성
 - Xcode 프로젝트의 Bundle Identifier == App Store Connect 앱의 Bundle ID
@@ -78,10 +79,10 @@ description: Unity 2D 모바일 게임을 Google Play와 App Store에 제출하�
 - **개인정보처리방침 URL**: 필수 (App Store Connect 메타데이터 + 앱 내부 둘 다)
 - **App Privacy 섹션** (Privacy Nutrition Label): 2020-12-08부터 의무. 데이터 수집 유형, 추적 사용 여부 등 설문 작성
 
-### 2-6. 연령 등급 (2026-01-31 이후 강제 갱신)
+### 2-6. 연령 등급 (2026-01-31 데드라인 경과 — 현재 미응답 시 즉시 차단)
 - 기존: 4+, 9+, 12+, 17+
-- 신규: **4+, 9+, 13+, 16+, 18+** (2025년 개편)
-- 2026-01-31까지 모든 앱이 새 설문에 답해야 하며, 미응답 시 업데이트 제출 차단됨
+- 신규: **4+, 9+, 13+, 16+, 18+** (2025-07-24 발표 개편)
+- 2026-01-31 데드라인이 이미 지났으므로, 새 설문에 아직 응답하지 않은 앱은 **지금 신규 제출·업데이트가 즉시 차단된 상태**
 - 새 설문: 인앱 통제, 의료·웰니스 주제, 폭력 테마 관련 질문 추가
 
 ### 2-7. iOS 최소 버전 (Deployment Target)
@@ -229,7 +230,7 @@ PlayerSettings.iOS.buildNumber = (int.Parse(PlayerSettings.iOS.buildNumber) + 1)
 
 ### Google Play
 - [ ] AAB 빌드 (APK 아님)
-- [ ] Target API Level 35+ (2026-08-31 이후 36+)
+- [ ] Target API Level **36+** (2026-08-31부터 시행 중 — 신규 앱은 유예 불가. 기존 앱 업데이트만 Policy status 페이지에서 신청 시 2026-11-01까지 연장 가능)
 - [ ] ARM64 포함, IL2CPP backend
 - [ ] versionCode 이전 빌드보다 증가
 - [ ] 512×512 아이콘, 1024×500 Feature Graphic
@@ -239,12 +240,12 @@ PlayerSettings.iOS.buildNumber = (int.Parse(PlayerSettings.iOS.buildNumber) + 1)
 - [ ] 개인정보처리방침 URL (HTML, 공개)
 
 ### App Store
-- [ ] Xcode 26 / iOS 26 SDK 빌드 (2026-04-28 이후)
+- [ ] Xcode 26 / iOS 26 SDK 빌드 (2026-04-28부터 시행 중, 유예 없음)
 - [ ] 1024×1024 아이콘, 알파 채널 없음
 - [ ] 스크린샷 6.9"(1320×2868) 또는 6.5"(1284×2778) 1순위, iPad 지원 시 13" 추가
 - [ ] CFBundleVersion 이전 빌드보다 증가
 - [ ] Bundle ID Xcode == App Store Connect 일치
-- [ ] 연령 등급 2025년 신규 설문 완료 (2026-01-31 데드라인)
+- [ ] 연령 등급 2025년 신규 설문 완료 (2026-01-31 데드라인 경과 — 미완료 시 지금 즉시 제출 차단)
 - [ ] 개인정보처리방침 URL + App Privacy 설문
 - [ ] IAP 있으면 Restore Purchases 버튼 구현
 - [ ] 계정 생성 기능 있으면 앱 내 계정 삭제 구현

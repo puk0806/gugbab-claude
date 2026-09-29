@@ -1,8 +1,8 @@
 ---
 skill: dream-content-research
 category: humanities
-version: v1
-date: 2026-05-15
+version: v2
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `dream-content-research` |
 | 스킬 경로 | `.claude/skills/humanities/dream-content-research/SKILL.md` |
-| 검증일 | 2026-05-15 |
-| 검증자 | skill-creator (Claude Code) |
-| 스킬 버전 | v1 |
+| 검증일 | 2026-09-26 |
+| 검증자 | skill-creator (Claude Code) / 2026-09-26 재검증: 메인 세션 (DreamResearch.net 원문·Crossref DOI 직접 대조) |
+| 스킬 버전 | v2 |
 
 ---
 
@@ -103,7 +103,24 @@ status: APPROVED
 | 정상 꿈 표본 = 부정 정서 > 긍정 정서 | Hall/Van de Castle 1966 (FiveThirtyEight 인용) | "Dreams are more negative than real life" ResearchGate | **VERIFIED** |
 | 연속성 가설 한계 — 일부 꿈은 불연속 (Domhoff 본인 인정) | Psychology Today "Continuity Hypothesis: A More Balanced Account" | Domhoff 2017 "Invasion of the Concept Snatchers" | **VERIFIED** |
 
-**총 클레임**: 12개 / **VERIFIED**: 12 / **DISPUTED**: 0 / **UNVERIFIED**: 0
+**총 클레임**: 12개 / **VERIFIED**: 12 / **DISPUTED**: 0 / **UNVERIFIED**: 0 (최초)
+
+#### 2026-09-26 재검증 — 1차 원문·DOI 직접 대조 (11건)
+
+| # | 클레임 | 1차 소스 | 판정 |
+|---|---|---|---|
+| R1 | "Zadra & Robert et al. (2003) *Dreaming*" 학업 스트레스 반복 꿈 논문 | Crossref 10.1023/A:1021152411010 | **DISPUTED→수정** — 저자 Duke & Davidson, 2002, 12(4) 185–197 |
+| R2 | Norms 표본 100+100, 1인 5꿈 | dreams.ucsc.edu/Norms 원문 | VERIFIED (개별 표 여성 491꿈 주기 보완) |
+| R3 | 부정 정서 > 긍정 | Norms Emotions 표: 부정 80%/80% | VERIFIED (수치로 교체) |
+| R4 | 약 1/3 꿈에 불운 | Norms Misfortune 표: 36%/33% | VERIFIED (수치로 교체) |
+| R5 | 10개 일반 카테고리·정신분석 척도 언급 | Chapter 2 원문 | VERIFIED |
+| R6 | Aggression 8 하위 | Chapter 2 원문 (A1~A8) | VERIFIED / Friendly 7·Sexual 5는 Appendix — `미대조` |
+| R7 | Schredl DRF r≈0.85 | Schredl 2004 초록("high retest reliability", N=198 수면장애 환자) | 서지 VERIFIED / **수치 UNVERIFIED→주의** |
+| R8 | Hobson (2009) "The AIM Model of …" 서지 | Crossref 검색 불특정 | **DISPUTED→교체** — Hobson et al. 2000 *BBS* 23(6) / Hobson 2009 *Nat Rev Neurosci* 10(11) |
+| R9 | Zadra, O'Brien, Donderi 1998 | Crossref: *ICP* 17(4) 293–311 | VERIFIED (권호 보완) |
+| R10 | Pesant & Zadra 2006 | Crossref: *J Clin Psychol* 62(1) 111–121 (온라인 2005) | VERIFIED (권호 보완) |
+| R11 | Domhoff & Schneider 2008 | Crossref: *Conscious Cogn* 17(4) 1238–1247 | VERIFIED (권호 보완) |
+| R12 | 반복 꿈 경험률 60~75% | 1차 수치 미대조 | **UNVERIFIED→`주의: 미검증`** |
 
 ### 4-3. 구조 완전성
 
@@ -129,6 +146,30 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+### skill-tester 재테스트 (2026-09-28)
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (도메인 전담 에이전트 미등록으로 대체)
+**수행 방법**: 1차 원문·DOI 대조 재검증(2026-09-26, §4-2 서지 오류 2건 정정)으로 PENDING_TEST 전환된 스킬 재테스트. SKILL.md Read 후 실전 질문 2개(모두 정정된 사실 겨냥) 답변, 서지 근거·정정 반영 확인
+
+Q1 (정정된 사실 겨냥). "학업 스트레스·반복 꿈 연구를 Zadra & Robert (2003)로 인용해도 되나요?" — PASS (근거: 소스 목록·§3.2 — "이전 판은 Zadra & Robert et al. (2003)로 적었으나 Crossref DOI 메타데이터상 저자는 Duke & Davidson, 연도는 2002" 정정을 정확히 답변에 반영, 잘못된 인용 거부)
+Q2 (정정된 사실 겨냥). "Hobson (2009) 'The AIM Model of Dreaming, Sleeping, and Waking Consciousness'로 인용해도 되나요?" — PASS (근거: 소스 목록·§6.1 — 해당 서지는 특정 불가로 삭제, Hobson et al.(2000) BBS 23(6) + Hobson(2009) Nat Rev Neurosci 10(11)로 교체됐음을 정확히 답변에 반영)
+
+agent content test: 2/2 PASS (2026-09-28 실제 agent 기반 재테스트). 2026-09-26 재검증으로 정정된 서지 오류 2건(학업 스트레스 논문 저자, Hobson AIM 논문 서지)이 SKILL.md에 정확히 반영되었음을 확인. PENDING_TEST → APPROVED 전환.
+
+### 재검증 기록 (2026-09-26)
+
+**수행일**: 2026-09-26
+**수행자**: 메인 세션 재검증 (1차 원문·DOI 대조 후 SKILL.md 자체 답변 확인)
+**수행 방법**: §4-2 R1~R12 대조 → 서지 오류 2건 정정 → 실전 질문 2개
+
+Q1. "학업 스트레스와 반복 꿈 연구를 참고문헌에 넣으려면?" — PASS (근거: 소스 목록 정정 — Duke & Davidson (2002), *Dreaming* 12(4), 185–197, DOI 10.1023/A:1021152411010)
+Q2. "앱 통계 화면에서 '정상 표본도 부정 정서가 많다'를 수치로 보여주려면?" — PASS (근거: §1.5 — Norms Emotions 표 부정 정서 80%, 집단 평균·시대 제약 주의 병기)
+
+agent content test: 2/2 PASS (재검증 기록). 서지 정정으로 status PENDING_TEST 전환.
+
+### 최초 테스트 (2026-05-15)
 
 **수행일**: 2026-05-15
 **수행자**: skill-tester → general-purpose (도메인별 전문 에이전트 미등록으로 대체)
@@ -181,8 +222,8 @@ status: APPROVED
 | 내용 정확성 | ✅ (12/12 클레임 VERIFIED) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-15 — Q1 10개 카테고리·정서 5종·금지 척도 / Q2 연속성 가설 개인 단정 anti-pattern / Q3 Hobson-Solms 대립점) |
-| **최종 판정** | **APPROVED** (학술 지식 스킬 — content test 3/3 PASS로 APPROVED 전환) |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-15 — Q1 10개 카테고리·정서 5종·금지 척도 / Q2 연속성 가설 개인 단정 anti-pattern / Q3 Hobson-Solms 대립점) / 2026-09-26 메인 세션 재검증 2/2 PASS / 2026-09-28 skill-tester 실제 agent 재테스트 2/2 PASS |
+| **최종 판정** | **APPROVED** (2026-09-28 skill-tester 재테스트: 서지 정정 2건이 SKILL.md에 정확히 반영됨을 agent content test로 확인, 2/2 PASS) |
 
 ---
 
@@ -191,6 +232,7 @@ status: APPROVED
 - [✅] skill-tester 정식 호출 (2026-05-15 완료, 3/3 PASS — APPROVED 전환)
 - [❌] 한국 표본 norms 자료가 발견되면 §1.4 주의 박스에 추가 비교 (현재 미발견) — 선택 보강 (차단 요인 아님)
 - [❌] DreamBank.net 데이터 직접 활용 예시 코드(JS/Python)는 별도 frontend 스킬(`dream-recurrence-detection`)에서 다룸 — 본 스킬은 *학술 근거* 영역에 집중 (선택 보강, 차단 요인 아님)
+- [✅] skill-tester 실제 agent 재테스트 수행 및 섹션 5·6·7·8 동기화 (2026-09-28 완료, 2/2 PASS) — APPROVED 재전환
 
 ---
 
@@ -200,3 +242,5 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-05-15 | v1 | 최초 작성 — Hall/Van de Castle 코드북·Domhoff 연속성 가설·Zadra/Robert 반복 꿈·Schredl DRF·Hobson AIM·Solms 정리, 앱 적용 가이드 + 함정 5종 + 짝 스킬 관계 | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 Hall/Van de Castle 10개 카테고리·정서 5종·금지 척도 / Q2 연속성 가설 개인 단정 anti-pattern / Q3 Hobson AIM vs Solms 대립점) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-26 | v2 | 재검증 — DreamResearch.net 원문·Crossref 대조 12건, 서지 오류 2건 정정(학업 스트레스 논문 저자 Zadra & Robert 2003 → Duke & Davidson 2002, Hobson "AIM Model" 불특정 서지 교체), Norms 수치 보강, 미검증 2건(DRF r=0.85, 반복 꿈 60~75%), 실전 질문 2/2 PASS → PENDING_TEST | 메인 세션 (재검증) |
+| 2026-09-28 | v2 | skill-tester 실제 agent 재테스트 수행 (Q1 Duke & Davidson 2002 서지 정정 확인 / Q2 Hobson AIM 서지 교체 확인) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |

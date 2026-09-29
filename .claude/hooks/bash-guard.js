@@ -6,13 +6,16 @@
  * 목적: Bash 명령어 안전 관리
  *
  * PreToolUse:
- *   - 위험한 Bash 패턴 → deny
- *   - 안전한 cd+git / heredoc 패턴 → allow (Claude Code 하드코딩 휴리스틱 우회)
+ *   - 위험한 Bash 패턴 → deny (정규식 + classifyShell 명령 단위 분류)
+ *   - 사용자 확인 대상(commit/push/publish, reset --hard, clean -f, 프로젝트 밖 rm, sudo, dd …) → ask
+ *   - 정적 판정 불가(동적 명령명·파싱 실패) → null (allow 하지 않음)
+ *   - 안전한 cd+git / heredoc / compound / script 패턴 → allow (Claude Code 하드코딩 휴리스틱 우회)
  *   - 그 외 → null (다른 훅에 위임)
+ *   ※ 파이프·체인·$()·서브셸·bash -c·env/command 전치·git -C 등 우회 형태도 일반 형태와 동일 판정
  *
  * PermissionRequest:
- *   - git commit / git push → null (사용자 확인 필요)
- *   - 그 외 Bash → allow
+ *   - PreToolUse 와 같은 분류기로 위험(deny/ask)·판정 불가 → null (사용자 확인)
+ *   - 그 외 Bash → allow (읽기 전용·일반 개발 명령 프롬프트 마찰 제거)
  *   - Bash 외 도구 → null (auto-approve.js에 위임)
  *
  * 안전 패턴 자동 허용 — 경로 경계는 동적으로 감지:
@@ -56,7 +59,7 @@ const DENY_PATTERNS = [
   ...buildProtectedWritePatterns(),
   // 위험 명령 패턴
   { pattern: /git\s+push\s+(--force|-f)\b/, reason: 'force push는 히스토리를 덮어씁니다. 직접 실행하세요.' },
-  { pattern: /git\s+push\s+.*-f\b/, reason: 'force push 감지. 직접 실행하세요.' },
+  // (구 `git\s+push\s+.*-f\b` 는 `git push origin feature-f` 를 오탐해 제거 — 뒤쪽 -f·+refspec·전치 옵션은 classifyShell 이 토큰 단위로 판정)
   { pattern: /rm\s+-rf\s+\/(bin|boot|dev|etc|lib|lib64|proc|root|sbin|sys|usr|var)(\/|$|\s|$)/, reason: '시스템 디렉토리 삭제는 차단됩니다.' },
   { pattern: /rm\s+-rf\s+\/$/, reason: '루트 디렉토리 삭제는 차단됩니다.' },
   { pattern: /rm\s+-rf\s+\/\s/, reason: '루트 디렉토리 삭제는 차단됩니다.' },
@@ -70,11 +73,6 @@ const DENY_PATTERNS = [
   { pattern: /chmod\s+777/, reason: '777 권한 설정은 보안 위험입니다.' },
   { pattern: /git\s+reset\s+--hard\s+HEAD~[2-9]\d*/, reason: '10개 이상의 커밋 되돌리기는 위험합니다. 직접 실행하세요.' },
   { pattern: /:\s*\(\)\s*\{.*:\|:.*\}/, reason: 'Fork bomb 패턴 감지. 차단합니다.' },
-]
-
-const REQUIRE_APPROVAL_PATTERNS = [
-  /(?:^|&&|\|\||;|\n)\s*(?:[A-Za-z_][A-Za-z_0-9]*=(?:"[^"]*"|'[^']*'|[^\s]*)\s+)*git\s+commit\b/,
-  /(?:^|&&|\|\||;|\n)\s*(?:[A-Za-z_][A-Za-z_0-9]*=(?:"[^"]*"|'[^']*'|[^\s]*)\s+)*git\s+push\b/,
 ]
 
 // 안전 패턴 자동 허용 — heredoc 출력에 허용되는 비실행 확장자
@@ -211,6 +209,7 @@ function isUnderTempDir(absPath) {
 // 안전 패턴: cd <abs path under allowed> && <safe rest>
 // → Claude Code의 "cd before git" 경고 우회
 function isCdGitSafe(cmd, allowedDirs) {
+  if (hasNonRmRisk(cmd, allowedDirs)) return false
   const trimmed = cmd.trim()
   // 첫 줄에서 cd 컴파운드 추출
   const firstLine = trimmed.split('\n')[0]
@@ -235,6 +234,7 @@ function isCdGitSafe(cmd, allowedDirs) {
 // 안전 패턴: cat > <safe path> << 'EOF' (또는 \EOF) ... EOF
 // → Claude Code의 "brace+quote obfuscation" 경고 우회
 function isHeredocSafe(cmd, allowedDirs) {
+  if (hasNonRmRisk(cmd, allowedDirs)) return false
   const firstLine = cmd.split('\n')[0]
   // cat/tee > FILE << 'DELIM'  또는  << \DELIM 만 허용 (확장 차단되는 형태)
   const m = firstLine.match(
@@ -290,6 +290,13 @@ const COMPOUND_SAFE_COMMANDS = new Set([
   'xargs',
 ])
 
+// rm 인자가 "그대로 읽히는" 경로인가 — 홈(~)·변수·따옴표·치환·상위(..) 는 자동 허용 대상에서 제외
+function isPlainRelativeRmArg(a) {
+  if (/[~$"'`\\]/.test(a)) return false
+  if (/(?:^|\/)\.\.(?:\/|$)/.test(a)) return false
+  return true
+}
+
 function isStatementSafeForCompound(stmt, allowedDirs) {
   const trimmed = stmt.trim()
   if (!trimmed) return false
@@ -334,6 +341,7 @@ function isStatementSafeForCompound(stmt, allowedDirs) {
   if (firstWord === 'rm') {
     const args = trimmed.split(/\s+/).slice(1).filter(a => !a.startsWith('-'))
     for (const a of args) {
+      if (!isPlainRelativeRmArg(a)) return false // ~ · $VAR · 따옴표 · .. → 경로 해석 불가/밖 가능
       if (a.startsWith('/')) {
         if (!isUnderAllowed(a, allowedDirs) && !isUnderTempDir(a)) return false
       }
@@ -488,6 +496,7 @@ function extractCommandSubstitutions(line) {
 function isShellScriptSafe(cmd, allowedDirs) {
   const trimmed = cmd.trim()
   if (!trimmed) return false
+  if (hasNonRmRisk(trimmed, allowedDirs)) return false
 
   // 다른 핸들러 영역 양보 — heredoc 은 별도, cd-only 도 별도
   if (/<<-?\s*['\\]?[A-Za-z_]/.test(trimmed)) return false
@@ -591,6 +600,7 @@ function isShellScriptSafe(cmd, allowedDirs) {
     if (firstWord === 'rm' || firstWord === 'cp' || firstWord === 'mv') {
       const args = stmt.split(/\s+/).slice(1).filter(a => !a.startsWith('-'))
       for (const a of args) {
+        if (firstWord === 'rm' && !isPlainRelativeRmArg(a)) return false
         if (a.startsWith('/')) {
           if (!isUnderAllowed(a, allowedDirs) && !isUnderTempDir(a)) return false
         }
@@ -634,6 +644,9 @@ function isShellScriptSafe(cmd, allowedDirs) {
       const fw = (stage.match(/^(\S+)/) || [])[1]
       if (!fw) return false
       if (!SCRIPT_ALL_SAFE.has(fw)) return false
+      // 파이프 각 단계에서도 git 위험 서브커맨드·publish 차단 (구: statement 첫 단어만 검사 → `true | git push` 우회)
+      if (fw === 'git' && /\bgit\s+(?:push|commit|reset\s+--hard|clean\s+-[fdx]|checkout\b)/.test(stage)) return false
+      if (/^(?:npm|pnpm|yarn|bun)$/.test(fw) && /\bpublish\b/.test(stage)) return false
       // xargs 다음 명령은 read-only
       if (fw === 'xargs') {
         const m = stage.match(/^xargs(?:\s+-\S+)*\s+(\S+)/)
@@ -670,6 +683,7 @@ function isShellScriptSafe(cmd, allowedDirs) {
 function isCompoundSafe(cmd, allowedDirs) {
   const trimmed = cmd.trim()
   if (!trimmed || trimmed.includes('\n')) return false
+  if (hasNonRmRisk(trimmed, allowedDirs)) return false // `a && b; git push` 처럼 ; 뒤에 숨은 명령 포함
 
   // 동적 코드 평가 차단
   if (/\$\(/.test(trimmed)) return false
@@ -699,6 +713,7 @@ function isCompoundSafe(cmd, allowedDirs) {
 function isBraceExpansionSafe(cmd) {
   const trimmed = cmd.trim()
   if (!trimmed) return false
+  if (hasNonRmRisk(trimmed, [])) return false
 
   // 실제로 brace expansion(쉼표 포함)을 쓰지 않으면 적용 대상 아님
   if (!/\{[^{}]*,[^{}]*\}/.test(trimmed)) return false
@@ -757,22 +772,710 @@ function isBraceExpansionSafe(cmd) {
   return true
 }
 
-function handlePreToolUse(toolName, toolInput, cwd) {
-  if (toolName !== 'Bash') return null
+// ─────────────────────────────────────────────────────────────
+// 셸 명령 분석기 (2026-09-26 사각지대 감사 C1·C3·C6 대응)
+//
+// 정규식 문자열 매칭은 파이프 단계·체인·치환·서브셸·`bash -c`·명령 전치(env/command/…)·
+// git 전역 옵션(-C 등)·따옴표 분할(gi"t")을 놓친다. 명령을 셸 문법 수준으로 풀어
+// "실제로 실행될 명령(invocation)" 목록을 만든 뒤 명령 단위로 위험을 분류한다.
+//
+// 보수 원칙: 정적으로 해석할 수 없는 것(동적 명령명·닫히지 않은 따옴표·과도한 중첩)은
+// 'unknown' — PreToolUse 에서 allow 하지 않고 PermissionRequest 에서 자동 승인하지 않는다.
+// 한계: 셸 문법 완전 구현이 아니다(case 패턴·산술식 등은 근사). 그래서 근사가 틀리면
+//       항상 "더 묻는" 쪽으로 틀리도록 설계했다.
+// ─────────────────────────────────────────────────────────────
+const os = require('os')
 
-  const cmd = (toolInput.command || '').trim()
+const MAX_ANALYZE_LEN = 1000000
+const MAX_DEPTH = 8
+const ZERO_WIDTH_RE = /[​-‍⁠﻿­]/g
+const HOME_DIR = (() => { try { return path.resolve(os.homedir()) } catch { return null } })()
 
-  for (const { pattern, reason } of DENY_PATTERNS) {
-    if (pattern.test(cmd)) {
-      return {
-        hookSpecificOutput: {
-          hookEventName: 'PreToolUse',
-          permissionDecision: 'deny',
-          permissionDecisionReason: reason,
-        },
+const SHELL_NAMES = new Set(['sh', 'bash', 'zsh', 'dash', 'ksh', 'mksh', 'ash', 'fish', 'yash', 'tcsh', 'csh'])
+const RESERVED_SKIP = new Set(['!', '{', '}', 'if', 'then', 'elif', 'else', 'fi', 'while', 'until', 'do', 'done', 'esac', 'time', 'coproc'])
+const FETCHERS = new Set(['curl', 'wget', 'fetch', 'http', 'https', 'aria2c', 'xh'])
+const EXEC_SINKS = new Set(['eval', 'source', '.'])
+const PUBLISHERS = new Set(['npm', 'pnpm', 'yarn', 'bun', 'cargo'])
+const SYSTEM_DIRS = ['/bin', '/boot', '/dev', '/etc', '/lib', '/lib64', '/proc', '/root', '/sbin', '/sys', '/usr',
+  '/var', '/opt', '/System', '/Library', '/Applications', '/private/etc', '/private/var', '/cores', '/Volumes']
+const LEVEL_RANK = { deny: 3, ask: 2, unknown: 1 }
+
+function isInterpreterName(name) {
+  return SHELL_NAMES.has(name) || /^python[\d.]*$/.test(name) || /^(?:node|nodejs|perl|ruby|php|lua|pwsh|powershell|osascript|deno|bun|tclsh|Rscript)$/i.test(name)
+}
+
+function newWord() { return { value: '', quoted: false, dyn: false, subst: false, tilde: false } }
+
+// "..." 내부 — $ 확장·$(…)·`…` 는 살아 있다
+function readDouble(src, i, cur, st) {
+  const n = src.length
+  while (i < n) {
+    const c = src[i]
+    if (c === '"') return i + 1
+    if (c === '\\' && i + 1 < n) {
+      const nx = src[i + 1]
+      if ('$`"\\\n'.includes(nx)) { if (nx !== '\n') cur.value += nx; i += 2; continue }
+      cur.value += c; i++; continue
+    }
+    if (c === '$' && src[i + 1] === '(') {
+      const r = readBalanced(src, i + 2, st); addSub(st, r.inner, cur); cur.value += '$(…)'; i = r.end; continue
+    }
+    if (c === '`') { const r = readBacktick(src, i + 1, st); addSub(st, r.inner, cur); cur.value += '`…`'; i = r.end; continue }
+    if (c === '$') { cur.dyn = true; cur.value += c; i++; continue }
+    cur.value += c; i++
+  }
+  st.error = st.error || '닫히지 않은 큰따옴표'
+  return n
+}
+
+// $( … ) / <( … ) 의 짝 괄호 찾기 — 따옴표·이스케이프 인지
+function readBalanced(src, i, st) {
+  const n = src.length, start = i
+  let depth = 1
+  const heredocs = [] // $( cat <<'EOF' … EOF ) — 본문의 따옴표·괄호는 짝 계산에서 제외
+  while (i < n) {
+    const c = src[i]
+    if (c === '\\') { i += 2; continue }
+    if (c === '<' && src[i + 1] === '<' && src[i + 2] !== '<') {
+      const m = /^<<-?[ \t]*(?:'([^'\n]*)'|"([^"\n]*)"|\\?([A-Za-z_0-9]+))/.exec(src.slice(i, i + 256))
+      if (m) { heredocs.push({ delim: m[1] ?? m[2] ?? m[3], strip: m[0].startsWith('<<-') }); i += m[0].length; continue }
+    }
+    if (c === '\n' && heredocs.length) {
+      i++
+      for (const hd of heredocs.splice(0)) {
+        while (i < n) {
+          const nl = src.indexOf('\n', i)
+          const line = src.slice(i, nl < 0 ? n : nl)
+          i = nl < 0 ? n : nl + 1
+          if ((hd.strip ? line.replace(/^\t+/, '') : line) === hd.delim) break
+        }
+      }
+      continue
+    }
+    if (c === "'") { const j = src.indexOf("'", i + 1); if (j < 0) break; i = j + 1; continue }
+    if (c === '"') {
+      i++
+      while (i < n && src[i] !== '"') i += src[i] === '\\' ? 2 : 1
+      i++; continue
+    }
+    if (c === '(') depth++
+    else if (c === ')') { depth--; if (depth === 0) return { inner: src.slice(start, i), end: i + 1 } }
+    i++
+  }
+  st.error = st.error || '닫히지 않은 $( … )'
+  return { inner: src.slice(start), end: n }
+}
+
+function readBacktick(src, i, st) {
+  const n = src.length
+  let j = i
+  while (j < n) {
+    if (src[j] === '\\') { j += 2; continue }
+    if (src[j] === '`') return { inner: src.slice(i, j).replace(/\\([`\\$])/g, '$1'), end: j + 1 }
+    j++
+  }
+  st.error = st.error || '닫히지 않은 백틱'
+  return { inner: src.slice(i), end: n }
+}
+
+// $'…' (ANSI-C 인용) — 이스케이프 해석해 실제 문자열로
+function readAnsiC(src, i, st) {
+  const n = src.length
+  let out = ''
+  const simple = { n: '\n', t: '\t', r: '\r', a: '\x07', b: '\b', e: '\x1b', E: '\x1b', f: '\f', v: '\v', '\\': '\\', "'": "'", '"': '"', '?': '?' }
+  while (i < n) {
+    const c = src[i]
+    if (c === "'") return { value: out, end: i + 1 }
+    if (c === '\\' && i + 1 < n) {
+      const nx = src[i + 1]
+      if (simple[nx] !== undefined) { out += simple[nx]; i += 2; continue }
+      let m
+      if ((m = /^x([0-9a-fA-F]{1,2})/.exec(src.slice(i + 1, i + 4)))) { out += String.fromCharCode(parseInt(m[1], 16)); i += 1 + m[0].length; continue }
+      if ((m = /^u([0-9a-fA-F]{1,4})/.exec(src.slice(i + 1, i + 6)))) { out += String.fromCharCode(parseInt(m[1], 16)); i += 1 + m[0].length; continue }
+      if ((m = /^U([0-9a-fA-F]{1,8})/.exec(src.slice(i + 1, i + 10)))) { try { out += String.fromCodePoint(parseInt(m[1], 16)) } catch { /* 무효 코드포인트 */ } i += 1 + m[0].length; continue }
+      if ((m = /^([0-7]{1,3})/.exec(src.slice(i + 1, i + 4)))) { out += String.fromCharCode(parseInt(m[1], 8)); i += 1 + m[0].length; continue }
+      out += nx; i += 2; continue
+    }
+    out += c; i++
+  }
+  st.error = st.error || "닫히지 않은 $'…'"
+  return { value: out, end: n }
+}
+
+function addSub(st, inner, cur) {
+  cur.dyn = true
+  cur.subst = true
+  st.subs.push(inner)
+}
+
+// heredoc 본문 건너뛰기 — 따옴표 구분자면 본문은 순수 텍스트, 아니면 본문 속 치환만 분석
+function skipHeredocs(src, i, list, st) {
+  const n = src.length
+  for (const hd of list) {
+    let body = ''
+    while (i < n) {
+      const nl = src.indexOf('\n', i)
+      const line = src.slice(i, nl < 0 ? n : nl)
+      i = nl < 0 ? n : nl + 1
+      if ((hd.strip ? line.replace(/^\t+/, '') : line) === hd.delim) break
+      body += line + '\n'
+    }
+    if (!hd.quoted) {
+      for (let k = 0; k < body.length; k++) {
+        if (body[k] === '\\') { k++; continue }
+        if (body[k] === '$' && body[k + 1] === '(') { const r = readBalanced(body, k + 2, st); st.subs.push(r.inner); k = r.end - 1; continue }
+        if (body[k] === '`') { const r = readBacktick(body, k + 1, st); st.subs.push(r.inner); k = r.end - 1 }
       }
     }
   }
+  return i
+}
+
+// 셸 어휘 분석 — 따옴표 제거된 단어 + 연산자 토큰
+function lexShell(src, st) {
+  const tokens = []
+  const n = src.length
+  const pending = []
+  let i = 0, cur = null, heredocExpect = null, redirNext = false
+
+  const start = () => { if (!cur) cur = newWord() }
+  const end = () => {
+    if (!cur) return
+    const w = cur; cur = null
+    if (heredocExpect) { pending.push({ delim: w.value, strip: heredocExpect.strip, quoted: w.quoted }); heredocExpect = null; return }
+    if (redirNext) { redirNext = false; tokens.push({ t: 'redir', w }); return }
+    tokens.push({ t: 'word', w })
+  }
+  const op = (v) => { end(); tokens.push({ t: 'op', v }) }
+
+  while (i < n) {
+    const ch = src[i]
+    if (ch === '\\') {
+      if (src[i + 1] === '\n') { i += 2; continue } // 줄 연속
+      start(); cur.quoted = true
+      if (i + 1 < n) cur.value += src[i + 1]
+      i += 2; continue
+    }
+    if (ch === "'") {
+      start(); cur.quoted = true
+      const j = src.indexOf("'", i + 1)
+      if (j < 0) { st.error = st.error || '닫히지 않은 작은따옴표'; cur.value += src.slice(i + 1); i = n; continue }
+      cur.value += src.slice(i + 1, j); i = j + 1; continue
+    }
+    if (ch === '$' && src[i + 1] === "'") {
+      start(); cur.quoted = true
+      const r = readAnsiC(src, i + 2, st); cur.value += r.value; i = r.end; continue
+    }
+    if (ch === '"') { start(); cur.quoted = true; i = readDouble(src, i + 1, cur, st); continue }
+    if (ch === '$' && src[i + 1] === '(') {
+      start(); const r = readBalanced(src, i + 2, st); addSub(st, r.inner, cur); cur.value += '$(…)'; i = r.end; continue
+    }
+    if (ch === '`') { start(); const r = readBacktick(src, i + 1, st); addSub(st, r.inner, cur); cur.value += '`…`'; i = r.end; continue }
+    if ((ch === '<' || ch === '>') && src[i + 1] === '(') {
+      end(); start(); const r = readBalanced(src, i + 2, st); addSub(st, r.inner, cur); cur.value += ch + '(…)'; i = r.end; continue
+    }
+    if (ch === '$') { start(); cur.dyn = true; cur.value += '$'; i++; continue }
+    if (ch === '\n') {
+      op('\n'); i++
+      if (pending.length) i = skipHeredocs(src, i, pending.splice(0), st)
+      continue
+    }
+    if (/\s/.test(ch)) { end(); i++; continue } // 유니코드 공백도 구분자로 — 보수적(더 많이 탐지)
+    if (ch === '#' && !cur) { while (i < n && src[i] !== '\n') i++; continue }
+    if (ch === ';') { op(';'); i++; continue }
+    if (ch === '&') {
+      if (src[i + 1] === '&') { op('&&'); i += 2; continue }
+      if (src[i + 1] === '>') { end(); i += src[i + 2] === '>' ? 3 : 2; redirNext = true; continue }
+      op('&'); i++; continue
+    }
+    if (ch === '|') {
+      if (src[i + 1] === '|') { op('||'); i += 2; continue }
+      op('|'); i += src[i + 1] === '&' ? 2 : 1; continue
+    }
+    if (ch === '(' || ch === ')') { op(ch); i++; continue }
+    if (ch === '<' || ch === '>') {
+      if (cur && !cur.quoted && !cur.dyn && /^\d+$/.test(cur.value)) cur = null // fd 번호 (2>)
+      else end()
+      let j = i + 1
+      if (ch === '<' && src[j] === '<') {
+        if (src[j + 1] === '<') { i = j + 2; redirNext = true; continue } // here-string
+        j++
+        let strip = false
+        if (src[j] === '-') { strip = true; j++ }
+        heredocExpect = { strip }; i = j; continue
+      }
+      if (src[j] === '>' || src[j] === '|' || src[j] === '&' || (ch === '<' && src[j] === '>')) j++
+      i = j; redirNext = true; continue
+    }
+    if (ch === '~' && !cur) { start(); cur.tilde = true; cur.value += '~'; i++; continue }
+    start(); cur.value += ch; i++
+  }
+  end()
+  return tokens
+}
+
+// {a,b} 중괄호 확장 — 인용·확장 없는 단어만 (bash 는 명령 위치에서도 확장한다: {git,push})
+function braceExpand(s, budget) {
+  const m = /^([\s\S]*?)\{([^{}]*,[^{}]*)\}([\s\S]*)$/.exec(s)
+  if (!m) return [s]
+  const out = []
+  for (const alt of m[2].split(',')) {
+    for (const r of braceExpand(m[1] + alt + m[3], budget)) {
+      out.push(r)
+      if (out.length >= budget) return out
+    }
+  }
+  return out
+}
+
+function expandWord(w) {
+  if (w.quoted || w.dyn || !/\{[^{}]*,[^{}]*\}/.test(w.value)) return [w]
+  return braceExpand(w.value, 256).map(v => ({ ...w, value: v, tilde: v === '~' || v.startsWith('~/') }))
+}
+
+// 토큰 → 단순 명령 목록 (파이프라인·서브셸 문맥 포함)
+function splitCommands(tokens) {
+  const cmds = []
+  let cur = null, pipeline = 0, parenDepth = 0
+  const flush = () => { if (cur && cur.words.length) cmds.push(cur); cur = null }
+  for (const tk of tokens) {
+    if (tk.t === 'op') {
+      flush()
+      if (tk.v === '(') parenDepth++
+      else if (tk.v === ')') parenDepth = Math.max(0, parenDepth - 1)
+      else if (tk.v !== '|') pipeline++
+      continue
+    }
+    if (!cur) cur = { words: [], redirs: [], pipeline, inParen: parenDepth > 0 }
+    if (tk.t === 'redir') cur.redirs.push(tk.w)
+    else cur.words.push(...expandWord(tk.w))
+  }
+  flush()
+  const sizes = {}
+  for (const c of cmds) sizes[c.pipeline] = (sizes[c.pipeline] || 0) + 1
+  for (const c of cmds) c.inPipe = sizes[c.pipeline] > 1
+  return cmds
+}
+
+function cleanValue(v) { return String(v).replace(ZERO_WIDTH_RE, '') }
+
+function cmdNameOf(w) {
+  const v = cleanValue(w.value)
+  return (v.includes('/') ? v.slice(v.lastIndexOf('/') + 1) : v).toLowerCase()
+}
+
+function isAssignmentWord(w) { return /^[A-Za-z_][A-Za-z0-9_]*(?:\[[^\]]*\])?\+?=/.test(w.value) }
+
+// sh -c 'SCRIPT' 의 SCRIPT 단어 (없으면 null)
+function shellDashC(args) {
+  let hasC = false
+  for (let i = 0; i < args.length; i++) {
+    const v = args[i].value
+    if (v === '--') { return hasC ? args[i + 1] || null : null }
+    if (/^--(?:rcfile|init-file)$/.test(v)) { i++; continue }
+    if (/^[-+]o$/.test(v)) { i++; continue }
+    if (/^[-+][A-Za-z]+$/.test(v)) { if (v[0] === '-' && v.includes('c')) hasC = true; continue }
+    if (v.startsWith('--')) continue
+    return hasC ? args[i] : null
+  }
+  return null
+}
+
+// 인터프리터가 stdin 에서 코드를 읽는가 (curl … | <이것>)
+function readsStdin(inv) {
+  const vals = inv.args.map(a => a.value)
+  if (SHELL_NAMES.has(inv.name)) {
+    for (let i = 0; i < vals.length; i++) {
+      const v = vals[i]
+      if (v === '--') return vals[i + 1] === undefined || vals[i + 1] === '-'
+      if (/^[-+]o$/.test(v)) { i++; continue }
+      if (/^-[A-Za-z]+$/.test(v)) { if (v.includes('c')) return false; if (v.includes('s')) return true; continue }
+      if (v.startsWith('-') && v !== '-') continue
+      return v === '-'
+    }
+    return true
+  }
+  for (let i = 0; i < vals.length; i++) {
+    const v = vals[i]
+    if (/^-(?:c|e|m|p|E|r)$/.test(v) || /^--(?:eval|print|command)$/.test(v)) return false
+    if (/^-[WXQ]$/.test(v)) { i++; continue }
+    if (v === '-') return true
+    if (v.startsWith('-')) continue
+    return false // 스크립트 파일 인자
+  }
+  return true
+}
+
+// git 전역 옵션 건너뛰고 서브커맨드 추출 + -c alias.X= 별칭 해석
+function parseGitInvocation(args) {
+  const aliases = {}
+  let dir = null, i = 0
+  while (i < args.length) {
+    const v = cleanValue(args[i].value)
+    if (v === '-C') { dir = args[i + 1] || null; i += 2; continue }
+    if (v === '-c') {
+      const kv = args[i + 1]
+      if (kv) { const m = /^alias\.([^=]+)=([\s\S]*)$/i.exec(kv.value); if (m) aliases[m[1].toLowerCase()] = m[2] }
+      i += 2; continue
+    }
+    if (/^--(?:git-dir|work-tree|namespace|super-prefix|config-env|attr-source)$/.test(v)) { i += 2; continue }
+    if (v.startsWith('-')) { i++; continue }
+    break
+  }
+  if (i >= args.length) return { sub: null, subDyn: false, args: [], dir, aliases }
+  return { sub: cleanValue(args[i].value).toLowerCase(), subDyn: !!args[i].dyn, args: args.slice(i + 1), dir, aliases }
+}
+
+function wordsOf(src) {
+  const st = { error: null, subs: [] }
+  return lexShell(src, st).filter(t => t.t === 'word').map(t => t.w)
+}
+
+// 전치 명령(env/command/sudo/xargs/…)을 벗기고 실제 명령을 invocation 으로 기록
+function collectInvocations(words, ctx, acc, meta) {
+  let w = words.slice()
+  let sudo = false
+  for (let guard = 0; guard < 64 && w.length; guard++) {
+    while (w.length && isAssignmentWord(w[0])) w.shift()
+    if (!w.length) return
+    const nm = cmdNameOf(w[0])
+    if (w[0].dyn) break
+    if (RESERVED_SKIP.has(nm) && !w[0].quoted) { w.shift(); continue }
+    if (nm === 'function' && !w[0].quoted) { w.splice(0, 2); continue }
+    if (nm === 'command') {
+      w.shift()
+      while (w.length && /^-[pvV]+$/.test(w[0].value)) { if (/[vV]/.test(w[0].value)) return; w.shift() } // -v/-V 는 조회만
+      continue
+    }
+    if (nm === 'builtin' || nm === 'nohup' || nm === 'noglob' || nm === 'busybox') { w.shift(); continue }
+    if (nm === 'exec' || nm === 'nice' || nm === 'stdbuf' || nm === 'caffeinate') {
+      w.shift()
+      while (w.length && w[0].value.startsWith('-')) {
+        const o = w.shift().value
+        if (o === '--') break
+        if ((nm === 'exec' && o === '-a') || (nm === 'nice' && o === '-n') || (nm === 'stdbuf' && /^-[ioe]$/.test(o)) || (nm === 'caffeinate' && /^-[tw]$/.test(o))) w.shift()
+      }
+      continue
+    }
+    if (nm === 'timeout' || nm === 'gtimeout') {
+      w.shift()
+      while (w.length && w[0].value.startsWith('-')) {
+        const o = w.shift().value
+        if (o === '--') break
+        if (/^(?:-s|-k|--signal|--kill-after)$/.test(o)) w.shift()
+      }
+      w.shift() // duration
+      continue
+    }
+    if (nm === 'env') {
+      w.shift()
+      let split = null
+      while (w.length) {
+        const o = w[0].value
+        if (o === '--') { w.shift(); break }
+        if (isAssignmentWord(w[0])) { w.shift(); continue }
+        if (o === '-') { w.shift(); continue }
+        if (!o.startsWith('-')) break
+        w.shift()
+        if (/^(?:-u|-C|-P|--unset|--chdir)$/.test(o)) w.shift()
+        else if (o === '-S' || o === '--split-string') split = w.shift() || null
+        else if (/^-S./.test(o)) split = { ...newWord(), value: o.slice(2) }
+        else if (o.startsWith('--split-string=')) split = { ...newWord(), value: o.slice(15) }
+      }
+      if (split) {
+        if (split.dyn) { acc.unknown.push('env -S 동적 문자열') }
+        w = [...wordsOf(split.value), ...w]
+      }
+      if (!w.length) return
+      continue
+    }
+    if (nm === 'sudo' || nm === 'doas') {
+      sudo = true
+      w.shift()
+      while (w.length && w[0].value.startsWith('-')) {
+        const o = w.shift().value
+        if (o === '--') break
+        if (/^-[ugpChDrtUT]$/.test(o)) w.shift()
+      }
+      if (!w.length) { acc.invocations.push({ name: nm, args: [], sudo: true, ...meta }); return }
+      continue
+    }
+    if (nm === 'xargs') {
+      w.shift()
+      while (w.length && w[0].value.startsWith('-')) {
+        const o = w.shift().value
+        if (o === '--') break
+        if (/^-[IdEsnPLa]$/.test(o)) w.shift()
+      }
+      if (!w.length) return
+      continue
+    }
+    break
+  }
+  if (!w.length) return
+
+  const inv = { name: cmdNameOf(w[0]), dynamicName: !!w[0].dyn, args: w.slice(1), sudo, ...meta }
+  acc.invocations.push(inv)
+  if (inv.dynamicName) return
+
+  const depth = ctx.depth + 1
+  if (SHELL_NAMES.has(inv.name)) {
+    const script = shellDashC(inv.args)
+    if (script) analyzeShellInto(script.value, depth, acc, true)
+  } else if (inv.name === 'eval') {
+    analyzeShellInto(inv.args.map(a => a.value).join(' '), depth, acc, true)
+  } else if (inv.name === 'find') {
+    for (let k = 0; k < inv.args.length; k++) {
+      if (/^-(?:exec|execdir|ok|okdir)$/.test(inv.args[k].value)) {
+        const sub = []
+        k++
+        while (k < inv.args.length && inv.args[k].value !== ';' && inv.args[k].value !== '+') sub.push(inv.args[k++])
+        collectInvocations(sub, ctx, acc, meta)
+      }
+    }
+  } else if (inv.name === 'git') {
+    let g = parseGitInvocation(inv.args)
+    if (g.sub && !g.subDyn && g.aliases[g.sub] !== undefined) {
+      const val = g.aliases[g.sub]
+      if (val.startsWith('!')) analyzeShellInto(val.slice(1), depth, acc, true)
+      else {
+        const aw = wordsOf(val)
+        if (aw.length) g = { ...g, sub: cmdNameOf(aw[0]), args: [...aw.slice(1), ...g.args] }
+      }
+    }
+    inv.git = g
+  }
+}
+
+function analyzeShellInto(src, depth, acc, inSub) {
+  if (depth > MAX_DEPTH) { acc.unknown.push('중첩 과다'); return }
+  const st = { error: null, subs: [] }
+  const tokens = lexShell(src, st)
+  if (st.error) acc.unknown.push(st.error)
+  for (const sub of st.subs) analyzeShellInto(sub, depth + 1, acc, true)
+  const scope = acc.seq++
+  for (const c of splitCommands(tokens)) {
+    collectInvocations(c.words, { depth }, acc, {
+      pipeline: `${scope}:${c.pipeline}`,
+      subshell: !!(inSub || c.inParen || c.inPipe),
+      fromSub: !!inSub,
+      argSubst: c.words.slice(1).some(x => x.subst),
+      redirs: c.redirs,
+    })
+  }
+}
+
+function analyzeShell(cmd) {
+  const acc = { invocations: [], unknown: [], seq: 0 }
+  if (typeof cmd !== 'string') { acc.unknown.push('비문자열 명령'); return acc }
+  if (cmd.length > MAX_ANALYZE_LEN) { acc.unknown.push('명령 길이 초과'); return acc }
+  analyzeShellInto(cmd, 0, acc, false)
+  return acc
+}
+
+// rm 대상 단어 → 절대경로 (해석 불가면 null). glob 이면 glob 이 걸린 디렉토리 + glob:true
+function resolveRmTarget(w, vcwd) {
+  let v = cleanValue(w.value)
+  if (w.tilde) {
+    if (!HOME_DIR || !(v === '~' || v.startsWith('~/'))) return null
+    v = HOME_DIR + v.slice(1)
+  } else if (w.dyn) {
+    const h = /^\$(?:\{HOME\}|HOME(?![A-Za-z0-9_]))([\s\S]*)$/.exec(v)
+    const p = /^\$(?:\{PWD\}|PWD(?![A-Za-z0-9_]))([\s\S]*)$/.exec(v)
+    if (h && HOME_DIR) v = HOME_DIR + h[1]
+    else if (p && vcwd) v = vcwd + p[1]
+    else return null
+    if (v.includes('$') || v.includes('`')) return null
+  }
+  if (!v) return null
+  if (!v.startsWith('/')) { if (!vcwd) return null; v = vcwd + '/' + v }
+  const g = v.search(/[*?[]/)
+  if (g >= 0) {
+    const base = v.slice(0, g)
+    const dir = base.endsWith('/') ? base : path.dirname(base)
+    return { abs: path.resolve(dir), glob: true }
+  }
+  return { abs: path.resolve(v), glob: false }
+}
+
+function isAncestorOrSame(dir, of) { return !!of && (of === dir || of.startsWith(dir === '/' ? '/' : dir + '/')) }
+
+function classifyRm(inv, ctx, add) {
+  let recursive = false, endOpts = false
+  const targets = []
+  for (const a of inv.args) {
+    const v = a.value
+    if (!endOpts && v === '--') { endOpts = true; continue }
+    if (!endOpts && /^-[A-Za-z]+$/.test(v)) { if (/[rR]/.test(v)) recursive = true; continue }
+    if (!endOpts && v.startsWith('--')) { if (v === '--recursive') recursive = true; continue }
+    targets.push(a)
+  }
+  for (const t of targets) {
+    const r = resolveRmTarget(t, ctx.vcwd)
+    if (!r) { add('ask', `rm 대상 경로를 정적으로 해석할 수 없습니다(${t.value}). 사용자 확인이 필요합니다.`); continue }
+    const abs = r.abs
+    if (abs === '/') { add('deny', '루트 디렉토리 삭제는 차단됩니다.'); continue }
+    if (HOME_DIR && isAncestorOrSame(abs, HOME_DIR)) { add('deny', '홈 디렉토리(또는 그 상위) 삭제는 차단됩니다.'); continue }
+    const base = path.basename(abs)
+    if (['.git', '.claude', '.ssh'].includes(base) || /\/\.ssh(?:\/|$)/.test(abs)) { add('deny', '.git / .claude / .ssh 디렉토리 삭제는 차단됩니다.'); continue }
+    if (isUnderTempDir(abs)) continue
+    if (SYSTEM_DIRS.some(d => isAncestorOrSame(d, abs))) {
+      add(recursive ? 'deny' : 'ask', '시스템 디렉토리 삭제는 차단됩니다.'); continue
+    }
+    if (ctx.root && isAncestorOrSame(abs, ctx.root)) { add(recursive ? 'deny' : 'ask', '프로젝트 루트(또는 그 상위) 전체 삭제는 차단됩니다.'); continue }
+    if (ctx.startCwd && abs === ctx.startCwd) { add(recursive ? 'deny' : 'ask', '현재 디렉토리 전체 삭제는 차단됩니다.'); continue }
+    if (ctx.allowedDirs.includes(abs)) { add('ask', `허용 디렉토리 루트 전체 삭제(${abs})는 사용자 확인이 필요합니다.`); continue }
+    if (isUnderAllowed(abs, ctx.allowedDirs)) continue
+    add('ask', `프로젝트 루트 밖 경로 삭제(${abs})는 사용자 확인이 필요합니다.`)
+  }
+}
+
+// git push 인자 → { remote, refspecs, force, pushAll, deleteMode } (branch-protection 과 공용)
+const PUSH_VALUE_OPTS = new Set(['-o', '--push-option', '--repo', '--receive-pack', '--exec'])
+function parsePushArgs(args) {
+  const positional = []
+  let force = false, pushAll = false, deleteMode = false
+  for (let i = 0; i < args.length; i++) {
+    const v = cleanValue(args[i].value)
+    if (v === '--') { positional.push(...args.slice(i + 1)); break }
+    if (v.startsWith('-') && v.length > 1) {
+      if (PUSH_VALUE_OPTS.has(v)) { i++; continue }
+      if (/^--force(?:$|=|-with-lease|-if-includes)/.test(v)) force = true
+      else if (/^--(?:all|mirror|branches)$/.test(v)) pushAll = true
+      else if (v === '--delete') deleteMode = true
+      else if (/^-[A-Za-z0-9]+$/.test(v)) { if (v.includes('f')) force = true; if (v.includes('d')) deleteMode = true }
+      continue
+    }
+    positional.push(args[i])
+  }
+  return { remote: positional[0] || null, refspecs: positional.slice(1), force, pushAll, deleteMode }
+}
+
+function classifyGit(g, add) {
+  if (!g || !g.sub) return
+  if (g.subDyn) { add('unknown', 'git 서브커맨드를 정적으로 해석할 수 없습니다.'); return }
+  const vals = g.args.map(a => cleanValue(a.value))
+  if (g.sub === 'push') {
+    const p = parsePushArgs(g.args)
+    const force = p.force || p.refspecs.some(r => cleanValue(r.value).startsWith('+'))
+    if (force) add('deny', 'force push는 히스토리를 덮어씁니다. 직접 실행하세요.')
+    else add('ask', 'git push 는 사용자 확인이 필요합니다 (커밋·푸시는 명시적 요청 시에만).')
+    return
+  }
+  if (g.sub === 'commit') { add('ask', 'git commit 은 사용자 확인이 필요합니다 (커밋·푸시는 명시적 요청 시에만).'); return }
+  if (g.sub === 'reset' && vals.includes('--hard')) { add('ask', 'git reset --hard 는 작업 내용을 버립니다. 사용자 확인이 필요합니다.'); return }
+  if (g.sub === 'clean' && vals.some(v => v === '--force' || /^-[A-Za-z]*f/.test(v))) { add('ask', 'git clean -f 는 추적되지 않은 파일을 삭제합니다. 사용자 확인이 필요합니다.') }
+}
+
+// 명령 전체 위험 분류 — PreToolUse·PermissionRequest 공용 (판정 일관성)
+// 반환: { level: 'deny'|'ask'|'unknown'|null, reason }
+const _classifyCache = new Map()
+function classifyShell(cmd, opts = {}) {
+  const cwdIn = opts.cwd || process.env.CLAUDE_PROJECT_DIR || process.cwd()
+  const key = `${opts.skipRm ? 1 : 0}\0${cwdIn}\0${(opts.allowedDirs || []).join(':')}\0${cmd}`
+  if (_classifyCache.has(key)) return _classifyCache.get(key)
+
+  let best = { level: null, reason: '' }
+  const add = (level, reason) => { if ((LEVEL_RANK[level] || 0) > (LEVEL_RANK[best.level] || 0)) best = { level, reason } }
+
+  const acc = analyzeShell(cmd)
+  for (const u of acc.unknown) add('unknown', `명령을 정적으로 해석할 수 없습니다(${u}).`)
+
+  let startCwd = null
+  try { startCwd = path.resolve(cwdIn) } catch { /* ignore */ }
+  const ctx = {
+    vcwd: startCwd,
+    startCwd,
+    root: startCwd ? (findProjectRoot(startCwd) || startCwd) : null,
+    allowedDirs: opts.allowedDirs || getAllowedDirs(cwdIn),
+  }
+
+  const pipelines = {}
+  for (const inv of acc.invocations) {
+    (pipelines[inv.pipeline] = pipelines[inv.pipeline] || []).push(inv)
+    if (inv.dynamicName) { add('unknown', '명령 이름이 변수·치환이라 정적으로 판정할 수 없습니다.'); continue }
+    if (inv.sudo) add('ask', 'sudo/doas 권한 상승 명령은 사용자 확인이 필요합니다.')
+    const nm = inv.name
+    const vals = inv.args.map(a => cleanValue(a.value))
+
+    if (nm === 'cd' || nm === 'pushd' || nm === 'popd') {
+      const t = inv.args.find(a => !/^-[LPe@]$/.test(a.value))
+      if (inv.subshell || nm === 'popd') { ctx.vcwd = null; continue } // 서브셸 cd 는 부모에 영향 없음 → 추적 포기(보수)
+      if (!t) { ctx.vcwd = HOME_DIR; continue }
+      const r = resolveRmTarget(t, ctx.vcwd)
+      ctx.vcwd = r && !r.glob && t.value !== '-' ? r.abs : null
+      continue
+    }
+    if (nm === 'git') { classifyGit(inv.git, add); continue }
+    if (PUBLISHERS.has(nm)) {
+      const cut = vals.indexOf('--')
+      const head = (cut >= 0 ? vals.slice(0, cut) : vals).map(v => v.toLowerCase())
+      if (head.includes('publish')) add('ask', '패키지 publish 는 사용자 확인이 필요합니다.')
+      continue
+    }
+    if (nm === 'rm') { if (!opts.skipRm) classifyRm(inv, ctx, add); continue }
+    if (nm === 'chmod') {
+      if (vals.some(v => /^0?777$/.test(v) || /^(?:a|ugo)[+=]rwx$/.test(v))) add('deny', '777 권한 설정은 보안 위험입니다.')
+      continue
+    }
+    if (nm === 'dd') { add('ask', 'dd 는 디스크·파일을 덮어쓸 수 있습니다. 사용자 확인이 필요합니다.'); continue }
+    if (/^(?:mkfs|newfs)/.test(nm) || ['shutdown', 'reboot', 'halt', 'poweroff'].includes(nm)
+      || (nm === 'diskutil' && vals.some(v => /^(?:erase|partition|zero|random|secureErase)/i.test(v)))) {
+      add('ask', '시스템·디스크 변경 명령은 사용자 확인이 필요합니다.'); continue
+    }
+    // 원격 코드를 치환으로 받아 실행: bash <(curl …), sh -c "$(curl …)", eval "$(curl …)"
+    if ((isInterpreterName(nm) || EXEC_SINKS.has(nm)) && inv.argSubst && acc.invocations.some(x => x.fromSub && FETCHERS.has(x.name))) {
+      add('deny', '원격 스크립트 실행(치환으로 받은 코드 실행)은 차단됩니다.')
+    }
+  }
+  // 원격 코드를 파이프로 받아 실행: curl … | sh / python3 / sudo bash
+  for (const list of Object.values(pipelines)) {
+    const f = list.findIndex(x => FETCHERS.has(x.name))
+    if (f < 0) continue
+    if (list.slice(f + 1).some(x => (isInterpreterName(x.name) || EXEC_SINKS.has(x.name)) && readsStdin(x))) {
+      add('deny', '원격 스크립트 실행(curl|wget → 인터프리터)은 차단됩니다.')
+    }
+  }
+
+  if (_classifyCache.size > 200) _classifyCache.clear()
+  _classifyCache.set(key, best)
+  return best
+}
+
+// 안전 패턴(allow) 함수들의 공통 게이트 — commit/push/publish/원격실행/동적명령이 섞이면 자동 허용 금지
+// rm 경로는 각 함수가 allowedDirs 기준으로 따로 검사하므로 여기선 제외
+function hasNonRmRisk(cmd, allowedDirs) {
+  return classifyShell(cmd, { skipRm: true, allowedDirs: allowedDirs || [] }).level !== null
+}
+
+function denyResult(reason) {
+  return { hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny', permissionDecisionReason: reason } }
+}
+
+function handlePreToolUse(toolName, toolInput, cwd) {
+  if (toolName !== 'Bash') return null
+
+  const rawCmd = toolInput && toolInput.command
+  if (rawCmd !== undefined && rawCmd !== null && typeof rawCmd !== 'string') return null
+  const cmd = (rawCmd || '').trim()
+
+  for (const { pattern, reason } of DENY_PATTERNS) {
+    if (pattern.test(cmd)) return denyResult(reason)
+  }
+
+  // 명령 단위 위험 분류 — 우회 형태(파이프·체인·치환·래퍼)도 일반 형태와 같은 판정
+  const risk = classifyShell(cmd, { cwd })
+  if (risk.level === 'deny') return denyResult(risk.reason)
+  if (risk.level === 'ask') {
+    return {
+      hookSpecificOutput: {
+        hookEventName: 'PreToolUse',
+        permissionDecision: 'ask',
+        permissionDecisionReason: `bash-guard: ${risk.reason}`,
+      },
+    }
+  }
+  if (risk.level === 'unknown') return null // 정적 판정 불가 — allow 하지 않고 기본 권한 흐름에 맡긴다
 
   // 안전 패턴 자동 허용 — 휴리스틱 우회 (cd+git, heredoc, brace, compound, multiline shell)
   const allowedDirs = getAllowedDirs(cwd)
@@ -793,13 +1496,19 @@ function handlePreToolUse(toolName, toolInput, cwd) {
   return null
 }
 
-function handlePermissionRequest(toolName, toolInput) {
+// PermissionRequest — PreToolUse 와 같은 분류기를 재사용한다 (판정 일관성).
+// 위험(deny/ask)·정적 판정 불가(unknown)는 자동 승인하지 않고 사용자 확인으로 넘긴다.
+// 그 외 읽기 전용·일반 개발 명령은 프롬프트 마찰 제거 의도대로 자동 승인 유지.
+function handlePermissionRequest(toolName, toolInput, cwd) {
   if (toolName !== 'Bash') return null
 
-  const cmd = (toolInput.command || '').trim()
-  for (const pattern of REQUIRE_APPROVAL_PATTERNS) {
-    if (pattern.test(cmd)) return null // 사용자 확인 필요
-  }
+  const rawCmd = toolInput && toolInput.command
+  if (rawCmd !== undefined && rawCmd !== null && typeof rawCmd !== 'string') return null
+  if (rawCmd === null) return null
+  const cmd = (rawCmd || '').trim()
+
+  if (DENY_PATTERNS.some(({ pattern }) => pattern.test(cmd))) return null
+  if (classifyShell(cmd, { cwd }).level !== null) return null // 사용자 확인 필요
 
   return {
     hookSpecificOutput: {
@@ -851,7 +1560,7 @@ async function main() {
   const eventName = hook_event_name || hookEventName
 
   const result = eventName === 'PermissionRequest'
-    ? handlePermissionRequest(tool_name, tool_input)
+    ? handlePermissionRequest(tool_name, tool_input, cwd)
     : eventName === 'PostToolUse'
       ? handlePostToolUse(tool_name, tool_input)
       : handlePreToolUse(tool_name, tool_input, cwd)
@@ -882,4 +1591,8 @@ module.exports = {
   handlePreToolUse,
   handlePermissionRequest,
   handlePostToolUse,
+  analyzeShell,
+  classifyShell,
+  parseGitInvocation,
+  parsePushArgs,
 }

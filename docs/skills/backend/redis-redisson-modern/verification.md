@@ -2,7 +2,7 @@
 skill: redis-redisson-modern
 category: backend
 version: v1
-date: 2026-04-23
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -16,10 +16,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `redis-redisson-modern` |
 | 스킬 경로 | `.claude/skills/backend/redis-redisson-modern/SKILL.md` |
-| 검증일 | 2026-04-23 |
-| 검증자 | skill-creator |
+| 검증일 | 2026-09-26 (최초 2026-04-23) |
+| 검증자 | skill-creator → 2026-09-26 재검증: 메인 오케스트레이션 (Claude Sonnet 5) |
 | 스킬 버전 | v1 |
-| 대상 버전 | Redisson 3.18.1 ~ 3.51.0, Spring Boot 3.x, Java 17+ |
+| 대상 버전 | Redisson 3.18.1 ~ 3.52.0, Spring Boot 3.x, Java 17+ (Redisson 4.x/Spring Boot 4.x는 범위 밖) |
 
 ---
 
@@ -113,13 +113,64 @@ status: APPROVED
 - [✅] 범용적으로 사용 가능 (특정 프로젝트 종속 X)
 
 ### 4-5. Claude Code 에이전트 활용 테스트
-- [❌] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (실사용 전)
-- [❌] 에이전트가 스킬 내용을 올바르게 활용하는지 확인
-- [❌] 잘못된 응답이 나오는 경우 스킬 내용 보완
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-09-28)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-09-28)
+- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (발견 없음)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose
+**수행 방법**: SKILL.md Read 후 2개(3문항) 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인. 질문 1개는 2026-09-26 재검증에서 정정된 "3.x 최신 안정판 3.52.0" + "4.0.0 GA 이관" 내용을 정확히 겨냥.
+
+### 실제 수행 테스트
+
+**Q1. "Spring Boot 3.3 + Java 17 프로젝트에서 주문 생성 API에 분산 락(waitTime 3초, leaseTime 10초)을 걸어줘"**
+- ✅ PASS
+- 근거: SKILL.md "분산 락 (RLock, RReadWriteLock, RSemaphore)" — "표준 사용 패턴" 섹션
+- 상세: `tryLock(3, 10, TimeUnit.SECONDS)` + try-finally + `isHeldByCurrentThread()` 체크, "절대 하면 안 되는 패턴" 섹션 근거로 안전 해제 이유까지 정확히 설명.
+
+**Q2. "Redisson 3.x 최신 안정판 버전은?" / "4.0.0으로 올라갔으면 3.x는 못 쓰고 API도 다시 배워야 하나?" (2026-09-26 버전 정정 + 4.x 이관 안내 겨냥)**
+- ✅ PASS
+- 근거: SKILL.md "버전·호환성 매트릭스" 표 + 상단 2026-09-26 갱신 주의문
+- 상세: 정정된 "3.52.0(2025-09-25)"을 정확히 제시(구 버전 3.51.0 언급 없이 일관), "RLock/RMap/RTopic/@Cacheable 등 애플리케이션 API는 변경 없음"이라는 4.0.0 이관 안내를 정확히 인용해 API 재학습 불필요함을 올바르게 답변. 옛 버전(3.51.0)과 모순되는 서술 없음.
+
+### 발견된 gap
+
+- "별도 스킬(`backend/redis-redisson-4`, 존재 시)"이라는 표현이 실제 존재 여부를 확정하지 않음 — 4.x 본격 도입 시점에 별도 스킬 작성 필요(기존 섹션 7에 이미 기록됨), 선택 보강
+
+### 판정
+
+- agent content test: 2/2 PASS (3문항)
+- verification-policy 분류: 라이브러리 사용법 스킬 → 실사용 필수 카테고리 해당 없음 (content test PASS로 APPROVED 가능)
+- 최종 상태: APPROVED
+
+---
+
+### 재검증 (2026-09-26)
+
+**수행일**: 2026-09-26
+**수행자**: 메인 대화 오케스트레이션 (Claude Sonnet 5) — verification-policy.md 재검증 절차
+**수행 방법**: SKILL.md + REFERENCE.md 전체 Read → WebSearch/WebFetch로 핵심 클레임 재대조 → 실전 질문 2개 자체 답변
+
+**재검증한 핵심 클레임**
+- "최신 3.x 안정판 3.51.0(2024-08-22)" → **DISPUTED, 수정 반영**: 실제로는 3.52.0(2025-09-25)이 3.x 라인의 마지막 릴리스. SKILL.md·의존성 예시 전체를 3.52.0으로 정정
+- **신규 발견**: Redisson이 2025-12-16 `4.0.0`으로 메이저 버전을 올려 Spring Boot 4.0을 지원하기 시작(`RLock`/`RMap`/`RTopic`/`@Cacheable` 등 애플리케이션 API는 변경 없음, 배포 클래스 경로·deprecated 제거 등은 Breaking) — SKILL.md 상단에 4.x 이관 안내 추가 (VERIFIED, GitHub Release `redisson-4.0.0` + redisson.pro 공식 블로그)
+- `getRedLock` deprecated → `getMultiLock` 권장 — 재확인, 변동 없음 (VERIFIED)
+
+**Q1. "Spring Boot 3.4 프로젝트에 Redisson 최신 3.x를 넣으려면 버전이 몇이어야 하나?"**
+- PASS
+- 근거: SKILL.md 버전·호환성 매트릭스 "Redisson 3.x 최종 안정판 3.52.0(2025-09-25)" — 의존성 예시도 3.52.0으로 일치.
+
+**Q2. "Redisson 4.0.0으로 올리면 Spring Boot 4 API가 완전히 다시 짜지나?"**
+- PASS
+- 근거: SKILL.md 상단 주의 문구 — "`RLock`/`RMap`/`RTopic`/`@Cacheable` 등 애플리케이션 코드에서 쓰는 API 자체는 변경 없음"이라고 명확히 구분해서 답변 가능.
+
+**판정**: 3.x 최신판 정정 + 4.x GA 이관 안내 신규 추가 → 내용 변경 있음 → status `PENDING_TEST`로 되돌림.
+
+---
 
 ### 테스트 케이스 1: 분산 락으로 주문 중복 생성 방지
 
@@ -189,14 +240,15 @@ Redisson에서 @RedissonLock 어노테이션을 메서드에 붙이면 자동으
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-04-23, 2문항 PASS — tryLock + RFuture/Reactive API + 2.x→3.x 마이그레이션 차이표·yaml 키 이동 정확) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (2026-04-23, 2문항 PASS) + ✅ (2026-09-26 재검증 셀프, 2문항 PASS) + ✅ (2026-09-28 skill-tester → general-purpose, 2/2 PASS(3문항) — 3.52.0 정정 + 4.0.0 GA 이관 안내 겨냥) |
+| **최종 판정** | **APPROVED** (2026-09-28 재테스트로 버전 정정 내용 반영 확인, 모순 없음) |
 
 ---
 
 ## 7. 개선 필요 사항
 
-- [🔬] 실제 Spring Boot 3.3 + Redisson 3.51.0 샘플 프로젝트에서 yaml 설정 로딩 확인 — 실환경 검증 대기
+- [✅] skill-tester content test 수행 및 섹션 5·6 업데이트 — 2026-09-28 완료, 2/2 PASS (3.52.0 버전 정정 + 4.0.0 GA 이관 안내 겨냥 포함)
+- [🔬] 실제 Spring Boot 3.3 + Redisson 3.52.0 샘플 프로젝트에서 yaml 설정 로딩 확인 — 실환경 검증 대기
 - [⏸️] `getRedLock` deprecated 여부 javadoc 직접 확인 — 현재 커뮤니티 근거 기반, 검증 보강 선택 사항
 - [⏸️] `RReliableQueue`의 정확한 등장 버전 확인 후 SKILL.md 버전 표기 — 검증 보강 선택 사항
 - [📅] Redisson 4.x 마이그레이션 스킬(`redis-redisson-4x`) 별도 작성 — 4.x 본격 도입 시점에 검토
@@ -209,3 +261,5 @@ Redisson에서 @RedissonLock 어노테이션을 메서드에 붙이면 자동으
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
 | 2026-04-23 | v1 | 최초 작성 — Redisson 3.18.1 ~ 3.51.0, Spring Boot 3.x + Java 17+ 기준 | skill-creator |
+| 2026-09-26 | v1 | 재검증 — 최신 3.x 안정판 3.51.0→3.52.0 정정, Redisson 4.0.0 GA(Spring Boot 4 지원) 이관 안내 신규 추가 → PENDING_TEST | 메인 오케스트레이션 (Claude Sonnet 5) |
+| 2026-09-28 | v1 | 2단계 실사용 재테스트 수행 (Q1 분산 락 / Q2 3.x 최신판·4.0.0 이관 정정분) → 2/2 PASS, APPROVED 전환 | skill-tester |

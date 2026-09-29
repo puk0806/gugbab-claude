@@ -23,7 +23,7 @@ description: >
 > - W3C SVG Accessibility — ARIA roles for charts: https://www.w3.org/wiki/SVG_Accessibility/ARIA_roles_for_charts
 > - WCAG 2.1 — Text Alternatives (1.1.1): https://www.w3.org/WAI/WCAG21/Understanding/non-text-content
 >
-> 검증일: 2026-05-15
+> 검증일: 2026-09-28 (최초 2026-05-15)
 >
 > 짝 스킬:
 > - `frontend/dream-symbol-tagging` — 상징 태그 입력값 → 워드클라우드 데이터 소스

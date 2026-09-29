@@ -19,8 +19,8 @@ description: >
 > - mecab-ko-dic (LuminosoInsight): https://github.com/LuminosoInsight/mecab-ko-dic
 > - KLUE 벤치마크: https://github.com/KLUE-benchmark/KLUE
 >
-> 검증일: 2026-05-15
-> 짝 스킬: `frontend/dream-symbol-tagging` (프론트엔드 시도) · `backend/python-fastapi` (예정)
+> 검증일: 2026-09-26 (2026-05-15 최초 검증 · 재검증 이력은 8절 참조. 재검증 결과 변동 없음 — mecab-ko 1.0.2, KoNLPy 0.6.0 여전히 최신)
+> 짝 스킬(설치된 경우 참조): `frontend/dream-symbol-tagging` (프론트엔드 시도) · `backend/python-fastapi` (예정)
 
 ---
 

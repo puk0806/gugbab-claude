@@ -1,4 +1,4 @@
-# frontend 스킬 (86종)
+# frontend 스킬 (78종)
 
 React·Next.js·TypeScript·SEO·접근성·성능·PWA·꿈 앱 UI·운세 앱 UI 등 프론트엔드 전 영역 스킬 모음.
 
@@ -21,20 +21,16 @@ React·Next.js·TypeScript·SEO·접근성·성능·PWA·꿈 앱 UI·운세 앱 
 | [recoil-to-zustand-migration](../../../.claude/skills/frontend/recoil-to-zustand-migration/SKILL.md) | Recoil(유지보수 중단) → Zustand/Jotai 전환 — 개념 대응표, async selector→TanStack Query 분리, 공존·브리지 점진 이행 | [→](./recoil-to-zustand-migration/verification.md) |
 | [tanstack-query](../../../.claude/skills/frontend/tanstack-query/SKILL.md) | TanStack Query v5 실전 — queryKey 설계·staleTime/gcTime·낙관적 업데이트·무한 스크롤·App Router SSR | [→](./tanstack-query/verification.md) |
 | [form-handling](../../../.claude/skills/frontend/form-handling/SKILL.md) | React Hook Form + Zod 유효성 검증, 재사용 필드 컴포넌트 | [→](./form-handling/verification.md) |
-| [error-handling](../../../.claude/skills/frontend/error-handling/SKILL.md) | React 19 Error Boundary, Suspense 조합, TanStack Query 에러 처리 | [→](./error-handling/verification.md) |
 
 ## UI 컴포넌트·라이브러리
 
 | 스킬 | 설명 | 검증 |
 |------|------|------|
-| [radix-ui](../../../.claude/skills/frontend/radix-ui/SKILL.md) | Radix UI Primitives — asChild/Slot, Compound Component, data-attribute 스타일링 | [→](./radix-ui/verification.md) |
 | [mui-v9](../../../.claude/skills/frontend/mui-v9/SKILL.md) | MUI v9 + Emotion — slots/slotProps, CSS Variables·colorSchemes, v5→v9 마이그레이션 | [→](./mui-v9/verification.md) |
 | [mui-v5](../../../.claude/skills/frontend/mui-v5/SKILL.md) | MUI v5(EOL, 최종 5.18.0) 레거시 고정용 — Emotion styled/sx, v5 Grid item/xs 문법, components/componentsProps, CSS 변수는 experimental, @mui/styles React 18 비호환, v6+ 업그레이드 경로 | [→](./mui-v5/verification.md) |
 | [animation](../../../.claude/skills/frontend/animation/SKILL.md) | motion 12.x 애니메이션 — CSS transition, useScroll, 드래그, LazyMotion | [→](./animation/verification.md) |
 | [swiper](../../../.claude/skills/frontend/swiper/SKILL.md) | Swiper 11.x 슬라이더 — React 컴포넌트, 핵심 모듈, 반응형, Next.js SSR | [→](./swiper/verification.md) |
-| [react-virtuoso](../../../.claude/skills/frontend/react-virtuoso/SKILL.md) | react-virtuoso 가상 스크롤 — 동적 높이, 무한 스크롤 | [→](./react-virtuoso/verification.md) |
 | [ag-grid](../../../.claude/skills/frontend/ag-grid/SKILL.md) | AG Grid v33 — ModuleRegistry 모듈 등록, Theming API, Community(MIT) vs Enterprise 경계, React 셀 렌더러·getRowId, Next.js App Router, row model별 성능 | [→](./ag-grid/verification.md) |
-| [react-dnd](../../../.claude/skills/frontend/react-dnd/SKILL.md) | react-dnd 드래그앤드롭 — useDrag/useDrop, 리스트 순서, @dnd-kit 비교 | [→](./react-dnd/verification.md) |
 | [design-token-scss](../../../.claude/skills/frontend/design-token-scss/SKILL.md) | 디자인 토큰 3계층 설계, Figma 추출, Style Dictionary v4 변환 | [→](./design-token-scss/verification.md) |
 | [srs-spaced-repetition](../../../.claude/skills/frontend/srs-spaced-repetition/SKILL.md) | 간격 반복 학습 알고리즘 — SM-2(Anki) + FSRS-5 비교 | [→](./srs-spaced-repetition/verification.md) |
 
@@ -42,11 +38,10 @@ React·Next.js·TypeScript·SEO·접근성·성능·PWA·꿈 앱 UI·운세 앱 
 
 | 스킬 | 설명 | 검증 |
 |------|------|------|
-| [bundling-compiler](../../../.claude/skills/frontend/bundling-compiler/SKILL.md) | tsup/Vite/Turbopack 선택 기준, React Compiler, Tree Shaking | [→](./bundling-compiler/verification.md) |
+| [bundling-compiler](../../../.claude/skills/frontend/bundling-compiler/SKILL.md) | tsup/Vite/Turbopack 선택 기준, React Compiler(도입 후에도 수동 메모가 필요한 경우 포함), Tree Shaking | [→](./bundling-compiler/verification.md) |
 | [monorepo-turborepo](../../../.claude/skills/frontend/monorepo-turborepo/SKILL.md) | 모노레포 구조, Turborepo 파이프라인 | [→](./monorepo-turborepo/verification.md) |
 | [tsup](../../../.claude/skills/frontend/tsup/SKILL.md) | TypeScript 라이브러리 번들러 — CJS/ESM 동시 출력, DTS, 모노레포 패턴 | [→](./tsup/verification.md) |
 | [rsbuild](../../../.claude/skills/frontend/rsbuild/SKILL.md) | Rsbuild 2.x — Rspack 기반 웹 앱 빌드, CRA·webpack 마이그레이션 | [→](./rsbuild/verification.md) |
-| [cra-to-vite-migration](../../../.claude/skills/frontend/cra-to-vite-migration/SKILL.md) | CRA → Vite 마이그레이션 8단계 절차 | [→](./cra-to-vite-migration/verification.md) |
 | [tanstack-query-v4-to-v5-migration](../../../.claude/skills/frontend/tanstack-query-v4-to-v5-migration/SKILL.md) | React Query v4 → v5 — breaking change 전수(isPending·gcTime·throwOnError·useQuery 콜백 제거·initialPageParam), 공식 codemod, 타입 에러 없이 동작만 바뀌는 함정 | [→](./tanstack-query-v4-to-v5-migration/verification.md) |
 | [webpack-vite-config-mapping](../../../.claude/skills/frontend/webpack-vite-config-mapping/SKILL.md) | Webpack/Craco 설정 → Vite 1:1 매핑 | [→](./webpack-vite-config-mapping/verification.md) |
 | [vite-advanced-splitting](../../../.claude/skills/frontend/vite-advanced-splitting/SKILL.md) | Vite 고급 코드 스플리팅 — manualChunks 함수형, 멀티 빌드 | [→](./vite-advanced-splitting/verification.md) |
@@ -66,7 +61,6 @@ React·Next.js·TypeScript·SEO·접근성·성능·PWA·꿈 앱 UI·운세 앱 
 
 | 스킬 | 설명 | 검증 |
 |------|------|------|
-| [performance](../../../.claude/skills/frontend/performance/SKILL.md) | React Compiler 기준 메모이제이션, 코드 스플리팅, 가상화 | [→](./performance/verification.md) |
 | [build-perf-benchmarking](../../../.claude/skills/frontend/build-perf-benchmarking/SKILL.md) | hyperfine 빌드 시간 벤치마킹 — cold/warm, median, p95 | [→](./build-perf-benchmarking/verification.md) |
 | [bundle-size-analysis](../../../.claude/skills/frontend/bundle-size-analysis/SKILL.md) | gzip/brotli 번들 크기 측정 — rollup-plugin-visualizer, size-limit | [→](./bundle-size-analysis/verification.md) |
 | [dev-server-hmr-benchmarking](../../../.claude/skills/frontend/dev-server-hmr-benchmarking/SKILL.md) | dev server cold start + HMR 지연 측정 | [→](./dev-server-hmr-benchmarking/verification.md) |
@@ -83,7 +77,7 @@ React·Next.js·TypeScript·SEO·접근성·성능·PWA·꿈 앱 UI·운세 앱 
 | [seo-static-html](../../../.claude/skills/frontend/seo-static-html/SKILL.md) | 프레임워크 비종속 HTML SEO — 표준 메타, OG, sitemap, robots.txt | [→](./seo-static-html/verification.md) |
 | [schema-org-patterns](../../../.claude/skills/frontend/schema-org-patterns/SKILL.md) | Google Rich Results JSON-LD 카탈로그 (Article/FAQ/Product 등) | [→](./schema-org-patterns/verification.md) |
 | [geo-ai-discoverability](../../../.claude/skills/frontend/geo-ai-discoverability/SKILL.md) | GEO — llms.txt, AI 크롤러 robots 분기, 질문-답변 구조 | [→](./geo-ai-discoverability/verification.md) |
-| [wcag-2.2-checklist](../../../.claude/skills/frontend/wcag-2.2-checklist/SKILL.md) | WCAG 2.2 A/AA 전체 체크리스트 + 2.2 신규 9개 SC | [→](./wcag-2.2-checklist/verification.md) |
+| [wcag-2.2-checklist](../../../.claude/skills/frontend/wcag-2.2-checklist/SKILL.md) | WCAG 2.2 A/AA 전체 체크리스트 + 2.2 신규 9개 SC + 미디어 SC(1.2.3 vs 1.2.5, captions vs subtitles) | [→](./wcag-2.2-checklist/verification.md) |
 | [i18n-seo](../../../.claude/skills/frontend/i18n-seo/SKILL.md) | 다국어 SEO — hreflang, canonical, URL 전략, Naver/Baidu | [→](./i18n-seo/verification.md) |
 | [og-image-generation](../../../.claude/skills/frontend/og-image-generation/SKILL.md) | 동적 OG 이미지 — Next.js opengraph-image, satori, CJK 폰트 | [→](./og-image-generation/verification.md) |
 | [url-canonicalization-redirects](../../../.claude/skills/frontend/url-canonicalization-redirects/SKILL.md) | URL 정규화·redirect 7대 항목, 301/302/307/308 차이 | [→](./url-canonicalization-redirects/verification.md) |
@@ -94,7 +88,6 @@ React·Next.js·TypeScript·SEO·접근성·성능·PWA·꿈 앱 UI·운세 앱 
 | [image-optimization-seo](../../../.claude/skills/frontend/image-optimization-seo/SKILL.md) | 이미지 SEO — srcset, AVIF/WebP, CDN, Next.js Image, alt text | [→](./image-optimization-seo/verification.md) |
 | [font-optimization](../../../.claude/skills/frontend/font-optimization/SKILL.md) | 웹폰트 로딩 전략·CLS 감소·CJK 서브셋·variable font | [→](./font-optimization/verification.md) |
 | [naver-seo-specifics](../../../.claude/skills/frontend/naver-seo-specifics/SKILL.md) | 네이버 SEO — C-Rank, D.I.A.+, 서치어드바이저, 통합검색 | [→](./naver-seo-specifics/verification.md) |
-| [media-accessibility](../../../.claude/skills/frontend/media-accessibility/SKILL.md) | 웹 미디어 접근성 — WebVTT, track CC, Whisper VTT, WCAG 1.2.x | [→](./media-accessibility/verification.md) |
 | [kakao-share-optimization](../../../.claude/skills/frontend/kakao-share-optimization/SKILL.md) | 카카오톡 공유 OG 최적화 — SDK 2.8.x, 캐시 초기화, SPA 주의 | [→](./kakao-share-optimization/verification.md) |
 | [security-headers-seo](../../../.claude/skills/frontend/security-headers-seo/SKILL.md) | HTTP 보안 헤더 + SEO 영향 — HSTS, CSP, Referrer-Policy | [→](./security-headers-seo/verification.md) |
 | [bot-management-seo](../../../.claude/skills/frontend/bot-management-seo/SKILL.md) | 봇 관리 — Cloudflare Bot, AWS WAF, Googlebot 화이트리스트 | [→](./bot-management-seo/verification.md) |
@@ -107,9 +100,8 @@ React·Next.js·TypeScript·SEO·접근성·성능·PWA·꿈 앱 UI·운세 앱 
 | 스킬 | 설명 | 검증 |
 |------|------|------|
 | [claude-api-streaming-frontend](../../../.claude/skills/frontend/claude-api-streaming-frontend/SKILL.md) | Claude Messages API SSE 스트리밍 프론트 — 이벤트 처리, 백엔드 프록시 | [→](./claude-api-streaming-frontend/verification.md) |
-| [chat-ui-pattern](../../../.claude/skills/frontend/chat-ui-pattern/SKILL.md) | LLM 챗봇 UI — react-markdown, 스트리밍 토큰, 자동 스크롤, IME | [→](./chat-ui-pattern/verification.md) |
-| [web-speech-api-tts](../../../.claude/skills/frontend/web-speech-api-tts/SKILL.md) | 브라우저 내장 TTS — speechSynthesis, getVoices, iOS 대응 | [→](./web-speech-api-tts/verification.md) |
-| [web-speech-api-stt](../../../.claude/skills/frontend/web-speech-api-stt/SKILL.md) | 브라우저 내장 STT — SpeechRecognition, ko-KR, continuous, 에러 코드 8종 | [→](./web-speech-api-stt/verification.md) |
+| [chat-ui-pattern](../../../.claude/skills/frontend/chat-ui-pattern/SKILL.md) | LLM 챗봇 UI — react-markdown, 스트리밍 토큰, 자동 스크롤, IME, react-virtuoso 가상 스크롤 API 요약 | [→](./chat-ui-pattern/verification.md) |
+| [web-speech-api-stt](../../../.claude/skills/frontend/web-speech-api-stt/SKILL.md) | 브라우저 내장 STT + TTS — SpeechRecognition, ko-KR, continuous, 에러 코드 8종 / speechSynthesis, getVoices, iOS 대응 | [→](./web-speech-api-stt/verification.md) |
 | [voice-input-ui](../../../.claude/skills/frontend/voice-input-ui/SKILL.md) | 음성 입력 UI/UX — 마이크 상태 머신, WAI-ARIA, getUserMedia | [→](./voice-input-ui/verification.md) |
 | [media-recorder-api](../../../.claude/skills/frontend/media-recorder-api/SKILL.md) | MediaRecorder 오디오 녹음 — MIME 타입, Blob 수집, Whisper 연동 | [→](./media-recorder-api/verification.md) |
 | [whisper-api-integration](../../../.claude/skills/frontend/whisper-api-integration/SKILL.md) | OpenAI Whisper API 통합 — 모델·포맷·25MB·language 파라미터 | [→](./whisper-api-integration/verification.md) |

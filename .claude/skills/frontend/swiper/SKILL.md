@@ -6,8 +6,8 @@ description: Swiper 14.x 슬라이더/캐러셀 — React 컴포넌트 + Swiper 
 # Swiper 14.x 슬라이더/캐러셀
 
 > 소스: https://swiperjs.com/react, https://swiperjs.com/swiper-api, https://swiperjs.com/element, https://swiperjs.com/blog/swiper-v14, https://swiperjs.com/blog/swiper-v12, https://swiperjs.com/changelog
-> 검증일: 2026-08-11
-> 버전: Swiper 14.1.0 (2026-08-06 릴리즈) 기준 — v14.0.0은 2026-06-26 릴리즈. v13은 건너뛰고 v12 → v14로 이동
+> 검증일: 2026-09-28 (최초 2026-08-11)
+> 버전: Swiper 14.2.0 (2026-08-26 릴리즈) 기준 — v14.0.0은 2026-06-26 릴리즈. v13은 건너뛰고 v12 → v14로 이동. 14.1.0→14.2.0은 버그 수정 + 비침습적 신규 파라미터만 포함(breaking change 없음)
 
 ---
 
@@ -378,6 +378,14 @@ function GallerySlider() {
   navigation
 >
 
+// v14.2.0 추가 — mode: 'out-in'으로 이전 슬라이드가 완전히 사라진 뒤 다음 슬라이드가 나타나게 함
+// (기본값은 in-out — 두 슬라이드가 겹치며 크로스페이드)
+<Swiper
+  modules={[EffectFade]}
+  effect="fade"
+  fadeEffect={{ crossFade: true, mode: 'out-in' }}
+>
+
 // Coverflow 효과
 <Swiper
   modules={[EffectCoverflow, Pagination]}
@@ -483,6 +491,7 @@ v13은 릴리즈되지 않았습니다(v12 → v14). 코드 변경이 실제로 
 | 12.1.0 | 2026-01-28 | `snapToSlideEdge` 추가, 키보드 이동 speed 지정 지원 |
 | 14.0.0 | 2026-06-26 | TypeScript 전면 재작성, 브라우저 baseline 상향, `ssr-window` 의존성 제거(런타임 의존성 0), 번들 2~4% 축소 |
 | 14.1.0 | 2026-08-06 | 버그 수정 (모듈 기본값 처리, 뷰포트 기준 오프셋, breakpoints 타입 보존) |
+| 14.2.0 | 2026-08-26 | 버그 수정(cards `calc()` 오류·loop 관련 이벤트/RTL/geometry) + 신규 파라미터 `lazyPreload`(내장 lazy 프리로더 리스너 비활성화), `fadeEffect.mode: 'out-in'`(이전 슬라이드가 완전히 사라진 뒤 다음 슬라이드 페이드인). 둘 다 옵트인 추가 옵션이며 breaking change 없음 |
 
 ### 체크리스트
 

@@ -1,8 +1,8 @@
 ---
 skill: tanstack-query
 category: frontend
-version: v1
-date: 2026-08-11
+version: v1.2
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,10 +14,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `tanstack-query` |
 | 스킬 경로 | `.claude/skills/frontend/tanstack-query/SKILL.md` |
-| 검증일 | 2026-08-11 |
-| 검증자 | skill-creator |
-| 스킬 버전 | v1 |
-| 기준 버전 | `@tanstack/react-query` 5.101.4 (React 18+ / 19) |
+| 검증일 | 2026-09-28 (재검증(2차)) / 2026-08-26 (v1.1) / 2026-08-11 (v1 최초) |
+| 검증자 | skill-creator (v1) → 재검증(2차) |
+| 스킬 버전 | v1.2 |
+| 기준 버전 | `@tanstack/react-query` 5.104.0 (React 18+ / 19) |
 
 ---
 
@@ -167,16 +167,36 @@ status: APPROVED
 
 ---
 
+### [2026-09-28] 재검증(2차) — 5.104.0 현행화 + 5.102 이후 추가 deprecated 확인
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임 3개를 1차 소스(GitHub Releases API)와 대조
+
+**클레임 대조 결과**:
+1. `@tanstack/react-query` 최신 버전 → VERIFIED (`npm registry @tanstack/react-query@latest` = 5.104.0)
+2. React 어댑터는 여전히 v5가 최신 안정 메이저이고 v6는 없는가 → VERIFIED (GitHub Releases에 `@tanstack/react-query@6.x` 태그 없음, Svelte/Solid만 6.x 존재 — 08-11 판정과 동일)
+3. 5.102.0(§10 통합 메서드 deprecated 반영 시점) 이후 5.104.0까지 새로 추가된 breaking change·deprecated API가 있는가 → **VERIFIED — 없음**. `api.github.com/repos/TanStack/query/releases`에서 `@tanstack/query-core`·`@tanstack/react-query`의 5.102~5.104 구간 changelog 전수 확인 결과: 5.103.2(캐시에서 이미 제거된 쿼리 인스턴스의 removal 요청 무시하는 patch), 5.103.3(codemods 파일 복사 버그 fix), 5.104.0(Vite 8 빌드 전환)뿐 — 공개 API·deprecation 변경 없음
+
+**보강(ADD)·축소**: 없음 (버전 번호만 갱신)
+
+**실전 질문 재검증**:
+- Q1. "지금(9월 말) 기준으로 TanStack Query 최신 버전이 뭔가?" → SKILL.md 상단 배너 근거로 5.104.0 — PASS
+- Q2. "5.102 이후에 또 deprecated된 메서드가 생겼나?" → SKILL.md §10 주의 블록 + 재검증 기록 근거로 "없음, 5.102의 통합 메서드 deprecated가 여전히 최신" — PASS
+
+**재검증 최종 판정**: status **APPROVED 유지** (내용 변경 없음, 버전 번호만 갱신)
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
 |------|------|
-| 내용 정확성 | ✅ (12개 클레임 중 VERIFIED 11, DISPUTED 1은 수정 반영) |
+| 내용 정확성 | ✅ (12개 클레임 중 VERIFIED 11, DISPUTED 1은 수정 반영. 2026-09-28 재검증 3개 클레임 추가 VERIFIED) |
 | 구조 완전성 | ✅ (frontmatter·소스 URL·검증일·버전 기준·주의 표기·흔한 실수·체크리스트) |
 | 실용성 | ✅ (전 섹션 실행 가능한 TypeScript 예시, 프로젝트 비종속) |
 | 기존 스킬과의 중복 | ✅ 분리 완료 (state-management = 선택 기준·Zustand / 이 스킬 = TanStack Query 사용법, 양방향 포인터) |
 | 에이전트 활용 테스트 | ✅ 3/3 PASS |
-| **최종 판정** | **APPROVED** |
+| **최종 판정** | **APPROVED** (2026-09-28 재검증에서도 유지) |
 
 > 판정 근거: `verification-policy.md`의 "실사용 검증이 필요 없는 스킬 — 라이브러리 사용법 스킬은 content test PASS = APPROVED" 기준 적용.
 > 빌드 산출물·실행 결과로만 검증 가능한 항목(마이그레이션·빌드 설정)은 포함돼 있지 않다.
@@ -198,3 +218,4 @@ status: APPROVED
 | 2026-08-11 | v1 | 최초 작성 — 공식 문서 21회 페치·6회 검색 기반, 12개 클레임 교차 검증(DISPUTED 1건 수정 반영), content test 3/3 PASS로 APPROVED | skill-creator |
 | 2026-08-26 | v1.1 | v5.102.0 통합 메서드 반영 — `prefetchQuery`/`fetchQuery`/`ensureQueryData` 계열 `@deprecated`(v6 제거 예정), `queryClient.query()`/`infiniteQuery()` 대체 및 동작 차이(throw·`staleTime: 'static'`) 주의 블록을 섹션 10에 추가. fact-checker 5개 독립 소스 VERIFIED(소스 JSDoc·마이그레이션 가이드·QueryClient 레퍼런스·RFC #9135·PR #11282). 기존 예시는 v5 내 유효하므로 유지 | orchestrator + fact-checker |
 | 2026-09-25 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | |
+| 2026-09-28 | v1.2 | 재검증(2차) — 5.104.0 확인(GitHub Releases 5.102~5.104 전수 대조, 신규 deprecated 없음). 버전 배너만 갱신, status APPROVED 유지 | 재검증(2차) |

@@ -125,7 +125,7 @@ git add e2e/__snapshots__/
 git push                          # CI에서 1px씩 깨짐
 
 # 좋은 예 — Docker 또는 CI 러너에서 생성
-docker run ... mcr.microsoft.com/playwright:v1.59.1-jammy ... --update-snapshots
+docker run ... mcr.microsoft.com/playwright:v1.63.0-jammy ... --update-snapshots
 ```
 
 ### 너무 느슨한 threshold

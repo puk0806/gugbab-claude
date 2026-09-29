@@ -5,13 +5,14 @@ description: motion 13.x (구 framer-motion) 핵심 패턴, CSS transition/keyfr
 
 # Animation — motion 13.x + CSS
 
-> 소스: https://motion.dev/docs | https://motion.dev/docs/react-upgrade-guide | https://motion.dev/changelog
+> 소스: https://motion.dev/docs | https://motion.dev/docs/react-upgrade-guide | https://motion.dev/changelog | https://motion.dev/docs/react-animate-view
 > 소스: https://developer.mozilla.org/en-US/docs/Web/CSS/animation
-> 검증일: 2026-08-11
+> 검증일: 2026-09-28 (최초 2026-08-11)
 
-> **motion v13.1.0** 기준 (2026-08-10 릴리즈, npm registry `latest` 확인. v13.0.0은 2026-08-05).
+> **motion v13.4.4** 기준 (2026-09-25 릴리즈, npm registry `latest` 확인. v13.1.0은 2026-08-10).
 > React API에서 v12 → v13 파괴적 변경은 **CSS-in-JS 사용자에게만 해당하는 1건**뿐이다 (아래 "motion 13 업그레이드" 참조).
 > 그 외 `motion` 컴포넌트·`AnimatePresence`·variants·훅 API는 v12와 동일하다.
+> 13.1→13.4 구간에는 React API 파괴적 변경이 없다. 단 **React용 `AnimateView`가 13.4.0에서 Motion+ Early Access를 벗어나 메인 패키지로 정식 이동**했다 (아래 "animateView / AnimateView" 절 참조).
 
 ---
 
@@ -119,7 +120,7 @@ pnpm remove framer-motion
 - motion 12·13: React에서 파괴적 변경 사실상 없음 (13의 CSS-in-JS 항목 제외). 기존 motion 11 코드 그대로 동작
 
 > `framer-motion`은 여전히 `motion`과 **동일한 버전 번호로 함께 배포되는 별칭 패키지**다
-> (2026-08-11 기준 양쪽 모두 13.1.0. `motion`이 내부적으로 `framer-motion`을 의존한다).
+> (2026-09-28 기준 양쪽 모두 13.4.4. `motion`이 내부적으로 `framer-motion`을 의존한다).
 > 즉 당장 깨지지는 않지만 신규 프로젝트는 `motion`을 설치한다 — 공식 문서는 `framer-motion`을
 > deprecated alias로 안내하며, 문서·예제는 모두 `motion/react` 기준이다.
 > 주의: npm registry의 `deprecated` 플래그 자체는 걸려 있지 않아 `npm install` 시 경고는 나오지 않는다.
@@ -400,7 +401,7 @@ function FadeInSection() {
 
 ---
 
-## 최근 버전 변경 요약 (v12.40 → v13.1)
+## 최근 버전 변경 요약 (v12.40 → v13.4)
 
 | 버전 | 날짜 | 내용 |
 |------|------|------|
@@ -408,7 +409,12 @@ function FadeInSection() {
 | 12.42.0 | 2026-06-24 | `animateView` 레이어가 DOM 계층에 맞춰 자동 그룹화, auto-crop이 종횡비 유지 |
 | 12.43.0 | 2026-07-27 | `backgroundColor`와 SVG 엘리먼트에 **하드웨어 가속 추가** |
 | 13.0.0 | 2026-08-05 | `@emotion/is-prop-valid` 자동 사용 제거(위 업그레이드 절 참조). SVG 하드웨어 가속 종료 시 최종 스타일 적용 수정, `AnimatePresence` `propagate` 관련 수정 |
-| 13.1.0 | 2026-08-10 | 현재 최신 안정 버전 |
+| 13.1.0 | 2026-08-10 | `Reorder`에 다차원 재정렬·축 자동 감지·RTL 지원 추가 |
+| 13.1.1 | 2026-08-18~20 | 비브라우저 런타임에서 `window` 접근 가드, `AnimatePresence` React 19 strict mode 호환성 개선 |
+| 13.2.0 | 2026-09-02 | `animate.addEffect()`(비-DOM 대상 구동), `motion/three`(Three.js), `motion/vgpu`(WebGPU/셰이더) 신규 모듈 — 3D·그래픽 특화 기능, 이 스킬의 CSS/React UI 애니메이션 범위 밖 |
+| 13.3.0 | 2026-09-14 | 성능 개선 위주(스프링 재타겟팅 80%↓, animate 번들 10%↓ 등), API 변경 없음 |
+| 13.4.0 | 2026-09-14 | **React용 `AnimateView`가 Motion+ Early Access를 벗어나 메인 패키지로 정식 이동** (아래 참조) |
+| 13.4.1~13.4.4 | 2026-09-22~25 | 버그 수정(SVG `style` 속성 CSS 변수, `Reorder` 위치 스케일, 커스텀 이징명 에러, `useDragControls`/`drag`/`spring`/`AnimatePresence`), `scroll`/`useScroll` 경량화·고속화 |
 
 ### animateView / AnimateView — 페이지·뷰 전환
 
@@ -424,11 +430,31 @@ animateView((view) => {
 })
 ```
 
-> **주의 — React용 `AnimateView` 컴포넌트는 아직 실험적이다.**
-> 현재 Motion+ Early Access 전용(`motion-plus/animate-view`)이며, React의 `ViewTransition` 컴포넌트에
-> 의존하므로 **React canary 이상 + motion 12.34.0 이상**을 요구한다.
-> 정식 릴리즈 시 메인 `motion` 패키지로 이동 예정. **프로덕션 React 앱에는 아직 도입하지 않는다** —
-> 페이지 전환은 위의 `AnimatePresence mode="wait"` 패턴을 계속 사용한다.
+> **업데이트(2026-09-28 확인) — React용 `<AnimateView>`가 13.4.0(2026-09-14)에서 Motion+ Early Access를 벗어나 메인 `motion` 패키지로 이동했다.** 더 이상 Motion+ 멤버십·액세스 토큰이 필요 없다.
+> - 요구사항: **React·React DOM 19.3 이상** (기존 "React canary 이상" 요구가 아니다 — 19.3 정식 릴리즈 기준으로 바뀜). 다른 Motion for React API는 그대로 React 18을 지원한다.
+> - import 경로가 별도 엔트리포인트로 분리됐다: `motion/react-animate-view` (`motion/react`에서는 export되지 않음)
+> - 기존 Early Access 사용자는 `motion-plus/animate-view` → `motion/react-animate-view`로 import만 바꾸면 된다 (API 동일)
+>
+> ```tsx
+> import { AnimateView } from 'motion/react-animate-view'
+> import { startTransition, useState } from 'react'
+>
+> function Example() {
+>   const [show, setShow] = useState(true)
+>   return (
+>     <>
+>       <button onClick={() => startTransition(() => setShow(!show))}>Toggle</button>
+>       {show && (
+>         <AnimateView transition={{ type: 'spring' }}>
+>           <div className="box" />
+>         </AnimateView>
+>       )}
+>     </>
+>   )
+> }
+> ```
+>
+> `startTransition`으로 상태 변경을 감싸야 뷰 전환이 트리거된다. **정식 이동은 됐지만 릴리즈 시점이 이 검증일 기준 2주 이내로 매우 최근이고 React 19.3+라는 높은 버전 요구사항이 있으므로**, React 18 프로젝트이거나 안정성을 우선한다면 여전히 `AnimatePresence mode="wait"` 패턴을 권장한다.
 
 ---
 

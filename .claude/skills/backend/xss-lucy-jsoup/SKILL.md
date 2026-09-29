@@ -13,11 +13,13 @@ description: Spring Boot XSS 방어 패턴 - Naver Lucy XSS Servlet Filter(요�
 > - https://docs.spring.io/spring-security/reference/servlet/exploits/headers.html
 > - https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html
 >
-> 검증일: 2026-04-22
+> 검증일: 2026-04-22 (재검증: 2026-09-26)
 
-> 주의: `com.navercorp.lucy:lucy-xss-servlet` 레포는 2025-06-09 GitHub에서 **archived** 상태로 전환되었습니다. 최신 버전은 2.0.1 (Maven Central)이며 2.0.0(2015-05-15) 이후 신규 기능 추가는 드뭅니다. 신규 프로젝트라면 OWASP Java Encoder + jsoup + Content-Security-Policy 조합도 함께 검토하세요. 다만 한국 엔터프라이즈에서 Lucy는 여전히 널리 사용 중이며, 서블릿 파라미터 레벨 방어에는 충분히 안정적입니다.
+> 주의: `com.navercorp.lucy:lucy-xss-servlet` 레포는 2025-06-09 GitHub에서 **archived** 상태로 전환되었습니다. 최신 버전은 2.0.1 (Maven Central)이며 2.0.0(2015-05-15) 이후 신규 기능 추가는 드뭅니다. 신규 프로젝트라면 OWASP Java Encoder + jsoup + Content-Security-Policy 조합도 함께 검토하세요. 다만 한국 엔터프라이즈에서 Lucy는 여전히 널리 사용 중이며, 서블릿 파라미터 레벨 방어에는 충분히 안정적입니다. (2026-09-26 재검증: archived 상태·2.0.1 최신 버전 변경 없음 확인)
 
 > 주의: jsoup 버전은 공식 Maven Central(https://central.sonatype.com/artifact/org.jsoup/jsoup/versions)에서 최신 안정 버전 확인 후 사용하세요. 본 문서는 1.18.3 (LTS성) 및 최신 1.22.x 계열을 기준으로 합니다. Safelist API는 1.14.2부터 안정적이며 이전의 `Whitelist`(deprecated)와 호환됩니다.
+>
+> 주의(2026-09-26 재검증): jsoup 최신 버전은 **1.23.2**(2026-08-26)입니다. `Safelist` 프리셋(`none/simpleText/basic/basicWithImages/relaxed`)·`addTags/addAttributes/addProtocols/addEnforcedAttribute` API는 변경 없이 그대로 유효하며, `preserveRelativeLinks` 관련 GHSA-gp7f-rwcx-9369 패치도 유지됩니다.
 
 ---
 

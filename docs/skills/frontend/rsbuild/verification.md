@@ -1,8 +1,8 @@
 ---
 skill: rsbuild
 category: frontend
-version: v2
-date: 2026-08-11
+version: v3
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -15,10 +15,10 @@ status: APPROVED
 | 스킬 이름 | `rsbuild` |
 | 스킬 경로 | `.claude/skills/frontend/rsbuild/SKILL.md` |
 | 최초 검증일 | 2026-04-23 |
-| 재검증일 | 2026-08-11 |
-| 검증자 | skill-creator (agent) → 버전 재검증 (2026-08-11) |
-| 스킬 버전 | v2 |
-| 버전 기준 | Rsbuild 2.1.10 (2026-08-04), 2.1.0 (2026-06-26) |
+| 재검증일 | 2026-09-28 (이전 재검증 2026-08-11) |
+| 검증자 | skill-creator (agent) → 버전 재검증 (2026-08-11, 2026-09-28) |
+| 스킬 버전 | v3 |
+| 버전 기준 | Rsbuild 2.2.10 (2026-09-27), 2.2.0 (2026-08-26) |
 
 ---
 
@@ -140,6 +140,56 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
+### [2026-09-28] skill-tester content test 재수행 (2.2 신규 기능 섹션 반영 후)
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose
+**수행 방법**: SKILL.md Read 후 2개 실전 질문 답변, 근거 섹션 존재 여부 및 anti-pattern 회피 확인. Q1은 아래 2026-09-28 재검증(3차)에서 정정·추가된 "Rsbuild 2.2 신규 기능" 섹션을 직접 겨냥.
+
+### 실제 수행 테스트
+
+**Q1. Rsbuild 2.1→2.2 업그레이드 시 최신 마이너·신규 기능·기존 React 설정 영향 여부**
+- ✅ PASS
+- 근거: SKILL.md "버전 정보" 표(27~37행) + "Rsbuild 2.2 신규 기능 (ADD, 2026-08-26)" 섹션(56~69행)
+- 상세: 최신 마이너 2.2(v2.2.10, 2026-09-27), 2.1 대비 신규 기능 6항목(native watcher·Node code-splitting·Brotli 리포팅·`hot.onConnect`·`output.module`·Solid v2/ESM) 정확히 인용. "breaking change는 Solid 플러그인 전용, React 설정(`pluginReact`/`reactCompiler`)은 영향 없음"을 69행 근거로 정확히 답변 — 이번 재검증에서 정정·추가된 내용이 답변에 정확히 반영됨, 구버전(2.1.10) 잔존 정보 없음.
+
+**Q2. CRA → Rsbuild 마이그레이션 시 흔히 놓치는 부분**
+- ✅ PASS
+- 근거: SKILL.md "CRA → Rsbuild 마이그레이션 요점" 섹션(390~478행) + "환경 변수" 섹션(326~356행) + "SVG → React 컴포넌트" 섹션(206~227행) + TypeScript 타입 체크 섹션(229~243행)
+- 상세: 8단계 순서와 각 단계별 함정(`%PUBLIC_URL%` 미치환, `REACT_APP_` 접두사 미설정, SVGR 플러그인 누락, 출력 디렉토리 `build`→`dist` 변경, 타입 체크가 빌드에서 빠짐, 테스트 러너 미대체)을 정확히 근거 제시. anti-pattern(치환 누락 등) 회피 확인. 경미한 gap: CSS Modules·Service Worker 이전 세부는 REFERENCE.md로 위임된 구조라 SKILL.md 본문에는 없음(구조상 의도된 분리, 차단 요인 아님).
+
+### 발견된 gap
+
+- 없음(차단 요인 기준). REFERENCE.md 위임 항목(CSS Modules, Service Worker 이전 등)은 선택 보강.
+
+### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 해당 없음 (빌드 설정/워크플로우/마이그레이션 카테고리 아님 — 툴 사용법 스킬)
+- 최종 상태: APPROVED (PENDING_TEST → APPROVED 재전환)
+
+---
+
+### [2026-09-28] 재검증(3차) — Rsbuild 2.1 → 2.2 신규 기능·버전 갱신 (ADD)
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임 3개를 1차 소스(npm registry time 메타데이터·GitHub Releases API)와 대조, ADD 항목(Rsbuild 2.2 신규 기능) 반영
+
+**클레임 대조 결과**:
+1. `@rsbuild/core` 최신 버전 → 2.1.10(2026-08-11 기록) 대비 **2.2.10(2026-09-27)로 마이너 갱신** — DISPUTED(정정): npm registry time 메타데이터로 2.1.0(2026-06-26)~2.2.10(2026-09-27) 전 패치 이력 확인, v2.2.0은 2026-08-26 릴리즈.
+2. Rsbuild 2.2 신규 기능 존재 여부 → VERIFIED: GitHub Releases API로 v2.2.0~v2.2.10 전수 확인. 주요 항목 — 기본 native watcher 전환(2.2.0), Node.js 빌드 기본 code-splitting(2.2.0), Brotli 압축 크기 리포팅(2.2.5), `environment.hot.onConnect` API(2.2.8), web-worker 타겟 `output.module`(2.2.10). Rsbuild 2.2는 공식 블로그 글이 없고(블로그 목록에 v2-2 없음, v2-1이 최신) GitHub Releases만 공식 소스로 존재함을 확인(rsbuild.rs/blog 인덱스 페이지로 확인).
+3. 본 스킬의 React/CRA 마이그레이션/Module Federation 예시 코드에 영향 주는 breaking change 존재 여부 → VERIFIED 없음: 2.2.0의 `@rsbuild/plugin-solid` ESM 전용 전환(Rsbuild v1 지원 중단)만 breaking이며 Solid 플러그인 전용이라 본 스킬 예시(React 중심)에는 영향 없음.
+
+**보강(ADD)**: "버전 정보" 표를 2.2.10/2.2.0 기준으로 갱신, "Rsbuild 2.2 신규 기능 (ADD, 2026-08-26)" 섹션 신설(native watcher 기본화·Node 빌드 code-splitting 기본화·Brotli 크기 리포팅·`hot.onConnect`·`output.module`·Solid v2/ESM 전환 6항목).
+
+**실전 질문 재검증**:
+- Q1. "지금 Rsbuild 최신 마이너는 몇이고 이전 2.1 대비 뭐가 달라졌나?" → SKILL.md "버전 정보" 표 + "Rsbuild 2.2 신규 기능" 섹션 근거로 PASS
+- Q2. "Rsbuild 2.2로 올렸는데 기존 React 프로젝트 설정이 깨지나?" → SKILL.md 신규 섹션의 "주의" 문구 근거로 PASS — breaking change는 Solid 플러그인 전용, React 설정은 영향 없음
+
+**재검증 최종 판정**: status **PENDING_TEST 전환** (스킬 본문 실질 변경 발생 — 메인 세션이 skill-tester로 content test 재수행 후 APPROVED 재전환 필요. 실사용 필수 카테고리는 아님, content test PASS만으로 APPROVED 가능)
+
+---
+
 **수행일**: 2026-04-23
 **수행자**: skill-tester → general-purpose (대체: frontend-developer 에이전트 미등록 상태로 skill-tester 직접 섹션 검증 수행)
 **수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 존재 여부 및 anti-pattern 회피 확인
@@ -206,14 +256,16 @@ status: APPROVED
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ PASS (3/3, 2026-04-23) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ PASS (3/3, 2026-04-23) + ✅ PASS (2/2, 2026-09-28 — 2.2 신규 기능 섹션 반영 후 재수행) |
+| WebSearch·npm·GitHub Releases 재검증 (2026-09-28) | ✅ Rsbuild 2.1.10→2.2.10 마이너 갱신 확인 + 2.2 신규 기능 6항목 반영, React 예시 breaking change 없음 확인 |
+| **최종 판정** | **APPROVED** (2026-09-28 skill-tester content test 재수행 2/2 PASS — 정정·추가 내용이 답변에 정확히 반영됨 확인, PENDING_TEST → APPROVED 재전환) |
 
 **근거:**
 - 공식 문서 직접 조사, 최초 교차 검증 7개 클레임 중 6개 VERIFIED, 1개는 SKILL.md 내 주의 표기로 대응.
 - 2026-04-23 skill-tester가 3개 실전 질문(CRA 마이그레이션, Vite vs Rsbuild 선택 기준, 모노레포 라이브러리 빌드) content test 수행, 전원 PASS → APPROVED 전환.
-- **2026-08-11 버전 재검증**: 기준을 Rsbuild 2.1.10(2026-08-04)로 갱신. 재검증 클레임 9건 중 VERIFIED 7 / DISPUTED 2(연도 오기 → 정정 반영), UNVERIFIED 0.
-- 재검증은 *버전·기능 갱신* 범위이며 스킬의 핵심 구조(의사결정 표, CRA 마이그레이션, Rslib 구분)는 변경 없음 → content test 재수행 없이 **APPROVED 유지**.
+- **2026-08-11 버전 재검증**: 기준을 Rsbuild 2.1.10(2026-08-04)로 갱신. 재검증 클레임 9건 중 VERIFIED 7 / DISPUTED 2(연도 오기 → 정정 반영), UNVERIFIED 0. 스킬 핵심 구조 변경 없어 content test 재수행 없이 APPROVED 유지.
+- **2026-09-28 재검증(3차, ADD)**: 기준을 Rsbuild 2.2.10(2026-09-27)로 갱신, "Rsbuild 2.2 신규 기능" 섹션 신설(ADD) — 버전 표·신규 섹션이 실질 추가된 변경이므로 verification-policy의 "정정·보강이 있으면 PENDING_TEST 전환" 원칙에 따라 **PENDING_TEST로 전환**.
+- **2026-09-28 skill-tester content test 재수행**: 2개 실전 질문(2.1→2.2 업그레이드 영향, CRA 마이그레이션 흔한 실수) 2/2 PASS. Q1이 2.2 신규 기능 섹션(정정·추가분)을 직접 겨냥해 정확히 근거 제시됨을 확인 → **APPROVED 재전환**.
 
 ---
 
@@ -223,7 +275,8 @@ status: APPROVED
 - [✅] `@rsbuild/core` 최신 patch 버전 확인 (2026-04-23 `npm view` 실행 결과 **2.0.0** — SKILL.md 기재 버전과 동일, 별도 업데이트 불필요)
 - [✅] 2026-08-11 버전 재검증 — 2.1.x 신규 기능 반영 및 v2.0.0/v1.7.x 릴리즈 **연도 오기 정정** 완료
 - [🔬] 실전 도입(신규 SPA 파일럿 등) 이후 흔한 실수 섹션 보강 — 실환경 검증 대기, 현 시점 차단 요인 아님
-- [🔬] 다음 재검증 시 **릴리즈 날짜는 npm time 메타데이터로 확정**할 것 — GitHub Releases의 상대 시각 표기를 옮기다 연도 오기가 발생한 전례 있음
+- [✅] 다음 재검증 시 **릴리즈 날짜는 npm time 메타데이터로 확정**할 것 — 2026-09-28 재검증에서 npm registry time 메타데이터 + GitHub Releases API 병행 사용으로 준수
+- [✅] **(2026-09-28 완료)** skill-tester로 "Rsbuild 2.2 신규 기능" 섹션 반영한 content test 재수행 — 2/2 PASS, PENDING_TEST → APPROVED 전환
 
 ---
 
@@ -235,3 +288,5 @@ status: APPROVED
 | 2026-04-23 | v1 | 2단계 실사용 테스트 수행 (Q1 CRA 마이그레이션 / Q2 Vite vs Rsbuild / Q3 모노레포 라이브러리) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-04-23 | v1 | 섹션 7 follow-up 정리 — `npm view @rsbuild/core version` 실행으로 최신 patch 2.0.0 확인, 섹션 7/8 cleanup | main |
 | 2026-08-11 | v2 | 버전 재검증 — 기준을 Rsbuild 2.1.10(2026-08-04)으로 갱신. ① **연도 오기 정정**: v2.0.0 2025-04-22 → **2026-04-22**, v1.7.5 2025-03-30 → **2026-03-30**, 마지막 1.x를 v1.7.6(2026-06-24)로 갱신 ② Rsbuild 2.1 신규 기능 섹션 신설(Rust React Compiler·TanStack Start·Tailwind v4 플러그인·autoExternal·병렬 Babel/SVGR·`?url`/`?worker`/Wasm source) ③ React 섹션에 `reactCompiler`·TanStack Start 설정 추가, 스타일 섹션에 `@rsbuild/plugin-tailwindcss` 추가 ④ 의사결정 트리에 TanStack Start 분기 추가. 재검증 클레임 9건(VERIFIED 7 / DISPUTED 2 정정) | 버전 재검증 |
+| 2026-09-28 | v3 | 재검증(3차, ADD) — 기준을 Rsbuild 2.2.10(2026-09-27)으로 갱신, "Rsbuild 2.2 신규 기능" 섹션 신설(native watcher 기본화·Node 빌드 code-splitting 기본화·Brotli 크기 리포팅·`hot.onConnect`·`output.module`·Solid v2/ESM 전환). React/CRA 예시에 영향 주는 breaking change 없음 확인. 실질 변경 발생으로 status APPROVED → **PENDING_TEST 전환** (skill-tester 재테스트 대기) | 메인 세션 |
+| 2026-09-28 | v3 | 2단계 실사용 테스트 재수행 (Q1 2.1→2.2 업그레이드 영향 / Q2 CRA 마이그레이션 흔한 실수) → 2/2 PASS, **APPROVED 재전환** | skill-tester |

@@ -8,7 +8,7 @@ description: MUI v9 (Material UI) 핵심 패턴 — ThemeProvider + CSS Variable
 > 소스: https://mui.com/material-ui/getting-started/
 >       https://mui.com/blog/introducing-material-ui-v9/
 >       https://mui.com/material-ui/migration/upgrade-to-v9/
-> 검증일: 2026-06-19
+> 검증일: 2026-09-28 (최초 2026-06-19)
 
 > 참고: v5 → v6 → v7 → v9 순서로 출시됨 (v8은 존재하지 않음 — MUI X와 버전 번호를 맞추기 위한 의도적 스킵).
 > 참고: 프로젝트가 **`@mui/material` 5.x에 고정**된 레거시라면 이 스킬의 Grid `size` prop·`colorSchemes`·`theme.applyStyles()`는 동작하지 않는다 — `frontend/mui-v5` 스킬을 먼저 참조할 것.
@@ -75,52 +75,11 @@ function App() {
 
 다크 모드가 필요한 경우 `cssVariables: true` + `colorSchemes`를 사용한다. SSR 깜빡임 없이 라이트/다크를 전환할 수 있다.
 
-```tsx
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-import InitColorSchemeScript from '@mui/material/InitColorSchemeScript';
-
-const theme = createTheme({
-  cssVariables: true,
-  colorSchemes: {
-    light: {
-      palette: { primary: { main: '#1976d2' } },
-    },
-    dark: {
-      palette: { primary: { main: '#90caf9' } },
-    },
-  },
-});
-
-// Next.js App Router: layout.tsx
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html suppressHydrationWarning>
-      <body>
-        <InitColorSchemeScript />  {/* SSR 깜빡임 방지 */}
-        <ThemeProvider theme={theme}>
-          <CssBaseline />
-          {children}
-        </ThemeProvider>
-      </body>
-    </html>
-  );
-}
-```
+→ references/REFERENCE.md §11 (CSS Variables + colorSchemes 예제)
 
 ### 다크 모드 토글 훅
 
-```tsx
-import { useColorScheme } from '@mui/material/styles';
-
-function ModeToggle() {
-  const { mode, setMode } = useColorScheme();
-  return (
-    <button onClick={() => setMode(mode === 'dark' ? 'light' : 'dark')}>
-      현재: {mode}
-    </button>
-  );
-}
-```
+→ references/REFERENCE.md §12 (다크 모드 토글 훅 예제)
 
 ---
 
@@ -187,31 +146,7 @@ import { Box } from '@mui/material';
 
 ### styled() 컴포넌트
 
-```tsx
-import { styled } from '@mui/material/styles';
-import { Button } from '@mui/material';
-
-// 기본
-const PrimaryButton = styled(Button)(({ theme }) => ({
-  borderRadius: theme.spacing(1),
-  padding: theme.spacing(1.5, 3),
-}));
-
-// 다크 모드 대응 (applyStyles)
-const ThemedCard = styled('div')(({ theme }) => ({
-  backgroundColor: theme.palette.background.paper,
-  ...theme.applyStyles('dark', {
-    backgroundColor: theme.palette.grey[900],
-  }),
-}));
-
-// 조건부 스타일 (variant prop)
-const StyledButton = styled(Button, {
-  shouldForwardProp: (prop) => prop !== 'rounded',
-})<{ rounded?: boolean }>(({ theme, rounded }) => ({
-  ...(rounded && { borderRadius: theme.spacing(3) }),
-}));
-```
+→ references/REFERENCE.md §13 (styled() 컴포넌트 예제)
 
 ---
 
@@ -219,101 +154,25 @@ const StyledButton = styled(Button, {
 
 ### palette 확장
 
-```tsx
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1976d2',
-      light: '#42a5f5',
-      dark: '#1565c0',
-      contrastText: '#fff',
-    },
-    // 커스텀 색상
-    custom: {
-      highlight: '#f5f5f5',
-    },
-  },
-});
-```
+→ references/REFERENCE.md §14 (커스텀 테마 예제 모음 — palette/typography/breakpoints/단계적 확장)
 
 ### typography 커스터마이징
 
-```tsx
-const theme = createTheme({
-  typography: {
-    fontFamily: '"Pretendard", "Roboto", sans-serif',
-    h1: { fontSize: '2.5rem', fontWeight: 700 },
-    body1: { fontSize: '1rem', lineHeight: 1.6 },
-    // 커스텀 variant
-    caption2: { fontSize: '0.625rem', color: 'text.secondary' },
-  },
-});
-```
+→ references/REFERENCE.md §14
 
 ### breakpoints & spacing
 
-```tsx
-const theme = createTheme({
-  spacing: 8,  // theme.spacing(1) = '8px'
-  breakpoints: {
-    values: { xs: 0, sm: 600, md: 900, lg: 1200, xl: 1536 },
-  },
-});
-
-// 사용
-theme.spacing(2)        // '16px'
-theme.breakpoints.up('md')  // '@media (min-width: 900px)'
-```
+→ references/REFERENCE.md §14
 
 ### 단계적 테마 확장 (의존 관계)
 
-```tsx
-let theme = createTheme({
-  palette: { primary: { main: '#0052cc' } },
-});
-theme = createTheme(theme, {
-  palette: {
-    info: { main: theme.palette.primary.main },
-  },
-});
-```
+→ references/REFERENCE.md §14
 
 ---
 
 ## 4. 컴포넌트 글로벌 오버라이드 (theme.components)
 
-```tsx
-const theme = createTheme({
-  components: {
-    MuiButton: {
-      defaultProps: {
-        disableRipple: true,
-        variant: 'contained',
-      },
-      styleOverrides: {
-        root: ({ theme }) => ({
-          borderRadius: 8,
-          textTransform: 'none',
-          // 다크 모드 대응
-          ...theme.applyStyles('dark', {
-            boxShadow: 'none',
-          }),
-          // variants API (v6+)
-          variants: [
-            {
-              props: { variant: 'dashed' },
-              style: { border: '2px dashed currentColor' },
-            },
-          ],
-        }),
-      },
-    },
-    MuiTextField: {
-      defaultProps: { size: 'small', variant: 'outlined' },
-    },
-  },
-});
-```
+→ references/REFERENCE.md §15 (theme.components 글로벌 오버라이드 예제)
 
 ---
 

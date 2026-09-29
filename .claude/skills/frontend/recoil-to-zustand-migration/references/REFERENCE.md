@@ -235,8 +235,10 @@ export const todoLabelState = selectorFamily<string, string>({
 // 사용: const label = useRecoilValue(todoLabelState(id))
 ```
 
+> 아래는 **Jotai v2** 기준 예시다. `jotai@3`(2026-09 릴리스)를 쓴다면 `atomFamily`의 import 경로가 `jotai-family` 패키지로 바뀐다 — SKILL.md §3-5 참조.
+
 ```ts
-// ── Jotai — 거의 1:1
+// ── Jotai — 거의 1:1 (v2: 'jotai/utils' / v3: 'jotai-family'로 패키지 자체가 바뀜 — SKILL.md §3-5)
 import { atom } from 'jotai'
 import { atomFamily } from 'jotai/utils'
 
@@ -316,8 +318,10 @@ function Profile({ id }: { id: string }) {
 }
 ```
 
+> 아래도 **Jotai v2** 기준이다. `jotai@3`에서는 `loadable`이 **완전히 제거**되고 대체 패키지도 없다(`unwrap` + 직접 구현 필요), `atomFamily`는 `jotai-family` 패키지로 이동한다 — SKILL.md §3-5 참조.
+
 ```tsx
-// ── 클라이언트 파생 비동기라면 Jotai async atom + loadable
+// ── 클라이언트 파생 비동기라면 Jotai async atom + loadable (v2 API — v3는 SKILL.md §3-5 참조)
 import { atom, useAtomValue } from 'jotai'
 import { atomFamily, loadable } from 'jotai/utils'
 

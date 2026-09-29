@@ -6,8 +6,8 @@ description: Playwright E2E 테스트 — 설치, 설정, 로케이터, POM, 네
 # E2E Testing — Playwright
 
 > 소스: https://playwright.dev/docs/intro | https://playwright.dev/docs/best-practices
-> 검증일: 2026-08-26 (최초 2026-04-20 · 08-26 freshness 재검증: 로케이터 우선순위·`page.route`·`defineConfig`·fixture 확장 전부 현행, 버전 문자열만 갱신)
-> 대상 버전: Playwright v1.62.x (최신 안정, 2026-08 기준)
+> 검증일: 2026-09-28 (최초 2026-04-20 · 08-26 freshness 재검증 · 09-28 재검증: 로케이터 우선순위·`page.route`·`defineConfig`·fixture 확장 전부 현행. "적대적 E2E 시나리오" 절(§7) 신설)
+> 대상 버전: Playwright v1.63.x (최신 안정, 2026-09 기준 — v1.63부터 Ubuntu 20.04 미지원)
 
 ---
 
@@ -363,6 +363,91 @@ test('녹화된 API로 테스트', async ({ page }) => {
 ```
 
 ---
+
+## 7. 적대적 E2E 시나리오 (보안·이상 경로)
+
+레포 규칙(`.claude/rules/adversarial-testing.md`)의 E2E 계층 — 정상 흐름(happy path)만 통과하는 E2E 스위트는 이 레포 기준 미완성이다. 인증·인가, 입력 인젝션, 비즈니스 로직 오남용 표면이 있으면 아래처럼 방어 테스트를 반드시 포함한다. Playwright는 `storageState` 조작과 `request` 컨텍스트(API 직접 호출)로 이런 시나리오를 재현할 수 있다.
+
+### 비로그인 상태로 보호 페이지·API 접근 → 로그인 리다이렉트/401
+
+```typescript
+test.describe('인증 없이 보호 리소스 접근', () => {
+  test.use({ storageState: { cookies: [], origins: [] } }); // 인증 상태 완전 제거
+
+  test('비로그인 유저는 대시보드 접근 시 로그인 페이지로 리다이렉트된다', async ({ page }) => {
+    await page.goto('/dashboard');
+    await expect(page).toHaveURL(/\/login/);
+    await expect(page.getByRole('heading', { name: '로그인' })).toBeVisible();
+  });
+
+  test('보호 API를 토큰 없이 직접 호출하면 401을 반환한다', async ({ request }) => {
+    const response = await request.get('/api/orders/me');
+    expect(response.status()).toBe(401);
+  });
+});
+```
+
+### IDOR — 다른 유저 리소스 접근 시도 → 403
+
+```typescript
+// e2e/tests/idor.spec.ts
+import { test, expect } from '../fixtures';
+
+test.describe('IDOR — 다른 유저 주문 조회', () => {
+  test.use({ storageState: 'playwright/.auth/user.json' }); // 일반 유저(A)로 로그인된 상태
+
+  test('유저 A가 유저 B 소유 주문 ID로 API를 직접 호출하면 403', async ({ request }) => {
+    const otherUsersOrderId = 'order-belongs-to-user-b';
+    const response = await request.get(`/api/orders/${otherUsersOrderId}`);
+    expect(response.status()).toBe(403);
+  });
+
+  test('URL의 orderId를 타 유저 값으로 조작해도 화면에서 접근이 거부된다', async ({ page }) => {
+    await page.goto('/orders/order-belongs-to-user-b');
+    await expect(page.getByText('접근 권한이 없습니다')).toBeVisible();
+    await expect(page.getByText('결제 금액')).not.toBeVisible(); // 타인 데이터 미노출 확인
+  });
+});
+```
+
+### 단계 건너뛰기 — 결제 없이 완료 페이지 직접 접근
+
+```typescript
+test('결제 단계를 건너뛰고 완료 페이지 URL로 직접 이동하면 결제 페이지로 되돌아간다', async ({ page }) => {
+  // 주문서 작성까지만 진행 — 결제(POST /api/payments)는 호출하지 않음
+  await page.goto('/checkout/step-1');
+  await page.getByLabel('배송지').fill('서울시 강남구');
+  await page.getByRole('button', { name: '다음' }).click();
+
+  // 결제를 건너뛰고 완료 페이지 URL을 직접 입력
+  await page.goto('/checkout/complete?orderId=temp-order-id');
+
+  // 서버가 결제 완료 상태를 재검증 → 완료 화면 대신 결제 페이지로 리다이렉트
+  await expect(page).toHaveURL(/\/checkout\/payment/);
+  await expect(page.getByText('결제가 완료되지 않았습니다')).toBeVisible();
+});
+```
+
+### XSS 입력 — 스크립트 페이로드 이스케이프 확인
+
+```typescript
+test('닉네임 입력에 <script> 페이로드를 넣어도 실행되지 않고 텍스트로 렌더링된다', async ({ page }) => {
+  const xssPayload = '<script>window.__xss = true;</script><img src=x onerror="window.__xss2=true">';
+
+  await page.goto('/profile/edit');
+  await page.getByLabel('닉네임').fill(xssPayload);
+  await page.getByRole('button', { name: '저장' }).click();
+
+  // 페이로드가 텍스트로 이스케이프되어 화면에 그대로 보임 (실행되지 않음)
+  await expect(page.getByText(xssPayload, { exact: false })).toBeVisible();
+
+  // 스크립트가 실제로 실행되지 않았는지 전역 오염 여부로 확인
+  const executed = await page.evaluate(() => (window as any).__xss || (window as any).__xss2);
+  expect(executed).toBeFalsy();
+});
+```
+
+> 위 4가지는 `.claude/rules/adversarial-testing.md`의 "인증·인가"·"입력 인젝션"·"비즈니스 로직 오남용" 체크리스트에 대응한다. `storageState: { cookies: [], origins: [] }`는 Playwright 공식 `StorageState` 타입(빈 배열)으로 인증 상태를 완전히 제거하는 표준 패턴이다.
 
 ---
 

@@ -17,7 +17,9 @@ description: >
 > - hyperfine: https://github.com/sharkdp/hyperfine
 > - chokidar: https://github.com/paulmillr/chokidar
 >
-> 검증일: 2026-08-11
+> 검증일: 2026-09-28 (최초 2026-05-14)
+>
+> **주의 (ADD, Vite 8/Rolldown 확인 결과):** Vite 8(2026-03 출시)은 dep pre-bundling 엔진을 esbuild → Rolldown(Rust)으로, JS 변환·minify를 esbuild → Oxc로 교체했다. 그러나 공식 마이그레이션 가이드(https://vite.dev/guide/migration)에는 dev 서버 cold start 시간·HMR 지연의 구체적 수치 변화가 명시돼 있지 않으며, 캐시 디렉터리(`node_modules/.vite/deps/`)·`--force` 옵션 동작·`vite:beforeUpdate`/`vite:afterUpdate` HMR 클라이언트 이벤트는 8.x에서도 그대로 유지된다(공식 문서 기준 확인). 따라서 본 스킬의 측정 방법론(섹션 2·3)은 Vite 8 프로젝트에도 수정 없이 적용 가능하다. 다만 `import.meta.hot.accept`에 **URL을 직접 넘기는 방식은 8.0에서 제거**됐고 id를 넘겨야 하므로(본 스킬 예시는 `hot.on(...)`만 사용해 영향 없음), 이 패턴을 확장해 쓰는 경우 주의한다. > 주의: dev 서버 체감 속도·HMR 지연 수치(예: "200ms→20ms") 를 주장하는 일부 서드파티 블로그 글이 있으나 공식 문서로 확인되지 않아 본 스킬에는 반영하지 않았다 — 실측은 반드시 섹션 2·3 방법론으로 직접 측정해 보고한다.
 
 ---
 
@@ -61,21 +63,24 @@ hyperfine \
 
 ```bash
 #!/usr/bin/env bash
-# bench-cold.sh
-set -euo pipefail
+# bench-cold.sh (macOS/Linux 겸용 — 아래 "검증" 주의 참고)
+set -uo pipefail
 
-START=$(date +%s%3N)
+now_ms() { python3 -c 'import time; print(int(time.time()*1000))'; }
+
+START=$(now_ms)
 
 # Vite ready 라인 매칭 후 종료
 pnpm vite --port 5173 2>&1 | while IFS= read -r line; do
   echo "$line"
   if [[ "$line" =~ ready\ in ]]; then
-    END=$(date +%s%3N)
+    END=$(now_ms)
     echo "COLD_START_MS=$((END - START))"
     pkill -P $$ -f "vite" || true
     break
   fi
 done
+exit 0
 ```
 
 hyperfine과 결합:
@@ -85,6 +90,8 @@ hyperfine --runs 10 --prepare 'rm -rf node_modules/.vite' \
   --export-markdown cold-start.md \
   './bench-cold.sh'
 ```
+
+> 검증 (2026-09-28, macOS 27.0 + hyperfine 1.20.0 실제 실행): 원래 예시의 `date +%s%3N`은 **GNU date 전용**이다. macOS(BSD date)는 `%N`을 인식하지 못해 리터럴 `N`이 그대로 붙어(`1790556416163N`) `$((END - START))` 산술 연산이 `value too great for base` 에러로 즉시 실패한다 — 위 코드는 `python3` 기반 `now_ms()`로 대체해 macOS/Linux 모두에서 동작하도록 정정했다. 또한 원래 예시에는 `exit 0`이 없어서, `pkill`로 vite를 강제 종료한 뒤 파이프의 마지막 종료 코드가 그대로 스크립트 종료 코드가 되어(SIGTERM → 143) `set -e`/`hyperfine` 양쪽에서 "실패"로 처리된다 — hyperfine 기본 동작상 **`--ignore-failure` 없이 위 명령을 그대로 실행하면 첫 실행에서 즉시 에러 처리**된다. `exit 0`을 추가해 "정상적으로 ready 감지 후 의도적으로 종료"와 "빌드 자체 실패"를 구분되게 했다.
 
 ### 2.3 도구별 캐시 위치
 
@@ -146,7 +153,9 @@ if (import.meta.hot) {
 
 ### 3.2 dev 서버 로그 파싱
 
-Vite는 HMR 업데이트마다 `hmr update /path/to/file.tsx (x+y modules)` 형태 로그를 stdout에 찍는다. 로그 라인 사이 시간차로 대략적인 throughput을 잴 수 있다.
+Vite는 HMR 업데이트마다 `hmr update /path/to/file.tsx` 형태 로그를 stdout에 찍는다(모듈 수에 따라 `(x+y modules)` 접미사가 붙는 경우도 있음). 로그 라인 사이 시간차로 대략적인 throughput을 잴 수 있다.
+
+> **주의 (검증, 2026-09-28 실제 실행 확인 — 차단급 전제조건)**: 이 로그는 **WebSocket으로 연결된 클라이언트(브라우저 탭)가 최소 1개 있어야만** 찍힌다. dev 서버만 띄우고 아무 브라우저도 페이지를 열지 않은 상태에서 소스 파일을 저장하면, 파일 워처는 변경을 감지해도 stdout에 `hmr update` 로그가 **전혀 출력되지 않는다**(직접 재현: 브라우저 미연결 상태 2회 시도 모두 로그 0줄, Chrome으로 페이지를 연 직후 동일 파일 수정 시 즉시 `hmr update /src/App.tsx` 로그 출력 확인). 따라서 이 방법을 완전 자동화(CLI만으로, 브라우저 없이)하려는 시도는 **동작하지 않는다** — 최소한 헤드리스든 아니든 브라우저 탭 1개를 열어 WS 핸드셰이크를 성사시킨 뒤 파일을 수정해야 한다. 이 조건을 충족하면 "파일 저장 시각"과 "로그 라인이 stdout에 도달한 시각"의 차이로 지연을 측정할 수 있으며(자체 실행 20회 측정: median 87ms, 12~116ms 범위), §3.1의 클라이언트 측 모듈 교체 시간과는 다른 지표(서버 감지+로그 출력까지)임에 유의한다.
 
 Webpack/Rsbuild는 `stats.timings: true`로 빌드 시간을 stdout에 노출한다.
 

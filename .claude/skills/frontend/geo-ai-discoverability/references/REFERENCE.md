@@ -25,7 +25,7 @@ GEO는 *전통 SEO를 대체하지 않고 그 위에 얹힌다*. 기본 SEO가 �
 |------|-----------|
 | **학습 허용 여부** | `GPTBot`, `ClaudeBot`, `Google-Extended` 등 학습 크롤러 허용/차단 |
 | **인용 허용 여부** | `OAI-SearchBot`, `Claude-SearchBot`, `PerplexityBot` 허용/차단 |
-| **사용자 fetch 허용 여부** | `ChatGPT-User`, `Claude-User`, `Perplexity-User` 허용/차단 (robots.txt 무시될 수 있음) |
+| **사용자 fetch 허용 여부** | `ChatGPT-User`, `Claude-User`, `Perplexity-User`, `Google-Agent` 허용/차단 (robots.txt 무시될 수 있음) |
 | **Privacy / Terms 명시** | 자사 사이트의 AI 학습·인용 정책을 사용자에게 공개 |
 
 ### 6-2. 공개 정책 문구 예시
@@ -85,9 +85,9 @@ Disallow: /
 
 Google-Extended는 *Gemini·Vertex AI 학습용 토큰*이지 *Googlebot이 아니다*. Google-Extended를 차단해도 **일반 구글 검색 노출에는 영향이 없다**. 두 토큰은 독립 평가된다.
 
-### 7-5. ChatGPT-User / Claude-User / Perplexity-User를 차단해 사용자 fetch까지 막기
+### 7-5. ChatGPT-User / Claude-User / Perplexity-User / Google-Agent를 차단해 사용자 fetch까지 막기
 
-이 세 크롤러는 "*사용자가 자기 질문에서 명시적으로 이 사이트를 보고 싶다고 요청한 경우*"의 fetch다. 차단하면 *사용자가 해당 사이트 URL을 ChatGPT에 직접 붙여넣어도 LLM이 못 읽는다*. 보통 학습용 차단과는 별개로 허용을 권장한다.
+이 네 크롤러는 "*사용자가 자기 질문·에이전트 작업에서 명시적으로 이 사이트를 보고 싶다고 요청한 경우*"의 fetch다(`Google-Agent`는 2026-03 도입, Project Mariner 등 Google 인프라 에이전트용). 차단하면 *사용자가 해당 사이트 URL을 ChatGPT·Gemini 계열 에이전트에 직접 지정해도 못 읽는다*. 보통 학습용 차단과는 별개로 허용을 권장한다.
 
 ### 7-6. 1년 이상 된 GEO 가이드를 그대로 적용
 
@@ -121,8 +121,9 @@ Google-Extended는 *Gemini·Vertex AI 학습용 토큰*이지 *Googlebot이 아�
 
 - OpenAI 크롤러: https://developers.openai.com/api/docs/bots
 - Anthropic 크롤러: https://support.claude.com/en/articles/8896518-does-anthropic-crawl-data-from-the-web-and-how-can-site-owners-block-the-crawler
-- Google-Extended: https://developers.google.com/search/docs/crawling-indexing/google-extended
-- Google 일반 크롤러: https://developers.google.com/search/docs/crawling-indexing/overview-google-crawlers
+- Google-Extended: https://developers.google.com/crawling/docs/crawlers-fetchers/google-common-crawlers#google-extended (2025-11 문서 이전으로 구 URL `search/docs/crawling-indexing/google-extended` 404 — 갱신됨)
+- Google 일반 크롤러: https://developers.google.com/crawling/docs/crawlers-fetchers/overview-google-crawlers
+- Google-Agent (신규, 2026-03 도입): https://developers.google.com/crawling/docs/crawlers-fetchers/google-agent
 - Perplexity 크롤러: https://docs.perplexity.ai/docs/resources/perplexity-crawlers
 - Applebot: https://support.apple.com/en-us/119829
 - Meta 크롤러: https://developers.facebook.com/docs/sharing/webmasters/crawler

@@ -2,7 +2,7 @@
 skill: redis-redisson-4
 category: backend
 version: v1
-date: 2026-08-11
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `redis-redisson-4` |
 | 스킬 경로 | `.claude/skills/backend/redis-redisson-4/SKILL.md` |
-| 검증일 | 2026-08-11 |
+| 검증일 | 2026-09-26 (30~60일 주기 재검증, 최초 검증 2026-08-11) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 | 대상 버전 | Redisson 4.0.0 ~ **4.7.0** (2026-08-04 릴리스) |
@@ -117,6 +117,17 @@ status: APPROVED
 | 17 | **스타터가 커버하는 Spring Boot 상한** | docs "Spring Boot 1.3.x - 4.0.x" | 4.7.0 스타터 pom이 **spring-boot 4.1.0 + spring-data-41** 사용 | ⚠️ **DISPUTED** |
 | 18 | `getMapCacheNative()`를 **커뮤니티 에디션에서 쓸 수 있는가** | docs Collections 표에서 PRO로 표기 | 대조 가능한 2차 공식 소스 확보 실패 | ⚠️ **UNVERIFIED** |
 
+### 3-1a. 2026-09-26 재검증 (30~60일 주기)
+
+| # | 클레임 | 소스 | 판정 |
+|---|--------|------|------|
+| R1 | 4.x 최신 안정판은 여전히 **4.7.0 (2026-08-04)** — 신규 마이너 없음 | `raw.githubusercontent.com/.../CHANGELOG.md` 재조회(2026-09-26) 최상단 항목 동일 | ✅ VERIFIED (변동 없음) |
+| R2 | 스타터 Spring Boot 지원 범위 "1.3.x ~ 4.1.x" | `redisson.pro/docs/integration-with-spring/` 재조회 — 기존 DISPUTED(#17, docs가 "~4.0.x"로 표기) 해소, 현재 docs가 SKILL.md와 일치 | ✅ VERIFIED (기존 DISPUTED 해소) |
+| R3 | 4.7.0 스타터가 번들하는 모듈은 `redisson-spring-data-41` | 4.7.0 태그 `redisson-spring-boot-starter/pom.xml` 원본 재확인 | ✅ VERIFIED (변동 없음) |
+| R4 | `getMapCacheNative()` 에디션 — 기존 UNVERIFIED(#18) 해소 | `redisson.pro/docs/data-and-services/collections/` 재조회: **기본판은 커뮤니티 에디션에서 사용 가능**, `getMapCacheNativeV2()`·클러스터 변종만 PRO 전용 | ⚠️ **DISPUTED → 정정 반영** (기존 SKILL.md 기술이 부정확했음. §6 REFERENCE.md 주의문 수정) |
+
+**정정 내역**: `references/REFERENCE.md` §6의 `getMapCacheNative()` 관련 `> 주의:` 문구를 "PRO 전용" → "기본판은 커뮤니티 에디션 가능, `getMapCacheNativeV2()`/클러스터 변종만 PRO 전용"으로 수정(2026-09-26).
+
 ### 3-2. DISPUTED / UNVERIFIED 반영 내역
 
 - **#17 (DISPUTED)**: docs의 "Spring Boot 1.3.x - 4.0.x" 문구와 실제 4.7.0 스타터의 Spring Boot 4.1.0 의존이 불일치. **1차 소스(릴리스 태그 pom.xml)를 우선**하여 SKILL.md에는 "1.3.x ~ 4.1.x"로 기재하고, 버전별 번들 모듈을 표로 분리해 오해 여지를 제거했다.
@@ -199,6 +210,51 @@ status: APPROVED
 
 ---
 
+### 5-1. 2026-09-26 재검증 (30~60일 주기, verification-policy.md 절차)
+
+**수행일**: 2026-09-26
+**수행 방법**: SKILL.md + references/REFERENCE.md 전체 Read → 핵심 클레임 4개 WebSearch/WebFetch 재검증(3-1a) → 실전 질문 2개로 SKILL.md 자체 답변 재확인
+
+**Q1(재검증). "커뮤니티 에디션에서 `getMapCacheNative()`를 써도 되나?"**
+- 정정 전 SKILL.md 답변: "PRO 전용이라 못 쓴다" (부정확)
+- 정정 후 SKILL.md 답변(§6 REFERENCE.md): 기본판 `getMapCacheNative()`(Redis 7.4+/Valkey 9.0+)는 **커뮤니티 에디션 사용 가능**, `getMapCacheNativeV2()`·클러스터 변종만 PRO 전용
+- **판정: ✅ PASS (정정 반영 후)** — 재검증으로 부정확한 서술 발견·수정
+
+**Q2(재검증). "Spring Boot 3.5에서 Redisson 4.7.0을 쓰려면 스타터 기본 번들을 그대로 둬도 되나?"**
+- SKILL.md 답변: 안 된다. 4.7.0 스타터는 `redisson-spring-data-41`(Spring Boot 4.1.x용)을 기본 번들하므로 Boot 3.5 사용 시 이를 exclude하고 `redisson-spring-data-35`를 명시해야 한다(§2).
+- WebFetch로 4.7.0 태그 pom.xml 재확인 결과 여전히 `-41` 번들 확인됨 — 변동 없음
+- **판정: ✅ PASS**
+
+**재검증 결과**: 4개 클레임 중 3개 VERIFIED(변동 없음), 1개는 기존 UNVERIFIED 항목이 실제로는 부정확한 서술이었음을 발견하여 REFERENCE.md 정정. 실질적 내용 변경 발생 → status PENDING_TEST로 전환.
+
+---
+
+### 5-2. 2026-09-26 skill-tester agent content test (정정 부분 타겟, verification-policy 3·4단계)
+
+**수행일**: 2026-09-26
+**수행자**: skill-tester → general-purpose (domain-specific 에이전트 미설치로 대체, verification.md에 명시)
+**수행 방법**: SKILL.md + REFERENCE.md Read 후 general-purpose 에이전트에게 실전 질문 2개를 1개씩 순차로 답변시키고, 근거 섹션·정정 반영 여부를 검증
+
+**Q1. "커뮤니티 에디션 + Redis 7.4 환경에서 `getMapCacheNative()`를 써도 되나? PRO 라이선스가 필요한가?" (5-1의 정정 사항을 정면 타겟)**
+- ✅ PASS
+- 근거: REFERENCE.md §6 "RMap 계열 선택표" 하단 "주의(2026-09-26 정정)" 문구
+- 상세: 에이전트가 "그대로 써도 된다, PRO 라이선스 불필요"로 정확히 답하고, `getMapCacheNativeV2()`·클러스터 변종만 PRO 전용임을 구분해 답변. 정정 전 서술("PRO 전용")로 오답할 함정을 정정 문구가 정확히 차단함을 확인.
+
+**Q2. "4.4.0 신규 `getNonReentrantLock()`·GCRA 레이트 리미터도 PRO 라이선스가 필요한가? 4.x 신규 기능이라 다 유료일 것 같다"**
+- ✅ PASS
+- 근거: REFERENCE.md §5 "락 종류 선택표"·"세마포어/레이트 리미터", §8 "4.x 신규 기능 (커뮤니티/PRO 구분 주의)" 표
+- 상세: 에이전트가 §8 표를 근거로 "PRO 전용은 Reliable Pub/Sub 하나뿐, Non-Reentrant Lock·GCRA는 커뮤니티"로 정확히 답변. "신규 기능 = 유료"라는 일반화 오답 패턴을 §8 주의문이 선제 차단함을 확인.
+
+**agent content test (재검증분): 2/2 PASS** — 5-1(자체 재확인) 2/2 PASS와 합산 시 2026-09-26 재검증 관련 테스트 총 4/4 PASS. 정정된 `getMapCacheNative()` 서술이 실제 에이전트 답변에서 올바르게 인용됨을 별도 에이전트로 재확인.
+
+### 판정
+
+- agent content test: 2/2 PASS (5-2), 누적 4/4 PASS
+- verification-policy 분류: 라이브러리 사용법·API 정확성 스킬 — "content test로 충분" 범주 (실사용 필수 카테고리인 빌드설정/워크플로우/설정+실행/마이그레이션 가이드 어디에도 해당하지 않음. §4 마이그레이션 diff는 참고 코드이지 이 스킬 자체가 빌드·마이그레이션 실행 결과물은 아님)
+- 최종 상태: **APPROVED**
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -207,8 +263,8 @@ status: APPROVED
 | 구조 완전성 | ✅ (frontmatter·소스 URL·검증일·버전 매트릭스·코드 예시·사용/미사용 기준·흔한 실수 포함) |
 | 실용성 | ✅ (실제 pom/YAML/Java diff를 그대로 복사해 쓸 수 있는 형태) |
 | 기존 스킬과의 역할 분리 | ✅ (2.x/3.x/4.x 3종 포인터를 SKILL.md 최상단 표로 명시, 3.x 상세는 modern 스킬 참조로 위임해 중복 최소화) |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ 최초 3/3 PASS (2026-08-11) + 재검증 2/2 PASS (2026-09-26, 정정 부분 타겟 general-purpose 테스트) |
+| **최종 판정** | **APPROVED** (2026-09-26 재검증 — `getMapCacheNative()` PRO/커뮤니티 서술 정정 후 skill-tester가 정정 부분을 정면 타겟한 질문으로 general-purpose 에이전트 content test 2/2 PASS 재확인) |
 
 > 판정 근거: 본 스킬은 *라이브러리 사용법·API 정확성* 중심으로 검증 대상이 **답변 정확성**이다(`verification-policy.md`의 "content test로 충분" 범주).
 > 다만 §4의 마이그레이션 diff는 실제 빌드 산출물로만 최종 확인 가능한 성격이 일부 있으므로, 실 프로젝트 적용 시 SKILL.md §10 체크리스트 14번(스테이징 기동·락·캐시·페일오버 검증)을 반드시 수행하도록 본문에 명시했다.
@@ -217,11 +273,11 @@ status: APPROVED
 
 ## 7. 개선 필요 사항
 
-- [❌] **README.md 스킬 목록·업데이트 로그 반영** — 본 작업에서 수정이 금지되어 미수행. 상위 에이전트가 일괄 반영 필요
-- [❌] `getMapCacheNative()` 에디션(커뮤니티/PRO) 재확인 — 2차 공식 소스 확보 시 `> 주의:` 문구 확정 또는 제거
-- [❌] Spring Boot 4.1 대응이 docs 호환 매트릭스에 반영되는지 재확인 (현재 docs는 4.0.x까지만 기재)
-- [❌] 4.8.0 이후 릴리스 시 §1 버전 매트릭스·§3-3 이후 breaking change 표 갱신
-- [❌] `redis-redisson-modern` 스킬에 "4.x는 `redis-redisson-4` 참조" 역방향 포인터 추가 검토 (현재 modern은 "별도 스킬로 분리" 문구만 있고 스킬명 미기재)
+- [❌] **README.md 스킬 목록·업데이트 로그 반영** — 본 작업에서 수정이 금지되어 미수행 (skill-tester 범위 밖). 상위 에이전트가 일괄 반영 필요 — *차단 요인 아님, 별도 후속 커밋에서 처리*
+- [✅] `getMapCacheNative()` 에디션(커뮤니티/PRO) 재확인 — (2026-09-26 완료) 공식 docs 재조회로 기본판=커뮤니티, `getMapCacheNativeV2()`/클러스터 변종=PRO로 확정, REFERENCE.md §6 정정 + skill-tester 재테스트(§5-2) 2/2 PASS로 정정 반영 확인
+- [❌] Spring Boot 4.1 대응이 docs 호환 매트릭스에 반영되는지 재확인 (현재 docs는 4.0.x까지만 기재) — *선택 보강. 스타터 pom.xml 1차 소스로 이미 SKILL.md에 정확히 반영되어 있어 차단 요인 아님*
+- [❌] 4.8.0 이후 릴리스 시 §1 버전 매트릭스·§3-3 이후 breaking change 표 갱신 — *아직 4.8.0 미출시. 향후 정기 재검증(30~60일 주기) 시 처리할 선택 후속 과제*
+- [❌] `redis-redisson-modern` 스킬에 "4.x는 `redis-redisson-4` 참조" 역방향 포인터 추가 검토 — *선택 보강(다른 스킬 파일 수정 필요, 본 스킬 정확성과 무관하여 차단 요인 아님)*
 
 ---
 
@@ -231,3 +287,5 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-08-11 | v1 | 최초 작성. Redisson 4.0.0~4.7.0 기준 조사·교차검증(18 클레임, VERIFIED 16/DISPUTED 1/UNVERIFIED 1) 후 SKILL.md 생성, agent content test 3/3 PASS → APPROVED | skill-creator |
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | skill-creator |
+| 2026-09-26 | v1 | 30~60일 주기 재검증. 4.7.0 최신 유지 확인, Spring Boot 매트릭스 DISPUTED 해소, `getMapCacheNative()` PRO/커뮤니티 서술 오류 발견·정정(REFERENCE.md §6) → status APPROVED에서 PENDING_TEST로 전환 | 메인 세션 |
+| 2026-09-26 | v1 | 재검증: 2단계 실사용 테스트 수행 (Q1 `getMapCacheNative()` 커뮤니티/PRO 정정 타겟 / Q2 4.4.0 신규 기능 PRO 오인 방지) → general-purpose 에이전트 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |

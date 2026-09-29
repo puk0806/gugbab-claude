@@ -6,9 +6,9 @@ description: AWS SDK for Java v1 (1.12.x) S3 + Rekognition 레거시 사용 가�
 # AWS SDK for Java v1 — S3 + Rekognition (Legacy)
 
 > 소스: https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/welcome.html | https://github.com/aws/aws-sdk-java | https://aws.amazon.com/blogs/developer/announcing-end-of-support-for-aws-sdk-for-java-v1-x-on-december-31-2025/ | https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/migration-whats-different.html
-> 검증일: 2026-04-23
+> 검증일: 2026-04-23 (재검증: 2026-09-26)
 
-> **주의 (EOL):** AWS SDK for Java v1.x는 **2024-07-31부터 maintenance mode**, **2025-12-31에 end-of-support**에 도달했습니다. 이후로는 보안 패치 포함 어떤 업데이트도 제공되지 않으며, 기존 아티팩트는 Maven Central에 그대로 남습니다. 신규 프로젝트는 **반드시 v2(`software.amazon.awssdk`)를 사용**하고, 이 스킬은 **기존 v1 코드베이스 유지·점진적 마이그레이션용**으로만 참조하세요. AWS는 OpenRewrite 기반의 v2 마이그레이션 도구를 제공합니다.
+> **주의 (EOL):** AWS SDK for Java v1.x는 **2024-07-31부터 maintenance mode**, **2025-12-31에 end-of-support**에 도달했습니다. 이후로는 보안 패치 포함 어떤 업데이트도 제공되지 않으며, 기존 아티팩트는 Maven Central에 그대로 남습니다. 신규 프로젝트는 **반드시 v2(`software.amazon.awssdk`)를 사용**하고, 이 스킬은 **기존 v1 코드베이스 유지·점진적 마이그레이션용**으로만 참조하세요. AWS는 OpenRewrite 기반의 v2 마이그레이션 도구를 제공합니다. (2026-09-26 재검증: end-of-support 상태 그대로 유지 확인 — v1 신규 릴리스 없음, 기존 아티팩트는 계속 Maven Central에서 사용 가능)
 
 > 대상 스택: AWS SDK for Java v1 (S3 1.12.201 + Rekognition 1.12.372 혼재), Spring Boot 2.5, Java 11.
 

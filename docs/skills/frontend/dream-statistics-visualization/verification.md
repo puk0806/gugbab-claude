@@ -1,8 +1,8 @@
 ---
 skill: dream-statistics-visualization
 category: frontend
-version: v1
-date: 2026-05-15
+version: v2
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -18,9 +18,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `dream-statistics-visualization` |
 | 스킬 경로 | `.claude/skills/frontend/dream-statistics-visualization/SKILL.md` |
-| 검증일 | 2026-05-15 |
-| 검증자 | skill-creator (Claude Opus 4.7) |
-| 스킬 버전 | v1 |
+| 검증일 | 2026-09-28 (최초 2026-05-15, 2026-09-28 재검증) |
+| 검증자 | skill-creator (Claude Opus 4.7) → Claude (Sonnet 5, 2026-09-28 재검증) |
+| 스킬 버전 | v2 |
 
 ---
 
@@ -118,6 +118,25 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-09-28] 재검증 — 차트 라이브러리 버전 npm 대조
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md + references/REFERENCE.md Read → 핵심 클레임 4개를 npm registry + GitHub 릴리스 노트로 1차 소스 대조
+
+**클레임 대조 결과**:
+1. Recharts stable이 3.8.x(2026-05 기준) → **VERIFIED (버전 drift)** — npm 최신 3.10.1로 상승했으나 동일 메이저(v3.x) 유지, React 19 지원 방침 변경 없음 (https://registry.npmjs.org/recharts/latest)
+2. `react-wordcloud`(chrisrzhou) 1.2.7이 약 6년간 미릴리즈·사실상 유지보수 중단 → **VERIFIED** — npm 최신 여전히 1.2.7로 변화 없음, 대안(`@visx/wordcloud`) 권장 유효
+3. visx 패키지군(`@visx/wordcloud`·`@visx/heatmap`·`@visx/scale`) 버전 → **VERIFIED (메이저 업그레이드 발견, 영향 없음)** — 재검증 시점 npm 최신이 3.x가 아닌 **4.0.0**(2026-06-11 릴리스, 원 검증일 2026-05-15 이후 출시)으로 확인. GitHub 릴리스 노트 대조 결과 v4는 "React 18/19 요구"·d3-shape/d3-path v3 업그레이드·prop-types/lodash 제거 등 **툴체인·peer dependency 현대화**이며, `Wordcloud`/`HeatmapRect`/`scaleLog`/`scaleTime`/`scaleBand`/`Group`/`AxisBottom`/`AxisLeft` 등 SKILL.md가 사용하는 컴포넌트 API 자체의 breaking change는 명시되지 않음 → 코드 예시 수정 불필요 (https://github.com/airbnb/visx/releases)
+4. ColorBrewer "colorblind safe" 필터 적용 시 qualitative(카테고리컬) 팔레트가 최대 4색까지만 제공 → **재확인 불가(인터랙티브 도구)** — colorbrewer2.org는 JS 기반 UI라 자동화 도구로 필터 조합 결과를 재확인할 수 없었음. 데이터셋 자체가 수년간 고정되어 있어 기존 검증(2026-05-15)을 유지하되, 확인 못 한 항목으로 보고
+
+**실전 질문 재검증**:
+- Q1. "visx 4.0.0으로 올라갔는데 기존 워드클라우드 코드를 고쳐야 하나?" → SKILL.md §2-3 코드 그대로 유지 가능(props 변경 없음), React 18/19 요구사항만 확인하면 됨 — PASS
+- Q2. "react-wordcloud를 써도 되는가?" → SKILL.md §2-3 주의 문단 근거로 여전히 회피 권장, 대안 제시 정확 — PASS
+
+**재검증 최종 판정**: 4개 클레임 중 3 VERIFIED(1건은 메이저 버전 상승 확인했으나 breaking change 없어 본문 수정 불필요) / 1건은 재확인 불가(인터랙티브 도구 한계, 기존 검증 유지). status **APPROVED 유지**
+
+---
 
 **수행일**: 2026-06-20
 **수행자**: skill-tester → general-purpose
@@ -237,8 +256,8 @@ status: APPROVED
 | 내용 정확성 | ✅ (공식 문서·교차 검증 9건 완료, DISPUTED 1건 정정 반영) |
 | 구조 완전성 | ✅ (frontmatter·소스·검증일·짝 스킬·11개 섹션 완비) |
 | 실용성 | ✅ (5종 차트별 실행 가능 컴포넌트 골격 제공) |
-| 에이전트 활용 테스트 | ✅ 5/5 PASS (2026-05-15 3회 + 2026-06-20 2회, skill-tester 수행) |
-| **최종 판정** | **APPROVED** (content test 5/5 PASS, 라이브러리 사용법 스킬 — 실사용 필수 카테고리 해당 없음) |
+| 에이전트 활용 테스트 | ✅ 5/5 PASS (2026-05-15 3회 + 2026-06-20 2회, skill-tester 수행) / 재검증 2026-09-28 |
+| **최종 판정** | **APPROVED** (content test 5/5 PASS, 라이브러리 사용법 스킬 — 실사용 필수 카테고리 해당 없음 / 2026-09-28 재검증 — visx v4 메이저 업그레이드 확인했으나 breaking change 없어 APPROVED 유지) |
 
 판정 사유:
 - 1단계 오프라인 검증 모두 통과 (PASS).
@@ -265,3 +284,4 @@ status: APPROVED
 | 2026-05-15 | v1 | 최초 작성 (5종 차트, 접근성, 색맹 친화, 짝 스킬 연계, 11종 함정) | skill-creator (Claude Opus 4.7) |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 Recharts vs visx 선택 / Q2 SVG ARIA 접근성 / Q3 색맹 팔레트) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | skill-tester |
 | 2026-06-20 | v1 | PENDING_TEST → APPROVED 재판정 — 라이브러리 사용법·패턴 스킬 재분류, content test 5/5 PASS (2회차 Q4 Recharts 2.x 주의사항, Q5 EmptyState 처리 추가) | skill-tester |
+| 2026-09-28 | v2 | 재검증(135일 경과) — Recharts/react-wordcloud/visx 버전 npm·GitHub 릴리스 재대조. visx가 원 검증일 이후 v4.0.0으로 메이저 업그레이드된 것을 발견했으나 SKILL.md 사용 API에 breaking change 없어 본문 수정 불필요. ColorBrewer colorblind-safe 4색 제한 클레임은 인터랙티브 도구 한계로 재확인 불가(기존 검증 유지). status APPROVED 유지 | Claude (Sonnet 5) |

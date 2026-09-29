@@ -42,6 +42,19 @@ DB 마이그레이션은 컨테이너 시작 시 자동 수행된다. **업그�
 
 > 즉 2.21 → 2.33 업그레이드는 **일반 minor 업그레이드 절차(pull → up -d)로 충분**하다. 별도 마이그레이션 작업은 없다.
 
+**v2.33 → v2.40 사이 셀프호스팅 관점 변경 요약 (2026-09-28 확인):**
+
+| 항목 | 내용 |
+|------|------|
+| 스케줄러 (v2.36 GA) | **Durable scheduler** GA — 시간 기반 워크플로우를 인메모리 대신 DB-backed 큐로 실행(재시작 생존, 멀티 인스턴스 분산). 기본 off, opt-in(`N8N_SCHEDULER_ENABLED` 등 — 5절 표) |
+| 노드 리소스 한도 (v2.38.1) | `NODES_MERGE_SQL_SANDBOX_MEMORY_LIMIT_MB` 신설 — Merge 노드 SQL 샌드박스 메모리 한도(기본 64MB) |
+| 보안 (v2.40) | `N8N_AZURE_STORAGE_CUSTOM_ENDPOINTS_ENABLED` 신설 — Azure Storage 커스텀 엔드포인트는 관리자가 명시적으로 켜야 사용 가능(기본 차단) |
+| DB / 마이그레이션 | v2.34~2.40 구간에 스키마·마이그레이션 breaking change **없음** (durable scheduler는 opt-in 신규 테이블 추가이며 기존 인스턴스 동작에 영향 없음) |
+| 설치 방식 | Docker / docker-compose 절차 변경 **없음** |
+| 문서 구조 | `docs.n8n.io/changelog/release-notes-2.x`가 **archived**(더 이상 갱신 안 됨) — 현재 릴리즈 노트는 `docs.n8n.io/changelog/release-notes`로 통합 |
+
+> 즉 2.33 → 2.40 업그레이드도 **일반 minor 업그레이드 절차로 충분**하다. Durable scheduler는 켜기 전까지 기존 인메모리 스케줄러 그대로 동작하므로 업그레이드 자체가 이 기능을 강제하지 않는다.
+
 ---
 
 ## 11. 큐 모드 (대규모 운영)
@@ -117,7 +130,7 @@ services:
 webhook 수신 부하가 큰 경우 메인 인스턴스에서 webhook 처리를 분리한 전용 프로세스를 둘 수 있다.
 
 - `EXECUTIONS_MODE=queue` + 동일 Redis + **동일 `N8N_ENCRYPTION_KEY`** 필요
-- `WEBHOOK_URL`을 외부 URL로 지정
+- `N8N_WEBHOOK_URL`(구 `WEBHOOK_URL`, deprecated alias)을 외부 URL로 지정
 - 로드밸런서에서 `/webhook/*`, `/webhook-waiting/*` 경로를 메인이 아닌 webhook processor로 라우팅
 
 > v2.34부터 큐 모드 워커가 **페이로드 크기 제한 없이** webhook 응답을 반환할 수 있다. 대용량 응답 때문에 webhook을
@@ -131,7 +144,7 @@ v2.0부터 task runner가 기본 활성화다. 문제는 **어디서** 실행되
 
 | 모드 | 동작 | 적합성 |
 |------|------|--------|
-| **internal** (기본) | n8n이 같은 호스트에서 자식 프로세스로 runner 기동. uid/gid 공유 | 공식 문서상 **"insecure by design"** — 민감 데이터 프로덕션에는 부적합 |
+| **internal** (기본) | n8n이 같은 호스트에서 자식 프로세스로 runner 기동. uid/gid 공유 | 공식 문서상 **"insecure by design"** — 민감 데이터 프로덕션에는 부적합. **2026-09-28 실측(v2.40.7)**: 기동 로그에 "Internal task runner mode is deprecated and will be removed in a future version"이 명시적으로 출력됨 — 단순 보안 권고를 넘어 **공식 제거 예정** 상태 |
 | **external** | 별도 컨테이너(`n8nio/runners`)에서 launcher가 runner 관리 | 프로덕션 권장. Code 노드가 n8n 프로세스와 격리됨 |
 
 ```yaml
@@ -142,7 +155,7 @@ v2.0부터 task runner가 기본 활성화다. 문제는 **어디서** 실행되
       N8N_RUNNERS_BROKER_LISTEN_ADDRESS: 0.0.0.0        # 외부 컨테이너 접속 허용
 
   n8n-runners:
-    image: n8nio/runners:2.33.7                          # n8n 이미지와 버전 일치
+    image: n8nio/runners:2.40.7                          # n8n 이미지와 버전 일치
     environment:
       N8N_RUNNERS_TASK_BROKER_URI: http://n8n:5679
       N8N_RUNNERS_AUTH_TOKEN: ${RUNNERS_AUTH_TOKEN}
@@ -190,12 +203,12 @@ n8n:
     N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}      # .env에 명시 + 별도 백업
 ```
 
-### 함정 2: 리버스 프록시 뒤에서 `WEBHOOK_URL` 누락
+### 함정 2: 리버스 프록시 뒤에서 `N8N_WEBHOOK_URL`(구 `WEBHOOK_URL`) 누락
 
-`https://n8n.example.com/` 도메인을 쓰는데 `WEBHOOK_URL`을 지정하지 않으면 n8n이 `http://localhost:5678/` 같은 내부 URL을 webhook 등록 URL로 외부에 알린다 → GitHub/Stripe 등 외부 서비스가 콜백 실패.
+`https://n8n.example.com/` 도메인을 쓰는데 `N8N_WEBHOOK_URL`을 지정하지 않으면 n8n이 `http://localhost:5678/` 같은 내부 URL을 webhook 등록 URL로 외부에 알린다 → GitHub/Stripe 등 외부 서비스가 콜백 실패.
 
 ```yaml
-WEBHOOK_URL: https://${N8N_HOST}/                  # 슬래시로 끝나야 함
+N8N_WEBHOOK_URL: https://${N8N_HOST}/              # 슬래시로 끝나야 함. 구 WEBHOOK_URL은 2026-09-28 실측(v2.40.7) 기준 deprecated alias
 ```
 
 ### 함정 3: SQLite로 시작 → 나중에 PostgreSQL 전환
@@ -240,7 +253,8 @@ Sustainable Use License는 "n8n을 제3자에게 서비스로 판매"하는 형�
 **공식 자료 (2026-08 개편 경로):**
 - Docs: https://docs.n8n.io/deploy/host-n8n/
 - Hosting 예시 레포: https://github.com/n8n-io/n8n-hosting
-- Release notes (2.x): https://docs.n8n.io/changelog/release-notes-2.x
+- Release notes (현행 통합, 2026-09 기준): https://docs.n8n.io/changelog/release-notes
+- Durable scheduler: https://docs.n8n.io/deploy/host-n8n/configure-n8n/durable-scheduler
 - Sitemap (경로 확인용): https://docs.n8n.io/sitemap.md
 - Community: https://community.n8n.io/
 

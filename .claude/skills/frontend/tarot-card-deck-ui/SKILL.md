@@ -12,12 +12,12 @@ user-invocable: false
 > 소스(이미지): https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/img · https://web.dev/articles/preload-responsive-images
 > 소스(접근성): https://www.w3.org/WAI/ARIA/apg/patterns/listbox/ · https://www.w3.org/WAI/ARIA/apg/practices/keyboard-interface/
 > 소스(애니메이션 라이브러리): https://motion.dev/docs/react-accessibility · https://motion.dev/docs/react-motion-config
-> 검증일: 2026-09-10
-> 버전 기준: motion 13.2.0 (2026-09-02 릴리즈, npm `latest`)
+> 검증일: 2026-09-28 (최초 2026-09-10)
+> 버전 기준: motion 13.4.4 (2026-09-25 릴리즈, npm `latest`; MotionConfig `reducedMotion` 기본값 `"never"` 등 본문 인용 API는 13.2.0 대비 변경 없음)
 
 ---
 
-## 관련 스킬 (먼저 확인)
+## 관련 스킬 (먼저 확인, 설치된 경우)
 
 | 목적 | 스킬 |
 |------|------|

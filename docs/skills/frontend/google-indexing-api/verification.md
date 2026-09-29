@@ -1,8 +1,8 @@
 ---
 skill: google-indexing-api
 category: frontend
-version: v1
-date: 2026-06-02
+version: v2
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `google-indexing-api` |
 | 스킬 경로 | `.claude/skills/frontend/google-indexing-api/SKILL.md` |
-| 검증일 | 2026-06-02 |
-| 검증자 | skill-creator |
-| 스킬 버전 | v1 |
+| 검증일 | 2026-09-28 (최초 2026-06-02, 2026-09-28 재검증) |
+| 검증자 | skill-creator → Claude (Sonnet 5, 2026-09-28 재검증) |
+| 스킬 버전 | v2 |
 
 ---
 
@@ -139,6 +139,24 @@ DISPUTED 또는 UNVERIFIED 항목 없음.
 
 ---
 
+### [2026-09-28] 재검증 — 변경 없음
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임 3개를 1차 소스(WebFetch)로 대조
+
+**클레임 대조 결과**:
+1. Google Indexing API는 `JobPosting`·`BroadcastEvent`(VideoObject 내부)에만 공식 지원, 그 외 콘텐츠 타입 추가 없음 → VERIFIED ("The Indexing API can only be used to crawl pages with either JobPosting or BroadcastEvent embedded in a VideoObject", https://developers.google.com/search/apis/indexing-api/v3/quickstart)
+2. publish 일일 할당량 200/day, getMetadata 180/min, 전체 endpoint 380/min — 기본값 변경 없음 → VERIFIED (https://developers.google.com/search/apis/indexing-api/v3/quota-pricing, 공식 문서 최종 업데이트 2026-07-16 확인, 수치 변경 언급 없음)
+3. Service Account에 Search Console **Owner** 권한 필요(Full로는 403) — SKILL.md §1-4 서술 유지, 이번 재검증에서는 quickstart·quota-pricing 페이지만 직접 재확인(prereqs 페이지는 2026-06-02 최초 검증 시 이미 공식 확인됨, 이번 회차는 재검증 대상에서 제외 — 변경 시사 정보 없음)
+
+**실전 질문 재검증**:
+- Q1. "일반 블로그 글에 Google Indexing API를 호출하면 인덱싱되는가?" → SKILL.md 섹션 0 "JobPosting·BroadcastEvent만 지원" 근거로 PASS (정책 불변 확인)
+- Q2. "Indexing API를 하루에 몇 번까지 호출할 수 있나?" → SKILL.md 섹션 3 "200/day" 근거로 PASS (수치 불변 확인)
+
+**재검증 최종 판정**: 3개 클레임 모두 VERIFIED, 변경 없음. status **APPROVED 유지**.
+
+---
+
 > (아래는 참고용 원본 템플릿 — 실제 수행 기록은 위에 있음)
 > skill-tester 에이전트 호출 별도 (이 스킬 작성 단계에서는 미수행).
 
@@ -151,8 +169,8 @@ DISPUTED 또는 UNVERIFIED 항목 없음.
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-02) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-02) + ✅ (2026-09-28 재검증, 클레임 3/3 VERIFIED) |
+| **최종 판정** | **APPROVED** (2026-09-28 재검증 — 변경 없음) |
 
 ---
 
@@ -170,3 +188,4 @@ DISPUTED 또는 UNVERIFIED 항목 없음.
 |------|------|-----------|--------|
 | 2026-06-02 | v1 | 최초 작성. Google Indexing API v3 기준, JobPosting+BroadcastEvent 한정 정책 강조, 5단계 prereqs + Node.js/GitHub Actions 예시 + 10개 실수 패턴 + IndexNow 비교 | skill-creator |
 | 2026-06-02 | v1 | 2단계 실사용 테스트 수행 (Q1 일반 블로그 호출 불가 / Q2 200 OK 색인 미등재 원인 / Q3 IndexNow 대체 불가) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-28 | v2 | 재검증 — JobPosting/BroadcastEvent 한정 정책·200/day·180/min·380/min 할당량 공식 문서(quickstart, quota-pricing) 재대조 전부 VERIFIED, 변경 없음. status APPROVED 유지 | Claude (Sonnet 5) |

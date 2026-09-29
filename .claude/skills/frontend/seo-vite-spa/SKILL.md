@@ -12,7 +12,7 @@ description: Vite / CRA 기반 React SPA의 SEO — react-helmet-async, @unhead/
 > - CRA deprecation: https://react.dev/blog/2025/02/14/sunsetting-create-react-app
 > - Googlebot JS rendering: https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics
 >
-> 검증일: 2026-08-26 (최초 2026-06-01 · 08-26 freshness 재검증: react-helmet-async 3.0.0(React 19 지원)·@unhead/react 3.x·Vike·CRA deprecated VERIFIED. 동적 렌더링/Rendertron 비권장 주의 블록 추가, vite-plugin-sitemap 유지보수 정체(2025-05 이후 무갱신) 주의 추가)
+> 검증일: 2026-09-28 (최초 2026-06-01 · 08-26 freshness 재검증: react-helmet-async 3.0.0(React 19 지원)·@unhead/react 3.x·Vike·CRA deprecated VERIFIED. 동적 렌더링/Rendertron 비권장 주의 블록 추가, vite-plugin-sitemap 유지보수 정체(2025-05 이후 무갱신) 주의 추가 · 09-28 2차 재검증: react-helmet-async 3.0.0(변동 없음)·@unhead/react 3.4.1(v3 유지)·Vike 0.4.266(활발히 유지보수, v1.0 아직 미출시) VERIFIED. Vike 네이티브 Head API(`+config`/`+Head`/`useConfig`) 보강(references/REFERENCE.md 6-1-1))
 
 ---
 

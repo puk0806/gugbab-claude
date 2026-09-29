@@ -15,8 +15,15 @@ description: Next.js 16.x App Router 핵심 패턴, 데이터 페칭, Cache Comp
 > - 캐싱(Cache Components): https://nextjs.org/docs/app/getting-started/caching
 > - fetch API 레퍼런스: https://nextjs.org/docs/app/api-reference/functions/fetch
 >
-> 검증일: 2026-08-11
-> 검증 대상 버전: **Next.js 16.3.0** (2026-08-03 릴리즈, 현재 최신 stable)
+> 검증일: 2026-09-28 (최초 2026-08-11)
+> 검증 대상 버전: **Next.js 16.3.6** (2026-09-22 릴리즈, 16.3.0의 패치 — 현재 최신 stable. 16.4.0은 아직 canary 단계)
+>
+> **주의(2026-09-28 확인, GitHub 공식 advisory 원문 대조) — 반드시 16.3.6 이상으로 사용한다.** 16.3.0~16.3.5 사이에는 **치명적(Critical) 보안 취약점** 3건이 있었고, 그중 1건만 Windows 호스팅에 한정된다:
+> - **GHSA-p293-qw3h-jr36 — Windows 호스팅 서버 한정** 경로 순회(Path Traversal) → 미인증 RCE. "Windows 파일시스템을 사용하는 서버에 호스팅된 경우"로 명시된 취약점이며 다른 OS는 영향 없음. (13.4.0~15.5.23, 16.0.0~16.3.2 영향 → 15.5.24 / 16.3.3에서 패치)
+> - **GHSA-2xp9-vwfh-vxw4 — 플랫폼 무관** AVIF 이미지 최적화 RCE. `sharp`가 쓰는 `libheif` 라이브러리 결함이 원인이라 **호스팅 OS와 무관하게** 영향받는다. (10.0.0~15.5.23, 16.0.0~16.3.2 영향 → 15.5.24 / 16.3.3에서 패치)
+> - **GHSA-vcvr-r3jv-pc5j — 플랫폼 무관** `next/og` `ImageResponse`(Node.js 런타임 한정, Edge 구현은 영향 없음) RCE — Satori 의존성의 SVG 이스케이프 결함으로 공격자 제어 값이 SVG content/속성/style에 들어가면 발동. (16.2.0~16.3.5 영향 → 16.3.6에서 패치)
+>
+> Cache Components·proxy.ts의 동작·API 서술 자체는 16.3.0~16.3.6 사이에 변경되지 않았다(패치는 보안·버그 수정 위주).
 
 ---
 
@@ -303,152 +310,19 @@ Next.js 16에는 캐싱 모델이 **두 개** 공존한다. 어느 쪽인지 먼
 
 ---
 
-## Route Handlers (API)
-
-```tsx
-// app/api/posts/route.ts
-import { NextRequest, NextResponse } from 'next/server'
-
-export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams
-  const query = searchParams.get('q')
-
-  const posts = await db.post.findMany({
-    where: query ? { title: { contains: query } } : {}
-  })
-
-  return NextResponse.json(posts)
-}
-
-export async function POST(request: NextRequest) {
-  const body = await request.json()
-  const post = await db.post.create({ data: body })
-  return NextResponse.json(post, { status: 201 })
-}
-
-// 동적 라우트: app/api/posts/[id]/route.ts
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params
-  const post = await db.post.findUnique({ where: { id } })
-  if (!post) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  return NextResponse.json(post)
-}
-```
+> → references/PATTERNS.md Route Handlers (API)
 
 ---
 
-## Server Actions
-
-```tsx
-// app/actions.ts
-'use server'
-
-import { revalidatePath } from 'next/cache'
-import { z } from 'zod'
-
-const schema = z.object({
-  title: z.string().min(1).max(100),
-  content: z.string().min(1)
-})
-
-export async function createPost(prevState: unknown, formData: FormData) {
-  const result = schema.safeParse({
-    title: formData.get('title'),
-    content: formData.get('content')
-  })
-
-  if (!result.success) {
-    return { error: result.error.flatten() }
-  }
-
-  await db.post.create({ data: result.data })
-  revalidatePath('/posts')
-  return { success: true }
-}
-
-// 컴포넌트에서 사용
-'use client'
-function PostForm() {
-  const [state, formAction, isPending] = useActionState(createPost, null)
-
-  return (
-    <form action={formAction}>
-      <input name="title" />
-      <textarea name="content" />
-      <button disabled={isPending}>작성</button>
-      {state?.error && <p>에러 발생</p>}
-    </form>
-  )
-}
-```
+> → references/PATTERNS.md Server Actions
 
 ---
 
-## 메타데이터 API
-
-> 여기서는 프레임워크 관점의 기본형만 다룬다. OpenGraph·JSON-LD·sitemap·robots·canonical 등
-> **SEO 관점의 상세**는 `frontend/seo-nextjs` 스킬을 참조한다.
-
-### 정적 메타데이터
-
-```tsx
-// app/about/page.tsx
-import type { Metadata } from 'next'
-
-export const metadata: Metadata = {
-  title: 'About',
-  description: '소개 페이지',
-  openGraph: {
-    title: 'About',
-    description: '소개 페이지',
-    images: ['/og-image.png'],
-  },
-}
-```
-
-### 동적 메타데이터
-
-```tsx
-// app/posts/[id]/page.tsx
-import type { Metadata } from 'next'
-
-export async function generateMetadata(
-  { params }: { params: Promise<{ id: string }> }
-): Promise<Metadata> {
-  const { id } = await params
-  const post = await fetch(`https://api.example.com/posts/${id}`).then(r => r.json())
-  return {
-    title: post.title,
-    description: post.excerpt,
-  }
-}
-```
+> → references/PATTERNS.md 메타데이터 API (정적/동적)
 
 ---
 
-## Streaming + Suspense
-
-```tsx
-// loading.tsx: 자동으로 Suspense 래핑됨
-export default function Loading() {
-  return <Skeleton />
-}
-
-// 세분화된 Streaming: 느린 컴포넌트만 suspense 처리
-async function Page() {
-  return (
-    <main>
-      <Header />       {/* 즉시 표시 */}
-      <Suspense fallback={<CommentSkeleton />}>
-        <Comments />   {/* 준비되면 streaming */}
-      </Suspense>
-    </main>
-  )
-}
-```
+> → references/PATTERNS.md Streaming + Suspense
 
 ---
 

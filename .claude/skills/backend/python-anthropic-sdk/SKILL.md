@@ -21,14 +21,15 @@ description: >
 > - 적응형 사고(adaptive thinking): https://platform.claude.com/docs/en/build-with-claude/adaptive-thinking
 > - effort 파라미터: https://platform.claude.com/docs/en/build-with-claude/effort
 > - 모델 마이그레이션: https://platform.claude.com/docs/en/about-claude/models/migration-guide
-> 검증일: 2026-08-12
-> SDK 기준 버전: `anthropic` v0.121.0 (PyPI latest, 2026-08-12 확인), Python 3.9+ 요구
+> - SDK v1.0 마이그레이션: https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md
+> 검증일: 2026-09-28 (최초 2026-05-15)
+> SDK 기준 버전: `anthropic` v1.8.0 (PyPI latest, 2026-09-28 확인 — 2026-08-20 v1.0.0 메이저 업그레이드), **Python 3.10+ 요구** (v1.0.0부터 3.9 지원 종료 — 3.9 환경은 `anthropic>=0.125,<1` 구버전 핀 필요)
 > 모델 기준 (2026-09-25 현행화): Claude Opus 5.5(`claude-opus-5-5`) 기본 권장 / Fable 5.1(`claude-fable-5-1`) / Sonnet 5(`claude-sonnet-5`) / Haiku 4.5(`claude-haiku-4-5`)
 > 구세대(서비스 중): Opus 5(`claude-opus-5`)·Fable 5(`claude-fable-5`)·Opus 4.8/4.7/4.6·Sonnet 4.6
 
 ---
 
-## 짝 스킬 (Companion Skills)
+## 짝 스킬 (Companion Skills, 설치된 경우 참조)
 
 - `backend/python-fastapi` — Python 백엔드 프레임워크
 - `backend/python-async-asyncio` — 비동기 동작 (AsyncAnthropic 사용 시 필수 이해)
@@ -54,7 +55,7 @@ pip install "anthropic[aws]"       # Claude Platform on AWS
 pip install "anthropic[aiohttp]"   # 비동기 성능 개선 (aiohttp 백엔드)
 ```
 
-**Python 요구 버전:** 3.9 이상.
+**Python 요구 버전:** 3.10 이상 (v1.0.0부터 — 이전 3.9+에서 상향).
 
 설치 후 버전 확인:
 
@@ -62,6 +63,24 @@ pip install "anthropic[aiohttp]"   # 비동기 성능 개선 (aiohttp 백엔드)
 import anthropic
 print(anthropic.__version__)
 ```
+
+### 1.1 v0.x → v1.x 마이그레이션 (2026-08-20 v1.0.0, 브레이킹 체인지)
+
+> 주의: 기존 v0.x 코드를 유지보수 중이면 아래 체크리스트를 먼저 확인한다. Python 3.9 환경은 SDK를 올리기 전에 런타임부터 3.10+로 올려야 한다(그전까지는 `anthropic>=0.125,<1` 핀 유지).
+
+| 변경 | Before (v0.x) | After (v1.x) |
+|------|---------------|--------------|
+| **HTTP 레이어** | `httpx` | **`httpx2`**(Pydantic 팀이 유지보수하는 fork). 반환 객체는 동일 속성을 갖는 httpx2 타입 — `isinstance`/타입 힌트만 `httpx2`로 교체 필요 |
+| Python 최소 버전 | 3.9+ | **3.10+** |
+| Text Completions API | `client.completions.create()`, `HUMAN_PROMPT`/`AI_PROMPT` | **제거됨** — `client.messages.create()` + 문자열 프롬프트 사용 |
+| 샘플링 파라미터(구형 모델용) | `messages.create(..., temperature=0.2)` | 메서드 시그니처에서 **제거** — `extra_body={"temperature": 0.2}`로 전달 |
+| `output_format` (구조화 출력) | `client.beta.messages.create(..., output_format={...})` | `output_config={"format": {...}}` (또는 `messages.parse(..., output_format=Model)` 헬퍼) |
+| 비동기 raw response | `await client.x.with_raw_response.create(...)` 후 `.parse()`는 **동기** | `.parse()`/`.text()`/`.read()` 모두 **`await` 필요** (async 클라이언트) |
+| `AnthropicBedrock` region | 미지정 시 `us-east-1` 암묵 사용 | **`aws_region` 명시 필수** (또는 `AWS_REGION` 환경변수) — 미지정 시 에러 |
+| 커스텀 헤더 | 대소문자 다른 키 = 둘 다 전송 | **대소문자 구분 없음** — 나중 키가 앞 키를 덮어씀 |
+
+> httpx2로 넘어가는 가장 간단한 경로: 앱 진입점 최상단에서 `import httpx2; httpx2.alias_httpx()` 한 줄로 기존 `import httpx` 코드를 그대로 유지할 수 있다(공식 MIGRATION.md 권장). `httpx.Timeout` 등 SDK에 값으로 넘기는 객체를 직접 구성하는 코드는 섹션 9.3(REFERENCE.md) 참조 — `httpx2` 기준으로 갱신 필요.
+> 소스: https://github.com/anthropics/anthropic-sdk-python/blob/main/MIGRATION.md , https://github.com/anthropics/anthropic-sdk-python/releases/tag/v1.0.0
 
 ---
 
@@ -80,25 +99,7 @@ client = Anthropic(
 
 ### 2.2 비동기 클라이언트 (`AsyncAnthropic`)
 
-```python
-import os
-import asyncio
-from anthropic import AsyncAnthropic
-
-client = AsyncAnthropic(
-    api_key=os.environ.get("ANTHROPIC_API_KEY"),
-)
-
-async def main() -> None:
-    message = await client.messages.create(
-        max_tokens=1024,
-        messages=[{"role": "user", "content": "Hello, Claude"}],
-        model="claude-opus-5-5",
-    )
-    print(message.content)
-
-asyncio.run(main())
-```
+→ references/REFERENCE.md §15 (비동기 클라이언트 생성 예제)
 
 ### 2.3 환경변수 관리 (보안 필수)
 
@@ -231,60 +232,19 @@ asyncio.run(main())
 
 메모리를 더 적게 쓰고 누적 객체를 만들지 않는다. 직접 이벤트 타입을 처리해야 한다.
 
-```python
-stream = client.messages.create(
-    model="claude-opus-5-5",
-    max_tokens=1024,
-    messages=[{"role": "user", "content": "Hello"}],
-    stream=True,
-)
-
-for event in stream:
-    # event.type: "message_start" | "content_block_start" | "content_block_delta"
-    #           | "content_block_stop" | "message_delta" | "message_stop" | "ping"
-    print(event.type)
-```
+→ references/REFERENCE.md §16 (원시 이벤트 스트림 예제)
 
 ### 4.4 이벤트 종류 (Server-Sent Events)
 
-| 이벤트 | 의미 |
-|--------|------|
-| `message_start` | 응답 시작, 빈 Message 객체 포함 |
-| `content_block_start` | 콘텐츠 블록 시작 (text / tool_use 등) |
-| `content_block_delta` | 블록 내 증분 (`text_delta`, `input_json_delta`) |
-| `content_block_stop` | 콘텐츠 블록 종료 |
-| `message_delta` | top-level 메시지 변경 (stop_reason, usage 등) |
-| `message_stop` | 응답 종료 |
-| `ping` | 연결 유지 신호 |
+→ references/REFERENCE.md §17 (SSE 이벤트 타입 표)
 
 > 주의: 직접 `stream=True`를 처리할 때 `content_block_delta`의 `delta.type`이 `text_delta`인지 `input_json_delta`(tool use)인지 분기해야 한다. 헬퍼를 쓰면 SDK가 자동 처리한다.
 
 ### 4.5 FastAPI에서 스트리밍 응답 전달 (짝 스킬)
 
-```python
-from fastapi import FastAPI
-from fastapi.responses import StreamingResponse
-from anthropic import AsyncAnthropic
+→ references/REFERENCE.md §18 (FastAPI 스트리밍 통합 예제)
 
-app = FastAPI()
-client = AsyncAnthropic()
-
-@app.post("/chat")
-async def chat(prompt: str):
-    async def event_generator():
-        async with client.messages.stream(
-            model="claude-opus-5-5",
-            max_tokens=1024,
-            messages=[{"role": "user", "content": prompt}],
-        ) as stream:
-            async for text in stream.text_stream:
-                yield f"data: {text}\n\n"
-        yield "data: [DONE]\n\n"
-
-    return StreamingResponse(event_generator(), media_type="text/event-stream")
-```
-
-> 프론트엔드 측 EventSource/Fetch 스트림 처리는 `frontend/claude-api-streaming-frontend` 스킬을 참조한다.
+> 프론트엔드 측 EventSource/Fetch 스트림 처리는 `frontend/claude-api-streaming-frontend` 스킬(설치된 경우)을 참조한다.
 
 ---
 
@@ -371,17 +331,17 @@ system=[
 
 | 모델 | 최소 캐시 토큰 |
 |------|---------------|
-| **Claude Fable 5.1, Fable 5, Opus 5** | **512** |
+| **Claude Fable 5.1, Fable 5, Opus 5.5, Opus 5** | **512** |
 | Claude Opus 4.8, Sonnet 5, Sonnet 4.6 / 4.5 | 1,024 |
 | Claude Opus 4.7 | 2,048 |
 | Claude Opus 4.6 / 4.5 | 4,096 |
 | Claude Haiku 4.5 | 4,096 |
 
-> 주의: 미확인 — Claude Opus 5.5는 공식 캐싱 최소 토큰 표에 아직 별도 기재가 없다(2026-09-25). 인용 전 공식 문서를 확인하고, 실제 적용 여부는 `cache_creation_input_tokens`로 검증한다.
+> 검증(2026-09-28): Claude Opus 5.5(`claude-opus-5-5`)의 최소 캐시 토큰은 공식 프롬프트 캐싱 문서(Cache limitations 섹션)에 **512**로 명시되어 있다 — Fable 5.1·Opus 5·Fable 5와 동일 티어. Opus 4.8(1,024)에서 Opus 5.5로 옮기면 임계값이 절반이 된다.
 
-> 주의: 최소 캐시 토큰은 세대 순으로 단조 감소하지 않는다. Opus 5는 512로 가장 낮지만
+> 주의: 최소 캐시 토큰은 세대 순으로 단조 감소하지 않는다. Opus 5.5·Opus 5는 512로 가장 낮지만
 > Opus 4.8은 1,024, Opus 4.7은 2,048, Opus 4.6은 4,096이다. 모델을 바꾸면 캐시 임계값도
-> 다시 확인해야 한다. Opus 4.8 → Opus 5로 옮기면 임계값이 절반(1,024 → 512)이 되므로,
+> 다시 확인해야 한다. Opus 4.8 → Opus 5.5로 옮기면 임계값이 절반(1,024 → 512)이 되므로,
 > 기존에 "너무 짧아서 캐시 안 된다"고 판단했던 프롬프트가 코드 변경 없이 캐시될 수 있다.
 
 ### 5.5 TTL 혼합 규칙
@@ -394,56 +354,7 @@ system=[
 
 ### 6.1 명시적 도구 정의
 
-```python
-tools = [
-    {
-        "name": "get_weather",
-        "description": "주어진 도시의 현재 날씨를 조회합니다.",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "location": {
-                    "type": "string",
-                    "description": "도시명 (예: Seoul)",
-                },
-            },
-            "required": ["location"],
-        },
-    }
-]
-
-response = client.messages.create(
-    model="claude-opus-5-5",
-    max_tokens=1024,
-    tools=tools,
-    messages=[{"role": "user", "content": "서울 날씨 알려줘"}],
-)
-
-# tool_use 응답 처리 루프
-while response.stop_reason == "tool_use":
-    tool_use = next(b for b in response.content if b.type == "tool_use")
-    result = handle_tool(tool_use.name, tool_use.input)  # 사용자 정의
-
-    response = client.messages.create(
-        model="claude-opus-5-5",
-        max_tokens=1024,
-        tools=tools,
-        messages=[
-            {"role": "user", "content": "서울 날씨 알려줘"},
-            {"role": "assistant", "content": response.content},
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "tool_result",
-                        "tool_use_id": tool_use.id,
-                        "content": result,
-                    }
-                ],
-            },
-        ],
-    )
-```
+→ references/REFERENCE.md §19 (명시적 도구 정의 + tool_use 루프 예제)
 
 ### 6.2 `@beta_tool` 데코레이터 (간편)
 

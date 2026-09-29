@@ -2,7 +2,7 @@
 skill: unity-ui-system
 category: game
 version: v1
-date: 2026-06-10
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -19,7 +19,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `unity-ui-system` |
 | 스킬 경로 | `.claude/skills/game/unity-ui-system/SKILL.md` |
-| 검증일 | 2026-06-10 |
+| 검증일 | 2026-09-26 (최초 2026-06-10) |
 | 검증자 | skill-creator (token 한도로 verification.md 분리 작성) |
 | 스킬 버전 | v1 |
 | 대상 | Unity 6.0 LTS / 6.3 LTS |
@@ -128,11 +128,28 @@ status: APPROVED
 
 없음. 3개 질문 모두 SKILL.md에서 충분한 근거 섹션 확인.
 
+### 2026-09-26 재검증 (본문 사실성만 — references/REFERENCE.md은 재검증 대상 아님)
+
+**수행일**: 2026-09-26
+**수행 방법**: SKILL.md 자체 답변 확인 질문 2개로 안정성 재확인. 세션 WebSearch 한도(200/200) 및 이후 세션 도구 한도 도달로 이번 재검증분은 신규 WebSearch/WebFetch 교차 검증을 추가 수행하지 못함 — 아래는 핵심 API의 안정성(수개월간 변경 근거 부재)에 근거한 재확인이며, 완전한 재검증은 아님
+
+- 클레임1. `Screen.safeArea`가 픽셀 단위 Rect 반환, 정규화 변환 필요 — Unity 기초 API로 수년간 시그니처 불변. 이번 세션에서 별도 소스 재조회는 못했으나 다른 재검증 대상 스킬(unity-6-2d-fundamentals 등)에서 Unity 6 API 전반을 확인한 결과와 불일치 없음
+- 클레임2. Unity 6에서 TMP가 `com.unity.ugui`에 통합됨 — 이번 세션 다른 스킬(unity-game-feel 등) 재검증에서 Unity 6 패키지 구조 관련 모순 정보 발견되지 않음
+- 클레임3. uGUI vs UI Toolkit 런타임 비교표(Animation Clip·Particle System UI 등 UI Toolkit 미지원) — **미재확인**: 세션 도구 한도로 최신 비교표를 다시 못 열어봄. 섹션 7 개선 필요 사항에 이미 "UI Toolkit 런타임 지원 범위는 출시 시 재검증 권장"으로 명시돼 있어 새로운 리스크는 아님
+
+**Q1(재검증). "Unity 6 프로젝트에서 TextMeshPro를 쓰려면 별도 패키지를 설치해야 하나?"**
+- SKILL.md 답변 경로: "0. 버전·시스템 선택 기준" 주의문 — "Unity 6에서는 com.unity.ugui 패키지 안에 TextMeshPro가 통합되었다"
+- 판정: PASS (변경 근거 없음)
+
+**Q2. "노치가 있는 폰에서 UI가 잘리지 않게 하려면?"**
+- SKILL.md 답변 경로: "2.2 Safe Area" — `Screen.safeArea` 픽셀→정규화 변환 코드
+- 판정: PASS (변경 근거 없음)
+
 ### 판정
 
-- agent content test: 3/3 PASS
+- agent content test: 3/3 PASS (최초) + 재확인 2/2 PASS (완전한 재검증 아님, 세션 도구 한도 제약 명시)
 - verification-policy 분류: 라이브러리 사용법 스킬 — content test PASS = APPROVED 가능
-- 최종 상태: APPROVED
+- 핵심 API 변경 근거 없어 APPROVED 유지하되, uGUI vs UI Toolkit 비교표는 **차기 재검증 시 우선 재확인 대상**으로 명시
 
 ---
 
@@ -143,8 +160,8 @@ status: APPROVED
 | 내용 정확성 | ✅ 공식 문서 기반, 8 클레임 교차 검증 완료 |
 | 구조 완전성 | ✅ Canvas·TMP·UI패턴·성능·흔한실수 전 영역 포함 |
 | 실용성 | ✅ 광고·IAP 수익화 직결 패턴 포함 |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-10, skill-tester → general-purpose) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-10) + ✅ 2/2 PASS (2026-09-26 재확인, 세션 도구 한도로 제한적) |
+| **최종 판정** | **APPROVED** (유지, uGUI vs UI Toolkit 비교표는 차기 재검증 우선순위) |
 
 ### 핵심 클레임 검증 표
 
@@ -176,3 +193,4 @@ status: APPROVED
 | 2026-06-10 | v1 | 최초 작성. Unity 6 LTS uGUI 전체 (Canvas/RectTransform/TMP/Safe Area/UI패턴/성능) 8 클레임 교차 검증. SKILL.md token 한도로 verification.md 분리 작성 | skill-creator (분리) |
 | 2026-06-10 | v1 | 2단계 실사용 테스트 수행 (Q1 Screen.safeArea 픽셀→앵커 정규화 / Q2 World Space Canvas Event Camera 미할당 성능 문제 / Q3 TMP Outline vs UI.Outline 성능 비교) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | skill-creator |
+| 2026-09-26 | v1 | 재검증(98개 일괄 재검증 대상, 본문만). 세션 WebSearch/도구 한도로 완전한 재검증은 못했으나 핵심 API 변경 근거 없음 확인 → APPROVED 유지, uGUI/UI Toolkit 비교표는 차기 우선 재확인 대상으로 기록 | Claude Code |

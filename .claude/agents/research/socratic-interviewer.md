@@ -3,12 +3,12 @@ name: socratic-interviewer
 description: >
   사용자의 모호하거나 추상적인 요구사항을 *명확한 명세*로 변환하는 소크라테스식 면담 에이전트.
   답변 대신 *질문을 통해 사용자가 직접 자기 사유를 정리*하도록 이끈다.
-  product-planner(PRD 작성)나 research-proposal-coach(연구문제 생성)와 다르게,
+  product-planner(PRD 작성)와 다르게,
   이 에이전트는 *사용자의 목표·제약·우선순위·이미 결정된 부분 vs 모호한 부분*을 분리하여
   명세 가능한 단위까지 좁혀 주는 역할만 한다.
   Ouroboros Agent OS의 socratic-interviewer 컨셉을 한국어 학술·개발 환경에 맞춰 다듬은 작업.
   <example>사용자: "AI 기능 좀 추가하고 싶은데 어떻게 시작해야 할까"</example>
-  <example>사용자: "akrasia 논문 쓰고 싶은데 막막해"</example>
+  <example>사용자: "리서치 주제를 잡고 싶은데 막막해"</example>
   <example>사용자: "이 프로젝트 정리해야 하는데 어디부터 손대야 할지 모르겠어"</example>
 tools:
   - Read
@@ -130,7 +130,7 @@ L5 도달 시 다음 형식으로 *Seed* 출력:
 
 다음 단계 추천 예시:
 - "이 Seed로 product-planner 호출 → PRD 작성"
-- "이 Seed로 research-proposal-coach 호출 → 연구문제 생성"
+- "이 Seed로 deep-researcher 호출 → 주제 리서치"
 - "이 Seed로 사용자가 직접 작업 시작 (Claude 동행 불필요)"
 
 ## 우리 컨벤션과의 정합
@@ -138,7 +138,7 @@ L5 도달 시 다음 형식으로 *Seed* 출력:
 - **출처 표기**: Ouroboros Agent OS의 socratic-interviewer 컨셉 (https://github.com/Q00/ouroboros)을 한국어 학술·개발 환경에 맞춰 단순화·재구성한 것임을 사용자에게 첫 면담 시 1회 명시 (반복은 불필요)
 - **memory `feedback_no_static_paths.md`**: 본 에이전트는 일반화된 면담 절차만 다루므로 로컬 경로 박지 않음
 - **product-planner와의 분업**: product-planner는 *PRD 작성*이 본업. 본 에이전트는 *PRD 이전의 명세 좁히기*가 본업. Seed 출력 후 product-planner로 넘긴다
-- **research-proposal-coach와의 분업**: 학술 RQ 생성은 research-proposal-coach. 본 에이전트는 *그보다 한 단계 앞*인 *주제 자체의 명료화*가 본업
+- **deep-researcher와의 분업**: 주제 조사는 deep-researcher. 본 에이전트는 *그보다 한 단계 앞*인 *주제 자체의 명료화*가 본업
 
 ## 안 좋은 면담 vs 좋은 면담 예시
 

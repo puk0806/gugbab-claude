@@ -1,8 +1,8 @@
 ---
 skill: storybook
 category: frontend
-version: v3
-date: 2026-08-11
+version: v4
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -12,10 +12,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `storybook` |
 | 스킬 경로 | `.claude/skills/frontend/storybook/SKILL.md` |
-| 검증일 | 2026-08-11 |
-| 검증자 | puk0806 |
-| 스킬 버전 | v3 |
-| 대상 버전 | Storybook 10.5.x (검증 시점 최신 안정 10.5.7) |
+| 검증일 | 2026-09-28 (최초 2026-08-11, 2026-09-28 재검증) |
+| 검증자 | puk0806 (2026-09-28 재검증: Claude, Sonnet 5) |
+| 스킬 버전 | v4 |
+| 대상 버전 | Storybook 10.6.x (검증 시점 최신 안정 10.6.0) |
 
 ---
 
@@ -151,13 +151,43 @@ status: APPROVED
 - [✅] 자매 스킬과 역할 분리 명시 — 이 스킬은 기본 사용법, 시각 회귀는 `frontend/storybook-visual-testing`으로 포인터
 
 ### 4-4. Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-08-11)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (3개 테스트 PASS)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-08-11, 2026-09-28 재테스트)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (3개 테스트 PASS + 2026-09-28 재테스트 2/2 PASS)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (보완 불필요)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (frontend-developer 미설치/미확인으로 대체)
+**수행 방법**: SKILL.md Read 후 2개 실전 질문 답변(2026-09-28 재검증(2차)의 Vitest 5 비호환 정정분을 직접 겨냥), 근거 섹션 및 anti-pattern 회피 확인
+
+### 실제 수행 테스트
+
+**Q1. SearchForm 인터랙션 테스트 작성 (v10 play function 핵심 기능)**
+- ✅ PASS
+- 근거: SKILL.md 섹션 4 "Play Function" (249~325줄)
+- 상세: `storybook/test`에서 `fn`·`expect` import, `canvas`/`userEvent` 컨텍스트 구조분해, `fn()` spy 패턴을 정확히 재현. 레거시 `within(canvasElement)` 보일러플레이트 없이 v10 시그니처로만 답변(anti-pattern 회피 확인).
+
+**Q2. Vitest 5 프로젝트에서 addon-vitest CI 실행 가능 여부 (2026-09-28 정정분 직접 겨냥)**
+- ✅ PASS
+- 근거: SKILL.md 섹션 4 "주의(2026-09-28 확인)" 블록 (325줄)
+- 상세: "`@storybook/addon-vitest`의 실제 peerDependencies는 `^3.0.0 \|\| ^4.0.0`이라 Vitest 5는 지원 범위 밖"이라는 정정 내용을 정확히 인용해 "Vitest 4.x 유지 또는 Storybook 11 안정화 대기"로 답변. 공식 문구("Vitest ≥ 3.0")만 보고 "Vitest 5도 된다"고 오답하지 않음 — 정정 반영 확인.
+
+### 발견된 gap
+
+- 경미: 쿼리 선택자(`getByRole` 등) 전체 API 목록이 SKILL.md 본문에 없고 `references/REFERENCE.md` §15로 위임되어 있음 — 의도된 참조 구조이므로 보강 불필요.
+
+### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 해당 없음 (라이브러리 사용법 스킬 — content test PASS로 APPROVED 전환 가능 카테고리)
+- 최종 상태: APPROVED
+
+---
+
+### [2026-08-11] 최초 2단계 테스트 기록
 
 **수행일**: 2026-08-11
 **수행자**: skill-creator (갱신 작업) — 갱신된 SKILL.md + references/REFERENCE.md 기반 실전 질문 답변 검증
@@ -245,6 +275,27 @@ addon-docs 등록 체크까지 유도.
 
 ---
 
+### [2026-09-28] 재검증(2차) — 10.5→10.6 버전 갱신 + addon-vitest Vitest 5 호환성 정정
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임 3개를 1차 소스(npm registry, 공식 문서)와 대조, 보강·축소 검토
+
+**클레임 대조 결과**:
+1. 최신 안정 버전은 10.5.7 → 10.6.0으로 갱신 필요 → **정정 반영** (`curl https://registry.npmjs.org/storybook/latest` → 10.6.0)
+2. Node.js 요구 20.19+ / 22.12+ 유지 → VERIFIED (공식 마이그레이션 가이드 재확인, 10.6에서도 변경 없음)
+3. addon-vitest "Vitest ≥ 3" 요구사항이 Vitest 5와도 호환되는지 → **DISPUTED**: 공식 문서(vitest-addon 페이지)는 "Vitest ≥ 3.0"이라고만 적혀 있어 5도 포함되는 것처럼 보이지만, `@storybook/addon-vitest@10.6.0`의 실제 `peerDependencies`는 `vitest: "^3.0.0 || ^4.0.0"`이다(`curl https://registry.npmjs.org/@storybook/addon-vitest/latest` 확인). Vitest 5(현재 최신 5.0.2, `curl https://registry.npmjs.org/vitest/latest`)는 아직 지원 범위 밖. GitHub에서 Vitest 5 지원 PR(storybookjs/storybook #36221, #36270)을 확인했으나 `next`/11.0.0-alpha 라인에만 반영되고 10.x 안정판 peer range는 그대로임을 WebSearch로 교차 확인.
+
+**보강(ADD)**: SKILL.md 4절 "CLI·CI에서 인터랙션 테스트 실행" addon-vitest 요구사항 목록 아래에 `> 주의(2026-09-28 확인):` 블록 추가 — "Vitest ≥ 3.0" 공식 표기와 실제 peer dependency(`^3.0.0 || ^4.0.0`, Vitest 5 미포함) 간 불일치를 명시하고, Vitest 5 프로젝트는 Vitest 4.x 유지 또는 Storybook 11 안정화 대기를 권고.
+**축소**: 없음.
+
+**실전 질문 재검증**:
+- Q1. "Storybook 10 프로젝트에서 Vitest 5로 addon-vitest를 쓸 수 있나?" → SKILL.md 4절 신규 주의 블록 근거로 PASS ("아직 지원 범위 밖, Vitest 4.x 유지 또는 Storybook 11 대기"로 정확히 답변)
+- Q2. "현재 Storybook 최신 안정 버전은?" → SKILL.md 상단 인용구 "10.6.x (2026-09-28 기준 최신 안정 10.6.0)" 근거로 PASS
+
+**재검증 최종 판정**: status **PENDING_TEST 전환** (Vitest 5 비호환 정정 반영, 버전 갱신 — 다음 skill-tester 재테스트 필요)
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -252,10 +303,10 @@ addon-docs 등록 체크까지 유도.
 | 내용 정확성 | ✅ (24 클레임: VERIFIED 22 / DISPUTED 1 반영 / PARTIAL 1 보수 기재) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (3/3 PASS) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (누적 5/5 PASS — 2026-08-11 3/3 + 2026-09-28 재테스트 2/2, Vitest 5 정정분 포함) |
+| **최종 판정** | **APPROVED** (2026-09-28 skill-tester 재테스트 2/2 PASS로 Vitest 5 비호환 정정분 검증 완료) |
 
-판정 근거: `verification-policy.md`의 "실사용 필수 스킬"(마이그레이션 전용 가이드·빌드 설정·워크플로우) 카테고리가 아닌 **라이브러리 사용법 스킬**이므로 content test PASS로 APPROVED 유지가 가능하다. 섹션 0의 마이그레이션 노트는 사용법 스킬 내부의 참조 정보이며, 스킬의 주 목적은 스토리 작성 사용법이다.
+판정 근거: `verification-policy.md`의 "실사용 필수 스킬"(마이그레이션 전용 가이드·빌드 설정·워크플로우) 카테고리가 아닌 **라이브러리 사용법 스킬**이므로 content test PASS로 APPROVED 전환 가능한 카테고리다. 2026-09-28 재검증에서 버전 갱신(10.5→10.6) + Vitest 5 비호환 정정이 반영되었고, 같은 날 skill-tester가 정정분을 직접 겨냥한 2개 질문으로 재테스트해 2/2 PASS를 확인했으므로 APPROVED로 전환한다.
 
 ---
 
@@ -265,7 +316,8 @@ addon-docs 등록 체크까지 유도.
 - [✅] Storybook Test addon(Vitest 통합) 섹션 추가 — 구 v2의 보류 항목, 섹션 4 말미에 반영 완료
 - [✅] references/REFERENCE.md의 v8 API(@storybook/react·@storybook/test·@storybook/blocks·docs.autodocs) 동반 수정 — SKILL.md와의 불일치 제거
 - [⏸️] CSF Factories(v10에서 React 대상 Preview 승격) 섹션 추가 — 아직 안정 API가 아니고 공식 문서 경로가 유동적(해당 API 문서 페이지 404 확인)이라 이번 갱신에서 제외. stable 전환 시 재검토
-- [⚠️] 자매 스킬 `frontend/storybook-visual-testing`의 main.ts 예시에 `@storybook/addon-essentials`가 남아 있음 — v10에서 제거된 패키지. 해당 스킬 갱신 시 수정 필요 (이번 작업 범위 밖)
+- [✅] 자매 스킬 `frontend/storybook-visual-testing`의 main.ts 예시에 `@storybook/addon-essentials`가 남아 있던 문제 — 해당 스킬 자체 갱신(v1.1, 2026-08-11)에서 이미 `@storybook/addon-docs`+`@storybook/addon-a11y`로 교체 완료됨을 2026-09-28 skill-tester가 재확인
+- [✅] skill-tester content test 재수행 (2026-09-28 완료, 2/2 PASS — Vitest 5 비호환 정정분 검증, PENDING_TEST → APPROVED 전환)
 
 ---
 
@@ -276,3 +328,6 @@ addon-docs 등록 체크까지 유도.
 | 2026-04-20 | v1 | 최초 작성 | skill-creator |
 | 2026-04-20 | v2 | WebSearch 공식 문서 12회 실시간 조사 기반 전면 재작성 — argTypesRegex 제한(play function spy 불가) 추가, @storybook/test import 주의사항 추가, 모노레포 공식 권장 방식(패키지별 독립 실행) 수정, step() API 추가, autodocs !autodocs 태그 패턴 추가, Chromatic push 이벤트 권장 이유 추가 | puk0806 |
 | 2026-08-11 | v3 | **Storybook 8.x → 10.5.x 전면 최신화.** 공식 문서·MIGRATION.md WebFetch 16회 + WebSearch 5회로 24개 클레임 교차 검증. 신규 섹션 0(v8→v10 마이그레이션 노트: ESM-only, Node 20.19+/22.12+, 패키지 이동 대응표, 제거된 애드온·API). 전 예시를 프레임워크 패키지 import·`storybook/test`·play 컨텍스트 `canvas`/`userEvent`·태그 기반 autodocs·`@storybook/addon-docs/blocks`로 교체. nextjs-vite 권장 반영, addon-vitest 실행 경로 추가. Node 버전 소스 불일치를 DISPUTED로 기록하고 `> 주의:` 표기. references/REFERENCE.md 동반 갱신. content test 3/3 PASS로 APPROVED 유지 | puk0806 |
+| 2026-09-26 | v3 | SKILL.md 500줄 초과 해소 — Vite 수동 설정 main.ts·CSF 3 기본 구조·argTypes 컨트롤 커스터마이징·play function 핵심 API 치트시트 예제를 references/REFERENCE.md §12~§15로 이동(내용 변경 없음, 이동만). SKILL.md 522→399줄. 내용·검증 상태 변경 없음 | Claude (Sonnet 5) |
+| 2026-09-28 | v4 | 재검증(2차) — 최신 안정 버전 10.5.7→10.6.0 갱신. addon-vitest "Vitest ≥ 3" 요구사항 재확인 중 실제 peerDependencies(`^3.0.0 \|\| ^4.0.0`)가 Vitest 5를 지원하지 않음을 npm registry로 확인, SKILL.md 4절에 `> 주의:` 블록으로 정정 반영(Vitest 5 프로젝트는 4.x 유지 또는 Storybook 11 대기 권고). status APPROVED → PENDING_TEST (skill-tester 재테스트 필요) | Claude (Sonnet 5) |
+| 2026-09-28 | v4 | skill-tester 재테스트(2차 재검증분) 수행 (Q1 SearchForm 인터랙션 작성 / Q2 Vitest 5 addon-vitest 호환 판단) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |

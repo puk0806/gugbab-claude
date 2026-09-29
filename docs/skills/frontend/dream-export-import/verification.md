@@ -1,8 +1,8 @@
 ---
 skill: dream-export-import
 category: frontend
-version: v1
-date: 2026-05-15
+version: v2
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `dream-export-import` |
 | 스킬 경로 | `.claude/skills/frontend/dream-export-import/SKILL.md` |
-| 검증일 | 2026-05-15 |
-| 검증자 | skill-creator |
-| 스킬 버전 | v1 |
+| 검증일 | 2026-09-28 (최초 2026-05-15, 2026-09-28 재검증) |
+| 검증자 | skill-creator → Claude (Sonnet 5, 2026-09-28 재검증) |
+| 스킬 버전 | v2 |
 
 ---
 
@@ -111,6 +111,26 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
+### [2026-09-28] 재검증 — 라이브러리 버전·브라우저 API 지원·개인정보 법령 원문 대조
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임 5개를 npm registry(`curl registry.npmjs.org`) + MDN/caniuse WebFetch + 법령 원문(casenote.kr 국가법령정보센터 미러)으로 1차 소스 대조
+
+**클레임 대조 결과**:
+1. `@zip.js/zip.js` v2.8.26+가 AES-256 암호화 ZIP 지원 → **VERIFIED** — npm 최신 2.18.2로 버전은 올라갔으나("v2.8.26+" 범위 내), AES 암호화 지원은 동일 유지 (https://registry.npmjs.org/@zip.js/zip.js/latest)
+2. Zod v4가 기본 배포 버전 → **VERIFIED** — npm 최신 4.6.5로 메이저 버전(v4) 유지 확인 (https://registry.npmjs.org/zod/latest)
+3. File System Access API — Chrome/Edge/Opera만 지원, Firefox·Safari 미지원, secure context+user gesture 필요 → **VERIFIED** — caniuse 대조 결과 Firefox는 "harmful"로 명시적 비채택 입장 유지, Safari도 Technology Preview까지 전부 미지원 유지 (https://caniuse.com/native-filesystem-api)
+4. Background Synchronization API — Baseline 아님, Safari 미지원 → **VERIFIED** — caniuse 대조 결과 Safari(데스크탑·iOS) 전부 미지원 유지, Chrome/Edge/Opera만 지원 (https://caniuse.com/mdn-api_serviceworkerregistration_sync)
+5. 한국 개인정보보호법 제35조의2(전송요구권) — 2023-03-14 개정 신설, 시행일은 분야별 대통령령으로 별도 지정(단계적 시행) → **VERIFIED** — 법령 원문 대조 결과 개정일 2023-03-14 일치, 시행일은 "9999-01-01"(=미지정, 대통령령 위임) 확인. 실제로는 의료·통신 정보가 2025-03-13 먼저 시행 개시, 에너지 정보는 2026-06-01 시행 예정으로 "단계적 시행" 서술이 그사이 실제로 구체화됨 — SKILL.md 서술 자체는 여전히 정확하므로 본문 수정은 불필요 (https://casenote.kr/법령/개인정보_보호법/제35조의2 , 관련 보도 교차확인)
+
+**실전 질문 재검증**:
+- Q1. "첨부 포함 꿈 일기를 암호화 ZIP으로 export하려는데 JSZip을 써도 되나?" → SKILL.md "2. Export 포맷 3종"·"6-2. 권장 조합" 근거로 "JSZip은 암호화 미지원, @zip.js/zip.js 사용" 정확히 도출 — PASS
+- Q2. "PWA에서 로컬 파일로 저장할 때 Safari 사용자는 어떻게 처리하나?" → SKILL.md "8-1. File System Access API" 근거로 `"showSaveFilePicker" in window` 분기 + `<a download>` 폴백 정확히 도출 — PASS
+
+**재검증 최종 판정**: 5개 클레임 전부 VERIFIED(버전 소폭 상승 외 실질 변경 없음). SKILL.md 본문 수정 불필요, status **APPROVED 유지**
+
+---
+
 **수행일**: 2026-06-20
 **수행자**: skill-tester → general-purpose
 **수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
@@ -170,7 +190,7 @@ status: APPROVED
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
 | 에이전트 활용 테스트 | ✅ (3/3 PASS, 2026-05-15 1차 / 2026-06-20 2차 재검증) |
-| **최종 판정** | **APPROVED** (content test 3/3 PASS, 라이브러리 사용법 스킬 카테고리 확정) |
+| **최종 판정** | **APPROVED** (content test 3/3 PASS, 라이브러리 사용법 스킬 카테고리 확정 / 2026-09-28 재검증 5개 클레임 전부 VERIFIED로 APPROVED 유지) |
 
 ---
 
@@ -192,3 +212,4 @@ status: APPROVED
 | 2026-05-15 | v1 | 최초 작성. 12개 공식 소스 + 3개 보조 소스로 11개 핵심 클레임 교차 검증 (10 VERIFIED / 1 주의표기) | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 JSZip 암호화 한계·대안 / Q2 libsodium Argon2id 파라미터·저사양 폴백 / Q3 File System Access API Firefox·Safari 폴백) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리로 당시 분류) | skill-tester |
 | 2026-06-20 | v1 | 2단계 실사용 테스트 재수행 (Q1 첨부 포함 export 포맷·JSZip 암호화 가부 / Q2 libsodium KDF 상수·OWASP baseline·저사양 폴백 / Q3 Firefox·Safari 폴백·Background Sync 핵심 흐름 의존 가부) → 3/3 PASS, APPROVED 전환 (라이브러리 사용법 스킬 카테고리 확정) | skill-tester |
+| 2026-09-28 | v2 | 재검증(135일 경과) — zip.js/Zod 버전 npm 대조, File System Access API·Background Sync API 브라우저 지원 현황 caniuse 재대조, 한국 개인정보보호법 제35조의2 원문 재대조. 5개 클레임 전부 VERIFIED, 본문 수정 없음. status APPROVED 유지 | Claude (Sonnet 5) |

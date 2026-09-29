@@ -16,14 +16,14 @@ sources:
   - https://docs.unity3d.com/Manual/sprite/atlas/v2/sprite-atlas-v2.html
   - https://docs.unity3d.com/ScriptReference/FilterMode.html
   - https://unity.com/blog/engine-platform/choosing-the-resolution-of-your-2d-art-assets
-verified: 2026-06-07
+verified: 2026-09-26
 status: APPROVED
 ---
 
 # Unity 2D 게임 에셋 AI 생성 파이프라인
 
 > 소스: 위 frontmatter `sources` 참조 (Midjourney 공식 docs, Leonardo.ai 공식, Scenario.gg 공식 docs, Unity 공식 매뉴얼, ControlNet 공식 GitHub)
-> 검증일: 2026-06-07
+> 검증일: 2026-09-26 (재검증. Midjourney Basic/Standard/Pro/Mega $10·$30·$60·$120, $1M 매출 임계, Leonardo Apprentice/Artisan/Maestro $12·$30·$60, Scenario Starter/Pro/Max $15·$45·$75, Unity ASTC 권장 블록 사이즈 모두 변동 없음 확인)
 > 적용 범위: Unity 6 / 2022 LTS 이상의 2D 프로젝트, 모바일·PC 타깃
 
 ---

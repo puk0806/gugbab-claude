@@ -8,11 +8,11 @@ description: >
 
 # Claude API Streaming — Frontend Pattern
 
-> 소스: https://platform.claude.com/docs/en/api/messages-streaming · https://platform.claude.com/docs/en/api/messages · https://platform.claude.com/docs/en/build-with-claude/prompt-caching · https://platform.claude.com/docs/en/api/errors · https://platform.claude.com/docs/en/build-with-claude/adaptive-thinking · https://platform.claude.com/docs/en/about-claude/models/migration-guide · https://github.com/anthropics/anthropic-sdk-typescript · https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events
-> 검증일: 2026-08-12
-> 버전 기준: Messages API `anthropic-version: 2023-06-01`, TypeScript SDK `@anthropic-ai/sdk` v0.116.0 (npm latest, 2026-08-12 확인), MDN SSE 표준
+> 소스: https://platform.claude.com/docs/en/api/messages-streaming · https://platform.claude.com/docs/en/api/messages · https://platform.claude.com/docs/en/build-with-claude/prompt-caching · https://platform.claude.com/docs/en/api/errors · https://platform.claude.com/docs/en/build-with-claude/adaptive-thinking · https://platform.claude.com/docs/en/about-claude/models/migration-guide · https://github.com/anthropics/anthropic-sdk-typescript · https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events · https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config/runtime
+> 검증일: 2026-09-28 (재검증 2차, 이전 2026-08-12) — 갱신 사유: ① SDK v0.116.0 → **v0.128.0**(npm latest, 2026-09-22 배포) 갱신. 0.116→0.128 구간 changelog 전수 확인 결과 본 스킬이 다루는 Messages/Streaming API·delta 타입·캐싱에 breaking change 없음(claude-opus-5-5 모델 지원 추가, Files/Skills GA, rate limits API 개편 등은 본 스킬 범위 밖) ② §4-1 Next.js 예제를 **Next.js 16 기준**(Edge Runtime deprecated → Node.js 런타임)으로 갱신 ③ 최소 캐시 토큰(REFERENCE.md) Opus 5.5 = **512**로 공식 확인(이전 "미확인" 표기 정정)
+> 버전 기준: Messages API `anthropic-version: 2023-06-01`, TypeScript SDK `@anthropic-ai/sdk` v0.128.0 (npm latest, 2026-09-28 확인), MDN SSE 표준, Next.js 16.3 (Route Handler 기본 런타임 `nodejs`, `edge`는 deprecated)
 > 모델 기준 (2026-09-25 현행화): Claude Opus 5.5(`claude-opus-5-5`) / Fable 5.1(`claude-fable-5-1`) / Sonnet 5(`claude-sonnet-5`) / Haiku 4.5(`claude-haiku-4-5`) — 예제 코드는 채팅용 `claude-sonnet-5` 사용
-> 짝 스킬: `frontend/chat-ui-pattern` (메시지 리스트·virtuoso·스크롤 동작) / `meta/dream-interpretation-prompt-engineering` (system 프롬프트 설계)
+> 짝 스킬(설치된 경우 참조): `frontend/chat-ui-pattern` (메시지 리스트·virtuoso·스크롤 동작) / `meta/dream-interpretation-prompt-engineering` (system 프롬프트 설계)
 
 ---
 
@@ -277,13 +277,13 @@ export function ChatBox() {
 
 ## 4. 백엔드 프록시 변형
 
-### 4-1. Next.js 15 Route Handler (Edge runtime)
+### 4-1. Next.js 16 Route Handler (Node.js runtime)
+
+> 주의 (2026-09-28 확인): Next.js는 16.1부터 Route Handler의 `export const runtime = 'edge'`를 **deprecated** 처리했다(공식: *"Remove the `runtime` export from your route files... The Node.js runtime is the default, so no replacement is needed."*). `runtime` 옵션 값 자체가 `'nodejs' | 'edge' (deprecated)`로 표기되며 기본값이 `'nodejs'`다. 아래 예제는 `runtime` export를 제거하고 기본 Node.js 런타임을 사용한다 — 기존에 `runtime = 'edge'`로 작성된 프록시가 있다면 그 줄만 지우면 되고(SSE `ReadableStream`·`for await` 로직은 변경 불필요), Node.js 런타임에서도 동일하게 동작한다.
 
 ```ts
 // app/api/claude/stream/route.ts
 import Anthropic from '@anthropic-ai/sdk';
-
-export const runtime = 'edge';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 

@@ -5,36 +5,63 @@ description: Vite 고급 코드 스플리팅 — manualChunks 함수형, 모바�
 
 # Vite 고급 코드 스플리팅 & 빌드 자동화
 
-> 소스: https://vitejs.dev/config/build-options | https://vitejs.dev/guide/api-plugin | https://vitejs.dev/guide/build
-> 검증일: 2026-08-11 (최초 작성 2026-04-20, Vite 8 대응 주의사항 추가)
+> 소스: https://vitejs.dev/config/build-options | https://vitejs.dev/guide/api-plugin | https://vitejs.dev/guide/build | https://vite.dev/guide/migration | https://rolldown.rs/reference/OutputOptions.codeSplitting
+> 검증일: 2026-09-28 (최초 작성 2026-04-20 · 08-11 Vite 8 대응 주의사항 추가 · 09-28 재검증: Vite 8.3.1 확인, `codeSplitting.groups`를 주 경로로 전면 재작성, `manualChunks`는 레거시(Vite 6/7)로 격하)
 
-> **주의 (Vite 8+):** Vite 8부터 Rolldown이 기본 번들러로 전환되면서 `build.rollupOptions`는 `build.rolldownOptions`로 개명됨(기존 `rollupOptions`는 deprecated alias로 하위호환 유지, 당장 깨지지 않음). `output.manualChunks` **객체 형식은 더 이상 지원되지 않음**(함수 형식은 deprecated로 계속 동작). 이 문서의 예시는 Vite 6.x 기준. 출처: https://vite.dev/guide/migration
+> **버전 분기:** Vite 8부터 Rolldown이 기본 번들러로 전환되며 `build.rollupOptions`는 `build.rolldownOptions`로 개명(`rollupOptions`는 deprecated alias로 하위호환 유지, 당장 깨지지 않음). `output.manualChunks`는 **객체 형식 미지원**, 함수 형식은 **deprecated로만 동작**. 신규 프로젝트·Vite 8+ 환경은 아래 "Vite 8+ 주 경로"(`codeSplitting.groups`)를 쓰고, 아직 Vite 6/7(Rollup 기반)을 유지 중이면 "레거시" 절의 `manualChunks`를 그대로 쓴다. 출처: https://vite.dev/guide/migration
 
 ---
 
-## 1. manualChunks 전략
+## 1. 코드 스플리팅 전략 — `codeSplitting.groups`(주 경로) vs `manualChunks`(레거시)
 
-### 기본 형식 비교
+### Vite 8+ 주 경로 — `rolldownOptions.output.codeSplitting`
 
 ```typescript
-// 객체 형식 — 명시적, 소규모 청크 분할에 적합 (Vite 8+에서는 미지원, 아래 "주의" 참조)
+// vite.config.ts (Vite 8+)
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  build: {
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            // priority 숫자가 클수록 먼저 평가됨 (먼저 매칭되는 그룹이 우선 배정)
+            { name: 'common-react-dom', test: /node_modules[\\/](react|react-dom|react-router-dom)[\\/]/, priority: 30 },
+            { name: 'common-swiper', test: /node_modules[\\/]swiper[\\/]/, priority: 20 },
+            { name: 'vendors-sentry', test: /node_modules[\\/]@sentry[\\/]/, priority: 20 },
+            { name: 'vendors-mui', test: /node_modules[\\/](@mui|@emotion)[\\/]/, priority: 20 },
+            // test 없이 마지막에 두면 나머지 node_modules를 모두 흡수하는 catch-all
+            { name: 'vendor', test: /node_modules/ },
+          ],
+        },
+      },
+    },
+  },
+})
+```
+
+> `groups` 각 항목: `name`(청크명, 문자열 또는 함수) · `test`(정규식 — 매칭되는 모듈을 이 그룹에 배정) · `priority`(숫자가 클수록 먼저 평가) · `minSize`/`maxSize`/`minModuleSize`/`maxModuleSize`/`minShareCount`(크기·공유 기준 세부 제어, 미달 시 그룹 무시). `test`는 함수가 아닌 **정규식만** 받으므로, 구 함수형 `manualChunks`처럼 패키지명을 문자열로 파싱해 동적으로 분기하는 로직 자체가 필요하면(예: `lf-*-api-client` 패턴처럼 접두/접미사 조건) 그룹을 패키지 단위로 정규식 나열하거나 아래 레거시 함수형을 계속 사용한다. 출처: https://rolldown.rs/reference/OutputOptions.codeSplitting
+
+### 레거시 (Vite 6/7, Rollup 기반) — `manualChunks`
+
+> **주의 (Vite 8+):** 아래 방식은 Vite 8에서 객체 형식 **미지원**, 함수 형식은 **deprecated**(당장 동작은 하나 신규 작성 금지). 신규 프로젝트는 위 "Vite 8+ 주 경로"를 사용할 것 — 이 절은 기존 Vite 6/7 프로젝트를 마이그레이션 전까지 유지 보수하는 용도로만 참고한다.
+
+```typescript
+// 객체 형식 — 명시적, 소규모 청크 분할에 적합 (Vite 8+에서는 미지원)
 manualChunks: {
   'react-vendor': ['react', 'react-dom'],
   'ui-vendor': ['@mui/material'],
 }
 
-// 함수 형식 — 동적 조건 처리, 대규모 분할에 적합 (Vite 8+에서도 동작, deprecated)
+// 함수 형식 — 동적 조건 처리, 대규모 분할에 적합 (Vite 8+에서도 동작하나 deprecated)
 manualChunks(id: string) {
   if (id.includes('node_modules')) { ... }
 }
 ```
 
-> **주의 (Vite 8+):** 객체 형식 `manualChunks`는 미지원으로 전환됨. 아래 "패키지명 기반 자동 분할"의 함수 형식을 사용할 것.
-
-### 패키지명 기반 자동 분할
-
 ```typescript
-// vite.config.ts
+// vite.config.ts (Vite 6/7)
 import { defineConfig } from 'vite'
 
 export default defineConfig({
@@ -82,13 +109,16 @@ export default defineConfig({
 ### React.lazy + Suspense와 함께 사용
 
 ```typescript
-// ❌ manualChunks와 React.lazy 조합 시 주의
-// 잘못된 manualChunks가 lazy chunk 경계를 깨뜨릴 수 있음
+// ❌ codeSplitting.groups/manualChunks와 React.lazy 조합 시 주의
+// 잘못된 그룹 test 패턴(또는 manualChunks 분기)가 lazy chunk 경계를 깨뜨릴 수 있음
 
-// ✅ 라우트 기반 lazy split은 manualChunks와 별개로 동작
+// ✅ 라우트 기반 lazy split은 codeSplitting.groups/manualChunks와 별개로 동작
 const ProductPage = lazy(() => import('./pages/ProductPage'))
 
-// manualChunks는 node_modules만 타겟으로, 앱 코드는 건드리지 않는 게 안전
+// Vite 8+: groups의 test는 node_modules만 타겟, 앱 코드는 건드리지 않는 게 안전
+{ name: 'vendor', test: /node_modules/ }
+
+// 레거시 manualChunks도 동일 원칙
 manualChunks(id) {
   if (id.includes('node_modules')) { ... }
   // 앱 코드 분기는 return 없이 통과 (Vite가 자동 처리)
@@ -310,20 +340,25 @@ window.addEventListener('vite:preloadError', (event) => {
 
 ## 5. 빌드 출력 최적화
 
+### Vite 8+ 주 경로
+
 ```typescript
 export default defineConfig({
   build: {
     // 청크 크기 경고 임계값 (기본 500KB)
     chunkSizeWarningLimit: 1000,
 
-    rollupOptions: {
+    rolldownOptions: {
       output: {
-        // 청크 파일명 패턴
+        // 청크 파일명 패턴 (Rolldown에서도 동일 옵션명 유지)
         chunkFileNames: 'assets/js/[name]-[hash].js',
         entryFileNames: 'assets/js/[name]-[hash].js',
         assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
 
-        manualChunks: { /* ... */ },
+        codeSplitting: { groups: [ /* 1절 참조 */ ] },
+
+        // console 제거 위치도 Vite 8+에서 이곳으로 이동 (webpack-vite-config-mapping 스킬 2절 참조)
+        minify: { compress: { dropConsole: true } },
       },
     },
 
@@ -333,16 +368,36 @@ export default defineConfig({
 })
 ```
 
+### 레거시 (Vite 6/7)
+
+```typescript
+export default defineConfig({
+  build: {
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        chunkFileNames: 'assets/js/[name]-[hash].js',
+        entryFileNames: 'assets/js/[name]-[hash].js',
+        assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
+        manualChunks: { /* ... */ },
+      },
+    },
+    sourcemap: process.env.GENERATE_SOURCEMAP === 'true',
+  },
+})
+```
+
 ---
 
 ## 흔한 실수 패턴
 
-### 1. manualChunks에서 앱 코드까지 지정
+### 1. codeSplitting.groups/manualChunks에서 앱 코드까지 지정
 
 ```typescript
-// ❌ 앱 내부 파일을 manualChunks로 강제 분할하면 circular dependency 위험
+// ❌ 앱 내부 파일을 그룹 test(또는 manualChunks)로 강제 분할하면 circular dependency 위험
+{ name: 'pages', test: /src\/pages/ }       // Vite 8+ — 위험
 manualChunks(id) {
-  if (id.includes('src/pages')) return 'pages'  // 위험
+  if (id.includes('src/pages')) return 'pages'  // 레거시 — 위험
 }
 
 // ✅ React.lazy로 라우트 기반 분할 사용

@@ -17,9 +17,10 @@ description: >
 > - Freud, *The Interpretation of Dreams* (Die Traumdeutung, 1899/1900) — Standard Edition Vol. IV–V (Strachey 1953): https://pep-web.org/browse/document/se.004.0000a
 > - *Dreams in Analytical Psychology* (Wikipedia, Jung 1차 문헌 정리): https://en.wikipedia.org/wiki/Dreams_in_analytical_psychology
 > - Hobson & McCarley, *American Journal of Psychiatry*, 1977.12 (Activation-Synthesis)
-> - Plevin & Munro, "The clinical use of dream content in modern psychiatry", *Australasian Psychiatry*, 2025: https://pubmed.ncbi.nlm.nih.gov/39748545/
+> - Plevin & Munro, "The clinical use of dream content in modern psychiatry", *Australasian Psychiatry*, 33(3), 413–416, 2025: https://pubmed.ncbi.nlm.nih.gov/39748545/
+> - 1차 원문 대조(2026-09-26): Freud *Die Traumdeutung* 독일어 원문(Project Gutenberg #40739), Brill 영역(Gutenberg #66048), Jung *Man and His Symbols* (1964) 본문
 >
-> 검증일: 2026-05-14
+> 검증일: 2026-09-26
 
 ---
 
@@ -46,7 +47,10 @@ description: >
 ### 1.2 핵심 명제
 
 > "The interpretation of dreams is the royal road to a knowledge of the unconscious activities of the mind."
-> — Freud, SE V, p. 608
+> — Freud, SE V, p. 608 (Strachey 역)
+>
+> 원문: "Die Traumdeutung aber ist die Via regia zur Kenntnis des Unbewußten im Seelenleben." (7장) / Brill 역: "the interpretation of dreams is the *via regia* to a knowledge of the unconscious in the psychic life."
+> 주의: 독일어 원문·Brill 역은 2026-09-26 Gutenberg 원문으로 대조했다. SE 문구·쪽수(V, 608)는 SE 원본을 직접 열지 못해 표준 인용 관례로만 확인했다 — 인용 전 SE 확인.
 
 - 꿈은 **위장된 소망 충족**(disguised wish fulfillment)이다.
 - 깨어 있을 때 억압된(verdrängt) 소망이 수면 중 검열(censorship)을 우회하여 위장된 형태로 충족된다.
@@ -71,7 +75,10 @@ description: >
 | **시각적 상징화** | *Rücksicht auf Darstellbarkeit* (considerations of representability) | 추상적 사고를 시각 이미지로 표현 가능한 형태로 번역 |
 | **이차 가공** | *sekundäre Bearbeitung* (secondary revision/elaboration) | 깨어남에 가까울 때 의식이 단편들을 그럴듯한 서사로 다시 정리 |
 
-> 프로이트 자신의 말: "Dream-displacement and dream-condensation are the two craftsmen to whom we may chiefly ascribe the structure of the dream" (SE IV, 6장 B절).
+> 프로이트 원문(6장 B절 "전치 작업"): "*Traumverschiebung* und *Traumverdichtung* sind die beiden Werkmeister, deren Tätigkeit wir die Gestaltung des Traumes hauptsächlich zuschreiben dürfen."
+> Brill 영역: "Dream displacement and dream condensation are the two craftsmen to whom we may chiefly attribute the moulding of the dream."
+>
+> 주의 (2026-09-26 정정): 이전 판은 "two craftsmen ... ascribe the structure of the dream"을 **SE IV 문장으로** 제시했으나, "two craftsmen"은 **Brill 번역의 표현**이고 문구도 Brill 원문과 달랐다(원문 대조: Gutenberg #66048·#40739). SE(Strachey) 번역은 다른 문구를 쓰므로 SE로 인용하려면 SE IV(6장 B절)를 직접 확인할 것.
 
 ### 1.5 해석법 — 자유 연상(free association)
 
@@ -120,11 +127,13 @@ description: >
 
 ### 2.4 꿈의 보상 기능(compensatory function)
 
-> "The general function of dreams is to try to re-establish our psychological equilibrium by means of dream material which, in a subtle way, reconstitutes the total equilibrium of our entire psyche."
-> — Jung, *CW* Vol. 8
+> "The general function of dreams is to try to restore our psychological balance by producing dream material that re-establishes, in a subtle way, the total psychic equilibrium. This is what I call the complementary (or compensatory) role of dreams in our psychic make-up."
+> — Jung, "Approaching the Unconscious", *Man and His Symbols* (1964)
+>
+> 주의 (2026-09-26 정정): 이전 판은 이 문장을 다른 문구로 바꿔 *CW* Vol. 8 출처로 제시했다. 원문 대조 결과 이 문장은 *Man and His Symbols* 1부 "Approaching the Unconscious"의 문장이다. 쪽수는 판본마다 다르므로 사용한 판본으로 확인. 보상 기능의 *CW* 전거가 필요하면 CW 8 "General Aspects of Dream Psychology"·"On the Nature of Dreams"를 직접 찾아 인용할 것.
 
 - 꿈은 **의식의 일면성·편향을 보완**한다 (위장된 소망이 아니라).
-- 4가지 보상 양태(Whitmont & Perera 정리):
+- 4가지 보상 양태(Whitmont & Perera 정리 — 서지·쪽수 2026-09-26 미대조, `주의: 미검증`):
   - **complementary** — 의식이 누락한 것을 조용히 보태줌
   - **opposing** — 지나친 의식 입장을 정면으로 반박
   - **prospective** — 의식이 아직 인식하지 못한 발달 방향 예고
@@ -138,7 +147,7 @@ description: >
 | 자료 | 개인의 사적 연상 | 개인 연상 + 신화·민담·종교·연금술·예술 등 문화적 평행 자료 |
 | 목적 | 잠재 내용(억압된 소망) 복원 | 원형적 의미·심리적 균형 파악 |
 
-> 확충은 "꿈 이미지의 본질로 돌아가는 한정적·일관적·방향성 있는 연상 작업"이다(*CW* Vol. 16).
+> 확충은 꿈 이미지의 본질로 돌아가는 한정적·일관적·방향성 있는 연상 작업이다(*CW* Vol. 16의 취지 **요약** — 따옴표 직접 인용 아님. 2026-09-26 재검증에서 원문 문장 미대조).
 
 ### 2.6 객관 단계 vs 주관 단계 해석
 
@@ -177,7 +186,7 @@ Whitmont & Perera는 *보상 기능을 가장 잘 충족시키는 쪽*을 선택
 ### 4.1 SEP "Dreams and Dreaming" 항목 (Windt 2015/2026-01-26 개정)
 
 - **프로이트 처리**: "Freudian dream theory considered dream interpretation as the royal road to knowledge of the unconscious"라는 평가와 함께, 신체 자극설을 거부하고 *심리적 원인*에 무게를 둔 의의를 인정.
-- **융 처리**: SEP 본문에 *독립 항목 수준의 비중으로는 다루어지지 않는다*. (이는 SEP가 분석철학 전통 중심이라는 편향을 반영하기도 한다 — 인문학 인용 시 보충 필요.)
+- **융 처리**: 2026-01-26 개정판 본문에 **Jung이라는 이름이 한 번도 등장하지 않는다**(2026-09-26 원문 대조). (이는 SEP가 분석철학 전통 중심이라는 편향을 반영하기도 한다 — 인문학 인용 시 보충 필요.)
 - **현대 철학적 관심**: 꿈을 *환각인가, 상상 경험인가*, *꿈에서의 자기의식*, *꿈의 시간성* 등 심리철학·인지과학 쪽으로 이동.
 
 ### 4.2 Hobson & McCarley 활성화-종합 가설(Activation-Synthesis, 1977)
@@ -195,12 +204,13 @@ Whitmont & Perera는 *보상 기능을 가장 잘 충족시키는 쪽*을 선택
 - **I** (Input-output gating) — 외부 자극 차단 정도
 - **M** (Modulation) — 신경조절물질(아미네 vs 콜린) 비율
 
-후기에는 꿈이 의식 연구의 자연 실험장이라는 관점(*protoconsciousness theory*)을 발전시켰고, 꿈 내용이 *각성 의식과 놀랍도록 연속적*이라는 점도 인정.
+후기에는 꿈이 의식 연구의 자연 실험장이라는 관점(*protoconsciousness theory* — Hobson 2009, *Nature Reviews Neuroscience* 10(11), 803–813; AIM은 Hobson, Pace-Schott & Stickgold 2000, *Behavioral and Brain Sciences* 23(6), 793–842)을 발전시켰고, 꿈 내용이 *각성 의식과 놀랍도록 연속적*이라는 점도 인정.
 
 ### 4.4 임상심리학·정신의학 내 위치 (Plevin & Munro 2025)
 
-- "정신분석 전통은 꿈 내용을 풍부하게 탐구했지만, **임상 사용은 광범위한 사용 중단(widespread disuse) 상태**다."
-- 그럼에도 일부 임상 영역에서 *꿈 내용 자체의 진단·예후적 가치*에 관한 연구는 진행 중: 조현병, 경계성 인격장애, 측두엽 간질, REM 수면 행동 장애, 치매, 물질 사용 장애 등.
+- 초록 원문: "Though there is a rich psychoanalytic tradition investigating the content and phenomenology of dreams, the clinical use of this has fallen into **widespread disuse**." (PubMed 초록, 2026-09-26 대조)
+- 그럼에도 *꿈 내용 자체의 진단·예후적 가치*가 있을 수 있는 영역: 조현병, 경계성 인격장애, 측두엽 간질, REM 수면 행동 장애, 치매, 문화 결합 증후군 Latah, 물질 사용.
+- 주의: 이 리뷰의 **결론은 오히려 임상가가 꿈 내용을 정기적으로 물어볼 것을 권한다**("should motivate clinicians to regularly enquire about dream content"). "사용 중단" 문장만 떼어 프로이트·융 무용론의 근거로 쓰지 말 것 (2026-09-26 보완).
 - 단, 이는 *프로이트·융 해석법의 부활*이 아니라 *꿈 내용에 대한 경험 연구의 회복*이라는 점을 명확히 구분해야 한다.
 
 ---
@@ -218,7 +228,9 @@ Whitmont & Perera는 *보상 기능을 가장 잘 충족시키는 쪽*을 선택
 | Windt, J. M. (2015/2026). "Dreams and Dreaming." SEP. | URL 인용 (revised 날짜 명기) |
 | Hobson, J. A. & McCarley, R. W. (1977). "The brain as a dream state generator..." *Am J Psychiatry*, 134(12): 1335–1348. | 활성화-종합 |
 | Hobson, J. A. (1988). *The Dreaming Brain*. Basic Books. | 대중서, 활성화-종합 확장 |
-| Plevin, D. & Munro, V. (2025). "The clinical use of dream content in modern psychiatry." *Australas Psychiatry*. | 현대 임상 평가 |
+| Plevin, D. & Munro, V. (2025). "The clinical use of dream content in modern psychiatry." *Australas Psychiatry*, 33(3), 413–416. doi:10.1177/10398562241311926 | 현대 임상 평가 |
+| Jung, C.G. (1964). "Approaching the Unconscious." In *Man and His Symbols*. | 보상 기능 인용문 출처 |
+| Hobson, J. A. (2009). "REM sleep and dreaming: towards a theory of protoconsciousness." *Nat Rev Neurosci*, 10(11), 803–813. | 후기 Hobson |
 
 ---
 
@@ -259,7 +271,7 @@ Whitmont & Perera는 *보상 기능을 가장 잘 충족시키는 쪽*을 선택
 - `humanities/attachment-theory-basics` — *성인 애착 이론* (Bowlby·Ainsworth·Hazan & Shaver 1987). 꿈 안의 *관계 행동 패턴*(추구·거리두기)을 안정·불안·회피·혼란 유형 *경향*으로 보조 해석. *진단 도구 X*. 융의 *주관 단계 해석*과 보완적.
 - `humanities/dream-content-research` — Hall & Van de Castle (1966) 코드북, Domhoff *continuity hypothesis*. 정신분석과 별개의 *경험 연구* 전통. 단일 꿈이 아닌 *시리즈* 분석 시 필수.
 - `humanities/korean-dream-interpretation-tradition` — 동일 꿈을 *한국 민속학* 관점에서 *전해지기도 하는* 풀이로 비교 시.
-- `humanities/relational-pattern-analysis` — 꿈 분석이 *관계 행동*으로 확장될 때 Gottman·EFT·NVC 가이드 적용 (단 *진단·치료 권고 금지*).
+- `humanities/attachment-theory-basics` §10 — 꿈 분석이 *관계 행동*으로 확장될 때 Gottman·EFT·NVC 가이드 적용 (단 *진단·치료 권고 금지*).
 
 조립 패턴: 꿈 해몽 앱이라면 `meta/dream-interpretation-prompt-engineering` 시스템 프롬프트에 두 학파(프로이트·융) 압축본 + 위 보조 스킬 압축본을 함께 캐시 대상으로 넣어 운용한다.
 
@@ -269,4 +281,6 @@ Whitmont & Perera는 *보상 기능을 가장 잘 충족시키는 쪽*을 선택
 
 | 일자 | 보강 내용 |
 |------|----------|
-| 2026-05-15 | §8 짝 스킬 cross-link 추가 (attachment-theory-basics·dream-content-research·korean-dream-interpretation-tradition·relational-pattern-analysis) |
+| 2026-05-15 | §8 짝 스킬 cross-link 추가 (attachment-theory-basics·dream-content-research·korean-dream-interpretation-tradition·관계 패턴 스킬) |
+| 2026-09-26 | §8 관계 패턴 스킬이 attachment-theory-basics §10으로 병합되어 링크 교체 |
+| 2026-09-26 | 1차 원문 대조 재검증 — Freud "two craftsmen" 번역본 귀속 정정(SE → Brill), Jung 보상 기능 인용문 출처 정정(CW 8 → *Man and His Symbols*), Plevin & Munro 결론 보완, Hobson 후기 서지 추가 |

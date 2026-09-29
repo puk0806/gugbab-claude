@@ -19,14 +19,14 @@ sources:
   - https://mobilegamer.biz/the-soft-launch-games-you-need-to-know-about/
   - https://unity.com/releases/unity-6/support
   - https://unity.com/blog/unity-6-3-lts-is-now-available
-verified: 2026-06-07
-status: APPROVED
+verified: 2026-09-26
+status: PENDING_TEST
 ---
 
 # Unity 2D 모바일 게임 기획서(GDD) 작성 방법론
 
 > 소스: 본문 frontmatter `sources` 참조 (Unity 공식 GDD 템플릿, Unity Learn, Game Developer, Kevuru Games, Ludo.ai, GameAnalytics, Deconstructor of Fun, Tenjin, Airflux, Mobile Gamer Biz, Unity 6 LTS 공식 페이지)
-> 검증일: 2026-06-07
+> 검증일: 2026-09-28 (재검증 시도, 이전 2026-09-26. 4.1절 하이브리드캐주얼 하위 장르 분류 기준의 원 출처를 Sensor Tower "State of Gaming 2026"으로 확인했으나, 공식 무료 페이지에 분류 기준 원문이 없어 본문 미수정·보류. 이전 재검증: Unity 6.0 LTS 지원 종료 임박(2026-10)으로 6.3 LTS 권장으로 갱신, 하이브리드 수익화 2026년 세부 장르별 비율 보강, 소프트런치 국가(캐나다·필리핀·인도네시아)는 변동 없음 확인)
 > 적용 범위: Unity 2D 캐주얼·하이퍼캐주얼·하이브리드 캐주얼 모바일 게임 (iOS/Android)
 
 ---
@@ -114,14 +114,14 @@ Unity 템플릿 "Art and Visuals" 섹션 기반:
 
 | 항목 | 권장 |
 |------|------|
-| 엔진 | Unity 6.0 LTS 또는 Unity 6.3 LTS (LTS 2027-12까지 지원, [Unity 공식](https://unity.com/blog/unity-6-3-lts-is-now-available)) |
+| 엔진 | Unity 6.3 LTS 권장 (2027-12까지 지원, [Unity 공식](https://unity.com/blog/unity-6-3-lts-is-now-available)). Unity 6.0 LTS는 2026-10 지원 종료 임박 — 신규 프로젝트는 6.3 LTS로 시작 |
 | 렌더 파이프라인 | URP(2D) 권장 — 모바일 성능·셰이더 그래프 활용 |
 | 타겟 fps | 60fps (저사양 30fps fallback) |
 | 빌드 사이즈 | iOS 200MB / Android APK 150MB 이하 권장 |
 | 최소 OS | iOS 15+, Android 8.0(API 26)+ |
 | SDK | Unity Ads / AdMob / IronSource 등 광고 미디에이션, Firebase Analytics, AppsFlyer/Adjust(어트리뷰션) |
 
-> Unity 6.0 LTS는 2024-10-17 글로벌 출시, 2년 지원 ([Unity Investor Relations](https://investors.unity.com/news/news-details/2024/Unity-6-Will-Release-Globally-October-17-2024-Unity-Announces-at-Annual-Unite-Developer-Conference/default.aspx)). Unity 6.3 LTS는 6.0 LTS 이후 첫 LTS로 2027-12까지 지원.
+> Unity 6.0 LTS는 2024-10-17 글로벌 출시, 2년 지원(2026-10 종료 예정) ([Unity Investor Relations](https://investors.unity.com/news/news-details/2024/Unity-6-Will-Release-Globally-October-17-2024-Unity-Announces-at-Annual-Unite-Developer-Conference/default.aspx)). Unity 6.3 LTS는 6.0 LTS 이후 첫 LTS로 2027-12까지 지원. 2026-09 기준 최신 릴리스는 Unity 6.6(2026-09-01, 비LTS), 다음 LTS는 6.7 LTS로 2026년 내 예정.
 
 ### 2.8 출시 로드맵 (Release Roadmap)
 
@@ -215,6 +215,8 @@ Unity 템플릿 "Art and Visuals" 섹션 기반:
 ```
 
 출처: [Tenjin Genre × Monetization Report](https://tenjin.com/blog/mobile-game-monetization-how-genre-impacts-growth/)
+
+> 주의(2026-09 갱신): 2026년 세부 벤치마크는 하위 장르별로 더 세분화됐다 — 하이브리드캐주얼 라이프스타일·퍼즐 IAP 59%/광고 41%, 스포츠·레이싱 IAP 71%/광고 29%, 액션·전략 IAP 82%/광고 18%. 위 4단계 결정 트리의 방향성(장르가 미드코어에 가까울수록 IAP 비중 증가)은 유지되나, 정확한 비율은 자사 데이터·최신 벤치마크로 재확인할 것.
 
 ### 4.2 광고 3종 + IAP 4종
 

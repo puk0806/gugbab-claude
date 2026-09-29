@@ -2,7 +2,7 @@
 skill: local-business-seo
 category: frontend
 version: v1
-date: 2026-06-04
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -18,7 +18,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `local-business-seo` |
 | 스킬 경로 | `.claude/skills/frontend/local-business-seo/SKILL.md` |
-| 검증일 | 2026-06-04 |
+| 검증일 | 2026-09-28 (재검증, 최초 2026-06-04) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 
@@ -152,6 +152,24 @@ status: APPROVED
 - verification-policy 분류: 라이브러리·패턴 정리형 스킬 — content test PASS = APPROVED 전환 가능
 - 최종 상태: APPROVED
 
+### 재검증 (2026-09-28)
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read 후 핵심 클레임 2개 1차 소스 WebFetch 재대조 + 실전 질문 2개 답변 검증
+
+**클레임 대조:**
+- LocalBusiness는 가장 구체적인 subtype 사용 권장: Google 공식 문서(developers.google.com/search/docs/appearance/structured-data/local-business) WebFetch 재확인 → "Use the most specific LocalBusiness sub-type possible; for example, Restaurant, DaySpa, HealthClub" 원문 그대로 유지. **VERIFIED, 변경 없음**
+- self-serving 리뷰(자기 사업체에 대한 aggregateRating/review) 비권장: 같은 공식 문서에서 "aggregateRating and review properties are only recommended for sites that capture reviews about other local businesses" 확인 — 2019 정책과 일치, 여전히 유효. **VERIFIED, 변경 없음**
+- GBP 카테고리 "1(기본)+9(추가)=10개" 수치: support.google.com/business/answer/7249669 WebFetch 재확인 결과 공식 문서는 여전히 정확한 숫자를 명시하지 않음(기본 카테고리 1개 필수 + "관련된 것만 선택" 권고만 확인) — 최초 검증 시점과 동일하게 "업계 통용 수치이나 Google 공식 명시 아님" 상태 유지. SKILL.md에 이미 정확한 출처 표기가 없으므로 `> 주의: GBP 카테고리 "10개" 수치는 Google 공식 도움말에 명시되지 않은 업계 통용값` 표기를 추가하는 것이 안전하나, 기존에도 같은 한계였고 실사용에 영향 없어 이번 재검증에서는 verification.md에 한계 기록으로 남김 (SKILL.md 본문 수정은 범위 밖 — 사용자 지정 재검증 절차이므로 상태 판정에만 반영)
+
+Q1. "카페 LocalBusiness Schema에서 aggregateRating 넣으면 지금도 별점이 안 나오나?"
+— PASS. 근거: SKILL.md §7이 Google 공식 문서 현재 버전과 정확히 일치("only recommended for sites that capture reviews about other local businesses").
+
+Q2. "LocalBusiness 대신 CafeOrCoffeeShop처럼 구체적인 타입 쓰라는 게 지금도 유효해?"
+— PASS. 근거: SKILL.md §2 "세부 유형 선택" 서술이 Google 공식 문서 현재 원문과 일치.
+
+**판정**: 핵심 클레임 2개 모두 공식 문서 현재 버전과 일치 확인, GBP 카테고리 수치는 기존과 동일하게 "공식 미명시·업계 통용" 한계 유지 → status APPROVED 유지 (내용 변경 없음).
+
 ---
 
 > 아래는 PENDING_TEST 초기 저장 시 기록된 예정 케이스 (참고용 보존)
@@ -234,3 +252,4 @@ LocalBusiness Schema에 별점(aggregateRating)을 넣었는데 Google 검색에
 |------|------|-----------|--------|
 | 2026-06-04 | v1 | 최초 작성 | skill-creator |
 | 2026-06-04 | v1 | 2단계 실사용 테스트 수행 (Q1 telephone+영업시간 형식 / Q2 aggregateRating 별점 미표시 원인 / Q3 다중 지점 페이지 구조·Schema) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-28 | v1 | 재검증: Google 공식 구조화 데이터 문서로 subtype 권장·self-serving 리뷰 제약 재확인(변경 없음), GBP 카테고리 "10개" 수치는 공식 미명시 한계 재확인. status APPROVED 유지 | 메인 세션 |

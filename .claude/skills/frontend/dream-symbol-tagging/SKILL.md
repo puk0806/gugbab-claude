@@ -18,7 +18,8 @@ description: >
 > - Anthropic Cookbook (Tool Use JSON 추출): https://github.com/anthropics/anthropic-cookbook/blob/main/tool_use/extracting_structured_json.ipynb
 > - KoNLPy 공식: https://konlpy.org/en/latest/morph/
 > - mecab-ko (Eunjeon Project): https://bitbucket.org/eunjeon/mecab-ko/
-> 검증일: 2026-09-25 (§6 Claude API JSON 강제 패턴 현행화)
+> - Anthropic TypeScript SDK 에러 클래스: https://github.com/anthropics/anthropic-sdk-typescript/blob/main/src/core/error.ts (`APIError`/`BadRequestError` 등, status 400→`BadRequestError` 분기)
+> 검증일: 2026-09-26 (§6-2 재시도·에러 처리 보강)
 
 ---
 
@@ -267,6 +268,15 @@ export async function llmExtractViaTool(dreamText: string): Promise<ExtractedSym
 > 주의: 강제 `tool_choice`(`{ type: "tool", name }` / `{ type: "any" }`)는 **Claude Sonnet 5·Haiku 4.5 등에서만 동작**하고, **Claude Opus 5.5(`claude-opus-5-5`)·Fable 5.1(`claude-fable-5-1`)에서는 400**(`tool_choice: type "tool" and "any" are not supported for this model.`)을 반환한다. 모델 교체에 안전하려면 위 6-1 또는 6-2 패턴을 쓴다.
 > 5 계열(Opus 5/5.5, Sonnet 5, Fable)은 `temperature`/`top_p`/`top_k` 지정 시 400이므로 추출 결정성을 샘플링 파라미터로 확보하려 하지 않는다.
 
+#### 6-2-1·6-2-2. 재시도·강제 tool_choice 에러 폴백 (부속 문서)
+
+`tool_choice: auto`는 호출을 보장하지 않고, 강제 `tool_choice`는 Opus 5.5·Fable 5.1에서 400을 반환한다 — 두 경우 모두 실전에서는 재시도·폴백 코드가 필요하다. 요지:
+
+- **미호출 재시도**: 최대 횟수(예: 2회)를 두고, 재시도마다 프롬프트로 도구 사용을 더 직접 지시한다. 상한을 넘기면 §6-3 fallback(룰 기반만 사용)으로 넘긴다.
+- **강제 tool_choice 400 폴백**: Anthropic TypeScript SDK는 400을 `Anthropic.BadRequestError`(`Anthropic.APIError` 서브클래스)로 던진다(`src/core/error.ts`, 공식 GitHub 확인). `try/catch`로 잡아 `instanceof Anthropic.BadRequestError`면 auto+재시도 경로로 폴백하고, 그 외 에러(인증·rate limit)는 그대로 전파한다.
+
+전체 코드(재시도 루프 함수 `llmExtractViaToolWithRetry`, 폴백 함수 `llmExtractForcedWithFallback`)는 `references/tool-choice-retry-fallback.md`에 있다.
+
 ### 6-3. JSON 깨짐 fallback
 
 Structured Outputs·strict 도구를 써도 schema 위반·누락 가능성은 0이 아니다 (`refusal`·`max_tokens` 중단, `auto`에서 도구 미호출, 클라이언트 측 범위 검증 실패 등).
@@ -468,6 +478,7 @@ export async function tagDreamEntry(text: string): Promise<DreamEntry["tagDetail
 - [ ] 상징 사전을 ID·카테고리·동의어 구조로 정의했는가
 - [ ] mecab-ko 또는 KoNLPy로 한국어 형태소 처리를 거치는가
 - [ ] Claude API 호출 시 Structured Outputs(`output_config.format`) 또는 `auto` + `strict: true` 도구로 JSON을 강제하는가 (강제 `tool_choice`는 Opus 5.5·Fable 5.1에서 400)
+- [ ] `auto`에서 도구 미호출 시 재시도 상한을 두고, 강제 `tool_choice` 400(`Anthropic.BadRequestError`)을 캐치해 auto 경로로 폴백하는가 (`references/tool-choice-retry-fallback.md`)
 - [ ] JSON 파싱 실패 시 fallback(룰 결과만 사용)이 동작하는가
 - [ ] 임베딩 사전은 사전 계산·캐시되는가
 - [ ] 사용자 텍스트가 길다면 문장 단위로 분할 임베딩 후 max-pooling 하는가

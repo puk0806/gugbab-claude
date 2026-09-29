@@ -19,7 +19,7 @@ description: >
 > - Cinemachine 3: https://docs.unity3d.com/Packages/com.unity.cinemachine@3.1/manual/
 > - Android 요구사항: https://docs.unity3d.com/6000.2/Documentation/Manual/android-requirements-and-compatibility.html
 >
-> 검증일: 2026-06-08
+> 검증일: 2026-09-28 (재검증, 이전 2026-09-26. Target API 36 유예 적용 대상 명확화 — 신규 앱은 유예 불가, 기존 앱 업데이트만 대상임을 Google Play Console 고객센터 공식 문서로 확인해 반영. 이전 재검증: Unity 6.6 출시(2026-09-01)·6.7 LTS 예정 반영, Unity 6.0 LTS 지원 종료 임박 명시, Google Play Target API 36 요구(2026-08-31 시행) 반영. Rigidbody2D.linearVelocity/Slide API는 변동 없음 확인)
 
 ---
 
@@ -34,6 +34,8 @@ description: >
 | Enterprise/Industry 연장 | 표준 + 1년 |
 
 **LTS 정책:** Unity 6의 각 마이너 버전(6.0 / 6.1 / 6.2 / 6.3 ...)은 모두 LTS로 출시되며 2년간 패치를 받는다. 신규 프로젝트는 가능한 최신 6.x LTS를 사용한다.
+
+> 주의(2026-09-26 갱신): 2026-09-01 Unity 6.6(비LTS, 신규 프로젝트 권장 최신 기능 버전)이 출시됐고 다음 LTS인 **6.7 LTS**가 2026년 내 예정이다. **Unity 6.0 LTS는 2026-10 지원 종료 임박** — 신규·진행 중 프로젝트는 6.3 LTS(2027-12까지) 사용을 권장한다.
 
 ---
 
@@ -246,10 +248,11 @@ Unity 6 권장 Cinemachine은 **3.x 메이저**. 2.x에서 클래스명이 변�
 | Scripting Backend | **IL2CPP** |
 | Target Architectures | **ARMv7 ❌ + ARM64 ✅** (ARM64 단독이 빌드 사이즈 ↓) |
 | Minimum API Level | **API Level 23 (Android 6.0)** 이상 (Unity 6 공식 최소) |
-| Target API Level | 최신 (35/36 지원) |
+| Target API Level | **API 36 (Android 16) 필수** — Google Play는 2026-08-31부터 신규 앱·업데이트에 API 36 이상을 요구. **유예(2026-11-01까지)는 신규 앱에는 적용되지 않으며, 이미 게시된 기존 앱을 업데이트할 계획이 있는 경우에만 Play Console Policy status 페이지에서 신청 가능**(출처: Google Play Console 고객센터 "Target API level requirements for Google Play apps") |
 | Graphics API | Vulkan + OpenGL ES 3.0 (자동 선택) |
 
-> 주의: 사용자 입력에 'API Level 26'이 명시되었으나 **Unity 6 공식 최소 지원은 API 23**이다. Google Play 정책상 신규 앱은 최신 Target API가 필수이므로 Target은 최신으로 설정한다.
+> 주의: 사용자 입력에 'API Level 26'이 명시되었으나 **Unity 6 공식 최소 지원은 API 23**이다(Minimum API Level과 Target API Level은 별개 — Minimum은 23 유지 가능, Target은 아래 Google Play 요구사항을 따라야 한다).
+> 주의(2026-09 갱신): Google Play는 2026-08-31부터 신규 앱·기존 앱 업데이트에 **Target API 36(Android 16) 이상**을 요구한다(기존 앱 유지는 API 35 이상). **마감 연장(2026-11-01까지)은 신규 앱 제출에는 적용되지 않는다** — 이미 게시된 앱을 상위 target API로 업데이트할 계획이 있는 경우에만 Play Console Policy status 페이지에서 신청 가능하다.
 
 ### 8-3. iOS
 

@@ -16,13 +16,13 @@ disable-model-invocation: true
 > - https://securitylab.github.com/resources/github-actions-preventing-pwn-requests/
 > - https://github.blog/changelog/2026-06-18-safer-pull_request_target-defaults-for-github-actions-checkout/
 >
-> 검증일: 2026-08-11
+> 검증일: 2026-09-28 (최초 2026-04-29 · 재검증 08-11, 09-28)
 
-> 주의: 이 문서는 2026-08 기준 최신 메이저 버전으로 작성되었습니다.
+> 주의: 이 문서는 2026-09-28 기준 최신 메이저 버전으로 작성되었습니다.
 > `actions/checkout@v7`(7.0.1, 2026-07-20), `actions/cache@v6`(6.1.0), `actions/upload-artifact@v7`(7.0.1),
 > `actions/download-artifact@v8`(8.0.1), `actions/setup-node@v7`(7.0.0), `actions/github-script@v9`(9.0.0),
-> `dorny/paths-filter@v4`(4.0.3), `pnpm/action-setup@v6`(6.0.10), `peter-evans/create-pull-request@v8`(8.1.1),
-> `thollander/actions-comment-pull-request@v3`(3.0.1) 기준입니다.
+> `dorny/paths-filter@v4`(4.0.3), `pnpm/action-setup@v6`(6.1.0), `peter-evans/create-pull-request@v8`(8.1.1),
+> `thollander/actions-comment-pull-request@v3`(3.0.1) 기준입니다. (09-28: GitHub Releases API 전수 재확인 — pnpm/action-setup만 6.0.10→6.1.0 패치, 나머지 전부 메이저·패치 변경 없음)
 
 > **보안 필독 — actions/checkout v7 기본값 변경 (2026-06-18):** `pull_request_target` 및
 > `workflow_run`(pull_request 계열 이벤트 트리거) 워크플로우에서 **포크 PR 코드 체크아웃이 기본 차단**됩니다.

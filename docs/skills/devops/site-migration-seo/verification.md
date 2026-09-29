@@ -1,8 +1,8 @@
 ---
 skill: site-migration-seo
 category: devops
-version: v1
-date: 2026-06-02
+version: v2
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `site-migration-seo` |
 | 스킬 경로 | `.claude/skills/devops/site-migration-seo/SKILL.md` |
-| 검증일 | 2026-06-02 |
-| 검증자 | skill-creator (자동) |
-| 스킬 버전 | v1 |
+| 검증일 | 2026-09-28 (최초 2026-06-02, 2026-09-28 재검증) |
+| 검증자 | skill-creator (자동) → Claude (Sonnet 5, 2026-09-28 재검증) |
+| 스킬 버전 | v2 |
 
 ---
 
@@ -105,8 +105,8 @@ DISPUTED / UNVERIFIED: 없음
 
 ### 4-4. Claude Code 에이전트 활용 테스트
 
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-06-02, 3/3 PASS)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (agent content test 3/3 PASS)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-06-02, 3/3 PASS / 2026-09-28 재검증 정정분 재테스트 2/2 PASS)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (agent content test 누적 5/5 PASS)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (보완 불필요 — 모든 근거 SKILL.md에 명시되어 있음)
 
 ---
@@ -158,6 +158,53 @@ DISPUTED / UNVERIFIED: 없음
 
 ---
 
+### [2026-09-28] 재검증 — GSC International Targeting 폐지·Change of Address 도메인 변형 갱신 반영
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임 3개를 1차 소스와 대조 (§7 개선 필요 사항에 남아있던 "GSC International Targeting deprecated 여부 확인 권장" 미결 항목 포함)
+
+**클레임 대조 결과**:
+1. §8의 "GSC > Legacy tools > International Targeting 보고서로 hreflang 에러 모니터링" → **DISPUTED → 수정 반영**: 해당 보고서는 2022-09-22 완전 폐지·제거됨 (Google 공식: "little value for the ecosystem, and is no longer supported"). 국가 타겟팅 수동 설정도 폐지, ccTLD·hreflang·서버 위치·콘텐츠 신호로 자동 판단으로 전환. SKILL.md §8을 "보고서 자체가 존재하지 않으니 외부 크롤러·검증 도구로 hreflang 모니터링" 서술로 정정 (소스: https://support.google.com/webmasters/answer/12474899 , https://searchengineland.com/google-search-console-to-remove-international-targeting-report-387477)
+2. Change of Address 도구 — 도메인 변경 시 이전 도메인의 www/non-www·서브도메인 변형을 모두 Search Console에 검증하고 각각 Change of Address를 제출해야 한다는 권장사항이 2026년 공식 가이드에 추가됨 → **신규 확인 사항 → SKILL.md §6에 추가 반영** (소스: https://support.google.com/webmasters/answer/9370220 — "다른 도메인으로 이동 시 이전 도메인의 모든 서브도메인 변형(www 포함/미포함)에 대해 이 도구를 사용해야 하며 Search Console에서 모두 확인되어야 한다", https://developers.google.com/search/docs/crawling-indexing/site-move-with-url-changes 최종 업데이트 2026-08-20 확인)
+3. Change of Address 신청 후 180일간 신호 이전 + 알림 표시, 180일 후 Google이 신·구 사이트 관계를 더 이상 인식하지 않음 → VERIFIED, 변경 없음 (Google Search Central 커뮤니티 공식 답변 다수 교차 확인)
+
+**실전 질문 재검증**:
+- Q1. "다국어 사이트 이전 후 hreflang 에러를 GSC에서 어떻게 확인하나?" → 정정 전에는 SKILL.md가 존재하지 않는 보고서를 안내했을 것 — 정정 후 SKILL.md §8 "외부 크롤러·검증 도구" 서술로 PASS
+- Q2. "example.com에서 newdomain.com으로 이전하는데 www.example.com도 따로 등록해야 하나?" → SKILL.md §6 "구 도메인의 www/non-www·서브도메인 변형까지 전부 검증 후 각각 Change of Address 제출" 근거로 PASS (정정 전에는 SKILL.md에 이 내용이 없어 FAIL 가능성 있었음)
+
+**재검증 최종 판정**: DISPUTED 1건(International Targeting 보고서 폐지) 수정 반영 + 신규 권장사항 1건(도메인 변형 전체 등록) 추가 반영. 나머지 클레임은 VERIFIED. **status PENDING_TEST 전환** (메인이 이후 skill-tester 재테스트 수행 — 정정된 §6·§8을 겨냥한 질문 포함 필요).
+
+---
+
+### [2026-09-28] skill-tester 2단계 재테스트 — §6 도메인 변형·§8 International Targeting 폐지 정정분 검증
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (2개 질문, 병렬 실행)
+**수행 방법**: SKILL.md Read 후 2026-09-28 재검증 정정분(§6 도메인 변형 전체 등록, §8 International Targeting 보고서 폐지)을 겨냥한 실전 질문 2개 답변, 근거 섹션 및 anti-pattern 회피 확인
+
+**Q1. example.com→newdomain.com 이전 시 www/서브도메인 변형도 개별 등록해야 하나?**
+- ✅ PASS
+- 근거: SKILL.md §6 "D+14: GSC Change of Address" 1번·5번 항목 + "주의 (2026 갱신)" 문장
+- 상세: "구 도메인의 www/non-www·서브도메인 변형까지 전부 검증", "검증된 구 도메인 변형마다 개별적으로 Change of Address 제출" 정확 인용. `example.com` 하나만 등록하면 불충분하다는 점, 각 변형을 개별 소유권 검증 후 개별 제출해야 한다는 절차를 정확히 답변. gap: 서브도메인 변형을 어떻게 전부 식별(발견)하는지 방법론은 §3-1(인벤토리)에 없음(선택 보강)
+
+**Q2. 다국어 이전 후 hreflang 에러를 GSC International Targeting 보고서에서 확인 가능한가?**
+- ✅ PASS
+- 근거: SKILL.md §8 "다국어 사이트 이전 (hreflang)" 문단
+- 상세: "International Targeting 보고서는 2022-09-22 완전 폐지되어 더 이상 존재하지 않는다"를 정확히 인용해 "찾을 수 없다"고 정확히 답변. 대안(Screaming Frog·Ahrefs 등 외부 크롤러 또는 hreflang 검증 전용 도구)도 정확히 제시. 정정 전이었다면 존재하지 않는 보고서로 유도했을 질문에서 옛 정보가 남지 않음을 확인
+
+### 발견된 gap (있으면)
+
+- §3-1 인벤토리 섹션에 도메인의 www/non-www·서브도메인 변형을 "어떻게 식별(발견)하는지" 방법론이 없음 — §6은 "전부 검증해야 한다"고만 하고 발견 방법은 미기술 (선택 보강)
+- §8 "sitemap/hreflang 검증 전용 도구"의 구체적 도구명이 나열되어 있지 않음 (선택 보강)
+
+### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: SEO 운영 체크리스트/워크플로우 스킬 — 정확성이 공식 문서(Google Search Central·GSC 지원 문서) 대조로 검증 가능한 유형이며 실제 도메인 이전 실행 결과물로만 검증 가능한 항목은 아님. 2026-06-02 최초 승인 시점과 동일하게 content test PASS로 APPROVED 가능 카테고리 유지
+- 최종 상태: APPROVED
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -165,8 +212,8 @@ DISPUTED / UNVERIFIED: 없음
 | 내용 정확성 | ✅ (10개 핵심 클레임 모두 VERIFIED) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-02) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ 누적 5/5 PASS (2026-06-02 3/3 + 2026-09-28 재테스트 2/2 — §6·§8 정정분 반영 확인) |
+| **최종 판정** | **APPROVED** (2026-09-28 skill-tester 재테스트 2/2 PASS — §6 도메인 변형·§8 International Targeting 폐지 정정분 검증 완료) |
 
 ---
 
@@ -175,7 +222,9 @@ DISPUTED / UNVERIFIED: 없음
 - [✅] skill-tester로 에이전트 활용 테스트 수행 (2026-06-02, 3/3 PASS)
 - [ ] 트래픽 회복 곡선 §7-2 표는 일반 보고치 — 사용 사례별 편차가 큰 만큼 실제 활용 시 사이트 규모 컨텍스트 추가 검증 (선택 보강)
 - [ ] hreflang 영역은 별도 i18n-seo 스킬로 확장 가능 (이미 i18n-seo 스킬 존재 — cross-link 강화 권장)
-- [ ] GSC International Targeting 보고서의 GSC 신버전 deprecated 여부 추후 확인 권장 (선택 보강)
+- [✅] (2026-09-28 완료) GSC International Targeting 보고서 deprecated 여부 확인 → 2022-09-22 완전 폐지 확인, SKILL.md §8 정정 반영
+- [✅] (2026-09-28 완료) SKILL.md §6에 추가한 "도메인 변형 전체 등록" 권장사항을 겨냥한 skill-tester 재테스트 → 2/2 PASS, status APPROVED 유지
+- [❌] §3-1 인벤토리에 www/서브도메인 변형 식별(발견) 방법론 미기술 (선택 보강 — 차단 요인 아님)
 
 ---
 
@@ -185,3 +234,5 @@ DISPUTED / UNVERIFIED: 없음
 |------|------|-----------|--------|
 | 2026-06-02 | v1 | 최초 작성 — 공식 문서 5종 + Mueller 2건 교차 검증 완료 | skill-creator |
 | 2026-06-02 | v1 | 2단계 실사용 테스트 수행 (Q1 WordPress→Next.js+도메인 이전 / Q2 D+14 트래픽 40% 진단 / Q3 동시 변경 가부) → agent content test 3/3 PASS, APPROVED 전환 | skill-tester (API 529로 메인이 대조) |
+| 2026-09-28 | v2 | 재검증 — GSC International Targeting 보고서 완전 폐지(2022-09-22) 확인 후 §8 정정, Change of Address 도메인 변형(www/non-www/서브도메인) 전체 등록 신규 권장사항을 §6에 추가 반영. status APPROVED → PENDING_TEST (재테스트 필요) | Claude (Sonnet 5) |
+| 2026-09-28 | v2 | 2단계 실사용 재테스트 수행 (Q1 도메인 변형 개별 등록 / Q2 International Targeting 보고서 폐지·대안) → 2/2 PASS, APPROVED 전환 | skill-tester |

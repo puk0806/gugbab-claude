@@ -7,7 +7,7 @@ disable-model-invocation: true
 # 번들링 & 컴파일러 패턴
 
 > 소스: https://tsup.egoist.dev | https://vitejs.dev | https://nextjs.org/docs | https://react.dev/learn/react-compiler
-> 검증일: 2026-06-20
+> 검증일: 2026-09-26
 
 ---
 
@@ -69,18 +69,30 @@ export default defineConfig({
 
 ### package.json exports 설정
 
+> **주의 (2026-09-26 실측, tsup 8.5.1):** `outExtension`의 `js` 오버라이드(`.mjs`/`.cjs`)는 **dts 확장자에 전파되지 않는다.** dts 확장자는 항상 package.json `"type"` 필드 기본 규칙(무/`"commonjs"` → ESM `.d.mts` / CJS `.d.ts`, `"module"` → ESM `.d.ts` / CJS `.d.cts`)을 따른다. `outExtension`에 `dts` 속성을 함께 반환해도 적용되지 않는 tsup 자체 제약(egoist/tsup#939, 미해결)이 있어, 위 "다중 Entry 패턴"처럼 `js`만 `.mjs`/`.cjs`로 강제한 경우 실제 산출물은 `index.mjs` + `index.cjs` + `index.d.mts`(ESM용) + `index.d.ts`(CJS용)가 된다 — exports는 조건별로 타입 파일을 분리해야 한다. 아래 exports 예시는 이 불일치를 그대로 반영한 결과다 — `.d.ts` 하나로 겸용하지 않고 `import`는 `.d.mts`, `require`는 `.d.ts`로 조건별 분리했다.
+
 ```json
 {
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.cjs"
+      }
     },
     "./utils": {
-      "types": "./dist/utils.d.ts",
-      "import": "./dist/utils.mjs",
-      "require": "./dist/utils.cjs"
+      "import": {
+        "types": "./dist/utils.d.mts",
+        "default": "./dist/utils.mjs"
+      },
+      "require": {
+        "types": "./dist/utils.d.ts",
+        "default": "./dist/utils.cjs"
+      }
     }
   },
   "main": "./dist/index.cjs",
@@ -209,19 +221,21 @@ export default defineConfig({
 ### React Compiler 활성화 시 변경되는 것
 
 ```tsx
-// ❌ React Compiler 없이: 수동 최적화 필요
+// ❌ React Compiler 없이: 수동 최적화 필요 (items.sort()는 제자리 변경 — 아래 주의 참고)
 const sortedItems = useMemo(
-  () => items.sort((a, b) => a.name.localeCompare(b.name)),
+  () => [...items].sort((a, b) => a.name.localeCompare(b.name)),
   [items]
 )
 const handleClick = useCallback(() => onSelect(id), [onSelect, id])
 const MemoizedComponent = memo(MyComponent)
 
 // ✅ React Compiler 활성화 시: 자동 처리됨 (수동 최적화 제거 가능)
-const sortedItems = items.sort((a, b) => a.name.localeCompare(b.name))
+const sortedItems = items.toSorted((a, b) => a.name.localeCompare(b.name)) // ES2023: Node 20+ / 브라우저 2023-07~. 구형 타깃은 [...items].sort(...) 사용
 const handleClick = () => onSelect(id)
 // memo 제거 가능
 ```
+
+> `items.sort()`는 배열을 제자리(in-place)에서 변경한다. `items`가 props나 state로 들어온 값이면 렌더 중 입력을 직접 변경하는 것이므로 Rules of React("컴포넌트·훅은 순수해야 한다")를 위반하고, React Compiler의 메모이제이션 전제를 깨 버그를 유발할 수 있다 — 항상 `toSorted()` 또는 `[...items].sort()`로 복사본을 정렬해야 한다.
 
 ### React Compiler 제약사항
 
@@ -240,6 +254,25 @@ function GoodComponent({ condition }: { condition: boolean }) {
   return condition ? <div>{state}</div> : null
 }
 ```
+
+### React Compiler 사용 중에도 수동 메모가 필요한 경우
+
+> 2026-09-26 구 `frontend/performance` 스킬에서 흡수 (소스: https://react.dev/learn/react-compiler)
+
+| 케이스 | 이유 |
+|--------|------|
+| Rules of React 위반 코드 | Compiler가 감지하면 해당 컴포넌트 최적화를 건너뜀 — 수동 메모가 그대로 유효 |
+| `useEffect` 의존성 정밀 제어 | 의존성 안정화가 필요한 값은 `useMemo`로 직접 고정 |
+| `'use no memo'` opt-out 구간 | 의도적으로 Compiler에서 제외한 코드는 자동 메모가 없음 |
+
+```tsx
+function SpecialComponent() {
+  'use no memo'
+  // 이 컴포넌트는 Compiler 대상이 아니므로 필요 시 useMemo/useCallback 수동 작성
+}
+```
+
+> **React Compiler는 메모이제이션(리렌더링 방지)만 담당한다.** 코드 스플리팅·가상화·번들 최적화는 별개 영역이라 Compiler 도입 후에도 그대로 필요하다. 리렌더 비용 측정은 `<Profiler id onRender>`의 `actualDuration`(실제 커밋 렌더 시간)과 `baseDuration`(메모 없이 렌더 시 추정치)을 비교한다.
 
 ---
 

@@ -17,6 +17,12 @@
 ```
 
 > 주의: Swiper 9 이전의 `Lazy` 모듈 + `data-src` 패턴은 완전히 제거되었습니다. `swiper-lazy-preloader` 클래스만 남아 있으며, 실제 lazy 로딩은 브라우저 네이티브 기능에 위임합니다.
+> 다만 Swiper는 `loading="lazy"` 이미지에 `load` 이벤트 리스너를 붙여 프리로더 표시를 자동 처리합니다 — 커스텀 lazy 로딩 로직과 충돌하면 v14.2.0부터 `lazyPreload: false`로 이 내장 리스너 자체를 끌 수 있습니다.
+
+```tsx
+// 커스텀 lazy 로딩 로직을 직접 구현할 때 (v14.2.0+)
+<Swiper lazyPreload={false}>
+```
 
 ### Virtual Slides (대량 슬라이드)
 

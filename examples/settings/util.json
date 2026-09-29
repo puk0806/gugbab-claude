@@ -81,11 +81,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/bash-guard.js"
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/bash-guard.js"
           },
           {
             "type": "command",
-            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/auto-approve.js"
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/auto-approve.js"
           }
         ]
       },
@@ -94,11 +94,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/parry.js"
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/parry.js"
           },
           {
             "type": "command",
-            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/protect-secrets.js"
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/protect-secrets.js"
           }
         ]
       },
@@ -107,7 +107,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/protect-secrets.js"
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/protect-secrets.js"
           }
         ]
       }
@@ -118,7 +118,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/bash-guard.js"
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/bash-guard.js"
           }
         ]
       }
@@ -128,21 +128,15 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-start.js"
-          }
-        ]
-      }
-    ],
-    "InstructionsLoaded": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/instructions-loaded.js"
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-start.js"
           },
           {
             "type": "command",
-            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/staleness-check.js"
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/instructions-loaded.js"
+          },
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/staleness-check.js"
           }
         ]
       }
@@ -152,7 +146,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/cc-notify.js"
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-export.js"
+          },
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/cc-notify.js"
           }
         ]
       }
@@ -163,11 +161,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/bash-guard.js"
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/bash-guard.js"
           },
           {
             "type": "command",
-            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/auto-approve.js"
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/auto-approve.js"
           }
         ]
       }

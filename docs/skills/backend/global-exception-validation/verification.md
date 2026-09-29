@@ -2,7 +2,7 @@
 skill: global-exception-validation
 category: backend
 version: v1
-date: 2026-04-22
+date: 2026-09-26 (최초: 2026-04-22)
 status: APPROVED
 ---
 
@@ -35,7 +35,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `global-exception-validation` |
 | 스킬 경로 | `.claude/skills/backend/global-exception-validation/SKILL.md` |
-| 검증일 | 2026-04-22 |
+| 검증일 | 2026-04-22 (재검증: 2026-09-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 | 버전 기준 | Spring Boot 2.x(`javax`) / Spring Boot 3.x(`jakarta`) 병기, Hibernate Validator 6.x / 8.x |
@@ -151,6 +151,23 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+### 2026-09-26 — 재검증 (60일 초과 정기 재검증)
+
+**수행일**: 2026-09-26
+**수행 방법**: SKILL.md + REFERENCE.md 전체 Read, WebSearch로 Spring Boot 버전 상태 재확인, SKILL.md 자체 근거로 질문 2개 재답변.
+
+**Q1. Spring Boot 4.1(2026-09 기준 최신)에서 `@Valid` 검증 실패 시 공통 JSON 에러 응답을 만들 수 있는가?**
+- PASS(재검증). SKILL.md의 `@RestControllerAdvice` + `MethodArgumentNotValidException` 핸들러 패턴은 Spring Framework 6.x API 그대로이며 Spring Boot 4.x에서도 변경 없음을 WebSearch로 확인(Spring Boot 4.1.1이 2026-08-21 최신, 4.0/4.1만 API 시그니처 변경 없이 유지).
+
+**Q2. 지금 이 스킬을 신규 프로젝트에 적용해도 되는가(EOL 버전 아닌가)?**
+- PASS(재검증). SKILL.md 상단 주의문이 3.5.x EOL(2026-06-30)·4.0.x/4.1.x 활성 지원으로 갱신되어 "3.4.x EOL, 3.5.x/4.0.x 활성"이라는 구 정보가 정정됨. 구조적 내용(ErrorCode enum, BusinessException, Bean Validation 매핑)은 버전 무관하게 유효.
+
+**재검증 결론**: 핵심 API·코드 패턴 변경 없음(VERIFIED 유지). Spring Boot 버전 생애주기 정보만 갱신 필요 확인 → SKILL.md 상단 주의문 갱신 완료. status 변경 없음(APPROVED 유지).
+
+---
+
+### 2026-04-22 — 원 수행 기록
 
 **수행일**: 2026-04-22
 **수행 방법**: general-purpose 에이전트에게 SKILL.md만 Read한 뒤 2개 실전 질문 답변.
@@ -273,3 +290,4 @@ jakarta 네임스페이스 기준.
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
 | 2026-04-22 | v1 | 최초 작성 (SB 2.x/3.x 병기, 11개 클레임 교차 검증 완료) | skill-creator |
+| 2026-09-26 | v1 | 재검증 — Spring Boot 버전 상태 갱신(3.5.x 2026-06-30 EOL, 활성 지원 4.0.x/4.1.x 최신 4.1.1), 핵심 API(@RestControllerAdvice/Bean Validation) 변경 없음 확인 | 메인 세션 |

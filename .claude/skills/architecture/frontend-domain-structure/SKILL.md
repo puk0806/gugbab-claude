@@ -28,9 +28,9 @@ description: 대규모 React/Next.js 프로젝트를 layer-first(types/·utils/�
 > - dependency-cruiser https://github.com/sverweij/dependency-cruiser
 > - Kent C. Dodds — Colocation https://kentcdodds.com/blog/colocation
 > - Adam Tornhill, "Software Design X-Rays" (Pragmatic Bookshelf, 2018) / code-maat https://github.com/adamtornhill/code-maat
-> 검증일: 2026-08-26
+> 검증일: 2026-09-26 (30~60일 주기 재검증, 최초 검증 2026-08-26 — 재검증 결과 실질 변경 없음)
 
-> 기준 버전: **FSD 스펙 2.1** (2024-11-13 릴리즈) / **Next.js 16.3.3** (문서 기준일 2026-07-21) / **Turborepo 2.10.12** / React 18·19
+> 기준 버전: **FSD 스펙 2.1** (2024-11-13 릴리즈, 변경 없음) / **Next.js 16.3.6** (문서 기준일 2025-12-19) / **Turborepo 2.10.12** / React 18·19
 
 > 이 스킬은 **폴더 구조와 의존 방향**을 다룬다. "도메인이 무엇인가"(유비쿼터스 언어·서브도메인·바운디드 컨텍스트·컨텍스트 맵)는 중복 서술하지 않고 `architecture/ddd` 스킬을 참조한다. 프론트엔드의 slice/feature 경계는 **바운디드 컨텍스트의 UI측 투영**으로 이해하면 된다.
 

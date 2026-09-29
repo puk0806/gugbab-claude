@@ -1,8 +1,8 @@
 ---
 skill: palmistry-limitations
 category: humanities
-version: v1
-date: 2026-09-10
+version: v2
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `palmistry-limitations` |
 | 스킬 경로 | `.claude/skills/humanities/palmistry-limitations/SKILL.md` |
-| 검증일 | 2026-09-10 |
-| 검증자 | skill-creator (Claude Code) |
-| 스킬 버전 | v1 |
+| 검증일 | 2026-09-28 (최초 2026-09-10, 2026-09-28 재검증) |
+| 검증자 | skill-creator (Claude Code) → Claude (Sonnet 5, 2026-09-28 재검증) |
+| 스킬 버전 | v2 |
 | 소스 유형 | 문화사·방법론 + 경험 연구 원논문 + 규제 정책·법령 (혼합형) |
 | 버전 기준 | Apple App Review Guidelines / Google Play Developer Policy 2026-09-10 접근 시점, 한국 법령은 국가법령정보센터 현행 조문 |
 
@@ -235,6 +235,27 @@ vocal.media, explainthat.org, 각종 손금·운세 앱 마케팅 블로그(kauc
 
 ---
 
+### [2026-09-28] 재검증(2차) — Apple 가이드라인 조항 번호 재확인
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임 3개(Apple 가이드라인 조항 번호 우선)를 1차 소스로 재대조
+
+**클레임 대조 결과**:
+1. Apple App Review Guideline **1.1.6** — "False information and features... Stating that the app is 'for entertainment purposes' won't overcome this guideline" → **VERIFIED** (developer.apple.com/app-store/review/guidelines/ 원문 재확인, 조항 번호·문구 모두 변경 없음)
+2. Apple App Review Guideline **4.3** — "Spam" 섹션, 4.3(b)에 "dating, flashlight, sound effects, wallpaper, simple timers, and fortune telling, are well established on the App Store... will not accept new submissions unless they offer a meaningfully different or improved experience" → **VERIFIED** (조항 번호·문구 모두 변경 없음, fortune telling 포화 카테고리 서술 그대로 유지)
+3. UF Health "Single palmar crease" — "about 1 out of 30 people", "Males are twice as likely as females" → **VERIFIED** (원문 축자 재확인, 변경 없음)
+4. (부가 확인) Indian Psychiatric Society DMIT 입장문(2019-09-25) — "DMIT is not based on scientific evidence", "not useful for intelligence testing, brain lobe function testing, and predicting future behavior", "urges parents and schools to stay away from such ill-founded practices" → **VERIFIED** (PDF 원문 직접 판독, 변경 없음. 참고: 문서 실제 일자는 2019-09-25 표기이며 verification.md 기존 "2022" 표기는 WordPress 업로드 연도를 서지 연도로 오인한 것 — §3 조사 소스 표는 "2022"를 "업로드/접근 연도"로 한정하고 문서 자체 일자는 2019-09-25임을 아래에 별도 기록)
+
+**보강(ADD)·축소**: 없음. 다만 소스 표(§3) "Indian Psychiatric Society, DMIT 입장문 ... 2022"의 "2022"가 문서 발행일이 아니라 업로드 URL 경로(wp-content/uploads/2022/04/)의 연도임을 명확히 하기 위한 각주 필요성을 발견 — 사실관계 오류는 아니므로 §7 개선 필요 사항에 선택 보강으로만 기록(본문 정정 불필요, 문서 자체가 "Dt-25-Sep-2019"로 자기 서지를 명시하고 있어 SKILL.md 본문은 애초에 연도를 인용하지 않음).
+
+**실전 질문 재검증**:
+- Q1. "'재미로 보세요' 문구만 달면 생명선-수명 예측 기능을 출시해도 되나?" → SKILL.md §5 주의 박스(1.1.6 원문) 근거로 PASS (조항 번호·문구 불변 확인)
+- Q2. "손금 앱을 신규로 스토어에 낼 때 리스크는?" → SKILL.md §5 주의 박스(4.3 fortune telling 포화 카테고리) 근거로 PASS (조항 번호 불변 확인)
+
+**재검증 최종 판정**: 클레임 4건 모두 VERIFIED, 조항 번호·원문 변경 없음 → status **APPROVED 유지**
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -244,7 +265,8 @@ vocal.media, explainthat.org, 각종 손금·운세 앱 마케팅 블로그(kauc
 | 실용성 | ✅ |
 | 교차 검증 | ✅ (14 클레임 — VERIFIED 11 / DISPUTED 2 / UNVERIFIED 1, 전부 본문 반영) |
 | 에이전트 활용 테스트 | ✅ (2026-09-10, general-purpose 3문항 — 3/3 PASS. 2026-09-11 v2 축소 후에도 Q1 소재 범위 판정(§5)·Q2 사이비 과학화 차단(§4)·Q3 리라이팅(§5 대조표) 근거 섹션 유효) |
-| **최종 판정** | **APPROVED** |
+| 재검증(2026-09-28) | ✅ (Apple 1.1.6/4.3 조항 번호·원문, UF Health STPC 수치, IPS DMIT 입장문 4건 1차 소스 재대조 — 전부 VERIFIED, 변경 없음) |
+| **최종 판정** | **APPROVED** (2026-09-28 재검증 유지) |
 
 ---
 
@@ -256,8 +278,9 @@ vocal.media, explainthat.org, 각종 손금·운세 앱 마케팅 블로그(kauc
 - [❌] Wilson & Mather(1974) 원문 확보 — 차단 요인 아님, 선택 보강 (현재 2019 논문 경유 2차 인용으로 이미 명시적 표기됨)
 - [❌] Newrick(1990) 원문(JRSM) 확보 — 차단 요인 아님, 선택 보강 (403/쿠키 차단, 서지사항은 이미 확보됨)
 - [❌] Google SQRG PDF · IPS 입장문 PDF 본문 직접 파싱 재시도 — 차단 요인 아님, 선택 보강 (현재 검색 요약 기반으로도 핵심 클레임 검증 완료)
-- [❌] 스토어 정책은 개정이 잦음 — Apple/Google 조항 번호를 6개월 주기로 재확인 — 차단 요인 아님, 정기 유지보수 성격의 후속 작업
+- [✅] (2026-09-28 완료) 스토어 정책 조항 번호 재확인 — Apple 1.1.6/4.3 원문·번호 모두 불변 확인. 다음 재확인은 6개월 후 권장
 - [❌] README.md / docs/skills/README.md 반영 — 이번 작업에서 수정 금지로 지정됨. 차단 요인 아님, 별도 정리 작업에서 일괄 반영 필요
+- [❌] §3 조사 소스 표의 "Indian Psychiatric Society, DMIT 입장문 ... 2022" 표기에 "2022는 PDF 업로드 URL 연도이며 문서 자체 서지는 Position Statement-4/2019-09-25"라는 각주 추가 — 선택 보강(차단 요인 아님, SKILL.md 본문은 연도를 인용하지 않아 사실관계 오류 없음)
 
 ---
 
@@ -268,3 +291,5 @@ vocal.media, explainthat.org, 각종 손금·운세 앱 마케팅 블로그(kauc
 | 2026-09-10 | v1 | 최초 작성 — 문화사·선/구 명칭 체계·근거 부재(4개 연구)·피부문리학 구분·엔터테인먼트 프레이밍 강제·면책 템플릿·LLM 가드레일·손 사진 개인정보 규칙. 14개 클레임 교차 검증 | skill-creator |
 | 2026-09-10 | v1 | 2단계 실사용 테스트 수행 (Q1 금지 기능 판정 / Q2 사이비 과학화 차단 / Q3 리라이팅 능력) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-09-11 | v2 | 캐주얼 앱 방향으로 안전 계열 섹션 축소·삭제 자산 참조 제거 — 구 §5 하드 블록 표·§6 면책 템플릿 3종·§7 스토어/법 규제 체크리스트·§9 LLM 가드레일(에스컬레이션 포함)을 "§5 엔터테인먼트 프레이밍 한 줄 고지"로 통합, §8 개인정보는 최소화 규칙 4행으로 압축. 위기 자원 스킬·운세 윤리 스킬 참조 제거, 의료법·표시광고법·Google Play 소스 삭제. 문화사·어휘·연구 이력·피부문리학 구분은 그대로 | main session |
+| 2026-09-25 | v2 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |
+| 2026-09-28 | v2 | 재검증(2차) — Apple 1.1.6/4.3 조항 번호·원문 developer.apple.com에서 재확인(변경 없음), UF Health STPC 수치·IPS DMIT 입장문 원문 재대조(변경 없음). 정정·보강·축소 없음, status APPROVED 유지 | Claude (Sonnet 5) |

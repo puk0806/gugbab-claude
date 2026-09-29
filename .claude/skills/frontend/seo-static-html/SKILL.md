@@ -16,7 +16,7 @@ description: 프레임워크 비종속 순수 HTML/정적 사이트 생성기(As
 > - X(Twitter) Cards Markup: https://developer.x.com/en/docs/x-for-websites/cards/overview/markup
 > - Lighthouse SEO: https://developer.chrome.com/docs/lighthouse
 >
-> 검증일: 2026-06-01
+> 검증일: 2026-09-28 (최초 2026-06-01, 2026-09-28 재검증 — 변경 없음)
 
 이 스킬은 React 프레임워크(Next.js·Vite SPA)와 무관하게 **HTML 자체 표준과 정적 호스팅 환경**에 집중한다. CMS 사이트, 블로그, 랜딩 페이지, 문서 사이트, Astro/11ty/Hugo 빌드 산출물이 주 사용처다.
 

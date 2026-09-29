@@ -11,7 +11,7 @@ footer (선택)
 
 **category:** `agent` | `skill` | `docs` | `config` | `memory` | `export`
 
-> `memory`·`export`는 커밋·푸시 요청 시 선행하는 메모리 정리 산출물 전용 (@.claude/rules/memory-sync.md).
+> `memory`·`export`는 커밋·푸시 요청 시 선행하는 메모리 정리 산출물 전용 (`.claude/rules/memory-sync.md` — memory 공유 옵션 설치된 경우).
 > `[memory] Type: Subject` 형식, `[export]`는 관례상 `[export] sync: <파일명>`.
 
 ## Type

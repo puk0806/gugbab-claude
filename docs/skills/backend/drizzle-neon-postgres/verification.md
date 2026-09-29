@@ -1,8 +1,8 @@
 ---
 skill: drizzle-neon-postgres
 category: backend
-version: v1
-date: 2026-09-17
+version: v1.1
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,10 +14,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `drizzle-neon-postgres` |
 | 스킬 경로 | `.claude/skills/backend/drizzle-neon-postgres/SKILL.md` |
-| 검증일 | 2026-09-17 |
+| 검증일 | 2026-09-28 (최초 2026-09-17 · 09-25 구조 개편 · 09-28 재검증) |
 | 검증자 | skill-creator |
-| 스킬 버전 | v1 |
-| 기준 버전 | `drizzle-orm` 0.45.2 / `drizzle-kit` 0.31.10 / `@neondatabase/serverless` 1.1.0 / Next.js 16.x App Router / Neon Free 플랜 한도 2026-09-17 기준 |
+| 스킬 버전 | v1.1 |
+| 기준 버전 | `drizzle-orm` 0.45.3 / `drizzle-kit` 0.31.11 / `@neondatabase/serverless` 1.1.0 / Next.js 16.x App Router / Neon Free 플랜 한도 2026-09-28 재확인(변경 없음) |
 
 ---
 
@@ -145,13 +145,44 @@ status: APPROVED
 - [✅] 범용적으로 사용 가능 (로컬 프로젝트명·절대경로 비종속. 대상 시나리오는 "개인용 PWA 푸시 알림 앱" 일반 서술로만 기술)
 
 ### 4-5. Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-09-17, typescript-backend-developer 3회)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (3/3 근거 섹션·줄번호 정확 인용)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-09-17, typescript-backend-developer 3회 / 2026-09-28 재검증 후 general-purpose 2회 재테스트)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-09-17 3/3, 2026-09-28 2/2 근거 섹션·줄번호 정확 인용)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (FAIL 없음 — 보완 불필요, gap만 기록)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-09-28 (재테스트)
+**수행자**: skill-tester → general-purpose (2회 병렬 호출, typescript-backend-developer 미등록으로 대체)
+**수행 방법**: 2026-09-28 재검증(2차)에서 정정된 drizzle-orm/kit 버전(0.45.2→0.45.3, 0.31.10→0.31.11)과 Neon Free 한도 재확인 내용을 겨냥해 SKILL.md + REFERENCE.md Read 후 실전 질문 2개 답변, 근거 섹션·줄번호 확인
+
+### 실제 수행 테스트 (재테스트)
+
+**Q1. drizzle-orm 0.45.2→0.45.3 / drizzle-kit 0.31.10→0.31.11 패치 적용 시 기존 pgTable 배열 콜백·onConflictDoUpdate·db.batch() 코드가 깨지는지, v1.0.0 정식 출시 여부**
+- ✅ PASS
+- 근거: SKILL.md 상단 메타(15행)·§1 "주의(버전 정책)"(45행), §5 문법 포인트(198행), §7 upsert/batch 예시(311-354행)
+- 상세: 0.45.x 라인 09-21 패치(Netlify DB 드라이버 추가)가 Neon/스키마 API에 영향 없음을 정확히 인용했고, v1은 여전히 RC 단계(공식 rc dist-tag 1.0.0-rc.4)이며 GA되지 않았음을 정확히 답변. pgTable 배열 콜백(0.36.0 도입)·onConflictDoUpdate·batch 모두 이번 패치로 깨지지 않는다고 정확히 판정.
+
+**Q2. Neon Free 플랜 한도 축소설 확인 + 1분 간격 keep-alive cron의 안전성**
+- ✅ PASS
+- 근거: SKILL.md 헤더(16행), §8 "콜드 스타트"·"완화책" 행(364-365행), REFERENCE.md §10 표+해석(160-178행), §12 안티패턴 #11(209행)
+- 상세: "09-17과 09-28 수치 변경 없음"을 정확히 인용해 축소설을 반박했고, 1분 간격 keep-alive cron이 안티패턴 #11에 명시적으로 등재된 CU-hours 소진 위험 패턴임을 정확히 지적함.
+
+### 재테스트 발견 gap (보강 권장, 차단 요인 아님)
+
+- Q1: 0.45.3 자체의 상세 변경 로그(diff)가 SKILL.md에 없어 "Neon/스키마 API 영향 없음"이라는 결론에 의존해야 함(간접 추론).
+- Q2: keep-alive cron 간격을 "충분히 넓힘"이라고만 정성적으로 권고, 구체적 권장 분(N분) 수치가 없음.
+
+### 재테스트 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 라이브러리/ORM 사용법 스킬 — 실사용 필수 카테고리 아님 → content test PASS로 APPROVED 유지
+- 최종 상태: APPROVED
+
+---
+
+### 최초 테스트 기록 (2026-09-17, 참고용)
 
 **수행일**: 2026-09-17
 **수행자**: skill-tester → typescript-backend-developer (domain-specific, 3회 병렬 호출)
@@ -197,23 +228,43 @@ status: APPROVED
 
 ---
 
+### [2026-09-28] 재검증(2차) — drizzle-orm/kit 패치 버전 정정, Neon Free 한도 변경 없음
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md + REFERENCE.md Read → 핵심 클레임 3개를 `curl registry.npmjs.org`(dist-tags·time 포함) + WebSearch로 1차 소스 대조
+
+**클레임 대조 결과**:
+1. `drizzle-orm` dist-tag `latest` — DISPUTED(정정) → 0.45.2(03-27) 이후 0.45.3(09-21) 배포 확인. GitHub 릴리즈 노트 확인 결과 Netlify DB 드라이버 추가가 전부이며 스키마/쿼리/마이그레이션 API에 영향 없음. `drizzle-kit`도 0.31.10(03-17)→0.31.11(09-21)로 동시 패치, v1은 여전히 RC(공식 `rc` dist-tag=1.0.0-rc.4, 최신 프리릴리즈 빌드는 rc.5 계열 09-09 그대로 — GA 안 됨)
+2. `@neondatabase/serverless` 최신 버전 1.1.0(2026-04-17) — VERIFIED, 변경 없음
+3. Neon Free 플랜 한도(스토리지 0.5GB·컴퓨트 100 CU-hours·브랜치 10·오토스케일 최대 2CU·5분 scale-to-zero) — VERIFIED (neon.com/docs/introduction/plans, neon.com/faqs/free-plan-limits-and-quotas 09-28 재확인, 09-17 시점과 수치 동일)
+
+**보강(ADD)·축소**: SKILL.md 상단 버전 줄·5절 주의 문구·REFERENCE.md §10 제목의 버전/날짜만 정정. 코드 예시·안티패턴·API 시그니처는 0.45.2→0.45.3, 0.31.10→0.31.11 사이 변경 없어 그대로 유지(축소 없음)
+
+**실전 질문 재검증**:
+- Q1. "0.45.3으로 올렸는데 기존 `onConflictDoUpdate`/`db.batch()` 코드가 그대로 동작하나?" → SKILL.md 5·7절 + 릴리즈 노트(Netlify 드라이버 추가만) 근거로 PASS (그대로 동작)
+- Q2. "Neon Free로 6명 앱 운영 중인데 한도가 최근에 바뀌었나?" → REFERENCE.md §10 근거로 PASS (09-17과 09-28 수치 동일, 변경 없음)
+
+**재검증 최종 판정**: status **PENDING_TEST 전환** (버전 정정 반영 — 메인이 skill-tester로 재테스트)
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
 |------|------|
-| 내용 정확성 | ✅ |
+| 내용 정확성 | ✅ — 2026-09-28 재검증에서 drizzle-orm/kit 버전 정정(0.45.2→0.45.3, 0.31.10→0.31.11) 1건 추가 |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-09-17, 3/3 PASS) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (2026-09-17 3/3 PASS, 2026-09-28 재테스트 2/2 PASS) |
+| **최종 판정** | **APPROVED** (재검증 정정분 재테스트 완료) |
 
-> 분류: 라이브러리/ORM 사용법 스킬 — verification-policy 기준상 실사용 필수 카테고리가 아니므로, skill-tester content test PASS(3/3)로 APPROVED 전환.
+> 분류: 라이브러리/ORM 사용법 스킬 — verification-policy 기준상 실사용 필수 카테고리가 아니므로, skill-tester content test PASS(2026-09-17 3/3, 2026-09-28 2/2)로 APPROVED 전환.
 
 ---
 
 ## 7. 개선 필요 사항
 
-- [✅] skill-tester 2단계 content test 수행 (2026-09-17 완료, 3/3 PASS — typescript-backend-developer)
+- [✅] skill-tester 2단계 content test 수행 (2026-09-17 완료, 3/3 PASS — typescript-backend-developer / 2026-09-28 재검증 정정분 재테스트 완료, 2/2 PASS — general-purpose)
 - [❌] Drizzle v1.0.0이 정식 릴리즈되면 마이그레이션 폴더 구조·관계 정의 API 기준으로 스킬 전면 갱신 필요 (현재 0.45.x 기준) — 차단 요인 아님, v1 정식 릴리즈 시점에 재작성 필요한 선택 보강
 - [❌] Neon Free 플랜 한도·Upstash Free 한도는 정책 변동 가능 — 재사용 시 pricing 페이지 재확인 권장 — 차단 요인 아님, 선택 보강
 - [❌] 빌드 단계 마이그레이션 실행에 대한 공식 근거를 찾지 못함(UNVERIFIED) — Vercel/Drizzle 공식 가이드가 추가되면 6절 갱신 — 차단 요인 아님, 선택 보강
@@ -230,3 +281,5 @@ status: APPROVED
 | 2026-09-17 | v1 | 최초 작성 (Drizzle 공식 10페이지 + Neon 공식 8페이지 + Vercel/Next.js 공식 3페이지 + GitHub 원본 소스 2건 조사, 29개 클레임 교차 검증: VERIFIED 27 / DISPUTED 1 / UNVERIFIED 1) | skill-creator |
 | 2026-09-17 | v1 | 2단계 실사용 테스트 수행 (Q1 neon-http 트랜잭션 에러·batch 대안 / Q2 구독 upsert 패턴·IDOR 방지 / Q3 DATABASE_URL vs UNPOOLED·빌드 자동화) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | skill-creator |
+| 2026-09-28 | v1.1 | 재검증(2차) — drizzle-orm 0.45.2→0.45.3, drizzle-kit 0.31.10→0.31.11 버전 정정(API 영향 없음), Neon Free 한도 변경 없음 확인. status APPROVED → PENDING_TEST(재테스트 대기) | Claude (Sonnet 5) |
+| 2026-09-28 | v1.1 | 2단계 재테스트 수행 (Q1 0.45.3/0.31.11 패치 영향·v1 GA 여부 / Q2 Neon Free 한도 축소설·keep-alive cron 안전성) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |

@@ -6,7 +6,7 @@ description: HikariCP 커넥션 풀 튜닝 가이드 - Oracle/MySQL 환경 필�
 # HikariCP 커넥션 풀 튜닝 (Oracle + MySQL)
 
 > 소스: https://github.com/brettwooldridge/HikariCP | https://github.com/brettwooldridge/HikariCP/wiki/MySQL-Configuration | https://github.com/brettwooldridge/HikariCP/wiki/About-Pool-Sizing | https://github.com/brettwooldridge/HikariCP/wiki/Rapid-Recovery
-> 검증일: 2026-04-22
+> 검증일: 2026-09-26 (재검증, 내용 변경 없음)
 
 > 주의: 이 문서는 HikariCP 3.4.5(레거시) ~ 5.x(현재 Spring Boot 3.x 번들) 기준입니다. 이 범위에서 API 및 설정 키는 사실상 동일하므로 통합 가이드로 사용 가능합니다. 7.x에서 일부 Breaking Change가 있으므로 최신 버전 사용 시 공식 changelog를 확인하세요.
 

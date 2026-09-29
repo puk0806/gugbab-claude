@@ -2,7 +2,7 @@
 skill: xss-lucy-jsoup
 category: backend
 version: v1
-date: 2026-04-22
+date: 2026-09-26 (최초: 2026-04-22)
 status: APPROVED
 ---
 
@@ -18,7 +18,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `xss-lucy-jsoup` |
 | 스킬 경로 | `.claude/skills/backend/xss-lucy-jsoup/SKILL.md` |
-| 검증일 | 2026-04-22 |
+| 검증일 | 2026-04-22 (재검증: 2026-09-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 | 기준 버전 | Naver Lucy XSS Servlet 2.0.0 / 2.0.1, jsoup 1.18.x / 1.22.x |
@@ -90,6 +90,23 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
+### 2026-09-26 — 재검증 (60일 초과 정기 재검증)
+
+**수행일**: 2026-09-26
+**수행 방법**: SKILL.md + REFERENCE.md 전체 Read, WebSearch로 jsoup·Lucy 최신 상태 재확인.
+
+**Q1. jsoup 최신 버전(1.23.2)에서도 `Safelist.relaxed()` 기반 커스텀 sanitize 코드가 그대로 동작하는가?**
+- PASS(재검증). jsoup 1.23.2(2026-08-26) 릴리스 노트 확인 결과 XML/W3C DOM 성능·HTTP 스트리밍 개선이 주 내용이며 `Safelist` API 변경 없음.
+
+**Q2. Naver Lucy가 archived된 지 1년 넘었는데 여전히 쓸 수 있는가?**
+- PASS(재검증). 레포 상태(archived, 2025-06-09)·최신 버전(2.0.1) 변경 없음 확인. 신규 기능 추가가 없다는 성격상 archived 상태가 오히려 API 안정성을 의미하며 SKILL.md의 "안정적으로 사용 가능" 평가 유지.
+
+**재검증 결론**: 핵심 클레임 VERIFIED 유지. jsoup 최신 버전만 갱신. status 변경 없음(APPROVED 유지).
+
+---
+
+### 2026-04-23 — 원 수행 기록
+
 **수행일**: 2026-04-23
 **수행 방법**: general-purpose 에이전트에게 SKILL.md만 Read한 뒤 2개 실전 질문 답변.
 
@@ -148,3 +165,4 @@ status: APPROVED
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
 | 2026-04-22 | v1 | 최초 작성 — Naver Lucy + jsoup + CSP 조합, SB 2.5/3.x 통합, Lucy archived 주의 명시 | skill-creator |
+| 2026-09-26 | v1 | 재검증 — jsoup 1.23.2 최신 확인, Lucy archived 상태 변경 없음 확인 | 메인 세션 |

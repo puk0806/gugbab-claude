@@ -1,8 +1,8 @@
 ---
 skill: seo-nextjs
 category: frontend
-version: v3
-date: 2026-08-11
+version: v4
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -35,9 +35,9 @@ status: APPROVED
 | 스킬 이름 | seo-nextjs |
 | 스킬 경로 | `.claude/skills/frontend/seo-nextjs/SKILL.md` |
 | 최초 작성일 | 2026-04-01 |
-| 재검증일 | **2026-08-11** (Next.js 16 기준 최신화) |
+| 재검증일 | **2026-09-28** (재검증, 이전 2026-08-11 Next.js 16 기준 최신화) |
 | 검증 방법 | 공식 문서 교차 검증 (nextjs.org docs 각 API 레퍼런스 + 업그레이드 가이드 + 릴리즈 블로그) |
-| 버전 기준 | **Next.js 16.3.0** (2026-08-03 릴리즈, 현재 최신 stable) |
+| 버전 기준 | **Next.js 16.3.x** (16.3.0에서 API 확정, 2026-09-28 기준 최신 패치 16.3.6 — API 표면 무변경 확인) |
 
 ---
 
@@ -156,6 +156,31 @@ status: APPROVED
 
 ---
 
+### [2026-09-28] 재검증(2차) — Next.js 16.3.x 패치 버전 대조, API 표면 변경 없음 확인
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md + REFERENCE.md 전체 Read → 핵심 클레임 4개를 1차 소스(nextjs.org/docs)와 WebFetch로 대조. 특히 이전 재검증(2026-08-11, v16.3.0 기준)에서 신규 반영했던 `generateSitemaps` id Promise·`robots.ts` `other` 필드가 이후 패치(16.3.1~16.3.6)에서도 유지되는지 집중 확인
+
+**클레임 대조 결과**:
+1. `generateSitemaps`로 분할된 `sitemap()`의 `id` 파라미터가 `Promise<string>`이고 `await` 후 `Number()` 변환 필요 → **VERIFIED** — sitemap.xml·generateSitemaps 공식 문서 Version History에 `v16.0.0` 항목 그대로 유지, 예제 코드도 `const id = await props.id` 동일 (nextjs.org/docs/app/api-reference/functions/generate-sitemaps, /file-conventions/metadata/sitemap)
+2. `robots.ts` rule에 `other` 필드로 비표준 per-agent 디렉티브(Seznam `Request-Rate` 등) 추가 가능, 대소문자 보존·배열은 줄바꿈 출력 → **VERIFIED** — robots.txt 공식 문서 Version History `v16.3.0` 항목·타입 정의·예제 출력 모두 SKILL.md/REFERENCE.md 서술과 문자 그대로 일치
+3. 현재 최신 Next.js 버전 → **VERIFIED (정정)** — 16.3.6(2026-09-22, 보안 패치)이 최신, SKILL.md의 "16.3.0이 현재 최신 stable" 표기는 정정 필요(패치만 있고 API 변경 없음은 확인됨)
+4. `generateMetadata`의 얕은 병합(shallow merge)·`metadataBase` 미설정 시 빌드 에러·Server Component 전용·`themeColor`/`colorScheme`/`viewport` deprecated(v14)·Streaming metadata·Cache Components 하 `generateMetadata` 동작 → **VERIFIED** — generate-metadata 공식 문서(최종 갱신 2026-08-25) Merging/metadataBase/Why Server Component only/Version History/Streaming metadata/With Cache Components 섹션 전부 SKILL.md 서술과 일치, 신규 breaking change 없음
+
+**ADD 검토 (사전 지정 2항목)**:
+- `generateSitemaps` Promise 관련 시그니처 변화 → 이미 SKILL.md §0 표 + REFERENCE.md §6에 v16.0.0 breaking change로 반영되어 있음(2026-08-11 재검증 때 추가). 이번 재검증에서 최신 문서로 재확인만 하고 추가 변경 없음
+- `robots` `other` 필드 → 이미 SKILL.md §7 "비표준 디렉티브 — `other` (v16.3.0 신규)" 섹션 + REFERENCE.md에 반영되어 있음. 이번 재검증에서 재확인만 하고 추가 변경 없음
+
+**보강(ADD)·축소**: 버전 표기만 정정(16.3.0 고정 표기 → 16.3.x/패치 상황 명시, API 표면 무변경 명시). 코드 예시·패턴·주의사항 내용 변경 없음. 축소 없음(모든 섹션이 버전 고정 정보·함정 목록이라 유지)
+
+**실전 질문 재검증**:
+- Q1. "50,000개 넘는 상품을 sitemap으로 나눠야 하는데 Next.js 16에서 generateSitemaps 쓸 때 주의할 점은?" → SKILL.md REFERENCE.md §6 "분할 — generateSitemaps (v16에서 시그니처 변경)" 근거로 `id`가 `Promise<string>`이므로 `await` 후 `Number()` 변환해야 한다고 정확히 답변 — PASS
+- Q2. "robots.ts에서 표준에 없는 Yandex Clean-param 지시문을 내보내려면?" → SKILL.md §7 "비표준 디렉티브 — other" 근거로 rule의 `other` 필드에 넣으면 되고, 값은 검증 없이 그대로 출력되니 대상 검색엔진 문서를 직접 확인해야 한다고 정확히 답변 — PASS
+
+**재검증 최종 판정**: status **APPROVED 유지** (내용 정확성 변화 없음 — 버전 표기 정정은 코드 가이드 자체에 영향 없는 프레시니스 정정으로 판단, 실전 질문 2/2 PASS)
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -165,8 +190,9 @@ status: APPROVED
 | 실용성 | ✅ |
 | 에이전트 활용 테스트 | ✅ PASS (frontend-architect) |
 | 버전 최신성 (2026-08-11 기준) | ✅ Next.js 16.3.0 반영 |
+| 버전 최신성 (2026-09-28 재검증) | ✅ 16.3.6까지 API 표면 무변경 확인, 버전 표기만 정정 |
 | 레포 내부 정합성 | ✅ `url-canonicalization-redirects`(16.x 기준)와 버전 기준 일치 |
-| **최종 판정** | **APPROVED** |
+| **최종 판정** | **APPROVED** (2026-09-28 2차 재검증 후 유지) |
 
 ---
 
@@ -186,3 +212,4 @@ status: APPROVED
 | 2026-06-01 | v2 | SEO 스킬 분할 작업에 따라 seo → seo-nextjs 리네이밍. 동일 SKILL 내용 유지(범위가 Next.js 한정으로 명확). seo-vite-spa·seo-static-html이 별도 스킬로 분리됨 | 메인 대화 |
 | 2026-08-11 | v3 | **Next.js 15 → 16.3.0 기준 최신화(2메이저 갭 해소).** ① DISPUTED 1건 수정: `generateSitemaps`의 `id`가 v16.0.0부터 `Promise<string>` — 기존 `{ id: number }` 예제는 `NaN` 산출 ② §0 "15→16 SEO 영향 변경" 표 신설 ③ 신규 섹션: `metadataBase`/URL 합성, canonical·hreflang·alternates, 메타데이터 얕은 병합 규칙, 파일 기반 OG 이미지의 async params/id, Streaming metadata + `htmlLimitedBots`, Cache Components 하 `generateMetadata` 동작, 봇·크롤러 static shell 주의 ④ `robots.ts` `other` 필드(v16.3.0 신규)·Robots 타입 전체·per-agent 규칙 배열 반영 ⑤ 이미지/비디오/다국어 사이트맵 추가 ⑥ `PageProps` 타입 헬퍼 추가 ⑦ "흔한 실수 패턴" 섹션 신설 ⑧ `nextjs`·`url-canonicalization-redirects`와 역할 분리 상호 참조 명시 | 버전 재검증 (교차 검증 17 클레임) |
 | 2026-09-25 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | |
+| 2026-09-28 | v4 | **재검증(2차).** 핵심 클레임 4건 재대조(generateSitemaps id Promise·robots other 필드·generateMetadata 병합/metadataBase/deprecated 필드 모두 VERIFIED), 최신 패치 16.3.6까지 API 표면 무변경 확인. 버전 표기만 "16.3.0 현재 최신" → "16.3.x, 16.3.6까지 패치만" 으로 정정. 실전 질문 2/2 PASS. status APPROVED 유지 | 재검증 (2차, 교차 검증 4 클레임) |

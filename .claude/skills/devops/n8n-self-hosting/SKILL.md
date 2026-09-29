@@ -12,16 +12,18 @@ disable-model-invocation: true
 > - https://docs.n8n.io/deploy/host-n8n/configure-n8n/basic-configuration/use-environment-variables/database.md
 > - https://docs.n8n.io/deploy/host-n8n/configure-n8n/basic-configuration/use-environment-variables/deployment.md
 > - https://docs.n8n.io/deploy/host-n8n/configure-n8n/basic-configuration/use-environment-variables/queue-mode.md
+> - https://docs.n8n.io/deploy/host-n8n/configure-n8n/basic-configuration/use-environment-variables/nodes.md
 > - https://docs.n8n.io/deploy/host-n8n/configure-n8n/basic-configuration/configuration-examples/set-a-custom-encryption-key.md
 > - https://docs.n8n.io/deploy/host-n8n/configure-n8n/scaling/enable-queue-mode.md
 > - https://docs.n8n.io/deploy/host-n8n/configure-n8n/set-up-task-runners.md
 > - https://docs.n8n.io/deploy/host-n8n/configure-n8n/user-management.md
+> - https://docs.n8n.io/deploy/host-n8n/configure-n8n/durable-scheduler.md
 > - https://docs.n8n.io/privacy-and-security/sustainable-use-license
-> - https://docs.n8n.io/changelog/release-notes-2.x
+> - https://docs.n8n.io/changelog/release-notes.md (현행 — 2.x 통합, `release-notes-2.x`는 2026-09 기준 archived)
 > - https://github.com/n8n-io/n8n-hosting
 >
-> 검증일: 2026-08-11
-> 대상 버전: n8n v2.x — **2026-08-11 기준 stable v2.33.7 / beta v2.34.4**
+> 검증일: 2026-09-28 (최초 2026-05-15, 재검증 2026-08-11 / 2026-09-28)
+> 대상 버전: n8n v2.x — **2026-09-28 기준 stable v2.40.7 / beta v2.41.3**
 > 짝 스킬: `devops/docker-deployment` (컨테이너 일반), `devops/n8n-workflow-design` (워크플로우 설계)
 
 > **주의 — 공식 문서 URL 전면 개편 (2026-08 확인):** 구 `docs.n8n.io/hosting/...` 경로는 전부 404다.
@@ -88,10 +90,10 @@ docker run -d \
 
 > **변경 (v2.0+):** `N8N_RUNNERS_ENABLED`는 **deprecated**다. v2.0부터 task runner가 항상 켜져 있어 이 변수를 지정할 필요가 없다
 > (공식 문서에서도 제거됨 — n8n-docs issue #4328 / PR #4450). **v1.x에서만** `true` 지정이 필요하다.
-> 기존 compose 파일에 남아 있으면 삭제한다. → 실행 격리 설정은 아래 "task runner 모드" 참조.
+> 기존 compose 파일에 남아 있으면 삭제한다. → 실행 격리 설정은 `references/REFERENCE.md` "11-1. Task runner 모드 (Code 노드 격리)" 절 참조.
 
 **이미지 태그 선택:** 태그를 생략한 `docker.n8n.io/n8nio/n8n`은 최신 stable을 가리킨다. 프로덕션은 재현 가능한 배포를 위해
-버전 핀(`:2.33.7`)을 권장하고, `:stable`은 "최신 안정판 자동 추종"이 필요할 때만 쓴다. `:next`는 beta(2.34.x) 채널이다.
+버전 핀(`:2.40.7`)을 권장하고, `:stable`은 "최신 안정판 자동 추종"이 필요할 때만 쓴다. `:next`는 beta(2.41.x) 채널이다.
 
 > 주의: 단일 컨테이너 + SQLite 조합은 동시 쓰기·큐 모드를 지원하지 않는다. 프로덕션은 PostgreSQL로 갈 것.
 > 단, PostgreSQL로 가더라도 **`~/.n8n` 볼륨은 계속 유지**한다 — encryption key 등이 이 디렉토리에 있다.
@@ -139,7 +141,7 @@ services:
       N8N_HOST: ${N8N_HOST}                       # 예: n8n.example.com
       N8N_PROTOCOL: https
       N8N_PORT: 5678
-      WEBHOOK_URL: https://${N8N_HOST}/
+      N8N_WEBHOOK_URL: https://${N8N_HOST}/       # 구 WEBHOOK_URL — v2.40.7 실행 로그 기준 deprecated alias(여전히 동작은 함, 신규 구성은 N8N_WEBHOOK_URL 사용)
       # Security
       N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
       N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: 'true'
@@ -201,7 +203,7 @@ openssl rand -hex 32
 | `N8N_HOST` | `localhost` | 외부에서 접근할 호스트명 (예: `n8n.example.com`) |
 | `N8N_PROTOCOL` | `http` | `https` 권장 |
 | `N8N_PORT` | `5678` | 컨테이너 내부 포트 |
-| `WEBHOOK_URL` | `${N8N_PROTOCOL}://${N8N_HOST}:${N8N_PORT}/` | 외부 webhook 콜백 URL. 리버스 프록시 뒤에서는 명시 필수 |
+| `N8N_WEBHOOK_URL`(구 `WEBHOOK_URL`) | `${N8N_PROTOCOL}://${N8N_HOST}:${N8N_PORT}/` | 외부 webhook 콜백 URL. 리버스 프록시 뒤에서는 명시 필수. **2026-09-28 실측(v2.40.7 기동 로그): `WEBHOOK_URL`은 deprecated alias — "Use N8N_WEBHOOK_URL instead" 경고 노출(동작은 계속함)** |
 | `DB_TYPE` | `sqlite` | 프로덕션은 `postgresdb` |
 | `DB_POSTGRESDB_HOST` | `localhost` | PostgreSQL 호스트 |
 | `DB_POSTGRESDB_PORT` | `5432` | PostgreSQL 포트 |
@@ -229,12 +231,29 @@ openssl rand -hex 32
 
 > 주의 (v2.0 변경): `N8N_BLOCK_ENV_ACCESS_IN_NODE=true`가 기본. Code 노드에서 `process.env` 접근이 기본 차단된다. 필요 시 명시적으로 `false` 지정.
 
+### v2.34~2.40에서 추가된 운영 변수 (2026-09-28 확인)
+
+| 변수 | 도입 | 기본값 | 용도 |
+|------|------|--------|------|
+| `N8N_SCHEDULER_ENABLED` | v2.36 (GA, v2.32~2.35은 Preview) | `false` | **Durable scheduler** 활성화 — Schedule Trigger 등 시간 기반 워크플로우를 인스턴스 메모리 타이머 대신 DB-backed 큐로 실행 (재시작 생존, 멀티 인스턴스 분산) |
+| `N8N_USE_WORKFLOW_PUBLICATION_SERVICE` | v2.36 | — | Durable scheduler가 Schedule Trigger 노드를 넘겨받기 위한 필수 동반 설정. `N8N_SCHEDULER_ENABLED`와 함께 `true` 필요 |
+| `N8N_SCHEDULER_POLL_TRIGGERS_ENABLED` | v2.36 | `false` | 폴링 트리거(Google Sheets 등)까지 durable scheduler 대상에 포함 |
+| `N8N_SCHEDULER_SYSTEM_TASKS_ENABLED` | v2.40 | `false` | n8n 내부 유지보수 작업을 durable scheduler로 이관 (2.40.0 시점엔 이관된 작업 없음 — 단계적 롤아웃) |
+| `N8N_ENV_FEAT_SKIP_DURABLE_SCHEDULER` | v2.36 | `false` | durable scheduler가 인스턴스 전체에 켜져 있어도 특정 Schedule Trigger 노드만 인메모리 방식으로 남기는 escape hatch |
+| `NODES_MERGE_SQL_SANDBOX_MEMORY_LIMIT_MB` | v2.38.1 | `64` | Merge 노드 "Combine by SQL" 샌드박스 메모리 한도(MB). 대용량 데이터셋에서 실패 시 증가 |
+| `N8N_COMPRESSION_NODE_MAX_DECOMPRESSED_SIZE_BYTES` | — | **`2147483648`(2GiB) — 2026-09-28 실측 정정** (구 서술 `268435456`/256MiB는 오류) | Compression 노드 압축 해제 결과 최대 크기 — zip bomb 방지. v2.40.7 기동 로그: "default ... will be reduced from 2 GiB to 256 MiB in a future version" — 256MiB는 **향후 버전 예정값**이지 현재 기본값이 아님. 현재 한도를 유지하려면 명시적으로 지정할 것 |
+| `N8N_COMPRESSION_NODE_MAX_ZIP_ENTRIES` | — | **`5000` — 2026-09-28 실측 정정** (구 서술 `1000`은 오류) | Compression 노드가 처리할 ZIP 엔트리 수 상한. v2.40.7 기동 로그: "default ... will be reduced from 5000 to 1000 in a future version" — 1000은 **향후 버전 예정값** |
+| `N8N_AZURE_STORAGE_CUSTOM_ENDPOINTS_ENABLED` | v2.40 | `false` | Azure Storage credential의 커스텀 엔드포인트(소버린 클라우드·프라이빗 엔드포인트) 허용 여부. 꺼져 있으면 커스텀 엔드포인트 credential이 테스트 실패 |
+
+> **Durable scheduler 도입 시 주의:** 기존 인스턴스는 기본적으로 인메모리 스케줄러를 계속 쓴다(opt-in). 켠 뒤 되돌려도(`false`) 이미 만들어진 durable 커서·스케줄 테이블은 자동 삭제되지 않는다("Cursors stay in their table"). 큐 모드(11절)와 별개 기능이지만 멀티 인스턴스·재시작 내구성이 필요하면 함께 검토.
+
 ---
 
 ## 6. PostgreSQL 백엔드 (프로덕션 권장)
 
 - **왜 PostgreSQL?** SQLite는 단일 프로세스 쓰기만 안전하다. 큐 모드·다중 워커·고가용성을 위해 PostgreSQL 필수.
 - **버전 권장:** PostgreSQL 14+ (위 예시는 16 사용).
+  > 주의 (2026-09-28 실측, v2.40.7 기동 로그): `Postgres 16 is outside the supported range and receives compatibility support only. Upgrade to Postgres 17 or newer.` — 14~16은 더 이상 완전 지원 대상이 아니고 "호환성 지원"으로 격하됨. 신규 구축은 **PostgreSQL 17+**를 우선 고려할 것 (16은 여전히 기동·마이그레이션·실행 자체는 정상 동작 확인됨 — 즉시 차단 사유는 아님).
 - **v2.0부터 MySQL/MariaDB 지원 중단.** PostgreSQL만 공식 지원.
 
 **처음 PostgreSQL로 전환할 때 주의:**
@@ -253,7 +272,7 @@ openssl rand -hex 32
 | **Cloudflare Tunnel** | 포트 개방 없이 외부 노출. webhook URL은 Cloudflare 도메인 |
 | **Nginx + certbot** | 기존 Nginx 인프라가 있을 때 |
 
-**webhook URL 주의:** 리버스 프록시 뒤에 있을 때 `WEBHOOK_URL`을 외부 URL로 명시하지 않으면 외부 서비스(GitHub, Stripe 등)가 잘못된 URL로 callback을 보낸다.
+**webhook URL 주의:** 리버스 프록시 뒤에 있을 때 `N8N_WEBHOOK_URL`(구 `WEBHOOK_URL` — 2026-09-28 실측 기준 deprecated alias)을 외부 URL로 명시하지 않으면 외부 서비스(GitHub, Stripe 등)가 잘못된 URL로 callback을 보낸다.
 
 ---
 

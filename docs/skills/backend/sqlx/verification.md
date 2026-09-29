@@ -2,7 +2,7 @@
 skill: sqlx
 category: backend
 version: v1
-date: 2026-06-20
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -36,7 +36,7 @@ status: APPROVED
 | 스킬 이름 | sqlx |
 | 스킬 경로 | .claude/skills/sqlx/SKILL.md |
 | 최초 작성일 | 2026-04-07 |
-| 재검증일 | 2026-04-09 |
+| 재검증일 | 2026-09-26 (직전 재검증 2026-06-20) |
 | 검증 방법 | 수동 작성(초기) + rust-backend-developer 활용 테스트 |
 | 버전 기준 | sqlx 0.8.x |
 
@@ -139,6 +139,26 @@ status: APPROVED
 
 ---
 
+### 재검증 (2026-09-26)
+
+**수행자**: 메인 세션 (Sonnet 5), 서브에이전트 미사용(사용자 지시)
+**수행 방법**: SKILL.md + REFERENCE.md 전체 Read → 핵심 클레임 3건 WebSearch/WebFetch 교차 검증 → 실전 질문 2개로 SKILL.md 자체 답변 확인
+
+**교차 검증 클레임:**
+1. sqlx 0.9.0(2026-05 릴리즈)의 breaking change 목록(`SqlSafeStr`/`AssertSqlSafe`, `Arguments` lifetime 제거, MySQL 텍스트 컬럼 추론 변경, `PgConnectOptions::options()` 자동 escape) — WebSearch로 `docs.rs/sqlx/latest/sqlx/trait.SqlSafeStr.html` 및 복수 dependabot/renovate PR 설명 교차 확인, SKILL.md 상단 주의 블록 내용과 정확히 일치 → **VERIFIED**
+2. sqlx 저장소가 `launchbadge/sqlx`에서 `transact-rs/sqlx`로 이전 — WebFetch(`github.com/launchbadge/sqlx`)가 실제로 transact-rs 콘텐츠를 반환(리다이렉트 확인), WebSearch로 "LaunchBadge, LLC 소유·관리 아님, 원저자 공동소유로 이전" 공식 사유 확인 → **DISPUTED(정보 누락) → 수정 반영**: 소스 URL과 상단 주의 블록에 조직 이전 사실 추가
+3. sqlx 최신이 0.9.0에서 멈춰 있고(2026-09 기준 0.9.1/0.9.2 등 후속 패치 없음) 0.8.x도 여전히 널리 쓰임 — WebSearch로 후속 패치 부재 확인 → **VERIFIED** (본문의 "0.8.x 기준 유지" 방침 타당)
+
+**Q1 (재확인). "sqlx 0.9로 올릴 때 동적으로 조립한 쿼리 문자열을 그대로 query()에 넘기면 왜 컴파일이 안 되나?"**
+- PASS — SKILL.md 상단 마이그레이션 노트의 `SqlSafeStr`/`AssertSqlSafe(..)` 설명으로 정확히 답변 가능(non-`&'static str`은 `AssertSqlSafe`로 감싸야 함).
+
+**Q2 (재확인). "지금 sqlx 공식 저장소 링크가 옛날 launchbadge 링크인데 최신인가?"**
+- PASS — 갱신된 소스 라인(`github.com/transact-rs/sqlx`, 구 URL은 리다이렉트)으로 정확히 답변 가능.
+
+**status**: 조직 이전 정보만 보강, API·코드 예시 변경 없음 → **APPROVED 유지**
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -165,3 +185,4 @@ status: APPROVED
 | 2026-04-17 | v2 | verification.md 신규 8섹션 포맷으로 마이그레이션 | 메인 대화 오케스트레이션 |
 | 2026-04-17 | v3 | WebSearch 7개 클레임 교차 검증, DISPUTED 1건 수정 (runtime feature 복수 선택 시 런타임 패닉) | 메인 대화 오케스트레이션 |
 | 2026-06-20 | v4 | 버전 재검증 — sqlx 0.9.0 (2026-05-21 릴리즈) 확인. 현재 문서는 0.8.x 유지, SKILL.md에 0.9 마이그레이션 노트(SqlSafeStr, Arguments lifetime, MySQL 컬럼 타입 변경, PgConnectOptions 자동 escape, sqlx.toml 신규 지원) 추가 | 버전 재검증 작업 |
+| 2026-09-26 | v5 | 정기 재검증 — sqlx 저장소 launchbadge→transact-rs 조직 이전 확인·소스 URL 갱신, 0.9.0 이후 후속 패치 없음 확인, 0.9 마이그레이션 노트(SqlSafeStr 등) 정확성 재확인, API 변경 없음 | Claude (Sonnet 5) |

@@ -157,7 +157,7 @@ export async function POST(request: Request) {
 
 ---
 
-## 10. Neon 무료(Free) 플랜 한도 — 2026-09-17 기준
+## 10. Neon 무료(Free) 플랜 한도 — 2026-09-28 기준 재확인(수치 변경 없음, 최초 확인 2026-09-17)
 
 | 항목 | Free plan |
 |------|-----------|

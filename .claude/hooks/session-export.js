@@ -178,9 +178,9 @@ function buildMarkdown(parsed, sessionId, codexRounds) {
 // ── 저장 위치 판정 ──────────────────────────────────────────────────────
 // Stop(toRepo=false): 항상 로컬 exports/ — 매 턴 기록이 레포를 dirty로 만들지 않도록
 // --refresh(toRepo=true): 레포에 memory/ 있으면(Y) 레포 exports/, 아니면(N) 로컬
-function resolveDest(transcriptPath, toRepo = false) {
+function resolveDest(transcriptPath, toRepo = false, projectDir = process.env.CLAUDE_PROJECT_DIR) {
   const localDir = path.dirname(transcriptPath);
-  const repoRoot = process.env.CLAUDE_PROJECT_DIR;
+  const repoRoot = projectDir;
   if (toRepo) {
     try {
       if (repoRoot && fs.statSync(path.join(repoRoot, 'memory')).isDirectory()) {
@@ -192,7 +192,7 @@ function resolveDest(transcriptPath, toRepo = false) {
 }
 
 // ── 메인 ────────────────────────────────────────────────────────────────
-function main(input, toRepo = false) {
+function main(input, toRepo = false, projectDir = process.env.CLAUDE_PROJECT_DIR) {
   const data = JSON.parse(input);
   const sessionId = data.session_id;
   const transcriptPath = data.transcript_path;
@@ -205,7 +205,7 @@ function main(input, toRepo = false) {
   const codexRounds = collectCodexRounds(startMs);
 
   const md = buildMarkdown(parsed, sessionId, codexRounds);
-  const { destDir } = resolveDest(transcriptPath, toRepo);
+  const { destDir } = resolveDest(transcriptPath, toRepo, projectDir);
   const fileName = `${localDate(parsed.firstTs)}-${sessionId.slice(0, 8)}.md`;
 
   fs.mkdirSync(destDir, { recursive: true });
@@ -213,13 +213,49 @@ function main(input, toRepo = false) {
   // 레포 저장(--refresh)도 워킹트리까지만 — 커밋·푸시는 사용자가 직접 (2026-07-10 자동 커밋 제거)
 }
 
+// ── 프로젝트 저장소 경로 (memory-pull·memory-sync 와 공유) ────────────────
+// Claude Code 는 프로젝트 경로의 영숫자 외 모든 문자(UTF-16 코드 유닛 단위)를 '-' 로 바꿔
+// ~/.claude/projects/<인코딩> 에 트랜스크립트·memory 를 둔다. 2026-09-26 실측(Claude Code 2.1.282):
+//   ".../scratchpad/enc test.v1 한글_x@y+z" → "...-scratchpad-enc-test-v1----x-y-z", "e😀m" → "e--m"
+// 구 규칙(/ 와 _ 만 치환)은 점·공백·비ASCII 경로에서 엉뚱한 디렉토리를 만들었다.
+// 주의: 매우 긴 경로의 축약 규칙은 미실측 → 훅 입력의 transcript_path 가 있으면 그 디렉토리를 우선한다.
+function encodeProjectPath(p) {
+  if (typeof p !== 'string' || p === '') return null;
+  return p.replace(/[^a-zA-Z0-9]/g, '-');
+}
+
+// transcript_path 가 ~/.claude/projects/<dir>/<file> 형태(바로 한 단계 아래)일 때만 신뢰한다 —
+// 그 밖의 경로(상위 탈출·중첩·다른 루트)는 무시하고 인코딩으로 폴백한다.
+function projectStoreDir(homeDir, projectDir, transcriptPath) {
+  const root = path.join(homeDir, '.claude', 'projects');
+  if (typeof transcriptPath === 'string' && transcriptPath) {
+    const dir = path.dirname(path.resolve(transcriptPath));
+    if (path.dirname(dir) === root && path.basename(dir) && dir !== root) return dir;
+  }
+  const enc = encodeProjectPath(projectDir);
+  return enc ? path.join(root, enc) : null;
+}
+
+// Bash 도구 등 훅 밖에서 실행되면 CLAUDE_PROJECT_DIR 가 없다(공식: 훅·MCP·LSP 프로세스에만 설정).
+// env → git 최상위 → cwd 순으로 폴백한다.
+function gitToplevel(cwd) {
+  try {
+    const out = require('child_process').execFileSync('git', ['rev-parse', '--show-toplevel'],
+      { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 5000 }).trim();
+    return out || null;
+  } catch { return null; }
+}
+function resolveProjectDir(env = process.env, cwd = process.cwd()) {
+  if (env && typeof env.CLAUDE_PROJECT_DIR === 'string' && env.CLAUDE_PROJECT_DIR) return env.CLAUDE_PROJECT_DIR;
+  return gitToplevel(cwd) || cwd;
+}
+
 // ── --refresh: 커밋·푸시 직전 수동 최신화 ──────────────────────────────
 // Stop 이벤트 없이 현재 세션(가장 최근에 기록 중인 .jsonl) 요약을 즉시 재생성.
 // 커밋 시 메모리 정리 절차(memory-sync.md)의 2단계에서 Claude가 직접 실행한다.
 function resolveRefreshTarget(homeDir, projectDir) {
   if (!projectDir) return null;
-  const encoded = projectDir.replace(/[/\_]/g, '-');
-  const localDir = path.join(homeDir, '.claude', 'projects', encoded);
+  const localDir = projectStoreDir(homeDir, projectDir, null);
   let entries;
   try { entries = fs.readdirSync(localDir); } catch { return null; }
   const jsonls = entries
@@ -233,17 +269,43 @@ function resolveRefreshTarget(homeDir, projectDir) {
   };
 }
 
-module.exports = { parseTranscript, buildMarkdown, resolveDest, cleanUserText, resolveRefreshTarget };
+// 세션을 시작한 경로(=저장소 키)는 git 최상위와 다를 수 있고(서브디렉토리 시작), macOS 는 /tmp ↔ /private/tmp
+// 처럼 realpath 가 다를 수 있다 → 후보를 차례로 시도해 트랜스크립트가 있는 첫 경로를 쓴다.
+function refreshCandidates(env = process.env, cwd = process.cwd()) {
+  const raw = [];
+  if (env && typeof env.CLAUDE_PROJECT_DIR === 'string' && env.CLAUDE_PROJECT_DIR) raw.push(env.CLAUDE_PROJECT_DIR);
+  const top = gitToplevel(cwd);
+  if (top) raw.push(top);
+  raw.push(cwd);
+  const out = [];
+  for (const p of raw) {
+    for (const v of [p, (() => { try { return fs.realpathSync(p); } catch { return null; } })()]) {
+      if (v && !out.includes(v)) out.push(v);
+    }
+  }
+  return out;
+}
+
+module.exports = {
+  parseTranscript, buildMarkdown, resolveDest, cleanUserText, resolveRefreshTarget,
+  encodeProjectPath, projectStoreDir, resolveProjectDir, refreshCandidates,
+};
 
 if (require.main === module) {
   if (process.argv.includes('--refresh')) {
     try {
-      const target = resolveRefreshTarget(os.homedir(), process.env.CLAUDE_PROJECT_DIR);
-      if (target) {
-        main(JSON.stringify(target), true); // 레포 exports/ 로 생성 (Y 프로젝트)
-        process.stdout.write(`[session-export] refresh 완료: ${target.session_id.slice(0, 8)}\n`);
+      let done = false;
+      for (const projectDir of refreshCandidates()) {
+        const target = resolveRefreshTarget(os.homedir(), projectDir);
+        if (!target) continue;
+        main(JSON.stringify(target), true, projectDir); // 레포 exports/ 로 생성 (Y 프로젝트)
+        process.stdout.write(`[session-export] refresh 완료: ${target.session_id.slice(0, 8)} (${projectDir})\n`);
+        done = true;
+        break;
       }
-    } catch { /* 비차단 */ }
+      // 무음 no-op 금지 — 찾지 못했으면 이유를 알린다 (exit 0: 커밋 흐름 비차단)
+      if (!done) process.stdout.write(`[session-export] refresh 대상 세션을 찾지 못함 — 확인한 경로: ${refreshCandidates().join(', ')}\n`);
+    } catch (e) { process.stdout.write(`[session-export] refresh 실패(비차단): ${e.message}\n`); }
     process.exit(0);
   }
   let input = '';

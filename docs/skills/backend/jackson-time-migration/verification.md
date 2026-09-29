@@ -2,7 +2,7 @@
 skill: jackson-time-migration
 category: backend
 version: v1
-date: 2026-04-22
+date: 2026-09-26 (최초: 2026-04-22)
 status: APPROVED
 ---
 
@@ -18,7 +18,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `jackson-time-migration` |
 | 스킬 경로 | `.claude/skills/backend/jackson-time-migration/SKILL.md` |
-| 검증일 | 2026-04-22 |
+| 검증일 | 2026-04-22 (재검증: 2026-09-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 
@@ -102,6 +102,23 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+### 2026-09-26 — 재검증 (60일 초과 정기 재검증)
+
+**수행일**: 2026-09-26
+**수행 방법**: SKILL.md + REFERENCE.md 전체 Read, WebSearch로 `jackson-datatype-jsr310` 최신 버전·API 안정성 재확인.
+
+**Q1. `jackson-datatype-jsr310` 최신 버전을 써도 SKILL.md의 `JavaTimeModule` 등록 방식이 그대로 맞는가?**
+- PASS(재검증). Maven Central 기준 최신 버전은 2.22.2로 확인. `registerModule(new JavaTimeModule())` API·`spring.jackson.serialization.write-dates-as-timestamps` 프로퍼티는 변경되지 않음.
+
+**Q2. Joda-Time → java.time 타입 매핑 표(섹션 6)가 여전히 유효한가?**
+- PASS(재검증). Joda-Time은 "finished" 상태로 유지보수 모드가 지속되어 매핑 표·마이그레이션 4단계 절차에 변경 사항 없음.
+
+**재검증 결론**: 핵심 클레임 전부 VERIFIED 유지. Jackson 버전 범위만 2.12~2.21 → 2.12~2.22로 갱신. status 변경 없음(APPROVED 유지).
+
+---
+
+### 2026-04-23 — 원 수행 기록
 
 **수행일**: 2026-04-23
 **수행 방법**: general-purpose 에이전트에게 SKILL.md만 Read한 뒤 2개 실전 질문 답변.
@@ -199,3 +216,4 @@ java.time으로 바꿀 때 ZonedDateTime과 OffsetDateTime 중 뭘 써야 하나
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
 | 2026-04-22 | v1 | 최초 작성 — Jackson + 시간 API 마이그레이션 스킬 (Joda 2.10.10 → java.time) | skill-creator |
+| 2026-09-26 | v1 | 재검증 — jackson-datatype-jsr310 최신 버전(2.22.2) 확인, 버전 범위 표기 갱신, 핵심 API 변경 없음 확인 | 메인 세션 |

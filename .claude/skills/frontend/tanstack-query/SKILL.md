@@ -7,8 +7,8 @@ description: TanStack Query(React Query) v5 실전 사용 패턴 — queryKey �
 
 > 소스: https://tanstack.com/query/latest/docs/framework/react (공식 문서)
 > 보조 소스: https://github.com/TanStack/query (공식 GitHub), https://registry.npmjs.org/@tanstack/react-query
-> 검증일: 2026-08-26 (최초 2026-08-11 · 08-26에 v5.102 통합 메서드 deprecated 반영)
-> 기준 버전: `@tanstack/react-query` **5.101.4** (React 18+ / 19 지원)
+> 검증일: 2026-09-28 (최초 2026-08-11 · 08-26 v5.102 통합 메서드 deprecated 반영 · 09-28 재검증(2차): 5.104.0까지 추가 deprecated 없음 확인)
+> 기준 버전: `@tanstack/react-query` **5.104.0** (React 18+ / 19 지원)
 
 ---
 
@@ -28,7 +28,7 @@ description: TanStack Query(React Query) v5 실전 사용 패턴 — queryKey �
 
 ## 0. 버전 기준 — v5가 현재 안정 메이저다
 
-- **React 어댑터(`@tanstack/react-query`)의 최신 안정 메이저는 v5**다 (검증 시점 5.101.4).
+- **React 어댑터(`@tanstack/react-query`)의 최신 안정 메이저는 v5**다 (검증 시점 5.104.0).
 - v6는 **Svelte 어댑터(`@tanstack/svelte-query` v6, Svelte 5 대응)** 와 **Solid 어댑터 v6 beta**에만 존재한다. 코어는 여전히 v5 계열이다.
   → **React 프로젝트에 "v6로 올려라"라고 조언하면 현재 시점에서 틀린 말이다.**
 - v4 → v5 마이그레이션(단일 객체 인자, `cacheTime`→`gcTime`, `useQuery`의 `onSuccess`/`onError` 제거, `isLoading`→`isPending`)은

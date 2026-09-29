@@ -13,7 +13,7 @@ description: >
 > 소스: https://github.com/pydantic/pydantic
 > 소스: https://github.com/pydantic/bump-pydantic
 > 소스: https://pypi.org/project/pydantic/
-> 검증일: 2026-05-15
+> 검증일: 2026-09-26 (2026-05-15 최초 검증 · 재검증 이력은 8절 참조. 재검증 결과 변동 없음 — 2.13.4가 2026-09 시점도 최신 안정판, 2.14.0은 아직 베타)
 > 대상 버전: Pydantic 2.13.4 (2026-05-06 릴리즈), pydantic-settings 2.14.1
 > 짝 스킬: `backend/python-fastapi`, `backend/python-basics` (해당 스킬이 추후 생성될 경우 함께 참조)
 

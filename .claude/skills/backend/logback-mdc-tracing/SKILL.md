@@ -13,9 +13,11 @@ description: Spring Boot 애플리케이션의 구조화된 로깅과 분산 추
 > - Micrometer Tracing: https://docs.micrometer.io/tracing/reference/index.html
 > - SLF4J MDC: https://www.slf4j.org/api/org/slf4j/MDC.html
 >
-> 검증일: 2026-04-22
+> 검증일: 2026-04-22 (재검증: 2026-09-26)
 
 > 주의: 이 문서는 Logback 1.5.x, Spring Boot 3.4+/3.5(Micrometer Tracing 1.3.x~1.5.x), Spring Boot 2.5.x(Sleuth 3.0.x / 3.1.x)를 기준으로 작성되었습니다. Sleuth는 **Spring Boot 3.x에서 동작하지 않으며**, 레거시 유지보수 프로젝트에만 사용합니다.
+>
+> 주의(2026-09-26 재검증): Logback 최신 stable은 1.5.38(2026-08-15)이며 1.5.x 라인 내 API·설정 스키마 변경 없음. Spring Boot 3.5는 2026-06-30 OSS EOL, 현재 활성 지원은 4.0.x/4.1.x — Micrometer Tracing 통합 방식(`management.tracing.*`, MDC 키 `traceId`/`spanId`)은 4.x에서도 동일하게 유효합니다.
 
 ---
 

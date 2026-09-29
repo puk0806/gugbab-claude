@@ -2,11 +2,11 @@
 
 ## 0단계 — 메모리 정리 (커밋 실행 전 필수)
 
-커밋·푸시 요청을 받으면 실행 전에 항상 아래를 수행한다 (@.claude/rules/memory-sync.md):
+커밋·푸시 요청을 받으면 실행 전에 항상 아래를 수행한다 (`.claude/rules/memory-sync.md` — memory 공유 옵션 설치된 경우. 레포에 `memory/`가 없으면 0단계 전체를 건너뛴다):
 
 1. 이번 작업으로 낡아진 memory 서술이 있는지 스캔 → Write/Edit로 갱신
 2. 기록할 가치 있는 신규 결정·피드백이 있으면 memory 파일로 저장 (+ MEMORY.md 인덱스)
-3. **세션 요약 최신화**: `node $CLAUDE_PROJECT_DIR/.claude/hooks/session-export.js --refresh` — 이 시점까지의 전체 대화를 exports에 재생성
+3. **세션 요약 최신화**: `R="$(git rev-parse --show-toplevel)" && CLAUDE_PROJECT_DIR="$R" node "$R/.claude/hooks/session-export.js" --refresh` — 이 시점까지의 전체 대화를 exports에 재생성 (Bash 도구에는 `CLAUDE_PROJECT_DIR`가 설정되지 않으므로 git 최상위로 명시 — 스크립트도 env가 없으면 git 최상위 → cwd 순으로 폴백하며, 대상 세션을 못 찾으면 그 사실을 출력한다)
 4. 레포 `memory/` ↔ 전역 `~/.claude/projects/<해시>/memory/` 미러 일치 확인 (`diff -rq`)
 5. memory 변경이 있으면 `[memory]` 커밋으로, exports 변경이 있으면 `[export]` 커밋으로 이번 배치에 포함
 
@@ -19,6 +19,6 @@
 - Type: Add / Remove / Fix / Modify / Improve / Refactor / Rename / Move (`[export]`는 관례상 `sync: <파일명>`)
 - Subject: 마침표 없음, 한국어 가능
 - 여러 관심사가 섞이면 커밋 분리 여부 먼저 확인
-- 푸터에 반드시 포함: `Co-Authored-By: Claude <현재 모델명> <noreply@anthropic.com>` (예: `Claude Fable 5` — 모델명 하드코딩 금지, 실행 시점 모델로)
+- 푸터에 반드시 포함: `Co-Authored-By: Claude <현재 모델명> <noreply@anthropic.com>` (예: `Claude Opus 5.5` — 예시일 뿐이며 하드코딩 금지, 실행 시점 모델명으로)
 
 staged가 없으면 변경된 파일 목록을 보여주고 무엇을 스테이징할지 물어봐.

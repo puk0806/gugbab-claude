@@ -11,12 +11,16 @@ disable-model-invocation: true
 > - https://github.com/actions/checkout (README·releases)
 > - https://github.blog/changelog/2026-06-18-safer-pull_request_target-defaults-for-github-actions-checkout/
 >
-> 검증일: 2026-08-11
+> 검증일: 2026-09-28 (최초 2026-04-20 · 재검증 08-11, 09-28)
 
-> 주의: 이 문서는 2026-08 기준 최신 메이저 버전으로 작성되었습니다.
+> 주의: 이 문서는 2026-09-28 기준 최신 메이저 버전으로 작성되었습니다.
 > `actions/checkout@v7`(7.0.1, 2026-07-20), `actions/cache@v6`(6.1.0), `actions/setup-node@v7`(7.0.0),
 > `actions/upload-artifact@v7`(7.0.1), `actions/download-artifact@v8`(8.0.1), `actions/github-script@v9`(9.0.0),
-> `dorny/paths-filter@v4`(4.0.3), `pnpm/action-setup@v6`(6.0.10), `Swatinem/rust-cache@v2`(2.9.2) 기준입니다.
+> `dorny/paths-filter@v4`(4.0.3), `pnpm/action-setup@v6`(6.1.0), `Swatinem/rust-cache@v2`(2.9.2),
+> `docker/login-action@v4`(4.6.0), `docker/metadata-action@v6`(6.2.0), `docker/build-push-action@v7`(7.4.0),
+> `aws-actions/configure-aws-credentials@v6`(6.3.0), `aws-actions/amazon-ecr-login@v2`(2.1.7),
+> `aws-actions/amazon-ecs-deploy-task-definition@v2`(2.6.3) 기준입니다.
+> **Node 24 런타임 전환 공통 사항 (09-28 확인):** 위 docker/*·aws-actions/configure-aws-credentials 메이저 업(login-action v3→v4, metadata-action v5→v6, build-push-action v6→v7, configure-aws-credentials v4/v5→v6)은 전부 **GitHub Actions Node 24 런타임 전환**이 핵심이며, 표준 입력(`registry`/`username`/`password`, `images`/`tags`, `context`/`push`/`tags`/`cache-from`/`cache-to`, `role-to-assume`/`aws-region`)은 변경되지 않았다. GitHub 호스트 러너는 기본 대응되지만 **셀프호스트 러너는 Actions Runner v2.327.1 이상**이 필요하다. `build-push-action` v7에서 `DOCKER_BUILD_NO_SUMMARY`/`DOCKER_BUILD_EXPORT_RETENTION_DAYS` 환경변수가 제거됐으니 사용 중이면 삭제한다.
 
 > **보안 필독 — actions/checkout v7 기본값 변경 (2026-06-18):** `pull_request_target` 및
 > `workflow_run`(pull_request 계열 이벤트로 트리거된 경우) 워크플로우에서 **포크 PR 코드 체크아웃이 기본 차단**됩니다.

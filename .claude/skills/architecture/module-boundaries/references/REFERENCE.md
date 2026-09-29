@@ -545,7 +545,7 @@ jobs:
 
 - **게이트는 하나만 빨갛게** 만든다. 여러 잡이 동시에 실패하면 개발자는 원인을 안 보고 규칙을 끄러 간다.
 - 실패 메시지에 **"대신 무엇을 하라"** 를 넣는다(`comment`/`message` 필드). 이것이 disable 주석 남발을 막는 가장 효과적인 장치다.
-- pre-commit에는 넣지 않는다(전체 그래프 분석은 커밋 루프에 과하다). `lint-staged`에는 ESLint만, dependency-cruiser는 pre-push 또는 CI. → 훅 구성은 `frontend/code-convention` 참조.
+- pre-commit에는 넣지 않는다(전체 그래프 분석은 커밋 루프에 과하다). `lint-staged`에는 ESLint만, dependency-cruiser는 pre-push 또는 CI. → 훅 구성은 `frontend/code-convention`(설치된 경우) 참조.
 
 ---
 

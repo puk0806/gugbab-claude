@@ -23,8 +23,13 @@ description: >
 > - https://docs.datadoghq.com/real_user_monitoring/application_monitoring/browser/monitoring_page_performance/
 > - https://docs.datadoghq.com/real_user_monitoring/explorer/search_syntax/
 >
-> 검증일: 2026-05-14
-> 기준 버전: `web-vitals` v5 · `@sentry/browser` 8.x · `@datadog/browser-rum` v7.1.0
+> 검증일: 2026-09-28 (최초 2026-05-14, 2026-09-28 재검증 — 아래 `> 주의` 참조)
+> 기준 버전(2026-05-14 당시): `web-vitals` v5 · `@sentry/browser` 8.x · `@datadog/browser-rum` v7.1.0
+> 기준 버전(2026-09-28 재검증 — npm registry 최신): `web-vitals` **v6.2.2** · `@sentry/browser` **v11.0.0** · `@datadog/browser-rum` **v7.14.0**
+
+> 주의 (2026-09-28 재검증, 확인 완료): `web-vitals`는 v5→v6으로 메이저가 올랐다. v6.0.0의 핵심은 Soft Navigation 지원 추가이며, 본 스킬이 쓰는 기본 API(`onCLS`/`onINP`/`onLCP`, `web-vitals/attribution`)는 공식 CHANGELOG 기준 breaking change 대상이 아니라 **코드 예시는 그대로 유효**하다(단, `verbatimModuleSyntax` tsconfig 사용 시 모듈 임포트 방식에 영향 가능 — 이 스킬 예시 범위 밖).
+>
+> `@sentry/browser`는 8.x→11.x로 **메이저 3단계**가 올랐다. 공식 마이그레이션 가이드(https://docs.sentry.io/platforms/javascript/migration/v10-to-v11/)로 직접 확인한 결과 — ① **`enableInp`는 v11부터 deprecated** (대체: `browserTracingIntegration({ webVitals: { ignore: ['inp'] } })`로 INP만 비활성화, 미지정 시 기본 포함, §4-1에 반영) ② 상호작용 span은 v11에서 `interactionsIntegration`으로 분리되고 "Report web vitals for bfcache restores by default"가 적용됨(§7-4에 반영) ③ **`interactionsSampleRate` 옵션은 v11이 아니라 이미 v8에서 제거**되어(GitHub `getsentry/sentry-javascript` issue #12006, 2024-05 확인) 이 스킬의 8.x 기준 자체에서도 §7-7의 "곱셈 샘플링" 서술이 부정확했음을 확인 — INP span은 `tracesSampleRate` 단독으로만 샘플링된다(§7-7 정정 완료). 이전 재검증에서 "미검증"으로 표기했던 항목은 모두 위와 같이 확인 완료.
 
 ---
 
@@ -130,18 +135,19 @@ Sentry.init({
   environment: 'production',
   integrations: [
     Sentry.browserTracingIntegration({
-      // SDK 8.x부터 기본 true. 명시적으로 끄지 않으면 INP 수집됨
+      // SDK 8.x~10.x: 기본 true. 명시적으로 끄지 않으면 INP 수집됨
+      // SDK 11+: deprecated — 아래 주의 참조
       enableInp: true,
     }),
   ],
-  tracesSampleRate: 0.1,            // 트랜잭션 10% 샘플링
-  // 상호작용(INP)은 trace 위에 추가 곱
-  // 예: 0.5 * 0.1 = 5% 상호작용 캡처
+  tracesSampleRate: 0.1,            // 트랜잭션 10% 샘플링. INP span도 이 비율 하나로만 샘플링됨(아래 §7-7 참조)
   tracePropagationTargets: ['localhost', /^https:\/\/api\.example\.com/],
 });
 ```
 
 자동 수집되는 Web Vitals: **LCP, CLS, FCP, TTFB, INP**. `browserTracingIntegration`이 페이지 로드·네비게이션·HTTP·long task를 자동 계측한다.
+
+> 주의(2026-09-28 재검증, 확인 완료): 위는 `@sentry/browser` 8.x~10.x 기준. 현재 최신은 v11.0.0이며 공식 마이그레이션 가이드(https://docs.sentry.io/platforms/javascript/migration/v10-to-v11/) 기준 `enableInp`는 **v11부터 deprecated**다. 대체 방법은 `browserTracingIntegration({ webVitals: { ignore: ['inp'] } })`로 **INP만 비활성화**하는 방식이며, 옵션을 아예 생략하면 기본으로 INP가 포함된다. 상호작용(INP) span 자체는 v11에서 별도의 `interactionsIntegration`으로 분리됐다("Report web vitals for bfcache restores by default"와 함께 v11 breaking change). v8.x 신규 프로젝트라면 위 코드 그대로 유효하고, v11로 마이그레이션할 계획이면 `enableInp` 줄을 제거하고 필요시 `webVitals: { ignore: [...] }`로 대체할 것.
 
 ### 4-2. release 값 일관성 (배포 비교의 핵심)
 
@@ -199,7 +205,7 @@ datadogRum.init({
 });
 ```
 
-> 주의 (버전 의존): INP 메트릭은 `@datadog/browser-rum` **v5.1.0** 이상에서 지원. LCP subparts는 v6.32.0+, INP subparts는 v6.33.0+. v2.2.0+ 부터 Core Web Vitals 자체는 수집된다.
+> 주의 (버전 의존): INP 메트릭은 `@datadog/browser-rum` **v5.1.0** 이상에서 지원. LCP subparts는 v6.32.0+, INP subparts는 v6.33.0+. v2.2.0+ 부터 Core Web Vitals 자체는 수집된다. (2026-09-28 재검증: npm 최신은 v7.14.0 — v7.1.0에서 마이너만 올라 API·옵션 변동 없음, `datadogRum.init` 시그니처 동일)
 
 ### 5-2. view 이벤트 필드 (RUM Explorer 쿼리 키)
 
@@ -290,6 +296,8 @@ INP는 **페이지 hidden 전환 시점**에 확정된다. SPA에서 라우트�
 
 `bfcache`로 복원된 페이지는 LCP·CLS가 다시 0부터 시작한다. `web-vitals` v3+는 자동 처리하지만, 직접 백엔드로 보낼 때는 `navigationType: 'back-forward-cache'`를 분리해서 본다.
 
+> 주의(2026-09-28 재검증, 확인 완료): `@sentry/browser` v11.0.0 공식 CHANGELOG·마이그레이션 가이드는 "Report web vitals for bfcache restores by default"를 breaking change로 명시한다 — v11부터 Sentry SDK가 bfcache 복원 시에도 기본으로 web vitals를 리포트한다(구 `bfcacheIntegration`도 `bfcacheMetricsIntegration`으로 이름 변경됨). v8.x 대비 release 비교 시 bfcache 트래픽 비중이 달라질 수 있으므로, v11 마이그레이션 시 배포 전후 비교 기준선(baseline)을 v11 적용 시점 이후로 다시 잡을 것.
+
 ### 7-5. Background tab
 
 백그라운드에서 열린 페이지(새 탭 cmd+click)는 LCP·INP가 신뢰성 없다. Datadog는 백그라운드 페이지의 LCP·INP를 수집하지 않는다고 명시.
@@ -298,9 +306,9 @@ INP는 **페이지 hidden 전환 시점**에 확정된다. SPA에서 라우트�
 
 브라우저 추적 방지·uBlock 사용자는 RUM payload가 차단된다. RUM 수치는 항상 **차단당하지 않는 사용자 분포**라는 점을 인지.
 
-### 7-7. tracesSampleRate × interactionsSampleRate 곱셈
+### 7-7. INP 캡처율은 `tracesSampleRate` 단독 제어 — 구 `interactionsSampleRate`는 이미 제거됨
 
-Sentry에서 두 옵션을 모두 0.1로 설정하면 INP 실제 캡처율은 **1%**(0.1 × 0.1). 트래픽 작은 사이트에서 INP 데이터가 너무 적으면 `interactionsSampleRate: 1.0`으로 올린다.
+> **정정 (2026-09-28 재검증)**: 과거 버전에 `interactionsSampleRate` 옵션(SDK 7.110.0에서 도입)이 있어 `tracesSampleRate`와 곱해져 INP 캡처율을 별도로 낮출 수 있었으나, **이 옵션은 v8에서 이미 제거**되어 이 스킬이 기준으로 삼는 8.x 이상에는 존재하지 않는다(GitHub `getsentry/sentry-javascript` issue #12006, 공식 문서 https://docs.sentry.io/platforms/javascript/tracing/instrumentation/automatic-instrumentation/ 에도 더 이상 언급 없음). 현재는 **INP span도 `tracesSampleRate` 하나로만 샘플링**된다 — 별도 곱셈 없음. 트래픽 작은 사이트에서 INP 데이터가 너무 적으면 `tracesSampleRate` 자체를 올린다(전체 트랜잭션 샘플링 비율도 함께 늘어난다는 점에 유의).
 
 ### 7-8. Release 누락 → "Unknown" 묶임
 

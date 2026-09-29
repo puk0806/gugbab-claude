@@ -2,7 +2,7 @@
 skill: unity-mobile-optimization
 category: game
 version: v1
-date: 2026-06-08
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `unity-mobile-optimization` |
 | 스킬 경로 | `.claude/skills/game/unity-mobile-optimization/SKILL.md` |
-| 검증일 | 2026-06-08 |
+| 검증일 | 2026-09-26 (최초 2026-06-08) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 | 기준 버전 | Unity 6 (6000.x LTS), URP 17, Addressables 2.0+ |
@@ -111,8 +111,8 @@ status: APPROVED
 
 ### 4-4. Claude Code 에이전트 활용 테스트
 
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-06-08 수행)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (3/3 PASS)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-06-08 수행, 2026-09-28 재검증 정정분 재테스트 완료)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (3/3 PASS, 재검증 2/2 PASS)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (gap 없음, 보완 불필요)
 
 ### 4-5. 교차 검증 클레임 판정
@@ -137,6 +137,36 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (Agent 도구 실제 서브에이전트 호출)
+**수행 방법**: 2026-09-26 재검증에서 정정된 내용(Android 텍스처 압축 실제 기본값)을 겨냥한 질문 1개 + 핵심 기능 질문 1개를 general-purpose 서브에이전트에게 "SKILL.md만 근거로 답하라"는 조건으로 위임, 답변과 근거 섹션을 대조 검증
+
+### 실제 수행 테스트 (2026-09-28)
+
+**Q1. Android 텍스처 압축 기본값**
+- ✅ PASS
+- 근거: SKILL.md "2. 메모리 최적화 > 2-1. Texture 압축" 표 및 각주
+- 상세: 에이전트가 "ASTC가 기본이 아니라 실제 기본값은 ETC2(RGBA)/ETC(RGB)"임을 정확히 도출. 2026-09-26 재검증으로 정정됐다는 사실까지 스스로 인용.
+
+**Q2. SRP Batcher + GPU Instancing 동시 사용 가능 여부**
+- ✅ PASS
+- 근거: SKILL.md "1. 렌더링 최적화 > 1-1. Draw Call 최소화" GPU Instancing 항목 + "8. 흔한 실수 패턴" 표
+- 상세: "동시 적용 불가, SRP Batcher 우선 적용, GPU Instancing 쓰려면 MaterialPropertyBlock 등으로 SRP Batcher 호환성 제거 필요"를 정확히 인용.
+
+### 발견된 gap (2026-09-28)
+
+- 없음
+
+### 판정 (2026-09-28)
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 해당 없음 (라이브러리 사용법·최적화 패턴 — 실사용 필수 카테고리 아님)
+- 2026-09-26 재검증 정정 내용(ASTC→ETC2 기본값 정정)이 실제 서브에이전트 답변에 정확히 반영됨을 확인 → APPROVED 전환
+
+---
+
+### (2026-06-08 시점 기록 — 아래 보존)
 
 **수행일**: 2026-06-08
 **수행자**: skill-tester → general-purpose
@@ -163,11 +193,28 @@ status: APPROVED
 
 없음. 3개 질문 모두 SKILL.md 내에서 충분한 근거와 판단 기준이 제공됨.
 
+### 2026-09-26 재검증
+
+**수행일**: 2026-09-26
+**수행 방법**: WebSearch로 핵심 클레임 3개 재확인 + SKILL.md 자체 답변 확인 질문 2개
+
+- 클레임1. "Android 모바일은 ASTC 6×6이 Unity 6 기본값" — WebSearch 재확인 → **DISPUTED(부정확)**: Unity 공식 문서 기준 Android **실제 기본 포맷은 ETC2**(RGBA)/ETC(RGB)이며 ASTC는 Texture Compression Targeting으로 추가 지정하는 권장 포맷. SKILL.md 2-1절 표·설명을 "ASTC 권장 + ETC2 기본 폴백" 구조로 정정
+- 클레임2. Google Play Target API 요구사항 — WebSearch 재확인 → **갱신 필요**: 2026-08-31부터 신규 앱·업데이트에 Target API 36(Android 16) 필수. SKILL.md "적용 대상" 표에 반영
+- 클레임3. SRP Batcher/GPU Instancing 동시 불가, ObjectPool 내장 API, FixedUpdate 50Hz 등 나머지 핵심 클레임 — 재확인 → **VERIFIED** (변동 없음)
+
+**Q1(재검증). "Android 텍스처 압축을 아무 설정 안 하면 기본으로 뭐가 쓰이나?"**
+- SKILL.md 답변 경로: 2-1절 "Unity Android 문서상 실제 기본값은 ETC2(RGBA)/ETC(RGB) — ASTC는 Texture Compression Targeting으로 추가 포맷 지정 필요"
+- 판정: PASS (정정 후 정확한 답변 가능. 정정 전에는 "ASTC가 기본값"이라는 부정확한 답이 나왔을 것)
+
+**Q2. "지금(2026-09) Google Play에 신규 게임을 출시하려면 Target API를 몇으로 잡아야 하나?"**
+- SKILL.md 답변 경로: "적용 대상" 표 "Target API 36 필수 — Google Play 2026-08-31부터 시행"
+- 판정: PASS
+
 ### 판정
 
-- agent content test: 3/3 PASS
+- agent content test: 3/3 PASS (최초) + 재검증 2/2 PASS
 - verification-policy 분류: 라이브러리 사용법·최적화 패턴 — content test PASS = APPROVED 가능
-- 최종 상태: APPROVED
+- Android 텍스처 압축 기본값 정정 + Target API 36 반영이라는 실질 내용 변경이 있었으므로 PENDING_TEST 전환. 차기 skill-tester 재테스트 시 APPROVED 재검토
 
 ---
 
@@ -178,14 +225,14 @@ status: APPROVED
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (3/3 PASS, 2026-06-08) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (3/3 PASS, 2026-06-08) + ✅ (2/2 PASS, 2026-09-26 자체 재검증) + ✅ (2/2 PASS, 2026-09-28 skill-tester 실제 서브에이전트 재테스트) |
+| **최종 판정** | **APPROVED** (2026-09-28 재테스트로 전환) |
 
 ---
 
 ## 7. 개선 필요 사항
 
-- [✅] skill-tester가 content test 수행하고 섹션 5·6 업데이트 (2026-06-08 완료, 3/3 PASS)
+- [✅] skill-tester가 content test 수행하고 섹션 5·6 업데이트 (2026-06-08 완료, 3/3 PASS / 2026-09-28 재검증 정정분 재테스트 완료, 2/2 PASS)
 - [❌] 발열·배터리 절대 임계치는 기기 다양성 때문에 일반화하기 어렵다. 사용자 프로젝트의 타겟 디바이스 풀이 확정되면 디바이스별 30분 플레이 KPI 표를 별도 부록으로 추가 검토. (차단 요인 아님 — 선택 보강)
 - [❌] URP 17 2D Renderer의 라이팅 (2D Light, Shadow Caster 2D) 최적화 항목은 본 스킬 범위 밖이라 미포함. 별도 스킬(`unity-urp-2d-lighting-optimization`) 분리 검토. (차단 요인 아님 — 별도 스킬 분리 과제)
 - [❌] Burst Compiler + Job System 활용 패턴은 본 스킬에서 다루지 않음. ECS·DOTS 2D 스킬로 별도 분리. (차단 요인 아님 — 별도 스킬 분리 과제)
@@ -198,3 +245,5 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-06-08 | v1 | 최초 작성 — Unity 6 + URP 17 + Addressables 2.0+ 기준 모바일 2D 최적화 가이드. 14개 핵심 클레임 교차 검증 (VERIFIED 12 / DISPUTED 1 → 일반화 / UNVERIFIED 1 → 일반화) | skill-creator |
 | 2026-06-08 | v1 | 2단계 실사용 테스트 수행 (Q1 Draw Call+SRP Batcher+GPU Instancing 동시 불가 / Q2 ObjectPool 내장 API 구조 / Q3 Managed Stripping High 위험·대처) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-26 | v1 | 재검증(98개 일괄 재검증 대상). Android 텍스처 압축 기본값(ASTC→실제 ETC2) 정정, Google Play Target API 36(2026-08-31 시행) 반영 → 실질 내용 변경으로 PENDING_TEST 전환 | Claude Code |
+| 2026-09-28 | v1 | 2단계 실사용 테스트 재수행 (Q1 Android 텍스처 압축 기본값 정정 확인 / Q2 SRP Batcher+GPU Instancing 동시 사용 불가) → 2/2 PASS, APPROVED 전환 | skill-tester |

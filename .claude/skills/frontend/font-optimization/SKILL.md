@@ -16,7 +16,7 @@ description: 웹폰트 로딩 전략·CLS 감소·CJK(한국어) 서브셋·vari
 > - Pretendard GitHub: https://github.com/orioncactus/pretendard
 > - Noto CJK GitHub: https://github.com/notofonts/noto-cjk
 > - Google Fonts — Noto Sans Korean: https://fonts.google.com/noto/specimen/Noto+Sans+KR
-> 검증일: 2026-06-03
+> 검증일: 2026-09-28 (최초 2026-06-03)
 
 CLS·LCP에 직결되는 *폰트 로딩 동작*과 한국어(CJK) 환경 특수 사항을 분리해 정리한 카탈로그. LCP·CLS 자체 지표는 [[core-web-vitals-optimization]]에 위임한다.
 

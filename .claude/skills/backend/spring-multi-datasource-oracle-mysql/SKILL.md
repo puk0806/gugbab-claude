@@ -13,9 +13,11 @@ description: Spring Boot 2.5/2.7 및 3.x에서 Oracle(Primary) + MySQL(Secondary
 > - https://dev.mysql.com/doc/connector-j/en/
 > - https://docs.spring.io/spring-boot/reference/io/jta.html
 >
-> 검증일: 2026-04-22
+> 검증일: 2026-04-22 (재검증: 2026-09-26)
 
 > 주의: 본 스킬은 Spring Boot 2.7 + Java 8/11 (레거시 환경)과 Spring Boot 3.x + Java 17+ (모던 환경) 두 축을 동시에 다룹니다. 각 섹션에서 버전별 분기를 명시합니다. Spring Boot 2.7은 2023-11-24로 OSS 지원이 종료되었으므로 신규 프로젝트에는 3.x 사용을 권장합니다.
+>
+> 주의(2026-09-26 재검증): MySQL은 2026-07 릴리스(26.7.0)부터 `com.mysql:mysql-connector-j` 버전 표기를 캘린더 버전(YY.M.P)으로 전환했습니다(9.x 계열의 후속). 드라이버 클래스명(`com.mysql.cj.jdbc.Driver`)·`sslMode`/`allowPublicKeyRetrieval` 설정은 변경 없이 그대로 유효합니다. `ojdbc11`도 23.x/21.22.x 등 신규 패치가 배포되었으나 API·드라이버 클래스명(`oracle.jdbc.OracleDriver`)은 동일합니다. 의존성 버전은 `mysql-connector-j`/`ojdbc11` 모두 Spring Boot BOM 또는 최신 안정 버전 확인 후 프로젝트에 맞게 고정하세요.
 
 ---
 

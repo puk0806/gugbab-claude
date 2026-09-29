@@ -1,8 +1,8 @@
 ---
 skill: palm-photo-capture-vision
 category: frontend
-version: v1
-date: 2026-09-10
+version: v2
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -16,9 +16,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `palm-photo-capture-vision` |
 | 스킬 경로 | `.claude/skills/frontend/palm-photo-capture-vision/SKILL.md` |
-| 검증일 | 2026-09-10 |
+| 검증일 | 2026-09-28 (재검증, 이전 2026-09-10) |
 | 검증자 | skill-creator (Claude Code) |
-| 스킬 버전 | v1 |
+| 스킬 버전 | v2 |
 | 소스 유형 | 라이브러리·표준 혼합 (Anthropic 공식 API 문서 + MDN 웹 표준 + 국내 법령 + 학술 원저) |
 
 ---
@@ -281,6 +281,26 @@ Claude Vision 통합 패턴 스킬이라 general-purpose로 충분하다고 판�
 
 ---
 
+### [2026-09-28] 재검증(2차) — Vision 이미지 제한·해상도 티어·모델 ID 현행성 재확인
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md·references/REFERENCE.md 전체 Read → 핵심 클레임 3개를 1차 소스(platform.claude.com WebFetch, WebSearch)와 대조, 보강·축소 검토
+
+**클레임 대조 결과**:
+1. 이미지당 최대 크기(직접 API 10MB / Bedrock·GCP 5MB / claude.ai 10MB), 최대 치수 8000×8000px, 요청당 이미지 수(200k 컨텍스트 모델 100장·그 외 600장·claude.ai 20장), 21장 이상 시 변당 2000px 이하 권장 → **VERIFIED** (WebFetch로 `platform.claude.com/docs/en/build-with-claude/vision` "Request limits" 섹션 전문 재확인, REFERENCE.md §5-1 표와 문구까지 일치)
+2. 해상도 티어 — 표준(1568px/1568토큰) vs 고해상도(2576px/4784토큰), 고해상도 적용 대상이 **"Claude 4.7 and later models"** → **VERIFIED** (공식 문서가 지금도 정확히 이 문구·수치를 그대로 사용, REFERENCE.md §5-1·§5-2의 "Claude 4.7 이후 모델" 서술과 정확히 일치 — 축소·정정 불필요)
+3. SKILL.md 예시 코드의 모델 ID(`claude-sonnet-5`, `claude-haiku-4-5`)가 현행 별칭인지 → **VERIFIED** (공식 문서 코드 예시는 `claude-opus-5-5` 풀 ID를 쓰지만, `agent-design.md` 기준 sonnet·haiku 별칭은 최신 모델로 자동 해석되므로 SKILL.md의 별칭 사용은 계속 유효. 구세대 하드코딩 ID 없음)
+
+**보강(ADD)·축소**: 없음 — 3개 클레임 모두 VERIFIED. 개인정보·손금 한계 고지(§7)·흔한 실수(§9)·릴리즈 체크리스트(§10)는 축소 대상 아니므로 유지.
+
+**실전 질문 재검증**:
+- Q1. "손 사진 21장 이상을 한 요청에 보내야 한다면 치수 제한이 어떻게 바뀌나?" → REFERENCE.md §5-1 표 근거로 PASS
+- Q2. "Claude Opus 5(고해상도 티어)에 3:4 손바닥 사진을 보낼 때 목표 크기는?" → REFERENCE.md §5-2 표(1648×2197) 근거로 PASS
+
+**재검증 최종 판정**: status **APPROVED 유지** (내용 변경 없음, 검증일만 갱신)
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -327,3 +347,5 @@ Claude Vision 통합 패턴 스킬이라 general-purpose로 충분하다고 판�
 | 2026-09-10 | v1 | 2단계 실사용 테스트 수행 (Q1 후면 카메라 constraints+권한 거부 처리 / Q2 리사이즈·압축·quality 값 / Q3 손 아님 거부 게이트+금지 카피) → 3/3 PASS, PENDING_TEST → APPROVED 전환. README 동기화는 여전히 미수행(별도 배치 필요) | skill-tester |
 | 2026-09-11 | v1.1 | 캐주얼 앱 방향 정리 — 삭제된 운세 콘텐츠 윤리 스킬 참조 2곳(짝 스킬 안내·§7 카피 규칙)을 `humanities/palmistry-limitations` 단일 참조로 정리. 촬영·비전 파이프라인 본문 변동 없음 | main session |
 | 2026-09-25 | v1.1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | skill-creator |
+| 2026-09-25 | v1.1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |
+| 2026-09-28 | v2 | 재검증(2차) — Vision 이미지 제한·해상도 티어(Claude 4.7 이후 고해상도)·모델 ID 현행성 재확인, 3/3 VERIFIED·DISPUTED 0, 내용 변경 없음 → APPROVED 유지 | Claude (Sonnet 5) |

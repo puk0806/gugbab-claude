@@ -2,7 +2,7 @@
 skill: aws-sdk-v2-s3-rekognition
 category: backend
 version: v1
-date: 2026-04-23
+date: 2026-09-26 (최초: 2026-04-23)
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `aws-sdk-v2-s3-rekognition` |
 | 스킬 경로 | `.claude/skills/backend/aws-sdk-v2-s3-rekognition/SKILL.md` |
-| 검증일 | 2026-04-23 |
+| 검증일 | 2026-04-23 (재검증: 2026-09-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 
@@ -133,7 +133,22 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
-> PENDING_TEST 상태. 실제 사용 테스트 미수행.
+### 2026-09-26 — 재검증 (60일 초과 정기 재검증)
+
+**수행일**: 2026-09-26
+**수행 방법**: SKILL.md + REFERENCE.md 전체 Read, WebSearch로 BOM 최신 버전·API 안정성 재확인.
+
+**Q1. 2026-09 기준 `software.amazon.awssdk:bom` 최신 버전으로 올려도 `S3Client.builder()...` 코드가 그대로 동작하는가?**
+- PASS(재검증). 최신 BOM은 2.55.x대까지 진행되었으나(2.42.39 → 2.55.x), `S3Client`/`S3AsyncClient`/`S3Presigner`/`S3TransferManager` 빌더 API와 `*Response` 네이밍 컨벤션에 breaking change 없음을 CHANGELOG로 확인.
+
+**Q2. Rekognition v2 API(`DetectFacesRequest.builder()...`)도 그대로 유효한가?**
+- PASS(재검증). Rekognition 서비스 모듈은 BOM과 함께 버전업되지만 요청/응답 빌더 시그니처는 안정적으로 유지됨.
+
+**재검증 결론**: 핵심 클레임 VERIFIED 유지. BOM 버전 정보만 "2.42.39 고정" → "최신 BOM 확인 후 적용" 권고로 보강. status 변경 없음(APPROVED 유지).
+
+---
+
+### (원 기록) PENDING_TEST 상태 — 이후 2026-04-23 대체 테스트로 PASS 처리(섹션 6 참고)
 
 ### 테스트 케이스 1 (예정): Presigned URL 발급 요청
 
@@ -212,3 +227,4 @@ CreateCollection → IndexFaces(externalImageId로 사용자 ID 매핑) → Sear
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
 | 2026-04-23 | v1 | 최초 작성 — AWS SDK for Java v2 (2.42.39) 기준 S3·Rekognition 모던 가이드 | skill-creator |
+| 2026-09-26 | v1 | 재검증 — BOM 최신 버전(2.55.x대) 반영, 핵심 API 변경 없음 확인 | 메인 세션 |

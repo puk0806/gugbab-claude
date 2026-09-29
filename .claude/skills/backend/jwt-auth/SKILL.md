@@ -7,9 +7,9 @@ description: Rust JWT 인증 패턴 - jsonwebtoken 크레이트 + Axum 미들웨
 
 > 소스: https://docs.rs/jsonwebtoken/latest/jsonwebtoken/ | https://github.com/Keats/jsonwebtoken
 > 소스: https://docs.rs/axum/latest/axum/middleware/
-> 검증일: 2026-06-20
+> 검증일: 2026-09-26 (재검증)
 
-> 주의: 이 문서는 jsonwebtoken 10.x / axum 0.8.x 기준으로 작성되었습니다. 버전 변경 시 API 시그니처와 기본값이 달라질 수 있으므로 공식 docs.rs를 반드시 확인하세요.
+> 주의: 이 문서는 jsonwebtoken 10.x/11.x / axum 0.8.x 기준으로 작성되었습니다. 2026-09 기준 최신은 jsonwebtoken 11.1.0이며 10.x → 11.x는 API 변경 없이 내부 성능 최적화만 있습니다(encode/decode 시그니처·feature flag 요구사항 동일). 버전 변경 시 API 시그니처와 기본값이 달라질 수 있으므로 공식 docs.rs를 반드시 확인하세요.
 
 > 주의: jsonwebtoken 10.0부터 암호화 백엔드를 feature flag로 명시적으로 선택해야 합니다. `aws_lc_rs` 또는 `rust_crypto` 중 하나를 반드시 지정해야 합니다. 9.x에서 마이그레이션 시 Cargo.toml 변경이 필요합니다.
 
@@ -21,15 +21,15 @@ description: Rust JWT 인증 패턴 - jsonwebtoken 크레이트 + Axum 미들웨
 # Cargo.toml
 [dependencies]
 axum = "0.8"
-axum-extra = { version = "0.10", features = ["typed-header"] }
-# jsonwebtoken 10.x: 암호화 백엔드 feature를 반드시 선택해야 한다
+axum-extra = { version = "0.12", features = ["typed-header"] }  # 2026-09 기준 최신 0.12.x, axum 0.8과 호환
+# jsonwebtoken 10.x/11.x: 암호화 백엔드 feature를 반드시 선택해야 한다
 # aws_lc_rs (권장: 성능 우수, AWS 환경에 최적화) 또는 rust_crypto (순수 Rust, 이식성 높음) 중 하나 선택
-jsonwebtoken = { version = "10", features = ["rust_crypto"] }
+jsonwebtoken = { version = "11", features = ["rust_crypto"] }  # 2026-09 기준 최신 11.1.0. 10.x도 API 동일
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 chrono = { version = "0.4", features = ["serde"] }
 tokio = { version = "1", features = ["full"] }
-tower-http = { version = "0.6", features = ["cors"] }
+tower-http = { version = "0.7", features = ["cors"] }
 dotenvy = "0.15"
 ```
 
@@ -381,7 +381,7 @@ fn load_jwt_config() -> (String, String) {
 
 ## jsonwebtoken 9.x → 10.x 마이그레이션 노트
 
-jsonwebtoken 10.0.0에서 **암호화 백엔드 선택이 필수**가 되었다.
+jsonwebtoken 10.0.0에서 **암호화 백엔드 선택이 필수**가 되었다. 11.x(2026-09 기준 최신 11.1.0)도 동일한 요구사항을 유지하며 API 변경은 없다(내부 성능 최적화만 포함).
 
 ### 변경 사항
 

@@ -4,7 +4,7 @@
  * 실행: node .claude/hooks/verification-guard.test.js
  */
 
-const { execSync } = require('child_process')
+const { spawnSync } = require('child_process')
 const fs = require('fs')
 const path = require('path')
 const HOOK = path.join(__dirname, 'verification-guard.js')
@@ -124,23 +124,27 @@ function runHook(toolName, filePath, content, eventName = 'PreToolUse') {
   })
   // 임시 파일로 입력 — 이모지·한글·줄바꿈이 포함된 콘텐츠도 안전하게 전달
   fs.writeFileSync(TMP, input, 'utf8')
-  try {
-    const output = execSync(`node "${HOOK}" < "${TMP}"`, {
-      encoding: 'utf8', timeout: 5000,
-    }).trim()
-    return { output: output ? JSON.parse(output) : null, exitCode: 0 }
-  } catch (e) {
-    let output = null
-    try { output = e.stdout?.trim() ? JSON.parse(e.stdout.trim()) : null } catch {}
-    return { output, exitCode: e.status ?? 1 }
-  }
+  const r = spawnSync('node', [HOOK], { input: fs.readFileSync(TMP), encoding: 'utf8', timeout: 5000 })
+  return { stdout: r.stdout || '', stderr: r.stderr || '', exitCode: r.status }
 }
 
+// 메시지 채널 단언 — PreToolUse·PostToolUse 모두 exit 2 시 Claude 에게 가는 것은 stderr.
+// (PostToolUse 에서 stdout JSON 은 decision:"block" 이 있어야만 reason 이 쓰이므로 {reason} 단독은 유실)
+// 차단: exit 2 + stderr 에 태그 + stdout 에 태그 없음 / 통과: exit 0 + 양 채널 모두 태그 없음
+const TAG = '[verification-guard]'
 function test(desc, toolName, filePath, content, expectedPass, eventName = 'PreToolUse') {
-  const { output, exitCode } = runHook(toolName, filePath, content, eventName)
-  const didPass = exitCode === 0 && output === null
-  const pass = didPass === expectedPass
-  console.log(`  ${pass ? '✅' : '❌'} ${desc} → ${pass ? 'PASS' : `FAIL (exitCode: ${exitCode}, output: ${JSON.stringify(output)})`}`)
+  const { stdout, stderr, exitCode } = runHook(toolName, filePath, content, eventName)
+  let why = ''
+  if (expectedPass) {
+    if (exitCode !== 0) why = `exitCode: ${exitCode}`
+    else if (stdout.trim() || stderr.includes(TAG)) why = '통과인데 사유 출력'
+  } else {
+    if (exitCode !== 2) why = `exitCode: ${exitCode} (기대 2)`
+    else if (!stderr.includes(TAG)) why = 'stderr 에 차단 사유 없음'
+    else if (stdout.includes(TAG)) why = 'stdout 에 차단 사유가 섞임'
+  }
+  const pass = !why
+  console.log(`  ${pass ? '✅' : '❌'} ${desc} → ${pass ? 'PASS' : `FAIL (${why})`}`)
   pass ? passed++ : failed++
 }
 

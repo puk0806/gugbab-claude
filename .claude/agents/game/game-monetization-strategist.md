@@ -157,6 +157,8 @@ ARPU = (광고 수익 + IAP 수익) / DAU
 
 ### 7단계: UA 전략 + 예산 배분
 
+> 채널별 운영 세부(ATT·SKAN 4.0 대응, 어트리뷰션 설정 등)는 `game/mobile-user-acquisition` 스킬 참조.
+
 **UA 시작 조건 (소프트런치 KPI 충족 후)**
 - D1 ≥ 35%, D7 ≥ 12% 달성 전 스케일 UA 금지
 - Crashlytics 크래시 없는 상태(ANR 0.47% 미만) 확인 후 시작

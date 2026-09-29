@@ -116,8 +116,7 @@ uv add fastapi           # pyproject.toml + uv.lock 모두 갱신
 
 ## 짝 스킬
 
-- `backend/python-basics` — Python 언어 기본기 (선언, 타입 힌트, 모듈)
 - `backend/python-fastapi` — FastAPI 웹 프레임워크
-- `backend/python-pytest` — pytest 기반 테스트
+- `backend/python-basics`, `backend/python-pytest` — Python 언어 기본기·pytest 테스트 스킬은 아직 생성되지 않음(해당 스킬이 추후 생성될 경우 함께 참조)
 
 `uv`는 이들 스킬의 *프로젝트 셋업·실행 인프라*를 담당한다. 코드 작성·테스트 작성은 각 짝 스킬을 참조한다.

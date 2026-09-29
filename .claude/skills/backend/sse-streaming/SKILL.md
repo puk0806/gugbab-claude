@@ -5,10 +5,11 @@ description: Rust Axum SSE 스트리밍 구현 — Sse 응답, Event 구성, tok
 
 # Axum SSE 스트리밍 구현
 
-> 소스: https://docs.rs/axum/latest/axum/response/sse/index.html | https://docs.rs/tokio-stream/latest/tokio_stream/ | https://developer.mozilla.org/en-US/docs/Web/API/EventSource
-> 검증일: 2026-08-12
+> 소스: https://docs.rs/axum/latest/axum/response/sse/index.html | https://docs.rs/tokio-stream/latest/tokio_stream/ | https://developer.mozilla.org/en-US/docs/Web/API/EventSource | https://platform.claude.com/docs/en/api/messages-streaming
+> 검증일: 2026-09-28 (최초 2026-04-06)
 
-> 주의: Axum 0.8.x 기준으로 작성. 0.7 이하에서는 `axum::response::sse` 모듈 경로 및 일부 API가 다를 수 있다.
+> 주의: Axum 0.8.x 기준으로 작성(crates.io 최신 0.8.9, 소스 코드 직접 대조 완료). 0.7 이하에서는 `axum::response::sse` 모듈 경로 및 일부 API가 다를 수 있다.
+> 주의: Anthropic 공식 문서 URL이 `docs.anthropic.com` → `platform.claude.com`으로 이전됨(구 URL은 301 리다이렉트로 계속 동작). 새 스킬·참조 작성 시 `platform.claude.com` 기준으로 인용 권장.
 
 ---
 
@@ -70,11 +71,19 @@ Event::default()
     .id("msg-001")
     .data("tracked message")
 
-// JSON 데이터 전송
+// JSON 데이터 전송 — 방법 1: 수동 직렬화
 let payload = serde_json::json!({ "role": "assistant", "content": "Hi" });
 Event::default()
     .event("message")
     .data(payload.to_string())
+
+// JSON 데이터 전송 — 방법 2: json_data() (axum "json" feature, 기본 활성화, 0.8.9 소스 확인)
+#[derive(serde::Serialize)]
+struct Payload { role: &'static str, content: &'static str }
+
+Event::default()
+    .event("message")
+    .json_data(Payload { role: "assistant", content: "Hi" })?  // Result<Event, axum_core::Error> 반환
 
 // 재연결 간격 설정 (밀리초)
 Event::default()
@@ -87,7 +96,8 @@ Event::default().comment("keep-alive")
 
 | 메서드 | SSE 필드 | 용도 |
 |--------|----------|------|
-| `.data(str)` | `data:` | 이벤트 페이로드 |
+| `.data(str)` | `data:` | 이벤트 페이로드 (문자열) |
+| `.json_data(T)` | `data:` | 이벤트 페이로드를 JSON으로 직렬화 (`Result` 반환, "json" feature 필요·기본 활성화) |
 | `.event(str)` | `event:` | 이벤트 타입명 (기본: `message`) |
 | `.id(str)` | `id:` | 이벤트 ID (재연결 추적) |
 | `.retry(Duration)` | `retry:` | 재연결 대기 시간 |
@@ -249,23 +259,43 @@ async fn chat_stream(
                     continue;
                 };
 
-                // event: message_stop 이면 종료
-                if data.contains("\"type\":\"message_stop\"") {
-                    let _ = tx.send(Ok(
-                        Event::default().event("done").data("[DONE]")
-                    )).await;
-                    return;
-                }
+                // 문자열 포함 검사(.contains()) 대신 JSON 파싱 후 "type" 필드로 분기.
+                // 공식 문서: "new event types may be added, and your code should
+                // handle unknown event types gracefully" — 파싱 실패·미매치 타입은
+                // 무시하고 스트림을 계속 읽어야 향후 신규 이벤트 타입에도 끊기지 않는다.
+                let Ok(parsed) = serde_json::from_str::<serde_json::Value>(data) else {
+                    continue; // 파싱 실패한 라인은 무시하고 계속 진행
+                };
 
-                // content_block_delta에서 텍스트 추출
-                if data.contains("\"type\":\"content_block_delta\"") {
-                    if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(data) {
-                        if let Some(text) = parsed["delta"]["text"].as_str() {
-                            let _ = tx.send(Ok(
-                                Event::default().event("text_delta").data(text)
-                            )).await;
+                match parsed["type"].as_str() {
+                    Some("content_block_delta") => {
+                        // delta.type이 text_delta인 경우만 텍스트 추출.
+                        // input_json_delta(도구 사용)·thinking_delta·signature_delta는
+                        // 필요 시 별도 분기를 추가하고, 여기서는 무시하고 넘어간다.
+                        if parsed["delta"]["type"].as_str() == Some("text_delta") {
+                            if let Some(text) = parsed["delta"]["text"].as_str() {
+                                let _ = tx.send(Ok(
+                                    Event::default().event("text_delta").data(text)
+                                )).await;
+                            }
                         }
                     }
+                    Some("message_stop") => {
+                        let _ = tx.send(Ok(
+                            Event::default().event("done").data("[DONE]")
+                        )).await;
+                        return;
+                    }
+                    Some("error") => {
+                        let msg = parsed["error"]["message"].as_str().unwrap_or("stream error");
+                        let _ = tx.send(Ok(
+                            Event::default().event("error").data(msg)
+                        )).await;
+                        return;
+                    }
+                    // message_start / content_block_start / content_block_stop /
+                    // message_delta / ping 및 향후 추가될 신규 타입은 그대로 무시
+                    _ => {}
                 }
             }
         }
@@ -279,7 +309,9 @@ async fn chat_stream(
 }
 ```
 
-> 주의: Claude API 스트리밍 응답의 전체 이벤트 타입은 `message_start`, `content_block_start`, `content_block_delta`, `content_block_stop`, `message_delta`, `message_stop`, `ping`, `error`이며, extended thinking 사용 시 `thinking_delta`, `signature_delta`가 추가됩니다. API 버전에 따라 변경될 수 있으므로 최신 사양은 https://docs.anthropic.com/en/api/messages-streaming 참조.
+> 주의: Claude API 스트리밍 응답의 전체 이벤트 타입은 `message_start`, `content_block_start`, `content_block_delta`, `content_block_stop`, `message_delta`, `message_stop`, `ping`, `error`이며, extended thinking 사용 시 `thinking_delta`, `signature_delta`가 추가됩니다(2026-09-28 재확인). 도구 사용 시 `content_block_delta.delta.type`에 `input_json_delta`도 나타난다. API 버전에 따라 변경될 수 있으므로 최신 사양은 https://platform.claude.com/docs/en/api/messages-streaming 참조.
+>
+> 주의: 공식 문서는 "새 이벤트 타입이 추가될 수 있으니 알 수 없는 이벤트 타입도 우아하게 처리하라"고 명시한다(버저닝 정책, https://platform.claude.com/docs/en/build-with-claude/streaming). 위 예제는 이를 반영해 `data.contains("\"type\":\"...\"")` 같은 문자열 포함 검사 대신 `serde_json::from_str::<Value>(data)`로 먼저 파싱한 뒤 `parsed["type"]`로 분기하고, **매치되지 않는 타입(및 파싱 실패)은 무시하고 계속 진행**한다(신규 타입 수신 시에도 스트림이 끊기지 않도록).
 
 ---
 

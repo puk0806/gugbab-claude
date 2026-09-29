@@ -49,7 +49,7 @@ Claude가 memory 파일 Write/Edit
 
 1. 이번 작업으로 낡아진 memory 서술 스캔 → 갱신 (예: 훅 수·정책 변경이 기존 memory와 어긋나는 경우)
 2. 기록할 가치 있는 신규 결정·피드백 저장 (+ MEMORY.md 인덱스 갱신)
-3. **세션 요약 최신화**: `node $CLAUDE_PROJECT_DIR/.claude/hooks/session-export.js --refresh`
+3. **세션 요약 최신화**: `R="$(git rev-parse --show-toplevel)" && CLAUDE_PROJECT_DIR="$R" node "$R/.claude/hooks/session-export.js" --refresh` (Bash 도구엔 `CLAUDE_PROJECT_DIR`가 없으므로 git 최상위로 명시)
    — Stop 이벤트를 기다리지 않고 이 시점까지의 전체 대화를 exports에 재생성 (PR에 대화 기록 누락 방지)
 4. 레포 ↔ 전역 미러 일치 확인 (`diff -rq memory ~/.claude/projects/<해시>/memory`)
 5. memory 변경 → `[memory]` 커밋 / exports 변경 → `[export]` 커밋으로 **해당 커밋 배치에 함께 포함**

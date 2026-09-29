@@ -22,12 +22,17 @@ disable-model-invocation: true
 > - [n8n Release notes 2.x](https://docs.n8n.io/changelog/release-notes-2.x)
 > - [Anthropic — Models overview](https://platform.claude.com/docs/en/about-claude/models/overview)
 > - [n8n PR #13543 — Anthropic 모델 동적 로딩 + thinking 지원](https://github.com/n8n-io/n8n/pull/13543)
-> - [n8n issue #28635 — Anthropic 노드 thinking 포맷 미갱신](https://github.com/n8n-io/n8n/issues/28635)
+> - [n8n issue #28635 — Anthropic 노드 thinking 포맷 미갱신 (→ PR #29467로 해결됨)](https://github.com/n8n-io/n8n/issues/28635)
+> - [n8n PR #29467 — Anthropic 노드 Adaptive Thinking Mode 도입 (typeVersion 1.5, n8n 2.20.0)](https://github.com/n8n-io/n8n/pull/29467)
+> - [n8n Docs — Save and publish workflows](https://docs.n8n.io/build/understand-workflows/save-and-publish-workflows)
+> - [n8n Support — Understanding Workflow Publishing in n8n 2.0](https://support.n8n.io/article/understanding-workflow-publishing-in-n-8-n-2-0)
+> - [n8n Docs — Security environment variables (`N8N_BLOCK_ENV_ACCESS_IN_NODE`)](https://docs.n8n.io/deploy/host-n8n/configure-n8n/basic-configuration/use-environment-variables/security)
+> - [npm registry — n8n latest 버전 조회](https://registry.npmjs.org/n8n/latest)
 >
-> 검증일: 2026-08-12
-> 대상 버전: n8n v2.x (2026-08-11 기준 stable v2.33.7 / beta v2.34.4)
+> 검증일: 2026-09-28 (최초 2026-05-15)
+> 대상 버전: n8n v2.x (2026-09-28 기준 npm latest **v2.40.7**)
 
-> 짝 스킬: `devops/n8n-self-hosting`, `devops/n8n-workflow-design`, `backend/python-anthropic-sdk`
+> 짝 스킬(설치된 경우 참조): `devops/n8n-self-hosting`, `devops/n8n-workflow-design`, `backend/python-anthropic-sdk`
 
 ---
 
@@ -64,7 +69,7 @@ n8n은 LangChain을 기반으로 **클러스터 노드(Cluster Nodes)** 구조�
 | Sampling Temperature | 0.0~1.0, 높을수록 다양성 증가 |
 | Top K | 다음 토큰 후보 수 |
 | Top P | nucleus sampling, 0.0~1.0 |
-| Enable Thinking / Thinking Budget | extended thinking 토글 + 예산 (아래 주의 참조) |
+| Thinking Mode (구 Enable Thinking / Thinking Budget) | `Disabled` / `Adaptive (Recommended)` / `Manual (Deprecated)` — n8n 2.20.0+/typeVersion 1.5+ 기준 (아래 주의 참조) |
 
 > **모델 목록은 하드코딩하지 않는다.** 이 노드는 자격증명의 API key로 Anthropic `/v1/models`를 조회해 드롭다운을 채운다.
 > 따라서 "어떤 모델이 뜨는가"는 **키에 열려 있는 모델**에 따라 달라진다. 워크플로우 JSON에는 선택된 모델 ID 문자열이 그대로 박히므로,
@@ -92,11 +97,14 @@ n8n은 LangChain을 기반으로 **클러스터 노드(Cluster Nodes)** 구조�
 > **구버전 모델명 금지:** `claude-3-7-sonnet`, `claude-3-5-sonnet`, `claude-3-haiku`, `claude-3-opus` 등 Claude 3 계열은
 > 대부분 **retired**(API 404)다. 과거 워크플로우 JSON에 이 문자열이 남아 있으면 실행이 실패하므로 일괄 점검 대상이다.
 
-> **주의 — thinking 파라미터 미갱신 (n8n issue #28635, 2026-08-11 기준 open):** Anthropic Chat Model 노드(v1.3)는
-> 레거시 포맷 `thinking: {type: "enabled", budget_tokens: N}`만 전송한다. Anthropic은 최신 모델에서 이 포맷을 제거하고
-> `thinking: {type: "adaptive"}` + `output_config.effort`를 요구하므로, **최신 모델 + thinking 활성화 조합은 400 에러**가 난다
-> (에러: `"thinking.type.enabled" is not supported for this model`). 노드가 수정될 때까지 우회책은 **thinking을 끄거나
-> extended thinking을 지원하는 모델을 쓰는 것**뿐이다. 깊은 추론이 필요하면 HTTP Request 노드로 Messages API를 직접 호출한다.
+> **해결됨 — thinking 파라미터 (n8n issue #28635 → PR #29467, n8n 2.20.0 / typeVersion 1.5부터):** 과거 Anthropic Chat Model
+> 노드(typeVersion 1.4 이하)는 레거시 포맷 `thinking: {type: "enabled", budget_tokens: N}`만 전송해 최신 모델 + thinking 활성화
+> 조합에서 400 에러(`"thinking.type.enabled" is not supported for this model`)가 났다. **n8n 2.20.0(2026-05-05 릴리즈)부터
+> typeVersion 1.5 노드에 `Thinking Mode` 옵션 3종이 생겼다: `Disabled` / `Adaptive (Recommended)` / `Manual (Deprecated)`.**
+> Adaptive를 고르면 노드가 `thinking.type: "adaptive"` + `output_config.effort`를 전송해 최신 모델과 호환된다. 2026-09-28
+> 기준 npm latest는 v2.40.7이므로 신규 인스턴스는 이 버전 이상을 쓴다. **오래된 워크플로우이거나 인스턴스가 2.20.0 미만이면
+> 여전히 레거시 경로**라 400이 날 수 있다 — 그 경우 `Manual`을 피하고 `Disabled`로 두거나 인스턴스를 업그레이드한다.
+> `Manual (Deprecated)`은 신규 워크플로우에서 선택하지 않는다.
 
 > **주의 — 샘플링 파라미터 (5 계열에서 제거됨):** Claude Opus 5.5·Opus 5·Sonnet 5·Fable 5.1·Fable 5·Opus 4.8/4.7은 `temperature`·`top_p`·`top_k`를
 > **더 이상 받지 않는다** — 기본값이 아닌 값을 보내면 400이다. n8n Anthropic Chat Model 노드는 Sampling Temperature 필드를
@@ -161,6 +169,12 @@ Chat Trigger는 세 가지 모드를 지원한다.
 - **Hosted Chat** — n8n이 호스팅하는 공개/임베드 URL
 - **Embedded Chat** — `@n8n/chat` 위젯으로 외부 사이트 임베드
 - **Webhook** — REST 호출
+
+> **주의 — Publish 필요 (n8n 2.0+):** 워크플로우 활성화 방식이 **Active 토글 → Publish 버튼**으로 바뀌었다. Save는 변경사항을
+> 저장만 할 뿐 운영에 반영하지 않으며, 화면 우측 상단 **Publish**(단축키 `Shift+P`)를 눌러야 그 버전이 고정 배포되어 Webhook·
+> Chat Trigger의 프로덕션 URL·스케줄·연결 앱 이벤트가 실제로 동작한다. 2.0 업그레이드 이전에 이미 활성화(active) 상태였던
+> 워크플로우는 자동으로 published로 마이그레이션되므로 별도 조치가 필요 없다. 새로 만든 LLM/챗봇 워크플로우는 Save만 하고
+> Publish를 잊으면 프로덕션 URL이 응답하지 않으니 주의한다.
 
 ### Simple Memory (구 Window Buffer Memory)
 
@@ -349,6 +363,7 @@ Chat Trigger ──▶ AI Agent ──▶ (Tool) Vector Store Retrieve
 | **Output 검증** | Structured Output Parser로 스키마 강제 + 후속 IF 노드로 값 범위 검증 |
 | **Rate Limit** | Wait 노드 / Queue 노드로 API rate limit 회피 |
 | **워크플로우 격리** | LLM 호출 워크플로우와 액션(메일 발송·DB 쓰기) 워크플로우 분리, Call n8n Workflow Tool로 명시적 호출 |
+| **Code 노드 `$env` 접근** | n8n 2.0부터 `N8N_BLOCK_ENV_ACCESS_IN_NODE` 기본값이 **`true`** — Code 노드(Code Tool 포함) 안의 환경변수 접근이 **기본 차단**된다(공식 v2.0 breaking changes: "n8n will block access to environment variables from the Code node by default"). 일반 노드 필드의 표현식은 이 변경의 영향을 받지 않는다. 시크릿은 환경변수 대신 n8n Credential로 관리하는 것이 공식 권장이며, 꼭 필요하면 인스턴스에 `N8N_BLOCK_ENV_ACCESS_IN_NODE=false`를 명시한다(짝 스킬 `devops/n8n-self-hosting`·`n8n-workflow-design`과 동일). |
 
 ---
 
@@ -372,7 +387,7 @@ Chat Trigger ──▶ AI Agent ──▶ (Tool) Vector Store Retrieve
         │     Model: claude-sonnet-5         # 드롭다운에서 선택 (API로 동적 조회)
         │     System Message: "당신은 꿈 해몽 전문가다. 문화적 맥락(동양 전통 해몽 + 현대 심리학)을 모두 고려해 균형 있게 해석한다."
         │     Sampling Temperature: (기본값 유지)  # 5 계열은 temperature 미지원 — 비기본값 전송 시 400
-        │     Enable Thinking: OFF            # issue #28635 — 최신 모델 + thinking = 400
+        │     Thinking Mode: Disabled          # 또는 Adaptive(Recommended) — Manual(Deprecated)은 피한다 (n8n 2.20.0+/typeVersion 1.5+)
         │
         ├─ [Simple Memory]
         │     Session Key: {{ $json.userId }}
@@ -408,6 +423,7 @@ Chat Trigger ──▶ AI Agent ──▶ (Tool) Vector Store Retrieve
 - Simple Memory의 `Session Key`를 `userId`로 → 같은 사용자의 꿈 이력 컨텍스트 유지
 - HTTP Request Tool은 선택. 없으면 모델 내재 지식으로만 해몽
 - 응답은 Respond to Webhook으로 반환 (Webhook의 Respond 설정이 `Using Respond to Webhook Node`여야 함)
+- Save만으로는 프로덕션 Webhook URL이 동작하지 않는다 — 화면 우측 상단 **Publish**를 눌러야 실제 요청을 받는다 (n8n 2.0+)
 
 ---
 
@@ -421,7 +437,9 @@ Chat Trigger ──▶ AI Agent ──▶ (Tool) Vector Store Retrieve
 | **`$ref` 사용 schema** | Structured Output Parser 에러 | 스키마를 inline 평탄화 |
 | **5 계열 모델 + Sampling Temperature 지정** | `400` — Opus 5.5·Opus 5·Sonnet 5·Fable 5.1·Fable 5·Opus 4.8/4.7은 `temperature`/`top_p`/`top_k` 미지원 | 노드 필드를 기본값으로 두고 프롬프트로 톤 제어 |
 | **`temperature` + `top_p` 동시** (4.6 이하 legacy 한정) | Anthropic API 에러 | 한쪽만 지정 |
-| **Enable Thinking + 최신 Claude 모델** | `400 "thinking.type.enabled" is not supported` | thinking OFF, 또는 HTTP Request 노드로 Messages API 직접 호출 (issue #28635) |
+| **Thinking Mode = Manual(Deprecated) + 최신 Claude 모델, n8n 2.20.0 미만/typeVersion 1.4 이하** | `400 "thinking.type.enabled" is not supported` | `Adaptive(Recommended)` 또는 `Disabled` 선택, 인스턴스를 2.20.0 이상으로 업그레이드 (issue #28635 → PR #29467로 해결) |
+| **Save만 하고 Publish 안 함 (n8n 2.0+)** | Webhook·Chat Trigger 프로덕션 URL·스케줄이 동작 안 함 | 우측 상단 **Publish**(`Shift+P`) 클릭 — Save는 저장만, 운영 반영 아님 |
+| **Code 노드 `$env`로 시크릿 그대로 노출** | 워크플로우 export·화면 공유 시 민감 환경변수 값 노출 | n8n 2.0+ 기본은 Code 노드 접근 차단(`N8N_BLOCK_ENV_ACCESS_IN_NODE=true`) — `false`로 풀어 쓰는 인스턴스에서 특히 주의. 시크릿은 Credential로 분리 |
 | **워크플로우에 Claude 3 계열 모델명 잔존** | 모델 404 / 실행 실패 | `claude-3-*` 문자열 일괄 검색 후 현행 모델로 교체 |
 | **오래된 가이드대로 Agent 타입 찾기** | UI에 드롭다운이 없음 | 1.82.0에서 제거됨 — 항상 Tools Agent |
 | **Motorhead 메모리 노드 사용** | 2.8.3부터 deprecated | Postgres / Redis Chat Memory로 이전 |
@@ -433,7 +451,7 @@ Chat Trigger ──▶ AI Agent ──▶ (Tool) Vector Store Retrieve
 
 ---
 
-## 14. 짝 스킬과의 관계
+## 14. 짝 스킬과의 관계 (설치된 경우 참조)
 
 | 스킬 | 다루는 범위 |
 |------|-------------|
@@ -442,4 +460,4 @@ Chat Trigger ──▶ AI Agent ──▶ (Tool) Vector Store Retrieve
 | `devops/n8n-workflow-design` | 일반 워크플로우 설계 원칙, 에러 처리, 모듈화 |
 | `backend/python-anthropic-sdk` | n8n 외부에서 직접 Anthropic SDK 호출(파이썬), Tool Use·streaming |
 
-> n8n 워크플로우 내에서 LLM을 *시각적 노드 조합*으로 다룰 때는 본 스킬을, 직접 SDK 호출이 필요한 영역(복잡한 도구 체인·테스트 코드)은 `backend/python-anthropic-sdk`를 참조한다.
+> n8n 워크플로우 내에서 LLM을 *시각적 노드 조합*으로 다룰 때는 본 스킬을, 직접 SDK 호출이 필요한 영역(복잡한 도구 체인·테스트 코드)은 `backend/python-anthropic-sdk`(설치된 경우)를 참조한다.

@@ -6,8 +6,8 @@ description: Storybook 10 + @storybook/test-runner + Playwright toHaveScreenshot
 # Storybook Visual Testing — 자체 호스팅 시각 회귀
 
 > 소스: https://storybook.js.org/docs/releases/migration-guide | https://github.com/storybookjs/test-runner | https://playwright.dev/docs/test-snapshots
-> 검증일: 2026-08-11
-> 대상 버전: Storybook 10.5.x · @storybook/test-runner 0.x · Playwright v1.59.x
+> 검증일: 2026-09-28 (최초 2026-04-29)
+> 대상 버전: Storybook 10.6.x · @storybook/test-runner 0.24.x · Playwright v1.63.x
 
 ---
 
@@ -84,7 +84,7 @@ export default config;
 | a11y addon | `@storybook/addon-a11y` 별도 패키지 | 여전히 별도 패키지 (Recommended 설치에 기본 포함) |
 | 자동 마이그레이션 | — | `npx storybook@latest upgrade` |
 
-> 주의: 10.4~10.5의 추가 사항(Vite 8 / Next.js 16.2 지원 등)은 시각 테스트 셋업에 직접 영향 없음. 현재 최신 안정은 10.5.x다.
+> 주의: 10.4~10.6의 추가 사항(Vite 8 / Next.js 16.2 지원, CLI·MCP 관련 기능 등)은 시각 테스트 셋업에 직접 영향 없음. 현재 최신 안정은 10.6.x다. `@storybook/test-runner`(현재 0.24.5)의 `peerDependencies`는 `storybook ^10.6.0-0`·`^11.0.0-0`까지 포함해 호환성 문제 없음(2026-09-28 npm registry 확인).
 
 ---
 
@@ -328,7 +328,7 @@ Playwright는 baseline 파일명에 플랫폼이 자동 포함된다: `card-chro
    ```bash
    # 로컬에서 CI와 동일한 Linux baseline 생성
    docker run --rm -v $(pwd):/work -w /work \
-     mcr.microsoft.com/playwright:v1.59.1-jammy \
+     mcr.microsoft.com/playwright:v1.63.0-jammy \
      npx playwright test --update-snapshots
    ```
 3. **Chromium만 사용** — Firefox/WebKit은 픽셀이 또 달라 baseline 3배가 됨. 컴포넌트 시각 회귀는 chromium 단일 채널로 충분

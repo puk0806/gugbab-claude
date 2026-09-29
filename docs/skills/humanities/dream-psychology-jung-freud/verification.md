@@ -1,8 +1,8 @@
 ---
 skill: dream-psychology-jung-freud
 category: humanities
-version: v1
-date: 2026-05-14
+version: v2
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `dream-psychology-jung-freud` |
 | 스킬 경로 | `.claude/skills/humanities/dream-psychology-jung-freud/SKILL.md` |
-| 검증일 | 2026-05-14 |
-| 검증자 | skill-creator (gugbab-claude) |
-| 스킬 버전 | v1 |
+| 검증일 | 2026-09-26 |
+| 검증자 | skill-creator (gugbab-claude) / 2026-09-26 재검증: 메인 세션 (독일어 원문·영역본·MaHS·PubMed·Crossref·SEP 직접 대조) |
+| 스킬 버전 | v2 |
 
 ---
 
@@ -103,10 +103,52 @@ status: APPROVED
 - [✅] skill-tester 호출 (2026-05-14 수행)
 - [✅] 테스트 질문 PASS/FAIL 기록 (3/3 PASS)
 - [✅] 실제 응답에서 학술 한계 박스 인용 확인
+- [✅] skill-tester → general-purpose 재테스트 수행 (2026-09-28, 1차 원문 대조 정정 2건 겨냥 2/2 PASS)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (도메인 전용 에이전트 미설치로 대체)
+**수행 방법**: 2026-09-26 재검증에서 정정된 1차 원문 대조 오류 2건("two craftsmen" SE→Brill 귀속 정정, Jung 보상 기능 인용문 CW 8→*Man and His Symbols* 정정)을 겨냥한 실전 질문 2개. SKILL.md Read 후 그 내용에만 의존해 답변, 근거 섹션 명시 필수.
+
+### 실제 수행 테스트 (재테스트, 2026-09-28)
+
+**Q1. 프로이트의 "두 명의 장인(two craftsmen)" 비유를 SE(Strachey 역) 직접 인용으로 논문에 표기해도 되는가?**
+- ✅ PASS
+- 근거: SKILL.md §1.4 (78~81줄) "주의 (2026-09-26 정정)" 문단
+- 상세: 에이전트가 "two craftsmen"이 SE가 아니라 Brill 역의 표현임을 정확히 지적하고, SE로 인용하려면 SE IV 6장 B절을 별도로 확인해야 한다는 스킬의 정정 내용을 그대로 재현. 옛 오류(SE 귀속)로 답하지 않음을 확인.
+
+**Q2. 융의 보상 기능 대표 인용문을 *Collected Works* Vol. 8 직접 인용으로 표기해도 되는가?**
+- ✅ PASS
+- 근거: SKILL.md §2.4 (128~133줄) "주의 (2026-09-26 정정)" 문단 + §5 학술 출처 표
+- 상세: 에이전트가 정확한 출처가 *Man and His Symbols*(1964) "Approaching the Unconscious"이며 CW 8 오귀속은 이전 판의 정정된 오류임을 정확히 답변. CW 8 대안 전거 안내(§2.4)까지 정확히 구분해 인용.
+
+### 발견된 gap
+
+- 없음. 두 질문 모두 SKILL.md가 스스로 정정 이력을 명시해 두어 옛 오류가 재발하지 않음을 확인.
+
+### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 학술 비교 분석 — 실사용 필수 카테고리 해당 없음 (content test PASS = APPROVED 가능)
+- 최종 상태: APPROVED
+
+---
+
+### 재검증 기록 (2026-09-26)
+
+**수행일**: 2026-09-26
+**수행자**: 메인 세션 재검증 (1차 원문 대조 후 SKILL.md 자체 답변 확인)
+**수행 방법**: §6 R1~R11 대조 → 오류 2건 정정 → 실전 질문 2개
+
+Q1. "'two craftsmen' 문장을 SE 쪽수로 인용해도 되나?" — PASS (근거: §1.4 정정 주의 — Brill 번역 표현, 원문 "die beiden Werkmeister", SE 인용은 SE IV 직접 확인)
+Q2. "융 보상 기능을 대표 인용문으로 쓰려면 출처는?" — PASS (근거: §2.4 — *Man and His Symbols* "Approaching the Unconscious" 원문 문장, CW 전거는 별도 확인)
+
+agent content test: 2/2 PASS (재검증 기록). 인용 출처 정정으로 status PENDING_TEST 전환.
+
+### 최초 테스트 (2026-05-14)
 
 **수행일**: 2026-05-14
 **수행자**: skill-tester → general-purpose (대체 수행)
@@ -161,8 +203,8 @@ status: APPROVED
 | 내용 정확성 | ✅ (11/11 클레임 VERIFIED) |
 | 구조 완전성 | ✅ (8/8 항목 충족) |
 | 실용성 | ✅ (5/5 항목 충족) |
-| 에이전트 활용 테스트 | ✅ (3/3 PASS, 2026-05-14 수행) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (3/3 PASS, 2026-05-14 수행 / 2026-09-26 메인 세션 재검증 2/2 PASS / 2026-09-28 skill-tester→general-purpose 재테스트 2/2 PASS) |
+| **최종 판정** | **APPROVED** (2026-09-28 — skill-tester 재테스트에서 1차 원문 대조 정정 2건이 옛 오류 재발 없이 정확히 반영됨을 확인 → PENDING_TEST에서 재전환) |
 
 ### 핵심 클레임별 판정
 
@@ -185,11 +227,28 @@ status: APPROVED
 DISPUTED: 0건
 UNVERIFIED: 0건
 
+#### 2026-09-26 재검증 — 1차 원문 직접 대조 (11건)
+
+| # | 클레임 | 1차 소스 | 판정 |
+|---|---|---|---|
+| R1 | "Royal road" 문장 | 독일어 원문(Gutenberg #40739) "Via regia zur Kenntnis des Unbewußten im Seelenleben", Brill 역(#66048) | VERIFIED (원문 존재) — SE V p.608 쪽수는 SE 미열람, 관례 확인만 |
+| R2 | "two craftsmen … ascribe the structure of the dream" = SE IV | 독일어 원문 "die beiden Werkmeister", Brill 역 "two craftsmen … attribute the moulding of the dream" | **DISPUTED→수정** — Brill 번역 표현이며 문구도 불일치. SE 귀속 삭제, 원문+Brill 병기 |
+| R3 | Jung 보상 기능 인용문 = *CW* Vol. 8 | *Man and His Symbols* (1964) "Approaching the Unconscious" 본문(archive.org 전문) | **DISPUTED→수정** — 출처는 MaHS, 문구도 원문과 달라 원문 문장으로 교체 |
+| R4 | 확충 정의 따옴표 인용 (*CW* 16) | 원문 미대조 | **UNVERIFIED→요약 명시** (따옴표 제거) |
+| R5 | Whitmont & Perera 보상 4양태 | 원문 미대조 | **UNVERIFIED→`주의: 미검증`** |
+| R6 | Plevin & Munro 2025 "widespread disuse" | PubMed 39748545 초록 | VERIFIED (33(3) 413–416 보완) + **결론(임상가에게 꿈 내용 질문 권장) 누락 보완** |
+| R7 | Hobson & McCarley 1977 AJP 134(12) 1335–1348 | Crossref 10.1176/ajp.134.12.1335 | VERIFIED |
+| R8 | Hobson protoconsciousness / AIM | Crossref 10.1038/nrn2716 (2009), 10.1017/S0140525X00003976 (2000) | VERIFIED (서지 추가) |
+| R9 | SEP "royal road" 요약 문장 | SEP 원문 | VERIFIED (문장 일치) |
+| R10 | SEP에서 융 비중 | SEP 원문 — "Jung" 0회 | VERIFIED (표현 구체화) |
+| R11 | SEP 개정일 | "First published Thu Apr 9, 2015; substantive revision Mon Jan 26, 2026" | VERIFIED |
+
 ---
 
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester로 2단계 테스트 수행 (2026-05-14 완료, 3/3 PASS)
+- [✅] skill-tester로 재테스트 수행 — 1차 원문 대조 정정 2건 겨냥 (2026-09-28 완료, 2/2 PASS)
 - [⚠️] 융의 *CW* 직접 권·문단(§) 번호 인용은 2차 자료 경유 — 추후 *Collected Works* 직접 대조 시 정밀화 가능 (선택 보강, 차단 요인 아님)
 - [⚠️] SEP가 Jung을 별도 항목으로 다루지 않으므로, 인문학 인용 시 *Cambridge Companion to Jung* (2008) 등 보충 권장 (선택 보강, 차단 요인 아님)
 
@@ -201,3 +260,5 @@ UNVERIFIED: 0건
 |------|------|-----------|--------|
 | 2026-05-14 | v1 | 최초 작성. SEP·PEP-Web·Wikipedia 3중 검증 기반. 핵심 클레임 13건 VERIFIED. | skill-creator |
 | 2026-05-14 | v1 | 2단계 실사용 테스트 수행 (Q1 꿈 작업 4가지 원어 정리 / Q2 확충 vs 자유 연상 3축 비교 / Q3 Hobson AIM 단순화 금지) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-26 | v2 | 재검증 — 1차 원문 대조 11건, 오류 2건 정정("two craftsmen" SE→Brill 귀속, Jung 보상 인용문 CW 8→*Man and His Symbols*), 미검증 2건(CW 16 확충 문구·Whitmont & Perera), Plevin 결론·Hobson 서지 보완, 실전 질문 2/2 PASS → PENDING_TEST | 메인 세션 (재검증) |
+| 2026-09-28 | v2 | 2단계 실사용 재테스트 수행 (Q1 "two craftsmen" SE 인용 가부 / Q2 Jung 보상 기능 인용문 CW 8 인용 가부) → 2/2 PASS, 정정 내용이 옛 오류 재발 없이 반영됨 확인 → PENDING_TEST에서 APPROVED 전환 | skill-tester |

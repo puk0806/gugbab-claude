@@ -91,7 +91,7 @@ function calcDiscount(price: number, rate: number): number {
 | 소스 구현 파일 | `fake-impl-guard` — 파라미터 무시 + 테스트 기대 리터럴 반환 시 차단 |
 | E2E 테스트(Playwright 등) | `qa-engineer` 에이전트가 적대적 E2E 시나리오를 **필수 산출물**로 생성 |
 
-두 훅 모두 **개발 전용(dev 템플릿)** 훅이다 — `tdd-guard`·`test-fake-guard`와 함께 export된다.
+두 훅 모두 **개발 전용(dev 템플릿)** 훅이다 — `test-fake-guard`와 함께 export된다. `tdd-guard`도 보통 같은 세트로 export되지만 `--legacy` 프로파일에서는 제외되므로(레거시 코드베이스 테스트 커버리지 불완전 대응), 레거시 프로젝트에서는 `adversarial-test-guard`·`fake-impl-guard`·`test-fake-guard` 3종만 설치될 수 있다.
 
 ---
 

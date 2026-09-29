@@ -6,9 +6,11 @@ description: Lombok + MapStruct + ModelMapper 통합 가이드 - Spring Boot에�
 # Lombok + MapStruct + ModelMapper (Spring Boot 2.5 / 3.x)
 
 > 소스: https://projectlombok.org/features/ | https://mapstruct.org/documentation/stable/reference/html/ | https://modelmapper.org/getting-started/
-> 검증일: 2026-04-22
+> 검증일: 2026-04-22 (재검증: 2026-09-26)
 
 > 주의: 본 문서는 Lombok 1.18.44, MapStruct 1.6.3, ModelMapper 3.2.x 기준. Spring Boot 2.5+ / 3.x 양쪽에서 동일하게 적용 가능하나, Spring Boot 3.x는 Java 17 이상이 필요하다.
+>
+> 주의(2026-09-26 재검증): Lombok 최신 버전은 **1.18.48**(JDK26 지원, `@Jacksonized` Jackson3 지원 추가)이며, `lombok-mapstruct-binding` 필요성 등 본문의 핵심 규칙은 변경 없습니다. MapStruct는 1.6.3이 여전히 최신 **안정** 버전이고 1.7.0은 Beta2(2026-06-27) 단계이므로 프로덕션에는 1.6.3을 유지하세요. ModelMapper는 3.2.6으로 변경 없음.
 
 ---
 

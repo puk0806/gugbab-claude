@@ -1,8 +1,8 @@
 ---
 skill: accessibility-vpat-writing
 category: writing
-version: v1
-date: 2026-06-02
+version: v2
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -18,10 +18,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `accessibility-vpat-writing` |
 | 스킬 경로 | `.claude/skills/writing/accessibility-vpat-writing/SKILL.md` |
-| 검증일 | 2026-06-02 |
-| 검증자 | skill-creator (Claude Code) |
-| 스킬 버전 | v1 |
-| 기준 표준 버전 | VPAT 2.5Rev (ITI, 2025-04) / WCAG 2.2 / EN 301 549 v3.2.1 / KWCAG 2.2 (KS X OT0003) |
+| 검증일 | 2026-09-26 |
+| 검증자 | skill-creator (Claude Code) / 2026-09-26 재검증: 메인 세션 (ITI·Section508.gov·W3C 원문 직접 대조) |
+| 스킬 버전 | v2 |
+| 기준 표준 버전 | VPAT 2.5Rev (ITI, 2025-04-24, 2026-09 현재 최신) / WCAG 2.2 / EN 301 549 v3.2.1 / KWCAG 2.2 (KS X OT0003) |
 
 ---
 
@@ -110,13 +110,52 @@ status: APPROVED
 | C6 | ITI는 작성된 VPAT을 검토·승인하지 않으며 공식 인증·로고 없음 | ITI 공식 페이지 (직접 인용) | Section508.gov FAQ | VERIFIED |
 | C7 | 자동 점검 도구는 WCAG SC의 약 30%만 커버 | Deque 업계 추정 | WebAIM 추정 | VERIFIED (업계 통념, 정확 수치는 도구별 차이) |
 
-DISPUTED / UNVERIFIED 항목 없음.
+DISPUTED / UNVERIFIED 항목 없음. (최초)
 
 > C7은 정확한 단일 수치가 아닌 *업계 통념*이므로 SKILL.md에 "약 30%"로 근사 표기.
+
+### 4-6. 2026-09-26 재검증 — 공식 페이지 직접 대조 (10건)
+
+| # | 클레임 | 1차 소스 | 판정 |
+|---|---|---|---|
+| R1 | 최신판 = VPAT 2.5Rev (2025-04) | ITI 공식 VPAT 페이지 (2025-04-24, 4개 에디션 + Change Tracking) | VERIFIED — 2026-09 현재도 최신 |
+| R2 | 에디션별 WCAG 버전 (WCAG=2.2, 508=+WCAG 2.0, EU=EN 301 549+WCAG 2.1 AA) | ITI 페이지 "WCAG 2.0 → 508, 2.1 → EU, 2.2 → WCAG·INT" | **부분 정정** — WCAG 에디션은 2.0/2.1/2.2 포함, EU는 "WCAG 2.1"로 표기 교정 |
+| R3 | 무료·멤버십 불필요 | ITI 원문 "offered free of charge… Membership … not required" | VERIFIED (서비스마크 변경 금지 보완) |
+| R4 | Conformance 4종 + Remarks 요구 | Section508.gov FAQ 원문 | VERIFIED |
+| R5 | "Not Evaluated = AAA 또는 평가 범위 밖" | VPAT 2.5Rev WCAG Edition 템플릿(.docx, ITI 배포) 원문 "This can only be used in WCAG Level AAA criteria" | **DISPUTED→수정** — AAA 기준에만. Supports 정의·N/A 대신 Supports 허용 주석 보완 |
+| R6 | VPAT "1998년 시작" | 1차 확인 불가 (1998은 Section 508 개정 연도) | **UNVERIFIED→`주의`** |
+| R7 | VPAT 2.5 "2023-09 발표"·"2.6 예정 없음" | ITI 페이지에 해당 서술 없음 | **UNVERIFIED→`주의`** |
+| R8 | "Section508.gov가 누락 빈도 가장 높다고 지적" | FAQ 원문에 없음 | **DISPUTED→삭제** |
+| R9 | 자동 도구 SC 약 30% (Deque·WebAIM 공통) | 원 보고서 미대조 | **UNVERIFIED→`주의`** (C7 재판정) |
+| R10 | WCAG 2.2 = 13 가이드라인·86 SC | W3C TR/WCAG22 원문 (conformance-level 86개, guideline 13개) | VERIFIED |
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### skill-tester 재테스트 (2026-09-28)
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (도메인 전담 에이전트 미등록으로 대체)
+**수행 방법**: 공식 페이지 대조 재검증(2026-09-26, §4-6 정정 3건)으로 PENDING_TEST 전환된 스킬 재테스트. SKILL.md Read 후 실전 질문 2개(모두 정정된 사실 겨냥) 답변, 근거 섹션·정정 반영 확인
+
+Q1 (정정된 사실 겨냥). "평가 못 한 AA 기준을 Not Evaluated로 적어도 되나요?" — PASS (근거: §6 — "Not Evaluated는 WCAG Level AAA 기준에만 사용 가능. A/AA 기준을 '평가 범위 밖'이라는 이유로 처리하면 안 된다"는 정정 내용을 정확히 반영해 거부)
+Q2 (정정된 사실 겨냥). "유럽 공공기관에 WCAG 2.2 기준으로 제출해야 하는데 EU Edition을 쓰면 되나요?" — PASS (근거: §3·§4 — EU Edition은 EN 301 549 + WCAG 2.1까지만 포함, WCAG 2.2는 WCAG/INT 에디션에만 포함된다는 정정 내용을 정확히 반영해 WCAG/INT Edition 권장)
+
+agent content test: 2/2 PASS (2026-09-28 실제 agent 기반 재테스트). 2026-09-26 재검증으로 정정된 3건(Not Evaluated 사용 범위, 에디션별 WCAG 버전 표기, Section508.gov "누락 빈도" 귀속 삭제)이 SKILL.md에 정확히 반영되었음을 확인. PENDING_TEST → APPROVED 전환.
+
+### 재검증 기록 (2026-09-26)
+
+**수행일**: 2026-09-26
+**수행자**: 메인 세션 재검증 (공식 페이지 대조 후 SKILL.md 자체 답변 확인)
+**수행 방법**: §4-6 R1~R10 대조 → 정정 3건 → 실전 질문 2개
+
+Q1. "평가 못 한 AA 기준 몇 개를 Not Evaluated로 적어도 되나?" — PASS (근거: §6 정정 — Not Evaluated는 AAA 기준에만, A/AA는 4개 공식 용어 중 선택 + Remarks)
+Q2. "EU 공공조달 고객에게 WCAG 2.2 기준 VPAT를 내야 하나?" — PASS (근거: §3 — EU 에디션은 EN 301 549 + WCAG 2.1, WCAG 2.2가 필요하면 WCAG/INT 에디션)
+
+agent content test: 2/2 PASS (재검증 기록). 사용 규칙 정정으로 status PENDING_TEST 전환.
+
+### 최초 테스트 (2026-06-02)
 
 **수행일**: 2026-06-02
 **수행자**: skill-tester → general-purpose (도메인 전담 에이전트 없어 general-purpose 대체)
@@ -192,8 +231,8 @@ VPAT 2.5 INT Edition 선택. 이유: Section 508 + EN 301 549 + WCAG 2.2 세 표
 | 내용 정확성 | ✅ (공식 소스 8건 기반, 클레임 7건 VERIFIED) |
 | 구조 완전성 | ✅ (frontmatter, 소스, 예시, 흔한 실수 모두 포함) |
 | 실용성 | ✅ (D-30 ~ D-Day 절차, 표지 템플릿, 파일명 컨벤션 제공) |
-| 에이전트 활용 테스트 | ✅ (2026-06-02, 3/3 PASS) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (2026-06-02, 3/3 PASS / 2026-09-26 메인 세션 재검증 2/2 PASS / 2026-09-28 skill-tester 실제 agent 재테스트 2/2 PASS) |
+| **최종 판정** | **APPROVED** (2026-09-28 skill-tester 재테스트: 정정 3건이 SKILL.md에 정확히 반영됨을 agent content test로 확인, 2/2 PASS) |
 
 > 본 스킬은 *문서 작성 가이드*로, 실행 결과·빌드 산출물이 없는 카테고리다. verification-policy.md의 "실사용 검증이 필요 없는 스킬" 분류에 해당하며, 2026-06-02 skill-tester content test 3/3 PASS로 APPROVED 전환 완료.
 
@@ -204,6 +243,7 @@ VPAT 2.5 INT Edition 선택. 이유: Section 508 + EN 301 549 + WCAG 2.2 세 표
 - [✅] skill-tester를 통한 실전 질문 3건 답변 검증 (2026-06-02 완료, 3/3 PASS)
 - [❌] VPAT 2.6 또는 WCAG 3.0 출시 시 본 스킬 재검증 (차단 요인 아님 — 선택 보강, 기준 표준 개정 시 수행)
 - [❌] 한국 기업이 실제 작성한 익명화 ACR 사례 1~2건 부록 추가 (차단 요인 아님 — 선택 보강, 우선순위 낮음)
+- [✅] skill-tester 실제 agent 재테스트 수행 및 섹션 5·6·7·8 동기화 (2026-09-28 완료, 2/2 PASS) — APPROVED 재전환
 
 ---
 
@@ -213,3 +253,5 @@ VPAT 2.5 INT Edition 선택. 이유: Section 508 + EN 301 549 + WCAG 2.2 세 표
 |------|------|-----------|--------|
 | 2026-06-02 | v1 | 최초 작성 — VPAT 2.5Rev 기준, 클레임 7건 VERIFIED, PENDING_TEST | skill-creator |
 | 2026-06-02 | v1 | 2단계 실사용 테스트 수행 (Q1 VPAT 에디션 선택 / Q2 Conformance level 구분 / Q3 흔한 실수 패턴) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-26 | v2 | 재검증 — ITI·Section508.gov·W3C 원문 대조 10건, 정정 3건(Not Evaluated 사용 범위, 에디션별 WCAG 버전 표기, Section508.gov "누락 빈도" 귀속 삭제), 미검증 3건(1998 시작·2.5 발표월/2.6 전망·자동도구 30%), 실전 질문 2/2 PASS → PENDING_TEST | 메인 세션 (재검증) |
+| 2026-09-28 | v2 | skill-tester 실제 agent 재테스트 수행 (Q1 Not Evaluated는 AAA 한정 확인 / Q2 EU Edition=WCAG 2.1까지, 2.2는 WCAG/INT 확인) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |

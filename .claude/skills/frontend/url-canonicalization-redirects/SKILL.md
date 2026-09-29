@@ -20,8 +20,8 @@ description: >
 > - Cloudflare Pages — Redirects: https://developers.cloudflare.com/pages/configuration/redirects/
 > - Nginx 공식 — "If is evil": https://nginx.com/resources/wiki/start/topics/depth/ifisevil/
 >
-> 검증일: 2026-08-26 (최초 2026-06-02 · 08-26 freshness 재검증: 신호 강도·rel=prev/next·308·Next.js 16 trailingSlash VERIFIED. 분리 모바일 호스트 결정 행 추가 — 상세는 mobile-seo-pwa 1-4절로 위임)
-> 검증 대상 버전: Next.js 16.x, Astro 5.x, Vercel/Netlify/Cloudflare Pages 2026-06 시점 문서
+> 검증일: 2026-09-28 (최초 2026-06-02 · 08-26 재검증: 신호 강도·rel=prev/next·308·Next.js 16 trailingSlash VERIFIED, 분리 모바일 호스트 결정 행 추가 — 상세는 mobile-seo-pwa 1-4절로 위임 · 09-28 재검증: Astro 5.x→7.x 버전 표기 정정, build.format/trailingSlash 기본값 불변 VERIFIED, Astro SSR redirect 상태코드 301/308 ADD · 09-28 선택 보강: 정적 프리렌더 페이지 트레일링 슬래시 제어 방법을 Vercel `trailingSlash`/Netlify Pretty URLs/Cloudflare Pages 수동 방식으로 각 공식 문서 확인 후 구체화 ADD)
+> 검증 대상 버전: Next.js 16.x(16.3.6), Astro 7.x(7.3.x — 2026-03 Astro 6 메이저 릴리즈 후 7.x까지 승급, 관련 기본값 불변), Vercel/Netlify/Cloudflare Pages 2026-09 시점 문서
 
 ---
 
@@ -186,6 +186,18 @@ module.exports = {
 
 미들웨어에서 커스텀 슬래시 처리를 하려면 `skipTrailingSlashRedirect`로 Next.js의 자동 정규화를 끄고 직접 처리한다.
 
+### Astro trailingSlash — SSR redirect 상태 코드
+
+Astro의 `trailingSlash` 옵션(라우트 매칭용, `build.format`과 별개)은 기본값 `'ignore'`(슬래시 유무 무관 매칭)이며, 프로덕션 SSR에서 위반 요청을 자동 redirect할 때 상태 코드가 다르다.
+
+| 값 | 매칭 | SSR 위반 시 redirect |
+|----|------|----------------------|
+| `'ignore'` (기본) | `/about`, `/about/` 둘 다 허용 | 없음 |
+| `'always'` | `/about/` 만 매칭 | **301** |
+| `'never'` | `/about` 만 매칭 | **308** |
+
+> **주의**: 정적 프리렌더 페이지의 트레일링 슬래시는 **호스팅 플랫폼이 처리**하며 이 설정을 따르지 않을 수 있다 (Astro 공식 명시). SSR 배포에서만 위 상태 코드가 적용된다.
+
 ---
 
 ## 5. Next.js 정규화 패턴
@@ -316,6 +328,23 @@ Vite 자체에는 서버 정규화가 없다. 정적 빌드 결과를 어디에 
 > `/.well-known` 경로는 정규화 대상에서 제외된다 (Vercel 문서 명시).
 > redirects 배열 한계: 2,048개 / source·destination 문자열 4,096자.
 
+**정적 프리렌더 페이지의 트레일링 슬래시 — `vercel.json` `trailingSlash` (2026-09-28 확인, 공식 문서):**
+
+```json
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "trailingSlash": false
+}
+```
+
+| 값 | 동작 |
+|----|------|
+| `false` | 슬래시로 끝나는 경로 → **308**로 슬래시 없는 경로로 redirect (`/about/` → `/about`) |
+| `true` | 슬래시 없는 경로 → **308**로 슬래시 있는 경로로 redirect (`/about` → `/about/`). 단 확장자가 있는 경로(`/about/styles.css`)는 redirect되지 않음 |
+| 미지정(`undefined`, 기본값) | 슬래시 유무 관계없이 redirect 없이 그대로 서빙 — Vercel 공식이 "검색엔진이 두 URL을 중복 콘텐츠로 색인할 수 있어 **비권장**"이라고 명시 |
+
+정적(SSG) 산출물도 이 설정이 적용된다 — 프레임워크가 이미 슬래시 정책을 처리하는 경우(Next.js `trailingSlash`, Astro `build.format` 등)라면 이중 처리가 되지 않도록 한쪽만 사용한다.
+
 ### 6-2. Netlify (`_redirects`)
 
 `public/_redirects` (Vite 기준) 또는 빌드 출력 루트에 파일을 둔다.
@@ -334,8 +363,8 @@ https://www.example.com/* https://example.com/:splat 301!
 /About         /about         301
 ```
 
-> **주의 (Netlify 한정)**: `_redirects` 만으로 *트레일링 슬래시 추가/제거* 는 불가능하다 (Netlify 공식 명시).
-> Netlify가 내부적으로 "Pretty URLs"로 자동 정규화하므로 슬래시 유무는 Netlify 동작에 맡기는 방식이 안전하다.
+> **주의 (Netlify 한정)**: `_redirects` 만으로 *트레일링 슬래시 추가/제거* 는 불가능하다 (Netlify 공식 명시: "You cannot use a redirect rule to add or remove a trailing slash").
+> 정적 프리렌더 페이지의 슬래시는 **Pretty URLs**(기본 활성화)가 처리한다 — `/about`을 `/about/`로 forward하고 `/about.html`을 `/about/`로 rewrite한다(공식 문서 표현). 끄고 싶으면 `_redirects`/`netlify.toml`이 아니라 **대시보드 Project configuration → Developer settings → Post processing → Pretty URLs** 토글에서 조정한다. CDN edge가 redirect 규칙 적용 *전에* URL을 정규화하므로, 슬래시 유무와 무관하게 같은 규칙에 매치된다.
 
 ### 6-3. Cloudflare Pages (`_redirects`)
 
@@ -350,13 +379,23 @@ https://www.example.com/* https://example.com/:splat 301!
 > **주의 (Cloudflare Pages 한정)**: 도메인 레벨 정규화(www, http→https), 쿼리 파라미터 기반 정규화, 국가/언어 조건은 `_redirects` 에서 *지원되지 않는다*. 이 경우 Cloudflare **Bulk Redirects** 또는 **Single Redirects** Rules를 사용해야 한다.
 > 한도: static 2,000개 + dynamic 100개 = 총 2,100개. 줄당 1,000자.
 
+**정적 프리렌더 페이지의 트레일링 슬래시 (2026-09-28 확인, 공식 문서):** Cloudflare Pages는 Vercel의 `trailingSlash`나 Netlify의 Pretty URLs 같은 **사이트 전체 자동 정규화 옵션이 없다**. `_redirects`에 라우트별로 직접 규칙을 적는 것이 공식 문서가 보여주는 유일한 방법이다:
+
+```
+# _redirects
+/about   /about/   301
+/about/  /about    301   # 반대 방향 예시 — 실제로는 한쪽만 선택
+```
+
+라우트가 많아 개별 작성이 비현실적이면(2,100개 한도 근접) **Bulk Redirects**로 패턴을 일괄 등록하거나, **Transform Rules**로 URL 재작성을 검토한다 — 둘 다 `_redirects` 파일 밖의 대시보드/Rules 기능이다.
+
 ### 6-4. 호스팅 비교표
 
 | 호스팅 | 슬래시 자동 정규화 | 도메인 정규화 | 한도 |
 |--------|:--:|:--:|----|
-| Vercel | 프로젝트 도메인 설정 | 대시보드 primary | 2,048 redirects |
-| Netlify | 자동 (Pretty URLs) | `_redirects` 또는 사이트 설정 | 무제한 (실용상) |
-| Cloudflare Pages | 수동 | Pages 외 Rules 필요 | 2,100 합계 |
+| Vercel | `vercel.json` `trailingSlash: true/false` (308) | 대시보드 primary | 2,048 redirects |
+| Netlify | 자동, 기본 활성화 (Pretty URLs — 대시보드 토글로만 변경, `_redirects`로는 불가) | `_redirects` 또는 사이트 설정 | 무제한 (실용상) |
+| Cloudflare Pages | 없음 — `_redirects`에 라우트별로 직접 작성(대량이면 Bulk Redirects) | Pages 외 Rules 필요 | 2,100 합계 |
 
 ---
 

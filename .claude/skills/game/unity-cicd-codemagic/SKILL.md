@@ -19,9 +19,10 @@ description: >
 > - Android 코드 서명: https://docs.codemagic.io/yaml-code-signing/signing-android/
 > - 빌드 트리거: https://docs.codemagic.io/yaml-running-builds/starting-builds-automatically/
 > - 가격: https://codemagic.io/pricing/
+> - Unity 6 지원 일정: https://unity.com/releases/unity-6/support
 >
-> 검증일: 2026-06-10
-> 대상 버전: Codemagic 2026-06 기준 / Unity 6 LTS (6.0 또는 6.3) 호환
+> 검증일: 2026-09-28 (최초 2026-06-10, 재검증 2026-08-11 / 2026-09-28)
+> 대상 버전: Codemagic 2026-09 기준 (가격·스키마 변경 없음) / **Unity 6.3 LTS(6000.3.x) 기본 — 6.0 LTS(6000.0.x)는 2026-10 EOL, 신규 채택 금지**
 
 ---
 
@@ -60,7 +61,7 @@ workflows:
     instance_type: mac_mini_m2      # 또는 mac_mini_m4 / linux_x2 / linux_x4 / windows_x2
     max_build_duration: 120         # 1~120분
     environment:
-      unity: 6000.0.32f1            # Unity 6 LTS 버전 명시
+      unity: 6000.3.0f1             # Unity 6 LTS 버전 명시 (6.3 LTS — 6.0은 2026-10 EOL, 10절 참조)
       groups:
         - unity_credentials
       vars:
@@ -399,16 +400,22 @@ Codemagic은 최신 Unity LTS를 사전 설치한다. `environment.unity:` 필�
 
 ```yaml
 environment:
-  unity: 6000.0.32f1     # Unity 6.0 LTS (2026-10까지 지원)
-  # 또는
-  unity: 6000.3.0f1      # Unity 6.3 LTS (2027-12까지 지원)
+  unity: 6000.3.0f1      # Unity 6.3 LTS (2027-12까지 지원) — 신규 프로젝트 기본값
+  # unity: 6000.0.32f1   # Unity 6.0 LTS — 2026-10 지원 종료(EOL), 신규 채택 금지
 ```
+
+> **주의 — Unity 6.0 LTS 지원 종료 임박 (2026-10, 검증일 2026-09-28 기준 1개월 이내):**
+> 이 스킬의 기본 예시 버전을 기존 `6000.0.32f1`(6.0 LTS)에서 `6000.3.0f1`(6.3 LTS)으로 변경했다.
+> 6.0 LTS로 이미 프로덕션이 고정된 프로젝트는 EOL 이후 보안·플랫폼 인증 패치를 받지 못하므로,
+> 신규 codemagic.yaml 작성 시 6.0을 선택하지 말고, 기존 6.0 프로젝트는 6.3 LTS 마이그레이션을 계획할 것.
+> 패치 버전(`f1` 뒤 번호)은 계속 올라가므로 실제 파이프라인에는 [Unity 6 릴리스](https://unity.com/releases/editor/whats-new/6000.3.0)에서
+> 확인한 최신 패치를 핀 고정해 사용한다 — 이 문서의 `6000.3.0f1`은 6.3 LTS 최초 릴리스(2025-12-03) 예시일 뿐 "최신 패치"가 아니다.
 
 원하는 버전이 사전 설치되어 있지 않으면:
 - Unity Hub CLI로 빌드 스크립트에서 설치
 - 또는 Codemagic 지원(채팅/Discord)에 요청
 
-> 참고: [Unity 6 지원 일정](https://unity.com/releases/unity-6/support) — 2026-06 기준 Unity 6.0 LTS는 2026-10까지, Unity 6.3 LTS는 2027-12까지 지원.
+> 참고: [Unity 6 지원 일정](https://unity.com/releases/unity-6/support) — 2026-09-28 재확인: Unity 6.0 LTS는 2026-10까지, Unity 6.3 LTS는 2027-12까지 지원(Enterprise/Industry는 +1년). 6.3 LTS는 Box2D v3 API·향상된 오디오·신규 라이트맵 패킹 등을 포함한 6.0 이후 첫 LTS다.
 
 ---
 

@@ -26,9 +26,9 @@ documents = parser.load_data("dream_dictionary.pdf")
 
 ---
 
-## 10. 실전 예시 — 한국 전통 해몽 사전 RAG
+## 10. 실전 예시 — 한국 전통 해몽 사전 RAG (설치된 경우 참조)
 
-> 짝 스킬 `humanities/korean-dream-interpretation-tradition`의 사전 데이터를 RAG로 만든다.
+> 짝 스킬 `humanities/korean-dream-interpretation-tradition`(설치된 경우)의 사전 데이터를 RAG로 만든다.
 > 사용자: "어젯밤 뱀이 나무를 휘감는 꿈을 꿨다" → 사전에서 유사 항목 검색·해석.
 
 ```python
@@ -174,6 +174,7 @@ pip install llama-index-vector-stores-chroma           # Chroma
 pip install llama-index-vector-stores-postgres         # pgvector
 pip install llama-index-vector-stores-qdrant           # Qdrant
 pip install llama-index-embeddings-huggingface         # HuggingFace 임베딩
+pip install llama-index-embeddings-voyageai            # Voyage AI 임베딩 (Anthropic 공식 추천 파트너)
 pip install llama-index-llms-anthropic                 # Claude
 pip install llama-index-postprocessor-cohere-rerank    # Cohere Reranker
 pip install llama-index-retrievers-bm25                # BM25

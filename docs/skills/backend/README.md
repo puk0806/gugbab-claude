@@ -1,30 +1,22 @@
 # backend 스킬
 
-Rust · Java · Python · TypeScript(Hono/Prisma/Zod/Better Auth/Drizzle/Neon) · Claude Code CLI · 운세 앱 백엔드 스킬 모음 (총 58종).
+Rust · Java · Python · TypeScript(Hono/Prisma/Zod/Better Auth/Drizzle/Neon) · Claude Code CLI · 운세 앱 백엔드 스킬 모음 (총 50종).
 
 ---
 
-## Rust 백엔드 (17종)
+## Rust 백엔드 (9종)
 
 | 스킬 | 설명 | 검증 |
 |------|------|------|
-| [axum](../../../.claude/skills/backend/axum/SKILL.md) | Axum 웹 프레임워크 핵심 패턴 — 라우팅, 상태 공유, 추출자, 에러 핸들링, 미들웨어 | [→](./axum/verification.md) |
-| [custom-middleware](../../../.claude/skills/backend/custom-middleware/SKILL.md) | Tower 커스텀 미들웨어 — from_fn, from_fn_with_state, 요청/응답 가로채기 | [→](./custom-middleware/verification.md) |
-| [dependency-injection](../../../.claude/skills/backend/dependency-injection/SKILL.md) | Trait 기반 의존성 주입 — Arc<dyn Trait> vs 제네릭, AppState 구성, Axum 핸들러 주입 | [→](./dependency-injection/verification.md) |
-| [design-patterns-rust](../../../.claude/skills/backend/design-patterns-rust/SKILL.md) | Rust 디자인 패턴 8종 — Builder, Newtype, Type State, Strategy, Command, Observer, RAII | [→](./design-patterns-rust/verification.md) |
+| [axum](../../../.claude/skills/backend/axum/SKILL.md) | Axum 웹 프레임워크 핵심 패턴 — 라우팅, 상태 공유, 추출자, 에러 핸들링, 미들웨어(커스텀 from_fn 포함 — 구 custom-middleware 병합) | [→](./axum/verification.md) |
 | [jwt-auth](../../../.claude/skills/backend/jwt-auth/SKILL.md) | JWT 인증 패턴 — jsonwebtoken 크레이트 + Axum 미들웨어 기반 토큰 생성/검증 | [→](./jwt-auth/verification.md) |
 | [multipart-upload](../../../.claude/skills/backend/multipart-upload/SKILL.md) | Axum Multipart 파일 업로드 — 필드 구분, 바이트 읽기, 크기 제한, 에러 처리 | [→](./multipart-upload/verification.md) |
 | [project-structure](../../../.claude/skills/backend/project-structure/SKILL.md) | Rust + Axum 레이어드 아키텍처 — 4계층 구조, 모듈 시스템, 책임 분리, DI 조립 | [→](./project-structure/verification.md) |
-| [repository-pattern](../../../.claude/skills/backend/repository-pattern/SKILL.md) | Repository 패턴 — async trait 기반 DB 추상화, In-Memory 구현, Service-Repository DI | [→](./repository-pattern/verification.md) |
 | [reqwest](../../../.claude/skills/backend/reqwest/SKILL.md) | reqwest HTTP 클라이언트 — GET/POST, JSON, 헤더, 스트리밍, 에러 처리, Client 재사용 | [→](./reqwest/verification.md) |
-| [serde](../../../.claude/skills/backend/serde/SKILL.md) | serde + serde_json 직렬화/역직렬화 핵심 패턴 | [→](./serde/verification.md) |
 | [sqlx](../../../.claude/skills/backend/sqlx/SKILL.md) | sqlx 비동기 SQL 툴킷 — Pool 연결, query 매크로, 트랜잭션, 마이그레이션, Axum 연동 | [→](./sqlx/verification.md) |
 | [sse-streaming](../../../.claude/skills/backend/sse-streaming/SKILL.md) | Axum SSE 스트리밍 구현 — Sse 응답, Event 구성, tokio-stream, Claude API 스트리밍 변환 | [→](./sse-streaming/verification.md) |
 | [testing-rust](../../../.claude/skills/backend/testing-rust/SKILL.md) | Rust 테스트 패턴 — 단위·통합·비동기 테스트, Axum 핸들러 테스트(tower::ServiceExt) | [→](./testing-rust/verification.md) |
-| [thiserror](../../../.claude/skills/backend/thiserror/SKILL.md) | thiserror 기반 에러 처리 — derive(Error), 메시지 포매팅, from 변환, Axum 연동 | [→](./thiserror/verification.md) |
-| [tokio](../../../.claude/skills/backend/tokio/SKILL.md) | Tokio 비동기 런타임 핵심 패턴 및 API 가이드 | [→](./tokio/verification.md) |
 | [tower-http](../../../.claude/skills/backend/tower-http/SKILL.md) | tower-http 미들웨어 — CorsLayer, TraceLayer, CompressionLayer, Axum 연동 | [→](./tower-http/verification.md) |
-| [tracing](../../../.claude/skills/backend/tracing/SKILL.md) | tracing + tracing-subscriber 구조화 로깅 — 초기화, EnvFilter, 매크로, #[instrument] | [→](./tracing/verification.md) |
 
 ---
 

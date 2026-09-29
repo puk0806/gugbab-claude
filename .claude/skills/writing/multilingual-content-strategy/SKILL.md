@@ -13,11 +13,12 @@ description: >
 > 소스:
 > - Google Search Central — Localized versions of pages: https://developers.google.com/search/docs/specialty/international/localized-versions
 > - Google Search Central Blog — March 2024 core update and new spam policies: https://developers.google.com/search/blog/2024/03/core-update-spam-policies
+> - Google Search Central — Spam policies (scaled content abuse 조항 원문): https://developers.google.com/search/docs/essentials/spam-policies
 > - W3C i18n Working Group / BCP 47: https://www.w3.org/International/articles/language-tags/
 > - Yahoo Japan / Google partnership (Wikipedia 종합): https://en.wikipedia.org/wiki/Yahoo_Japan
 > - 일본 공정거래위원회(JFTC) 2010 발표: https://www.jftc.go.jp/en/pressreleases/yearly-2010/dec/individual-000002.html
 >
-> 검증일: 2026-06-04
+> 검증일: 2026-09-26 (Google localized-versions 문서 2026-09-21 수정본·spam policies 2026-08-28 수정본 원문 대조)
 
 ---
 
@@ -62,11 +63,12 @@ description: >
 
 - **Yahoo! Japan은 2010년부터 Google 검색 기술 기반**으로 운영된다.
   > 주의: "2023년 전환 완료"는 사실이 아니다. 일본 공정거래위원회(JFTC) 2010년 발표 및 Yahoo Japan 자체 공식 발표 시점이 2010년이다.
-  > 단, **Yahoo Japan ↔ Google 파트너십은 2025년 만료 예정**이며 Yahoo Japan은 NAVER 등 대안을 검토 중이라는 보도가 있다. 2025년 이후 검색 백엔드 전환 여부는 재확인 필요.
+  > 단, **Yahoo Japan ↔ Google 파트너십은 2025년 만료 예정**이며 Yahoo Japan은 NAVER 검색 기술로의 전환을 검토 중이라는 서술이 있다(영문 위키백과 "Yahoo Japan" 항목, 2차 자료).
+  > 주의: 미검증 — 2026-09-26 재검증 시점에 2025년 이후 실제 검색 백엔드(계약 연장·전환 여부)를 1차 자료(LY Corporation·Google 공식 발표)로 확인하지 못했다. JFTC 2010 발표 페이지도 접속 차단으로 재대조 불가. 일본 SEO 전략 수립 전 반드시 현재 상태를 확인할 것.
 - **실무 함의 (현 시점 기준)**: 일본 SEO는 *Google SEO를 기본으로* 수행하면 Yahoo! Japan SERP도 거의 함께 커버된다. 단, Yahoo! Japan의 *UI·디스플레이 광고·Yahoo Shopping*은 별도 채널로 남아 있다.
 - **URL 슬러그**: 히라가나/가타카나/한자 URL은 인코딩 시 길고 깨지기 쉬움 → 영문 슬러그 권장.
 - **표기 체계 키워드 조사**: 같은 단어가 한자(寿司)·히라가나(すし)·가타카나(スシ)·로마자(sushi)로 검색된다. 검색자는 종종 *히라가나·가타카나*로 검색하므로 키워드 도구로 표기별 검색량 확인 필수.
-- **존경어 결정**: ます/です(존댓말) vs だ/である(상체) 중 어느 톤인지 사이트 전반에서 통일.
+- **문체 결정**: です/ます체(敬体, 정중체) vs だ/である체(常体, 보통체) 중 어느 톤인지 사이트 전반에서 통일. (이전 판 "상체" 표기 정정)
 
 ### 2-4. 중국어 — 간체(zh-CN) vs 번체(zh-TW)
 
@@ -166,8 +168,10 @@ description: >
 <link rel="alternate" hreflang="x-default" href="https://example.com/page" />
 ```
 
-**핵심 규칙** (공식):
+**핵심 규칙** (공식 — 2026-09-21 수정본 원문 대조):
 - 언어 코드는 **ISO 639-1**, 지역 코드는 **ISO 3166-1 Alpha-2**, 스크립트 코드는 **ISO 15924**.
+- "Only language codes listed in ISO 639-1 and region codes listed in ISO 3166-1 Alpha 2 are supported" — 예: **`es-419`(UN M.49 지역)는 미지원**.
+- 대소문자 무관(지역 코드는 대문자 표기 권장).
 - 지원 형태: `de`, `de-CH`, `zh-Hans`, `zh-Hans-US`.
 - **지역 코드만 단독 사용 불가** (`hreflang="us"` 같은 표기 금지).
 - 상호 참조(reciprocal) 필수: A→B를 선언했으면 B→A도 선언.
@@ -178,9 +182,10 @@ description: >
 ### 5-2. 기계 번역(MT)과 Google 정책
 
 - Google은 **March 2024 core update**와 함께 **"Scaled content abuse"** 스팸 정책을 발표했다.
-- 정책 핵심 (공식 인용):
-  > *"…including through automated transformations like synonymizing, translating, or other obfuscation techniques, where little value is provided to users"*
-  > → **자동 번역으로 *대량 페이지를 생산*하고 *사용자에게 가치를 거의 제공하지 않는* 경우** 스팸 정책 위반.
+- 정책 핵심 (Spam policies 문서 원문 인용, 2026-08-28 수정본):
+  > *"Scraping feeds, search results, or other content to generate many pages (including through automated transformations like synonymizing, translating, or other obfuscation techniques), where little value is provided to users"*
+  > → 이 예시는 **남의 콘텐츠를 긁어와(scraping) 자동 번역 등으로 변형해 대량 페이지를 만들고 사용자 가치가 거의 없는 경우**를 가리킨다. 본인 콘텐츠의 번역 자체를 금지하는 문장은 아니다.
+  > 주의 (2026-09-26 정정): 이전 판은 이 구절을 앞부분("Scraping feeds …")을 뺀 채 인용해 "자동 번역 대량 생산 일반"으로 읽히게 했다. 출처도 블로그가 아니라 Spam policies 문서다. 다만 같은 정책은 "Using generative AI tools or other similar tools to generate many pages without adding value" 등도 예시로 들므로, 사람 검토 없는 대량 MT 배포는 여전히 위험하다.
 - **MT 자체가 자동 페널티 대상은 아니다.** 핵심은:
   1. **사람 검토(post-editing)** 가 들어갔는가
   2. 사용자에게 **고유한 가치**를 제공하는가
@@ -249,7 +254,6 @@ description: >
 
 - `frontend/i18n-seo` — hreflang·sitemap·canonical 상세 패턴
 - `frontend/naver-seo-specifics` — 네이버 SEO 세부
-- `writing/seo-content-structure` (있는 경우) — 콘텐츠 구조 SEO
 
 ---
 
@@ -258,7 +262,7 @@ description: >
 | 항목 | 소스 | 신뢰도 |
 |------|------|--------|
 | hreflang 표준 / 중국어 코드 | Google Search Central 공식 | ⭐⭐⭐ |
-| Scaled content abuse 정책 | Google Search Central Blog (2024-03) | ⭐⭐⭐ |
-| Yahoo Japan-Google 파트너십 시점 (2010) | 일본 공정거래위원회 발표, Wikipedia | ⭐⭐⭐ / ⭐⭐ |
+| Scaled content abuse 정책 | Google Search Central Blog (2024-03) + Spam policies 문서 | ⭐⭐⭐ |
+| Yahoo Japan-Google 파트너십 시점 (2010) / 2025 만료 | 일본 공정거래위원회 발표(2026-09-26 접속 차단), Wikipedia | ⭐⭐⭐ / ⭐⭐ (2025 이후 상태 미검증) |
 | Baidu ICP 관련 | 다수 산업 보고서 (Hilborn·Sinorbis 등) | ⭐⭐ |
 | BCP 47 / ISO 639·3166·15924 | W3C i18n / IETF | ⭐⭐⭐ |

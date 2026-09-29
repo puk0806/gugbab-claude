@@ -1,8 +1,8 @@
 ---
 skill: tarot-card-deck-ui
 category: frontend
-version: v1
-date: 2026-09-10
+version: v2
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,10 +14,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `tarot-card-deck-ui` |
 | 스킬 경로 | `.claude/skills/frontend/tarot-card-deck-ui/SKILL.md` |
-| 검증일 | 2026-09-10 |
+| 검증일 | 2026-09-28 (재검증, 이전 2026-09-10) |
 | 검증자 | skill-creator |
-| 스킬 버전 | v1 |
-| 버전 기준 | motion 13.2.0 (2026-09-02 npm `latest`) / CSS·DOM 표준은 MDN 현행 기준 |
+| 스킬 버전 | v2 |
+| 버전 기준 | motion 13.4.4 (2026-09-25 npm `latest`, 재검증 시점 갱신) / CSS·DOM 표준은 MDN 현행 기준 |
 
 ---
 
@@ -112,6 +112,7 @@ status: APPROVED
 - [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-09-10, skill-tester → frontend-developer)
 - [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (3/3 PASS, 근거 섹션 명시 확인)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (해당 없음 — FAIL 없음, 경미한 gap만 발견)
+- [✅] 재테스트 (2026-09-28, skill-tester → general-purpose — motion 13.4.4 버전 표기 정정분 겨냥, 2/2 PASS)
 
 ### 4-5. 교차 검증한 클레임과 판정 결과
 
@@ -253,6 +254,56 @@ motion 라이브러리를 쓰고 있어.
 
 ---
 
+### [2026-09-28] 재검증(2차) — motion 버전·MotionConfig 기본값·RWS 저작권 서술 재확인
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md·references/REFERENCE.md 전체 Read → 핵심 클레임 3개를 1차 소스(npm registry curl, WebSearch)와 대조, 보강·축소 검토
+
+**클레임 대조 결과**:
+1. motion 최신 안정 버전 → **정정**: 검증 시점(2026-09-10)의 `13.2.0`에서 `13.4.4`(2026-09-25 배포)로 **패치가 여러 차례 올라감**(`curl -s https://registry.npmjs.org/motion/latest` 결과 `13.4.4`). WebSearch로 13.3·13.4 변경 이력을 확인한 결과 View Transition 지원(`AnimateView`)·`useSpring` 성능 개선 등이며, **SKILL.md가 인용하는 API(`MotionConfig`/`useReducedMotion`/`rotateY` 플립/`layout` prop)에 영향을 주는 breaking change는 없음**. SKILL.md 상단 버전 기준 줄만 `13.4.4`로 갱신
+2. `MotionConfig`의 `reducedMotion` 기본값이 여전히 `"never"`인지 → **VERIFIED** (motion.dev 공식 문서 재확인, D1 판정 시점과 동일하게 유지)
+3. RWS 원본 아트워크 미국 퍼블릭 도메인·U.S. Games Systems 입장 서술의 현재 유효성 → **VERIFIED** (2024년 CCB 판정 이후 새로운 소송·판결 변경 소식 없음, 기존 서술 그대로 유효)
+
+**보강(ADD)·축소**: SKILL.md·verification.md 상단 버전 기준 표기만 `13.2.0 → 13.4.4`로 정정(코드·API 설명 본문은 변경 없음). 저작권·접근성·명리 도메인 가드는 축소하지 않음.
+
+**실전 질문 재검증**:
+- Q1. "motion 13.4.x에서도 MotionConfig의 reducedMotion 기본값이 여전히 never인가?" → SKILL.md §6-1 표 근거로 PASS
+- Q2. "motion 13.4 View Transition 기능이 이 스킬의 플립 패턴에 영향을 주나?" → REFERENCE.md §2-4 코드 근거로 PASS(무관, 별도 API)
+
+**재검증 최종 판정**: status **PENDING_TEST 전환** (버전 표기 정정 1건 반영 — 내용·API 서술 자체는 변경 없으나 정책상 재테스트 필요. 메인이 이후 skill-tester 재검증 수행)
+
+---
+
+### [2026-09-28] skill-tester 재테스트 — motion 13.4.4 버전 표기 정정분 확인
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (frontend-developer 미설치/미등록 세션이라 대체, 대체 사실 명시)
+**수행 방법**: SKILL.md(+ 필요 시 references/REFERENCE.md) Read 후 실전 질문 2개 답변, 근거 섹션 및 anti-pattern 회피 확인. 특히 motion 13.2.0→13.4.4 버전 표기 정정이 답변에 올바르게 반영되는지, 핵심 기능(셔플 랜덤성)에 회귀가 없는지를 중점 확인
+
+### 실제 수행 테스트
+
+**Q1. motion 13.4.x에서 `MotionConfig.reducedMotion` 기본값이 바뀌었는가 + reduced-motion 카드 뽑기 접근성 대응**
+- ✅ PASS
+- 근거: SKILL.md 상단 버전 기준 인용(16행, "MotionConfig `reducedMotion` 기본값 `"never"` 등 본문 인용 API는 13.2.0 대비 변경 없음"), references/REFERENCE.md §6-1(reducedMotion 표 + `useReducedMotion` 대체 렌더 경로)
+- 상세: "바뀌지 않았다"는 정확한 결론과 함께 기본값 `"never"`·`reducedMotion="user"` 명시 필요성·회전만 멈추면 카드가 안 보이는 함정·`useReducedMotion` 대체 렌더까지 정확히 인용. 버전 정정(13.2.0→13.4.4) 이후에도 API 서술이 그대로 유효함을 정확히 확인시켜줌. gap: SKILL.md 본문 자체에는 이 함정의 한 줄 요약이 없고 REFERENCE.md 위임뿐 — 경미(설계상 의도된 분리).
+
+**Q2. 78장 덱 편향 없는 셔플 + `Array.prototype.sort` 셔플 사용 가능 여부**
+- ✅ PASS
+- 근거: SKILL.md §1-1("Array.prototype.sort 셔플은 금지"), §1-2(Fisher-Yates), §1-4(`crypto.getRandomValues()` + 거부 샘플링)
+- 상세: `sort` 셔플 금지와 정확한 이유(비교 함수 비일관성), Fisher-Yates `randomIntBelow(i + 1)` 상한(Sattolo 오분기 회피), `crypto.getRandomValues()` + 거부 샘플링을 모두 정확히 인용. 버전 정정과 무관한 핵심 로직 섹션이 손상 없이 유지됨을 확인. gap: 3장만 뽑을 때 전체 셔플 대신 부분 Fisher-Yates로 충분한지에 대한 언급 없음 — 경미(성능 최적화 논점, 정확성에는 영향 없음).
+
+### 발견된 gap (있으면)
+
+- 없음 (경미한 지적 2건은 기존 §7 "선택 보강" 성격과 동일 — 차단 요인 아님)
+
+### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 해당 없음 — UI 인터랙션/라이브러리 사용 패턴 스킬(빌드 설정·워크플로우·마이그레이션 아님) → content test PASS만으로 APPROVED 전환 가능한 카테고리
+- 최종 상태: APPROVED (motion 버전 표기 정정 이후 API 서술 유효성 확인, 핵심 로직 섹션 회귀 없음)
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -261,14 +312,15 @@ motion 라이브러리를 쓰고 있어.
 | 구조 완전성 | ✅ (frontmatter·소스 URL·검증일·주의 표기·코드 예시·흔한 실수 포함) |
 | 실용성 | ✅ (실행 가능한 TS/React/CSS 예시, 프로젝트 비종속) |
 | 기존 스킬 정합성 | ✅ (`frontend/animation`·`frontend/swiper` Read 후 역할 분담·상호 참조 명시, 권장 라이브러리 충돌 없음) |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-09-10, skill-tester → frontend-developer) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-09-10, skill-tester → frontend-developer) / ✅ 재테스트 2/2 PASS (2026-09-28, skill-tester → general-purpose) |
+| **최종 판정** | **APPROVED** (2026-09-28 재검증 — motion 버전 표기 정정 1건, API 서술·핵심 로직 회귀 없음 확인 완료) |
 
 ---
 
 ## 7. 개선 필요 사항
 
 - [✅] **skill-tester로 2단계 실사용 테스트 수행** (2026-09-10 완료, 3/3 PASS — §5 "실제 수행 테스트" 참조. status PENDING_TEST → APPROVED 전환)
+- [✅] **skill-tester 재테스트** (2026-09-28 완료, 2/2 PASS — motion 13.4.4 버전 표기 정정분 반영 확인. status PENDING_TEST → APPROVED 재전환)
 - [❌] `humanities/tarot-history-symbolism` 스킬이 실제로 생성되면 상호 참조 링크 유효성 확인 — 선택 보강(차단 아님, 해당 스킬 부재 시에도 본 스킬은 독립적으로 유효)
 - [❌] RWS 저작권 절은 `sacred-texts.com` FAQ가 403으로 접근 실패했다. 접근 가능해지면 재확인해 영국 만료 기산점 서술을 보강 — 선택 보강(차단 아님, 이미 "통설+이견 존재"로 안전하게 서술됨)
 - [❌] 켈틱크로스 포지션 의미는 앱이 채택할 전통이 확정되면 `humanities` 스킬과 라벨 문구를 정합화 — 선택 보강(차단 아님, 레이아웃 기하는 이미 확정 서술)
@@ -284,3 +336,6 @@ motion 라이브러리를 쓰고 있어.
 | 2026-09-10 | v1 | 최초 작성. 셔플 랜덤성·CSS 3D 플립·부채꼴 인터랙션·스프레드 배치·접근성·이미지 에셋 6개 축. 14개 클레임 교차 검증(VERIFIED 12 / DISPUTED 2) | skill-creator |
 | 2026-09-10 | v1 | 2단계 실사용 테스트 수행 (Q1 셔플 랜덤성 / Q2 CSS 플립 깨짐 진단 / Q3 reduced-motion 접근성) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | main session |
+| 2026-09-25 | v1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |
+| 2026-09-28 | v2 | 재검증(2차) — motion 13.2.0→13.4.4 버전 표기 정정(API 변경 없음)·MotionConfig 기본값·RWS 저작권 서술 재확인, 3/3 대조 완료. 버전 표기 정정으로 APPROVED → **PENDING_TEST** 전환(skill-tester 재검증 대기) | Claude (Sonnet 5) |
+| 2026-09-28 | v2 | 2단계 실사용 테스트 재수행 (Q1 motion 13.4.x reducedMotion 기본값·접근성 대응 / Q2 78장 셔플 편향 회피) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |

@@ -6,8 +6,9 @@ description: Zod 4 서버 경계 검증 패턴 — 요청 body/query/params, 환
 # Zod 스키마 검증 — 서버 경계 패턴 (Zod 4)
 
 > 소스: https://zod.dev/ (공식 문서) | https://zod.dev/v4/changelog (마이그레이션 가이드) | https://github.com/colinhacks/zod/releases
-> 검증일: 2026-09-25
-> 기준 버전: **zod 4.6.5** (2026-09 기준 최신 안정). `.validate()`는 4.6.0+, `__proto__` 스킵 수정은 4.4.0+
+> 2026-09-26 보강: `npm i zod@4`로 로컬 실측(`z.record` `__proto__` 처리) | RFC 9110 §15.5.21(422) | npm dist-tag 히스토리(3.25.0~, `stringbool` 존재 확인)
+> 검증일: 2026-09-25 (섹션 4-2·10-2 보강은 2026-09-26)
+> 기준 버전: **zod 4.6.5** (2026-09 기준 최신 안정, 위 실측도 이 버전으로 수행). `.validate()`는 4.6.0+, `__proto__` 스킵 수정은 4.4.0+
 
 **범위:** 서버 측 "신뢰 경계(trust boundary)" 검증. React Hook Form + Zod 폼 연동은 `frontend/form-handling` 스킬, Hono 미들웨어 통합(`zValidator` 등)은 `backend/hono-api-patterns` 스킬을 참조한다.
 
@@ -117,6 +118,8 @@ export async function handleCreateOrder(req: Request): Promise<Response> {
 }
 ```
 
+**왜 422가 아니라 400을 쓰는 곳도 있는가 (상태 코드 선택 근거):** HTTP는 요청을 "구문(syntax)"과 "의미(semantic)" 두 층위로 나눈다. 서버가 JSON 자체를 파싱하지 못하면(형식 오류) 400 Bad Request, JSON은 문법적으로 유효하지만 스키마 검증(의미)에 실패하면 422 Unprocessable Content(RFC 9110 §15.5.21, 원래 WebDAV RFC 4918에서 도입)가 더 정확한 의미를 전달한다. 이 스킬의 예시는 이 구분(파싱 실패 400 / 스키마 검증 실패 422)을 따른다. 다만 이는 업계 관행이지 강제 표준은 아니며 — 다수 API가 클라이언트 에러를 전부 400으로 통일하는 것도 정당한 선택이다. **핵심은 같은 API 안에서 일관성을 유지하는 것**(엔드포인트마다 400/422를 섞어 쓰면 클라이언트가 상태 코드로 분기할 수 없다).
+
 - `parse`는 실패 시 `ZodError`를 throw, `safeParse`는 `{ success, data | error }` 판별 유니언을 반환한다. 핸들러에서는 `safeParse`가 흐름 제어에 유리하다.
 - **비동기 refine/transform이 있으면 `parseAsync`/`safeParseAsync` 필수.** 동기 `parse`로 호출하면 에러가 난다.
 - `parse` 결과는 입력의 deep clone이므로, 원본 `raw`를 다시 쓰지 말고 `result.data`만 쓴다.
@@ -140,6 +143,7 @@ const query = ListQuery.safeParse(Object.fromEntries(url.searchParams));
 - `z.coerce.number()`의 입력 타입은 `unknown`. `Number("")`은 `0`이 되므로 **빈 문자열이 0으로 통과**할 수 있다 → `.min(1)` 같은 범위로 막는다.
 - **`z.coerce.boolean()` 금지:** `Boolean("false") === true`. 문자열 불리언은 `z.stringbool()`을 쓴다.
 - `z.stringbool()` 기본값 — truthy: `"true","1","yes","on","y","enabled"` / falsy: `"false","0","no","off","n","disabled"`, 대소문자 무시. 그 외 문자열은 에러. `z.stringbool({ truthy: [...], falsy: [...], case: "sensitive" })`로 변경 가능.
+- `z.stringbool()` 도입 버전: 패키지 루트 `"zod"`가 Zod 4(당시 베타)를 export하기 시작한 **3.25.0(2025-05-19)** 부터 이미 포함되어 있었고, 이후 정식 `zod@4.x` 라인에 그대로 이어진다(codec 도입 이전부터 존재, 내부적으로 codec 기반 재구현됨). 기준 버전 4.6.5에서도 그대로 사용 가능.
 
 ### 4-3. path params
 
@@ -318,7 +322,19 @@ z.strictObject({ name: z.string() }).safeParse(payload); // 미정의 키 → �
 - **zod 4.4.0 이상 필수:** 4.4.0에서 catchall 경로(`z.looseObject`, `.passthrough()`, `.catchall()`)가 `__proto__` 키를 건너뛰도록 수정됐다 (PR #5898). 이전 버전은 `output[key] = value`가 `__proto__` setter를 호출해 결과 객체의 프로토타입이 공격자 값으로 바뀔 수 있었다.
 - 요청 body에는 `looseObject`/`catchall`보다 **`strictObject` 또는 기본 strip**을 쓴다.
 
-> 주의: `z.record(...)`의 `__proto__` 키 처리는 과거 이슈(#2227)가 보고된 경로다. 4.4.0 수정이 record 경로까지 포괄하는지는 공식 릴리즈 노트에서 명확히 확인하지 못했다(미검증). 동적 키 맵에는 **키 스키마로 허용 문자를 제한**해 원천 차단한다.
+**`z.record(...)`의 `__proto__` 키 처리 (2026-09-26 zod 4.6.5로 실측, 이전 "미검증" 문구 갱신):**
+
+```ts
+const payload = JSON.parse('{"name":"a","__proto__":{"isAdmin":true}}');
+// JSON.parse는 "__proto__"를 own property로 만든다 (프로토타입 setter를 타지 않음)
+
+const result = z.record(z.string(), z.any()).parse(payload);
+console.log(Object.getOwnPropertyNames(result));      // ["name"] — "__proto__" 키 자체가 결과에 없음
+console.log(Object.getPrototypeOf(result) === Object.prototype); // true — 오염 없음
+console.log(({} as any).isAdmin);                       // undefined — 전역 Object.prototype도 안전
+```
+
+zod 4.6.5 기준 `z.record(keySchema, valueSchema).parse(payload)`는 `"__proto__"` 키를 결과 객체의 own property로 복사하지 않으며, `Object.prototype`도 오염되지 않는다(과거 이슈 #2227이 보고했던 경로는 현재 버전에서 재현되지 않음). 다만 이는 이 스킬이 실측한 단일 버전·단일 케이스 결과이고, 4.4.0 PR #5898의 변경 로그가 `z.record` 경로를 명시적으로 언급하지는 않으므로 **버전 업그레이드 시 재확인을 권장**한다. 방어의 원칙 자체는 유지한다 — 동적 키 맵에는 **키 스키마로 허용 문자를 제한**해 원천 차단한다.
 
 ```ts
 const SafeKey = z.string().regex(/^[a-zA-Z0-9_-]{1,64}$/); // "__proto__"도 막으려면 refine 추가

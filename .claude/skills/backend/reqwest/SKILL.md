@@ -5,26 +5,30 @@ description: Rust reqwest HTTP 클라이언트 핵심 패턴 — GET/POST, JSON,
 
 # reqwest HTTP 클라이언트
 
-> 소스: https://docs.rs/reqwest/latest/reqwest/ | https://github.com/seanmonstar/reqwest
-> 검증일: 2026-08-12
+> 소스: https://docs.rs/reqwest/latest/reqwest/ | https://github.com/seanmonstar/reqwest | https://crates.io/crates/reqwest
+> 검증일: 2026-09-28 (최초 2026-04-06)
 
-> 주의: 이 문서는 reqwest 0.12.x 기준으로 작성되었습니다. 0.13.x (최신 0.13.11, 2026-05-28 릴리즈)가 출시되어 Breaking Change가 있으므로 신규 프로젝트는 마이그레이션 노트를 참조하세요.
+> 이 문서는 reqwest 0.13.x(2025-12-30 첫 stable 릴리즈, crates.io 최신 0.13.5 — 2026-09-08 릴리즈, 소스 확인) 기준으로 작성되었습니다. 아래 예제 코드는 0.12.x·0.13.x 양쪽에서 동일하게 동작합니다(`json`/`stream` feature명, `.json()`/`.header()`/`.bytes_stream()`/`error_for_status()`/`is_timeout()` 등 API 변경 없음, `reqwest-0.13.0` 소스 직접 확인).
 
-> **reqwest 0.13으로의 마이그레이션 시 주요 Breaking Change (0.12 → 0.13):**
-> - rustls가 기본 TLS로 변경(aws-lc 기반), `rustls-tls` feature가 `rustls`로 rename
-> - MSRV이 1.85로 상향
-> - `ClientBuilder::dns_resolver`가 `dns_resolver2`로 교체
-> - `reqwest::Url`의 serde Deserialize 지원이 별도 feature 필요
-> - 0.11.x 이하(hyper 0.14 기반) 대비 API 변경 있음
+> **0.12 → 0.13 실제 Breaking Change (CHANGELOG.md·소스 코드 직접 확인, 2026-09-28):**
+> - `rustls`가 `native-tls` 대신 기본 TLS 백엔드로 변경, crypto provider 기본값도 aws-lc로 변경(기존 ring). 다른 provider는 `rustls-no-provider` 사용
+> - `rustls-tls` feature가 `rustls`로 rename. rustls roots feature 제거 — 기본으로 `rustls-platform-verifier` 사용(커스텀 루트는 `tls_certs_only(your_roots)`)
+> - `native-tls`가 기본으로 ALPN 포함(비활성화는 `native-tls-no-alpn`)
+> - `query`·`form`이 기본 비활성 opt-in feature로 변경(이전엔 항상 포함) — `.query()`/`.form()` 사용 시 `features = [..., "query", "form"]` 추가 필요
+> - 오래 deprecated였던 메서드·feature 제거(예: `trust-dns` — 이미 `hickory-dns`로 rename됐던 것의 최종 제거)
+> - 다수 TLS 메서드가 발견성 개선을 위해 rename(예: `use_rustls_tls()` 대신 `tls_backend_rustls()` 권장) — 구 이름은 soft-deprecated로 계속 동작
+> - MSRV는 0.12.x·0.13.0 모두 1.64.0으로 **변경 없음** (Cargo.toml `rust-version` 직접 확인 — 과거 "1.85로 상향" 기재는 오류였음, 정정)
+> - `ClientBuilder::dns_resolver2()`는 0.12.23에서 임시 추가됐다가 0.13.0에서 제거됨. 원래의 `dns_resolver()`는 0.13.0에도 그대로 존재 — "dns_resolver가 dns_resolver2로 교체"는 과거 기재 오류였음, 정정
+> - 0.11.x 이하(hyper 0.14 기반) 대비로는 API 변경 폭이 더 크다(구버전 마이그레이션 시 공식 CHANGELOG 확인 권장)
 
 ---
 
 ## Cargo.toml 의존성
 
 ```toml
-# reqwest 0.12.x (현재 문서 기준) — 0.13이 2026-05-28 릴리즈됨, 마이그레이션 주의사항 참조
+# reqwest 0.13.x 기준 (crates.io 최신 0.13.5, 2026-09-08). 0.12.x도 동일 feature명·API로 계속 사용 가능
 [dependencies]
-reqwest = { version = "0.12", features = ["json", "stream"] }
+reqwest = { version = "0.13", features = ["json", "stream"] }
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -333,7 +337,65 @@ async fn send_message(
 
 reqwest 자체에는 재시도 기능이 없다. 직접 구현하거나 `reqwest-middleware` + `reqwest-retry` 크레이트 사용.
 
-> 주의: reqwest 0.12.23(2025-08-08 릴리즈)부터 `reqwest::retry` 모듈과 `ClientBuilder::retries(policy)` 메서드가 내장됨. 단, 기본 내장 retry는 HTTP/2 REFUSED_STREAM 등 프로토콜 레벨 NACK 재시도 용도이며, 커스텀 정책이 필요한 경우 reqwest-middleware + reqwest-retry 조합이 더 유연함.
+> 주의: reqwest 0.12.23(2025-08-12 릴리즈, 소스 확인)부터 `reqwest::retry` 모듈과 `ClientBuilder::retry(policy)` 메서드(0.13.0 소스에서도 동일 시그니처 확인)가 내장됨. 단, 기본 내장 retry는 HTTP/2 REFUSED_STREAM 등 프로토콜 레벨 NACK 재시도 용도이며, 커스텀 정책이 필요한 경우 reqwest-middleware + reqwest-retry 조합이 더 유연함.
+
+### `ClientBuilder::retry(policy)` — 내장 재시도 정책 설정
+
+`policy` 인자의 타입은 `reqwest::retry::Builder`다(docs.rs 0.13.5 시그니처: `pub fn retry(self, policy: Builder) -> ClientBuilder`). `reqwest::retry::for_host(host)`가 이 `Builder`를 바로 반환하므로 별도 변환 없이 체이닝해서 `.retry()`에 전달한다.
+
+```rust
+use reqwest::{Client, retry};
+
+// 특정 호스트로 범위를 좁힌 재시도 정책 (retry::for_host()가 Builder를 반환)
+let client = Client::builder()
+    .retry(
+        retry::for_host("api.anthropic.com")
+            .max_retries_per_request(3)          // 요청당 최대 재시도 횟수
+            .classify_fn(|req_rep| {
+                // 재시도 가능 여부를 직접 판별 (기본은 프로토콜 NACK만 재시도)
+                match req_rep.status() {
+                    Some(status) if status.is_server_error() => req_rep.retryable(),
+                    _ => req_rep.success(),
+                }
+            }),
+    )
+    .build()?;
+
+// 특정 문자열/클로저 외의 범위가 필요하면 Builder::scoped() 사용
+// let policy = retry::Builder::scoped(my_scope).max_retries_per_request(3);
+```
+
+- `retry::Builder::no_budget()` / `.max_extra_load(pct)`: 기본 20% 여유 재시도 예산(budget)을 끄거나 조정.
+- `retry::Builder::classify(impl Classify)` / `.classify_fn(F)`: 어떤 응답을 재시도할지 커스텀 로직으로 판별(`req_rep.retryable()` / `req_rep.success()` 반환).
+- 커스텀 정책이 이 내장 API로 부족하면(예: 지수 백오프 지연 자체 제어) `reqwest-middleware` + `reqwest-retry` 조합을 사용한다.
+
+---
+
+## DNS 리졸버 커스터마이징 — `ClientBuilder::dns_resolver()`
+
+```rust
+use reqwest::dns::{Resolve, Resolving, Name};
+use reqwest::Client;
+use std::sync::Arc;
+
+// reqwest::dns::Resolve 트레이트 구현 (Send + Sync 필수, &self — 가변 참조 불필요)
+struct MyResolver;
+
+impl Resolve for MyResolver {
+    fn resolve(&self, name: Name) -> Resolving {
+        Box::pin(async move {
+            // 커스텀 DNS 조회 로직 — Iterator<Item = SocketAddr>를 boxed future로 반환
+            todo!("{name} 조회 후 SocketAddr 이터레이터 반환")
+        })
+    }
+}
+
+let client = Client::builder()
+    .dns_resolver(Arc::new(MyResolver))  // Arc<R: Resolve + 'static> 가 IntoResolve 구현
+    .build()?;
+```
+
+`dns_resolver<R>(self, resolver: R) -> ClientBuilder where R: IntoResolve`(docs.rs 0.13.5) — `IntoResolve`는 `Resolve + 'static`을 구현하는 타입과 `Arc<dyn Resolve>`에 대해 구현되어 있으므로, 커스텀 리졸버는 `Resolve`만 구현하면 된다. 특정 이름에 대한 개별 override(`resolve()`/`resolve_to_addrs()`)는 이 리졸버 위에 추가로 적용된다.
 
 ```rust
 // 수동 재시도 (지수 백오프)
@@ -367,4 +429,4 @@ async fn retry_request(
 }
 ```
 
-> 주의: `reqwest-middleware` 0.4.x / `reqwest-retry` 0.7.x 기준. 버전 호환성 확인 필요.
+> 주의: crates.io 최신 기준 `reqwest-middleware` 0.5.x(0.5.2가 reqwest 0.13.1 의존 확인) / `reqwest-retry` 0.9.x (2026-09-28 확인). reqwest 0.12.x 프로젝트는 `reqwest-middleware` 0.4.x대 사용.

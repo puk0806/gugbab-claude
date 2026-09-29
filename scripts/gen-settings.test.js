@@ -208,6 +208,81 @@ console.log('\n[--legacy] tdd-guard 제외 · typescript-quality --changed-only'
   assert('util + legacy → typescript-quality 미배선', JSON.stringify(u.hooks).includes('typescript-quality'), false)
 }
 
+// ── 신선도·규칙 경고 훅 배선 (2026-09-25) ────────────────────────────────
+// 공식 문서: InstructionsLoaded 는 관측 전용(출력 폐기) → SessionStart(stdout·additionalContext 주입)로 이동
+console.log('\n[SessionStart] instructions-loaded · staleness-check 는 SessionStart 에 배선, InstructionsLoaded 미배선')
+{
+  const hookCmds = (s, ev) => JSON.stringify((s.hooks[ev] || []).flatMap(g => g.hooks.map(h => h.command)))
+  for (const flags of [[], ['--dev'], ['--util'], ['--memory'], ['--staleness-guard'], ['--util', '--staleness-guard']]) {
+    const s = generate(...flags)
+    const label = flags.join(' ') || '(기본)'
+    const ss = hookCmds(s, 'SessionStart')
+    assert(`${label} → SessionStart 에 instructions-loaded`, ss.includes('instructions-loaded.js'), true)
+    assert(`${label} → SessionStart 에 staleness-check`, ss.includes('staleness-check.js'), true)
+    assert(`${label} → InstructionsLoaded 이벤트 미배선 (출력 폐기 이벤트)`, s.hooks.InstructionsLoaded, undefined)
+    // 경계: 중복 배선 금지 — 같은 훅이 두 번 실행되면 경고가 두 번 뜬다
+    assert(`${label} → staleness-check 1회만 배선`, (ss.match(/staleness-check\.js/g) || []).length, 1)
+  }
+  // --staleness-guard 옵션은 --strict 로 전달, 미선택 시 --strict 없음
+  assert('--staleness-guard → --strict 전달', hookCmds(generate('--staleness-guard'), 'SessionStart').includes('staleness-check.js --strict'), true)
+  assert('기본 → --strict 없음', hookCmds(generate(), 'SessionStart').includes('--strict'), false)
+  // 공식 문서: "All matching hooks run in parallel." — 배열 순서는 실행 순서를 보장하지 않으므로
+  // 순서 단언 대신 "각 훅이 정확히 1회 배선" 만 확인한다 (2026-09-26 순서 가정 정정)
+  const m = hookCmds(generate('--memory'), 'SessionStart')
+  assert('--memory → memory-pull 1회만 배선', (m.match(/memory-pull\.js/g) || []).length, 1)
+  // 악성 입력: 알 수 없는 플래그가 배선을 깨뜨리지 않음
+  assert('알 수 없는 플래그 → SessionStart 배선 유지', hookCmds(generate('--unknown-flag'), 'SessionStart').includes('staleness-check.js'), true)
+}
+
+// ── $CLAUDE_PROJECT_DIR 따옴표 (2026-09-26) ─────────────────────────────
+// 공식 문서(hooks "Reference scripts by path"): "In shell form, wrap each placeholder in double quotes."
+// 무따옴표면 공백 포함 경로에서 단어 분리 → Cannot find module → 모든 가드 fail-open
+console.log('\n[quoting] 모든 훅·statusLine 명령이 "$CLAUDE_PROJECT_DIR" 로 따옴표 처리')
+{
+  const fs = require('fs')
+  const os = require('os')
+  const { spawnSync } = require('child_process')
+  const allCmds = (s) => [
+    ...Object.values(s.hooks).flatMap(groups => groups.flatMap(g => g.hooks.map(h => h.command))),
+    s.statusLine.command,
+  ]
+  const combos = [[], ['--dev', '--typescript', '--legacy'], ['--dev', '--typescript'], ['--util'],
+    ['--memory', '--codex', '--readme-guard', '--staleness-guard', '--branch-protection'],
+    ['--util', '--memory', '--codex', '--readme-guard', '--branch-protection']]
+  for (const flags of combos) {
+    const label = flags.join(' ') || '(기본)'
+    const cmds = allCmds(generate(...flags))
+    // 악성·경계: 무따옴표 형태($CLAUDE_PROJECT_DIR/ 가 따옴표 없이 시작)가 하나라도 남으면 실패
+    const bare = cmds.filter(c => /(^|[^"])\$\{?CLAUDE_PROJECT_DIR\}?\//.test(c))
+    assert(`${label} → 무따옴표 $CLAUDE_PROJECT_DIR 0건`, bare.length, 0)
+    assert(`${label} → 모든 명령이 "$CLAUDE_PROJECT_DIR"/.claude/hooks/ 형식`,
+      cmds.every(c => c.includes('"$CLAUDE_PROJECT_DIR"/.claude/hooks/')), true)
+  }
+  // 실제 셸 실행: 공백·따옴표 유사 문자·한글이 섞인 프로젝트 경로에서 훅 스크립트가 실행되는지
+  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'gen settings q '))
+  const proj = path.join(base, "my proj 한글 (v2)")
+  fs.mkdirSync(path.join(proj, '.claude', 'hooks'), { recursive: true })
+  const marker = path.join(base, 'ran.txt')
+  const s = generate('--dev', '--typescript', '--memory', '--codex', '--staleness-guard', '--branch-protection')
+  const names = new Set(allCmds(s).map(c => (c.match(/\.claude\/hooks\/([\w.-]+)/) || [])[1]).filter(Boolean))
+  for (const n of names) {
+    const body = n.endsWith('.sh')
+      ? `echo "${n} $*" >> "${marker}"\n`
+      : `require('fs').appendFileSync(${JSON.stringify(marker)}, ${JSON.stringify(n)} + ' ' + process.argv.slice(2).join(' ') + '\\n')\n`
+    fs.writeFileSync(path.join(proj, '.claude', 'hooks', n), body)
+  }
+  let okAll = true
+  for (const c of allCmds(s)) {
+    const r = spawnSync('bash', ['-c', c], { env: { ...process.env, CLAUDE_PROJECT_DIR: proj }, encoding: 'utf8', input: '{}' })
+    if (r.status !== 0) { okAll = false; console.log(`    실패: ${c}\n    ${r.stderr.slice(0, 200)}`) }
+  }
+  assert('공백·한글·괄호 경로에서 모든 배선 명령 exit 0', okAll, true)
+  const ran = fs.existsSync(marker) ? fs.readFileSync(marker, 'utf8') : ''
+  assert('--strict 인자가 스크립트까지 그대로 전달', /staleness-check\.js --strict/.test(ran), true)
+  assert('--no-readme 인자가 스크립트까지 그대로 전달', /deliverable-guard\.js --no-readme/.test(ran), true)
+  fs.rmSync(base, { recursive: true, force: true })
+}
+
 // ── 최종 ────────────────────────────────────────────────────────────────
 console.log(`\n결과: ${passed} passed, ${failed} failed`)
 process.exit(failed > 0 ? 1 : 0)

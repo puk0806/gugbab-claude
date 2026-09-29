@@ -412,3 +412,71 @@ export function ChatContainer() {
 | react-virtuoso | 4.x | React 16.8+ | — |
 
 > 주의: react-markdown v9 → v10 마이그레이션 시 ESM 전용 패키지인 점, `transformImageUri`/`transformLinkUri` → `urlTransform` 통합 등 breaking change가 있다. 신규 프로젝트는 v10 사용 권장.
+
+---
+
+## 16. react-virtuoso 범용 API 요약 (구 `frontend/react-virtuoso` 스킬 흡수)
+
+> 소스: https://virtuoso.dev/react-virtuoso/ · https://github.com/petyosi/react-virtuoso
+> 버전 기준: react-virtuoso 4.18.5 (검증일 2026-04-20, 2026-09-26 이 스킬로 병합)
+
+### 16-1. 컴포넌트 선택
+
+| 컴포넌트 | 사용 시점 |
+|----------|----------|
+| `Virtuoso` | 단일 열 리스트, 가변 높이 아이템 (채팅 메시지 리스트) |
+| `VirtuosoGrid` | CSS Grid/Flexbox 그리드 — **동일 크기 아이템만**. 가변 높이(Masonry)는 `@virtuoso.dev/masonry` |
+| `TableVirtuoso` | 실제 `<table>/<thead>/<tbody>` 유지, `fixedHeaderContent`로 헤더 고정 |
+| `GroupedVirtuoso` | `groupCounts` + `groupContent`로 sticky 그룹 헤더 (날짜 구분선 등) |
+| `GroupedTableVirtuoso` | 그룹 헤더 + 테이블 |
+
+`data` prop을 넘기면 `itemContent(index, item)`의 `item` 타입이 제네릭으로 추론된다. 핸들 타입은 `VirtuosoHandle`·`TableVirtuosoHandle`·`GroupedVirtuosoHandle`·`VirtuosoGridHandle`.
+
+### 16-2. 높이 측정·성능 props
+
+| prop | 버전 | 용도 |
+|------|------|------|
+| (기본) | — | ResizeObserver로 아이템 실측 — 이미지 로딩·텍스트 확장에도 자동 대응 |
+| `fixedItemHeight` | — | 모든 아이템 높이가 같으면 측정 생략 (v4.15.0+ GroupedVirtuoso도 지원) |
+| `defaultItemHeight` | — | 첫 아이템 probe 렌더링 생략 |
+| `heightEstimates` | v4.16.0+ | 아이템별 높이 추정 배열 → 초기 스크롤바 정확도 향상, 실측값으로 점차 대체 |
+| `minOverscanItemCount` | v4.17.0+ | 뷰포트 밖 최소 N개 유지 (`{ top, bottom }` 개별 지정 가능) — 아주 큰 아이템에서 픽셀 overscan 부족 시 |
+| `overscan` / `increaseViewportBy` | — | 뷰포트 밖 추가 렌더 픽셀 (후자는 `{ top, bottom }` 양방향) |
+| `scrollSeekConfiguration` + `components.ScrollSeekPlaceholder` | — | 빠른 스크롤(`velocity` 기준 enter/exit) 중 가벼운 플레이스홀더 렌더 |
+| `useWindowScroll` | — | 컨테이너 대신 window 스크롤 사용 (높이 지정 불필요) |
+| `initialItemCount` | — | SSR 시 초기 렌더 아이템 수 |
+
+React Compiler 사용 중이면 `itemContent` 안의 수동 `React.memo`는 불필요하다.
+
+### 16-3. 프로그래매틱 스크롤
+
+- `ref.current?.scrollToIndex({ index, align: 'start' | 'center' | 'end', behavior: 'smooth' | 'auto' })`
+- `initialTopMostItemIndex` — 초기 위치 (채팅은 마지막 인덱스)
+- `followOutput` — `true`·`'smooth'`·`'auto'` 또는 함수. 데이터 추가 시 바닥 추적, 사용자가 위로 스크롤하면 중단
+- `endReached` — **하단** 도달 콜백. 최신 아이템이 아래에 있는 목록에서 "더 아래로" 불러올 때만 사용 (TanStack Query `useInfiniteQuery`면 `if (hasNextPage) fetchNextPage()` + `components.Footer`에 `isFetchingNextPage` 표시)
+- `startReached` + `firstItemIndex` — **상단** 도달 시 과거 데이터 prepend. `initialTopMostItemIndex`로 하단부터 시작하는 채팅에서 위로 스크롤해 과거 메시지를 불러오는 패턴이 이것이다. `firstItemIndex`를 prepend 개수만큼 감소시켜야 스크롤 점프 없이 유지된다 — 전체 코드는 SKILL.md 3절 참조
+
+> 정정 (2026-09-26): 과거 이 절은 "과거 메시지 로드"를 `endReached`로 뭉뚱그렸으나, 채팅처럼 최신 메시지가 아래에 있는 목록에서 과거를 불러오는 것은 상단 도달이므로 `startReached`가 맞는 API다.
+
+### 16-4. 라이브러리 선택: react-virtuoso vs 대안
+
+| 기준 | react-virtuoso | @tanstack/react-virtual | react-window |
+|------|---------------|------------------------|--------------|
+| 동적 높이 | 자동 측정 (설정 불필요) | 수동 측정 (`measureElement`) | 제한적 (VariableSizeList 수동) |
+| 테이블 / 그룹 헤더 | 내장 | 직접 구현 | 미지원 |
+| 무한 스크롤 | `endReached` 내장 | 직접 구현 | react-window-infinite-loader |
+| API | 선언적, 간단 | Headless (유연, 코드 많음) | 간단하지만 기능 제한 |
+
+- **react-virtuoso**: 채팅처럼 가변 높이·자동 바닥 추적·그룹 헤더가 필요할 때
+- **@tanstack/react-virtual**: 번들 크기가 중요하거나 완전한 커스텀 레이아웃이 필요할 때
+- **react-window**: 1.8.11에서 React 19 지원 추가, v2 개발 중 — 단순 고정 높이 리스트·레거시 유지보수
+
+### 16-5. 흔한 실수 (SKILL.md 3절 3가지 외)
+
+| 실수 | 결과 / 대응 |
+|------|------------|
+| VirtuosoGrid에서 가변 높이 기대 | 레이아웃 깨짐 → 동일 크기로 맞추거나 `@virtuoso.dev/masonry` |
+| `LogLevel[0]` 같은 enum 리버스 매핑 | **v4.18.2 Breaking Change** — `undefined` 반환. `LogLevel.DEBUG` named 접근만 사용 |
+| `role`/`aria-live`를 Virtuoso에 직접 전달했는데 반영 안 됨 | 외부 `<div role="log" aria-live="polite">`로 래핑 (SKILL.md 3절) |
+| 채팅 과거 메시지 로드를 `endReached`로 구현 | 최신 메시지가 하단인 채팅에서 과거 로드는 **상단 도달** — `startReached` + `firstItemIndex` 감소가 맞는 패턴 (SKILL.md 3절) |
+| 무료 `Virtuoso`와 유료 `VirtuosoMessageList`(`@virtuoso.dev/message-list`) 혼동 | 후자는 license key가 필요한 상용 패키지. 이 스킬 예시는 전부 오픈소스 `Virtuoso` 기준 |

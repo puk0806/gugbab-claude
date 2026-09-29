@@ -22,8 +22,8 @@ description: >
 > Michael Dummett & Sylvia Mann, *The Game of Tarot*(Duckworth, 1980) / Decker·Depaulis·Dummett, *A Wicked Pack of Cards*(1996),
 > Helen Farley, *A Cultural History of Tarot*(I.B. Tauris, 2009),
 > C. G. Jung, *The Archetypes of the Collective Unconscious*(CW 9i, §81) · *Visions: Notes of the Seminar 1930–1934*(Princeton UP, 1997, p.923)
-> 검증일: 2026-09-10
-> 검증 상태: 역사·구조·저작권 본문 VERIFIED, 앱 톤 가이드 포함 skill-tester content test 3/3 PASS → APPROVED (2026-09-10)
+> 검증일: 2026-09-28 (최초 2026-09-10, 2026-09-28 재검증)
+> 검증 상태: 역사·구조·저작권 본문 VERIFIED, 앱 톤 가이드 포함 skill-tester content test 3/3 PASS → APPROVED (2026-09-10, 2026-09-28 재검증 유지)
 
 ---
 
@@ -423,7 +423,7 @@ Britannica 표준 목록(마르세유 전통) 기준. **괄호는 RWS 명칭/번
 
 ## 9. 짝 스킬
 
-본 스킬은 타로의 **역사·구조·상징·저작권·톤**만 다룬다. 함께 쓰면 좋은 스킬:
+본 스킬은 타로의 **역사·구조·상징·저작권·톤**만 다룬다. 함께 쓰면 좋은 스킬(설치된 경우 참조):
 
 - `humanities/dream-psychology-jung-freud` — 융·프로이트 원전 기반 심리학 프레임. §3의 원형 개념을 더 정확히 다룰 때 **학파를 명시해 병기**한다
 - `meta/fortune-interpretation-prompt-engineering` — §5의 톤 가이드를 시스템 프롬프트·few-shot으로 조립하는 패턴

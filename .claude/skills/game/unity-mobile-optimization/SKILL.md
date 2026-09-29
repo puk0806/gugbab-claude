@@ -23,7 +23,7 @@ description: >
 > - Audio file compression: https://docs.unity3d.com/6000.3/Documentation/Manual/AudioFiles-compression.html
 > - Fixed updates: https://docs.unity3d.com/6000.3/Documentation/Manual/fixed-updates.html
 > - IL2CPP build size: https://support.unity.com/hc/en-us/articles/208412186-IL2CPP-build-size-optimizations
-> 검증일: 2026-06-08
+> 검증일: 2026-09-26 (재검증. Android 텍스처 압축 실제 기본값이 ETC2이고 ASTC는 Texture Compression Targeting 추가 포맷임을 명확화, Google Play 2026-08-31 시행 Target API 36 요구 반영. SRP Batcher·ObjectPool·FixedUpdate 등 나머지 클레임은 변동 없음 확인)
 > 기준 버전: Unity 6 (6000.x LTS), URP 17, Addressables 2.0+
 
 ---
@@ -34,7 +34,7 @@ description: >
 |------|------|
 | Unity 버전 | 6000.x LTS (Unity 6) |
 | 렌더 파이프라인 | URP 17 (2D Renderer) |
-| 타깃 플랫폼 | Android (API 26+) / iOS 14+ |
+| 타깃 플랫폼 | Android (최소 API 23, **Target API 36 필수 — Google Play 2026-08-31부터 시행**) / iOS 14+ |
 | 스크립팅 백엔드 | IL2CPP 필수 (Mono 금지) |
 | 아키텍처 | ARM64 (Android는 ARMv7 + ARM64 동시 활성화) |
 
@@ -102,13 +102,14 @@ public class CameraFollow : MonoBehaviour
 
 | 플랫폼 | 권장 포맷 | 비고 |
 |--------|-----------|------|
-| Android (Adreno 4xx+ / Mali T624+ / Tegra K1+) | **ASTC 6×6** | Unity 6 기본값 |
-| iOS (A8 이상, 2014~) | **ASTC 6×6** | Apple 권장 |
+| Android (Adreno 4xx+ / Mali T624+ / Tegra K1+) | **ASTC 6×6** (권장), 폴백 ETC2 | Unity Android **문서상 실제 기본값은 ETC2**(RGBA)/ETC(RGB) — ASTC는 Texture Compression Targeting으로 추가 포맷 지정 필요 |
+| iOS (A8 이상, 2014~) | **ASTC 6×6** | Apple 권장, iOS는 별도 폴백 불필요(A8+ 전량 지원) |
 | 캐릭터·UI 등 품질 민감 | ASTC 4×4 | 비트레이트 증가 |
 | 단순 배경·이펙트 | ASTC 8×8 ~ 12×12 | 용량 절감 |
 
 - ASTC 비트레이트: 4×4 = 8 bpp, 6×6 = 3.56 bpp, 8×8 = 2 bpp, 12×12 = 0.89 bpp.
 - 미지원 기기에서는 런타임 압축 해제 → 메모리·렌더 속도 둘 다 손해. ASTC 미지원 구형 기기는 별도 ETC2 변형 빌드 고려.
+- 실무 권장(2026 기준): Android App Bundle(AAB) + Texture Compression Targeting으로 ETC2를 기본 폴백, ASTC를 지원 기기용 추가 포맷으로 지정 — 기기가 자동으로 알맞은 포맷을 다운로드.
 
 ### 2-2. Mip Maps
 

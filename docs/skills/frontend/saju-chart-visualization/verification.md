@@ -1,8 +1,8 @@
 ---
 skill: saju-chart-visualization
 category: frontend
-version: v1
-date: 2026-09-10
+version: v2
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -17,9 +17,9 @@ status: APPROVED
 | 스킬 이름 | `saju-chart-visualization` |
 | 스킬 경로 | `.claude/skills/frontend/saju-chart-visualization/SKILL.md` |
 | 검증 문서 경로 | `docs/skills/frontend/saju-chart-visualization/verification.md` |
-| 검증일 | 2026-09-10 |
+| 검증일 | 2026-09-28 (재검증, 이전 2026-09-10) |
 | 검증자 | skill-creator |
-| 스킬 버전 | v1 |
+| 스킬 버전 | v2 |
 | 버전 기준 | Recharts 3.10.1 / visx 4.0.0 / React 19 / WCAG 2.2 |
 
 ---
@@ -233,6 +233,26 @@ status: APPROVED
 
 ---
 
+### [2026-09-28] 재검증(2차) — Recharts·visx 버전·WCAG 2.2 현행성 재확인
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md·references/REFERENCE.md 전체 Read → 핵심 클레임 3개를 1차 소스(npm registry curl, WebSearch)와 대조, 보강·축소 검토
+
+**클레임 대조 결과**:
+1. Recharts 최신 안정 버전이 **3.10.1**, React peer `^16.8 || ^17 || ^18 || ^19` → **VERIFIED** (`curl -s https://registry.npmjs.org/recharts/latest` 결과 버전·peerDependencies 모두 SKILL.md 서술과 정확히 일치, 변경 없음)
+2. visx(`@visx/scale`) 최신이 **4.0.0** → **VERIFIED** (`curl -s https://registry.npmjs.org/@visx/scale/latest` 결과 `4.0.0`, 변경 없음)
+3. 접근성 기준 표준이 여전히 **WCAG 2.2**이며 WCAG 3.0은 아직 Working Draft(컴플라이언스 표준 아님) → **VERIFIED** (WebSearch 2026-09 기준 W3C WAI 공식 안내 재확인 — WCAG 2.2가 ISO/IEC 40500:2025로 국제표준화됐고, WCAG 3.0은 2029년경에야 Recommendation 예상. SKILL.md의 "WCAG 2.2" 기준 서술을 바꿀 이유 없음)
+
+**보강(ADD)·축소**: 없음 — 3개 클레임 모두 VERIFIED. 명리 도메인 단정 금지 가드(2절)·오방정색 접근성 재매핑(5절)·오독 방지 캡션·흔한 실수 18항은 축소하지 않음.
+
+**실전 질문 재검증**:
+- Q1. "Recharts 3.x에서 RadarChart의 accessibilityLayer 기본값과 애니메이션이 reduced-motion을 존중하는가?" → SKILL.md 3-3·REFERENCE.md §6-3 근거로 PASS
+- Q2. "visx는 어떤 화면에 쓰고 Recharts는 어떤 화면에 쓰나?" → SKILL.md 3-1·3-2 표 근거로 PASS
+
+**재검증 최종 판정**: status **APPROVED 유지** (내용 변경 없음, 검증일만 갱신)
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -263,4 +283,6 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-09-10 | v1 | 최초 작성 — 원국 표·오행 분포 차트·대운 타임라인·오방정색 접근성 토큰·CJK 고정 문자셋 서브셋·다크모드. 교차 검증 18건 | skill-creator |
 | 2026-09-10 | v1 | 2단계 실사용 테스트 수행 (Q1 원국 표 div vs table + hourUnknown / Q2 레이더 0값 폴백 + 축 도메인 / Q3 오방정색 접근성 재매핑) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
-| 2026-09-25 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | |
+| 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | |
+| 2026-09-25 | v1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |
+| 2026-09-28 | v2 | 재검증(2차) — Recharts 3.10.1·visx 4.0.0·WCAG 2.2 현행성 재확인, 3/3 VERIFIED·DISPUTED 0, 내용 변경 없음 → APPROVED 유지 | Claude (Sonnet 5) |

@@ -168,7 +168,7 @@ ext['hikaricp.version'] = '5.1.0'
 > 기준: Spring Boot 4.0 번들 HikariCP 7.0.x / Java 17+
 > 소스: https://github.com/brettwooldridge/HikariCP/blob/dev/CHANGES
 >       https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Release-Notes
-> 검증일: 2026-06-19
+> 검증일: 2026-09-26 (재검증, 내용 변경 없음 — HikariCP 최신 안정 7.1.0/설정 키 변경 없음 확인)
 
 ### 11.1 Spring Boot 버전별 HikariCP 번들
 

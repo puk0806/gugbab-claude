@@ -11,7 +11,7 @@ description: >
 # 꿈 일기 — 감정 태깅 입력 UI 스킬
 
 > 소스: Ekman 1992 *Cognition and Emotion* 6(3/4), 169-200 / Plutchik 1980 *Emotion: Theory, Research, and Experience* (Academic Press) ch. 1 / Russell 1980 *J. Pers. Soc. Psychol.* 39(6), 1161-1178 / W3C WCAG 2.1 SC 1.4.1 / WAI-ARIA / Hick 1952
-> 검증일: 2026-05-15
+> 검증일: 2026-09-28 (최초 2026-05-15)
 
 ---
 
@@ -21,7 +21,7 @@ description: >
 - 자유 텍스트로만 받기보다 **구조화된 감정 태그**가 필요할 때 (통계·검색·해몽 컨텍스트 활용)
 - 학술적 근거가 있는 감정 분류 체계를 선택해야 할 때
 
-> **연계 스킬:**
+> **연계 스킬 (설치된 경우 참조):**
 > - `architecture/dream-journal-data-modeling` — `emotions[]` 다중값 인덱스 스키마
 > - `meta/dream-interpretation-prompt-engineering` — 감정을 LLM 해몽 컨텍스트로 주입
 > - `frontend/dream-symbol-tagging` — 상징 태깅과 함께 사용
@@ -308,7 +308,7 @@ db.version(2).stores({
 });
 ```
 
-> 자세한 스키마는 짝 스킬 `architecture/dream-journal-data-modeling` 참조.
+> 자세한 스키마는 짝 스킬 `architecture/dream-journal-data-modeling`(설치된 경우) 참조.
 
 ### 4.2 해몽 LLM 프롬프트 컨텍스트로 전달
 
@@ -323,7 +323,7 @@ db.version(2).stores({
 위 감정 메타데이터를 참고하여 ...
 ```
 
-> 자세한 프롬프트 설계는 짝 스킬 `meta/dream-interpretation-prompt-engineering` 참조.
+> 자세한 프롬프트 설계는 짝 스킬 `meta/dream-interpretation-prompt-engineering`(설치된 경우) 참조.
 
 ---
 

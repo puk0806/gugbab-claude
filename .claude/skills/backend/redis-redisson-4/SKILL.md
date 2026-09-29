@@ -6,7 +6,7 @@ description: Redisson 4.x — 3.x→4.x Breaking Change 전체(Config 최상위 
 # Redisson 4.x (Valkey & Redis Java Client)
 
 > 소스: https://github.com/redisson/redisson/releases/tag/redisson-4.0.0 | https://raw.githubusercontent.com/redisson/redisson/master/CHANGELOG.md | https://github.com/redisson/redisson (README) | https://redisson.pro/docs/configuration/ | https://redisson.pro/docs/integration-with-spring/ | https://redisson.pro/docs/data-and-services/data-serialization/ | 소스 코드: `org/redisson/config/Config.java`, `BaseConfig.java`, `org/redisson/api/RLock.java`, `RBucket.java`, `redisson-spring/redisson-spring-boot-starter/pom.xml`
-> 검증일: 2026-08-11
+> 검증일: 2026-09-26
 
 ---
 

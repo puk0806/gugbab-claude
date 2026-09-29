@@ -2,7 +2,7 @@
 skill: tower-http
 category: backend
 version: v1
-date: 2026-06-20
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -36,7 +36,7 @@ status: APPROVED
 | 스킬 이름 | tower-http |
 | 스킬 경로 | .claude/skills/tower-http/SKILL.md |
 | 최초 작성일 | 2026-04-06 |
-| 재검증일 | 2026-04-08 |
+| 재검증일 | 2026-09-26 (직전 재검증 2026-06-20) |
 | 검증 방법 | rust-backend-developer 활용 테스트 |
 | 버전 기준 | tower-http 0.6.x |
 
@@ -145,6 +145,26 @@ status: APPROVED
 
 ---
 
+### 재검증 (2026-09-26)
+
+**수행자**: 메인 세션 (Sonnet 5), 서브에이전트 미사용(사용자 지시)
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임 3건 WebFetch/WebSearch 교차 검증 → 실전 질문 2개로 SKILL.md 자체 답변 확인
+
+**교차 검증 클레임 (버전 드리프트 발견 → 본문 수정 반영):**
+1. tower-http 최신이 0.7.0(2026-05-18)이라는 기존 서술 — WebFetch(docs.rs/tower-http/latest CorsLayer) 결과 문서가 **0.7.1** 기준으로 갱신되어 있음을 확인. dependabot/renovate PR 다수로 0.7.0→0.7.1 패치만 있고 추가 breaking change 없음(ConcurrentBag 등 내부 최적화) 확인 → **DISPUTED(버전 드리프트) → 수정 반영**: Cargo.toml 예시를 0.7로 갱신, 상단 주의 문구에 0.7.1 반영
+2. `CorsLayer::permissive()`는 credentials 미포함, `very_permissive()`만 credentials 허용 — WebFetch(docs.rs 0.7.1 CorsLayer) "All origins/methods/headers allowed"(permissive, credentials 언급 없음) vs "Credentials allowed"(very_permissive) 재확인 → **VERIFIED** (0.6→0.7 변경 없음)
+3. `allow_origin()`/`allow_credentials()` 메서드 시그니처 — 0.7.1 문서에서 `impl Into<AllowOrigin>`/`impl Into<AllowCredentials>` 그대로 확인 → **VERIFIED**
+
+**Q1 (재확인). "CorsLayer::permissive()로 쿠키 인증까지 허용되나?"**
+- PASS — SKILL.md "CorsLayer" 절 주석("credentials는 허용하지 않음. credentials까지 허용하려면 CorsLayer::very_permissive() 사용")이 0.7.1에서도 정확함을 재확인.
+
+**Q2 (재확인). "tower-http 최신 버전으로 CORS+트레이싱+압축 미들웨어를 추가하려면 Cargo.toml에 뭘 넣나?"**
+- PASS — 갱신된 예시(`tower-http = { version = "0.7", features = [...] }`)로 정확히 답변 가능. API는 0.6.x/0.7.x 동일.
+
+**status**: 버전 핀 1건 수정(0.6→0.7, 0.7.0→0.7.1 각주 갱신)했으나 API·동작 변경 없음, content test 2건 PASS → **APPROVED 유지**
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -171,3 +191,4 @@ status: APPROVED
 | 2026-04-17 | v2 | verification.md 신규 8섹션 포맷으로 마이그레이션 | 메인 대화 오케스트레이션 |
 | 2026-04-17 | v3 | WebSearch 7개 클레임 교차 검증, DISPUTED 2건 수정 (Compression 우선순위 조건부, permissive credentials 미포함) | 메인 대화 오케스트레이션 |
 | 2026-06-20 | v4 | 버전 재검증 — tower-http 0.7.0 (2026-05-18 릴리즈) 확인. 현재 문서는 0.6.x 유지, SKILL.md에 0.7 마이그레이션 노트(no-op feature 제거, FollowRedirect Extension 전달 변경, Trace 이벤트 parent span 명시, GrpcCode non_exhaustive) 추가 | 버전 재검증 작업 |
+| 2026-09-26 | v5 | 정기 재검증 — 버전 드리프트 발견(0.7.0→0.7.1, 추가 breaking change 없음), Cargo.toml 예시 0.6→0.7 갱신, CorsLayer credentials 동작 재확인 | Claude (Sonnet 5) |

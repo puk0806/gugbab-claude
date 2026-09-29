@@ -250,7 +250,7 @@ project/
 
 ## 10. 다음 단계
 1. `typescript-backend-developer` → 위 결정에 따라 코드 구현
-2. `database-architect` → ERD·스키마·인덱스 확정 (아직 없으면)
+2. `database-architect`(설치된 경우) → ERD·스키마·인덱스 확정 (아직 없으면)
 3. `api-spec-designer` → OpenAPI 명세 작성
 4. `qa-engineer` → 테스트 계획·factory·testcontainers 설계
 

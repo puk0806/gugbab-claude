@@ -6,7 +6,7 @@ description: Rust + Axum 백엔드 레이어드 아키텍처 - 4계층 구조, �
 # Rust + Axum 레이어드 아키텍처
 
 > 소스: https://docs.rs/axum/latest/axum/ | https://doc.rust-lang.org/reference/items/modules.html | https://github.com/tokio-rs/axum/tree/main/examples
-> 검증일: 2026-06-20
+> 검증일: 2026-09-26 (재검증, 내용 변경 없음)
 
 > 주의: axum 0.8.x 기준입니다. 프로젝트 규모와 팀 컨벤션에 따라 구조를 조정하세요. 아래는 중규모 이상 프로젝트에 적합한 구조입니다.
 
@@ -481,6 +481,8 @@ impl<R: UserRepo> UserService<R> {
     }
 }
 ```
+
+> Rust 1.75+ 네이티브 `async fn in trait`(async_trait 불필요)·dyn 비호환·Send 바운드 함정 → [`references/REFERENCE.md`](references/REFERENCE.md)
 
 ---
 

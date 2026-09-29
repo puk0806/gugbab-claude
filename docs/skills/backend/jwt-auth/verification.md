@@ -2,7 +2,7 @@
 skill: jwt-auth
 category: backend
 version: v2
-date: 2026-06-20
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -36,9 +36,9 @@ status: APPROVED
 | 스킬 이름 | jwt-auth |
 | 스킬 경로 | .claude/skills/jwt-auth/SKILL.md |
 | 최초 작성일 | 2026-04-07 |
-| 검증일 | 2026-06-20 (버전 재검증, 최초 2026-04-07) |
+| 검증일 | 2026-09-26 (재검증, 최초 2026-04-07) |
 | 검증 방법 | skill-creator 에이전트 (creation-workflow 준수) |
-| 버전 기준 | jsonwebtoken 10.x (최신: 10.4.0) / axum 0.8.x |
+| 버전 기준 | jsonwebtoken 10.x/11.x (최신: 11.1.0) / axum 0.8.x / axum-extra 0.12.x |
 | 현재 상태 | **VERIFIED_WITH_CAVEATS** |
 
 ---
@@ -157,6 +157,26 @@ status: APPROVED
 
 ---
 
+### 재검증 (2026-09-26)
+
+**수행자**: 메인 세션 (Sonnet 5), 서브에이전트 미사용(사용자 지시)
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임 3건 WebSearch/WebFetch 교차 검증 → 실전 질문 2개로 SKILL.md 자체 답변 확인
+
+**교차 검증 클레임 (버전 드리프트 발견 → 본문 수정 반영):**
+1. jsonwebtoken 최신이 10.x라는 기존 서술 — WebFetch(docs.rs/jsonwebtoken/latest)로 확인한 결과 **11.1.0까지 릴리즈**. CHANGELOG 확인 결과 10.x→11.x는 breaking change 없음(중복 토큰 파싱 제거 등 성능 최적화만) → **DISPUTED(버전 드리프트) → 수정 반영**: Cargo.toml 예시 및 마이그레이션 노트에 11.x 언급 추가, encode/decode API 변경 없음 확인
+2. axum-extra 버전 "0.10" — WebSearch/WebFetch(docs.rs axum-extra 0.12.6 Cargo.toml) 결과 최신 0.12.6이 axum 0.8.9에 의존하여 완전 호환 확인 → **DISPUTED(버전 드리프트) → 수정 반영**: Cargo.toml 예시를 0.12로 갱신
+3. jsonwebtoken 10.0부터 암호화 백엔드(`aws_lc_rs`/`rust_crypto`) feature 선택 필수 — 11.x에서도 동일 요구사항 유지 확인(CHANGELOG에 백엔드 시스템 변경 없음) → **VERIFIED** (본문 유지, 11.x 언급만 추가)
+
+**Q1 (재확인). "jsonwebtoken 최신 버전으로 HS256 토큰을 encode/decode하는 코드가 10.x 예시와 달라지나?"**
+- PASS — SKILL.md "토큰 생성"·"토큰 검증" 절의 `encode`/`decode` 시그니처가 11.x에서도 동일하게 유효함을 CHANGELOG로 확인. 코드 예시 변경 불필요.
+
+**Q2 (재확인). "axum 0.8 프로젝트에 axum-extra TypedHeader로 Authorization Bearer를 받으려면 Cargo.toml에 어떤 버전을 넣나?"**
+- PASS — 갱신된 예시(`axum-extra = { version = "0.12", features = ["typed-header"] }`)가 axum 0.8.9와 호환됨을 axum-extra 0.12.6 Cargo.toml 의존성으로 재확인.
+
+**status**: 버전 핀 2건 수정(jsonwebtoken 10→11, axum-extra 0.10→0.12)했으나 API·동작 변경 없음, content test 2건 PASS → **APPROVED 유지**
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -183,3 +203,4 @@ status: APPROVED
 | 2026-04-17 | v2 | verification.md 신규 8섹션 포맷으로 마이그레이션 | 메인 대화 오케스트레이션 |
 | 2026-06-20 | v3 | 버전 재검증 — jsonwebtoken 9.x → 10.4.0 메이저 업그레이드 반영. Cargo.toml feature flag 필수 변경(aws_lc_rs/rust_crypto), 마이그레이션 노트 섹션 추가, time 의존성 제거 확인. crates.io WebSearch + GitHub 릴리즈 노트 확인. | 버전 재검증 작업 |
 | 2026-09-25 | v3 | 포맷 정합 — 메타 표에 "검증일" 라인 추가(기존엔 체크리스트 항목으로만 표기돼 자동 감사가 날짜를 못 읽음). 내용·status 변경 없음 | 모델 ID 현행화 감사 |
+| 2026-09-26 | v4 | 정기 재검증 — 버전 드리프트 발견(jsonwebtoken 10.x→11.1.0, axum-extra 0.10→0.12) 반영, API 변경 없음 확인 | Claude (Sonnet 5) |

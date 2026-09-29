@@ -200,7 +200,7 @@ const ProductGrid = dynamic(
 
 ## 8. v33 → 최신(v36) breaking change 요약
 
-> 최신 안정 메이저는 **36.1.0** (npm `ag-grid-react` latest 기준). 아래는 v33 기준 코드베이스를 올릴 때 실제로 손봐야 하는 항목만 추린 것이다.
+> 최신 안정 메이저는 **36.2.0** (npm `ag-grid-react` latest 기준, 2026-09-26 재확인 — 2026-08-26 확인 시 36.1.0에서 마이너 갱신, breaking change 없음). 아래는 v33 기준 코드베이스를 올릴 때 실제로 손봐야 하는 항목만 추린 것이다.
 
 | 버전 | 성격 | 내용 |
 |------|------|------|
@@ -374,7 +374,7 @@ api.setGridOption('datasource', {
 
 ## 11. AG Grid vs react-virtuoso — 선택 기준
 
-가상 스크롤이라는 점에서 겹치지만 해결하는 문제가 다르다. 자세한 가상 리스트 API는 `frontend/react-virtuoso` 스킬을 참조한다.
+가상 스크롤이라는 점에서 겹치지만 해결하는 문제가 다르다. react-virtuoso API 요약은 `frontend/chat-ui-pattern` 스킬의 references/REFERENCE.md 16절에 있다(그 스킬이 설치되지 않은 템플릿이면 https://virtuoso.dev/react-virtuoso/ 공식 문서를 본다).
 
 | 요구사항 | AG Grid | react-virtuoso |
 |----------|:---:|:---:|

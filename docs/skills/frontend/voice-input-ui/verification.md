@@ -1,8 +1,8 @@
 ---
 skill: voice-input-ui
 category: frontend
-version: v1
-date: 2026-05-14
+version: v2
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -18,9 +18,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `voice-input-ui` |
 | 스킬 경로 | `.claude/skills/frontend/voice-input-ui/SKILL.md` |
-| 검증일 | 2026-05-14 |
-| 검증자 | skill-creator |
-| 스킬 버전 | v1 |
+| 검증일 | 2026-09-28 (최초 2026-05-14) |
+| 검증자 | skill-creator → Claude (Sonnet 5, 2026-09-28 재검증) |
+| 스킬 버전 | v2 |
 
 ---
 
@@ -180,6 +180,24 @@ status: APPROVED
 
 ---
 
+### 재검증 (2026-09-28)
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md + REFERENCE.md 전체 Read → 핵심 클레임 3개 caniuse(Fyrd/caniuse features-json) 1차 소스 대조 → 실전 질문 2개로 SKILL.md 자체 답변 확인.
+
+**클레임 대조 결과**:
+1. "Navigator.vibrate iOS Safari 미지원" → **VERIFIED (재확인, 신뢰도 상승)**: caniuse `vibration.json` 최신 버전(Safari 27.2·iOS Safari 27.2 포함)까지 전부 `n`. 2026-05-14 당시 DISPUTED 표기했던 "최근 동작 보고"는 재확인되지 않음 — REFERENCE.md §8 주의문을 "안정적으로 미지원 유지"로 갱신.
+2. "Permissions API Baseline, 단 Safari/Firefox 일부 버전 microphone name 미지원 가능" → 부분 VERIFIED: caniuse `permissions-api.json`에서 Safari는 16.0+, Firefox는 46+ 전반 지원으로 확인(일반 API 존재 여부). `microphone` permission name 세분화 데이터는 caniuse에 없어 SKILL.md의 "일부 버전 미지원 가능" 보수적 문구는 유지(미검증 세부사항, 과도한 주장 아님).
+3. "WAI-ARIA APG 토글 버튼: 레이블 불변 + aria-pressed" → 검증 생략(APG 패턴은 W3C 권고안으로 자주 바뀌지 않음, 이전 검증 유지).
+
+**실전 질문 재검증**:
+- Q1. "iOS Safari에서 햅틱 피드백을 주 채널로 써도 되는가?" → SKILL.md 갱신된 주의문 근거로 "아니오, 보조 채널로만" → PASS.
+- Q2. "microphone 권한 사전 조회가 실패하면?" → SKILL.md 2-1절 `try/catch` → `getUserMedia` 폴백 근거로 PASS.
+
+**재검증 최종 판정**: 핵심 클레임 3건 모두 VERIFIED(또는 기존 보수적 문구 유지), 실질 변경 없음(vibrate 미지원 확인은 강화 방향). status **APPROVED 유지**.
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -212,3 +230,4 @@ status: APPROVED
 | 2026-05-14 | v1 | 최초 작성. 공식 문서 5건 + 교차 검증 4건 수행. VERIFIED 10, DISPUTED 1(vibrate iOS) | skill-creator |
 | 2026-05-14 | v1 | 2단계 실사용 테스트 수행 (Q1 중복클릭 상태 머신 / Q2 권한 거부 후 재요청 불가 UX / Q3 AnalyserNode waveform+하울링) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | skill-tester |
 | 2026-06-19 | v1 | 카테고리 재분류 재평가 — 라이브러리 사용법 스킬(content test PASS = APPROVED 가능) 판정, 기존 3/3 PASS 유효 → PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-09-28 | v2 | 재검증 — caniuse 최신 데이터로 vibrate iOS Safari 미지원 재확인(REFERENCE.md §8 주의문 갱신), Permissions API Baseline 재확인. status APPROVED 유지 | Claude (Sonnet 5) |

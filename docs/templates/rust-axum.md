@@ -49,18 +49,19 @@ Rust + Axum 백엔드 프로젝트. 프론트엔드·Java·게임·학술 스킬
 
 ---
 
-## 스킬 (32종)
+## 스킬 (24종)
 
 | 카테고리 | 종류 | 링크 |
 |----------|------|------|
-| backend — Rust (18종) | Axum·sqlx·thiserror·tokio·tower-http·serde·tracing 등 + claude-code-headless (Claude 구독 중계 연동용 예외) | [→ 목록](../skills/backend/README.md) |
+| backend — Rust (10종) | axum·sqlx·tower-http·reqwest·jwt-auth·multipart-upload·sse-streaming·project-structure·testing-rust + claude-code-headless (Claude 구독 중계 연동용 예외) | [→ 목록](../skills/backend/README.md) |
 | devops (8종) | docker-deployment·github-actions·n8n 5종·vercel-sandbox | [→ 목록](../skills/devops/README.md) |
 | architecture (3종) | ddd·incremental-refactoring·module-boundaries | [→ 목록](../skills/architecture/README.md) |
-| meta (3종) | claude-code-hook-authoring·ralph-loop·riper-workflow | [→ 목록](../skills/meta/README.md) |
+| meta (1종) | claude-code-hook-authoring | [→ 목록](../skills/meta/README.md) |
 
 > 2026-08-31: dream 전용(meta 3·architecture 1)·frontend-domain-structure가 fallthrough로 딸려가던 누수를 차단했습니다.
 > 2026-09-11: python 에이전트 2종(python-backend-developer·python-backend-architect)을 배제 목록에 추가 — Python 스킬은 원래 설치되지 않습니다 (rust 화이트리스트 방식).
 > 2026-09-25 실측: devops는 github-actions-visual-regression·site-migration-seo(프론트 전용)를 포함하지 않아 8종(이전 표의 10종은 과다 계상이었다).
+> 2026-09-26 스킬 정리: serde·thiserror·tokio·tracing·design-patterns-rust·dependency-injection·repository-pattern 삭제(모델 기본 지식), custom-middleware는 axum에 병합 — 실설치 실측 24종. 기존 설치처의 폐기 사본은 재설치 시 install-cleanup이 짝 단위로 정리합니다.
 
 ---
 
@@ -78,12 +79,12 @@ Rust + Axum 백엔드 프로젝트. 프론트엔드·Java·게임·학술 스킬
 | [session-start.js](../../.claude/hooks/session-start.js) | SessionStart | 세션 시작 시 브랜치·미커밋 파일·최근 커밋 요약 출력 |
 | [session-export.js](../../.claude/hooks/session-export.js) | Stop | 세션 대화 요약을 로컬 exports에 기록 |
 | [cc-notify.js](../../.claude/hooks/cc-notify.js) | Stop | 작업 완료 시 macOS 데스크탑 알림 |
-| [instructions-loaded.js](../../.claude/hooks/instructions-loaded.js) | InstructionsLoaded | CLAUDE.md 로드 완료 시 규칙 요약 출력 |
+| [instructions-loaded.js](../../.claude/hooks/instructions-loaded.js) | SessionStart | CLAUDE.md 로드 완료 시 규칙 요약 출력 |
 | [deliverable-guard.js](../../.claude/hooks/deliverable-guard.js) | PostToolUse Write/Edit · PreToolUse Bash · Stop | 산출물 완결성 — 세션 수정 파일 추적 + README 동기화 검사 + PENDING_TEST 스킬 테스트 미수행 차단 |
 | [skill-md-guard.js](../../.claude/hooks/skill-md-guard.js) | PostToolUse Write | SKILL.md 소스 URL·검증일·필수 섹션 검증 |
 | [agent-md-guard.js](../../.claude/hooks/agent-md-guard.js) | PostToolUse Write | 에이전트 .md name·description·tools·model·example 형식 검증 |
 | [verification-guard.js](../../.claude/hooks/verification-guard.js) | PostToolUse Write | verification.md 필수 섹션 확인, UNVERIFIED 상태 차단 |
-| [staleness-check.js](../../.claude/hooks/staleness-check.js) | InstructionsLoaded | 스킬 검증일 경과 감지 — 30~59일 경고, 60일+ 재검증 강제 |
+| [staleness-check.js](../../.claude/hooks/staleness-check.js) | SessionStart | 스킬 검증일 경과 감지 — 30~59일 경고, 60일+ 재검증 강제 |
 | [statusline.sh](../../.claude/hooks/statusline.sh) | statusLine | 상태 바 — 브랜치·미커밋 수·PENDING_TEST 스킬 수 표시 |
 
 ### 개발 전용 (4종)

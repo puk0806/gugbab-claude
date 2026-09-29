@@ -17,13 +17,13 @@ description: >
 > - PyPI: https://pypi.org/project/llama-index/
 > - LlamaParse: https://www.llamaindex.ai/llamaparse
 >
-> 검증일: 2026-05-15
-> 검증 버전: llama-index **0.14.22** (2026-05-14 PyPI 릴리즈)
+> 검증일: 2026-09-28 (최초 2026-05-15)
+> 검증 버전: llama-index **0.14.25** (2026-09-21 PyPI 릴리즈, 재검증 시점 최신) — 최초 검증 시 0.14.22, 0.14.x 라인 내 patch 업데이트만 있어 API 변경 없음
 > 권장 버전: 0.14.x 이상 (이 스킬은 0.14 기준. 0.11~0.13에서는 일부 API 다름)
 
 ---
 
-## 0. 짝 스킬과의 분업
+## 0. 짝 스킬과의 분업 (설치된 경우 참조)
 
 | 스킬 | 역할 |
 |------|------|
@@ -194,6 +194,7 @@ Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-m3")
 
 > **주의:** Anthropic은 **임베딩 모델을 제공하지 않는다.** Claude(LLM)만 제공.
 > LlamaIndex에서 `Settings.llm = Anthropic(...)` 으로 LLM은 쓸 수 있지만, embedding은 OpenAI·HuggingFace·Cohere 등으로 별도 구성해야 한다.
+> Anthropic 공식 문서가 임베딩 대안으로 명시 추천하는 파트너는 **Voyage AI**다 (`pip install llama-index-embeddings-voyageai`, `from llama_index.embeddings.voyageai import VoyageEmbedding`). 한국어 특화가 필요 없고 매니지드 임베딩을 원하면 HuggingFace 로컬 모델 대신 고려 가능 (2026-09-28 재검증 확인).
 
 ```python
 from llama_index.llms.anthropic import Anthropic

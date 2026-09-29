@@ -24,7 +24,7 @@ description: >
 > - 한국천문연구원 음양력 정보 OpenAPI — https://www.data.go.kr/data/15012679/openapi.do
 > - Major Arcana / 78장 구조 — https://en.wikipedia.org/wiki/Major_Arcana
 >
-> 검증일: 2026-09-10 (2026-09-11 캐주얼 앱 방향으로 안전 계열 섹션 축소)
+> 검증일: 2026-09-28 (최초 2026-09-10, 2026-09-11 캐주얼 앱 방향으로 안전 계열 섹션 축소, 2026-09-28 재검증)
 > 대상 모델: Claude Opus 5.5 / Sonnet 5 / Haiku 4.5 (2026-09-25 현행 세대 — 예제 기본은 비용 효율상 Sonnet 5)
 
 이 스킬은 **재미로 보는 캐주얼 운세 앱** 백엔드에서 Claude API를 호출할 때

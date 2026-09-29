@@ -14,7 +14,7 @@ description: Hono 4.x 기반 TypeScript REST API 패턴 — 체이닝 라우팅�
 > 검증일: 2026-09-25
 > 기준 버전: `hono` **4.13.9**(2026-09-24) / `@hono/zod-validator` **0.9.1**(peer: `hono >=4.11.2`, `zod ^3.25.0 || ^4.0.0`) / `@hono/node-server` **2.1.1**(Node **>=20**) / `@anthropic-ai/sdk` **0.128.0**(2026-09-22, `claude-opus-5-5` 지원 추가)
 
-**관련 스킬 (중복 서술 안 함 — 해당 스킬 참조):**
+**관련 스킬 (중복 서술 안 함 — 설치된 경우 해당 스킬 참조):**
 - Zod 스키마 작성 자체 → `backend/zod-schema-validation`
 - ORM → `backend/prisma-orm`, `backend/drizzle-neon-postgres`
 - 세션·OAuth 인증 → `backend/better-auth`

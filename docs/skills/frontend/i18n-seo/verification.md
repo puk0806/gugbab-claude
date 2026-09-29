@@ -2,7 +2,7 @@
 skill: i18n-seo
 category: frontend
 version: v1
-date: 2026-06-02
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `i18n-seo` |
 | 스킬 경로 | `.claude/skills/frontend/i18n-seo/SKILL.md` |
-| 검증일 | 2026-06-02 |
+| 검증일 | 2026-09-28 (재검증) |
 | 검증자 | skill-creator (sonnet) |
 | 스킬 버전 | v1 |
 
@@ -155,6 +155,24 @@ status: APPROVED
 - verification-policy 분류: 해당 없음 (SEO 표준 정리형 — content test로 APPROVED 전환 가능)
 - 최종 상태: APPROVED
 
+### 재검증 (2026-09-28)
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read 후 핵심 클레임 3개 1차 소스 대조 + 실전 질문 2개 답변 검증
+
+**클레임 대조:**
+- Next.js `generateMetadata`의 `alternates.languages` API: 공식 문서(nextjs.org/docs/app/api-reference/functions/generate-metadata, 문서 버전 16.3.6, lastUpdated 2026-08-25) 직접 WebFetch 대조 → 필드 구조·출력 HTML(`<link rel="alternate" hreflang="...">`) 동일, 변경 없음. SKILL.md의 "16.2" 표기만 최신(16.3.6, `npm view next version` 확인)으로 정정
+- Google Search Console International Targeting 폐지(2022-09-22): 역사적 사실로 재변동 없음 (변경 여지 없는 클레임)
+- BCP 47 (RFC 5646) 언어 태그 형식: IETF 표준 고정 사양, 변경 없음
+
+Q1. "Next.js 16 최신 버전에서도 alternates.languages로 hreflang 생성하는 방식이 그대로야?"
+— PASS. 근거: SKILL.md 10절 코드 예시가 공식 문서 16.3.6 버전 예시와 필드·출력 구조 동일함을 확인.
+
+Q2. "Search Console International Targeting 도구 지금도 써?"
+— PASS. 근거: SKILL.md 5-5절 "2022-09-22 폐지" 기술이 여전히 유효(폐지는 되돌릴 수 없는 과거 사실).
+
+**판정**: 예제 버전 표기(16.2→16.3)만 갱신, API·정책 변경 없음 → status APPROVED 유지.
+
 ---
 
 > 아래는 skill-creator 작성 당시의 예정 템플릿 (참고용 보존)
@@ -235,3 +253,4 @@ Next.js app router에서 hreflang을 어떻게 자동으로 생성해?
 |------|------|-----------|--------|
 | 2026-06-02 | v1 | 최초 작성. Google Search Central 공식 + BCP 47 + Yandex/Baidu/Naver 특수성 + Next.js·Astro 매핑 포함. International Targeting 보고서 2022 폐지 반영 | skill-creator |
 | 2026-06-02 | v1 | 2단계 실사용 테스트 수행 (Q1 ko-KR·ko·kr 구분 / Q2 canonical 영문 통일 문제 / Q3 Accept-Language 자동 리다이렉트 위험) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-28 | v1 | 재검증: Next.js 16.3.6 공식 문서 대조로 `alternates.languages` API 무변경 확인, 예제 버전 표기 16.2→16.3 정정. status APPROVED 유지 | 메인 세션 |

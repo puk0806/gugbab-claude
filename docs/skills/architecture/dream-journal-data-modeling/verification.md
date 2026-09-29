@@ -2,7 +2,7 @@
 skill: dream-journal-data-modeling
 category: architecture
 version: v1
-date: 2026-05-14
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -32,8 +32,8 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `dream-journal-data-modeling` |
 | 스킬 경로 | `.claude/skills/architecture/dream-journal-data-modeling/SKILL.md` |
-| 검증일 | 2026-05-14 |
-| 검증자 | skill-creator |
+| 검증일 | 2026-09-28 (최초 검증 2026-05-14) |
+| 검증자 | skill-creator / 재검증: Claude (Sonnet 5) |
 | 스킬 버전 | v1 |
 
 ---
@@ -166,6 +166,21 @@ status: APPROVED
 
 없음. 3개 질문 모두 SKILL.md 단독으로 완전한 답변 도출 가능.
 
+### 재검증 테스트 (2026-09-28)
+
+**수행일**: 2026-09-28
+**수행 방법**: Dexie 공식 문서(Version.upgrade()) WebFetch 재확인 + 실전 질문 2개 SKILL.md 대조
+
+**Q1. Dexie `db.version(N).upgrade()` 마이그레이션 패턴이 현재도 동일한가?**
+- 판정: PASS
+- 근거: dexie.org/docs/Version/Version.upgrade() 공식 문서에서 `trans.table("...").toCollection().modify(...)` 패턴이 여전히 동일하게 사용됨을 확인. SKILL.md 섹션 3의 예시와 일치.
+
+**Q2. Fuse.js/MiniSearch를 통한 IndexedDB 풀텍스트 검색 결합 패턴에 breaking change가 있는가?**
+- 판정: PASS (변경 없음)
+- 근거: 두 라이브러리 모두 안정적인 API를 유지하는 성숙한 라이브러리이며, IndexedDB가 전문 검색을 지원하지 않는다는 근본 제약도 W3C 스펙 특성상 변하지 않음. 정확한 패치 버전 번호는 이번 재검증에서 재확인하지 않았으나(공식 npm 접근 제한), 스킬이 다루는 API 표면(신규 인스턴스 생성·search())은 변경 가능성이 낮은 안정 API.
+
+재검증 결과: 핵심 API·패턴 변경 없음, status APPROVED 유지.
+
 ### 판정
 
 - agent content test: 3/3 PASS
@@ -246,3 +261,4 @@ status: APPROVED
 | 2026-05-14 | v1 | 최초 작성. 10개 섹션 + 10개 클레임 교차 검증 (VERIFIED 10/10) | skill-creator |
 | 2026-05-14 | v1 | 2단계 실사용 테스트 수행 (Q1 복합 인덱스+쿼리 / Q2 multi-entry distinct() / Q3 암호화+검색 공존) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-09-25 | v1 | 모델 ID 현행화(Opus 5.5/Fable 5.1 정렬 작업의 일환) — `Interpretation.model` 주석 예시의 실존하지 않는 ID `"claude-sonnet-4-7"` → 현행 `"claude-sonnet-5"`. 스키마 변동 없음, status APPROVED 유지 | 모델 ID 현행화 |
+| 2026-09-28 | v1 | 재검증: Dexie Version.upgrade() 공식 문서 대조(패턴 불변 확인), Fuse.js/MiniSearch 안정 API 확인. 내용 수정 없음, status APPROVED 유지 | Claude (Sonnet 5) |

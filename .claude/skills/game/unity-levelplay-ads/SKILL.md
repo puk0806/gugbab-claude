@@ -21,8 +21,8 @@ description: >
 > - [Changelog](https://docs.unity.com/en-us/grow/levelplay/sdk/unity/changelog)
 > - [Google AdMob integration](https://docs.unity.com/en-us/grow/levelplay/sdk/android/networks/guides/google-admob)
 > - GitHub: [ironsource-mobile/Unity-sdk](https://github.com/ironsource-mobile/Unity-sdk)
-> 검증일: 2026-06-09
-> 대상 버전: LevelPlay Unity Package **9.4.3** (2026-05-25 릴리스), Unity 6 LTS / Unity 2022.3 LTS 호환
+> 검증일: 2026-09-28 (재검증, 이전 2026-09-26. 보상형 광고 서버 측 중복 지급·재전송 방어 지침(S2S 서명 검증·EVENT_ID 중복 체크·멱등 처리) 신설 — Unity LevelPlay 공식 S2S 콜백 문서로 확인해 반영. 이전 재검증: LevelPlay 9.4.3 → **9.5.1**로 최신 버전 갱신, Android `AD_ID` 권한 요구 시점을 API 33+ → **API 31(Android 12)+ 타겟 시부터**로 정정, LevelPlay Android SDK가 Maven Central로 이전(IS.com 저장소는 더 이상 미지원)됨을 추가 반영)
+> 대상 버전: LevelPlay Unity Package **9.5.1** (2026 릴리스), Unity 6 LTS / Unity 2022.3 LTS 호환
 
 ---
 
@@ -34,7 +34,7 @@ Unity LevelPlay는 2023년 리브랜딩을 통해 구 **ironSource Mediation SDK
 |------|------|
 | 공식 명칭 | Unity LevelPlay (구 ironSource Mediation) |
 | 패키지명 | `com.unity.services.levelplay` |
-| 최신 안정 버전 | **9.4.3** (2026-05-25) |
+| 최신 안정 버전 | **9.5.1** (2026) |
 | 지원 Unity Editor | LTS 및 Editor Supported 버전 (Unity 6 / 2022.3 LTS 포함) |
 | 지원 Android | API Level 19 (Android 4.4)+ |
 | 지원 iOS | iOS 13+ (XCode 16+) |
@@ -75,11 +75,12 @@ LevelPlay 9.0.0부터 새로운 **Ad Unit 기반 API**(`LevelPlay.Init`, `LevelP
 ### Android 빌드 사전 설정
 
 1. `Edit > Project Settings > Player > Android > Publishing Settings` → **Custom Main Gradle Template** / **Custom Main Manifest** 활성화
-2. Android API 33+ 타겟 시 `AndroidManifest.xml`에 다음 추가:
+2. Android **API 31(Android 12) 이상을 타겟**하면 `AndroidManifest.xml`에 다음 추가(API 33+에서도 동일하게 필요):
    ```xml
    <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
    ```
 3. `Assets > External Dependency Manager > Android Resolver > Resolve` 실행하여 네이티브 의존성 다운로드.
+4. 참고(2026-09 갱신): LevelPlay Android SDK·Ad Quality SDK는 Maven Central로 이전 완료 — IS.com 저장소로의 수동 의존성 참조는 더 이상 지원되지 않는다. External Dependency Manager가 최신이면 자동 반영된다.
 
 ### iOS 빌드 사전 설정
 
@@ -254,6 +255,16 @@ void OnAdClosed(LevelPlayAdInfo adInfo)
 **올바른 패턴**: 보상은 반드시 `OnAdRewarded` 콜백에서만 지급한다. `OnAdRewarded`는 사용자가 보상 조건(보통 끝까지 시청)을 충족했을 때만 호출된다.
 
 > 주의: `OnAdRewarded`와 `OnAdClosed`는 비동기이고, 광고 네트워크에 따라 발생 순서가 다를 수 있다(`OnAdClosed`가 먼저 올 수도 있음). 따라서 두 콜백은 독립적으로 처리하며, 보상 지급 로직만 `OnAdRewarded`에 둔다.
+
+### 4-1. 서버 측 보상 검증 — 중복 지급·재전송 방어 (프로덕션 권장)
+
+위 `OnAdRewarded` 클라이언트 콜백만으로 재화를 직접 지급하면(`GameProgress.AddCurrency` 직접 호출) 메모리 조작·에뮬레이터 후킹으로 위조 호출이 가능하다. 실제 재화가 걸린 보상(유료 재화·희귀 아이템 등)은 **Server-to-Server(S2S) 콜백**으로 서버가 직접 검증 후 지급해야 한다.
+
+- LevelPlay(ironSource)는 광고 시청 완료 시 지정한 서버 URL로 GET 콜백을 보낸다. Play Console/LevelPlay 대시보드가 아니라 **자체 백엔드**가 아래 두 가지를 반드시 확인해야 한다:
+  1. **서명(signature) 검증**: `signature = md5([TIMESTAMP][EVENTID][USER_ID][REWARDS][PRIVATE_KEY])` — private key는 발급자와 ironSource만 아는 값. 서버에서 동일 공식으로 재계산해 URL의 `signature` 파라미터와 일치하는지 확인 후 불일치 시 지급 거부(출처: Unity LevelPlay 공식 문서 "Server-to-server callback settings")
+  2. **`[EVENT_ID]` 중복 체크**: EVENT_ID는 ironSource가 완료 이벤트마다 생성하는 고유 식별자. 서버는 이미 처리한 EVENT_ID를 저장해 두고, 재수신 시 재지급하지 않는다(출처: 위 문서 "A unique identifier of the completed event... so you can verify that you have not already rewarded the user for the event")
+- **재전송(retry) 주의**: LevelPlay는 서버가 HTTP 200과 함께 응답 본문에 `[EVENT_ID]:OK` 문자열을 포함해 반환할 때까지 **동일 콜백을 주기적으로 재호출**한다(공식 문서). 따라서 콜백 핸들러는 멱등(idempotent)하게 구현해야 한다 — 이미 처리한 EVENT_ID면 재지급 없이 곧바로 `[EVENT_ID]:OK`를 반환한다.
+- 클라이언트 `OnAdRewarded`는 UX 피드백(즉시 애니메이션 등) 용도로만 쓰고, 실제 재화 확정은 S2S 콜백 처리 후 서버 상태를 클라이언트가 조회하는 구조를 권장한다.
 
 ---
 
@@ -452,7 +463,7 @@ LevelPlay.Init("YOUR_APP_KEY");
 | `OnApplicationPause` 미구현 | 일부 네트워크 광고 표시 실패·통계 오류 | `IronSource.Agent.onApplicationPause(isPaused)` 호출 |
 | 초기화 완료 전 광고 객체 생성 | 광고 로드 실패 | `LevelPlay.OnInitSuccess` 콜백 이후에 생성 |
 | iOS `GADApplicationIdentifier` 미설정 | 앱 시작 시 크래시 | Info.plist에 `ca-app-pub-XXX~YYY` 추가 |
-| Android API 33+에서 `AD_ID` 권한 누락 | 광고 ID 수집 안 됨 → 매출 손실 | `<uses-permission android:name="com.google.android.gms.permission.AD_ID"/>` 추가 |
+| Android API 31+ 타겟에서 `AD_ID` 권한 누락 | 광고 ID 수집 안 됨 → 매출 손실 | `<uses-permission android:name="com.google.android.gms.permission.AD_ID"/>` 추가 |
 | 광고 표시 직전 `LoadAd()` 호출 | 첫 광고가 항상 실패 | 앱 시작 시 한 번 로드 → `OnAdClosed`에서 다음 광고 로드 |
 | 레거시·신 API 혼용 | 콜백 누락·중복 발생 | 신 API(`LevelPlayRewardedAd` 등)로 통일 |
 | `IsAdReady()` 체크 없이 `ShowAd()` 호출 | 표시 실패 + UX 깨짐 | 표시 전 `IsAdReady() && !IsPlacementCapped(name)` 체크 |
@@ -473,13 +484,13 @@ LevelPlay.Init("YOUR_APP_KEY");
 
 배포 전 반드시 확인할 항목:
 
-- [ ] `com.unity.services.levelplay` 9.4.x 이상 설치
+- [ ] `com.unity.services.levelplay` 9.5.x 이상 설치
 - [ ] Unity Dashboard에서 App Key 발급 + 광고 단위(Ad Unit) 생성
 - [ ] `LevelPlay.Init` 호출 + `OnInitSuccess`/`OnInitFailed` 구독
 - [ ] 광고 객체 생성은 `OnInitSuccess` 콜백 이후
 - [ ] 보상 지급은 `OnAdRewarded`에서만
 - [ ] `OnApplicationPause`에서 `IronSource.Agent.onApplicationPause(isPaused)` 호출
 - [ ] iOS Info.plist: `GADApplicationIdentifier`(AdMob 사용 시) + `NSAppTransportSecurity`
-- [ ] Android API 33+: `AD_ID` 권한
+- [ ] Android API 31+ 타겟: `AD_ID` 권한
 - [ ] `LevelPlay.LaunchTestSuite()`로 통합 검증
 - [ ] AdMob 미디에이션: AdMob 계정 타임존 UTC + 네트워크 어댑터 설치

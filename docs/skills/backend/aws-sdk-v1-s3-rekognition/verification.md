@@ -2,7 +2,7 @@
 skill: aws-sdk-v1-s3-rekognition
 category: backend
 version: v1
-date: 2026-04-23
+date: 2026-09-26 (최초: 2026-04-23)
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `aws-sdk-v1-s3-rekognition` |
 | 스킬 경로 | `.claude/skills/backend/aws-sdk-v1-s3-rekognition/SKILL.md` |
-| 검증일 | 2026-04-23 |
+| 검증일 | 2026-04-23 (재검증: 2026-09-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 | 대상 스택 | AWS SDK for Java v1 (1.12.x), Spring Boot 2.5, Java 11 |
@@ -135,7 +135,22 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
-> 실제 CLI에서 에이전트 활용 테스트 미실시. PENDING_TEST 단계.
+### 2026-09-26 — 재검증 (60일 초과 정기 재검증)
+
+**수행일**: 2026-09-26
+**수행 방법**: SKILL.md + REFERENCE.md 전체 Read, WebSearch로 v1 end-of-support 상태·BOM 버전 변동 재확인.
+
+**Q1. 2026-09 기준으로도 AWS SDK v1이 정말 end-of-support 상태인가, 재개 발표는 없었는가?**
+- PASS(재검증). WebSearch 결과 v1은 여전히 2025-12-31 end-of-support 상태 유지, 신규 릴리스 없음, "기존 앱은 계속 동작하되 신규 프로젝트는 v2 마이그레이션 권장" 공식 입장 그대로 확인.
+
+**Q2. aws-java-sdk-bom 1.12.797이 여전히 마지막 배포 버전인가?**
+- PASS(재검증). EOL 이후 신규 배포가 없으므로 1.12.797이 계속 마지막 버전. BOM 통일 권장(핵심 클레임 1번)에 변경 없음.
+
+**재검증 결론**: 핵심 클레임 전부 VERIFIED 유지, 내용 변경 없음. status 변경 없음(APPROVED 유지).
+
+---
+
+### (원 기록) 실제 CLI 에이전트 활용 테스트 미실시 — 이후 2026-04-23 대체 테스트로 PASS 처리(섹션 6 참고)
 
 ### 테스트 케이스 1 (예정): BOM 충돌 해결
 
@@ -203,3 +218,4 @@ S3 bucket/key 에 올라간 이미지에 대해 얼굴 속성을 추출하고 �
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
 | 2026-04-23 | v1 | 최초 작성 (S3 + Rekognition + Spring Boot 2.5 통합) | skill-creator |
+| 2026-09-26 | v1 | 재검증 — v1 end-of-support 상태·BOM 1.12.797 최종 버전 변경 없음 확인 | 메인 세션 |

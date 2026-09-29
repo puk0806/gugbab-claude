@@ -51,7 +51,6 @@ echo "   4/rust-axum          — Rust + Axum 백엔드"
 echo "   5/java-spring-legacy — Java 11 + Spring Boot 2.5 + MyBatis"
 echo "   6/java-spring-modern — Java 21 + Spring Boot 3.x + MyBatis"
 echo "   7/unity-game         — Unity 6 LTS 2D 모바일 게임"
-echo "   8/academic           — 논문·학술 작업"
 echo "   9/dream-interpretation — 꿈 해몽 앱 개발"
 echo "  10/health             — 건강·식단 PWA 앱"
 echo "  11/seo-geo            — SEO·GEO 검색 노출 (프레임워크 비종속 — 스택 템플릿과 병행 선택)"
@@ -72,7 +71,6 @@ _parse_template() {
     5|java-spring-legacy)   echo "java-spring-legacy" ;;
     6|java-spring-modern)   echo "java-spring-modern" ;;
     7|unity-game)           echo "unity-game" ;;
-    8|academic)             echo "academic" ;;
     9|dream-interpretation) echo "dream-interpretation" ;;
     10|health)              echo "health" ;;
     11|seo-geo)             echo "seo-geo" ;;
@@ -455,7 +453,7 @@ HOOKS_COMMON=(
   "statusline.sh"
 )
 
-# 개발 전용 (util·academic·dream 제외)
+# 개발 전용 (util·dream 제외)
 HOOKS_DEV_ONLY=("tdd-guard.js" "test-fake-guard.js" "adversarial-test-guard.js" "fake-impl-guard.js")
 
 # TypeScript 전용 (react-spa·nextjs만)
@@ -507,6 +505,51 @@ for hook in "${HOOKS[@]}"; do
   fi
 done
 
+# 훅 CJS 경계 (2026-09-25) — 대상 루트 package.json 이 "type":"module" 이면 plain .js(CJS) 훅 전체가
+# "require is not defined in ES module scope" 로 크래시한다. 훅 폴더에 {"type":"commonjs"} 를 두어
+# 가장 가까운 package.json 을 고정한다. 템플릿·옵션과 무관하게 항상 설치.
+# 사용자 소유 파일(매니페스트 해시 증명 없음·원본과 다름)은 덮어쓰지 않는다 — 커스텀 훅 의존성 등 보존.
+_hooks_pj_src="$REPO_DIR/.claude/hooks/package.json"
+_hooks_pj_dest="$TARGET/.claude/hooks/package.json"
+if [ -f "$_hooks_pj_src" ]; then
+  _hooks_pj_action=$(node -e '
+    const fs = require("fs"), crypto = require("crypto");
+    const [src, dest, mfPath] = process.argv.slice(1);
+    const sha = (b) => crypto.createHash("sha256").update(b).digest("hex");
+    // symlink(끊어진 링크 포함)면 cp -f 가 링크 대상(대상 프로젝트 밖일 수 있음)에 쓴다 → 건드리지 않음 (2026-09-26 F6)
+    let lst = null; try { lst = fs.lstatSync(dest); } catch {}
+    if (lst && lst.isSymbolicLink()) { console.log("symlink"); process.exit(0); }
+    if (!lst) { console.log("install"); process.exit(0); }
+    const cur = fs.readFileSync(dest);
+    if (cur.equals(fs.readFileSync(src))) { console.log("same"); process.exit(0); }
+    try {  // 이전 설치가 만든 사본(해시 일치) → 원본 갱신 반영
+      const m = JSON.parse(fs.readFileSync(mfPath, "utf8"));
+      const h = m && m.hashes && m.hashes.hooks && m.hashes.hooks["package.json"];
+      if (Array.isArray(m.hooks) && m.hooks.includes("package.json") && typeof h === "string" && h === sha(cur)) {
+        console.log("update"); process.exit(0);
+      }
+    } catch {}
+    let t = null;
+    try { const j = JSON.parse(cur.toString("utf8")); t = j && typeof j === "object" ? j.type : null; } catch {}
+    console.log(t === "commonjs" ? "keep-ok" : "keep-bad");
+  ' "$_hooks_pj_src" "$_hooks_pj_dest" "$TARGET/.claude/.install-manifest.json" 2>/dev/null) || _hooks_pj_action="keep-bad"
+  case "$_hooks_pj_action" in
+    install|update|same)
+      if [ "$_hooks_pj_action" = "same" ] || cp -f "$_hooks_pj_src" "$_hooks_pj_dest" 2>/dev/null; then
+        echo "  → .claude/hooks/package.json (CJS 경계)"
+        echo "package.json" >> "$MANIFEST_HOOKS_TMP"
+      else
+        echo "  ✗ .claude/hooks/package.json (복사 실패)"
+      fi ;;
+    keep-ok)
+      echo "  · .claude/hooks/package.json 사용자 파일 보존 (type=commonjs 확인)" ;;
+    symlink)
+      echo "  ⚠ .claude/hooks/package.json 이 symlink 입니다 — 링크 대상에 쓰지 않도록 건드리지 않았습니다. 일반 파일 {\"type\": \"commonjs\"} 로 교체하지 않으면 루트가 \"type\":\"module\" 인 프로젝트에서 훅이 크래시할 수 있습니다" ;;
+    *)
+      echo "  ⚠ .claude/hooks/package.json 사용자 파일 보존 — \"type\": \"commonjs\" 가 아니어서(또는 JSON 오류) 루트가 \"type\":\"module\" 인 프로젝트에서 훅이 require 에러로 크래시할 수 있습니다. 직접 \"type\": \"commonjs\" 로 수정하세요" ;;
+  esac
+fi
+
 # git 훅 (.githooks/pre-commit) — util 단독 제외
 if ! is_util_only; then
   if [ -d "$REPO_DIR/.githooks" ]; then
@@ -529,6 +572,7 @@ echo "[agents]"
 # 유틸: 범용 에이전트만 허용 (비개발자도 사용 가능한 것)
 UTIL_AGENTS=(
   "meta/claude-code-guide.md"
+  "research/socratic-interviewer.md"
   "research/deep-researcher.md"
   "research/web-searcher.md"
   "research/research-reviewer.md"
@@ -539,28 +583,6 @@ UTIL_AGENTS=(
   "validation/qa-engineer.md"
   "domain/product-planner.md"
   "domain/ui-ux-designer.md"
-)
-
-# academic: 논문·학술 전용 에이전트 허용 목록
-ACADEMIC_AGENTS=(
-  "education/curriculum-2022-fact-checker.md"
-  "research/academic-researcher.md"
-  "research/defense-question-simulator.md"
-  "research/literature-review-synthesizer.md"
-  "research/research-proposal-coach.md"
-  "research/research-reviewer.md"
-  "research/socratic-interviewer.md"
-  "research/translation-comparison.md"
-  "research/web-searcher.md"
-  "research/deep-researcher.md"
-  "validation/abstract-reviewer.md"
-  "validation/argument-reviewer.md"
-  "validation/citation-checker.md"
-  "validation/fact-checker.md"
-  "validation/peer-review-simulator.md"
-  "validation/source-validator.md"
-  "meta/claude-code-guide.md"
-  "meta/freshness-auditor.md"
 )
 
 # dream-interpretation: 꿈 앱 전용 에이전트 허용 목록
@@ -620,18 +642,9 @@ FORTUNE_APP_AGENTS=(
 )
 
 # 특수 목적 에이전트 (일반 개발 템플릿에서 제외)
-SPECIAL_AGENTS_ACADEMIC=(
-  "education/curriculum-2022-fact-checker.md"
-  "research/academic-researcher.md"
-  "research/defense-question-simulator.md"
-  "research/literature-review-synthesizer.md"
-  "research/research-proposal-coach.md"
+# 요구사항 면담 에이전트 — util·all 전용 (2026-09-28 academic 템플릿 폐지로 util 로 이관, 개발 템플릿 제외는 유지)
+SPECIAL_AGENTS_UTIL_ONLY=(
   "research/socratic-interviewer.md"
-  "research/translation-comparison.md"
-  "validation/abstract-reviewer.md"
-  "validation/argument-reviewer.md"
-  "validation/citation-checker.md"
-  "validation/peer-review-simulator.md"
 )
 SPECIAL_AGENTS_DREAM=(
   "research/dream-journal-coach.md"
@@ -784,9 +797,6 @@ _agent_ok_for_tmpl() {
   if [ "$tmpl" = "util" ]; then
     is_in_list "$rel" "${UTIL_AGENTS[@]}" && return 0; return 1
   fi
-  if [ "$tmpl" = "academic" ]; then
-    is_in_list "$rel" "${ACADEMIC_AGENTS[@]}" && return 0; return 1
-  fi
   if [ "$tmpl" = "dream-interpretation" ]; then
     is_in_list "$rel" "${DREAM_APP_AGENTS[@]}" && return 0; return 1
   fi
@@ -797,8 +807,8 @@ _agent_ok_for_tmpl() {
     is_in_list "$rel" "${FORTUNE_APP_AGENTS[@]}" && return 0; return 1
   fi
   if [ "$tmpl" = "all" ]; then return 0; fi
-  # 개발 템플릿 공통: 학술·dream·fortune 전용 제외
-  is_in_list "$rel" "${SPECIAL_AGENTS_ACADEMIC[@]}" && return 1
+  # 개발 템플릿 공통: util 전용·dream·fortune 전용 제외
+  is_in_list "$rel" "${SPECIAL_AGENTS_UTIL_ONLY[@]}" && return 1
   is_in_list "$rel" "${SPECIAL_AGENTS_DREAM[@]}" && return 1
   is_in_list "$rel" "${SPECIAL_AGENTS_FORTUNE[@]}" && return 1
   # health 전용은 health 템플릿에서만 (2026-09-25)
@@ -838,7 +848,7 @@ _option_excluded_agent() {
 should_include_agent() {
   local rel="$1"
   if _option_excluded_agent "$rel"; then record_excluded_agent "$rel"; return 1; fi
-  # 작성 도구 y 는 템플릿 화이트리스트(seo-geo·academic·dream)보다 우선 — 질문이 약속한 에이전트 3종(+agents/CLAUDE.md)이
+  # 작성 도구 y 는 템플릿 화이트리스트(seo-geo·dream)보다 우선 — 질문이 약속한 에이전트 3종(+agents/CLAUDE.md)이
   # 화이트리스트 템플릿 단독 설치에서 조용히 빠지던 계약 위반 수정 (2026-09-01 Codex R3). util 단독은 질문 자체가 없다.
   if [ "$INCLUDE_AUTHORING" = "true" ] && is_in_list "$rel" "${AUTHORING_AGENTS[@]}"; then return 0; fi
   for _tmpl in "${TEMPLATES[@]}"; do
@@ -1043,15 +1053,14 @@ SEO_WRITING_SKILLS=(
   "writing/accessibility-vpat-writing"
 )
 
-# dream-interpretation 전용 humanities 스킬 (academic 템플릿에서 제외)
+# dream-interpretation 전용 humanities 스킬
 DREAM_HUMANITIES_SKILLS=(
   "humanities/dream-content-privacy-ethics"
   "humanities/dream-content-research"
   "humanities/dream-psychology-jung-freud"
   "humanities/korean-dream-interpretation-tradition"
   "humanities/crisis-intervention-resources-korea"
-  "humanities/attachment-theory-basics"
-  "humanities/relational-pattern-analysis"
+  "humanities/attachment-theory-basics"   # 2026-09-26: 관계 패턴(Gottman·EFT·NVC) 스킬 병합 흡수
 )
 
 # dream-interpretation 전용 meta 스킬
@@ -1140,7 +1149,6 @@ DREAM_FRONTEND_SKILLS=(
   "frontend/srs-spaced-repetition"
   "frontend/voice-input-ui"
   "frontend/web-speech-api-stt"
-  "frontend/web-speech-api-tts"
   "frontend/whisper-api-integration"
   "frontend/media-recorder-api"
   "frontend/pwa-offline-llm-fallback"
@@ -1357,7 +1365,7 @@ _seo_optin_skill_ok() {
 _skill_ok_for_tmpl() {
   local rel="$1" skill_prefix="$2" tmpl="$3"
   if [ "$tmpl" = "all" ]; then return 0; fi
-  # health 도메인 스킬(영양·식단 5종)은 health 템플릿에서만 — 그 외 전 템플릿(util·academic·dream·rust·java·unity·react·next) 누출 차단
+  # health 도메인 스킬(영양·식단 5종)은 health 템플릿에서만 — 그 외 전 템플릿(util·dream·rust·java·unity·react·next) 누출 차단
   if [[ "$rel" == health/* && "$tmpl" != "health" ]]; then return 1; fi
   # fortune-app 전용 스킬 13종은 fortune-app 템플릿에서만 — 동일 방식 전역 차단
   if is_fortune_skill "$skill_prefix" && [ "$tmpl" != "fortune-app" ]; then return 1; fi
@@ -1367,15 +1375,6 @@ _skill_ok_for_tmpl() {
        "$rel" == education/* || "$rel" == research/* || "$rel" == writing/* ]] && return 1
     # dream 전용 meta 프롬프트 3종 누출 차단 (2026-09-11 백로그 6 — fortune meta 는 전역 게이트가 이미 막는다)
     [[ "$rel" == meta/* ]] && is_dream_meta "$skill_prefix" && return 1
-    return 0
-  fi
-  if [ "$tmpl" = "academic" ]; then
-    [[ "$rel" == frontend/* || "$rel" == backend/* || "$rel" == devops/* || "$rel" == game/* ]] && return 1
-    [[ "$rel" == humanities/* ]] && is_dream_humanities "$skill_prefix" && return 1
-    [[ "$rel" == meta/* ]] && is_dream_meta "$skill_prefix" && return 1
-    # SEO writing 4종은 학술 글쓰기와 무관 (2026-09-11 백로그 6)
-    [[ "$rel" == writing/* ]] && is_seo_writing "$skill_prefix" && return 1
-    [[ "$rel" == architecture/* ]] && [[ "$skill_prefix" != "architecture/ddd" ]] && return 1
     return 0
   fi
   if [ "$tmpl" = "dream-interpretation" ]; then
@@ -1691,6 +1690,12 @@ if [ -f "$SETTINGS_FILE" ]; then
       *) echo "  y 또는 n을 입력하세요." ;;
     esac
   done
+  # 보존(N) 경로 최소 이관 (2026-09-26) — 구버전 InstructionsLoaded 배선(instructions-loaded·staleness-check)만
+  # SessionStart 로 옮기고(.bak 백업), 무따옴표 $CLAUDE_PROJECT_DIR 배선은 경고한다. 그 외 사용자 설정은 불변.
+  if [ "$OVERWRITE_SETTINGS" = "skip" ]; then
+    node "$REPO_DIR/scripts/migrate-settings.js" --settings "$SETTINGS_FILE" || \
+      echo "  ⚠ settings.json 이관 스크립트 실행 실패 — 구버전 InstructionsLoaded 배선이 남아 있을 수 있습니다"
+  fi
 fi
 
 if [ ! -f "$SETTINGS_FILE" ] || ([ -f "$SETTINGS_FILE" ] && [ "$OVERWRITE_SETTINGS" != "skip" ]); then

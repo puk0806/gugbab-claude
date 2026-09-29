@@ -7,9 +7,9 @@ disable-model-invocation: true
 # Docker 컨테이너화 및 배포 패턴
 
 > 소스: https://docs.docker.com/build/building/best-practices/ | https://docs.docker.com/build/building/multi-stage/ | https://docs.docker.com/guides/nodejs/containerize/ | https://docs.docker.com/guides/rust/build-images/
-> 검증일: 2026-04-20
+> 검증일: 2026-09-28 (최초 작성 2026-04-20)
 
-> 주의: 이 문서는 Docker Engine v29.x, Docker Compose v5.x 기준으로 작성되었습니다. Docker Engine v25 미만은 EOL 상태이므로 반드시 업그레이드하세요.
+> 주의: 이 문서는 Docker Engine v29.x, Docker Compose v5.x 기준으로 작성되었습니다. Docker Engine v25 미만은 EOL 상태이므로 반드시 업그레이드하세요. (2026-09-28 재검증: Docker Engine v29.8.1 / Compose v5.5.1 — 패치 버전만 갱신, 문서 내용·API 변경 없음)
 
 ---
 

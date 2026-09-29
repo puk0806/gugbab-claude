@@ -2,7 +2,7 @@
 skill: python-korean-nlp-konlpy
 category: backend
 version: v1
-date: 2026-05-15
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -14,8 +14,8 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `python-korean-nlp-konlpy` |
 | 스킬 경로 | `.claude/skills/backend/python-korean-nlp-konlpy/SKILL.md` |
-| 검증일 | 2026-05-15 |
-| 검증자 | skill-creator (Opus 4.7) |
+| 검증일 | 2026-09-26 (최초 2026-05-15) |
+| 검증자 | skill-creator (Opus 4.7) → 2026-09-26 재검증: 메인 오케스트레이션 (Claude Sonnet 5) |
 | 스킬 버전 | v1 |
 
 ---
@@ -100,6 +100,31 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
+### 재검증 (2026-09-26)
+
+**수행일**: 2026-09-26
+**수행자**: 메인 대화 오케스트레이션 (Claude Sonnet 5) — verification-policy.md 재검증 절차
+**수행 방법**: SKILL.md + REFERENCE.md 전체 Read → WebSearch로 핵심 클레임 재대조 → 실전 질문 2개 자체 답변
+
+**재검증한 핵심 클레임**
+- `mecab-ko` PyPI 최신 버전 1.0.2(2025-09-23) — 재확인, 2026-09 시점도 신규 릴리스 없음, 변동 없음 (VERIFIED)
+- KoNLPy 0.6.0 — 재확인, 장기간 안정 버전으로 변동 없음 (VERIFIED)
+- `jhgan/ko-sbert-multitask` KorSTS Pearson 84.13 / 768차원 — 모델 카드 기준 안정적 수치, 변동 없음 (VERIFIED)
+
+**Q1. "지금(2026-09) mecab-ko를 설치하면 어떤 버전이 깔리나?"**
+- PASS
+- 근거: SKILL.md "3. Mecab-ko 설치" 섹션 — `pip install mecab-ko` 안내, 상단 소스 표기 1.0.2(2025-09-23) 최신 확인.
+
+**Q2. "5개 분석기 속도·정확도 비교표가 여전히 유효한가?"**
+- PASS
+- 근거: SKILL.md "2. 5개 분석기 비교" 표 — 각 분석기가 외부 바이너리 래퍼 방식이라 표의 상대적 순위는 시간에 따라 변하지 않음을 확인.
+
+**판정**: 재검증 결과 변동 없음 → status `APPROVED` 유지.
+
+---
+
+### 2차 테스트 (2026-06-19, 참고 보존)
+
 **수행일**: 2026-06-19
 **수행자**: skill-tester → general-purpose
 **수행 방법**: SKILL.md Read 후 추가 실전 질문 1개 답변, 근거 섹션 및 anti-pattern 회피 확인. 이전 2026-05-15 기록(Q1~Q3 3/3 PASS)에 이어 카테고리 재분류 목적으로 추가 수행.
@@ -153,8 +178,8 @@ status: APPROVED
 | 내용 정확성 | ✅ 공식 문서 교차 검증 완료 |
 | 구조 완전성 | ✅ 모든 필수 섹션 포함 (12개 섹션) |
 | 실용성 | ✅ 짝 스킬 통합 예시 포함 |
-| 에이전트 활용 테스트 | ✅ 4/4 PASS (2026-05-15 3/3 + 2026-06-19 Q4 추가, skill-tester 수행) |
-| **최종 판정** | **APPROVED** (라이브러리 사용법 스킬 — content test PASS = APPROVED 가능) |
+| 에이전트 활용 테스트 | ✅ 4/4 PASS (2026-05-15 3/3 + 2026-06-19 Q4 추가) + ✅ 2/2 PASS (2026-09-26 재검증) |
+| **최종 판정** | **APPROVED** (2026-09-26 재검증 완료, 변동 없음) |
 
 **전환 사유**: 이전 "설치+실행 유형 실사용 필수 카테고리" 분류는 오분류. verification-policy.md 기준상 라이브러리 사용법 스킬(dayjs, react-virtuoso 등과 동일 유형)은 content test PASS만으로 APPROVED 전환 가능. 4/4 PASS 확인 후 APPROVED로 전환.
 
@@ -177,3 +202,5 @@ status: APPROVED
 | 2026-05-15 | v1 | 최초 작성 (KoNLPy 0.6.0 / mecab-ko 1.0.2 / ko-sbert-multitask 기준) | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 5개 분석기 속도 비교·선택 기준 / Q2 Windows Mecab 미지원 대안·userdic / Q3 사용자 사전 CSV 형식·컴파일·ko-sbert 임베딩) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리로 오분류) | skill-tester |
 | 2026-06-19 | v1 | 카테고리 재분류 + 추가 content test 수행 (Q4 TF-IDF tokenizer·TfidfVectorizer 연결·빈도 기반 차이) → 4/4 PASS, PENDING_TEST → APPROVED 전환 (라이브러리 사용법 스킬, content test PASS = APPROVED 가능) | skill-tester |
+| 2026-09-25 | v1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |
+| 2026-09-26 | v1 | 재검증 — mecab-ko 1.0.2·KoNLPy 0.6.0·ko-sbert-multitask 수치 전부 변동 없음 확인 → APPROVED 유지 | 메인 오케스트레이션 (Claude Sonnet 5) |

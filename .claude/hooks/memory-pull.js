@@ -12,10 +12,17 @@ const path = require('path');
 const projectDir = process.env.CLAUDE_PROJECT_DIR;
 if (!projectDir) process.exit(0);
 
+// 전역 저장소 경로: 훅 입력 transcript_path 의 디렉토리(실제 저장소) 우선, 없으면 Claude Code 인코딩 규칙.
+// 인코딩·검증 로직은 session-export.js 의 공통 함수 하나로 통일 (2026-09-26 — 구 규칙은 / _ 만 치환해
+// 점·공백·비ASCII 경로에서 엉뚱한 전역 디렉토리를 만들었다). session-export.js 는 공통 훅이라 항상 설치된다.
+let projectStoreDir;
+try { ({ projectStoreDir } = require('./session-export.js')); } catch { process.exit(0); }
+let hookInput = {};
+try { hookInput = JSON.parse(fs.readFileSync(0, 'utf8') || '{}') || {}; } catch { hookInput = {}; }
 const repoMemory = path.join(projectDir, 'memory');
-// Claude 인코딩: / 와 _ 를 모두 - 로 치환
-const encoded = projectDir.replace(/[/\_]/g, '-');
-const globalMemory = path.join(os.homedir(), '.claude', 'projects', encoded, 'memory');
+const storeDir = projectStoreDir(os.homedir(), projectDir, hookInput && hookInput.transcript_path);
+if (!storeDir) process.exit(0);
+const globalMemory = path.join(storeDir, 'memory');
 
 try {
   // ── 1단계: 전역 memory를 실제 디렉토리로 보장 (symlink 마이그레이션) ──

@@ -7,7 +7,7 @@ workflows:
     instance_type: mac_mini_m2
     max_build_duration: 120
     environment:
-      unity: 6000.0.32f1
+      unity: 6000.3.0f1   # Unity 6.3 LTS — 6.0(6000.0.x)은 2026-10 EOL, SKILL.md 10절 참조
       android_signing:
         - keystore_reference
       groups:
@@ -64,7 +64,7 @@ workflows:
     integrations:
       app_store_connect: codemagic
     environment:
-      unity: 6000.0.32f1
+      unity: 6000.3.0f1   # Unity 6.3 LTS — 6.0(6000.0.x)은 2026-10 EOL, SKILL.md 10절 참조
       ios_signing:
         distribution_type: app_store
         bundle_identifier: io.example.unitygame
@@ -163,6 +163,7 @@ workflows:
 | `unity:` 필드 누락 | 빌드 머신 기본 LTS 사용 — 프로젝트 버전과 불일치 | 항상 명시적 버전 지정 |
 | Personal 라이선스로 Codemagic 빌드 시도 | 공식 가이드 미보장 — 시트 2개 제한으로 빌드 충돌 가능 | Plus 이상 라이선스 권장 |
 | `submit_as_draft: true` + `rollout_fraction` 동시 사용 | Google Play API 거부 | 둘 중 하나만 사용 |
+| 신규 프로젝트에 Unity 6.0 LTS(`6000.0.x`) 고정 | 2026-10 EOL 이후 보안·플랫폼 인증 패치 미제공 | Unity 6.3 LTS(`6000.3.x`, 2027-12까지)로 시작 (SKILL.md 10절) |
 
 ## 12. 멀티 워크플로우 패턴 (Android + iOS)
 

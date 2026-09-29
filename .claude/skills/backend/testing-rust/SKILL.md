@@ -6,7 +6,7 @@ description: Rust 테스트 패턴 — 단위 테스트, 통합 테스트, #[tok
 # Rust 테스트 패턴
 
 > 소스: https://doc.rust-lang.org/book/ch11-00-testing.html | https://docs.rs/tokio/latest/tokio/attr.test.html | https://docs.rs/axum/0.8/axum/ | https://docs.rs/tower/latest/tower/trait.ServiceExt.html
-> 검증일: 2026-06-20
+> 검증일: 2026-09-26 (재검증, 내용 변경 없음)
 
 > 주의: Rust 1.75+ / tokio 1.x / axum 0.8.x 기준으로 작성되었습니다.
 
@@ -163,11 +163,11 @@ tokio = { version = "1", features = ["macros", "rt"] }
 
 ---
 
-## In-Memory Mock (repository-pattern 연동)
+## In-Memory Mock (Repository trait 연동)
 
 Service 계층의 비즈니스 로직을 DB 없이 테스트한다. Repository trait의 In-Memory 구현을 주입한다.
 
-> 관련 스킬: repository-pattern 스킬의 InMemoryUserRepository 참조
+> 관련 스킬: project-structure 스킬의 "Trait 기반 DI" 절 (Repository trait 정의·async fn in trait 제약)
 
 ```rust
 // tests/mock_repo.rs 또는 src 내부 테스트 모듈

@@ -1,8 +1,8 @@
 ---
 skill: url-canonicalization-redirects
 category: frontend
-version: v1
-date: 2026-06-02
+version: v1.3
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `url-canonicalization-redirects` |
 | 스킬 경로 | `.claude/skills/frontend/url-canonicalization-redirects/SKILL.md` |
-| 검증일 | 2026-06-02 |
+| 검증일 | 2026-09-28 (최초 2026-06-02) |
 | 검증자 | skill-creator |
-| 스킬 버전 | v1 |
+| 스킬 버전 | v1.2 |
 
 ---
 
@@ -142,13 +142,86 @@ status: APPROVED
 
 ### 4-5. Claude Code 에이전트 활용 테스트
 
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-06-02, skill-tester → general-purpose 대체)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-06-02, skill-tester → general-purpose 대체 / **2026-09-28 재테스트**, Vercel·Netlify 정적 프리렌더 트레일링 슬래시 보강분 겨냥 2문항)
 - [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인
-- [✅] 잘못된 응답 시 스킬 내용 보완 (Q2 PARTIAL → 보강 권장 항목 기록)
+- [✅] 잘못된 응답 시 스킬 내용 보완 (Q2 PARTIAL → 보강 권장 항목 기록 / 2026-09-28 재테스트는 2/2 PASS로 보완 불필요)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-09-28] skill-tester 재테스트 — 정적 프리렌더 트레일링 슬래시 보강분(Vercel/Netlify/Cloudflare Pages) 확인
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose
+**수행 방법**: SKILL.md Read 후 2개 실전 질문 답변, 근거 섹션 존재 여부 확인. 직전 orchestrator 배치가 반영한 "정적 프리렌더 페이지 트레일링 슬래시 제어" 보강분(섹션 6-1 Vercel `trailingSlash`, 6-2 Netlify Pretty URLs)을 직접 겨냥.
+
+### 실제 수행 테스트
+
+**Q1. Vite SPA를 정적 빌드해 Vercel에 배포, `/about`·`/about/` 둘 다 200으로 서빙됨 — 슬래시 없는 쪽으로 강제 통일하려면 vercel.json에 무엇을 추가하고 어떤 상태 코드가 나오는가**
+- ✅ PASS
+- 근거: SKILL.md "6-1. Vercel (`vercel.json`)" 331~346행 표
+- 상세: `trailingSlash: false` 설정 시 `/about/` → `/about`으로 **308** redirect됨을 정확히 답변. 346행의 "정적(SSG) 산출물도 이 설정이 적용된다"까지 근거로 제시해 Vite SPA(서버 정규화 없음)에 적용 가능함을 정확히 판단. 344행의 미지정 시 "비권장" 경고까지 인용해 현재 겪는 증상(둘 다 200)과 정확히 매칭. 경미 gap: `redirects` 배열(path별, 326행)과 `trailingSlash` 최상위 옵션(사이트 전체, 331행)의 관계가 명시적으로 설명되어 있지 않음(선택 보강, 차단 요인 아님).
+
+**Q2. Netlify Pretty URLs(자동 forward)를 `_redirects` 규칙으로 끌 수 있는가**
+- ✅ PASS
+- 근거: SKILL.md "6-2. Netlify (`_redirects`)" 367행 주의문 + "6-4. 호스팅 비교표" 397행
+- 상세: `_redirects`/`netlify.toml`로는 끌 수 없고 반드시 **대시보드 Project configuration → Developer settings → Post processing → Pretty URLs** 토글에서 조정해야 한다는 것, CDN edge가 redirect 규칙보다 먼저 URL을 정규화한다는 근거까지 정확히 인용. gap 없음.
+
+### 발견된 gap
+
+- 선택 보강(차단 요인 아님): Vercel `vercel.json`의 path별 `redirects` 배열과 사이트 전체 `trailingSlash` 옵션의 관계를 좀 더 명시적으로 구분 설명하면 좋음.
+
+### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: content test로 충분한 카테고리 (URL 정규화 베스트 프랙티스 가이드 — 실행 결과·빌드 산출물이 아니라 답변 정확성으로 검증 가능)
+- 최종 상태: **PENDING_TEST → APPROVED** (정적 프리렌더 트레일링 슬래시 보강분 재테스트 2/2 PASS)
+
+---
+
+### [2026-09-28] 선택 보강 반영 — 정적 프리렌더 페이지 트레일링 슬래시(Vercel/Netlify/Cloudflare Pages)
+
+- 반영 내용:
+  - SKILL.md "6-1. Vercel" 절에 `vercel.json`의 `trailingSlash`(boolean) 설정 추가 — `false`(슬래시 있는 경로 → 308로 제거)/`true`(슬래시 없는 경로 → 308로 추가, 단 확장자 있는 경로는 제외)/미지정(redirect 없음, Vercel이 비권장) 3가지 값과 정확한 동작 표로 정리
+  - "6-2. Netlify" 절에 Pretty URLs(기본 활성화) 상세 — `/about`→`/about/` forward, `/about.html`→`/about/` rewrite, 끄려면 `_redirects`가 아니라 대시보드 Post processing 토글에서만 가능, CDN edge가 redirect 규칙 적용 전에 정규화한다는 근거 추가
+  - "6-3. Cloudflare Pages" 절에 "사이트 전체 자동 정규화 옵션이 없다 — `_redirects`에 라우트별로 직접 작성, 대량이면 Bulk Redirects/Transform Rules" 문단 추가
+  - "6-4. 호스팅 비교표"를 위 3건에 맞춰 정확한 메커니즘으로 갱신(기존 "프로젝트 도메인 설정"/"수동" 같은 모호한 표현 → 구체적 설정 방법)
+- 근거: 각 공식 문서 WebFetch로 확인
+  - Vercel: https://vercel.com/docs/project-configuration/vercel-json#trailingslash — "When `trailingSlash: false`... 308... `/about/` will redirect to `/about`", "When `trailingSlash: true`... `/about` will redirect to `/about/`... paths with a file extension will not redirect", "When `trailingSlash: undefined`... not recommended because it could lead to search engines indexing two different pages with duplicate content"
+  - Netlify: https://docs.netlify.com/manage/routing/redirects/redirect-options/ — "You cannot use a redirect rule to add or remove a trailing slash", "When Pretty URLs are enabled, Netlify forwards paths like `/about` to `/about/`... and rewrites paths like `/about.html` to `/about/`", "Our CDN edge nodes do URL normalization before the redirect rules kick in"
+  - Cloudflare Pages: https://developers.cloudflare.com/pages/configuration/redirects/ — 문서에 사이트 전체 자동 슬래시 정규화 기능 언급 없음, `_redirects` 예시(`/trailing /trailing/ 301` 형태)로 라우트별 수동 작성만 제시됨. 대량 케이스는 기존 SKILL.md에 이미 있던 Bulk Redirects/Transform Rules 안내와 연결
+- status 영향: 새 사실(설정 방법·정확한 동작) 추가이므로 PENDING_TEST 전환 — 메인의 skill-tester 재테스트 필요
+
+### [2026-09-28] skill-tester content test 재테스트 — Astro 7.x SSR trailingSlash 상태코드 ADD 반영 확인
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose
+**수행 방법**: SKILL.md Read 후 2개 실전 질문 답변, 근거 섹션 존재 여부 확인. Q1은 2026-09-28 재검증(2차)에서 신설된 "Astro trailingSlash — SSR redirect 상태 코드" 표(섹션 4)를 직접 겨냥.
+
+### 실제 수행 테스트
+
+**Q1. Astro 7.x SSR 배포에서 `trailingSlash: 'never'` 설정 시 `/about/` 요청에 308이 오는 게 맞는가 + 정적 프리렌더 페이지에도 적용되는가**
+- ✅ PASS
+- 근거: SKILL.md "4. 트레일링 슬래시 — Astro trailingSlash — SSR redirect 상태 코드" 표(189~199행)
+- 상세: `'never'` → 308이 표에 정확히 명시되어 정상 동작으로 답변. 정적 프리렌더 페이지는 "호스팅 플랫폼이 처리하며 이 설정을 따르지 않을 수 있다"는 199행 주의문까지 근거로 제시해 SSR과 정적 배포를 구분함. 경미 gap: 어떤 호스팅이 구체적으로 어떻게 override하는지는 SKILL.md에 없음(선택 보강, 차단 요인 아님 — Astro 어댑터별 세부는 스킬 범위 밖).
+
+**Q2. www→non-www + 대소문자 통일을 next.config.js의 redirects()로 처리 가능한가**
+- ✅ PASS
+- 근거: SKILL.md "5-2. 동적 호스트 정규화 (middleware)" 238행("`redirects()`는 path 기반이라 호스트 정규화에는 적합하지 않다. middleware에서 처리한다") + 251~260행 코드(www 제거 + 소문자화 로직)
+- 상세: redirects()로는 불가하고 middleware.ts에서 처리해야 한다는 것과 실제 코드(www 제거·소문자 변환 두 로직 모두)가 정확히 근거로 제시됨. gap 없음.
+
+### 발견된 gap
+
+- 선택 보강(차단 요인 아님): 정적 프리렌더 페이지에서 호스팅 플랫폼별로 트레일링 슬래시를 구체적으로 어떻게 override하는지(예: Vercel/Netlify 각각의 실제 동작) 세부 명시 없음.
+
+### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: content test로 충분한 카테고리 (URL 정규화 베스트 프랙티스 가이드)
+- 최종 상태: **PENDING_TEST → APPROVED 복귀** (Astro 7.x 정정 + SSR trailingSlash ADD 반영 후 재테스트 2/2 PASS)
+
+---
 
 **수행일**: 2026-06-02
 **수행자**: skill-tester → general-purpose (세션 내 직접 검증)
@@ -194,6 +267,27 @@ status: APPROVED
 
 ---
 
+### [2026-09-28] 재검증(2차) — Astro 5.x→7.x 버전 표기 정정 + SSR trailingSlash 상태코드 ADD
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임 4개를 1차 소스(Astro 공식 문서, Next.js 공식 문서, npm registry)와 대조, 보강 검토
+
+**클레임 대조 결과**:
+1. Astro 최신 메이저 버전이 5.x라는 표기 → **DISPUTED(정정)** — 2026-03-10 Astro 6.0 정식 출시, 이후 7.x까지 승급(npm `astro@latest` = 7.3.5, https://astro.build/blog/astro-6/, https://registry.npmjs.org/astro/latest)
+2. Astro `build.format` 기본값 `'directory'`(슬래시 유) — **VERIFIED**, 6.x/7.x에서도 불변 (https://docs.astro.build/en/reference/configuration-reference/)
+3. Astro `trailingSlash: 'never'` 옵션이 유효한 설정값인가 — **VERIFIED**, `'ignore'`(기본)/`'always'`/`'never'` 3값 체계 불변, SSR 위반 시 `'always'`→301, `'never'`→308 redirect (동일 공식 문서, 기존 SKILL.md에 미기재된 세부 사항)
+4. Next.js 최신 버전이 16.x 계열인가(15.x 아님) — **VERIFIED**, npm `next@latest` = 16.3.6 (https://registry.npmjs.org/next/latest), trailingSlash 기본 동작(`/about/`→`/about`) 문서상 불변 확인 (2026-09-07 갱신 문서)
+
+**보강(ADD)·축소**: 섹션 4에 "Astro trailingSlash — SSR redirect 상태 코드" 표 신설 — `'ignore'`/`'always'`(301)/`'never'`(308) 3값과 "정적 프리렌더 페이지는 호스팅 플랫폼이 슬래시를 처리하며 이 설정을 따르지 않을 수 있다"는 Astro 공식 주의사항 추가. 헤더 검증 대상 버전을 Astro 7.x로 정정. 축소 없음.
+
+**실전 질문 재검증**:
+- Q1. "Astro 6/7에서 SSR로 배포한 사이트가 `/about/`으로 들어온 요청에 308을 내려주는 이유는?" → SKILL.md "5. Next.js... Astro trailingSlash — SSR redirect 상태 코드" 표 근거로 PASS (`trailingSlash: 'never'` 설정 시 SSR이 308 자동 redirect)
+- Q2. "Astro 정적 빌드(SSG)에서 트레일링 슬래시가 설정과 다르게 나온다" → 표 하단 "주의" 문구(호스팅 플랫폼이 정적 프리렌더 슬래시를 처리) 근거로 PASS
+
+**재검증 최종 판정**: status **PENDING_TEST 전환** (버전 표기 정정 + 신규 ADD 발생 — 메인의 skill-tester 재테스트 대상)
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -201,18 +295,19 @@ status: APPROVED
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 교차 검증 | ✅ (VERIFIED 22 / DISPUTED 1 / UNVERIFIED 0) |
-| 에이전트 활용 테스트 | ✅ (2026-06-02, Q1 PASS / Q2 PARTIAL / Q3 PASS, 2/3 PASS) |
-| **최종 판정** | **APPROVED** (content test 2/3 PASS, PARTIAL은 보강 권장 수준) |
+| 교차 검증 | ✅ (VERIFIED 22 / DISPUTED 1 / UNVERIFIED 0, 2026-09-28 재검증 4건 추가: VERIFIED 3 / DISPUTED-정정 1) |
+| 에이전트 활용 테스트 | ✅ (2026-06-02, Q1 PASS / Q2 PARTIAL / Q3 PASS, 2/3 PASS + 2026-09-28 Astro 7.x 재테스트 2/2 PASS + **2026-09-28 정적 프리렌더 보강분 재테스트 2/2 PASS** — Vercel `trailingSlash`·Netlify Pretty URLs 확인) |
+| **최종 판정** | **APPROVED** (2026-09-28 선택 보강 — Vercel/Netlify/Cloudflare Pages 정적 프리렌더 트레일링 슬래시 제어 방법 반영분에 대해 skill-tester 재테스트 2/2 PASS 완료) |
 
 ---
 
 ## 7. 개선 필요 사항
 
-- [✅] skill-tester 호출 후 verification.md 섹션 5/6/7/8 업데이트 (2026-06-02 완료, 2/3 PASS → APPROVED)
+- [✅] skill-tester 호출 후 verification.md 섹션 5/6/7/8 업데이트 (2026-06-02 완료, 2/3 PASS → APPROVED / **2026-09-28 Astro 7.x ADD분 재테스트 완료, 2/2 PASS → APPROVED 복귀**)
 - [✅] Vercel vercel.json 트레일링 슬래시 일괄 제거 와일드카드 패턴 누락 확인 (2026-06-02 Q2 PARTIAL에서 발견, 섹션 6-1 보강 권장 — 차단 요인 아닌 선택 보강)
 - [❌] Next.js metadata.alternates.canonical 슬래시 normalize 이슈가 Next.js 16.x에서 수정되었는지 후속 확인 (Discussion #65323 트래킹) — 선택 보강, APPROVED 상태에 차단 요인 아님
 - [❌] Apache `.htaccess` 예시는 작성 범위에서 제외함. 레거시 환경 사용자가 늘면 추가 섹션 검토 — 선택 보강
+- [✅] (2026-09-28 반영) 정적 프리렌더 페이지의 트레일링 슬래시를 호스팅 플랫폼별로 구체적으로 어떻게 override하는지 세부 명시 — Vercel `trailingSlash` boolean(공식 문서 3값 표), Netlify Pretty URLs(대시보드 토글, `_redirects` 불가), Cloudflare Pages(자동 정규화 없음, 라우트별 수동/Bulk Redirects) 반영. **2026-09-28 skill-tester 재테스트 완료(2/2 PASS) → PENDING_TEST에서 APPROVED로 전환**
 
 ---
 
@@ -223,3 +318,7 @@ status: APPROVED
 | 2026-06-02 | v1 | 최초 작성. Google Search Central + MDN + Next.js 16.x + Vercel/Netlify/Cloudflare Pages + Nginx 공식 문서 기반. 7대 정규화 축, 301-308 결정 트리, 호스팅별 패턴 7종, 흔한 실수 8종 정리. 교차 검증 23 클레임 (VERIFIED 22 / DISPUTED 1). | skill-creator |
 | 2026-06-02 | v1 | 2단계 실사용 테스트 수행 (Q1 Next.js 호스트+슬래시 정규화 / Q2 Vercel Vite SPA 슬래시 제거 / Q3 redirect chain 4단 SEO 영향) → 2/3 PASS 1 PARTIAL, APPROVED 전환. 섹션 5·6·7·8 동기화. | skill-tester |
 | 2026-08-26 | v1.1 | freshness 재검증(85일 경과) — 신호 강도·rel=prev/next 폐기·308·Next.js 16 trailingSlash VERIFIED. **갭 발견**: 분리 모바일 호스트(m-dot) 정규화가 7대 축에 없음 → TL;DR 결정 트리에 행 추가(UA 리다이렉트 금지·양방향 교차 지정), 상세 코드는 `mobile-seo-pwa` 1-4절로 위임(Google mobile-first indexing 공식 문서 원문 확인) | freshness-auditor + orchestrator |
+| 2026-09-28 | v1.2 | 재검증(2차, 33일 경과) — Astro 최신 버전 표기가 5.x로 정체된 것을 발견해 7.x로 정정(2026-03 Astro 6 출시 → 이후 7.x, npm 확인). Next.js 16.3.6/trailingSlash 기본 동작 VERIFIED 유지. **ADD**: 섹션 4에 Astro `trailingSlash`(`'ignore'`/`'always'`/`'never'`) SSR redirect 상태코드(301/308) 표 신설, 정적 프리렌더 예외 주의사항 추가. status APPROVED → PENDING_TEST 전환 | orchestrator (2차 재검증 배치) |
+| 2026-09-28 | v1.2 | 2단계 실사용 테스트 재테스트 수행 (Q1 Astro 7.x SSR trailingSlash 'never' 308 동작+정적 프리렌더 예외 / Q2 www→non-www+대소문자 통일이 redirects()로 가능한지) → 2/2 PASS, **PENDING_TEST → APPROVED 복귀** | skill-tester |
+| 2026-09-28 | v1.3 | 선택 보강 반영 — 각 공식 문서(Vercel vercel.json#trailingslash, Netlify redirect-options, Cloudflare Pages redirects) 확인 후 정적 프리렌더 페이지 트레일링 슬래시 제어 방법을 6-1·6-2·6-3·6-4에 구체화(Vercel boolean 3값 표, Netlify Pretty URLs 상세, Cloudflare Pages 수동/Bulk Redirects). status APPROVED → PENDING_TEST (메인 skill-tester 재테스트 필요) | orchestrator (선택 보강 반영 배치) |
+| 2026-09-28 | v1.3 | 2단계 실사용 재테스트 수행 (Q1 Vercel `trailingSlash` 정적 프리렌더 강제 통일 / Q2 Netlify Pretty URLs `_redirects`로 끌 수 있는지) → 2/2 PASS, **PENDING_TEST → APPROVED** 전환. 섹션 5·6·7·8 동기화 | skill-tester |

@@ -5,10 +5,10 @@ description: JUnit 5 + Spring Boot(2.5 & 3.x) 테스트 패턴 - 단위·슬라�
 
 # JUnit 5 + Spring Boot 테스트 스킬
 
-> 소스: https://junit.org/junit5/docs/current/user-guide/ | https://docs.spring.io/spring-boot/reference/testing/ | https://mybatis.org/spring-boot-starter/mybatis-spring-boot-test-autoconfigure/ | https://java.testcontainers.org/test_framework_integration/junit_5/
-> 검증일: 2026-08-11
+> 소스: https://junit.org/junit5/docs/current/user-guide/ | https://docs.spring.io/spring-boot/reference/testing/ | https://mybatis.org/spring-boot-starter/mybatis-spring-boot-test-autoconfigure/ | https://java.testcontainers.org/test_framework_integration/junit_5/ | https://repo1.maven.org/maven2/ (버전 확인)
+> 검증일: 2026-09-28 (최초 2026-04-22)
 
-> 주의: 이 문서는 JUnit 5.14.x(LTS)와 Spring Boot 2.5 / 3.x 양쪽을 대상으로 합니다. JUnit 6.x(2025-09-30 GA)는 최소 JDK 17 요구 등 breaking change가 있어 기존 2.5/3.x 프로젝트에서는 JUnit 5.x를 유지하는 것이 안전합니다.
+> 주의: 이 문서는 JUnit 5.14.x(LTS, Maven Central 최신 5.14.4 확인)와 Spring Boot 2.5 / 3.x 양쪽을 대상으로 합니다. JUnit 6.x(**2025-09-30 GA** — 과거 기재된 "2026-02 GA"는 오류였음, Maven Central `junit-jupiter` 최신은 6.1.3)는 최소 JDK 17 요구 등 breaking change가 있어 기존 2.5/3.x 프로젝트에서는 JUnit 5.x를 유지하는 것이 안전합니다.
 
 > 주의: MyBatis 기반 프로젝트를 전제로 합니다. JPA 관련 어노테이션(`@DataJpaTest` 등)은 의도적으로 제외했습니다.
 
@@ -32,7 +32,7 @@ description: JUnit 5 + Spring Boot(2.5 & 3.x) 테스트 패턴 - 단위·슬라�
     <dependency>
         <groupId>org.mybatis.spring.boot</groupId>
         <artifactId>mybatis-spring-boot-starter-test</artifactId>
-        <version>3.0.3</version>
+        <version>3.0.5</version>
         <scope>test</scope>
     </dependency>
 
@@ -43,27 +43,29 @@ description: JUnit 5 + Spring Boot(2.5 & 3.x) 테스트 패턴 - 단위·슬라�
         <scope>test</scope>
     </dependency>
 
-    <!-- Testcontainers (실제 DB 통합 테스트) -->
+    <!-- Testcontainers (실제 DB 통합 테스트) — 2.0부터 모듈 좌표가 testcontainers-* 로 변경됨(아래 주의 참조) -->
     <dependency>
         <groupId>org.testcontainers</groupId>
-        <artifactId>junit-jupiter</artifactId>
-        <version>1.20.4</version>
+        <artifactId>testcontainers-junit-jupiter</artifactId>
+        <version>2.0.5</version>
         <scope>test</scope>
     </dependency>
     <dependency>
         <groupId>org.testcontainers</groupId>
-        <artifactId>oracle-free</artifactId>
-        <version>1.20.4</version>
+        <artifactId>testcontainers-oracle-free</artifactId>
+        <version>2.0.5</version>
         <scope>test</scope>
     </dependency>
     <dependency>
         <groupId>org.testcontainers</groupId>
-        <artifactId>mysql</artifactId>
-        <version>1.20.4</version>
+        <artifactId>testcontainers-mysql</artifactId>
+        <version>2.0.5</version>
         <scope>test</scope>
     </dependency>
 </dependencies>
 ```
+
+> 주의(2026-09-28 확인, Maven Central `maven-metadata.xml` 직접 대조): Testcontainers는 2.0.0부터 모듈 아티팩트ID가 `testcontainers-{module}` 형식으로 변경됐다(예: `org.testcontainers:junit-jupiter` → `org.testcontainers:testcontainers-junit-jupiter`, `mysql` → `testcontainers-mysql`, `oracle-free` → `testcontainers-oracle-free`). 구 좌표(`junit-jupiter`/`mysql`/`oracle-free`)는 1.21.4에서 멈춰 있고 더 이상 갱신되지 않는다. 2.0에서는 JUnit 4 지원이 제거됐지만(원래 JUnit 5 전용으로 쓰던 이 스킬에는 영향 없음), `@Testcontainers`/`@Container`(`org.testcontainers.junit.jupiter.*`), `OracleContainer`(`org.testcontainers.oracle.*`), `MySQLContainer`(`org.testcontainers.containers.*` 그대로 유지)의 **패키지 경로와 사용법은 변경 없음**(2.0.5 jar 클래스 목록 직접 확인) — 좌표만 바꾸면 아래 코드 예제는 그대로 동작한다.
 
 ### Spring Boot 2.5 (Maven)
 
@@ -85,11 +87,11 @@ description: JUnit 5 + Spring Boot(2.5 & 3.x) 테스트 패턴 - 단위·슬라�
 ```gradle
 dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:3.0.3'
+    testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:3.0.5'
     testRuntimeOnly 'com.h2database:h2'
-    testImplementation 'org.testcontainers:junit-jupiter:1.20.4'
-    testImplementation 'org.testcontainers:oracle-free:1.20.4'
-    testImplementation 'org.testcontainers:mysql:1.20.4'
+    testImplementation 'org.testcontainers:testcontainers-junit-jupiter:2.0.5'
+    testImplementation 'org.testcontainers:testcontainers-oracle-free:2.0.5'
+    testImplementation 'org.testcontainers:testcontainers-mysql:2.0.5'
 }
 
 test {
@@ -376,10 +378,13 @@ class OrderServiceIntegrationTest {
 
 ## Spring Boot 4.x 테스트 마이그레이션
 
-> 기준: Spring Boot 4.0 GA (2025-11-30) / JUnit 6 / Spring Framework 7.0
+> 기준: Spring Boot 4.0 GA (2025-11-30, 4.1은 2026-06-30 GA) / JUnit 6 / Spring Framework 7.0
 > 소스: https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide
 >       https://rieckpil.de/whats-new-for-testing-in-spring-boot-4-0-and-spring-framework-7/
-> 검증일: 2026-06-19
+>       https://mybatis.org/spring-boot-starter/ (버전 매트릭스)
+> 검증일: 2026-09-28 (최초 2026-06-19)
+
+> 보강: MyBatis 테스트 슬라이스를 SB 4.x에서 쓴다면 `mybatis-spring-boot-starter-test`도 함께 올려야 한다 — 공식 매트릭스 기준 **4.0.x = SB 4.0**, **master(4.1대) = SB 4.1**, Java 17+ 공통(Maven Central `mybatis-spring-boot-starter-test` 최신 4.1.0 확인, 2026-09-28). 이 문서 상단 "의존성 설정"의 3.0.x는 SB 3.2~3.5 전용이므로 그대로 두면 안 된다.
 
 ### @MockBean / @SpyBean 완전 제거 (4.0)
 

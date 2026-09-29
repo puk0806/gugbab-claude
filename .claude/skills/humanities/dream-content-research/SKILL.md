@@ -18,18 +18,20 @@ description: >
 > - Hall, C. S. & Van de Castle, R. L. *The Content Analysis of Dreams*. New York: Appleton-Century-Crofts, 1966.
 > - Domhoff, G. W. *The Scientific Study of Dreams: Neural Networks, Cognitive Development, and Content Analysis*. Washington, D.C.: American Psychological Association (APA Books), 2003.
 > - DreamResearch.net (UC Santa Cruz, Domhoff/Schneider 공식 운영) — Hall/Van de Castle 시스템 정식 해설 챕터: https://dreams.ucsc.edu/Library/fmid2.html
-> - Hall/Van de Castle Normative Tables (Case Western Reserve 표본 100명+100명, 각 5개 꿈 = 1,000꿈): https://dreams.ucsc.edu/Norms/
+> - Hall/Van de Castle Normative Tables (Case Western Reserve 표본 남 100명+여 100명, 1인 5개 꿈 → 500꿈씩 두 표본; 일부 표는 여성 491꿈 기준): https://dreams.ucsc.edu/Norms/
 > - DreamBank.net (Schneider & Domhoff 운영, 20,000+ 익명화 꿈 보고서): https://www.dreambank.net/
-> - Zadra, A., O'Brien, S. A., & Donderi, D. C. (1998). Dream Content, Dream Recurrence and Well-Being: A Replication with a Younger Sample. *Imagination, Cognition and Personality*. https://journals.sagepub.com/doi/10.2190/LLXL-D4DB-9CP5-BRGT
-> - Zadra, A., & Robert, G. (et al.). "Ordinary and Recurrent Dream Recall of Active, Past and Non-recurrent Dreamers During and After Academic Stress." *Dreaming* (2003). https://link.springer.com/article/10.1023/A:1021152411010
-> - Pesant, N. & Zadra, A. (2006). "Dream content and psychological well-being: A longitudinal study of the continuity hypothesis." *Journal of Clinical Psychology*. https://onlinelibrary.wiley.com/doi/abs/10.1002/jclp.20212
-> - Schredl, M. — Dream Recall Frequency 7-point scale, 다년간의 회상 빈도 연구 (Central Institute of Mental Health, Mannheim)
-> - Domhoff, G. W. & Schneider, A. (2008). "Studying dream content using the archive and search engine on DreamBank.net." *Consciousness and Cognition*. https://www.sciencedirect.com/science/article/abs/pii/S1053810008001116
-> - Hobson, J. A. (2009). "The AIM Model of Dreaming, Sleeping, and Waking Consciousness." (활성화·입력·조절 3축 모델)
+> - Zadra, A., O'Brien, S. A., & Donderi, D. C. (1998). Dream Content, Dream Recurrence and Well-Being: A Replication with a Younger Sample. *Imagination, Cognition and Personality*, 17(4), 293–311. https://doi.org/10.2190/LLXL-D4DB-9CP5-BRGT
+> - Duke, T., & Davidson, J. (2002). "Ordinary and recurrent dream recall of active, past and non-recurrent dreamers during and after academic stress." *Dreaming*, 12(4), 185–197. https://doi.org/10.1023/A:1021152411010
+>   > 주의 (2026-09-26 정정): 이전 판은 이 논문을 "Zadra & Robert et al. (2003)"로 적었으나, Crossref DOI 메타데이터상 저자는 **Duke & Davidson**, 연도는 **2002**다.
+> - Pesant, N. & Zadra, A. (2006). "Dream content and psychological well-being: A longitudinal study of the continuity hypothesis." *Journal of Clinical Psychology*, 62(1), 111–121 (온라인 2005). https://doi.org/10.1002/jclp.20212
+> - Schredl, M. (2004). Reliability and stability of a dream recall frequency scale. *Perceptual and Motor Skills*, 98(3 Suppl), 1422–1426. https://doi.org/10.2466/pms.98.3c.1422-1426 (Central Institute of Mental Health, Mannheim)
+> - Domhoff, G. W. & Schneider, A. (2008). "Studying dream content using the archive and search engine on DreamBank.net." *Consciousness and Cognition*, 17(4), 1238–1247. https://doi.org/10.1016/j.concog.2008.06.010
+> - Hobson, J. A., Pace-Schott, E. F., & Stickgold, R. (2000). Dreaming and the brain: Toward a cognitive neuroscience of conscious states. *Behavioral and Brain Sciences*, 23(6), 793–842 (AIM 모델 정식화) / Hobson, J. A. (2009). REM sleep and dreaming: towards a theory of protoconsciousness. *Nature Reviews Neuroscience*, 10(11), 803–813.
+>   > 주의 (2026-09-26 정정): 이전 판의 "Hobson (2009). *The AIM Model of Dreaming, Sleeping, and Waking Consciousness*"는 서지를 특정할 수 없어 위 두 문헌(Crossref 확인)으로 교체.
 > - Solms, M. & Hobson 논쟁 정리 (Domhoff 2005, DreamResearch.net): https://dreams.ucsc.edu/Library/domhoff_2005b.html
 > - SEP "Dreams and Dreaming" (Jennifer Windt): https://plato.stanford.edu/entries/dreams-dreaming/
 >
-> 검증일: 2026-05-15
+> 검증일: 2026-09-26 (DreamResearch.net Norms·Chapter 2 원문, Crossref DOI 메타데이터 직접 대조)
 
 ---
 
@@ -69,7 +71,7 @@ description: >
 | # | 카테고리 (원어) | 한국어 표기 | 비고 |
 |---|-----------------|-------------|------|
 | 1 | Characters | 인물 | 인물 수·성별·정체성·연령 등 하위 코드 |
-| 2 | Social Interactions | 사회적 상호작용 | **Aggressive**(8 하위, 살해·물리 공격·언어 공격 등), **Friendly**(7 하위), **Sexual**(5 하위) |
+| 2 | Social Interactions | 사회적 상호작용 | **Aggressive**(8 하위 A1~A8, A8 = 살해 — Chapter 2 원문 확인), **Friendly**(7 하위), **Sexual**(5 하위) — Friendly·Sexual 하위 수는 Appendix A 소관으로 2026-09-26 원문 미대조 |
 | 3 | Activities | 활동 | 신체적·이동·언어·인지 활동 등 |
 | 4 | Striving: Success and Failure | 노력: 성공과 실패 | 목표 추구 결과 |
 | 5 | Misfortunes and Good Fortunes | 불운과 행운 | 떨어짐·죽음·신체 손상 등 부정 사건 / 운 좋은 사건 |
@@ -86,8 +88,8 @@ description: >
 | 항목 | 내용 |
 |------|------|
 | 표본 | Case Western Reserve University 대학생 200명 (남 100 / 여 100) |
-| 수집 시기 | 1947~1950년대 미국 |
-| 꿈 수 | 각 5개 × 200명 = **1,000개 꿈** (남 500 / 여 500) |
+| 수집 시기 | 1947~1950년대 미국 (> 주의: 수집 연도는 2026-09-26 Norms 페이지에서 확인되지 않음 — 원서로 확인) |
+| 꿈 수 | 1인 5개 × 200명 → 남 500 / 여 500 (Norms 페이지). 단 정서·불운 등 개별 표는 **여성 491꿈** 기준 |
 | 용도 | 새 표본의 카테고리별 출현 비율과 *통계적으로 비교*할 때 기준값 |
 
 > **주의:** 이 norms는 약 80년 전 미국 대학생 데이터다. 한국·다른 연령대·임상군 데이터와 비교할 때는 **norms 자체의 시대·문화 제약**을 항상 함께 명시해야 한다.
@@ -96,8 +98,8 @@ description: >
 
 | 발견 | 내용 |
 |------|------|
-| 부정 우세 | Emotions 카테고리에서 부정 정서(anger, apprehension, sadness, confusion)가 긍정(happiness)보다 **상당히 많다** (Hall/Van de Castle 정상 표본 일관) |
-| 불운 우세 | Misfortunes가 Good Fortunes보다 많다. 약 **1/3의 꿈에 어떤 형태의 불운**이 포함됨 |
+| 부정 우세 | 전체 정서 중 부정 정서(AP+CO+AN+SD) **남 80% / 여 80%**, happiness 20% (Norms "Emotions" 표, 2026-09-26 대조) |
+| 불운 우세 | 불운이 있는 꿈 **남 36% / 여 33%** vs 행운이 있는 꿈 6% / 6% (Norms "Misfortune & Good Fortune" 표) |
 | 친숙 인물 우세 | 꿈에 등장하는 인물 중 *알고 있는 사람*이 *모르는 사람*보다 많음 |
 | 일상 환경 우세 | 환경은 *친숙(familiar)* > 왜곡/낯섦. 다만 기괴한 환경 꿈도 *유의미한 소수* 존재 |
 | 성별 차이 | 남성 꿈에 남성 인물·물리적 공격성·실외 환경 비율이 더 높음 (Hall/Van de Castle 정상 표본 차이) |
@@ -133,18 +135,20 @@ description: >
 
 ## 3. 반복 꿈 (Recurrent Dreams) 연구
 
+> 주의 (2026-09-26): 아래 "빈도 60~75%"는 1차 논문 수치를 이번 재검증에서 대조하지 못했다(`미검증`). 학업 스트레스 연구의 저자는 Duke & Davidson (2002)로 정정되었다.
+
 ### 3.1 정의
 
 같은 주제·상황·서사가 *수개월~수십 년에 걸쳐 반복되는* 꿈. 일회성 악몽과 구분된다.
 
-### 3.2 주요 발견 (Zadra & Robert et al.)
+### 3.2 주요 발견 (Zadra 등 · Duke & Davidson)
 
 | 발견 | 내용 |
 |------|------|
 | 빈도 | 성인의 **약 60~75%**가 일생에 반복 꿈을 경험 (Zadra 연구 일관) |
 | 정서 우세 | 반복 꿈은 **부정 정서가 압도적**(추격·낙하·시험 실패·갇힘 등) |
 | 심리적 안녕 | 현재 반복 꿈을 꾸는 사람은 *과거에만 꾸었거나 안 꾸는 사람*보다 심리적 안녕 점수가 낮음 (Zadra, O'Brien, Donderi 1998) |
-| 학업 스트레스 영향 | 학업 스트레스 *동안* 반복 꿈 빈도 증가, *완화 후* 감소 (Zadra & Robert 2003, *Dreaming*) |
+| 학업 스트레스 영향 | 학업 스트레스 *동안*과 *이후*의 일반·반복 꿈 회상을 현재/과거/비반복 꿈꾼 집단별로 비교 (Duke & Davidson 2002, *Dreaming* 12(4)) — 구체 방향·효과는 원문 결과표 확인 |
 
 ### 3.3 Domhoff 해석
 
@@ -176,7 +180,8 @@ Michael Schredl (독일 Mannheim Central Institute of Mental Health). *Internati
 | 5 | 일주일에 여러 번 |
 | 6 | 거의 매일 아침 |
 
-- Retest 신뢰도 **r ≈ 0.85** (Schredl 2004).
+- Schredl (2004) 초록: 수면장애 환자 N=198 표본에서 **높은 재검사 신뢰도** 확인, 일반 수면 설문 안에 제시하면 측정 자체로 인한 회상 증가가 나타나지 않음.
+- > 주의: 미검증 — 이전 판의 "r ≈ 0.85"는 초록에 수치가 없어 원문 표로 확인 필요 (2026-09-26).
 - 자기 보고지만 안정성 있음 → 앱에서 사용자 자기 평가 항목으로 활용 가능.
 
 ### 4.3 회상 빈도에 영향을 주는 요인
@@ -214,7 +219,7 @@ Michael Schredl (독일 Mannheim Central Institute of Mental Health). *Internati
 
 ### 6.1 Hobson AIM 모델
 
-> Hobson, J. A. *The AIM Model of Dreaming, Sleeping, and Waking Consciousness* (2009 / 1990년대 이후 발전).
+> Hobson, Pace-Schott & Stickgold (2000), *BBS* 23(6) / Hobson (2009), *Nat Rev Neurosci* 10(11) (1990년대 이후 발전).
 
 | 축 | 의미 |
 |----|------|

@@ -5,8 +5,8 @@ description: Jest/Vitest + React Testing Library 핵심 패턴, 캡슐화 기반
 
 # Testing — Jest/Vitest + React Testing Library
 
-> 소스: https://testing-library.com/docs/react-testing-library/intro | https://vitest.dev/guide/
-> 검증일: 2026-08-26 (최초 2026-04-01 · 08-26 freshness 재검증: RTL 16부터 `@testing-library/dom`이 peerDependency로 분리되어 설치 커맨드에 명시 추가. Vitest 4.1 stable·RTL 16.3 기준 나머지 패턴 VERIFIED)
+> 소스: https://testing-library.com/docs/react-testing-library/intro | https://vitest.dev/guide/ | https://vitest.dev/guide/migration/
+> 검증일: 2026-09-28 (최초 2026-04-01 · 08-26 freshness 재검증 · 09-28 재검증: Vitest 5.0 메이저 출시(2026-09-03) 반영 — 아래 "주의 (Vitest 5.0+)" 참고. RTL 16.3 기준 나머지 패턴 VERIFIED)
 
 ---
 
@@ -51,6 +51,9 @@ import '@testing-library/jest-dom'
 
 ```bash
 pnpm add -D vitest @vitest/ui jsdom @testing-library/react @testing-library/dom @testing-library/jest-dom @testing-library/user-event
+# Vitest 5.0+: vite가 direct dependency에서 peer dependency로 전환됨.
+# 이미 Vite 프로젝트(vite.config.ts 보유)라면 영향 없음 — vite가 이미 devDependencies에 있으므로 그대로 사용.
+# Vitest만 단독 설치하는 경우(Vite 프로젝트가 아님) yarn은 vite를 명시적으로 함께 설치해야 함: yarn add -D vite vitest
 ```
 
 ```ts
@@ -64,6 +67,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
     globals: true,
+    clearMocks: true, // Vitest 5.0+ 기본값(명시 안 해도 true) — 아래 "주의 (Vitest 5.0+)" 참고
   },
 })
 ```
@@ -72,6 +76,12 @@ export default defineConfig({
 // vitest.setup.ts
 import '@testing-library/jest-dom'
 ```
+
+> **주의 (Vitest 5.0+, 2026-09-03 출시 · 메이저):** Node.js **22.12.0+**, Vite **6.4.0+** 필수. 핵심 브레이킹 체인지 3가지 —
+> 1. **`clearMocks` 기본값이 `true`로 변경.** 매 테스트 전 `vi.clearAllMocks()`가 자동 호출되어 mock의 호출 이력(`toHaveBeenCalledTimes` 등)이 초기화됨(구현은 유지). v4 방식(수동 초기화)이 필요하면 `clearMocks: false` 명시.
+> 2. **`vi.mock`/`vi.unmock`/`vi.hoisted`를 파일 최상단이 아닌 함수·블록 내부에서 호출하면 경고 대신 에러로 throw.** 이 문서의 `vi.mock(...)` 예시처럼 파일 최상단에 두면 영향 없음.
+> 3. **`await` 없는 비동기 assertion(`resolves`/`rejects`/`toMatchFileSnapshot`)이 경고 대신 테스트 실패로 처리됨.** `test.sequential`/`describe.sequential`은 제거되어 `concurrent: false`로 대체.
+> 출처: https://vitest.dev/guide/migration/ · https://vitest.dev/blog/vitest-5.html
 
 ---
 

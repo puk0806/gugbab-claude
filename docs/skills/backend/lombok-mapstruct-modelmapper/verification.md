@@ -2,7 +2,7 @@
 skill: lombok-mapstruct-modelmapper
 category: backend
 version: v1
-date: 2026-04-22
+date: 2026-09-26 (최초: 2026-04-22)
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `lombok-mapstruct-modelmapper` |
 | 스킬 경로 | `.claude/skills/backend/lombok-mapstruct-modelmapper/SKILL.md` |
-| 검증일 | 2026-04-22 |
+| 검증일 | 2026-04-22 (재검증: 2026-09-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 
@@ -124,6 +124,23 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
+### 2026-09-26 — 재검증 (60일 초과 정기 재검증)
+
+**수행일**: 2026-09-26
+**수행 방법**: SKILL.md + REFERENCE.md 전체 Read, WebSearch로 Lombok/MapStruct/ModelMapper 최신 버전 재확인.
+
+**Q1. Lombok 최신 버전(1.18.48)에서도 `lombok-mapstruct-binding` + annotationProcessor 순서 규칙이 그대로 필요한가?**
+- PASS(재검증). Lombok 1.18.16+ 부터의 바인딩 분리 정책은 1.18.48에서도 변경 없음(체인지로그에 바인딩 관련 회귀 없음 확인).
+
+**Q2. MapStruct 1.7.0(Beta2)이 나왔는데 지금 프로덕션에 1.6.3 대신 써도 되는가?**
+- PASS(재검증). 1.7.0은 2026-09 기준 Beta2 단계(정식 GA 아님) 확인 → SKILL.md는 여전히 1.6.3(안정)을 기준으로 유지하는 것이 맞음을 재확인, 주의문에 명시.
+
+**재검증 결론**: 핵심 클레임 VERIFIED 유지. Lombok 패치 버전 정보만 갱신, MapStruct는 안정 버전 유지 권고를 주의문으로 보강. status 변경 없음(APPROVED 유지).
+
+---
+
+### 2026-04-22 — 원 수행 기록
+
 **수행일**: 2026-04-22
 **수행 방법**: general-purpose 에이전트에게 SKILL.md만 Read한 뒤 2개 실전 질문 답변.
 
@@ -223,3 +240,4 @@ JPA 엔티티에 Lombok을 적용할 때 주의할 점은?
 | 날짜 | 버전 | 변경 내용 | 변경자 |
 |------|------|-----------|--------|
 | 2026-04-22 | v1 | 최초 작성 — Lombok 1.18.44 + MapStruct 1.6.3 + ModelMapper 3.2.x 기준 통합 스킬 작성, 공식 문서 및 복수 소스 교차 검증 완료 | skill-creator |
+| 2026-09-26 | v1 | 재검증 — Lombok 1.18.48 최신 확인(1.18.44에서 패치 진행), MapStruct 1.7.0 Beta 단계로 1.6.3 유지 권고 명시 | 메인 세션 |

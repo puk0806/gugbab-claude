@@ -21,6 +21,8 @@ const crypto = require('crypto');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+// 짝 단위 판정 공유 함수 (unitOf·classifyFile·blockUnits …) — 옵션 prune 과 동일 규칙 (2026-09-26)
+const pair = require('./prune-option-excluded.js');
 
 // ── 인자 파싱 ───────────────────────────────────────────────────────────
 const args = process.argv.slice(2);
@@ -86,11 +88,8 @@ const OPTION_PLUGINS = {
 // keep 여부와 무관하게 정리 대상이지만, *이 설치가 만든 파일이라는 증명*이 있을 때만
 // 삭제한다 — 매니페스트 hooks 기록+해시 일치, 또는 레거시 1회 확인(--delete-orphans).
 // 대상 프로젝트가 같은 이름의 자체 훅을 운영할 수 있다 (2026-08-12 적대적 리뷰 지적).
-const RETIRED_HOOKS = [
-  'memory-stop-guard', 'session-summary', 'session-handoff', 'pending-test-guard',
-  'readme-guard', 'task-plan-guard', 'confirmation-gate', 'verification-gate',
-  'careful-with-judge',
-];
+// 목록은 migrate-settings.js 가 단일 출처로 보유한다 (git 이력 전수 16종, 2026-09-26 감사 B)
+const { RETIRED_HOOKS } = require('./migrate-settings.js');
 
 const hooksDir = path.join(target, '.claude', 'hooks');
 const rulesDir = path.join(target, '.claude', 'rules');
@@ -124,7 +123,10 @@ if (fs.existsSync(manifestFile)) {
       commands: new Set(Array.isArray(m.commands) ? m.commands : []),
       // rules 는 2026-08-26부터 기록 — 없으면(구버전) null 로 두고 소스 동일성 폴백을 쓴다
       rules: Array.isArray(m.rules) ? new Set(m.rules) : null,
+      // 짝 docs (2026-08-31부터 기록, <target>/docs/ 기준) — 없으면(구버전) 빈 집합 → 소스 동일 폴백
+      docs: new Set(Array.isArray(m.docs) ? m.docs : []),
       hashes: {
+        docs: (hs.docs && typeof hs.docs === 'object') ? hs.docs : {},
         agents: (hs.agents && typeof hs.agents === 'object') ? hs.agents : {},
         skills: (hs.skills && typeof hs.skills === 'object') ? hs.skills : {},
         hooks: (hs.hooks && typeof hs.hooks === 'object') ? hs.hooks : {},
@@ -512,6 +514,9 @@ const optionOffCommands = new Set([
   ...(keep.dev ? [] : COMMANDS_DEV),
 ]);
 
+// 폐기 스킬·에이전트의 짝 단위 판정 결과 (본체 + 짝 docs) — 루프 뒤에서 한 번에 차단·실행한다
+const unitDecisions = [];
+
 for (const kind of ['skills', 'agents', 'commands']) {
   const srcRoot = path.join(source, '.claude', kind);
   const tgtRoot = path.join(target, '.claude', kind);
@@ -548,6 +553,29 @@ for (const kind of ['skills', 'agents', 'commands']) {
       unknown.push(rel);
     }
   }
+  // 폐기 스킬·에이전트는 짝 단위 (2026-09-25 스킬 디렉토리 → 2026-09-26 짝 docs 까지 확장):
+  // 스킬 디렉토리(SKILL.md + references/) + docs/skills/<cat>/<name>/**, 에이전트 .md + docs/agents/<rel>
+  // · <name>-verification.md 는 한 단위다. 본체든 docs 든 하나라도 수정본(해시 불일치)이거나 anchor 가
+  // 보존되면 단위 전체를 보존한다 — prune-option-excluded 와 같은 규칙(공유 함수 blockUnits)을 쓴다.
+  // 스킬은 소스에서 SKILL.md 까지 폐기된 디렉토리만 단위로 묶는다(현행 스킬의 폐기 references 는 파일 단위).
+  // 커스텀(매니페스트 밖) 파일은 보존만 하고 단위를 막지 않는다. 보존 쪽으로만 작동한다.
+  if (kind === 'skills' || kind === 'agents') {
+    const orphanSet = new Set(orphans);
+    const unitKey = (rel) => {
+      if (kind === 'agents') return pair.unitOf('agents', rel);
+      return orphanSet.has(`${pair.skillUnit(rel)}/SKILL.md`) ? pair.unitOf('skills', rel) : `file:skills|${rel}`;
+    };
+    const push = (rels, state) => {
+      for (const rel of rels) {
+        unitDecisions.push({ kind, rel, root: tgtRoot, full: path.join(tgtRoot, rel), state,
+          unit: unitKey(rel), anchor: pair.isAnchor(kind, rel) });
+      }
+    };
+    push(removed, 'delete');
+    push(localEdits, 'modified');
+    push(unknown, 'custom');
+    removed.length = 0; // 삭제는 짝 docs 판정 뒤 단위 차단을 거쳐 일괄 실행
+  }
   for (const rel of removed) {
     try {
       fs.unlinkSync(path.join(tgtRoot, rel));
@@ -563,6 +591,61 @@ for (const kind of ['skills', 'agents', 'commands']) {
   if (unknown.length > 0) {
     warn(`소스 레포에 없는 ${kind} ${unknown.length}건 발견 — 커스텀 파일 또는 미확인 잔재. 자동 삭제하지 않으니 직접 확인하세요:`);
     for (const rel of unknown) console.log(`      - .claude/${kind}/${rel}`);
+  }
+}
+
+// ── 5.5 폐기 스킬·에이전트의 짝 docs + 단위 일괄 실행 (2026-09-26) ─────────
+// 본체만 지우고 docs/skills/<cat>/<name>/**, docs/agents/<rel>(-verification).md 를 남기면 스테일 문서가
+// 영구 잔존한다. 레포에 본체(anchor)가 없는 단위의 짝 docs 만 대상으로 한다 — 레포 현행 단위의 docs 는
+// 설치본에 본체가 없어도(템플릿 미선택 등) 여기서 건드리지 않는다(옵션 제외는 prune 담당).
+// 본체가 이미 없는 고아 docs 도 같은 경로로 수렴한다(증명 시에만 삭제).
+// 소유 증명: 매니페스트 docs 기록 + 해시 일치, 또는 docs 섹션 없는 구버전 매니페스트면 레포 원본과
+// 바이트 동일(classifyFile 폴백). 매니페스트 손상 → 아무것도 안 함, 부재 → --delete-orphans 일 때만.
+// docs 루트가 대상 밖을 가리키는 symlink 이면 docs 는 통째로 건너뛴다(대상 밖 삭제 금지).
+const docsRoot = path.join(target, 'docs');
+const docsRootSafe = (() => {
+  const rt = (() => { try { return fs.realpathSync(target); } catch { return null; } })();
+  const rd = (() => { try { return fs.realpathSync(docsRoot); } catch { return null; } })();
+  return !!(rt && rd && rd.startsWith(rt + path.sep));
+})();
+if (docsRootSafe && !manifestBroken && (manifest || deleteOrphansFlag)) {
+  const mkDocs = manifest ? { set: manifest.docs, hashes: manifest.hashes.docs } : { set: new Set(), hashes: {} };
+  const sourceAnchorExists = (unit) => {
+    if (unit.startsWith('skill:')) return fs.existsSync(path.join(source, '.claude', 'skills', unit.slice(6), 'SKILL.md'));
+    if (unit.startsWith('agent:')) return fs.existsSync(path.join(source, '.claude', 'agents', unit.slice(6)));
+    return true;
+  };
+  for (const sub of ['skills', 'agents']) {
+    // listRel 은 symlink 디렉토리·파일을 따라가지 않는다 (Dirent 가 isDirectory/isFile 모두 false)
+    for (const r of listRel(path.join(docsRoot, sub))) {
+      const rel = `${sub}/${r.split(path.sep).join('/')}`;
+      if (!pair.isPairDoc(rel)) continue;
+      if (sourceAnchorExists(pair.unitOf('docs', rel))) continue;
+      unitDecisions.push(pair.classifyFile({ target, kind: 'docs', rel, mk: mkDocs, sourceDir: source }));
+    }
+  }
+}
+{
+  const blockedBy = pair.blockUnits(unitDecisions);
+  for (const d of unitDecisions) {
+    const disp = pair.dispFor(d.kind, d.rel);
+    if (d.state !== 'delete') {
+      // 본체의 수정본·미확인 목록은 위 루프가 이미 출력했다 — docs 만 개별 경고
+      if (d.kind === 'docs') warn(`폐기 자산의 짝 docs ${d.state === 'modified' ? '수정본(설치 시점과 다름)' : '(소유 증명 없음 — 커스텀 가능성)'} → 보존: ${disp}`);
+      continue;
+    }
+    if (blockedBy.has(d.unit)) { warn(`짝 단위 보존(같은 단위의 ${blockedBy.get(d.unit)} 보존) → 보존: ${disp}`); continue; }
+    try {
+      fs.unlinkSync(d.full);
+      if (d.kind === 'docs') {
+        log(`폐기된 관리 자산의 짝 docs 삭제${d.viaSource ? '(소스 동일 증명)' : ''}: ${disp}`);
+        pair.rmEmptyDirs(path.dirname(d.full), docsRoot);
+      } else {
+        log(`폐기된 관리 ${d.kind} 삭제: ${disp}`);
+      }
+    } catch {
+      warn(`${disp} 삭제 실패 — 직접 확인하세요`);
+    }
   }
 }
 

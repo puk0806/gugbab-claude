@@ -13,8 +13,9 @@
 # 1. Codex CLI 설치 확인
 which codex >/dev/null 2>&1 || { echo "[codex-review] codex CLI 없음 — 건너뜀"; exit 0; }
 
-# 2. 로그인 상태 확인
-codex login status 2>&1 | grep -qi "logged in" || { echo "[codex-review] codex 미로그인 — 건너뜀"; exit 0; }
+# 2. 로그인 상태 확인 — 종료코드 0 AND "Not logged in" 문구 없음 (grep "logged in" 단독은 "Not logged in"에도 매치)
+CODEX_LOGIN=$(codex login status 2>&1) && ! printf '%s\n' "$CODEX_LOGIN" | grep -qi "not logged in" \
+  || { echo "[codex-review] codex 미로그인 — 건너뜀"; exit 0; }
 
 # 3. 프로젝트 플러그인 활성화 확인
 node -e "const s=require('./.claude/settings.json');process.exit(s.enabledPlugins?.['codex@openai-codex']?0:1)" 2>/dev/null \
@@ -67,7 +68,7 @@ node -e "const s=require('./.claude/settings.json');process.exit(s.enabledPlugin
 > - **스탠스**: 배포를 막을 가장 강한 이유를 찾는다. happy path에서만 동작하면 그 자체가 결함. 선의·부분 수정 크레딧 없음
 > - **공격 표면**: 인증·권한·테넌트 격리·신뢰 경계 / 데이터 손실·손상·비가역 상태 / 롤백·재시도·부분 실패·멱등성 / 레이스·순서 가정·재진입 / empty·null·timeout·의존성 degrade / 버전 skew·스키마 drift·마이그레이션 / 관측성 공백
 > - **finding 문턱**: 스타일·네이밍·저가치 클린업 제외, 근거 있는 material finding만
-> - **출력**: `needs-attention`(막을 위험) / `approve`(적대적 결함 0). 이 attack-surface는 @.claude/rules/adversarial-testing.md 의 테스트 기준과 동일 축으로 정렬됨
+> - **출력**: `needs-attention`(막을 위험) / `approve`(적대적 결함 0). 이 attack-surface는 `.claude/rules/adversarial-testing.md`(dev 템플릿 설치 시)의 테스트 기준과 동일 축으로 정렬됨
 
 ### Round 1 — 초기 적대적 리뷰
 
@@ -146,3 +147,38 @@ touch .claude/.codex-review-done
 
 이 마커가 있어야 `codex-review-guard` Stop 훅이 통과된다.
 훅에 의해 자동 트리거된 경우: 마커 기록 후 세션 종료를 재시도한다.
+
+---
+
+## 사용 불가 감지 시 마커 기록 (계정/모델 400 등 환경 오류)
+
+Round 실행 중 codex 응답이 **계정이 설정된 모델을 지원하지 않는다는 400 오류**
+(예: "The '...' model is not supported when using Codex with a ChatGPT account.")
+등 Claude 가 스스로 해소할 수 없는 환경 오류로 실패하면, "실행 조건 3가지"의 취지(조용히
+건너뜀)를 이 경우에도 적용한다 — 단, 매 턴 재시도해 사용자를 반복 차단하지 않도록 아래
+마커를 남긴다.
+
+1. 같은 사유로 **최소 2회** 재시도해 동일한 400/환경 오류임을 확인한다 (일시적 오류와 구분).
+2. 아래 명령으로 `.claude/.codex-unavailable` 에 감지 시각 + 현재 `~/.codex/config.toml`
+   해시 + `codex --version` 을 기록한다:
+
+```bash
+node -e '
+const fs=require("fs"),crypto=require("crypto"),os=require("os"),path=require("path"),{execSync}=require("child_process");
+const home=process.env.CODEX_HOME||path.join(os.homedir(),".codex");
+const cfg=path.join(home,"config.toml");
+let hash="MISSING"; try { hash=crypto.createHash("sha256").update(fs.readFileSync(cfg,"utf8")).digest("hex"); } catch {}
+const ver=execSync("codex --version",{encoding:"utf8"}).trim();
+fs.mkdirSync(".claude",{recursive:true});
+fs.writeFileSync(".claude/.codex-unavailable", JSON.stringify({detectedAt:new Date().toISOString(), configHash:hash, codexVersion:ver}, null, 2));
+'
+```
+
+3. 사용자에게 1회 보고한다: 어떤 모델/계정 조합이 거부되었는지, `~/.codex/config.toml`의
+   `model` 값을 무엇으로 바꾸면 해소 가능성이 있는지.
+4. `codex-review-guard` 훅은 이 마커의 `configHash`·`codexVersion`이 현재 상태와 **정확히
+   일치하는 동안에만** 차단 대신 세션당 1회 안내 후 통과시킨다. 사용자가 `config.toml`의
+   `model`을 바꾸거나 codex를 업데이트하면 마커가 자동 무효화되어 다음 Stop부터 리뷰가 다시
+   요구된다 — 마커를 수동으로 지울 필요는 없다.
+5. 마커 위조 방지를 위해 `.claude/.codex-unavailable`은 반드시 일반 파일로 기록한다(심볼릭
+   링크·다른 경로 참조 금지) — 훅이 심볼릭 링크는 무효로 간주한다.

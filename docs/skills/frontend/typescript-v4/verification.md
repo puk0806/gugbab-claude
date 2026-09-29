@@ -1,8 +1,8 @@
 ---
 skill: typescript-v4
 category: frontend
-version: v1
-date: 2026-04-20
+version: v1.2
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -12,9 +12,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | typescript-v4 |
 | 스킬 경로 | .claude/skills/frontend/typescript-v4/SKILL.md |
-| 검증일 | 2026-04-20 |
-| 검증자 | skill-creator |
-| 스킬 버전 | v1 |
+| 검증일 | 2026-09-28 (재검증, 이전 2026-08-26 · 2026-04-20) |
+| 검증자 | skill-creator (최초) → 재검증(2차) |
+| 스킬 버전 | v1.2 |
 
 ---
 
@@ -98,13 +98,41 @@ status: APPROVED
 - [✅] 범용적으로 사용 가능 (특정 프로젝트 종속 X)
 
 ### 4-4. Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-04-20 최초 + 2026-09-28 2차 재검증 배너 보강분 재테스트)
 - [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인
-- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완
+- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (2026-09-28 재테스트에서 신규 결함 없음)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (실제 Agent 도구 호출)
+**수행 방법**: 2026-09-28 2차 재검증으로 보강된 SKILL.md(TS 7.0 GA `moduleResolution:"node"/"node10"`·`target:"es5"` 완전 제거 배너 추가판)를 general-purpose 에이전트에게 Read시켜 실전 질문 2개 답변, 근거 섹션 및 보강 내용 반영 여부 확인
+
+### 실제 수행 테스트
+
+**Q1. satisfies 연산자로 타입 검증 + 리터럴 유지 (핵심 기능)**
+- ✅ PASS
+- 근거: SKILL.md "4.9: satisfies 연산자" 섹션 (L331-360), satisfies vs 타입 어노테이션 vs as 단언 vs as const 비교표(L355-360)
+- 상세: `as const`(검증 없음)·`: T`(리터럴 소실)·`as T`(위험)와 정확히 대비해 `satisfies`가 유일한 정답임을 근거 표까지 인용해 답변. anti-pattern(as const/타입 어노테이션 오용) 회피 완비.
+
+**Q2. moduleResolution: "node" 유지 가능 여부 (2차 재검증 보강 배너 직접 겨냥)**
+- ✅ PASS
+- 근거: SKILL.md 상단 "주의" 배너 (L11-15, 2026-09-28 보강분)
+- 상세: 에이전트가 "TS 7.0 GA(2026-07)부터 moduleResolution: node/node10이 완전히 제거되어 하드 에러가 된다"는 보강된 배너 내용을 정확히 인용해 답변. 구체적 대체값(bundler/node16/nodenext 중 최종값)은 이 SKILL.md 단독으로는 확정할 수 없고 배너가 명시적으로 위임한 대로 `frontend/typescript-v5` §9-4를 봐야 한다고 정직하게 답변 — 이는 배너의 의도된 설계(중간 단계 명시 + 짝 스킬 참조 안내)를 정확히 따른 것이며 결함이 아니다.
+
+### 발견된 gap
+
+없음. 2차 재검증 보강 내용(배너)이 옛 내용과 모순 없이 정확히 답변에 반영됨을 확인.
+
+### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 해당 없음 (버전별 기능·설정 정리형 스킬 — content test로 충분. 짝 스킬 typescript-v5도 동일 분류로 APPROVED 전례 있음)
+- 최종 상태: APPROVED (2026-09-28 2차 재검증 보강분이 실제 에이전트 답변에 올바르게 반영됨을 확인)
+
+---
 
 ### 테스트 케이스 1: satisfies 연산자 활용
 
@@ -156,6 +184,26 @@ SKILL.md 4.7 섹션에서 node16/nodenext 모듈 해석 전략의 핵심 규칙(
 
 ---
 
+### [2026-09-28] 재검증(2차) — TS 7.0 GA 현행화 + moduleResolution:node 완전 제거 사실 보강
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임 3개를 1차 소스와 대조, 보강 검토
+
+**클레임 대조 결과**:
+1. 2026-09-28 기준 TypeScript 최신 버전이 7.0.x인가 → VERIFIED (`npm registry typescript@latest` = 7.0.2)
+2. TS 4.9 `satisfies` 연산자 도입 사실(역사적) → VERIFIED (변경 불가능한 과거 릴리즈 사실, devblogs.microsoft.com/typescript/announcing-typescript-7-0/ 재확인으로 최신 문서 체계에서도 4.x 서술과 모순 없음)
+3. "4.x → 5.0+ 마이그레이션" 표의 `moduleResolution: "node"` → `"bundler"` 권장이 여전히 유효한 중간 경로인가 → DISPUTED(정정 아님, 보강): TS 7.0 GA에서 `moduleResolution: "node"`/`"node10"`·`target: "es5"`가 완전히 제거되어 하드 에러가 됨 확인 (공식: https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/) — 4.x 문서 자체의 역사적 서술은 그대로 두되, 최상단 배너에 "이 표는 중간 단계이며 최종 목적지는 아니다" 보강 문구 추가
+
+**보강(ADD)·축소**: 최상단 레거시 배너에 TS 7.0 GA 시점 `moduleResolution:"node"/"node10"`·`target:"es5"` 완전 제거 사실과 `frontend/typescript-v5` §9-4 참조 안내 1문단 추가. 그 외 축소 없음(4.0~4.9 버전 고정 서술은 원칙상 축소 금지 대상이라 유지).
+
+**실전 질문 재검증**:
+- Q1. "TS 4.9 환경에서 리터럴 타입을 유지하면서 타입 검증하려면?" → SKILL.md "4.9: satisfies 연산자" 섹션 근거로 PASS
+- Q2. "4.x 레거시 프로젝트를 최신 TS로 올릴 때 moduleResolution을 뭘로 바꿔야 하나?" → SKILL.md 신규 배너 문구 + references/REFERENCE.md 마이그레이션 표 근거로 "5.0대로는 bundler, 최종적으로 7.0 GA 환경이면 node/node10 자체가 하드 에러이므로 반드시 전환 필요"까지 답변 가능 — PASS
+
+**재검증 최종 판정**: status **PENDING_TEST 전환** (배너 보강으로 내용 변경 발생 — skill-tester 재테스트 필요)
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -163,8 +211,8 @@ SKILL.md 4.7 섹션에서 node16/nodenext 모듈 해석 전략의 핵심 규칙(
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (2026-04-20 2/2 PASS + 2026-09-28 skill-tester 실제 재테스트 2/2 PASS — 보강 배너 내용이 답변에 올바르게 반영됨) |
+| **최종 판정** | **APPROVED** (2026-09-28 skill-tester 재테스트 완료) |
 
 ---
 
@@ -172,7 +220,8 @@ SKILL.md 4.7 섹션에서 node16/nodenext 모듈 해석 전략의 핵심 규칙(
 
 - [✅] WebSearch로 공식 문서 실시간 교차 검증 — 2026-04-20 3개 클레임(satisfies, Template Literal Types, moduleResolution node16) VERIFIED
 - [✅] 에이전트 활용 테스트 — satisfies + moduleResolution node16 2건 PASS (섹션 5 기록)
-- [⏸️] 기존 typescript-v5 스킬과의 참조 관계 정리 — 선택 보강, 차단 요인 아님
+- [✅] 기존 typescript-v5 스킬과의 참조 관계 정리 — 2026-08-26에 배너로 역참조 추가, 2026-09-28 2차 재검증에서 §9-4 포인터까지 보강 완료
+- [✅] 2026-09-28 2차 재검증 배너 보강분(TS 7.0 GA moduleResolution 완전 제거) skill-tester 실제 재테스트 수행 완료 (2/2 PASS)
 
 ---
 
@@ -182,3 +231,5 @@ SKILL.md 4.7 섹션에서 node16/nodenext 모듈 해석 전략의 핵심 규칙(
 |------|------|-----------|--------|
 | 2026-04-20 | v1 | 최초 작성 — TS 4.0~4.9 버전별 핵심 기능 10개, tsconfig, React 타입 패턴, 마이그레이션 가이드 | skill-creator |
 | 2026-08-26 | v1.1 | freshness 재검증(128일 경과) — 기능 서술은 역사적 사실이라 변경 없음. 상단에 레거시 배너 추가(현행 TS 7.0 GA·6.0, 짝 스킬 `typescript-v5`로 역참조 — 기존에는 v5→v4 단방향만 존재). "EOL" 단정은 Microsoft 공식 일정 부재로 UNVERIFIED 처리해 미기재 | freshness-auditor + orchestrator |
+| 2026-09-28 | v1.2 | 재검증(2차) — TS 최신 patch(7.0.2) 반영, TS 7.0 GA에서 `moduleResolution:"node"/"node10"`·`target:"es5"` 완전 제거 사실을 배너에 보강, `typescript-v5` §9-4 참조 안내 추가. 4.0~4.9 본문 서술은 축소 없음 | 재검증(2차) |
+| 2026-09-28 | v1.2 | 2단계 실사용 재테스트 수행 (Q1 satisfies 연산자 핵심 기능 / Q2 moduleResolution node 배너 보강분 겨냥) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |

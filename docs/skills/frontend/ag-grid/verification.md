@@ -2,7 +2,7 @@
 skill: ag-grid
 category: frontend
 version: v1
-date: 2026-08-26
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -14,11 +14,11 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `ag-grid` |
 | 스킬 경로 | `.claude/skills/frontend/ag-grid/SKILL.md` |
-| 검증일 | 2026-08-26 |
+| 검증일 | 2026-09-26 (30~60일 주기 재검증, 최초 검증 2026-08-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 | 기준 버전 | `ag-grid-community` / `ag-grid-react` **33.x** (React 18/19, Next.js App Router) |
-| 최신 메이저 대조 | 36.1.0 (npm `ag-grid-react` latest, 2026-08-26 확인) |
+| 최신 메이저 대조 | 36.2.0 (npm `ag-grid-react` latest, 2026-09-26 재확인 — 2026-08-26 확인 시 36.1.0) |
 
 ---
 
@@ -117,7 +117,7 @@ status: APPROVED
 - [✅] 에이전트가 참조했을 때 실제 코드 작성에 도움이 되는 수준
 - [✅] 지나치게 이론적이지 않고 실용적인 예시 포함
 - [✅] 범용적으로 사용 가능 (특정 프로젝트 종속 X — 도메인 예시는 일반적인 상품 그리드)
-- [✅] 기존 `frontend/react-virtuoso` 스킬과 범위 중복 없이 선택 기준 섹션 + 상호 참조 삽입
+- [✅] 기존 `frontend/react-virtuoso` 스킬과 범위 중복 없이 선택 기준 섹션 + 상호 참조 삽입 (해당 스킬은 2026-09-26 `frontend/chat-ui-pattern`으로 병합 — REFERENCE §11 참조처를 chat-ui-pattern REFERENCE 16절로 갱신)
 - [✅] 기존 `frontend/tanstack-query` 스킬로 서버 상태 캐싱 규칙 위임 (중복 서술 회피)
 
 ### 4-4. Claude Code 에이전트 활용 테스트
@@ -203,6 +203,30 @@ status: APPROVED
 
 ---
 
+### 5-1. 2026-09-26 재검증 (30~60일 주기, verification-policy.md 절차)
+
+**수행일**: 2026-09-26
+**수행 방법**: SKILL.md + references/REFERENCE.md 전체 Read → 핵심 클레임 3개 WebSearch/WebFetch 재검증 → 실전 질문 2개로 SKILL.md 자체 답변 재확인
+
+**재검증 클레임**:
+| # | 클레임 | 재확인 결과 |
+|---|--------|------|
+| R1 | 최신 안정 메이저 버전 | npm registry 재확인 → **36.1.0 → 36.2.0** 마이너 갱신, AG Grid 37 미출시(WebSearch로 확인) |
+| R2 | React peer 지원 범위 `^16.8 \|\| ^17 \|\| ^18 \|\| ^19` | npm registry package.json 재확인 → ✅ VERIFIED, 변동 없음 |
+| R3 | v34~v36 breaking change 목록이 여전히 최신과 일치하는가 | WebSearch로 v37 존재 여부 확인 — 미출시, 8절의 v36까지 breaking change 목록이 현재도 최신 | ✅ VERIFIED, 변동 없음 |
+
+**Q1(재검증). "지금 AG Grid 최신 메이저가 뭐고, v33 기준 스킬 내용이 여전히 유효한가?"**
+- SKILL.md 답변: 최신은 36.2.0(2026-09-26 기준, breaking change 없는 마이너 갱신). v37 메이저는 아직 출시되지 않아 8절의 v33→v36 breaking change 목록이 현재도 유효하다.
+- **판정: ✅ PASS**
+
+**Q2(재검증). "React 19 프로젝트에서 ag-grid-react 최신 버전을 바로 써도 되나?"**
+- SKILL.md 답변: 그렇다. peer 범위가 `^16.8 || ^17 || ^18 || ^19`로 변동 없이 React 19를 포함한다(§0, R2).
+- **판정: ✅ PASS**
+
+**재검증 결과**: 3개 클레임 모두 실질 변경 없음(버전 번호만 마이너 갱신). **status APPROVED 유지.**
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -236,3 +260,4 @@ status: APPROVED
 | 2026-08-26 | v1 | 최초 작성 — 공식 문서 24회 페치·12회 검색 기반, 17개 클레임 교차 검증(DISPUTED 1건 수정 반영, 미검증 2건 `> 주의:` 표기). v33 기준 + v33→v36 breaking change 정리, Community/Enterprise 라이선스 경계표 포함. skill-tester 테스트는 오케스트레이터가 별도 수행 예정 | skill-creator |
 | 2026-08-26 | v1 | 2단계 실사용 테스트 수행 (Q1 라이선스 경계 / Q2 v33 모듈 미등록 에러 / Q3 Next.js App Router 컴포넌트 분리) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | skill-creator |
+| 2026-09-26 | v1 | 30~60일 주기 재검증. 최신 버전 36.1.0→36.2.0 갱신(breaking change 없음), React 19 peer 지원 변동 없음 확인. status APPROVED 유지 | 메인 세션 |

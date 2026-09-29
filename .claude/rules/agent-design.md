@@ -9,7 +9,7 @@ CLAUDE.md와 agent-creator 모두 이 파일을 기준으로 삼습니다.
 
 | 모델 | 최신 ID | 적합한 경우 | 예시 |
 |------|---------|------------|------|
-| fable | `claude-fable-5-1` | 최고난도 **장기(long-horizon) 멀티에이전트 오케스트레이션** — 다수 서브에이전트를 장시간 지휘·종합 | deep-researcher, academic-researcher |
+| fable | `claude-fable-5-1` | 최고난도 **장기(long-horizon) 멀티에이전트 오케스트레이션** — 다수 서브에이전트를 장시간 지휘·종합 | deep-researcher |
 | `opus` | `claude-opus-5-5` | 최고난도 판단·분석, 일반 오케스트레이터 | agent-creator, skill-creator |
 | `sonnet` | `claude-sonnet-5` | 검색·코드 생성, 검증·판정 | web-searcher, fact-checker, rust-backend-developer |
 | `haiku` | `claude-haiku-4-5` | 단순 포맷 변환, 반복 작업 | 포맷터, 분류기 등 |
@@ -20,7 +20,7 @@ CLAUDE.md와 agent-creator 모두 이 파일을 기준으로 삼습니다.
 >
 > **Opus 5.5 API 브레이킹 체인지 (예제 코드 작성 시 필수 반영):** ① thinking 비활성 불가 — `{type:"disabled"}`·`budget_tokens` 모두 400, 깊이는 `output_config.effort`로만 조절하며 **기본값이 `medium`**(Opus 5는 `high`) ② 강제 `tool_choice`(`any`/`tool`) 400 — `auto` + `strict: true` 또는 structured outputs 사용 ③ 컴퓨터 사용은 `computer_toolset_20260801`만 ④ thinking 블록은 생성 모델·대화에 묶임(preserved thinking). Fable 5.1도 ②④가 동일하다. 이 패턴을 쓰는 예제를 Opus 5.5로 옮길 때는 ID만 바꾸지 말고 코드도 함께 고친다.
 >
-> **캐시 최소 토큰은 모델마다 다르고 세대순이 아니다** — Fable 5.1·Fable 5·Opus 5는 512, Opus 4.8·Sonnet 5·Sonnet 4.6은 1,024, Opus 4.7은 2,048, Opus 4.6·Haiku 4.5는 4,096. Opus 5.5는 공식 캐싱 표에 아직 별도 기재가 없다(주의: 미확인 — 인용 전 공식 문서 확인). 프롬프트 캐싱을 다루는 스킬에서 이 값을 인용할 때는 대상 모델을 명시한다.
+> **캐시 최소 토큰은 모델마다 다르고 세대순이 아니다** — Fable 5.1·Opus 5.5·Fable 5·Opus 5는 512, Opus 4.8·Sonnet 5·Sonnet 4.6은 1,024, Opus 4.7은 2,048, Opus 4.6·Haiku 4.5는 4,096 (2026-09-28 공식 prompt-caching 문서로 Opus 5.5=512 확인). 프롬프트 캐싱을 다루는 스킬에서 이 값을 인용할 때는 대상 모델을 명시한다.
 
 **선택 기준:**
 - 다수 서브에이전트를 장시간 지휘하는 최고난도 리서치 오케스트레이터 → `claude-fable-5-1` (비용 감안해 최소 지정)

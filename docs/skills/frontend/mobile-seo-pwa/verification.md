@@ -1,8 +1,8 @@
 ---
 skill: mobile-seo-pwa
 category: frontend
-version: v1
-date: 2026-06-02
+version: v2.1
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `mobile-seo-pwa` |
 | 스킬 경로 | `.claude/skills/frontend/mobile-seo-pwa/SKILL.md` |
-| 검증일 | 2026-06-02 |
+| 검증일 | 2026-09-28 (최초 2026-06-02) |
 | 검증자 | skill-creator |
-| 스킬 버전 | v1 |
+| 스킬 버전 | v2.1 |
 
 ---
 
@@ -109,9 +109,9 @@ status: APPROVED
 
 ### 4-4. Claude Code 에이전트 활용 테스트
 
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-06-02, skill-tester → general-purpose 대체 수행 / 2026-08-26, skill-tester → frontend-developer로 1-4절 신설분 재수행)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (3/3 PASS — 2026-06-02, 3/3 PASS — 2026-08-26)
-- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (gap 없음 — 보완 불필요, 두 차례 모두)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-06-02, skill-tester → general-purpose 대체 수행 / 2026-08-26, skill-tester → frontend-developer로 1-4절 신설분 재수행 / 2026-09-28, skill-tester → general-purpose로 6-3절 DISPUTED 정정분 재수행)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (3/3 PASS — 2026-06-02, 3/3 PASS — 2026-08-26, 2/2 PASS — 2026-09-28)
+- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (gap 없음 — 보완 불필요, 세 차례 모두)
 
 ---
 
@@ -140,6 +140,34 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose
+**수행 방법**: SKILL.md Read 후 2개 실전 질문(6-3절 EU DMA 정정분 겨냥 1개 + 4절 dvh/svh 핵심 기능 1개) 답변, 근거 섹션 및 anti-pattern 회피 확인
+
+### 실제 수행 테스트 (2026-09-28, 6-3절 EU DMA 정정 재테스트)
+
+**Q1. 우리 서비스가 EU 사용자에게도 서비스되는데, PWA 홈 화면 추가 기능(독립 실행 standalone·푸시 알림)을 다른 지역과 동일하게 제공해도 되는가? iOS 17.4 이후 EU 제약이 있는 것 아닌가?**
+- ✅ PASS
+- 근거: SKILL.md "6-3. iOS DMA/EU 관련 — 제약 아님 (2024-03 철회로 정리됨)" (358~361줄)
+- 상세: Apple이 2024-02 iOS 17.4 베타에서 EU 홈 화면 웹 앱 강등·독립 실행/푸시 제거를 예고했으나 정식 출시 전인 2024-03-01에 전면 철회했고, 현재(2026)까지 EU도 다른 지역과 동일하게 정상 동작한다는 **정정된 내용**을 정확히 인용해 "제약 없음"으로 답변함. 옛 "iOS 17.4 EU 제약" 서술이 남아 혼동을 일으키지 않음을 확인
+
+**Q2. iOS Safari standalone PWA에서 100vh 히어로 영역 하단이 잘리는 문제 — 해결법과 모달에 쓸 단위는?**
+- ✅ PASS
+- 근거: SKILL.md "4. Dynamic Viewport (dvh / svh / lvh)" 4-1·4-2·4-4절 (209-248줄)
+- 상세: `100vh`가 주소창 사라진 largest viewport 기준으로 계산되어 하단이 잘리는 원인, `100dvh`로 교체하는 해결책(구형 브라우저 fallback 포함), 모달처럼 절대 잘리면 안 되는 요소는 `100svh` 사용해야 하는 근거(jank 회피 포함)를 정확히 인용
+
+### 발견된 gap (2026-09-28)
+
+없음(차단 요인). Q2에서 "PWA standalone 모드가 dvh 동작 자체에 영향을 주는지"는 SKILL.md에 명시돼 있지 않다는 지적이 있었으나, 이는 3절(safe-area)과 4절(dvh)이 서로 다른 문제를 다루는 의도된 범위 분리이며 별도 보완이 필요한 오류가 아니다.
+
+### 판정 (2026-09-28)
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: "실사용 검증이 필요 없는 스킬" (라이브러리/메타 정리형)
+- 최종 상태: APPROVED (유지)
+
+---
 
 **수행일**: 2026-08-26
 **수행자**: skill-tester → frontend-developer
@@ -211,15 +239,36 @@ status: APPROVED
 
 ---
 
+### [2026-09-28] 재검증(2차) — iOS DMA/EU PWA 제약 서술 DISPUTED 정정 + W3C 스펙 날짜 갱신
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임 4개를 1차 소스(Apple Developer, W3C, 2024년 당시 업계 보도)와 대조, 보강·축소 검토
+
+**클레임 대조 결과**:
+1. "2024-03 Apple이 DMA 컴플라이언스로 EU에서 PWA 기능(독립 실행·푸시 알림)을 제한, 현재도 유지" → **DISPUTED(정정)** — 실제로는 Apple이 2024-02 iOS 17.4 베타에서 해당 제한을 예고했으나, 개발자 커뮤니티 반발과 유럽위원회 개입으로 **iOS 17.4 정식 출시 전인 2024-03-01에 계획을 전면 철회**. 이후 현재(2026)까지 EU 사용자도 홈 화면 웹 앱이 다른 지역과 동일하게 정상 동작 (https://developer.apple.com/support/dma-and-apps-in-the-eu/, https://techcrunch.com/2024/03/01/apple-reverses-decision-about-blocking-web-apps-on-iphones-in-the-eu/, https://9to5mac.com/2024/03/01/apple-home-screen-web-apps-ios-17-eu/, https://www.macrumors.com/2024/03/01/apple-walks-back-decision-to-disable-eu-web-apps/)
+2. W3C Web Application Manifest 스펙 Working Draft 날짜가 2026-05-07 — **DISPUTED(정정)** — 현재 최신 WD는 2026-08-13 (https://www.w3.org/TR/appmanifest/, 문서 내 "This version: .../WD-appmanifest-20260813/")
+3. W3C manifest 스펙상 모든 필드가 optional이라는 기존 클레임 — **VERIFIED** (동일 문서, 8월판에서도 구조 불변)
+4. iOS 17.4 EU 관련 2026년 현재 Apple 공식 문서(DMA 지원 페이지)에 PWA 전용 제약 언급이 있는가 → **VERIFIED(부재 확인)** — 2026년 8월 갱신된 Apple DMA 지원 페이지에 Home Screen web app/PWA 제약 언급 없음, 앱 배포·결제·브라우저 엔진 관련 내용만 존재
+
+**보강(ADD)·축소**: 섹션 6-3을 "iOS 17.4+ EU 제약" → "iOS DMA/EU 관련 — 제약 아님"으로 정정 재작성(2024-02 예고 → 2024-03-01 철회 경위 + 현재 EU도 정상 동작 명시). 헤더 소스 목록에 Apple DMA 지원 페이지 추가, W3C manifest WD 날짜 2026-08-13로 갱신. 축소 없음.
+
+**실전 질문 재검증**:
+- Q1. "우리 서비스가 EU에도 서비스되는데, PWA 홈 화면 추가 기능을 EU 사용자에게 그대로 제공해도 되는가?" → SKILL.md "6-3절" 근거로 PASS (2024-03-01 Apple이 제한 계획을 철회했으므로 EU도 다른 지역과 동일하게 정상 동작, 별도 분기 불필요)
+- Q2. "W3C manifest 스펙에서 icons 필드가 필수인지 확인해달라" → SKILL.md "5-1절"("스펙상 모든 필드는 optional") 근거로 PASS, 최신 WD(2026-08-13)에서도 구조 불변 확인
+
+**재검증 최종 판정**: status **PENDING_TEST 전환** (기존에 잘못된 사실이 서술돼 있던 DISPUTED 정정 발생 — 메인의 skill-tester 재테스트 대상)
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
 |------|------|
-| 내용 정확성 | ✅ (15/15 클레임 VERIFIED) |
+| 내용 정확성 | ✅ (15/15 VERIFIED, 2026-09-28 재검증에서 발견된 iOS DMA/EU 항목 DISPUTED는 정정 완료 및 재테스트로 반영 확인) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (3/3 PASS — 2026-06-02, 1-4절 신설분 재테스트 3/3 PASS — 2026-08-26) |
-| **최종 판정** | **APPROVED** (유지) |
+| 에이전트 활용 테스트 | ✅ (3/3 PASS — 2026-06-02, 3/3 PASS — 2026-08-26, 2/2 PASS — 2026-09-28 6-3절 정정분 재테스트) |
+| **최종 판정** | **APPROVED** (2026-09-28 skill-tester 재테스트 완료, 2/2 PASS — 6-3절 정정 반영 확인) |
 
 ---
 
@@ -227,6 +276,7 @@ status: APPROVED
 
 - [✅] skill-tester를 통한 실전 질문 답변 테스트 (2026-06-02 완료, 3/3 PASS)
 - [✅] 1-4절(분리 모바일 URL m-dot canonical/alternate 교차 지정) 신설분 content 재테스트 (2026-08-26 완료, 3/3 PASS — skill-tester → frontend-developer)
+- [✅] 6-3절(iOS DMA/EU PWA 제약 DISPUTED 정정) content 재테스트 (2026-09-28 완료, 2/2 PASS — skill-tester → general-purpose)
 - [❌] 실제 PWA 프로젝트에서 manifest·apple-touch-icon 통합 검증 (실사용 검증) — 차단 요인 아님. 라이브러리/메타 정리형 스킬이므로 content test PASS로 APPROVED 전환 가능. 실제 앱 개발 이후 추가 보강 권장(선택)
 - [❌] iOS 18 신규 변경사항이 향후 등장하면 6절·6-3절 업데이트 — 차단 요인 아님. 향후 변경사항 발생 시에만 필요한 선택적 후속 과제
 
@@ -240,3 +290,5 @@ status: APPROVED
 | 2026-06-02 | v1 | 2단계 실사용 테스트 수행 (Q1 100vh/dvh 주소창 잘림 / Q2 iPhone 홈화면 아이콘 깨짐 / Q3 AMP 2026 신규 도입 가치) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-08-26 | v2 | freshness 재검증(85일 경과) — Mobile-First Indexing 완료·dvh/svh·iOS DMA·interactive-widget VERIFIED. **1-2절 M-dot 행이 "양방향 링크 필수" 한 줄뿐이라 방향을 반대로 넣을 위험** → 1-4절 신설: 데스크톱=canonical 자기참조+`rel=alternate media="only screen and (max-width: 640px)"`, 모바일=canonical→데스크톱(Google 공식 문서 원문 인용), 패리티·JSON-LD url 통일·공용 SEO 컴포넌트·GSC 속성 분리·통합 시 301 순서 | freshness-auditor + orchestrator |
 | 2026-08-26 | v2 | 1-4절 신설분 content 재테스트 수행 (Q1 m./www. 분리 시 link 태그 방향·media / Q2 모바일 canonical 자기참조 시 결과 / Q3 반응형 통합 순서) → 3/3 PASS, APPROVED 유지 | skill-tester |
+| 2026-09-28 | v2.1 | 재검증(2차, 33일 경과) — **DISPUTED 정정 발견**: 6-3절 "iOS 17.4+ EU PWA 제약"이 사실과 다름을 확인. Apple은 2024-02 iOS 17.4 베타에서 EU 홈 화면 웹 앱 강등을 예고했으나 2024-03-01 정식 출시 전 전면 철회, 현재까지 EU도 정상 동작. 6-3절을 "제약 아님"으로 정정 재작성. W3C manifest WD 날짜도 2026-05-07 → 2026-08-13으로 갱신. status APPROVED → PENDING_TEST 전환 | orchestrator (2차 재검증 배치) |
+| 2026-09-28 | v2.1 | 2단계 재테스트 수행 (Q1 EU PWA 기능 제약 여부/6-3절 정정 겨냥 / Q2 100vh 잘림·dvh/svh 핵심 기능) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |

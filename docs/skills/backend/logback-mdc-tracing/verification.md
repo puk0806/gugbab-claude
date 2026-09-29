@@ -2,7 +2,7 @@
 skill: logback-mdc-tracing
 category: backend
 version: v1
-date: 2026-04-22
+date: 2026-09-26 (최초: 2026-04-22, 2026-06-19 APPROVED 전환)
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `logback-mdc-tracing` |
 | 스킬 경로 | `.claude/skills/backend/logback-mdc-tracing/SKILL.md` |
-| 검증일 | 2026-04-22 |
+| 검증일 | 2026-04-22 (재검증: 2026-09-26) |
 | 검증자 | skill-creator (Claude) |
 | 스킬 버전 | v1 |
 
@@ -135,6 +135,21 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+### 2026-09-26 — 재검증 (60일 초과 정기 재검증)
+
+**수행일**: 2026-09-26
+**수행 방법**: SKILL.md + REFERENCE.md 전체 Read, WebSearch로 Logback·Micrometer Tracing·Spring Boot 버전 상태 재확인.
+
+**Q1. Logback 1.5.38(2026-09 기준 최신)에서도 `logback-spring.xml`/`AsyncAppender`/`MDC.putCloseable` 패턴이 그대로 맞는가?**
+- PASS(재검증). Logback 1.5.x 라인 내 설정 스키마·API 변경 없음 확인(1.5.32 → 1.5.38 패치 릴리스만 존재).
+
+**Q2. Spring Boot 3.5 EOL 이후에도 Micrometer Tracing 통합 방식이 유효한가?**
+- PASS(재검증). Spring Boot 3.5는 2026-06-30 OSS EOL, 활성 지원은 4.0.x/4.1.x. `management.tracing.*` 설정 키·MDC `traceId`/`spanId` 키는 4.x에서도 동일하게 유지됨을 확인.
+
+**재검증 결론**: 핵심 클레임 전부 VERIFIED 유지. Spring Boot 버전 생애주기 정보만 SKILL.md 상단에 갱신 반영. status 변경 없음(APPROVED 유지).
+
+---
 
 ### 2026-06-19 — skill-tester 재수행 (APPROVED 전환)
 
@@ -276,3 +291,4 @@ Spring Boot 3.5 서비스에 Zipkin 기반 분산 추적을 추가하고 로그�
 |------|------|-----------|--------|
 | 2026-04-22 | v1 | 최초 작성 — Logback + MDC + Sleuth(SB 2.5) + Micrometer Tracing(SB 3.x) 통합 스킬 | skill-creator |
 | 2026-06-19 | v1 | 2단계 실사용 테스트 수행 (Q1 Zipkin 설정 / Q2 AsyncAppender discardingThreshold / Q3 @NewSpan vs @Observed 버전 분기) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-26 | v1 | 재검증 — Logback 1.5.38·Spring Boot 4.x 생애주기 반영, 핵심 API 변경 없음 확인 | 메인 세션 |

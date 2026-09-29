@@ -1,8 +1,8 @@
 ---
 skill: attachment-theory-basics
 category: humanities
-version: v1
-date: 2026-05-15
+version: v3
+date: 2026-09-26
 status: APPROVED
 ---
 
@@ -133,6 +133,34 @@ status: APPROVED
 
 ## 5. 테스트 진행 기록
 
+### [재검증] 2026-09-26 — §10 병합분(relational-pattern-analysis) content test
+
+**수행일**: 2026-09-26
+**수행자**: skill-tester → general-purpose (도메인 전용 에이전트 미등록으로 대체)
+**수행 방법**: SKILL.md Read 후 2개 실전 질문 답변(§10 병합분 겨냥), 근거 섹션 및 anti-pattern 회피 확인
+
+**Q1. (병합분 겨냥) Gottman 4 Horsemen — 파트너 진단 가부 + "94% 정확도" 수치 인용 가부**
+- PASS
+- 근거: SKILL.md "10.0 학술적 한계", "10.1 Gottman 4 Horsemen — 정의·해독제"(종단 연구 수치+주의), "10.4 적용 가이드", "10.5 Anti-pattern", "10.6 출력 가드레일"
+- 상세: "당신 파트너는 stonewalling 유형" 진단 금지를 §10.4 예시와 §10.5 anti-pattern 표로 정확히 근거 제시. "94% 정확도로 이혼 예측" 표현이 후향적 분류(retrodictive)이지 예측이 아니라는 §10.1 주의문·§10.5·§10.6-4를 정확히 인용해 단정 표현을 회피.
+
+**Q2. (병합분 겨냥) EFT pursuer-withdrawer cycle 설명 + 창시자 인용 주의 + NVC 대필 가부**
+- PASS
+- 근거: SKILL.md "10.2 EFT — Pursuer/Withdrawer Cycle"(Sue Johnson 별세 주의 포함), "10.4 적용 가이드", "10.5 Anti-pattern", "10.6 출력 가드레일" 5번
+- 상세: cycle이 적이지 상대가 적이 아니라는 §10.2·§10.4 문장을 정확히 재현. Dr. Sue Johnson 2024-04-23 별세·Greenberg 공동 개발 사실을 정확히 인용해 "현재형 서술" anti-pattern 회피. NVC 4단계는 "사용자 본인 문장 작성용"이며 "상대를 향한 완성 대본"을 만들면 안 된다는 §10.6-5 가드레일을 정확히 근거로 대필 요청을 거절함.
+
+### 발견된 gap (§10 병합분)
+
+- §10.4에 "사용자가 대필을 강하게 요청할 때"의 구체적 거절·재유도 응대 스크립트가 없음 — 원칙만 있고 스크립트 예시 부재 (차단 요인 아님, 선택 보강)
+
+### 판정 (2026-09-26 재검증)
+
+- agent content test: 2/2 PASS (병합분 §10 포함)
+- verification-policy 분류: 도메인 지식 스킬 (경계선 — content test PASS = APPROVED 가능)
+- 최종 상태: APPROVED (병합 전 §1-9 기존 3/3 PASS + 병합분 §10 2/2 PASS 종합)
+
+---
+
 **수행일**: 2026-05-15
 **수행자**: skill-tester → general-purpose (도메인 특화 에이전트 미등록으로 skill-tester 직접 검증 수행)
 **수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 존재 여부 및 anti-pattern 회피 확인
@@ -184,14 +212,15 @@ status: APPROVED
 | 내용 정확성 | ✅ (10개 핵심 클레임 VERIFIED, 1개 DISPUTED 정정, 1개 UNVERIFIED 제거) |
 | 구조 완전성 | ✅ (frontmatter·소스·검증일·9개 섹션·BibTeX 모두 포함, skill-md-guard 통과) |
 | 실용성 | ✅ (hedging 템플릿·짝 스킬 연계·오용 차단) |
-| 에이전트 활용 테스트 | ✅ (2026-05-15 수행, 3/3 PASS) |
-| **최종 판정** | **APPROVED** (3/3 PASS, 도메인 지식 스킬 — content test로 충분, hedging 템플릿·임상 오용 차단 근거 모두 SKILL.md 내 명시 확인) |
+| 에이전트 활용 테스트 | ✅ (2026-05-15 수행, 3/3 PASS) / §10 병합분 2/2 PASS (2026-09-26, general-purpose 대체) |
+| **최종 판정** | **APPROVED** (2026-09-26 §10 병합분 content test 2/2 PASS로 재전환 완료. 병합 이력은 §9 참조) |
 
 ---
 
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester로 hedging 표현이 답변에 실제 반영되는지 확인 (2026-05-15 완료, Q1 hedging 템플릿·단정 금지 근거 섹션 3에서 확인)
+- [✅] §10 병합분(Gottman·EFT·NVC 꿈 앱 가드레일) content test 수행 (2026-09-26 완료, 2/2 PASS)
 - [❌] 짝 스킬 `dream-psychology-jung-freud`와 함께 호출되는 통합 시나리오 테스트 (꿈+애착 동시 적용) — 차단 요인 아님, 선택 보강. 짝 스킬 자체가 APPROVED되면 통합 시나리오 테스트 권장
 - [❌] 사용자 학위논문/석사 작업 흐름에서 *비유·예시*로만 사용되도록 표현 가드 추가 검토 — 차단 요인 아님, 선택 보강. 현재 섹션 7 "언제 사용하지 말아야 할 때"로 충분히 커버됨
 
@@ -203,3 +232,20 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-05-15 | v1 | 최초 작성 — 7개 1차 문헌 + 2개 측정 도구 + 4유형/4범주 정리 + hedging 템플릿 + 학술 한계 박스 | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 꿈 해석 hedging / Q2 ECR-R 자가 진단 한계 / Q3 Ainsworth vs Bartholomew 차이) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-09-26 | v2 | 스킬 정리 — `humanities/relational-pattern-analysis` 병합: 원 §0 한계·§1.1 수치·§1.2 4 horsemen·§2 EFT(Sue Johnson 별세 주의 포함)·§3.2 NVC 4단계·§4 앱 적용 가이드·§5 anti-pattern·§6 출력 가드레일·§7 참조 문헌을 SKILL.md §10으로 이관(학파 개론 일부 축약). description·짝 스킬 줄 보강. project-install.sh DREAM_HUMANITIES_SKILLS 목록에서 원 스킬 제거. status PENDING_TEST 전환 | 메인 세션 (스킬 정리) |
+| 2026-09-26 | v3 | 2단계 실사용 테스트 수행 (Q1 §10 Gottman 진단 금지+94% 수치 인용 주의 / Q2 §10 EFT cycle 설명+Johnson 별세 인용 주의+NVC 대필 금지) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+
+---
+
+## 9. 병합 이력 (2026-09-26)
+
+| 항목 | 내용 |
+|------|------|
+| 원 스킬 | `humanities/relational-pattern-analysis` (제거 — Gottman·EFT·NVC 본문 개론은 잘 알려진 내용. 꿈 앱 관계 조언 가드레일만 고유 가치) |
+| 이관 범위 | 원 §0 학술적 한계 → §10.0 / §1.1 종단 연구 수치·§1.2 4 horsemen 정의·해독제 표(예시 열 생략)·§1.3 cascade 주의 → §10.1 / §2.1 개요·Sue Johnson 별세 주의·§2.3 pursuer/withdrawer 표·§2.4–2.5 주의 → §10.2 / §3.1–3.2 NVC → §10.3 / §4 적용 가이드 → §10.4 / §5 anti-pattern → §10.5 / §6 출력 가드레일 → §10.6 / §7 참조 문헌 → §10.7 |
+| 축약·생략 | Hold Me Tight 7대화 목록(§2.4), NVC 예시 대화·자기공감 사이클(§3.3–3.4) — 일반 지식이라 생략(주의 문구는 유지) |
+| 원 소스 | Gottman Institute (https://www.gottman.com/), ICEEFT (https://iceeft.com/, 부고 iceeft.com/obituary), Dr. Sue Johnson (https://drsuejohnson.com/), CNVC (https://www.cnvc.org/), PuddleDancer Press (https://nonviolentcommunication.com/), Gottman & Levenson 1992/2000, Gottman 외 1998 원문 |
+| 이관 클레임 판정 (원 verification.md) | 4 horsemen 정의·antidote 4종·contempt 최강 예측 변수 — VERIFIED(2026-05-15, 2026-07-04, 2026-09-26) / EFT Johnson+Greenberg 1980년대 초·ICEEFT 1998 — VERIFIED / NVC 4단계·CNVC 1984 — VERIFIED / 종단 연구 서지·"후향적 분류 정확도" 구분 — VERIFIED / **Dr. Sue Johnson 2024-04-23 별세** — 2026-09-26 DISPUTED(현재형 서술) → 정정 반영 후 skill-tester 2/2 PASS |
+| 설치 스크립트 | `project-install.sh` DREAM_HUMANITIES_SKILLS에서 원 스킬 행 제거(attachment-theory-basics는 유지) |
+| 에이전트·스킬 참조 교체 | `agents/research/dream-multi-perspective-synthesizer.md`(description·경로 표), `skills/humanities/dream-psychology-jung-freud` §8, `skills/meta/dream-interpretation-prompt-engineering/references/REFERENCE.md` §13.2 → 본 스킬 §10 |
+| 상태 | APPROVED — §10 content test 2/2 PASS (2026-09-26) 완료 |

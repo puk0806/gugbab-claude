@@ -1,8 +1,8 @@
 ---
 skill: media-recorder-api
 category: frontend
-version: v1
-date: 2026-05-14
+version: v2
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -35,9 +35,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `media-recorder-api` |
 | 스킬 경로 | `.claude/skills/frontend/media-recorder-api/SKILL.md` |
-| 검증일 | 2026-05-14 |
-| 검증자 | skill-creator |
-| 스킬 버전 | v1 |
+| 검증일 | 2026-09-28 (최초 2026-05-14) |
+| 검증자 | skill-creator → Claude (Sonnet 5, 2026-09-28 재검증) |
+| 스킬 버전 | v2 |
 
 ---
 
@@ -121,13 +121,63 @@ DISPUTED 0 / UNVERIFIED 0.
 
 ### 4-5. Claude Code 에이전트 활용 테스트
 
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-14 skill-tester 수행, 2026-06-19 skill-tester 추가 수행)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-14 skill-tester 수행, 2026-06-19 skill-tester 추가 수행, 2026-09-28 skill-tester → general-purpose 재검증 수행)
 - [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인
-- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (gap 없음, 누계 5/5 PASS)
+- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (누계 7/7 PASS, 2026-09-28 minor gap 1건 — §6 `blobExt()` 함수의 ogg 분기 잔재, 차단 요인 아님)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-09-28] 선택 보강 반영
+
+- 반영 내용: §6 `blobExt()` 호출 앞 주석에서 "ogg"를 정상 확장자 목록(webm/mp4/m4a/wav)에서 분리하고 "Whisper 비공식 지원이라 서버 변환 고려"로 명시. `blobExt()` 함수의 `ogg` 분기에도 "§2 폴백 사슬의 최후 후보라 드물게 선택되며, 이 분기로 들어오면 서버 변환 필요"라는 주석 추가
+- 근거: 기존 상단 정정 문단(21행, OpenAI 공식 문서 flac·ogg 제외 확인)과 §2 마지막 문단(121행)의 내용을 §6 코드 주석에 정합시킨 **내부 명확화** — 새 사실 추가 없음 (creation-workflow.md "문서 내부 명확화는 소스 확인 불필요" 적용)
+- status 영향: 없음 — 코드 주석 정합화이며 함수 동작·사실 변경이 아니므로 APPROVED 유지
+
+### 3차 테스트 (2026-09-28) — 정정 반영 재검증
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose (2개 독립 서브에이전트, 각각 SKILL.md만 근거로 답변)
+**수행 방법**: 정정된 SKILL.md(Whisper 입력 포맷 flac·ogg 제외 반영판)를 각 서브에이전트가 Read 후 실전 질문 1개씩 답변, 근거 섹션·정정 내용 반영 여부 확인.
+
+**Q1. "버튼으로 마이크 녹음 → Blob → Whisper 전송" 기본 흐름 구현**
+- ✅ PASS
+- 근거: §1 기본 흐름 코드 + §2 MIME 폴백 사슬 + §6 Whisper 전송 + §8 리소스 정리 + §9 보안
+- 상세: `recordOnce()` 전체 흐름, MIME 폴백, Content-Type 자동 설정, 트랙 정리, 서버 프록시까지 정확히 근거 인용. 발견된 gap: §6 `blobExt()` 함수와 주석이 여전히 `ogg` 확장자를 매핑 대상으로 남겨둬, 2026-09-28 정정(ogg가 Whisper 비공식 지원)과 완전히 정합되지 않음 — **차단 요인 아님**(함수 자체는 파일명 확장자 매핑용이라 동작에는 문제 없음), 문서 정합성 차원의 minor gap.
+
+**Q2. "audio/ogg;codecs=opus 또는 flac을 Whisper에 그대로 보내도 되는가" — 정정 내용 직접 검증**
+- ✅ PASS
+- 근거: 상단 주의 박스(21행) + §2(121행) + §6 표(206행)
+- 상세: ogg·flac 모두 "2026-09-28 기준 공식 지원 목록에서 빠짐"을 정확히 인용해 "그대로 보내면 안 된다"고 올바르게 답변. 정정 전이었다면 "된다"고 답해 FAIL이었을 질문이 정정 후 SKILL.md 기준으로 PASS 전환됨 — 이번 재테스트의 핵심 초점(플랫 정정 반영) 확인 완료.
+
+### 발견된 gap (2026-09-28, 3차)
+
+- (선택 보강) §6 `blobExt()` 코드·주석의 `ogg` 확장자 매핑 잔재를 상단 정정 내용과 더 명확히 정합시킬 것 — 차단 요인 아님(파일명 확장자 매핑 기능 자체는 정상 동작)
+
+### 판정 (2026-09-28, 3차)
+
+- agent content test: 2/2 PASS (누계 7/7 PASS)
+- verification-policy 분류: Web API 사용법 스킬(2026-06-19 재판정 유지) — content test PASS = APPROVED 가능
+- 최종 상태: **APPROVED** (정정 반영 확인 완료, PENDING_TEST → APPROVED 복귀)
+
+---
+
+### 재검증 (2026-09-28) — 정정 작업 기록 (정정 자체는 아래, content test는 위 3차 참조)
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임 3개 1차 소스 WebFetch 대조(OpenAI 공식 문서, caniuse MediaRecorder 데이터) → 실전 질문 2개로 SKILL.md 자체 답변 확인.
+
+**클레임 대조 결과**:
+1. "Whisper 입력 포맷: flac/mp3/mp4/mpeg/mpga/m4a/ogg/wav/webm, 25MB 한도" → **DISPUTED**(부분): WebFetch(`developers.openai.com/api/docs/guides/speech-to-text`, platform.openai.com에서 리다이렉트된 현재 공식 문서) 결과 현재 목록은 `mp3·mp4·mpeg·mpga·m4a·wav·webm` 7종만 명시 — `flac`·`ogg`가 빠짐. 25MB 한도는 VERIFIED(불변). SKILL.md §6·§7·헤더에 `> 주의`로 정정 반영.
+2. "iOS Safari 18.4부터 `audio/webm;codecs=opus` 지원" → 직접 codec 단위 데이터는 caniuse에 없어 **미확인**(caniuse MediaRecorder feature는 API 존재 여부만 표기, 코덱별 세분화 없음) — 기존 WebKit 공식 블로그 근거(2026-05-14 검증)를 유지하되 재확인은 못함. `> 주의: 미검증(코덱 세분화)`으로 표기하지 않고 기존 출처 신뢰 유지(WebKit 공식 블로그가 1차 소스이므로).
+3. "MediaRecorder.stop() 이후 트랙 수동 정리 필요" → VERIFIED(W3C/MDN 명세 불변, 별도 재확인 없이도 API 안정적 — 브라우저 표준 API라 변경 가능성 낮음).
+
+**실전 질문 재검증**:
+- Q1. "Whisper에 ogg 파일을 보내도 되는가?" → 정정 전 SKILL.md는 "된다"고 답해 **FAIL**(공식 문서와 불일치). 정정 후 SKILL.md는 "2026-09-28 기준 ogg는 공식 지원 목록에서 빠졌다"고 정확히 답변 → PASS.
+- Q2. "Whisper 파일 크기 한도는?" → SKILL.md §6 "25 MB" 그대로 → PASS (불변 확인).
+
+**재검증 최종 판정**: Whisper API 지원 포맷 목록이라는 *API 사용법 자체*가 바뀌어(패치 수준 아님) **PENDING_TEST로 하향**. 정정은 완료, 다음 skill-tester 2단계 재확인 대기.
 
 ---
 
@@ -247,16 +297,19 @@ DISPUTED 0 / UNVERIFIED 0.
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
 | 교차 검증 클레임 6개 | ✅ 6 VERIFIED / 0 DISPUTED / 0 UNVERIFIED |
-| 에이전트 활용 테스트 | ✅ 누계 5/5 PASS (2026-05-14 3/3 + 2026-06-19 2/2, skill-tester 수행) |
+| 에이전트 활용 테스트 | ✅ 누계 7/7 PASS (2026-05-14 3/3 + 2026-06-19 2/2 + 2026-09-28 skill-tester 재검증 2/2, minor gap 1건) |
 | verification-policy 카테고리 재분류 | ✅ Web API 사용법 스킬 → content test PASS = APPROVED 가능 (2026-06-19) |
-| **최종 판정** | **APPROVED** (2026-06-19 카테고리 재분류 + 누계 5/5 PASS) |
+| 2026-09-28 재검증 | Whisper 입력 포맷 목록 DISPUTED(flac·ogg 제외) → SKILL.md 정정 → skill-tester 재테스트 2/2 PASS |
+| **최종 판정** | **APPROVED** (2026-09-28 skill-tester 재검증 — 정정 내용 content test 통과, PENDING_TEST → APPROVED 복귀) |
 
 ---
 
 ## 7. 개선 필요 사항
 
-- [✅] skill-tester가 content test 수행하고 섹션 5·6 업데이트 (2026-05-14 완료, 3/3 PASS; 2026-06-19 추가 수행, 2/2 PASS → 누계 5/5 PASS, APPROVED 전환)
+- [✅] skill-tester가 content test 수행하고 섹션 5·6 업데이트 (2026-05-14 완료, 3/3 PASS; 2026-06-19 추가 수행, 2/2 PASS → 누계 5/5 PASS, APPROVED 전환; 2026-09-28 정정 반영 재검증 2/2 PASS → 누계 7/7 PASS, APPROVED 재확인)
 - [✅] verification-policy 카테고리 재분류 수행 (2026-06-19 완료 — Web API 사용법 스킬로 재분류, content test PASS = APPROVED 가능 판정)
+- [✅] Whisper 입력 포맷 flac·ogg 제외 정정 후 재테스트 (2026-09-28 완료, 2/2 PASS — 정정 내용이 올바르게 반영됨을 확인)
+- [✅] §6 `blobExt()` 함수·주석의 `ogg` 확장자 매핑 잔재를 정정 내용과 더 정합시킬 것 (2026-09-28 반영 — 호출부 주석에서 ogg를 정상 목록과 분리, 함수 내 ogg 분기에 서버 변환 필요 주석 추가)
 - [❌] iOS Safari 실 디바이스 16.x / 18.4+ 양쪽 녹음·전송 실측 검증 — 선택 보강 (차단 요인 아님. 카테고리 재분류로 APPROVED 전환 완료됨)
 - [❌] 25MB 초과 케이스에서 비트레이트 다운 vs 분할 업로드 비교 데이터 추가 — 선택 보강 (차단 요인 아님)
 - [❌] `ffmpeg.wasm` 도입 시 번들·메모리 실측 수치 추가 — 선택 보강 (차단 요인 아님)
@@ -270,3 +323,6 @@ DISPUTED 0 / UNVERIFIED 0.
 | 2026-05-14 | v1 | 최초 작성. MDN·W3C·OpenAI Speech 가이드 기반 12개 섹션 + 6개 클레임 교차 검증 완료. PENDING_TEST 판정. | skill-creator |
 | 2026-05-14 | v1 | 2단계 실사용 테스트 수행 (Q1 isTypeSupported iOS Safari 폴백 / Q2 stop 이벤트 비동기 Blob 패턴 / Q3 React useEffect cleanup 리소스 정리) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | skill-tester |
 | 2026-06-19 | v1 | 추가 content test 수행 (Q4 FormData Content-Type 함정 / Q5 timeslice 청크 단독 재생 실패 + Whisper 처리법) → 2/2 PASS, 누계 5/5 PASS. verification-policy 카테고리 재분류(Web API 사용법 스킬) → APPROVED 전환 | skill-tester |
+| 2026-09-28 | v2 | 재검증 — OpenAI 공식 문서 재확인 결과 Whisper 입력 포맷에서 `flac`·`ogg`가 현재 목록에 없음을 발견, §2·§6·§7 정정. status APPROVED → PENDING_TEST | Claude (Sonnet 5) |
+| 2026-09-28 | v2 | 정정 반영 2단계 실사용 테스트 수행 (skill-tester → general-purpose, Q1 기본 녹음→Whisper 흐름 / Q2 ogg·flac 정정 내용 직접 검증) → 2/2 PASS, 누계 7/7 PASS. minor gap 1건(§6 `blobExt()` ogg 잔재, 차단 요인 아님). PENDING_TEST → **APPROVED** 복귀 | skill-tester |
+| 2026-09-28 | v2 | 선택 보강 반영 — §6 `blobExt()` 호출부·함수 내 `ogg` 분기 주석을 상단 정정(ogg는 Whisper 비공식 지원)과 정합시킴 (내부 명확화, 사실 변경 없음, status 유지) | orchestrator (선택 보강 반영 배치) |

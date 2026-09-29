@@ -6,9 +6,9 @@ description: Redisson 3.x 모던 — Spring Boot 3.x + Java 17+ 기반 RedissonC
 # Redisson 3.x 모던 (Spring Boot 3.x + Java 17+)
 
 > 소스: https://github.com/redisson/redisson/blob/master/docs/integration-with-spring.md | https://redisson.pro/docs/integration-with-spring/ | https://redisson.pro/docs/data-and-services/locks-and-synchronizers/ | https://github.com/redisson/redisson/blob/master/redisson/src/main/java/org/redisson/api/RLock.java | https://www.baeldung.com/redis-redisson
-> 검증일: 2026-04-23
+> 검증일: 2026-09-26 (2026-04-23 최초 검증 · 재검증 이력은 8절 참조)
 
-> 주의: 본 스킬은 **Redisson 3.18.1 ~ 3.51.0** 범위(Spring Boot 3.x + Spring Data Redis 3.x 호환)를 기준으로 합니다. Redisson 4.x는 Spring 통합 모듈 분리 등 Breaking Change가 있어 별도 스킬로 분리됩니다. 레거시 2.15.2는 `redis-redisson-legacy` 스킬을 참조하세요.
+> 주의: 본 스킬은 **Redisson 3.18.1 ~ 3.52.0** 범위(Spring Boot 3.x + Spring Data Redis 3.x 호환)를 기준으로 합니다. **(2026-09-26 갱신)** Redisson은 2025-12-16 `4.0.0`으로 메이저 버전을 올렸고(Spring Boot 4.0 대응, 배포 클래스 경로 변경 등 Breaking Change 포함 — `RLock`/`RMap`/`RTopic`/`@Cacheable` 등 애플리케이션 코드에서 쓰는 API 자체는 변경 없음), 3.x 라인은 3.52.0(2025-09-25)을 끝으로 사실상 마감되었습니다. Spring Boot 4.x + Redisson 4.x 조합은 별도 스킬(`backend/redis-redisson-4`, 존재 시)을 참조하세요. 레거시 2.15.2는 `redis-redisson-legacy` 스킬을 참조하세요.
 
 ---
 
@@ -16,8 +16,9 @@ description: Redisson 3.x 모던 — Spring Boot 3.x + Java 17+ 기반 RedissonC
 
 | 항목 | 값 |
 |------|-----|
-| Redisson 최신 3.x 안정판 | **3.51.0** (2024-08-22) |
-| Spring Boot 지원 범위 (전체) | 1.3.x ~ 4.0.x |
+| Redisson 3.x 최종 안정판 | **3.52.0** (2025-09-25 — 3.x 라인의 사실상 마지막 릴리스) |
+| Redisson 4.x (별도 스킬 대상) | `4.0.0`(2025-12-16 GA, Spring Boot 4.0 지원 시작) ~ `4.7.0`(2026-08) |
+| Spring Boot 지원 범위 (3.x 라인 전체) | 1.3.x ~ 4.0.x (버전별로 다름, 4.0 지원은 4.x 라인에서 시작) |
 | Spring Boot 3.x 지원 시작 | Redisson **3.18.1** 이후 (Spring Data Redis 3.x 의존성 도입) |
 | 필수 JDK | Java 8+ (Redisson 핵심), Spring Boot 3.x 사용 시 **Java 17+** |
 | Spring Data Redis 3.x 대응 모듈 | `redisson-spring-data-33` (Spring Boot 3.3 등) |
@@ -34,14 +35,14 @@ description: Redisson 3.x 모던 — Spring Boot 3.x + Java 17+ 기반 RedissonC
 <dependency>
     <groupId>org.redisson</groupId>
     <artifactId>redisson-spring-boot-starter</artifactId>
-    <version>3.51.0</version>
+    <version>3.52.0</version>
 </dependency>
 ```
 
 ### Gradle
 
 ```groovy
-implementation 'org.redisson:redisson-spring-boot-starter:3.51.0'
+implementation 'org.redisson:redisson-spring-boot-starter:3.52.0'
 ```
 
 ### 스프링 데이터 모듈 버전 다운그레이드가 필요할 때
@@ -52,7 +53,7 @@ implementation 'org.redisson:redisson-spring-boot-starter:3.51.0'
 <dependency>
     <groupId>org.redisson</groupId>
     <artifactId>redisson-spring-boot-starter</artifactId>
-    <version>3.51.0</version>
+    <version>3.52.0</version>
     <exclusions>
         <exclusion>
             <groupId>org.redisson</groupId>
@@ -63,7 +64,7 @@ implementation 'org.redisson:redisson-spring-boot-starter:3.51.0'
 <dependency>
     <groupId>org.redisson</groupId>
     <artifactId>redisson-spring-data-31</artifactId>
-    <version>3.51.0</version>
+    <version>3.52.0</version>
 </dependency>
 ```
 

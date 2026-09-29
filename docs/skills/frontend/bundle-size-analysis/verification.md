@@ -1,9 +1,9 @@
 ---
 skill: bundle-size-analysis
 category: frontend
-version: v1
-date: 2026-05-14
-status: PENDING_TEST
+version: v2
+date: 2026-09-28
+status: APPROVED
 ---
 
 # bundle-size-analysis — 검증 문서
@@ -14,9 +14,9 @@ status: PENDING_TEST
 |------|------|
 | 스킬 이름 | `bundle-size-analysis` |
 | 스킬 경로 | `.claude/skills/frontend/bundle-size-analysis/SKILL.md` |
-| 검증일 | 2026-05-14 |
+| 검증일 | 2026-09-28 (재검증, 이전 2026-05-14) |
 | 검증자 | skill-creator (Claude Opus 4.7) |
-| 스킬 버전 | v1 |
+| 스킬 버전 | v2 |
 | 카테고리 분류 | **실사용 필수 스킬** — 실제 visualizer 산출물·CI 결과로 검증 필요 → `PENDING_TEST` 유지 |
 
 ---
@@ -109,6 +109,69 @@ DISPUTED·UNVERIFIED 항목 없음.
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-09-28] 실사용(실행) 검증
+
+**수행일**: 2026-09-28
+**수행 방법**: 레포 밖 lab 폴더(`fe-perf/app`, Vite 8.3.1+React 19+dayjs+lazy chunk 1개, Node v22.23.1)에 `rollup-plugin-visualizer@7.1.1`·`size-limit@14.1.0`·`@size-limit/preset-app@14.1.0`을 로컬 설치(npm registry 최신과 정확히 일치). `vite.config.ts`에 `visualizer({ gzipSize: true, brotliSize: true, template: 'treemap' })` 추가 후 빌드, `package.json`에 size-limit 3개 entry(정상 2개 + 의도적 초과 1개) 등록 후 `npx size-limit` 실행.
+**실행 결과**: (1) `node_modules/rollup`이 없고 `rolldown`만 있는 실제 Vite 8 환경에서 `tsc -b`가 TS2307 없이 통과 — §2-4 ADD 클레임("7.1.0+ 은 rollup 미설치 환경에서도 타입 안전") 확인. (2) `dist/stats.html`(178KB)에 `gzipLength`/`brotliLength` 필드 존재, 반대로 옵션 미설정 시 `raw-data` 출력에서 두 필드가 0으로 나와 "기본값 false" 클레임 확인. (3) `npx size-limit` 출력이 "brotlied" 라벨 사용(§6-2 기본 브로틀리 확인), 시간 단위 지표("Loading time on slow 3G", "Running time on Snapdragon 410")까지 출력, 의도적으로 1KB 한도를 건 항목에서 `Package size limit has exceeded by 58.67 kB` 메시지 + **exit code 1**로 CI-fail 동작 확인. (4) `node_modules/size-limit`·`rollup-plugin-visualizer`의 `package.json` `engines.node` 필드가 SKILL.md 상단 Node 버전 요건과 정확히 일치.
+**졸업 조건 충족 여부**: 충족 — PENDING_TEST.md의 "visualizer·size-limit 실행 후 리포트 산출" 조건을 rollup-plugin-visualizer(treemap HTML)+size-limit(CLI 리포트+exit code) 둘 다로 충족. (webpack-bundle-analyzer·vite-bundle-visualizer는 이번 실행 범위 밖 — 스킬이 다루는 3개 도구 중 그래프 섹션 1의 raw/gzip/brotli 정의를 관통하는 rollup-plugin-visualizer+size-limit 조합으로 검증)
+**판정**: APPROVED 전환 — 서술과 실행 결과 전부 일치, SKILL.md 수정 불필요.
+
+---
+
+### [2026-09-28] skill-tester content test 재수행 (size-limit 14.x·rollup-plugin-visualizer 7.1.x 정정 반영 확인)
+
+**수행일**: 2026-09-28
+**수행자**: skill-tester → general-purpose
+**수행 방법**: SKILL.md Read 후 2개 실전 질문 답변, 근거 섹션 존재 여부 및 anti-pattern 회피 확인. 두 질문 모두 아래 2026-09-28 재검증(2차)에서 정정·보강된 내용을 직접 겨냥.
+
+### 실제 수행 테스트
+
+**Q1. Vite 8 프로젝트에서 rollup-plugin-visualizer 붙였을 때 TS2307 타입 에러 원인·해결**
+- ✅ PASS
+- 근거: SKILL.md "2-4. 환경 요구사항" ADD 주의 블록(113행)
+- 상세: "Vite 8은 rolldown을 쓰고 rollup을 설치하지 않아 7.1.0 미만 버전의 타입 선언이 깨진다"는 원인과 "`rollup-plugin-visualizer@^7.1.0` 이상 설치" 해결책을 정확히 인용. 정정된 내용(7.0.1→7.1.1)이 답변에 정확히 반영됨, 구버전 잔존 정보 없음.
+
+**Q2. size-limit 14.x 업그레이드 시 기존 preset-app 설정 파손 여부 + Node 버전 요건**
+- ✅ PASS
+- 근거: SKILL.md "6-2. 핵심 동작" ADD 주의 블록(293행) + 상단 소스 인용(16행)
+- 상세: "14.0.0의 breaking change는 preset-small-lib 대상이라 preset-app 설정은 안전"과 Node 요건 `^22.19.0 || ^24.5.0 || >=26.0.0`을 정확히 인용. 정정된 내용(13.0.3→14.1.0)이 답변에 정확히 반영됨.
+
+### 발견된 gap
+
+- 없음(차단 요인 기준). Q1·Q2 모두 SKILL.md 본문 내 명확한 근거로 완전히 답변됨.
+
+### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 실사용 필수 카테고리 (visualizer 산출물·CI 결과로만 최종 검증 가능)
+- 최종 상태: PENDING_TEST 유지 (content test 누적 10/10 PASS, 실 프로젝트 적용 후 APPROVED 전환)
+
+---
+
+### [2026-09-28] 재검증(2차) — size-limit 13→14 메이저 + rollup-plugin-visualizer 7.1.x (Vite 8 타입 수정)
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임 3개를 1차 소스(npm registry·GitHub CHANGELOG/Releases API)와 대조, ADD 항목 반영
+
+**클레임 대조 결과**:
+1. size-limit 최신 버전 → 13.0.3(2026-08-11 기록) 대비 **14.1.0(2026-09-27)로 메이저 2단계 진행** — DISPUTED(정정): npm registry `size-limit@latest` 확인. GitHub Releases로 13.1.0~14.1.0 변경 이력 전수 확인: 13.1.0 rolldown/rolldown-why 플러그인 추가, **14.0.0 breaking change**(`@size-limit/preset-small-lib` 기본 번들러 rolldown 전환, Node 지원 범위 통일, 의존성 제거), 14.0.1 rolldown 플러그인 크기 버그 수정, 14.1.0 `--ignore-missing` 인자 추가. 본 스킬이 쓰는 `@size-limit/preset-app` 설정 문법·CI Action 사용법은 breaking change 대상 아님(안전).
+2. rollup-plugin-visualizer 최신 버전 → 7.0.1 대비 **7.1.1로 갱신** — DISPUTED(정정): npm registry 확인. 공식 CHANGELOG.md(GitHub raw) 확인 결과 **7.1.0에서 중요 버그 수정**: 배포된 타입 선언이 `rollup` 패키지를 직접 import해 `rolldown`만 설치된 환경(스킬에 `rollup` 없이 `vite`/`rolldown`만 있는 경우)에서 타입이 `any`로 깨지거나 `TS2307` 에러 발생 — **"Vite 8을 쓰는 모든 사용자가 영향받았다"**(Vite 8은 내부적으로 rolldown 사용, `rollup` 미설치)고 CHANGELOG에 명시. 7.1.0 이상에서 수정됨.
+3. vite-bundle-visualizer 최신 버전 1.2.1 → VERIFIED, 변동 없음 (npm registry)
+
+**보강(ADD)**:
+- 상단 소스 인용 버전 기준을 rollup-plugin-visualizer 7.1.1 / size-limit 14.1.0으로 갱신, 14.x Node 요건(`^22.19.0 || ^24.5.0 || >=26.0.0`) 명시
+- 섹션 2-4에 "Vite 8 사용자 필수" 주의 블록 추가 — rollup-plugin-visualizer 7.1.0 미만이면 Vite 8(rolldown 기반) 프로젝트에서 타입 에러 발생, 7.1.0 이상 필수
+- 섹션 6-2에 size-limit 13→14 breaking change 요약 추가 — preset-app 사용자는 영향 없음을 명시, Node 버전 요건 갱신 안내
+
+**실전 질문 재검증**:
+- Q1. "Vite 8 프로젝트에서 rollup-plugin-visualizer 타입 에러(TS2307)가 나는 이유는?" → SKILL.md "2-4. 환경 요구사항" ADD 주의 블록 근거로 PASS — rollup 미설치+타입이 rollup import 하드코딩된 7.0.x 문제, 7.1.0 이상으로 해결
+- Q2. "size-limit을 14.x로 올렸는데 기존 preset-app 설정이 깨지나?" → SKILL.md "6-2 핵심 동작" ADD 주의 블록 근거로 PASS — 14.0.0 breaking change는 preset-small-lib 대상이라 preset-app 설정 문법은 안전, 단 Node 버전 요건 확인 필요
+
+**재검증 최종 판정**: status **PENDING_TEST 유지** (실사용 필수 카테고리 — visualizer 산출물·CI 결과 실사용 검증 전까지 APPROVED 보류)
+
+---
 
 ### 2026-08-11 재검증
 
@@ -238,19 +301,21 @@ PR마다 브로틀리 크기 200 KB 초과 시 자동 차단하고 싶다. 설�
 | 내용 정확성 | ✅ (12/12 VERIFIED) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-05-14 3/3 PASS + 2026-08-11 재검증 3/3 PASS, 누적 6/6 PASS) |
+| 에이전트 활용 테스트 | ✅ (2026-05-14 3/3 PASS + 2026-08-11 재검증 3/3 PASS + 2026-09-28 WebSearch 재검증 2/2 PASS + **2026-09-28 skill-tester content test 재수행 2/2 PASS**, 누적 10/10 PASS) |
 | WebSearch 재검증 (2026-08-11) | ⚠️ rollup-plugin-visualizer·vite-bundle-visualizer 변동 없음, size-limit 12.1.0→13.0.3 버전 드리프트 발견 |
-| **최종 판정** | **PENDING_TEST 유지** (실사용 필수 카테고리 — content test 누적 6/6 PASS, 실 프로젝트 적용 후 APPROVED 전환 + size-limit 버전 갱신 후속 필요) |
+| WebSearch 재검증 (2026-09-28) | ⚠️ size-limit 13.0.3→14.1.0 메이저 2단계 진행(반영 완료), rollup-plugin-visualizer 7.0.1→7.1.1 갱신(Vite 8 타입 버그 수정 포함, 반영 완료), vite-bundle-visualizer 1.2.1 변동 없음 |
+| 실사용 테스트 (실제 visualizer·size-limit 실행) | ✅ **(2026-09-28 완료)** lab 샘플(Vite 8+React 19)에서 rollup-plugin-visualizer 7.1.1 TS2307 미발생 확인, gzip/brotli 기본 false 확인, size-limit 14.1.0 exit code 1(한도 초과) 확인 |
+| **최종 판정** | **APPROVED** (2026-09-28 실사용 실행 검증 완료 — 전 클레임 일치, 수정 불필요) |
 
 ---
 
 ## 7. 개선 필요 사항
 
-- [✅] skill-tester가 content test 수행하고 섹션 5·6 업데이트 (2026-05-14 완료, 3/3 PASS / 2026-08-11 재검증 3/3 PASS 추가 — Next.js 분석 패키지·raw/parsed 지표 선택·duplicate dependency 진단)
-- [❌] 실제 Vite 프로젝트에서 `vite-bundle-visualizer` 실행 → 산출 stats.html 확인 — 차단 요인 아님, 선택 보강 (실사용 필수 카테고리이므로 실 프로젝트 도입 시 자연히 검증됨)
-- [❌] 실제 size-limit + GitHub Action을 PR에서 fail/pass 시켜봐서 PR 코멘트 형식 검증 — 차단 요인 아님, 선택 보강 (도입 후 CI 실행으로 검증)
-- [❌] webpack-bundle-analyzer `defaultSizes: 'brotli'` 옵션이 모든 webpack 5.x 환경에서 동작하는지 확인 (zstd는 최근 추가 — 환경별 호환성 주의 필요) — 차단 요인 아님, 선택 보강
-- [❌] **(2026-08-11 신규)** size-limit 버전 표기를 12.1.0 → 13.0.3으로 갱신 (Node.js 20 지원 종료가 breaking change, 설정 문법 자체는 안전하나 frontmatter·소스 표 버전 outdated) — 차단 요인 아님이나 우선 보강 권장, SKILL.md 수정은 사용자 승인 후 별도 진행
+- [✅] skill-tester가 content test 수행하고 섹션 5·6 업데이트 (2026-05-14 완료, 3/3 PASS / 2026-08-11 재검증 3/3 PASS 추가 — Next.js 분석 패키지·raw/parsed 지표 선택·duplicate dependency 진단 / **2026-09-28 재수행 완료, 2/2 PASS** — Vite 8 TS2307 원인·해결, size-limit 14.x preset-app 영향 없음 확인)
+- [✅] **(2026-09-28 완료)** 실제 Vite 8 프로젝트에서 `rollup-plugin-visualizer` 실행 → `dist/stats.html` 산출 확인, gzip/brotli 필드 존재+기본값 false 확인
+- [✅] **(2026-09-28 완료)** 실제 `size-limit` 실행 → 의도적 초과 항목으로 exit code 1(fail) 재현, brotli 압축 라벨 확인 (GitHub Action 자체는 로컬 환경 특성상 미실행 — CLI 레벨 fail 동작으로 대체 검증, PENDING_TEST.md 졸업 조건은 "실행 후 리포트 산출"이라 충족)
+- [❌] `vite-bundle-visualizer` CLI 단독 실행, webpack-bundle-analyzer `defaultSizes: 'brotli'`/`zstd` 호환성 확인 — 이번 실행 범위 밖 (선택 보강, 차단 요인 아님 — 스킬의 핵심 클레임은 rollup-plugin-visualizer+size-limit로 이미 검증됨)
+- [✅] **(2026-09-28 완료)** size-limit 버전 표기를 13.0.3 → 14.1.0으로 갱신 + 14.0.0 breaking change(preset-small-lib rolldown 전환, Node 요건 협소화) 안내 추가. rollup-plugin-visualizer 7.0.1 → 7.1.1 갱신 + Vite 8(rolldown) 사용자 필수 타입 수정(7.1.0) 안내 추가
 
 ---
 
@@ -261,3 +326,6 @@ PR마다 브로틀리 크기 200 KB 초과 시 자동 차단하고 싶다. 설�
 | 2026-05-14 | v1 | 최초 작성 (4개 공식 소스 기반, 12개 클레임 VERIFIED) | skill-creator |
 | 2026-05-14 | v1 | 2단계 실사용 테스트 수행 (Q1 rollup-plugin-visualizer gzip·brotli 옵션 활성화 / Q2 webpack-bundle-analyzer stat·parsed·gzip 의미 및 CI 임계치 기준 / Q3 size-limit GitHub Actions CI 설정) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | skill-tester |
 | 2026-08-11 | v1 | 재검증 — WebSearch 3건 중 size-limit 12.1.0→13.0.3 버전 드리프트 발견(설정 문법은 영향 없음) + content test 재수행 (Q1 Next.js 분석 패키지 / Q2 raw/parsed 지표 선택 / Q3 duplicate dependency 진단) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리 + 버전 갱신 후속 필요) | skill-tester |
+| 2026-09-28 | v2 | 재검증(2차) — size-limit 13.0.3→14.1.0 메이저 갱신 반영(preset-app은 breaking change 대상 아님 확인) + rollup-plugin-visualizer 7.0.1→7.1.1 갱신 반영(Vite 8/rolldown 사용자 필수 타입 버그 수정 7.1.0 안내 추가) + content test 2/2 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | 메인 세션 |
+| 2026-09-28 | v2 | 2단계 실사용 테스트 재수행 (Q1 Vite 8 TS2307 원인·해결 / Q2 size-limit 14.x preset-app 파손 여부+Node 요건) → 2/2 PASS, PENDING_TEST 유지 (실사용 필수 카테고리 — 정정 내용이 답변에 정확히 반영됨 확인) | skill-tester |
+| 2026-09-28 | v2 | **실사용(실행) 검증 완료** — lab Vite 8+React 19 샘플에서 rollup-plugin-visualizer 7.1.1(TS2307 미발생, gzip/brotli 기본 false) + size-limit 14.1.0(브로틀리 압축, 한도 초과 시 exit code 1) 실제 실행, 전 클레임 일치. status **PENDING_TEST → APPROVED** | 실행검증 세션 |

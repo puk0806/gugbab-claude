@@ -28,6 +28,45 @@ const os = require('os');
 const path = require('path');
 const crypto = require('crypto');
 
+// 프로젝트 밖 파일에는 발동하지 않는다 — CLAUDE_PROJECT_DIR(없으면 cwd) 하위 산출물에만 적용한다.
+// symlink·`..`·대소문자(macOS)·상대경로·루트 접두 충돌까지 realpath로 정규화한다.
+function realCanonical(p) {
+  try { return fs.realpathSync(p); } catch {}
+  try { return path.join(fs.realpathSync(path.dirname(p)), path.basename(p)); } catch {}
+  return path.resolve(p);
+}
+function resolveProjectRoot(baseCwd) {
+  const raw = process.env.CLAUDE_PROJECT_DIR || baseCwd || process.cwd();
+  return realCanonical(raw);
+}
+// realpath는 symlink만 풀 뿐 대소문자를 온디스크 표기로 정규화하지 않는다(실측 확인) —
+// macOS(APFS 기본: 대소문자 구분 없음)·Windows 대비 darwin/win32에서는 비교 직전 소문자로 접어
+// 대소문자만 다른 CLAUDE_PROJECT_DIR도 같은 디렉토리로 인식하게 한다.
+const CASE_INSENSITIVE_FS = process.platform === 'darwin' || process.platform === 'win32';
+// PostToolUse의 exit 0 + stderr는 디버그 로그로만 가고 Claude에게는 전달되지 않는다
+// (공식 문서 hooks.md: "Stderr from a hook that exits 0 goes to the debug log only ...
+// Claude never sees it"). "1회 경고 후 다음번엔 차단" 정책의 그 1회 경고가 이 채널로 나가면
+// 아무도 못 보고 다음 저장에서 갑자기 차단만 보게 된다. exit 0에서도 Claude에게 보이는 유일한
+// 경로는 JSON stdout의 hookSpecificOutput.additionalContext이므로(문서 "JSON output" 섹션),
+// 통과시키되 경고를 전달해야 하는 자리는 stderr 대신(또는 병행) 이 헬퍼로 내보낸다.
+function warnAndExit0(text) {
+  process.stdout.write(JSON.stringify({
+    hookSpecificOutput: { hookEventName: 'PostToolUse', additionalContext: text },
+  }) + '\n');
+  process.exit(0);
+}
+function isInsideProject(targetPath, baseCwd) {
+  if (!targetPath) return false;
+  const base = baseCwd || process.cwd();
+  const abs = path.isAbsolute(targetPath) ? targetPath : path.resolve(base, targetPath);
+  const real = realCanonical(abs);
+  const root = resolveProjectRoot(baseCwd);
+  const foldedReal = CASE_INSENSITIVE_FS ? real.toLowerCase() : real;
+  const foldedRoot = CASE_INSENSITIVE_FS ? root.toLowerCase() : root;
+  const rel = path.relative(foldedRoot, foldedReal);
+  return rel === '' || (rel !== '..' && !rel.startsWith('..' + path.sep) && !path.isAbsolute(rel));
+}
+
 const ARGV = process.argv.slice(2);
 const CHANGED_ONLY = ARGV.includes('--changed-only');
 const SEED = ARGV.includes('--seed');
@@ -143,6 +182,7 @@ try {
   const input = JSON.parse(fs.readFileSync('/dev/stdin', 'utf8'));
   const filePath = input.tool_input?.file_path || input.tool_input?.path;
   if (!filePath) process.exit(0);
+  if (!isInsideProject(filePath, input.cwd)) process.exit(0);
 
   const ext = path.extname(filePath);
   if (!['.ts', '.tsx'].includes(ext)) process.exit(0);
@@ -178,11 +218,10 @@ try {
       );
       process.exit(2);
     }
-    process.stderr.write(
+    warnAndExit0(
       `[typescript-quality] ⚠ tsc 가 ${Math.round(timeout / 1000)}s 안에 끝나지 않아 이번 검사를 건너뜁니다 (1회 경고 — 다음에도 타임아웃이면 차단).` +
-      (CHANGED_ONLY ? '' : ' 대형 프로젝트면 settings.json 배선에 --changed-only 를 추가하세요.') + '\n'
+      (CHANGED_ONLY ? '' : ' 대형 프로젝트면 settings.json 배선에 --changed-only 를 추가하세요.')
     );
-    process.exit(0);
   }
   if (r.toolFailure) {
     // 타임아웃과 같은 정책: 1회 경고, 연속 2회째부터 차단. 통과로 취급하면 게이트가 조용히 꺼진다.
@@ -196,8 +235,7 @@ try {
       );
       process.exit(2);
     }
-    process.stderr.write(`[typescript-quality] ⚠ tsc 가 타입 진단 없이 비정상 종료했습니다 (1회 경고 — 다음에도 실패하면 차단):\n${head}\n`);
-    process.exit(0);
+    warnAndExit0(`[typescript-quality] ⚠ tsc 가 타입 진단 없이 비정상 종료했습니다 (1회 경고 — 다음에도 실패하면 차단):\n${head}`);
   }
   writeTimeouts(st.timeouts, 0); // 정상 완료 → 카운터 리셋
 
@@ -214,6 +252,9 @@ try {
     const rel = path.relative(projectRoot, filePath).split(path.sep).join('/');
     const baseline = loadBaseline(st.baseline);
 
+    // exit 0으로 끝날 때만 Claude에게 보이도록 JSON additionalContext로도 내보낼 안내 문구 모음.
+    // (exit 2로 끝나면 아래 stderr.write만으로도 공식 문서상 Claude에게 전달된다 — 병행 유지)
+    const notes = [];
     let offenders;
     if (baseline) {
       // 베이스라인 대비 *새로 생긴* 에러 — 파일 불문 (소비자 파일의 회귀 포함).
@@ -227,20 +268,21 @@ try {
       // 베이스라인 없음(시드 전·tmp 정리 후): 비교 기준이 없어 편집 파일의 에러로만 판정한다.
       // 이 한 번은 다른 파일의 회귀를 놓칠 수 있으므로 시드를 권고하고, 이번 결과를 베이스라인으로 확정한다.
       offenders = diags.filter(d => d.file === rel);
-      process.stderr.write(
-        `[typescript-quality] ⚠ 베이스라인이 없어 이번 저장은 편집 파일(${rel})의 에러로만 판정했습니다. ` +
-        `다른 파일의 회귀를 놓치지 않으려면 \`node .claude/hooks/typescript-quality.js --seed --project ${projectRoot}\` 로 미리 시드하세요.\n`
-      );
+      const note = `[typescript-quality] ⚠ 베이스라인이 없어 이번 저장은 편집 파일(${rel})의 에러로만 판정했습니다. ` +
+        `다른 파일의 회귀를 놓치지 않으려면 \`node .claude/hooks/typescript-quality.js --seed --project ${projectRoot}\` 로 미리 시드하세요.`;
+      process.stderr.write(note + '\n');
+      notes.push(note);
     }
     const preexisting = diags.length - offenders.length;
 
     if (offenders.length === 0) {
       saveBaseline(st.baseline, currentCounts); // 차단 없음 → 현재 에러 multiset을 베이스라인으로 확정
       if (preexisting > 0) {
-        process.stderr.write(
-          `[typescript-quality] ℹ 저장한 파일은 통과. 프로젝트의 기존 TS 에러 ${preexisting}건은 이 편집과 무관해 차단하지 않습니다.\n`
-        );
+        const note = `[typescript-quality] ℹ 저장한 파일은 통과. 프로젝트의 기존 TS 에러 ${preexisting}건은 이 편집과 무관해 차단하지 않습니다.`;
+        process.stderr.write(note + '\n');
+        notes.push(note);
       }
+      if (notes.length > 0) warnAndExit0(notes.join('\n'));
       process.exit(0);
     }
 

@@ -91,6 +91,8 @@ Glob: .claude/skills/**/SKILL.md
 - 6~12개월: ⚠️ 재검증 권장
 - 12개월 이상: ❌ 재검증 필요
 
+> 검증일은 SKILL.md `> 검증일:`, verification.md 메타 표 `| 검증일 |`·frontmatter `date:`·섹션 8 "재검증" 행 중 **최신값**으로 판정한다(staleness-check 훅과 동일 기준). 재검증 결과를 반영할 때는 SKILL.md `> 검증일:`과 verification.md 메타 표 검증일(+ frontmatter `date:`)을 **함께** 갱신하고 섹션 8에 "재검증" 행을 추가하도록 권고한다.
+
 ### 2-3. verification.md 존재 확인
 
 각 스킬에 대응하는 `docs/skills/{category}/{name}/verification.md` 존재 여부 확인.

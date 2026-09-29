@@ -150,7 +150,7 @@ ISO 8601 duration: `PT[시간]H[분]M[초]S`
 
 ## 8. WebSite (사이트 식별)
 
-> **주의 (2026-06-01 기준)**: Sitelinks Search Box는 2024년 11월 21일자로 Google이 글로벌 deprecation했다. `WebSite` + `potentialAction: SearchAction` 마크업은 Google SERP에서 검색창을 더 이상 생성하지 않는다.
+> **주의 (2026-06-01 최초 작성, 2026-09-28 재확인 — 변경 없음)**: Sitelinks Search Box는 2024년 11월 21일자로 Google이 글로벌 deprecation했다. `WebSite` + `potentialAction: SearchAction` 마크업은 Google SERP에서 검색창을 더 이상 생성하지 않는다.
 >
 > **그러나** `WebSite` 자체는 여전히 Google이 지원하며, 사이트 이름·SiteNavigationElement·검색 결과의 사이트 식별에 사용된다. `WebSite` 마크업은 계속 권장된다.
 >
@@ -244,7 +244,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
 
 ---
 
-## Google Rich Results 지원 현황 요약 (2026-06-01 기준)
+## Google Rich Results 지원 현황 요약 (2026-06-01 최초 작성, 2026-09-28 재확인 — 변경 없음. 참고: QAPage(Q&A)는 별도로 여전히 지원되나 본 카탈로그 8종 범위 밖)
 
 | 타입 | Google SERP 지원 | 비고 |
 |------|:---:|------|

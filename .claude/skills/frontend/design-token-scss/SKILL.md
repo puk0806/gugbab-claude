@@ -1,12 +1,12 @@
 ---
 name: design-token-scss
-description: 디자인 토큰 3계층 설계, Figma 토큰 추출, Style Dictionary v4 SCSS/CSS 변환, 테마 전환 패턴
+description: 디자인 토큰 3계층 설계, Figma 토큰 추출, Style Dictionary v4/v5 SCSS/CSS 변환, 테마 전환 패턴
 ---
 
 # Design Token + SCSS 시스템
 
 > 소스: https://styledictionary.com/ | https://sass-lang.com/documentation/ | https://tr.designtokens.org/format/ | https://docs.tokens.studio/
-> 검증일: 2026-04-17
+> 검증일: 2026-09-26
 
 ---
 
@@ -93,15 +93,17 @@ curl -H "X-FIGMA-TOKEN: ${FIGMA_TOKEN}" \
 | Figma 네이티브 통합 | 별도 플러그인 | 네이티브 |
 | SD 호환성 | 직접 호환 | 변환 필요 |
 | 팀 협업 | GitHub 연동 | API 자동화 |
-| 비용 | 무료/Pro | Professional plan 이상 |
+| 비용 | 무료/Pro | Enterprise plan 전용 (REST API — 아래 주의 참조) |
 
 ---
 
 ## 3. Style Dictionary v4 설정 (SCSS/CSS 변환)
 
+> 주의: 2026-09-26 기준 최신 안정 버전은 v5.5.x다(npm `style-dictionary`). 아래 `new StyleDictionary(config)` + `hooks.transforms` + `scss/variables`·`css/variables` 포맷 등 이 문서의 핵심 API는 v5에서도 동일하게 동작한다(공식 v5 마이그레이션 가이드에 breaking change로 명시되지 않음). v5에서 실제로 바뀐 점: ① Node.js 최소 버전이 22.0.0(LTS)로 상향 ② 토큰 참조가 leaf 토큰에만 허용(그룹·비토큰 속성 참조 금지) ③ 참조 구분자(`{`·`}`·`.`) 커스터마이징 옵션 제거. 신규 프로젝트는 v5 설치를 권장하고, 기존 v4 프로젝트는 위 3가지만 점검하면 이 문서의 패턴을 그대로 쓸 수 있다.
+
 ### 기본 설정 (`sd.config.mjs`)
 
-Style Dictionary v4는 ESM 기반 설정 파일을 사용한다.
+Style Dictionary v4/v5는 공통으로 ESM 기반 설정 파일을 사용한다.
 
 ```js
 // sd.config.mjs

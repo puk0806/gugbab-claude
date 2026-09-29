@@ -14,26 +14,26 @@ description: 프론트엔드 코드베이스에서 도메인·레이어 간 의�
 > 소스: https://eslint.org/docs/latest/rules/no-restricted-imports
 > 소스: https://www.typescriptlang.org/docs/handbook/project-references.html
 > 소스: https://nodejs.org/api/packages.html
-> 검증일: 2026-08-26
+> 검증일: 2026-09-26 (30~60일 주기 재검증, 최초 검증 2026-08-26)
 
 폴더를 도메인별로 나누는 것만으로는 경계가 유지되지 않는다. **import 방향을 CI에서 실패시키지 않으면** 몇 달 안에 다시 뒤엉킨다. 이 스킬은 "규칙을 코드로 만들고 CI 게이트에 올리는" 절차를 다룬다.
 
-> ESLint·Prettier·husky·lint-staged **기본 설정 자체**는 이 스킬에서 다루지 않는다 → `frontend/code-convention` 스킬 참조.
+> ESLint·Prettier·husky·lint-staged **기본 설정 자체**는 이 스킬에서 다루지 않는다 → `frontend/code-convention` 스킬(설치된 경우) 참조.
 > 레이어 개념(Domain/Application/Infrastructure)의 **의미**는 `architecture/ddd` 스킬 참조. 이 스킬은 그 레이어를 **강제하는 도구** 쪽만 다룬다.
 
 ---
 
-## 0. 기준 버전 (2026-08-26 확인)
+## 0. 기준 버전 (2026-09-26 재확인, 최초 확인 2026-08-26)
 
 | 도구 | 최신 버전 | ESLint 호환 | Node 요구 | 비고 |
 |------|-----------|-------------|-----------|------|
-| `dependency-cruiser` | **18.2.0** | 무관 (ESLint 비의존) | `^22 \|\| ^24 \|\| >=26` | v18에서 Node 20·25 지원 종료 |
-| `eslint-plugin-boundaries` / `@boundaries/eslint-plugin` | **7.2.0** | v5.0.0+ = **ESLint 9+ flat config** / ESLint 8·eslintrc는 **v4.2.2** | `>=18.18` | 패키지명이 `@boundaries/eslint-plugin`로 이관 중 |
+| `dependency-cruiser` | **18.4.0** (2026-08-26 확인 시 18.2.0 → 마이너 갱신) | 무관 (ESLint 비의존) | `^22 \|\| ^24 \|\| >=26` | v18에서 Node 20·25 지원 종료 |
+| `eslint-plugin-boundaries` / `@boundaries/eslint-plugin` | **7.2.0** (변동 없음) | v5.0.0+ = **ESLint 9+ flat config** / ESLint 8·eslintrc는 **v4.2.2** | `>=18.18` | 패키지명이 `@boundaries/eslint-plugin`로 이관 중 |
 | `eslint-plugin-import` | **2.32.0** | `^2 \|\| ... \|\| ^8 \|\| ^9` — **ESLint 10 미지원** | `>=4` | eslintrc·flat 양쪽 지원 |
 | `eslint-plugin-import-x` | **4.17.1** | `^8.57 \|\| ^9 \|\| ^10` | `^18.18 \|\| ^20.9 \|\| >=21.1` | import 플러그인의 경량·고속 포크 |
 | `eslint-import-resolver-typescript` | **4.4.5** | eslint 무관(peer optional) | `^16.17 \|\| >=18.6` | `import`/`import-x` 양쪽 지원 |
 | `madge` | **8.0.0** | 무관 | `>=18` | 순환 탐지·그래프 보조 도구 |
-| `eslint` | **10.9.1** | — | `^20.19 \|\| ^22.13 \|\| >=24` | **v10에서 eslintrc 완전 제거** |
+| `eslint` | **10.11.0** (2026-08-26 확인 시 10.9.1 → 마이너 갱신) | — | `^20.19 \|\| ^22.13 \|\| >=24` | **v10에서 eslintrc 완전 제거** (변동 없음) |
 
 > 주의: ESLint 10.0.0부터 `.eslintrc.*`·`.eslintignore`·`--no-eslintrc`·`--env`·`--resolve-plugins-relative-to` 등이 **제거**됐다. ESLint 8을 쓰는 프로젝트는 (a) 8에서 동작하는 조합으로 규칙을 먼저 켜고 (b) 9 → 10 마이그레이션 시 플러그인 조합을 재선정하는 2단계로 간다.
 

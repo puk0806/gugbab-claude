@@ -81,6 +81,8 @@ SKILL.md 필수 포함:
 
 **이 단계를 생략하면 스킬 생성이 미완료 상태다.**
 
+> 재검증으로 검증일을 바꿀 때는 SKILL.md `> 검증일:`과 verification.md 메타 표 검증일(+ frontmatter `date:`, 섹션 8 "재검증" 행)을 **함께** 갱신한다 — 상세는 verification-policy.md "재검증(검증일 갱신) 시 함께 갱신할 위치".
+
 ### 단계 5: 2단계 실사용 테스트 (skill-tester 호출) — 생략 불가
 
 스킬 작성 직후(같은 세션 내) 반드시 `skill-tester` 에이전트를 호출하여 **verification-policy.md의 3·4단계**(테스트 질문 수행 + verification.md 업데이트)를 수행한다.

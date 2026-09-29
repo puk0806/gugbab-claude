@@ -11,7 +11,7 @@ description: Claude Code CLI를 headless(`claude -p`) 모드로 프로그래매�
 > - https://code.claude.com/docs/en/cli-reference (CLI reference)
 > - https://code.claude.com/docs/en/agent-sdk/overview (Agent SDK overview)
 > - https://support.claude.com/en/articles/15036540 (Use the Agent SDK with your Claude plan)
-> 검증일: 2026-07-03
+> 검증일: 2026-09-26 (재검증)
 
 Vercel Sandbox 등 비대화형 환경에서 Claude Code CLI를 구독 인증으로 헤드리스 실행해
 프롬프트를 중계(예: SSE)할 때 필요한 핵심 지식을 정리한다.
@@ -95,8 +95,10 @@ session_id=$(claude -p "리뷰 시작" --output-format json | jq -r '.session_id
 claude -p "그 리뷰 계속" --resume "$session_id"
 ```
 
-> 주의: `--resume`의 세션 ID 조회는 현재 프로젝트 디렉터리(및 git worktree) 범위로 한정된다.
-> 첫 호출과 이어가기 호출을 같은 디렉터리에서 실행해야 한다.
+> 주의(2026-09 갱신): Claude Code v2.1.223부터 `--resume`은 세션 ID로 **이 머신의 모든 프로젝트**에서 세션을 찾는다.
+> v2.1.223 이전에는 현재 프로젝트 디렉터리(및 git worktree) 범위로 한정되어 첫 호출과 같은 디렉터리에서 실행해야 했다.
+> 2026-09 기준 최신 CLI(v2.1.28x)에서는 이 제약이 없으므로 서로 다른 디렉터리에서 `--resume`을 호출해도 된다.
+> 세션 ID 대신 `.jsonl` 트랜스크립트 파일의 절대경로를 넘겨도 이어갈 수 있다.
 
 ---
 
@@ -127,7 +129,10 @@ export CLAUDE_CODE_OAUTH_TOKEN=your-token
 3. **`ANTHROPIC_API_KEY`** — `X-Api-Key` 헤더 (직접 API 접근)
 4. **`apiKeyHelper`** — 스크립트가 반환하는 동적 키 (short-lived 토큰 등)
 5. **`CLAUDE_CODE_OAUTH_TOKEN`** — `setup-token`으로 만든 장기 OAuth 토큰
-6. **구독 OAuth** (`/login`) — Pro/Max/Team/Enterprise 기본값
+6. **Anthropic profile / federation 자격증명** (2026-09 갱신 신규 확인) — `ant auth login`이 작성한 profile, Workload Identity Federation. `ANTHROPIC_PROFILE`로 이름 지정 시 `/login`보다 위, 그 외 `user_oauth` 모드 profile은 `/login` 자격증명보다 아래
+7. **구독 OAuth** (`/login`) — Pro/Max/Team/Enterprise 기본값
+
+> 참고: `Claude apps gateway` 로그인 세션은 이 목록 밖에 있으며 모든 항목보다 우선한다 (조직이 게이트웨이를 강제하는 경우).
 
 > 함정: **`ANTHROPIC_API_KEY`가 설정돼 있으면 구독보다 우선한다.**
 > 비대화형(`-p`) 모드에서는 키가 존재하면 **항상** 사용된다.
@@ -149,6 +154,11 @@ CI·스크립트에서 머신마다 동일한 결과를 얻는 데 유용하다.
 즉 **구독 토큰으로 중계**하려면 `--bare`를 쓰면 안 된다.
 `claude -p`(bare 미적용)로 실행해야 `CLAUDE_CODE_OAUTH_TOKEN`이 적용된다.
 (bare 모드에서는 Bash·file read·file edit 도구만 기본 제공되고, 컨텍스트는 플래그로만 주입된다.)
+
+> 주의(2026-09 갱신): 공식 문서는 `--bare`를 "스크립트·SDK 호출의 권장 모드"로 명시하며,
+> **향후 `-p`의 기본값이 될 예정**이라고 고지한다. 구독 토큰 기반 중계 서버는 이 변경이 실제 적용되면
+> 인증이 조용히 끊길 수 있으므로, `-p`를 버전 고정하거나 `--bare`가 기본이 되는 시점에
+> `ANTHROPIC_API_KEY`/`apiKeyHelper` 전환 계획을 미리 세워둘 것.
 
 ---
 
@@ -213,4 +223,4 @@ claude -p "$USER_PROMPT" --tools "" \
 | 샌드박스에 `ANTHROPIC_API_KEY` 잔존 | 구독 대신 API 키로 청구됨 | `unset ANTHROPIC_API_KEY`, `/status` 확인 |
 | stream-json에 `--verbose` 누락 | 스트리밍 이벤트 안 나옴 | `--verbose --include-partial-messages` 추가 |
 | 채팅 중계에 도구 미차단 | 임의 파일·명령 실행 위험 | `--tools ""` 또는 `--disallowedTools "*"` |
-| `--resume`를 다른 디렉터리에서 호출 | 세션 못 찾음 | 첫 호출과 같은 디렉터리에서 실행 |
+| v2.1.223 미만 CLI에서 `--resume`를 다른 디렉터리에서 호출 | 세션 못 찾음 | CLI를 v2.1.223 이상으로 올리거나, 첫 호출과 같은 디렉터리에서 실행 (v2.1.223+는 디렉터리 제약 없음 — 위 "주의" 참조) |

@@ -17,10 +17,11 @@ description: >
 > - next-intl GitHub (releases·공식 example-app-router): https://github.com/amannn/next-intl
 > - Next.js `next/root-params`: https://nextjs.org/docs/app/api-reference/functions/next-root-params
 > - Next.js `proxy.js`: https://nextjs.org/docs/app/api-reference/file-conventions/proxy
-> 검증일: 2026-09-25
+> - 2026-09-26 보강: next-intl routing/setup 문서(`experimental.rootParams` 문구) + https://github.com/vercel/next.js/pull/72837 (rootParams 실험 플래그 PR)
+> 검증일: 2026-09-25 (1장·5장·4장 보강은 2026-09-26)
 > 기준 버전: **next-intl 4.14.7** (2026-09-24, npm latest) / **Next.js 16.3.x** (레포 `frontend/nextjs` 스킬 기준)
 
-**관련 스킬 (중복 금지):**
+**관련 스킬 (중복 금지, 설치된 경우 참조):**
 - hreflang·`alternates.languages`·다국어 sitemap·canonical·locale URL 전략의 SEO 판단 → `frontend/i18n-seo`
 - Next.js 16 전반(캐싱·proxy·async params) → `frontend/nextjs`
 
@@ -37,7 +38,7 @@ description: >
 | next-intl 최신 | 4.14.7 (peer: `next` ^12~^16, `react` ^16.8~^19) |
 | Next.js 16 대응 | next-intl 4.4.0 "Next.js 16 update" |
 | 파일명 | Next.js 16부터 `middleware.ts` → **`proxy.ts`** (middleware는 deprecated). next-intl API 이름(`next-intl/middleware`, `createMiddleware`)은 **그대로** |
-| `next/root-params` | Next.js **16.3.0** 도입(기본 사용 가능). 16.3 미만은 `experimental.rootParams` 필요(next-intl 문서 기재, 주의: 미검증 — 레거시는 7-2 경로 권장) |
+| `next/root-params` | Next.js **16.3.0** 도입(기본 사용 가능). 16.3 미만은 `next.config`에 `experimental: { rootParams: true }` 필요 — next-intl 공식 문서(routing/setup)가 명시("In earlier versions, it needs to be enabled via `experimental.rootParams`")하고, Next.js 자체 PR(vercel/next.js#72837 "feat: rootParams (experimental)")로도 교차 확인됨(2026-09-26, 이전 "미검증" 갱신). 다만 레거시 버전은 안정성 문제로 7-2 `setRequestLocale` 경로가 여전히 더 검증된 선택 |
 | `setRequestLocale` | **4.13.5에서 deprecated** (2026-08-04) — 하위 호환용으로 동작은 함 |
 | `getRequestConfig`의 `requestLocale` 파라미터 | **4.13.6에서 deprecated** (2026-08-10) |
 | 4.0 (2025-03-12) 이후 | `AppConfig` 타입 확장, `hasLocale`, `NextIntlClientProvider`가 messages·formats 자동 상속, 반환값에 `locale` 필수, ESM-only |
@@ -254,6 +255,18 @@ declare module 'next-intl' {
 }
 ```
 
+**`AppConfig` 타입이 실제로 적용되려면** `global.ts`가 프로젝트의 `tsconfig.json` `include` 범위 안에 있어야 한다(TypeScript는 컴파일 대상에 포함된 파일의 `declare module` 선언만 전역에 반영한다). 기본 `create-next-app` 템플릿의 `include: ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"]`는 `**/*.ts`가 이미 `global.ts`를 포함하므로 보통 별도 설정이 필요 없다. 파일을 `src/` 밖(예: 프로젝트 루트)에 두거나 `include`를 좁혀둔 프로젝트라면 명시적으로 추가한다(2026-09-26 추가, content test Q1 gap 보강):
+
+```json
+// tsconfig.json
+{
+  "compilerOptions": { /* ... */ },
+  "include": ["next-env.d.ts", "global.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"]
+}
+```
+
+- `tsc --noEmit` 또는 에디터에서 `t('없는키')`가 타입 에러로 잡히지 않으면 가장 먼저 `global.ts`가 `include`(또는 `exclude`에 걸려 제외)되어 있는지 확인한다.
+
 **ICU 인자까지 타입 검사**(선택, experimental):
 
 ```json
@@ -333,6 +346,29 @@ const locale = await getLocale();
 ```
 
 > 주의: bind로 넘어온 `locale`도 클라이언트가 조작 가능한 입력이다. 서버에서 `hasLocale(routing.locales, locale)`로 재검증한다.
+
+**재검증 실패 시 처리 (2026-09-26 추가, content test Q2 gap 보강):**
+
+```ts
+'use server';
+import type {Locale} from 'next-intl';
+import {hasLocale} from 'next-intl';
+import {getTranslations} from 'next-intl/server';
+import {routing} from '@/i18n/routing';
+
+export async function subscribe(locale: Locale, formData: FormData) {
+  if (!hasLocale(routing.locales, locale)) {
+    // 허용 목록 밖 값 — 조작된 입력으로 간주. 기본 로케일로 조용히 폴백하지 않고 거부한다
+    // (메시지 동적 import 경로 오염·엉뚱한 언어로 응답 방지).
+    throw new Error('INVALID_LOCALE');
+  }
+  const t = await getTranslations({locale, namespace: 'Subscribe'});
+  // ...
+}
+```
+
+- **폴백 대신 거부를 권장하는 이유**: `locale`을 조용히 `routing.defaultLocale`로 대체하면 클라이언트가 의도한 언어와 다른 응답이 반환되는 것을 사용자가 알아채기 어렵다. Server Action은 폼 제출 흐름이므로 거부 시 화면에서 일반 에러 메시지로 처리하면 된다.
+- Route Handler(API 라우트)라면 `throw` 대신 `Response.json({error: 'INVALID_LOCALE'}, {status: 400})`처럼 HTTP 상태로 표현한다.
 
 ---
 
@@ -419,52 +455,9 @@ setRequestLocale(locale); // 모든 layout·page에서, next-intl 함수 호출 
 
 ## 8. 로케일 전환 UI
 
-```tsx
-// src/components/LocaleSwitcherSelect.tsx  (공식 example 축약)
-'use client';
-import {useParams} from 'next/navigation';
-import type {Locale} from 'next-intl';
-import {useLocale, useTranslations} from 'next-intl';
-import {useTransition, type ChangeEvent} from 'react';
-import {usePathname, useRouter} from '@/i18n/navigation';
-import {routing} from '@/i18n/routing';
+`@/i18n/navigation`의 `useRouter().replace({pathname, params}, {locale})` 패턴으로 현재 라우트를 유지한 채 로케일만 바꾼다. 동적 세그먼트가 없으면 `router.replace(pathname, {locale: nextLocale})`로 충분. 링크 방식은 `<Link href="/" locale="en">English</Link>`, 서버 측 리다이렉트는 `redirect({href: '/login', locale})`(4.x는 객체 인자, 접두사 강제는 `forcePrefix: true`), 경로 문자열만 필요하면 `getPathname({locale: 'en', href: '/about'})`.
 
-export default function LocaleSwitcherSelect() {
-  const t = useTranslations('LocaleSwitcher');
-  const locale = useLocale();
-  const router = useRouter();
-  const pathname = usePathname(); // 로케일 접두사 제외 경로 ('/en' → '/')
-  const params = useParams();
-  const [isPending, startTransition] = useTransition();
-
-  function onChange(e: ChangeEvent<HTMLSelectElement>) {
-    const nextLocale = e.target.value as Locale;
-    startTransition(() => {
-      router.replace(
-        // @ts-expect-error -- 현재 라우트의 pathname·params는 항상 일치
-        {pathname, params},
-        {locale: nextLocale}
-      );
-    });
-  }
-
-  return (
-    <label>
-      <span className="sr-only">{t('label')}</span>
-      <select defaultValue={locale} disabled={isPending} onChange={onChange}>
-        {routing.locales.map((cur) => (
-          <option key={cur} value={cur}>{t('locale', {locale: cur})}</option>
-        ))}
-      </select>
-    </label>
-  );
-}
-```
-
-- 동적 세그먼트가 없으면 `router.replace(pathname, {locale: nextLocale})`로 충분.
-- 링크 방식: `<Link href="/" locale="en">English</Link>`.
-- 서버 측 리다이렉트: `redirect({href: '/login', locale})` (4.x는 객체 인자). 접두사 강제는 `forcePrefix: true`.
-- 경로 문자열만 필요: `getPathname({locale: 'en', href: '/about'})`.
+공식 example 기반 완전한 `LocaleSwitcherSelect` 컴포넌트(`useTransition` + `useParams` 포함) → [references/locale-switcher.md](references/locale-switcher.md)
 
 ---
 

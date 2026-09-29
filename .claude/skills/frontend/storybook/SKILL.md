@@ -6,8 +6,8 @@ description: Storybook 10 컴포넌트 문서화 — ESM-only 설정, CSF 3 스�
 # Storybook 10 컴포넌트 문서화
 
 > 소스: https://storybook.js.org/docs | https://storybook.js.org/docs/releases/migration-guide | https://github.com/storybookjs/storybook/blob/next/MIGRATION.md
-> 검증일: 2026-08-11
-> 대상 버전: Storybook 10.5.x (2026-08-11 기준 최신 안정 10.5.7) · React ≥ 16.8 · Vite ≥ 5
+> 검증일: 2026-09-28 (최초 2026-08-11)
+> 대상 버전: Storybook 10.6.x (2026-09-28 기준 최신 안정 10.6.0) · React ≥ 16.8 · Vite ≥ 5
 
 시각 회귀(스크린샷) 테스트 셋업은 이 스킬 범위가 아니다 → `frontend/storybook-visual-testing` 스킬 참조.
 이 스킬은 **설치·스토리 작성·컨트롤·인터랙션·문서화** 기본기를 다룬다.
@@ -93,20 +93,7 @@ npm install -D @storybook/react-vite @storybook/addon-docs
 
 `.storybook/main.ts` — **ESM이어야 한다**:
 
-```typescript
-import type { StorybookConfig } from '@storybook/react-vite';
-
-const config: StorybookConfig = {
-  stories: ['../src/**/*.mdx', '../src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
-  addons: [
-    '@storybook/addon-docs',   // autodocs·MDX 문서화
-    '@storybook/addon-a11y',   // 접근성 검사 (선택)
-  ],
-  framework: '@storybook/react-vite',  // 문자열 축약형 가능
-};
-
-export default config;
-```
+→ references/REFERENCE.md §12 (Vite 수동 설정 main.ts 예제)
 
 ESM 전환 시 주의점:
 
@@ -171,62 +158,7 @@ Storybook 10은 CSF 3(Component Story Format)을 기본 포맷으로 사용한�
 
 ### 기본 구조
 
-```typescript
-import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Button } from './Button';
-
-// Meta: 컴포넌트 수준 설정
-const meta = {
-  title: 'Components/Button',
-  component: Button,
-  tags: ['autodocs'], // 자동 문서 페이지 생성
-  parameters: {
-    layout: 'centered', // 'centered' | 'fullscreen' | 'padded'
-  },
-  argTypes: {
-    variant: {
-      control: 'select',
-      options: ['primary', 'secondary', 'danger'],
-      description: '버튼 스타일 변형',
-    },
-    size: {
-      control: 'radio',
-      options: ['sm', 'md', 'lg'],
-    },
-    disabled: {
-      control: 'boolean',
-    },
-    onClick: {
-      action: 'clicked', // Actions 패널에 이벤트 로깅
-    },
-  },
-} satisfies Meta<typeof Button>;
-
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-// 각 스토리는 named export
-export const Primary: Story = {
-  args: {
-    variant: 'primary',
-    children: 'Primary Button',
-  },
-};
-
-export const Secondary: Story = {
-  args: {
-    variant: 'secondary',
-    children: 'Secondary Button',
-  },
-};
-
-export const Large: Story = {
-  args: {
-    ...Primary.args,
-    size: 'lg',
-  },
-};
-```
+→ references/REFERENCE.md §13 (CSF 3 기본 구조 전체 예제)
 
 ### 핵심 규칙
 
@@ -277,26 +209,7 @@ export const Default: Story = {
 | `'range'` | 슬라이더 | opacity, fontSize |
 | `false` | 컨트롤 숨김 | children, className |
 
-```typescript
-argTypes: {
-  // 컨트롤 숨김
-  className: { control: false },
-  // 범위 제한
-  count: {
-    control: { type: 'range', min: 0, max: 100, step: 5 },
-  },
-  // 테이블 설명 추가
-  variant: {
-    control: 'select',
-    options: ['primary', 'secondary'],
-    description: '버튼 변형',
-    table: {
-      type: { summary: 'string' },
-      defaultValue: { summary: 'primary' },
-    },
-  },
-},
-```
+→ references/REFERENCE.md §14 (argTypes 컨트롤 커스터마이징 예제)
 
 ### TypeScript에서 자동 추론
 
@@ -372,43 +285,7 @@ export const FilledForm: Story = {
 
 ### play function 핵심 API
 
-```typescript
-import { expect, fn, userEvent, within, waitFor, screen, spyOn } from 'storybook/test';
-
-// 컨텍스트에서 바로 받기 (권장)
-play: async ({ canvas, userEvent, args, step, canvasElement }) => { /* ... */ }
-
-// canvas: 스토리 루트에 스코프된 Testing Library 쿼리
-canvas.getByRole('button');
-await canvas.findByText('Loaded');
-
-// screen: 캔버스 밖(포털·다이얼로그 등)까지 쿼리해야 할 때
-await expect(screen.getByRole('dialog')).toBeInTheDocument();
-
-// userEvent: 사용자 이벤트 (모두 await 필수)
-await userEvent.click(element);
-await userEvent.type(input, 'text');
-await userEvent.clear(input);
-await userEvent.selectOptions(select, 'value');
-await userEvent.hover(element);
-await userEvent.keyboard('{Enter}');
-
-// fn(): Vitest mock 함수 / spyOn(): 기존 메서드 감시
-const mockFn = fn();
-
-// expect: jest-dom matcher 포함 (모두 await 권장)
-await expect(element).toBeInTheDocument();
-await expect(element).toHaveTextContent('text');
-await expect(mockFn).toHaveBeenCalledWith(args);
-
-// waitFor: 비동기 대기
-await waitFor(() => expect(element).toBeVisible());
-
-// step: 인터랙션 패널 그룹핑
-await step('로그인 폼 입력', async () => {
-  await userEvent.type(canvas.getByLabelText('Email'), 'user@example.com');
-});
-```
+→ references/REFERENCE.md §15 (play function 핵심 API 치트시트 예제)
 
 > 레거시 호환: `within`은 여전히 `storybook/test`에서 export되므로 `within(canvasElement)` 패턴도 동작한다. 신규 코드에는 `canvas`를 쓴다.
 
@@ -444,6 +321,8 @@ export default defineConfig({
 
 - 요구사항: Vitest ≥ 3, Vite 기반 프레임워크(`react-vite`, `nextjs-vite`, `vue3-vite` 등), Playwright Chromium(브라우저 모드)
 - Vitest 애드온을 쓸 수 없는 환경(Webpack 빌더 등)에서는 `@storybook/test-runner`로 CI 실행한다
+
+> 주의(2026-09-28 확인): 공식 문서는 "Vitest ≥ 3.0"이라고만 적혀 있어 Vitest 5와도 호환되는 것처럼 읽히지만, 실제 `@storybook/addon-vitest` 최신 안정판(10.6.0)의 `peerDependencies`는 `vitest: "^3.0.0 || ^4.0.0"`로 **Vitest 5는 아직 지원 범위 밖**이다(2026-09-28 npm registry 확인). Vitest 5 지원 PR은 Storybook 저장소에 존재하지만 `next`/11.0.0-alpha 라인에만 반영된 상태이고 10.x 안정판에는 아직 병합되지 않았다. **Vitest 5 프로젝트에서 addon-vitest를 도입하려면 Vitest를 4.x로 유지하거나 Storybook 11 안정화를 기다린다.**
 
 ---
 

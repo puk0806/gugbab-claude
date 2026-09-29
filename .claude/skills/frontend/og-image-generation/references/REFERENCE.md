@@ -139,6 +139,7 @@ Next.js가 아닌 프로젝트(Vite·SvelteKit 등)는 `satori + @resvg/resvg-js
 | WOFF2 폰트 사용 | satori 파싱 실패 | TTF/OTF/WOFF만 사용 |
 | Next.js 16+ `params` 동기 접근 | 런타임 에러 | `await params` 사용 |
 | `ImageResponse` 번들 500KB 초과 | 빌드/런타임 에러 | 폰트 서브셋 + 이미지 외부화 |
+| Next.js `<16.3.6`(Node.js `ImageResponse`) 또는 satori `<0.33.5` 방치 | **CVE-2026-94545 RCE** (SKILL.md 0절) | next 16.3.6+ / satori 0.33.5+ 즉시 업그레이드 |
 
 ---
 

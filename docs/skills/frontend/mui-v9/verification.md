@@ -1,8 +1,8 @@
 ---
 skill: mui-v9
 category: frontend
-version: v2
-date: 2026-06-19
+version: v3
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -12,9 +12,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `mui-v9` (구: mui-v5) |
 | 스킬 경로 | `.claude/skills/frontend/mui-v9/SKILL.md` (2026-08-11 폴더 리네임: mui-v5 → mui-v9) |
-| 검증일 | 2026-06-19 |
-| 검증자 | Claude (Sonnet 4.6) |
-| 스킬 버전 | v2 (MUI v5 → v9 전면 재작성) |
+| 검증일 | 2026-09-28 (최초 2026-06-19, 2026-09-28 재검증) |
+| 검증자 | Claude (Sonnet 4.6) → Claude (Sonnet 5, 2026-09-28 재검증) |
+| 스킬 버전 | v3 (MUI v5 → v9 전면 재작성, 2026-09-28 재검증 반영) |
 
 ---
 
@@ -108,6 +108,26 @@ agent content test: 3/3 PASS
 
 ---
 
+### [2026-09-28] 재검증 — v9 Breaking Changes 핵심 클레임 전수 대조
+
+**수행일**: 2026-09-28
+**수행 방법**: SKILL.md 전체 Read → 핵심 클레임 5개를 1차 소스(mui.com 공식 마이그레이션 가이드 WebFetch)·npm registry와 대조. WebSearch로 v9 이후 v10 출시 여부도 확인.
+
+**클레임 대조 결과**:
+1. `@mui/material` 최신 버전이 v9 계열 유지(v8 미존재, v7→v9 점프) → VERIFIED (npm registry latest = 9.4.0, WebSearch 결과 "v10은 아직 stable 미출시, MUI X와 동시 출시 예정"으로 2026-09-28 기준에도 v9가 최신 메이저)
+2. System props(`<Box mt={2}>`) 제거, `sx` prop 필수 → VERIFIED (공식 업그레이드 가이드: "Deprecated system props removed from Box, DialogContentText, Grid, Link, Stack, Typography, TimelineContent, TimelineOppositeContent")
+3. Grid `size` prop 통일, `direction="column"` 미지원(Stack 대체) → VERIFIED (공식 가이드: "GridLegacy Removal", "Grid no longer accepts direction='column'")
+4. `slots`/`slotProps` 통일(`components`/`componentsProps` 제거) → VERIFIED (공식 가이드: Accordion·Alert·Avatar·Autocomplete·Backdrop·Badge 등 다수 컴포넌트에 걸쳐 확인)
+5. `disableEscapeKeyDown` 제거 → `onClose` reason 처리 / CSS 복합 클래스 변경 / 아이콘 `...Outline` 23개 제거 → `...Outlined` 통일 → 모두 VERIFIED (공식 가이드 원문 그대로 일치)
+
+**실전 질문 재검증**:
+- Q1. "MUI v9에서 `<Box mt={2}>`를 그대로 써도 되는가?" → SKILL.md 섹션 2 "v9에서 System props 직접 사용은 제거" 근거로 PASS
+- Q2. "v5의 `<TextField InputLabelProps={{shrink:true}}>`를 v9로 바꾸면?" → SKILL.md 섹션 6 `slotProps={{ inputLabel: {shrink:true} }}` 근거로 PASS
+
+**재검증 최종 판정**: 핵심 클레임 5건 모두 VERIFIED, 정정 불필요(npm 최신 버전만 9.1.1→9.4.0로 패치 갱신되었을 뿐 API·Breaking Changes 서술에 영향 없음). status **APPROVED 유지**.
+
+---
+
 ## 6. 검증 결과 요약
 
 | 클레임 | 판정 | 소스 |
@@ -126,8 +146,8 @@ agent content test: 3/3 PASS
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (3/3 PASS) |
-| **최종 판정** | **APPROVED** |
+| 에이전트 활용 테스트 | ✅ (3/3 PASS, 2026-06-19) + ✅ (실전 질문 2/2 PASS, 2026-09-28 재검증) |
+| **최종 판정** | **APPROVED** (2026-09-28 재검증 유지) |
 
 ---
 
@@ -144,3 +164,5 @@ agent content test: 3/3 PASS
 |------|------|-----------|--------|
 | 2026-04-20 | v1 | 최초 작성 — MUI v5 기준 핵심 패턴 | skill-creator |
 | 2026-06-19 | v2 | MUI v9 기준 전면 재작성 — System props 제거, Grid size prop, slots/slotProps, cssVariables+colorSchemes, applyStyles, v5→v9 Breaking Changes 표 추가. 검증일 갱신. | Claude (Sonnet 4.6) |
+| 2026-09-26 | v2 | SKILL.md 500줄 초과 해소 — CSS Variables+colorSchemes·다크모드 토글 훅·styled() 컴포넌트·커스텀 테마(palette/typography/breakpoints/단계적 확장)·theme.components 오버라이드 예제를 references/REFERENCE.md §11~§15로 이동(내용 변경 없음, 이동만). SKILL.md 530→389줄. 내용·검증 상태 변경 없음 | Claude (Sonnet 5) |
+| 2026-09-28 | v3 | 재검증 — v9 Breaking Changes 핵심 클레임 5건(System props 제거·Grid size/direction·slots/slotProps·disableEscapeKeyDown·아이콘 리네임) 공식 마이그레이션 가이드 재대조 전부 VERIFIED, v10 미출시 확인(npm 최신 9.4.0). status APPROVED 유지 | Claude (Sonnet 5) |

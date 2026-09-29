@@ -17,8 +17,19 @@ function runTest(desc, toolName, toolInput, expectedExit, eventName = 'PostToolU
     hook_event_name: eventName, tool_name: toolName, tool_input: toolInput,
   })
   const r = spawnSync('node', [HOOK], { input, encoding: 'utf8', timeout: 5000 })
-  const pass = r.status === expectedExit
-  console.log(`  ${pass ? '✅' : '❌'} ${desc} → ${pass ? 'PASS' : `FAIL (기대 exit ${expectedExit}, 실제 ${r.status})`}`)
+  // 메시지 채널 단언 — PreToolUse·PostToolUse 모두 exit 2 시 Claude 에게 가는 것은 stderr.
+  // (PostToolUse 에서 stdout JSON 은 decision:"block" 이 있어야만 reason 이 쓰이므로 {reason} 단독은 유실)
+  const TAG = '[agent-md-guard]'
+  const out = r.stdout || '', err = r.stderr || ''
+  let chanErr = ''
+  if (expectedExit === 2) {
+    if (!err.includes(TAG)) chanErr = 'stderr 에 차단 사유 없음'
+    else if (out.includes(TAG)) chanErr = 'stdout 에 차단 사유가 섞임'
+  } else if (out.includes(TAG) || err.includes(TAG)) {
+    chanErr = '통과인데 차단 사유 출력'
+  }
+  const pass = r.status === expectedExit && !chanErr
+  console.log(`  ${pass ? '✅' : '❌'} ${desc} → ${pass ? 'PASS' : `FAIL (기대 exit ${expectedExit}, 실제 ${r.status}${chanErr ? ', ' + chanErr : ''})`}`)
   pass ? passed++ : failed++
 }
 

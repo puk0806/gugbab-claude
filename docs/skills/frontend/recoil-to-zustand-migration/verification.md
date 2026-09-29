@@ -1,9 +1,9 @@
 ---
 skill: recoil-to-zustand-migration
 category: frontend
-version: v1
-date: 2026-08-26
-status: PENDING_TEST
+version: v1.2
+date: 2026-09-28
+status: APPROVED
 ---
 
 # recoil-to-zustand-migration 스킬 검증 문서
@@ -14,10 +14,10 @@ status: PENDING_TEST
 |------|------|
 | 스킬 이름 | `recoil-to-zustand-migration` |
 | 스킬 경로 | `.claude/skills/frontend/recoil-to-zustand-migration/SKILL.md` |
-| 검증일 | 2026-08-26 |
+| 검증일 | 2026-09-26 (30~60일 주기 재검증, 이전 검증 2026-08-26) |
 | 검증자 | skill-creator |
-| 스킬 버전 | v1 |
-| 기준 버전 | `recoil` 0.7.7 / `zustand` 5.0.15 / `jotai` 2.20.3 / `valtio` 2.3.2 (React 18 기준, React 19 비호환 경로 포함) |
+| 스킬 버전 | v1.1 |
+| 기준 버전 | `recoil` 0.7.7 / `zustand` 5.0.15 / `jotai` **3.0.0**(2026-09-26 확인 시 신규 릴리스, 이전 검증 시 2.20.3) / `valtio` 2.3.2 (React 18 기준, React 19 비호환 경로 포함) |
 
 ---
 
@@ -176,6 +176,20 @@ status: PENDING_TEST
 
 ## 5. 테스트 진행 기록
 
+### [2026-09-28] 실사용(실행) 검증
+
+**수행일**: 2026-09-28
+**수행 방법**: Node v22.23.1 / npm 10.9.8 / lab 격리 폴더에 Vite5+React18+TS5.6 샘플 프로젝트 신규 생성. `recoil` 0.7.7로 atom 2종(leaf `themeState`, `counterState`) + 파생 selector 1종(`doubledCounterState`, `counterState`에 의존) 구성. RTL로 기존 동작 테스트를 **먼저 작성**(테마 토글 독립성·카운터/더블 값 연쇄 확인) → `tsc --noEmit`·`vite build`·vitest 통과 확인(베이스라인, 1/1 PASS) → 리프 atom `themeState`(의존하는 selector 없음)만 SKILL.md §3-1 대응표(`atom({key,default})` → 스토어 필드+setter, `useRecoilState` → 개별 selector 2회 구독)를 따라 Zustand 5.0.15 스토어로 이전, `counterState`/`doubledCounterState`는 그대로 `<RecoilRoot>` 안에 남겨 **공존** 구성 → 기존 테스트 재실행 + 신규 테스트 1건(싱글톤 스토어 언마운트/리마운트 동작 기록) 추가 → `tsc --noEmit`·`vite build`·vitest 재실행.
+**실행 결과**:
+- 베이스라인(Recoil 전용): tsc 통과, build 통과, vitest 1/1 통과.
+- 이전 후(Zustand+Recoil 공존): tsc 통과, build 통과, vitest **2/2 통과** — 기존 테스트(baseline과 assertion 100% 동일)가 그대로 PASS해 **회귀 없음**을 직접 확인. 테마 토글이 카운터/더블 값에 영향 없음, 카운터 증가가 테마에 영향 없음 모두 재확인.
+- **서술과 결과 일치**: SKILL.md §3-1의 `<RecoilRoot override>` 행에 이미 "테스트 격리에서 자주 쓰이던 패턴"이라는 주의가 있는데, 실제로 이 정확한 현상을 실행으로 재현했다 — Recoil은 `<RecoilRoot>`가 마운트마다 새 atom 상태를 주는 반면, 모듈 스코프 Zustand `create()` 스토어는 **싱글톤**이라 언마운트/리마운트에도 상태가 유지된다(전역 UI 상태로는 올바른 동작이지만 테스트 격리 관점에서는 명시적 리셋이 필요). `afterEach(() => useThemeStore.setState(useThemeStore.getInitialState()))`로 해결 — 이는 SKILL.md 서술과 **불일치가 아니라 정확히 일치하는 재현**이므로 SKILL.md 수정 불필요.
+- Jotai 쪽(§3-5의 v3 이관표 등)은 이번 실행 대상에 포함하지 않음(그래프 깊이/atomFamily 다수 사용 케이스가 아니라 Zustand가 적합한 시나리오로 샘플을 구성했으므로 — §2-2 선택 기준표와 일치).
+**졸업 조건 충족 여부**: **충족** — PENDING_TEST.md 표의 요구("Recoil 사용 프로젝트에서 리프 atom 1개 이상을 공존 상태로 Zustand/Jotai로 옮기고 회귀 없음 확인")를 정확히 재현·확인.
+**판정**: **APPROVED 전환** (서술 오류 없음 — 실행이 SKILL.md의 사전 경고와 정확히 일치)
+
+---
+
 **수행일**: 2026-08-26
 **수행자**: skill-tester → frontend-developer (도메인 특화 에이전트, general-purpose 대체 아님)
 **수행 방법**: SKILL.md Read 후 실전 질문 4개 답변, 근거 섹션 및 anti-pattern 회피 확인 (verification-policy.md 3·4단계 수행)
@@ -214,6 +228,32 @@ status: PENDING_TEST
 
 ---
 
+### 5-1. 2026-09-26 재검증 (30~60일 주기, verification-policy.md 절차) — Jotai v3 발견
+
+**수행일**: 2026-09-26
+**수행 방법**: SKILL.md + references/REFERENCE.md 전체 Read → 핵심 클레임 4개(zustand·jotai 최신 버전, Recoil 아카이브 상태 불변, Jotai atomFamily/loadable API 변경 여부) WebSearch/WebFetch 재검증 → 실전 질문 2개로 SKILL.md 자체 답변 재확인
+
+**재검증 클레임**:
+| # | 클레임 | 재확인 결과 |
+|---|--------|------|
+| R1 | zustand 최신 버전 5.0.15 | npm registry 재확인 → ✅ VERIFIED, 변동 없음 |
+| R2 | jotai 최신 버전 2.20.3 | npm registry 재확인 → **⚠️ 3.0.0으로 메이저 업**(2026-09 릴리스). WebSearch로 InfoQ·공식 뉴스레터·GitHub PR 다수 교차 확인 | ⚠️ **실질 변경 발견** |
+| R3 | jotai v3의 breaking change가 이 스킬 예시(atomFamily·loadable)에 영향을 주는가 | 공식 마이그레이션 가이드(`github.com/pmndrs/jotai/blob/main/docs/guides/migrating-to-v3.mdx`) 원문 확인 → **`atomFamily`는 `jotai-family` 패키지로 이동, `loadable`은 완전 제거(대체 패키지 없음, `unwrap`+직접 구현 필요)**. `atomWithReset`/`atomWithStorage`는 `jotai/utils`에 그대로 유지 확인 | ⚠️ **VERIFIED, SKILL.md 정정 필요** |
+| R4 | Recoil 저장소 아카이브 상태·React 19 미해결 이슈 | 저장소가 read-only이므로 상태 변경 불가능 — 재확인 결과 변동 없음(구조적으로 변할 수 없음) | ✅ VERIFIED, 변동 없음 |
+
+**Q1(재검증). "Recoil에서 Jotai로 지금 새로 전환을 시작하는데 최신 jotai를 설치해도 되나?"**
+- 정정 전 SKILL.md: 버전 표에 2.20.3만 기재, v3 관련 안내 없음
+- 정정 후 SKILL.md: §0에 "jotai@2 API 기준 예시" 명시 + 신설 §3-5에 v3 이관표(atomFamily→jotai-family, loadable 제거) 반영. `jotai@3`을 새로 설치하면 이 스킬의 `atomFamily`/`loadable` 코드 예시가 그대로 컴파일되지 않는다는 점을 명시적으로 경고
+- **판정: ✅ PASS (정정 반영 후)** — 재검증으로 메이저 버전 변경과 breaking change를 발견해 반영
+
+**Q2(재검증). "atomFamily를 Jotai v3에서 쓰려면 어떻게 해야 하나?"**
+- SKILL.md 답변(정정 후): `npm install jotai-family` 후 `import { atomFamily } from 'jotai-family'`로 교체(§3-5). API 자체는 동일
+- **판정: ✅ PASS**
+
+**재검증 결과**: 4개 클레임 중 1개(jotai 버전)에서 **메이저 버전업 + 이 스킬의 핵심 코드 예시에 영향을 주는 breaking change**를 발견 → SKILL.md §0·§3-1·§3-3(REFERENCE)·§6-2·§6-3(REFERENCE) 정정. 실질적 내용 변경 발생. **status는 기존에도 PENDING_TEST(실사용 필수 카테고리)였으므로 변동 없이 유지**하되, 변경 이력에 상세 기록.
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -223,9 +263,11 @@ status: PENDING_TEST
 | 실용성 | ✅ (5개 변환 시나리오 × 2개 도착지 대비, 인벤토리·검증 명령 포함, 프로젝트 비종속) |
 | 기존 스킬과의 중복 | ✅ 분리 완료 (state-management = Zustand 사용법 / tanstack-query = 서버 상태 / 이 스킬 = 전환 경로, 상호 참조 삽입) |
 | 에이전트 활용 테스트 | ✅ 4/4 PASS (2026-08-26, skill-tester → frontend-developer, Q1~Q4 전부 SKILL.md 근거 명시·anti-pattern 회피 확인) |
-| **최종 판정** | **PENDING_TEST 유지** (content test 4/4 PASS, 실사용 필수 카테고리라 실제 전환 검증 전까지 APPROVED 보류) |
+| freshness 재검증 (2026-09-26) | ⚠️ Jotai 3.0.0 메이저 릴리스 발견 — `atomFamily`(→`jotai-family` 패키지)·`loadable`(완전 제거) breaking change를 SKILL.md §0·§3-1·§3-5(신설)·REFERENCE.md §3-3·§6-2·§6-3에 반영 |
+| 실사용(실행) 검증 (2026-09-28) | ✅ Recoil 0.7.7 샘플에서 리프 atom(`themeState`)을 Zustand 5.0.15로 실이전, `counterState`/`doubledCounterState`는 Recoil에 남겨 공존 구성. 기존 RTL 테스트 회귀 없음(2/2 PASS), tsc·build 통과. 싱글톤 스토어 언마운트/리마운트 동작을 SKILL.md §3-1의 사전 경고와 정확히 일치하게 재현 |
+| **최종 판정** | **APPROVED** — content test(2026-08-26, 4/4 PASS) + 실사용 실행 검증(2026-09-28, 회귀 없음 확인) 모두 완료 |
 
-> 이 스킬은 `verification-policy.md`의 **"실사용 필수 스킬 — 마이그레이션 가이드"** 카테고리에 해당한다. 따라서 content test를 통과하더라도 실제 코드베이스 전환 결과로 검증되기 전까지는 PENDING_TEST 유지가 원칙이다. content test 자체(2단계)는 2026-08-26에 완료됨 — 섹션 5 참조.
+> 이 스킬은 `verification-policy.md`의 **"실사용 필수 스킬 — 마이그레이션 가이드"** 카테고리였다. 2026-09-28에 실제 Recoil→Zustand 전환을 lab 샘플에서 수행해 회귀 없음을 확인했으므로 졸업 조건을 충족해 `APPROVED`로 전환한다.
 
 ---
 
@@ -236,7 +278,8 @@ status: PENDING_TEST
 - [❌] `jotai-tanstack-query` 실제 적용 예시 미포함 (포인터만 제공) — 필요 시 별도 스킬 또는 섹션 확장. **선택 보강**
 - [❌] Valtio 전환 경로는 "국소 도입 권고" 수준 — Valtio를 주 도착지로 삼는 코드베이스가 생기면 대응표 확장 필요. **선택 보강**
 - [❌] Zustand v6·Jotai v3 등 차기 메이저가 나오면 0장 버전표와 v5 breaking change 서술 재검증 필요. **차기 메이저 릴리스 시점에 재검증 필요** (현재는 차단 요인 아님)
-- [✅] skill-tester 2단계 테스트 수행 (2026-08-26 완료, Q1~Q4 4/4 PASS, frontend-developer 에이전트 활용) — 섹션 5·6 갱신 완료. 이 스킬은 실사용 필수 카테고리(마이그레이션 가이드)이므로 content test PASS와 별개로 **실제 코드베이스 전환 검증 전까지 PENDING_TEST 유지**가 남는 후속 과제(차단 요인, 실사용 검증되면 APPROVED 전환)
+- [✅] skill-tester 2단계 테스트 수행 (2026-08-26 완료, Q1~Q4 4/4 PASS, frontend-developer 에이전트 활용) — 섹션 5·6 갱신 완료.
+- [✅] 실제 코드베이스 전환 검증 (2026-09-28 완료) — lab 샘플에서 리프 atom 실이전 + 공존 구성 + 회귀 없음 확인. status APPROVED 전환
 
 ---
 
@@ -247,3 +290,5 @@ status: PENDING_TEST
 | 2026-08-26 | v1 | 최초 작성 — 공식 소스 약 30회 페치·6회 검색 기반, 14개 클레임 교차 검증(DISPUTED 1건 확정 반영, UNVERIFIED 서술 3건 제외). skill-tester 미수행으로 PENDING_TEST | skill-creator |
 | 2026-08-26 | v1 | 2단계 실사용 테스트 수행 (Q1 Recoil deprecated 상태 정확성 / Q2 selectorFamily async selector 이관 판정 / Q3 Loadable hasValue·contents Jotai 함정 / Q4 4천 파일 SPA 공존 이동 순서) → 4/4 PASS, 실사용 필수 카테고리(마이그레이션 가이드)라 PENDING_TEST 유지 | skill-tester |
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | skill-creator |
+| 2026-09-26 | v1.1 | 30~60일 주기 재검증. **Jotai 3.0.0 메이저 릴리스 발견** — `atomFamily`가 `jotai-family` 패키지로 이동, `loadable`이 완전 제거됨을 확인해 SKILL.md에 신규 §3-5(v3 이관표) 추가 + §0·§3-1·REFERENCE.md §3-3·§6-2·§6-3에 v2/v3 구분 주의문 반영. status PENDING_TEST 유지(원래도 실사용 필수 카테고리) | 메인 세션 |
+| 2026-09-28 | v1.2 | 실사용(실행) 검증 완료 — lab 샘플(Recoil 0.7.7 + Zustand 5.0.15)에서 리프 atom 1개를 공존 상태로 실이전, 기존 RTL 테스트 회귀 없음 확인(2/2 PASS), tsc/build 통과. §3-1의 RecoilRoot 테스트 격리 경고를 실행으로 정확히 재현(서술 오류 없음 — SKILL.md 수정 불필요). status PENDING_TEST → **APPROVED** | 메인 세션(fe-migrate lab) |

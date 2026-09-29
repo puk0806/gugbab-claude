@@ -17,8 +17,8 @@ description: AG Grid v33 데이터 그리드 — 모듈 등록(ModuleRegistry/Al
 > 소스: https://www.ag-grid.com/javascript-data-grid/upgrading-to-ag-grid-35/
 > 소스: https://www.ag-grid.com/javascript-data-grid/upgrading-to-ag-grid-36/
 > 소스: https://github.com/ag-grid/ag-grid
-> 검증일: 2026-08-26
-> 버전 기준: `ag-grid-community` / `ag-grid-react` **33.x** (최신 안정 메이저는 36.1.0 — 8절에 v33→v36 차이 정리)
+> 검증일: 2026-09-26 (30~60일 주기 재검증, 최초 검증 2026-08-26)
+> 버전 기준: `ag-grid-community` / `ag-grid-react` **33.x** (최신 안정 메이저는 36.2.0, 2026-08-26 확인 시 36.1.0 → 마이너 갱신, breaking change 없음 — 8절에 v33→v36 차이 정리)
 
 ---
 

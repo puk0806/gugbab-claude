@@ -8,7 +8,7 @@ description: >
 # 봇 관리(Bot Management)와 SEO 안전성
 
 > 소스: Google Search Central(developers.google.com/search), Cloudflare Bots Docs(developers.cloudflare.com/bots), AWS WAF Developer Guide(docs.aws.amazon.com/waf)
-> 검증일: 2026-08-26 (최초 2026-06-04 · 08-26 freshness 재검증: 역DNS 검증·Cloudflare verified_bot·AWS Bot Control VERIFIED. Googlebot IP JSON 구경로 제거·common-crawlers.json 단일화, Cloudflare AI 크롤러 3분류·Bot Preference Sync 절(2.5) 추가)
+> 검증일: 2026-09-28 (최초 2026-06-04 · 08-26 재검증: 역DNS 검증·Cloudflare verified_bot·AWS Bot Control VERIFIED, Googlebot IP JSON 구경로 제거·common-crawlers.json 단일화, Cloudflare AI 크롤러 3분류·Bot Preference Sync 절(2.5) 추가 · 09-28 재검증: Naver Yeti UA·IP 비공개 정책 VERIFIED(변경 없음), **AI 크롤러 UA+공식 IP 목록 ADD**(1.4절 신설 — OpenAI/Anthropic/Perplexity/Google-Extended, 전 URL 실접속 확인))
 
 봇 관리 솔루션(Cloudflare Bot Fight Mode, AWS WAF Bot Control 등)은 악성 봇 차단에는 효과적이지만, 잘못 설정하면 Googlebot·Yeti·Bingbot 같은 정당한 검색 크롤러까지 차단해 색인 손실로 이어진다. 이 스킬은 (1) 주요 검색 엔진 크롤러를 식별하고 (2) Cloudflare·AWS WAF에서 안전하게 허용하며 (3) 차단 사고를 진단·복구하는 절차를 정리한다.
 
@@ -48,6 +48,27 @@ description: >
 - User-Agent (Desktop): `Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)`
 - IP 검증 도구: `https://www.bing.com/toolbox/verify-bingbot` (Bing Webmaster Tools 내부 + 공개 도구)
 - Microsoft도 Bingbot IP 목록을 JSON으로 제공한다.
+
+### 1.4 AI 크롤러(검색·에이전트·학습) — UA + 공식 IP 목록 (2026-09-28 확인)
+
+주요 AI 사업자는 **용도별로 봇을 분리**하며(검색 인용 / 사용자 대신 실시간 fetch / 모델 학습), robots.txt에서 각각 독립적으로 허용·차단할 수 있다. WAF 화이트리스트도 이 구분을 따라야 한다 — 예를 들어 학습용 봇만 차단하고 검색 인용 봇은 허용하는 식.
+
+| 사업자 | 봇 이름 | 용도 | 공식 IP 목록(JSON) |
+|--------|---------|------|---------------------|
+| OpenAI | `GPTBot` | 모델 학습 데이터 수집 | https://openai.com/gptbot.json |
+| OpenAI | `OAI-SearchBot` | ChatGPT 검색·인용용 색인 (학습에 사용 안 함) | https://openai.com/searchbot.json |
+| OpenAI | `ChatGPT-User` | 사용자가 ChatGPT에 특정 URL 조회를 요청했을 때 실시간 fetch | https://openai.com/chatgpt-user.json |
+| Anthropic | `ClaudeBot` | 모델 학습 데이터 수집 | https://claude.com/crawling/bots.json (3개 봇 공통 IP 목록) |
+| Anthropic | `Claude-User` | 사용자가 Claude에 요청했을 때 실시간 fetch | 〃 |
+| Anthropic | `Claude-SearchBot` | 검색 결과 품질 개선(색인) | 〃 |
+| Perplexity | `PerplexityBot` | 검색·인용용 색인 | https://www.perplexity.ai/perplexitybot.json |
+| Google | `Google-Extended`※ | Gemini/AI 개요 학습 opt-out 전용 토큰(일반 Googlebot과 별개, 색인에는 영향 없음) | 1.1절 `common-crawlers.json`에 포함 |
+
+※ `Google-Extended`는 실제로 접속하는 **크롤러가 아니다** — 별도의 UA·IP로 방문하지 않고, Googlebot이 이미 수집한 콘텐츠를 Gemini/AI 개요 학습에 쓸지 말지를 robots.txt에서 `User-agent: Google-Extended` 규칙 하나로 지정하는 **opt-out 토큰**이다. 그래서 WAF 화이트리스트 대상이 아니며(방문 자체가 없음), IP 목록도 Googlebot과 동일한 `common-crawlers.json`을 그대로 참조한다.
+
+> 주의: 버전 번호가 UA 문자열에 붙는 경우가 있어(OpenAI 공식 권고) **정확히 일치가 아니라 봇 이름 부분 문자열로 매칭**한다. 각 봇은 robots.txt에서 **독립적으로 제어**된다 — 예: `GPTBot`을 `Disallow`해도 `OAI-SearchBot`·`ChatGPT-User`는 별도로 허용/차단해야 하며, `ClaudeBot` 차단이 `Claude-SearchBot`·`Claude-User`를 막지 않는다. 단, Anthropic 3봇처럼 **공식 IP 목록이 공유**되는 경우 IP 기반 WAF 화이트리스트로는 이 봇들을 구분할 수 없다 — 봇별 세분 제어(예: 학습 봇만 차단하고 검색·에이전트 봇은 허용)는 **UA 매칭(robots.txt 또는 WAF User-Agent 규칙, 스푸핑 주의)으로만** 가능하다.
+> 이 스킬은 WAF에서 "검색·인용 봇은 안전 허용, 학습 봇은 정책에 따라 차단 가능"이라는 원칙만 다룬다. AI 답변 인용(GEO) 관점의 상세 전략은 `frontend/geo-ai-discoverability` 참조.
+> 출처: https://support.claude.com/en/articles/8896518 (Anthropic 공식), OpenAI/Perplexity 공식 IP JSON(위 표 URL 직접 확인, 2026-09-28)
 
 ---
 
@@ -275,3 +296,7 @@ WAF 룰을 프로덕션과 동일하게 staging에 적용하면 Googlebot이 sta
 - AWS WAF — Bot Control Rule Group: https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-bot.html
 - AWS WAF — Bot Control Components: https://docs.aws.amazon.com/waf/latest/developerguide/waf-bot-control-components.html
 - Bing — Verify Bingbot: https://www.bing.com/toolbox/verify-bingbot
+- Anthropic — Claude 크롤러 공식 안내(ClaudeBot/Claude-User/Claude-SearchBot): https://support.claude.com/en/articles/8896518
+- Anthropic — Claude 크롤러 공식 IP 목록: https://claude.com/crawling/bots.json
+- OpenAI — GPTBot/OAI-SearchBot/ChatGPT-User 공식 IP 목록: https://openai.com/gptbot.json · https://openai.com/searchbot.json · https://openai.com/chatgpt-user.json
+- Perplexity — PerplexityBot 공식 IP 목록: https://www.perplexity.ai/perplexitybot.json

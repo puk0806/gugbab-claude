@@ -13,15 +13,35 @@ description: >
 > - https://ogp.me/ (OpenGraph Protocol)
 > - https://nextjs.org/docs/app/api-reference/file-conventions/metadata/opengraph-image (Next.js 16.2.7)
 > - https://nextjs.org/docs/app/api-reference/functions/image-response (Next.js 16.2.7)
-> - https://github.com/vercel/satori (v0.33.4, npm latest 2026-08 기준 — 0.x라 마이너 간 breaking 가능, 설치 시 changelog 확인)
-> - https://www.npmjs.com/package/@vercel/og (1.0.2 — Next.js 외 환경용 독립 패키지. Next.js에서는 `next/og` 내장)
+> - https://github.com/vercel/satori (v0.33.5, npm latest 2026-09 기준 — 0.x라 마이너 간 breaking 가능, 설치 시 changelog 확인)
+> - https://www.npmjs.com/package/@vercel/og (1.0.3 — Next.js 외 환경용 독립 패키지. Next.js에서는 `next/og` 내장)
 > - https://developer.x.com/en/docs/x-for-websites/cards/overview/summary-card-with-large-image
 > - https://developers.facebook.com/docs/sharing/webmasters/images
+> - https://nextjs.org/blog/nextjs-security-update-september-22-2026 (CVE-2026-94545 / GHSA-vcvr-r3jv-pc5j)
+> - https://github.com/vercel/satori/security/advisories/GHSA-wx4j-mvgx-mqwp
 >
-> 대상 버전: Next.js 16.x · satori 0.33.x · @vercel/og 1.0.x(Next.js에서는 `next/og`)
-> 검증일: 2026-08-26 (최초 2026-06-02 · 08-26 freshness 재검증: 1200×630 규격·Next.js 16 Promise params VERIFIED, satori 0.27→0.33.4·@vercel/og 1.0.2 버전 갱신. 카카오·네이버 이미지 규격은 공식 문서 부재로 1.91:1 유지가 안전)
+> 대상 버전: Next.js **16.3.6 이상 필수**(보안 패치, 아래 0절 참조) · satori **0.33.5 이상 필수** · @vercel/og 1.0.x(Next.js에서는 `next/og`)
+> 검증일: 2026-09-28 (최초 2026-06-02 · 08-26 재검증: 1200×630 규격·Next.js 16 Promise params VERIFIED, satori 0.27→0.33.4·@vercel/og 1.0.2 버전 갱신 · 09-28 재검증: **CVE-2026-94545(next/og ImageResponse RCE, CVSS Critical) ADD** — Next.js 16.2.0~16.3.5·satori 0.0.27~0.33.4가 영향받는 실사용 위험 사실 확인, 0절 신설로 반영. satori 0.33.5·@vercel/og 1.0.3·next 16.3.6 최신 버전 갱신)
 
 OpenGraph 이미지는 링크가 공유될 때 카카오톡·Slack·X·페이스북·LinkedIn에서 표시되는 미리보기 카드의 핵심 비주얼이다. 정적 PNG 1장을 두는 방식도 가능하지만 글 제목·태그·작성자 같은 가변 정보를 담으려면 *동적 생성*이 표준이다.
+
+---
+
+## 0. 보안 필수 확인 — CVE-2026-94545 (next/og `ImageResponse` RCE, Critical)
+
+> **이 스킬의 섹션 2·5 예제처럼 사용자/DB 유래 값(`post.title` 등)을 `ImageResponse` JSX에 흘려넣는 패턴을 쓰고 있다면 반드시 아래 버전 확인부터 하라.**
+
+- **2026-09-22**: Vercel이 `next/og`의 **Node.js `ImageResponse`** 구현에서 원격 코드 실행(RCE) 취약점에 대한 out-of-band 보안 패치를 발표. **CVE-2026-94545 / GHSA-vcvr-r3jv-pc5j**(Next.js), CVSS 4.0 **9.5 (Critical)**.
+- **원인**: satori가 생성하는 SVG 출력의 이스케이핑 결함(업스트림 satori 어드바이저리 **GHSA-wx4j-mvgx-mqwp**). 공격 표면이 있는 라우트에서 사용자가 통제 가능한 값(요청 URL·DB 콘텐츠 등)이 이스케이프되지 않은 채 SVG 요소/속성/스타일로 흘러들어가면 임의 코드 실행으로 이어질 수 있다.
+- **영향 범위**:
+  - Next.js **`>=16.2.0 <16.3.6`** — Node.js `ImageResponse`(`next/og`, 이 스킬 섹션 2의 기본 패턴) 사용 시 영향. **Edge runtime `ImageResponse`는 영향 없음** (Vercel 공식 명시).
+  - satori 단독 사용(이 스킬 섹션 3) — satori **`>=0.0.27 <0.33.5`** 영향. Next.js를 거치지 않아도 satori 자체 결함이다. 단 satori 어드바이저리 자체의 심각도는 **medium**("Improper escaping in Satori-generated SVG")이고, Critical(RCE)은 Next.js Node.js `ImageResponse` 경로 기준 판정이다 — 그래도 사용자 입력을 SVG에 넣는다면 0.33.5 이상으로 올린다.
+  - Next.js 15.x는 RCE 자체의 영향은 없으나 15.5.26에 관련 하드닝이 포함됨.
+- **조치**:
+  1. `next`를 **16.3.6 이상**(15 계열 유지 시 15.5.26 이상)으로, satori 단독 사용이면 **0.33.5 이상**으로 즉시 업그레이드.
+  2. 사용자·DB 유래 텍스트(글 제목·작성자명 등)를 `ImageResponse`/`satori` JSX에 전달하는 모든 라우트를 점검 — 길이 제한은 레이아웃 안정화일 뿐 **보안 패치가 아니다**. 버전 업그레이드가 유일한 실질 대응.
+  3. 사용자 입력으로 SVG 속성값·style 문자열·엘리먼트 구조 자체를 동적 생성하지 않는다 (예: `style={{ color: userInput }}` 형태로 검증 없이 임의 문자열을 넣지 않는다).
+- 출처: https://nextjs.org/blog/nextjs-security-update-september-22-2026 (Vercel 공식), https://github.com/vercel/satori/security/advisories/GHSA-wx4j-mvgx-mqwp
 
 ---
 
