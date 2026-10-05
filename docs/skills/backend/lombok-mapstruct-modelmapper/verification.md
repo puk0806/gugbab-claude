@@ -2,7 +2,7 @@
 skill: lombok-mapstruct-modelmapper
 category: backend
 version: v1
-date: 2026-09-26 (최초: 2026-04-22)
+date: 2026-09-26
 status: APPROVED
 ---
 

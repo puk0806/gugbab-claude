@@ -68,7 +68,7 @@
 | 반응형 breakpoint | https://www.browserstack.com/guide/responsive-design-breakpoints | 2026-04-20 |
 | Mermaid 문법 | https://mermaid.ai/open-source/syntax/flowchart.html | 2026-04-20 |
 
-## 관련 에이전트
+## 관련 에이전트 (설치된 경우 참조)
 
 - **product-planner** (domain) -- PRD 작성. 이 에이전트의 출력이 ui-ux-designer의 주요 입력
 - **frontend-developer** (frontend) -- 디자인 사양을 실제 코드로 구현할 때 활용

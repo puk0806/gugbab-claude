@@ -8,7 +8,7 @@ Unity 6 LTS 2D 모바일 게임 개발 프로젝트. 웹 프론트엔드·서버
 
 ---
 
-## 에이전트 (33종 — 작성 도구 y 시 36종)
+## 에이전트 (31종 — 작성 도구 y 시 34종)
 
 | 카테고리 | 에이전트 | 설명 |
 |----------|---------|------|
@@ -43,16 +43,14 @@ Unity 6 LTS 2D 모바일 게임 개발 프로젝트. 웹 프론트엔드·서버
 | validation | [a11y-auditor](../../.claude/agents/validation/a11y-auditor.md) | WCAG 2.2 접근성 자동 점검 |
 | validation | [build-perf-benchmarker](../../.claude/agents/validation/build-perf-benchmarker.md) | 빌드·번들·Lighthouse 성능 실측 |
 | validation | [perf-report-writer](../../.claude/agents/validation/perf-report-writer.md) | 성능 실측 결과 → 이해관계자용 보고서 작성 |
-| validation | [seo-auditor](../../.claude/agents/validation/seo-auditor.md) | SEO·GEO 상태 통합 감사 |
-| validation | [content-quality-reviewer](../../.claude/agents/validation/content-quality-reviewer.md) | 콘텐츠 E-E-A-T·신뢰 신호 진단 |
 
 > `python-backend-developer`·`python-backend-architect`·`typescript-backend-developer`·`typescript-backend-architect`는 unity 템플릿에서 제외됩니다 (2026-09-25 TS 에이전트 누수 차단, python은 이전부터 제외).
 > 작성 도구 3종(agent-creator·skill-creator·skill-tester)은 "작성 도구" 옵션 y일 때만 포함됩니다 (기본 n).
-> 2026-09-25 실측: validation의 SEO/성능 계열 5종(seo-auditor·content-quality-reviewer·a11y-auditor·build-perf-benchmarker·perf-report-writer)과 domain의 business-domain-analyst·codebase-domain-analyst가 이전 표에서 누락돼 있었다 — 기본 옵션 설치에도 포함된다.
+> 2026-09-30 실측: 작성도구 n·codex n 기본 옵션 설치 기준 31종. `seo-auditor`·`content-quality-reviewer`는 unity 템플릿에서 제외된다 (seo-geo(11) 병행 선택 시에만 포함). validation의 a11y-auditor·build-perf-benchmarker·perf-report-writer와 domain의 business-domain-analyst·codebase-domain-analyst는 기본 옵션 설치에도 포함된다.
 
 ---
 
-## 스킬 (30종)
+## 스킬 (28종)
 
 | 카테고리 | 종류 | 링크 |
 |----------|------|------|
@@ -62,17 +60,16 @@ Unity 6 LTS 2D 모바일 게임 개발 프로젝트. 웹 프론트엔드·서버
 | meta (1종) | claude-code-hook-authoring | [→ meta 스킬 목록](../skills/meta/README.md) |
 
 > 2026-08-31: dream 전용(meta 3·architecture 1)·frontend-domain-structure가 fallthrough로 딸려가던 누수를 차단했습니다.
-> 2026-09-25 실측: devops는 github-actions-visual-regression·site-migration-seo(프론트 전용)를 포함하지 않아 8종(이전 표의 10종은 과다 계상이었다).
+> 2026-09-30 실측: devops는 github-actions-visual-regression·site-migration-seo(프론트 전용)를 포함하지 않아 8종(이전 표의 10종은 과다 계상이었다).
 
 ---
 
-## 훅 (19종)
+## 훅 (18종 — 공통 14 + 개발 전용 4)
 
-### 공통 (15종)
+### 공통 (14종)
 
 | 훅 | 이벤트 | 설명 |
 |----|--------|------|
-| [_lib.js](../../.claude/hooks/_lib.js) | — | 훅 공통 유틸리티 모듈 |
 | [bash-guard.js](../../.claude/hooks/bash-guard.js) | PreToolUse Bash | 위험한 Bash 명령어 패턴 차단 (rm -rf 시스템 경로, force push 등) |
 | [auto-approve.js](../../.claude/hooks/auto-approve.js) | PreToolUse | Bash를 제외한 도구 자동 승인 |
 | [parry.js](../../.claude/hooks/parry.js) | PreToolUse Write | 시크릿·프롬프트 인젝션 패턴 스캔 — 감지 시 저장 차단 |
@@ -142,4 +139,4 @@ Unity 6 LTS 2D 모바일 게임 개발 프로젝트. 웹 프론트엔드·서버
 | `permissions.deny` | `git push --force`, `rm -rf` 시스템 경로, `chmod 777`, curl\|bash 패턴 |
 | `permissions.additionalDirectories` | `/tmp`, `/private/tmp`, `/var/folders` |
 | `statusLine` | 브랜치·미커밋·PENDING_TEST 상태 표시 (`statusline.sh`) |
-| 훅 연결 | 공통 15종 + dev(tdd-guard·test-fake-guard·adversarial-test-guard·fake-impl-guard) 연결 (TypeScript 훅 제외) |
+| 훅 연결 | 공통 14종 + dev(tdd-guard·test-fake-guard·adversarial-test-guard·fake-impl-guard) 연결 (TypeScript 훅 제외) |

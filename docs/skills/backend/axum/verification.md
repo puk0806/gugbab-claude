@@ -36,6 +36,7 @@ status: APPROVED
 | 스킬 이름 | axum |
 | 스킬 경로 | .claude/skills/axum/SKILL.md |
 | 최초 작성일 | 2026-04-06 |
+| 검증일 | 2026-09-26 (최초 2026-04-06, 본문 사실성 정기 재검증) |
 | 재검증일 | 2026-09-26 (본문 사실성 정기 재검증) |
 | 검증 방법 | fact-checker 에이전트 (재검증) + rust-backend-developer 활용 테스트 |
 | 버전 기준 | axum 0.8.x (0.8.8 실제 resolve 확인) |

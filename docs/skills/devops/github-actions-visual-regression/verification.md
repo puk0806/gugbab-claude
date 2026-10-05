@@ -41,6 +41,7 @@ status: APPROVED
 | 스킬 이름 | `github-actions-visual-regression` |
 | 스킬 경로 | `.claude/skills/devops/github-actions-visual-regression/SKILL.md` |
 | 최초 검증일 | 2026-04-29 |
+| 검증일 | 2026-09-28 (최초 2026-04-29 · 재검증 2026-08-11, 2026-09-28) |
 | 최종 재검증일 | 2026-09-28 (08-11 액션 메이저 버전·checkout v7 보안 기본값 반영 → 09-28 전수 재확인, pnpm/action-setup 패치 정정) |
 | 검증자 | Claude (Opus 4.7 최초 / Opus 5 → Sonnet 5 재검증) |
 | 스킬 버전 | v1.2 |

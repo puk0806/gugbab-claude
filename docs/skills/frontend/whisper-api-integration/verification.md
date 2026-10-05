@@ -15,6 +15,7 @@ status: APPROVED
 | 스킬 이름 | `whisper-api-integration` |
 | 스킬 경로 | `.claude/skills/frontend/whisper-api-integration/SKILL.md` |
 | 최초 검증일 | 2026-05-14 |
+| 검증일 | 2026-09-28 (최초 2026-05-14, 재검증 2026-08-11, 2026-09-28) |
 | 최신 검증일 | 2026-08-11 (모델 라인업 최신화 재검증) / **2026-09-28 (재검증 2차 — SDK 지원 현황)** |
 | 검증자 | skill-creator |
 | 스킬 버전 | v2.1 |

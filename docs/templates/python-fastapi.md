@@ -47,7 +47,7 @@ rust·java·typescript 백엔드 에이전트 6종, build-error-resolver(cargo·
 
 ---
 
-## 스킬 (24종)
+## 스킬 (22종)
 
 | 카테고리 | 종류 | 링크 |
 |----------|------|------|
@@ -62,9 +62,9 @@ dream 전용 meta 3종·architecture 1종, frontend-domain-structure.
 
 ---
 
-## 훅 (19종 — 공통 15 + 개발 전용 4)
+## 훅 (18종 — 공통 14 + 개발 전용 4)
 
-공통 15종은 [fortune-app.md](./fortune-app.md#훅-20종--공통-15--개발-전용-4--typescript-1) 참조.
+공통 14종은 [fortune-app.md](./fortune-app.md#훅-19종--공통-14--개발-전용-4--typescript-1) 참조.
 
 개발 전용: `tdd-guard.js` · `test-fake-guard.js` · `adversarial-test-guard.js` · `fake-impl-guard.js`
 
@@ -124,7 +124,7 @@ python 스킬·에이전트가 빠지는 전환(`13→4`, `9→5` 등)에서는 
 
 ---
 
-## 설치 검증 (2026-09-25)
+## 설치 검증 (2026-09-25, 2026-09-30 재실측)
 
-기본 옵션(전부 엔터) 실측: 스킬 24 · 에이전트 24 · 훅 19 · 규칙 4 · 커맨드 9 · 매니페스트 `templates: ["python-fastapi"]`.
+기본 옵션(전부 엔터) 실측: 스킬 22 · 에이전트 24 · 훅 18 · 규칙 4 · 커맨드 9 · 매니페스트 `templates: ["python-fastapi"]`.
 `scripts/template-separation.test.js` — 단독 / 9·12 회귀 / `13,2` union / 잘못된 번호·이름 입력 / `13→4` 다운그레이드 수렴 케이스.

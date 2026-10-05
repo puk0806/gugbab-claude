@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `better-auth` |
 | 스킬 경로 | `.claude/skills/backend/better-auth/SKILL.md` |
-| 검증일 | 2026-09-25 |
+| 검증일 | 2026-09-26 (최초 2026-09-25, 섹션 7 보강·재테스트 2026-09-26) |
 | 검증자 | skill-creator 에이전트 |
 | 스킬 버전 | v1 |
 | 기준 버전 | `better-auth` 1.7.6 (npm `latest`, 2026-09-24) |

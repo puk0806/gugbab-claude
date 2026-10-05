@@ -53,7 +53,7 @@ TodoWrite, NotebookEdit
 | `SKILL.md`, `verification.md` | ✅ approve | 스킬·검증 파일 |
 | 그 외 경로 | ❓ ask | 사용자 확인 필요 |
 
-**예시:**
+**예시** (경로 형태 설명용 — 해당 파일은 템플릿에 따라 설치되지 않을 수 있음):
 ```
 ✅ .claude/agents/frontend/frontend-architect.md
 ✅ .claude/skills/frontend/react-core/SKILL.md

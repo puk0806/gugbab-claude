@@ -50,7 +50,7 @@
 | Vercel 프로젝트 설정 | https://vercel.com/docs/project-configuration/vercel-json | 2026-04-20 |
 | Railway Config as Code | https://docs.railway.com/config-as-code | 2026-04-20 |
 
-## 관련 에이전트
+## 관련 에이전트 (설치된 경우 참조)
 
 - **frontend-developer** (frontend) -- 프론트엔드 코드 수정이 필요할 때 위임
 - **rust-backend-developer** (backend) -- Rust 백엔드 코드 수정이 필요할 때 위임

@@ -8,7 +8,9 @@
 
 ---
 
-## 에이전트 (13종)
+## 에이전트 (12종)
+
+> 2026-09-30 실측: 기본 옵션 설치 기준 (에이전트 12·스킬 1·훅 14·규칙 2·커맨드 3). 작성 도구 옵션은 util 단독 설치에서 묻지 않는다.
 
 | 카테고리 | 에이전트 | 설명 |
 |----------|---------|------|
@@ -35,20 +37,12 @@
 |------|------|
 | [claude-code-hook-authoring](../../.claude/skills/meta/claude-code-hook-authoring/SKILL.md) | Claude Code 훅 작성법 — 이벤트·exit 규약·settings.json 배선 |
 
-------|------|
-| [ralph-loop](../../.claude/skills/meta/ralph-loop/SKILL.md) | 종료 조건 있는 자율 반복 루프 워크플로우 |
-| [riper-workflow](../../.claude/skills/meta/riper-workflow/SKILL.md) | Research→Innovate→Plan→Execute→Review 5단계 워크플로우 |
-| [dream-interpretation-prompt-engineering](../../.claude/skills/meta/dream-interpretation-prompt-engineering/SKILL.md) | 꿈 해몽 앱 Claude API 프롬프트 설계 패턴 |
-| [dream-safety-classifier-prompts](../../.claude/skills/meta/dream-safety-classifier-prompts/SKILL.md) | 꿈 앱 안전 분류기 프롬프트 패턴 |
-| [dream-app-ab-testing-prompts](../../.claude/skills/meta/dream-app-ab-testing-prompts/SKILL.md) | 꿈 해몽 앱 시스템 프롬프트 A/B 테스트 설계 |
-
 ---
 
-## 훅 (15종) — 공통 훅
+## 훅 (14종) — 공통 훅
 
 | 훅 | 이벤트 | 설명 |
 |----|--------|------|
-| [_lib.js](../../.claude/hooks/_lib.js) | — | 훅 공통 유틸리티 모듈 |
 | [bash-guard.js](../../.claude/hooks/bash-guard.js) | PreToolUse Bash | 위험한 Bash 명령어 패턴 차단 (rm -rf 시스템 경로, force push 등) |
 | [auto-approve.js](../../.claude/hooks/auto-approve.js) | PreToolUse | Bash를 제외한 도구 자동 승인 |
 | [parry.js](../../.claude/hooks/parry.js) | PreToolUse Write | 시크릿·프롬프트 인젝션 패턴 스캔 — 감지 시 저장 차단 |

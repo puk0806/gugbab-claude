@@ -18,7 +18,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `prisma-orm` |
 | 스킬 경로 | `.claude/skills/backend/prisma-orm/SKILL.md` (+ `references/v6-to-v7-upgrade.md`, `references/serverless-edge.md`) |
-| 검증일 | 2026-09-25 |
+| 검증일 | 2026-09-26 (최초 2026-09-25, 섹션 7 보강·재테스트 2026-09-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 | 기준 버전 | Prisma ORM **7.10.0** (`@prisma/client`·`@prisma/adapter-pg`·`@prisma/adapter-neon` npm `latest` = 7.10.0, GitHub Latest = 7.10.0 / 2026-08-25). `prisma` CLI npm `latest` = 8.0.0-rc.17 (`prev` = 7.10.0) |

@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `next-intl-i18n` |
 | 스킬 경로 | `.claude/skills/frontend/next-intl-i18n/SKILL.md` |
-| 검증일 | 2026-09-25 |
+| 검증일 | 2026-09-26 (최초 2026-09-25, 섹션 7 보강·재테스트 2026-09-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 | 버전 기준 | next-intl 4.14.7 (2026-09-24, npm latest) / Next.js 16.3.x (공식 문서 16.3.6 시점) |
@@ -260,3 +260,4 @@ Server Action 안에서 getTranslations('Form')를 호출했더니 로케일을 
 | 2026-09-25 | v1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |
 | 2026-09-26 | v1 | 섹션 7 선택 보강 3건 반영: 클레임 #18(`experimental.rootParams`) UNVERIFIED→VERIFIED 전환(next-intl 공식 문서 + Next.js PR 교차 검증), Server Action `hasLocale` 재검증 실패 처리 코드 예시(§5) 추가, `AppConfig` tsconfig include 예시(§4) 추가. 500줄 유지 위해 §8 컴포넌트 전문을 references/locale-switcher.md로 분리. 내용 변경으로 APPROVED → PENDING_TEST 재전환(재테스트 대기) | Claude (Sonnet 5) |
 | 2026-09-26 | v1 | 2단계 재테스트 수행 (Q1 Server Action hasLocale 실패 처리+Route Handler 차이 / Q2 AppConfig tsconfig include 원인 진단 / Q3 16.2에서 rootParams 도입 판단형) — 보강 내용 전부 타깃, 3/3 PASS → PENDING_TEST → APPROVED 재전환 | skill-tester |
+| 2026-09-30 | v1 | 교차 참조 조건부 표기 (내용 변경 없음) — `frontend/i18n-seo` 참조 3곳에 "SEO 옵션 설치 시" 병기, status 유지 | Claude (Sonnet 5.5) |

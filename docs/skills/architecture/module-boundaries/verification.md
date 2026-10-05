@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `module-boundaries` |
 | 스킬 경로 | `.claude/skills/architecture/module-boundaries/SKILL.md` |
-| 검증일 | 2026-08-26 |
+| 검증일 | 2026-09-26 (30~60일 주기 재검증, 최초 검증 2026-08-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 | 기준 버전 | dependency-cruiser 18.4.0(2026-09-26 갱신, 최초 18.2.0) / eslint-plugin-boundaries·@boundaries/eslint-plugin 7.2.0(레거시 4.2.2, 변동 없음) / eslint-plugin-import 2.32.0 / eslint-plugin-import-x 4.17.1 / eslint-import-resolver-typescript 4.4.5 / madge 8.0.0 / ESLint 10.11.0(2026-09-26 갱신, 최초 10.9.1)(8·9 호환 경로 병기) |

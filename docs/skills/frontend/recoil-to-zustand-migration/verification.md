@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `recoil-to-zustand-migration` |
 | 스킬 경로 | `.claude/skills/frontend/recoil-to-zustand-migration/SKILL.md` |
-| 검증일 | 2026-09-26 (30~60일 주기 재검증, 이전 검증 2026-08-26) |
+| 검증일 | 2026-09-28 (실사용 검증 v1.2, 직전 30~60일 주기 재검증 2026-09-26, 이전 검증 2026-08-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1.1 |
 | 기준 버전 | `recoil` 0.7.7 / `zustand` 5.0.15 / `jotai` **3.0.0**(2026-09-26 확인 시 신규 릴리스, 이전 검증 시 2.20.3) / `valtio` 2.3.2 (React 18 기준, React 19 비호환 경로 포함) |

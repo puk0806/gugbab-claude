@@ -44,7 +44,7 @@ Next.js App Router + TypeScript 프로젝트. 백엔드·게임·학술 스킬 �
 | validation | [perf-report-writer](../../.claude/agents/validation/perf-report-writer.md) | 성능 실측 결과 → 이해관계자용 보고서 작성 |
 
 > 작성 도구 3종(agent-creator·skill-creator·skill-tester)은 "작성 도구" 옵션 y일 때만 포함됩니다 (기본 n).
-> 2026-09-25 실측: SEO n·작성도구 n·codex n 기본 옵션 설치 기준.
+> 2026-09-30 실측: SEO n·작성도구 n·codex n 기본 옵션 설치 기준 (SEO y 시 32종 — seo-auditor·content-quality-reviewer 추가).
 
 ---
 
@@ -54,24 +54,23 @@ Next.js App Router + TypeScript 프로젝트. 백엔드·게임·학술 스킬 �
 
 | 카테고리 | 종류 | 링크 |
 |----------|------|------|
-| frontend (38종 / SEO y 시 추가) | 프레임워크·상태관리·UI·빌드·테스트·성능·LLM (Next.js·SSR·App Router 포함, SEO·GEO 는 옵트인) | [→ 목록](../skills/frontend/README.md) |
+| frontend (37종 / SEO y 시 55종) | 프레임워크·상태관리·UI·빌드·테스트·성능·LLM (Next.js·SSR·App Router 포함, SEO·GEO 는 옵트인) | [→ 목록](../skills/frontend/README.md) |
 | devops (5종 / SEO y 시 6종) | Docker·GitHub Actions(+시각 회귀)·Vercel Sandbox·Vercel Workflow (+ site-migration-seo 는 옵트인) — vercel-workflow 는 사용자별 지정 시각 Web Push 예약용 (2026-09-17) | [→ 목록](../skills/devops/README.md) |
 | backend (6종) | claude-code-headless (Claude 구독 중계 연동용 예외) + TS 백엔드 5종 — hono-api-patterns·prisma-orm·zod-schema-validation·better-auth·drizzle-neon-postgres (짝 에이전트 typescript-backend-* 소유, 2026-09-25 신설) | [→ 목록](../skills/backend/README.md) |
 | architecture (4종) | DDD, 프론트 도메인 구조, 모듈 경계 강제, 점진 리팩터링 | [→ 목록](../skills/architecture/README.md) |
 | meta (1종) | claude-code-hook-authoring | [→ 목록](../skills/meta/README.md) |
 | writing (0종 / SEO y 시 4종) | SEO 콘텐츠 품질 — content-eeat-quality·ymyl·multilingual·accessibility-vpat (옵트인) | [→ 목록](../skills/writing/README.md) |
 
-총 **56종** (SEO n·기본 옵션). 위 수치는 기본 옵션(SEO n·작성도구 n·codex n) 설치 실측(2026-09-26, frontend 스킬 정리 반영 — 이전 2026-09-25 실측 62종). 이전 표는 그 이전 값이었다.
+총 **53종** (SEO n·기본 옵션 — SEO c 68종·SEO y 76종). 위 수치는 기본 옵션(SEO n·작성도구 n·codex n) 설치 실측(2026-09-30, 이전 2026-09-26 실측 56종).
 
 ---
 
-## 훅 (20종 — 공통 15 + 개발 전용 4 + TypeScript 1)
+## 훅 (19종 — 공통 14 + 개발 전용 4 + TypeScript 1)
 
-### 공통 (15종)
+### 공통 (14종)
 
 | 훅 | 이벤트 | 설명 |
 |----|--------|------|
-| [_lib.js](../../.claude/hooks/_lib.js) | — | 훅 공통 유틸리티 모듈 |
 | [bash-guard.js](../../.claude/hooks/bash-guard.js) | PreToolUse Bash | 위험한 Bash 명령어 패턴 차단 (rm -rf 시스템 경로, force push 등) |
 | [auto-approve.js](../../.claude/hooks/auto-approve.js) | PreToolUse | Bash를 제외한 도구 자동 승인 |
 | [parry.js](../../.claude/hooks/parry.js) | PreToolUse Write | 시크릿·프롬프트 인젝션 패턴 스캔 — 감지 시 저장 차단 |
@@ -106,7 +105,7 @@ Next.js App Router + TypeScript 프로젝트. 백엔드·게임·학술 스킬 �
 
 ---
 
-## 규칙 (9종 — 작성 도구 n이면 4종)
+## 규칙 (10종 — 작성 도구 n이면 5종)
 
 > 설치 시 **"스킬·에이전트 작성 도구 포함?"**(기본 n) — n이면 작성 규칙 5종(agent-design·creation-workflow·verification-policy·commands·readme-update)과 agent-creator·skill-creator·skill-tester, `agents/CLAUDE.md`·`skills/CLAUDE.md`가 빠진다(세션당 약 4k 토큰 절약). 자산은 원본 레포에서 만들고 export만 하는 프로젝트는 n.
 
@@ -120,6 +119,7 @@ Next.js App Router + TypeScript 프로젝트. 백엔드·게임·학술 스킬 �
 | [readme-update.md](../../.claude/rules/readme-update.md) | README 업데이트 규칙 — 추가/삭제/이름변경 시 반영 항목 |
 | [verification-policy.md](../../.claude/rules/verification-policy.md) | 검증 정책 — PENDING_TEST→APPROVED 전환 절차, 수정 도구 제한 |
 | [task-workflow.md](../../.claude/rules/task-workflow.md) | 작업 착수 전 확인 절차 — 이해 확인→작업 목록→승인 후 실행 |
+| [adversarial-testing.md](../../.claude/rules/adversarial-testing.md) | 적대적 테스트 원칙 — 악성 유저 방어·이상 경로 필수, 가짜 구현 금지 |
 | [typescript.md](../../.claude/rules/typescript.md) | TypeScript + React 코딩 규칙 — 타입 시스템, 컴포넌트, 상태 관리, 금지 패턴 |
 
 ---
@@ -150,4 +150,4 @@ Next.js App Router + TypeScript 프로젝트. 백엔드·게임·학술 스킬 �
 | `permissions.deny` | `git push --force`, `rm -rf` 시스템 경로, `chmod 777`, curl\|bash 패턴 |
 | `permissions.additionalDirectories` | `/tmp`, `/private/tmp`, `/var/folders` |
 | `statusLine` | 브랜치·미커밋·PENDING_TEST 상태 표시 (`statusline.sh`) |
-| 훅 연결 | 공통 15종 + dev(tdd-guard·test-fake-guard·adversarial-test-guard·fake-impl-guard) + TypeScript(typescript-quality) 전체 연결. **레거시 프로파일**(`--legacy`): tdd-guard 제외 + typescript-quality `--changed-only` |
+| 훅 연결 | 공통 14종 + dev(tdd-guard·test-fake-guard·adversarial-test-guard·fake-impl-guard) + TypeScript(typescript-quality) 전체 연결. **레거시 프로파일**(`--legacy`): tdd-guard 제외 + typescript-quality `--changed-only` |

@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `tanstack-query-v4-to-v5-migration` |
 | 스킬 경로 | `.claude/skills/frontend/tanstack-query-v4-to-v5-migration/SKILL.md` |
-| 검증일 | 2026-09-26 (30~60일 주기 재검증, 이전 검증 2026-08-26) |
+| 검증일 | 2026-09-28 (실사용 검증 v1.1, 직전 30~60일 주기 재검증 2026-09-26, 이전 검증 2026-08-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 | 기준 버전 | 출발 = `@tanstack/react-query` 4.44.0 (v4 마지막, 변동 없음) / 도착 = 5.104.0 (v5 최신, 2026-08-26 확인 시 5.102.4) |

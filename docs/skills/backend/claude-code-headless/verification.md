@@ -2,7 +2,7 @@
 skill: claude-code-headless
 category: backend
 version: v2
-date: 2026-09-26
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `claude-code-headless` |
 | 스킬 경로 | `.claude/skills/backend/claude-code-headless/SKILL.md` |
-| 검증일 | 2026-09-26 (재검증, 최초 2026-07-03) — SKILL.md `> 검증일:` 갱신 없이 2026-09-28 "흔한 실수" 표 모순 정정·재테스트만 수행 |
+| 검증일 | 2026-09-28 (2026-09-26 정기 재검증, 2026-09-28 "흔한 실수" 표 정정·재테스트, 최초 2026-07-03) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 

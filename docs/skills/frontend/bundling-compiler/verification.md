@@ -35,6 +35,7 @@ status: APPROVED
 | 스킬 이름 | bundling-compiler |
 | 스킬 경로 | `.claude/skills/frontend/bundling-compiler/SKILL.md` |
 | 최초 작성일 | 2026-03-27 |
+| 검증일 | 2026-09-26 (최초 2026-03-27, 직전 재검증 2026-06-20) |
 | 재검증일 | 2026-06-20 |
 | 검증 방법 | frontend-architect 활용 테스트 |
 | 버전 기준 | Vite 8.0.16, Next.js 16.2.9, React Compiler 1.x |
