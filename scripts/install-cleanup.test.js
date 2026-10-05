@@ -32,7 +32,7 @@ function assert(desc, actual, expected) {
 
 // 소스 레포 흉내: 현행 훅 목록만 존재 (memory-stop-guard 등 폐지 훅 없음)
 const SOURCE_HOOKS = [
-  '_lib.js', 'bash-guard.js', 'auto-approve.js', 'deliverable-guard.js',
+  'bash-guard.js', 'auto-approve.js', 'deliverable-guard.js',
   'memory-pull.js', 'memory-sync.js', 'codex-review-guard.js',
   'branch-protection.js', 'staleness-check.js', 'session-export.js',
 ]
@@ -1168,6 +1168,51 @@ console.log('\n[악성 방어] 매니페스트에 기록됐어도 로컬 수정(
   assert('로컬 수정된 폐지 훅 보존', fs.existsSync(hookPath), true)
   assert('배선도 보존 (파일과 일관)', flatHooks(readSettings(tgt)).includes('memory-stop-guard'), true)
   assert('보존 경고 출력', out.includes('memory-stop-guard'), true)
+}
+
+// _lib.js 폐지 (2026-09-30) — 어떤 훅도 require 하지 않던 공통 유틸. 배선된 적 없음.
+console.log('\n[정상] 폐지된 _lib.js — 매니페스트 소유 증명(기록+해시 일치) 시 삭제, 다른 배선 무변경')
+{
+  const src = makeSource(tmp('src'))
+  const tgt = makeTarget(tmp('tgt'))
+  const libPath = path.join(tgt, '.claude/hooks/_lib.js')
+  fs.writeFileSync(libPath, '// installed _lib\n')
+  fs.writeFileSync(path.join(tgt, '.claude', '.install-manifest.json'), JSON.stringify({
+    version: 1, agents: [], skills: [], hooks: ['_lib.js'], memoryManaged: false,
+    hashes: { agents: {}, skills: {}, hooks: { '_lib.js': sha256('// installed _lib\n') } },
+  }))
+  const before = flatHooks(readSettings(tgt))
+  run(tgt, src, tmp('glo'), ['--keep-memory', '--keep-codex', '--keep-branch-protection', '--keep-readme-guard', '--keep-staleness-strict'])
+  assert('소유 증명된 _lib.js 삭제', fs.existsSync(libPath), false)
+  // 폐지 목록 확장이 다른 배선에 부작용을 내지 않는다 (memory-stop-guard 는 소유 미증명 → 보존)
+  assert('다른 훅 배선 무변경', flatHooks(readSettings(tgt)), before)
+}
+
+console.log('\n[악성 방어] _lib.js — 매니페스트 미기록(사용자 동명 파일)·해시 불일치는 보존, 사용자 경로의 _lib 배선은 제거하지 않음')
+{
+  const src = makeSource(tmp('src'))
+  // (a) 매니페스트에 없음 → 사용자 파일
+  const tgtA = makeTarget(tmp('tgt'))
+  const libA = path.join(tgtA, '.claude/hooks/_lib.js')
+  fs.writeFileSync(libA, '// team shared util\n')
+  const { out: outA } = run(tgtA, src, tmp('glo'), ['--keep-memory', '--keep-codex', '--keep-branch-protection'])
+  assert('매니페스트 미기록 _lib.js 보존', fs.existsSync(libA), true)
+  assert('보존 경고 출력', outA.includes('_lib.js'), true)
+  // (b) 기록은 있으나 로컬 수정(해시 불일치)
+  const tgtB = makeTarget(tmp('tgt'))
+  const libB = path.join(tgtB, '.claude/hooks/_lib.js')
+  fs.writeFileSync(libB, '// installed _lib\n// local edit\n')
+  fs.writeFileSync(path.join(tgtB, '.claude', '.install-manifest.json'), JSON.stringify({
+    version: 1, agents: [], skills: [], hooks: ['_lib.js'], memoryManaged: false,
+    hashes: { agents: {}, skills: {}, hooks: { '_lib.js': sha256('// installed _lib\n') } },
+  }))
+  run(tgtB, src, tmp('glo'), ['--keep-memory', '--keep-codex', '--keep-branch-protection'])
+  assert('로컬 수정된 _lib.js 보존', fs.existsSync(libB), true)
+  // (c) 사용자 자체 경로(tools/hooks/_lib.js)를 가리키는 배선 — 우리 설치 경로가 아니므로 제거 금지
+  const userCmd = { type: 'command', command: 'node ./tools/hooks/_lib.js --check' }
+  const tgtC = makeTarget(tmp('tgt'), { settings: { hooks: { Stop: [{ hooks: [userCmd] }] } } })
+  run(tgtC, src, tmp('glo'), ['--keep-memory', '--keep-codex', '--keep-branch-protection', '--keep-readme-guard'])
+  assert('사용자 경로 _lib 배선 보존', flatHooks(readSettings(tgtC)).includes('tools/hooks/_lib.js'), true)
 }
 
 // ═══════════════════════════════════════════════════════════════════════

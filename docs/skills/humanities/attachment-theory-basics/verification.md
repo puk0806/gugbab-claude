@@ -18,7 +18,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `attachment-theory-basics` |
 | 스킬 경로 | `.claude/skills/humanities/attachment-theory-basics/SKILL.md` |
-| 검증일 | 2026-05-15 |
+| 검증일 | 2026-09-26 (최초 2026-05-15, §10 병합·content test 2026-09-26) |
 | 검증자 | skill-creator (자동) |
 | 스킬 버전 | v1 |
 | 짝 스킬 | `humanities/dream-psychology-jung-freud` |

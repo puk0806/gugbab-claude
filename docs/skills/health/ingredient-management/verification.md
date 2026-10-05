@@ -2,7 +2,7 @@
 skill: ingredient-management
 category: health
 version: v2
-date: 2026-09-26
+date: 2026-09-28
 status: APPROVED
 ---
 
@@ -33,7 +33,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `ingredient-management` |
 | 스킬 경로 | `.claude/skills/health/ingredient-management/SKILL.md` |
-| 검증일 | 2026-06-26 |
+| 검증일 | 2026-09-28 (최초 2026-06-26, 재검증·보강 2026-09-26, 출처 검증 마감 2026-09-28) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 

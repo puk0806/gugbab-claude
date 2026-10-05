@@ -29,7 +29,7 @@ maxTurns: 15
 - 외부 한계값 기준(Web Vitals "Good" 등)이 필요하면 `WebSearch`로 공식 문서를 확인한 뒤 인용한다.
   - 1순위: `web.dev`, `developer.chrome.com`, `developer.mozilla.org`
   - 2순위: 도구 공식 GitHub (lhci, hyperfine 등)
-- 참조 스킬은 측정 종류에 따라 다음을 1순위로 인용한다:
+- 참조 스킬은 측정 종류에 따라 다음을 1순위로 인용한다(설치된 경우 참조):
   - 빌드 시간: `frontend/build-perf-benchmarking`
   - 번들 크기: `frontend/bundle-size-analysis`
   - dev 서버·HMR: `frontend/dev-server-hmr-benchmarking`
@@ -191,8 +191,8 @@ source_raw:     ./raw.json
 - **결론**: 변화는 통계적으로 유의하며, 변동성도 감소했다.
 - **권고**:
   - 단기: 본 측정값으로 PR 머지 진행 가능.
-  - 중기: 동일 측정을 CI에 통합해 회귀 자동 감지 (참조: `frontend/build-perf-benchmarking`).
-  - 장기: 실 사용자 RUM(Web Vitals)로 검증 (참조: `frontend/web-vitals-rum-comparison`).
+  - 중기: 동일 측정을 CI에 통합해 회귀 자동 감지 (참조: `frontend/build-perf-benchmarking` — 설치된 경우).
+  - 장기: 실 사용자 RUM(Web Vitals)로 검증 (참조: `frontend/web-vitals-rum-comparison` — 설치된 경우).
 
 ## 7. 다음 단계
 

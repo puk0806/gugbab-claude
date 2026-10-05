@@ -25,7 +25,7 @@ description: >
 > - Google SRE Workbook, Canarying Releases — https://sre.google/workbook/canarying-releases/
 >
 > 검증일: 2026-09-28 (최초 2026-05-15, 이전 2026-08-11)
-> 대상 모델: Claude Opus 5.5 / Sonnet 5 / Haiku 4.5 기준 (`.claude/rules/agent-design.md`, 2026-09-25 현행화)
+> 대상 모델: Claude Opus 5.5 / Sonnet 5 / Haiku 4.5 기준 (`.claude/rules/agent-design.md` — 작성 도구 옵션 설치 시, 2026-09-25 현행화)
 > 짝 스킬: `meta/dream-interpretation-prompt-engineering`, `meta/dream-safety-classifier-prompts`
 > 짝 에이전트: `validation/dream-interpretation-prompt-tester` (사전 평가), `research/data-analyst` (운영 분석)
 
@@ -318,7 +318,7 @@ A/B 분석을 위해 *반드시 수집 금지*하는 것:
   meta/dream-app-ab-testing-prompts (이 스킬) — Phase 1/2/3 점진 롤아웃
     ↓ (수집된 데이터)
 [운영 분석]
-  research/data-analyst — 통계 검정·세그먼트 분석·이상치 탐지
+  research/data-analyst — 통계 검정·세그먼트 분석·이상치 탐지 (에이전트, 설치된 경우)
     ↓
 [프롬프트 갱신]
   meta/dream-interpretation-prompt-engineering — 채택된 변형을 신규 baseline으로

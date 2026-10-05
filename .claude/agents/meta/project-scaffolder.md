@@ -224,7 +224,7 @@ git commit -m "[config] Initial commit — bootstrap with {stack}"
 2. **환경 변수 설정**: `.env.example` → `.env` 복사 후 값 채우기
 3. **다음 에이전트 호출 권장**:
    - 백엔드: `{language}-backend-architect` (예: `java-backend-architect`, `rust-backend-architect` — 설치된 경우)
-   - 프론트엔드: `frontend-architect` (있다면)
+   - 프론트엔드: `frontend-architect` (설치된 경우)
 4. **첫 실행 명령**: `pnpm dev` / `uv run uvicorn ...` / `cargo run` / `./gradlew bootRun`
 5. **DB 마이그레이션**: 해당 시 첫 마이그레이션 실행 명령
 

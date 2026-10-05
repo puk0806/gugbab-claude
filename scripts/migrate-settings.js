@@ -30,6 +30,9 @@ const RETIRED_HOOKS = [
   'memory-stop-guard', 'session-summary', 'session-handoff', 'session-handoff-inject', 'pending-test-guard',
   'readme-guard', 'task-plan-guard', 'confirmation-gate', 'verification-gate', 'careful-with-judge',
   'drift-monitor', 'permission-judge', 'pre-compact', 'skill-guard', 'subagent-audit', 'user-prompt-submit',
+  // 2026-09-30: 훅 공통 유틸 — 어떤 훅도 require 하지 않아 폐지. 배선된 적이 없어 배선 제거는 no-op 이고,
+  // 파일은 install-cleanup 이 매니페스트 해시 증명 시에만 지운다(동명 사용자 파일 보호)
+  '_lib',
 ];
 
 const log = (m) => console.log(`  [settings] ${m}`);

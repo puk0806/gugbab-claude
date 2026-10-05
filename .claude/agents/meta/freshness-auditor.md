@@ -52,7 +52,7 @@ CLAUDE.md 파일은 제외하고 처리한다.
 | `claude-haiku-4-5` | ✅ 최신 (현행 Haiku) |
 | `claude-fable-5-1` | ✅ 최신 (최상위 티어) |
 | `claude-fable-5` | ⚠️ 구세대 — `claude-fable-5-1`로 교체 권장 |
-| `claude-opus-5` / `claude-opus-4-8` / `claude-opus-4-7` / `claude-opus-4-6` | ⚠️ 구세대 — `claude-opus-5-5`로 교체 권장 (Opus 5.5 브레이킹 체인지는 `.claude/rules/agent-design.md` 참조) |
+| `claude-opus-5` / `claude-opus-4-8` / `claude-opus-4-7` / `claude-opus-4-6` | ⚠️ 구세대 — `claude-opus-5-5`로 교체 권장 (Opus 5.5 브레이킹 체인지는 `.claude/rules/agent-design.md`(설치된 경우) 참조) |
 | `claude-sonnet-4-6` | ⚠️ 구세대 — `claude-sonnet-5`로 교체 권장 |
 | `claude-sonnet-4-20250514` | ⚠️ deprecated 예정 (2026-06-15) |
 | `claude-opus-4-20250514` | ⚠️ deprecated 예정 (2026-06-15) |
@@ -87,9 +87,9 @@ Glob: .claude/skills/**/SKILL.md
 - 본문에서 버전 번호 (예: `v18`, `^5.0`, `0.8.x` 등)
 
 **검증일 기준:**
-- 6개월 이내: ✅ 최신
-- 6~12개월: ⚠️ 재검증 권장
-- 12개월 이상: ❌ 재검증 필요
+- 30일 이내: ✅ 최신
+- 30일 초과~60일 이하: ⚠️ 재검증 권장 (staleness-check 훅 WARN_DAYS=30)
+- 60일 초과: ❌ 재검증 필요 (staleness-check 훅 STALE_DAYS=60)
 
 > 검증일은 SKILL.md `> 검증일:`, verification.md 메타 표 `| 검증일 |`·frontmatter `date:`·섹션 8 "재검증" 행 중 **최신값**으로 판정한다(staleness-check 훅과 동일 기준). 재검증 결과를 반영할 때는 SKILL.md `> 검증일:`과 verification.md 메타 표 검증일(+ frontmatter `date:`)을 **함께** 갱신하고 섹션 8에 "재검증" 행을 추가하도록 권고한다.
 
@@ -110,7 +110,7 @@ Glob: docs/skills/**/verification.md
 
 ### 2-5. 버전 outdated 검사 (WebSearch)
 
-검증일이 6개월 이상 지났거나 버전 번호가 명시된 스킬에 대해 WebSearch로 현재 최신 버전을 확인한다.
+검증일이 30일 넘게 지났거나 버전 번호가 명시된 스킬에 대해 WebSearch로 현재 최신 버전을 확인한다.
 
 ```
 WebSearch: "{라이브러리명} latest version {year}"
@@ -149,8 +149,8 @@ SKILL.md에 명시된 버전과 현재 최신 버전을 비교해 major 버전 �
 
 | 상태 | 스킬 | 검증일 | 문제 |
 |------|------|--------|------|
-| ❌ | frontend/react-core | 2025-01-01 | 재검증 필요 (14개월), major 버전 outdated (v18→v19) |
-| ⚠️ | backend/axum | 2025-10-01 | 재검증 권장 (7개월) |
+| ❌ | frontend/react-core | 2026-06-01 | 재검증 필요 (60일 초과, 121일 경과), major 버전 outdated (v18→v19) |
+| ⚠️ | backend/axum | 2026-08-10 | 재검증 권장 (30일 초과, 51일 경과) |
 | ❌ | frontend/new-skill | - | verification.md 누락 |
 | ❌ | backend/old-skill | - | status: NEEDS_REVISION |
 | ✅ | ... | ... | 정상 |

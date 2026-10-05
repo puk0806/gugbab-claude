@@ -10,7 +10,7 @@ description: TanStack Query v4 → v5 마이그레이션 전용 — breaking cha
 > https://tanstack.com/blog/announcing-tanstack-query-v5 (공식 릴리즈 공지),
 > https://tkdodo.eu/blog/breaking-react-querys-api-on-purpose (메인테이너 TkDodo — 콜백 제거 근거·대체 패턴),
 > https://registry.npmjs.org/@tanstack/react-query (버전 확인)
-> 검증일: 2026-09-26 (30~60일 주기 재검증, 이전 검증 2026-08-26)
+> 검증일: 2026-09-28 (실사용 검증 v1.1, 직전 30~60일 주기 재검증 2026-09-26, 이전 검증 2026-08-26)
 > 기준 버전: v4 마지막 = **4.44.0** (npm dist-tag `previous`, 변동 없음) / v5 최신 = **5.104.0** (npm dist-tag `latest`, 2026-08-26 확인 시 5.102.4 → 마이너 갱신, breaking change 없음). **React Query v6는 아직 존재하지 않는다**(WebSearch 재확인 — v6 표기는 Solid/Svelte 어댑터 한정이며 React 코어는 여전히 v5).
 
 ---

@@ -32,7 +32,9 @@ function readEvent() {
     return j && typeof j === 'object' ? j : null;
   } catch { return null; }
 }
-const EVENT = readEvent();
+// require() 로 함수만 재사용할 때(scripts/verification-consistency.test.js)는 stdin 을 읽지 않는다.
+const IS_MAIN = require.main === module;
+const EVENT = IS_MAIN ? readEvent() : null;
 const SESSION_START = !!EVENT && EVENT.hook_event_name === 'SessionStart';
 // source 분기 (공식 source: startup | resume | clear | compact | fork)
 //   startup·clear → Claude 지시(additionalContext) + 사용자 요약(systemMessage) — 새 대화의 시작점
@@ -120,6 +122,87 @@ function resolveDate(verifPath, skillMdPath) {
   return best;
 }
 
+// ── 날짜 4곳 일관성 (2026-09-30) ──────────────────────────────────────
+// resolveDate 는 "최신값 채택" 이라 소스 간 불일치를 가린다(재검증 때 SKILL.md 만 갱신돼도 통과).
+// 이 검사는 frontmatter `date:` · 메타 표 `| 검증일 |` · SKILL.md 줄 시작 `> 검증일:` 세 곳이
+// 서로 같은 날짜인지 따로 본다(섹션 8 재검증 행은 이력이라 대상 아님). 판독 규칙은 위 resolveDate 와 동일.
+// 각 소스 값: 유효한 날짜 문자열(여러 개면 최신) / null(소스 부재) / 'INVALID'(형식·달력·미래 오류)
+function latestValid(strs) {
+  let best = null, bestT = -Infinity, invalid = false;
+  for (const s of strs) {
+    const t = parseDate(s);
+    if (t === null) { invalid = true; continue; }
+    if (t > bestT) { bestT = t; best = s; }
+  }
+  return best !== null ? best : (invalid ? 'INVALID' : null);
+}
+
+function collectDateSources(verifPath, skillMdPath) {
+  let raw = '';
+  try { raw = fs.readFileSync(verifPath, 'utf8'); } catch {}
+  let fmDate = null, meta = null;
+  const fm = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/.exec(raw);
+  if (fm) {
+    const d = /^date:[ \t]*["']?([^"'\r\n]*?)["']?[ \t]*$/m.exec(fm[1]);
+    if (d) fmDate = latestValid([d[1]]); // 주석 붙은 값("2026-09-26 (최초: …)")은 INVALID — resolveDate 도 못 읽는 형식
+  }
+  const body = stripFences(fm ? raw.slice(fm[0].length) : raw);
+  const m = /^\|\s*\**검증일\**\s*\|([^|\n]*)\|/m.exec(body);
+  if (m) { const ds = datesIn(m[1]); meta = ds.length ? latestValid(ds) : 'INVALID'; }
+  let skill = null;
+  if (skillMdPath) {
+    try {
+      if (fs.lstatSync(skillMdPath).isFile()) {
+        // 줄 안 날짜 중 최신 ("2026-04-23 (재검증: 2026-09-26)" → 09-26) — 메타 표 셀과 같은 규칙
+        const q = /^>\s*검증일\s*:([^\n]*)/m.exec(stripFences(fs.readFileSync(skillMdPath, 'utf8')));
+        if (q) { const ds = datesIn(q[1]); skill = ds.length ? latestValid(ds) : 'INVALID'; }
+      }
+    } catch {}
+  }
+  return { frontmatter: fmDate, meta, skill };
+}
+
+// 문제 목록(빈 배열 = 일치). 기본은 소스 부재도 문제로 본다(레포 회귀 테스트 — 조용한 누락 금지).
+// opts.allowMissing=true(SessionStart 경고용): 부재는 무시하고 "있는 값끼리의 불일치·판독 불가"만 보고 —
+// 일부 소스만 설치되는 타깃 프로젝트에서 상시 소음이 되지 않게 한다.
+function checkDateConsistency(verifPath, skillMdPath, opts = {}) {
+  const src = collectDateSources(verifPath, skillMdPath);
+  const labels = { frontmatter: 'frontmatter date', meta: '메타 표 검증일', skill: 'SKILL.md > 검증일' };
+  const problems = [];
+  for (const k of Object.keys(labels)) {
+    if (src[k] === null) { if (!opts.allowMissing) problems.push(`${labels[k]} 없음`); }
+    else if (src[k] === 'INVALID') problems.push(`${labels[k]} 판독 불가`);
+  }
+  const vals = Object.keys(labels).filter(k => src[k] && src[k] !== 'INVALID');
+  if (new Set(vals.map(k => src[k])).size > 1) {
+    problems.push('날짜 불일치: ' + vals.map(k => `${labels[k]}=${src[k]}`).join(' / '));
+  }
+  return problems;
+}
+
+function scanConsistency(docsDir, skillsDir, opts = {}) {
+  const out = [];
+  (function walk(dir) {
+    let entries;
+    try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
+    for (const e of entries) {
+      const full = path.join(dir, e.name);
+      if (e.isDirectory()) walk(full);
+      else if (e.name === 'verification.md' && e.isFile()) {
+        const rel = path.relative(docsDir, dir);
+        const skillMd = path.join(skillsDir, rel, 'SKILL.md');
+        const problems = checkDateConsistency(full, skillMd.startsWith(skillsDir + path.sep) ? skillMd : null, opts);
+        if (problems.length) out.push({ rel, problems });
+      }
+    }
+  })(docsDir);
+  return out.sort((a, b) => a.rel.localeCompare(b.rel));
+}
+
+if (!IS_MAIN) {
+  module.exports = { parseDate, resolveDate, collectDateSources, checkDateConsistency, scanConsistency };
+}
+
 function scan(dir, results, docsDir, skillsDir) {
   let entries;
   try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
@@ -144,6 +227,7 @@ function scan(dir, results, docsDir, skillsDir) {
   }
 }
 
+if (IS_MAIN) {
 try {
   const docsDir = path.join(process.env.CLAUDE_PROJECT_DIR || process.cwd(), 'docs', 'skills');
   if (!fs.existsSync(docsDir)) process.exit(0);
@@ -151,12 +235,18 @@ try {
   const skillsDir = path.join(path.dirname(path.dirname(docsDir)), '.claude', 'skills');
   const all = [];
   scan(docsDir, all, docsDir, skillsDir);
-  if (all.length === 0) process.exit(0);
+  const incons = scanConsistency(docsDir, skillsDir, { allowMissing: true }); // 날짜 4곳 불일치 — 경고 전용(차단 아님)
+  if (all.length === 0 && incons.length === 0) process.exit(0);
 
   const undated = all.filter(s => s.days === null).sort((a, b) => a.path.localeCompare(b.path)); // 판독 불가
   const dated = all.filter(s => s.days !== null).sort((a, b) => b.days - a.days);
   const stale = dated.filter(s => s.days > STALE_DAYS);  // 60일 초과
   const warn  = dated.filter(s => s.days > WARN_DAYS && s.days <= STALE_DAYS); // 30~59일
+  const consLines = () => incons.length === 0 ? [] : [
+    `[staleness-check] 검증일 기록 불일치 스킬 ${incons.length}종 (frontmatter date · 메타 표 · SKILL.md 를 같은 날짜로 맞추세요 — 경고만, 작업은 계속):`,
+    ...incons.slice(0, 10).map(c => `  - ${c.rel.padEnd(50)} ${c.problems.join('; ')}`),
+    ...(incons.length > 10 ? [`  ... 외 ${incons.length - 10}종`] : []),
+  ];
   const urgentCount = stale.length + undated.length;    // 즉시 재검증 대상(60일 초과 + 판독 불가)
 
   function formatList(items, limit = 10) {
@@ -180,8 +270,8 @@ try {
     return L;
   }
   const question = undated.length > 0
-    ? `"검증일이 ${STALE_DAYS}일을 넘었거나 판독 불가한 스킬 ${urgentCount}종이 있습니다. freshness-auditor로 재검증하시겠습니까?"`
-    : `"검증일이 ${STALE_DAYS}일을 넘은 스킬 ${stale.length}종이 있습니다. freshness-auditor로 재검증하시겠습니까?"`;
+    ? `"검증일이 ${STALE_DAYS}일을 넘었거나 판독 불가한 스킬 ${urgentCount}종이 있습니다. freshness-auditor(작성 도구 설치 시)로 재검증하시겠습니까?"`
+    : `"검증일이 ${STALE_DAYS}일을 넘은 스킬 ${stale.length}종이 있습니다. freshness-auditor(작성 도구 설치 시)로 재검증하시겠습니까?"`;
 
   // ── SessionStart 모드: stdout JSON 1개 ─────────────────────────────────
   if (SESSION_START) {
@@ -193,17 +283,24 @@ try {
       const ctx = STRICT
         ? [...urgentLines(), '',
            '[staleness-check → 필수 질문] 지금 즉시 사용자에게 다음을 물어보세요:', question,
-           `YES → freshness-auditor 에이전트를 실행하세요. 대상: 검증일 ${WARN_DAYS}일 초과 스킬 전체(${all.length}종).`,
+           `YES → freshness-auditor 에이전트(설치된 경우 — 없으면 원본 레포에서 재검증)를 실행하세요. 대상: 검증일 ${WARN_DAYS}일 초과 스킬 전체(${all.length}종).`,
            'NO  → 그냥 진행하세요.', '(이 질문은 생략하지 마세요)']
         // 일반 모드 = "경고만"(설치 안내: 60일+ 강제 질문은 strict 전용) — 작업을 끊는 질문 강요 금지
         : [...urgentLines(), '',
            '[staleness-check → 참고] 사용자의 현재 요청을 먼저 처리하세요. 작업을 중단하지 말고,',
-           `응답을 마칠 때 한 줄로 재검증(freshness-auditor, 대상: ${WARN_DAYS}일 초과 전체) 가능 여부를 안내하면 충분합니다.`];
+           `응답을 마칠 때 한 줄로 재검증(freshness-auditor — 설치된 경우, 대상: ${WARN_DAYS}일 초과 전체) 가능 여부를 안내하면 충분합니다.`];
       if (instruct) out.hookSpecificOutput = { hookEventName: 'SessionStart', additionalContext: clip(ctx.join('\n')) };
       userLines.push(...urgentLines(':'));
     }
     if (warn.length > 0) {
       userLines.push(`[staleness-check] 검증일 ${WARN_DAYS}~${STALE_DAYS}일 스킬 ${warn.length}종 (재검증 권고):`, formatList(warn));
+    }
+    if (incons.length > 0) {
+      userLines.push(...consLines());
+      if (instruct) {
+        const prev = out.hookSpecificOutput ? out.hookSpecificOutput.additionalContext + '\n\n' : '';
+        out.hookSpecificOutput = { hookEventName: 'SessionStart', additionalContext: clip(prev + consLines().join('\n')) };
+      }
     }
     if (userLines.length > 0) out.systemMessage = clip(userLines.join('\n'));
     if (Object.keys(out).length > 0) process.stdout.write(JSON.stringify(out));
@@ -211,6 +308,7 @@ try {
   }
 
   // ── 레거시(InstructionsLoaded) 경로 — 문서상 출력이 전달되지 않음(관측·수동 실행용으로 유지) ──
+  if (incons.length > 0) process.stderr.write('\n' + consLines().join('\n') + '\n');
   // ── 60일 초과 처리 ────────────────────────────────────────────────────
   if (urgentCount > 0) {
     if (STRICT) {
@@ -222,7 +320,7 @@ try {
         '',
         '[staleness-check → 필수 질문] 지금 즉시 사용자에게 다음을 물어보세요:',
         question,
-        `YES → freshness-auditor 에이전트를 실행하세요. 대상: 검증일 ${WARN_DAYS}일 초과 스킬 전체(${all.length}종).`,
+        `YES → freshness-auditor 에이전트(설치된 경우 — 없으면 원본 레포에서 재검증)를 실행하세요. 대상: 검증일 ${WARN_DAYS}일 초과 스킬 전체(${all.length}종).`,
         'NO  → 그냥 진행하세요.',
         '(이 질문은 생략하지 마세요)',
         '',
@@ -235,7 +333,7 @@ try {
         '',
         `[staleness-check → Claude 지시] 즉시 사용자에게 질문하세요:`,
         question,
-        `YES면 freshness-auditor 에이전트를 실행하고(대상: ${WARN_DAYS}일 초과 전체), NO면 그냥 진행하세요.`,
+        `YES면 freshness-auditor 에이전트(설치된 경우 — 없으면 원본 레포에서 재검증)를 실행하고(대상: ${WARN_DAYS}일 초과 전체), NO면 그냥 진행하세요.`,
         '',
       ].join('\n'));
     }
@@ -255,3 +353,4 @@ try {
 } catch {}
 
 process.exit(0);
+}

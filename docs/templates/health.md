@@ -46,6 +46,7 @@
 | health | [nutrition-prompt-tester](../../.claude/agents/health/nutrition-prompt-tester.md) | 식단 추천·영양 분석 프롬프트 4축 평가(근거·의료 단정 회피·알레르기/질환 가드·출력 포맷) — **health·all 전용** (2026-09-25, 타 템플릿 누수 차단) |
 
 > 작성 도구 3종(agent-creator·skill-creator·skill-tester)은 "작성 도구" 옵션 y일 때만 포함됩니다 (기본 n).
+> 2026-09-30 실측: SEO n·작성도구 n·codex n 기본 옵션 설치 기준 31종 (SEO y 시 33종).
 
 ---
 
@@ -54,14 +55,14 @@
 | 카테고리 | 종류 | 비고 |
 |----------|------|------|
 | health (5종) | nutrition-basics · korean-food-nutrition · ingredient-management · meal-recommendation-prompt · nutrition-analysis-prompt | 건강·식단 도메인 핵심 |
-| frontend (41종 / SEO y 시 59종) | 프레임워크·상태관리·UI·빌드·테스트·성능·LLM (+ SEO·GEO 는 옵트인) | indexeddb-dexie · claude-api-streaming-frontend · chat-ui-pattern · pwa-offline-llm-fallback 포함 (LLM PWA 공용 3종은 dream 목록에 섞여 있어 2026-09-11 전까지 실제로는 빠져 있었음) |
+| frontend (40종 / SEO y 시 58종) | 프레임워크·상태관리·UI·빌드·테스트·성능·LLM (+ SEO·GEO 는 옵트인) | indexeddb-dexie · claude-api-streaming-frontend · chat-ui-pattern · pwa-offline-llm-fallback 포함 (LLM PWA 공용 3종은 dream 목록에 섞여 있어 2026-09-11 전까지 실제로는 빠져 있었음) |
 | devops (10종 / SEO y 시 11종) | Docker·GitHub Actions·n8n·Vercel Sandbox·Vercel Workflow (+ site-migration-seo 는 옵트인) | vercel-workflow 는 사용자별 지정 시각 Web Push 예약용 (2026-09-17) |
 | architecture (4종) | DDD·프론트 도메인 구조·모듈 경계·점진 리팩터링 | |
 | backend (6종) | claude-code-headless (Claude 구독 중계 연동용 예외) + TS 백엔드 5종 — hono-api-patterns·prisma-orm·zod-schema-validation·better-auth·drizzle-neon-postgres (짝 에이전트 typescript-backend-* 소유, 2026-09-25 신설) | |
 | meta (1종) | claude-code-hook-authoring | |
 | writing (0종 / SEO y 시 4종) | SEO 콘텐츠 품질 — 옵트인 | |
 
-> **SEO·GEO 옵트인 (2026-09-11)**: react-spa·nextjs와 같은 질문(`y` 전체 / `c` 커머스 / `n` 제외, 엔터 = n)을 받는다. 이전에는 스킬 필터가 SEO 옵션을 읽고 있었지만 질문이 나오지 않아 기본값(전체 포함)이 항상 통과했다. 개인용 PWA면 n. 기본 옵션 실측(2026-09-25, TS 백엔드 스킬 소유 템플릿 신설 반영): 스킬 75(SEO y 시 98) · 에이전트 31 · 훅 20 · 규칙 5 · 매니페스트 `templates: ["health"]`.
+> **SEO·GEO 옵트인 (2026-09-11)**: react-spa·nextjs와 같은 질문(`y` 전체 / `c` 커머스 / `n` 제외, 엔터 = n)을 받는다. 이전에는 스킬 필터가 SEO 옵션을 읽고 있었지만 질문이 나오지 않아 기본값(전체 포함)이 항상 통과했다. 개인용 PWA면 n. 기본 옵션 실측(2026-09-30, 이전 2026-09-25 실측 스킬 75·훅 20): 스킬 66(SEO c 81 · SEO y 89) · 에이전트 31 · 훅 19 · 규칙 5 · 매니페스트 `templates: ["health"]`.
 
 ---
 
@@ -79,11 +80,11 @@ frontend/claude-api-streaming-frontend ← 프론트→Claude API 직접 호출
 
 ---
 
-## 훅 (20종)
+## 훅 (19종 — 공통 14 + 개발 전용 4 + TypeScript 1)
 
-### 공통 (15종)
+### 공통 (14종)
 
-react-spa 템플릿과 동일한 공통 훅 세트. 자세한 목록은 [fortune-app.md](./fortune-app.md#훅-20종--공통-15--개발-전용-4--typescript-1) 참조.
+react-spa 템플릿과 동일한 공통 훅 세트. 자세한 목록은 [fortune-app.md](./fortune-app.md#훅-19종--공통-14--개발-전용-4--typescript-1) 참조.
 
 ### 개발 전용 (4종)
 
@@ -95,7 +96,7 @@ react-spa 템플릿과 동일한 공통 훅 세트. 자세한 목록은 [fortune
 
 ---
 
-## 규칙
+## 규칙 (5종 기본 / 작성 도구 y 시 10종)
 
 | 규칙 | 조건 |
 |------|------|

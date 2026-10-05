@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: ea135cf2-6650-48cc-ac4f-5b9362cf7126
-  modified: 2026-09-29T00:30:52.229Z
+  modified: 2026-10-05T02:51:03.943Z
 ---
 
 **상태 (2026-09-28 저녁)**: 이전 세션(macOS TCC 권한으로 중단)의 재개 작업 **완료**. 커밋·푸시 직전에서 멈춤 — 사용자가 "커밋 푸시 전 작업까지"만 요청.
@@ -23,4 +23,6 @@ metadata:
 
 **3차 (09-28~29, 사용자 요청 "커밋 푸시 빼고 해야할 거 다")**: PENDING_TEST 16종을 세션 scratchpad `lab/` 격리 폴더에서 실제 실행 검증(Docker Desktop은 이때 `open -a Docker`로 기동 — 09-29 사용자 요청으로 실험 이미지 4종(n8n·runners·postgres:16·redis:7-alpine, 전부 09-28 pull) 삭제 후 종료. 기존 컨테이너 one-sphere-poc는 무관. `~/.gradle/wrapper/dists/gradle-7.6.6-bin`은 실험 중 생성된 채 남김) → 9종 졸업, 17→8. 실행으로만 드러난 결함 다수 정정(README 09-29 행). 선택 보강 약 25건 반영·재테스트 통과. 최종 APPROVED 176·PENDING_TEST 8·NEEDS_REVISION 0. 교훈: 서브에이전트 1건이 lab 밖 `~/.config/pip/pip.conf`를 만들었다 지움(원래 없던 것으로 추정) — 실행 검증 브리프엔 "전역 설정 파일 생성 금지"도 명시할 것.
 
-**09-29 커밋·푸시 진행**(사용자 요청). **남은 것**: ① (완료 시 해소) `/commit`(관심사별 분리: [skill] 삭제·재검증 / [agent] 삭제·참조 정리 / [config] install·test / [docs] README·docs / [memory]) → push → PR ② 머지 후 01·04 레포 재설치(academic 템플릿 쓰던 설치본 있으면 8 대신 다른 번호로) ③ 재테스트에서 나온 선택 보강 gap(비차단)은 각 verification.md 섹션 7에 기록돼 있음.
+**10-05 후속**: 하네스 구조 감사 어긋남 수정 + 회귀 테스트 4종(installed-refs·verification-consistency·template-docs-counts·template-ownership) + 설치본(01·voca) 제보 반영(참조 검사 확장·Codex 마커 `.gitignore`·typescript.md 예외) → 전체 293/293, 실설치 7조합·재설치·훅 실행 스모크 확인 후 커밋·PR. 머지 후 01·04·voca 재설치 안내 필요(voca의 로컬 react-virtuoso는 원본 기준으로 수동 삭제).
+
+**09-29 커밋 7개·푸시 완료 → PR #19 머지(`bef86a3`), 로컬 main 체크아웃·pull 완료.** 대용량 push는 HTTPS `HTTP 400 RPC failed` → `git -c http.postBuffer=524288000 push`로 해결(전역 설정 변경 없이). **남은 것**: ① (완료 시 해소) `/commit`(관심사별 분리: [skill] 삭제·재검증 / [agent] 삭제·참조 정리 / [config] install·test / [docs] README·docs / [memory]) → push → PR ② 머지 후 01·04 레포 재설치(academic 템플릿 쓰던 설치본 있으면 8 대신 다른 번호로) ③ 재테스트에서 나온 선택 보강 gap(비차단)은 각 verification.md 섹션 7에 기록돼 있음.

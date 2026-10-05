@@ -7,11 +7,11 @@
 | 파일 | `.claude/agents/research/web-searcher.md` |
 | 모델 | Sonnet |
 | 도구 | WebSearch, WebFetch |
-| 호출 | `deep-researcher`가 자동 호출 (서브에이전트) |
+| 호출 | `deep-researcher`가 자동 호출 (서브에이전트, deep-researcher 설치 시) |
 
 ## 역할
 
-`deep-researcher`의 서브에이전트로 자동 호출됩니다. 검색 축별로 특화된 전략을 사용해 관련 소스를 찾고 신뢰도가 태깅된 구조화된 마크다운 결과를 반환합니다.
+`deep-researcher`(설치된 경우)의 서브에이전트로 자동 호출됩니다. 검색 축별로 특화된 전략을 사용해 관련 소스를 찾고 신뢰도가 태깅된 구조화된 마크다운 결과를 반환합니다.
 
 ## 축별 검색 전략
 

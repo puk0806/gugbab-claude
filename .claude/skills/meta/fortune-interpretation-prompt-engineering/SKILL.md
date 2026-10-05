@@ -43,7 +43,7 @@ description: >
 
 ## 1. 꿈 해몽 프롬프트와 무엇이 다른가 — 톤 룰의 교체
 
-`meta/dream-interpretation-prompt-engineering`(꿈 해몽)은 **"점술적 어조 자체 금지"**
+`meta/dream-interpretation-prompt-engineering`(꿈 해몽 — 설치된 경우 참조)은 **"점술적 어조 자체 금지"**
 가 하드 룰이다. 해몽은 심리적 자기 성찰 도구로 포지셔닝되기 때문이다.
 
 운세 앱은 다르다. **사주·타로·손금은 점술 그 자체가 제품**이므로 "점술 어조 금지"를

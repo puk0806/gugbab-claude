@@ -14,7 +14,7 @@ status: PENDING_TEST
 |------|------|
 | 스킬 이름 | `incremental-refactoring` |
 | 스킬 경로 | `.claude/skills/architecture/incremental-refactoring/SKILL.md` |
-| 검증일 | 2026-09-26 (30~60일 주기 재검증, 최초 검증 2026-08-26) |
+| 검증일 | 2026-09-28 (실사용 검증 v1.1, 직전 30~60일 주기 재검증 2026-09-26, 최초 검증 2026-08-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 | 기준 버전 | ts-morph 28.0.0 / jscodeshift 17.4.0 / dependency-cruiser 18.2.0 / eslint-plugin-boundaries 7.2.0 / tsconfig-paths 4.2.0 / size-limit 13.0.3 / TypeScript 7.0.2(6.0.2 병행) |

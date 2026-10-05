@@ -8,7 +8,7 @@ Rust + Axum 백엔드 프로젝트. 프론트엔드·Java·게임·학술 스킬
 
 ---
 
-## 에이전트 (30종 — 작성 도구 y 시 33종)
+## 에이전트 (28종 — 작성 도구 y 시 31종)
 
 | 카테고리 | 에이전트 | 설명 |
 |----------|---------|------|
@@ -40,16 +40,15 @@ Rust + Axum 백엔드 프로젝트. 프론트엔드·Java·게임·학술 스킬
 | validation | [a11y-auditor](../../.claude/agents/validation/a11y-auditor.md) | WCAG 2.2 접근성 자동 점검 |
 | validation | [build-perf-benchmarker](../../.claude/agents/validation/build-perf-benchmarker.md) | 빌드·번들·Lighthouse 성능 실측 |
 | validation | [perf-report-writer](../../.claude/agents/validation/perf-report-writer.md) | 성능 실측 결과 → 이해관계자용 보고서 작성 |
-| validation | [seo-auditor](../../.claude/agents/validation/seo-auditor.md) | SEO·GEO 상태 통합 감사 |
-| validation | [content-quality-reviewer](../../.claude/agents/validation/content-quality-reviewer.md) | 콘텐츠 E-E-A-T·신뢰 신호 진단 |
 
 > `typescript-backend-developer`·`typescript-backend-architect`·`python-backend-developer`·`python-backend-architect`는 rust 템플릿에서 제외됩니다 (2026-09-25 TS 에이전트 누수 차단, python은 2026-09-11부터).
 > 작성 도구 3종(agent-creator·skill-creator·skill-tester)은 "작성 도구" 옵션 y일 때만 포함됩니다 (기본 n).
-> validation의 SEO/성능 계열 5종(seo-auditor·content-quality-reviewer·a11y-auditor·build-perf-benchmarker·perf-report-writer)은 기본 옵션 설치에도 포함된다 — 2026-09-25 실측 확인, 프론트 전용 스킬(frontend/*)은 여전히 설치되지 않는다.
+> `seo-auditor`·`content-quality-reviewer`는 rust 템플릿에서 제외됩니다 (2026-09-30 — seo-geo(11) 병행 선택 시에만 포함). validation의 a11y-auditor·build-perf-benchmarker·perf-report-writer 3종은 기본 옵션 설치에도 포함되며, 프론트 전용 스킬(frontend/*)은 여전히 설치되지 않는다.
+> 2026-09-30 실측: SEO 옵션 없음·작성도구 n·codex n 기본 옵션 설치 기준 (28종).
 
 ---
 
-## 스킬 (24종)
+## 스킬 (22종)
 
 | 카테고리 | 종류 | 링크 |
 |----------|------|------|
@@ -60,18 +59,17 @@ Rust + Axum 백엔드 프로젝트. 프론트엔드·Java·게임·학술 스킬
 
 > 2026-08-31: dream 전용(meta 3·architecture 1)·frontend-domain-structure가 fallthrough로 딸려가던 누수를 차단했습니다.
 > 2026-09-11: python 에이전트 2종(python-backend-developer·python-backend-architect)을 배제 목록에 추가 — Python 스킬은 원래 설치되지 않습니다 (rust 화이트리스트 방식).
-> 2026-09-25 실측: devops는 github-actions-visual-regression·site-migration-seo(프론트 전용)를 포함하지 않아 8종(이전 표의 10종은 과다 계상이었다).
-> 2026-09-26 스킬 정리: serde·thiserror·tokio·tracing·design-patterns-rust·dependency-injection·repository-pattern 삭제(모델 기본 지식), custom-middleware는 axum에 병합 — 실설치 실측 24종. 기존 설치처의 폐기 사본은 재설치 시 install-cleanup이 짝 단위로 정리합니다.
+> 2026-09-30 실측: devops는 github-actions-visual-regression·site-migration-seo(프론트 전용)를 포함하지 않아 8종(이전 표의 10종은 과다 계상이었다).
+> 2026-09-26 스킬 정리: serde·thiserror·tokio·tracing·design-patterns-rust·dependency-injection·repository-pattern 삭제(모델 기본 지식), custom-middleware는 axum에 병합 — 실설치 실측 24종(당시). 기존 설치처의 폐기 사본은 재설치 시 install-cleanup이 짝 단위로 정리합니다.
 
 ---
 
-## 훅 (19종)
+## 훅 (18종 — 공통 14 + 개발 전용 4)
 
-### 공통 (15종)
+### 공통 (14종)
 
 | 훅 | 이벤트 | 설명 |
 |----|--------|------|
-| [_lib.js](../../.claude/hooks/_lib.js) | — | 훅 공통 유틸리티 모듈 |
 | [bash-guard.js](../../.claude/hooks/bash-guard.js) | PreToolUse Bash | 위험한 Bash 명령어 패턴 차단 (rm -rf 시스템 경로, force push 등) |
 | [auto-approve.js](../../.claude/hooks/auto-approve.js) | PreToolUse | Bash를 제외한 도구 자동 승인 |
 | [parry.js](../../.claude/hooks/parry.js) | PreToolUse Write | 시크릿·프롬프트 인젝션 패턴 스캔 — 감지 시 저장 차단 |
@@ -100,7 +98,9 @@ Rust + Axum 백엔드 프로젝트. 프론트엔드·Java·게임·학술 스킬
 
 ---
 
-## 규칙 (9종)
+## 규칙 (10종 — 작성 도구 n이면 5종)
+
+> 작성 규칙 5종(agent-design·creation-workflow·verification-policy·commands·readme-update)은 "작성 도구" 옵션 y일 때만 포함됩니다 (기본 n).
 
 | 규칙 | 설명 |
 |------|------|
@@ -112,6 +112,7 @@ Rust + Axum 백엔드 프로젝트. 프론트엔드·Java·게임·학술 스킬
 | [readme-update.md](../../.claude/rules/readme-update.md) | README 업데이트 규칙 — 추가/삭제/이름변경 시 반영 항목 |
 | [verification-policy.md](../../.claude/rules/verification-policy.md) | 검증 정책 — PENDING_TEST→APPROVED 전환 절차, 수정 도구 제한 |
 | [task-workflow.md](../../.claude/rules/task-workflow.md) | 작업 착수 전 확인 절차 — 이해 확인→작업 목록→승인 후 실행 |
+| [adversarial-testing.md](../../.claude/rules/adversarial-testing.md) | 적대적 테스트 원칙 — 악성 유저 방어·이상 경로 필수, 가짜 구현 금지 |
 | [rust.md](../../.claude/rules/rust.md) | Rust + Axum 코딩 규칙 — 에러 처리, 타입 설계, 비동기, 아키텍처, Clippy 기준 |
 
 ---
@@ -142,4 +143,4 @@ Rust + Axum 백엔드 프로젝트. 프론트엔드·Java·게임·학술 스킬
 | `permissions.deny` | `git push --force`, `rm -rf` 시스템 경로, `chmod 777`, curl\|bash 패턴 |
 | `permissions.additionalDirectories` | `/tmp`, `/private/tmp`, `/var/folders` |
 | `statusLine` | 브랜치·미커밋·PENDING_TEST 상태 표시 (`statusline.sh`) |
-| 훅 연결 | 공통 15종 + dev(tdd-guard·test-fake-guard·adversarial-test-guard·fake-impl-guard) 연결 (TypeScript 훅 제외) |
+| 훅 연결 | 공통 14종 + dev(tdd-guard·test-fake-guard·adversarial-test-guard·fake-impl-guard) 연결 (TypeScript 훅 제외) |

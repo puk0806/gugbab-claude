@@ -67,7 +67,7 @@ function validate(content) {
   if (!/^tools\s*:/m.test(fm)) {
     errors.push(
       'frontmatter에 tools: 필드가 없습니다.\n' +
-      '  → 필요한 도구만 최소로 명시하세요. (agent-design.md 원칙 참조)'
+      '  → 필요한 도구만 최소로 명시하세요. (agent-design.md 원칙 참조 — 설치된 경우)'
     )
   }
 
@@ -141,8 +141,8 @@ async function main() {
     ...errors.map((e, i) => `${i + 1}. ${e}`),
     '',
     blocked
-      ? '위 항목을 수정한 내용으로 다시 저장하세요. (참조: @.claude/rules/agent-design.md)'
-      : '위 항목을 수정하세요. (참조: @.claude/rules/agent-design.md)',
+      ? '위 항목을 수정한 내용으로 다시 저장하세요. (참조: @.claude/rules/agent-design.md — 설치된 경우)'
+      : '위 항목을 수정하세요. (참조: @.claude/rules/agent-design.md — 설치된 경우)',
   ].join('\n')
 
   // exit 2 의 메시지 채널은 stderr — PreToolUse: 도구 실행 차단 사유 / PostToolUse: Claude 에게 수정 요구 피드백.

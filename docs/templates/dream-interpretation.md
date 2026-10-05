@@ -8,7 +8,7 @@
 
 ---
 
-## 에이전트 (27종)
+## 에이전트 (25종 — 작성 도구 y 시 28종)
 
 | 카테고리 | 에이전트 | 설명 |
 |----------|---------|------|
@@ -36,7 +36,9 @@
 | meta | [claude-code-guide](../../.claude/agents/meta/claude-code-guide.md) | Claude Code CLI 사용법·설정 가이드 |
 | meta | [tech-stack-advisor](../../.claude/agents/meta/tech-stack-advisor.md) | 요구사항에 맞는 기술 스택 추천·비교 |
 | meta | [project-scaffolder](../../.claude/agents/meta/project-scaffolder.md) | 결정된 스택으로 프로젝트 부트스트랩 |
-| meta | [build-perf-benchmarker](../../.claude/agents/validation/build-perf-benchmarker.md) | 빌드·번들·Lighthouse 성능 지표 측정 |
+| domain | [frontend-domain-refactorer](../../.claude/agents/domain/frontend-domain-refactorer.md) | layer-first → domain-first 재구조화 실행 계획 (경계 역추출·배치·codemod·경계 규칙) |
+
+> 2026-09-30 실측: SEO n·작성도구 n·codex n 기본 옵션 설치 기준 25종 (SEO y 시 27종 — seo-auditor·content-quality-reviewer 추가). build-perf-benchmarker는 이 템플릿에 설치되지 않는다.
 
 ---
 
@@ -44,25 +46,26 @@
 
 | 카테고리 | 종류 | 링크 |
 |----------|------|------|
-| frontend (55종 / SEO y 시 75종) | 프레임워크·상태관리·UI·빌드·테스트·성능·꿈 앱 UI (+ SEO·GEO 20종은 옵트인) | [→ frontend 스킬 목록](../skills/frontend/README.md) |
+| frontend (54종 / SEO y 시 73종) | 프레임워크·상태관리·UI·빌드·테스트·성능·꿈 앱 UI (+ SEO·GEO 20종은 옵트인) | [→ frontend 스킬 목록](../skills/frontend/README.md) |
 | backend — Python (10종) | FastAPI·Pydantic·LlamaIndex·Anthropic SDK 등 | [→ backend 스킬 목록](../skills/backend/README.md) |
-| devops (9종 / SEO y 시 10종) | Docker·GitHub Actions·n8n·Vercel Sandbox (+ site-migration-seo 는 옵트인) | [→ devops 스킬 목록](../skills/devops/README.md) |
-| architecture (2종) | DDD + dream-journal-data-modeling | [→ architecture 스킬 목록](../skills/architecture/README.md) |
+| devops (10종 / SEO y 시 11종) | Docker·GitHub Actions·n8n·Vercel Sandbox (+ site-migration-seo 는 옵트인) | [→ devops 스킬 목록](../skills/devops/README.md) |
+| architecture (5종) | DDD + dream-journal-data-modeling + frontend-domain-structure·incremental-refactoring·module-boundaries | [→ architecture 스킬 목록](../skills/architecture/README.md) |
 | humanities (6종) | 꿈 관련 전용 (dream-psychology·korean-dream·attachment(관계 패턴 Gottman·EFT·NVC 포함) 등) | [→ humanities 스킬 목록](../skills/humanities/README.md) |
 | writing (0종 / SEO y 시 4종) | SEO 콘텐츠 품질 (content-eeat-quality·ymyl·multilingual·accessibility-vpat) — 옵트인 | [→ writing 스킬 목록](../skills/writing/README.md) |
-| meta (5종) | 워크플로우 + 꿈 앱 프롬프트 엔지니어링 전체 | [→ meta 스킬 목록](../skills/meta/README.md) |
+| meta (4종) | claude-code-hook-authoring + 꿈 앱 프롬프트 엔지니어링 3종 | [→ meta 스킬 목록](../skills/meta/README.md) |
 
 > **SEO·GEO 옵트인 (2026-09-11)**: react-spa·nextjs와 같은 질문(`y` 전체 / `c` 커머스 / `n` 제외, 엔터 = n)을 받는다. 이전에는 SEO 20종 + writing 4종이 무조건 포함돼 seo-geo(11) 병행 선택이 무의미했다. 개인용·캐주얼 앱이면 n.
 
+총 **89종** (SEO n·기본 옵션 — SEO c 105종·SEO y 113종, 2026-09-30 실측).
+
 ---
 
-## 훅 (20종 — 공통 15 + 개발 전용 4 + TypeScript 1)
+## 훅 (19종 — 공통 14 + 개발 전용 4 + TypeScript 1)
 
-### 공통 (15종)
+### 공통 (14종)
 
 | 훅 | 이벤트 | 설명 |
 |----|--------|------|
-| [_lib.js](../../.claude/hooks/_lib.js) | — | 훅 공통 유틸리티 모듈 |
 | [bash-guard.js](../../.claude/hooks/bash-guard.js) | PreToolUse Bash | 위험한 Bash 명령어 패턴 차단 (rm -rf 시스템 경로, force push 등) |
 | [auto-approve.js](../../.claude/hooks/auto-approve.js) | PreToolUse | Bash를 제외한 도구 자동 승인 |
 | [parry.js](../../.claude/hooks/parry.js) | PreToolUse Write | 시크릿·프롬프트 인젝션 패턴 스캔 — 감지 시 저장 차단 |
@@ -83,7 +86,7 @@
 | [fake-impl-guard.js](../../.claude/hooks/fake-impl-guard.js) | PostToolUse Write/Edit | 파라미터를 무시하고 테스트 기대 리터럴을 그대로 return하는 가짜 구현 차단 |
 | [typescript-quality.js](../../.claude/hooks/typescript-quality.js) | PostToolUse Write/Edit | tsc --noEmit 타입 검사 — 에러 시 차단 (레거시 프로파일 선택 시 --changed-only) |
 
-> **2026-09-11부터 스택 템플릿과 같은 레벨(dev + TypeScript)**: health(10)·fortune(12)과 동일하게 개발 전용 훅 4종 + TypeScript 훅 1종, `adversarial-testing.md`·`typescript.md` 규칙, Codex 적대적 리뷰·레거시 프로파일 옵션 질문을 받는다. 이전에는 개발 에이전트(frontend-developer·python-backend-developer·qa-engineer)를 설치하면서 훅이 없어 qa-engineer가 명시하는 "adversarial-test-guard가 차단"이 성립하지 않았다. Memory 훅은 옵션이다. (공통 훅 표에 `session-export.js`가 빠져 있었던 것도 함께 정정 — 실제 공통은 15종.)
+> **2026-09-11부터 스택 템플릿과 같은 레벨(dev + TypeScript)**: health(10)·fortune(12)과 동일하게 개발 전용 훅 4종 + TypeScript 훅 1종, `adversarial-testing.md`·`typescript.md` 규칙, Codex 적대적 리뷰·레거시 프로파일 옵션 질문을 받는다. 이전에는 개발 에이전트(frontend-developer·python-backend-developer·qa-engineer)를 설치하면서 훅이 없어 qa-engineer가 명시하는 "adversarial-test-guard가 차단"이 성립하지 않았다. Memory 훅은 옵션이다. (공통 훅 표에 `session-export.js`가 빠져 있었던 것도 함께 정정 — 실제 공통은 당시 15종, 2026-09-30 `_lib.js` 삭제로 14종.)
 
 ---
 
@@ -132,4 +135,4 @@
 | `permissions.deny` | `git push --force`, `rm -rf` 시스템 경로, `chmod 777`, curl\|bash 패턴 |
 | `permissions.additionalDirectories` | `/tmp`, `/private/tmp`, `/var/folders` |
 | `statusLine` | 브랜치·미커밋·PENDING_TEST 상태 표시 (`statusline.sh`) |
-| 훅 연결 | 공통 15종 + 개발 전용 4종 + TypeScript 1종 전체 연결 |
+| 훅 연결 | 공통 14종 + 개발 전용 4종 + TypeScript 1종 전체 연결 |

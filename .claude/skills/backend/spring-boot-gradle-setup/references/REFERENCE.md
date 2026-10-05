@@ -50,7 +50,7 @@ Spring Boot 3로 올릴 때 **의존 라이브러리·도구도 함께 교체**�
 - `oauth2ResourceServer(...)` 설정도 람다 DSL 필수
 - jjwt 0.10.x → 0.12.x (API 완전 재작성, `parserBuilder` 제거)
 
-> 상세: `.claude/skills/backend/spring-security-5-jwt-jjwt10/SKILL.md` (레거시) / `spring-security-6-jwt-jjwt12/SKILL.md` (모던)
+> 상세(해당 템플릿이 설치된 경우): `.claude/skills/backend/spring-security-5-jwt-jjwt10/SKILL.md` (레거시) / `spring-security-6-jwt-jjwt12/SKILL.md` (모던)
 
 #### API 문서화: Springfox → Springdoc OpenAPI
 

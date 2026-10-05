@@ -14,7 +14,7 @@ paths:
 ## 타입 시스템
 
 - `any` 사용 금지 — `unknown` + 타입 가드로 대체
-- `as` 타입 단언은 외부 API 응답 경계에서만 허용
+- `as` 타입 단언은 외부 API 응답 경계에서만 허용. 예외: React 요소·ref 조작(Slot의 `cloneElement`, ref 병합)처럼 타입 시스템이 표현하지 못하는 경우, DOM 이벤트 타깃에서 `instanceof` 가드가 불가능한 경우. DOM 타깃은 `instanceof` 가드를 먼저 쓴다
 - 유니온/인터섹션 타입보다 명시적 인터페이스 우선
 - `interface`는 확장 가능한 객체 형태, `type`은 유니온·유틸리티 타입에 사용
 - `strictNullChecks: true` 준수 — 옵셔널 체이닝(`?.`), nullish 병합(`??`) 활용
@@ -47,7 +47,7 @@ paths:
 
 ## 에러 처리
 
-- 비동기 함수: `try/catch` 또는 TanStack Query `onError` 콜백
+- 비동기 함수: `try/catch`. TanStack Query v5는 `useQuery`의 `onSuccess`·`onError`·`onSettled`가 제거됐으므로 쿼리 에러는 반환값 `error`·`isError`나 `QueryCache`의 `onError`로 처리하고, 콜백은 `useMutation`에서만 쓴다 (v4 이하 레거시는 기존 방식 유지)
 - 컴포넌트 경계: `ErrorBoundary` 래핑
 - 사용자에게 보이는 에러 메시지는 기술 스택 정보 노출 금지
 
@@ -64,6 +64,6 @@ paths:
 ## 금지 패턴
 
 - `console.log` 프로덕션 코드에 남기지 않기
-- 인라인 스타일(`style={{}}`) — CSS Module 또는 SCSS 사용
-- `useEffect` 내부에서 상태 직접 업데이트 (무한 루프 위험)
+- 인라인 스타일(`style={{}}`) — CSS Module 또는 SCSS 사용. 예외: 헤드리스·프리미티브 컴포넌트의 **기능적 스타일**(런타임 위치 계산 결과, 시각적 숨김, 크기 측정값)은 허용하고, 장식 스타일은 계속 금지
+- `useEffect` 내부에서 상태 직접 업데이트 (무한 루프 위험). 예외: 하이드레이션 불일치를 피하기 위한 **마운트 후 1회 갱신**(빈 의존성 배열의 `setMounted(true)` 등 — React 공식 two-pass rendering 패턴)은 허용, 의존성 변화에 반응해 상태를 다시 쓰는 갱신은 계속 금지
 - prop drilling 3단계 초과 — Zustand 또는 Compound Component 패턴 사용

@@ -1,6 +1,7 @@
 # Memory Index
 
 ## Reference
+- [하네스 구조 요약·구조도 링크](reference_harness_structure.md) — 이벤트 순서는 Claude Code 고정, settings.json은 훅 배치만. SessionStart 훅은 차단 불가(지시 주입), 실제 차단은 Pre/Post/Stop. 테스트 274(실설치 검사 5종)
 - [comux/copad 자료+사용법](reference_comux_copad.md) — AI 에이전트용 tmux 스타일 멀티플렉서. 사용자 맥 풀 설치(install.sh 경로), 2026-09-17 v1.2.0 갱신. 업데이트 절차·copadd LaunchAgent 수동 bootstrap 함정·서버 재시작 필요 기록
 
 ## User
@@ -26,13 +27,14 @@
 - [사진 재현은 회전 방향 먼저 확정](feedback_pdf_photo_reproduction_rotation.md) — 180°(top→bottom)와 90° CCW(top→left) 혼동 시 행·열 전치. 기존 `pdf변환/` 스크립트부터 확인
 - [수정본은 새 파일명 + 미리보기 동봉](feedback_output_revision_delivery.md) — 같은 이름 덮어쓰기 금지(뷰어가 옛 버전 표시), 레이아웃 논쟁은 좌표로 제시
 - [라이브러리 스킬은 실제 사용량 실측 후 생성](feedback_verify_usage_before_library_skill.md) — package.json 의존성≠사용. import 파일 수 두 자리 이상일 때만 전용 스킬. vanilla-extract 죽은 devDep 사례
-- [전수 감사 사각지대 4유형](feedback_audit_blind_spots.md) — 훅 I/O 규약 공식 문서 대조·설치본 현지 수정 역류 점검·템플릿별 실설치 참조 스캔·짝 단위 처리. 2026-09-25 감사 직후 설치본 보고로 드러남
+- [전수 감사 사각지대](feedback_audit_blind_spots.md) — 훅 I/O 규약 대조·설치본 역류·실설치 참조 스캔·짝 단위 처리. **09-30: 교훈을 계획에 안 넣어 재발 → 설치본 참조·날짜 일치·문서 수치·소유 매트릭스를 테스트로 강제, 감사 계획에 체크리스트로 직접 포함**
+- [기준은 항상 원본 레포](feedback_source_repo_is_standard.md) — 설치본이 쓰고 있어도 원본 기준 불필요면 제거, 프로젝트별 보존 예외 없음, 유용한 내용만 원본으로 흡수 후 재설치로 배포
 - [삭제 요청은 범위를 좁게](feedback_deletion_scope_narrow.md) — 확정/경계/유지로 나눠 경계는 질문, 검색·검증 범용 에이전트는 휩쓸어 지우지 않음, 남는 자산의 설치 경로 이관
 - [토큰 95% 소진 시 일시 정지](feedback_pause_at_95_percent_tokens.md) — 장기 작업은 병렬 가능한 것만 병렬, 잔여 5% 이하면 새 작업 금지·완료/미완 목록+재개법 보고 후 멈춤
 
 ## Project — 컨벤션 자산 인프라
 
-- [★ 재개 지점 (2026-09-28 완료, 커밋 전 정지)](project_resume_2026-09-28.md) — 재검증·재테스트 완료(60일 초과 0·NEEDS_REVISION 0), 철학·학술 자산 삭제(스킬 209→187·에이전트 66→56·템플릿 8 폐지) + 2차: 7일 초과 71종 재검증, ralph-loop·riper-workflow·cra-to-vite 삭제(→184), 7일 초과 0 + 3차(09-29): PENDING_TEST 실행 검증 17→8. 남은 것: 사용자 요청 시 커밋·푸시·PR → 01·04 재설치
+- [★ 재개 지점 (2026-09-28 완료, 커밋 전 정지)](project_resume_2026-09-28.md) — 재검증·재테스트 완료(60일 초과 0·NEEDS_REVISION 0), 철학·학술 자산 삭제(스킬 209→187·에이전트 66→56·템플릿 8 폐지) + 2차: 7일 초과 71종 재검증, ralph-loop·riper-workflow·cra-to-vite 삭제(→184), 7일 초과 0 + 3차(09-29): PENDING_TEST 실행 검증 17→8. **PR #19 머지 완료(09-29)**. 남은 것: 01·04 재설치
 
 - [하네스 평가 & 훅 다이어트 완료](project_hook_diet_plan.md) — 2026-07-04 5단계 완료 + PR #9 머지. 2026-07-10 메모리 개편(memory-stop-guard 삭제)으로 훅 22종. 후순위 중 플러그인 전환은 2026-07-09 계획 수립 착수
 - [메모리 저장 구조 (2026-07-10 개편)](project_memory_architecture.md) — 전역 실제 디렉토리 = 1차 저장, 레포 memory/ = 워킹트리 미러, 자동 커밋 전면 폐지(memory·exports), Y/N 판별 = 레포 memory/ 존재 여부. export --refresh는 `CLAUDE_PROJECT_DIR` env 필수(없으면 무음 no-op), push는 커밋과 별도 Bash 호출로

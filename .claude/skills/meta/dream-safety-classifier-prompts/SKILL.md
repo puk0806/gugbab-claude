@@ -440,7 +440,7 @@ def handle_dream(user_dream: str) -> dict:
 
 9. **모델 ID 하드코딩** — `claude-3-haiku-20240307` 같은 구 모델 ID는
    deprecated. 현행은 `claude-haiku-4-5-20251001` (cookbook 사용) 또는
-   별칭 `claude-haiku-4-5`. `agent-design.md` 참조.
+   별칭 `claude-haiku-4-5`. `agent-design.md` 참조(작성 도구 옵션 설치 시).
 
 10. **분류기 호출 실패 시 fail-open** — 네트워크 오류로 분류기 호출이 실패했을
     때 *해몽 모델로 그냥 진행*하면 1차 안전망이 무력화된다. fail-closed로:

@@ -8,7 +8,9 @@ Java 21 + Spring Boot 3.x + Jar/Native + MyBatis 모던 백엔드 프로젝트.
 
 ---
 
-## 에이전트 (24종)
+## 에이전트 (24종 — 작성 도구 y 시 27종)
+
+> 2026-09-30 실측: 작성도구 n·codex n 기본 옵션 설치 기준.
 
 | 카테고리 | 에이전트 | 설명 |
 |----------|---------|------|
@@ -54,7 +56,7 @@ Java 21 + Spring Boot 3.x + Jar/Native + MyBatis 모던 백엔드 프로젝트.
 | architecture (3종) | ddd·incremental-refactoring·module-boundaries | [→ 목록](../skills/architecture/README.md) |
 | meta (1종) | claude-code-hook-authoring | [→ 목록](../skills/meta/README.md) |
 
-총 **26종** (2026-09-25 실측 — `redis-redisson-4` JAVA_SKILLS_MODERN_ONLY 누락 버그 수정 반영). 각 스킬의 `references/` 부속 파일도 함께 복사됩니다 (2026-08-31: SKILL.md만 복사되던 버그 수정).
+총 **24종** (2026-09-30 실측, 이전 26종 — 2026-09-25 실측 — `redis-redisson-4` JAVA_SKILLS_MODERN_ONLY 누락 버그 수정 반영). 각 스킬의 `references/` 부속 파일도 함께 복사됩니다 (2026-08-31: SKILL.md만 복사되던 버그 수정).
 
 > 레거시 전용 스킬(spring-security-5·swagger-springfox-2·redis-redisson-legacy·ehcache-2·aws-sdk-v1·spring-boot-2-to-3-migration) 제외.
 > 2026-08-31: dream 계열(meta 3·architecture 1)·n8n 5종·SEO(site-migration-seo)·프론트 전용(frontend-domain-structure·github-actions-visual-regression·vercel-sandbox)이 backend 외 카테고리 fallthrough로 딸려가던 누수를 차단했습니다. Python 스킬은 원래 설치되지 않습니다 (java 화이트리스트 방식).
@@ -62,13 +64,12 @@ Java 21 + Spring Boot 3.x + Jar/Native + MyBatis 모던 백엔드 프로젝트.
 
 ---
 
-## 훅 (19종)
+## 훅 (18종 — 공통 14 + 개발 전용 4)
 
-### 공통 (15종)
+### 공통 (14종)
 
 | 훅 | 이벤트 | 설명 |
 |----|--------|------|
-| [_lib.js](../../.claude/hooks/_lib.js) | — | 훅 공통 유틸리티 모듈 |
 | [bash-guard.js](../../.claude/hooks/bash-guard.js) | PreToolUse Bash | 위험한 Bash 명령어 패턴 차단 (rm -rf 시스템 경로, force push 등) |
 | [auto-approve.js](../../.claude/hooks/auto-approve.js) | PreToolUse | Bash를 제외한 도구 자동 승인 |
 | [parry.js](../../.claude/hooks/parry.js) | PreToolUse Write | 시크릿·프롬프트 인젝션 패턴 스캔 — 감지 시 저장 차단 |
@@ -97,7 +98,7 @@ Java 21 + Spring Boot 3.x + Jar/Native + MyBatis 모던 백엔드 프로젝트.
 
 ---
 
-## 규칙 (기본 5종)
+## 규칙 (기본 5종 — 작성 도구 y 시 10종)
 
 | 규칙 | 설명 |
 |------|------|
@@ -143,4 +144,4 @@ Java 21 + Spring Boot 3.x + Jar/Native + MyBatis 모던 백엔드 프로젝트.
 | `permissions.deny` | `git push --force`, `rm -rf` 시스템 경로, `chmod 777`, curl\|bash 패턴 |
 | `permissions.additionalDirectories` | `/tmp`, `/private/tmp`, `/var/folders` |
 | `statusLine` | 브랜치·미커밋·PENDING_TEST 상태 표시 (`statusline.sh`) |
-| 훅 연결 | 공통 15종 + dev(tdd-guard·test-fake-guard·adversarial-test-guard·fake-impl-guard) 연결 (TypeScript 훅 제외) |
+| 훅 연결 | 공통 14종 + dev(tdd-guard·test-fake-guard·adversarial-test-guard·fake-impl-guard) 연결 (TypeScript 훅 제외) |

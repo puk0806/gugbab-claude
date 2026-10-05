@@ -221,5 +221,5 @@ verdict: PASS | NEEDS_REVISION | FAIL
 ## 참조 메모리·규칙
 
 - `feedback_verification_strictness` — 검증 강도 안주 금지, 통합 시나리오 권장
-- `.claude/rules/agent-design.md` — 도구 최소 부여 원칙 (Read·Write만)
+- `.claude/rules/agent-design.md` (작성 도구 옵션 설치 시) — 도구 최소 부여 원칙 (Read·Write만)
 - `.claude/rules/info-verification.md` — 외부 정보 검증 우선순위

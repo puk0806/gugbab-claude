@@ -43,7 +43,7 @@ description: Spring Boot 2.5(Java 11) → 3.x(Java 17/21) 마이그레이션 실
 > "목적지(모던)" 열의 스킬이 실제로는 설치되지 않는다 — `java-spring-modern`을 함께 설치(예: `5,6`)한 경우에만 존재한다.
 > 단독 설치에서는 마이그레이션 목표를 가리키는 참고용 스킬명으로 읽는다.
 
-| 영역 | 출발지 (SB 2.5 / Java 11) | 목적지 (SB 3.x / Java 17+) |
+| 영역 | 출발지 (SB 2.5 / Java 11) | 목적지 (SB 3.x / Java 17+ — `java-spring-modern` 함께 설치 시에만 존재) |
 |------|---------------------------|----------------------------|
 | 빌드·패키징 | `backend/spring-boot-gradle-setup` (2장) | `backend/spring-boot-gradle-setup` (3장) |
 | 인증 | `backend/spring-security-5-jwt-jjwt10` | `backend/spring-security-6-jwt-jjwt12` |
@@ -236,7 +236,7 @@ public class SecurityConfig {
 }
 ```
 
-> 상세 코드: 출발지 `backend/spring-security-5-jwt-jjwt10`, 목적지 `backend/spring-security-6-jwt-jjwt12`.
+> 상세 코드: 출발지 `backend/spring-security-5-jwt-jjwt10`, 목적지 `backend/spring-security-6-jwt-jjwt12`(`java-spring-modern` 함께 설치 시).
 > jjwt 0.10.x → 0.12.x는 API가 재작성되었으므로 **Phase 4의 별도 작업**으로 잡는다(5.8 단계에서는 건드리지 않는다).
 
 #### Security 6에서 바뀌는 "동작" — 컴파일은 되는데 런타임에 터지는 것들
@@ -288,7 +288,7 @@ public class SecurityConfig {
 
 > "참조 스킬" 열의 조건부 설치 안내는 §0 참조(모던 스킬은 `java-spring-modern` 함께 설치 시에만 존재).
 
-| 영역 | SB 2.5 | SB 3.x | 이유 | 참조 스킬 |
+| 영역 | SB 2.5 | SB 3.x | 이유 | 참조 스킬 (모던은 `java-spring-modern` 함께 설치 시) |
 |------|--------|--------|------|-----------|
 | API 문서 | Springfox 2.9.x | **springdoc-openapi 2.x** | Springfox는 SB 3 미지원(사실상 EOL) | `backend/swagger-springfox-2` → `backend/springdoc-openapi-3` |
 | 분산 추적 | Spring Cloud Sleuth 3.x | **Micrometer Tracing** | Sleuth는 Spring Cloud 2022.0 릴리즈 트레인에서 제외, 코어가 Micrometer Tracing으로 이관 | `backend/logback-mdc-tracing` |

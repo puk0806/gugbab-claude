@@ -10,7 +10,9 @@
 
 ---
 
-## 에이전트 (23종)
+## 에이전트 (23종 — 작성 도구 y 시 26종)
+
+> 2026-09-30: SEO 옵트인 y 시 25종 — seo-auditor·content-quality-reviewer 추가(dream-interpretation과 동일, 이전에는 SEO y 여도 두 에이전트가 빠지던 결함 수정).
 
 | 카테고리 | 에이전트 | 설명 |
 |----------|---------|------|
@@ -43,7 +45,7 @@
 
 ---
 
-## 스킬 (96종 — SEO 옵트인 y 시 약 117종)
+## 스킬 (86종 — SEO c 102종 · SEO y 110종)
 
 ### 운세 앱 전용 (10종 — 이 템플릿과 `all`에서만 설치)
 
@@ -62,11 +64,11 @@
 
 > 2026-09-11 삭제 3종: `meta/fortune-safety-classifier-prompts`(안전 분류기 프롬프트)·`humanities/fortune-content-ethics-korea`(표시광고법·전자상거래법·개인정보 규제)·`backend/web-subscription-payments-korea`(정기결제) — 캐주얼 앱에 과잉. 필요해지면 git 이력(2026-09-10 신설 커밋 전 워킹트리)이 아니라 신규 작성으로 되살린다(미커밋 상태에서 삭제됨).
 
-### 공유 스킬 (86종 — SEO y 시 약 107종)
+### 공유 스킬 (76종 — SEO y 시 100종)
 
 | 카테고리 | 종류 | 링크 |
 |----------|------|------|
-| frontend (51종 / SEO y 시 약 70종) | 프레임워크·상태관리·UI·빌드·테스트·성능·LLM 스트리밍·PWA (dream-* 전용 제외, SEO·GEO 19종은 옵트인 — 정적 HTML 전용 `seo-static-html` 은 스택 템플릿과 같이 제외) | [→ frontend 스킬 목록](../skills/frontend/README.md) |
+| frontend (46종 / SEO y 시 65종) | 프레임워크·상태관리·UI·빌드·테스트·성능·LLM 스트리밍·PWA (dream-* 전용 제외, SEO·GEO 19종은 옵트인 — 정적 HTML 전용 `seo-static-html` 은 스택 템플릿과 같이 제외) | [→ frontend 스킬 목록](../skills/frontend/README.md) |
 | backend — Python + TypeScript (15종) | Python 10종(FastAPI·Pydantic·LlamaIndex·Anthropic SDK 등) + TS 백엔드 5종 — hono-api-patterns·prisma-orm·zod-schema-validation·better-auth·drizzle-neon-postgres (짝 에이전트 typescript-backend-* 소유, 2026-09-25 신설 — 이전 표는 Python 10종만 계상하던 누락이었다) | [→ backend 스킬 목록](../skills/backend/README.md) |
 | devops (10종 / SEO y 시 11종) | docker-deployment·github-actions·github-actions-visual-regression·n8n 5종·vercel-sandbox·vercel-workflow (+ site-migration-seo 는 옵트인) — vercel-workflow 는 사용자별 지정 시각 Web Push 예약용 (2026-09-17, 이전 표는 vercel-workflow 반영 전 9종이었다) | [→ devops 스킬 목록](../skills/devops/README.md) |
 | architecture (4종) | DDD·프론트 도메인 구조·모듈 경계·점진 리팩터링 | [→ architecture 스킬 목록](../skills/architecture/README.md) |
@@ -75,15 +77,14 @@
 
 > game·education·research·health 카테고리와 Java·Rust 백엔드, dream 전용 스킬(frontend `dream-*` 8종·meta 3종·`dream-journal-data-modeling`), humanities 공유 스킬(위기 자원 포함)은 제외된다.
 > **SEO·GEO 옵트인 (2026-09-11)**: react-spa·nextjs와 같은 질문(`y` 전체 / `c` 커머스 / `n` 제외, 엔터 = n)을 받는다. 이전에는 SEO 20종 + writing 4종이 무조건 포함돼 seo-geo(11) 병행 선택이 무의미했다. 캐주얼 앱이면 n.
-> 2026-09-26 실측(SEO n 기본 옵션): 스킬 89종(공유 79 + 운세 전용 10) · 에이전트 23종 — frontend 스킬 정리(제거 3·병합 4) 반영. SEO y 수치는 이전 표의 증분(+19 frontend·+4 writing·+1 devops)을 새 기준값에 반영한 추정치다.
+> 2026-09-30 실측(SEO n 기본 옵션): 스킬 86종(공유 76 + 운세 전용 10) · 에이전트 23종 · 훅 19 · 규칙 5 · 커맨드 9 — SEO c 102종·SEO y 110종(+19 frontend·+4 writing·+1 devops 실측). 이전 2026-09-26 실측은 스킬 89종.
 
 ---
 
-## 훅 (20종 — 공통 15 + 개발 전용 4 + TypeScript 1)
+## 훅 (19종 — 공통 14 + 개발 전용 4 + TypeScript 1)
 
 | 훅 | 이벤트 | 설명 |
 |----|--------|------|
-| [_lib.js](../../.claude/hooks/_lib.js) | — | 훅 공통 유틸리티 모듈 |
 | [bash-guard.js](../../.claude/hooks/bash-guard.js) | PreToolUse Bash | 위험한 Bash 명령어 패턴 차단 (rm -rf 시스템 경로, force push 등) |
 | [auto-approve.js](../../.claude/hooks/auto-approve.js) | PreToolUse | Bash를 제외한 도구 자동 승인 |
 | [parry.js](../../.claude/hooks/parry.js) | PreToolUse Write | 시크릿·프롬프트 인젝션 패턴 스캔 — 감지 시 저장 차단 |
@@ -152,10 +153,10 @@
 | `permissions.deny` | `git push --force`, `rm -rf` 시스템 경로, `chmod 777`, curl\|bash 패턴 |
 | `permissions.additionalDirectories` | `/tmp`, `/private/tmp`, `/var/folders` |
 | `statusLine` | 브랜치·미커밋·PENDING_TEST 상태 표시 (`statusline.sh`) |
-| 훅 연결 | 공통 15종 + 개발 전용 4종 + TypeScript 1종 |
+| 훅 연결 | 공통 14종 + 개발 전용 4종 + TypeScript 1종 |
 
 ---
 
-## 설치 검증 (2026-09-11)
+## 설치 검증 (2026-09-11, 2026-09-30 재실측)
 
-임시 디렉토리에 기본 옵션(memory·superpowers·codex·레거시·작성 도구·readme-guard·staleness·branch-protection 전부 n, SEO 엔터 = n)으로 설치해 **에이전트 23 / 스킬 89(운세 전용 10종 전부 포함) / 훅 20 / 규칙 5 / 커맨드 9**가 매니페스트에 기록되고 `templates: ["fortune-app"]`이 남는 것을 확인했다. SEO 옵트인 y 시 스킬 113(SEO 19 + writing 4 + site-migration-seo). 운세 전용 스킬 10종은 react-spa·nextjs·dream·java 등 다른 템플릿에서 `is_fortune_skill` 게이트로 차단되고, `12 → util` 다운그레이드 재설치에서 수렴한다. `scripts/template-separation.test.js` fortune 케이스 5건(양성 대조·SEO y·누수·다운그레이드·수정본 보존) 포함 전체 통과.
+임시 디렉토리에 기본 옵션(memory·superpowers·codex·레거시·작성 도구·readme-guard·staleness·branch-protection 전부 n, SEO 엔터 = n)으로 설치해 **에이전트 23 / 스킬 86(운세 전용 10종 전부 포함) / 훅 19 / 규칙 5 / 커맨드 9**가 매니페스트에 기록되고 `templates: ["fortune-app"]`이 남는 것을 확인했다. SEO 옵트인 y 시 스킬 110(SEO 19 + writing 4 + site-migration-seo). 운세 전용 스킬 10종은 react-spa·nextjs·dream·java 등 다른 템플릿에서 `is_fortune_skill` 게이트로 차단되고, `12 → util` 다운그레이드 재설치에서 수렴한다. `scripts/template-separation.test.js` fortune 케이스 5건(양성 대조·SEO y·누수·다운그레이드·수정본 보존) 포함 전체 통과.

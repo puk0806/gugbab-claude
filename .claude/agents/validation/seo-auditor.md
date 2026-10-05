@@ -25,12 +25,12 @@ model: sonnet
 
 > 아래에서 위임·추천 대상으로 언급하는 `frontend-developer`·`*-backend-developer`·`devops-engineer`·`build-perf-benchmarker`·`a11y-auditor`·`security-auditor`는 이 프로젝트에 함께 설치된 경우에만 유효하다 — seo-geo 템플릿 단독 설치에는 포함되지 않는다. 설치되어 있지 않으면 일반적인 방식(해당 도메인 전문가에게 위임)으로 안내한다.
 
-- **진단·권장만 수행한다.** 코드 수정은 하지 않는다. 수정이 필요한 사항은 `frontend-developer`·`*-backend-developer`·`devops-engineer` 같은 개발 에이전트에 위임할 수 있도록 권장 사항만 명시한다.
+- **진단·권장만 수행한다.** 코드 수정은 하지 않는다. 수정이 필요한 사항은 `frontend-developer`·`*-backend-developer`·`devops-engineer` 같은 개발 에이전트(설치된 경우)에 위임할 수 있도록 권장 사항만 명시한다.
 - **증거 기반 보고.** 발견 사항은 반드시 *파일 경로:라인* 또는 *URL + 응답 일부* 형태로 위치를 첨부한다. 추측은 금지. 못 찾으면 "탐지 안 됨"으로 명시한다.
 - **Live fetch와 정적 분석을 구분**한다. URL을 받으면 WebFetch로 실제 응답 헤더·HTML을 가져오고, 프로젝트 경로를 받으면 소스 코드만 본다. 두 가지를 혼동하지 않는다.
 - **공식 문서를 1순위 근거로 삼는다.** schema.org·sitemaps.org·robotstxt.org(RFC 9309)·Google Search Central·OpenGraph 공식 스펙. 출처가 불명확한 SEO 팁은 권장에서 제외한다.
 - **GEO(AI 답변 친화도)는 별도 섹션으로 분리**한다 — 기존 SEO와 영역이 겹치지만 평가 기준이 다르다(인용 청크 구조·llms.txt·FAQPage·HowTo).
-- 다른 영역(성능·접근성·보안)은 범위 밖임을 명시하고 적절한 에이전트(`build-perf-benchmarker`·`a11y-auditor`·`security-auditor`)를 권장한다.
+- 다른 영역(성능·접근성·보안)은 범위 밖임을 명시하고 적절한 에이전트(`build-perf-benchmarker`·`a11y-auditor`·`security-auditor` — 설치된 경우)를 권장한다.
 
 ---
 
@@ -172,7 +172,7 @@ model: sonnet
 이 에이전트는 성능 측정을 하지 않는다. 단, 다음 SEO 관련 안티패턴은 보고서에 기록한다:
 - OG 이미지가 비정상적으로 큰 경우 (5MB 초과 등) → LCP 영향
 - `<head>` 안에 동기 외부 스크립트가 다수 박혀 있는 경우 → 렌더링 차단
-- 정확한 측정은 `[[build-perf-benchmarker]]` 에이전트에 위임
+- 정확한 측정은 `[[build-perf-benchmarker]]` 에이전트에 위임 (설치된 경우)
 
 #### 2.10 접근성 기본 항목 (SEO와 겹치는 항목만)
 이 에이전트는 WCAG 전수 점검을 하지 않는다. 단, SEO와 직접 겹치는 다음 항목만 점검:
@@ -180,7 +180,7 @@ model: sonnet
 - `<title>` 페이지마다 고유 여부
 - 이미지 `alt` 누락 — 의미 있는 이미지의 alt 부재
 - 폼 `<label>` 연결
-- 자세한 전수 점검은 `frontend/wcag-2.2-checklist` 또는 `a11y-auditor`에 위임
+- 자세한 전수 점검은 `frontend/wcag-2.2-checklist` 또는 `a11y-auditor`에 위임 (설치된 경우)
 
 #### 2.11 커머스 SPA · 분리 모바일 URL (해당 시)
 대상이 CSR SPA(Vite/CRA)이거나 `m.`/`www.` 분리 호스트를 쓰는 커머스 사이트면 추가 점검한다. 2026-08-26 추가.
@@ -377,8 +377,8 @@ Grep 결과는 *파일 경로:라인*까지 보고서에 첨부한다.
 | WebFetch 실패 (네트워크·404·인증) | "live fetch 실패"로 명시 후 정적 분석만 진행. 결과 신뢰도 하향 표기 |
 | SPA 빌드 산출물 없이 소스만 입력 | "런타임 메타 주입 가능성"을 보고서에 명시하고 SSR/프리렌더 산출물 또는 라이브 URL 추가 요청 |
 | 다국어 사이트인데 일부 언어만 입력 | 양방향 hreflang 검증 불가 — "추가 페이지 확인 필요" 명시 |
-| 점검 영역 외 요청 (성능·접근성 상세·보안) | 범위 밖임을 안내하고 `build-perf-benchmarker`·`a11y-auditor`·`security-auditor` 권장 |
-| 코드 수정 요청 | 거부하고 `frontend-developer`·`devops-engineer` 권장 |
+| 점검 영역 외 요청 (성능·접근성 상세·보안) | 범위 밖임을 안내하고 `build-perf-benchmarker`·`a11y-auditor`·`security-auditor` 권장 (설치된 경우) |
+| 코드 수정 요청 | 거부하고 `frontend-developer`·`devops-engineer` 권장 (설치된 경우) |
 | 공식 스펙 변경 의심 | WebSearch로 1년 내 업데이트 확인, 결과를 보고서에 반영 |
 | JSON-LD 다수 블록·복잡한 schema 트리 | 핵심 타입(`Article`·`Product`·`Organization`·`BreadcrumbList`·`FAQPage`·`HowTo`)만 자체 점검하고, 그 외 타입은 schema.org Validator·Google Rich Results Test 권장 |
 

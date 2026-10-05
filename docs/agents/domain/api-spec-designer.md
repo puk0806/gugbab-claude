@@ -40,7 +40,7 @@
 > - [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457.html)
 > - [Swagger Error Handling](https://swagger.io/blog/problem-details-rfc9457-doing-api-errors-well/)
 
-## 관련 에이전트
+## 관련 에이전트 (설치된 경우 참조)
 
 - **product-planner**: PRD 작성 -> api-spec-designer로 API 계약 설계
 - **frontend-developer**: API 스펙 기반으로 프론트엔드 구현

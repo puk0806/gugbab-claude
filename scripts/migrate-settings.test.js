@@ -320,3 +320,36 @@ test('B 악성: symlink settings 는 교정·제거 대상이어도 링크 대�
   assert.match(r.stdout, /⚠.*symlink/);
   fs.rmSync(dir, { recursive: true, force: true });
 });
+
+// ── 2026-09-30: _lib.js 폐지 — RETIRED_HOOKS 확장 ─────────────────────────────
+test('불변식: RETIRED_HOOKS 는 현행 소스 훅과 겹치지 않고(_lib 포함), 이름은 경로 문자가 없는 base 이다', () => {
+  const { RETIRED_HOOKS } = require('./migrate-settings.js');
+  const src = new Set(fs.readdirSync(path.join(__dirname, '..', '.claude', 'hooks')).map((f) => f.replace(/\.c?js$/, '')));
+  assert.ok(RETIRED_HOOKS.includes('_lib'), '_lib 가 폐지 목록에 없음');
+  assert.deepStrictEqual(RETIRED_HOOKS.filter((b) => src.has(b)), [], '현행 훅이 폐지 목록에 있음 — 설치 직후 정리 대상이 됨');
+  assert.strictEqual(new Set(RETIRED_HOOKS).size, RETIRED_HOOKS.length, '폐지 목록 중복');
+  for (const b of RETIRED_HOOKS) assert.match(b, /^[A-Za-z0-9_-]+$/, `경로·확장자 포함 이름: ${b}`);
+});
+
+test('_lib 경계·악성: 설치본에 파일 없는 우리 경로 배선만 제거, 파일 있음·사용자 경로·위장 이름은 보존', () => {
+  const s0 = { hooks: { Stop: [{ hooks: [
+    H2('node "$CLAUDE_PROJECT_DIR"/.claude/hooks/_lib.js'),        // 죽은 배선 → 제거
+    H2('node ./tools/hooks/_lib.js'),                              // 사용자 경로 → 보존
+    H2('node "$CLAUDE_PROJECT_DIR"/.claude/hooks/my_lib.js'),      // 위장(부분 일치) → 보존
+    H2('node "$CLAUDE_PROJECT_DIR"/.claude/hooks/session-export.js'),
+  ] }] } };
+  const { dir, f } = withHooks(s0, ['session-export.js']);
+  assert.strictEqual(run(f).status, 0);
+  assert.deepStrictEqual(cmds(JSON.parse(fs.readFileSync(f, 'utf8')), 'Stop'), [
+    'node ./tools/hooks/_lib.js',
+    'node "$CLAUDE_PROJECT_DIR"/.claude/hooks/my_lib.js',
+    'node "$CLAUDE_PROJECT_DIR"/.claude/hooks/session-export.js',
+  ]);
+  fs.rmSync(dir, { recursive: true, force: true });
+  // 파일이 설치본에 있으면(소유 미증명 보존 상태) 배선도 보존
+  const x = withHooks({ hooks: { Stop: [{ hooks: [H2('node "$CLAUDE_PROJECT_DIR"/.claude/hooks/_lib.js')] }] } }, ['_lib.js']);
+  const before = fs.readFileSync(x.f, 'utf8');
+  assert.strictEqual(run(x.f).status, 0);
+  assert.strictEqual(fs.readFileSync(x.f, 'utf8'), before, '파일이 있는 _lib 배선이 제거됨');
+  fs.rmSync(x.dir, { recursive: true, force: true });
+});

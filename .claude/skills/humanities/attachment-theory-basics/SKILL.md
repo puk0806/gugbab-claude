@@ -15,7 +15,7 @@ description: >
 # 성인 애착 이론 기초 (Attachment Theory Basics)
 
 > 소스: Bowlby (1969/1982) *Attachment and Loss Vol.1* — https://www.amazon.com/Attachment-Loss-Basic-Books-Classics/dp/0465005438
-> 검증일: 2026-05-15 / §10 관계 패턴 모델 2026-09-26 병합(재검증 반영)
+> 검증일: 2026-09-26 (최초 2026-05-15 / §10 관계 패턴 모델 2026-09-26 병합·재검증 반영)
 > 짝 스킬: `humanities/dream-psychology-jung-freud` (꿈 해석 시 함께 활용) · `meta/dream-interpretation-prompt-engineering` (꿈 해몽 후 관계 조언 — §10 가드레일 적용)
 
 **전체 1차 문헌 소스:**

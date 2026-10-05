@@ -36,6 +36,7 @@ status: APPROVED
 | 스킬 이름 | multipart-upload |
 | 스킬 경로 | .claude/skills/multipart-upload/SKILL.md |
 | 최초 작성일 | 2026-04-06 |
+| 검증일 | 2026-09-26 (최초 2026-04-06, 직전 재검증 2026-06-20) |
 | 재검증일 | 2026-09-26 (직전 재검증 2026-06-20) |
 | 검증 방법 | rust-backend-developer 활용 테스트 |
 | 버전 기준 | axum 0.8.x |

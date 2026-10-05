@@ -12,7 +12,7 @@ description: Prisma ORM 7.x(TypeScript) 사용 패턴 — prisma-client 제너�
 > - Vercel: https://vercel.com/kb/guide/connection-pooling-with-functions
 > - 2026-09-26 보강: https://www.prisma.io/docs/orm/prisma-client/client-extensions/query ($extends 로깅 전체 예시), https://neon.com/docs/guides/prisma (connect_timeout 위치), https://neon.com/docs/guides/vercel-managed-integration (Vercel-Neon 환경변수명), https://unpkg.com/@prisma/adapter-neon@7.10.0/dist/index.d.ts (PrismaNeonHttp 생성자 원본 확인)
 >
-> 검증일: 2026-09-25 (섹션 5·7·9·10 보강은 2026-09-26)
+> 검증일: 2026-09-26 (최초 2026-09-25, 섹션 5·7·9·10 보강·재테스트 2026-09-26)
 > 기준 버전: **Prisma ORM 7.10.0** (`@prisma/client`·`@prisma/adapter-*` dist-tag `latest` = 7.10.0, GitHub "Latest" = 7.10.0, 2026-08-25)
 > 최소 요구: Node.js **20.19.0+** (22.x 권장), TypeScript **5.4.0+** (5.9.x 권장)
 

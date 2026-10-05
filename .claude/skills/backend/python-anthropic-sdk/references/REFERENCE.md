@@ -72,7 +72,7 @@ message = client.messages.create(
 > 신규 코드는 Opus 5.5·Fable 5.1·Sonnet 5를 쓰고, 기존 코드는 마이그레이션 가이드를 따라 옮긴다
 > (Opus 5 → 5.5 전환 시 thinking disabled·강제 `tool_choice` 제거, effort 명시 필요).
 > Haiku 4.5는 **여전히 현행**이므로 교체하지 않는다.
-> 모델 선택 기준은 `.claude/rules/agent-design.md`를 따른다.
+> 모델 선택 기준은 `.claude/rules/agent-design.md`(작성 도구 옵션 설치 시)를 따른다.
 
 ---
 

@@ -7,7 +7,7 @@ CLAUDE.md와 agent-creator 모두 이 파일을 기준으로 삼습니다.
 
 ## 모델 선택 기준
 
-| 모델 | 최신 ID | 적합한 경우 | 예시 |
+| 모델 | 최신 ID | 적합한 경우 | 예시 (설치 템플릿에 따라 설치되지 않을 수 있음) |
 |------|---------|------------|------|
 | fable | `claude-fable-5-1` | 최고난도 **장기(long-horizon) 멀티에이전트 오케스트레이션** — 다수 서브에이전트를 장시간 지휘·종합 | deep-researcher |
 | `opus` | `claude-opus-5-5` | 최고난도 판단·분석, 일반 오케스트레이터 | agent-creator, skill-creator |
@@ -88,11 +88,18 @@ model: {opus|sonnet|haiku}
 ## 폴더 구조
 
 ```
-.claude/agents/
-├── meta/        ← 에이전트 생성·관리 도구
-├── research/    ← 리서치·조사 관련
-├── validation/  ← 검증·확인 관련
-└── frontend/    ← 프론트엔드 개발 관련
+.claude/agents/   (괄호 안 에이전트명은 예시 — 설치 템플릿에 따라 설치되지 않을 수 있음)
+├── meta/        ← 에이전트 생성·관리 도구 (agent-creator, skill-creator, skill-tester 등)
+├── research/    ← 리서치·조사·분석 (deep-researcher, web-searcher 등)
+├── validation/  ← 검증·감사·심사 (fact-checker, qa-engineer, seo-auditor 등)
+├── frontend/    ← 프론트엔드 개발·아키텍처
+├── backend/     ← 언어별 백엔드 개발·아키텍처, DB 설계
+├── domain/      ← 도메인 분석·기획·UI/UX·API 설계
+├── devops/      ← 배포·CI/CD
+├── game/        ← Unity 게임 개발·출시·수익화
+└── health/      ← 건강·식단 앱 프롬프트 검증
 ```
+
+> 설치 템플릿에 따라 일부 카테고리만 설치된다 — `project-install.sh`의 에이전트 필터 참조.
 
 새 카테고리 추가 시 `docs/agents/{category}/` 문서 폴더도 함께 생성한다.

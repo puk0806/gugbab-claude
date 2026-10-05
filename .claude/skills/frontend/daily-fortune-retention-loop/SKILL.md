@@ -272,7 +272,7 @@ function streakMessage(streak: number, brokenYesterday: boolean): string {
 
 공유는 **신규 사용자 획득**과 **본인 재방문**을 동시에 노리는 장치다. 구현은 전용 스킬(설치된 경우)에 위임한다.
 
-| 작업 | 참조 스킬 |
+| 작업 | 참조 스킬 (설치된 경우) |
 |---|---|
 | 카카오톡 공유 미리보기·`Kakao.Share.sendDefault`·OG 캐시 초기화 | `frontend/kakao-share-optimization` |
 | 운세 카드 OG 이미지 동적 생성(문구 합성·폰트·캐싱) | `frontend/og-image-generation` |

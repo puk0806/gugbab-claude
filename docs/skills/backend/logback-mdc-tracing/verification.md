@@ -2,7 +2,7 @@
 skill: logback-mdc-tracing
 category: backend
 version: v1
-date: 2026-09-26 (최초: 2026-04-22, 2026-06-19 APPROVED 전환)
+date: 2026-09-26
 status: APPROVED
 ---
 
