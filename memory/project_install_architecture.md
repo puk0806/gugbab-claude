@@ -5,11 +5,12 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 9152b891-1df7-4c78-8301-10defaed293c
-  modified: 2026-09-27T20:26:21.141Z
+  modified: 2026-09-30T06:18:32.495Z
 ---
 
 gugbab-claude는 Claude Code 컨벤션 소스 레포. `project-install.sh`로 다른 프로젝트에 이식.
 
+> 2026-09-30 갱신: 하네스 구조 조사에서 드러난 결함 수정 — ① rust(4)·unity(7) `EXCLUDE_AGENTS_RUST/GAME`에 seo-auditor·content-quality-reviewer 추가(SEO 질문 없는 템플릿이라 누수였음, `4,11`·`7,11`은 seo-geo 화이트리스트로 유지, 기존 설치본은 `SEO_GEO_AGENTS` 기록 경로로 재설치 시 prune) ② all(0) 베이스 CLAUDE.md 도메인 섹션 삽입이 `^## 규칙 참조`만 찾아 `## 상황별 규칙 참조`(CLAUDE.template.md)에서 무음 실패 → `(상황별 )?` ERE, 제목 없으면 경고 ③ `_lib.js` 폐지(공통 훅 14종) + `RETIRED_HOOKS`에 `_lib`, 배선 제거 정규식을 `.claude/hooks/` 경로로 한정(사용자 동명 훅 보호). 남은 후속: all·`5,11` 조합에서 추가 템플릿의 규칙 참조 표 행은 베이스 표로 병합되지 않음. E2E 62건.
 > 2026-09-28 갱신: **템플릿 8 `academic` 폐지** — 사용자 결정으로 철학·도덕교육·학술 자산(스킬 22·에이전트 10) 삭제에 따라 메뉴·`_parse_template`·`ACADEMIC_AGENTS`·스킬 분기·`examples/CLAUDE.academic.md`·`docs/templates/academic.md` 제거. **번호 8은 재사용하지 않는다**(기존 조합 번호 `5,11`·`12` 등 보존) — `8`/`academic` 입력은 "알 수 없는 템플릿"으로 거부. `SPECIAL_AGENTS_ACADEMIC` → `SPECIAL_AGENTS_UTIL_ONLY`(socratic-interviewer 1종, util·all 전용, 개발 템플릿 제외 유지). template-separation E2E 56건.
 
 > 2026-09-25 갱신: **템플릿 13 `python-fastapi` 신설**(python 스킬 10종·python 에이전트 소유, dev 질문만 받고 TS·SEO 질문 없음, `agents/backend/CLAUDE.md`는 rust/java 규칙 import라 제외, 13→다른 템플릿 재설치 시 python 자산 prune). `SPECIAL_AGENTS_HEALTH`로 health 전용 에이전트는 10·0에서만. `redis-redisson-4`는 `JAVA_SKILLS_MODERN_ONLY`. 같은 날 2차: `TS_BACKEND_SKILLS`(hono·prisma·zod·better-auth·drizzle-neon-postgres)는 react-spa·nextjs·health·fortune-app·all 소유, TS 백엔드 에이전트는 rust·java·unity 제외, 에이전트 디렉토리 CLAUDE.md는 소유 템플릿만 + 없는 규칙 import 줄 설치 시 제거, 입력 루프는 `prompt_read`(EOF → exit 1). 2026-09-26: prune은 스킬 폴더+references+docs / 에이전트+docs+verification을 **한 단위**로 판정(하나라도 수정본이면 전체 보존), `.claude/hooks/package.json`({"type":"commonjs"}) 항상 설치(ESM 대상 크래시 방지), instructions-loaded·staleness-check는 SessionStart 배선(InstructionsLoaded는 출력 폐기). 상세 [[feedback_audit_blind_spots]]. 상세 → [[project_full_audit_2026-09-25]].
