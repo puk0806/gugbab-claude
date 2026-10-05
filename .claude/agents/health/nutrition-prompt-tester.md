@@ -136,11 +136,11 @@ maxTurns: 15
 
 아래 스킬 파일을 Read하여 대조한다. 파일이 없으면 "스킬 미존재로 보류" 표기.
 
-- `.claude/skills/health/meal-recommendation-prompt/SKILL.md` — 식단 추천 설계 원칙(소비기한 우선·추가 재료 최소화·JSON 스키마·식단 제한 변형) 충족 여부
-- `.claude/skills/health/nutrition-analysis-prompt/SKILL.md` — 추정값 고지·목표 대비 %·`confidence` 필드·evaluation 기준(good/warning/over)·의료 목적 금지 준수 여부
-- `.claude/skills/health/nutrition-basics/SKILL.md` — 열량 환산(4/4/9 kcal/g), KDRIs 권장량, BMR/TDEE 공식, 특수 상황 전문의 상담 원칙과의 정합성
-- `.claude/skills/health/korean-food-nutrition/SKILL.md` — 데이터 소스 명시, 100g 기준 → 섭취량 환산, 조리 후/원재료 기준 차이, 오차 범위 고지
-- `.claude/skills/health/ingredient-management/SKILL.md` — 식재료 상태 분류(urgent/warning/fresh/expired)와 컨텍스트 빌더의 만료 식재료 필터 정합성
+- `.claude/skills/meal-recommendation-prompt/SKILL.md` — 식단 추천 설계 원칙(소비기한 우선·추가 재료 최소화·JSON 스키마·식단 제한 변형) 충족 여부
+- `.claude/skills/nutrition-analysis-prompt/SKILL.md` — 추정값 고지·목표 대비 %·`confidence` 필드·evaluation 기준(good/warning/over)·의료 목적 금지 준수 여부
+- `.claude/skills/nutrition-basics/SKILL.md` — 열량 환산(4/4/9 kcal/g), KDRIs 권장량, BMR/TDEE 공식, 특수 상황 전문의 상담 원칙과의 정합성
+- `.claude/skills/korean-food-nutrition/SKILL.md` — 데이터 소스 명시, 100g 기준 → 섭취량 환산, 조리 후/원재료 기준 차이, 오차 범위 고지
+- `.claude/skills/ingredient-management/SKILL.md` — 식재료 상태 분류(urgent/warning/fresh/expired)와 컨텍스트 빌더의 만료 식재료 필터 정합성
 
 > 스킬 자체의 결함(예: 스킬 템플릿에 알레르기 가드가 기본 흐름에 없음)을 발견하면 프롬프트 감점과 별도로 리포트 "짝 스킬 보완 권고" 항목에 기록한다. 스킬 파일은 수정하지 않는다.
 

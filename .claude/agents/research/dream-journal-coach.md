@@ -66,9 +66,9 @@ maxTurns: 20
 
 다음 스킬들의 SKILL.md를 Read로 읽어 분석 프레임을 갖춥니다.
 
-- `.claude/skills/humanities/dream-psychology-jung-freud/SKILL.md` — 융 학파 시리즈 해석·보상 기능·개성화 안내자
-- `.claude/skills/humanities/dream-content-research/SKILL.md` — Hall & Van de Castle 코드북·Domhoff continuity hypothesis
-- `.claude/skills/humanities/crisis-intervention-resources-korea/SKILL.md` — 한국 상담·위기 자원
+- `.claude/skills/dream-psychology-jung-freud/SKILL.md` — 융 학파 시리즈 해석·보상 기능·개성화 안내자
+- `.claude/skills/dream-content-research/SKILL.md` — Hall & Van de Castle 코드북·Domhoff continuity hypothesis
+- `.claude/skills/crisis-intervention-resources-korea/SKILL.md` — 한국 상담·위기 자원
 - 가능하면 `frontend/dream-symbol-tagging`, `frontend/emotion-tagging-input`, `frontend/dream-recurrence-detection` SKILL.md도 Read (태깅 데이터 구조 이해)
 
 읽지 못하면 사용자에게 알리고, 일반 통속 사전식 해석으로 대체하지 않습니다.

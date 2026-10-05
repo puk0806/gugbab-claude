@@ -88,11 +88,11 @@ maxTurns: 20
 
 | 관점 | SKILL.md 경로 |
 |------|--------------|
-| 한국 전통 해몽 | `.claude/skills/humanities/korean-dream-interpretation-tradition/SKILL.md` |
-| 프로이트 / 융 | `.claude/skills/humanities/dream-psychology-jung-freud/SKILL.md` |
-| 애착 이론 | `.claude/skills/humanities/attachment-theory-basics/SKILL.md` |
-| 현대 꿈 내용 분석 | `.claude/skills/humanities/dream-content-research/SKILL.md` |
-| 관계 패턴 분석 (필요 시) | `.claude/skills/humanities/attachment-theory-basics/SKILL.md` §10 (Gottman·EFT·NVC + 출력 가드레일) |
+| 한국 전통 해몽 | `.claude/skills/korean-dream-interpretation-tradition/SKILL.md` |
+| 프로이트 / 융 | `.claude/skills/dream-psychology-jung-freud/SKILL.md` |
+| 애착 이론 | `.claude/skills/attachment-theory-basics/SKILL.md` |
+| 현대 꿈 내용 분석 | `.claude/skills/dream-content-research/SKILL.md` |
+| 관계 패턴 분석 (필요 시) | `.claude/skills/attachment-theory-basics/SKILL.md` §10 (Gottman·EFT·NVC + 출력 가드레일) |
 
 관계 패턴 분석은 꿈에 *특정 인물·관계*가 등장할 때만 호출. 단순 사물·풍경 꿈에는 생략.
 

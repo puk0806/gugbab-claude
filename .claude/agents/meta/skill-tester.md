@@ -23,7 +23,7 @@ maxTurns: 30
 ## 입력
 
 다음 중 하나:
-1. **단일 스킬 경로** — `.claude/skills/{category}/{name}` 또는 스킬 이름만
+1. **단일 스킬 경로** — `.claude/skills/{name}` 또는 스킬 이름만
 2. **일괄 처리 지시** — "오늘 PENDING_TEST 전부", "backend 카테고리 전체" 등
 
 여러 스킬이면 **순차 처리**한다 (병렬 시 verification.md 동시 수정 충돌 위험).

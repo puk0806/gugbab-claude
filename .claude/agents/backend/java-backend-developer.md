@@ -40,16 +40,16 @@ model: sonnet
 
 | 스킬 | 경로 | 활용 시점 |
 |------|------|-----------|
-| spring-boot-gradle-setup | `.claude/skills/backend/spring-boot-gradle-setup/SKILL.md` | 프로젝트 초기 설정, 의존성, WAR/Jar 패키징 |
-| mybatis-mapper-patterns | `.claude/skills/backend/mybatis-mapper-patterns/SKILL.md` | Mapper 인터페이스·XML 작성 |
-| spring-multi-datasource-oracle-mysql | `.claude/skills/backend/spring-multi-datasource-oracle-mysql/SKILL.md` | Oracle + MySQL 동시 사용 설정 |
-| spring-security-5-jwt-jjwt10 | `.claude/skills/backend/spring-security-5-jwt-jjwt10/SKILL.md` | 레거시 Security + JWT |
-| spring-security-6-jwt-jjwt12 | `.claude/skills/backend/spring-security-6-jwt-jjwt12/SKILL.md` | 모던 Security + JWT |
-| hikaricp-tuning-oracle-mysql | `.claude/skills/backend/hikaricp-tuning-oracle-mysql/SKILL.md` | 커넥션 풀 튜닝 |
-| global-exception-validation | `.claude/skills/backend/global-exception-validation/SKILL.md` | `@ControllerAdvice` + Bean Validation |
-| testing-junit5-spring-boot | `.claude/skills/backend/testing-junit5-spring-boot/SKILL.md` | 단위·통합 테스트 |
-| lombok-mapstruct-modelmapper | `.claude/skills/backend/lombok-mapstruct-modelmapper/SKILL.md` | DTO 변환 |
-| logback-mdc-tracing | `.claude/skills/backend/logback-mdc-tracing/SKILL.md` | 로깅 + 분산 추적 |
+| spring-boot-gradle-setup | `.claude/skills/spring-boot-gradle-setup/SKILL.md` | 프로젝트 초기 설정, 의존성, WAR/Jar 패키징 |
+| mybatis-mapper-patterns | `.claude/skills/mybatis-mapper-patterns/SKILL.md` | Mapper 인터페이스·XML 작성 |
+| spring-multi-datasource-oracle-mysql | `.claude/skills/spring-multi-datasource-oracle-mysql/SKILL.md` | Oracle + MySQL 동시 사용 설정 |
+| spring-security-5-jwt-jjwt10 | `.claude/skills/spring-security-5-jwt-jjwt10/SKILL.md` | 레거시 Security + JWT |
+| spring-security-6-jwt-jjwt12 | `.claude/skills/spring-security-6-jwt-jjwt12/SKILL.md` | 모던 Security + JWT |
+| hikaricp-tuning-oracle-mysql | `.claude/skills/hikaricp-tuning-oracle-mysql/SKILL.md` | 커넥션 풀 튜닝 |
+| global-exception-validation | `.claude/skills/global-exception-validation/SKILL.md` | `@ControllerAdvice` + Bean Validation |
+| testing-junit5-spring-boot | `.claude/skills/testing-junit5-spring-boot/SKILL.md` | 단위·통합 테스트 |
+| lombok-mapstruct-modelmapper | `.claude/skills/lombok-mapstruct-modelmapper/SKILL.md` | DTO 변환 |
+| logback-mdc-tracing | `.claude/skills/logback-mdc-tracing/SKILL.md` | 로깅 + 분산 추적 |
 
 **스킬 참조 규칙:** 해당 기능을 처음 구현할 때 관련 스킬 파일을 Read로 읽고, 그 패턴을 따라 코드를 작성한다. 스킬 파일이 아직 없으면 공식 문서를 WebSearch로 확인 후 작성한다.
 

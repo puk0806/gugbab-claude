@@ -122,7 +122,7 @@ private void Awake() => rb = GetComponent<Rigidbody2D>();
 
 ### 단계 2: 관련 스킬·기존 코드 참조
 
-작성할 코드와 관련된 기존 스크립트가 있으면 Read로 패턴을 확인한 뒤 동일한 스타일을 따른다. 프로젝트에 Unity 관련 스킬 파일(`.claude/skills/game/**/SKILL.md`)이 있으면 함께 Read한다.
+작성할 코드와 관련된 기존 스크립트가 있으면 Read로 패턴을 확인한 뒤 동일한 스타일을 따른다. 프로젝트에 Unity·게임 스킬 파일(`.claude/skills/unity-*/SKILL.md`, `game-*`, `app-store-submission` 등)이 있으면 함께 Read한다.
 
 ### 단계 3: 코드 작성/수정
 

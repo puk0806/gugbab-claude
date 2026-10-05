@@ -123,10 +123,10 @@ maxTurns: 15
 
 해당 스킬 파일이 존재하면 Read하여 대조한다. 미작성이면 "스킬 미작성으로 보류" 표기.
 
-- `.claude/skills/meta/fortune-interpretation-prompt-engineering/SKILL.md` — 프롬프트 설계 기준(2단 구조·귀속·hedging·스키마) 충족 여부
-- `.claude/skills/humanities/korean-saju-tradition/SKILL.md` — 사주 용어·십성·오행 서술의 전통 체계 내 정합성
-- `.claude/skills/humanities/tarot-history-symbolism/SKILL.md` — 타로 카드 상징·역방향 해석의 출처 정합성, 유사역사(고대 이집트 기원설 등) 서술 검출
-- `.claude/skills/humanities/palmistry-limitations/SKILL.md` — 손금 어휘·엔터테인먼트 프레이밍 정합성
+- `.claude/skills/fortune-interpretation-prompt-engineering/SKILL.md` — 프롬프트 설계 기준(2단 구조·귀속·hedging·스키마) 충족 여부
+- `.claude/skills/korean-saju-tradition/SKILL.md` — 사주 용어·십성·오행 서술의 전통 체계 내 정합성
+- `.claude/skills/tarot-history-symbolism/SKILL.md` — 타로 카드 상징·역방향 해석의 출처 정합성, 유사역사(고대 이집트 기원설 등) 서술 검출
+- `.claude/skills/palmistry-limitations/SKILL.md` — 손금 어휘·엔터테인먼트 프레이밍 정합성
 
 ### 단계 5: 리포트 작성 (Write)
 
