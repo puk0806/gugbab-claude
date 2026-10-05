@@ -1837,30 +1837,10 @@ CLAUDE_WRITTEN=false
 
 if [ -f "$CLAUDE_FILE" ]; then
   echo "  ⚠ CLAUDE.md 이미 존재합니다."
-  # 팀이 git 으로 관리하는 CLAUDE.md 는 앞선 y/N 질문들의 연속 'y' 로 덮어써지지 않게 한다 (2026-10-05 설치본 실사고:
-  # 팀 코딩 컨벤션 CLAUDE.md 가 템플릿으로 교체됨). 추적 파일은 'overwrite' 를 정확히 입력해야 덮어쓰고,
-  # 미추적 파일도 덮어쓰기 전에 CLAUDE.md.bak-<날짜시각> 백업을 남긴다.
-  _claude_tracked=false
-  git -C "$TARGET" ls-files --error-unmatch -- CLAUDE.md >/dev/null 2>&1 && _claude_tracked=true
-  if [ "$_claude_tracked" = true ]; then
-    echo "  ⚠ 이 CLAUDE.md 는 git 으로 추적 중인 팀 파일입니다 — 덮어쓰면 팀 규칙이 템플릿으로 바뀝니다."
-    echo "    보존을 권장합니다. 템플릿은 examples/CLAUDE.${TEMPLATE}.md 를 참고해 직접 병합하세요."
-  fi
   while true; do
-    if [ "$_claude_tracked" = true ]; then
-      prompt_read "  정말 덮어쓰려면 overwrite 입력 (엔터 = 보존): " OVERWRITE_CLAUDE
-      case "$OVERWRITE_CLAUDE" in
-        overwrite) OVERWRITE_CLAUDE=y ;;
-        "") OVERWRITE_CLAUDE=n ;;
-        *) echo "  ('$OVERWRITE_CLAUDE' 은 overwrite 가 아니므로 보존합니다)"; OVERWRITE_CLAUDE=n ;;
-      esac
-    else
-      prompt_read "  덮어쓸까요? (y/N): " OVERWRITE_CLAUDE
-    fi
+    prompt_read "  덮어쓸까요? (y/N): " OVERWRITE_CLAUDE
     case "$OVERWRITE_CLAUDE" in
-      y|Y) _bak="$CLAUDE_FILE.bak-$(date +%Y%m%d%H%M%S)"
-           cp "$CLAUDE_FILE" "$_bak" && echo "  → 기존 CLAUDE.md 백업: $(basename "$_bak")"
-           cp "$CLAUDE_SRC" "$CLAUDE_FILE"
+      y|Y) cp "$CLAUDE_SRC" "$CLAUDE_FILE"
            echo "  → CLAUDE.md 덮어쓰기 (기본 템플릿: $TEMPLATE)"
            CLAUDE_WRITTEN=true; break ;;
       n|N|"") echo "  → 건너뜀 (프로젝트 고유 파일 보존)"; break ;;
@@ -1987,43 +1967,22 @@ if [ "$CLAUDE_WRITTEN" = true ]; then
   done
   [ -n "$_REMOVED_RULE_ROWS" ] && echo "  ✓ 미설치 규칙 참조 행 제거:$_REMOVED_RULE_ROWS"
 
-  # 프로젝트명 — 엔터면 대상 폴더 이름. 앞선 y/N 질문의 습관적 'y'·'n' 이 이름으로 들어가 `CLAUDE.md — y` 가 된
-  # 설치본 실사고(2026-10-05)가 있어 y/n/yes/no 단독 입력은 다시 묻는다. sed 치환 특수문자(\ & |)는 이스케이프.
-  _sed_esc() { printf '%s' "$1" | sed -e 's/[\\&|]/\\&/g'; }
-  _default_name="$(basename "$TARGET")"
-  while true; do
-    read -rp "  프로젝트명을 입력하세요 (엔터 = $_default_name): " PROJECT_NAME || PROJECT_NAME=""
-    case "$PROJECT_NAME" in
-      y|Y|n|N|yes|YES|no|NO) echo "  '$PROJECT_NAME' 은 y/N 답처럼 보입니다 — 프로젝트 이름을 입력하거나 엔터로 '$_default_name' 사용" ;;
-      *) break ;;
-    esac
-  done
-  [ -n "$PROJECT_NAME" ] || PROJECT_NAME="$_default_name"
-  TMP=$(mktemp)
-  sed "s|{프로젝트명}|$(_sed_esc "$PROJECT_NAME")|g" "$CLAUDE_FILE" > "$TMP" && mv "$TMP" "$CLAUDE_FILE"
-  echo "  ✓ 프로젝트명: $PROJECT_NAME"
-  read -rp "  프로젝트 설명을 입력하세요 (Enter로 건너뜀): " PROJECT_DESC || PROJECT_DESC=""
-  case "$PROJECT_DESC" in y|Y|n|N|yes|YES|no|NO) PROJECT_DESC="" ;; esac
+  read -rp "  프로젝트명을 입력하세요 (Enter로 건너뜀): " PROJECT_NAME
+  if [ -n "$PROJECT_NAME" ]; then
+    TMP=$(mktemp)
+    sed "s|{프로젝트명}|$PROJECT_NAME|g" "$CLAUDE_FILE" > "$TMP" && mv "$TMP" "$CLAUDE_FILE"
+    echo "  ✓ 프로젝트명: $PROJECT_NAME"
+  fi
+  read -rp "  프로젝트 설명을 입력하세요 (Enter로 건너뜀): " PROJECT_DESC
   if [ -n "$PROJECT_DESC" ]; then
     TMP=$(mktemp)
-    sed "s|{프로젝트 한 줄 설명}|$(_sed_esc "$PROJECT_DESC")|g" "$CLAUDE_FILE" > "$TMP" && mv "$TMP" "$CLAUDE_FILE"
-    echo "  ✓ 프로젝트 설명 적용"
-  else
-    echo "  ℹ CLAUDE.md 의 {프로젝트 한 줄 설명}을 직접 수정하세요"
-  fi
-
-  # Java 템플릿의 "Java NN" 표기를 대상 빌드 파일의 실제 버전으로 (2026-10-05 설치본 실측: Java 17 프로젝트에
-  # 모던 템플릿의 "Java 21" 이 그대로 남음). 감지 실패 시 템플릿 값 유지.
-  _java_ver=""
-  for _bf in "$TARGET/build.gradle" "$TARGET/build.gradle.kts" "$TARGET/pom.xml"; do
-    [ -f "$_bf" ] || continue
-    _java_ver="$(grep -oE 'languageVersion(\.set)?[ =(]*JavaLanguageVersion\.of\( *[0-9]+|sourceCompatibility *=? *(JavaVersion\.VERSION_)?['"'"'"]?[0-9]+(\.[0-9]+)?|<java\.version>[0-9]+' "$_bf" 2>/dev/null | head -1 | grep -oE '[0-9]+(\.[0-9]+)?$' | sed 's/^1\.//')"
-    [ -n "$_java_ver" ] && break
-  done
-  if [ -n "$_java_ver" ] && grep -qE '^Java [0-9]+ \+' "$CLAUDE_FILE"; then
+    sed "s|{프로젝트 한 줄 설명}|$PROJECT_DESC|g" "$CLAUDE_FILE" > "$TMP" && mv "$TMP" "$CLAUDE_FILE"
     TMP=$(mktemp)
-    sed -E "s/^Java [0-9]+ \+/Java $_java_ver +/" "$CLAUDE_FILE" > "$TMP" && mv "$TMP" "$CLAUDE_FILE"
-    echo "  ✓ Java 버전 표기: Java $_java_ver (빌드 파일 감지)"
+    sed "s|{논문·연구 주제 한 줄 설명}|$PROJECT_DESC|g" "$CLAUDE_FILE" > "$TMP" && mv "$TMP" "$CLAUDE_FILE"
+    echo "  ✓ 프로젝트 설명 적용"
+  fi
+  if [ -z "$PROJECT_NAME" ] && [ -z "$PROJECT_DESC" ]; then
+    echo "  ℹ {프로젝트명}과 {설명}을 직접 수정하세요"
   fi
 fi
 
