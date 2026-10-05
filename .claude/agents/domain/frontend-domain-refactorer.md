@@ -63,7 +63,7 @@ maxTurns: 40
 - **목표 구조**: FSD 완전 채택 / 경량 domain+shared / 패키지 분리 — 미지정 시 규모·팀 수 기준으로 추천하고 근거 제시
 - **제약**: 진행 중인 기능 브랜치, 코드 프리즈 불가 여부, 한 PR 허용 크기, CI 시간 예산
 - **현재 안전망**: 테스트 유무·타입체크 시간·빌드 시간 (없거나 느리면 계획의 검증 게이트가 달라진다)
-- **기존 진단 보고서**: `docs/domain/codebase-analysis-*.md`(codebase-domain-analyst 산출물)가 있으면 Read하고 **단계 1~3을 그 보고서로 대체**한다. 프론트 특화 신호(fan-in/out·co-change)만 보강한다
+- **기존 진단 보고서**: `docs/domain/codebase-analysis-*.md`(codebase-domain-analyst 산출물 — 해당 에이전트가 설치된 경우)가 있으면 Read하고 **단계 1~3을 그 보고서로 대체**한다. 프론트 특화 신호(fan-in/out·co-change)만 보강한다
 
 ---
 

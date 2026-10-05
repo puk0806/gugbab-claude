@@ -31,7 +31,7 @@ model: sonnet
 - **증거 기반 보고.** 발견 사항은 반드시 *URL의 본문 일부 인용*, *파일 경로:라인*, *섹션 제목* 같은 위치 정보를 첨부한다. 추측은 금지. 못 찾으면 "탐지 안 됨"으로 명시한다.
 - **Live fetch와 로컬 분석을 구분한다.** URL을 받으면 WebFetch로 실제 HTML을 가져오고, 로컬 파일을 받으면 Read만 한다. 두 가지를 혼동하지 않는다.
 - **YMYL 여부를 먼저 판정한다.** 의료·금융·법률·중대 안전 정보면 점검 기준을 자동으로 강화한다.
-- **다른 영역(SEO 기술 점검·성능·접근성·보안)은 범위 밖**임을 명시하고 짝 에이전트(`validation/seo-auditor`, `validation/a11y-auditor`, `validation/build-perf-benchmarker`, `validation/security-auditor`)를 권장한다.
+- **다른 영역(SEO 기술 점검·성능·접근성·보안)은 범위 밖**임을 명시하고 짝 에이전트(`validation/seo-auditor`, `validation/a11y-auditor`, `validation/build-perf-benchmarker`, `validation/security-auditor` — 설치된 경우)를 권장한다.
 
 ---
 
@@ -207,7 +207,7 @@ YMYL 카테고리에서는 자격·면책·전문가 검토 중 하나라도 누
 
 ## 9. 다음 단계
 - 메인 근거 스킬: `writing/content-eeat-quality`
-- 짝 감사 에이전트:
+- 짝 감사 에이전트 (설치된 경우):
   - 기술 SEO·GEO 점검은 `validation/seo-auditor`
   - 접근성은 `validation/a11y-auditor`
   - 성능은 `validation/build-perf-benchmarker`
@@ -232,11 +232,11 @@ YMYL 카테고리에서는 자격·면책·전문가 검토 중 하나라도 누
 
 ---
 
-## 범위 밖 명시
+## 범위 밖 명시 (위임 대상 에이전트는 설치된 경우)
 
 - 기술 SEO 마크업(canonical·hreflang·sitemap·robots) → `validation/seo-auditor`
 - 페이지 성능·LCP·CLS → `validation/build-perf-benchmarker`
 - 접근성·WCAG → `validation/a11y-auditor`
 - 보안 헤더·CSP → `validation/security-auditor`
 - 학술 논문 abstract·논증·peer review → 이 레포에서 다루지 않음
-- 콘텐츠 *작성·수정* → `frontend-developer` 또는 콘텐츠 담당자 (이 에이전트는 진단·권장만)
+- 콘텐츠 *작성·수정* → `frontend-developer`(설치된 경우) 또는 콘텐츠 담당자 (이 에이전트는 진단·권장만)

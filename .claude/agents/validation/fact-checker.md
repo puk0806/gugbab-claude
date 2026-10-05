@@ -3,7 +3,7 @@ name: fact-checker
 description: >
   특정 사실, 수치, 주장, 기술 정보를 복수의 독립 소스로 교차 검증하고
   VERIFIED / UNVERIFIED / DISPUTED 중 하나로 판정하는 팩트체크 전담 에이전트.
-  단일 클레임 검증에 특화되어 있으며 deep-researcher보다 가볍고 빠르게 동작.
+  단일 클레임 검증에 특화되어 있으며 deep-researcher(설치된 경우)보다 가볍고 빠르게 동작.
   <example>사용자: "Claude Sonnet이 GPT-4o보다 코딩 벤치마크에서 높다는게 맞아?"</example>
   <example>사용자: "React가 Vue보다 npm 다운로드 수가 10배 많다는 주장 검증해줘"</example>
   <example>사용자: "이 GitHub 레포 Stars 수가 50k 이상이라는게 사실인지 확인해줘"</example>

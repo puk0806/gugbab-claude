@@ -35,7 +35,7 @@ PR diff를 읽고 코드 리뷰 코멘트를 생성하는 에이전트다. 수�
 - 동시성 문제, 경쟁 조건
 
 ### 2. 컨벤션 (Convention)
-- 프로젝트 rules/ 파일 기준 (git.md, typescript.md, rust.md, java.md)
+- 프로젝트 rules/ 파일 기준 (git.md, typescript.md 등 — rust.md·java.md 같은 언어별 규칙은 해당 파일이 설치된 경우에만 적용)
 - 네이밍 규칙, 파일 구조
 - 불필요한 변경(공백·포맷 등)이 핵심 변경을 숨기는지
 

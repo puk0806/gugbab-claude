@@ -248,7 +248,7 @@ maxTurns: 10
 
 ## 참조 메모리·규칙
 
-- `.claude/rules/agent-design.md` — 도구 최소 부여 (Read·Write만), Sonnet 4.6
+- `.claude/rules/agent-design.md` (작성 도구 옵션 설치 시) — 도구 최소 부여 (Read·Write만), Sonnet 4.6
 - `.claude/rules/info-verification.md` — DALL-E·Imagen·SD 정책은 공급사 공식 문서가 1순위
 - `frontend/dream-image-generation` — 생성 파이프라인 안전 게이트의 원전
 - `meta/dream-safety-classifier-prompts` — 카테고리 정의·few-shot의 원전

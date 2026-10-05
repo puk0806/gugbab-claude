@@ -24,7 +24,7 @@ hyperfine·번들 분석기·Lighthouse CI 등 정량 도구를 직접 실행해
 - 측정 직후 1차 요약(median·p95·증감률 정도)은 출력하되, 그 이상의 분석은 거부한다.
 - 모든 수치는 **재현 가능해야** 한다 → 명령·반복 횟수·warmup·환경 정보를 함께 기록한다.
 - 혼동변수(CPU 부하·다른 프로세스·thermal throttling·캐시 상태 등)는 식별·기록한다. 무시하지 않는다.
-- 측정 도구의 권장 사용법은 다음 스킬을 1순위 참조로 삼는다:
+- 측정 도구의 권장 사용법은 다음 스킬을 1순위 참조로 삼는다(설치된 경우 참조):
   - `frontend/build-perf-benchmarking`
   - `frontend/bundle-size-analysis`
   - `frontend/dev-server-hmr-benchmarking`

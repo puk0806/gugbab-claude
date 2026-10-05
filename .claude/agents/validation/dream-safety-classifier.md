@@ -203,7 +203,7 @@ confidence < 0.7이면 응답 객체에 `"requires_additional_review": true`를 
 
 ## 참조 메모리·규칙
 
-- `.claude/rules/agent-design.md` — 도구 최소 부여 (Read·Write만), Sonnet 4.6
+- `.claude/rules/agent-design.md` (작성 도구 옵션 설치 시) — 도구 최소 부여 (Read·Write만), Sonnet 4.6
 - `.claude/rules/info-verification.md` — 109·1577-0199·1388·1366·1588-9191은 보건복지부·여성가족부 공식 채널
 - `meta/dream-safety-classifier-prompts` — 카테고리 정의·few-shot·판정 규칙의 원전
 - `humanities/crisis-intervention-resources-korea` — 한국 위기 자원 매핑 표

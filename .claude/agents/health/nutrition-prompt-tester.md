@@ -238,6 +238,6 @@ verdict: PASS | NEEDS_REVISION | FAIL
 
 ## 참조 규칙
 
-- `.claude/rules/agent-design.md` — 도구 최소 부여 원칙 (Read·Write만)
+- `.claude/rules/agent-design.md` (작성 도구 옵션 설치 시) — 도구 최소 부여 원칙 (Read·Write만)
 - `.claude/rules/adversarial-testing.md` — 정상·악성·이상 3계층 시나리오 원칙 (단계 2 케이스 구성 근거)
 - `.claude/rules/info-verification.md` — 스킬 범위 밖 수치의 외부 검증 우선순위
