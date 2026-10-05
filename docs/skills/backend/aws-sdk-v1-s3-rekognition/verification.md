@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `aws-sdk-v1-s3-rekognition` |
-| 스킬 경로 | `.claude/skills/backend/aws-sdk-v1-s3-rekognition/SKILL.md` |
+| 스킬 경로 | `.claude/skills/aws-sdk-v1-s3-rekognition/SKILL.md` |
 | 검증일 | 2026-04-23 (재검증: 2026-09-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |

@@ -4,7 +4,7 @@
 **분석 범위:** exhibition(전시) 도메인
 **서비스:** LF Mall (https://www.lfmall.co.kr/app)
 **분석일:** 2026-04-17
-**분석 기준:** DDD 스킬 (.claude/skills/architecture/ddd/SKILL.md)
+**분석 기준:** DDD 스킬 (.claude/skills/ddd/SKILL.md)
 
 > **범례**
 > - ✅ **코드에서 확인됨** — 실제 소스 파일에서 직접 확인한 내용

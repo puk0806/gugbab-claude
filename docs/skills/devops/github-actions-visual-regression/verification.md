@@ -39,7 +39,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `github-actions-visual-regression` |
-| 스킬 경로 | `.claude/skills/devops/github-actions-visual-regression/SKILL.md` |
+| 스킬 경로 | `.claude/skills/github-actions-visual-regression/SKILL.md` |
 | 최초 검증일 | 2026-04-29 |
 | 검증일 | 2026-09-28 (최초 2026-04-29 · 재검증 2026-08-11, 2026-09-28) |
 | 최종 재검증일 | 2026-09-28 (08-11 액션 메이저 버전·checkout v7 보안 기본값 반영 → 09-28 전수 재확인, pnpm/action-setup 패치 정정) |
@@ -66,7 +66,7 @@ status: APPROVED
 
 | 단계 | 도구 | 입력 요약 | 출력 요약 |
 |------|------|-----------|-----------|
-| 형식 참조 | Read | `.claude/skills/devops/github-actions/SKILL.md` | 형식·구조 일관성 확보용 기존 devops 스킬 확인 |
+| 형식 참조 | Read | `.claude/skills/github-actions/SKILL.md` | 형식·구조 일관성 확보용 기존 devops 스킬 확인 |
 | 형식 참조 | Read | `docs/skills/devops/github-actions/verification.md` | verification.md 8섹션 구조 확인 |
 | 템플릿 | Read | `docs/skills/VERIFICATION_TEMPLATE.md` | 검증 문서 템플릿 구조 확인 |
 | 조사 1 | WebSearch | `actions/checkout v5 latest release 2026` | actions/checkout v6도 출시되었으나 v5도 안정. 본 스킬은 기존 devops 스킬과 일관되게 v5 사용 |

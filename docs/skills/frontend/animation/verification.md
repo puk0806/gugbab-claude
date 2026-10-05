@@ -33,7 +33,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `animation` |
-| 스킬 경로 | `.claude/skills/frontend/animation/SKILL.md` |
+| 스킬 경로 | `.claude/skills/animation/SKILL.md` |
 | 최초 작성일 | 2026-03-27 |
 | 검증일 | 2026-09-28 (최초 2026-03-27, 직전 재검증 2026-08-11, 2026-04-20) |
 | 재검증일 | 2026-09-28 (직전 2026-08-11, 2026-04-20) |

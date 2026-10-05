@@ -33,7 +33,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | nextjs |
-| 스킬 경로 | `.claude/skills/frontend/nextjs/SKILL.md` |
+| 스킬 경로 | `.claude/skills/nextjs/SKILL.md` |
 | 최초 작성일 | 2026-03-27 |
 | 검증일 | 2026-09-28 (최초 2026-03-27, 직전 재검증 2026-08-11) |
 | 재검증일 | **2026-09-28** (직전 2026-08-11) |

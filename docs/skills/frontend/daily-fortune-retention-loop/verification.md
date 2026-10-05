@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `daily-fortune-retention-loop` |
-| 스킬 경로 | `.claude/skills/frontend/daily-fortune-retention-loop/SKILL.md` |
+| 스킬 경로 | `.claude/skills/daily-fortune-retention-loop/SKILL.md` |
 | 검증일 | 2026-09-28 (재검증, 이전 2026-09-10) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v3 (frontmatter가 2026-09-11 변경 이후에도 `v1`로 남아있던 것을 변경 이력의 실제 진행에 맞춰 정정) |

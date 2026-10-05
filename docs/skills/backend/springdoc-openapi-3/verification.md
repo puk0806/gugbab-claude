@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `springdoc-openapi-3` |
-| 스킬 경로 | `.claude/skills/backend/springdoc-openapi-3/SKILL.md` |
+| 스킬 경로 | `.claude/skills/springdoc-openapi-3/SKILL.md` |
 | 검증일 | 2026-09-26 (재검증) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |

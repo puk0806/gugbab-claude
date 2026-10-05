@@ -32,7 +32,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `meal-recommendation-prompt` |
-| 스킬 경로 | `.claude/skills/health/meal-recommendation-prompt/SKILL.md` |
+| 스킬 경로 | `.claude/skills/meal-recommendation-prompt/SKILL.md` |
 | 검증일 | 2026-09-26 (최초 2026-06-26) |
 | 검증자 | skill-creator → 2026-09-26 안전 결함 수정 |
 | 스킬 버전 | v2 |

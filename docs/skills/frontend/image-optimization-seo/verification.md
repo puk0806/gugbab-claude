@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `image-optimization-seo` |
-| 스킬 경로 | `.claude/skills/frontend/image-optimization-seo/SKILL.md` |
+| 스킬 경로 | `.claude/skills/image-optimization-seo/SKILL.md` |
 | 검증일 | 2026-09-28 (재검증, 최초 2026-06-03) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |

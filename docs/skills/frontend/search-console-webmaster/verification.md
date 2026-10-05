@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `search-console-webmaster` |
-| 스킬 경로 | `.claude/skills/frontend/search-console-webmaster/SKILL.md` |
+| 스킬 경로 | `.claude/skills/search-console-webmaster/SKILL.md` |
 | 검증일 | 2026-09-28 (최초 2026-06-02 · 1차 재검증 2026-08-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |

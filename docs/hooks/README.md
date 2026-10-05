@@ -24,11 +24,11 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 23종 = 실행 �
 | [parry.js](../../.claude/hooks/parry.js) | PreToolUse Write | 시크릿·프롬프트 인젝션 패턴 스캔 — 감지 시 저장 차단 | ✅ |
 | [protect-secrets.js](../../.claude/hooks/protect-secrets.js) | PreToolUse Write/Edit | 민감 파일(.env, *.pem, *.key, credentials 등) 수정 차단 | ✅ |
 | [deliverable-guard.js](../../.claude/hooks/deliverable-guard.js) | PostToolUse Write/Edit · PreToolUse Bash · Stop | **산출물 완결성 통합 훅** — 세션 수정 파일 추적 + git commit/push·세션 종료 시 README 동기화 검사 + PENDING_TEST 스킬 2단계 테스트 미수행 차단 + **push/PR 직전 memory·exports 미커밋 차단**(Y 프로젝트, 메모리 정리·세션 요약 포함 강제) (`.claude/worktrees/` 스캔 제외) | ✅ |
-| [skill-md-guard.js](../../.claude/hooks/skill-md-guard.js) | PreToolUse Write · PostToolUse Edit | SKILL.md 소스 URL·검증일·필수 섹션 검증 — **위반 시 저장 자체 차단** (Edit는 디스크 재읽기 사후 검증) | ✅ |
+| [skill-md-guard.js](../../.claude/hooks/skill-md-guard.js) | PreToolUse Write · PostToolUse Edit | SKILL.md frontmatter `name`·`description`, `> 소스:`·`> 검증일:` 줄, **저장 위치가 1단 `.claude/skills/<name>/SKILL.md`인지**(2단 중첩은 스킬로 등록되지 않음), `name` = 폴더 이름 검증 — **위반 시 저장 자체 차단** (Edit는 디스크 재읽기 사후 검증). 본문 섹션 구성은 검사하지 않음 | ✅ |
 | [agent-md-guard.js](../../.claude/hooks/agent-md-guard.js) | PreToolUse Write · PostToolUse Edit | 에이전트 .md name·description·tools·model·example 검증 — **위반 시 저장 자체 차단** | ✅ |
 | [verification-guard.js](../../.claude/hooks/verification-guard.js) | PreToolUse Write · PostToolUse Edit | verification.md 필수 섹션·UNVERIFIED·"내장 지식" 자백 검증 — **위반 시 저장 자체 차단**. 편집 후 frontmatter date·메타 표 검증일·SKILL.md 검증일이 다르면 비차단 경고(2026-09-30) | ✅ |
 | [staleness-check.js](../../.claude/hooks/staleness-check.js) | SessionStart | 스킬 검증일 경과 감지 — 30~59일 경고, 60일+ 재검증 강제 지시. 검증일 3곳(frontmatter·메타 표·SKILL.md) 불일치·판독 불가 스킬 목록 경고(2026-09-30 — "최신 날짜" 판정이 불일치를 가리던 문제) | ✅ |
-| [instructions-loaded.js](../../.claude/hooks/instructions-loaded.js) | SessionStart | CLAUDE.md 로드 완료 시 규칙 요약 출력 | ✅ |
+| [instructions-loaded.js](../../.claude/hooks/instructions-loaded.js) | SessionStart | 이 설치본이 기대하는 규칙 파일(매니페스트 `rules`·CLAUDE.md `@` import 기준)이 실제로 있는지 검사 — 누락 시 경고만(차단 없음) | ✅ |
 | [session-start.js](../../.claude/hooks/session-start.js) | SessionStart | 세션 시작 시 현재 브랜치·미커밋 파일·최근 커밋 요약 출력 | ✅ |
 | [session-export.js](../../.claude/hooks/session-export.js) | Stop | 세션 대화 요약(요청·응답·수정 파일·Codex 리뷰) 강제 보존 — Stop(매 턴)은 로컬 `~/.claude/projects/<해시>/exports/`에만 기록(레포 status 오염 없음), 커밋 배치의 `--refresh` 실행 시에만 레포 `exports/`에 전체 요약 생성(Y 프로젝트) (비차단) | ✅ |
 | [cc-notify.js](../../.claude/hooks/cc-notify.js) | Stop | 작업 완료 시 macOS 데스크탑 알림 (비차단, 타 플랫폼 silent) | ✅ |
@@ -77,7 +77,7 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 23종 = 실행 �
 
 | 훅 | 이벤트 | 설명 | 테스트 |
 |----|--------|------|:---:|
-| [codex-review-guard.js](../../.claude/hooks/codex-review-guard.js) | Stop | 미커밋 코드 변경 감지 시 Codex 적대적 리뷰 3라운드 강제 — 로그인 미완료 시 로그인 선행 요구 + 계정·모델 조합이 400 등으로 사용 불가한 환경 오류는 `.claude/.codex-unavailable` 마커(config.toml 해시 + codex 버전 기록)로 감지해 config·버전이 그대로인 동안만 세션당 1회 안내 후 통과(변경 시 마커 자동 무효화) | ✅ |
+| [codex-review-guard.js](../../.claude/hooks/codex-review-guard.js) | Stop | 미커밋 코드 변경 감지 시 Codex 적대적 리뷰 3라운드 강제 — codex CLI 미설치·미로그인이면 건너뜀(`codex login`은 대화형이라 Claude가 해소할 수 없어 차단 대신 통과) + 계정·모델 조합이 400 등으로 사용 불가한 환경 오류는 `.claude/.codex-unavailable` 마커(config.toml 해시 + codex 버전 기록)로 감지해 config·버전이 그대로인 동안만 세션당 1회 안내 후 통과(변경 시 마커 자동 무효화) | ✅ |
 
 ---
 

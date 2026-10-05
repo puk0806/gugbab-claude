@@ -33,7 +33,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | monorepo-turborepo |
-| 스킬 경로 | `.claude/skills/frontend/monorepo-turborepo/SKILL.md` |
+| 스킬 경로 | `.claude/skills/monorepo-turborepo/SKILL.md` |
 | 최초 작성일 | 2026-03-27 |
 | 검증일 | 2026-09-28 (재검증(2차)) / 2026-08-11 (v4) / 2026-06-20 (v3) |
 | 검증 방법 | frontend-architect 활용 테스트 + 버전 재검증 (공식 문서·GitHub API·npm 레지스트리) → 재검증(2차) |

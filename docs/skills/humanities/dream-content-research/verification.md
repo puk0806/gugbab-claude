@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `dream-content-research` |
-| 스킬 경로 | `.claude/skills/humanities/dream-content-research/SKILL.md` |
+| 스킬 경로 | `.claude/skills/dream-content-research/SKILL.md` |
 | 검증일 | 2026-09-26 |
 | 검증자 | skill-creator (Claude Code) / 2026-09-26 재검증: 메인 세션 (DreamResearch.net 원문·Crossref DOI 직접 대조) |
 | 스킬 버전 | v2 |

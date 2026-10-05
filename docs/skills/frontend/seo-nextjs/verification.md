@@ -33,7 +33,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | seo-nextjs |
-| 스킬 경로 | `.claude/skills/frontend/seo-nextjs/SKILL.md` |
+| 스킬 경로 | `.claude/skills/seo-nextjs/SKILL.md` |
 | 최초 작성일 | 2026-04-01 |
 | 검증일 | 2026-09-28 (최초 2026-04-01, 이전 재검증 2026-08-11) |
 | 재검증일 | **2026-09-28** (재검증, 이전 2026-08-11 Next.js 16 기준 최신화) |

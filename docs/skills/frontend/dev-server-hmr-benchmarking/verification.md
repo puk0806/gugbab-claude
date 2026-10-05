@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `dev-server-hmr-benchmarking` |
-| 스킬 경로 | `.claude/skills/frontend/dev-server-hmr-benchmarking/SKILL.md` |
+| 스킬 경로 | `.claude/skills/dev-server-hmr-benchmarking/SKILL.md` |
 | 검증일 | 2026-09-28 (재검증, 이전 2026-05-14) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v2 |

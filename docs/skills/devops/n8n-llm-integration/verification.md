@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `n8n-llm-integration` |
-| 스킬 경로 | `.claude/skills/devops/n8n-llm-integration/SKILL.md` |
+| 스킬 경로 | `.claude/skills/n8n-llm-integration/SKILL.md` |
 | 검증일 | **2026-09-28** (재검증, 이전 2026-08-12 / 2026-09-25) — 최초 작성 2026-05-15 |
 | 검증자 | skill-creator (최초) → 최신화 재검증(2026-08-11, 2026-08-12, 2026-09-25) → 2차 재검증(2026-09-28) |
 | 스킬 버전 | v3.2 |

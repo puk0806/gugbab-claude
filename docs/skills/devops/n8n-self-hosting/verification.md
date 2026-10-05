@@ -8,7 +8,7 @@ status: PENDING_TEST
 
 # n8n Self-Hosting 검증 문서
 
-> 이 문서는 `.claude/skills/devops/n8n-self-hosting/SKILL.md` 스킬의 검증 기록이다.
+> 이 문서는 `.claude/skills/n8n-self-hosting/SKILL.md` 스킬의 검증 기록이다.
 
 ---
 
@@ -17,7 +17,7 @@ status: PENDING_TEST
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `n8n-self-hosting` |
-| 스킬 경로 | `.claude/skills/devops/n8n-self-hosting/SKILL.md` |
+| 스킬 경로 | `.claude/skills/n8n-self-hosting/SKILL.md` |
 | 검증일 | **2026-09-28** (최초 작성 2026-05-15, 재검증 2026-08-11 / 2026-09-28) |
 | 검증자 | skill-creator (최초) → 최신화 재검증 (2026-08-11) → 2차 재검증 (2026-09-28) |
 | 스킬 버전 | v3 |

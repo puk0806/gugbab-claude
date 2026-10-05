@@ -13,12 +13,12 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `fortune-interpretation-prompt-engineering` |
-| 스킬 경로 | `.claude/skills/meta/fortune-interpretation-prompt-engineering/SKILL.md` |
+| 스킬 경로 | `.claude/skills/fortune-interpretation-prompt-engineering/SKILL.md` |
 | 검증일 | 2026-09-28 (최초 2026-09-10, 2026-09-11·2026-09-25·2026-09-28 재검증) |
 | 검증자 | skill-creator (Claude Code) → Claude (Sonnet 5, 2026-09-28 재검증) |
 | 스킬 버전 | v3 |
 | 대상 기준 | Claude API 2026-09-25 현행 (Opus 5.5 / Sonnet 5 / Haiku 4.5) — 최초 2026-09-10 Opus 5 기준 |
-| 포크 원본 | `.claude/skills/meta/dream-interpretation-prompt-engineering/SKILL.md` (구조 계승, 톤 룰 교체) |
+| 포크 원본 | `.claude/skills/dream-interpretation-prompt-engineering/SKILL.md` (구조 계승, 톤 룰 교체) |
 
 ---
 

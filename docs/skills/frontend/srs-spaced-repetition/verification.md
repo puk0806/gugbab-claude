@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `srs-spaced-repetition` |
-| 스킬 경로 | `.claude/skills/frontend/srs-spaced-repetition/SKILL.md` |
+| 스킬 경로 | `.claude/skills/srs-spaced-repetition/SKILL.md` |
 | 검증일 | 2026-09-28 |
 | 검증자 | Claude (Sonnet 5) |
 | 스킬 버전 | v2 |
@@ -41,7 +41,7 @@ status: APPROVED
 | 조사 2 | WebSearch | "FSRS-5 Free Spaced Repetition Scheduler algorithm 2024 stability difficulty retrievability" | DSR 모델, 19 trainable parameters, forgetting curve r = exp(ln(0.9)*i/s), Anki 23.10+ default |
 | 조사 3 | WebSearch | "FSRS-5 rating scale Again Hard Good Easy 1-4 card states" | Again=1·Hard=2·Good=3·Easy=4. 4 카드 상태(New/Learning/Review/Relearning) |
 | 조사 4 | WebFetch | https://github.com/open-spaced-repetition/free-spaced-repetition-scheduler | 다국어 구현(TypeScript/Python/Rust/Go/Dart 등). DSR 3 변수. 메모리 법칙 3가지 |
-| 작성 | Write | .claude/skills/frontend/srs-spaced-repetition/SKILL.md | 두 알고리즘 정리 + 비교표 + 매핑 패턴 + 단조 증가 보장 + 시계 변경 방어 |
+| 작성 | Write | .claude/skills/srs-spaced-repetition/SKILL.md | 두 알고리즘 정리 + 비교표 + 매핑 패턴 + 단조 증가 보장 + 시계 변경 방어 |
 
 ---
 

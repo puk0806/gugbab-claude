@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `mui-v5` |
-| 스킬 경로 | `.claude/skills/frontend/mui-v5/SKILL.md` |
+| 스킬 경로 | `.claude/skills/mui-v5/SKILL.md` |
 | 검증일 | 2026-09-26 (30~60일 주기 재검증, 최초 검증 2026-08-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
@@ -25,7 +25,7 @@ status: APPROVED
 ## 1. 작업 목록 (Task List)
 
 - [✅] 검증 템플릿 확인 (`docs/skills/VERIFICATION_TEMPLATE.md` — 8개 섹션 구조 확보)
-- [✅] 중복 스킬 확인 (`.claude/skills/frontend/mui-v*/SKILL.md` → `mui-v9`만 존재, `mui-v5` 신규)
+- [✅] 중복 스킬 확인 (`.claude/skills/mui-v*/SKILL.md` → `mui-v9`만 존재, `mui-v5` 신규)
 - [✅] 기존 `frontend/mui-v9` SKILL.md Read → 서술 범위 분리·상호 참조 지점 결정
 - [✅] 공식 문서 1순위 소스 확인 (v5 전용 문서 사이트 `v5.mui.com` + 현행 `mui.com` 지원/마이그레이션 페이지)
 - [✅] 공식 GitHub 2순위 소스 확인 (릴리스 API, v5.18.0/v5.10.0 태그 소스, 지원 정책 원문 md, 코드모드 README, 이슈 #44413)
@@ -48,8 +48,8 @@ status: APPROVED
 | 단계 | 도구 | 입력 요약 | 출력 요약 |
 |------|------|-----------|-----------|
 | 템플릿 확인 | Read | `docs/skills/VERIFICATION_TEMPLATE.md`, `docs/skills/frontend/tanstack-query/verification.md` | 8개 섹션 구조·작성 관례 확보 |
-| 중복 확인 | Glob | `.claude/skills/frontend/mui-v*/SKILL.md` | `mui-v9`만 존재 → 신규 생성 확정 |
-| 범위 분리 | Read | `.claude/skills/frontend/mui-v9/SKILL.md` | v9 = size prop Grid·slots/slotProps·cssVariables·applyStyles 담당 → v5 스킬은 v5 고유 API 중심으로 작성하고 업그레이드 상세는 v9로 포인터 연결 |
+| 중복 확인 | Glob | `.claude/skills/mui-v*/SKILL.md` | `mui-v9`만 존재 → 신규 생성 확정 |
+| 범위 분리 | Read | `.claude/skills/mui-v9/SKILL.md` | v9 = size prop Grid·slots/slotProps·cssVariables·applyStyles 담당 → v5 스킬은 v5 고유 API 중심으로 작성하고 업그레이드 상세는 v9로 포인터 연결 |
 | 조사 | WebSearch | "MUI v5 latest version 5.18 support status", "MUI v5 support policy EOL", "material-ui v5.18.0 CSS layers backport", "Unstable_Grid2 introduced version", "Material UI supported versions table LTS" | 5회 검색 — 검색 결과만으로는 최신 상태 확인 불가(오래된 결과 다수) → 전 항목 공식 원문 페치로 재확인 |
 | 조사 | WebFetch | `mui.com/versions`, `mui.com/material-ui/getting-started/support/`, `registry.npmjs.org/@mui/material`(dist-tags), `@mui/material/5.18.0`·`5.10.0`(peerDeps), `api.github.com` 릴리스 v5.18.0·v5.16.14, 이슈 #44413 | v5 최종 5.18.0(2025-07-08), dist-tag `latest-v5`, 지원 종료 상태, peer 변화(React 19 백포트) 확인 |
 | 조사 | WebFetch | v5 문서 8종: react-grid, react-grid2, theme-components, theming, dark-mode, experimental-api/css-theme-variables(usage·customization), system/styles/basics, system/getting-started/usage, the-sx-prop, guides/server-rendering, guides/next-js-app-router, guides/composition, migration/troubleshooting, api/modal, api/text-field | v5 고유 API·제약·성능 수치·SSR 배선·TS 보강 원문 확보 |
@@ -93,7 +93,7 @@ status: APPROVED
 | 마이그레이션 — Upgrade to v7 | https://mui.com/material-ui/migration/upgrade-to-v7/ | ⭐⭐⭐ High | 2026-08-26 | Grid→GridLegacy, Grid2→Grid, deep import 제한, codemod |
 | @mui/codemod README (master 원문) | https://raw.githubusercontent.com/mui/material-ui/master/packages/mui-codemod/README.md | ⭐⭐⭐ High | 2026-08-26 | 네임스페이스 목록, `deprecations/all`, `v5.0.0/preset-safe` |
 | MUI System 지원 페이지 | https://mui.com/system/getting-started/support/ | ⭐⭐ Medium | 2026-08-26 | v5를 "Stable major"로 표기한 **오래된 내용** — DISPUTED 처리(4-5 #2) |
-| 레포 내 기존 스킬 | `.claude/skills/frontend/mui-v9/SKILL.md` | ⭐⭐⭐ High | 2026-08-26 | 서술 범위 분리 기준 |
+| 레포 내 기존 스킬 | `.claude/skills/mui-v9/SKILL.md` | ⭐⭐⭐ High | 2026-08-26 | 서술 범위 분리 기준 |
 
 ---
 

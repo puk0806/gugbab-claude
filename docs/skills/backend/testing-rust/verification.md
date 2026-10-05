@@ -99,7 +99,7 @@ status: APPROVED
 | axum 공식 문서 | https://docs.rs/axum/0.8/axum/ | High |
 | tower::ServiceExt 문서 | https://docs.rs/tower/latest/tower/trait.ServiceExt.html | High |
 | axum GitHub examples | https://github.com/tokio-rs/axum/tree/main/examples | High |
-| project-structure 스킬 (구 repository-pattern 스킬 대체, 2026-09-26 삭제) | .claude/skills/backend/project-structure/SKILL.md | Internal |
+| project-structure 스킬 (구 repository-pattern 스킬 대체, 2026-09-26 삭제) | .claude/skills/project-structure/SKILL.md | Internal |
 
 ---
 

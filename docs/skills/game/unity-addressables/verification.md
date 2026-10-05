@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `unity-addressables` |
-| 스킬 경로 | `.claude/skills/game/unity-addressables/SKILL.md` |
+| 스킬 경로 | `.claude/skills/unity-addressables/SKILL.md` |
 | 검증일 | 2026-09-26 (최초 2026-06-08) |
 | 검증자 | skill-creator (Claude) |
 | 스킬 버전 | v1 |

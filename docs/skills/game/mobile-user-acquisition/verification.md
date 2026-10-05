@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `mobile-user-acquisition` |
-| 스킬 경로 | `.claude/skills/game/mobile-user-acquisition/SKILL.md` |
+| 스킬 경로 | `.claude/skills/mobile-user-acquisition/SKILL.md` |
 | 최초 검증일 | 2026-06-10 |
 | 검증일 | 2026-09-28 (최초 2026-06-10, 재검증 2026-08-11, 2026-09-28) |
 | 최종 재검증일 | **2026-09-28** (2차 재검증 — ATT·SKAN·AAK 최신 정책 수치 재확인, 이전 재검증 2026-08-11) |

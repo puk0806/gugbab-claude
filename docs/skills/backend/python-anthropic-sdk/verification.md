@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `python-anthropic-sdk` |
-| 스킬 경로 | `.claude/skills/backend/python-anthropic-sdk/SKILL.md` |
+| 스킬 경로 | `.claude/skills/python-anthropic-sdk/SKILL.md` |
 | 검증일 | 2026-09-28 (재검증, 이전 2026-08-12 / 최초 2026-05-15) |
 | 검증자 | skill-creator (최초) / 모델 ID 정기 감사 (2026-08-11) / 5 계열 정렬 감사 (2026-08-12) / **2차 재검증 — SDK 1.0 메이저 업그레이드 반영 (2026-09-28)** |
 | 스킬 버전 | v2 |
@@ -39,7 +39,7 @@ status: APPROVED
 | 단계 | 도구 | 입력 요약 | 출력 요약 |
 |------|------|-----------|-----------|
 | 템플릿 확인 | Read | VERIFICATION_TEMPLATE.md | 8 섹션 구조 확정 |
-| 중복 확인 | Glob | `.claude/skills/backend/python-anthropic-sdk/**` | 기존 파일 없음, 신규 작성 |
+| 중복 확인 | Glob | `.claude/skills/python-anthropic-sdk/**` | 기존 파일 없음, 신규 작성 |
 | 조사 | WebSearch | "anthropic Python SDK 공식 문서 messages create streaming" | 공식 SDK 문서 URL 확보 |
 | 조사 | WebSearch | "anthropic-sdk-python github AsyncAnthropic" | GitHub 레포 + 헬퍼 문서 확인 |
 | 조사 | WebSearch | "anthropic prompt caching cache_control ephemeral 1h TTL" | 캐시 정책 (5m 기본, 1h 옵션) 확정 |

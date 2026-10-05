@@ -51,16 +51,16 @@
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
-| humanities | [korean-saju-tradition](../../.claude/skills/humanities/korean-saju-tradition/SKILL.md) | 사주명리 3대 원전 계보·간지/오행/십성/대운 개념·조선 명과학 수용사 |
-| humanities | [tarot-history-symbolism](../../.claude/skills/humanities/tarot-history-symbolism/SKILL.md) | 타로 덱 계보·78장 구조·RWS 상징·융 원형론(과장 금지)·이미지 저작권 |
-| humanities | [palmistry-limitations](../../.claude/skills/humanities/palmistry-limitations/SKILL.md) | 손금 어휘(선·구 명칭)·문화사·경험 연구 실패 이력, 엔터테인먼트 프레이밍 한 줄 고지 |
-| meta | [fortune-interpretation-prompt-engineering](../../.claude/skills/meta/fortune-interpretation-prompt-engineering/SKILL.md) | 사주·타로·손금 3모드 시스템 프롬프트, "상징 해석 허용 / 단정 회피" 톤, Structured Outputs, 캐싱 |
-| architecture | [saju-tarot-data-modeling](../../.claude/skills/architecture/saju-tarot-data-modeling/SKILL.md) | 출생 입력/계산 결과 분리·계산 버전 캐시 무효화·Subject 분리·Dexie 4.x 스키마·생년월일시 암호화 |
-| frontend | [saju-chart-visualization](../../.claude/skills/frontend/saju-chart-visualization/SKILL.md) | 원국 표·오행 차트·대운 타임라인, 오방정색 WCAG 재조정, "오행 개수=우열" 오독 방지 |
-| frontend | [tarot-card-deck-ui](../../.claude/skills/frontend/tarot-card-deck-ui/SKILL.md) | CSS 3D 플립·셔플, 스프레드 배치, Fisher-Yates + crypto 셔플, 접근성, 카드 에셋 |
-| frontend | [palm-photo-capture-vision](../../.claude/skills/frontend/palm-photo-capture-vision/SKILL.md) | 손바닥 촬영 → Claude Vision 파이프라인, 품질 검증, 손 아닌 이미지 거부, 원본 미보관 |
-| frontend | [daily-fortune-retention-loop](../../.claude/skills/frontend/daily-fortune-retention-loop/SKILL.md) | 하루 1회 갱신 경계·write-once 캐싱(리롤 금지)·푸시·스트릭·공유 카드 |
-| backend | [korean-lunar-calendar-manseryeok](../../.claude/skills/backend/korean-lunar-calendar-manseryeok/SKILL.md) | 절기 기준 월주·입춘 기준 연주, 한국 표준시·서머타임 이력, 진태양시 보정, KASI 대조 검증 |
+| humanities | [korean-saju-tradition](../../.claude/skills/korean-saju-tradition/SKILL.md) | 사주명리 3대 원전 계보·간지/오행/십성/대운 개념·조선 명과학 수용사 |
+| humanities | [tarot-history-symbolism](../../.claude/skills/tarot-history-symbolism/SKILL.md) | 타로 덱 계보·78장 구조·RWS 상징·융 원형론(과장 금지)·이미지 저작권 |
+| humanities | [palmistry-limitations](../../.claude/skills/palmistry-limitations/SKILL.md) | 손금 어휘(선·구 명칭)·문화사·경험 연구 실패 이력, 엔터테인먼트 프레이밍 한 줄 고지 |
+| meta | [fortune-interpretation-prompt-engineering](../../.claude/skills/fortune-interpretation-prompt-engineering/SKILL.md) | 사주·타로·손금 3모드 시스템 프롬프트, "상징 해석 허용 / 단정 회피" 톤, Structured Outputs, 캐싱 |
+| architecture | [saju-tarot-data-modeling](../../.claude/skills/saju-tarot-data-modeling/SKILL.md) | 출생 입력/계산 결과 분리·계산 버전 캐시 무효화·Subject 분리·Dexie 4.x 스키마·생년월일시 암호화 |
+| frontend | [saju-chart-visualization](../../.claude/skills/saju-chart-visualization/SKILL.md) | 원국 표·오행 차트·대운 타임라인, 오방정색 WCAG 재조정, "오행 개수=우열" 오독 방지 |
+| frontend | [tarot-card-deck-ui](../../.claude/skills/tarot-card-deck-ui/SKILL.md) | CSS 3D 플립·셔플, 스프레드 배치, Fisher-Yates + crypto 셔플, 접근성, 카드 에셋 |
+| frontend | [palm-photo-capture-vision](../../.claude/skills/palm-photo-capture-vision/SKILL.md) | 손바닥 촬영 → Claude Vision 파이프라인, 품질 검증, 손 아닌 이미지 거부, 원본 미보관 |
+| frontend | [daily-fortune-retention-loop](../../.claude/skills/daily-fortune-retention-loop/SKILL.md) | 하루 1회 갱신 경계·write-once 캐싱(리롤 금지)·푸시·스트릭·공유 카드 |
+| backend | [korean-lunar-calendar-manseryeok](../../.claude/skills/korean-lunar-calendar-manseryeok/SKILL.md) | 절기 기준 월주·입춘 기준 연주, 한국 표준시·서머타임 이력, 진태양시 보정, KASI 대조 검증 |
 
 > 2026-09-11 삭제 3종: `meta/fortune-safety-classifier-prompts`(안전 분류기 프롬프트)·`humanities/fortune-content-ethics-korea`(표시광고법·전자상거래법·개인정보 규제)·`backend/web-subscription-payments-korea`(정기결제) — 캐주얼 앱에 과잉. 필요해지면 git 이력(2026-09-10 신설 커밋 전 워킹트리)이 아니라 신규 작성으로 되살린다(미커밋 상태에서 삭제됨).
 

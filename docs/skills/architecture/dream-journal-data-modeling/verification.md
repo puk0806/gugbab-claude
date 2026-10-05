@@ -31,7 +31,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `dream-journal-data-modeling` |
-| 스킬 경로 | `.claude/skills/architecture/dream-journal-data-modeling/SKILL.md` |
+| 스킬 경로 | `.claude/skills/dream-journal-data-modeling/SKILL.md` |
 | 검증일 | 2026-09-28 (최초 검증 2026-05-14) |
 | 검증자 | skill-creator / 재검증: Claude (Sonnet 5) |
 | 스킬 버전 | v1 |

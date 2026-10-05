@@ -45,15 +45,15 @@ SEO·GEO(생성형 AI 검색 노출) 애드온 템플릿. 프레임워크 비종
 
 | 분류 | 스킬 | 커머스 |
 |------|------|:------:|
-| 구조화 데이터 | [schema-org-patterns](../../.claude/skills/frontend/schema-org-patterns/SKILL.md) · [structured-data-validation-api](../../.claude/skills/frontend/structured-data-validation-api/SKILL.md) | ✅ |
-| 커머스·GEO | [ecommerce-seo](../../.claude/skills/frontend/ecommerce-seo/SKILL.md) · [geo-ai-discoverability](../../.claude/skills/frontend/geo-ai-discoverability/SKILL.md) | ✅ |
-| 한국 시장 | [naver-seo-specifics](../../.claude/skills/frontend/naver-seo-specifics/SKILL.md) · [kakao-share-optimization](../../.claude/skills/frontend/kakao-share-optimization/SKILL.md) · [search-console-webmaster](../../.claude/skills/frontend/search-console-webmaster/SKILL.md) | ✅ |
-| URL·크롤링·헤더 | [url-canonicalization-redirects](../../.claude/skills/frontend/url-canonicalization-redirects/SKILL.md) · [bot-management-seo](../../.claude/skills/frontend/bot-management-seo/SKILL.md) · [security-headers-seo](../../.claude/skills/frontend/security-headers-seo/SKILL.md) | ✅ |
-| 렌더·자산 | [seo-static-html](../../.claude/skills/frontend/seo-static-html/SKILL.md) · [image-optimization-seo](../../.claude/skills/frontend/image-optimization-seo/SKILL.md) · [mobile-seo-pwa](../../.claude/skills/frontend/mobile-seo-pwa/SKILL.md) | ✅ |
-| 콘텐츠 | [content-eeat-quality](../../.claude/skills/writing/content-eeat-quality/SKILL.md) | ✅ |
-| 다국어·로컬 | [i18n-seo](../../.claude/skills/frontend/i18n-seo/SKILL.md) · [local-business-seo](../../.claude/skills/frontend/local-business-seo/SKILL.md) · [multilingual-content-strategy](../../.claude/skills/writing/multilingual-content-strategy/SKILL.md) | — |
-| 특수 콘텐츠 | [ymyl-content-seo](../../.claude/skills/writing/ymyl-content-seo/SKILL.md) · [accessibility-vpat-writing](../../.claude/skills/writing/accessibility-vpat-writing/SKILL.md) | — |
-| 운영·이전 | [google-indexing-api](../../.claude/skills/frontend/google-indexing-api/SKILL.md) · [seo-monitoring-automation](../../.claude/skills/frontend/seo-monitoring-automation/SKILL.md) · [site-migration-seo](../../.claude/skills/devops/site-migration-seo/SKILL.md) | — |
+| 구조화 데이터 | [schema-org-patterns](../../.claude/skills/schema-org-patterns/SKILL.md) · [structured-data-validation-api](../../.claude/skills/structured-data-validation-api/SKILL.md) | ✅ |
+| 커머스·GEO | [ecommerce-seo](../../.claude/skills/ecommerce-seo/SKILL.md) · [geo-ai-discoverability](../../.claude/skills/geo-ai-discoverability/SKILL.md) | ✅ |
+| 한국 시장 | [naver-seo-specifics](../../.claude/skills/naver-seo-specifics/SKILL.md) · [kakao-share-optimization](../../.claude/skills/kakao-share-optimization/SKILL.md) · [search-console-webmaster](../../.claude/skills/search-console-webmaster/SKILL.md) | ✅ |
+| URL·크롤링·헤더 | [url-canonicalization-redirects](../../.claude/skills/url-canonicalization-redirects/SKILL.md) · [bot-management-seo](../../.claude/skills/bot-management-seo/SKILL.md) · [security-headers-seo](../../.claude/skills/security-headers-seo/SKILL.md) | ✅ |
+| 렌더·자산 | [seo-static-html](../../.claude/skills/seo-static-html/SKILL.md) · [image-optimization-seo](../../.claude/skills/image-optimization-seo/SKILL.md) · [mobile-seo-pwa](../../.claude/skills/mobile-seo-pwa/SKILL.md) | ✅ |
+| 콘텐츠 | [content-eeat-quality](../../.claude/skills/content-eeat-quality/SKILL.md) | ✅ |
+| 다국어·로컬 | [i18n-seo](../../.claude/skills/i18n-seo/SKILL.md) · [local-business-seo](../../.claude/skills/local-business-seo/SKILL.md) · [multilingual-content-strategy](../../.claude/skills/multilingual-content-strategy/SKILL.md) | — |
+| 특수 콘텐츠 | [ymyl-content-seo](../../.claude/skills/ymyl-content-seo/SKILL.md) · [accessibility-vpat-writing](../../.claude/skills/accessibility-vpat-writing/SKILL.md) | — |
+| 운영·이전 | [google-indexing-api](../../.claude/skills/google-indexing-api/SKILL.md) · [seo-monitoring-automation](../../.claude/skills/seo-monitoring-automation/SKILL.md) · [site-migration-seo](../../.claude/skills/site-migration-seo/SKILL.md) | — |
 
 > **프레임워크 종속 3종은 이 템플릿 소유가 아니다** — `seo-nextjs`·`og-image-generation`(Next ImageResponse/satori)은 nextjs, `seo-vite-spa`는 react-spa 가 소유한다. `3,11`처럼 병행하면 union 으로 함께 온다.
 > `seo-static-html`은 그동안 프레임워크 필터에서 모든 템플릿이 제외해 **어느 템플릿에서도 export 되지 않던 스킬**이었다. JSP·Thymeleaf 등 서버 렌더 HTML에 가장 가까워 이 템플릿이 소유한다.

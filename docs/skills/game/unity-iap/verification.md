@@ -18,7 +18,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `unity-iap` |
-| 스킬 경로 | `.claude/skills/game/unity-iap/SKILL.md` |
+| 스킬 경로 | `.claude/skills/unity-iap/SKILL.md` |
 | 검증일 | 2026-09-26 (최초 2026-06-09) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |

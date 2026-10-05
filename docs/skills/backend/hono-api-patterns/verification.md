@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `hono-api-patterns` |
-| 스킬 경로 | `.claude/skills/backend/hono-api-patterns/SKILL.md` (+ `references/testing-examples.md`) |
+| 스킬 경로 | `.claude/skills/hono-api-patterns/SKILL.md` (+ `references/testing-examples.md`) |
 | 검증일 | 2026-09-25 |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |

@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `n8n-webhook-patterns` |
-| 스킬 경로 | `.claude/skills/devops/n8n-webhook-patterns/SKILL.md` |
+| 스킬 경로 | `.claude/skills/n8n-webhook-patterns/SKILL.md` |
 | 검증일 | 2026-09-28 (최초 검증 2026-05-15, 2026-09-28 재검증, 2026-09-28 형제 스킬 정합 보완) |
 | 검증자 | skill-creator / 재검증: Claude (Sonnet 5) |
 | 스킬 버전 | v2 |
@@ -38,7 +38,7 @@ status: APPROVED
 | 단계 | 도구 | 입력 요약 | 출력 요약 |
 |------|------|-----------|-----------|
 | 템플릿 확인 | Read | VERIFICATION_TEMPLATE.md | 8개 섹션 구조 확인 |
-| 중복 확인 | Glob | `.claude/skills/devops/**/SKILL.md` | n8n-webhook-patterns 없음, github-actions 등 3개 기존 |
+| 중복 확인 | Glob | `.claude/skills/devops/**/SKILL.md` (평탄화 이전 경로) | n8n-webhook-patterns 없음, github-actions 등 3개 기존 |
 | 조사 1 | WebSearch | n8n Webhook node Test/Production URL | 공식 docs 5개 + 커뮤니티 글 5개 수집 |
 | 조사 2 | WebSearch | Respond mode (On Received, Last Node, Respond to Webhook) | 공식 Respond to Webhook 노드 문서 확인 |
 | 조사 3 | WebSearch | Authentication (Basic, Header, JWT, HMAC) | HMAC은 노드에 빌트인 부재, Code 노드 수동 구현 확인 |

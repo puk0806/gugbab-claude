@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `tarot-card-deck-ui` |
-| 스킬 경로 | `.claude/skills/frontend/tarot-card-deck-ui/SKILL.md` |
+| 스킬 경로 | `.claude/skills/tarot-card-deck-ui/SKILL.md` |
 | 검증일 | 2026-09-28 (재검증, 이전 2026-09-10) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v2 |
@@ -44,7 +44,7 @@ status: APPROVED
 | 템플릿 확인 | Read | `docs/skills/VERIFICATION_TEMPLATE.md` | 8개 섹션 구조 확보 |
 | 중복 확인 | Glob | `.claude/skills/**/tarot*/SKILL.md` | 결과 0건 — 신규 생성 확정 |
 | 레포 정합 | Read | `frontend/animation/SKILL.md`, `frontend/swiper/SKILL.md` | motion 13.x 권장·Swiper 14.x 확인. 부채꼴에 Swiper 부적합 판단 근거 확보 |
-| 레포 정합 | Glob | `.claude/skills/humanities/**/SKILL.md`, 이미지·a11y 관련 스킬 | `image-optimization-seo` 존재 확인. `humanities/tarot-history-symbolism`은 현 시점 미존재(동시 생성 전제로 상호 참조 링크만 배치) |
+| 레포 정합 | Glob | `.claude/skills/humanities/**/SKILL.md`(평탄화 이전 경로), 이미지·a11y 관련 스킬 | `image-optimization-seo` 존재 확인. `humanities/tarot-history-symbolism`은 현 시점 미존재(동시 생성 전제로 상호 참조 링크만 배치) |
 | 조사 | WebFetch | MDN `transform-style`, `backface-visibility`, `will-change`, `touch-action`, `prefers-reduced-motion`, `Pointer_events`, `Crypto.getRandomValues`, `<img>` | 8개 1순위 소스, 값·기본값·경고 문구 원문 확보 |
 | 조사 | WebFetch | v8.dev `math-random` 블로그 | xorshift128+ / 128비트 상태 / 비암호학적 명시 확인 |
 | 조사 | WebFetch | motion.dev `react-motion-config`, `react-accessibility`, `react-use-reduced-motion` | `reducedMotion` 값·기본값·동작 확인 |

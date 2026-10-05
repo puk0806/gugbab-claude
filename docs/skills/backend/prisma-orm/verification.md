@@ -17,7 +17,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `prisma-orm` |
-| 스킬 경로 | `.claude/skills/backend/prisma-orm/SKILL.md` (+ `references/v6-to-v7-upgrade.md`, `references/serverless-edge.md`) |
+| 스킬 경로 | `.claude/skills/prisma-orm/SKILL.md` (+ `references/v6-to-v7-upgrade.md`, `references/serverless-edge.md`) |
 | 검증일 | 2026-09-26 (최초 2026-09-25, 섹션 7 보강·재테스트 2026-09-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |

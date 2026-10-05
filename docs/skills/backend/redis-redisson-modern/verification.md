@@ -15,7 +15,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `redis-redisson-modern` |
-| 스킬 경로 | `.claude/skills/backend/redis-redisson-modern/SKILL.md` |
+| 스킬 경로 | `.claude/skills/redis-redisson-modern/SKILL.md` |
 | 검증일 | 2026-09-26 (최초 2026-04-23) |
 | 검증자 | skill-creator → 2026-09-26 재검증: 메인 오케스트레이션 (Claude Sonnet 5) |
 | 스킬 버전 | v1 |

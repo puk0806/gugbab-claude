@@ -32,7 +32,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `korean-food-nutrition` |
-| 스킬 경로 | `.claude/skills/health/korean-food-nutrition/SKILL.md` |
+| 스킬 경로 | `.claude/skills/korean-food-nutrition/SKILL.md` |
 | 검증일 | 2026-09-28 (최초 2026-06-26, 2026-09-28 재검증) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v2 |

@@ -8,7 +8,7 @@ status: APPROVED
 
 # spring-security-6-jwt-jjwt12 검증 문서
 
-> 스킬: `.claude/skills/backend/spring-security-6-jwt-jjwt12/SKILL.md`
+> 스킬: `.claude/skills/spring-security-6-jwt-jjwt12/SKILL.md`
 > 대상 스택: Spring Boot 3.x + Spring Security 6.x + jjwt 0.12.x + Java 17+
 
 ---
@@ -18,7 +18,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `spring-security-6-jwt-jjwt12` |
-| 스킬 경로 | `.claude/skills/backend/spring-security-6-jwt-jjwt12/SKILL.md` |
+| 스킬 경로 | `.claude/skills/spring-security-6-jwt-jjwt12/SKILL.md` |
 | 검증일 | 2026-09-26 (재검증, 이전 2026-07-04) |
 | 검증자 | skill-creator (자동) |
 | 스킬 버전 | v1 |

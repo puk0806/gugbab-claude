@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `tanstack-query` |
-| 스킬 경로 | `.claude/skills/frontend/tanstack-query/SKILL.md` |
+| 스킬 경로 | `.claude/skills/tanstack-query/SKILL.md` |
 | 검증일 | 2026-09-28 (재검증(2차)) / 2026-08-26 (v1.1) / 2026-08-11 (v1 최초) |
 | 검증자 | skill-creator (v1) → 재검증(2차) |
 | 스킬 버전 | v1.2 |
@@ -42,7 +42,7 @@ status: APPROVED
 |------|------|-----------|-----------|
 | 템플릿 확인 | Read | `docs/skills/VERIFICATION_TEMPLATE.md` | 8개 섹션 구조 확보 |
 | 중복 확인 | Glob | `.claude/skills/**/tanstack*/SKILL.md` | 결과 없음 → 신규 생성 확정 |
-| 범위 분리 | Read | `.claude/skills/frontend/state-management/SKILL.md` | Zustand·상태 분류·v4→v5 표는 기존 스킬에 존재 → 이 스킬에서 제외하고 포인터로 연결 |
+| 범위 분리 | Read | `.claude/skills/state-management/SKILL.md` | Zustand·상태 분류·v4→v5 표는 기존 스킬에 존재 → 이 스킬에서 제외하고 포인터로 연결 |
 | 조사 | WebSearch | "TanStack Query v6 release stable 2026", "latest npm @tanstack/react-query 2026", "staleTime static 옵션", "environmentManager.isServer 릴리즈", "mutation onMutateResult 시그니처 변경", "staleTime vs gcTime" | 6회 검색 / v6는 Svelte·Solid 어댑터 한정, React는 v5, 5.101.4 확인 |
 | 조사 | WebFetch | 공식 문서 페이지 13종 + GitHub main 브랜치 docs 원문 6종 + npm registry latest + 이슈 #9660 | 총 21회 페치, 캐시 수명·키 규칙·뮤테이션 콜백·SSR·Suspense·무한쿼리 원문 확보 |
 | 교차 검증 | WebSearch + WebFetch | 12개 클레임, 독립 소스 2개 이상씩 대조 | VERIFIED 11 / DISPUTED 1 / UNVERIFIED 0 |

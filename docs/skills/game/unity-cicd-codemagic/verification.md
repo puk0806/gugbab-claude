@@ -13,7 +13,7 @@ status: PENDING_TEST
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `unity-cicd-codemagic` |
-| 스킬 경로 | `.claude/skills/game/unity-cicd-codemagic/SKILL.md` |
+| 스킬 경로 | `.claude/skills/unity-cicd-codemagic/SKILL.md` |
 | 검증일 | **2026-09-28** (최초 2026-06-10, 재검증 2026-08-11 / 2026-09-28) |
 | 검증자 | skill-creator (최초) → skill-tester+fact-checker (2026-08-11) → 2차 재검증 (2026-09-28) |
 | 스킬 버전 | v2 |

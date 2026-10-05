@@ -32,7 +32,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `nutrition-analysis-prompt` |
-| 스킬 경로 | `.claude/skills/health/nutrition-analysis-prompt/SKILL.md` |
+| 스킬 경로 | `.claude/skills/nutrition-analysis-prompt/SKILL.md` |
 | 검증일 | 2026-09-26 (최초 2026-06-26) |
 | 검증자 | skill-creator → 2026-09-26 안전 결함 수정 |
 | 스킬 버전 | v2 |
@@ -69,7 +69,7 @@ status: APPROVED
 | Anthropic 프롬프트 엔지니어링 공식 문서 | https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices | ⭐⭐⭐ High | 2026-06-26 | WebFetch 직접 확인 |
 | Anthropic cookbook (vision + tools) | https://platform.claude.com/cookbook/tool-use-vision-with-tools | ⭐⭐⭐ High | 2026-06-26 | 공식 cookbook |
 | Anthropic SDK (Node.js) | https://github.com/anthropics/anthropic-sdk-node | ⭐⭐⭐ High | 2026-06-26 | 공식 SDK |
-| nutrition-basics 스킬 | `.claude/skills/health/nutrition-basics/SKILL.md` | ⭐⭐⭐ High | 2026-06-26 | BMR/TDEE 공식 기반 |
+| nutrition-basics 스킬 | `.claude/skills/nutrition-basics/SKILL.md` | ⭐⭐⭐ High | 2026-06-26 | BMR/TDEE 공식 기반 |
 | Anthropic Structured outputs 공식 문서 | https://platform.claude.com/docs/en/build-with-claude/structured-outputs | ⭐⭐⭐ High | 2026-09-26 | `output_config.format`·지원 모델·스키마 제약 WebFetch 확인 |
 | claude-api 번들 스킬 (TS SDK) | Claude Code 번들 `claude-api` 스킬 `typescript/claude-api/tool-use.md` | ⭐⭐⭐ High | 2026-09-26 | `messages.parse` + `zodOutputFormat`, 5 계열 sampling 파라미터 400 |
 | 식품 등의 표시·광고에 관한 법률 (국가법령정보센터) | https://www.law.go.kr/lsInfoP.do?lsiSeq=269957&lsId=013094 | ⭐⭐⭐ High | 2026-09-26 | 제8조 질병 예방·치료 효능 인식 우려 표시·광고 금지 — 설계 참고 |

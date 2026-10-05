@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `korean-dream-interpretation-tradition` |
-| 스킬 경로 | `.claude/skills/humanities/korean-dream-interpretation-tradition/SKILL.md` |
+| 스킬 경로 | `.claude/skills/korean-dream-interpretation-tradition/SKILL.md` |
 | 검증일 | 2026-09-26 |
 | 검증자 | skill-creator (Claude Opus 4.7) / 2026-09-26 재검증: 메인 세션 (민족문화대백과 본문·위키문헌 원문 직접 대조) |
 | 스킬 버전 | v2 |
@@ -40,7 +40,7 @@ status: APPROVED
 | 단계 | 도구 | 입력 요약 | 출력 요약 |
 |------|------|-----------|-----------|
 | 템플릿 확인 | Read | VERIFICATION_TEMPLATE.md | 8개 섹션 구조 확인 |
-| 중복 확인 | Glob | .claude/skills/humanities/korean-dream-interpretation-tradition/** | 없음 — 신규 생성 |
+| 중복 확인 | Glob | .claude/skills/korean-dream-interpretation-tradition/** | 없음 — 신규 생성 |
 | 조사 1 | WebSearch | "한국민속대백과사전 꿈 해몽 민속신앙사전" | 10개 소스, 한국민족문화대백과사전 E0011278 발견 |
 | 조사 2 | WebSearch | "한국민속대백과사전 태몽 folkency 국립민속박물관" | 편찬 주체 = 국립민속박물관, 2001 기획 확인 |
 | 조사 3 | WebSearch | "동의보감 정신편 몽 한의학 분류" | 내경편 권02 위치 확인 |

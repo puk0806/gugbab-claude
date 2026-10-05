@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `claude-code-headless` |
-| 스킬 경로 | `.claude/skills/backend/claude-code-headless/SKILL.md` |
+| 스킬 경로 | `.claude/skills/claude-code-headless/SKILL.md` |
 | 검증일 | 2026-09-28 (2026-09-26 정기 재검증, 2026-09-28 "흔한 실수" 표 정정·재테스트, 최초 2026-07-03) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |

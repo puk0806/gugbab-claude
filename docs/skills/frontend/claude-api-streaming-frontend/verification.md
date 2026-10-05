@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `claude-api-streaming-frontend` |
-| 스킬 경로 | `.claude/skills/frontend/claude-api-streaming-frontend/SKILL.md` |
+| 스킬 경로 | `.claude/skills/claude-api-streaming-frontend/SKILL.md` |
 | 검증일 | 2026-08-12 (최초 2026-05-14) / **2026-09-28 (재검증 2차)** |
 | 검증자 | skill-creator (최초) / 모델 ID 정기 감사 (2026-08-11) / 5 계열 정렬 감사 (2026-08-12) / **재검증 2차 (2026-09-28)** |
 | 스킬 버전 | v1.1 |

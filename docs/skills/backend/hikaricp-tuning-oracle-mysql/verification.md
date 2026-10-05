@@ -15,7 +15,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `hikaricp-tuning-oracle-mysql` |
-| 스킬 경로 | `.claude/skills/backend/hikaricp-tuning-oracle-mysql/SKILL.md` |
+| 스킬 경로 | `.claude/skills/hikaricp-tuning-oracle-mysql/SKILL.md` |
 | 검증일 | 2026-09-26 (재검증) |
 | 검증자 | skill-creator (Claude) |
 | 스킬 버전 | v1 |

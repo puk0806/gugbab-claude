@@ -34,7 +34,7 @@ status: PENDING_TEST
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | vite-pwa-service-worker |
-| 스킬 경로 | .claude/skills/frontend/vite-pwa-service-worker/SKILL.md |
+| 스킬 경로 | .claude/skills/vite-pwa-service-worker/SKILL.md |
 | 최초 작성일 | 2026-04-20 |
 | 검증일 | 2026-09-28 (재검증, 이전 2026-08-11) |
 | 검증 방법 | WebSearch 교차 검증 (메인 대화) + 2026-09-28 재검증(2차, npm registry 대조) |

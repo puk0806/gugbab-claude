@@ -18,7 +18,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `dream-symbol-tagging` |
-| 스킬 경로 | `.claude/skills/frontend/dream-symbol-tagging/SKILL.md` |
+| 스킬 경로 | `.claude/skills/dream-symbol-tagging/SKILL.md` |
 | 검증일 | 2026-09-26 (최초 2026-05-15) |
 | 모델 ID 한정 재감사일 | 2026-08-11 — 변경 없음 (아래 §8 참조) |
 | 검증자 | skill-creator (Claude Opus 4.7) → 2026-09-26 skill-tester 재테스트 |

@@ -33,7 +33,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | form-handling |
-| 스킬 경로 | `.claude/skills/frontend/form-handling/SKILL.md` |
+| 스킬 경로 | `.claude/skills/form-handling/SKILL.md` |
 | 최초 작성일 | 2026-04-01 |
 | 검증일 | 2026-09-26 (최초 2026-04-01, 직전 재검증 2026-04-14 · Zod 4 현행화 2026-09-25 · 재테스트·선택 보강 2026-09-26) |
 | 재검증일 | 2026-04-14 |

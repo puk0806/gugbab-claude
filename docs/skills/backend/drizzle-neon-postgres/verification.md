@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `drizzle-neon-postgres` |
-| 스킬 경로 | `.claude/skills/backend/drizzle-neon-postgres/SKILL.md` |
+| 스킬 경로 | `.claude/skills/drizzle-neon-postgres/SKILL.md` |
 | 검증일 | 2026-09-28 (최초 2026-09-17 · 09-25 구조 개편 · 09-28 재검증) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1.1 |

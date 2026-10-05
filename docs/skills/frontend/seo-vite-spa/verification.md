@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `seo-vite-spa` |
-| 스킬 경로 | `.claude/skills/frontend/seo-vite-spa/SKILL.md` |
+| 스킬 경로 | `.claude/skills/seo-vite-spa/SKILL.md` |
 | 검증일 | 2026-09-28 (재검증, 이전 2026-08-26, 최초 2026-06-01) |
 | 검증자 | skill-creator (Claude Code 에이전트) |
 | 스킬 버전 | v1.3 |

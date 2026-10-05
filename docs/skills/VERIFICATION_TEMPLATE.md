@@ -60,7 +60,7 @@ status: PENDING_TEST   # PENDING_TEST | APPROVED | NEEDS_REVISION (UNVERIFIED는
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `{skill-name}` |
-| 스킬 경로 | `.claude/skills/{category}/{skill-name}/SKILL.md` |
+| 스킬 경로 | `.claude/skills/{skill-name}/SKILL.md` |
 | 검증일 | YYYY-MM-DD |
 | 검증자 | {이름} |
 | 스킬 버전 | v{N} |

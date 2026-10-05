@@ -50,7 +50,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `e2e-testing` |
-| 스킬 경로 | `.claude/skills/frontend/e2e-testing/SKILL.md` |
+| 스킬 경로 | `.claude/skills/e2e-testing/SKILL.md` |
 | 검증일 | 2026-09-28 (재검증, 이전 2026-08-26) |
 | 검증자 | Claude (skill-creator) · 2026-09-28 재검증: Claude (Sonnet 5) |
 | 스킬 버전 | v2 |

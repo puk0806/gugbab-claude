@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `dream-recurrence-detection` |
-| 스킬 경로 | `.claude/skills/frontend/dream-recurrence-detection/SKILL.md` |
+| 스킬 경로 | `.claude/skills/dream-recurrence-detection/SKILL.md` |
 | 검증일 | 2026-09-28 (최초 2026-05-15, 2026-09-28 재검증) |
 | 검증자 | skill-creator (Claude) → Claude (Sonnet 5, 2026-09-28 재검증) |
 | 스킬 버전 | v2 |

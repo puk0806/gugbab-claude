@@ -34,7 +34,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `spring-security-5-jwt-jjwt10` |
-| 스킬 경로 | `.claude/skills/backend/spring-security-5-jwt-jjwt10/SKILL.md` |
+| 스킬 경로 | `.claude/skills/spring-security-5-jwt-jjwt10/SKILL.md` |
 | 검증일 | 2026-09-26 (재검증, 이전 2026-07-04) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
@@ -58,7 +58,7 @@ status: APPROVED
 | 단계 | 도구 | 입력 요약 | 출력 요약 |
 |------|------|-----------|-----------|
 | 템플릿 확인 | Read | VERIFICATION_TEMPLATE.md, axum/SKILL.md | 섹션 1-8 구조, SKILL.md 헤더 형식 확인 |
-| 중복 체크 | Read | .claude/skills/backend/spring-security-5-jwt-jjwt10/SKILL.md | 파일 없음 → 신규 생성 |
+| 중복 체크 | Read | .claude/skills/spring-security-5-jwt-jjwt10/SKILL.md | 파일 없음 → 신규 생성 |
 | 조사 1 | WebSearch | Spring Boot 2.5 bundled Spring Security version | Spring Security 5.5.x 번들 확인 (2.5.0-M2부터) |
 | 조사 2 | WebSearch | jjwt 0.10.7 release github | 0.10.x 시리즈 정보, CHANGELOG 링크 확보 |
 | 조사 3 | WebSearch | WebSecurityConfigurerAdapter Spring Security 5 deprecated | 5.7부터 deprecated, 5.5.x는 정식 패턴 확인 |

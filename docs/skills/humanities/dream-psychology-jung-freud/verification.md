@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `dream-psychology-jung-freud` |
-| 스킬 경로 | `.claude/skills/humanities/dream-psychology-jung-freud/SKILL.md` |
+| 스킬 경로 | `.claude/skills/dream-psychology-jung-freud/SKILL.md` |
 | 검증일 | 2026-09-26 |
 | 검증자 | skill-creator (gugbab-claude) / 2026-09-26 재검증: 메인 세션 (독일어 원문·영역본·MaHS·PubMed·Crossref·SEP 직접 대조) |
 | 스킬 버전 | v2 |

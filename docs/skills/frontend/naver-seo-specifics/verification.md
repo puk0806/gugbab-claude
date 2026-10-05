@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `naver-seo-specifics` |
-| 스킬 경로 | `.claude/skills/frontend/naver-seo-specifics/SKILL.md` |
+| 스킬 경로 | `.claude/skills/naver-seo-specifics/SKILL.md` |
 | 검증일 | 2026-06-03 (최초) / 2026-08-26 (freshness 갱신) / **2026-09-26 (30~60일 주기 재검증)** |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1.2 |

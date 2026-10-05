@@ -15,7 +15,7 @@ status: PENDING_TEST
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `korean-lunar-calendar-manseryeok` |
-| 스킬 경로 | `.claude/skills/backend/korean-lunar-calendar-manseryeok/SKILL.md` |
+| 스킬 경로 | `.claude/skills/korean-lunar-calendar-manseryeok/SKILL.md` |
 | 검증일 | 2026-09-28 (재검증, 이전 2026-09-10) |
 | 검증자 | skill-creator (최초), 재검증 2차 작업(2026-09-28), 실사용(실행) 검증(2026-09-28) |
 | 스킬 버전 | v3 |

@@ -15,7 +15,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `testing-junit5-spring-boot` |
-| 스킬 경로 | `.claude/skills/backend/testing-junit5-spring-boot/SKILL.md` |
+| 스킬 경로 | `.claude/skills/testing-junit5-spring-boot/SKILL.md` |
 | 검증일 | 2026-09-28 (재검증, 이전 2026-08-11) |
 | 검증자 | skill-creator (최초), 재검증 2차 작업(2026-09-28) |
 | 스킬 버전 | v2 |

@@ -31,7 +31,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `python-async-asyncio` |
-| 스킬 경로 | `.claude/skills/backend/python-async-asyncio/SKILL.md` |
+| 스킬 경로 | `.claude/skills/python-async-asyncio/SKILL.md` |
 | 검증일 | 2026-09-28 (재검증, 이전 2026-09-26 · 최초 2026-05-15) |
 | 검증자 | skill-creator → 2026-09-26 재검증 → 2026-09-28 선택 보강: 메인 오케스트레이션 (Claude Sonnet 5) |
 | 스킬 버전 | v1 |
@@ -60,7 +60,7 @@ status: APPROVED
 | 단계 | 도구 | 입력 요약 | 출력 요약 |
 |------|------|-----------|-----------|
 | 템플릿 확인 | Read | `docs/skills/VERIFICATION_TEMPLATE.md` | 8개 섹션 구조 확보 |
-| 중복 확인 | Glob | `.claude/skills/backend/python-async-asyncio/**`, `python-*` | 중복 없음, 짝 스킬도 아직 미생성 |
+| 중복 확인 | Glob | `.claude/skills/python-async-asyncio/**`, `python-*` | 중복 없음, 짝 스킬도 아직 미생성 |
 | 조사 | WebSearch | "Python asyncio official documentation 3.12 async await coroutines" | docs.python.org 3.12·3.14, Real Python 등 |
 | 조사 | WebSearch | "Python 3.11 asyncio.timeout() vs wait_for difference" | PEP·discuss.python.org·bug tracker 확보 |
 | 조사 | WebFetch | docs.python.org/3/library/asyncio-task.html | API 시그니처·버전 추가 정보 정확 추출 |
