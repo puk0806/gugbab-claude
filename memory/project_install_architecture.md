@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 9152b891-1df7-4c78-8301-10defaed293c
-  modified: 2026-10-05T05:23:57.607Z
+  modified: 2026-10-05T07:09:37.274Z
 ---
 
 gugbab-claude는 Claude Code 컨벤션 소스 레포. `project-install.sh`로 다른 프로젝트에 이식.
@@ -84,4 +84,4 @@ gugbab-claude는 Claude Code 컨벤션 소스 레포. `project-install.sh`로 �
 - **새 훅 추가 시** → `project-install.sh` HOOKS 배열 + `scripts/gen-settings.js` hooks 섹션 수정
 - **새 권한/디렉토리 추가 시** → `scripts/gen-settings.js` 내 permissions 섹션 수정
 - 변경 후 `bash -n project-install.sh`로 구문 검증 + `node --test scripts/template-separation.test.js`
-- **2026-10-05 스킬 평탄화·팀 레포 보호**: 스킬 본체 1단 `.claude/skills/<name>/`, 템플릿 필터는 논리 ID `<cat>/<name>`(카테고리는 `docs/skills/<cat>/<name>/`에서 `skill_category`로 조회 — 새 스킬은 docs 짝이 없으면 설치 안 됨). 정리 단위 키 = 스킬 이름(`prune-option-excluded.js` `LEGACY_SKILL_CATEGORIES`로 구 2단 판별 → 스킬 이름이 카테고리명과 같으면 안 됨). 테스트는 `scripts/skill-index.js`로 논리 ID↔경로 변환. 원본 settings.json은 gen-settings 전체 옵션 출력과 의미상 동일해야 함(회귀 검사). 팀 레포 보호: `--delete-orphans`는 git 추적 파일 보존, 추적 CLAUDE.md는 `overwrite` 입력 시만 덮어쓰기(미추적은 `.bak-시각` 백업), 프로젝트명 y/n 거부·엔터=폴더명, Java 버전 빌드 파일 감지, 폐기 공용 docs(docs/hooks) 해시 증명 삭제
+- **2026-10-05 스킬 평탄화**: 스킬 본체 1단 `.claude/skills/<name>/`, 템플릿 필터는 논리 ID `<cat>/<name>`(카테고리는 `docs/skills/<cat>/<name>/`에서 `skill_category`로 조회 — 새 스킬은 docs 짝이 없으면 설치 안 됨). 정리 단위 키 = 스킬 이름(`prune-option-excluded.js` `LEGACY_SKILL_CATEGORIES`로 구 2단 판별 → 스킬 이름이 카테고리명과 같으면 안 됨). 테스트는 `scripts/skill-index.js`로 논리 ID↔경로 변환. 원본 settings.json은 gen-settings 전체 옵션 출력과 의미상 동일해야 함(회귀 검사). 폐기 공용 docs(docs/hooks) 해시 증명 삭제. export는 원본 기준으로 대상을 갱신(대상의 팀 파일 보존 장치는 넣지 않음 — [[feedback_no_target_driven_changes]])

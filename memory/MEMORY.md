@@ -28,6 +28,7 @@
 - [수정본은 새 파일명 + 미리보기 동봉](feedback_output_revision_delivery.md) — 같은 이름 덮어쓰기 금지(뷰어가 옛 버전 표시), 레이아웃 논쟁은 좌표로 제시
 - [라이브러리 스킬은 실제 사용량 실측 후 생성](feedback_verify_usage_before_library_skill.md) — package.json 의존성≠사용. import 파일 수 두 자리 이상일 때만 전용 스킬. vanilla-extract 죽은 devDep 사례
 - [전수 감사 사각지대](feedback_audit_blind_spots.md) — 훅 I/O 규약 대조·설치본 역류·실설치 참조 스캔·짝 단위 처리. **09-30: 교훈을 계획에 안 넣어 재발 → 설치본 참조·날짜 일치·문서 수치·소유 매트릭스를 테스트로 강제, 감사 계획에 체크리스트로 직접 포함**
+- [설치본 사정으로 원본 export 동작 바꾸지 않기](feedback_no_target_driven_changes.md) — 원본은 그 자체로 정상, export는 대상을 원본 기준으로 전부 갱신. LF 이슈는 LF 하네스에서
 - [기준은 항상 원본 레포](feedback_source_repo_is_standard.md) — 설치본이 쓰고 있어도 원본 기준 불필요면 제거, 프로젝트별 보존 예외 없음, 유용한 내용만 원본으로 흡수 후 재설치로 배포
 - [삭제 요청은 범위를 좁게](feedback_deletion_scope_narrow.md) — 확정/경계/유지로 나눠 경계는 질문, 검색·검증 범용 에이전트는 휩쓸어 지우지 않음, 남는 자산의 설치 경로 이관
 - [토큰 95% 소진 시 일시 정지](feedback_pause_at_95_percent_tokens.md) — 장기 작업은 병렬 가능한 것만 병렬, 잔여 5% 이하면 새 작업 금지·완료/미완 목록+재개법 보고 후 멈춤
