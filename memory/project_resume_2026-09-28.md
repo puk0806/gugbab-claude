@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: ea135cf2-6650-48cc-ac4f-5b9362cf7126
-  modified: 2026-10-05T07:09:40.302Z
+  modified: 2026-10-05T08:19:09.485Z
 ---
 
 **상태 (2026-09-28 저녁)**: 이전 세션(macOS TCC 권한으로 중단)의 재개 작업 **완료**. 커밋·푸시 직전에서 멈춤 — 사용자가 "커밋 푸시 전 작업까지"만 요청.
@@ -25,6 +25,6 @@ metadata:
 
 **10-05 후속**: 하네스 구조 감사 어긋남 수정 + 회귀 테스트 4종(installed-refs·verification-consistency·template-docs-counts·template-ownership) + 설치본(01·voca) 제보 반영(참조 검사 확장·Codex 마커 `.gitignore`·typescript.md 예외) → 전체 293/293, 실설치 7조합·재설치·훅 실행 스모크 확인 후 커밋·PR. 머지 후 01·04·voca 재설치 안내 필요(voca의 로컬 react-virtuoso는 원본 기준으로 수동 삭제). **PR #20 머지 완료.**
 
-**10-05 2차 (브랜치 `refactor/flatten-skills-2026-10-05`, 미커밋)**: 스킬 184종 2단→1단 평탄화(스킬 미등록 구조 결함), skill-md-guard 위치·name 가드, 구조 회귀 검사, verification.md 179종 경로 일괄 정정(승인), settings.json 생성기 정합, 훅 문서 3곳·permission-judge.md 삭제·verification-guard Post Write 배선, 폐기 docs/hooks 정리. **PR #21** (LF 사고를 이유로 넣었던 팀 레포 보호 변경은 사용자 지적으로 되돌림). 남은 것: 머지 → LF 설치본 재설치는 LF 쪽 별도 작업. 별도 과제: LF 공통 하네스 계획서 — Claude Docs 문서로 작성 완료(2026-10-05): https://claude.ai/code/artifact/1946e909-0b07-4974-8f76-b730673e7e8e (혼합형 권장: 사내 Bitbucket 플러그인 마켓 lf-core·lf-frontend·lf-java-legacy·lf-java-modern·lf-seo-geo + 얇은 설치기, 결정 항목 13개). 사용자 검토·요청사항 대기.
+**10-05 2차 (브랜치 `refactor/flatten-skills-2026-10-05`, 미커밋)**: 스킬 184종 2단→1단 평탄화(스킬 미등록 구조 결함), skill-md-guard 위치·name 가드, 구조 회귀 검사, verification.md 179종 경로 일괄 정정(승인), settings.json 생성기 정합, 훅 문서 3곳·permission-judge.md 삭제·verification-guard Post Write 배선, 폐기 docs/hooks 정리. **PR #21** (LF 사고를 이유로 넣었던 팀 레포 보호 변경은 사용자 지적으로 되돌림). 남은 것: 머지 → LF 설치본 재설치는 LF 쪽 별도 작업. 별도 과제: LF 공통 하네스 계획서 — Claude Docs 문서로 작성 완료(2026-10-05): https://claude.ai/code/artifact/1946e909-0b07-4974-8f76-b730673e7e8e — 2026-10-05 사용자 지시로 전면 재작성: 대상 레포(LF 8개) 고려 없이 범용 공통 하네스 전제, 1단계 = 원본의 settings.json·워크플로우·훅 22·규칙 14·커맨드 10·에이전트 56·스킬 184(별도 탭) 기능 인벤토리. 사용자가 가져갈 항목을 고르면 2단계 구축 계획 작성.
 
 **09-29 커밋 7개·푸시 완료 → PR #19 머지(`bef86a3`), 로컬 main 체크아웃·pull 완료.** 대용량 push는 HTTPS `HTTP 400 RPC failed` → `git -c http.postBuffer=524288000 push`로 해결(전역 설정 변경 없이). **남은 것**: ① (완료 시 해소) `/commit`(관심사별 분리: [skill] 삭제·재검증 / [agent] 삭제·참조 정리 / [config] install·test / [docs] README·docs / [memory]) → push → PR ② 머지 후 01·04 레포 재설치(academic 템플릿 쓰던 설치본 있으면 8 대신 다른 번호로) ③ 재테스트에서 나온 선택 보강 gap(비차단)은 각 verification.md 섹션 7에 기록돼 있음.
