@@ -108,6 +108,18 @@ const warn = (msg) => console.log(`  [cleanup] ⚠ ${msg}`);
 // 넘긴다. 파싱 실패(손상·조작) 시에는 어떤 삭제도 하지 않는다.
 const manifestFile = path.join(target, '.claude', '.install-manifest.json');
 const deleteOrphansFlag = args.includes('--delete-orphans');
+
+// 대상 레포가 git 으로 추적 중인 파일 (대상 기준 상대경로, '/' 구분). git 레포가 아니거나 git 이 없으면 빈 집합.
+// --delete-orphans 는 소유 증명 없이 "소스에 없으면 잔재"로 보고 지우므로, 팀이 커밋해 둔 자체 스킬·에이전트
+// (예: .claude/skills/<팀-리뷰-스킬>/)까지 지운 실사고가 있었다(2026-10-05 설치본 실측 — 첫 설치 "잔재 삭제? y").
+// 추적 파일은 매니페스트 해시 증명이 있을 때만 지우고, 증명 없는 일괄 삭제에서는 보존한다.
+const gitTracked = (() => {
+  try {
+    const out = require('child_process').execFileSync('git', ['-C', target, 'ls-files', '-z', '--', '.claude'],
+      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 64 * 1024 * 1024 });
+    return new Set(out.split('\0').filter(Boolean));
+  } catch { return new Set(); }
+})();
 let manifest = null;
 let manifestBroken = false;
 if (fs.existsSync(manifestFile)) {
@@ -518,6 +530,8 @@ const optionOffCommands = new Set([
 
 // 폐기 스킬·에이전트의 짝 단위 판정 결과 (본체 + 짝 docs) — 루프 뒤에서 한 번에 차단·실행한다
 const unitDecisions = [];
+// --delete-orphans 대상이지만 git 추적 중이라 보존한 파일 (팀 자산 보호)
+const trackedKept = [];
 
 for (const kind of ['skills', 'agents', 'commands']) {
   const srcRoot = path.join(source, '.claude', kind);
@@ -536,6 +550,7 @@ for (const kind of ['skills', 'agents', 'commands']) {
   const removed = [];
   const unknown = [];
   const localEdits = [];
+  const trackedHere = [];   // --delete-orphans 대상이지만 git 추적 중 → 보존 (짝 단위도 보존)
   for (const rel of orphans) {
     if (manifest) {
       if (!manifest[kind].has(rel)) { unknown.push(rel); continue; }
@@ -550,7 +565,8 @@ for (const kind of ['skills', 'agents', 'commands']) {
       if (current !== null && current === recorded) removed.push(rel);
       else localEdits.push(rel);
     } else if (!manifestBroken && deleteOrphansFlag) {
-      removed.push(rel);
+      if (gitTracked.has(`.claude/${kind}/${rel}`)) { trackedHere.push(rel); trackedKept.push(`.claude/${kind}/${rel}`); }
+      else removed.push(rel);
     } else {
       unknown.push(rel);
     }
@@ -565,7 +581,7 @@ for (const kind of ['skills', 'agents', 'commands']) {
     const orphanSet = new Set(orphans);
     const unitKey = (rel) => {
       if (kind === 'agents') return pair.unitOf('agents', rel);
-      return orphanSet.has(`${pair.skillUnit(rel)}/SKILL.md`) ? pair.unitOf('skills', rel) : `file:skills|${rel}`;
+      return orphanSet.has(`${pair.skillDir(rel)}/SKILL.md`) ? pair.unitOf('skills', rel) : `file:skills|${rel}`;
     };
     const push = (rels, state) => {
       for (const rel of rels) {
@@ -576,6 +592,7 @@ for (const kind of ['skills', 'agents', 'commands']) {
     push(removed, 'delete');
     push(localEdits, 'modified');
     push(unknown, 'custom');
+    push(trackedHere, 'modified');   // 팀 추적 파일은 단위(짝 docs 포함) 전체 보존
     removed.length = 0; // 삭제는 짝 docs 판정 뒤 단위 차단을 거쳐 일괄 실행
   }
   for (const rel of removed) {
@@ -594,6 +611,11 @@ for (const kind of ['skills', 'agents', 'commands']) {
     warn(`소스 레포에 없는 ${kind} ${unknown.length}건 발견 — 커스텀 파일 또는 미확인 잔재. 자동 삭제하지 않으니 직접 확인하세요:`);
     for (const rel of unknown) console.log(`      - .claude/${kind}/${rel}`);
   }
+}
+
+if (trackedKept.length > 0) {
+  warn(`잔재 삭제 대상 중 git 으로 추적 중인 파일 ${trackedKept.length}건은 팀 자산일 수 있어 삭제하지 않습니다 — 정말 지울 파일이면 직접 git rm 하세요:`);
+  for (const p of trackedKept) console.log(`      - ${p}`);
 }
 
 // ── 5.5 폐기 스킬·에이전트의 짝 docs + 단위 일괄 실행 (2026-09-26) ─────────
@@ -647,6 +669,24 @@ if (docsRootSafe && !manifestBroken && (manifest || deleteOrphansFlag)) {
       }
     } catch {
       warn(`${disp} 삭제 실패 — 직접 확인하세요`);
+    }
+  }
+}
+
+// ── 5.6 공용 docs(docs/hooks/**) 중 레포에서 폐기된 문서 (2026-10-05) ────────
+// docs/hooks/ 는 통째 복사되고 매니페스트 docs 에 기록되지만 삭제 경로가 없어(설치 스크립트 주석 "후속 과제"),
+// 레포에서 지운 문서(예: 존재하지 않는 훅을 설명하던 permission-judge.md)가 설치본에 영구 잔존했다.
+// 소유 증명: 매니페스트 docs 기록 + 설치 시점 해시 일치일 때만 삭제. 수정본·미기록은 보존(경고).
+if (docsRootSafe && manifest && !manifestBroken) {
+  for (const rel of [...manifest.docs].filter((r) => r.startsWith('hooks/'))) {
+    if (fs.existsSync(path.join(source, 'docs', rel))) continue;            // 레포 현행 문서
+    const full = path.join(docsRoot, rel);
+    if (!pair.safeRegularFile(full, target)) continue;                       // 이미 없음·symlink·대상 밖
+    const recorded = manifest.hashes.docs[rel];
+    if (typeof recorded === 'string' && pair.sha(full) === recorded) {
+      try { fs.unlinkSync(full); log(`폐기된 공용 docs 삭제: docs/${rel}`); } catch { warn(`docs/${rel} 삭제 실패 — 직접 확인하세요`); }
+    } else {
+      warn(`폐기된 공용 docs 가 설치 시점과 달라(로컬 수정본) 보존합니다: docs/${rel}`);
     }
   }
 }

@@ -202,7 +202,7 @@ section('날짜 불일치 비차단 경고 (PostToolUse) — frontmatter date ·
   const mkProj = () => fs.mkdtempSync(path.join(os.tmpdir(), 'vg-drift-'))
   const put = (root, fm, meta, skillDate) => {
     const vDir = path.join(root, 'docs', 'skills', 'frontend', 'drift-test')
-    const sDir = path.join(root, '.claude', 'skills', 'frontend', 'drift-test')
+    const sDir = path.join(root, '.claude', 'skills', 'drift-test')   // 스킬 본체는 1단 (2026-10-05 평탄화)
     fs.mkdirSync(vDir, { recursive: true }); fs.mkdirSync(sDir, { recursive: true })
     const v = path.join(vDir, 'verification.md')
     fs.writeFileSync(v, VALID_CONTENT.replace('date: 2026-04-17', `date: ${fm}`).replace('# 테스트 스킬 검증 문서', `# 테스트 스킬 검증 문서\n\n| 항목 | 내용 |\n|---|---|\n| 검증일 | ${meta} |`))

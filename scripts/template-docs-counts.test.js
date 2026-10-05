@@ -209,7 +209,8 @@ function countInstalled(dir) {
   const c = dir + '/.claude';
   let agents = 0, skills = 0;
   walk(path.join(c, 'agents'), (_f, n) => { if (n.endsWith('.md') && n !== 'CLAUDE.md') agents++; });
-  walk(path.join(c, 'skills'), (f, n) => { if (n === 'SKILL.md' && path.relative(path.join(c, 'skills'), f).split(path.sep).length === 3) skills++; });
+  // 스킬은 1단 .claude/skills/<name>/SKILL.md 만 센다 — Claude Code 가 등록하는 깊이 (2026-10-05 평탄화)
+  walk(path.join(c, 'skills'), (f, n) => { if (n === 'SKILL.md' && path.relative(path.join(c, 'skills'), f).split(path.sep).length === 2) skills++; });
   const hooks = listFiles(path.join(c, 'hooks')).filter((e) => e.isFile() && e.name !== 'package.json' && !e.name.endsWith('.test.js')).length;
   const rules = listFiles(path.join(c, 'rules')).filter((e) => e.isFile() && e.name.endsWith('.md')).length;
   const commands = listFiles(path.join(c, 'commands')).filter((e) => e.isFile() && e.name.endsWith('.md')).length;
@@ -457,15 +458,14 @@ describe('파서 방어 (악성·근사·삭제 퇴행)', () => {
 // 4. 루트 README·docs/skills README 수치 ↔ 실제 .claude 개수
 // ══════════════════════════════════════════════════════════════════════
 describe('README·카테고리 문서 수치 ↔ 실제 레포 개수', () => {
+  // 스킬 본체는 1단 .claude/skills/<name>/, 카테고리는 docs/skills/<cat>/<name>/ 위치 (2026-10-05 평탄화)
   const skillsRoot = path.join(REPO, '.claude', 'skills');
+  const cmap = require('./skill-index.js').categoryMap();
   const actualByCat = {};
   for (const e of listFiles(skillsRoot)) {
-    if (!e.isDirectory()) continue;
-    let n = 0;
-    for (const s of listFiles(path.join(skillsRoot, e.name))) {
-      if (s.isDirectory() && fs.existsSync(path.join(skillsRoot, e.name, s.name, 'SKILL.md'))) n++;
-    }
-    actualByCat[e.name] = n;
+    if (!e.isDirectory() || !fs.existsSync(path.join(skillsRoot, e.name, 'SKILL.md'))) continue;
+    const cat = cmap.get(e.name) || '?';
+    actualByCat[cat] = (actualByCat[cat] || 0) + 1;
   }
   const totalSkills = Object.values(actualByCat).reduce((a, b) => a + b, 0);
   const readme = fs.readFileSync(path.join(REPO, 'README.md'), 'utf8');

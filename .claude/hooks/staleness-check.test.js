@@ -73,9 +73,10 @@ function metaDoc({ fm, meta, metaRaw, bq, checklist, history, extra = '' } = {})
   return s
 }
 
-// <root>/.claude/skills/category/name/SKILL.md 생성
+// <root>/.claude/skills/name/SKILL.md 생성 — 스킬 본체는 1단(2026-10-05 평탄화), 카테고리는 docs 위치에만 있다.
+// category 인자는 호출부 호환용(짝 docs/skills/<category>/<name>/ 과 같은 이름을 넘긴다).
 function mkSkillMd(root, category, name, content) {
-  const dir = path.join(root, '.claude', 'skills', category, name)
+  const dir = path.join(root, '.claude', 'skills', name)
   fs.mkdirSync(dir, { recursive: true })
   fs.writeFileSync(path.join(dir, 'SKILL.md'), content)
 }
@@ -304,11 +305,30 @@ section('검증일 소스 — 신뢰 소스(SKILL.md 인용 줄·메타 표·fro
   const outside = mkRoot('sc-src-symlink-out-')
   fs.writeFileSync(path.join(outside, 'SKILL.md'), `> 검증일: ${isoDaysAgo(0)}\n`)
   mkSkill(root, 'game', 'linked-skillmd', metaDoc({ meta: isoDaysAgo(100) }))
-  const sdir = path.join(root, '.claude', 'skills', 'game', 'linked-skillmd')
+  const sdir = path.join(root, '.claude', 'skills', 'linked-skillmd')
   fs.mkdirSync(sdir, { recursive: true })
   fs.symlinkSync(path.join(outside, 'SKILL.md'), path.join(sdir, 'SKILL.md'))
   const r = runHook(root, ['--strict'])
   ok('심볼릭 링크 SKILL.md(외부 파일) 는 신뢰하지 않음 → stale', r.stdout.includes('linked-skillmd'))
+}
+{
+  // 평탄화 이전 2단 경로(.claude/skills/<cat>/<name>/SKILL.md)의 새 날짜는 짝으로 쓰지 않는다 —
+  // Claude Code 가 스킬로 등록하지 않는 잔재 사본으로 신선 위장하는 경로 차단 (2026-10-05)
+  const root = mkRoot('sc-src-legacy-nested-')
+  mkSkill(root, 'game', 'legacy-nested', metaDoc({ meta: isoDaysAgo(100) }))
+  const ldir = path.join(root, '.claude', 'skills', 'game', 'legacy-nested')
+  fs.mkdirSync(ldir, { recursive: true })
+  fs.writeFileSync(path.join(ldir, 'SKILL.md'), `> 검증일: ${isoDaysAgo(0)}\n`)
+  const r = runHook(root, ['--strict'])
+  ok('구 2단 경로 SKILL.md 의 새 날짜는 무시 → 60일 초과 보고', r.stdout.includes('legacy-nested'))
+}
+{
+  const { skillMdFor } = require('./staleness-check.js')
+  const sd = path.join(os.tmpdir(), 'skmd-root', '.claude', 'skills')
+  ok('skillMdFor: {cat}/{name} → 1단 SKILL.md', skillMdFor(sd, path.join('frontend', 'react-query')) === path.join(sd, 'react-query', 'SKILL.md'))
+  ok('skillMdFor: 상위 탈출(..) → null', skillMdFor(sd, path.join('..', 'escape')) === null && skillMdFor(sd, path.join('frontend', '..')) === null)
+  ok('skillMdFor: 깊이 1·3 → null', skillMdFor(sd, 'react-query') === null && skillMdFor(sd, path.join('a', 'b', 'c')) === null)
+  ok('skillMdFor: 빈 세그먼트 → null', skillMdFor(sd, '') === null)
 }
 {
   const root = mkRoot('sc-src-traversal-')

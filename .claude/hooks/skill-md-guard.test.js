@@ -128,7 +128,7 @@ function test(desc, toolName, filePath, content, expectedPass, eventName = 'PreT
 
 function section(title) { console.log(`\n── ${title} ──`) }
 
-const SKILL_PATH = '.claude/skills/frontend/test-skill/SKILL.md'
+const SKILL_PATH = '.claude/skills/test-skill/SKILL.md'   // 1단 — Claude Code 가 스킬로 등록하는 위치 (2026-10-05)
 
 console.log('🔍 skill-md-guard 테스트 시작 (Write = PreToolUse 사전 차단)')
 
@@ -158,15 +158,40 @@ section('PostToolUse Edit → 디스크 전체 재읽기 검증')
 {
   const os = require('os')
   const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'smg-edit-'))
-  const skillDir = path.join(tmpRoot, '.claude', 'skills', 'frontend', 'edit-skill')
+  const skillDir = path.join(tmpRoot, '.claude', 'skills', 'test-skill')
   fs.mkdirSync(skillDir, { recursive: true })
   const validOnDisk = path.join(skillDir, 'SKILL.md')
   fs.writeFileSync(validOnDisk, VALID_CONTENT)
   test('Edit — 디스크 파일 유효 → 통과', 'Edit', validOnDisk, undefined, true, 'PostToolUse')
   fs.writeFileSync(validOnDisk, NO_SOURCE)
   test('Edit — 디스크 파일 소스 누락 → 실패', 'Edit', validOnDisk, undefined, false, 'PostToolUse')
+  // 구 2단 잔재 사본을 Edit 하면 위치 위반으로 수정 요구 (내용이 유효해도)
+  const legacyDir = path.join(tmpRoot, '.claude', 'skills', 'frontend', 'test-skill')
+  fs.mkdirSync(legacyDir, { recursive: true })
+  fs.writeFileSync(path.join(legacyDir, 'SKILL.md'), VALID_CONTENT)
+  test('Edit — 구 2단 위치 SKILL.md → 실패(위치 위반)', 'Edit', path.join(legacyDir, 'SKILL.md'), undefined, false, 'PostToolUse')
   fs.rmSync(tmpRoot, { recursive: true, force: true })
 }
+
+section('저장 위치 — 1단 .claude/skills/<name>/SKILL.md 만 등록된다 (2026-10-05)')
+test('카테고리 2단 중첩 → 차단 (조용히 미등록되는 경로)', 'Write', '.claude/skills/frontend/test-skill/SKILL.md', VALID_CONTENT, false)
+test('3단 중첩 → 차단', 'Write', '.claude/skills/a/b/test-skill/SKILL.md', VALID_CONTENT, false)
+test('절대경로 1단 → 통과', 'Write', '/repo/.claude/skills/test-skill/SKILL.md', VALID_CONTENT, true)
+test('모노레포 하위 .claude/skills 1단 → 통과', 'Write', '/repo/apps/web/.claude/skills/test-skill/SKILL.md', VALID_CONTENT, true)
+test('모노레포 하위 .claude/skills 2단 → 차단', 'Write', '/repo/apps/web/.claude/skills/x/test-skill/SKILL.md', VALID_CONTENT, false)
+test('Windows 구분자 2단 → 차단 (정규화 후 판정)', 'Write', 'C:\\repo\\.claude\\skills\\frontend\\test-skill\\SKILL.md', VALID_CONTENT, false)
+test('내용 비어도 2단 위치면 차단', 'Write', '.claude/skills/frontend/test-skill/SKILL.md', '', false)
+{
+  const r = runHook('Write', '.claude/skills/frontend/test-skill/SKILL.md', VALID_CONTENT)
+  const ok = r.stderr.includes('.claude/skills/test-skill/SKILL.md')
+  console.log(`  ${ok ? '✅' : '❌'} 위치 위반 메시지가 올바른 1단 경로를 안내 → ${ok ? 'PASS' : 'FAIL'}`)
+  ok ? passed++ : failed++
+}
+
+section('name ↔ 폴더 이름 일치')
+test('name 이 폴더와 다름 → 차단', 'Write', '.claude/skills/other-name/SKILL.md', VALID_CONTENT, false)
+test('name 에 따옴표·주석 → 정규화 후 일치면 통과', 'Write', SKILL_PATH, VALID_CONTENT.replace('name: test-skill', 'name: "test-skill"  # 등록 이름'), true)
+test('name 경로 조작 문자열 → 차단', 'Write', SKILL_PATH, VALID_CONTENT.replace('name: test-skill', 'name: ../../evil'), false)
 
 console.log(`\n${'─'.repeat(40)}`)
 console.log(`결과: ${passed}/${passed + failed} 통과 ${failed > 0 ? `(${failed}개 실패)` : ''}`)

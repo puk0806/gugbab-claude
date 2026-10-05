@@ -44,6 +44,7 @@
       "Bash(diff*)",
       "Bash(xargs*)",
       "Bash(for*)",
+      "Bash(tee*)",
       "Write",
       "Edit",
       "Read",
@@ -76,6 +77,10 @@
       "Bash(curl*|*bash)",
       "Bash(wget*|*sh)"
     ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/statusline.sh"
   },
   "hooks": {
     "PreToolUse": [
@@ -151,6 +156,10 @@
           {
             "type": "command",
             "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/deliverable-guard.js"
+          },
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/verification-guard.js"
           },
           {
             "type": "command",

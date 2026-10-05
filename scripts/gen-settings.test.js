@@ -140,8 +140,11 @@ console.log('\n[사전 차단] verification/skill-md/agent-md — PreToolUse Wri
   const postEdit = s.hooks.PostToolUse.find(b => b.matcher === 'Edit').hooks.map(h => h.command).join(' ')
   assert('PreToolUse Write에 구조 검증 3종 배선',
     ['verification-guard', 'skill-md-guard', 'agent-md-guard'].every(n => preWrite.includes(n)), true)
-  assert('PostToolUse Write에서 구조 검증 3종 제거',
-    ['verification-guard', 'skill-md-guard', 'agent-md-guard'].some(n => postWrite.includes(n)), false)
+  assert('PostToolUse Write에서 차단형 구조 검증(skill-md·agent-md) 제거 — Pre 에서 이미 사전 차단',
+    ['skill-md-guard', 'agent-md-guard'].some(n => postWrite.includes(n)), false)
+  // verification-guard 는 Post Write 를 경고 전용(날짜 4곳 불일치)으로 처리 — 배선 누락 시 Write 로 만든
+  // verification.md 의 날짜 불일치가 세션 시작 전까지 드러나지 않았다 (2026-10-05)
+  assert('PostToolUse Write에 verification-guard 배선 (날짜 불일치 경고 전용)', postWrite.includes('verification-guard'), true)
   assert('PostToolUse Edit에 구조 검증 3종 배선 (디스크 재읽기)',
     ['verification-guard', 'skill-md-guard', 'agent-md-guard'].every(n => postEdit.includes(n)), true)
   const editCmds = s.hooks.PostToolUse.find(b => b.matcher === 'Edit').hooks.map(h => h.command)
@@ -281,6 +284,32 @@ console.log('\n[quoting] 모든 훅·statusLine 명령이 "$CLAUDE_PROJECT_DIR" 
   assert('--strict 인자가 스크립트까지 그대로 전달', /staleness-check\.js --strict/.test(ran), true)
   assert('--no-readme 인자가 스크립트까지 그대로 전달', /deliverable-guard\.js --no-readme/.test(ran), true)
   fs.rmSync(base, { recursive: true, force: true })
+}
+
+// ── 원본 레포 settings.json ↔ 생성기 전체 옵션 출력 동기 (2026-10-05) ──────
+// 원본 레포는 모든 옵션을 켠 설치본과 같은 설정을 써야 한다(원본에서 훅을 실사용하며 검증하는 구조).
+// 손으로 고친 settings.json 이 생성기와 어긋나 statusLine 누락·allow 누락·훅 배선 누락(verification-guard
+// PostToolUse Write)이 생긴 것을 계기로, 의미 단위(훅은 이벤트별 matcher::command 집합, 권한은 집합)로 비교한다.
+console.log('\n[회귀] 원본 .claude/settings.json == gen-settings 전체 옵션 출력 (의미 비교)')
+{
+  const full = generate('--dev', '--typescript', '--memory', '--superpowers', '--codex', '--readme-guard', '--staleness-guard', '--branch-protection')
+  const repo = JSON.parse(require('fs').readFileSync(path.join(__dirname, '..', '.claude', 'settings.json'), 'utf8'))
+  const norm = (s) => {
+    const o = JSON.parse(JSON.stringify(s))
+    for (const ev of Object.keys(o.hooks || {})) {
+      o.hooks[ev] = o.hooks[ev].flatMap((g) => g.hooks.map((h) => `${g.matcher || ''} :: ${h.command}`)).sort()
+    }
+    for (const k of ['allow', 'deny', 'ask', 'additionalDirectories']) if (o.permissions && o.permissions[k]) o.permissions[k] = [...o.permissions[k]].sort()
+    if (o.enabledPlugins) o.enabledPlugins = Object.fromEntries(Object.entries(o.enabledPlugins).sort())
+    const sorted = (v) => Array.isArray(v) ? v.map(sorted) : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, sorted(v[k])])) : v
+    return JSON.stringify(sorted(o))
+  }
+  assert('원본 settings.json 이 생성기 전체 옵션 출력과 의미상 동일', norm(repo) === norm(full), true)
+  // 악성·경계: 비교기가 실제 차이를 잡는지 (항상 true 인 가짜 비교 방지)
+  const tampered = JSON.parse(JSON.stringify(full)); tampered.permissions.allow.push('Bash(curl*)')
+  assert('비교기: allow 1줄 추가를 차이로 판정', norm(tampered) === norm(full), false)
+  const unwired = JSON.parse(JSON.stringify(full)); unwired.hooks.PostToolUse[0].hooks.pop()
+  assert('비교기: 훅 1개 배선 누락을 차이로 판정', norm(unwired) === norm(full), false)
 }
 
 // ── 최종 ────────────────────────────────────────────────────────────────

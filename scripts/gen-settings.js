@@ -92,7 +92,9 @@ const tsHook = isLegacy
   ? { type: 'command', command: 'node "$CLAUDE_PROJECT_DIR"/.claude/hooks/typescript-quality.js --changed-only' }
   : H('typescript-quality.js');
 
-const writeHooks = [H('deliverable-guard.js')];
+// verification-guard 는 Write 를 PreToolUse 에서 사전 차단하지만, 날짜 4곳 불일치 경고(비차단)는 저장된 디스크
+// 파일로만 판정할 수 있어 PostToolUse Write 배선이 필요하다(훅은 Post Write 를 경고 전용으로 처리 — 2026-10-05 배선 누락 수정)
+const writeHooks = [H('deliverable-guard.js'), H('verification-guard.js')];
 if (isDev) writeHooks.push(...devWriteHooks);
 if (withTs) writeHooks.push(tsHook);
 if (withMemory) writeHooks.push(H('memory-sync.js'));
