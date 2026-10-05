@@ -402,8 +402,10 @@ try {
       }
       // 소유 미증명으로 파일을 보존한 훅은 배선도 남긴다 (반쪽 상태 방지)
       const wiringBases = [...removeBases].filter((b) => !preservedHookBases.has(b));
+      // 우리 설치 경로(.claude/hooks/)의 배선만 — `_lib` 처럼 흔한 이름이 폐지 목록에 들어오면서(2026-09-30)
+      // 사용자 자체 경로(tools/hooks/_lib.js 등) 배선까지 지우지 않도록 경로를 고정한다
       const removeRe = wiringBases.length > 0
-        ? new RegExp(`/hooks/(${wiringBases.map(escapeRe).join('|')})\\.c?js(\\s|$)`)
+        ? new RegExp(`\\.claude/hooks/(${wiringBases.map(escapeRe).join('|')})\\.c?js(\\s|$)`)
         : null;
 
       const rewriteCommand = (cmd, event, matcher) => {

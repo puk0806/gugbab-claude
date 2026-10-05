@@ -92,7 +92,20 @@ const danglingRuleRefs = (dir) => {
   return refs.filter((r) => !fs.existsSync(path.join(dir, '.claude', 'rules', r)));
 };
 
+// CLAUDE.md 의 `## ` 섹션 제목 목록 (순서 보존)
+const h2s = (md) => md.split('\n').filter((l) => l.startsWith('## '));
+// `## <title>` 섹션 본문 (다음 `---` 또는 `## ` 전까지)
+const sectionOf = (md, title) => {
+  const i = md.indexOf(`\n## ${title}\n`);
+  if (i < 0) return null;
+  const rest = md.slice(i + title.length + 5);
+  const end = rest.search(/\n(---|## )/);
+  return end < 0 ? rest : rest.slice(0, end);
+};
+
 const PYTHON_AGENTS = ['backend/python-backend-developer.md', 'backend/python-backend-architect.md'];
+// SEO 감사 에이전트 2종 — 소유자는 SEO 옵트인 템플릿(2·3·9·10·12, y 선택 시)·seo-geo(11)·all(0) 뿐
+const SEO_AGENT_PAIR = ['validation/seo-auditor.md', 'validation/content-quality-reviewer.md'];
 // 프론트 프로젝트에만 의미 있는 devops 스킬 — java 뿐 아니라 rust·unity 에서도 빠져야 한다 (백로그 2)
 const FRONTEND_ONLY_DEVOPS = ['devops/site-migration-seo', 'devops/github-actions-visual-regression', 'devops/vercel-workflow'];
 // Next.js + Vercel 서버리스 전용 스킬 (2026-09-17 PWA 예약 푸시 자산) — nextjs·health 에만, 서버 없는 react-spa 와 타 스택엔 없어야 한다
@@ -217,6 +230,8 @@ test('rust-axum: java·python 스킬 제외 + dream·프론트 아키텍처·프
     const a = agentFiles(dir);
     for (const p of PYTHON_AGENTS) assert.ok(!a.includes(p), `python 에이전트가 rust 템플릿에 설치됨: ${p}`);
     assert.ok(a.includes('backend/rust-backend-developer.md'), 'rust 코어 에이전트 누락');
+    // 2026-09-30: rust 는 SEO 옵트인 질문이 없어 INCLUDE_SEO 기본값(true)이 통과 → SEO 감사 에이전트 2종 누수
+    for (const p of SEO_AGENT_PAIR) assert.ok(!a.includes(p), `SEO 에이전트가 rust 템플릿에 설치됨: ${p}`);
     assert.deepStrictEqual(danglingRuleRefs(dir), [], 'CLAUDE.md 가 미설치 규칙을 참조');
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
@@ -237,6 +252,7 @@ test('unity-game: backend/frontend 카테고리 제외 + dream·프론트 아키
     const a = agentFiles(dir);
     for (const p of PYTHON_AGENTS) assert.ok(!a.includes(p), `python 에이전트가 unity 템플릿에 설치됨: ${p}`);
     assert.ok(a.includes('game/unity-developer.md'), 'unity 코어 에이전트 누락');
+    for (const p of SEO_AGENT_PAIR) assert.ok(!a.includes(p), `SEO 에이전트가 unity 템플릿에 설치됨: ${p}`);
     assert.deepStrictEqual(danglingRuleRefs(dir), [], 'CLAUDE.md 가 미설치 규칙을 참조');
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
@@ -1454,6 +1470,9 @@ test('버그5: 템플릿 0(all) 기본 설치의 루트 CLAUDE.md 에 미설치 
     assert.deepStrictEqual(danglingRuleRefs(dir), [], 'all CLAUDE.md 가 미설치 규칙을 참조');
     const claude = fs.readFileSync(path.join(dir, 'CLAUDE.md'), 'utf8');
     assert.ok(/PENDING_TEST → APPROVED 일괄 전환 금지/.test(claude), '금지 사항 본문 자체가 과잉 제거됨');
+    // 경계(2026-09-30): all 단독은 추가 템플릿이 없으므로 섹션 구성이 예제 그대로여야 한다 (삽입·중복 0)
+    assert.deepStrictEqual(h2s(claude), ['## 컨텍스트 관리', '## 금지 사항', '## 상황별 규칙 참조'],
+      'all 단독 CLAUDE.md 섹션 구성이 예제와 다름');
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
@@ -1720,4 +1739,281 @@ test('공백 경로: 공백·괄호가 포함된 대상에 설치한 settings �
   } finally {
     fs.rmSync(base, { recursive: true, force: true });
   }
+});
+
+// ── 2026-09-30 설치 결함 3건 ─────────────────────────────────────────────────
+// (1) rust(4)·unity(7) 의 SEO 감사 에이전트 2종 누수  (2) all(0) 베이스 CLAUDE.md 에 추가 템플릿 섹션 미삽입
+// (3) 미사용 훅 _lib.js 폐지 — 재설치 시 소유 증명 하에 수렴
+
+// 매니페스트에 "이전 설치가 복사한 파일"로 기록 (소유 증명 부여)
+const recordInManifest = (dir, kind, rel, full) => {
+  const mfPath = path.join(dir, '.claude', '.install-manifest.json');
+  const mf = JSON.parse(fs.readFileSync(mfPath, 'utf8'));
+  if (!mf[kind].includes(rel)) mf[kind].push(rel);
+  mf.hashes[kind][rel] = sha(full);
+  fs.writeFileSync(mfPath, JSON.stringify(mf, null, 2));
+};
+
+test('SEO 누수 경계: rust+seo-geo (4,11) 는 SEO 에이전트 2종 유지 → 4 재설치에서 수렴, 사용자 수정본은 보존', () => {
+  const dir = mktarget('rust-seo');
+  try {
+    install('4,11', dir);
+    const a0 = agentFiles(dir);
+    for (const p of SEO_AGENT_PAIR) assert.ok(a0.includes(p), `4,11 조합인데 SEO 에이전트 누락(과잉 제외): ${p}`);
+    assert.ok(a0.includes('backend/rust-backend-developer.md'), 'rust 코어 에이전트 누락');
+
+    // 악성·경계: 사용자가 손댄 seo-auditor 는 애드온을 빼도 삭제 금지
+    const modified = path.join(dir, '.claude', 'agents', 'validation', 'seo-auditor.md');
+    fs.appendFileSync(modified, '\n<!-- 프로젝트 커스텀 점검 항목 -->\n');
+    const out = install('4', dir);
+    const a1 = agentFiles(dir);
+    assert.ok(!a1.includes('validation/content-quality-reviewer.md'), '4,11 → 4 후 미수정 SEO 에이전트 잔존');
+    assert.ok(fs.existsSync(modified), '사용자 수정본 SEO 에이전트가 prune 에 삭제됨 — 해시 증명 없는 삭제');
+    assert.ok(/seo-auditor/.test(out), '수정본 보존 경고 미출력');
+    assert.ok(a1.includes('backend/rust-backend-developer.md'), 'rust 자산이 다운그레이드에 휘말림');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('SEO 누수 경계: unity+seo-geo (7,11) 는 SEO 에이전트 2종 유지 → 7 재설치에서 둘 다 수렴', () => {
+  const dir = mktarget('unity-seo');
+  try {
+    install('7,11', dir);
+    const a0 = agentFiles(dir);
+    for (const p of SEO_AGENT_PAIR) assert.ok(a0.includes(p), `7,11 조합인데 SEO 에이전트 누락(과잉 제외): ${p}`);
+    install('7', dir);
+    const a1 = agentFiles(dir);
+    for (const p of SEO_AGENT_PAIR) assert.ok(!a1.includes(p), `7,11 → 7 후 SEO 에이전트 잔존: ${p}`);
+    assert.ok(a1.includes('game/unity-developer.md'), 'unity 자산이 다운그레이드에 휘말림');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('SEO 누수 업그레이드: 수리 전 rust 설치가 남긴 SEO 에이전트 2종(매니페스트 기록)은 rust 재설치에서 수렴한다', () => {
+  const dir = mktarget('rust-seo-up');
+  try {
+    install('4', dir);
+    // 수리 전 설치 재현 — 원본 그대로 복사 + 매니페스트 해시 기록
+    for (const rel of SEO_AGENT_PAIR) {
+      const dest = path.join(dir, '.claude', 'agents', rel);
+      fs.mkdirSync(path.dirname(dest), { recursive: true });
+      fs.copyFileSync(path.join(REPO, '.claude', 'agents', rel), dest);
+      recordInManifest(dir, 'agents', rel, dest);
+    }
+    // 이상: 매니페스트에 기록되지 않은 동명 커스텀 에이전트 디렉토리 파일은 건드리지 않는다
+    const custom = path.join(dir, '.claude', 'agents', 'validation', 'my-seo-checklist.md');
+    fs.writeFileSync(custom, '# 팀 자체 SEO 체크리스트\n');
+    install('4', dir);
+    const a = agentFiles(dir);
+    for (const p of SEO_AGENT_PAIR) assert.ok(!a.includes(p), `수리 전 SEO 에이전트 잔재가 수렴하지 않음: ${p}`);
+    assert.ok(fs.existsSync(custom), '커스텀 에이전트가 prune 에 삭제됨');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('all 베이스(0,11): seo-geo 도메인 섹션이 `## 상황별 규칙 참조` 바로 앞에 1회 삽입되고 금지 사항도 병합된다', () => {
+  const dir = mktarget('all-seo');
+  try {
+    const out = install('0,11', dir);
+    assert.ok(/seo-geo 도메인 섹션 추가/.test(out), '도메인 섹션 추가 로그 미출력');
+    const claude = fs.readFileSync(path.join(dir, 'CLAUDE.md'), 'utf8');
+    assert.deepStrictEqual(h2s(claude),
+      ['## 컨텍스트 관리', '## 금지 사항', '## SEO·GEO 작업 원칙', '## 상황별 규칙 참조'],
+      'all 베이스에 seo-geo 도메인 섹션이 올바른 위치에 1회 삽입되지 않음');
+    assert.ok(/seo-auditor` 에이전트로 메타/.test(sectionOf(claude, 'SEO·GEO 작업 원칙')), '도메인 섹션 본문 누락');
+    const prohibit = sectionOf(claude, '금지 사항');
+    assert.ok(/동적 렌더링·클로킹 금지/.test(prohibit), 'seo-geo 금지 사항이 all 금지 사항에 병합되지 않음');
+    assert.ok(/일괄 전환 금지/.test(prohibit), 'all 고유 금지 사항이 병합 과정에서 밀려남');
+    // 이상: 애드온의 표준 섹션(필수 원칙·규칙 참조 표)은 새어 들어오지 않고, 서식이 깨지지 않는다
+    assert.ok(!/## 필수 원칙|^## 규칙 참조/m.test(claude), '애드온 표준 섹션이 도메인으로 유입');
+    assert.ok(!/\n\n\n/.test(claude), '3연속 빈 줄');
+    assert.ok(!/\n---\n\n---\n/.test(claude), '빈 구분선 중복');
+    assert.deepStrictEqual(danglingRuleRefs(dir), [], 'CLAUDE.md 가 미설치 규칙을 참조');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('all 베이스(0,5): 도메인 섹션이 없는 java 는 삽입 없이 금지 사항만 병합된다 (중복·누락 0)', () => {
+  const dir = mktarget('all-java');
+  try {
+    install('0,5', dir);
+    const claude = fs.readFileSync(path.join(dir, 'CLAUDE.md'), 'utf8');
+    assert.deepStrictEqual(h2s(claude), ['## 컨텍스트 관리', '## 금지 사항', '## 상황별 규칙 참조'],
+      'java 표준 섹션이 도메인으로 유입되거나 섹션이 중복됨');
+    const prohibit = sectionOf(claude, '금지 사항');
+    assert.ok(/`jakarta\.\*` import 금지/.test(prohibit), 'java 금지 사항이 all 금지 사항에 병합되지 않음');
+    assert.strictEqual((claude.match(/`jakarta\.\*` import 금지/g) || []).length, 1, 'java 금지 사항이 중복 병합됨');
+    assert.ok(/\| Git 커밋 컨벤션 \| @\.claude\/rules\/git\.md \|/.test(sectionOf(claude, '상황별 규칙 참조')),
+      '상황별 규칙 참조 표가 훼손됨');
+    assert.deepStrictEqual(danglingRuleRefs(dir), [], 'CLAUDE.md 가 미설치 규칙을 참조');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('_lib.js 폐지: 신규 설치엔 없고, 이전 설치의 미수정 _lib.js 는 재설치에서 삭제, 수정본은 보존된다', () => {
+  const dir = mktarget('lib-retired');
+  const hook = path.join(dir, '.claude', 'hooks', '_lib.js');
+  const ORIGINAL = "#!/usr/bin/env node\n// _lib.js — 훅 공통 유틸리티 (이전 설치본 재현)\nmodule.exports = {}\n";
+  try {
+    install('1', dir);
+    assert.ok(!fs.existsSync(hook), '폐지된 _lib.js 가 설치됨');
+    const mf0 = JSON.parse(fs.readFileSync(path.join(dir, '.claude', '.install-manifest.json'), 'utf8'));
+    assert.ok(!mf0.hooks.includes('_lib.js'), '매니페스트에 _lib.js 가 기록됨');
+
+    // 정상(업그레이드): 이전 설치가 복사한 원본 그대로의 _lib.js → 삭제
+    fs.writeFileSync(hook, ORIGINAL);
+    recordInManifest(dir, 'hooks', '_lib.js', hook);
+    install('1', dir);
+    assert.ok(!fs.existsSync(hook), '소유 증명된 _lib.js 가 재설치에서 삭제되지 않음');
+
+    // 악성·경계: 매니페스트 기록은 있으나 로컬 수정(해시 불일치) → 보존 + 경고
+    fs.writeFileSync(hook, ORIGINAL);
+    recordInManifest(dir, 'hooks', '_lib.js', hook);
+    fs.appendFileSync(hook, 'module.exports.mine = () => 1\n');
+    const out = install('1', dir);
+    assert.ok(fs.existsSync(hook), '로컬 수정된 _lib.js 가 삭제됨 — 해시 증명 없는 삭제');
+    assert.ok(/_lib\.js/.test(out), '보존 경고 미출력');
+    // 설치된 settings 어디에도 _lib 배선은 없다
+    assert.ok(!JSON.stringify(settingsOf(dir)).includes('_lib'), 'settings.json 에 _lib 배선 존재');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// ── Codex 마커 .gitignore (세션·머신별 마커가 git 에 추적되지 않게) ───────────────
+// 질문 순서(dev+TS 템플릿 '2'): memory · superpowers · codex · legacy ...
+const CODEX_Y = ['', '', 'y'];
+const MARKERS = ['.claude/.codex-review-done', '.claude/.codex-unavailable'];
+const giLines = (dir) => fs.readFileSync(path.join(dir, '.gitignore'), 'utf8').split('\n');
+const count = (arr, v) => arr.filter((l) => l === v).length;
+
+test('codex y: .gitignore 가 없으면 만들고 마커 두 줄 + 출처 주석을 쓴다', () => {
+  const dir = mktarget('gi-new');
+  try {
+    install('2', dir, CODEX_Y);
+    const lines = giLines(dir);
+    for (const m of MARKERS) assert.strictEqual(count(lines, m), 1, `${m} 누락`);
+    assert.ok(lines.some((l) => l.startsWith('#') && /Codex/.test(l)), '출처 주석 없음');
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('codex y: 기존 .gitignore 내용 보존 + 재설치해도 중복 없음', () => {
+  const dir = mktarget('gi-keep');
+  try {
+    fs.writeFileSync(path.join(dir, '.gitignore'), 'node_modules/\n.env\n');
+    install('2', dir, CODEX_Y);
+    install('2', dir, CODEX_Y);
+    const lines = giLines(dir);
+    assert.ok(lines.includes('node_modules/') && lines.includes('.env'), '기존 내용 훼손');
+    for (const m of MARKERS) assert.strictEqual(count(lines, m), 1, `${m} 중복 또는 누락`);
+    assert.strictEqual(lines.filter((l) => /^# Codex/.test(l)).length, 1, '주석 중복');
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('codex y: 끝 줄바꿈 없는 .gitignore — 마지막 줄과 붙지 않는다', () => {
+  const dir = mktarget('gi-nonl');
+  try {
+    fs.writeFileSync(path.join(dir, '.gitignore'), 'dist');
+    install('2', dir, CODEX_Y);
+    const lines = giLines(dir);
+    assert.ok(lines.includes('dist'), '마지막 줄이 마커와 붙어 훼손됨');
+    for (const m of MARKERS) assert.strictEqual(count(lines, m), 1);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('codex y: 이미 한 줄만(선행 / 변형 포함) 있으면 없는 줄만 추가한다', () => {
+  const dir = mktarget('gi-partial');
+  try {
+    fs.writeFileSync(path.join(dir, '.gitignore'), '/.claude/.codex-review-done\n');
+    install('2', dir, CODEX_Y);
+    const lines = giLines(dir);
+    assert.strictEqual(count(lines, MARKERS[0]), 0, '선행 / 변형이 이미 있는데 중복 추가');
+    assert.strictEqual(count(lines, '/' + MARKERS[0]), 1);
+    assert.strictEqual(count(lines, MARKERS[1]), 1);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('codex n: .gitignore 를 만들지 않고, 기존 파일은 건드리지 않는다. n 재설치도 우리가 넣은 줄을 지우지 않는다', () => {
+  const dir = mktarget('gi-off');
+  try {
+    install('2', dir, []);
+    assert.ok(!fs.existsSync(path.join(dir, '.gitignore')), 'codex n 인데 .gitignore 생성');
+    install('2', dir, CODEX_Y);
+    assert.strictEqual(count(giLines(dir), MARKERS[0]), 1, '전제: y 설치로 추가됨');
+    install('2', dir, []);   // codex n 재설치 — 마커 파일이 남아 있을 수 있어 줄은 유지해야 한다
+    const lines = giLines(dir);
+    for (const m of MARKERS) assert.strictEqual(count(lines, m), 1, 'n 재설치가 줄을 지움');
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('악성: .gitignore 가 심볼릭 링크면 링크 대상에 쓰지 않고 경고한다', () => {
+  const dir = mktarget('gi-symlink');
+  const outside = mktarget('gi-symlink-out');
+  const victim = path.join(outside, 'victim.txt');
+  try {
+    fs.writeFileSync(victim, 'SECRET\n');
+    fs.symlinkSync(victim, path.join(dir, '.gitignore'));
+    const out = install('2', dir, CODEX_Y);
+    assert.strictEqual(fs.readFileSync(victim, 'utf8'), 'SECRET\n', '링크 대상이 수정됨');
+    assert.ok(fs.lstatSync(path.join(dir, '.gitignore')).isSymbolicLink(), '링크가 교체됨');
+    assert.ok(/\.gitignore 가 symlink/.test(out), '경고 미출력');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(outside, { recursive: true, force: true });
+  }
+});
+
+test('악성: 끊어진 심볼릭 링크 .gitignore — 링크 대상 파일을 만들지 않는다', () => {
+  const dir = mktarget('gi-dangling');
+  const outside = mktarget('gi-dangling-out');
+  const ghost = path.join(outside, 'ghost.txt');
+  try {
+    fs.symlinkSync(ghost, path.join(dir, '.gitignore'));
+    const out = install('2', dir, CODEX_Y);
+    assert.ok(!fs.existsSync(ghost), '끊어진 링크 대상에 파일이 생성됨');
+    assert.ok(/symlink/.test(out));
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(outside, { recursive: true, force: true });
+  }
+});
+
+test('경계: .gitignore 가 디렉터리면 설치는 성공하고 경고만 출력한다', () => {
+  const dir = mktarget('gi-dir');
+  try {
+    fs.mkdirSync(path.join(dir, '.gitignore'));
+    const out = install('2', dir, CODEX_Y);
+    assert.ok(fs.statSync(path.join(dir, '.gitignore')).isDirectory());
+    assert.ok(/\.gitignore 가 일반 파일이 아님/.test(out), '경고 미출력');
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('추적 중인 마커: git 명령은 실행하지 않고 git rm --cached 안내만 출력 (추적 상태 불변)', () => {
+  const dir = mktarget('gi-tracked');
+  const git = (...a) => spawnSync('git', ['-C', dir, ...a], { encoding: 'utf8' });
+  try {
+    assert.strictEqual(git('init', '-q').status, 0);
+    fs.mkdirSync(path.join(dir, '.claude'), { recursive: true });
+    fs.writeFileSync(path.join(dir, MARKERS[0]), 'done\n');
+    git('add', '-f', MARKERS[0]);
+    const out = install('2', dir, CODEX_Y);
+    assert.ok(/git rm --cached \.claude\/\.codex-review-done/.test(out), '안내 미출력');
+    assert.ok(!/codex-unavailable.*git rm|git rm --cached[^\n]*codex-unavailable/.test(out), '추적 안 되는 파일까지 안내');
+    assert.strictEqual(git('ls-files', '--', MARKERS[0]).stdout.trim(), MARKERS[0], '설치가 추적 상태를 바꿈');
+    assert.strictEqual(count(giLines(dir), MARKERS[0]), 1);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('추적 마커 없는 git 레포: 안내를 출력하지 않는다', () => {
+  const dir = mktarget('gi-clean');
+  try {
+    spawnSync('git', ['-C', dir, 'init', '-q']);
+    const out = install('2', dir, CODEX_Y);
+    assert.ok(!/git rm --cached/.test(out), '불필요한 안내');
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });

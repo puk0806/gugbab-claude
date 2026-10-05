@@ -124,7 +124,7 @@ skill-tester가 자동 수행하는 것:
 ## 5. 테스트 진행 기록
 
 **수행일**: YYYY-MM-DD
-**수행자**: skill-tester → general-purpose (또는 frontend-developer 등)
+**수행자**: skill-tester → general-purpose (또는 frontend-developer 등 설치된 경우의 도메인 에이전트)
 **수행 방법**: SKILL.md Read 후 실전 질문 N개 답변
 
 Q1. ... — PASS (근거: SKILL.md "..." 섹션)

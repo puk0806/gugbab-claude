@@ -237,7 +237,7 @@ section('검증일 소스 — 신뢰 소스(SKILL.md 인용 줄·메타 표·fro
   mkSkill(root, 'game', 'skillmd-new', metaDoc({ meta: isoDaysAgo(100), fm: isoDaysAgo(100) }))
   mkSkillMd(root, 'game', 'skillmd-new', `# 스킬\n\n> 소스: https://example.com\n> 검증일: ${isoDaysAgo(2)}\n\n본문\n`)
   const r = runHook(root, ['--strict'])
-  ok('verification.md 전부 옛 날짜 + SKILL.md 인용 줄만 새 날짜 → 새 날짜 채택', r.stdout.trim() === '' && r.stderr.trim() === '')
+  ok('verification.md 전부 옛 날짜 + SKILL.md 인용 줄만 새 날짜 → 새 날짜 채택(60일 초과 보고 없음) + 불일치는 경고만', r.stdout.trim() === '' && !r.stderr.includes('60일 초과') && r.stderr.includes('불일치'))
 }
 {
   const root = mkRoot('sc-src-skillmd-inline-')
@@ -257,7 +257,7 @@ section('검증일 소스 — 신뢰 소스(SKILL.md 인용 줄·메타 표·fro
   const root = mkRoot('sc-src-fm-')
   mkSkill(root, 'game', 'fm-new', metaDoc({ meta: isoDaysAgo(100), fm: isoDaysAgo(4) }))
   const r = runHook(root, ['--strict'])
-  ok('frontmatter date 가 최신 → 채택(출력 없음)', r.stdout.trim() === '' && r.stderr.trim() === '')
+  ok('frontmatter date 가 최신 → 채택(60일 초과 보고 없음) + 메타 표와의 불일치는 경고만', r.stdout.trim() === '' && !r.stderr.includes('60일 초과') && r.stderr.includes('불일치'))
 }
 {
   const root = mkRoot('sc-src-fm-body-')
@@ -297,7 +297,7 @@ section('검증일 소스 — 신뢰 소스(SKILL.md 인용 줄·메타 표·fro
   mkSkill(root, 'game', 'unity-live-ops', metaDoc({ fm: old, meta: old, checklist: old, history: [[old, '최초 작성'], [isoDaysAgo(0), '60일 경과 정기 재검증: 핵심 클레임 3개 재확인']] }))
   mkSkillMd(root, 'game', 'unity-live-ops', `# s\n\n> 검증일: ${isoDaysAgo(0)}\n`)
   const r = runHook(root, ['--strict'])
-  ok('실제 버그 재현 — 재검증 완료 스킬은 60일 초과로 보고되지 않음', r.stdout.trim() === '' && r.stderr.trim() === '')
+  ok('실제 버그 재현 — 재검증 완료 스킬은 60일 초과로 보고되지 않음(단, 세 곳 불일치는 경고로 드러남)', r.stdout.trim() === '' && !r.stderr.includes('60일 초과') && r.stderr.includes('불일치') && r.stderr.includes('unity-live-ops'))
 }
 {
   const root = mkRoot('sc-src-symlink-')
@@ -523,6 +523,102 @@ section('SessionStart source 분기 — startup·clear 만 Claude 지시, compac
     const c = ctx(j) || ''
     ok('비strict startup: 목록은 전달하되 "질문하세요"/"생략하지 마세요" 강제 문구 없음', c.includes('src-stale') && !c.includes('질문하세요') && !c.includes('생략하지 마세요'))
     ok('비strict startup: 현재 요청 우선 처리 안내 포함', c.includes('현재 요청'))
+  }
+}
+
+// ── 날짜 불일치 경고 (2026-09-30) — frontmatter date · 메타 표 · SKILL.md 세 곳 ──────────
+// 최신값 채택(resolveDate)이 가리던 불일치를 SessionStart 에서 경고로 드러낸다. 차단 아님(exit 0), 60일 질문 아님.
+section('날짜 불일치 경고 — 정상 / 불일치 / 파싱 불가 / frontmatter 없음 / 악성 위장')
+{
+  const parseJ = (r) => { try { return JSON.parse(r.stdout) } catch { return null } }
+  const start = (root, source = 'startup') => runHook(root, [], { input: JSON.stringify({ hook_event_name: 'SessionStart', source }) })
+  const d = isoDaysAgo(3), old = isoDaysAgo(20)
+
+  // 정상 — 세 곳 일치 → 출력 없음
+  {
+    const root = mkRoot('sc-cons-ok-')
+    mkSkill(root, 'game', 'consistent', metaDoc({ fm: d, meta: d }))
+    mkSkillMd(root, 'game', 'consistent', `# s\n\n> 검증일: ${d}\n`)
+    const r = start(root)
+    ok('정상: 세 곳 일치 → stdout·stderr 비어있음, exit 0', r.status === 0 && r.stdout.trim() === '' && r.stderr.trim() === '')
+  }
+  // 정상 — 최초/재검증 병기, 최신 일치
+  {
+    const root = mkRoot('sc-cons-multi-')
+    mkSkill(root, 'game', 'multi', metaDoc({ fm: d, metaRaw: `${old} (최초) / ${d} 재검증` }))
+    mkSkillMd(root, 'game', 'multi', `# s\n\n> 검증일: ${old} (재검증: ${d})\n`)
+    const r = start(root)
+    ok('정상: 셀·줄에 최초+재검증 병기해도 최신이 같으면 경고 없음', r.stdout.trim() === '' && r.stderr.trim() === '')
+  }
+  // 불일치 — SessionStart startup: systemMessage + additionalContext, 차단 아님
+  {
+    const root = mkRoot('sc-cons-bad-')
+    mkSkill(root, 'game', 'drifted', metaDoc({ fm: d, meta: d }))
+    mkSkillMd(root, 'game', 'drifted', `# s\n\n> 검증일: ${old}\n`)
+    const r = start(root)
+    const j = parseJ(r)
+    ok('불일치: exit 0(차단 아님)', r.status === 0)
+    ok('불일치: systemMessage 에 스킬 경로·"불일치"·각 소스 날짜 포함', !!j && typeof j.systemMessage === 'string' && j.systemMessage.includes('game' + path.sep + 'drifted') && j.systemMessage.includes('불일치') && j.systemMessage.includes(d) && j.systemMessage.includes(old))
+    ok('불일치: startup 에서 additionalContext 로도 전달(Claude 가 정정 가능)', !!j && (j.hookSpecificOutput?.additionalContext || '').includes('drifted'))
+    ok('불일치: 60일 초과 질문·필수 질문 문구 없음(경고만)', !!j && !JSON.stringify(j).includes('필수 질문') && !JSON.stringify(j).includes('60일 초과'))
+    const rc = start(root, 'compact')
+    ok('불일치: compact 는 기존 정책대로 무출력', rc.stdout.trim() === '' && rc.stderr.trim() === '')
+    const rr = start(root, 'resume')
+    const jr = parseJ(rr)
+    ok('불일치: resume 은 사용자 systemMessage 만(Claude 지시 없음)', !!jr && jr.systemMessage.includes('drifted') && !('hookSpecificOutput' in jr))
+  }
+  // 불일치 — 메타 표 vs frontmatter (SKILL.md 없음)
+  {
+    const root = mkRoot('sc-cons-fm-meta-')
+    mkSkill(root, 'game', 'fm-vs-meta', metaDoc({ fm: d, meta: old }))
+    const j = parseJ(start(root))
+    ok('불일치: SKILL.md 없이 frontmatter ≠ 메타 표만으로도 보고', !!j && j.systemMessage.includes('fm-vs-meta'))
+  }
+  // 파싱 불가 — 주석 붙은 frontmatter date / 날짜 없는 메타 셀 / 달력상 무효일
+  for (const [label, doc] of [
+    ['주석 붙은 frontmatter date', metaDoc({ meta: d }).replace(/^/, `---\nskill: x\ncategory: y\nversion: v1\ndate: ${d} (최초: ${old})\nstatus: APPROVED\n---\n\n`)],
+    ['날짜 없는 메타 셀', metaDoc({ fm: d, metaRaw: '확인 필요' })],
+    ['달력상 무효일 메타 셀', metaDoc({ fm: d, metaRaw: '2026-02-30' })],
+  ]) {
+    const root = mkRoot('sc-cons-bad-parse-')
+    mkSkill(root, 'game', 'unparsable', doc)
+    const r = start(root)
+    const j = parseJ(r)
+    ok(`파싱 불가(${label}): 크래시 없이 exit 0 + 판독 불가 경고`, r.status === 0 && !!j && j.systemMessage.includes('unparsable') && j.systemMessage.includes('판독 불가'))
+  }
+  // frontmatter 없음 — 다른 두 곳이 일치하면 소음 없음(부재는 훅이 아니라 레포 회귀 테스트가 강제)
+  {
+    const root = mkRoot('sc-cons-nofm-')
+    mkSkill(root, 'game', 'no-fm', metaDoc({ meta: d }))
+    mkSkillMd(root, 'game', 'no-fm', `# s\n\n> 검증일: ${d}\n`)
+    const r = start(root)
+    ok('frontmatter 없음 + 나머지 일치 → 경고 없음(설치 타깃 소음 방지), exit 0', r.status === 0 && r.stdout.trim() === '' && r.stderr.trim() === '')
+  }
+  // frontmatter 없음 + 나머지 불일치 → 여전히 보고
+  {
+    const root = mkRoot('sc-cons-nofm-bad-')
+    mkSkill(root, 'game', 'no-fm-bad', metaDoc({ meta: d }))
+    mkSkillMd(root, 'game', 'no-fm-bad', `# s\n\n> 검증일: ${old}\n`)
+    const j = parseJ(start(root))
+    ok('frontmatter 없음 + 메타 표 ≠ SKILL.md → 보고', !!j && j.systemMessage.includes('no-fm-bad'))
+  }
+  // 악성 위장 — 코드펜스 안 가짜 메타 행으로 일치 위장
+  {
+    const root = mkRoot('sc-cons-fence-')
+    mkSkill(root, 'game', 'fence-fake', metaDoc({ fm: d, meta: old, extra: `\n\`\`\`\n| 검증일 | ${d} |\n\`\`\`\n` }))
+    const j = parseJ(start(root))
+    ok('악성: 코드펜스 안 가짜 메타 행으로 일치 위장 불가 → 불일치 보고', !!j && j.systemMessage.includes('fence-fake'))
+  }
+  // 40개 초과 불일치 — 출력 상한(10줄) + 총 개수 표기, CAP 준수
+  {
+    const root = mkRoot('sc-cons-many-')
+    for (let i = 0; i < 25; i++) {
+      const n = 'many-' + String(i).padStart(2, '0')
+      mkSkill(root, 'game', n, metaDoc({ fm: d, meta: d }))
+      mkSkillMd(root, 'game', n, `# s\n\n> 검증일: ${old}\n`)
+    }
+    const j = parseJ(start(root))
+    ok('경계: 불일치 25종 → 총 25종 표기 + 10줄 상한("외 15종") + 9000자 이하', !!j && j.systemMessage.includes('25종') && j.systemMessage.includes('외 15종') && j.systemMessage.length <= 9000)
   }
 }
 

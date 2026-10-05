@@ -436,7 +436,8 @@ echo "[hooks]"
 # (2026-07 훅 다이어트: session-summary/handoff·pending-test-guard·readme-guard·
 #  task-plan-guard → deliverable-guard 통합 또는 네이티브 기능(Plan Mode·resume)으로 대체)
 HOOKS_COMMON=(
-  "_lib.js"
+  # _lib.js 는 2026-09-30 폐지 — 어떤 훅도 require 하지 않았다. 이전 설치본은 install-cleanup 이
+  # RETIRED_HOOKS(migrate-settings.js) 기준으로 소유 증명(매니페스트 해시) 시에만 삭제한다
   "bash-guard.js"
   "auto-approve.js"
   "parry.js"
@@ -698,6 +699,11 @@ EXCLUDE_AGENTS_RUST=(
   # 2026-09-11 감사 백로그 2 — python 에이전트 2종이 rust·java·unity 배제 목록에서 빠져 있었다
   "backend/python-backend-developer.md"
   "backend/python-backend-architect.md"
+  # 2026-09-30 누수 수정 — rust 는 SEO 옵트인 질문이 없어 INCLUDE_SEO=true 기본값이 항상 통과해 SEO 감사 2종이 딸려갔다
+  # (java·python 과 동일 처리). `4,11` 은 seo-geo 화이트리스트가 union 으로 보탠다.
+  # 이전 rust 설치 잔재는 should_include_agent 의 SEO_GEO_AGENTS 기록 분기가 prune 목록에 올린다(해시 증명 하 삭제).
+  "validation/seo-auditor.md"
+  "validation/content-quality-reviewer.md"
 )
 EXCLUDE_AGENTS_JAVA=(
   "frontend/frontend-developer.md"
@@ -744,6 +750,9 @@ EXCLUDE_AGENTS_GAME=(
   "backend/build-error-resolver.md"
   "backend/python-backend-developer.md"
   "backend/python-backend-architect.md"
+  # 2026-09-30 누수 수정 — rust 와 같은 이유(SEO 질문 없음 → 기본값 통과). `7,11` 은 seo-geo 가 보탠다
+  "validation/seo-auditor.md"
+  "validation/content-quality-reviewer.md"
 )
 # python-fastapi(13, 2026-09-25) — python 에이전트 2종의 스택 소유 템플릿. java 와 같은 수준으로
 # 프론트·타 언어 백엔드·프론트 전용 검증 에이전트를 막는다 (build-error-resolver 는 cargo·tsc·Vite 전담이라 제외)
@@ -797,14 +806,17 @@ _agent_ok_for_tmpl() {
   if [ "$tmpl" = "util" ]; then
     is_in_list "$rel" "${UTIL_AGENTS[@]}" && return 0; return 1
   fi
+  # dream·fortune 은 SEO 옵트인 템플릿 — y/c 면 SEO 감사 2종도 함께 (n 이면 위 _option_excluded_agent 가 먼저 뺀다).
+  # (2026-09-30 소유 매트릭스 테스트로 발견: 두 화이트리스트에 SEO 감사 2종이 없어 docs 가 약속한
+  #  "SEO y 시 seo-auditor·content-quality-reviewer 추가"가 성립하지 않았다)
   if [ "$tmpl" = "dream-interpretation" ]; then
-    is_in_list "$rel" "${DREAM_APP_AGENTS[@]}" && return 0; return 1
+    is_in_list "$rel" "${DREAM_APP_AGENTS[@]}" "${SEO_AGENTS[@]}" && return 0; return 1
   fi
   if [ "$tmpl" = "seo-geo" ]; then
     is_in_list "$rel" "${SEO_GEO_AGENTS[@]}" && return 0; return 1
   fi
   if [ "$tmpl" = "fortune-app" ]; then
-    is_in_list "$rel" "${FORTUNE_APP_AGENTS[@]}" && return 0; return 1
+    is_in_list "$rel" "${FORTUNE_APP_AGENTS[@]}" "${SEO_AGENTS[@]}" && return 0; return 1
   fi
   if [ "$tmpl" = "all" ]; then return 0; fi
   # 개발 템플릿 공통: util 전용·dream·fortune 전용 제외
@@ -867,6 +879,7 @@ should_include_agent() {
   fi
   # seo-geo 소유 에이전트가 빠졌다면(애드온 제거 `11→util`·`5,11→5`) 조합 조건 없이 기록 (2026-09-01 Codex R2).
   # 여기 도달 = 선택된 어떤 템플릿도 포함하지 않음. 삭제는 매니페스트 해시 증명 하에서만.
+  # SEO 감사 2종의 rust·unity 누수 수정(2026-09-30) 잔재도 이 분기가 수렴시킨다 (SEO_AGENTS ⊂ SEO_GEO_AGENTS).
   if is_in_list "$rel" "${SEO_GEO_AGENTS[@]}"; then
     record_excluded_agent "$rel"
   fi
@@ -1730,6 +1743,63 @@ if [ ! -f "$SETTINGS_FILE" ] || ([ -f "$SETTINGS_FILE" ] && [ "$OVERWRITE_SETTIN
   fi
 fi
 
+# ── Codex 세션·머신별 마커 gitignore (INCLUDE_CODEX=true 일 때만) ────────────
+# .claude/.codex-review-done·.codex-unavailable 은 "이 머신·이 세션에서 리뷰했다/못 한다"는 로컬 상태다.
+# git 에 추적되면 새로 클론한 머신이 "리뷰 완료"로 오인한다 → 대상 루트 .gitignore 에 추가한다.
+# - git 레포가 아니어도 만든다: 이 스크립트는 .githooks/ 등도 git 여부와 무관하게 설치하며, 나중에 git init 해도 안전하다.
+# - 이미 있는 줄은 중복 추가하지 않고(선행 `/` 동치 인정), 끝 줄바꿈 없는 파일은 줄바꿈부터 보충한다.
+# - codex n 으로 재설치해도 우리가 넣은 줄은 **지우지 않는다**: 마커 파일이 디스크에 남아 있을 수 있고,
+#   줄을 지우면 그 마커가 git status 에 노출돼 커밋될 위험이 생긴다. 무해한 두 줄이라 남겨두는 쪽이 안전하다.
+# - .gitignore 가 symlink·디렉터리 등 일반 파일이 아니면 링크 대상(프로젝트 밖일 수 있음)에 쓰지 않고 경고 후 건너뛴다.
+# - 이미 추적 중인 마커는 gitignore 로 해제되지 않는다 → git 명령은 실행하지 않고(읽기 전용 ls-files 만) 안내만 출력한다.
+if [ "$INCLUDE_CODEX" = "true" ]; then
+  echo ""
+  echo "[.gitignore]"
+  node -e '
+    const fs = require("fs"), path = require("path"), { execFileSync } = require("child_process");
+    const target = process.argv[1];
+    const MARKERS = [".claude/.codex-review-done", ".claude/.codex-unavailable"];
+    const COMMENT = "# Codex 리뷰 세션·머신별 마커 (gugbab-claude project-install.sh)";
+    const gi = path.join(target, ".gitignore");
+    let lst = null; try { lst = fs.lstatSync(gi); } catch {}
+    if (lst && !lst.isFile()) {
+      console.log("  ⚠ .gitignore 가 " + (lst.isSymbolicLink() ? "symlink" : "일반 파일이 아님") + " — 건드리지 않았습니다. 직접 추가하세요: " + MARKERS.join(" , "));
+    } else {
+      let cur = "";
+      try { if (lst) cur = fs.readFileSync(gi, "utf8"); } catch (e) { cur = null; }
+      if (cur === null) {
+        console.log("  ⚠ .gitignore 를 읽지 못했습니다 — 건드리지 않았습니다. 직접 추가하세요: " + MARKERS.join(" , "));
+      } else {
+        const have = new Set(cur.split(/\r?\n/).map((l) => l.trim().replace(/^\//, "")));
+        const missing = MARKERS.filter((m) => !have.has(m));
+        if (missing.length === 0) {
+          console.log("  · .gitignore Codex 마커 이미 등록됨");
+        } else {
+          let add = "";
+          if (cur.length > 0 && !cur.endsWith("\n")) add += "\n";
+          if (!cur.includes(COMMENT)) add += COMMENT + "\n";
+          add += missing.join("\n") + "\n";
+          try { fs.appendFileSync(gi, add); console.log("  → .gitignore (Codex 마커 " + missing.length + "줄 추가)"); }
+          catch (e) { console.log("  ⚠ .gitignore 쓰기 실패 — 직접 추가하세요: " + missing.join(" , ")); }
+        }
+      }
+    }
+    // 이미 추적 중인 마커 안내 (읽기 전용 ls-files — 사용자 git 상태는 바꾸지 않는다)
+    if (fs.existsSync(path.join(target, ".git"))) {
+      let tracked = [];
+      try {
+        const out = execFileSync("git", ["-C", target, "ls-files", "--", ...MARKERS], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+        tracked = out.split("\n").map((s) => s.trim()).filter(Boolean);
+      } catch {}
+      if (tracked.length) {
+        console.log("  ⚠ 이미 git 에 추적 중인 Codex 마커: " + tracked.join(", "));
+        console.log("    .gitignore 만으로는 추적이 해제되지 않습니다. 설치 스크립트는 git 상태를 바꾸지 않으니 직접 실행하세요:");
+        console.log("      git rm --cached " + tracked.join(" "));
+      }
+    }
+  ' "$TARGET" || echo "  ⚠ .gitignore 처리 실패 — Codex 마커(.claude/.codex-review-done, .claude/.codex-unavailable)를 직접 .gitignore 에 추가하세요"
+fi
+
 # ── 7. CLAUDE.md ─────────────────────────────────────────────────────
 echo ""
 echo "[CLAUDE.md]"
@@ -1781,9 +1851,10 @@ if [ "$CLAUDE_WRITTEN" = true ]; then
       # 을 제외한 도메인 전용 ## 섹션 추출. 연속 빈 줄 접기는 awk 로 — 이전의
       # `sed '/…/{ N; /…/d }'` 는 BSD sed(macOS)에서 "extra characters at the end of d command" 로 실패해
       # 다중 템플릿 도메인 섹션이 macOS 에서 한 번도 append 되지 않고 있었다 (2026-09-01 seo-geo E2E 에서 발견).
+      # 규칙 참조 제목은 스택 예제 `## 규칙 참조` / all 베이스(CLAUDE.template.md) `## 상황별 규칙 참조` 두 형태 (2026-09-30)
       _domain_content=$(awk '
         /^# /                                         { skip=1; next }
-        /^## (필수 원칙|금지 사항|규칙 참조)/         { skip=1; next }
+        /^## (필수 원칙|금지 사항|규칙 참조|상황별 규칙 참조)/ { skip=1; next }
         /^## /                                        { skip=0 }
         /^---/                                        { skip=0; next }
         /^<!-- common-rules -->/                      { skip=1; next }
@@ -1797,14 +1868,19 @@ if [ "$CLAUDE_WRITTEN" = true ]; then
                       print lines[i]
                     } }')   # 앞뒤 빈 줄 제거 + 연속 빈 줄 접기
 
-      if [ -n "$_domain_content" ]; then
+      if [ -n "$_domain_content" ] && ! grep -Eq '^## (상황별 )?규칙 참조' "$CLAUDE_FILE" 2>/dev/null; then
+        # 삽입 기준 제목이 없는 베이스 — 조용히 누락하고 "추가" 로그를 찍던 문제 방지 (2026-09-30)
+        echo "  ⚠ ${_add_tmpl} 도메인 섹션 삽입 위치(## 규칙 참조)를 찾지 못해 건너뜀 — CLAUDE.md 에 직접 옮기세요: $_add_src"
+      elif [ -n "$_domain_content" ]; then
         # ## 규칙 참조 섹션 바로 앞에 "도메인 섹션 + ---" 삽입 (베이스 CLAUDE.md 의 `---` 다음 자리).
+        # all(0) 베이스는 제목이 `## 상황별 규칙 참조` 라 `^## 규칙 참조` 만 찾으면 삽입이 조용히 누락됐다 (2026-09-30).
+        # 두 제목 모두 인식 — `(상황별 )?` 는 POSIX ERE 라 BSD awk(macOS)·gawk 공통.
         # `awk -v domain="<여러 줄>"` 은 BSD awk(macOS)가 "newline in string" 으로 거부하므로 임시 파일 + getline 으로 주입.
         _DOMAIN_TMP=$(mktemp)
         printf '%s\n' "$_domain_content" > "$_DOMAIN_TMP"
         TMP=$(mktemp)
         awk -v dfile="$_DOMAIN_TMP" '
-          /^## 규칙 참조/ && added==0 {
+          /^## (상황별 )?규칙 참조/ && added==0 {
             while ((getline line < dfile) > 0) print line
             close(dfile)
             print ""
@@ -1821,6 +1897,7 @@ if [ "$CLAUDE_WRITTEN" = true ]; then
       # 추가 템플릿의 `## 금지 사항` 항목은 버리지 않고 베이스 금지 사항 끝에 병합한다 (2026-09-01 Codex R3:
       # seo-geo 의 클로킹·미검증 JSON-LD·robots 변경 금지 같은 핵심 가드레일이 `5,11` 에서 통째로 빠지던 문제).
       # `<!-- common-rules -->` 자리표시자는 베이스에서 이미 주입됐으므로 `- ` 항목만 가져온다.
+      # `## 금지 사항` 제목은 all(CLAUDE.template.md) 포함 전 예제가 동일 — 규칙 참조 제목 변형과 무관 (2026-09-30 확인)
       _domain_prohibitions=$(awk '
         /^## 금지 사항/ { f=1; next }
         /^## / || /^---/ { f=0 }
@@ -1850,6 +1927,7 @@ if [ "$CLAUDE_WRITTEN" = true ]; then
   # 예제 CLAUDE.md 의 "규칙 참조" 표는 정적이라 작성도구 n·codex n·memory n 기본 설치에서
   # agent-design·commands·readme-update·codex-review 같은 미설치 규칙을 `@.claude/rules/…` 로 가리킨 채 남았다.
   # 실제 대상 `.claude/rules/` 를 기준으로, 존재하지 않는 규칙을 참조하는 *표 행*(`|` 로 시작)만 지운다.
+  # 섹션 제목(`## 규칙 참조`/`## 상황별 규칙 참조`)에 의존하지 않고 파일 전체의 `@.claude/rules/` 참조를 본다.
   # 본문 문장은 지우지 않고, 문장 끝 괄호 참조 ` (@.claude/rules/x.md)` 만 떼어낸다 (2026-09-25 감사 버그 5:
   # all 템플릿 CLAUDE.template.md 의 "PENDING_TEST → APPROVED 일괄 전환 금지 (@…/verification-policy.md)" 가
   # 작성도구 n 기본 설치에서 깨진 참조로 남았다 — verification-policy 는 RULES_COMMON 이면서 AUTHORING_RULES 라 기본 미설치).

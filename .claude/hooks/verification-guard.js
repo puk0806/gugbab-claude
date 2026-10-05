@@ -16,10 +16,17 @@
  *   3. 필수 8개 섹션 누락
  *   4. 검증 체크박스 전부 [❌] → 체크리스트 미완성
  *   5. status: UNVERIFIED 저장 차단
+ *
+ * 비차단 경고 (PostToolUse Edit/Write, 2026-09-30):
+ *   frontmatter date · 메타 표 `| 검증일 |` · 짝 SKILL.md `> 검증일:` 가 서로 다른 날짜면
+ *   additionalContext 로 알린다 (exit 0). 저장 차단 조건은 늘리지 않는다 — 에이전트가 네 곳을
+ *   순차 Edit 하는 중간 상태를 막게 되기 때문. 판독은 staleness-check.js 의 함수를 재사용하며,
+ *   그 파일이 설치돼 있지 않으면 조용히 생략한다.
  */
 
 const readline = require('readline')
 const fs = require('fs')
+const path = require('path')
 
 const VERIFICATION_PATH_PATTERN = /docs\/skills\/.+\/verification\.md$/
 
@@ -48,7 +55,7 @@ function validate(content) {
   if (agentLogMatch && /내장\s*지식/.test(agentLogMatch[1])) {
     errors.push(
       '에이전트 로그에 "내장 지식" 구문이 감지됐습니다.\n' +
-      '  → skill-creator는 반드시 WebSearch/WebFetch로 공식 문서를 직접 조사·교차 검증해야 합니다.\n' +
+      '  → skill-creator(작성 도구 설치 시) 또는 직접 작성하는 경우 모두 반드시 WebSearch/WebFetch로 공식 문서를 직접 조사·교차 검증해야 합니다.\n' +
       '  → 내장 지식으로 대체하는 것은 금지입니다. 실제 조사를 수행한 뒤 verification.md를 재작성하세요.'
     )
   }
@@ -88,6 +95,25 @@ function validate(content) {
   return errors
 }
 
+// 날짜 불일치 경고 문자열(없으면 null). 어떤 실패도 저장 흐름을 막지 않는다.
+function dateDriftWarning(verifFile) {
+  try {
+    const { checkDateConsistency } = require('./staleness-check.js')
+    const norm = path.resolve(verifFile).replace(/\\/g, '/')
+    const i = norm.lastIndexOf('/docs/skills/')
+    if (i < 0) return null
+    const root = norm.slice(0, i)
+    const rel = path.posix.dirname(norm.slice(i + '/docs/skills/'.length))
+    const skillMd = path.join(root, '.claude', 'skills', rel, 'SKILL.md')
+    const problems = checkDateConsistency(verifFile, skillMd, { allowMissing: true })
+    if (problems.length === 0) return null
+    return `[verification-guard] ⚠️ 검증일 기록 불일치 (경고만, 저장은 완료됨): ${rel}\n` +
+      problems.map(p => `  - ${p}`).join('\n') +
+      '\n  → 재검증 시 frontmatter date · 메타 표 `| 검증일 |` · SKILL.md `> 검증일:` · 섹션 8 변경 이력을 같은 날짜로 함께 갱신하세요' +
+      ' (여러 곳을 순차 수정 중이면 마지막 수정 뒤 이 경고가 사라지는지 확인).'
+  } catch { return null }
+}
+
 async function main() {
   const rl = readline.createInterface({ input: process.stdin })
   let raw = ''
@@ -110,15 +136,22 @@ async function main() {
   let content = ''
   if (eventName === 'PreToolUse' && tool_name === 'Write') {
     content = tool_input.content || ''
-  } else if (eventName === 'PostToolUse' && tool_name === 'Edit') {
+  } else if (eventName === 'PostToolUse' && (tool_name === 'Edit' || tool_name === 'Write')) {
     try { content = fs.readFileSync(tool_input.file_path, 'utf8') } catch { return process.exit(0) }
   } else {
     return process.exit(0)
   }
   if (!content) return process.exit(0)
 
-  const errors = validate(content)
-  if (errors.length === 0) return process.exit(0)
+  // PostToolUse Write 는 Pre 단계가 이미 검증·차단했다 — 여기서는 새 차단 없이 날짜 경고만.
+  const errors = eventName === 'PostToolUse' && tool_name === 'Write' ? [] : validate(content)
+  if (errors.length === 0) {
+    if (eventName === 'PostToolUse') {
+      const warn = dateDriftWarning(tool_input.file_path)
+      if (warn) process.stdout.write(JSON.stringify({ hookSpecificOutput: { hookEventName: 'PostToolUse', additionalContext: warn } }))
+    }
+    return process.exit(0)
+  }
 
   const blocked = eventName === 'PreToolUse'
   const message = [

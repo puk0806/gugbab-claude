@@ -159,7 +159,7 @@ function buildReadmeReason(violations, action) {
     )
   }
 
-  lines.push('', '참고: @.claude/rules/readme-update.md')
+  lines.push('', '참고: @.claude/rules/readme-update.md (설치된 경우)')
   return lines.join('\n')
 }
 
@@ -191,7 +191,7 @@ function buildMemoryExportReason(dirtyLines, action) {
     '  2. R="$(git rev-parse --show-toplevel)" && CLAUDE_PROJECT_DIR="$R" node "$R/.claude/hooks/session-export.js" --refresh  ← 세션 요약 최신화',
     '  3. [memory] / [export] 커밋으로 포함 후 push·PR 재시도',
     '',
-    '참고: @.claude/rules/memory-sync.md — 커밋 시 메모리 정리',
+    '참고: @.claude/rules/memory-sync.md (설치된 경우) — 커밋 시 메모리 정리',
   ].join('\n')
 }
 
@@ -342,17 +342,17 @@ function buildPendingTestReason(missing) {
     '',
     '판정 기준:',
     '  • "수행일: YYYY-MM-DD" 라인 + 실제 테스트 흔적 키워드 동시 필요',
-    '    (PASS / FAIL / Q1·Q2 / skill-tester 호출 / agent content test / N/N PASS)',
-    '  • "skill-tester 호출 미수행", "셀프 검증" 같은 자백 라인만 있으면 차단',
+    '    (PASS / FAIL / Q1·Q2 / skill-tester 호출 / agent content test / N/N PASS — skill-tester 는 작성 도구 설치 시에만 존재)',
+    '  • "skill-tester 호출 미수행", "셀프 검증" 같은 자백 라인만 있으면 차단 (skill-tester 미설치 시에도 동일)',
     '',
     ...missing.map(f => `  • ${f}`),
     '',
     '조치 (하나 선택):',
-    '  A. skill-tester 에이전트 호출 (권장)',
+    '  A. skill-tester 에이전트 호출 (권장 — 작성 도구 옵션 설치 시)',
     '  B. 수동으로 section 5에 테스트 기록 작성 ("**수행일**: ' + today + '" + PASS/FAIL)',
     '  C. "실사용 필수 스킬" 카테고리면 agent content test 기록만으로 PENDING_TEST 유지 가능',
     '',
-    '참고: @.claude/rules/verification-policy.md, @.claude/rules/creation-workflow.md',
+    '참고: @.claude/rules/verification-policy.md, @.claude/rules/creation-workflow.md (설치된 경우)',
     '═══════════════════════════════════════════════════════════════',
     '',
   ].join('\n')

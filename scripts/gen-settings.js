@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // gen-settings.js — project-install.sh에서 호출. 선택된 옵션에 따라 settings.json 생성
-// 사용: node scripts/gen-settings.js [--util] [--dev] [--typescript] [--legacy] [--memory] [--superpowers] [--codex] [--readme-guard] [--branch-protection]
+// 사용: node scripts/gen-settings.js [--util] [--dev] [--typescript] [--legacy] [--memory] [--superpowers] [--codex] [--readme-guard] [--staleness-guard] [--branch-protection]
 
 const args = process.argv.slice(2);
 const isUtil               = args.includes('--util');

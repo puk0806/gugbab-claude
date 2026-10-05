@@ -196,6 +196,68 @@ section('PostToolUse Edit → 디스크 전체 재읽기 검증')
   fs.rmSync(tmpRoot, { recursive: true, force: true })
 }
 
+section('날짜 불일치 비차단 경고 (PostToolUse) — frontmatter date · 메타 표 · SKILL.md')
+{
+  const os = require('os')
+  const mkProj = () => fs.mkdtempSync(path.join(os.tmpdir(), 'vg-drift-'))
+  const put = (root, fm, meta, skillDate) => {
+    const vDir = path.join(root, 'docs', 'skills', 'frontend', 'drift-test')
+    const sDir = path.join(root, '.claude', 'skills', 'frontend', 'drift-test')
+    fs.mkdirSync(vDir, { recursive: true }); fs.mkdirSync(sDir, { recursive: true })
+    const v = path.join(vDir, 'verification.md')
+    fs.writeFileSync(v, VALID_CONTENT.replace('date: 2026-04-17', `date: ${fm}`).replace('# 테스트 스킬 검증 문서', `# 테스트 스킬 검증 문서\n\n| 항목 | 내용 |\n|---|---|\n| 검증일 | ${meta} |`))
+    if (skillDate) fs.writeFileSync(path.join(sDir, 'SKILL.md'), `# s\n\n> 검증일: ${skillDate}\n`)
+    return v
+  }
+  const call = (tool, file, event = 'PostToolUse') => {
+    const r = spawnSync('node', [HOOK], { input: JSON.stringify({ hook_event_name: event, tool_name: tool, tool_input: { file_path: file } }), encoding: 'utf8', timeout: 5000 })
+    let j = null; try { j = JSON.parse(r.stdout) } catch {}
+    return { code: r.status, out: r.stdout, err: r.stderr, ctx: j?.hookSpecificOutput?.additionalContext || '' }
+  }
+  const check = (desc, cond) => { console.log(`  ${cond ? '✅' : '❌'} ${desc}`); cond ? passed++ : failed++ }
+
+  // 정상 — 세 곳 일치 → 조용히 통과
+  let root = mkProj()
+  let v = put(root, '2026-09-01', '2026-09-01', '2026-09-01')
+  let r = call('Edit', v)
+  check('정상: 세 곳 일치 → exit 0, 출력 없음', r.code === 0 && r.out === '' && r.err === '')
+  fs.rmSync(root, { recursive: true, force: true })
+
+  // 불일치 — 경고만(exit 0), additionalContext 로 전달, 차단 없음
+  root = mkProj()
+  v = put(root, '2026-09-26', '2026-09-26', '2026-04-23')
+  r = call('Edit', v)
+  check('불일치: exit 0(차단 아님) + stderr 없음', r.code === 0 && r.err === '')
+  check('불일치: additionalContext 에 스킬 경로·불일치·각 날짜 포함', r.ctx.includes('frontend/drift-test') && r.ctx.includes('불일치') && r.ctx.includes('2026-04-23') && r.ctx.includes('2026-09-26'))
+  r = call('Write', v)
+  check('불일치: PostToolUse Write 도 경고만(exit 0)', r.code === 0 && r.ctx.includes('불일치'))
+  r = call('Edit', v, 'PreToolUse')
+  check('불일치: PreToolUse Edit 는 무시(경고 없음)', r.code === 0 && r.out === '')
+  fs.rmSync(root, { recursive: true, force: true })
+
+  // 파싱 불가 — 주석 붙은 frontmatter date → 판독 불가 경고, 크래시 없음
+  root = mkProj()
+  v = put(root, '2026-09-01 (최초: 2026-04-01)', '2026-09-01', '2026-09-01')
+  r = call('Edit', v)
+  check('파싱 불가: 주석 붙은 frontmatter date → exit 0 + 판독 불가 경고', r.code === 0 && r.ctx.includes('판독 불가'))
+  fs.rmSync(root, { recursive: true, force: true })
+
+  // 경계 — SKILL.md 없음(설치 타깃 부분 설치): 소음 없음
+  root = mkProj()
+  v = put(root, '2026-09-01', '2026-09-01', null)
+  r = call('Edit', v)
+  check('경계: 짝 SKILL.md 없음 → 경고 없음(부재는 레포 회귀 테스트 담당)', r.code === 0 && r.out === '')
+  fs.rmSync(root, { recursive: true, force: true })
+
+  // 악성 — 형식 오류로 이미 차단 대상인 파일은 기존 exit 2 유지(날짜 경고가 이를 가리지 않음)
+  root = mkProj()
+  v = put(root, '2026-09-26', '2026-09-26', '2026-04-23')
+  fs.writeFileSync(v, fs.readFileSync(v, 'utf8').replace('status: PENDING_TEST\n', ''))
+  r = call('Edit', v)
+  check('악성/이상: status 누락 + 날짜 불일치 → 기존대로 exit 2(경고로 대체되지 않음)', r.code === 2 && r.err.includes('status'))
+  fs.rmSync(root, { recursive: true, force: true })
+}
+
 console.log(`\n${'─'.repeat(40)}`)
 console.log(`결과: ${passed}/${passed + failed} 통과 ${failed > 0 ? `(${failed}개 실패)` : ''}`)
 if (failed === 0) console.log('✅ 모든 테스트 통과')
