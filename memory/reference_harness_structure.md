@@ -5,12 +5,12 @@ metadata:
   node_type: memory
   type: reference
   originSessionId: ea135cf2-6650-48cc-ac4f-5b9362cf7126
-  modified: 2026-10-05T02:51:00.190Z
+  modified: 2026-10-05T05:23:49.290Z
 ---
 
 구조도 페이지(2026-09-30 기준, 현재 상태 서술): https://claude.ai/artifact/2F5h1h3o6bgam1CLbyzft5 — 원본 HTML은 세션 scratchpad에 있었으므로 갱신은 이 URL을 `url`로 read → 수정 → 재게시.
 
-**층 구조**: 규칙(CLAUDE.md + rules 14, java·rust·typescript는 `paths` 조건부) → 권한(settings permissions, acceptEdits + deny 7) → 훅 22(+statusline, 폴더 23) → 자산(에이전트 56·스킬 184, verification.md 짝) → 설치 분기(project-install.sh 템플릿 13·옵션 9, 매니페스트 해시 소유 증명).
+**층 구조**: 규칙(CLAUDE.md + rules 14, java·rust·typescript는 `paths` 조건부) → 권한(settings permissions, acceptEdits + deny 7) → 훅 22(+statusline, 폴더 23) → 자산(에이전트 56·스킬 184, verification.md 짝 — **스킬은 1단 `.claude/skills/<이름>/SKILL.md`**, 카테고리는 `docs/skills/<카테고리>/<이름>/` 위치가 단일 원천. 2026-10-05 이전엔 2단 중첩이라 스킬로 등록되지 않았음, skill-md-guard가 2단 저장 차단) → 설치 분기(project-install.sh 템플릿 13·옵션 9, 매니페스트 해시 소유 증명).
 
 **이벤트 순서는 Claude Code가 정함**(settings.json은 "어느 이벤트에 어떤 훅을 거는지"와 같은 이벤트 내 실행 순서만 정함): SessionStart(시작·재개·clear·compact) → 턴 안에서 도구마다 반복 [PreToolUse → (권한 필요 시) PermissionRequest → 실행 → PostToolUse] → 턴 끝 Stop(세션 종료가 아니라 **답변마다**).
 
