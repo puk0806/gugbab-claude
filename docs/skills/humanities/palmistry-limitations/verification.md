@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `palmistry-limitations` |
-| 스킬 경로 | `.claude/skills/humanities/palmistry-limitations/SKILL.md` |
+| 스킬 경로 | `.claude/skills/palmistry-limitations/SKILL.md` |
 | 검증일 | 2026-09-28 (최초 2026-09-10, 2026-09-28 재검증) |
 | 검증자 | skill-creator (Claude Code) → Claude (Sonnet 5, 2026-09-28 재검증) |
 | 스킬 버전 | v2 |

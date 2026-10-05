@@ -11,7 +11,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | swiper |
-| 스킬 경로 | .claude/skills/frontend/swiper/SKILL.md |
+| 스킬 경로 | .claude/skills/swiper/SKILL.md |
 | 검증일 | 2026-09-28 (재검증) / 2026-08-11 (v3 최신화) / 2026-04-20 (v2 최초 검증) |
 | 검증자 | Claude (WebSearch + WebFetch 기반 공식 문서 직접 조사) (2026-09-28 재검증: Claude, Sonnet 5) |
 | 스킬 버전 | v4 |

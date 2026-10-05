@@ -17,7 +17,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `unity-live-ops` |
-| 스킬 경로 | `.claude/skills/game/unity-live-ops/SKILL.md` |
+| 스킬 경로 | `.claude/skills/unity-live-ops/SKILL.md` |
 | 검증일 | 2026-09-26 (재검증, 이전 2026-06-10) |
 | 검증자 | skill-creator (Claude) |
 | 스킬 버전 | v1 |

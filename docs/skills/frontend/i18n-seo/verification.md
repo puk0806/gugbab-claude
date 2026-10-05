@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `i18n-seo` |
-| 스킬 경로 | `.claude/skills/frontend/i18n-seo/SKILL.md` |
+| 스킬 경로 | `.claude/skills/i18n-seo/SKILL.md` |
 | 검증일 | 2026-09-28 (재검증) |
 | 검증자 | skill-creator (sonnet) |
 | 스킬 버전 | v1 |

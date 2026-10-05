@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | tsup |
-| 스킬 경로 | .claude/skills/frontend/tsup/SKILL.md |
+| 스킬 경로 | .claude/skills/tsup/SKILL.md |
 | 검증일 | 2026-09-29 (실사용 검증 v3, 직전 재검증 2026-09-26, 최초 2026-04-20) |
 | 검증자 | Claude (WebSearch + WebFetch) |
 | 스킬 버전 | v2 |

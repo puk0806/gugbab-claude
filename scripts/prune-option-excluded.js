@@ -55,11 +55,26 @@ const safeRegularFile = (full, base) => {
 // 지워져 "검증 문서 없는 스킬"이 생긴다(실보고 31종). 단위 키는 레포 레이아웃(skills/<cat>/<name>/)에서
 // 결정적으로 도출한다 — 설치 스크립트 목록 형식을 바꾸지 않아 구 목록과도 호환된다.
 // 단위 묶음은 **보존 쪽으로만** 작동한다(삭제 가능 파일을 보존으로 돌릴 뿐, 삭제를 늘리지 않음).
-const skillUnit = (p) => { const s = p.split('/'); return s.length >= 3 ? s.slice(0, 2).join('/') : path.posix.dirname(p); };
+//
+// 2026-10-05 스킬 평탄화: 스킬 본체는 Claude Code 가 인식하는 1단 경로 `.claude/skills/<name>/` 로 옮겼고
+// 짝 검증 문서는 `docs/skills/<cat>/<name>/` 에 그대로 둔다. 그래서 단위 키는 카테고리 없는 **스킬 이름**이다.
+// 평탄화 이전 설치본의 2단 경로(`<cat>/<name>/...`)도 같은 이름 단위로 묶어야 재설치 한 번에 수렴한다 —
+// 첫 세그먼트가 아래 옛 카테고리면 2단(구 레이아웃), 아니면 1단(현행)으로 해석한다. 스킬 이름이 옛 카테고리와
+// 같아지면 이 판별이 깨지므로 template-separation 테스트가 그런 이름을 금지한다.
+const LEGACY_SKILL_CATEGORIES = new Set([
+  'academic', 'architecture', 'backend', 'devops', 'frontend', 'game', 'health',
+  'humanities', 'meta', 'philosophy', 'writing',
+]);
+const isLegacySkillRel = (s) => s.length >= 3 && LEGACY_SKILL_CATEGORIES.has(s[0]);
+// 설치본 .claude/skills 기준 상대경로 → 스킬 폴더 경로 (현행 `<name>`, 구 `<cat>/<name>`)
+const skillDir = (p) => { const s = p.split('/'); return isLegacySkillRel(s) ? s.slice(0, 2).join('/') : s[0]; };
+// 설치본 .claude/skills 기준 상대경로 → 스킬 이름 (단위 키)
+const skillUnit = (p) => { const s = p.split('/'); return isLegacySkillRel(s) ? s[1] : s[0]; };
 const unitOf = (kind, rel) => {
   if (kind === 'skills') return `skill:${skillUnit(rel)}`;
   if (kind === 'agents') return `agent:${rel}`;
-  if (kind === 'docs' && rel.startsWith('skills/')) return `skill:${skillUnit(rel.slice('skills/'.length))}`;
+  // docs/skills/<cat>/<name>/** → 스킬 이름
+  if (kind === 'docs' && rel.startsWith('skills/')) return `skill:${rel.split('/')[2]}`;
   if (kind === 'docs' && rel.startsWith('agents/')) return `agent:${rel.slice('agents/'.length).replace(/-verification\.md$/, '.md')}`;
   return `${kind}|${rel}`;
 };
@@ -90,7 +105,9 @@ const classifyFile = ({ target, kind, rel, mk, sourceDir }) => {
   if (!safeRegularFile(full, target)) { d.state = 'custom'; d.unsafe = true; return d; }
   if (!mk.set.has(rel)) {
     if (FALLBACK_KINDS.has(kind) && sourceDir) {
-      const srcFull = path.join(rootFor(sourceDir, kind), rel);
+      // 구 2단 스킬 사본(<cat>/<name>/...)의 원본은 레포의 1단 <name>/... 이다 (2026-10-05 평탄화)
+      const srcRel = kind === 'skills' && isLegacySkillRel(rel.split('/')) ? rel.split('/').slice(1).join('/') : rel;
+      const srcFull = path.join(rootFor(sourceDir, kind), srcRel);
       if (fs.existsSync(srcFull)) {
         const cur = sha(full);
         d.state = (cur !== null && cur === sha(srcFull)) ? 'delete' : 'modified';
@@ -122,7 +139,7 @@ const blockUnits = (decisions) => {
   return blockedBy;
 };
 
-module.exports = { KINDS, rootFor, dispFor, sha, rmEmptyDirs, safeRegularFile, skillUnit, unitOf, isAnchor, isPairDoc, classifyFile, blockUnits };
+module.exports = { KINDS, rootFor, dispFor, sha, rmEmptyDirs, safeRegularFile, LEGACY_SKILL_CATEGORIES, skillDir, skillUnit, unitOf, isAnchor, isPairDoc, classifyFile, blockUnits };
 
 function main() {
   // 3번째 인자 sourceDir(선택) — docs kind 한정 소유 증명 폴백 (classifyFile 주석 참조)

@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `wcag-2.2-checklist` |
-| 스킬 경로 | `.claude/skills/frontend/wcag-2.2-checklist/SKILL.md` |
+| 스킬 경로 | `.claude/skills/wcag-2.2-checklist/SKILL.md` |
 | 검증일 | 2026-09-28 (재검증, 최초 2026-06-02) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |

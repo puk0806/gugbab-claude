@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `emotion-tagging-input` |
-| 스킬 경로 | `.claude/skills/frontend/emotion-tagging-input/SKILL.md` |
+| 스킬 경로 | `.claude/skills/emotion-tagging-input/SKILL.md` |
 | 검증일 | 2026-09-28 (최초 2026-05-15, 2026-09-28 재검증) |
 | 검증자 | skill-creator (Claude Opus 4.7) → Claude (Sonnet 5, 2026-09-28 재검증) |
 | 스킬 버전 | v2 |
@@ -41,7 +41,7 @@ status: APPROVED
 | 단계 | 도구 | 입력 요약 | 출력 요약 |
 |------|------|-----------|-----------|
 | 템플릿 Read | Read | VERIFICATION_TEMPLATE.md | 8개 섹션 구조 확인 |
-| 중복 확인 | Glob | `.claude/skills/frontend/emotion-tagging-input/**` | 없음 (신규 작성) |
+| 중복 확인 | Glob | `.claude/skills/emotion-tagging-input/**` | 없음 (신규 작성) |
 | 조사 1 | WebSearch | "Ekman 1992 six basic emotions Cognition and Emotion" | 공식 출처 (Tandfonline, APA PsycNet, PDF) + 6개 감정 확정 |
 | 조사 2 | WebSearch | "Plutchik wheel of emotions 8 primary emotions intensity levels 2002" | Wikipedia + 6 Seconds + Toolshero — 8 primary, 3 intensity, bipolar 쌍 |
 | 조사 3 | WebSearch | "Russell 1980 circumplex model affect valence arousal" | PDF 원문 (uvm.edu) + 공식 인용 — 39(6), 1161-1178 확정 |

@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `rsbuild` |
-| 스킬 경로 | `.claude/skills/frontend/rsbuild/SKILL.md` |
+| 스킬 경로 | `.claude/skills/rsbuild/SKILL.md` |
 | 최초 검증일 | 2026-04-23 |
 | 검증일 | 2026-09-28 (최초 2026-04-23, 이전 재검증 2026-08-11) |
 | 재검증일 | 2026-09-28 (이전 재검증 2026-08-11) |

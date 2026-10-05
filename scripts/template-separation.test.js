@@ -38,19 +38,11 @@ function install(tmpl, dir, answers = []) {
   return r.stdout;
 }
 
-const skillDirs = (dir) => {
-  const root = path.join(dir, '.claude', 'skills');
-  const out = [];
-  if (!fs.existsSync(root)) return out;
-  for (const cat of fs.readdirSync(root)) {
-    const catDir = path.join(root, cat);
-    if (!fs.statSync(catDir).isDirectory()) continue;
-    for (const name of fs.readdirSync(catDir)) {
-      if (fs.statSync(path.join(catDir, name)).isDirectory()) out.push(`${cat}/${name}`);
-    }
-  }
-  return out.sort();
-};
+// 설치된 스킬의 논리 ID({cat}/{name}) — 설치본은 1단 `.claude/skills/<name>/` (2026-10-05 평탄화),
+// 카테고리는 레포 docs/skills/<cat>/<name>/ 에서 붙인다 (scripts/skill-index.js)
+const skillIndex = require('./skill-index.js');
+const CMAP = skillIndex.categoryMap();
+const skillDirs = (dir) => skillIndex.installedSkillIds(dir, CMAP);
 
 const agentFiles = (dir) => {
   const root = path.join(dir, '.claude', 'agents');
@@ -429,18 +421,19 @@ test('악성·경계: 순수 java 재설치 시 누수 잔재만 prune, 수정�
     const skillsRoot = path.join(dir, '.claude', 'skills');
 
     // (a) 구버전 설치가 남긴 누수 잔재 — 매니페스트 소유 증명 있음 → prune 대상
-    const leakRel = 'meta/dream-safety-classifier-prompts/SKILL.md';
+    // 스킬 경로는 1단 `<name>/SKILL.md` (2026-10-05 평탄화)
+    const leakRel = 'dream-safety-classifier-prompts/SKILL.md';
     const leakSrc = path.join(REPO, '.claude', 'skills', leakRel);
     const leakDest = path.join(skillsRoot, leakRel);
     fs.mkdirSync(path.dirname(leakDest), { recursive: true });
     fs.copyFileSync(leakSrc, leakDest);
     // (b) 누수 잔재지만 사용자가 수정한 파일 — 해시 불일치 → 보존해야 함
-    const modRel = 'architecture/dream-journal-data-modeling/SKILL.md';
+    const modRel = 'dream-journal-data-modeling/SKILL.md';
     const modDest = path.join(skillsRoot, modRel);
     fs.mkdirSync(path.dirname(modDest), { recursive: true });
     fs.copyFileSync(path.join(REPO, '.claude', 'skills', modRel), modDest);
     // (c) 매니페스트에 없는 커스텀 스킬 — 소유 미증명 → 절대 삭제 금지
-    const customDest = path.join(skillsRoot, 'meta', 'my-custom-skill', 'SKILL.md');
+    const customDest = path.join(skillsRoot, 'my-custom-skill', 'SKILL.md');
     fs.mkdirSync(path.dirname(customDest), { recursive: true });
     fs.writeFileSync(customDest, '# 프로젝트 자체 커스텀 스킬\n');
 
@@ -473,22 +466,22 @@ test('악성·경계: 레포에서 폐기된 스킬·에이전트는 재설치 �
       return f;
     };
     // (1) 폐기 스킬 + 짝 docs (전부 원본) → 단위 삭제
-    const sGone = plant('.claude/skills', 'backend/zz-retired-skill/SKILL.md', '# retired\n');
+    const sGone = plant('.claude/skills', 'zz-retired-skill/SKILL.md', '# retired\n');   // 1단 (2026-10-05)
     const sGoneDoc = plant('docs', 'skills/backend/zz-retired-skill/verification.md', '# rv\n');
     // (2) 폐기 에이전트 + 짝 docs + verification (전부 원본) → 단위 삭제
     const aGone = plant('.claude/agents', 'meta/zz-retired-agent.md', '# ra\n');
     const aGoneDoc = plant('docs', 'agents/meta/zz-retired-agent.md', '# rad\n');
     const aGoneVer = plant('docs', 'agents/meta/zz-retired-agent-verification.md', '# rav\n');
     // (3) 폐기 스킬이지만 짝 docs 를 사용자가 수정 → 본체·docs 단위 보존
-    const sKeep = plant('.claude/skills', 'backend/zz-edited-docs/SKILL.md', '# keep\n');
+    const sKeep = plant('.claude/skills', 'zz-edited-docs/SKILL.md', '# keep\n');
     const sKeepDoc = plant('docs', 'skills/backend/zz-edited-docs/verification.md', '# kv\n');
     // (4) 매니페스트 밖 고아 docs (증명 불가) → 보존
     const custom = plant('docs', 'skills/backend/zz-my-notes/verification.md', '# mine\n');
 
     const mf = JSON.parse(fs.readFileSync(mfPath, 'utf8'));
     const rec = (kind, rel, f) => { mf[kind].push(rel); mf.hashes[kind][rel] = sha(f); };
-    rec('skills', 'backend/zz-retired-skill/SKILL.md', sGone);
-    rec('skills', 'backend/zz-edited-docs/SKILL.md', sKeep);
+    rec('skills', 'zz-retired-skill/SKILL.md', sGone);
+    rec('skills', 'zz-edited-docs/SKILL.md', sKeep);
     rec('agents', 'meta/zz-retired-agent.md', aGone);
     rec('docs', 'skills/backend/zz-retired-skill/verification.md', sGoneDoc);
     rec('docs', 'skills/backend/zz-edited-docs/verification.md', sKeepDoc);
@@ -512,6 +505,52 @@ test('악성·경계: 레포에서 폐기된 스킬·에이전트는 재설치 �
   }
 });
 
+test('마이그레이션: 평탄화 이전 2단 설치본(.claude/skills/<cat>/<name>/)은 재설치 한 번에 1단으로 수렴, 수정본·커스텀은 보존 (2026-10-05)', () => {
+  const dir = mktarget('flatten migrate');   // 공백 경로
+  try {
+    install('5', dir);
+    const skillsRoot = path.join(dir, '.claude', 'skills');
+    const mfPath = path.join(dir, '.claude', '.install-manifest.json');
+    const mf = JSON.parse(fs.readFileSync(mfPath, 'utf8'));
+    // 평탄화 이전 설치본 재현: 1단 스킬 폴더를 <cat>/<name>/ 로 옮기고 매니페스트 경로도 구 형식으로
+    const flatIds = skillDirs(dir);
+    assert.ok(flatIds.length >= 10 && flatIds.every((id) => !id.startsWith('?/')), `설치 스킬 논리 ID 이상: ${flatIds.slice(0, 5)}`);
+    const remap = (rel) => { const n = rel.split('/')[0]; return CMAP.has(n) ? `${CMAP.get(n)}/${rel}` : rel; };
+    for (const id of flatIds) {
+      const [cat, name] = id.split('/');
+      fs.mkdirSync(path.join(skillsRoot, cat), { recursive: true });
+      fs.renameSync(path.join(skillsRoot, name), path.join(skillsRoot, cat, name));
+    }
+    mf.skills = mf.skills.map(remap);
+    mf.hashes.skills = Object.fromEntries(Object.entries(mf.hashes.skills).map(([k, v]) => [remap(k), v]));
+    fs.writeFileSync(mfPath, JSON.stringify(mf, null, 2));
+    // 구 2단 사본 하나는 사용자 수정본, 하나는 매니페스트 밖 커스텀 스킬
+    const [eCat, eName] = flatIds[0].split('/');
+    const edited = path.join(skillsRoot, eCat, eName, 'SKILL.md');
+    fs.appendFileSync(edited, '\n<!-- 사용자 로컬 수정 -->\n');
+    const custom = path.join(skillsRoot, 'backend', 'team-own-skill', 'SKILL.md');
+    fs.mkdirSync(path.dirname(custom), { recursive: true });
+    fs.writeFileSync(custom, '# 팀 고유 스킬\n');
+
+    install('5', dir);
+    // 1단으로 전부 설치됨
+    for (const id of flatIds) assert.ok(fs.existsSync(path.join(skillsRoot, id.split('/')[1], 'SKILL.md')), `1단 미설치: ${id}`);
+    // 원본 그대로였던 구 2단 사본은 정리됨 (수정본 하나 제외)
+    const legacyLeft = flatIds.filter((id) => id !== flatIds[0] && fs.existsSync(path.join(skillsRoot, id, 'SKILL.md')));
+    assert.deepStrictEqual(legacyLeft, [], '원본 그대로인 구 2단 사본이 남음');
+    assert.ok(fs.existsSync(edited), '구 2단 수정본이 삭제됨 — 파괴 방어 실패');
+    assert.ok(fs.existsSync(custom), '매니페스트 밖 커스텀 스킬이 삭제됨');
+    // 매니페스트는 1단 경로로 수렴
+    const mf2 = JSON.parse(fs.readFileSync(mfPath, 'utf8'));
+    const nested = mf2.skills.filter((r) => r.split('/').length >= 3 && CMAP.has(r.split('/')[1]) && !r.includes('/references/'));
+    assert.deepStrictEqual(nested.filter((r) => r !== `${eCat}/${eName}/SKILL.md`), [], '매니페스트에 구 2단 경로 잔존');
+    // 짝 docs 는 그대로 (스킬 이름 단위가 레포에 살아 있으므로)
+    for (const id of flatIds) assert.ok(fs.existsSync(path.join(dir, 'docs', 'skills', id, 'verification.md')), `짝 docs 유실: ${id}`);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test('악성·경계: 매니페스트 없는 구버전 설치본의 템플릿 외 누수는 레포 원본과 동일하면 짝 단위로 수렴, 한 파일이라도 다르면 단위 보존 (2026-09-26 감사 A)', () => {
   const dir = mktarget('legacy-leak');
   try {
@@ -524,14 +563,14 @@ test('악성·경계: 매니페스트 없는 구버전 설치본의 템플릿 �
       return dest;
     };
     // (1) 레포 원본과 동일한 누수 스킬 + 짝 docs → 삭제
-    const leak = copy('.claude/skills', 'meta/dream-safety-classifier-prompts/SKILL.md');
+    const leak = copy('.claude/skills', 'dream-safety-classifier-prompts/SKILL.md');
     const leakDoc = copy('docs', 'skills/meta/dream-safety-classifier-prompts/verification.md');
     // (2) references 한 파일만 수정된 누수 스킬 → 폴더 단위 보존
-    const modSkill = copy('.claude/skills', 'architecture/dream-journal-data-modeling/SKILL.md');
-    const modRef = copy('.claude/skills', 'architecture/dream-journal-data-modeling/references/REFERENCE.md');
+    const modSkill = copy('.claude/skills', 'dream-journal-data-modeling/SKILL.md');
+    const modRef = copy('.claude/skills', 'dream-journal-data-modeling/references/REFERENCE.md');
     fs.appendFileSync(modRef, '\n<!-- 사용자 로컬 수정 -->\n');
     // (3) 레포에 없는 사용자 스킬 → 보존
-    const custom = path.join(dir, '.claude', 'skills', 'meta', 'my-own-skill', 'SKILL.md');
+    const custom = path.join(dir, '.claude', 'skills', 'my-own-skill', 'SKILL.md');
     fs.mkdirSync(path.dirname(custom), { recursive: true });
     fs.writeFileSync(custom, '# mine\n');
 
@@ -551,12 +590,12 @@ test('업그레이드: 수리 전 rust 설치가 남긴 dream 잔재(references 
   const dir = mktarget('rust-up');
   try {
     install('4', dir);
-    const leakRel = 'meta/dream-safety-classifier-prompts/SKILL.md';
+    const leakRel = 'dream-safety-classifier-prompts/SKILL.md';
     const leakDest = path.join(dir, '.claude', 'skills', leakRel);
     fs.mkdirSync(path.dirname(leakDest), { recursive: true });
     fs.copyFileSync(path.join(REPO, '.claude', 'skills', leakRel), leakDest);
     // 구버전이 함께 복사해 둔 부속 references 파일 (Codex R2: SKILL.md만 prune하면 영구 잔존)
-    const refRel = 'meta/dream-safety-classifier-prompts/references/REFERENCE.md';
+    const refRel = 'dream-safety-classifier-prompts/references/REFERENCE.md';
     const refDest = path.join(dir, '.claude', 'skills', refRel);
     fs.mkdirSync(path.dirname(refDest), { recursive: true });
     fs.writeFileSync(refDest, '# 구버전 설치가 복사한 부속 파일\n');
@@ -582,7 +621,7 @@ test('업그레이드: java+rust 혼합 재설치에서도 dream 잔재는 수�
     install('5,4', dir);
     const s0 = skillDirs(dir);
     assert.ok(s0.includes('devops/n8n-workflow-design'), 'rust 소유 n8n이 혼합 설치에 없음 (전제 확인)');
-    const leakRel = 'architecture/dream-journal-data-modeling/SKILL.md';
+    const leakRel = 'dream-journal-data-modeling/SKILL.md';
     const leakDest = path.join(dir, '.claude', 'skills', leakRel);
     fs.mkdirSync(path.dirname(leakDest), { recursive: true });
     fs.copyFileSync(path.join(REPO, '.claude', 'skills', leakRel), leakDest);
@@ -606,7 +645,7 @@ test('docs 수렴: 누수 스킬 prune 시 소유 증명된 짝 docs도 제거�
   try {
     install('5', dir);
     // 구버전 설치가 남긴 누수 스킬 + 짝 docs (둘 다 매니페스트 소유 증명 부여)
-    const leakRel = 'meta/dream-safety-classifier-prompts/SKILL.md';
+    const leakRel = 'dream-safety-classifier-prompts/SKILL.md';
     const leakDest = path.join(dir, '.claude', 'skills', leakRel);
     fs.mkdirSync(path.dirname(leakDest), { recursive: true });
     fs.copyFileSync(path.join(REPO, '.claude', 'skills', leakRel), leakDest);
@@ -646,7 +685,7 @@ test('업그레이드: docs 섹션이 없는 구버전 매니페스트에서도 
     delete mf.docs;
     delete mf.hashes.docs;
     // 누수 스킬(소유 증명) + 짝 docs — docs는 레포 원본의 미수정 사본 (구버전 설치가 복사한 상태)
-    const leakRel = 'meta/dream-safety-classifier-prompts/SKILL.md';
+    const leakRel = 'dream-safety-classifier-prompts/SKILL.md';
     const leakDest = path.join(dir, '.claude', 'skills', leakRel);
     fs.mkdirSync(path.dirname(leakDest), { recursive: true });
     fs.copyFileSync(path.join(REPO, '.claude', 'skills', leakRel), leakDest);
@@ -680,7 +719,7 @@ test('짝 단위(2026-09-25 보고 버그): 구버전 매니페스트에서 SKIL
     const mf = JSON.parse(fs.readFileSync(mfPath, 'utf8'));
     delete mf.docs;                                          // docs 섹션 없는 구버전 매니페스트
     delete mf.hashes.docs;
-    const leakRel = 'meta/dream-safety-classifier-prompts/SKILL.md';
+    const leakRel = 'dream-safety-classifier-prompts/SKILL.md';
     const leakDest = path.join(dir, '.claude', 'skills', leakRel);
     fs.mkdirSync(path.dirname(leakDest), { recursive: true });
     fs.copyFileSync(path.join(REPO, '.claude', 'skills', leakRel), leakDest);
@@ -817,7 +856,7 @@ test('업그레이드: 5,11 전체→커머스 프로파일 전환 재설치에�
     const i18nDoc = path.join(dir, 'docs', 'skills', 'frontend', 'i18n-seo', 'verification.md');
     assert.ok(fs.existsSync(i18nDoc), '전제: i18n-seo 짝 docs 복사됨');
     // 수리 전 설치가 남긴 dream 잔재 (소유 증명 부여) — seo-geo 병행 조합도 leakscope 라 수렴해야 함
-    const leakRel = 'architecture/dream-journal-data-modeling/SKILL.md';
+    const leakRel = 'dream-journal-data-modeling/SKILL.md';
     const leakDest = path.join(dir, '.claude', 'skills', leakRel);
     fs.mkdirSync(path.dirname(leakDest), { recursive: true });
     fs.copyFileSync(path.join(REPO, '.claude', 'skills', leakRel), leakDest);
@@ -826,7 +865,7 @@ test('업그레이드: 5,11 전체→커머스 프로파일 전환 재설치에�
     mf.skills.push(leakRel); mf.hashes.skills[leakRel] = sha(leakDest);
     fs.writeFileSync(mfPath, JSON.stringify(mf, null, 2));
     // 사용자가 로컬 수정한 SEO 스킬 — 프로파일 전환으로 빠지더라도 파괴 금지
-    const modSkill = path.join(dir, '.claude', 'skills', 'writing', 'ymyl-content-seo', 'SKILL.md');
+    const modSkill = path.join(dir, '.claude', 'skills', 'ymyl-content-seo', 'SKILL.md');
     fs.appendFileSync(modSkill, '\n<!-- 로컬 수정 -->\n');
 
     install('5,11', dir, ['', '', '', 'c']);
@@ -898,7 +937,7 @@ test('다운그레이드: 5,11 → 5 재설치에서 seo-geo 자산(스킬·짝 
     const seoDoc = path.join(dir, 'docs', 'skills', 'frontend', 'schema-org-patterns');
     assert.ok(fs.existsSync(seoDoc), '전제: SEO 짝 docs 설치됨');
     // 사용자가 로컬 수정한 SEO 스킬 — 애드온을 빼더라도 파괴 금지
-    const modSkill = path.join(dir, '.claude', 'skills', 'frontend', 'naver-seo-specifics', 'SKILL.md');
+    const modSkill = path.join(dir, '.claude', 'skills', 'naver-seo-specifics', 'SKILL.md');
     fs.appendFileSync(modSkill, '\n<!-- 로컬 수정 -->\n');
 
     install('5', dir);
@@ -958,15 +997,80 @@ test('seo-geo 단독 + 작성 도구 y: 화이트리스트와 무관하게 작�
   }
 });
 
+// ── 팀 레포 보호 (2026-10-05 설치본 실사고 재현) ──────────────────────────
+// 팀이 git 으로 관리하는 CLAUDE.md·자체 스킬이 있는 레포에 첫 설치(매니페스트 없음)하면서 모든 질문에 'y' 를
+// 답하면 ① "잔재 삭제? y" 가 팀 스킬을 지우고 ② CLAUDE.md 가 템플릿으로 덮어써지고 ③ 프로젝트명에 'y' 가 들어갔다.
+const gitInit = (dir) => {
+  const g = (...a) => spawnSync('git', ['-C', dir, ...a], { encoding: 'utf8' });
+  g('init', '-q'); return g;
+};
+const installRaw = (dir, tmpl, tail) => spawnSync('bash', [INSTALLER], { input: `${dir}\n${tmpl}\n${tail}`, encoding: 'utf8', timeout: 120000 });
+
+test('악성·경계: 팀 레포에 전부 y 로 첫 설치해도 git 추적 팀 스킬·CLAUDE.md 는 삭제·덮어쓰기 되지 않는다', () => {
+  const dir = mktarget('team repo');
+  try {
+    const g = gitInit(dir);
+    fs.writeFileSync(path.join(dir, 'CLAUDE.md'), '# 팀 컨벤션\n팀 규칙\n');
+    fs.mkdirSync(path.join(dir, '.claude', 'skills', 'team-review'), { recursive: true });
+    fs.writeFileSync(path.join(dir, '.claude', 'skills', 'team-review', 'README.md'), '# 팀 리뷰\n');
+    g('add', '-A'); g('-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'team');
+    const r = installRaw(dir, '6', 'y\n'.repeat(80));
+    assert.strictEqual(r.status, 0, `설치 실패\n${(r.stdout || '').slice(-600)}`);
+    const tracked = g('status', '--porcelain').stdout.split('\n').filter((l) => l && !l.startsWith('??'));
+    assert.deepStrictEqual(tracked, [], `git 추적 팀 파일이 바뀜: ${tracked}`);
+    assert.strictEqual(fs.readFileSync(path.join(dir, 'CLAUDE.md'), 'utf8'), '# 팀 컨벤션\n팀 규칙\n');
+    assert.ok(/git 으로 추적 중인 파일 1건/.test(r.stdout), '추적 파일 보존 경고 부재');
+    assert.ok(/git 으로 추적 중인 팀 파일입니다/.test(r.stdout), 'CLAUDE.md 팀 파일 경고 부재');
+    // 하네스 자체는 정상 설치됨 (1단 스킬)
+    assert.ok(skillDirs(dir).length >= 10, '하네스 스킬 미설치');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('경계: 미추적 CLAUDE.md 덮어쓰기는 백업을 남기고, 프로젝트명 y 는 거부(폴더명), Java 버전은 빌드 파일에서 감지', () => {
+  const dir = mktarget('acme-api');
+  try {
+    gitInit(dir);
+    fs.writeFileSync(path.join(dir, 'CLAUDE.md'), '# 로컬 메모\n');
+    fs.writeFileSync(path.join(dir, 'build.gradle'), "java {\n  toolchain {\n    languageVersion = JavaLanguageVersion.of(17)\n  }\n}\n");
+    const r = installRaw(dir, '6', 'y\n'.repeat(80));
+    assert.strictEqual(r.status, 0);
+    const baks = fs.readdirSync(dir).filter((f) => /^CLAUDE\.md\.bak-\d{14}$/.test(f));
+    assert.strictEqual(baks.length, 1, '덮어쓰기 전 백업 없음');
+    assert.strictEqual(fs.readFileSync(path.join(dir, baks[0]), 'utf8'), '# 로컬 메모\n');
+    const head = fs.readFileSync(path.join(dir, 'CLAUDE.md'), 'utf8').split('\n').slice(0, 3).join('\n');
+    assert.ok(head.startsWith(`# CLAUDE.md — ${path.basename(dir)}`), `프로젝트명이 폴더명이 아님: ${head}`);
+    assert.ok(!/— y$/m.test(head), '프로젝트명에 y 가 들어감');
+    assert.ok(/^Java 17 \+/m.test(head), `Java 버전 미반영: ${head}`);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('악성: 프로젝트명 sed 특수문자(| & \\)가 CLAUDE.md 치환을 깨지 않는다', () => {
+  const dir = mktarget('sed-esc');
+  try {
+    // 질문 수는 옵션에 따라 다르므로 기본 엔터 + 이름 줄을 충분히 반복 — 이름 질문이 처음 받는 비-y 줄이 이름이 된다
+    const name = 'a|b&c\\d';
+    const r = installRaw(dir, '6', '\n'.repeat(40) + `${name}\n`.repeat(5));
+    assert.strictEqual(r.status, 0);
+    const first = fs.readFileSync(path.join(dir, 'CLAUDE.md'), 'utf8').split('\n')[0];
+    assert.ok(first === `# CLAUDE.md — ${name}` || first === `# CLAUDE.md — ${path.basename(dir)}`, `치환 깨짐: ${first}`);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test('경계: 매니페스트가 손상(JSON 깨짐)돼도 설치는 성공하고 어떤 prune 삭제도 없다', () => {
   const dir = mktarget('corrupt');
   try {
     install('5', dir);
     const mfPath = path.join(dir, '.claude', '.install-manifest.json');
     // 누수 잔재 주입 + 매니페스트 파괴
-    const leakDest = path.join(dir, '.claude', 'skills', 'meta', 'dream-safety-classifier-prompts', 'SKILL.md');
+    const leakDest = path.join(dir, '.claude', 'skills', 'dream-safety-classifier-prompts', 'SKILL.md');
     fs.mkdirSync(path.dirname(leakDest), { recursive: true });
-    fs.copyFileSync(path.join(REPO, '.claude', 'skills', 'meta', 'dream-safety-classifier-prompts', 'SKILL.md'), leakDest);
+    fs.copyFileSync(path.join(REPO, '.claude', 'skills', 'dream-safety-classifier-prompts', 'SKILL.md'), leakDest);
     fs.writeFileSync(mfPath, '{ 깨진 JSON !!!');
 
     install('5', dir);
@@ -1104,8 +1208,8 @@ test('악성·경계: 사용자가 손댄 fortune 스킬은 12 → util 다운�
   const dir = mktarget('fortune-modified');
   try {
     install('12', dir);
-    const edited = path.join(dir, '.claude', 'skills', 'meta', 'fortune-interpretation-prompt-engineering', 'SKILL.md');
-    const untouched = path.join(dir, '.claude', 'skills', 'humanities', 'palmistry-limitations', 'SKILL.md');
+    const edited = path.join(dir, '.claude', 'skills', 'fortune-interpretation-prompt-engineering', 'SKILL.md');
+    const untouched = path.join(dir, '.claude', 'skills', 'palmistry-limitations', 'SKILL.md');
     assert.ok(fs.existsSync(edited) && fs.existsSync(untouched), '전제: fortune 스킬 설치됨');
     fs.appendFileSync(edited, '\n<!-- 프로젝트 커스텀: 우리 앱 카테고리 추가 -->\n');
     install('1', dir);
@@ -1171,8 +1275,8 @@ test('다운그레이드: 10 → 5 재설치에서 health 전용 에이전트(�
 // python 백엔드 스킬 10종·에이전트 2종은 그동안 도메인 앱 템플릿(9·12)으로만 설치됐다.
 // Java·Rust 처럼 독립 스택 템플릿이 소유하고, 프론트 전용·Java·Rust·Unity 자산은 새지 않아야 한다.
 
-const PYTHON_SKILLS = fs.readdirSync(path.join(REPO, '.claude', 'skills', 'backend'))
-  .filter((n) => n.startsWith('python-')).map((n) => `backend/${n}`).sort();
+const PYTHON_SKILLS = [...CMAP].filter(([n, c]) => c === 'backend' && n.startsWith('python-'))
+  .map(([n]) => `backend/${n}`).sort();
 
 const PYTHON_EXCLUDED_AGENTS = [
   // backend/CLAUDE.md 는 rust.md·java.md 를 임포트 — python 단독 설치엔 두 규칙이 없어 깨진 임포트만 남는다
@@ -1291,8 +1395,8 @@ test('다운그레이드: 13 → 4(rust) 재설치에서 python 스킬(짝 docs)
   const dir = mktarget('python-to-rust');
   try {
     install('13', dir);
-    const edited = path.join(dir, '.claude', 'skills', 'backend', 'python-fastapi', 'SKILL.md');
-    const untouched = path.join(dir, '.claude', 'skills', 'backend', 'python-pydantic-v2', 'SKILL.md');
+    const edited = path.join(dir, '.claude', 'skills', 'python-fastapi', 'SKILL.md');
+    const untouched = path.join(dir, '.claude', 'skills', 'python-pydantic-v2', 'SKILL.md');
     const untouchedDoc = path.join(dir, 'docs', 'skills', 'backend', 'python-pydantic-v2');
     assert.ok(fs.existsSync(edited) && fs.existsSync(untouched) && fs.existsSync(untouchedDoc), '전제: python 스킬·docs 설치됨');
     fs.appendFileSync(edited, '\n<!-- 프로젝트 커스텀 -->\n');
@@ -1384,8 +1488,8 @@ test('버그1·2 다운그레이드: 3 → 4 재설치에서 TS 백엔드 스킬
   const dir = mktarget('tsb-next-to-rust');
   try {
     install('3', dir);
-    const edited = path.join(dir, '.claude', 'skills', 'backend', 'hono-api-patterns', 'SKILL.md');
-    const untouched = path.join(dir, '.claude', 'skills', 'backend', 'zod-schema-validation', 'SKILL.md');
+    const edited = path.join(dir, '.claude', 'skills', 'hono-api-patterns', 'SKILL.md');
+    const untouched = path.join(dir, '.claude', 'skills', 'zod-schema-validation', 'SKILL.md');
     const untouchedDoc = path.join(dir, 'docs', 'skills', 'backend', 'zod-schema-validation');
     const agent = path.join(dir, '.claude', 'agents', 'backend', 'typescript-backend-developer.md');
     assert.ok(fs.existsSync(edited) && fs.existsSync(untouched) && fs.existsSync(untouchedDoc) && fs.existsSync(agent), '전제: TS 백엔드 자산 설치됨');
@@ -1447,7 +1551,7 @@ test('버그4 다운그레이드: 10 → 5 재설치에서 health 스킬 5종(�
     install('10', dir);
     const hs = skillDirs(dir).filter((x) => x.startsWith('health/'));
     assert.strictEqual(hs.length, 5, '전제: health 스킬 5종 설치');
-    const edited = path.join(dir, '.claude', 'skills', hs[0], 'SKILL.md');
+    const edited = path.join(skillIndex.skillDirOf(dir, hs[0]), 'SKILL.md');
     const untouchedDoc = path.join(dir, 'docs', 'skills', hs[1]);
     assert.ok(fs.existsSync(untouchedDoc), '전제: health 스킬 짝 docs 설치');
     fs.appendFileSync(edited, '\n<!-- 프로젝트 커스텀 영양 기준 -->\n');

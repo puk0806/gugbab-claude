@@ -35,7 +35,7 @@
 
 | 스킬 | 설명 |
 |------|------|
-| [claude-code-hook-authoring](../../.claude/skills/meta/claude-code-hook-authoring/SKILL.md) | Claude Code 훅 작성법 — 이벤트·exit 규약·settings.json 배선 |
+| [claude-code-hook-authoring](../../.claude/skills/claude-code-hook-authoring/SKILL.md) | Claude Code 훅 작성법 — 이벤트·exit 규약·settings.json 배선 |
 
 ---
 

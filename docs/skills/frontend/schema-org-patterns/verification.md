@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `schema-org-patterns` |
-| 스킬 경로 | `.claude/skills/frontend/schema-org-patterns/SKILL.md` |
+| 스킬 경로 | `.claude/skills/schema-org-patterns/SKILL.md` |
 | 검증일 | 2026-09-28 (재검증 2차, 이전 2026-08-26 재검증, 최초 2026-06-01) |
 | 검증자 | skill-creator (최초) → freshness-auditor + orchestrator (08-26) → orchestrator (09-28 2차 재검증) |
 | 스킬 버전 | v1.2 |

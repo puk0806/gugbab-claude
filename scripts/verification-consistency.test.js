@@ -77,22 +77,59 @@ test('모든 verification.md: 메타 표 "| 검증일 |" 행 존재', () => {
   assert.deepStrictEqual(bad, []);
 });
 
+// 스킬 본체는 1단 .claude/skills/<name>/SKILL.md (2026-10-05 평탄화 — Claude Code 는 2단 중첩을 스킬로 등록하지
+// 않았다), 짝 검증 문서는 docs/skills/<category>/<name>/verification.md. 카테고리 단일 원천은 docs 위치다.
+const { LEGACY_SKILL_CATEGORIES } = require(path.join(REPO, 'scripts', 'prune-option-excluded.js'));
+const skillDirs = () => fs.readdirSync(SKILLS, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name);
+
 test('verification.md ↔ SKILL.md 1:1 (양방향, 심볼릭 링크 SKILL.md 불허)', () => {
   const bad = [];
   for (const { category, name } of all) {
-    const skill = path.join(SKILLS, category, name, 'SKILL.md');
+    const skill = path.join(SKILLS, name, 'SKILL.md');
     let st = null;
     try { st = fs.lstatSync(skill); } catch {}
-    if (!st || !st.isFile()) bad.push(`${category}/${name}: 짝 SKILL.md 없음(또는 일반 파일 아님)`);
+    if (!st || !st.isFile()) bad.push(`${category}/${name}: 짝 SKILL.md(.claude/skills/${name}/) 없음(또는 일반 파일 아님)`);
   }
-  // 역방향: verification.md 없는 SKILL.md
-  for (const cat of fs.readdirSync(SKILLS, { withFileTypes: true })) {
-    if (!cat.isDirectory()) continue;
-    for (const name of fs.readdirSync(path.join(SKILLS, cat.name), { withFileTypes: true })) {
-      if (!name.isDirectory()) continue;
-      if (!fs.existsSync(path.join(SKILLS, cat.name, name.name, 'SKILL.md'))) continue;
-      if (!fs.existsSync(path.join(DOCS, cat.name, name.name, 'verification.md'))) bad.push(`${cat.name}/${name.name}: verification.md 없음`);
+  // 역방향: 짝 verification.md 가 없거나 둘 이상(여러 카테고리)인 SKILL.md
+  for (const name of skillDirs()) {
+    if (!fs.existsSync(path.join(SKILLS, name, 'SKILL.md'))) continue;
+    const pairs = all.filter((v) => v.name === name);
+    if (pairs.length === 0) bad.push(`${name}: verification.md 없음 (docs/skills/<카테고리>/${name}/)`);
+    if (pairs.length > 1) bad.push(`${name}: 짝 verification.md 가 여러 카테고리에 있음 (${pairs.map((p) => p.category).join(', ')})`);
+  }
+  assert.deepStrictEqual(bad, []);
+});
+
+// ── 구조 회귀: Claude Code 스킬 등록 조건 (2026-10-05) ───────────────────
+test('구조: 모든 SKILL.md 는 1단(.claude/skills/<name>/SKILL.md) — 2단 이상 중첩은 스킬로 등록되지 않는다', () => {
+  const nested = [];
+  (function walk(dir, depth) {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const f = path.join(dir, e.name);
+      if (e.isDirectory()) walk(f, depth + 1);
+      else if (e.name === 'SKILL.md' && depth !== 1) nested.push(path.relative(SKILLS, f));
     }
+  })(SKILLS, 0);
+  assert.deepStrictEqual(nested, []);
+  assert.ok(skillDirs().filter((n) => fs.existsSync(path.join(SKILLS, n, 'SKILL.md'))).length >= 100, '1단 스킬 순회가 비었음');
+});
+
+test('구조: 스킬 폴더는 SKILL.md 가 있어야 하고, 이름이 구 카테고리명과 같으면 안 된다', () => {
+  const bad = [];
+  for (const name of skillDirs()) {
+    if (!fs.existsSync(path.join(SKILLS, name, 'SKILL.md'))) bad.push(`${name}: SKILL.md 없는 폴더 (카테고리 폴더 잔재?)`);
+    if (LEGACY_SKILL_CATEGORIES.has(name)) bad.push(`${name}: 구 카테고리명과 같은 스킬 이름 — 재설치 정리가 구 2단 경로로 오인`);
+  }
+  assert.deepStrictEqual(bad, []);
+});
+
+test('구조: SKILL.md frontmatter name 은 폴더 이름과 같다 (등록 이름 = 폴더 이름)', () => {
+  const bad = [];
+  for (const name of skillDirs()) {
+    const f = path.join(SKILLS, name, 'SKILL.md');
+    if (!fs.existsSync(f)) continue;
+    const fm = frontmatter(fs.readFileSync(f, 'utf8'));
+    if (!fm || fm.name !== name) bad.push(`${name}: frontmatter name="${fm && fm.name}"`);
   }
   assert.deepStrictEqual(bad, []);
 });

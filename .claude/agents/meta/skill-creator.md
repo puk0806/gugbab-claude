@@ -60,7 +60,7 @@ isolation: worktree
 | 스킬 주제 | 사용자 설명에서 추출 |
 | 대상 버전 | 명시 없으면 최신 안정 버전 기준 |
 | 카테고리 | frontend / backend / architecture / tooling 등 |
-| SKILL.md 저장 경로 | `.claude/skills/{category}/{name}/SKILL.md` |
+| SKILL.md 저장 경로 | `.claude/skills/{name}/SKILL.md` |
 | verification.md 경로 | `docs/skills/{category}/{name}/verification.md` |
 | 소스 유형 | 라이브러리(공식 URL 있음) / 방법론(공식 URL 없음) 구분 |
 
@@ -133,7 +133,7 @@ description: {한 줄 설명}
 {검증된 내용}
 ```
 
-**저장 경로:** `.claude/skills/{category}/{name}/SKILL.md`
+**저장 경로:** `.claude/skills/{name}/SKILL.md`
 
 ---
 

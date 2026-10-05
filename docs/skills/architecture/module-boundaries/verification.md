@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `module-boundaries` |
-| 스킬 경로 | `.claude/skills/architecture/module-boundaries/SKILL.md` |
+| 스킬 경로 | `.claude/skills/module-boundaries/SKILL.md` |
 | 검증일 | 2026-09-26 (30~60일 주기 재검증, 최초 검증 2026-08-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
@@ -52,7 +52,7 @@ status: APPROVED
 |------|------|-----------|-----------|
 | 템플릿 확인 | Read | `docs/skills/VERIFICATION_TEMPLATE.md` | 8개 섹션 구조 확보 |
 | 관례 확인 | Read | `architecture/ddd/SKILL.md`, `frontend/code-convention/SKILL.md`, `docs/skills/frontend/tanstack-query/verification.md` | frontmatter·소스/검증일 표기·섹션 스타일·verification 8섹션 형식 확보 |
-| 중복 확인 | Glob | `.claude/skills/**/module-boundaries/SKILL.md`, `.claude/skills/architecture/*/SKILL.md` | 동명 스킬 없음 (architecture 기존 2종) |
+| 중복 확인 | Glob | `.claude/skills/**/module-boundaries/SKILL.md`, `.claude/skills/*/SKILL.md` | 동명 스킬 없음 (architecture 기존 2종) |
 | 조사 | WebFetch | npm registry `latest`/`dist-tags` 7건(dependency-cruiser, eslint-plugin-boundaries, @boundaries/eslint-plugin, eslint-plugin-import, eslint-plugin-import-x, eslint-import-resolver-typescript, madge, eslint) | 최신 버전·peerDependencies·engines 원문 확보 |
 | 조사 | WebFetch | dependency-cruiser `doc/rules-reference.md`·`doc/options-reference.md`·`doc/cli.md`·`README.md`·`doc/faq.md`, GitHub releases | 규칙 조건 전체·옵션명·CLI 플래그·v18 breaking change 확보 |
 | 조사 | WebFetch | jsboundaries.dev (`/docs/installation/`, `/docs/quick-start/`, `/docs/rules/`, `/docs/rules/dependencies/`, `/docs/setup/eslint-integration/`) | v7 룰 구성·deprecated 목록·프리셋·ESLint 9+ 요구 확인 |

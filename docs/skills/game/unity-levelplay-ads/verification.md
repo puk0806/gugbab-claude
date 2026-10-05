@@ -17,7 +17,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `unity-levelplay-ads` |
-| 스킬 경로 | `.claude/skills/game/unity-levelplay-ads/SKILL.md` |
+| 스킬 경로 | `.claude/skills/unity-levelplay-ads/SKILL.md` |
 | 검증일 | 2026-09-28 (재검증, 이전 2026-09-26 / 최초 2026-06-09) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
@@ -44,7 +44,7 @@ status: APPROVED
 |------|------|-----------|-----------|
 | 사전 확인 | Read | VERIFICATION_TEMPLATE.md | 8개 섹션 템플릿 구조 파악 |
 | 사전 확인 | Glob | `.claude/skills/**/unity-levelplay-ads/SKILL.md` | 중복 없음 — 신규 작성 진행 |
-| 사전 확인 | Glob | `.claude/skills/game/**` | 기존 게임 스킬 6종 확인 (unity-6-2d-fundamentals 등) |
+| 사전 확인 | Glob | `.claude/skills/game/**` (평탄화 이전 경로) | 기존 게임 스킬 6종 확인 (unity-6-2d-fundamentals 등) |
 | 조사 | WebSearch | "Unity LevelPlay SDK Unity 6 documentation 2026" | 공식 문서 사이트 + GitHub 확인 |
 | 조사 | WebSearch | "com.unity.services.levelplay package manager latest version" | 최신 버전 9.4.x 확인 |
 | 조사 | WebFetch | docs.unity.com/.../migrate-to-init-api | 신구 API 차이 정확히 파악 (IronSource.Agent → LevelPlay.Init) |

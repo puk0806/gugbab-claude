@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `saju-tarot-data-modeling` |
-| 스킬 경로 | `.claude/skills/architecture/saju-tarot-data-modeling/SKILL.md` |
+| 스킬 경로 | `.claude/skills/saju-tarot-data-modeling/SKILL.md` |
 | 검증일 | 2026-09-28 (최초 2026-09-10 · 09-25 모델ID 현행화 · 09-28 재검증) |
 | 검증자 | skill-creator (Claude Code) |
 | 스킬 버전 | v1.2 |

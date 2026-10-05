@@ -98,13 +98,14 @@ function validate(content) {
 // 날짜 불일치 경고 문자열(없으면 null). 어떤 실패도 저장 흐름을 막지 않는다.
 function dateDriftWarning(verifFile) {
   try {
-    const { checkDateConsistency } = require('./staleness-check.js')
+    const { checkDateConsistency, skillMdFor } = require('./staleness-check.js')
     const norm = path.resolve(verifFile).replace(/\\/g, '/')
     const i = norm.lastIndexOf('/docs/skills/')
     if (i < 0) return null
     const root = norm.slice(0, i)
     const rel = path.posix.dirname(norm.slice(i + '/docs/skills/'.length))
-    const skillMd = path.join(root, '.claude', 'skills', rel, 'SKILL.md')
+    // docs/skills/{category}/{name}/ ↔ .claude/skills/{name}/SKILL.md (1단 — 2026-10-05 평탄화)
+    const skillMd = skillMdFor(path.join(root, '.claude', 'skills'), rel.split('/').join(path.sep))
     const problems = checkDateConsistency(verifFile, skillMd, { allowMissing: true })
     if (problems.length === 0) return null
     return `[verification-guard] ⚠️ 검증일 기록 불일치 (경고만, 저장은 완료됨): ${rel}\n` +

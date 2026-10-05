@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `pwa-push-notifications` |
-| 스킬 경로 | `.claude/skills/frontend/pwa-push-notifications/SKILL.md` |
+| 스킬 경로 | `.claude/skills/pwa-push-notifications/SKILL.md` |
 | 검증일 | 2026-09-28 (재검증, 이전 2026-05-15) |
 | 검증자 | skill-creator (Opus 4.7 1M) |
 | 스킬 버전 | v2 |

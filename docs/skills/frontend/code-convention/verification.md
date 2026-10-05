@@ -33,7 +33,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | code-convention |
-| 스킬 경로 | `.claude/skills/frontend/code-convention/SKILL.md` |
+| 스킬 경로 | `.claude/skills/code-convention/SKILL.md` |
 | 최초 작성일 | 2026-03-27 |
 | 검증일 | 2026-09-28 (재검증(2차)) / 2026-08-26 (v3) / 2026-04-14 (v1) |
 | 검증 방법 | frontend-architect 활용 테스트 (v1) → freshness 재검증(v3) → 재검증(2차) |

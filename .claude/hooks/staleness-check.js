@@ -180,6 +180,16 @@ function checkDateConsistency(verifPath, skillMdPath, opts = {}) {
   return problems;
 }
 
+// 짝 SKILL.md 경로 — 검증 문서는 docs/skills/{category}/{name}/ 이지만 스킬 본체는 Claude Code 가 인식하는
+// 1단 경로 .claude/skills/{name}/SKILL.md 다 (2026-10-05 평탄화: 2단 중첩은 스킬로 등록되지 않았다).
+// rel 이 정확히 {category}/{name} 2단이 아니면(상위 탈출·다른 깊이) 짝 없음(null)으로 본다.
+function skillMdFor(skillsDir, rel) {
+  const parts = rel.split(path.sep);
+  if (parts.length !== 2 || parts.some((p) => !p || p === '.' || p === '..')) return null;
+  const skillMd = path.join(skillsDir, parts[1], 'SKILL.md');
+  return skillMd.startsWith(skillsDir + path.sep) ? skillMd : null;
+}
+
 function scanConsistency(docsDir, skillsDir, opts = {}) {
   const out = [];
   (function walk(dir) {
@@ -190,8 +200,7 @@ function scanConsistency(docsDir, skillsDir, opts = {}) {
       if (e.isDirectory()) walk(full);
       else if (e.name === 'verification.md' && e.isFile()) {
         const rel = path.relative(docsDir, dir);
-        const skillMd = path.join(skillsDir, rel, 'SKILL.md');
-        const problems = checkDateConsistency(full, skillMd.startsWith(skillsDir + path.sep) ? skillMd : null, opts);
+        const problems = checkDateConsistency(full, skillMdFor(skillsDir, rel), opts);
         if (problems.length) out.push({ rel, problems });
       }
     }
@@ -200,7 +209,7 @@ function scanConsistency(docsDir, skillsDir, opts = {}) {
 }
 
 if (!IS_MAIN) {
-  module.exports = { parseDate, resolveDate, collectDateSources, checkDateConsistency, scanConsistency };
+  module.exports = { parseDate, resolveDate, collectDateSources, checkDateConsistency, scanConsistency, skillMdFor };
 }
 
 function scan(dir, results, docsDir, skillsDir) {
@@ -213,9 +222,7 @@ function scan(dir, results, docsDir, skillsDir) {
     } else if (entry.name === 'verification.md' && entry.isFile()) {
       try {
         const rel = path.relative(docsDir, dir);
-        const skillMd = path.join(skillsDir, rel, 'SKILL.md');
-        const inside = !rel.startsWith('..') && !path.isAbsolute(rel) && skillMd.startsWith(skillsDir + path.sep);
-        const t = resolveDate(full, inside ? skillMd : null);
+        const t = resolveDate(full, skillMdFor(skillsDir, rel));
         if (t === null) {
           results.push({ path: full, date: null, days: null });
         } else {

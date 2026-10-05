@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `frontend-domain-structure` |
-| 스킬 경로 | `.claude/skills/architecture/frontend-domain-structure/SKILL.md` |
+| 스킬 경로 | `.claude/skills/frontend-domain-structure/SKILL.md` |
 | 검증일 | 2026-09-26 (30~60일 주기 재검증, 최초 검증 2026-08-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
@@ -25,7 +25,7 @@ status: APPROVED
 ## 1. 작업 목록 (Task List)
 
 - [✅] 검증 템플릿 확인 (`docs/skills/VERIFICATION_TEMPLATE.md` — 8개 섹션 구조 확보)
-- [✅] 중복 스킬 확인 (Glob: `.claude/skills/architecture/*/SKILL.md` → 동명 스킬 없음, 신규 생성 확정)
+- [✅] 중복 스킬 확인 (Glob: `.claude/skills/architecture/*/SKILL.md` — 2026-10-05 평탄화 이전 경로 → 동명 스킬 없음, 신규 생성 확정)
 - [✅] 레포 작성 관례 확인 (`architecture/ddd` SKILL.md Read → frontmatter `user-invocable: false`, `> 소스:` 다중 행, `> 검증일:` 형식, 표 중심 섹션 스타일 채택)
 - [✅] 기존 `architecture/ddd` 스킬과의 범위 분리 (바운디드 컨텍스트·유비쿼터스 언어·서브도메인은 중복 서술하지 않고 상호 참조 포인터로 연결)
 - [✅] 공식 문서 1순위 소스 확인 (FSD 공식 문서 7종, Next.js 공식 문서 2종 + 공식 블로그 1종, Turborepo 공식 문서 2종, Nx 공식 문서 1종, React 공식 FAQ 1종)
@@ -54,8 +54,8 @@ status: APPROVED
 |------|------|-----------|-----------|
 | 템플릿 확인 | Read | `docs/skills/VERIFICATION_TEMPLATE.md` | 8개 섹션(1. 작업 목록 ~ 8. 변경 이력) 구조 확보 |
 | 형식 확인 | Read | `docs/skills/frontend/tanstack-query/verification.md` | frontmatter 키·섹션 번호·교차 검증 판정표(4-5) 서식 채택 |
-| 관례 확인 | Read | `.claude/skills/architecture/ddd/SKILL.md` | frontmatter·소스/검증일 블록·표 스타일 확인, 중복 범위(바운디드 컨텍스트 등) 식별 |
-| 중복 확인 | Glob | `.claude/skills/architecture/*/SKILL.md` | `ddd`, `dream-journal-data-modeling` 2종만 존재 → 신규 생성 확정 |
+| 관례 확인 | Read | `.claude/skills/ddd/SKILL.md` | frontmatter·소스/검증일 블록·표 스타일 확인, 중복 범위(바운디드 컨텍스트 등) 식별 |
+| 중복 확인 | Glob | `.claude/skills/architecture/*/SKILL.md` (평탄화 이전 경로) | `ddd`, `dream-journal-data-modeling` 2종만 존재 → 신규 생성 확정 |
 | 조사 | WebSearch | "Feature-Sliced Design 2.1 official documentation layers slices segments" / "FSD v2.1 pages-first 2024 spec changes" / "FSD v2.1 released November 2024" / "steiger FSD official linter eslint-plugin-boundaries dependency-cruiser" / "Turborepo internal packages one purpose package granularity" / "barrel files index.ts performance tree-shaking optimizePackageImports" / "FSD Next.js app router _pages rename" | 7회 검색. FSD 2.1 릴리즈일(2024-11-13)·pages-first 전환·processes deprecated·배럴 파일 성능 논쟁 소스 확보 |
 | 조사 | WebFetch | FSD 공식: overview / reference-layers / reference-slices-segments / reference-public-api / guides-tech-with-nextjs / guides-examples-types / guides-migration-from-v2-0 / releases·releases-tag-v2.1 / steiger | 9회 페치. 레이어 정의 원문, import 규칙 원문, 세그먼트 표준명, `types` 폴더 금지 문구, `@x` 표기, public API 3원칙, Steiger 규칙 목록 확보 |
 | 조사 | WebFetch | Next.js 공식: `app/getting-started/project-structure` / `config/next-config-js/optimizePackageImports` / Vercel 블로그 `how-we-optimized-package-imports-in-next-js` | 3회 페치. 문서 메타에서 버전 16.3.3·기준일 확인. colocation·private folder·route group 원문, 3가지 조직 전략, 기본 최적화 라이브러리 목록, 배럴 성능 측정치 확보 |

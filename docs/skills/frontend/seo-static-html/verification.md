@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `seo-static-html` |
-| 스킬 경로 | `.claude/skills/frontend/seo-static-html/SKILL.md` |
+| 스킬 경로 | `.claude/skills/seo-static-html/SKILL.md` |
 | 검증일 | 2026-09-28 (최초 2026-06-01, 2026-09-28 재검증) |
 | 검증자 | skill-creator → Claude (Sonnet 5, 2026-09-28 재검증) |
 | 스킬 버전 | v2 |

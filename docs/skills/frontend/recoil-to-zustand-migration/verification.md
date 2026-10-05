@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `recoil-to-zustand-migration` |
-| 스킬 경로 | `.claude/skills/frontend/recoil-to-zustand-migration/SKILL.md` |
+| 스킬 경로 | `.claude/skills/recoil-to-zustand-migration/SKILL.md` |
 | 검증일 | 2026-09-28 (실사용 검증 v1.2, 직전 30~60일 주기 재검증 2026-09-26, 이전 검증 2026-08-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1.1 |
@@ -52,7 +52,7 @@ status: APPROVED
 |------|------|-----------|-----------|
 | 템플릿 확인 | Read | `docs/skills/VERIFICATION_TEMPLATE.md` | 8개 섹션 구조 확보 |
 | 중복 확인 | Glob | `.claude/skills/**/recoil*/SKILL.md` | 결과 없음 → 신규 생성 확정 |
-| 범위 분리 | Read | `.claude/skills/frontend/state-management/SKILL.md` | Zustand 기본 사용법·슬라이스·미들웨어·상태 분류표는 기존 스킬에 존재 → 이 스킬에서 제외하고 포인터로 연결 |
+| 범위 분리 | Read | `.claude/skills/state-management/SKILL.md` | Zustand 기본 사용법·슬라이스·미들웨어·상태 분류표는 기존 스킬에 존재 → 이 스킬에서 제외하고 포인터로 연결 |
 | 형식 정렬 | Read | `docs/skills/frontend/tanstack-query/verification.md` | 섹션 번호·제목·판정표 형식 정렬 |
 | 조사 | WebFetch | Recoil 저장소 루트, `CHANGELOG-recoil.md`(raw), 릴리스 목록, 이슈 #2318·#2324, recoiljs.org 블로그·0.7.6 릴리스 노트, 공식 문서 6종(atomFamily·useRecoilValueLoadable·RecoilRoot·Snapshot·selector·asynchronous-data-queries·atom-effects·useRecoilState) | Recoil 유지보수 사실·API 원문 확보 |
 | 조사 | WebFetch | jotai.org 문서 7종(basics/concepts·basics/comparison·core/atom·core/store·core/use-atom·utils family·utils async·utils resettable·utils storage·extensions/query) + GitHub raw `docs/utilities/storage.mdx` | atom 모델·Recoil 비교 원문·family 규칙·loadable 형태·getOnInit 기본값 확보 |

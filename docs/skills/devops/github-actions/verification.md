@@ -50,7 +50,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `github-actions` |
-| 스킬 경로 | `.claude/skills/devops/github-actions/SKILL.md` |
+| 스킬 경로 | `.claude/skills/github-actions/SKILL.md` |
 | 최초 검증일 | 2026-04-20 |
 | 검증일 | 2026-09-28 (최초 2026-04-20 · 재검증 2026-08-11, 2026-09-28) |
 | 최종 재검증일 | 2026-09-28 (08-11 액션 메이저 버전·checkout v7 보안 기본값 반영 → 09-28 docker/*·aws-actions 메이저 태그 정정) |

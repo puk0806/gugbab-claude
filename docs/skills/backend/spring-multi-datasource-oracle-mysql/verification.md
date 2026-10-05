@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `spring-multi-datasource-oracle-mysql` |
-| 스킬 경로 | `.claude/skills/backend/spring-multi-datasource-oracle-mysql/SKILL.md` |
+| 스킬 경로 | `.claude/skills/spring-multi-datasource-oracle-mysql/SKILL.md` |
 | 검증일 | 2026-04-22 (재검증: 2026-09-26) |
 | 검증자 | skill-creator (Claude Code) |
 | 스킬 버전 | v1 |
@@ -203,7 +203,7 @@ Oracle에 주문 저장하고 MySQL에 로그 남기는데, 한 트랜잭션으�
 
 ## 7. 개선 필요 사항
 
-- [✅] `hikaricp-tuning-oracle-mysql` 스킬 존재 확인 (`.claude/skills/backend/hikaricp-tuning-oracle-mysql/` 생성됨) — 별도 보완 불필요
+- [✅] `hikaricp-tuning-oracle-mysql` 스킬 존재 확인 (`.claude/skills/hikaricp-tuning-oracle-mysql/` 생성됨) — 별도 보완 불필요
 - [⏸️] Testcontainers 예시 추가(Oracle/MySQL 실제 컨테이너) — 범위 확장 선택 사항
 - [⏸️] MyBatis 어노테이션 기반 매퍼(@Mapper + XML 미사용) 예시 — 선택 보강, 차단 요인 아님
 - [✅] 에이전트 활용 테스트 — Oracle Primary 멀티 DataSource + 크로스 DB 트랜잭션 2건 PASS (섹션 5, general-purpose 대체, 2026-04-22)

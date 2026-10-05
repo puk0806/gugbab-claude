@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `spring-boot-gradle-setup` |
-| 스킬 경로 | `.claude/skills/backend/spring-boot-gradle-setup/SKILL.md` |
+| 스킬 경로 | `.claude/skills/spring-boot-gradle-setup/SKILL.md` |
 | 검증일 | 2026-09-28 (재검증 2차, 이전 2026-09-26) |
 | 검증자 | skill-creator agent |
 | 스킬 버전 | v2 |

@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `chat-ui-pattern` |
-| 스킬 경로 | `.claude/skills/frontend/chat-ui-pattern/SKILL.md` |
+| 스킬 경로 | `.claude/skills/chat-ui-pattern/SKILL.md` |
 | 검증일 | 2026-09-28 (최초 2026-05-14, 2026-09-26 병합·정정, 2026-09-28 재검증) |
 | 검증자 | skill-creator → Claude (Sonnet 5, 2026-09-28 재검증) |
 | 스킬 버전 | v6 |
@@ -59,7 +59,7 @@ status: APPROVED
 | W3C WAI — ARIA23 role=log | https://www.w3.org/WAI/WCAG21/Techniques/aria/ARIA23 | ⭐⭐⭐ High | 2026-05-14 | role="log"의 implicit polite·atomic 정의 |
 | HackerOne — Secure Markdown Rendering in React | https://www.hackerone.com/blog/secure-markdown-rendering-react-balancing-flexibility-and-safety | ⭐⭐ Medium | 2026-05-14 | XSS 안전성 교차 검증 보조 |
 | Sara Soueidan — Accessible Notifications with ARIA Live Regions | https://www.sarasoueidan.com/blog/accessible-notifications-with-aria-live-regions-part-1/ | ⭐⭐ Medium | 2026-05-14 | 접근성 패턴 교차 검증 |
-| react-virtuoso 스킬 (내부) | `.claude/skills/frontend/react-virtuoso/SKILL.md` | ⭐⭐⭐ High | 2026-04-20 | 상호 보완 스킬 참조 (2026-09-26 본 스킬로 병합·제거 — 당시 기록) |
+| react-virtuoso 스킬 (내부) | `.claude/skills/react-virtuoso/SKILL.md` | ⭐⭐⭐ High | 2026-04-20 | 상호 보완 스킬 참조 (2026-09-26 본 스킬로 병합·제거 — 당시 기록) |
 
 ---
 
@@ -390,7 +390,7 @@ react-markdown으로 LLM 응답을 렌더링할 때 XSS가 걱정되는데 sanit
 | 2026-05-14 | v1 | 2단계 실사용 테스트 수행 (Q1 스트리밍 토큰 누적+수동 스크롤 감지 / Q2 Markdown XSS 안전성 / Q3 IME Enter 방지) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | skill-tester |
 | 2026-06-19 | v1 | 카테고리 재분류 수행 (실사용 필수 → 라이브러리 사용법 스킬 재분류) + 재검토 3/3 PASS → APPROVED 전환. 섹션 5 기록 추가, frontmatter status 갱신 | skill-tester |
 | 2026-06-20 | v1 | 3차 테스트 수행 (Q1 함수형 업데이트+AbortError 구분 / Q2 Markdown 재파싱 문제+XSS 안전성 / Q3 자동 스크롤 임계값 로직+컨테이너 실수) → 3/3 PASS, APPROVED 유지. 섹션 5·6·7·8 전체 동기화 완료 | skill-tester |
-| 2026-09-26 | v2 | **병합**: 구 `frontend/react-virtuoso` 스킬 제거(스킬 트리아지 MERGE 판정 — 타깃 사용 2파일, 채팅 사용법은 이미 본 스킬에 존재)하면서 chat-ui에 없던 virtuoso 고유분만 이관. SKILL.md 3절에 "가상화 무효 실수 3가지"(높이 미지정·List forwardRef·endReached 가드), references/REFERENCE.md 16절(컴포넌트 5종 선택표, fixedItemHeight·defaultItemHeight·heightEstimates v4.16+·minOverscanItemCount v4.17+·scrollSeek·increaseViewportBy·useWindowScroll, scrollToIndex align, react-virtuoso vs TanStack Virtual vs react-window 비교, v4.18.2 LogLevel 브레이킹). 출처: https://virtuoso.dev/react-virtuoso/ , https://github.com/petyosi/react-virtuoso (구 react-virtuoso verification.md: v4.18.5·5개 컴포넌트·followOutput·fixedItemHeight·VirtuosoGrid 고정 크기·List forwardRef VERIFIED, react-window 유지보수 중단 클레임 DISPUTED→수정, 검증일 2026-04-20, APPROVED). 3절 참조 섹션의 `.claude/skills/frontend/react-virtuoso/SKILL.md` 행은 제거된 스킬의 과거 기록. status APPROVED → PENDING_TEST | 메인 대화 (스킬 정리) |
+| 2026-09-26 | v2 | **병합**: 구 `frontend/react-virtuoso` 스킬 제거(스킬 트리아지 MERGE 판정 — 타깃 사용 2파일, 채팅 사용법은 이미 본 스킬에 존재)하면서 chat-ui에 없던 virtuoso 고유분만 이관. SKILL.md 3절에 "가상화 무효 실수 3가지"(높이 미지정·List forwardRef·endReached 가드), references/REFERENCE.md 16절(컴포넌트 5종 선택표, fixedItemHeight·defaultItemHeight·heightEstimates v4.16+·minOverscanItemCount v4.17+·scrollSeek·increaseViewportBy·useWindowScroll, scrollToIndex align, react-virtuoso vs TanStack Virtual vs react-window 비교, v4.18.2 LogLevel 브레이킹). 출처: https://virtuoso.dev/react-virtuoso/ , https://github.com/petyosi/react-virtuoso (구 react-virtuoso verification.md: v4.18.5·5개 컴포넌트·followOutput·fixedItemHeight·VirtuosoGrid 고정 크기·List forwardRef VERIFIED, react-window 유지보수 중단 클레임 DISPUTED→수정, 검증일 2026-04-20, APPROVED). 3절 참조 섹션의 `.claude/skills/react-virtuoso/SKILL.md` 행은 제거된 스킬의 과거 기록. status APPROVED → PENDING_TEST | 메인 대화 (스킬 정리) |
 | 2026-09-26 | v3 | 2단계 실사용 테스트 재수행 (Q1 SSE 스트리밍 stale state+AbortError 구분 / Q2 병합 반영분 — react-virtuoso 무한 스크롤 중복 요청·role/aria-live 미반영·fixedItemHeight / Q3 가상 스크롤 라이브러리 선택 기준+LogLevel 브레이킹 체인지) → 3/3 PASS, PENDING_TEST → APPROVED 전환. Q2 과정에서 `endReached`/`startReached` 방향성 확인 필요 항목 발견 — SKILL.md는 수정하지 않고 보고만 함(다른 작업자 frontend 참조 정리 중) | skill-tester |
 | 2026-09-26 | v4 | Q2에서 발견된 `endReached`/`startReached` 방향성 이슈 정정: virtuoso.dev `VirtuosoProps` 공식 레퍼런스 + GitHub discussions #1032 교차 검증 후 SKILL.md 3절(코드·표·주의 문단)과 REFERENCE.md 16-3·16-5를 `startReached` + `firstItemIndex` 감소 패턴으로 수정, `VirtuosoMessageList`(상용 라이선스) 구분 각주 추가. status APPROVED → PENDING_TEST (재테스트 필요) | 메인 대화 (정정 작업) |
 | 2026-09-26 | v5 | 2단계 실사용 테스트 재수행 (Q1 정정된 `startReached`/`firstItemIndex` 패턴 겨냥 / Q2 SSE 스트리밍 AbortController 중단 구분 / Q3 `VirtuosoMessageList` 상용 라이선스 판단) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |

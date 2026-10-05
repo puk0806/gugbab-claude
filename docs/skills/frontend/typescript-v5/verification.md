@@ -11,7 +11,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | typescript-v5 |
-| 스킬 경로 | .claude/skills/frontend/typescript-v5/SKILL.md |
+| 스킬 경로 | .claude/skills/typescript-v5/SKILL.md |
 | 검증일 | 2026-09-28 (NEEDS_REVISION 보강) / 2026-09-28 (재검증(2차)) / 2026-08-11 (v2) / 2026-04-20 (v1 최초) |
 | 검증자 | skill-creator (v1·v2) → 재검증(2차) → NEEDS_REVISION 보강 |
 | 스킬 버전 | v4 |

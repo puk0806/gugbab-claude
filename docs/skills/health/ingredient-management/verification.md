@@ -32,7 +32,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `ingredient-management` |
-| 스킬 경로 | `.claude/skills/health/ingredient-management/SKILL.md` |
+| 스킬 경로 | `.claude/skills/ingredient-management/SKILL.md` |
 | 검증일 | 2026-09-28 (최초 2026-06-26, 재검증·보강 2026-09-26, 출처 검증 마감 2026-09-28) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
@@ -66,7 +66,7 @@ status: APPROVED
 |--------|-----|--------|------|------|
 | 유통기한 언제지 (App Store) | https://apps.apple.com/kr/app/id1522650178 | ⭐⭐ Medium | 2026-06-26 | 도메인 분석용 |
 | 원더 프리지 (Google Play) | https://play.google.com/store/apps/details?id=com.meolly.fridge | ⭐⭐ Medium | 2026-06-26 | 도메인 분석용 |
-| indexeddb-dexie 스킬 | `.claude/skills/frontend/indexeddb-dexie/SKILL.md` | ⭐⭐⭐ High | 2026-06-26 | 내부 스킬 기반 |
+| indexeddb-dexie 스킬 | `.claude/skills/indexeddb-dexie/SKILL.md` | ⭐⭐⭐ High | 2026-06-26 | 내부 스킬 기반 |
 
 ---
 

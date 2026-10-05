@@ -50,7 +50,7 @@ Spring Boot 3로 올릴 때 **의존 라이브러리·도구도 함께 교체**�
 - `oauth2ResourceServer(...)` 설정도 람다 DSL 필수
 - jjwt 0.10.x → 0.12.x (API 완전 재작성, `parserBuilder` 제거)
 
-> 상세(해당 템플릿이 설치된 경우): `.claude/skills/backend/spring-security-5-jwt-jjwt10/SKILL.md` (레거시) / `spring-security-6-jwt-jjwt12/SKILL.md` (모던)
+> 상세(해당 템플릿이 설치된 경우): `.claude/skills/spring-security-5-jwt-jjwt10/SKILL.md` (레거시) / `spring-security-6-jwt-jjwt12/SKILL.md` (모던)
 
 #### API 문서화: Springfox → Springdoc OpenAPI
 
@@ -82,7 +82,7 @@ Spring Boot 3부터 **Sleuth는 삭제됨** (Sleuth GitHub Issue #2239). Microme
 | 전파 포맷 | B3 (기본) | W3C Trace Context (기본) |
 | MDC 키 | `traceId`, `spanId` (동일) | **`traceId`, `spanId` (변경 없음)** → 로그 패턴 유지 가능 |
 
-> 상세: `.claude/skills/backend/logback-mdc-tracing/SKILL.md` (Sleuth·Micrometer Tracing 양쪽 분기 커버)
+> 상세: `.claude/skills/logback-mdc-tracing/SKILL.md` (Sleuth·Micrometer Tracing 양쪽 분기 커버)
 
 > 주의: 마이그레이션 중에 **B3 포맷 서비스와 W3C 포맷 서비스가 공존**하면 traceId가 이어지지 않는다. 전파 포맷을 맞추거나 동시에 전환해야 함.
 

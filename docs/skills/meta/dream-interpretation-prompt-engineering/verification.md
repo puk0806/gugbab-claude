@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `dream-interpretation-prompt-engineering` |
-| 스킬 경로 | `.claude/skills/meta/dream-interpretation-prompt-engineering/SKILL.md` |
+| 스킬 경로 | `.claude/skills/dream-interpretation-prompt-engineering/SKILL.md` |
 | 검증일 | 2026-09-28 (최초 2026-05-14, 이전 2026-08-12) |
 | 검증자 | skill-creator (최초) / 모델 ID 정기 감사 (2026-08-11) / 재검증 2차 (2026-09-28) / skill-tester 재테스트 (2026-09-28) |
 | 스킬 버전 | v1.4 |

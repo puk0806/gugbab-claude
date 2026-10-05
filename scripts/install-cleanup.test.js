@@ -573,11 +573,12 @@ console.log('\n[악성 방어] 폐기 스킬 디렉토리는 한 단위 — SKIL
   const mk = (skillBody, refBody, extra = {}) => {
     const src = makeSource(tmp('src'))
     const tgt = makeTarget(tmp('tgt'))
-    const d = path.join(tgt, '.claude', 'skills', 'backend', 'retired skill')   // 공백 경로
+    // 1단 스킬 폴더(2026-10-05 평탄화) — references 3세그먼트를 구 2단으로 오인하지 않는지도 함께 검증
+    const d = path.join(tgt, '.claude', 'skills', 'retired skill')   // 공백 경로
     fs.mkdirSync(path.join(d, 'references'), { recursive: true })
     fs.writeFileSync(path.join(d, 'SKILL.md'), skillBody)
     fs.writeFileSync(path.join(d, 'references', 'REF.md'), refBody)
-    const S = 'backend/retired skill/SKILL.md', R = 'backend/retired skill/references/REF.md'
+    const S = 'retired skill/SKILL.md', R = 'retired skill/references/REF.md'
     fs.writeFileSync(path.join(tgt, '.claude', '.install-manifest.json'), JSON.stringify({
       version: 1, agents: [], skills: [S, R, ...(extra.skills || [])], memoryManaged: true,
       hashes: { skills: { [S]: sha256('# s\n'), [R]: sha256('# r\n'), ...(extra.hashes || {}) } },
@@ -605,7 +606,7 @@ console.log('\n[악성 방어] 폐기 스킬 디렉토리는 한 단위 — SKIL
   {
     // 소스에 SKILL.md 가 살아 있는 스킬에서 references 한 개만 폐기된 경우 — 단위 차단 없이 파일 단위 정리
     const { src, tgt, d } = mk('# s\n', '# r\n')
-    const srcD = path.join(src, '.claude', 'skills', 'backend', 'retired skill')
+    const srcD = path.join(src, '.claude', 'skills', 'retired skill')
     fs.mkdirSync(srcD, { recursive: true })
     fs.writeFileSync(path.join(srcD, 'SKILL.md'), '# s\n')
     run(tgt, src, tmp('glo'))
@@ -1105,14 +1106,15 @@ console.log('\n[경계] memory 마이그레이션 실패 → 잔재 보존으로
 console.log('\n[경계] 소스에 없는 스킬·에이전트 → 삭제하지 않고 경고만 (템플릿 축소 잔재 감지)')
 {
   const src = makeSource(tmp('src'))
-  fs.mkdirSync(path.join(src, '.claude/skills/frontend/kept-skill'), { recursive: true })
-  fs.writeFileSync(path.join(src, '.claude/skills/frontend/kept-skill/SKILL.md'), '# kept\n')
+  // 스킬은 1단 .claude/skills/<name>/ (2026-10-05 평탄화)
+  fs.mkdirSync(path.join(src, '.claude/skills/kept-skill'), { recursive: true })
+  fs.writeFileSync(path.join(src, '.claude/skills/kept-skill/SKILL.md'), '# kept\n')
   fs.mkdirSync(path.join(src, '.claude/agents/meta'), { recursive: true })
   fs.writeFileSync(path.join(src, '.claude/agents/meta/kept-agent.md'), '# kept\n')
 
   const tgt = makeTarget(tmp('tgt'))
-  fs.mkdirSync(path.join(tgt, '.claude/skills/frontend/kept-skill'), { recursive: true })
-  fs.writeFileSync(path.join(tgt, '.claude/skills/frontend/kept-skill/SKILL.md'), '# kept\n')
+  fs.mkdirSync(path.join(tgt, '.claude/skills/kept-skill'), { recursive: true })
+  fs.writeFileSync(path.join(tgt, '.claude/skills/kept-skill/SKILL.md'), '# kept\n')
   fs.mkdirSync(path.join(tgt, '.claude/skills/backend/orphan-skill'), { recursive: true })
   fs.writeFileSync(path.join(tgt, '.claude/skills/backend/orphan-skill/SKILL.md'), '# orphan\n')
   fs.mkdirSync(path.join(tgt, '.claude/agents/meta'), { recursive: true })
@@ -1347,7 +1349,8 @@ console.log('\n[경계] 본체가 이미 없는 고아 docs — 소스에도 없
     // 레포에 스킬·에이전트가 살아 있으면(현행 단위) 설치본에 본체가 없어도 docs 를 건드리지 않는다
     const { src, tgt, f } = mkRetiredPair()
     for (const k of ['skill', 'sref', 'agent']) fs.unlinkSync(f[k])
-    for (const [rel, body] of [['.claude/skills/backend/old skill/SKILL.md', '# s\n'], ['.claude/agents/meta/old-agent.md', '# a\n']]) {
+    // 레포(소스)의 스킬 본체는 1단 .claude/skills/<name>/ (2026-10-05 평탄화) — 설치본 쪽은 구 2단 잔재 단위
+    for (const [rel, body] of [['.claude/skills/old skill/SKILL.md', '# s\n'], ['.claude/agents/meta/old-agent.md', '# a\n']]) {
       fs.mkdirSync(path.dirname(path.join(src, rel)), { recursive: true })
       fs.writeFileSync(path.join(src, rel), body)
     }
@@ -1450,6 +1453,45 @@ console.log('\n[악성 방어] 경로 조작·symlink docs — 대상 밖은 절
     const userEmpty = path.join(tgt, 'docs', 'my-empty'); fs.mkdirSync(userEmpty)
     run(tgt, src, tmp('glo'))
     assert('무관한 빈 docs 폴더 보존', fs.existsSync(userEmpty), true)
+  }
+}
+
+console.log('\n[정상·악성] 공용 docs(docs/hooks/**) 폐기 문서 — 매니페스트 해시 증명 시에만 삭제 (2026-10-05)')
+{
+  const mk = ({ edit = false, record = true } = {}) => {
+    const src = makeSource(tmp('src'))
+    fs.mkdirSync(path.join(src, 'docs', 'hooks'), { recursive: true })
+    fs.writeFileSync(path.join(src, 'docs', 'hooks', 'README.md'), '# hooks\n')
+    const tgt = makeTarget(tmp('tgt'))
+    fs.mkdirSync(path.join(tgt, 'docs', 'hooks'), { recursive: true })
+    fs.writeFileSync(path.join(tgt, 'docs', 'hooks', 'README.md'), '# hooks\n')
+    fs.writeFileSync(path.join(tgt, 'docs', 'hooks', 'retired-hook.md'), '# old\n')
+    fs.writeFileSync(path.join(tgt, 'docs', 'hooks', 'team-notes.md'), '# 팀 메모\n')
+    const docs = ['hooks/README.md', ...(record ? ['hooks/retired-hook.md'] : [])]
+    fs.writeFileSync(path.join(tgt, '.claude', '.install-manifest.json'), JSON.stringify({
+      version: 1, agents: [], skills: [], docs, memoryManaged: true,
+      hashes: { docs: Object.fromEntries(docs.map((d) => [d, sha256(d === 'hooks/README.md' ? '# hooks\n' : '# old\n')])) },
+    }))
+    if (edit) fs.appendFileSync(path.join(tgt, 'docs', 'hooks', 'retired-hook.md'), '로컬 수정\n')
+    return { src, tgt }
+  }
+  {
+    const { src, tgt } = mk()
+    const { code } = run(tgt, src, tmp('glo'))
+    assert('exit 0', code, 0)
+    assert('레포에서 폐기 + 해시 일치 → 삭제', fs.existsSync(path.join(tgt, 'docs/hooks/retired-hook.md')), false)
+    assert('레포 현행 문서 보존', fs.existsSync(path.join(tgt, 'docs/hooks/README.md')), true)
+    assert('매니페스트 밖 팀 문서 보존', fs.existsSync(path.join(tgt, 'docs/hooks/team-notes.md')), true)
+  }
+  {
+    const { src, tgt } = mk({ edit: true })
+    const { out } = run(tgt, src, tmp('glo'))
+    assert('로컬 수정본 → 보존 + 경고', fs.existsSync(path.join(tgt, 'docs/hooks/retired-hook.md')) && /로컬 수정본/.test(out), true)
+  }
+  {
+    const { src, tgt } = mk({ record: false })
+    run(tgt, src, tmp('glo'))
+    assert('매니페스트 미기록 → 보존 (증명 불가)', fs.existsSync(path.join(tgt, 'docs/hooks/retired-hook.md')), true)
   }
 }
 

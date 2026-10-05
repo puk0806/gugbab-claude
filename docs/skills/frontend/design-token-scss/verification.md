@@ -35,7 +35,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | design-token-scss |
-| 스킬 경로 | .claude/skills/frontend/design-token-scss/SKILL.md |
+| 스킬 경로 | .claude/skills/design-token-scss/SKILL.md |
 | 최초 작성일 | 2026-04-17 |
 | 검증일 | 2026-09-26 (재검증) |
 | 검증 방법 | WebSearch 교차 검증 (메인 대화 오케스트레이션) |

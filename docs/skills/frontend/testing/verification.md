@@ -33,7 +33,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | testing |
-| 스킬 경로 | `.claude/skills/frontend/testing/SKILL.md` |
+| 스킬 경로 | `.claude/skills/testing/SKILL.md` |
 | 최초 작성일 | 2026-04-01 |
 | 검증일 | 2026-09-28 (재검증, 이전 2026-08-26) |
 | 검증 방법 | frontend-architect 활용 테스트 + 2026-09-28 재검증(2차, 1차 소스 대조) |

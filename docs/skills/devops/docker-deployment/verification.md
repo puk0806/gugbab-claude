@@ -50,7 +50,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `docker-deployment` |
-| 스킬 경로 | `.claude/skills/devops/docker-deployment/SKILL.md` |
+| 스킬 경로 | `.claude/skills/docker-deployment/SKILL.md` |
 | 검증일 | 2026-09-28 (최초 검증 2026-04-20) |
 | 검증자 | Claude (Opus 4.6) / 재검증: Claude (Sonnet 5) |
 | 스킬 버전 | v1 |

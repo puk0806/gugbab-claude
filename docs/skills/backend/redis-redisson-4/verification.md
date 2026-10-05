@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `redis-redisson-4` |
-| 스킬 경로 | `.claude/skills/backend/redis-redisson-4/SKILL.md` |
+| 스킬 경로 | `.claude/skills/redis-redisson-4/SKILL.md` |
 | 검증일 | 2026-09-26 (30~60일 주기 재검증, 최초 검증 2026-08-11) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
@@ -46,7 +46,7 @@ status: APPROVED
 | 단계 | 도구 | 입력 요약 | 출력 요약 |
 |------|------|-----------|-----------|
 | 사전 확인 | Read | `docs/skills/VERIFICATION_TEMPLATE.md` | 8개 섹션 템플릿 구조 확보 |
-| 사전 확인 | Glob | `.claude/skills/backend/redis-redisson*/SKILL.md` | 기존 2종 확인, `redis-redisson-4` 중복 없음 |
+| 사전 확인 | Glob | `.claude/skills/redis-redisson*/SKILL.md` | 기존 2종 확인, `redis-redisson-4` 중복 없음 |
 | 사전 확인 | Read | `redis-redisson-modern/SKILL.md`, `redis-redisson-legacy/SKILL.md` | 톤·구조·중복 회피 기준 확보. modern 스킬이 "4.x는 별도 스킬로 분리" 명시한 것 확인 |
 | 조사 | WebSearch | "Redisson 4.0 release notes breaking changes migration from 3.x" | 4.0.0 breaking change 1차 목록 수집 |
 | 조사 | WebSearch | "Redisson 4.4.0 release May 2026" | 4.4.0 = 2026-05-12 확인 |

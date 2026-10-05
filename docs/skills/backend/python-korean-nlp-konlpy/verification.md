@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `python-korean-nlp-konlpy` |
-| 스킬 경로 | `.claude/skills/backend/python-korean-nlp-konlpy/SKILL.md` |
+| 스킬 경로 | `.claude/skills/python-korean-nlp-konlpy/SKILL.md` |
 | 검증일 | 2026-09-26 (최초 2026-05-15) |
 | 검증자 | skill-creator (Opus 4.7) → 2026-09-26 재검증: 메인 오케스트레이션 (Claude Sonnet 5) |
 | 스킬 버전 | v1 |

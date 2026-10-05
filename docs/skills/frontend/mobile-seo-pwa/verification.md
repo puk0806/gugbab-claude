@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `mobile-seo-pwa` |
-| 스킬 경로 | `.claude/skills/frontend/mobile-seo-pwa/SKILL.md` |
+| 스킬 경로 | `.claude/skills/mobile-seo-pwa/SKILL.md` |
 | 검증일 | 2026-09-28 (최초 2026-06-02) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v2.1 |
@@ -188,7 +188,7 @@ status: APPROVED
 **Q3. m./www. 분리 구조를 반응형(단일 URL)으로 통합할 때 작업 순서는?**
 - ✅ PASS (질문 자체에 대한 답은 정확 — 심화 실행 절차는 의도적으로 타 스킬에 위임된 범위)
 - 근거: SKILL.md "1-4절" 마지막 불릿(99줄) — "통합 시 m. → www. **301** + alternate 제거 순서로 진행"
-- 상세: "① m.→www. 301 리다이렉트 ② alternate 태그 제거" 순서를 정확히 답변. 에이전트가 자체적으로 "실행 세부(리다이렉트 롤아웃, GSC 속성 정리, 사이트맵 갱신 시점)는 `frontend/url-canonicalization-redirects` 스킬로 위임되어 이 파일만으로는 완결 안 됨"이라고 지적했으나, 이는 SKILL.md 0절이 명시한 의도된 역할 분리(스킬 간 책임 경계)이며 실제 질문("순서")에는 SKILL.md 근거로 정확히 답변함. 참조 스킬 `.claude/skills/frontend/url-canonicalization-redirects/SKILL.md` 실존 확인 완료
+- 상세: "① m.→www. 301 리다이렉트 ② alternate 태그 제거" 순서를 정확히 답변. 에이전트가 자체적으로 "실행 세부(리다이렉트 롤아웃, GSC 속성 정리, 사이트맵 갱신 시점)는 `frontend/url-canonicalization-redirects` 스킬로 위임되어 이 파일만으로는 완결 안 됨"이라고 지적했으나, 이는 SKILL.md 0절이 명시한 의도된 역할 분리(스킬 간 책임 경계)이며 실제 질문("순서")에는 SKILL.md 근거로 정확히 답변함. 참조 스킬 `.claude/skills/url-canonicalization-redirects/SKILL.md` 실존 확인 완료
 
 ### 발견된 gap
 

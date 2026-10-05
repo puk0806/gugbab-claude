@@ -17,7 +17,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `content-eeat-quality` |
-| 스킬 경로 | `.claude/skills/writing/content-eeat-quality/SKILL.md` |
+| 스킬 경로 | `.claude/skills/content-eeat-quality/SKILL.md` |
 | 검증일 | 2026-09-26 |
 | 검증자 | skill-creator / 2026-09-26 재검증: 메인 세션 (QRG 전문 PDF·Google Search Central 원문 직접 대조) |
 | 스킬 버전 | v2 |

@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `web-speech-api-stt` |
-| 스킬 경로 | `.claude/skills/frontend/web-speech-api-stt/SKILL.md` |
+| 스킬 경로 | `.claude/skills/web-speech-api-stt/SKILL.md` |
 | 검증일 | 2026-09-28 (최초 2026-05-14, 2026-09-26 TTS 병합) |
 | 검증자 | skill-creator → Claude (Sonnet 5, 2026-09-28 재검증) |
 | 스킬 버전 | v3 |
@@ -40,8 +40,8 @@ status: APPROVED
 | 단계 | 도구 | 입력 요약 | 출력 요약 |
 |------|------|-----------|-----------|
 | 템플릿 확인 | Read | `docs/skills/VERIFICATION_TEMPLATE.md` | 8개 섹션 구조 확인 |
-| 기존 스킬 확인 | Glob | `.claude/skills/frontend/web-speech-api-*/SKILL.md` | TTS 스킬 1건 발견 → 차별성 섹션 추가 결정 |
-| TTS 스킬 참조 | Read | `.claude/skills/frontend/web-speech-api-tts/SKILL.md` | 톤·구조 일관성 확보 (TTS 스킬은 2026-09-26 본 스킬 14절로 병합·제거 — 당시 기록) |
+| 기존 스킬 확인 | Glob | `.claude/skills/web-speech-api-*/SKILL.md` | TTS 스킬 1건 발견 → 차별성 섹션 추가 결정 |
+| TTS 스킬 참조 | Read | `.claude/skills/web-speech-api-tts/SKILL.md` | 톤·구조 일관성 확보 (TTS 스킬은 2026-09-26 본 스킬 14절로 병합·제거 — 당시 기록) |
 | 조사 | WebFetch | MDN SpeechRecognition 페이지 | 인터페이스 속성·메서드·이벤트 10종 확인 |
 | 조사 | WebFetch | MDN SpeechRecognitionResult | isFinal·length·item() 구조 확인 |
 | 조사 | WebFetch | MDN error_event | 8개 에러 코드 정리 |

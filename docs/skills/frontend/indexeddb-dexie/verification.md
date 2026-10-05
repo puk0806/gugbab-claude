@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `indexeddb-dexie` |
-| 스킬 경로 | `.claude/skills/frontend/indexeddb-dexie/SKILL.md` |
+| 스킬 경로 | `.claude/skills/indexeddb-dexie/SKILL.md` |
 | 검증일 | 2026-09-26 (재검증, 최초 2026-05-07) |
 | 검증자 | Claude (Opus 4.7) |
 | 스킬 버전 | v1 |
@@ -44,7 +44,7 @@ status: APPROVED
 | 조사 2 | WebSearch | "dexie-react-hooks useLiveQuery latest version" | dexie-react-hooks 4.2.0 latest, 4.2.1-beta.1 useSuspendingLiveQuery 실험 |
 | 조사 3 | WebFetch | https://dexie.org/docs/Tutorial/React | useLiveQuery 패턴, schema singleton, binary range tree 변경 감지, multi-window sync |
 | 조사 4 | WebSearch | "Dexie compound index '[level+nextDue]' syntax migration upgrade callback" | 복합 인덱스 [a+b] 표기, where('[a+b]').equals([v1,v2]) 쿼리, .upgrade(trans => modify) 마이그레이션 |
-| 작성 | Write | .claude/skills/frontend/indexeddb-dexie/SKILL.md | 11개 섹션 + 9가지 흔한 실수 + 호환성 매트릭스 |
+| 작성 | Write | .claude/skills/indexeddb-dexie/SKILL.md | 11개 섹션 + 9가지 흔한 실수 + 호환성 매트릭스 |
 
 ---
 

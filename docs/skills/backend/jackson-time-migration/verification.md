@@ -17,7 +17,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `jackson-time-migration` |
-| 스킬 경로 | `.claude/skills/backend/jackson-time-migration/SKILL.md` |
+| 스킬 경로 | `.claude/skills/jackson-time-migration/SKILL.md` |
 | 검증일 | 2026-04-22 (재검증: 2026-09-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |

@@ -15,7 +15,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `palm-photo-capture-vision` |
-| 스킬 경로 | `.claude/skills/frontend/palm-photo-capture-vision/SKILL.md` |
+| 스킬 경로 | `.claude/skills/palm-photo-capture-vision/SKILL.md` |
 | 검증일 | 2026-09-28 (재검증, 이전 2026-09-10) |
 | 검증자 | skill-creator (Claude Code) |
 | 스킬 버전 | v2 |
@@ -54,7 +54,7 @@ status: APPROVED
 | 사전 확인 | Read | `docs/skills/VERIFICATION_TEMPLATE.md` | 8개 섹션 템플릿 구조 확보 |
 | 사전 확인 | Glob | `.claude/skills/**/palm-photo-capture-vision/SKILL.md` | 결과 없음 → 신규 생성 확정 (중복 없음) |
 | 사전 확인 | Glob | `.claude/skills/**/{dream-app-onboarding,palmistry-limitations}/SKILL.md` | 작성 시점엔 `dream-app-onboarding`만 존재 → SKILL.md에 "미존재 시 대응" 주석 명시. 2026-09-11 `palmistry-limitations` 존재 확인, 함께 참조했던 운세 콘텐츠 윤리 스킬은 삭제돼 참조 제거 |
-| 사전 확인 | Read | `.claude/skills/frontend/dream-app-onboarding/SKILL.md` (1~60행) | 맥락적 권한 요청 패턴·짝 스킬 표기 관례 확인, 중복 서술 회피 |
+| 사전 확인 | Read | `.claude/skills/dream-app-onboarding/SKILL.md` (1~60행) | 맥락적 권한 요청 패턴·짝 스킬 표기 관례 확인, 중복 서술 회피 |
 | 사전 확인 | Grep | `^user-invocable:` 등 frontmatter 관례 | 레포 내 `user-invocable: false` 선례 4건 확인 (education·architecture·research) |
 | 조사 | WebFetch | `docs.claude.com/en/docs/build-with-claude/vision` | 302 리다이렉트 → `platform.claude.com` 정규 경로 확인 |
 | 조사 | WebFetch | `platform.claude.com/docs/en/build-with-claude/vision` | 포맷 4종, 10MB/5MB, 8000px, 100·600장, 28×28 패치, 티어 표, 한계 목록, 보관 FAQ 전문 확보 |
@@ -76,7 +76,7 @@ status: APPROVED
 | 교차 검증 | WebSearch | "개인정보보호위원회 생체정보 보호 가이드라인 원본정보 특징정보" | 특징정보만 민감정보라는 해석을 두 번째 소스로 확인 → VERIFIED |
 | 교차 검증 | WebSearch | "palmistry pseudoscience Britannica" | 과학적 근거 부재 서술 확인 → VERIFIED |
 | 교차 검증 | WebSearch | "input capture attribute ignored desktop" | 데스크톱에서 일반 파일 선택기로 폴백됨 확인 → VERIFIED |
-| 작성 | Write | SKILL.md (10개 섹션) | `.claude/skills/frontend/palm-photo-capture-vision/SKILL.md` 생성 |
+| 작성 | Write | SKILL.md (10개 섹션) | `.claude/skills/palm-photo-capture-vision/SKILL.md` 생성 |
 | 작성 | Write | verification.md | `docs/skills/frontend/palm-photo-capture-vision/verification.md` 생성 |
 
 **총 도구 사용**: WebFetch 11회 / WebSearch 9회 / Read 2회 / Glob 3회 / Grep 1회 / Write 2회

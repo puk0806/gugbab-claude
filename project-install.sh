@@ -157,14 +157,20 @@ is_leakscope_only_selected() {
 # SKILL.md만이 아니라 스킬 폴더 아래 전체 파일(references/ 등)을 큐잉한다
 # (2026-08-31 Codex R2: references 복사 도입 후 SKILL.md만 prune하면 부속 파일이 영구 잔존).
 # 삭제 자체는 prune-option-excluded.js가 파일별 매니페스트 해시 증명으로만 수행한다.
+# 2026-10-05 평탄화: _rel·_prefix 는 템플릿 판정용 논리 경로({cat}/{name})이고, 설치본의 실제 스킬 폴더는
+# 1단 .claude/skills/{name}/ 다. 평탄화 이전 설치본의 2단 폴더 .claude/skills/{cat}/{name}/ 도 함께 기록해
+# 템플릿 축소 재설치가 구 레이아웃에서도 수렴하게 한다 (삭제는 여전히 매니페스트 해시 증명 하에서만).
 record_excluded_skill() {
-  local _rel="$1" _prefix="$2"
-  if [ -d "$TARGET/.claude/skills/$_prefix" ]; then
-    ( cd "$TARGET/.claude/skills" && find "$_prefix" -type f 2>/dev/null ) | \
-      sed 's/^/skills|/' >> "$OPTION_EXCLUDED_TMP"
-  else
-    echo "skills|$_rel" >> "$OPTION_EXCLUDED_TMP"
-  fi
+  local _rel="$1" _prefix="$2" _name _found=false _dir
+  _name="${_prefix##*/}"
+  for _dir in "$_name" "$_prefix"; do
+    if [ -d "$TARGET/.claude/skills/$_dir" ]; then
+      ( cd "$TARGET/.claude/skills" && find "$_dir" -type f 2>/dev/null ) | \
+        sed 's/^/skills|/' >> "$OPTION_EXCLUDED_TMP"
+      _found=true
+    fi
+  done
+  [ "$_found" = true ] || echo "skills|$_name/SKILL.md" >> "$OPTION_EXCLUDED_TMP"
   if [ -d "$TARGET/docs/skills/$_prefix" ]; then
     ( cd "$TARGET/docs" && find "skills/$_prefix" -type f 2>/dev/null ) | \
       sed 's/^/docs|/' >> "$OPTION_EXCLUDED_TMP"
@@ -1535,10 +1541,27 @@ should_include_skill() {
   return 1
 }
 
-for src_path in "$REPO_DIR/.claude/skills"/*/*/SKILL.md; do
+# 스킬 카테고리 — 스킬 본체는 Claude Code 가 인식하는 1단 경로 .claude/skills/{name}/SKILL.md 에 있고
+# (2026-10-05 평탄화: 2단 {cat}/{name} 중첩은 스킬로 등록되지 않았다), 카테고리는 짝 검증 문서 위치
+# docs/skills/{cat}/{name}/ 가 단일 원천이다. 템플릿 필터는 계속 논리 경로 {cat}/{name} 으로 판정한다.
+skill_category() {
+  local _name="$1" _d
+  for _d in "$REPO_DIR/docs/skills"/*/"$_name"; do
+    [ -d "$_d" ] && { basename "$(dirname "$_d")"; return 0; }
+  done
+  return 1
+}
+
+for src_path in "$REPO_DIR/.claude/skills"/*/SKILL.md; do
   [ -f "$src_path" ] || continue
-  rel="${src_path#$REPO_DIR/.claude/skills/}"
-  skill_prefix="${rel%/SKILL.md}"   # backend/foo
+  skill_name="$(basename "$(dirname "$src_path")")"
+  if ! skill_cat="$(skill_category "$skill_name")"; then
+    echo "  ⚠ .claude/skills/$skill_name — docs/skills/<카테고리>/$skill_name/ 가 없어 카테고리를 알 수 없음, 건너뜀"
+    continue
+  fi
+  rel="$skill_cat/$skill_name/SKILL.md"   # 논리 경로 (템플릿 판정용)
+  skill_prefix="$skill_cat/$skill_name"   # backend/foo
+  phys_rel="$skill_name/SKILL.md"         # 설치본 실제 경로 (.claude/skills 기준)
 
   if ! should_include_skill "$rel" "$skill_prefix"; then
     # 이번 템플릿 범위인데 옵션(SEO n)·전용 스킬 누출 차단으로 빠진 것은 재설치 정리 목록에 기록
@@ -1582,14 +1605,14 @@ for src_path in "$REPO_DIR/.claude/skills"/*/*/SKILL.md; do
          [[ "$skill_prefix" == "architecture/frontend-domain-structure" ]]; }; then
       record_excluded_skill "$rel" "$skill_prefix"          # java·rust·unity 공통 누수 (혼합 조합 포함)
     fi
-    echo "  skip .claude/skills/$rel" && continue
+    echo "  skip .claude/skills/$phys_rel" && continue
   fi
 
-  dest="$TARGET/.claude/skills/$rel"
+  dest="$TARGET/.claude/skills/$phys_rel"
   mkdir -p "$(dirname "$dest")"
   if cp -f "$src_path" "$dest" 2>/dev/null; then
-    echo "  → .claude/skills/$rel"
-    echo "$rel" >> "$MANIFEST_SKILLS_TMP"
+    echo "  → .claude/skills/$phys_rel"
+    echo "$phys_rel" >> "$MANIFEST_SKILLS_TMP"
 
     # SKILL.md 외 부속 파일(references/ 등)도 함께 복사 — 본문이 참조하는 파일 누락 방지 (2026-08-31)
     # 파일별로 매니페스트에 기록해 재설치 정리(소유 증명) 대상에 포함한다
@@ -1619,7 +1642,7 @@ for src_path in "$REPO_DIR/.claude/skills"/*/*/SKILL.md; do
       fi
     fi
   else
-    echo "  ✗ .claude/skills/$rel (복사 실패)"
+    echo "  ✗ .claude/skills/$phys_rel (복사 실패)"
   fi
 done
 
@@ -1814,10 +1837,30 @@ CLAUDE_WRITTEN=false
 
 if [ -f "$CLAUDE_FILE" ]; then
   echo "  ⚠ CLAUDE.md 이미 존재합니다."
+  # 팀이 git 으로 관리하는 CLAUDE.md 는 앞선 y/N 질문들의 연속 'y' 로 덮어써지지 않게 한다 (2026-10-05 설치본 실사고:
+  # 팀 코딩 컨벤션 CLAUDE.md 가 템플릿으로 교체됨). 추적 파일은 'overwrite' 를 정확히 입력해야 덮어쓰고,
+  # 미추적 파일도 덮어쓰기 전에 CLAUDE.md.bak-<날짜시각> 백업을 남긴다.
+  _claude_tracked=false
+  git -C "$TARGET" ls-files --error-unmatch -- CLAUDE.md >/dev/null 2>&1 && _claude_tracked=true
+  if [ "$_claude_tracked" = true ]; then
+    echo "  ⚠ 이 CLAUDE.md 는 git 으로 추적 중인 팀 파일입니다 — 덮어쓰면 팀 규칙이 템플릿으로 바뀝니다."
+    echo "    보존을 권장합니다. 템플릿은 examples/CLAUDE.${TEMPLATE}.md 를 참고해 직접 병합하세요."
+  fi
   while true; do
-    prompt_read "  덮어쓸까요? (y/N): " OVERWRITE_CLAUDE
+    if [ "$_claude_tracked" = true ]; then
+      prompt_read "  정말 덮어쓰려면 overwrite 입력 (엔터 = 보존): " OVERWRITE_CLAUDE
+      case "$OVERWRITE_CLAUDE" in
+        overwrite) OVERWRITE_CLAUDE=y ;;
+        "") OVERWRITE_CLAUDE=n ;;
+        *) echo "  ('$OVERWRITE_CLAUDE' 은 overwrite 가 아니므로 보존합니다)"; OVERWRITE_CLAUDE=n ;;
+      esac
+    else
+      prompt_read "  덮어쓸까요? (y/N): " OVERWRITE_CLAUDE
+    fi
     case "$OVERWRITE_CLAUDE" in
-      y|Y) cp "$CLAUDE_SRC" "$CLAUDE_FILE"
+      y|Y) _bak="$CLAUDE_FILE.bak-$(date +%Y%m%d%H%M%S)"
+           cp "$CLAUDE_FILE" "$_bak" && echo "  → 기존 CLAUDE.md 백업: $(basename "$_bak")"
+           cp "$CLAUDE_SRC" "$CLAUDE_FILE"
            echo "  → CLAUDE.md 덮어쓰기 (기본 템플릿: $TEMPLATE)"
            CLAUDE_WRITTEN=true; break ;;
       n|N|"") echo "  → 건너뜀 (프로젝트 고유 파일 보존)"; break ;;
@@ -1944,22 +1987,43 @@ if [ "$CLAUDE_WRITTEN" = true ]; then
   done
   [ -n "$_REMOVED_RULE_ROWS" ] && echo "  ✓ 미설치 규칙 참조 행 제거:$_REMOVED_RULE_ROWS"
 
-  read -rp "  프로젝트명을 입력하세요 (Enter로 건너뜀): " PROJECT_NAME
-  if [ -n "$PROJECT_NAME" ]; then
-    TMP=$(mktemp)
-    sed "s|{프로젝트명}|$PROJECT_NAME|g" "$CLAUDE_FILE" > "$TMP" && mv "$TMP" "$CLAUDE_FILE"
-    echo "  ✓ 프로젝트명: $PROJECT_NAME"
-  fi
-  read -rp "  프로젝트 설명을 입력하세요 (Enter로 건너뜀): " PROJECT_DESC
+  # 프로젝트명 — 엔터면 대상 폴더 이름. 앞선 y/N 질문의 습관적 'y'·'n' 이 이름으로 들어가 `CLAUDE.md — y` 가 된
+  # 설치본 실사고(2026-10-05)가 있어 y/n/yes/no 단독 입력은 다시 묻는다. sed 치환 특수문자(\ & |)는 이스케이프.
+  _sed_esc() { printf '%s' "$1" | sed -e 's/[\\&|]/\\&/g'; }
+  _default_name="$(basename "$TARGET")"
+  while true; do
+    read -rp "  프로젝트명을 입력하세요 (엔터 = $_default_name): " PROJECT_NAME || PROJECT_NAME=""
+    case "$PROJECT_NAME" in
+      y|Y|n|N|yes|YES|no|NO) echo "  '$PROJECT_NAME' 은 y/N 답처럼 보입니다 — 프로젝트 이름을 입력하거나 엔터로 '$_default_name' 사용" ;;
+      *) break ;;
+    esac
+  done
+  [ -n "$PROJECT_NAME" ] || PROJECT_NAME="$_default_name"
+  TMP=$(mktemp)
+  sed "s|{프로젝트명}|$(_sed_esc "$PROJECT_NAME")|g" "$CLAUDE_FILE" > "$TMP" && mv "$TMP" "$CLAUDE_FILE"
+  echo "  ✓ 프로젝트명: $PROJECT_NAME"
+  read -rp "  프로젝트 설명을 입력하세요 (Enter로 건너뜀): " PROJECT_DESC || PROJECT_DESC=""
+  case "$PROJECT_DESC" in y|Y|n|N|yes|YES|no|NO) PROJECT_DESC="" ;; esac
   if [ -n "$PROJECT_DESC" ]; then
     TMP=$(mktemp)
-    sed "s|{프로젝트 한 줄 설명}|$PROJECT_DESC|g" "$CLAUDE_FILE" > "$TMP" && mv "$TMP" "$CLAUDE_FILE"
-    TMP=$(mktemp)
-    sed "s|{논문·연구 주제 한 줄 설명}|$PROJECT_DESC|g" "$CLAUDE_FILE" > "$TMP" && mv "$TMP" "$CLAUDE_FILE"
+    sed "s|{프로젝트 한 줄 설명}|$(_sed_esc "$PROJECT_DESC")|g" "$CLAUDE_FILE" > "$TMP" && mv "$TMP" "$CLAUDE_FILE"
     echo "  ✓ 프로젝트 설명 적용"
+  else
+    echo "  ℹ CLAUDE.md 의 {프로젝트 한 줄 설명}을 직접 수정하세요"
   fi
-  if [ -z "$PROJECT_NAME" ] && [ -z "$PROJECT_DESC" ]; then
-    echo "  ℹ {프로젝트명}과 {설명}을 직접 수정하세요"
+
+  # Java 템플릿의 "Java NN" 표기를 대상 빌드 파일의 실제 버전으로 (2026-10-05 설치본 실측: Java 17 프로젝트에
+  # 모던 템플릿의 "Java 21" 이 그대로 남음). 감지 실패 시 템플릿 값 유지.
+  _java_ver=""
+  for _bf in "$TARGET/build.gradle" "$TARGET/build.gradle.kts" "$TARGET/pom.xml"; do
+    [ -f "$_bf" ] || continue
+    _java_ver="$(grep -oE 'languageVersion(\.set)?[ =(]*JavaLanguageVersion\.of\( *[0-9]+|sourceCompatibility *=? *(JavaVersion\.VERSION_)?['"'"'"]?[0-9]+(\.[0-9]+)?|<java\.version>[0-9]+' "$_bf" 2>/dev/null | head -1 | grep -oE '[0-9]+(\.[0-9]+)?$' | sed 's/^1\.//')"
+    [ -n "$_java_ver" ] && break
+  done
+  if [ -n "$_java_ver" ] && grep -qE '^Java [0-9]+ \+' "$CLAUDE_FILE"; then
+    TMP=$(mktemp)
+    sed -E "s/^Java [0-9]+ \+/Java $_java_ver +/" "$CLAUDE_FILE" > "$TMP" && mv "$TMP" "$CLAUDE_FILE"
+    echo "  ✓ Java 버전 표기: Java $_java_ver (빌드 파일 감지)"
   fi
 fi
 

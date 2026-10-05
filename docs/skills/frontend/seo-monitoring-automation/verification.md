@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `seo-monitoring-automation` |
-| 스킬 경로 | `.claude/skills/frontend/seo-monitoring-automation/SKILL.md` |
+| 스킬 경로 | `.claude/skills/seo-monitoring-automation/SKILL.md` |
 | 검증일 | 2026-09-28 (재검증, 최초 2026-06-04) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |

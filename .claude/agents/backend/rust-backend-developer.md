@@ -40,11 +40,11 @@ model: sonnet
 
 | 스킬 | 경로 | 활용 시점 |
 |------|------|-----------|
-| axum | `.claude/skills/backend/axum/SKILL.md` | 라우터, 핸들러, 추출자, 커스텀 미들웨어(from_fn) 작성 |
-| reqwest | `.claude/skills/backend/reqwest/SKILL.md` | 외부 API 호출, HTTP 클라이언트 |
-| tower-http | `.claude/skills/backend/tower-http/SKILL.md` | CORS, 로깅, 압축 미들웨어 |
-| sse-streaming | `.claude/skills/backend/sse-streaming/SKILL.md` | SSE 스트리밍 응답 |
-| multipart-upload | `.claude/skills/backend/multipart-upload/SKILL.md` | 파일 업로드 처리 |
+| axum | `.claude/skills/axum/SKILL.md` | 라우터, 핸들러, 추출자, 커스텀 미들웨어(from_fn) 작성 |
+| reqwest | `.claude/skills/reqwest/SKILL.md` | 외부 API 호출, HTTP 클라이언트 |
+| tower-http | `.claude/skills/tower-http/SKILL.md` | CORS, 로깅, 압축 미들웨어 |
+| sse-streaming | `.claude/skills/sse-streaming/SKILL.md` | SSE 스트리밍 응답 |
+| multipart-upload | `.claude/skills/multipart-upload/SKILL.md` | 파일 업로드 처리 |
 
 **스킬 참조 규칙:** 해당 기능을 처음 구현할 때 관련 스킬 파일을 Read로 읽고, 그 패턴을 따라 코드를 작성한다.
 

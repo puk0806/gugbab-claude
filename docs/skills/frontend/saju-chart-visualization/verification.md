@@ -15,7 +15,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `saju-chart-visualization` |
-| 스킬 경로 | `.claude/skills/frontend/saju-chart-visualization/SKILL.md` |
+| 스킬 경로 | `.claude/skills/saju-chart-visualization/SKILL.md` |
 | 검증 문서 경로 | `docs/skills/frontend/saju-chart-visualization/verification.md` |
 | 검증일 | 2026-09-28 (재검증, 이전 2026-09-10) |
 | 검증자 | skill-creator |

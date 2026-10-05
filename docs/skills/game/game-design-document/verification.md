@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `game-design-document` |
-| 스킬 경로 | `.claude/skills/game/game-design-document/SKILL.md` |
+| 스킬 경로 | `.claude/skills/game-design-document/SKILL.md` |
 | 검증일 | 2026-09-28 (재검증, 이전 2026-09-26 / 최초 2026-06-07) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |

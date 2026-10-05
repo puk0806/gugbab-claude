@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `crisis-intervention-resources-korea` |
-| 스킬 경로 | `.claude/skills/humanities/crisis-intervention-resources-korea/SKILL.md` |
+| 스킬 경로 | `.claude/skills/crisis-intervention-resources-korea/SKILL.md` |
 | 검증일 | 2026-09-26 (재검증, 이전 2026-07-04) |
 | 검증자 | skill-creator (Claude) |
 | 스킬 버전 | v1 |
@@ -41,7 +41,7 @@ status: APPROVED
 | 단계 | 도구 | 입력 요약 | 출력 요약 |
 |------|------|-----------|-----------|
 | 템플릿 확인 | Read | docs/skills/VERIFICATION_TEMPLATE.md | 8개 섹션 구조 확인 |
-| 중복 확인 | Glob | .claude/skills/humanities/crisis-intervention-resources-korea/** | 신규(없음) |
+| 중복 확인 | Glob | .claude/skills/crisis-intervention-resources-korea/** | 신규(없음) |
 | 조사 1 | WebSearch | "보건복지부 자살예방 상담전화 109 2024 1393 통합" | 109 통합 일자·운영주체·8개 기관 통합 확인 |
 | 조사 2 | WebSearch | "한국생명존중희망재단 자살예방 상담 109" | 109 의미·콜센터 위탁·증설 확인 |
 | 조사 3 | WebSearch | "정신건강상담전화 1577-0199 24시간 보건복지부" | 24시간·무료·역할 확인 |

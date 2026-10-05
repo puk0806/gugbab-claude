@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `bot-management-seo` |
-| 스킬 경로 | `.claude/skills/frontend/bot-management-seo/SKILL.md` |
+| 스킬 경로 | `.claude/skills/bot-management-seo/SKILL.md` |
 | 검증일 | 2026-09-28 (최초 2026-06-04) |
 | 검증자 | skill-creator (Claude) |
 | 스킬 버전 | v2.1 |

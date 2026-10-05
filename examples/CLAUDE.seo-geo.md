@@ -38,7 +38,7 @@ SEO·GEO 검색 노출 — {프로젝트 한 줄 설명}
 | 작업 착수 전 확인 | @.claude/rules/task-workflow.md |
 | Git 커밋 컨벤션 | @.claude/rules/git.md |
 | 외부 정보 조사·검증 | @.claude/rules/info-verification.md |
-| SEO·GEO 통합 감사 | `seo-auditor` 에이전트 + `.claude/skills/frontend/{schema-org-patterns,ecommerce-seo,geo-ai-discoverability,naver-seo-specifics}` |
+| SEO·GEO 통합 감사 | `seo-auditor` 에이전트 + `.claude/skills/{schema-org-patterns,ecommerce-seo,geo-ai-discoverability,naver-seo-specifics}` |
 | 에이전트 설계·작성 | @.claude/rules/agent-design.md |
 | 슬래시 커맨드 작성 | @.claude/rules/commands.md |
 | README 업데이트 | @.claude/rules/readme-update.md |

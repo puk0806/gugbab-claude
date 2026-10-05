@@ -13,7 +13,7 @@ status: PENDING_TEST
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `spring-boot-2-to-3-migration` |
-| 스킬 경로 | `.claude/skills/backend/spring-boot-2-to-3-migration/SKILL.md` |
+| 스킬 경로 | `.claude/skills/spring-boot-2-to-3-migration/SKILL.md` |
 | 검증일 | 2026-09-28 (재검증, 이전 2026-08-11) |
 | 검증자 | skill-creator (최초), 재검증 2차 작업(2026-09-28) |
 | 스킬 버전 | v2 |
@@ -43,7 +43,7 @@ status: PENDING_TEST
 |------|------|-----------|-----------|
 | 템플릿 확인 | Read | `docs/skills/VERIFICATION_TEMPLATE.md` | 8개 섹션 구조 확보 |
 | 중복 확인 | Glob | `.claude/skills/**/spring-boot-2-to-3-migration/SKILL.md` | 결과 없음 → 신규 생성 확정 |
-| 기존 자산 파악 | Glob + Grep + Read | `.claude/skills/backend/*/SKILL.md` 50종 description, `spring-boot-gradle-setup` 6장, `spring-security-6-jwt-jjwt12`, `springdoc-openapi-3`, `redis-redisson-modern` | 짝 스킬 13종 매핑 확보, `spring-boot-gradle-setup` 6장과의 중복 구간 식별 → 참조 방식으로 회피 |
+| 기존 자산 파악 | Glob + Grep + Read | `.claude/skills/*/SKILL.md` 50종 description, `spring-boot-gradle-setup` 6장, `spring-security-6-jwt-jjwt12`, `springdoc-openapi-3`, `redis-redisson-modern` | 짝 스킬 13종 매핑 확보, `spring-boot-gradle-setup` 6장과의 중복 구간 식별 → 참조 방식으로 회피 |
 | 규칙 정합성 | Read | `.claude/rules/java.md` | "Spring Boot 3 전환 시" 4항목(javax→jakarta, SecurityFilterChain, Springdoc, Micrometer Tracing) 모두 스킬에 반영 |
 | 조사 | WebFetch | Spring Boot 3.0 Migration Guide / 3.0 Release Notes / upgrading.html / system-requirements.html / Spring Framework 6.0 Release Notes / Sleuth 3.1 Migration Guide(micrometer wiki) / spring.io Security 블로그 / OpenRewrite 레시피 / mybatis starter README / Security 6.5 migration-7 | 공식 소스 10건 확보 |
 | 조사 | WebSearch | Sleuth→Micrometer, jakarta 전환 범위, 프로퍼티 rename, Tomcat 10 jakarta 도구, ojdbc11, HikariCP, MyBatis 매트릭스, Redisson, Lucy XSS | 보조 소스 9건, 1순위 소스 교차 확인용 |

@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `dream-image-generation` |
-| 스킬 경로 | `.claude/skills/frontend/dream-image-generation/SKILL.md` |
+| 스킬 경로 | `.claude/skills/dream-image-generation/SKILL.md` |
 | 검증일 | 2026-05-15 (최초) / **2026-09-28 재검증 — 중대 변경 발견** |
 | 모델 ID 한정 재감사일 | 2026-08-11 — 변경 없음 (아래 §8 참조) |
 | 검증자 | skill-creator (자동) |

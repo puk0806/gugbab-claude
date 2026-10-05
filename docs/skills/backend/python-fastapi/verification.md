@@ -40,7 +40,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `python-fastapi` |
-| 스킬 경로 | `.claude/skills/backend/python-fastapi/SKILL.md` |
+| 스킬 경로 | `.claude/skills/python-fastapi/SKILL.md` |
 | 검증일 | 2026-09-28 (재검증, 이전 2026-08-12) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |

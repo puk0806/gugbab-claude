@@ -17,7 +17,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `ai-game-asset-pipeline` |
-| 스킬 경로 | `.claude/skills/game/ai-game-asset-pipeline/SKILL.md` |
+| 스킬 경로 | `.claude/skills/ai-game-asset-pipeline/SKILL.md` |
 | 검증일 | 2026-09-26 (최초 2026-06-07) |
 | 검증자 | skill-creator (Claude Code) |
 | 스킬 버전 | v1 |

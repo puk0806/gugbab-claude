@@ -13,7 +13,7 @@ status: PENDING_TEST
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `python-uv-project-setup` |
-| 스킬 경로 | `.claude/skills/backend/python-uv-project-setup/SKILL.md` |
+| 스킬 경로 | `.claude/skills/python-uv-project-setup/SKILL.md` |
 | 검증일 | 2026-09-28 (재검증, 이전 2026-08-12) (최초 2026-05-15) |
 | 검증자 | skill-creator → skill-tester(재감사) → 정정 반영 → 2차 재검증(2026-09-28) |
 | 스킬 버전 | v3 |

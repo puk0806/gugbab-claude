@@ -97,21 +97,24 @@ console.log('\n[악성 방어] 커스텀·수정본·매니페스트 부재는 �
 // ── 짝 단위 처리 (2026-09-25): 스킬 디렉토리 + 짝 docs, 에이전트 + 짝 docs 는 한 단위 ─────────────
 // 버그: docs 섹션 없는 구버전 매니페스트 재설치에서 SKILL.md 는 수정본이라 보존됐는데 짝 verification.md 는
 // "소스 동일" 폴백으로 삭제돼 "검증 문서 없는 스킬" 31종이 생겼다. 단위 중 하나라도 보존되면 단위 전체 보존.
-const SK = 'health/meal-plan';                   // 스킬 prefix
+// 2026-10-05 평탄화: 스킬 본체는 1단 .claude/skills/<name>/, 짝 docs 는 docs/skills/<cat>/<name>/.
+// SKP = 설치본 스킬 폴더(현행 1단 기본), SK = 짝 docs prefix. 구 2단 레이아웃 회귀는 아래 [마이그레이션] 블록.
+const SK = 'health/meal-plan';                   // 짝 docs prefix (docs/skills/<cat>/<name>)
+let SKP = 'meal-plan';                           // 설치본 스킬 폴더 (.claude/skills/<name>)
 const skLines = (extra = []) => [
-  `skills|${SK}/SKILL.md`,
-  `skills|${SK}/references/REF.md`,
+  `skills|${SKP}/SKILL.md`,
+  `skills|${SKP}/references/REF.md`,
   `docs|skills/${SK}/verification.md`,
   ...extra,
 ];
 const skFixture = ({ skillBody = '# skill\n', refBody = '# ref\n', docBody = '# verif\n', docsInManifest = false } = {}) => {
   const t = tmp('tgt'); const src = tmp('src');
-  const skill = put(t, 'skills', `${SK}/SKILL.md`, skillBody);
-  const ref = put(t, 'skills', `${SK}/references/REF.md`, refBody);
+  const skill = put(t, 'skills', `${SKP}/SKILL.md`, skillBody);
+  const ref = put(t, 'skills', `${SKP}/references/REF.md`, refBody);
   const doc = putDoc(t, `skills/${SK}/verification.md`, docBody);
   putDoc(src, `skills/${SK}/verification.md`, '# verif\n');   // 레포 원본
-  const m = { skills: [`${SK}/SKILL.md`, `${SK}/references/REF.md`],
-    hashes: { skills: { [`${SK}/SKILL.md`]: sha('# skill\n'), [`${SK}/references/REF.md`]: sha('# ref\n') } } };
+  const m = { skills: [`${SKP}/SKILL.md`, `${SKP}/references/REF.md`],
+    hashes: { skills: { [`${SKP}/SKILL.md`]: sha('# skill\n'), [`${SKP}/references/REF.md`]: sha('# ref\n') } } };
   if (docsInManifest) { m.docs = [`skills/${SK}/verification.md`]; m.hashes.docs = { [`skills/${SK}/verification.md`]: sha('# verif\n') }; }
   manifest(t, m);                                              // docsInManifest=false = docs 섹션 없는 구버전 매니페스트
   return { t, src, skill, ref, doc };
@@ -182,13 +185,43 @@ console.log('\n[회귀] 매니페스트 docs 섹션 있는 설치 — 해시 증
 {
   // 단위 격리: 다른 스킬의 수정본이 무관한 스킬 삭제를 막지 않는다
   const { t, src, skill, doc } = skFixture();
-  const other = put(t, 'skills', 'health/other/SKILL.md', '# other edited\n');
+  const other = put(t, 'skills', 'other/SKILL.md', '# other edited\n');
   const m = JSON.parse(fs.readFileSync(path.join(t, '.claude', '.install-manifest.json'), 'utf8'));
-  m.skills.push('health/other/SKILL.md'); m.hashes.skills['health/other/SKILL.md'] = sha('# other\n');
+  m.skills.push('other/SKILL.md'); m.hashes.skills['other/SKILL.md'] = sha('# other\n');
   manifest(t, m);
-  run(t, [...skLines(), 'skills|health/other/SKILL.md'], src);
+  run(t, [...skLines(), 'skills|other/SKILL.md'], src);
   assert('(d4) 수정된 다른 스킬 보존', ex(other), true);
   assert('(d4) 무관한 원본 스킬·docs 는 삭제', `${ex(skill)},${ex(doc)}`, 'false,false');
+}
+
+console.log('\n[마이그레이션] 평탄화 이전 2단 설치본(.claude/skills/<cat>/<name>/) — 같은 이름 단위로 수렴');
+{
+  // 구 레이아웃: 스킬 폴더가 health/meal-plan — 단위 키는 이름(meal-plan)이라 짝 docs 와 묶인다
+  SKP = 'health/meal-plan';
+  try {
+    const a = skFixture();
+    run(a.t, skLines(), a.src);
+    assert('(m1) 구 2단 전부 원본 → SKILL.md·references·docs 삭제', `${ex(a.skill)},${ex(a.ref)},${ex(a.doc)}`, 'false,false,false');
+    const b = skFixture({ skillBody: '# legacy edited\n' });
+    run(b.t, skLines(), b.src);
+    assert('(m2) 구 2단 SKILL.md 수정본 → 짝 docs 까지 단위 보존', `${ex(b.skill)},${ex(b.doc)}`, 'true,true');
+  } finally { SKP = 'meal-plan'; }
+}
+{
+  // 구 2단 잔재와 현행 1단 사본이 함께 있을 때 — 구 잔재(해시 일치)만 지우고 현행 사본은 목록에 없으니 건드리지 않음
+  const t = tmp('tgt'); const src = tmp('src');
+  const legacy = put(t, 'skills', 'frontend/react-query/SKILL.md', '# rq\n');
+  const flat = put(t, 'skills', 'react-query/SKILL.md', '# rq\n');
+  manifest(t, { skills: ['frontend/react-query/SKILL.md'], hashes: { skills: { 'frontend/react-query/SKILL.md': sha('# rq\n') } } });
+  run(t, ['skills|frontend/react-query/SKILL.md'], src);
+  assert('(m3) 구 2단 잔재 삭제 + 현행 1단 사본 유지', `${ex(legacy)},${ex(flat)}`, 'false,true');
+}
+{
+  const { skillDir, skillUnit, unitOf } = require('./prune-option-excluded.js');
+  assert('(m4) 단위 키 — 현행 1단', `${skillDir('react-query/references/x.md')}|${skillUnit('react-query/SKILL.md')}`, 'react-query|react-query');
+  assert('(m4) 단위 키 — 구 2단', `${skillDir('frontend/react-query/SKILL.md')}|${skillUnit('frontend/react-query/references/x.md')}`, 'frontend/react-query|react-query');
+  assert('(m4) 단위 키 — 현행 1단 references 3세그먼트는 구 2단으로 오인하지 않음', skillDir('react-query/references/REF.md'), 'react-query');
+  assert('(m4) 스킬·짝 docs 같은 단위', `${unitOf('skills', 'react-query/SKILL.md')}|${unitOf('docs', 'skills/frontend/react-query/verification.md')}`, 'skill:react-query|skill:react-query');
 }
 
 console.log('\n[악성 방어·정상] 짝 단위 — 에이전트 + 짝 docs(문서·verification)');
@@ -235,17 +268,18 @@ console.log('\n[경계] 짝 단위 — 고아 docs·공백 경로·커스텀 doc
 }
 {
   // 경로에 공백 — 단위 매칭·삭제가 깨지지 않아야 함
-  const P = 'my cat/my skill';
+  const P = 'my cat/my skill';   // 짝 docs prefix
+  const N = 'my skill';          // 설치본 스킬 폴더 (1단)
   const t = tmp('tgt'); const src = tmp('src');
-  const skill = put(t, 'skills', `${P}/SKILL.md`, '# s\n');
+  const skill = put(t, 'skills', `${N}/SKILL.md`, '# s\n');
   const doc = putDoc(t, `skills/${P}/verification.md`, '# v\n');
   putDoc(src, `skills/${P}/verification.md`, '# v\n');
-  manifest(t, { skills: [`${P}/SKILL.md`], hashes: { skills: { [`${P}/SKILL.md`]: sha('# s\n') } } });
-  run(t, [`skills|${P}/SKILL.md`, `docs|skills/${P}/verification.md`], src);
+  manifest(t, { skills: [`${N}/SKILL.md`], hashes: { skills: { [`${N}/SKILL.md`]: sha('# s\n') } } });
+  run(t, [`skills|${N}/SKILL.md`, `docs|skills/${P}/verification.md`], src);
   assert('공백 경로 — 전부 원본 → 둘 다 삭제', `${ex(skill)},${ex(doc)}`, 'false,false');
-  const skill2 = put(t, 'skills', `${P}/SKILL.md`, '# s edited\n');
+  const skill2 = put(t, 'skills', `${N}/SKILL.md`, '# s edited\n');
   const doc2 = putDoc(t, `skills/${P}/verification.md`, '# v\n');
-  run(t, [`skills|${P}/SKILL.md`, `docs|skills/${P}/verification.md`], src);
+  run(t, [`skills|${N}/SKILL.md`, `docs|skills/${P}/verification.md`], src);
   assert('공백 경로 — 수정본이면 둘 다 보존', `${ex(skill2)},${ex(doc2)}`, 'true,true');
 }
 {
@@ -264,15 +298,15 @@ console.log('\n[경계] 짝 단위 — 고아 docs·공백 경로·커스텀 doc
   assert('중복 줄 → 삭제 실패 경고 없음', /삭제 실패/.test(out), false);
 }
 {
-  // 접두어 충돌(a/x vs a/xy)·경로 조작 줄이 단위 판정을 오염시키지 않는다
+  // 접두어 충돌(x vs xy)·경로 조작 줄이 단위 판정을 오염시키지 않는다
   const t = tmp('tgt'); const src = tmp('src');
-  const edited = put(t, 'skills', 'a/x/SKILL.md', '# edited\n');
-  const other = put(t, 'skills', 'a/xy/SKILL.md', '# y\n');
+  const edited = put(t, 'skills', 'x/SKILL.md', '# edited\n');
+  const other = put(t, 'skills', 'xy/SKILL.md', '# y\n');
   const otherDoc = putDoc(t, 'skills/a/xy/verification.md', '# yv\n');
   putDoc(src, 'skills/a/xy/verification.md', '# yv\n');
   const outside = path.join(t, 'outside.md'); fs.writeFileSync(outside, 'x');
-  manifest(t, { skills: ['a/x/SKILL.md', 'a/xy/SKILL.md'], hashes: { skills: { 'a/x/SKILL.md': sha('# x\n'), 'a/xy/SKILL.md': sha('# y\n') } } });
-  run(t, ['skills|a/x/SKILL.md', 'skills|a/xy/SKILL.md', 'docs|skills/a/xy/verification.md', 'docs|skills/a/x/../../../outside.md'], src);
+  manifest(t, { skills: ['x/SKILL.md', 'xy/SKILL.md'], hashes: { skills: { 'x/SKILL.md': sha('# x\n'), 'xy/SKILL.md': sha('# y\n') } } });
+  run(t, ['skills|x/SKILL.md', 'skills|xy/SKILL.md', 'docs|skills/a/xy/verification.md', 'docs|skills/a/x/../../../outside.md'], src);
   assert('접두어 충돌 → 수정본 a/x 보존', ex(edited), true);
   assert('접두어 충돌 → 원본 a/xy 스킬·docs 는 삭제', `${ex(other)},${ex(otherDoc)}`, 'false,false');
   assert('../ 줄 무시 → 밖의 파일 보존', ex(outside), true);
@@ -290,8 +324,10 @@ const legacyUnit = (opts = {}) => {
   };
   const f = {};
   for (const [k, [kind, rel, body]] of Object.entries(files)) {
+    // 설치본은 구버전(평탄화 이전) 2단 사본, 레포 원본은 현행 1단 <name>/ (2026-10-05) — 폴백 증명이 이 차이를 건너야 한다
     f[k] = put(t, kind, rel, body);
-    if (!(opts.notInSource || []).includes(k)) put(src, kind, rel, body);
+    const srcRel = kind === 'skills' ? rel.split('/').slice(1).join('/') : rel;
+    if (!(opts.notInSource || []).includes(k)) put(src, kind, srcRel, body);
   }
   f.sdoc = putDoc(t, 'skills/frontend/dream-x/verification.md', '# sv\n'); putDoc(src, 'skills/frontend/dream-x/verification.md', '# sv\n');
   f.adoc = putDoc(t, 'agents/validation/dream-y.md', '# ad\n'); putDoc(src, 'agents/validation/dream-y.md', '# ad\n');
@@ -337,7 +373,7 @@ console.log('\n[악성 방어] 폴백 증명 단위 — 한 파일이라도 다�
 {
   // 레포 원본이 그 사이 바뀐 경우 = 설치본과 불일치 → 안전 쪽(보존)
   const { t, src, f, lines } = legacyUnit();
-  fs.appendFileSync(path.join(src, '.claude/skills/frontend/dream-x/SKILL.md'), '\n## 레포 갱신\n');
+  fs.appendFileSync(path.join(src, '.claude/skills/dream-x/SKILL.md'), '\n## 레포 갱신\n');   // 레포 원본은 1단
   run(t, lines, src);
   assert('레포 원본 변경 → 구버전 사본 단위 보존', exAll(f.skill, f.ref, f.sdoc), 'true,true,true');
 }

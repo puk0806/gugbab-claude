@@ -13,7 +13,7 @@ status: PENDING_TEST
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `incremental-refactoring` |
-| 스킬 경로 | `.claude/skills/architecture/incremental-refactoring/SKILL.md` |
+| 스킬 경로 | `.claude/skills/incremental-refactoring/SKILL.md` |
 | 검증일 | 2026-09-28 (실사용 검증 v1.1, 직전 30~60일 주기 재검증 2026-09-26, 최초 검증 2026-08-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
@@ -52,8 +52,8 @@ status: PENDING_TEST
 | 단계 | 도구 | 입력 요약 | 출력 요약 |
 |------|------|-----------|-----------|
 | 템플릿 확인 | Read | `docs/skills/VERIFICATION_TEMPLATE.md` | 8개 섹션 구조 확보 |
-| 관례 확인 | Read | `.claude/skills/architecture/ddd/SKILL.md`, `docs/skills/frontend/tanstack-query/verification.md` | frontmatter·소스/검증일 줄·`> 주의:` 표기·표 중심 스타일 / verification 8섹션 서식 확보 |
-| 중복 확인 | Glob | `.claude/skills/**/incremental-refactoring/SKILL.md`, `.claude/skills/architecture/*/SKILL.md` | 결과 없음 → 신규 생성 확정 (architecture 카테고리 기존 2종과 주제 비중복) |
+| 관례 확인 | Read | `.claude/skills/ddd/SKILL.md`, `docs/skills/frontend/tanstack-query/verification.md` | frontmatter·소스/검증일 줄·`> 주의:` 표기·표 중심 스타일 / verification 8섹션 서식 확보 |
+| 중복 확인 | Glob | `.claude/skills/**/incremental-refactoring/SKILL.md`, `.claude/skills/*/SKILL.md` | 결과 없음 → 신규 생성 확정 (architecture 카테고리 기존 2종과 주제 비중복) |
 | 범위 중복 확인 | Grep | `dependency-cruiser\|eslint-plugin-boundaries\|Strangler` in `.claude/skills` | 매칭 파일 0 → 기존 스킬과 내용 중복 없음 |
 | 조사 (원저자) | WebFetch | martinfowler.com — StranglerFigApplication / BranchByAbstraction / ParallelChange / branching-patterns / refactoring.com | 원문 정의·단계·주의점·Semantic Conflict 원문 인용 확보 |
 | 조사 (공식) | WebFetch | learn.microsoft.com Strangler Fig 패턴 페이지 | 4단계 파사드 흐름 + 고려사항 + 롤백 가능 구간 원문 확보 |

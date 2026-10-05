@@ -266,16 +266,9 @@ function listAssets(root) {
     }
   };
   if (fs.existsSync(agentsRoot)) walk(agentsRoot, '');
-  const skillsRoot = path.join(claude, 'skills');
-  if (fs.existsSync(skillsRoot)) {
-    for (const cat of fs.readdirSync(skillsRoot)) {
-      const catDir = path.join(skillsRoot, cat);
-      if (!fs.statSync(catDir).isDirectory()) continue;
-      for (const name of fs.readdirSync(catDir)) {
-        if (fs.existsSync(path.join(catDir, name, 'SKILL.md'))) out.skills.push(`${cat}/${name}`);
-      }
-    }
-  }
+  // 스킬 논리 ID {cat}/{name} — 본체는 1단 .claude/skills/<name>/, 카테고리는 레포 docs 위치 (2026-10-05 평탄화).
+  // 카테고리를 모르는 1단 스킬은 `?/<name>` 으로 나와 어떤 그룹에도 속하지 않으므로 "미분류"로 실패한다.
+  out.skills = require('./skill-index.js').installedSkillIds(root);
   const rulesRoot = path.join(claude, 'rules');
   if (fs.existsSync(rulesRoot)) out.rules = fs.readdirSync(rulesRoot).filter((f) => f.endsWith('.md'));
   const hooksRoot = path.join(claude, 'hooks');

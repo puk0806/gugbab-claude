@@ -42,16 +42,16 @@ model: sonnet
 
 | 스킬 | 경로 | 활용 시점 |
 |------|------|-----------|
-| python-uv-project-setup | `.claude/skills/backend/python-uv-project-setup/SKILL.md` | uv로 프로젝트 초기화, 의존성 추가, 락파일, 스크립트 실행 |
-| python-fastapi | `.claude/skills/backend/python-fastapi/SKILL.md` | FastAPI 라우터·Depends·SSE·multipart·TestClient·uvicorn |
-| python-pydantic-v2 | `.claude/skills/backend/python-pydantic-v2/SKILL.md` | Pydantic v2 Annotated Field·validator·model_dump·Settings |
-| python-async-asyncio | `.claude/skills/backend/python-async-asyncio/SKILL.md` | asyncio·TaskGroup·to_thread·httpx.AsyncClient·timeout·CancelledError |
-| python-anthropic-sdk | `.claude/skills/backend/python-anthropic-sdk/SKILL.md` | Anthropic SDK sync/async·messages.stream()·cache_control·tool_choice |
-| python-langchain-current | `.claude/skills/backend/python-langchain-current/SKILL.md` | LangChain 1.x LCEL·ChatAnthropic — *Anthropic SDK 직접 사용 권장 시나리오 확인* |
-| python-llamaindex | `.claude/skills/backend/python-llamaindex/SKILL.md` | LlamaIndex Document/Node/Index, FunctionAgent (FunctionCallingAgent 대체) |
-| python-embeddings-vector-db | `.claude/skills/backend/python-embeddings-vector-db/SKILL.md` | 임베딩 모델·Chroma/Qdrant/pgvector, 청킹 전략 |
-| python-korean-nlp-konlpy | `.claude/skills/backend/python-korean-nlp-konlpy/SKILL.md` | KoNLPy + mecab-ko, ko-sbert-multitask |
-| python-cli-typer | `.claude/skills/backend/python-cli-typer/SKILL.md` | Typer CLI 작성 (관리 스크립트·배치 작업) |
+| python-uv-project-setup | `.claude/skills/python-uv-project-setup/SKILL.md` | uv로 프로젝트 초기화, 의존성 추가, 락파일, 스크립트 실행 |
+| python-fastapi | `.claude/skills/python-fastapi/SKILL.md` | FastAPI 라우터·Depends·SSE·multipart·TestClient·uvicorn |
+| python-pydantic-v2 | `.claude/skills/python-pydantic-v2/SKILL.md` | Pydantic v2 Annotated Field·validator·model_dump·Settings |
+| python-async-asyncio | `.claude/skills/python-async-asyncio/SKILL.md` | asyncio·TaskGroup·to_thread·httpx.AsyncClient·timeout·CancelledError |
+| python-anthropic-sdk | `.claude/skills/python-anthropic-sdk/SKILL.md` | Anthropic SDK sync/async·messages.stream()·cache_control·tool_choice |
+| python-langchain-current | `.claude/skills/python-langchain-current/SKILL.md` | LangChain 1.x LCEL·ChatAnthropic — *Anthropic SDK 직접 사용 권장 시나리오 확인* |
+| python-llamaindex | `.claude/skills/python-llamaindex/SKILL.md` | LlamaIndex Document/Node/Index, FunctionAgent (FunctionCallingAgent 대체) |
+| python-embeddings-vector-db | `.claude/skills/python-embeddings-vector-db/SKILL.md` | 임베딩 모델·Chroma/Qdrant/pgvector, 청킹 전략 |
+| python-korean-nlp-konlpy | `.claude/skills/python-korean-nlp-konlpy/SKILL.md` | KoNLPy + mecab-ko, ko-sbert-multitask |
+| python-cli-typer | `.claude/skills/python-cli-typer/SKILL.md` | Typer CLI 작성 (관리 스크립트·배치 작업) |
 
 **스킬 참조 규칙:** 해당 기능을 처음 구현할 때 관련 스킬 파일을 Read로 읽고, 그 패턴을 따라 코드를 작성한다. 관련 스킬이 없거나 모호하면 그 사실을 사용자에게 보고하고 진행 방향을 묻는다.
 Python 기본 문법·pytest 사용법·pandas·시각화·스크래핑·Jupyter는 전용 스킬이 없다(내장 지식과 중복되어 정리됨) — 내장 지식으로 처리하되, pytest 패턴은 `python-fastapi` 스킬의 TestClient 섹션과 `python-async-asyncio`의 pytest-asyncio 절을 우선 참조한다.

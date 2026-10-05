@@ -23,7 +23,7 @@
 ## 입력/출력
 
 - **입력**: 스킬 주제, 대상 버전 (선택), 카테고리 (선택)
-- **출력**: 3개 산출물 -- `.claude/skills/{category}/{name}/SKILL.md` (검증된 스킬 파일), `docs/skills/{category}/{name}/verification.md` (검증 증거 문서), README.md 업데이트 (gugbab-claude 프로젝트인 경우)
+- **출력**: 3개 산출물 -- `.claude/skills/{name}/SKILL.md` (검증된 스킬 파일), `docs/skills/{category}/{name}/verification.md` (검증 증거 문서), README.md 업데이트 (gugbab-claude 프로젝트인 경우)
 
 ## 관련 에이전트 (설치된 경우 참조)
 

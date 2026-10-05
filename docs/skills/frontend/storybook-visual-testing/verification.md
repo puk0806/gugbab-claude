@@ -47,7 +47,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `storybook-visual-testing` |
-| 스킬 경로 | `.claude/skills/frontend/storybook-visual-testing/SKILL.md` |
+| 스킬 경로 | `.claude/skills/storybook-visual-testing/SKILL.md` |
 | 검증일 | 2026-09-28 (최초 2026-04-29, 2026-09-28 재검증) |
 | 검증자 | Claude (skill-creator) (2026-09-28 재검증: Claude, Sonnet 5) |
 | 스킬 버전 | v1.2 |

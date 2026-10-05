@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `tanstack-query-v4-to-v5-migration` |
-| 스킬 경로 | `.claude/skills/frontend/tanstack-query-v4-to-v5-migration/SKILL.md` |
+| 스킬 경로 | `.claude/skills/tanstack-query-v4-to-v5-migration/SKILL.md` |
 | 검증일 | 2026-09-28 (실사용 검증 v1.1, 직전 30~60일 주기 재검증 2026-09-26, 이전 검증 2026-08-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
@@ -50,8 +50,8 @@ status: APPROVED
 |------|------|-----------|-----------|
 | 템플릿 확인 | Read | `docs/skills/VERIFICATION_TEMPLATE.md` | 8개 섹션 구조 확보 |
 | 중복 확인 | Glob | `.claude/skills/**/tanstack-query*/SKILL.md` | 1건(`frontend/tanstack-query`)만 존재 → 마이그레이션 스킬 신규 |
-| 관례 확인 | Read | `.claude/skills/frontend/tanstack-query/SKILL.md`, `docs/skills/frontend/tanstack-query/verification.md` | 문서 포맷·범위 분리 서술 방식 승계 |
-| 중복 범위 조사 | Grep + Read | `.claude/skills/frontend/state-management/SKILL.md` 내 `v4|v5|cacheTime|gcTime|isPending|keepPreviousData` | v4→v5 절이 2항목 요약뿐임을 확인 → 이 스킬이 정본임을 명시 |
+| 관례 확인 | Read | `.claude/skills/tanstack-query/SKILL.md`, `docs/skills/frontend/tanstack-query/verification.md` | 문서 포맷·범위 분리 서술 방식 승계 |
+| 중복 범위 조사 | Grep + Read | `.claude/skills/state-management/SKILL.md` 내 `v4|v5|cacheTime|gcTime|isPending|keepPreviousData` | v4→v5 절이 2항목 요약뿐임을 확인 → 이 스킬이 정본임을 명시 |
 | 조사 | WebFetch | 공식 마이그레이션 가이드 (tanstack.com 렌더 + GitHub raw 원문). 헤딩 전량 열거 1회 + 구간별 축자 재현 5회 | 35개 breaking change 헤딩 + New Features 8개 확보, 구간별 before/after 코드 확보 |
 | 조사 | WebFetch | `docs/reference/QueryClient.md`, `docs/framework/react/reference/useQuery.md`, `installation.md`, `devtools.md`(v5), `plugins/persistQueryClient.md` | `query()`/`infiniteQuery()` 등재 확인, `isInitialLoading` deprecated 확인, React 18+/브라우저 요건, devtools v5 옵션표, persistOptions 필드 |
 | 조사 | WebFetch | v4 문서 — `tanstack.com/query/v4/.../reference/useQuery`, `/eslint/no-deprecated-options`, `/devtools` | v4의 `isInitialLoading`·`structuralSharing` 함수형 존재 확인, v4 eslint 규칙 2종 확인, v4 devtools prop 확인 |

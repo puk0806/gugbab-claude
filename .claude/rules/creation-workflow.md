@@ -146,7 +146,7 @@ agent content test: 3/3 PASS
 
 스킬 생성 완료 기준:
 
-- [ ] `.claude/skills/{category}/{name}/SKILL.md` 생성
+- [ ] `.claude/skills/{name}/SKILL.md` 생성
 - [ ] `docs/skills/{category}/{name}/verification.md` 생성
 - [ ] `README.md` 스킬 목록 업데이트
 - [ ] `README.md` 업데이트 로그 추가

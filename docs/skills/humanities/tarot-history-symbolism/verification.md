@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `tarot-history-symbolism` |
-| 스킬 경로 | `.claude/skills/humanities/tarot-history-symbolism/SKILL.md` |
+| 스킬 경로 | `.claude/skills/tarot-history-symbolism/SKILL.md` |
 | 검증일 | 2026-09-28 (최초 2026-09-10, 2026-09-28 재검증) |
 | 검증자 | skill-creator (Claude Code) → Claude (Sonnet 5, 2026-09-28 재검증) |
 | 스킬 버전 | v2 |
@@ -49,7 +49,7 @@ status: APPROVED
 | 단계 | 도구 | 입력 요약 | 출력 요약 |
 |------|------|-----------|-----------|
 | 템플릿 확인 | Read | `docs/skills/VERIFICATION_TEMPLATE.md`, 참고 템플릿 `humanities/korean-dream-interpretation-tradition/SKILL.md` | 8개 섹션 구조 + "1차 자료 + 학술적 한계 + 앱 톤 가이드" 3부 구성 확인 |
-| 중복 확인 | Glob | `.claude/skills/humanities/**/SKILL.md` | humanities 스킬 19종 확인, 타로 관련 기존 스킬 **없음** → 신규 생성 확정 |
+| 중복 확인 | Glob | `.claude/skills/humanities/**/SKILL.md` (평탄화 이전 경로) | humanities 스킬 19종 확인, 타로 관련 기존 스킬 **없음** → 신규 생성 확정 |
 | 조사 1 | WebSearch | 타로 15세기 이탈리아 기원, 놀이용 카드 | 북부 이탈리아 1430~1450, trionfi, 비스콘티-스포르차 덱 확인 |
 | 조사 2 | WebSearch | Court de Gébelin 1781 이집트 기원설 debunk | *Le Monde primitif* vol.8, 사료 없음, 상형문자 미해독 시기 확인 |
 | 조사 3 | WebSearch (allowed_domains: britannica.com) | 78장 구조, 22 트럼프, 4수트, 점술 전환 시점 | 78=22+56, 4수트×14, 프랑스 1780년경 점술 전용화, 1430년대 이탈리아 제작 확인 |

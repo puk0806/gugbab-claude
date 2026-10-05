@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `n8n-error-handling` |
-| 스킬 경로 | `.claude/skills/devops/n8n-error-handling/SKILL.md` |
+| 스킬 경로 | `.claude/skills/n8n-error-handling/SKILL.md` |
 | 검증일 | 2026-09-28 (최초 검증 2026-05-15, 2026-09-28 재검증, 2026-09-28 형제 스킬 정합 보완) |
 | 검증자 | skill-creator (Claude Opus 4.7) / 재검증: Claude (Sonnet 5) |
 | 스킬 버전 | v2 |

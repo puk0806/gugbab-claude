@@ -13,7 +13,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | `next-intl-i18n` |
-| 스킬 경로 | `.claude/skills/frontend/next-intl-i18n/SKILL.md` |
+| 스킬 경로 | `.claude/skills/next-intl-i18n/SKILL.md` |
 | 검증일 | 2026-09-26 (최초 2026-09-25, 섹션 7 보강·재테스트 2026-09-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |

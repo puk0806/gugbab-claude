@@ -33,7 +33,7 @@ status: APPROVED
 | 항목 | 내용 |
 |------|------|
 | 스킬 이름 | og-image-generation |
-| 스킬 경로 | `.claude/skills/frontend/og-image-generation/SKILL.md` |
+| 스킬 경로 | `.claude/skills/og-image-generation/SKILL.md` |
 | 최초 작성일 | 2026-06-02 |
 | 검증일 | 2026-09-28 (최초 2026-06-02) |
 | 검증 방법 | 공식 문서 교차 검증 → skill-tester 실사용 테스트 완료 (2026-06-02) |

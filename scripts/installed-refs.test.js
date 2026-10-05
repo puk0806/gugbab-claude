@@ -62,12 +62,9 @@ function walk(dir, pred, out = []) {
 }
 
 function buildUniverse(root) {
-  const skillsRoot = path.join(root, '.claude', 'skills');
-  const skills = new Set(
-    walk(skillsRoot, (f) => path.basename(f) === 'SKILL.md')
-      .map((f) => path.relative(skillsRoot, path.dirname(f)).split(path.sep).join('/'))
-      .filter((id) => id.split('/').length === 2),
-  );
+  // 스킬 논리 ID {cat}/{name} — 본체는 1단 .claude/skills/<name>/, 카테고리는 docs 위치 (2026-10-05 평탄화)
+  const skillIndex = require('./skill-index.js');
+  const skills = new Set(skillIndex.installedSkillIds(root, skillIndex.categoryMap(root)).filter((id) => !id.startsWith('?/')));
   const agentsRoot = path.join(root, '.claude', 'agents');
   const agents = new Set(
     walk(agentsRoot, (f) => f.endsWith('.md'))
@@ -111,6 +108,9 @@ function makeExtractor(U) {
   // (오탐 근거: freshness-auditor 예시 리포트 표의 `backend/axum`, skill-tester <example> 발화 속 스킬명).
   const SKILL_SPAN = new RegExp(`\`(?:\\.claude\\/skills\\/)?((?:${cats})\\/[a-z0-9][a-z0-9-]*)(?:\\/[^\`]*)?\``, 'g');
   const SKILL_PATH = new RegExp(`\\.claude\\/skills\\/((?:${cats})\\/[a-z0-9][a-z0-9-]*)(?![\\w-])`, 'g');
+  // 현행 1단 경로 `.claude/skills/<name>` (2026-10-05 평탄화) — 이름 → 논리 ID 로 환원해 같은 판정을 탄다
+  const idByName = new Map([...U.skills].map((id) => [id.split('/').pop(), id]));
+  const SKILL_FLAT = /\.claude\/skills\/([a-z0-9][a-z0-9.-]*?)(?=\/|`|'|"|\)|\s|$|[^\w.-])/g;
   const AGENT_PATH = /(?:^|[^\w-])(?:\.claude\/)?agents\/([a-z0-9-]+)\/([a-z0-9][\w-]*)\.md/g;
   const AGENT_SUBTYPE = /subagent_type\s*[=:]\s*["'`]?([a-z0-9][\w:-]*)/g;
   const AGENT_NAMED = new RegExp(`(^|[^\\w-])\`?(${agentNames})\`?\\s*(?:\\([^)]*\\)\\s*)?(?:서브\\s*)?(?:에이전트|agent\\b)`, 'g');
@@ -144,6 +144,10 @@ function makeExtractor(U) {
         if (U.skills.has(m[1])) refs.push({ kind: 'skill', target: m[1], raw: m[1] });
       }
     }
+    for (SKILL_FLAT.lastIndex = 0; (m = SKILL_FLAT.exec(text));) {
+      const id = idByName.get(m[1]);
+      if (id) refs.push({ kind: 'skill', target: id, raw: `.claude/skills/${m[1]}` });
+    }
     for (AGENT_PATH.lastIndex = 0; (m = AGENT_PATH.exec(text));) {
       if (U.agents.has(m[2])) refs.push({ kind: 'agent', target: m[2], raw: `agents/${m[1]}/${m[2]}.md` });
     }
@@ -172,7 +176,8 @@ function makeInstalledIndex(dir) {
     has(ref) {
       switch (ref.kind) {
         case 'rule': return fs.existsSync(path.join(dir, '.claude', 'rules', `${ref.target}.md`));
-        case 'skill': return fs.existsSync(path.join(dir, '.claude', 'skills', ...ref.target.split('/'), 'SKILL.md'));
+        // 논리 ID {cat}/{name} → 설치본 1단 .claude/skills/<name>/SKILL.md (2026-10-05 평탄화)
+        case 'skill': return fs.existsSync(path.join(dir, '.claude', 'skills', ref.target.split('/').pop(), 'SKILL.md'));
         case 'agent': return agents.has(ref.target);
         case 'command': return fs.existsSync(path.join(dir, '.claude', 'commands', `${ref.target}.md`));
         default: return false;
@@ -600,6 +605,15 @@ test('경계: 접두 유사 이름·universe 밖 토큰·docs 경로는 오탐�
   assert.deepStrictEqual(FX('`.claude/skills/devops/n8n-self-hosting/references/REFERENCE.md`').map((r) => r.target), ['devops/n8n-self-hosting']);
   assert.deepStrictEqual(FX('docs/skills/frontend/nextjs-seo/verification.md docs/rules/agent-design.md'), []);
   assert.deepStrictEqual(FX('my-git.md, legit.md, git.mdx'), []);
+});
+
+test('2026-10-05 평탄화: 현행 1단 경로 `.claude/skills/<name>` 참조도 논리 ID 로 잡고, 접두 유사·자리표시자·비스킬은 무시', () => {
+  assert.deepStrictEqual(FX('.claude/skills/nextjs-seo/SKILL.md 를 읽어라').map((r) => r.target), ['frontend/nextjs-seo']);
+  assert.deepStrictEqual(FX('`.claude/skills/nextjs/SKILL.md`').map((r) => r.target), ['frontend/nextjs']);
+  assert.deepStrictEqual(FX('`.claude/skills/n8n-self-hosting/references/REFERENCE.md`').map((r) => r.target), ['devops/n8n-self-hosting']);
+  // 자리표시자·스킬 폴더 아닌 파일·universe 밖 이름·접미 확장
+  assert.deepStrictEqual(FX('.claude/skills/{name}/SKILL.md · .claude/skills/<name>/ · .claude/skills/CLAUDE.md'), []);
+  assert.deepStrictEqual(FX('.claude/skills/unknown-thing/SKILL.md .claude/skills/nextjs-seo-extra/SKILL.md'), []);
 });
 
 // ── 2026-10-05 보강: 에이전트명 단독 참조 · docs 스캔 (설치본 감사 제보 3건의 형태) ──
