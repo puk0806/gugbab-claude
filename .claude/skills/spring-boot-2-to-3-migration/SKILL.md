@@ -76,7 +76,7 @@ description: Spring Boot 2.5(Java 11) → 3.x(Java 17/21) 마이그레이션 실
 | 서블릿 컨테이너(WAR) | **Tomcat 10.1+** (Servlet 6.0) | Boot 3.0 번들 Tomcat 10.1 |
 
 > 주의: Java 17 전환 자체가 별도의 리스크다. Lombok·MapStruct·ByteBuddy·Mockito·JaCoCo 등 **바이트코드를 다루는 도구**는
-> Java 17 지원 버전으로 먼저 올려야 한다(`.claude/skills/backend/lombok-mapstruct-modelmapper/SKILL.md` 참조).
+> Java 17 지원 버전으로 먼저 올려야 한다(`.claude/skills/lombok-mapstruct-modelmapper/SKILL.md` 참조).
 > Java 17의 강한 캡슐화 때문에 리플렉션 기반 라이브러리에서 `InaccessibleObjectException`이 나면
 > 임시로 `--add-opens java.base/java.lang=ALL-UNNAMED`로 넘기되, **임시 조치임을 티켓으로 남긴다.**
 
