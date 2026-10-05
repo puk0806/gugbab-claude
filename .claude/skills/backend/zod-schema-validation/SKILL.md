@@ -7,7 +7,7 @@ description: Zod 4 서버 경계 검증 패턴 — 요청 body/query/params, 환
 
 > 소스: https://zod.dev/ (공식 문서) | https://zod.dev/v4/changelog (마이그레이션 가이드) | https://github.com/colinhacks/zod/releases
 > 2026-09-26 보강: `npm i zod@4`로 로컬 실측(`z.record` `__proto__` 처리) | RFC 9110 §15.5.21(422) | npm dist-tag 히스토리(3.25.0~, `stringbool` 존재 확인)
-> 검증일: 2026-09-25 (섹션 4-2·10-2 보강은 2026-09-26)
+> 검증일: 2026-09-26 (최초 2026-09-25, 섹션 4-2·10-2 보강·재테스트 2026-09-26)
 > 기준 버전: **zod 4.6.5** (2026-09 기준 최신 안정, 위 실측도 이 버전으로 수행). `.validate()`는 4.6.0+, `__proto__` 스킵 수정은 4.4.0+
 
 **범위:** 서버 측 "신뢰 경계(trust boundary)" 검증. React Hook Form + Zod 폼 연동은 `frontend/form-handling` 스킬, Hono 미들웨어 통합(`zValidator` 등)은 `backend/hono-api-patterns` 스킬을 참조한다.

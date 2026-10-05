@@ -11,7 +11,7 @@ description: Claude Code CLI를 headless(`claude -p`) 모드로 프로그래매�
 > - https://code.claude.com/docs/en/cli-reference (CLI reference)
 > - https://code.claude.com/docs/en/agent-sdk/overview (Agent SDK overview)
 > - https://support.claude.com/en/articles/15036540 (Use the Agent SDK with your Claude plan)
-> 검증일: 2026-09-26 (재검증)
+> 검증일: 2026-09-28 (2026-09-26 정기 재검증, 2026-09-28 "흔한 실수" 표 정정·재테스트)
 
 Vercel Sandbox 등 비대화형 환경에서 Claude Code CLI를 구독 인증으로 헤드리스 실행해
 프롬프트를 중계(예: SSE)할 때 필요한 핵심 지식을 정리한다.

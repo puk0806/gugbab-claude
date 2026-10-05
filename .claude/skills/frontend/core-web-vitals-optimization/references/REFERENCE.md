@@ -91,7 +91,7 @@ import hero from '../assets/hero.jpg';
 |------|------|
 | 빌드 시 lab 측정 (Lighthouse CI) | `lighthouse-ci-setup` |
 | 실사용자 RUM 수집 | `web-vitals-rum-comparison` |
-| 빌드 성능 회귀 감지 | `build-perf-benchmarker` |
+| 빌드 성능 회귀 감지 | `build-perf-benchmarker` (에이전트, 설치된 경우) |
 
 **최소 RUM 셋업 (web-vitals npm):**
 

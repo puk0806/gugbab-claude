@@ -75,7 +75,7 @@ n8n은 LangChain을 기반으로 **클러스터 노드(Cluster Nodes)** 구조�
 > 따라서 "어떤 모델이 뜨는가"는 **키에 열려 있는 모델**에 따라 달라진다. 워크플로우 JSON에는 선택된 모델 ID 문자열이 그대로 박히므로,
 > 모델 교체 시 워크플로우를 수정해야 한다.
 
-**현행 모델 지정 기준** — 이 레포는 `.claude/rules/agent-design.md`를 기준으로 삼는다:
+**현행 모델 지정 기준** — 원본 레포의 `.claude/rules/agent-design.md`(작성 도구 옵션 설치 시 존재)를 기준으로 삼는다:
 
 | 티어 | 모델 ID | 용도 |
 |------|---------|------|
@@ -85,7 +85,7 @@ n8n은 LangChain을 기반으로 **클러스터 노드(Cluster Nodes)** 구조�
 | 경량 | `claude-haiku-4-5` | 단순 분류·포맷 변환·라우팅 ($1/$5) |
 
 > **세대 정렬 (2026-09-25 갱신):** 위 표는 Anthropic 현행 라인업(**Claude Fable 5.1 / Claude Opus 5.5 / Claude Sonnet 5 /
-> Claude Haiku 4.5**) 기준이며 `.claude/rules/agent-design.md`와 일치한다. 구세대 `claude-fable-5`·`claude-opus-5`·
+> Claude Haiku 4.5**) 기준이며 `.claude/rules/agent-design.md`(설치된 경우)와 일치한다. 구세대 `claude-fable-5`·`claude-opus-5`·
 > `claude-opus-4-8`·`claude-sonnet-4-6`은 여전히 호출 가능한 *legacy*지만 신규 워크플로우에는 쓰지 않는다.
 > Haiku는 `claude-haiku-4-5`가 계속 현행이다. 신규 n8n 워크플로우 구성 시 드롭다운에 뜨는 최신 ID를 함께 확인한다.
 >

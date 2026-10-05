@@ -6,7 +6,7 @@ description: 유지보수 중단된 Recoil 0.7에서 Zustand v5 / Jotai v2로 �
 # Recoil 탈출 마이그레이션 (→ Zustand v5 / Jotai v2)
 
 > 소스: https://github.com/facebookexperimental/Recoil | https://recoiljs.org/docs | https://jotai.org/docs | https://zustand.docs.pmnd.rs | https://react.dev/blog/2024/04/25/react-19-upgrade-guide | https://github.com/pmndrs/jotai/releases (v3 마이그레이션 가이드)
-> 검증일: 2026-09-26 (30~60일 주기 재검증 — **Jotai 3.0.0 신규 릴리스 반영**, 이전 검증 2026-08-26)
+> 검증일: 2026-09-28 (실사용 검증 v1.2, 직전 30~60일 주기 재검증 2026-09-26 — **Jotai 3.0.0 신규 릴리스 반영**, 이전 검증 2026-08-26)
 
 ---
 

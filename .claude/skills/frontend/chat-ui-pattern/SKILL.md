@@ -1,6 +1,6 @@
 ---
 name: chat-ui-pattern
-description: LLM 챗봇용 React 채팅 UI 패턴 — 메시지 버블·가상 스크롤·스트리밍 토큰 누적·자동 스크롤·Markdown 렌더링(react-markdown v10 + remark-gfm + rehype-highlight)·타이핑 인디케이터·자동 높이 입력·메시지 액션·에러 재시도·접근성(aria-live/role=log)
+description: LLM 챗봇용 React 채팅 UI 패턴 — 메시지 버블·가상 스크롤·스트리밍 토큰 누적·자동 스크롤·Markdown 렌더링(react-markdown v10 + remark-gfm + rehype-highlight)·타이핑 인디케이터·자동 높이 입력·메시지 액션·에러 재시도·접근성(aria-live/role=log). 채팅이 아닌 일반 긴 목록·테이블·그리드의 react-virtuoso 가상 스크롤(Virtuoso·TableVirtuoso·VirtuosoGrid 선택, 높이·성능 props, 프로그래매틱 스크롤)도 references 16절에서 다룬다
 ---
 
 # LLM 챗봇용 React 채팅 UI 패턴

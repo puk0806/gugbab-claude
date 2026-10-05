@@ -176,6 +176,8 @@ matcher 값의 **문자 구성**에 따라 해석 방식이 바뀐다.
 
 3중 중첩 구조 — `이벤트 → matcher 그룹 → hooks 배열`.
 
+> 아래 예시의 `tdd-guard.js`는 dev 템플릿 전용 훅이다(설치된 경우에만 존재). 다른 훅 파일명으로 바꿔 읽어도 구조는 동일하다.
+
 ```json
 {
   "hooks": {
@@ -287,6 +289,8 @@ process.exit(0)
 - 테스트 가능하게 만들려면 판정 함수를 `module.exports`로 내보내고 `if (require.main === module) main()`으로 실행부를 감싼다.
 
 ### 7-3. 차단 + 사유 전달 (tdd-guard.js)
+
+> `tdd-guard`는 dev 템플릿 전용 훅이다(설치된 경우에만 존재). 아래는 차단 훅 작성 패턴 예시로 읽는다.
 
 ```js
 if (!hasTest) {

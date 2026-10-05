@@ -12,7 +12,7 @@ description: Better Auth(TypeScript 인증 라이브러리) 1.7.x 통합 패턴 
 > - 세션·저장소 상세(2026-09-26 추가): https://www.better-auth.com/docs/concepts/database (Secondary Storage 인터페이스·Redis 예시), npm `@better-auth/redis-storage`
 > - GitHub: https://github.com/better-auth/better-auth (releases, `packages/better-auth/package.json`), 1.7 릴리스 블로그 https://better-auth.com/blog/1-7
 >
-> 검증일: 2026-09-25 (섹션 6·9·10 rate limit 키·secondaryStorage·강제 로그아웃 항목은 2026-09-26 보강)
+> 검증일: 2026-09-26 (최초 2026-09-25, 섹션 6·9·10 rate limit 키·secondaryStorage·강제 로그아웃 항목은 2026-09-26 보강·재테스트)
 > 기준 버전: `better-auth` **1.7.6** (npm dist-tag `latest`, 2026-09-24). 1.6 계열은 `release-1.6` 태그(1.6.33)로 유지보수 중.
 > peer 범위(1.7.6 package.json): `next` ^14 / ^15 / ^16, `react` ^18 / ^19, `drizzle-orm` ^0.45.2 또는 >=1.0.0-rc.1, `@prisma/client` ^5 / ^6 / ^7
 

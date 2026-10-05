@@ -17,7 +17,7 @@ description: 소스 파일 수천 개 규모 프론트엔드 코드베이스를 
 > 소스: https://github.com/sverweij/dependency-cruiser/blob/main/doc/cli.md (dependency-cruiser 18.2.0 CLI 문서)
 > 소스: https://git-scm.com/docs/git-mv , https://git-scm.com/docs/git-diff , https://git-scm.com/docs/git-blame , https://git-scm.com/docs/git-log
 > 소스: https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/ (TypeScript 7.0, 2026-07-08)
-> 검증일: 2026-09-26 (30~60일 주기 재검증, 최초 검증 2026-08-26)
+> 검증일: 2026-09-28 (실사용 검증 v1.1, 직전 30~60일 주기 재검증 2026-09-26, 최초 검증 2026-08-26)
 
 이 스킬은 **"도메인 폴더로 옮기기로 결정했다" 다음 단계**를 다룬다.
 어떤 구조가 옳은지(레이어드 vs 기능 슬라이스 vs 도메인)는 다루지 않는다 — 그건 `architecture/ddd` 참조.

@@ -6,7 +6,7 @@ description: React Hook Form + Zod 유효성 검증, 제어/비제어 폼 패턴
 # Form Handling — React Hook Form + Zod
 
 > 소스: https://react-hook-form.com/docs | https://zod.dev/ | https://zod.dev/v4/changelog
-> 검증일: 2026-09-25 (Zod 4 예제 현행화)
+> 검증일: 2026-09-26 (Zod 4 예제 현행화 2026-09-25, 재테스트·선택 보강 2026-09-26)
 > 기준 버전: react-hook-form 7.x · **zod 4.x (4.6 기준)** · @hookform/resolvers 5.x (`zodResolver`가 Zod 4 스키마를 자동 인식)
 >
 > 서버 측 검증(요청 body·환경변수·외부 API 응답·악성 입력 방어)과 Zod 3 → 4 변경점 상세는 `backend/zod-schema-validation` 스킬(설치된 경우)을 참조한다.
@@ -416,4 +416,4 @@ function SignupForm() {
 }
 ```
 
-> `setError(field, ...)`의 `field`는 `register`에 쓴 것과 같은 dot-path 문자열이어야 값이 실제 필드에 연결된다. 서버·클라이언트가 스키마를 공유하지 않는다면(별도 패키지가 아니라면) 필드명 오타로 매핑이 조용히 실패할 수 있으니, 공유 스키마(`backend/zod-schema-validation` 스킬의 서버 검증과 동일 스키마)를 쓰는 것을 권장한다.
+> `setError(field, ...)`의 `field`는 `register`에 쓴 것과 같은 dot-path 문자열이어야 값이 실제 필드에 연결된다. 서버·클라이언트가 스키마를 공유하지 않는다면(별도 패키지가 아니라면) 필드명 오타로 매핑이 조용히 실패할 수 있으니, 공유 스키마(`backend/zod-schema-validation` 스킬 — 설치된 경우 — 의 서버 검증과 동일 스키마)를 쓰는 것을 권장한다.

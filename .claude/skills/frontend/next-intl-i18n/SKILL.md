@@ -18,11 +18,11 @@ description: >
 > - Next.js `next/root-params`: https://nextjs.org/docs/app/api-reference/functions/next-root-params
 > - Next.js `proxy.js`: https://nextjs.org/docs/app/api-reference/file-conventions/proxy
 > - 2026-09-26 보강: next-intl routing/setup 문서(`experimental.rootParams` 문구) + https://github.com/vercel/next.js/pull/72837 (rootParams 실험 플래그 PR)
-> 검증일: 2026-09-25 (1장·5장·4장 보강은 2026-09-26)
+> 검증일: 2026-09-26 (최초 2026-09-25, 1장·5장·4장 보강·재테스트 2026-09-26)
 > 기준 버전: **next-intl 4.14.7** (2026-09-24, npm latest) / **Next.js 16.3.x** (레포 `frontend/nextjs` 스킬 기준)
 
 **관련 스킬 (중복 금지, 설치된 경우 참조):**
-- hreflang·`alternates.languages`·다국어 sitemap·canonical·locale URL 전략의 SEO 판단 → `frontend/i18n-seo`
+- hreflang·`alternates.languages`·다국어 sitemap·canonical·locale URL 전략의 SEO 판단 → `frontend/i18n-seo`(SEO 옵션 설치 시)
 - Next.js 16 전반(캐싱·proxy·async params) → `frontend/nextjs`
 
 ---
@@ -114,7 +114,7 @@ export const routing = defineRouting({
 | `'never'` | `/about` (모든 로케일) | 도메인 기반·쿠키 기반 결정용. URL이 로케일별로 유일하지 않아 alternate 링크 비활성 |
 | 커스텀 prefix | `{mode: 'always', prefixes: {'en-US': '/us'}}` | 내부 locale과 URL 접두사 분리 |
 
-기타 옵션: `localeDetection: false`(accept-language·쿠키 감지 끔), `localeCookie`(이름·maxAge 조정 또는 `false`), `pathnames`(로케일별 URL 번역), `domains`(도메인 기반), `alternateLinks`(기본 `true` — hreflang `Link` 헤더 자동 생성. SEO 판단은 `frontend/i18n-seo`).
+기타 옵션: `localeDetection: false`(accept-language·쿠키 감지 끔), `localeCookie`(이름·maxAge 조정 또는 `false`), `pathnames`(로케일별 URL 번역), `domains`(도메인 기반), `alternateLinks`(기본 `true` — hreflang `Link` 헤더 자동 생성. SEO 판단은 `frontend/i18n-seo` — SEO 옵션 설치 시).
 
 > 4.0부터 로케일 쿠키는 기본 **세션 쿠키**이며, 사용자가 accept-language와 다른 로케일로 전환했을 때만 설정된다.
 
@@ -197,7 +197,7 @@ export function generateStaticParams() {
 export async function generateMetadata() {
   const t = await getTranslations('LocaleLayout'); // root-params 덕에 locale 전달 불필요
   return {title: t('title')};
-  // hreflang(alternates.languages)은 frontend/i18n-seo 참조
+  // hreflang(alternates.languages)은 frontend/i18n-seo 참조 (SEO 옵션 설치 시)
 }
 
 export default async function LocaleLayout({children}: LayoutProps<'/[locale]'>) {
