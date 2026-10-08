@@ -67,7 +67,7 @@ date -u +"%Y-%m-%dT%H:%M:%SZ"
 
 ### 단계 2: 측정 종류 분기
 
-#### 2-A. 빌드 시간 벤치마킹 (`build-perf-benchmarking` 참조)
+#### 2-A. 빌드 시간 벤치마킹 (`build-perf-benchmarking` 참조 — 설치된 경우)
 
 - 출력 디렉터리 결정: `./bench-results/{YYYY-MM-DD}/build/`
 - hyperfine 기본 템플릿:
@@ -86,7 +86,7 @@ hyperfine \
 - JSON 후처리로 **p95**를 산출한다 (hyperfine은 기본 출력에 p95 없음 → `times[]` 정렬 후 0.95 위치 값 추출). median·mean·stddev는 hyperfine이 제공.
 - IQR(Q3-Q1)도 함께 계산하여 변동성 지표로 기록.
 
-#### 2-B. 번들 크기 분석 (`bundle-size-analysis` 참조)
+#### 2-B. 번들 크기 분석 (`bundle-size-analysis` 참조 — 설치된 경우)
 
 - 도구 선택:
   - Vite: `vite-bundle-visualizer` 또는 `rollup-plugin-visualizer`
@@ -97,13 +97,13 @@ hyperfine \
   - brotli bytes (`brotli -c file | wc -c` 또는 `bro` 가용 시)
 - baseline이 있으면 동일 명령을 baseline 브랜치/태그에서도 수행해 **변경 전후 표**를 만든다.
 
-#### 2-C. dev 서버·HMR 벤치마킹 (`dev-server-hmr-benchmarking` 참조)
+#### 2-C. dev 서버·HMR 벤치마킹 (`dev-server-hmr-benchmarking` 참조 — 설치된 경우)
 
 - dev cold start: hyperfine으로 "ready" 로그가 나올 때까지의 시간을 측정.
   - 일반 패턴: `--show-output` + 사용자 정의 wrapper 스크립트로 ready 시점에 exit.
 - HMR 지연: Vite의 경우 `import.meta.hot` 측정 스니펫을 사용자가 사전 주입했는지 확인. 없으면 측정 방식(자동/수동)을 명시적으로 합의한 뒤 진행.
 
-#### 2-D. Lighthouse CI 측정 (`lighthouse-ci-setup` 참조)
+#### 2-D. Lighthouse CI 측정 (`lighthouse-ci-setup` 참조 — 설치된 경우)
 
 - `lhci collect --numberOfRuns=N --url=<url>` 실행.
 - 추출 메트릭: FCP, LCP, TBT, CLS, SI, Performance score.

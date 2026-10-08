@@ -6,3 +6,4 @@ React·Next.js 프론트엔드 아키텍처 설계와 코드 구현 전담 에�
 |---------|------|
 | [frontend-architect](../../../.claude/agents/frontend/frontend-architect.md) | 프로젝트 구조·기술 스택·렌더링 전략·번들링 설정 등 아키텍처 수준 설계·결정 |
 | [frontend-developer](../../../.claude/agents/frontend/frontend-developer.md) | React/Next.js 컴포넌트·커스텀 훅·API 연동·폼·애니메이션 코드 구현 및 타입 에러 수정 |
+| [nexacro-screen-converter](../../../.claude/agents/frontend/nexacro-screen-converter.md) | 넥사크로 화면 + 분석·명세 → Next.js 화면 초안(페이지·API 훅·폼 스키마·AG Grid), 원본과 다를 수 있는 곳 TODO 표시 — 사람 검토 전제 (nexacro 템플릿) |
