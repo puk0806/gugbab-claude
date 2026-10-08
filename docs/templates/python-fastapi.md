@@ -62,9 +62,9 @@ dream 전용 meta 3종·architecture 1종, frontend-domain-structure.
 
 ---
 
-## 훅 (18종 — 공통 14 + 개발 전용 4)
+## 훅 (24종 — 공통 18 + 개발 전용 6)
 
-공통 14종은 [fortune-app.md](./fortune-app.md#훅-19종--공통-14--개발-전용-4--typescript-1) 참조.
+공통 18종은 [fortune-app.md](./fortune-app.md#훅-25종--공통-18--개발-전용-6--typescript-1) 참조.
 
 개발 전용: `tdd-guard.js` · `test-fake-guard.js` · `adversarial-test-guard.js` · `fake-impl-guard.js`
 

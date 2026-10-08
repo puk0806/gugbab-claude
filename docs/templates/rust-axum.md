@@ -64,19 +64,23 @@ Rust + Axum 백엔드 프로젝트. 프론트엔드·Java·게임·학술 스킬
 
 ---
 
-## 훅 (18종 — 공통 14 + 개발 전용 4)
+## 훅 (24종 — 공통 18 + 개발 전용 6)
 
-### 공통 (14종)
+### 공통 (18종)
 
 | 훅 | 이벤트 | 설명 |
 |----|--------|------|
 | [bash-guard.js](../../.claude/hooks/bash-guard.js) | PreToolUse Bash | 위험한 Bash 명령어 패턴 차단 (rm -rf 시스템 경로, force push 등) |
 | [auto-approve.js](../../.claude/hooks/auto-approve.js) | PreToolUse | Bash를 제외한 도구 자동 승인 |
 | [parry.js](../../.claude/hooks/parry.js) | PreToolUse Write | 시크릿·프롬프트 인젝션 패턴 스캔 — 감지 시 저장 차단 |
-| [protect-secrets.js](../../.claude/hooks/protect-secrets.js) | PreToolUse Write/Edit | 민감 파일(.env, *.pem, *.key, credentials 등) 수정 차단 |
+| [protect-secrets.js](../../.claude/hooks/protect-secrets.js) | PreToolUse Write/Edit/NotebookEdit/Read/Grep | 민감 파일(.env, *.pem, *.key, credentials 등)·홈 셸·SSH·git 설정 파일 수정 차단 + 개인키·클라우드 인증 파일 읽기 차단(.env 읽기는 허용) |
 | [session-start.js](../../.claude/hooks/session-start.js) | SessionStart | 세션 시작 시 브랜치·미커밋 파일·최근 커밋 요약 출력 |
 | [session-export.js](../../.claude/hooks/session-export.js) | Stop | 세션 대화 요약을 로컬 exports에 기록 |
 | [cc-notify.js](../../.claude/hooks/cc-notify.js) | Stop | 작업 완료 시 macOS 데스크탑 알림 |
+| [korean-response-guard.js](../../.claude/hooks/korean-response-guard.js) | UserPromptSubmit · Stop | 답변 한국어 강제 — 매 질문마다 지시 주입, 영어 위주 답변은 한국어로 재작성 요구 |
+| [task-confirm-guard.js](../../.claude/hooks/task-confirm-guard.js) | UserPromptSubmit · PreToolUse Write/Edit/NotebookEdit | 확인 절차 강제 — 직전 답변 마지막 줄이 "진행할까요?"이고 사용자가 승인해야 파일 수정 허용 |
+| [config-change-audit.js](../../.claude/hooks/config-change-audit.js) | SessionStart · ConfigChange | 설정 변경 감사 — 세션 중 settings 가 바뀌면 기록하고 훅 제거·deny 제거·넓은 허용 등은 ⚠ 알림 (차단 안 함) |
+| [progress-tracker.js](../../.claude/hooks/progress-tracker.js) | UserPromptSubmit · PostToolUse · SessionStart | 진행 기록 — 승인된 계획과 수정 파일을 자동 기록, 새 세션·요약 직후 "여기까지 진행됨" 안내 |
 | [instructions-loaded.js](../../.claude/hooks/instructions-loaded.js) | SessionStart | CLAUDE.md 로드 완료 시 규칙 요약 출력 |
 | [deliverable-guard.js](../../.claude/hooks/deliverable-guard.js) | PostToolUse Write/Edit · PreToolUse Bash · Stop | 산출물 완결성 — 세션 수정 파일 추적 + README 동기화 검사 + PENDING_TEST 스킬 테스트 미수행 차단 |
 | [skill-md-guard.js](../../.claude/hooks/skill-md-guard.js) | PostToolUse Write | SKILL.md 소스 URL·검증일·필수 섹션 검증 |
@@ -85,7 +89,7 @@ Rust + Axum 백엔드 프로젝트. 프론트엔드·Java·게임·학술 스킬
 | [staleness-check.js](../../.claude/hooks/staleness-check.js) | SessionStart | 스킬 검증일 경과 감지 — 30~59일 경고, 60일+ 재검증 강제 |
 | [statusline.sh](../../.claude/hooks/statusline.sh) | statusLine | 상태 바 — 브랜치·미커밋 수·PENDING_TEST 스킬 수 표시 |
 
-### 개발 전용 (4종)
+### 개발 전용 (6종)
 
 | 훅 | 이벤트 | 설명 |
 |----|--------|------|
@@ -93,6 +97,8 @@ Rust + Axum 백엔드 프로젝트. 프론트엔드·Java·게임·학술 스킬
 | [test-fake-guard.js](../../.claude/hooks/test-fake-guard.js) | PreToolUse Bash / PostToolUse Write | 가짜 테스트 패턴 탐지·차단 |
 | [adversarial-test-guard.js](../../.claude/hooks/adversarial-test-guard.js) | PostToolUse Write/Edit | 테스트에 악성 유저 방어·경계 계층 없으면 차단 |
 | [fake-impl-guard.js](../../.claude/hooks/fake-impl-guard.js) | PostToolUse Write/Edit | 테스트 기대 리터럴을 그대로 반환하는 가짜 구현 차단 |
+| [auto-format.js](../../.claude/hooks/auto-format.js) | PostToolUse Write/Edit | 저장한 파일을 언어별 포매터로 정리 (biome·prettier / ruff·black / rustfmt, 설정+설치 시에만, 실패해도 막지 않음) |
+| [package-manager-guard.js](../../.claude/hooks/package-manager-guard.js) | PreToolUse Bash | lock 파일과 다른 패키지 매니저로 설치·추가·삭제 차단 (JS·Python) |
 
 > TypeScript 훅(typescript-quality)·Memory 훅은 이 템플릿에 포함되지 않습니다.
 
@@ -143,4 +149,4 @@ Rust + Axum 백엔드 프로젝트. 프론트엔드·Java·게임·학술 스킬
 | `permissions.deny` | `git push --force`, `rm -rf` 시스템 경로, `chmod 777`, curl\|bash 패턴 |
 | `permissions.additionalDirectories` | `/tmp`, `/private/tmp`, `/var/folders` |
 | `statusLine` | 브랜치·미커밋·PENDING_TEST 상태 표시 (`statusline.sh`) |
-| 훅 연결 | 공통 14종 + dev(tdd-guard·test-fake-guard·adversarial-test-guard·fake-impl-guard) 연결 (TypeScript 훅 제외) |
+| 훅 연결 | 공통 18종 + dev(tdd-guard·test-fake-guard·adversarial-test-guard·fake-impl-guard·auto-format·package-manager-guard) 연결 (TypeScript 훅 제외) |

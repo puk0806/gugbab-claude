@@ -1,6 +1,6 @@
 # backend 스킬
 
-Rust · Java · Python · TypeScript(Hono/Prisma/Zod/Better Auth/Drizzle/Neon) · Claude Code CLI · 운세 앱 백엔드 스킬 모음 (총 50종).
+Rust · Java · Python · TypeScript(Hono/Prisma/Zod/Better Auth/Drizzle/Neon) · Claude Code CLI · 운세 앱 백엔드 · 넥사크로 레거시 마이그레이션 스킬 모음 (총 52종).
 
 ---
 
@@ -105,3 +105,12 @@ Rust · Java · Python · TypeScript(Hono/Prisma/Zod/Better Auth/Drizzle/Neon) �
 | 스킬 | 설명 | 검증 |
 |------|------|------|
 | [korean-lunar-calendar-manseryeok](../../../.claude/skills/korean-lunar-calendar-manseryeok/SKILL.md) | 한국 음양력·만세력 계산 규칙 — 절기 기준 월주·입춘 기준 연주 경계, 표준시 변천·서머타임 이력, 진태양시 보정, 야자시/조자시, KASI 공식 데이터 대조 검증 | [→](./korean-lunar-calendar-manseryeok/verification.md) |
+
+---
+
+## 넥사크로 레거시 백엔드 마이그레이션 (nexacro 템플릿 전용, 2종)
+
+| 스킬 | 설명 | 검증 |
+|------|------|------|
+| [spring-boot-1-to-2-migration](../../../.claude/skills/spring-boot-1-to-2-migration/SKILL.md) | Spring Boot 1.x → 2.7.x 단계 가이드 — 1.3→1.5→2.0→2.7 공식 경로, properties-migrator·Security/Actuator·Hikari 변경, 이후 `spring-boot-2-to-3-migration`으로 연결 | [→](./spring-boot-1-to-2-migration/verification.md) |
+| [ibatis-to-mybatis-migration](../../../.claude/skills/ibatis-to-mybatis-migration/SKILL.md) | iBATIS 2 → MyBatis 3 — 공식 변환 도구 ibatis2mybatis 실행·한계, 문법 대응표(isNotEmpty·procedure 함정), SqlMapClient→Mapper, 공존 점진 전환, Oracle `jdbcTypeForNull` | [→](./ibatis-to-mybatis-migration/verification.md) |

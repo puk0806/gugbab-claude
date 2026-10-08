@@ -28,16 +28,16 @@ gugbab-claude/
 ├── memory/          ← Claude 메모리 미러 (전역 memory의 워킹트리 복사 · 커밋은 수동 · 크로스 데스크탑 공유)
 └── .claude/
     ├── agents/      ← 에이전트 (9카테고리)
-    ├── skills/      ← 스킬 (9카테고리, 184종) — 1단 `skills/<이름>/SKILL.md`, 카테고리는 docs/skills/<카테고리>/ 위치로 구분
-    ├── hooks/       ← 훅 (23종)
+    ├── skills/      ← 스킬 (11카테고리, 195종) — 1단 `skills/<이름>/SKILL.md`, 카테고리는 docs/skills/<카테고리>/ 위치로 구분
+    ├── hooks/       ← 훅 (29종)
     ├── rules/       ← 규칙 (14종)
     ├── commands/    ← 슬래시 커맨드
     └── settings.json
 ```
 
 - [agents/](./docs/agents/README.md) — 9카테고리
-- [skills/](./docs/skills/README.md) — 9카테고리 184종
-- [hooks/](./docs/hooks/README.md) — 23종 (공통 14 · dev 4 · TypeScript 1 · Memory 2 · Codex 1 · Branch Protection 1)
+- [skills/](./docs/skills/README.md) — 11카테고리 195종
+- [hooks/](./docs/hooks/README.md) — 29종 (공통 18 · dev 6 · TypeScript 1 · Memory 2 · Codex 1 · Branch Protection 1)
 - [rules/](./docs/rules/README.md) — 14종 (공통 9 · 언어별 3 · 선택적 2)
 
 ---
@@ -62,9 +62,12 @@ gugbab-claude/
 | 11 | seo-geo | SEO·GEO 검색 노출 애드온 (프레임워크 비종속 — 스택 템플릿과 병행) | [→](./docs/templates/seo-geo.md) | [예시](./examples/CLAUDE.seo-geo.md) |
 | 12 | fortune-app | 사주·타로·손금 캐주얼 운세 앱 (만세력 · 사주 차트 · 타로 덱 UI · 손금 촬영) | [→](./docs/templates/fortune-app.md) | [예시](./examples/CLAUDE.fortune-app.md) |
 | 13 | python-fastapi | Python 3.12+ + FastAPI 백엔드 | [→](./docs/templates/python-fastapi.md) | [예시](./examples/CLAUDE.python-fastapi.md) |
+| 14 | spec-extraction | 레거시 스펙 추출 애드온 (Java·React·넥사크로 → `docs/spec/` — 스택 템플릿과 병행) | [→](./docs/templates/spec-extraction.md) | [예시](./examples/CLAUDE.spec-extraction.md) |
+| 15 | nexacro | 넥사크로 17 + Spring(X-API) 레거시 → Next.js·Java 이전 (레거시 프로파일) | [→](./docs/templates/nexacro.md) | [예시](./examples/CLAUDE.nexacro.md) |
 
 복수 선택도 가능합니다: `react-spa,health` 또는 `2,10` 처럼 쉼표로 구분하면 agents·skills·rules가 **union(합집합)** 으로 병합됩니다.
 서버 렌더 HTML(JSP 등)로 검색 노출을 담당하는 Java 프로젝트는 `5,11`(java-spring-legacy + seo-geo)처럼 조합합니다.
+레거시 레포의 스펙 문서화는 `15,14`(nexacro + spec-extraction)·`5,14`처럼 spec-extraction 애드온을 붙입니다.
 
 ---
 
@@ -95,9 +98,16 @@ gugbab-claude의 에이전트·훅·규칙을 다른 프로젝트에 심어서 �
   7) unity-game        — Unity 6 LTS 2D 모바일 게임 개발
   9) dream-interpretation — 꿈 해몽 앱 도메인
  10) health             — 건강·식단 PWA 앱
+ 11) seo-geo            — SEO·GEO 검색 노출 (애드온 — 스택 템플릿과 병행)
+ 12) fortune-app        — 사주·타로·손금 운세 앱 개발
+ 13) python-fastapi     — Python 3.12+ + FastAPI 백엔드
+ 14) spec-extraction    — 레거시 스펙 추출 (애드온 — 스택 템플릿과 병행, 단독 가능)
+ 15) nexacro            — 넥사크로 17 레거시 → Next.js·Java 이전
 
 번호 또는 이름 입력 (쉼표로 복수 선택 가능): 2,10
 ```
+
+> 번호 8은 폐지된 템플릿이라 비어 있다. 애드온(11·14)은 입력 순서와 무관하게 스택 템플릿 뒤로 정렬된다 — 예: `14,15` → `15,14`.
 
 설치가 완료되면 대상 프로젝트에서 커밋합니다.
 
@@ -167,6 +177,8 @@ claude --continue             # 이전 대화 이어서
 
 | 날짜 | 변경 내용 |
 |------|-----------|
+| 2026-10-08 | **스펙 추출·넥사크로 마이그레이션 자산 신설** — 스킬 11종(184→195, 카테고리 9→11): 신규 `spec` 4종(`spec-extraction-method`·`spring-mybatis-spec-extraction`·`react-spec-extraction`·`characterization-testing`) · 신규 `nexacro` 5종(`nexacro-17-xfdl-anatomy`·`nexacro-xapi-server`·`nexacro-to-react-mapping`·`xapi-to-rest-migration`·`nexacro-strangler-coexistence`) · backend 2종(`spring-boot-1-to-2-migration`·`ibatis-to-mybatis-migration`, nexacro 템플릿 전용). 전부 공식 문서 조사·교차 검증 + skill-tester 3/3 PASS — APPROVED 5 / 마이그레이션·워크플로우 6종은 규칙대로 PENDING_TEST(졸업 조건은 PENDING_TEST.md). 에이전트 5종(56→61): `legacy-spec-extractor`(domain, 오케스트레이터 opus·maxTurns 40) · `spec-reviewer`(validation) · `nexacro-screen-analyzer`(domain) · `nexacro-screen-converter`(frontend) · `migration-parity-tester`(validation). 커맨드 `/spec-extract`. **템플릿 2종 추가** — 14 `spec-extraction`(애드온, 단독 가능 — 스킬 5·에이전트 9·공통 훅, `5,14`·`15,14` 조합) · 15 `nexacro`(dev, TS 훅 없음, 레거시 프로파일 자동 — tdd-guard 제외, 스킬 49·에이전트 30). 설치기·소유/분리/참조/수치 테스트 약 40개 추가(누수·입력 순서 정규화·잘못된 번호·축소 재설치), `examples/CLAUDE.{spec-extraction,nexacro}.md`·`docs/templates/` 2종. **설치 검수(13개 조합 실설치·축소 재설치·`claude -p` 인식 확인 + 독립 리뷰) 반영** — 15 단독 설치본이 미설치 스킬(`zod-schema-validation`, Rust용 `multipart-upload`)을 가리키던 4곳 정정(업로드 방어는 Java 기준 본문으로), 참조 검사에 백틱 스킬 이름 단독 형태 추가, 15 조합 시 "레거시 프로파일이 조합 전체에 적용" 경고 출력, examples 2종 지침 충돌 정리(X-API 유지 범위·특성화 테스트 예외), 14·15 자산 누수 직접 검사를 기존 템플릿 12종 전부로 확장. 보강된 검사가 드러낸 같은 형태의 기존 참조 13곳(에이전트 `build-perf-benchmarker`, 스킬 `aws-sdk-v2-s3-rekognition`·`redis-redisson-4`·`redis-redisson-modern`·`core-web-vitals-optimization`·`mobile-seo-pwa`·`seo-static-html`·`palm-photo-capture-vision`)과 신규 스펙 스킬 4종 13곳에도 "(설치된 경우)" 표기(사용자 승인, 내용 변경 없음) |
+| 2026-10-06 | **한국어 답변 강제 훅 신설** — `korean-response-guard.js`(공통, 모든 템플릿·util 포함): UserPromptSubmit 에서 매 질문마다 "한국어로 답변" 지시 주입 + Stop 에서 마지막 답변의 한국어 단어 비율(코드·경로·URL·식별자 제외) 50% 미만이면 재작성 요구(1회, 루프 방지·"영어로" 요청 시 통과). 훅 23→24종(공통 14→15), `gen-settings.js`·`settings.json`·템플릿 문서 12종·훅 문서 동기화, 테스트 28개. **승인 프롬프트 축소** — `auto-approve.js`가 설정이 없어 매번 확인 창이 뜨던 Skill·Monitor·Workflow·EnterWorktree·Artifact·모든 MCP 도구를 자동 승인(PowerShell 제외), 테스트 63개(위장 도구 이름·이상 입력 포함). **확인 절차 강제 훅 신설** — `task-confirm-guard.js`(공통): 직전 답변 마지막 줄의 "진행할까요?"에 사용자가 승인해야 Write/Edit/NotebookEdit 허용(거절·수정 요청·되묻기는 미승인, 메모리·임시 폴더 예외), 실제 세션 질문 93건으로 오탐 3종 교정, 테스트 45개 — 계획 승인 버튼(ExitPlanMode)은 자동 승인으로 전환. 훅 24→25종(공통 15→16). **reset 판정 변경** — `git reset --hard`는 푸시 여부를 git 으로 확인해 미푸시면 자동·푸시된 커밋 삭제면 차단(`settings.json` deny 의 `HEAD~2+` 정적 규칙 제거), `git clean -f` 자동, 실제 임시 git 레포 테스트 20개. **승인 분류 정비(사용자 결정)** — 차단: 홈 셸·SSH·git 설정 파일 수정, 개인키·클라우드 인증 파일 읽기(Read·Grep·Bash 인자 공통, `.env` 읽기는 허용), `gh repo delete` / 확인: 프로젝트 밖 쓰기, 삭제·공유 계열 MCP·Artifact 삭제, gh PR·릴리스·api 쓰기, curl·wget 파일 업로드, docker 정리, `killall`·`pkill`, 세션 밖 프로세스 `kill -9`(세션이 띄운 것은 자동) / Workflow·계획 승인은 자동. protect-secrets 를 Read·Grep·NotebookEdit 에 배선. 테스트: protect-secrets 47·auto-approve 92·bash-guard 411. **훅 4종 신설** — 개발 전용: `auto-format.js`(저장 파일을 언어별 포매터로 정리 — biome·prettier / ruff·black / rustfmt, 설정+설치 시에만·실패해도 비차단, 28) · `package-manager-guard.js`(lock 파일과 다른 매니저의 설치·추가·삭제 차단 — JS·Python, 51) / 공통: `config-change-audit.js`(세션 중 설정 변경 기록 + 훅 제거·deny 제거·넓은 허용 등 ⚠ 알림, 비차단, 25) · `progress-tracker.js`(승인된 계획·수정 파일 자동 기록, 새 세션·요약 직후 이어하기 안내, 27). task-confirm-guard 버그 수정 — 백그라운드 작업 알림이 UserPromptSubmit 으로 들어와 승인이 풀리던 문제(시스템 알림은 상태 유지, 테스트 50). 훅 25→29종(공통 16→18·개발 4→6) |
 | 2026-10-05 | **설치본(01·voca) 제보 반영**: ① 설치본 참조 검사(`installed-refs.test.js`) 보강 — 백틱·문장 속 에이전트 이름, `cat/agent` 표기, 설치되는 `docs/**`까지 스캔(검증 기록 문서는 과거 사실이라 제외). 새로 드러난 무조건 참조를 "(설치된 경우)"로 정정 — 훅 3(verification-guard·deliverable-guard·staleness-check), 에이전트 9(a11y-auditor·seo-auditor·content-quality-reviewer·security-auditor 등), 규칙 2, docs/agents "관련 에이전트" 11종 등. ② Codex 옵션 설치 시 대상 `.gitignore`에 `.claude/.codex-review-done`·`.codex-unavailable` 자동 추가(중복 방지, 이미 추적 중이면 `git rm --cached` 안내만, 심볼릭 링크·디렉터리는 건너뜀 — E2E 62→72). ③ typescript.md 예외 명시 — `as`(React 요소·ref 조작, instanceof 불가 DOM 타깃), 인라인 style(헤드리스 기능적 스타일), effect 내 setState(하이드레이션용 마운트 후 1회, React 공식 two-pass 패턴) + TanStack Query v5 `useQuery` 콜백 제거 반영. ④ 원본이 기준 원칙 — 09-26 병합된 react-virtuoso는 되살리지 않고 chat-ui-pattern 설명문에 범용 가상 리스트(references 16절) 명시로 발견성 보강. ⑤ **스킬 구조 평탄화 — 184종이 스킬로 등록되지 않던 구조 결함 수정**: Claude Code는 `.claude/skills/<이름>/SKILL.md` 1단만 스킬로 등록하는데 `skills/<카테고리>/<이름>/` 2단 중첩이라 원본·설치본 모두 자동 호출·`/이름` 호출이 안 되고 에이전트가 경로로 Read할 때만 쓰였음(경로로도 안 불리는 약 70종은 사실상 미사용). 184종을 1단으로 이동(git mv, 이름 충돌 0), 카테고리는 `docs/skills/<카테고리>/<이름>/` 위치를 단일 원천으로 — 설치 스크립트가 이 위치로 템플릿 필터 유지. 평탄화 이전 2단 설치본은 재설치 한 번에 1단으로 수렴(매니페스트 해시·레포 원본 동일 증명, 수정본·커스텀 보존). 재발 방지: skill-md-guard가 2단 이상 저장·name≠폴더명을 저장 차단, 구조 회귀 검사(1단·카테고리명 충돌·name 일치·docs 1:1) 추가, 참조 약 275곳 정정. 실측: 이 세션·설치본 `claude -p` 모두 스킬 목록에 노출 확인. ⑥ 문서·배선 어긋남 정리 — 훅 문서 3곳 설명을 실제 동작으로(instructions-loaded·skill-md-guard·codex-review-guard), 존재하지 않는 훅 문서 `permission-judge.md` 삭제, verification-guard 날짜 경고가 Write 후 배선 누락으로 발생하지 않던 문제 수정, 원본 settings.json을 생성기 전체 옵션 출력과 일치(statusLine·`Bash(tee*)`, 회귀 검사 추가), verification.md 179종 스킬 경로 표기를 1단으로 일괄 정정(사용자 승인). ⑦ 레포에서 폐기된 공용 docs(docs/hooks/**)가 설치본에 영구 잔존하던 문제를 매니페스트 해시 증명 하에 정리. 실제 설치본 사본 리허설: 2단 25종 → 1단 25종, 폐기 문서 제거 |
 | 2026-09-30 | **하네스 구조 조사 중 발견한 어긋남 정리 + 설치본 감사 제보 반영**: ① 작성 도구 없이 설치하면 없는 규칙·에이전트를 가리키던 문구를 "(설치된 경우)" 조건부로 — 에이전트 4종(freshness-auditor·tech-stack-advisor·pr-reviewer·changelog-writer), 훅 차단 메시지(agent-md-guard·deliverable-guard), 스킬 교차 참조(next-intl-i18n → i18n-seo, claude-code-hook-authoring의 tdd-guard 예시). ② freshness-auditor 재검증 기준을 staleness-check 훅과 같은 30/60일로 통일. ③ verification.md 메타 날짜 불일치 39종 정리(메타 표 검증일 행 누락 15·날짜 어긋남 24, 이력의 실제 날짜 기준, 내용 변경 없음). ④ 문서 정정 — docs/rules 분류(adversarial-testing은 dev 전용, typescript 대상 5템플릿), agent-design 폴더 구조 9카테고리, VERIFICATION_TEMPLATE 필수 frontmatter·4절 번호, gen-settings 사용법 주석. ⑤ 미사용 잔재 삭제(`examples/settings/util.json` 등). ⑥ **설치 스크립트 결함 3건 수정(E2E 56→62)** — rust-axum·unity-game 설치에 딸려 들어가던 SEO 에이전트 2종 제외(seo-geo 병행 시 유지, 기존 설치본은 재설치 때 소유 증명 후 정리), all(0)이 CLAUDE.md 베이스일 때 다른 템플릿 도메인 섹션이 병합되지 않던 문제(`## 상황별 규칙 참조` 제목 인식), 미사용 `_lib.js` 폐지(공통 훅 15→14종, 재설치 정리 목록 추가). 폐지 훅 배선 제거 정규식이 `.claude/hooks/` 밖 사용자 훅까지 지울 수 있던 부작용도 차단. 템플릿 문서 수치를 실제 설치 결과로 재실측. ⑦ **재발 방지 회귀 검사 4종 신설 (테스트 108→274)** — 어제 전수 검증이 "파일 하나의 형식"만 보고 실제 설치 결과·파일 간 일관성을 안 봐서 위 결함을 놓친 공백을 메움: `scripts/installed-refs.test.js`(템플릿·옵션 20개 실설치본에서 미설치 대상 무조건 참조 검출 — 첫 실행 위반 54건, 에이전트 11·스킬 13·훅 3·규칙 1 조건부 표기로 정정), `verification-consistency.test.js`(검증일 3곳·frontmatter·짝 SKILL.md 전수 — backend 11종 날짜 판독 불가 발견·정정, staleness-check·verification-guard에 불일치 경고 추가), `template-docs-counts.test.js`(템플릿 문서·README 수치 ↔ 34개 실설치 — 문서 오류 3건 정정), `template-ownership.test.js`(자산 58그룹 × 템플릿·조합 28케이스 매트릭스, 미분류 자산 실패 — dream·fortune SEO y 시 SEO 에이전트 누락 결함 발견·수정) |
 | 2026-09-29 | **PENDING_TEST 실사용(실행) 검증 + 선택 보강 반영 (PENDING_TEST 17→8)**: ① 세션 임시 격리 폴더에 샘플 프로젝트를 만들어 16종을 실제 실행(Vite 8 빌드·hyperfine·size-limit·lhci·Playwright SW·tsup·TanStack v4→v5 codemod·Recoil→Zustand·ts-morph·uv·만세력 라이브러리·Docker n8n 스택·SB 2.5→3.5 Gradle 이전·Claude Code headless 훅 9회) → **9종 졸업**(vite-advanced-splitting·webpack-vite-config-mapping·tsup·build-perf-benchmarking·bundle-size-analysis·dev-server-hmr-benchmarking·tanstack-query-v4-to-v5-migration·recoil-to-zustand-migration·claude-code-hook-authoring). 실행에서만 드러난 결함 정정: TanStack codemod 경로·자동/수동 경계표 5항목, ts-morph `move()` 경로 버그, tsup + TS 7 `dts` 크래시, macOS `date %3N`·`exit 0` 누락·HMR WS 전제조건, SB 2.7 기본 Security 5.7에 `requestMatchers(String...)` 없음(5.8 오버라이드), n8n `N8N_WEBHOOK_URL`·압축 한도 현재 기본값·internal runner deprecated, 1954/1961 표준시 전환 모호·부재 시각, 훅 `node <경로>` 오타는 exit 1. 남은 8종은 CI 러너·실기기·KASI 키·대규모 코드베이스·Unity 계정 등 로컬 불가 조건만 남음(`docs/skills/PENDING_TEST.md`). ② `spring-boot-gradle-setup` REFERENCE §9.7 Boot 4.0 Starter 이름 변경 신설 + `spring-boot-2-to-3-migration`의 §9 인용 복원(전날 "9장 없음" 오판 정정). ③ 재테스트 발견 선택 보강 약 25건 반영(asyncio 3.13/3.14, reqwest retry·DNS 예제, SSE JSON 분기, Next.js GHSA 플랫폼 구분, Vike JSON-LD 예제, 정적 호스팅 트레일링 슬래시, Target API 36 유예 대상, Suno 계정 단위, LevelPlay S2S 중복 지급 방어, 공공데이터 API 응답 경로 버그 등) 후 skill-tester 재통과. 최종: APPROVED 176 · PENDING_TEST 8 · NEEDS_REVISION 0 |

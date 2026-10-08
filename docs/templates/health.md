@@ -80,13 +80,13 @@ frontend/claude-api-streaming-frontend ← 프론트→Claude API 직접 호출
 
 ---
 
-## 훅 (19종 — 공통 14 + 개발 전용 4 + TypeScript 1)
+## 훅 (25종 — 공통 18 + 개발 전용 6 + TypeScript 1)
 
-### 공통 (14종)
+### 공통 (18종)
 
-react-spa 템플릿과 동일한 공통 훅 세트. 자세한 목록은 [fortune-app.md](./fortune-app.md#훅-19종--공통-14--개발-전용-4--typescript-1) 참조.
+react-spa 템플릿과 동일한 공통 훅 세트. 자세한 목록은 [fortune-app.md](./fortune-app.md#훅-25종--공통-18--개발-전용-6--typescript-1) 참조.
 
-### 개발 전용 (4종)
+### 개발 전용 (6종)
 
 `tdd-guard.js` · `test-fake-guard.js` · `adversarial-test-guard.js` · `fake-impl-guard.js`
 

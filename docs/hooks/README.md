@@ -1,6 +1,6 @@
 # 훅 (Hooks)
 
-Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 23종 = 실행 훅 22종 + `statusline.sh`, 2026-09-30 실측 — 공통 유틸 `_lib.js`는 삭제됨).
+Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 29종 = 실행 훅 28종 + `statusline.sh`, 2026-09-30 실측 — 공통 유틸 `_lib.js`는 삭제됨).
 
 훅 파일 위치: `.claude/hooks/`
 
@@ -15,14 +15,14 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 23종 = 실행 �
 
 ---
 
-## 공통 훅 (14종) — 모든 템플릿
+## 공통 훅 (18종) — 모든 템플릿
 
 | 훅 | 이벤트 | 설명 | 테스트 |
 |----|--------|------|:---:|
-| [bash-guard.js](../../.claude/hooks/bash-guard.js) | PreToolUse·PostToolUse·PermissionRequest | 위험 Bash 차단(rm -rf 시스템/홈/.git·force push 등) + 보호 파일 *쓰기 연산* 차단 + 안전 패턴 자동 허용 | ✅ |
-| [auto-approve.js](../../.claude/hooks/auto-approve.js) | PreToolUse·PermissionRequest | Bash를 제외한 도구 자동 승인 (Bash 보안은 bash-guard가 담당) | ✅ |
+| [bash-guard.js](../../.claude/hooks/bash-guard.js) | PreToolUse·PostToolUse·PermissionRequest | 위험 Bash 차단(rm -rf 시스템/홈/.git·force push 등) + 보호 파일 *쓰기 연산* 차단 + 안전 패턴 자동 허용. `git reset --hard`는 git 으로 푸시 여부를 확인해 **미푸시 커밋·커밋 안 한 작업만 지우면 자동, 푸시된 커밋을 지우면 차단**, 판정 불가면 확인(2026-10-06 — 구 `HEAD~2+` 정적 차단 대체). `git clean -f` 자동. **gh**: 조회 자동·PR 생성/머지·릴리스·`gh api` 쓰기는 확인·`gh repo delete` 차단 / **curl·wget 파일 업로드**(`-d @`·`-F`·`-T`·`--post-file`) 확인 / **docker·podman 정리·볼륨 삭제**, `killall`·`pkill` 확인 / **`kill -9`**: 이 Claude 세션이 띄운 프로세스면 자동, 아니면 확인(ps 로 부모 추적) / **개인키·인증 파일 경로가 인자에 있으면 차단**(protect-secrets 판정 공유) — 2026-10-06 | ✅ |
+| [auto-approve.js](../../.claude/hooks/auto-approve.js) | PreToolUse·PermissionRequest | Bash를 제외한 도구 자동 승인 (Bash 보안은 bash-guard가 담당) — 기본 도구 + Skill·Monitor·Workflow·EnterWorktree·Artifact + **모든 MCP 도구**(`mcp__<서버>__<도구>`, 2026-10-06). + ExitPlanMode(계획 승인 — 확인은 task-confirm-guard 가 강제). **확인 창 강제**: 프로젝트·허용 폴더 밖 Write/Edit/NotebookEdit(메모리·계획·임시 폴더 제외), 삭제·공유 계열 MCP(`delete`·`trash`·`share`·`remove` 등), Artifact 삭제. 예외: PowerShell(분석기 없는 셸)은 자동 승인하지 않음 | ✅ |
 | [parry.js](../../.claude/hooks/parry.js) | PreToolUse Write | 시크릿·프롬프트 인젝션 패턴 스캔 — 감지 시 저장 차단 | ✅ |
-| [protect-secrets.js](../../.claude/hooks/protect-secrets.js) | PreToolUse Write/Edit | 민감 파일(.env, *.pem, *.key, credentials 등) 수정 차단 | ✅ |
+| [protect-secrets.js](../../.claude/hooks/protect-secrets.js) | PreToolUse Write/Edit/NotebookEdit/Read/Grep | 민감 파일(.env, *.pem, *.key, credentials 등) 수정 차단 + **홈 셸·SSH·git 설정 파일(`~/.zshrc`·`~/.bashrc`·`~/.gitconfig`·`~/.ssh/*` 등) 수정 차단** + **개인키·클라우드 인증 파일(`~/.ssh` 개인키·`*.pem`·`*.key`·`~/.aws/credentials`·`~/.netrc` 등) Read·Grep 차단**(2026-10-06). `.env` 읽기는 디버깅용으로 허용. 같은 판정을 bash-guard 가 Bash 인자에도 적용 | ✅ |
 | [deliverable-guard.js](../../.claude/hooks/deliverable-guard.js) | PostToolUse Write/Edit · PreToolUse Bash · Stop | **산출물 완결성 통합 훅** — 세션 수정 파일 추적 + git commit/push·세션 종료 시 README 동기화 검사 + PENDING_TEST 스킬 2단계 테스트 미수행 차단 + **push/PR 직전 memory·exports 미커밋 차단**(Y 프로젝트, 메모리 정리·세션 요약 포함 강제) (`.claude/worktrees/` 스캔 제외) | ✅ |
 | [skill-md-guard.js](../../.claude/hooks/skill-md-guard.js) | PreToolUse Write · PostToolUse Edit | SKILL.md frontmatter `name`·`description`, `> 소스:`·`> 검증일:` 줄, **저장 위치가 1단 `.claude/skills/<name>/SKILL.md`인지**(2단 중첩은 스킬로 등록되지 않음), `name` = 폴더 이름 검증 — **위반 시 저장 자체 차단** (Edit는 디스크 재읽기 사후 검증). 본문 섹션 구성은 검사하지 않음 | ✅ |
 | [agent-md-guard.js](../../.claude/hooks/agent-md-guard.js) | PreToolUse Write · PostToolUse Edit | 에이전트 .md name·description·tools·model·example 검증 — **위반 시 저장 자체 차단** | ✅ |
@@ -32,6 +32,10 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 23종 = 실행 �
 | [session-start.js](../../.claude/hooks/session-start.js) | SessionStart | 세션 시작 시 현재 브랜치·미커밋 파일·최근 커밋 요약 출력 | ✅ |
 | [session-export.js](../../.claude/hooks/session-export.js) | Stop | 세션 대화 요약(요청·응답·수정 파일·Codex 리뷰) 강제 보존 — Stop(매 턴)은 로컬 `~/.claude/projects/<해시>/exports/`에만 기록(레포 status 오염 없음), 커밋 배치의 `--refresh` 실행 시에만 레포 `exports/`에 전체 요약 생성(Y 프로젝트) (비차단) | ✅ |
 | [cc-notify.js](../../.claude/hooks/cc-notify.js) | Stop | 작업 완료 시 macOS 데스크탑 알림 (비차단, 타 플랫폼 silent) | ✅ |
+| [korean-response-guard.js](../../.claude/hooks/korean-response-guard.js) | UserPromptSubmit · Stop | 답변 한국어 강제 — 매 질문마다 "한국어로 답변" 지시 주입 + 종료 시 마지막 답변의 한국어 단어 비율(코드·경로·URL·식별자 제외) 50% 미만이면 재작성 요구(1회, `stop_hook_active` 루프 방지). 사용자가 "영어로" 요청하면 통과 | ✅ |
+| [task-confirm-guard.js](../../.claude/hooks/task-confirm-guard.js) | UserPromptSubmit · PreToolUse Write/Edit/NotebookEdit | **확인 절차 강제**(2026-10-06) — 질문할 때 승인 여부를 기록하고, 승인 전 Write/Edit/NotebookEdit 를 **차단**. 승인 = 직전 답변의 마지막 줄이 "진행할까요?" + 이번 질문이 거절·수정 요청(아니·말고·다시 정리 등)이나 승인 표현 없는 되묻기가 아님. 예외: 메모리·계획·임시 폴더 쓰기, "바로 진행"·"확인 없이" 명시. 단어로 작업 복잡도를 추측하던 구 task-plan-guard 와 달리 직전 대화만으로 판정 | ✅ |
+| [config-change-audit.js](../../.claude/hooks/config-change-audit.js) | SessionStart · ConfigChange | **설정 변경 감사**(2026-10-06) — 세션 시작 때 settings 스냅샷을 저장하고, 세션 중 설정 파일이 바뀌면 비교해 감사 로그(대화 기록 폴더 `config-audit/`)에 남긴다. 훅 제거·deny 제거·넓은 허용(`Bash`·`Bash(*)` 등)·`bypassPermissions`·`disableAllHooks`·파일 삭제/깨짐은 ⚠ systemMessage 로 알림. **차단하지 않음**(하네스 레포는 설정을 개발하므로). skills 변경은 기록만 | ✅ |
+| [progress-tracker.js](../../.claude/hooks/progress-tracker.js) | UserPromptSubmit · PostToolUse Write/Edit/NotebookEdit · SessionStart | **진행 기록**(2026-10-06) — "진행할까요?" 승인 시 직전 답변의 이해 요약·작업 목록을 저장(승인 판정은 task-confirm-guard 와 공유), 파일 수정마다 경로 기록(최대 200). SessionStart compact·resume 이면 이 세션 계획을, startup·clear 이면 72시간 안의 직전 작업을 한 번 안내. 저장은 대화 기록 폴더 `progress/` (레포 미오염). 백그라운드 알림은 계획을 덮어쓰지 않음 | ✅ |
 | [statusline.sh](../../.claude/hooks/statusline.sh) | statusLine | 상태 바 — 브랜치 + 미커밋 수 + PENDING_TEST 스킬 수 표시 | — |
 
 > 테스트 "—" 항목은 차단하지 않는 관찰·알림·컨텍스트 주입 훅 (오탐 시 피해 없음).
@@ -39,7 +43,9 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 23종 = 실행 �
 
 ---
 
-## 개발 전용 훅 (4종, `--legacy` 프로파일은 3종) — dev 템플릿 (react-spa·nextjs·rust-axum·java·unity·health·dream-interpretation·fortune-app·python-fastapi)
+## 개발 전용 훅 (6종, `--legacy` 프로파일은 5종) — dev 템플릿 (react-spa·nextjs·rust-axum·java·unity·health·dream-interpretation·fortune-app·python-fastapi·nexacro)
+
+> nexacro(15)는 레거시 코드베이스 전제라 `--legacy` 프로파일이 질문 없이 자동 적용된다(tdd-guard 제외 5종). spec-extraction(14)·seo-geo(11)는 애드온이라 dev 훅을 직접 갖지 않는다.
 
 > **`--legacy` 프로파일 예외**: tdd-guard.js는 레거시 프로파일에서 복사·배선되지 않는다(레거시 코드베이스는 기존 테스트 커버리지가 불완전해 "소스 수정 시 대응 테스트 파일 필수" 차단이 오탐을 유발하기 때문). `--legacy` 선택 시 개발 전용 훅은 3종(test-fake-guard·adversarial-test-guard·fake-impl-guard)만 설치된다.
 
@@ -49,6 +55,8 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 23종 = 실행 �
 | [test-fake-guard.js](../../.claude/hooks/test-fake-guard.js) | PreToolUse Bash | echo/printf/true로 테스트 결과를 흉내내는 가짜 테스트 실행 차단 | ✅ |
 | [adversarial-test-guard.js](../../.claude/hooks/adversarial-test-guard.js) | PostToolUse Write/Edit | 테스트 파일이 정상 흐름만 담고 악성 유저 방어·이상 경로를 누락하면 차단 — 테스트 2케이스↑ & 적대적 커버리지(에러/보안/경계) 2카테고리↓, RED 초기 1케이스·waiver 예외 | ✅ |
 | [fake-impl-guard.js](../../.claude/hooks/fake-impl-guard.js) | PostToolUse Write/Edit | 파라미터를 무시하고 테스트 기대 리터럴(문자열/숫자)을 그대로 return하는 가짜 구현 차단 — boolean·상수 getter·waiver 제외 | ✅ |
+| [auto-format.js](../../.claude/hooks/auto-format.js) | PostToolUse Write/Edit | **언어별 자동 포매터**(2026-10-06) — 확장자로 언어를 골라 JS·TS 등은 biome(우선)·prettier, Python 은 ruff(우선)·black, Rust 는 rustfmt(Cargo edition) 실행. 프로젝트에 설정과 실행 파일이 **둘 다** 있을 때만(내려받지 않음), node_modules·dist·프로젝트 밖·심볼릭 링크 제외, Java 제외(빌드 도구 경유라 느림). 정리되면 "다시 Read" 안내, 실패해도 막지 않음 | ✅ |
+| [package-manager-guard.js](../../.claude/hooks/package-manager-guard.js) | PreToolUse Bash | **패키지 매니저 강제**(2026-10-06) — lock 파일(pnpm·yarn·npm·bun / uv·poetry·pipenv)로 매니저를 판단해 다른 매니저의 설치·추가·삭제·업데이트를 deny(올바른 명령 안내). 실행 명령(npm run 등)·lock 없음·lock 여러 개는 통과. 모노레포 하위 폴더는 가장 가까운 lock 기준. 파싱은 bash-guard 공유(체인·치환 우회 동일 판정) | ✅ |
 
 ---
 
@@ -92,8 +100,8 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 23종 = 실행 �
 ## 훅 계층 구조
 
 ```
-공통 (14종)      ← 모든 템플릿
-├── 개발 전용 (4종)  ← react-spa·nextjs·rust-axum·java-spring-*·unity-game·health·dream-interpretation·fortune-app·python-fastapi
+공통 (18종)      ← 모든 템플릿
+├── 개발 전용 (6종)  ← react-spa·nextjs·rust-axum·java-spring-*·unity-game·health·dream-interpretation·fortune-app·python-fastapi·nexacro(레거시 5종)
 │   └── TypeScript (1종)  ← react-spa·nextjs·health·dream-interpretation·fortune-app 추가
 ├── Memory (2종)    ← --memory 옵션 선택 시 추가
 ├── Codex (1종)     ← --codex 옵션 선택 시 추가
