@@ -87,7 +87,7 @@ import hero from '../assets/hero.jpg';
 
 이 스킬은 *진단·처방*에 집중. 측정은 아래 스킬에 위임한다.
 
-| 작업 | 스킬 |
+| 작업 | 스킬 (설치된 경우) |
 |------|------|
 | 빌드 시 lab 측정 (Lighthouse CI) | `lighthouse-ci-setup` |
 | 실사용자 RUM 수집 | `web-vitals-rum-comparison` |

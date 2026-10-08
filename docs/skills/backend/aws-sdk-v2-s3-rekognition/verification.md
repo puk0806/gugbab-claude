@@ -228,3 +228,4 @@ CreateCollection → IndexFaces(externalImageId로 사용자 ID 매핑) → Sear
 |------|------|-----------|--------|
 | 2026-04-23 | v1 | 최초 작성 — AWS SDK for Java v2 (2.42.39) 기준 S3·Rekognition 모던 가이드 | skill-creator |
 | 2026-09-26 | v1 | 재검증 — BOM 최신 버전(2.55.x대) 반영, 핵심 API 변경 없음 확인 | 메인 세션 |
+| 2026-10-08 | v1 | 설치본 참조 정리 — java-spring-modern 등 v1 스킬이 설치되지 않는 템플릿을 위해 `aws-sdk-v1-s3-rekognition` 참조에 "(설치된 경우)" 표기(참조 검사 보강으로 발견). 내용 변경 없음 | Claude |

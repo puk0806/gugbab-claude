@@ -14,12 +14,12 @@ description: Redisson 4.x — 3.x→4.x Breaking Change 전체(Config 최상위 
 
 | 스킬 | 대상 버전 | 언제 참조하나 |
 |------|-----------|---------------|
-| `redis-redisson-legacy` | Redisson **2.15.2** | Spring Boot 2.5 + Java 11 고정 레거시 유지보수 |
+| `redis-redisson-legacy` (설치된 경우) | Redisson **2.15.2** | Spring Boot 2.5 + Java 11 고정 레거시 유지보수 |
 | `redis-redisson-modern` | Redisson **3.18.1 ~ 3.51.x** | Spring Boot 3.x + Java 17 운영 중, 3.x 라인 유지 |
 | **`redis-redisson-4` (이 스킬)** | Redisson **4.0.0 ~ 4.7.x** | 4.x 신규 도입, 또는 **3.x → 4.x 업그레이드** |
 
 - **API 기본 사용법(RLock/RMap/RTopic 등 개념·표준 패턴)은 3종이 거의 동일**하다. 이 스킬은 **4.x에서 달라진 것**과 **마이그레이션**에 집중하며, 공통 패턴은 요약만 싣는다. 3.x 상세 예제가 필요하면 `redis-redisson-modern`을 참조한다.
-- 2.x → 4.x 직행은 권장하지 않는다. `redis-redisson-legacy` → 3.x 안정화 → 4.x 순서로 두 단계로 나눈다(2.x→3.x는 패키지·`RFuture` 시그니처가 통째로 바뀌므로 4.x 변경과 섞으면 원인 추적이 불가능해진다).
+- 2.x → 4.x 직행은 권장하지 않는다. `redis-redisson-legacy`(설치된 경우) → 3.x 안정화 → 4.x 순서로 두 단계로 나눈다(2.x→3.x는 패키지·`RFuture` 시그니처가 통째로 바뀌므로 4.x 변경과 섞으면 원인 추적이 불가능해진다).
 
 ---
 

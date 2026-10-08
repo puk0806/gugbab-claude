@@ -263,3 +263,4 @@ Redisson에서 @RedissonLock 어노테이션을 메서드에 붙이면 자동으
 | 2026-04-23 | v1 | 최초 작성 — Redisson 3.18.1 ~ 3.51.0, Spring Boot 3.x + Java 17+ 기준 | skill-creator |
 | 2026-09-26 | v1 | 재검증 — 최신 3.x 안정판 3.51.0→3.52.0 정정, Redisson 4.0.0 GA(Spring Boot 4 지원) 이관 안내 신규 추가 → PENDING_TEST | 메인 오케스트레이션 (Claude Sonnet 5) |
 | 2026-09-28 | v1 | 2단계 실사용 재테스트 수행 (Q1 분산 락 / Q2 3.x 최신판·4.0.0 이관 정정분) → 2/2 PASS, APPROVED 전환 | skill-tester |
+| 2026-10-08 | v1 | 설치본 참조 정리 — `redis-redisson-legacy` 참조에 "(설치된 경우)" 표기(java-spring-modern 등 미설치 템플릿 대응, 참조 검사 보강으로 발견). 내용 변경 없음 | Claude |

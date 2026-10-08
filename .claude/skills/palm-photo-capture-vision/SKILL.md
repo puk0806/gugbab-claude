@@ -180,7 +180,7 @@ async function peekCameraPermission(): Promise<PermissionState | 'unknown'> {
 
 ### 2-5. 맥락적 권한 요청 UX
 
-`dream-app-onboarding`의 원칙을 카메라에 그대로 적용한다: **온보딩에서 미리 요청하지 않고,
+`dream-app-onboarding`(설치된 경우)의 원칙을 카메라에 그대로 적용한다: **온보딩에서 미리 요청하지 않고,
 사용자가 "손금 보기"를 누른 직후에 요청한다.**
 
 ```

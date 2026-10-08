@@ -8,7 +8,7 @@ description: Redisson 3.x 모던 — Spring Boot 3.x + Java 17+ 기반 RedissonC
 > 소스: https://github.com/redisson/redisson/blob/master/docs/integration-with-spring.md | https://redisson.pro/docs/integration-with-spring/ | https://redisson.pro/docs/data-and-services/locks-and-synchronizers/ | https://github.com/redisson/redisson/blob/master/redisson/src/main/java/org/redisson/api/RLock.java | https://www.baeldung.com/redis-redisson
 > 검증일: 2026-09-26 (2026-04-23 최초 검증 · 재검증 이력은 8절 참조)
 
-> 주의: 본 스킬은 **Redisson 3.18.1 ~ 3.52.0** 범위(Spring Boot 3.x + Spring Data Redis 3.x 호환)를 기준으로 합니다. **(2026-09-26 갱신)** Redisson은 2025-12-16 `4.0.0`으로 메이저 버전을 올렸고(Spring Boot 4.0 대응, 배포 클래스 경로 변경 등 Breaking Change 포함 — `RLock`/`RMap`/`RTopic`/`@Cacheable` 등 애플리케이션 코드에서 쓰는 API 자체는 변경 없음), 3.x 라인은 3.52.0(2025-09-25)을 끝으로 사실상 마감되었습니다. Spring Boot 4.x + Redisson 4.x 조합은 별도 스킬(`backend/redis-redisson-4`, 존재 시)을 참조하세요. 레거시 2.15.2는 `redis-redisson-legacy` 스킬을 참조하세요.
+> 주의: 본 스킬은 **Redisson 3.18.1 ~ 3.52.0** 범위(Spring Boot 3.x + Spring Data Redis 3.x 호환)를 기준으로 합니다. **(2026-09-26 갱신)** Redisson은 2025-12-16 `4.0.0`으로 메이저 버전을 올렸고(Spring Boot 4.0 대응, 배포 클래스 경로 변경 등 Breaking Change 포함 — `RLock`/`RMap`/`RTopic`/`@Cacheable` 등 애플리케이션 코드에서 쓰는 API 자체는 변경 없음), 3.x 라인은 3.52.0(2025-09-25)을 끝으로 사실상 마감되었습니다. Spring Boot 4.x + Redisson 4.x 조합은 별도 스킬(`backend/redis-redisson-4`, 존재 시)을 참조하세요. 레거시 2.15.2는 `redis-redisson-legacy` 스킬(설치된 경우)을 참조하세요.
 
 ---
 

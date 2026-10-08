@@ -231,3 +231,4 @@ status: APPROVED
 | 2026-06-02 | v1 | 최초 작성 — LCP/INP/CLS 진단·처방 카탈로그. 14개 클레임 VERIFIED | skill-creator |
 | 2026-06-02 | v1 | 2단계 실사용 테스트 수행 (Q1 LCP hero 이미지 처방 / Q2 INP React API 우선순위 / Q3 CLS 원인·수정) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-09-28 | v2 | 재검증 — CWV 임계값(LCP/INP/CLS)·Next.js 16 `priority`→`preload` deprecation·`scheduler.yield` Chrome 129+ stable 1차 소스 재대조 전부 VERIFIED, 변경 없음. status APPROVED 유지 | Claude (Sonnet 5) |
+| 2026-10-08 | v2 | 설치본 참조 정리 — references/REFERENCE.md 7절 측정 위임 표 머리글에 "(설치된 경우)" 표기(`lighthouse-ci-setup`·`web-vitals-rum-comparison` 미설치 템플릿 대응, 참조 검사 보강으로 발견). 내용 변경 없음 | Claude |

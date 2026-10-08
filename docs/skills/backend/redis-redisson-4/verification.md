@@ -289,3 +289,4 @@ status: APPROVED
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | skill-creator |
 | 2026-09-26 | v1 | 30~60일 주기 재검증. 4.7.0 최신 유지 확인, Spring Boot 매트릭스 DISPUTED 해소, `getMapCacheNative()` PRO/커뮤니티 서술 오류 발견·정정(REFERENCE.md §6) → status APPROVED에서 PENDING_TEST로 전환 | 메인 세션 |
 | 2026-09-26 | v1 | 재검증: 2단계 실사용 테스트 수행 (Q1 `getMapCacheNative()` 커뮤니티/PRO 정정 타겟 / Q2 4.4.0 신규 기능 PRO 오인 방지) → general-purpose 에이전트 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-10-08 | v1 | 설치본 참조 정리 — 레거시 스킬이 없는 템플릿(java-spring-modern 등)을 위해 `redis-redisson-legacy` 참조 3곳(SKILL.md 2·references 1)에 "(설치된 경우)" 표기(참조 검사 보강으로 발견). 내용 변경 없음 | Claude |
