@@ -60,19 +60,23 @@
 
 ---
 
-## 훅 (19종 — 공통 14 + 개발 전용 4 + TypeScript 1)
+## 훅 (25종 — 공통 18 + 개발 전용 6 + TypeScript 1)
 
-### 공통 (14종)
+### 공통 (18종)
 
 | 훅 | 이벤트 | 설명 |
 |----|--------|------|
 | [bash-guard.js](../../.claude/hooks/bash-guard.js) | PreToolUse Bash | 위험한 Bash 명령어 패턴 차단 (rm -rf 시스템 경로, force push 등) |
 | [auto-approve.js](../../.claude/hooks/auto-approve.js) | PreToolUse | Bash를 제외한 도구 자동 승인 |
 | [parry.js](../../.claude/hooks/parry.js) | PreToolUse Write | 시크릿·프롬프트 인젝션 패턴 스캔 — 감지 시 저장 차단 |
-| [protect-secrets.js](../../.claude/hooks/protect-secrets.js) | PreToolUse Write/Edit | 민감 파일(.env, *.pem, *.key, credentials 등) 수정 차단 |
+| [protect-secrets.js](../../.claude/hooks/protect-secrets.js) | PreToolUse Write/Edit/NotebookEdit/Read/Grep | 민감 파일(.env, *.pem, *.key, credentials 등)·홈 셸·SSH·git 설정 파일 수정 차단 + 개인키·클라우드 인증 파일 읽기 차단(.env 읽기는 허용) |
 | [session-start.js](../../.claude/hooks/session-start.js) | SessionStart | 세션 시작 시 브랜치·미커밋 파일·최근 커밋 요약 출력 |
 | [session-export.js](../../.claude/hooks/session-export.js) | Stop | 세션 대화 요약을 로컬 exports에 기록 |
 | [cc-notify.js](../../.claude/hooks/cc-notify.js) | Stop | 작업 완료 시 macOS 데스크탑 알림 |
+| [korean-response-guard.js](../../.claude/hooks/korean-response-guard.js) | UserPromptSubmit · Stop | 답변 한국어 강제 — 매 질문마다 지시 주입, 영어 위주 답변은 한국어로 재작성 요구 |
+| [task-confirm-guard.js](../../.claude/hooks/task-confirm-guard.js) | UserPromptSubmit · PreToolUse Write/Edit/NotebookEdit | 확인 절차 강제 — 직전 답변 마지막 줄이 "진행할까요?"이고 사용자가 승인해야 파일 수정 허용 |
+| [config-change-audit.js](../../.claude/hooks/config-change-audit.js) | SessionStart · ConfigChange | 설정 변경 감사 — 세션 중 settings 가 바뀌면 기록하고 훅 제거·deny 제거·넓은 허용 등은 ⚠ 알림 (차단 안 함) |
+| [progress-tracker.js](../../.claude/hooks/progress-tracker.js) | UserPromptSubmit · PostToolUse · SessionStart | 진행 기록 — 승인된 계획과 수정 파일을 자동 기록, 새 세션·요약 직후 "여기까지 진행됨" 안내 |
 | [instructions-loaded.js](../../.claude/hooks/instructions-loaded.js) | SessionStart | CLAUDE.md 로드 완료 시 규칙 요약 출력 |
 | [deliverable-guard.js](../../.claude/hooks/deliverable-guard.js) | PostToolUse Write/Edit · PreToolUse Bash · Stop | 산출물 완결성 — 세션 수정 파일 추적 + README 동기화 검사 + PENDING_TEST 스킬 테스트 미수행 차단 |
 | [skill-md-guard.js](../../.claude/hooks/skill-md-guard.js) | PostToolUse Write | SKILL.md 소스 URL·검증일·필수 섹션 검증 |
@@ -84,9 +88,11 @@
 | [test-fake-guard.js](../../.claude/hooks/test-fake-guard.js) | PreToolUse Bash / PostToolUse Write | 가짜 테스트 패턴 탐지·차단 |
 | [adversarial-test-guard.js](../../.claude/hooks/adversarial-test-guard.js) | PostToolUse Write/Edit | 테스트 파일이 정상 흐름만 담고 악성 유저 방어·이상 경로를 누락하면 차단 |
 | [fake-impl-guard.js](../../.claude/hooks/fake-impl-guard.js) | PostToolUse Write/Edit | 파라미터를 무시하고 테스트 기대 리터럴을 그대로 return하는 가짜 구현 차단 |
+| [auto-format.js](../../.claude/hooks/auto-format.js) | PostToolUse Write/Edit | 저장한 파일을 언어별 포매터로 정리 (biome·prettier / ruff·black / rustfmt, 설정+설치 시에만, 실패해도 막지 않음) |
+| [package-manager-guard.js](../../.claude/hooks/package-manager-guard.js) | PreToolUse Bash | lock 파일과 다른 패키지 매니저로 설치·추가·삭제 차단 (JS·Python) |
 | [typescript-quality.js](../../.claude/hooks/typescript-quality.js) | PostToolUse Write/Edit | tsc --noEmit 타입 검사 — 에러 시 차단 (레거시 프로파일 선택 시 --changed-only) |
 
-> **2026-09-11부터 스택 템플릿과 같은 레벨(dev + TypeScript)**: health(10)·fortune(12)과 동일하게 개발 전용 훅 4종 + TypeScript 훅 1종, `adversarial-testing.md`·`typescript.md` 규칙, Codex 적대적 리뷰·레거시 프로파일 옵션 질문을 받는다. 이전에는 개발 에이전트(frontend-developer·python-backend-developer·qa-engineer)를 설치하면서 훅이 없어 qa-engineer가 명시하는 "adversarial-test-guard가 차단"이 성립하지 않았다. Memory 훅은 옵션이다. (공통 훅 표에 `session-export.js`가 빠져 있었던 것도 함께 정정 — 실제 공통은 당시 15종, 2026-09-30 `_lib.js` 삭제로 14종.)
+> **2026-09-11부터 스택 템플릿과 같은 레벨(dev + TypeScript)**: health(10)·fortune(12)과 동일하게 개발 전용 훅 6종 + TypeScript 훅 1종, `adversarial-testing.md`·`typescript.md` 규칙, Codex 적대적 리뷰·레거시 프로파일 옵션 질문을 받는다. 이전에는 개발 에이전트(frontend-developer·python-backend-developer·qa-engineer)를 설치하면서 훅이 없어 qa-engineer가 명시하는 "adversarial-test-guard가 차단"이 성립하지 않았다. Memory 훅은 옵션이다. (공통 훅 표에 `session-export.js`가 빠져 있었던 것도 함께 정정 — 실제 공통은 당시 15종, 2026-09-30 `_lib.js` 삭제로 14종.)
 
 ---
 
@@ -135,4 +141,4 @@
 | `permissions.deny` | `git push --force`, `rm -rf` 시스템 경로, `chmod 777`, curl\|bash 패턴 |
 | `permissions.additionalDirectories` | `/tmp`, `/private/tmp`, `/var/folders` |
 | `statusLine` | 브랜치·미커밋·PENDING_TEST 상태 표시 (`statusline.sh`) |
-| 훅 연결 | 공통 14종 + 개발 전용 4종 + TypeScript 1종 전체 연결 |
+| 훅 연결 | 공통 18종 + 개발 전용 6종 + TypeScript 1종 전체 연결 |

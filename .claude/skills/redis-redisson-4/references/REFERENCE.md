@@ -305,7 +305,7 @@ nettyThreads: 32     # Netty I/O 스레드
 | Redisson 4.x 신규 프로젝트 | ✅ 이 스킬 |
 | 3.x → 4.x 업그레이드 | ✅ 이 스킬 (+ 기존 코드 이해는 `redis-redisson-modern`) |
 | 3.x 라인 유지·운영 | ❌ `redis-redisson-modern` |
-| 2.15.2 레거시 | ❌ `redis-redisson-legacy` |
+| 2.15.2 레거시 | ❌ `redis-redisson-legacy` (설치된 경우) |
 | Spring Data Redis(Lettuce/Jedis)만 쓰고 분산 락 불필요 | ❌ Redisson 자체가 과한 선택 |
 | Redis Streams·Pub/Sub만 필요 | ⚠️ 표준 `spring-data-redis`로 충분한지 먼저 검토 |
 

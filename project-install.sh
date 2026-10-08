@@ -56,8 +56,11 @@ echo "  10/health             — 건강·식단 PWA 앱"
 echo "  11/seo-geo            — SEO·GEO 검색 노출 (프레임워크 비종속 — 스택 템플릿과 병행 선택)"
 echo "  12/fortune-app        — 사주·타로·손금 운세 앱 개발"
 echo "  13/python-fastapi     — Python 3.12+ + FastAPI 백엔드"
+echo "  14/spec-extraction    — 레거시 스펙 추출 → docs/spec/ (Java·React·넥사크로 — 스택 템플릿과 병행 선택)"
+echo "  15/nexacro            — 넥사크로 17 + Spring(X-API) 레거시 이해 · Next.js·Java 이전 (레거시 프로파일)"
 echo ""
 echo "  복수 선택 예시: react-spa,health  또는  2,10  또는  java-spring-legacy,seo-geo (5,11)  또는  python-fastapi,react-spa (13,2)"
+echo "                  또는  nexacro,spec-extraction (15,14)  또는  java-spring-legacy,spec-extraction (5,14)"
 echo ""
 
 _parse_template() {
@@ -76,6 +79,8 @@ _parse_template() {
     11|seo-geo)             echo "seo-geo" ;;
     12|fortune-app)         echo "fortune-app" ;;
     13|python-fastapi)      echo "python-fastapi" ;;
+    14|spec-extraction)     echo "spec-extraction" ;;
+    15|nexacro)             echo "nexacro" ;;
     *) return 1 ;;
   esac
 }
@@ -100,7 +105,8 @@ done
 # 애드온 템플릿(seo-geo)은 CLAUDE.md 베이스가 될 수 없다 — 베이스 예시는 첫 템플릿 것을 통째로 쓰고 나머지는
 # 도메인 섹션만 append 하므로, `11,5`처럼 애드온을 앞에 쓰면 Java 의 `## 금지 사항` 같은 스택 가드레일이 통째로
 # 빠진 채 조용히 설치된다 (2026-09-01 Codex R1). 입력 순서와 무관하게 스택 템플릿 → 애드온 순으로 정규화한다.
-ADDON_TEMPLATES=("seo-geo")
+# spec-extraction(2026-10-08)도 같은 애드온 — `14,5` 는 java 가 베이스, 스펙 원칙은 도메인 섹션으로 append 된다.
+ADDON_TEMPLATES=("seo-geo" "spec-extraction")
 _STACK_TMPLS=(); _ADDON_TMPLS=()
 for _t in "${TEMPLATES[@]}"; do
   _is_addon=false
@@ -133,7 +139,8 @@ is_only_java_selected() {
   has_template "java-spring-legacy" || has_template "java-spring-modern" || return 1
   for _tmpl in "${TEMPLATES[@]}"; do
     case "$_tmpl" in
-      java-spring-legacy|java-spring-modern|seo-geo) ;;
+      # spec-extraction(2026-10-08) 도 java 누수 목록을 하나도 소유하지 않는 애드온 — `5,14` 재설치도 수렴
+      java-spring-legacy|java-spring-modern|seo-geo|spec-extraction) ;;
       *) return 1 ;;
     esac
   done
@@ -146,7 +153,8 @@ is_only_java_selected() {
 is_leakscope_only_selected() {
   for _tmpl in "${TEMPLATES[@]}"; do
     case "$_tmpl" in
-      java-spring-legacy|java-spring-modern|rust-axum|unity-game|seo-geo|python-fastapi) ;;
+      # nexacro·spec-extraction(2026-10-08)도 dream 전용·frontend-domain-structure 를 소유하지 않는다
+      java-spring-legacy|java-spring-modern|rust-axum|unity-game|seo-geo|python-fastapi|spec-extraction|nexacro) ;;
       *) return 1 ;;
     esac
   done
@@ -183,9 +191,19 @@ record_excluded_skill() {
 is_dev_selected() {
   for _tmpl in "${TEMPLATES[@]}"; do
     case "$_tmpl" in
-      react-spa|nextjs|rust-axum|java-spring-legacy|java-spring-modern|unity-game|health|dream-interpretation|fortune-app|python-fastapi|all)
+      react-spa|nextjs|rust-axum|java-spring-legacy|java-spring-modern|unity-game|health|dream-interpretation|fortune-app|python-fastapi|nexacro|all)
         return 0 ;;
     esac
+  done
+  return 1
+}
+# spec-extraction(14)은 문서 산출 애드온이라 dev 가 아니다 — 스택과 조합하면 스택 쪽 판정을 따른다 (seo-geo 와 동일)
+
+# 레거시 프로파일을 질문 없이 강제하는 템플릿 (2026-10-08) — nexacro 는 테스트가 거의 없는 레거시 코드베이스가 전제라
+# tdd-guard 가 사실상 모든 편집을 막는다. 조합에 하나라도 있으면 설치 전체가 레거시 프로파일(--legacy)이 된다.
+is_legacy_forced() {
+  for _tmpl in "${TEMPLATES[@]}"; do
+    case "$_tmpl" in nexacro) return 0 ;; esac
   done
   return 1
 }
@@ -260,7 +278,15 @@ fi
 # 테스트가 거의 없고 tsc가 느린 기존 코드베이스에 일반 dev 프로파일을 깔면
 # tdd-guard가 사실상 모든 편집을 차단하고 typescript-quality가 매 저장마다 타임아웃을 낸다.
 INCLUDE_LEGACY=false
-if is_dev_selected && is_ts_selected; then
+if is_legacy_forced; then
+  echo ""
+  echo "ℹ nexacro 템플릿 — 레거시 프로파일 자동 적용 (tdd-guard 제외$(is_ts_selected && echo ' · typescript-quality --changed-only'))"
+  # 훅은 설치 단위(settings.json 하나)라 템플릿별로 나눌 수 없다 — 함께 고른 템플릿에도 적용됨을 알린다 (2026-10-08 검수)
+  if [ "${#TEMPLATES[@]}" -gt 1 ]; then
+    echo "  ⚠ 훅은 프로젝트 전체 설정이라 함께 선택한 템플릿(${TEMPLATE_DISPLAY})에도 같이 적용됩니다 — tdd-guard 가 필요하면 nexacro 를 빼고 설치하세요."
+  fi
+  INCLUDE_LEGACY=true
+elif is_dev_selected && is_ts_selected; then
   echo ""
   echo "레거시 대형 프로젝트 프로파일을 적용하시겠습니까?"
   echo "  - tdd-guard 제외 (테스트 파일 없는 소스 편집 차단 해제)"
@@ -451,6 +477,10 @@ HOOKS_COMMON=(
   "session-start.js"
   "session-export.js"
   "cc-notify.js"
+  "korean-response-guard.js"
+  "task-confirm-guard.js"
+  "config-change-audit.js"
+  "progress-tracker.js"
   "instructions-loaded.js"
   "deliverable-guard.js"
   "skill-md-guard.js"
@@ -461,7 +491,8 @@ HOOKS_COMMON=(
 )
 
 # 개발 전용 (util·dream 제외)
-HOOKS_DEV_ONLY=("tdd-guard.js" "test-fake-guard.js" "adversarial-test-guard.js" "fake-impl-guard.js")
+# auto-format·package-manager-guard 는 2026-10-06 추가 (언어별 포매터 · lock 파일 기준 매니저 강제)
+HOOKS_DEV_ONLY=("tdd-guard.js" "test-fake-guard.js" "adversarial-test-guard.js" "fake-impl-guard.js" "auto-format.js" "package-manager-guard.js")
 
 # TypeScript 전용 (react-spa·nextjs만)
 HOOKS_TS_ONLY=("typescript-quality.js")
@@ -677,6 +708,30 @@ SPECIAL_AGENTS_GAME=(
   "game/unity-architect.md"
   "game/unity-developer.md"
 )
+# 스펙 추출 에이전트 (2026-10-08) — 소유자는 spec-extraction(14)·all 뿐. nexacro(15) 단독에도 넣지 않는다(사용자는 `15,14`로 조합)
+SPECIAL_AGENTS_SPEC=(
+  "domain/legacy-spec-extractor.md"
+  "validation/spec-reviewer.md"
+)
+# 넥사크로 이전 에이전트 (2026-10-08) — 소유자는 nexacro(15)·all 뿐
+SPECIAL_AGENTS_NEXACRO=(
+  "domain/nexacro-screen-analyzer.md"
+  "frontend/nexacro-screen-converter.md"
+  "validation/migration-parity-tester.md"
+)
+# spec-extraction(14) 화이트리스트 — 스펙 추출 2종 + 재사용 3종(코드 역분석·API 명세·QA) + 조사·검증 최소 세트.
+# 스택 에이전트는 병행 선택한 스택 템플릿이 union 으로 보탠다 (seo-geo 와 같은 애드온 방식)
+SPEC_EXTRACTION_AGENTS=(
+  "domain/legacy-spec-extractor.md"
+  "validation/spec-reviewer.md"
+  "domain/codebase-domain-analyst.md"
+  "domain/api-spec-designer.md"
+  "validation/qa-engineer.md"
+  "validation/fact-checker.md"
+  "validation/source-validator.md"
+  "research/web-searcher.md"
+  "meta/claude-code-guide.md"
+)
 
 # 기술 스택별 제외 목록
 EXCLUDE_AGENTS_FRONTEND=(
@@ -782,6 +837,23 @@ EXCLUDE_AGENTS_PYTHON=(
   "validation/build-perf-benchmarker.md"
   "validation/perf-report-writer.md"
 )
+# nexacro(15, 2026-10-08) — java 와 같은 수준의 차단 + Next.js 이전 대상이라 프론트 개발 에이전트는 받는다.
+# typescript.md 규칙(이전 목표 Next.js)을 받으므로 frontend/CLAUDE.md 도 받는다.
+# backend/CLAUDE.md 도 받고, 설치 후 미설치 rust.md 임포트 줄만 3.5 절이 지운다.
+EXCLUDE_AGENTS_NEXACRO=(
+  "backend/rust-backend-developer.md"
+  "backend/rust-backend-architect.md"
+  "backend/python-backend-developer.md"
+  "backend/python-backend-architect.md"
+  "backend/typescript-backend-developer.md"
+  "backend/typescript-backend-architect.md"
+  "backend/build-error-resolver.md"
+  "validation/seo-auditor.md"
+  "validation/content-quality-reviewer.md"
+  "validation/a11y-auditor.md"
+  "validation/build-perf-benchmarker.md"
+  "validation/perf-report-writer.md"
+)
 # 위 python 2종 — rust·java·unity 재설치 시 이전 설치 잔재 정리(prune) 기록 대상 (2026-09-11)
 PYTHON_AGENTS_NEWLY_EXCLUDED=(
   "backend/python-backend-developer.md"
@@ -824,11 +896,19 @@ _agent_ok_for_tmpl() {
   if [ "$tmpl" = "fortune-app" ]; then
     is_in_list "$rel" "${FORTUNE_APP_AGENTS[@]}" "${SEO_AGENTS[@]}" && return 0; return 1
   fi
+  if [ "$tmpl" = "spec-extraction" ]; then
+    is_in_list "$rel" "${SPEC_EXTRACTION_AGENTS[@]}" && return 0; return 1
+  fi
   if [ "$tmpl" = "all" ]; then return 0; fi
-  # 개발 템플릿 공통: util 전용·dream·fortune 전용 제외
+  # 개발 템플릿 공통: util 전용·dream·fortune·스펙 추출 전용 제외
   is_in_list "$rel" "${SPECIAL_AGENTS_UTIL_ONLY[@]}" && return 1
   is_in_list "$rel" "${SPECIAL_AGENTS_DREAM[@]}" && return 1
   is_in_list "$rel" "${SPECIAL_AGENTS_FORTUNE[@]}" && return 1
+  is_in_list "$rel" "${SPECIAL_AGENTS_SPEC[@]}" && return 1
+  # 넥사크로 이전 에이전트는 nexacro 템플릿에서만 (2026-10-08)
+  if [ "$tmpl" != "nexacro" ]; then
+    is_in_list "$rel" "${SPECIAL_AGENTS_NEXACRO[@]}" && return 1
+  fi
   # health 전용은 health 템플릿에서만 (2026-09-25)
   if [ "$tmpl" != "health" ]; then
     is_in_list "$rel" "${SPECIAL_AGENTS_HEALTH[@]}" && return 1
@@ -849,6 +929,8 @@ _agent_ok_for_tmpl() {
       is_in_list "$rel" "${EXCLUDE_AGENTS_GAME[@]}" && return 1 ;;
     python-fastapi)
       is_in_list "$rel" "${EXCLUDE_AGENTS_PYTHON[@]}" && return 1 ;;
+    nexacro)
+      is_in_list "$rel" "${EXCLUDE_AGENTS_NEXACRO[@]}" && return 1 ;;
   esac
   return 0
 }
@@ -895,6 +977,11 @@ should_include_agent() {
   fi
   # health 전용 에이전트도 동일 — 소유자는 health·all 뿐이라 `10→5`·`10→util` 다운그레이드가 수렴하도록 기록 (2026-09-25)
   if is_in_list "$rel" "${SPECIAL_AGENTS_HEALTH[@]}"; then
+    record_excluded_agent "$rel"
+  fi
+  # 스펙 추출·넥사크로 전용 에이전트도 동일 — 소유자(14·15·all)가 조합에 없을 때만 여기 도달하므로
+  # `15,14→15`·`15→5` 같은 축소 재설치가 수렴하도록 조합 조건 없이 기록 (2026-10-08). 삭제는 매니페스트 해시 증명 하에서만.
+  if is_in_list "$rel" "${SPECIAL_AGENTS_SPEC[@]}" "${SPECIAL_AGENTS_NEXACRO[@]}"; then
     record_excluded_agent "$rel"
   fi
   return 1
@@ -981,16 +1068,19 @@ _rule_ok_for_tmpl() {
   is_in_list "$name" "${RULES_COMMON[@]}" && return 0
   case "$name" in
     java.md)
-      [[ "$tmpl" == all || "$tmpl" == java-spring-legacy || "$tmpl" == java-spring-modern ]] && return 0 ;;
+      # nexacro(2026-10-08): 서버가 Spring(X-API) + 이전 목표도 Java — java 규칙 사용
+      [[ "$tmpl" == all || "$tmpl" == java-spring-legacy || "$tmpl" == java-spring-modern || "$tmpl" == nexacro ]] && return 0 ;;
     rust.md)
       [[ "$tmpl" == all || "$tmpl" == rust-axum ]] && return 0 ;;
     typescript.md)
       # is_ts_selected 와 동일 집합
       [[ "$tmpl" == all || "$tmpl" == react-spa || "$tmpl" == nextjs || "$tmpl" == health ||
-         "$tmpl" == dream-interpretation || "$tmpl" == fortune-app ]] && return 0 ;;
+         "$tmpl" == dream-interpretation || "$tmpl" == fortune-app ]] && return 0
+      # nexacro(2026-10-08): TS 훅은 끄지만 이전 목표(Next.js) 코드 규칙은 필요 — 프론트 스킬 본문이 이 규칙을 참조한다
+      [[ "$tmpl" == nexacro ]] && return 0 ;;
     adversarial-testing.md)
       # 적대적 테스트 강제 훅(adversarial-test-guard·fake-impl-guard)이 참조 — dev 템플릿 전체에 포함 (is_dev_selected 와 동일 집합)
-      case "$tmpl" in all|react-spa|nextjs|rust-axum|java-spring-legacy|java-spring-modern|unity-game|health|dream-interpretation|fortune-app|python-fastapi) return 0 ;; esac ;;
+      case "$tmpl" in all|react-spa|nextjs|rust-axum|java-spring-legacy|java-spring-modern|unity-game|health|dream-interpretation|fortune-app|python-fastapi|nexacro) return 0 ;; esac ;;
   esac
   return 1
 }
@@ -1114,6 +1204,40 @@ is_fortune_skill() {
   for s in "${FORTUNE_APP_SKILLS[@]}"; do [[ "$prefix" == "$s" ]] && return 0; done
   return 1
 }
+
+# ── spec-extraction(14)·nexacro(15) 스킬 (2026-10-08) ──────────────────────
+# spec/* 카테고리 전부 = spec-extraction·all 전용. nexacro/* 카테고리 = nexacro·all 전용이되, 화면 파일 해석(xfdl)은
+# 스펙 추출에도 필요해 spec-extraction 과 공유한다. backend 카테고리의 SB1→2·iBATIS 이관 2종은 넥사크로 레거시 전용이라
+# java-spring-legacy/modern(backend 화이트리스트 밖)·rust(backend fallthrough) 등에 새지 않게 전역 게이트로 막는다.
+SPEC_SHARED_NEXACRO_SKILLS=("nexacro/nexacro-17-xfdl-anatomy")
+NEXACRO_BACKEND_SKILLS=(
+  "backend/spring-boot-1-to-2-migration"
+  "backend/ibatis-to-mybatis-migration"
+)
+# nexacro 이전 목표 스택 핵심 — Next.js 화면(그리드·서버 상태·폼·검증)과 Spring Boot 3·REST 문서화.
+# 프론트 전체를 주지 않는다 — 변환 에이전트(nexacro-screen-converter)가 따르는 스킬 + 동등성 E2E + 함께 설치되는
+# frontend-architect·frontend-domain-refactorer 와 위 스킬 본문이 무조건 참조하는 스킬(참조 닫힘, installed-refs 테스트로 고정).
+# backend/zod-schema-validation 은 본문이 TS 백엔드(hono)를 참조해 제외 — 폼 검증 zod 사용법은 form-handling 이 담당한다.
+NEXACRO_TARGET_SKILLS=(
+  "frontend/nextjs"
+  "frontend/ag-grid"
+  "frontend/tanstack-query"
+  "frontend/form-handling"
+  "frontend/state-management"
+  "frontend/typescript-v5"
+  "frontend/e2e-testing"
+  # 참조 닫힘 (state-management·typescript-v5·frontend-architect·frontend-domain-refactorer)
+  "frontend/tanstack-query-v4-to-v5-migration"
+  "frontend/typescript-v4"
+  "frontend/monorepo-turborepo"
+  "frontend/bundling-compiler"
+  "frontend/vite-advanced-splitting"
+  "frontend/bundle-size-analysis"
+  "frontend/core-web-vitals-optimization"
+  "architecture/frontend-domain-structure"
+  "backend/spring-security-6-jwt-jjwt12"
+  "backend/springdoc-openapi-3"
+)
 
 # n8n 자동화 스킬 — LLM 워크플로우 템플릿(health·dream)과 백엔드에서만. 프론트(react-spa·nextjs)에는 노이즈 (2026-08-26)
 N8N_SKILLS=(
@@ -1388,6 +1512,13 @@ _skill_ok_for_tmpl() {
   if [[ "$rel" == health/* && "$tmpl" != "health" ]]; then return 1; fi
   # fortune-app 전용 스킬 13종은 fortune-app 템플릿에서만 — 동일 방식 전역 차단
   if is_fortune_skill "$skill_prefix" && [ "$tmpl" != "fortune-app" ]; then return 1; fi
+  # spec·nexacro 카테고리 + 넥사크로 전용 backend 이관 2종 — 소유 템플릿 밖 전역 차단 (2026-10-08).
+  # 카테고리 fallthrough 템플릿(util·java·rust·unity·python)이 새 카테고리를 통째로 받던 구조적 누수를 원천 봉쇄한다.
+  if [[ "$rel" == spec/* ]] && [ "$tmpl" != "spec-extraction" ]; then return 1; fi
+  if [[ "$rel" == nexacro/* ]] && [ "$tmpl" != "nexacro" ]; then
+    { [ "$tmpl" = "spec-extraction" ] && is_in_skill_list "$skill_prefix" "${SPEC_SHARED_NEXACRO_SKILLS[@]}"; } || return 1
+  fi
+  if is_in_skill_list "$skill_prefix" "${NEXACRO_BACKEND_SKILLS[@]}" && [ "$tmpl" != "nexacro" ]; then return 1; fi
   if [ "$tmpl" = "util" ]; then
     [[ "$rel" == frontend/* || "$rel" == backend/* || "$rel" == devops/* ||
        "$rel" == architecture/* || "$rel" == game/* || "$rel" == humanities/* ||
@@ -1529,6 +1660,25 @@ _skill_ok_for_tmpl() {
     [[ "$skill_prefix" == "architecture/frontend-domain-structure" ]] && return 1
     return 0
   fi
+  if [ "$tmpl" = "spec-extraction" ]; then
+    # 화이트리스트 애드온 (2026-10-08) — spec/* 전부 + 넥사크로 화면 해석 1종. 스택 스킬은 병행 템플릿이 union 으로 보탠다
+    [[ "$rel" == spec/* ]] && return 0
+    is_in_skill_list "$skill_prefix" "${SPEC_SHARED_NEXACRO_SKILLS[@]}" && return 0
+    return 1
+  fi
+  if [ "$tmpl" = "nexacro" ]; then
+    # 넥사크로 17 + Spring(X-API) 레거시 → Next.js·Java 이전 스택 템플릿 (2026-10-08).
+    # 소유: nexacro/* 전부 + SB1→2·iBATIS 이관 + 이전 목표 핵심(NEXACRO_TARGET_SKILLS) + java-spring-legacy 의 Java 스킬 세트.
+    [[ "$rel" == nexacro/* ]] && return 0
+    is_in_skill_list "$skill_prefix" "${NEXACRO_BACKEND_SKILLS[@]}" "${NEXACRO_TARGET_SKILLS[@]}" && return 0
+    # 이하 java-spring-legacy 와 같은 기준 — 프론트 나머지·게임·도메인·학술·SEO writing 은 통째로 제외
+    [[ "$rel" == frontend/* || "$rel" == game/* || "$rel" == humanities/* ||
+       "$rel" == education/* || "$rel" == research/* || "$rel" == writing/* ]] && return 1
+    [[ "$rel" == backend/* ]] && ! is_java_skill "$skill_prefix" && return 1
+    is_java_noncore_excluded "$skill_prefix" && return 1
+    is_in_skill_list "$skill_prefix" "${JAVA_SKILLS_MODERN_ONLY[@]}" && return 1
+    return 0
+  fi
   return 1
 }
 
@@ -1596,6 +1746,12 @@ for src_path in "$REPO_DIR/.claude/skills"/*/SKILL.md; do
     if is_in_skill_list "$skill_prefix" "${TS_BACKEND_SKILLS[@]}"; then
       record_excluded_skill "$rel" "$skill_prefix"
     fi
+    # spec·nexacro 카테고리와 넥사크로 전용 backend 이관 2종 (2026-10-08) — 소유자(14·15·all)가 이번 조합에 없을 때만 여기 도달.
+    # `15,14→15`·`15→5`·`14→util` 같은 축소 재설치가 수렴하도록 조합 조건 없이 기록. 삭제는 매니페스트 해시 증명 하에서만.
+    # (Next.js 목표 스킬 nextjs·ag-grid 등은 프론트 템플릿 공용 자산이라 기록하지 않는다 — 템플릿은 가산적)
+    if [[ "$rel" == spec/* || "$rel" == nexacro/* ]] || is_in_skill_list "$skill_prefix" "${NEXACRO_BACKEND_SKILLS[@]}"; then
+      record_excluded_skill "$rel" "$skill_prefix"
+    fi
     # 템플릿 누수 수정(2026-08-31)으로 제외된 스킬 — 소유자 없는 템플릿 조합의 재설치에서 잔재 정리 기록
     # (seo-geo 병행 시 그 소유분은 위에서 처리했거나 포함됐으므로 여기선 제외)
     if is_only_java_selected && is_java_noncore_excluded "$skill_prefix" && ! is_seo_geo_skill "$skill_prefix"; then
@@ -1656,6 +1812,12 @@ COMMANDS_DEV=("create-plan.md" "fix-pr.md" "update-docs.md" "tdd-implement.md" "
 COMMANDS=("${COMMANDS_UTIL[@]}")
 is_util_only || COMMANDS+=("${COMMANDS_DEV[@]}")
 [ "$INCLUDE_CODEX" = "true" ] && COMMANDS+=("codex-review.md")
+# /spec-extract (2026-10-08) — spec-extraction·all 전용. 빠진 재설치(`15,14→15`)는 이전 사본을 prune 목록에 기록한다
+if has_template "spec-extraction" || has_template "all"; then
+  COMMANDS+=("spec-extract.md")
+elif [ -f "$TARGET/.claude/commands/spec-extract.md" ]; then
+  echo "commands|spec-extract.md" >> "$OPTION_EXCLUDED_TMP"
+fi
 # 레거시 프로파일에서 /tdd-implement 는 tdd-guard 없이도 동작하지만 강제 흐름이 아니라 안내용으로 남긴다
 mkdir -p "$TARGET/.claude/commands"
 MANIFEST_COMMANDS_TMP=$(mktemp)

@@ -25,7 +25,7 @@ description: AWS SDK for Java v2 (software.amazon.awssdk) S3·Rekognition 모던
 >
 > 주의(2026-09-26 재검증): `software.amazon.awssdk:bom` 최신 버전은 **2.55.x대**(2026-09 기준)로 계속 활발히 릴리스되고 있습니다. 빌더 API·`*Response` 네이밍·`S3Presigner`/`S3TransferManager`/CRT 클라이언트 사용법·예외 계층(`SdkException` → `AwsServiceException` → `S3Exception`)은 마이너 업그레이드로 변경되지 않았습니다. 실제 프로젝트에는 `2.42.39` 대신 BOM의 최신 안정 버전을 확인해 적용하세요.
 
-> 관련 스킬: v1 전용 패턴은 `aws-sdk-v1-s3-rekognition` 스킬 참조.
+> 관련 스킬: v1 전용 패턴은 `aws-sdk-v1-s3-rekognition` 스킬(설치된 경우) 참조.
 
 ---
 

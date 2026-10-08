@@ -1,6 +1,6 @@
 # PENDING_TEST 졸업 체크리스트
 
-> 최종 갱신: 2026-09-29 (09-28~29 실사용 실행 검증으로 9종 졸업 — 8종 남음)
+> 최종 갱신: 2026-10-08 (스펙 추출·넥사크로 마이그레이션 스킬 6종 추가 — 14종 남음. 이전: 09-28~29 실사용 실행 검증으로 9종 졸업)
 
 `PENDING_TEST`는 "**내용 검증은 끝났고 실사용 테스트만 남은**" 상태다. 사용은 가능하다.
 `verification-policy.md` 기준으로 **실행 결과·빌드 산출물로만 최종 확인 가능한 스킬**이 여기에 남는다 — content test가 PASS여도 그것만으로는 전환하지 않는다.
@@ -23,6 +23,12 @@
 | `frontend/lighthouse-ci-setup` | 로컬 `lhci autorun`(collect 3회→assert→upload filesystem) 전체 실행, 워크플로우 YAML 문법 검증 | GitHub Actions 러너에서 baseline 생성 | GitHub Actions |
 | `game/unity-cicd-codemagic` | (실행 불가 — 도구·계정 없음) | Codemagic에서 Unity 빌드 1회 성공 | Unity, Codemagic 계정 |
 | `architecture/incremental-refactoring` | 20파일 샘플에서 ts-morph 배치 이동 → tsc·dependency-cruiser 게이트 (예제 `move()` 경로 버그 발견·정정) | 소스 수백 개 이상 실코드베이스에서 배치 1개 이동 → 게이트 통과 → 머지 1사이클 | 대규모 TS 프로젝트 |
+| `spec/spec-extraction-method` | content test 3/3 PASS (2026-10-08) | 실제 레거시 레포 1개 모듈에 양식·규약대로 추출 → spec-reviewer PASS → 사람 검토 1사이클 | 실제 레거시 레포 |
+| `nexacro/nexacro-to-react-mapping` | content test 3/3 PASS (2026-10-08) | 넥사크로 조회·편집 그리드 화면 각 1개를 대응표대로 Next.js 로 옮겨 기존 화면과 동등 동작 확인 | 넥사크로 레거시 화면, Next.js 앱 |
+| `nexacro/xapi-to-rest-migration` | content test 3/3 PASS (2026-10-08) | X-API 서비스 1개를 REST(일괄 저장·낙관적 잠금 포함)로 옮겨 동등성 테스트 통과 | 넥사크로 X-API 서버 |
+| `nexacro/nexacro-strangler-coexistence` | content test 3/3 PASS (2026-10-08) | 넥사크로 메뉴에서 새 Next.js 화면 1개를 열어 세션·쿠키 공유로 동작 확인 | 넥사크로 런타임 + Next.js 배포 |
+| `backend/spring-boot-1-to-2-migration` | content test 3/3 PASS (2026-10-08) | SB 1.x 레거시를 1.5→2.0→2.7 단계로 올려 테스트 GREEN | 실제 SB 1.x 프로젝트 |
+| `backend/ibatis-to-mybatis-migration` | content test 3/3 PASS (2026-10-08) | ibatis2mybatis 도구 실제 실행 + 변환 매퍼로 쿼리 결과 동등 확인 | iBATIS 2 프로젝트, Oracle |
 | `backend/korean-lunar-calendar-manseryeok` | 라이브러리 3종으로 경계·표준시·서머타임 케이스 실계산 (1954·1961 전환의 모호/부재 시각 구간 발견·보강) | KASI 공식 음양력 API 대조(T-1/T-2, 300건 규모) | KASI 오픈 API 키 |
 
 ## 기록 방법

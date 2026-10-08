@@ -49,14 +49,18 @@ const TEMPLATES = [
   { num: 11, name: 'seo-geo' },
   { num: 12, name: 'fortune-app' },
   { num: 13, name: 'python-fastapi' },
+  { num: 14, name: 'spec-extraction' },  // 2026-10-08 애드온 (비 dev·비 TS)
+  { num: 15, name: 'nexacro' },          // 2026-10-08 스택 (dev·비 TS·레거시 프로파일 강제)
 ];
 const DEV = new Set(['react-spa', 'nextjs', 'rust-axum', 'java-spring-legacy', 'java-spring-modern', 'unity-game',
-  'health', 'dream-interpretation', 'fortune-app', 'python-fastapi']);
+  'health', 'dream-interpretation', 'fortune-app', 'python-fastapi', 'nexacro']);
+// 레거시 프로파일을 질문 없이 강제하는 템플릿 — 레거시 질문(dev&ts)이 생략된다
+const LEGACY_FORCED = new Set(['nexacro']);
 const TS = new Set(['react-spa', 'nextjs', 'health', 'dream-interpretation', 'fortune-app']);
 const SEO_OPTIN = new Set(['react-spa', 'nextjs', 'health', 'dream-interpretation', 'fortune-app']); // n/c/y 질문
 const SEO_ADDON = new Set(['seo-geo']); // c/y 질문 (엔터 = y)
 // 현재 커맨드 수를 문서에 적고 있는 템플릿 — 이 수치가 문서에서 사라지면(퇴행) 실패
-const COMMANDS_DOCUMENTED = new Set(['java-spring-legacy', 'java-spring-modern', 'seo-geo']);
+const COMMANDS_DOCUMENTED = new Set(['java-spring-legacy', 'java-spring-modern', 'seo-geo', 'spec-extraction', 'nexacro']);
 
 // ══════════════════════════════════════════════════════════════════════
 // 파서
@@ -180,13 +184,15 @@ function install(tmpl, { seo = null, authoring = 'n' } = {}) {
   // 질문 순서: memory, superpowers, [codex(dev)], [legacy(dev&ts)], [SEO(optin|addon)], [작성 도구(!util)]
   const answers = ['', ''];
   if (DEV.has(tmpl)) answers.push('');
-  if (DEV.has(tmpl) && TS.has(tmpl)) answers.push('');
+  if (DEV.has(tmpl) && TS.has(tmpl) && !LEGACY_FORCED.has(tmpl)) answers.push('');
   if (SEO_OPTIN.has(tmpl) || SEO_ADDON.has(tmpl)) answers.push(seo === 'n' ? '' : (seo || ''));
   if (tmpl !== 'util') answers.push(authoring === 'y' ? 'y' : '');
   const num = TEMPLATES.find((t) => t.name === tmpl).num;
   const input = `${dir}\n${num}\n` + answers.map((a) => `${a}\n`).join('') + '\n'.repeat(60);
   const res = spawnSync('bash', [INSTALLER], { input, encoding: 'utf8', timeout: 120000 });
   assert.strictEqual(res.status, 0, `install(${tmpl}) 실패 status=${res.status}\n${(res.stderr || '').slice(-400)}`);
+  // 레거시 강제 템플릿은 질문 없이 true, 그 외는 이 헬퍼가 항상 N(엔터)으로 답한다
+  assert.ok(res.stdout.includes(`레거시 프로파일: ${LEGACY_FORCED.has(tmpl)}`), `${tmpl}: 레거시 프로파일 기대값 불일치`);
   // 답변 정렬 검증 — 질문 순서가 바뀌어 엉뚱한 옵션이 켜진 채 비교되는 것을 막는다.
   const wantSeo = { n: 'false', c: 'commerce', y: 'true' }[seo || (SEO_ADDON.has(tmpl) ? 'y' : 'n')];
   if (SEO_OPTIN.has(tmpl) || SEO_ADDON.has(tmpl)) {
@@ -327,7 +333,17 @@ describe('템플릿 문서 집합 일치 (경계: 존재하지 않는/미등록 
     }
   });
 
-  test('루트 README 템플릿 표가 12개 문서를 모두 링크', () => {
+  test('경계: 레거시 강제 집합은 dev 템플릿이어야 하고(비 dev 강제는 무의미) 설치 스크립트가 질문 없이 켠다', () => {
+    for (const t of LEGACY_FORCED) assert.ok(DEV.has(t), `${t}: 레거시 강제인데 dev 아님`);
+    const sh = fs.readFileSync(INSTALLER, 'utf8');
+    const m = sh.match(/is_legacy_forced\(\) \{[\s\S]*?\n\}/);
+    assert.ok(m, 'is_legacy_forced() 를 찾지 못함');
+    for (const t of TEMPLATES) {
+      assert.strictEqual(new RegExp(`(^|[|\\s])${t.name}([|\\s)]|$)`, 'm').test(m[0]), LEGACY_FORCED.has(t.name), `is_legacy_forced 와 LEGACY_FORCED 불일치: ${t.name}`);
+    }
+  });
+
+  test('루트 README 템플릿 표가 모든 템플릿 문서를 링크', () => {
     const readme = fs.readFileSync(path.join(REPO, 'README.md'), 'utf8');
     for (const t of TEMPLATES) {
       assert.ok(readme.includes(`docs/templates/${t.name}.md`), `README 템플릿 표에 ${t.name} 문서 링크 없음`);

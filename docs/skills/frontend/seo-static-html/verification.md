@@ -259,3 +259,4 @@ SKILL.md 섹션 4 "크기·개수 제한" + "sitemap index" 인용해야 한다.
 | 2026-06-01 | v1 | 최초 작성. 공식 문서 9개 + 보조 8개 소스에서 24개 클레임 교차 검증 완료. PENDING_TEST 상태로 저장 (skill-tester 호출은 사용자 지시로 보류) | skill-creator |
 | 2026-06-01 | v1 | 2단계 실사용 테스트 수행 (Q1 noindex+Disallow 충돌 / Q2 OG+TwitterCard property vs name / Q3 50,000 URL 초과 sitemap) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-09-28 | v2 | 재검증 — robots 메타태그 디렉티브 전체 목록·sitemap 50,000/50MB 한계·`@astrojs/sitemap` entryLimit 45000 기본값 1차 소스 재대조 전부 VERIFIED, 변경 없음. status APPROVED 유지 | Claude (Sonnet 5) |
+| 2026-10-08 | v2 | 설치본 참조 정리 — `i18n-seo` 참조 2곳에 "(설치된 경우)" 표기(SEO 커머스 프로파일 등 미설치 대응, 참조 검사 보강으로 발견). 내용 변경 없음 | Claude |

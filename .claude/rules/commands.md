@@ -42,6 +42,7 @@
 | `/agent-status` | agent-status.md | 현재 브랜치·미커밋 파일·PENDING_TEST 스킬 현황 요약 (verification.md frontmatter `status:` 기준) |
 | `/sparc-refine` | sparc-refine.md | SPARC 5단계(Spec→Pseudocode→Arch→Refine→Complete) 리팩터링 |
 | `/codex-review` | codex-review.md | Codex 적대적 코드 리뷰 수동 실행 (최대 3라운드 핑퐁) — Codex 옵션 설치 시에만 존재 |
+| `/spec-extract` | spec-extract.md | 레거시 코드에서 스펙 추출(legacy-spec-extractor → spec-reviewer) → `docs/spec/` 문서화. 소스 수정 없음 — spec-extraction 템플릿 설치 시에만 존재 |
 
 ---
 

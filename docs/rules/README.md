@@ -27,7 +27,7 @@
 
 | 규칙 | 대상 | 설명 |
 |------|------|------|
-| [adversarial-testing.md](../../.claude/rules/adversarial-testing.md) | react-spa·nextjs·rust-axum·java×2·unity-game·dream-interpretation·health·fortune-app·python-fastapi·all | 적대적 테스트 원칙 — 테스트 3계층(정상/악성 유저 방어/이상·경계) 강제, 악성 유저 공격 체크리스트, 테스트 통과용 하드코딩 return 금지(adversarial-test-guard·fake-impl-guard 훅) |
+| [adversarial-testing.md](../../.claude/rules/adversarial-testing.md) | react-spa·nextjs·rust-axum·java×2·unity-game·dream-interpretation·health·fortune-app·python-fastapi·nexacro·all | 적대적 테스트 원칙 — 테스트 3계층(정상/악성 유저 방어/이상·경계) 강제, 악성 유저 공격 체크리스트, 테스트 통과용 하드코딩 return 금지(adversarial-test-guard·fake-impl-guard 훅) |
 
 ---
 
@@ -35,9 +35,9 @@
 
 | 규칙 | 대상 템플릿 | 로드 조건 | 설명 |
 |------|------------|------|------|
-| [java.md](../../.claude/rules/java.md) | java-spring-legacy·java-spring-modern·all | `*.java`, `*.gradle(.kts)`, `pom.xml` | Java + Spring Boot 코딩 규칙 — 레거시(Java 11 / SB 2.5)·모던(Java 21 / SB 3.x) 양쪽 |
+| [java.md](../../.claude/rules/java.md) | java-spring-legacy·java-spring-modern·nexacro·all | `*.java`, `*.gradle(.kts)`, `pom.xml` | Java + Spring Boot 코딩 규칙 — 레거시(Java 11 / SB 2.5)·모던(Java 21 / SB 3.x) 양쪽 |
 | [rust.md](../../.claude/rules/rust.md) | rust-axum·all | `*.rs`, `Cargo.toml` | Rust + Axum 코딩 규칙 — 에러 처리, 타입 설계, 비동기, 아키텍처, Clippy 기준 |
-| [typescript.md](../../.claude/rules/typescript.md) | react-spa·nextjs·health·dream-interpretation·fortune-app·all | `*.ts`, `*.tsx` | TypeScript + React 코딩 규칙 — 타입 시스템, 컴포넌트, 상태 관리, 에러 처리 |
+| [typescript.md](../../.claude/rules/typescript.md) | react-spa·nextjs·health·dream-interpretation·fortune-app·nexacro(규칙만, TS 훅 없음)·all | `*.ts`, `*.tsx` | TypeScript + React 코딩 규칙 — 타입 시스템, 컴포넌트, 상태 관리, 에러 처리 |
 
 ---
 

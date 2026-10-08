@@ -21,7 +21,7 @@ description: 프레임워크 비종속 순수 HTML/정적 사이트 생성기(As
 이 스킬은 React 프레임워크(Next.js·Vite SPA)와 무관하게 **HTML 자체 표준과 정적 호스팅 환경**에 집중한다. CMS 사이트, 블로그, 랜딩 페이지, 문서 사이트, Astro/11ty/Hugo 빌드 산출물이 주 사용처다.
 
 다음 주제는 별도 스킬에서 다룬다:
-- 다국어 SEO(`hreflang`) → `i18n-seo`
+- 다국어 SEO(`hreflang`) → `i18n-seo` (설치된 경우)
 - JSON-LD 구조화 데이터 → `schema-org-patterns`
 - AI 크롤러(GPTBot·ClaudeBot 등) → `geo-ai-discoverability`
 
@@ -202,7 +202,7 @@ ogp.me 스펙 기준 필수 속성: `og:title`, `og:type`, `og:image`, `og:url`.
 <link rel="alternate" hreflang="x-default" href="https://example.com/en/about">
 ```
 
-> 자세한 hreflang 규칙은 `i18n-seo` 스킬 참조.
+> 자세한 hreflang 규칙은 `i18n-seo` 스킬(설치된 경우) 참조.
 
 ---
 

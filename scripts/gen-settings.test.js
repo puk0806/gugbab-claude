@@ -77,14 +77,44 @@ console.log('\n[훅 다이어트] deliverable-guard 통합 · 제거 훅 미참�
   assert('Stop에 deliverable-guard 포함', flat(s).includes('deliverable-guard.js') , true)
   assert('제거된 훅 미참조 (pending-test/readme/session-summary/handoff/task-plan/confirmation-gate/verification-gate/careful-with-judge/memory-stop)',
     /pending-test-guard|readme-guard\.js|session-summary|session-handoff|task-plan-guard|confirmation-gate|verification-gate|careful-with-judge|memory-stop-guard/.test(flat(s)), false)
-  assert('UserPromptSubmit 이벤트 제거됨', 'UserPromptSubmit' in s.hooks, false)
+  // UserPromptSubmit 은 2026-07 다이어트로 비웠다가 2026-10-06 한국어 지시 주입 전용으로 재도입 — 그 외 훅 금지
+  assert('UserPromptSubmit 에는 korean-response-guard·task-confirm-guard·progress-tracker 3개만',
+    JSON.stringify((s.hooks.UserPromptSubmit || []).flatMap(g => g.hooks.map(h => h.command.split('/').pop()))),
+    JSON.stringify(['korean-response-guard.js', 'task-confirm-guard.js', 'progress-tracker.js']))
+  // 2026-10-06 신규 훅 4종 배선
+  const cmdsOf = (st, ev, m) => (st.hooks[ev] || []).filter(g => m === undefined || g.matcher === m).flatMap(g => g.hooks.map(h => h.command)).join(' ')
+  assert('ConfigChange 에 config-change-audit', cmdsOf(s, 'ConfigChange').includes('config-change-audit.js'), true)
+  assert('SessionStart 에 config-change-audit·progress-tracker', /config-change-audit\.js/.test(cmdsOf(s, 'SessionStart')) && /progress-tracker\.js/.test(cmdsOf(s, 'SessionStart')), true)
+  assert('PostToolUse Write·Edit·NotebookEdit 에 progress-tracker', ['Write', 'Edit', 'NotebookEdit'].every(m => cmdsOf(s, 'PostToolUse', m).includes('progress-tracker.js')), true)
+  assert('dev: PostToolUse Write·Edit 에 auto-format', ['Write', 'Edit'].every(m => cmdsOf(s, 'PostToolUse', m).includes('auto-format.js')), true)
+  assert('dev: PreToolUse Bash 에 package-manager-guard', cmdsOf(s, 'PreToolUse', 'Bash').includes('package-manager-guard.js'), true)
+  const nd = generate('--memory')
+  assert('비개발(옵션만): auto-format·package-manager-guard 미배선', /auto-format|package-manager-guard/.test(JSON.stringify(nd.hooks)), false)
+  assert('비개발에도 progress-tracker·config-change-audit 배선', /progress-tracker/.test(JSON.stringify(nd.hooks)) && /config-change-audit/.test(JSON.stringify(nd.hooks)), true)
+  const ut = generate('--util')
+  assert('util: progress-tracker(Write·Edit) + ConfigChange 배선, auto-format 없음',
+    cmdsOf(ut, 'PostToolUse', 'Write').includes('progress-tracker.js') && cmdsOf(ut, 'ConfigChange').includes('config-change-audit.js') && !/auto-format/.test(JSON.stringify(ut.hooks)), true)
+  for (const m of ['Write', 'Edit', 'NotebookEdit']) {
+    const grp = s.hooks.PreToolUse.find(b => b.matcher === m)
+    assert(`PreToolUse ${m} 에 task-confirm-guard (승인 전 수정 차단)`, !!grp && grp.hooks.some(h => h.command.includes('task-confirm-guard.js')), true)
+  }
+  for (const m of ['Read', 'Grep', 'NotebookEdit']) {
+    const grp = s.hooks.PreToolUse.find(b => b.matcher === m)
+    assert(`PreToolUse ${m} 에 protect-secrets (개인키·인증 파일 차단)`, !!grp && grp.hooks.some(h => h.command.includes('protect-secrets.js')), true)
+  }
+  const u = generate('--util')
+  assert('util 모드에도 Read 에 protect-secrets', u.hooks.PreToolUse.find(b => b.matcher === 'Read').hooks.some(h => h.command.includes('protect-secrets.js')), true)
+  assert('util 모드에도 task-confirm-guard 배선 (UserPromptSubmit + Write)',
+    JSON.stringify(u.hooks.UserPromptSubmit).includes('task-confirm-guard.js') && u.hooks.PreToolUse.find(b => b.matcher === 'Write').hooks.some(h => h.command.includes('task-confirm-guard.js')), true)
   const stopCmds = s.hooks.Stop[0].hooks.map(h => h.command)
-  assert('Stop 훅 4개 이하 (deliverable+codex+export+notify — memory-stop 제거)', stopCmds.length <= 4, true)
+  assert('Stop 훅 5개 이하 (deliverable+codex+export+korean+notify — memory-stop 제거)', stopCmds.length <= 5, true)
+  assert('Stop에 korean-response-guard 포함 (강제)', stopCmds.some(c => c.includes('korean-response-guard.js')), true)
   assert('Stop에 session-export 포함 (강제 보존)', stopCmds.some(c => c.includes('session-export.js')), true)
 }
 {
   const s = generate('--util')
-  assert('util 모드 Stop에 session-export+cc-notify만 (opt-in 미선택)', s.hooks.Stop[0].hooks.length, 2)
+  assert('util 모드 Stop에 session-export+korean-response-guard+cc-notify만 (opt-in 미선택)', s.hooks.Stop[0].hooks.length, 3)
+  assert('util 모드에도 UserPromptSubmit 한국어 지시 주입', JSON.stringify(s.hooks.UserPromptSubmit || []).includes('korean-response-guard.js'), true)
   assert('util 모드 Stop에도 session-export 포함 (강제 보존)',
     JSON.stringify(s.hooks.Stop).includes('session-export.js'), true)
   const utilPreWrite = s.hooks.PreToolUse.find(b => b.matcher === 'Write').hooks.map(h => h.command).join(' ')
@@ -209,6 +239,18 @@ console.log('\n[--legacy] tdd-guard 제외 · typescript-quality --changed-only'
   // util + legacy: util 은 강제 훅 자체가 없으므로 legacy 가 아무것도 추가하지 않아야 함
   const u = generate('--util', '--legacy')
   assert('util + legacy → typescript-quality 미배선', JSON.stringify(u.hooks).includes('typescript-quality'), false)
+
+  // nexacro(15) 프로파일 = --dev --legacy (TS 없음, 2026-10-08): tdd-guard 만 빠지고 dev 품질 훅은 유지, TS 훅 없음
+  const nx = generate('--dev', '--legacy')
+  const nw = cmds(nx, 'Write'), ne = cmds(nx, 'Edit')
+  assert('dev+legacy(비 TS): Write·Edit 에 tdd-guard 미배선', [...nw, ...ne].some(c => c.includes('tdd-guard')), false)
+  assert('dev+legacy(비 TS): adversarial·fake-impl·auto-format 유지',
+    ['adversarial-test-guard', 'fake-impl-guard', 'auto-format'].every(h => nw.some(c => c.includes(h)) && ne.some(c => c.includes(h))), true)
+  assert('dev+legacy(비 TS): typescript-quality 미배선 (--changed-only 포함 어떤 형태도)', JSON.stringify(nx.hooks).includes('typescript-quality'), false)
+  assert('dev+legacy(비 TS): PreToolUse Bash test-fake-guard·package-manager-guard 유지',
+    /test-fake-guard[\s\S]*package-manager-guard/.test(JSON.stringify((nx.hooks.PreToolUse || []).filter(g => g.matcher === 'Bash'))), true)
+  // 경계: 플래그 순서를 바꿔도(--legacy --dev) 같은 결과
+  assert('dev+legacy 플래그 순서 무관', JSON.stringify(generate('--legacy', '--dev')) === JSON.stringify(nx), true)
 }
 
 // ── 신선도·규칙 경고 훅 배선 (2026-09-25) ────────────────────────────────

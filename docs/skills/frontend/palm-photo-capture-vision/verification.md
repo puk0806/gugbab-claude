@@ -349,3 +349,4 @@ Claude Vision 통합 패턴 스킬이라 general-purpose로 충분하다고 판�
 | 2026-09-25 | v1.1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | skill-creator |
 | 2026-09-25 | v1.1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |
 | 2026-09-28 | v2 | 재검증(2차) — Vision 이미지 제한·해상도 티어(Claude 4.7 이후 고해상도)·모델 ID 현행성 재확인, 3/3 VERIFIED·DISPUTED 0, 내용 변경 없음 → APPROVED 유지 | Claude (Sonnet 5) |
+| 2026-10-08 | v2 | 설치본 참조 정리 — fortune-app 템플릿에 설치되지 않는 `dream-app-onboarding` 참조에 "(설치된 경우)" 표기(참조 검사 보강으로 발견). 내용 변경 없음 | Claude |

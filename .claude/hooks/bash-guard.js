@@ -7,7 +7,8 @@
  *
  * PreToolUse:
  *   - 위험한 Bash 패턴 → deny (정규식 + classifyShell 명령 단위 분류)
- *   - 사용자 확인 대상(commit/push/publish, reset --hard, clean -f, 프로젝트 밖 rm, sudo, dd …) → ask
+ *   - 사용자 확인 대상(commit/push/publish, 프로젝트 밖 rm, sudo, dd …) → ask
+ *   - git reset --hard: 미푸시 커밋·커밋 안 한 작업만 지우면 자동, 푸시된 커밋을 지우면 deny (2026-10-06)
  *   - 정적 판정 불가(동적 명령명·파싱 실패) → null (allow 하지 않음)
  *   - 안전한 cd+git / heredoc / compound / script 패턴 → allow (Claude Code 하드코딩 휴리스틱 우회)
  *   - 그 외 → null (다른 훅에 위임)
@@ -71,7 +72,7 @@ const DENY_PATTERNS = [
   { pattern: /curl\s+.*\|\s*(ba)?sh/, reason: '원격 스크립트 실행(curl|bash)은 차단됩니다.' },
   { pattern: /wget\s+.*\|\s*(ba)?sh/, reason: '원격 스크립트 실행(wget|bash)은 차단됩니다.' },
   { pattern: /chmod\s+777/, reason: '777 권한 설정은 보안 위험입니다.' },
-  { pattern: /git\s+reset\s+--hard\s+HEAD~[2-9]\d*/, reason: '10개 이상의 커밋 되돌리기는 위험합니다. 직접 실행하세요.' },
+  // (구 `git reset --hard HEAD~[2-9]` 정적 차단은 2026-10-06 제거 — 푸시 여부를 git 으로 확인하는 classifyGit 판정으로 대체)
   { pattern: /:\s*\(\)\s*\{.*:\|:.*\}/, reason: 'Fork bomb 패턴 감지. 차단합니다.' },
 ]
 
@@ -1351,7 +1352,23 @@ function parsePushArgs(args) {
   return { remote: positional[0] || null, refspecs: positional.slice(1), force, pushAll, deleteMode }
 }
 
-function classifyGit(g, add) {
+// reset --hard 대상 커밋까지 되돌릴 때 지워지는 커밋 중 이미 푸시된(원격 브랜치에 있는) 것의 수
+// 반환: 숫자(0 = 전부 미푸시 → 자동 허용) | null(판정 불가 → 사용자 확인)
+// execFileSync + 인자 배열 — 셸을 거치지 않으므로 대상 문자열로 명령 주입 불가. 대상은 ref 문자만 허용
+const GIT_REF_RE = /^[A-Za-z0-9_.\/@{}^~-]{1,200}$/
+function pushedCommitsDiscarded(target, dir) {
+  if (!GIT_REF_RE.test(target) || target.startsWith('-')) return null
+  const { execFileSync } = require('child_process')
+  const run = (args) => execFileSync('git', args, { cwd: dir || undefined, encoding: 'utf8', timeout: 3000, stdio: ['ignore', 'pipe', 'ignore'] }).trim()
+  try {
+    const total = Number(run(['rev-list', '--count', `${target}..HEAD`]))
+    const unpushed = Number(run(['rev-list', '--count', `${target}..HEAD`, '--not', '--remotes']))
+    if (!Number.isInteger(total) || !Number.isInteger(unpushed)) return null
+    return total - unpushed
+  } catch { return null }
+}
+
+function classifyGit(g, add, ctx) {
   if (!g || !g.sub) return
   if (g.subDyn) { add('unknown', 'git 서브커맨드를 정적으로 해석할 수 없습니다.'); return }
   const vals = g.args.map(a => cleanValue(a.value))
@@ -1363,8 +1380,152 @@ function classifyGit(g, add) {
     return
   }
   if (g.sub === 'commit') { add('ask', 'git commit 은 사용자 확인이 필요합니다 (커밋·푸시는 명시적 요청 시에만).'); return }
-  if (g.sub === 'reset' && vals.includes('--hard')) { add('ask', 'git reset --hard 는 작업 내용을 버립니다. 사용자 확인이 필요합니다.'); return }
-  if (g.sub === 'clean' && vals.some(v => v === '--force' || /^-[A-Za-z]*f/.test(v))) { add('ask', 'git clean -f 는 추적되지 않은 파일을 삭제합니다. 사용자 확인이 필요합니다.') }
+  // reset --hard (2026-10-06 사용자 결정): 커밋 안 한 작업·푸시 안 된 커밋만 지우면 자동 허용(의도된 리셋),
+  // 이미 푸시된 커밋을 지우면 차단(원격과 어긋나 되돌리기 어려움), 판정 불가(동적 대상·git 실패)면 확인.
+  // git clean -f 는 자동 허용으로 전환 (같은 결정 — 이전엔 확인)
+  if (g.sub === 'reset' && vals.includes('--hard')) {
+    const targetArg = g.args.find(a => !cleanValue(a.value).startsWith('-'))
+    if (targetArg && targetArg.dyn) { add('ask', 'git reset --hard 대상이 변수라 푸시 여부를 판정할 수 없습니다. 사용자 확인이 필요합니다.'); return }
+    const target = targetArg ? cleanValue(targetArg.value) : 'HEAD'
+    if (target === 'HEAD') return // 커밋 안 한 작업만 버림
+    let dir = ctx && ctx.vcwd
+    if (g.dir) {
+      const r = resolveRmTarget(g.dir, dir)
+      dir = r && !r.glob ? r.abs : null
+      if (!dir) { add('ask', 'git -C 경로를 해석할 수 없어 푸시 여부를 판정할 수 없습니다. 사용자 확인이 필요합니다.'); return }
+    }
+    if (!dir) { add('ask', '현재 디렉토리를 알 수 없어 reset 대상의 푸시 여부를 판정할 수 없습니다. 사용자 확인이 필요합니다.'); return }
+    const pushed = pushedCommitsDiscarded(target, dir)
+    if (pushed === null) { add('ask', `git reset --hard ${target} 의 푸시 여부를 판정할 수 없습니다. 사용자 확인이 필요합니다.`); return }
+    if (pushed > 0) add('deny', `git reset --hard ${target} 는 이미 푸시된 커밋 ${pushed}개를 지웁니다. 원격과 어긋나므로 차단합니다 — 직접 실행하세요.`)
+    return
+  }
+}
+
+// ── 2026-10-06 사용자 결정 추가 분류 ────────────────────────────────────────
+// 개인키·인증 파일 판정은 protect-secrets.js 와 공유 (Read 도구와 Bash 의 판정 일관성)
+let _isSecretReadPath = null
+try { _isSecretReadPath = require('./protect-secrets.js').isSecretReadPath } catch { /* 미설치 → 검사 생략 */ }
+
+// 인자 중 개인키·인증 파일(또는 ~/.ssh 디렉토리)을 가리키는 것이 있으면 차단 — cat·cp·grep·scp 등 명령 무관
+function classifySecretArgs(inv, ctx, add) {
+  if (!_isSecretReadPath) return
+  for (const a of inv.args) {
+    const raw = cleanValue(a.value)
+    if (a.dyn && !/^\$(?:\{HOME\}|HOME)(?![A-Za-z0-9_])/.test(raw)) continue
+    const v = raw.replace(/^-{1,2}[A-Za-z][\w-]*=/, '') // --file=~/.ssh/id_rsa
+    if (!v || v.startsWith('-')) continue
+    const r = resolveRmTarget({ ...a, value: v }, ctx.vcwd)
+    if (r && _isSecretReadPath(r.abs)) { add('deny', `개인키·인증 파일(${v}) 접근은 차단됩니다. 필요하면 사용자가 직접 확인하세요.`); return }
+  }
+}
+
+// gh — 조회는 자동, GitHub 에 반영되는 쓰기는 확인, 레포 삭제는 차단
+const GH_VALUE_FLAGS = new Set(['-R', '--repo', '--hostname'])
+const GH_READONLY_TOP = new Set(['auth', 'config', 'extension', 'alias', 'completion', 'help', 'version', 'status', 'search', 'browse'])
+const GH_READONLY_ACTIONS = new Set(['view', 'list', 'ls', 'status', 'diff', 'checks', 'download', 'clone', 'checkout', 'watch', 'browse'])
+function classifyGh(vals, add) {
+  const pos = []
+  for (let i = 0; i < vals.length; i++) {
+    const v = vals[i]
+    if (GH_VALUE_FLAGS.has(v)) { i++; continue }
+    if (v.startsWith('-')) { if (pos.length === 0 && (v === '--version' || v === '--help')) return; continue }
+    pos.push(v)
+    if (pos.length === 2) break
+  }
+  const [sub, action] = pos
+  if (!sub || GH_READONLY_TOP.has(sub)) return
+  if (sub === 'api') {
+    let write = false
+    for (let i = 0; i < vals.length; i++) {
+      const v = vals[i]
+      const m = /^(?:-X|--method)(?:=(.*))?$/.exec(v) || /^-X(.+)$/.exec(v)
+      if (m) { const method = (m[1] !== undefined ? m[1] : vals[i + 1] || '').toUpperCase(); if (method !== 'GET') write = true }
+      if (/^(?:-f|-F|--field|--raw-field|--input)(?:=|$)/.test(v)) write = true
+    }
+    if (write) add('ask', 'gh api 쓰기 요청(POST·PATCH·DELETE 등)은 GitHub 에 바로 반영돼 사용자 확인이 필요합니다.')
+    return
+  }
+  if (sub === 'repo' && action === 'delete') { add('deny', 'gh repo delete 는 되돌릴 수 없어 차단됩니다. 직접 실행하세요.'); return }
+  if (action && GH_READONLY_ACTIONS.has(action)) return
+  add('ask', `gh ${sub}${action ? ' ' + action : ''} 는 GitHub 에 반영되는 작업이라 사용자 확인이 필요합니다.`)
+}
+
+// curl·wget 파일 업로드 — 데이터 유출 경로
+function classifyUpload(nm, vals, add) {
+  const reason = `${nm} 로 파일을 외부에 업로드하는 요청은 사용자 확인이 필요합니다.`
+  if (nm === 'curl') {
+    for (let i = 0; i < vals.length; i++) {
+      const v = vals[i]
+      if (/^(?:-F|--form|--form-string|-T|--upload-file)(?:=|$)/.test(v) || (/^-[A-Za-z]*[FT]/.test(v) && !v.startsWith('--'))) { add('ask', reason); return }
+      const dm = /^(?:-d|--data|--data-binary|--data-urlencode|--data-raw|--json)(?:=(.*))?$/.exec(v) || /^-d(.+)$/.exec(v)
+      if (dm) {
+        const val = dm[1] !== undefined ? dm[1] : (vals[i + 1] || '')
+        if (/(?:^|=)@/.test(val)) { add('ask', reason); return }
+      }
+    }
+  } else if (nm === 'wget') {
+    if (vals.some(v => /^--(?:post-file|body-file)(?:=|$)/.test(v))) add('ask', reason)
+  }
+}
+
+// 프로세스가 이 Claude 세션의 자손인가 — ps 로 부모를 거슬러 올라가 확인
+// 세션 PID = 훅 프로세스의 조상 중 이름이 claude 인 가장 가까운 프로세스 (테스트는 BASH_GUARD_TEST_SESSION_PID 로 지정)
+let _procTable = null
+function procTable() {
+  if (_procTable) return _procTable
+  _procTable = new Map()
+  try {
+    const out = require('child_process').execFileSync('ps', ['-axo', 'pid=,ppid=,comm='], { encoding: 'utf8', timeout: 3000, stdio: ['ignore', 'pipe', 'ignore'] })
+    for (const line of out.split('\n')) {
+      const m = /^\s*(\d+)\s+(\d+)\s+(.*)$/.exec(line)
+      if (m) _procTable.set(Number(m[1]), { ppid: Number(m[2]), comm: m[3].trim() })
+    }
+  } catch { /* ps 실패 → 빈 표 = 판정 불가 */ }
+  return _procTable
+}
+function sessionPid() {
+  const forced = Number(process.env.BASH_GUARD_TEST_SESSION_PID)
+  if (Number.isInteger(forced) && forced > 1) return forced
+  const t = procTable()
+  let pid = process.ppid
+  for (let hop = 0; pid > 1 && hop < 64; hop++) {
+    const p = t.get(pid)
+    if (!p) return null
+    if (/(?:^|\/)claude(?:\.exe)?$/i.test(p.comm)) return pid
+    pid = p.ppid
+  }
+  return null
+}
+function isSessionDescendant(pid, root) {
+  if (!root || pid === root) return false
+  const t = procTable()
+  let cur = pid
+  for (let hop = 0; cur > 1 && hop < 64; hop++) {
+    const p = t.get(cur)
+    if (!p) return false
+    if (p.ppid === root) return true
+    cur = p.ppid
+  }
+  return false
+}
+
+// docker 정리(prune)·볼륨 삭제, 일괄·강제 종료 — 다른 프로젝트 데이터·사용자 프로세스에 영향
+function classifyDockerKill(nm, vals, add) {
+  if (nm === 'docker' || nm === 'podman') {
+    if (vals.includes('prune') || (vals.includes('volume') && (vals.includes('rm') || vals.includes('remove')))) {
+      add('ask', `${nm} 정리·볼륨 삭제는 누가 만들었든 전부 지워 사용자 확인이 필요합니다.`)
+    }
+    return
+  }
+  if (nm === 'killall' || nm === 'pkill') { add('ask', `${nm} 는 이름으로 여러 프로세스를 한꺼번에 종료해 사용자 확인이 필요합니다.`); return }
+  if (nm !== 'kill') return
+  const forceIdx = vals.findIndex((v, i) => /^-(?:9|KILL|SIGKILL)$/i.test(v) || (v === '-s' && /^(?:9|KILL|SIGKILL)$/i.test(vals[i + 1] || '')))
+  if (forceIdx < 0) return
+  const targets = vals.filter((v, i) => !v.startsWith('-') && !(i > 0 && vals[i - 1] === '-s'))
+  const root = sessionPid()
+  const mine = targets.length > 0 && root && targets.every(v => /^\d+$/.test(v) && isSessionDescendant(Number(v), root))
+  if (!mine) add('ask', 'kill -9 대상이 이 Claude 세션이 띄운 프로세스가 아니거나 확인할 수 없습니다. 사용자 확인이 필요합니다.')
 }
 
 // 명령 전체 위험 분류 — PreToolUse·PermissionRequest 공용 (판정 일관성)
@@ -1406,7 +1567,11 @@ function classifyShell(cmd, opts = {}) {
       ctx.vcwd = r && !r.glob && t.value !== '-' ? r.abs : null
       continue
     }
-    if (nm === 'git') { classifyGit(inv.git, add); continue }
+    classifySecretArgs(inv, ctx, add)
+    if (nm === 'git') { classifyGit(inv.git, add, ctx); continue }
+    if (nm === 'gh') { classifyGh(vals, add); continue }
+    if (nm === 'curl' || nm === 'wget') { classifyUpload(nm, vals, add); continue }
+    if (['docker', 'podman', 'kill', 'killall', 'pkill'].includes(nm)) { classifyDockerKill(nm, vals, add); continue }
     if (PUBLISHERS.has(nm)) {
       const cut = vals.indexOf('--')
       const head = (cut >= 0 ? vals.slice(0, cut) : vals).map(v => v.toLowerCase())

@@ -292,3 +292,4 @@ status: APPROVED
 | 2026-08-26 | v2 | 1-4절 신설분 content 재테스트 수행 (Q1 m./www. 분리 시 link 태그 방향·media / Q2 모바일 canonical 자기참조 시 결과 / Q3 반응형 통합 순서) → 3/3 PASS, APPROVED 유지 | skill-tester |
 | 2026-09-28 | v2.1 | 재검증(2차, 33일 경과) — **DISPUTED 정정 발견**: 6-3절 "iOS 17.4+ EU PWA 제약"이 사실과 다름을 확인. Apple은 2024-02 iOS 17.4 베타에서 EU 홈 화면 웹 앱 강등을 예고했으나 2024-03-01 정식 출시 전 전면 철회, 현재까지 EU도 정상 동작. 6-3절을 "제약 아님"으로 정정 재작성. W3C manifest WD 날짜도 2026-05-07 → 2026-08-13으로 갱신. status APPROVED → PENDING_TEST 전환 | orchestrator (2차 재검증 배치) |
 | 2026-09-28 | v2.1 | 2단계 재테스트 수행 (Q1 EU PWA 기능 제약 여부/6-3절 정정 겨냥 / Q2 100vh 잘림·dvh/svh 핵심 기능) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-10-08 | v2.1 | 설치본 참조 정리 — `seo-static-html` 참조에 "(설치된 경우)" 표기(SEO 프로파일에 따라 미설치, 참조 검사 보강으로 발견). 내용 변경 없음 | Claude |
