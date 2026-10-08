@@ -45,7 +45,8 @@ const permissions = {
   ],
   deny: [
     'Bash(git push --force*)', 'Bash(git push -f*)',
-    'Bash(git reset --hard HEAD~[2-9]*)',
+    // (구 'Bash(git reset --hard HEAD~[2-9]*)' 는 2026-10-06 제거 — 정적 규칙은 푸시 여부를 몰라 미푸시 리셋까지 막았다.
+    //  bash-guard 가 git 으로 확인해 푸시된 커밋을 지우는 reset 만 차단)
     'Bash(rm -rf /bin*)', 'Bash(rm -rf /etc*)', 'Bash(rm -rf /lib*)',
     'Bash(rm -rf /sbin*)', 'Bash(rm -rf /sys*)', 'Bash(rm -rf /usr*)',
     'Bash(rm -rf /var*)', 'Bash(rm -rf /proc*)', 'Bash(rm -rf /dev*)',
@@ -59,14 +60,20 @@ const hooks = {};
 // PreToolUse — 공통
 // (계획 확인은 confirmation-gate/task-plan-guard 훅 대신 네이티브 Plan Mode 사용 — 2026-07 훅 다이어트)
 // 구조 검증 3종(verification/skill-md/agent-md)은 Write 사전 차단 — 위반 파일은 저장 자체가 안 됨
+// task-confirm-guard(2026-10-06): "진행할까요?" 승인 전 Write/Edit/NotebookEdit 차단 — 모든 템플릿·util 공통
 hooks.PreToolUse = [
   { matcher: '*',     hooks: [H('bash-guard.js'), H('auto-approve.js')] },
-  { matcher: 'Write', hooks: [H('parry.js'), H('protect-secrets.js'), H('verification-guard.js'), H('skill-md-guard.js'), H('agent-md-guard.js')] },
-  { matcher: 'Edit',  hooks: [H('protect-secrets.js')] },
+  { matcher: 'Write', hooks: [H('parry.js'), H('protect-secrets.js'), H('verification-guard.js'), H('skill-md-guard.js'), H('agent-md-guard.js'), H('task-confirm-guard.js')] },
+  { matcher: 'Edit',  hooks: [H('protect-secrets.js'), H('task-confirm-guard.js')] },
+  { matcher: 'NotebookEdit', hooks: [H('protect-secrets.js'), H('task-confirm-guard.js')] },
+  // protect-secrets 읽기 차단(2026-10-06): 개인키·클라우드 인증 파일 Read·Grep 차단
+  { matcher: 'Read',  hooks: [H('protect-secrets.js')] },
+  { matcher: 'Grep',  hooks: [H('protect-secrets.js')] },
 ];
 // PreToolUse Bash — 개발 전용 (가짜 테스트 차단. rm -rf 분석은 bash-guard에 흡수)
+// package-manager-guard(2026-10-06): lock 파일과 다른 패키지 매니저로 의존성 변경 차단
 if (isDev) {
-  hooks.PreToolUse.push({ matcher: 'Bash', hooks: [H('test-fake-guard.js')] });
+  hooks.PreToolUse.push({ matcher: 'Bash', hooks: [H('test-fake-guard.js'), H('package-manager-guard.js')] });
 }
 // PreToolUse Bash — readme-guard 선택 시 (git commit/push 직전 README 미업데이트 차단)
 // deliverable-guard가 구 readme-guard + pending-test-guard + 세션 파일 추적 통합 훅
@@ -94,20 +101,22 @@ const tsHook = isLegacy
 
 // verification-guard 는 Write 를 PreToolUse 에서 사전 차단하지만, 날짜 4곳 불일치 경고(비차단)는 저장된 디스크
 // 파일로만 판정할 수 있어 PostToolUse Write 배선이 필요하다(훅은 Post Write 를 경고 전용으로 처리 — 2026-10-05 배선 누락 수정)
-const writeHooks = [H('deliverable-guard.js'), H('verification-guard.js')];
-if (isDev) writeHooks.push(...devWriteHooks);
+// progress-tracker(2026-10-06, 공통): 승인된 계획에 수정 파일 기록 / auto-format(개발 전용): 저장 파일을 언어별 포매터로 정리
+const writeHooks = [H('deliverable-guard.js'), H('verification-guard.js'), H('progress-tracker.js')];
+if (isDev) writeHooks.push(...devWriteHooks, H('auto-format.js'));
 if (withTs) writeHooks.push(tsHook);
 if (withMemory) writeHooks.push(H('memory-sync.js'));
 
 // PostToolUse Edit — 구조 검증 3종은 Edit만 사후 검증 (디스크 전체 재읽기, Write는 PreToolUse에서 사전 차단)
-const editHooks = [H('deliverable-guard.js'), H('verification-guard.js'), H('skill-md-guard.js'), H('agent-md-guard.js')];
-if (isDev) editHooks.push(...devWriteHooks);
+const editHooks = [H('deliverable-guard.js'), H('verification-guard.js'), H('skill-md-guard.js'), H('agent-md-guard.js'), H('progress-tracker.js')];
+if (isDev) editHooks.push(...devWriteHooks, H('auto-format.js'));
 if (withTs) editHooks.push(tsHook);
 if (withMemory) editHooks.push(H('memory-sync.js'));
 
 hooks.PostToolUse = [
   { matcher: 'Write', hooks: writeHooks },
   { matcher: 'Edit',  hooks: editHooks  },
+  { matcher: 'NotebookEdit', hooks: [H('progress-tracker.js')] },
   { matcher: 'Bash',  hooks: [H('bash-guard.js')] },
 ];
 
@@ -124,7 +133,12 @@ if (withMemory) sessionStartHooks.push(H('memory-pull.js'));
 sessionStartHooks.push(H('session-start.js'));
 sessionStartHooks.push(H('instructions-loaded.js'));
 sessionStartHooks.push(stalenessHook);
+// 2026-10-06: config-change-audit(설정 스냅샷) · progress-tracker(직전·현재 작업 안내) — 공통
+sessionStartHooks.push(H('config-change-audit.js'), H('progress-tracker.js'));
 hooks.SessionStart = [{ hooks: sessionStartHooks }];
+
+// ConfigChange(2026-10-06, 공통) — 세션 중 설정 파일 변경을 기록하고 보호 장치에 영향이 있으면 ⚠ 알림 (차단은 안 함)
+hooks.ConfigChange = [{ hooks: [H('config-change-audit.js')] }];
 
 // Stop — 산출물 완결성(deliverable-guard) + 선택 훅만 (스태킹 최소화)
 // --readme-guard 미선택 시 README 검사는 끄고 PENDING_TEST 검사만 수행 (opt-in 의미 보존)
@@ -135,8 +149,14 @@ const stopHooks = [deliverableStop];
 if (withCodex) stopHooks.push(H('codex-review-guard.js'));
 // memory-stop-guard는 2026-07-10 제거 — 자동 커밋 폐지로 존재 이유 소멸 (memory-sync가 미러 복사 담당)
 stopHooks.push(H('session-export.js')); // 대화 요약 강제 보존 — 옵션 없음 (Y: 레포 exports/ 워킹트리 · N: 로컬 exports/)
+stopHooks.push(H('korean-response-guard.js')); // 답변 한국어 강제 — 옵션 없음 (2026-10-06)
 stopHooks.push(H('cc-notify.js'));
 hooks.Stop = [{ hooks: stopHooks }];
+
+// UserPromptSubmit — 매 질문마다 "한국어로 답변" 지시 주입 (Stop 검사와 짝) + 승인 여부 기록(task-confirm-guard)
+// 모든 템플릿·util 공통
+// progress-tracker: 승인된 계획 기록 (task-confirm-guard 와 같은 승인 판정 함수 공유)
+hooks.UserPromptSubmit = [{ hooks: [H('korean-response-guard.js'), H('task-confirm-guard.js'), H('progress-tracker.js')] }];
 
 // PermissionRequest
 hooks.PermissionRequest = [
@@ -149,23 +169,27 @@ if (isUtil) {
   // PreToolUse 재정의 — 구조 검증 3종(verification/skill-md/agent-md)이 딸려가지 않도록
   hooks.PreToolUse = [
     { matcher: '*',     hooks: [H('bash-guard.js'), H('auto-approve.js')] },
-    { matcher: 'Write', hooks: [H('parry.js'), H('protect-secrets.js')] },
-    { matcher: 'Edit',  hooks: [H('protect-secrets.js')] },
+    { matcher: 'Write', hooks: [H('parry.js'), H('protect-secrets.js'), H('task-confirm-guard.js')] },
+    { matcher: 'Edit',  hooks: [H('protect-secrets.js'), H('task-confirm-guard.js')] },
+    { matcher: 'NotebookEdit', hooks: [H('protect-secrets.js'), H('task-confirm-guard.js')] },
+    { matcher: 'Read',  hooks: [H('protect-secrets.js')] },
+    { matcher: 'Grep',  hooks: [H('protect-secrets.js')] },
   ];
   if (withReadmeGuard)      hooks.PreToolUse.push({ matcher: 'Bash', hooks: [H('deliverable-guard.js')] });
   else if (withMemory)      hooks.PreToolUse.push({ matcher: 'Bash', hooks: [deliverablePreBash] });
   if (withBranchProtection) hooks.PreToolUse.push({ matcher: 'Bash', hooks: [H('branch-protection.js')] });
 
   // README 검사를 쓰려면 세션 파일 추적(PostToolUse)도 함께 필요
+  // progress-tracker 는 util 에도 공통 (2026-10-06) — Write/Edit 그룹이 항상 존재
   const utilWriteHooks = [
     ...(withReadmeGuard ? [H('deliverable-guard.js')] : []),
     ...(withMemory ? [H('memory-sync.js')] : []),
+    H('progress-tracker.js'),
   ];
   hooks.PostToolUse = [
-    ...(utilWriteHooks.length > 0 ? [
-      { matcher: 'Write', hooks: utilWriteHooks },
-      { matcher: 'Edit',  hooks: utilWriteHooks },
-    ] : []),
+    { matcher: 'Write', hooks: utilWriteHooks },
+    { matcher: 'Edit',  hooks: utilWriteHooks },
+    { matcher: 'NotebookEdit', hooks: [H('progress-tracker.js')] },
     { matcher: 'Bash', hooks: [H('bash-guard.js')] },
   ];
   hooks.Stop = [
@@ -173,10 +197,11 @@ if (isUtil) {
       ...(withReadmeGuard ? [H('deliverable-guard.js')] : []),
       ...(withCodex ? [H('codex-review-guard.js')] : []),
       H('session-export.js'), // 대화 요약 강제 보존 — util 모드에서도 옵션 없이 포함
+      H('korean-response-guard.js'), // 답변 한국어 강제 — util 모드에서도 옵션 없이 포함
       H('cc-notify.js'),
     ] },
   ];
-  // SessionStart(위 공통 배선) / PermissionRequest 유지 — InstructionsLoaded 는 2026-09-25 폐지
+  // SessionStart(위 공통 배선) / UserPromptSubmit / PermissionRequest 유지 — InstructionsLoaded 는 2026-09-25 폐지
 }
 
 // ── Output ───────────────────────────────────────────────────────────────

@@ -38,3 +38,13 @@ Thumbs.db
 # 학위논문 작업물 (개인 작업물 — 본 repo는 Claude Code 컨벤션 repo)
 akrasia/*
 research-notes/
+
+# 강아지 영상 생성 (Gemini/Veo) — 원본 사진·생성 영상은 용량·개인 자료라 제외
+dog-video/input/*
+dog-video/output/*
+!dog-video/input/.gitkeep
+!dog-video/output/.gitkeep
+dog-video/refs/
+dog-video/.venv/
+dog-video/__pycache__/
+!dog-video/.env.example
