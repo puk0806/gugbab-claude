@@ -15,7 +15,8 @@
 //  - 설치 결과 ∩ 그룹 = 표가 말한 기대 집합 (누수·누락 모두 실패)
 //
 // 3계층 (rules/adversarial-testing.md):
-//  - 정상: 템플릿 0~7·9~13 단독(SEO 옵트인은 n/y 둘 다, seo-geo 는 y/c) + 대표 조합 + 작성 도구 y
+//  - 정상: 템플릿 0~7·9~15 단독(SEO 옵트인은 n/y 둘 다, seo-geo 는 y/c) + 대표 조합 + 작성 도구 y
+//    (2026-10-08: 14 spec-extraction 애드온·15 nexacro 스택 — 소유 그룹·누수 방지·순서 정규화 케이스 추가)
 //  - 악성·오남용(tamper): 표 자체를 오염(오타 멤버·중복 소유·미분류 자산·폐지 템플릿·허용 목록 밖 부분집합)시켜
 //    검증기가 스스로 실패하는지, 누수가 섞인 가짜 설치 결과를 비교기가 잡는지
 //  - 경계: 빈 그룹, 조합 순서 뒤집기(11,4 == 4,11), 옵션 전용 그룹(기본값에선 항상 empty)
@@ -33,10 +34,12 @@ const REPO = path.resolve(__dirname, '..');
 const INSTALLER = path.join(REPO, 'project-install.sh');
 
 // ── 템플릿·옵션 정의 (docs/templates 기준) ──────────────────────────────
-const TEMPLATE_IDS = ['0', '1', '2', '3', '4', '5', '6', '7', '9', '10', '11', '12', '13']; // 8(academic) 폐지
+const TEMPLATE_IDS = ['0', '1', '2', '3', '4', '5', '6', '7', '9', '10', '11', '12', '13', '14', '15']; // 8(academic) 폐지
 const ALL_BUT = (...ex) => TEMPLATE_IDS.filter((t) => !ex.includes(t));
-// 개발 템플릿 (dev 훅·adversarial-testing 규칙·codex 질문) — util·seo-geo 제외. dream·fortune 은 2026-09-11 부터 dev
-const DEV_T = ALL_BUT('1', '11');
+// 개발 템플릿 (dev 훅·adversarial-testing 규칙·codex 질문) — util·seo-geo·spec-extraction(애드온) 제외. dream·fortune 은 2026-09-11 부터 dev
+const DEV_T = ALL_BUT('1', '11', '14');
+// 레거시 프로파일 강제 템플릿 — 질문 없이 tdd-guard 제외 (2026-10-08 nexacro: 테스트 없는 레거시 코드베이스 전제)
+const LEGACY_FORCED_T = ['15'];
 // TypeScript 템플릿 (TS 훅·규칙·레거시 프로파일 질문) — 프론트 스택 + 웹앱 도메인 3종
 const TS_T = ['0', '2', '3', '9', '10', '12'];
 // SEO 옵트인 질문(y/c/N)을 받는 템플릿
@@ -56,41 +59,45 @@ const OWNERSHIP = [
   { id: 'agent:조사·검증 코어', kind: 'agents', on: TEMPLATE_IDS,
     why: 'seo-geo(11) 단독에서도 쓰는 최소 조사 세트 — 전 템플릿 공통',
     members: ['meta/claude-code-guide.md', 'research/web-searcher.md', 'validation/fact-checker.md', 'validation/source-validator.md'] },
-  { id: 'agent:범용 기획·QA·리서치', kind: 'agents', on: ALL_BUT('11'),
-    why: 'util 과 모든 개발 템플릿 공통 (seo-geo 화이트리스트엔 없음)',
+  { id: 'agent:범용 기획·QA·리서치', kind: 'agents', on: ALL_BUT('11', '14'),
+    why: 'util 과 모든 개발 템플릿 공통 (seo-geo 화이트리스트엔 없음, spec-extraction 화이트리스트는 qa-engineer 만)',
+    partial: { 14: ['validation/qa-engineer.md'] },
     members: ['domain/product-planner.md', 'domain/ui-ux-designer.md', 'validation/qa-engineer.md',
       'research/deep-researcher.md', 'research/research-reviewer.md'] },
-  { id: 'agent:범용 분석(도메인 앱 제외)', kind: 'agents', on: ALL_BUT('9', '11', '12'),
+  { id: 'agent:범용 분석(도메인 앱 제외)', kind: 'agents', on: ALL_BUT('9', '11', '12', '14'),
     why: 'util·일반 개발 템플릿 — dream·fortune 화이트리스트(docs 25·23종)에는 없음',
     members: ['research/competitor-analyst.md', 'research/data-analyst.md'] },
-  { id: 'agent:개발 공용', kind: 'agents', on: ALL_BUT('1', '11'),
+  { id: 'agent:개발 공용', kind: 'agents', on: ALL_BUT('1', '11', '14'),
+    partial: { 14: ['domain/api-spec-designer.md'] },
     members: ['devops/devops-engineer.md', 'domain/api-spec-designer.md', 'meta/project-scaffolder.md',
       'meta/tech-stack-advisor.md', 'validation/security-auditor.md'] },
-  { id: 'agent:개발 공용(도메인 앱 제외)', kind: 'agents', on: ALL_BUT('1', '9', '11', '12'),
-    why: 'dream·fortune 화이트리스트에는 없는 개발 보조 에이전트',
+  { id: 'agent:개발 공용(도메인 앱 제외)', kind: 'agents', on: ALL_BUT('1', '9', '11', '12', '14'),
+    why: 'dream·fortune 화이트리스트에는 없는 개발 보조 에이전트 (spec-extraction 은 코드 역분석 1종만)',
+    partial: { 14: ['domain/codebase-domain-analyst.md'] },
     members: ['domain/business-domain-analyst.md', 'domain/codebase-domain-analyst.md', 'meta/changelog-writer.md',
       'meta/freshness-auditor.md', 'validation/pr-reviewer.md'] },
-  { id: 'agent:프론트 개발', kind: 'agents', on: WEB_T,
+  { id: 'agent:프론트 개발', kind: 'agents', on: [...WEB_T, '15'],
+    why: 'nexacro(15)는 Next.js 이전 대상 — 프론트 개발 에이전트 포함',
     members: ['frontend/frontend-developer.md', 'frontend/frontend-architect.md', 'domain/frontend-domain-refactorer.md'] },
   // 예외(좁게): dream·fortune 은 frontend 에이전트와 typescript.md 를 받지만 이 파일은 받지 않는다.
   // 이 파일의 내용은 typescript.md 재임포트뿐이고, 두 템플릿엔 typescript.md 가 프로젝트 규칙으로 이미 설치돼 잃는 것이 없다.
   // 화이트리스트 템플릿의 최소 구성 원칙 + template-separation.test.js 의 fortune 에이전트 정확 집합(23종)과 일치.
-  { id: 'agent:frontend/CLAUDE.md (typescript.md 임포트)', kind: 'agents', on: ['0', '2', '3', '10'],
-    why: '프론트 스택 템플릿 — 화이트리스트 도메인 앱(9·12)은 위 예외',
+  { id: 'agent:frontend/CLAUDE.md (typescript.md 임포트)', kind: 'agents', on: ['0', '2', '3', '10', '15'],
+    why: '프론트 스택 템플릿 + nexacro(typescript.md 규칙 설치) — 화이트리스트 도메인 앱(9·12)은 위 예외',
     members: ['frontend/CLAUDE.md'] },
   { id: 'agent:프론트 검증', kind: 'agents', on: ['0', '2', '3', '4', '7', '10'],
     why: 'docs: rust·unity 는 기본 포함, java·python·dream·fortune·seo-geo 는 제외',
     members: ['validation/a11y-auditor.md', 'validation/build-perf-benchmarker.md', 'validation/perf-report-writer.md'] },
   { id: 'agent:build-error-resolver (cargo·tsc·Vite)', kind: 'agents', on: ['0', '2', '3', '4', '10'],
     members: ['backend/build-error-resolver.md'] },
-  { id: 'agent:database-architect', kind: 'agents', on: ['0', '4', '5', '6', '7', '9', '12', '13'],
+  { id: 'agent:database-architect', kind: 'agents', on: ['0', '4', '5', '6', '7', '9', '12', '13', '15'],
     why: '프론트 스택(2·3·10) 제외',
     members: ['backend/database-architect.md'] },
-  { id: 'agent:backend/CLAUDE.md (rust·java 임포트)', kind: 'agents', on: ['0', '4', '5', '6'],
+  { id: 'agent:backend/CLAUDE.md (rust·java 임포트)', kind: 'agents', on: ['0', '4', '5', '6', '15'],
     members: ['backend/CLAUDE.md'] },
   { id: 'agent:rust 백엔드', kind: 'agents', on: ['0', '4'],
     members: ['backend/rust-backend-developer.md', 'backend/rust-backend-architect.md'] },
-  { id: 'agent:java 백엔드', kind: 'agents', on: ['0', '5', '6'],
+  { id: 'agent:java 백엔드', kind: 'agents', on: ['0', '5', '6', '15'],
     members: ['backend/java-backend-developer.md', 'backend/java-backend-architect.md'] },
   { id: 'agent:python 백엔드', kind: 'agents', on: ['0', '9', '12', '13'],
     members: ['backend/python-backend-developer.md', 'backend/python-backend-architect.md'] },
@@ -112,21 +119,28 @@ const OWNERSHIP = [
       'game/mobile-app-publisher.md', 'game/unity-architect.md', 'game/unity-developer.md'] },
   { id: 'agent:util 전용(요구사항 면담)', kind: 'agents', on: ['0', '1'],
     members: ['research/socratic-interviewer.md'] },
+  { id: 'agent:spec-extraction 전용', kind: 'agents', on: ['0', '14'],
+    why: '스펙 추출 자산은 14 소유 — nexacro(15) 단독 포함 전 템플릿 누수 금지 (15,14 로 조합)',
+    members: ['domain/legacy-spec-extractor.md', 'validation/spec-reviewer.md'] },
+  { id: 'agent:nexacro 전용', kind: 'agents', on: ['0', '15'],
+    members: ['domain/nexacro-screen-analyzer.md', 'frontend/nexacro-screen-converter.md', 'validation/migration-parity-tester.md'] },
   { id: 'agent:작성 도구', kind: 'agents', option: 'authoring',
     why: '작성 도구 y 일 때만 — all(0)·화이트리스트 템플릿 포함 전부 동일',
     members: ['meta/agent-creator.md', 'meta/skill-creator.md', 'meta/skill-tester.md', 'CLAUDE.md'] },
 
   // ── skills ──
-  { id: 'skill:java 공통', kind: 'skills', on: ['0', '5', '6'],
+  { id: 'skill:java 공통', kind: 'skills', on: ['0', '5', '6', '15'],
     members: ['backend/spring-boot-gradle-setup', 'backend/mybatis-mapper-patterns', 'backend/spring-multi-datasource-oracle-mysql',
       'backend/hikaricp-tuning-oracle-mysql', 'backend/global-exception-validation', 'backend/testing-junit5-spring-boot',
       'backend/lombok-mapstruct-modelmapper', 'backend/logback-mdc-tracing', 'backend/jasypt-encrypted-config',
       'backend/xss-lucy-jsoup', 'backend/jackson-time-migration', 'backend/webflux-webclient-in-sync-app',
       'backend/bouncycastle-crypto'] },
-  { id: 'skill:java 레거시 전용', kind: 'skills', on: ['0', '5'],
+  { id: 'skill:java 레거시 전용', kind: 'skills', on: ['0', '5', '15'],
     members: ['backend/spring-security-5-jwt-jjwt10', 'backend/swagger-springfox-2', 'backend/redis-redisson-legacy',
       'backend/ehcache-2-legacy', 'backend/aws-sdk-v1-s3-rekognition', 'backend/spring-boot-2-to-3-migration'] },
   { id: 'skill:java 모던 전용', kind: 'skills', on: ['0', '6'],
+    why: 'nexacro(15)는 이전 목표(Security 6·springdoc)만',
+    partial: { 15: ['backend/spring-security-6-jwt-jjwt12', 'backend/springdoc-openapi-3'] },
     members: ['backend/spring-security-6-jwt-jjwt12', 'backend/springdoc-openapi-3', 'backend/redis-redisson-modern',
       'backend/redis-redisson-4', 'backend/aws-sdk-v2-s3-rekognition'] },
   { id: 'skill:rust', kind: 'skills', on: ['0', '4'],
@@ -137,7 +151,7 @@ const OWNERSHIP = [
       'backend/python-anthropic-sdk', 'backend/python-langchain-current', 'backend/python-llamaindex',
       'backend/python-embeddings-vector-db', 'backend/python-korean-nlp-konlpy', 'backend/python-cli-typer'] },
   { id: 'skill:TS 백엔드', kind: 'skills', on: ['0', '2', '3', '10', '12'],
-    why: '짝 에이전트 typescript-backend-* 소유 템플릿과 동일 (drizzle 은 prisma 링크 대상이라 함께)',
+    why: '짝 에이전트 typescript-backend-* 소유 템플릿과 동일 (drizzle 은 prisma 링크 대상이라 함께). nexacro 는 zod 도 없음(본문이 hono 참조)',
     members: ['backend/hono-api-patterns', 'backend/prisma-orm', 'backend/zod-schema-validation', 'backend/better-auth',
       'backend/drizzle-neon-postgres'] },
   { id: 'skill:claude-code-headless (구독 중계 예외)', kind: 'skills', on: ['0', '2', '3', '4', '10'],
@@ -171,6 +185,13 @@ const OWNERSHIP = [
       'frontend/emotion-tagging-input', 'frontend/srs-spaced-repetition', 'frontend/voice-input-ui',
       'frontend/web-speech-api-stt', 'frontend/whisper-api-integration', 'frontend/media-recorder-api'] },
   { id: 'skill:공용 frontend', kind: 'skills', on: WEB_T,
+    why: 'nexacro(15)는 Next.js 이전 목표 스택 핵심만',
+    partial: { 15: ['frontend/nextjs', 'frontend/ag-grid', 'frontend/tanstack-query', 'frontend/form-handling',
+      'frontend/state-management', 'frontend/typescript-v5', 'frontend/e2e-testing',
+      // 참조 닫힘 — 위 스킬·frontend-architect·frontend-domain-refactorer 본문이 무조건 참조
+      'frontend/tanstack-query-v4-to-v5-migration', 'frontend/typescript-v4', 'frontend/monorepo-turborepo',
+      'frontend/bundling-compiler', 'frontend/vite-advanced-splitting', 'frontend/bundle-size-analysis',
+      'frontend/core-web-vitals-optimization'] },
     members: ['frontend/ag-grid', 'frontend/animation', 'frontend/build-perf-benchmarking', 'frontend/bundle-size-analysis',
       'frontend/bundling-compiler', 'frontend/code-convention', 'frontend/core-web-vitals-optimization', 'frontend/design-token-scss',
       'frontend/dev-server-hmr-benchmarking', 'frontend/e2e-testing', 'frontend/font-optimization', 'frontend/form-handling',
@@ -203,30 +224,43 @@ const OWNERSHIP = [
   { id: 'skill:og-image-generation', kind: 'skills', on: ['0'], seoOn: SEO_OPTIN_T,
     why: 'seo-geo(11) 소유 아님 — 프론트 스택이 SEO 켤 때만',
     members: ['frontend/og-image-generation'] },
-  { id: 'skill:devops 기본', kind: 'skills', on: ALL_BUT('1', '11'),
+  { id: 'skill:devops 기본', kind: 'skills', on: ALL_BUT('1', '11', '14'),
     members: ['devops/docker-deployment', 'devops/github-actions'] },
   { id: 'skill:n8n', kind: 'skills', on: ['0', '4', '7', '9', '10', '12', '13'],
     why: 'LLM 워크플로우 도메인 앱·rust·unity·python — react-spa·nextjs·java 제외',
     members: ['devops/n8n-error-handling', 'devops/n8n-llm-integration', 'devops/n8n-self-hosting',
       'devops/n8n-webhook-patterns', 'devops/n8n-workflow-design'] },
-  { id: 'skill:vercel-sandbox', kind: 'skills', on: ALL_BUT('1', '5', '6', '11'),
+  { id: 'skill:vercel-sandbox', kind: 'skills', on: ALL_BUT('1', '5', '6', '11', '14', '15'),
     members: ['devops/vercel-sandbox'] },
   { id: 'skill:github-actions-visual-regression', kind: 'skills', on: WEB_T,
     members: ['devops/github-actions-visual-regression'] },
   { id: 'skill:vercel-workflow (Next.js 서버리스)', kind: 'skills', on: ['0', '3', '9', '10', '12'],
     why: '서버 없는 react-spa 제외',
     members: ['devops/vercel-workflow'] },
-  { id: 'skill:architecture 기본', kind: 'skills', on: ALL_BUT('1', '11'),
+  { id: 'skill:architecture 기본', kind: 'skills', on: ALL_BUT('1', '11', '14'),
     members: ['architecture/ddd', 'architecture/incremental-refactoring', 'architecture/module-boundaries'] },
-  { id: 'skill:frontend-domain-structure', kind: 'skills', on: WEB_T,
+  { id: 'skill:frontend-domain-structure', kind: 'skills', on: [...WEB_T, '15'],
     members: ['architecture/frontend-domain-structure'] },
-  { id: 'skill:claude-code-hook-authoring', kind: 'skills', on: ALL_BUT('11'),
+  { id: 'skill:claude-code-hook-authoring', kind: 'skills', on: ALL_BUT('11', '14'),
     members: ['meta/claude-code-hook-authoring'] },
   { id: 'skill:game', kind: 'skills', on: ['0', '7'],
     members: ['game/ai-game-asset-pipeline', 'game/app-store-submission', 'game/game-audio-ai-tools', 'game/game-design-document',
       'game/mobile-user-acquisition', 'game/unity-6-2d-fundamentals', 'game/unity-addressables', 'game/unity-cicd-codemagic',
       'game/unity-firebase', 'game/unity-game-feel', 'game/unity-iap', 'game/unity-levelplay-ads', 'game/unity-live-ops',
       'game/unity-mobile-optimization', 'game/unity-save-system', 'game/unity-ui-system'] },
+  { id: 'skill:spec 추출', kind: 'skills', on: ['0', '14'],
+    why: 'spec 카테고리 전부 — 14 소유, 15 단독엔 없음',
+    members: ['spec/spec-extraction-method', 'spec/spring-mybatis-spec-extraction', 'spec/react-spec-extraction',
+      'spec/characterization-testing'] },
+  { id: 'skill:nexacro 화면 구조(14·15 공유)', kind: 'skills', on: ['0', '14', '15'],
+    why: '스펙 추출(14)의 넥사크로 화면 해석 + 이전(15) 양쪽에서 필요',
+    members: ['nexacro/nexacro-17-xfdl-anatomy'] },
+  { id: 'skill:nexacro 이전', kind: 'skills', on: ['0', '15'],
+    members: ['nexacro/nexacro-xapi-server', 'nexacro/nexacro-to-react-mapping', 'nexacro/xapi-to-rest-migration',
+      'nexacro/nexacro-strangler-coexistence'] },
+  { id: 'skill:nexacro 전용 backend 이관', kind: 'skills', on: ['0', '15'],
+    why: 'backend 카테고리지만 SB 1.x·iBATIS 탈출은 넥사크로 레거시 전용 — java-spring-legacy/modern 누수 금지',
+    members: ['backend/spring-boot-1-to-2-migration', 'backend/ibatis-to-mybatis-migration'] },
 
   // ── rules ──
   { id: 'rule:공통 최소', kind: 'rules', on: TEMPLATE_IDS, members: ['git.md', 'info-verification.md'] },
@@ -234,18 +268,22 @@ const OWNERSHIP = [
   { id: 'rule:작성 규칙', kind: 'rules', option: 'authoring',
     members: ['agent-design.md', 'creation-workflow.md', 'verification-policy.md', 'commands.md', 'readme-update.md'] },
   { id: 'rule:adversarial-testing', kind: 'rules', on: DEV_T, members: ['adversarial-testing.md'] },
-  { id: 'rule:java', kind: 'rules', on: ['0', '5', '6'], members: ['java.md'] },
+  { id: 'rule:java', kind: 'rules', on: ['0', '5', '6', '15'], members: ['java.md'] },
   { id: 'rule:rust', kind: 'rules', on: ['0', '4'], members: ['rust.md'] },
-  { id: 'rule:typescript', kind: 'rules', on: TS_T, members: ['typescript.md'] },
+  { id: 'rule:typescript', kind: 'rules', on: [...TS_T, '15'], members: ['typescript.md'],
+    why: 'nexacro 는 TS 훅은 없지만 이전 목표(Next.js) 코드 규칙은 받는다' },
   { id: 'rule:옵션 전용(memory·codex)', kind: 'rules', option: 'off-by-default', members: ['memory-sync.md', 'codex-review.md'] },
 
   // ── hooks ──
   { id: 'hook:공통', kind: 'hooks', on: TEMPLATE_IDS,
     members: ['bash-guard.js', 'auto-approve.js', 'parry.js', 'protect-secrets.js', 'session-start.js', 'session-export.js',
-      'cc-notify.js', 'instructions-loaded.js', 'deliverable-guard.js', 'skill-md-guard.js', 'agent-md-guard.js',
+      'cc-notify.js', 'korean-response-guard.js', 'task-confirm-guard.js', 'config-change-audit.js', 'progress-tracker.js', 'instructions-loaded.js', 'deliverable-guard.js', 'skill-md-guard.js', 'agent-md-guard.js',
       'verification-guard.js', 'staleness-check.js', 'statusline.sh'] },
   { id: 'hook:dev', kind: 'hooks', on: DEV_T,
-    members: ['tdd-guard.js', 'test-fake-guard.js', 'adversarial-test-guard.js', 'fake-impl-guard.js'] },
+    members: ['test-fake-guard.js', 'adversarial-test-guard.js', 'fake-impl-guard.js', 'auto-format.js', 'package-manager-guard.js'] },
+  { id: 'hook:tdd-guard', kind: 'hooks', on: DEV_T.filter((t) => !LEGACY_FORCED_T.includes(t)), legacyOff: true,
+    why: '레거시 프로파일(nexacro 가 조합에 있으면 강제, 그 외 TS 템플릿은 질문 — 이 테스트는 N)에서 제외',
+    members: ['tdd-guard.js'] },
   { id: 'hook:typescript', kind: 'hooks', on: TS_T, members: ['typescript-quality.js'] },
   { id: 'hook:옵션 전용(memory·codex·branch)', kind: 'hooks', option: 'off-by-default',
     members: ['memory-pull.js', 'memory-sync.js', 'codex-review-guard.js', 'branch-protection.js'] },
@@ -326,6 +364,8 @@ function expectedSet(group, opts) {
   if (group.option === 'authoring') return new Set(opts.auth && !utilOnly ? group.members : []);
   if (group.option === 'off-by-default') return new Set();
   const has = (list) => opts.templates.some((t) => (list || []).includes(t));
+  // 레거시 강제 템플릿(nexacro)이 조합에 하나라도 있으면 설치 전체가 레거시 프로파일 — tdd-guard 는 어떤 템플릿 소유로도 오지 않는다
+  if (group.legacyOff && has(LEGACY_FORCED_T)) return new Set();
   if (has(group.on)) return new Set(group.members);
   if (opts.seo && has(group.seoOn)) return new Set(group.members);
   if (opts.seo === true && has(group.seoFull)) return new Set(group.members);
@@ -370,7 +410,8 @@ function caseOptions(c) {
   } else seo = true; // 질문 없음 — 스크립트 기본값(전체). seoOn 은 옵트인·seo-geo 템플릿에만 걸리므로 영향 없음
   const answers = ['', ''];
   if (dev) answers.push('');
-  if (dev && ts) answers.push('');
+  // 레거시 질문은 dev+TS 일 때만, 단 nexacro 가 섞이면 질문 없이 강제 (2026-10-08)
+  if (dev && ts && !templates.some((t) => LEGACY_FORCED_T.includes(t))) answers.push('');
   if (seoQ !== null) answers.push(seoQ);
   if (!utilOnly) answers.push(c.auth ? 'y' : '');
   return { templates, seo, auth: !!c.auth && !utilOnly, answers };
@@ -425,6 +466,18 @@ const CASES = [
   // 옵션: 작성 도구 y (스택 템플릿·화이트리스트 템플릿 각각)
   { id: '2y+auth', input: '2', seo: 'y', auth: true },
   { id: '11+auth', input: '11', auth: true },
+  // 2026-10-08: spec-extraction(14) 애드온 · nexacro(15) 스택
+  { id: '14', input: '14' },
+  { id: '15', input: '15' },
+  { id: '15,14', input: '15,14' },
+  { id: '5,14', input: '5,14' },
+  { id: '2,14', input: '2,14', seo: 'n' },
+  { id: '14+auth', input: '14', auth: true },
+  // 경계: 애드온을 앞에 쓴 역순 입력·공백 섞인 입력 — 각각 5,14 / 15,14 와 같은 결과여야 한다
+  { id: '14,5', input: '14,5' },
+  { id: ' 15 , 14 ', input: ' 15 , 14 ' },
+  // 경계: nexacro + TS 템플릿 — 레거시 질문 없이 강제(tdd-guard 없음), 프론트 자산은 nextjs 가 union
+  { id: '15,3', input: '15,3', seo: 'n' },
 ];
 
 const results = new Map();
@@ -438,7 +491,7 @@ test('소유 표: 레포의 모든 스킬·에이전트·규칙·훅이 정확�
 
 test('소유 표: docs/templates 실측 수치와 표가 계산하는 기본 설치 수가 일치 (표 자체의 오기 방지)', () => {
   // docs/templates/*.md 의 2026-09-30 실측 스킬 수 (기본 옵션). 표가 이 수를 재현하지 못하면 표가 틀린 것이다.
-  const DOC_SKILL_COUNTS = { 1: 1, 2: 52, 3: 53, 4: 22, 5: 25, 6: 24, 7: 28, 9: 89, 10: 66, 12: 86, 13: 22 };
+  const DOC_SKILL_COUNTS = { 1: 1, 2: 52, 3: 53, 4: 22, 5: 25, 6: 24, 7: 28, 9: 89, 10: 66, 12: 86, 13: 22, 14: 5, 15: 49 };
   const skillGroups = OWNERSHIP.filter((g) => g.kind === 'skills');
   for (const [t, n] of Object.entries(DOC_SKILL_COUNTS)) {
     const opts = { templates: [t], seo: SEO_OPTIN_T.includes(t) ? false : true, auth: false };
@@ -464,6 +517,45 @@ test('경계: 애드온을 앞에 쓴 11,4 는 4,11 과 설치 자산이 완전�
   const a = run(CASES.find((c) => c.id === '4,11')).installed;
   const b = run(CASES.find((c) => c.id === '11,4')).installed;
   assert.deepStrictEqual(b, a);
+});
+
+test('경계: spec-extraction 애드온 역순(14,5)·공백 섞인 입력( 15 , 14 )은 정규 입력과 설치 자산이 같다', () => {
+  assert.deepStrictEqual(run(CASES.find((c) => c.id === '14,5')).installed, run(CASES.find((c) => c.id === '5,14')).installed);
+  assert.deepStrictEqual(run(CASES.find((c) => c.id === ' 15 , 14 ')).installed, run(CASES.find((c) => c.id === '15,14')).installed);
+});
+
+// ── 누수 방지: 14·15 소유 자산이 소유 템플릿 밖으로 새지 않는다 (표와 별개의 직접 단언 — 표 오기에도 걸리게) ──
+// 2026-10-08 검수: 1·5·6·11 만 보던 것을 소유자(0·14·15) 외 기존 템플릿 전부로 확장 — rust·unity·python(4·7·13) 포함
+test('누수: spec·nexacro 자산과 SB1→2·iBATIS 이관 스킬은 기존 템플릿(1~7·9~13) 어디에도 없다', () => {
+  const NEW_ONLY = [
+    'spec/spec-extraction-method', 'spec/characterization-testing', 'nexacro/nexacro-17-xfdl-anatomy',
+    'nexacro/xapi-to-rest-migration', 'backend/spring-boot-1-to-2-migration', 'backend/ibatis-to-mybatis-migration',
+  ];
+  const NEW_AGENTS = ['domain/legacy-spec-extractor.md', 'validation/spec-reviewer.md', 'domain/nexacro-screen-analyzer.md',
+    'frontend/nexacro-screen-converter.md', 'validation/migration-parity-tester.md'];
+  const NON_OWNERS = TEMPLATE_IDS.filter((t) => !['0', '14', '15'].includes(t));
+  assert.ok(NON_OWNERS.includes('4') && NON_OWNERS.includes('7') && NON_OWNERS.includes('13') && NON_OWNERS.length === 12, `비소유 템플릿 목록 이상: ${NON_OWNERS}`);
+  for (const id of NON_OWNERS) {
+    const c = CASES.find((x) => x.id === id);
+    assert.ok(c, `매트릭스 CASES 에 템플릿 ${id} 단독 케이스 없음`);
+    const { installed } = run(c);
+    assert.deepStrictEqual(installed.skills.filter((s) => NEW_ONLY.includes(s) || /^(spec|nexacro)\//.test(s)), [], `템플릿 ${id} 에 14·15 스킬 누수`);
+    assert.deepStrictEqual(installed.agents.filter((a) => NEW_AGENTS.includes(a)), [], `템플릿 ${id} 에 14·15 에이전트 누수`);
+  }
+});
+
+test('누수: nexacro(15) 단독엔 스펙 추출 자산(spec/* 스킬·legacy-spec-extractor·spec-reviewer)이 없고, 14 단독엔 Java·TS 훅·규칙이 없다', () => {
+  const n = run(CASES.find((c) => c.id === '15')).installed;
+  assert.deepStrictEqual(n.skills.filter((s) => s.startsWith('spec/')), [], '15 단독에 spec 스킬 누수');
+  assert.ok(!n.agents.includes('domain/legacy-spec-extractor.md') && !n.agents.includes('validation/spec-reviewer.md'), '15 단독에 스펙 추출 에이전트 누수');
+  assert.ok(n.rules.includes('java.md') && n.rules.includes('typescript.md'), '15: java 규칙 O · 이전 목표 TS 규칙 O (TS 훅은 X)');
+  assert.ok(!n.hooks.includes('tdd-guard.js') && n.hooks.includes('adversarial-test-guard.js') && !n.hooks.includes('typescript-quality.js'),
+    '15: 레거시(tdd-guard 제외)·dev O·TS X');
+  const s = run(CASES.find((c) => c.id === '14')).installed;
+  for (const h of ['tdd-guard.js', 'adversarial-test-guard.js', 'typescript-quality.js', 'auto-format.js']) {
+    assert.ok(!s.hooks.includes(h), `14 단독(비 dev·비 TS)에 ${h} 설치됨`);
+  }
+  assert.deepStrictEqual(s.rules.sort(), ['git.md', 'info-verification.md', 'task-workflow.md'], '14 단독 규칙은 공통 3종만');
 });
 
 // ── 악성·오남용: 오염된 표를 검증기가 스스로 잡는가 ─────────────────────

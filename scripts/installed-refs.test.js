@@ -111,6 +111,12 @@ function makeExtractor(U) {
   // 현행 1단 경로 `.claude/skills/<name>` (2026-10-05 평탄화) — 이름 → 논리 ID 로 환원해 같은 판정을 탄다
   const idByName = new Map([...U.skills].map((id) => [id.split('/').pop(), id]));
   const SKILL_FLAT = /\.claude\/skills\/([a-z0-9][a-z0-9.-]*?)(?=\/|`|'|"|\)|\s|$|[^\w.-])/g;
+  // (2026-10-08 보강) 스킬 이름 단독 백틱 — `zod-schema-validation` 처럼 백틱 span 전체가 원본 스킬 이름과 정확히 같을 때.
+  // 설치 검수에서 nexacro(15) 단독 설치본의 미설치 스킬 참조(`zod-schema-validation`·`multipart-upload`)를 기존 규칙이
+  // 놓친 형태다. 에이전트 단독 규칙과 같은 기준으로 하이픈 포함 이름만 본다 — `nextjs`·`axum`·`testing` 같은 단어형
+  // 이름은 패키지·크레이트·일반 단어와 겹쳐 오탐한다. span 전체 일치만 인정해 `zod-schema-validation.ts` 같은 파일명은 제외.
+  const skillWordNames = [...idByName.keys()].filter((s) => s.includes('-') && !U.agents.has(s)).sort((a, b) => b.length - a.length).map(esc).join('|') || '(?!)';
+  const SKILL_BARE = new RegExp(`\`(${skillWordNames})\``, 'g');
   const AGENT_PATH = /(?:^|[^\w-])(?:\.claude\/)?agents\/([a-z0-9-]+)\/([a-z0-9][\w-]*)\.md/g;
   const AGENT_SUBTYPE = /subagent_type\s*[=:]\s*["'`]?([a-z0-9][\w:-]*)/g;
   const AGENT_NAMED = new RegExp(`(^|[^\\w-])\`?(${agentNames})\`?\\s*(?:\\([^)]*\\)\\s*)?(?:서브\\s*)?(?:에이전트|agent\\b)`, 'g');
@@ -147,6 +153,10 @@ function makeExtractor(U) {
     for (SKILL_FLAT.lastIndex = 0; (m = SKILL_FLAT.exec(text));) {
       const id = idByName.get(m[1]);
       if (id) refs.push({ kind: 'skill', target: id, raw: `.claude/skills/${m[1]}` });
+    }
+    for (SKILL_BARE.lastIndex = 0; (m = SKILL_BARE.exec(text));) {
+      const id = idByName.get(m[1]);
+      if (id) refs.push({ kind: 'skill', target: id, raw: m[1] });
     }
     for (AGENT_PATH.lastIndex = 0; (m = AGENT_PATH.exec(text));) {
       if (U.agents.has(m[2])) refs.push({ kind: 'agent', target: m[2], raw: `agents/${m[1]}/${m[2]}.md` });
@@ -450,6 +460,8 @@ const TMPL = {
   11: { name: 'seo-geo', seoGeo: true },
   12: { name: 'fortune-app', dev: true, ts: true, seoOptin: true },
   13: { name: 'python-fastapi', dev: true },
+  14: { name: 'spec-extraction' },                     // 2026-10-08 애드온 (비 dev)
+  15: { name: 'nexacro', dev: true, legacyForced: true }, // 2026-10-08 스택 — 레거시 질문 없이 강제
 };
 
 function answersFor(tmplInput, { authoring = false, seo = '' } = {}) {
@@ -459,7 +471,7 @@ function answersFor(tmplInput, { authoring = false, seo = '' } = {}) {
   const utilOnly = ids.length === 1 && ids[0] === 1;
   const a = ['', '']; // memory, superpowers
   if (any('dev')) a.push('');                 // codex
-  if (any('dev') && any('ts')) a.push('');    // legacy
+  if (any('dev') && any('ts') && !any('legacyForced')) a.push('');    // legacy (nexacro 가 섞이면 질문 생략)
   if (any('seoGeo') || any('seoOptin')) a.push(seo);
   if (!utilOnly) a.push(authoring ? 'y' : '');
   return a;
@@ -616,6 +628,28 @@ test('2026-10-05 평탄화: 현행 1단 경로 `.claude/skills/<name>` 참조도
   assert.deepStrictEqual(FX('.claude/skills/unknown-thing/SKILL.md .claude/skills/nextjs-seo-extra/SKILL.md'), []);
 });
 
+// ── 2026-10-08 보강: 스킬 이름 단독 백틱 참조 (nexacro 설치 검수 지적 형태) ──
+
+test('악성(검수 지적 형태): 백틱 스킬 이름 단독 `n8n-self-hosting` 은 미설치면 위반, 같은 줄 조건 표기면 통과', () => {
+  // nexacro-to-react-mapping 30행 형태 — 표 행 속 단독 스킬 이름
+  assert.deepStrictEqual(scanFx('| 영역 | 스킬 |\n|---|---|\n| 서버 검증 | `n8n-self-hosting` |\n').map((v) => v.target), ['devops/n8n-self-hosting']);
+  // nexacro-screen-converter 27행 형태 — 산문 속 나열
+  assert.deepStrictEqual(scanFx('- 설치된 스킬(`nextjs`·`n8n-self-hosting`)의 패턴을 따른다\n').map((v) => v.target), ['devops/n8n-self-hosting'],
+    '"설치된 스킬"이라는 단정 문구가 조건 표기로 오인됨');
+  assert.deepStrictEqual(scanFx('- 상세는 `n8n-self-hosting`(설치된 경우)\n'), []);
+  // 설치된 스킬은 단독 참조여도 통과
+  assert.deepStrictEqual(scanFx('- `nextjs-seo` 와 함께\n').map((v) => v.target), ['frontend/nextjs-seo']);
+});
+
+test('경계: 스킬 이름 단독 규칙은 span 전체 일치·하이픈 이름만 — 파일명·확장·단어형 이름은 무시', () => {
+  const skillRefs = (s) => FX(s).filter((r) => r.kind === 'skill').map((r) => r.target);
+  assert.deepStrictEqual(skillRefs('`n8n-self-hosting.ts` `n8n-self-hosting-v2` `my-n8n-self-hosting` `n8n-self-hosting/`'), []);
+  assert.deepStrictEqual(skillRefs('`nextjs` 패키지와 nextjs-seo 평문'), [], '하이픈 없는 단어형·백틱 없는 평문이 잡힘');
+  assert.deepStrictEqual(skillRefs('``'), []);
+  // 같은 줄 중복은 1건
+  assert.deepStrictEqual(skillRefs('`nextjs-seo`·`nextjs-seo`'), ['frontend/nextjs-seo']);
+});
+
 // ── 2026-10-05 보강: 에이전트명 단독 참조 · docs 스캔 (설치본 감사 제보 3건의 형태) ──
 
 test('악성(제보 형태 a): 백틱 `seo-auditor` 위임은 "에이전트" 접미 없이도 잡는다', () => {
@@ -694,7 +728,11 @@ test('경계: docs 검증 기록 판정은 basename 정확 일치만 (템플릿�
 // ═══════════════════════════════════════════════════════════════════════
 
 const CASES = [
-  ...[0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13].map((t) => ({ tmpl: String(t), opts: {}, label: `${t}(${TMPL[t].name}) 기본` })),
+  ...[0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15].map((t) => ({ tmpl: String(t), opts: {}, label: `${t}(${TMPL[t].name}) 기본` })),
+  // 2026-10-08: 스펙 추출 애드온 조합 — 15 에이전트의 스펙 추출 자산 언급은 15,14 에서 실재, 15 단독에선 조건 표기 필요
+  { tmpl: '15,14', opts: {}, label: '15,14 (nexacro + spec-extraction)' },
+  { tmpl: '5,14', opts: {}, label: '5,14 (java-legacy + spec-extraction)' },
+  { tmpl: '14', opts: { authoring: true }, label: '14 + 작성 도구 y' },
   { tmpl: '5', opts: { authoring: true }, label: '5 + 작성 도구 y' },
   { tmpl: '3', opts: { seo: 'y' }, label: '3 + SEO y' },
   { tmpl: '10', opts: { seo: 'c' }, label: '10 + SEO c(커머스)' },
@@ -771,7 +809,7 @@ test('악성: 설치본(5)에 에이전트명 단독 참조 주입 → 에이전
 });
 
 // ── 악성: 존재하지 않는 템플릿 조합은 설치 자체가 거부돼야 한다 ─────────────
-for (const bad of ['8', '99', '-1', '5,8', '../../etc', 'academic']) {
+for (const bad of ['8', '99', '-1', '5,8', '../../etc', 'academic', '16', '15,16', 'nexacro17', '14;rm']) {
   test(`악성: 존재하지 않는 템플릿 '${bad}' 설치 거부 + 대상 무변경`, () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'inst-refs-bad-'));
     try {

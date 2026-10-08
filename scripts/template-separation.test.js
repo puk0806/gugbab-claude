@@ -1313,11 +1313,12 @@ test('조합: python-fastapi + react-spa (13,2) 는 양쪽 소유 자산의 unio
   }
 });
 
-test('경계: 잘못된 번호(14)는 거부·재질문되고, 이름(python-fastapi) 입력도 13 과 같은 템플릿으로 해석된다', () => {
+test('경계: 잘못된 번호(16)는 거부·재질문되고, 이름(python-fastapi) 입력도 13 과 같은 템플릿으로 해석된다', () => {
   const dir = mktarget('python-name');
   try {
-    const out = install('14\npython-fastapi', dir);
-    assert.ok(/알 수 없는 템플릿 '14'/.test(out), '존재하지 않는 템플릿 번호가 거부되지 않음');
+    // 14·15 는 2026-10-08 부터 유효 번호(spec-extraction·nexacro) — 최초 미사용 번호 16 으로 거부를 검사한다
+    const out = install('16\npython-fastapi', dir);
+    assert.ok(/알 수 없는 템플릿 '16'/.test(out), '존재하지 않는 템플릿 번호가 거부되지 않음');
     const manifest = JSON.parse(fs.readFileSync(path.join(dir, '.claude', '.install-manifest.json'), 'utf8'));
     assert.deepStrictEqual(manifest.templates, ['python-fastapi']);
     assert.ok(PYTHON_SKILLS.every((p) => skillDirs(dir).includes(p)), '이름 입력으로 python 스킬 미설치');
@@ -1342,6 +1343,221 @@ test('다운그레이드: 13 → 4(rust) 재설치에서 python 스킬(짝 docs)
     const a = agentFiles(dir);
     for (const p of PYTHON_AGENTS) assert.ok(!a.includes(p), `rust 다운그레이드 후 python 에이전트 잔존: ${p}`);
     assert.ok(skillDirs(dir).includes('backend/axum') && a.includes('backend/rust-backend-developer.md'), 'rust 자산 누락');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// ── spec-extraction(14) 애드온 · nexacro(15) 스택 (2026-10-08) ─────────────────
+// 14: 레거시 레포에서 스펙을 뽑아 docs/spec/ 에 문서화 — 스택과 조합(5,14·15,14·2,14)하거나 단독. 비 dev·비 TS.
+// 15: 넥사크로 17 + Spring(X-API) 레거시 이해 + Next.js·Java 이전 — dev O · TS X · 레거시 프로파일 강제(tdd-guard 제외).
+// 스펙 추출 자산은 14 소유라 15 단독엔 없다. SB1→2·iBATIS 이관 스킬(backend 카테고리)은 15·all 만 소유한다.
+
+const SPEC_SKILLS = [...CMAP].filter(([, c]) => c === 'spec').map(([n]) => `spec/${n}`).sort();
+const NEXACRO_SKILLS = [...CMAP].filter(([, c]) => c === 'nexacro').map(([n]) => `nexacro/${n}`).sort();
+const NEXACRO_BACKEND = ['backend/spring-boot-1-to-2-migration', 'backend/ibatis-to-mybatis-migration'];
+const SPEC_AGENTS = ['domain/legacy-spec-extractor.md', 'validation/spec-reviewer.md'];
+const NEXACRO_AGENTS = ['domain/nexacro-screen-analyzer.md', 'frontend/nexacro-screen-converter.md', 'validation/migration-parity-tester.md'];
+const SPEC_EXTRACTION_AGENTS = [...SPEC_AGENTS, 'domain/codebase-domain-analyst.md', 'domain/api-spec-designer.md',
+  'validation/qa-engineer.md', 'meta/claude-code-guide.md', 'research/web-searcher.md', 'validation/fact-checker.md',
+  'validation/source-validator.md'].sort();
+const postToolCmds = (dir) => {
+  const s = JSON.parse(fs.readFileSync(path.join(dir, '.claude', 'settings.json'), 'utf8'));
+  return (s.hooks.PostToolUse || []).flatMap((g) => g.hooks.map((h) => h.command)).join('\n');
+};
+const commandFiles = (dir) => fs.readdirSync(path.join(dir, '.claude', 'commands')).sort();
+
+test('nexacro(15) 단독: 넥사크로·이관·Java·Next.js 핵심 스킬 + 소유 에이전트, 스펙 추출 자산 없음, dev(레거시)·TS X·java 규칙', () => {
+  const dir = mktarget('nexacro');
+  try {
+    assert.strictEqual(NEXACRO_SKILLS.length, 5, `전제: nexacro 카테고리 5종 (현재 ${NEXACRO_SKILLS.length})`);
+    const out = install('15', dir);
+    assert.ok(/CLAUDE\.md \(기본 템플릿: nexacro\)/.test(out), 'nexacro CLAUDE.md 베이스 미사용');
+    assert.ok(/\n레거시 프로파일: true\n/.test(out), '레거시 프로파일이 강제되지 않음');
+    const s = skillDirs(dir);
+    for (const must of [...NEXACRO_SKILLS, ...NEXACRO_BACKEND, 'backend/mybatis-mapper-patterns', 'backend/spring-boot-2-to-3-migration',
+      'backend/spring-security-5-jwt-jjwt10', 'backend/spring-security-6-jwt-jjwt12', 'backend/springdoc-openapi-3',
+      'frontend/nextjs', 'frontend/ag-grid', 'frontend/tanstack-query', 'frontend/form-handling', 'architecture/frontend-domain-structure']) {
+      assert.ok(s.includes(must), `nexacro 필수 스킬 누락: ${must}`);
+    }
+    for (const no of [...SPEC_SKILLS, 'backend/redis-redisson-modern', 'backend/redis-redisson-4', 'backend/prisma-orm', 'backend/axum',
+      'backend/zod-schema-validation', 'backend/hono-api-patterns', 'frontend/mui-v5', 'frontend/schema-org-patterns', 'devops/n8n-workflow-design', 'devops/vercel-sandbox',
+      ...DREAM_ONLY, ...FRONTEND_ONLY_DEVOPS]) {
+      assert.ok(!s.includes(no), `nexacro 에 누수 스킬: ${no}`);
+    }
+    assert.deepStrictEqual(s.filter((x) => x.startsWith('backend/python-')), [], 'python 스킬 누수');
+    const a = agentFiles(dir);
+    for (const must of [...NEXACRO_AGENTS, 'frontend/frontend-developer.md', 'frontend/frontend-architect.md',
+      'backend/java-backend-developer.md', 'backend/java-backend-architect.md', 'validation/qa-engineer.md']) {
+      assert.ok(a.includes(must), `nexacro 필수 에이전트 누락: ${must}`);
+    }
+    for (const no of [...SPEC_AGENTS, ...PYTHON_AGENTS, 'backend/rust-backend-developer.md',
+      'backend/typescript-backend-developer.md', 'backend/build-error-resolver.md', ...SEO_AGENT_PAIR, HEALTH_AGENT]) {
+      assert.ok(!a.includes(no), `nexacro 에 누수 에이전트: ${no}`);
+    }
+    const hooks = fs.readdirSync(path.join(dir, '.claude', 'hooks'));
+    assert.ok(!hooks.includes('tdd-guard.js'), '레거시 강제인데 tdd-guard 설치');
+    assert.ok(hooks.includes('adversarial-test-guard.js') && hooks.includes('fake-impl-guard.js'), 'dev 훅 누락');
+    assert.ok(!hooks.includes('typescript-quality.js'), 'TS 아닌 nexacro 에 TS 훅');
+    const post = postToolCmds(dir);
+    assert.ok(!post.includes('tdd-guard.js') && post.includes('adversarial-test-guard.js'), 'settings 배선이 레거시 프로파일과 다름');
+    assert.deepStrictEqual(fs.readdirSync(path.join(dir, '.claude', 'rules')).sort(),
+      ['adversarial-testing.md', 'git.md', 'info-verification.md', 'java.md', 'task-workflow.md', 'typescript.md']);
+    assert.ok(!commandFiles(dir).includes('spec-extract.md'), '15 단독에 /spec-extract 커맨드 누수');
+    const manifest = JSON.parse(fs.readFileSync(path.join(dir, '.claude', '.install-manifest.json'), 'utf8'));
+    assert.deepStrictEqual(manifest.templates, ['nexacro']);
+    const claude = fs.readFileSync(path.join(dir, 'CLAUDE.md'), 'utf8');
+    assert.ok(/docs\/migration\//.test(claude) && /넥사크로/.test(claude), 'nexacro CLAUDE.md 아님');
+    assert.ok(!/<!-- common-rules -->/.test(claude), '공통 규칙 자리표시자가 남음');
+    assert.deepStrictEqual(danglingRuleRefs(dir), [], 'CLAUDE.md 가 미설치 규칙을 참조');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('spec-extraction(14) 단독: spec 스킬 + xfdl 해석 1종, 화이트리스트 에이전트 9종, 비 dev(dev·TS 훅·규칙 없음), /spec-extract', () => {
+  const dir = mktarget('spec');
+  try {
+    assert.ok(SPEC_SKILLS.length >= 3, `전제: spec 카테고리 스킬 존재 (현재 ${SPEC_SKILLS.length})`);
+    const out = install('14', dir);
+    assert.ok(/CLAUDE\.md \(기본 템플릿: spec-extraction\)/.test(out), 'spec-extraction CLAUDE.md 베이스 미사용');
+    assert.ok(/\n레거시 프로파일: false\n/.test(out) && /\nCodex 리뷰: false\n/.test(out), '비 dev 템플릿인데 dev 옵션이 켜짐');
+    assert.deepStrictEqual(skillDirs(dir), [...SPEC_SKILLS, 'nexacro/nexacro-17-xfdl-anatomy'].sort(), 'spec-extraction 스킬 집합 불일치');
+    assert.deepStrictEqual(agentFiles(dir), SPEC_EXTRACTION_AGENTS, 'spec-extraction 에이전트 화이트리스트 불일치');
+    const hooks = fs.readdirSync(path.join(dir, '.claude', 'hooks'));
+    for (const h of ['tdd-guard.js', 'adversarial-test-guard.js', 'fake-impl-guard.js', 'test-fake-guard.js', 'auto-format.js', 'typescript-quality.js']) {
+      assert.ok(!hooks.includes(h), `비 dev 애드온 단독에 ${h} 설치`);
+    }
+    assert.ok(!postToolCmds(dir).includes('adversarial-test-guard.js'), 'settings 에 dev 훅 배선');
+    assert.deepStrictEqual(fs.readdirSync(path.join(dir, '.claude', 'rules')).sort(), ['git.md', 'info-verification.md', 'task-workflow.md']);
+    assert.ok(commandFiles(dir).includes('spec-extract.md'), '/spec-extract 커맨드 누락');
+    const claude = fs.readFileSync(path.join(dir, 'CLAUDE.md'), 'utf8');
+    assert.ok(/docs\/spec\//.test(claude) && /파일:줄/.test(claude), 'spec-extraction CLAUDE.md 아님');
+    assert.deepStrictEqual(danglingRuleRefs(dir), [], 'CLAUDE.md 가 미설치 규칙을 참조');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('악성·순서: 이름으로 애드온을 앞에 쓴 spec-extraction,nexacro 도 nexacro 가 베이스 — 스펙 섹션 append·금지 사항 병합·union', () => {
+  const dir = mktarget('spec-nexacro');
+  try {
+    const out = install('spec-extraction,nexacro', dir);
+    assert.ok(/애드온 템플릿\(spec-extraction\)은 뒤로 정렬/.test(out), '순서 정규화 안내 미출력');
+    assert.ok(/CLAUDE\.md \(기본 템플릿: nexacro\)/.test(out), 'CLAUDE.md 베이스가 nexacro 가 아님');
+    const claude = fs.readFileSync(path.join(dir, 'CLAUDE.md'), 'utf8');
+    assert.ok(/docs\/migration\//.test(claude), 'nexacro 베이스 내용 누락');
+    assert.strictEqual((claude.match(/^## 스펙 추출 작업 원칙$/gm) || []).length, 1, '스펙 도메인 섹션이 1회 append 되지 않음');
+    const prohib = sectionOf(claude, '금지 사항');
+    assert.ok(prohib && prohib.includes('<!-- spec-extraction 금지 사항 -->'), 'spec-extraction 금지 사항이 병합되지 않음');
+    const s = skillDirs(dir);
+    for (const must of [...SPEC_SKILLS, ...NEXACRO_SKILLS, ...NEXACRO_BACKEND]) assert.ok(s.includes(must), `union 누락: ${must}`);
+    const a = agentFiles(dir);
+    for (const must of [...SPEC_AGENTS, ...NEXACRO_AGENTS]) assert.ok(a.includes(must), `union 에이전트 누락: ${must}`);
+    assert.ok(commandFiles(dir).includes('spec-extract.md'), '조합에서 /spec-extract 누락');
+    assert.ok(!fs.readdirSync(path.join(dir, '.claude', 'hooks')).includes('tdd-guard.js'), '조합에서도 레거시 강제여야 함');
+    const manifest = JSON.parse(fs.readFileSync(path.join(dir, '.claude', '.install-manifest.json'), 'utf8'));
+    assert.deepStrictEqual(manifest.templates, ['nexacro', 'spec-extraction']);
+    assert.deepStrictEqual(danglingRuleRefs(dir), [], 'CLAUDE.md 가 미설치 규칙을 참조');
+    assert.ok(!/\n\n\n/.test(claude), 'CLAUDE.md 에 3연속 빈 줄');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('조합: java-spring-legacy + spec-extraction (5,14) — java 베이스·tdd-guard 유지, 넥사크로 이전 자산·SB1→2·iBATIS 는 없다', () => {
+  const dir = mktarget('java-spec');
+  try {
+    const out = install('5,14', dir);
+    assert.ok(/CLAUDE\.md \(기본 템플릿: java-spring-legacy\)/.test(out), 'java 베이스 아님');
+    const claude = fs.readFileSync(path.join(dir, 'CLAUDE.md'), 'utf8');
+    assert.ok(/`jakarta\.\*` import 금지/.test(claude) && /## 스펙 추출 작업 원칙/.test(claude), 'java 금지 사항·스펙 섹션 조립 실패');
+    const s = skillDirs(dir);
+    for (const must of [...SPEC_SKILLS, 'nexacro/nexacro-17-xfdl-anatomy', 'backend/spring-security-5-jwt-jjwt10']) assert.ok(s.includes(must), `누락: ${must}`);
+    for (const no of [...NEXACRO_SKILLS.filter((x) => x !== 'nexacro/nexacro-17-xfdl-anatomy'), ...NEXACRO_BACKEND]) {
+      assert.ok(!s.includes(no), `5,14 에 nexacro 이전 자산 누수: ${no}`);
+    }
+    const a = agentFiles(dir);
+    for (const no of NEXACRO_AGENTS) assert.ok(!a.includes(no), `5,14 에 nexacro 에이전트 누수: ${no}`);
+    for (const must of [...SPEC_AGENTS, 'backend/java-backend-developer.md']) assert.ok(a.includes(must), `누락: ${must}`);
+    assert.ok(fs.readdirSync(path.join(dir, '.claude', 'hooks')).includes('tdd-guard.js'), '5,14 는 레거시 강제 대상 아님 — tdd-guard 유지');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('안내: nexacro 를 다른 템플릿과 조합(15,3)하면 레거시 프로파일이 조합 전체에 걸린다고 경고하고, 단독(15)에서는 경고하지 않는다 (2026-10-08 검수)', () => {
+  const combo = mktarget('nexacro-nextjs');
+  const solo = mktarget('nexacro-solo');
+  try {
+    const out = install('15,3', combo);
+    assert.ok(/레거시 프로파일 자동 적용/.test(out), '레거시 자동 적용 안내 미출력');
+    assert.ok(/함께 선택한 템플릿\(nexacro,nextjs\)에도 같이 적용/.test(out), '조합 전체 적용 경고 미출력');
+    // 경고 문구대로 실제로도 nextjs 쪽 tdd-guard 가 빠진다 — 안내와 동작이 어긋나지 않음
+    const hooks = fs.readdirSync(path.join(combo, '.claude', 'hooks'));
+    assert.ok(!hooks.includes('tdd-guard.js') && hooks.includes('typescript-quality.js'), '15,3 훅 구성이 안내와 다름');
+    const soloOut = install('15', solo);
+    assert.ok(/레거시 프로파일 자동 적용/.test(soloOut), '단독 설치에서 자동 적용 안내 누락');
+    assert.ok(!/함께 선택한 템플릿/.test(soloOut), '단독 설치인데 조합 경고 출력');
+  } finally {
+    fs.rmSync(combo, { recursive: true, force: true });
+    fs.rmSync(solo, { recursive: true, force: true });
+  }
+});
+
+test('다운그레이드: 15,14 → 15 재설치에서 스펙 자산(스킬·짝 docs·에이전트·/spec-extract)만 수렴, 공유 xfdl 스킬·수정본은 보존', () => {
+  const dir = mktarget('spec-removed');
+  try {
+    install('15,14', dir);
+    const edited = path.join(dir, '.claude', 'skills', 'spec-extraction-method', 'SKILL.md');
+    const untouched = path.join(dir, '.claude', 'skills', 'react-spec-extraction', 'SKILL.md');
+    const untouchedDoc = path.join(dir, 'docs', 'skills', 'spec', 'react-spec-extraction');
+    const cmd = path.join(dir, '.claude', 'commands', 'spec-extract.md');
+    assert.ok([edited, untouched, untouchedDoc, cmd].every((f) => fs.existsSync(f)), '전제: 스펙 자산 설치됨');
+    fs.appendFileSync(edited, '\n<!-- 프로젝트 커스텀 -->\n');
+    install('15', dir);
+    assert.ok(fs.existsSync(edited), '사용자 수정본이 prune 에 삭제됨 — 해시 증명 없는 삭제');
+    assert.ok(!fs.existsSync(untouched) && !fs.existsSync(untouchedDoc), '미수정 spec 스킬·짝 docs 잔존');
+    assert.ok(!fs.existsSync(cmd), '/spec-extract 커맨드 잔존');
+    const a = agentFiles(dir);
+    for (const p of SPEC_AGENTS) assert.ok(!a.includes(p), `애드온 제거 후 스펙 에이전트 잔존: ${p}`);
+    assert.ok(skillDirs(dir).includes('nexacro/nexacro-17-xfdl-anatomy'), '15 도 소유하는 공유 xfdl 스킬이 과잉 prune');
+    for (const p of NEXACRO_AGENTS) assert.ok(a.includes(p), `nexacro 자산이 휘말림: ${p}`);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('다운그레이드: 15 → 5 재설치에서 nexacro 스킬·SB1→2·iBATIS·전용 에이전트가 수렴하고 tdd-guard 가 돌아온다 (수정본 보존)', () => {
+  const dir = mktarget('nexacro-to-java');
+  try {
+    install('15', dir);
+    const edited = path.join(dir, '.claude', 'skills', 'nexacro-xapi-server', 'SKILL.md');
+    const untouched = path.join(dir, '.claude', 'skills', 'xapi-to-rest-migration', 'SKILL.md');
+    const untouchedDoc = path.join(dir, 'docs', 'skills', 'nexacro', 'xapi-to-rest-migration');
+    const sb1 = path.join(dir, '.claude', 'skills', 'spring-boot-1-to-2-migration', 'SKILL.md');
+    assert.ok([edited, untouched, untouchedDoc, sb1].every((f) => fs.existsSync(f)), '전제: nexacro 자산 설치됨');
+    fs.appendFileSync(edited, '\n<!-- 프로젝트 커스텀 -->\n');
+    install('5', dir);
+    assert.ok(fs.existsSync(edited), '사용자 수정본이 prune 에 삭제됨');
+    assert.ok(!fs.existsSync(untouched) && !fs.existsSync(untouchedDoc), '미수정 nexacro 스킬·짝 docs 잔존');
+    assert.ok(!fs.existsSync(sb1), 'SB1→2 이관 스킬이 java-legacy 재설치 후 잔존');
+    const a = agentFiles(dir);
+    for (const p of NEXACRO_AGENTS) assert.ok(!a.includes(p), `nexacro 에이전트 잔존: ${p}`);
+    assert.ok(fs.readdirSync(path.join(dir, '.claude', 'hooks')).includes('tdd-guard.js'), '레거시 해제 후 tdd-guard 미복원');
+    assert.ok(skillDirs(dir).includes('backend/mybatis-mapper-patterns') && a.includes('backend/java-backend-developer.md'), 'java 자산 누락');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('경계: 15 다음 잘못된 번호(15,16)는 통째로 거부·재질문되고 재입력(nexacro)만 설치된다', () => {
+  const dir = mktarget('nexacro-bad');
+  try {
+    const out = install('15,16\nnexacro', dir);
+    assert.ok(/알 수 없는 템플릿 '16'/.test(out), '잘못된 번호가 섞인 입력이 거부되지 않음');
+    const manifest = JSON.parse(fs.readFileSync(path.join(dir, '.claude', '.install-manifest.json'), 'utf8'));
+    assert.deepStrictEqual(manifest.templates, ['nexacro']);
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
@@ -1456,9 +1672,12 @@ test('버그3: agents 디렉토리 CLAUDE.md 는 누수되지 않고, 설치된 
     '7': [false, false, []],
     '10': [false, true, ['frontend/CLAUDE.md -> typescript.md']],
     '13': [false, false, []],
+    '14': [false, false, []],
+    // nexacro: java.md·typescript.md(이전 목표) 설치 — backend 는 rust.md 임포트만 제거, frontend/CLAUDE.md 포함
+    '15': [true, true, ['backend/CLAUDE.md -> java.md', 'frontend/CLAUDE.md -> typescript.md']],
     '4,5': [true, false, ['backend/CLAUDE.md -> rust.md', 'backend/CLAUDE.md -> java.md']],
   };
-  for (const tmpl of ['0', '1', '2', '3', '4', '5', '6', '7', '9', '10', '11', '12', '13', '4,5']) { // 8(academic) 폐지
+  for (const tmpl of ['0', '1', '2', '3', '4', '5', '6', '7', '9', '10', '11', '12', '13', '14', '15', '4,5']) { // 8(academic) 폐지
     const dir = mktarget(`agentdir-${tmpl.replace(',', '-')}`);
     try {
       install(tmpl, dir);
