@@ -1,0 +1,458 @@
+<title>gugbab-claude 래퍼 개편</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 레이아웃: 상단 바(제목+탭) 아래 — 계획서 탭은 목차 사이드 + 본문 760px, 체크리스트 탭은 고정 요약줄 + 항목 목록 */
+:root {
+  --bg: #f4f5f7;
+  --panel: #ffffff;
+  --fg: #1a1e26;
+  --muted: #5a6272;
+  --line: #dde1e8;
+  --soft: #eceff4;
+  --accent: #2b54c4;
+  --accent-soft: #e5ebfa;
+  --lock: #a8520c;
+  --lock-soft: #fbeedf;
+  --on: #1b7348;
+  --on-soft: #e1f2e8;
+  --off: #6b7280;
+  --changed: #fff6d6;
+  --code-bg: #eef0f4;
+  --font-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12151b; --panel: #1a1e26; --fg: #e4e7ee; --muted: #9aa3b4; --line: #2c323e; --soft: #222833;
+    --accent: #7d9ef0; --accent-soft: #232d47; --lock: #f0a35e; --lock-soft: #3a2a1a; --on: #5fcf93; --on-soft: #1a3328;
+    --off: #8b93a1; --changed: #3a3418; --code-bg: #222833; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12151b; --panel: #1a1e26; --fg: #e4e7ee; --muted: #9aa3b4; --line: #2c323e; --soft: #222833;
+  --accent: #7d9ef0; --accent-soft: #232d47; --lock: #f0a35e; --lock-soft: #3a2a1a; --on: #5fcf93; --on-soft: #1a3328;
+  --off: #8b93a1; --changed: #3a3418; --code-bg: #222833; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.7; margin: 0; }
+code, pre { font-family: var(--font-mono); font-size: 0.86em; }
+a { color: var(--accent); }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--panel); border-bottom: 1px solid var(--line); }
+.topbar-inner { max-width: 1180px; margin: 0 auto; padding: 12px 16px 0; display: flex; flex-wrap: wrap; gap: 4px 24px; align-items: flex-end; }
+.brand { padding-bottom: 12px; min-width: 0; }
+.brand h1 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+.brand p { margin: 0; font-size: 12.5px; color: var(--muted); }
+.tabs { display: flex; gap: 2px; margin-left: auto; }
+.tab { border: 0; background: none; padding: 10px 14px; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; font-weight: 500; }
+.tab[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
+.tab .n { font-family: var(--font-mono); font-size: 12px; color: var(--muted); margin-left: 4px; }
+.tab { font-size: 15px; }
+.cta-box { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; margin: 18px 0; padding: 14px 16px; border: 1px solid var(--accent); background: var(--accent-soft); border-radius: 10px; }
+.cta-box p { margin: 0; min-width: 0; flex: 1 1 260px; }
+.cta { border: 0; background: var(--accent); color: var(--panel); font-weight: 600; padding: 8px 16px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
+
+/* 계획서 */
+.doc-wrap { max-width: 1180px; margin: 0 auto; padding-block: 28px 80px; padding-inline: 16px; display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 40px; }
+.toc { position: sticky; top: 92px; align-self: start; font-size: 13px; max-height: calc(100vh - 110px); overflow: auto; }
+.toc b { display: block; font-size: 11px; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 8px; }
+.toc a { display: block; color: var(--muted); text-decoration: none; padding: 3px 0 3px 10px; border-left: 2px solid var(--line); line-height: 1.45; }
+.toc a:hover { color: var(--fg); border-left-color: var(--accent); }
+article { min-width: 0; max-width: 780px; }
+article h1 { font-size: 26px; line-height: 1.3; margin: 0 0 6px; text-wrap: balance; letter-spacing: -0.02em; }
+article h2 { font-size: 20px; margin: 48px 0 12px; padding-top: 12px; border-top: 1px solid var(--line); text-wrap: balance; scroll-margin-top: 90px; }
+article h3 { font-size: 16px; margin: 28px 0 8px; scroll-margin-top: 90px; }
+article blockquote { margin: 12px 0; padding: 8px 14px; background: var(--accent-soft); border-radius: 6px; color: var(--fg); }
+article blockquote p { margin: 2px 0; }
+article hr { border: 0; border-top: 1px solid var(--line); margin: 32px 0; }
+article :not(pre) > code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+article pre { background: var(--code-bg); padding: 14px 16px; border-radius: 8px; overflow-x: auto; line-height: 1.55; }
+article ul, article ol { padding-left: 22px; }
+article li { margin: 3px 0; }
+.tbl { overflow-x: auto; margin: 14px 0; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+.tbl table { border-collapse: collapse; width: 100%; font-size: 13.5px; line-height: 1.55; }
+.tbl th, .tbl td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.tbl th { background: var(--soft); font-weight: 600; white-space: nowrap; }
+.tbl tr:last-child td { border-bottom: 0; }
+.loading { color: var(--muted); }
+
+/* 체크리스트 */
+.cl-wrap { max-width: 1180px; margin: 0 auto; padding-block: 0 80px; padding-inline: 16px; }
+.bar { position: sticky; top: 64px; z-index: 10; background: var(--bg); padding-block: 14px 10px; display: grid; gap: 10px; }
+.stats { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; font-size: 13.5px; }
+.stat b { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 15px; margin-right: 4px; }
+.stat.lock b { color: var(--lock); } .stat.on b { color: var(--on); } .stat.off b { color: var(--off); }
+.save { margin-left: auto; font-size: 12.5px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--off); }
+.save[data-s="saved"] .dot { background: var(--on); } .save[data-s="saving"] .dot { background: var(--lock); } .save[data-s="local"] .dot { background: var(--off); }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.chip { border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 4px 12px; font-size: 13px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.search { flex: 1 1 200px; min-width: 0; border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 6px 10px; font: inherit; font-size: 13.5px; color: var(--fg); }
+.ghost { border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 5px 10px; font-size: 13px; cursor: pointer; }
+.confirm { display: flex; gap: 8px; align-items: center; font-size: 13px; background: var(--lock-soft); padding: 6px 10px; border-radius: 8px; }
+.legend { font-size: 12.5px; color: var(--muted); }
+.legend span { white-space: nowrap; margin-right: 12px; }
+.sec { margin-top: 22px; }
+.sec > h2 { font-size: 18px; margin: 0 0 4px; }
+.grp { margin-top: 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.grp-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--soft); border-bottom: 1px solid var(--line); }
+.grp-head h3 { margin: 0; font-size: 14.5px; }
+.grp-head .acts { display: flex; gap: 6px; }
+.item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 16px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.item:last-child { border-bottom: 0; }
+.item.changed { background: var(--changed); }
+.item .main { min-width: 0; }
+.item .name { font-family: var(--font-mono); font-weight: 500; font-size: 13.5px; word-break: break-all; }
+.item .tag { font-size: 11.5px; color: var(--muted); margin-left: 6px; }
+.item .rec { font-size: 11.5px; margin-left: 6px; color: var(--muted); }
+.item .desc { font-size: 13.5px; color: var(--fg); margin-top: 2px; line-height: 1.6; }
+.item .rel { font-size: 12.5px; color: var(--muted); margin-top: 3px; line-height: 1.55; }
+.item .rel code { font-size: 0.95em; }
+.item .rel b { color: var(--fg); font-weight: 600; margin-right: 2px; }
+.item .tag.hint { color: var(--accent); font-weight: 600; }
+.more { margin-top: 4px; }
+.more > summary { cursor: pointer; font-size: 12.5px; color: var(--accent); width: max-content; list-style: none; }
+.more > summary::-webkit-details-marker { display: none; }
+.more > summary::before { content: "▸ "; }
+.more[open] > summary::before { content: "▾ "; }
+.more[open] > summary { margin-bottom: 4px; }
+.more .rel { padding-left: 14px; border-left: 2px solid var(--line); margin-top: 0; padding-block: 2px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; align-self: start; }
+.seg button { border: 0; background: var(--panel); padding: 5px 10px; font-size: 12.5px; cursor: pointer; color: var(--muted); white-space: nowrap; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"][data-v="lock"] { background: var(--lock-soft); color: var(--lock); font-weight: 600; }
+.seg button[aria-pressed="true"][data-v="on"] { background: var(--on-soft); color: var(--on); font-weight: 600; }
+.seg button[aria-pressed="true"][data-v="off"] { background: var(--soft); color: var(--fg); font-weight: 600; }
+.empty { padding: 30px; text-align: center; color: var(--muted); }
+
+@media (max-width: 860px) {
+  .doc-wrap { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .toc { display: none; }
+  .tabs { margin-left: 0; width: 100%; }
+  .bar { top: 100px; }
+  .item { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: no-preference) { .item { transition: background 0.2s; } }
+</style>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <h1>gugbab-claude 래퍼 개편</h1>
+      <p>shim wrapper 계획서 · 최종 수정 __UPDATED__</p>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button class="tab" role="tab" id="tab-plan" aria-selected="true" aria-controls="view-plan">계획서</button>
+      <button class="tab" role="tab" id="tab-cl" aria-selected="false" aria-controls="view-cl">항목 체크리스트<span class="n">__COUNT__</span></button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section id="view-plan" role="tabpanel" aria-labelledby="tab-plan">
+    <div class="doc-wrap">
+      <nav class="toc" id="toc" aria-label="목차"><b>목차</b></nav>
+      <article id="doc"><p class="loading">계획서를 불러오는 중…</p></article>
+    </div>
+  </section>
+
+  <section id="view-cl" role="tabpanel" aria-labelledby="tab-cl" hidden>
+    <div class="cl-wrap">
+      <div class="bar">
+        <div class="stats" id="stats"></div>
+        <div class="controls">
+          <button class="chip" data-f="all" aria-pressed="true">전체</button>
+          <button class="chip" data-f="setting" aria-pressed="false">설정</button>
+          <button class="chip" data-f="hook" aria-pressed="false">훅</button>
+          <button class="chip" data-f="rule" aria-pressed="false">룰</button>
+          <button class="chip" data-f="command" aria-pressed="false">커맨드</button>
+          <button class="chip" data-f="agent" aria-pressed="false">에이전트</button>
+          <button class="chip" data-f="skill" aria-pressed="false">스킬</button>
+          <button class="chip" data-f="changed" aria-pressed="false">추천에서 바꾼 것</button>
+          <input class="search" id="q" type="search" placeholder="이름·설명 검색" aria-label="항목 검색">
+          <span id="reset-area"><button class="ghost" id="reset">추천으로 되돌리기</button></span>
+        </div>
+        <div class="legend"><span>모든 프로젝트의 기본값</span><span><b style="color:var(--lock)">고정</b> = /harness 에서 끌 수 없음</span><span><b style="color:var(--on)">켬</b> = 처음엔 켜짐 · <b>끔</b> = 처음엔 꺼짐 (프로젝트마다 /harness 로 바꿀 수 있음)</span><span>노란 줄 = 제 추천에서 바꾼 항목</span></div>
+      </div>
+      <div id="list"></div>
+    </div>
+  </section>
+</main>
+
+<script type="text/plain" id="plan-md">__PLAN_MD__</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script>
+(function () {
+  // ── 탭 ─────────────────────────────────────────
+  const tabs = { plan: document.getElementById('tab-plan'), cl: document.getElementById('tab-cl') };
+  const views = { plan: document.getElementById('view-plan'), cl: document.getElementById('view-cl') };
+  function show(k) {
+    for (const key of Object.keys(tabs)) {
+      tabs[key].setAttribute('aria-selected', String(key === k));
+      views[key].hidden = key !== k;
+    }
+    window.scrollTo(0, 0); // 탭을 바꾸면 항상 맨 위부터 (이전 탭의 스크롤 위치가 남지 않게)
+    try { localStorage.setItem('gugbab-tab', k); } catch (e) {}
+  }
+  tabs.plan.addEventListener('click', () => show('plan'));
+  tabs.cl.addEventListener('click', () => show('cl'));
+  let startTab = location.hash === '#checklist' ? 'cl' : null;
+  if (!startTab) { try { startTab = localStorage.getItem('gugbab-tab'); } catch (e) {} }
+  if (startTab === 'cl') show('cl');
+
+  // ── 계획서 렌더 ─────────────────────────────────
+  const md = document.getElementById('plan-md').textContent;
+  const doc = document.getElementById('doc');
+  const toc = document.getElementById('toc');
+  function slug(t, i) { return 's' + i + '-' + t.replace(/[^\w가-힣]+/g, '-').slice(0, 40); }
+  if (window.marked) {
+    doc.innerHTML = window.marked.parse(md, { gfm: true });
+    doc.querySelectorAll('table').forEach(t => { const w = document.createElement('div'); w.className = 'tbl'; t.parentNode.insertBefore(w, t); w.appendChild(t); });
+    doc.querySelectorAll('h2').forEach((h, i) => {
+      h.id = slug(h.textContent, i);
+      const a = document.createElement('a'); a.href = '#' + h.id; a.textContent = h.textContent;
+      a.addEventListener('click', e => { e.preventDefault(); h.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+      toc.appendChild(a);
+    });
+  } else {
+    const pre = document.createElement('pre'); pre.textContent = md; doc.replaceChildren(pre);
+  }
+  // 체크리스트로 가는 버튼 — 계획서 제목 바로 아래와 맨 끝
+  function ctaBox() {
+    const box = document.createElement('div'); box.className = 'cta-box';
+    const p = document.createElement('p');
+    p.textContent = '훅·룰·커맨드·에이전트·스킬 __COUNT__개의 고정 / 켬 / 끔은 항목 체크리스트에서 보고 바꿀 수 있습니다.';
+    const b = document.createElement('button'); b.className = 'cta'; b.type = 'button'; b.textContent = '항목 체크리스트 열기 →';
+    b.addEventListener('click', () => show('cl'));
+    box.append(p, b);
+    return box;
+  }
+  const firstQuote = doc.querySelector('blockquote');
+  if (firstQuote) firstQuote.after(ctaBox()); else doc.prepend(ctaBox());
+  doc.appendChild(ctaBox());
+
+  // ── 체크리스트 ──────────────────────────────────
+  // 한 칸: 모든 프로젝트 기본값(고정·켬·끔). gugbab-claude 레포만의 고정·기본값은 레포 .gugbab.json(lock·enable)으로 한다.
+  // 저장: changes = 추천(rec)과 다른 값만. 예전 두 칸 형식(repo/project)은 합친다 — 두 칸이 같으면 그 값,
+  // 한쪽만 고정이면 고정이 아닌 쪽 값(사용자 결정 2026-10-15: "둘 중 하나 고정 아닌 건 고정 빼고").
+  const SECTIONS = /*__ITEMS__*/null;
+  const ITEMS = [];
+  for (const s of SECTIONS) for (const g of s.groups) for (const it of g.items) { it.type = s.type; ITEMS.push(it); }
+  const BY_ID = Object.fromEntries(ITEMS.map(i => [i.id, i]));
+  const TYPE_LABEL = { setting: '설정', hook: '훅', rule: '룰', command: '커맨드', agent: '에이전트', skill: '스킬' };
+  const LABEL = { lock: '고정', on: '켬', off: '끔' };
+  const STATES = ['lock', 'on', 'off'];
+  let changes = {};
+  let filter = 'all', query = '';
+  const cur = it => changes[it.id] || it.rec;
+
+  const listEl = document.getElementById('list');
+  const statsEl = document.getElementById('stats');
+
+  function stateButtons(it) {
+    const opts = it.type === 'skill' ? ['on', 'off'] : STATES;
+    const seg = document.createElement('div'); seg.className = 'seg'; seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', it.name + ' 상태');
+    for (const v of opts) {
+      const b = document.createElement('button'); b.type = 'button'; b.dataset.v = v; b.textContent = LABEL[v];
+      b.setAttribute('aria-pressed', String(cur(it) === v));
+      b.addEventListener('click', () => setState([it], v));
+      seg.appendChild(b);
+    }
+    return seg;
+  }
+
+  function matches(it) {
+    if (filter === 'changed' && !changes[it.id]) return false;
+    if (filter !== 'all' && filter !== 'changed' && it.type !== filter) return false;
+    if (query) { const q = query.toLowerCase(); return (it.name + ' ' + it.desc + ' ' + it.rel.join(' ') + ' ' + it.note).toLowerCase().includes(q); }
+    return true;
+  }
+
+  function itemRow(it) {
+    const row = document.createElement('div'); row.className = 'item' + (changes[it.id] ? ' changed' : '');
+    const main = document.createElement('div'); main.className = 'main';
+    const nm = document.createElement('span'); nm.className = 'name'; nm.textContent = it.name; main.appendChild(nm);
+    if (it.note) { const t = document.createElement('span'); t.className = 'tag'; t.textContent = it.note; main.appendChild(t); }
+    if (it.projHint === 'off') { const t = document.createElement('span'); t.className = 'tag hint'; t.textContent = '하네스 제작용 · 다른 프로젝트 추천: 끔 (이 레포는 .gugbab.json 으로 고정 예정)'; main.appendChild(t); }
+    if (changes[it.id]) { const r = document.createElement('span'); r.className = 'rec'; r.textContent = '추천: ' + LABEL[it.rec]; main.appendChild(r); }
+    const d = document.createElement('div'); d.className = 'desc'; d.textContent = it.desc; main.appendChild(d);
+    // 상세 줄은 "자세히" 를 눌러야 펼쳐진다. "라벨: 내용" 이면 라벨을 굵게. 검색어가 있으면 펼친 채로
+    if (it.rel.length) {
+      const det = document.createElement('details'); det.className = 'more';
+      if (query) det.open = true;
+      const sm = document.createElement('summary'); sm.textContent = '자세히'; det.appendChild(sm);
+      for (const rl of it.rel) {
+        const r = document.createElement('div'); r.className = 'rel';
+        const k = rl.indexOf(': ');
+        if (k > 0 && k < 12) { const b = document.createElement('b'); b.textContent = rl.slice(0, k); r.append(b, ' ' + rl.slice(k + 2)); }
+        else r.textContent = rl;
+        det.appendChild(r);
+      }
+      main.appendChild(det);
+    }
+    row.appendChild(main); row.appendChild(stateButtons(it));
+    return row;
+  }
+
+  function groupBox(title, items, bulk) {
+    const box = document.createElement('div'); box.className = 'grp';
+    const head = document.createElement('div'); head.className = 'grp-head';
+    const h3 = document.createElement('h3'); h3.textContent = title + ' · ' + items.length; head.appendChild(h3);
+    if (bulk) {
+      const acts = document.createElement('div'); acts.className = 'acts';
+      for (const [v, t] of [['on', '이 묶음 전부 켬'], ['off', '전부 끔']]) {
+        const b = document.createElement('button'); b.className = 'ghost'; b.type = 'button'; b.textContent = t;
+        b.addEventListener('click', () => setState(items.filter(i => cur(i) !== 'lock'), v));
+        acts.appendChild(b);
+      }
+      head.appendChild(acts);
+    }
+    box.appendChild(head);
+    for (const it of items) box.appendChild(itemRow(it));
+    return box;
+  }
+
+  function render() {
+    const frag = document.createDocumentFragment();
+    let shown = 0;
+    for (const s of SECTIONS) {
+      const groups = s.groups.map(g => ({ g, items: g.items.filter(matches) })).filter(x => x.items.length);
+      if (!groups.length) continue;
+      const sec = document.createElement('section'); sec.className = 'sec';
+      const h = document.createElement('h2'); h.textContent = s.no + '. ' + s.title; sec.appendChild(h);
+      for (const { g, items } of groups) {
+        sec.appendChild(groupBox(g.title || TYPE_LABEL[s.type], items, s.type === 'skill' || s.type === 'agent'));
+        shown += items.length;
+      }
+      frag.appendChild(sec);
+    }
+    if (!shown) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = '조건에 맞는 항목이 없습니다.'; frag.appendChild(e); }
+    listEl.replaceChildren(frag);
+    renderStats();
+  }
+
+  function renderStats() {
+    const c = { lock: 0, on: 0, off: 0 };
+    for (const it of ITEMS) c[cur(it)]++;
+    statsEl.querySelectorAll('.stat').forEach(e => e.remove());
+    const parts = [['lock', '고정'], ['on', '켬'], ['off', '끔']].map(([k, t]) => '<span class="stat ' + k + '"><b>' + c[k] + '</b>' + t + '</span>');
+    parts.push('<span class="stat"><b>' + Object.keys(changes).length + '</b>추천에서 바꿈</span>');
+    const tmp = document.createElement('div'); tmp.innerHTML = parts.join('');
+    statsEl.prepend(...tmp.children);
+  }
+
+  // ── 저장 (db: 체크 결과를 Claude 가 읽을 수 있게) ─────
+  const saveEl = document.createElement('span'); saveEl.className = 'save'; saveEl.dataset.s = 'local';
+  saveEl.innerHTML = '<span class="dot"></span><span class="t">불러오는 중</span>';
+  statsEl.appendChild(saveEl);
+  function saveStatus(s, t) { saveEl.dataset.s = s; saveEl.querySelector('.t').textContent = t; }
+
+  let ref = null, writing = false, pending = false, timer = null, canWrite = true, dirty = false;
+  function setState(items, v) {
+    if (!STATES.includes(v)) return;
+    for (const it of items) {
+      if (it.type === 'skill' && v === 'lock') continue;
+      if (v === it.rec) delete changes[it.id]; else changes[it.id] = v;
+    }
+    render();
+    scheduleSave();
+  }
+  function scheduleSave() {
+    try { localStorage.setItem('gugbab-changes', JSON.stringify(changes)); } catch (e) {}
+    if (!ref || !canWrite) return;
+    saveStatus('saving', '저장 중');
+    dirty = true;
+    clearTimeout(timer);
+    timer = setTimeout(flush, 700);
+  }
+  async function flush() {
+    if (writing) { pending = true; return; }
+    writing = true;
+    try {
+      await ref.set({ changes: { ...changes }, updatedAt: new Date().toISOString(), version: 4 });
+      saveStatus('saved', '저장됨 — Claude 가 읽을 수 있음');
+    } catch (e) {
+      if (e && e.code === 'invalid_argument') { canWrite = false; saveStatus('local', '보기 전용 — 이 브라우저에만 저장'); }
+      else saveStatus('local', '저장 실패 — 다시 바꾸면 재시도');
+    } finally {
+      writing = false;
+      if (pending) { pending = false; flush(); } else { dirty = false; }
+    }
+  }
+
+  // 되돌리기 — 페이지 안 확인 단계
+  const resetArea = document.getElementById('reset-area');
+  function bindReset() {
+    document.getElementById('reset').addEventListener('click', () => {
+      resetArea.innerHTML = '<span class="confirm">바꾼 ' + Object.keys(changes).length + '개를 추천으로 되돌릴까요? <button class="ghost" id="r-yes">되돌리기</button><button class="ghost" id="r-no">취소</button></span>';
+      document.getElementById('r-yes').addEventListener('click', () => { changes = {}; render(); scheduleSave(); restoreReset(); });
+      document.getElementById('r-no').addEventListener('click', restoreReset);
+    });
+  }
+  function restoreReset() { resetArea.innerHTML = '<button class="ghost" id="reset">추천으로 되돌리기</button>'; bindReset(); }
+  restoreReset();
+
+  document.querySelectorAll('.chip').forEach(ch => ch.addEventListener('click', () => {
+    filter = ch.dataset.f;
+    document.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', String(c === ch)));
+    render();
+  }));
+  document.getElementById('q').addEventListener('input', e => { query = e.target.value.trim(); render(); });
+
+  function clean(obj) {
+    const out = {};
+    for (const [k, v] of Object.entries(obj && typeof obj === 'object' && !Array.isArray(obj) ? obj : {})) {
+      const it = BY_ID[k];
+      if (!it || !STATES.includes(v) || v === it.rec) continue;
+      if (it.type === 'skill' && v === 'lock') continue;
+      out[k] = v;
+    }
+    return out;
+  }
+  // 저장 형식 → changes. 예전 두 칸(repo/project)이면 합친다: 같으면 그 값, 한쪽만 고정이면 고정 아닌 쪽, 둘 다 고정 아니고 다르면 project
+  function fromData(data) {
+    if (!data || typeof data !== 'object') return {};
+    if (!data.repo && !data.project) return clean(data.changes);
+    const r = clean(data.repo), p = clean(data.project), merged = {};
+    for (const it of ITEMS) {
+      const a = r[it.id] || it.rec, b = p[it.id] || it.rec;
+      let v;
+      if (a === b) v = a;
+      else if (a === 'lock') v = b;
+      else if (b === 'lock') v = a;
+      else v = b;
+      if (v !== it.rec) merged[it.id] = v;
+    }
+    return merged;
+  }
+  // 먼저 이 브라우저 저장분으로 그리고, db 가 오면 그 값으로 맞춘다
+  try { changes = clean(JSON.parse(localStorage.getItem('gugbab-changes') || '{}')); } catch (e) {}
+  render();
+
+  (async () => {
+    let db = null;
+    try { db = window.claude && window.claude.use ? await window.claude.use('db') : null; } catch (e) { db = null; }
+    if (!db) { saveStatus('local', '이 화면에서는 이 브라우저에만 저장'); return; }
+    ref = db.doc('checklist/selection');
+    let first = true;
+    ref.onSnapshot(snap => {
+      if (snap.metadata && snap.metadata.hasPendingWrites) return;
+      if (snap.exists) {
+        const data = snap.data() || {};
+        if (first || (!writing && !dirty)) { changes = fromData(data); render(); }
+        // 예전 두 칸 형식이면 합친 값으로 한 번 다시 저장
+        if (first && (data.repo || data.project)) scheduleSave();
+        else saveStatus('saved', '저장됨 — Claude 가 읽을 수 있음');
+      } else if (first) {
+        if (Object.keys(changes).length) scheduleSave(); else saveStatus('saved', '추천 그대로 — 바꾸면 자동 저장');
+      }
+      first = false;
+    }, () => saveStatus('local', '연결 끊김 — 이 브라우저에만 저장'));
+  })();
+})();
+</script>

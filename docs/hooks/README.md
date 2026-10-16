@@ -1,6 +1,6 @@
 # 훅 (Hooks)
 
-Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 29종 = 실행 훅 28종 + `statusline.sh`, 2026-09-30 실측 — 공통 유틸 `_lib.js`는 삭제됨).
+Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 30종 = 실행 훅 29종 + `statusline.sh`, 2026-10-16 실측 — 2026-10-16 레포 전용 `relation-guard` 추가).
 
 훅 파일 위치: `.claude/hooks/`
 
@@ -97,6 +97,14 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 29종 = 실행 �
 
 ---
 
+## 이 레포 전용 훅 (1종) — 설치되지 않음
+
+| 훅 | 이벤트 | 설명 | 테스트 |
+|----|--------|------|:---:|
+| [relation-guard.js](../../.claude/hooks/relation-guard.js) | PostToolUse Write/Edit · PreToolUse Bash | 훅·룰·커맨드·에이전트·스킬 관계 원본 [`relations.json`](../../relations.json)(묶음·블록·필수 의존·관계 분류) 검사 — 파일 저장 때 분류 안 된 새 언급·블록/묶음 소속 없는 새 항목·체크리스트 줄 없는 새 훅·룰·커맨드를 알리고(비차단), `git commit` 때 하나라도 있으면 차단. `relations.json` 이 없는 레포에서는 동작하지 않음. 레포 전체 검사는 `scripts/relations.test.js` | ✅ |
+
+---
+
 ## 훅 계층 구조
 
 ```
@@ -106,6 +114,7 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 29종 = 실행 �
 ├── Memory (2종)    ← --memory 옵션 선택 시 추가
 ├── Codex (1종)     ← --codex 옵션 선택 시 추가
 └── Branch Protection (1종)  ← --branch-protection 옵션 선택 시 추가
+레포 전용 (1종)  ← relation-guard — gugbab-claude 레포에서만 (설치되지 않음)
 ```
 
 ## 테스트 실행
