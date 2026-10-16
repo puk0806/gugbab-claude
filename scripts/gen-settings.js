@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // gen-settings.js — project-install.sh에서 호출. 선택된 옵션에 따라 settings.json 생성
-// 사용: node scripts/gen-settings.js [--util] [--dev] [--typescript] [--legacy] [--memory] [--superpowers] [--codex] [--readme-guard] [--staleness-guard] [--branch-protection]
+// 사용: node scripts/gen-settings.js [--util] [--dev] [--typescript] [--legacy] [--memory] [--superpowers] [--codex] [--readme-guard] [--staleness-guard] [--branch-protection] [--relation-guard]
 
 const args = process.argv.slice(2);
 const isUtil               = args.includes('--util');
@@ -17,6 +17,9 @@ const withCodex            = args.includes('--codex');             // codex@open
 const withReadmeGuard      = args.includes('--readme-guard');      // git commit/push 직전 README 미업데이트 차단
 const withStalenessGuard   = args.includes('--staleness-guard');   // 60일 초과 스킬 강제 재검증 지시 주입
 const withBranchProtection = args.includes('--branch-protection'); // main push 금지 + 피처→피처 브랜치 생성 금지
+// relation-guard(2026-10-16): gugbab-claude 레포 전용 — relations.json 관계 분류 검사. 설치 스크립트는 이 옵션을 넘기지 않는다
+// (훅 파일도 설치되지 않음). util 모드에서는 배선하지 않는다
+const withRelationGuard    = args.includes('--relation-guard') && !isUtil;
 
 // 공식 문서(hooks "Reference scripts by path"): 셸 형태에서는 placeholder 를 큰따옴표로 감싼다 —
 // 무따옴표면 공백 포함 프로젝트 경로에서 단어 분리로 Cannot find module → 모든 가드가 fail-open (2026-09-26)
@@ -88,6 +91,9 @@ if (withReadmeGuard) {
 if (withBranchProtection) {
   hooks.PreToolUse.push({ matcher: 'Bash', hooks: [H('branch-protection.js')] });
 }
+if (withRelationGuard) {
+  hooks.PreToolUse.push({ matcher: 'Bash', hooks: [H('relation-guard.js')] });
+}
 
 // PostToolUse Write — deliverable-guard(세션 수정 파일 추적, 구 session-summary 역할) 포함.
 // 공식 문서: "All matching hooks run in parallel." — 배열 순서는 실행 순서가 아니며, 다른 훅의 exit 2 가
@@ -106,12 +112,14 @@ const writeHooks = [H('deliverable-guard.js'), H('verification-guard.js'), H('pr
 if (isDev) writeHooks.push(...devWriteHooks, H('auto-format.js'));
 if (withTs) writeHooks.push(tsHook);
 if (withMemory) writeHooks.push(H('memory-sync.js'));
+if (withRelationGuard) writeHooks.push(H('relation-guard.js'));
 
 // PostToolUse Edit — 구조 검증 3종은 Edit만 사후 검증 (디스크 전체 재읽기, Write는 PreToolUse에서 사전 차단)
 const editHooks = [H('deliverable-guard.js'), H('verification-guard.js'), H('skill-md-guard.js'), H('agent-md-guard.js'), H('progress-tracker.js')];
 if (isDev) editHooks.push(...devWriteHooks, H('auto-format.js'));
 if (withTs) editHooks.push(tsHook);
 if (withMemory) editHooks.push(H('memory-sync.js'));
+if (withRelationGuard) editHooks.push(H('relation-guard.js'));
 
 hooks.PostToolUse = [
   { matcher: 'Write', hooks: writeHooks },

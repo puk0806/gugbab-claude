@@ -53,6 +53,7 @@ const WEB_T = ['0', '2', '3', '9', '10', '12'];
 // seoFull : SEO 전체(y) 일 때만 이 템플릿이면 전부 설치 (커머스 프로파일 제외분)
 // partial : { 템플릿: [허용 부분집합] } — 그 템플릿에선 이 목록만 설치
 // option  : 'authoring' (작성 도구 y 일 때만, util 단독 제외) / 'off-by-default' (memory·codex·branch — 이 테스트는 전부 기본 N)
+//           / 'repo-only' (gugbab-claude 원본 레포 전용 — 어떤 템플릿·옵션으로도 설치되지 않음, 2026-10-16 relation-guard)
 // 나열하지 않은 템플릿 = 전혀 없음.
 const OWNERSHIP = [
   // ── agents ──
@@ -287,6 +288,9 @@ const OWNERSHIP = [
   { id: 'hook:typescript', kind: 'hooks', on: TS_T, members: ['typescript-quality.js'] },
   { id: 'hook:옵션 전용(memory·codex·branch)', kind: 'hooks', option: 'off-by-default',
     members: ['memory-pull.js', 'memory-sync.js', 'codex-review-guard.js', 'branch-protection.js'] },
+  { id: 'hook:레포 전용(relation-guard)', kind: 'hooks', option: 'repo-only',
+    why: 'relations.json(관계 원본)은 원본 레포에만 있다 — 설치본에 가면 검사할 대상이 없다',
+    members: ['relation-guard.js'] },
 ];
 
 const KINDS = ['agents', 'skills', 'rules', 'hooks'];
@@ -340,7 +344,7 @@ function validateOwnership(groups, sources) {
       if (subset.length === 0) problems.push(`${g.id}: partial[${t}] 가 비어 있음 — 전혀 없음이면 partial 에서 빼라`);
     }
     if (g.option) {
-      if (!['authoring', 'off-by-default'].includes(g.option)) problems.push(`${g.id}: 알 수 없는 option '${g.option}'`);
+      if (!['authoring', 'off-by-default', 'repo-only'].includes(g.option)) problems.push(`${g.id}: 알 수 없는 option '${g.option}'`);
       if (tmplRefs.length) problems.push(`${g.id}: option 그룹은 템플릿 소유를 함께 선언할 수 없음`);
     } else if (!(g.on || []).includes('0')) {
       problems.push(`${g.id}: all(0) 은 옵션 제외분 외 전부를 설치한다 — on 에 '0' 누락`);
@@ -362,7 +366,7 @@ function expectedSet(group, opts) {
   }
   const utilOnly = opts.templates.length === 1 && opts.templates[0] === '1';
   if (group.option === 'authoring') return new Set(opts.auth && !utilOnly ? group.members : []);
-  if (group.option === 'off-by-default') return new Set();
+  if (group.option === 'off-by-default' || group.option === 'repo-only') return new Set();
   const has = (list) => opts.templates.some((t) => (list || []).includes(t));
   // 레거시 강제 템플릿(nexacro)이 조합에 하나라도 있으면 설치 전체가 레거시 프로파일 — tdd-guard 는 어떤 템플릿 소유로도 오지 않는다
   if (group.legacyOff && has(LEGACY_FORCED_T)) return new Set();
@@ -618,6 +622,20 @@ test('경계: 옵션 전용 그룹은 all(0) 에서도 기본값이면 empty, �
   assert.strictEqual(expectedSet(auth, { templates: ['1'], seo: true, auth: true }).size, 0);
   assert.strictEqual(expectedSet(auth, { templates: ['0'], seo: true, auth: false }).size, 0);
   assert.strictEqual(expectedSet(auth, { templates: ['11'], seo: true, auth: true }).size, auth.members.length);
+});
+
+test('누수·경계: 레포 전용(repo-only) 훅은 all(0)·모든 옵션에서도 기대 집합이 비고, 설치본에 섞이면 [누수]로 잡힌다', () => {
+  const repoOnly = OWNERSHIP.find((g) => g.option === 'repo-only');
+  assert.ok(repoOnly && repoOnly.members.includes('relation-guard.js'));
+  for (const t of TEMPLATE_IDS) assert.strictEqual(expectedSet(repoOnly, { templates: [t], seo: true, auth: true }).size, 0, `템플릿 ${t}`);
+  const opts = { templates: ['0'], seo: true, auth: true };
+  const fake = { agents: [], skills: [], rules: [], hooks: [] };
+  for (const g of OWNERSHIP) for (const m of expectedSet(g, opts)) fake[g.kind].push(m);
+  const leaky = { ...fake, hooks: [...fake.hooks, 'relation-guard.js'] };
+  assert.ok(compareInstall(OWNERSHIP, leaky, opts).some((p) => p.startsWith('[누수]') && p.includes('relation-guard.js')));
+  // 레포 전용 그룹이 템플릿 소유를 같이 선언하면 표 검증에서 실패
+  const bad = [...clone().filter((g) => g.option !== 'repo-only'), { ...repoOnly, members: [...repoOnly.members], on: ['0'] }];
+  assert.ok(validateOwnership(bad, SOURCES).some((p) => p.includes('option 그룹은 템플릿 소유를 함께 선언할 수 없음')));
 });
 
 test('경계: 표에 없는 템플릿 번호(8·99·빈 값)로 기대값을 묻으면 invalid 로 던진다', () => {

@@ -438,7 +438,7 @@ assert('http://0.0.0.0:80', isLocalhostUrl('http://0.0.0.0:80'), true)
 assert('https://github.com 거부', isLocalhostUrl('https://github.com'), false)
 assert('https://google.com 거부', isLocalhostUrl('https://google.com'), false)
 
-const ALLOWED_FOR_SCRIPT = [SIBLING, '/Users/lf/Desktop/workspace/00_lf-ui']
+const ALLOWED_FOR_SCRIPT = [SIBLING, '/Users/lf/Desktop/workspace/00_my-ui']
 
 section('isShellScriptSafe — 허용 케이스 (true)')
 assert('빌드 verify + http.server + curl + kill',
