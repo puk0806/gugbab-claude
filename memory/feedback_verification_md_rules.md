@@ -22,7 +22,7 @@ verification.md 수정과 status 전환 시 반드시 지킬 4개 원칙.
 ### 2. 로컬 프로젝트명·PR 번호 박지 않기
 
 verification.md는 다른 사람·다른 PC에서 이해 가능해야 한다. 다음 박지 말 것:
-- 로컬 프로젝트명 (`01_gugbab-claude-package`, `lfos-ui` 등)
+- 로컬 프로젝트명 (`01_gugbab-claude-package`, 작업 중인 실무 레포 이름 등)
 - PR 번호 (`PR #1~#11`)
 - 로컬 파일 절대경로 (`/Users/lf/Desktop/...`)
 - 사용자 로컬 워크플로우 파일명

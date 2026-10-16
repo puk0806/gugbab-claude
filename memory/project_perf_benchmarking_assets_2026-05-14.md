@@ -67,5 +67,5 @@ perf-report-writer (측정 결과 검증 → report.md 작성)
 
 ## 다음 단계 (사용자 영역)
 
-- 4개 PENDING_TEST 스킬은 실 프로젝트(lfos-ui Next.js 모노레포 / lf-ui CRA 등)에 적용 후 산출물 검증되면 APPROVED 전환
+- 4개 PENDING_TEST 스킬은 실 프로젝트(Next.js 모노레포 / CRA 레거시 등)에 적용 후 산출물 검증되면 APPROVED 전환
 - build-perf-benchmarker + perf-report-writer는 첫 호출 시 실 측정 시나리오로 검증
