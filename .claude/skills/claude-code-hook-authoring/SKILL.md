@@ -235,7 +235,7 @@ matcher 값의 **문자 구성**에 따라 해석 방식이 바뀐다.
 | 이 레포 규칙 | **`*.test.js` 필수** | 테스트 선택 |
 | 실패 시 동작 | 예외 발생해도 `exit 0`으로 빠져나갈 안전장치 필요 | 동일 |
 
-이 레포의 실제 배선 예: 차단형 = `bash-guard`(위험 Bash deny) · `parry`/`protect-secrets`(시크릿 저장 차단) · `skill-md-guard`/`verification-guard`/`agent-md-guard`(구조 위반 저장 차단) · `deliverable-guard`(README·PENDING_TEST 미완 시 종료 차단) · dev 전용 `tdd-guard`/`adversarial-test-guard`/`fake-impl-guard`. 비차단형 = `session-start`·`instructions-loaded`·`staleness-check`·`session-export`·`cc-notify`·`memory-sync`.
+이 레포의 실제 배선 예: 차단형 = `bash-guard`(위험 Bash deny) · `parry`/`protect-secrets`(시크릿 저장 차단) · `skill-md-guard`/`verification-guard`/`agent-md-guard`(구조 위반 저장 차단) · `deliverable-guard`(README·PENDING_TEST 미완 시 종료 차단) · dev 전용 `tdd-guard`/`adversarial-test-guard`/`fake-impl-guard`. 비차단형 = `session-start`·`claude-version-check`·`parallel-hint`·`staleness-check`·`session-export`·`cc-notify`·`memory-sync`.
 
 ---
 
