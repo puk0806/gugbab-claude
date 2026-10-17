@@ -2,7 +2,7 @@
 // skill-index.js — 스킬 논리 ID({category}/{name}) ↔ 실제 경로 매핑 (2026-10-05 평탄화)
 //
 // 스킬 본체는 Claude Code 가 인식하는 1단 경로 `.claude/skills/<name>/SKILL.md` 에 있고, 카테고리는 짝 검증 문서
-// `docs/skills/<category>/<name>/` 위치가 단일 원천이다(project-install.sh 의 skill_category 와 같은 규칙).
+// `docs/skills/<category>/<name>/` 위치가 단일 원천이다.
 // 테스트·도구는 사람이 읽기 쉬운 논리 ID `<category>/<name>` 을 계속 쓰고, 이 모듈로 실제 경로와 오간다.
 
 const fs = require('node:fs');

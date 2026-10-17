@@ -255,14 +255,14 @@ console.log('\n[--legacy] tdd-guard 제외 · typescript-quality --changed-only'
 
 // ── 신선도·규칙 경고 훅 배선 (2026-09-25) ────────────────────────────────
 // 공식 문서: InstructionsLoaded 는 관측 전용(출력 폐기) → SessionStart(stdout·additionalContext 주입)로 이동
-console.log('\n[SessionStart] instructions-loaded · staleness-check 는 SessionStart 에 배선, InstructionsLoaded 미배선')
+console.log('\n[SessionStart] staleness-check 는 SessionStart 에 배선, InstructionsLoaded 미배선, 삭제한 instructions-loaded 는 어디에도 없음')
 {
   const hookCmds = (s, ev) => JSON.stringify((s.hooks[ev] || []).flatMap(g => g.hooks.map(h => h.command)))
   for (const flags of [[], ['--dev'], ['--util'], ['--memory'], ['--staleness-guard'], ['--util', '--staleness-guard']]) {
     const s = generate(...flags)
     const label = flags.join(' ') || '(기본)'
     const ss = hookCmds(s, 'SessionStart')
-    assert(`${label} → SessionStart 에 instructions-loaded`, ss.includes('instructions-loaded.js'), true)
+    assert(`${label} → 삭제한 instructions-loaded 미배선 (2026-10-17, 결정 21)`, JSON.stringify(s.hooks).includes('instructions-loaded'), false)
     assert(`${label} → SessionStart 에 staleness-check`, ss.includes('staleness-check.js'), true)
     assert(`${label} → InstructionsLoaded 이벤트 미배선 (출력 폐기 이벤트)`, s.hooks.InstructionsLoaded, undefined)
     // 경계: 중복 배선 금지 — 같은 훅이 두 번 실행되면 경고가 두 번 뜬다

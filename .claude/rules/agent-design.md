@@ -7,7 +7,7 @@ CLAUDE.md와 agent-creator 모두 이 파일을 기준으로 삼습니다.
 
 ## 모델 선택 기준
 
-| 모델 | 최신 ID | 적합한 경우 | 예시 (설치 템플릿에 따라 설치되지 않을 수 있음) |
+| 모델 | 최신 ID | 적합한 경우 | 예시 (프로젝트에서 꺼 두었을 수 있음) |
 |------|---------|------------|------|
 | fable | `claude-fable-5-1` | 최고난도 **장기(long-horizon) 멀티에이전트 오케스트레이션** — 다수 서브에이전트를 장시간 지휘·종합 | deep-researcher |
 | `opus` | `claude-opus-5-5` | 최고난도 판단·분석, 일반 오케스트레이터 | agent-creator, skill-creator |
@@ -88,7 +88,7 @@ model: {opus|sonnet|haiku}
 ## 폴더 구조
 
 ```
-.claude/agents/   (괄호 안 에이전트명은 예시 — 설치 템플릿에 따라 설치되지 않을 수 있음)
+.claude/agents/   (괄호 안 에이전트명은 예시 — 프로젝트에서 켠 블록에 따라 꺼져 있을 수 있음)
 ├── meta/        ← 에이전트 생성·관리 도구 (agent-creator, skill-creator, skill-tester 등)
 ├── research/    ← 리서치·조사·분석 (deep-researcher, web-searcher 등)
 ├── validation/  ← 검증·감사·심사 (fact-checker, qa-engineer, seo-auditor 등)
@@ -100,6 +100,6 @@ model: {opus|sonnet|haiku}
 └── health/      ← 건강·식단 앱 프롬프트 검증
 ```
 
-> 설치 템플릿에 따라 일부 카테고리만 설치된다 — `project-install.sh`의 에이전트 필터 참조.
+> 래퍼(`gugbab-claude`)에서는 프로젝트마다 켠 블록·프리셋에 따라 일부 에이전트만 로드된다 — `relations.json` 의 `blocks`·`presets` 참조.
 
 새 카테고리 추가 시 `docs/agents/{category}/` 문서 폴더도 함께 생성한다.

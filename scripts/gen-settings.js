@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// gen-settings.js — project-install.sh에서 호출. 선택된 옵션에 따라 settings.json 생성
+// gen-settings.js — 이 레포 .claude/settings.json 의 원본 생성기 (옛 project-install.sh 는 2026-10-17 삭제).
+// 레포 settings.json 은 전체 옵션 출력과 같아야 하고(gen-settings.test.js 회귀 검사), build-manifest 가 그 settings.json 에서 훅 배선을 읽는다
 // 사용: node scripts/gen-settings.js [--util] [--dev] [--typescript] [--legacy] [--memory] [--superpowers] [--codex] [--readme-guard] [--staleness-guard] [--branch-protection] [--relation-guard] [--parallel-hint] [--claude-version-check]
 
 const args = process.argv.slice(2);
@@ -135,7 +136,7 @@ hooks.PostToolUse = [
 if (withParallelHint) hooks.PostToolUse.push({ matcher: '*', hooks: [H('parallel-hint.js')] });
 
 // SessionStart — 핸드오프 주입은 네이티브 resume이 커버하므로 제거 (2026-07 훅 다이어트)
-// 2026-09-25: instructions-loaded·staleness-check 를 InstructionsLoaded → SessionStart 로 이동.
+// 2026-09-25: instructions-loaded·staleness-check 를 InstructionsLoaded → SessionStart 로 이동. (instructions-loaded 는 2026-10-17 옛 복사 설치와 함께 삭제 — 결정 21)
 // 공식 문서상 InstructionsLoaded 는 관측 전용(출력 폐기)이라 경고가 아무에게도 전달되지 않았다.
 // SessionStart 는 stdout·additionalContext 를 컨텍스트로 주입하며 /clear 시에도(source:"clear") 발생한다.
 const stalenessHook = withStalenessGuard
@@ -145,7 +146,6 @@ const sessionStartHooks = [];
 // 같은 이벤트 훅은 병렬 실행(순서 보장 없음). memory-pull 과 경고 훅 2종은 서로 독립 — memory 를 읽지 않는다
 if (withMemory) sessionStartHooks.push(H('memory-pull.js'));
 sessionStartHooks.push(H('session-start.js'));
-sessionStartHooks.push(H('instructions-loaded.js'));
 sessionStartHooks.push(stalenessHook);
 // 2026-10-06: config-change-audit(설정 스냅샷) · progress-tracker(직전·현재 작업 안내) — 공통
 sessionStartHooks.push(H('config-change-audit.js'), H('progress-tracker.js'));
