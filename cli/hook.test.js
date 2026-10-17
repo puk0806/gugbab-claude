@@ -22,7 +22,7 @@ const HOOKS = {
   plain: `process.stdout.write('PLAIN-TEXT')`,
   crash: `throw new Error('boom')`,
   slow: `setTimeout(()=>{},5000)`,
-  env: `process.stdout.write(JSON.stringify({hookSpecificOutput:{hookEventName:'UserPromptSubmit',additionalContext:'ENABLED='+process.env.GUGBAB_ENABLED}}))`,
+  env: `process.stdout.write(JSON.stringify({hookSpecificOutput:{hookEventName:'UserPromptSubmit',additionalContext:'ENABLED='+process.env.GUGBAB_ENABLED+' STATE='+process.env.GUGBAB_STATE_DIR}}))`,
   stopblock: `process.stdout.write(JSON.stringify({decision:'block',reason:'STOP-R'}))`,
 };
 
@@ -115,6 +115,8 @@ test('정상: 켜진 목록을 GUGBAB_ENABLED 로 넘기고, 프로젝트가 직
   const ctx = run(s, 'UserPromptSubmit', { hook_event_name: 'UserPromptSubmit' }).json.hookSpecificOutput.additionalContext;
   assert.match(ctx, /ENABLED=.*hook:env/);
   assert.ok(!ctx.includes('CTX-ONE'));
+  // 상태 폴더(<데이터>/state)도 넘긴다 — claude-version-check 가 버전 기록을 래퍼 데이터 폴더에 둠
+  assert.ok(ctx.includes(`STATE=${path.join(s.data, 'state')}`), ctx);
 });
 
 test('악성: manifest 경로가 hooks 폴더 밖이면 실행하지 않고 기록', () => {

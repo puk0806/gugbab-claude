@@ -46,7 +46,7 @@ gugbab-claude --raw              # 하네스 없이 그냥 claude
 
 | 명령 | 하는 일 |
 |---|---|
-| `gugbab-claude status` | 이 프로젝트에 켜진 것 요약 (종류별 개수·기본값과 다른 항목·경고) |
+| `gugbab-claude status` | 이 프로젝트에 켜진 것 요약 (하네스 버전·Claude Code 버전·종류별 개수·기본값과 다른 항목·경고) |
 | `gugbab-claude doctor` | 설치·로그인·조립 상태 점검 |
 | `gugbab-claude update` | 지금 바로 최신화 (평소엔 실행할 때 1시간에 한 번 자동) |
 | `gugbab-claude harness` | 켜기·끄기 화면 (터미널에서) |
@@ -61,15 +61,15 @@ gugbab-claude --raw              # 하네스 없이 그냥 claude
  gugbab 하네스 · my-ui   범위: [이 프로젝트]  모든 프로젝트
  설정 7/7 · 훅 29/30 · 룰 14/14 · 커맨드 12/12 · 에이전트 39/61 · 스킬 1/195 · 🔒 32
  ── 묶음 — 훅·룰·커맨드를 기능별로 (6) ─────────────────
-›   🔒  작업 확인 절차                  3/3 · bundle:task-confirm
-    [x] 테스트 품질 (TDD·적대적 테스트  6/6 · bundle:dev-quality
-    [ ] Codex 리뷰                      0/3 · bundle:codex-review
+›   🔒 작업 확인 절차                  3/3 · bundle:task-confirm
+    ✅ 테스트 품질 (TDD·적대적 테스트  6/6 · bundle:dev-quality
+    ⬜ Codex 리뷰                      0/3 · bundle:codex-review
  ── 스택 블록 — 스킬·에이전트 (21) ─────────────────────
-    [-] 개발 공통                       8/14 · block:dev-common
+    🟨 개발 공통                       8/14 · block:dev-common
  ↑↓ 이동 · Space 켜기/끄기 · Tab 범위 · / 검색 · p 프리셋 · Enter 저장 · q 닫기
 ```
 
-- **이름**: `hook:이름` · `rule:이름.md` · `command:이름` · `agent:이름` · `skill:이름`, 기능 묶음 `bundle:이름`, 스킬·에이전트 스택 `block:이름`. `[-]` 는 일부만 켜짐.
+- **이름**: `hook:이름` · `rule:이름.md` · `command:이름` · `agent:이름` · `skill:이름`, 기능 묶음 `bundle:이름`, 스킬·에이전트 스택 `block:이름`. ✅ 켬 · ⬜ 끔 · 🟨 일부만 켜짐 · 🔒 고정.
 - **범위**: 기본은 **이 프로젝트만** (`~/gugbab/projects/<프로젝트>/settings.json`). Tab 이나 `--all` 이면 **모든 프로젝트** (`~/gugbab/profile.json`). 둘 다 있으면 이 프로젝트 쪽이 이깁니다.
 - **🔒 고정** 항목(확인 절차·위험 명령 차단·비밀 보호·병렬 안내 등)은 끌 수 없습니다. 눌렀는데 안 바뀌면 이유(고정·다른 설정이 덮음·필수 의존)를 보여 줍니다.
 - **반영 시점**: 훅·스킬·커맨드는 바로. 룰·CLAUDE.md·에이전트·설정은 `/exit` 하면 래퍼가 대화를 이어서(`--continue`) 다시 띄울 때.
@@ -132,7 +132,7 @@ curl -fsSL https://raw.githubusercontent.com/puk0806/gugbab-claude/main/install.
 |---|---|---|
 | 스킬 | 스킬 (11카테고리, 195종) | [docs/skills/](./docs/skills/README.md) |
 | 에이전트 | 에이전트 (9카테고리) 61종 | [docs/agents/](./docs/agents/README.md) |
-| 훅 | 훅 (31종) — 확인 절차·위험 명령 차단·비밀 보호·TDD·적대적 테스트·한국어 답변·병렬 안내 등 | [docs/hooks/](./docs/hooks/README.md) |
+| 훅 | 훅 (32종) — 확인 절차·위험 명령 차단·비밀 보호·TDD·적대적 테스트·한국어 답변·병렬 안내·Claude Code 버전 확인 등 | [docs/hooks/](./docs/hooks/README.md) |
 | 룰 | 규칙 (14종) | [docs/rules/](./docs/rules/README.md) |
 | 커맨드 | 12종 — `/harness` · `/commit` · `/create-pr` · `/create-plan` · `/tdd-implement` 등 | [.claude/commands/](./.claude/commands) |
 

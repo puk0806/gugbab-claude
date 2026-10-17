@@ -58,12 +58,15 @@ test('정상: Tab 으로 범위를 모든 프로젝트로 바꾸면 profile 쪽�
   assert.match(render(st, { cols: 100, rows: 30 }), /\[모든 프로젝트\]/);
 });
 
-test('정상: 일부만 켠 블록은 [-] 와 개수, 바꾼 줄은 * 표시, 저장 전이면 "저장 안 됨"', () => {
+test('정상: 일부만 켠 블록은 🟨 와 개수, 켠 항목은 ✅, 바꾼 줄은 * 표시, 저장 전이면 "저장 안 됨"', () => {
   let st = gotoId(createState({ manifest, layers: layers(), projectName: 'p' }), 'skill:s1');
   st = press(st, 'space').st;
   const screen = render(st, { cols: 100, rows: 30 });
-  assert.match(screen, /\[-\] 스택 +1\/2/);
-  assert.match(screen, /\* \[x\] s1/);
+  assert.match(screen, /🟨 스택 +1\/2/);
+  assert.match(screen, /\* ✅ s1/);
+  assert.match(screen, /⬜ s2/);
+  assert.match(screen, /🔒 lock/);
+  assert.ok(!/\[x\]|\[-\]|\[ \]/.test(screen), '옛 [x]·[-]·[ ] 표시가 남지 않음');
   assert.match(screen, /저장 안 됨/);
 });
 
@@ -177,6 +180,7 @@ test('경계: 아주 작은 터미널·한글 폭에서도 줄이 화면 폭을 
     for (const l of lines) assert.ok(strWidth(l.replace(/\x1b\[[0-9;?]*[A-Za-z]/g, '')) <= cols, `${cols}: ${l}`);
   }
   assert.strictEqual(strWidth('가a🔒'), 5);
+  assert.strictEqual(strWidth('✅⬜🟨🔒'), 8, '체크 아이콘은 모두 2칸');
 });
 
 test('경계: 검색 결과가 없으면 안내, 커서는 범위 안, 이동 키는 머리줄을 건너뜀', () => {

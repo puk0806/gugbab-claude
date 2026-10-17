@@ -79,6 +79,21 @@ test('경계: macOS 가 아니면 로그인 점검은 건너뛴다는 안내, co
   assert.ok(!r2.some(x => x.key === 'links'), '프로젝트가 없으면 링크 점검 생략');
 });
 
+test('정상·경계: Claude Code 최신 여부 줄 — 훅 기록이 있으면 표시(새 버전이면 경고), 없거나 깨지면 줄 없음', () => {
+  const s = setup();
+  const hooksDir = path.join(s.code, '.claude', 'hooks');
+  fs.mkdirSync(hooksDir, { recursive: true });
+  fs.copyFileSync(path.join(__dirname, '..', '.claude', 'hooks', 'claude-version-check.js'), path.join(hooksDir, 'claude-version-check.js'));
+  const state = path.join(s.data, 'state');
+  const paths = { ...s.paths, harnessRoot: path.join(s.code, '.claude'), stateDir: state };
+  assert.ok(!runDoctor({ paths, project: s.project, exec: okExec, env: {}, platform: 'darwin' }).some(x => x.key === 'claudeLatest'));
+  w(path.join(state, 'claude-version.json'), JSON.stringify({ lastSeen: '2.1.296', latest: '2.1.302', latestCheckedAt: Date.now() }));
+  const r = runDoctor({ paths, project: s.project, exec: okExec, env: {}, platform: 'darwin' }).find(x => x.key === 'claudeLatest');
+  assert.ok(r && r.level === 'warn' && /2\.1\.302/.test(r.msg), JSON.stringify(r));
+  w(path.join(state, 'claude-version.json'), '{broken');
+  assert.ok(!runDoctor({ paths, project: s.project, exec: okExec, env: {}, platform: 'darwin' }).some(x => x.key === 'claudeLatest'));
+});
+
 test('정상·경계: 하네스 버전 줄 — 개발 모드 표시, git 저장소가 아니어도 죽지 않음, stateDir 없으면 줄 없음', () => {
   const s = setup();
   const r = runDoctor({ paths: { ...s.paths, stateDir: path.join(s.data, 'state'), dev: true }, project: s.project, exec: okExec, env: {}, platform: 'darwin' });

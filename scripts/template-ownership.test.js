@@ -294,6 +294,9 @@ const OWNERSHIP = [
   { id: 'hook:레포·래퍼 전용(parallel-hint)', kind: 'hooks', option: 'repo-only',
     why: '병렬 실행 안내(2026-10-17) — 래퍼(gugbab-claude)가 manifest 로 켜고, 원본 레포는 직접 배선. 옛 project-install.sh 복사 설치에는 넣지 않는다(이전 방식은 개편 6단계에서 정리)',
     members: ['parallel-hint.js'] },
+  { id: 'hook:레포·래퍼 전용(claude-version-check)', kind: 'hooks', option: 'repo-only',
+    why: 'Claude Code 버전 변경·새 버전 안내(2026-10-17) — 래퍼가 기대는 내부 변수(로그인 공유)가 버전마다 바뀔 수 있어 래퍼와 함께 쓴다. 옛 복사 설치에는 넣지 않는다',
+    members: ['claude-version-check.js'] },
 ];
 
 const KINDS = ['agents', 'skills', 'rules', 'hooks'];

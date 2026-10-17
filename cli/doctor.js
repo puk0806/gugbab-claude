@@ -16,6 +16,13 @@ function runDoctor({ paths, project, exec = defaultExec, env = process.env, plat
   add('node', major >= 18 ? 'ok' : 'fail', `node ${nodeVersion}${major >= 18 ? '' : ' — 18 이상이 필요합니다'}`);
 
   try { add('claude', 'ok', `claude ${exec('claude', ['--version'])}`); } catch { add('claude', 'fail', 'claude 를 찾지 못했습니다 — Claude Code 설치 필요'); }
+  // 최신 버전 여부 — claude-version-check 훅의 기록(하루 한 번 npm 확인)
+  if (paths.harnessRoot && paths.stateDir) {
+    try {
+      const sum = require(path.join(paths.harnessRoot, 'hooks', 'claude-version-check.js')).readClaudeVersionState(paths.stateDir).summary;
+      if (sum) add('claudeLatest', /있음/.test(sum) ? 'warn' : 'ok', sum);
+    } catch { /* 훅 없음 */ }
+  }
 
   // 하네스 버전·채널 (main 채널인데 안정 버전 태그가 생겼으면 stable 로 바꾸는 법 안내)
   if (paths.stateDir) {
