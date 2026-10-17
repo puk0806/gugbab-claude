@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 956a993c-0d69-41df-9a5f-10e37ec24b3f
-  modified: 2026-10-17T06:20:42.557Z
+  modified: 2026-10-17T06:44:43.977Z
 ---
 
 2026-10-15 사용자가 하네스 개편 방향을 **shim wrapper 방식**으로 확정했다. 플러그인/마켓플레이스 전환 제안은 명시적으로 거부("공식 플러그인 이딴소리 하지말고").
@@ -27,7 +27,9 @@ metadata:
 - **2026-10-17 3단계 완료**: `install.sh`(bash, `--ref` 브랜치 시험·`--version`·`--channel`·`--uninstall [--yes]`, 태그 없으면 main, 남의 폴더·일반 파일 링크·로컬 변경은 거부) + `update.js` branch 채널(`state/channel.json` `{channel:"branch",branch}`), 테스트 `scripts/install-sh.test.js` 14. 배포 모드는 `GUGBAB_HOME` 없이 실행 → dataDir = 설치 폴더(~/gugbab, projects/·state/ 는 gitignore). bash-guard 가 명령 문자열의 `curl … | bash` 글자도 막으니 README 등은 Edit 도구로. 사용자 요청 병렬 안내 훅 `parallel-hint`(결정 26, repo-only — 레포+래퍼, 옛 복사 설치 제외, 훅 31종) — 래퍼 세션에서 안내 주입 후 조회 3개가 한 응답으로 묶이는 것 확인
 - **2026-10-17 PR #24 머지 + 결정 27 "래퍼로만 사용"**: 사용자 지시로 README 를 래퍼 설치·사용 안내로 전면 재작성(옛 project-install 안내 전부 제거), 업데이트 로그 → `docs/CHANGELOG.md`, `template-docs-counts` 의 README 템플릿 표 검사 → 프리셋 표 검사. 브랜치 `docs/readme-wrapper-only-2026-10-17`. 옛 설치 스크립트·템플릿 파일 삭제는 6단계(범위 확인 후)
 - **2026-10-17 결정 28 — 버전 = GitHub 태그(npm 아님)**. 사용자 지정 순서: README PR 머지 → `v1.0.0` 태그+Release → 사용자 실제 테스트(버그는 버전 안 올리고 `v1.0.0` 태그를 고친 커밋으로 옮김 — 원격 태그 덮어쓰기라 매번 승인, bash-guard 가 명령 문자열의 force push 글자를 막으니 사용자 직접 실행 필요할 수 있음) → 정상 확인 후 `v*` 태그 보호 → `v1.0.1` 로 업데이트 시험. `status`·`doctor` 에 버전·채널 표시(`update.js` versionInfo). 지금(태그 없음) 설치하면 main 채널 → 태그 후 설치 명령 재실행해야 stable
-- **다음**: README PR 머지 후 v1.0.0 태그 / 6단계 정리(project-install.sh·docs/templates·examples·관련 테스트 삭제 범위 제시) (그 전에 원하면 `~/.local/bin/gugbab-claude` 링크로 직접 써 보기 — 사용자에게 물어봄) → 4단계 TUI. 이전 기록: manifest.json 초안(relations.json 합침) → 남은 PoC(플러그인 링크·첫 실행 화면 포함) → 1차본 완성 후 Codex 리뷰
+- **2026-10-17 실제 설치본 시험**(사용자 `~/gugbab`, 데이터만 `GUGBAB_DATA` 임시 폴더, 실제 `claude -p` init 의 agents·slash_commands·skills·plugins 와 대조 — 스크립트 scratchpad `rt-scenario.sh`) 에서 버그: 설정 항목 이름(공백·한글)이 켜기·끄기 이름 검사에 막힘 → manifest 허용 목록 판정으로 수정. 채널 기록은 설치 폴더 우선(`readChannel`). 19/19. 브랜치 `fix/wrapper-setting-toggle-2026-10-17`
+- 채널은 설치 때 정해짐: 태그 없을 때 설치 = main 채널(태그 없이 main 머지분 받음), 태그 생긴 뒤 설치 명령 재실행해야 stable
+- **다음**: fix PR 머지 → main 에 v1.0.0 태그+Release → 사용자 설치본 재설치로 stable 확인 / 6단계 정리(project-install.sh·docs/templates·examples·관련 테스트 삭제 범위 제시) (그 전에 원하면 `~/.local/bin/gugbab-claude` 링크로 직접 써 보기 — 사용자에게 물어봄) → 4단계 TUI. 이전 기록: manifest.json 초안(relations.json 합침) → 남은 PoC(플러그인 링크·첫 실행 화면 포함) → 1차본 완성 후 Codex 리뷰
 
 **Why:** 복사 설치는 버전 갱신마다 재설치가 필요해 불편. comux처럼 별도 명령으로 감싼 프로그램을 띄우는 형태를 원함.
 **How to apply:** 개편 논의에서 플러그인 대안을 다시 꺼내지 말고 래퍼 방식 안에서 해법을 낸다. 불확실한 동작(로그인 유지·핫리로드 등)은 PoC 항목으로 명시. 관련: [[project-harness-status-2026-10-15]] [[project-install-architecture]]
