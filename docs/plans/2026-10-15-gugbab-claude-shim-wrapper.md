@@ -1,6 +1,6 @@
 # gugbab-claude 래퍼(shim wrapper) 개편 계획서
 
-> 최종 수정: 2026-10-17 · 상태: **권한 정책 확정 · PoC 1~3번 확인 · 체크리스트 반영(고정 33 · 켬 70 · 끔 217) · 묶음·의존 관리 방안 3+4 확정 · relation-guard 구현 · 개편 범위 gugbab 만(범위 밖 내용 로컬 전용) · **0~2단계 완료(15장) · 4단계 TUI·`/harness`·프리셋 완료(15.6) · 3단계 설치 `install.sh` 완료(15.7) · **5단계 릴리스 v1.0.0·v1.0.1(15.8)**, 실사용 시나리오 16장** → 다음: 사용자 1.0.x 테스트 → 태그 보호 → 6단계 정리**
+> 최종 수정: 2026-10-17 · 상태: **권한 정책 확정 · PoC 1~3번 확인 · 체크리스트 반영(고정 33 · 켬 70 · 끔 216) · 묶음·의존 관리 방안 3+4 확정 · relation-guard 구현 · 개편 범위 gugbab 만(범위 밖 내용 로컬 전용) · **0~2단계 완료(15장) · 4단계 TUI·`/harness`·프리셋 완료(15.6) · 3단계 설치 `install.sh` 완료(15.7) · **5단계 릴리스 v1.0.0·v1.0.1(15.8)**, 실사용 시나리오 16장 · **6단계 옛 복사 설치 삭제(15.9)**** → 다음: 사용자 1.0.x 실사용 테스트 → 태그 보호
 > 대상 레포: `puk0806/gugbab-claude` (PUBLIC, 기본 브랜치 `main`)
 > 이 문서와 [항목 체크리스트](2026-10-15-harness-item-checklist.md)가 원본이고, 계획서 페이지(claude.ai 아티팩트)는 이 두 파일로 만든다 — 생성 방법은 맨 끝 "문서 갱신 방법"
 
@@ -742,6 +742,14 @@ TUI 화면 예 (방안 3 을 고를 때 — 체크리스트 페이지의 "이 �
 - **v1.0.1** (PR #27 머지 8e86bfb — 화면 아이콘·Claude Code 버전 확인 훅·설정 항목 버그 수정) — 태그 + [Release](https://github.com/puk0806/gugbab-claude/releases/tag/v1.0.1). 사용자 설치본에서 1시간 확인 기록을 지우고 세션을 실행하자 **`[gugbab] 하네스 v1.0.0 → v1.0.1`** 로 자동 갱신(별도 명령 없이), 1시간 안에 다시 실행하면 확인하지 않음
 - v1.0.1 설치본으로 16장 시나리오 32/32
 - 태그 보호 규칙은 아직 안 켬 — 사용자 1.0.x 테스트가 끝나면 켠다(결정 28)
+
+### 15.9 6단계 결과 — 옛 복사 설치 삭제 (2026-10-17, 결정 27 "래퍼로만 사용")
+
+**지운 것**: `project-install.sh`(2,216줄) · 옛 설치본 도구 `scripts/install-cleanup.js`·`migrate-settings.js`·`prune-option-excluded.js`·`write-install-manifest.js`(+테스트) · 템플릿 실제 설치 E2E·소유·참조 검사 `template-separation`·`template-ownership`·`installed-refs` · 템플릿 문서 `docs/templates/` 14개 · 예시 `examples/` 16개 · `instructions-loaded` 훅(결정 21 — 옛 설치와 함께 삭제, 훅 32→31)
+
+**남기고 고친 것**: `gen-settings.js`(이 레포 settings.json 원본 생성기 — 주석 정리, instructions-loaded 배선 제거) · README·docs 수치 검사는 새 `scripts/docs-counts.test.js` 로 옮김(옛 `template-docs-counts` 의 템플릿 부분은 삭제) · `skill-index.js`(docs-counts 가 씀) · 규칙·문서의 옛 설치 언급을 래퍼 기준으로(`agent-design.md`·`docs/rules/README.md`·`docs/skills/README.md`·`.claude/skills/CLAUDE.md`, 에이전트 4개의 "설치 템플릿에 따라" → "이 프로젝트에서 꺼 두었을 수 있음") · 체크리스트·`relations.json`·`settings.json`·manifest(319 항목, 고정 33·켬 70·끔 216)
+
+**그대로 둔 것**: 스킬 `verification.md` 3개의 옛 설치 언급(과거 검증 기록, 여러 개 일괄 수정은 규칙상 따로 승인) · 계획서·CHANGELOG 의 과거 기록
 
 ## 16. 실사용 테스트 시나리오 — `scripts/wrapper-e2e.sh` (2026-10-17 사용자 요청)
 

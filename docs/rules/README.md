@@ -4,7 +4,7 @@
 
 규칙 파일 위치: `.claude/rules/`
 
-설치 조합은 `project-install.sh`가 결정한다 — 공통(`RULES_COMMON`) 중 작성 도구 규칙 5종은 "작성 도구" 옵션을 켰을 때만, util 템플릿은 `RULES_UTIL` 2종만 받는다.
+래퍼(`gugbab-claude`)에서는 프로젝트마다 `/harness` 로 켜고 끈다 — 🔒 고정 규칙(info-verification·task-workflow·verification-policy)은 끌 수 없고, 나머지 기본값은 [항목 체크리스트](../plans/2026-10-15-harness-item-checklist.md) 를 따른다. (옛 복사 설치 `project-install.sh` 는 2026-10-17 삭제)
 
 ---
 
