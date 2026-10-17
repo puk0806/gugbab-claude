@@ -1,6 +1,6 @@
 # gugbab-claude 래퍼(shim wrapper) 개편 계획서
 
-> 최종 수정: 2026-10-16 · 상태: **권한 정책 확정 · PoC 1~3번 확인 · 체크리스트 반영(고정 31 · 켬 70 · 끔 217) · 묶음·의존 관리 방안 3+4 확정 · relation-guard 구현 · 개편 범위 gugbab 만(범위 밖 내용 로컬 전용) · 구현(래퍼 본체)은 시작 전 → 다음: manifest 초안 + 남은 PoC**
+> 최종 수정: 2026-10-17 · 상태: **권한 정책 확정 · PoC 1~3번 확인 · 체크리스트 반영(고정 32 · 켬 70 · 끔 217) · 묶음·의존 관리 방안 3+4 확정 · relation-guard 구현 · 개편 범위 gugbab 만(범위 밖 내용 로컬 전용) · **0~2단계 완료(15장) · 4단계 TUI·`/harness`·프리셋 완료(15.6) · 3단계 설치 `install.sh` 완료(15.7) — 브랜치로 한 줄 설치 시험 가능** → 다음: 5단계 첫 릴리스**
 > 대상 레포: `puk0806/gugbab-claude` (PUBLIC, 기본 브랜치 `main`)
 > 이 문서와 [항목 체크리스트](2026-10-15-harness-item-checklist.md)가 원본이고, 계획서 페이지(claude.ai 아티팩트)는 이 두 파일로 만든다 — 생성 방법은 맨 끝 "문서 갱신 방법"
 
@@ -87,12 +87,13 @@ curl -fsSL https://raw.githubusercontent.com/puk0806/gugbab-claude/main/install.
 
 | 옵션 | 기본값 | 설명 |
 |---|---|---|
+| `--ref <브랜치\|태그>` | (없음) | **2026-10-17 추가** — 받을 브랜치·태그. 브랜치면 `branch` 채널로 그 브랜치를 계속 따라 최신화 (PR 머지 전 시험용) |
 | `--version vX.Y.Z` | (없음) | 특정 버전으로 설치·고정 (자동 업데이트 중지) |
 | `--channel stable\|main` | `stable` | 업데이트를 받을 채널. stable = `v*` 태그 중 최신 |
 | `--dir PATH` | `~/gugbab` | 설치 위치 |
 | `--bin-dir PATH` | `~/.local/bin` | 실행 파일 링크 위치 |
-| `--share-history` / `--no-share-history` | 질문 | 그냥 `claude`와 대화기록·메모리 공유 여부 (결정 2) |
-| `--yes` | 끔 | 모든 질문에 기본값으로 답함 (CI·비대화) |
+| ~~`--share-history`~~ | — | 2026-10-17 구현에서 뺌 — 대화기록·메모리는 항상 공유(결정 2, 조립이 `projects/` 링크) |
+| `--yes` | 끔 | 묻지 않고 진행 (제거 확인 포함, CI·비대화) |
 | `--uninstall` | — | 링크·설치 폴더 제거 (대화기록 폴더는 묻고 삭제) |
 
 ### 3.2 install.sh 동작 순서
@@ -163,7 +164,7 @@ $ gugbab-claude [claude 인자 그대로 전달]
 - 화면 출력을 파싱하지 않고 각 도구의 공식 명령만 쓰므로 claude·comux 업데이트에 영향을 덜 받는다.
 - comux 명령(`split --from`·`send`)은 2026-10-15 설치된 comux 에서 존재 확인. comux 에는 팝업 명령이 없어 창 나누기 방식을 쓴다.
 
-### 5.2 화면 (Node `@inquirer/prompts` 체크박스 — 비활성 항목 표시 지원)
+### 5.2 화면 (2026-10-17 구현 — Node 기본 readline, 의존성 없음 · 결정 24)
 
 ```
  gugbab 하네스 · my-ui                 범위: [이 프로젝트]  모든 프로젝트
@@ -315,12 +316,14 @@ GUGBAB_HOME="$PWD" gugbab-claude      # 작업 트리의 harness/를 바로 사�
 | 1 | `CLAUDE_CONFIG_DIR` 변경 시 재로그인 필요 여부 — **프로젝트마다 설정 폴더가 다를 때도 로그인이 공유되는가** (프로젝트마다 다시 로그인하면 안 됨)<br>**2026-10-16 확인 (claude 2.1.296): `CLAUDE_CONFIG_DIR` 만 바꾸면 "Not logged in"** — 키체인 이름이 `Claude Code-credentials-<설정 폴더 경로 해시 8자>` 로 바뀌기 때문. **`CLAUDE_SECURESTORAGE_CONFIG_DIR=`(빈 값)을 함께 주면 기본 키체인 항목을 그대로 써서 로그인 공유됨** (새 키체인 항목 안 생김). 문서에 없는 내부 변수라 `doctor` 가 매번 점검 | ① 로그인 정보 파일만 공용 위치로 링크 ② 그래도 안 되면 설정 폴더를 하나(`~/gugbab/.claude`)로 두고 프로젝트별 차이는 디스패처·`--settings`·`--add-dir` 로 주입 (초기 설계로 후퇴) |
 | 2 | 그 폴더의 skills·agents·commands·rules·CLAUDE.md·settings 훅이 모두 로드되는가<br>**2026-10-16 확인: 통과** — CLAUDE.md·`rules/` 내용이 시스템 프롬프트에 들어가고, 스킬·에이전트 호출, 커맨드 실행, settings.json 훅(UserPromptSubmit) 실행 모두 됨. 설정 폴더마다 `.claude.json`(첫 실행 상태 등)이 따로 생김 | 로드 안 되는 종류만 `--settings`·`--append-system-prompt-file`·`--add-dir`로 주입 |
 | 3 | 심볼릭 링크로 넣은 skills·rules가 인식되는가<br>**2026-10-16 확인: 통과** — 항목별 링크(스킬 폴더·에이전트·커맨드·룰 파일·CLAUDE.md·settings.json) 모두 인식, 실행 후에도 링크 유지. 단 `settings.json` 은 Claude 가 설정 저장 시 덮어쓸 수 있으므로 조립 때 **일반 파일로 생성** | 링크 대신 복사(조립 시) |
-| 4 | 디스패처 방식에서 exit 2 차단·JSON 결정이 정상 전달되는가 | 훅별 개별 연결 + 조립 시 settings 재생성 |
-| 5 | 커스텀 커맨드의 셸 실행에서 `comux split --from` + `send` 로 옆 창에 TUI 를 띄울 수 있는가 (tmux 는 `display-popup`) | comux 단축키(mux.toml `[keys]`)로 TUI 실행 |
-| 6 | 스킬·커맨드 변경이 실행 중 세션에 즉시 반영되는가 | 재시작 흐름에 포함 |
-| 7 | `/exit` 후 래퍼 반복 실행으로 `claude --continue` 가 대화를 이어가는가 | "재시작 필요" 안내만 표시 |
-| 8 | 대화기록 공유용 `projects/` 링크가 문제없는가 | 분리 운영 + 메모리만 동기화 |
-| 9 | `curl \| bash`에서 `/dev/tty` 질문이 동작하는가 | `--yes` 기본값 + 설치 후 `gugbab-claude config` |
+| 4 | 디스패처 방식에서 exit 2 차단·JSON 결정이 정상 전달되는가<br>**2026-10-16 확인: 통과** — 디스패처 하나를 거쳐도 exit 2 차단(stderr 그대로), PreToolUse JSON `permissionDecision: deny`, UserPromptSubmit `additionalContext` 모두 claude 까지 전달 | 훅별 개별 연결 + 조립 시 settings 재생성 |
+| 5 | 커스텀 커맨드의 셸 실행에서 `comux split --from` + `send` 로 옆 창에 TUI 를 띄울 수 있는가 (tmux 는 `display-popup`) — 4단계에서 확인 | comux 단축키(mux.toml `[keys]`)로 TUI 실행 |
+| 6 | 스킬·커맨드 변경이 실행 중 세션에 즉시 반영되는가<br>**2026-10-16 확인: 통과** — 세션이 떠 있는 동안 설정 폴더에 새 커맨드·스킬을 넣자 바로 `/커맨드` 실행·스킬 목록에 나타남 (재시작 불필요). 룰·CLAUDE.md·에이전트는 재시작 대상으로 유지 | 재시작 흐름에 포함 |
+| 7 | `/exit` 후 래퍼 반복 실행으로 `claude --continue` 가 대화를 이어가는가<br>**2026-10-16 확인: 통과** — `-p` 로 단어 기억 → `--continue` 로 기억 확인, 래퍼 대화형 실측(룰 끄기 → 재시작 표시 → `/exit` → 래퍼가 `--continue` 로 다시 띄움 → 이전 대화 기억)까지 통과. `-p`(한 번 실행)는 대화형으로 바뀌지 않게 다시 띄우지 않고 안내만 | "재시작 필요" 안내만 표시 |
+| 8 | 대화기록 공유용 `projects/` 링크가 문제없는가<br>**2026-10-16 확인: 통과** — 대화기록이 원래 `~/.claude/projects/<인코딩>/` 에 쌓임. 단 훅에 들어오는 경로가 링크 경로(`설정폴더/projects/…`)라 메모리·계획 경로 판정 훅 3개(task-confirm-guard·auto-approve·session-export)를 실제 위치 기준으로 고침 | 분리 운영 + 메모리만 동기화 |
+| 9 | `curl \| bash`에서 `/dev/tty` 질문이 동작하는가 — 3단계에서 확인 | `--yes` 기본값 + 설치 후 `gugbab-claude config` |
+| + | 플러그인을 `plugins/` 링크로 넣으면 보이는가<br>**2026-10-16 확인: 통과** — `claude plugin list` 에 superpowers·codex·vercel 이 그대로 보이고 `superpowers:brainstorming` 스킬 사용 가능. 켜고 끄기는 조립한 `settings.json` 의 `enabledPlugins` 로 | 조립 때 플러그인 설정 복사 |
+| + | 설정 폴더마다 첫 실행 화면이 다시 나오는가<br>**2026-10-16 확인: 나옴 → 해결** — 새 설정 폴더는 테마 선택(온보딩)이 다시 뜸. 조립 때 `~/.claude.json` 의 `hasCompletedOnboarding`·`lastOnboardingVersion`·`theme` 과 그 폴더의 `hasTrustDialogAccepted` 만 옮기면 바로 입력 화면 (계정 정보 등 다른 값은 옮기지 않음). 처음 여는 폴더의 신뢰 확인은 그냥 `claude` 와 같이 한 번 뜸 | — |
 
 ---
 
@@ -396,15 +399,27 @@ force push · 푸시된 커밋을 지우는 `reset --hard` · `gh repo delete` �
 | 16 | 관계 원본 + 검사 훅 (2026-10-16) | 관계 분류는 레포 최상위 **`relations.json`**(1단계에서 manifest 로 합침). 새 훅 **`relation-guard`**(harness-authoring) 가 훅·에이전트·스킬·룰·커맨드 저장 때 분류 안 된 새 언급·소속 없는 새 항목을 알리고, `git commit` 때 하나라도 있으면 차단. `scripts/relations.test.js` 로 레포 전체 정합성 검사 |
 | 17 | Codex 리뷰 시점 (2026-10-16) | 개편 **1차본을 전부 완성한 뒤 맨 마지막에** 한 번. 그 전까지 `codex.skipReview` 로 중지 유지 |
 | 18 | 개편 범위 (2026-10-16) | **gugbab 하네스만** 개편한다. 범위 밖(업무용 프로젝트 관련) 메모리·세션 요약·분석 문서는 git 추적에서 빼고 **로컬에만** 둔다(`.git/info/exclude` — 커밋되는 `.gitignore` 에 이름을 적지 않음, 목록은 로컬 메모리 `local_index.md`). 공유 문서의 예시 프로젝트 이름은 중립 이름(`my-ui`). 예전 커밋 이력 정리는 개편 완성 후 결정(force push 필요) |
+| 19 | `harness/` 폴더 이동 시점 (2026-10-16) | **6단계로 미룸** — 1·2단계는 manifest 가 지금 `.claude/` 아래 경로를 그대로 가리킨다(하네스 원본 위치 = `GUGBAB_HOME/.claude`). 아직 쓰는 `project-install.sh`·기존 설치본이 깨지지 않게, 실제 이동은 `project-install.sh` 를 지울 때 함께 한다 |
+| 20 | 루트 하네스 무관 폴더 정리 (2026-10-16) | **미룸** — 2단계 동작과 무관하고 폴더별 확인이 필요해 이후 따로 진행 (6번 결정의 시점만 변경) |
+| 21 | `instructions-loaded` 파일 삭제 시점 (2026-10-16) | **6단계로 미룸** — manifest 에서 이미 "끔"이라 래퍼는 실행하지 않는다(폐지 효과는 지금 적용). 파일·배선 삭제는 아직 쓰는 `project-install.sh` 설치 목록·설정 이관 스크립트(`migrate-settings`)와 그 테스트·템플릿 문서 9곳에 걸려 있어, 결정 19 처럼 `project-install.sh` 를 지울 때 함께 한다 |
+| 22 | 하네스 레포 자신을 래퍼로 열 때 (2026-10-16) | 레포 `.claude/` 가 같은 훅·항목을 이미 직접 가지고 있으므로 래퍼는 **프로젝트가 가진 것은 건너뛴다**(같은 이름 스킬·룰·에이전트·커맨드, 프로젝트 settings 에 연결된 같은 훅 — 두 번 실행·중복 방지). 공통 CLAUDE.md 도 넣지 않는다(레포 CLAUDE.md 가 상위 집합). 레포 `.gugbab.json` 은 6단계(레포 자체 배선 제거) 뒤 실제로 쓰인다 |
+| 23 | 충돌 판정의 "블록을 켰다" (2026-10-16 실측 버그) | 블록·묶음은 **이름으로 켰거나 구성원이 전부 켜졌을 때만** 켜진 것으로 본다. 체크리스트에서 nexacro 블록의 에이전트 일부를 모든 프로젝트 기본 켬으로 해 두어, "하나라도 켜짐" 규칙이면 모든 프로젝트에서 tdd-guard 가 꺼지는 문제가 실제 실행에서 드러남 |
+| 24 | TUI 구현 방식 (2026-10-17, 결정 5 의 화면 부분 변경) | **Node 기본 `readline` 으로 직접 구현, npm 의존성 없음** — `@inquirer/prompts` 체크박스로는 Tab 범위 전환·`/` 검색·묶음 일부 켬(`[-] 1/6`) 표시·프리셋 화면을 함께 넣을 수 없고, 설치 단계 전이라 의존성이 없는 편이 단순. 상태 계산·그리기는 순수 함수로 나눠 테스트(`cli/tui.js`) |
+| 25 | 덮여 있어도 기록은 남김 (2026-10-17 실측 버그) | 켜기·끄기는 **이 프로젝트에서 위쪽 층(프로젝트 설정·`.gugbab.json`)이 덮어 안 바뀌어도 고른 범위에 기록**하고 이유만 보여 준다. "모든 프로젝트" 범위에서 끈 것이 지금 연 프로젝트가 켬으로 덮고 있다는 이유로 기록되지 않아 다른 프로젝트에도 반영되지 않던 문제가 실측에서 드러남. 🔒 고정은 기록하지 않음. 같은 층에서는 끔이 켬을 이기므로, 켤 때는 그 항목을 덮는 끔 기록을 걷어낸다(묶음 끔이면 나머지 구성원 끔으로 풂) |
+| 26 | 병렬 실행 안내 훅 `parallel-hint` (2026-10-17 사용자 요청) | 비차단 안내만. 요청에 독립 작업이 여럿이면 병렬 요령 주입(UserPromptSubmit), 읽기 전용 단일 호출 3연속이면 한 번 알림(PostToolUse). **이 레포 + 래퍼 전용**(relation-guard 와 같은 `repo-only` — 옛 복사 설치에는 넣지 않음, 이전 방식은 6단계에 정리), **🔒 고정(2026-10-17 사용자 결정 — 어느 프로젝트에서도 끌 수 없음)**, `relations.json` standalone |
 
-### 지금 어디까지 왔나 (2026-10-16)
-- **구현은 아직 시작 전** — 9장 기준 0단계 PoC 는 1~3번만 확인, 1단계는 준비물(`relations.json`·`relation-guard`·체크리스트 기본값 `defaults.json`·계획 페이지 생성기)만 완료. 래퍼 본체(2단계)·설치(3단계)·`/harness` TUI(4단계)·릴리스·이전·문서(5~7단계)는 미착수
-- 위 준비물과 이 계획서는 1단계 전에 먼저 한 번 커밋한다
+### 지금 어디까지 왔나 (2026-10-17)
+- **0~2단계 완료** (15장 계획대로, 결과는 15.5) — PoC 4·6·7·8·플러그인·첫 실행 화면 확인, `manifest.json` 생성기, 훅 경로 수정 6개, 상태줄 수정, `bin/gugbab-claude` + `cli/` 래퍼 핵심. 이 레포에서 `GUGBAB_HOME=$PWD bin/gugbab-claude` 로 실제 세션이 열린다
+- **4단계 완료** (2026-10-17, 결과는 15.6) — 켜기·끄기 화면(TUI), 세션 안 `/harness`(comux 옆 창 · tmux 팝업 · macOS 새 창), 프리셋 13개, 안 바뀐 이유 표시. 사용자 요청으로 3단계보다 먼저 진행. comux 옆 창으로 실제 토글 확인
+- **3단계 완료** (2026-10-17, 결과는 15.7) — `install.sh` + branch 채널, 병렬 안내 훅(결정 26)
+- 남은 단계: 5 첫 릴리스 · 6 이전(설치본 정리·`project-install.sh` 삭제·`harness/` 이동·`instructions-loaded` 삭제) · 7 문서 · 맨 마지막 Codex 리뷰
 
 ### 다음 단계
 1. ~~14장 관리 방안 결정~~ → 2026-10-16 방안 3+4 확정(15번), `relations.json` + `relation-guard` 구현(16번)
-2. `manifest.json` 초안 작성 (locked·default + `relations.json` 의 묶음·블록·의존·충돌을 합침)
-3. 남은 PoC (10장 4~9번 + 플러그인 링크·첫 실행 화면)
+2. ~~0~2단계 구현~~ → 2026-10-16 완료 (15.5)
+3. ~~4단계 TUI·`/harness`~~ → 2026-10-17 완료 (15.6)
+4. ~~3단계 설치~~ → 2026-10-17 완료 (15.7) — 사용자가 브랜치로 설치부터 시험
+5. 5단계 첫 릴리스(`v1.0.0` 태그) — PR 머지 후
 
 ---
 
@@ -587,6 +602,122 @@ TUI 화면 예 (방안 3 을 고를 때 — 체크리스트 페이지의 "이 �
 - 새 훅·에이전트·스킬을 만들면: ① 블록이나 묶음에 넣고 ② 새로 생긴 언급을 `edges`(또는 `requires`)에 분류하고 ③ 훅·룰·커맨드면 `checklist-head.md` 에 항목 줄을 추가한다 — 빠뜨리면 커밋이 막힌다.
 
 ---
+
+## 15. 0~2단계 구현 계획 (2026-10-16 승인)
+
+목표: 이 레포에서 `GUGBAB_HOME=$PWD ./bin/gugbab-claude` 로 실제 세션이 열리고, 로그인 공유·스킬·룰 로드·디스패처를 거친 훅 차단이 실제로 동작하는 상태. 설치(`install.sh`)는 3단계, `/harness` TUI 는 4단계라 이번 범위가 아니다. 끝나면 원할 때 `~/.local/bin/gugbab-claude` 링크 하나로 다른 폴더에서도 실행해 볼 수 있다.
+
+### 15.1 0단계 — 남은 PoC (세션 임시 폴더, 레포 수정 없음)
+
+| # | 확인 | 결과가 2단계에 주는 영향 |
+|---|---|---|
+| 4 | 디스패처 하나로 묶었을 때 exit 2 차단·JSON 결정(deny/ask/allow)·`additionalContext` 가 claude 까지 그대로 전달되는가 | 실패하면 훅별 개별 연결 + 조립 시 settings 재생성 |
+| 6 | 스킬·커맨드 변경이 실행 중 세션에 즉시 반영되는가 | 재시작이 필요한 종류 목록 확정 |
+| 7 | `/exit` 후 `claude --continue` 가 대화를 이어가는가 | 반복 실행 구조 포함 여부 |
+| 8 | `projects/` 링크로 대화기록·메모리 공유 시 문제없는가 | memory 훅 경로 계산 점검 |
+| + | `plugins/` 링크로 플러그인(superpowers·codex·vercel)이 보이는가 | 실패하면 조립 때 플러그인 설정 복사 |
+| + | 설정 폴더마다 첫 실행 화면이 다시 나오는가 | 나오면 `.claude.json` 완료 표시 미리 넣기 |
+
+5번(comux 창)은 4단계, 9번(`/dev/tty`)은 3단계에서 확인한다.
+
+### 15.2 1단계 — manifest
+
+1. `scripts/build-manifest.js` → 레포 최상위 `manifest.json` **생성**(손으로 고치지 않음). 재료: 체크리스트 고정·켬·끔(`checklist-head.md` + `defaults.json`), 지금 `.claude/settings.json` 의 훅 연결(이벤트·matcher·timeout·인자), `relations.json`(묶음·블록·의존·충돌), `gen-settings` 의 권한 목록. 재생성 결과가 같은지 테스트로 확인
+2. 이 레포 전용 `.gugbab.json` — 하네스 제작 검사 `lock`
+3. 훅 경로 점검 — 훅마다 자기 위치 기준 경로와 대상 프로젝트 `.claude/` 경로 중 무엇을 쓰는지 확인하고 래퍼 실행 때 깨지는 곳 수정 (예: codex-review-guard 가 프로젝트 `settings.json` 에서 플러그인을 읽음)
+4. 작은 정리: `statusline.sh` 결함 2건, `instructions-loaded` 훅 폐지
+5. 결정 19 대로 파일 이동 없음 — manifest 경로는 `.claude/` 기준
+
+### 15.3 2단계 — 래퍼 핵심 (Node 기본 기능만, npm 의존성 없음)
+
+| 파일 | 하는 일 |
+|---|---|
+| `bin/gugbab-claude` (POSIX sh) | `GUGBAB_HOME` 결정 → 업데이트 → 조립 → `CLAUDE_CONFIG_DIR=… CLAUDE_SECURESTORAGE_CONFIG_DIR= claude "$@"` · 재시작 표시 있으면 `--continue` 로 다시 · `--raw` 는 하네스 없이 |
+| `cli/project.js` | git 최상위로 프로젝트 이름, `~/gugbab/projects/<이름>/`, 같은 이름은 해시 붙임, `index.json` |
+| `cli/resolve.js` | 적용 순서(고정 > `.gugbab.json` > 프로젝트 > profile > 기본값) + 14장 처리 순서 A→B→C→B + 필수 의존 경고 |
+| `cli/compose.js` | 켜진 항목만 링크, `settings.json` 은 일반 파일(이벤트마다 디스패처 하나), `projects/`·`plugins/` 링크, 바뀐 게 없으면 건너뜀 |
+| `cli/hook.js` | 디스패처 — 켜진 훅만 순서대로, exit 2 차단, 결정 deny > ask > allow, 안내 이어붙임, 시간 초과·오류 기록, 잠금 훅 항상 실행, `GUGBAB_ENABLED` 전달 |
+| `cli/update.js` | 1시간에 한 번 3초 제한 fetch, fast-forward 만, 개발 모드에선 끔 |
+| `cli/doctor.js` · `cli/status.js` | 링크·훅·버전·로그인 공유(내부 변수) 점검 / 현재 켜진 항목 |
+| `.claude/hooks/auto-approve.js` | 12장 권한 정책 반영 |
+
+테스트(정상·악성·경계): `.gugbab.json` 에 `../../evil.js`, 잠금 훅 끄기 시도, 변조된 manifest, 설정 폴더 밖을 가리키는 링크 / 빈 stdin, 깨진 JSON, timeout, 공백 경로, 동시 실행.
+
+완료 기준: 이 레포에서 개발 모드 실제 세션 — 로그인 공유, 스킬·룰 로드, task-confirm-guard 등 훅이 디스패처를 거쳐 차단 + 기존 테스트 전부 통과.
+
+### 15.4 진행 방식
+- 브랜치: `feat/shim-wrapper-relation-guard-2026-10-16` 에서 이어서 (branch-protection 이 피처 브랜치에서 새 브랜치 생성을 막음 — 앞 작업이 아직 머지 전이라 같은 브랜치 사용)
+- 단계마다 짧게 보고, PoC 결과로 설계가 바뀌면 그 자리에서 계획서·페이지 갱신. 커밋·PR 은 요청 시, Codex 리뷰는 결정 17 대로 맨 마지막
+
+### 15.5 결과 (2026-10-16 완료)
+
+**만든 것**
+
+| 파일 | 내용 |
+|---|---|
+| `bin/gugbab-claude` | 실행 진입점(POSIX sh). 링크를 따라 자기 위치를 찾고, `prepare` → `CLAUDE_CONFIG_DIR=… CLAUDE_SECURESTORAGE_CONFIG_DIR= claude "$@"`. 재시작 표시가 있으면 `--continue` 로 다시(`-p` 는 안내만). `--raw`·하위 명령(`status`·`doctor`·`update`·`on`·`off`) |
+| `cli/paths.js` · `project.js` · `layers.js` | 위치(코드 = `GUGBAB_HOME`, 데이터 = `GUGBAB_DATA` > 개발 모드 `~/.gugbab-dev` > 코드 폴더), 프로젝트 이름(겹치면 해시 4자, `index.json`), 적용 층 읽기·쓰기(고정은 `.gugbab.json` 에서만) |
+| `cli/resolve.js` | 적용 순서 + 14장 처리 순서(A 펼치기 → B 채우기 → C 정리 → B 재검사), 고정 전파, 고정 끄기 거부 목록 |
+| `cli/compose.js` | 켜진 항목 링크 · `projects/`·`plugins/`·`plans/` 링크 · `settings.json`(일반 파일, 이벤트마다 디스패처 하나, 사용자가 넣은 값 보존) · `.claude.json` 첫 실행 표시. 프로젝트가 가진 것은 건너뜀(결정 22) |
+| `cli/hook.js` | 디스패처 — exit 2 즉시 차단, deny > ask > allow, 안내 이어붙임, 시간 초과·크래시는 `logs/hook-errors.log` 에 남기고 계속, hooks 폴더 밖 파일 거부, `GUGBAB_ENABLED` 전달, manifest 를 못 읽으면 도구 이벤트는 막음 |
+| `cli/update.js` · `doctor.js` · `status.js` · `main.js` | 1시간·3초 fetch + fast-forward 만 / 점검(로그인 공유 내부 변수 매번 안내) / 요약 / 하위 명령 |
+| `scripts/build-manifest.js` → `manifest.json` | 체크리스트 + settings + relations 로 생성(318 항목 · 이벤트 7). 레포 테스트가 "최신인지" 검사 |
+| `docs/plans/page/parse-checklist.js` | 체크리스트 읽기 공용(페이지·manifest 같은 규칙) |
+| `.claude/CLAUDE.common.md` · `.claude/commands/harness.md` · `.gugbab.json` | 공통 규칙 문서, `/harness`(지금은 상태 보기 + `on`/`off` 명령 — TUI 는 4단계), 이 레포 전용 설정 |
+
+**고친 훅** — `auto-approve`(12장 권한 정책: 신규 자동 6 · 신규 확인 6 · Drive `update_file` 확인 · ArtifactData 삭제 확인), `task-confirm-guard`·`session-export`(링크 경로를 실제 위치로 판정), `codex-review-guard`·`bash-guard`·`config-change-audit`(설정 폴더 `settings.json` 도 읽음), `statusline.sh`(PENDING_TEST 를 verification.md frontmatter 기준으로 — 실제 14개, ` | ` 구분자)
+
+**실측** (일반 터미널과 같게 이 세션의 `CLAUDE_CODE_*` 환경변수를 빼고 실행, 데이터는 임시 폴더)
+- `.claude` 없는 시험 프로젝트: 로그인 공유, 공통 CLAUDE.md·룰 로드, 디스패처를 거친 한국어·확인 절차 안내 주입, 승인 없는 Write 차단(task-confirm-guard), main push 차단(branch-protection), `off hook:branch-protection` 후 다음 호출부터 bash-guard 메시지로 바뀜(재시작 없이), 고정 끄기 거부, 대화형 재시작 → `--continue` 로 대화 유지
+- 이 레포 개발 모드: 세션 정상, 레포가 직접 연결한 훅 28개·항목 215개는 건너뜀(중복 실행 없음)
+
+**테스트** — cli 11개 파일 · 페이지 4개 파일 134개, scripts 12개 파일(새 `build-manifest` 10), 훅 30개 파일(새 `statusline` 7, auto-approve 124 등) 전부 통과
+
+### 15.6 4단계 결과 — 켜기·끄기 화면 · `/harness` · 프리셋 (2026-10-17 완료)
+
+**만든 것**
+
+| 파일 | 내용 |
+|---|---|
+| `cli/tui.js` | 화면. 묶음 → 스택 블록 → 종류별 항목 순 목록, `[x]`·`[ ]`·`[-] 1/6`(일부 켬)·🔒, 바꾼 줄 `*`, "● 저장 안 됨". 키: ↑↓ · Space · Tab(이 프로젝트 ↔ 모든 프로젝트) · `/` 검색 · `p` 프리셋 · Enter 저장 · q 닫기(바꾼 게 있으면 한 번 확인). 한글 2칸 폭 계산, 제어문자·이스케이프 제거. 저장 때는 화면에서 한 동작을 **그때의 파일 위에 다시 적용**(화면을 연 뒤 다른 세션이 바꾼 것 보존). 프로젝트 자체 `.claude` 가 가진 항목은 `↷ 자체 .claude 우선` 표시 |
+| `cli/apply.js` | 켜기·끄기 기록 규칙 공용(CLI·화면) — 같은 층 정리(결정 25), 프리셋 적용, 안 바뀐 이유(🔒 체크리스트 고정 / `.gugbab.json` 고정 / 위쪽 층이 덮음 / 의존·충돌 / 이미 그 상태), 저장 → 다시 계산 → 조립 → 재시작 표시 |
+| `cli/open.js` | 화면 띄울 곳 — comux(`split --from $COPAD_MUX_PANE` → `send`), tmux(`run-shell -b` + `display-popup`), macOS(osascript 새 터미널 창), 그 밖 안내. 경로는 작은따옴표로 감싸고 줄바꿈 경로·이상한 창 토큰은 거부 |
+| `cli/main.js` | `preset [이름] [--all]`, `harness`(터미널에서 화면), `harness --open [--dry-run]`(/harness 가 부름), `on`/`off` 가 안 바뀐 이유를 함께 출력 |
+| `bin/gugbab-claude` | claude 를 띄우기 전에 `$GUGBAB_HOME/bin` 을 PATH 앞에 — `/harness` 가 `${…}` 변수 없이 `gugbab-claude` 를 부를 수 있게 |
+| `.claude/commands/harness.md` | 인자 없으면 화면 열기, `on`/`off`/`preset` 은 명령으로 |
+| `relations.json` `presets` | 템플릿 → 블록 조합 13개(nextjs · java-legacy · java-modern · rust · python · unity · dream · fortune · health · nexacro + 애드온 seo-geo · spec-extraction · n8n). `build-manifest` 가 이름·구성(블록·묶음만) 검사 후 manifest 로 |
+
+**실측에서 찾아 고친 문제**
+1. **`/harness` 가 아예 동작하지 않음** — 커맨드 안 `${GUGBAB_HOME:-…}` 를 Claude Code 가 "실행 전에 검사할 수 없는 변수"로 거부(`Shell command permission check failed`). → 래퍼가 PATH 를 넣고 커맨드는 `gugbab-claude` 이름만 사용
+2. **모든 프로젝트 범위 끄기가 기록되지 않음** — 연 프로젝트가 켬으로 덮고 있으면 화면이 기록 자체를 건너뜀 → 결정 25
+3. 묶음을 끈 뒤 그 안 항목 하나를 켜도 안 켜짐(같은 층에서 끔이 이김) → 결정 25
+4. 안 바뀌면 "바뀐 항목 없음"만 나옴 → 이유 표시. `status` 의 기본값과 다른 항목 목록이 수백 개 그대로 찍힘 → 12개 + 개수
+
+**실측** (이 세션의 `CLAUDE_CODE_*` 를 뺀 일반 터미널 조건, 홈 아래 시험 프로젝트 2개 A·B, 데이터는 임시 폴더)
+- 명령: 이 프로젝트만 끄기 / `--all` / 우선순위(프로젝트 > 모든 프로젝트) / 고정 거부 / 묶음·블록 / `.gugbab.json` lock / 이상 입력 — 25개 확인 통과
+- 화면(pty 에 실제 키 입력): 묶음 끄고 저장 → 실제 claude 세션에서 tdd-guard 안 돎 → 검색으로 tdd-guard 만 켬 → 다시 돎 → 모든 프로젝트 범위로 끔 → B 에선 안 돌고 A 는 이유 표시하며 유지 → B 에서 다시 켬 → 돎 · 프리셋 rust · 🔒 거부 · 저장 안 하고 닫기 확인 · 바꾼 것 없이 Enter
+- 실제 claude 세션의 `/harness`: 상태·고정 거부·묶음 끄기·프리셋 목록, 인자 없으면 **comux 옆 창이 실제로 열림** → 그 창에 키를 보내 켜고 저장 → 재시작 표시 생성 → 창 닫힘
+- 확인 못 한 것: tmux(이 PC 에 없음 — 계획만 `--dry-run` 확인), macOS 새 터미널 창(AppleScript 문법만 `osacompile` 로 확인, 실제 창은 안 엶)
+
+**테스트** — 새 `apply` 13 · `open` 11 · `tui` 19, `main`·`bin`·`status`·`layers`·`build-manifest` 보강. 전체 병렬 실행 결과는 README 2026-10-17 행
+
+---
+
+### 15.7 3단계 결과 — 설치 `install.sh` (2026-10-17)
+
+**만든 것**
+- `install.sh` (bash, 전체를 `main()` 으로 감싸 반쪽 다운로드 실행 방지, sudo 없음) — 도구 확인(git·node 18+·claude 는 없으면 경고만) → `~/gugbab` 에 clone(이미 우리 설치본이면 fetch 후 갱신, 로컬 변경이 있으면 멈춤, 남의 폴더면 멈춤) → 꺼낼 버전 결정(`--version` 고정 / `--ref` 브랜치·태그 / 기본 stable 태그, **태그가 아직 없으면 main**) → `state/channel.json` 기록 → `~/.local/bin/gugbab-claude` 링크(일반 파일이 있으면 멈춤) → PATH 안내 → `gugbab-claude doctor`. `--uninstall` 은 우리 링크·우리 설치본만 지운다
+- 계획서 3.2 와 달라진 점: npm 의존성 단계 없음(결정 24), 대화기록 공유 질문 없음(항상 공유), 셸 설정 자동 수정 없음(넣을 한 줄만 안내), `--ref` 추가
+- `cli/update.js` 에 **branch 채널** — `--ref <브랜치>` 로 설치하면 실행할 때 `origin/<브랜치>` 로 fast-forward. 브랜치 이름은 옵션처럼 보이는 이름·`..` 거부
+- 테스트 `scripts/install-sh.test.js` 14개 — 임시 HOME + 임시 git 원격으로 실제 설치·재설치·제거 (악성: 옵션·경로 조작 브랜치 이름, 홈·루트·상대경로 설치 위치, 남의 폴더 설치·제거, 링크 자리 일반 파일, 로컬 변경 덮어쓰기 / 경계: 없는 브랜치·잘못된 버전·채널, 원격 불통, 래퍼 없는 브랜치)
+
+**실측 (푸시 전 — 작업 트리 스냅샷을 임시 원격으로, 임시 HOME 에 설치)**
+- `install.sh --ref <브랜치>` → clone · 링크 · `state/channel.json`(`branch`) · doctor 출력까지 정상. 설치된 `gugbab-claude` 가 PATH 에서 잡히고, 배포 모드(`GUGBAB_HOME` 없음)에서 `status` · `preset rust` · `harness --open --dry-run`(comux 옆 창 계획) 동작. 프로젝트 설정은 설치 폴더 `projects/` 에 쌓이고 설치 폴더 git 은 깨끗(gitignore)
+- 원격 브랜치에 새 커밋 → `gugbab-claude update` 가 그 브랜치로 fast-forward (`2a82da3 → … 9053fb8`)
+- `--uninstall --yes` → 우리 링크·설치 폴더만 삭제, 프로젝트 폴더는 그대로
+- 임시 HOME 에선 macOS 키체인이 없어 doctor 가 로그인 경고를 냄(실제 홈에선 해당 없음). doctor 의 "/harness … 4단계" 옛 문구 정리
+
+**실측 (푸시 후 — GitHub 에서 받아 설치)** — (푸시 후 채움)
 
 ## 문서 갱신 방법
 

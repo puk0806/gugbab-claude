@@ -21,6 +21,12 @@ Claude Code를 효과적으로 활용하기 위한 **에이전트(Agent)**, **�
 ```
 gugbab-claude/
 ├── CLAUDE.md        ← 프로젝트 공통 규칙
+├── install.sh       ← 래퍼 한 줄 설치 (README "래퍼로 쓰기", --ref 로 브랜치 시험)
+├── bin/gugbab-claude ← 래퍼 실행 진입점 (설치 후 gugbab-claude, 개발 모드: GUGBAB_HOME=$PWD bin/gugbab-claude)
+├── cli/             ← 래퍼 핵심 (조립·훅 디스패처·업데이트·doctor·status·켜기/끄기 화면 tui·프리셋)
+├── manifest.json    ← 래퍼가 읽는 항목 정의 (생성 파일 — node scripts/build-manifest.js)
+├── relations.json   ← 항목 간 관계 원본 + 프리셋 13개 (relation-guard 가 검사)
+├── .gugbab.json     ← 이 레포 전용 래퍼 설정 (lock·enable)
 ├── examples/        ← 프로젝트 유형별 CLAUDE.md 템플릿
 │   ├── CLAUDE.common.md   ← 공통 규칙 (모든 템플릿에 자동 주입)
 │   └── CLAUDE.{stack}.md  ← 스택별 규칙
@@ -29,7 +35,7 @@ gugbab-claude/
 └── .claude/
     ├── agents/      ← 에이전트 (9카테고리)
     ├── skills/      ← 스킬 (11카테고리, 195종) — 1단 `skills/<이름>/SKILL.md`, 카테고리는 docs/skills/<카테고리>/ 위치로 구분
-    ├── hooks/       ← 훅 (30종)
+    ├── hooks/       ← 훅 (31종)
     ├── rules/       ← 규칙 (14종)
     ├── commands/    ← 슬래시 커맨드
     └── settings.json
@@ -37,7 +43,7 @@ gugbab-claude/
 
 - [agents/](./docs/agents/README.md) — 9카테고리
 - [skills/](./docs/skills/README.md) — 11카테고리 195종
-- [hooks/](./docs/hooks/README.md) — 30종 (공통 18 · dev 6 · TypeScript 1 · Memory 2 · Codex 1 · Branch Protection 1 · 레포 전용 1)
+- [hooks/](./docs/hooks/README.md) — 31종 (공통 18 · dev 6 · TypeScript 1 · Memory 2 · Codex 1 · Branch Protection 1 · 레포 전용 2)
 - [relations.json](./relations.json) — 훅·룰·커맨드·에이전트·스킬 관계 원본(묶음·블록·필수 의존·관계 분류), `relation-guard` 훅이 검사
 - [rules/](./docs/rules/README.md) — 14종 (공통 9 · 언어별 3 · 선택적 2)
 
@@ -72,7 +78,55 @@ gugbab-claude/
 
 ---
 
-## 다른 프로젝트에 설치하기
+## 래퍼로 쓰기 — `gugbab-claude` (새 방식, 개편 진행 중)
+
+프로젝트에 파일을 복사하지 않고, `claude` 대신 `gugbab-claude` 로 실행하면 하네스(훅·룰·스킬·에이전트·커맨드)가 붙은 채로 열립니다. 한 번 설치하면 실행할 때 자동으로 최신화되고, 프로젝트마다 켜고 끈 설정은 `~/gugbab/projects/` 에 따로 저장됩니다(프로젝트 폴더·git 에는 아무것도 생기지 않음). 설계·진행 상황 → [계획서](docs/plans/2026-10-15-gugbab-claude-shim-wrapper.md)
+
+### 설치
+
+필요한 것: `git`, `node` 18 이상, Claude Code(`claude`). sudo 를 쓰지 않습니다.
+
+```bash
+# 기본 — 안정 버전(v* 태그, 아직 없으면 main)
+curl -fsSL https://raw.githubusercontent.com/puk0806/gugbab-claude/main/install.sh | bash
+
+# PR 머지 전 브랜치 시험 — 그 브랜치를 받고, 이후 실행할 때도 그 브랜치를 따라 최신화
+B=feat/shim-wrapper-relation-guard-2026-10-16
+curl -fsSL https://raw.githubusercontent.com/puk0806/gugbab-claude/$B/install.sh | bash -s -- --ref $B
+```
+
+| 옵션 | 설명 |
+|---|---|
+| `--ref <브랜치\|태그>` | 받을 버전. 브랜치면 그 브랜치를 계속 따라감 |
+| `--version vX.Y.Z` | 그 태그로 고정(자동 최신화 끔) |
+| `--channel stable\|main` | 최신화 채널 (기본 stable) |
+| `--dir` / `--bin-dir` | 설치 위치 `~/gugbab` / 실행 파일 링크 위치 `~/.local/bin` |
+| `--uninstall [--yes]` | 링크·설치 폴더 제거 (대화 기록 `~/.claude` 는 그대로) |
+
+`~/.local/bin` 이 PATH 에 없으면 설치가 넣을 한 줄을 알려 줍니다. 다시 실행하면 갱신, `~/gugbab` 이 다른 내용으로 차 있으면 멈춥니다.
+
+### 사용
+
+```bash
+cd ~/어떤/프로젝트
+gugbab-claude              # 하네스 붙은 claude (인자는 claude 에 그대로)
+gugbab-claude status       # 이 프로젝트에 켜진 것 요약 · doctor 점검 · update 바로 최신화
+gugbab-claude harness      # 켜기·끄기 화면 (세션 안에서는 /harness — comux 옆 창·tmux 팝업·새 터미널 창)
+gugbab-claude preset nextjs           # 프리셋(블록 조합) 한 번에 켜기, --all = 모든 프로젝트
+gugbab-claude off hook:cc-notify      # 명령으로 끄기 (on 도 같음, --all = 모든 프로젝트)
+gugbab-claude --raw        # 하네스 없이 그냥 claude
+```
+
+- 화면 키: ↑↓ 이동 · Space 켜기/끄기 · Tab 범위(이 프로젝트 ↔ 모든 프로젝트) · `/` 검색 · `p` 프리셋 · Enter 저장 · q 닫기
+- 🔒 고정 항목은 끌 수 없습니다. 안 바뀌면 이유(고정·다른 설정이 덮음·의존)를 보여 줍니다.
+- 훅·스킬·커맨드는 바로, 룰·CLAUDE.md·에이전트는 `/exit` 하면 래퍼가 대화를 이어서 다시 띄울 때 반영됩니다.
+- 로그인·대화 기록·메모리·플러그인은 그냥 `claude` 와 함께 씁니다.
+
+> 아래 `project-install.sh` 복사 설치는 이전 방식입니다. 래퍼가 정식 릴리스되면(개편 5·6단계) 정리됩니다.
+
+---
+
+## 다른 프로젝트에 설치하기 (이전 방식 — 복사)
 
 gugbab-claude의 에이전트·훅·규칙을 다른 프로젝트에 심어서 팀 전체가 동일한 Claude Code 환경으로 작업할 수 있습니다.
 
@@ -178,7 +232,8 @@ claude --continue             # 이전 대화 이어서
 
 | 날짜 | 변경 내용 |
 |------|-----------|
-| 2026-10-16 | **관계 원본 + 검사 훅 신설 (래퍼 개편 준비)** — 레포 최상위 `relations.json`: 훅·룰·커맨드·에이전트·스킬 관계를 기능 묶음 6개·블록 21개(스킬·에이전트 스택)·필수 의존 11건·관계 분류 194건(requires·uses·mention·code)으로 정리(878건 실측 + 템플릿 14종 실제 설치 결과 기준, 계획서 14장). `relation-guard.js`(레포 전용, 설치되지 않음): 파일 저장 때 분류 안 된 새 언급·소속 없는 새 항목·체크리스트 줄 없는 새 훅·룰·커맨드를 알리고 `git commit` 때 차단, 테스트 21개(경로 탈출·깨진/오염된 원본·체인 속 commit·초대용량·부분 이름 일치 포함). `scripts/relations.test.js` 로 레포 전체 정합성 검사. 훅 29→30종 |
+| 2026-10-17 | **래퍼 개편 4단계 — 켜기·끄기 화면 · `/harness` · 프리셋** — `cli/tui.js`(묶음·블록·항목 목록, Space 켜기/끄기 · Tab 이 프로젝트↔모든 프로젝트 · `/` 검색 · `p` 프리셋 · Enter 저장, 의존성 없는 Node readline — 계획서 결정 24), `cli/apply.js`(CLI·화면 공용 기록 규칙 + 안 바뀐 이유: 🔒 고정·다른 설정이 덮음·의존), `cli/open.js`(`/harness` 가 comux 옆 창·tmux 팝업·macOS 새 터미널 창에 화면을 띄움), `gugbab-claude preset`·`harness`, `relations.json` 프리셋 13개(템플릿 → 블록 조합, `build-manifest` 가 검사). 실측으로 고친 문제: `/harness` 가 `${…}` 변수 검사에 막혀 아예 동작하지 않던 것(래퍼가 PATH 를 넣고 이름만으로 호출), 모든 프로젝트 범위 끄기가 연 프로젝트가 덮고 있으면 기록되지 않던 것·묶음 끈 뒤 항목 하나 켜도 안 켜지던 것(결정 25). pty 실제 키 입력 + 실제 claude 세션 + comux 옆 창으로 토글 확인. 전체 테스트 15묶음 병렬 실행 통과(cli·페이지 · 훅 30 · scripts 12 — 실제 설치 E2E 포함) · **래퍼 개편 3단계 — 한 줄 설치 `install.sh`**(`--ref` 브랜치 시험·`--version` 고정·`--uninstall`, 남의 폴더·링크 자리 일반 파일·로컬 변경은 건드리지 않음, 태그가 없으면 main) + `update.js` branch 채널, 테스트 14개(임시 HOME·임시 git 원격 실제 설치) · README "래퍼로 쓰기" 섹션 · **병렬 실행 안내 훅 `parallel-hint` 신설**(레포·래퍼 전용, 🔒 고정, 비차단 — 여러 작업 요청이면 독립 호출은 한 응답·긴 테스트는 백그라운드·독립 조사는 서브에이전트로, 단일 조회 3연속이면 묶으라고 안내, 실제 트랜스크립트 15개로 오탐 점검), 훅 30→31종 |
+| 2026-10-16 | **관계 원본 + 검사 훅 신설 (래퍼 개편 준비)** — 레포 최상위 `relations.json`: 훅·룰·커맨드·에이전트·스킬 관계를 기능 묶음 6개·블록 21개(스킬·에이전트 스택)·필수 의존 11건·관계 분류 194건(requires·uses·mention·code)으로 정리(878건 실측 + 템플릿 14종 실제 설치 결과 기준, 계획서 14장). `relation-guard.js`(레포 전용, 설치되지 않음): 파일 저장 때 분류 안 된 새 언급·소속 없는 새 항목·체크리스트 줄 없는 새 훅·룰·커맨드를 알리고 `git commit` 때 차단, 테스트 21개(경로 탈출·깨진/오염된 원본·체인 속 commit·초대용량·부분 이름 일치 포함). `scripts/relations.test.js` 로 레포 전체 정합성 검사. 훅 29→30종 · **래퍼 개편 0~2단계 완료** — 남은 PoC(디스패처 차단·결정 전달, 스킬·커맨드 즉시 반영, `--continue` 대화 유지, `projects/`·`plugins/` 링크, 첫 실행 화면) 실측 통과. `bin/gugbab-claude` + `cli/`(조립·디스패처·업데이트·doctor·status·on/off, Node 기본 기능만) 와 `scripts/build-manifest.js` → `manifest.json`(318 항목) 신설, `.claude/CLAUDE.common.md`·`/harness`(상태 보기 + 명령 켜기·끄기)·`.gugbab.json`. 래퍼 실행에 맞춰 훅 6종 수정: `auto-approve`(계획서 12장 권한 정책 — 신규 자동 6·확인 6·Drive 덮어쓰기 확인), `task-confirm-guard`·`session-export`(링크 경로를 실제 위치로 판정), `codex-review-guard`·`bash-guard`·`config-change-audit`(설정 폴더 settings.json 도 읽음). `statusline.sh` 결함 2건 수정(PENDING_TEST 를 verification.md frontmatter 기준으로, ` \| ` 구분자) + 테스트 신설 |
 | 2026-10-08 | **스펙 추출·넥사크로 마이그레이션 자산 신설** — 스킬 11종(184→195, 카테고리 9→11): 신규 `spec` 4종(`spec-extraction-method`·`spring-mybatis-spec-extraction`·`react-spec-extraction`·`characterization-testing`) · 신규 `nexacro` 5종(`nexacro-17-xfdl-anatomy`·`nexacro-xapi-server`·`nexacro-to-react-mapping`·`xapi-to-rest-migration`·`nexacro-strangler-coexistence`) · backend 2종(`spring-boot-1-to-2-migration`·`ibatis-to-mybatis-migration`, nexacro 템플릿 전용). 전부 공식 문서 조사·교차 검증 + skill-tester 3/3 PASS — APPROVED 5 / 마이그레이션·워크플로우 6종은 규칙대로 PENDING_TEST(졸업 조건은 PENDING_TEST.md). 에이전트 5종(56→61): `legacy-spec-extractor`(domain, 오케스트레이터 opus·maxTurns 40) · `spec-reviewer`(validation) · `nexacro-screen-analyzer`(domain) · `nexacro-screen-converter`(frontend) · `migration-parity-tester`(validation). 커맨드 `/spec-extract`. **템플릿 2종 추가** — 14 `spec-extraction`(애드온, 단독 가능 — 스킬 5·에이전트 9·공통 훅, `5,14`·`15,14` 조합) · 15 `nexacro`(dev, TS 훅 없음, 레거시 프로파일 자동 — tdd-guard 제외, 스킬 49·에이전트 30). 설치기·소유/분리/참조/수치 테스트 약 40개 추가(누수·입력 순서 정규화·잘못된 번호·축소 재설치), `examples/CLAUDE.{spec-extraction,nexacro}.md`·`docs/templates/` 2종. **설치 검수(13개 조합 실설치·축소 재설치·`claude -p` 인식 확인 + 독립 리뷰) 반영** — 15 단독 설치본이 미설치 스킬(`zod-schema-validation`, Rust용 `multipart-upload`)을 가리키던 4곳 정정(업로드 방어는 Java 기준 본문으로), 참조 검사에 백틱 스킬 이름 단독 형태 추가, 15 조합 시 "레거시 프로파일이 조합 전체에 적용" 경고 출력, examples 2종 지침 충돌 정리(X-API 유지 범위·특성화 테스트 예외), 14·15 자산 누수 직접 검사를 기존 템플릿 12종 전부로 확장. 보강된 검사가 드러낸 같은 형태의 기존 참조 13곳(에이전트 `build-perf-benchmarker`, 스킬 `aws-sdk-v2-s3-rekognition`·`redis-redisson-4`·`redis-redisson-modern`·`core-web-vitals-optimization`·`mobile-seo-pwa`·`seo-static-html`·`palm-photo-capture-vision`)과 신규 스펙 스킬 4종 13곳에도 "(설치된 경우)" 표기(사용자 승인, 내용 변경 없음) |
 | 2026-10-06 | **한국어 답변 강제 훅 신설** — `korean-response-guard.js`(공통, 모든 템플릿·util 포함): UserPromptSubmit 에서 매 질문마다 "한국어로 답변" 지시 주입 + Stop 에서 마지막 답변의 한국어 단어 비율(코드·경로·URL·식별자 제외) 50% 미만이면 재작성 요구(1회, 루프 방지·"영어로" 요청 시 통과). 훅 23→24종(공통 14→15), `gen-settings.js`·`settings.json`·템플릿 문서 12종·훅 문서 동기화, 테스트 28개. **승인 프롬프트 축소** — `auto-approve.js`가 설정이 없어 매번 확인 창이 뜨던 Skill·Monitor·Workflow·EnterWorktree·Artifact·모든 MCP 도구를 자동 승인(PowerShell 제외), 테스트 63개(위장 도구 이름·이상 입력 포함). **확인 절차 강제 훅 신설** — `task-confirm-guard.js`(공통): 직전 답변 마지막 줄의 "진행할까요?"에 사용자가 승인해야 Write/Edit/NotebookEdit 허용(거절·수정 요청·되묻기는 미승인, 메모리·임시 폴더 예외), 실제 세션 질문 93건으로 오탐 3종 교정, 테스트 45개 — 계획 승인 버튼(ExitPlanMode)은 자동 승인으로 전환. 훅 24→25종(공통 15→16). **reset 판정 변경** — `git reset --hard`는 푸시 여부를 git 으로 확인해 미푸시면 자동·푸시된 커밋 삭제면 차단(`settings.json` deny 의 `HEAD~2+` 정적 규칙 제거), `git clean -f` 자동, 실제 임시 git 레포 테스트 20개. **승인 분류 정비(사용자 결정)** — 차단: 홈 셸·SSH·git 설정 파일 수정, 개인키·클라우드 인증 파일 읽기(Read·Grep·Bash 인자 공통, `.env` 읽기는 허용), `gh repo delete` / 확인: 프로젝트 밖 쓰기, 삭제·공유 계열 MCP·Artifact 삭제, gh PR·릴리스·api 쓰기, curl·wget 파일 업로드, docker 정리, `killall`·`pkill`, 세션 밖 프로세스 `kill -9`(세션이 띄운 것은 자동) / Workflow·계획 승인은 자동. protect-secrets 를 Read·Grep·NotebookEdit 에 배선. 테스트: protect-secrets 47·auto-approve 92·bash-guard 411. **훅 4종 신설** — 개발 전용: `auto-format.js`(저장 파일을 언어별 포매터로 정리 — biome·prettier / ruff·black / rustfmt, 설정+설치 시에만·실패해도 비차단, 28) · `package-manager-guard.js`(lock 파일과 다른 매니저의 설치·추가·삭제 차단 — JS·Python, 51) / 공통: `config-change-audit.js`(세션 중 설정 변경 기록 + 훅 제거·deny 제거·넓은 허용 등 ⚠ 알림, 비차단, 25) · `progress-tracker.js`(승인된 계획·수정 파일 자동 기록, 새 세션·요약 직후 이어하기 안내, 27). task-confirm-guard 버그 수정 — 백그라운드 작업 알림이 UserPromptSubmit 으로 들어와 승인이 풀리던 문제(시스템 알림은 상태 유지, 테스트 50). 훅 25→29종(공통 16→18·개발 4→6) |
 | 2026-10-05 | **설치본(01·voca) 제보 반영**: ① 설치본 참조 검사(`installed-refs.test.js`) 보강 — 백틱·문장 속 에이전트 이름, `cat/agent` 표기, 설치되는 `docs/**`까지 스캔(검증 기록 문서는 과거 사실이라 제외). 새로 드러난 무조건 참조를 "(설치된 경우)"로 정정 — 훅 3(verification-guard·deliverable-guard·staleness-check), 에이전트 9(a11y-auditor·seo-auditor·content-quality-reviewer·security-auditor 등), 규칙 2, docs/agents "관련 에이전트" 11종 등. ② Codex 옵션 설치 시 대상 `.gitignore`에 `.claude/.codex-review-done`·`.codex-unavailable` 자동 추가(중복 방지, 이미 추적 중이면 `git rm --cached` 안내만, 심볼릭 링크·디렉터리는 건너뜀 — E2E 62→72). ③ typescript.md 예외 명시 — `as`(React 요소·ref 조작, instanceof 불가 DOM 타깃), 인라인 style(헤드리스 기능적 스타일), effect 내 setState(하이드레이션용 마운트 후 1회, React 공식 two-pass 패턴) + TanStack Query v5 `useQuery` 콜백 제거 반영. ④ 원본이 기준 원칙 — 09-26 병합된 react-virtuoso는 되살리지 않고 chat-ui-pattern 설명문에 범용 가상 리스트(references 16절) 명시로 발견성 보강. ⑤ **스킬 구조 평탄화 — 184종이 스킬로 등록되지 않던 구조 결함 수정**: Claude Code는 `.claude/skills/<이름>/SKILL.md` 1단만 스킬로 등록하는데 `skills/<카테고리>/<이름>/` 2단 중첩이라 원본·설치본 모두 자동 호출·`/이름` 호출이 안 되고 에이전트가 경로로 Read할 때만 쓰였음(경로로도 안 불리는 약 70종은 사실상 미사용). 184종을 1단으로 이동(git mv, 이름 충돌 0), 카테고리는 `docs/skills/<카테고리>/<이름>/` 위치를 단일 원천으로 — 설치 스크립트가 이 위치로 템플릿 필터 유지. 평탄화 이전 2단 설치본은 재설치 한 번에 1단으로 수렴(매니페스트 해시·레포 원본 동일 증명, 수정본·커스텀 보존). 재발 방지: skill-md-guard가 2단 이상 저장·name≠폴더명을 저장 차단, 구조 회귀 검사(1단·카테고리명 충돌·name 일치·docs 1:1) 추가, 참조 약 275곳 정정. 실측: 이 세션·설치본 `claude -p` 모두 스킬 목록에 노출 확인. ⑥ 문서·배선 어긋남 정리 — 훅 문서 3곳 설명을 실제 동작으로(instructions-loaded·skill-md-guard·codex-review-guard), 존재하지 않는 훅 문서 `permission-judge.md` 삭제, verification-guard 날짜 경고가 Write 후 배선 누락으로 발생하지 않던 문제 수정, 원본 settings.json을 생성기 전체 옵션 출력과 일치(statusLine·`Bash(tee*)`, 회귀 검사 추가), verification.md 179종 스킬 경로 표기를 1단으로 일괄 정정(사용자 승인). ⑦ 레포에서 폐기된 공용 docs(docs/hooks/**)가 설치본에 영구 잔존하던 문제를 매니페스트 해시 증명 하에 정리. 실제 설치본 사본 리허설: 2단 25종 → 1단 25종, 폐기 문서 제거 |

@@ -1,6 +1,6 @@
 # 훅 (Hooks)
 
-Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 30종 = 실행 훅 29종 + `statusline.sh`, 2026-10-16 실측 — 2026-10-16 레포 전용 `relation-guard` 추가).
+Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 31종 = 실행 훅 30종 + `statusline.sh`, 2026-10-17 실측 — 2026-10-16 레포 전용 `relation-guard`, 2026-10-17 레포·래퍼 전용 `parallel-hint` 추가).
 
 훅 파일 위치: `.claude/hooks/`
 
@@ -20,7 +20,7 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 30종 = 실행 �
 | 훅 | 이벤트 | 설명 | 테스트 |
 |----|--------|------|:---:|
 | [bash-guard.js](../../.claude/hooks/bash-guard.js) | PreToolUse·PostToolUse·PermissionRequest | 위험 Bash 차단(rm -rf 시스템/홈/.git·force push 등) + 보호 파일 *쓰기 연산* 차단 + 안전 패턴 자동 허용. `git reset --hard`는 git 으로 푸시 여부를 확인해 **미푸시 커밋·커밋 안 한 작업만 지우면 자동, 푸시된 커밋을 지우면 차단**, 판정 불가면 확인(2026-10-06 — 구 `HEAD~2+` 정적 차단 대체). `git clean -f` 자동. **gh**: 조회 자동·PR 생성/머지·릴리스·`gh api` 쓰기는 확인·`gh repo delete` 차단 / **curl·wget 파일 업로드**(`-d @`·`-F`·`-T`·`--post-file`) 확인 / **docker·podman 정리·볼륨 삭제**, `killall`·`pkill` 확인 / **`kill -9`**: 이 Claude 세션이 띄운 프로세스면 자동, 아니면 확인(ps 로 부모 추적) / **개인키·인증 파일 경로가 인자에 있으면 차단**(protect-secrets 판정 공유) — 2026-10-06 | ✅ |
-| [auto-approve.js](../../.claude/hooks/auto-approve.js) | PreToolUse·PermissionRequest | Bash를 제외한 도구 자동 승인 (Bash 보안은 bash-guard가 담당) — 기본 도구 + Skill·Monitor·Workflow·EnterWorktree·Artifact + **모든 MCP 도구**(`mcp__<서버>__<도구>`, 2026-10-06). + ExitPlanMode(계획 승인 — 확인은 task-confirm-guard 가 강제). **확인 창 강제**: 프로젝트·허용 폴더 밖 Write/Edit/NotebookEdit(메모리·계획·임시 폴더 제외), 삭제·공유 계열 MCP(`delete`·`trash`·`share`·`remove` 등), Artifact 삭제. 예외: PowerShell(분석기 없는 셸)은 자동 승인하지 않음 | ✅ |
+| [auto-approve.js](../../.claude/hooks/auto-approve.js) | PreToolUse·PermissionRequest | Bash를 제외한 도구 자동 승인 (Bash 보안은 bash-guard가 담당) — 기본 도구 + Skill·Monitor·Workflow·EnterWorktree·Artifact + **모든 MCP 도구**(`mcp__<서버>__<도구>`, 2026-10-06). + ExitPlanMode(계획 승인 — 확인은 task-confirm-guard 가 강제). **확인 창 강제**: 프로젝트·허용 폴더 밖 Write/Edit/NotebookEdit(메모리·계획·임시 폴더 제외), 삭제·공유 계열 MCP(`delete`·`trash`·`share`·`remove` 등), Artifact 삭제. 예외: PowerShell(분석기 없는 셸)은 자동 승인하지 않음. **2026-10-16 계획서 12장 권한 정책**: ArtifactData(삭제만 확인 — batch 속 삭제 포함)·ArtifactComments·PushNotification·ExitWorktree·TaskStop·LSP 자동, SendMessage·CronCreate·CronDelete·RemoteTrigger·DesignSync·PowerShell·Google Drive `update_file`(덮어쓰기) 확인. 래퍼 설정 폴더의 `projects/`·`plans/` 링크는 실제 위치(`~/.claude`)로 따라가 메모리·계획 쓰기로 판정 | ✅ |
 | [parry.js](../../.claude/hooks/parry.js) | PreToolUse Write | 시크릿·프롬프트 인젝션 패턴 스캔 — 감지 시 저장 차단 | ✅ |
 | [protect-secrets.js](../../.claude/hooks/protect-secrets.js) | PreToolUse Write/Edit/NotebookEdit/Read/Grep | 민감 파일(.env, *.pem, *.key, credentials 등) 수정 차단 + **홈 셸·SSH·git 설정 파일(`~/.zshrc`·`~/.bashrc`·`~/.gitconfig`·`~/.ssh/*` 등) 수정 차단** + **개인키·클라우드 인증 파일(`~/.ssh` 개인키·`*.pem`·`*.key`·`~/.aws/credentials`·`~/.netrc` 등) Read·Grep 차단**(2026-10-06). `.env` 읽기는 디버깅용으로 허용. 같은 판정을 bash-guard 가 Bash 인자에도 적용 | ✅ |
 | [deliverable-guard.js](../../.claude/hooks/deliverable-guard.js) | PostToolUse Write/Edit · PreToolUse Bash · Stop | **산출물 완결성 통합 훅** — 세션 수정 파일 추적 + git commit/push·세션 종료 시 README 동기화 검사 + PENDING_TEST 스킬 2단계 테스트 미수행 차단 + **push/PR 직전 memory·exports 미커밋 차단**(Y 프로젝트, 메모리 정리·세션 요약 포함 강제) (`.claude/worktrees/` 스캔 제외) | ✅ |
@@ -33,10 +33,10 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 30종 = 실행 �
 | [session-export.js](../../.claude/hooks/session-export.js) | Stop | 세션 대화 요약(요청·응답·수정 파일·Codex 리뷰) 강제 보존 — Stop(매 턴)은 로컬 `~/.claude/projects/<해시>/exports/`에만 기록(레포 status 오염 없음), 커밋 배치의 `--refresh` 실행 시에만 레포 `exports/`에 전체 요약 생성(Y 프로젝트) (비차단) | ✅ |
 | [cc-notify.js](../../.claude/hooks/cc-notify.js) | Stop | 작업 완료 시 macOS 데스크탑 알림 (비차단, 타 플랫폼 silent) | ✅ |
 | [korean-response-guard.js](../../.claude/hooks/korean-response-guard.js) | UserPromptSubmit · Stop | 답변 한국어 강제 — 매 질문마다 "한국어로 답변" 지시 주입 + 종료 시 마지막 답변의 한국어 단어 비율(코드·경로·URL·식별자 제외) 50% 미만이면 재작성 요구(1회, `stop_hook_active` 루프 방지). 사용자가 "영어로" 요청하면 통과 | ✅ |
-| [task-confirm-guard.js](../../.claude/hooks/task-confirm-guard.js) | UserPromptSubmit · PreToolUse Write/Edit/NotebookEdit | **확인 절차 강제**(2026-10-06) — 질문할 때 승인 여부를 기록하고, 승인 전 Write/Edit/NotebookEdit 를 **차단**. 승인 = 직전 답변의 마지막 줄이 "진행할까요?" + 이번 질문이 거절·수정 요청(아니·말고·다시 정리 등)이나 승인 표현 없는 되묻기가 아님. 예외: 메모리·계획·임시 폴더 쓰기, "바로 진행"·"확인 없이" 명시. 단어로 작업 복잡도를 추측하던 구 task-plan-guard 와 달리 직전 대화만으로 판정 | ✅ |
+| [task-confirm-guard.js](../../.claude/hooks/task-confirm-guard.js) | UserPromptSubmit · PreToolUse Write/Edit/NotebookEdit | **확인 절차 강제**(2026-10-06) — 질문할 때 승인 여부를 기록하고, 승인 전 Write/Edit/NotebookEdit 를 **차단**. 승인 = 직전 답변의 마지막 줄이 "진행할까요?" + 이번 질문이 거절·수정 요청(아니·말고·다시 정리 등)이나 승인 표현 없는 되묻기가 아님. 예외: 메모리·계획·임시 폴더 쓰기(래퍼 설정 폴더 링크 경로는 실제 위치로 판정 — 2026-10-16), "바로 진행"·"확인 없이" 명시. 단어로 작업 복잡도를 추측하던 구 task-plan-guard 와 달리 직전 대화만으로 판정 | ✅ |
 | [config-change-audit.js](../../.claude/hooks/config-change-audit.js) | SessionStart · ConfigChange | **설정 변경 감사**(2026-10-06) — 세션 시작 때 settings 스냅샷을 저장하고, 세션 중 설정 파일이 바뀌면 비교해 감사 로그(대화 기록 폴더 `config-audit/`)에 남긴다. 훅 제거·deny 제거·넓은 허용(`Bash`·`Bash(*)` 등)·`bypassPermissions`·`disableAllHooks`·파일 삭제/깨짐은 ⚠ systemMessage 로 알림. **차단하지 않음**(하네스 레포는 설정을 개발하므로). skills 변경은 기록만 | ✅ |
 | [progress-tracker.js](../../.claude/hooks/progress-tracker.js) | UserPromptSubmit · PostToolUse Write/Edit/NotebookEdit · SessionStart | **진행 기록**(2026-10-06) — "진행할까요?" 승인 시 직전 답변의 이해 요약·작업 목록을 저장(승인 판정은 task-confirm-guard 와 공유), 파일 수정마다 경로 기록(최대 200). SessionStart compact·resume 이면 이 세션 계획을, startup·clear 이면 72시간 안의 직전 작업을 한 번 안내. 저장은 대화 기록 폴더 `progress/` (레포 미오염). 백그라운드 알림은 계획을 덮어쓰지 않음 | ✅ |
-| [statusline.sh](../../.claude/hooks/statusline.sh) | statusLine | 상태 바 — 브랜치 + 미커밋 수 + PENDING_TEST 스킬 수 표시 | — |
+| [statusline.sh](../../.claude/hooks/statusline.sh) | statusLine | 상태 바 — 브랜치 + 미커밋 수 + PENDING_TEST 스킬 수 표시. PENDING_TEST 는 `docs/skills/**/verification.md` frontmatter `status:` 기준(2026-10-16 — 예전엔 스킬 본문의 예시 글자까지 셌음), 구분자 ` \| ` | ✅ |
 
 > 테스트 "—" 항목은 차단하지 않는 관찰·알림·컨텍스트 주입 훅 (오탐 시 피해 없음).
 > **차단형(blocking) 훅은 전부 `*.test.js` 필수** — 2026-07-03 오탐 4건이 모두 미테스트 훅에서 발생한 데 따른 조치.
@@ -102,6 +102,7 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 30종 = 실행 �
 | 훅 | 이벤트 | 설명 | 테스트 |
 |----|--------|------|:---:|
 | [relation-guard.js](../../.claude/hooks/relation-guard.js) | PostToolUse Write/Edit · PreToolUse Bash | 훅·룰·커맨드·에이전트·스킬 관계 원본 [`relations.json`](../../relations.json)(묶음·블록·필수 의존·관계 분류) 검사 — 파일 저장 때 분류 안 된 새 언급·블록/묶음 소속 없는 새 항목·체크리스트 줄 없는 새 훅·룰·커맨드를 알리고(비차단), `git commit` 때 하나라도 있으면 차단. `relations.json` 이 없는 레포에서는 동작하지 않음. 레포 전체 검사는 `scripts/relations.test.js` | ✅ |
+| [parallel-hint.js](../../.claude/hooks/parallel-hint.js) | UserPromptSubmit · PostToolUse (전체) | **병렬 실행 안내**(2026-10-17, 비차단) — 요청에 서로 독립인 작업이 여럿 보이면(번호 목록 2개+·작업 동사 여럿·"병렬" 언급) 독립 도구 호출은 한 응답에, 긴 테스트는 백그라운드로, 독립 조사는 서브에이전트로 동시에 하라고 알림(앞 결과가 필요한 단계·같은 파일 수정·커밋 순서·사용자 확인 대기는 제외). 읽기 전용 도구 1개씩인 응답이 3번 연속이면 묶으라고 한 번 알림(트랜스크립트 끝 256KB만 읽음). 시스템·훅 메시지·짧은 질문은 무시. 옛 복사 설치에는 들어가지 않음 — 래퍼에서는 🔒 고정(끌 수 없음) | ✅ |
 
 ---
 
@@ -114,8 +115,12 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 30종 = 실행 �
 ├── Memory (2종)    ← --memory 옵션 선택 시 추가
 ├── Codex (1종)     ← --codex 옵션 선택 시 추가
 └── Branch Protection (1종)  ← --branch-protection 옵션 선택 시 추가
-레포 전용 (1종)  ← relation-guard — gugbab-claude 레포에서만 (설치되지 않음)
+레포 전용 (2종)  ← relation-guard — gugbab-claude 레포에서만 (설치되지 않음) · parallel-hint — 이 레포 + 래퍼(gugbab-claude)에서 (옛 복사 설치에는 설치되지 않음)
 ```
+
+## 래퍼(`gugbab-claude`)로 실행할 때 (2026-10-16 개편 2단계)
+
+래퍼는 프로젝트별 설정 폴더의 `settings.json` 에 훅을 하나씩 연결하지 않고, **이벤트마다 디스패처 `cli/hook.js` 하나**만 연결한다. 디스패처가 실행할 때마다 `manifest.json`·켜기/끄기 설정을 읽어 켜진 훅만 위 순서대로 실행한다(`gugbab-claude off hook:<이름>` 이 바로 반영, 🔒 고정 훅은 항상 실행). 결과 합치기: exit 2 하나라도 → 차단 / `permissionDecision` deny > ask > allow / 안내는 이어붙임 / 훅 크래시·시간 초과는 차단하지 않고 `<데이터>/logs/hook-errors.log` 에 기록. 훅은 켜진 목록을 `GUGBAB_ENABLED` 로 받는다. 프로젝트 `.claude/settings.json` 이 같은 훅을 직접 연결해 두었으면(이 레포처럼) 디스패처는 그 훅을 건너뛴다. 켜고 끄는 방법(래퍼 전용 — `/harness` 는 옛 복사 설치에는 설치되지 않음): 세션 안 `/harness`(화면 — comux 옆 창·tmux 팝업·새 터미널 창), 터미널 `gugbab-claude harness`, 명령 `gugbab-claude on|off <항목> [--all]`·`preset <이름>` — 화면·명령 모두 안 바뀐 이유(🔒 고정·다른 설정이 덮음)를 보여 준다(2026-10-17). 상세 → 계획서 `docs/plans/2026-10-15-gugbab-claude-shim-wrapper.md` 6장·15장(15.6)
 
 ## 테스트 실행
 
