@@ -73,6 +73,7 @@
   },
   "standalone": [
     "hook:claude-version-check",
+    "hook:release-version-guard",
     "hook:parallel-hint",
     "hook:bash-guard",
     "hook:protect-secrets",
@@ -685,6 +686,8 @@
     "hook:package-manager-guard>hook:bash-guard": "code",
     "hook:relation-guard>hook:bash-guard": "code",
     "hook:parallel-hint>hook:progress-tracker": "mention",
+    "hook:release-version-guard>hook:bash-guard": "code",
+    "command:create-pr>hook:release-version-guard": "mention",
     "agent:frontend-architect>command:harness": "mention",
     "agent:frontend-domain-refactorer>command:harness": "mention",
     "agent:seo-auditor>command:harness": "mention",

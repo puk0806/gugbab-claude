@@ -61,7 +61,7 @@ gugbab-claude --raw    # 하네스 없이 그냥 claude
 |---|---|---|
 | 스킬 | 스킬 (11카테고리, 195종) | [docs/skills/](./docs/skills/README.md) |
 | 에이전트 | 에이전트 (9카테고리) 61종 | [docs/agents/](./docs/agents/README.md) |
-| 훅 | 훅 (31종) — 확인 절차·위험 명령 차단·비밀 보호·TDD·적대적 테스트·한국어 답변·병렬 안내·Claude Code 버전 확인 등 | [docs/hooks/](./docs/hooks/README.md) |
+| 훅 | 훅 (32종) — 확인 절차·위험 명령 차단·비밀 보호·TDD·적대적 테스트·한국어 답변·병렬 안내·Claude Code 버전 확인·PR 전 버전 검사 등 | [docs/hooks/](./docs/hooks/README.md) |
 | 룰 | 규칙 (14종) | [docs/rules/](./docs/rules/README.md) |
 | 커맨드 | 12종 — `/harness` · `/commit` · `/create-pr` · `/create-plan` · `/tdd-implement` 등 | [.claude/commands/](./.claude/commands) |
 

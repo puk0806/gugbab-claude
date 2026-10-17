@@ -1,0 +1,49 @@
+# main 에 머지되면 VERSION 값으로 v* 태그와 GitHub Release 를 만든다 (계획서 결정 32)
+# stable 채널 설치본은 최신 v* 태그를 따라가므로, 다음 실행 때 자동으로 새 버전을 받는다
+# - 이미 그 태그가 있으면 건너뜀(다시 실행해도 중복 없음), VERSION 이 최신 태그보다 작거나 같으면 실패(버전 안 올린 머지)
+# - 동시에 여러 번 돌지 않게 concurrency 로 묶음, 손으로 다시 돌릴 수 있게 workflow_dispatch
+# 이 파일이 있는 것이 release-version-guard 훅의 "이 레포" 표시이기도 하다
+name: release-on-main
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: release-on-main
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: 태그 이름 정하기
+        id: ver
+        run: |
+          git fetch --tags --force origin
+          TAG=$(node scripts/release-version.js release-tag)
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "$TAG 태그가 이미 있습니다 — 건너뜀"
+          else
+            node scripts/release-version.js check
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: 태그·Release 만들기
+        if: steps.ver.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.ver.outputs.tag }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "$TAG" "$GITHUB_SHA"
+          git push origin "refs/tags/$TAG"
+          gh release create "$TAG" --title "$TAG" --generate-notes --verify-tag

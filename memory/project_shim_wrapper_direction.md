@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 956a993c-0d69-41df-9a5f-10e37ec24b3f
-  modified: 2026-10-17T09:40:44.917Z
+  modified: 2026-10-17T09:58:53.096Z
 ---
 
 2026-10-15 사용자가 하네스 개편 방향을 **shim wrapper 방식**으로 확정했다. 플러그인/마켓플레이스 전환 제안은 명시적으로 거부("공식 플러그인 이딴소리 하지말고").
@@ -36,6 +36,7 @@ metadata:
 - **2026-10-17 깨끗한 세션 리뷰 반영**: 독립 리뷰 에이전트 + GitHub 새 clone 전체 테스트(임시 폴더 clone 은 훅 테스트 3개가 "임시 폴더 쓰기 허용" 때문에 실패 — 홈 아래 clone 은 통과, 테스트가 레포 위치를 가정). 고친 것: readme-update 의 지운 테스트 참조, 체크리스트 훅 수(실행 훅 30 + 상태줄), 옛 템플릿·설치 옵션 표현 전체(규칙·에이전트·스킬·훅 메시지·docs — 일반적인 "(설치된 경우)" 는 유지 기준), docs/rules/README 래퍼 기준 재작성, wrapper-e2e.sh(자동 업데이트 막기·시험 대화 기록 정리·init 실패 시 "읽기실패"·전제 검사·Ctrl-C), docs-counts 에 체크리스트·훅 문서·에이전트·커맨드 수 대조. `~/.claude/projects` 에 남아 있던 시험 기록 25개 삭제
 - **2026-10-17 README 축소 + 트리 화면(결정 30)**: README 는 설치·제거·사용 두 줄·무엇이 들어 있나·이 레포 개발만, 나머지는 `docs/USAGE.md`(docs-counts 가 프리셋 표·연관 표를 relations.json 과 대조). `/harness` 를 큰 갈래 → 묶음·블록 → 항목 트리로(→/←·a·검색 자동 펼침, 그룹·큰 갈래 Space 일괄, 범례·설명칸에 필요로 함/이걸 필요로 함/충돌/고정 이유). 브랜치 `docs/readme-slim-2026-10-17`(미커밋). 사용자가 "수정할 거 더 있다"고 함
 - **2026-10-17 결정 31 — 처음 실행 프리셋 고르기 + 기본값 문서**: `cli/first-run.js`(스택 감지·추천, 번호·쉼표·Enter=추천·0, 프로젝트 settings 에 `firstRun` 기록해 한 번만, 터미널 아님·`-p`·기존 설정·`.gugbab.json`·`GUGBAB_NO_FIRST_RUN` 이면 안 물음, 실패해도 exit 0), bin 이 prepare 직전 `first-run` 호출. `docs/DEFAULTS.md` 는 `scripts/build-defaults-doc.js` 생성 문서(최신 여부 테스트). README 에 요구 사항·PATH·`/harness`, USAGE 의 설치 옵션·하위 명령은 DEVELOPMENT 끝으로. pty 실측: next 프로젝트에서 추천 nextjs, `1,11` → 80개 켬(스킬 1→76), 재실행 시 안 물음. 시험 주의: scratchpad `wrap.sh` 는 데이터 폴더를 `wrap-data` 로 고정함. 이어서 사용자 지적("기본·프리셋별 고정/열림/닫힘 볼 수 있게") → DEFAULTS.md 에 기본 프리셋 설정·프리셋 한눈 표·항목 × 프리셋 표(🔒/✅/⬜)·프리셋별 상세 추가. README "사용" 아래에 `/harness` 켜기·끄기 절(키·명령·반영 시점)을 꺼내고 README·USAGE·`/harness` 커맨드에서 DEFAULTS.md 로 연결(사용자: "하네스·프리셋이랑 연결돼서 볼 수 있어야"). 미커밋 파일은 GitHub 에 안 보인다는 점·`open` 은 md 를 원문으로 보여 준다는 점 안내 — 미리보기는 VS Code `Cmd+Shift+V`
+- **2026-10-17 PR #29 머지 후 결정 32 — PR 마다 버전 올리기 → 머지 때 자동 태그**: 사용자 지적 "main 머지되면 태그가 계속 바뀌어야지"(결정 28 은 손으로 태그 → stable 설치본이 머지분을 못 받음). 사용자 지시: "PR 은 이제 너한테 올려달라고 할 테니 PR 전에 버전 올리게, 이 레포에만". `VERSION` 파일 + 레포 전용 🔒 훅 `release-version-guard`(gh pr create 직전 커밋된 VERSION > 최신 v* 태그, 아니면 차단 — 훅은 파일 안 고침) + `scripts/release-version.js`(check·bump·release-tag·latest) + 워크플로 `version-check`(PR)·`release-on-main`(머지 → VERSION 으로 태그·Release). `/create-pr` 0-1 단계. 브랜치 `feat/release-version-2026-10-17`(미커밋), VERSION 은 아직 1.0.1 — 이 작업 PR 때 1.0.2 로 올려 첫 자동 릴리스 확인 예정. 실테스트: main clone 시나리오 33/33, GitHub install.sh 새 설치(`~/.gugbab-fresh-install`, `~/.gugbab-main-check` 남겨 둠)에서 진짜 claude 처음 실행 nextjs 추천·적용(init 스킬 51→98)
 - **다음**: 사용자 추가 수정 요청 → 커밋·푸시 → 설치본 반영은 새 태그 / 1.0.x 실사용 테스트 → 태그 보호 규칙 / 제안 중: 고정 보안 훅 fail-closed / 맨 마지막 Codex 리뷰(지금 꺼 둠)
 
 **Why:** 복사 설치는 버전 갱신마다 재설치가 필요해 불편. comux처럼 별도 명령으로 감싼 프로그램을 띄우는 형태를 원함.

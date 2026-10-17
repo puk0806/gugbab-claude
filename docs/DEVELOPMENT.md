@@ -38,6 +38,13 @@ gugbab-claude/
 - manifest 가 바뀌면 `node scripts/build-defaults-doc.js` 로 [기본값·고정 목록](DEFAULTS.md) 도 다시 만듭니다 (최신인지 `scripts/build-defaults-doc.test.js` 가 검사).
 - 이 레포에서 작업할 때의 규칙: [CLAUDE.md](../CLAUDE.md) · `.claude/rules/`
 
+## 버전·릴리스
+
+- 레포 최상위 `VERSION`(X.Y.Z 한 줄)이 다음 릴리스 버전입니다. **PR 마다 최신 `v*` 태그보다 크게 올립니다** — `node scripts/release-version.js bump`(기본 패치 +1, `bump minor`·`bump major`) 후 커밋.
+- 빠뜨리면 `release-version-guard` 훅(🔒, 이 레포 전용)이 `gh pr create` 를 막고, PR 의 `version-check` 워크플로도 실패합니다. `/create-pr` 는 이 단계를 먼저 처리합니다.
+- main 에 머지되면 `release-on-main` 워크플로가 `VERSION` 값으로 태그(`v1.0.2` …)와 GitHub Release 를 만들고, stable 설치본은 다음 실행 때 자동으로 받습니다. 이미 그 태그가 있으면 건너뛰고, 필요하면 Actions 화면에서 손으로 다시 실행할 수 있습니다.
+- 확인: `node scripts/release-version.js check --remote` · 최신 태그 `node scripts/release-version.js latest --remote`
+
 ## 참고
 
 - 설계·진행 상황: [래퍼 개편 계획서](plans/2026-10-15-gugbab-claude-shim-wrapper.md)

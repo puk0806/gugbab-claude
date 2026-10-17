@@ -12,19 +12,19 @@
 | 종류 | 🔒 고정 | ✅ 기본 켬 | ⬜ 기본 끔 | 합계 |
 |---|---:|---:|---:|---:|
 | 설정 | 5 | 2 | 0 | 7 |
-| 훅 | 17 | 13 | 0 | 30 |
+| 훅 | 18 | 13 | 0 | 31 |
 | 룰 | 3 | 11 | 0 | 14 |
 | 커맨드 | 1 | 11 | 0 | 12 |
 | 에이전트 | 7 | 32 | 22 | 61 |
 | 스킬 | 0 | 1 | 194 | 195 |
-| **합계** | **33** | **70** | **216** | **319** |
+| **합계** | **34** | **70** | **216** | **320** |
 
-## 🔒 고정 — 33개
+## 🔒 고정 — 34개
 
 어느 프로젝트에서도 끌 수 없습니다. 고정 항목이 필요로 하는 것도 같이 고정됩니다.
 
 - **설정** (5): 시작 권한 모드 `acceptEdits` · 위험 명령 차단 목록 (deny) · 임시 폴더 접근 허용 · 자동 허용 목록 (allow) · 전역 CLAUDE.md 공통 부분
-- **훅** (17): auto-approve · auto-format · bash-guard · cc-notify · claude-version-check · config-change-audit · korean-response-guard · package-manager-guard · parallel-hint · parry · progress-tracker · protect-secrets · session-export · session-start · task-confirm-guard · typescript-quality · verification-guard
+- **훅** (18): auto-approve · auto-format · bash-guard · cc-notify · claude-version-check · config-change-audit · korean-response-guard · package-manager-guard · parallel-hint · parry · progress-tracker · protect-secrets · release-version-guard · session-export · session-start · task-confirm-guard · typescript-quality · verification-guard
 - **룰** (3): info-verification.md · task-workflow.md · verification-policy.md
 - **커맨드** (1): harness
 - **에이전트** (7): claude-code-guide · fact-checker · research-reviewer · socratic-interviewer · source-validator · tech-stack-advisor · web-searcher
@@ -223,20 +223,20 @@
 
 | 프리셋 | 설명 | 🔒 고정 | ✅ 켜짐 | ⬜ 꺼짐 | 설정 | 훅 | 룰 | 커맨드 | 에이전트 | 스킬 |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 기본 | 프리셋 없음 (처음 상태) | 33 | 70 | 216 | 7/7 | 30/30 | 14/14 | 12/12 | 39/61 | 1/195 |
-| `nextjs` | React·Next.js (+TS 백엔드) | 33 | 123 | 163 | 7/7 | 30/30 | 14/14 | 12/12 | 42/61 | 51/195 |
-| `java-legacy` | Java Spring 레거시 | 33 | 95 | 191 | 7/7 | 30/30 | 14/14 | 12/12 | 39/61 | 26/195 |
-| `java-modern` | Java Spring 모던 | 33 | 94 | 192 | 7/7 | 30/30 | 14/14 | 12/12 | 39/61 | 25/195 |
-| `rust` | Rust Axum | 33 | 87 | 199 | 7/7 | 30/30 | 14/14 | 12/12 | 41/61 | 16/195 |
-| `python` | Python FastAPI | 33 | 88 | 198 | 7/7 | 30/30 | 14/14 | 12/12 | 41/61 | 17/195 |
-| `unity` | Unity 게임 | 33 | 98 | 188 | 7/7 | 30/30 | 14/14 | 12/12 | 45/61 | 23/195 |
-| `dream` | 꿈 해몽 앱 | 33 | 144 | 142 | 7/7 | 30/30 | 14/14 | 12/12 | 47/61 | 67/195 |
-| `fortune` | 운세 앱 | 33 | 132 | 154 | 7/7 | 30/30 | 14/14 | 12/12 | 43/61 | 59/195 |
-| `health` | 건강·식단 앱 | 33 | 127 | 159 | 7/7 | 30/30 | 14/14 | 12/12 | 43/61 | 54/195 |
-| `nexacro` | 넥사크로 마이그레이션 | 33 | 115 | 171 | 7/7 | 29/30 | 14/14 | 12/12 | 39/61 | 47/195 |
-| `seo-geo` | 애드온 · SEO·GEO | 33 | 97 | 189 | 7/7 | 30/30 | 14/14 | 12/12 | 41/61 | 26/195 |
-| `spec-extraction` | 애드온 · 레거시 스펙 추출 | 33 | 74 | 212 | 7/7 | 30/30 | 14/14 | 12/12 | 39/61 | 5/195 |
-| `n8n` | 애드온 · n8n | 33 | 75 | 211 | 7/7 | 30/30 | 14/14 | 12/12 | 39/61 | 6/195 |
+| 기본 | 프리셋 없음 (처음 상태) | 34 | 70 | 216 | 7/7 | 31/31 | 14/14 | 12/12 | 39/61 | 1/195 |
+| `nextjs` | React·Next.js (+TS 백엔드) | 34 | 123 | 163 | 7/7 | 31/31 | 14/14 | 12/12 | 42/61 | 51/195 |
+| `java-legacy` | Java Spring 레거시 | 34 | 95 | 191 | 7/7 | 31/31 | 14/14 | 12/12 | 39/61 | 26/195 |
+| `java-modern` | Java Spring 모던 | 34 | 94 | 192 | 7/7 | 31/31 | 14/14 | 12/12 | 39/61 | 25/195 |
+| `rust` | Rust Axum | 34 | 87 | 199 | 7/7 | 31/31 | 14/14 | 12/12 | 41/61 | 16/195 |
+| `python` | Python FastAPI | 34 | 88 | 198 | 7/7 | 31/31 | 14/14 | 12/12 | 41/61 | 17/195 |
+| `unity` | Unity 게임 | 34 | 98 | 188 | 7/7 | 31/31 | 14/14 | 12/12 | 45/61 | 23/195 |
+| `dream` | 꿈 해몽 앱 | 34 | 144 | 142 | 7/7 | 31/31 | 14/14 | 12/12 | 47/61 | 67/195 |
+| `fortune` | 운세 앱 | 34 | 132 | 154 | 7/7 | 31/31 | 14/14 | 12/12 | 43/61 | 59/195 |
+| `health` | 건강·식단 앱 | 34 | 127 | 159 | 7/7 | 31/31 | 14/14 | 12/12 | 43/61 | 54/195 |
+| `nexacro` | 넥사크로 마이그레이션 | 34 | 115 | 171 | 7/7 | 30/31 | 14/14 | 12/12 | 39/61 | 47/195 |
+| `seo-geo` | 애드온 · SEO·GEO | 34 | 97 | 189 | 7/7 | 31/31 | 14/14 | 12/12 | 41/61 | 26/195 |
+| `spec-extraction` | 애드온 · 레거시 스펙 추출 | 34 | 74 | 212 | 7/7 | 31/31 | 14/14 | 12/12 | 39/61 | 5/195 |
+| `n8n` | 애드온 · n8n | 34 | 75 | 211 | 7/7 | 31/31 | 14/14 | 12/12 | 39/61 | 6/195 |
 
 ## 항목 × 프리셋 표
 
@@ -256,7 +256,7 @@
 
 </details>
 
-<details><summary>훅 — 30개</summary>
+<details><summary>훅 — 31개</summary>
 
 | 항목 | 기본 | `nextjs` | `java-legacy` | `java-modern` | `rust` | `python` | `unity` | `dream` | `fortune` | `health` | `nexacro` | `seo-geo` | `spec-extraction` | `n8n` |
 |---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
@@ -281,6 +281,7 @@
 | progress-tracker | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 |
 | protect-secrets | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 |
 | relation-guard | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| release-version-guard | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 |
 | session-export | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 |
 | session-start | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 |
 | skill-md-guard | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -609,7 +610,7 @@
 
 ### 기본 — 프리셋 없음 (처음 상태)
 
-- 🔒 고정 33 · ✅ 켜짐 70 · ⬜ 꺼짐 216
+- 🔒 고정 34 · ✅ 켜짐 70 · ⬜ 꺼짐 216
 
 <details><summary>✅ 켜짐 70개 (🔒 고정 제외)</summary>
 
@@ -632,7 +633,7 @@
 ### `nextjs` — React·Next.js (+TS 백엔드)
 
 - 켜는 블록: `dev-common` · `frontend-core` · `frontend-tooling` · `ts-backend`
-- 🔒 고정 33 · ✅ 켜짐 123 · ⬜ 꺼짐 163
+- 🔒 고정 34 · ✅ 켜짐 123 · ⬜ 꺼짐 163
 - 기본과 비교: 새로 켜짐 53개 (에이전트 3 · 스킬 50)
 
 <details><summary>새로 켜지는 항목 53개</summary>
@@ -663,7 +664,7 @@
 ### `java-legacy` — Java Spring 레거시
 
 - 켜는 블록: `dev-common` · `java-common` · `java-legacy`
-- 🔒 고정 33 · ✅ 켜짐 95 · ⬜ 꺼짐 191
+- 🔒 고정 34 · ✅ 켜짐 95 · ⬜ 꺼짐 191
 - 기본과 비교: 새로 켜짐 25개 (스킬 25)
 
 <details><summary>새로 켜지는 항목 25개</summary>
@@ -693,7 +694,7 @@
 ### `java-modern` — Java Spring 모던
 
 - 켜는 블록: `dev-common` · `java-common` · `java-modern`
-- 🔒 고정 33 · ✅ 켜짐 94 · ⬜ 꺼짐 192
+- 🔒 고정 34 · ✅ 켜짐 94 · ⬜ 꺼짐 192
 - 기본과 비교: 새로 켜짐 24개 (스킬 24)
 
 <details><summary>새로 켜지는 항목 24개</summary>
@@ -723,7 +724,7 @@
 ### `rust` — Rust Axum
 
 - 켜는 블록: `dev-common` · `rust`
-- 🔒 고정 33 · ✅ 켜짐 87 · ⬜ 꺼짐 199
+- 🔒 고정 34 · ✅ 켜짐 87 · ⬜ 꺼짐 199
 - 기본과 비교: 새로 켜짐 17개 (에이전트 2 · 스킬 15)
 
 <details><summary>새로 켜지는 항목 17개</summary>
@@ -754,7 +755,7 @@
 ### `python` — Python FastAPI
 
 - 켜는 블록: `dev-common` · `python`
-- 🔒 고정 33 · ✅ 켜짐 88 · ⬜ 꺼짐 198
+- 🔒 고정 34 · ✅ 켜짐 88 · ⬜ 꺼짐 198
 - 기본과 비교: 새로 켜짐 18개 (에이전트 2 · 스킬 16)
 
 <details><summary>새로 켜지는 항목 18개</summary>
@@ -785,7 +786,7 @@
 ### `unity` — Unity 게임
 
 - 켜는 블록: `dev-common` · `unity`
-- 🔒 고정 33 · ✅ 켜짐 98 · ⬜ 꺼짐 188
+- 🔒 고정 34 · ✅ 켜짐 98 · ⬜ 꺼짐 188
 - 기본과 비교: 새로 켜짐 28개 (에이전트 6 · 스킬 22)
 
 <details><summary>새로 켜지는 항목 28개</summary>
@@ -816,7 +817,7 @@
 ### `dream` — 꿈 해몽 앱
 
 - 켜는 블록: `frontend-core` · `frontend-tooling` · `ai-app` · `dream`
-- 🔒 고정 33 · ✅ 켜짐 144 · ⬜ 꺼짐 142
+- 🔒 고정 34 · ✅ 켜짐 144 · ⬜ 꺼짐 142
 - 기본과 비교: 새로 켜짐 74개 (에이전트 8 · 스킬 66)
 
 <details><summary>새로 켜지는 항목 74개</summary>
@@ -847,7 +848,7 @@
 ### `fortune` — 운세 앱
 
 - 켜는 블록: `frontend-core` · `frontend-tooling` · `ai-app` · `fortune`
-- 🔒 고정 33 · ✅ 켜짐 132 · ⬜ 꺼짐 154
+- 🔒 고정 34 · ✅ 켜짐 132 · ⬜ 꺼짐 154
 - 기본과 비교: 새로 켜짐 62개 (에이전트 4 · 스킬 58)
 
 <details><summary>새로 켜지는 항목 62개</summary>
@@ -878,7 +879,7 @@
 ### `health` — 건강·식단 앱
 
 - 켜는 블록: `frontend-core` · `frontend-tooling` · `ai-app` · `health`
-- 🔒 고정 33 · ✅ 켜짐 127 · ⬜ 꺼짐 159
+- 🔒 고정 34 · ✅ 켜짐 127 · ⬜ 꺼짐 159
 - 기본과 비교: 새로 켜짐 57개 (에이전트 4 · 스킬 53)
 
 <details><summary>새로 켜지는 항목 57개</summary>
@@ -909,7 +910,7 @@
 ### `nexacro` — 넥사크로 마이그레이션
 
 - 켜는 블록: `dev-common` · `frontend-core` · `java-common` · `java-legacy` · `nexacro`
-- 🔒 고정 33 · ✅ 켜짐 115 · ⬜ 꺼짐 171
+- 🔒 고정 34 · ✅ 켜짐 115 · ⬜ 꺼짐 171
 - 기본과 비교: 새로 켜짐 46개 (스킬 46) · 충돌로 꺼짐 1개: tdd-guard
 
 <details><summary>새로 켜지는 항목 46개</summary>
@@ -941,7 +942,7 @@
 
 - 애드온 — 다른 프리셋에 더해 씀
 - 켜는 블록: `seo-geo`
-- 🔒 고정 33 · ✅ 켜짐 97 · ⬜ 꺼짐 189
+- 🔒 고정 34 · ✅ 켜짐 97 · ⬜ 꺼짐 189
 - 기본과 비교: 새로 켜짐 27개 (에이전트 2 · 스킬 25)
 
 <details><summary>새로 켜지는 항목 27개</summary>
@@ -973,7 +974,7 @@
 
 - 애드온 — 다른 프리셋에 더해 씀
 - 켜는 블록: `spec-extraction`
-- 🔒 고정 33 · ✅ 켜짐 74 · ⬜ 꺼짐 212
+- 🔒 고정 34 · ✅ 켜짐 74 · ⬜ 꺼짐 212
 - 기본과 비교: 새로 켜짐 4개 (스킬 4)
 
 <details><summary>새로 켜지는 항목 4개</summary>
@@ -1004,7 +1005,7 @@
 
 - 애드온 — 다른 프리셋에 더해 씀
 - 켜는 블록: `n8n`
-- 🔒 고정 33 · ✅ 켜짐 75 · ⬜ 꺼짐 211
+- 🔒 고정 34 · ✅ 켜짐 75 · ⬜ 꺼짐 211
 - 기본과 비교: 새로 켜짐 5개 (스킬 5)
 
 <details><summary>새로 켜지는 항목 5개</summary>
