@@ -16,6 +16,8 @@ const manifest = {
     'rule:r.md': { type: 'rule', state: 'on' },
     'skill:s1': { type: 'skill', state: 'off' },
     'skill:s2': { type: 'skill', state: 'off' },
+    'setting:superpowers 플러그인': { type: 'setting', state: 'on', key: 'plugin:superpowers@m' },
+    'setting:상태줄 `statusline.sh`': { type: 'setting', state: 'on', key: 'statusLine' },
   },
   relations: {
     bundles: { q: { title: '품질', items: ['hook:a', 'hook:b', 'rule:r.md'] } },
@@ -87,6 +89,21 @@ test('정상: commitLayer — 파일에 쓰고 켬·끔 차이와 재시작 필�
   const r2 = commitLayer({ manifest, paths, project, scope: 'profile', mutate: (l) => applyToggle(l, 'off', 'hook:a', manifest), composeFn: () => {} });
   assert.deepStrictEqual([r2.turnedOff, r2.needRestart], [['hook:a'], false]);
   assert.ok(fs.existsSync(paths.profilePath));
+});
+
+test('정상: 설정 항목은 이름에 공백·한글·백틱이 있어도 켜고 끔 (manifest 에 있는 이름이면)', () => {
+  let l = applyToggle({}, 'off', 'setting:superpowers 플러그인', manifest);
+  l = applyToggle(l, 'off', 'setting:상태줄 `statusline.sh`', manifest);
+  const r = run([{ source: 'project', ...l }]);
+  assert.ok(!r.enabled.has('setting:superpowers 플러그인') && !r.enabled.has('setting:상태줄 `statusline.sh`'));
+  l = applyToggle(l, 'on', 'setting:superpowers 플러그인', manifest);
+  assert.ok(run([{ source: 'project', ...l }]).enabled.has('setting:superpowers 플러그인'));
+});
+
+test('악성: 공백 허용을 이용한 조작 — manifest 에 없는 이름·줄바꿈·제어문자·경로 조작은 거부', () => {
+  for (const bad of ['setting:superpowers 플러그인\n', 'setting:superpowers  플러그인', 'setting:superpowers 플러그인\u0000', 'hook:a b', 'setting:../../x 플러그인', 'setting:\u001b[2J', ' setting:superpowers 플러그인']) {
+    assert.throws(() => applyToggle({}, 'off', bad, manifest), /올바르지|모르는/, JSON.stringify(bad));
+  }
 });
 
 test('악성: 모르는 이름·경로 조작·프로토타입 키 → 거부(예외), 층은 그대로', () => {

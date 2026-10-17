@@ -17,7 +17,7 @@ const { resolve, expand } = require('./resolve');
 const { loadLayers, readJsonObject, readSkipped } = require('./layers');
 const { applyToggle, applyPreset, explainUnchanged, commitLayer, layerIndex } = require('./apply');
 const { compose } = require('./compose');
-const { checkUpdate } = require('./update');
+const { checkUpdate, readChannel } = require('./update');
 const { runDoctor } = require('./doctor');
 const { statusLines } = require('./status');
 
@@ -59,7 +59,7 @@ function report(lines) {
 
 function prepare(withUpdate) {
   if (withUpdate) {
-    const ch = readJsonObject(path.join(paths.stateDir, 'channel.json'));
+    const ch = readChannel({ codeHome: paths.codeHome, stateDir: paths.stateDir });
     try {
       const r = checkUpdate({ codeHome: paths.codeHome, stateDir: paths.stateDir, ...channelOf(ch), dev: paths.dev, pin: typeof ch.pin === 'string' ? ch.pin : null });
       if (r.message) process.stderr.write(r.message + '\n');
@@ -119,7 +119,7 @@ switch (cmd) {
     break;
   }
   case 'update': {
-    const ch = readJsonObject(path.join(paths.stateDir, 'channel.json'));
+    const ch = readChannel({ codeHome: paths.codeHome, stateDir: paths.stateDir });
     try { fs.rmSync(path.join(paths.stateDir, 'update-check.json'), { force: true }); } catch { /* 없음 */ }
     const r = checkUpdate({ codeHome: paths.codeHome, stateDir: paths.stateDir, ...channelOf(ch), dev: paths.dev, pin: null });
     process.stdout.write((r.message || `[gugbab] ${r.updated ? '갱신됨' : r.skipped === 'up-to-date' ? '이미 최신' : `건너뜀 (${r.skipped})`}`) + '\n');

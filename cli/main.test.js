@@ -21,6 +21,7 @@ function setup() {
       'rule:git.md': { type: 'rule', state: 'on', path: '.claude/rules/git.md' },
       'skill:react-core': { type: 'skill', state: 'off', path: '.claude/skills/react-core' },
       'setting:claude-md': { type: 'setting', state: 'lock', key: 'claudeMd', path: '.claude/CLAUDE.common.md' },
+      'setting:superpowers 플러그인': { type: 'setting', state: 'on', key: 'plugin:superpowers@m' },
     },
     hookOrder: { Stop: [{ id: 'hook:cc-notify', matcher: '', args: [] }] },
     relations: { bundles: { b: { title: '묶음 B', items: ['hook:cc-notify', 'rule:git.md'] } }, presets: { p1: { title: '프리셋 하나', enable: ['bundle:b'] } } },
@@ -160,4 +161,13 @@ test('경계: harness 를 터미널 없이 부르면 화면을 못 띄운다고 
   assert.strictEqual(r.status, 1);
   assert.match(r.stderr, /터미널/);
   assert.match(r.stderr, /--open/);
+});
+
+test('정상: 이름에 공백·한글이 있는 설정 항목(플러그인)을 끄면 조립된 settings.json 의 enabledPlugins 가 false', () => {
+  const s = setup();
+  const cfg = run(s, ['prepare']).stdout.trim();
+  const r = run(s, ['off', 'setting:superpowers 플러그인']);
+  assert.strictEqual(r.status, 0, r.stderr);
+  assert.match(r.stdout, /끔: setting:superpowers 플러그인/);
+  assert.strictEqual(JSON.parse(fs.readFileSync(path.join(cfg, 'settings.json'), 'utf8')).enabledPlugins['superpowers@m'], false);
 });
