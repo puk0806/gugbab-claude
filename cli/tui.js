@@ -21,6 +21,7 @@ function charWidth(cp) {
   if ((cp >= 0x2e80 && cp <= 0xa4cf) || (cp >= 0xac00 && cp <= 0xd7a3) || (cp >= 0xf900 && cp <= 0xfaff)) return 2;
   if ((cp >= 0xfe30 && cp <= 0xfe4f) || (cp >= 0xff00 && cp <= 0xff60) || (cp >= 0xffe0 && cp <= 0xffe6)) return 2;
   if (cp >= 0x1f300 && cp <= 0x1faff) return 2;
+  if (cp === 0x2705 || cp === 0x274c || cp === 0x2b1b || cp === 0x2b1c) return 2; // ✅ ❌ ⬛ ⬜ — 기본이 그림 글자(2칸)
   return 1;
 }
 function strWidth(s) { let w = 0; for (const ch of String(s)) w += charWidth(ch.codePointAt(0)); return w; }
@@ -87,7 +88,8 @@ function entryState(st, row, res) {
   const ids = row.group ? (expand(row.id, st.manifest) || []) : [row.id];
   const on = ids.filter(i => res.enabled.has(i)).length;
   const lockedAll = ids.length > 0 && ids.every(i => res.locked.has(i));
-  const mark = lockedAll ? '🔒 ' : on === ids.length && ids.length ? '[x]' : on === 0 ? '[ ]' : '[-]';
+  // docs 표기와 같은 아이콘 (2026-10-17 사용자 요청) — ✅ 켬 · ⬜ 끔 · 🟨 일부 켬 · 🔒 고정. 모두 화면 2칸
+  const mark = lockedAll ? '🔒' : on === ids.length && ids.length ? '✅' : on === 0 ? '⬜' : '🟨';
   return { ids, on, total: ids.length, lockedAll, mark };
 }
 
