@@ -321,6 +321,15 @@
             "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/bash-guard.js"
           }
         ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/parallel-hint.js"
+          }
+        ]
       }
     ],
     "SessionStart": [
@@ -403,6 +412,10 @@
           {
             "type": "command",
             "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/progress-tracker.js"
+          },
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/parallel-hint.js"
           }
         ]
       }

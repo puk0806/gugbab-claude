@@ -291,6 +291,9 @@ const OWNERSHIP = [
   { id: 'hook:레포 전용(relation-guard)', kind: 'hooks', option: 'repo-only',
     why: 'relations.json(관계 원본)은 원본 레포에만 있다 — 설치본에 가면 검사할 대상이 없다',
     members: ['relation-guard.js'] },
+  { id: 'hook:레포·래퍼 전용(parallel-hint)', kind: 'hooks', option: 'repo-only',
+    why: '병렬 실행 안내(2026-10-17) — 래퍼(gugbab-claude)가 manifest 로 켜고, 원본 레포는 직접 배선. 옛 project-install.sh 복사 설치에는 넣지 않는다(이전 방식은 개편 6단계에서 정리)',
+    members: ['parallel-hint.js'] },
 ];
 
 const KINDS = ['agents', 'skills', 'rules', 'hooks'];

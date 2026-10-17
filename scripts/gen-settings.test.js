@@ -348,13 +348,27 @@ console.log('\n[relation-guard] --relation-guard 일 때만 PreToolUse Bash · P
   assert('--util --relation-guard → 미배선', JSON.stringify(util.hooks).includes('relation-guard'), false)
 }
 
+// ── parallel-hint (2026-10-17, 레포·래퍼 전용 — 설치 스크립트는 이 옵션을 넘기지 않음) ──────
+console.log('\n[parallel-hint] --parallel-hint 일 때만 UserPromptSubmit · PostToolUse * 에 배선')
+{
+  const cmdsOf = (s, ev, m) => (s.hooks[ev] || []).filter((g) => m === undefined || g.matcher === m).flatMap((g) => g.hooks.map((h) => h.command))
+  const on = generate('--dev', '--parallel-hint')
+  assert('--parallel-hint → UserPromptSubmit 배선', cmdsOf(on, 'UserPromptSubmit').some((c) => /parallel-hint\.js/.test(c)), true)
+  assert('--parallel-hint → PostToolUse * 배선', cmdsOf(on, 'PostToolUse', '*').some((c) => /parallel-hint\.js/.test(c)), true)
+  // 악성·경계: 옵션 없이는 어떤 조합에서도 배선되지 않음 (옛 설치본엔 훅 파일이 없음), util 은 옵션이 있어도 미배선
+  for (const flags of [['--dev'], ['--dev', '--typescript', '--memory', '--codex', '--readme-guard', '--staleness-guard', '--branch-protection', '--relation-guard'], ['--util', '--parallel-hint']]) {
+    const s = generate(...flags)
+    assert(`${flags.join(' ')} → parallel-hint 미배선`, JSON.stringify(s.hooks).includes('parallel-hint'), false)
+  }
+}
+
 // ── 원본 레포 settings.json ↔ 생성기 전체 옵션 출력 동기 (2026-10-05) ──────
 // 원본 레포는 모든 옵션을 켠 설치본과 같은 설정을 써야 한다(원본에서 훅을 실사용하며 검증하는 구조).
 // 손으로 고친 settings.json 이 생성기와 어긋나 statusLine 누락·allow 누락·훅 배선 누락(verification-guard
 // PostToolUse Write)이 생긴 것을 계기로, 의미 단위(훅은 이벤트별 matcher::command 집합, 권한은 집합)로 비교한다.
 console.log('\n[회귀] 원본 .claude/settings.json == gen-settings 전체 옵션 출력 (의미 비교)')
 {
-  const full = generate('--dev', '--typescript', '--memory', '--superpowers', '--codex', '--readme-guard', '--staleness-guard', '--branch-protection', '--relation-guard')
+  const full = generate('--dev', '--typescript', '--memory', '--superpowers', '--codex', '--readme-guard', '--staleness-guard', '--branch-protection', '--relation-guard', '--parallel-hint')
   const repo = JSON.parse(require('fs').readFileSync(path.join(__dirname, '..', '.claude', 'settings.json'), 'utf8'))
   const norm = (s) => {
     const o = JSON.parse(JSON.stringify(s))
