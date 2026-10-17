@@ -164,6 +164,7 @@ gugbab-claude/
 ```
 
 - 테스트: `node --test cli/*.test.js` · `node --test .claude/hooks/*.test.js` · `node --test scripts/*.test.js`
+- 실사용 시나리오(실제 claude 세션으로 종류별 껐다 켜기·폴더 분리 확인, 몇 분 걸림): `sh scripts/wrapper-e2e.sh` (설치본) · `--dev` (작업 트리)
 - 항목을 추가·변경하면 `relations.json`(소속·관계)과 체크리스트를 함께 고치고 `node scripts/build-manifest.js` 로 manifest 를 다시 만듭니다 (`relation-guard` 훅이 빠진 것을 커밋 때 막음).
 - 이 레포에서 작업할 때의 규칙: [CLAUDE.md](./CLAUDE.md) · `.claude/rules/`
 - 설계·진행 상황: [래퍼 개편 계획서](./docs/plans/2026-10-15-gugbab-claude-shim-wrapper.md)
