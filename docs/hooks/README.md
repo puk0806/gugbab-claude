@@ -1,6 +1,6 @@
 # 훅 (Hooks)
 
-Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 31종 = 실행 훅 30종 + `statusline.sh`, 2026-10-17 실측 — 2026-10-16 레포 전용 `relation-guard`, 2026-10-17 레포·래퍼 전용 `parallel-hint` 추가).
+Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 32종 = 실행 훅 31종 + `statusline.sh`, 2026-10-17 실측 — 2026-10-16 레포 전용 `relation-guard`, 2026-10-17 레포·래퍼 전용 `parallel-hint`·`claude-version-check` 추가).
 
 훅 파일 위치: `.claude/hooks/`
 
@@ -103,6 +103,7 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 31종 = 실행 �
 |----|--------|------|:---:|
 | [relation-guard.js](../../.claude/hooks/relation-guard.js) | PostToolUse Write/Edit · PreToolUse Bash | 훅·룰·커맨드·에이전트·스킬 관계 원본 [`relations.json`](../../relations.json)(묶음·블록·필수 의존·관계 분류) 검사 — 파일 저장 때 분류 안 된 새 언급·블록/묶음 소속 없는 새 항목·체크리스트 줄 없는 새 훅·룰·커맨드를 알리고(비차단), `git commit` 때 하나라도 있으면 차단. `relations.json` 이 없는 레포에서는 동작하지 않음. 레포 전체 검사는 `scripts/relations.test.js` | ✅ |
 | [parallel-hint.js](../../.claude/hooks/parallel-hint.js) | UserPromptSubmit · PostToolUse (전체) | **병렬 실행 안내**(2026-10-17, 비차단) — 요청에 서로 독립인 작업이 여럿 보이면(번호 목록 2개+·작업 동사 여럿·"병렬" 언급) 독립 도구 호출은 한 응답에, 긴 테스트는 백그라운드로, 독립 조사는 서브에이전트로 동시에 하라고 알림(앞 결과가 필요한 단계·같은 파일 수정·커밋 순서·사용자 확인 대기는 제외). 읽기 전용 도구 1개씩인 응답이 3번 연속이면 묶으라고 한 번 알림(트랜스크립트 끝 256KB만 읽음). 시스템·훅 메시지·짧은 질문은 무시. 옛 복사 설치에는 들어가지 않음 — 래퍼에서는 🔒 고정(끌 수 없음) | ✅ |
+| [claude-version-check.js](../../.claude/hooks/claude-version-check.js) | SessionStart | **Claude Code 버전 확인**(2026-10-17, 비차단, 래퍼에서 🔒 고정) — `claude --version` 을 지난 세션에 본 버전과 비교해 바뀌었으면 알림(래퍼의 로그인 공유는 문서에 없는 내부 변수 `CLAUDE_SECURESTORAGE_CONFIG_DIR` 를 쓰므로 "Not logged in" 이면 `gugbab-claude doctor`), 하루에 한 번 npm 레지스트리에서 최신 버전을 확인(3초 제한, 실패하면 건너뜀)해 새 버전이 있으면 `claude update` 안내. 기록은 래퍼 데이터 폴더 `state/claude-version.json`(디스패처가 `GUGBAB_STATE_DIR` 로 넘김, 없으면 임시 폴더) — `status`·`doctor` 도 이 기록으로 버전 줄을 보여 줌. 옛 복사 설치에는 들어가지 않음 | ✅ |
 
 ---
 
@@ -115,7 +116,7 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 31종 = 실행 �
 ├── Memory (2종)    ← --memory 옵션 선택 시 추가
 ├── Codex (1종)     ← --codex 옵션 선택 시 추가
 └── Branch Protection (1종)  ← --branch-protection 옵션 선택 시 추가
-레포 전용 (2종)  ← relation-guard — gugbab-claude 레포에서만 (설치되지 않음) · parallel-hint — 이 레포 + 래퍼(gugbab-claude)에서 (옛 복사 설치에는 설치되지 않음)
+레포 전용 (3종)  ← relation-guard — gugbab-claude 레포에서만 (설치되지 않음) · parallel-hint · claude-version-check — 이 레포 + 래퍼(gugbab-claude)에서 (옛 복사 설치에는 설치되지 않음)
 ```
 
 ## 래퍼(`gugbab-claude`)로 실행할 때 (2026-10-16 개편 2단계)
