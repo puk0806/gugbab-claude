@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// progress-tracker.js — UserPromptSubmit + PostToolUse(Write·Edit·NotebookEdit) + SessionStart Hook (공통, 모든 템플릿)
+// progress-tracker.js — UserPromptSubmit + PostToolUse(Write·Edit·NotebookEdit) + SessionStart Hook (공통)
 //
 // 목적: 작업이 중간에 끊겨도(토큰 소진·종료·/clear·자동 요약) 어디까지 했는지 이어서 알 수 있게 한다 (2026-10-06 사용자 요청)
 //

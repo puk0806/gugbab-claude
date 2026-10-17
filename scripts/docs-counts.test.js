@@ -82,6 +82,31 @@ describe('README·docs 수치 ↔ 실제 레포 개수', () => {
     assert.strictEqual(c.approx, false, 'README 에 근사 표기("약 N종" 등)');
   });
 
+  test('README 에이전트 수·커맨드 수, 훅 문서·체크리스트의 훅 수 == 실제 (2026-10-17 리뷰 — 체크리스트 수치가 1 어긋난 채 남았던 사례)', () => {
+    const agentsActual = (() => { let n = 0; const walk = (d) => { for (const e of listFiles(d)) { if (e.isDirectory()) walk(path.join(d, e.name)); else if (e.name.endsWith('.md') && e.name !== 'CLAUDE.md') n++; } }; walk(path.join(REPO, '.claude', 'agents')); return n; })();
+    const am = readme.match(/에이전트 \(\d+카테고리\) (\d+)종/);
+    assert.ok(am, 'README 에서 "에이전트 (N카테고리) M종" 을 찾지 못함');
+    assert.strictEqual(Number(am[1]), agentsActual, 'README 에이전트 수');
+    const cm = readme.match(/\| 커맨드 \| (\d+)종/);
+    assert.ok(cm, 'README 에서 커맨드 수를 찾지 못함');
+    assert.strictEqual(Number(cm[1]), listFiles(path.join(REPO, '.claude', 'commands')).filter((e) => e.isFile() && e.name.endsWith('.md')).length, 'README 커맨드 수');
+    const runHooks = listFiles(path.join(REPO, '.claude', 'hooks')).filter((e) => e.isFile() && e.name.endsWith('.js') && !e.name.endsWith('.test.js')).length;
+    const hd = fs.readFileSync(path.join(REPO, 'docs', 'hooks', 'README.md'), 'utf8').match(/총 (\d+)종 = 실행 훅 (\d+)종 \+ `statusline\.sh`/);
+    assert.ok(hd, 'docs/hooks/README.md 에서 "총 N종 = 실행 훅 M종 + statusline.sh" 를 찾지 못함');
+    assert.deepStrictEqual([Number(hd[1]), Number(hd[2])], [runHooks + 1, runHooks], 'docs/hooks/README.md 훅 수');
+    for (const f of ['docs/plans/page/checklist-head.md', 'docs/plans/2026-10-15-harness-item-checklist.md']) {
+      const md = fs.readFileSync(path.join(REPO, f), 'utf8');
+      const h2 = md.match(/^## 2\. 훅 \((\d+)종\)/m);
+      const hd2 = md.match(/훅 (\d+) \+ 상태줄 1/);
+      assert.ok(h2 && hd2, `${f} 에서 훅 수 표기를 찾지 못함`);
+      assert.deepStrictEqual([Number(h2[1]), Number(hd2[1])], [runHooks, runHooks], `${f} 훅 수`);
+      // 2장 체크 항목 수도 실제 실행 훅 수와 같아야 한다 (상태줄은 1장 설정 항목)
+      const sec = md.split(/^## /m).find((x) => x.startsWith('2. 훅')) || '';
+      const items = (sec.match(/^- \[[ x]\] \*\*/gm) || []).length;
+      assert.strictEqual(items, runHooks, `${f} 2장 훅 항목 수`);
+    }
+  });
+
   test('README 프리셋 표 == relations.json 프리셋 (이름·켜지는 블록, 빠짐·유령 없음)', () => {
     const presets = Object.entries(JSON.parse(fs.readFileSync(path.join(REPO, 'relations.json'), 'utf8')).presets || {}).filter(([k]) => !k.startsWith('$'));
     assert.ok(presets.length > 0, 'relations.json 에 프리셋이 없음');
@@ -121,8 +146,9 @@ describe('파서 방어 (악성·오남용)', () => {
     assert.throws(() => presetRows(dup), /중복/);
     assert.throws(() => categoryRows('| [frontend](x) | 3종 |\n| [frontend](x) | 4종 |\n'), /중복/);
   });
-  test('악성: 블록 칸에 백틱 이름이 없는 행(옵션 표 등)은 프리셋으로 세지 않음', () => {
-    const rows = presetRows('| `--version vX.Y.Z` | 고정 |  |\n| `gugbab-claude status` | 요약 | 설명 |\n| `rust` | Rust | `rust` |\n');
+  test('악성: 이름은 프리셋처럼 생겼지만 블록 칸에 백틱 이름이 없는 행(설명 표)은 프리셋으로 세지 않음', () => {
+    // 첫 칸이 이름 정규식을 통과하는 행이라야 "블록 없음 → 건너뜀" 분기를 실제로 탄다
+    const rows = presetRows('| `opt` | 설명 | 일반 문장 |\n| `--version vX.Y.Z` | 고정 |  |\n| `rust` | Rust | `rust` |\n');
     assert.deepStrictEqual([...rows.keys()], ['rust']);
   });
 });

@@ -277,8 +277,8 @@ try {
     return L;
   }
   const question = undated.length > 0
-    ? `"검증일이 ${STALE_DAYS}일을 넘었거나 판독 불가한 스킬 ${urgentCount}종이 있습니다. freshness-auditor(작성 도구 설치 시)로 재검증하시겠습니까?"`
-    : `"검증일이 ${STALE_DAYS}일을 넘은 스킬 ${stale.length}종이 있습니다. freshness-auditor(작성 도구 설치 시)로 재검증하시겠습니까?"`;
+    ? `"검증일이 ${STALE_DAYS}일을 넘었거나 판독 불가한 스킬 ${urgentCount}종이 있습니다. freshness-auditor(하네스 제작 묶음을 켠 경우)로 재검증하시겠습니까?"`
+    : `"검증일이 ${STALE_DAYS}일을 넘은 스킬 ${stale.length}종이 있습니다. freshness-auditor(하네스 제작 묶음을 켠 경우)로 재검증하시겠습니까?"`;
 
   // ── SessionStart 모드: stdout JSON 1개 ─────────────────────────────────
   if (SESSION_START) {

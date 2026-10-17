@@ -200,8 +200,8 @@ try {
 
   const testPath = findTestFile(filePath)
   // 대응 테스트가 없으면 비교할 기대값이 없으므로 통과.
-  // 테스트 부재 자체의 차단은 tdd-guard 몫이지만, --legacy 프로파일에서는 tdd-guard가 설치되지 않아
-  // 테스트 없는 소스는 어떤 훅도 막지 않는다 (의도된 동작 — scripts/gen-settings.js --legacy 참조)
+  // 테스트 부재 자체의 차단은 tdd-guard 몫이다 — tdd-guard 를 꺼 둔 프로젝트(레거시 등)에서는
+  // 테스트 없는 소스를 어떤 훅도 막지 않는다 (의도된 동작)
   if (!testPath) process.exit(0)
 
   let testText = ''

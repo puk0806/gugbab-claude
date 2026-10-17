@@ -43,7 +43,7 @@ find "docs/skills/${CAT}" -name verification.md -exec awk '{sub(/\r$/,"")} FNR==
 
 ### 스킬 검증 현황
 - PENDING_TEST: {N}개
-- 확인 필요 시: skill-tester 에이전트로 2단계 테스트 (작성 도구 설치 시에만 존재 — 없으면 `.claude/rules/verification-policy.md` 절차를 수동 수행, 해당 규칙도 없으면 생략)
+- 확인 필요 시: skill-tester 에이전트로 2단계 테스트 (하네스 제작 묶음을 켰을 때만 있음 — 없으면 `.claude/rules/verification-policy.md` 절차를 수동 수행, 해당 규칙도 없으면 생략)
 
 ### 오늘 작업한 파일
 - {최근 수정 파일 목록}

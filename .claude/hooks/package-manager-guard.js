@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// package-manager-guard.js — PreToolUse Bash Hook (개발 템플릿)
+// package-manager-guard.js — PreToolUse Bash Hook (개발 전용)
 //
 // 목적: 프로젝트가 쓰는 패키지 매니저 강제 (2026-10-06 사용자 요청)
 //   lock 파일로 매니저를 판단해, 다른 매니저로 의존성을 바꾸는 명령(설치·추가·삭제·업데이트)을 차단한다.

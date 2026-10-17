@@ -28,7 +28,7 @@
  * 안전장치: 에러 발생 시 exit 0 (차단 않음)
  *
  * 옵션: --no-readme — README 동기화 검사 비활성화 (PENDING_TEST 검사·세션 추적만 수행).
- *       gen-settings.js가 --readme-guard 미선택 템플릿에 전달 (opt-in 의미 보존)
+ *       gen-settings.js가 --readme-guard 를 고르지 않은 설정에 붙인다 (opt-in 의미 보존)
  */
 
 const readline = require('readline')
@@ -342,13 +342,13 @@ function buildPendingTestReason(missing) {
     '',
     '판정 기준:',
     '  • "수행일: YYYY-MM-DD" 라인 + 실제 테스트 흔적 키워드 동시 필요',
-    '    (PASS / FAIL / Q1·Q2 / skill-tester 호출 / agent content test / N/N PASS — skill-tester 는 작성 도구 설치 시에만 존재)',
+    '    (PASS / FAIL / Q1·Q2 / skill-tester 호출 / agent content test / N/N PASS — skill-tester 는 하네스 제작 묶음을 켰을 때만 있음)',
     '  • "skill-tester 호출 미수행", "셀프 검증" 같은 자백 라인만 있으면 차단 (skill-tester 미설치 시에도 동일)',
     '',
     ...missing.map(f => `  • ${f}`),
     '',
     '조치 (하나 선택):',
-    '  A. skill-tester 에이전트 호출 (권장 — 작성 도구 옵션 설치 시)',
+    '  A. skill-tester 에이전트 호출 (권장 — 하네스 제작 묶음을 켠 경우)',
     '  B. 수동으로 section 5에 테스트 기록 작성 ("**수행일**: ' + today + '" + PASS/FAIL)',
     '  C. "실사용 필수 스킬" 카테고리면 agent content test 기록만으로 PENDING_TEST 유지 가능',
     '',

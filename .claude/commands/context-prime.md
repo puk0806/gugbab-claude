@@ -1,7 +1,7 @@
 이 세션의 작업 컨텍스트를 초기화해. 아래 순서로 읽고 상태를 파악한 뒤 요약 보고해.
 
 1. CLAUDE.md 읽기
-2. `.claude/rules/` 목록을 먼저 확인(`ls .claude/rules/`)하고 **존재하는 파일만** 읽는다 — 설치 옵션에 따라 없는 규칙이 있다(작성 규칙은 작성 도구 설치 시에만 존재). 우선순위:
+2. `.claude/rules/` 목록을 먼저 확인(`ls .claude/rules/`)하고 **존재하는 파일만** 읽는다 — 이 프로젝트에서 꺼 둔 규칙이 있을 수 있다(`/harness`)(작성 규칙은 하네스 제작 묶음을 켰을 때만 있음). 우선순위:
    `git.md` → `task-workflow.md` → `info-verification.md` → (있으면) `creation-workflow.md`·`verification-policy.md` → 나머지는 목록만 파악
    (폴더가 없거나 비어 있으면 건너뛴다)
 3. git status 확인 (현재 브랜치, 수정 파일 목록)
