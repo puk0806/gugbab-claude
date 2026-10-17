@@ -72,6 +72,7 @@
     }
   },
   "standalone": [
+    "hook:parallel-hint",
     "hook:bash-guard",
     "hook:protect-secrets",
     "hook:parry",
@@ -94,7 +95,8 @@
     "command:create-plan",
     "command:fix-pr",
     "command:update-docs",
-    "command:sparc-refine"
+    "command:sparc-refine",
+    "command:harness"
   ],
   "blocks": {
     "core": {
@@ -514,7 +516,25 @@
       "changed-only"
     ]
   },
+  "presets": {
+    "$comment": "지금 설치 템플릿을 블록·묶음 조합으로 다시 쓴 것 (계획서 14.4). TUI 의 p 키 / gugbab-claude preset <이름> 으로 한 번에 켬. 애드온은 다른 프리셋에 더함",
+    "nextjs": { "title": "React·Next.js (+TS 백엔드)", "enable": ["block:dev-common", "block:frontend-core", "block:frontend-tooling", "block:ts-backend"] },
+    "java-legacy": { "title": "Java Spring 레거시", "enable": ["block:dev-common", "block:java-common", "block:java-legacy"] },
+    "java-modern": { "title": "Java Spring 모던", "enable": ["block:dev-common", "block:java-common", "block:java-modern"] },
+    "rust": { "title": "Rust Axum", "enable": ["block:dev-common", "block:rust"] },
+    "python": { "title": "Python FastAPI", "enable": ["block:dev-common", "block:python"] },
+    "unity": { "title": "Unity 게임", "enable": ["block:dev-common", "block:unity"] },
+    "dream": { "title": "꿈 해몽 앱", "enable": ["block:frontend-core", "block:frontend-tooling", "block:ai-app", "block:dream"] },
+    "fortune": { "title": "운세 앱", "enable": ["block:frontend-core", "block:frontend-tooling", "block:ai-app", "block:fortune"] },
+    "health": { "title": "건강·식단 앱", "enable": ["block:frontend-core", "block:frontend-tooling", "block:ai-app", "block:health"] },
+    "nexacro": { "title": "넥사크로 마이그레이션", "enable": ["block:dev-common", "block:frontend-core", "block:java-common", "block:java-legacy", "block:nexacro"] },
+    "seo-geo": { "title": "애드온 · SEO·GEO", "enable": ["block:seo-geo"] },
+    "spec-extraction": { "title": "애드온 · 레거시 스펙 추출", "enable": ["block:spec-extraction"] },
+    "n8n": { "title": "애드온 · n8n", "enable": ["block:n8n"] }
+  },
   "edges": {
+    "command:harness>hook:cc-notify": "mention",
+    "rule:commands.md>command:harness": "mention",
     "agent:a11y-auditor>agent:build-perf-benchmarker": "uses",
     "agent:a11y-auditor>agent:frontend-developer": "uses",
     "agent:a11y-auditor>agent:security-auditor": "uses",
@@ -664,6 +684,7 @@
     "hook:memory-sync>hook:session-export": "code",
     "hook:package-manager-guard>hook:bash-guard": "code",
     "hook:relation-guard>hook:bash-guard": "code",
+    "hook:parallel-hint>hook:progress-tracker": "mention",
     "hook:protect-secrets>hook:bash-guard": "code",
     "hook:session-export>hook:memory-pull": "code",
     "hook:session-export>hook:memory-sync": "code",

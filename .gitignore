@@ -2,6 +2,12 @@
 .claude/memory/
 **/.claude/memory/
 
+# gugbab-claude 래퍼 런타임 데이터 (배포본 ~/gugbab 에서 생김 — 계획서 2.1)
+/projects/
+/profile.json
+/logs/
+/state/
+
 # Claude 세션 임시 파일
 .claude/.codex-review-done
 .claude/.codex-unavailable

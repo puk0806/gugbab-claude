@@ -21,47 +21,10 @@ function lastChapter(md) {
   return n;
 }
 const base = lastChapter(plan);
-const m7 = /^## 7\. /m.exec(cl);
-const relIdx = m7 ? m7.index : cl.length;
+// 항목 읽기는 parse-checklist.js 공용 (manifest 생성기와 같은 규칙)
+const { sections, items, relIdx } = require('./parse-checklist').parseChecklist(cl);
 const relMd = cl.slice(relIdx).replace(/^## 7\./m, `## ${base + 1}.`).replace(/^## 8\./m, `## ${base + 2}.`).replace(/^### ([A-E])\./gm, `### ${base + 2}.$1`);
-
-const TYPE = { 1: 'setting', 2: 'hook', 3: 'rule', 4: 'command', 5: 'agent', 6: 'skill' };
-const sections = []; // {no, title, type, groups:[{title, items:[]}]}
-let sec = null, grp = null, last = null;
-for (const raw of cl.slice(0, relIdx).split('\n')) {
-  let m;
-  if ((m = raw.match(/^## (\d)\. (.+)$/))) {
-    sec = { no: +m[1], title: m[2], type: TYPE[m[1]], groups: [] }; sections.push(sec);
-    grp = { title: '', items: [] }; sec.groups.push(grp); last = null; continue;
-  }
-  if (!sec) continue;
-  if ((m = raw.match(/^### [\d.]+ (.+)$/))) { grp = { title: m[1], items: [] }; sec.groups.push(grp); last = null; continue; }
-  if ((m = raw.match(/^- \[[ x]\] \*\*묶음 전체 기본 켬\*\*/))) continue;
-  // 일반 항목: - [x] **name** (기본 켬 …) — desc
-  if ((m = raw.match(/^- \[( |x)\] \*\*(.+?)\*\*(?: \(([^)]*)\))?(?: \(신규\))? — (.*)$/))) {
-    const note = m[3] || '';
-    const rec = m[1] === 'x' ? 'lock' : /기본 켬/.test(note) ? 'on' : 'off';
-    const extra = note.replace(/^기본 [켬끔]\s*·?\s*/, '').replace(/\*\*/g, '');
-    last = { id: sec.type + ':' + m[2].replace(/^\//, ''), name: m[2], rec, note: extra, desc: m[4], rel: [], projHint: null };
-    grp.items.push(last); continue;
-  }
-  // 스킬: - [ ] `name` — desc · 쓰는 에이전트: …
-  if ((m = raw.match(/^ {2}- \[( |x)\] `(.+?)` — (.*)$/))) {
-    let desc = m[3], rel = [];
-    const k = desc.indexOf(' · 쓰는 에이전트: ');
-    if (k >= 0) { rel.push(desc.slice(k + 3)); desc = desc.slice(0, k); }
-    last = { id: 'skill:' + m[2], name: m[2], rec: m[1] === 'x' ? 'on' : 'off', note: '', desc, rel, projHint: null };
-    grp.items.push(last); continue;
-  }
-  // 항목 아래 상세 줄: 일반 항목은 2칸, 스킬은 4칸 들여쓰기. 그보다 깊거나 항목 앞에 나온 줄은 무시
-  // "프로젝트 추천: 끔" (정확히 이 문구만) → 다른 프로젝트에서는 끄기를 추천하는 항목(하네스 제작·README 용). 상세 줄에는 넣지 않는다
-  if ((m = raw.match(/^ {2}(?: {2})?- (.+)$/)) && last) {
-    if (m[1].trim() === '프로젝트 추천: 끔') { last.projHint = 'off'; continue; }
-    last.rel.push(m[1]); continue;
-  }
-}
-for (const s of sections) s.groups = s.groups.filter(g => g.items.length);
-const count = sections.reduce((n, s) => n + s.groups.reduce((a, g) => a + g.items.length, 0), 0);
+const count = items.length;
 
 const tpl = fs.readFileSync(path.join(S, 'page-template.html'), 'utf8');
 const safe = s => s.replace(/<\/script/gi, '<\\/script');
