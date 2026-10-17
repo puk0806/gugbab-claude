@@ -717,7 +717,10 @@ TUI 화면 예 (방안 3 을 고를 때 — 체크리스트 페이지의 "이 �
 - `--uninstall --yes` → 우리 링크·설치 폴더만 삭제, 프로젝트 폴더는 그대로
 - 임시 HOME 에선 macOS 키체인이 없어 doctor 가 로그인 경고를 냄(실제 홈에선 해당 없음). doctor 의 "/harness … 4단계" 옛 문구 정리
 
-**실측 (푸시 후 — GitHub 에서 받아 설치)** — (푸시 후 채움)
+**실측 (푸시 후 — GitHub 에서 받아 설치, 2026-10-17)**
+- `raw.githubusercontent.com/puk0806/gugbab-claude/<브랜치>/install.sh` 를 받아 로컬 파일과 같은지 확인 → 임시 HOME 에서 `--ref <브랜치>` 실행: GitHub clone(060a2ec) · 링크 · `state/channel.json`(`branch`) · PATH 안내 · doctor 정상. 설치본에서 `status`·`preset` 동작
+- 실제 홈에서 doctor 의 로그인 점검 ✓(기본 키체인 항목 있음 — 임시 HOME 의 경고는 키체인이 없어서)
+- 남은 것: 사용자가 기본 터미널에서 실제 홈에 설치해 실사용(이슈는 PR 에서)
 
 ## 문서 갱신 방법
 
