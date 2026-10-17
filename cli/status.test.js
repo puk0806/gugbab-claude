@@ -31,6 +31,13 @@ test('정상: 프로젝트 자체 .claude 가 가진 항목(래퍼가 건너뜀)
   assert.ok(!statusLines({ manifest: {}, resolved: empty(), project, paths: { codeHome: '/g' } }).join('\n').includes('자체'));
 });
 
+test('정상: 버전·채널 줄과 안내 (없으면 줄도 없음)', () => {
+  const text = statusLines({ manifest: {}, resolved: empty(), project, paths: { codeHome: '/g' }, version: { text: 'v1.0.0 (stable — 최신 v* 태그를 따라감)', hint: '안정 버전 v1.0.1 이 있습니다' } }).join('\n');
+  assert.match(text, /버전 +v1\.0\.0 \(stable/);
+  assert.match(text, /⚠ 안정 버전 v1\.0\.1/);
+  assert.ok(!statusLines({ manifest: {}, resolved: empty(), project, paths: { codeHome: '/g' } }).join('\n').includes('버전'));
+});
+
 test('경계: 기본값과 다른 항목이 많으면 12개만 보이고 나머지는 개수로', () => {
   const items = {};
   for (let i = 0; i < 30; i++) items[`skill:s${i}`] = { type: 'skill', state: 'off' };

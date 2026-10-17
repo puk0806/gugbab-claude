@@ -3,13 +3,15 @@
 
 const TYPES = [['setting', '설정'], ['hook', '훅'], ['rule', '룰'], ['command', '커맨드'], ['agent', '에이전트'], ['skill', '스킬']];
 
-function statusLines({ manifest, resolved, project, paths, skipped = new Set() }) {
+function statusLines({ manifest, resolved, project, paths, skipped = new Set(), version = null }) {
   const items = manifest.items || {};
   const lines = [];
   lines.push(`gugbab 하네스 · ${project.id}${paths.dev ? '  (개발 모드)' : ''}`);
   lines.push(`  프로젝트   ${project.root}`);
   lines.push(`  설정 폴더  ${project.configDir}`);
   lines.push(`  하네스     ${paths.codeHome}`);
+  if (version) lines.push(`  버전       ${version.text}`);
+  if (version && version.hint) lines.push(`  ⚠ ${version.hint}`);
   const counts = TYPES.map(([t, label]) => {
     const all = Object.entries(items).filter(([, it]) => it.type === t);
     return `${label} ${all.filter(([id]) => resolved.enabled.has(id)).length}/${all.length}`;

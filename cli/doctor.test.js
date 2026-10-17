@@ -78,3 +78,12 @@ test('경계: macOS 가 아니면 로그인 점검은 건너뛴다는 안내, co
   assert.match(r2.find(x => x.key === 'mux').msg, /tmux/);
   assert.ok(!r2.some(x => x.key === 'links'), '프로젝트가 없으면 링크 점검 생략');
 });
+
+test('정상·경계: 하네스 버전 줄 — 개발 모드 표시, git 저장소가 아니어도 죽지 않음, stateDir 없으면 줄 없음', () => {
+  const s = setup();
+  const r = runDoctor({ paths: { ...s.paths, stateDir: path.join(s.data, 'state'), dev: true }, project: s.project, exec: okExec, env: {}, platform: 'darwin' });
+  const v = r.find(x => x.key === 'version');
+  assert.ok(v, '버전 줄 없음');
+  assert.match(v.msg, /하네스 \? \(git 저장소가 아님\)/);
+  assert.ok(!runDoctor({ paths: s.paths, project: s.project, exec: okExec, env: {}, platform: 'darwin' }).some(x => x.key === 'version'));
+});

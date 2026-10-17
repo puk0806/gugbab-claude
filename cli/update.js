@@ -74,4 +74,32 @@ function checkUpdate({ codeHome, stateDir, channel = 'stable', branch = null, de
   return { updated: true, message: `[gugbab] 하네스 ${from} → ${channel === 'stable' ? label : `${label} ${describe(codeHome)}`}` };
 }
 
-module.exports = { checkUpdate, latestTag };
+// 지금 버전과 채널 — status·doctor 가 보여 준다 (state/channel.json 은 install.sh 가 기록)
+function versionInfo({ codeHome, stateDir, dev = false }) {
+  let ch = {};
+  try { const v = JSON.parse(fs.readFileSync(path.join(stateDir, 'channel.json'), 'utf8')); if (v && typeof v === 'object') ch = v; } catch { /* 없음·깨짐 → stable */ }
+  let isGit = true;
+  try { git(codeHome, ['rev-parse', '--git-dir']); } catch { isGit = false; }
+  if (!isGit) return { version: '?', channel: 'stable', text: '? (git 저장소가 아님)', hint: null };
+  let tag = null;
+  try { tag = git(codeHome, ['describe', '--tags', '--exact-match', 'HEAD']); } catch { /* 태그 위가 아님 */ }
+  if (tag && !/^v\d+\.\d+\.\d+$/.test(tag)) tag = null;
+  let short = '?';
+  try { short = git(codeHome, ['rev-parse', '--short', 'HEAD']); } catch { /* 무시 */ }
+  const version = tag || short;
+  if (dev) return { version, channel: 'dev', text: `${version} (개발 모드 — 자동 최신화 끔)`, hint: null };
+  const pin = typeof ch.pin === 'string' && /^v\d+\.\d+\.\d+$/.test(ch.pin) ? ch.pin : null;
+  if (pin) return { version, channel: 'pinned', text: `${version} (고정 — 자동 최신화 끔, 바꾸려면 설치 명령을 다시)`, hint: null };
+  if (ch.channel === 'branch' && typeof ch.branch === 'string' && BRANCH_RE.test(ch.branch) && !ch.branch.includes('..')) {
+    return { version, channel: 'branch', text: `${ch.branch} ${short} (브랜치 시험 채널 — 그 브랜치를 따라감)`, hint: null };
+  }
+  if (ch.channel === 'main') {
+    let latest = null;
+    try { latest = latestTag(git(codeHome, ['tag', '--list', 'v*']).split('\n').filter(Boolean)); } catch { /* 무시 */ }
+    return { version, channel: 'main', text: `main ${short} (main 채널 — main 최신 커밋을 따라감)`,
+      hint: latest ? `안정 버전 ${latest} 이 있습니다 — 버전(태그)만 받으려면 설치 명령을 다시 실행하세요 (기본 stable)` : null };
+  }
+  return { version, channel: 'stable', text: `${version} (stable — 최신 v* 태그를 따라감)`, hint: null };
+}
+
+module.exports = { checkUpdate, latestTag, versionInfo };
