@@ -1,6 +1,6 @@
 # health 에이전트
 
-건강·식단 앱(health 템플릿) 도메인 전용 에이전트 모음. health 스킬 5종(nutrition-basics · korean-food-nutrition · ingredient-management · meal-recommendation-prompt · nutrition-analysis-prompt)을 실행 단계에서 활용한다.
+건강·식단 앱(health 블록 · 프리셋 `health`) 도메인 전용 에이전트 모음. health 스킬 5종(nutrition-basics · korean-food-nutrition · ingredient-management · meal-recommendation-prompt · nutrition-analysis-prompt)을 실행 단계에서 활용한다.
 
 | 에이전트 | 설명 |
 |---------|------|

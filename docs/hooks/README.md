@@ -42,9 +42,9 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 31종 = 실행 �
 
 ---
 
-## 개발 전용 훅 (6종, `--legacy` 프로파일은 5종) — dev 템플릿 (react-spa·nextjs·rust-axum·java·unity·health·dream-interpretation·fortune-app·python-fastapi·nexacro)
+## 개발 전용 훅 (6종) — 래퍼에서는 테스트 품질 묶음(`bundle:dev-quality`)·자동 포맷·패키지 매니저 가드로 켜고 끈다 (테스트가 거의 없는 레거시 프로젝트는 `tdd-guard` 만 꺼도 된다)
 
-> nexacro(15)는 레거시 코드베이스 전제라 `--legacy` 프로파일이 질문 없이 자동 적용된다(tdd-guard 제외 5종). spec-extraction(14)·seo-geo(11)는 애드온이라 dev 훅을 직접 갖지 않는다.
+> 넥사크로 블록(`block:nexacro`)을 켜면 충돌 규칙으로 `tdd-guard` 가 자동으로 꺼진다(레거시 코드베이스 전제).
 
 > **`--legacy` 프로파일 예외**: tdd-guard.js는 레거시 프로파일에서 복사·배선되지 않는다(레거시 코드베이스는 기존 테스트 커버리지가 불완전해 "소스 수정 시 대응 테스트 파일 필수" 차단이 오탐을 유발하기 때문). `--legacy` 선택 시 개발 전용 훅은 3종(test-fake-guard·adversarial-test-guard·fake-impl-guard)만 설치된다.
 

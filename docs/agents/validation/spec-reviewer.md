@@ -8,7 +8,7 @@
 | 모델 | Sonnet |
 | 도구 | Read, Glob, Grep (읽기 전용) |
 | 호출 | `legacy-spec-extractor`가 마지막 단계에 호출, 또는 사용자 직접 |
-| 템플릿 | spec-extraction(14) |
+| 블록 | 스펙 추출 `block:spec-extraction` (애드온 프리셋 `spec-extraction`) |
 
 ## 검토 항목
 
