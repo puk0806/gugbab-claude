@@ -109,11 +109,39 @@ function isExemptPath(filePath, cwd) {
   try { abs = path.resolve(cwd || process.env.CLAUDE_PROJECT_DIR || process.cwd(), v) } catch { return false }
   if (/^\/(?:private\/)?(?:tmp|var\/folders)\//.test(abs)) return true
   if (HOME) {
-    const projects = path.join(HOME, '.claude', 'projects') + path.sep
-    if (abs.startsWith(projects) && abs.slice(projects.length).split(path.sep)[1] === 'memory') return true
-    if (abs.startsWith(path.join(HOME, '.claude', 'plans') + path.sep)) return true
+    // 래퍼 설정 폴더의 projects/·plans/ 는 ~/.claude 쪽 링크 — 실제 위치로도 한 번 더 본다
+    for (const p of [abs, realLocation(abs)]) {
+      if (!p) continue
+      for (const base of claudeBases()) {
+        const projects = path.join(base, 'projects') + path.sep
+        if (p.startsWith(projects) && p.slice(projects.length).split(path.sep)[1] === 'memory') return true
+        if (p.startsWith(path.join(base, 'plans') + path.sep)) return true
+      }
+    }
   }
   return false
+}
+
+// ~/.claude 와 그 실경로 (홈 아래가 링크인 환경 대비)
+function claudeBases() {
+  const b = path.join(HOME, '.claude')
+  let real = b
+  try { real = fs.realpathSync(b) } catch { /* 없음 */ }
+  return real === b ? [b] : [b, real]
+}
+
+// 가장 가까운 실제 존재하는 상위 폴더의 실경로 + 나머지 (없으면 null)
+function realLocation(abs) {
+  let cur = abs
+  const rest = []
+  for (let i = 0; i < 256; i++) {
+    try { return path.join(fs.realpathSync(cur), ...rest.reverse()) } catch { /* 한 단계 위로 */ }
+    const up = path.dirname(cur)
+    if (up === cur) return null
+    rest.push(path.basename(cur))
+    cur = up
+  }
+  return null
 }
 
 const PRE_CONTEXT = '[task-confirm-guard] 이번 요청에 파일 수정이 필요하면 먼저 "이렇게 이해했습니다:"(요약) → "작업 목록:"(번호 목록) → "진행할까요?"를 제시하고 답변을 끝낸다. 승인 전 Write/Edit 는 훅이 차단한다. 설명·조회·보고 요청이면 파일을 수정하지 않는다.'

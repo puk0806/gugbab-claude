@@ -39,7 +39,10 @@ function readJson(p) {
 function settingsFiles(cwd) {
   const proj = path.resolve(process.env.CLAUDE_PROJECT_DIR || cwd || process.cwd())
   const files = [path.join(proj, '.claude', 'settings.json'), path.join(proj, '.claude', 'settings.local.json')]
-  try { files.push(path.join(os.homedir(), '.claude', 'settings.json')) } catch { /* ignore */ }
+  // 사용자 설정: 래퍼(gugbab-claude)로 실행하면 설정 폴더(CLAUDE_CONFIG_DIR, 절대 경로만)가 그 자리다
+  const cfg = process.env.CLAUDE_CONFIG_DIR
+  if (cfg && path.isAbsolute(cfg)) files.push(path.join(cfg, 'settings.json'))
+  else { try { files.push(path.join(os.homedir(), '.claude', 'settings.json')) } catch { /* ignore */ } }
   return files
 }
 
@@ -139,5 +142,5 @@ if (require.main === module) {
   if (r) process.stdout.write(JSON.stringify(r) + '\n')
   process.exit(0)
 } else {
-  module.exports = { handle, diffSettings, hookCommands }
+  module.exports = { handle, diffSettings, hookCommands, settingsFiles }
 }

@@ -92,7 +92,7 @@ Write 또는 Edit 도구로 다음을 수정한다:
 ### 1. 로컬 프로젝트명·PR 번호·로컬 파일 경로 박지 않기
 
 verification.md는 다른 사람·다른 PC에서도 이해 가능해야 한다. 다음은 박지 않는다:
-- 로컬 프로젝트명 (예: `01_gugbab-claude-package`, `lfos-ui` 등)
+- 로컬 프로젝트명 (예: `01_gugbab-claude-package`, `my-ui` 같은 작업 레포 이름 등)
 - PR 번호 (예: `PR #1~#11`)
 - 로컬 파일 절대경로 (예: `/Users/lf/Desktop/...`)
 - 사용자 로컬 워크플로우 파일명 (예: `visual-regression.yml`)

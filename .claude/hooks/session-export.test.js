@@ -182,6 +182,20 @@ check('저장소 경로 악성: projects 밖·상위 탈출·중첩 transcript_p
     assert.strictEqual(projectStoreDir(home, '/p/q', tp), want, String(tp));
   }
 });
+// 래퍼(gugbab-claude) 설정 폴더의 projects/ 는 ~/.claude/projects 링크 — transcript_path 가 링크 경로로 와도 실제 폴더를 쓴다 (2026-10-16)
+check('저장소 경로: 링크된 설정 폴더 projects 아래 transcript → 실제 ~/.claude/projects/<dir>', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'se-home-'));
+  const real = path.join(home, '.claude', 'projects', '-real-dir');
+  fs.mkdirSync(real, { recursive: true });
+  const cfg = fs.mkdtempSync(path.join(os.tmpdir(), 'se-cfg-'));
+  fs.symlinkSync(path.join(home, '.claude', 'projects'), path.join(cfg, 'projects'));
+  assert.strictEqual(projectStoreDir(home, '/any/proj', path.join(cfg, 'projects', '-real-dir', 'abc.jsonl')), fs.realpathSync(real));
+  // 링크가 아니라 이름만 projects 인 다른 폴더 → 무시하고 인코딩 폴백
+  const fake = fs.mkdtempSync(path.join(os.tmpdir(), 'se-fake-'));
+  fs.mkdirSync(path.join(fake, 'projects', '-real-dir'), { recursive: true });
+  assert.strictEqual(projectStoreDir(home, '/p/q', path.join(fake, 'projects', '-real-dir', 'abc.jsonl')), path.join(home, '.claude', 'projects', '-p-q'));
+  for (const d of [home, cfg, fake]) fs.rmSync(d, { recursive: true, force: true });
+});
 check('저장소 경로 경계: 프로젝트 경로도 transcript 도 없으면 null', () => {
   assert.strictEqual(projectStoreDir('/h', null, null), null);
 });

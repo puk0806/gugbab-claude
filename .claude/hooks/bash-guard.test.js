@@ -438,7 +438,7 @@ assert('http://0.0.0.0:80', isLocalhostUrl('http://0.0.0.0:80'), true)
 assert('https://github.com 거부', isLocalhostUrl('https://github.com'), false)
 assert('https://google.com 거부', isLocalhostUrl('https://google.com'), false)
 
-const ALLOWED_FOR_SCRIPT = [SIBLING, '/Users/lf/Desktop/workspace/00_lf-ui']
+const ALLOWED_FOR_SCRIPT = [SIBLING, '/Users/lf/Desktop/workspace/00_my-ui']
 
 section('isShellScriptSafe — 허용 케이스 (true)')
 assert('빌드 verify + http.server + curl + kill',
@@ -913,6 +913,28 @@ section('Bash 로 개인키·인증 파일 접근 → 차단 (.env 는 허용)')
   expectAutoApproved('cat .env (사용자 결정으로 허용)', 'cat .env')
   expectAutoApproved('cat ~/.ssh/id_rsa.pub (공개키)', 'cat ~/.ssh/id_rsa.pub')
   expectAutoApproved('echo "~/.ssh/id_rsa" (인용 텍스트는 명령 인자지만 문자열)', 'ls ~/.ssh/known_hosts')
+}
+
+// 래퍼(gugbab-claude) 설정 폴더의 settings.json additionalDirectories 도 허용 폴더로 본다 (2026-10-16)
+section('getAllowedDirs — 래퍼 설정 폴더(CLAUDE_CONFIG_DIR)')
+{
+  const fs = require('fs')
+  const os = require('os')
+  const { getAllowedDirs } = require('./bash-guard.js')
+  const cfg = fs.mkdtempSync(path.join(os.tmpdir(), 'bg-cfg-'))
+  fs.writeFileSync(path.join(cfg, 'settings.json'), JSON.stringify({ permissions: { additionalDirectories: ['/opt/gugbab-allowed', 'relative/dir', 42] } }))
+  const saved = process.env.CLAUDE_CONFIG_DIR
+  process.env.CLAUDE_CONFIG_DIR = cfg
+  const dirs = getAllowedDirs(PROJECT_ROOT)
+  assert('설정 폴더 additionalDirectories 의 절대 경로 → 허용 폴더에 포함', dirs.includes('/opt/gugbab-allowed'), true)
+  assert('설정 폴더의 상대 경로 항목은 무시 (어디 기준인지 모호)', dirs.some(d => d.endsWith('relative/dir')), false)
+  process.env.CLAUDE_CONFIG_DIR = 'relative-cfg'
+  assert('CLAUDE_CONFIG_DIR 가 상대 경로면 무시 (크래시 없음)', Array.isArray(getAllowedDirs(PROJECT_ROOT)), true)
+  fs.writeFileSync(path.join(cfg, 'settings.json'), '{broken')
+  process.env.CLAUDE_CONFIG_DIR = cfg
+  assert('설정 폴더 settings.json 이 깨져도 크래시 없음', Array.isArray(getAllowedDirs(PROJECT_ROOT)), true)
+  if (saved === undefined) delete process.env.CLAUDE_CONFIG_DIR; else process.env.CLAUDE_CONFIG_DIR = saved
+  fs.rmSync(cfg, { recursive: true, force: true })
 }
 
 console.log(`\n${'─'.repeat(40)}`)

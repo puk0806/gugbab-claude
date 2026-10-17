@@ -231,6 +231,12 @@ function projectStoreDir(homeDir, projectDir, transcriptPath) {
   if (typeof transcriptPath === 'string' && transcriptPath) {
     const dir = path.dirname(path.resolve(transcriptPath));
     if (path.dirname(dir) === root && path.basename(dir) && dir !== root) return dir;
+    // 래퍼 설정 폴더의 projects/ 링크로 들어온 경로 — 실제 위치가 projects 바로 아래면 실제 경로를 쓴다
+    try {
+      const realDir = fs.realpathSync(dir);
+      const realRoot = fs.realpathSync(root);
+      if (path.dirname(realDir) === realRoot && realDir !== realRoot) return realDir;
+    } catch { /* 없는 경로 → 인코딩 폴백 */ }
   }
   const enc = encodeProjectPath(projectDir);
   return enc ? path.join(root, enc) : null;

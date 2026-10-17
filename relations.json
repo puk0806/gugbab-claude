@@ -1,0 +1,734 @@
+{
+  "$comment": "훅·룰·커맨드·에이전트·스킬 관계 원본 (계획서 14장, 결정 13장 15·16번). relation-guard 훅과 scripts/relations.test.js 가 검사한다. 1단계에서 manifest.json 으로 합친다.",
+  "version": 1,
+  "kinds": {
+    "requires": "없으면 동작이 깨짐 — 켤 때 같이 켜고, 끄면 쓰는 쪽도 끔",
+    "uses": "있으면 쓰고 없으면 대신함 — 묶지 않음",
+    "mention": "예시·목록에 이름만 나옴 — 무시",
+    "code": "훅끼리 코드 공유 — 토글과 무관"
+  },
+  "auto": "스킬이 다른 항목을 언급하는 것, 에이전트가 스킬을 언급하는 것은 자동으로 uses. 같은 묶음 안의 언급과 requires 에 적힌 관계는 따로 적지 않는다.",
+  "bundles": {
+    "task-confirm": {
+      "title": "작업 확인 절차",
+      "items": [
+        "hook:task-confirm-guard",
+        "hook:progress-tracker",
+        "rule:task-workflow.md"
+      ]
+    },
+    "verification": {
+      "title": "스킬 검증 문서",
+      "items": [
+        "hook:verification-guard",
+        "rule:verification-policy.md"
+      ]
+    },
+    "dev-quality": {
+      "title": "테스트 품질 (TDD·적대적 테스트)",
+      "items": [
+        "hook:tdd-guard",
+        "hook:adversarial-test-guard",
+        "hook:fake-impl-guard",
+        "hook:test-fake-guard",
+        "rule:adversarial-testing.md",
+        "command:tdd-implement"
+      ]
+    },
+    "codex-review": {
+      "title": "Codex 리뷰",
+      "items": [
+        "hook:codex-review-guard",
+        "rule:codex-review.md",
+        "command:codex-review"
+      ]
+    },
+    "memory-share": {
+      "title": "메모리 공유",
+      "items": [
+        "hook:memory-pull",
+        "hook:memory-sync",
+        "rule:memory-sync.md"
+      ]
+    },
+    "harness-authoring": {
+      "title": "하네스 제작 (스킬·에이전트 만들기)",
+      "items": [
+        "hook:skill-md-guard",
+        "hook:agent-md-guard",
+        "hook:deliverable-guard",
+        "hook:staleness-check",
+        "hook:relation-guard",
+        "rule:agent-design.md",
+        "rule:creation-workflow.md",
+        "rule:readme-update.md",
+        "rule:commands.md",
+        "command:agent-status",
+        "agent:agent-creator",
+        "agent:skill-creator",
+        "agent:skill-tester",
+        "agent:freshness-auditor"
+      ]
+    }
+  },
+  "standalone": [
+    "hook:parallel-hint",
+    "hook:bash-guard",
+    "hook:protect-secrets",
+    "hook:parry",
+    "hook:auto-approve",
+    "hook:config-change-audit",
+    "hook:branch-protection",
+    "hook:package-manager-guard",
+    "hook:korean-response-guard",
+    "hook:session-start",
+    "hook:session-export",
+    "hook:cc-notify",
+    "hook:auto-format",
+    "hook:typescript-quality",
+    "hook:instructions-loaded",
+    "rule:git.md",
+    "rule:info-verification.md",
+    "command:commit",
+    "command:create-pr",
+    "command:context-prime",
+    "command:create-plan",
+    "command:fix-pr",
+    "command:update-docs",
+    "command:sparc-refine",
+    "command:harness"
+  ],
+  "blocks": {
+    "core": {
+      "title": "공통 에이전트",
+      "items": [
+        "agent:api-spec-designer",
+        "agent:claude-code-guide",
+        "agent:deep-researcher",
+        "agent:devops-engineer",
+        "agent:fact-checker",
+        "agent:product-planner",
+        "agent:project-scaffolder",
+        "agent:qa-engineer",
+        "agent:research-reviewer",
+        "agent:security-auditor",
+        "agent:socratic-interviewer",
+        "agent:source-validator",
+        "agent:tech-stack-advisor",
+        "agent:ui-ux-designer",
+        "agent:web-searcher"
+      ]
+    },
+    "dev-common": {
+      "title": "개발 공통",
+      "items": [
+        "agent:build-error-resolver",
+        "agent:business-domain-analyst",
+        "agent:changelog-writer",
+        "agent:codebase-domain-analyst",
+        "agent:competitor-analyst",
+        "agent:data-analyst",
+        "agent:database-architect",
+        "agent:pr-reviewer",
+        "skill:claude-code-hook-authoring",
+        "skill:ddd",
+        "skill:docker-deployment",
+        "skill:github-actions",
+        "skill:incremental-refactoring",
+        "skill:module-boundaries"
+      ]
+    },
+    "frontend-core": {
+      "title": "프론트 핵심",
+      "items": [
+        "agent:frontend-architect",
+        "agent:frontend-developer",
+        "agent:frontend-domain-refactorer",
+        "rule:typescript.md",
+        "skill:ag-grid",
+        "skill:bundle-size-analysis",
+        "skill:bundling-compiler",
+        "skill:core-web-vitals-optimization",
+        "skill:e2e-testing",
+        "skill:form-handling",
+        "skill:frontend-domain-structure",
+        "skill:monorepo-turborepo",
+        "skill:nextjs",
+        "skill:state-management",
+        "skill:tanstack-query",
+        "skill:tanstack-query-v4-to-v5-migration",
+        "skill:typescript-v4",
+        "skill:typescript-v5",
+        "skill:vite-advanced-splitting"
+      ]
+    },
+    "frontend-tooling": {
+      "title": "프론트 도구·품질",
+      "items": [
+        "agent:a11y-auditor",
+        "agent:build-perf-benchmarker",
+        "agent:perf-report-writer",
+        "skill:animation",
+        "skill:build-perf-benchmarking",
+        "skill:code-convention",
+        "skill:design-token-scss",
+        "skill:dev-server-hmr-benchmarking",
+        "skill:font-optimization",
+        "skill:github-actions-visual-regression",
+        "skill:indexeddb-dexie",
+        "skill:lighthouse-ci-setup",
+        "skill:mui-v5",
+        "skill:mui-v9",
+        "skill:next-intl-i18n",
+        "skill:pwa-push-notifications",
+        "skill:recoil-to-zustand-migration",
+        "skill:rsbuild",
+        "skill:storybook",
+        "skill:storybook-visual-testing",
+        "skill:swiper",
+        "skill:testing",
+        "skill:tsup",
+        "skill:vite-pwa-service-worker",
+        "skill:wcag-2.2-checklist",
+        "skill:web-vitals-rum-comparison",
+        "skill:webpack-vite-config-mapping"
+      ]
+    },
+    "ts-backend": {
+      "title": "TS 백엔드",
+      "items": [
+        "agent:typescript-backend-architect",
+        "agent:typescript-backend-developer",
+        "skill:better-auth",
+        "skill:drizzle-neon-postgres",
+        "skill:hono-api-patterns",
+        "skill:prisma-orm",
+        "skill:zod-schema-validation"
+      ]
+    },
+    "java-common": {
+      "title": "Java 공통",
+      "items": [
+        "agent:java-backend-architect",
+        "agent:java-backend-developer",
+        "rule:java.md",
+        "skill:bouncycastle-crypto",
+        "skill:global-exception-validation",
+        "skill:hikaricp-tuning-oracle-mysql",
+        "skill:jackson-time-migration",
+        "skill:jasypt-encrypted-config",
+        "skill:logback-mdc-tracing",
+        "skill:lombok-mapstruct-modelmapper",
+        "skill:mybatis-mapper-patterns",
+        "skill:spring-boot-gradle-setup",
+        "skill:spring-multi-datasource-oracle-mysql",
+        "skill:testing-junit5-spring-boot",
+        "skill:webflux-webclient-in-sync-app",
+        "skill:xss-lucy-jsoup"
+      ]
+    },
+    "java-legacy": {
+      "title": "Java 레거시 (SB 2)",
+      "items": [
+        "skill:aws-sdk-v1-s3-rekognition",
+        "skill:ehcache-2-legacy",
+        "skill:redis-redisson-legacy",
+        "skill:spring-boot-2-to-3-migration",
+        "skill:spring-security-5-jwt-jjwt10",
+        "skill:swagger-springfox-2"
+      ]
+    },
+    "java-modern": {
+      "title": "Java 모던 (SB 3)",
+      "items": [
+        "skill:aws-sdk-v2-s3-rekognition",
+        "skill:redis-redisson-4",
+        "skill:redis-redisson-modern",
+        "skill:spring-security-6-jwt-jjwt12",
+        "skill:springdoc-openapi-3"
+      ]
+    },
+    "rust": {
+      "title": "Rust",
+      "items": [
+        "agent:rust-backend-architect",
+        "agent:rust-backend-developer",
+        "rule:rust.md",
+        "skill:axum",
+        "skill:jwt-auth",
+        "skill:multipart-upload",
+        "skill:project-structure",
+        "skill:reqwest",
+        "skill:sqlx",
+        "skill:sse-streaming",
+        "skill:testing-rust",
+        "skill:tower-http"
+      ]
+    },
+    "python": {
+      "title": "Python",
+      "items": [
+        "agent:python-backend-architect",
+        "agent:python-backend-developer",
+        "skill:python-anthropic-sdk",
+        "skill:python-async-asyncio",
+        "skill:python-cli-typer",
+        "skill:python-embeddings-vector-db",
+        "skill:python-fastapi",
+        "skill:python-korean-nlp-konlpy",
+        "skill:python-langchain-current",
+        "skill:python-llamaindex",
+        "skill:python-pydantic-v2",
+        "skill:python-uv-project-setup"
+      ]
+    },
+    "unity": {
+      "title": "Unity",
+      "items": [
+        "agent:game-asset-ai-director",
+        "agent:game-design-document-writer",
+        "agent:game-monetization-strategist",
+        "agent:mobile-app-publisher",
+        "agent:unity-architect",
+        "agent:unity-developer",
+        "skill:ai-game-asset-pipeline",
+        "skill:app-store-submission",
+        "skill:game-audio-ai-tools",
+        "skill:game-design-document",
+        "skill:mobile-user-acquisition",
+        "skill:unity-6-2d-fundamentals",
+        "skill:unity-addressables",
+        "skill:unity-cicd-codemagic",
+        "skill:unity-firebase",
+        "skill:unity-game-feel",
+        "skill:unity-iap",
+        "skill:unity-levelplay-ads",
+        "skill:unity-live-ops",
+        "skill:unity-mobile-optimization",
+        "skill:unity-save-system",
+        "skill:unity-ui-system"
+      ]
+    },
+    "seo-geo": {
+      "title": "SEO·GEO",
+      "items": [
+        "agent:content-quality-reviewer",
+        "agent:seo-auditor",
+        "skill:accessibility-vpat-writing",
+        "skill:bot-management-seo",
+        "skill:content-eeat-quality",
+        "skill:ecommerce-seo",
+        "skill:geo-ai-discoverability",
+        "skill:google-indexing-api",
+        "skill:i18n-seo",
+        "skill:image-optimization-seo",
+        "skill:kakao-share-optimization",
+        "skill:local-business-seo",
+        "skill:mobile-seo-pwa",
+        "skill:multilingual-content-strategy",
+        "skill:naver-seo-specifics",
+        "skill:og-image-generation",
+        "skill:schema-org-patterns",
+        "skill:search-console-webmaster",
+        "skill:security-headers-seo",
+        "skill:seo-monitoring-automation",
+        "skill:seo-nextjs",
+        "skill:seo-static-html",
+        "skill:seo-vite-spa",
+        "skill:site-migration-seo",
+        "skill:structured-data-validation-api",
+        "skill:url-canonicalization-redirects",
+        "skill:ymyl-content-seo"
+      ]
+    },
+    "ai-app": {
+      "title": "AI 앱 공통",
+      "items": [
+        "skill:chat-ui-pattern",
+        "skill:claude-api-streaming-frontend",
+        "skill:emotion-tagging-input",
+        "skill:media-recorder-api",
+        "skill:pwa-offline-llm-fallback",
+        "skill:srs-spaced-repetition",
+        "skill:voice-input-ui",
+        "skill:web-speech-api-stt",
+        "skill:whisper-api-integration"
+      ]
+    },
+    "n8n": {
+      "title": "n8n",
+      "items": [
+        "skill:n8n-error-handling",
+        "skill:n8n-llm-integration",
+        "skill:n8n-self-hosting",
+        "skill:n8n-webhook-patterns",
+        "skill:n8n-workflow-design"
+      ]
+    },
+    "dream": {
+      "title": "꿈 도메인",
+      "items": [
+        "agent:dream-image-safety-classifier",
+        "agent:dream-interpretation-prompt-tester",
+        "agent:dream-journal-coach",
+        "agent:dream-multi-perspective-synthesizer",
+        "agent:dream-safety-classifier",
+        "skill:attachment-theory-basics",
+        "skill:crisis-intervention-resources-korea",
+        "skill:dream-app-ab-testing-prompts",
+        "skill:dream-app-onboarding",
+        "skill:dream-content-privacy-ethics",
+        "skill:dream-content-research",
+        "skill:dream-export-import",
+        "skill:dream-image-generation",
+        "skill:dream-interpretation-prompt-engineering",
+        "skill:dream-journal-data-modeling",
+        "skill:dream-privacy-consent-ui",
+        "skill:dream-psychology-jung-freud",
+        "skill:dream-recurrence-detection",
+        "skill:dream-safety-classifier-prompts",
+        "skill:dream-sharing-anonymized",
+        "skill:dream-statistics-visualization",
+        "skill:dream-symbol-tagging",
+        "skill:korean-dream-interpretation-tradition"
+      ]
+    },
+    "fortune": {
+      "title": "운세 도메인",
+      "items": [
+        "agent:fortune-interpretation-prompt-tester",
+        "skill:daily-fortune-retention-loop",
+        "skill:fortune-interpretation-prompt-engineering",
+        "skill:korean-lunar-calendar-manseryeok",
+        "skill:korean-saju-tradition",
+        "skill:palm-photo-capture-vision",
+        "skill:palmistry-limitations",
+        "skill:saju-chart-visualization",
+        "skill:saju-tarot-data-modeling",
+        "skill:tarot-card-deck-ui",
+        "skill:tarot-history-symbolism"
+      ]
+    },
+    "health": {
+      "title": "건강 도메인",
+      "items": [
+        "agent:nutrition-prompt-tester",
+        "skill:ingredient-management",
+        "skill:korean-food-nutrition",
+        "skill:meal-recommendation-prompt",
+        "skill:nutrition-analysis-prompt",
+        "skill:nutrition-basics"
+      ]
+    },
+    "spec-extraction": {
+      "title": "스펙 추출",
+      "items": [
+        "agent:legacy-spec-extractor",
+        "agent:spec-reviewer",
+        "command:spec-extract",
+        "skill:characterization-testing",
+        "skill:nexacro-17-xfdl-anatomy",
+        "skill:react-spec-extraction",
+        "skill:spec-extraction-method",
+        "skill:spring-mybatis-spec-extraction"
+      ]
+    },
+    "nexacro": {
+      "title": "넥사크로",
+      "items": [
+        "agent:migration-parity-tester",
+        "agent:nexacro-screen-analyzer",
+        "agent:nexacro-screen-converter",
+        "skill:ibatis-to-mybatis-migration",
+        "skill:nexacro-strangler-coexistence",
+        "skill:nexacro-to-react-mapping",
+        "skill:nexacro-xapi-server",
+        "skill:spring-boot-1-to-2-migration",
+        "skill:xapi-to-rest-migration"
+      ]
+    },
+    "misc": {
+      "title": "기타",
+      "items": [
+        "skill:claude-code-headless",
+        "skill:vercel-sandbox",
+        "skill:vercel-workflow"
+      ]
+    },
+    "harness-authoring": {
+      "title": "하네스 제작 에이전트",
+      "items": [
+        "agent:agent-creator",
+        "agent:freshness-auditor",
+        "agent:skill-creator",
+        "agent:skill-tester"
+      ]
+    }
+  },
+  "requires": {
+    "command:spec-extract": [
+      "agent:legacy-spec-extractor",
+      "agent:spec-reviewer",
+      "skill:spec-extraction-method"
+    ],
+    "agent:legacy-spec-extractor": [
+      "agent:spec-reviewer"
+    ],
+    "hook:progress-tracker": [
+      "hook:task-confirm-guard"
+    ],
+    "hook:deliverable-guard": [
+      "agent:skill-tester"
+    ],
+    "rule:creation-workflow.md": [
+      "agent:skill-tester"
+    ],
+    "agent:skill-creator": [
+      "rule:creation-workflow.md"
+    ],
+    "agent:agent-creator": [
+      "rule:agent-design.md",
+      "rule:creation-workflow.md"
+    ],
+    "hook:codex-review-guard": [
+      "rule:codex-review.md"
+    ],
+    "command:codex-review": [
+      "rule:codex-review.md"
+    ],
+    "agent:deep-researcher": [
+      "agent:web-searcher",
+      "agent:research-reviewer"
+    ],
+    "command:commit": [
+      "rule:git.md"
+    ]
+  },
+  "conflicts": [
+    [
+      "block:nexacro",
+      "hook:tdd-guard"
+    ]
+  ],
+  "variants": {
+    "hook:typescript-quality": [
+      "normal",
+      "changed-only"
+    ]
+  },
+  "presets": {
+    "$comment": "지금 설치 템플릿을 블록·묶음 조합으로 다시 쓴 것 (계획서 14.4). TUI 의 p 키 / gugbab-claude preset <이름> 으로 한 번에 켬. 애드온은 다른 프리셋에 더함",
+    "nextjs": { "title": "React·Next.js (+TS 백엔드)", "enable": ["block:dev-common", "block:frontend-core", "block:frontend-tooling", "block:ts-backend"] },
+    "java-legacy": { "title": "Java Spring 레거시", "enable": ["block:dev-common", "block:java-common", "block:java-legacy"] },
+    "java-modern": { "title": "Java Spring 모던", "enable": ["block:dev-common", "block:java-common", "block:java-modern"] },
+    "rust": { "title": "Rust Axum", "enable": ["block:dev-common", "block:rust"] },
+    "python": { "title": "Python FastAPI", "enable": ["block:dev-common", "block:python"] },
+    "unity": { "title": "Unity 게임", "enable": ["block:dev-common", "block:unity"] },
+    "dream": { "title": "꿈 해몽 앱", "enable": ["block:frontend-core", "block:frontend-tooling", "block:ai-app", "block:dream"] },
+    "fortune": { "title": "운세 앱", "enable": ["block:frontend-core", "block:frontend-tooling", "block:ai-app", "block:fortune"] },
+    "health": { "title": "건강·식단 앱", "enable": ["block:frontend-core", "block:frontend-tooling", "block:ai-app", "block:health"] },
+    "nexacro": { "title": "넥사크로 마이그레이션", "enable": ["block:dev-common", "block:frontend-core", "block:java-common", "block:java-legacy", "block:nexacro"] },
+    "seo-geo": { "title": "애드온 · SEO·GEO", "enable": ["block:seo-geo"] },
+    "spec-extraction": { "title": "애드온 · 레거시 스펙 추출", "enable": ["block:spec-extraction"] },
+    "n8n": { "title": "애드온 · n8n", "enable": ["block:n8n"] }
+  },
+  "edges": {
+    "command:harness>hook:cc-notify": "mention",
+    "rule:commands.md>command:harness": "mention",
+    "agent:a11y-auditor>agent:build-perf-benchmarker": "uses",
+    "agent:a11y-auditor>agent:frontend-developer": "uses",
+    "agent:a11y-auditor>agent:security-auditor": "uses",
+    "agent:a11y-auditor>agent:seo-auditor": "uses",
+    "agent:build-perf-benchmarker>agent:perf-report-writer": "uses",
+    "agent:changelog-writer>agent:pr-reviewer": "mention",
+    "agent:changelog-writer>command:commit": "mention",
+    "agent:changelog-writer>command:context-prime": "mention",
+    "agent:changelog-writer>command:create-pr": "mention",
+    "agent:changelog-writer>hook:cc-notify": "mention",
+    "agent:changelog-writer>hook:parry": "mention",
+    "agent:changelog-writer>hook:tdd-guard": "mention",
+    "agent:changelog-writer>hook:typescript-quality": "mention",
+    "agent:changelog-writer>rule:git.md": "mention",
+    "agent:codebase-domain-analyst>agent:frontend-domain-refactorer": "uses",
+    "agent:competitor-analyst>agent:product-planner": "uses",
+    "agent:content-quality-reviewer>agent:a11y-auditor": "uses",
+    "agent:content-quality-reviewer>agent:build-perf-benchmarker": "uses",
+    "agent:content-quality-reviewer>agent:frontend-developer": "uses",
+    "agent:content-quality-reviewer>agent:security-auditor": "uses",
+    "agent:content-quality-reviewer>agent:seo-auditor": "uses",
+    "agent:database-architect>agent:qa-engineer": "uses",
+    "agent:dream-image-safety-classifier>agent:dream-safety-classifier": "uses",
+    "agent:dream-image-safety-classifier>rule:agent-design.md": "uses",
+    "agent:dream-image-safety-classifier>rule:info-verification.md": "uses",
+    "agent:dream-interpretation-prompt-tester>rule:agent-design.md": "uses",
+    "agent:dream-interpretation-prompt-tester>rule:info-verification.md": "uses",
+    "agent:dream-safety-classifier>agent:dream-interpretation-prompt-tester": "uses",
+    "agent:dream-safety-classifier>rule:agent-design.md": "uses",
+    "agent:dream-safety-classifier>rule:info-verification.md": "uses",
+    "agent:fact-checker>agent:deep-researcher": "uses",
+    "agent:fortune-interpretation-prompt-tester>rule:agent-design.md": "uses",
+    "agent:fortune-interpretation-prompt-tester>rule:info-verification.md": "uses",
+    "agent:freshness-auditor>agent:rust-backend-developer": "mention",
+    "agent:frontend-architect>agent:frontend-developer": "uses",
+    "agent:frontend-developer>agent:frontend-architect": "uses",
+    "agent:frontend-developer>agent:frontend-domain-refactorer": "uses",
+    "agent:frontend-domain-refactorer>agent:codebase-domain-analyst": "uses",
+    "agent:frontend-domain-refactorer>agent:frontend-developer": "uses",
+    "agent:game-monetization-strategist>agent:mobile-app-publisher": "uses",
+    "agent:game-monetization-strategist>agent:unity-developer": "uses",
+    "agent:java-backend-architect>agent:java-backend-developer": "uses",
+    "agent:java-backend-developer>agent:java-backend-architect": "uses",
+    "agent:mobile-app-publisher>agent:game-design-document-writer": "uses",
+    "agent:mobile-app-publisher>agent:unity-architect": "uses",
+    "agent:mobile-app-publisher>agent:unity-developer": "uses",
+    "agent:nexacro-screen-analyzer>agent:legacy-spec-extractor": "uses",
+    "agent:nexacro-screen-analyzer>agent:nexacro-screen-converter": "uses",
+    "agent:nexacro-screen-converter>agent:migration-parity-tester": "uses",
+    "agent:nutrition-prompt-tester>agent:fact-checker": "uses",
+    "agent:nutrition-prompt-tester>rule:adversarial-testing.md": "uses",
+    "agent:nutrition-prompt-tester>rule:agent-design.md": "uses",
+    "agent:nutrition-prompt-tester>rule:info-verification.md": "uses",
+    "agent:perf-report-writer>agent:build-perf-benchmarker": "uses",
+    "agent:pr-reviewer>rule:git.md": "uses",
+    "agent:pr-reviewer>rule:java.md": "uses",
+    "agent:pr-reviewer>rule:rust.md": "uses",
+    "agent:pr-reviewer>rule:typescript.md": "uses",
+    "agent:project-scaffolder>agent:frontend-architect": "uses",
+    "agent:project-scaffolder>agent:java-backend-architect": "uses",
+    "agent:project-scaffolder>agent:rust-backend-architect": "uses",
+    "agent:project-scaffolder>agent:tech-stack-advisor": "uses",
+    "agent:python-backend-architect>agent:api-spec-designer": "uses",
+    "agent:python-backend-architect>agent:database-architect": "uses",
+    "agent:python-backend-architect>agent:python-backend-developer": "uses",
+    "agent:python-backend-architect>agent:qa-engineer": "uses",
+    "agent:python-backend-architect>rule:info-verification.md": "uses",
+    "agent:python-backend-developer>agent:python-backend-architect": "uses",
+    "agent:qa-engineer>hook:adversarial-test-guard": "uses",
+    "agent:qa-engineer>rule:adversarial-testing.md": "uses",
+    "agent:rust-backend-developer>agent:rust-backend-architect": "uses",
+    "agent:security-auditor>agent:build-perf-benchmarker": "uses",
+    "agent:security-auditor>agent:frontend-developer": "uses",
+    "agent:seo-auditor>agent:a11y-auditor": "uses",
+    "agent:seo-auditor>agent:build-perf-benchmarker": "uses",
+    "agent:seo-auditor>agent:devops-engineer": "uses",
+    "agent:seo-auditor>agent:frontend-developer": "uses",
+    "agent:seo-auditor>agent:security-auditor": "uses",
+    "agent:skill-tester>agent:frontend-developer": "uses",
+    "agent:skill-tester>agent:java-backend-developer": "uses",
+    "agent:skill-tester>agent:rust-backend-developer": "uses",
+    "agent:skill-tester>hook:verification-guard": "uses",
+    "agent:skill-tester>rule:verification-policy.md": "uses",
+    "agent:socratic-interviewer>agent:deep-researcher": "uses",
+    "agent:socratic-interviewer>agent:product-planner": "uses",
+    "agent:spec-reviewer>agent:legacy-spec-extractor": "uses",
+    "agent:tech-stack-advisor>agent:agent-creator": "uses",
+    "agent:tech-stack-advisor>agent:api-spec-designer": "uses",
+    "agent:tech-stack-advisor>agent:business-domain-analyst": "uses",
+    "agent:tech-stack-advisor>agent:database-architect": "uses",
+    "agent:tech-stack-advisor>agent:devops-engineer": "uses",
+    "agent:tech-stack-advisor>agent:frontend-architect": "uses",
+    "agent:tech-stack-advisor>agent:frontend-developer": "uses",
+    "agent:tech-stack-advisor>agent:product-planner": "uses",
+    "agent:tech-stack-advisor>agent:qa-engineer": "uses",
+    "agent:tech-stack-advisor>agent:security-auditor": "uses",
+    "agent:tech-stack-advisor>agent:ui-ux-designer": "uses",
+    "agent:tech-stack-advisor>rule:java.md": "uses",
+    "agent:typescript-backend-architect>agent:api-spec-designer": "uses",
+    "agent:typescript-backend-architect>agent:database-architect": "uses",
+    "agent:typescript-backend-architect>agent:qa-engineer": "uses",
+    "agent:typescript-backend-architect>agent:typescript-backend-developer": "uses",
+    "agent:typescript-backend-architect>rule:info-verification.md": "uses",
+    "agent:typescript-backend-architect>rule:typescript.md": "uses",
+    "agent:typescript-backend-developer>agent:typescript-backend-architect": "uses",
+    "agent:ui-ux-designer>agent:product-planner": "uses",
+    "agent:unity-architect>agent:devops-engineer": "uses",
+    "agent:unity-architect>agent:game-asset-ai-director": "uses",
+    "agent:unity-architect>agent:game-design-document-writer": "uses",
+    "agent:unity-architect>agent:unity-developer": "uses",
+    "agent:unity-developer>agent:unity-architect": "uses",
+    "command:agent-status>rule:verification-policy.md": "uses",
+    "command:commit>hook:deliverable-guard": "uses",
+    "command:commit>hook:memory-sync": "uses",
+    "command:commit>hook:session-export": "uses",
+    "command:commit>rule:memory-sync.md": "uses",
+    "command:context-prime>rule:creation-workflow.md": "uses",
+    "command:context-prime>rule:git.md": "uses",
+    "command:context-prime>rule:info-verification.md": "uses",
+    "command:context-prime>rule:task-workflow.md": "uses",
+    "command:context-prime>rule:verification-policy.md": "uses",
+    "command:create-pr>hook:deliverable-guard": "uses",
+    "command:create-pr>hook:memory-sync": "uses",
+    "command:create-pr>hook:session-export": "uses",
+    "command:create-pr>rule:memory-sync.md": "uses",
+    "command:fix-pr>command:commit": "uses",
+    "command:fix-pr>rule:git.md": "uses",
+    "command:spec-extract>command:commit": "uses",
+    "command:spec-extract>skill:nexacro-17-xfdl-anatomy": "uses",
+    "command:spec-extract>skill:react-spec-extraction": "uses",
+    "command:spec-extract>skill:spring-mybatis-spec-extraction": "uses",
+    "command:update-docs>command:commit": "uses",
+    "hook:auto-approve>hook:bash-guard": "code",
+    "hook:auto-approve>hook:protect-secrets": "code",
+    "hook:auto-approve>hook:task-confirm-guard": "code",
+    "hook:bash-guard>hook:auto-approve": "code",
+    "hook:bash-guard>hook:branch-protection": "code",
+    "hook:bash-guard>hook:memory-sync": "mention",
+    "hook:bash-guard>hook:protect-secrets": "code",
+    "hook:bash-guard>hook:verification-guard": "mention",
+    "hook:branch-protection>hook:bash-guard": "code",
+    "hook:deliverable-guard>hook:memory-sync": "code",
+    "hook:deliverable-guard>hook:session-export": "code",
+    "hook:deliverable-guard>rule:memory-sync.md": "uses",
+    "hook:deliverable-guard>rule:verification-policy.md": "uses",
+    "hook:memory-pull>hook:session-export": "code",
+    "hook:memory-sync>hook:session-export": "code",
+    "hook:package-manager-guard>hook:bash-guard": "code",
+    "hook:relation-guard>hook:bash-guard": "code",
+    "hook:parallel-hint>hook:progress-tracker": "mention",
+    "hook:protect-secrets>hook:bash-guard": "code",
+    "hook:session-export>hook:memory-pull": "code",
+    "hook:session-export>hook:memory-sync": "code",
+    "hook:session-export>rule:memory-sync.md": "uses",
+    "hook:verification-guard>agent:skill-creator": "uses",
+    "hook:verification-guard>hook:staleness-check": "code",
+    "rule:adversarial-testing.md>agent:qa-engineer": "uses",
+    "rule:agent-design.md>agent:deep-researcher": "mention",
+    "rule:agent-design.md>agent:fact-checker": "mention",
+    "rule:agent-design.md>agent:qa-engineer": "mention",
+    "rule:agent-design.md>agent:rust-backend-developer": "mention",
+    "rule:agent-design.md>agent:seo-auditor": "mention",
+    "rule:agent-design.md>agent:web-searcher": "mention",
+    "rule:codex-review.md>rule:adversarial-testing.md": "uses",
+    "rule:commands.md>agent:legacy-spec-extractor": "mention",
+    "rule:commands.md>agent:spec-reviewer": "mention",
+    "rule:commands.md>command:codex-review": "mention",
+    "rule:commands.md>command:commit": "mention",
+    "rule:commands.md>command:context-prime": "mention",
+    "rule:commands.md>command:create-plan": "mention",
+    "rule:commands.md>command:create-pr": "mention",
+    "rule:commands.md>command:fix-pr": "mention",
+    "rule:commands.md>command:sparc-refine": "mention",
+    "rule:commands.md>command:spec-extract": "mention",
+    "rule:commands.md>command:tdd-implement": "mention",
+    "rule:commands.md>command:update-docs": "mention",
+    "rule:commands.md>rule:codex-review.md": "mention",
+    "rule:commands.md>rule:git.md": "mention",
+    "rule:creation-workflow.md>agent:frontend-developer": "uses",
+    "rule:creation-workflow.md>rule:verification-policy.md": "uses",
+    "rule:git.md>agent:agent-creator": "mention",
+    "rule:git.md>agent:rust-backend-architect": "mention",
+    "rule:git.md>agent:rust-backend-developer": "mention",
+    "rule:git.md>agent:skill-creator": "mention",
+    "rule:git.md>hook:memory-sync": "mention",
+    "rule:git.md>rule:memory-sync.md": "uses",
+    "rule:memory-sync.md>hook:bash-guard": "mention",
+    "rule:memory-sync.md>hook:deliverable-guard": "mention",
+    "rule:memory-sync.md>hook:session-export": "mention",
+    "rule:rust.md>skill:sqlx": "mention",
+    "rule:typescript.md>agent:frontend-domain-refactorer": "uses",
+    "rule:verification-policy.md>agent:skill-tester": "uses",
+    "rule:verification-policy.md>hook:bash-guard": "mention",
+    "rule:verification-policy.md>hook:staleness-check": "mention",
+    "rule:verification-policy.md>skill:swiper": "mention"
+  }
+}

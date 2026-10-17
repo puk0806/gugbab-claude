@@ -88,6 +88,31 @@ console.log('\n── 차단 경로 (codex 스텁) → exit 2 + stderr 사유 �
     pass ? passed++ : failed++
     fs.rmSync(stub2, { recursive: true, force: true })
   }
+  {
+    // 래퍼(gugbab-claude) 실행: 프로젝트에 .claude/settings.json 이 없고 플러그인은 설정 폴더(CLAUDE_CONFIG_DIR)에서 켜진다 (2026-10-16)
+    const bare = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-bare-'))
+    execSync('git init -q', { cwd: bare })
+    fs.writeFileSync(path.join(bare, 'app.js'), 'module.exports = 2\n')
+    const cfgOn = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-cfg-'))
+    fs.writeFileSync(path.join(cfgOn, 'settings.json'), JSON.stringify({ enabledPlugins: { 'codex@openai-codex': true } }))
+    const cfgOff = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-cfg-'))
+    fs.writeFileSync(path.join(cfgOff, 'settings.json'), JSON.stringify({ enabledPlugins: { 'codex@openai-codex': false } }))
+    const run = (cfg) => spawnSync('node', [HOOK], { input: JSON.stringify({ hook_event_name: 'Stop' }), encoding: 'utf8', timeout: 20000, cwd: bare,
+      env: { ...env('yes'), CLAUDE_CONFIG_DIR: cfg } })
+    const on = run(cfgOn)
+    const p1 = on.status === 2 && on.stderr.includes('적대적 리뷰 필요')
+    console.log(`  ${p1 ? '✅' : '❌'} 설정 폴더에서 플러그인 켜짐 → 리뷰 요구 → ${p1 ? 'PASS' : `FAIL (exit ${on.status})`}`)
+    p1 ? passed++ : failed++
+    const off = run(cfgOff)
+    const p2 = off.status === 0 && !off.stderr.includes('리뷰 필요')
+    console.log(`  ${p2 ? '✅' : '❌'} 설정 폴더에서 플러그인 꺼짐 → 통과 → ${p2 ? 'PASS' : `FAIL (exit ${off.status})`}`)
+    p2 ? passed++ : failed++
+    const bad = run(path.join(cfgOn, 'no-such-dir'))
+    const p3 = bad.status === 0
+    console.log(`  ${p3 ? '✅' : '❌'} 설정 폴더 경로가 없음 → 플러그인 꺼짐으로 보고 통과 → ${p3 ? 'PASS' : `FAIL (exit ${bad.status})`}`)
+    p3 ? passed++ : failed++
+    for (const d of [bare, cfgOn, cfgOff]) fs.rmSync(d, { recursive: true, force: true })
+  }
 
   // 마커가 변경보다 최신이면 통과 (차단 사유 출력 없음)
   const marker = path.join(repo, '.claude', '.codex-review-done')

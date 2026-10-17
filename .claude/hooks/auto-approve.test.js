@@ -108,9 +108,63 @@ section('프로젝트 밖 쓰기 → 확인 / 안쪽·메모리·임시 → 자�
   test('NotebookEdit 밖', 'NotebookEdit', { notebook_path: `${HOME}/Documents/n.ipynb` }, 'ask')
 }
 
+// 2026-10-16 계획서 12장 권한 정책 반영
+section('12장 신규 자동 허용 → allow')
+for (const tool of ['ArtifactComments', 'PushNotification', 'ExitWorktree', 'TaskStop', 'LSP']) {
+  test(`${tool} (Pre)`, tool, {}, 'allow')
+  test(`${tool} (PermissionRequest)`, tool, {}, 'allow', 'PermissionRequest')
+}
+test('ArtifactData get → 자동', 'ArtifactData', { action: 'get', collection: 'c', doc_id: 'd' }, 'allow')
+test('ArtifactData batch → 자동', 'ArtifactData', { action: 'batch' }, 'allow')
+test('ArtifactData delete → 확인', 'ArtifactData', { action: 'delete', collection: 'c', doc_id: 'd' }, 'ask')
+test('ArtifactData delete (PermissionRequest → 사용자에게)', 'ArtifactData', { action: 'delete' }, 'null', 'PermissionRequest')
+test('ArtifactData batch 안에 delete → 확인 (묶어서 우회 금지)', 'ArtifactData', { action: 'batch', batch: [{ action: 'set' }, { action: 'delete' }] }, 'ask')
+
+section('12장 신규 확인 → ask (PermissionRequest=null)')
+for (const tool of ['SendMessage', 'CronCreate', 'CronDelete', 'RemoteTrigger', 'DesignSync', 'PowerShell']) {
+  test(`${tool} (Pre)`, tool, {}, 'ask')
+  test(`${tool} (PermissionRequest)`, tool, {}, 'null', 'PermissionRequest')
+}
+test('Google Drive update_file(덮어쓰기) → 확인', 'mcp__claude_ai_Google_Drive__update_file', {}, 'ask')
+test('Google Drive update_file (PermissionRequest)', 'mcp__claude_ai_Google_Drive__update_file', {}, 'null', 'PermissionRequest')
+test('다른 서버 update_file 은 자동 (Drive 덮어쓰기만 확인)', 'mcp__claude_ai_Claude_Docs__update', {}, 'allow')
+
+section('래퍼 설정 폴더(CLAUDE_CONFIG_DIR) 링크를 거친 메모리·계획 쓰기')
+{
+  const fs = require('fs')
+  const os = require('os')
+  const HOME = os.homedir()
+  const realProjects = path.join(HOME, '.claude', 'projects')
+  // 임시 폴더는 원래 자동 허용이라 위장 시험이 안 된다 — 홈 아래에 잠깐 만들고 지운다
+  const cfgLinked = fs.mkdtempSync(path.join(HOME, '.aa-cfg-'))
+  const cfgReal = fs.mkdtempSync(path.join(HOME, '.aa-cfg-'))
+  fs.symlinkSync(realProjects, path.join(cfgLinked, 'projects'))
+  fs.mkdirSync(path.join(cfgReal, 'projects'))
+  const runIn = (filePath, env) => {
+    const input = JSON.stringify({ hook_event_name: 'PreToolUse', tool_name: 'Write', tool_input: { file_path: filePath }, cwd: '/Users/nobody-project' })
+    try {
+      const out = execSync(`node "${HOOK}"`, { input, encoding: 'utf8', timeout: 3000, env: { ...process.env, ...env } }).trim()
+      return out ? JSON.parse(out).hookSpecificOutput.permissionDecision : 'null'
+    } catch { return 'CRASH' }
+  }
+  const check = (desc, actual, expected) => {
+    const pass = actual === expected
+    console.log(`  ${pass ? '✅' : '❌'} ${desc} → ${pass ? 'PASS' : `FAIL (기대: ${expected}, 실제: ${actual})`}`)
+    pass ? passed++ : failed++
+  }
+  check('설정 폴더 projects → ~/.claude/projects 링크 안 메모리 → 자동',
+    runIn(path.join(cfgLinked, 'projects', '-x', 'memory', 'a.md'), { CLAUDE_CONFIG_DIR: cfgLinked }), 'allow')
+  check('설정 폴더 projects 가 링크 아닌 진짜 폴더 → 확인 (이름만 projects 인 폴더 위장)',
+    runIn(path.join(cfgReal, 'projects', '-x', 'memory', 'a.md'), { CLAUDE_CONFIG_DIR: cfgReal }), 'ask')
+  check('CLAUDE_CONFIG_DIR=/ 로 위장 → /etc/hosts 는 여전히 확인',
+    runIn('/etc/hosts', { CLAUDE_CONFIG_DIR: '/' }), 'ask')
+  check('링크된 projects 를 ../ 로 빠져나가기 → 확인',
+    runIn(path.join(cfgLinked, 'projects', '..', '..', 'escape.txt'), { CLAUDE_CONFIG_DIR: cfgLinked }), 'ask')
+  fs.rmSync(cfgLinked, { recursive: true, force: true })
+  fs.rmSync(cfgReal, { recursive: true, force: true })
+}
+
 section('악성·우회 시도 → null (자동 승인 금지)')
-test('PowerShell — 분석기 없는 셸', 'PowerShell', { command: 'Remove-Item -Recurse C:\\' }, 'null')
-test('PowerShell (PermissionRequest)', 'PowerShell', {}, 'null', 'PermissionRequest')
 test('ExitPlanMode — 사용자 결정으로 자동 (확인은 task-confirm-guard 가 강제)', 'ExitPlanMode', {}, 'allow')
 test('ExitPlanMode (PermissionRequest)', 'ExitPlanMode', {}, 'allow', 'PermissionRequest')
 test('"mcp__" 단독 — 서버·도구 이름 없음', 'mcp__', {}, 'null')

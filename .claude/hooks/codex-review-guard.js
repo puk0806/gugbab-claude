@@ -36,11 +36,14 @@ function isCodexAvailable() {
   try { execSync('which codex', { stdio: 'ignore' }); return true; } catch { return false; }
 }
 
+// 프로젝트 .claude/settings.json 또는 래퍼(gugbab-claude) 설정 폴더 $CLAUDE_CONFIG_DIR/settings.json 중 하나라도 켜져 있으면 켬
 function isPluginEnabled(repoRoot) {
-  try {
-    const s = JSON.parse(fs.readFileSync(path.join(repoRoot, '.claude', 'settings.json'), 'utf8'));
-    return !!s.enabledPlugins?.['codex@openai-codex'];
-  } catch { return false; }
+  const files = [path.join(repoRoot, '.claude', 'settings.json')];
+  const cfg = process.env.CLAUDE_CONFIG_DIR;
+  if (cfg && path.isAbsolute(cfg)) files.push(path.join(cfg, 'settings.json'));
+  return files.some(f => {
+    try { return !!JSON.parse(fs.readFileSync(f, 'utf8')).enabledPlugins?.['codex@openai-codex']; } catch { return false; }
+  });
 }
 
 // 종료코드 0 AND "Not logged in" 부정 문구 없음 AND 긍정 문구 존재 — /logged in/ 부분 매치는 "Not logged in"도 잡는다

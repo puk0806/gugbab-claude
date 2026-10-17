@@ -1,0 +1,3021 @@
+{
+  "$comment": "생성 파일 — 손으로 고치지 말고 node scripts/build-manifest.js 로 다시 만든다. 재료: 체크리스트 · .claude/settings.json · relations.json",
+  "version": 1,
+  "root": ".claude",
+  "items": {
+    "agent:a11y-auditor": {
+      "type": "agent",
+      "state": "off",
+      "path": ".claude/agents/validation/a11y-auditor.md"
+    },
+    "agent:agent-creator": {
+      "type": "agent",
+      "state": "on",
+      "projHint": "off",
+      "path": ".claude/agents/meta/agent-creator.md"
+    },
+    "agent:api-spec-designer": {
+      "type": "agent",
+      "state": "on",
+      "path": ".claude/agents/domain/api-spec-designer.md"
+    },
+    "agent:build-error-resolver": {
+      "type": "agent",
+      "state": "on",
+      "path": ".claude/agents/backend/build-error-resolver.md"
+    },
+    "agent:build-perf-benchmarker": {
+      "type": "agent",
+      "state": "off",
+      "path": ".claude/agents/validation/build-perf-benchmarker.md"
+    },
+    "agent:business-domain-analyst": {
+      "type": "agent",
+      "state": "on",
+      "path": ".claude/agents/domain/business-domain-analyst.md"
+    },
+    "agent:changelog-writer": {
+      "type": "agent",
+      "state": "on",
+      "path": ".claude/agents/meta/changelog-writer.md"
+    },
+    "agent:claude-code-guide": {
+      "type": "agent",
+      "state": "lock",
+      "path": ".claude/agents/meta/claude-code-guide.md"
+    },
+    "agent:codebase-domain-analyst": {
+      "type": "agent",
+      "state": "on",
+      "path": ".claude/agents/domain/codebase-domain-analyst.md"
+    },
+    "agent:competitor-analyst": {
+      "type": "agent",
+      "state": "on",
+      "path": ".claude/agents/research/competitor-analyst.md"
+    },
+    "agent:content-quality-reviewer": {
+      "type": "agent",
+      "state": "off",
+      "path": ".claude/agents/validation/content-quality-reviewer.md"
+    },
+    "agent:data-analyst": {
+      "type": "agent",
+      "state": "on",
+      "path": ".claude/agents/research/data-analyst.md"
+    },
+    "agent:database-architect": {
+      "type": "agent",
+      "state": "on",
+      "path": ".claude/agents/backend/database-architect.md"
+    },
+    "agent:deep-researcher": {
+      "type": "agent",
+      "state": "on",
+      "path": ".claude/agents/research/deep-researcher.md"
+    },
+    "agent:devops-engineer": {
+      "type": "agent",
+      "state": "on",
+      "path": ".claude/agents/devops/devops-engineer.md"
+    },
+    "agent:dream-image-safety-classifier": {
+      "type": "agent",
+      "state": "off",
+      "path": ".claude/agents/validation/dream-image-safety-classifier.md"
+    },
+    "agent:dream-interpretation-prompt-tester": {
+      "type": "agent",
+      "state": "off",
+      "path": ".claude/agents/validation/dream-interpretation-prompt-tester.md"
+    },
+    "agent:dream-journal-coach": {
+      "type": "agent",
+      "state": "off",
+      "path": ".claude/agents/research/dream-journal-coach.md"
+    },
+    "agent:dream-multi-perspective-synthesizer": {
+      "type": "agent",
+      "state": "off",
+      "path": ".claude/agents/research/dream-multi-perspective-synthesizer.md"
+    },
+    "agent:dream-safety-classifier": {
+      "type": "agent",
+      "state": "off",
+      "path": ".claude/agents/validation/dream-safety-classifier.md"
+    },
+    "agent:fact-checker": {
+      "type": "agent",
+      "state": "lock",
+      "path": ".claude/agents/validation/fact-checker.md"
+    },
+    "agent:fortune-interpretation-prompt-tester": {
+      "type": "agent",
+      "state": "off",
+      "path": ".claude/agents/validation/fortune-interpretation-prompt-tester.md"
+    },
+    "agent:freshness-auditor": {
+      "type": "agent",
+      "state": "on",
+      "projHint": "off",
+      "path": ".claude/agents/meta/freshness-auditor.md"
+    },
+    "agent:frontend-architect": {
+      "type": "agent",
+      "state": "on",
+      "path": ".claude/agents/frontend/frontend-architect.md"
+    },
+    "agent:frontend-developer": {
+      "type": "agent",
+      "state": "on",
+      "path": ".claude/agents/frontend/frontend-developer.md"
+    },
+    "agent:frontend-domain-refactorer": {
+      "type": "agent",
+      "state": "on",
+      "path": ".claude/agents/domain/frontend-domain-refactorer.md"
+    },
+    "agent:game-asset-ai-director": {
+      "type": "agent",
+      "state": "off",
+      "path": ".claude/agents/game/game-asset-ai-director.md"
+    },
+    "agent:game-design-document-writer": {
+      "type": "agent",
+      "state": "off",
+      "path": ".claude/agents/game/game-design-document-writer.md"
+    },
+    "agent:game-monetization-strategist": {
+      "type": "agent",
+      "state": "off",
+      "path": ".claude/agents/game/game-monetization-strategist.md"
+    },
+    "agent:java-backend-architect": {
+      "type": "agent",
+      "state": "on",
+      "path": ".claude/agents/backend/java-backend-architect.md"
+    },
+    "agent:java-backend-developer": {
+      "type": "agent",
+      "state": "on",
+      "path": ".claude/agents/backend/java-backend-developer.md"
+    },
+    "agent:legacy-spec-extractor": {
+      "type": "agent",
+      "state": "on",
+      "path": ".claude/agents/domain/legacy-spec-extractor.md"
+    },
+    "agent:migration-parity-tester": {
+      "type": "agent",
+      "state": "on",
+      "path": ".claude/agents/validation/migration-parity-tester.md"
+    },
+    "agent:mobile-app-publisher": {
+      "type": "agent",
+      "state": "off",
+      "path": ".claude/agents/game/mobile-app-publisher.md"
+    },
+    "agent:nexacro-screen-analyzer": {
+      "type": "agent",
+      "state": "on",
+      "path": ".claude/agents/domain/nexacro-screen-analyzer.md"
+    },
+    "agent:nexacro-screen-converter": {
+      "type": "agent",
+      "state": "on",
+      "path": ".claude/agents/frontend/nexacro-screen-converter.md"
+    },
+    "agent:nutrition-prompt-tester": {
+      "type": "agent",
+      "state": "off",
+      "path": ".claude/agents/health/nutrition-prompt-tester.md"
+    },
+    "agent:perf-report-writer": {
+      "type": "agent",
+      "state": "off",
+      "path": ".claude/agents/validation/perf-report-writer.md"
+    },
+    "agent:pr-reviewer": {
+      "type": "agent",
+      "state": "on",
+      "path": ".claude/agents/validation/pr-reviewer.md"
+    },
+    "agent:product-planner": {
+      "type": "agent",
+      "state": "on",
+      "path": ".claude/agents/domain/product-planner.md"
+    },
+    "agent:project-scaffolder": {
+      "type": "agent",
+      "state": "on",
+      "path": ".claude/agents/meta/project-scaffolder.md"
+    },
+    "agent:python-backend-architect": {
+      "type": "agent",
+      "state": "off",
+      "path": ".claude/agents/backend/python-backend-architect.md"
+    },
+    "agent:python-backend-developer": {
+      "type": "agent",
+      "state": "off",
+      "path": ".claude/agents/backend/python-backend-developer.md"
+    },
+    "agent:qa-engineer": {
+      "type": "agent",
+      "state": "on",
+      "path": ".claude/agents/validation/qa-engineer.md"
+    },
+    "agent:research-reviewer": {
+      "type": "agent",
+      "state": "lock",
+      "path": ".claude/agents/research/research-reviewer.md"
+    },
+    "agent:rust-backend-architect": {
+      "type": "agent",
+      "state": "off",
+      "path": ".claude/agents/backend/rust-backend-architect.md"
+    },
+    "agent:rust-backend-developer": {
+      "type": "agent",
+      "state": "off",
+      "path": ".claude/agents/backend/rust-backend-developer.md"
+    },
+    "agent:security-auditor": {
+      "type": "agent",
+      "state": "on",
+      "path": ".claude/agents/validation/security-auditor.md"
+    },
+    "agent:seo-auditor": {
+      "type": "agent",
+      "state": "off",
+      "path": ".claude/agents/validation/seo-auditor.md"
+    },
+    "agent:skill-creator": {
+      "type": "agent",
+      "state": "on",
+      "projHint": "off",
+      "path": ".claude/agents/meta/skill-creator.md"
+    },
+    "agent:skill-tester": {
+      "type": "agent",
+      "state": "on",
+      "projHint": "off",
+      "path": ".claude/agents/meta/skill-tester.md"
+    },
+    "agent:socratic-interviewer": {
+      "type": "agent",
+      "state": "lock",
+      "path": ".claude/agents/research/socratic-interviewer.md"
+    },
+    "agent:source-validator": {
+      "type": "agent",
+      "state": "lock",
+      "path": ".claude/agents/validation/source-validator.md"
+    },
+    "agent:spec-reviewer": {
+      "type": "agent",
+      "state": "on",
+      "path": ".claude/agents/validation/spec-reviewer.md"
+    },
+    "agent:tech-stack-advisor": {
+      "type": "agent",
+      "state": "lock",
+      "path": ".claude/agents/meta/tech-stack-advisor.md"
+    },
+    "agent:typescript-backend-architect": {
+      "type": "agent",
+      "state": "on",
+      "path": ".claude/agents/backend/typescript-backend-architect.md"
+    },
+    "agent:typescript-backend-developer": {
+      "type": "agent",
+      "state": "on",
+      "path": ".claude/agents/backend/typescript-backend-developer.md"
+    },
+    "agent:ui-ux-designer": {
+      "type": "agent",
+      "state": "on",
+      "path": ".claude/agents/domain/ui-ux-designer.md"
+    },
+    "agent:unity-architect": {
+      "type": "agent",
+      "state": "off",
+      "path": ".claude/agents/game/unity-architect.md"
+    },
+    "agent:unity-developer": {
+      "type": "agent",
+      "state": "off",
+      "path": ".claude/agents/game/unity-developer.md"
+    },
+    "agent:web-searcher": {
+      "type": "agent",
+      "state": "lock",
+      "path": ".claude/agents/research/web-searcher.md"
+    },
+    "command:agent-status": {
+      "type": "command",
+      "state": "on",
+      "projHint": "off",
+      "path": ".claude/commands/agent-status.md"
+    },
+    "command:codex-review": {
+      "type": "command",
+      "state": "on",
+      "path": ".claude/commands/codex-review.md"
+    },
+    "command:commit": {
+      "type": "command",
+      "state": "on",
+      "path": ".claude/commands/commit.md"
+    },
+    "command:context-prime": {
+      "type": "command",
+      "state": "on",
+      "path": ".claude/commands/context-prime.md"
+    },
+    "command:create-plan": {
+      "type": "command",
+      "state": "on",
+      "path": ".claude/commands/create-plan.md"
+    },
+    "command:create-pr": {
+      "type": "command",
+      "state": "on",
+      "path": ".claude/commands/create-pr.md"
+    },
+    "command:fix-pr": {
+      "type": "command",
+      "state": "on",
+      "path": ".claude/commands/fix-pr.md"
+    },
+    "command:harness": {
+      "type": "command",
+      "state": "lock",
+      "path": ".claude/commands/harness.md"
+    },
+    "command:sparc-refine": {
+      "type": "command",
+      "state": "on",
+      "path": ".claude/commands/sparc-refine.md"
+    },
+    "command:spec-extract": {
+      "type": "command",
+      "state": "on",
+      "path": ".claude/commands/spec-extract.md"
+    },
+    "command:tdd-implement": {
+      "type": "command",
+      "state": "on",
+      "path": ".claude/commands/tdd-implement.md"
+    },
+    "command:update-docs": {
+      "type": "command",
+      "state": "on",
+      "path": ".claude/commands/update-docs.md"
+    },
+    "hook:adversarial-test-guard": {
+      "type": "hook",
+      "state": "on",
+      "path": ".claude/hooks/adversarial-test-guard.js",
+      "hooks": [
+        {
+          "event": "PostToolUse",
+          "matcher": "Write",
+          "args": []
+        },
+        {
+          "event": "PostToolUse",
+          "matcher": "Edit",
+          "args": []
+        }
+      ]
+    },
+    "hook:agent-md-guard": {
+      "type": "hook",
+      "state": "on",
+      "projHint": "off",
+      "path": ".claude/hooks/agent-md-guard.js",
+      "hooks": [
+        {
+          "event": "PreToolUse",
+          "matcher": "Write",
+          "args": []
+        },
+        {
+          "event": "PostToolUse",
+          "matcher": "Edit",
+          "args": []
+        }
+      ]
+    },
+    "hook:auto-approve": {
+      "type": "hook",
+      "state": "lock",
+      "path": ".claude/hooks/auto-approve.js",
+      "hooks": [
+        {
+          "event": "PreToolUse",
+          "matcher": "*",
+          "args": []
+        },
+        {
+          "event": "PermissionRequest",
+          "matcher": "*",
+          "args": []
+        }
+      ]
+    },
+    "hook:auto-format": {
+      "type": "hook",
+      "state": "lock",
+      "path": ".claude/hooks/auto-format.js",
+      "hooks": [
+        {
+          "event": "PostToolUse",
+          "matcher": "Write",
+          "args": []
+        },
+        {
+          "event": "PostToolUse",
+          "matcher": "Edit",
+          "args": []
+        }
+      ]
+    },
+    "hook:bash-guard": {
+      "type": "hook",
+      "state": "lock",
+      "path": ".claude/hooks/bash-guard.js",
+      "hooks": [
+        {
+          "event": "PreToolUse",
+          "matcher": "*",
+          "args": []
+        },
+        {
+          "event": "PostToolUse",
+          "matcher": "Bash",
+          "args": []
+        },
+        {
+          "event": "PermissionRequest",
+          "matcher": "*",
+          "args": []
+        }
+      ]
+    },
+    "hook:branch-protection": {
+      "type": "hook",
+      "state": "on",
+      "path": ".claude/hooks/branch-protection.js",
+      "hooks": [
+        {
+          "event": "PreToolUse",
+          "matcher": "Bash",
+          "args": []
+        }
+      ]
+    },
+    "hook:cc-notify": {
+      "type": "hook",
+      "state": "lock",
+      "path": ".claude/hooks/cc-notify.js",
+      "hooks": [
+        {
+          "event": "Stop",
+          "matcher": "",
+          "args": []
+        }
+      ]
+    },
+    "hook:codex-review-guard": {
+      "type": "hook",
+      "state": "on",
+      "path": ".claude/hooks/codex-review-guard.js",
+      "hooks": [
+        {
+          "event": "Stop",
+          "matcher": "",
+          "args": []
+        }
+      ]
+    },
+    "hook:config-change-audit": {
+      "type": "hook",
+      "state": "lock",
+      "path": ".claude/hooks/config-change-audit.js",
+      "hooks": [
+        {
+          "event": "SessionStart",
+          "matcher": "",
+          "args": []
+        },
+        {
+          "event": "ConfigChange",
+          "matcher": "",
+          "args": []
+        }
+      ]
+    },
+    "hook:deliverable-guard": {
+      "type": "hook",
+      "state": "on",
+      "projHint": "off",
+      "path": ".claude/hooks/deliverable-guard.js",
+      "hooks": [
+        {
+          "event": "PreToolUse",
+          "matcher": "Bash",
+          "args": []
+        },
+        {
+          "event": "PostToolUse",
+          "matcher": "Write",
+          "args": []
+        },
+        {
+          "event": "PostToolUse",
+          "matcher": "Edit",
+          "args": []
+        },
+        {
+          "event": "Stop",
+          "matcher": "",
+          "args": []
+        }
+      ]
+    },
+    "hook:fake-impl-guard": {
+      "type": "hook",
+      "state": "on",
+      "path": ".claude/hooks/fake-impl-guard.js",
+      "hooks": [
+        {
+          "event": "PostToolUse",
+          "matcher": "Write",
+          "args": []
+        },
+        {
+          "event": "PostToolUse",
+          "matcher": "Edit",
+          "args": []
+        }
+      ]
+    },
+    "hook:instructions-loaded": {
+      "type": "hook",
+      "state": "off",
+      "projHint": "off",
+      "path": ".claude/hooks/instructions-loaded.js",
+      "hooks": [
+        {
+          "event": "SessionStart",
+          "matcher": "",
+          "args": []
+        }
+      ]
+    },
+    "hook:korean-response-guard": {
+      "type": "hook",
+      "state": "lock",
+      "path": ".claude/hooks/korean-response-guard.js",
+      "hooks": [
+        {
+          "event": "Stop",
+          "matcher": "",
+          "args": []
+        },
+        {
+          "event": "UserPromptSubmit",
+          "matcher": "",
+          "args": []
+        }
+      ]
+    },
+    "hook:memory-pull": {
+      "type": "hook",
+      "state": "on",
+      "path": ".claude/hooks/memory-pull.js",
+      "hooks": [
+        {
+          "event": "SessionStart",
+          "matcher": "",
+          "args": []
+        }
+      ]
+    },
+    "hook:memory-sync": {
+      "type": "hook",
+      "state": "on",
+      "path": ".claude/hooks/memory-sync.js",
+      "hooks": [
+        {
+          "event": "PostToolUse",
+          "matcher": "Write",
+          "args": []
+        },
+        {
+          "event": "PostToolUse",
+          "matcher": "Edit",
+          "args": []
+        }
+      ]
+    },
+    "hook:package-manager-guard": {
+      "type": "hook",
+      "state": "lock",
+      "path": ".claude/hooks/package-manager-guard.js",
+      "hooks": [
+        {
+          "event": "PreToolUse",
+          "matcher": "Bash",
+          "args": []
+        }
+      ]
+    },
+    "hook:parallel-hint": {
+      "type": "hook",
+      "state": "lock",
+      "path": ".claude/hooks/parallel-hint.js",
+      "hooks": [
+        {
+          "event": "PostToolUse",
+          "matcher": "*",
+          "args": []
+        },
+        {
+          "event": "UserPromptSubmit",
+          "matcher": "",
+          "args": []
+        }
+      ]
+    },
+    "hook:parry": {
+      "type": "hook",
+      "state": "lock",
+      "path": ".claude/hooks/parry.js",
+      "hooks": [
+        {
+          "event": "PreToolUse",
+          "matcher": "Write",
+          "args": []
+        }
+      ]
+    },
+    "hook:progress-tracker": {
+      "type": "hook",
+      "state": "lock",
+      "path": ".claude/hooks/progress-tracker.js",
+      "hooks": [
+        {
+          "event": "PostToolUse",
+          "matcher": "Write",
+          "args": []
+        },
+        {
+          "event": "PostToolUse",
+          "matcher": "Edit",
+          "args": []
+        },
+        {
+          "event": "PostToolUse",
+          "matcher": "NotebookEdit",
+          "args": []
+        },
+        {
+          "event": "SessionStart",
+          "matcher": "",
+          "args": []
+        },
+        {
+          "event": "UserPromptSubmit",
+          "matcher": "",
+          "args": []
+        }
+      ]
+    },
+    "hook:protect-secrets": {
+      "type": "hook",
+      "state": "lock",
+      "path": ".claude/hooks/protect-secrets.js",
+      "hooks": [
+        {
+          "event": "PreToolUse",
+          "matcher": "Write",
+          "args": []
+        },
+        {
+          "event": "PreToolUse",
+          "matcher": "Edit",
+          "args": []
+        },
+        {
+          "event": "PreToolUse",
+          "matcher": "NotebookEdit",
+          "args": []
+        },
+        {
+          "event": "PreToolUse",
+          "matcher": "Read",
+          "args": []
+        },
+        {
+          "event": "PreToolUse",
+          "matcher": "Grep",
+          "args": []
+        }
+      ]
+    },
+    "hook:relation-guard": {
+      "type": "hook",
+      "state": "on",
+      "projHint": "off",
+      "path": ".claude/hooks/relation-guard.js",
+      "hooks": [
+        {
+          "event": "PreToolUse",
+          "matcher": "Bash",
+          "args": []
+        },
+        {
+          "event": "PostToolUse",
+          "matcher": "Write",
+          "args": []
+        },
+        {
+          "event": "PostToolUse",
+          "matcher": "Edit",
+          "args": []
+        }
+      ]
+    },
+    "hook:session-export": {
+      "type": "hook",
+      "state": "lock",
+      "path": ".claude/hooks/session-export.js",
+      "hooks": [
+        {
+          "event": "Stop",
+          "matcher": "",
+          "args": []
+        }
+      ]
+    },
+    "hook:session-start": {
+      "type": "hook",
+      "state": "lock",
+      "path": ".claude/hooks/session-start.js",
+      "hooks": [
+        {
+          "event": "SessionStart",
+          "matcher": "",
+          "args": []
+        }
+      ]
+    },
+    "hook:skill-md-guard": {
+      "type": "hook",
+      "state": "on",
+      "projHint": "off",
+      "path": ".claude/hooks/skill-md-guard.js",
+      "hooks": [
+        {
+          "event": "PreToolUse",
+          "matcher": "Write",
+          "args": []
+        },
+        {
+          "event": "PostToolUse",
+          "matcher": "Edit",
+          "args": []
+        }
+      ]
+    },
+    "hook:staleness-check": {
+      "type": "hook",
+      "state": "on",
+      "projHint": "off",
+      "path": ".claude/hooks/staleness-check.js",
+      "hooks": [
+        {
+          "event": "SessionStart",
+          "matcher": "",
+          "args": [
+            "--strict"
+          ]
+        }
+      ]
+    },
+    "hook:task-confirm-guard": {
+      "type": "hook",
+      "state": "lock",
+      "path": ".claude/hooks/task-confirm-guard.js",
+      "hooks": [
+        {
+          "event": "PreToolUse",
+          "matcher": "Write",
+          "args": []
+        },
+        {
+          "event": "PreToolUse",
+          "matcher": "Edit",
+          "args": []
+        },
+        {
+          "event": "PreToolUse",
+          "matcher": "NotebookEdit",
+          "args": []
+        },
+        {
+          "event": "UserPromptSubmit",
+          "matcher": "",
+          "args": []
+        }
+      ]
+    },
+    "hook:tdd-guard": {
+      "type": "hook",
+      "state": "on",
+      "path": ".claude/hooks/tdd-guard.js",
+      "hooks": [
+        {
+          "event": "PostToolUse",
+          "matcher": "Write",
+          "args": []
+        },
+        {
+          "event": "PostToolUse",
+          "matcher": "Edit",
+          "args": []
+        }
+      ]
+    },
+    "hook:test-fake-guard": {
+      "type": "hook",
+      "state": "on",
+      "path": ".claude/hooks/test-fake-guard.js",
+      "hooks": [
+        {
+          "event": "PreToolUse",
+          "matcher": "Bash",
+          "args": []
+        }
+      ]
+    },
+    "hook:typescript-quality": {
+      "type": "hook",
+      "state": "lock",
+      "path": ".claude/hooks/typescript-quality.js",
+      "hooks": [
+        {
+          "event": "PostToolUse",
+          "matcher": "Write",
+          "args": []
+        },
+        {
+          "event": "PostToolUse",
+          "matcher": "Edit",
+          "args": []
+        }
+      ]
+    },
+    "hook:verification-guard": {
+      "type": "hook",
+      "state": "lock",
+      "projHint": "off",
+      "path": ".claude/hooks/verification-guard.js",
+      "hooks": [
+        {
+          "event": "PreToolUse",
+          "matcher": "Write",
+          "args": []
+        },
+        {
+          "event": "PostToolUse",
+          "matcher": "Write",
+          "args": []
+        },
+        {
+          "event": "PostToolUse",
+          "matcher": "Edit",
+          "args": []
+        }
+      ]
+    },
+    "rule:adversarial-testing.md": {
+      "type": "rule",
+      "state": "on",
+      "path": ".claude/rules/adversarial-testing.md"
+    },
+    "rule:agent-design.md": {
+      "type": "rule",
+      "state": "on",
+      "projHint": "off",
+      "path": ".claude/rules/agent-design.md"
+    },
+    "rule:codex-review.md": {
+      "type": "rule",
+      "state": "on",
+      "path": ".claude/rules/codex-review.md"
+    },
+    "rule:commands.md": {
+      "type": "rule",
+      "state": "on",
+      "projHint": "off",
+      "path": ".claude/rules/commands.md"
+    },
+    "rule:creation-workflow.md": {
+      "type": "rule",
+      "state": "on",
+      "projHint": "off",
+      "path": ".claude/rules/creation-workflow.md"
+    },
+    "rule:git.md": {
+      "type": "rule",
+      "state": "on",
+      "path": ".claude/rules/git.md"
+    },
+    "rule:info-verification.md": {
+      "type": "rule",
+      "state": "lock",
+      "path": ".claude/rules/info-verification.md"
+    },
+    "rule:java.md": {
+      "type": "rule",
+      "state": "on",
+      "path": ".claude/rules/java.md"
+    },
+    "rule:memory-sync.md": {
+      "type": "rule",
+      "state": "on",
+      "path": ".claude/rules/memory-sync.md"
+    },
+    "rule:readme-update.md": {
+      "type": "rule",
+      "state": "on",
+      "projHint": "off",
+      "path": ".claude/rules/readme-update.md"
+    },
+    "rule:rust.md": {
+      "type": "rule",
+      "state": "on",
+      "path": ".claude/rules/rust.md"
+    },
+    "rule:task-workflow.md": {
+      "type": "rule",
+      "state": "lock",
+      "path": ".claude/rules/task-workflow.md"
+    },
+    "rule:typescript.md": {
+      "type": "rule",
+      "state": "on",
+      "path": ".claude/rules/typescript.md"
+    },
+    "rule:verification-policy.md": {
+      "type": "rule",
+      "state": "lock",
+      "projHint": "off",
+      "path": ".claude/rules/verification-policy.md"
+    },
+    "setting:superpowers 플러그인": {
+      "type": "setting",
+      "state": "on",
+      "key": "plugin:superpowers@superpowers-marketplace"
+    },
+    "setting:상태줄 `statusline.sh`": {
+      "type": "setting",
+      "state": "on",
+      "key": "statusLine",
+      "path": ".claude/hooks/statusline.sh"
+    },
+    "setting:시작 권한 모드 `acceptEdits`": {
+      "type": "setting",
+      "state": "lock",
+      "key": "permissions.defaultMode"
+    },
+    "setting:위험 명령 차단 목록 (deny)": {
+      "type": "setting",
+      "state": "lock",
+      "key": "permissions.deny"
+    },
+    "setting:임시 폴더 접근 허용": {
+      "type": "setting",
+      "state": "lock",
+      "key": "permissions.additionalDirectories"
+    },
+    "setting:자동 허용 목록 (allow)": {
+      "type": "setting",
+      "state": "lock",
+      "key": "permissions.allow"
+    },
+    "setting:전역 CLAUDE.md 공통 부분": {
+      "type": "setting",
+      "state": "lock",
+      "key": "claudeMd",
+      "path": ".claude/CLAUDE.common.md"
+    },
+    "skill:accessibility-vpat-writing": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/accessibility-vpat-writing"
+    },
+    "skill:ag-grid": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/ag-grid"
+    },
+    "skill:ai-game-asset-pipeline": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/ai-game-asset-pipeline"
+    },
+    "skill:animation": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/animation"
+    },
+    "skill:app-store-submission": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/app-store-submission"
+    },
+    "skill:attachment-theory-basics": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/attachment-theory-basics"
+    },
+    "skill:aws-sdk-v1-s3-rekognition": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/aws-sdk-v1-s3-rekognition"
+    },
+    "skill:aws-sdk-v2-s3-rekognition": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/aws-sdk-v2-s3-rekognition"
+    },
+    "skill:axum": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/axum"
+    },
+    "skill:better-auth": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/better-auth"
+    },
+    "skill:bot-management-seo": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/bot-management-seo"
+    },
+    "skill:bouncycastle-crypto": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/bouncycastle-crypto"
+    },
+    "skill:build-perf-benchmarking": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/build-perf-benchmarking"
+    },
+    "skill:bundle-size-analysis": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/bundle-size-analysis"
+    },
+    "skill:bundling-compiler": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/bundling-compiler"
+    },
+    "skill:characterization-testing": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/characterization-testing"
+    },
+    "skill:chat-ui-pattern": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/chat-ui-pattern"
+    },
+    "skill:claude-api-streaming-frontend": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/claude-api-streaming-frontend"
+    },
+    "skill:claude-code-headless": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/claude-code-headless"
+    },
+    "skill:claude-code-hook-authoring": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/claude-code-hook-authoring"
+    },
+    "skill:code-convention": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/code-convention"
+    },
+    "skill:content-eeat-quality": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/content-eeat-quality"
+    },
+    "skill:core-web-vitals-optimization": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/core-web-vitals-optimization"
+    },
+    "skill:crisis-intervention-resources-korea": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/crisis-intervention-resources-korea"
+    },
+    "skill:daily-fortune-retention-loop": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/daily-fortune-retention-loop"
+    },
+    "skill:ddd": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/ddd"
+    },
+    "skill:design-token-scss": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/design-token-scss"
+    },
+    "skill:dev-server-hmr-benchmarking": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/dev-server-hmr-benchmarking"
+    },
+    "skill:docker-deployment": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/docker-deployment"
+    },
+    "skill:dream-app-ab-testing-prompts": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/dream-app-ab-testing-prompts"
+    },
+    "skill:dream-app-onboarding": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/dream-app-onboarding"
+    },
+    "skill:dream-content-privacy-ethics": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/dream-content-privacy-ethics"
+    },
+    "skill:dream-content-research": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/dream-content-research"
+    },
+    "skill:dream-export-import": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/dream-export-import"
+    },
+    "skill:dream-image-generation": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/dream-image-generation"
+    },
+    "skill:dream-interpretation-prompt-engineering": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/dream-interpretation-prompt-engineering"
+    },
+    "skill:dream-journal-data-modeling": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/dream-journal-data-modeling"
+    },
+    "skill:dream-privacy-consent-ui": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/dream-privacy-consent-ui"
+    },
+    "skill:dream-psychology-jung-freud": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/dream-psychology-jung-freud"
+    },
+    "skill:dream-recurrence-detection": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/dream-recurrence-detection"
+    },
+    "skill:dream-safety-classifier-prompts": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/dream-safety-classifier-prompts"
+    },
+    "skill:dream-sharing-anonymized": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/dream-sharing-anonymized"
+    },
+    "skill:dream-statistics-visualization": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/dream-statistics-visualization"
+    },
+    "skill:dream-symbol-tagging": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/dream-symbol-tagging"
+    },
+    "skill:drizzle-neon-postgres": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/drizzle-neon-postgres"
+    },
+    "skill:e2e-testing": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/e2e-testing"
+    },
+    "skill:ecommerce-seo": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/ecommerce-seo"
+    },
+    "skill:ehcache-2-legacy": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/ehcache-2-legacy"
+    },
+    "skill:emotion-tagging-input": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/emotion-tagging-input"
+    },
+    "skill:font-optimization": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/font-optimization"
+    },
+    "skill:form-handling": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/form-handling"
+    },
+    "skill:fortune-interpretation-prompt-engineering": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/fortune-interpretation-prompt-engineering"
+    },
+    "skill:frontend-domain-structure": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/frontend-domain-structure"
+    },
+    "skill:game-audio-ai-tools": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/game-audio-ai-tools"
+    },
+    "skill:game-design-document": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/game-design-document"
+    },
+    "skill:geo-ai-discoverability": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/geo-ai-discoverability"
+    },
+    "skill:github-actions": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/github-actions"
+    },
+    "skill:github-actions-visual-regression": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/github-actions-visual-regression"
+    },
+    "skill:global-exception-validation": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/global-exception-validation"
+    },
+    "skill:google-indexing-api": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/google-indexing-api"
+    },
+    "skill:hikaricp-tuning-oracle-mysql": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/hikaricp-tuning-oracle-mysql"
+    },
+    "skill:hono-api-patterns": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/hono-api-patterns"
+    },
+    "skill:i18n-seo": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/i18n-seo"
+    },
+    "skill:ibatis-to-mybatis-migration": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/ibatis-to-mybatis-migration"
+    },
+    "skill:image-optimization-seo": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/image-optimization-seo"
+    },
+    "skill:incremental-refactoring": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/incremental-refactoring"
+    },
+    "skill:indexeddb-dexie": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/indexeddb-dexie"
+    },
+    "skill:ingredient-management": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/ingredient-management"
+    },
+    "skill:jackson-time-migration": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/jackson-time-migration"
+    },
+    "skill:jasypt-encrypted-config": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/jasypt-encrypted-config"
+    },
+    "skill:jwt-auth": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/jwt-auth"
+    },
+    "skill:kakao-share-optimization": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/kakao-share-optimization"
+    },
+    "skill:korean-dream-interpretation-tradition": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/korean-dream-interpretation-tradition"
+    },
+    "skill:korean-food-nutrition": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/korean-food-nutrition"
+    },
+    "skill:korean-lunar-calendar-manseryeok": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/korean-lunar-calendar-manseryeok"
+    },
+    "skill:korean-saju-tradition": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/korean-saju-tradition"
+    },
+    "skill:lighthouse-ci-setup": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/lighthouse-ci-setup"
+    },
+    "skill:local-business-seo": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/local-business-seo"
+    },
+    "skill:logback-mdc-tracing": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/logback-mdc-tracing"
+    },
+    "skill:lombok-mapstruct-modelmapper": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/lombok-mapstruct-modelmapper"
+    },
+    "skill:meal-recommendation-prompt": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/meal-recommendation-prompt"
+    },
+    "skill:media-recorder-api": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/media-recorder-api"
+    },
+    "skill:mobile-seo-pwa": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/mobile-seo-pwa"
+    },
+    "skill:mobile-user-acquisition": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/mobile-user-acquisition"
+    },
+    "skill:module-boundaries": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/module-boundaries"
+    },
+    "skill:monorepo-turborepo": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/monorepo-turborepo"
+    },
+    "skill:mui-v5": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/mui-v5"
+    },
+    "skill:mui-v9": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/mui-v9"
+    },
+    "skill:multilingual-content-strategy": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/multilingual-content-strategy"
+    },
+    "skill:multipart-upload": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/multipart-upload"
+    },
+    "skill:mybatis-mapper-patterns": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/mybatis-mapper-patterns"
+    },
+    "skill:n8n-error-handling": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/n8n-error-handling"
+    },
+    "skill:n8n-llm-integration": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/n8n-llm-integration"
+    },
+    "skill:n8n-self-hosting": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/n8n-self-hosting"
+    },
+    "skill:n8n-webhook-patterns": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/n8n-webhook-patterns"
+    },
+    "skill:n8n-workflow-design": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/n8n-workflow-design"
+    },
+    "skill:naver-seo-specifics": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/naver-seo-specifics"
+    },
+    "skill:nexacro-17-xfdl-anatomy": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/nexacro-17-xfdl-anatomy"
+    },
+    "skill:nexacro-strangler-coexistence": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/nexacro-strangler-coexistence"
+    },
+    "skill:nexacro-to-react-mapping": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/nexacro-to-react-mapping"
+    },
+    "skill:nexacro-xapi-server": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/nexacro-xapi-server"
+    },
+    "skill:next-intl-i18n": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/next-intl-i18n"
+    },
+    "skill:nextjs": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/nextjs"
+    },
+    "skill:nutrition-analysis-prompt": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/nutrition-analysis-prompt"
+    },
+    "skill:nutrition-basics": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/nutrition-basics"
+    },
+    "skill:og-image-generation": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/og-image-generation"
+    },
+    "skill:palm-photo-capture-vision": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/palm-photo-capture-vision"
+    },
+    "skill:palmistry-limitations": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/palmistry-limitations"
+    },
+    "skill:prisma-orm": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/prisma-orm"
+    },
+    "skill:project-structure": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/project-structure"
+    },
+    "skill:pwa-offline-llm-fallback": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/pwa-offline-llm-fallback"
+    },
+    "skill:pwa-push-notifications": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/pwa-push-notifications"
+    },
+    "skill:python-anthropic-sdk": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/python-anthropic-sdk"
+    },
+    "skill:python-async-asyncio": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/python-async-asyncio"
+    },
+    "skill:python-cli-typer": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/python-cli-typer"
+    },
+    "skill:python-embeddings-vector-db": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/python-embeddings-vector-db"
+    },
+    "skill:python-fastapi": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/python-fastapi"
+    },
+    "skill:python-korean-nlp-konlpy": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/python-korean-nlp-konlpy"
+    },
+    "skill:python-langchain-current": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/python-langchain-current"
+    },
+    "skill:python-llamaindex": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/python-llamaindex"
+    },
+    "skill:python-pydantic-v2": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/python-pydantic-v2"
+    },
+    "skill:python-uv-project-setup": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/python-uv-project-setup"
+    },
+    "skill:react-spec-extraction": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/react-spec-extraction"
+    },
+    "skill:recoil-to-zustand-migration": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/recoil-to-zustand-migration"
+    },
+    "skill:redis-redisson-4": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/redis-redisson-4"
+    },
+    "skill:redis-redisson-legacy": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/redis-redisson-legacy"
+    },
+    "skill:redis-redisson-modern": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/redis-redisson-modern"
+    },
+    "skill:reqwest": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/reqwest"
+    },
+    "skill:rsbuild": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/rsbuild"
+    },
+    "skill:saju-chart-visualization": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/saju-chart-visualization"
+    },
+    "skill:saju-tarot-data-modeling": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/saju-tarot-data-modeling"
+    },
+    "skill:schema-org-patterns": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/schema-org-patterns"
+    },
+    "skill:search-console-webmaster": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/search-console-webmaster"
+    },
+    "skill:security-headers-seo": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/security-headers-seo"
+    },
+    "skill:seo-monitoring-automation": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/seo-monitoring-automation"
+    },
+    "skill:seo-nextjs": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/seo-nextjs"
+    },
+    "skill:seo-static-html": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/seo-static-html"
+    },
+    "skill:seo-vite-spa": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/seo-vite-spa"
+    },
+    "skill:site-migration-seo": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/site-migration-seo"
+    },
+    "skill:spec-extraction-method": {
+      "type": "skill",
+      "state": "on",
+      "path": ".claude/skills/spec-extraction-method"
+    },
+    "skill:spring-boot-1-to-2-migration": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/spring-boot-1-to-2-migration"
+    },
+    "skill:spring-boot-2-to-3-migration": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/spring-boot-2-to-3-migration"
+    },
+    "skill:spring-boot-gradle-setup": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/spring-boot-gradle-setup"
+    },
+    "skill:spring-multi-datasource-oracle-mysql": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/spring-multi-datasource-oracle-mysql"
+    },
+    "skill:spring-mybatis-spec-extraction": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/spring-mybatis-spec-extraction"
+    },
+    "skill:spring-security-5-jwt-jjwt10": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/spring-security-5-jwt-jjwt10"
+    },
+    "skill:spring-security-6-jwt-jjwt12": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/spring-security-6-jwt-jjwt12"
+    },
+    "skill:springdoc-openapi-3": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/springdoc-openapi-3"
+    },
+    "skill:sqlx": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/sqlx"
+    },
+    "skill:srs-spaced-repetition": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/srs-spaced-repetition"
+    },
+    "skill:sse-streaming": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/sse-streaming"
+    },
+    "skill:state-management": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/state-management"
+    },
+    "skill:storybook": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/storybook"
+    },
+    "skill:storybook-visual-testing": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/storybook-visual-testing"
+    },
+    "skill:structured-data-validation-api": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/structured-data-validation-api"
+    },
+    "skill:swagger-springfox-2": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/swagger-springfox-2"
+    },
+    "skill:swiper": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/swiper"
+    },
+    "skill:tanstack-query": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/tanstack-query"
+    },
+    "skill:tanstack-query-v4-to-v5-migration": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/tanstack-query-v4-to-v5-migration"
+    },
+    "skill:tarot-card-deck-ui": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/tarot-card-deck-ui"
+    },
+    "skill:tarot-history-symbolism": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/tarot-history-symbolism"
+    },
+    "skill:testing": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/testing"
+    },
+    "skill:testing-junit5-spring-boot": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/testing-junit5-spring-boot"
+    },
+    "skill:testing-rust": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/testing-rust"
+    },
+    "skill:tower-http": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/tower-http"
+    },
+    "skill:tsup": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/tsup"
+    },
+    "skill:typescript-v4": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/typescript-v4"
+    },
+    "skill:typescript-v5": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/typescript-v5"
+    },
+    "skill:unity-6-2d-fundamentals": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/unity-6-2d-fundamentals"
+    },
+    "skill:unity-addressables": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/unity-addressables"
+    },
+    "skill:unity-cicd-codemagic": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/unity-cicd-codemagic"
+    },
+    "skill:unity-firebase": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/unity-firebase"
+    },
+    "skill:unity-game-feel": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/unity-game-feel"
+    },
+    "skill:unity-iap": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/unity-iap"
+    },
+    "skill:unity-levelplay-ads": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/unity-levelplay-ads"
+    },
+    "skill:unity-live-ops": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/unity-live-ops"
+    },
+    "skill:unity-mobile-optimization": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/unity-mobile-optimization"
+    },
+    "skill:unity-save-system": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/unity-save-system"
+    },
+    "skill:unity-ui-system": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/unity-ui-system"
+    },
+    "skill:url-canonicalization-redirects": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/url-canonicalization-redirects"
+    },
+    "skill:vercel-sandbox": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/vercel-sandbox"
+    },
+    "skill:vercel-workflow": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/vercel-workflow"
+    },
+    "skill:vite-advanced-splitting": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/vite-advanced-splitting"
+    },
+    "skill:vite-pwa-service-worker": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/vite-pwa-service-worker"
+    },
+    "skill:voice-input-ui": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/voice-input-ui"
+    },
+    "skill:wcag-2.2-checklist": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/wcag-2.2-checklist"
+    },
+    "skill:web-speech-api-stt": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/web-speech-api-stt"
+    },
+    "skill:web-vitals-rum-comparison": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/web-vitals-rum-comparison"
+    },
+    "skill:webflux-webclient-in-sync-app": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/webflux-webclient-in-sync-app"
+    },
+    "skill:webpack-vite-config-mapping": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/webpack-vite-config-mapping"
+    },
+    "skill:whisper-api-integration": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/whisper-api-integration"
+    },
+    "skill:xapi-to-rest-migration": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/xapi-to-rest-migration"
+    },
+    "skill:xss-lucy-jsoup": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/xss-lucy-jsoup"
+    },
+    "skill:ymyl-content-seo": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/ymyl-content-seo"
+    },
+    "skill:zod-schema-validation": {
+      "type": "skill",
+      "state": "off",
+      "path": ".claude/skills/zod-schema-validation"
+    }
+  },
+  "hookOrder": {
+    "PreToolUse": [
+      {
+        "id": "hook:bash-guard",
+        "matcher": "*",
+        "args": []
+      },
+      {
+        "id": "hook:auto-approve",
+        "matcher": "*",
+        "args": []
+      },
+      {
+        "id": "hook:parry",
+        "matcher": "Write",
+        "args": []
+      },
+      {
+        "id": "hook:protect-secrets",
+        "matcher": "Write",
+        "args": []
+      },
+      {
+        "id": "hook:verification-guard",
+        "matcher": "Write",
+        "args": []
+      },
+      {
+        "id": "hook:skill-md-guard",
+        "matcher": "Write",
+        "args": []
+      },
+      {
+        "id": "hook:agent-md-guard",
+        "matcher": "Write",
+        "args": []
+      },
+      {
+        "id": "hook:task-confirm-guard",
+        "matcher": "Write",
+        "args": []
+      },
+      {
+        "id": "hook:protect-secrets",
+        "matcher": "Edit",
+        "args": []
+      },
+      {
+        "id": "hook:task-confirm-guard",
+        "matcher": "Edit",
+        "args": []
+      },
+      {
+        "id": "hook:protect-secrets",
+        "matcher": "NotebookEdit",
+        "args": []
+      },
+      {
+        "id": "hook:task-confirm-guard",
+        "matcher": "NotebookEdit",
+        "args": []
+      },
+      {
+        "id": "hook:protect-secrets",
+        "matcher": "Read",
+        "args": []
+      },
+      {
+        "id": "hook:protect-secrets",
+        "matcher": "Grep",
+        "args": []
+      },
+      {
+        "id": "hook:test-fake-guard",
+        "matcher": "Bash",
+        "args": []
+      },
+      {
+        "id": "hook:package-manager-guard",
+        "matcher": "Bash",
+        "args": []
+      },
+      {
+        "id": "hook:deliverable-guard",
+        "matcher": "Bash",
+        "args": []
+      },
+      {
+        "id": "hook:branch-protection",
+        "matcher": "Bash",
+        "args": []
+      },
+      {
+        "id": "hook:relation-guard",
+        "matcher": "Bash",
+        "args": []
+      }
+    ],
+    "PostToolUse": [
+      {
+        "id": "hook:deliverable-guard",
+        "matcher": "Write",
+        "args": []
+      },
+      {
+        "id": "hook:verification-guard",
+        "matcher": "Write",
+        "args": []
+      },
+      {
+        "id": "hook:progress-tracker",
+        "matcher": "Write",
+        "args": []
+      },
+      {
+        "id": "hook:tdd-guard",
+        "matcher": "Write",
+        "args": []
+      },
+      {
+        "id": "hook:adversarial-test-guard",
+        "matcher": "Write",
+        "args": []
+      },
+      {
+        "id": "hook:fake-impl-guard",
+        "matcher": "Write",
+        "args": []
+      },
+      {
+        "id": "hook:auto-format",
+        "matcher": "Write",
+        "args": []
+      },
+      {
+        "id": "hook:typescript-quality",
+        "matcher": "Write",
+        "args": []
+      },
+      {
+        "id": "hook:memory-sync",
+        "matcher": "Write",
+        "args": []
+      },
+      {
+        "id": "hook:relation-guard",
+        "matcher": "Write",
+        "args": []
+      },
+      {
+        "id": "hook:deliverable-guard",
+        "matcher": "Edit",
+        "args": []
+      },
+      {
+        "id": "hook:verification-guard",
+        "matcher": "Edit",
+        "args": []
+      },
+      {
+        "id": "hook:skill-md-guard",
+        "matcher": "Edit",
+        "args": []
+      },
+      {
+        "id": "hook:agent-md-guard",
+        "matcher": "Edit",
+        "args": []
+      },
+      {
+        "id": "hook:progress-tracker",
+        "matcher": "Edit",
+        "args": []
+      },
+      {
+        "id": "hook:tdd-guard",
+        "matcher": "Edit",
+        "args": []
+      },
+      {
+        "id": "hook:adversarial-test-guard",
+        "matcher": "Edit",
+        "args": []
+      },
+      {
+        "id": "hook:fake-impl-guard",
+        "matcher": "Edit",
+        "args": []
+      },
+      {
+        "id": "hook:auto-format",
+        "matcher": "Edit",
+        "args": []
+      },
+      {
+        "id": "hook:typescript-quality",
+        "matcher": "Edit",
+        "args": []
+      },
+      {
+        "id": "hook:memory-sync",
+        "matcher": "Edit",
+        "args": []
+      },
+      {
+        "id": "hook:relation-guard",
+        "matcher": "Edit",
+        "args": []
+      },
+      {
+        "id": "hook:progress-tracker",
+        "matcher": "NotebookEdit",
+        "args": []
+      },
+      {
+        "id": "hook:bash-guard",
+        "matcher": "Bash",
+        "args": []
+      },
+      {
+        "id": "hook:parallel-hint",
+        "matcher": "*",
+        "args": []
+      }
+    ],
+    "SessionStart": [
+      {
+        "id": "hook:memory-pull",
+        "matcher": "",
+        "args": []
+      },
+      {
+        "id": "hook:session-start",
+        "matcher": "",
+        "args": []
+      },
+      {
+        "id": "hook:instructions-loaded",
+        "matcher": "",
+        "args": []
+      },
+      {
+        "id": "hook:staleness-check",
+        "matcher": "",
+        "args": [
+          "--strict"
+        ]
+      },
+      {
+        "id": "hook:config-change-audit",
+        "matcher": "",
+        "args": []
+      },
+      {
+        "id": "hook:progress-tracker",
+        "matcher": "",
+        "args": []
+      }
+    ],
+    "ConfigChange": [
+      {
+        "id": "hook:config-change-audit",
+        "matcher": "",
+        "args": []
+      }
+    ],
+    "Stop": [
+      {
+        "id": "hook:deliverable-guard",
+        "matcher": "",
+        "args": []
+      },
+      {
+        "id": "hook:codex-review-guard",
+        "matcher": "",
+        "args": []
+      },
+      {
+        "id": "hook:session-export",
+        "matcher": "",
+        "args": []
+      },
+      {
+        "id": "hook:korean-response-guard",
+        "matcher": "",
+        "args": []
+      },
+      {
+        "id": "hook:cc-notify",
+        "matcher": "",
+        "args": []
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "id": "hook:korean-response-guard",
+        "matcher": "",
+        "args": []
+      },
+      {
+        "id": "hook:task-confirm-guard",
+        "matcher": "",
+        "args": []
+      },
+      {
+        "id": "hook:progress-tracker",
+        "matcher": "",
+        "args": []
+      },
+      {
+        "id": "hook:parallel-hint",
+        "matcher": "",
+        "args": []
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "id": "hook:bash-guard",
+        "matcher": "*",
+        "args": []
+      },
+      {
+        "id": "hook:auto-approve",
+        "matcher": "*",
+        "args": []
+      }
+    ]
+  },
+  "pluginBundles": {
+    "codex@openai-codex": "codex-review"
+  },
+  "relations": {
+    "bundles": {
+      "task-confirm": {
+        "title": "작업 확인 절차",
+        "items": [
+          "hook:task-confirm-guard",
+          "hook:progress-tracker",
+          "rule:task-workflow.md"
+        ]
+      },
+      "verification": {
+        "title": "스킬 검증 문서",
+        "items": [
+          "hook:verification-guard",
+          "rule:verification-policy.md"
+        ]
+      },
+      "dev-quality": {
+        "title": "테스트 품질 (TDD·적대적 테스트)",
+        "items": [
+          "hook:tdd-guard",
+          "hook:adversarial-test-guard",
+          "hook:fake-impl-guard",
+          "hook:test-fake-guard",
+          "rule:adversarial-testing.md",
+          "command:tdd-implement"
+        ]
+      },
+      "codex-review": {
+        "title": "Codex 리뷰",
+        "items": [
+          "hook:codex-review-guard",
+          "rule:codex-review.md",
+          "command:codex-review"
+        ]
+      },
+      "memory-share": {
+        "title": "메모리 공유",
+        "items": [
+          "hook:memory-pull",
+          "hook:memory-sync",
+          "rule:memory-sync.md"
+        ]
+      },
+      "harness-authoring": {
+        "title": "하네스 제작 (스킬·에이전트 만들기)",
+        "items": [
+          "hook:skill-md-guard",
+          "hook:agent-md-guard",
+          "hook:deliverable-guard",
+          "hook:staleness-check",
+          "hook:relation-guard",
+          "rule:agent-design.md",
+          "rule:creation-workflow.md",
+          "rule:readme-update.md",
+          "rule:commands.md",
+          "command:agent-status",
+          "agent:agent-creator",
+          "agent:skill-creator",
+          "agent:skill-tester",
+          "agent:freshness-auditor"
+        ]
+      }
+    },
+    "standalone": [
+      "hook:parallel-hint",
+      "hook:bash-guard",
+      "hook:protect-secrets",
+      "hook:parry",
+      "hook:auto-approve",
+      "hook:config-change-audit",
+      "hook:branch-protection",
+      "hook:package-manager-guard",
+      "hook:korean-response-guard",
+      "hook:session-start",
+      "hook:session-export",
+      "hook:cc-notify",
+      "hook:auto-format",
+      "hook:typescript-quality",
+      "hook:instructions-loaded",
+      "rule:git.md",
+      "rule:info-verification.md",
+      "command:commit",
+      "command:create-pr",
+      "command:context-prime",
+      "command:create-plan",
+      "command:fix-pr",
+      "command:update-docs",
+      "command:sparc-refine",
+      "command:harness"
+    ],
+    "blocks": {
+      "core": {
+        "title": "공통 에이전트",
+        "items": [
+          "agent:api-spec-designer",
+          "agent:claude-code-guide",
+          "agent:deep-researcher",
+          "agent:devops-engineer",
+          "agent:fact-checker",
+          "agent:product-planner",
+          "agent:project-scaffolder",
+          "agent:qa-engineer",
+          "agent:research-reviewer",
+          "agent:security-auditor",
+          "agent:socratic-interviewer",
+          "agent:source-validator",
+          "agent:tech-stack-advisor",
+          "agent:ui-ux-designer",
+          "agent:web-searcher"
+        ]
+      },
+      "dev-common": {
+        "title": "개발 공통",
+        "items": [
+          "agent:build-error-resolver",
+          "agent:business-domain-analyst",
+          "agent:changelog-writer",
+          "agent:codebase-domain-analyst",
+          "agent:competitor-analyst",
+          "agent:data-analyst",
+          "agent:database-architect",
+          "agent:pr-reviewer",
+          "skill:claude-code-hook-authoring",
+          "skill:ddd",
+          "skill:docker-deployment",
+          "skill:github-actions",
+          "skill:incremental-refactoring",
+          "skill:module-boundaries"
+        ]
+      },
+      "frontend-core": {
+        "title": "프론트 핵심",
+        "items": [
+          "agent:frontend-architect",
+          "agent:frontend-developer",
+          "agent:frontend-domain-refactorer",
+          "rule:typescript.md",
+          "skill:ag-grid",
+          "skill:bundle-size-analysis",
+          "skill:bundling-compiler",
+          "skill:core-web-vitals-optimization",
+          "skill:e2e-testing",
+          "skill:form-handling",
+          "skill:frontend-domain-structure",
+          "skill:monorepo-turborepo",
+          "skill:nextjs",
+          "skill:state-management",
+          "skill:tanstack-query",
+          "skill:tanstack-query-v4-to-v5-migration",
+          "skill:typescript-v4",
+          "skill:typescript-v5",
+          "skill:vite-advanced-splitting"
+        ]
+      },
+      "frontend-tooling": {
+        "title": "프론트 도구·품질",
+        "items": [
+          "agent:a11y-auditor",
+          "agent:build-perf-benchmarker",
+          "agent:perf-report-writer",
+          "skill:animation",
+          "skill:build-perf-benchmarking",
+          "skill:code-convention",
+          "skill:design-token-scss",
+          "skill:dev-server-hmr-benchmarking",
+          "skill:font-optimization",
+          "skill:github-actions-visual-regression",
+          "skill:indexeddb-dexie",
+          "skill:lighthouse-ci-setup",
+          "skill:mui-v5",
+          "skill:mui-v9",
+          "skill:next-intl-i18n",
+          "skill:pwa-push-notifications",
+          "skill:recoil-to-zustand-migration",
+          "skill:rsbuild",
+          "skill:storybook",
+          "skill:storybook-visual-testing",
+          "skill:swiper",
+          "skill:testing",
+          "skill:tsup",
+          "skill:vite-pwa-service-worker",
+          "skill:wcag-2.2-checklist",
+          "skill:web-vitals-rum-comparison",
+          "skill:webpack-vite-config-mapping"
+        ]
+      },
+      "ts-backend": {
+        "title": "TS 백엔드",
+        "items": [
+          "agent:typescript-backend-architect",
+          "agent:typescript-backend-developer",
+          "skill:better-auth",
+          "skill:drizzle-neon-postgres",
+          "skill:hono-api-patterns",
+          "skill:prisma-orm",
+          "skill:zod-schema-validation"
+        ]
+      },
+      "java-common": {
+        "title": "Java 공통",
+        "items": [
+          "agent:java-backend-architect",
+          "agent:java-backend-developer",
+          "rule:java.md",
+          "skill:bouncycastle-crypto",
+          "skill:global-exception-validation",
+          "skill:hikaricp-tuning-oracle-mysql",
+          "skill:jackson-time-migration",
+          "skill:jasypt-encrypted-config",
+          "skill:logback-mdc-tracing",
+          "skill:lombok-mapstruct-modelmapper",
+          "skill:mybatis-mapper-patterns",
+          "skill:spring-boot-gradle-setup",
+          "skill:spring-multi-datasource-oracle-mysql",
+          "skill:testing-junit5-spring-boot",
+          "skill:webflux-webclient-in-sync-app",
+          "skill:xss-lucy-jsoup"
+        ]
+      },
+      "java-legacy": {
+        "title": "Java 레거시 (SB 2)",
+        "items": [
+          "skill:aws-sdk-v1-s3-rekognition",
+          "skill:ehcache-2-legacy",
+          "skill:redis-redisson-legacy",
+          "skill:spring-boot-2-to-3-migration",
+          "skill:spring-security-5-jwt-jjwt10",
+          "skill:swagger-springfox-2"
+        ]
+      },
+      "java-modern": {
+        "title": "Java 모던 (SB 3)",
+        "items": [
+          "skill:aws-sdk-v2-s3-rekognition",
+          "skill:redis-redisson-4",
+          "skill:redis-redisson-modern",
+          "skill:spring-security-6-jwt-jjwt12",
+          "skill:springdoc-openapi-3"
+        ]
+      },
+      "rust": {
+        "title": "Rust",
+        "items": [
+          "agent:rust-backend-architect",
+          "agent:rust-backend-developer",
+          "rule:rust.md",
+          "skill:axum",
+          "skill:jwt-auth",
+          "skill:multipart-upload",
+          "skill:project-structure",
+          "skill:reqwest",
+          "skill:sqlx",
+          "skill:sse-streaming",
+          "skill:testing-rust",
+          "skill:tower-http"
+        ]
+      },
+      "python": {
+        "title": "Python",
+        "items": [
+          "agent:python-backend-architect",
+          "agent:python-backend-developer",
+          "skill:python-anthropic-sdk",
+          "skill:python-async-asyncio",
+          "skill:python-cli-typer",
+          "skill:python-embeddings-vector-db",
+          "skill:python-fastapi",
+          "skill:python-korean-nlp-konlpy",
+          "skill:python-langchain-current",
+          "skill:python-llamaindex",
+          "skill:python-pydantic-v2",
+          "skill:python-uv-project-setup"
+        ]
+      },
+      "unity": {
+        "title": "Unity",
+        "items": [
+          "agent:game-asset-ai-director",
+          "agent:game-design-document-writer",
+          "agent:game-monetization-strategist",
+          "agent:mobile-app-publisher",
+          "agent:unity-architect",
+          "agent:unity-developer",
+          "skill:ai-game-asset-pipeline",
+          "skill:app-store-submission",
+          "skill:game-audio-ai-tools",
+          "skill:game-design-document",
+          "skill:mobile-user-acquisition",
+          "skill:unity-6-2d-fundamentals",
+          "skill:unity-addressables",
+          "skill:unity-cicd-codemagic",
+          "skill:unity-firebase",
+          "skill:unity-game-feel",
+          "skill:unity-iap",
+          "skill:unity-levelplay-ads",
+          "skill:unity-live-ops",
+          "skill:unity-mobile-optimization",
+          "skill:unity-save-system",
+          "skill:unity-ui-system"
+        ]
+      },
+      "seo-geo": {
+        "title": "SEO·GEO",
+        "items": [
+          "agent:content-quality-reviewer",
+          "agent:seo-auditor",
+          "skill:accessibility-vpat-writing",
+          "skill:bot-management-seo",
+          "skill:content-eeat-quality",
+          "skill:ecommerce-seo",
+          "skill:geo-ai-discoverability",
+          "skill:google-indexing-api",
+          "skill:i18n-seo",
+          "skill:image-optimization-seo",
+          "skill:kakao-share-optimization",
+          "skill:local-business-seo",
+          "skill:mobile-seo-pwa",
+          "skill:multilingual-content-strategy",
+          "skill:naver-seo-specifics",
+          "skill:og-image-generation",
+          "skill:schema-org-patterns",
+          "skill:search-console-webmaster",
+          "skill:security-headers-seo",
+          "skill:seo-monitoring-automation",
+          "skill:seo-nextjs",
+          "skill:seo-static-html",
+          "skill:seo-vite-spa",
+          "skill:site-migration-seo",
+          "skill:structured-data-validation-api",
+          "skill:url-canonicalization-redirects",
+          "skill:ymyl-content-seo"
+        ]
+      },
+      "ai-app": {
+        "title": "AI 앱 공통",
+        "items": [
+          "skill:chat-ui-pattern",
+          "skill:claude-api-streaming-frontend",
+          "skill:emotion-tagging-input",
+          "skill:media-recorder-api",
+          "skill:pwa-offline-llm-fallback",
+          "skill:srs-spaced-repetition",
+          "skill:voice-input-ui",
+          "skill:web-speech-api-stt",
+          "skill:whisper-api-integration"
+        ]
+      },
+      "n8n": {
+        "title": "n8n",
+        "items": [
+          "skill:n8n-error-handling",
+          "skill:n8n-llm-integration",
+          "skill:n8n-self-hosting",
+          "skill:n8n-webhook-patterns",
+          "skill:n8n-workflow-design"
+        ]
+      },
+      "dream": {
+        "title": "꿈 도메인",
+        "items": [
+          "agent:dream-image-safety-classifier",
+          "agent:dream-interpretation-prompt-tester",
+          "agent:dream-journal-coach",
+          "agent:dream-multi-perspective-synthesizer",
+          "agent:dream-safety-classifier",
+          "skill:attachment-theory-basics",
+          "skill:crisis-intervention-resources-korea",
+          "skill:dream-app-ab-testing-prompts",
+          "skill:dream-app-onboarding",
+          "skill:dream-content-privacy-ethics",
+          "skill:dream-content-research",
+          "skill:dream-export-import",
+          "skill:dream-image-generation",
+          "skill:dream-interpretation-prompt-engineering",
+          "skill:dream-journal-data-modeling",
+          "skill:dream-privacy-consent-ui",
+          "skill:dream-psychology-jung-freud",
+          "skill:dream-recurrence-detection",
+          "skill:dream-safety-classifier-prompts",
+          "skill:dream-sharing-anonymized",
+          "skill:dream-statistics-visualization",
+          "skill:dream-symbol-tagging",
+          "skill:korean-dream-interpretation-tradition"
+        ]
+      },
+      "fortune": {
+        "title": "운세 도메인",
+        "items": [
+          "agent:fortune-interpretation-prompt-tester",
+          "skill:daily-fortune-retention-loop",
+          "skill:fortune-interpretation-prompt-engineering",
+          "skill:korean-lunar-calendar-manseryeok",
+          "skill:korean-saju-tradition",
+          "skill:palm-photo-capture-vision",
+          "skill:palmistry-limitations",
+          "skill:saju-chart-visualization",
+          "skill:saju-tarot-data-modeling",
+          "skill:tarot-card-deck-ui",
+          "skill:tarot-history-symbolism"
+        ]
+      },
+      "health": {
+        "title": "건강 도메인",
+        "items": [
+          "agent:nutrition-prompt-tester",
+          "skill:ingredient-management",
+          "skill:korean-food-nutrition",
+          "skill:meal-recommendation-prompt",
+          "skill:nutrition-analysis-prompt",
+          "skill:nutrition-basics"
+        ]
+      },
+      "spec-extraction": {
+        "title": "스펙 추출",
+        "items": [
+          "agent:legacy-spec-extractor",
+          "agent:spec-reviewer",
+          "command:spec-extract",
+          "skill:characterization-testing",
+          "skill:nexacro-17-xfdl-anatomy",
+          "skill:react-spec-extraction",
+          "skill:spec-extraction-method",
+          "skill:spring-mybatis-spec-extraction"
+        ]
+      },
+      "nexacro": {
+        "title": "넥사크로",
+        "items": [
+          "agent:migration-parity-tester",
+          "agent:nexacro-screen-analyzer",
+          "agent:nexacro-screen-converter",
+          "skill:ibatis-to-mybatis-migration",
+          "skill:nexacro-strangler-coexistence",
+          "skill:nexacro-to-react-mapping",
+          "skill:nexacro-xapi-server",
+          "skill:spring-boot-1-to-2-migration",
+          "skill:xapi-to-rest-migration"
+        ]
+      },
+      "misc": {
+        "title": "기타",
+        "items": [
+          "skill:claude-code-headless",
+          "skill:vercel-sandbox",
+          "skill:vercel-workflow"
+        ]
+      },
+      "harness-authoring": {
+        "title": "하네스 제작 에이전트",
+        "items": [
+          "agent:agent-creator",
+          "agent:freshness-auditor",
+          "agent:skill-creator",
+          "agent:skill-tester"
+        ]
+      }
+    },
+    "requires": {
+      "command:spec-extract": [
+        "agent:legacy-spec-extractor",
+        "agent:spec-reviewer",
+        "skill:spec-extraction-method"
+      ],
+      "agent:legacy-spec-extractor": [
+        "agent:spec-reviewer"
+      ],
+      "hook:progress-tracker": [
+        "hook:task-confirm-guard"
+      ],
+      "hook:deliverable-guard": [
+        "agent:skill-tester"
+      ],
+      "rule:creation-workflow.md": [
+        "agent:skill-tester"
+      ],
+      "agent:skill-creator": [
+        "rule:creation-workflow.md"
+      ],
+      "agent:agent-creator": [
+        "rule:agent-design.md",
+        "rule:creation-workflow.md"
+      ],
+      "hook:codex-review-guard": [
+        "rule:codex-review.md"
+      ],
+      "command:codex-review": [
+        "rule:codex-review.md"
+      ],
+      "agent:deep-researcher": [
+        "agent:web-searcher",
+        "agent:research-reviewer"
+      ],
+      "command:commit": [
+        "rule:git.md"
+      ]
+    },
+    "conflicts": [
+      [
+        "block:nexacro",
+        "hook:tdd-guard"
+      ]
+    ],
+    "variants": {
+      "hook:typescript-quality": [
+        "normal",
+        "changed-only"
+      ]
+    },
+    "presets": {
+      "nextjs": {
+        "title": "React·Next.js (+TS 백엔드)",
+        "enable": [
+          "block:dev-common",
+          "block:frontend-core",
+          "block:frontend-tooling",
+          "block:ts-backend"
+        ]
+      },
+      "java-legacy": {
+        "title": "Java Spring 레거시",
+        "enable": [
+          "block:dev-common",
+          "block:java-common",
+          "block:java-legacy"
+        ]
+      },
+      "java-modern": {
+        "title": "Java Spring 모던",
+        "enable": [
+          "block:dev-common",
+          "block:java-common",
+          "block:java-modern"
+        ]
+      },
+      "rust": {
+        "title": "Rust Axum",
+        "enable": [
+          "block:dev-common",
+          "block:rust"
+        ]
+      },
+      "python": {
+        "title": "Python FastAPI",
+        "enable": [
+          "block:dev-common",
+          "block:python"
+        ]
+      },
+      "unity": {
+        "title": "Unity 게임",
+        "enable": [
+          "block:dev-common",
+          "block:unity"
+        ]
+      },
+      "dream": {
+        "title": "꿈 해몽 앱",
+        "enable": [
+          "block:frontend-core",
+          "block:frontend-tooling",
+          "block:ai-app",
+          "block:dream"
+        ]
+      },
+      "fortune": {
+        "title": "운세 앱",
+        "enable": [
+          "block:frontend-core",
+          "block:frontend-tooling",
+          "block:ai-app",
+          "block:fortune"
+        ]
+      },
+      "health": {
+        "title": "건강·식단 앱",
+        "enable": [
+          "block:frontend-core",
+          "block:frontend-tooling",
+          "block:ai-app",
+          "block:health"
+        ]
+      },
+      "nexacro": {
+        "title": "넥사크로 마이그레이션",
+        "enable": [
+          "block:dev-common",
+          "block:frontend-core",
+          "block:java-common",
+          "block:java-legacy",
+          "block:nexacro"
+        ]
+      },
+      "seo-geo": {
+        "title": "애드온 · SEO·GEO",
+        "enable": [
+          "block:seo-geo"
+        ]
+      },
+      "spec-extraction": {
+        "title": "애드온 · 레거시 스펙 추출",
+        "enable": [
+          "block:spec-extraction"
+        ]
+      },
+      "n8n": {
+        "title": "애드온 · n8n",
+        "enable": [
+          "block:n8n"
+        ]
+      }
+    }
+  },
+  "base": {
+    "permissions": {
+      "defaultMode": "acceptEdits",
+      "allow": [
+        "Bash(node*)",
+        "Bash(npx*)",
+        "Bash(pnpm*)",
+        "Bash(npm*)",
+        "Bash(codex*)",
+        "Bash(git status*)",
+        "Bash(git diff*)",
+        "Bash(git log*)",
+        "Bash(git branch*)",
+        "Bash(git show*)",
+        "Bash(git remote*)",
+        "Bash(git add*)",
+        "Bash(git stash*)",
+        "Bash(git fetch*)",
+        "Bash(ls*)",
+        "Bash(ll*)",
+        "Bash(cat*)",
+        "Bash(head*)",
+        "Bash(tail*)",
+        "Bash(find*)",
+        "Bash(grep*)",
+        "Bash(wc*)",
+        "Bash(pwd)",
+        "Bash(which*)",
+        "Bash(echo*)",
+        "Bash(printf*)",
+        "Bash(mkdir*)",
+        "Bash(touch*)",
+        "Bash(cp*)",
+        "Bash(mv*)",
+        "Bash(rm*)",
+        "Bash(sed*)",
+        "Bash(awk*)",
+        "Bash(sort*)",
+        "Bash(uniq*)",
+        "Bash(diff*)",
+        "Bash(xargs*)",
+        "Bash(for*)",
+        "Bash(tee*)",
+        "Write",
+        "Edit",
+        "Read",
+        "Glob",
+        "Grep",
+        "WebSearch",
+        "WebFetch",
+        "Agent"
+      ],
+      "additionalDirectories": [
+        "/tmp",
+        "/private/tmp",
+        "/var/folders",
+        "/private/var/folders"
+      ],
+      "deny": [
+        "Bash(git push --force*)",
+        "Bash(git push -f*)",
+        "Bash(rm -rf /bin*)",
+        "Bash(rm -rf /etc*)",
+        "Bash(rm -rf /lib*)",
+        "Bash(rm -rf /sbin*)",
+        "Bash(rm -rf /sys*)",
+        "Bash(rm -rf /usr*)",
+        "Bash(rm -rf /var*)",
+        "Bash(rm -rf /proc*)",
+        "Bash(rm -rf /dev*)",
+        "Bash(chmod 777*)",
+        "Bash(curl*|*bash)",
+        "Bash(wget*|*sh)"
+      ]
+    },
+    "statusLine": {
+      "type": "command",
+      "command": "bash \"${GUGBAB_ROOT}\"/hooks/statusline.sh"
+    },
+    "enabledPlugins": {
+      "superpowers@superpowers-marketplace": true,
+      "codex@openai-codex": true
+    }
+  }
+}

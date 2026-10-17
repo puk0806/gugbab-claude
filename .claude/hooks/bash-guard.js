@@ -189,6 +189,15 @@ function getAllowedDirs(stdinCwd) {
     } catch { /* ignore */ }
   }
 
+  // 래퍼(gugbab-claude) 실행이면 설정 폴더 settings.json 의 additionalDirectories 도 (절대 경로만)
+  const cfgDir = process.env.CLAUDE_CONFIG_DIR
+  if (cfgDir && path.isAbsolute(cfgDir)) {
+    try {
+      const extra = JSON.parse(fs.readFileSync(path.join(cfgDir, 'settings.json'), 'utf8'))?.permissions?.additionalDirectories
+      if (Array.isArray(extra)) extra.forEach(d => { if (typeof d === 'string' && path.isAbsolute(d)) dirs.add(path.resolve(d)) })
+    } catch { /* 없음·깨짐 → 무시 */ }
+  }
+
   return [...dirs]
 }
 

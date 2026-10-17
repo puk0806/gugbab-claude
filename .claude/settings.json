@@ -197,6 +197,10 @@
           {
             "type": "command",
             "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/branch-protection.js"
+          },
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/relation-guard.js"
           }
         ]
       }
@@ -240,6 +244,10 @@
           {
             "type": "command",
             "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/memory-sync.js"
+          },
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/relation-guard.js"
           }
         ]
       },
@@ -289,6 +297,10 @@
           {
             "type": "command",
             "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/memory-sync.js"
+          },
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/relation-guard.js"
           }
         ]
       },
@@ -307,6 +319,15 @@
           {
             "type": "command",
             "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/bash-guard.js"
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/parallel-hint.js"
           }
         ]
       }
@@ -391,6 +412,10 @@
           {
             "type": "command",
             "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/progress-tracker.js"
+          },
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/parallel-hint.js"
           }
         ]
       }

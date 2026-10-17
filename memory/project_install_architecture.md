@@ -1,11 +1,11 @@
 ---
 name: project-install-sh
-description: "gugbab-claude → 다른 프로젝트 이식 구조. 템플릿 13개(0~13 중 8 academic은 2026-09-28 폐지·번호 재사용 안 함, 11=seo-geo 애드온, 12=fortune-app, 13=python-fastapi), JAVA_SKILLS 필터, 도메인 스킬 카테고리는 소유 템플릿만 포함(누출 주의), settings.json 단일 source-of-truth"
+description: "gugbab-claude → 다른 프로젝트 이식 구조. 템플릿 15개(0~15 중 8 academic은 2026-09-28 폐지·번호 재사용 안 함, 11=seo-geo 애드온, 12=fortune-app, 13=python-fastapi, 14=spec-extraction 애드온, 15=nexacro 레거시 강제), JAVA_SKILLS 필터, 도메인 스킬 카테고리는 소유 템플릿만 포함(누출 주의), settings.json 단일 source-of-truth"
 metadata: 
   node_type: memory
   type: project
   originSessionId: 9152b891-1df7-4c78-8301-10defaed293c
-  modified: 2026-10-05T07:09:37.274Z
+  modified: 2026-10-15T00:12:30.917Z
 ---
 
 gugbab-claude는 Claude Code 컨벤션 소스 레포. `project-install.sh`로 다른 프로젝트에 이식.
@@ -28,7 +28,7 @@ gugbab-claude는 Claude Code 컨벤션 소스 레포. `project-install.sh`로 �
 - ~~`8` academic~~ — **2026-09-28 폐지** (번호 결번 유지)
 - `9` dream-interpretation — 꿈 해몽 도메인 특화 (dream 스킬 전체 + DREAM_INTERPRETATION_AGENTS 25종 화이트리스트)
 - `10` health — 건강·식단 PWA (프론트엔드/TS 그룹 = react-spa·nextjs와 같은 프론트 스킬셋 + health/* 도메인 스킬 5종 전용)
-- `11` seo-geo (2026-09-01 신설) — **애드온 템플릿**: 프레임워크 비종속 SEO·GEO 스킬 17종 + writing 4종 + site-migration-seo(=22종, 커머스 프로파일 c면 SEO_NONCOMMERCE 8종 빠져 14종) + 에이전트 6종 화이트리스트(seo-auditor·content-quality-reviewer·fact-checker·source-validator·web-searcher·claude-code-guide). 스택 템플릿과 `5,11`·`3,11`처럼 병행하는 게 기본 용법. 프레임워크 종속 3종(seo-nextjs·seo-vite-spa·og-image-generation)은 nextjs·react-spa 소유 유지. **사용자 결정: java 분기에 SEO 조건을 덧대지 말고 템플릿으로 분리해 union 조합** — 조건 분기 제안은 기각됨. 프로파일 질문은 n 없이 y(기본)/c만. `seo-static-html`은 이전까지 어느 템플릿도 소유 안 해 export 안 되던 죽은 스킬 → seo-geo 소유로 해소. 첫 타깃: [[lfcp-ui-ssr-target]]. **Codex 3라운드 반영 규칙**: `ADDON_TEMPLATES` 정규화(애드온은 입력 순서 무관 뒤로 → CLAUDE.md 베이스는 항상 스택), seo-geo 소유 자산은 제외되면 조합 조건 없이 prune 기록(제외 = 어떤 선택 템플릿도 미소유), 작성 도구 y는 화이트리스트 템플릿(seo-geo·academic·dream)보다 우선, 병행 설치 시 추가 템플릿 `## 금지 사항`을 베이스에 병합. E2E 21건
+- `11` seo-geo (2026-09-01 신설) — **애드온 템플릿**: 프레임워크 비종속 SEO·GEO 스킬 17종 + writing 4종 + site-migration-seo(=22종, 커머스 프로파일 c면 SEO_NONCOMMERCE 8종 빠져 14종) + 에이전트 6종 화이트리스트(seo-auditor·content-quality-reviewer·fact-checker·source-validator·web-searcher·claude-code-guide). 스택 템플릿과 `5,11`·`3,11`처럼 병행하는 게 기본 용법. 프레임워크 종속 3종(seo-nextjs·seo-vite-spa·og-image-generation)은 nextjs·react-spa 소유 유지. **사용자 결정: java 분기에 SEO 조건을 덧대지 말고 템플릿으로 분리해 union 조합** — 조건 분기 제안은 기각됨. 프로파일 질문은 n 없이 y(기본)/c만. `seo-static-html`은 이전까지 어느 템플릿도 소유 안 해 export 안 되던 죽은 스킬 → seo-geo 소유로 해소. 첫 타깃은 로컬 전용 메모리([[local-index]]). **Codex 3라운드 반영 규칙**: `ADDON_TEMPLATES` 정규화(애드온은 입력 순서 무관 뒤로 → CLAUDE.md 베이스는 항상 스택), seo-geo 소유 자산은 제외되면 조합 조건 없이 prune 기록(제외 = 어떤 선택 템플릿도 미소유), 작성 도구 y는 화이트리스트 템플릿(seo-geo·academic·dream)보다 우선, 병행 설치 시 추가 템플릿 `## 금지 사항`을 베이스에 병합. E2E 21건
 - `12` fortune-app (2026-09-10 신설) — 사주·타로·손금 운세 앱 도메인 (dream-interpretation과 동형 구조): `FORTUNE_APP_AGENTS` 24종 화이트리스트(python·ts 백엔드 양쪽 + fortune 검증 에이전트 2종), 전용 스킬 13종은 `FORTUNE_APP_SKILLS`+`is_fortune_skill` 게이트로 fortune-app·all 외 전역 차단(health/* 방식) + seo-geo와 같은 조합 무관 prune 기록(`12→util` 수렴). fortune-app 안에서는 dream 전용을 `frontend/dream-*` 접두어·`is_dream_meta`·`DREAM_ARCH_SKILLS`로만 차단하고 접두어 없는 공용 LLM·PWA·음성 스킬은 **의도적으로 공유**. 비개발 템플릿(dev 훅·TS 훅 없음, SEO 프로파일 질문 없이 전체 포함). 기본 설치본 = 에이전트 24·스킬 118·훅 15·규칙 3. 상세: [[project_fortune_app_assets_2026-09-10]]. E2E 4건 추가(양성 대조·누수 3템플릿·util 다운그레이드·수정본 보존)
 
 > **도메인 스킬 누출 주의 (2026-07-21 수정):** react-spa/nextjs/health는 같은 `_skill_ok_for_tmpl` 블록을 공유하는데, "제외 목록에 없으면 포함" 방식이라 도메인 카테고리를 명시 제외하지 않으면 새어나간다. `health/*`(영양·식단 도메인 5종)가 제외 목록에 빠져 react-spa·nextjs 선택 시에도 export되던 버그를 `[[ "$rel" == health/* && "$tmpl" != "health" ]] && return 1`로 수정. 즉 도메인 스킬은 소유 템플릿에서만.
@@ -61,7 +61,7 @@ gugbab-claude는 Claude Code 컨벤션 소스 레포. `project-install.sh`로 �
   매니페스트 없는 레거시 설치는 첫 재설치 때 1회 확인(`잔재 삭제? [y/N]`) → `--delete-orphans`.
   상세 규칙은 [[full-audit-2026-08-11]] 매니페스트 섹션. 테스트: install-cleanup 146건 + write-install-manifest 27건.
   배경: 재설치 시 이전 설치 잔재가 정리되지 않아 N 선택이 무시되던 문제
-  (실제로 01~05 + lf-ui·lfos-ui 전부 memory 잔재/symlink 활성 상태였음 — 2026-08-07 감사).
+  (실제로 01~05 + 실무 레포 설치본 전부 memory 잔재/symlink 활성 상태였음 — 2026-08-07 감사).
   **미정리 프로젝트는 각자 재설치를 돌려야 정리 적용됨** — 첫 회에 y 응답하면 폐기 에이전트 4종(planner 등)도 자동 제거
 - settings.json 생성: `scripts/gen-settings.js` 스크립트로 자동 생성 (2026-06-15 기준)
   - `--superpowers` 플래그 → `superpowers@superpowers-marketplace: true` 추가 (조건부, codex와 동일 방식)

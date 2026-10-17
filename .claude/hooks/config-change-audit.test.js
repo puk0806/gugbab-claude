@@ -140,6 +140,22 @@ for (const [desc, stdin] of [['깨진 JSON', '{x'], ['빈 입력', ''], ['null',
   check(`${desc} → exit 0, 출력 없음`, r.status === 0 && !(r.stdout || '').trim())
 }
 
+// 래퍼(gugbab-claude) 설정 폴더 settings.json 도 감시 대상 (2026-10-16)
+{
+  const { settingsFiles } = require('./config-change-audit.js')
+  const saved = { cfg: process.env.CLAUDE_CONFIG_DIR, proj: process.env.CLAUDE_PROJECT_DIR }
+  delete process.env.CLAUDE_PROJECT_DIR
+  process.env.CLAUDE_CONFIG_DIR = path.join(base, 'cfg')
+  check('설정 폴더 settings.json 이 감시 목록에 들어간다', settingsFiles(proj).includes(path.join(base, 'cfg', 'settings.json')))
+  check('프로젝트 settings.json 도 그대로 감시', settingsFiles(proj).includes(SETTINGS))
+  process.env.CLAUDE_CONFIG_DIR = '../relative'
+  check('상대 경로 CLAUDE_CONFIG_DIR 는 무시 (엉뚱한 파일 감시 방지)', !settingsFiles(proj).some(f => f.includes('relative')))
+  delete process.env.CLAUDE_CONFIG_DIR
+  check('CLAUDE_CONFIG_DIR 없으면 ~/.claude/settings.json', settingsFiles(proj).includes(path.join(os.homedir(), '.claude', 'settings.json')))
+  if (saved.cfg !== undefined) process.env.CLAUDE_CONFIG_DIR = saved.cfg
+  if (saved.proj !== undefined) process.env.CLAUDE_PROJECT_DIR = saved.proj
+}
+
 fs.rmSync(base, { recursive: true, force: true })
 console.log(`\n${'─'.repeat(40)}`)
 console.log(`결과: ${passed}/${passed + failed} 통과 ${failed > 0 ? `(${failed}개 실패)` : ''}`)

@@ -1,0 +1,68 @@
+#!/bin/sh
+# gugbab-claude — gugbab 하네스를 끼워 claude 를 실행하는 래퍼 (계획서 4장)
+#   ① 업데이트 확인 ② 프로젝트 확인 ③ 조립 → ④ CLAUDE_CONFIG_DIR=<프로젝트별 설정 폴더> 로 claude 실행
+#   claude 가 끝났을 때 재시작 표시(.gugbab-restart)가 있으면 claude --continue 로 다시 띄운다 (대화 유지)
+#   개발 모드: GUGBAB_HOME=<작업 트리> gugbab-claude  → 그 작업 트리를 바로 쓰고 자동 업데이트 끔
+set -u
+
+# 자기 위치 (심볼릭 링크를 따라감 — ~/.local/bin/gugbab-claude → ~/gugbab/bin/gugbab-claude)
+self=$0
+while [ -L "$self" ]; do
+  link=$(readlink "$self")
+  case $link in
+    /*) self=$link ;;
+    *) self=$(dirname "$self")/$link ;;
+  esac
+done
+code=$(cd "$(dirname "$self")/.." && pwd -P)
+
+if [ -n "${GUGBAB_HOME:-}" ]; then
+  GUGBAB_DEV=1
+else
+  GUGBAB_HOME=$code
+  GUGBAB_DEV=${GUGBAB_DEV:-}
+fi
+export GUGBAB_HOME GUGBAB_DEV
+
+command -v node >/dev/null 2>&1 || { echo "[gugbab] node 가 필요합니다 (18 이상)" >&2; exit 127; }
+main="$GUGBAB_HOME/cli/main.js"
+
+case "${1:-}" in
+  status|doctor|update|on|off|preset|harness|compose|help|--help)
+    exec node "$main" "$@" ;;
+  --raw)
+    shift
+    exec claude "$@" ;;
+esac
+
+command -v claude >/dev/null 2>&1 || { echo "[gugbab] claude 를 찾지 못했습니다 — Claude Code 를 먼저 설치하세요" >&2; exit 127; }
+
+cfg=$(node "$main" prepare) || { echo "[gugbab] 조립 실패 — gugbab-claude doctor 로 확인하세요 (하네스 없이: gugbab-claude --raw)" >&2; exit 1; }
+[ -n "$cfg" ] && [ -d "$cfg" ] || { echo "[gugbab] 설정 폴더를 만들지 못했습니다: $cfg" >&2; exit 1; }
+rm -f "$cfg/.gugbab-restart"
+
+# claude 세션 안(/harness 커맨드·Bash)에서 이 하네스의 gugbab-claude 가 먼저 잡히게 — 커맨드에 ${…} 변수를 쓰면
+# Claude Code 가 "실행 전에 검사할 수 없다" 며 거부하므로 이름만으로 부를 수 있어야 한다
+PATH="$GUGBAB_HOME/bin:$PATH"
+export PATH
+
+# -p/--print(한 번 실행)는 다시 띄우지 않는다 — --continue 로 바꾸면 대화형이 떠 버린다
+oneshot=
+for a in "$@"; do
+  case $a in -p|--print) oneshot=1 ;; esac
+done
+
+while :; do
+  # CLAUDE_SECURESTORAGE_CONFIG_DIR= (빈 값) — 설정 폴더가 달라도 기본 키체인 로그인을 그대로 쓴다 (PoC 1, 문서에 없는 내부 변수)
+  CLAUDE_CONFIG_DIR="$cfg" CLAUDE_SECURESTORAGE_CONFIG_DIR= claude "$@"
+  rc=$?
+  [ -f "$cfg/.gugbab-restart" ] || exit $rc
+  rm -f "$cfg/.gugbab-restart"
+  if [ -n "$oneshot" ]; then
+    echo "[gugbab] 하네스가 바뀌었습니다 — 다음 실행부터 반영됩니다" >&2
+    exit $rc
+  fi
+  echo "[gugbab] 바뀐 하네스로 다시 시작합니다 (대화 이어서)" >&2
+  cfg=$(node "$main" prepare --no-update) || exit 1
+  set -- --continue
+done

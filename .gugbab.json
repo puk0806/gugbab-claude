@@ -1,0 +1,11 @@
+{
+  "$comment": "gugbab-claude 레포 자신의 하네스 설정 (계획서 2.2·결정 11). 하네스 제작 검사는 이 레포에서 끌 수 없게 lock. 지금은 레포 .claude/ 가 같은 항목을 직접 가지고 있어 래퍼가 건너뛰므로(중복 방지) 실제 효과는 6단계(레포 자체 배선 제거) 이후. block:nexacro 는 tdd-guard 와 충돌(14장 C)이라 켜지 않는다",
+  "lock": ["bundle:harness-authoring", "bundle:verification"],
+  "enable": [
+    "bundle:dev-quality", "bundle:memory-share", "bundle:codex-review",
+    "block:core", "block:dev-common", "block:frontend-core", "block:frontend-tooling", "block:ts-backend",
+    "block:java-common", "block:java-legacy", "block:java-modern", "block:rust", "block:python", "block:unity",
+    "block:seo-geo", "block:ai-app", "block:n8n", "block:dream", "block:fortune", "block:health",
+    "block:spec-extraction", "block:misc", "block:harness-authoring"
+  ]
+}
