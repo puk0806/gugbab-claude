@@ -1,6 +1,6 @@
 'use strict';
 // docs-counts.test.js — README·docs 의 수치·프리셋 표 ↔ 실제 레포 (2026-10-17, 옛 template-docs-counts 에서 래퍼에 필요한 부분만 옮김)
-//   README "무엇이 들어 있나" 수치(스킬·에이전트·훅·규칙) · README 프리셋 표 == relations.json · docs/skills 카테고리 수치
+//   README "무엇이 들어 있나" 수치(스킬·에이전트·훅·규칙) · 사용 안내(docs/USAGE.md) 프리셋 표 == relations.json · docs/skills 카테고리 수치
 // 3계층 (rules/adversarial-testing.md):
 //  - 정상: 실제 README·docs 와 실제 .claude 개수 대조
 //  - 악성·오남용: 근사 표기("약 N종")·중복 행·유령 프리셋으로 수치를 흐리는 문서는 실패
@@ -48,6 +48,26 @@ function categoryRows(md) {
     rows[m[1]] = Number(m[2]);
   }
   return rows;
+}
+
+// 사용 안내 "연관 동작" 표: 이름 칸 첫 백틱 → 둘째 칸 백틱 목록. 표 제목 줄(**필수 의존 목록** 등) 아래 첫 표만
+function tableAfter(md, heading) {
+  const s = typeof md === 'string' ? md : '';
+  const i = s.indexOf(heading);
+  if (i < 0) return null;
+  const lines = s.slice(i).split('\n').slice(1);
+  const start = lines.findIndex((l) => l.startsWith('|'));
+  if (start < 0) return null;
+  const out = new Map();
+  for (const l of lines.slice(start)) {
+    if (!l.startsWith('|')) break;
+    const cells = l.split('|').slice(1, -1);
+    const key = (cells[0] || '').match(/`([^`]+)`/);
+    if (!key) continue; // 머리줄·구분줄
+    if (out.has(key[1])) throw new Error(`표 행 중복: ${key[1]}`);
+    out.set(key[1], [...(cells[1] || '').matchAll(/`([^`]+)`/g)].map((x) => x[1]));
+  }
+  return out;
 }
 
 // ── 1. 정상 — 실제 문서 ↔ 실제 레포 ───────────────────────────────────
@@ -107,15 +127,31 @@ describe('README·docs 수치 ↔ 실제 레포 개수', () => {
     }
   });
 
-  test('README 프리셋 표 == relations.json 프리셋 (이름·켜지는 블록, 빠짐·유령 없음)', () => {
+  // 2026-10-17 README 를 줄이면서 프리셋 표는 사용 안내(docs/USAGE.md)로 옮겼다
+  test('사용 안내(docs/USAGE.md) 프리셋 표 == relations.json 프리셋 (이름·켜지는 블록, 빠짐·유령 없음), README 는 사용 안내를 링크', () => {
     const presets = Object.entries(JSON.parse(fs.readFileSync(path.join(REPO, 'relations.json'), 'utf8')).presets || {}).filter(([k]) => !k.startsWith('$'));
     assert.ok(presets.length > 0, 'relations.json 에 프리셋이 없음');
-    const shown = presetRows(readme);
+    assert.ok(readme.includes('docs/USAGE.md'), 'README 가 사용 안내(docs/USAGE.md)를 링크하지 않음');
+    const shown = presetRows(fs.readFileSync(path.join(REPO, 'docs', 'USAGE.md'), 'utf8'));
     for (const [name, p] of presets) {
-      assert.ok(shown.has(name), `README 프리셋 표에 ${name} 없음`);
-      assert.deepStrictEqual(shown.get(name), p.enable.map((g) => g.replace(/^(?:block|bundle):/, '')), `README 프리셋 ${name} 의 블록이 relations.json 과 다름`);
+      assert.ok(shown.has(name), `사용 안내 프리셋 표에 ${name} 없음`);
+      assert.deepStrictEqual(shown.get(name), p.enable.map((g) => g.replace(/^(?:block|bundle):/, '')), `사용 안내 프리셋 ${name} 의 블록이 relations.json 과 다름`);
     }
-    for (const name of shown.keys()) assert.ok(presets.some(([k]) => k === name), `README 프리셋 표의 ${name} 는 relations.json 에 없음`);
+    for (const name of shown.keys()) assert.ok(presets.some(([k]) => k === name), `사용 안내 프리셋 표의 ${name} 는 relations.json 에 없음`);
+  });
+
+  test('사용 안내 "연관 동작" 필수 의존·충돌 표 == relations.json (2026-10-17 트리 화면과 함께 문서화)', () => {
+    const rel = JSON.parse(fs.readFileSync(path.join(REPO, 'relations.json'), 'utf8'));
+    const usage = fs.readFileSync(path.join(REPO, 'docs', 'USAGE.md'), 'utf8');
+    const req = tableAfter(usage, '**필수 의존 목록**');
+    assert.ok(req, '사용 안내에 필수 의존 목록 표가 없음');
+    assert.deepStrictEqual(Object.fromEntries(req), rel.requires || {}, '필수 의존 표가 relations.json 과 다름');
+    const conf = tableAfter(usage, '**충돌 목록**');
+    assert.ok(conf, '사용 안내에 충돌 목록 표가 없음');
+    assert.deepStrictEqual([...conf].map(([a, [b]]) => [a, b]), rel.conflicts || [], '충돌 표가 relations.json 과 다름');
+    const bun = tableAfter(usage, '**묶음 목록**');
+    assert.ok(bun, '사용 안내에 묶음 목록 표가 없음');
+    assert.deepStrictEqual([...bun.keys()], Object.keys(rel.bundles || {}).map((k) => `bundle:${k}`), '묶음 목록이 relations.json 과 다름');
   });
 
   test('docs/skills/README.md 카테고리별 수 == 실제, 유령·누락 카테고리 없음', () => {
@@ -146,6 +182,17 @@ describe('파서 방어 (악성·오남용)', () => {
     assert.throws(() => presetRows(dup), /중복/);
     assert.throws(() => categoryRows('| [frontend](x) | 3종 |\n| [frontend](x) | 4종 |\n'), /중복/);
   });
+  test('악성: 연관 표에 같은 A 가 두 번(수치 은폐) → 예외, 제목이 없으면 null', () => {
+    assert.throws(() => tableAfter('**필수 의존 목록**\n\n| A | B |\n|---|---|\n| `x` | `y` |\n| `x` | `z` |\n', '**필수 의존 목록**'), /중복/);
+    assert.strictEqual(tableAfter('본문만', '**필수 의존 목록**'), null);
+    assert.strictEqual(tableAfter(null, '**충돌 목록**'), null);
+  });
+
+  test('경계: 연관 표 — 표가 끝나면 거기까지만, 백틱 없는 머리줄은 건너뜀', () => {
+    const t = tableAfter('**충돌 목록**\n| A | B |\n|---|---|\n| `a` | `b` |\n\n| `zz` | `yy` |\n', '**충돌 목록**');
+    assert.deepStrictEqual([...t], [['a', ['b']]]);
+  });
+
   test('악성: 이름은 프리셋처럼 생겼지만 블록 칸에 백틱 이름이 없는 행(설명 표)은 프리셋으로 세지 않음', () => {
     // 첫 칸이 이름 정규식을 통과하는 행이라야 "블록 없음 → 건너뜀" 분기를 실제로 탄다
     const rows = presetRows('| `opt` | 설명 | 일반 문장 |\n| `--version vX.Y.Z` | 고정 |  |\n| `rust` | Rust | `rust` |\n');
