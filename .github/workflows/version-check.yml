@@ -1,0 +1,23 @@
+# PR 마다 VERSION 이 최신 v* 태그보다 큰지 검사 (계획서 결정 32)
+# 머지되면 release-on-main 이 이 VERSION 으로 태그·Release 를 만든다 — 버전을 안 올린 PR 은 여기서 실패한다
+name: version-check
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: VERSION > 최신 태그
+        run: |
+          git fetch --tags --force origin
+          node scripts/release-version.js check
