@@ -144,6 +144,22 @@ for (const q of ['이건 뭐야??', '왜 그렇게 해야 해?', '3번은 어떻
 check('예외 경로 위장: /tmpx/a (임시 폴더 아님) → 차단', (() => { const s = sid(); prompt(s, '해줘', transcript('x')); return write(s, '/tmpx/a').code === 2 })())
 check('예외 경로 위장: ~/.claude/projects/x/notmemory/a → 차단', (() => { const s = sid(); prompt(s, '해줘', transcript('x')); return write(s, path.join(os.homedir(), '.claude/projects/x/notmemory/a')).code === 2 })())
 check('예외 경로 위장: memory/../../settings.json (상위 이동) → 차단', (() => { const s = sid(); prompt(s, '해줘', transcript('x')); return write(s, path.join(os.homedir(), '.claude/projects/x/memory/../../../settings.json')).code === 2 })())
+// 래퍼(gugbab-claude) 설정 폴더: projects/·plans/ 가 ~/.claude 쪽 링크 — 링크를 따라간 실제 위치로 예외 판정 (2026-10-16)
+{
+  const HOME = os.homedir()
+  const linked = fs.mkdtempSync(path.join(HOME, '.tcg-cfg-'))
+  const fake = fs.mkdtempSync(path.join(HOME, '.tcg-cfg-'))
+  fs.symlinkSync(path.join(HOME, '.claude', 'projects'), path.join(linked, 'projects'))
+  fs.mkdirSync(path.join(fake, 'projects', 'x', 'memory'), { recursive: true })
+  const s1 = sid(); prompt(s1, '해줘', transcript('x'))
+  check('설정 폴더 projects 링크 안 메모리 → 미승인이어도 허용', write(s1, path.join(linked, 'projects', '-x', 'memory', 'a.md')).code === 0)
+  const s2 = sid(); prompt(s2, '해줘', transcript('x'))
+  check('예외 경로 위장: 링크 아닌 진짜 projects/x/memory 폴더 → 차단', write(s2, path.join(fake, 'projects', 'x', 'memory', 'a.md')).code === 2)
+  const s3 = sid(); prompt(s3, '해줘', transcript('x'))
+  check('예외 경로 위장: 링크 projects 안 notmemory → 차단', write(s3, path.join(linked, 'projects', '-x', 'notmemory', 'a.md')).code === 2)
+  fs.rmSync(linked, { recursive: true, force: true })
+  fs.rmSync(fake, { recursive: true, force: true })
+}
 
 console.log('\n── 이상·경계 경로 ──')
 check('상태 파일 없는 세션 → 차단 (보수)', write(sid()).code === 2)

@@ -915,6 +915,28 @@ section('Bash 로 개인키·인증 파일 접근 → 차단 (.env 는 허용)')
   expectAutoApproved('echo "~/.ssh/id_rsa" (인용 텍스트는 명령 인자지만 문자열)', 'ls ~/.ssh/known_hosts')
 }
 
+// 래퍼(gugbab-claude) 설정 폴더의 settings.json additionalDirectories 도 허용 폴더로 본다 (2026-10-16)
+section('getAllowedDirs — 래퍼 설정 폴더(CLAUDE_CONFIG_DIR)')
+{
+  const fs = require('fs')
+  const os = require('os')
+  const { getAllowedDirs } = require('./bash-guard.js')
+  const cfg = fs.mkdtempSync(path.join(os.tmpdir(), 'bg-cfg-'))
+  fs.writeFileSync(path.join(cfg, 'settings.json'), JSON.stringify({ permissions: { additionalDirectories: ['/opt/gugbab-allowed', 'relative/dir', 42] } }))
+  const saved = process.env.CLAUDE_CONFIG_DIR
+  process.env.CLAUDE_CONFIG_DIR = cfg
+  const dirs = getAllowedDirs(PROJECT_ROOT)
+  assert('설정 폴더 additionalDirectories 의 절대 경로 → 허용 폴더에 포함', dirs.includes('/opt/gugbab-allowed'), true)
+  assert('설정 폴더의 상대 경로 항목은 무시 (어디 기준인지 모호)', dirs.some(d => d.endsWith('relative/dir')), false)
+  process.env.CLAUDE_CONFIG_DIR = 'relative-cfg'
+  assert('CLAUDE_CONFIG_DIR 가 상대 경로면 무시 (크래시 없음)', Array.isArray(getAllowedDirs(PROJECT_ROOT)), true)
+  fs.writeFileSync(path.join(cfg, 'settings.json'), '{broken')
+  process.env.CLAUDE_CONFIG_DIR = cfg
+  assert('설정 폴더 settings.json 이 깨져도 크래시 없음', Array.isArray(getAllowedDirs(PROJECT_ROOT)), true)
+  if (saved === undefined) delete process.env.CLAUDE_CONFIG_DIR; else process.env.CLAUDE_CONFIG_DIR = saved
+  fs.rmSync(cfg, { recursive: true, force: true })
+}
+
 console.log(`\n${'─'.repeat(40)}`)
 console.log(`결과: ${passed}/${passed + failed} 통과 ${failed > 0 ? `(${failed}개 실패)` : ''}`)
 if (failed === 0) console.log('✅ 모든 테스트 통과')
