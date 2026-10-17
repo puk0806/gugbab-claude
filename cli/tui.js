@@ -1,8 +1,9 @@
-// /harness 화면 (계획서 5.2, 4단계 · 2026-10-17 트리) — 큰 갈래 → 묶음·블록 → 항목을 접고 펼치며 Space 로 켜고 끈다
+// /harness 화면 (계획서 5.2, 4단계 · 2026-10-17 트리) — 종류 → 용도 → 항목을 접고 펼치며 Space 로 켜고 끈다
 //   상태 계산(createState·handleKey)과 그리기(render)는 순수 함수, 터미널 입출력은 runTui
 //   의존성 없이 Node 기본 readline 만 쓴다 (결정 24 — @inquirer 체크박스로는 Tab 범위 전환·검색·묶음 일부 켬 표시가 안 됨)
 //   저장할 때는 화면에서 한 동작(ops)을 그때의 파일 내용 위에 다시 적용한다 — 화면을 연 뒤 다른 세션이 바꾼 것을 지우지 않게
-//   트리(결정 30): 큰 갈래(스택 블록·묶음·단독 항목) → 그룹(블록·묶음·종류) → 항목. 그룹·큰 갈래에서 Space = 일괄(🔒 고정은 건너뜀)
+//   트리(결정 33): 종류(설정·훅·룰·커맨드·에이전트·스킬) → 용도(계획서 체크리스트 절) → 항목. 그룹·종류에서 Space = 일괄(🔒 고정은 건너뜀)
+//   v 키로 결정 30 의 블록·묶음 보기(스택 블록·묶음·단독 항목 → 블록·묶음 → 항목)로 전환
 'use strict';
 const readline = require('readline');
 const { resolve, expand } = require('./resolve');
@@ -12,8 +13,8 @@ const { applyToggle, applyPreset, explainUnchanged, commitLayer, layerIndex, RES
 const TYPES = [['setting', '설정'], ['hook', '훅'], ['rule', '룰'], ['command', '커맨드'], ['agent', '에이전트'], ['skill', '스킬']];
 const TYPE_NAME = Object.fromEntries(TYPES);
 const SCOPE_NAME = { project: '이 프로젝트', profile: '모든 프로젝트' };
-const LEGEND = '✅ 켬 · ⬜ 끔 · 🟨 일부만 켬(묶음 안 일부) · 🔒 고정(끌 수 없음) · * 저장 안 한 변경';
-const KEYS_HELP = '↑↓ 이동 · →/← 펼치기·접기 · a 모두 펼치기/접기 · Space 켜기/끄기(그룹은 일괄) · Tab 범위 · / 검색 · p 프리셋 · Enter 저장 · q 닫기';
+const LEGEND = '✅ 켬 · ⬜ 끔 · 🟨 일부만 켬(그룹 안 일부) · 🔒 고정(끌 수 없음) · * 저장 안 한 변경';
+const KEYS_HELP = '↑↓ 이동 · →← 펼침 · a 전체 · Space 켬/끔 · Tab 범위 · / 검색 · p 프리셋 · v 보기 · Enter 저장 · q 닫기';
 const CTRL_RE = /[\u0000-\u001f\u007f-\u009f]/;
 const clean = (s) => String(s == null ? '' : s).replace(/\u001b\][^\u0007\u001b]*(?:\u0007|\u001b\\)?/g, '').replace(/\u001b\[[0-9;?]*[ -/]*[@-~]/g, '').replace(/[\u0000-\u001f\u007f-\u009f]/g, '');
 
@@ -41,13 +42,54 @@ const pad = (s, width) => { const f = fit(s, width); return f + ' '.repeat(Math.
 
 function stripSource(l) { const { source, ...rest } = l || {}; return JSON.parse(JSON.stringify(rest)); }
 
-// ── 트리 뼈대 (manifest 에서 한 번 만든다) ─────────────────────────────
+// ── 트리 뼈대 (manifest 에서 만든다) ─────────────────────────────────
 //   node: { id, kind: 'section'|'group'|'item', label, children: [node], ids: [항목 id], op: 토글 기록에 쓰는 id | null }
-function buildTree(manifest) {
+//   보기 두 가지: 'type'(기본, 결정 33) = 종류 → 용도 → 항목 (계획서 체크리스트와 같은 구성)
+//                'stack' = 스택 블록·묶음·단독 항목 (결정 30, v 키로 전환)
+const own = (o, k) => !!o && Object.prototype.hasOwnProperty.call(o, k);
+const itemLabel = (id) => clean(id.replace(/^[a-z]+:/, ''));
+const itemNode = (id) => ({ id, kind: 'item', label: itemLabel(id), children: [], ids: [id], op: id });
+
+function buildTree(manifest, view = 'type') {
+  return view === 'stack' ? buildStackTree(manifest) : buildTypeTree(manifest);
+}
+
+// 종류 → 용도 → 항목. 용도는 manifest.layout(체크리스트 `###` 절, 적힌 순서). 절이 없는 종류(룰·커맨드 등)는 항목이 바로 온다.
+// layout 에 없는 항목(옛 manifest 등)은 그 종류 끝 "기타" 로 — 어느 항목도 화면에서 빠지지 않게
+function buildTypeTree(manifest) {
+  const items = manifest.items || {};
+  const layout = Array.isArray(manifest.layout) ? manifest.layout : [];
+  const placed = new Set();
+  return TYPES.map(([t, name]) => {
+    const sec = layout.find((s) => s && s.type === t) || { groups: [] };
+    const groups = [];
+    for (const g of Array.isArray(sec.groups) ? sec.groups : []) {
+      const ids = (Array.isArray(g.items) ? g.items : []).filter((id) => typeof id === 'string' && own(items, id) && items[id].type === t && !placed.has(id));
+      ids.forEach((id) => placed.add(id));
+      if (ids.length) groups.push({ title: clean(g.title || ''), ids });
+    }
+    const rest = Object.keys(items).filter((id) => items[id].type === t && !placed.has(id));
+    rest.forEach((id) => placed.add(id));
+    if (rest.length) groups.push({ title: groups.length ? '기타' : '', ids: rest });
+    const titled = groups.filter((g) => g.title);
+    // 절 제목이 없는 그룹뿐이면 항목을 바로 단다
+    const children = titled.length
+      // 목록에는 괄호 앞 이름(예: "메모리 공유"), 설명칸에는 체크리스트 절 제목 전체(full)
+      ? groups.map((g, i) => ({ id: `grp:${t}:${i}`, kind: 'group', label: (g.title || '기타').replace(/\s*\([^()]*\)\s*$/, '') || g.title, full: g.title || '기타', children: g.ids.map(itemNode), ids: g.ids, op: null }))
+      : groups.flatMap((g) => g.ids.map(itemNode));
+    return { id: `type:${t}`, kind: 'section', label: name, children, ids: groups.flatMap((g) => g.ids), op: null };
+  }).filter((s) => s.ids.length);
+}
+
+// 처음 펼칠 노드 — 용도 그룹이 있는 종류만 펼쳐 용도 목록을 보이고, 항목이 바로 달린 종류(설정·룰·커맨드)는 접어
+// 첫 화면에 모든 종류가 한눈에 들어오게 한다. 블록·묶음 보기는 큰 갈래 전부
+function initialExpanded(tree) {
+  return new Set(tree.filter((s) => s.children.some((c) => c.kind !== 'item')).map((s) => s.id));
+}
+
+function buildStackTree(manifest) {
   const rel = manifest.relations || {};
   const items = manifest.items || {};
-  const label = (id) => clean(id.replace(/^[a-z]+:/, ''));
-  const itemNode = (id) => ({ id, kind: 'item', label: label(id), children: [], ids: [id], op: id });
   const groupNode = (key, prefix, g) => {
     const members = (g.items || []).filter((i) => Object.prototype.hasOwnProperty.call(items, i));
     return { id: `${prefix}:${key}`, kind: 'group', label: clean(g.title || key), children: members.map(itemNode), ids: members, op: `${prefix}:${key}` };
@@ -67,22 +109,27 @@ function buildTree(manifest) {
   ].filter((s) => s.ids.length);
 }
 
-// 항목 → 속한 그룹 이름들 (블록·묶음)
-function membershipOf(tree) {
+// 항목 → 속한 블록·묶음 이름들 (보기와 무관하게 relations 에서)
+function membershipOf(manifest) {
+  const rel = manifest.relations || {};
+  const items = manifest.items || {};
   const out = {};
-  for (const sec of tree) for (const g of sec.children) if (g.op) for (const id of g.ids) (out[id] = out[id] || []).push(g.label);
+  for (const src of [rel.blocks || {}, rel.bundles || {}]) {
+    for (const [k, g] of Object.entries(src)) for (const id of (g && g.items) || []) if (own(items, id)) (out[id] = out[id] || []).push(clean(g.title || k));
+  }
   return out;
 }
 
-function createState({ manifest, layers, projectName, scope = 'project', skipped = new Set() }) {
-  const tree = buildTree(manifest);
+function createState({ manifest, layers, projectName, scope = 'project', skipped = new Set(), view = 'type' }) {
+  const v = view === 'stack' ? 'stack' : 'type';
+  const tree = buildTree(manifest, v);
   const st = {
-    manifest, projectName: clean(projectName), tree, memberOf: membershipOf(tree), skipped,
+    manifest, projectName: clean(projectName), tree, view: v, memberOf: membershipOf(manifest), skipped,
     gugbab: layers[2] || { source: '.gugbab.json' },
     initial: { profile: stripSource(layers[0]), project: stripSource(layers[1]) },
     drafts: { profile: stripSource(layers[0]), project: stripSource(layers[1]) },
     ops: { profile: [], project: [] },
-    expanded: new Set(tree.map((s) => s.id)), // 처음엔 큰 갈래만 펼침 → 블록·묶음 목록이 보인다
+    expanded: initialExpanded(tree), // 용도가 있는 종류만 펼침 → 종류·용도 목록이 한눈에
     scope, cursor: 0, top: 0, filter: '', mode: 'list', presetCursor: 0, message: '', confirmQuit: false,
     _rows: null,
   };
@@ -95,34 +142,32 @@ const dirty = (st) => st.ops.profile.length + st.ops.project.length > 0;
 
 // ── 보이는 줄 (펼침 상태·검색 반영) ──────────────────────────────────
 function rowsOf(st) {
-  const key = `${st.filter}\u0000${[...st.expanded].sort().join(',')}`;
+  const key = `${st.view}\u0000${st.filter}\u0000${[...st.expanded].sort().join(',')}`;
   if (st._rows && st._rows.key === key) return st._rows.rows;
   const q = st.filter.toLowerCase();
   const rows = [];
-  const hitItem = (n) => n.id.toLowerCase().includes(q) || n.label.toLowerCase().includes(q);
+  const hit = (n) => n.id.toLowerCase().includes(q) || n.label.toLowerCase().includes(q);
+  // 깊이와 무관하게(종류 → 항목, 종류 → 용도 → 항목 모두) 펼친 노드의 자식을 단다
+  const walk = (n, depth) => {
+    const open = n.kind !== 'item' && st.expanded.has(n.id);
+    rows.push({ ...n, depth, open });
+    if (open) for (const c of n.children) walk(c, depth + 1);
+  };
+  // 검색: 맞는 항목과 그 위 그룹·종류를 펼쳐 보여 준다. 그룹 이름이 맞으면 그 안 전체
+  const pick = (n) => {
+    if (n.kind === 'item') return hit(n) ? n : null;
+    if (n.kind !== 'section' && hit(n)) return n;
+    const kids = n.children.map(pick).filter(Boolean);
+    return kids.length ? { ...n, children: kids } : null;
+  };
+  const walkAll = (n, depth) => {
+    rows.push({ ...n, depth, open: n.kind !== 'item' });
+    for (const c of n.children) walkAll(c, depth + 1);
+  };
   for (const sec of st.tree) {
-    if (!q) {
-      rows.push({ ...sec, depth: 0, open: st.expanded.has(sec.id) });
-      if (!st.expanded.has(sec.id)) continue;
-      for (const g of sec.children) {
-        rows.push({ ...g, depth: 1, open: st.expanded.has(g.id) });
-        if (st.expanded.has(g.id)) for (const it of g.children) rows.push({ ...it, depth: 2, open: false });
-      }
-      continue;
-    }
-    // 검색: 맞는 항목과 그 위 그룹·큰 갈래를 펼쳐 보여 준다. 그룹 이름이 맞으면 그룹 안 전체
-    const groups = [];
-    for (const g of sec.children) {
-      const gHit = g.label.toLowerCase().includes(q) || g.id.toLowerCase().includes(q);
-      const kids = gHit ? g.children : g.children.filter(hitItem);
-      if (gHit || kids.length) groups.push([g, kids]);
-    }
-    if (!groups.length) continue;
-    rows.push({ ...sec, depth: 0, open: true });
-    for (const [g, kids] of groups) {
-      rows.push({ ...g, depth: 1, open: true });
-      for (const it of kids) rows.push({ ...it, depth: 2, open: false });
-    }
+    if (!q) { walk(sec, 0); continue; }
+    const p = pick(sec);
+    if (p) walkAll(p, 0);
   }
   st._rows = { key, rows };
   return rows;
@@ -170,12 +215,13 @@ function relationLines(st, row, res) {
     const comp = TYPES.filter(([t]) => types[t]).map(([t, n]) => `${n} ${types[t]}`).join(' · ');
     const ns = nodeState(row, res);
     const locked = row.ids.filter((i) => res.locked.has(i)).length;
-    lines.push(`[${row.label}] ${ns.total}개 중 ${ns.on}개 켜짐 (${comp})${locked ? ` · 🔒 ${locked}개는 끌 수 없음` : ''} — Space: 안의 항목 일괄 ${ns.on === ns.total ? '끄기' : '켜기'}`);
+    lines.push(`[${row.full || row.label}] ${ns.total}개 중 ${ns.on}개 켜짐 (${comp})${locked ? ` · 🔒 ${locked}개는 끌 수 없음` : ''} — Space: 안의 항목 일괄 ${ns.on === ns.total ? '끄기' : '켜기'}`);
     const conf = (rel.conflicts || []).filter((p) => Array.isArray(p) && (p[0] === row.op || row.ids.includes(p[0])));
     if (conf.length) lines.push(`  · 충돌: 이것을 켜면 ${conf.map((p) => exp(p[1]).map(name).join('·')).join(', ')} 이(가) 꺼진다`);
     else if (row.op && row.op.startsWith('bundle:')) lines.push('  · 묶음 = 같이 켜고 끄는 단위. 안의 항목 하나만 끄면 묶음은 🟨(일부만 켬)으로 보인다');
     else if (row.op && row.op.startsWith('block:')) lines.push('  · 블록 = 한 스택의 스킬·에이전트·언어 룰. 프리셋(p)은 블록 여러 개를 한 번에 켠다');
-    else lines.push('  · 큰 갈래·종류에서 Space = 그 아래 전체 일괄 (🔒 고정은 건너뜀)');
+    else if (row.kind === 'group') lines.push('  · 용도 = 계획서 체크리스트의 분류. Space = 안의 항목 일괄 (🔒 고정은 건너뜀) · 스택 단위는 p(프리셋)·v(블록·묶음 보기)');
+    else lines.push('  · 종류에서 Space = 그 아래 전체 일괄 (🔒 고정은 건너뜀) · v = 블록·묶음 보기로 전환');
     return lines;
   }
   const id = row.id;
@@ -203,12 +249,19 @@ function relationLines(st, row, res) {
 }
 
 // ── 켜기·끄기 ───────────────────────────────────────────────────────
-// 큰 갈래·종류 그룹은 아래 그룹(또는 항목)을 하나씩 같은 방향으로 기록 — 🔒 고정만 있는 자식은 건너뜀
+// 이름 있는 그룹(블록·묶음)은 그 이름 하나로, 종류·용도처럼 이름 없는 그룹은 아래로 내려가며
+// 이름 있는 그룹·항목을 하나씩 같은 방향으로 기록 — 🔒 고정만 있는 것은 건너뜀
 function opsFor(row, st) {
   if (row.op) return [row.op];
-  const kids = row.children || [];
   const res = effective(st);
-  return kids.filter((k) => !(k.ids.length && k.ids.every((i) => res.locked.has(i)))).map((k) => k.op || k.id).filter(Boolean);
+  const out = [];
+  const walk = (n) => {
+    if (n.ids.length && n.ids.every((i) => res.locked.has(i))) return;
+    if (n.op) { out.push(n.op); return; }
+    for (const c of n.children || []) walk(c);
+  };
+  for (const c of row.children || []) walk(c);
+  return out;
 }
 
 function toggleAt(st) {
@@ -296,6 +349,7 @@ function handleKey(st0, key) {
       if (ch === 'l') return { state: expandAt(st, row), action: null };
       if (ch === 'h') return { state: collapseAt(st, row, rows), action: null };
       if (ch === 'a') return { state: toggleAllOpen(st), action: null };
+      if (ch === 'v') return { state: switchView(st), action: null };
       if (ch === '/') return { state: { ...st, mode: 'search', message: '' }, action: null };
       if (ch === 'p') return { state: presetNames(st.manifest).length ? { ...st, mode: 'preset', presetCursor: 0, message: '' } : { ...st, message: '프리셋이 없습니다' }, action: null };
       if (ch !== 'q') return { state: st, action: null };
@@ -320,12 +374,20 @@ function collapseAt(st, row, rows) {
   if (row.kind !== 'item' && st.expanded.has(row.id)) return setOpen(st, row.id, false);
   return { ...st, cursor: parentIndex(rows, st.cursor) }; // 항목·접힌 그룹이면 부모로
 }
-// a — 그룹이 하나라도 접혀 있으면 모두 펼치고, 다 펼쳐져 있으면 큰 갈래만 남기고 접는다
+// v — 종류별 보기 ↔ 블록·묶음 보기. 저장 안 한 변경(drafts·ops)은 그대로 두고 트리만 바꾼다
+function switchView(st) {
+  const view = st.view === 'stack' ? 'type' : 'stack';
+  const tree = buildTree(st.manifest, view);
+  return { ...st, view, tree, expanded: initialExpanded(tree), cursor: 0, top: 0, filter: '', _rows: null,
+    message: view === 'stack' ? '보기: 스택 블록·묶음 (v 로 종류별 보기)' : '보기: 종류 → 용도 (v 로 블록·묶음 보기)' };
+}
+
+// a — 그룹이 하나라도 접혀 있으면 모두 펼치고, 다 펼쳐져 있으면 종류(큰 갈래)만 남기고 접는다
 function toggleAllOpen(st) {
-  const groups = st.tree.flatMap((s) => s.children.map((g) => g.id));
+  const groups = st.tree.flatMap((s) => s.children.filter((g) => g.kind !== 'item').map((g) => g.id));
   const allOpen = groups.every((id) => st.expanded.has(id));
   const cur = rowsOf(st)[st.cursor];
-  const expanded = new Set(st.tree.map((s) => s.id));
+  const expanded = allOpen ? initialExpanded(st.tree) : new Set(st.tree.map((s) => s.id));
   if (!allOpen) for (const id of groups) expanded.add(id);
   const next = { ...st, expanded, message: allOpen ? '모두 접음' : '모두 펼침' };
   const i = cur ? rowsOf(next).findIndex((r) => r.id === cur.id) : 0;
@@ -346,7 +408,7 @@ function render(st, { cols = 80, rows: height = 24 } = {}) {
   out.push(fit(` ${counts.join(' · ')} · 🔒 ${res.locked.size}${dirty(st) ? ' · ● 저장 안 됨' : ''}`, cols));
   out.push(fit(` ${LEGEND}`, cols));
   out.push('─'.repeat(Math.max(0, cols)));
-  const bodyH = Math.max(0, height - 8);
+  const bodyH = Math.max(0, height - 9); // 머리 4줄(제목·개수·범례·선) + 아래 5줄(선·설명 2·메시지·키 도움말)
 
   if (st.mode === 'preset') {
     const presets = (st.manifest.relations || {}).presets || {};
