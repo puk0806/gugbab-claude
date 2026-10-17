@@ -38,6 +38,10 @@ function channelOf(ch) {
   if (ch.channel === 'branch') return { channel: 'branch', branch: typeof ch.branch === 'string' ? ch.branch : null };
   return { channel: 'stable' };
 }
+// claude-version-check 훅이 남긴 기록(<데이터>/state/claude-version.json)의 한 줄 요약 — 훅이 없거나 기록이 없으면 null
+function claudeVersionSummary() {
+  try { return require(path.join(paths.harnessRoot, 'hooks', 'claude-version-check.js')).readClaudeVersionState(paths.stateDir).summary || null; } catch { return null; }
+}
 function fail(msg) { process.stderr.write(msg + '\n'); process.exit(1); }
 function loadManifest() {
   try { return JSON.parse(fs.readFileSync(paths.manifestPath, 'utf8')); }
@@ -107,7 +111,7 @@ switch (cmd) {
   case 'status': {
     const { manifest, project, resolved } = context();
     const version = require('./update').versionInfo({ codeHome: paths.codeHome, stateDir: paths.stateDir, dev: paths.dev });
-    process.stdout.write(statusLines({ manifest, resolved, project, paths, skipped: readSkipped(project.configDir), version }).join('\n') + '\n');
+    process.stdout.write(statusLines({ manifest, resolved, project, paths, skipped: readSkipped(project.configDir), version, claudeVersion: claudeVersionSummary() }).join('\n') + '\n');
     break;
   }
   case 'doctor': {

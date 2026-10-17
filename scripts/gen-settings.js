@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // gen-settings.js — project-install.sh에서 호출. 선택된 옵션에 따라 settings.json 생성
-// 사용: node scripts/gen-settings.js [--util] [--dev] [--typescript] [--legacy] [--memory] [--superpowers] [--codex] [--readme-guard] [--staleness-guard] [--branch-protection] [--relation-guard] [--parallel-hint]
+// 사용: node scripts/gen-settings.js [--util] [--dev] [--typescript] [--legacy] [--memory] [--superpowers] [--codex] [--readme-guard] [--staleness-guard] [--branch-protection] [--relation-guard] [--parallel-hint] [--claude-version-check]
 
 const args = process.argv.slice(2);
 const isUtil               = args.includes('--util');
@@ -23,6 +23,8 @@ const withRelationGuard    = args.includes('--relation-guard') && !isUtil;
 // parallel-hint(2026-10-17): 여러 작업 요청·연속 단일 조회 때 병렬 실행 안내(비차단). relation-guard 처럼 옛 복사 설치에는 넣지 않는다
 // (래퍼는 manifest 로 켬). util 모드에서도 배선하지 않는다
 const withParallelHint     = args.includes('--parallel-hint') && !isUtil;
+// claude-version-check(2026-10-17): 세션 시작 때 Claude Code 버전 변경·새 버전 안내(비차단). 레포·래퍼 전용, util 제외
+const withClaudeVersionCheck = args.includes('--claude-version-check') && !isUtil;
 
 // 공식 문서(hooks "Reference scripts by path"): 셸 형태에서는 placeholder 를 큰따옴표로 감싼다 —
 // 무따옴표면 공백 포함 프로젝트 경로에서 단어 분리로 Cannot find module → 모든 가드가 fail-open (2026-09-26)
@@ -147,6 +149,7 @@ sessionStartHooks.push(H('instructions-loaded.js'));
 sessionStartHooks.push(stalenessHook);
 // 2026-10-06: config-change-audit(설정 스냅샷) · progress-tracker(직전·현재 작업 안내) — 공통
 sessionStartHooks.push(H('config-change-audit.js'), H('progress-tracker.js'));
+if (withClaudeVersionCheck) sessionStartHooks.push(H('claude-version-check.js'));
 hooks.SessionStart = [{ hooks: sessionStartHooks }];
 
 // ConfigChange(2026-10-06, 공통) — 세션 중 설정 파일 변경을 기록하고 보호 장치에 영향이 있으면 ⚠ 알림 (차단은 안 함)

@@ -66,7 +66,7 @@ const subject = TOOL_EVENTS.has(event) ? input.tool_name : (input.source ?? inpu
 const hooksDir = realOr(path.join(paths.codeHome, '.claude', 'hooks'));
 const list = ((manifest.hookOrder || {})[event] || []).filter(h => h && resolved.enabled.has(h.id) && !(ctx && ctx.skipped.has(h.id)) && matches(h.matcher, subject));
 
-const env = { ...process.env, GUGBAB_HOME: paths.codeHome, GUGBAB_ENABLED: [...resolved.enabled].join(',') };
+const env = { ...process.env, GUGBAB_HOME: paths.codeHome, GUGBAB_ENABLED: [...resolved.enabled].join(','), GUGBAB_STATE_DIR: paths.stateDir };
 const decisions = [];
 const contexts = [];
 const plains = [];

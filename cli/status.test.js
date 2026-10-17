@@ -38,6 +38,12 @@ test('정상: 버전·채널 줄과 안내 (없으면 줄도 없음)', () => {
   assert.ok(!statusLines({ manifest: {}, resolved: empty(), project, paths: { codeHome: '/g' } }).join('\n').includes('버전'));
 });
 
+test('정상: Claude Code 버전 줄 (claude-version-check 기록이 있을 때만)', () => {
+  const text = statusLines({ manifest: {}, resolved: empty(), project, paths: { codeHome: '/g' }, claudeVersion: 'Claude Code 2.1.296 (최신 2.1.302 있음 — claude update)' }).join('\n');
+  assert.match(text, /Claude +Claude Code 2\.1\.296 \(최신 2\.1\.302 있음/);
+  assert.ok(!statusLines({ manifest: {}, resolved: empty(), project, paths: { codeHome: '/g' } }).join('\n').includes('Claude Code'));
+});
+
 test('경계: 기본값과 다른 항목이 많으면 12개만 보이고 나머지는 개수로', () => {
   const items = {};
   for (let i = 0; i < 30; i++) items[`skill:s${i}`] = { type: 'skill', state: 'off' };
