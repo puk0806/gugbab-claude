@@ -372,13 +372,23 @@ console.log('\n[claude-version-check] --claude-version-check 일 때만 SessionS
   }
 }
 
+// ── release-version-guard (2026-10-17, gugbab-claude 레포 전용) ──────
+console.log('\n[release-version-guard] --release-version-guard 일 때만 PreToolUse Bash 에 배선')
+{
+  const pre = (s) => (s.hooks.PreToolUse || []).filter((g) => g.matcher === 'Bash').flatMap((g) => g.hooks.map((h) => h.command))
+  assert('--release-version-guard → PreToolUse Bash 배선', pre(generate('--dev', '--release-version-guard')).some((c) => /release-version-guard\.js/.test(c)), true)
+  for (const flags of [['--dev'], ['--dev', '--typescript', '--memory', '--codex', '--readme-guard', '--staleness-guard', '--branch-protection', '--relation-guard', '--parallel-hint', '--claude-version-check'], ['--util', '--release-version-guard']]) {
+    assert(`${flags.join(' ')} → release-version-guard 미배선`, JSON.stringify(generate(...flags).hooks).includes('release-version-guard'), false)
+  }
+}
+
 // ── 원본 레포 settings.json ↔ 생성기 전체 옵션 출력 동기 (2026-10-05) ──────
 // 원본 레포는 모든 옵션을 켠 설치본과 같은 설정을 써야 한다(원본에서 훅을 실사용하며 검증하는 구조).
 // 손으로 고친 settings.json 이 생성기와 어긋나 statusLine 누락·allow 누락·훅 배선 누락(verification-guard
 // PostToolUse Write)이 생긴 것을 계기로, 의미 단위(훅은 이벤트별 matcher::command 집합, 권한은 집합)로 비교한다.
 console.log('\n[회귀] 원본 .claude/settings.json == gen-settings 전체 옵션 출력 (의미 비교)')
 {
-  const full = generate('--dev', '--typescript', '--memory', '--superpowers', '--codex', '--readme-guard', '--staleness-guard', '--branch-protection', '--relation-guard', '--parallel-hint', '--claude-version-check')
+  const full = generate('--dev', '--typescript', '--memory', '--superpowers', '--codex', '--readme-guard', '--staleness-guard', '--branch-protection', '--relation-guard', '--parallel-hint', '--claude-version-check', '--release-version-guard')
   const repo = JSON.parse(require('fs').readFileSync(path.join(__dirname, '..', '.claude', 'settings.json'), 'utf8'))
   const norm = (s) => {
     const o = JSON.parse(JSON.stringify(s))

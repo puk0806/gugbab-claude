@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // gen-settings.js — 이 레포 .claude/settings.json 의 원본 생성기 (옛 project-install.sh 는 2026-10-17 삭제).
 // 레포 settings.json 은 전체 옵션 출력과 같아야 하고(gen-settings.test.js 회귀 검사), build-manifest 가 그 settings.json 에서 훅 배선을 읽는다
-// 사용: node scripts/gen-settings.js [--util] [--dev] [--typescript] [--legacy] [--memory] [--superpowers] [--codex] [--readme-guard] [--staleness-guard] [--branch-protection] [--relation-guard] [--parallel-hint] [--claude-version-check]
+// 사용: node scripts/gen-settings.js [--util] [--dev] [--typescript] [--legacy] [--memory] [--superpowers] [--codex] [--readme-guard] [--staleness-guard] [--branch-protection] [--relation-guard] [--parallel-hint] [--claude-version-check] [--release-version-guard]
 
 const args = process.argv.slice(2);
 const isUtil               = args.includes('--util');
@@ -26,6 +26,8 @@ const withRelationGuard    = args.includes('--relation-guard') && !isUtil;
 const withParallelHint     = args.includes('--parallel-hint') && !isUtil;
 // claude-version-check(2026-10-17): 세션 시작 때 Claude Code 버전 변경·새 버전 안내(비차단). 레포·래퍼 전용, util 제외
 const withClaudeVersionCheck = args.includes('--claude-version-check') && !isUtil;
+// release-version-guard(2026-10-17): gh pr create 직전 VERSION > 최신 태그 검사. gugbab-claude 레포 전용(다른 프로젝트에선 스스로 건너뜀), util 제외
+const withReleaseVersionGuard = args.includes('--release-version-guard') && !isUtil;
 
 // 공식 문서(hooks "Reference scripts by path"): 셸 형태에서는 placeholder 를 큰따옴표로 감싼다 —
 // 무따옴표면 공백 포함 프로젝트 경로에서 단어 분리로 Cannot find module → 모든 가드가 fail-open (2026-09-26)
@@ -99,6 +101,9 @@ if (withBranchProtection) {
 }
 if (withRelationGuard) {
   hooks.PreToolUse.push({ matcher: 'Bash', hooks: [H('relation-guard.js')] });
+}
+if (withReleaseVersionGuard) {
+  hooks.PreToolUse.push({ matcher: 'Bash', hooks: [H('release-version-guard.js')] });
 }
 
 // PostToolUse Write — deliverable-guard(세션 수정 파일 추적, 구 session-summary 역할) 포함.
