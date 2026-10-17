@@ -106,7 +106,8 @@ switch (cmd) {
     break;
   case 'status': {
     const { manifest, project, resolved } = context();
-    process.stdout.write(statusLines({ manifest, resolved, project, paths, skipped: readSkipped(project.configDir) }).join('\n') + '\n');
+    const version = require('./update').versionInfo({ codeHome: paths.codeHome, stateDir: paths.stateDir, dev: paths.dev });
+    process.stdout.write(statusLines({ manifest, resolved, project, paths, skipped: readSkipped(project.configDir), version }).join('\n') + '\n');
     break;
   }
   case 'doctor': {

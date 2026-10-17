@@ -148,8 +148,8 @@ agent content test: 3/3 PASS
 
 - [ ] `.claude/skills/{name}/SKILL.md` 생성
 - [ ] `docs/skills/{category}/{name}/verification.md` 생성
-- [ ] `README.md` 스킬 목록 업데이트
-- [ ] `README.md` 업데이트 로그 추가
+- [ ] `docs/skills/<카테고리>/README.md` 스킬 목록 · README "무엇이 들어 있나" 스킬 수 업데이트
+- [ ] `docs/CHANGELOG.md` 업데이트 로그 추가
 - [ ] 소스 URL이 공식 문서인가
 - [ ] 버전 번호가 명시되어 있는가
 - [ ] 교차 검증 결과가 verification.md에 기록되어 있는가

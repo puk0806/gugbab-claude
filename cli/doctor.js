@@ -17,6 +17,12 @@ function runDoctor({ paths, project, exec = defaultExec, env = process.env, plat
 
   try { add('claude', 'ok', `claude ${exec('claude', ['--version'])}`); } catch { add('claude', 'fail', 'claude 를 찾지 못했습니다 — Claude Code 설치 필요'); }
 
+  // 하네스 버전·채널 (main 채널인데 안정 버전 태그가 생겼으면 stable 로 바꾸는 법 안내)
+  if (paths.stateDir) {
+    const v = require('./update').versionInfo({ codeHome: paths.codeHome, stateDir: paths.stateDir, dev: paths.dev });
+    add('version', v.hint ? 'warn' : 'ok', `하네스 ${v.text}${v.hint ? ` — ${v.hint}` : ''}`);
+  }
+
   let manifest = null;
   try { manifest = JSON.parse(fs.readFileSync(paths.manifestPath, 'utf8')); } catch { add('manifest', 'fail', `manifest.json 을 읽지 못했습니다 (${paths.manifestPath})`); }
   if (manifest) {

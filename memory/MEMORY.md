@@ -2,7 +2,7 @@
 
 ## ★ 하네스 현재 상태
 - [★★ 하네스 현재 상태 (2026-10-16 갱신) — 여기부터 읽기](project_harness_status_2026-10-15.md) — 스킬 195·에이전트 61·훅 30·템플릿 0~15, main=PR #23 머지, 개편 작업 미커밋(커밋 직전 정리 완료). 미결: 예전 커밋 이력 정리·설치본 재설치. 플러그인·관리 설정 조사 요약. **수정 작업은 마지막 줄 `진행할까요?`**
-- [★ 개편 방향 = shim wrapper (2026-10-15)](project_shim_wrapper_direction.md) — `gugbab-claude` 래퍼 + 프로젝트별 `CLAUDE_CONFIG_DIR` + `/harness` 토글. 플러그인 제안 거부됨. **2026-10-17 0~4단계(TUI·/harness·프리셋·install.sh·parallel-hint 훅) 완료·푸시** → 다음 사용자 설치 시험 후 5단계 릴리스
+- [★ 개편 방향 = shim wrapper (2026-10-15)](project_shim_wrapper_direction.md) — `gugbab-claude` 래퍼 + 프로젝트별 `CLAUDE_CONFIG_DIR` + `/harness` 토글. 플러그인 제안 거부됨. **2026-10-17 0~4단계 완료·PR #24 머지, 래퍼로만 사용(결정 27) — README 래퍼 전용·로그는 docs/CHANGELOG.md** → 다음 6단계 정리·5단계 릴리스
 - [Codex 리뷰는 1차본 완성 후 맨 마지막 (중지 중)](feedback_codex_review_on_request.md) — `codex.skipReview=true` 유지, 구현 중 재개 여부 다시 묻지 않음, 완료 후 `--unset` 하고 리뷰
 - [개편 계획서 항상 최신화](feedback_keep_plan_synced.md) — 결정 바뀌면 그 턴에 레포 `docs/plans/` 문서 + 아티팩트 페이지 함께 갱신
 - [로컬 전용 메모리 목록](local_index.md) — git 제외(.gitignore), 이 PC에만 있음. 개편 범위 밖 내용은 여기 먼저 확인
@@ -32,7 +32,7 @@
 - [플러그인 설치는 claude CLI로 끝낸다](feedback_plugin_install.md) — `claude plugin marketplace add` + `install` Bash 실행, 프로젝트 scope `enabledPlugins`만
 - [codex review 워크플로우 제약·패턴](feedback_codex_review_workflow.md) — --uncommitted+prompt 병용 불가, isLoggedIn에 2>&1 필수. ChatGPT 계정+`gpt-5.4` config는 400 거부 → 2회 시도 후 마커 기록·사용자 보고
 - [병렬 에이전트 README 충돌 방지](feedback_parallel_readme.md) — 병렬 스킬 생성 시 README 동시 수정 금지, 완료 후 한 번에 정리
-- [README 업데이트 로그 규칙](feedback_readme_log.md) — 날짜별 단일 행 유지, 같은 날 여러 변경은 기존 행에 합산
+- [README 업데이트 로그 규칙](feedback_readme_log.md) — 날짜별 단일 행 유지, 같은 날 여러 변경은 기존 행에 합산. 2026-10-17부터 위치는 docs/CHANGELOG.md
 - [토큰 95% 소진 시 일시 정지](feedback_pause_at_95_percent_tokens.md) — 장기 작업은 병렬 가능한 것만 병렬, 잔여 5% 이하면 새 작업 금지·완료/미완 목록+재개법 보고 후 멈춤
 
 ## Feedback — 스킬·검증

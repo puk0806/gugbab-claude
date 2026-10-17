@@ -6,7 +6,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { execSync } = require('child_process');
-const { checkUpdate, latestTag } = require('./update');
+const { checkUpdate, latestTag, versionInfo } = require('./update');
 
 const tmp = (p) => fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), p)));
 const sh = (cmd, cwd) => execSync(cmd, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@t' } }).trim();
@@ -113,4 +113,60 @@ test('악성: branch 채널에 이상한 브랜치 이름(옵션·경로 조작�
     assert.strictEqual(r.updated, false, String(bad));
     assert.strictEqual(r.skipped, 'bad-branch', String(bad));
   }
+});
+
+// ── versionInfo — status·doctor 가 보여 줄 지금 버전과 채널 (1.0.0 → 1.0.1 업데이트 시험 때 확인용) ──
+const writeChannel = (s, obj) => { fs.mkdirSync(s.state, { recursive: true }); fs.writeFileSync(path.join(s.state, 'channel.json'), JSON.stringify(obj)); };
+
+test('정상: stable 채널 + 태그 위 → "v1.0.0 (stable …)", 업데이트하면 새 태그로 바뀜', () => {
+  const s = setup();
+  writeChannel(s, { channel: 'stable' });
+  let v = versionInfo({ codeHome: s.home, stateDir: s.state });
+  assert.deepStrictEqual([v.version, v.channel], ['v1.0.0', 'stable']);
+  assert.match(v.text, /^v1\.0\.0 \(stable/);
+  sh('echo 2 > f && git commit -qam two && git tag v1.0.1', s.origin);
+  checkUpdate({ codeHome: s.home, stateDir: s.state, channel: 'stable', now: now() });
+  v = versionInfo({ codeHome: s.home, stateDir: s.state });
+  assert.strictEqual(v.version, 'v1.0.1');
+});
+
+test('정상: 고정(pin)·main·branch·개발 모드 표시', () => {
+  const s = setup();
+  writeChannel(s, { channel: 'stable', pin: 'v1.0.0' });
+  assert.match(versionInfo({ codeHome: s.home, stateDir: s.state }).text, /v1\.0\.0 \(고정/);
+  sh('git checkout -q main', s.home);
+  writeChannel(s, { channel: 'main' });
+  const m = versionInfo({ codeHome: s.home, stateDir: s.state });
+  assert.strictEqual(m.channel, 'main');
+  assert.match(m.text, /main 채널/);
+  writeChannel(s, { channel: 'branch', branch: 'feat/x' });
+  assert.match(versionInfo({ codeHome: s.home, stateDir: s.state }).text, /feat\/x .*브랜치/);
+  assert.match(versionInfo({ codeHome: s.home, stateDir: s.state, dev: true }).text, /개발 모드/);
+});
+
+test('정상: main 채널인데 안정 버전 태그가 있으면 stable 로 바꾸는 법을 알려 줌', () => {
+  const s = setup();
+  sh('git checkout -q main', s.home);
+  writeChannel(s, { channel: 'main' });
+  const v = versionInfo({ codeHome: s.home, stateDir: s.state });
+  assert.match(v.hint, /v1\.0\.0.*설치 명령을 다시/);
+});
+
+test('악성: channel.json 의 이상한 값(모르는 채널·명령 같은 브랜치 이름)은 그대로 출력하지 않음', () => {
+  const s = setup();
+  writeChannel(s, { channel: 'evil', branch: '$(rm -rf ~)' });
+  const v = versionInfo({ codeHome: s.home, stateDir: s.state });
+  assert.strictEqual(v.channel, 'stable');
+  writeChannel(s, { channel: 'branch', branch: '$(rm -rf ~)\u001b[2J' });
+  const b = versionInfo({ codeHome: s.home, stateDir: s.state });
+  assert.ok(!b.text.includes('$(') && !b.text.includes('\u001b'), b.text);
+});
+
+test('경계: git 저장소가 아니거나 channel.json 이 없거나 깨져도 죽지 않음', () => {
+  const d = tmp('up-nogit-');
+  assert.strictEqual(versionInfo({ codeHome: d, stateDir: d }).version, '?');
+  const s = setup();
+  fs.mkdirSync(s.state, { recursive: true });
+  fs.writeFileSync(path.join(s.state, 'channel.json'), '{broken');
+  assert.strictEqual(versionInfo({ codeHome: s.home, stateDir: s.state }).channel, 'stable');
 });

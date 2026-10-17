@@ -343,13 +343,18 @@ describe('템플릿 문서 집합 일치 (경계: 존재하지 않는/미등록 
     }
   });
 
-  test('루트 README 템플릿 표가 모든 템플릿 문서를 링크', () => {
+  // 2026-10-17 README 를 래퍼(gugbab-claude) 사용 안내로 개편 — 옛 복사 설치 템플릿 표 대신 프리셋 표를 검사한다
+  test('루트 README 프리셋 표 == relations.json 프리셋 (이름·켜지는 블록, 빠짐·유령 없음)', () => {
     const readme = fs.readFileSync(path.join(REPO, 'README.md'), 'utf8');
-    for (const t of TEMPLATES) {
-      assert.ok(readme.includes(`docs/templates/${t.name}.md`), `README 템플릿 표에 ${t.name} 문서 링크 없음`);
-      // 표 행: `| 번호 | 표시명 | ... | [→](./docs/templates/<name>.md) |` — 번호와 문서 링크가 같은 행에 있어야 한다
-      assert.ok(new RegExp(`^\\|\\s*${t.num}\\s*\\|[^\\n]*docs/templates/${t.name}\\.md`, 'm').test(readme), `README 표의 번호 ${t.num}↔${t.name} 문서 링크 불일치`);
+    const presets = Object.entries(JSON.parse(fs.readFileSync(path.join(REPO, 'relations.json'), 'utf8')).presets || {}).filter(([k]) => !k.startsWith('$'));
+    assert.ok(presets.length > 0, 'relations.json 에 프리셋이 없음');
+    const rows = [...readme.matchAll(/^\|\s*`([a-z0-9-]+)`\s*\|[^|\n]*\|([^\n]*)\|\s*$/gm)].filter(m => /`[a-z0-9-]+`/.test(m[2]));
+    const shown = new Map(rows.map(m => [m[1], [...m[2].matchAll(/`([a-z0-9-]+)`/g)].map(x => x[1])]));
+    for (const [name, p] of presets) {
+      assert.ok(shown.has(name), `README 프리셋 표에 ${name} 없음`);
+      assert.deepStrictEqual(shown.get(name), p.enable.map(g => g.replace(/^(?:block|bundle):/, '')), `README 프리셋 ${name} 의 블록이 relations.json 과 다름`);
     }
+    for (const name of shown.keys()) assert.ok(presets.some(([k]) => k === name), `README 프리셋 표의 ${name} 는 relations.json 에 없음`);
   });
 });
 
