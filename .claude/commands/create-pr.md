@@ -6,6 +6,9 @@
      `R="$(git rev-parse --show-toplevel)" && CLAUDE_PROJECT_DIR="$R" node "$R/.claude/hooks/session-export.js" --refresh`로 세션 요약 최신화 (Bash 도구엔 `CLAUDE_PROJECT_DIR`가 없어 git 최상위로 명시) →
      `[memory]`/`[export]` 커밋으로 포함 (절차: `.claude/rules/memory-sync.md` — memory 공유 옵션 설치된 경우)
    - 미커밋 상태로 push·PR 시도하면 deliverable-guard 훅이 차단한다
+0-1. **버전 올리기 (레포 최상위에 `VERSION` 과 `.github/workflows/release-on-main.yml` 이 있는 레포만)** — 머지되면 `VERSION` 값으로 태그·Release 가 자동으로 만들어지므로, PR 마다 최신 태그보다 크게 올린다:
+   - `node scripts/release-version.js check --remote` 가 실패하면 `node scripts/release-version.js bump --remote`(기본 패치 +1, 사용자가 큰 변경이라고 하면 `bump minor`·`bump major`) → `git add VERSION && git commit -m "[config] Modify: 버전 X.Y.Z"`
+   - 이미 이번 브랜치에서 올렸으면 그대로 둔다. 빠뜨리면 `release-version-guard` 훅이 `gh pr create` 를 막고, PR 의 `version-check` 워크플로도 실패한다
 1. `git log main...HEAD --oneline` 으로 커밋 목록 확인
 2. `git diff main...HEAD --stat` 으로 변경 파일 범위 파악
 3. PR title 작성 (70자 이내, 변경 핵심을 한 줄로)
