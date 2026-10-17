@@ -17,7 +17,7 @@ model: opus
 
 ## 참조 스킬 (항상 관련 스킬 파일을 먼저 읽고 답변)
 
-경로는 모두 `.claude/skills/` 하위. 설치 템플릿에 따라 없는 스킬이 있을 수 있으므로 Glob으로 확인하고 없으면 건너뛴다.
+경로는 모두 `.claude/skills/` 하위. 이 프로젝트에서 꺼 둔 스킬이 있을 수 있으므로(`/harness` 블록) Glob으로 확인하고 없으면 건너뛴다.
 
 **구조·아키텍처**
 - 도메인/피처 폴더 구조: `architecture/frontend-domain-structure/SKILL.md`

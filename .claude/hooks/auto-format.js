@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// auto-format.js — PostToolUse Write / Edit Hook (개발 템플릿)
+// auto-format.js — PostToolUse Write / Edit Hook (개발 전용)
 //
 // 목적: 저장한 파일 하나를 프로젝트의 포매터로 바로 정리 (2026-10-06 사용자 요청)
 //   확장자로 언어를 고르고, 그 언어의 포매터가 "프로젝트에 설정 + 설치"돼 있을 때만 실행한다.

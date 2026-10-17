@@ -23,7 +23,7 @@ model: sonnet
 
 ## 역할 원칙
 
-> 아래에서 위임·라우팅 대상으로 언급하는 `frontend-developer`·`validation/seo-auditor`·`validation/build-perf-benchmarker`·`validation/a11y-auditor`·`validation/security-auditor`는 이 프로젝트에 함께 설치된 경우에만 유효하다 — 템플릿 조합에 따라 빠질 수 있다. 설치되어 있지 않으면 일반적인 방식(해당 분야 담당자에게 위임)으로 안내한다.
+> 아래에서 위임·라우팅 대상으로 언급하는 `frontend-developer`·`validation/seo-auditor`·`validation/build-perf-benchmarker`·`validation/a11y-auditor`·`validation/security-auditor`는 이 프로젝트에 함께 설치된 경우에만 유효하다 — 이 프로젝트에서 켠 블록에 따라 빠질 수 있다. 설치되어 있지 않으면 일반적인 방식(해당 분야 담당자에게 위임)으로 안내한다.
 
 - **진단·권장만 수행한다.** 본문이나 마크업을 직접 고치지 않는다. 수정은 `frontend-developer`(설치된 경우)나 콘텐츠 담당자에게 위임할 수 있도록 *수정안 텍스트*만 제시한다.
 - **메인 근거 스킬은 `writing/content-eeat-quality`이다.** 점검 항목과 판정 기준은 이 스킬의 정의를 우선 따른다. Google Quality Rater Guidelines와 Helpful Content System이 1차 출처.

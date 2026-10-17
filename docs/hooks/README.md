@@ -1,6 +1,6 @@
 # 훅 (Hooks)
 
-Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 32종 = 실행 훅 31종 + `statusline.sh`, 2026-10-17 실측 — 2026-10-16 레포 전용 `relation-guard`, 2026-10-17 레포·래퍼 전용 `parallel-hint`·`claude-version-check` 추가).
+Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 31종 = 실행 훅 30종 + `statusline.sh`, 2026-10-17 실측 — 같은 날 옛 복사 설치와 함께 `instructions-loaded` 삭제 — 2026-10-16 레포 전용 `relation-guard`, 2026-10-17 레포·래퍼 전용 `parallel-hint`·`claude-version-check` 추가).
 
 훅 파일 위치: `.claude/hooks/`
 
@@ -28,7 +28,6 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 32종 = 실행 �
 | [agent-md-guard.js](../../.claude/hooks/agent-md-guard.js) | PreToolUse Write · PostToolUse Edit | 에이전트 .md name·description·tools·model·example 검증 — **위반 시 저장 자체 차단** | ✅ |
 | [verification-guard.js](../../.claude/hooks/verification-guard.js) | PreToolUse Write · PostToolUse Edit | verification.md 필수 섹션·UNVERIFIED·"내장 지식" 자백 검증 — **위반 시 저장 자체 차단**. 편집 후 frontmatter date·메타 표 검증일·SKILL.md 검증일이 다르면 비차단 경고(2026-09-30) | ✅ |
 | [staleness-check.js](../../.claude/hooks/staleness-check.js) | SessionStart | 스킬 검증일 경과 감지 — 30~59일 경고, 60일+ 재검증 강제 지시. 검증일 3곳(frontmatter·메타 표·SKILL.md) 불일치·판독 불가 스킬 목록 경고(2026-09-30 — "최신 날짜" 판정이 불일치를 가리던 문제) | ✅ |
-| [instructions-loaded.js](../../.claude/hooks/instructions-loaded.js) | SessionStart | 이 설치본이 기대하는 규칙 파일(매니페스트 `rules`·CLAUDE.md `@` import 기준)이 실제로 있는지 검사 — 누락 시 경고만(차단 없음) | ✅ |
 | [session-start.js](../../.claude/hooks/session-start.js) | SessionStart | 세션 시작 시 현재 브랜치·미커밋 파일·최근 커밋 요약 출력 | ✅ |
 | [session-export.js](../../.claude/hooks/session-export.js) | Stop | 세션 대화 요약(요청·응답·수정 파일·Codex 리뷰) 강제 보존 — Stop(매 턴)은 로컬 `~/.claude/projects/<해시>/exports/`에만 기록(레포 status 오염 없음), 커밋 배치의 `--refresh` 실행 시에만 레포 `exports/`에 전체 요약 생성(Y 프로젝트) (비차단) | ✅ |
 | [cc-notify.js](../../.claude/hooks/cc-notify.js) | Stop | 작업 완료 시 macOS 데스크탑 알림 (비차단, 타 플랫폼 silent) | ✅ |
@@ -43,9 +42,9 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 32종 = 실행 �
 
 ---
 
-## 개발 전용 훅 (6종, `--legacy` 프로파일은 5종) — dev 템플릿 (react-spa·nextjs·rust-axum·java·unity·health·dream-interpretation·fortune-app·python-fastapi·nexacro)
+## 개발 전용 훅 (6종) — 래퍼에서는 테스트 품질 묶음(`bundle:dev-quality`)·자동 포맷·패키지 매니저 가드로 켜고 끈다 (테스트가 거의 없는 레거시 프로젝트는 `tdd-guard` 만 꺼도 된다)
 
-> nexacro(15)는 레거시 코드베이스 전제라 `--legacy` 프로파일이 질문 없이 자동 적용된다(tdd-guard 제외 5종). spec-extraction(14)·seo-geo(11)는 애드온이라 dev 훅을 직접 갖지 않는다.
+> 넥사크로 블록(`block:nexacro`)을 켜면 충돌 규칙으로 `tdd-guard` 가 자동으로 꺼진다(레거시 코드베이스 전제).
 
 > **`--legacy` 프로파일 예외**: tdd-guard.js는 레거시 프로파일에서 복사·배선되지 않는다(레거시 코드베이스는 기존 테스트 커버리지가 불완전해 "소스 수정 시 대응 테스트 파일 필수" 차단이 오탐을 유발하기 때문). `--legacy` 선택 시 개발 전용 훅은 3종(test-fake-guard·adversarial-test-guard·fake-impl-guard)만 설치된다.
 

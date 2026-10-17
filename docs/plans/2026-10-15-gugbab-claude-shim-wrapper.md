@@ -1,6 +1,6 @@
 # gugbab-claude 래퍼(shim wrapper) 개편 계획서
 
-> 최종 수정: 2026-10-17 · 상태: **권한 정책 확정 · PoC 1~3번 확인 · 체크리스트 반영(고정 33 · 켬 70 · 끔 217) · 묶음·의존 관리 방안 3+4 확정 · relation-guard 구현 · 개편 범위 gugbab 만(범위 밖 내용 로컬 전용) · **0~2단계 완료(15장) · 4단계 TUI·`/harness`·프리셋 완료(15.6) · 3단계 설치 `install.sh` 완료(15.7) — 브랜치로 한 줄 설치 시험 가능** → 다음: 5단계 첫 릴리스**
+> 최종 수정: 2026-10-17 · 상태: **권한 정책 확정 · PoC 1~3번 확인 · 체크리스트 반영(고정 33 · 켬 70 · 끔 216) · 묶음·의존 관리 방안 3+4 확정 · relation-guard 구현 · 개편 범위 gugbab 만(범위 밖 내용 로컬 전용) · **0~2단계 완료(15장) · 4단계 TUI·`/harness`·프리셋 완료(15.6) · 3단계 설치 `install.sh` 완료(15.7) · **5단계 릴리스 v1.0.0·v1.0.1(15.8)**, 실사용 시나리오 16장 · **6단계 옛 복사 설치 삭제(15.9)**** → 다음: 사용자 1.0.x 실사용 테스트 → 태그 보호
 > 대상 레포: `puk0806/gugbab-claude` (PUBLIC, 기본 브랜치 `main`)
 > 이 문서와 [항목 체크리스트](2026-10-15-harness-item-checklist.md)가 원본이고, 계획서 페이지(claude.ai 아티팩트)는 이 두 파일로 만든다 — 생성 방법은 맨 끝 "문서 갱신 방법"
 
@@ -734,6 +734,49 @@ TUI 화면 예 (방안 3 을 고를 때 — 체크리스트 페이지의 "이 �
 - **버그 — 설정 항목 7개를 켜고 끌 수 없었음**: 이름에 공백·한글·백틱이 있는데(`setting:superpowers 플러그인`) 켜기·끄기가 이름을 영문·숫자 패턴으로 검사해 명령·화면 모두 "항목 이름이 올바르지 않습니다". → `cli/apply.js` 가 패턴 대신 **manifest 에 있는 이름인지(허용 목록)** 로 판정(제어문자·`..`·앞뒤 공백은 계속 거부). 고친 뒤 실제 세션에서 superpowers 플러그인이 빠졌다 돌아오고, 상태줄 끄기가 조립된 settings.json 에 반영, 화면 Space·저장도 확인
 - **약점 — 데이터 폴더를 따로 두면 버전·채널 표시가 틀림**: 채널 기록은 설치 폴더(`~/gugbab/state`)에 있는데 데이터 폴더 쪽을 읽었음(평소엔 같은 폴더라 무관). → `readChannel` 이 설치 폴더 것을 먼저, 없으면 데이터 폴더 것(일반 파일·객체만, 링크 무시)
 - 고친 코드로 같은 시나리오 재실행 19/19 통과
+
+### 15.8 5단계 결과 — 릴리스 v1.0.0 · v1.0.1 (2026-10-17)
+
+- **v1.0.0** (PR #26 머지 a9d67c3) — 태그 + [GitHub Release](https://github.com/puk0806/gugbab-claude/releases/tag/v1.0.0). 사용자 설치본은 태그가 없던 때 설치돼 main 채널이었음 → `status` 가 "안정 버전 v1.0.0 이 있습니다 — 설치 명령을 다시" 안내 → 재설치로 stable 전환(프로젝트 설정 유지)
+- stable 설치본은 main 에 PR #27 이 머지돼도 `v1.0.0` 에 머묾 (`update` = "이미 최신", 실행 시 자동 확인도 움직이지 않음)
+- **v1.0.1** (PR #27 머지 8e86bfb — 화면 아이콘·Claude Code 버전 확인 훅·설정 항목 버그 수정) — 태그 + [Release](https://github.com/puk0806/gugbab-claude/releases/tag/v1.0.1). 사용자 설치본에서 1시간 확인 기록을 지우고 세션을 실행하자 **`[gugbab] 하네스 v1.0.0 → v1.0.1`** 로 자동 갱신(별도 명령 없이), 1시간 안에 다시 실행하면 확인하지 않음
+- v1.0.1 설치본으로 16장 시나리오 32/32
+- 태그 보호 규칙은 아직 안 켬 — 사용자 1.0.x 테스트가 끝나면 켠다(결정 28)
+
+### 15.9 6단계 결과 — 옛 복사 설치 삭제 (2026-10-17, 결정 27 "래퍼로만 사용")
+
+**지운 것**: `project-install.sh`(2,216줄) · 옛 설치본 도구 `scripts/install-cleanup.js`·`migrate-settings.js`·`prune-option-excluded.js`·`write-install-manifest.js`(+테스트) · 템플릿 실제 설치 E2E·소유·참조 검사 `template-separation`·`template-ownership`·`installed-refs` · 템플릿 문서 `docs/templates/` 14개 · 예시 `examples/` 16개 · `instructions-loaded` 훅(결정 21 — 옛 설치와 함께 삭제, 훅 32→31)
+
+**남기고 고친 것**: `gen-settings.js`(이 레포 settings.json 원본 생성기 — 주석 정리, instructions-loaded 배선 제거) · README·docs 수치 검사는 새 `scripts/docs-counts.test.js` 로 옮김(옛 `template-docs-counts` 의 템플릿 부분은 삭제) · `skill-index.js`(docs-counts 가 씀) · 규칙·문서의 옛 설치 언급을 래퍼 기준으로(`agent-design.md`·`docs/rules/README.md`·`docs/skills/README.md`·`.claude/skills/CLAUDE.md`, 에이전트 4개의 "설치 템플릿에 따라" → "이 프로젝트에서 꺼 두었을 수 있음") · 체크리스트·`relations.json`·`settings.json`·manifest(319 항목, 고정 33·켬 70·끔 216)
+
+**그대로 둔 것**: 스킬 `verification.md` 3개의 옛 설치 언급(과거 검증 기록, 여러 개 일괄 수정은 규칙상 따로 승인) · 계획서·CHANGELOG 의 과거 기록
+
+## 16. 실사용 테스트 시나리오 — `scripts/wrapper-e2e.sh` (2026-10-17 사용자 요청)
+
+릴리스·큰 변경 뒤에 실제 claude 세션으로 확인하는 시나리오. 켜고 끈 결과를 **세션 시작 정보**(claude 가 로드한 에이전트·커맨드·스킬·플러그인 목록)와 **실제 동작**(훅 안내)으로 대조한다. 켜기·끄기 기록은 임시 데이터 폴더(`GUGBAB_DATA`)에만 쓰고, 시험 프로젝트는 홈 아래 임시 폴더에 만든 뒤 지운다 — 사용자의 실제 설정은 건드리지 않는다.
+
+```bash
+sh scripts/wrapper-e2e.sh --expect-version v1.0.1   # 설치본(~/.local/bin/gugbab-claude)
+sh scripts/wrapper-e2e.sh --dev                     # 이 레포 작업 트리(개발 모드)
+```
+
+| 구역 | 확인하는 것 |
+|---|---|
+| 0. 버전·상태 | `status` 출력, 버전 줄이 기대 버전(`--expect-version`) |
+| 1. 종류별 껐다 켜기 | **에이전트**(qa-engineer 끄기·켜기 → 세션 에이전트 목록) · **스킬**(axum 켜기·끄기 → 스킬 목록) · **커맨드**(/commit) · **룰**(git.md 끄기 → 필요로 하는 /commit 도 꺼짐 안내·재시작 안내·조립 폴더 링크 제거) · **설정**(superpowers 플러그인 — 공백·한글 이름 → 플러그인 목록) · **묶음**(codex-review → 훅·룰·커맨드 3개) · **블록**(rust → 에이전트) · **훅 실제 동작**(tdd-guard 끄면 안내 없음, 켜면 안내) · **🔒 고정 거부**(bash-guard·claude-version-check·parallel-hint) |
+| 2. 폴더(워크스페이스) 분리 | alpha 에 켠 프리셋이 beta 에 없음 · 프로젝트마다 설정 폴더 다름 · **같은 이름 폴더**(x/app·y/app)는 다른 프로젝트 · **하위 폴더**에서 열어도 git 최상위 프로젝트 설정 · **git 이 아닌 폴더**도 동작 · **동시 세션** 두 개가 각자 설정 · **모든 프로젝트(--all)** 와 프로젝트별 덮기 · **`.gugbab.json`** enable·lock 이 그 프로젝트에만 |
+| 3. 세션 안 `/harness` | `/harness preset` 이 설치본 PATH 의 `gugbab-claude` 로 프리셋 목록 표시 |
+
+**결과 기록**
+| 날짜 | 대상 | 결과 |
+|---|---|---|
+| 2026-10-17 | 설치본 v1.0.1 | 32/32 (처음 31/32 — 실패 1건은 시나리오 기대값 오류, 고친 뒤 32/32) |
+| 2026-10-17 (깨끗한 세션 리뷰 후 보강) | 설치본 v1.0.1 | 34/34 — 전제 검사 2개 추가. 시나리오 뒤 `~/gugbab` 버전 그대로(8e86bfb), `~/.claude/projects` 시험 기록 0 |
+| 2026-10-17 | 가짜 claude(`GUGBAB_E2E_CLAUDE=/usr/bin/false`) | 실패 19 · 전체 실패(rc=1) — claude 가 실패하면 시나리오가 실패로 잡히는지 확인용 |
+
+**보강 (2026-10-17 깨끗한 세션 리뷰 지적)**: 설치본 모드에서도 `~/gugbab` 이 자동 업데이트되지 않게 시작 때 "방금 확인함" 기록을 임시 데이터 폴더에 둠 · 시험 세션 대화 기록(`~/.claude/projects/<임시 경로를 바꾼 이름>`)을 끝날 때 지움 · 세션 시작 정보를 못 받으면 "읽기실패"로 검사 실패 · 설정 폴더 이름·소스 파일 생성 같은 전제를 별도 검사로 · Ctrl-C 면 정리 후 종료
+
+화면(TUI) 아이콘은 이 스크립트에 넣지 않았다(가짜 터미널이 필요) — pty 로 따로 확인: 설치본 v1.0.1 에서 ✅·⬜·🟨·🔒 표시.
 
 ## 문서 갱신 방법
 

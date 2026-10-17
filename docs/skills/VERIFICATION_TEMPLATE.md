@@ -83,7 +83,7 @@ status: PENDING_TEST   # PENDING_TEST | APPROVED | NEEDS_REVISION (UNVERIFIED는
 
 ## 2. 실행 에이전트 로그
 
-> skill-creator 에이전트(작성 도구 설치 시) 또는 직접 작성자가 사용한 도구와 조사·검증 내역 기록
+> skill-creator 에이전트(하네스 제작 묶음을 켠 경우) 또는 직접 작성자가 사용한 도구와 조사·검증 내역 기록
 
 | 단계 | 도구 | 입력 요약 | 출력 요약 |
 |------|------|-----------|-----------|

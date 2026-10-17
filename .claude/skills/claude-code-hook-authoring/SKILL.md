@@ -176,7 +176,7 @@ matcher 값의 **문자 구성**에 따라 해석 방식이 바뀐다.
 
 3중 중첩 구조 — `이벤트 → matcher 그룹 → hooks 배열`.
 
-> 아래 예시의 `tdd-guard.js`는 dev 템플릿 전용 훅이다(설치된 경우에만 존재). 다른 훅 파일명으로 바꿔 읽어도 구조는 동일하다.
+> 아래 예시의 `tdd-guard.js`는 테스트 품질 묶음 훅이다(켜 둔 경우에만 동작). 다른 훅 파일명으로 바꿔 읽어도 구조는 동일하다.
 
 ```json
 {
@@ -235,7 +235,7 @@ matcher 값의 **문자 구성**에 따라 해석 방식이 바뀐다.
 | 이 레포 규칙 | **`*.test.js` 필수** | 테스트 선택 |
 | 실패 시 동작 | 예외 발생해도 `exit 0`으로 빠져나갈 안전장치 필요 | 동일 |
 
-이 레포의 실제 배선 예: 차단형 = `bash-guard`(위험 Bash deny) · `parry`/`protect-secrets`(시크릿 저장 차단) · `skill-md-guard`/`verification-guard`/`agent-md-guard`(구조 위반 저장 차단) · `deliverable-guard`(README·PENDING_TEST 미완 시 종료 차단) · dev 전용 `tdd-guard`/`adversarial-test-guard`/`fake-impl-guard`. 비차단형 = `session-start`·`instructions-loaded`·`staleness-check`·`session-export`·`cc-notify`·`memory-sync`.
+이 레포의 실제 배선 예: 차단형 = `bash-guard`(위험 Bash deny) · `parry`/`protect-secrets`(시크릿 저장 차단) · `skill-md-guard`/`verification-guard`/`agent-md-guard`(구조 위반 저장 차단) · `deliverable-guard`(README·PENDING_TEST 미완 시 종료 차단) · dev 전용 `tdd-guard`/`adversarial-test-guard`/`fake-impl-guard`. 비차단형 = `session-start`·`claude-version-check`·`parallel-hint`·`staleness-check`·`session-export`·`cc-notify`·`memory-sync`.
 
 ---
 
@@ -290,7 +290,7 @@ process.exit(0)
 
 ### 7-3. 차단 + 사유 전달 (tdd-guard.js)
 
-> `tdd-guard`는 dev 템플릿 전용 훅이다(설치된 경우에만 존재). 아래는 차단 훅 작성 패턴 예시로 읽는다.
+> `tdd-guard`는 테스트 품질 묶음 훅이다(켜 둔 경우에만 동작). 아래는 차단 훅 작성 패턴 예시로 읽는다.
 
 ```js
 if (!hasTest) {

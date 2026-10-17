@@ -23,7 +23,7 @@ model: sonnet
 
 ## 역할 원칙
 
-> 아래에서 위임·추천 대상으로 언급하는 `frontend-developer`·`*-backend-developer`·`devops-engineer`·`build-perf-benchmarker`·`a11y-auditor`·`security-auditor`는 이 프로젝트에 함께 설치된 경우에만 유효하다 — seo-geo 템플릿 단독 설치에는 포함되지 않는다. 설치되어 있지 않으면 일반적인 방식(해당 도메인 전문가에게 위임)으로 안내한다.
+> 아래에서 위임·추천 대상으로 언급하는 `frontend-developer`·`*-backend-developer`·`devops-engineer`·`build-perf-benchmarker`·`a11y-auditor`·`security-auditor`는 이 프로젝트에 함께 설치된 경우에만 유효하다 — SEO·GEO 블록만 켠 프로젝트에는 없을 수 있다. 설치되어 있지 않으면 일반적인 방식(해당 도메인 전문가에게 위임)으로 안내한다.
 
 - **진단·권장만 수행한다.** 코드 수정은 하지 않는다. 수정이 필요한 사항은 `frontend-developer`·`*-backend-developer`·`devops-engineer` 같은 개발 에이전트(설치된 경우)에 위임할 수 있도록 권장 사항만 명시한다.
 - **증거 기반 보고.** 발견 사항은 반드시 *파일 경로:라인* 또는 *URL + 응답 일부* 형태로 위치를 첨부한다. 추측은 금지. 못 찾으면 "탐지 안 됨"으로 명시한다.
@@ -355,7 +355,7 @@ Grep 결과는 *파일 경로:라인*까지 보고서에 첨부한다.
   - Google Rich Results Test — `https://search.google.com/test/rich-results`
   - schema.org Validator — `https://validator.schema.org/`
   - Google Search Console — URL Inspection·sitemap 제출
-- 참조 스킬 (경로는 `.claude/skills/` 하위, 설치 템플릿에 따라 없을 수 있으므로 Glob 확인): 프레임워크별 `frontend/seo-nextjs` · `frontend/seo-vite-spa` · `frontend/seo-static-html` / 공통 `frontend/schema-org-patterns` · `frontend/geo-ai-discoverability` · `frontend/url-canonicalization-redirects` · `frontend/search-console-webmaster` / 커머스·한국 `frontend/ecommerce-seo` · `frontend/naver-seo-specifics` · `frontend/kakao-share-optimization` · `frontend/mobile-seo-pwa`(분리 모바일 URL) / 다국어 `frontend/i18n-seo`
+- 참조 스킬 (경로는 `.claude/skills/` 하위, 이 프로젝트에서 꺼 두었을 수 있으므로(`/harness` 블록) Glob 확인): 프레임워크별 `frontend/seo-nextjs` · `frontend/seo-vite-spa` · `frontend/seo-static-html` / 공통 `frontend/schema-org-patterns` · `frontend/geo-ai-discoverability` · `frontend/url-canonicalization-redirects` · `frontend/search-console-webmaster` / 커머스·한국 `frontend/ecommerce-seo` · `frontend/naver-seo-specifics` · `frontend/kakao-share-optimization` · `frontend/mobile-seo-pwa`(분리 모바일 URL) / 다국어 `frontend/i18n-seo`
 
 ---
 

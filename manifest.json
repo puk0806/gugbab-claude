@@ -574,19 +574,6 @@
         }
       ]
     },
-    "hook:instructions-loaded": {
-      "type": "hook",
-      "state": "off",
-      "projHint": "off",
-      "path": ".claude/hooks/instructions-loaded.js",
-      "hooks": [
-        {
-          "event": "SessionStart",
-          "matcher": "",
-          "args": []
-        }
-      ]
-    },
     "hook:korean-response-guard": {
       "type": "hook",
       "state": "lock",
@@ -2239,11 +2226,6 @@
         "args": []
       },
       {
-        "id": "hook:instructions-loaded",
-        "matcher": "",
-        "args": []
-      },
-      {
         "id": "hook:staleness-check",
         "matcher": "",
         "args": [
@@ -2418,7 +2400,6 @@
       "hook:cc-notify",
       "hook:auto-format",
       "hook:typescript-quality",
-      "hook:instructions-loaded",
       "rule:git.md",
       "rule:info-verification.md",
       "command:commit",

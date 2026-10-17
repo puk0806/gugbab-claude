@@ -8,7 +8,7 @@
 | 모델 | Sonnet (maxTurns 30) |
 | 도구 | Read, Glob, Grep, Bash, Write |
 | 호출 | 사용자 직접 호출 (마이그레이션 착수 전 인벤토리) |
-| 템플릿 | nexacro(15) |
+| 블록 | 넥사크로 `block:nexacro` (프리셋 `nexacro`) |
 
 ## 산출물
 

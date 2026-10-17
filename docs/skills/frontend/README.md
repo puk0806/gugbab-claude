@@ -109,7 +109,7 @@ React·Next.js·TypeScript·SEO·접근성·성능·PWA·꿈 앱 UI·운세 앱 
 | [pwa-offline-llm-fallback](../../../.claude/skills/pwa-offline-llm-fallback/SKILL.md) | PWA 오프라인 LLM 호출 fallback — Background Sync, 재시도 | [→](./pwa-offline-llm-fallback/verification.md) |
 | [indexeddb-dexie](../../../.claude/skills/indexeddb-dexie/SKILL.md) | Dexie 4.4.x IndexedDB — 스키마, 마이그레이션, useLiveQuery | [→](./indexeddb-dexie/verification.md) |
 
-## 꿈 앱 UI (dream-interpretation 템플릿 전용)
+## 꿈 앱 UI (꿈 도메인 블록 · 프리셋 `dream`)
 
 | 스킬 | 설명 | 검증 |
 |------|------|------|
@@ -123,7 +123,7 @@ React·Next.js·TypeScript·SEO·접근성·성능·PWA·꿈 앱 UI·운세 앱 
 | [dream-export-import](../../../.claude/skills/dream-export-import/SKILL.md) | 꿈 일기 export·import — JSON/CSV/암호화 ZIP | [→](./dream-export-import/verification.md) |
 | [dream-sharing-anonymized](../../../.claude/skills/dream-sharing-anonymized/SKILL.md) | 꿈 익명 공유 — 옵트인, PII 마스킹, k-anonymity | [→](./dream-sharing-anonymized/verification.md) |
 
-## 운세 앱 UI (fortune-app 템플릿 전용)
+## 운세 앱 UI (운세 도메인 블록 · 프리셋 `fortune`)
 
 | 스킬 | 설명 | 검증 |
 |------|------|------|

@@ -8,7 +8,7 @@
 | 모델 | Opus (maxTurns 40) |
 | 도구 | Agent, Read, Glob, Grep, Bash, Write |
 | 호출 | 사용자 직접 호출, `/spec-extract` 커맨드 |
-| 템플릿 | spec-extraction(14) |
+| 블록 | 스펙 추출 `block:spec-extraction` (애드온 프리셋 `spec-extraction`) |
 
 ## 역할
 

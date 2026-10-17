@@ -3,7 +3,7 @@ name: nexacro-screen-analyzer
 description: >
   넥사크로 17 프로젝트의 화면(.xfdl)을 읽어 화면별 Dataset·transaction 호출·Grid 기능·팝업·공통 함수 의존을
   뽑고 마이그레이션 난이도를 매겨, 전체 화면 인벤토리와 전환 순서(웨이브) 계획을 만드는 분석 에이전트.
-  코드는 수정하지 않는다. 화면 단위 상세 명세는 legacy-spec-extractor(spec-extraction 템플릿 함께 설치 시), 화면 변환은 nexacro-screen-converter가 맡는다.
+  코드는 수정하지 않는다. 화면 단위 상세 명세는 legacy-spec-extractor(스펙 추출 블록을 켠 경우), 화면 변환은 nexacro-screen-converter가 맡는다.
   <example>사용자: "넥사크로 화면 1,400개 마이그레이션 난이도 분류해줘"</example>
   <example>사용자: "이 업무 폴더 화면들 어떤 순서로 옮기면 좋을지 웨이브 계획 짜줘"</example>
   <example>사용자: "이 xfdl 화면 하나 분석해서 Dataset이랑 호출 서비스 정리해줘"</example>

@@ -8,7 +8,7 @@
 | 모델 | Sonnet (maxTurns 30) |
 | 도구 | Read, Write, Edit, Glob, Grep, Bash |
 | 호출 | 화면·API 변환 후 사용자 직접 호출 |
-| 템플릿 | nexacro(15) |
+| 블록 | 넥사크로 `block:nexacro` (프리셋 `nexacro`) |
 
 ## 역할
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// korean-response-guard.js — UserPromptSubmit + Stop Hook (공통, 모든 템플릿)
+// korean-response-guard.js — UserPromptSubmit + Stop Hook (공통)
 //
 // 목적: Claude 답변을 한국어로 강제한다 (2026-10-06 사용자 요청 — 답변이 영어로 새는 문제)
 //

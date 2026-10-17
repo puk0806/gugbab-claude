@@ -1,6 +1,6 @@
 # 적대적 테스트 원칙 (Adversarial Testing)
 
-테스트 코드(단위·통합·E2E)를 작성하거나 export 시 test 코드가 생성될 때 준수한다.
+테스트 코드(단위·통합·E2E)를 작성하거나 생성할 때 준수한다.
 superpowers `test-driven-development` 스킬의 "edge case 커버"를 이 레포에서 **강제 수준**으로 구체화한 규칙이다.
 
 핵심 원칙:
@@ -91,7 +91,7 @@ function calcDiscount(price: number, rate: number): number {
 | 소스 구현 파일 | `fake-impl-guard` — 파라미터 무시 + 테스트 기대 리터럴 반환 시 차단 |
 | E2E 테스트(Playwright 등) | `qa-engineer` 에이전트가 적대적 E2E 시나리오를 **필수 산출물**로 생성 |
 
-두 훅 모두 **개발 전용(dev 템플릿)** 훅이다 — `test-fake-guard`와 함께 export된다. `tdd-guard`도 보통 같은 세트로 export되지만 `--legacy` 프로파일에서는 제외되므로(레거시 코드베이스 테스트 커버리지 불완전 대응), 레거시 프로젝트에서는 `adversarial-test-guard`·`fake-impl-guard`·`test-fake-guard` 3종만 설치될 수 있다.
+두 훅은 `tdd-guard`·`test-fake-guard`·이 규칙과 함께 래퍼의 **테스트 품질 묶음(`bundle:dev-quality`)** 에 속한다 — 묶음 단위로 켜고 끈다(`/harness`). 레거시 프로젝트처럼 테스트가 거의 없는 곳에서는 `tdd-guard` 만 끄고(`gugbab-claude off hook:tdd-guard`) 나머지 3종은 유지할 수 있다. 넥사크로 블록을 켜면 충돌 규칙으로 `tdd-guard` 가 자동으로 꺼진다.
 
 ---
 

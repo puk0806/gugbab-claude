@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// config-change-audit.js — SessionStart + ConfigChange Hook (공통, 모든 템플릿)
+// config-change-audit.js — SessionStart + ConfigChange Hook (공통)
 //
 // 목적: 세션 도중 설정 파일이 바뀌면 "무엇이 바뀌었는지" 기록하고 사용자에게 알린다 (2026-10-06 사용자 요청)
 //   하네스의 보호 장치(훅 배선·deny·권한 모드)는 settings.json 에 있다. 누군가(Claude 포함) 이 파일을 고쳐

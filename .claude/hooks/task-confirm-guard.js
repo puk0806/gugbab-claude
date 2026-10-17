@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// task-confirm-guard.js — UserPromptSubmit + PreToolUse(Write·Edit·NotebookEdit) Hook (공통, 모든 템플릿)
+// task-confirm-guard.js — UserPromptSubmit + PreToolUse(Write·Edit·NotebookEdit) Hook (공통)
 //
 // 목적: task-workflow.md 의 "이렇게 이해했습니다 → 작업 목록 → 진행할까요?" 절차를 훅으로 강제한다
 //       (2026-10-06 사용자 요청 — 규칙만으로는 약해 확인 없이 수정에 착수하는 일이 반복됨)

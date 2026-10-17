@@ -41,9 +41,9 @@
 | `/tdd-implement` | tdd-implement.md | Red-Green-Refactor 사이클 강제 실행 |
 | `/agent-status` | agent-status.md | 현재 브랜치·미커밋 파일·PENDING_TEST 스킬 현황 요약 (verification.md frontmatter `status:` 기준) |
 | `/sparc-refine` | sparc-refine.md | SPARC 5단계(Spec→Pseudocode→Arch→Refine→Complete) 리팩터링 |
-| `/codex-review` | codex-review.md | Codex 적대적 코드 리뷰 수동 실행 (최대 3라운드 핑퐁) — Codex 옵션 설치 시에만 존재 |
-| `/spec-extract` | spec-extract.md | 레거시 코드에서 스펙 추출(legacy-spec-extractor → spec-reviewer) → `docs/spec/` 문서화. 소스 수정 없음 — spec-extraction 템플릿 설치 시에만 존재 |
-| `/harness` | harness.md | gugbab 하네스 켜기·끄기 화면(TUI — comux 옆 창·tmux 팝업·새 터미널 창) 열기, 명령형 `on`/`off`/`preset`(`--all` = 모든 프로젝트) — `gugbab-claude` 래퍼로 실행할 때만 동작(옛 복사 설치에는 설치되지 않음) |
+| `/codex-review` | codex-review.md | Codex 적대적 코드 리뷰 수동 실행 (최대 3라운드 핑퐁) — Codex 리뷰 묶음(`bundle:codex-review`)을 켰을 때만 |
+| `/spec-extract` | spec-extract.md | 레거시 코드에서 스펙 추출(legacy-spec-extractor → spec-reviewer) → `docs/spec/` 문서화. 소스 수정 없음 — 스펙 추출 블록(`block:spec-extraction`)을 켰을 때만 |
+| `/harness` | harness.md | gugbab 하네스 켜기·끄기 화면(TUI — comux 옆 창·tmux 팝업·새 터미널 창) 열기, 명령형 `on`/`off`/`preset`(`--all` = 모든 프로젝트) — `gugbab-claude` 래퍼로 실행할 때 동작 |
 
 ---
 

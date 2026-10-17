@@ -79,7 +79,12 @@ test('모든 verification.md: 메타 표 "| 검증일 |" 행 존재', () => {
 
 // 스킬 본체는 1단 .claude/skills/<name>/SKILL.md (2026-10-05 평탄화 — Claude Code 는 2단 중첩을 스킬로 등록하지
 // 않았다), 짝 검증 문서는 docs/skills/<category>/<name>/verification.md. 카테고리 단일 원천은 docs 위치다.
-const { LEGACY_SKILL_CATEGORIES } = require(path.join(REPO, 'scripts', 'prune-option-excluded.js'));
+// 평탄화 전 2단 스킬 경로(skills/<카테고리>/<이름>)에 쓰이던 카테고리 이름 — 이 이름의 폴더가 다시 생기면 구조 위반
+// (원래 scripts/prune-option-excluded.js 에서 가져왔으나 2026-10-17 옛 복사 설치 도구와 함께 삭제되어 여기로 옮김)
+const LEGACY_SKILL_CATEGORIES = new Set([
+  'academic', 'architecture', 'backend', 'devops', 'frontend', 'game', 'health',
+  'humanities', 'meta', 'philosophy', 'writing',
+]);
 const skillDirs = () => fs.readdirSync(SKILLS, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name);
 
 test('verification.md ↔ SKILL.md 1:1 (양방향, 심볼릭 링크 SKILL.md 불허)', () => {

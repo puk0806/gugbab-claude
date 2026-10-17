@@ -132,7 +132,7 @@ curl -fsSL https://raw.githubusercontent.com/puk0806/gugbab-claude/main/install.
 |---|---|---|
 | 스킬 | 스킬 (11카테고리, 195종) | [docs/skills/](./docs/skills/README.md) |
 | 에이전트 | 에이전트 (9카테고리) 61종 | [docs/agents/](./docs/agents/README.md) |
-| 훅 | 훅 (32종) — 확인 절차·위험 명령 차단·비밀 보호·TDD·적대적 테스트·한국어 답변·병렬 안내·Claude Code 버전 확인 등 | [docs/hooks/](./docs/hooks/README.md) |
+| 훅 | 훅 (31종) — 확인 절차·위험 명령 차단·비밀 보호·TDD·적대적 테스트·한국어 답변·병렬 안내·Claude Code 버전 확인 등 | [docs/hooks/](./docs/hooks/README.md) |
 | 룰 | 규칙 (14종) | [docs/rules/](./docs/rules/README.md) |
 | 커맨드 | 12종 — `/harness` · `/commit` · `/create-pr` · `/create-plan` · `/tdd-implement` 등 | [.claude/commands/](./.claude/commands) |
 
@@ -164,6 +164,7 @@ gugbab-claude/
 ```
 
 - 테스트: `node --test cli/*.test.js` · `node --test .claude/hooks/*.test.js` · `node --test scripts/*.test.js`
+- 실사용 시나리오(실제 claude 세션으로 종류별 껐다 켜기·폴더 분리 확인, 몇 분 걸림): `sh scripts/wrapper-e2e.sh` (설치본) · `--dev` (작업 트리)
 - 항목을 추가·변경하면 `relations.json`(소속·관계)과 체크리스트를 함께 고치고 `node scripts/build-manifest.js` 로 manifest 를 다시 만듭니다 (`relation-guard` 훅이 빠진 것을 커밋 때 막음).
 - 이 레포에서 작업할 때의 규칙: [CLAUDE.md](./CLAUDE.md) · `.claude/rules/`
 - 설계·진행 상황: [래퍼 개편 계획서](./docs/plans/2026-10-15-gugbab-claude-shim-wrapper.md)

@@ -100,7 +100,7 @@ Rust · Java · Python · TypeScript(Hono/Prisma/Zod/Better Auth/Drizzle/Neon) �
 
 ---
 
-## 운세 앱 백엔드 (fortune-app 템플릿 전용, 1종)
+## 운세 앱 백엔드 (운세 도메인 블록 · 프리셋 `fortune`, 1종)
 
 | 스킬 | 설명 | 검증 |
 |------|------|------|
@@ -108,7 +108,7 @@ Rust · Java · Python · TypeScript(Hono/Prisma/Zod/Better Auth/Drizzle/Neon) �
 
 ---
 
-## 넥사크로 레거시 백엔드 마이그레이션 (nexacro 템플릿 전용, 2종)
+## 넥사크로 레거시 백엔드 마이그레이션 (넥사크로 블록 · 프리셋 `nexacro`, 2종)
 
 | 스킬 | 설명 | 검증 |
 |------|------|------|

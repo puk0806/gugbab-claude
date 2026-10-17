@@ -55,7 +55,7 @@ function validate(content) {
   if (agentLogMatch && /내장\s*지식/.test(agentLogMatch[1])) {
     errors.push(
       '에이전트 로그에 "내장 지식" 구문이 감지됐습니다.\n' +
-      '  → skill-creator(작성 도구 설치 시) 또는 직접 작성하는 경우 모두 반드시 WebSearch/WebFetch로 공식 문서를 직접 조사·교차 검증해야 합니다.\n' +
+      '  → skill-creator(하네스 제작 묶음을 켠 경우) 또는 직접 작성하는 경우 모두 반드시 WebSearch/WebFetch로 공식 문서를 직접 조사·교차 검증해야 합니다.\n' +
       '  → 내장 지식으로 대체하는 것은 금지입니다. 실제 조사를 수행한 뒤 verification.md를 재작성하세요.'
     )
   }

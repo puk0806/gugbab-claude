@@ -25,7 +25,7 @@ description: >
 > - Google SRE Workbook, Canarying Releases — https://sre.google/workbook/canarying-releases/
 >
 > 검증일: 2026-09-28 (최초 2026-05-15, 이전 2026-08-11)
-> 대상 모델: Claude Opus 5.5 / Sonnet 5 / Haiku 4.5 기준 (`.claude/rules/agent-design.md` — 작성 도구 옵션 설치 시, 2026-09-25 현행화)
+> 대상 모델: Claude Opus 5.5 / Sonnet 5 / Haiku 4.5 기준 (`.claude/rules/agent-design.md` — 하네스 제작 묶음을 켠 경우, 2026-09-25 현행화)
 > 짝 스킬: `meta/dream-interpretation-prompt-engineering`, `meta/dream-safety-classifier-prompts`
 > 짝 에이전트: `validation/dream-interpretation-prompt-tester` (사전 평가), `research/data-analyst` (운영 분석)
 

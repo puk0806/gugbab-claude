@@ -22,7 +22,7 @@ description: >
 > 기준 버전: **next-intl 4.14.7** (2026-09-24, npm latest) / **Next.js 16.3.x** (레포 `frontend/nextjs` 스킬 기준)
 
 **관련 스킬 (중복 금지, 설치된 경우 참조):**
-- hreflang·`alternates.languages`·다국어 sitemap·canonical·locale URL 전략의 SEO 판단 → `frontend/i18n-seo`(SEO 옵션 설치 시)
+- hreflang·`alternates.languages`·다국어 sitemap·canonical·locale URL 전략의 SEO 판단 → `frontend/i18n-seo`(SEO·GEO 블록을 켠 경우)
 - Next.js 16 전반(캐싱·proxy·async params) → `frontend/nextjs`
 
 ---
@@ -197,7 +197,7 @@ export function generateStaticParams() {
 export async function generateMetadata() {
   const t = await getTranslations('LocaleLayout'); // root-params 덕에 locale 전달 불필요
   return {title: t('title')};
-  // hreflang(alternates.languages)은 frontend/i18n-seo 참조 (SEO 옵션 설치 시)
+  // hreflang(alternates.languages)은 frontend/i18n-seo 참조 (SEO·GEO 블록을 켠 경우)
 }
 
 export default async function LocaleLayout({children}: LayoutProps<'/[locale]'>) {
