@@ -5,10 +5,10 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 0693c72c-1709-4533-8cb9-8a3b20e52a64
-  modified: 2026-10-15T00:16:29.675Z
+  modified: 2026-10-17T05:10:23.497Z
 ---
 
-**상태 (2026-10-16 갱신)**: main = `f8c404d`(PR #23 머지). 개편 방향 확정·계획서 작성·relation-guard 구현까지 미커밋 상태로 커밋 직전 정리 완료(커밋·푸시는 사용자 요청 대기, main 직접 push 불가 → 브랜치 + PR). 개편 진행 상황은 [[project-shim-wrapper-direction]].
+**상태 (2026-10-16 갱신)**: main = `f8c404d`(PR #23 머지). 브랜치 `feat/shim-wrapper-relation-guard-2026-10-16` 에 커밋 4개 push(계획서·relation-guard·메모리, PR 은 나중에). 그 위에 래퍼 0~4단계(2026-10-17 TUI·/harness·프리셋·install.sh·parallel-hint 훅) 를 2026-10-17 커밋·푸시(PR 은 나중에). 개편 진행 상황은 [[project-shim-wrapper-direction]].
 
 **자산 수 (레포 실측)**: 스킬 195(1단 평탄 구조, 카테고리는 `docs/skills/<카테고리>/` 기준) · 에이전트 61 · 훅 30 + statusline(2026-10-16 레포 전용 `relation-guard` 포함) · 규칙 14 · 커맨드 11 · 설치 템플릿 0~15(8 academic 폐지·결번). 검증 상태 APPROVED 181 · PENDING_TEST 15(실사용 필수만) · NEEDS_REVISION 0.
 

@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 956a993c-0d69-41df-9a5f-10e37ec24b3f
-  modified: 2026-10-16T02:53:07.059Z
+  modified: 2026-10-17T05:10:21.556Z
 ---
 
 2026-10-15 사용자가 하네스 개편 방향을 **shim wrapper 방식**으로 확정했다. 플러그인/마켓플레이스 전환 제안은 명시적으로 거부("공식 플러그인 이딴소리 하지말고").
@@ -22,7 +22,10 @@ metadata:
 - **2026-10-16 체크리스트 반영 완료**: 사용자 체크 45개 + **묶음 정리 규칙**(짝 묶음 안 상태가 섞이면 고정 빼고 전부 켬 — 두 칸 합칠 때와 같은 원칙 / 필수 의존은 쓰는 쪽 수준까지 끌어올림 / instructions-loaded 끔) → **고정 31 · 켬 69 · 끔 217**. 고정→켬 12(dev-quality 훅 3, memory-pull, harness-authoring 8). 에이전트·스킬 기본값은 새 파일 `docs/plans/page/defaults.json`(gen-md.js 5번째 인자), 페이지 db changes 비움. 14.6 방안 이름 A~D → **방안 1~4**(16장 관계 종류 A~E 와 구분), 처리 순서 A 펼치기→B 채우기→C 정리→B 재검사
 - **2026-10-16 방안 3+4 확정 + 관계 검사 구현**(계획서 13장 15~17번, 14.8): 레포 최상위 `relations.json`(묶음 6·standalone 23·블록 21·requires 11·edges 194, 자동 분류 = 스킬발 언급·에이전트→스킬·같은 묶음·requires) + 레포 전용 훅 `relation-guard`(저장 때 안내, `git commit` 때 차단, 전체 검사 0.6초) + `scripts/relations.test.js`. gen-settings 에 레포 전용 `--relation-guard` 옵션, template-ownership 에 `repo-only` 소유. 훅 29→30종, 체크리스트 고정31·켬70·끔217(318). 새 훅·에이전트·스킬 만들 때: 블록/묶음 넣기 + edges 분류 + (훅·룰·커맨드) checklist-head 줄
 - **2026-10-16 결정 18 — 개편 범위는 gugbab 만**: 범위 밖 메모리 7·세션 요약 6·분석 문서 1은 `git rm --cached` + `.git/info/exclude`(커밋 안 되는 로컬 제외 목록)로 로컬 전용, 목록은 [[local-index]]. 공유 문서 예시 이름 `my-ui`. 구현(래퍼 본체)은 아직 시작 전 — 계획서 13장 "지금 어디까지 왔나"
-- **다음**: manifest.json 초안(relations.json 합침) → 남은 PoC(플러그인 링크·첫 실행 화면 포함) → 1차본 완성 후 Codex 리뷰
+- **2026-10-16 0~2단계 완료 (미커밋, 브랜치 feat/shim-wrapper-relation-guard-2026-10-16 — branch-protection 이 피처 브랜치에서 새 브랜치 생성을 막아 같은 브랜치 사용)**: PoC 4·6·7·8·플러그인 링크·첫 실행 화면 전부 확인(첫 실행은 `.claude.json` 의 온보딩 완료 표시 + 그 폴더 신뢰 기록만 옮겨 해결). `bin/gugbab-claude`(sh) + `cli/`(paths·project·layers·resolve·compose·hook 디스패처·update·doctor·status·main, Node 기본 기능만) + `scripts/build-manifest.js` → `manifest.json`(생성 파일, 318 항목). 훅 6종 래퍼 대응 수정(auto-approve 12장 정책 포함), statusline 수정. 결정 21(instructions-loaded 삭제는 6단계), 22(프로젝트가 이미 가진 훅·항목은 건너뜀 — 이 레포는 레포 자체 배선이 그대로 동작), 23(충돌 판정의 블록 켬 = 이름으로 켬 또는 구성원 전부 켬 — 실측 버그). 개발 모드 데이터는 `~/.gugbab-dev`(GUGBAB_DATA 로 바꿈). 실측은 이 세션 `CLAUDE_CODE_*` 환경변수를 빼야 일반 터미널과 같음, 임시 폴더 프로젝트에선 task-confirm-guard 가 원래 허용이라 홈 아래에서 시험해야 함
+- **2026-10-17 4단계 완료 (미커밋, 사용자 요청으로 3단계보다 먼저)**: `cli/tui.js`(화면, Node readline 직접 구현 — 결정 24, @inquirer 아님), `cli/apply.js`(CLI·화면 공용 기록 규칙 + 안 바뀐 이유), `cli/open.js`(/harness → comux `split --from $COPAD_MUX_PANE`+`send` / tmux `run-shell -b display-popup` / macOS osascript), `preset`·`harness` 명령, `relations.json` presets 13개. 실측 버그: ① 커맨드 안 `${VAR:-…}` 는 Claude Code 가 "검사할 수 없는 변수"로 거부 → 래퍼가 `$GUGBAB_HOME/bin` 을 PATH 에 넣고 이름만 호출 ② 모든 프로젝트 범위 끄기가 연 프로젝트가 덮으면 기록 안 되던 것 → 결정 25(덮여도 기록, 같은 층 끔 우선이라 켤 때 덮는 끔 기록 걷어냄). 시험 방법: pty 키 입력(scratchpad `poc/tui_pty.py`), comux 옆 창에 `comux send` 로 키 입력. tdd-guard 는 PostToolUse 라 "파일 생김" 이 아니라 세션 기록의 경고로 판정해야 함. tmux·macOS 새 창은 실제 미확인
+- **2026-10-17 3단계 완료**: `install.sh`(bash, `--ref` 브랜치 시험·`--version`·`--channel`·`--uninstall [--yes]`, 태그 없으면 main, 남의 폴더·일반 파일 링크·로컬 변경은 거부) + `update.js` branch 채널(`state/channel.json` `{channel:"branch",branch}`), 테스트 `scripts/install-sh.test.js` 14. 배포 모드는 `GUGBAB_HOME` 없이 실행 → dataDir = 설치 폴더(~/gugbab, projects/·state/ 는 gitignore). bash-guard 가 명령 문자열의 `curl … | bash` 글자도 막으니 README 등은 Edit 도구로. 사용자 요청 병렬 안내 훅 `parallel-hint`(결정 26, repo-only — 레포+래퍼, 옛 복사 설치 제외, 훅 31종) — 래퍼 세션에서 안내 주입 후 조회 3개가 한 응답으로 묶이는 것 확인
+- **다음**: 사용자가 브랜치로 설치부터 시험 → 5단계 첫 릴리스(PR 머지 후 v1.0.0) (그 전에 원하면 `~/.local/bin/gugbab-claude` 링크로 직접 써 보기 — 사용자에게 물어봄) → 4단계 TUI. 이전 기록: manifest.json 초안(relations.json 합침) → 남은 PoC(플러그인 링크·첫 실행 화면 포함) → 1차본 완성 후 Codex 리뷰
 
 **Why:** 복사 설치는 버전 갱신마다 재설치가 필요해 불편. comux처럼 별도 명령으로 감싼 프로그램을 띄우는 형태를 원함.
 **How to apply:** 개편 논의에서 플러그인 대안을 다시 꺼내지 말고 래퍼 방식 안에서 해법을 낸다. 불확실한 동작(로그인 유지·핫리로드 등)은 PoC 항목으로 명시. 관련: [[project-harness-status-2026-10-15]] [[project-install-architecture]]
