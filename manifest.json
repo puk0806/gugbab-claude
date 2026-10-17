@@ -2001,6 +2001,508 @@
       "path": ".claude/skills/zod-schema-validation"
     }
   },
+  "layout": [
+    {
+      "type": "setting",
+      "groups": [
+        {
+          "title": "",
+          "items": [
+            "setting:위험 명령 차단 목록 (deny)",
+            "setting:자동 허용 목록 (allow)",
+            "setting:시작 권한 모드 `acceptEdits`",
+            "setting:임시 폴더 접근 허용",
+            "setting:superpowers 플러그인",
+            "setting:상태줄 `statusline.sh`",
+            "setting:전역 CLAUDE.md 공통 부분"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "hook",
+      "groups": [
+        {
+          "title": "안전 — 위험한 행동 차단",
+          "items": [
+            "hook:bash-guard",
+            "hook:protect-secrets",
+            "hook:parry",
+            "hook:auto-approve",
+            "hook:branch-protection",
+            "hook:config-change-audit"
+          ]
+        },
+        {
+          "title": "작업 방식 — 사용자 규칙 강제",
+          "items": [
+            "hook:task-confirm-guard",
+            "hook:korean-response-guard",
+            "hook:progress-tracker"
+          ]
+        },
+        {
+          "title": "세션 편의",
+          "items": [
+            "hook:session-start",
+            "hook:session-export",
+            "hook:cc-notify"
+          ]
+        },
+        {
+          "title": "개발 품질 (코드 작성 프로젝트용)",
+          "items": [
+            "hook:tdd-guard",
+            "hook:adversarial-test-guard",
+            "hook:fake-impl-guard",
+            "hook:test-fake-guard",
+            "hook:package-manager-guard",
+            "hook:auto-format",
+            "hook:typescript-quality"
+          ]
+        },
+        {
+          "title": "Codex 리뷰",
+          "items": [
+            "hook:codex-review-guard"
+          ]
+        },
+        {
+          "title": "메모리 공유 (레포에 `memory/` 를 두고 git 으로 여러 PC 공유하는 프로젝트용)",
+          "items": [
+            "hook:memory-pull",
+            "hook:memory-sync"
+          ]
+        },
+        {
+          "title": "하네스 개발용 (이 gugbab-claude 레포 작업할 때만 필요)",
+          "items": [
+            "hook:verification-guard",
+            "hook:skill-md-guard",
+            "hook:agent-md-guard",
+            "hook:deliverable-guard",
+            "hook:staleness-check",
+            "hook:relation-guard",
+            "hook:parallel-hint",
+            "hook:claude-version-check",
+            "hook:release-version-guard"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "rule",
+      "groups": [
+        {
+          "title": "",
+          "items": [
+            "rule:git.md",
+            "rule:info-verification.md",
+            "rule:task-workflow.md",
+            "rule:adversarial-testing.md",
+            "rule:typescript.md",
+            "rule:java.md",
+            "rule:rust.md",
+            "rule:codex-review.md",
+            "rule:memory-sync.md",
+            "rule:agent-design.md",
+            "rule:creation-workflow.md",
+            "rule:verification-policy.md",
+            "rule:readme-update.md",
+            "rule:commands.md"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "command",
+      "groups": [
+        {
+          "title": "",
+          "items": [
+            "command:harness",
+            "command:commit",
+            "command:create-pr",
+            "command:fix-pr",
+            "command:context-prime",
+            "command:create-plan",
+            "command:update-docs",
+            "command:tdd-implement",
+            "command:sparc-refine",
+            "command:agent-status",
+            "command:codex-review",
+            "command:spec-extract"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "agent",
+      "groups": [
+        {
+          "title": "메타 (생성·검증·관리)",
+          "items": [
+            "agent:agent-creator",
+            "agent:changelog-writer",
+            "agent:claude-code-guide",
+            "agent:freshness-auditor",
+            "agent:project-scaffolder",
+            "agent:skill-creator",
+            "agent:skill-tester",
+            "agent:tech-stack-advisor"
+          ]
+        },
+        {
+          "title": "리서치",
+          "items": [
+            "agent:competitor-analyst",
+            "agent:data-analyst",
+            "agent:deep-researcher",
+            "agent:dream-journal-coach",
+            "agent:dream-multi-perspective-synthesizer",
+            "agent:research-reviewer",
+            "agent:socratic-interviewer",
+            "agent:web-searcher"
+          ]
+        },
+        {
+          "title": "검증·감사",
+          "items": [
+            "agent:a11y-auditor",
+            "agent:build-perf-benchmarker",
+            "agent:content-quality-reviewer",
+            "agent:dream-image-safety-classifier",
+            "agent:dream-interpretation-prompt-tester",
+            "agent:dream-safety-classifier",
+            "agent:fact-checker",
+            "agent:fortune-interpretation-prompt-tester",
+            "agent:migration-parity-tester",
+            "agent:perf-report-writer",
+            "agent:pr-reviewer",
+            "agent:qa-engineer",
+            "agent:security-auditor",
+            "agent:seo-auditor",
+            "agent:source-validator",
+            "agent:spec-reviewer"
+          ]
+        },
+        {
+          "title": "프론트엔드",
+          "items": [
+            "agent:frontend-architect",
+            "agent:frontend-developer",
+            "agent:nexacro-screen-converter"
+          ]
+        },
+        {
+          "title": "백엔드",
+          "items": [
+            "agent:build-error-resolver",
+            "agent:database-architect",
+            "agent:java-backend-architect",
+            "agent:java-backend-developer",
+            "agent:python-backend-architect",
+            "agent:python-backend-developer",
+            "agent:rust-backend-architect",
+            "agent:rust-backend-developer",
+            "agent:typescript-backend-architect",
+            "agent:typescript-backend-developer"
+          ]
+        },
+        {
+          "title": "도메인·기획·설계",
+          "items": [
+            "agent:api-spec-designer",
+            "agent:business-domain-analyst",
+            "agent:codebase-domain-analyst",
+            "agent:frontend-domain-refactorer",
+            "agent:legacy-spec-extractor",
+            "agent:nexacro-screen-analyzer",
+            "agent:product-planner",
+            "agent:ui-ux-designer"
+          ]
+        },
+        {
+          "title": "배포",
+          "items": [
+            "agent:devops-engineer"
+          ]
+        },
+        {
+          "title": "게임",
+          "items": [
+            "agent:game-asset-ai-director",
+            "agent:game-design-document-writer",
+            "agent:game-monetization-strategist",
+            "agent:mobile-app-publisher",
+            "agent:unity-architect",
+            "agent:unity-developer"
+          ]
+        },
+        {
+          "title": "건강",
+          "items": [
+            "agent:nutrition-prompt-tester"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "skill",
+      "groups": [
+        {
+          "title": "프론트엔드 (React·Next.js·PWA·SEO 일부 포함)",
+          "items": [
+            "skill:ag-grid",
+            "skill:animation",
+            "skill:bot-management-seo",
+            "skill:build-perf-benchmarking",
+            "skill:bundle-size-analysis",
+            "skill:bundling-compiler",
+            "skill:chat-ui-pattern",
+            "skill:claude-api-streaming-frontend",
+            "skill:code-convention",
+            "skill:core-web-vitals-optimization",
+            "skill:daily-fortune-retention-loop",
+            "skill:design-token-scss",
+            "skill:dev-server-hmr-benchmarking",
+            "skill:dream-app-onboarding",
+            "skill:dream-export-import",
+            "skill:dream-image-generation",
+            "skill:dream-privacy-consent-ui",
+            "skill:dream-recurrence-detection",
+            "skill:dream-sharing-anonymized",
+            "skill:dream-statistics-visualization",
+            "skill:dream-symbol-tagging",
+            "skill:e2e-testing",
+            "skill:ecommerce-seo",
+            "skill:emotion-tagging-input",
+            "skill:font-optimization",
+            "skill:form-handling",
+            "skill:geo-ai-discoverability",
+            "skill:google-indexing-api",
+            "skill:i18n-seo",
+            "skill:image-optimization-seo",
+            "skill:indexeddb-dexie",
+            "skill:kakao-share-optimization",
+            "skill:lighthouse-ci-setup",
+            "skill:local-business-seo",
+            "skill:media-recorder-api",
+            "skill:mobile-seo-pwa",
+            "skill:monorepo-turborepo",
+            "skill:mui-v5",
+            "skill:mui-v9",
+            "skill:naver-seo-specifics",
+            "skill:next-intl-i18n",
+            "skill:nextjs",
+            "skill:og-image-generation",
+            "skill:palm-photo-capture-vision",
+            "skill:pwa-offline-llm-fallback",
+            "skill:pwa-push-notifications",
+            "skill:recoil-to-zustand-migration",
+            "skill:rsbuild",
+            "skill:saju-chart-visualization",
+            "skill:schema-org-patterns",
+            "skill:search-console-webmaster",
+            "skill:security-headers-seo",
+            "skill:seo-monitoring-automation",
+            "skill:seo-nextjs",
+            "skill:seo-static-html",
+            "skill:seo-vite-spa",
+            "skill:srs-spaced-repetition",
+            "skill:state-management",
+            "skill:storybook",
+            "skill:storybook-visual-testing",
+            "skill:structured-data-validation-api",
+            "skill:swiper",
+            "skill:tanstack-query",
+            "skill:tanstack-query-v4-to-v5-migration",
+            "skill:tarot-card-deck-ui",
+            "skill:testing",
+            "skill:tsup",
+            "skill:typescript-v4",
+            "skill:typescript-v5",
+            "skill:url-canonicalization-redirects",
+            "skill:vite-advanced-splitting",
+            "skill:vite-pwa-service-worker",
+            "skill:voice-input-ui",
+            "skill:wcag-2.2-checklist",
+            "skill:web-speech-api-stt",
+            "skill:web-vitals-rum-comparison",
+            "skill:webpack-vite-config-mapping",
+            "skill:whisper-api-integration"
+          ]
+        },
+        {
+          "title": "백엔드 (Java·Rust·Python·TS)",
+          "items": [
+            "skill:aws-sdk-v1-s3-rekognition",
+            "skill:aws-sdk-v2-s3-rekognition",
+            "skill:axum",
+            "skill:better-auth",
+            "skill:bouncycastle-crypto",
+            "skill:claude-code-headless",
+            "skill:drizzle-neon-postgres",
+            "skill:ehcache-2-legacy",
+            "skill:global-exception-validation",
+            "skill:hikaricp-tuning-oracle-mysql",
+            "skill:hono-api-patterns",
+            "skill:ibatis-to-mybatis-migration",
+            "skill:jackson-time-migration",
+            "skill:jasypt-encrypted-config",
+            "skill:jwt-auth",
+            "skill:korean-lunar-calendar-manseryeok",
+            "skill:logback-mdc-tracing",
+            "skill:lombok-mapstruct-modelmapper",
+            "skill:multipart-upload",
+            "skill:mybatis-mapper-patterns",
+            "skill:prisma-orm",
+            "skill:project-structure",
+            "skill:python-anthropic-sdk",
+            "skill:python-async-asyncio",
+            "skill:python-cli-typer",
+            "skill:python-embeddings-vector-db",
+            "skill:python-fastapi",
+            "skill:python-korean-nlp-konlpy",
+            "skill:python-langchain-current",
+            "skill:python-llamaindex",
+            "skill:python-pydantic-v2",
+            "skill:python-uv-project-setup",
+            "skill:redis-redisson-4",
+            "skill:redis-redisson-legacy",
+            "skill:redis-redisson-modern",
+            "skill:reqwest",
+            "skill:spring-boot-1-to-2-migration",
+            "skill:spring-boot-2-to-3-migration",
+            "skill:spring-boot-gradle-setup",
+            "skill:spring-multi-datasource-oracle-mysql",
+            "skill:spring-security-5-jwt-jjwt10",
+            "skill:spring-security-6-jwt-jjwt12",
+            "skill:springdoc-openapi-3",
+            "skill:sqlx",
+            "skill:sse-streaming",
+            "skill:swagger-springfox-2",
+            "skill:testing-junit5-spring-boot",
+            "skill:testing-rust",
+            "skill:tower-http",
+            "skill:webflux-webclient-in-sync-app",
+            "skill:xss-lucy-jsoup",
+            "skill:zod-schema-validation"
+          ]
+        },
+        {
+          "title": "아키텍처·도메인 모델링",
+          "items": [
+            "skill:ddd",
+            "skill:dream-journal-data-modeling",
+            "skill:frontend-domain-structure",
+            "skill:incremental-refactoring",
+            "skill:module-boundaries",
+            "skill:saju-tarot-data-modeling"
+          ]
+        },
+        {
+          "title": "배포·CI/CD·n8n·Vercel",
+          "items": [
+            "skill:docker-deployment",
+            "skill:github-actions",
+            "skill:github-actions-visual-regression",
+            "skill:n8n-error-handling",
+            "skill:n8n-llm-integration",
+            "skill:n8n-self-hosting",
+            "skill:n8n-webhook-patterns",
+            "skill:n8n-workflow-design",
+            "skill:site-migration-seo",
+            "skill:vercel-sandbox",
+            "skill:vercel-workflow"
+          ]
+        },
+        {
+          "title": "Unity 게임",
+          "items": [
+            "skill:ai-game-asset-pipeline",
+            "skill:app-store-submission",
+            "skill:game-audio-ai-tools",
+            "skill:game-design-document",
+            "skill:mobile-user-acquisition",
+            "skill:unity-6-2d-fundamentals",
+            "skill:unity-addressables",
+            "skill:unity-cicd-codemagic",
+            "skill:unity-firebase",
+            "skill:unity-game-feel",
+            "skill:unity-iap",
+            "skill:unity-levelplay-ads",
+            "skill:unity-live-ops",
+            "skill:unity-mobile-optimization",
+            "skill:unity-save-system",
+            "skill:unity-ui-system"
+          ]
+        },
+        {
+          "title": "인문 (꿈 해몽·사주·타로·애착 이론 등 앱 도메인 지식)",
+          "items": [
+            "skill:attachment-theory-basics",
+            "skill:crisis-intervention-resources-korea",
+            "skill:dream-content-privacy-ethics",
+            "skill:dream-content-research",
+            "skill:dream-psychology-jung-freud",
+            "skill:korean-dream-interpretation-tradition",
+            "skill:korean-saju-tradition",
+            "skill:palmistry-limitations",
+            "skill:tarot-history-symbolism"
+          ]
+        },
+        {
+          "title": "건강·식단 앱",
+          "items": [
+            "skill:ingredient-management",
+            "skill:korean-food-nutrition",
+            "skill:meal-recommendation-prompt",
+            "skill:nutrition-analysis-prompt",
+            "skill:nutrition-basics"
+          ]
+        },
+        {
+          "title": "메타 (Claude Code·프롬프트 엔지니어링)",
+          "items": [
+            "skill:claude-code-hook-authoring",
+            "skill:dream-app-ab-testing-prompts",
+            "skill:dream-interpretation-prompt-engineering",
+            "skill:dream-safety-classifier-prompts",
+            "skill:fortune-interpretation-prompt-engineering"
+          ]
+        },
+        {
+          "title": "글쓰기·콘텐츠 품질",
+          "items": [
+            "skill:accessibility-vpat-writing",
+            "skill:content-eeat-quality",
+            "skill:multilingual-content-strategy",
+            "skill:ymyl-content-seo"
+          ]
+        },
+        {
+          "title": "레거시 스펙 추출",
+          "items": [
+            "skill:characterization-testing",
+            "skill:react-spec-extraction",
+            "skill:spec-extraction-method",
+            "skill:spring-mybatis-spec-extraction"
+          ]
+        },
+        {
+          "title": "넥사크로 마이그레이션",
+          "items": [
+            "skill:nexacro-17-xfdl-anatomy",
+            "skill:nexacro-strangler-coexistence",
+            "skill:nexacro-to-react-mapping",
+            "skill:nexacro-xapi-server",
+            "skill:xapi-to-rest-migration"
+          ]
+        }
+      ]
+    }
+  ],
   "hookOrder": {
     "PreToolUse": [
       {

@@ -56,12 +56,22 @@ function itemPath(root, it) {
   }
 }
 
+// /harness 화면 트리 순서 (결정 33) — 체크리스트의 장(종류) → 절(용도, `### 2.1 안전 — …`) → 항목, 체크리스트에 적힌 순서 그대로.
+// 절 제목 끝의 개수 표기(" — 78종", " (8)")는 화면에선 실제 개수를 따로 보여 주므로 뺀다
+function layoutOf(sections, items) {
+  const title = (t) => String(t || '').replace(/\s*(?:—\s*\d+종|\(\d+\))\s*$/, '').trim();
+  return sections.map(s => ({
+    type: s.type,
+    groups: s.groups.map(g => ({ title: title(g.title), items: g.items.map(i => i.id).filter(id => items[id]) })).filter(g => g.items.length),
+  })).filter(s => s.groups.length);
+}
+
 function sortKeys(o) {
   return Object.fromEntries(Object.keys(o).sort().map(k => [k, o[k]]));
 }
 
 function buildManifest({ root, checklistMd, settings, relations }) {
-  const { items: list } = parseChecklist(checklistMd);
+  const { items: list, sections } = parseChecklist(checklistMd);
   const items = {};
   for (const it of list) {
     const entry = { type: it.type, state: it.rec };
@@ -135,6 +145,7 @@ function buildManifest({ root, checklistMd, settings, relations }) {
     version: 1,
     root: HARNESS_DIR,
     items: sortKeys(items),
+    layout: layoutOf(sections, items),
     hookOrder,
     pluginBundles: PLUGIN_BUNDLES,
     relations: {
