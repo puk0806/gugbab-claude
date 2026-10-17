@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 956a993c-0d69-41df-9a5f-10e37ec24b3f
-  modified: 2026-10-17T07:43:40.856Z
+  modified: 2026-10-17T08:03:45.226Z
 ---
 
 2026-10-15 사용자가 하네스 개편 방향을 **shim wrapper 방식**으로 확정했다. 플러그인/마켓플레이스 전환 제안은 명시적으로 거부("공식 플러그인 이딴소리 하지말고").
@@ -32,7 +32,8 @@ metadata:
 - **2026-10-17 v1.0.0 릴리스**: PR #26 머지(a9d67c3) → 사용자 설치본 main 채널 `gugbab-claude update` 로 7d6ea3f→a9d67c3 확인, 설치본 시나리오 24/24 → `v1.0.0` 태그(annotated)+GitHub Release → 설치 명령 재실행으로 stable v1.0.0 전환(channel.json stable, `update` "이미 최신", projects/ 설정 유지). 태그 보호 규칙은 아직 안 켬(1.0.0 테스트 중 버그 수정 시 태그 이동 가능하게 — 결정 28)
 - **2026-10-17 결정 29 (v1.0.0 테스트 중 요청)**: `/harness` 화면 아이콘 ✅켬·⬜끔·🟨일부·🔒고정(✅⬜ 은 폭 계산에 2칸 추가) + 새 훅 `claude-version-check`(SessionStart, 🔒 고정, repo-only — 버전 변경 시 로그인 공유 확인 안내, 하루 1회 npm `@anthropic-ai/claude-code/latest` 확인), 디스패처가 `GUGBAB_STATE_DIR` 전달, status·doctor 에 Claude 버전 줄. 훅 32종·고정 33. 브랜치 `feat/harness-check-icons-claude-version-2026-10-17`(미커밋). 관찰: 16묶음 동시 실행 부하에서 hook.test 1건 일시 실패(단독 3회 통과) — 디스패처는 훅이 비정상 종료하면 비차단으로 건너뜀(고정 보안 훅도 fail-open 가능성 — 사용자에게 제안만)
 - **2026-10-17 v1.0.1 릴리스**(PR #27 머지 8e86bfb, 태그+Release) — 사용자 설치본이 실행 시 자동 확인으로 `v1.0.0 → v1.0.1` 받음 확인. 실사용 시나리오를 레포 `scripts/wrapper-e2e.sh` 로(계획서 16장 — 사용자 요청: 종류별 껐다 켜기·폴더 분리를 시나리오로 남김) — 설치본 v1.0.1 32/32. 브랜치 `test/wrapper-e2e-scenario-2026-10-17`(미커밋). 시나리오 스크립트에서 결과 출력은 파일 안에서 — Bash 명령 문자열에 `echo "…통과…"` 가 있으면 test-fake-guard 가 막음
-- **다음**: 사용자 1.0.0 실제 테스트 → 태그 보호 → v1.0.1 업데이트 시험(실행 시 자동 확인 경로 포함) / 계획서 5단계 결과 기록 / 6단계 정리(project-install.sh·docs/templates·examples·관련 테스트 삭제 범위 제시) (그 전에 원하면 `~/.local/bin/gugbab-claude` 링크로 직접 써 보기 — 사용자에게 물어봄) → 4단계 TUI. 이전 기록: manifest.json 초안(relations.json 합침) → 남은 PoC(플러그인 링크·첫 실행 화면 포함) → 1차본 완성 후 Codex 리뷰
+- **2026-10-17 6단계 — 옛 복사 설치 삭제**(계획서 15.9): project-install.sh·install-cleanup·migrate-settings·prune-option-excluded·write-install-manifest·template-separation/ownership/installed-refs 테스트·docs/templates·examples·instructions-loaded 훅 삭제(훅 31). README·docs 수치 검사는 `scripts/docs-counts.test.js`. gen-settings 는 레포 settings.json 생성기로 유지. 시나리오 PR 이 안 머지돼 같은 브랜치 `test/wrapper-e2e-scenario-2026-10-17` 에 이어서 작업
+- **다음**: 사용자 1.0.x 실사용 테스트 → 태그 보호 → v1.0.1 업데이트 시험(실행 시 자동 확인 경로 포함) / 계획서 5단계 결과 기록 / 6단계 정리(project-install.sh·docs/templates·examples·관련 테스트 삭제 범위 제시) (그 전에 원하면 `~/.local/bin/gugbab-claude` 링크로 직접 써 보기 — 사용자에게 물어봄) → 4단계 TUI. 이전 기록: manifest.json 초안(relations.json 합침) → 남은 PoC(플러그인 링크·첫 실행 화면 포함) → 1차본 완성 후 Codex 리뷰
 
 **Why:** 복사 설치는 버전 갱신마다 재설치가 필요해 불편. comux처럼 별도 명령으로 감싼 프로그램을 띄우는 형태를 원함.
 **How to apply:** 개편 논의에서 플러그인 대안을 다시 꺼내지 말고 래퍼 방식 안에서 해법을 낸다. 불확실한 동작(로그인 유지·핫리로드 등)은 PoC 항목으로 명시. 관련: [[project-harness-status-2026-10-15]] [[project-install-architecture]]
