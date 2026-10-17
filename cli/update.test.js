@@ -6,7 +6,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { execSync } = require('child_process');
-const { checkUpdate, latestTag, versionInfo } = require('./update');
+const { checkUpdate, latestTag, versionInfo, readChannel } = require('./update');
 
 const tmp = (p) => fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), p)));
 const sh = (cmd, cwd) => execSync(cmd, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@t' } }).trim();
@@ -169,4 +169,32 @@ test('경계: git 저장소가 아니거나 channel.json 이 없거나 깨져도
   fs.mkdirSync(s.state, { recursive: true });
   fs.writeFileSync(path.join(s.state, 'channel.json'), '{broken');
   assert.strictEqual(versionInfo({ codeHome: s.home, stateDir: s.state }).channel, 'stable');
+});
+
+test('정상·경계: 채널 기록은 설치 폴더(<코드>/state) 것을 먼저 읽음 — 데이터 폴더를 따로 둬도(GUGBAB_DATA) 맞게 표시', () => {
+  const s = setup();
+  sh('git checkout -q main', s.home);
+  fs.mkdirSync(path.join(s.home, 'state'), { recursive: true });
+  fs.writeFileSync(path.join(s.home, 'state', 'channel.json'), JSON.stringify({ channel: 'main' }));
+  const otherData = tmp('up-data-');
+  assert.strictEqual(versionInfo({ codeHome: s.home, stateDir: otherData }).channel, 'main');
+  assert.deepStrictEqual(readChannel({ codeHome: s.home, stateDir: otherData }), { channel: 'main' });
+  // 설치 폴더에 없으면 데이터 폴더 것, 둘 다 없으면 빈 값(stable)
+  fs.rmSync(path.join(s.home, 'state'), { recursive: true });
+  writeChannel(s, { channel: 'branch', branch: 'feat/x' });
+  assert.strictEqual(readChannel({ codeHome: s.home, stateDir: s.state }).branch, 'feat/x');
+  assert.deepStrictEqual(readChannel({ codeHome: tmp('up-x-'), stateDir: tmp('up-y-') }), {});
+});
+
+test('악성: 설치 폴더의 channel.json 이 깨졌거나 배열·링크로 밖을 가리키면 무시', () => {
+  const s = setup();
+  fs.mkdirSync(path.join(s.home, 'state'), { recursive: true });
+  fs.writeFileSync(path.join(s.home, 'state', 'channel.json'), '[1,2]');
+  writeChannel(s, { channel: 'main' });
+  assert.deepStrictEqual(readChannel({ codeHome: s.home, stateDir: s.state }), { channel: 'main' });
+  const outside = path.join(tmp('up-out-'), 'c.json');
+  fs.writeFileSync(outside, JSON.stringify({ channel: 'branch', branch: 'evil' }));
+  fs.rmSync(path.join(s.home, 'state', 'channel.json'));
+  fs.symlinkSync(outside, path.join(s.home, 'state', 'channel.json'));
+  assert.deepStrictEqual(readChannel({ codeHome: s.home, stateDir: s.state }), { channel: 'main' });
 });

@@ -10,7 +10,9 @@ const path = require('path');
 const { resolve, expand } = require('./resolve');
 const { loadLayers, readJsonObject, writeJson } = require('./layers');
 
-const ID_RE = /^(?:[a-z]+:)?[A-Za-z0-9._@-]+(?:\.md)?$/;
+// 이름 검사 — 기본 형태만 보고, 실제 판정은 "manifest 에 있는 이름인지"(허용 목록)로 한다.
+// 설정 항목은 이름에 공백·한글·백틱이 있다(예: `setting:superpowers 플러그인`) — 패턴으로 막으면 켜고 끌 수 없었다(2026-10-17 실측 버그)
+const CTRL_RE = /[\u0000-\u001f\u007f-\u009f]/;
 const GROUP_RE = /^(?:block|bundle):/;
 const RESTART_TYPES = new Set(['rule', 'agent', 'setting']); // 세션 시작 때만 읽히는 것 (PoC 6: 스킬·커맨드는 바로 반영)
 const LAYER_ORDER = ['profile', 'project', '.gugbab.json']; // loadLayers 순서 — 뒤가 이김
@@ -21,7 +23,7 @@ const uniq = (a) => [...new Set(a)];
 const layerIndex = (scope) => LAYER_ORDER.indexOf(scope);
 
 function members(id, manifest) {
-  if (typeof id !== 'string' || id.length > 200 || !ID_RE.test(id) || id.includes('..')) throw new Error(`항목 이름이 올바르지 않습니다: ${id}`);
+  if (typeof id !== 'string' || !id || id.length > 200 || CTRL_RE.test(id) || id.includes('..') || id !== id.trim()) throw new Error(`항목 이름이 올바르지 않습니다: ${JSON.stringify(id)}`);
   const ids = expand(id, manifest);
   if (!ids) throw new Error(`모르는 항목입니다: ${id}`);
   return ids;

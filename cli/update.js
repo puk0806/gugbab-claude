@@ -74,10 +74,24 @@ function checkUpdate({ codeHome, stateDir, channel = 'stable', branch = null, de
   return { updated: true, message: `[gugbab] 하네스 ${from} → ${channel === 'stable' ? label : `${label} ${describe(codeHome)}`}` };
 }
 
-// 지금 버전과 채널 — status·doctor 가 보여 준다 (state/channel.json 은 install.sh 가 기록)
+// 채널 기록(state/channel.json) — install.sh 가 설치 폴더에 쓴다. 설치 폴더 것을 먼저, 없으면 데이터 폴더 것
+// (데이터 폴더를 GUGBAB_DATA 로 따로 두면 두 위치가 달라진다 — 2026-10-17 실측). 일반 파일·객체만, 링크는 무시
+function readChannel({ codeHome, stateDir }) {
+  for (const dir of [codeHome && path.join(codeHome, 'state'), stateDir]) {
+    if (!dir) continue;
+    const f = path.join(dir, 'channel.json');
+    try {
+      if (!fs.lstatSync(f).isFile()) continue;
+      const v = JSON.parse(fs.readFileSync(f, 'utf8'));
+      if (v && typeof v === 'object' && !Array.isArray(v)) return v;
+    } catch { /* 없음·깨짐 → 다음 위치 */ }
+  }
+  return {};
+}
+
+// 지금 버전과 채널 — status·doctor 가 보여 준다
 function versionInfo({ codeHome, stateDir, dev = false }) {
-  let ch = {};
-  try { const v = JSON.parse(fs.readFileSync(path.join(stateDir, 'channel.json'), 'utf8')); if (v && typeof v === 'object') ch = v; } catch { /* 없음·깨짐 → stable */ }
+  const ch = readChannel({ codeHome, stateDir });
   let isGit = true;
   try { git(codeHome, ['rev-parse', '--git-dir']); } catch { isGit = false; }
   if (!isGit) return { version: '?', channel: 'stable', text: '? (git 저장소가 아님)', hint: null };
@@ -102,4 +116,4 @@ function versionInfo({ codeHome, stateDir, dev = false }) {
   return { version, channel: 'stable', text: `${version} (stable — 최신 v* 태그를 따라감)`, hint: null };
 }
 
-module.exports = { checkUpdate, latestTag, versionInfo };
+module.exports = { checkUpdate, latestTag, versionInfo, readChannel };
