@@ -56,3 +56,4 @@ Claude Code 활용에 필요한 에이전트(Agent), 스킬(Skill), 설정(CLAUD
 | 슬래시 커맨드 작성·목록 | @.claude/rules/commands.md |
 | 메모리 동기화 정책 | @.claude/rules/memory-sync.md |
 | 작업 착수 전 확인 절차 | @.claude/rules/task-workflow.md |
+| 이 레포 개발(개발 모드 실행·테스트·실사용 시나리오·항목 추가) | `docs/DEVELOPMENT.md` |

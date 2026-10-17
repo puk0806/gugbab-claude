@@ -689,6 +689,7 @@
     "agent:frontend-domain-refactorer>command:harness": "mention",
     "agent:seo-auditor>command:harness": "mention",
     "rule:adversarial-testing.md>command:harness": "mention",
+    "rule:readme-update.md>command:harness": "mention",
     "command:context-prime>command:harness": "mention",
     "agent:devops-engineer>command:harness": "mention",
     "agent:frontend-developer>command:harness": "mention",
