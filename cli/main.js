@@ -6,6 +6,7 @@
 //   doctor                  설치·조립 상태 점검
 //   on|off <항목> [--all]   켜기·끄기 (기본 = 이 프로젝트, --all = 모든 프로젝트)
 //   preset [이름] [--all]   프리셋 목록 / 적용 (블록·묶음 조합)
+//   first-run [claude 인자…] 프로젝트에서 처음 실행할 때 기본 프리셋 고르기 (래퍼가 세션 직전에 부름, 묻지 않을 때는 조용히 끝)
 //   harness                 켜기·끄기 화면(TUI) — 터미널에서
 //   harness --open          화면을 comux 옆 창 · tmux 팝업 · 새 터미널 창에 띄움 (/harness 가 부름, --dry-run 은 계획만)
 'use strict';
@@ -156,6 +157,18 @@ switch (cmd) {
     const project = resolveProject(process.cwd(), paths.dataDir);
     const ids = [...new Set(presets[name].enable.flatMap(g => expand(g, manifest) || []))];
     changeAndReport({ manifest, project, all, ids, action: 'on', mutate: (l) => applyPreset(l, name, manifest), title: `프리셋 ${name}` });
+    break;
+  }
+  case 'first-run': {
+    // 세션을 막지 않는다 — 어떤 오류든 조용히 끝내고 래퍼는 그대로 claude 를 띄운다
+    try {
+      const manifest = JSON.parse(fs.readFileSync(paths.manifestPath, 'utf8')); // loadManifest 는 실패 때 exit 1 이라 여기선 직접 읽는다
+      const project = resolveProject(process.cwd(), paths.dataDir);
+      const { shouldAsk, runFirstRun } = require('./first-run');
+      const sa = shouldAsk({ project, argv: args.slice(1), isTTY: !!(process.stdin.isTTY && process.stdout.isTTY), env: process.env, manifest });
+      if (!sa.ask) process.exit(0);
+      runFirstRun({ manifest, paths, project }).then(() => process.exit(0), () => process.exit(0));
+    } catch { process.exit(0); }
     break;
   }
   case 'harness': {

@@ -131,3 +131,11 @@ test('경계: 하위 명령(status)은 claude 없이 동작, 심볼릭 링크로
   assert.strictEqual(r.status, 0, r.stderr);
   assert.match(r.stdout, /gugbab 하네스/);
 });
+
+test('경계: 처음 실행 프리셋 질문은 터미널이 아니면(스크립트·-p) 나오지 않고 바로 claude 실행', () => {
+  const s = setup('echo "ran $*" >> "$LOG"');
+  const r = run(s, ['-p', 'hi']);
+  assert.strictEqual(r.status, 0, r.stderr);
+  assert.ok(!/처음 실행합니다/.test(r.stdout + r.stderr));
+  assert.deepStrictEqual(calls(s), ['ran -p hi']);
+});

@@ -171,3 +171,18 @@ test('정상: 이름에 공백·한글이 있는 설정 항목(플러그인)을 
   assert.match(r.stdout, /끔: setting:superpowers 플러그인/);
   assert.strictEqual(JSON.parse(fs.readFileSync(path.join(cfg, 'settings.json'), 'utf8')).enabledPlugins['superpowers@m'], false);
 });
+
+test('경계: first-run 은 터미널이 아니면 묻지 않고 조용히 끝(exit 0), 설정 파일도 만들지 않음', () => {
+  const s = setup();
+  const r = run(s, ['first-run']);
+  assert.strictEqual(r.status, 0, r.stderr);
+  assert.strictEqual(r.stdout, '');
+  assert.ok(!fs.existsSync(path.join(s.data, 'projects', path.basename(s.proj), 'settings.json')));
+});
+
+test('악성: first-run 이 깨진 manifest 를 만나도 세션을 막지 않음(exit 0)', () => {
+  const s = setup();
+  fs.writeFileSync(path.join(s.code, 'manifest.json'), '{broken');
+  const r = run(s, ['first-run', '-p', 'x']);
+  assert.strictEqual(r.status, 0);
+});

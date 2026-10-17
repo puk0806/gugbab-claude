@@ -37,6 +37,9 @@ esac
 
 command -v claude >/dev/null 2>&1 || { echo "[gugbab] claude 를 찾지 못했습니다 — Claude Code 를 먼저 설치하세요" >&2; exit 127; }
 
+# 프로젝트에서 처음 실행이면 기본 프리셋 고르기 (터미널·-p 아님·설정 없음일 때만 묻는다, 실패해도 계속)
+node "$main" first-run "$@" || true
+
 cfg=$(node "$main" prepare) || { echo "[gugbab] 조립 실패 — gugbab-claude doctor 로 확인하세요 (하네스 없이: gugbab-claude --raw)" >&2; exit 1; }
 [ -n "$cfg" ] && [ -d "$cfg" ] || { echo "[gugbab] 설정 폴더를 만들지 못했습니다: $cfg" >&2; exit 1; }
 rm -f "$cfg/.gugbab-restart"
