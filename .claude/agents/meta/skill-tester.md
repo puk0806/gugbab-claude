@@ -199,11 +199,11 @@ Edit 작업이 끝난 직후 verification.md를 Read로 **전체 다시 읽고**
 
 ## 에이전트 선택 가이드 (테스트 실행용)
 
-가급적 domain-specific 에이전트 사용(템플릿에 따라 설치되지 않을 수 있음):
+가급적 domain-specific 에이전트 사용(이 프로젝트에서 꺼 두었을 수 있음):
 - Java 스킬 → `java-backend-developer`(설치된 경우)
 - Rust 스킬 → `rust-backend-developer`(설치된 경우)
 - Frontend 스킬 → `frontend-developer`(설치된 경우)
-- 해당 에이전트가 설치되어 있지 않거나(부분 설치 템플릿) 세션 registry에 없거나 신규 생성 직후면 `general-purpose`로 대체 (이번 세션처럼)
+- 해당 에이전트가 설치되어 있지 않거나(이 프로젝트에서 꺼 둠) 세션 registry에 없거나 신규 생성 직후면 `general-purpose`로 대체 (이번 세션처럼)
 
 대체 사용 사실은 verification.md 테스트 기록에 명시한다.
 

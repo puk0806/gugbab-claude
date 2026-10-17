@@ -355,7 +355,7 @@ Grep 결과는 *파일 경로:라인*까지 보고서에 첨부한다.
   - Google Rich Results Test — `https://search.google.com/test/rich-results`
   - schema.org Validator — `https://validator.schema.org/`
   - Google Search Console — URL Inspection·sitemap 제출
-- 참조 스킬 (경로는 `.claude/skills/` 하위, 설치 템플릿에 따라 없을 수 있으므로 Glob 확인): 프레임워크별 `frontend/seo-nextjs` · `frontend/seo-vite-spa` · `frontend/seo-static-html` / 공통 `frontend/schema-org-patterns` · `frontend/geo-ai-discoverability` · `frontend/url-canonicalization-redirects` · `frontend/search-console-webmaster` / 커머스·한국 `frontend/ecommerce-seo` · `frontend/naver-seo-specifics` · `frontend/kakao-share-optimization` · `frontend/mobile-seo-pwa`(분리 모바일 URL) / 다국어 `frontend/i18n-seo`
+- 참조 스킬 (경로는 `.claude/skills/` 하위, 이 프로젝트에서 꺼 두었을 수 있으므로(`/harness` 블록) Glob 확인): 프레임워크별 `frontend/seo-nextjs` · `frontend/seo-vite-spa` · `frontend/seo-static-html` / 공통 `frontend/schema-org-patterns` · `frontend/geo-ai-discoverability` · `frontend/url-canonicalization-redirects` · `frontend/search-console-webmaster` / 커머스·한국 `frontend/ecommerce-seo` · `frontend/naver-seo-specifics` · `frontend/kakao-share-optimization` · `frontend/mobile-seo-pwa`(분리 모바일 URL) / 다국어 `frontend/i18n-seo`
 
 ---
 
