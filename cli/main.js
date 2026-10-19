@@ -19,7 +19,7 @@ const { resolve, expand } = require('./resolve');
 const { loadLayers, readJsonObject, readSkipped } = require('./layers');
 const { applyToggle, applyPreset, explainUnchanged, commitLayer, layerIndex } = require('./apply');
 const { compose } = require('./compose');
-const { checkUpdate, readChannel } = require('./update');
+const { checkUpdate, readChannel, writeLastCheck } = require('./update');
 const { runDoctor } = require('./doctor');
 const { statusLines } = require('./status');
 
@@ -64,13 +64,16 @@ function report(lines) {
 }
 
 // 자동 업데이트 한 번 — 실패는 알리고 넘어간다
+//   래퍼가 넘긴 실행 값(GUGBAB_LAUNCH)이 있으면 결과를 state/last-check.json 에 남긴다 → 세션 시작 때 훅이 화면에 보여 줌 (2026-10-19)
 function autoUpdate() {
   const ch = readChannel({ codeHome: paths.codeHome, stateDir: paths.stateDir });
+  let r;
   try {
-    const r = checkUpdate({ codeHome: paths.codeHome, stateDir: paths.stateDir, ...channelOf(ch), dev: paths.dev, pin: typeof ch.pin === 'string' ? ch.pin : null });
+    r = checkUpdate({ codeHome: paths.codeHome, stateDir: paths.stateDir, ...channelOf(ch), dev: paths.dev, pin: typeof ch.pin === 'string' ? ch.pin : null });
     if (r.message) process.stderr.write(r.message + '\n');
-    return r;
-  } catch (e) { process.stderr.write(`[gugbab] 업데이트 확인 실패(무시): ${e.message}\n`); return { updated: false }; }
+  } catch (e) { process.stderr.write(`[gugbab] 업데이트 확인 실패(무시): ${e.message}\n`); r = { updated: false, skipped: 'error' }; }
+  writeLastCheck({ stateDir: paths.stateDir, launch: process.env.GUGBAB_LAUNCH, result: r });
+  return r;
 }
 
 function prepare(withUpdate) {
@@ -136,7 +139,7 @@ switch (cmd) {
     const ch = readChannel({ codeHome: paths.codeHome, stateDir: paths.stateDir });
     try { fs.rmSync(path.join(paths.stateDir, 'update-check.json'), { force: true }); } catch { /* 없음 */ }
     const r = checkUpdate({ codeHome: paths.codeHome, stateDir: paths.stateDir, ...channelOf(ch), dev: paths.dev, pin: null });
-    process.stdout.write((r.message || `[gugbab] ${r.updated ? '갱신됨' : r.skipped === 'up-to-date' ? '이미 최신' : `건너뜀 (${r.skipped})`}`) + '\n');
+    process.stdout.write((r.message || `[gugbab] ${r.updated ? '갱신됨' : r.skipped === 'up-to-date' ? `이미 최신 (${r.version})` : `건너뜀 (${r.skipped})`}`) + '\n');
     break;
   }
   case 'on':

@@ -198,3 +198,61 @@ test('악성: 설치 폴더의 channel.json 이 깨졌거나 배열·링크로 �
   fs.symlinkSync(outside, path.join(s.home, 'state', 'channel.json'));
   assert.deepStrictEqual(readChannel({ codeHome: s.home, stateDir: s.state }), { channel: 'main' });
 });
+
+// ── 확인 결과 기록 (state/last-check.json — 세션 시작 때 wrapper-version-check 훅이 화면에 보여 줌, 2026-10-19) ──
+const { writeLastCheck } = require('./update');
+const L = '12345-1792370048';
+const readLast = (dir) => JSON.parse(fs.readFileSync(path.join(dir, 'last-check.json'), 'utf8'));
+
+test('정상: 갱신·최신·1시간 안 결과가 사유 코드와 버전(이전→새, 지금)을 돌려줌', () => {
+  const s = setup();
+  sh('echo 2 > f && git commit -qam two && git tag v1.1.0', s.origin);
+  const r = checkUpdate({ codeHome: s.home, stateDir: s.state, channel: 'stable', now: now() });
+  assert.deepStrictEqual([r.updated, r.from, r.to], [true, 'v1.0.0', 'v1.1.0']);
+  const t = setup();
+  const r2 = checkUpdate({ codeHome: t.home, stateDir: t.state, channel: 'stable', now: now() });
+  assert.deepStrictEqual([r2.skipped, r2.version], ['up-to-date', 'v1.0.0']);
+  const r3 = checkUpdate({ codeHome: t.home, stateDir: t.state, channel: 'stable', now: now() + 60000 });
+  assert.deepStrictEqual([r3.skipped, r3.lastCheckAt], ['recent', now()]);
+});
+
+test('정상: 실행 값이 있으면 결과를 기록 — 갱신은 이전·새 버전, 1시간 안은 마지막 확인 시각', () => {
+  const d = tmp('up-last-');
+  assert.strictEqual(writeLastCheck({ stateDir: d, launch: L, result: { updated: true, from: 'v1.0.4', to: 'v1.0.5' }, now: 7 }), true);
+  assert.deepStrictEqual(readLast(d), { launch: L, at: 7, result: 'updated', from: 'v1.0.4', to: 'v1.0.5' });
+  writeLastCheck({ stateDir: d, launch: L, result: { updated: false, skipped: 'recent', lastCheckAt: 3 }, now: 8 });
+  assert.deepStrictEqual(readLast(d), { launch: L, at: 8, result: 'recent', lastCheckAt: 3 });
+  writeLastCheck({ stateDir: d, launch: L, result: { updated: false, skipped: 'local-changes', message: 'x' }, now: 9 });
+  assert.deepStrictEqual(readLast(d), { launch: L, at: 9, result: 'local-changes' }, '메시지(경로 포함)는 기록하지 않음');
+  assert.deepStrictEqual(fs.readdirSync(d), ['last-check.json'], '임시 파일이 남지 않음');
+});
+
+test('악성: 조작된 실행 값·모르는 결과는 기록하지 않음', () => {
+  const d = tmp('up-last-');
+  for (const launch of [undefined, '', '$(id)', `${L}\n`, '../1-2', '1'.repeat(40), 12345]) {
+    assert.strictEqual(writeLastCheck({ stateDir: d, launch, result: { updated: false, skipped: 'up-to-date' } }), false, String(launch));
+  }
+  assert.strictEqual(writeLastCheck({ stateDir: d, launch: L, result: { updated: false, skipped: 'rm -rf' } }), false);
+  assert.strictEqual(writeLastCheck({ stateDir: d, launch: L, result: null }), false);
+  assert.deepStrictEqual(fs.readdirSync(d), []);
+});
+
+test('악성: 기록 자리에 심은 링크·폴더는 따라가 쓰지 않음', () => {
+  const d = tmp('up-last-');
+  const victim = path.join(tmp('up-victim-'), 'v.txt'); fs.writeFileSync(victim, 'keep');
+  fs.symlinkSync(victim, path.join(d, 'last-check.json'));
+  assert.strictEqual(writeLastCheck({ stateDir: d, launch: L, result: { updated: false, skipped: 'up-to-date' } }), false);
+  assert.strictEqual(fs.readFileSync(victim, 'utf8'), 'keep');
+  const e = tmp('up-last-'); fs.mkdirSync(path.join(e, 'last-check.json'));
+  assert.strictEqual(writeLastCheck({ stateDir: e, launch: L, result: { updated: false, skipped: 'up-to-date' } }), false);
+});
+
+test('경계: 개발 모드는 기록하지 않고, 상태 폴더가 없으면 만들고, 못 쓰는 곳이면 false (죽지 않음)', () => {
+  const d = tmp('up-last-');
+  assert.strictEqual(writeLastCheck({ stateDir: d, launch: L, result: { updated: false, skipped: 'dev' } }), false);
+  const nested = path.join(tmp('up-last-'), 'a', 'state');
+  assert.strictEqual(writeLastCheck({ stateDir: nested, launch: L, result: { updated: false, skipped: 'fetch-failed' } }), true);
+  assert.strictEqual(readLast(nested).result, 'fetch-failed');
+  const file = path.join(tmp('up-last-'), 'plain'); fs.writeFileSync(file, 'x');
+  assert.strictEqual(writeLastCheck({ stateDir: path.join(file, 'state'), launch: L, result: { updated: false, skipped: 'up-to-date' } }), false);
+});

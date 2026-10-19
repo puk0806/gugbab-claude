@@ -198,6 +198,7 @@ const H = path.resolve(__dirname, '..'), nb = path.join(H, 'bin', 'gugbab-claude
 const swap = () => { fs.writeFileSync(nb + '.tmp', fs.readFileSync(path.join(H, 'new-wrapper'))); fs.renameSync(nb + '.tmp', nb); };
 if (cmd === 'self-update') {
   a('self-update');
+  if (process.env.LAUNCH_LOG) fs.appendFileSync(process.env.LAUNCH_LOG, 'update ' + (process.env.GUGBAB_LAUNCH || 'unset') + '\\n');
   const m = process.env.FAKE_UPDATE || 'none';
   if (m === 'crash') throw new Error('boom');
   if (m === 'update') { swap(); process.exit(10); }
@@ -213,7 +214,7 @@ if (cmd === 'prepare') {
   process.stdout.write(cfg + '\\n');
 }
 `;
-const NEW_WRAPPER = '#!/bin/sh\necho "new-wrapper reexec=[$GUGBAB_REEXEC] dev=[$GUGBAB_DEV]" >> "$LOG"\nfor a in "$@"; do echo "[$a]" >> "$LOG"; done\n';
+const NEW_WRAPPER = '#!/bin/sh\necho "new-wrapper reexec=[$GUGBAB_REEXEC] dev=[$GUGBAB_DEV]" >> "$LOG"\nfor a in "$@"; do echo "[$a]" >> "$LOG"; done\n[ -n "${LAUNCH_LOG:-}" ] && echo "new-wrapper ${GUGBAB_LAUNCH:-unset}" >> "$LAUNCH_LOG"\nexit 0\n';
 function fakeHarness(fakeClaude) {
   const s = setup(fakeClaude);
   const h = tmp('bn-harness-');
@@ -225,7 +226,7 @@ function fakeHarness(fakeClaude) {
 }
 function runHarness(s, args, extra = {}) {
   const env = { ...process.env, HOME: s.home, GUGBAB_DATA: s.data, PATH: `${s.fakeBin}:${process.env.PATH}`, LOG: s.log, ...extra };
-  for (const k of ['GUGBAB_HOME', 'GUGBAB_DEV', 'GUGBAB_REEXEC', 'GUGBAB_WRAPPER_REV', 'CLAUDE_CONFIG_DIR']) if (!(k in extra)) delete env[k];
+  for (const k of ['GUGBAB_HOME', 'GUGBAB_DEV', 'GUGBAB_REEXEC', 'GUGBAB_WRAPPER_REV', 'CLAUDE_CONFIG_DIR', 'GUGBAB_LAUNCH']) if (!(k in extra)) delete env[k];
   return spawnSync('sh', [s.hbin, ...args], { cwd: s.proj, encoding: 'utf8', timeout: 60000, env });
 }
 const CLAUDE_ENV = 'echo "claude reexec=[${GUGBAB_REEXEC-unset}] rev=[${GUGBAB_WRAPPER_REV-unset}] args=$*" >> "$LOG"';
@@ -313,4 +314,46 @@ test('경계: 개발 모드(실제 main.js)의 self-update 는 건너뛰고 0 �
   const r = spawnSync(process.execPath, [path.join(REPO, 'cli', 'main.js'), 'self-update'], { encoding: 'utf8', env: { ...process.env, GUGBAB_HOME: REPO, GUGBAB_DEV: '1', GUGBAB_DATA: tmp('bn-su-') } });
   assert.strictEqual(r.status, 0, r.stderr);
   assert.strictEqual(r.stdout, '', 'stdout 은 비어 있어야 함');
+});
+
+// ── 실행 값 GUGBAB_LAUNCH (2026-10-19 — self-update 가 확인 결과를 이 값과 함께 남기고 세션 시작 훅이 같은 실행 것만 보여 줌) ──
+const launches = (f) => (fs.existsSync(f) ? fs.readFileSync(f, 'utf8').trim().split('\n') : []);
+const LAUNCH_CLAUDE = 'echo "claude ${GUGBAB_LAUNCH-unset}" >> "$LAUNCH_LOG"';
+
+test('정상: 실행마다 새 실행 값을 만들어 self-update 와 claude 에 같은 값을 넘김', () => {
+  const s = fakeHarness(LAUNCH_CLAUDE);
+  const f = path.join(s.data, 'launch.log');
+  runHarness(s, ['-p', 'x'], { LAUNCH_LOG: f });
+  runHarness(s, ['-p', 'x'], { LAUNCH_LOG: f });
+  const l = launches(f);
+  assert.strictEqual(l.length, 4, l.join('|'));
+  const v1 = l[0].split(' ')[1], v2 = l[2].split(' ')[1];
+  assert.match(v1, /^\d{1,10}-\d{1,13}$/);
+  assert.deepStrictEqual([l[0], l[1]], [`update ${v1}`, `claude ${v1}`]);
+  assert.deepStrictEqual([l[2], l[3]], [`update ${v2}`, `claude ${v2}`]);
+  assert.notStrictEqual(v1, v2, '실행마다 다른 값');
+});
+
+test('정상: 업데이트 후 새 래퍼로 다시 실행해도 같은 실행 값을 이어받음 (안내가 그 실행 것으로 맞음)', () => {
+  const s = fakeHarness(LAUNCH_CLAUDE);
+  const f = path.join(s.data, 'launch.log');
+  runHarness(s, ['-p', 'x'], { LAUNCH_LOG: f, FAKE_UPDATE: 'update' });
+  const l = launches(f);
+  const v = l[0].split(' ')[1];
+  assert.deepStrictEqual(l, [`update ${v}`, `new-wrapper ${v}`]);
+});
+
+test('악성: 밖에서 넘어온 GUGBAB_LAUNCH 는 쓰지 않고 새로 만듦 (다른 실행의 기록을 가로채지 않음)', () => {
+  const s = fakeHarness(LAUNCH_CLAUDE);
+  const f = path.join(s.data, 'launch.log');
+  runHarness(s, ['-p', 'x'], { LAUNCH_LOG: f, GUGBAB_LAUNCH: '1-1' });
+  const l = launches(f);
+  assert.ok(!l.some(x => x.endsWith(' 1-1')), l.join('|'));
+});
+
+test('경계: 하위 명령(status 등)은 실행 값을 만들지 않음', () => {
+  const s = fakeHarness(LAUNCH_CLAUDE);
+  const f = path.join(s.data, 'launch.log');
+  runHarness(s, ['status'], { LAUNCH_LOG: f });
+  assert.deepStrictEqual(launches(f), []);
 });

@@ -44,7 +44,11 @@ command -v claude >/dev/null 2>&1 || { echo "[gugbab] claude 를 찾지 못했�
 # 자동 업데이트 — 갱신됐으면 새 버전의 래퍼로 다시 실행한다 (2026-10-19)
 #   지금 도는 셸·node 는 업데이트 전 코드라, 그대로 가면 래퍼·cli 수정이 다음 실행에야 반영된다
 #   다시 실행된 쪽(GUGBAB_REEXEC=1)은 업데이트를 건너뛴다 — 반복 실행 방지. 새 래퍼가 없으면 이 프로세스로 계속
+#   GUGBAB_LAUNCH = 이번 실행 값. self-update 가 확인 결과를 이 값과 함께 남기고, 세션 시작 때 wrapper-version-check 훅이
+#   같은 값일 때만 "하네스 vX — 최신 / vA → vB 업데이트" 를 화면에 보여 준다. 다시 실행된 쪽은 같은 값을 이어받는다
 if [ "${GUGBAB_REEXEC:-}" != "1" ]; then
+  GUGBAB_LAUNCH="$$-$(date +%s)"
+  export GUGBAB_LAUNCH
   node "$main" self-update
   if [ $? -eq 10 ] && [ -f "$GUGBAB_HOME/bin/gugbab-claude" ]; then
     GUGBAB_REEXEC=1
