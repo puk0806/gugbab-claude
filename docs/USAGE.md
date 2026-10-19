@@ -156,3 +156,5 @@
 | 세션을 끝낼 때마다 Codex 리뷰를 요구 | 쓰지 않으면 `/harness` 에서 "Codex 리뷰" 묶음을 끄거나 `gugbab-claude off bundle:codex-review` |
 | 바꿨는데 반영이 안 됨 | 룰·에이전트·설정은 `/exit` 후 다시 시작해야 반영. `gugbab-claude status` 의 ⚠ 줄 확인 |
 | 하네스 없이 확인하고 싶음 | `gugbab-claude --raw` |
+| 메모리 폴더를 읽거나 고칠 때 확인 창이 뜸 | 세션 도중에 프로젝트 자체 `.claude/hooks` 를 지웠다면 `/exit` 후 다시 실행(실행할 때 어느 훅을 프로젝트 것으로 쓸지 정합니다). 하위 폴더에서 실행했다면 프로젝트 루트에서 실행 |
+| 하네스 폴더(`~/gugbab`)를 고치는 Bash 명령에 확인 창 | 의도된 동작 — 설치본은 `gugbab-claude update` 로만 바뀌어야 합니다 |

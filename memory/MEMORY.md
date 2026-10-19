@@ -3,11 +3,13 @@
 ## ★ 하네스 현재 상태
 - [★★ 하네스 현재 상태 (2026-10-16 갱신) — 여기부터 읽기](project_harness_status_2026-10-15.md) — 스킬 195·에이전트 61·훅 30·템플릿 0~15, main=PR #23 머지, 개편 작업 미커밋(커밋 직전 정리 완료). 미결: 예전 커밋 이력 정리·설치본 재설치. 플러그인·관리 설정 조사 요약. **수정 작업은 마지막 줄 `진행할까요?`**
 - [★ 개편 방향 = shim wrapper (2026-10-15)](project_shim_wrapper_direction.md) — `gugbab-claude` 래퍼 + 프로젝트별 `CLAUDE_CONFIG_DIR` + `/harness` 토글. 플러그인 제안 거부됨. **2026-10-17 0~4단계 완료·PR #24 머지, 래퍼로만 사용(결정 27) — README 래퍼 전용·로그는 docs/CHANGELOG.md** → v1.0.5 까지 릴리스(결정 35 새 래퍼 재실행), 2026-10-19 결정 36(세션 시작 때 하네스 버전·vA→vB 표시, v1.0.6 머지) → 결정 37(SessionStart systemMessage 는 화면에 안 보여 Claude 가 첫 답변 맨 위에 전달, v1.0.7 머지·설치본 반영) — 남은 한계: 첫 메시지 전엔 화면에 안 보임, 래퍼 출력/상태줄 미결정. `gugbab-claude --version` 은 claude 버전임 → 결정 38(dash `set -m` 으로 comux 에이전트 감지 + `sessions/` 공유로 세션 간 메시지, 미커밋)
+- [윈도우(PowerShell) 지원 분석 — 추후 작업 (2026-10-19)](project_windows_support_analysis.md) — 가능하나 시작부터 실패·훅 fail-open. PoC(로그인 공유·설정 폴더 스킬 읽기) 먼저, `.gitattributes`·`/dev/stdin`·경로 정규화·`CLAUDE_CODE_USE_POWERSHELL_TOOL=0` 추천
 - [Codex 리뷰는 1차본 완성 후 맨 마지막 (중지 중)](feedback_codex_review_on_request.md) — `codex.skipReview=true` 유지, 구현 중 재개 여부 다시 묻지 않음, 완료 후 `--unset` 하고 리뷰
 - [개편 계획서 항상 최신화](feedback_keep_plan_synced.md) — 결정 바뀌면 그 턴에 레포 `docs/plans/` 문서 + 아티팩트 페이지 함께 갱신
 - [로컬 전용 메모리 목록](local_index.md) — git 제외(.gitignore), 이 PC에만 있음. 개편 범위 밖 내용은 여기 먼저 확인
 
 ## 하네스 구조 지식
+- [래퍼 vs 프로젝트 설정 우선순위 실측 (2026-10-19)](reference_wrapper_project_settings_precedence.md) — 하네스=사용자 범위, 훅은 모두 실행·값은 local>프로젝트>하네스·deny는 못 풂·같은 이름은 하네스가 뺌. 신뢰 안 한 폴더는 프로젝트 allow 무시. 세션 간 메시지는 터미널 무관
 - [하네스 구조 요약·구조도 링크](reference_harness_structure.md) — 이벤트 순서는 Claude Code 고정, settings.json은 훅 배치만. SessionStart 훅은 차단 불가(지시 주입), 실제 차단은 Pre/Post/Stop. 테스트 274(실설치 검사 5종)
 - [project-install.sh 이식 아키텍처](project_install_architecture.md) — 템플릿 0~15(8 academic 폐지·결번, 11 seo-geo·14 spec-extraction 애드온, 15 nexacro 레거시 강제), JAVA_SKILLS_* 필터, 누수 차단·references 복사·매니페스트 docs kind·template-separation E2E, gen-settings.js로 settings.json 생성
 - [하네스 평가 & 훅 다이어트 완료](project_hook_diet_plan.md) — 2026-07-04 5단계 완료 + PR #9 머지. 2026-07-10 메모리 개편으로 훅 22종. 플러그인 전환은 2026-07-09 계획 수립만

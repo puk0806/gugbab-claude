@@ -953,7 +953,7 @@ function lexShell(src, st) {
     if (!cur) return
     const w = cur; cur = null
     if (heredocExpect) { pending.push({ delim: w.value, strip: heredocExpect.strip, quoted: w.quoted }); heredocExpect = null; return }
-    if (redirNext) { redirNext = false; tokens.push({ t: 'redir', w }); return }
+    if (redirNext) { const r = redirNext; redirNext = false; tokens.push({ t: 'redir', w, out: r.out, dup: r.dup }); return }
     tokens.push({ t: 'word', w })
   }
   const op = (v) => { end(); tokens.push({ t: 'op', v }) }
@@ -995,7 +995,7 @@ function lexShell(src, st) {
     if (ch === ';') { op(';'); i++; continue }
     if (ch === '&') {
       if (src[i + 1] === '&') { op('&&'); i += 2; continue }
-      if (src[i + 1] === '>') { end(); i += src[i + 2] === '>' ? 3 : 2; redirNext = true; continue }
+      if (src[i + 1] === '>') { end(); i += src[i + 2] === '>' ? 3 : 2; redirNext = { out: true, dup: false }; continue }
       op('&'); i++; continue
     }
     if (ch === '|') {
@@ -1008,14 +1008,16 @@ function lexShell(src, st) {
       else end()
       let j = i + 1
       if (ch === '<' && src[j] === '<') {
-        if (src[j + 1] === '<') { i = j + 2; redirNext = true; continue } // here-string
+        if (src[j + 1] === '<') { i = j + 2; redirNext = { out: false, dup: false }; continue } // here-string
         j++
         let strip = false
         if (src[j] === '-') { strip = true; j++ }
         heredocExpect = { strip }; i = j; continue
       }
-      if (src[j] === '>' || src[j] === '|' || src[j] === '&' || (ch === '<' && src[j] === '>')) j++
-      i = j; redirNext = true; continue
+      const nx = src[j]
+      if (nx === '>' || nx === '|' || nx === '&' || (ch === '<' && nx === '>')) j++
+      // 방향: > >> >| <> 는 쓰기, < 는 읽기 / >& <& 는 fd 복제(뒤 단어가 숫자·- 면 경로 아님)
+      i = j; redirNext = { out: ch === '>' || nx === '>', dup: nx === '&' }; continue
     }
     if (ch === '~' && !cur) { start(); cur.tilde = true; cur.value += '~'; i++; continue }
     start(); cur.value += ch; i++
@@ -1057,7 +1059,7 @@ function splitCommands(tokens) {
       continue
     }
     if (!cur) cur = { words: [], redirs: [], pipeline, inParen: parenDepth > 0 }
-    if (tk.t === 'redir') cur.redirs.push(tk.w)
+    if (tk.t === 'redir') cur.redirs.push({ ...tk.w, out: !!tk.out, dup: !!tk.dup })
     else cur.words.push(...expandWord(tk.w))
   }
   flush()
@@ -1340,6 +1342,74 @@ function classifyRm(inv, ctx, add) {
   }
 }
 
+// ── 하네스 설치 폴더 쓰기 보호 (결정 39, 2026-10-19) ──
+// 래퍼(gugbab-claude)가 넘기는 GUGBAB_HOME 아래를 Bash 로 고치면 확인 — 설치본은 업데이트로만 바뀌어야 하고,
+// 가드 훅 코드도 여기 있다. 허용 폴더(이 프로젝트 메모리·대화 폴더 등)는 실제 위치가 그 안일 때만 제외.
+// 상대경로·루트·홈(또는 그 상위)인 GUGBAB_HOME 은 무시 — 홈 전체에 확인 창이 뜨지 않게
+function harnessRoots() {
+  const h = process.env.GUGBAB_HOME
+  if (!h || !path.isAbsolute(h)) return []
+  const abs = path.resolve(h)
+  if (abs === '/' || (HOME_DIR && isAncestorOrSame(abs, HOME_DIR))) return []
+  let real = abs
+  try { real = fs.realpathSync(abs) } catch { /* 없음 → 글자 그대로 */ }
+  return [...new Set([abs, real])]
+}
+
+// 가장 가까운 실제 존재하는 상위 폴더의 실경로 + 나머지 — 링크를 따라간 실제 위치
+function realLocation(abs) {
+  let cur = abs
+  const rest = []
+  for (let i = 0; i < 256; i++) {
+    try { return path.join(fs.realpathSync(cur), ...rest.reverse()) } catch { /* 없음 → 한 단계 위로 */ }
+    const up = path.dirname(cur)
+    if (up === cur) return null
+    rest.push(path.basename(cur))
+    cur = up
+  }
+  return null
+}
+
+const HARNESS_WRITE_ALL = new Set(['touch', 'mkdir', 'rmdir', 'ln', 'chmod', 'chown', 'chgrp', 'truncate', 'tee', 'unlink', 'shred', 'mv'])
+const HARNESS_WRITE_DEST = new Set(['cp', 'install', 'rsync', 'ditto'])
+
+// 명령이 쓰는 대상 단어 — 전부(touch·mv …) / 목적지만(cp …) / in-place 편집(sed -i·perl -i)의 파일
+function harnessWriteTargets(inv) {
+  const nm = inv.name
+  const nonOpt = []
+  let endOpts = false, tdir = null
+  for (let k = 0; k < inv.args.length; k++) {
+    const a = inv.args[k]
+    const v = a.value
+    if (!endOpts && v === '--') { endOpts = true; continue }
+    if (!endOpts && v.length > 1 && v.startsWith('-')) {
+      if (HARNESS_WRITE_DEST.has(nm)) {
+        if (v === '-t' && k + 1 < inv.args.length) { tdir = inv.args[++k]; continue }
+        if (v.startsWith('--target-directory=')) { tdir = { ...a, value: v.slice(19) }; continue }
+      }
+      continue
+    }
+    nonOpt.push(a)
+  }
+  if (HARNESS_WRITE_ALL.has(nm)) return nonOpt
+  if (HARNESS_WRITE_DEST.has(nm)) return tdir ? [tdir] : nonOpt.slice(-1)
+  if ((nm === 'sed' || nm === 'perl') && inv.args.some(a => /^-[A-Za-z]*i/.test(a.value) || a.value.startsWith('--in-place'))) return nonOpt
+  return []
+}
+
+function classifyHarnessWrite(inv, ctx, add) {
+  if (!ctx.harness.length) return
+  const redirs = (inv.redirs || []).filter(r => r.out && !(r.dup && /^(?:\d+|-)$/.test(r.value)))
+  for (const t of [...harnessWriteTargets(inv), ...redirs]) {
+    const r = resolveRmTarget(t, ctx.vcwd)
+    if (!r) continue // 변수 등 정적 해석 불가 — 이 검사는 판정하지 않음(기존 흐름)
+    const real = realLocation(r.abs) || r.abs
+    if (isUnderAllowed(real, ctx.allowedDirs)) continue
+    const h = ctx.harness.find(d => isAncestorOrSame(d, r.abs) || isAncestorOrSame(d, real))
+    if (h) add('ask', `하네스 설치 폴더(${h}) 쓰기(${inv.name || '리다이렉트'})는 사용자 확인이 필요합니다 — 설치본은 업데이트로만 바뀌어야 합니다.`)
+  }
+}
+
 // git push 인자 → { remote, refspecs, force, pushAll, deleteMode } (branch-protection 과 공용)
 const PUSH_VALUE_OPTS = new Set(['-o', '--push-option', '--repo', '--receive-pack', '--exec'])
 function parsePushArgs(args) {
@@ -1542,7 +1612,8 @@ function classifyDockerKill(nm, vals, add) {
 const _classifyCache = new Map()
 function classifyShell(cmd, opts = {}) {
   const cwdIn = opts.cwd || process.env.CLAUDE_PROJECT_DIR || process.cwd()
-  const key = `${opts.skipRm ? 1 : 0}\0${cwdIn}\0${(opts.allowedDirs || []).join(':')}\0${cmd}`
+  const harness = harnessRoots()
+  const key = `${opts.skipRm ? 1 : 0}\0${cwdIn}\0${(opts.allowedDirs || []).join(':')}\0${harness.join(':')}\0${process.env.CLAUDE_BASH_GUARD_ALLOWED_DIRS || ''}\0${cmd}`
   if (_classifyCache.has(key)) return _classifyCache.get(key)
 
   let best = { level: null, reason: '' }
@@ -1558,7 +1629,10 @@ function classifyShell(cmd, opts = {}) {
     startCwd,
     root: startCwd ? (findProjectRoot(startCwd) || startCwd) : null,
     allowedDirs: opts.allowedDirs || getAllowedDirs(cwdIn),
+    harness,
   }
+  // 하네스 폴더 자체에서 작업 중이면(프로젝트 루트가 그 안) 보호하지 않는다
+  if (ctx.root && harness.some(d => isAncestorOrSame(d, ctx.root))) ctx.harness = []
 
   const pipelines = {}
   for (const inv of acc.invocations) {
@@ -1577,6 +1651,7 @@ function classifyShell(cmd, opts = {}) {
       continue
     }
     classifySecretArgs(inv, ctx, add)
+    classifyHarnessWrite(inv, ctx, add)
     if (nm === 'git') { classifyGit(inv.git, add, ctx); continue }
     if (nm === 'gh') { classifyGh(vals, add); continue }
     if (nm === 'curl' || nm === 'wget') { classifyUpload(nm, vals, add); continue }
