@@ -81,10 +81,27 @@ for a in "$@"; do
   case $a in -p|--print) oneshot=1 ;; esac
 done
 
+unset GUGBAB_JC
+# claude 실행 + 재시작 반복 — 터미널에서는 작업 제어를 켠 dash 로 돌린다 (2026-10-19 결정 38)
+#   작업 제어가 꺼진 sh 는 claude 를 자기 프로세스 그룹에 넣어, comux·tmux 가 이 칸을 claude 가 아니라 sh 로 본다
+#   (에이전트 목록에 안 나옴). set -m 이면 claude 가 자기 그룹으로 터미널 앞에 선다
+#   macOS /bin/sh(bash 3.2)는 set -m 이어도 claude 가 Ctrl+Z 로 멈춘 걸 알아채지 못해 칸이 멈추므로 dash 를 쓴다 (PoC)
+#   claude 가 멈추면(작업이 남아 있으면) 래퍼도 멈춰 부모 셸로 돌아가고, fg 로 깨어나면 claude 를 다시 앞으로
+#   dash 는 고정 경로만(PATH 의 가짜 dash 무시). 없거나 터미널이 아니거나(-p·파이프) GUGBAB_JOBCTL=0 이면 예전처럼 sh 로
+# shellcheck disable=SC2016
+loop='cfg=$1; oneshot=$2; main=$3; shift 3
+jc=${GUGBAB_JC:-}; unset GUGBAB_JC
 while :; do
   # CLAUDE_SECURESTORAGE_CONFIG_DIR= (빈 값) — 설정 폴더가 달라도 기본 키체인 로그인을 그대로 쓴다 (PoC 1, 문서에 없는 내부 변수)
   CLAUDE_CONFIG_DIR="$cfg" CLAUDE_SECURESTORAGE_CONFIG_DIR= claude "$@"
   rc=$?
+  if [ -n "$jc" ]; then
+    while jobs %1 >/dev/null 2>&1; do
+      kill -STOP $$
+      fg %1 >/dev/null 2>&1
+      rc=$?
+    done
+  fi
   [ -f "$cfg/.gugbab-restart" ] || exit $rc
   rm -f "$cfg/.gugbab-restart"
   if [ -n "$oneshot" ]; then
@@ -100,4 +117,12 @@ while :; do
   fi
   cfg=$(node "$main" prepare --no-update) || exit 1
   set -- --continue
-done
+done'
+if [ -z "$oneshot" ] && [ "${GUGBAB_JOBCTL:-1}" != "0" ] && [ -t 0 ] && [ -t 1 ]; then
+  for d in /bin/dash /usr/bin/dash; do
+    [ -x "$d" ] || continue
+    GUGBAB_JC=1 exec "$d" -c "set -m
+$loop" gugbab-claude "$cfg" "$oneshot" "$main" "$@"
+  done
+fi
+exec sh -c "$loop" gugbab-claude "$cfg" "$oneshot" "$main" "$@"

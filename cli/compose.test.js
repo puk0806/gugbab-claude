@@ -197,6 +197,110 @@ test('경계: ~/.claude/plans 가 없으면 만들고 링크 (없으면 claude �
   assert.ok(!r.warnings.some(x => x.includes('plans')));
 });
 
+// ── sessions/ 공유 (2026-10-19 결정 38 — 설정 폴더마다 따로면 ListAgents·SendMessage 가 다른 세션을 못 찾음) ──
+const KEY = (pid) => `${pid}.${'ab'.repeat(32)}.key`;
+const touchAt = (f, s, ms) => { w(f, s); const t = new Date(ms); fs.utimesSync(f, t, t); };
+
+test('정상: sessions/ 를 ~/.claude/sessions 로 링크 (없으면 만들어서, 0700)', () => {
+  const s = setup();
+  const r = compose(s);
+  const shared = path.join(s.home, '.claude', 'sessions');
+  assert.strictEqual(fs.readlinkSync(path.join(s.project.configDir, 'sessions')), shared);
+  assert.strictEqual(fs.statSync(shared).mode & 0o777, 0o700);
+  assert.ok(!r.warnings.some(x => x.includes('sessions')), r.warnings.join('|'));
+});
+
+test('정상: 예전 실행이 만든 진짜 sessions/ 폴더는 세션 기록을 공유 폴더로 옮기고 링크로 바꿈', () => {
+  const s = setup();
+  const own = path.join(s.project.configDir, 'sessions');
+  w(path.join(own, '123.json'), '{"pid":123}');
+  w(path.join(own, KEY(123)), 'k');
+  const r = compose(s);
+  const shared = path.join(s.home, '.claude', 'sessions');
+  assert.ok(isLink(own));
+  assert.strictEqual(fs.readFileSync(path.join(shared, '123.json'), 'utf8'), '{"pid":123}');
+  assert.ok(fs.existsSync(path.join(shared, KEY(123))));
+  assert.ok(r.changed);
+  assert.ok(!r.warnings.some(x => x.includes('sessions')), r.warnings.join('|'));
+});
+
+test('정상: 같은 pid 기록이 양쪽에 있으면 더 최근 것을 남김', () => {
+  const s = setup();
+  const own = path.join(s.project.configDir, 'sessions');
+  const shared = path.join(s.home, '.claude', 'sessions');
+  touchAt(path.join(own, '7.json'), 'own-new', Date.now());
+  touchAt(path.join(shared, '7.json'), 'shared-old', Date.now() - 60000);
+  touchAt(path.join(own, '8.json'), 'own-old', Date.now() - 60000);
+  touchAt(path.join(shared, '8.json'), 'shared-new', Date.now());
+  compose(s);
+  assert.strictEqual(fs.readFileSync(path.join(shared, '7.json'), 'utf8'), 'own-new');
+  assert.strictEqual(fs.readFileSync(path.join(shared, '8.json'), 'utf8'), 'shared-new');
+  assert.ok(isLink(own));
+});
+
+test('악성: sessions/ 안의 링크·낯선 파일·폴더는 옮기지 않고, 링크도 걸지 않고 경고 (밖의 파일을 끌어오지 않음)', () => {
+  const s = setup();
+  const own = path.join(s.project.configDir, 'sessions');
+  const secret = path.join(s.data, 'secret.txt');
+  w(secret, 'S');
+  w(path.join(own, '1.json'), 'ok');
+  fs.symlinkSync(secret, path.join(own, '2.json'));
+  w(path.join(own, 'evil.json'), 'x'); // 이름이 세션 기록 형식 밖
+  fs.mkdirSync(path.join(own, '3.json'));
+  const r = compose(s);
+  const shared = path.join(s.home, '.claude', 'sessions');
+  assert.ok(!isLink(own) && fs.statSync(own).isDirectory(), '진짜 폴더 그대로');
+  assert.ok(fs.existsSync(path.join(shared, '1.json')), '형식 맞는 일반 파일은 옮김');
+  assert.ok(!fs.existsSync(path.join(shared, '2.json')), '링크는 안 옮김');
+  assert.ok(!fs.existsSync(path.join(shared, 'evil.json')));
+  assert.ok(!fs.existsSync(path.join(shared, '3.json')));
+  assert.strictEqual(fs.readFileSync(secret, 'utf8'), 'S');
+  assert.ok(r.warnings.some(x => x.startsWith('sessions:')), r.warnings.join('|'));
+});
+
+test('악성: 공유 폴더 쪽 같은 이름이 링크·폴더면 덮어쓰지 않음', () => {
+  const s = setup();
+  const own = path.join(s.project.configDir, 'sessions');
+  const shared = path.join(s.home, '.claude', 'sessions');
+  const victim = path.join(s.data, 'victim');
+  w(victim, 'V');
+  fs.mkdirSync(shared, { recursive: true });
+  fs.symlinkSync(victim, path.join(shared, '5.json'));
+  touchAt(path.join(own, '5.json'), 'own', Date.now() + 60000);
+  const r = compose(s);
+  assert.strictEqual(fs.readFileSync(victim, 'utf8'), 'V');
+  assert.ok(isLink(path.join(shared, '5.json')));
+  assert.ok(!isLink(own));
+  assert.ok(r.warnings.some(x => x.startsWith('sessions:')));
+});
+
+test('악성: 설정 폴더 sessions 가 다른 곳을 가리키는 링크면(우리가 만든 것 아님) 그대로 두고 경고', () => {
+  const s = setup();
+  const elsewhere = tmp('cp-else-');
+  fs.mkdirSync(s.project.configDir, { recursive: true });
+  fs.symlinkSync(elsewhere, path.join(s.project.configDir, 'sessions'));
+  const r = compose(s);
+  assert.strictEqual(fs.readlinkSync(path.join(s.project.configDir, 'sessions')), elsewhere);
+  assert.ok(r.warnings.some(x => x.includes('sessions')));
+});
+
+test('경계: 설정 폴더에 sessions 가 파일이면 지우지 않고 경고', () => {
+  const s = setup();
+  w(path.join(s.project.configDir, 'sessions'), 'file');
+  const r = compose(s);
+  assert.strictEqual(fs.readFileSync(path.join(s.project.configDir, 'sessions'), 'utf8'), 'file');
+  assert.ok(r.warnings.some(x => x.startsWith('sessions:')));
+});
+
+test('경계: 빈 sessions/ 폴더는 지우고 링크, 두 번 조립해도 그대로 (변경 없음)', () => {
+  const s = setup();
+  fs.mkdirSync(path.join(s.project.configDir, 'sessions'), { recursive: true });
+  compose(s);
+  assert.ok(isLink(path.join(s.project.configDir, 'sessions')));
+  const r2 = compose(s);
+  assert.ok(!r2.changed);
+});
+
 test('경계: settings.json·.claude.json 이 깨져 있어도 조립 (깨진 파일은 새로)', () => {
   const s = setup();
   w(path.join(s.project.configDir, 'settings.json'), '{broken');
