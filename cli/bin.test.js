@@ -186,3 +186,131 @@ test('경계: GUGBAB_DEV 가 0·1 이 아닌 값이면 예전처럼 GUGBAB_HOME 
   assert.strictEqual(runEnv(t, ['-p', 'x'], deployedEnv(t, { GUGBAB_DEV: '' })).status, 0);
   assert.strictEqual(calls(t)[0], 'dev=[0]', '빈 값 + GUGBAB_HOME 없음 → 배포 모드');
 });
+
+// ── 업데이트 직후 새 래퍼로 다시 실행 (2026-10-19 — 업데이트한 그 실행은 예전 래퍼 코드로 돌아 래퍼 수정이 한 번 늦게 반영되던 문제) ──
+// 가짜 하네스 폴더: bin/gugbab-claude(시험 대상 복사본) + cli/main.js(가짜 — self-update 는 FAKE_UPDATE 대로, prepare 는 설정 폴더 출력)
+const FAKE_MAIN = `
+const fs = require('fs'), path = require('path');
+const [cmd, ...rest] = process.argv.slice(2);
+const a = (s) => fs.appendFileSync(process.env.LOG, s + '\\n');
+const H = path.resolve(__dirname, '..'), nb = path.join(H, 'bin', 'gugbab-claude');
+// git checkout 처럼 새 파일로 바꿔치기 (tmp → rename) — 도는 셸은 예전 파일을 끝까지 읽는다
+const swap = () => { fs.writeFileSync(nb + '.tmp', fs.readFileSync(path.join(H, 'new-wrapper'))); fs.renameSync(nb + '.tmp', nb); };
+if (cmd === 'self-update') {
+  a('self-update');
+  const m = process.env.FAKE_UPDATE || 'none';
+  if (m === 'crash') throw new Error('boom');
+  if (m === 'update') { swap(); process.exit(10); }
+  if (m === 'update-no-bin') { fs.rmSync(nb); process.exit(10); }
+  if (m === 'always') process.exit(10);
+  process.exit(0);
+}
+if (cmd === 'first-run') process.exit(0);
+if (cmd === 'prepare') {
+  a('prepare ' + rest.join(' '));
+  const cfg = path.join(process.env.GUGBAB_DATA, 'cfg', '.claude');
+  fs.mkdirSync(cfg, { recursive: true });
+  process.stdout.write(cfg + '\\n');
+}
+`;
+const NEW_WRAPPER = '#!/bin/sh\necho "new-wrapper reexec=[$GUGBAB_REEXEC] dev=[$GUGBAB_DEV]" >> "$LOG"\nfor a in "$@"; do echo "[$a]" >> "$LOG"; done\n';
+function fakeHarness(fakeClaude) {
+  const s = setup(fakeClaude);
+  const h = tmp('bn-harness-');
+  fs.mkdirSync(path.join(h, 'bin')); fs.mkdirSync(path.join(h, 'cli'));
+  fs.copyFileSync(BIN, path.join(h, 'bin', 'gugbab-claude'));
+  fs.writeFileSync(path.join(h, 'cli', 'main.js'), FAKE_MAIN);
+  fs.writeFileSync(path.join(h, 'new-wrapper'), NEW_WRAPPER);
+  return { ...s, h, hbin: path.join(h, 'bin', 'gugbab-claude') };
+}
+function runHarness(s, args, extra = {}) {
+  const env = { ...process.env, HOME: s.home, GUGBAB_DATA: s.data, PATH: `${s.fakeBin}:${process.env.PATH}`, LOG: s.log, ...extra };
+  for (const k of ['GUGBAB_HOME', 'GUGBAB_DEV', 'GUGBAB_REEXEC', 'GUGBAB_WRAPPER_REV', 'CLAUDE_CONFIG_DIR']) if (!(k in extra)) delete env[k];
+  return spawnSync('sh', [s.hbin, ...args], { cwd: s.proj, encoding: 'utf8', timeout: 60000, env });
+}
+const CLAUDE_ENV = 'echo "claude reexec=[${GUGBAB_REEXEC-unset}] rev=[${GUGBAB_WRAPPER_REV-unset}] args=$*" >> "$LOG"';
+
+test('정상: 업데이트되면 새 래퍼로 다시 실행 — 인자 그대로, 예전 래퍼는 claude 를 띄우지 않음', () => {
+  const s = fakeHarness(CLAUDE_ENV);
+  const r = runHarness(s, ['--model', 'opus'], { FAKE_UPDATE: 'update' });
+  assert.strictEqual(r.status, 0, r.stderr);
+  assert.deepStrictEqual(calls(s), ['self-update', 'new-wrapper reexec=[1] dev=[0]', '[--model]', '[opus]']);
+});
+
+test('정상: 업데이트가 없으면 다시 실행하지 않고 조립은 --no-update, claude 에는 다시 실행 표시가 새지 않음', () => {
+  const s = fakeHarness(CLAUDE_ENV);
+  const r = runHarness(s, ['-p', 'x']);
+  assert.strictEqual(r.status, 0, r.stderr);
+  assert.deepStrictEqual(calls(s), ['self-update', 'prepare --no-update', 'claude reexec=[unset] rev=[unknown] args=-p x']);
+});
+
+test('정상: claude 에 이 래퍼의 하네스 커밋을 GUGBAB_WRAPPER_REV 로 넘김 (git 저장소면 HEAD)', () => {
+  const s = setup(CLAUDE_ENV);
+  const r = run(s, ['-p', 'x']);
+  assert.strictEqual(r.status, 0, r.stderr);
+  const head = spawnSync('git', ['-C', REPO, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).stdout.trim();
+  assert.match(head, /^[0-9a-f]{40}$/);
+  assert.strictEqual(calls(s)[0], `claude reexec=[unset] rev=[${head}] args=-p x`);
+});
+
+test('정상: 재시작 표시로 다시 띄울 때도 지금 설치된 래퍼로 --continue (세션 도중 업데이트 반영)', () => {
+  // 가짜 claude: 세션 도중 하네스가 업데이트됨(래퍼 바꿔치기) + 재시작 표시
+  const t = fakeHarness([CLAUDE_ENV,
+    `node -e 'const fs=require("fs");const h=process.argv[1];fs.writeFileSync(h+"/bin/gugbab-claude.tmp",fs.readFileSync(h+"/new-wrapper"));fs.renameSync(h+"/bin/gugbab-claude.tmp",h+"/bin/gugbab-claude")' "$HARNESS"`,
+    'touch "$CLAUDE_CONFIG_DIR/.gugbab-restart"'].join('\n'));
+  const r2 = runHarness(t, ['--model', 'opus'], { HARNESS: t.h });
+  assert.strictEqual(r2.status, 0, r2.stderr);
+  assert.deepStrictEqual(calls(t), ['self-update', 'prepare --no-update', 'claude reexec=[unset] rev=[unknown] args=--model opus', 'new-wrapper reexec=[1] dev=[0]', '[--continue]']);
+  assert.match(r2.stderr, /다시 시작/);
+});
+
+test('악성: 업데이트가 계속 "갱신됨" 이어도 다시 실행은 한 번만 (무한 반복 없음)', () => {
+  const s = fakeHarness(CLAUDE_ENV);
+  const r = runHarness(s, ['-p', 'x'], { FAKE_UPDATE: 'always' });
+  assert.strictEqual(r.status, 0, r.stderr);
+  assert.deepStrictEqual(calls(s), ['self-update', 'prepare --no-update', 'claude reexec=[unset] rev=[unknown] args=-p x']);
+});
+
+test('악성: 다시 실행해도 셸 문자가 든 인자를 해석하지 않고 그대로 넘김', () => {
+  const s = fakeHarness(CLAUDE_ENV);
+  const evil = '$(touch /tmp/gugbab-reexec-pwned) ; rm -rf ~';
+  runHarness(s, ['-p', evil, '"q"', ''], { FAKE_UPDATE: 'update' });
+  assert.deepStrictEqual(calls(s), ['self-update', 'new-wrapper reexec=[1] dev=[0]', '[-p]', `[${evil}]`, '["q"]', '[]']);
+  assert.ok(!fs.existsSync('/tmp/gugbab-reexec-pwned'));
+});
+
+test('악성: 밖에서 넘어온 GUGBAB_REEXEC 는 claude 세션으로 새지 않고, 1 이 아닌 값이면 업데이트를 그대로 확인', () => {
+  const s = fakeHarness(CLAUDE_ENV);
+  runHarness(s, ['-p', 'x'], { GUGBAB_REEXEC: '1' });
+  assert.deepStrictEqual(calls(s), ['prepare --no-update', 'claude reexec=[unset] rev=[unknown] args=-p x'], '1 이면 업데이트만 건너뜀');
+  const t = fakeHarness(CLAUDE_ENV);
+  runHarness(t, ['-p', 'x'], { GUGBAB_REEXEC: 'yes' });
+  assert.strictEqual(calls(t)[0], 'self-update');
+});
+
+test('경계: 업데이트 뒤 새 래퍼 파일이 없으면 지금 프로세스로 계속', () => {
+  const s = fakeHarness(CLAUDE_ENV);
+  const r = runHarness(s, ['-p', 'x'], { FAKE_UPDATE: 'update-no-bin' });
+  assert.strictEqual(r.status, 0, r.stderr);
+  assert.deepStrictEqual(calls(s), ['self-update', 'prepare --no-update', 'claude reexec=[unset] rev=[unknown] args=-p x']);
+});
+
+test('경계: 업데이트 확인이 죽어도(node 오류) 세션은 그대로 뜸', () => {
+  const s = fakeHarness(CLAUDE_ENV);
+  const r = runHarness(s, ['-p', 'x'], { FAKE_UPDATE: 'crash' });
+  assert.strictEqual(r.status, 0, r.stderr);
+  assert.deepStrictEqual(calls(s), ['self-update', 'prepare --no-update', 'claude reexec=[unset] rev=[unknown] args=-p x']);
+});
+
+test('경계: 하위 명령(status 등)과 --raw 는 업데이트·다시 실행을 하지 않음', () => {
+  const s = fakeHarness(CLAUDE_ENV);
+  runHarness(s, ['status'], { FAKE_UPDATE: 'update' });
+  runHarness(s, ['--raw', '-p', 'x'], { FAKE_UPDATE: 'update' });
+  assert.deepStrictEqual(calls(s), ['claude reexec=[unset] rev=[unset] args=-p x']);
+});
+
+test('경계: 개발 모드(실제 main.js)의 self-update 는 건너뛰고 0 — 다시 실행 없음', () => {
+  const r = spawnSync(process.execPath, [path.join(REPO, 'cli', 'main.js'), 'self-update'], { encoding: 'utf8', env: { ...process.env, GUGBAB_HOME: REPO, GUGBAB_DEV: '1', GUGBAB_DATA: tmp('bn-su-') } });
+  assert.strictEqual(r.status, 0, r.stderr);
+  assert.strictEqual(r.stdout, '', 'stdout 은 비어 있어야 함');
+});

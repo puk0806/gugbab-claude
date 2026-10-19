@@ -73,6 +73,7 @@
   },
   "standalone": [
     "hook:claude-version-check",
+    "hook:wrapper-version-check",
     "hook:release-version-guard",
     "hook:parallel-hint",
     "hook:bash-guard",

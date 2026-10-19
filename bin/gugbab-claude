@@ -1,7 +1,7 @@
 #!/bin/sh
 # gugbab-claude — gugbab 하네스를 끼워 claude 를 실행하는 래퍼 (계획서 4장)
-#   ① 업데이트 확인 ② 프로젝트 확인 ③ 조립 → ④ CLAUDE_CONFIG_DIR=<프로젝트별 설정 폴더> 로 claude 실행
-#   claude 가 끝났을 때 재시작 표시(.gugbab-restart)가 있으면 claude --continue 로 다시 띄운다 (대화 유지)
+#   ① 업데이트 확인(갱신되면 새 래퍼로 다시 실행) ② 프로젝트 확인 ③ 조립 → ④ CLAUDE_CONFIG_DIR=<프로젝트별 설정 폴더> 로 claude 실행
+#   claude 가 끝났을 때 재시작 표시(.gugbab-restart)가 있으면 지금 설치된 래퍼로 claude --continue 를 다시 띄운다 (대화 유지)
 #   개발 모드: GUGBAB_HOME=<작업 트리> gugbab-claude  → 그 작업 트리를 바로 쓰고 자동 업데이트 끔
 set -u
 
@@ -41,10 +41,23 @@ esac
 
 command -v claude >/dev/null 2>&1 || { echo "[gugbab] claude 를 찾지 못했습니다 — Claude Code 를 먼저 설치하세요" >&2; exit 127; }
 
+# 자동 업데이트 — 갱신됐으면 새 버전의 래퍼로 다시 실행한다 (2026-10-19)
+#   지금 도는 셸·node 는 업데이트 전 코드라, 그대로 가면 래퍼·cli 수정이 다음 실행에야 반영된다
+#   다시 실행된 쪽(GUGBAB_REEXEC=1)은 업데이트를 건너뛴다 — 반복 실행 방지. 새 래퍼가 없으면 이 프로세스로 계속
+if [ "${GUGBAB_REEXEC:-}" != "1" ]; then
+  node "$main" self-update
+  if [ $? -eq 10 ] && [ -f "$GUGBAB_HOME/bin/gugbab-claude" ]; then
+    GUGBAB_REEXEC=1
+    export GUGBAB_REEXEC
+    exec sh "$GUGBAB_HOME/bin/gugbab-claude" "$@"
+  fi
+fi
+unset GUGBAB_REEXEC
+
 # 프로젝트에서 처음 실행이면 기본 프리셋 고르기 (터미널·-p 아님·설정 없음일 때만 묻는다, 실패해도 계속)
 node "$main" first-run "$@" || true
 
-cfg=$(node "$main" prepare) || { echo "[gugbab] 조립 실패 — gugbab-claude doctor 로 확인하세요 (하네스 없이: gugbab-claude --raw)" >&2; exit 1; }
+cfg=$(node "$main" prepare --no-update) || { echo "[gugbab] 조립 실패 — gugbab-claude doctor 로 확인하세요 (하네스 없이: gugbab-claude --raw)" >&2; exit 1; }
 [ -n "$cfg" ] && [ -d "$cfg" ] || { echo "[gugbab] 설정 폴더를 만들지 못했습니다: $cfg" >&2; exit 1; }
 rm -f "$cfg/.gugbab-restart"
 
@@ -52,6 +65,11 @@ rm -f "$cfg/.gugbab-restart"
 # Claude Code 가 "실행 전에 검사할 수 없다" 며 거부하므로 이름만으로 부를 수 있어야 한다
 PATH="$GUGBAB_HOME/bin:$PATH"
 export PATH
+
+# 이 세션을 띄운 래퍼의 하네스 커밋 — wrapper-version-check 훅이 설치본과 비교해, 세션 도중 업데이트되면 재시작을 안내한다
+GUGBAB_WRAPPER_REV=$(git -C "$GUGBAB_HOME" rev-parse HEAD 2>/dev/null) || GUGBAB_WRAPPER_REV=
+[ -n "$GUGBAB_WRAPPER_REV" ] || GUGBAB_WRAPPER_REV=unknown
+export GUGBAB_WRAPPER_REV
 
 # -p/--print(한 번 실행)는 다시 띄우지 않는다 — --continue 로 바꾸면 대화형이 떠 버린다
 oneshot=
@@ -70,6 +88,12 @@ while :; do
     exit $rc
   fi
   echo "[gugbab] 바뀐 하네스로 다시 시작합니다 (대화 이어서)" >&2
+  # 세션 도중 하네스가 업데이트됐을 수 있으니 지금 설치된 래퍼로 다시 실행한다 (업데이트는 건너뜀)
+  if [ -f "$GUGBAB_HOME/bin/gugbab-claude" ]; then
+    GUGBAB_REEXEC=1
+    export GUGBAB_REEXEC
+    exec sh "$GUGBAB_HOME/bin/gugbab-claude" --continue
+  fi
   cfg=$(node "$main" prepare --no-update) || exit 1
   set -- --continue
 done

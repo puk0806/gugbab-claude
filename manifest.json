@@ -913,6 +913,18 @@
         }
       ]
     },
+    "hook:wrapper-version-check": {
+      "type": "hook",
+      "state": "lock",
+      "path": ".claude/hooks/wrapper-version-check.js",
+      "hooks": [
+        {
+          "event": "SessionStart",
+          "matcher": "",
+          "args": []
+        }
+      ]
+    },
     "rule:adversarial-testing.md": {
       "type": "rule",
       "state": "on",
@@ -2085,7 +2097,8 @@
             "hook:relation-guard",
             "hook:parallel-hint",
             "hook:claude-version-check",
-            "hook:release-version-guard"
+            "hook:release-version-guard",
+            "hook:wrapper-version-check"
           ]
         }
       ]
@@ -2765,6 +2778,11 @@
         "id": "hook:claude-version-check",
         "matcher": "",
         "args": []
+      },
+      {
+        "id": "hook:wrapper-version-check",
+        "matcher": "",
+        "args": []
       }
     ],
     "ConfigChange": [
@@ -2905,6 +2923,7 @@
     },
     "standalone": [
       "hook:claude-version-check",
+      "hook:wrapper-version-check",
       "hook:release-version-guard",
       "hook:parallel-hint",
       "hook:bash-guard",
