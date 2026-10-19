@@ -2,7 +2,7 @@
 
 ## ★ 하네스 현재 상태
 - [★★ 하네스 현재 상태 (2026-10-16 갱신) — 여기부터 읽기](project_harness_status_2026-10-15.md) — 스킬 195·에이전트 61·훅 30·템플릿 0~15, main=PR #23 머지, 개편 작업 미커밋(커밋 직전 정리 완료). 미결: 예전 커밋 이력 정리·설치본 재설치. 플러그인·관리 설정 조사 요약. **수정 작업은 마지막 줄 `진행할까요?`**
-- [★ 개편 방향 = shim wrapper (2026-10-15)](project_shim_wrapper_direction.md) — `gugbab-claude` 래퍼 + 프로젝트별 `CLAUDE_CONFIG_DIR` + `/harness` 토글. 플러그인 제안 거부됨. **2026-10-17 0~4단계 완료·PR #24 머지, 래퍼로만 사용(결정 27) — README 래퍼 전용·로그는 docs/CHANGELOG.md** → v1.0.5 까지 릴리스(결정 35 새 래퍼 재실행), 2026-10-19 결정 36(세션 시작 때 하네스 버전·vA→vB 화면 표시) 미커밋
+- [★ 개편 방향 = shim wrapper (2026-10-15)](project_shim_wrapper_direction.md) — `gugbab-claude` 래퍼 + 프로젝트별 `CLAUDE_CONFIG_DIR` + `/harness` 토글. 플러그인 제안 거부됨. **2026-10-17 0~4단계 완료·PR #24 머지, 래퍼로만 사용(결정 27) — README 래퍼 전용·로그는 docs/CHANGELOG.md** → v1.0.5 까지 릴리스(결정 35 새 래퍼 재실행), 2026-10-19 결정 36(세션 시작 때 하네스 버전·vA→vB 표시, v1.0.6 머지) → 결정 37(SessionStart systemMessage 는 화면에 안 보여 Claude 가 첫 답변 맨 위에 전달, v1.0.7 PR)
 - [Codex 리뷰는 1차본 완성 후 맨 마지막 (중지 중)](feedback_codex_review_on_request.md) — `codex.skipReview=true` 유지, 구현 중 재개 여부 다시 묻지 않음, 완료 후 `--unset` 하고 리뷰
 - [개편 계획서 항상 최신화](feedback_keep_plan_synced.md) — 결정 바뀌면 그 턴에 레포 `docs/plans/` 문서 + 아티팩트 페이지 함께 갱신
 - [로컬 전용 메모리 목록](local_index.md) — git 제외(.gitignore), 이 PC에만 있음. 개편 범위 밖 내용은 여기 먼저 확인
