@@ -18,7 +18,9 @@
  *   건너뜀: 개발 모드(GUGBAB_DEV≠0), 래퍼가 조립한 설정 폴더가 아님. ①②는 커밋을 알 수 없음(unknown·형식 틀림)·git 실패여도 건너뜀(⓪은 그대로)
  *
  *   입력 환경: GUGBAB_DEV · GUGBAB_HOME(하네스 폴더) · GUGBAB_DATA(데이터 폴더, 없으면 하네스 폴더) · GUGBAB_LAUNCH · GUGBAB_WRAPPER_REV · CLAUDE_CONFIG_DIR
- *   출력: hookSpecificOutput.additionalContext + systemMessage (SessionStart — systemMessage 는 사용자 화면에 표시). 항상 exit 0
+ *   출력: hookSpecificOutput.additionalContext + systemMessage. 항상 exit 0
+ *         SessionStart 의 systemMessage 는 기록에만 남고 첫 화면에 안 보여서(2026-10-19 실측), 버전 안내도 additionalContext 로
+ *         "첫 답변 맨 위에 그대로 한 번" 전하라고 Claude 에게 요청한다 (systemMessage 는 보이는 환경을 위해 유지)
  *   모듈: checkWrapperVersion({ env, headOf, source, now })
  */
 'use strict'
@@ -168,9 +170,13 @@ if (require.main === module) {
   const source = typeof input.source === 'string' ? input.source : 'startup'
   let r
   try { r = checkWrapperVersion({ source }) } catch { process.exit(0) }
-  // 버전 안내는 사용자 화면(systemMessage)에 바로 보이므로 Claude 에게 전달을 부탁하지 않는다. 래퍼 안내(①②)만 전달 요청
+  // SessionStart 의 systemMessage 는 기록에만 남고 첫 화면에 안 보인다(2026-10-19 실측) → 버전 안내도 Claude 가 첫 답변 맨 위에 그대로 전하게 한다.
+  // systemMessage 는 보이는 환경을 위해 그대로 둔다
   const shown = [], context = []
-  if (r.notice) { shown.push(`[gugbab] ${r.notice}`); context.push(`[gugbab] ${r.notice} (사용자 화면에 이미 표시됨)`) }
+  if (r.notice) {
+    shown.push(`[gugbab] ${r.notice}`)
+    context.push(`[gugbab] ${r.notice}\n위 [gugbab] 한 줄을 이 세션의 첫 답변 맨 위에 고치지 말고 그대로 한 번 보여 주세요(사용자 화면에는 아직 보이지 않음). 두 번째 답변부터는 반복하지 마세요.`)
+  }
   if (r.message) {
     const text = `[wrapper-version-check] ${r.message}`
     shown.push(text); context.push(`${text}\n이 내용을 사용자에게 한 번 알려 주세요.`)
