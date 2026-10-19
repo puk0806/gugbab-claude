@@ -315,3 +315,85 @@ test('경계: 켜진 훅이 하나도 없으면 hooks 칸 없음', () => {
   compose(s);
   assert.strictEqual(readJson(path.join(s.project.configDir, 'settings.json')).hooks, undefined);
 });
+
+// ── 이 프로젝트 메모리·대화 폴더를 훅 허용 폴더로 (결정 39) ──
+const enc = (root) => root.replace(/[^A-Za-z0-9]/g, '-');
+
+test('정상: env.CLAUDE_BASH_GUARD_ALLOWED_DIRS = 이 프로젝트 메모리·대화 폴더(설정 폴더 쪽 + 실제 위치) 둘만', () => {
+  const s = setup();
+  compose(s);
+  const st = readJson(path.join(s.project.configDir, 'settings.json'));
+  assert.deepStrictEqual(st.env.CLAUDE_BASH_GUARD_ALLOWED_DIRS.split(':'), [
+    path.join(s.project.configDir, 'projects', enc(s.project.root)),
+    path.join(s.home, '.claude', 'projects', enc(s.project.root)),
+  ]);
+});
+
+test('정상: 사용자가 env 에 넣은 다른 값은 다시 조립해도 남고, 우리 키는 우리 값으로', () => {
+  const s = setup();
+  compose(s);
+  const f = path.join(s.project.configDir, 'settings.json');
+  const st = readJson(f);
+  st.env.MY_VAR = '1';
+  st.env.CLAUDE_BASH_GUARD_ALLOWED_DIRS = '/';
+  fs.writeFileSync(f, JSON.stringify(st));
+  const r = compose(s);
+  const st2 = readJson(f);
+  assert.strictEqual(st2.env.MY_VAR, '1');
+  assert.ok(!st2.env.CLAUDE_BASH_GUARD_ALLOWED_DIRS.split(':').includes('/'), '사용자가 넓힌 값(/)은 우리 값으로 덮음');
+  assert.strictEqual(r.changed, true);
+  assert.strictEqual(compose(s).changed, false, '다시 조립해도 바뀐 게 없음');
+});
+
+test('악성: 다른 프로젝트 폴더·상위 폴더·projects 전체는 허용 폴더에 넣지 않음', () => {
+  const s = setup();
+  compose(s);
+  const dirs = readJson(path.join(s.project.configDir, 'settings.json')).env.CLAUDE_BASH_GUARD_ALLOWED_DIRS.split(':');
+  for (const d of dirs) {
+    assert.ok(path.basename(d) === enc(s.project.root), d);
+    assert.notStrictEqual(d, path.join(s.home, '.claude', 'projects'));
+    assert.notStrictEqual(d, s.project.configDir);
+  }
+});
+
+test('악성: 프로젝트 경로에 : 이 있으면(목록 구분자 주입) env 를 넣지 않음', () => {
+  const s = setup();
+  const odd = path.join(path.dirname(s.project.root), 'a:b');
+  fs.mkdirSync(odd, { recursive: true });
+  s.project.root = odd;
+  compose(s);
+  const st = readJson(path.join(s.project.configDir, 'settings.json'));
+  assert.strictEqual((st.env || {}).CLAUDE_BASH_GUARD_ALLOWED_DIRS, undefined);
+});
+
+test('경계: 인코딩 이름이 200자를 넘으면(Claude Code 가 잘라 해시를 붙임) 넣지 않음', () => {
+  const s = setup();
+  s.project.root = path.join(s.project.root, 'x'.repeat(220));
+  compose(s);
+  const st = readJson(path.join(s.project.configDir, 'settings.json'));
+  assert.strictEqual((st.env || {}).CLAUDE_BASH_GUARD_ALLOWED_DIRS, undefined);
+});
+
+test('경계: projects 공유 링크가 없으면(~/.claude/projects 없음) env 를 넣지 않고, 예전에 넣은 우리 키만 걷어냄', () => {
+  const s = setup();
+  compose(s);
+  const f = path.join(s.project.configDir, 'settings.json');
+  const st = readJson(f);
+  st.env.MY_VAR = '1';
+  fs.writeFileSync(f, JSON.stringify(st));
+  fs.rmSync(path.join(s.home, '.claude', 'projects'), { recursive: true });
+  compose(s);
+  const st2 = readJson(f);
+  assert.deepStrictEqual(st2.env, { MY_VAR: '1' });
+});
+
+test('경계: env 가 객체가 아니면(깨진 값) 버리고 우리 값만', () => {
+  const s = setup();
+  compose(s);
+  const f = path.join(s.project.configDir, 'settings.json');
+  const st = readJson(f);
+  st.env = ['x'];
+  fs.writeFileSync(f, JSON.stringify(st));
+  compose(s);
+  assert.deepStrictEqual(Object.keys(readJson(f).env), ['CLAUDE_BASH_GUARD_ALLOWED_DIRS']);
+});

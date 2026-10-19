@@ -84,6 +84,16 @@ function projectWiredHooks(root) {
   return names;
 }
 
+// 이 프로젝트의 메모리·대화 폴더 — 설정 폴더 쪽 경로와 링크를 따라간 실제 위치(~/.claude/projects/<인코딩>)
+// 인코딩은 Claude Code 와 같게(영숫자 밖 → -). 200자 넘으면 Claude Code 가 잘라 해시를 붙이므로 넣지 않고(지금처럼 확인 창),
+// 경로에 : 가 있으면 목록 구분자와 겹쳐 넣지 않는다
+function projectMemoryDirs(cfg, claudeHome, root) {
+  const enc = String(root || '').replace(/[^A-Za-z0-9]/g, '-');
+  if (!enc || enc.length > 200) return [];
+  const dirs = [path.join(cfg, 'projects', enc), path.join(claudeHome, 'projects', enc)];
+  return [root, ...dirs].some(d => String(d).includes(':')) ? [] : dirs;
+}
+
 function compose({ manifest, paths, project, resolved }) {
   const code = paths.codeHome;
   if (UNSAFE_SHELL.test(code)) throw new Error(`하네스 경로에 명령에 쓸 수 없는 문자가 있습니다: ${code}`);
@@ -189,6 +199,11 @@ function compose({ manifest, paths, project, resolved }) {
   }
   if (Object.keys(hooks).length) composed.hooks = hooks;
 
+  // env — 이 프로젝트 메모리·대화 폴더를 훅 허용 폴더로 (결정 39). 자기 훅을 가진 프로젝트의 auto-approve 는
+  // 설정 폴더 projects/ 링크를 따라가지 않아 메모리 수정마다 확인 창이 뜬다 → bash-guard 계열이 읽는 환경변수로 넘긴다
+  const memDirs = desired.has('projects') ? projectMemoryDirs(cfg, paths.claudeHome, project.root) : [];
+  if (memDirs.length) composed.env = { CLAUDE_BASH_GUARD_ALLOWED_DIRS: memDirs.join(':') };
+
   // 사용자가 넣은 값 보존 — 지난번 조립 결과와 달라진 칸은 사용자 것으로 본다
   const settingsFile = path.join(cfg, 'settings.json');
   const sst = lstat(settingsFile);
@@ -208,6 +223,11 @@ function compose({ manifest, paths, project, resolved }) {
     out.permissions = { ...extraKeys, ...composed.permissions };
     if (userAllow.length) out.permissions.allow = [...(composed.permissions.allow || []), ...userAllow];
   }
+  // env 는 키 단위 — 사용자가 넣은 다른 키는 보존, 우리가 넣었던 키는 이번 값으로(이번에 없으면 걷어냄)
+  const isObj = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+  const ourEnv = new Set([...Object.keys(isObj(prev.env) ? prev.env : {}), ...Object.keys(composed.env || {})]);
+  const env = { ...Object.fromEntries(Object.entries(isObj(existing.env) ? existing.env : {}).filter(([k]) => !ourEnv.has(k))), ...(composed.env || {}) };
+  if (Object.keys(env).length) out.env = env; else delete out.env;
   if (sst && sst.isSymbolicLink()) fs.unlinkSync(settingsFile); // 링크였으면 일반 파일로 (PoC 3)
   if (writeIfChanged(settingsFile, JSON.stringify(out, null, 2) + '\n')) changed = true;
 
