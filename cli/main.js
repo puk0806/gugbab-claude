@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // gugbab-claude 하위 명령 — bin/gugbab-claude 가 부른다
 //   prepare [--no-update]   업데이트 → 프로젝트 확인 → 조립, 설정 폴더 경로를 stdout 으로 (래퍼 실행 직전)
+//   self-update             업데이트만 — 갱신됐으면 exit 10 (래퍼가 새 버전으로 다시 실행, 2026-10-19)
 //   compose                 조립만
 //   status                  이 프로젝트에 적용된 항목 요약
 //   doctor                  설치·조립 상태 점검
@@ -62,14 +63,18 @@ function report(lines) {
   process.stderr.write(shown.join('\n') + '\n');
 }
 
+// 자동 업데이트 한 번 — 실패는 알리고 넘어간다
+function autoUpdate() {
+  const ch = readChannel({ codeHome: paths.codeHome, stateDir: paths.stateDir });
+  try {
+    const r = checkUpdate({ codeHome: paths.codeHome, stateDir: paths.stateDir, ...channelOf(ch), dev: paths.dev, pin: typeof ch.pin === 'string' ? ch.pin : null });
+    if (r.message) process.stderr.write(r.message + '\n');
+    return r;
+  } catch (e) { process.stderr.write(`[gugbab] 업데이트 확인 실패(무시): ${e.message}\n`); return { updated: false }; }
+}
+
 function prepare(withUpdate) {
-  if (withUpdate) {
-    const ch = readChannel({ codeHome: paths.codeHome, stateDir: paths.stateDir });
-    try {
-      const r = checkUpdate({ codeHome: paths.codeHome, stateDir: paths.stateDir, ...channelOf(ch), dev: paths.dev, pin: typeof ch.pin === 'string' ? ch.pin : null });
-      if (r.message) process.stderr.write(r.message + '\n');
-    } catch (e) { process.stderr.write(`[gugbab] 업데이트 확인 실패(무시): ${e.message}\n`); }
-  }
+  if (withUpdate) autoUpdate();
   const { manifest, project, resolved } = context();
   const r = compose({ manifest, paths, project, resolved });
   report([
@@ -108,6 +113,10 @@ switch (cmd) {
   }
   case 'compose':
     prepare(false);
+    break;
+  case 'self-update':
+    // 래퍼 전용 — 갱신됐으면 종료 코드 10 (래퍼가 새 버전 자신으로 다시 실행), 아니면 0. stdout 은 쓰지 않는다
+    process.exit(autoUpdate().updated ? 10 : 0);
     break;
   case 'status': {
     const { manifest, project, resolved } = context();

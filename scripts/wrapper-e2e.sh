@@ -123,7 +123,7 @@ g "$A" on hook:tdd-guard >/dev/null; rm -rf "$A/src"
 c=$(g "$A" -p "$P" --max-turns 3 --output-format stream-json --verbose | grep -c 'tdd-guard'); check "훅 켜기 → tdd-guard 안내 나옴" yes "$([ "$c" -gt 0 ] && echo yes || echo no)"
 rm -rf "$A/src"
 # 고정
-for id in hook:bash-guard hook:claude-version-check hook:parallel-hint; do
+for id in hook:bash-guard hook:claude-version-check hook:parallel-hint hook:wrapper-version-check; do
   check "🔒 $id 끄기 거부" 1 "$(g "$A" off $id | grep -c '고정')"
 done
 
@@ -168,6 +168,24 @@ if [ "$MODE" = dev ]; then
 else
   check "세션 안 gugbab-claude 가 배포 모드 (개발 모드 아님)" "0 1" "$(printf '%s\n' "$NESTED" | grep -c '개발 모드') $(printf '%s\n' "$NESTED" | grep -c -m1 'stable\|main 채널\|고정\|브랜치')"
 fi
+
+echo "== 4. 업데이트한 그 실행에서 새 래퍼가 돈다 (2026-10-19 — 예전엔 래퍼·cli 수정이 다음 실행부터 반영)"
+# 이 작업 트리로 임시 하네스 원격을 만든다: v9.0.0(지금 코드) → v9.0.1(래퍼가 stderr 에 표시를 남김). v9.0.0 설치본으로 실행
+U="$WORK/upd"; mkdir -p "$U/src" "$U/data/state"
+GE() { env GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@t GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@t git "$@"; }
+(cd "$REPO" && git ls-files -co --exclude-standard -z | tar --null -cf - -T -) | (cd "$U/src" && tar xf -)
+(cd "$U/src" && git init -q -b main && git add -A && GE commit -qm v9.0.0 && git tag v9.0.0)
+git clone -q --bare "$U/src" "$U/origin.git" && git clone -q "$U/origin.git" "$U/harness" && git -C "$U/harness" checkout -q v9.0.0
+node -e 'const fs=require("fs"),f=process.argv[1];fs.writeFileSync(f,fs.readFileSync(f,"utf8").replace("\nset -u\n","\nset -u\necho \"[e2e] 새 래퍼 실행\" >&2\n"))' "$U/src/bin/gugbab-claude"
+(cd "$U/src" && GE commit -qam v9.0.1 && git tag v9.0.1 && git push -q "$U/origin.git" main v9.0.1)
+UP=$(cd "$A" && env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT -u CLAUDE_CODE_SESSION_ID -u CLAUDE_CODE_CHILD_SESSION \
+  -u CLAUDE_CODE_SESSION_ATTENDED -u CLAUDE_PID -u CLAUDE_CODE_MESSAGING_SOCKET -u CLAUDE_CODE_MESSAGING_TOKEN -u CLAUDE_CODE_EXECPATH \
+  -u CLAUDE_EFFORT -u CLAUDE_PLUGIN_DATA -u CLAUDE_PROJECT_DIR -u CLAUDE_CONFIG_DIR -u GUGBAB_DEV -u GUGBAB_HOME -u GUGBAB_REEXEC -u GUGBAB_WRAPPER_REV \
+  PATH="${FAKEBIN:+$FAKEBIN:}$PATH" GUGBAB_DATA="$U/data" sh "$U/harness/bin/gugbab-claude" -p 'ok 라고만 답해' --max-turns 1 --output-format stream-json --verbose 2>&1)
+check "자동 업데이트 v9.0.0 → v9.0.1" "$(git -C "$U/src" rev-parse HEAD)" "$(git -C "$U/harness" rev-parse HEAD 2>/dev/null)"
+check "업데이트한 그 실행에서 새 래퍼가 돎 (한 번)" 1 "$(printf '%s\n' "$UP" | grep -c '\[e2e\] 새 래퍼 실행')"
+check "세션이 정상으로 뜸 (init 받음)" yes "$(printf '%s\n' "$UP" | grep -q '"subtype":"init"' && echo yes || echo no)"
+check "wrapper-version-check 안내 없음 (세션 커밋 = 설치본 커밋)" 0 "$(printf '%s\n' "$UP" | grep -c 'wrapper-version-check')"
 
 echo ""
 echo "wrapper-e2e: 성공 $PASS · 실패 $FAIL ($MODE)"
