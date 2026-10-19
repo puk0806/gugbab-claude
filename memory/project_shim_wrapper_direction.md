@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 956a993c-0d69-41df-9a5f-10e37ec24b3f
-  modified: 2026-10-17T10:17:00.153Z
+  modified: 2026-10-18T23:55:09.265Z
 ---
 
 2026-10-15 사용자가 하네스 개편 방향을 **shim wrapper 방식**으로 확정했다. 플러그인/마켓플레이스 전환 제안은 명시적으로 거부("공식 플러그인 이딴소리 하지말고").
@@ -38,6 +38,7 @@ metadata:
 - **2026-10-17 결정 31 — 처음 실행 프리셋 고르기 + 기본값 문서**: `cli/first-run.js`(스택 감지·추천, 번호·쉼표·Enter=추천·0, 프로젝트 settings 에 `firstRun` 기록해 한 번만, 터미널 아님·`-p`·기존 설정·`.gugbab.json`·`GUGBAB_NO_FIRST_RUN` 이면 안 물음, 실패해도 exit 0), bin 이 prepare 직전 `first-run` 호출. `docs/DEFAULTS.md` 는 `scripts/build-defaults-doc.js` 생성 문서(최신 여부 테스트). README 에 요구 사항·PATH·`/harness`, USAGE 의 설치 옵션·하위 명령은 DEVELOPMENT 끝으로. pty 실측: next 프로젝트에서 추천 nextjs, `1,11` → 80개 켬(스킬 1→76), 재실행 시 안 물음. 시험 주의: scratchpad `wrap.sh` 는 데이터 폴더를 `wrap-data` 로 고정함. 이어서 사용자 지적("기본·프리셋별 고정/열림/닫힘 볼 수 있게") → DEFAULTS.md 에 기본 프리셋 설정·프리셋 한눈 표·항목 × 프리셋 표(🔒/✅/⬜)·프리셋별 상세 추가. README "사용" 아래에 `/harness` 켜기·끄기 절(키·명령·반영 시점)을 꺼내고 README·USAGE·`/harness` 커맨드에서 DEFAULTS.md 로 연결(사용자: "하네스·프리셋이랑 연결돼서 볼 수 있어야"). 미커밋 파일은 GitHub 에 안 보인다는 점·`open` 은 md 를 원문으로 보여 준다는 점 안내 — 미리보기는 VS Code `Cmd+Shift+V`
 - **2026-10-17 PR #29 머지 후 결정 32 — PR 마다 버전 올리기 → 머지 때 자동 태그**: 사용자 지적 "main 머지되면 태그가 계속 바뀌어야지"(결정 28 은 손으로 태그 → stable 설치본이 머지분을 못 받음). 사용자 지시: "PR 은 이제 너한테 올려달라고 할 테니 PR 전에 버전 올리게, 이 레포에만". `VERSION` 파일 + 레포 전용 🔒 훅 `release-version-guard`(gh pr create 직전 커밋된 VERSION > 최신 v* 태그, 아니면 차단 — 훅은 파일 안 고침) + `scripts/release-version.js`(check·bump·release-tag·latest) + 워크플로 `version-check`(PR)·`release-on-main`(머지 → VERSION 으로 태그·Release). `/create-pr` 0-1 단계. 브랜치 `feat/release-version-2026-10-17`(미커밋), VERSION 은 아직 1.0.1 — 이 작업 PR 때 1.0.2 로 올려 첫 자동 릴리스 확인 예정. 실테스트: main clone 시나리오 33/33, GitHub install.sh 새 설치(`~/.gugbab-fresh-install`, `~/.gugbab-main-check` 남겨 둠)에서 진짜 claude 처음 실행 nextjs 추천·적용(init 스킬 51→98)
 - **2026-10-17 v1.0.2 자동 릴리스 확인 + 결정 33**: PR #30 머지 → release-on-main 이 v1.0.2 태그·Release 자동 생성, 설치본이 평소 실행으로 v1.0.1→v1.0.2 받음(업데이트 확인은 1시간 간격 — 머지 3초 전에 확인해 늦었던 사례, 바로 받으려면 `gugbab-claude update`). 사용자 지적 "트리는 훅·룰·스킬·에이전트로 나뉘고 거기서 용도별로, 계획서 체크리스트처럼" → `/harness` 기본 트리를 **종류 → 용도(체크리스트 ### 절) → 항목**으로(manifest `layout`, build-manifest 가 체크리스트에서 생성), 용도 이름은 괄호 앞만·설명칸엔 전체, 항목만 달린 종류(설정·룰·커맨드)는 처음 접힘, 옛 블록·묶음 보기는 `v`. 키 도움말 줄이 잘리던 버그(본문 높이 -8→-9) 수정. 브랜치 `feat/harness-tree-by-type-2026-10-17`(미커밋), PR 때 VERSION 1.0.3
+- **2026-10-17~19 v1.0.3 릴리스 + 결정 34 버그**: PR #31 머지 → v1.0.3 자동 태그, 설치본 `update` 로 반영. 사용자 보고 "켰더니 자동 최신화가 꺼져 있다" → 원인: 래퍼가 claude 에 `GUGBAB_HOME` 을 넘기는데 래퍼는 "GUGBAB_HOME 있음 = 개발 모드" 로 판정 → 세션 안에서 다시 부른 gugbab-claude(/harness 의 status·on·off·preset)가 개발 모드(표시 + 데이터 `~/.gugbab-dev`). 수정: 배포 모드는 `GUGBAB_DEV=0` 을 넘기고 다시 불려도 배포 모드·자기 위치. `~/.gugbab-dev/projects/lf/settings.json` 에 잘못 간 기록 1건(`disable block:frontend-tooling`) — 옮길지 사용자 판단 대기. 교훈: 실사용 시나리오를 동시에 2개 돌리면 claude 세션 부하로 원래 통과하던 검사도 실패 → 시나리오는 순서대로. 브랜치 `fix/nested-wrapper-dev-mode-2026-10-17`(미커밋), PR 때 VERSION 1.0.4
 - **다음**: 사용자 추가 수정 요청 → 커밋·푸시 → 설치본 반영은 새 태그 / 1.0.x 실사용 테스트 → 태그 보호 규칙 / 제안 중: 고정 보안 훅 fail-closed / 맨 마지막 Codex 리뷰(지금 꺼 둠)
 
 **Why:** 복사 설치는 버전 갱신마다 재설치가 필요해 불편. comux처럼 별도 명령으로 감싼 프로그램을 띄우는 형태를 원함.
