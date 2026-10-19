@@ -139,3 +139,50 @@ test('경계: 처음 실행 프리셋 질문은 터미널이 아니면(스크립
   assert.ok(!/처음 실행합니다/.test(r.stdout + r.stderr));
   assert.deepStrictEqual(calls(s), ['ran -p hi']);
 });
+
+// ── 세션 안에서 다시 부른 gugbab-claude 의 모드 (2026-10-17 — 배포 모드 세션 안 status 가 "개발 모드 — 자동 최신화 끔" 으로 나오던 버그) ──
+// 배포 모드 = GUGBAB_HOME 없이 실행. 시험이 이 레포를 자동 업데이트하지 않게 "방금 확인함" 기록을 데이터 폴더에 둔다
+function deployedEnv(s, extra = {}) {
+  fs.mkdirSync(path.join(s.data, 'state'), { recursive: true });
+  fs.writeFileSync(path.join(s.data, 'state', 'update-check.json'), JSON.stringify({ at: Date.now() }));
+  const env = { ...process.env, HOME: s.home, GUGBAB_DATA: s.data, PATH: `${s.fakeBin}:${process.env.PATH}`, LOG: s.log, ...extra };
+  for (const k of ['GUGBAB_HOME', 'GUGBAB_DEV']) if (!(k in extra)) delete env[k];
+  return env;
+}
+const runEnv = (s, args, env) => spawnSync('sh', [BIN, ...args], { cwd: s.proj, encoding: 'utf8', timeout: 60000, env });
+const NESTED = 'echo "dev=[$GUGBAB_DEV] home=$GUGBAB_HOME" >> "$LOG"; gugbab-claude status | grep "버전" >> "$LOG"';
+
+test('정상: 배포 모드로 띄운 세션 안에서 다시 부른 gugbab-claude 는 배포 모드 (개발 모드·자동 최신화 끔으로 나오지 않음)', () => {
+  const s = setup(NESTED);
+  const r = runEnv(s, ['-p', 'x'], deployedEnv(s));
+  assert.strictEqual(r.status, 0, r.stderr);
+  const [env, ver] = calls(s);
+  assert.strictEqual(env, `dev=[0] home=${REPO}`, '배포 모드는 GUGBAB_DEV=0 을 넘김');
+  assert.ok(ver && !/개발 모드|자동 최신화 끔/.test(ver), ver);
+});
+
+test('정상: 개발 모드로 띄운 세션 안에서 다시 부르면 개발 모드 그대로', () => {
+  const s = setup(NESTED);
+  const r = run(s, ['-p', 'x']);
+  assert.strictEqual(r.status, 0, r.stderr);
+  const [env, ver] = calls(s);
+  assert.strictEqual(env, `dev=[1] home=${REPO}`);
+  assert.match(ver, /개발 모드/);
+});
+
+test('악성: GUGBAB_DEV=0 과 함께 엉뚱한 GUGBAB_HOME 이 넘어와도 그 경로를 쓰지 않고 자기 위치를 씀', () => {
+  const s = setup('echo "dev=[$GUGBAB_DEV] home=$GUGBAB_HOME" >> "$LOG"');
+  const evil = tmp('bn-evil-');
+  const r = runEnv(s, ['-p', 'x'], deployedEnv(s, { GUGBAB_DEV: '0', GUGBAB_HOME: evil }));
+  assert.strictEqual(r.status, 0, r.stderr);
+  assert.strictEqual(calls(s)[0], `dev=[0] home=${REPO}`);
+});
+
+test('경계: GUGBAB_DEV 가 0·1 이 아닌 값이면 예전처럼 GUGBAB_HOME 유무로 판정', () => {
+  const s = setup('echo "dev=[$GUGBAB_DEV]" >> "$LOG"');
+  assert.strictEqual(run(s, ['-p', 'x'], { GUGBAB_DEV: 'yes' }).status, 0);
+  assert.strictEqual(calls(s)[0], 'dev=[1]', 'GUGBAB_HOME 이 있으면 개발 모드');
+  const t = setup('echo "dev=[$GUGBAB_DEV]" >> "$LOG"');
+  assert.strictEqual(runEnv(t, ['-p', 'x'], deployedEnv(t, { GUGBAB_DEV: '' })).status, 0);
+  assert.strictEqual(calls(t)[0], 'dev=[0]', '빈 값 + GUGBAB_HOME 없음 → 배포 모드');
+});

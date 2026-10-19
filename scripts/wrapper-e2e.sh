@@ -160,6 +160,14 @@ rm -f "$B/.gugbab.json"
 
 echo "== 3. 세션 안 /harness"
 check "/harness preset 이 프리셋 목록을 보여 줌" 1 "$(g "$A" -p '/harness preset' --max-turns 3 | grep -c -m1 'nextjs')"
+# 세션 안에서 다시 부른 gugbab-claude 의 모드 (2026-10-17 — 배포 모드 세션 안 status 가 "개발 모드 — 자동 최신화 끔" 으로 나오고
+# 켜기·끄기 기록이 ~/.gugbab-dev 로 가던 버그). 설치본이면 배포 모드(stable 등), 개발 모드면 개발 모드여야 한다
+NESTED=$(g "$A" -p 'Bash 로 `gugbab-claude status` 를 실행하고, 출력에서 "버전" 이 들어간 줄만 그대로 답해' --max-turns 3 --allowedTools 'Bash(gugbab-claude status)')
+if [ "$MODE" = dev ]; then
+  check "세션 안 gugbab-claude 가 개발 모드 그대로" 1 "$(printf '%s\n' "$NESTED" | grep -c -m1 '개발 모드')"
+else
+  check "세션 안 gugbab-claude 가 배포 모드 (개발 모드 아님)" "0 1" "$(printf '%s\n' "$NESTED" | grep -c '개발 모드') $(printf '%s\n' "$NESTED" | grep -c -m1 'stable\|main 채널\|고정\|브랜치')"
+fi
 
 echo ""
 echo "wrapper-e2e: 성공 $PASS · 실패 $FAIL ($MODE)"

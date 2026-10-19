@@ -16,11 +16,15 @@ while [ -L "$self" ]; do
 done
 code=$(cd "$(dirname "$self")/.." && pwd -P)
 
-if [ -n "${GUGBAB_HOME:-}" ]; then
+# 배포 모드는 GUGBAB_DEV=0 을 넘긴다 — claude 세션 안에서 다시 부를 때(/harness 의 status·on·off 등) 넘겨받은
+# GUGBAB_HOME 때문에 개발 모드로 잘못 판정되면(자동 최신화 끔 표시 + 데이터가 ~/.gugbab-dev 로) 안 되므로 (2026-10-17)
+if [ "${GUGBAB_DEV:-}" = "0" ]; then
+  GUGBAB_HOME=$code
+elif [ -n "${GUGBAB_HOME:-}" ]; then
   GUGBAB_DEV=1
 else
   GUGBAB_HOME=$code
-  GUGBAB_DEV=${GUGBAB_DEV:-}
+  GUGBAB_DEV=0
 fi
 export GUGBAB_HOME GUGBAB_DEV
 
