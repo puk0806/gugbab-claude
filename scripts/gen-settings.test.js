@@ -372,6 +372,16 @@ console.log('\n[claude-version-check] --claude-version-check 일 때만 SessionS
   }
 }
 
+// ── wrapper-version-check (2026-10-19, 레포·래퍼 전용 — 설치 스크립트는 이 옵션을 넘기지 않음) ──────
+console.log('\n[wrapper-version-check] --wrapper-version-check 일 때만 SessionStart 에 배선')
+{
+  const cmds = (s) => (s.hooks.SessionStart || []).flatMap((g) => g.hooks.map((h) => h.command))
+  assert('--wrapper-version-check → SessionStart 배선', cmds(generate('--dev', '--wrapper-version-check')).some((c) => /wrapper-version-check\.js/.test(c)), true)
+  for (const flags of [['--dev'], ['--dev', '--typescript', '--memory', '--codex', '--readme-guard', '--staleness-guard', '--branch-protection', '--relation-guard', '--parallel-hint', '--claude-version-check', '--release-version-guard'], ['--util', '--wrapper-version-check']]) {
+    assert(`${flags.join(' ')} → wrapper-version-check 미배선`, JSON.stringify(generate(...flags).hooks).includes('wrapper-version-check'), false)
+  }
+}
+
 // ── release-version-guard (2026-10-17, gugbab-claude 레포 전용) ──────
 console.log('\n[release-version-guard] --release-version-guard 일 때만 PreToolUse Bash 에 배선')
 {
@@ -388,7 +398,7 @@ console.log('\n[release-version-guard] --release-version-guard 일 때만 PreToo
 // PostToolUse Write)이 생긴 것을 계기로, 의미 단위(훅은 이벤트별 matcher::command 집합, 권한은 집합)로 비교한다.
 console.log('\n[회귀] 원본 .claude/settings.json == gen-settings 전체 옵션 출력 (의미 비교)')
 {
-  const full = generate('--dev', '--typescript', '--memory', '--superpowers', '--codex', '--readme-guard', '--staleness-guard', '--branch-protection', '--relation-guard', '--parallel-hint', '--claude-version-check', '--release-version-guard')
+  const full = generate('--dev', '--typescript', '--memory', '--superpowers', '--codex', '--readme-guard', '--staleness-guard', '--branch-protection', '--relation-guard', '--parallel-hint', '--claude-version-check', '--release-version-guard', '--wrapper-version-check')
   const repo = JSON.parse(require('fs').readFileSync(path.join(__dirname, '..', '.claude', 'settings.json'), 'utf8'))
   const norm = (s) => {
     const o = JSON.parse(JSON.stringify(s))

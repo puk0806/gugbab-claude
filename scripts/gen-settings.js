@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // gen-settings.js — 이 레포 .claude/settings.json 의 원본 생성기 (옛 project-install.sh 는 2026-10-17 삭제).
 // 레포 settings.json 은 전체 옵션 출력과 같아야 하고(gen-settings.test.js 회귀 검사), build-manifest 가 그 settings.json 에서 훅 배선을 읽는다
-// 사용: node scripts/gen-settings.js [--util] [--dev] [--typescript] [--legacy] [--memory] [--superpowers] [--codex] [--readme-guard] [--staleness-guard] [--branch-protection] [--relation-guard] [--parallel-hint] [--claude-version-check] [--release-version-guard]
+// 사용: node scripts/gen-settings.js [--util] [--dev] [--typescript] [--legacy] [--memory] [--superpowers] [--codex] [--readme-guard] [--staleness-guard] [--branch-protection] [--relation-guard] [--parallel-hint] [--claude-version-check] [--release-version-guard] [--wrapper-version-check]
 
 const args = process.argv.slice(2);
 const isUtil               = args.includes('--util');
@@ -28,6 +28,8 @@ const withParallelHint     = args.includes('--parallel-hint') && !isUtil;
 const withClaudeVersionCheck = args.includes('--claude-version-check') && !isUtil;
 // release-version-guard(2026-10-17): gh pr create 직전 VERSION > 최신 태그 검사. gugbab-claude 레포 전용(다른 프로젝트에선 스스로 건너뜀), util 제외
 const withReleaseVersionGuard = args.includes('--release-version-guard') && !isUtil;
+// wrapper-version-check(2026-10-19): 세션 시작 때 이 세션을 띄운 래퍼가 설치된 하네스와 같은 커밋인지 확인(비차단). 레포·래퍼 전용, util 제외
+const withWrapperVersionCheck = args.includes('--wrapper-version-check') && !isUtil;
 
 // 공식 문서(hooks "Reference scripts by path"): 셸 형태에서는 placeholder 를 큰따옴표로 감싼다 —
 // 무따옴표면 공백 포함 프로젝트 경로에서 단어 분리로 Cannot find module → 모든 가드가 fail-open (2026-09-26)
@@ -155,6 +157,7 @@ sessionStartHooks.push(stalenessHook);
 // 2026-10-06: config-change-audit(설정 스냅샷) · progress-tracker(직전·현재 작업 안내) — 공통
 sessionStartHooks.push(H('config-change-audit.js'), H('progress-tracker.js'));
 if (withClaudeVersionCheck) sessionStartHooks.push(H('claude-version-check.js'));
+if (withWrapperVersionCheck) sessionStartHooks.push(H('wrapper-version-check.js'));
 hooks.SessionStart = [{ hooks: sessionStartHooks }];
 
 // ConfigChange(2026-10-06, 공통) — 세션 중 설정 파일 변경을 기록하고 보호 장치에 영향이 있으면 ⚠ 알림 (차단은 안 함)

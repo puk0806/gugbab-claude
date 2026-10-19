@@ -1,6 +1,6 @@
 # gugbab 하네스 항목 체크리스트 — 고정 / 켜고 끄기 선택
 
-> 최종 수정: 2026-10-17 · 상태: **사용자 체크 반영** (고정 34 · 켬 70 · 끔 216 — 사용자 체크 45개 + 묶음 정리 규칙 적용(계획서 14.5) + 새 훅 relation-guard · parallel-hint · claude-version-check · release-version-guard) · 기준: 현재 레포 실측 (훅 31 + 상태줄 1 · 룰 14 · 커맨드 11 + `/harness` · 에이전트 61 · 스킬 195)
+> 최종 수정: 2026-10-19 · 상태: **사용자 체크 반영** (고정 35 · 켬 70 · 끔 216 — 사용자 체크 45개 + 묶음 정리 규칙 적용(계획서 14.5) + 새 훅 relation-guard · parallel-hint · claude-version-check · release-version-guard · wrapper-version-check) · 기준: 현재 레포 실측 (훅 32 + 상태줄 1 · 룰 14 · 커맨드 11 + `/harness` · 에이전트 61 · 스킬 195)
 > 짝 문서: `docs/plans/2026-10-15-gugbab-claude-shim-wrapper.md`
 
 ## 체크하는 법
@@ -56,7 +56,7 @@
 
 ---
 
-## 2. 훅 (31종)
+## 2. 훅 (32종)
 
 > 훅 = Claude 가 도구를 쓰기 직전·직후, 사용자가 질문을 보낼 때, 답변을 끝낼 때 자동으로 실행되는 검사 프로그램. 막기(차단)·물어보기(확인 창)·정보 주입(Claude 에게 한마디 덧붙이기)을 한다.
 > 래퍼에서는 디스패처가 실행 직전에 켜짐/꺼짐을 읽으므로 **훅은 `/harness` 에서 바꾸면 즉시 반영**된다.
@@ -216,6 +216,9 @@
 - [x] **release-version-guard** (신규) — PR 전에 버전(VERSION)을 올렸는지 검사, gugbab-claude 레포 전용 (🔒 2026-10-17 사용자 결정)
   - 하는 일: `gh pr create` 직전에 커밋된 `VERSION` 이 최신 `v*` 태그보다 큰지 확인하고, 아니면 막고 `node scripts/release-version.js bump` → 커밋 → 다시 PR 을 안내한다. 머지되면 `release-on-main` 워크플로가 그 버전으로 태그·Release 를 만들어 stable 설치본이 자동으로 받는다(PR 마다 `version-check` 워크플로도 같은 검사). 레포에 `.github/workflows/release-on-main.yml` 이 있을 때만 동작해 다른 프로젝트에서는 아무것도 하지 않는다.
   - 이렇게 보여요: 버전을 안 올리고 PR 을 만들면 "VERSION 1.0.1 이 최신 태그 v1.0.1 보다 커야 합니다 — bump 로 1.0.2 …" 로 막힌다.
+- [x] **wrapper-version-check** (신규) — 세션을 띄운 래퍼가 설치된 하네스와 같은 버전인지 확인 (🔒 2026-10-19 사용자 결정)
+  - 하는 일: 래퍼가 claude 를 띄울 때 넘긴 하네스 커밋(`GUGBAB_WRAPPER_REV`)을 설치본의 지금 커밋과 비교한다. 세션 도중 하네스가 업데이트됐으면 재시작 표시를 남겨 `/exit` 하면 래퍼가 새 버전으로 대화를 이어서 다시 띄우게 하고, 커밋 값이 아예 없으면(다시 실행 기능이 없던 예전 래퍼) 터미널에서 `gugbab-claude -c` 로 다시 실행하라고 알린다. 개발 모드·래퍼 밖에서는 아무것도 하지 않는다. 막지는 않는다.
+  - 이렇게 보여요: "이 세션이 열린 뒤 하네스 v1.0.5가 업데이트됐습니다 (b20ff06 → 1a2b3c4). `/exit` 하면 래퍼가 새 버전으로 대화를 이어서 다시 시작합니다." 안내가 사용자와 Claude 에게 전달된다.
 
 ---
 
