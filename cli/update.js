@@ -41,7 +41,7 @@ function checkUpdate({ codeHome, stateDir, channel = 'stable', branch = null, de
   const stampFile = path.join(stateDir, 'update-check.json');
   let last = 0;
   try { last = Number(JSON.parse(fs.readFileSync(stampFile, 'utf8')).at) || 0; } catch { /* 처음 */ }
-  if (now - last < INTERVAL_MS && now >= last) return { updated: false, skipped: 'recent' };
+  if (now - last < INTERVAL_MS && now >= last) return { updated: false, skipped: 'recent', lastCheckAt: last };
   try { fs.mkdirSync(stateDir, { recursive: true }); fs.writeFileSync(stampFile, JSON.stringify({ at: now })); } catch { /* 기록 실패는 무시 */ }
 
   try { git(codeHome, ['fetch', '--quiet', '--tags', '--force', 'origin'], FETCH_TIMEOUT_MS); } catch { return { updated: false, skipped: 'fetch-failed' }; }
@@ -58,20 +58,21 @@ function checkUpdate({ codeHome, stateDir, channel = 'stable', branch = null, de
   }
   let targetSha, headSha;
   try { targetSha = git(codeHome, ['rev-parse', `${target}^{commit}`]); headSha = git(codeHome, ['rev-parse', 'HEAD']); } catch { return { updated: false, skipped: 'no-target' }; }
-  if (targetSha === headSha) return { updated: false, skipped: 'up-to-date' };
+  if (targetSha === headSha) return { updated: false, skipped: 'up-to-date', version: describe(codeHome) };
 
   if (git(codeHome, ['status', '--porcelain', '--untracked-files=no'])) {
-    return { updated: false, message: `[gugbab] 하네스 폴더에 로컬 변경이 있어 업데이트하지 않았습니다 (${codeHome})` };
+    return { updated: false, skipped: 'local-changes', message: `[gugbab] 하네스 폴더에 로컬 변경이 있어 업데이트하지 않았습니다 (${codeHome})` };
   }
   try { git(codeHome, ['merge-base', '--is-ancestor', headSha, targetSha]); } catch {
-    return { updated: false, message: `[gugbab] 원격 이력이 달라 fast-forward 할 수 없어 업데이트하지 않았습니다 — \`gugbab-claude doctor\`` };
+    return { updated: false, skipped: 'not-ff', message: `[gugbab] 원격 이력이 달라 fast-forward 할 수 없어 업데이트하지 않았습니다 — \`gugbab-claude doctor\`` };
   }
   const from = describe(codeHome);
   try {
     if (channel !== 'stable') git(codeHome, ['merge', '--ff-only', '--quiet', targetSha]);
     else git(codeHome, ['checkout', '--quiet', '--detach', targetSha]);
-  } catch (e) { return { updated: false, message: `[gugbab] 업데이트 실패: ${e.message.split('\n')[0]}` }; }
-  return { updated: true, message: `[gugbab] 하네스 ${from} → ${channel === 'stable' ? label : `${label} ${describe(codeHome)}`}` };
+  } catch (e) { return { updated: false, skipped: 'failed', message: `[gugbab] 업데이트 실패: ${e.message.split('\n')[0]}` }; }
+  const to = channel === 'stable' ? label : `${label} ${describe(codeHome)}`;
+  return { updated: true, from, to, message: `[gugbab] 하네스 ${from} → ${to}` };
 }
 
 // 채널 기록(state/channel.json) — install.sh 가 설치 폴더에 쓴다. 설치 폴더 것을 먼저, 없으면 데이터 폴더 것
@@ -116,4 +117,30 @@ function versionInfo({ codeHome, stateDir, dev = false }) {
   return { version, channel: 'stable', text: `${version} (stable — 최신 v* 태그를 따라감)`, hint: null };
 }
 
-module.exports = { checkUpdate, latestTag, versionInfo, readChannel };
+// 이번 실행의 업데이트 확인 결과 기록(state/last-check.json) — wrapper-version-check 훅이 세션 시작 때 사용자에게 보여 준다 (2026-10-19)
+//   launch = 래퍼가 실행마다 새로 만드는 값(GUGBAB_LAUNCH). 훅은 자기 세션의 launch 와 같을 때만 결과를 보여 주고 한 번 보여 주면 shown 표시
+//   링크·폴더 자리에는 쓰지 않음, 임시 파일 → rename 으로 통째로 바꿈
+const LAUNCH_RE = /^\d{1,10}-\d{1,13}$/;
+const RESULTS = new Set(['updated', 'up-to-date', 'recent', 'fetch-failed', 'pinned', 'local-changes', 'not-ff', 'failed', 'no-tag', 'no-target', 'not-git', 'bad-branch', 'error']);
+function writeLastCheck({ stateDir, launch, result, now = Date.now() }) {
+  if (typeof launch !== 'string' || !LAUNCH_RE.test(launch) || !result || result.skipped === 'dev') return false;
+  const kind = result.updated ? 'updated' : result.skipped;
+  if (!RESULTS.has(kind)) return false;
+  const rec = { launch, at: now, result: kind };
+  if (kind === 'updated') { rec.from = result.from; rec.to = result.to; }
+  if (kind === 'recent' && Number.isFinite(result.lastCheckAt)) rec.lastCheckAt = result.lastCheckAt;
+  const f = path.join(stateDir, 'last-check.json');
+  const tmpf = `${f}.${process.pid}.tmp`;
+  try {
+    fs.mkdirSync(stateDir, { recursive: true });
+    try { if (!fs.lstatSync(f).isFile()) return false; } catch { /* 없음 → 새로 */ }
+    fs.writeFileSync(tmpf, JSON.stringify(rec), { flag: 'wx' });
+    fs.renameSync(tmpf, f);
+    return true;
+  } catch {
+    try { if (fs.lstatSync(tmpf).isFile()) fs.rmSync(tmpf); } catch { /* 없음 */ }
+    return false;
+  }
+}
+
+module.exports = { checkUpdate, latestTag, versionInfo, readChannel, writeLastCheck };

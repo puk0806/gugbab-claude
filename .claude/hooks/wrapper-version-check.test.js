@@ -140,6 +140,143 @@ console.log('\n[이상·경계]')
   check('이미 재시작 표시가 있으면 그대로 두고 재시작 안내', r.marked && fs.readFileSync(s.marker, 'utf8') === 'toggle', r)
 }
 
+// ── ⓪ 버전 안내 (state/last-check.json) ──
+const L = '12345-1792370048'
+const recFile = (s) => path.join(s.home, 'state', 'last-check.json')
+function writeRec(s, rec) { fs.mkdirSync(path.join(s.home, 'state'), { recursive: true }); fs.writeFileSync(recFile(s), typeof rec === 'string' ? rec : JSON.stringify(rec)) }
+const readRec = (s) => JSON.parse(fs.readFileSync(recFile(s), 'utf8'))
+const NOW = Date.parse('2026-10-19T01:10:00Z')
+const notice = (s, extra = {}, opts = {}) => checkWrapperVersion({ env: envOf(s, { GUGBAB_LAUNCH: L, ...extra }), headOf: headIs(A), now: NOW, ...opts }).notice
+
+console.log('\n[버전 안내 — 정상]')
+{
+  const s = setup()
+  writeRec(s, { launch: L, at: NOW, result: 'updated', from: 'v1.0.4', to: 'v1.0.5' })
+  check('이번 실행에 갱신됨 → "v1.0.4 → v1.0.5 로 업데이트"', notice(s) === '하네스 v1.0.4 → v1.0.5 로 업데이트됐습니다', notice)
+  check('  한 번 보여 주면 shown 표시', readRec(s).shown === true)
+  check('  같은 실행에서 다시(/clear·재시작) → 반복하지 않음', notice(s, {}, { source: 'clear' }) === null && notice(s, {}, { source: 'resume' }) === null)
+}
+{
+  const s = setup()
+  writeRec(s, { launch: L, at: NOW, result: 'up-to-date' })
+  check('최신 확인 → "v1.0.5 — 최신입니다"', notice(s) === '하네스 v1.0.5 — 최신입니다 (방금 확인)')
+}
+{
+  const s = setup()
+  const last = NOW - 30 * 60 * 1000
+  writeRec(s, { launch: L, at: NOW, result: 'recent', lastCheckAt: last })
+  const n = notice(s)
+  const d = new Date(last), hm = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+  check('1시간 안 → 건너뜀 + 마지막 확인 시각 + update 안내', n && n.includes(`마지막 확인 ${hm}`) && /gugbab-claude update/.test(n) && n.startsWith('하네스 v1.0.5'), n)
+}
+{
+  const s = setup()
+  for (const [result, re] of [['fetch-failed', /연결 못 함/], ['pinned', /버전 고정/], ['local-changes', /로컬 변경/], ['not-ff', /원격 이력/], ['failed', /오류/], ['error', /오류/], ['no-tag', /확인하지 못했습니다 \(no-tag/]]) {
+    writeRec(s, { launch: L, at: NOW, result })
+    const n = notice(s)
+    check(`결과 ${result} → 지금 버전 + 사유`, n && n.startsWith('하네스 v1.0.5') && re.test(n), n)
+  }
+}
+{
+  const s = setup()
+  writeRec(s, { launch: L, at: NOW, result: 'updated', from: 'main abc1234', to: 'main def5678' })
+  check('main 채널 표기(공백 포함 라벨)도 그대로', notice(s) === '하네스 main abc1234 → main def5678 로 업데이트됐습니다', notice(s))
+}
+{
+  const s = setup()
+  check('기록 없음 + 새 세션 → 지금 버전만', notice(s) === '하네스 v1.0.5')
+  check('기록 없음 + /clear·compact → 조용히', notice(s, {}, { source: 'clear' }) === null && notice(s, {}, { source: 'compact' }) === null)
+  const data = path.join(s.d, 'data'); fs.mkdirSync(path.join(data, 'state'), { recursive: true })
+  fs.writeFileSync(path.join(data, 'state', 'last-check.json'), JSON.stringify({ launch: L, at: NOW, result: 'up-to-date' }))
+  check('데이터 폴더를 따로 두면(GUGBAB_DATA) 거기 기록을 읽음', notice(s, { GUGBAB_DATA: data }) === '하네스 v1.0.5 — 최신입니다 (방금 확인)')
+}
+{
+  const s = setup()
+  writeRec(s, { launch: L, at: NOW, result: 'updated', from: 'v1.0.4', to: 'v1.0.5' })
+  const r = checkWrapperVersion({ env: envOf(s, { GUGBAB_LAUNCH: L }), headOf: headIs(B), now: NOW })
+  check('버전 안내와 세션 도중 업데이트 안내가 함께 나옴', r.notice && r.kind === 'updated-during-session' && r.message, r)
+  const s2 = setup()
+  const r2 = checkWrapperVersion({ env: envOf(s2), headOf: () => { throw new Error('git 없음') }, now: NOW })
+  check('git 실패여도 버전 안내는 나옴', r2.notice === '하네스 v1.0.5' && r2.message === null, r2)
+}
+
+console.log('\n[버전 안내 — 악성·우회]')
+{
+  const s = setup()
+  writeRec(s, { launch: '99999-1792370048', at: NOW, result: 'updated', from: 'v1.0.4', to: 'v1.0.5' })
+  check('다른 실행(다른 세션)의 기록 → 남의 업데이트 안내를 가져오지 않고 버전만', notice(s) === '하네스 v1.0.5' && readRec(s).shown === undefined, notice(s))
+}
+{
+  const s = setup()
+  writeRec(s, { launch: L, at: NOW, result: 'updated', from: 'v1.0.4', to: 'v1.0.5' })
+  for (const launch of ['$(touch /tmp/wvc-launch-pwned)', `${L}\n`, '1'.repeat(30), '', '12345-abc', '../12345-1']) {
+    check(`조작된 GUGBAB_LAUNCH(${JSON.stringify(launch.slice(0, 20))}) → 기록 무시`, notice(s, { GUGBAB_LAUNCH: launch }) === '하네스 v1.0.5')
+  }
+  check('  기록은 그대로 (shown 안 붙음)', readRec(s).shown === undefined)
+  check('  셸 문자가 실행되지 않음', !fs.existsSync('/tmp/wvc-launch-pwned'))
+}
+{
+  const s = setup()
+  for (const [desc, from] of [['제어문자', 'v1.0.4\u001b[2J'], ['줄바꿈', 'v1\nrm -rf ~'], ['초장문', 'v'.repeat(500)], ['셸 문자', '$(id)'], ['객체', { x: 1 }]]) {
+    writeRec(s, { launch: L, at: NOW, result: 'updated', from, to: 'v1.0.5' })
+    const n = notice(s)
+    check(`조작된 버전 라벨(${desc}) → 그 값을 출력하지 않고 지금 버전으로`, n === '하네스가 v1.0.5 로 업데이트됐습니다', n)
+  }
+}
+{
+  const s = setup()
+  writeRec(s, { launch: L, at: NOW, result: 'rm -rf' })
+  check('모르는 결과 값 → 기록 무시, 버전만', notice(s) === '하네스 v1.0.5')
+}
+{
+  const s = setup()
+  const victim = path.join(s.d, 'victim.json'); fs.writeFileSync(victim, JSON.stringify({ launch: L, at: NOW, result: 'up-to-date' }))
+  fs.mkdirSync(path.join(s.home, 'state'), { recursive: true }); fs.symlinkSync(victim, recFile(s))
+  const n = notice(s)
+  check('기록 자리에 심은 링크 → 따라가 읽거나 쓰지 않음', n === '하네스 v1.0.5' && !JSON.parse(fs.readFileSync(victim, 'utf8')).shown && fs.lstatSync(recFile(s)).isSymbolicLink(), n)
+}
+{
+  const s = setup()
+  writeRec(s, { launch: L, at: NOW, result: 'up-to-date' })
+  for (const data of ['relative/data', '']) {
+    check(`상대·빈 GUGBAB_DATA(${JSON.stringify(data)}) → 하네스 폴더 기록 사용`, notice(s, { GUGBAB_DATA: data }) === '하네스 v1.0.5 — 최신입니다 (방금 확인)')
+    writeRec(s, { launch: L, at: NOW, result: 'up-to-date' })
+  }
+}
+
+console.log('\n[버전 안내 — 이상·경계]')
+{
+  const s = setup()
+  for (const [desc, body] of [['깨진 JSON', '{not json'], ['배열', '[1,2]'], ['null', 'null'], ['빈 파일', ''], ['초대용량', JSON.stringify({ launch: L, result: 'up-to-date', junk: 'x'.repeat(10000) })]]) {
+    writeRec(s, body)
+    check(`기록이 ${desc} → 죽지 않고 버전만`, notice(s) === '하네스 v1.0.5', notice(s))
+  }
+}
+{
+  const s = setup()
+  for (const lastCheckAt of [NOW + 3600 * 1000, -5, 'abc', null]) {
+    writeRec(s, { launch: L, at: NOW, result: 'recent', lastCheckAt })
+    const n = notice(s)
+    check(`마지막 확인 시각 이상(${JSON.stringify(lastCheckAt)}) → 시각 없이 안내`, n && !/마지막 확인/.test(n) && /1시간마다/.test(n), n)
+  }
+}
+{
+  const s = setup({ version: null })
+  writeRec(s, { launch: L, at: NOW, result: 'up-to-date' })
+  check('VERSION 없음 → "(버전 모름)" 으로 안내', notice(s) === '하네스 (버전 모름) — 최신입니다 (방금 확인)', notice(s))
+  const s2 = setup({ version: null })
+  check('VERSION 없음 + 기록 없음 → 조용히', notice(s2) === null)
+}
+{
+  const s = setup()
+  writeRec(s, { launch: L, at: NOW, result: 'up-to-date' })
+  for (const dev of ['1', undefined]) {
+    const env = envOf(s, { GUGBAB_LAUNCH: L, GUGBAB_DEV: dev }); if (dev === undefined) delete env.GUGBAB_DEV
+    check(`개발 모드·래퍼 밖(GUGBAB_DEV=${JSON.stringify(dev)}) → 버전 안내도 없음`, checkWrapperVersion({ env, headOf: headIs(A), now: NOW }).notice === null)
+  }
+  check('  기록은 그대로', readRec(s).shown === undefined)
+}
+
 console.log('\n[훅 프로세스]')
 function runHook(input, env) {
   const r = spawnSync('node', [HOOK], { input: typeof input === 'string' ? input : JSON.stringify(input), encoding: 'utf8', timeout: 10000, env: { PATH: process.env.PATH, HOME: process.env.HOME, ...env } })
@@ -153,7 +290,15 @@ function runHook(input, env) {
   git('init', '-q'); git('add', 'VERSION'); git('commit', '-qm', 'v')
   const head = git('rev-parse', 'HEAD')
   const same = runHook({ hook_event_name: 'SessionStart', source: 'startup' }, envOf(s, { GUGBAB_WRAPPER_REV: head }))
-  check('실제 git: 같은 커밋 → exit 0 · 출력 없음', same.code === 0 && same.out === '', same)
+  check('실제 git: 같은 커밋 → exit 0 · 래퍼 안내 없이 버전만 화면에', same.code === 0 && same.j && same.j.systemMessage === '[gugbab] 하네스 v1.0.5' &&
+    !/wrapper-version-check/.test(same.out) && !/사용자에게 한 번 알려/.test(same.j.hookSpecificOutput.additionalContext), same)
+  writeRec(s, { launch: L, at: Date.now(), result: 'updated', from: 'v1.0.4', to: 'v1.0.5' })
+  const upd = runHook({ hook_event_name: 'SessionStart', source: 'startup' }, envOf(s, { GUGBAB_WRAPPER_REV: head, GUGBAB_LAUNCH: L }))
+  check('실제 훅: 이번 실행에 갱신됨 → 화면에 "[gugbab] 하네스 v1.0.4 → v1.0.5 로 업데이트됐습니다"', upd.code === 0 && upd.j && upd.j.systemMessage === '[gugbab] 하네스 v1.0.4 → v1.0.5 로 업데이트됐습니다', upd)
+  const again = runHook({ hook_event_name: 'SessionStart', source: 'resume' }, envOf(s, { GUGBAB_WRAPPER_REV: head, GUGBAB_LAUNCH: L }))
+  check('실제 훅: 같은 실행의 재시작(resume) → 다시 보여 주지 않음', again.code === 0 && again.out === '', again)
+  const cleared = runHook({ hook_event_name: 'SessionStart', source: 'clear' }, envOf(s, { GUGBAB_WRAPPER_REV: head }))
+  check('실제 git: /clear(같은 커밋) → exit 0 · 출력 없음', cleared.code === 0 && cleared.out === '', cleared)
   const diff = runHook({ hook_event_name: 'SessionStart', source: 'resume' }, envOf(s, { GUGBAB_WRAPPER_REV: A }))
   const hs = diff.j && diff.j.hookSpecificOutput
   check('실제 git: 다른 커밋 → exit 0 + SessionStart additionalContext + systemMessage', diff.code === 0 && hs && hs.hookEventName === 'SessionStart' &&

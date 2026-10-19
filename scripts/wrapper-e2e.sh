@@ -180,12 +180,14 @@ node -e 'const fs=require("fs"),f=process.argv[1];fs.writeFileSync(f,fs.readFile
 (cd "$U/src" && GE commit -qam v9.0.1 && git tag v9.0.1 && git push -q "$U/origin.git" main v9.0.1)
 UP=$(cd "$A" && env -u CLAUDECODE -u CLAUDE_CODE_ENTRYPOINT -u CLAUDE_CODE_SESSION_ID -u CLAUDE_CODE_CHILD_SESSION \
   -u CLAUDE_CODE_SESSION_ATTENDED -u CLAUDE_PID -u CLAUDE_CODE_MESSAGING_SOCKET -u CLAUDE_CODE_MESSAGING_TOKEN -u CLAUDE_CODE_EXECPATH \
-  -u CLAUDE_EFFORT -u CLAUDE_PLUGIN_DATA -u CLAUDE_PROJECT_DIR -u CLAUDE_CONFIG_DIR -u GUGBAB_DEV -u GUGBAB_HOME -u GUGBAB_REEXEC -u GUGBAB_WRAPPER_REV \
+  -u CLAUDE_EFFORT -u CLAUDE_PLUGIN_DATA -u CLAUDE_PROJECT_DIR -u CLAUDE_CONFIG_DIR -u GUGBAB_DEV -u GUGBAB_HOME -u GUGBAB_REEXEC -u GUGBAB_WRAPPER_REV -u GUGBAB_LAUNCH \
   PATH="${FAKEBIN:+$FAKEBIN:}$PATH" GUGBAB_DATA="$U/data" sh "$U/harness/bin/gugbab-claude" -p 'ok 라고만 답해' --max-turns 1 --output-format stream-json --verbose 2>&1)
 check "자동 업데이트 v9.0.0 → v9.0.1" "$(git -C "$U/src" rev-parse HEAD)" "$(git -C "$U/harness" rev-parse HEAD 2>/dev/null)"
 check "업데이트한 그 실행에서 새 래퍼가 돎 (한 번)" 1 "$(printf '%s\n' "$UP" | grep -c '\[e2e\] 새 래퍼 실행')"
 check "세션이 정상으로 뜸 (init 받음)" yes "$(printf '%s\n' "$UP" | grep -q '"subtype":"init"' && echo yes || echo no)"
 check "wrapper-version-check 안내 없음 (세션 커밋 = 설치본 커밋)" 0 "$(printf '%s\n' "$UP" | grep -c 'wrapper-version-check')"
+# 세션 시작 훅이 이번 실행의 업데이트 결과를 화면 문구(systemMessage)로 냄 (2026-10-19)
+check "세션 시작 때 \"하네스 v9.0.0 → v9.0.1 로 업데이트됐습니다\" 안내" 1 "$(printf '%s\n' "$UP" | grep -c -m1 '하네스 v9.0.0 → v9.0.1 로 업데이트됐습니다')"
 
 echo ""
 echo "wrapper-e2e: 성공 $PASS · 실패 $FAIL ($MODE)"
