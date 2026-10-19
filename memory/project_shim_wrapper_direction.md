@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 956a993c-0d69-41df-9a5f-10e37ec24b3f
-  modified: 2026-10-19T00:58:12.330Z
+  modified: 2026-10-19T01:21:07.980Z
 ---
 
 2026-10-15 사용자가 하네스 개편 방향을 **shim wrapper 방식**으로 확정했다. 플러그인/마켓플레이스 전환 제안은 명시적으로 거부("공식 플러그인 이딴소리 하지말고").
@@ -40,6 +40,7 @@ metadata:
 - **2026-10-17 v1.0.2 자동 릴리스 확인 + 결정 33**: PR #30 머지 → release-on-main 이 v1.0.2 태그·Release 자동 생성, 설치본이 평소 실행으로 v1.0.1→v1.0.2 받음(업데이트 확인은 1시간 간격 — 머지 3초 전에 확인해 늦었던 사례, 바로 받으려면 `gugbab-claude update`). 사용자 지적 "트리는 훅·룰·스킬·에이전트로 나뉘고 거기서 용도별로, 계획서 체크리스트처럼" → `/harness` 기본 트리를 **종류 → 용도(체크리스트 ### 절) → 항목**으로(manifest `layout`, build-manifest 가 체크리스트에서 생성), 용도 이름은 괄호 앞만·설명칸엔 전체, 항목만 달린 종류(설정·룰·커맨드)는 처음 접힘, 옛 블록·묶음 보기는 `v`. 키 도움말 줄이 잘리던 버그(본문 높이 -8→-9) 수정. 브랜치 `feat/harness-tree-by-type-2026-10-17`(미커밋), PR 때 VERSION 1.0.3
 - **2026-10-17~19 v1.0.3 릴리스 + 결정 34 버그**: PR #31 머지 → v1.0.3 자동 태그, 설치본 `update` 로 반영. 사용자 보고 "켰더니 자동 최신화가 꺼져 있다" → 원인: 래퍼가 claude 에 `GUGBAB_HOME` 을 넘기는데 래퍼는 "GUGBAB_HOME 있음 = 개발 모드" 로 판정 → 세션 안에서 다시 부른 gugbab-claude(/harness 의 status·on·off·preset)가 개발 모드(표시 + 데이터 `~/.gugbab-dev`). 수정: 배포 모드는 `GUGBAB_DEV=0` 을 넘기고 다시 불려도 배포 모드·자기 위치. `~/.gugbab-dev/projects/lf/settings.json` 에 잘못 간 기록 1건(`disable block:frontend-tooling`) — 옮길지 사용자 판단 대기. 교훈: 실사용 시나리오를 동시에 2개 돌리면 claude 세션 부하로 원래 통과하던 검사도 실패 → 시나리오는 순서대로. 브랜치 `fix/nested-wrapper-dev-mode-2026-10-17`(미커밋), PR 때 VERSION 1.0.4
 - **2026-10-19 v1.0.4 머지(PR #32) + 결정 35**: 설치본 세션에서 확인하니 여전히 개발 모드 — 09:34:09 자동 업데이트(v1.0.3→v1.0.4) 1초 뒤 세션이 떴는데, 그 실행은 이미 돌던 v1.0.3 셸(배포 모드에 `GUGBAB_DEV` 빈 값)이 진행. 구조 문제: 래퍼·`cli/` 수정은 업데이트한 그 실행에 안 들어감(스킬·훅·룰은 디스크에서 읽어 바로 반영). 사용자 "강제로 훅으로" → 훅만으론 불가(업데이트는 claude 전, SessionStart 는 막기·재시작 불가)라 설명하고 ① 래퍼 `self-update`(exit 10) → `GUGBAB_REEXEC=1 exec` 새 래퍼, 재시작도 지금 래퍼로 `exec --continue`, `prepare --no-update` ② `GUGBAB_WRAPPER_REV` + 🔒 SessionStart 훅 `wrapper-version-check`(불일치 = 재시작 표시, 값 없음 = 예전 래퍼 → `gugbab-claude -c` 안내만 — 예전 래퍼에 표시를 남기면 /exit 마다 재시작 반복). 훅 31→32 · 고정 34→35. 브랜치 `fix/wrapper-reexec-after-update-2026-10-19`(미커밋), PR 때 VERSION 1.0.5. 주의: 세션 안에서 `node --test cli/bin.test.js` 는 `CLAUDE_CONFIG_DIR` 이 새어 `--raw` 테스트 1건 실패 → `env -u CLAUDE_CONFIG_DIR` 로 돌린다. 커밋 때 에디터(Cursor)·상태줄의 git status 가 `.git/index.lock` 을 잠깐 잡아 add·reset 이 조용히 실패 → 스테이징된 다른 파일이 엉뚱한 커밋에 섞임(미푸시라 soft reset 으로 복구). 여러 커밋을 나눌 땐 락 대기 + 커밋 직전 `git diff --cached --name-only` 대조
+- **2026-10-19 v1.0.5 머지(PR #33) + 결정 36**: 머지 뒤 실행했는데 설치본이 1.0.4 그대로 — 원인은 1시간 확인 간격(09:34 확인 후 머지, 확인은 실행할 때만이고 세션 도중엔 안 함). `gugbab-claude update` 로 강제 갱신(v1.0.4→v1.0.5). 사용자 "지금 버전·vA→vB 를 텍스트로 보이게, 훅으로 강제" → 래퍼가 실행마다 `GUGBAB_LAUNCH`(`<pid>-<초>`, 다시 실행은 이어받음) → `self-update` 가 `<데이터>/state/last-check.json` 에 결과 코드·from/to·마지막 확인 시각 기록 → 🔒 `wrapper-version-check` 가 SessionStart `systemMessage`(공식 문서·실사용 시나리오로 화면 표시 확인)로 실행당 한 번 표시(shown 표시, 같은 실행 /clear·재시작 반복 안 함, 기록 없으면 새 세션에서 버전만). 1시간 간격은 유지. 새 훅 없음. 브랜치 `feat/session-version-notice-2026-10-19`(미커밋), PR 때 VERSION 1.0.6. 주의: 세션 안 테스트는 `unset GUGBAB_HOME GUGBAB_DEV GUGBAB_WRAPPER_REV CLAUDE_CONFIG_DIR GUGBAB_LAUNCH` 후 (zsh 는 변수에 담은 `env -u …` 를 쪼개지 않아 127)
 - **다음**: 사용자 추가 수정 요청 → 커밋·푸시 → 설치본 반영은 새 태그 / 1.0.x 실사용 테스트 → 태그 보호 규칙 / 제안 중: 고정 보안 훅 fail-closed / 맨 마지막 Codex 리뷰(지금 꺼 둠)
 
 **Why:** 복사 설치는 버전 갱신마다 재설치가 필요해 불편. comux처럼 별도 명령으로 감싼 프로그램을 띄우는 형태를 원함.
