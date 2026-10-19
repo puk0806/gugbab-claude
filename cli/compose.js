@@ -1,6 +1,6 @@
 // 조립 — 연 프로젝트의 설정 폴더(<dataDir>/projects/<이름>/.claude = 그 세션의 CLAUDE_CONFIG_DIR)를 만든다
 //   ① 켜진 룰·커맨드·에이전트·스킬·공통 CLAUDE.md → 하네스 원본으로 심볼릭 링크 (PoC 3)
-//   ② projects/·plugins/·plans/ → ~/.claude 쪽 링크 (대화기록·메모리·플러그인·계획 공유 — 결정 2, PoC 8·플러그인)
+//   ② projects/·plugins/·plans/·sessions/ → ~/.claude 쪽 링크 (대화기록·메모리·플러그인·계획·실행 중 세션 목록 공유 — 결정 2·38, PoC 8·플러그인)
 //   ③ settings.json 은 일반 파일 — 권한·상태줄·플러그인 + 이벤트마다 디스패처(cli/hook.js) 하나 (PoC 4)
 //   ④ .claude.json 에 온보딩 완료 표시와 이 폴더의 신뢰 기록만 옮김 (첫 실행 화면 PoC)
 // 프로젝트가 이미 가진 항목(.claude/ 아래 같은 이름, settings.json 에 연결된 같은 훅)은 건너뛴다 — 두 번 실행·중복 방지
@@ -10,7 +10,10 @@ const fs = require('fs');
 const path = require('path');
 
 const TOOL_EVENTS = new Set(['PreToolUse', 'PostToolUse', 'PostToolUseFailure', 'PermissionRequest']);
-const SHARED = ['projects', 'plugins', 'plans'];
+const SHARED = ['projects', 'plugins', 'plans', 'sessions'];
+// 처음부터 만들어 둘 공유 폴더 — 없으면 claude 가 설정 폴더 안에 진짜 폴더를 만들어 공유가 끊긴다
+const CREATE_SHARED = new Set(['plans', 'sessions']);
+const SESSION_ENTRY = /^\d{1,10}(?:\.[0-9a-f]{16,128})?\.(?:json|key)$/;
 const SUBDIR = { rule: 'rules', command: 'commands', agent: 'agents', skill: 'skills' };
 const UNSAFE_SHELL = /["$`\\\n\r]/;
 
@@ -30,6 +33,40 @@ function writeIfChanged(file, content, mode) {
   if (mode) fs.chmodSync(tmp, mode);
   fs.renameSync(tmp, file);
   return true;
+}
+
+// 설정 폴더에 이미 진짜 sessions/ 폴더가 있으면(결정 38 이전에 띄운 세션) 안의 세션 기록을 공유 폴더로 옮기고 비운다
+//   sessions/ = 실행 중인 세션 목록(<pid>.json·<pid>.<hex>.key). 설정 폴더마다 따로 두면 ListAgents·SendMessage 가 서로를 못 찾는다
+//   옮기는 것은 이름이 세션 기록 형식인 일반 파일뿐 — 링크·폴더·낯선 파일이 있으면 손대지 않고 링크도 걸지 않는다
+//   같은 이름이 이미 있으면(같은 pid 번호) 더 최근 것을 남긴다. 실행 중인 세션은 다음 갱신 때 링크를 거쳐 다시 쓴다
+function migrateSessions(src, target) {
+  const st = lstat(src);
+  if (!st || st.isSymbolicLink()) return { changed: false };
+  if (!st.isDirectory()) return { changed: false, blocked: '설정 폴더에 sessions 파일이 있어 링크하지 않습니다' };
+  let tst;
+  try { tst = fs.statSync(target); } catch { tst = null; }
+  if (!tst || !tst.isDirectory()) return { changed: false, blocked: `${target} 가 폴더가 아니라 옮기지 않습니다` };
+  let changed = false;
+  const left = [];
+  for (const name of fs.readdirSync(src)) {
+    const from = path.join(src, name);
+    const fst = lstat(from);
+    if (!SESSION_ENTRY.test(name) || !fst || !fst.isFile()) { left.push(name); continue; }
+    const to = path.join(target, name);
+    const dst = lstat(to);
+    try {
+      if (dst && (!dst.isFile() || dst.mtimeMs >= fst.mtimeMs)) {
+        if (!dst.isFile()) { left.push(name); continue; }
+        fs.unlinkSync(from); // 공유 폴더 쪽이 더 최근
+      } else {
+        fs.renameSync(from, to);
+      }
+      changed = true;
+    } catch { left.push(name); }
+  }
+  if (left.length) return { changed, blocked: `설정 폴더 sessions/ 에 옮기지 못한 항목이 있어 링크하지 않습니다 (${left.slice(0, 3).join(', ')}${left.length > 3 ? ' …' : ''})` };
+  try { fs.rmdirSync(src); } catch { return { changed, blocked: '설정 폴더 sessions/ 를 비우지 못해 링크하지 않습니다' }; }
+  return { changed: true };
 }
 
 // 프로젝트 자체 settings.json 에 이미 연결된 하네스 훅 이름들
@@ -81,9 +118,14 @@ function compose({ manifest, paths, project, resolved }) {
   // ② 공유 링크
   for (const d of SHARED) {
     const target = path.join(paths.claudeHome, d);
-    // plans 는 계획 모드를 처음 쓸 때 생기는 빈 폴더 — 미리 만들어야 설정 폴더에 따로 생기지 않는다
-    if (d === 'plans' && !lstat(target) && lstat(paths.claudeHome)) { try { fs.mkdirSync(target); } catch { /* 아래에서 경고 */ } }
+    // plans 는 계획 모드를 처음 쓸 때, sessions 는 세션을 처음 띄울 때 생기는 폴더 — 미리 만들어야 설정 폴더에 따로 생기지 않는다
+    if (CREATE_SHARED.has(d) && !lstat(target) && lstat(paths.claudeHome)) { try { fs.mkdirSync(target, { mode: 0o700 }); } catch { /* 아래에서 경고 */ } }
     if (!lstat(target)) { warnings.push(`${d}: ${target} 가 없어 링크를 건너뜁니다`); continue; }
+    if (d === 'sessions') {
+      const m = migrateSessions(path.join(cfg, d), target);
+      if (m.changed) changed = true;
+      if (m.blocked) { warnings.push(`sessions: ${m.blocked} — 다른 세션과 서로 보이지 않습니다`); continue; }
+    }
     desired.set(d, target);
   }
 

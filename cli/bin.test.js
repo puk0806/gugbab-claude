@@ -357,3 +357,139 @@ test('경계: 하위 명령(status 등)은 실행 값을 만들지 않음', () =
   runHarness(s, ['status'], { LAUNCH_LOG: f });
   assert.deepStrictEqual(launches(f), []);
 });
+
+// ── 터미널에서는 claude 가 자기 프로세스 그룹으로 앞에 선다 (2026-10-19 결정 38 — comux·tmux 에이전트 감지) ──
+// 가상 터미널(python3 pty)에서 래퍼를 띄운다. 래퍼가 멈추면(Ctrl+Z) 부모 셸처럼 SIGCONT 로 깨운다(= fg)
+const DASH = ['/bin/dash', '/usr/bin/dash'].find((d) => { try { fs.accessSync(d, fs.constants.X_OK); return true; } catch { return false; } });
+const PY = spawnSync('python3', ['-c', 'import pty'], { encoding: 'utf8' }).status === 0;
+const ptyOpts = { skip: !(DASH && PY) && 'python3 pty 또는 dash 없음' };
+const PTY_RUN = `
+import os, pty, sys, time, signal, select, json
+cwd = sys.argv[1]; cmd = sys.argv[2:]
+pid, fd = pty.fork()
+if pid == 0:
+    os.chdir(cwd); os.execvp(cmd[0], cmd)
+stopped = 0; out = b''; status = None; deadline = time.time() + 30
+def drain():
+    global out
+    while True:
+        r, _, _ = select.select([fd], [], [], 0.05)
+        if not r: return
+        try:
+            b = os.read(fd, 65536)
+        except OSError:
+            return
+        if not b: return
+        out += b
+while True:
+    drain()
+    w, st = os.waitpid(pid, os.WUNTRACED | os.WNOHANG)
+    if w:
+        if os.WIFSTOPPED(st):
+            stopped += 1
+            if stopped > 3:
+                os.killpg(pid, 9); status = 'stuck'; break
+            time.sleep(0.1); os.killpg(pid, signal.SIGCONT); continue
+        status = os.WEXITSTATUS(st) if os.WIFEXITED(st) else -os.WTERMSIG(st); break
+    if time.time() > deadline:
+        os.killpg(pid, 9); status = 'timeout'; break
+drain()
+print(json.dumps({'stopped': stopped, 'status': status, 'out': out.decode('utf8', 'replace')}))
+`;
+function runTty(s, args, env = {}) {
+  const r = spawnSync('python3', ['-I', '-c', PTY_RUN, s.proj, 'sh', BIN, ...args], { encoding: 'utf8', timeout: 60000,
+    env: { ...process.env, HOME: s.home, GUGBAB_HOME: REPO, GUGBAB_DATA: s.data, GUGBAB_NO_FIRST_RUN: '1', PATH: `${s.fakeBin}:${process.env.PATH}`, LOG: s.log, ...env } });
+  assert.strictEqual(r.status, 0, r.stderr);
+  return JSON.parse(r.stdout.trim().split('\n').pop());
+}
+// 가짜 claude: 자기 pid·프로세스 그룹·터미널 앞 그룹을 남긴다
+const PG_CLAUDE = 'echo "pid=$$ pgid=$(ps -o pgid= -p $$ | tr -d " ") tpgid=$(ps -o tpgid= -p $$ | tr -d " ")" >> "$LOG"';
+const pg = (line) => Object.fromEntries(line.split(' ').map((kv) => kv.split('=')));
+
+test('정상: 터미널에서는 claude 가 자기 프로세스 그룹 대표로 터미널 앞에 섬 (멀티플렉서가 claude 로 감지)', ptyOpts, () => {
+  const s = setup(`${PG_CLAUDE}; exit 3`);
+  const r = runTty(s, ['--model', 'opus']);
+  assert.strictEqual(r.status, 3, r.out);
+  const p = pg(calls(s)[0]);
+  assert.strictEqual(p.pgid, p.pid, calls(s)[0]);
+  assert.strictEqual(p.tpgid, p.pid, calls(s)[0]);
+});
+
+test('정상: claude 가 Ctrl+Z 로 멈추면 래퍼도 멈추고, fg 로 깨우면 claude 가 이어서 돎', ptyOpts, () => {
+  const s = setup('if [ ! -f "$LOG.s" ]; then : > "$LOG.s"; kill -TSTP 0; fi; echo resumed >> "$LOG"; exit 7');
+  const r = runTty(s, []);
+  assert.strictEqual(r.stopped, 1, '래퍼가 한 번 멈춰 부모 셸로 돌아감');
+  assert.strictEqual(r.status, 7, r.out);
+  assert.deepStrictEqual(calls(s), ['resumed']);
+});
+
+test('정상: 터미널에서도 재시작 표시가 있으면 --continue 로 한 번 더', ptyOpts, () => {
+  const s = setup([
+    'echo "args=$*" >> "$LOG"',
+    'if [ ! -f "$LOG.once" ]; then touch "$LOG.once"; touch "$CLAUDE_CONFIG_DIR/.gugbab-restart"; fi',
+  ].join('\n'));
+  const r = runTty(s, ['--model', 'opus']);
+  assert.strictEqual(r.status, 0, r.out);
+  assert.deepStrictEqual(calls(s), ['args=--model opus', 'args=--continue']);
+});
+
+test('악성: 터미널 경로에서도 셸 문자가 든 인자를 해석하지 않고 그대로 넘김', ptyOpts, () => {
+  const s = setup('for a in "$@"; do echo "[$a]" >> "$LOG"; done');
+  const pwn = path.join(s.data, 'pwned');
+  runTty(s, [`$(touch ${pwn})`, '"q" ; x', '`id`']);
+  assert.deepStrictEqual(calls(s), [`[$(touch ${pwn})]`, '["q" ; x]', '[`id`]']);
+  assert.ok(!fs.existsSync(pwn));
+});
+
+test('악성: PATH 앞의 가짜 dash 는 쓰지 않음 (고정 경로만)', ptyOpts, () => {
+  const s = setup(`${PG_CLAUDE}`);
+  fs.writeFileSync(path.join(s.fakeBin, 'dash'), '#!/bin/sh\necho fake-dash >> "$LOG"\nexit 99\n');
+  fs.chmodSync(path.join(s.fakeBin, 'dash'), 0o755);
+  const r = runTty(s, []);
+  assert.strictEqual(r.status, 0, r.out);
+  assert.ok(!calls(s).includes('fake-dash'), calls(s).join('|'));
+  assert.strictEqual(calls(s).length, 1);
+});
+
+test('악성: 밖에서 넘어온 GUGBAB_JC 로 작업 제어 경로를 흉내 내지 못하고 claude 에도 새지 않음', ptyOpts, () => {
+  const s = setup('echo "jc=[${GUGBAB_JC-unset}]" >> "$LOG"; exit 146');
+  const r = run(s, [], { GUGBAB_JC: '1' }); // 터미널 아님 → sh 경로
+  assert.strictEqual(r.status, 146);
+  assert.deepStrictEqual(calls(s), ['jc=[unset]']);
+  fs.rmSync(s.log);
+  const t = runTty(s, [], { GUGBAB_JC: '1' });
+  assert.strictEqual(t.status, 146, t.out);
+  assert.deepStrictEqual(calls(s), ['jc=[unset]']);
+});
+
+test('경계: claude 가 진짜로 146(정지 신호 번호)으로 끝나도 정지로 오해해 멈추지 않음', ptyOpts, () => {
+  const s = setup('exit 146');
+  const r = runTty(s, []);
+  assert.strictEqual(r.stopped, 0);
+  assert.strictEqual(r.status, 146);
+});
+
+test('경계: GUGBAB_JOBCTL=0 이면 예전처럼 래퍼와 같은 그룹 (탈출구)', ptyOpts, () => {
+  const s = setup(PG_CLAUDE);
+  const r = runTty(s, [], { GUGBAB_JOBCTL: '0' });
+  assert.strictEqual(r.status, 0, r.out);
+  const p = pg(calls(s)[0]);
+  assert.notStrictEqual(p.pgid, p.pid, calls(s)[0]);
+});
+
+test('경계: -p(한 번 실행)는 터미널이어도 작업 제어 없이 (파이프·스크립트 동작 그대로)', ptyOpts, () => {
+  const s = setup(PG_CLAUDE);
+  const r = runTty(s, ['-p', 'x']);
+  assert.strictEqual(r.status, 0, r.out);
+  const p = pg(calls(s)[0]);
+  assert.notStrictEqual(p.pgid, p.pid, calls(s)[0]);
+});
+
+test('경계: 터미널이 아니면(파이프) 작업 제어 없이 — 경고 문구 없이 예전처럼', () => {
+  const s = setup(PG_CLAUDE);
+  const r = run(s, []);
+  assert.strictEqual(r.status, 0, r.stderr);
+  assert.ok(!/job control|tty/i.test(r.stderr), r.stderr);
+  const p = pg(calls(s)[0]);
+  assert.notStrictEqual(p.pgid, p.pid, calls(s)[0]);
+});
