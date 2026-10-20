@@ -57,7 +57,7 @@ gugbab-claude/
 필요한 것: `git`, `node` 18 이상, [Claude Code](https://code.claude.com)(`claude`, 한 번 로그인해 둔 상태). sudo 는 쓰지 않습니다.
 
 - `~/gugbab` 에 설치되고 `~/.local/bin/gugbab-claude` 링크가 생깁니다.
-- `~/.local/bin` 이 PATH 에 없으면 셸 설정(`~/.zshrc` 등)에 넣을 한 줄을 알려 줍니다. 넣은 뒤 새 터미널을 여세요.
+- `~/.local/bin` 이 PATH 에 없으면 쓰는 셸의 설정 파일 끝에 PATH 한 줄을 **묻지 않고 자동으로** 넣습니다(끄려면 `--no-modify-path`) — zsh `~/.zshrc`(`ZDOTDIR` 존중) · bash macOS `~/.bash_profile`·그 밖 `~/.bashrc` · fish `config.fish` · 그 밖 `~/.profile`. `# >>> gugbab-claude PATH >>>` 표시로 감싸 다시 설치해도 한 번만 들어가고, 다른 줄은 건드리지 않습니다. 넣은 뒤 `source ~/.zshrc` 또는 새 터미널. 경로에 `"` `$` `` ` `` `\` 가 있으면 자동으로 넣지 않습니다.
 - 끝에 `gugbab-claude doctor` 점검 결과가 나옵니다.
 - 다시 실행하면 갱신합니다. `~/gugbab` 이 다른 내용으로 차 있으면 건드리지 않고 멈춥니다.
 
@@ -68,7 +68,8 @@ gugbab-claude/
 | `--ref <브랜치>` | 그 브랜치를 받고 계속 따라감 — PR 머지 전 시험용 |
 | `--dir PATH` · `--bin-dir PATH` | 설치 위치(기본 `~/gugbab`) · 링크 위치(기본 `~/.local/bin`) |
 | `--yes` | 묻지 않고 진행 |
-| `--uninstall` | 제거 — `~/.local/bin/gugbab-claude` 링크와 `~/gugbab`(프로젝트별 켜기·끄기 설정 포함)을 지운다. 대화 기록·메모리(`~/.claude`)는 그대로. 다른 곳을 가리키는 링크나 gugbab 설치본이 아닌 폴더는 지우지 않는다 |
+| `--no-modify-path` | 셸 설정 파일에 PATH 를 넣지 않고 넣을 한 줄만 안내 |
+| `--uninstall` | 제거 — `~/.local/bin/gugbab-claude` 링크와 `~/gugbab`(프로젝트별 켜기·끄기 설정 포함)을 지우고, 설치가 셸 설정에 넣은 PATH 블록만 지운다(표시 짝이 안 맞으면 그대로 둠). 대화 기록·메모리(`~/.claude`)는 그대로. 다른 곳을 가리키는 링크나 gugbab 설치본이 아닌 폴더는 지우지 않는다 |
 
 옵션은 `bash -s --` 뒤에 붙입니다. 예: `curl -fsSL …/install.sh | bash -s -- --channel main`
 

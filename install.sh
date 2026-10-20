@@ -6,14 +6,15 @@
 #         --dir PATH          설치 위치 (기본 ~/gugbab)
 #         --bin-dir PATH      실행 파일 링크 위치 (기본 ~/.local/bin)
 #         --yes               묻지 않고 진행 (제거 확인 포함)
-#         --uninstall         링크·설치 폴더 제거 (대화 기록 ~/.claude 는 건드리지 않음)
+#         --no-modify-path    PATH 에 없을 때 셸 설정 파일(~/.zshrc 등)에 자동으로 넣지 않고 안내만
+#         --uninstall         링크·설치 폴더 제거 + 설치가 넣은 PATH 블록 제거 (대화 기록 ~/.claude 는 건드리지 않음)
 # 계획서 3장. 받다가 끊겨 반쪽만 받아져도 실행되지 않게 전체를 main() 으로 감싸 맨 끝에서 부른다. sudo 를 쓰지 않는다
 set -euo pipefail
 
 main() {
   local repo_url="${GUGBAB_REPO_URL:-https://github.com/puk0806/gugbab-claude.git}"
   local dir="$HOME/gugbab" bin_dir="$HOME/.local/bin"
-  local ref="" version="" channel="" yes="" uninstall=""
+  local ref="" version="" channel="" yes="" uninstall="" no_modify_path=""
 
   say() { printf '[gugbab] %s\n' "$*"; }
   die() { printf '[gugbab] ✗ %s\n' "$*" >&2; exit 1; }
@@ -28,6 +29,63 @@ main() {
     case "$ans" in [Yy]*) return 0 ;; [Nn]*) return 1 ;; *) [ "$def" = y ] ;; esac
   }
 
+  # PATH 블록 — 셸 설정 파일 끝에 표시 주석으로 감싸 넣는다 (다시 설치해도 한 번만, 제거 때 이 블록만 지움)
+  local mark_begin='# >>> gugbab-claude PATH >>>' mark_end='# <<< gugbab-claude PATH <<<'
+  rc_file() { # 로그인 셸 기준 설정 파일 하나
+    case "${SHELL##*/}" in
+      zsh) printf '%s\n' "${ZDOTDIR:-$HOME}/.zshrc" ;;
+      bash) if [ "$(uname -s)" = Darwin ]; then printf '%s\n' "$HOME/.bash_profile"; else printf '%s\n' "$HOME/.bashrc"; fi ;;
+      fish) printf '%s\n' "${XDG_CONFIG_HOME:-$HOME/.config}/fish/config.fish" ;;
+      *) printf '%s\n' "$HOME/.profile" ;;
+    esac
+  }
+  path_line() { # $1 = 넣을 폴더. 홈 아래면 $HOME 으로 적는다
+    local p=$1
+    case "$p" in "$HOME"/*) p="\$HOME${p#"$HOME"}" ;; esac
+    if [ "${SHELL##*/}" = fish ]; then printf 'set -gx PATH "%s" $PATH\n' "$p"; else printf 'export PATH="%s:$PATH"\n' "$p"; fi
+  }
+  manual_path() { say "    $(path_line "$bin_dir")"; say "  넣은 뒤 새 터미널을 여세요"; }
+  add_path() {
+    case ":$PATH:" in *":$bin_dir:"*) return 0 ;; esac
+    local rc; rc=$(rc_file)
+    if [ -f "$rc" ] && grep -qF "$mark_begin" "$rc" 2>/dev/null; then
+      say "PATH 는 이미 $rc 에 들어 있습니다 — 새 터미널을 열거나 source $rc"; return 0
+    fi
+    if [ -n "$no_modify_path" ]; then
+      say "⚠ $bin_dir 가 PATH 에 없습니다 (--no-modify-path) — 셸 설정에 아래 한 줄을 넣으세요"; manual_path; return 0
+    fi
+    # 셸 설정에 그대로 들어가므로 해석될 수 있는 문자가 든 경로는 쓰지 않는다
+    case "$bin_dir" in *[\"\$\`\\]*)
+      say "⚠ $bin_dir 경로에 셸이 해석하는 문자가 있어 $rc 에 자동으로 넣지 않습니다 — 직접 넣으세요"; manual_path; return 0 ;;
+    esac
+    if [ -L "$rc" ] && [ ! -e "$rc" ]; then
+      say "⚠ $rc 가 없는 곳을 가리키는 링크라 자동으로 넣지 않습니다 — 직접 넣으세요"; manual_path; return 0
+    fi
+    # 묻지 않고 넣는다 (2026-10-20 사용자 결정) — 끄려면 --no-modify-path
+    mkdir -p "$(dirname "$rc")" 2>/dev/null || true
+    # 파일 끝에 줄바꿈이 없으면 앞줄에 붙지 않게 먼저 줄을 바꾼다
+    if [ -s "$rc" ] && [ -n "$(tail -c 1 "$rc" 2>/dev/null)" ]; then printf '\n' >> "$rc" 2>/dev/null || true; fi
+    if { printf '%s\n' "$mark_begin"; path_line "$bin_dir"; printf '%s\n' "$mark_end"; } >> "$rc" 2>/dev/null; then
+      say "PATH 추가: $rc 끝에 $(path_line "$bin_dir")"
+      say "  지금 열린 터미널은 source $rc 를 실행하거나 새 터미널을 여세요"
+    else
+      say "⚠ $rc 에 쓸 수 없습니다 — 직접 넣으세요"; manual_path
+    fi
+  }
+  remove_path() { # 설치가 넣은 블록만 지운다. 시작·끝 표시가 짝이 안 맞으면(손으로 고쳤으면) 건드리지 않는다
+    local rc b e tmpf
+    for rc in "${ZDOTDIR:-$HOME}/.zshrc" "$HOME/.zshrc" "$HOME/.bash_profile" "$HOME/.bashrc" "$HOME/.profile" "${XDG_CONFIG_HOME:-$HOME/.config}/fish/config.fish"; do
+      [ -f "$rc" ] || continue
+      b=$(grep -cxF "$mark_begin" "$rc" 2>/dev/null || true); e=$(grep -cxF "$mark_end" "$rc" 2>/dev/null || true)
+      [ "${b:-0}" -gt 0 ] || continue
+      if [ "$b" != "$e" ]; then say "⚠ $rc 의 gugbab PATH 표시가 짝이 맞지 않아 그대로 둡니다 — 직접 확인하세요"; continue; fi
+      tmpf=$(mktemp) || continue
+      awk -v b="$mark_begin" -v e="$mark_end" '$0==b{skip=1;next} skip&&$0==e{skip=0;next} !skip' "$rc" > "$tmpf" \
+        && cat "$tmpf" > "$rc" && say "PATH 블록 제거: $rc" # cat > 로 써서 링크·권한은 그대로
+      rm -f "$tmpf"
+    done
+  }
+
   while [ $# -gt 0 ]; do
     case "$1" in
       --ref) [ $# -ge 2 ] || die "--ref 뒤에 브랜치·태그 이름이 필요합니다"; ref=$2; shift 2 ;;
@@ -36,8 +94,9 @@ main() {
       --dir) [ $# -ge 2 ] || die "--dir 뒤에 경로가 필요합니다"; dir=$2; shift 2 ;;
       --bin-dir) [ $# -ge 2 ] || die "--bin-dir 뒤에 경로가 필요합니다"; bin_dir=$2; shift 2 ;;
       --yes|-y) yes=1; shift ;;
+      --no-modify-path) no_modify_path=1; shift ;;
       --uninstall) uninstall=1; shift ;;
-      -h|--help) sed -n '2,10p' "${BASH_SOURCE[0]:-/dev/null}" 2>/dev/null || true; return 0 ;;
+      -h|--help) sed -n '2,11p' "${BASH_SOURCE[0]:-/dev/null}" 2>/dev/null || true; return 0 ;;
       *) die "모르는 옵션: $1" ;;
     esac
   done
@@ -71,6 +130,7 @@ main() {
         say "설치 폴더는 남겨 두었습니다: $dir"
       fi
     fi
+    remove_path
     say "제거를 마쳤습니다"
     return 0
   fi
@@ -144,11 +204,7 @@ main() {
   say "링크: $link → $dir/bin/gugbab-claude"
 
   say "설치 완료: $label ($(git -C "$dir" rev-parse --short HEAD))"
-  case ":$PATH:" in
-    *":$bin_dir:"*) ;;
-    *) say "⚠ $bin_dir 가 PATH 에 없습니다 — 셸 설정(~/.zshrc 등)에 아래 한 줄을 넣고 새 터미널을 여세요"
-       printf '    export PATH="%s:$PATH"\n' "$bin_dir" ;;
-  esac
+  add_path
   say "점검:"
   "$dir/bin/gugbab-claude" doctor || say "⚠ 점검에서 문제가 보였습니다 — 위 내용을 확인하세요"
   say "이제 프로젝트 폴더에서 gugbab-claude 로 실행하세요 (켜기·끄기: 세션 안 /harness · 터미널 gugbab-claude harness)"

@@ -151,7 +151,7 @@
 
 | 증상 | 확인 |
 |---|---|
-| `command not found: gugbab-claude` | `~/.local/bin` 을 PATH 에 넣고 새 터미널 (설치가 알려 준 한 줄) |
+| `command not found: gugbab-claude` | 설치가 셸 설정(`~/.zshrc` 등)에 PATH 를 넣었으면 새 터미널을 열거나 `source ~/.zshrc`. 넣지 않았으면(`--no-modify-path`·셸 문자가 든 경로·쓸 수 없는 설정 파일) 설치가 알려 준 한 줄을 직접 넣기 |
 | "Not logged in" | 먼저 그냥 `claude` 로 한 번 로그인. 래퍼는 같은 로그인을 씁니다 — Claude Code 업데이트 뒤 이 문제가 생기면 `gugbab-claude doctor` 결과를 확인하세요 |
 | 세션을 끝낼 때마다 Codex 리뷰를 요구 | 쓰지 않으면 `/harness` 에서 "Codex 리뷰" 묶음을 끄거나 `gugbab-claude off bundle:codex-review` |
 | 바꿨는데 반영이 안 됨 | 룰·에이전트·설정은 `/exit` 후 다시 시작해야 반영. `gugbab-claude status` 의 ⚠ 줄 확인 |

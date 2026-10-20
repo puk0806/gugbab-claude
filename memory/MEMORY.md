@@ -1,9 +1,9 @@
 # Memory Index
 
 ## ★ 하네스 현재 상태
-- [★★ 하네스 현재 상태 (2026-10-20 갱신) — 여기부터 읽기](project_harness_status_2026-10-15.md) — shim 래퍼로만 사용, 설치본 v1.0.10, 321 항목(훅 32·고정 35·켬 70·끔 216). 남은 제안: 태그 보호·Codex 리뷰·고정 훅 fail-closed·윈도우(보류). 기본값·고정 = 계획서 페이지 + `docs/DEFAULTS.md`. **수정 작업은 마지막 줄 `진행할까요?`**
-- [★ 개편 방향 = shim wrapper (2026-10-15)](project_shim_wrapper_direction.md) — `gugbab-claude` 래퍼 + 프로젝트별 `CLAUDE_CONFIG_DIR` + `/harness` 토글. 플러그인 제안 거부됨. **2026-10-17 0~4단계 완료·PR #24 머지, 래퍼로만 사용(결정 27) — README 래퍼 전용·로그는 docs/CHANGELOG.md** → v1.0.5 까지 릴리스(결정 35 새 래퍼 재실행), 2026-10-19 결정 36(세션 시작 때 하네스 버전·vA→vB 표시, v1.0.6 머지) → 결정 37(SessionStart systemMessage 는 화면에 안 보여 Claude 가 첫 답변 맨 위에 전달, v1.0.7 머지·설치본 반영) — 남은 한계: 첫 메시지 전엔 화면에 안 보임, 래퍼 출력/상태줄 미결정. `gugbab-claude --version` 은 claude 버전임 → 결정 38(dash `set -m` 으로 comux 에이전트 감지 + `sessions/` 공유로 세션 간 메시지, v1.0.8) → 결정 39(이 프로젝트 메모리 폴더 env 허용 + 설치 폴더 Bash 쓰기 확인, v1.0.9 머지·설치본 반영) → 결정 40(SendMessage 자동 — 받는 세션이 확인, v1.0.11 PR). 남은 제안: 태그 보호·Codex 리뷰·고정 훅 fail-closed
-- [윈도우(PowerShell) 지원 분석 — 추후 작업 (2026-10-19)](project_windows_support_analysis.md) — 가능하나 시작부터 실패·훅 fail-open. PoC(로그인 공유·설정 폴더 스킬 읽기) 먼저, `.gitattributes`·`/dev/stdin`·경로 정규화·`CLAUDE_CODE_USE_POWERSHELL_TOOL=0` 추천
+- [★★ 하네스 현재 상태 (2026-10-20 갱신) — 여기부터 읽기](project_harness_status_2026-10-15.md) — shim 래퍼로만 사용, 설치본 v1.0.11, 321 항목(훅 32·고정 35·켬 70·끔 216). 남은 제안: 태그 보호·Codex 리뷰·고정 훅 fail-closed·윈도우(계획서 작성, PoC 대기). 설치는 PATH 를 묻지 않고 자동 추가(v1.0.12). 기본값·고정 = 계획서 페이지 + `docs/DEFAULTS.md`. **수정 작업은 마지막 줄 `진행할까요?`**
+- [★ 개편 방향 = shim wrapper (2026-10-15)](project_shim_wrapper_direction.md) — `gugbab-claude` 래퍼 + 프로젝트별 `CLAUDE_CONFIG_DIR` + `/harness` 토글. 플러그인 제안 거부됨. **2026-10-17 0~4단계 완료·PR #24 머지, 래퍼로만 사용(결정 27) — README 래퍼 전용·로그는 docs/CHANGELOG.md** → v1.0.5 까지 릴리스(결정 35 새 래퍼 재실행), 2026-10-19 결정 36(세션 시작 때 하네스 버전·vA→vB 표시, v1.0.6 머지) → 결정 37(SessionStart systemMessage 는 화면에 안 보여 Claude 가 첫 답변 맨 위에 전달, v1.0.7 머지·설치본 반영) — 남은 한계: 첫 메시지 전엔 화면에 안 보임, 래퍼 출력/상태줄 미결정. `gugbab-claude --version` 은 claude 버전임 → 결정 38(dash `set -m` 으로 comux 에이전트 감지 + `sessions/` 공유로 세션 간 메시지, v1.0.8) → 결정 39(이 프로젝트 메모리 폴더 env 허용 + 설치 폴더 Bash 쓰기 확인, v1.0.9 머지·설치본 반영) → 결정 40(SendMessage 자동 — 받는 세션이 확인, v1.0.11 머지·설치본 반영). 남은 제안: 태그 보호·Codex 리뷰·고정 훅 fail-closed
+- [윈도우 지원 — 계획서 작성·PoC 대기 (2026-10-20, 결정 41)](project_windows_support_analysis.md) — `docs/plans/2026-10-20-windows-support.md`. 조사 40건(첫 조립 실패·보안 훅 fail-open·bash-guard `.exe` 우회는 맥에도 있음). 사용자 윈도우 PC PoC 결과 JSON 받아 P6 로그인·P7 설정 폴더 스킬로 방향 확정
 - [Codex 리뷰는 1차본 완성 후 맨 마지막 (중지 중)](feedback_codex_review_on_request.md) — `codex.skipReview=true` 유지, 구현 중 재개 여부 다시 묻지 않음, 완료 후 `--unset` 하고 리뷰
 - [개편 계획서 항상 최신화](feedback_keep_plan_synced.md) — 결정 바뀌면 그 턴에 레포 `docs/plans/` 문서 + 아티팩트 페이지 함께 갱신
 - [로컬 전용 메모리 목록](local_index.md) — git 제외(.gitignore), 이 PC에만 있음. 개편 범위 밖 내용은 여기 먼저 확인
@@ -35,6 +35,7 @@
 - [codex review 워크플로우 제약·패턴](feedback_codex_review_workflow.md) — --uncommitted+prompt 병용 불가, isLoggedIn에 2>&1 필수. ChatGPT 계정+`gpt-5.4` config는 400 거부 → 2회 시도 후 마커 기록·사용자 보고
 - [병렬 에이전트 README 충돌 방지](feedback_parallel_readme.md) — 병렬 스킬 생성 시 README 동시 수정 금지, 완료 후 한 번에 정리
 - [README 업데이트 로그 규칙](feedback_readme_log.md) — 날짜별 단일 행 유지, 같은 날 여러 변경은 기존 행에 합산. 2026-10-17부터 위치는 docs/CHANGELOG.md
+- [테스트 전부 끝내고 보고](feedback_report_after_full_tests.md) — 하네스 수정은 단위 → `wrapper-e2e.sh --dev` → 고치기 전·후 실세션 비교까지 순서대로 마친 뒤 한 번에 보고. 시험 메시지는 이 세션으로
 - [토큰 95% 소진 시 일시 정지](feedback_pause_at_95_percent_tokens.md) — 장기 작업은 병렬 가능한 것만 병렬, 잔여 5% 이하면 새 작업 금지·완료/미완 목록+재개법 보고 후 멈춤
 
 ## Feedback — 스킬·검증
