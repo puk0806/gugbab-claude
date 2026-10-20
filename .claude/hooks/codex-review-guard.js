@@ -33,7 +33,12 @@ function isOptedOut() {
 }
 
 function isCodexAvailable() {
-  try { execSync('which codex', { stdio: 'ignore' }); return true; } catch { return false; }
+  // PATH 에서 실행 파일을 직접 찾는다('which' 와 같은 뜻) — 'which' 는 윈도우 cmd.exe 에 없다. 윈도우는 PATHEXT(.EXE·.CMD …)
+  const exts = process.platform === 'win32' ? (process.env.PATHEXT || '.EXE;.CMD;.BAT').split(';').filter(Boolean) : [''];
+  return (process.env.PATH || '').split(path.delimiter).some(d => d && exts.some(e => {
+    const f = path.join(d, 'codex' + e);
+    try { fs.accessSync(f, fs.constants.X_OK); return fs.statSync(f).isFile(); } catch { return false; }
+  }));
 }
 
 // 프로젝트 .claude/settings.json 또는 래퍼(gugbab-claude) 설정 폴더 $CLAUDE_CONFIG_DIR/settings.json 중 하나라도 켜져 있으면 켬
@@ -214,7 +219,7 @@ function hasCodeChangesNewerThan(repoRoot, markerMtime) {
 }
 
 const raw = (() => {
-  try { return fs.readFileSync('/dev/stdin', 'utf8').trim(); } catch { return ''; }
+  try { return fs.readFileSync(0, 'utf8').trim(); } catch { return ''; } // fd 0 — '/dev/stdin' 은 윈도우에 없다
 })();
 
 if (!raw) skip('stdin 비어있음');

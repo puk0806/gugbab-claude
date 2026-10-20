@@ -167,6 +167,10 @@ test('"Python 내장 자료형" 문맥', 'Write', 'docs/skills/backend/python-bu
 
 section('frontmatter status 누락 → 실패')
 test('status 필드 없음', 'Write', 'docs/skills/frontend/test/verification.md', CONTENT_WITHOUT_STATUS, false)
+// CRLF 줄바꿈 (윈도우 autocrlf 체크아웃, 2026-10-20) — LF 와 같은 판정
+test('유효한 verification.md (CRLF) → 통과', 'Write', 'docs/skills/frontend/test/verification.md', VALID_CONTENT.replace(/\n/g, '\r\n'), true)
+test('status 필드 없음 (CRLF) → 그래도 실패', 'Write', 'docs/skills/frontend/test/verification.md', CONTENT_WITHOUT_STATUS.replace(/\n/g, '\r\n'), false)
+test('"내장 지식" 구문 (CRLF) → 그래도 실패', 'Write', 'docs/skills/frontend/test/verification.md', CONTENT_WITH_NAEJANG.replace(/\n/g, '\r\n'), false)
 
 section('필수 섹션 누락 → 실패')
 test('섹션 1,3,5,6,7,8 누락', 'Write', 'docs/skills/frontend/test/verification.md', CONTENT_MISSING_SECTIONS, false)

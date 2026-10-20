@@ -89,6 +89,19 @@ console.log('\n── 차단 경로 (codex 스텁) → exit 2 + stderr 사유 �
     fs.rmSync(stub2, { recursive: true, force: true })
   }
   {
+    // 2026-10-20 — 'which codex' 대신 PATH 를 직접 찾는다. 실행 파일이 아닌 것(폴더·실행 권한 없는 파일)은 설치로 치지 않는다
+    const stub3 = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-bin-fake-'))
+    const stub4 = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-bin-noexec-'))
+    fs.mkdirSync(path.join(stub3, 'codex'))
+    fs.writeFileSync(path.join(stub4, 'codex'), '#!/bin/sh\necho "Logged in using ChatGPT"\n') // 0644 — 실행 불가
+    const r = spawnSync(process.execPath, [HOOK], { input: JSON.stringify({ hook_event_name: 'Stop' }), encoding: 'utf8', timeout: 20000, cwd: repo,
+      env: { ...process.env, PATH: `${stub3}:${stub4}::/usr/bin:/bin` } }) // 빈 항목(::)도 섞음, 진짜 codex 가 없는 PATH
+    const pass = r.status === 0 && r.stderr.includes('건너뜀: codex CLI 없음') // 로그인 실패로 우연히 통과한 것과 구분
+    console.log(`  ${pass ? '✅' : '❌'} PATH 에 codex 폴더·실행 불가 파일만 → 미설치로 조용히 통과 → ${pass ? 'PASS' : `FAIL (exit ${r.status}, ${r.stderr.slice(0, 80)})`}`)
+    pass ? passed++ : failed++
+    fs.rmSync(stub3, { recursive: true, force: true }); fs.rmSync(stub4, { recursive: true, force: true })
+  }
+  {
     // 래퍼(gugbab-claude) 실행: 프로젝트에 .claude/settings.json 이 없고 플러그인은 설정 폴더(CLAUDE_CONFIG_DIR)에서 켜진다 (2026-10-16)
     const bare = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-bare-'))
     execSync('git init -q', { cwd: bare })

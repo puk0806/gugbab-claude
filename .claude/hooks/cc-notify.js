@@ -12,7 +12,7 @@ const fs = require('fs');
 if (process.platform !== 'darwin') process.exit(0);
 
 try {
-  const input = JSON.parse(fs.readFileSync('/dev/stdin', 'utf8'));
+  const input = JSON.parse(fs.readFileSync(0, 'utf8')); // fd 0 — '/dev/stdin' 은 윈도우에 없다
   if (input === null || typeof input !== 'object') process.exit(0);
 
   if (input.stop_hook_active === true) process.exit(0);

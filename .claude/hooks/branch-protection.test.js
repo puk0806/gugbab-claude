@@ -68,6 +68,12 @@ test('push -o ci.skip origin main (값 받는 옵션)', `${P} -o ci.skip origin 
 test('push origin master', `${P} origin master`, 2, repo)
 test('push origin feature/x main (다중 refspec 중 main)', `${P} origin feature/x main`, 2, repo)
 test('push --all origin (main 포함 전체)', `${P} --all origin`, 2, repo)
+// 2026-10-20 윈도우 — Git Bash 의 git.exe·대문자·\ 경로도 같은 git 으로 본다
+test('git.exe push origin main', 'git.exe push origin main', 2, repo)
+test('GIT.EXE push origin main', 'GIT.EXE push origin main', 2, repo)
+test('"C:\\Git\\bin\\git.exe" push origin main', '"C:\\Git\\bin\\git.exe" push origin main', 2, repo)
+test('git.exe switch -c another (피처에서 분기 금지)', 'git.exe switch -c feature/another', 2, repo)
+test('git.exe push origin feature/test (정상)', 'git.exe push origin feature/test', 0, repo)
 test('push --mirror origin', `${P} --mirror origin`, 2, repo)
 test('push origin :main (main 삭제)', `${P} origin :main`, 2, repo)
 test('push origin --delete main', `${P} origin --delete main`, 2, repo)
@@ -98,10 +104,20 @@ test('echo "git push origin main" (인용 텍스트)', `echo "${P} origin main"`
 test('git log --grep main', 'git log --grep main', 0, repo)
 test('빈 명령', '', 0, repo)
 {
-  const r = spawnSync('node', [HOOK], { input: '{broken', encoding: 'utf8', timeout: 5000, cwd: repo })
-  const ok = r.status === 0 && !(r.stdout + r.stderr).includes('[branch-protection]')
-  console.log(`  ${ok ? '✅' : '❌'} 깨진 JSON stdin → exit 0 → ${ok ? 'PASS' : `FAIL (exit ${r.status})`}`)
-  ok ? passed++ : failed++
+  // 보안 훅은 입력을 못 읽으면 막는다 (2026-10-20 — 예전엔 통과, 윈도우에서 '/dev/stdin' 이 없어 모든 push 가 무검사로 통과했다)
+  for (const [label, input] of [['깨진 JSON', '{broken'], ['빈 stdin', ''], ['JSON null', 'null'], ['JSON 배열', '[]'], ['숫자', '42']]) {
+    const r = spawnSync('node', [HOOK], { input, encoding: 'utf8', timeout: 5000, cwd: repo })
+    const ok = r.status === 2 && r.stderr.includes('입력(JSON)을 읽지 못해')
+    console.log(`  ${ok ? '✅' : '❌'} ${label} stdin → exit 2 차단 → ${ok ? 'PASS' : `FAIL (exit ${r.status})`}`)
+    ok ? passed++ : failed++
+  }
+  {
+    // 정상: 다른 도구·빈 명령은 예전처럼 통과 (입력은 읽혔으므로)
+    const r = spawnSync('node', [HOOK], { input: JSON.stringify({ hook_event_name: 'PreToolUse', tool_name: 'Read', tool_input: {} }), encoding: 'utf8', timeout: 5000, cwd: repo })
+    const ok = r.status === 0
+    console.log(`  ${ok ? '✅' : '❌'} Bash 가 아닌 도구 → exit 0 → ${ok ? 'PASS' : `FAIL (exit ${r.status})`}`)
+    ok ? passed++ : failed++
+  }
   const long = 'echo a && '.repeat(20000) + `${P} origin main`
   const r2 = spawnSync('node', [HOOK], { input: JSON.stringify({ hook_event_name: 'PreToolUse', tool_name: 'Bash', tool_input: { command: long } }), encoding: 'utf8', timeout: 10000, cwd: repo })
   const ok2 = r2.status === 2

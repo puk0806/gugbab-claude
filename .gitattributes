@@ -1,0 +1,17 @@
+# 줄바꿈 고정 — 윈도우 git 기본값(core.autocrlf=true)으로 받으면 .sh·.md 가 CRLF 로 바뀌어
+# 셸 스크립트(set -u\r)·frontmatter 판정이 깨진다 (윈도우 지원 계획 1단계, 2026-10-20)
+* text=auto eol=lf
+# 윈도우 전용 스크립트는 CRLF (cmd.exe 는 LF 배치 파일의 레이블·goto 를 잘못 읽는다)
+*.cmd text eol=crlf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+# 바이너리
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.zip binary

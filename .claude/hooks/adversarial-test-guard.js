@@ -128,7 +128,7 @@ function readContent(input, filePath) {
 }
 
 try {
-  const input = JSON.parse(fs.readFileSync('/dev/stdin', 'utf8'))
+  const input = JSON.parse(fs.readFileSync(0, 'utf8')) // fd 0 — '/dev/stdin' 은 윈도우에 없다
   const filePath = input.tool_input?.file_path || input.tool_input?.path
   if (!filePath) process.exit(0)
   if (!isInsideProject(filePath, input.cwd)) process.exit(0)

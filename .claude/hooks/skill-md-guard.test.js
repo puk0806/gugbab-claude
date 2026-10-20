@@ -146,6 +146,12 @@ section('소스·검증일 누락 → 실패')
 test('> 소스: 없음', 'Write', SKILL_PATH, NO_SOURCE, false)
 test('> 검증일: 없음', 'Write', SKILL_PATH, NO_VERIFIED_DATE, false)
 
+section('CRLF 줄바꿈 (윈도우 autocrlf 체크아웃, 2026-10-20) — LF 와 같은 판정')
+test('유효한 SKILL.md (CRLF) → 통과', 'Write', SKILL_PATH, VALID_CONTENT.replace(/\n/g, '\r\n'), true)
+test('> 소스: 없음 (CRLF) → 그래도 실패', 'Write', SKILL_PATH, NO_SOURCE.replace(/\n/g, '\r\n'), false)
+test('name: 없음 (CRLF) → 그래도 실패', 'Write', SKILL_PATH, NO_NAME.replace(/\n/g, '\r\n'), false)
+test('frontmatter 없음 (\\r 만) → 실패', 'Write', SKILL_PATH, NO_FRONTMATTER.replace(/\n/g, '\r'), false)
+
 section('대상 아닌 경로 → 무시 (통과)')
 test('다른 경로', 'Write', 'README.md', VALID_CONTENT, true)
 test('.claude/skills 외 경로', 'Write', 'docs/skills/frontend/test/SKILL.md', VALID_CONTENT, true)

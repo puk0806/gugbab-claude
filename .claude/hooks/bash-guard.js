@@ -806,6 +806,8 @@ const RESERVED_SKIP = new Set(['!', '{', '}', 'if', 'then', 'elif', 'else', 'fi'
 const FETCHERS = new Set(['curl', 'wget', 'fetch', 'http', 'https', 'aria2c', 'xh'])
 const EXEC_SINKS = new Set(['eval', 'source', '.'])
 const PUBLISHERS = new Set(['npm', 'pnpm', 'yarn', 'bun', 'cargo'])
+// 윈도우 명령 셸·스크립트 호스트 — 넘긴 명령(rd /s /q·Remove-Item 등)을 이 분석기가 해석하지 못한다
+const WIN_SHELLS = new Set(['cmd', 'powershell', 'pwsh', 'wsl', 'wscript', 'cscript', 'mshta'])
 const SYSTEM_DIRS = ['/bin', '/boot', '/dev', '/etc', '/lib', '/lib64', '/proc', '/root', '/sbin', '/sys', '/usr',
   '/var', '/opt', '/System', '/Library', '/Applications', '/private/etc', '/private/var', '/cores', '/Volumes']
 const LEVEL_RANK = { deny: 3, ask: 2, unknown: 1 }
@@ -1071,9 +1073,12 @@ function splitCommands(tokens) {
 
 function cleanValue(v) { return String(v).replace(ZERO_WIDTH_RE, '') }
 
+// 윈도우 실행 파일 확장자 — Git Bash 에서 git.exe·rm.exe·"C:\Git\bin\git.exe" 로 부르면 이름이 달라 분류를 빠져나갔다
+// (2026-10-20 실측: git.exe push --force 가 PermissionRequest 자동 승인). \ 경로와 확장자를 떼고 git·rm 으로 판정
+const WIN_EXE_RE = /\.(?:exe|cmd|bat|com|ps1)$/i
 function cmdNameOf(w) {
   const v = cleanValue(w.value)
-  return (v.includes('/') ? v.slice(v.lastIndexOf('/') + 1) : v).toLowerCase()
+  return v.slice(Math.max(v.lastIndexOf('/'), v.lastIndexOf('\\')) + 1).toLowerCase().replace(WIN_EXE_RE, '')
 }
 
 function isAssignmentWord(w) { return /^[A-Za-z_][A-Za-z0-9_]*(?:\[[^\]]*\])?\+?=/.test(w.value) }
@@ -1652,6 +1657,7 @@ function classifyShell(cmd, opts = {}) {
     }
     classifySecretArgs(inv, ctx, add)
     classifyHarnessWrite(inv, ctx, add)
+    if (WIN_SHELLS.has(nm)) { add('ask', `${nm} 로 넘긴 명령은 판정할 수 없습니다. 사용자 확인이 필요합니다.`); continue }
     if (nm === 'git') { classifyGit(inv.git, add, ctx); continue }
     if (nm === 'gh') { classifyGh(vals, add); continue }
     if (nm === 'curl' || nm === 'wget') { classifyUpload(nm, vals, add); continue }
