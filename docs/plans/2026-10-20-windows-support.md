@@ -1,6 +1,6 @@
 # gugbab 하네스 윈도우 지원 계획서
 
-> 작성: 2026-10-20 · 최종 수정: 2026-10-20 · 상태: **0단계 PoC 대기** (사용자 윈도우 PC 실행 필요)
+> 작성: 2026-10-20 · 최종 수정: 2026-10-20 · 상태: **0단계 PoC 대기** (사용자 윈도우 PC 실행 필요) · **1단계 보안·공통 정리 구현(5.1)**
 > 관련: [래퍼 개편 계획서](2026-10-15-gugbab-claude-shim-wrapper.md) 결정 41 · 17장(요약)
 > 기준 버전: 하네스 v1.0.11 · Claude Code 2.1.304
 
@@ -107,17 +107,21 @@
 
 ### 4.1 실행 방법
 
-PoC 파일 두 개(`poc-windows.js`·`poc-windows.ps1`)를 윈도우 PC 의 같은 폴더에 둔다. 전달 방법(USB·메신저·레포 브랜치)은 사용자가 정한다.
+PoC 는 레포 `scripts/poc/`(`poc-windows.js`·`poc-windows.ps1`)에 있다 — 브랜치 `feat/windows-support-poc-2026-10-20`.
 
 ```powershell
 # 0) 준비: Git for Windows, Node 22+, Claude Code(평소 쓰는 방식으로 설치·로그인 1회)
-# 1) 하네스 레포를 윈도우에 클론 (테스트·훅 실측용 — autocrlf 영향을 보려면 기본 설정 그대로)
-git clone https://github.com/puk0806/gugbab-claude.git C:\src\gugbab-claude
-# 2) PoC — Windows Terminal 의 PowerShell 에서 (Git Bash 창 아님)
-powershell -ExecutionPolicy Bypass -File .\poc-windows.ps1 -Repo C:\src\gugbab-claude
+# 1) 이 브랜치를 윈도우에 클론 (테스트·훅 실측용 — autocrlf 영향을 보려면 git 설정 그대로)
+git clone -b feat/windows-support-poc-2026-10-20 https://github.com/puk0806/gugbab-claude.git C:\src\gugbab-claude
+cd C:\src\gugbab-claude
+# 2) PoC — Windows Terminal 의 PowerShell 에서 (Git Bash 창 아님). 결과는 현재 폴더 poc-windows-result.json
+powershell -ExecutionPolicy Bypass -File .\scripts\poc\poc-windows.ps1 -Repo C:\src\gugbab-claude
 # 3) 로그인 파일 링크 방식까지 보려면 (실제 .credentials.json 을 가리킴 — 끝나면 원상 확인·복구)
-powershell -ExecutionPolicy Bypass -File .\poc-windows.ps1 -LinkCreds
+powershell -ExecutionPolicy Bypass -File .\scripts\poc\poc-windows.ps1 -LinkCreds
 ```
+
+> 결과 파일 `poc-windows-result.json` 은 레포 폴더 안에 생긴다 — 사용자 이름·경로가 들어 있으므로 **커밋하지 말고** 파일만 전달한다.
+> 이 브랜치는 1단계 수정(5장)도 담고 있어 `hookDefenses`(P12)는 수정 뒤 판정이 나온다. 수정 전 판정이 필요하면 `-Repo` 에 `main` 클론을 준다.
 
 결과 `poc-windows-result.json` 을 돌려주면 다음 단계 방향을 확정한다. 토큰 값은 기록하지 않는다(파일 존재·크기·최상위 키 이름만). 시험 파일은 `%TEMP%\gugbab-poc-*` 에 만들고 끝나면 지운다. claude 호출은 haiku 로 9~11번.
 
@@ -164,6 +168,20 @@ powershell -ExecutionPolicy Bypass -File .\poc-windows.ps1 -LinkCreds
 | **3. 래퍼·조립** | `cli/launch.js`(래퍼 로직, 재시작 반복·`--continue`·`self-update` exit 10·`GUGBAB_*` 전달) + `bin/gugbab-claude.cmd`·`.ps1` (macOS sh 는 그대로, 공통 부분만 launch 로) · compose: `UNSAFE_SHELL` 윈도우 처리·junction/하드링크/복사·mode 생략·신뢰 키 `C:/`·훅 명령 `/` 표기·메모리 폴더 인코딩 · `paths.js` homedir · `open.js` `wt.exe` · 상태줄 Node 이식 · 로그인 방식(4.3) · 윈도우 settings `env.CLAUDE_CODE_USE_POWERSHELL_TOOL=0` · `doctor` 윈도우 점검(Git Bash·개발자 모드·긴 경로·autocrlf·로그인 방식·PowerShell 도구·터미널) | 조립 적대 테스트: 링크 자리에 사용자 파일·폴더, junction 이 하네스 밖을 가리킴, 복사 방식 원본 삭제·변경 후 재조립, 동시 두 조립(잠금), 읽기 전용 `.claude.json`, 백신 잠금 흉내(EBUSY 주입) | 윈도우 CI 에서 cli 테스트 전부, 사용자 PC 에서 `gugbab-claude` 로 세션이 열림 |
 | **4. 설치·업데이트·E2E** | `install.ps1`(install.sh 1:1 — clone·런처·사용자 PATH·`--version`·`--channel`·`--uninstall`) · README 윈도우 절 · `scripts/wrapper-e2e` 를 Node 로 이식(맥·윈도우 공용, sh 판은 유지 또는 대체) | 빈 사용자 프로필 시뮬레이션(임시 `USERPROFILE`), 재설치·제거, PATH 에 이미 다른 `gugbab-claude`, 실행 정책 Restricted | 새 윈도우 PC 한 줄 설치 → 실행 성공, E2E 전부 통과 |
 | **5. 실사용 검증·릴리스** | 6장 수동 체크리스트를 사용자 PC 에서, 문제 수정 | — | 체크리스트 전부 통과 → **v1.1.0**(새 플랫폼 = minor) |
+
+### 5.1 1단계 결과 (2026-10-20 — PoC 와 무관하게 먼저, 결정 41-⑥)
+
+| 항목 | 한 일 | 테스트 |
+|---|---|---|
+| bash-guard 명령 이름 | `cmdNameOf` 가 `\` 경로·`.exe/.cmd/.bat/.com/.ps1` 를 떼고 소문자로 — git·rm 등 **모든 분류가 함께** 적용. `cmd`·`powershell`·`pwsh`·`wsl`·`wscript`·`cscript`·`mshta` 는 안의 명령을 판정할 수 없어 확인(ask) | 우회 17개(`git.exe`·`GIT.EXE`·`"C:\Git\bin\git.exe"`·`/c/Program Files/…/git.exe`·`git.cmd`·`rm.exe -rf ~`·`RM.EXE -rf "$HOME"`, PermissionRequest 자동 승인 안 함, 윈도우 셸 ask·파이프 뒤) + 회귀 6개(`ls`·`git status`·`node build.com.js`·인자로만 나온 `cmd` 등 그대로 자동). 수정 전 코드로 돌리면 실패 |
+| 입력 못 읽으면 통과하던 훅 8개 | `readFileSync('/dev/stdin')` → `readFileSync(0)`: branch-protection·parry·tdd-guard·fake-impl-guard·adversarial-test-guard·typescript-quality·codex-review-guard·cc-notify. **보안 훅 2개(branch-protection·parry)는 입력이 비었거나 JSON 객체가 아니면 차단(exit 2)** — 기존 "깨진 JSON → 통과" 테스트는 기대값을 바꿈 | 깨진 JSON·빈 stdin·`null`·배열·숫자/문자열 → 차단, 다른 도구는 통과, `git.exe push origin main` 차단 |
+| 셸을 거치던 명령 | branch-protection `git branch --show-current 2>/dev/null` → `execFileSync`. codex-review-guard `which codex` → PATH 직접 탐색(윈도우는 PATHEXT, 폴더·실행 불가 파일은 미설치) | PATH 에 `codex` 폴더·실행 불가 파일만 → "codex CLI 없음" 으로 건너뜀(로그인 실패로 우연히 통과한 것과 구분) |
+| CRLF | skill-md-guard·agent-md-guard·verification-guard·`docs/plans/page/inv.js`·`parse-checklist.js`·`build-page.js` 가 읽은 직후 `\r\n`·`\r` → `\n` (build-page 는 parse-checklist 가 준 7장 위치로 자르므로 같은 기준) | CRLF·CR 만 쓴 파일이 LF 와 같은 결과, 누락 필드는 CRLF 여도 계속 차단. `inv.test.js` 신설. skill·agent·page 는 수정 전 코드로 실패(verification-guard 는 원래 CRLF 에서도 동작 — 회귀용) |
+| `.gitattributes` | `* text=auto eol=lf`, `*.cmd`·`*.bat`·`*.ps1` 은 `eol=crlf`, 이미지·폰트·zip 바이너리 | `git add --renormalize .` 로 줄바꿈이 바뀌는 기존 파일 0개 확인 |
+
+검증: 훅 테스트 파일 34개 전부 · cli·scripts·문서 391 · `wrapper-e2e.sh --dev` 40/40 · **고치기 전(`origin/main`)·후 실세션 비교**(`claude -p`, 임시 프로젝트): 전에는 `git.exe push --force`·`cmd //c` 가 훅을 그대로 지나 "command not found" 로만 끝났고, 후에는 branch-protection·bash-guard 가 막음(`ls` 는 그대로).
+
+**1단계에서 뺀 것 → 2단계로**: 경로 목록 `path.delimiter`(compose·bash-guard 양쪽), 공용 경로 헬퍼(`normPath`·`isUnder`·`msysToWin`), 훅 테스트 러너의 `echo '…' | node` → `spawnSync`+`input`(윈도우 CI 와 함께).
 
 ---
 
@@ -220,4 +238,4 @@ powershell -ExecutionPolicy Bypass -File .\poc-windows.ps1 -LinkCreds
 | 날짜 | 내용 |
 |---|---|
 | 2026-10-19 | 1차 분석(메모리에만, 보류) |
-| 2026-10-20 | 계획서 작성 — 공식 문서 재확인(F1~F11), 코드 전수 조사 40건, PoC 스크립트 작성·맥에서 판정 로직 검증, 결정 41 추천안 |
+| 2026-10-20 | 계획서 작성 — 공식 문서 재확인(F1~F11), 코드 전수 조사 40건, PoC 스크립트 작성·맥에서 판정 로직 검증, 결정 41 추천안 · PoC 를 브랜치 `scripts/poc/` 로(4.1) · **1단계 보안·공통 정리 구현(5.1)** |

@@ -2,7 +2,7 @@ const fs = require('fs'), path = require('path');
 const R = process.argv[2];
 const OUT = process.argv[3];
 const SK = 'SKILL' + '.md';
-const fm = t => { const m = t.match(/^---\n([\s\S]*?)\n---/); if (!m) return {}; const o = {}; let k = null; for (const l of m[1].split('\n')) { const mm = l.match(/^([a-zA-Z-]+):\s*(.*)$/); if (mm) { k = mm[1]; o[k] = mm[2].replace(/^[>|]-?\s*$/, ''); } else if (k && /^\s/.test(l)) o[k] += ' ' + l.trim(); } return o; };
+const fm = t => { t = t.replace(/\r\n?/g, '\n'); /* CRLF 체크아웃도 같은 frontmatter */ const m = t.match(/^---\n([\s\S]*?)\n---/); if (!m) return {}; const o = {}; let k = null; for (const l of m[1].split('\n')) { const mm = l.match(/^([a-zA-Z-]+):\s*(.*)$/); if (mm) { k = mm[1]; o[k] = mm[2].replace(/^[>|]-?\s*$/, ''); } else if (k && /^\s/.test(l)) o[k] += ' ' + l.trim(); } return o; };
 const clean = s => (s || '').replace(/<example>.*?<\/example>/g, '').replace(/\s+/g, ' ').replace(/^["']|["']$/g, '').trim();
 const cat = {};
 for (const c of fs.readdirSync(path.join(R, 'docs/skills'))) { const d = path.join(R, 'docs/skills', c); if (!fs.statSync(d).isDirectory()) continue; for (const n of fs.readdirSync(d)) cat[n] = c; }

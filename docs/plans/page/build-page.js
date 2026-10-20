@@ -5,8 +5,9 @@ const path = require('path');
 const S = __dirname;
 const [, , planPath, clPath, outPath] = process.argv;
 if (!planPath || !clPath || !outPath) { console.error('사용: node build-page.js <계획서.md> <체크리스트.md> <출력.html>'); process.exit(1); }
-const plan = fs.readFileSync(planPath, 'utf8');
-const cl = fs.readFileSync(clPath, 'utf8');
+// CRLF(윈도우 autocrlf 체크아웃)는 LF 로 — parse-checklist 가 LF 로 바꾼 뒤 준 relIdx 로 이 문자열을 자르므로 같은 기준이어야 한다
+const plan = fs.readFileSync(planPath, 'utf8').replace(/\r\n?/g, '\n');
+const cl = fs.readFileSync(clPath, 'utf8').replace(/\r\n?/g, '\n');
 
 // 체크리스트 7·8장(요약·연관 처리)은 계획서 탭에 문서로 붙인다
 // 계획서의 마지막 장 번호(N) 다음인 N+1·N+2 장으로 번호를 바꿔 붙인다 — 계획서에 장이 늘어도 겹치지 않게.

@@ -11,6 +11,7 @@ function checkName(name) {
 
 function parseChecklist(md) {
   if (typeof md !== 'string') throw new TypeError('체크리스트 md 는 문자열이어야 합니다');
+  md = md.replace(/\r\n?/g, '\n'); // CRLF(윈도우 autocrlf 체크아웃)면 항목이 0개로 읽히던 문제
   const m7 = /^## 7\. /m.exec(md);
   const relIdx = m7 ? m7.index : md.length;
   const sections = [];

@@ -200,3 +200,14 @@ test('에러: 입력 파일이 없으면 0이 아닌 코드로 끝나고 출력 
   assert.notStrictEqual(r.status, 0);
   assert.ok(!fs.existsSync(out));
 });
+
+test('경계: CRLF 체크아웃(윈도우 autocrlf) 계획서·체크리스트도 LF 와 같은 페이지 — 7장 위치가 어긋나지 않는다', () => {
+  const planLf = '# 계획서\n\n## 12. 앞 장\n\n## 13. 결정\n\n본문';
+  const a = build(planLf, CHECKLIST);
+  const b = build(planLf.replace(/\n/g, '\r\n'), CHECKLIST.replace(/\n/g, '\r\n'));
+  assert.strictEqual(b.r.status, 0, b.r.stderr);
+  assert.deepStrictEqual(sectionsOf(b.html), sectionsOf(a.html));
+  assert.ok(b.html.includes('## 14. 추천 고정 목록 요약'), '7장이 14장으로 붙어야 한다');
+  assert.ok(!b.html.includes('\r'), 'CR 이 페이지에 남으면 안 된다');
+  assert.strictEqual(b.html, a.html);
+});

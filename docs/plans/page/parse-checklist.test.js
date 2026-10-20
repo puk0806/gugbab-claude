@@ -69,6 +69,16 @@ test('경계: 형식이 깨진 줄(체크박스·굵게 없음)은 무시', () =
   assert.ok(!items.some(i => i.id === 'hook:cc-notify'));
 });
 
+test('경계: CRLF·CR 줄바꿈도 LF 와 같은 항목 — 이름·설명 끝에 \\r 이 붙지 않음 (윈도우 autocrlf)', () => {
+  const lf = parseChecklist(MD);
+  for (const nl of ['\r\n', '\r']) {
+    const r = parseChecklist(MD.replace(/\n/g, nl));
+    assert.deepStrictEqual(r.items, lf.items);
+    assert.deepStrictEqual(r.sections, lf.sections);
+    assert.ok(!JSON.stringify(r).includes('\\r'));
+  }
+});
+
 test('경계: 입력이 문자열이 아니면 TypeError', () => {
   assert.throws(() => parseChecklist(null), TypeError);
 });

@@ -792,7 +792,7 @@ sh scripts/wrapper-e2e.sh --dev                     # 이 레포 작업 트리(�
 
 ## 17. 윈도우 지원 계획 (2026-10-20 — 결정 41, 상세는 [별도 계획서](2026-10-20-windows-support.md))
 
-**상태: 0단계 PoC 대기** — 사용자 윈도우 PC 에서 PoC 스크립트(`poc-windows.ps1` + `poc-windows.js`)를 실행해 결과 JSON 을 회수한다. 맥에서 판정 로직은 검증함(`.ps1` 껍데기는 미실행).
+**상태: 0단계 PoC 대기 · 1단계 구현** — 사용자 윈도우 PC 에서 PoC 스크립트(브랜치 `feat/windows-support-poc-2026-10-20` 의 `scripts/poc/`)를 실행해 결과 JSON 을 회수한다. 맥에서 판정 로직은 검증함(`.ps1` 껍데기는 미실행). PoC 와 무관한 **1단계(보안·공통 정리)는 2026-10-20 구현** — bash-guard 가 `git.exe`·`\` 경로·`.exe` 를 떼고 판정·`cmd`·`powershell` 은 확인, `/dev/stdin` 훅 8개를 fd 0 으로(보안 훅 2개는 입력 실패 시 차단), CRLF frontmatter, `.gitattributes`. 상세는 윈도우 계획서 5.1.
 
 ### 17.1 지금 윈도우에서 일어나는 일
 
