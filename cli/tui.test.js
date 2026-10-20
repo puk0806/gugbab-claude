@@ -158,6 +158,75 @@ test('정상: runTui — 가짜 터미널로 블록 일괄 켜고 저장하면 �
   assert.ok(screen.includes('\x1b[?1049l'), '끝나면 원래 화면으로 돌아옴');
 });
 
+// ── /harness 창 자동 닫기 (2026-10-20 — 예전엔 저장 뒤 "아무 키나" 를 기다려 창이 남았다) ──
+function tuiRig(opts = {}) {
+  const d = fs.mkdtempSync(path.join(os.tmpdir(), 'tui-close-'));
+  const paths = { profilePath: path.join(d, 'profile.json') };
+  const project = { root: d, id: 'p', configDir: path.join(d, 'cfg'), settingsPath: path.join(d, 'projects', 'p', 'settings.json') };
+  const input = new PassThrough(); input.isTTY = true;
+  const raw = []; input.setRawMode = (v) => { raw.push(v); return input; };
+  const output = new PassThrough(); output.columns = 120; output.rows = 30;
+  let screen = ''; output.on('data', (c) => { screen += c; });
+  const t0 = Date.now();
+  const done = runTui({ manifest, paths, project, input, output, composeFn: () => {}, ...opts });
+  return { input, raw, done, project, screen: () => screen, elapsed: () => Date.now() - t0 };
+}
+const CHANGE_AND_SAVE = ['v', '\x1b[B', ' ', '\r']; // 블록 보기 → block:st 일괄 켬 → 저장
+
+test('정상: /harness 창(holdOnExit) — 저장하면 요약을 보여 주고 키를 더 누르지 않아도 저절로 끝남', async () => {
+  const r = tuiRig({ holdOnExit: true, closeDelayMs: 30 });
+  for (const k of CHANGE_AND_SAVE) r.input.write(k);
+  const res = await r.done; // 추가 키 입력 없음
+  assert.strictEqual(res.saved, true);
+  assert.match(r.screen(), /저장했습니다[\s\S]*0초 뒤 이 창을 닫습니다 \(아무 키나 누르면 바로\)/);
+  assert.ok(!/아무 키나 누르면 이 창을 닫습니다/.test(r.screen()), '예전 문구(키를 기다림)는 없어야');
+  assert.strictEqual(r.raw[r.raw.length - 1], false, '끝나면 raw 모드를 풀어 터미널을 돌려놓음');
+  assert.strictEqual(r.input.listenerCount('keypress'), 0, '키 리스너가 남지 않음');
+});
+
+test('경계: 기다리는 동안 키를 누르면 타이머를 기다리지 않고 바로 끝남 · 키와 타이머가 겹쳐도 한 번만', async () => {
+  const r = tuiRig({ holdOnExit: true, closeDelayMs: 60000 });
+  for (const k of CHANGE_AND_SAVE) r.input.write(k);
+  await new Promise((ok) => setImmediate(ok));
+  r.input.write('x'); r.input.write('y'); r.input.write('\r'); // 여러 번 눌러도
+  const res = await r.done;
+  assert.strictEqual(res.saved, true);
+  assert.ok(r.elapsed() < 5000, `60초 타이머를 기다리면 안 됨 (${r.elapsed()}ms)`);
+  assert.strictEqual(r.input.listenerCount('keypress'), 0);
+  // 60초 타이머가 남아 있으면 node:test 가 이 파일을 끝내지 못한다 — clearTimeout 확인은 테스트가 끝나는 것 자체
+});
+
+test('경계: 바꾼 것 없이 Enter·q·Ctrl+C 는 기다리지 않고 바로 끝남 (요약·대기 문구 없음)', async () => {
+  for (const keys of [['\r'], ['q'], ['\x03']]) {
+    const r = tuiRig({ holdOnExit: true, closeDelayMs: 60000 });
+    for (const k of keys) r.input.write(k);
+    const res = await r.done;
+    assert.strictEqual(res.saved, false, JSON.stringify(keys));
+    assert.ok(r.elapsed() < 5000);
+    assert.ok(!/초 뒤 이 창을 닫습니다/.test(r.screen()), JSON.stringify(keys));
+  }
+});
+
+test('경계: 바꾼 뒤 q 두 번(버리고 닫기)도 바로 끝나고 파일에 쓰지 않음', async () => {
+  const r = tuiRig({ holdOnExit: true, closeDelayMs: 60000 });
+  for (const k of ['v', '\x1b[B', ' ', 'q', 'q']) r.input.write(k);
+  const res = await r.done;
+  assert.strictEqual(res.saved, false);
+  assert.ok(!fs.existsSync(r.project.settingsPath), '버린 변경은 기록 안 됨');
+  assert.ok(r.elapsed() < 5000);
+});
+
+test('정상·경계: 세션 밖(holdOnExit 없음)은 저장해도 기다리지 않음 · 음수 대기 시간은 0 으로', async () => {
+  const a = tuiRig({ closeDelayMs: 60000 });
+  for (const k of CHANGE_AND_SAVE) a.input.write(k);
+  assert.strictEqual((await a.done).saved, true);
+  assert.ok(a.elapsed() < 5000 && !/초 뒤 이 창을 닫습니다/.test(a.screen()));
+  const b = tuiRig({ holdOnExit: true, closeDelayMs: -5000 });
+  for (const k of CHANGE_AND_SAVE) b.input.write(k);
+  assert.strictEqual((await b.done).saved, true);
+  assert.ok(b.elapsed() < 5000);
+});
+
 test('정상: 프로젝트 자체 .claude 가 가진 항목은 ↷ 표시, 바꿔도 적용 안 된다고 알림', () => {
   let st = createState({ manifest, layers: layers(), projectName: 'p', skipped: new Set(['hook:solo']), view: 'stack' });
   st = goto(press(goto(st, 'type:hook'), 'right').st, 'hook:solo');

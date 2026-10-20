@@ -13,7 +13,8 @@ const shq = (s) => `'${String(s).replace(/'/g, `'\\''`)}'`;
 const asq = (s) => `"${String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`; // AppleScript 문자열
 const show = (s) => (/^[A-Za-z0-9_./:=@%+,-]+$/.test(s) ? s : shq(s));
 
-function sessionCommand({ bin, root, env }) {
+// closeTerminal — macOS 새 터미널 창으로 띄울 때만: 끝나면 그 창을 닫는다(아래 scheduleTerminalClose)
+function sessionCommand({ bin, root, env, closeTerminal = false }) {
   const vars = [];
   if (env.GUGBAB_DEV === '1' && env.GUGBAB_HOME) vars.push(['GUGBAB_HOME', env.GUGBAB_HOME]);
   if (env.GUGBAB_DATA) vars.push(['GUGBAB_DATA', env.GUGBAB_DATA]);
@@ -21,7 +22,60 @@ function sessionCommand({ bin, root, env }) {
     if (/[\n\r\0]/.test(String(v))) throw new Error('경로에 줄바꿈이 있어 화면을 띄울 수 없습니다');
   }
   const prefix = vars.length ? `env ${vars.map(([k, v]) => `${k}=${shq(v)}`).join(' ')} ` : '';
-  return `clear; cd ${shq(root)} && ${prefix}${shq(bin)} harness --session`; // clear — 창에 찍힌 긴 실행 명령을 지움
+  return `clear; cd ${shq(root)} && ${prefix}${shq(bin)} harness --session${closeTerminal ? ' --close-terminal' : ''}`; // clear — 창에 찍힌 긴 실행 명령을 지움
+}
+
+// macOS 터미널 창 닫기 — `do script "…; exit"` 로 연 창은 셸이 끝나도 터미널 설정("셸이 종료되면: 창 닫지 않음")이면 남는다.
+// TUI 가 도는 동안(busy) 그 tty 의 창을 찾아 **창 id** 로 기억하고, 셸이 끝나 한가해지면(busy=false) 그 창만 닫는다.
+// tty 이름만으로 고르면 이미 끝나 남아 있는 다른 창이 같은 tty 이름을 가질 수 있어(2026-10-20 실측) 실행 중인 창으로 고른다.
+// 탭이 여럿인 창(사용자가 합친 창)은 건드리지 않는다. 최대 waitSec 기다림
+const TTY_RE = /^\/dev\/ttys\d{1,4}$/;
+function terminalCloseScript(tty, waitSec = 1800) {
+  if (!TTY_RE.test(String(tty))) throw new Error(`터미널 tty 형식이 아닙니다: ${tty}`); // AppleScript 에 그대로 들어가므로 형식만 받는다
+  const loops = Math.max(1, Math.min(7200, Math.round(Number(waitSec) * 2) || 1));
+  return [
+    'set target to missing value',
+    'repeat 20 times',
+    '  tell application "Terminal"',
+    '    repeat with w in windows',
+    '      try',
+    `        if (count of tabs of w) is 1 and tty of tab 1 of w is "${tty}" and busy of tab 1 of w then`,
+    '          set target to id of w',
+    '          exit repeat',
+    '        end if',
+    '      end try',
+    '    end repeat',
+    '  end tell',
+    '  if target is not missing value then exit repeat',
+    '  delay 0.25',
+    'end repeat',
+    'if target is missing value then return',
+    `repeat ${loops} times`,
+    '  delay 0.5',
+    '  tell application "Terminal"',
+    '    try',
+    '      if busy of tab 1 of window id target is false then',
+    '        close window id target',
+    '        return',
+    '      end if',
+    '    on error',
+    '      return',
+    '    end try',
+    '  end tell',
+    'end repeat',
+  ].join('\n');
+}
+// 창과 무관한 새 세션(detached)으로 띄운다 — 이 창의 프로세스로 잡히면 터미널이 "실행 중인 프로세스를 종료할까요?" 를 묻는다
+function scheduleTerminalClose({ tty, spawn = require('child_process').spawn }) {
+  const child = spawn('osascript', ['-e', terminalCloseScript(tty)], { detached: true, stdio: 'ignore' });
+  if (child && typeof child.unref === 'function') child.unref();
+  return child;
+}
+function currentTty({ exec = (cmd, args, o) => execFileSync(cmd, args, o) } = {}) {
+  try {
+    const t = String(exec('tty', [], { encoding: 'utf8', stdio: ['inherit', 'pipe', 'ignore'] })).trim();
+    return TTY_RE.test(t) ? t : null;
+  } catch { return null; }
 }
 
 function planLaunch({ env, platform, bin, root }) {
@@ -33,7 +87,8 @@ function planLaunch({ env, platform, bin, root }) {
   }
   if (env.TMUX) return { kind: 'tmux', cmd, argv: ['tmux', 'run-shell', '-b', `tmux display-popup -E -w 90% -h 85% ${shq(cmd)}`] };
   if (platform === 'darwin') {
-    return { kind: 'terminal', cmd, argv: ['osascript', '-e', `tell application "Terminal" to do script ${asq(`${cmd}; exit`)}`, '-e', 'tell application "Terminal" to activate'] };
+    const tcmd = sessionCommand({ bin, root, env, closeTerminal: true });
+    return { kind: 'terminal', cmd: tcmd, argv: ['osascript', '-e', `tell application "Terminal" to do script ${asq(`${tcmd}; exit`)}`, '-e', 'tell application "Terminal" to activate'] };
   }
   return manual;
 }
@@ -53,10 +108,10 @@ function launch(p, { exec = (cmd, args) => execFileSync(cmd, args, { encoding: '
       if (!TOKEN_RE.test(pane)) throw new Error('comux 창을 나누지 못했습니다');
       exec('comux', ['send', pane, `${p.cmd}; exit`]);
       exec('comux', ['send', pane, '\n']);
-      return `comux 옆 창에 하네스 화면을 띄웠습니다 (창 ${pane}) — 저장하거나 닫으면 창도 닫힙니다`;
+      return `comux 옆 창에 하네스 화면을 띄웠습니다 (창 ${pane}) — Enter 로 저장하면 결과를 2초 보여 주고 창이 닫힙니다`;
     }
     exec(p.argv[0], p.argv.slice(1));
-    return p.kind === 'tmux' ? 'tmux 팝업으로 하네스 화면을 띄웠습니다' : '새 터미널 창에 하네스 화면을 띄웠습니다';
+    return p.kind === 'tmux' ? 'tmux 팝업으로 하네스 화면을 띄웠습니다 — Enter 로 저장하면 결과를 2초 보여 주고 닫힙니다' : '새 터미널 창에 하네스 화면을 띄웠습니다 — Enter 로 저장하면 결과를 2초 보여 주고 창이 닫힙니다';
   } catch (e) {
     throw new Error(`화면을 띄우지 못했습니다 (${e.message})\n다른 터미널에서 실행하세요: ${p.cmd}`);
   }
@@ -74,4 +129,4 @@ function rootFromConfigDir(env, projectsDir) {
   } catch { return null; }
 }
 
-module.exports = { shq, sessionCommand, planLaunch, describePlan, launch, rootFromConfigDir };
+module.exports = { shq, sessionCommand, planLaunch, describePlan, launch, rootFromConfigDir, terminalCloseScript, scheduleTerminalClose, currentTty };
