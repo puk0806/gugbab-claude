@@ -474,7 +474,9 @@ function replayOps(layer, ops, manifest) {
 }
 
 // 터미널에서 실행 — 저장하면 { saved, turnedOn, turnedOff, needRestart, warnings }
-function runTui({ manifest, paths, project, input = process.stdin, output = process.stdout, composeFn, holdOnExit = false }) {
+// holdOnExit — /harness 로 띄운 창(comux 옆 창·tmux 팝업·macOS 새 창): 저장했으면 요약을 closeDelayMs 동안 보여 주고 저절로 끝난다
+//   (예전엔 "아무 키나 누르면 닫습니다" 로 키를 하나 더 기다려 Enter 저장 뒤에도 창이 남았다 — 2026-10-20 사용자 요청)
+function runTui({ manifest, paths, project, input = process.stdin, output = process.stdout, composeFn, holdOnExit = false, closeDelayMs = 2000 }) {
   if (!input.isTTY || typeof input.setRawMode !== 'function') return Promise.reject(new Error('터미널에서만 화면을 띄울 수 있습니다'));
   let st = createState({ manifest, layers: loadLayers(paths, project), projectName: project.id, skipped: project.configDir ? readSkipped(project.configDir) : new Set() });
   return new Promise((resolveP, rejectP) => {
@@ -502,11 +504,22 @@ function runTui({ manifest, paths, project, input = process.stdin, output = proc
         } catch (e) { rejectP(e); return; }
       }
       const done = () => { input.pause(); resolveP(result); };
-      if (!holdOnExit) return done();
-      output.write(`${summaryLines(result).join('\n')}\n\n아무 키나 누르면 이 창을 닫습니다\n`);
+      if (!holdOnExit || !result.saved) return done(); // 저장 안 했으면 보여 줄 것이 없어 바로 닫는다
+      const secs = Math.max(0, Math.round(closeDelayMs / 1000));
+      output.write(`${summaryLines(result).join('\n')}\n\n${secs}초 뒤 이 창을 닫습니다 (아무 키나 누르면 바로)\n`);
+      let closed = false, timer = null;
+      const close = () => {
+        if (closed) return; // 타이머와 키가 겹쳐도 한 번만
+        closed = true;
+        clearTimeout(timer);
+        input.removeListener('keypress', close);
+        try { input.setRawMode(false); } catch { /* 무시 */ }
+        done();
+      };
       try { input.setRawMode(true); } catch { /* 무시 */ }
       input.resume();
-      input.once('keypress', () => { try { input.setRawMode(false); } catch { /* 무시 */ } done(); });
+      input.on('keypress', close);
+      timer = setTimeout(close, Math.max(0, closeDelayMs));
     };
     const onKey = (str, key = {}) => {
       if (key.ctrl && key.name === 'c') return finish(false);

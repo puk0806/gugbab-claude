@@ -198,9 +198,15 @@ switch (cmd) {
     const project = resolveProject(process.cwd(), paths.dataDir);
     const { runTui, summaryLines } = require('./tui');
     const session = args.includes('--session');
+    // macOS 새 터미널 창으로 띄운 경우(/harness, open.js) — 끝나면 그 창도 닫는다. 닫기 도우미는 화면이 도는 지금 띄워야
+    // "실행 중인 창"으로 이 창을 정확히 고른다. 오류로 끝나면 도우미를 멈춰 창을 남겨 둔다(오류 내용을 보게)
+    const open = session && args.includes('--close-terminal') && process.platform === 'darwin' ? require('./open') : null;
+    const tty = open ? open.currentTty() : null;
+    let closer = null;
+    if (tty) { try { closer = open.scheduleTerminalClose({ tty }); } catch { closer = null; /* 창은 남지만 설정은 저장됨 */ } }
     runTui({ manifest, paths, project, holdOnExit: session })
       .then((r) => { if (!session) process.stdout.write(summaryLines(r).join('\n') + '\n'); process.exit(0); })
-      .catch((e) => fail(`[gugbab] ${e.message}`));
+      .catch((e) => { if (closer && closer.pid) { try { process.kill(closer.pid); } catch { /* 이미 끝남 */ } } fail(`[gugbab] ${e.message}`); });
     break;
   }
   case undefined:

@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 0693c72c-1709-4533-8cb9-8a3b20e52a64
-  modified: 2026-10-20T02:37:11.194Z
+  modified: 2026-10-20T08:22:45.761Z
 ---
 
 **상태 (2026-10-20 갱신)**: **shim 래퍼(`gugbab-claude`)로만 사용**(결정 27). main = `5773711`(PR #39), 설치본 `~/gugbab` = **v1.0.11**(stable, PR 마다 VERSION 올림 → 머지 때 자동 태그 — 결정 32). 개편 0~6단계 완료, 결정 1~40 은 계획서 13장 + [[project-shim-wrapper-direction]]. 옛 복사 설치(`project-install.sh`·템플릿 0~15)는 6단계에서 삭제됨. 다른 PC 에서 시작하면 계획서 페이지 https://claude.ai/artifact/U7vpKRXVemaNYYNhz8nNLj (계획서 + 항목 체크리스트) 와 `docs/DEFAULTS.md` 가 기본값·고정 목록 원본.
@@ -15,6 +15,8 @@ metadata:
 **남은 제안 (2026-10-20)**: `v*` 태그 보호 규칙(결정 28) · Codex 적대적 리뷰 맨 마지막 1회 · 🔒 고정 훅 비정상 종료 시 fail-closed · 디스패처가 프로젝트 훅 삭제를 실시간 반영 · 윈도우 지원([[project-windows-support-analysis]], 2026-10-20 계획서·결정 41 작성 — 사용자 윈도우 PC PoC 결과 대기).
 
 **설치 PATH 자동 추가 (2026-10-20, v1.0.12 PR)**: 사용자 결정 "의사 안 물어보고 설치할 때 자동으로" — `install.sh` 가 `~/.local/bin` 이 PATH 에 없으면 셸 설정(zsh `~/.zshrc`·bash `~/.bash_profile`/`~/.bashrc`·fish·`~/.profile`) 끝에 `# >>> gugbab-claude PATH >>>` 블록을 묻지 않고 넣음(CI 포함), 제거 때 블록만 묻지 않고 지움, 끄기 `--no-modify-path`. README 에는 안 적음(자동이라 불필요 — 사용자). 이 브랜치는 윈도우 브랜치와 별개(`feat/install-path-setup-2026-10-20`). 파생 하네스 세션에 래퍼 전환 자료를 메시지로 전달함(2026-10-19).
+
+**`/harness` 창 저장 뒤 자동 닫힘 (2026-10-20, `feat/harness-auto-close-2026-10-20`, 커밋 전)**: 사용자 요청 "comux·tmux·macOS 터미널 싹다 닫히게". 원인은 `--session` 이 저장 뒤 "아무 키나" 를 기다린 것 → 저장하면 2초 요약 후 끝(키 누르면 바로), 저장 없음은 즉시. **macOS Terminal 기본 설정은 셸이 끝나도 창을 남김(대조 실측)** → `--close-terminal`: 화면 시작 때 detached osascript 가 그 tty 의 **busy 인 창을 id 로 기억**(남은 창이 같은 tty 이름을 재사용함 — tty 로만 고르면 엉뚱한 창, 실측)하고 한가해지면 그 창만 닫음, 저장 오류면 도우미를 kill 해 창 유지. comux·Terminal 실창 확인, tmux 는 이 PC 미설치(단위만). 실험 팁: Terminal 의 `do script " " in tab` 은 실행 중 프로세스에 글자+엔터를 입력해 줌.
 
 **최근 이력 (요약)**
 - 09-28~29 PR #19: 철학·학술 자산 삭제(템플릿 8 폐지), 재검증·재테스트, PENDING_TEST 실행 검증
