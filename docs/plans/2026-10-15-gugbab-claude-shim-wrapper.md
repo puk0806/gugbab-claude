@@ -1,6 +1,6 @@
 # gugbab-claude 래퍼(shim wrapper) 개편 계획서
 
-> 최종 수정: 2026-10-19 · 상태: **권한 정책 확정 · PoC 1~3번 확인 · 체크리스트 반영(고정 33 · 켬 70 · 끔 216) · 묶음·의존 관리 방안 3+4 확정 · relation-guard 구현 · 개편 범위 gugbab 만(범위 밖 내용 로컬 전용) · **0~2단계 완료(15장) · 4단계 TUI·`/harness`·프리셋 완료(15.6) · 3단계 설치 `install.sh` 완료(15.7) · **5단계 릴리스 v1.0.0·v1.0.1(15.8)**, 실사용 시나리오 16장 · **6단계 옛 복사 설치 삭제(15.9)**** → 다음: 사용자 1.0.x 실사용 테스트 → 태그 보호
+> 최종 수정: 2026-10-20 · 상태: **권한 정책 확정 · PoC 1~3번 확인 · 체크리스트 반영(고정 33 · 켬 70 · 끔 216) · 묶음·의존 관리 방안 3+4 확정 · relation-guard 구현 · 개편 범위 gugbab 만(범위 밖 내용 로컬 전용) · **0~2단계 완료(15장) · 4단계 TUI·`/harness`·프리셋 완료(15.6) · 3단계 설치 `install.sh` 완료(15.7) · **5단계 릴리스 v1.0.0·v1.0.1(15.8)**, 실사용 시나리오 16장 · **6단계 옛 복사 설치 삭제(15.9)**** → 다음: 사용자 1.0.x 실사용 테스트 → 태그 보호
 > 대상 레포: `puk0806/gugbab-claude` (PUBLIC, 기본 브랜치 `main`)
 > 이 문서와 [항목 체크리스트](2026-10-15-harness-item-checklist.md)가 원본이고, 계획서 페이지(claude.ai 아티팩트)는 이 두 파일로 만든다 — 생성 방법은 맨 끝 "문서 갱신 방법"
 
@@ -357,7 +357,7 @@ GUGBAB_HOME="$PWD" gugbab-claude      # 작업 트리의 harness/를 바로 사�
 | Agent · Skill · Workflow · Monitor · TodoWrite · WebSearch · WebFetch · EnterWorktree · ExitPlanMode · ShareOnboardingGuide | 항상 |
 | MCP 도구 | 삭제·공유 계열(12.2)을 뺀 전부 — 크롬 브라우저 조작, Claude Docs 수정 포함 |
 | Bash | 12.2·12.3 에 걸리지 않는 모든 명령 (`bash-guard` 가 승인). settings.json 의 Bash 허용 41개는 `bash-guard` 가 없을 때를 대비한 예비 목록 |
-| **신규 자동 허용** | ArtifactData(삭제만 확인) · ArtifactComments · PushNotification · ExitWorktree · TaskStop · LSP |
+| **신규 자동 허용** | ArtifactData(삭제만 확인) · ArtifactComments · PushNotification · ExitWorktree · TaskStop · LSP · **SendMessage(2026-10-20 결정 40 — 받는 세션이 확인)** |
 
 ### 12.2 확인 창
 
@@ -370,7 +370,7 @@ GUGBAB_HOME="$PWD" gugbab-claude      # 작업 트리의 harness/를 바로 사�
 | 삭제·시스템 | 프로젝트 밖 `rm`, 허용 폴더 통째 삭제, 대상 불명 삭제, `dd`·`mkfs`·`shutdown`·`reboot`·`diskutil erase` |
 | 외부 전송·프로세스 | `curl`·`wget` 파일 업로드, `docker prune`·볼륨 삭제, `killall`·`pkill`, 남의 프로세스 `kill -9` |
 | 판정 불가 | 명령 이름이 변수라 무엇이 실행될지 모르는 Bash |
-| **신규 확인** | SendMessage · CronCreate · CronDelete · RemoteTrigger · DesignSync · PowerShell |
+| **신규 확인** | CronCreate · CronDelete · RemoteTrigger · DesignSync · PowerShell (SendMessage 는 2026-10-20 자동으로 옮김 — 결정 40) |
 
 ### 12.3 차단 (확인 창 없이 거부)
 
@@ -422,6 +422,7 @@ force push · 푸시된 커밋을 지우는 `reset --hard` · `gh repo delete` �
 | 37 | 세션 시작 버전 안내는 Claude 가 첫 답변 맨 위에 전달 — 결정 36 보완 (2026-10-19 사용자 선택) | v1.0.6 으로 실행했는데 화면에 안내가 안 보였다. 세션 기록을 보면 훅은 정상으로 돌았고 `systemMessage` 도 `hook_system_message` 로 저장됐지만 첫 화면에는 그려지지 않았다 — 결정 36 의 "SessionStart `systemMessage` 는 화면에 뜬다" 전제가 틀림(공식 문서에도 SessionStart 표시 위치는 없음, 실제 화면 확인을 빠뜨림). `additionalContext` 의 "(사용자 화면에 이미 표시됨)" 을 "첫 답변 맨 위에 고치지 말고 그대로 한 번, 두 번째 답변부터 반복 안 함" 요청으로 바꿈. `systemMessage` 는 보이는 환경을 위해 유지. 첫 질문을 해야 보이는 한계는 사용자 확인(상태줄 상시 표시는 하지 않음). 조작된 버전 라벨은 화면·문맥 어디에도 들어가지 않음(테스트 98→102) |
 | 38 | 래퍼 세션도 comux·tmux 에이전트 목록과 세션 간 메시지에 보이게 (2026-10-19 사용자 요청) | 래퍼로 띄운 세션이 `comux list-agents` 에 안 나오고(칸이 `KIND=shell LABEL=sh`), `ListAgents` 도 다른 세션을 못 찾았다. ① 원인: 래퍼(비대화형 sh)는 재시작 반복 때문에 claude 를 `exec` 하지 않고 자식으로 띄우는데, 작업 제어가 꺼져 claude 가 sh 와 같은 프로세스 그룹에 들어가 멀티플렉서가 그룹 대표 `sh` 만 봄. 해결: 터미널(stdin·stdout 둘 다)이고 `-p` 가 아니면 claude 실행·재시작 반복을 **`/bin/dash`(또는 `/usr/bin/dash`, 고정 경로 — PATH 의 가짜 dash 무시)에 `set -m` 으로 넘겨 `exec`** — claude 가 자기 그룹 대표로 터미널 앞에 섬(PoC: comux 가 `agent claude` 로 감지). macOS `/bin/sh`(bash 3.2)는 set -m 이어도 claude 가 Ctrl+Z 로 멈춘 걸 못 알아채 칸이 멈춰서 쓰지 않음(PoC). claude 가 멈추면 `jobs %1` 로 작업이 남았는지 보고 래퍼가 스스로 멈춰 부모 셸로 돌아가고, `fg` 로 깨면 `fg %1` 로 claude 를 다시 앞으로 — 진짜 종료 코드 146 은 정지로 오해하지 않음. dash 가 없거나 터미널이 아니거나 `GUGBAB_JOBCTL=0` 이면 예전 방식(감지 안 됨). ② 원인: 실행 중 세션 목록(`<pid>.json`·`.key`)이 `<CLAUDE_CONFIG_DIR>/sessions/` 에 있어 설정 폴더가 다르면 서로 못 찾음(메시지 소켓은 공용 `/tmp/cc-socks`). 해결: 조립 때 `sessions/` 를 `~/.claude/sessions` 로 링크(공유 폴더 목록에 추가, 없으면 0700 생성). 예전 실행이 만든 진짜 폴더는 세션 기록 형식의 일반 파일만 옮기고(같은 이름은 더 최근 것), 링크·폴더·낯선 파일이 있으면 손대지 않고 링크도 걸지 않고 경고. PoC: 설정 폴더가 다른 두 임시 세션이 공유 목록으로 서로를 찾았고 메시지가 받는 쪽 inbox 에 들어감(받는 쪽 권한 모드에 따라 승인 대기는 Claude Code 동작). `sessions/` 는 문서에 없는 내부 구조라 Claude Code 업데이트로 바뀔 수 있음. **남은 한계**: comux 는 에이전트 칸을 `claude --resume <id>` 로 저장해, comux 서버 재시작 복원 때는 하네스 없이(설정 폴더 없이) 대화만 이어서 열린다 |
 | 39 | 이 프로젝트 메모리·대화 폴더는 확인 없이, 하네스 설치 폴더 Bash 쓰기는 확인 (2026-10-19 사용자 요청) | 다른 프로젝트에서 `gugbab-claude` 로 작업할 때 설정 폴더 메모리를 읽고 고칠 때마다 확인 창이 떴다. 실측(`claude -p`, 실제와 같은 링크 경로): **하네스 훅을 쓰는 프로젝트는 이미 확인 없이 동작**(auto-approve 가 `projects/` 링크를 따라가 판정) — 확인 창은 **자기 훅을 가진 프로젝트**(별도 하네스 원본 등)에서만 뜸: 그 auto-approve 는 `~/.claude/projects` 를 글자 그대로만 비교해 메모리 수정이 ask, 그 bash-guard 는 `cd <메모리 폴더> && grep …` 을 허용 폴더 밖으로 보고 판정하지 않아 Claude Code 자체 "이 폴더 읽기 허용?" 창. 실행 중에 프로젝트 훅을 지우면 디스패처가 실행 때 기록(`.gugbab-state.json` skippedHooks)대로 하네스 훅도 건너뛰어 같은 창이 뜸 → 다시 실행하면 해소. 해결: 조립하는 settings.json `env` 에 **`CLAUDE_BASH_GUARD_ALLOWED_DIRS` = 그 프로젝트 메모리·대화 폴더 하나**(설정 폴더 쪽 `projects/<인코딩>` + 실제 위치 `~/.claude/projects/<인코딩>`) — 하네스·파생 bash-guard 가 공통으로 읽는 변수라 그 레포 파일을 안 고치고 통함(settings `env` 가 훅에 전달되는지 실측). 사용자 `env` 의 다른 키는 보존, 인코딩 200자 초과(Claude Code 가 잘라 해시)·경로에 `:`·projects 링크 없음이면 안 넣음(지금처럼 확인), 하위 폴더에서 실행해 인코딩이 다르면 확인. `additionalDirectories` 는 파생 훅이 래퍼 settings 를 안 읽어 효과 없고 acceptEdits 로 쓰기까지 열려 안 씀, `Read(//…)` 규칙은 읽기가 이미 허용이라 안 씀. 함께: **bash-guard 가 `GUGBAB_HOME` 아래 Bash 쓰기를 ask**(`touch`·`mkdir`·`ln`·`chmod`·`mv`·`tee`·`truncate`, `cp`·`install`·`rsync` 목적지·`-t`, `sed -i`·`perl -i`, 출력 리다이렉트 — lexer 에 리다이렉트 방향·fd 복제 구분 추가). 실측에서 `touch ~/gugbab/x` 가 확인 없이 됐다(기본 allow `Bash(touch*)` 등). 실제 위치(링크 추적)가 허용 폴더 안이면 제외, 프로젝트 루트가 하네스 안이면(하네스 자체 작업) 보호 안 함, `GUGBAB_HOME` 이 상대경로·루트·홈(상위)이면 무시, 변수 대상은 판정 안 함. **남은 한계**: 자기 bash-guard 를 가진 프로젝트는 하네스 bash-guard 가 빠져 설치 폴더 보호가 적용 안 됨, `git -C ~/gugbab checkout` 같은 git 쓰기는 대상 아님, 실행 중 프로젝트 훅 삭제는 다시 실행해야 반영 |
+| 40 | 세션 간 메시지(`SendMessage`)는 확인 없이 보냄 (2026-10-20 사용자 결정 — 12.2 에서 12.1 로) | 다른 세션에 작업 자료를 넘길 때마다 auto-approve 가 확인 창을 띄웠다. 사용자: "해당 세션에서 내용 전달받으면 내용 확인하고 진행 여부 확인 이후에 진행" — 받는 세션이 메시지를 읽고 자기 규칙(작업 전 확인 절차)대로 진행 여부를 묻기 때문에 보내는 쪽 확인은 중복. `SendMessage` 를 확인 목록에서 자동 허용 목록으로 옮김(정확한 도구 이름만 — 비슷한 이름·대소문자 다른 이름은 자동 아님). CronCreate·CronDelete·RemoteTrigger·DesignSync·PowerShell 은 확인 유지. 받는 세션의 권한 모드가 보내는 쪽과 다르면 Claude Code 자체가 받는 쪽 사용자에게 수락을 묻는데, 이것은 Claude Code 동작이라 그대로 둠 |
 
 ### 지금 어디까지 왔나 (2026-10-17)
 - **0~2단계 완료** (15장 계획대로, 결과는 15.5) — PoC 4·6·7·8·플러그인·첫 실행 화면 확인, `manifest.json` 생성기, 훅 경로 수정 6개, 상태줄 수정, `bin/gugbab-claude` + `cli/` 래퍼 핵심. 이 레포에서 `GUGBAB_HOME=$PWD bin/gugbab-claude` 로 실제 세션이 열린다

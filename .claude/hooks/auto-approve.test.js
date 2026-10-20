@@ -120,8 +120,17 @@ test('ArtifactData delete → 확인', 'ArtifactData', { action: 'delete', colle
 test('ArtifactData delete (PermissionRequest → 사용자에게)', 'ArtifactData', { action: 'delete' }, 'null', 'PermissionRequest')
 test('ArtifactData batch 안에 delete → 확인 (묶어서 우회 금지)', 'ArtifactData', { action: 'batch', batch: [{ action: 'set' }, { action: 'delete' }] }, 'ask')
 
+// 2026-10-20 결정 40 — 세션 간 메시지는 받는 세션이 내용을 보고 진행 여부를 확인하므로 보내는 쪽은 자동
+section('SendMessage → allow (받는 세션이 확인)')
+test('SendMessage (Pre)', 'SendMessage', { to: 'peer', message: 'hi' }, 'allow')
+test('SendMessage (PermissionRequest)', 'SendMessage', { to: 'peer', message: 'hi' }, 'allow', 'PermissionRequest')
+test('SendMessage 입력이 비어도 자동 (도구 단위 판정)', 'SendMessage', {}, 'allow')
+test('이름만 비슷한 SendMessageX 는 자동 허용 안 함', 'SendMessageX', {}, 'null')
+test('소문자 sendmessage 는 자동 허용 안 함 (정확한 이름만)', 'sendmessage', {}, 'null')
+test('공백 붙인 "SendMessage " 는 자동 허용 안 함', 'SendMessage ', {}, 'null')
+
 section('12장 신규 확인 → ask (PermissionRequest=null)')
-for (const tool of ['SendMessage', 'CronCreate', 'CronDelete', 'RemoteTrigger', 'DesignSync', 'PowerShell']) {
+for (const tool of ['CronCreate', 'CronDelete', 'RemoteTrigger', 'DesignSync', 'PowerShell']) {
   test(`${tool} (Pre)`, tool, {}, 'ask')
   test(`${tool} (PermissionRequest)`, tool, {}, 'null', 'PermissionRequest')
 }

@@ -13,7 +13,8 @@
  *   - 그 외 → null (다른 훅 또는 사용자 확인)
  *
  *   - 2026-10-16 계획서 12장: ArtifactData(삭제만 확인)·ArtifactComments·PushNotification·ExitWorktree·TaskStop·LSP 자동,
- *     SendMessage·CronCreate·CronDelete·RemoteTrigger·DesignSync·PowerShell·Google Drive update_file 확인
+ *     CronCreate·CronDelete·RemoteTrigger·DesignSync·PowerShell·Google Drive update_file 확인
+ *   - 2026-10-20 결정 40: SendMessage 자동 — 받는 세션이 내용을 보고 진행 여부를 확인한다
  *   - 래퍼 설정 폴더의 projects/·plans/ 링크는 실제 위치(~/.claude)로 따라가 판정
  *
  * 자동 승인하지 않는 것 (정적 검사 불가 셸 — 승인하면 bash-guard 검사 전체를 우회한다):
@@ -58,11 +59,13 @@ const SAFE_TOOLS = new Set([
   'ExitWorktree',
   'TaskStop',
   'LSP',
+  // 2026-10-20 결정 40 — 세션 간 메시지: 받는 세션이 내용을 보고 진행 여부를 확인하므로 보내는 쪽 확인은 중복 (사용자 결정)
+  'SendMessage',
 ])
 
-// 2026-10-16 계획서 12.2 신규 확인 — 다른 세션·예약 실행·외부 동기화처럼 지금 대화 밖으로 영향이 나가는 도구, 분석기 없는 셸
+// 2026-10-16 계획서 12.2 신규 확인 — 예약 실행·외부 동기화처럼 지금 대화 밖으로 영향이 나가는 도구, 분석기 없는 셸
+// (SendMessage 는 2026-10-20 결정 40 으로 자동 — 받는 쪽이 확인)
 const ASK_TOOLS = new Map([
-  ['SendMessage', '다른 세션·에이전트에 메시지를 보냅니다'],
   ['CronCreate', '예약 실행을 만듭니다'],
   ['CronDelete', '예약 실행을 지웁니다'],
   ['RemoteTrigger', '원격 실행을 시작합니다'],
