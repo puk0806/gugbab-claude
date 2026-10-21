@@ -12,8 +12,10 @@ const fs = require('fs')
 const os = require('os')
 const path = require('path')
 const HOOK = path.join(__dirname, 'memory-pull.js')
+const { IS_WIN, linkDir, trySymlink } = require('./lib/testfs')
 
-let passed = 0, failed = 0
+let passed = 0, failed = 0, skipped = 0
+function skip(desc, why) { console.log(`  ⚠️ 건너뜀: ${desc} — ${why}`); skipped++ }
 
 function assert(desc, actual, expected) {
   const pass = JSON.stringify(actual) === JSON.stringify(expected)
@@ -23,14 +25,19 @@ function assert(desc, actual, expected) {
 
 function section(title) { console.log(`\n── ${title} ──`) }
 
-function encode(projectDir) { return projectDir.replace(/[/_]/g, '-') }
+// Claude Code 실측 인코딩 (영숫자 외 모든 문자 → '-'). 기존 `/ _` 만 치환하던 식은 맥 mkdtemp 경로에선 같은 결과였지만
+// 윈도우 `C:\…` 의 `:`·`\` 를 못 바꿔 `projects\C:\Users\…` 같은 깨진 경로를 만들었다 (2026-10-20 윈도우 실측) — 맥 결과는 동일
+function encode(projectDir) { return projectDir.replace(/[^A-Za-z0-9]/g, '-') }
 function globalMemoryOf(tmpHome, repoDir) {
   return path.join(tmpHome, '.claude', 'projects', encode(repoDir), 'memory')
 }
 
+// 홈 격리: 윈도우 os.homedir() 는 HOME 이 아니라 USERPROFILE 을 본다 — 둘 다 바꿔야 실제 홈을 건드리지 않는다
+function homeEnv(env, home) { env.HOME = home; env.USERPROFILE = home; return env }
+
 function runHook({ home, repoDir } = {}) {
   const env = { ...process.env }
-  if (home) env.HOME = home
+  if (home) homeEnv(env, home)
   if (repoDir) env.CLAUDE_PROJECT_DIR = repoDir
   else delete env.CLAUDE_PROJECT_DIR
   return spawnSync('node', [HOOK], { input: '', encoding: 'utf8', timeout: 5000, env })
@@ -70,8 +77,8 @@ section('정상 — 과거 symlink 자동 마이그레이션')
   fs.writeFileSync(path.join(repoMemory, 'shared.md'), 'repo-content')
   const migrateTargetParent = path.dirname(globalMemory)
   fs.mkdirSync(migrateTargetParent, { recursive: true })
-  // 구 구조: 전역 memory 가 레포 memory 를 가리키는 symlink
-  fs.symlinkSync(repoMemory, globalMemory)
+  // 구 구조: 전역 memory 가 레포 memory 를 가리키는 symlink (윈도우는 junction — lstat 이 똑같이 링크로 본다)
+  linkDir(repoMemory, globalMemory)
   assert('사전 조건: symlink 상태', fs.lstatSync(globalMemory).isSymbolicLink(), true)
 
   const r = runHook({ home, repoDir: repo })
@@ -174,7 +181,9 @@ section('경계 — 깨진 symlink (한 항목이 나머지 동기화를 막지 
 {
   const { home, repo, globalMemory, repoMemory } = mkFixture()
   fs.mkdirSync(repoMemory, { recursive: true })
-  fs.symlinkSync('/nonexistent/target/path.md', path.join(repoMemory, 'a-broken.md'))
+  const made = trySymlink('/nonexistent/target/path.md', path.join(repoMemory, 'a-broken.md'))
+  // 윈도우 파일 링크 불가(EPERM) → 깨진 junction(폴더 링크)으로 같은 상황을 만든다 (대상 폴더 없음)
+  if (made === null) linkDir(path.join(repo, 'no-such-dir'), path.join(repoMemory, 'a-broken.md'))
   fs.writeFileSync(path.join(repoMemory, 'b-valid.md'), 'valid content')
 
   const r = runHook({ home, repoDir: repo })
@@ -195,7 +204,7 @@ section('경계 — CLAUDE_PROJECT_DIR 없음')
 
 // ─── 경로 인코딩 (2026-09-26 실측: 영숫자 외 모든 문자 → '-') ─────────────
 function runHookInput({ home, repoDir, input }) {
-  const env = { ...process.env, HOME: home, CLAUDE_PROJECT_DIR: repoDir }
+  const env = homeEnv({ ...process.env, CLAUDE_PROJECT_DIR: repoDir }, home)
   return spawnSync('node', [HOOK], { input, encoding: 'utf8', timeout: 5000, env })
 }
 section('인코딩 — 점·공백·한글이 있는 프로젝트 경로는 Claude Code 실제 디렉토리명으로 매핑')
@@ -242,7 +251,38 @@ section('악성 — projects 밖·상위 탈출 transcript_path 는 무시 (임�
   cleanup(home, repo, evil)
 }
 
+// ─── 윈도우 실측 입력 모양 (2026-10-20) — 윈도우에서만 의미 있는 표기 ───
+section('윈도우 — 슬래시 CLAUDE_PROJECT_DIR·대소문자 다른 transcript_path·접두만 같은 형제 projects·링크된 설정 폴더')
+if (!IS_WIN) {
+  skip('윈도우 입력 모양 4종', '윈도우 전용')
+} else {
+  const { home, repo, repoMemory, globalMemory } = mkFixture()
+  fs.mkdirSync(repoMemory, { recursive: true })
+  fs.writeFileSync(path.join(repoMemory, 'a.md'), 'A')
+  // ① env 는 `C:/…` (슬래시) — 네이티브와 같은 저장소로 인코딩돼야 한다
+  runHookInput({ home, repoDir: repo.replace(/\\/g, '/'), input: '' })
+  assert('슬래시 표기 CLAUDE_PROJECT_DIR → 네이티브와 같은 전역 폴더', fs.readFileSync(path.join(globalMemory, 'a.md'), 'utf8'), 'A')
+  // ② transcript_path 의 드라이브·폴더 대소문자가 달라도 projects 바로 아래면 신뢰
+  const store = path.join(home, '.claude', 'projects', '-case-store')
+  fs.mkdirSync(store, { recursive: true })
+  runHookInput({ home, repoDir: repo, input: JSON.stringify({ transcript_path: path.join(store, 's.jsonl').toUpperCase() }) })
+  assert('대소문자 다른 transcript_path → 그 저장소 memory 로 반영', fs.existsSync(path.join(store, 'memory', 'a.md')), true)
+  // ③ 악성: `projects-evil` (접두만 같은 형제) 아래 transcript → 무시
+  const sib = path.join(home, '.claude', 'projects-evil', 'x')
+  fs.mkdirSync(sib, { recursive: true })
+  runHookInput({ home, repoDir: repo, input: JSON.stringify({ transcript_path: path.join(sib, 's.jsonl') }) })
+  assert('접두만 같은 형제 projects-evil 에 memory 미생성', fs.existsSync(path.join(sib, 'memory')), false)
+  // ④ 래퍼 설정 폴더의 projects junction 경로 → 실제 ~/.claude/projects/<dir> 로
+  const cfg = fs.mkdtempSync(path.join(os.tmpdir(), 'mpull-cfg-'))
+  linkDir(path.join(home, '.claude', 'projects'), path.join(cfg, 'projects'))
+  fs.rmSync(path.join(store, 'memory'), { recursive: true, force: true }) // ② 결과를 지워 이 단계만 검증
+  runHookInput({ home, repoDir: repo, input: JSON.stringify({ transcript_path: path.join(cfg, 'projects', '-case-store', 's2.jsonl') }) })
+  assert('junction 설정 폴더 경유 transcript → 실제 저장소 반영(크래시 없음)', fs.existsSync(path.join(store, 'memory', 'a.md')), true)
+  fs.unlinkSync(path.join(cfg, 'projects'))
+  cleanup(home, repo, cfg)
+}
+
 console.log(`\n${'─'.repeat(40)}`)
-console.log(`결과: ${passed}/${passed + failed} 통과 ${failed > 0 ? `(${failed}개 실패)` : ''}`)
+console.log(`결과: ${passed}/${passed + failed} 통과 ${failed > 0 ? `(${failed}개 실패)` : ''}${skipped ? ` · 건너뜀 ${skipped}` : ''}`)
 if (failed === 0) console.log('✅ 모든 테스트 통과')
 else { console.log('❌ 일부 테스트 실패'); process.exit(1) }

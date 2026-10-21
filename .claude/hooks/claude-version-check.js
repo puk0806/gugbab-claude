@@ -18,7 +18,7 @@
 const fs = require('fs')
 const os = require('os')
 const path = require('path')
-const { execFileSync } = require('child_process')
+const { execFileSync, execSync } = require('child_process')
 
 const REGISTRY_URL = 'https://registry.npmjs.org/@anthropic-ai/claude-code/latest'
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -77,9 +77,51 @@ function writeState(stateDir, obj) {
   } catch { return false }
 }
 
+// 윈도우: npm 전역 설치는 확장자 없는 sh(`claude` — spawn ENOENT)·claude.cmd·claude.ps1, 네이티브 설치는 claude.exe.
+// PATHEXT 순서로 실행 가능한 파일(.exe·.com·.cmd·.bat 만 — .js·.vbs 등 스크립트 호스트 실행은 제외)의 절대 경로를 찾는다.
+// 경로가 주어지면(GUGBAB_CLAUDE_BIN) 그 파일 또는 그 이름 + 확장자를 본다
+const WIN_RUNNABLE = /\.(exe|com|cmd|bat)$/i
+function winResolve(name) {
+  const isFile = (p) => { try { return fs.statSync(p).isFile() } catch { return false } }
+  const exts = (process.env.PATHEXT || '.COM;.EXE;.BAT;.CMD').split(';').filter((e) => WIN_RUNNABLE.test(e))
+  const cands = (p) => (WIN_RUNNABLE.test(p) ? [p] : exts.map((e) => p + e))
+  if (/[\\/]/.test(name)) return cands(name).find(isFile) || null
+  for (const d of String(process.env.PATH || '').split(path.delimiter)) {
+    if (!d) continue
+    const hit = cands(path.join(d, name)).find(isFile)
+    if (hit) return hit
+  }
+  return null
+}
+
+// 윈도우 npm 설치 — claude.cmd 가 부르는 node_modules\@anthropic-ai\claude-code 의 package.json 에서 버전을 바로 읽는다
+//   claude.exe --version 은 윈도우에서 수 초~십수 초(2026-10-20 실측 13초 — 백신 검사) 걸려 2.5초 제한에 늘 걸린다
+//   이름이 정확히 @anthropic-ai/claude-code 이고 버전이 x.y.z 일 때만 인정 (그 밖이면 null → 실행으로)
+function npmPackageVersion(cmdPath) {
+  try {
+    const pkg = path.join(path.dirname(cmdPath), 'node_modules', '@anthropic-ai', 'claude-code', 'package.json')
+    const st = fs.lstatSync(pkg)
+    if (!st.isFile() || st.size > 256 * 1024) return null
+    const j = JSON.parse(fs.readFileSync(pkg, 'utf8'))
+    return j && j.name === '@anthropic-ai/claude-code' && typeof j.version === 'string' && /^\d+\.\d+\.\d+$/.test(j.version) ? `${j.version} (Claude Code)` : null
+  } catch { return null }
+}
+
 function defaultExec() {
   const bin = process.env.GUGBAB_CLAUDE_BIN || 'claude'
-  return execFileSync(bin, ['--version'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 2500, maxBuffer: 64 * 1024 })
+  const opts = { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 2500, maxBuffer: 64 * 1024, windowsHide: true }
+  if (process.platform === 'win32') {
+    const f = winResolve(bin)
+    if (!f) throw new Error('claude 실행 파일 없음')
+    if (/\.(cmd|bat)$/i.test(f)) { const v = npmPackageVersion(f); if (v) return v }
+    if (/\.(cmd|bat)$/i.test(f)) {
+      // .cmd 는 셸 없이 spawn 하면 EINVAL(Node 보안 수정) → cmd 경유. 인자는 고정 상수, 경로는 따옴표로 감싸고 % · " 가 든 경로는 거부(따옴표 안에서도 확장됨)
+      if (/["%]/.test(f)) throw new Error('실행할 수 없는 경로')
+      return execSync(`"${f}" --version`, opts)
+    }
+    return execFileSync(f, ['--version'], opts)
+  }
+  return execFileSync(bin, ['--version'], opts)
 }
 
 // 레지스트리 조회 — 실패하면 null (오프라인·타임아웃·이상 응답·초대용량)
@@ -139,7 +181,7 @@ async function checkClaudeVersion({ stateDir = defaultStateDir(), now = Date.now
   return res
 }
 
-module.exports = { checkClaudeVersion, readClaudeVersionState, parseVersion, cmpVer, REGISTRY_URL }
+module.exports = { checkClaudeVersion, readClaudeVersionState, parseVersion, cmpVer, REGISTRY_URL, winResolve, npmPackageVersion }
 
 if (require.main === module) {
   const hardStop = setTimeout(() => process.exit(0), 4000) // SessionStart 지연 상한

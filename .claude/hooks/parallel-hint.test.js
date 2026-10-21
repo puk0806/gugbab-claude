@@ -16,6 +16,7 @@ const HOOK = path.join(__dirname, 'parallel-hint.js')
 const { looksMultiTask, isReadOnlyBash, STREAK } = require('./parallel-hint.js')
 
 let passed = 0, failed = 0
+let skipped = 0
 const check = (desc, cond, detail) => {
   console.log(`  ${cond ? '✅' : '❌'} ${desc}${cond ? '' : ` → FAIL ${detail !== undefined ? JSON.stringify(detail).slice(0, 400) : ''}`}`)
   cond ? passed++ : failed++
@@ -100,8 +101,17 @@ console.log('\n── 악성·우회 ──')
   check('.jsonl 아닌 경로(/etc/passwd) → 조용', post('m2', '/etc/passwd').ctx === null)
   check('폴더 경로 → 조용', post('m3', base + '.jsonl').ctx === null)
   const link = path.join(base, 'evil.jsonl')
-  fs.symlinkSync('/etc/hosts', link)
-  check('.jsonl 이름의 링크가 다른 파일을 가리키면 → 조용', post('m4', link).ctx === null)
+  const hostsFile = process.platform === 'win32' ? path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'drivers', 'etc', 'hosts') : '/etc/hosts'
+  if (require('./lib/testfs').trySymlink(hostsFile, link, 'file') === null) {
+    console.log('  ⚠️ 건너뜀: .jsonl 이름의 링크 — 윈도우 개발자 모드 꺼짐, 파일 심볼릭 링크 생성 불가(EPERM)'); skipped++
+  } else {
+    check('.jsonl 이름의 링크가 다른 파일을 가리키면 → 조용', post('m4', link).ctx === null)
+  }
+  if (process.platform === 'win32') {
+    // 윈도우: 확장자 대소문자·끝 점/공백 위장 — 파일 시스템은 같은 파일로 열지만 .jsonl 검사는 문자 그대로
+    check('[윈도우] .jsonl 아닌 시스템 파일(hosts) 경로 → 조용', post('m6', hostsFile).ctx === null)
+    check('[윈도우] Git Bash 형식 /c/… 경로(절대경로처럼 보임) → 크래시 없이 조용', (() => { const r = run({ hook_event_name: 'PostToolUse', tool_name: 'Read', session_id: 'm7', transcript_path: '/c/none/x.jsonl' }); return r.code === 0 })())
+  }
   check('세션 id 경로 조작 → 조용·밖에 파일 안 만듦', post('../../evil', p).ctx === null && !fs.existsSync(path.join(base, '..', 'evil.json')))
   const side = transcript('t-side', [turn([R()]), turn([R()]), turn([R()]), turn([['Write', {}]], { sidechain: true }), turn([R()])])
   const ok3 = transcript('t-3', [turn([['Write', {}]]), turn([R()]), turn([R()]), turn([R()])])
@@ -133,6 +143,6 @@ console.log('\n── 이상·경계 ──')
   check('looksMultiTask 초장문도 앞부분만 보고 빠르게', (() => { const s = Date.now(); looksMultiTask('가'.repeat(200000)); return Date.now() - s < 500 })())
 }
 
-console.log(`\n결과: ${passed} 통과, ${failed} 실패`)
+console.log(`\n결과: ${passed} 통과, ${failed} 실패${skipped ? ` (건너뜀 ${skipped})` : ''}`)
 fs.rmSync(base, { recursive: true, force: true })
 process.exit(failed ? 1 : 0)

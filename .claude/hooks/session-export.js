@@ -14,6 +14,10 @@ const path = require('path');
 const USER_TEXT_LIMIT = 1500;   // 사용자 요청 1건당 최대 길이
 const CODEX_LINE_LIMIT = 120;   // Codex 라운드 파일 1개당 최대 라인
 
+// 윈도우 분기 전용 헬퍼 — 윈도우 분기에서만 로드한다(맥·리눅스는 lib/ 없이도 기존과 1바이트도 다르지 않게 동작)
+const IS_WIN = process.platform === 'win32';
+const winpath = () => require('./lib/winpath');
+
 // ── 텍스트 정리 ─────────────────────────────────────────────────────────
 function cleanUserText(text) {
   let t = text
@@ -98,18 +102,29 @@ function parseTranscript(jsonlText) {
 }
 
 // ── Codex 리뷰 라운드 파일 수집 (세션 시작 이후 생성분만) ────────────────
+// 라운드 파일 위치 — `tee /tmp/codex-rN.txt` 는 Git Bash 에서 %TEMP%(=os.tmpdir()) 로 간다.
+// Node 의 '/tmp' 는 윈도우에서 `C:\tmp` 라 다른 폴더다 (2026-10-20 윈도우 PC 실측: cygpath -w /tmp = os.tmpdir()).
+// 윈도우는 os.tmpdir() 를 먼저, 그다음 '/tmp'(C:\tmp) 를 본다. 맥·리눅스는 '/tmp' 하나 (기존 그대로)
+function codexRoundDirs(win = IS_WIN, tmpdir = os.tmpdir()) {
+  if (!win) return ['/tmp'];
+  return tmpdir && tmpdir !== '/tmp' ? [tmpdir, '/tmp'] : ['/tmp'];
+}
+
 function collectCodexRounds(sessionStartMs) {
   const rounds = [];
   for (let i = 1; i <= 3; i++) {
-    const fp = `/tmp/codex-r${i}.txt`;
-    try {
-      const st = fs.statSync(fp);
-      if (st.mtimeMs < sessionStartMs) continue; // 이전 세션 잔재 제외
-      const lines = fs.readFileSync(fp, 'utf8').split('\n');
-      let body = lines.slice(0, CODEX_LINE_LIMIT).join('\n');
-      if (lines.length > CODEX_LINE_LIMIT) body += `\n…(${lines.length - CODEX_LINE_LIMIT}줄 생략)`;
-      rounds.push({ round: i, body });
-    } catch { /* 파일 없음 */ }
+    for (const dir of codexRoundDirs()) {
+      const fp = IS_WIN ? path.join(dir, `codex-r${i}.txt`) : `/tmp/codex-r${i}.txt`;
+      try {
+        const st = fs.statSync(fp);
+        if (st.mtimeMs < sessionStartMs) continue; // 이전 세션 잔재 제외
+        const lines = fs.readFileSync(fp, 'utf8').split('\n');
+        let body = lines.slice(0, CODEX_LINE_LIMIT).join('\n');
+        if (lines.length > CODEX_LINE_LIMIT) body += `\n…(${lines.length - CODEX_LINE_LIMIT}줄 생략)`;
+        rounds.push({ round: i, body });
+        break; // 같은 라운드는 먼저 찾은 한 곳만
+      } catch { /* 파일 없음 */ }
+    }
   }
   return rounds;
 }
@@ -219,26 +234,32 @@ function main(input, toRepo = false, projectDir = process.env.CLAUDE_PROJECT_DIR
 //   ".../scratchpad/enc test.v1 한글_x@y+z" → "...-scratchpad-enc-test-v1----x-y-z", "e😀m" → "e--m"
 // 구 규칙(/ 와 _ 만 치환)은 점·공백·비ASCII 경로에서 엉뚱한 디렉토리를 만들었다.
 // 주의: 매우 긴 경로의 축약 규칙은 미실측 → 훅 입력의 transcript_path 가 있으면 그 디렉토리를 우선한다.
-function encodeProjectPath(p) {
+// 윈도우(2026-10-20 실측): `C:\Users\LF_USER\…\proj` → `C--Users-LF-USER-…-proj` — 같은 규칙(`:`·`\` 도 '-')이라
+// 네이티브(`C:\`)·슬래시(`C:/`) 표기는 같은 결과. Git Bash 의 MSYS 표기(`/c/…`)만 드라이브 표기로 바꾼 뒤 인코딩한다.
+function encodeProjectPath(p, win = IS_WIN) {
   if (typeof p !== 'string' || p === '') return null;
-  return p.replace(/[^a-zA-Z0-9]/g, '-');
+  const src = win ? winpath().msysToWin(p, true) : p;
+  return src.replace(/[^a-zA-Z0-9]/g, '-');
 }
 
 // transcript_path 가 ~/.claude/projects/<dir>/<file> 형태(바로 한 단계 아래)일 때만 신뢰한다 —
 // 그 밖의 경로(상위 탈출·중첩·다른 루트)는 무시하고 인코딩으로 폴백한다.
-function projectStoreDir(homeDir, projectDir, transcriptPath) {
+// 윈도우: 드라이브·폴더 대소문자와 `\`·`/` 를 가리지 않고 경로 단위로 비교한다 (NTFS 기본 대소문자 무시).
+function projectStoreDir(homeDir, projectDir, transcriptPath, win = IS_WIN) {
   const root = path.join(homeDir, '.claude', 'projects');
+  const same = win ? (a, b) => winpath().samePath(a, b, true) : (a, b) => a === b;
   if (typeof transcriptPath === 'string' && transcriptPath) {
     const dir = path.dirname(path.resolve(transcriptPath));
-    if (path.dirname(dir) === root && path.basename(dir) && dir !== root) return dir;
-    // 래퍼 설정 폴더의 projects/ 링크로 들어온 경로 — 실제 위치가 projects 바로 아래면 실제 경로를 쓴다
+    const rootAbs = win ? path.resolve(root) : root;
+    if (same(path.dirname(dir), rootAbs) && path.basename(dir) && !same(dir, rootAbs)) return dir;
+    // 래퍼 설정 폴더의 projects/ 링크(윈도우는 junction)로 들어온 경로 — 실제 위치가 projects 바로 아래면 실제 경로를 쓴다
     try {
       const realDir = fs.realpathSync(dir);
       const realRoot = fs.realpathSync(root);
-      if (path.dirname(realDir) === realRoot && realDir !== realRoot) return realDir;
+      if (same(path.dirname(realDir), realRoot) && !same(realDir, realRoot)) return realDir;
     } catch { /* 없는 경로 → 인코딩 폴백 */ }
   }
-  const enc = encodeProjectPath(projectDir);
+  const enc = encodeProjectPath(projectDir, win);
   return enc ? path.join(root, enc) : null;
 }
 
@@ -294,7 +315,7 @@ function refreshCandidates(env = process.env, cwd = process.cwd()) {
 
 module.exports = {
   parseTranscript, buildMarkdown, resolveDest, cleanUserText, resolveRefreshTarget,
-  encodeProjectPath, projectStoreDir, resolveProjectDir, refreshCandidates,
+  encodeProjectPath, projectStoreDir, resolveProjectDir, refreshCandidates, codexRoundDirs,
 };
 
 if (require.main === module) {

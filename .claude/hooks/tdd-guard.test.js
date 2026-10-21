@@ -139,6 +139,32 @@ if (rootUpper && fs.existsSync(rootUpper)) {
   console.log('  ⚠️  이 파일시스템은 대소문자 구분(case-sensitive) — 대소문자 정규화 테스트 스킵')
 }
 
+if (process.platform === 'win32') {
+  // 회귀: 윈도우 file_path 는 백슬래시 — 슬래시 기준 예외 판정이 안 걸려 훅·scripts 수정마다 오탐 차단되던 버그 (2026-10-20)
+  console.log('\n── 윈도우 백슬래시 경로 — 예외 판정 회귀 + 위장 우회 ──')
+  const W = path.join(tmp, 'win')
+  const mk = (...seg) => { const f = path.join(W, ...seg); fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, 'export const a = 1'); return f }
+  // 정상: 인프라·설정 폴더는 테스트 없이도 통과 (전부 테스트 파일 없음)
+  test('[윈도우] .claude\\hooks\\h.js → 제외 exit 0', mk('.claude', 'hooks', 'h.js'), 0, { projectDir: W })
+  test('[윈도우] .claude\\commands\\c.js → 제외 exit 0', mk('.claude', 'commands', 'c.js'), 0, { projectDir: W })
+  test('[윈도우] scripts\\gen.js → 제외 exit 0', mk('scripts', 'gen.js'), 0, { projectDir: W })
+  test('[윈도우] src\\lib\\db\\conn.ts → 제외 exit 0', mk('src', 'lib', 'db', 'conn.ts'), 0, { projectDir: W })
+  test('[윈도우] src\\__tests__\\helper.ts → 제외 exit 0', mk('src', '__tests__', 'helper.ts'), 0, { projectDir: W })
+  // 악성·우회: 이름만 비슷한 폴더로 예외를 노림 → 제외되지 않고 차단
+  test('[윈도우] myscripts\\evil.ts (접미 위장) → 차단 exit 2', mk('myscripts', 'evil.ts'), 2, { projectDir: W })
+  test('[윈도우] src\\lib\\dbx\\evil.ts (db 위장) → 차단 exit 2', mk('src', 'lib', 'dbx', 'evil.ts'), 2, { projectDir: W })
+  test('[윈도우] src\\claude\\hooks\\evil.ts (점 없는 위장) → 차단 exit 2', mk('src', 'claude', 'hooks', 'evil.ts'), 2, { projectDir: W })
+  // 이상·경계: 드라이브 소문자·공백·한글 경로도 정상 판정
+  const orphanW = mk('src', 'orphan.ts')
+  test('[윈도우] 드라이브 소문자 c:\\… 의 테스트 없는 소스 → 차단 exit 2', orphanW[0].toLowerCase() + orphanW.slice(1), 2, { projectDir: W })
+  test('[윈도우] 공백·한글 폴더의 테스트 없는 소스 → 차단 exit 2', mk('공백 폴더', '한글.ts'), 2, { projectDir: W })
+  const coveredW = mk('공백 폴더', 'ok.ts'); fs.writeFileSync(path.join(W, '공백 폴더', 'ok.test.ts'), 'test')
+  test('[윈도우] 공백·한글 폴더 + 테스트 있음 → exit 0', coveredW, 0, { projectDir: W })
+  // 악성·우회: CLAUDE_PROJECT_DIR 가 Git Bash 표기(/c/…)여도 "프로젝트 밖"으로 빠져 검사가 꺼지지 않음
+  const msysW = '/' + W[0].toLowerCase() + W.slice(2).replace(/\\/g, '/')
+  test('[윈도우] CLAUDE_PROJECT_DIR=/c/… + 테스트 없는 소스 → 차단 exit 2', mk('src', 'msys.ts'), 2, { projectDir: msysW })
+}
+
 fs.rmSync(tmp, { recursive: true, force: true })
 
 console.log(`\n결과: ${passed}/${passed + failed} 통과`)

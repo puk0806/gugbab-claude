@@ -20,6 +20,10 @@ const check = (desc, cond, detail) => {
   console.log(`  ${cond ? '✅' : '❌'} ${desc}${cond ? '' : ` → FAIL ${detail !== undefined ? JSON.stringify(detail).slice(0, 400) : ''}`}`)
   cond ? passed++ : failed++
 }
+const { trySymlink, linkDir } = require('./lib/testfs')
+const WIN_NO_SYMLINK = '윈도우 개발자 모드 꺼짐 — 파일 심볼릭 링크 생성 불가(EPERM), 공격자도 못 만듦'
+let skipped = 0
+const skip = (desc, why) => { console.log(`  ⚠️ 건너뜀: ${desc} — ${why}`); skipped++ }
 const base = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'wvc-')))
 let n = 0
 const A = 'a'.repeat(40), B = 'b'.repeat(40)
@@ -87,23 +91,37 @@ console.log('\n[악성·우회]')
   const r = checkWrapperVersion({ env: envOf(s), headOf: headIs(B) })
   check('상태 파일 없는 .claude (래퍼가 조립하지 않은 폴더) → 무시', r.message === null && !fs.existsSync(s.marker), r)
   const target = path.join(s.d, 'elsewhere.json'); fs.writeFileSync(target, '{}')
-  fs.symlinkSync(target, path.join(s.cfg, '.gugbab-state.json'))
-  const r2 = checkWrapperVersion({ env: envOf(s), headOf: headIs(B) })
-  check('상태 파일이 링크(위장) → 무시', r2.message === null && !fs.existsSync(s.marker), r2)
+  if (trySymlink(target, path.join(s.cfg, '.gugbab-state.json'), 'file') === null) {
+    skip('상태 파일이 링크(위장)', WIN_NO_SYMLINK)
+  } else {
+    const r2 = checkWrapperVersion({ env: envOf(s), headOf: headIs(B) })
+    check('상태 파일이 링크(위장) → 무시', r2.message === null && !fs.existsSync(s.marker), r2)
+  }
 }
 {
   const s = setup()
   const victim = path.join(s.d, 'victim.txt'); fs.writeFileSync(victim, 'keep')
-  fs.symlinkSync(victim, s.marker)
-  const r = checkWrapperVersion({ env: envOf(s), headOf: headIs(B) })
-  check('재시작 표시 자리에 심은 링크 → 따라가 쓰지 않음', fs.readFileSync(victim, 'utf8') === 'keep' && fs.lstatSync(s.marker).isSymbolicLink(), r)
-  check('  표시를 못 남기면 터미널에서 다시 실행하라고 안내', !r.marked && /gugbab-claude -c/.test(r.message), r)
+  if (trySymlink(victim, s.marker, 'file') === null) {
+    skip('재시작 표시 자리에 심은 링크', WIN_NO_SYMLINK)
+  } else {
+    const r = checkWrapperVersion({ env: envOf(s), headOf: headIs(B) })
+    check('재시작 표시 자리에 심은 링크 → 따라가 쓰지 않음', fs.readFileSync(victim, 'utf8') === 'keep' && fs.lstatSync(s.marker).isSymbolicLink(), r)
+    check('  표시를 못 남기면 터미널에서 다시 실행하라고 안내', !r.marked && /gugbab-claude -c/.test(r.message), r)
+  }
+}
+{
+  // 하드링크(윈도우도 권한 없이 생성 가능) — 재시작 표시 자리에 밖 파일의 하드링크를 심어도 그 내용을 바꾸지 않음
+  const s = setup()
+  const victim = path.join(s.d, 'victim-hard.txt'); fs.writeFileSync(victim, 'keep')
+  fs.linkSync(victim, s.marker)
+  checkWrapperVersion({ env: envOf(s), headOf: headIs(B) })
+  check('재시작 표시 자리에 심은 하드링크 → 밖 파일 내용 그대로', fs.readFileSync(victim, 'utf8') === 'keep')
 }
 {
   const s = setup()
   const link = path.join(s.d, 'cfg-link')
   const fake = path.join(s.d, 'fake'); fs.mkdirSync(fake)
-  fs.symlinkSync(fake, link)
+  linkDir(fake, link) // 윈도우는 junction (권한 없이 생성 가능)
   const r = checkWrapperVersion({ env: envOf(s, { CLAUDE_CONFIG_DIR: link }), headOf: headIs(B) })
   check('설정 폴더를 다른 폴더 링크로 바꿔치기 → 무시', r.message === null && !fs.existsSync(path.join(fake, '.gugbab-restart')), r)
 }
@@ -231,9 +249,13 @@ console.log('\n[버전 안내 — 악성·우회]')
 {
   const s = setup()
   const victim = path.join(s.d, 'victim.json'); fs.writeFileSync(victim, JSON.stringify({ launch: L, at: NOW, result: 'up-to-date' }))
-  fs.mkdirSync(path.join(s.home, 'state'), { recursive: true }); fs.symlinkSync(victim, recFile(s))
-  const n = notice(s)
-  check('기록 자리에 심은 링크 → 따라가 읽거나 쓰지 않음', n === '하네스 v1.0.5' && !JSON.parse(fs.readFileSync(victim, 'utf8')).shown && fs.lstatSync(recFile(s)).isSymbolicLink(), n)
+  fs.mkdirSync(path.join(s.home, 'state'), { recursive: true })
+  if (trySymlink(victim, recFile(s), 'file') === null) {
+    skip('기록 자리에 심은 링크', WIN_NO_SYMLINK)
+  } else {
+    const n = notice(s)
+    check('기록 자리에 심은 링크 → 따라가 읽거나 쓰지 않음', n === '하네스 v1.0.5' && !JSON.parse(fs.readFileSync(victim, 'utf8')).shown && fs.lstatSync(recFile(s)).isSymbolicLink(), n)
+  }
 }
 {
   const s = setup()
@@ -326,5 +348,5 @@ function runHook(input, env) {
 }
 
 fs.rmSync(base, { recursive: true, force: true })
-console.log(`\n결과: ${passed} 통과 / ${failed} 실패`)
+console.log(`\n결과: ${passed} 통과 / ${failed} 실패${skipped ? ` (건너뜀 ${skipped})` : ''}`)
 process.exit(failed ? 1 : 0)

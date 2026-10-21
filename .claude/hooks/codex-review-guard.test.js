@@ -13,6 +13,28 @@ const path = require('path')
 const HOOK = path.join(__dirname, 'codex-review-guard.js')
 
 let passed = 0, failed = 0
+const IS_WIN = process.platform === 'win32'
+const { nameAllowed, trySymlink } = require('./lib/testfs')
+let skipped = 0
+const skipNote = (desc, why) => { console.log(`  ⚠️ 건너뜀: ${desc} — ${why}`); skipped++ }
+// 윈도우 파일명 불가: " < > | ? * 와 제어문자(개행 등)
+const nameOk = (n) => nameAllowed(n) && !(IS_WIN && /[\x00-\x1f]/.test(n))
+// 가짜 codex — 맥은 확장자 없는 sh, 윈도우는 PATHEXT 로 찾히는 codex.cmd 도 함께 만든다 (sh 스크립트는 윈도우에서 실행 불가)
+function writeStub(dir, sh, cmd, name = 'codex') {
+  fs.writeFileSync(path.join(dir, name), sh)
+  fs.chmodSync(path.join(dir, name), 0o755)
+  if (IS_WIN) fs.writeFileSync(path.join(dir, name + '.cmd'), '@echo off\r\n' + cmd.trim().split('\n').join('\r\n') + '\r\n')
+}
+const findExe = (n) => {
+  for (const d of (process.env.PATH || '').split(path.delimiter)) {
+    const f = path.join(d, n + (IS_WIN ? '.exe' : ''))
+    try { if (d && fs.statSync(f).isFile()) return f } catch { /* 다음 */ }
+  }
+  return null
+}
+const CMD_LOGGED_IN ='echo Logged in using ChatGPT\nexit /b 0'
+// 상태 파일 격리 — 맥 os.tmpdir() 는 TMPDIR, 윈도우는 TEMP/TMP 를 본다
+const tmpEnv = (dir) => ({ TMPDIR: dir, TEMP: dir, TMP: dir })
 
 function test(desc, input, expectedExit, cwd, stderrIncludes) {
   const r = spawnSync('node', [HOOK], {
@@ -53,10 +75,9 @@ console.log('\n── 차단 경로 (codex 스텁) → exit 2 + stderr 사유 �
   fs.writeFileSync(path.join(repo, '.claude', 'settings.json'), JSON.stringify({ enabledPlugins: { 'codex@openai-codex': true } }))
   // 공백·한글·따옴표 경로 파싱은 아래 "경로 파싱" 스위트에서 검증 (여기는 메시지 채널 검증 목적)
   fs.writeFileSync(path.join(repo, 'app.js'), 'module.exports = 1\n')
-  const stub = path.join(bin, 'codex')
-  const env = (login) => ({ ...process.env, PATH: `${bin}:${process.env.PATH}`, STUB_LOGIN: login })
-  fs.writeFileSync(stub, '#!/bin/sh\nif [ "$STUB_LOGIN" = "yes" ]; then echo "Logged in using ChatGPT"; else echo "Not logged in"; exit 1; fi\n')
-  fs.chmodSync(stub, 0o755)
+  const env = (login) => ({ ...process.env, PATH: `${bin}${path.delimiter}${process.env.PATH}`, STUB_LOGIN: login })
+  writeStub(bin, '#!/bin/sh\nif [ "$STUB_LOGIN" = "yes" ]; then echo "Logged in using ChatGPT"; else echo "Not logged in"; exit 1; fi\n',
+    'if "%STUB_LOGIN%"=="yes" (echo Logged in using ChatGPT& exit /b 0)\necho Not logged in\nexit /b 1')
 
   const runBlock = (desc, login, needle) => {
     const r = spawnSync('node', [HOOK], {
@@ -79,10 +100,9 @@ console.log('\n── 차단 경로 (codex 스텁) → exit 2 + stderr 사유 �
   {
     // 종료코드 0 인데 "Not logged in" 출력 — /logged in/ 부분 매치로 로그인 판정하면 안 됨
     const stub2 = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-bin-nl-'))
-    fs.writeFileSync(path.join(stub2, 'codex'), '#!/bin/sh\necho "Not logged in"\nexit 0\n')
-    fs.chmodSync(path.join(stub2, 'codex'), 0o755)
+    writeStub(stub2, '#!/bin/sh\necho "Not logged in"\nexit 0\n', 'echo Not logged in\nexit /b 0')
     const r = spawnSync('node', [HOOK], { input: JSON.stringify({ hook_event_name: 'Stop' }), encoding: 'utf8', timeout: 20000, cwd: repo,
-      env: { ...process.env, PATH: `${stub2}:${process.env.PATH}` } })
+      env: { ...process.env, PATH: `${stub2}${path.delimiter}${process.env.PATH}` } })
     const pass = r.status === 0 && !r.stderr.includes('리뷰 필요')
     console.log(`  ${pass ? '✅' : '❌'} "Not logged in" + exit 0 → 미로그인으로 판정(부분 매치 오판 금지) → ${pass ? 'PASS' : `FAIL (exit ${r.status})`}`)
     pass ? passed++ : failed++
@@ -94,8 +114,15 @@ console.log('\n── 차단 경로 (codex 스텁) → exit 2 + stderr 사유 �
     const stub4 = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-bin-noexec-'))
     fs.mkdirSync(path.join(stub3, 'codex'))
     fs.writeFileSync(path.join(stub4, 'codex'), '#!/bin/sh\necho "Logged in using ChatGPT"\n') // 0644 — 실행 불가
+    // 윈도우: PATHEXT 이름의 폴더(codex.cmd·codex.exe) + PATHEXT 에 없는 확장자 파일(codex.txt)·확장자 없는 sh — 모두 실행 불가
+    if (IS_WIN) {
+      fs.mkdirSync(path.join(stub3, 'codex.cmd')); fs.mkdirSync(path.join(stub3, 'codex.exe'))
+      fs.writeFileSync(path.join(stub4, 'codex.txt'), 'echo Logged in using ChatGPT\r\n')
+    }
+    // 빈 항목(::)도 섞음, 진짜 codex 가 없는 PATH — git 은 있어야 레포 판정이 된다(윈도우는 git.exe 폴더)
+    const tail = IS_WIN ? [path.dirname(findExe('git')), path.dirname(process.env.ComSpec || 'C:\\Windows\\System32\\cmd.exe')] : ['/usr/bin', '/bin']
     const r = spawnSync(process.execPath, [HOOK], { input: JSON.stringify({ hook_event_name: 'Stop' }), encoding: 'utf8', timeout: 20000, cwd: repo,
-      env: { ...process.env, PATH: `${stub3}:${stub4}::/usr/bin:/bin` } }) // 빈 항목(::)도 섞음, 진짜 codex 가 없는 PATH
+      env: { ...process.env, PATH: [stub3, stub4, '', ...tail].join(path.delimiter) } })
     const pass = r.status === 0 && r.stderr.includes('건너뜀: codex CLI 없음') // 로그인 실패로 우연히 통과한 것과 구분
     console.log(`  ${pass ? '✅' : '❌'} PATH 에 codex 폴더·실행 불가 파일만 → 미설치로 조용히 통과 → ${pass ? 'PASS' : `FAIL (exit ${r.status}, ${r.stderr.slice(0, 80)})`}`)
     pass ? passed++ : failed++
@@ -145,14 +172,13 @@ console.log('\n── 경로 파싱 (공백·한글·따옴표·개행·rename·
 {
   const { execSync } = require('child_process')
   const bin = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-bin2-'))
-  const stub = path.join(bin, 'codex')
-  fs.writeFileSync(stub, '#!/bin/sh\necho "Logged in using ChatGPT"\n')
-  fs.chmodSync(stub, 0o755)
-  const env = { ...process.env, PATH: `${bin}:${process.env.PATH}` }
+  writeStub(bin, '#!/bin/sh\necho "Logged in using ChatGPT"\n', CMD_LOGGED_IN)
+  const env = { ...process.env, PATH: `${bin}${path.delimiter}${process.env.PATH}` }
   const git = (repo, args) => spawnSync('git', args, { cwd: repo, encoding: 'utf8' })
 
   // setup(repo): 커밋 전 상태 준비 / change(repo): 커밋 이후 변경 / marker: 'old'|'new'|undefined
-  const scenario = (desc, { committed = [], change, marker, expect }) => {
+  const scenario = (desc, { committed = [], change, marker, expect, names = [] }) => {
+    if (!names.every(nameOk)) return skipNote(desc, '윈도우에서 만들 수 없는 파일 이름')
     const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-path-'))
     try {
       execSync('git init -q && git config user.email t@t && git config user.name t && git config core.quotePath true', { cwd: repo })
@@ -184,12 +210,12 @@ console.log('\n── 경로 파싱 (공백·한글·따옴표·개행·rename·
   scenario('untracked 공백 디렉토리 "src dir/app.js" → 리뷰 요구', { change: write('src dir/app.js'), expect: 2 })
   scenario('tracked 공백 파일 "my file.js" 수정 → 리뷰 요구', { committed: ['my file.js'], change: write('my file.js'), expect: 2 })
   scenario('한글 파일명 "한글.ts" (quotePath 기본값) → 리뷰 요구', { change: write('한글.ts'), expect: 2 })
-  scenario('따옴표 포함 파일명 a"b.py → 리뷰 요구', { change: write('a"b.py'), expect: 2 })
-  scenario('개행 포함 파일명 "a\\nb.go" → 리뷰 요구', { change: write('a\nb.go'), expect: 2 })
+  scenario('따옴표 포함 파일명 a"b.py → 리뷰 요구', { change: write('a"b.py'), expect: 2, names: ['a"b.py'] })
+  scenario('개행 포함 파일명 "a\\nb.go" → 리뷰 요구', { change: write('a\nb.go'), expect: 2, names: ['a\nb.go'] })
   scenario('rename 문서→공백 코드 "notes.txt -> new name.js" (staged) → 리뷰 요구', {
     committed: ['notes.txt'], change: (repo, g) => { g(repo, ['mv', 'notes.txt', 'new name.js']) }, expect: 2,
   })
-  scenario('파일명에 " -> " 리터럴 포함 "x -> y.rs" → 리뷰 요구', { change: write('x -> y.rs'), expect: 2 })
+  scenario('파일명에 " -> " 리터럴 포함 "x -> y.rs" → 리뷰 요구', { change: write('x -> y.rs'), expect: 2, names: ['x -> y.rs'] })
   // 마커 경로 — 첫 줄 선행 공백(" M") trim 으로 경로 앞 글자가 잘리던 버그
   scenario('마커(과거) 이후 tracked "app.js" worktree 수정 → 리뷰 재요구', { committed: ['app.js'], change: write('app.js'), marker: 'old', expect: 2 })
   scenario('마커(과거) 이후 공백 경로 "src dir/app.js" 수정 → 리뷰 재요구', { committed: ['src dir/app.js'], change: write('src dir/app.js'), marker: 'old', expect: 2 })
@@ -217,9 +243,8 @@ console.log('\n── stop_hook_active 루프 방지 — 같은 사유 재차단
   fs.mkdirSync(path.join(repo, '.claude'), { recursive: true })
   fs.writeFileSync(path.join(repo, '.claude', 'settings.json'), JSON.stringify({ enabledPlugins: { 'codex@openai-codex': true } }))
   fs.writeFileSync(path.join(repo, 'app.js'), 'x\n')
-  fs.writeFileSync(path.join(bin, 'codex'), '#!/bin/sh\necho "Logged in using ChatGPT"\n')
-  fs.chmodSync(path.join(bin, 'codex'), 0o755)
-  const env = { ...process.env, PATH: `${bin}:${process.env.PATH}`, TMPDIR: tmp }
+  writeStub(bin, '#!/bin/sh\necho "Logged in using ChatGPT"\n', CMD_LOGGED_IN)
+  const env = { ...process.env, PATH: `${bin}${path.delimiter}${process.env.PATH}`, ...tmpEnv(tmp) }
   const stop = (extra) => {
     const r = spawnSync('node', [HOOK], { input: JSON.stringify({ hook_event_name: 'Stop', ...extra }), encoding: 'utf8', timeout: 20000, cwd: repo, env })
     let j = null; try { j = r.stdout.trim() ? JSON.parse(r.stdout) : null } catch { j = 'INVALID' }
@@ -266,11 +291,12 @@ console.log('\n── stop_hook_active 루프 방지 — 같은 사유 재차단
 console.log('\n── git status 실패 — 변경 있음으로 간주(fail-closed), -uall 만 실패 시 일반 status 로 폴백 ──')
 {
   const { execSync } = require('child_process')
-  const realGit = execSync('command -v git', { encoding: 'utf8' }).trim()
+  // 윈도우 cmd 에는 `command -v` 가 없다 → PATH 에서 git.exe 를 직접 찾는다
+  const realGit = IS_WIN ? findExe('git') : execSync('command -v git', { encoding: 'utf8' }).trim()
   const bin = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-gitfail-bin-'))
-  fs.writeFileSync(path.join(bin, 'codex'), '#!/bin/sh\necho "Logged in using ChatGPT"\n')
-  fs.writeFileSync(path.join(bin, 'git'), `#!/bin/sh\nfor a in "$@"; do case "$a" in status) [ "$FAIL_MODE" = all ] && exit 128;; -uall) [ "$FAIL_MODE" = uall ] && exit 128;; esac; done\nexec "${realGit}" "$@"\n`)
-  fs.chmodSync(path.join(bin, 'codex'), 0o755); fs.chmodSync(path.join(bin, 'git'), 0o755)
+  writeStub(bin, '#!/bin/sh\necho "Logged in using ChatGPT"\n', CMD_LOGGED_IN)
+  writeStub(bin, `#!/bin/sh\nfor a in "$@"; do case "$a" in status) [ "$FAIL_MODE" = all ] && exit 128;; -uall) [ "$FAIL_MODE" = uall ] && exit 128;; esac; done\nexec "${realGit}" "$@"\n`,
+    `setlocal\nset S=\nset U=\nfor %%a in (%*) do (\n  if "%%~a"=="status" set S=1\n  if "%%~a"=="-uall" set U=1\n)\nif defined S if "%FAIL_MODE%"=="all" exit /b 128\nif defined U if "%FAIL_MODE%"=="uall" exit /b 128\n"${realGit}" %*\nexit /b %ERRORLEVEL%`, 'git')
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-gitfail-tmp-'))
   const mkRepo = (setup) => {
     const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-gitfail-'))
@@ -286,7 +312,7 @@ console.log('\n── git status 실패 — 변경 있음으로 간주(fail-clos
   const run = (desc, mode, setup, expect, needle) => {
     const repo = mkRepo(setup)
     const r = spawnSync('node', [HOOK], { input: JSON.stringify({ hook_event_name: 'Stop', session_id: 'gf-' + Math.random(), stop_hook_active: false }), encoding: 'utf8', timeout: 20000, cwd: repo,
-      env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, TMPDIR: tmp, FAIL_MODE: mode } })
+      env: { ...process.env, PATH: `${bin}${path.delimiter}${process.env.PATH}`, ...tmpEnv(tmp), FAIL_MODE: mode } })
     const pass = r.status === expect && (!needle || r.stderr.includes(needle))
     console.log(`  ${pass ? '✅' : '❌'} ${desc} → ${pass ? 'PASS' : `FAIL (기대 ${expect}, 실제 ${r.status}, stderr: ${r.stderr.slice(0, 100)})`}`)
     pass ? passed++ : failed++
@@ -307,11 +333,11 @@ console.log('\n── codex 사용 불가 마커 (.claude/.codex-unavailable) �
   // codex 스텁: login status / --version 을 인자별로 구분 응답
   const makeCodexBin = (version) => {
     const bin = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-unavail-bin-'))
-    fs.writeFileSync(path.join(bin, 'codex'),
+    writeStub(bin,
       '#!/bin/sh\n' +
       'if [ "$1" = "login" ] && [ "$2" = "status" ]; then echo "Logged in using ChatGPT"; exit 0; fi\n' +
-      `if [ "$1" = "--version" ]; then echo "${version}"; exit 0; fi\n`)
-    fs.chmodSync(path.join(bin, 'codex'), 0o755)
+      `if [ "$1" = "--version" ]; then echo "${version}"; exit 0; fi\n`,
+      `if "%1"=="login" if "%2"=="status" (echo Logged in using ChatGPT& exit /b 0)\nif "%1"=="--version" (echo ${version}& exit /b 0)`)
     return bin
   }
   const VERSION = 'codex-cli 0.146.0'
@@ -344,7 +370,7 @@ console.log('\n── codex 사용 불가 마커 (.claude/.codex-unavailable) �
   const runStop = (repo, home, extra, tmp) => {
     const r = spawnSync('node', [HOOK], {
       input: JSON.stringify({ hook_event_name: 'Stop', ...extra }), encoding: 'utf8', timeout: 20000, cwd: repo,
-      env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, CODEX_HOME: home, TMPDIR: tmp || fs.mkdtempSync(path.join(os.tmpdir(), 'crg-unavail-tmp-')) },
+      env: { ...process.env, PATH: `${bin}${path.delimiter}${process.env.PATH}`, CODEX_HOME: home, ...tmpEnv(tmp || fs.mkdtempSync(path.join(os.tmpdir(), 'crg-unavail-tmp-'))) },
     })
     let j = null; try { j = r.stdout.trim() ? JSON.parse(r.stdout) : null } catch { j = 'INVALID' }
     return { ...r, j }
@@ -410,9 +436,12 @@ console.log('\n── codex 사용 불가 마커 (.claude/.codex-unavailable) �
     const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-unavail-outside-'))
     const realMarker = path.join(outside, 'real-marker.json')
     fs.writeFileSync(realMarker, JSON.stringify({ configHash: configHashOf(CONFIG_A), codexVersion: VERSION }))
-    fs.symlinkSync(realMarker, path.join(repo, '.claude', '.codex-unavailable'))
-    const r = runStop(repo, home, { session_id: 'u6', stop_hook_active: false })
-    check('마커 심볼릭 링크 위장 → 무시(lstat.isFile()===false) → 기존 차단(exit 2)', r.status === 2 && r.stderr.includes('적대적 리뷰 필요'), r)
+    if (trySymlink(realMarker, path.join(repo, '.claude', '.codex-unavailable'), 'file') === null) {
+      skipNote('마커 심볼릭 링크 위장', '윈도우 개발자 모드 꺼짐 — 파일 심볼릭 링크 생성 불가(EPERM), 공격자도 못 만듦')
+    } else {
+      const r = runStop(repo, home, { session_id: 'u6', stop_hook_active: false })
+      check('마커 심볼릭 링크 위장 → 무시(lstat.isFile()===false) → 기존 차단(exit 2)', r.status === 2 && r.stderr.includes('적대적 리뷰 필요'), r)
+    }
     fs.rmSync(repo, { recursive: true, force: true }); fs.rmSync(home, { recursive: true, force: true }); fs.rmSync(outside, { recursive: true, force: true })
   }
 
@@ -429,11 +458,10 @@ console.log('\n── codex 사용 불가 마커 (.claude/.codex-unavailable) �
     const repo = mkRepo(); const home = mkCodexHome(CONFIG_A)
     writeMarker(repo)
     const noLoginBin = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-unavail-nologin-'))
-    fs.writeFileSync(path.join(noLoginBin, 'codex'), '#!/bin/sh\necho "Not logged in"\nexit 1\n')
-    fs.chmodSync(path.join(noLoginBin, 'codex'), 0o755)
+    writeStub(noLoginBin, '#!/bin/sh\necho "Not logged in"\nexit 1\n', 'echo Not logged in\nexit /b 1')
     const r = spawnSync('node', [HOOK], {
       input: JSON.stringify({ hook_event_name: 'Stop', session_id: 'u8', stop_hook_active: false }), encoding: 'utf8', timeout: 20000, cwd: repo,
-      env: { ...process.env, PATH: `${noLoginBin}:${process.env.PATH}`, CODEX_HOME: home },
+      env: { ...process.env, PATH: `${noLoginBin}${path.delimiter}${process.env.PATH}`, CODEX_HOME: home },
     })
     const pass = r.status === 0 && (r.stdout || '').trim() === '' && !r.stderr.includes('사용 불가')
     console.log(`  ${pass ? '✅' : '❌'} 미로그인 + 마커 유효 → 미로그인 경로 우선(조용히 통과, 마커 안내 없음) → ${pass ? 'PASS' : `FAIL (exit ${r.status}, stdout: ${(r.stdout || '').slice(0, 80)})`}`)
@@ -446,12 +474,12 @@ console.log('\n── codex 사용 불가 마커 (.claude/.codex-unavailable) �
     const repo = mkRepo(); const home = mkCodexHome(CONFIG_A)
     writeMarker(repo)
     const noVersionBin = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-unavail-noversion-'))
-    fs.writeFileSync(path.join(noVersionBin, 'codex'),
-      '#!/bin/sh\nif [ "$1" = "login" ] && [ "$2" = "status" ]; then echo "Logged in using ChatGPT"; exit 0; fi\nexit 1\n')
-    fs.chmodSync(path.join(noVersionBin, 'codex'), 0o755)
+    writeStub(noVersionBin,
+      '#!/bin/sh\nif [ "$1" = "login" ] && [ "$2" = "status" ]; then echo "Logged in using ChatGPT"; exit 0; fi\nexit 1\n',
+      'if "%1"=="login" if "%2"=="status" (echo Logged in using ChatGPT& exit /b 0)\nexit /b 1')
     const r = spawnSync('node', [HOOK], {
       input: JSON.stringify({ hook_event_name: 'Stop', session_id: 'u9', stop_hook_active: false }), encoding: 'utf8', timeout: 20000, cwd: repo,
-      env: { ...process.env, PATH: `${noVersionBin}:${process.env.PATH}`, CODEX_HOME: home },
+      env: { ...process.env, PATH: `${noVersionBin}${path.delimiter}${process.env.PATH}`, CODEX_HOME: home },
     })
     const pass = r.status === 2 && r.stderr.includes('적대적 리뷰 필요')
     console.log(`  ${pass ? '✅' : '❌'} codex --version 실패 → 판단 불가 → 마커 무효 → 기존 차단(exit 2) → ${pass ? 'PASS' : `FAIL (exit ${r.status})`}`)
@@ -462,6 +490,45 @@ console.log('\n── codex 사용 불가 마커 (.claude/.codex-unavailable) �
   fs.rmSync(bin, { recursive: true, force: true })
 }
 
-console.log(`\n결과: ${passed}/${passed + failed} 통과`)
+if (IS_WIN) {
+  console.log('\n── 윈도우 전용 — codex.cmd 절대 경로 실행·레포 안 위장 codex·안내 경로 형식 ──')
+  const { execSync } = require('child_process')
+  const check = (desc, cond, r) => {
+    console.log(`  ${cond ? '✅' : '❌'} ${desc} → ${cond ? 'PASS' : `FAIL (exit ${r.status}, stdout: ${(r.stdout || '').slice(0, 100)}, stderr: ${(r.stderr || '').slice(0, 200)})`}`)
+    cond ? passed++ : failed++
+  }
+  const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-win-'))
+  execSync('git init -q', { cwd: repo })
+  fs.mkdirSync(path.join(repo, '.claude'), { recursive: true })
+  fs.writeFileSync(path.join(repo, '.claude', 'settings.json'), JSON.stringify({ enabledPlugins: { 'codex@openai-codex': true } }))
+  fs.writeFileSync(path.join(repo, 'app.js'), 'x\n')
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-win-tmp-'))
+  // 정상·경계: 공백·한글 폴더의 codex.cmd → 셸 경유 절대 경로 실행으로 로그인 판정 → 리뷰 요구
+  const spaced = path.join(os.tmpdir(), `crg 공백 한글 ${process.pid}`); fs.mkdirSync(spaced, { recursive: true })
+  writeStub(spaced, '#!/bin/sh\n', CMD_LOGGED_IN)
+  let r = spawnSync('node', [HOOK], { input: JSON.stringify({ hook_event_name: 'Stop', session_id: 'w1' }), encoding: 'utf8', timeout: 20000, cwd: repo,
+    env: { ...process.env, PATH: `${spaced}${path.delimiter}${process.env.PATH}`, ...tmpEnv(tmp) } })
+  check('[윈도우] 공백·한글 폴더의 codex.cmd → 로그인 판정 후 리뷰 요구(exit 2)', r.status === 2 && r.stderr.includes('적대적 리뷰 필요'), r)
+  // 안내 문구: Git Bash 에서 그대로 쓸 수 있는 슬래시·따옴표 경로 (백슬래시면 touch 가 엉뚱한 파일을 만든다)
+  const mk = path.join(repo, '.claude', '.codex-review-done').replace(/\\/g, '/')
+  check('[윈도우] 마커 touch 안내가 따옴표 + 슬래시 경로', r.stderr.includes(`touch "${mk}"`) && !/touch [A-Za-z]:\\/.test(r.stderr), r)
+  check('[윈도우] 라운드 출력 경로가 os.tmpdir() (Git Bash /tmp 와 Read 도구 C:\\tmp 불일치 방지)', r.stderr.includes(`tee "${tmp.replace(/\\/g, '/')}/codex-r{N}.txt"`), r) // 훅의 os.tmpdir() = 위에서 넘긴 TEMP
+  // 악성: 레포(현재 폴더)에 "로그인됨" codex.cmd 를 심고, PATH 의 진짜 codex 는 미로그인.
+  //   NoDefaultCurrentDirectoryInExePath 를 지운 환경에서 cmd 가 현재 폴더 codex.cmd 를 먼저 실행하면 우회된다 → 절대 경로 실행으로 방어
+  const realBin = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-win-real-'))
+  writeStub(realBin, '#!/bin/sh\n', 'echo Not logged in\nexit /b 1')
+  fs.writeFileSync(path.join(repo, 'codex.cmd'), '@echo off\r\necho Logged in using ChatGPT\r\n')
+  const env2 = { ...process.env, PATH: `${realBin}${path.delimiter}${process.env.PATH}`, ...tmpEnv(tmp) }
+  delete env2.NoDefaultCurrentDirectoryInExePath
+  r = spawnSync('node', [HOOK], { input: JSON.stringify({ hook_event_name: 'Stop', session_id: 'w2' }), encoding: 'utf8', timeout: 20000, cwd: repo, env: env2 })
+  check('[윈도우] 레포 안 위장 codex.cmd(로그인됨)는 무시, PATH 의 codex(미로그인) 기준 → 조용히 통과', r.status === 0 && !r.stderr.includes('리뷰 필요'), r)
+  // 악성: PATH 에 codex 없음 + 레포 안 codex.cmd 만 → 미설치
+  const env3 = { ...env2, PATH: [path.dirname(findExe('git')), path.dirname(process.env.ComSpec || 'C:\\Windows\\System32\\cmd.exe')].join(path.delimiter) }
+  r = spawnSync(process.execPath, [HOOK], { input: JSON.stringify({ hook_event_name: 'Stop', session_id: 'w3' }), encoding: 'utf8', timeout: 20000, cwd: repo, env: env3 })
+  check('[윈도우] PATH 에 없고 레포 안 codex.cmd 만 → "codex CLI 없음" 으로 건너뜀', r.status === 0 && r.stderr.includes('codex CLI 없음'), r)
+  for (const d of [repo, tmp, spaced, realBin]) fs.rmSync(d, { recursive: true, force: true })
+}
+
+console.log(`\n결과: ${passed}/${passed + failed} 통과${skipped ? ` (건너뜀 ${skipped})` : ''}`)
 if (failed > 0) { console.log('❌ 일부 테스트 실패'); process.exit(1) }
 console.log('✅ 모든 테스트 통과')

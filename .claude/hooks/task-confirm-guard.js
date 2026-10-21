@@ -24,6 +24,15 @@ const BYPASS_RE = /바로\s*(?:진행|작업|수정|해)|확인\s*없이|묻지\
 // 거절·수정 요청 — 문장 첫머리의 거절어, 또는 방향을 바꾸는 표현
 const REJECT_START_RE = /^[\s"'“‘(]*(?:아니|아뇨|아냐|잠깐|잠시만|멈춰|중단|취소|보류|그만|no\b|stop\b|wait\b)/i
 const REJECT_ANY_RE = /말고|하지\s*마|하지\s*말|대신에?\s|다시\s*(?:정리|짜|생각|가져)|수정해서\s*다시|이해\s*못|잘못\s*이해/
+// 승인어로 시작하는 답 — "응 … 커밋 푸쉬는 하지 말고 …" 처럼 *다른 행동*을 금지하는 부가 조건은 거절이 아니다
+// (2026-10-20 실사용 오탐: 승인했는데 "하지 말" 에 걸려 거절로 판정). 승인어 뒤는 공백·문장부호·끝이어야 한다
+// ("예전처럼"·"네가" 같은 다른 낱말의 첫 글자는 승인어가 아님)
+const APPROVE_START_RE = /^[\s"'“‘(]*(?:응|네|넹|예|ㅇㅇ|ㅇㅋ|좋아요?|오케이|그래|진행(?:해(?:줘|주세요|요)?|하자|하세요|시켜)?)(?=$|[\s,.!~…])/
+// 위 관대 처리에서 지우는 "-지 말고 / -지 마" 금지 절(하지·건드리지·푸시하지 …). 대체 요청("A 말고 B로")은 "-지" 가 없어
+// 지우지 않는다 → 계속 거절
+const PROHIBIT_CLAUSE_RE = /지\s*(?:말(?:고|아(?:줘|요|주세요)?|기|구)?|마(?:세요|요)?)/g
+// 승인어로 시작해도 중간에 거절어가 낱말로 끼면("응 아니 그거 하지 말고") 관대 처리하지 않는다
+const MID_REJECT_RE = /(?:^|[\s,.!~…])(?:아니|아뇨|아냐|잠깐|잠시만|멈춰|중단|취소|보류|그만)(?=$|[\s,.!~…]|야|요|해)/
 
 const APPROVE_WORD_RE = /진행|^\s*(?:응|네|넹|예|ㅇㅇ|ㅇㅋ|좋아|오케이|그래|콜)|해\s*줘|하자|ok\b|okay\b|go\b|yes\b/i
 const QUESTION_RE = /\?\s*$|뭐야|뭐지|뭔데|왜\s|어떻게|무슨|무엇|맞아\??\s*$|건가|는가\??\s*$/
@@ -95,14 +104,63 @@ function judgePrompt(prompt, prevAssistant) {
   const lines = String(prevAssistant || '').trimEnd().split('\n').map(l => l.trim()).filter(Boolean)
   const lastLine = (lines[lines.length - 1] || '').slice(-CONFIRM_TAIL_CHARS)
   if (!CONFIRM_RE.test(lastLine) || /["“'‘「]진행할까요/.test(lastLine)) return { approved: false, why: 'no-confirm-question' }
-  if (REJECT_START_RE.test(p) || REJECT_ANY_RE.test(p)) return { approved: false, why: 'rejected' }
+  // 승인어로 시작 + 중간 거절어 없음 → "하지 말고/하지 마" 금지 절만 빼고 거절 표현을 본다
+  const rejectTarget = APPROVE_START_RE.test(p) && !MID_REJECT_RE.test(p) ? p.replace(PROHIBIT_CLAUSE_RE, ' ') : p
+  if (REJECT_START_RE.test(p) || REJECT_ANY_RE.test(rejectTarget)) return { approved: false, why: 'rejected' }
   // 승인 표현 없이 되묻는 질문("이건 뭐야??")은 승인이 아니라 확인 질문 (실제 세션 검증으로 추가)
   if (!APPROVE_WORD_RE.test(p) && QUESTION_RE.test(p)) return { approved: false, why: 'question' }
   return { approved: true, why: 'approved' }
 }
 
+const IS_WIN = process.platform === 'win32'
+
+// 윈도우 판정 (2026-10-20 윈도우 PC 실측: 임시 폴더 = os.tmpdir() = `C:\Users\…\AppData\Local\Temp`, Claude scratchpad 도 그 아래.
+// `/tmp`·`/var/folders` 고정식은 윈도우에서 한 번도 맞지 않아 임시 폴더 쓰기까지 막혔다).
+// 경로 단위·대소문자 무시 비교(lib/winpath) — 접두만 같은 형제(`Temp2`)·`..` 탈출은 예외 아님.
+// 판정은 링크(junction)를 따라간 *실제 위치* 기준 — 임시 폴더 안 junction 이 레포를 가리키면 실제로는 레포에 쓰게 되므로 예외 아님.
+// 실경로는 realpathSync.native(junction·8.3 짧은 이름·대소문자까지 정규화)로 구한다.
+// lib 로드 실패 등 예외는 false(=예외 아님 → 승인 상태에 따름, 보수)
+function isExemptPathWin(filePath, cwd) {
+  try {
+    const w = require('./lib/winpath')
+    const real = (p) => { try { return fs.realpathSync.native(p) } catch { return null } }
+    const realLoc = (abs) => { // 가장 가까운 실제 존재하는 상위 폴더의 실경로 + 나머지
+      let cur = abs
+      const rest = []
+      for (let i = 0; i < 256; i++) {
+        const r = real(cur)
+        if (r) return path.win32.join(r, ...rest.reverse())
+        const up = path.win32.dirname(cur)
+        if (up === cur) return null
+        rest.push(path.win32.basename(cur))
+        cur = up
+      }
+      return null
+    }
+    let v = w.msysToWin(filePath, true)
+    if (HOME && (v === '~' || /^~[\\/]/.test(v))) v = HOME + v.slice(1)
+    const abs = path.win32.resolve(w.msysToWin(cwd || process.env.CLAUDE_PROJECT_DIR || process.cwd(), true), v)
+    const p = realLoc(abs) || abs
+    const under = (x, base) => base && w.isUnder(x, base, true) && !w.samePath(x, base, true)
+    const both = (base) => [base, real(base)].filter(Boolean)
+    // 이 훅의 승인 상태 파일 폴더는 임시 폴더 안이지만 예외가 아니다 — Write 로 approved:true 를 써 넣는 자기 승인 차단
+    if ([abs, p].some(x => both(STATE_DIR).some(b => w.isUnder(x, b, true)))) return false
+    if (both(os.tmpdir()).some(t => under(p, t))) return true
+    if (HOME) {
+      const np = w.normPath(p, true)
+      for (const base of both(path.win32.join(HOME, '.claude'))) {
+        const projects = w.normPath(path.win32.join(base, 'projects'), true) + '/'
+        if (np.startsWith(projects) && np.slice(projects.length).split('/')[1] === 'memory') return true
+        if (np.startsWith(w.normPath(path.win32.join(base, 'plans'), true) + '/')) return true
+      }
+    }
+  } catch { /* 판정 불가 → 예외 아님 */ }
+  return false
+}
+
 function isExemptPath(filePath, cwd) {
   if (typeof filePath !== 'string' || !filePath) return false
+  if (IS_WIN) return isExemptPathWin(filePath, cwd)
   let v = filePath
   if (HOME && (v === '~' || v.startsWith('~/'))) v = HOME + v.slice(1)
   let abs
@@ -187,5 +245,5 @@ if (require.main === module) {
   if (r.stderr) process.stderr.write(r.stderr + '\n')
   process.exit(r.code)
 } else {
-  module.exports = { handle, judgePrompt, isSystemPrompt, isExemptPath, lastAssistantText, stateFile }
+  module.exports = { handle, judgePrompt, isSystemPrompt, isExemptPath, lastAssistantText, stateFile, STATE_DIR }
 }

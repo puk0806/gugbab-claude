@@ -30,8 +30,32 @@ const PRETTIER_CONFIGS = ['.prettierrc', '.prettierrc.json', '.prettierrc.yaml',
 const exists = (p) => { try { return fs.existsSync(p) } catch { return false } }
 const readText = (p) => { try { return fs.readFileSync(p, 'utf8') } catch { return '' } }
 
+const { IS_WIN, msysToWin, isUnder } = require('./lib/winpath')
+
 function projectRoot() {
-  return path.resolve(process.env.CLAUDE_PROJECT_DIR || process.cwd())
+  // 윈도우: Git Bash 가 넘긴 `/c/…` 는 path.resolve 가 `C:\c\…` 로 잘못 붙이므로 드라이브 경로로 먼저 바꾼다 (맥은 그대로)
+  return path.resolve(msysToWin(process.env.CLAUDE_PROJECT_DIR || process.cwd()))
+}
+
+const isFile = (p) => { try { return fs.statSync(p).isFile() } catch { return false } }
+
+// 윈도우 npm 의 node_modules/.bin 은 확장자 없는 sh 스크립트(spawn ENOENT)·.cmd(셸 없이 spawn 하면 EINVAL)·.ps1 뿐이다.
+// .cmd 를 셸로 돌리면 파일 이름의 `&`·`%` 로 명령 주입이 가능하므로, 패키지 package.json 의 bin 진입점 JS 를 node 로 직접 실행한다.
+const NPM_PKG = { biome: '@biomejs/biome', prettier: 'prettier' }
+function winNpmBin(dir, name) {
+  const pkgDir = path.join(dir, 'node_modules', ...(NPM_PKG[name] || name).split('/'))
+  let pkg
+  try { pkg = JSON.parse(readText(path.join(pkgDir, 'package.json'))) } catch { pkg = null }
+  if (pkg && pkg.bin) {
+    const rel = typeof pkg.bin === 'string' ? pkg.bin : pkg.bin[name]
+    if (typeof rel === 'string' && rel) {
+      const js = path.resolve(pkgDir, rel)
+      // bin 이 `../../evil` 처럼 패키지 밖을 가리키면 쓰지 않는다
+      if (isUnder(js, pkgDir) && isFile(js)) return { cmd: process.execPath, pre: [js] }
+    }
+  }
+  const exe = path.join(dir, 'node_modules', '.bin', name + '.exe')
+  return isFile(exe) ? { cmd: exe, pre: [] } : null
 }
 
 // 파일이 있는 폴더부터 루트까지 올라가며 첫 번째로 조건을 만족하는 폴더
@@ -47,17 +71,29 @@ function findUp(fromDir, root, pred) {
   return null
 }
 
+// 반환: { cmd, pre } | null — pre 는 cmd 뒤·도구 인자 앞에 붙는 인자(윈도우에서 node 로 JS 진입점을 돌릴 때)
 function binIn(dir, name) {
+  if (IS_WIN) return winNpmBin(dir, name)
   const p = path.join(dir, 'node_modules', '.bin', name)
-  return exists(p) ? p : null
+  return exists(p) ? { cmd: p, pre: [] } : null
 }
 
+// 윈도우: 셸 없이 실행 가능한 .exe 만 찾는다(.cmd·.bat 는 셸 경유가 필요해 주입 위험) — 폴더·이름만 같은 다른 파일은 무시
 function onPath(name) {
   for (const d of String(process.env.PATH || '').split(path.delimiter)) {
-    if (d && exists(path.join(d, name))) return path.join(d, name)
+    if (!d) continue
+    if (IS_WIN) {
+      const p = path.join(d, name + '.exe')
+      if (isFile(p)) return p
+      continue
+    }
+    if (exists(path.join(d, name))) return path.join(d, name)
   }
   return null
 }
+
+// 파이썬 가상환경 실행 파일 — 맥·리눅스 `.venv/bin/<name>`, 윈도우 `.venv\Scripts\<name>.exe`
+const venvRel = (name) => (IS_WIN ? ['.venv', 'Scripts', name + '.exe'] : ['.venv', 'bin', name])
 
 // 반환: { tool, cmd, args } | null
 function pickFormatter(file, root) {
@@ -66,13 +102,13 @@ function pickFormatter(file, root) {
     const biomeDir = findUp(dir, root, d => exists(path.join(d, 'biome.json')) || exists(path.join(d, 'biome.jsonc')))
     if (biomeDir) {
       const bin = findUp(dir, root, d => !!binIn(d, 'biome'))
-      if (bin) return { tool: 'biome', cmd: binIn(bin, 'biome'), args: ['format', '--write', file] }
+      if (bin) { const b = binIn(bin, 'biome'); return { tool: 'biome', cmd: b.cmd, args: [...b.pre, 'format', '--write', file] } }
     }
     const prettierDir = findUp(dir, root, d => PRETTIER_CONFIGS.some(c => exists(path.join(d, c)))
       || /"prettier"\s*:/.test(readText(path.join(d, 'package.json'))))
     if (prettierDir) {
       const bin = findUp(dir, root, d => !!binIn(d, 'prettier'))
-      if (bin) return { tool: 'prettier', cmd: binIn(bin, 'prettier'), args: ['--write', '--log-level', 'warn', file] }
+      if (bin) { const b = binIn(bin, 'prettier'); return { tool: 'prettier', cmd: b.cmd, args: [...b.pre, '--write', '--log-level', 'warn', file] } }
     }
     return null
   }
@@ -80,16 +116,16 @@ function pickFormatter(file, root) {
     const cfgDir = findUp(dir, root, d => exists(path.join(d, 'ruff.toml')) || exists(path.join(d, '.ruff.toml'))
       || /^\[tool\.ruff/m.test(readText(path.join(d, 'pyproject.toml'))) || /^\[tool\.black\]/m.test(readText(path.join(d, 'pyproject.toml'))))
     if (!cfgDir) return null
-    const venvBin = (name) => findUp(dir, root, d => exists(path.join(d, '.venv', 'bin', name)))
+    const venvBin = (name) => findUp(dir, root, d => (IS_WIN ? isFile : exists)(path.join(d, ...venvRel(name))))
     const usesRuff = exists(path.join(cfgDir, 'ruff.toml')) || exists(path.join(cfgDir, '.ruff.toml')) || /^\[tool\.ruff/m.test(readText(path.join(cfgDir, 'pyproject.toml')))
     if (usesRuff) {
       const v = venvBin('ruff')
-      const cmd = v ? path.join(v, '.venv', 'bin', 'ruff') : onPath('ruff')
+      const cmd = v ? path.join(v, ...venvRel('ruff')) : onPath('ruff')
       if (cmd) return { tool: 'ruff', cmd, args: ['format', file] }
     }
     if (/^\[tool\.black\]/m.test(readText(path.join(cfgDir, 'pyproject.toml')))) {
       const v = venvBin('black')
-      const cmd = v ? path.join(v, '.venv', 'bin', 'black') : onPath('black')
+      const cmd = v ? path.join(v, ...venvRel('black')) : onPath('black')
       if (cmd) return { tool: 'black', cmd, args: ['--quiet', file] }
     }
     return null
@@ -114,7 +150,8 @@ function handle(input) {
   const root = projectRoot()
   const file = path.resolve(root, ti.file_path)
   // 프로젝트 밖·빌드 산출물·의존성 폴더는 손대지 않는다
-  if (!(file === root || file.startsWith(root + path.sep))) return null
+  // 윈도우는 드라이브·대소문자 차이(`c:\` vs `C:\`)를 같은 경로로 본다 (맥은 기존 문자열 비교 그대로)
+  if (IS_WIN ? !isUnder(file, root) : !(file === root || file.startsWith(root + path.sep))) return null
   if (SKIP_DIR.test(path.relative(root, file).split(path.sep).join('/') + '/')) return null
   let stat
   try { stat = fs.lstatSync(file) } catch { return null }

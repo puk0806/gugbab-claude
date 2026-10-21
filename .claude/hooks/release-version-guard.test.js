@@ -17,6 +17,8 @@ const { evaluate, isPrCreate } = require('./release-version-guard.js')
 const rv = require(path.join(__dirname, '..', '..', 'scripts', 'release-version.js'))
 
 let passed = 0, failed = 0
+let skipped = 0
+const { trySymlink } = require('./lib/testfs')
 const check = (desc, cond, detail) => {
   console.log(`  ${cond ? '✅' : '❌'} ${desc}${cond ? '' : ` → FAIL ${detail !== undefined ? JSON.stringify(detail).slice(0, 400) : ''}`}`)
   cond ? passed++ : failed++
@@ -80,9 +82,11 @@ console.log('\n[악성·우회]')
   check('작업 폴더만 올리고 커밋 안 함 → 차단 + "커밋되지 않았습니다" 안내', ru.block === true && /커밋되지 않았습니다/.test(ru.message), ru)
   const ln = repo({ version: null, marker: false, localTags: [] })
   fs.mkdirSync(path.join(ln, '.github', 'workflows'), { recursive: true })
-  fs.symlinkSync(path.join(s, '.github', 'workflows', 'release-on-main.yml'), path.join(ln, '.github', 'workflows', 'release-on-main.yml'))
-  check('표시 파일이 링크면 이 레포로 보지 않음 (다른 프로젝트에서 무시)', ev('gh pr create', ln).block === false)
-  // 프로젝트의 scripts/release-version.js 는 실행하지 않는다 — 실행되면 표시 파일을 만든다
+  if (trySymlink(path.join(s, '.github', 'workflows', 'release-on-main.yml'), path.join(ln, '.github', 'workflows', 'release-on-main.yml'), 'file') === null) {
+    console.log('  ⚠️ 건너뜀: 표시 파일이 링크 — 윈도우 개발자 모드 꺼짐, 파일 심볼릭 링크 생성 불가(EPERM)'); skipped++
+  } else {
+    check('표시 파일이 링크면 이 레포로 보지 않음 (다른 프로젝트에서 무시)', ev('gh pr create', ln).block === false)
+  }  // 프로젝트의 scripts/release-version.js 는 실행하지 않는다 — 실행되면 표시 파일을 만든다
   const evil = repo({ version: '1.0.2\n', localTags: ['v1.0.1'] })
   fs.mkdirSync(path.join(evil, 'scripts'))
   const pwned = path.join(evil, 'PWNED')
@@ -112,5 +116,5 @@ console.log('\n[이상·경계]')
 }
 
 fs.rmSync(base, { recursive: true, force: true })
-console.log(`\n결과: ${passed} 통과 / ${failed} 실패`)
+console.log(`\n결과: ${passed} 통과 / ${failed} 실패${skipped ? ` (건너뜀 ${skipped})` : ''}`)
 process.exit(failed ? 1 : 0)

@@ -56,10 +56,24 @@ function extractPlan(text) {
   return { understanding: understanding.replace(/\*\*/g, '').slice(0, 500), tasks: tasks.slice(0, 30).map(x => x.slice(0, 300)) }
 }
 
-function relPath(p, cwd) {
-  const root = path.resolve(process.env.CLAUDE_PROJECT_DIR || cwd || process.cwd())
-  const abs = path.resolve(root, p)
-  return abs.startsWith(root + path.sep) ? path.relative(root, abs) : abs
+const IS_WIN = process.platform === 'win32'
+
+// 기록은 항상 `/` 구분 — 윈도우에서 `src\ui\Form.tsx` 로 저장되면 안내 문구·비교가 플랫폼마다 달라진다 (2026-10-20 윈도우 실측)
+// 윈도우 분기: MSYS(`/c/…`)·슬래시(`C:/…`) 표기를 드라이브 표기로, 드라이브·폴더 대소문자 무시로 루트 아래인지 판정.
+// 맥·리눅스(win=false)는 기존 식 그대로
+function relPath(p, cwd, win = IS_WIN, projectDir = process.env.CLAUDE_PROJECT_DIR) {
+  if (!win) {
+    const root = path.resolve(projectDir || cwd || process.cwd())
+    const abs = path.resolve(root, p)
+    return abs.startsWith(root + path.sep) ? path.relative(root, abs) : abs
+  }
+  const w = require('./lib/winpath')
+  const P = path.win32
+  const root = P.resolve(w.msysToWin(projectDir || cwd || process.cwd(), true))
+  const abs = P.resolve(root, w.msysToWin(p, true))
+  return w.isUnder(abs, root, true) && !w.samePath(abs, root, true)
+    ? w.toSlash(P.relative(root, abs), true)
+    : w.toSlash(abs, true)
 }
 
 function render(rec, header) {
@@ -150,5 +164,5 @@ if (require.main === module) {
   if (r) process.stdout.write(JSON.stringify(r) + '\n')
   process.exit(0)
 } else {
-  module.exports = { handle, extractPlan, render }
+  module.exports = { handle, extractPlan, render, relPath }
 }

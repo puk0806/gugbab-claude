@@ -24,13 +24,17 @@
  *   2. CLAUDE_PROJECT_DIR 환경변수
  *   3. process.cwd()
  *   위 cwd에서 .git / .claude 상향 탐색해 프로젝트 루트 확정,
- *   추가 경계는 CLAUDE_BASH_GUARD_ALLOWED_DIRS 환경변수(콜론 구분)와
+ *   추가 경계는 CLAUDE_BASH_GUARD_ALLOWED_DIRS 환경변수(맥 콜론·윈도우 세미콜론 구분)와
  *   .claude/settings.json 의 permissions.additionalDirectories로 지정 가능.
  */
 
 const readline = require('readline')
 const path = require('path')
 const fs = require('fs')
+const os = require('os')
+// 윈도우 경로 헬퍼 (2026-10-20 윈도우 2단계) — 윈도우 분기는 모두 IS_WIN 안에서만. 맥 판정은 기존 코드 그대로
+const W = require('./lib/winpath')
+const IS_WIN = W.IS_WIN
 
 // 보호 파일(verification.md / SKILL.md / memory/)은 Bash *쓰기 연산*만 차단
 // 읽기 전용 사용(grep / diff / cat FILE / sed -n / awk 출력)은 허용 — 오탐 방지
@@ -161,13 +165,14 @@ function getAllowedDirs(stdinCwd) {
   }
 
   if (process.env.CLAUDE_PROJECT_DIR) {
-    try { dirs.add(path.resolve(process.env.CLAUDE_PROJECT_DIR)) } catch { /* ignore */ }
+    try { dirs.add(path.resolve(nativeDir(process.env.CLAUDE_PROJECT_DIR))) } catch { /* ignore */ }
   }
 
+  // 구분자: 맥 `:` / 윈도우 `;`(path.delimiter) — 윈도우에서 `:` 로 나누면 `C:` 드라이브가 잘려 허용 폴더가 깨진다
   const envExtra = process.env.CLAUDE_BASH_GUARD_ALLOWED_DIRS
   if (envExtra) {
-    envExtra.split(':').filter(Boolean).forEach(d => {
-      try { dirs.add(path.resolve(d)) } catch { /* ignore */ }
+    envExtra.split(IS_WIN ? ';' : ':').filter(Boolean).forEach(d => {
+      try { dirs.add(path.resolve(nativeDir(d))) } catch { /* ignore */ }
     })
   }
 
@@ -201,19 +206,144 @@ function getAllowedDirs(stdinCwd) {
   return [...dirs]
 }
 
+// 윈도우: MSYS `/c/x` 로 온 허용 폴더를 `C:/x` 로 (path.resolve 가 `C:\c\x` 로 잘못 만들지 않게). 맥은 그대로
+function nativeDir(d) { return IS_WIN ? W.msysToWin(W.toSlash(d, true), true) : d }
+
 function isUnderAllowed(absPath, allowedDirs) {
+  if (IS_WIN) {
+    // 윈도우: `..` 를 먼저 풀고(winCanon) 대소문자·구분자 무시로 경로 단위 비교 — 접두만 같은 형제(C:/proj-evil)는 밖
+    const c = typeof absPath === 'string' ? winCanon(absPath) : null
+    if (!c) return false
+    return (allowedDirs || []).some(d => { const dc = winCanon(d); return !!dc && W.isUnder(c, dc, true) })
+  }
   if (!absPath || !absPath.startsWith('/')) return false
   const norm = path.resolve(absPath)
   return allowedDirs.some(d => norm === d || norm.startsWith(d + path.sep))
 }
 
 function isUnderTempDir(absPath) {
+  if (IS_WIN) {
+    // 윈도우: 사용자 임시 폴더(os.tmpdir() = Git Bash /tmp) 아래만 — 임시 폴더 자체는 아래가 아님(맥 `/tmp/` 접두와 같은 기준)
+    const c = typeof absPath === 'string' ? winCanon(absPath) : null
+    return !!c && winTmpDirs().some(t => !W.samePath(c, t, true) && W.isUnder(c, t, true))
+  }
   if (!absPath || !absPath.startsWith('/')) return false
   const norm = path.resolve(absPath)
   return norm.startsWith('/tmp/')
     || norm.startsWith('/private/tmp/')
     || norm.startsWith('/var/folders/')
     || norm.startsWith('/private/var/folders/')
+}
+
+// ── 윈도우 경로 판정 (2026-10-20 윈도우 2단계) ─────────────────────────────
+// Git Bash 명령 안 경로는 `C:/x`·`/c/x`·따옴표 속 `C:\x`·`~`·`$HOME`(=C:\Users\x) 로 온다 (PoC 실측).
+// 아래 함수는 윈도우에서만 판정에 쓰인다 (맥은 호출되지 않거나 기존 결과와 같은 값을 돌려준다).
+
+// 비교용 절대 경로 — `\`→`/`, Git Bash `/tmp`→사용자 임시 폴더, MSYS `/c/x`→`C:/x`, `..` 풀기, 드라이브 대문자.
+// `C:/x`·UNC(`//srv/share`) 외의 `/usr` 같은 경로는 Git 설치 폴더 기준 POSIX 경로로 남긴다. 상대·드라이브 상대(`C:x`) → null
+// 플랫폼과 무관한 순수 함수라 맥에서도 단위 시험된다
+function winCanon(p) {
+  if (typeof p !== 'string' || !p || p.includes('\0')) return null
+  let s = p.replace(/\\/g, '/')
+  s = s.replace(/^\/\/[?.]\/(?=[A-Za-z]:\/)/, '').replace(/^\/\/[?.]\/UNC\//i, '//') // \\?\C:\x · \\?\UNC\srv\share
+  if (/^\/tmp(?:\/|$)/.test(s)) s = os.tmpdir().replace(/\\/g, '/').replace(/\/+$/, '') + s.slice(4)
+  s = W.msysToWin(s, true)
+  let r
+  const srv = /^\/\/([^/]+)\/*$/.exec(s) // `//srv` 서버 루트 — win32.resolve 는 현재 드라이브 아래로 잘못 푼다
+  if (srv) return '//' + srv[1]
+  if (/^[A-Za-z]:\//.test(s) || /^\/\/[^/]/.test(s)) {
+    try { r = path.win32.resolve(s).replace(/\\/g, '/') } catch { return null }
+  } else if (s.startsWith('/')) r = path.posix.normalize(s)
+  else return null
+  if (/^[a-z]:/.test(r)) r = r[0].toUpperCase() + r.slice(1)
+  if (r.length > 1 && !/^[A-Za-z]:\/$/.test(r)) r = r.replace(/\/+$/, '') || '/'
+  return r
+}
+
+// 드라이브 루트(`C:/`)·UNC 서버·공유 루트(`//srv/share`)
+function isWinRoot(r) { return typeof r === 'string' && (/^[A-Za-z]:\/$/.test(r) || /^\/\/[^/]+(?:\/[^/]+)?$/.test(r)) }
+
+let _winTmp = null
+function winTmpDirs() {
+  if (_winTmp) return _winTmp
+  const t = os.tmpdir()
+  const all = [t]
+  try { all.push(fs.realpathSync(t)) } catch { /* 없음 */ }
+  try { all.push(fs.realpathSync.native(t)) } catch { /* 없음 */ } // 8.3 짧은 이름(LF_USE~1) 풀기
+  return (_winTmp = [...new Set(all.map(winCanon).filter(Boolean))])
+}
+
+// 윈도우 시스템 폴더 — 그 아래 삭제는 맥 SYSTEM_DIRS 와 같은 기준(재귀 deny, 아니면 ask)
+let _winSys = null
+function winSystemDirs() {
+  if (_winSys) return _winSys
+  const e = process.env
+  const list = [e.SystemRoot, e.windir, e.ProgramFiles, e['ProgramFiles(x86)'], e.ProgramW6432, e.ProgramData,
+    'C:\\Windows', 'C:\\Program Files', 'C:\\Program Files (x86)', 'C:\\ProgramData']
+  return (_winSys = [...new Set(list.filter(Boolean).map(winCanon).filter(Boolean))])
+}
+// 그 자체(또는 상위)를 지우면 deny — 사용자 폴더 모음(C:\Users). 그 아래는 다른 사용자 홈·내 프로젝트라 하위는 막지 않는다
+function winUsersDirs() {
+  const out = ['C:\\Users']
+  if (HOME_DIR) out.push(path.win32.dirname(HOME_DIR))
+  return [...new Set(out.map(winCanon).filter(Boolean))]
+}
+
+// 윈도우에서 쓰면 로그인·셸 시작 시 실행되는 위치 — PowerShell 프로필·시작프로그램 (대소문자 무시)
+const WIN_FORBIDDEN_WRITE = [
+  /\/documents\/(?:windows)?powershell(?:\/|$)/i,
+  /\/start menu\/programs\/startup(?:\/|$)/i,
+]
+function winForbiddenWrite(p) {
+  const s = String(p).replace(/\\/g, '/')
+  return WIN_FORBIDDEN_WRITE.some(re => re.test(s)) || HEREDOC_FORBIDDEN_PATHS.some(re => new RegExp(re.source, 'i').test(s))
+}
+
+// 안전 패턴(문자열 휴리스틱)의 "절대 경로" — 맥은 기존 `/` 시작 그대로.
+// 윈도우는 `C:/x`·`/c/x`·`/tmp/x` 를 인정하되 `\` 가 섞인 경로는 거부: 따옴표 밖 `\` 는 bash 가 지워 다른 경로(C:Usersx)가 된다
+function shAbs(p) {
+  if (typeof p !== 'string' || !p) return false
+  if (!IS_WIN) return p.startsWith('/')
+  return !p.includes('\\') && W.isAbs(p, true)
+}
+// 경로 검사를 반드시 거쳐야 하는 인자인가 — 맥: `/` 시작(기존). 윈도우: + 드라이브·`\`·`~` 시작
+function shLooksAbs(p) {
+  if (typeof p !== 'string' || !p) return false
+  if (!IS_WIN) return p.startsWith('/')
+  return p.startsWith('/') || /^[A-Za-z]:/.test(p) || p.startsWith('\\') || p.startsWith('~')
+}
+function shSafeAbs(p, allowedDirs) { return shAbs(p) && (isUnderAllowed(p, allowedDirs) || isUnderTempDir(p)) }
+
+// 윈도우 전용: 문장 속 모든 드라이브·MSYS 드라이브·UNC·`\`·`~` 경로가 허용·임시 폴더 안이고 쓰기 금지 위치가 아닌가.
+// 경로 환경변수($HOME·$APPDATA …)·리다이렉트 대상 변수는 해석 불가라 거부. 따옴표 안 텍스트도 검사(보수적 — 자동 허용만 줄어든다)
+const WIN_PATH_VAR_RE = /\$\{?(?:HOME|USERPROFILE|APPDATA|LOCALAPPDATA|PROGRAMDATA|PROGRAMFILES|SYSTEMROOT|WINDIR|TEMP|TMP|PUBLIC|ONEDRIVE|HOMEDRIVE|HOMEPATH)(?![A-Za-z0-9_])/i
+function winPathsSafe(s, allowedDirs) {
+  if (!IS_WIN) return true
+  if (typeof s !== 'string') return false
+  if (WIN_PATH_VAR_RE.test(s)) return false
+  if (/>\s*["']?\$/.test(s)) return false
+  if (/(?:^|[\s=>"'(])\/\/[^\s/]/.test(s)) return false // //srv/share (UNC) · cmd //c
+  const B = '[^\\s"\'`|;&<>()]*'
+  const toks = []
+  for (const m of s.matchAll(new RegExp(`(?<![A-Za-z0-9_])[A-Za-z]:[\\\\/]${B}`, 'g'))) toks.push(m[0])
+  for (const m of s.matchAll(new RegExp(`(?:^|[\\s=>"'(])(\\\\${B})`, 'g'))) toks.push(m[1])
+  for (const m of s.matchAll(new RegExp(`(?:^|[\\s=>"'(])(\\/[A-Za-z](?:\\/${B})?)(?=[\\s"'\`|;&<>()]|$)`, 'g'))) toks.push(m[1])
+  const pushTilde = (t) => {
+    if (!HOME_DIR || !(t === '~' || t.startsWith('~/'))) return false
+    toks.push(HOME_DIR.replace(/\\/g, '/') + t.slice(1))
+    return true
+  }
+  for (const m of s.matchAll(new RegExp(`(?:^|[\\s=>"'(])(~${B})`, 'g'))) if (!pushTilde(m[1])) return false
+  // 따옴표로 감싼 공백 경로("C:/…/Start Menu/Programs/Startup/x.js")는 위 토큰이 공백에서 끊기므로 통째로 한 번 더
+  for (const m of s.matchAll(/(["'])([^"']*)\1/g)) {
+    const q = m[2]
+    if (/^~(?:\/|$)/.test(q)) { if (!pushTilde(q)) return false } else if (/^(?:[A-Za-z]:[\\/]|\/[A-Za-z](?:\/|$)|\\)/.test(q)) toks.push(q)
+  }
+  for (const t of toks) {
+    if (winForbiddenWrite(t)) return false
+    if (!shSafeAbs(t, allowedDirs)) return false
+  }
+  return true
 }
 
 // 안전 패턴: cd <abs path under allowed> && <safe rest>
@@ -229,11 +359,12 @@ function isCdGitSafe(cmd, allowedDirs) {
   const target = m[1]
   const rest = m[2]
 
-  if (!target.startsWith('/')) return false
+  if (!shAbs(target)) return false
   if (!isUnderAllowed(target, allowedDirs)) return false
 
   // 컴파운드 나머지에 위험 신호가 있으면 거부
   if (CD_COMPOUND_DANGER.some(p => p.test(rest))) return false
+  if (!winPathsSafe(rest, allowedDirs)) return false // 윈도우만 — 드라이브·~ 경로가 허용 폴더 밖이면 거부
 
   // 컴파운드 뒤에 추가 줄이 있으면 ( cmd 가 멀티라인 ) 거부 — 의심스러움
   if (trimmed.split('\n').length > 1) return false
@@ -253,13 +384,22 @@ function isHeredocSafe(cmd, allowedDirs) {
   if (!m) return false
 
   const outPath = m[1]
-  if (!outPath.startsWith('/')) return false  // 절대경로만
+  if (!shAbs(outPath)) return false  // 절대경로만 (윈도우: C:/x·/c/x·/tmp/x, `\` 섞이면 거부)
 
   // 출력 경로 안전성: 허용 디렉토리 또는 임시 디렉토리
   if (!isUnderAllowed(outPath, allowedDirs) && !isUnderTempDir(outPath)) return false
 
   // 위험 경로(쉘 시작 파일, ssh, git hooks 등) 차단
   if (HEREDOC_FORBIDDEN_PATHS.some(p => p.test(outPath))) return false
+  if (IS_WIN) {
+    // 윈도우: 대소문자 무시 + PowerShell 프로필·시작프로그램, 본문 뒤 후속 명령의 경로도 허용 폴더 안이어야 함
+    if (winForbiddenWrite(winCanon(outPath) || outPath)) return false
+    const delim = m[2] || m[3]
+    const lines = cmd.split('\n')
+    const endIdx = lines.findIndex((l, i) => i > 0 && l.replace(/^\t+/, '') === delim)
+    const after = endIdx >= 0 ? lines.slice(endIdx + 1).join('\n') : ''
+    if (!winPathsSafe(firstLine, allowedDirs) || !winPathsSafe(after, allowedDirs)) return false
+  }
 
   // 비실행 확장자만
   if (!SAFE_FILE_EXT.test(outPath)) return false
@@ -342,8 +482,8 @@ function isStatementSafeForCompound(stmt, allowedDirs) {
   if (firstWord === 'cp' || firstWord === 'mv') {
     const args = trimmed.split(/\s+/).slice(1).filter(a => !a.startsWith('-'))
     const dest = args[args.length - 1]
-    if (dest && dest.startsWith('/')) {
-      if (!isUnderAllowed(dest, allowedDirs) && !isUnderTempDir(dest)) return false
+    if (dest && shLooksAbs(dest)) {
+      if (!shSafeAbs(dest, allowedDirs)) return false
     }
   }
 
@@ -352,11 +492,14 @@ function isStatementSafeForCompound(stmt, allowedDirs) {
     const args = trimmed.split(/\s+/).slice(1).filter(a => !a.startsWith('-'))
     for (const a of args) {
       if (!isPlainRelativeRmArg(a)) return false // ~ · $VAR · 따옴표 · .. → 경로 해석 불가/밖 가능
-      if (a.startsWith('/')) {
-        if (!isUnderAllowed(a, allowedDirs) && !isUnderTempDir(a)) return false
+      if (shLooksAbs(a)) {
+        if (!shSafeAbs(a, allowedDirs)) return false
       }
     }
   }
+
+  // 윈도우: 리다이렉트·인자의 드라이브·~ 경로도 허용 폴더 안이어야 함 (맥 판정엔 영향 없음)
+  if (!winPathsSafe(trimmed, allowedDirs)) return false
 
   // xargs 다음 명령은 read-only 화이트리스트만 허용
   // (xargs rm/mv/cp 같이 여러 파일을 한 번에 변경하는 패턴은 위험)
@@ -436,7 +579,9 @@ function validateLineReferences(line, allowedDirs, safeVars) {
 
   // 절대경로 검증 — 더블쿼트 안의 텍스트는 제외 (echo 등의 인자에 들어간 경로는 텍스트일 뿐)
   // 명령에 직접 인자로 전달된 경로(따옴표 밖)만 체크
-  const noQuotes = noSingleQuotes.replace(/"[^"]*"/g, '""')
+  let noQuotes = noSingleQuotes.replace(/"[^"]*"/g, '""')
+  // 윈도우: `C:/x/y` 의 뒷부분(`/x/y`)을 POSIX 경로로 오인하지 않게 드라이브 경로는 빼고, 아래 winPathsSafe 가 따로 검사
+  if (IS_WIN) noQuotes = noQuotes.replace(/(?<![A-Za-z0-9_])[A-Za-z]:\/[^\s"'`|;&<>()]*/g, ' ')
   const pathMatches = noQuotes.match(/(?<![:/])\/(?:[a-zA-Z0-9._-]+\/?)+/g) || []
   for (const p of pathMatches) {
     if (/^\/dev\/(?:null|stdin|stdout|stderr)$/.test(p)) continue
@@ -446,6 +591,9 @@ function validateLineReferences(line, allowedDirs, safeVars) {
     if (isUnderAllowed(p, allowedDirs)) continue
     return false
   }
+
+  // 윈도우: `C:/x`(앞 `:` 때문에 위 정규식이 놓침)·~·`\` 경로도 검사 (맥은 항상 true)
+  if (!winPathsSafe(line, allowedDirs)) return false
 
   return true
 }
@@ -597,7 +745,7 @@ function isShellScriptSafe(cmd, allowedDirs) {
     // cd <safe>
     if (firstWord === 'cd') {
       const target = stmt.split(/\s+/)[1]
-      if (!target || !target.startsWith('/')) return false
+      if (!target || !shAbs(target)) return false
       if (!isUnderAllowed(target, allowedDirs) && !isUnderTempDir(target)) return false
     }
 
@@ -611,8 +759,8 @@ function isShellScriptSafe(cmd, allowedDirs) {
       const args = stmt.split(/\s+/).slice(1).filter(a => !a.startsWith('-'))
       for (const a of args) {
         if (firstWord === 'rm' && !isPlainRelativeRmArg(a)) return false
-        if (a.startsWith('/')) {
-          if (!isUnderAllowed(a, allowedDirs) && !isUnderTempDir(a)) return false
+        if (shLooksAbs(a)) {
+          if (!shSafeAbs(a, allowedDirs)) return false
         }
       }
     }
@@ -624,8 +772,8 @@ function isShellScriptSafe(cmd, allowedDirs) {
     if (firstWord === 'ln') {
       const args = stmt.split(/\s+/).slice(1).filter(a => !a.startsWith('-'))
       const target = args[args.length - 1]
-      if (target && target.startsWith('/')) {
-        if (!isUnderAllowed(target, allowedDirs) && !isUnderTempDir(target)) return false
+      if (target && shLooksAbs(target)) {
+        if (!shSafeAbs(target, allowedDirs)) return false
       }
     }
 
@@ -720,7 +868,8 @@ function isCompoundSafe(cmd, allowedDirs) {
 
 // 안전 패턴: 첫 단어가 read-only 명령이고 brace expansion이 인자에서만 일어남
 // → Claude Code의 "Brace expansion" 경고 우회
-function isBraceExpansionSafe(cmd) {
+// allowedDirs 는 윈도우 리다이렉트 대상 검사에만 쓴다 (맥은 무시 — 기존 판정 그대로)
+function isBraceExpansionSafe(cmd, allowedDirs) {
   const trimmed = cmd.trim()
   if (!trimmed) return false
   if (hasNonRmRisk(trimmed, [])) return false
@@ -772,6 +921,14 @@ function isBraceExpansionSafe(cmd) {
     if (target === '/dev/null') continue
     if (target.startsWith('&')) continue  // &1, &2 fd 복제
     if (HEREDOC_FORBIDDEN_PATHS.some(p => p.test(target))) return false
+    // 윈도우: 드라이브·MSYS·~·`\`·변수 대상은 허용·임시 폴더 안이어야 함 (+ PowerShell 프로필·시작프로그램 금지)
+    if (IS_WIN) {
+      if (/^["']?\$/.test(target)) return false
+      const t = target.replace(/^["']/, '') // 따옴표로 감싼 대상("C:/x y/z")도 같은 검사 — 따옴표 때문에 경로 판정을 빠져나가지 않게
+      if (winForbiddenWrite(t)) return false
+      if (shLooksAbs(t) && !shSafeAbs(t, allowedDirs || [])) return false
+      if (!winPathsSafe(trimmed.slice(r.index), allowedDirs || [])) return false // 공백 든 따옴표 경로 전체
+    }
     // 절대경로 redirect가 /tmp 또는 워크스페이스가 아닌 시스템 영역이면 차단
     if (target.startsWith('/') && !target.startsWith('/tmp/') && !target.startsWith('/var/folders/') && !target.startsWith('/private/')) {
       // /Users/x/.zshrc 같은 건 이미 위에서 차단. 그 외 시스템 영역 추가 차단.
@@ -794,8 +951,6 @@ function isBraceExpansionSafe(cmd) {
 // 한계: 셸 문법 완전 구현이 아니다(case 패턴·산술식 등은 근사). 그래서 근사가 틀리면
 //       항상 "더 묻는" 쪽으로 틀리도록 설계했다.
 // ─────────────────────────────────────────────────────────────
-const os = require('os')
-
 const MAX_ANALYZE_LEN = 1000000
 const MAX_DEPTH = 8
 const ZERO_WIDTH_RE = /[​-‍⁠﻿­]/g
@@ -1292,6 +1447,7 @@ function analyzeShell(cmd) {
 
 // rm 대상 단어 → 절대경로 (해석 불가면 null). glob 이면 glob 이 걸린 디렉토리 + glob:true
 function resolveRmTarget(w, vcwd) {
+  if (IS_WIN) return resolveRmTargetWin(w, vcwd)
   let v = cleanValue(w.value)
   if (w.tilde) {
     if (!HOME_DIR || !(v === '~' || v.startsWith('~/'))) return null
@@ -1315,7 +1471,47 @@ function resolveRmTarget(w, vcwd) {
   return { abs: path.resolve(v), glob: false }
 }
 
-function isAncestorOrSame(dir, of) { return !!of && (of === dir || of.startsWith(dir === '/' ? '/' : dir + '/')) }
+// 윈도우판 — 결과 abs 는 winCanon 형태(`C:/Users/x`, 슬래시·드라이브 대문자). 홈은 `~`·`$HOME`·`$USERPROFILE`
+// 따옴표 밖 `C:\x` 는 bash 가 `\` 를 지워 `C:x`(드라이브 상대)가 되므로 해석 불가 → null(확인)
+function resolveRmTargetWin(w, vcwd) {
+  let v = cleanValue(w.value)
+  if (w.tilde) {
+    if (!HOME_DIR || !(v === '~' || v.startsWith('~/'))) return null
+    v = HOME_DIR + v.slice(1)
+  } else if (w.dyn) {
+    const h = /^\$(?:\{(?:HOME|USERPROFILE)\}|(?:HOME|USERPROFILE)(?![A-Za-z0-9_]))([\s\S]*)$/.exec(v)
+    const p = /^\$(?:\{PWD\}|PWD(?![A-Za-z0-9_]))([\s\S]*)$/.exec(v)
+    // Git Bash 는 윈도우 환경변수 APPDATA·LOCALAPPDATA 를 그대로 물려받는다 (%APPDATA%\gcloud 인증 파일 등)
+    const a = /^\$(?:\{(APPDATA|LOCALAPPDATA)\}|(APPDATA|LOCALAPPDATA)(?![A-Za-z0-9_]))([\s\S]*)$/.exec(v)
+    const aVal = a ? process.env[a[1] || a[2]] : null
+    if (h && HOME_DIR) v = HOME_DIR + h[1]
+    else if (p && vcwd) v = vcwd + p[1]
+    else if (a && aVal && path.win32.isAbsolute(aVal)) v = aVal + a[3]
+    else return null
+    if (v.includes('$') || v.includes('`')) return null
+  }
+  if (!v) return null
+  v = v.replace(/\\/g, '/')
+  if (/^[A-Za-z]:(?!\/)/.test(v)) return null // 드라이브 상대 경로(C:x) — 그 드라이브의 현재 폴더를 모름
+  if (!W.isAbs(v, true)) { if (!vcwd) return null; v = String(vcwd).replace(/\\/g, '/') + '/' + v }
+  const g = v.search(/[*?[]/)
+  if (g >= 0) {
+    const base = v.slice(0, g)
+    let dir = base.endsWith('/') ? base : path.posix.dirname(base)
+    if (/^[A-Za-z]:$/.test(dir)) dir += '/' // C:/x* → 드라이브 루트에 걸린 glob
+    const abs = winCanon(dir)
+    return abs ? { abs, glob: true } : null
+  }
+  const abs = winCanon(v)
+  return abs ? { abs, glob: false } : null
+}
+
+// of 가 dir 와 같거나 그 아래인가 — 윈도우는 대소문자·구분자 무시(winpath.isUnder)
+function isAncestorOrSame(dir, of) {
+  if (IS_WIN) return !!of && !!dir && W.isUnder(winCanon(of) || of, winCanon(dir) || dir, true)
+  return !!of && (of === dir || of.startsWith(dir === '/' ? '/' : dir + '/'))
+}
+function sameDir(a, b) { return IS_WIN ? !!a && !!b && W.samePath(winCanon(a) || a, winCanon(b) || b, true) : a === b }
 
 function classifyRm(inv, ctx, add) {
   let recursive = false, endOpts = false
@@ -1332,16 +1528,19 @@ function classifyRm(inv, ctx, add) {
     if (!r) { add('ask', `rm 대상 경로를 정적으로 해석할 수 없습니다(${t.value}). 사용자 확인이 필요합니다.`); continue }
     const abs = r.abs
     if (abs === '/') { add('deny', '루트 디렉토리 삭제는 차단됩니다.'); continue }
+    if (IS_WIN && isWinRoot(abs)) { add('deny', `드라이브·네트워크 공유 루트(${abs}) 삭제는 차단됩니다.`); continue }
     if (HOME_DIR && isAncestorOrSame(abs, HOME_DIR)) { add('deny', '홈 디렉토리(또는 그 상위) 삭제는 차단됩니다.'); continue }
-    const base = path.basename(abs)
-    if (['.git', '.claude', '.ssh'].includes(base) || /\/\.ssh(?:\/|$)/.test(abs)) { add('deny', '.git / .claude / .ssh 디렉토리 삭제는 차단됩니다.'); continue }
+    if (IS_WIN && winUsersDirs().some(d => isAncestorOrSame(abs, d))) { add('deny', `사용자 폴더 모음(${abs}) 삭제는 차단됩니다.`); continue }
+    // 윈도우는 대소문자 무시 (.SSH 도 같은 폴더)
+    const base = IS_WIN ? path.posix.basename(abs).toLowerCase() : path.basename(abs)
+    if (['.git', '.claude', '.ssh'].includes(base) || (IS_WIN ? /\/\.ssh(?:\/|$)/i : /\/\.ssh(?:\/|$)/).test(abs)) { add('deny', '.git / .claude / .ssh 디렉토리 삭제는 차단됩니다.'); continue }
     if (isUnderTempDir(abs)) continue
-    if (SYSTEM_DIRS.some(d => isAncestorOrSame(d, abs))) {
+    if (SYSTEM_DIRS.some(d => isAncestorOrSame(d, abs)) || (IS_WIN && winSystemDirs().some(d => isAncestorOrSame(d, abs)))) {
       add(recursive ? 'deny' : 'ask', '시스템 디렉토리 삭제는 차단됩니다.'); continue
     }
     if (ctx.root && isAncestorOrSame(abs, ctx.root)) { add(recursive ? 'deny' : 'ask', '프로젝트 루트(또는 그 상위) 전체 삭제는 차단됩니다.'); continue }
-    if (ctx.startCwd && abs === ctx.startCwd) { add(recursive ? 'deny' : 'ask', '현재 디렉토리 전체 삭제는 차단됩니다.'); continue }
-    if (ctx.allowedDirs.includes(abs)) { add('ask', `허용 디렉토리 루트 전체 삭제(${abs})는 사용자 확인이 필요합니다.`); continue }
+    if (ctx.startCwd && sameDir(abs, ctx.startCwd)) { add(recursive ? 'deny' : 'ask', '현재 디렉토리 전체 삭제는 차단됩니다.'); continue }
+    if (ctx.allowedDirs.some(d => sameDir(d, abs))) { add('ask', `허용 디렉토리 루트 전체 삭제(${abs})는 사용자 확인이 필요합니다.`); continue }
     if (isUnderAllowed(abs, ctx.allowedDirs)) continue
     add('ask', `프로젝트 루트 밖 경로 삭제(${abs})는 사용자 확인이 필요합니다.`)
   }
@@ -1354,8 +1553,8 @@ function classifyRm(inv, ctx, add) {
 function harnessRoots() {
   const h = process.env.GUGBAB_HOME
   if (!h || !path.isAbsolute(h)) return []
-  const abs = path.resolve(h)
-  if (abs === '/' || (HOME_DIR && isAncestorOrSame(abs, HOME_DIR))) return []
+  const abs = path.resolve(nativeDir(h))
+  if (abs === '/' || (IS_WIN && isWinRoot(winCanon(abs))) || (HOME_DIR && isAncestorOrSame(abs, HOME_DIR))) return []
   let real = abs
   try { real = fs.realpathSync(abs) } catch { /* 없음 → 글자 그대로 */ }
   return [...new Set([abs, real])]
@@ -1496,7 +1695,8 @@ function classifySecretArgs(inv, ctx, add) {
   if (!_isSecretReadPath) return
   for (const a of inv.args) {
     const raw = cleanValue(a.value)
-    if (a.dyn && !/^\$(?:\{HOME\}|HOME)(?![A-Za-z0-9_])/.test(raw)) continue
+    if (a.dyn && !/^\$(?:\{HOME\}|HOME)(?![A-Za-z0-9_])/.test(raw)
+      && !(IS_WIN && /^\$\{?(?:USERPROFILE|APPDATA|LOCALAPPDATA)(?![A-Za-z0-9_])/.test(raw))) continue
     const v = raw.replace(/^-{1,2}[A-Za-z][\w-]*=/, '') // --file=~/.ssh/id_rsa
     if (!v || v.startsWith('-')) continue
     const r = resolveRmTarget({ ...a, value: v }, ctx.vcwd)
@@ -1559,6 +1759,8 @@ let _procTable = null
 function procTable() {
   if (_procTable) return _procTable
   _procTable = new Map()
+  // 윈도우: `ps -axo` 가 없다(Git Bash ps 는 옵션이 다름) → 빈 표 = 판정 불가 → kill -9 는 항상 확인 (보수적)
+  if (IS_WIN) return _procTable
   try {
     const out = require('child_process').execFileSync('ps', ['-axo', 'pid=,ppid=,comm='], { encoding: 'utf8', timeout: 3000, stdio: ['ignore', 'pipe', 'ignore'] })
     for (const line of out.split('\n')) {
@@ -1736,7 +1938,7 @@ function handlePreToolUse(toolName, toolInput, cwd) {
   const allowedDirs = getAllowedDirs(cwd)
   if (isCdGitSafe(cmd, allowedDirs)
    || isHeredocSafe(cmd, allowedDirs)
-   || isBraceExpansionSafe(cmd)
+   || isBraceExpansionSafe(cmd, allowedDirs)
    || isCompoundSafe(cmd, allowedDirs)
    || isShellScriptSafe(cmd, allowedDirs)) {
     return {
@@ -1850,4 +2052,6 @@ module.exports = {
   classifyShell,
   parseGitInvocation,
   parsePushArgs,
+  winCanon,
+  isWinRoot,
 }

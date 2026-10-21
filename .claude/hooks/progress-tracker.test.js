@@ -12,7 +12,7 @@ const fs = require('fs')
 const os = require('os')
 const path = require('path')
 const HOOK = path.join(__dirname, 'progress-tracker.js')
-const { extractPlan } = require('./progress-tracker.js')
+const { extractPlan, relPath } = require('./progress-tracker.js')
 
 let passed = 0, failed = 0
 const check = (desc, cond, detail) => {
@@ -54,6 +54,27 @@ console.log('\n── 계획 추출 ──')
   const q = extractPlan('이렇게 이해했습니다:\n다음 줄에 요약\n\n작업 목록:\n1) 하나\n2) 둘\n\n그 외 설명 문단\n\n진행할까요?')
   check('요약이 다음 줄에 있어도·"1)" 형식도 추출, 목록 뒤 문단은 제외', q.understanding === '다음 줄에 요약' && q.tasks.length === 2, q)
   check('계획 없는 답변 → 빈 계획', extractPlan('완료했습니다.').tasks.length === 0)
+}
+
+console.log('\n── 수정 파일 경로 표기 (플랫폼 인자로 맥·윈도우 규칙을 모두 검사) ──')
+{
+  // 맥 규칙(win=false) 고정 — 기존 식 그대로여야 한다 (기존 식은 네이티브 path 를 써서 POSIX 에서만 검사 가능)
+  if (process.platform !== 'win32') {
+    check('맥: 루트 아래 → 상대경로', relPath('/r/proj/src/a.ts', '/r/proj', false, '/r/proj') === 'src/a.ts')
+    check('맥: 접두만 같은 형제(/r/proj2) → 절대경로 유지', relPath('/r/proj2/a.ts', '/r/proj', false, '/r/proj') === '/r/proj2/a.ts')
+  } else {
+    console.log('  ⚠️ 건너뜀: 맥 규칙 2종 — 기존 식이 네이티브 path 를 써서 POSIX 에서만 검사 가능')
+  }
+  // 윈도우 규칙(win=true) — path.win32 로 계산해 맥에서도 돈다
+  const R = 'C:\\Users\\LF_USER\\proj'
+  check('윈도우: 네이티브 `C:\\…\\src\\ui\\Form.tsx` → `src/ui/Form.tsx`', relPath(`${R}\\src\\ui\\Form.tsx`, R, true, R) === 'src/ui/Form.tsx')
+  check('윈도우: 상대 `src\\api\\x.ts` → `src/api/x.ts`', relPath('src\\api\\x.ts', R, true, R) === 'src/api/x.ts')
+  check('윈도우: env 슬래시 `C:/…` + 드라이브 소문자 file_path → 상대경로', relPath('c:\\users\\lf_user\\proj\\a.ts', R, true, 'C:/Users/LF_USER/proj') === 'a.ts', relPath('c:\\users\\lf_user\\proj\\a.ts', R, true, 'C:/Users/LF_USER/proj'))
+  check('윈도우: MSYS `/c/…` file_path → 상대경로', relPath('/c/Users/LF_USER/proj/b.ts', R, true, R) === 'b.ts')
+  check('윈도우 악성: 접두만 같은 형제 `proj2` → 루트 밖(절대·슬래시)', relPath('C:\\Users\\LF_USER\\proj2\\a.ts', R, true, R) === 'C:/Users/LF_USER/proj2/a.ts')
+  check('윈도우 악성: `..` 로 루트 밖 → 절대경로로 기록(상대 `../` 아님)', relPath(`${R}\\..\\secret.txt`, R, true, R) === 'C:/Users/LF_USER/secret.txt')
+  check('윈도우 경계: 공백·한글 폴더', relPath(`${R}\\내 폴더\\a b.ts`, R, true, R) === '내 폴더/a b.ts')
+  check('윈도우 경계: 루트 자체 → 절대경로', relPath(R, R, true, R) === 'C:/Users/LF_USER/proj')
 }
 
 console.log('\n── 정상 경로 ──')

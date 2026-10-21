@@ -48,6 +48,14 @@ assert('node_modules 하위 → true',
   isExcludedPath('/proj/node_modules/pkg/verification.md'), true)
 assert('일반 docs/skills 경로 → false',
   isExcludedPath('/proj/docs/skills/backend/dayjs/verification.md'), false)
+// 윈도우 규칙(win=true) — 맥에서도 도는 순수 검사
+assert('윈도우: `C:\\proj\\.claude\\worktrees\\…` → true', isExcludedPath('C:\\proj\\.claude\\worktrees\\x\\verification.md', true), true)
+assert('윈도우: 대소문자 다른 `Node_Modules` → true', isExcludedPath('C:\\proj\\Node_Modules\\pkg\\verification.md', true), true)
+assert('윈도우: 슬래시·백슬래시 섞임 → true', isExcludedPath('C:/proj\\node_modules/pkg\\v.md', true), true)
+assert('윈도우 악성: 접두만 같은 `node_modules2` → false (스캔 대상 유지)', isExcludedPath('C:\\proj\\node_modules2\\verification.md', true), false)
+assert('윈도우 악성: 이름 일부 `my.claude\\worktrees` → false', isExcludedPath('C:\\proj\\my.claude\\worktrees\\v.md', true), false)
+assert('윈도우 경계: 빈 문자열 → false', isExcludedPath('', true), false)
+assert('맥 고정: win=false 면 `\\` 경로는 제외 판정 안 함 (기존 동작)', isExcludedPath('C:\\proj\\node_modules\\v.md', false), path.sep === '\\')
 
 // ─── frontmatter status 추출 ─────────────────────────────────────
 section('extractStatus')
@@ -131,7 +139,9 @@ assert('위반 없음 → exit 0', stopClean.status, 0)
 section('Stop 루프 방지 — stop_hook_active')
 {
   const stTmp = fs.mkdtempSync(path.join(os.tmpdir(), 'dg-loop-tmp-')) // 상태 파일 격리
-  const envL = { ...process.env, CLAUDE_PROJECT_DIR: tmpRoot, TMPDIR: stTmp }
+  // 윈도우 os.tmpdir() 는 TMPDIR 이 아니라 TEMP/TMP 를 본다 — 셋 다 바꿔야 상태 파일이 격리된다
+  // (격리 안 되면 이전 실행이 남긴 실제 %TEMP% 상태 파일로 'L2 1회 차단'·'손상 → 차단' 이 거꾸로 판정됐다, 2026-10-20 윈도우 실측)
+  const envL = { ...process.env, CLAUDE_PROJECT_DIR: tmpRoot, TMPDIR: stTmp, TEMP: stTmp, TMP: stTmp }
   const stopL = (extra, root = tmpRoot) => {
     const r = spawnSync('node', [HOOK, '--no-readme'], {
       input: JSON.stringify({ hook_event_name: 'Stop', cwd: root, ...extra }), encoding: 'utf8', timeout: 5000, cwd: root, env: { ...envL, CLAUDE_PROJECT_DIR: root },
@@ -237,6 +247,40 @@ section('README 미갱신 commit → JSON deny (메시지 채널)')
   assert('기록 없는 세션 → 통과 (출력 없음)', none.status === 0 && !none.stdout.trim(), true)
   try { fs.unlinkSync(sessionFilePath(RSID)) } catch {}
   fs.rmSync(rRoot, { recursive: true, force: true })
+}
+
+// ─── 윈도우 — 네이티브 `\` 경로의 스킬 수정도 README 검사 대상 (2026-10-20 실측: 패턴이 `/` 라 통째로 꺼져 있었다) ───
+section('윈도우 — 백슬래시 SKILL 경로·대소문자 다른 README')
+if (process.platform !== 'win32') {
+  console.log('  ⚠️ 건너뜀: 윈도우 README 검사 4종 — 윈도우 전용 (Write/Edit file_path 가 `\\` 로 오는 플랫폼)')
+} else {
+  const WSID = `dg-win-${process.pid}`
+  const wRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dg-win-'))
+  spawnSync('git', ['-C', wRoot, 'init', '-q'])
+  const preW = (sid, env = {}) => runHook(
+    { hook_event_name: 'PreToolUse', session_id: sid, tool_name: 'Bash', tool_input: { command: 'git commit -m x' } },
+    { cwd: wRoot, env: { ...process.env, CLAUDE_PROJECT_DIR: wRoot.replace(/\\/g, '/'), ...env } },
+  )
+  const denied = (r) => { try { return JSON.parse(r.stdout).hookSpecificOutput.permissionDecision === 'deny' } catch { return false } }
+  try { fs.unlinkSync(sessionFilePath(WSID)) } catch {}
+  recordModifiedFile(WSID, 'Write', { file_path: path.join(wRoot, '.claude', 'skills', 'x', 'SKILL.md') })
+  const r1 = preW(WSID)
+  assert('윈도우: `C:\\…\\.claude\\skills\\x\\SKILL.md` 수정 + README 미갱신 → deny', denied(r1), true)
+  assert('  └ 사유의 파일 목록이 `/` 로 짧게 표시', (JSON.parse(r1.stdout).hookSpecificOutput.permissionDecisionReason || '').includes('.claude/skills/x/SKILL.md'), true)
+  // 경계: README 를 드라이브 소문자로 기록해도 루트 README 로 인정 → 통과
+  recordModifiedFile(WSID, 'Edit', { file_path: wRoot[0].toLowerCase() + wRoot.slice(1) + '\\README.md' })
+  assert('윈도우: 대소문자·구분자 다른 루트 README → 통과', denied(preW(WSID)), false)
+  try { fs.unlinkSync(sessionFilePath(WSID)) } catch {}
+  // 악성: 하위 폴더의 README(루트 아님)로 우회 시도 → 계속 deny
+  const ESID = `dg-win-evil-${process.pid}`
+  try { fs.unlinkSync(sessionFilePath(ESID)) } catch {}
+  recordModifiedFile(ESID, 'Write', { file_path: path.join(wRoot, '.claude', 'agents', 'a.md') })
+  recordModifiedFile(ESID, 'Edit', { file_path: path.join(wRoot, 'sub', 'README.md') })
+  assert('윈도우 악성: 하위 폴더 README 로 우회 → deny 유지', denied(preW(ESID)), true)
+  recordModifiedFile(ESID, 'Edit', { file_path: path.join(wRoot + '2', 'README.md') })
+  assert('윈도우 악성: 접두만 같은 형제 폴더 README → deny 유지', denied(preW(ESID)), true)
+  try { fs.unlinkSync(sessionFilePath(ESID)) } catch {}
+  fs.rmSync(wRoot, { recursive: true, force: true })
 }
 
 // ─── memory·exports 클린 검사 — push/PR 차단 ─────────────────────

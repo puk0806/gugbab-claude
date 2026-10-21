@@ -4,7 +4,7 @@
  * Stop Hook — 코드 변경 감지 시 Codex 적대적 리뷰 강제
  */
 
-const { execSync } = require('child_process');
+const { execSync, spawnSync } = require('child_process');
 const crypto = require('crypto');
 const fs = require('fs');
 const os = require('os');
@@ -32,13 +32,38 @@ function isOptedOut() {
   catch { return false; }
 }
 
-function isCodexAvailable() {
-  // PATH 에서 실행 파일을 직접 찾는다('which' 와 같은 뜻) — 'which' 는 윈도우 cmd.exe 에 없다. 윈도우는 PATHEXT(.EXE·.CMD …)
-  const exts = process.platform === 'win32' ? (process.env.PATHEXT || '.EXE;.CMD;.BAT').split(';').filter(Boolean) : [''];
-  return (process.env.PATH || '').split(path.delimiter).some(d => d && exts.some(e => {
-    const f = path.join(d, 'codex' + e);
-    try { fs.accessSync(f, fs.constants.X_OK); return fs.statSync(f).isFile(); } catch { return false; }
-  }));
+const IS_WIN = process.platform === 'win32';
+
+// PATH 에서 codex 실행 파일의 절대 경로를 찾는다('which' 와 같은 뜻) — 'which' 는 윈도우 cmd.exe 에 없다. 윈도우는 PATHEXT(.EXE·.CMD …)
+function findCodex() {
+  const exts = IS_WIN ? (process.env.PATHEXT || '.EXE;.CMD;.BAT').split(';').filter(Boolean) : [''];
+  for (const d of (process.env.PATH || '').split(path.delimiter)) {
+    if (!d) continue;
+    for (const e of exts) {
+      const f = path.join(d, 'codex' + e);
+      try { fs.accessSync(f, fs.constants.X_OK); if (fs.statSync(f).isFile()) return f; } catch {}
+    }
+  }
+  return null;
+}
+function isCodexAvailable() { return findCodex() !== null; }
+
+// 윈도우: codex 를 PATH 에서 찾은 절대 경로로 실행한다.
+//   - 이름만 주면 cmd.exe 가 현재 폴더(레포)의 codex.cmd 를 먼저 실행할 수 있다(NoDefaultCurrentDirectoryInExePath 미설정 시, 2026-10-20 실측)
+//   - npm 전역 설치는 codex.cmd — 셸 없이 spawn 하면 EINVAL 이라 .cmd/.bat 만 셸 경유(인자는 고정 상수라 주입 여지 없음)
+// 반환: { status, out(stdout+stderr) } | null(실행 불가)
+function runCodexWin(args) {
+  const bin = findCodex();
+  if (!bin) return null;
+  let r;
+  if (/\.(cmd|bat)$/i.test(bin)) {
+    if (/["%]/.test(bin)) return null; // cmd 따옴표 안에서도 % 는 확장된다 — 그런 경로는 실행하지 않음
+    r = spawnSync(`"${bin}" ${args.join(' ')}`, { shell: true, encoding: 'utf8', timeout: 15000, windowsHide: true });
+  } else {
+    r = spawnSync(bin, args, { encoding: 'utf8', timeout: 15000, windowsHide: true });
+  }
+  if (r.error) return null;
+  return { status: r.status, out: `${r.stdout || ''}${r.stderr || ''}`, stdout: r.stdout || '' };
 }
 
 // 프로젝트 .claude/settings.json 또는 래퍼(gugbab-claude) 설정 폴더 $CLAUDE_CONFIG_DIR/settings.json 중 하나라도 켜져 있으면 켬
@@ -53,6 +78,12 @@ function isPluginEnabled(repoRoot) {
 
 // 종료코드 0 AND "Not logged in" 부정 문구 없음 AND 긍정 문구 존재 — /logged in/ 부분 매치는 "Not logged in"도 잡는다
 function isLoggedIn() {
+  if (IS_WIN) {
+    const r = runCodexWin(['login', 'status']);
+    if (!r || r.status !== 0) return false;
+    if (/not[\s-]+logged[\s-]*in/i.test(r.out)) return false;
+    return /logged[\s-]*in/i.test(r.out);
+  }
   try {
     const r = execSync('codex login status 2>&1', { encoding: 'utf8', timeout: 15000 });
     if (/not[\s-]+logged[\s-]*in/i.test(r)) return false;
@@ -169,6 +200,10 @@ function hashCodexConfig() {
   } catch { return 'MISSING'; }
 }
 function getCodexVersionString() {
+  if (IS_WIN) {
+    const r = runCodexWin(['--version']);
+    return r && r.status === 0 ? r.stdout.trim() : null;
+  }
   try { return execSync('codex --version', { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'], timeout: 15000 }).trim(); }
   catch { return null; }
 }
@@ -275,16 +310,21 @@ if (!shouldBlock(input, sig)) {
   ].join('\n'));
 }
 
+// 윈도우(Git Bash): `touch C:\a\b` 는 백슬래시가 이스케이프로 먹혀 엉뚱한 파일을 만든다 → 슬래시 + 따옴표.
+// `/tmp` 는 Git Bash 에선 %TEMP% 지만 Read 도구(node)는 `C:\tmp` 로 읽는다 → 양쪽이 같은 os.tmpdir() 를 슬래시 경로로 안내 (맥은 기존 문구 그대로)
+const markerArg = IS_WIN ? `"${marker.replace(/\\/g, '/')}"` : marker;
+const roundOut = IS_WIN ? `"${os.tmpdir().replace(/\\/g, '/')}/codex-r{N}.txt"` : '/tmp/codex-r{N}.txt';
+
 process.stderr.write([
   '✗ codex-review-guard: Codex 적대적 리뷰 필요',
   ...(statusFailed ? ['  (git status 변경 목록 확인 실패 — 대형 untracked 트리·타임아웃 등. 변경 있음으로 간주)'] : []),
   '',
   '다음을 즉시 실행하세요 (사용자에게 묻지 말고, 3라운드 완료까지):',
   '  → .claude/rules/codex-review.md 의 워크플로우 그대로 실행 (적대적 프롬프트 = adversarial-review 컴패니언)',
-  '  → Round 1~3: Bash("CODEX_COMPANION=$(ls ~/.claude/plugins/cache/openai-codex/codex/*/scripts/codex-companion.mjs 2>/dev/null | sort -V | tail -1); node \\"$CODEX_COMPANION\\" adversarial-review --wait --scope working-tree 2>&1 | tee /tmp/codex-r{N}.txt") 실행',
+  `  → Round 1~3: Bash("CODEX_COMPANION=$(ls ~/.claude/plugins/cache/openai-codex/codex/*/scripts/codex-companion.mjs 2>/dev/null | sort -V | tail -1); node \\"$CODEX_COMPANION\\" adversarial-review --wait --scope working-tree 2>&1 | tee ${roundOut}") 실행`,
   '  → 각 라운드 결과: ACCEPT/REJECT/PARTIAL 판정 및 수정 반영',
   '  → 새 Critical 이슈 없으면 조기 종료 가능',
-  `  → 완료 후 반드시: Bash("touch ${marker}")`,
+  `  → 완료 후 반드시: Bash("touch ${markerArg}")`,
   '  → 마커 기록 후 세션 종료 재시도',
   '',
   '이 프로젝트 영구 제외: git config codex.skipReview true',

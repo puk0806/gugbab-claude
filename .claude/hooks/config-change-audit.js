@@ -69,7 +69,7 @@ function diffSettings(before, after) {
   const bh = new Set(hookCommands(b)), ah = new Set(hookCommands(after))
   const removedHooks = [...bh].filter(h => !ah.has(h))
   const addedHooks = [...ah].filter(h => !bh.has(h))
-  if (removedHooks.length) risky.push(`훅 ${removedHooks.length}개 제거: ${removedHooks.map(h => h.split('|')[0] + ' ' + (h.match(/hooks\/([\w.-]+)/) || [, h.split('|')[2]])[1]).slice(0, 5).join(', ')}`)
+  if (removedHooks.length) risky.push(`훅 ${removedHooks.length}개 제거: ${removedHooks.map(h => h.split('|')[0] + ' ' + (h.match(/hooks[\\/]([\w.-]+)/) || [, h.split('|')[2]])[1]).slice(0, 5).join(', ')}`)
   if (addedHooks.length) other.push(`훅 ${addedHooks.length}개 추가`)
   const addedAllow = list(after, 'allow').filter(x => !list(b, 'allow').includes(x))
   const removedDeny = list(b, 'deny').filter(x => !list(after, 'deny').includes(x))
