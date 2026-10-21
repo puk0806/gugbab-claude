@@ -1,14 +1,14 @@
 ---
 name: project-windows-support-analysis
-description: "하네스 윈도우 지원 — 2026-10-20 사용자 윈도우 PC 에서 PoC 완료·1~4단계 구현·실측 테스트 완료(미커밋). 남은 것: 맥 회귀 확인·윈도우 CI·대화형 수동 확인·릴리스"
+description: "하네스 윈도우 지원 — 2026-10-20~21 사용자 윈도우 PC 에서 PoC·1~4단계 구현·실측 완료, 브랜치에 커밋·푸시. 다음: main 추가분(PR #41·#42) 병합 → 맥 회귀·윈도우 CI·릴리스"
 metadata:
   node_type: memory
   type: project
   originSessionId: d852c16f-4ed9-436a-affa-a1a250d0233a
-  modified: 2026-10-20T18:00:00.000Z
+  modified: 2026-10-21T06:52:06.346Z
 ---
 
-2026-10-19 분석만 → 2026-10-20 맥에서 계획서(결정 41)·1단계 → **같은 날 사용자 윈도우 PC(Win10 LTSC 2019, PS 5.1, Node 22.17, Git 2.37, Claude Code 2.1.280→304 npm 설치)에서 PoC·2~4단계 구현·실측까지**. 브랜치 `feat/windows-support-poc-2026-10-20`, **커밋·푸시 안 함(사용자 지시 — 요청 시에만)**. 상세는 레포 `docs/plans/2026-10-20-windows-support.md` 4.4(PoC 결과)·5.2(2~4단계 결과).
+2026-10-19 분석만 → 2026-10-20 맥에서 계획서(결정 41)·1단계 → **같은 날 사용자 윈도우 PC(Win10 LTSC 2019, PS 5.1, Node 22.17, Git 2.37, Claude Code 2.1.280→304 npm 설치)에서 PoC·2~4단계 구현·실측까지**. 브랜치 `feat/windows-support-poc-2026-10-20`, 2026-10-21 커밋·푸시(`7015ac0`). 상세는 레포 `docs/plans/2026-10-20-windows-support.md` 4.4(PoC 결과)·5.2(2~4단계 결과).
 
 **PoC 로 확정**: 로그인 = 빈 값 `CLAUDE_SECURESTORAGE_CONFIG_DIR`(맥과 같음, 윈도우도 동작) · 설정 폴더 구조 유지(junction 스킬·하드링크 에이전트/룰/커맨드/CLAUDE.md 모두 인식) · 훅은 Git Bash 로 돎(`CLAUDE_PROJECT_DIR=C:/…`) · PowerShell 도구 기본 켜짐 → 조립 settings `env.CLAUDE_CODE_USE_POWERSHELL_TOOL=0` · 심볼릭 링크 EPERM(개발자 모드 꺼짐) → 폴더 junction·파일 하드링크→복사.
 
@@ -20,6 +20,12 @@ metadata:
 
 **2026-10-21 대화형 실측 완료**: 이 PC 사용자 PATH 에 `C:\회사\gugbab-claude\gugbab-claude\bin` + 사용자 환경변수 `GUGBAB_HOME`(개발 모드) 등록(원래 PATH 는 세션 scratchpad 백업 — 정식 설치 후 둘 다 지울 것). 자동 키 입력(SendKeys)은 윈도우 포커스 제한으로 안 됨 → `AttachConsole`+`WriteConsoleInput`(가상 키·스캔 코드 채워야 claude 가 받음)+`ReadConsoleOutputCharacter` 로 새 창을 직접 구동해 첫 실행·신뢰·응답·Ctrl+C(키 이벤트)·/harness 새 창 TUI 저장·/exit→--continue·종료 정리 확인. 찾은 것: Git Bash 의 `/` 인자 경로 변환 → sh 래퍼 수정 · 창 하나 입력 멈춤(재현 안 됨) · 이 PC Claude Code 자동 업데이트 중 몇 초간 claude.exe 없음 · 시험 도중 생긴 고아 `git status` 프로세스·오래된 `.git/index.lock`(잠금은 지움, 프로세스 종료는 분류기 거부) · 줄바꿈 정규화 뒤 내용 같은 파일 767개가 status 에 M 으로 보여 인덱스에서 다시 꺼내 정리. 버전 1.0.13.
 
-**남은 것**: 맥에서 전체 테스트·`sh scripts/wrapper-e2e.sh --dev`·`node scripts/wrapper-e2e.js --dev` 회귀 확인(M13) · `windows-latest` CI · M2·M3·M11 · 커밋(사용자 요청 시, 이 PC git 전역 작성자는 회사 계정 kty — 커밋 전 local user 를 puk0806 로 바꿀지 확인).
+**남은 것**: 아래 main 추가분 병합 → 맥에서 전체 테스트·`sh scripts/wrapper-e2e.sh --dev`·`node scripts/wrapper-e2e.js --dev` 회귀 확인(M13) · `windows-latest` CI · M2·M3·M11 · PR(커밋은 사용자 요청 시, 윈도우 PC git 전역 작성자는 회사 계정 kty — 커밋 전 local user 를 puk0806 로 바꿀지 확인).
 
-**How to apply:** 맥으로 돌아가면 위 회귀 확인부터. 윈도우 세션은 메모리를 레포 `memory/` 에 직접 써도 이제 memory-sync 가 전역으로 미러함(윈도우 경로 인식 수정). 관련: [[project-shim-wrapper-direction]] [[reference-wrapper-project-settings-precedence]] [[feedback-report-after-full-tests]]
+**main 추가분 반영할 것 (2026-10-21 맥에서 이 브랜치에 넣음 — 사용자 지시: "윈도우 쪽 작업 다 끝나면 추가 작업 내용만 정리해서 그 피처 브랜치에서 하라고 전달")**
+- 기준: 이 브랜치는 main `c849d1b`(PR #40 v1.0.12)까지 병합됨. 그 뒤 main 추가분 = **PR #41 v1.0.13**(`/harness` 창 저장 뒤 자동 닫힘 — tui `closeDelayMs` 2초 요약 뒤 끝, macOS 만 `--close-terminal` 로 화면 시작 때 그 tty 의 busy 창을 id 로 기억해 한가해지면 닫음) + **PR #42 v1.0.14**(결정 42 bash-guard 고정값 변수 풀기 `resolveLiteralVars`·`isReadOnlyResolved` — 풀어 본 명령이 엄격한 읽기 목록일 때만 새로 자동 허용, deny·ask 는 그대로 / 결정 43 `/harness` 📌 — 프로젝트 파일 `.gugbab.json`·`.lfmall.json` 이 정한 항목 표시, 이 프로젝트 범위에선 바꾸지도 기록하지도 않음). main 쪽 메모리 `feedback_auto_allow_reads_only.md`(자동 허용은 읽기만)도 이 커밋으로 들어옴
+- 할 일: `git fetch origin && git merge origin/main`. **실제 충돌 9개(2026-10-21 `git merge-tree` 예측)** — `VERSION`(이 브랜치 1.0.13 ↔ main 1.0.14 → 병합 땐 main 의 1.0.14 를 그대로 받음. 버전은 main 에 들어갈 때만 의미가 있어서 **PR 을 올릴 때만** `node scripts/release-version.js bump` 로 올림 — 2026-10-21 사용자 "메인에 아직 들어갈 거 아닌데 버전이 왜 올라가") · `cli/open.js`·`cli/open.test.js`(윈도우 `wt.exe`·Node 경로 ↔ main `--close-terminal`·`terminalCloseScript` — 둘 다 살림) · `.claude/hooks/bash-guard.test.js`(양쪽이 끝부분 결과 출력 앞에 섹션 추가 — 둘 다) · `docs/CHANGELOG.md`(2026-10-20·21 행 합치기 — 같은 날 한 행) · `docs/hooks/README.md`(bash-guard 행 문구 둘 다) · 계획서 `docs/plans/2026-10-15-…md`(결정 41 → 42 → 43 순서, 17장 유지, 12.1 Bash 행) · `exports/2026-10-20-e56d6dae.md`(병합 뒤 다시 생성) · `memory/project_harness_status_2026-10-15.md`(이 브랜치 쪽이 이미 합친 내용 — 이 브랜치 것 유지). `bash-guard.js`·`README.md`·`docs/USAGE.md`·`MEMORY.md` 는 자동 병합되지만 결과를 읽어 확인
+- 병합 뒤 윈도우 관점 확인: ① 결정 42 변수 풀기 + `.exe` 정리가 함께 동작하는 테스트 추가(`X=git.exe; $X push --force` 차단, `X=cat.exe; $X 파일` 읽기 자동) ② 값에 `\`(`X=C:\Users\x`)가 있으면 지금은 안 풂(`SAFE_VALUE_RE` — 안전 쪽), `C:/…` 는 풀림 — 필요하면 `winpath` 정규화와 함께 판단 ③ 창 자동 닫힘 윈도우판: `open.js` 의 `wt.exe`/새 창 경로에서 프로세스가 끝나면 탭이 닫히는지(Windows Terminal `closeOnExit`) 실측, 안 닫히면 `--close-terminal` 같은 처리 ④ 📌 표시는 플랫폼 무관
+- 확인 순서: 전체 단위 테스트 → `node scripts/wrapper-e2e.js --dev`(윈도우) → 맥 `sh scripts/wrapper-e2e.sh --dev` 회귀(M13) → PR
+
+**How to apply:** 윈도우 데스크탑에서 `git pull` 후 이 브랜치 세션을 열면 위 "main 추가분 반영할 것" 부터(병합 결과는 커밋·푸시 요청 전까지 작업 트리에). 맥으로 돌아가면 위 회귀 확인부터. 윈도우 세션은 메모리를 레포 `memory/` 에 직접 써도 이제 memory-sync 가 전역으로 미러함(윈도우 경로 인식 수정). 관련: [[project-shim-wrapper-direction]] [[reference-wrapper-project-settings-precedence]] [[feedback-report-after-full-tests]] [[feedback-auto-allow-reads-only]]

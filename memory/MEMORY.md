@@ -1,9 +1,9 @@
 # Memory Index
 
 ## ★ 하네스 현재 상태
-- [★★ 하네스 현재 상태 (2026-10-20 갱신) — 여기부터 읽기](project_harness_status_2026-10-15.md) — shim 래퍼로만 사용, 설치본 v1.0.11, 321 항목(훅 32·고정 35·켬 70·끔 216). 남은 제안: 태그 보호·Codex 리뷰·고정 훅 fail-closed·윈도우(2026-10-20 구현·윈도우 실측 완료, 맥 회귀·커밋 남음). 설치는 PATH 를 묻지 않고 자동 추가(v1.0.12). 기본값·고정 = 계획서 페이지 + `docs/DEFAULTS.md`. **수정 작업은 마지막 줄 `진행할까요?`**
+- [★★ 하네스 현재 상태 (2026-10-21 갱신) — 여기부터 읽기](project_harness_status_2026-10-15.md) — shim 래퍼로만 사용, 설치본 v1.0.14(결정 42 변수 읽기 자동·43 📌 표시 — lfmall 은 전달 끝·신경 안 씀, 윈도우 브랜치엔 main 추가분 할 일을 메모리로 넣음), 321 항목(훅 32·고정 35·켬 70·끔 216). 남은 제안: 태그 보호·Codex 리뷰·고정 훅 fail-closed·윈도우(구현·윈도우 실측 끝, main 병합·맥 회귀·PR 남음). 설치는 PATH 를 묻지 않고 자동 추가(v1.0.12). 기본값·고정 = 계획서 페이지 + `docs/DEFAULTS.md`. **수정 작업은 마지막 줄 `진행할까요?`**
 - [★ 개편 방향 = shim wrapper (2026-10-15)](project_shim_wrapper_direction.md) — `gugbab-claude` 래퍼 + 프로젝트별 `CLAUDE_CONFIG_DIR` + `/harness` 토글. 플러그인 제안 거부됨. **2026-10-17 0~4단계 완료·PR #24 머지, 래퍼로만 사용(결정 27) — README 래퍼 전용·로그는 docs/CHANGELOG.md** → v1.0.5 까지 릴리스(결정 35 새 래퍼 재실행), 2026-10-19 결정 36(세션 시작 때 하네스 버전·vA→vB 표시, v1.0.6 머지) → 결정 37(SessionStart systemMessage 는 화면에 안 보여 Claude 가 첫 답변 맨 위에 전달, v1.0.7 머지·설치본 반영) — 남은 한계: 첫 메시지 전엔 화면에 안 보임, 래퍼 출력/상태줄 미결정. `gugbab-claude --version` 은 claude 버전임 → 결정 38(dash `set -m` 으로 comux 에이전트 감지 + `sessions/` 공유로 세션 간 메시지, v1.0.8) → 결정 39(이 프로젝트 메모리 폴더 env 허용 + 설치 폴더 Bash 쓰기 확인, v1.0.9 머지·설치본 반영) → 결정 40(SendMessage 자동 — 받는 세션이 확인, v1.0.11 머지·설치본 반영). 남은 제안: 태그 보호·Codex 리뷰·고정 훅 fail-closed
-- [윈도우 지원 — PoC·1~4단계 구현·윈도우 실측 완료, 미커밋 (2026-10-20, 결정 41)](project_windows_support_analysis.md) — 사용자 윈도우 PC 에서 PoC(로그인=빈 값 변수 OK·구조 유지)·Node 래퍼 `cli/launch.js`+`.cmd`·junction/하드링크·`install.ps1`·훅 윈도우 경로·E2E/매트릭스 Node 이식. 남은 것: 맥 회귀·윈도우 CI·대화형 수동 확인·커밋(작성자 확인)
+- [윈도우 지원 — PoC·1~4단계 구현·윈도우 실측 완료, 브랜치 푸시 (2026-10-20~21, 결정 41)](project_windows_support_analysis.md) — 사용자 윈도우 PC 에서 PoC(로그인=빈 값 변수 OK·구조 유지)·Node 래퍼 `cli/launch.js`+`.cmd`·junction/하드링크·`install.ps1`·훅 윈도우 경로·E2E/매트릭스 Node 이식. **다음: "main 추가분 반영할 것"(PR #41·#42 병합, 충돌 9개)** → 맥 회귀·윈도우 CI·PR
 - [Codex 리뷰는 1차본 완성 후 맨 마지막 (중지 중)](feedback_codex_review_on_request.md) — `codex.skipReview=true` 유지, 구현 중 재개 여부 다시 묻지 않음, 완료 후 `--unset` 하고 리뷰
 - [개편 계획서 항상 최신화](feedback_keep_plan_synced.md) — 결정 바뀌면 그 턴에 레포 `docs/plans/` 문서 + 아티팩트 페이지 함께 갱신
 - [로컬 전용 메모리 목록](local_index.md) — git 제외(.gitignore), 이 PC에만 있음. 개편 범위 밖 내용은 여기 먼저 확인
@@ -24,6 +24,7 @@
 - [사용자 프로필](user_profile.md) — 풀스택 개발자. 프론트엔드(Next.js 모노레포 + CRA 레거시) + Java 레거시 백엔드(SB 2.5+MyBatis+Oracle+MySQL+Redisson 2+EhCache 2+AWS SDK v1) 운영
 
 ## Feedback — 작업 방식
+- [자동 허용은 읽기만 넓힌다](feedback_auto_allow_reads_only.md) — Edit·Write·삭제·실행은 새로 자동 허용 금지, 훅으로 강제·적대 테스트, 바꾸기 전 실제 확인 창 기록 재생으로 효과 수치 보고 (결정 42)
 - [커밋은 사용자 요청 시에만](feedback_commit_policy.md) — 자동 커밋·제안 금지, 요청 시 실행 전 메모리 정리 선행 후 [memory] 커밋 포함, main push는 branch-protection이 차단(PR 경유)
 - [삭제 요청은 범위를 좁게](feedback_deletion_scope_narrow.md) — 확정/경계/유지로 나눠 경계는 질문, 검색·검증 범용 에이전트는 휩쓸어 지우지 않음, 남는 자산의 설치 경로 이관
 - [기준은 항상 원본 레포](feedback_source_repo_is_standard.md) — 설치본이 쓰고 있어도 원본 기준 불필요면 제거, 프로젝트별 보존 예외 없음, 유용한 내용만 원본으로 흡수 후 재설치로 배포
