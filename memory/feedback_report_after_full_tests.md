@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: feedback
   originSessionId: d852c16f-4ed9-436a-affa-a1a250d0233a
-  modified: 2026-10-20T01:04:15.660Z
+  modified: 2026-10-21T06:39:07.307Z
 ---
 
 2026-10-20 사용자: "테스트까지 완료하고 보고해", "완료되면 보고해". 단위 테스트 통과 시점에 중간 보고하자 실테스트까지 마치고 보고하라고 함.

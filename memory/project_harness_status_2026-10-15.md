@@ -5,14 +5,14 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 0693c72c-1709-4533-8cb9-8a3b20e52a64
-  modified: 2026-10-20T02:37:11.194Z
+  modified: 2026-10-21T06:39:30.000Z
 ---
 
 **상태 (2026-10-20 갱신)**: **shim 래퍼(`gugbab-claude`)로만 사용**(결정 27). main = `5773711`(PR #39), 설치본 `~/gugbab` = **v1.0.11**(stable, PR 마다 VERSION 올림 → 머지 때 자동 태그 — 결정 32). 개편 0~6단계 완료, 결정 1~40 은 계획서 13장 + [[project-shim-wrapper-direction]]. 옛 복사 설치(`project-install.sh`·템플릿 0~15)는 6단계에서 삭제됨. 다른 PC 에서 시작하면 계획서 페이지 https://claude.ai/artifact/U7vpKRXVemaNYYNhz8nNLj (계획서 + 항목 체크리스트) 와 `docs/DEFAULTS.md` 가 기본값·고정 목록 원본.
 
 **자산 수 (manifest 실측 2026-10-20)**: 스킬 195 · 에이전트 61 · 훅 32 + statusline · 규칙 14 · 커맨드 12 · 설정 7 = 321 항목, 기본 고정 35 · 켬 70 · 끔 216. 검증 상태(10-16 기준) APPROVED 181 · PENDING_TEST 15(실사용 필수만) · NEEDS_REVISION 0.
 
-**남은 제안 (2026-10-20)**: `v*` 태그 보호 규칙(결정 28) · Codex 적대적 리뷰 맨 마지막 1회 · 🔒 고정 훅 비정상 종료 시 fail-closed · 디스패처가 프로젝트 훅 삭제를 실시간 반영 · 윈도우 지원([[project-windows-support-analysis]], 2026-10-20 계획서·결정 41 작성 — 사용자 윈도우 PC PoC 결과 대기).
+**남은 제안 (2026-10-20)**: `v*` 태그 보호 규칙(결정 28) · Codex 적대적 리뷰 맨 마지막 1회 · 🔒 고정 훅 비정상 종료 시 fail-closed · 디스패처가 프로젝트 훅 삭제를 실시간 반영 · 윈도우 지원([[project-windows-support-analysis]] — 2026-10-20~21 사용자 윈도우 PC 에서 PoC·1~4단계 구현·실측 완료, 브랜치 `feat/windows-support-poc-2026-10-20` VERSION 1.0.13 커밋·푸시. 남은 것: 맥 회귀·윈도우 CI·PR).
 
 **설치 PATH 자동 추가 (2026-10-20, v1.0.12 PR)**: 사용자 결정 "의사 안 물어보고 설치할 때 자동으로" — `install.sh` 가 `~/.local/bin` 이 PATH 에 없으면 셸 설정(zsh `~/.zshrc`·bash `~/.bash_profile`/`~/.bashrc`·fish·`~/.profile`) 끝에 `# >>> gugbab-claude PATH >>>` 블록을 묻지 않고 넣음(CI 포함), 제거 때 블록만 묻지 않고 지움, 끄기 `--no-modify-path`. README 에는 안 적음(자동이라 불필요 — 사용자). 이 브랜치는 윈도우 브랜치와 별개(`feat/install-path-setup-2026-10-20`). 파생 하네스 세션에 래퍼 전환 자료를 메시지로 전달함(2026-10-19).
 
