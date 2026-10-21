@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 0693c72c-1709-4533-8cb9-8a3b20e52a64
-  modified: 2026-10-20T08:22:45.761Z
+  modified: 2026-10-21T01:37:30.423Z
 ---
 
 **상태 (2026-10-20 갱신)**: **shim 래퍼(`gugbab-claude`)로만 사용**(결정 27). main = `5773711`(PR #39), 설치본 `~/gugbab` = **v1.0.11**(stable, PR 마다 VERSION 올림 → 머지 때 자동 태그 — 결정 32). 개편 0~6단계 완료, 결정 1~40 은 계획서 13장 + [[project-shim-wrapper-direction]]. 옛 복사 설치(`project-install.sh`·템플릿 0~15)는 6단계에서 삭제됨. 다른 PC 에서 시작하면 계획서 페이지 https://claude.ai/artifact/U7vpKRXVemaNYYNhz8nNLj (계획서 + 항목 체크리스트) 와 `docs/DEFAULTS.md` 가 기본값·고정 목록 원본.
@@ -17,6 +17,8 @@ metadata:
 **설치 PATH 자동 추가 (2026-10-20, v1.0.12 PR)**: 사용자 결정 "의사 안 물어보고 설치할 때 자동으로" — `install.sh` 가 `~/.local/bin` 이 PATH 에 없으면 셸 설정(zsh `~/.zshrc`·bash `~/.bash_profile`/`~/.bashrc`·fish·`~/.profile`) 끝에 `# >>> gugbab-claude PATH >>>` 블록을 묻지 않고 넣음(CI 포함), 제거 때 블록만 묻지 않고 지움, 끄기 `--no-modify-path`. README 에는 안 적음(자동이라 불필요 — 사용자). 이 브랜치는 윈도우 브랜치와 별개(`feat/install-path-setup-2026-10-20`). 파생 하네스 세션에 래퍼 전환 자료를 메시지로 전달함(2026-10-19).
 
 **`/harness` 창 저장 뒤 자동 닫힘 (2026-10-20, `feat/harness-auto-close-2026-10-20`, 커밋 전)**: 사용자 요청 "comux·tmux·macOS 터미널 싹다 닫히게". 원인은 `--session` 이 저장 뒤 "아무 키나" 를 기다린 것 → 저장하면 2초 요약 후 끝(키 누르면 바로), 저장 없음은 즉시. **macOS Terminal 기본 설정은 셸이 끝나도 창을 남김(대조 실측)** → `--close-terminal`: 화면 시작 때 detached osascript 가 그 tty 의 **busy 인 창을 id 로 기억**(남은 창이 같은 tty 이름을 재사용함 — tty 로만 고르면 엉뚱한 창, 실측)하고 한가해지면 그 창만 닫음, 저장 오류면 도우미를 kill 해 창 유지. comux·Terminal 실창 확인, tmux 는 이 PC 미설치(단위만). 실험 팁: Terminal 의 `do script " " in tab` 은 실행 중 프로세스에 글자+엔터를 입력해 줌.
+
+**2026-10-21 `feat/bash-guard-literal-vars-2026-10-21` (커밋 나눔, 푸시·PR 전)**: 결정 42(bash-guard 고정값 변수 풀기 — 읽기만 새로 자동) + 결정 43(`/harness` 📌 — 프로젝트 파일 `.gugbab.json`/`.lfmall.json` 이 정한 항목 표시, 이 프로젝트 범위에선 바꾸지도 기록하지도 않음). **사용자 계획: 이 레포 반영 뒤 lfmall-ai-toolkit 세션에 두 변경을 함께 전달.** 이 레포 설정(`~/gugbab/projects/00_gugbab-claude/settings.json`)에 효과 없는 끔 기록 14개가 남아 있음 — 지울지 사용자 확인 대기. 전 항목 Space 실측 스크립트는 그 세션 scratchpad `lit/toggle-render.js`(항목마다 화면 아이콘 비교·📌·기록 확인).
 
 **최근 이력 (요약)**
 - 09-28~29 PR #19: 철학·학술 자산 삭제(템플릿 8 폐지), 재검증·재테스트, PENDING_TEST 실행 검증
