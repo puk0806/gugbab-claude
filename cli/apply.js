@@ -70,7 +70,7 @@ function explainUnchanged(ids, action, layers, resolved, idx, manifest) {
     if (resolved.enabled.has(id) === want) continue;
     if (!want && resolved.locked.has(id)) {
       if ((manifest.items[id] || {}).state === 'lock') reasons.push(`${id}: 🔒 체크리스트 고정`);
-      else if (layers.some(l => mentions(l, 'lock', id, manifest))) reasons.push(`${id}: 🔒 .gugbab.json 에서 고정`);
+      else if (layers.some(l => mentions(l, 'lock', id, manifest))) reasons.push(`${id}: 🔒 ${layers.find(l => mentions(l, 'lock', id, manifest)).source} 에서 고정`); // 파생 하네스는 자기 파일 이름
       else reasons.push(`${id}: 🔒 고정 항목이 필요로 해서 같이 고정`);
       continue;
     }
