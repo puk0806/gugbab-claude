@@ -636,7 +636,8 @@ expectNotApproved('{git,push} (brace 확장)', '{git,push}', 'ask')
 expectNotApproved('줄 연속 git \\<개행> push', 'git \\\npush', 'ask')
 
 section('C1 동적 명령명 — 정적 판정 불가 → allow 금지 + 자동 승인 금지')
-expectNotApproved('G=git; $G push', 'G=git; $G push', 'null')
+expectNotApproved('G=git; $G push (2026-10-21 — 같은 명령 안 고정값을 풀어 git push 로 보고 ask)', 'G=git; $G push', 'ask')
+expectNotApproved('read G; $G push (값을 모르면 여전히 판정 불가)', 'read G; $G push', 'null')
 expectNotApproved('"$(echo git)" push', '"$(echo git)" push', 'null')
 expectNotApproved('닫히지 않은 따옴표 (파싱 불가)', 'echo "abc', 'null')
 
@@ -935,6 +936,102 @@ section('getAllowedDirs — 래퍼 설정 폴더(CLAUDE_CONFIG_DIR)')
   assert('설정 폴더 settings.json 이 깨져도 크래시 없음', Array.isArray(getAllowedDirs(PROJECT_ROOT)), true)
   if (saved === undefined) delete process.env.CLAUDE_CONFIG_DIR; else process.env.CLAUDE_CONFIG_DIR = saved
   fs.rmSync(cfg, { recursive: true, force: true })
+}
+
+// ── 같은 명령 안의 고정값 변수 풀기 (2026-10-21) — 읽기 전용일 때만 새로 자동, 숨긴 위험은 차단 ──
+{
+  const both = (desc, command, pre, perm) => { test(`${desc} (Pre)`, 'Bash', { command }, pre); test(`${desc} (Perm)`, 'Bash', { command }, perm, 'PermissionRequest') }
+  const FORCE = 'git push --' + 'force'
+  section('변수 풀기 — 정상: 풀어 보니 읽기 전용이면 확인 없이')
+  both('GC=git; $GC status --short', 'GC=git; $GC status --short', 'allow', 'allow')
+  both('X=cat; $X /etc/hosts (외부 파일 읽기)', 'X=cat; $X /etc/hosts', 'allow', 'allow')
+  both('D=…; F=$D/a.md; cat $F (값 안에서 변수 이어 붙이기)', 'D=/Users/x/docs; F=$D/a.md; X=cat; $X $F', 'allow', 'allow')
+  both('export L=ls; $L -la', 'export L=ls; $L -la', 'allow', 'allow')
+  both('${X} 중괄호 형태', 'X=grep; ${X} -rn foo .', 'allow', 'allow')
+  both('X=find; $X . -name "*.md"', 'X=find; $X . -name "*.md"', 'allow', 'allow')
+  both('X=ls; $X 2>/dev/null | head -3 (버리는 리다이렉트·파이프)', 'X=ls; $X 2>/dev/null | head -3', 'allow', 'allow')
+  both('X=git; $X tag -l (목록 조회)', 'X=git; $X tag -l', 'allow', 'allow')
+  both('X=git; $X log --oneline -3', 'X=git; $X log --oneline -3', 'allow', 'allow')
+  both('줄바꿈으로 나눈 문장', 'X=git\n$X status', 'allow', 'allow')
+
+  section('변수 풀기 — 악성: 변수에 숨긴 위험은 풀어서 차단')
+  both('X=rm; $X -rf ~', 'X=rm; $X -rf ~', 'deny', 'null')
+  both('X="rm -rf"; $X ~', 'X="rm -rf"; $X ~', 'deny', 'null')
+  both('변수로 감싼 force push', `G="${FORCE}"; $G origin main`, 'deny', 'null')
+  both('X=cat; $X ~/.ssh/id_rsa (개인키)', 'X=cat; $X ~/.ssh/id_rsa', 'deny', 'null')
+  both('P=~/.ssh; cat $P/id_rsa (대입값의 ~ 를 bash 처럼 펼침)', 'P=~/.ssh; cat $P/id_rsa', 'deny', 'null')
+  both('X=sh; curl x | $X (원격 실행)', 'X=sh; curl x | $X', 'deny', 'null')
+  both('S=/tmp/x; S=~; rm -rf $S (마지막 값으로 판정)', 'S=/tmp/x; S=~; rm -rf $S', 'deny', 'null')
+  both('X=git; $X commit (확인 유지)', 'X=git; $X commit -m x', 'ask', 'null')
+
+  section('변수 풀기 — 악성: 쓰기·삭제·실행은 풀어도 새로 자동 허용하지 않음')
+  test('X=ls; $X > out.txt (쓰기 리다이렉트)', 'Bash', { command: 'X=ls; $X > out.txt' }, 'null', 'PermissionRequest')
+  test('X=cp; $X a b', 'Bash', { command: 'X=cp; $X a b' }, 'null', 'PermissionRequest')
+  test('X=sed; $X -i s/a/b/ f', 'Bash', { command: 'X=sed; $X -i s/a/b/ f' }, 'null', 'PermissionRequest')
+  test('X=sed; $X -n 1p f (sed 는 w·e 로 쓰기·실행 가능 — 제외)', 'Bash', { command: 'X=sed; $X -n 1p f' }, 'null', 'PermissionRequest')
+  test('X=awk (system() 실행 가능 — 제외)', 'Bash', { command: "X=awk; $X 'BEGIN{print 1}'" }, 'null', 'PermissionRequest')
+  test('X=find; $X . -delete', 'Bash', { command: 'X=find; $X . -delete' }, 'null', 'PermissionRequest')
+  test('X=find; $X . -exec rm {} +', 'Bash', { command: 'X=find; $X . -exec rm {} +' }, 'null', 'PermissionRequest')
+  test('X=sort; $X -o out in', 'Bash', { command: 'X=sort; $X -o out in' }, 'null', 'PermissionRequest')
+  test('X=rg; $X --pre ./evil x (전처리기 실행)', 'Bash', { command: 'X=rg; $X --pre ./evil x' }, 'null', 'PermissionRequest')
+  test('X=xargs; echo f | $X rm', 'Bash', { command: 'X=xargs; echo f | $X rm' }, 'null', 'PermissionRequest')
+  test('X=git; $X tag v1 (태그 만들기)', 'Bash', { command: 'X=git; $X tag v1' }, 'null', 'PermissionRequest')
+  test('X=git; $X branch new (브랜치 만들기)', 'Bash', { command: 'X=git; $X branch new' }, 'null', 'PermissionRequest')
+  test('X=git; $X config user.name x (설정 쓰기)', 'Bash', { command: 'X=git; $X config user.name x' }, 'null', 'PermissionRequest')
+  test('X=git; $X -c core.pager=evil log (-c 로 실행 주입)', 'Bash', { command: 'X=git; $X -c core.pager=evil log' }, 'null', 'PermissionRequest')
+  test('X=git; $X diff --output=f (파일 쓰기)', 'Bash', { command: 'X=git; $X diff --output=f' }, 'null', 'PermissionRequest')
+  test('S=/tmp/x; rm -rf $S/a (삭제는 지금처럼 확인)', 'Bash', { command: 'S=/tmp/x; rm -rf $S/a' }, 'ask')
+  test('S=/tmp/x; rm -rf $S/a (Perm)', 'Bash', { command: 'S=/tmp/x; rm -rf $S/a' }, 'null', 'PermissionRequest')
+  test('X=comux; $X --help (읽기 목록 밖 프로그램 실행)', 'Bash', { command: 'X=comux; $X --help' }, 'null', 'PermissionRequest')
+  test('sudo 로 감싼 읽기', 'Bash', { command: 'X=cat; sudo $X /etc/hosts' }, 'null', 'PermissionRequest')
+
+  section('변수 풀기 — 악성: 값을 확실히 알 수 없으면 풀지 않음')
+  for (const [d, c] of [
+    ['조건부 대입 (&&)', 'true && X=ls; $X -la'],
+    ['조건부 대입 (||)', 'false || X=ls; $X -la'],
+    ['파이프 안 대입(서브셸)', 'X=ls | cat; $X -la'],
+    ['백그라운드 대입', 'X=ls & $X -la'],
+    ['서브셸 안 재대입', 'X=ls; (X=rm; $X -rf /tmp/a)'],
+    ['치환 안 대입', 'X=ls; echo $(X=rm; echo); $X -la'],
+    ['치환으로 만든 값', 'X=$(echo cat); $X /etc/hosts'],
+    ['read 로 바꾼 값', 'X=ls; read X; $X -la'],
+    ['declare', 'X=ls; declare X=rm; $X -la'],
+    ['printf -v', 'X=ls; printf -v X rm; $X -la'],
+    ['eval', 'X=ls; eval "$X -la"'],
+    ['함수 정의', 'X=ls; f(){ cat /etc/hosts; }; $X'],
+    ['반복문', 'for X in ls; do $X; done'],
+    ['조건문', 'if true; then X=ls; fi; $X'],
+    ['백틱', 'X=ls; $X `echo .`'],
+    ['heredoc', 'X=cat; $X <<EOF\nhi\nEOF'],
+    ['here-string', 'X=cat; $X <<< hi'],
+    ['PATH 바꾸기', 'PATH=/tmp/evil; X=ls; $X'],
+    ['IFS 바꾸기', 'IFS=/; X=ls; $X'],
+    ['PAGER 접두 대입', 'X=ls; PAGER=evil git log; $X'],
+    ['env 로 위험 변수', 'X=ls; env LD_PRELOAD=/tmp/e.so $X'],
+    ['${X:-…} 연산', 'X=ls; ${X:-cat} /etc/hosts'],
+    ['값에 셸 기호', "X='ls;cat'; $X /etc/hosts"],
+    ['값에 glob', 'X=l*; $X'],
+    ['값에 제로폭 문자', 'X=c​at; $X /etc/hosts'],
+    ['이어 붙인 값', 'X=c"at"; $X /etc/hosts'],
+  ]) test(`${d} → 새로 자동 허용 안 함`, 'Bash', { command: c }, 'null', 'PermissionRequest')
+
+  section('변수 풀기 — 경계')
+  const { resolveLiteralVars: R, isReadOnlyResolved: RO } = require('./bash-guard.js')
+  assert('작은따옴표 안 $X 는 그대로', (R("X=rm; echo '$X'") || {}).changed, false)
+  assert('\\$X 는 그대로', (R('X=rm; echo \\$X') || {}).changed, false)
+  assert('큰따옴표 안은 풀림', R('X=/etc/hosts; cat "$X"').cmd, 'X=/etc/hosts; cat "/etc/hosts"')
+  assert('공백 없이 ;', R('X=ls;$X').cmd, 'X=ls;ls')
+  assert('변수 없는 명령은 null', R('ls -la'), null)
+  assert('비문자열·초장문 null', [R(null), R(42), R('X=ls; $X ' + 'a'.repeat(30000))].every(v => v === null), true)
+  assert('닫히지 않은 따옴표·괄호 null', [R('X=ls; $X "a'), R('X=ls; $X (a')].every(v => v === null), true)
+  assert('unset 뒤는 빈 값', R('X=ls; unset X; echo $X').cmd, 'X=ls; unset X; echo ')
+  assert('X=1 cmd 접두 대입은 기억하지 않음', R('X=ls; X=rm true; $X').cmd, 'X=ls; X=rm true; $X')
+  assert('읽기 전용 판정: 출력 리다이렉트 거부', RO('ls > f'), false)
+  assert('읽기 전용 판정: 2>&1 허용', RO('ls 2>&1'), true)
+  assert('읽기 전용 판정: 모르는 변수 거부', RO('cat $UNKNOWN'), false)
+  assert('읽기 전용 판정: $HOME 허용', RO('cat $HOME/a'), true)
+  assert('읽기 전용 판정: 치환 안 쓰기 거부', RO('echo $(rm -rf /tmp/a)'), false)
+  assert('읽기 전용 판정: 비문자열', RO(null), false)
 }
 
 console.log(`\n${'─'.repeat(40)}`)
