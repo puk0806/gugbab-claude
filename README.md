@@ -20,6 +20,22 @@ curl -fsSL https://raw.githubusercontent.com/puk0806/gugbab-claude/main/install.
 curl -fsSL https://raw.githubusercontent.com/puk0806/gugbab-claude/main/install.sh | bash -s -- --uninstall --yes
 ```
 
+### 윈도우
+
+필요한 것: [Git for Windows](https://git-scm.com/download/win)(훅이 Git Bash 로 돕니다 — 없으면 안전 가드가 동작하지 않음), `node` 18 이상, Claude Code(한 번 로그인). PowerShell 에서:
+
+```powershell
+irm https://raw.githubusercontent.com/puk0806/gugbab-claude/main/install.ps1 | iex
+```
+
+`~\gugbab` 에 설치하고 `~\gugbab\bin` 을 사용자 PATH 에 넣습니다 — **새 터미널**(PowerShell·cmd·Windows Terminal)에서 `gugbab-claude`. 제거·옵션(`-Ref` 브랜치·`-Version`·`-NoModifyPath`):
+
+```powershell
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/puk0806/gugbab-claude/main/install.ps1))) -Uninstall -Yes
+```
+
+윈도우에서 다른 점 — `/harness` 화면은 새 창에 뜨고, 설정 폴더 연결은 관리자 권한 없이 되는 방식(폴더 junction·파일 하드링크)을 쓰며, PowerShell 도구는 꺼 둡니다(안전 가드가 Bash 명령만 보므로). 자세한 내용 → [사용 안내 · 윈도우](./docs/USAGE.md#윈도우)
+
 ---
 
 ## 사용

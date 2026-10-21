@@ -4,6 +4,8 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 33종 = 실행 �
 
 훅 파일 위치: `.claude/hooks/`
 
+공용 헬퍼(훅이 아님, `.claude/hooks/lib/`): `winpath.js` — 윈도우 경로 세 모양(`C:\…`·`C:/…`·Git Bash `/c/…`)을 한 비교 형식으로(`normPath`·`isUnder`·`samePath`, 맥에서는 그대로) · `testfs.js` — 테스트 전용 링크 헬퍼(윈도우 폴더 링크 = junction, 파일 심볼릭 링크는 권한 없으면 건너뜀). 윈도우에서 훅은 Git Bash 로 실행된다(2026-10-20 실측).
+
 > **2026-07 훅 다이어트**: 훅 29→22종, Stop 차단형 6→3개.
 > 판단 기준 — *"없으면 비가역 사고가 나는가? 아니면 CLAUDE.md 한 줄/네이티브 기능으로 충분한가"*
 > - `task-plan-guard` + `confirmation-gate` → 네이티브 **Plan Mode**로 대체

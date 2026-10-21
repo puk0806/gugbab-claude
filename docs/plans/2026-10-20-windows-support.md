@@ -1,6 +1,6 @@
 # gugbab 하네스 윈도우 지원 계획서
 
-> 작성: 2026-10-20 · 최종 수정: 2026-10-20 · 상태: **0단계 PoC 대기** (사용자 윈도우 PC 실행 필요) · **1단계 보안·공통 정리 구현(5.1)**
+> 작성: 2026-10-20 · 최종 수정: 2026-10-20 · 상태: **0단계 PoC 완료(4.4) · 1~4단계 구현·윈도우 실측 완료(5.1·5.2)** — 남은 것: 맥 회귀 확인(M13), 윈도우 CI, 사용자 PC 수동 체크리스트 일부(6장), 릴리스
 > 관련: [래퍼 개편 계획서](2026-10-15-gugbab-claude-shim-wrapper.md) 결정 41 · 17장(요약)
 > 기준 버전: 하네스 v1.0.11 · Claude Code 2.1.304
 
@@ -154,6 +154,29 @@ powershell -ExecutionPolicy Bypass -File .\scripts\poc\poc-windows.ps1 -LinkCred
 | 3 | **조립 전후 동기화** — 실행 전 `~/.claude` 최신본을 복사, 종료 후 더 새것이면 되돌려 복사 | 링크 권한 불필요 | 동시 세션이 각자 갱신하면 마지막이 이김(로그아웃 위험 낮음 — 같은 계정 토큰) | 1·2 실패, `copyCredentials` 성공 |
 | 4 | `claude setup-token` → 하네스가 `CLAUDE_CODE_OAUTH_TOKEN` 주입 | 공식·안정 | Remote Control·커넥터 불가(F2), 1년마다 재발급, 토큰을 어딘가 저장해야 함(자격 증명 관리자) | 1~3 모두 실패 |
 
+### 4.4 PoC 결과 (2026-10-20, 사용자 윈도우 PC)
+
+환경: Windows 10 Enterprise LTSC 2019(17763) · PowerShell 5.1 · Node 22.17.1 · Git 2.37.1(Git Bash, `/usr/bin/dash` 있음) · Claude Code 2.1.280(npm 설치 — `claude`(sh)·`claude.cmd`·`claude.ps1`) · 개발자 모드 꺼짐 · 관리자 아님 · 긴 경로 꺼짐 · autocrlf=true · 콘솔 949 · 레포 경로에 한글(`C:\회사\…`).
+
+> 1차 실행은 PoC 가 확장자 없는 `npm\claude`(sh)를 spawn 해 ENOENT — claude 항목이 전부 "판정 불가". PATHEXT 확장자 있는 것만 쓰게 고쳐 2차 실행(아래).
+
+| # | 결과 | 결정 |
+|---|---|---|
+| P2 링크 | 심볼릭 링크 EPERM(파일·폴더), **junction·하드링크 됨**, 하드링크는 "새 파일 → rename" 쓰기면 끊김, junction 을 지워도 대상 그대로 | 41-④ 확정: 폴더 junction · 파일 하드링크 → 복사, 끊긴 하드링크는 조립 때 다시 연결 |
+| P3 Node | `/dev/stdin` ENOENT · `readFileSync(0)` 됨 · 열린 파일 위 rename EPERM · chmod 600 → 666 · `2>/dev/null` 이 cmd 로 돎 · `.cmd` 셸 없이 spawn EINVAL · JS realpath 는 입력 대소문자 유지(`.native` 만 실제 표기) | 3.2·3.3 수정 근거 그대로 + realpath 는 윈도우에서 `.native` |
+| P4 줄바꿈 | `.gitattributes` 로 LF 유지 | 1단계 그대로 |
+| P5 Git Bash | `$HOME=/c/Users/…`, `/tmp`=`%TEMP%`, Git Bash 안에서도 `/dev/stdin` ENOENT, `ln -s` 는 복사본 | 훅 경로 판정에 MSYS `/c/…` 변환 |
+| **P6 로그인** | 새 설정 폴더만 = "Not logged in" · **빈 값 `CLAUDE_SECURESTORAGE_CONFIG_DIR` = 로그인 됨** · 홈 지정 = 됨 · `.credentials.json` 복사 = 됨 | **4.3 1순위 채택** — macOS 와 같은 방식, Node 래퍼가 빈 값으로 넘김 |
+| **P7 설정 폴더 내용** | 진짜 폴더·**junction 스킬**·CRLF 스킬·하드링크 에이전트·커맨드·룰·CLAUDE.md 모두 인식(세션 init 목록·응답) | **지금 구조 유지**(구조 재설계 불필요, F10 걱정은 2.1.280 에서 해당 없음) |
+| P8 훅 | Git Bash(bash 4.4, MSYSTEM=MINGW64)로 실행, stdin 정상, settings `env` 전달, exit 2 차단 됨, `CLAUDE_PROJECT_DIR=C:/…`(슬래시)·`CLAUDE_CONFIG_DIR` 은 준 그대로, `args` 형식도 동작 | 조립 명령은 `node "C:/…/cli/hook.js" 이벤트` (shell 형식, `/` 표기) |
+| P9 PowerShell 도구 | 기본 켜짐 · 변수 0 → 꺼짐 · Bash deny 규칙 → 꺼짐 | 41-② 확정: 조립 settings `env.CLAUDE_CODE_USE_POWERSHELL_TOOL=0` |
+| P10 경로 형식 | `projects/` 폴더 이름 = 영숫자 밖 → `-` (`C--Users-…`) · 신뢰 키는 `C:\…`(옛 기록)와 `C:/…`(2.1.280 기록)가 섞여 있음 | 신뢰 키는 대소문자·구분자 무시로 찾고 두 표기 모두로 옮김 |
+| P11 세션 | `~/.claude/sessions` 있음 | 결정 38 링크를 junction 으로 |
+| P12 훅 방어 | 1단계 뒤 11/17 — `rm -rf "$HOME"`·`/c/Users/x`·`C:/Users/x`·`rm.exe -rf ~` 가 ask, 프로젝트·`%TEMP%` Write 가 ask | 2단계에서 전부 수정(5.2) |
+| P13 테스트 | cli 15파일 중 8 실패, 훅 34파일 중 약 20 실패 | 2~3단계에서 전부 통과(5.2) |
+
+추가로 확인한 윈도우 함정: Node 22.17 `fs.cpSync` 는 대상 경로에 한글이 있으면 **프로세스가 죽는다**(세그폴트, 재현) — 운영 코드는 쓰지 않음, 테스트·E2E 도 파일 단위 복사로. PowerShell 5.1 `Remove-Item -Recurse` 는 junction 을 따라 들어갈 수 있어 제거는 `cmd rmdir /s`(junction 은 링크만 지움 — 실측).
+
 ---
 
 ## 5. 단계별 계획 (PR 단위)
@@ -183,6 +206,32 @@ powershell -ExecutionPolicy Bypass -File .\scripts\poc\poc-windows.ps1 -LinkCred
 
 **1단계에서 뺀 것 → 2단계로**: 경로 목록 `path.delimiter`(compose·bash-guard 양쪽), 공용 경로 헬퍼(`normPath`·`isUnder`·`msysToWin`), 훅 테스트 러너의 `echo '…' | node` → `spawnSync`+`input`(윈도우 CI 와 함께).
 
+### 5.2 2~4단계 결과 (2026-10-20 — 사용자 윈도우 PC 에서 구현·실측)
+
+| 단계 | 한 일 |
+|---|---|
+| 2 훅 | 공용 `.claude/hooks/lib/winpath.js`(`toSlash`·`msysToWin`·`normPath`·`isUnder`·`samePath`, 플랫폼 인자로 맥에서도 윈도우 판정 시험)·`testfs.js`(폴더 링크 = junction, 파일 심볼릭 링크는 권한 없으면 "건너뜀"). **bash-guard**: `$HOME`·`~`·`/c/…`·`C:/…`·`C:\…` 를 한 비교 형식으로 — `rm -rf "$HOME"`·`/c/Users/x`·`C:/Users/x`·`rm.exe -rf ~`·드라이브 루트·`C:\Users`·`Windows`/`Program Files` 재귀 삭제 deny, 자동 허용 패턴에 `C:/…`·`/c/…`·UNC·따옴표 밖 `\`·`$APPDATA`·PowerShell 프로필·시작프로그램 폴더 검사, 허용 폴더 목록 `;` 구분. **auto-approve**: 프로젝트 안·`%TEMP%` Write 허용(실제 위치로도 확인 — junction 탈출 거부). **protect-secrets**: 대소문자 무시·`~\`·`%APPDATA%\gcloud`·PowerShell 프로필·시작프로그램 쓰기 차단. **memory-sync**(윈도우에서 미러가 통째로 꺼져 있었음)·session-export(경로 비교·`/tmp`↔`os.tmpdir()`)·progress-tracker(`/` 기록)·deliverable-guard(README 검사 꺼져 있었음)·task-confirm-guard(임시 폴더 예외는 실제 위치로, 자기 승인 상태 파일 쓰기 거부)·tdd/adversarial/fake-impl/test-fake-guard(`\` 경로 예외 판정, `/c/…` `CLAUDE_PROJECT_DIR`)·auto-format(`.bin` shim 대신 패키지 bin JS, `.venv\Scripts`)·codex-review-guard·typescript-quality(`cd &&` → `cwd`)·claude-version-check(npm 설치는 package.json 에서 버전 — `claude.exe --version` 이 윈도우에서 13초). 훅 테스트 러너를 `spawnSync`+`input` 으로 |
+| 3 래퍼·조립 | `cli/launch.js`(sh 래퍼와 같은 순서 — 업데이트 후 새 래퍼로 한 번 다시 실행·first-run·prepare·재시작 표시 → `--continue`·`-p` 는 다시 띄우지 않음·Ctrl+C 는 claude 에 맡기고 래퍼는 기다림·빈 `CLAUDE_SECURESTORAGE_CONFIG_DIR`), `bin/gugbab-claude.cmd`, sh 래퍼는 Git Bash 면 launch.js 로. `cli/winfs.js`(realpath `.native`·rename/unlink 재시도·junction/하드링크/복사·`claude.cmd` 안의 `claude.exe` 를 찾아 셸 없이 실행). compose: 명령 경로 `/` 표기·관리 기록 `fileLinks`(하드링크·복사는 일반 파일이라 기록으로 판별, 끊긴 하드링크 다시 연결, 사용자가 고친 파일은 남기고 알림, **다른 세션이 파일을 잡고 있으면 조립을 멈추지 않고 기록을 남겨 다음 조립에서**)·신뢰 키 두 표기·메모리 폴더 목록 `;`·PowerShell 도구 끔. paths(홈 = `os.homedir()`, MSYS 경로 변환)·project(실제 표기 루트)·open(`/harness` = `start` 새 창)·doctor(Git Bash·로그인 파일 점검)·update(fetch 8초, 자격 증명 창 안 띄움) |
+| 4 설치·E2E | `install.ps1`(install.sh 대응 — `-Ref`·`-Version`·`-Channel`·`-Dir`·`-NoModifyPath`·`-Uninstall`·`-Yes`, ASCII 만, `<설치>\bin` 을 사용자 PATH 에 REG_EXPAND_SZ 그대로, 채널 파일 BOM 없이, 제거는 `cmd rmdir /s`). `scripts/wrapper-e2e.js`(sh 판 시나리오 전부 + 윈도우 전용: PowerShell 도구 꺼짐·개인키 Read/`cat` 차단·`.env` Read 허용(설계)·main push·`git.exe push --force` 차단·junction 공유 폴더·`.cmd` 런처·`/harness` 새 창 계획·doctor), `scripts/wrapper-matrix.js`(프리셋 13종·항목 321개 켜기·끄기·고정 35개 거부, `--with-claude` 면 프리셋마다 실제 세션 목록). 둘 다 `--home <설치 폴더>` |
+
+**검증 (윈도우 10, 2026-10-20)**
+
+| 무엇 | 결과 |
+|---|---|
+| 단위 테스트 | 훅·cli·scripts·페이지 전부 통과 — 윈도우에서 만들 수 없는 것(파일 심볼릭 링크·`"`·개행 파일 이름·sh 래퍼·install.sh)은 이유와 함께 건너뜀, 대신 junction 판 적대 시험 추가 |
+| 실세션 E2E 개발 모드 | 첫 실행 53/54 — 실패 1건은 시험 기대값 오류(`.env` 읽기 차단을 기대했으나 허용이 2026-10-06 결정) → 개인키 차단 + `.env` 허용 확인으로 시나리오 수정 후 **56/56** |
+| **대화형 실측**(2026-10-21, 새 PowerShell 창 — 사용자 PATH 에 개발 모드 등록 후 콘솔에 직접 키 입력·화면 읽기) | 첫 실행 프리셋 질문(번호 선택·고르지 않음·잘못된 입력 재질문) · 폴더 신뢰 · 질문·응답 · 상태줄(Git Bash) · **키보드 Ctrl+C 는 답변만 중단**(세션·래퍼 유지) · 세션 안 `/harness` → **새 창 TUI** 에서 이동·Space·Enter 저장 → 설정 폴더 반영 · `/exit` → 래퍼가 `launch.js --continue` 로 다시 실행해 새 에이전트 반영 · 마지막 `/exit` 후 래퍼·claude·cmd 프로세스 모두 정리 — 전부 확인 |
+| 대화형에서 찾은 것 | **Git Bash 창에서 `/` 로 시작하는 인자가 윈도우 경로로 바뀜**(`gugbab-claude -p "/harness preset"` → `C:/Program Files/Git/harness preset`) → sh 래퍼가 변환을 끄고 넘김(수정·회귀 시험 추가) · claude 가 떠 있지 않을 때(첫 실행 질문 등) 콘솔 Ctrl+C 신호면 cmd 의 "일괄 작업을 끝내시겠습니까 (Y/N)?" 가 나옴(`.cmd` 도구 공통, claude 대화 중 Ctrl+C 는 해당 없음) · 첫 시도 창 하나에서 claude 가 키 입력을 읽지 않는 상태가 됨 — Claude Code 자동 업데이트 직후 시작된 세션, 같은 순서로 두 번 다시 해서는 재현 안 됨(원인 미확정) · 이 PC 는 Claude Code npm 설치본이 수십 분마다 자동 업데이트(2.1.304→305→306)되며 그 몇 초 동안 `claude.exe` 가 없어 `claude`·`gugbab-claude` 모두 실행 안 됨(하네스와 무관) |
+| 실세션 E2E **설치본**(`install.ps1` 로 설치한 배포 모드) | **56/56** — 자동 업데이트 v9.0.0 → v9.0.1 후 그 실행에서 새 래퍼, 세션 시작 버전 안내 포함 |
+| 매트릭스 개발 모드 | 624/625 → 실패 1건(동시 세션이 하드링크 원본을 열고 있어 끄기 실패)을 고침 |
+| 매트릭스 **설치본** + 프리셋별 실제 세션 | **638/638** (E2E 와 동시에 돌려 잠김 보강도 확인) |
+| `install.ps1` | 설치·브랜치·재설치·제거(junction 너머 대화 기록 보존)·거부 8/8, 실제 설치 후 doctor 전부 ✓ |
+| 메모리 미러 | 이 세션에서 레포 `memory/` 를 고치자 전역으로 미러됨(수정 전에는 윈도우에서 안 됨) |
+
+**남은 것**: 맥 회귀 확인(M13 — 이 PC 에서는 못 돌림, 맥 분기는 바꾸지 않았지만 공용 함수 변경이 있음) · `windows-latest` CI · M2(다음 날 토큰 갱신 후) · M3(두 세션 `SendMessage`) · M8 일부(창 X 버튼으로 닫기) · M11(백신 켠 채 연속 10회) · v1.1.0 릴리스. M1·M4·M8(Ctrl+C·`/exit`)은 2026-10-21 대화형 실측으로 확인. 이 브랜치 버전은 **1.0.13**(단계 PR 은 패치 +1, 결정 41-⑦).
+
+**맥에도 있는 것으로 찾았지만 동작을 바꾸지 않아 남긴 것**(따로 결정 필요): task-confirm-guard 승인 상태 파일을 임시 폴더에 직접 써 자기 승인 가능(윈도우 분기는 막음) · tdd/adversarial/fake-impl 의 `.claude/hooks` 부분 문자열 제외(`.claude/hooksX/…`·경로 중간 `.claude/hooks/`) · 폴더 링크 너머 파일 신뢰(staleness-check·auto-format) · 자동 허용 패턴이 `cp x ~/…` 대상은 보지 않음 · 이름만으로 `git` 실행 시 현재 폴더의 `git.exe`(윈도우 `NoDefaultCurrentDirectoryInExePath` 없을 때).
+
 ---
 
 ## 6. 수동 확인 체크리스트 (사용자 윈도우 PC — 5단계)
@@ -210,11 +259,11 @@ powershell -ExecutionPolicy Bypass -File .\scripts\poc\poc-windows.ps1 -LinkCred
 | # | 항목 | 추천 | 상태 |
 |---|---|---|---|
 | 41-① | 진행 순서 | **PoC 먼저**, 결과로 P6(로그인)·P7(설정 폴더 내용) 방향 확정 후 1단계 | 사용자 승인(2026-10-20) |
-| 41-② | PowerShell 도구 | **윈도우 하네스는 끔**(`CLAUDE_CODE_USE_POWERSHELL_TOOL=0`), Git for Windows 필수 — Bash 가드 7개를 PowerShell 로 다시 만들지 않는다 | 추천 — 확인 필요 |
-| 41-③ | 래퍼 형식 | **Node 런처(`cli/launch.js`) + `.cmd`·`.ps1` 껍데기**, macOS sh 래퍼는 당분간 유지(comux 작업 제어 때문) | 추천 — 확인 필요 |
-| 41-④ | 링크 | 폴더 **junction**, 파일 **하드링크 → 복사** (개발자 모드·관리자 권한 요구하지 않음) | 추천 — P2 결과로 확정 |
-| 41-⑤ | 지원 터미널 | **Windows Terminal**(PowerShell 7/5.1, cmd) 공식 지원, Git Bash 창(mintty)은 TTY 감지가 안 돼 비권장 | 추천 |
-| 41-⑥ | 1단계를 윈도우 작업과 별개로 먼저 | bash-guard `.exe` 이름 우회·보안 훅 fail-open 은 **맥 코드에도 있는 결함**이라 윈도우 일정과 무관하게 먼저 고칠 가치 | 추천 — 확인 필요 |
+| 41-② | PowerShell 도구 | **윈도우 하네스는 끔**(`CLAUDE_CODE_USE_POWERSHELL_TOOL=0`), Git for Windows 필수 — Bash 가드 7개를 PowerShell 로 다시 만들지 않는다 | **구현**(2026-10-20, P9 실측 — E2E 로 도구 목록에서 빠짐 확인) |
+| 41-③ | 래퍼 형식 | **Node 런처(`cli/launch.js`) + `.cmd` 껍데기**, macOS sh 래퍼는 유지(comux 작업 제어 때문). `.ps1` 은 두지 않음 — PowerShell 은 같은 폴더의 `.ps1` 을 `.cmd` 보다 먼저 실행해 실행 정책 Restricted 에서 실패(npm 의 알려진 문제) | **구현**(2026-10-20) |
+| 41-④ | 링크 | 폴더 **junction**, 파일 **하드링크 → 복사** (개발자 모드·관리자 권한 요구하지 않음) | **구현**(P2·P7 실측) |
+| 41-⑤ | 지원 터미널 | PowerShell 7/5.1·cmd·Windows Terminal, Git Bash 창도 같은 Node 래퍼로 넘김 | **구현** — mintty TTY 감지는 대화형 수동 확인 남음 |
+| 41-⑥ | 1단계를 윈도우 작업과 별개로 먼저 | bash-guard `.exe` 이름 우회·보안 훅 fail-open 은 **맥 코드에도 있는 결함**이라 윈도우 일정과 무관하게 먼저 고칠 가치 | 구현(5.1) — 릴리스 시기는 확인 필요 |
 | 41-⑦ | 버전 | 윈도우 지원 완료 릴리스 = **v1.1.0**, 1~4단계 PR 은 기존처럼 패치 +1 | 추천 |
 
 ---
@@ -238,4 +287,4 @@ powershell -ExecutionPolicy Bypass -File .\scripts\poc\poc-windows.ps1 -LinkCred
 | 날짜 | 내용 |
 |---|---|
 | 2026-10-19 | 1차 분석(메모리에만, 보류) |
-| 2026-10-20 | 계획서 작성 — 공식 문서 재확인(F1~F11), 코드 전수 조사 40건, PoC 스크립트 작성·맥에서 판정 로직 검증, 결정 41 추천안 · PoC 를 브랜치 `scripts/poc/` 로(4.1) · **1단계 보안·공통 정리 구현(5.1)** |
+| 2026-10-20 | 계획서 작성 — 공식 문서 재확인(F1~F11), 코드 전수 조사 40건, PoC 스크립트 작성·맥에서 판정 로직 검증, 결정 41 추천안 · PoC 를 브랜치 `scripts/poc/` 로(4.1) · **1단계 보안·공통 정리 구현(5.1)** · **사용자 윈도우 PC 에서 PoC(4.4)·2~4단계 구현·실측(5.2)**, 결정 41-②~⑤ 구현 |
