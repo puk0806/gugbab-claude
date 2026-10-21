@@ -24,6 +24,7 @@
 - [사용자 프로필](user_profile.md) — 풀스택 개발자. 프론트엔드(Next.js 모노레포 + CRA 레거시) + Java 레거시 백엔드(SB 2.5+MyBatis+Oracle+MySQL+Redisson 2+EhCache 2+AWS SDK v1) 운영
 
 ## Feedback — 작업 방식
+- [자동 허용은 읽기만 넓힌다](feedback_auto_allow_reads_only.md) — Edit·Write·삭제·실행은 새로 자동 허용 금지, 훅으로 강제·적대 테스트, 바꾸기 전 실제 확인 창 기록 재생으로 효과 수치 보고 (결정 42)
 - [커밋은 사용자 요청 시에만](feedback_commit_policy.md) — 자동 커밋·제안 금지, 요청 시 실행 전 메모리 정리 선행 후 [memory] 커밋 포함, main push는 branch-protection이 차단(PR 경유)
 - [삭제 요청은 범위를 좁게](feedback_deletion_scope_narrow.md) — 확정/경계/유지로 나눠 경계는 질문, 검색·검증 범용 에이전트는 휩쓸어 지우지 않음, 남는 자산의 설치 경로 이관
 - [기준은 항상 원본 레포](feedback_source_repo_is_standard.md) — 설치본이 쓰고 있어도 원본 기준 불필요면 제거, 프로젝트별 보존 예외 없음, 유용한 내용만 원본으로 흡수 후 재설치로 배포
