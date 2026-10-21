@@ -153,7 +153,7 @@ function mkFixture({ fm = '2026-09-01', meta = '2026-09-01', skill = '2026-09-01
   if (skillAsSymlink) {
     const outside = path.join(root, 'outside.md');
     fs.writeFileSync(outside, `# x\n\n> 검증일: ${skill}\n`);
-    fs.symlinkSync(outside, s);
+    if (require('../.claude/hooks/lib/testfs').trySymlink(outside, s) === null) return null; // 윈도우 권한 없음 → 호출한 시험이 건너뜀
   } else if (skill !== null) {
     fs.writeFileSync(s, skillLine ?? `---\nname: x\n---\n\n# x\n\n> 검증일: ${skill}\n`);
   }
@@ -205,7 +205,14 @@ test('악성: 코드펜스 안의 가짜 SKILL.md "> 검증일:" 은 무시', ()
   assert.ok(p.includes('SKILL.md > 검증일 없음'), p.join('|'));
 });
 
-test('악성: 심볼릭 링크 SKILL.md(외부 파일로 신선 위장)는 읽지 않아 SKILL.md 없음으로 보고', () => {
+test('악성: 심볼릭 링크 SKILL.md(외부 파일로 신선 위장)는 읽지 않아 SKILL.md 없음으로 보고', (t) => {
+  if (require('../.claude/hooks/lib/testfs').IS_WIN) {
+    // 윈도우 권한 없으면 파일 심볼릭 링크를 못 만든다 — 만들 수 있을 때만 시험
+    const probe = path.join(os.tmpdir(), `vc-probe-${process.pid}`);
+    const ok = require('../.claude/hooks/lib/testfs').trySymlink(__filename, probe);
+    try { fs.rmSync(probe, { force: true }); } catch { /* 없음 */ }
+    if (ok === null) return t.skip('윈도우 심볼릭 링크 권한 없음(개발자 모드 꺼짐)');
+  }
   const p = check({ skillAsSymlink: true });
   assert.ok(p.includes('SKILL.md > 검증일 없음'), p.join('|'));
 });

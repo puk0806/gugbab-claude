@@ -45,11 +45,11 @@ test('악성: 프로필에 lock 을 넣어도 무시 (고정은 manifest·.gugba
   assert.strictEqual(l[1].lock, undefined);
 });
 
-test('악성: .gugbab.json 이 프로젝트 밖을 가리키는 링크면 읽지 않음', () => {
+test('악성: .gugbab.json 이 프로젝트 밖을 가리키는 링크면 읽지 않음', (t) => {
   const { d, paths, project } = setup();
   const outside = path.join(d, 'outside.json');
   write(outside, { lock: ['hook:evil'] });
-  fs.symlinkSync(outside, path.join(project.root, '.gugbab.json'));
+  if (require('../.claude/hooks/lib/testfs').trySymlink(outside, path.join(project.root, '.gugbab.json')) === null) return t.skip('윈도우 심볼릭 링크 권한 없음');
   const l = loadLayers(paths, project);
   assert.ok(!l.some(x => x.source === '.gugbab.json' && x.lock));
 });

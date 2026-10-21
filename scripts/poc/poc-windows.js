@@ -58,7 +58,8 @@ function regQuery(key, val) {
 }
 const gitBashCandidates = [process.env.CLAUDE_CODE_GIT_BASH_PATH, 'C:\\Program Files\\Git\\bin\\bash.exe', 'C:\\Program Files (x86)\\Git\\bin\\bash.exe', path.join(HOME, 'AppData', 'Local', 'Programs', 'Git', 'bin', 'bash.exe')].filter(Boolean);
 const GIT_BASH = gitBashCandidates.find(exists) || null;
-const claudePaths = whereAll('claude');
+// 윈도우 npm 설치는 확장자 없는 sh 스크립트(`claude`)가 `claude.cmd` 보다 먼저 잡힌다 — spawn 하면 ENOENT 라 PATHEXT 확장자 있는 것만 쓴다 (2026-10-20 윈도우 PC 실측)
+const claudePaths = IS_WIN ? whereAll('claude').filter(p => /\.(exe|cmd|bat|com)$/i.test(p)) : whereAll('claude');
 rec('env', {
   platform: process.platform, release: os.release(), arch: process.arch, node: process.version,
   shellEnv: { ComSpec: process.env.ComSpec || null, SHELL: process.env.SHELL || null, PSModulePath: !!process.env.PSModulePath, HOME: process.env.HOME || null, USERPROFILE: process.env.USERPROFILE || null, TEMP: os.tmpdir() },

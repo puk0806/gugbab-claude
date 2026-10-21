@@ -1,7 +1,9 @@
 'use strict';
 // install-sh.test.js — install.sh (래퍼 한 줄 설치, 계획서 3장) 를 임시 HOME 에 실제로 설치·재설치·제거해 시험
 // 원격은 임시 폴더의 진짜 git 저장소(GUGBAB_REPO_URL). 정상 / 악성·우회 / 경계 3계층
-const test = require('node:test');
+// 윈도우는 install.ps1(install-ps1.test.js) — install.sh 는 맥·리눅스 전용(심볼릭 링크·셸 설정 파일)이라 건너뜀
+const nodeTest = require('node:test');
+const test = process.platform === 'win32' ? (name) => nodeTest(name, { skip: 'install.sh 는 맥·리눅스 전용 — 윈도우는 install-ps1.test.js' }, () => {}) : nodeTest;
 const assert = require('node:assert');
 const fs = require('fs');
 const os = require('os');

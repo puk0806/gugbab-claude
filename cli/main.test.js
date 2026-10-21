@@ -35,8 +35,11 @@ function setup() {
 }
 function run(s, args, extraEnv = {}) {
   return spawnSync(process.execPath, [MAIN, ...args], { cwd: s.proj, encoding: 'utf8', timeout: 30000,
-    env: { ...process.env, HOME: s.home, GUGBAB_HOME: s.code, GUGBAB_DATA: s.data, GUGBAB_DEV: '1', ...extraEnv } });
+    // USERPROFILE — 윈도우 홈은 os.homedir()(=USERPROFILE). HOME 만 바꾸면 실제 ~/.claude 를 쓰게 된다
+    env: { ...process.env, HOME: s.home, USERPROFILE: s.home, GUGBAB_HOME: s.code, GUGBAB_DATA: s.data, GUGBAB_DEV: '1', ...extraEnv } });
 }
+// 연결된 항목인가 — 맥 심볼릭 링크 / 윈도우 파일은 하드링크(일반 파일, 2026-10-20)
+const isLinked = (p) => { try { const st = fs.lstatSync(p); return st.isSymbolicLink() || (process.platform === 'win32' && st.isFile()); } catch { return false; } };
 
 test('정상: prepare — 설정 폴더를 조립하고 그 경로를 출력', () => {
   const s = setup();
@@ -44,7 +47,7 @@ test('정상: prepare — 설정 폴더를 조립하고 그 경로를 출력', (
   assert.strictEqual(r.status, 0, r.stderr);
   const cfg = r.stdout.trim();
   assert.strictEqual(cfg, path.join(s.data, 'projects', path.basename(s.proj), '.claude'));
-  assert.ok(fs.lstatSync(path.join(cfg, 'rules', 'git.md')).isSymbolicLink());
+  assert.ok(isLinked(path.join(cfg, 'rules', 'git.md')));
   assert.ok(JSON.parse(fs.readFileSync(path.join(cfg, 'settings.json'), 'utf8')).hooks.Stop);
 });
 

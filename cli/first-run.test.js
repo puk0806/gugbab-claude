@@ -100,8 +100,8 @@ test('악성: 범위 밖 번호·문자·셸 문자·음수·아주 긴 입력·
 test('악성: 프로젝트 파일이 링크로 밖을 가리키거나 너무 크면 감지에 쓰지 않음', () => {
   const s = setup();
   const outside = path.join(s.d, 'evil.json'); w(outside, JSON.stringify({ dependencies: { next: '1' } }));
-  fs.symlinkSync(outside, path.join(s.root, 'package.json'));
-  assert.deepStrictEqual(detectStack(s.root).suggest, []);
+  // 윈도우 권한 없으면(EPERM) 링크 부분은 건너뛰고 크기 시험만 — 그 PC 에선 공격자도 파일 심볼릭 링크를 못 만든다
+  if (require('../.claude/hooks/lib/testfs').trySymlink(outside, path.join(s.root, 'package.json')) !== null) assert.deepStrictEqual(detectStack(s.root).suggest, []);
   const b = setup(); w(path.join(b.root, 'package.json'), JSON.stringify({ dependencies: { next: '1' }, pad: 'x'.repeat(2 * 1024 * 1024) }));
   assert.deepStrictEqual(detectStack(b.root).suggest, []);
 });

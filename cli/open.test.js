@@ -93,6 +93,35 @@ test('경계: 기록 파일이 없거나 깨졌거나 CLAUDE_CONFIG_DIR 가 없�
   assert.strictEqual(rootFromConfigDir({ CLAUDE_CONFIG_DIR: 'relative/.claude' }, path.join(d, 'projects')), null);
 });
 
+// ── 윈도우 (2026-10-20) — start 로 새 콘솔 창 ──
+const { planWindows } = require('./open');
+test('정상: 윈도우 — start 로 새 창에 node <main.js> harness --session (작업 폴더 = 프로젝트)', () => {
+  const p = planWindows({ bin: 'C:\\gugbab\\bin\\gugbab-claude', root: 'C:\\회사\\my proj', node: 'C:\\Program Files\\nodejs\\node.exe' });
+  assert.strictEqual(p.kind, 'console');
+  assert.strictEqual(p.argv[0], 'cmd.exe');
+  assert.deepStrictEqual(p.argv[1].slice(0, 3), ['/d', '/s', '/c']);
+  assert.strictEqual(p.cmd, 'start "gugbab harness" /D "C:\\회사\\my proj" "C:\\Program Files\\nodejs\\node.exe" "C:\\gugbab\\cli\\main.js" harness --session');
+  assert.strictEqual(p.argv[1][3], `"${p.cmd}"`, '/s 는 바깥 따옴표 한 쌍만 벗긴다');
+  let called = null;
+  assert.match(launch(p, { detached: (f, a) => { called = [f, a]; } }), /새 창/);
+  assert.deepStrictEqual(called, p.argv);
+  assert.match(describePlan(p), /^cmd\.exe \/d \/s \/c "start /);
+});
+
+test('악성: 윈도우 — 경로에 cmd 가 따옴표 안에서도 해석하는 글자(" % !)가 있으면 띄우지 않고 안내', () => {
+  for (const root of ['C:\\a"b', 'C:\\%PATH%', 'C:\\a!b!', 'C:\\a\nb']) {
+    const p = planWindows({ bin: 'C:\\g\\bin\\gugbab-claude', root, node: 'C:\\node.exe' });
+    assert.strictEqual(p.kind, 'manual', JSON.stringify(root));
+  }
+  // & ^ | 는 큰따옴표 안에서 글자 그대로라 허용
+  assert.strictEqual(planWindows({ bin: 'C:\\g\\bin\\gugbab-claude', root: 'C:\\a & b ^ c | d', node: 'C:\\node.exe' }).kind, 'console');
+});
+
+test('경계: 윈도우 — 창 띄우기 실패면 안내 문구와 함께 오류', () => {
+  const p = planWindows({ bin: 'C:\\g\\bin\\gugbab-claude', root: 'C:\\p', node: 'C:\\node.exe' });
+  assert.throws(() => launch(p, { detached: () => { throw new Error('cmd 없음'); } }), /띄우지 못했습니다.*다른 터미널/s);
+});
+
 test('경계: 띄우기 명령이 실패하면 안내 문구와 함께 오류', () => {
   const p = planLaunch({ ...base, env: {}, platform: 'darwin' });
   assert.throws(() => launch(p, { exec: () => { throw new Error('osascript 없음'); } }), /띄우지 못했습니다.*다른 터미널/s);

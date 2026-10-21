@@ -7,13 +7,17 @@
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
+const { renameRetry } = require('./winfs');
 
 const INTERVAL_MS = 60 * 60 * 1000;
-const FETCH_TIMEOUT_MS = 3000;
+// 윈도우는 git 첫 실행·자격 증명 관리자(GCM) 초기화가 느려 3초면 자주 fetch-failed — 8초 (2026-10-20)
+const FETCH_TIMEOUT_MS = process.platform === 'win32' ? 8000 : 3000;
 const BRANCH_RE = /^[A-Za-z0-9][A-Za-z0-9._/-]{0,99}$/; // 옵션처럼 보이는 이름·경로 조작 거부
 
+// 자격 증명 창·프롬프트를 띄우지 않는다 — 세션 시작 전 자동 확인이 사용자 입력을 기다리며 멈추지 않게 (윈도우 GCM 창 대비)
+const GIT_ENV = { ...process.env, GIT_TERMINAL_PROMPT: '0', GCM_INTERACTIVE: 'never' };
 function git(cwd, args, timeout = 10000) {
-  return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout }).trim();
+  return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout, env: GIT_ENV }).trim();
 }
 
 // v<숫자>.<숫자>.<숫자> 만 — 프리릴리스·옵션처럼 보이는 이름은 제외
@@ -135,7 +139,7 @@ function writeLastCheck({ stateDir, launch, result, now = Date.now() }) {
     fs.mkdirSync(stateDir, { recursive: true });
     try { if (!fs.lstatSync(f).isFile()) return false; } catch { /* 없음 → 새로 */ }
     fs.writeFileSync(tmpf, JSON.stringify(rec), { flag: 'wx' });
-    fs.renameSync(tmpf, f);
+    renameRetry(tmpf, f);
     return true;
   } catch {
     try { if (fs.lstatSync(tmpf).isFile()) fs.rmSync(tmpf); } catch { /* 없음 */ }

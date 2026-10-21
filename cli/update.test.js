@@ -195,8 +195,8 @@ test('악성: 설치 폴더의 channel.json 이 깨졌거나 배열·링크로 �
   const outside = path.join(tmp('up-out-'), 'c.json');
   fs.writeFileSync(outside, JSON.stringify({ channel: 'branch', branch: 'evil' }));
   fs.rmSync(path.join(s.home, 'state', 'channel.json'));
-  fs.symlinkSync(outside, path.join(s.home, 'state', 'channel.json'));
-  assert.deepStrictEqual(readChannel({ codeHome: s.home, stateDir: s.state }), { channel: 'main' });
+  // 윈도우 권한 없으면(EPERM) 링크 시험만 건너뜀 — 깨진 값·배열 시험은 위에서 이미 확인
+  if (require('../.claude/hooks/lib/testfs').trySymlink(outside, path.join(s.home, 'state', 'channel.json')) !== null) assert.deepStrictEqual(readChannel({ codeHome: s.home, stateDir: s.state }), { channel: 'main' });
 });
 
 // ── 확인 결과 기록 (state/last-check.json — 세션 시작 때 wrapper-version-check 훅이 화면에 보여 줌, 2026-10-19) ──
@@ -240,9 +240,10 @@ test('악성: 조작된 실행 값·모르는 결과는 기록하지 않음', ()
 test('악성: 기록 자리에 심은 링크·폴더는 따라가 쓰지 않음', () => {
   const d = tmp('up-last-');
   const victim = path.join(tmp('up-victim-'), 'v.txt'); fs.writeFileSync(victim, 'keep');
-  fs.symlinkSync(victim, path.join(d, 'last-check.json'));
-  assert.strictEqual(writeLastCheck({ stateDir: d, launch: L, result: { updated: false, skipped: 'up-to-date' } }), false);
-  assert.strictEqual(fs.readFileSync(victim, 'utf8'), 'keep');
+  if (require('../.claude/hooks/lib/testfs').trySymlink(victim, path.join(d, 'last-check.json')) !== null) { // 윈도우 권한 없으면 폴더 시험만
+    assert.strictEqual(writeLastCheck({ stateDir: d, launch: L, result: { updated: false, skipped: 'up-to-date' } }), false);
+    assert.strictEqual(fs.readFileSync(victim, 'utf8'), 'keep');
+  }
   const e = tmp('up-last-'); fs.mkdirSync(path.join(e, 'last-check.json'));
   assert.strictEqual(writeLastCheck({ stateDir: e, launch: L, result: { updated: false, skipped: 'up-to-date' } }), false);
 });

@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { execFileSync } = require('child_process');
+const { realpath, renameRetry } = require('./winfs');
 
 // 설정 폴더 이름으로 써도 안전한 이름 — 영숫자·점·밑줄·하이픈만, 점으로 시작 금지, 64자
 function safeName(s) {
@@ -13,12 +14,13 @@ function safeName(s) {
   return n || 'project';
 }
 
+// 윈도우는 실제 표기(.native)로 — JS realpath 는 입력 대소문자를 그대로 둬 `c:\a` 와 `C:\a` 가 다른 프로젝트가 된다 (2026-10-20 실측)
 function projectRoot(cwd) {
   try {
     const top = execFileSync('git', ['rev-parse', '--show-toplevel'], { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 5000 }).trim();
-    if (top) return fs.realpathSync(top);
+    if (top) return realpath(top);
   } catch { /* git 아님 */ }
-  try { return fs.realpathSync(cwd); } catch { return path.resolve(cwd); }
+  try { return realpath(cwd); } catch { return path.resolve(cwd); }
 }
 
 function readIndex(file) {
@@ -42,7 +44,7 @@ function resolveProject(cwd, dataDir) {
     fs.mkdirSync(projectsDir, { recursive: true });
     const tmp = `${indexFile}.${process.pid}.tmp`;
     fs.writeFileSync(tmp, JSON.stringify(index, null, 2) + '\n');
-    fs.renameSync(tmp, indexFile);
+    renameRetry(tmp, indexFile);
   }
   const dir = path.join(projectsDir, id);
   return { root, id, dir, configDir: path.join(dir, '.claude'), settingsPath: path.join(dir, 'settings.json') };
