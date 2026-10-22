@@ -1,6 +1,6 @@
 # gugbab 하네스 윈도우 지원 계획서
 
-> 작성: 2026-10-20 · 최종 수정: 2026-10-22 · 상태: **0단계 PoC 완료(4.4) · 1~4단계 구현·윈도우 실측 완료(5.1·5.2) · 맥 회귀(5.3)·윈도우 재확인(5.4)·맥 확인(5.5) 완료** — 남은 것: 푸시 뒤 CI 통과 확인, 사용자 PC 수동 체크리스트 일부(M6·M9·M10 — 이 PC 환경상 불가), 릴리스
+> 작성: 2026-10-20 · 최종 수정: 2026-10-22 · 상태: **0단계 PoC 완료(4.4) · 1~4단계 구현·윈도우 실측 완료(5.1·5.2) · 맥 회귀(5.3)·윈도우 재확인(5.4)·맥 확인(5.5)·CI 맥·윈도우 통과 완료** — 남은 것: 릴리스(PR, bump 1.0.15). 사용자 PC 수동 체크리스트 일부(M6·M9·M10)는 이 PC 환경상 불가
 > 관련: [래퍼 개편 계획서](2026-10-15-gugbab-claude-shim-wrapper.md) 결정 41 · 17장(요약)
 > 기준 버전: 하네스 v1.0.11 · Claude Code 2.1.304
 
@@ -297,7 +297,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\poc\poc-windows.ps1 -LinkCred
 - **맥(5.4 수정 뒤)**: 단위 cli 315(15 건너뜀) · 훅 51/51 · 공용 헬퍼 전부 · scripts 103(8 건너뜀) · `wrapper-e2e.js --dev` **51/51**(판정 불가 0 — 훅 이벤트 판정·`/harness preset` 도구 결과 판정·보안 재시도가 맥 stream-json 에서도 맞음. 윈도우 59 와의 차이는 윈도우 전용 시험)
 - **CI 1차 실패 원인 = 윈도우 추정과 같음** (맥에서 잡 로그 확인): 맥 훅 단계 `auto-approve`·`task-confirm-guard` "설정 폴더 projects → ~/.claude/projects 링크 안 메모리 → 자동 (기대 allow, 실제 ask)", 윈도우 cli 단계 `project.test` 3건 "기대 `C:\Users\RUNNER~1\…` · 실제 `C:\Users\runneradmin\…`"
 - **CI 2차**(5.4 수정 푸시): 맥 **전부 통과**. 윈도우는 cli 통과 → 훅 단계에서 `skill-md-guard.test.js`·`verification-guard.test.js` 가 시험 입력을 고정 `/tmp/…json` 에 씀 → 윈도우에선 "현재 드라이브:\tmp" = 러너 `D:\tmp`(없음) → `ENOENT` 로 파일째 죽음(윈도우 PC 는 `C:\tmp` 가 있었던 것으로 추정). → `os.tmpdir()` 로 고침(맥은 그대로 통과, 다른 `TMPDIR` 로도 통과·그 폴더에 씀 확인). 다른 `/tmp/…` 는 "생기지 않았는지" 확인용(`existsSync`)이라 윈도우에서도 문제없음
-- 남은 것: 푸시 뒤 CI 3차 — 윈도우 훅 이후 단계(공용 헬퍼·scripts)는 아직 한 번도 안 돎
+- **CI 3차**(`4ce81c9`, run `39725358364`, 2026-10-22): **맥·윈도우 모두 통과** — 윈도우 훅·공용 헬퍼·scripts 단계 첫 통과, 시간 초과를 걱정했던 `claude-version-check`·`session-start` 도 러너에서 통과. 같은 시각 윈도우 세션도 같은 `/tmp` 수정을 만들어 푸시하다 거부됨(non-fast-forward) → 내용이 같아 윈도우 로컬 커밋은 버리고 원격에 맞춤. **두 PC 에서 같은 브랜치를 동시에 작업하지 않는다** — 한쪽이 푸시하고 다른 쪽은 pull 뒤 이어서
+- 남은 것: PR(`release-version.js bump` → 1.0.15)
 
 ---
 
