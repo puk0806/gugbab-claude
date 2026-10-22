@@ -1,6 +1,6 @@
 ---
 name: project-windows-support-analysis
-description: "하네스 윈도우 지원 — 2026-10-20~21 사용자 윈도우 PC 에서 PoC·1~4단계 구현·실측 완료, 브랜치에 커밋·푸시. 다음: main 추가분(PR #41·#42) 병합 → 맥 회귀·윈도우 CI·릴리스"
+description: "하네스 윈도우 지원 — 2026-10-20~21 사용자 윈도우 PC 에서 PoC·1~4단계 구현·실측 완료, 브랜치 푸시. main 추가분(PR #41·#42) 병합·병합 뒤 대화형·M2·M3·M8·M11 실측까지 완료 → 커밋·푸시 → 맥 회귀·윈도우 CI·PR"
 metadata:
   node_type: memory
   type: project
@@ -28,4 +28,8 @@ metadata:
 - 병합 뒤 윈도우 관점 확인: ① 결정 42 변수 풀기 + `.exe` 정리가 함께 동작하는 테스트 추가(`X=git.exe; $X push --force` 차단, `X=cat.exe; $X 파일` 읽기 자동) ② 값에 `\`(`X=C:\Users\x`)가 있으면 지금은 안 풂(`SAFE_VALUE_RE` — 안전 쪽), `C:/…` 는 풀림 — 필요하면 `winpath` 정규화와 함께 판단 ③ 창 자동 닫힘 윈도우판: `open.js` 의 `wt.exe`/새 창 경로에서 프로세스가 끝나면 탭이 닫히는지(Windows Terminal `closeOnExit`) 실측, 안 닫히면 `--close-terminal` 같은 처리 ④ 📌 표시는 플랫폼 무관
 - 확인 순서: 전체 단위 테스트 → `node scripts/wrapper-e2e.js --dev`(윈도우) → 맥 `sh scripts/wrapper-e2e.sh --dev` 회귀(M13) → PR
 
-**How to apply:** 윈도우 데스크탑에서 `git pull` 후 이 브랜치 세션을 열면 위 "main 추가분 반영할 것" 부터(병합 결과는 커밋·푸시 요청 전까지 작업 트리에). 맥으로 돌아가면 위 회귀 확인부터. 윈도우 세션은 메모리를 레포 `memory/` 에 직접 써도 이제 memory-sync 가 전역으로 미러함(윈도우 경로 인식 수정). 관련: [[project-shim-wrapper-direction]] [[reference-wrapper-project-settings-precedence]] [[feedback-report-after-full-tests]] [[feedback-auto-allow-reads-only]]
+**main 추가분 병합 결과 (2026-10-21 윈도우 PC, `git merge --no-commit origin/main` — 작업 트리, 커밋·푸시 요청 전)**: 충돌 9개 위 방침대로 해소(VERSION 은 main 1.0.14 — 이 브랜치가 앞서 올린 1.0.13 은 "PR 때만 bump" 지시와 어긋났던 것). **병합으로 생긴 윈도우 보안 회귀**: 결정 42 `literalAssignValue` 가 `~` 를 `HOME_DIR`(`C:\Users\x`)로 펼치면 `\` 때문에 `SAFE_VALUE_RE` 에 걸려 안 풀림 → `P=~/.ssh; cat $P/id_rsa` 자동 허용·`S=~; rm -rf $S` ask → 윈도우는 `C:/Users/x` 로 펼치게 고침. 변수 × 윈도우 시험 18개 추가(bash-guard 645). 윈도우 `/harness` 창은 `start` 콘솔이라 저장 뒤 요약 약 2초 후 node 가 끝나면 창도 닫힘(실측, `--close-terminal` 불필요). 검증: 단위 2,499(부하 시간 초과 2건 단독 통과)·E2E 56/56·매트릭스 625/625. 시험 도구: 콘솔 구동 `condrv.ps1`(scratchpad — AttachConsole·WriteConsoleInput·ReadConsoleOutput, 이름이 `con` 이면 윈도우 예약 장치라 안 됨, 여러 PowerShell 호출 사이 시간은 1초 넘게 걸리니 시간 측정은 한 프로세스 안에서).
+
+**병합 뒤 추가 실측 (2026-10-21, 사용자 요청 "확인할 수 있는 건 다 확인")**: 대화형 전체 흐름(새 환경 창 2개 — 첫 실행 추천·적용·신뢰·응답·상태줄·Ctrl+C·`/harness` 새 창 저장·자동 닫힘·`/exit`→`--continue`·종료) · M3 두 세션 `ListAgents`·`SendMessage` 양방향 · M8 창 닫기(WM_CLOSE) 뒤 남는 프로세스 0 · M2 토큰이 실제 갱신된 뒤에도 공유(설정 폴더별 로그인 사본 0) · M11 V3 켠 채 연속 20회 파일 잠김 0 · 병합본 설치본 E2E 56/56 — 전부 통과. 교훈: 병합처럼 코드가 바뀌면 자동 테스트만이 아니라 **대화형 흐름도 다시 돌린다**(사용자 지적 "왜 검증 안 한 거지"). Claude Code 가 처음 묻는 "auto mode 를 기본으로?" 는 사용자 설정을 바꾸므로 시험에서 "No" 를 고른다.
+
+**How to apply:** 커밋·푸시(병합 커밋 + `[memory]`·`[export]`) → 맥으로 돌아가면 병합된 브랜치에서 회귀 확인(M13) → PR 때 `node scripts/release-version.js bump`. 맥으로 돌아가면 위 회귀 확인부터. 윈도우 세션은 메모리를 레포 `memory/` 에 직접 써도 이제 memory-sync 가 전역으로 미러함(윈도우 경로 인식 수정). 관련: [[project-shim-wrapper-direction]] [[reference-wrapper-project-settings-precedence]] [[feedback-report-after-full-tests]] [[feedback-auto-allow-reads-only]]
