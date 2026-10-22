@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: d852c16f-4ed9-436a-affa-a1a250d0233a
-  modified: 2026-10-21T06:52:06.346Z
+  modified: 2026-10-22T00:42:02.226Z
 ---
 
 2026-10-19 분석만 → 2026-10-20 맥에서 계획서(결정 41)·1단계 → **같은 날 사용자 윈도우 PC(Win10 LTSC 2019, PS 5.1, Node 22.17, Git 2.37, Claude Code 2.1.280→304 npm 설치)에서 PoC·2~4단계 구현·실측까지**. 브랜치 `feat/windows-support-poc-2026-10-20`, 2026-10-21 커밋·푸시(`7015ac0`). 상세는 레포 `docs/plans/2026-10-20-windows-support.md` 4.4(PoC 결과)·5.2(2~4단계 결과).
@@ -20,7 +20,7 @@ metadata:
 
 **2026-10-21 대화형 실측 완료**: 이 PC 사용자 PATH 에 `C:\회사\gugbab-claude\gugbab-claude\bin` + 사용자 환경변수 `GUGBAB_HOME`(개발 모드) 등록(원래 PATH 는 세션 scratchpad 백업 — 정식 설치 후 둘 다 지울 것). 자동 키 입력(SendKeys)은 윈도우 포커스 제한으로 안 됨 → `AttachConsole`+`WriteConsoleInput`(가상 키·스캔 코드 채워야 claude 가 받음)+`ReadConsoleOutputCharacter` 로 새 창을 직접 구동해 첫 실행·신뢰·응답·Ctrl+C(키 이벤트)·/harness 새 창 TUI 저장·/exit→--continue·종료 정리 확인. 찾은 것: Git Bash 의 `/` 인자 경로 변환 → sh 래퍼 수정 · 창 하나 입력 멈춤(재현 안 됨) · 이 PC Claude Code 자동 업데이트 중 몇 초간 claude.exe 없음 · 시험 도중 생긴 고아 `git status` 프로세스·오래된 `.git/index.lock`(잠금은 지움, 프로세스 종료는 분류기 거부) · 줄바꿈 정규화 뒤 내용 같은 파일 767개가 status 에 M 으로 보여 인덱스에서 다시 꺼내 정리. 버전 1.0.13.
 
-**남은 것**: 아래 main 추가분 병합 → 맥에서 전체 테스트·`sh scripts/wrapper-e2e.sh --dev`·`node scripts/wrapper-e2e.js --dev` 회귀 확인(M13) · `windows-latest` CI · M2·M3·M11 · PR(커밋은 사용자 요청 시, 윈도우 PC git 전역 작성자는 회사 계정 kty — 커밋 전 local user 를 puk0806 로 바꿀지 확인).
+**남은 것 (2026-10-22 갱신)**: main 병합·M2·M3·M11 은 끝(아래) · 맥 회귀(M13)·`windows-latest` CI 워크플로는 2026-10-22 맥에서 끝(아래 "맥 회귀 확인") · **남은 것 = 아래 "윈도우에서 다시 확인할 것" → PR(bump)**. 커밋은 사용자 요청 시, 윈도우 PC git 전역 작성자는 회사 계정 kty — 커밋 전 local user 를 puk0806 로 바꿀지 확인(지금까지 브랜치 커밋은 모두 puk0806).
 
 **main 추가분 반영할 것 (2026-10-21 맥에서 이 브랜치에 넣음 — 사용자 지시: "윈도우 쪽 작업 다 끝나면 추가 작업 내용만 정리해서 그 피처 브랜치에서 하라고 전달")**
 - 기준: 이 브랜치는 main `c849d1b`(PR #40 v1.0.12)까지 병합됨. 그 뒤 main 추가분 = **PR #41 v1.0.13**(`/harness` 창 저장 뒤 자동 닫힘 — tui `closeDelayMs` 2초 요약 뒤 끝, macOS 만 `--close-terminal` 로 화면 시작 때 그 tty 의 busy 창을 id 로 기억해 한가해지면 닫음) + **PR #42 v1.0.14**(결정 42 bash-guard 고정값 변수 풀기 `resolveLiteralVars`·`isReadOnlyResolved` — 풀어 본 명령이 엄격한 읽기 목록일 때만 새로 자동 허용, deny·ask 는 그대로 / 결정 43 `/harness` 📌 — 프로젝트 파일 `.gugbab.json`·`.lfmall.json` 이 정한 항목 표시, 이 프로젝트 범위에선 바꾸지도 기록하지도 않음). main 쪽 메모리 `feedback_auto_allow_reads_only.md`(자동 허용은 읽기만)도 이 커밋으로 들어옴
@@ -32,4 +32,8 @@ metadata:
 
 **병합 뒤 추가 실측 (2026-10-21, 사용자 요청 "확인할 수 있는 건 다 확인")**: 대화형 전체 흐름(새 환경 창 2개 — 첫 실행 추천·적용·신뢰·응답·상태줄·Ctrl+C·`/harness` 새 창 저장·자동 닫힘·`/exit`→`--continue`·종료) · M3 두 세션 `ListAgents`·`SendMessage` 양방향 · M8 창 닫기(WM_CLOSE) 뒤 남는 프로세스 0 · M2 토큰이 실제 갱신된 뒤에도 공유(설정 폴더별 로그인 사본 0) · M11 V3 켠 채 연속 20회 파일 잠김 0 · 병합본 설치본 E2E 56/56 — 전부 통과. 교훈: 병합처럼 코드가 바뀌면 자동 테스트만이 아니라 **대화형 흐름도 다시 돌린다**(사용자 지적 "왜 검증 안 한 거지"). Claude Code 가 처음 묻는 "auto mode 를 기본으로?" 는 사용자 설정을 바꾸므로 시험에서 "No" 를 고른다.
 
-**How to apply:** 커밋·푸시(병합 커밋 + `[memory]`·`[export]`) → 맥으로 돌아가면 병합된 브랜치에서 회귀 확인(M13) → PR 때 `node scripts/release-version.js bump`. 맥으로 돌아가면 위 회귀 확인부터. 윈도우 세션은 메모리를 레포 `memory/` 에 직접 써도 이제 memory-sync 가 전역으로 미러함(윈도우 경로 인식 수정). 관련: [[project-shim-wrapper-direction]] [[reference-wrapper-project-settings-precedence]] [[feedback-report-after-full-tests]] [[feedback-auto-allow-reads-only]]
+**맥 회귀 확인(M13)·테스트 보강 (2026-10-22 맥, 계획서 5.3)**: 병합본 그대로는 단위 cli 3개 실패(`winfs.test.js` 가 `win:true` 로 맥 임시 폴더를 `\var\…` 로 만들어 진짜 fs 로 찾음 — 시험 결함), 나머지·E2E 43/40·매트릭스 625 통과. 서브에이전트로 윈도우 세션 테스트 품질 검토 + 코드 직접 확인 → 고침: **`winpath.normPath` 가 `..` 를 안 정리해 `C:/proj/../evil`·`/Users/a/p/../q` 가 허용 폴더 아래로 판정(맥도 해당, 호출 쪽이 먼저 resolve 해서 실제로 뚫리진 않음)** → `dotSegments`(루트·드라이브·UNC 공유 위로 못 감) · `winfs` 실행 파일 찾기에 시험용 `fsys` 주입(윈도우 경로 가짜 fs) · `testfs.test.js` 늘 통과 조건 · `wrapper-e2e.js` `blockedBy`(그 도구 호출 결과의 훅 이름으로만 '차단' — 예전 `/force/` 는 프롬프트에 맞아 늘 통과), 보안 7개를 맥·윈도우 공통으로 · `wrapper-matrix.js` 훅 32개는 `status` 켜진 훅 수가 1씩 바뀌는지, 블록 스킬 하나하나(블록 끄기는 기본 켬도 끔 — 고정만 남음) · 빠진 시험(project realpath·config-change-audit `\`·cc-notify fd 0) · `.github/workflows/unit-tests.yml`(macOS·Windows 단위). 고친 뒤 맥: 단위 실패 0 · E2E node 50·sh 40 · 매트릭스 671 · 조립 링크 점검 10,768(scratchpad `linkaudit/audit.js` — 레포에 없음). 남겨 둔 결정: 계획서 :237 "맥에도 있는 것" 5건.
+
+**윈도우에서 다시 확인할 것 (2026-10-22 — 이번 수정이 윈도우 경로를 건드림)**: ① 단위 전체(`winfs` 윈도우 실제 fs 시험 첫 실행, `normPath` 변경이 윈도우 훅 9개 경로 판정에 영향) ② `node scripts/wrapper-e2e.js --dev`(공통 보안 구역·`blockedBy` 가 윈도우 stream-json 에서 맞는지, 56→63 예상) ③ `node scripts/wrapper-matrix.js --dev` ④ 푸시 뒤 Actions `unit-tests` `windows-latest` 첫 실행 ⑤ 실측 기록 없는 M5(`rm -rf ~`·`cat ~/.ssh/id_rsa` 실세션)·M6·M9·M10·M12.
+
+**How to apply:** 윈도우 PC 에서 이 브랜치를 받으면 위 "윈도우에서 다시 확인할 것" 부터 → 통과하면 PR 때 `node scripts/release-version.js bump`. 맥에서는 남은 할 일 없음(:237 5건은 사용자 결정 대기). 윈도우 세션은 메모리를 레포 `memory/` 에 직접 써도 이제 memory-sync 가 전역으로 미러함(윈도우 경로 인식 수정). 관련: [[project-shim-wrapper-direction]] [[reference-wrapper-project-settings-precedence]] [[feedback-report-after-full-tests]] [[feedback-auto-allow-reads-only]]
