@@ -1,6 +1,10 @@
 // bin/gugbab-claude — 실행 래퍼 (가짜 claude 를 PATH 에 두고 시험)
 // 정상 / 악성·우회 / 경계 3계층
-const test = require('node:test');
+// 윈도우: 이 sh 래퍼는 Git Bash 에서 실행되면 바로 cli/launch.js 로 넘긴다(2026-10-20) — 여기 시험(가짜 sh claude·dash 작업 제어)은
+//   맥·리눅스 전용이라 건너뛰고, 같은 동작의 윈도우판은 launch.test.js 가 맡는다. 넘기는 것 자체는 맨 아래 윈도우 시험
+const nodeTest = require('node:test');
+const IS_WIN = process.platform === 'win32';
+const test = IS_WIN ? (name) => nodeTest(name, { skip: 'sh 래퍼 전용 — 윈도우는 launch.test.js' }, () => {}) : nodeTest;
 const assert = require('node:assert');
 const fs = require('fs');
 const os = require('os');
@@ -9,6 +13,30 @@ const { spawnSync } = require('child_process');
 
 const REPO = path.resolve(__dirname, '..');
 const BIN = path.join(REPO, 'bin', 'gugbab-claude');
+
+nodeTest('정상(윈도우): Git Bash 에서 sh 래퍼를 부르면 launch.js 로 넘김 — 하위 명령·가짜 claude 인자 그대로', { skip: !IS_WIN && '윈도우 전용' }, () => {
+  const home = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'bn-home-')));
+  for (const d of ['projects', 'plugins', 'plans']) fs.mkdirSync(path.join(home, '.claude', d), { recursive: true });
+  const data = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'bn-data-')));
+  const proj = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'bn-proj-')));
+  const log = path.join(data, 'calls.jsonl');
+  const fake = path.join(data, 'fake.js');
+  fs.writeFileSync(fake, `require('fs').appendFileSync(process.env.LOG, JSON.stringify(process.argv.slice(2))+'\\n')`);
+  const env = { ...process.env, HOME: home, USERPROFILE: home, GUGBAB_HOME: REPO, GUGBAB_DATA: data, GUGBAB_CLAUDE_BIN: fake, LOG: log };
+  delete env.CLAUDE_CONFIG_DIR;
+  const st = spawnSync('sh', [BIN, 'status'], { cwd: proj, env, encoding: 'utf8', timeout: 60000 });
+  assert.strictEqual(st.status, 0, st.stderr);
+  const r = spawnSync('sh', [BIN, '-p', 'a b', '$(x)'], { cwd: proj, env, encoding: 'utf8', timeout: 60000 });
+  assert.strictEqual(r.status, 0, r.stderr);
+  assert.deepStrictEqual(JSON.parse(fs.readFileSync(log, 'utf8').trim()), ['-p', 'a b', '$(x)']);
+  // 악성·경계: Git Bash 는 / 로 시작하는 인자를 윈도우 경로로 바꾼다("/harness preset" → "C:/Program Files/Git/harness preset", 2026-10-21 실측)
+  //   — 래퍼가 변환을 꺼서 슬래시 커맨드·POSIX 경로·윈도우 경로·한글·셸 문자 모두 받은 그대로
+  fs.rmSync(log, { force: true });
+  const odd = ['/harness preset', '/tmp/x', 'C:\\a b', '//server/share', '한글 인자', '--opt=/etc/x'];
+  const r2 = spawnSync('sh', [BIN, '--raw', '-p', ...odd], { cwd: proj, env, encoding: 'utf8', timeout: 60000 });
+  assert.strictEqual(r2.status, 0, r2.stderr);
+  assert.deepStrictEqual(JSON.parse(fs.readFileSync(log, 'utf8').trim()), ['-p', ...odd]);
+});
 const tmp = (p) => fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), p)));
 
 function setup(fakeClaude) {

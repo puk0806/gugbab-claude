@@ -4,18 +4,20 @@
  * 실행: node .claude/hooks/auto-approve.test.js
  */
 
-const { execSync } = require('child_process')
+const { execSync, spawnSync } = require('child_process')
 const path = require('path')
 const HOOK = path.join(__dirname, 'auto-approve.js')
+const { IS_WIN } = require('./lib/winpath')
+const { linkDir } = require('./lib/testfs')
 
 let passed = 0, failed = 0
 
-function runHook(toolName, toolInput = {}, eventName = 'PreToolUse') {
-  const input = JSON.stringify({ hook_event_name: eventName, tool_name: toolName, tool_input: toolInput })
+// stdin 은 셸을 거치지 않고 직접 넘긴다 — 구 `echo '<json>' | node` 는 윈도우 cmd.exe 가 작은따옴표를 몰라 전부 실패했다 (2026-10-20)
+function runHook(toolName, toolInput = {}, eventName = 'PreToolUse', extra = {}) {
+  const input = JSON.stringify({ hook_event_name: eventName, tool_name: toolName, tool_input: toolInput, ...extra })
+  const r = spawnSync(process.execPath, [HOOK], { input, encoding: 'utf8', timeout: 5000 })
   try {
-    const output = execSync(`echo '${input.replace(/'/g, "\\'")}' | node "${HOOK}"`, {
-      encoding: 'utf8', timeout: 3000,
-    }).trim()
+    const output = (r.stdout || '').trim()
     return output ? JSON.parse(output) : null
   } catch { return null }
 }
@@ -104,7 +106,8 @@ section('프로젝트 밖 쓰기 → 확인 / 안쪽·메모리·임시 → 자�
   test('Write 프로젝트 안 README.md', 'Write', { file_path: 'README.md' }, 'allow')
   test('Write 메모리 폴더', 'Write', { file_path: `${HOME}/.claude/projects/-x/memory/a.md` }, 'allow')
   test('Write 계획 폴더', 'Write', { file_path: `${HOME}/.claude/plans/p.md` }, 'allow')
-  test('Write 임시 폴더', 'Write', { file_path: '/private/tmp/claude-1/a.txt' }, 'allow')
+  // 윈도우 임시 폴더는 %TEMP%(os.tmpdir()) — `/private/tmp` 는 맥 경로라 윈도우에선 의미가 없다
+  test('Write 임시 폴더', 'Write', { file_path: IS_WIN ? path.join(os.tmpdir(), 'claude-1', 'a.txt') : '/private/tmp/claude-1/a.txt' }, 'allow')
   test('NotebookEdit 밖', 'NotebookEdit', { notebook_path: `${HOME}/Documents/n.ipynb` }, 'ask')
 }
 
@@ -144,15 +147,18 @@ section('래퍼 설정 폴더(CLAUDE_CONFIG_DIR) 링크를 거친 메모리·계
   const os = require('os')
   const HOME = os.homedir()
   const realProjects = path.join(HOME, '.claude', 'projects')
+  // CI 러너처럼 ~/.claude/projects 가 없으면 링크가 깨져 시험이 안 된다 — 없을 때만 만들고, 끝나면 만든 것만 지운다 (2026-10-22)
+  const madeByTest = fs.existsSync(path.join(HOME, '.claude')) ? (fs.existsSync(realProjects) ? null : realProjects) : path.join(HOME, '.claude')
+  fs.mkdirSync(realProjects, { recursive: true })
   // 임시 폴더는 원래 자동 허용이라 위장 시험이 안 된다 — 홈 아래에 잠깐 만들고 지운다
   const cfgLinked = fs.mkdtempSync(path.join(HOME, '.aa-cfg-'))
   const cfgReal = fs.mkdtempSync(path.join(HOME, '.aa-cfg-'))
-  fs.symlinkSync(realProjects, path.join(cfgLinked, 'projects'))
+  linkDir(realProjects, path.join(cfgLinked, 'projects')) // 윈도우는 junction (래퍼도 junction 으로 링크)
   fs.mkdirSync(path.join(cfgReal, 'projects'))
   const runIn = (filePath, env) => {
     const input = JSON.stringify({ hook_event_name: 'PreToolUse', tool_name: 'Write', tool_input: { file_path: filePath }, cwd: '/Users/nobody-project' })
     try {
-      const out = execSync(`node "${HOOK}"`, { input, encoding: 'utf8', timeout: 3000, env: { ...process.env, ...env } }).trim()
+      const out = execSync(`node "${HOOK}"`, { input, encoding: 'utf8', timeout: 5000, env: { ...process.env, ...env } }).trim()
       return out ? JSON.parse(out).hookSpecificOutput.permissionDecision : 'null'
     } catch { return 'CRASH' }
   }
@@ -171,6 +177,55 @@ section('래퍼 설정 폴더(CLAUDE_CONFIG_DIR) 링크를 거친 메모리·계
     runIn(path.join(cfgLinked, 'projects', '..', '..', 'escape.txt'), { CLAUDE_CONFIG_DIR: cfgLinked }), 'ask')
   fs.rmSync(cfgLinked, { recursive: true, force: true })
   fs.rmSync(cfgReal, { recursive: true, force: true })
+  if (madeByTest) fs.rmSync(madeByTest, { recursive: true, force: true })
+}
+
+// 2026-10-20 윈도우 2단계 — PoC 실측: 프로젝트 안 Write(C:\repo\poc-tmp.txt, cwd=C:\repo)·%TEMP% 아래 Write 가 allow 대신 ask
+section('윈도우 — 프로젝트·임시·메모리 쓰기 자동 / 밖·우회는 확인')
+if (!IS_WIN) {
+  console.log('  ⚠️ 건너뜀: 윈도우 경로 쓰기 시험 (맥 — 윈도우 PC 에서만 의미 있음)')
+} else {
+  const fs = require('fs')
+  const os = require('os')
+  const HOME = os.homedir()
+  const ROOT = path.resolve(__dirname, '..', '..')              // 이 레포 (C:\…, .git 있음)
+  const at = (desc, filePath, expected, cwd = ROOT) => {
+    const actual = getDecision(runHook('Write', { file_path: filePath, content: 'x' }, 'PreToolUse', { cwd }), 'PreToolUse')
+    const pass = actual === expected
+    console.log(`  ${pass ? '✅' : '❌'} ${desc} → ${pass ? 'PASS' : `FAIL (기대: ${expected}, 실제: ${actual})`}`)
+    pass ? passed++ : failed++
+  }
+  // 정상
+  at('PoC: 프로젝트 안 C:\\<repo>\\poc-tmp.txt (cwd=<repo>)', path.join(ROOT, 'poc-tmp.txt'), 'allow')
+  at('드라이브 소문자 c:\\<repo>\\x', ROOT[0].toLowerCase() + ROOT.slice(1) + '\\x.txt', 'allow')
+  at('슬래시 C:/<repo>/x', ROOT.replace(/\\/g, '/') + '/x.txt', 'allow')
+  at('MSYS /c/<repo>/x', '/' + ROOT[0].toLowerCase() + ROOT.slice(2).replace(/\\/g, '/') + '/x.txt', 'allow')
+  at('공백·한글 하위 폴더 <repo>\\내 폴더\\가.txt', path.join(ROOT, '내 폴더', '가.txt'), 'allow')
+  at('PoC: %TEMP% 아래', path.join(os.tmpdir(), 'poc', 'a.txt'), 'allow')
+  at('~\\.claude\\projects\\-x\\memory\\a.md (~\\ 표기)', '~\\.claude\\projects\\-x\\memory\\a.md', 'allow')
+  at('메모리 폴더 대소문자 섞임 (NTFS 대소문자 무시)', path.join(HOME, '.CLAUDE', 'Projects', '-x', 'memory', 'a.md'), 'allow')
+  // 악성·우회
+  at('접두만 같은 형제 폴더 <repo>-evil\\x', ROOT + '-evil\\x.txt', 'ask')
+  at('<repo>\\..\\x 로 빠져나가기', ROOT + '\\..\\x.txt', 'ask')
+  at('다른 드라이브 D:\\x', 'D:\\x.txt', 'ask')
+  at('UNC \\\\srv\\share\\x', '\\\\srv\\share\\x.txt', 'ask')
+  at('드라이브 상대 C:x.txt (현재 폴더 모름)', 'C:x.txt', 'ask')
+  at('홈 ~\\Documents\\x', '~\\Documents\\x.txt', 'ask')
+  at('%TEMP% 자체를 .. 로 벗어나기', path.join(os.tmpdir(), '..', 'x.txt'), 'ask')
+  at('~/.claude/settings.json (전역 설정)', path.join(HOME, '.claude', 'settings.json'), 'ask')
+  at('C:\\Windows\\System32\\x.dll', 'C:\\Windows\\System32\\x.dll', 'ask')
+  // junction 탈출 — 프로젝트(또는 임시) 안 링크가 밖을 가리키면 글자 위치가 안이어도 확인
+  const base = fs.mkdtempSync(path.join(HOME, '.aa-win-'))
+  const proj = path.join(base, 'proj'), outside = path.join(base, 'outside')
+  fs.mkdirSync(path.join(proj, '.git'), { recursive: true }); fs.mkdirSync(outside)
+  linkDir(outside, path.join(proj, 'out'))
+  const tmpBase = fs.mkdtempSync(path.join(os.tmpdir(), 'aa-win-'))
+  linkDir(outside, path.join(tmpBase, 'out'))
+  at('프로젝트 안 일반 폴더 → 자동', path.join(proj, 'in', 'x.txt'), 'allow', proj)
+  at('프로젝트 안 junction → 밖 폴더 쓰기 → 확인', path.join(proj, 'out', 'x.txt'), 'ask', proj)
+  at('%TEMP% 안 junction → 밖 폴더 쓰기 → 확인', path.join(tmpBase, 'out', 'x.txt'), 'ask', proj)
+  fs.rmSync(base, { recursive: true, force: true })
+  fs.rmSync(tmpBase, { recursive: true, force: true })
 }
 
 section('악성·우회 시도 → null (자동 승인 금지)')

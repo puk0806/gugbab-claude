@@ -129,6 +129,7 @@ async function main() {
   } else {
     return process.exit(0)
   }
+  content = content.replace(/\r\n?/g, '\n') // CRLF(윈도우 autocrlf 체크아웃)도 같은 frontmatter 로 본다
   if (!content) return process.exit(0)
 
   const errors = validate(content)

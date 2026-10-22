@@ -35,8 +35,10 @@ function realCanonical(p) {
   try { return path.join(fs.realpathSync(path.dirname(p)), path.basename(p)); } catch {}
   return path.resolve(p);
 }
+const { msysToWin, toSlash } = require('./lib/winpath');
 function resolveProjectRoot(baseCwd) {
-  const raw = process.env.CLAUDE_PROJECT_DIR || baseCwd || process.cwd();
+  // 윈도우: Git Bash 형식 `/c/…` 는 드라이브 경로로 (맥은 그대로)
+  const raw = msysToWin(process.env.CLAUDE_PROJECT_DIR || baseCwd || process.cwd());
   return realCanonical(raw);
 }
 // realpath는 symlink만 풀 뿐 대소문자를 온디스크 표기로 정규화하지 않는다(실측 확인) —
@@ -84,8 +86,9 @@ const DIAG_RE = /^(.*?)(?:\((\d+),(\d+)\)|:(\d+):(\d+)(?:\s+-)?):?\s+error\s+(TS
 
 // 진단 줄 → { file, code, msg, key } (파일 접두어가 없는 전역 에러는 file='')
 function parseDiag(line) {
-  const m = DIAG_RE.exec(line);
-  if (m) return { file: m[1].trim(), code: m[6], msg: m[7].trim(), key: `${m[1].trim()}|${m[6]}|${m[7].trim()}` };
+  const m = DIAG_RE.exec(line.replace(/\r$/, '')); // 윈도우 tsc·cmd 출력의 CRLF — 메시지 끝 \r 이 키에 섞이지 않게
+  // 윈도우: tsc 가 `src\a.ts` 로 낼 수 있어 편집 파일 상대경로(`src/a.ts`)·베이스라인 키와 맞추려 슬래시로 통일 (맥은 그대로)
+  if (m) { const f = toSlash(m[1].trim()); return { file: f, code: m[6], msg: m[7].trim(), key: `${f}|${m[6]}|${m[7].trim()}` }; }
   const g = /^error\s+(TS\d+):\s*(.*)$/.exec(line);
   if (g) return { file: '', code: g[1], msg: g[2].trim(), key: `|${g[1]}|${g[2].trim()}` };
   return null;
@@ -138,7 +141,8 @@ function runTsc(projectRoot, { incremental, timeout }) {
   let cmd = 'npx --no-install tsc --noEmit';
   if (incremental) cmd += ` --incremental --tsBuildInfoFile "${stateFiles(projectRoot).buildInfo}"`;
   try {
-    execSync(`cd "${projectRoot}" && ${cmd} 2>&1`, { timeout, stdio: ['ignore', 'pipe', 'pipe'] });
+    // 작업 폴더는 cwd 옵션으로 — `cd "…" &&` 는 윈도우 cmd 에서 다른 드라이브로 못 가고(/d 필요) 경로 따옴표에 취약하다 (맥 동작 동일)
+    execSync(`${cmd} 2>&1`, { cwd: projectRoot, timeout, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
     return { ok: true, diags: [], lines: [] };
   } catch (e) {
     const output = (e.stdout || e.stderr || '').toString().trim();
@@ -155,7 +159,7 @@ function runTsc(projectRoot, { incremental, timeout }) {
 
 // ── --seed: 베이스라인만 생성 ──────────────────────────────────────────────
 if (SEED) {
-  const projectRoot = path.resolve(argValue('--project') || process.cwd());
+  const projectRoot = path.resolve(msysToWin(argValue('--project') || process.cwd())); // 윈도우 설치 스크립트(Git Bash)가 `/c/…` 로 넘길 수 있다
   if (!fs.existsSync(path.join(projectRoot, 'tsconfig.json'))) {
     process.stderr.write(`[typescript-quality] --seed: ${projectRoot} 에 tsconfig.json 이 없습니다\n`);
     process.exit(1);
@@ -179,7 +183,7 @@ if (SEED) {
 }
 
 try {
-  const input = JSON.parse(fs.readFileSync('/dev/stdin', 'utf8'));
+  const input = JSON.parse(fs.readFileSync(0, 'utf8')); // fd 0 — '/dev/stdin' 은 윈도우에 없다
   const filePath = input.tool_input?.file_path || input.tool_input?.path;
   if (!filePath) process.exit(0);
   if (!isInsideProject(filePath, input.cwd)) process.exit(0);

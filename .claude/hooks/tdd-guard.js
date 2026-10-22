@@ -10,7 +10,9 @@ function realCanonical(p) {
   return path.resolve(p);
 }
 function resolveProjectRoot(baseCwd) {
-  const raw = process.env.CLAUDE_PROJECT_DIR || baseCwd || process.cwd();
+  let raw = process.env.CLAUDE_PROJECT_DIR || baseCwd || process.cwd();
+  // 윈도우 — Git Bash 표기(/c/…)면 C:/… 로 (그대로 두면 모든 파일이 "프로젝트 밖"이 되어 검사가 꺼진다, 2026-10-20 실측)
+  if (process.platform === 'win32') { const m = /^\/([a-zA-Z])(\/.*)?$/.exec(raw); if (m) raw = `${m[1].toUpperCase()}:${m[2] || '/'}`; }
   return realCanonical(raw);
 }
 // realpath는 symlink만 풀 뿐 대소문자를 온디스크 표기로 정규화하지 않는다(실측 확인) —
@@ -30,7 +32,7 @@ function isInsideProject(targetPath, baseCwd) {
 }
 
 try {
-  const input = JSON.parse(fs.readFileSync('/dev/stdin', 'utf8'));
+  const input = JSON.parse(fs.readFileSync(0, 'utf8')); // fd 0 — '/dev/stdin' 은 윈도우에 없다
   const filePath = input.tool_input?.file_path || input.tool_input?.path;
   if (!filePath) process.exit(0);
   if (!isInsideProject(filePath, input.cwd)) process.exit(0);
@@ -43,20 +45,22 @@ try {
   const dir = path.dirname(filePath);
 
   // 테스트 파일 자체, 설정 파일, 훅 파일은 건너뜀
+  // 윈도우는 file_path 가 `.claude\hooks\…` — 슬래시로 바꿔 판정한다 (2026-10-20 윈도우 PC 실측: 훅·scripts 수정마다 오탐 차단)
+  const slashPath = process.platform === 'win32' ? filePath.replace(/\\/g, '/') : filePath;
   if (
     basename.includes('.test') ||
     basename.includes('.spec') ||
     basename.includes('_test') ||
-    filePath.includes('__tests__') ||
-    filePath.includes('.claude/hooks') ||
-    filePath.includes('.claude/commands') ||
-    /(?:^|\/)scripts\//.test(filePath) ||
+    slashPath.includes('__tests__') ||
+    slashPath.includes('.claude/hooks') ||
+    slashPath.includes('.claude/commands') ||
+    /(?:^|\/)scripts\//.test(slashPath) ||
     // *.config.ts / *.config.js / *.config.mjs 등 순수 설정 파일
     /\.config\.[a-z]+$/.test(path.basename(filePath)) ||
     // Service Worker (브라우저 환경 의존, 단위 테스트 불가)
     basename === 'sw' ||
     // DB 커넥션 셋업 (통합 테스트로만 검증 가능)
-    /(?:^|\/)lib\/db\//.test(filePath)
+    /(?:^|\/)lib\/db\//.test(slashPath)
   ) {
     process.exit(0);
   }

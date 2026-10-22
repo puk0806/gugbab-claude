@@ -5,12 +5,17 @@
 'use strict';
 const os = require('os');
 const path = require('path');
+const { fromMsys } = require('./winfs');
 
-function getPaths({ env = process.env, codeHome } = {}) {
-  const home = env.HOME || os.homedir();
-  const code = path.resolve(codeHome || env.GUGBAB_HOME || path.join(__dirname, '..'));
+// 윈도우: 홈은 os.homedir()(USERPROFILE) 우선 — Git Bash 에서 넘어온 HOME 이 /c/Users/x 일 수 있고, Claude Code 도 %USERPROFILE%\.claude 를 쓴다
+//         GUGBAB_HOME·GUGBAB_DATA 가 MSYS 표기(/c/…)로 오면 C:\… 로 바꾼다 (Git Bash 안 /harness 등에서 부를 때)
+function getPaths({ env = process.env, codeHome, platform = process.platform } = {}) {
+  const win = platform === 'win32';
+  const home = win ? os.homedir() : (env.HOME || os.homedir());
+  const fix = (p) => (win ? fromMsys(p, true) : p);
+  const code = path.resolve(fix(codeHome || env.GUGBAB_HOME || path.join(__dirname, '..')));
   const dev = env.GUGBAB_DEV === '1';
-  const dataDir = env.GUGBAB_DATA ? path.resolve(env.GUGBAB_DATA) : dev ? path.join(home, '.gugbab-dev') : code;
+  const dataDir = env.GUGBAB_DATA ? path.resolve(fix(env.GUGBAB_DATA)) : dev ? path.join(home, '.gugbab-dev') : code;
   return {
     home,
     codeHome: code,

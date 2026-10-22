@@ -10,7 +10,16 @@ const os = require('os')
 const path = require('path')
 const HOOK = path.join(__dirname, 'session-start.js')
 
-let passed = 0, failed = 0
+let passed = 0, failed = 0, skipped = 0
+const IS_WIN = process.platform === 'win32'
+function skip(desc, why) { console.log(`  ⚠️ 건너뜀: ${desc} — ${why}`); skipped++ }
+
+// 윈도우 파일명 금지: 제어문자(개행 등)·" < > | ? * :, 그리고 끝 공백·점(자동 제거돼 " " 같은 이름은 만들 수 없음).
+// lib/testfs 의 nameAllowed 는 제어문자·끝 공백을 보지 않아 여기서 함께 판정한다 (2026-10-20 윈도우 PC 실측: `a\nb.txt` ENOENT)
+function winNameOk(name) {
+  if (!IS_WIN) return true
+  return !/[\x00-\x1f"<>|?*:]/.test(name) && !/[ .]$/.test(name)
+}
 
 function sh(cmd, cwd) {
   execSync(cmd, { cwd, stdio: 'pipe' })
@@ -115,8 +124,18 @@ for (const marker of ['pwned', 'pwned2', 'pwned3']) {
 
 console.log('\n── 경계 — 출력 채널·크기 ──')
 const nlRepo = makeGitRepo({ commits: true })
-fs.writeFileSync(path.join(nlRepo, 'a\nb.txt'), 'x')
-test('개행 포함 파일명 1개 → 미커밋 파일 1개 (줄 수로 세지 않음)', '{}', nlRepo, { stderrIncludes: '미커밋 파일: 1개' })
+if (winNameOk('a\nb.txt')) {
+  fs.writeFileSync(path.join(nlRepo, 'a\nb.txt'), 'x')
+  test('개행 포함 파일명 1개 → 미커밋 파일 1개 (줄 수로 세지 않음)', '{}', nlRepo, { stderrIncludes: '미커밋 파일: 1개' })
+} else {
+  skip('개행 포함 파일명', '윈도우는 파일명에 개행을 쓸 수 없다 (그 PC 에선 생길 수 없는 상태)')
+}
+// 파일 이름 대신 하위 폴더 2개에 파일 2개 — 윈도우에서도 -z 파싱 경로를 같은 방식으로 확인 (구분자 '/' 가 git 출력에 섞임)
+const subRepo = makeGitRepo({ commits: true })
+fs.mkdirSync(path.join(subRepo, 'd 1'), { recursive: true })
+fs.writeFileSync(path.join(subRepo, 'd 1', 'x.txt'), 'x')
+fs.writeFileSync(path.join(subRepo, '한글 파일.txt'), 'x')
+test('공백·한글 경로(폴더 1 + 파일 1) → 미커밋 파일 2개', '{}', subRepo, { stderrIncludes: '미커밋 파일: 2개' })
 const longRepo = makeGitRepo({ commits: true })
 execSync('git commit -q --allow-empty -F -', { cwd: longRepo, input: 'L'.repeat(50_000) + '\n', stdio: ['pipe', 'pipe', 'pipe'] })
 test('초장문 커밋 메시지(50KB) → additionalContext 10,000자 상한 이내', '{}', longRepo, {
@@ -145,9 +164,13 @@ test('tracked "a"·"b" 수정 → 미커밋 파일 2개', '{}',
 test('tracked "a" 수정 + untracked "b" → 미커밋 파일 2개', '{}',
   repoWith((d) => { commitFiles(d, ['a']); fs.writeFileSync(path.join(d, 'a'), 'm\n'); fs.writeFileSync(path.join(d, 'b'), 'n\n') }),
   { stderrIncludes: '미커밋 파일: 2개' })
-test('공백 파일명 " " 수정 → 미커밋 파일 1개', '{}',
-  repoWith((d) => { commitFiles(d, [' ']); fs.writeFileSync(path.join(d, ' '), 'm\n') }),
-  { stderrIncludes: '미커밋 파일: 1개' })
+if (winNameOk(' ')) {
+  test('공백 파일명 " " 수정 → 미커밋 파일 1개', '{}',
+    repoWith((d) => { commitFiles(d, [' ']); fs.writeFileSync(path.join(d, ' '), 'm\n') }),
+    { stderrIncludes: '미커밋 파일: 1개' })
+} else {
+  skip('공백 파일명 " "', '윈도우는 끝 공백을 지워 " " 이름을 만들 수 없다')
+}
 test('선행 공백 파일명 " x" + 1글자 "a" 수정 → 미커밋 파일 2개', '{}',
   repoWith((d) => { commitFiles(d, [' x', 'a']); fs.writeFileSync(path.join(d, ' x'), 'm\n'); fs.writeFileSync(path.join(d, 'a'), 'm\n') }),
   { stderrIncludes: '미커밋 파일: 2개' })
@@ -156,10 +179,10 @@ test('1글자 rename "a" → "b" (staged, 원경로 토큰 1개 추가) → 미�
   { stderrIncludes: '미커밋 파일: 1개' })
 
 // cleanup
-for (const d of [cleanRepo, dirtyRepo, emptyRepo, notARepo, injectRepo, nlRepo, longRepo, ...extraRepos]) {
+for (const d of [cleanRepo, dirtyRepo, emptyRepo, notARepo, injectRepo, nlRepo, subRepo, longRepo, ...extraRepos]) {
   try { fs.rmSync(d, { recursive: true, force: true }) } catch {}
 }
 
-console.log(`\n결과: ${passed}/${passed + failed} 통과`)
+console.log(`\n결과: ${passed}/${passed + failed} 통과${skipped ? ` · 건너뜀 ${skipped}` : ''}`)
 if (failed > 0) { console.log('❌ 일부 테스트 실패'); process.exit(1) }
 console.log('✅ 모든 테스트 통과')

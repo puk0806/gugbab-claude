@@ -13,7 +13,7 @@
 //   브랜치명에 main 이 "포함"될 뿐인 feature/main-fix, main-backup 은 허용.
 // bash-guard.js 를 불러올 수 없으면(단독 설치 등) 기존 정규식 판정으로 폴백한다.
 
-const { execSync } = require('child_process')
+const { execFileSync } = require('child_process')
 const fs = require('fs')
 const path = require('path')
 
@@ -52,8 +52,9 @@ function currentBranchOf(dir) {
   if (branchCache.has(key)) return branchCache.get(key)
   let b = ''
   try {
-    b = execSync('git branch --show-current 2>/dev/null', {
-      encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'], cwd: dir ? path.resolve(dir) : undefined,
+    // 셸을 거치지 않는다 — '2>/dev/null' 은 윈도우 cmd.exe 에서 실패해 브랜치를 못 읽고 통과했다
+    b = execFileSync('git', ['branch', '--show-current'], {
+      encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], cwd: dir ? path.resolve(dir) : undefined,
     }).trim()
   } catch { b = '' }
   branchCache.set(key, b)
@@ -111,19 +112,25 @@ function checkLegacy(cmd, currentBranch) {
   const beforeHeredoc = cmd.split(/<<\s*['"]?[A-Z_]+['"]?/)[0]
   const segments = beforeHeredoc.split(/&&|\|\||;|\||\n/).map(s => s.trim()).filter(Boolean)
   for (const seg of segments) {
-    if (/^git\s+(?:-\S+\s+(?:\S+\s+)?)*push\b/i.test(seg) && !/--delete\b/.test(seg)) {
+    if (/^git(?:\.exe)?\s+(?:-\S+\s+(?:\S+\s+)?)*push\b/i.test(seg) && !/--delete\b/.test(seg)) {
       const onProtected = isProtected(currentBranch)
       const explicit = /\s\+?(?:refs\/heads\/)?(?:main|master)(?:\s|$)/i.test(seg) || /:(?:refs\/heads\/)?(?:main|master)\b/i.test(seg)
       if (onProtected || explicit) blockPush('', onProtected)
     }
-    if (!isProtected(currentBranch) && /^git\s+(checkout\s+-b|switch\s+-c)\b/.test(seg)) blockBranchCreate(currentBranch)
+    if (!isProtected(currentBranch) && /^git(?:\.exe)?\s+(checkout\s+-b|switch\s+-c)\b/i.test(seg)) blockBranchCreate(currentBranch)
   }
 }
 
-try {
-  const raw = fs.readFileSync('/dev/stdin', 'utf8')
-  const input = JSON.parse(raw || '{}')
+// 입력은 fd 0 으로 읽는다('/dev/stdin' 은 윈도우에 없어 예외 → 아래 catch 로 조용히 통과했다).
+// 보안 훅이라 입력이 비었거나 JSON 객체가 아니면 통과시키지 않고 막는다 (2026-10-20 윈도우 계획 1단계)
+let input = null
+try { input = JSON.parse(fs.readFileSync(0, 'utf8')) } catch { input = null }
+if (!input || typeof input !== 'object' || Array.isArray(input)) {
+  process.stderr.write(`${TAG} 훅 입력(JSON)을 읽지 못해 안전을 위해 차단했습니다.\n`)
+  process.exit(2)
+}
 
+try {
   if (input.tool_name !== 'Bash') process.exit(0)
 
   const cmdRaw = input.tool_input && input.tool_input.command

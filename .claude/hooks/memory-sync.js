@@ -14,13 +14,24 @@ const norm = (p) => {
   try { return fs.realpathSync(p); } catch { return path.resolve(p); }
 };
 
+// 윈도우(2026-10-20 실측): file_path 가 `C:\repo\memory\x.md` — `/memory/` 문자열 검사에 안 걸려 미러가 통째로 꺼져 있었다.
+// 윈도우 분기에서만 lib/winpath 를 로드한다(맥·리눅스는 기존 판정 그대로).
+const IS_WIN = process.platform === 'win32';
+const winpath = () => require('./lib/winpath');
+// 문자열 게이트: 윈도우는 `\` → `/`·소문자(NTFS 대소문자 무시)로 바꾼 뒤 본다
+const looksLikeMemory = (p) => (IS_WIN ? winpath().toSlash(p, true).toLowerCase() : p).includes('/memory/');
+// 폴더 비교: 윈도우는 드라이브·폴더 대소문자와 구분자를 가리지 않는다
+const same = (a, b) => (IS_WIN ? winpath().samePath(a, b, true) : a === b);
+
 let input = '';
 process.stdin.on('data', d => (input += d));
 process.stdin.on('end', () => {
   try {
     const data = JSON.parse(input);
-    const filePath = data?.tool_input?.file_path || '';
-    if (!filePath.includes('/memory/')) process.exit(0);
+    const rawPath = data?.tool_input?.file_path || '';
+    // Git Bash MSYS 표기(`/c/…`)가 오면 드라이브 표기로 — path.resolve 가 `C:\c\…` 로 잘못 붙이지 않게
+    const filePath = IS_WIN && typeof rawPath === 'string' ? winpath().msysToWin(rawPath, true) : rawPath;
+    if (!looksLikeMemory(filePath)) process.exit(0);
 
     const projectDir = process.env.CLAUDE_PROJECT_DIR;
     if (!projectDir) process.exit(0);
@@ -39,13 +50,13 @@ process.stdin.on('end', () => {
 
     // 수정된 쪽 판별 → 반대쪽으로 복사
     let dstDir = null;
-    if (dir === globalMemory) dstDir = repoMemory;
-    else if (dir === repoMemory) dstDir = globalMemory;
-    if (!dstDir || dstDir === dir) process.exit(0);
+    if (same(dir, globalMemory)) dstDir = repoMemory;
+    else if (same(dir, repoMemory)) dstDir = globalMemory;
+    if (!dstDir || same(dstDir, dir)) process.exit(0);
 
     // N 프로젝트 방어: 레포 memory/ 가 애초에 없으면(= Y 프로젝트로 설정된 적 없음)
     // 이 훅이 잘못 실행되더라도 레포에 memory/ 를 새로 만들지 않는다
-    if (dstDir === repoMemory && !fs.existsSync(repoMemory)) process.exit(0);
+    if (same(dstDir, repoMemory) && !fs.existsSync(repoMemory)) process.exit(0);
 
     fs.mkdirSync(dstDir, { recursive: true });
     fs.copyFileSync(written, path.join(dstDir, path.basename(written)));

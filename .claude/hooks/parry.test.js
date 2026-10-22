@@ -55,6 +55,17 @@ test('.env 파일은 스킵 (의도적 시크릿 보관)', 'Write', '/proj/.env'
 test('Edit 도구는 검사 안 함', 'Edit', '/tmp/x.ts', `const k = "${fakeAnthropicKey}"`, 0)
 test('빈 내용', 'Write', '/tmp/empty.ts', '', 0)
 
+console.log('\n── 입력을 못 읽으면 차단 (2026-10-20 — 예전엔 통과, 윈도우에서 /dev/stdin 이 없어 시크릿 검사가 꺼졌다) ──')
+{
+  const { spawnSync } = require('child_process')
+  for (const [label, input] of [['깨진 JSON', '{broken'], ['빈 stdin', ''], ['JSON null', 'null'], ['JSON 배열', '[]'], ['따옴표 문자열', '"x"']]) {
+    const r = spawnSync('node', [HOOK], { input, encoding: 'utf8', timeout: 5000 })
+    const ok = r.status === 2 && r.stderr.includes('입력(JSON)을 읽지 못해')
+    console.log(`  ${ok ? '✅' : '❌'} ${label} → exit 2 → ${ok ? 'PASS' : `FAIL (exit ${r.status})`}`)
+    ok ? passed++ : failed++
+  }
+}
+
 console.log(`\n결과: ${passed}/${passed + failed} 통과`)
 if (failed > 0) { console.log('❌ 일부 테스트 실패'); process.exit(1) }
 console.log('✅ 모든 테스트 통과')

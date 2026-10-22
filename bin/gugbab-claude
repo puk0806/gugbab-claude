@@ -16,6 +16,17 @@ while [ -L "$self" ]; do
 done
 code=$(cd "$(dirname "$self")/.." && pwd -P)
 
+# 윈도우 Git Bash(MINGW·MSYS·Cygwin) — Node 래퍼로 넘긴다 (2026-10-20 윈도우 지원 3단계)
+#   claude 가 Git Bash 안 Bash 도구로 gugbab-claude 를 부를 때(/harness 등)도, 사용자가 Git Bash 창에서 칠 때도 같은 동작
+#   Git Bash 는 윈도우 프로그램(node)에 넘기는 인자 중 / 로 시작하는 것을 경로로 바꾼다("/harness preset" → "C:/Program Files/Git/harness preset",
+#   2026-10-21 실측) — 인자는 그대로 넘기도록 변환을 끄고(MSYS_NO_PATHCONV·MSYS2_ARG_CONV_EXCL), launch.js 경로만 직접 윈도우 표기로
+case "$(uname -s 2>/dev/null)" in
+  MINGW*|MSYS*|CYGWIN*)
+    launch="$code/cli/launch.js"
+    command -v cygpath >/dev/null 2>&1 && launch=$(cygpath -w "$launch")
+    MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' exec node "$launch" "$@" ;;
+esac
+
 # 배포 모드는 GUGBAB_DEV=0 을 넘긴다 — claude 세션 안에서 다시 부를 때(/harness 의 status·on·off 등) 넘겨받은
 # GUGBAB_HOME 때문에 개발 모드로 잘못 판정되면(자동 최신화 끔 표시 + 데이터가 ~/.gugbab-dev 로) 안 되므로 (2026-10-17)
 if [ "${GUGBAB_DEV:-}" = "0" ]; then

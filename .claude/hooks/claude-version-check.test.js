@@ -30,8 +30,20 @@ const DAY = 24 * 60 * 60 * 1000
 const T0 = Date.parse('2026-10-17T00:00:00Z')
 
 // 가짜 claude 실행 파일
-function fakeClaude(out, code = 0) {
-  const f = path.join(base, `claude-${++n}.sh`)
+const IS_WIN = process.platform === 'win32'
+const { trySymlink } = require('./lib/testfs')
+let skipped = 0
+const skip = (desc, why) => { console.log(`  ⚠️ 건너뜀: ${desc} — ${why}`); skipped++ }
+function fakeClaude(out, code = 0, dirPath = base) {
+  if (IS_WIN) {
+    // 윈도우는 sh 를 못 돌린다 — npm 설치와 같은 .cmd 래퍼가 node 스크립트를 부르는 모양으로 만든다
+    const js = path.join(dirPath, `claude-${++n}.js`)
+    fs.writeFileSync(js, `process.stdout.write(${JSON.stringify(out + '\n')}); process.exit(${code})\n`)
+    const f = js.replace(/\.js$/, '.cmd')
+    fs.writeFileSync(f, `@node "%~dp0${path.basename(js)}" %*\r\n`)
+    return f
+  }
+  const f = path.join(dirPath, `claude-${++n}.sh`)
   fs.writeFileSync(f, `#!/bin/sh\nprintf '%s\\n' '${out.replace(/'/g, "'\\''")}'\nexit ${code}\n`)
   fs.chmodSync(f, 0o755)
   return f
@@ -40,7 +52,7 @@ function fakeClaude(out, code = 0) {
 function runHook(input, env = {}) {
   return new Promise((resolve) => {
     const started = Date.now()
-    const p = spawn('node', [HOOK], { env: { ...process.env, ...env } })
+    const p = spawn(process.execPath, [HOOK], { env: { ...process.env, ...env } }) // PATH 를 바꾼 시험에서도 node 를 찾도록
     let out = '', err = ''
     p.stdout.on('data', (d) => { out += d }); p.stderr.on('data', (d) => { err += d })
     const killer = setTimeout(() => p.kill('SIGKILL'), 10000)
@@ -109,10 +121,22 @@ function server(handler) {
     const d = dir()
     const outside = path.join(base, 'outside.json')
     fs.writeFileSync(outside, JSON.stringify({ lastSeen: '1.0.0' }))
-    fs.symlinkSync(outside, path.join(d, 'claude-version.json'))
-    const r = await checkClaudeVersion({ stateDir: d, now: T0, exec: exec('2.1.296'), fetchLatest: fetchOf(null) })
-    check('기록 파일이 링크면 읽지 않음(변경 안내 없음)', !r.changed, r)
-    check('링크를 덮어쓰지 않음(밖 파일 그대로)', JSON.parse(fs.readFileSync(outside, 'utf8')).lastSeen === '1.0.0')
+    if (trySymlink(outside, path.join(d, 'claude-version.json'), 'file') === null) {
+      skip('기록 파일이 심볼릭 링크', '윈도우 개발자 모드 꺼짐 — 파일 심볼릭 링크 생성 불가(EPERM)')
+    } else {
+      const r = await checkClaudeVersion({ stateDir: d, now: T0, exec: exec('2.1.296'), fetchLatest: fetchOf(null) })
+      check('기록 파일이 링크면 읽지 않음(변경 안내 없음)', !r.changed, r)
+      check('링크를 덮어쓰지 않음(밖 파일 그대로)', JSON.parse(fs.readFileSync(outside, 'utf8')).lastSeen === '1.0.0')
+    }
+  }
+  {
+    // 하드링크는 윈도우에서도 권한 없이 만들 수 있다 — 밖 파일과 같은 실체를 가리켜도 쓰기(tmp → rename)는 링크만 바꾸고 밖 파일은 그대로
+    const d = dir()
+    const outside = path.join(base, 'outside-hard.json')
+    fs.writeFileSync(outside, JSON.stringify({ lastSeen: '1.0.0' }))
+    fs.linkSync(outside, path.join(d, 'claude-version.json'))
+    await checkClaudeVersion({ stateDir: d, now: T0, exec: exec('2.1.296'), fetchLatest: fetchOf(null) })
+    check('기록 파일이 하드링크여도 밖 파일 내용은 바뀌지 않음', JSON.parse(fs.readFileSync(outside, 'utf8')).lastSeen === '1.0.0')
   }
   for (const [name, content] of [['배열', '[1,2]'], ['깨진 JSON', '{broken'], ['초대용량', JSON.stringify({ lastSeen: '1.0.0', pad: 'x'.repeat(200000) })], ['이상한 lastSeen', JSON.stringify({ lastSeen: '1.0.0; rm -rf ~', latest: '<script>' })]]) {
     const d = dir()
@@ -186,7 +210,55 @@ function server(handler) {
     check('claude 가 실패 종료 → exit 0 출력 없음', r.code === 0 && r.out === '', r)
   }
 
-  console.log(`\n결과: ${passed} 통과 / ${failed} 실패`)
+  if (IS_WIN) {
+    console.log('\n[윈도우] PATH 에서 claude 찾기 — npm(.cmd)·네이티브(.exe), sh·.ps1·폴더는 실행 파일 아님')
+    const { s, url } = await server((req, res) => { res.setHeader('content-type', 'application/json'); res.end(JSON.stringify({ version: '2.3.0' })) })
+    const nodeDir = path.dirname(process.execPath)
+    const junk = path.join(base, 'junk'); fs.mkdirSync(path.join(junk, 'claude.exe'), { recursive: true }) // 이름만 .exe 인 폴더
+    fs.writeFileSync(path.join(junk, 'claude'), '#!/bin/sh\necho 9.9.9\n') // npm 의 확장자 없는 sh shim
+    fs.writeFileSync(path.join(junk, 'claude.ps1'), 'Write-Output "9.9.9"\r\n')
+    fs.writeFileSync(path.join(junk, 'claude.js'), 'console.log("9.9.9")\n') // PATHEXT 에 .JS 가 있어도 스크립트 호스트 실행은 제외
+    const npmDir = path.join(base, 'npm 전역 폴더'); fs.mkdirSync(npmDir)
+    const cmdFile = fakeClaude('2.1.296 (Claude Code)', 0, npmDir)
+    fs.renameSync(cmdFile, path.join(npmDir, 'claude.cmd'))
+    fs.writeFileSync(path.join(npmDir, 'claude.cmd'), `@node "%~dp0${path.basename(cmdFile, '.cmd')}.js" %*\r\n`)
+    fs.writeFileSync(path.join(npmDir, 'claude'), '#!/bin/sh\n')
+    const envBase = { GUGBAB_CLAUDE_BIN: '', GUGBAB_TEST_NPM_LATEST_URL: url, PATHEXT: '.COM;.EXE;.BAT;.CMD;.VBS;.JS' }
+    let r = await runHook({ hook_event_name: 'SessionStart' }, { ...envBase, GUGBAB_STATE_DIR: dir(), PATH: [junk, npmDir, nodeDir].join(path.delimiter) })
+    check('[윈도우] PATH 앞쪽 폴더·sh·.ps1·.js 는 건너뛰고 공백·한글 폴더의 claude.cmd 실행 → 안내', r.code === 0 && /새 버전 2\.3\.0 .*지금 2\.1\.296/.test(r.ctx || ''), r)
+    r = await runHook({ hook_event_name: 'SessionStart' }, { ...envBase, GUGBAB_STATE_DIR: dir(), PATH: [junk, nodeDir].join(path.delimiter) })
+    check('[윈도우] PATH 에 실행 가능한 claude 없음(폴더·sh·.ps1·.js 만) → 조용히 exit 0', r.code === 0 && r.out === '', r)
+    r = await runHook({ hook_event_name: 'SessionStart' }, { ...envBase, GUGBAB_STATE_DIR: dir(), GUGBAB_CLAUDE_BIN: path.join(npmDir, 'claude'), PATH: nodeDir })
+    check('[윈도우] GUGBAB_CLAUDE_BIN 이 확장자 없는 경로 → 옆의 claude.cmd 사용', r.code === 0 && /2\.1\.296/.test(r.ctx || ''), r)
+    // 악성: % 가 든 폴더의 claude.cmd — cmd 가 따옴표 안에서도 %VAR% 를 확장하므로 실행하지 않음
+    const pctDir = path.join(base, '%COMSPEC%'); fs.mkdirSync(pctDir)
+    const pctCmd = fakeClaude('2.1.296 (Claude Code)', 0, pctDir)
+    r = await runHook({ hook_event_name: 'SessionStart' }, { ...envBase, GUGBAB_STATE_DIR: dir(), GUGBAB_CLAUDE_BIN: pctCmd, PATH: nodeDir })
+    check('[윈도우] 경로에 % 가 든 .cmd → 실행 거부, 조용히 exit 0', r.code === 0 && r.out === '', r)
+    // 악성: 출력에 cmd 메타문자가 섞인 이름 — 인자는 고정이라 주입 없음 (& 가 든 폴더)
+    const ampDir = path.join(base, 'a&echo PWNED'); fs.mkdirSync(ampDir)
+    const ampCmd = fakeClaude('2.1.296 (Claude Code)', 0, ampDir)
+    r = await runHook({ hook_event_name: 'SessionStart' }, { ...envBase, GUGBAB_STATE_DIR: dir(), GUGBAB_CLAUDE_BIN: ampCmd, PATH: nodeDir })
+    check('[윈도우] & 가 든 폴더의 .cmd → 따옴표로 감싸 정상 실행, 주입 출력 없음', r.code === 0 && /2\.1\.296/.test(r.ctx || '') && !/PWNED/.test(r.out.replace(/a&echo PWNED/g, '')), r)
+    check('[윈도우] winResolve: 드라이브 소문자 경로도 파일 그대로 인정', (() => { const { winResolve } = require('./claude-version-check.js'); const p = path.join(npmDir, 'claude.cmd'); return winResolve(p[0].toLowerCase() + p.slice(1)) !== null })())
+    // npm 설치 — .cmd 옆 node_modules\@anthropic-ai\claude-code\package.json 버전을 실행 없이 읽음 (claude.exe --version 이 윈도우에서 십수 초)
+    const { npmPackageVersion } = require('./claude-version-check.js')
+    const npmPkg = (root, obj) => { const d = path.join(root, 'node_modules', '@anthropic-ai', 'claude-code'); fs.mkdirSync(d, { recursive: true }); fs.writeFileSync(path.join(d, 'package.json'), typeof obj === 'string' ? obj : JSON.stringify(obj)) }
+    const pkgDir = path.join(base, 'npm-pkg'); fs.mkdirSync(pkgDir)
+    fs.writeFileSync(path.join(pkgDir, 'claude.cmd'), '@exit /b 9\r\n') // 실행되면 실패하는 가짜 — 실행 없이 읽는지 확인
+    npmPkg(pkgDir, { name: '@anthropic-ai/claude-code', version: '2.1.304' })
+    r = await runHook({ hook_event_name: 'SessionStart' }, { ...envBase, GUGBAB_STATE_DIR: dir(), GUGBAB_CLAUDE_BIN: path.join(pkgDir, 'claude.cmd'), PATH: nodeDir })
+    check('[윈도우] npm 설치 → package.json 버전을 실행 없이 읽음', r.code === 0 && /2\.1\.304/.test(r.ctx || ''), r)
+    // 악성·경계: 이름이 다르거나 버전 모양이 아니거나 깨진 package.json → 믿지 않음(null)
+    const bad = (obj) => { const d = fs.mkdtempSync(path.join(base, 'npkg-')); fs.writeFileSync(path.join(d, 'claude.cmd'), ''); npmPkg(d, obj); return npmPackageVersion(path.join(d, 'claude.cmd')) }
+    check('[윈도우] package.json 이름이 다르면 무시', bad({ name: 'evil-claude', version: '9.9.9' }) === null)
+    check('[윈도우] 버전에 문자 주입 → 무시', bad({ name: '@anthropic-ai/claude-code', version: '1.0.0 (Claude Code)\nINJECT' }) === null)
+    check('[윈도우] 깨진 package.json → 무시', bad('{broken') === null)
+    check('[윈도우] package.json 없음 → null', npmPackageVersion(path.join(base, 'nowhere', 'claude.cmd')) === null)
+    s.close()
+  }
+
+  console.log(`\n결과: ${passed} 통과 / ${failed} 실패${skipped ? ` (건너뜀 ${skipped})` : ''}`)
   try { fs.rmSync(base, { recursive: true, force: true }) } catch { /* 무시 */ }
   process.exit(failed ? 1 : 0)
 })()

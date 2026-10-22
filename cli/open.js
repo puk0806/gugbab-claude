@@ -6,7 +6,8 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
-const { execFileSync } = require('child_process');
+const { execFileSync, spawn } = require('child_process');
+const { realOrNull } = require('./winfs');
 
 const TOKEN_RE = /^[A-Za-z0-9._-]{1,80}$/;
 const shq = (s) => `'${String(s).replace(/'/g, `'\\''`)}'`;
@@ -90,17 +91,42 @@ function planLaunch({ env, platform, bin, root }) {
     const tcmd = sessionCommand({ bin, root, env, closeTerminal: true });
     return { kind: 'terminal', cmd: tcmd, argv: ['osascript', '-e', `tell application "Terminal" to do script ${asq(`${tcmd}; exit`)}`, '-e', 'tell application "Terminal" to activate'] };
   }
+  if (platform === 'win32') return planWindows({ bin, root, node: process.execPath });
   return manual;
+}
+
+// 윈도우(2026-10-20) — `start` 로 새 콘솔 창에 `node <main.js> harness --session` (환경변수는 창이 물려받는다)
+//   cmd 줄은 /s /c "…" 로 통째로 감싸 넘기고(windowsVerbatimArguments), 큰따옴표 안에서도 해석되는 글자(" % ! 줄바꿈)는 거부
+const CMD_BAD = /["%!\r\n\0]/;
+function planWindows({ bin, root, node }) {
+  const main = path.win32.join(path.win32.dirname(bin), '..', 'cli', 'main.js');
+  const manualCmd = `cd /d "${root}" && gugbab-claude harness --session`;
+  const manual = { kind: 'manual', cmd: manualCmd, message: `다른 터미널(PowerShell·cmd)에서 실행하세요: ${manualCmd}` };
+  if ([root, node, main].some(v => CMD_BAD.test(String(v)))) return manual;
+  const line = `start "gugbab harness" /D "${root}" "${node}" "${main}" harness --session`;
+  return { kind: 'console', cmd: line, argv: ['cmd.exe', ['/d', '/s', '/c', `"${line}"`]] };
 }
 
 function describePlan(p) {
   if (p.kind === 'comux') return [p.split.map(show).join(' '), `comux send <새 창> ${shq(`${p.cmd}; exit`)}`, 'comux send <새 창> <엔터>'].join('\n');
   if (p.kind === 'manual') return p.message;
+  if (p.kind === 'console') return `cmd.exe /d /s /c "${p.cmd}"`;
   return p.argv.map(show).join(' ');
 }
 
-function launch(p, { exec = (cmd, args) => execFileSync(cmd, args, { encoding: 'utf8', timeout: 10000, stdio: ['ignore', 'pipe', 'pipe'] }) } = {}) {
+const defaultDetached = (file, args) => {
+  const child = spawn(file, args, { detached: true, stdio: 'ignore', windowsVerbatimArguments: true });
+  child.on('error', () => { /* 창을 못 띄움 — 아래 메시지로 안내 */ });
+  child.unref();
+};
+
+function launch(p, { exec = (cmd, args) => execFileSync(cmd, args, { encoding: 'utf8', timeout: 10000, stdio: ['ignore', 'pipe', 'pipe'] }), detached = defaultDetached } = {}) {
   if (p.kind === 'manual') return p.message;
+  if (p.kind === 'console') {
+    try { detached(p.argv[0], p.argv[1]); } catch (e) { throw new Error(`화면을 띄우지 못했습니다 (${e.message})\n다른 터미널에서 실행하세요: ${p.cmd}`); }
+    // start 로 연 콘솔은 그 안의 node 가 끝나면 창도 닫힌다 — macOS 의 --close-terminal 같은 처리가 필요 없다
+    return '새 창에 하네스 화면을 띄웠습니다 — Enter 로 저장하면 결과를 2초 보여 주고 창이 닫힙니다';
+  }
   try {
     if (p.kind === 'comux') {
       let pane = '';
@@ -122,11 +148,11 @@ function rootFromConfigDir(env, projectsDir) {
   const cfg = env.CLAUDE_CONFIG_DIR;
   if (!cfg || !path.isAbsolute(cfg)) return null;
   try {
-    const real = fs.realpathSync(cfg);
-    if (path.basename(real) !== '.claude' || path.dirname(path.dirname(real)) !== fs.realpathSync(projectsDir)) return null;
+    const real = realOrNull(cfg);
+    if (!real || path.basename(real) !== '.claude' || path.dirname(path.dirname(real)) !== realOrNull(projectsDir)) return null;
     const st = JSON.parse(fs.readFileSync(path.join(real, '.gugbab-state.json'), 'utf8'));
     return st && typeof st.projectRoot === 'string' && path.isAbsolute(st.projectRoot) ? st.projectRoot : null;
   } catch { return null; }
 }
 
-module.exports = { shq, sessionCommand, planLaunch, describePlan, launch, rootFromConfigDir, terminalCloseScript, scheduleTerminalClose, currentTty };
+module.exports = { shq, sessionCommand, planLaunch, planWindows, describePlan, launch, rootFromConfigDir, terminalCloseScript, scheduleTerminalClose, currentTty };

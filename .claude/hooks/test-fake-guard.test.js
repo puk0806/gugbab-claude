@@ -87,7 +87,7 @@ console.log('\n── 프로젝트 밖 cwd는 통과(스킵) — 경로 정규�
   fs.mkdirSync(outSideReal, { recursive: true })
   const linkCwd = path.join(root, 'linked-cwd')
   try {
-    fs.symlinkSync(outSideReal, linkCwd)
+    require('./lib/testfs').linkDir(outSideReal, linkCwd) // 폴더 링크 — 윈도우는 junction(권한 불필요)
     test('심볼릭 링크로 프로젝트 안에 들어온 밖의 디렉토리(가짜 통과 위장) → realpath 기준 exit 0',
       'echo "All tests passed"', 0, { cwd: linkCwd, projectDir: root })
   } catch (e) {
@@ -105,6 +105,13 @@ console.log('\n── 프로젝트 밖 cwd는 통과(스킵) — 경로 정규�
     console.log('  ⚠️  이 파일시스템은 대소문자 구분(case-sensitive) — 대소문자 정규화 테스트 스킵')
   }
 
+  if (process.platform === 'win32') {
+    // 윈도우: Git Bash 형식 CLAUDE_PROJECT_DIR(/c/…) — 예전엔 `C:\c\…` 로 풀려 cwd 가 "프로젝트 밖"(검사 꺼짐)
+    const msys = '/' + root[0].toLowerCase() + root.slice(2).replace(/\\/g, '/')
+    test('[윈도우] CLAUDE_PROJECT_DIR /c/… + 프로젝트 안 cwd → 가짜 통과 차단 exit 2', 'echo "All tests passed"', 2, { cwd: root, projectDir: msys })
+    test('[윈도우] /c/… 프로젝트 + 밖의 cwd → 여전히 스킵 exit 0', 'echo "All tests passed"', 0, { cwd: outside, projectDir: msys })
+    test('[윈도우] cwd 드라이브 소문자(c:\\…) → 같은 프로젝트, 차단 exit 2', 'echo "All tests passed"', 2, { cwd: root[0].toLowerCase() + root.slice(1), projectDir: root })
+  }
   fs.rmSync(tmp, { recursive: true, force: true })
 }
 

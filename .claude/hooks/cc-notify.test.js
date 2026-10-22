@@ -86,6 +86,21 @@ test('last_assistant_message 에 셸 메타문자 → 알림 문구에 반영 �
   { notifyCalled: isMac, logIncludes: isMac ? '작업이 완료됐어요' : undefined, logExcludes: 'pwned' })
 test('JSON null → exit 0, 알림 호출 안 함(크래시 없음)', 'null', { notifyCalled: false })
 
+// 입력은 fd 0 으로 읽는다('/dev/stdin' 은 윈도우에 없음 — 2026-10-20). 파이프가 아닌 파일로 넘어와도 읽혀야 한다 (2026-10-22 시험 추가)
+{
+  const { dir, logFile } = makeFakeOsascriptDir()
+  const inFile = path.join(dir, 'in.json')
+  fs.writeFileSync(inFile, JSON.stringify({ hook_event_name: 'Stop', stop_hook_active: false }))
+  const fd = fs.openSync(inFile, 'r')
+  const r = spawnSync('node', [HOOK], { stdio: [fd, 'pipe', 'pipe'], encoding: 'utf8', timeout: 5000, env: { ...process.env, PATH: `${dir}:${process.env.PATH}` } })
+  fs.closeSync(fd)
+  const log = readLog(logFile)
+  const pass = r.status === 0 && (isMac ? (log !== null && log.includes('작업이 완료됐어요')) : log === null)
+  console.log(`  ${pass ? '✅' : '❌'} stdin 이 파일(파이프 아님)이어도 fd 0 으로 읽음 → ${pass ? 'PASS' : `FAIL (exit ${r.status}, log: ${JSON.stringify(log)})`}`)
+  pass ? passed++ : failed++
+  try { fs.rmSync(dir, { recursive: true, force: true }) } catch {}
+}
+
 console.log('\n── 악성/경계 — stdin 조작 ──')
 test('빈 stdin → JSON.parse 실패 → exit 0, 알림 호출 안 함', '', { notifyCalled: false })
 test('깨진 JSON stdin → exit 0, 알림 호출 안 함', '{broken json,,,', { notifyCalled: false })

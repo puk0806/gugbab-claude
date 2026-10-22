@@ -25,7 +25,8 @@ let input = {};
 try { const v = JSON.parse(raw); if (v && typeof v === 'object') input = v; } catch { /* 깨진 입력 — 그대로 전달 */ }
 
 const paths = getPaths();
-const realOr = (p) => { try { return fs.realpathSync(p); } catch { return null; } };
+// 윈도우는 실제 표기(.native) — JS realpath 는 입력 대소문자를 그대로 둬 같은 폴더가 다른 문자열이 된다 (winfs.js)
+const realOr = (p) => require('./winfs').realOrNull(p);
 
 function logError(hookId, msg) {
   try {

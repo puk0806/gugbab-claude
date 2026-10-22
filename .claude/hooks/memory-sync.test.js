@@ -12,8 +12,10 @@ const fs = require('fs')
 const os = require('os')
 const path = require('path')
 const HOOK = path.join(__dirname, 'memory-sync.js')
+const { IS_WIN, linkDir, trySymlink } = require('./lib/testfs')
 
-let passed = 0, failed = 0
+let passed = 0, failed = 0, skipped = 0
+function skip(desc, why) { console.log(`  ⚠️ 건너뜀: ${desc} — ${why}`); skipped++ }
 
 function assert(desc, actual, expected) {
   const pass = JSON.stringify(actual) === JSON.stringify(expected)
@@ -23,19 +25,24 @@ function assert(desc, actual, expected) {
 
 function section(title) { console.log(`\n── ${title} ──`) }
 
-// 훅과 동일한 인코딩 규칙 (/ 와 _ 를 모두 - 로 치환)
-function encode(projectDir) { return projectDir.replace(/[/_]/g, '-') }
+// Claude Code 실측 인코딩 (영숫자 외 모든 문자 → '-', 2026-09-26 맥·2026-10-20 윈도우 실측).
+// 기존 `/ _` 만 치환하던 식은 맥 mkdtemp 경로(영숫자·/·_ 뿐)에서는 같은 결과였지만 윈도우 `C:\…` 의 `:`·`\` 를 못 바꿔
+// `projects\C:\Users\…` 같은 깨진 경로를 만들었다 → 실측 규칙으로 교체 (맥 결과는 동일)
+function encode(projectDir) { return projectDir.replace(/[^A-Za-z0-9]/g, '-') }
 
 function globalMemoryOf(tmpHome, repoDir) {
   return path.join(tmpHome, '.claude', 'projects', encode(repoDir), 'memory')
 }
+
+// 홈 격리: 윈도우 os.homedir() 는 HOME 이 아니라 USERPROFILE 을 본다 — 둘 다 바꿔야 실제 홈을 건드리지 않는다
+function homeEnv(env, home) { env.HOME = home; env.USERPROFILE = home; return env }
 
 function runHook(toolInput, { home, repoDir, toolName = 'Write' } = {}) {
   const input = JSON.stringify({
     hook_event_name: 'PostToolUse', tool_name: toolName, tool_input: toolInput,
   })
   const env = { ...process.env }
-  if (home) env.HOME = home
+  if (home) homeEnv(env, home)
   if (repoDir) env.CLAUDE_PROJECT_DIR = repoDir
   else delete env.CLAUDE_PROJECT_DIR
   return spawnSync('node', [HOOK], { input, encoding: 'utf8', timeout: 5000, env })
@@ -114,7 +121,7 @@ section('악성 — ../ 경로 조작으로 memory 밖 쓰기 유도')
   // path.join은 '..'를 정규화해버려 '/memory/' 문자열이 사라지므로, 문자열을 직접 이어붙여
   // "게이트(문자열에 '/memory/' 포함)는 통과하지만 실제로는 memory 밖을 가리키는" 상황을 재현한다
   const traversalPath = `${repoMemory}/../secret.txt`
-  assert('문자열 표현에 /memory/ 포함 (게이트 통과 확인용)', traversalPath.includes('/memory/'), true)
+  assert('문자열 표현에 /memory/ 포함 (게이트 통과 확인용)', traversalPath.replace(/\\/g, '/').includes('/memory/'), true)
 
   const r = runHook({ file_path: traversalPath }, { home, repoDir: repo })
   assert('exit 0 (조용히 무시)', r.status, 0)
@@ -132,12 +139,65 @@ section('악성 — 심볼릭 링크로 memory 밖 파일 유출 시도')
   const outsideSecret = path.join(home, 'outside-secret.txt')
   fs.writeFileSync(outsideSecret, 'top-secret-via-symlink')
   const linkPath = path.join(globalMemory, 'link.md')
-  fs.symlinkSync(outsideSecret, linkPath)
+  if (trySymlink(outsideSecret, linkPath) === null) {
+    skip('파일 심볼릭 링크 유출', '윈도우 권한 부족(EPERM) — 이 PC 에선 공격자도 파일 링크를 못 만든다')
+  } else {
+    const r = runHook({ file_path: linkPath }, { home, repoDir: repo })
+    assert('exit 0 (조용히 무시)', r.status, 0)
+    assert('레포 memory/ 로 심볼릭 링크 대상이 복사되지 않음', fs.readdirSync(repoMemory).length, 0)
+  }
 
-  const r = runHook({ file_path: linkPath }, { home, repoDir: repo })
-  assert('exit 0 (조용히 무시)', r.status, 0)
-  assert('레포 memory/ 로 심볼릭 링크 대상이 복사되지 않음', fs.readdirSync(repoMemory).length, 0)
+  cleanup(home, repo)
+}
 
+section('악성 — memory 안의 폴더 링크(윈도우 junction)로 밖 파일 유출 시도')
+{
+  const { home, repo, globalMemory, repoMemory } = mkFixture()
+  fs.mkdirSync(globalMemory, { recursive: true })
+  fs.mkdirSync(repoMemory, { recursive: true })
+  const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'msync-out-'))
+  fs.writeFileSync(path.join(outside, 'secret.md'), 'SECRET')
+  // 레포 memory/sub → 밖 폴더. file_path 문자열은 '/memory/' 를 품지만 실제 위치는 밖
+  linkDir(outside, path.join(repoMemory, 'sub'))
+  const r = runHook({ file_path: path.join(repoMemory, 'sub', 'secret.md') }, { home, repoDir: repo })
+  assert('exit 0', r.status, 0)
+  assert('전역 memory/ 로 링크 너머 파일이 복사되지 않음', fs.readdirSync(globalMemory).length, 0)
+  fs.unlinkSync(path.join(repoMemory, 'sub')) // 링크만 제거 (대상 폴더 내용 보존 확인용)
+  assert('링크 제거 후 밖 파일은 그대로', fs.readFileSync(path.join(outside, 'secret.md'), 'utf8'), 'SECRET')
+  cleanup(home, repo, outside)
+}
+
+// ─── 윈도우 경로 표기 (2026-10-20 윈도우 PC 실측 — 이 PC 에서만 의미 있는 표기라 윈도우에서만 실행) ───
+section('윈도우 — 네이티브 `\\` 경로·드라이브 대소문자·MSYS 표기·접두만 같은 형제 폴더')
+if (!IS_WIN) {
+  skip('윈도우 경로 표기 4종', '윈도우 전용 (맥은 `/c/…` 가 진짜 경로라 바꾸지 않는다)')
+} else {
+  const { home, repo, globalMemory, repoMemory } = mkFixture()
+  fs.mkdirSync(globalMemory, { recursive: true })
+  fs.mkdirSync(repoMemory, { recursive: true })
+  // ① 네이티브 백슬래시 경로 (Write/Edit 실제 입력) — 예전엔 '/memory/' 게이트에 막혀 미러가 안 됐다
+  fs.writeFileSync(path.join(repoMemory, 'native.md'), 'N1')
+  runHook({ file_path: path.join(repoMemory, 'native.md') }, { home, repoDir: repo })
+  assert('네이티브 `C:\\…\\memory\\x.md` → 전역으로 미러', fs.existsSync(path.join(globalMemory, 'native.md')), true)
+  // ② 드라이브 소문자 + 슬래시 표기의 CLAUDE_PROJECT_DIR
+  fs.writeFileSync(path.join(globalMemory, 'case.md'), 'C1')
+  const lowerRepo = repo[0].toLowerCase() + repo.slice(1).replace(/\\/g, '/')
+  runHook({ file_path: path.join(globalMemory, 'case.md').toUpperCase() }, { home, repoDir: lowerRepo })
+  assert('드라이브·폴더 대소문자가 달라도 같은 폴더로 판정 → 레포로 미러', fs.existsSync(path.join(repoMemory, 'case.md')), true)
+  // ③ MSYS `/c/…` 표기
+  fs.writeFileSync(path.join(repoMemory, 'msys.md'), 'M1')
+  const msys = '/' + repo[0].toLowerCase() + repo.slice(2).replace(/\\/g, '/') + '/memory/msys.md'
+  runHook({ file_path: msys }, { home, repoDir: repo })
+  assert('MSYS `/c/…/memory/x.md` → 전역으로 미러', fs.existsSync(path.join(globalMemory, 'msys.md')), true)
+  // ④ 악성: 접두만 같은 형제 폴더 `memory2` (`…\memory` 문자열 접두로는 같아 보임)
+  fs.mkdirSync(path.join(repo, 'memory2', 'memory'), { recursive: true })
+  fs.writeFileSync(path.join(repo, 'memory2', 'memory', 'x.md'), 'EVIL')
+  runHook({ file_path: path.join(repo, 'memory2', 'memory', 'x.md') }, { home, repoDir: repo })
+  assert('형제 폴더 memory2\\memory 의 파일은 전역으로 복사 안 됨', fs.existsSync(path.join(globalMemory, 'x.md')), false)
+  // ⑤ 악성: `..` 섞인 백슬래시 경로로 레포 밖 파일 지목
+  fs.writeFileSync(path.join(repo, 'secret.txt'), 'S')
+  runHook({ file_path: `${repoMemory}\\..\\secret.txt` }, { home, repoDir: repo })
+  assert('`memory\\..\\secret.txt` → 전역으로 유출 안 됨', fs.existsSync(path.join(globalMemory, 'secret.txt')), false)
   cleanup(home, repo)
 }
 
@@ -164,7 +224,7 @@ section('경계 — 깨진 stdin JSON')
 
   const r = spawnSync('node', [HOOK], {
     input: '{not-json', encoding: 'utf8', timeout: 5000,
-    env: { ...process.env, HOME: home, CLAUDE_PROJECT_DIR: repo },
+    env: homeEnv({ ...process.env, CLAUDE_PROJECT_DIR: repo }, home),
   })
   assert('exit 0 (안전장치)', r.status, 0)
   assert('아무 것도 복사 안 됨', fs.readdirSync(globalMemory).length === 0 && fs.readdirSync(repoMemory).length === 0, true)
@@ -255,7 +315,7 @@ section('transcript_path 우선 / 악성 transcript_path 무시')
   fs.writeFileSync(path.join(realStore, 'memory', 't.md'), 'T')
   const mk = (tp, fp) => spawnSync('node', [HOOK], { input: JSON.stringify({ hook_event_name: 'PostToolUse', tool_name: 'Write',
     tool_input: { file_path: fp }, transcript_path: tp }), encoding: 'utf8', timeout: 5000,
-    env: { ...process.env, HOME: home, CLAUDE_PROJECT_DIR: repo } })
+    env: homeEnv({ ...process.env, CLAUDE_PROJECT_DIR: repo }, home) })
   mk(path.join(realStore, 's.jsonl'), path.join(realStore, 'memory', 't.md'))
   assert('transcript_path 저장소의 memory 쓰기 → 레포 미러', fs.existsSync(path.join(repoMemory, 't.md')), true)
   // 악성: 공격자 디렉토리를 transcript 로 위장해 그 안의 memory 파일을 레포로 끌어오려는 시도
@@ -270,6 +330,6 @@ section('transcript_path 우선 / 악성 transcript_path 무시')
 }
 
 console.log(`\n${'─'.repeat(40)}`)
-console.log(`결과: ${passed}/${passed + failed} 통과 ${failed > 0 ? `(${failed}개 실패)` : ''}`)
+console.log(`결과: ${passed}/${passed + failed} 통과 ${failed > 0 ? `(${failed}개 실패)` : ''}${skipped ? ` · 건너뜀 ${skipped}` : ''}`)
 if (failed === 0) console.log('✅ 모든 테스트 통과')
 else { console.log('❌ 일부 테스트 실패'); process.exit(1) }

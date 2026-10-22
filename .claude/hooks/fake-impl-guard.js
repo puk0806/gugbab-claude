@@ -24,6 +24,7 @@
 
 const fs = require('fs')
 const path = require('path')
+const { toSlash, msysToWin } = require('./lib/winpath')
 
 // 프로젝트 밖 파일에는 발동하지 않는다 — 코드 품질/테스트 강제 훅은 CLAUDE_PROJECT_DIR(없으면 cwd)
 // 하위 산출물에만 적용한다. symlink·`..`·대소문자(macOS)·상대경로·루트 접두 충돌까지 realpath로 정규화한다.
@@ -33,7 +34,8 @@ function realCanonical(p) {
   return path.resolve(p)
 }
 function resolveProjectRoot(baseCwd) {
-  const raw = process.env.CLAUDE_PROJECT_DIR || baseCwd || process.cwd()
+  // 윈도우: Git Bash 형식 `/c/…` 를 그대로 realpath 하면 `C:\c\…` 로 풀려 모든 파일이 "프로젝트 밖"(검사 꺼짐)이 된다 (맥은 그대로)
+  const raw = msysToWin(process.env.CLAUDE_PROJECT_DIR || baseCwd || process.cwd())
   return realCanonical(raw)
 }
 // realpath는 symlink만 풀 뿐 대소문자를 온디스크 표기로 정규화하지 않는다(실측 확인) —
@@ -64,7 +66,7 @@ function isTestFile(filePath) {
   return (
     /\.(test|spec)\./.test(base) ||
     /_test\.[a-z]+$/.test(base) ||
-    /(?:^|\/)__tests__\//.test(filePath) ||
+    /(?:^|\/)__tests__\//.test(toSlash(filePath)) || // 윈도우 `src\__tests__\…` 도 테스트 파일
     /^test_.*\.py$/.test(base)
   )
 }
@@ -178,13 +180,15 @@ function returnedLiterals(body) {
 }
 
 try {
-  const input = JSON.parse(fs.readFileSync('/dev/stdin', 'utf8'))
+  const input = JSON.parse(fs.readFileSync(0, 'utf8')) // fd 0 — '/dev/stdin' 은 윈도우에 없다
   const filePath = input.tool_input?.file_path || input.tool_input?.path
   if (!filePath) process.exit(0)
   if (!isInsideProject(filePath, input.cwd)) process.exit(0)
 
   // 레포 인프라(훅·커맨드·스크립트)는 제품 코드가 아니므로 제외 (tdd-guard와 동일 철학)
-  if (/\.claude\/(?:hooks|commands)\//.test(filePath) || /(?:^|\/)scripts\//.test(filePath)) process.exit(0)
+  // 윈도우 file_path 는 백슬래시 — 슬래시로 바꿔 맥과 같은 기준으로 인프라 제외 판정 (맥은 그대로)
+  const slashPath = toSlash(filePath)
+  if (/\.claude\/(?:hooks|commands)\//.test(slashPath) || /(?:^|\/)scripts\//.test(slashPath)) process.exit(0)
 
   const ext = path.extname(filePath)
   if (!SOURCE_EXTS.includes(ext)) process.exit(0)

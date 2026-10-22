@@ -1,24 +1,24 @@
 ---
 name: project-harness-status-2026-10-15
-description: "★ 하네스 현재 상태 (2026-10-20 갱신 — shim 래퍼 v1.0.11, 래퍼로만 사용) — 자산 수·남은 제안·미결 과제·환경 주의사항"
+description: "★ 하네스 현재 상태 (2026-10-21 갱신 — shim 래퍼 v1.0.14, 래퍼로만 사용) — 자산 수·남은 제안·미결 과제·환경 주의사항"
 metadata:
   node_type: memory
   type: project
   originSessionId: 0693c72c-1709-4533-8cb9-8a3b20e52a64
-  modified: 2026-10-21T01:37:30.423Z
+  modified: 2026-10-21T06:50:03.115Z
 ---
 
-**상태 (2026-10-20 갱신)**: **shim 래퍼(`gugbab-claude`)로만 사용**(결정 27). main = `5773711`(PR #39), 설치본 `~/gugbab` = **v1.0.11**(stable, PR 마다 VERSION 올림 → 머지 때 자동 태그 — 결정 32). 개편 0~6단계 완료, 결정 1~40 은 계획서 13장 + [[project-shim-wrapper-direction]]. 옛 복사 설치(`project-install.sh`·템플릿 0~15)는 6단계에서 삭제됨. 다른 PC 에서 시작하면 계획서 페이지 https://claude.ai/artifact/U7vpKRXVemaNYYNhz8nNLj (계획서 + 항목 체크리스트) 와 `docs/DEFAULTS.md` 가 기본값·고정 목록 원본.
+**상태 (2026-10-21 갱신)**: **shim 래퍼(`gugbab-claude`)로만 사용**(결정 27). main = `206193c`(PR #42), 설치본 `~/gugbab` = **v1.0.14**(stable, PR 마다 VERSION 올림 → 머지 때 자동 태그 — 결정 32). 2026-10-20~21 머지: PR #40 v1.0.12(설치 PATH 자동), #41 v1.0.13(/harness 창 자동 닫힘), #42 v1.0.14(결정 42·43). 개편 0~6단계 완료, 결정 1~43 은 계획서 13장(41 은 윈도우 브랜치에만) + [[project-shim-wrapper-direction]]. 옛 복사 설치(`project-install.sh`·템플릿 0~15)는 6단계에서 삭제됨. 다른 PC 에서 시작하면 계획서 페이지 https://claude.ai/artifact/U7vpKRXVemaNYYNhz8nNLj (계획서 + 항목 체크리스트) 와 `docs/DEFAULTS.md` 가 기본값·고정 목록 원본.
 
 **자산 수 (manifest 실측 2026-10-20)**: 스킬 195 · 에이전트 61 · 훅 32 + statusline · 규칙 14 · 커맨드 12 · 설정 7 = 321 항목, 기본 고정 35 · 켬 70 · 끔 216. 검증 상태(10-16 기준) APPROVED 181 · PENDING_TEST 15(실사용 필수만) · NEEDS_REVISION 0.
 
-**남은 제안 (2026-10-20)**: `v*` 태그 보호 규칙(결정 28) · Codex 적대적 리뷰 맨 마지막 1회 · 🔒 고정 훅 비정상 종료 시 fail-closed · 디스패처가 프로젝트 훅 삭제를 실시간 반영 · 윈도우 지원([[project-windows-support-analysis]], 2026-10-20 계획서·결정 41 작성 — 사용자 윈도우 PC PoC 결과 대기).
+**남은 제안 (2026-10-20)**: `v*` 태그 보호 규칙(결정 28) · Codex 적대적 리뷰 맨 마지막 1회 · 🔒 고정 훅 비정상 종료 시 fail-closed · 디스패처가 프로젝트 훅 삭제를 실시간 반영 · 윈도우 지원([[project-windows-support-analysis]] — 2026-10-20~21 사용자 윈도우 PC 에서 PoC·1~4단계 구현·실측 완료, 브랜치 `feat/windows-support-poc-2026-10-20` VERSION 1.0.13 커밋·푸시. 남은 것: main 추가분(PR #41·#42) 병합·맥 회귀·윈도우 CI·PR).
 
-**설치 PATH 자동 추가 (2026-10-20, v1.0.12 PR)**: 사용자 결정 "의사 안 물어보고 설치할 때 자동으로" — `install.sh` 가 `~/.local/bin` 이 PATH 에 없으면 셸 설정(zsh `~/.zshrc`·bash `~/.bash_profile`/`~/.bashrc`·fish·`~/.profile`) 끝에 `# >>> gugbab-claude PATH >>>` 블록을 묻지 않고 넣음(CI 포함), 제거 때 블록만 묻지 않고 지움, 끄기 `--no-modify-path`. README 에는 안 적음(자동이라 불필요 — 사용자). 이 브랜치는 윈도우 브랜치와 별개(`feat/install-path-setup-2026-10-20`). 파생 하네스 세션에 래퍼 전환 자료를 메시지로 전달함(2026-10-19).
+**설치 PATH 자동 추가 (2026-10-20, v1.0.12 머지)**: 사용자 결정 "의사 안 물어보고 설치할 때 자동으로" — `install.sh` 가 `~/.local/bin` 이 PATH 에 없으면 셸 설정(zsh `~/.zshrc`·bash `~/.bash_profile`/`~/.bashrc`·fish·`~/.profile`) 끝에 `# >>> gugbab-claude PATH >>>` 블록을 묻지 않고 넣음(CI 포함), 제거 때 블록만 묻지 않고 지움, 끄기 `--no-modify-path`. README 에는 안 적음(자동이라 불필요 — 사용자). 이 브랜치는 윈도우 브랜치와 별개(`feat/install-path-setup-2026-10-20`). 파생 하네스 세션에 래퍼 전환 자료를 메시지로 전달함(2026-10-19).
 
-**`/harness` 창 저장 뒤 자동 닫힘 (2026-10-20, `feat/harness-auto-close-2026-10-20`, 커밋 전)**: 사용자 요청 "comux·tmux·macOS 터미널 싹다 닫히게". 원인은 `--session` 이 저장 뒤 "아무 키나" 를 기다린 것 → 저장하면 2초 요약 후 끝(키 누르면 바로), 저장 없음은 즉시. **macOS Terminal 기본 설정은 셸이 끝나도 창을 남김(대조 실측)** → `--close-terminal`: 화면 시작 때 detached osascript 가 그 tty 의 **busy 인 창을 id 로 기억**(남은 창이 같은 tty 이름을 재사용함 — tty 로만 고르면 엉뚱한 창, 실측)하고 한가해지면 그 창만 닫음, 저장 오류면 도우미를 kill 해 창 유지. comux·Terminal 실창 확인, tmux 는 이 PC 미설치(단위만). 실험 팁: Terminal 의 `do script " " in tab` 은 실행 중 프로세스에 글자+엔터를 입력해 줌.
+**`/harness` 창 저장 뒤 자동 닫힘 (2026-10-20, v1.0.13 머지 — 사용자 comux 실확인)**: 사용자 요청 "comux·tmux·macOS 터미널 싹다 닫히게". 원인은 `--session` 이 저장 뒤 "아무 키나" 를 기다린 것 → 저장하면 2초 요약 후 끝(키 누르면 바로), 저장 없음은 즉시. **macOS Terminal 기본 설정은 셸이 끝나도 창을 남김(대조 실측)** → `--close-terminal`: 화면 시작 때 detached osascript 가 그 tty 의 **busy 인 창을 id 로 기억**(남은 창이 같은 tty 이름을 재사용함 — tty 로만 고르면 엉뚱한 창, 실측)하고 한가해지면 그 창만 닫음, 저장 오류면 도우미를 kill 해 창 유지. comux·Terminal 실창 확인, tmux 는 이 PC 미설치(단위만). 실험 팁: Terminal 의 `do script " " in tab` 은 실행 중 프로세스에 글자+엔터를 입력해 줌.
 
-**2026-10-21 `feat/bash-guard-literal-vars-2026-10-21` (커밋 나눔, 푸시·PR 전)**: 결정 42(bash-guard 고정값 변수 풀기 — 읽기만 새로 자동) + 결정 43(`/harness` 📌 — 프로젝트 파일 `.gugbab.json`/`.lfmall.json` 이 정한 항목 표시, 이 프로젝트 범위에선 바꾸지도 기록하지도 않음). **사용자 계획: 이 레포 반영 뒤 lfmall-ai-toolkit 세션에 두 변경을 함께 전달.** 이 레포 설정(`~/gugbab/projects/00_gugbab-claude/settings.json`)에 효과 없는 끔 기록 14개가 남아 있음 — 지울지 사용자 확인 대기. 전 항목 Space 실측 스크립트는 그 세션 scratchpad `lit/toggle-render.js`(항목마다 화면 아이콘 비교·📌·기록 확인).
+**2026-10-21 결정 42·43 (PR #42 v1.0.14 머지·설치본 반영)**: 결정 42(bash-guard 고정값 변수 풀기 — 읽기만 새로 자동) + 결정 43(`/harness` 📌 — 프로젝트 파일 `.gugbab.json`/`.lfmall.json` 이 정한 항목 표시, 이 프로젝트 범위에선 바꾸지도 기록하지도 않음). lfmall-ai-toolkit 세션에 두 변경 + PR #41 을 전달함 — **이후 lfmall 쪽은 신경 쓰지 않아도 됨(2026-10-21 사용자)**. 윈도우 브랜치에는 윈도우 작업이 끝난 뒤(2026-10-21) main 추가분(PR #41·#42) 정리를 메모리로 넣음 — [[project-windows-support-analysis]] "main 추가분 반영할 것". 이 레포의 `/harness` 기록(`~/gugbab/projects/00_gugbab-claude/settings.json`)은 사용자 요청으로 기본 상태(빈 enable·disable)로 정리 — 시험 기록뿐이었고 `.gugbab.json` 이 덮고 있어 실제 상태 변화 없음(status 동일). 전 항목 Space 실측은 tui 의 createState·handleKey·render 로 항목마다 화면 아이콘·📌·ops 비교(세션 scratchpad 스크립트, 필요하면 다시 작성). **남은 선택 과제**: `status` 에 📌 개수, 작업·임시 폴더 안 쓰기·삭제를 acceptEdits 가 스스로 허용하는 것을 bash-guard 가 ask 로 막을지(사용자 결정 필요), 윈도우 브랜치 머지 뒤 계획서 페이지 재게시(main 기준으로 만들면 17장이 빠짐).
 
 **최근 이력 (요약)**
 - 09-28~29 PR #19: 철학·학술 자산 삭제(템플릿 8 폐지), 재검증·재테스트, PENDING_TEST 실행 검증

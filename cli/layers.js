@@ -6,6 +6,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const { realpath, renameRetry } = require('./winfs');
 
 const MAX_BYTES = 1024 * 1024;
 
@@ -28,8 +29,8 @@ function pick(obj, keys, source) {
 function readProjectFile(root, name) {
   const file = path.join(root, name);
   try {
-    const real = fs.realpathSync(file);
-    const realRoot = fs.realpathSync(root);
+    const real = realpath(file);
+    const realRoot = realpath(root);
     if (path.dirname(real) !== realRoot) return {};
   } catch { return {}; }
   return readJsonObject(file);
@@ -47,7 +48,7 @@ function writeJson(file, obj) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
   const tmp = `${file}.${process.pid}.tmp`;
   fs.writeFileSync(tmp, JSON.stringify(obj, null, 2) + '\n');
-  fs.renameSync(tmp, file);
+  renameRetry(tmp, file);
 }
 
 // 조립 기록(.gugbab-state.json) — 프로젝트 자체 .claude 가 이미 가져서 래퍼가 건너뛴 훅·항목 (결정 22)

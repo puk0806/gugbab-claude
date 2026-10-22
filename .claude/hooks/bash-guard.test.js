@@ -7,7 +7,12 @@
 const { execSync, spawnSync } = require('child_process')
 const path = require('path')
 const HOOK = path.join(__dirname, 'bash-guard.js')
-const PROJECT_ROOT = path.resolve(__dirname, '..', '..')
+const { IS_WIN, toSlash } = require('./lib/winpath')
+// 윈도우(2026-10-20): bash 명령에 넣는 경로는 Git Bash 가 실제로 쓰는 슬래시 형태(C:/x)로 둔다.
+// 네이티브 `C:\x` 를 따옴표 없이 명령에 넣으면 bash 가 `\` 를 지워 `C:x`(다른 경로)가 되므로 실사용과 다른 시험이 된다
+// (그 형태는 아래 "윈도우 경로" 섹션에서 적대 케이스로 따로 검증). 맥은 toSlash 가 그대로 돌려줘 기존과 같다
+const PROJECT_ROOT_NATIVE = path.resolve(__dirname, '..', '..')
+const PROJECT_ROOT = toSlash(PROJECT_ROOT_NATIVE)
 const { isCdGitSafe, isHeredocSafe, isBraceExpansionSafe, isCompoundSafe, isStatementSafeForCompound, isShellScriptSafe, isLocalhostUrl, findProjectRoot } = require('./bash-guard.js')
 
 let passed = 0, failed = 0
@@ -105,8 +110,9 @@ test('Read → null', 'Read', { file_path: 'file.md' }, 'null', 'PermissionReque
 // ─────────────────────────────────────────────────────────────
 
 section('findProjectRoot — .git/.claude 상향 탐색')
-assert('프로젝트 cwd → 정확한 루트 반환', findProjectRoot(PROJECT_ROOT), PROJECT_ROOT)
-assert('프로젝트 하위 cwd → 루트 반환', findProjectRoot(path.join(PROJECT_ROOT, '.claude', 'hooks')), PROJECT_ROOT)
+// findProjectRoot 는 path.resolve 결과(윈도우 네이티브 `C:\…`)를 돌려준다
+assert('프로젝트 cwd → 정확한 루트 반환', findProjectRoot(PROJECT_ROOT), PROJECT_ROOT_NATIVE)
+assert('프로젝트 하위 cwd → 루트 반환', findProjectRoot(path.join(PROJECT_ROOT, '.claude', 'hooks')), PROJECT_ROOT_NATIVE)
 assert('루트가 없는 경로 → null', findProjectRoot('/'), null)
 assert('잘못된 입력 → null', findProjectRoot(null), null)
 
@@ -188,7 +194,8 @@ assert('bash /tmp/x.tsx → 허용 (확장자가 .tsx라 무의미)',
   isHeredocSafe(`cat > /tmp/x.tsx << 'EOF'\nx\nEOF\nbash /tmp/x.tsx`, ALLOWED), true)
 
 section('isCompoundSafe — 허용 케이스 (true)')
-const SIBLING = '/Users/lf/Desktop/gugbab-workspace/01_gugbab-claude-package'
+// 윈도우: Claude Code 가 넘기는 cwd 는 드라이브 경로라 같은 위치를 드라이브 형태로 (맥은 기존 값)
+const SIBLING = IS_WIN ? 'C:/Users/lf/Desktop/gugbab-workspace/01_gugbab-claude-package' : '/Users/lf/Desktop/gugbab-workspace/01_gugbab-claude-package'
 const ALLOWED_WITH_SIBLING = [PROJECT_ROOT, SIBLING]
 assert('cp /tmp → workspace + pnpm test + rm workspace',
   isCompoundSafe(
@@ -873,7 +880,14 @@ expectNotApproved('kill -9 %1 (작업 번호 — 판정 불가)', 'kill -9 %1', 
 expectNotApproved('kill -9 -1 (모든 프로세스)', 'kill -9 -1', 'ask')
 expectNotApproved('kill -9 $PID (변수)', 'kill -9 $PID', 'ask')
 expectAutoApproved('kill 12345 (일반 종료 신호)', 'kill 12345')
-{
+if (IS_WIN) {
+  // 윈도우는 프로세스 부모 표(ps -axo)가 없어 세션 자손 판정을 하지 않는다 → kill -9 는 항상 확인(보수적)
+  console.log('  ⚠️ 건너뜀: 세션이 띄운 프로세스 kill -9 자동 허용 (윈도우 — ps -axo 없음, 항상 확인으로 처리)')
+  const a = pre('kill -9 4242')
+  const ok = a === 'ask'
+  console.log(`  ${ok ? '✅' : '❌'} 윈도우: kill -9 <pid> 는 부모 판정 없이 확인 → ${ok ? 'PASS' : `FAIL (Pre=${a})`}`)
+  ok ? passed++ : failed++
+} else {
   // 세션 자손 판정 — 테스트 프로세스를 "세션"으로 지정하고 직접 띄운 자식은 자동, 남의 것은 확인
   const { spawn } = require('child_process')
   const child = spawn('sleep', ['30'], { stdio: 'ignore' })
@@ -900,7 +914,7 @@ expectAutoApproved('kill 12345 (일반 종료 신호)', 'kill 12345')
 
 section('Bash 로 개인키·인증 파일 접근 → 차단 (.env 는 허용)')
 {
-  const HOME = require('os').homedir()
+  const HOME = toSlash(require('os').homedir()) // 윈도우: 명령 안에는 슬래시 형태 (위 PROJECT_ROOT 주석 참고)
   expectNotApproved('cat ~/.ssh/id_rsa', 'cat ~/.ssh/id_rsa', 'deny')
   expectNotApproved('cat $HOME/.ssh/id_ed25519', 'cat $HOME/.ssh/id_ed25519', 'deny')
   expectNotApproved('cp ~/.aws/credentials /tmp/x', 'cp ~/.aws/credentials /tmp/x', 'deny')
@@ -923,11 +937,13 @@ section('getAllowedDirs — 래퍼 설정 폴더(CLAUDE_CONFIG_DIR)')
   const os = require('os')
   const { getAllowedDirs } = require('./bash-guard.js')
   const cfg = fs.mkdtempSync(path.join(os.tmpdir(), 'bg-cfg-'))
-  fs.writeFileSync(path.join(cfg, 'settings.json'), JSON.stringify({ permissions: { additionalDirectories: ['/opt/gugbab-allowed', 'relative/dir', 42] } }))
+  // 윈도우: `/opt/x` 는 드라이브가 없어 path.resolve 가 `C:\opt\x` 로 바꾼다 → 윈도우 절대 경로로 시험 (맥은 기존 값)
+  const EXTRA = IS_WIN ? 'D:\\gugbab-allowed' : '/opt/gugbab-allowed'
+  fs.writeFileSync(path.join(cfg, 'settings.json'), JSON.stringify({ permissions: { additionalDirectories: [EXTRA, 'relative/dir', 42] } }))
   const saved = process.env.CLAUDE_CONFIG_DIR
   process.env.CLAUDE_CONFIG_DIR = cfg
   const dirs = getAllowedDirs(PROJECT_ROOT)
-  assert('설정 폴더 additionalDirectories 의 절대 경로 → 허용 폴더에 포함', dirs.includes('/opt/gugbab-allowed'), true)
+  assert('설정 폴더 additionalDirectories 의 절대 경로 → 허용 폴더에 포함', dirs.includes(EXTRA), true)
   assert('설정 폴더의 상대 경로 항목은 무시 (어디 기준인지 모호)', dirs.some(d => d.endsWith('relative/dir')), false)
   process.env.CLAUDE_CONFIG_DIR = 'relative-cfg'
   assert('CLAUDE_CONFIG_DIR 가 상대 경로면 무시 (크래시 없음)', Array.isArray(getAllowedDirs(PROJECT_ROOT)), true)
@@ -936,6 +952,202 @@ section('getAllowedDirs — 래퍼 설정 폴더(CLAUDE_CONFIG_DIR)')
   assert('설정 폴더 settings.json 이 깨져도 크래시 없음', Array.isArray(getAllowedDirs(PROJECT_ROOT)), true)
   if (saved === undefined) delete process.env.CLAUDE_CONFIG_DIR; else process.env.CLAUDE_CONFIG_DIR = saved
   fs.rmSync(cfg, { recursive: true, force: true })
+}
+
+section('윈도우 실행 파일 이름 우회 (2026-10-20) — .exe·대문자·\\ 경로를 떼고 같은 판정')
+// 악성: Git Bash 에서 .exe 를 붙이면 이름이 달라 분류를 빠져나가 PermissionRequest 자동 승인되던 우회
+test('git.exe push --force → deny', 'Bash', { command: 'git.exe push --force origin main' }, 'deny')
+test('GIT.EXE push -f → deny', 'Bash', { command: 'GIT.EXE push -f origin main' }, 'deny')
+test('"C:\\Git\\bin\\git.exe" push --force (따옴표 \\ 경로) → deny', 'Bash', { command: '"C:\\Git\\bin\\git.exe" push --force origin main' }, 'deny')
+test('/c/Program Files/Git/bin/git.exe push --force → deny', 'Bash', { command: '"/c/Program Files/Git/bin/git.exe" push --force origin main' }, 'deny')
+test('git.cmd push --force → deny', 'Bash', { command: 'git.cmd push --force origin main' }, 'deny')
+test('rm.exe -rf ~ → deny', 'Bash', { command: 'rm.exe -rf ~' }, 'deny')
+test('RM.EXE -rf "$HOME" → deny', 'Bash', { command: 'RM.EXE -rf "$HOME"' }, 'deny')
+test('git.exe push --force → PermissionRequest 자동 승인 안 함', 'Bash', { command: 'git.exe push --force origin main' }, 'null', 'PermissionRequest')
+test('git.exe commit → PermissionRequest 자동 승인 안 함(사용자 확인)', 'Bash', { command: 'git.exe commit -m x' }, 'null', 'PermissionRequest')
+// 악성: 윈도우 명령 셸·스크립트 호스트 — 안의 명령을 해석할 수 없으므로 확인
+test('cmd //c "rd /s /q C:\\Users" → ask', 'Bash', { command: 'cmd //c "rd /s /q C:\\Users"' }, 'ask')
+test('cmd.exe /c del → ask', 'Bash', { command: 'cmd.exe /c del /f /q C:\\x' }, 'ask')
+test('powershell.exe -c Remove-Item -Recurse → ask', 'Bash', { command: 'powershell.exe -c Remove-Item -Recurse -Force C:\\Users' }, 'ask')
+test('pwsh -NoProfile -c … → ask', 'Bash', { command: 'pwsh -NoProfile -c "Get-ChildItem"' }, 'ask')
+test('echo x | powershell → ask (파이프 뒤도)', 'Bash', { command: 'echo x | powershell -' }, 'ask')
+test('wsl rm -rf ~ → deny (문자열 패턴이 홈 삭제를 먼저 잡음 — WSL 홈도 위험)', 'Bash', { command: 'wsl rm -rf ~' }, 'deny')
+test('wsl ls → ask', 'Bash', { command: 'wsl ls /mnt/c' }, 'ask')
+test('cmd //c → PermissionRequest 자동 승인 안 함', 'Bash', { command: 'cmd //c "rd /s /q C:\\Users"' }, 'null', 'PermissionRequest')
+test('powershell.exe → PermissionRequest 자동 승인 안 함', 'Bash', { command: 'powershell.exe -c Remove-Item -Recurse C:\\Users' }, 'null', 'PermissionRequest')
+// 정상·경계: 이름 정리가 평범한 명령을 바꾸지 않는다 (회귀)
+test('ls -la → PermissionRequest allow (그대로)', 'Bash', { command: 'ls -la' }, 'allow', 'PermissionRequest')
+test('git status → PermissionRequest allow (그대로)', 'Bash', { command: 'git status' }, 'allow', 'PermissionRequest')
+test('node build.com.js (이름 아닌 인자의 .com) → allow', 'Bash', { command: 'node build.com.js' }, 'allow', 'PermissionRequest')
+test('echo cmd powershell (인자로만 등장) → allow', 'Bash', { command: 'echo cmd powershell' }, 'allow', 'PermissionRequest')
+test('git.exe status → PermissionRequest allow', 'Bash', { command: 'git.exe status' }, 'allow', 'PermissionRequest')
+test('.exe 만 있는 이름(빈 이름) → deny 아님', 'Bash', { command: '.exe --help' }, 'null')
+
+// ─────────────────────────────────────────────────────────────
+// 2026-10-20 윈도우 2단계 — 경로 판정 (PoC 실측: rm -rf "$HOME"·/c/Users/x·C:/Users/x·rm.exe -rf ~ 가 deny 대신 ask)
+// winCanon·isWinRoot 는 플랫폼과 무관한 순수 함수라 맥에서도 돈다. 훅 판정 시험은 윈도우에서만(맥은 건너뜀 표시)
+// ─────────────────────────────────────────────────────────────
+section('윈도우 경로 정규화 winCanon (모든 플랫폼)')
+{
+  const { winCanon, isWinRoot } = require('./bash-guard.js')
+  const TMP = toSlash(require('os').tmpdir(), true).replace(/\/+$/, '')
+  const tmpQ = (TMP[1] === ':' ? TMP[0].toUpperCase() + TMP.slice(1) : TMP) + '/q'
+  // 정상
+  assert('MSYS /c/Users/x → C:/Users/x', winCanon('/c/Users/x'), 'C:/Users/x')
+  assert('소문자 드라이브 c:\\a → C:/a', winCanon('c:\\a'), 'C:/a')
+  assert('Git Bash /tmp/q → 사용자 임시 폴더/q', winCanon('/tmp/q'), winCanon(tmpQ))
+  assert('공백·한글 경로 유지', winCanon('C:\\회사\\내 폴더\\x'), 'C:/회사/내 폴더/x')
+  // 악성·우회
+  assert('.. 로 빠져나가기는 먼저 풀린다 (C:\\proj\\..\\Windows)', winCanon('C:\\proj\\..\\Windows'), 'C:/Windows')
+  assert('루트 위로 .. 는 루트에서 멈춤', winCanon('/c/../../..'), 'C:/')
+  assert('\\\\?\\ 접두 장경로 → 일반 드라이브 경로', winCanon('\\\\?\\C:\\Users\\x'), 'C:/Users/x')
+  assert('UNC \\\\srv\\share\\ → //srv/share', winCanon('\\\\srv\\share\\'), '//srv/share')
+  assert('UNC 공유 밖으로 .. 불가', winCanon('//srv/share/../../x'), '//srv/share/x')
+  // 이상·경계
+  assert('드라이브 상대 C:x → null (해석 불가)', winCanon('C:x'), null)
+  assert('드라이브만 c: → null', winCanon('c:'), null)
+  assert('상대 경로 → null', winCanon('src/a'), null)
+  assert('빈 값·비문자열·NUL → null', [winCanon(''), winCanon(null), winCanon(42), winCanon('C:/a\0b')].every(x => x === null), true)
+  assert('/usr/bin/ 같은 Git POSIX 경로는 그대로', winCanon('/usr/bin/'), '/usr/bin')
+  assert('isWinRoot: C:/ · //srv/share · //srv', [isWinRoot('C:/'), isWinRoot('//srv/share'), isWinRoot('//srv')].every(Boolean), true)
+  assert('isWinRoot: C:/x · / · 비문자열 → false', [isWinRoot('C:/x'), isWinRoot('/'), isWinRoot(null)].some(Boolean), false)
+}
+
+section('윈도우 — rm 홈·드라이브 루트·시스템 폴더 → deny (PoC 실패 4건 포함)')
+if (!IS_WIN) {
+  console.log('  ⚠️ 건너뜀: 윈도우 rm 판정 시험 (맥 — 윈도우 PC 에서만 의미 있음)')
+} else {
+  const os = require('os')
+  const HOMEN = os.homedir()                    // C:\Users\x
+  const HOMES = toSlash(HOMEN)                  // C:/Users/x
+  const HOMEM = '/' + HOMES[0].toLowerCase() + HOMES.slice(2) // /c/Users/x
+  const DQ = (s) => `"${s}"`                    // 따옴표 안 \ 는 bash 가 지우지 않는다
+  // PoC 실측 실패 4건 — 이제 deny + 자동 승인 금지
+  expectNotApproved('rm -rf "$HOME"', `${RMRF}"$HOME"`, 'deny')
+  expectNotApproved(`rm -rf ${HOMEM} (MSYS)`, `${RMRF}${HOMEM}`, 'deny')
+  expectNotApproved(`rm -rf ${HOMES}`, `${RMRF}${HOMES}`, 'deny')
+  expectNotApproved('rm.exe -rf ~', 'rm.exe -rf ~', 'deny')
+  // 악성·우회 변형
+  expectNotApproved('드라이브 소문자 c:/users/<me>', `${RMRF}${HOMES.toLowerCase()}`, 'deny')
+  expectNotApproved('따옴표 속 네이티브 "C:\\Users\\<me>"', `${RMRF}${DQ(HOMEN)}`, 'deny')
+  expectNotApproved('rm -rf "$USERPROFILE"', `${RMRF}"$USERPROFILE"`, 'deny')
+  expectNotApproved('rm -rf ~/.. (홈의 상위)', `${RMRF}~/..`, 'deny')
+  expectNotApproved('rm -rf C:/Users (사용자 폴더 모음)', `${RMRF}C:/Users`, 'deny')
+  expectNotApproved('rm -rf /c (드라이브 루트 MSYS)', `${RMRF}/c`, 'deny')
+  expectNotApproved('rm -rf C:/', `${RMRF}C:/`, 'deny')
+  expectNotApproved('rm -rf D:/ (다른 드라이브 루트)', `${RMRF}D:/`, 'deny')
+  expectNotApproved('rm -rf C:/* (루트 glob)', `${RMRF}C:/*`, 'deny')
+  expectNotApproved('rm -rf C:/x* (루트에 걸린 glob)', `${RMRF}C:/x*`, 'deny')
+  expectNotApproved('rm -rf "C:\\Windows"', `${RMRF}${DQ('C:\\Windows')}`, 'deny')
+  expectNotApproved('rm -rf c:/windows/system32 (소문자)', `${RMRF}c:/windows/system32`, 'deny')
+  expectNotApproved('rm -rf "C:/Program Files" (공백)', `${RMRF}"C:/Program Files"`, 'deny')
+  expectNotApproved('rm -rf "C:/Program Files (x86)/x"', `${RMRF}"C:/Program Files (x86)/x"`, 'deny')
+  expectNotApproved('rm -rf C:/ProgramData', `${RMRF}C:/ProgramData`, 'deny')
+  expectNotApproved('rm -rf ~/.SSH (대소문자 무시)', `${RMRF}~/.SSH`, 'deny')
+  expectNotApproved('rm -rf //srv/share (네트워크 공유 루트)', `${RMRF}//srv/share`, 'deny')
+  expectNotApproved('cd /c && rm -rf Users (cd 추적)', `cd /c && ${RMRF}Users`, 'deny')
+  expectNotApproved('cd ~ && rm -rf .. (cd 추적 → 홈 상위)', `cd ~ && ${RMRF}..`, 'deny')
+  expectNotApproved('RM.EXE -rf C:/ (대문자 .exe)', 'RM.EXE -rf C:/', 'deny')
+  // 확인(ask) — 프로젝트 밖·해석 불가
+  expectNotApproved('따옴표 밖 C:\\Users\\x (bash 가 \\ 를 지워 C:Usersx) → 해석 불가 확인', `${RMRF}C:\\Users\\nobody`, 'ask')
+  expectNotApproved('드라이브 상대 c:foo → 확인', `${RMRF}c:foo`, 'ask')
+  expectNotApproved('접두만 같은 형제 폴더 <proj>-evil → 확인', `${RMRF}${PROJECT_ROOT}-evil/x`, 'ask')
+  expectNotApproved('<proj>/../x 로 빠져나가기 → 확인', `${RMRF}${PROJECT_ROOT}/../x`, 'ask')
+  expectNotApproved('다른 드라이브 D:/work/x → 확인', `${RMRF}D:/work/x`, 'ask')
+  expectNotApproved('UNC //srv/share/dir → 확인', `${RMRF}//srv/share/dir`, 'ask')
+  expectNotApproved('공백·한글 폴더 "C:/공백 폴더/한글" → 확인', `${RMRF}"C:/공백 폴더/한글"`, 'ask')
+  expectNotApproved('rm C:/Windows/x.dll (재귀 아님 — 맥 시스템 폴더 기준과 같게 확인)', 'rm C:/Windows/x.dll', 'ask')
+  expectNotApproved('rm -rf "$APPDATA" (프로젝트 밖)', `${RMRF}"$APPDATA"`, 'ask')
+  // 정상 — 프로젝트·임시 안은 자동 유지 (회귀)
+  expectAutoApproved('rm -rf <proj>/x (슬래시 드라이브)', `${RMRF}${PROJECT_ROOT}/x`)
+  expectAutoApproved('rm -rf <proj 소문자 드라이브>/x', `${RMRF}${PROJECT_ROOT[0].toLowerCase()}${PROJECT_ROOT.slice(1)}/x`)
+  expectAutoApproved('rm -rf /c/<proj>/x (MSYS)', `${RMRF}/${PROJECT_ROOT[0].toLowerCase()}${PROJECT_ROOT.slice(2)}/x`)
+  expectAutoApproved('rm -rf "<proj 네이티브>\\x" (따옴표 속 \\)', `${RMRF}${DQ(PROJECT_ROOT_NATIVE + '\\x')}`)
+  expectAutoApproved('rm -rf /tmp/x (Git Bash 임시 = %TEMP%)', `${RMRF}/tmp/x`)
+  expectAutoApproved('rm -rf "%TEMP% 네이티브\\x"', `${RMRF}${DQ(path.join(os.tmpdir(), 'bg-x'))}`)
+}
+
+section('윈도우 — Bash 로 개인키·인증 파일 접근 → deny')
+if (!IS_WIN) {
+  console.log('  ⚠️ 건너뜀: 윈도우 인증 파일 시험 (맥)')
+} else {
+  const HOMES = toSlash(require('os').homedir())
+  const HOMEM = '/' + HOMES[0].toLowerCase() + HOMES.slice(2)
+  expectNotApproved('cat /c/Users/<me>/.ssh/id_rsa (MSYS)', `cat ${HOMEM}/.ssh/id_rsa`, 'deny')
+  expectNotApproved('cat "C:\\Users\\<me>\\.aws\\credentials" (따옴표 속 \\)', `cat "${HOMES.replace(/\//g, '\\')}\\.aws\\credentials"`, 'deny')
+  expectNotApproved('cat ~/.SSH/ID_RSA (대소문자)', 'cat ~/.SSH/ID_RSA', 'deny')
+  expectNotApproved('cat ~/_netrc (윈도우 netrc 이름)', 'cat ~/_netrc', 'deny')
+  if (process.env.APPDATA) expectNotApproved('cat "$APPDATA/gcloud/application_default_credentials.json"', 'cat "$APPDATA/gcloud/application_default_credentials.json"', 'deny')
+  expectNotApproved('grep -r key "$USERPROFILE/.ssh"', 'grep -r key "$USERPROFILE/.ssh"', 'deny')
+  expectAutoApproved('cat ~/.ssh/id_rsa.PUB (공개키 — 대소문자)', 'cat ~/.ssh/id_rsa.PUB')
+  expectAutoApproved('cat ~/.ssh/known_hosts → 자동 (공개 정보)', 'cat ~/.ssh/known_hosts')
+}
+
+section('윈도우 — 안전 패턴(자동 허용)이 드라이브·~ 경로를 허용 폴더로만 제한')
+if (!IS_WIN) {
+  console.log('  ⚠️ 건너뜀: 윈도우 안전 패턴 시험 (맥)')
+} else {
+  const R = PROJECT_ROOT
+  const RM = '/' + R[0].toLowerCase() + R.slice(2)
+  const A = [R]
+  const HOMES = toSlash(require('os').homedir())
+  const STARTUP = `${HOMES}/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/Startup`
+  // 정상
+  assert('cd /c/<proj> (MSYS) && git status → true', isCdGitSafe(`cd ${RM} && git status`, A), true)
+  assert('cd <proj 소문자 드라이브> && git status → true', isCdGitSafe(`cd ${R.toLowerCase()} && git status`, A), true)
+  assert('ls && cp a <proj>/b → true', isCompoundSafe(`ls && cp a ${R}/b`, A), true)
+  assert('heredoc → <proj>/x.tsx → true', isHeredocSafe(`cat > ${R}/x.tsx << 'EOF'\nx\nEOF`, A), true)
+  // 악성·우회
+  assert('cd C:\\<proj> (따옴표 밖 \\ — bash 가 지움) → false', isCdGitSafe(`cd ${PROJECT_ROOT_NATIVE} && git status`, A), false)
+  assert('cd <proj>-evil (접두 형제) → false', isCdGitSafe(`cd ${R}-evil && git status`, A), false)
+  assert('cd <proj> && cat x > D:/out.txt (밖 드라이브 리다이렉트) → false', isCdGitSafe(`cd ${R} && cat x > D:/out.txt`, A), false)
+  assert('ls && cp x C:/Users/<me>/.bashrc → false', isCompoundSafe(`ls && cp x ${HOMES}/.bashrc`, A), false)
+  assert('ls && cp a D:/x → false (다른 드라이브)', isCompoundSafe('ls && cp a D:/x', A), false)
+  assert('ls && cp a "C:\\x" → false (\\ 경로)', isCompoundSafe('ls && cp a "C:\\x"', A), false)
+  assert('ls && cp a ~/x → false (~ 는 홈 = 밖)', isCompoundSafe('ls && cp a ~/x', A), false)
+  assert('echo > 시작프로그램 폴더 && ls → false', isCompoundSafe(`echo a > "${STARTUP}/x.js" && ls`, A), false)
+  assert('echo x > $APPDATA/x && ls → false (경로 변수)', isCompoundSafe('echo x > $APPDATA/x && ls', A), false)
+  assert('ls && echo x > /c/Windows/x.txt → false (MSYS 드라이브)', isCompoundSafe('ls && echo x > /c/Windows/x.txt', A), false)
+  assert('ls && cat //srv/share/x → false (UNC)', isCompoundSafe('ls && cat //srv/share/x', A), false)
+  assert('heredoc → C:\\proj\\x.tsx (\\ 경로) → false', isHeredocSafe(`cat > ${PROJECT_ROOT_NATIVE}\\x.tsx << 'EOF'\nx\nEOF`, A), false)
+  assert('heredoc 허용 폴더 안이라도 PowerShell 프로필 위치 → false',
+    isHeredocSafe(`cat > ${HOMES}/Documents/WindowsPowerShell/x.json << 'EOF'\n{}\nEOF`, [R, `${HOMES}/Documents`]), false)
+  assert('heredoc 허용 폴더 안이라도 PowerShell 7 프로필(대소문자 섞임) → false',
+    isHeredocSafe(`cat > ${HOMES}/documents/POWERSHELL/x.json << 'EOF'\n{}\nEOF`, [R, HOMES]), false)
+  // 공백 든 경로는 따옴표로 쓴다 — 공백에서 끊긴 앞부분(…/Start)만 보고 통과시키면 안 된다
+  assert('compound: 홈을 허용해도 따옴표 속 시작프로그램 폴더(대소문자 섞임) 쓰기 → false',
+    isCompoundSafe(`echo a > "${STARTUP.replace('Startup', 'STARTUP')}/x.js" && ls`, [R, HOMES]), false)
+  assert('brace: 홈을 허용해도 따옴표 속 시작프로그램 폴더 리다이렉트 → false',
+    isBraceExpansionSafe(`echo {a,b} > "${STARTUP}/x.txt"`, [R, HOMES]), false)
+  assert('compound: 홈을 허용하면 따옴표 속 평범한 공백 경로는 → true (과잉 차단 없음)',
+    isCompoundSafe(`echo a > "${HOMES}/내 문서/x.txt" && ls`, [R, HOMES]), true)
+  assert('heredoc 본문 뒤 cp /tmp/x.json D:/evil.json → false',
+    isHeredocSafe(`cat > /tmp/x.json << 'EOF'\n{}\nEOF\ncp /tmp/x.json D:/evil.json`, A), false)
+  assert('brace: echo {a,b} > C:/Windows/x.txt → false', isBraceExpansionSafe('echo {a,b} > C:/Windows/x.txt', A), false)
+  assert('brace: echo {a,b} > "$APPDATA/x" → false', isBraceExpansionSafe('echo {a,b} > "$APPDATA/x"', A), false)
+  assert('brace: wc -l x/{a,b} > /tmp/c.txt → true (임시)', isBraceExpansionSafe('wc -l x/{a,b} > /tmp/c.txt', A), true)
+  assert('script: X=1 + echo $X > D:/x.txt → false', isShellScriptSafe('X=1\necho $X > D:/x.txt', A), false)
+  assert('script: X=1 + echo $X > <proj>/x.txt → true', isShellScriptSafe(`X=1\necho $X > ${R}/x.txt`, A), true)
+}
+
+section('허용 폴더 환경변수 구분자 — 맥 `:` / 윈도우 `;`')
+{
+  const { getAllowedDirs } = require('./bash-guard.js')
+  const saved = process.env.CLAUDE_BASH_GUARD_ALLOWED_DIRS
+  if (IS_WIN) {
+    process.env.CLAUDE_BASH_GUARD_ALLOWED_DIRS = 'D:\\aa;E:/bb;/f/cc;;'
+    const d = getAllowedDirs(PROJECT_ROOT).map(x => x.toLowerCase())
+    assert('윈도우: D:\\aa;E:/bb;/f/cc → 세 폴더 모두 (C: 가 잘리지 않음)', ['d:\\aa', 'e:\\bb', 'f:\\cc'].every(x => d.includes(x)), true)
+    assert('윈도우: 빈 항목(;;)은 무시 — 드라이브 루트가 허용 폴더로 끼어들지 않음', d.some(x => /^[a-z]:\\$/.test(x)), false)
+    process.env.CLAUDE_BASH_GUARD_ALLOWED_DIRS = 'D:\\aa:E:\\bb' // 맥 구분자로 잘못 넣음 → 하나의 이상한 경로일 뿐, 드라이브 루트가 허용되지 않음
+    const d2 = getAllowedDirs(PROJECT_ROOT).map(x => x.toLowerCase())
+    assert('윈도우: `:` 로 넣은 값은 나뉘지 않아 D:\\ 루트·E:\\ 루트가 허용되지 않음', d2.some(x => x === 'd:\\' || x === 'e:\\'), false)
+  } else {
+    process.env.CLAUDE_BASH_GUARD_ALLOWED_DIRS = '/aa:/bb'
+    const d = getAllowedDirs(PROJECT_ROOT)
+    assert('맥: /aa:/bb → 두 폴더 (기존 동작)', d.includes('/aa') && d.includes('/bb'), true)
+  }
+  if (saved === undefined) delete process.env.CLAUDE_BASH_GUARD_ALLOWED_DIRS; else process.env.CLAUDE_BASH_GUARD_ALLOWED_DIRS = saved
 }
 
 // ── 같은 명령 안의 고정값 변수 풀기 (2026-10-21) — 읽기 전용일 때만 새로 자동, 숨긴 위험은 차단 ──
@@ -1031,7 +1243,28 @@ section('getAllowedDirs — 래퍼 설정 폴더(CLAUDE_CONFIG_DIR)')
   assert('읽기 전용 판정: 모르는 변수 거부', RO('cat $UNKNOWN'), false)
   assert('읽기 전용 판정: $HOME 허용', RO('cat $HOME/a'), true)
   assert('읽기 전용 판정: 치환 안 쓰기 거부', RO('echo $(rm -rf /tmp/a)'), false)
-  assert('읽기 전용 판정: 비문자열', RO(null), false)
+  assert('읽기 전용 판정: 비문자열', RO(null), false)}
+
+// ── 변수 풀기 × 윈도우 (2026-10-21 main 결정 42 병합) — .exe 이름·윈도우 경로·~ 펼침이 함께 동작 ──
+{
+  const both = (desc, command, pre, perm) => { test(`${desc} (Pre)`, 'Bash', { command }, pre); test(`${desc} (Perm)`, 'Bash', { command }, perm, 'PermissionRequest') }
+  section('변수 풀기 × 윈도우 실행 파일 이름 — 악성: 변수에 .exe 를 숨겨도 같은 판정')
+  both('X=git.exe; $X push --force', 'X=git.exe; $X push --' + 'force origin main', 'deny', 'null')
+  both('X=RM.EXE; $X -rf ~', 'X=RM.EXE; $X -rf ~', 'deny', 'null')
+  both('X=git.exe; $X status (읽기)', 'X=git.exe; $X status --short', 'allow', 'allow')
+  both('X=cat.exe; $X /etc/hosts (읽기)', 'X=cat.exe; $X /etc/hosts', 'allow', 'allow')
+  both('X=cmd.exe; $X //c dir (안을 판정 못 하는 셸)', 'X=cmd.exe; $X //c dir', 'ask', 'null')
+  if (process.platform === 'win32') {
+    section('변수 풀기 × 윈도우 경로 — ~ 는 C:/Users/… 로 펼쳐 개인키·홈 삭제를 그대로 막음')
+    // 회귀: 윈도우 홈의 \ 때문에 ~ 를 펼친 값이 안전값 검사에 걸려 안 풀리고, 개인키 읽기가 자동 허용되던 것 (2026-10-21)
+    both('P=~/.ssh; cat $P/id_rsa', 'P=~/.ssh; cat $P/id_rsa', 'deny', 'null')
+    both('S=~; rm -rf $S', 'S=~; rm -rf $S', 'deny', 'null')
+    both('H=C:/Users; rm -rf $H (슬래시 표기 윈도우 경로)', 'H=C:/Users; rm -rf $H', 'deny', 'null')
+    // 경계: \ 가 든 값은 지금처럼 풀지 않음(안전 쪽 — 판정 못 하면 확인)
+    both('X=C:\\Windows; rm -rf $X (\\ 값은 안 풂 → 확인)', 'X=C:\\Windows; rm -rf $X', 'ask', 'null')
+  } else {
+    console.log('  ⏭ 윈도우 경로 판정은 윈도우에서만 (맥의 ~ 펼침은 위 결정 42 시험이 맡음)')
+  }
 }
 
 console.log(`\n${'─'.repeat(40)}`)

@@ -218,6 +218,29 @@ if (rootUpper && fs.existsSync(rootUpper)) {
   console.log('  ⚠️  이 파일시스템은 대소문자 구분(case-sensitive) — 대소문자 정규화 테스트 스킵')
 }
 
+if (process.platform === 'win32') {
+  console.log('\n── 윈도우 경로 형식 (백슬래시·Git Bash 경로·위장) ──')
+  // 대응 테스트를 같은 폴더에 둬서, 제외 판정이 안 걸리면 실제로 차단되는 상황을 만든다
+  const W = path.join(tmp, 'win'); fs.mkdirSync(W, { recursive: true })
+  run('[윈도우] .claude\\hooks\\ 백슬래시 경로(테스트 같은 폴더) → 인프라 제외 exit 0',
+    { src: FAKE_SRC, test: FAKE_TEST, dir: path.join(W, '.claude', 'hooks'), srcName: 'calc.js', projectDir: W }, 0)
+  run('[윈도우] scripts\\ 백슬래시 경로 → 인프라 제외 exit 0',
+    { src: FAKE_SRC, test: FAKE_TEST, dir: path.join(W, 'scripts'), srcName: 'calc.js', projectDir: W }, 0)
+  run('[윈도우] src\\__tests__\\helper.ts(이름에 .test 없음) → 테스트 폴더 파일이라 검사 제외 exit 0',
+    { src: FAKE_SRC, test: FAKE_TEST, dir: path.join(W, 'src', '__tests__'), srcName: 'helper.ts', testName: 'helper.test.ts', projectDir: W }, 0)
+  // 우회 시도: 비슷한 이름 폴더 → 제외되지 않고 차단
+  run('[윈도우] .claude\\hooksX\\ (접두 위장) → 차단 exit 2',
+    { src: FAKE_SRC, test: FAKE_TEST, dir: path.join(W, '.claude', 'hooksX'), srcName: 'calc.ts', projectDir: W }, 2)
+  run('[윈도우] myscripts\\ (접미 위장) → 차단 exit 2',
+    { src: FAKE_SRC, test: FAKE_TEST, dir: path.join(W, 'myscripts'), srcName: 'calc.ts', projectDir: W }, 2)
+  // 이상·경계: Git Bash 형식 CLAUDE_PROJECT_DIR — 예전엔 `C:\c\…` 로 풀려 전부 "프로젝트 밖"(검사 꺼짐)
+  const msys = '/' + W[0].toLowerCase() + W.slice(2).replace(/\\/g, '/')
+  run('[윈도우] CLAUDE_PROJECT_DIR 가 /c/… 형식 → 프로젝트 안, 가짜 구현 차단 exit 2',
+    { src: FAKE_SRC, test: FAKE_TEST, dir: path.join(W, 'msys'), srcName: 'calc.ts', projectDir: msys }, 2)
+  run('[윈도우] 공백·한글 폴더의 가짜 구현 → 차단 exit 2',
+    { src: FAKE_SRC, test: FAKE_TEST, dir: path.join(W, '공백 폴더'), srcName: 'calc.ts', projectDir: W }, 2)
+}
+
 fs.rmSync(tmp, { recursive: true, force: true })
 
 console.log(`\n결과: ${passed}/${passed + failed} 통과`)

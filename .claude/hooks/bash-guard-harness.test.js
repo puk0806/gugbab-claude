@@ -9,21 +9,25 @@ const os = require('os')
 const path = require('path')
 const { spawnSync } = require('child_process')
 const { classifyShell, handlePreToolUse } = require('./bash-guard.js')
+const { IS_WIN, toSlash } = require('./lib/winpath')
+const { linkDir } = require('./lib/testfs')
 
 const HOOK = path.join(__dirname, 'bash-guard.js')
-const tmp = (p) => fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), p)))
 
 // 임시 폴더는 원래 쓰기 허용이라 하네스·프로젝트를 홈 아래 임시 폴더에 둔다 (실제 ~/gugbab 와 같은 조건)
-const base = fs.realpathSync(fs.mkdtempSync(path.join(os.homedir(), '.bg-harness-test-')))
+// 윈도우(2026-10-20): bash 명령에 넣는 경로는 Git Bash 가 쓰는 슬래시 형태(C:/x) — 따옴표 밖 `\` 는 bash 가 지운다.
+// fs 함수는 슬래시 경로도 받으므로 같은 문자열을 그대로 쓴다. 맥은 toSlash 가 그대로 돌려준다
+const base = toSlash(fs.realpathSync(fs.mkdtempSync(path.join(os.homedir(), '.bg-harness-test-'))))
 process.on('exit', () => { try { fs.rmSync(base, { recursive: true, force: true }) } catch { /* 무시 */ } })
-const harness = path.join(base, 'gugbab')
-const proj = path.join(base, 'proj')
-const memDir = path.join(harness, 'projects', 'proj', '.claude', 'projects', '-enc-proj')
-const otherMem = path.join(harness, 'projects', 'other', '.claude', 'projects', '-enc-other')
-for (const d of [path.join(harness, 'cli'), path.join(proj, '.git'), memDir, otherMem]) fs.mkdirSync(d, { recursive: true })
-fs.writeFileSync(path.join(harness, 'cli', 'main.js'), '')
-const link = path.join(base, 'link-to-harness')
-fs.symlinkSync(harness, link)
+const J = (...a) => toSlash(path.join(...a))
+const harness = J(base, 'gugbab')
+const proj = J(base, 'proj')
+const memDir = J(harness, 'projects', 'proj', '.claude', 'projects', '-enc-proj')
+const otherMem = J(harness, 'projects', 'other', '.claude', 'projects', '-enc-other')
+for (const d of [J(harness, 'cli'), J(proj, '.git'), memDir, otherMem]) fs.mkdirSync(d, { recursive: true })
+fs.writeFileSync(J(harness, 'cli', 'main.js'), '')
+const link = J(base, 'link-to-harness')
+linkDir(harness, link) // 윈도우는 junction (개발자 모드 없이 만들 수 있는 링크 — 공격자도 같은 조건)
 
 function withEnv(env, fn) {
   const keys = ['GUGBAB_HOME', 'CLAUDE_BASH_GUARD_ALLOWED_DIRS', 'CLAUDE_PROJECT_DIR', 'CLAUDE_CONFIG_DIR']

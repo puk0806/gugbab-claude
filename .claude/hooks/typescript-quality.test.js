@@ -19,6 +19,7 @@ const STATE_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'tsq-state-'))
 process.env.TSQ_STATE_DIR = STATE_DIR
 
 let passed = 0, failed = 0
+const IS_WIN = process.platform === 'win32'
 
 // 훅이 CLAUDE_PROJECT_DIR(없으면 cwd) 밖 파일을 스킵하므로, 기존 테스트(프로젝트 픽스처 다수를
 // tmp에 흩어 생성)가 계속 같은 의미로 통과하려면 각 호출의 CLAUDE_PROJECT_DIR을 그 파일의
@@ -79,6 +80,16 @@ function makeProject(name) {
     'exit "${TSC_STUB_EXIT:-0}"',
   ].join('\n'))
   fs.chmodSync(stub, 0o755)
+  if (IS_WIN) {
+    // 윈도우 npx 는 .bin/tsc.cmd 를 실행한다(sh 스텁은 못 돌림) — 같은 동작(SLEEP·printf %b·EXIT)을 node 스크립트로
+    fs.writeFileSync(path.join(bin, 'tsc-stub.js'), [
+      "const e = process.env",
+      "const esc = (_, s) => s === 'n' ? '\\n' : s === '\\\\' ? '\\\\' : String.fromCharCode(parseInt(s.slice(1), 16))",
+      "const out = () => { process.stdout.write(String(e.TSC_STUB_OUT || '').replace(/\\\\(x[0-9a-fA-F]{2}|n|\\\\)/g, esc)); process.exit(Number(e.TSC_STUB_EXIT || 0)) }",
+      "if (e.TSC_STUB_SLEEP) setTimeout(out, Number(e.TSC_STUB_SLEEP) * 1000); else out()",
+    ].join('\n'))
+    fs.writeFileSync(path.join(bin, 'tsc.cmd'), '@node "%~dp0tsc-stub.js" %*\r\n')
+  }
   // npx --yes tsc 는 로컬 node_modules/.bin 을 우선 사용한다. package.json 이 있어야 프로젝트로 인식.
   fs.writeFileSync(path.join(root, 'package.json'), '{"name":"tsq-fixture","private":true}')
   return root
@@ -440,6 +451,35 @@ console.log('\n── 프로젝트 밖 파일은 통과(스킵) — 경로 정�
       editedScope, 2, ['--changed-only'], { ...failStub, CLAUDE_PROJECT_DIR: scopeUpper })
   } else {
     console.log('  ⚠️  이 파일시스템은 대소문자 구분(case-sensitive) — 대소문자 정규화 테스트 스킵')
+  }
+
+  if (IS_WIN) {
+    console.log('\n── 윈도우 경로 형식 ──')
+    // 악성: 폴더 junction(권한 없이 만들 수 있는 링크)으로 밖의 폴더를 프로젝트 안처럼 보이게 → realpath 기준 밖 → exit 0
+    const { linkDir } = require('./lib/testfs')
+    const outDir = path.join(outsideRoot, 'jdir'); fs.mkdirSync(outDir, { recursive: true })
+    fs.writeFileSync(path.join(outDir, 'j.ts'), 'export const j = 1')
+    linkDir(outDir, path.join(projScope, 'src', 'jlink'))
+    resetBaseline(projScope)
+    test('[윈도우] junction 으로 들어온 밖의 폴더 파일(에러 있음) → realpath 기준 밖 exit 0',
+      path.join(projScope, 'src', 'jlink', 'j.ts'), 0, ['--changed-only'], { TSC_STUB_OUT: errIn('src/jlink/j.ts'), TSC_STUB_EXIT: '2', CLAUDE_PROJECT_DIR: projScope })
+    // 정상: Git Bash 형식 CLAUDE_PROJECT_DIR(/c/…) 도 같은 프로젝트 → 차단 유지
+    const msys = '/' + projScope[0].toLowerCase() + projScope.slice(2).replace(/\\/g, '/')
+    resetBaseline(projScope)
+    test('[윈도우] CLAUDE_PROJECT_DIR 가 /c/… 형식 → 프로젝트 안으로 보고 차단(exit 2)', editedScope, 2, ['--changed-only'], { ...failStub, CLAUDE_PROJECT_DIR: msys })
+    // 경계: tsc 가 백슬래시 경로 + CRLF 로 출력해도 편집 파일 에러로 인식
+    resetBaseline(projScope)
+    test('[윈도우] tsc 출력이 src\\edited.ts + CRLF → 편집 파일 에러로 인식 exit 2', editedScope, 2, ['--changed-only'],
+      { TSC_STUB_OUT: `src\\\\edited.ts(3,7): error TS2322: Type 'string' is not assignable to type 'number'.\r\n`, TSC_STUB_EXIT: '2' },
+      (se) => se.includes('src/edited.ts') && se.includes('이번 저장'))
+    // 우회 시도: 백슬래시로 다른 파일을 편집 파일처럼 위장(src\edited.ts.bak) → 내 에러로 오인 안 함
+    resetBaseline(projScope)
+    test('[윈도우] src\\edited.ts.bak·src\\sub\\edited.ts 에러는 편집 파일로 오인 안 함 exit 0', editedScope, 0, ['--changed-only'],
+      { TSC_STUB_OUT: `src\\\\edited.ts.bak(3,7): error TS2322: x\nsrc\\\\sub\\\\edited.ts(1,1): error TS2322: y\n`, TSC_STUB_EXIT: '2' })
+    // 경계: 드라이브 문자 소문자 file_path
+    resetBaseline(projScope)
+    test('[윈도우] file_path 드라이브 소문자(c:\\…) → 같은 프로젝트 차단 유지 exit 2', editedScope[0].toLowerCase() + editedScope.slice(1), 2, ['--changed-only'],
+      { ...failStub, CLAUDE_PROJECT_DIR: projScope })
   }
 
   fs.rmSync(projScope, { recursive: true, force: true })

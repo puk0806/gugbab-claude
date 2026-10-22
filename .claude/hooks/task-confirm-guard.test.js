@@ -12,7 +12,8 @@ const fs = require('fs')
 const os = require('os')
 const path = require('path')
 const HOOK = path.join(__dirname, 'task-confirm-guard.js')
-const { stateFile } = require('./task-confirm-guard.js')
+const { stateFile, judgePrompt } = require('./task-confirm-guard.js')
+const { IS_WIN, linkDir } = require('./lib/testfs')
 
 let passed = 0, failed = 0
 const check = (desc, cond, detail) => {
@@ -64,7 +65,9 @@ console.log('\n── 정상 경로 ──')
   const s = sid(); const r = prompt(s, '이거 설명해줘', transcript('완료했습니다.'))
   check('미승인 질문 → 절차 지시 주입', /진행할까요/.test(r.stdout) && JSON.parse(r.stdout).hookSpecificOutput.hookEventName === 'UserPromptSubmit', r.stdout)
   check('미승인이어도 메모리 폴더 쓰기는 허용', write(s, path.join(os.homedir(), '.claude/projects/-x/memory/a.md')).code === 0)
-  check('미승인이어도 임시 폴더 쓰기는 허용', write(s, '/private/tmp/claude-1/scratchpad/a.txt').code === 0)
+  // 윈도우 임시 폴더 = os.tmpdir() (`C:\Users\…\AppData\Local\Temp`, scratchpad 도 그 아래). 맥은 기존 경로 그대로
+  const tmpFile = IS_WIN ? path.join(os.tmpdir(), 'claude', 'scratchpad', 'a.txt') : '/private/tmp/claude-1/scratchpad/a.txt'
+  check('미승인이어도 임시 폴더 쓰기는 허용', write(s, tmpFile).code === 0)
   check('미승인이어도 계획 폴더 쓰기는 허용', write(s, path.join(os.homedir(), '.claude/plans/p.md')).code === 0)
   check('Read 등 다른 도구는 관여 안 함', run({ hook_event_name: 'PreToolUse', session_id: s, tool_name: 'Read', tool_input: { file_path: 'a' } }).code === 0)
   check('Bash 는 관여 안 함', run({ hook_event_name: 'PreToolUse', session_id: s, tool_name: 'Bash', tool_input: { command: 'ls' } }).code === 0)
@@ -147,9 +150,13 @@ check('예외 경로 위장: memory/../../settings.json (상위 이동) → 차�
 // 래퍼(gugbab-claude) 설정 폴더: projects/·plans/ 가 ~/.claude 쪽 링크 — 링크를 따라간 실제 위치로 예외 판정 (2026-10-16)
 {
   const HOME = os.homedir()
+  // CI 러너처럼 ~/.claude/projects 가 없으면 링크가 깨져 시험이 안 된다 — 없을 때만 만들고, 끝나면 만든 것만 지운다 (2026-10-22)
+  const projects = path.join(HOME, '.claude', 'projects')
+  const madeByTest = fs.existsSync(path.join(HOME, '.claude')) ? (fs.existsSync(projects) ? null : projects) : path.join(HOME, '.claude')
+  fs.mkdirSync(projects, { recursive: true })
   const linked = fs.mkdtempSync(path.join(HOME, '.tcg-cfg-'))
   const fake = fs.mkdtempSync(path.join(HOME, '.tcg-cfg-'))
-  fs.symlinkSync(path.join(HOME, '.claude', 'projects'), path.join(linked, 'projects'))
+  linkDir(projects, path.join(linked, 'projects')) // 윈도우는 junction (심볼릭 링크 EPERM)
   fs.mkdirSync(path.join(fake, 'projects', 'x', 'memory'), { recursive: true })
   const s1 = sid(); prompt(s1, '해줘', transcript('x'))
   check('설정 폴더 projects 링크 안 메모리 → 미승인이어도 허용', write(s1, path.join(linked, 'projects', '-x', 'memory', 'a.md')).code === 0)
@@ -157,8 +164,52 @@ check('예외 경로 위장: memory/../../settings.json (상위 이동) → 차�
   check('예외 경로 위장: 링크 아닌 진짜 projects/x/memory 폴더 → 차단', write(s2, path.join(fake, 'projects', 'x', 'memory', 'a.md')).code === 2)
   const s3 = sid(); prompt(s3, '해줘', transcript('x'))
   check('예외 경로 위장: 링크 projects 안 notmemory → 차단', write(s3, path.join(linked, 'projects', '-x', 'notmemory', 'a.md')).code === 2)
+  fs.unlinkSync(path.join(linked, 'projects')) // 링크만 먼저 제거 — rm 이 링크 너머 실제 ~/.claude/projects 로 들어가지 않게
   fs.rmSync(linked, { recursive: true, force: true })
   fs.rmSync(fake, { recursive: true, force: true })
+  if (madeByTest) fs.rmSync(madeByTest, { recursive: true, force: true })
+}
+
+console.log('\n── 승인 + 다른 행동 금지 부가 조건 (2026-10-20 실사용 오탐) ──')
+{
+  // 정상: 승인어로 시작하고 "하지 말고/하지 마" 가 *다른 행동*을 금지 → 승인
+  for (const reply of ['응 진행해 커밋 푸쉬는 하지 말고 테스트까지만', '응 … 커밋 푸쉬는 하지 말고 …', '네 그렇게 해줘. 다만 main 에는 푸시하지 마', '진행해, README 는 건드리지 말고',
+    'ㅇㅇ 근데 문서는 수정하지 말아줘', '좋아 진행하자 커밋은 하지마']) {
+    const v = judgePrompt(reply, PLAN)
+    check(`승인 + 금지 부가 조건 "${reply}" → 승인`, v.approved === true, v)
+  }
+  const s = sid(); prompt(s, '응 … 커밋 푸쉬는 하지 말고 …', transcript(PLAN))
+  check('실사용 문장으로 승인 → Write 허용 (훅 경유)', write(s).code === 0)
+  // 악성·우회: 승인어로 시작해도 진짜 거절·대체 요청이면 계속 거절
+  for (const reply of ['아니 그거 하지 말고 다시', '응 아니 그거 하지 말고 다시 정리해', '네 잠깐 그거 하지 마', '응 근데 A 말고 B로 해줘', '응 다시 정리해서 가져와',
+    '예전처럼 하지 말고 새로 짜', '네가 하지 말고 내가 할게', '그거 하지 마', '응 그만해 하지 마', '응 그 방식 말고 다른 방식']) {
+    const v = judgePrompt(reply, PLAN)
+    check(`진짜 거절·대체 "${reply}" → 거절`, v.approved === false, v)
+  }
+  // 이상·경계: 승인어만·빈 값·초장문·특수문자
+  check('경계: "응" 단독 → 승인', judgePrompt('응', PLAN).approved === true)
+  check('경계: 빈 문자열 → 승인(기존 동작: 확인 질문 뒤 거절 표현 없음)', judgePrompt('', PLAN).approved === true)
+  check('경계: 초장문 금지 절 반복 → 크래시 없이 승인', judgePrompt('응 ' + '커밋 하지 말고 '.repeat(5000), PLAN).approved === true)
+  check('경계: 확인 질문 없는 답 뒤의 승인+금지 → 미승인', judgePrompt('응 커밋은 하지 말고', '완료했습니다.').approved === false)
+}
+
+console.log('\n── 윈도우 임시 폴더·메모리 예외 (윈도우 전용 경로 모양) ──')
+if (!IS_WIN) {
+  console.log('  ⚠️ 건너뜀: 윈도우 예외 경로 6종 — 윈도우 전용 (맥은 /tmp·/var/folders 규칙 그대로)')
+} else {
+  const T = os.tmpdir()
+  const mk = () => { const s = sid(); prompt(s, '해줘', transcript('x')); return s }
+  check('윈도우: 임시 폴더 드라이브 소문자·슬래시 표기 → 허용', write(mk(), (T[0].toLowerCase() + T.slice(1)).replace(/\\/g, '/') + '/x/a.txt').code === 0)
+  check('윈도우: 메모리 폴더 대소문자 다르게(`MEMORY`) → 허용', write(mk(), path.join(os.homedir(), '.Claude', 'Projects', '-x', 'MEMORY', 'a.md')).code === 0)
+  check('윈도우 악성: 접두만 같은 형제 `Temp2` → 차단', write(mk(), T + '2\\a.txt').code === 2)
+  check('윈도우 악성: 임시 폴더에서 `..` 로 탈출 → 차단', write(mk(), path.join(T, 'x') + '\\..\\..\\evil.txt').code === 2)
+  check('윈도우 악성: 승인 상태 파일 직접 쓰기(자기 승인) → 차단', write(mk(), path.join(T, 'claude-task-confirm-guard', 'x.json')).code === 2)
+  check('윈도우 악성: C:\\tmp (Node 의 /tmp — 진짜 임시 폴더 아님) → 차단', write(mk(), '/tmp/a.txt').code === 2)
+  const j = fs.mkdtempSync(path.join(T, 'tcg-j-'))
+  linkDir(process.cwd(), path.join(j, 'repo')) // 임시 폴더 안 junction → 레포 (공격자도 만들 수 있는 링크)
+  check('윈도우 악성: 임시 폴더 안 junction 너머 레포 파일 → 차단', write(mk(), path.join(j, 'repo', 'src', 'app.ts')).code === 2)
+  fs.unlinkSync(path.join(j, 'repo'))
+  fs.rmSync(j, { recursive: true, force: true })
 }
 
 console.log('\n── 이상·경계 경로 ──')

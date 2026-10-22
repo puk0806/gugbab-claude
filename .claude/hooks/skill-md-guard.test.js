@@ -8,7 +8,8 @@ const { spawnSync } = require('child_process')
 const fs = require('fs')
 const path = require('path')
 const HOOK = path.join(__dirname, 'skill-md-guard.js')
-const TMP = '/tmp/skill-md-guard-test.json'
+// 고정 '/tmp' 는 윈도우에서 '현재 드라이브:\tmp' 라 없을 수 있음(CI 러너 D:\tmp ENOENT, 2026-10-22)
+const TMP = path.join(require('os').tmpdir(), 'skill-md-guard-test.json')
 
 let passed = 0, failed = 0
 
@@ -145,6 +146,12 @@ test('description: 없음', 'Write', SKILL_PATH, NO_DESCRIPTION, false)
 section('소스·검증일 누락 → 실패')
 test('> 소스: 없음', 'Write', SKILL_PATH, NO_SOURCE, false)
 test('> 검증일: 없음', 'Write', SKILL_PATH, NO_VERIFIED_DATE, false)
+
+section('CRLF 줄바꿈 (윈도우 autocrlf 체크아웃, 2026-10-20) — LF 와 같은 판정')
+test('유효한 SKILL.md (CRLF) → 통과', 'Write', SKILL_PATH, VALID_CONTENT.replace(/\n/g, '\r\n'), true)
+test('> 소스: 없음 (CRLF) → 그래도 실패', 'Write', SKILL_PATH, NO_SOURCE.replace(/\n/g, '\r\n'), false)
+test('name: 없음 (CRLF) → 그래도 실패', 'Write', SKILL_PATH, NO_NAME.replace(/\n/g, '\r\n'), false)
+test('frontmatter 없음 (\\r 만) → 실패', 'Write', SKILL_PATH, NO_FRONTMATTER.replace(/\n/g, '\r'), false)
 
 section('대상 아닌 경로 → 무시 (통과)')
 test('다른 경로', 'Write', 'README.md', VALID_CONTENT, true)

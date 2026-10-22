@@ -21,8 +21,16 @@ const INJECTION_PATTERNS = [
   { name: '프롬프트 종료 시도', regex: /---+\s*END\s+(?:OF\s+)?(?:SYSTEM|INSTRUCTIONS)/i },
 ];
 
+// 입력은 fd 0 으로 읽는다('/dev/stdin' 은 윈도우에 없어 예외 → 아래 catch 로 조용히 통과했다).
+// 보안 훅이라 입력이 비었거나 JSON 객체가 아니면 통과시키지 않고 막는다 (2026-10-20 윈도우 계획 1단계)
+let input = null;
+try { input = JSON.parse(fs.readFileSync(0, 'utf8')); } catch { input = null; }
+if (!input || typeof input !== 'object' || Array.isArray(input)) {
+  process.stderr.write('[parry] 훅 입력(JSON)을 읽지 못해 안전을 위해 차단했습니다.\n');
+  process.exit(2);
+}
+
 try {
-  const input = JSON.parse(fs.readFileSync('/dev/stdin', 'utf8'));
   if (input.tool_name !== 'Write') process.exit(0);
 
   const content = input.tool_input?.content || '';

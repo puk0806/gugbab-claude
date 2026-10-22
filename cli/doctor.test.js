@@ -5,7 +5,9 @@ const assert = require('node:assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { runDoctor } = require('./doctor');
+const { runDoctor, findGitBash } = require('./doctor');
+const { trySymlink } = require('../.claude/hooks/lib/testfs');
+const winfs = require('./winfs');
 
 const tmp = (p) => fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), p)));
 const w = (f, s = '') => { fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, s); };
@@ -40,9 +42,9 @@ test('정상: 다 갖춰지면 ok', () => {
   assert.ok(r.find(x => x.key === 'login').msg.includes('CLAUDE_SECURESTORAGE_CONFIG_DIR'), '내부 변수 의존을 매번 알림');
 });
 
-test('악성: 설정 폴더 링크가 하네스 밖이나 없는 곳을 가리키면 경고', () => {
+test('악성: 설정 폴더 링크가 하네스 밖이나 없는 곳을 가리키면 경고', (t) => {
   const s = setup();
-  fs.symlinkSync('/etc/hosts', path.join(s.cfg, 'rules', 'evil.md'));
+  if (trySymlink('/etc/hosts', path.join(s.cfg, 'rules', 'evil.md')) === null) return t.skip('윈도우 심볼릭 링크 권한 없음 — junction 판은 아래 시험');
   fs.symlinkSync(path.join(s.code, 'nope.md'), path.join(s.cfg, 'rules', 'broken.md'));
   const r = runDoctor({ paths: s.paths, project: s.project, exec: okExec, env: {}, platform: 'darwin', nodeVersion: 'v22.0.0' });
   const links = r.find(x => x.key === 'links');
@@ -101,4 +103,45 @@ test('정상·경계: 하네스 버전 줄 — 개발 모드 표시, git 저장�
   assert.ok(v, '버전 줄 없음');
   assert.match(v.msg, /하네스 \? \(git 저장소가 아님\)/);
   assert.ok(!runDoctor({ paths: s.paths, project: s.project, exec: okExec, env: {}, platform: 'darwin' }).some(x => x.key === 'version'));
+});
+
+// ── 윈도우 (2026-10-20) ──
+test('정상: 윈도우 — 로그인 파일·Git Bash 점검', () => {
+  const s = setup();
+  w(path.join(s.paths.home, '.claude', '.credentials.json'), '{}');
+  const pf = tmp('dr-pf-'); w(path.join(pf, 'Git', 'bin', 'bash.exe'));
+  const r = runDoctor({ paths: s.paths, project: s.project, exec: okExec, env: { ProgramFiles: pf }, platform: 'win32', nodeVersion: 'v22.0.0' });
+  const lv = levels(r);
+  assert.strictEqual(lv.login, 'ok');
+  assert.strictEqual(lv.gitBash, 'ok');
+  assert.match(r.find(x => x.key === 'mux').msg, /새 창/);
+});
+
+test('악성: 윈도우 — Git Bash 가 없으면 fail(훅이 PowerShell 로 떨어져 가드가 꺼짐), 로그인 파일 없으면 warn', () => {
+  const s = setup();
+  const r = runDoctor({ paths: s.paths, project: s.project, exec: okExec, env: { ProgramFiles: tmp('dr-empty-'), PATH: '' }, platform: 'win32', nodeVersion: 'v22.0.0' });
+  const lv = levels(r);
+  assert.strictEqual(lv.gitBash, 'fail');
+  assert.strictEqual(lv.login, 'warn');
+});
+
+test('악성: Git Bash 후보 — PATH 의 git 폴더에서 찾되, 이름만 비슷한 폴더·폴더로 된 bash.exe 는 아님', () => {
+  const root = tmp('dr-git-');
+  w(path.join(root, 'Git', 'bin', 'bash.exe'));
+  assert.strictEqual(findGitBash({ PATH: path.join(root, 'Git', 'cmd') }), path.join(root, 'Git', 'bin', 'bash.exe'));
+  assert.strictEqual(findGitBash({ PATH: path.join(root, 'legit', 'cmd') }), null);
+  const dirAsExe = tmp('dr-git2-'); fs.mkdirSync(path.join(dirAsExe, 'Git', 'bin', 'bash.exe'), { recursive: true });
+  assert.strictEqual(findGitBash({ ProgramFiles: dirAsExe }), null);
+  assert.strictEqual(findGitBash({}), null);
+});
+
+test('악성(윈도우): 설정 폴더 안 junction 이 하네스 밖을 가리키면 경고 (권한 없이 만드는 링크)', { skip: process.platform !== 'win32' && '윈도우 전용' }, () => {
+  const s = setup();
+  const outside = tmp('dr-out-');
+  fs.mkdirSync(path.join(s.cfg, 'skills'), { recursive: true });
+  winfs.makeLink(outside, path.join(s.cfg, 'skills', 'evil'));
+  const r = runDoctor({ paths: s.paths, project: s.project, exec: okExec, env: {}, platform: 'win32', nodeVersion: 'v22.0.0' });
+  const links = r.find(x => x.key === 'links');
+  assert.strictEqual(links.level, 'warn');
+  assert.ok(links.msg.includes('evil'));
 });

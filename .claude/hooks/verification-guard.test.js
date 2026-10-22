@@ -8,7 +8,8 @@ const { spawnSync } = require('child_process')
 const fs = require('fs')
 const path = require('path')
 const HOOK = path.join(__dirname, 'verification-guard.js')
-const TMP = '/tmp/verification-guard-test.json'
+// 고정 '/tmp' 는 윈도우에서 '현재 드라이브:\tmp' 라 없을 수 있음(CI 러너 D:\tmp ENOENT, 2026-10-22)
+const TMP = path.join(require('os').tmpdir(), 'verification-guard-test.json')
 
 let passed = 0, failed = 0
 
@@ -167,6 +168,10 @@ test('"Python 내장 자료형" 문맥', 'Write', 'docs/skills/backend/python-bu
 
 section('frontmatter status 누락 → 실패')
 test('status 필드 없음', 'Write', 'docs/skills/frontend/test/verification.md', CONTENT_WITHOUT_STATUS, false)
+// CRLF 줄바꿈 (윈도우 autocrlf 체크아웃, 2026-10-20) — LF 와 같은 판정
+test('유효한 verification.md (CRLF) → 통과', 'Write', 'docs/skills/frontend/test/verification.md', VALID_CONTENT.replace(/\n/g, '\r\n'), true)
+test('status 필드 없음 (CRLF) → 그래도 실패', 'Write', 'docs/skills/frontend/test/verification.md', CONTENT_WITHOUT_STATUS.replace(/\n/g, '\r\n'), false)
+test('"내장 지식" 구문 (CRLF) → 그래도 실패', 'Write', 'docs/skills/frontend/test/verification.md', CONTENT_WITH_NAEJANG.replace(/\n/g, '\r\n'), false)
 
 section('필수 섹션 누락 → 실패')
 test('섹션 1,3,5,6,7,8 누락', 'Write', 'docs/skills/frontend/test/verification.md', CONTENT_MISSING_SECTIONS, false)

@@ -142,6 +142,7 @@ async function main() {
   } else {
     return process.exit(0)
   }
+  content = content.replace(/\r\n?/g, '\n') // CRLF(윈도우 autocrlf 체크아웃)도 같은 frontmatter 로 본다
   if (!content) return process.exit(0)
 
   // PostToolUse Write 는 Pre 단계가 이미 검증·차단했다 — 여기서는 새 차단 없이 날짜 경고만.

@@ -26,7 +26,8 @@ function realCanonical(p) {
   return path.resolve(p)
 }
 function resolveProjectRoot(baseCwd) {
-  const raw = process.env.CLAUDE_PROJECT_DIR || baseCwd || process.cwd()
+  // 윈도우: Git Bash 형식 `/c/…` 는 드라이브 경로로 — 그대로 두면 `C:\c\…` 로 풀려 검사가 꺼진다 (맥은 그대로)
+  const raw = require('./lib/winpath').msysToWin(process.env.CLAUDE_PROJECT_DIR || baseCwd || process.cwd())
   return realCanonical(raw)
 }
 // realpath는 symlink만 풀 뿐 대소문자를 온디스크 표기로 정규화하지 않는다(실측 확인) —

@@ -159,3 +159,26 @@
 | 하네스 없이 확인하고 싶음 | `gugbab-claude --raw` |
 | 메모리 폴더를 읽거나 고칠 때 확인 창이 뜸 | 세션 도중에 프로젝트 자체 `.claude/hooks` 를 지웠다면 `/exit` 후 다시 실행(실행할 때 어느 훅을 프로젝트 것으로 쓸지 정합니다). 하위 폴더에서 실행했다면 프로젝트 루트에서 실행 |
 | 하네스 폴더(`~/gugbab`)를 고치는 Bash 명령에 확인 창 | 의도된 동작 — 설치본은 `gugbab-claude update` 로만 바뀌어야 합니다 |
+
+---
+
+## 윈도우
+
+설치는 [README · 윈도우](../README.md#윈도우). 동작은 macOS 와 같고, 아래만 다릅니다 (2026-10-20 윈도우 10 실측 기준).
+
+| 항목 | 윈도우 |
+|---|---|
+| 실행 | PowerShell·cmd·Windows Terminal 에서 `gugbab-claude` (`~\gugbab\bin\gugbab-claude.cmd` → Node 래퍼 `cli/launch.js`). Git Bash 창에서도 같은 래퍼로 넘어갑니다 |
+| 필수 | **Git for Windows** — Claude Code 가 훅·상태줄을 Git Bash 로 실행합니다. 없으면 훅이 PowerShell 로 떨어져 안전 가드가 동작하지 않으므로 `gugbab-claude doctor` 가 ✗ 로 알립니다 |
+| 로그인 | `claude` 로 한 번 로그인한 `%USERPROFILE%\.claude\.credentials.json` 을 모든 프로젝트가 같이 씁니다(macOS 와 같은 방식 — 문서에 없는 내부 변수라 `doctor` 가 매번 알림) |
+| 설정 폴더 연결 | 관리자 권한·개발자 모드 없이 — 폴더(스킬·공유 폴더)는 **junction**, 파일(룰·커맨드·에이전트·CLAUDE.md)은 **하드링크**(안 되면 복사). 하네스가 업데이트돼 하드링크가 끊기면 다음 실행 때 다시 연결합니다 |
+| PowerShell 도구 | **꺼 둡니다**(`CLAUDE_CODE_USE_POWERSHELL_TOOL=0`). 위험 명령 차단·main push 보호 같은 가드가 Bash 명령만 보기 때문입니다 |
+| `/harness` 화면 | 새 콘솔 창에 뜹니다(저장하거나 닫으면 창도 닫힘). comux·tmux 는 윈도우에 없습니다 |
+| 업데이트 | 원격 확인 제한 8초(윈도우 git·자격 증명 관리자 초기화가 느림), 자격 증명 창은 띄우지 않습니다 |
+
+| 증상 | 확인 |
+|---|---|
+| `gugbab-claude` 를 찾지 못함 | 설치 뒤 **새 터미널**을 여세요(PATH 는 새 창부터). `-NoModifyPath` 로 설치했다면 `~\gugbab\bin` 을 사용자 PATH 에 직접 추가 |
+| 설치 스크립트 실행이 막힘(실행 정책) | `powershell -ExecutionPolicy Bypass -File .\install.ps1` 로 실행 |
+| `doctor` 가 Git Bash ✗ | Git for Windows 설치, 또는 `CLAUDE_CODE_GIT_BASH_PATH` 에 `bash.exe` 경로 |
+| 프로젝트 안 파일 수정에도 확인 창 | `/exit` 후 다시 실행(조립이 허용 폴더를 새로 계산). 계속되면 `gugbab-claude doctor` |

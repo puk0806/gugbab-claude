@@ -1,0 +1,38 @@
+# 단위 테스트 — 맥·윈도우 둘 다 (2026-10-22 윈도우 지원 맥 회귀 검토 — 윈도우 전용 보안 시험은 윈도우에서만 돌아 CI 가 없으면 회귀를 못 잡음)
+#   실사용 시나리오(scripts/wrapper-e2e.js·wrapper-matrix.js)는 claude 로그인이 필요해 여기서 돌리지 않는다 — 맥·윈도우 PC 에서 직접
+name: unit-tests
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: ['feat/**', 'fix/**']
+permissions:
+  contents: read
+jobs:
+  unit:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash # 윈도우도 Git Bash — 훅이 실제로 도는 셸과 같게
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: git 사용자(테스트가 임시 저장소에 커밋함)
+        run: |
+          git config --global user.name ci
+          git config --global user.email ci@example.invalid
+          git config --global init.defaultBranch main
+      - name: cli
+        run: node --test cli/*.test.js
+      - name: 훅
+        run: node --test .claude/hooks/*.test.js
+      - name: 훅 공용 헬퍼
+        run: for f in .claude/hooks/lib/*.test.js; do node "$f" || exit 1; done
+      - name: scripts
+        run: node --test scripts/*.test.js

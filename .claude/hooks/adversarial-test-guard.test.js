@@ -181,6 +181,30 @@ if (rootUpper && fs.existsSync(rootUpper)) {
   console.log('  ⚠️  이 파일시스템은 대소문자 구분(case-sensitive) — 대소문자 정규화 테스트 스킵')
 }
 
+if (process.platform === 'win32') {
+  console.log('\n── 윈도우 경로 형식 (백슬래시·드라이브 대소문자·Git Bash 경로·junction) ──')
+  const W = path.join(tmp, 'win-proj'); fs.mkdirSync(W, { recursive: true })
+  // 정상: 백슬래시 경로의 인프라 폴더는 맥과 같이 제외
+  run('[윈도우] .claude\\hooks\\ 백슬래시 경로 → 인프라 제외 exit 0', { absPath: path.join(W, '.claude', 'hooks', 'h.test.js'), content: HAPPY_ONLY, projectDir: W }, 0)
+  run('[윈도우] scripts\\ 백슬래시 경로 → 인프라 제외 exit 0', { absPath: path.join(W, 'scripts', 's.test.js'), content: HAPPY_ONLY, projectDir: W }, 0)
+  // 우회 시도: 이름만 비슷한 폴더로 제외 판정을 노림 → 제외되지 않고 차단
+  run('[윈도우] .claude\\hooksX\\ (접두 위장) → 제외 아님, 차단 exit 2', { absPath: path.join(W, '.claude', 'hooksX', 'e.test.ts'), content: HAPPY_ONLY, projectDir: W }, 2)
+  run('[윈도우] myscripts\\ (접미 위장) → 제외 아님, 차단 exit 2', { absPath: path.join(W, 'myscripts', 'e.test.ts'), content: HAPPY_ONLY, projectDir: W }, 2)
+  run('[윈도우] 파일 이름에 .claude 를 넣은 위장(src\\.claude-hooks.test.ts) → 차단 exit 2', { absPath: path.join(W, 'src', '.claude-hooks.test.ts'), content: HAPPY_ONLY, projectDir: W }, 2)
+  // 이상 경로: __tests__ 폴더 안 파일(이름에 .test 없음)도 테스트 파일 — 백슬래시라 놓치면 검사가 꺼진다
+  run('[윈도우] src\\__tests__\\calc.ts (happy만) → 테스트 파일로 보고 차단 exit 2', { absPath: path.join(W, 'src', '__tests__', 'calc.ts'), content: HAPPY_ONLY, projectDir: W }, 2)
+  // 경계: 드라이브 소문자·Git Bash 형식 프로젝트 경로도 같은 프로젝트
+  const lowerFile = path.join(W, 'lower.test.ts'); fs.writeFileSync(lowerFile, HAPPY_ONLY)
+  run('[윈도우] file_path 드라이브 소문자(c:\\…) → 같은 프로젝트, 차단 exit 2', { absPath: lowerFile[0].toLowerCase() + lowerFile.slice(1), content: HAPPY_ONLY, projectDir: W }, 2)
+  const msys = '/' + W[0].toLowerCase() + W.slice(2).replace(/\\/g, '/')
+  run('[윈도우] CLAUDE_PROJECT_DIR 가 /c/… 형식 → 같은 프로젝트, 차단 exit 2', { absPath: path.join(W, 'msys.test.ts'), content: HAPPY_ONLY, projectDir: msys }, 2)
+  run('[윈도우] 공백·한글 폴더(happy만) → 차단 exit 2', { absPath: path.join(W, '공백 폴더', '한글.test.ts'), content: HAPPY_ONLY, projectDir: W }, 2)
+  // 악성: junction(권한 없이 생성 가능)으로 밖의 폴더를 프로젝트 안처럼 → realpath 기준 밖 → 스킵 exit 0
+  const { linkDir } = require('./lib/testfs')
+  linkDir(outside, path.join(W, 'jlink'))
+  run('[윈도우] junction 너머 밖의 파일(happy만) → realpath 기준 프로젝트 밖 exit 0', { absPath: path.join(W, 'jlink', 'linked.test.ts'), content: undefined, projectDir: W }, 0)
+}
+
 fs.rmSync(tmp, { recursive: true, force: true })
 
 console.log(`\n결과: ${passed}/${passed + failed} 통과`)

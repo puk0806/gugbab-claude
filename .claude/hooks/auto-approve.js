@@ -28,6 +28,9 @@ const os = require('os')
 const path = require('path')
 const readline = require('readline')
 const { getAllowedDirs, isUnderAllowed, isUnderTempDir } = require('./bash-guard.js')
+// 윈도우(2026-10-20 윈도우 2단계): file_path·cwd 는 네이티브 `C:\x`. 비교는 대소문자·구분자 무시. 맥 판정은 기존 코드 그대로
+const W = require('./lib/winpath')
+const IS_WIN = W.IS_WIN
 
 // 공식 도구 표(code.claude.com/docs/en/tools-reference)에서 "Permission required: Yes" 이거나
 // 이 하네스에서 자동 승인할 도구. 권한이 원래 불필요한 도구(ToolSearch·TodoWrite 등)는 넣어도 무해하다.
@@ -104,9 +107,16 @@ const realDirs = (() => {
   return () => cache || (cache = CLAUDE_WORK_DIRS.map(d => { try { return fs.realpathSync(d) } catch { return d } }))
 })()
 
-// 래퍼(gugbab-claude)는 설정 폴더의 projects/·plans/ 를 ~/.claude 쪽으로 링크한다 — 링크를 따라간 실제 위치로 판정한다.
+// 래퍼(gugbab-claude)는 설정 폴더의 projects/·plans/ 를 ~/.claude 쪽으로 링크한다 (윈도우는 junction) — 링크를 따라간 실제 위치로 판정한다.
 // 이름만 projects 인 진짜 폴더나 CLAUDE_CONFIG_DIR 위장은 실제 위치가 ~/.claude 밖이라 통과하지 못한다
 function isClaudeWorkPath(abs) {
+  if (IS_WIN) {
+    // 윈도우: 대소문자 무시 + 경로 단위, 실제 위치(junction 따라감)로만 판정 — 래퍼 설정 폴더 링크는 통과,
+    // ~/.claude/projects 안에 심은 junction 으로 밖을 가리키는 탈출은 차단
+    const under = (p, dirs) => dirs.some(d => !W.samePath(p, d, true) && W.isUnder(p, d, true))
+    const real = realLocation(abs)
+    return !!real && (under(real, CLAUDE_WORK_DIRS) || under(real, realDirs()))
+  }
   if (CLAUDE_WORK_DIRS.some(d => abs.startsWith(d + path.sep))) return true
   const real = realLocation(abs)
   return !!real && realDirs().some(d => real.startsWith(d + path.sep))
@@ -121,6 +131,7 @@ function writeTargetOf(toolInput) {
 // 쓰기 경로가 프로젝트·허용 폴더 안인가 (판정 불가 → false = 확인)
 function isWriteInsideAllowed(filePath, cwd) {
   if (typeof filePath !== 'string' || !filePath) return false
+  if (IS_WIN) return isWriteInsideAllowedWin(filePath, cwd)
   let v = filePath
   if (HOME && (v === '~' || v.startsWith('~/'))) v = HOME + v.slice(1)
   let abs
@@ -128,6 +139,25 @@ function isWriteInsideAllowed(filePath, cwd) {
   if (isUnderTempDir(abs)) return true
   if (isClaudeWorkPath(abs)) return true
   return isUnderAllowed(abs, getAllowedDirs(cwd))
+}
+
+// 윈도우판 — `~\`·`~/`, MSYS `/c/x` 를 풀고, 글자 위치와 실제 위치(junction·링크를 따라간 곳)가 모두 허용 범위여야 자동.
+// 드라이브 상대(`C:x`)·다른 드라이브·UNC·접두만 같은 형제 폴더(C:\proj-evil)는 isUnderAllowed 가 경로 단위로 걸러 확인으로 간다
+function isWriteInsideAllowedWin(filePath, cwd) {
+  let v = filePath.replace(/\\/g, '/')
+  if (/^[A-Za-z]:(?!\/)/.test(v)) return false // 드라이브 상대 — 그 드라이브의 현재 폴더를 모름
+  if (HOME && (v === '~' || v.startsWith('~/'))) v = HOME + v.slice(1)
+  v = W.msysToWin(v, true)
+  let abs
+  try { abs = path.resolve(W.msysToWin(W.toSlash(cwd || process.env.CLAUDE_PROJECT_DIR || process.cwd(), true), true), v) } catch { return false }
+  if (isClaudeWorkPath(abs)) return true
+  const real = realLocation(abs)
+  if (!real) return false
+  if (isUnderTempDir(abs)) return isUnderTempDir(real)
+  const dirs = getAllowedDirs(cwd)
+  if (!isUnderAllowed(abs, dirs)) return false
+  const realAllowed = dirs.map(d => { try { return fs.realpathSync(d) } catch { return d } })
+  return isUnderAllowed(real, dirs) || isUnderAllowed(real, realAllowed)
 }
 
 // 반환: { level: 'allow'|'ask', reason } | null

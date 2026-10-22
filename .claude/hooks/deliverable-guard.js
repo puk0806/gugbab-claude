@@ -77,11 +77,19 @@ const SKILL_PATTERN = /\.claude\/skills\/.+\/SKILL\.md$/
 const AGENT_PATTERN = /\.claude\/agents\/.+\.md$/
 const CHANGESET_PATTERN = /\.changeset\/.+\.md$/
 
+// 윈도우(2026-10-20 실측): Write/Edit file_path·path.join 결과가 `\` 구분이라 위 `/` 패턴이 한 번도 맞지 않았다
+// (스킬·에이전트 수정 후 README 검사가 윈도우에서 통째로 꺼짐). 윈도우 분기에서만 `\` → `/` 로 바꿔 판정한다
+const IS_WIN = process.platform === 'win32'
+const slash = (p, win = IS_WIN) => (win ? String(p).replace(/\\/g, '/') : p)
+const matches = (re, f) => re.test(slash(f))
+
 // 루트 README.md 여부 판정 — 하위 패키지·참조 레포 README는 제외
 function isRootReadme(filePath) {
   if (!filePath.endsWith('README.md')) return false
   const projectDir = process.env.CLAUDE_PROJECT_DIR
   if (projectDir) {
+    // 윈도우: env 는 `C:/…`, file_path 는 `c:\…` 처럼 표기·대소문자가 달라도 같은 파일 (NTFS 대소문자 무시)
+    if (IS_WIN) return require('./lib/winpath').samePath(filePath, path.join(projectDir, 'README.md'), true)
     return path.normalize(filePath) === path.normalize(path.join(projectDir, 'README.md'))
   }
   const normalized = filePath.replace(/\\/g, '/')
@@ -98,7 +106,7 @@ function getReadmeViolations(sessionId, stagedOnly = false) {
   const sessionFiles = session.files || []
 
   // skill/agent: Write/Edit 도구로 기록됨 → session 기반
-  const skillAgentFiles = sessionFiles.filter(f => SKILL_PATTERN.test(f) || AGENT_PATTERN.test(f))
+  const skillAgentFiles = sessionFiles.filter(f => matches(SKILL_PATTERN, f) || matches(AGENT_PATTERN, f))
 
   const projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd()
   const toAbs = (files) => files.map(f => path.isAbsolute(f) ? f : path.join(projectDir, f))
@@ -108,7 +116,7 @@ function getReadmeViolations(sessionId, stagedOnly = false) {
   const unstaged = stagedOnly ? [] : toAbs(runGit('git diff --name-only'))
   const untracked = stagedOnly ? [] : toAbs(runGit('git ls-files --others --exclude-standard'))
   const changesetFiles = [...new Set([...staged, ...unstaged, ...untracked])]
-    .filter(f => CHANGESET_PATTERN.test(f) && fs.existsSync(f))
+    .filter(f => matches(CHANGESET_PATTERN, f) && fs.existsSync(f))
 
   if (skillAgentFiles.length === 0 && changesetFiles.length === 0) return null
 
@@ -119,7 +127,7 @@ function getReadmeViolations(sessionId, stagedOnly = false) {
 }
 
 function shortPath(fp) {
-  const parts = fp.split('/')
+  const parts = slash(fp).split('/')
   for (const anchor of ['.claude', 'docs', '.changeset']) {
     const idx = parts.indexOf(anchor)
     if (idx !== -1) return parts.slice(idx).join('/')
@@ -211,7 +219,14 @@ const SCAN_EXCLUDE = [
   `${path.sep}node_modules${path.sep}`,
 ]
 
-function isExcludedPath(fullPath) {
+// 윈도우: 실제 경로는 `\`, 테스트·도구 입력은 `/` 가 섞여 온다 → `/` 로 통일 + 소문자(NTFS 대소문자 무시) 후 판정.
+// 맥·리눅스(win=false)는 기존 식 그대로 (path.sep='/')
+const SCAN_EXCLUDE_SLASH = ['/.claude/worktrees/', '/node_modules/']
+function isExcludedPath(fullPath, win = IS_WIN) {
+  if (win) {
+    const p = slash(fullPath, true).toLowerCase()
+    return SCAN_EXCLUDE_SLASH.some(seg => p.includes(seg))
+  }
   return SCAN_EXCLUDE.some(seg => fullPath.includes(seg))
 }
 

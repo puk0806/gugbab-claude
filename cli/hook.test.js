@@ -131,12 +131,12 @@ test('악성: manifest 경로가 hooks 폴더 밖이면 실행하지 않고 기�
   fs.rmSync(evil, { force: true });
 });
 
-test('악성: hooks 폴더 안 링크가 밖을 가리켜도 실행하지 않음', () => {
+test('악성: hooks 폴더 안 링크가 밖을 가리켜도 실행하지 않음', (t) => {
   const s = setup({ PreToolUse: [H('mark')] });
   const out = tmp('hk-out-');
   fs.writeFileSync(path.join(out, 'x.js'), `require('fs').writeFileSync(process.env.MARK_FILE,'ran')`);
   fs.rmSync(path.join(s.code, '.claude/hooks/mark.js'));
-  fs.symlinkSync(path.join(out, 'x.js'), path.join(s.code, '.claude/hooks/mark.js'));
+  if (require('../.claude/hooks/lib/testfs').trySymlink(path.join(out, 'x.js'), path.join(s.code, '.claude/hooks/mark.js')) === null) return t.skip('윈도우 심볼릭 링크 권한 없음');
   const mark = path.join(s.data, 'mark');
   run(s, 'PreToolUse', pre(), { MARK_FILE: mark });
   assert.ok(!fs.existsSync(mark));
