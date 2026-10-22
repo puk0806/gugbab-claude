@@ -1,11 +1,11 @@
 ---
 name: project-windows-support-analysis
-description: "하네스 윈도우 지원 — 2026-10-20~21 사용자 윈도우 PC 에서 PoC·1~4단계 구현·실측 완료, main(PR #41·#42) 병합·실측. 2026-10-22 맥 회귀·윈도우 재확인·맥 확인 끝, CI 실패 원인(러너 가정 시험) 수정, CI 3차 맥·윈도우 통과 → PR(bump)"
+description: "하네스 윈도우 지원 — 2026-10-20~21 사용자 윈도우 PC 에서 PoC·1~4단계 구현·실측 완료, main(PR #41·#42) 병합·실측. 2026-10-22 맥 회귀·윈도우 재확인·맥 확인 끝, CI 실패 원인(러너 가정 시험) 수정, CI 3차 맥·윈도우 통과 → PR #43 머지·v1.0.15 릴리스(2026-10-22)"
 metadata:
   node_type: memory
   type: project
   originSessionId: d852c16f-4ed9-436a-affa-a1a250d0233a
-  modified: 2026-10-22T05:04:11.510Z
+  modified: 2026-10-22T06:21:04.603Z
 ---
 
 2026-10-19 분석만 → 2026-10-20 맥에서 계획서(결정 41)·1단계 → **같은 날 사용자 윈도우 PC(Win10 LTSC 2019, PS 5.1, Node 22.17, Git 2.37, Claude Code 2.1.280→304 npm 설치)에서 PoC·2~4단계 구현·실측까지**. 브랜치 `feat/windows-support-poc-2026-10-20`, 2026-10-21 커밋·푸시(`7015ac0`). 상세는 레포 `docs/plans/2026-10-20-windows-support.md` 4.4(PoC 결과)·5.2(2~4단계 결과).
@@ -20,7 +20,7 @@ metadata:
 
 **2026-10-21 대화형 실측 완료**: 이 PC 사용자 PATH 에 `C:\회사\gugbab-claude\gugbab-claude\bin` + 사용자 환경변수 `GUGBAB_HOME`(개발 모드) 등록(원래 PATH 는 세션 scratchpad 백업 — 정식 설치 후 둘 다 지울 것). 자동 키 입력(SendKeys)은 윈도우 포커스 제한으로 안 됨 → `AttachConsole`+`WriteConsoleInput`(가상 키·스캔 코드 채워야 claude 가 받음)+`ReadConsoleOutputCharacter` 로 새 창을 직접 구동해 첫 실행·신뢰·응답·Ctrl+C(키 이벤트)·/harness 새 창 TUI 저장·/exit→--continue·종료 정리 확인. 찾은 것: Git Bash 의 `/` 인자 경로 변환 → sh 래퍼 수정 · 창 하나 입력 멈춤(재현 안 됨) · 이 PC Claude Code 자동 업데이트 중 몇 초간 claude.exe 없음 · 시험 도중 생긴 고아 `git status` 프로세스·오래된 `.git/index.lock`(잠금은 지움, 프로세스 종료는 분류기 거부) · 줄바꿈 정규화 뒤 내용 같은 파일 767개가 status 에 M 으로 보여 인덱스에서 다시 꺼내 정리. 버전 1.0.13.
 
-**남은 것 (2026-10-22 갱신)**: main 병합·M2·M3·M11·맥 회귀(M13)·윈도우 재확인·맥 확인·**CI 3차 통과**는 끝(아래) · **남은 것 = PR(bump 1.0.15)**. 커밋은 사용자 요청 시, 윈도우 PC git 전역 작성자는 회사 계정 kty — 커밋 전 local user 를 puk0806 로 바꿀지 확인(지금까지 브랜치 커밋은 모두 puk0806).
+**남은 것 (2026-10-22 PR 올림)**: main 병합·M2·M3·M11·맥 회귀(M13)·윈도우 재확인·맥 확인·CI 3차 통과는 끝(아래) · **2026-10-22 맥에서 `bump` → 1.0.15 커밋(`7c961f9`)·푸시 → PR #43 `[config] 윈도우 지원 · 단위 테스트 CI(맥·윈도우) (v1.0.15)` 생성** · **2026-10-22 사용자가 PR #43 머지(`1c83c54`) → `release-on-main` 이 v1.0.15 태그·Release 생성, 맥 설치본 `gugbab-claude update` 로 v1.0.14 → v1.0.15**. 필수로 남은 것 없음. 맥 설치본 v1.0.15 실측: `wrapper-e2e.js` 51 · `wrapper-e2e.sh` 40 · 매트릭스 671 전부 통과. **사용자 지시로 윈도우 지원 마무리 표시 = v1.1.0(minor) 버전 PR**(2026-10-22, 코드 변경 없이 VERSION·메모리만). 하면 좋은 것: 윈도우 실제 VS Code 터미널(M12)·수동 `gugbab-claude update`(M7). 커밋은 사용자 요청 시, 윈도우 PC git 전역 작성자는 회사 계정 kty — 커밋 전 local user 를 puk0806 로 바꿀지 확인(지금까지 브랜치 커밋은 모두 puk0806).
 
 **main 추가분 반영할 것 (2026-10-21 맥에서 이 브랜치에 넣음 — 사용자 지시: "윈도우 쪽 작업 다 끝나면 추가 작업 내용만 정리해서 그 피처 브랜치에서 하라고 전달")**
 - 기준: 이 브랜치는 main `c849d1b`(PR #40 v1.0.12)까지 병합됨. 그 뒤 main 추가분 = **PR #41 v1.0.13**(`/harness` 창 저장 뒤 자동 닫힘 — tui `closeDelayMs` 2초 요약 뒤 끝, macOS 만 `--close-terminal` 로 화면 시작 때 그 tty 의 busy 창을 id 로 기억해 한가해지면 닫음) + **PR #42 v1.0.14**(결정 42 bash-guard 고정값 변수 풀기 `resolveLiteralVars`·`isReadOnlyResolved` — 풀어 본 명령이 엄격한 읽기 목록일 때만 새로 자동 허용, deny·ask 는 그대로 / 결정 43 `/harness` 📌 — 프로젝트 파일 `.gugbab.json`·`.lfmall.json` 이 정한 항목 표시, 이 프로젝트 범위에선 바꾸지도 기록하지도 않음). main 쪽 메모리 `feedback_auto_allow_reads_only.md`(자동 허용은 읽기만)도 이 커밋으로 들어옴
@@ -40,4 +40,4 @@ metadata:
 
 **CI 3차·윈도우·맥 동시 작업 충돌 (2026-10-22)**: 맥이 `/tmp` 시험 2건을 고쳐 푸시(`4ce81c9`)한 것과 **같은 시각에 윈도우 세션도 같은 수정을 만들어 푸시하다가 거부됨**(non-fast-forward) — 내용이 같아 윈도우 로컬 커밋 4개는 버리고 원격으로 맞춤(`git checkout --detach` + `branch -f`, `reset --hard` 는 deny). **CI 3차(`4ce81c9`, run `39725358364`) 맥·윈도우 모두 통과** — 윈도우 훅·공용 헬퍼·scripts 단계 첫 통과, 시간 초과 걱정하던 `claude-version-check`·`session-start` 도 러너에서 통과. 윈도우 PC 에서 CI 로그 받는 법(`gh` 없음): 저장된 git 자격증명을 `git credential fill` 로 꺼내 curl `-K` 설정 파일(토큰 값은 출력 안 함, 바로 삭제)로 `…/jobs/<id>/logs` 요청 → 302 의 Azure blob 서명 URL 은 사내 프록시 인증서 때문에 `-k` 필요. **교훈: 두 PC 에서 같은 브랜치를 동시에 작업하지 않는다** — 한쪽이 푸시하고 다른 쪽은 pull 받은 뒤 이어서.
 
-**How to apply:** 다음 = PR(`node scripts/release-version.js bump` → 1.0.15, 사용자 요청 시). 맥·윈도우 둘 다 남은 할 일 없음(M6·M9·M10 은 윈도우 환경상 불가, 계획서 :237 "맥에도 있는 것" 5건은 사용자 결정 대기). 윈도우 세션은 메모리를 레포 `memory/` 에 직접 써도 이제 memory-sync 가 전역으로 미러함(윈도우 경로 인식 수정). 세션 도중 pull 로 레포 메모리가 바뀌면 전역은 다음 세션 시작까지 낡음 — 그 사이 전역을 Edit 하면 낡은 내용이 레포로 미러돼 덮어쓰므로 레포 최신본 기준으로 Write. 관련: [[project-shim-wrapper-direction]] [[reference-wrapper-project-settings-precedence]] [[feedback-report-after-full-tests]] [[feedback-auto-allow-reads-only]]
+**How to apply:** 윈도우 지원은 main(v1.0.15)에 들어감 — 브랜치 `feat/windows-support-poc-2026-10-20` 작업은 끝, 새 수정은 main 에서 새 브랜치로. 윈도우 PC 는 main pull 뒤 개발 모드 대신 `install.ps1` 정식 설치로 바꿀 때 사용자 PATH 의 개발 폴더·`GUGBAB_HOME` 을 지울 것(위 10-21 대화형 실측). 맥·윈도우 둘 다 남은 필수 확인 없음(M6·M9·M10 은 윈도우 환경상 불가, 계획서 :237 "맥에도 있는 것" 5건은 사용자 결정 대기). 윈도우 세션은 메모리를 레포 `memory/` 에 직접 써도 이제 memory-sync 가 전역으로 미러함(윈도우 경로 인식 수정). 세션 도중 pull 로 레포 메모리가 바뀌면 전역은 다음 세션 시작까지 낡음 — 그 사이 전역을 Edit 하면 낡은 내용이 레포로 미러돼 덮어쓰므로 레포 최신본 기준으로 Write. 관련: [[project-shim-wrapper-direction]] [[reference-wrapper-project-settings-precedence]] [[feedback-report-after-full-tests]] [[feedback-auto-allow-reads-only]]
