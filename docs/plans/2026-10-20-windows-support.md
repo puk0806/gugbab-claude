@@ -1,6 +1,6 @@
 # gugbab 하네스 윈도우 지원 계획서
 
-> 작성: 2026-10-20 · 최종 수정: 2026-10-20 · 상태: **0단계 PoC 완료(4.4) · 1~4단계 구현·윈도우 실측 완료(5.1·5.2)** — 남은 것: 맥 회귀 확인(M13), 윈도우 CI, 사용자 PC 수동 체크리스트 일부(6장), 릴리스
+> 작성: 2026-10-20 · 최종 수정: 2026-10-22 · 상태: **0단계 PoC 완료(4.4) · 1~4단계 구현·윈도우 실측 완료(5.1·5.2) · 맥 회귀(5.3)·윈도우 재확인(5.4) 완료** — 남은 것: 푸시 뒤 CI 통과 확인, 사용자 PC 수동 체크리스트 일부(M6·M9·M10 — 이 PC 환경상 불가), 릴리스
 > 관련: [래퍼 개편 계획서](2026-10-15-gugbab-claude-shim-wrapper.md) 결정 41 · 17장(요약)
 > 기준 버전: 하네스 v1.0.11 · Claude Code 2.1.304
 
@@ -260,6 +260,38 @@ powershell -ExecutionPolicy Bypass -File .\scripts\poc\poc-windows.ps1 -LinkCred
 4. 푸시 뒤 GitHub Actions `unit-tests` 첫 실행(특히 `windows-latest`)
 5. 아직 실측 기록 없는 수동 항목: M5(`rm -rf ~`·`cat ~/.ssh/id_rsa` 실세션), M6, M9, M10, M12
 
+### 5.4 윈도우 재확인 결과·CI 첫 실행 실패 수정 (2026-10-22 — 사용자 윈도우 PC)
+
+**5.3 의 재확인 목록 결과** (하네스 제품 동작에서 새로 나온 문제 없음)
+| # | 항목 | 결과 |
+|---|---|---|
+| 1 | 단위 전체 | cli 280 통과(윈도우 전용 포함, 50 건너뜀 = 맥 전용·sh 래퍼) · 훅 51/51 · 훅 공용 헬퍼(`winpath` 36·`testfs` 11 등) 전부 · scripts 86 — `normPath` `..` 정리가 윈도우 훅 9개 경로 판정에 영향 없음 |
+| 2 | `wrapper-e2e.js --dev` | 맥 메모의 "56 → 63" 은 착오 — 윈도우 전용 보안 5개가 공통 7개로 바뀐 것이라 **56 → 58**. 첫 실행 56/58: 실패 2(개인키 Read·`git.exe push --force`)는 아래 "모델 거절" |
+| 3 | `wrapper-matrix.js --dev` | **671/671**(맥과 같음 — 훅 32개 켜기·끄기, 블록 스킬 하나하나) |
+| 4 | Actions `unit-tests` 첫 실행 | **맥·윈도우 둘 다 실패** — 아래 "CI 실패 원인" (로그는 GitHub 로그인이 필요해 못 보고, 러너 조건을 이 PC 에서 흉내 내 재현) |
+| 5 | M12 일부 | VS Code 처럼 드라이브 소문자(`c:\…`)·하위 폴더로 열어도 같은 프로젝트·설정 폴더 |
+| 5 | M5 | main push·`git.exe push --force`·`cat server.key` 차단·PowerShell 도구 없음은 E2E 로. `rm -rf ~` 는 훅이 못 막으면 진짜 홈이 지워지므로 실세션 대신 bash-guard 단위 테스트로 |
+| 5 | M6·M9·M10 | 이 PC 에서 불가 — PowerShell 7·D: 드라이브 없음, `LongPathsEnabled=0`, 사용자 계정 하나. 상태줄은 5.2 대화형 실측에서 확인 |
+
+**CI 실패 원인 — 테스트가 러너 환경을 가정 (제품 동작과 무관)**
+| 원인 | 어디 | 고침 |
+|---|---|---|
+| 윈도우 러너 임시 폴더가 8.3 짧은 이름(`C:\Users\RUNNER~1\…`) — 시험 기대값은 `fs.realpathSync`(짧은 이름 그대로), 제품은 `.native`(긴 이름) | `cli/project.test.js` 3 · `session-export.test.js` 3 · `codex-review-guard.test.js` 1 | 기대값도 `fs.realpathSync.native` (맥·리눅스는 둘이 같음) |
+| 러너 홈에 `~/.claude/projects` 가 없어 설정 폴더 → `~/.claude/projects` 링크가 깨짐 → "자동" 이어야 할 메모리 쓰기가 "확인" (**맥 러너도 같음** — 맥 CI 훅 단계 실패의 유력 원인, 푸시 뒤 CI 로 확인) | `auto-approve.test.js` 1 · `task-confirm-guard.test.js` 1 | 없을 때만 만들고 끝나면 만든 것만 지움 |
+
+재현·확인: 러너처럼 홈 `C:\cisim\runneradministrator`(비어 있음)·`TEMP=C:\cisim\RUNNER~1\AppData\Local\Temp`·`CI=true`·PATH 에서 claude 제외 → 고치기 전 cli 3·훅 4+2 실패, 고친 뒤 **cli 280/0 · 훅 51/0 · scripts 86/0**(조용한 상태). 윈도우 CI 는 cli 단계에서 멈춰 훅 이후 단계는 아직 한 번도 돌지 않았다.
+
+**E2E 들쭉날쭉 — 모델 거절·요약 의존 (하네스 문제 아님)**
+| 시험 | 무엇이 | 고침 |
+|---|---|---|
+| 개인키 Read·Bash cat·main push·`git.exe push --force`·`.env` Read | haiku 가 "개인키라서·force push 라서" 도구를 **아예 안 부름**(3번 중 2번) — 맥에서 판정을 "도구 안 부름 = 실패" 로 엄격히 한 뒤 모델 기분에 따라 갈림. 부른 1번은 `branch-protection` 이 정확히 막음, 값은 한 번도 안 샘 | 프롬프트에 "하네스 훅 시험·가짜 값" 을 덧붙이고 최대 3번 다시 시도, 끝내 안 부르면 실패가 아니라 **판정 불가**로 따로 셈(훅 자체는 단위 테스트가 봄). 값이 안 샜는지는 모든 시도에서 봄 |
+| 훅 켜기 → tdd-guard 안내 | 출력 전체의 `tdd-guard` 글자를 세어 **모델이 답에서 언급하지 않으면** 실패(2번 중 1번) — 훅은 매번 실행됨 | `--include-hook-events` 의 PostToolUse `hook_response` 에 `[tdd-guard]` 가 있는지로 판정(켬 3/3 = 1개, 끔 0개 실측) + "소스 파일을 실제로 씀" 전제 검사 |
+| `/harness preset` 목록 | 평문 최종 답만 봐서 모델이 요약에 `nextjs` 를 안 쓰거나 3턴 안에 못 끝내면(`Reached max turns (3)`) 실패 — 커맨드는 3번 모두 `gugbab-claude preset` 을 실행해 목록을 받음 | stream-json 의 Bash 도구 결과(목록) 또는 최종 답에 `nextjs`, 턴 6 |
+
+**부하 때문에 보인 것 (수정 없음)**: 단위·CI 흉내·E2E·매트릭스 4개를 동시에 돌리면 훅 시험(claude-version-check·deliverable-guard·session-start·release-version-guard 등)과 `update.test.js` 가 4~8초 제한에 걸려 `exit null` — 단독·조용한 상태에서는 전부 통과. `node --test` 가 훅 시험 파일 51개를 동시에 띄우는 것만으로도 윈도우에서는 가끔 걸린다(`claude-version-check`·`session-start` 1건씩) → CI 윈도우 러너에서 재발하면 훅 단계만 `--test-concurrency=1` 로 돌리는 것을 검토.
+
+**고친 뒤 윈도우(단독·조용한 상태)**: 단위 cli 280/0 · 훅 51/0 · 공용 헬퍼 전부 · scripts 86/0 · CI 흉내(빈 홈·짧은 이름 임시 폴더) cli 280/0 · 훅 51/0 · scripts 86/0 · `wrapper-e2e.js --dev` **59/59**(판정 불가 0 — 프롬프트에 시험임을 덧붙이니 haiku 가 도구를 불렀고 훅이 전부 막음) · 매트릭스 671/671.
+
 ---
 
 ## 6. 수동 확인 체크리스트 (사용자 윈도우 PC — 5단계)
@@ -317,4 +349,4 @@ powershell -ExecutionPolicy Bypass -File .\scripts\poc\poc-windows.ps1 -LinkCred
 | 2026-10-19 | 1차 분석(메모리에만, 보류) |
 | 2026-10-20 | 계획서 작성 — 공식 문서 재확인(F1~F11), 코드 전수 조사 40건, PoC 스크립트 작성·맥에서 판정 로직 검증, 결정 41 추천안 · PoC 를 브랜치 `scripts/poc/` 로(4.1) · **1단계 보안·공통 정리 구현(5.1)** · **사용자 윈도우 PC 에서 PoC(4.4)·2~4단계 구현·실측(5.2)**, 결정 41-②~⑤ 구현 |
 | 2026-10-21 | (윈도우 PC) main(결정 42·43·창 자동 닫힘) 병합·윈도우 `~` 회귀 수정·병합 뒤 대화형·M2·M3·M8·M11 실측 |
-| 2026-10-22 | (맥) M13 회귀 확인·테스트 품질 검토로 찾은 것 수정 — `winpath` `..` 정리(맥도 해당), 늘 통과하던 판정·플랫폼 가정 시험 고침, 빠진 시험 보강, 단위 테스트 CI(맥·윈도우) 추가, 윈도우 재확인 목록(5.3) |
+| 2026-10-22 | (맥) M13 회귀 확인·테스트 품질 검토로 찾은 것 수정 — `winpath` `..` 정리(맥도 해당), 늘 통과하던 판정·플랫폼 가정 시험 고침, 빠진 시험 보강, 단위 테스트 CI(맥·윈도우) 추가, 윈도우 재확인 목록(5.3) · (윈도우) 재확인 완료(5.4) — 단위·매트릭스 671 통과, CI 첫 실행 실패 원인 2가지(8.3 짧은 이름 임시 폴더·`~/.claude/projects` 없음)를 시험 9건 수정으로 해소, E2E 모델 거절·요약 의존 판정 3곳을 도구 결과·훅 이벤트 기준으로 |
