@@ -232,9 +232,33 @@ powershell -ExecutionPolicy Bypass -File .\scripts\poc\poc-windows.ps1 -LinkCred
 
 **병합 뒤 추가 실측 (2026-10-21, 새 환경 PowerShell 창 2개 · 콘솔 직접 구동)**: 대화형 전체 흐름(첫 실행 추천 A=rust·B=nextjs → 적용 → 신뢰 → 질문·응답 → 상태줄 → 키보드 Ctrl+C → 세션 안 `/harness` 새 창 저장 → 요약 약 2초 뒤 창 자동 닫힘 → `/exit` 후 `--continue` 재시작·새 에이전트 반영 → 마지막 `/exit` 프롬프트 복귀) · **M3** 두 세션 `ListAgents`·`SendMessage` 양방향(named pipe, 설정 폴더 달라도 `sessions/` junction 공유로 서로 찾음) · **M8** claude 가 떠 있는 채 창 닫기(WM_CLOSE) → PowerShell·cmd·래퍼·claude 모두 종료, 남는 프로세스 없음 · **M2** 로그인 파일이 시험 중 실제 갱신(토큰 약 8시간)된 뒤에도 모든 래퍼 세션 재로그인 없음, 설정 폴더별 로그인 사본 0 · **M11** 백신(AhnLab V3) 켠 채 항목을 바꿔 가며 연속 20회 조립·실행 — 파일 잠김 오류 0(2회는 모델이 1턴 안에 도구를 부른 "max turns" — 하네스 있음·없음 각 6회 재현 안 됨) · 병합본 스냅샷을 `install.ps1` 로 새로 설치한 설치본 E2E 56/56.
 
-**남은 것**: 맥 회귀 확인(M13 — 이 PC 에서는 못 돌림, 맥 분기는 바꾸지 않았지만 공용 함수 변경이 있음) · `windows-latest` CI · v1.1.0 릴리스. M1·M2·M3·M4·M8·M11 은 2026-10-21 윈도우 실측으로 확인(위). 버전은 main 병합으로 **1.0.14**, PR 을 올릴 때만 `release-version.js bump`(결정 32 — 단계 PR 은 패치 +1).
+**남은 것**: ~~맥 회귀 확인(M13)~~ → 5.3 · ~~`windows-latest` CI~~ → 5.3(워크플로 추가, 첫 실행은 푸시 뒤) · 5.3 의 윈도우 재확인 · v1.1.0 릴리스. M1·M2·M3·M4·M8·M11 은 2026-10-21 윈도우 실측으로 확인(위). 버전은 main 병합으로 **1.0.14**, PR 을 올릴 때만 `release-version.js bump`(결정 32 — 단계 PR 은 패치 +1).
 
 **맥에도 있는 것으로 찾았지만 동작을 바꾸지 않아 남긴 것**(따로 결정 필요): task-confirm-guard 승인 상태 파일을 임시 폴더에 직접 써 자기 승인 가능(윈도우 분기는 막음) · tdd/adversarial/fake-impl 의 `.claude/hooks` 부분 문자열 제외(`.claude/hooksX/…`·경로 중간 `.claude/hooks/`) · 폴더 링크 너머 파일 신뢰(staleness-check·auto-format) · 자동 허용 패턴이 `cp x ~/…` 대상은 보지 않음 · 이름만으로 `git` 실행 시 현재 폴더의 `git.exe`(윈도우 `NoDefaultCurrentDirectoryInExePath` 없을 때).
+
+### 5.3 맥 회귀 확인(M13)·테스트 보강 (2026-10-22 — 맥)
+
+**병합본(`2c5be7a`) 그대로 맥에서**: 단위 cli 308 통과·**3 실패**(`winfs.test.js` — `win:true` 로 맥 임시 폴더를 `\var\folders\…` 윈도우 경로로 만든 뒤 진짜 fs 로 찾아 언제나 없음, 시험 결함·제품 동작 무관) · 훅 51 파일·bash-guard 563/563(윈도우 645 — 차이는 윈도우 전용 구역) · scripts 103 · `wrapper-e2e.js --dev` 43/43 · `wrapper-e2e.sh --dev` 40/40 · 매트릭스 625/625. 새로 만든 **조립 링크 점검**(껐다 켜기·되돌리기·블록·프로젝트 자체 항목 있음/지움·`--all`/이 프로젝트만·사용자 파일 보존·프리셋 4종 뒤 설정 폴더의 모든 링크가 깨지지 않음·절대 경로·켠 항목만·그 항목의 원본·프로젝트 폴더를 안 가리킴·공용 링크는 `~/.claude/<같은 이름>`·관리 기록 일치) 10,141/10,141 — 일부러 깬 링크 3종을 잡는지 자기 점검 통과.
+
+**검토에서 찾아 고친 것** (윈도우 세션 테스트 품질 검토 — 서브에이전트 + 코드 직접 확인)
+| 대상 | 문제 | 고침 |
+|---|---|---|
+| `winpath.normPath`·`isUnder` | `C:/proj/../evil` 이 `C:/proj` 아래로 판정 — **맥도 같음**(`/Users/a/p/../q`). 머리말의 `..` 시험이 실제로 없었음 | `.`·`..`·겹친 슬래시를 정리한 뒤 비교(루트·드라이브·UNC 공유 위로는 못 올라감), 시험 +11(고치기 전 코드로 9개 실패). 지금 호출하는 쪽은 먼저 resolve·realpath 해서 당장 뚫리진 않았음 |
+| `cli/winfs.test.js` | 맥에서 3개 실패, 같은 이름 폴더 시험은 맥에서 엉뚱한 이유로 통과, 같은 값 두 번 쓴 분기 | `findExecutable`·`exeFromCmdShim`·`resolveClaude` 에 시험용 `fsys` 주입 → 윈도우 경로 가짜 fs 로 맥에서도 판정(형제 폴더·형식 밖 `.cmd` 거부·PATH 순서·따옴표 폴더 추가), 윈도우 실제 fs·맥 실행 권한 시험 분리 |
+| `lib/testfs.test.js` | `threw \|\| IS_WIN`·`r===true\|\|r===null` 이 윈도우에서 늘 통과 | 성공이면 링크로 읽히는지, null 이면 아무것도 안 생겼는지, 부모 없음은 ENOENT 또는 윈도우 null 만 |
+| `scripts/wrapper-e2e.js` | `git.exe push --force` 판정 정규식 `force` 가 프롬프트에도 맞아 안 막혀도 통과, 개인키 cat 은 세션이 실패해도 통과, 보안 확인이 윈도우 전용 구역에만 | `blockedBy` — 그 도구 호출의 결과(`tool_result`)에 훅 이름이 있을 때만 '차단', 도구를 안 부르면 실패. 개인키·`.env`·main push·`git.exe push --force` 7개를 맥·윈도우 공통으로 |
+| `scripts/wrapper-matrix.js` | 훅 32개는 검사 없이 넘어감·센 수도 없음, `>= before` 는 늘 참 | 훅은 `status` 의 켜진 훅 수가 끄기·켜기마다 정확히 1씩 바뀌는지, 블록 스킬은 하나하나 연결·끄면 고정만 남는지, 넘어간 수 출력 |
+| 시험 없음 | `project.js` realpath(.native), `config-change-audit` `hooks[\\/]`, `cc-notify` fd 0 | `project.test.js` +4(대소문자만 다른 경로·윈도우 .native·심볼릭 링크로 연 경로·index 임시 파일), `config-change-audit` +2, `cc-notify` +1 |
+| CI 없음 | 윈도우 전용 보안 시험이 맥에서 전부 건너뛰어 회귀를 잡을 곳이 없음 | `.github/workflows/unit-tests.yml` — `macos-latest`·`windows-latest` 단위 테스트(PR·`feat/**`·`fix/**` 푸시, Git Bash). 실사용 시나리오는 로그인이 필요해 제외 |
+
+**고친 뒤 맥**: 단위 cli 315 통과·0 실패(15 건너뜀) · 훅 51 파일 · `winpath` 36·`testfs` 11 · scripts 103 · `wrapper-e2e.js --dev` **50/50**(보안 7개가 공통으로) · `wrapper-e2e.sh --dev` 40/40 · 매트릭스 **671/671**(훅 검사 추가) · 링크 점검 10,768/10,768.
+
+**윈도우에서 다시 확인할 것** (이번 수정이 윈도우 경로를 건드림)
+1. 단위 전체 — `winfs` 윈도우 실제 fs 시험은 처음 돎, `normPath` 변경은 윈도우 훅 9개(bash-guard·auto-approve·protect-secrets·task-confirm-guard 등) 경로 판정에 영향
+2. `node scripts/wrapper-e2e.js --dev` — 새 공통 보안 구역·`blockedBy` 가 윈도우 stream-json 에서도 맞는지(56 → 63 예상)
+3. `node scripts/wrapper-matrix.js --dev` — 훅 수·블록 검사
+4. 푸시 뒤 GitHub Actions `unit-tests` 첫 실행(특히 `windows-latest`)
+5. 아직 실측 기록 없는 수동 항목: M5(`rm -rf ~`·`cat ~/.ssh/id_rsa` 실세션), M6, M9, M10, M12
 
 ---
 
@@ -254,7 +278,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\poc\poc-windows.ps1 -LinkCred
 | M10 | PowerShell 7 · Windows PowerShell 5.1 · cmd 각각 실행 | 모두 같은 결과 |
 | M11 | Defender 실시간 검사 켠 채 연속 10회 실행 | EPERM·EBUSY 로 실패 없음 |
 | M12 | VS Code 통합 터미널에서 실행 | 신뢰 기록 드라이브 대소문자(F9) 문제 없음 |
-| M13 | macOS 회귀 | `wrapper-e2e.sh --dev` 전부 통과, 기존 세션과 같은 동작 |
+| M13 | macOS 회귀 | `wrapper-e2e.sh --dev` 전부 통과, 기존 세션과 같은 동작 — **2026-10-22 확인(5.3)** |
 
 ---
 
@@ -292,3 +316,5 @@ powershell -ExecutionPolicy Bypass -File .\scripts\poc\poc-windows.ps1 -LinkCred
 |---|---|
 | 2026-10-19 | 1차 분석(메모리에만, 보류) |
 | 2026-10-20 | 계획서 작성 — 공식 문서 재확인(F1~F11), 코드 전수 조사 40건, PoC 스크립트 작성·맥에서 판정 로직 검증, 결정 41 추천안 · PoC 를 브랜치 `scripts/poc/` 로(4.1) · **1단계 보안·공통 정리 구현(5.1)** · **사용자 윈도우 PC 에서 PoC(4.4)·2~4단계 구현·실측(5.2)**, 결정 41-②~⑤ 구현 |
+| 2026-10-21 | (윈도우 PC) main(결정 42·43·창 자동 닫힘) 병합·윈도우 `~` 회귀 수정·병합 뒤 대화형·M2·M3·M8·M11 실측 |
+| 2026-10-22 | (맥) M13 회귀 확인·테스트 품질 검토로 찾은 것 수정 — `winpath` `..` 정리(맥도 해당), 늘 통과하던 판정·플랫폼 가정 시험 고침, 빠진 시험 보강, 단위 테스트 CI(맥·윈도우) 추가, 윈도우 재확인 목록(5.3) |
