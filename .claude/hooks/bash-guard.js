@@ -1614,6 +1614,41 @@ function classifyHarnessWrite(inv, ctx, add) {
   }
 }
 
+// ── 프로젝트 소스 파일을 Bash 로 쓰기 차단 (2026-10-22 실사용 보고) ──
+// `cat > package.json <<EOF`·`sed … > build.gradle`·`sed -i …` 로 파일을 만들면 Write·Edit 에 걸린 검사 훅과
+// 경로 룰 로드를 모두 비켜 간다. 내용을 손으로 쓰는 명령(cat·echo·printf·tee·sed·awk·perl)이
+// 프로젝트·허용 폴더 안의 소스·설정 파일에 쓰면 deny — 이유에 "Write·Edit 도구로" 를 남겨 Claude 가 도구로 다시 쓰게 한다.
+// 프로그램 출력(node gen.js > docs/x.md, npm test > out.txt)·임시 폴더·.git 안·확장자 없는 파일은 그대로.
+const AUTHOR_CMDS = new Set(['cat', 'echo', 'printf', 'tee', 'sed', 'gsed', 'awk', 'gawk', 'perl'])
+const SOURCE_EXT_RE = /\.(?:[cm]?[jt]sx?|vue|svelte|java|kts?|gradle|groovy|scala|xml|xfdl|json5?|ya?ml|toml|properties|ini|py|rb|go|rs|php|cs|swift|c|h|cpp|hpp|sql|html?|css|scss|sass|less|mdx?|sh|bash|zsh|ps1|bat|cmd)$/i
+const SOURCE_NAME_RE = /^(?:\.env(?:\..+)?|dockerfile|makefile|gemfile|pom\.xml)$/i
+
+function sourceWriteTargets(inv) {
+  if (!AUTHOR_CMDS.has(inv.name)) return []
+  const redirs = (inv.redirs || []).filter(r => r.out && !(r.dup && /^(?:\d+|-)$/.test(r.value)))
+  const inPlace = (inv.name === 'tee' || ((inv.name === 'sed' || inv.name === 'gsed' || inv.name === 'perl')
+    && inv.args.some(a => /^-[A-Za-z]*i/.test(a.value) || a.value.startsWith('--in-place')))) ? harnessWriteTargets({ ...inv, name: inv.name === 'tee' ? 'tee' : 'sed' }) : []
+  return [...redirs, ...inPlace]
+}
+
+function classifySourceWrite(inv, ctx, add) {
+  for (const t of sourceWriteTargets(inv)) {
+    const r = resolveRmTarget(t, ctx.vcwd)
+    if (!r || r.glob) continue // 변수 등 정적 해석 불가 — 이 검사는 판정하지 않음(기존 흐름)
+    const abs = r.abs
+    const base = IS_WIN ? path.posix.basename(abs) : path.basename(abs)
+    if (!SOURCE_EXT_RE.test(base) && !SOURCE_NAME_RE.test(base)) continue
+    if (/^\/dev\//.test(abs) || isUnderTempDir(abs)) continue
+    const real = realLocation(abs) || abs
+    if (isUnderTempDir(real)) continue
+    if ((IS_WIN ? /\/\.git(?:\/|$)/i : /\/\.git(?:\/|$)/).test(real)) continue
+    const inProject = (ctx.root && (isAncestorOrSame(ctx.root, abs) || isAncestorOrSame(ctx.root, real))) || isUnderAllowed(real, ctx.allowedDirs)
+    if (!inProject) continue
+    add('deny', `${inv.name} 로 프로젝트 파일(${base})을 직접 쓰면 Write·Edit 검사 훅을 거치지 않습니다. 파일을 만들거나 고칠 때는 Write·Edit 도구를 쓰세요(명령 출력을 파일로 받는 것은 그대로 됩니다).`)
+    return
+  }
+}
+
 // git push 인자 → { remote, refspecs, force, pushAll, deleteMode } (branch-protection 과 공용)
 const PUSH_VALUE_OPTS = new Set(['-o', '--push-option', '--repo', '--receive-pack', '--exec'])
 function parsePushArgs(args) {
@@ -1859,6 +1894,7 @@ function classifyShell(cmd, opts = {}) {
     }
     classifySecretArgs(inv, ctx, add)
     classifyHarnessWrite(inv, ctx, add)
+    classifySourceWrite(inv, ctx, add)
     if (WIN_SHELLS.has(nm)) { add('ask', `${nm} 로 넘긴 명령은 판정할 수 없습니다. 사용자 확인이 필요합니다.`); continue }
     if (nm === 'git') { classifyGit(inv.git, add, ctx); continue }
     if (nm === 'gh') { classifyGh(vals, add); continue }

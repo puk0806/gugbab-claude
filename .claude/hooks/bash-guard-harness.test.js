@@ -85,7 +85,9 @@ test('정상: 하네스 폴더 자체에서 작업 중이면(프로젝트 = 하�
   fs.mkdirSync(path.join(harness, '.git'), { recursive: true })
   try {
     assert.strictEqual(level(`touch ${harness}/x`, { cwd: harness }), null)
-    assert.strictEqual(level('echo y > cli/new.js', { cwd: harness }), null)
+    assert.strictEqual(level('echo y > cli/new.txt', { cwd: harness }), null)
+    // 소스 파일은 하네스 보호와 별개로 "프로젝트 소스 Bash 쓰기" 규칙에 걸림 (2026-10-22 — Write·Edit 도구로)
+    assert.strictEqual(level('echo y > cli/new.js', { cwd: harness }), 'deny')
   } finally { fs.rmSync(path.join(harness, '.git'), { recursive: true, force: true }) }
 })
 

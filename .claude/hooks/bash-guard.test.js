@@ -42,8 +42,8 @@ function getDecision(result, eventName) {
 }
 
 // 원시 실행 — exit code·stdout·stderr 를 모두 본다 (메시지 채널 단언용)
-function runHookRaw(toolName, toolInput = {}, eventName = 'PreToolUse') {
-  const input = JSON.stringify({ hook_event_name: eventName, tool_name: toolName, tool_input: toolInput })
+function runHookRaw(toolName, toolInput = {}, eventName = 'PreToolUse', stdinExtra = {}) {
+  const input = JSON.stringify({ hook_event_name: eventName, tool_name: toolName, tool_input: toolInput, ...stdinExtra })
   const r = spawnSync('node', [HOOK], { input, encoding: 'utf8', timeout: 3000 })
   let json = null
   try { json = r.stdout.trim() ? JSON.parse(r.stdout.trim()) : null } catch {}
@@ -56,7 +56,7 @@ function test(desc, toolName, toolInput, expected, eventName = 'PreToolUse', std
   let pass = actual === expected
   // 메시지 채널 단언 — PreToolUse deny 는 exit 0 + stdout JSON 의 permissionDecisionReason 로만 사유 전달
   if (pass && expected === 'deny' && eventName === 'PreToolUse') {
-    const raw = runHookRaw(toolName, toolInput, eventName)
+    const raw = runHookRaw(toolName, toolInput, eventName, stdinExtra) // 같은 cwd 로 — cwd 에 따라 판정이 갈리는 시험(2026-10-22)
     const reason = raw.json?.hookSpecificOutput?.permissionDecisionReason
     pass = raw.status === 0 && typeof reason === 'string' && reason.length > 0 && !raw.stderr.trim()
   }
@@ -148,8 +148,9 @@ assert('cat > /tmp/x.json',
   isHeredocSafe(`cat > /tmp/x.json << 'EOF'\n{"a": 1}\nEOF`, ALLOWED), true)
 assert('cat > /tmp/x.md',
   isHeredocSafe(`cat > /tmp/notes.md << 'EOF'\n# title\nEOF`, ALLOWED), true)
-assert('cat > 프로젝트 내부 파일',
-  isHeredocSafe(`cat > ${PROJECT_ROOT}/temp.tsx << 'EOF'\ncode\nEOF`, ALLOWED), true)
+// 2026-10-22: 프로젝트 안 소스 파일을 heredoc 으로 쓰면 Write·Edit 검사 훅을 비켜 가므로 자동 허용하지 않는다(classifySourceWrite)
+assert('cat > 프로젝트 내부 소스 파일 → 자동 허용 안 함',
+  isHeredocSafe(`cat > ${PROJECT_ROOT}/temp.tsx << 'EOF'\ncode\nEOF`, ALLOWED), false)
 assert('cat > /tmp/x.tsx with backslash delim',
   isHeredocSafe(`cat > /tmp/x.tsx <<\\EOF\ncode\nEOF`, ALLOWED), true)
 assert('tee > /tmp/x.json',
@@ -432,8 +433,9 @@ test('Case 5 — heredoc ENDTEST + npx vitest',
   'Bash', { command: CASE5 }, 'allow', 'PreToolUse', { cwd: SIBLING })
 test('Case 6 — cd + git stash + npx vitest + git stash pop',
   'Bash', { command: CASE6 }, 'allow', 'PreToolUse', { cwd: SIBLING })
-test('Case 7 — heredoc to workspace path + pnpm test',
-  'Bash', { command: CASE7 }, 'allow', 'PreToolUse', { cwd: SIBLING })
+// 2026-10-22: 프로젝트 안 시험 파일을 heredoc 으로 만들면 adversarial-test-guard 등 Write 훅을 비켜 감 → 차단(Write 도구로)
+test('Case 7 — heredoc to workspace path + pnpm test → 차단',
+  'Bash', { command: CASE7 }, 'deny', 'PreToolUse', { cwd: SIBLING })
 
 // ─────────────────────────────────────────────────────────────
 // isShellScriptSafe — 멀티라인·$()·BG 서버·kill PID 추적
@@ -1265,6 +1267,48 @@ section('허용 폴더 환경변수 구분자 — 맥 `:` / 윈도우 `;`')
   } else {
     console.log('  ⏭ 윈도우 경로 판정은 윈도우에서만 (맥의 ~ 펼침은 위 결정 42 시험이 맡음)')
   }
+}
+
+// ─────────────────────────────────────────────────────────────
+// 프로젝트 소스 파일을 Bash 로 쓰기 → deny (2026-10-22 실사용 보고 — heredoc·sed > 로 Write 훅 우회)
+// ─────────────────────────────────────────────────────────────
+section('프로젝트 소스 파일 Bash 쓰기 → deny, 명령 출력·임시 폴더는 그대로')
+{
+  const P = { cwd: PROJECT_ROOT }
+  const notDeny = (desc, command) => {
+    const actual = getDecision(runHook('Bash', { command }, 'PreToolUse', P), 'PreToolUse')
+    assert(desc, actual !== 'deny', true)
+  }
+  const reason = (command) => runHook('Bash', { command }, 'PreToolUse', P)?.hookSpecificOutput?.permissionDecisionReason || ''
+  // 정상(막아야 함): 실제 보고된 형태
+  test('cat > package.json <<EOF (보고된 형태)', 'Bash', { command: "cat > package.json <<'EOF'\n{\"name\":\"x\"}\nEOF" }, 'deny', 'PreToolUse', P)
+  test('sed … > build.gradle (보고된 형태)', 'Bash', { command: "sed 's/a/b/' build.gradle.tmpl > build.gradle" }, 'deny', 'PreToolUse', P)
+  test('echo > src/App.tsx', 'Bash', { command: "echo 'export const a = 1' > src/App.tsx" }, 'deny', 'PreToolUse', P)
+  test('printf >> README.md (이어쓰기)', 'Bash', { command: "printf '## x\\n' >> README.md" }, 'deny', 'PreToolUse', P)
+  test('sed -i 로 소스 수정', 'Bash', { command: "sed -i '' 's/a/b/' src/Main.java" }, 'deny', 'PreToolUse', P)
+  test('perl -pi -e 로 yml 수정', 'Bash', { command: "perl -pi -e 's/a/b/' application.yml" }, 'deny', 'PreToolUse', P)
+  test('echo | tee src/b.ts', 'Bash', { command: 'echo hi | tee src/b.ts' }, 'deny', 'PreToolUse', P)
+  test('awk > config.json', 'Bash', { command: "awk '{print}' a.txt > config.json" }, 'deny', 'PreToolUse', P)
+  test('절대경로로 프로젝트 안 .java', 'Bash', { command: `cat > ${PROJECT_ROOT}/src/X.java <<'EOF'\nclass X {}\nEOF` }, 'deny', 'PreToolUse', P)
+  test('.env·Dockerfile (확장자 없는 이름)', 'Bash', { command: 'echo A=1 > .env.local && echo FROM x > Dockerfile' }, 'deny', 'PreToolUse', P)
+  assert('차단 이유가 Write·Edit 도구를 안내', /Write·Edit 도구/.test(reason("echo x > src/a.ts")), true)
+  // 악성(우회 시도): 감싸기·위치 바꾸기·대소문자
+  test('우회: bash -c 안에서 쓰기', 'Bash', { command: 'bash -c "echo x > src/a.ts"' }, 'deny', 'PreToolUse', P)
+  test('우회: cd 뒤 상대경로', 'Bash', { command: "cd src && cat > a.ts <<'EOF'\nx\nEOF" }, 'deny', 'PreToolUse', P)
+  test('우회: command·env 접두', 'Bash', { command: 'command cat a > b.ts; env X=1 printf x > c.ts' }, 'deny', 'PreToolUse', P)
+  test('우회: 대문자 확장자 A.TS', 'Bash', { command: 'echo x > A.TS' }, 'deny', 'PreToolUse', P)
+  test('우회: 파이프 끝 tee -a', 'Bash', { command: 'cat a.txt | tee -a src/x.yml' }, 'deny', 'PreToolUse', P)
+  // 경계(그대로 둬야 함): 명령 출력·임시 폴더·읽기·소스 아닌 파일
+  notDeny('명령 출력: node gen.js > docs/x.md', 'node scripts/gen.js > docs/x.md')
+  notDeny('명령 출력: npm test > out.txt', 'npm test > out.txt 2>&1')
+  notDeny('임시 폴더: cat > /tmp/x.ts <<EOF', "cat > /tmp/x.ts <<'EOF'\nx\nEOF")
+  notDeny('임시 폴더로 복사: cat a.ts > /tmp/b.ts', 'cat src/a.ts > /tmp/b.ts')
+  notDeny('/dev/null·2>&1', 'echo x > /dev/null 2>&1')
+  notDeny('소스 아닌 파일: echo > notes.txt·build.log', 'echo x > notes.txt; echo y >> build.log')
+  notDeny('.git 안: echo > .git/info/exclude', 'echo x >> .git/info/exclude')
+  notDeny('읽기만: cat·sed 출력', "cat src/a.ts; sed 's/a/b/' src/a.ts")
+  notDeny('대상이 변수(정적 해석 불가)는 이 검사 밖', 'echo x > "$OUT"')
+  notDeny('프로젝트 밖 홈 폴더 아님 경로(/tmp 하위 폴더)', `mkdir -p /tmp/bgx && echo x > /tmp/bgx/a.java`)
 }
 
 console.log(`\n${'─'.repeat(40)}`)

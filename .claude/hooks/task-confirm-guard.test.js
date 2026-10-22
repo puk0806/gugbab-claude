@@ -193,6 +193,38 @@ console.log('\n── 승인 + 다른 행동 금지 부가 조건 (2026-10-20 �
   check('경계: 확인 질문 없는 답 뒤의 승인+금지 → 미승인', judgePrompt('응 커밋은 하지 말고', '완료했습니다.').approved === false)
 }
 
+console.log('\n── 확인 생략 표현 넓히기·부정 문맥 (2026-10-22 실사용 보고 "물어보지말고 그냥 만들어" 미인정) ──')
+{
+  // 정상: 확인 질문이 없어도(첫 요청) 생략 표현이면 바로 승인
+  for (const reply of ['물어보지말고 그냥 만들어', '물어보지 말고 해', '컨펌 없이 해', '확인 안 받고 진행해', '그냥 만들어줘', '그냥 진행해', '그냥 해', '그냥 해줘. 토이 프로젝트야',
+    '바로 진행해', '확인 없이 진행']) {
+    const v = judgePrompt(reply, '이전 답변')
+    check(`생략 "${reply}" → 승인(bypass)`, v.approved === true && v.why === 'bypass', v)
+  }
+  const s = sid(); prompt(s, '물어보지말고 그냥 만들어', transcript('이전 답변'))
+  check('보고된 문장으로 생략 → Write 허용 (훅 경유)', write(s).code === 0)
+  // 악성·우회: 생략 표현 바로 뒤 부정, 생략처럼 보이는 다른 뜻
+  for (const reply of ['바로 진행하지 마', '그냥 진행하지 말고 물어봐', '그냥 만들지 마', '바로 진행하면 안 돼', '그냥 두고 물어봐', '그냥 해서 문제가 생겼어',
+    '그냥 궁금해서', '그냥 해봤어', '물어보고 해']) {
+    const v = judgePrompt(reply, '이전 답변')
+    check(`생략 아님 "${reply}" → 미승인`, v.approved === false, v)
+  }
+  // 확인 질문 뒤의 거절 일반형 — 예전엔 승인으로 판정되던 것
+  for (const reply of ['그냥 만들지 마', '바로 진행하면 안 돼', '그건 건드리지마', '지금은 수정하지 마세요']) {
+    const v = judgePrompt(reply, PLAN)
+    check(`확인 질문 뒤 거절 "${reply}" → 거절`, v.approved === false && v.why === 'rejected', v)
+  }
+  for (const reply of ['응 근데 테스트 파일은 지우면 안 돼', '네 진행해 main 에 푸시하면 안 됩니다']) {
+    const v = judgePrompt(reply, PLAN)
+    check(`승인 + 금지 부가 조건 "${reply}" → 승인`, v.approved === true, v)
+  }
+  // 이상·경계: 초장문·반복·특수문자에서도 시간 안에 판정
+  const t0 = Date.now()
+  check('경계: 초장문 "그냥 " 반복 → 크래시 없이 판정', typeof judgePrompt('그냥 '.repeat(20000) + '하지 마', '이전 답변').approved === 'boolean')
+  check('경계: 판정 시간 1초 이내', Date.now() - t0 < 1000)
+  check('경계: 비문자열 입력 → 미승인(생략 아님)', judgePrompt(null, '이전 답변').approved === false)
+}
+
 console.log('\n── 윈도우 임시 폴더·메모리 예외 (윈도우 전용 경로 모양) ──')
 if (!IS_WIN) {
   console.log('  ⚠️ 건너뜀: 윈도우 예외 경로 6종 — 윈도우 전용 (맥은 /tmp·/var/folders 규칙 그대로)')
