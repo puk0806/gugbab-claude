@@ -251,18 +251,19 @@ check('저장소 경로 경계: 프로젝트 경로도 transcript 도 없으면 
 
 // resolveProjectDir: env → git toplevel → cwd
 const { execSync } = require('child_process');
-const gitRepo = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'se-git-')));
+// .native — 윈도우 CI 러너 임시 폴더는 8.3 짧은 이름(RUNNER~1)이라 git toplevel(긴 이름)과 맞추려면 실제 표기로 (2026-10-22)
+const gitRepo = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'se-git-')));
 execSync('git init -q', { cwd: gitRepo });
 fs.mkdirSync(path.join(gitRepo, 'sub', 'deep'), { recursive: true });
-const outside = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'se-nogit-')));
+const outside = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'se-nogit-')));
 check('프로젝트 루트: env 가 있으면 env', () => {
   assert.strictEqual(resolveProjectDir({ CLAUDE_PROJECT_DIR: '/from/env' }, gitRepo), '/from/env');
 });
 check('프로젝트 루트: env 없음 + 서브디렉토리 cwd → git toplevel', () => {
-  assert.strictEqual(fs.realpathSync(resolveProjectDir({}, path.join(gitRepo, 'sub', 'deep'))), gitRepo);
+  assert.strictEqual(fs.realpathSync.native(resolveProjectDir({}, path.join(gitRepo, 'sub', 'deep'))), gitRepo);
 });
 check('프로젝트 루트: env 빈 문자열은 없음으로 취급', () => {
-  assert.strictEqual(fs.realpathSync(resolveProjectDir({ CLAUDE_PROJECT_DIR: '' }, gitRepo)), gitRepo);
+  assert.strictEqual(fs.realpathSync.native(resolveProjectDir({ CLAUDE_PROJECT_DIR: '' }, gitRepo)), gitRepo);
 });
 check('프로젝트 루트: 레포 밖 cwd → cwd 그대로', () => {
   assert.strictEqual(resolveProjectDir({}, outside), outside);

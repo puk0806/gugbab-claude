@@ -150,9 +150,13 @@ check('예외 경로 위장: memory/../../settings.json (상위 이동) → 차�
 // 래퍼(gugbab-claude) 설정 폴더: projects/·plans/ 가 ~/.claude 쪽 링크 — 링크를 따라간 실제 위치로 예외 판정 (2026-10-16)
 {
   const HOME = os.homedir()
+  // CI 러너처럼 ~/.claude/projects 가 없으면 링크가 깨져 시험이 안 된다 — 없을 때만 만들고, 끝나면 만든 것만 지운다 (2026-10-22)
+  const projects = path.join(HOME, '.claude', 'projects')
+  const madeByTest = fs.existsSync(path.join(HOME, '.claude')) ? (fs.existsSync(projects) ? null : projects) : path.join(HOME, '.claude')
+  fs.mkdirSync(projects, { recursive: true })
   const linked = fs.mkdtempSync(path.join(HOME, '.tcg-cfg-'))
   const fake = fs.mkdtempSync(path.join(HOME, '.tcg-cfg-'))
-  linkDir(path.join(HOME, '.claude', 'projects'), path.join(linked, 'projects')) // 윈도우는 junction (심볼릭 링크 EPERM)
+  linkDir(projects, path.join(linked, 'projects')) // 윈도우는 junction (심볼릭 링크 EPERM)
   fs.mkdirSync(path.join(fake, 'projects', 'x', 'memory'), { recursive: true })
   const s1 = sid(); prompt(s1, '해줘', transcript('x'))
   check('설정 폴더 projects 링크 안 메모리 → 미승인이어도 허용', write(s1, path.join(linked, 'projects', '-x', 'memory', 'a.md')).code === 0)
@@ -163,6 +167,7 @@ check('예외 경로 위장: memory/../../settings.json (상위 이동) → 차�
   fs.unlinkSync(path.join(linked, 'projects')) // 링크만 먼저 제거 — rm 이 링크 너머 실제 ~/.claude/projects 로 들어가지 않게
   fs.rmSync(linked, { recursive: true, force: true })
   fs.rmSync(fake, { recursive: true, force: true })
+  if (madeByTest) fs.rmSync(madeByTest, { recursive: true, force: true })
 }
 
 console.log('\n── 승인 + 다른 행동 금지 부가 조건 (2026-10-20 실사용 오탐) ──')

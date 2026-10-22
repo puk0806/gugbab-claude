@@ -497,7 +497,8 @@ if (IS_WIN) {
     console.log(`  ${cond ? '✅' : '❌'} ${desc} → ${cond ? 'PASS' : `FAIL (exit ${r.status}, stdout: ${(r.stdout || '').slice(0, 100)}, stderr: ${(r.stderr || '').slice(0, 200)})`}`)
     cond ? passed++ : failed++
   }
-  const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'crg-win-'))
+  // .native — CI 러너 임시 폴더는 8.3 짧은 이름(RUNNER~1), 훅은 git toplevel(긴 이름)로 안내한다 (2026-10-22)
+  const repo = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'crg-win-')))
   execSync('git init -q', { cwd: repo })
   fs.mkdirSync(path.join(repo, '.claude'), { recursive: true })
   fs.writeFileSync(path.join(repo, '.claude', 'settings.json'), JSON.stringify({ enabledPlugins: { 'codex@openai-codex': true } }))

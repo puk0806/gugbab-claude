@@ -147,6 +147,9 @@ section('래퍼 설정 폴더(CLAUDE_CONFIG_DIR) 링크를 거친 메모리·계
   const os = require('os')
   const HOME = os.homedir()
   const realProjects = path.join(HOME, '.claude', 'projects')
+  // CI 러너처럼 ~/.claude/projects 가 없으면 링크가 깨져 시험이 안 된다 — 없을 때만 만들고, 끝나면 만든 것만 지운다 (2026-10-22)
+  const madeByTest = fs.existsSync(path.join(HOME, '.claude')) ? (fs.existsSync(realProjects) ? null : realProjects) : path.join(HOME, '.claude')
+  fs.mkdirSync(realProjects, { recursive: true })
   // 임시 폴더는 원래 자동 허용이라 위장 시험이 안 된다 — 홈 아래에 잠깐 만들고 지운다
   const cfgLinked = fs.mkdtempSync(path.join(HOME, '.aa-cfg-'))
   const cfgReal = fs.mkdtempSync(path.join(HOME, '.aa-cfg-'))
@@ -174,6 +177,7 @@ section('래퍼 설정 폴더(CLAUDE_CONFIG_DIR) 링크를 거친 메모리·계
     runIn(path.join(cfgLinked, 'projects', '..', '..', 'escape.txt'), { CLAUDE_CONFIG_DIR: cfgLinked }), 'ask')
   fs.rmSync(cfgLinked, { recursive: true, force: true })
   fs.rmSync(cfgReal, { recursive: true, force: true })
+  if (madeByTest) fs.rmSync(madeByTest, { recursive: true, force: true })
 }
 
 // 2026-10-20 윈도우 2단계 — PoC 실측: 프로젝트 안 Write(C:\repo\poc-tmp.txt, cwd=C:\repo)·%TEMP% 아래 Write 가 allow 대신 ask
