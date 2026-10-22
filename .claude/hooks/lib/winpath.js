@@ -22,13 +22,27 @@ function msysToWin(p, win = IS_WIN) {
   return m ? `${m[1].toUpperCase()}:/${m[3]}` : p;
 }
 
-// 비교용 정규화 — 윈도우: MSYS → 드라이브, 슬래시 통일, 소문자(NTFS 기본 대소문자 무시), 끝 슬래시 제거
+// `.`·`..`·겹친 슬래시를 글자 단위로 정리 — 앞부분(루트 `/`, 드라이브 `c:/`, 윈도우 UNC `//서버/공유/`)은 지키고, 그 위로는 못 올라간다
+//   `C:/proj/../evil` 이 `C:/proj` 아래로 판정되던 문제(2026-10-22 맥 회귀 검토에서 찾음). 링크는 풀지 않는다 — 호출한 쪽이 realpath
+function dotSegments(s, win) {
+  const m = (win ? /^([a-zA-Z]:\/|\/\/[^/]+\/[^/]+(?:\/|$)|\/)?(.*)$/ : /^(\/)?(.*)$/).exec(s);
+  const head = m[1] || '';
+  const out = [];
+  for (const seg of m[2].split('/')) {
+    if (!seg || seg === '.') continue;
+    if (seg === '..') { if (out.length && out[out.length - 1] !== '..') out.pop(); else if (!head) out.push('..'); continue; }
+    out.push(seg);
+  }
+  return head + out.join('/') || (head ? head : '.');
+}
+
+// 비교용 정규화 — 윈도우: MSYS → 드라이브, 슬래시 통일, 소문자(NTFS 기본 대소문자 무시), 끝 슬래시 제거 / 공통: `.`·`..` 정리
 function normPath(p, win = IS_WIN) {
   if (typeof p !== 'string' || !p) return '';
-  if (!win) return p.length > 1 ? p.replace(/\/+$/, '') : p;
+  if (!win) return dotSegments(p, false);
   let s = toSlash(msysToWin(toSlash(p, true), true), true);
   if (/^[a-zA-Z]:$/.test(s)) s += '/';
-  s = s.toLowerCase();
+  s = dotSegments(s.toLowerCase(), true);
   return s.length > 3 ? s.replace(/\/+$/, '') : s;
 }
 
