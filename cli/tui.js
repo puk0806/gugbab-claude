@@ -13,7 +13,7 @@ const { applyToggle, applyPreset, explainUnchanged, commitLayer, layerIndex, RES
 const TYPES = [['setting', '설정'], ['hook', '훅'], ['rule', '룰'], ['command', '커맨드'], ['agent', '에이전트'], ['skill', '스킬']];
 const TYPE_NAME = Object.fromEntries(TYPES);
 const SCOPE_NAME = { project: '이 프로젝트', profile: '모든 프로젝트' };
-const LEGEND = '✅ 켬 · ⬜ 끔 · 🟨 일부만 켬(그룹 안 일부) · 🔒 고정(끌 수 없음) · * 저장 안 한 변경';
+const LEGEND = '✅ 켬 · ⬜ 끔 · 🟨 일부만 켬(그룹 안 일부) · 🔒 고정(끌 수 없음) · 📌 프로젝트 파일이 정함(여기서 못 바꿈) · * 저장 안 한 변경';
 const KEYS_HELP = '↑↓ 이동 · →← 펼침 · a 전체 · Space 켬/끔 · Tab 범위 · / 검색 · p 프리셋 · v 보기 · Enter 저장 · q 닫기';
 const CTRL_RE = /[\u0000-\u001f\u007f-\u009f]/;
 const clean = (s) => String(s == null ? '' : s).replace(/\u001b\][^\u0007\u001b]*(?:\u0007|\u001b\\)?/g, '').replace(/\u001b\[[0-9;?]*[ -/]*[@-~]/g, '').replace(/[\u0000-\u001f\u007f-\u009f]/g, '');
@@ -140,6 +140,20 @@ const layersOf = (st, which = 'drafts') => [{ source: 'profile', ...st[which].pr
 const effective = (st) => resolve(st.manifest, layersOf(st));
 const dirty = (st) => st.ops.profile.length + st.ops.project.length > 0;
 
+// 프로젝트 파일(.gugbab.json — 파생 하네스는 그 하네스의 파일 이름)이 정해 둔 항목 📌 — 🔒 처럼 "이 프로젝트에서는 못 바꿈"인데
+// 평범한 ✅·⬜ 로 보여 Space 가 고장 난 것처럼 보였다 (2026-10-21 사용자 보고). 실제 결과가 그 파일의 켬/끔과 같을 때만 📌, 🔒 가 우선
+const projectFileName = (st) => clean((st.gugbab && st.gugbab.source) || '.gugbab.json');
+function pinnedOf(st, res) {
+  const g = st.gugbab || {};
+  const key = `${JSON.stringify(g.enable || [])}\u0000${JSON.stringify(g.disable || [])}`;
+  if (!st._pinSets || st._pinSets.key !== key) {
+    const set = (k) => new Set((Array.isArray(g[k]) ? g[k] : []).filter((x) => typeof x === 'string').flatMap((raw) => expand(raw, st.manifest) || []));
+    st._pinSets = { key, on: set('enable'), off: set('disable') };
+  }
+  const { on, off } = st._pinSets;
+  return (id) => (res.locked.has(id) ? null : res.enabled.has(id) ? (on.has(id) ? 'on' : null) : (off.has(id) ? 'off' : null));
+}
+
 // ── 보이는 줄 (펼침 상태·검색 반영) ──────────────────────────────────
 function rowsOf(st) {
   const key = `${st.view}\u0000${st.filter}\u0000${[...st.expanded].sort().join(',')}`;
@@ -215,7 +229,9 @@ function relationLines(st, row, res) {
     const comp = TYPES.filter(([t]) => types[t]).map(([t, n]) => `${n} ${types[t]}`).join(' · ');
     const ns = nodeState(row, res);
     const locked = row.ids.filter((i) => res.locked.has(i)).length;
-    lines.push(`[${row.full || row.label}] ${ns.total}개 중 ${ns.on}개 켜짐 (${comp})${locked ? ` · 🔒 ${locked}개는 끌 수 없음` : ''} — Space: 안의 항목 일괄 ${ns.on === ns.total ? '끄기' : '켜기'}`);
+    const pin = pinnedOf(st, res);
+    const pinned = row.ids.filter((i) => pin(i)).length;
+    lines.push(`[${row.full || row.label}] ${ns.total}개 중 ${ns.on}개 켜짐 (${comp})${locked ? ` · 🔒 ${locked}개는 끌 수 없음` : ''}${pinned ? ` · 📌 ${pinned}개는 ${projectFileName(st)} 이 정함` : ''} — Space: 안의 항목 일괄 ${ns.on === ns.total ? '끄기' : '켜기'}`);
     const conf = (rel.conflicts || []).filter((p) => Array.isArray(p) && (p[0] === row.op || row.ids.includes(p[0])));
     if (conf.length) lines.push(`  · 충돌: 이것을 켜면 ${conf.map((p) => exp(p[1]).map(name).join('·')).join(', ')} 이(가) 꺼진다`);
     else if (row.op && row.op.startsWith('bundle:')) lines.push('  · 묶음 = 같이 켜고 끄는 단위. 안의 항목 하나만 끄면 묶음은 🟨(일부만 켬)으로 보인다');
@@ -232,8 +248,11 @@ function relationLines(st, row, res) {
   let lock = '';
   if (res.locked.has(id)) {
     if (it.state === 'lock') lock = '🔒 체크리스트 고정';
-    else if ((st.gugbab.lock || []).some((raw) => exp(raw).includes(id))) lock = '🔒 .gugbab.json 에서 고정';
+    else if ((st.gugbab.lock || []).some((raw) => exp(raw).includes(id))) lock = `🔒 ${projectFileName(st)} 에서 고정`;
     else lock = '🔒 고정 항목이 필요로 해서 같이 고정';
+  } else {
+    const p = pinnedOf(st, res)(id);
+    if (p) lock = `📌 ${projectFileName(st)} 이(가) ${p === 'on' ? '켬' : '끔'}으로 정함 — 여기서 못 바꿈`;
   }
   lines.push(`[${row.label}] ${TYPE_NAME[it.type] || it.type}${groups.length ? ` · 속한 곳: ${groups.join(', ')}` : ' · 단독 항목'}${lock ? ` · ${lock}` : ''}`);
   const rels = [];
@@ -254,9 +273,10 @@ function relationLines(st, row, res) {
 function opsFor(row, st) {
   if (row.op) return [row.op];
   const res = effective(st);
+  const pin = st.scope === 'project' ? pinnedOf(st, res) : () => null; // 이 프로젝트 범위면 📌 도 🔒 처럼 건너뜀
   const out = [];
   const walk = (n) => {
-    if (n.ids.length && n.ids.every((i) => res.locked.has(i))) return;
+    if (n.ids.length && n.ids.every((i) => res.locked.has(i) || pin(i))) return;
     if (n.op) { out.push(n.op); return; }
     for (const c of n.children || []) walk(c);
   };
@@ -274,6 +294,17 @@ function toggleAt(st) {
   if (ns.lockedAll) {
     return { ...st, message: explainUnchanged(ns.ids, 'off', layersOf(st), before, layerIndex(st.scope), m).slice(0, 2).join(' · ') };
   }
+  // 이 프로젝트 범위: 📌 프로젝트 파일이 정한 것만 남으면 바꾸지도 기록하지도 않는다 (효과 없는 기록이 쌓이던 문제).
+  // 모든 프로젝트 범위는 다른 프로젝트에 적용되므로 지금처럼 기록한다(결정 25)
+  const pin = pinnedOf(st, before);
+  const file = projectFileName(st);
+  const pinnedIds = ns.ids.filter((id) => pin(id));
+  if (st.scope === 'project' && pinnedIds.length && ns.ids.every((id) => before.locked.has(id) || pin(id))) {
+    return { ...st, message: clean(row.kind === 'item'
+      ? `📌 ${file} 이(가) ${pin(row.id) === 'on' ? '켬' : '끔'}으로 정해 둔 항목이라 여기서 바꿀 수 없습니다 — 바꾸려면 프로젝트의 ${file} 을(를) 고치세요`
+      : `바꿀 수 있는 항목이 없습니다 — 📌 ${file} 이 정함 ${pinnedIds.length}개${ns.ids.length > pinnedIds.length ? ` · 🔒 고정 ${ns.ids.length - pinnedIds.length}개` : ''}`) };
+  }
+  const pinNote = pinnedIds.length ? ` (📌 ${pinnedIds.length}개는 ${file} 이 정해 그대로)` : '';
   const action = ns.on === ns.total ? 'off' : 'on';
   const targets = opsFor(row, st);
   if (!targets.length) return { ...st, message: '바꿀 수 있는 항목이 없습니다 (모두 🔒 고정)' };
@@ -292,7 +323,7 @@ function toggleAt(st) {
   }
   const extra = after.warnings.filter((w) => !before.warnings.includes(w));
   const ownNote = ns.ids.some((id) => st.skipped.has(id)) ? ' — ↷ 이 프로젝트는 자체 .claude 의 것을 써서 여기엔 적용 안 됨' : '';
-  return { ...next, ops, message: clean(`${action === 'on' ? '켬' : '끔'}: ${what}${scopeNote}${ownNote}${extra.length ? ` — ⚠ ${extra[0]}` : ''}`) };
+  return { ...next, ops, message: clean(`${action === 'on' ? '켬' : '끔'}: ${what}${scopeNote}${pinNote}${ownNote}${extra.length ? ` — ⚠ ${extra[0]}` : ''}`) };
 }
 
 function presetNames(m) { return Object.keys((m.relations || {}).presets || {}); }
@@ -405,7 +436,9 @@ function render(st, { cols = 80, rows: height = 24 } = {}) {
     const all = Object.keys(items).filter((id) => items[id].type === t);
     return `${label} ${all.filter((id) => res.enabled.has(id)).length}/${all.length}`;
   });
-  out.push(fit(` ${counts.join(' · ')} · 🔒 ${res.locked.size}${dirty(st) ? ' · ● 저장 안 됨' : ''}`, cols));
+  const pin = pinnedOf(st, res);
+  const pinCount = Object.keys(items).filter((id) => pin(id)).length;
+  out.push(fit(` ${counts.join(' · ')} · 🔒 ${res.locked.size}${pinCount ? ` · 📌 ${pinCount} (${projectFileName(st)})` : ''}${dirty(st) ? ' · ● 저장 안 됨' : ''}`, cols));
   out.push(fit(` ${LEGEND}`, cols));
   out.push('─'.repeat(Math.max(0, cols)));
   const bodyH = Math.max(0, height - 9); // 머리 4줄(제목·개수·범례·선) + 아래 5줄(선·설명 2·메시지·키 도움말)
@@ -446,13 +479,15 @@ function render(st, { cols = 80, rows: height = 24 } = {}) {
       const labelW = Math.max(8, Math.min(34, Math.floor(cols * 0.38)) - r.depth * 2);
       const own = r.ids.filter((id) => st.skipped.has(id)).length;
       const ownNote = own ? ` · ↷ 자체 .claude 우선${r.kind === 'item' ? '' : ` ${own}`}` : '';
+      const pinned = r.kind === 'item' ? pin(r.id) : r.ids.filter((id) => pin(id)).length;
+      const pinNote = !pinned ? '' : r.kind === 'item' ? ` · 📌 ${projectFileName(st)} ${pinned === 'on' ? '켬' : '끔'}` : ` · 📌 ${pinned}`;
       let detail;
       if (r.kind === 'item') {
         const groups = st.memberOf[r.id] || [];
         detail = TYPE_NAME[(items[r.id] || {}).type] || '';
         if (groups.length > 1) detail += ` · 다른 묶음에도 속함`;
       } else detail = `${ns.on}/${ns.total}${r.op ? ` · ${r.op}` : ''}`;
-      const line = `${i === st.cursor ? '›' : ' '}${changed ? '*' : ' '}${indent}${arrow}${ns.mark} ${pad(r.label, labelW)}  ${detail}${ownNote}`;
+      const line = `${i === st.cursor ? '›' : ' '}${changed ? '*' : ' '}${indent}${arrow}${ns.mark} ${pad(r.label, labelW)}  ${detail}${pinNote}${ownNote}`;
       out.push(i === st.cursor ? `\x1b[7m${fit(line, cols)}\x1b[0m` : fit(line, cols));
     }
     out.push(...Array(Math.max(0, bodyH - Math.min(bodyH, rows.length - top))).fill(''));
@@ -474,7 +509,9 @@ function replayOps(layer, ops, manifest) {
 }
 
 // 터미널에서 실행 — 저장하면 { saved, turnedOn, turnedOff, needRestart, warnings }
-function runTui({ manifest, paths, project, input = process.stdin, output = process.stdout, composeFn, holdOnExit = false }) {
+// holdOnExit — /harness 로 띄운 창(comux 옆 창·tmux 팝업·macOS 새 창): 저장했으면 요약을 closeDelayMs 동안 보여 주고 저절로 끝난다
+//   (예전엔 "아무 키나 누르면 닫습니다" 로 키를 하나 더 기다려 Enter 저장 뒤에도 창이 남았다 — 2026-10-20 사용자 요청)
+function runTui({ manifest, paths, project, input = process.stdin, output = process.stdout, composeFn, holdOnExit = false, closeDelayMs = 2000 }) {
   if (!input.isTTY || typeof input.setRawMode !== 'function') return Promise.reject(new Error('터미널에서만 화면을 띄울 수 있습니다'));
   let st = createState({ manifest, layers: loadLayers(paths, project), projectName: project.id, skipped: project.configDir ? readSkipped(project.configDir) : new Set() });
   return new Promise((resolveP, rejectP) => {
@@ -502,11 +539,22 @@ function runTui({ manifest, paths, project, input = process.stdin, output = proc
         } catch (e) { rejectP(e); return; }
       }
       const done = () => { input.pause(); resolveP(result); };
-      if (!holdOnExit) return done();
-      output.write(`${summaryLines(result).join('\n')}\n\n아무 키나 누르면 이 창을 닫습니다\n`);
+      if (!holdOnExit || !result.saved) return done(); // 저장 안 했으면 보여 줄 것이 없어 바로 닫는다
+      const secs = Math.max(0, Math.round(closeDelayMs / 1000));
+      output.write(`${summaryLines(result).join('\n')}\n\n${secs}초 뒤 이 창을 닫습니다 (아무 키나 누르면 바로)\n`);
+      let closed = false, timer = null;
+      const close = () => {
+        if (closed) return; // 타이머와 키가 겹쳐도 한 번만
+        closed = true;
+        clearTimeout(timer);
+        input.removeListener('keypress', close);
+        try { input.setRawMode(false); } catch { /* 무시 */ }
+        done();
+      };
       try { input.setRawMode(true); } catch { /* 무시 */ }
       input.resume();
-      input.once('keypress', () => { try { input.setRawMode(false); } catch { /* 무시 */ } done(); });
+      input.on('keypress', close);
+      timer = setTimeout(close, Math.max(0, closeDelayMs));
     };
     const onKey = (str, key = {}) => {
       if (key.ctrl && key.name === 'c') return finish(false);

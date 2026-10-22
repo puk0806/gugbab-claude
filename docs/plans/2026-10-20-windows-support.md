@@ -228,7 +228,11 @@ powershell -ExecutionPolicy Bypass -File .\scripts\poc\poc-windows.ps1 -LinkCred
 | `install.ps1` | 설치·브랜치·재설치·제거(junction 너머 대화 기록 보존)·거부 8/8, 실제 설치 후 doctor 전부 ✓ |
 | 메모리 미러 | 이 세션에서 레포 `memory/` 를 고치자 전역으로 미러됨(수정 전에는 윈도우에서 안 됨) |
 
-**남은 것**: 맥 회귀 확인(M13 — 이 PC 에서는 못 돌림, 맥 분기는 바꾸지 않았지만 공용 함수 변경이 있음) · `windows-latest` CI · M2(다음 날 토큰 갱신 후) · M3(두 세션 `SendMessage`) · M8 일부(창 X 버튼으로 닫기) · M11(백신 켠 채 연속 10회) · v1.1.0 릴리스. M1·M4·M8(Ctrl+C·`/exit`)은 2026-10-21 대화형 실측으로 확인. 이 브랜치 버전은 **1.0.13**(단계 PR 은 패치 +1, 결정 41-⑦).
+**main 추가분 병합 (2026-10-21)**: main `206193c`(PR #41 `/harness` 창 저장 뒤 자동 닫힘 · PR #42 결정 42 변수 풀기·결정 43 📌)을 이 브랜치에 병합 — 충돌 9개(VERSION 은 main 1.0.14, open.js 는 윈도우 새 창 + macOS `--close-terminal` 둘 다, 테스트·문서·계획서는 양쪽 합침). **병합으로 생긴 윈도우 보안 회귀를 찾아 고침**: 결정 42 가 대입값의 `~` 를 홈으로 펼칠 때 윈도우 홈 `C:\Users\x` 의 `\` 가 안전값 검사에 걸려 아예 안 풀려 `P=~/.ssh; cat $P/id_rsa` 가 자동 허용·`S=~; rm -rf $S` 가 확인으로 약해짐 → 윈도우는 `C:/Users/x` 로 펼침. 변수 × 윈도우 시험 추가(`X=git.exe; $X push --force` 차단, `X=cat.exe; $X …` 읽기 자동, `X=cmd.exe` 확인, `\` 값은 안 풂). 윈도우 `/harness` 창 자동 닫힘 실측: `start` 로 연 콘솔이라 저장 뒤 요약을 약 2초 보여 주고 node 가 끝나면 창도 닫힘(macOS 같은 추가 처리 불필요). 병합 뒤 검증: 단위 2,499 통과(부하로 시간 초과난 2건은 단독 재실행 통과) · E2E 56/56 · 매트릭스 625/625 · bash-guard 645/645.
+
+**병합 뒤 추가 실측 (2026-10-21, 새 환경 PowerShell 창 2개 · 콘솔 직접 구동)**: 대화형 전체 흐름(첫 실행 추천 A=rust·B=nextjs → 적용 → 신뢰 → 질문·응답 → 상태줄 → 키보드 Ctrl+C → 세션 안 `/harness` 새 창 저장 → 요약 약 2초 뒤 창 자동 닫힘 → `/exit` 후 `--continue` 재시작·새 에이전트 반영 → 마지막 `/exit` 프롬프트 복귀) · **M3** 두 세션 `ListAgents`·`SendMessage` 양방향(named pipe, 설정 폴더 달라도 `sessions/` junction 공유로 서로 찾음) · **M8** claude 가 떠 있는 채 창 닫기(WM_CLOSE) → PowerShell·cmd·래퍼·claude 모두 종료, 남는 프로세스 없음 · **M2** 로그인 파일이 시험 중 실제 갱신(토큰 약 8시간)된 뒤에도 모든 래퍼 세션 재로그인 없음, 설정 폴더별 로그인 사본 0 · **M11** 백신(AhnLab V3) 켠 채 항목을 바꿔 가며 연속 20회 조립·실행 — 파일 잠김 오류 0(2회는 모델이 1턴 안에 도구를 부른 "max turns" — 하네스 있음·없음 각 6회 재현 안 됨) · 병합본 스냅샷을 `install.ps1` 로 새로 설치한 설치본 E2E 56/56.
+
+**남은 것**: 맥 회귀 확인(M13 — 이 PC 에서는 못 돌림, 맥 분기는 바꾸지 않았지만 공용 함수 변경이 있음) · `windows-latest` CI · v1.1.0 릴리스. M1·M2·M3·M4·M8·M11 은 2026-10-21 윈도우 실측으로 확인(위). 버전은 main 병합으로 **1.0.14**, PR 을 올릴 때만 `release-version.js bump`(결정 32 — 단계 PR 은 패치 +1).
 
 **맥에도 있는 것으로 찾았지만 동작을 바꾸지 않아 남긴 것**(따로 결정 필요): task-confirm-guard 승인 상태 파일을 임시 폴더에 직접 써 자기 승인 가능(윈도우 분기는 막음) · tdd/adversarial/fake-impl 의 `.claude/hooks` 부분 문자열 제외(`.claude/hooksX/…`·경로 중간 `.claude/hooks/`) · 폴더 링크 너머 파일 신뢰(staleness-check·auto-format) · 자동 허용 패턴이 `cp x ~/…` 대상은 보지 않음 · 이름만으로 `git` 실행 시 현재 폴더의 `git.exe`(윈도우 `NoDefaultCurrentDirectoryInExePath` 없을 때).
 

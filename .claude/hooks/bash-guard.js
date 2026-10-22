@@ -1905,6 +1905,176 @@ function hasNonRmRisk(cmd, allowedDirs) {
   return classifyShell(cmd, { skipRm: true, allowedDirs: allowedDirs || [] }).level !== null
 }
 
+// ── 같은 명령 안의 고정값 변수 풀기 (2026-10-21 사용자 요청) ───────────────────────────────
+// `G=/경로; ls $G` · `GC="git -c core.hooksPath=.githooks"; $GC status` 처럼 같은 명령 안에서 글자 그대로 넣은 값을
+// 풀어 실제로 무엇이 실행되는지 본다. 풀어 본 결과는 ① 변수에 숨긴 위험(deny)을 막고 ② **읽기 전용일 때만** 새로
+// 자동 허용하는 데만 쓴다 — 쓰기·삭제·실행은 풀어도 지금처럼 확인(사용자 결정: "읽기에 대해서만").
+// 값을 확실히 알 수 없으면 풀지 않는다(조건·반복·함수·서브셸 안 대입·치환·read/declare/eval 등) → 지금처럼 판정 불가.
+const RESOLVE_BAIL_WORDS = new Set(['if', 'then', 'else', 'elif', 'fi', 'for', 'while', 'until', 'do', 'done', 'case', 'esac',
+  'select', 'function', 'read', 'declare', 'typeset', 'local', 'readonly', 'mapfile', 'readarray', 'getopts', 'let',
+  'eval', 'source', '.', 'alias', 'set', 'shopt', 'trap', 'exec', '{', '}', '(', ')', '[[', '((', 'coproc', 'time'])
+// 값이 바뀌면 다른 프로그램이 실행되거나 단어 나누기가 달라지는 변수 — 대입이 있으면 아예 풀지 않는다
+const SENSITIVE_VAR_RE = /^(?:PATH|IFS|CDPATH|ENV|BASH_ENV|SHELLOPTS|BASHOPTS|PROMPT_COMMAND|PS4|HOME|LD_\w+|DYLD_\w+|GIT_\w+|PAGER|LESS\w*|MANPAGER|EDITOR|VISUAL|NODE_OPTIONS|PYTHON\w*|PERL5\w*|RUBY\w*|GCONV_PATH|TMPDIR)$/
+const SAFE_VALUE_RE = /^[A-Za-z0-9_.\/:@%+,= -]*$/ // 따옴표·glob·~·셸 기호 없는 값만 (공백은 허용 — 단어 나누기는 bash 와 같다)
+const MAX_RESOLVE_LEN = 20000
+
+// 최상위 문장으로 나눈다. 판정을 흐릴 구조가 보이면 null (풀지 않음)
+function splitTopLevelStatements(src) {
+  const parts = []
+  let buf = '', quote = null, depth = 0, pipe = false, atWord = true, prevSep = null
+  const push = (sep) => { parts.push({ text: buf, sepBefore: prevSep, sep, pipe }); buf = ''; pipe = false; prevSep = sep; atWord = true }
+  for (let i = 0; i < src.length; i++) {
+    const c = src[i], nx = src[i + 1]
+    if (quote === "'") { buf += c; if (c === "'") quote = null; continue }
+    if (c === '\\') { buf += c + (nx || ''); i++; atWord = false; continue }
+    if (quote === '"') { buf += c; if (c === '"') quote = null; else if (c === '`') return null; else if (c === '$' && nx === '(') { buf += nx; i++; depth++ } else if (c === ')' && depth > 0) depth--; continue }
+    if (c === "'" || c === '"') { quote = c; buf += c; atWord = false; continue }
+    if (c === '`') return null
+    if (c === '<' && nx === '<') return null // heredoc·here-string
+    if (c === '(' || (c === '$' && nx === '(')) { if (c === '$') { buf += c; i++ } buf += '('; depth++; atWord = true; continue }
+    if (c === ')') { if (depth === 0) return null; depth--; buf += c; atWord = false; continue }
+    if (depth > 0) {
+      if (atWord && /^[A-Za-z_][A-Za-z0-9_]*\+?=/.test(src.slice(i))) return null // 서브셸·치환 안 대입 — 바깥 값과 달라짐
+      buf += c; atWord = /[\s;&|(]/.test(c); continue
+    }
+    if (c === ';' || c === '\n') { push(c); continue }
+    if (c === '&' && nx === '&') { push('&&'); i++; continue }
+    if (c === '|' && nx === '|') { push('||'); i++; continue }
+    if (c === '&') { if (nx === '>' || src[i - 1] === '>') { buf += c; continue } push('&'); continue }
+    if (c === '|') { pipe = true; buf += c; atWord = true; continue }
+    buf += c; atWord = /\s/.test(c)
+  }
+  if (quote || depth) return null
+  push(null)
+  return parts
+}
+
+// $NAME·${NAME} 를 아는 값으로 바꾼다 (작은따옴표 안·\$ 는 그대로, ${NAME:-…} 같은 연산은 그대로 둔다)
+function substituteVars(text, vars) {
+  let out = '', quote = null, changed = false
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i]
+    if (quote === "'") { out += c; if (c === "'") quote = null; continue }
+    if (c === '\\') { out += c + (text[i + 1] || ''); i++; continue }
+    if (c === "'" && quote !== '"') { quote = "'"; out += c; continue }
+    if (c === '"') { quote = quote === '"' ? null : '"'; out += c; continue }
+    if (c === '$') {
+      const m = /^\$(?:\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*))/.exec(text.slice(i))
+      const name = m && (m[1] || m[2])
+      if (name && vars.has(name) && vars.get(name) !== null) { out += vars.get(name); i += m[0].length - 1; changed = true; continue }
+    }
+    out += c
+  }
+  return { text: out, changed }
+}
+
+// 대입 오른쪽 값 → 글자 그대로의 값 (모르면 null)
+function literalAssignValue(rhs, vars) {
+  let v = null
+  const sq = /^'([^']*)'$/.exec(rhs)
+  if (sq) v = sq[1]
+  else {
+    const dq = /^"([^"`\\]*)"$/.exec(rhs)
+    const body = dq ? dq[1] : rhs
+    if (!dq && /["'`\\\s]/.test(body)) return null
+    const s = substituteVars(body, vars).text
+    if (s.includes('$')) return null
+    // bash 는 따옴표 없는 대입값의 맨 앞 ~ 를 펼친다. 윈도우 홈(C:\Users\x)은 \ 때문에 아래 안전값 검사에 걸려 아예 안 풀리고
+    //   그러면 `P=~/.ssh; cat $P/id_rsa` 의 개인키 차단이 빠진다(2026-10-21 main 병합 뒤 실측) → 슬래시 표기(C:/Users/x)로 펼친다
+    if (!dq && /^~(?:\/|$)/.test(s)) { if (!HOME_DIR) return null; v = (IS_WIN ? HOME_DIR.replace(/\\/g, '/') : HOME_DIR) + s.slice(1) }
+    else v = s
+  }
+  return SAFE_VALUE_RE.test(v) ? v : null
+}
+
+// { cmd: 변수를 푼 명령, changed } — 풀 수 없는 구조면 null
+function resolveLiteralVars(cmd) {
+  if (typeof cmd !== 'string' || cmd.length > MAX_RESOLVE_LEN || !cmd.includes('$')) return null
+  const parts = splitTopLevelStatements(cmd)
+  if (!parts) return null
+  const vars = new Map() // 이름 → 값 (null = 값을 확실히 모름 → 풀지 않음)
+  let out = '', changed = false
+  for (const p of parts) {
+    const raw = p.text
+    const t = raw.trim()
+    const conditional = p.sepBefore === '&&' || p.sepBefore === '||' || p.sep === '&' || p.pipe
+    const first = (t.match(/^\S+/) || [''])[0]
+    if (RESOLVE_BAIL_WORDS.has(first) || /^[A-Za-z_][\w-]*\s*\(\s*\)/.test(t) || /\bprintf\s+(?:-\S+\s+)*-v\b/.test(t)) return null
+    // 어디에든 위험 변수 대입(접두 대입·env X=… 포함)이 보이면 풀지 않는다
+    for (const m of removeSingleQuotedSegments(t).matchAll(/(?:^|[\s;&|(])(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\+?=/g)) if (SENSITIVE_VAR_RE.test(m[1])) return null
+    const asg = /^(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)=(\S*|'[^']*'|"[^"]*")$/.exec(t)
+    if (asg) {
+      vars.set(asg[1], conditional ? null : literalAssignValue(asg[2], vars))
+      out += raw + (p.sep || '') // 대입 문장은 실행하는 것이 없어 그대로 둔다
+      continue
+    }
+    if (/^(?:export\s+)?[A-Za-z_][A-Za-z0-9_]*\+?=/.test(t)) {
+      // 대입 여러 개·이어 붙인 값·접두 대입(X=1 cmd) — 값이 확실하지 않거나 남지 않으므로 그 이름은 모름으로
+      for (const m of t.matchAll(/(?:^|\s)([A-Za-z_][A-Za-z0-9_]*)\+?=/g)) vars.set(m[1], null)
+    }
+    if (first === 'unset') {
+      for (const n of t.split(/\s+/).slice(1)) if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(n)) vars.set(n, conditional ? null : '')
+    }
+    const s = substituteVars(raw, vars)
+    if (s.changed) changed = true
+    out += s.text + (p.sep || '')
+  }
+  return { cmd: out, changed }
+}
+
+// 풀어 본 명령이 확실히 읽기 전용인가 — 이번에 새로 여는 자동 허용 전용의 엄격한 목록
+// (SAFE_READONLY_COMMANDS 의 sed·awk·xargs·less 는 w·e·system()·! 로 쓰거나 실행할 수 있어 뺀다)
+const hasOpt = (vals, opts) => vals.some(v => opts.some(o => v === o || v.startsWith(o + '=') || (o.length === 2 && v.startsWith(o) && !v.startsWith('--'))))
+const noArgs = (vals) => !vals.some(v => !v.startsWith('-'))
+const GIT_READ_SUB = new Set(['status', 'log', 'diff', 'show', 'rev-parse', 'ls-files', 'ls-tree', 'cat-file', 'describe',
+  'blame', 'shortlog', 'grep', 'branch', 'tag', 'remote', 'config', 'stash', 'worktree', 'reflog', 'rev-list', 'merge-base', 'name-rev', 'whatchanged', 'count-objects'])
+const READ_ONLY_RESOLVED = {
+  ls: () => true, pwd: () => true, stat: () => true, realpath: () => true, readlink: () => true, basename: () => true,
+  dirname: () => true, printenv: () => true, whoami: () => true, true: () => true, test: () => true, '[': () => true,
+  cat: () => true, head: () => true, tail: () => true, wc: () => true, cmp: () => true, diff: () => true,
+  grep: () => true, egrep: () => true, fgrep: () => true, cut: () => true, tr: () => true, du: () => true, df: () => true,
+  echo: () => true, printf: (v) => !hasOpt(v, ['-v']), which: () => true, type: () => true, jq: () => true,
+  cd: () => true, pushd: () => true, popd: () => true,
+  // 값만 정하는 셸 내장 — 위험 변수(PATH·IFS·LD_* 등) 대입은 resolveLiteralVars 가 이미 풀지 않는다
+  export: (v) => v.every(x => /^[A-Za-z_][A-Za-z0-9_]*(?:=.*)?$/.test(x) && !SENSITIVE_VAR_RE.test(x.split('=')[0])),
+  unset: (v) => v.every(x => /^[A-Za-z_][A-Za-z0-9_]*$/.test(x)),
+  rg: (v) => !hasOpt(v, ['--pre', '--pre-glob']),
+  sort: (v) => !hasOpt(v, ['-o', '--output']),
+  tree: (v) => !hasOpt(v, ['-o']),
+  file: (v) => !hasOpt(v, ['-C', '--compile']),
+  find: (v) => !v.some(x => /^-(?:exec|execdir|ok|okdir|delete|fprint|fprint0|fprintf|fls)$/.test(x)),
+  date: (v) => !hasOpt(v, ['-s', '--set']) && !v.some(x => !x.startsWith('-') && !x.startsWith('+')),
+  hostname: (v) => noArgs(v),
+  git: (v, inv) => {
+    const g = inv.git
+    if (!g || !g.sub || g.subDyn || Object.keys(g.aliases || {}).length || !GIT_READ_SUB.has(g.sub)) return false
+    const pre = v.slice(0, v.length - g.args.length - 1)
+    if (pre.some(x => /^(?:-c|--config-env|--exec-path)(?:=|$)/.test(x))) return false
+    const a = g.args.map(x => cleanValue(x.value))
+    if (a.some(x => /^--(?:output|ext-diff|textconv)(?:=|$)/.test(x))) return false
+    if (g.sub === 'branch') return a.every(x => /^(?:-a|-r|-v|-vv|-l|--list|--all|--remotes|--show-current|--contains|--merged|--no-merged|--sort=.*|--format=.*)$/.test(x))
+    if (g.sub === 'tag') return a.length === 0 || (a.some(x => x === '-l' || x === '--list') && !a.some(x => /^(?:-d|--delete|-a|--annotate|-s|--sign|-f|--force|-m|--message|-F|--file|-u|--local-user)(?:=|$)/.test(x)))
+    if (g.sub === 'remote') return a.length === 0 || a[0] === '-v' || a[0] === 'get-url' || a[0] === 'show'
+    if (g.sub === 'config') return a.some(x => /^(?:--get|--get-all|--get-regexp|--list|-l)$/.test(x))
+    if (g.sub === 'stash' || g.sub === 'worktree') return a[0] === 'list' || (g.sub === 'stash' && a[0] === 'show')
+    if (g.sub === 'reflog') return a.length === 0 || a[0] === 'show' || a[0].startsWith('-')
+    return true
+  },
+}
+function isReadOnlyResolved(cmd) {
+  if (typeof cmd !== 'string') return false
+  const acc = analyzeShell(cmd)
+  if (acc.unknown.length) return false
+  for (const inv of acc.invocations) {
+    if (inv.dynamicName || inv.sudo) return false
+    if ((inv.redirs || []).some(r => r.out && !r.dup && cleanValue(r.value) !== '/dev/null')) return false // 쓰기 리다이렉트
+    if (inv.args.some(a => a.dyn && !/^\$(?:\{(?:HOME|PWD)\}|(?:HOME|PWD)(?![A-Za-z0-9_]))/.test(a.value))) return false // 아직 모르는 변수
+    const ok = Object.prototype.hasOwnProperty.call(READ_ONLY_RESOLVED, inv.name) && READ_ONLY_RESOLVED[inv.name]
+    if (!ok || !ok(inv.args.map(a => cleanValue(a.value)), inv)) return false
+  }
+  return true
+}
+
 function denyResult(reason) {
   return { hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny', permissionDecisionReason: reason } }
 }
@@ -1920,9 +2090,27 @@ function handlePreToolUse(toolName, toolInput, cwd) {
     if (pattern.test(cmd)) return denyResult(reason)
   }
 
+  // 같은 명령 안의 고정값 변수를 풀어 본 명령 — 변수에 숨긴 위험은 막고, 읽기 전용일 때만 아래에서 자동 허용 (2026-10-21)
+  const lit = resolveLiteralVars(cmd)
+  const litRisk = lit && lit.changed ? classifyShell(lit.cmd, { cwd }) : null
+  if (litRisk) {
+    for (const { pattern, reason } of DENY_PATTERNS) {
+      if (pattern.test(lit.cmd)) return denyResult(`${reason} (같은 명령 안의 변수 값을 풀어 판정)`)
+    }
+    if (litRisk.level === 'deny') return denyResult(`${litRisk.reason} (같은 명령 안의 변수 값을 풀어 판정)`)
+  }
+  const litReadOnly = !!litRisk && litRisk.level === null && isReadOnlyResolved(lit.cmd)
+  const litAllow = { hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'allow',
+    permissionDecisionReason: 'bash-guard: 같은 명령 안의 고정값 변수를 풀어 보니 읽기 전용 — 자동 허용' } }
+
   // 명령 단위 위험 분류 — 우회 형태(파이프·체인·치환·래퍼)도 일반 형태와 같은 판정
   const risk = classifyShell(cmd, { cwd })
   if (risk.level === 'deny') return denyResult(risk.reason)
+  if (risk.level !== null && litReadOnly) return litAllow // 변수 때문에 판정하지 못했을 뿐, 풀어 보면 읽기
+  if (litRisk && litRisk.level === 'ask') {
+    return { hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'ask',
+      permissionDecisionReason: `bash-guard: ${litRisk.reason} (같은 명령 안의 변수 값을 풀어 판정)` } }
+  }
   if (risk.level === 'ask') {
     return {
       hookSpecificOutput: {
@@ -1965,7 +2153,14 @@ function handlePermissionRequest(toolName, toolInput, cwd) {
   const cmd = (rawCmd || '').trim()
 
   if (DENY_PATTERNS.some(({ pattern }) => pattern.test(cmd))) return null
-  if (classifyShell(cmd, { cwd }).level !== null) return null // 사용자 확인 필요
+  // 같은 명령 안의 고정값 변수를 풀어 본 명령이 위험하면 자동 승인하지 않는다.
+  // 변수 때문에 판정하지 못하던 명령은 풀어 보니 **읽기 전용일 때만** 자동 승인 (쓰기·삭제·실행은 사용자 확인 — 2026-10-21)
+  const lit = resolveLiteralVars(cmd)
+  if (lit && lit.changed) {
+    if (DENY_PATTERNS.some(({ pattern }) => pattern.test(lit.cmd))) return null
+    if (classifyShell(lit.cmd, { cwd }).level !== null) return null
+    if (classifyShell(cmd, { cwd }).level !== null && !isReadOnlyResolved(lit.cmd)) return null
+  } else if (classifyShell(cmd, { cwd }).level !== null) return null // 사용자 확인 필요
 
   return {
     hookSpecificOutput: {
@@ -2050,6 +2245,8 @@ module.exports = {
   handlePostToolUse,
   analyzeShell,
   classifyShell,
+  resolveLiteralVars,
+  isReadOnlyResolved,
   parseGitInvocation,
   parsePushArgs,
   winCanon,

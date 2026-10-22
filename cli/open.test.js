@@ -6,7 +6,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { spawnSync } = require('child_process');
-const { shq, sessionCommand, planLaunch, describePlan, launch, rootFromConfigDir } = require('./open');
+const { shq, sessionCommand, planLaunch, describePlan, launch, rootFromConfigDir, terminalCloseScript, scheduleTerminalClose, currentTty } = require('./open');
 
 const base = { bin: '/home/u/gugbab/bin/gugbab-claude', root: '/work/my-ui' };
 const roundTrip = (s) => spawnSync('sh', ['-c', `printf %s ${shq(s)}`], { encoding: 'utf8' }).stdout;
@@ -120,6 +120,67 @@ test('악성: 윈도우 — 경로에 cmd 가 따옴표 안에서도 해석하�
 test('경계: 윈도우 — 창 띄우기 실패면 안내 문구와 함께 오류', () => {
   const p = planWindows({ bin: 'C:\\g\\bin\\gugbab-claude', root: 'C:\\p', node: 'C:\\node.exe' });
   assert.throws(() => launch(p, { detached: () => { throw new Error('cmd 없음'); } }), /띄우지 못했습니다.*다른 터미널/s);
+});
+
+test('정상: 윈도우 새 창은 --close-terminal 을 붙이지 않음 (start 로 연 콘솔은 node 가 끝나면 닫힘)', () => {
+  const p = planLaunch({ bin: 'C:\\g\\bin\\gugbab-claude', root: 'C:\\p', env: {}, platform: 'win32' });
+  assert.strictEqual(p.kind, 'console');
+  assert.ok(!p.cmd.includes('--close-terminal'), p.cmd);
+  assert.match(launch(p, { detached: () => {} }), /2초 보여 주고 창이 닫힙니다/);
+});
+
+// ── 끝나면 창 닫기 (2026-10-20) — comux 는 `; exit`, tmux 는 display-popup -E, macOS 터미널은 --close-terminal ──
+test('정상: macOS 새 창만 --close-terminal 을 붙이고, comux·tmux 는 붙이지 않음 (그쪽은 명령이 끝나면 닫힘)', () => {
+  const mac = planLaunch({ ...base, env: {}, platform: 'darwin' });
+  assert.match(mac.cmd, /harness --session --close-terminal$/);
+  assert.ok(mac.argv[2].includes('--close-terminal; exit'), mac.argv[2]);
+  const cx = planLaunch({ ...base, env: { COPAD_MUX: '1', COPAD_MUX_PANE: 'abc-1' }, platform: 'darwin' });
+  assert.ok(!cx.cmd.includes('--close-terminal'));
+  const tm = planLaunch({ ...base, env: { TMUX: '/tmp/t,1,0' }, platform: 'darwin' });
+  assert.ok(!tm.cmd.includes('--close-terminal'));
+  assert.match(tm.argv[3], /display-popup -E /, 'tmux 팝업은 -E 라 명령이 끝나면 닫힌다');
+});
+
+test('정상: 닫기 스크립트 — 그 tty 에서 실행 중인 창을 id 로 기억했다가, 셸이 끝나 한가해진 뒤 그 창만 닫음', () => {
+  const s = terminalCloseScript('/dev/ttys003');
+  assert.match(s, /tty of tab 1 of w is "\/dev\/ttys003" and busy of tab 1 of w then[\s\S]*set target to id of w/,
+    '이미 끝나 남은 창(같은 tty 이름, busy=false)이 아니라 실행 중인 창을 고름');
+  assert.match(s, /\(count of tabs of w\) is 1/, '탭이 여럿인 창은 건드리지 않음');
+  assert.match(s, /if target is missing value then return/, '못 찾으면 아무 창도 닫지 않음');
+  assert.match(s, /busy of tab 1 of window id target is false[\s\S]*close window id target/, '실행 중이면 닫지 않음(종료 확인 창 방지)');
+  assert.ok(!/close w\b/.test(s), 'tty 로 다시 찾아 닫지 않음 — 기억한 id 로만');
+  assert.match(s, /repeat 3600 times[\s\S]*delay 0\.5/, '기본 최대 30분 기다림');
+  assert.match(terminalCloseScript('/dev/ttys003', 1e9), /repeat 7200 times/, '대기 상한');
+  assert.match(terminalCloseScript('/dev/ttys003', 'x'), /repeat 1 times/, '이상한 값은 최소');
+});
+
+test('악성: tty 자리에 AppleScript·셸 주입 문자열 → 스크립트를 만들지 않고 osascript 도 띄우지 않음', () => {
+  const bad = ['/dev/ttys1" then do shell script "rm -rf ~" --', '/dev/ttys001\nclose every window', '/dev/tty', 'ttys001', '/dev/ttys', '/dev/ttys12345', '/dev/../dev/ttys001', '', null, undefined, 42];
+  for (const t of bad) {
+    assert.throws(() => terminalCloseScript(t), /tty 형식/, String(t));
+    let spawned = false;
+    assert.throws(() => scheduleTerminalClose({ tty: t, spawn: () => { spawned = true; return {}; } }), /tty 형식/);
+    assert.strictEqual(spawned, false, String(t));
+  }
+});
+
+test('정상: 닫기는 창과 무관한 새 세션(detached·입출력 없음)으로 띄우고 기다리지 않음(unref)', () => {
+  const calls = []; let unref = 0;
+  scheduleTerminalClose({ tty: '/dev/ttys012', spawn: (cmd, args, o) => { calls.push({ cmd, args, o }); return { unref: () => { unref++; } }; } });
+  assert.strictEqual(calls.length, 1);
+  assert.strictEqual(calls[0].cmd, 'osascript');
+  assert.strictEqual(calls[0].args[0], '-e');
+  assert.match(calls[0].args[1], /ttys012/);
+  assert.strictEqual(calls[0].o.detached, true);
+  assert.strictEqual(calls[0].o.stdio, 'ignore');
+  assert.strictEqual(unref, 1);
+});
+
+test('경계: currentTty — tty 명령 결과가 형식에 맞을 때만, 실패·이상한 값이면 null(창은 남고 저장은 그대로)', () => {
+  assert.strictEqual(currentTty({ exec: () => '/dev/ttys007\n' }), '/dev/ttys007');
+  assert.strictEqual(currentTty({ exec: () => 'not a tty\n' }), null);
+  assert.strictEqual(currentTty({ exec: () => '/dev/ttys007"; rm -rf ~\n' }), null);
+  assert.strictEqual(currentTty({ exec: () => { throw new Error('no tty'); } }), null);
 });
 
 test('경계: 띄우기 명령이 실패하면 안내 문구와 함께 오류', () => {

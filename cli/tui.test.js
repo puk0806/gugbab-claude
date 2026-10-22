@@ -158,6 +158,75 @@ test('정상: runTui — 가짜 터미널로 블록 일괄 켜고 저장하면 �
   assert.ok(screen.includes('\x1b[?1049l'), '끝나면 원래 화면으로 돌아옴');
 });
 
+// ── /harness 창 자동 닫기 (2026-10-20 — 예전엔 저장 뒤 "아무 키나" 를 기다려 창이 남았다) ──
+function tuiRig(opts = {}) {
+  const d = fs.mkdtempSync(path.join(os.tmpdir(), 'tui-close-'));
+  const paths = { profilePath: path.join(d, 'profile.json') };
+  const project = { root: d, id: 'p', configDir: path.join(d, 'cfg'), settingsPath: path.join(d, 'projects', 'p', 'settings.json') };
+  const input = new PassThrough(); input.isTTY = true;
+  const raw = []; input.setRawMode = (v) => { raw.push(v); return input; };
+  const output = new PassThrough(); output.columns = 120; output.rows = 30;
+  let screen = ''; output.on('data', (c) => { screen += c; });
+  const t0 = Date.now();
+  const done = runTui({ manifest, paths, project, input, output, composeFn: () => {}, ...opts });
+  return { input, raw, done, project, screen: () => screen, elapsed: () => Date.now() - t0 };
+}
+const CHANGE_AND_SAVE = ['v', '\x1b[B', ' ', '\r']; // 블록 보기 → block:st 일괄 켬 → 저장
+
+test('정상: /harness 창(holdOnExit) — 저장하면 요약을 보여 주고 키를 더 누르지 않아도 저절로 끝남', async () => {
+  const r = tuiRig({ holdOnExit: true, closeDelayMs: 30 });
+  for (const k of CHANGE_AND_SAVE) r.input.write(k);
+  const res = await r.done; // 추가 키 입력 없음
+  assert.strictEqual(res.saved, true);
+  assert.match(r.screen(), /저장했습니다[\s\S]*0초 뒤 이 창을 닫습니다 \(아무 키나 누르면 바로\)/);
+  assert.ok(!/아무 키나 누르면 이 창을 닫습니다/.test(r.screen()), '예전 문구(키를 기다림)는 없어야');
+  assert.strictEqual(r.raw[r.raw.length - 1], false, '끝나면 raw 모드를 풀어 터미널을 돌려놓음');
+  assert.strictEqual(r.input.listenerCount('keypress'), 0, '키 리스너가 남지 않음');
+});
+
+test('경계: 기다리는 동안 키를 누르면 타이머를 기다리지 않고 바로 끝남 · 키와 타이머가 겹쳐도 한 번만', async () => {
+  const r = tuiRig({ holdOnExit: true, closeDelayMs: 60000 });
+  for (const k of CHANGE_AND_SAVE) r.input.write(k);
+  await new Promise((ok) => setImmediate(ok));
+  r.input.write('x'); r.input.write('y'); r.input.write('\r'); // 여러 번 눌러도
+  const res = await r.done;
+  assert.strictEqual(res.saved, true);
+  assert.ok(r.elapsed() < 5000, `60초 타이머를 기다리면 안 됨 (${r.elapsed()}ms)`);
+  assert.strictEqual(r.input.listenerCount('keypress'), 0);
+  // 60초 타이머가 남아 있으면 node:test 가 이 파일을 끝내지 못한다 — clearTimeout 확인은 테스트가 끝나는 것 자체
+});
+
+test('경계: 바꾼 것 없이 Enter·q·Ctrl+C 는 기다리지 않고 바로 끝남 (요약·대기 문구 없음)', async () => {
+  for (const keys of [['\r'], ['q'], ['\x03']]) {
+    const r = tuiRig({ holdOnExit: true, closeDelayMs: 60000 });
+    for (const k of keys) r.input.write(k);
+    const res = await r.done;
+    assert.strictEqual(res.saved, false, JSON.stringify(keys));
+    assert.ok(r.elapsed() < 5000);
+    assert.ok(!/초 뒤 이 창을 닫습니다/.test(r.screen()), JSON.stringify(keys));
+  }
+});
+
+test('경계: 바꾼 뒤 q 두 번(버리고 닫기)도 바로 끝나고 파일에 쓰지 않음', async () => {
+  const r = tuiRig({ holdOnExit: true, closeDelayMs: 60000 });
+  for (const k of ['v', '\x1b[B', ' ', 'q', 'q']) r.input.write(k);
+  const res = await r.done;
+  assert.strictEqual(res.saved, false);
+  assert.ok(!fs.existsSync(r.project.settingsPath), '버린 변경은 기록 안 됨');
+  assert.ok(r.elapsed() < 5000);
+});
+
+test('정상·경계: 세션 밖(holdOnExit 없음)은 저장해도 기다리지 않음 · 음수 대기 시간은 0 으로', async () => {
+  const a = tuiRig({ closeDelayMs: 60000 });
+  for (const k of CHANGE_AND_SAVE) a.input.write(k);
+  assert.strictEqual((await a.done).saved, true);
+  assert.ok(a.elapsed() < 5000 && !/초 뒤 이 창을 닫습니다/.test(a.screen()));
+  const b = tuiRig({ holdOnExit: true, closeDelayMs: -5000 });
+  for (const k of CHANGE_AND_SAVE) b.input.write(k);
+  assert.strictEqual((await b.done).saved, true);
+  assert.ok(b.elapsed() < 5000);
+});
+
 test('정상: 프로젝트 자체 .claude 가 가진 항목은 ↷ 표시, 바꿔도 적용 안 된다고 알림', () => {
   let st = createState({ manifest, layers: layers(), projectName: 'p', skipped: new Set(['hook:solo']), view: 'stack' });
   st = goto(press(goto(st, 'type:hook'), 'right').st, 'hook:solo');
@@ -402,4 +471,99 @@ test('종류별 보기(정상): 긴 용도 이름은 목록엔 괄호 앞만, �
   assert.match(relationLines(st, row, teff(st, m))[0], /^\[메모리 공유 \(레포에 `memory\/` 를 두고 git 으로 여러 PC 공유하는 프로젝트용\)\]/);
   const only = JSON.parse(JSON.stringify(typed)); only.layout[1].groups[0].title = '(괄호만)';
   assert.strictEqual(buildTree(only).find((x) => x.id === 'type:hook').children[0].label, '(괄호만)', '괄호뿐인 제목은 그대로');
+});
+
+// ── 📌 프로젝트 파일(.gugbab.json)이 정한 항목 (2026-10-21) — 🔒 처럼 이 프로젝트에선 못 바꾸는데 평범한 ✅·⬜ 로 보이던 문제 ──
+const curLine = (st, id) => { const s = goto(st, id); return render(s, { cols: 160, rows: 40 }).split('\n').find((l) => l.includes('›')) || ''; };
+const openAll = (st) => press(st, 'a').st;
+
+test('정상: .gugbab.json 이 켠 항목 — 줄 끝 📌 표시·상단 개수·설명칸, Space 는 바꾸지도 기록하지도 않고 이유 안내', () => {
+  const st = openAll(fresh(layers({}, {}, { enable: ['skill:s1'] })));
+  assert.match(curLine(st, 'skill:s1'), /✅ .*📌 \.gugbab\.json 켬/);
+  const scr = render(goto(st, 'skill:s1'), { cols: 160, rows: 40 });
+  assert.match(scr, /🔒 1 · 📌 1 \(\.gugbab\.json\)/);
+  assert.match(scr, /📌 \.gugbab\.json 이\(가\) 켬으로 정함 — 여기서 못 바꿈/);
+  assert.match(scr, /📌 프로젝트 파일이 정함\(여기서 못 바꿈\)/, '범례');
+  const r = press(goto(st, 'skill:s1'), 'space').st;
+  assert.ok(eff(r).enabled.has('skill:s1'));
+  assert.deepStrictEqual(r.ops, { profile: [], project: [] }, '효과 없는 기록을 남기지 않음');
+  assert.match(r.message, /📌 \.gugbab\.json 이\(가\) 켬으로 정해 둔 항목이라 여기서 바꿀 수 없습니다 — 바꾸려면 프로젝트의 \.gugbab\.json/);
+});
+
+test('정상: .gugbab.json 이 끈 항목은 ⬜ + 📌 끔, Space 로 켜지지 않고 기록도 없음', () => {
+  const st = openAll(fresh(layers({}, {}, { disable: ['hook:solo'] })));
+  assert.match(curLine(st, 'hook:solo'), /⬜ .*📌 \.gugbab\.json 끔/);
+  const r = press(goto(st, 'hook:solo'), 'space').st;
+  assert.ok(!eff(r).enabled.has('hook:solo'));
+  assert.strictEqual(r.ops.project.length, 0);
+  assert.match(r.message, /끔으로 정해 둔 항목이라/);
+});
+
+test('정상: 모든 프로젝트 범위(Tab)에서는 다른 프로젝트에 적용되므로 지금처럼 기록하고, 이 프로젝트는 그대로라고 안내', () => {
+  const st = openAll(fresh(layers({}, {}, { enable: ['skill:s1'] })));
+  const r = press(goto(st, 'skill:s1'), 'tab', 'space').st;
+  assert.deepStrictEqual(r.ops.profile, [['off', 'skill:s1']]);
+  assert.match(r.message, /끔 기록 \(모든 프로젝트\) — 이 프로젝트는 그대로/);
+});
+
+test('경계: .gugbab.json 이 블록으로 켜면 구성원 모두 📌 — 블록에서 Space 는 바꿀 것이 없다고 안내, 기록 없음', () => {
+  const st = openAll(fresh(layers({}, {}, { enable: ['block:st'] })));
+  for (const id of ['skill:s1', 'skill:s2']) assert.match(curLine(st, id), /📌 \.gugbab\.json 켬/, id);
+  assert.match(curLine(st, 'block:st'), /📌 3/);
+  const r = press(goto(st, 'block:st'), 'space').st;
+  assert.strictEqual(r.ops.project.length, 0);
+  assert.match(r.message, /바꿀 수 있는 항목이 없습니다 — 📌 \.gugbab\.json 이 정함 3개/);
+});
+
+test('경계: 종류에서 일괄 Space — 📌 는 건너뛰고 나머지만 기록, 몇 개가 그대로인지 안내', () => {
+  let st = createState({ manifest, layers: layers({}, {}, { enable: ['skill:s1'] }), projectName: 'p' }); // 종류별 보기
+  st = openAll(st);
+  const r = press(goto(st, 'type:skill'), 'space').st;
+  assert.ok(eff(r).enabled.has('skill:s2') && eff(r).enabled.has('skill:s1'));
+  assert.ok(!r.ops.project.some(([, id]) => id === 'skill:s1'), '📌 항목은 기록하지 않음');
+  assert.match(r.message, /\(📌 1개는 \.gugbab\.json 이 정해 그대로\)/);
+});
+
+test('경계: 🔒 가 📌 보다 우선 — .gugbab.json 이 고정+켬이면 🔒 만 보이고 📌 없음', () => {
+  const st = openAll(fresh(layers({}, {}, { lock: ['hook:a'], enable: ['hook:a'] })));
+  const line = curLine(st, 'hook:a');
+  assert.match(line, /🔒/);
+  assert.ok(!line.includes('📌'), line);
+  assert.match(render(goto(st, 'hook:a'), { cols: 160, rows: 40 }), /🔒 \.gugbab\.json 에서 고정/);
+});
+
+test('경계: 파일이 켜도 다른 규칙(충돌)으로 실제로 꺼졌으면 📌 아님 — 실제 결과가 파일 값과 같을 때만', () => {
+  const st = openAll(fresh(layers({}, { enable: ['block:st'] }, { enable: ['hook:solo'] })));
+  // block:st 를 켜면 hook:solo 가 꺼지는 충돌 규칙 — 파일은 켬인데 실제는 끔
+  assert.strictEqual(eff(st).enabled.has('hook:solo'), false);
+  assert.ok(!curLine(st, 'hook:solo').includes('📌'), '실제 결과와 다른 파일 값은 📌 로 보이지 않음');
+  const r = press(goto(st, 'hook:solo'), 'space').st;
+  assert.ok(!/여기서 바꿀 수 없습니다/.test(r.message), '📌 안내 대신 지금의 이유 안내');
+});
+
+test('경계: 파생 하네스의 프로젝트 파일 이름(.lfmall.json)을 그대로 보여 줌 — 🔒 이유 문구도', () => {
+  const l = [{ source: 'profile' }, { source: 'project' }, { source: '.lfmall.json', enable: ['skill:s1'], lock: ['hook:a'] }];
+  const st = openAll(fresh(l));
+  assert.match(curLine(st, 'skill:s1'), /📌 \.lfmall\.json 켬/);
+  assert.match(render(goto(st, 'hook:a'), { cols: 160, rows: 40 }), /🔒 \.lfmall\.json 에서 고정/);
+  assert.match(press(goto(st, 'hook:a'), 'space').st.message, /🔒 \.lfmall\.json 에서 고정/);
+  assert.ok(!render(st, { cols: 160, rows: 40 }).includes('.gugbab.json'));
+});
+
+test('악성: 프로젝트 파일의 모르는 이름·문자열 아닌 값·이스케이프 섞인 파일 이름이 화면을 깨지 않음', () => {
+  const l = [{ source: 'profile' }, { source: 'project' }, { source: '.evil\x1b[31m.json', enable: ['skill:nope', 42, null, { x: 1 }, 'skill:s1'], disable: 'hook:a' }];
+  const st = openAll(fresh(l));
+  const scr = render(goto(st, 'skill:s1'), { cols: 160, rows: 40 });
+  assert.ok(!/\x1b\[31m/.test(scr), '파일 이름의 이스케이프는 지움');
+  assert.match(curLine(st, 'skill:s1'), /📌 \.evil.*켬/);
+  assert.ok(!curLine(st, 'hook:a').includes('📌'), '배열이 아닌 disable 은 무시');
+});
+
+test('정상: 프로젝트 파일이 없는 일반 프로젝트는 📌 가 하나도 없고 Space 는 지금처럼 바뀜', () => {
+  const st = openAll(fresh());
+  const scr = render(st, { cols: 160, rows: 40 });
+  assert.ok(!/📌 \d|📌 \.gugbab/.test(scr));
+  const r = press(goto(st, 'skill:s1'), 'space').st;
+  assert.ok(eff(r).enabled.has('skill:s1'));
+  assert.deepStrictEqual(r.ops.project, [['on', 'skill:s1']]);
 });
