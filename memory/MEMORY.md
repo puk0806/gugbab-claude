@@ -18,7 +18,7 @@
 - [프로젝트 scope 전용 원칙](project_scope_only.md) — gugbab-claude 모든 산출물은 프로젝트 scope에만, 글로벌(~/.claude) 설정 금지
 - [MCP 미사용 결정](project_mcp_decision.md) — WebSearch/WebFetch만 사용, 팀 이식성 우선
 - [세션 일괄 메모리 저장·재시작 절차](project_multi_session_memory_save_restart.md) — ListAgents+SendMessage 병렬 요청, mtime으로 완료 확인, 원격 재시작 불가(각 터미널 `/exit`→`claude -c`)
-- [Claude Code 설치 환경·npm SSL 우회](project_claude_install_environment.md) — 단일 nvm-global 설치, 업데이트 후 버전 안 바뀌면 .npm-global 중복 의심, SELF_SIGNED_CERT면 curl 우회, `ENOTEMPTY rename` 잔재 삭제, postinstall 미완료 시 `claude` 실행 불가
+- [Claude Code 설치 환경·npm SSL 우회](project_claude_install_environment.md) — 단일 nvm-global 설치, 업데이트 후 버전 안 바뀌면 .npm-global 중복 의심, SELF_SIGNED_CERT면 curl 우회, `ENOTEMPTY rename` 잔재 삭제, postinstall 미완료 시 `claude` 실행 불가, 윈도우는 자동 업데이트 뒤 exe 가 구버전(2.1.280)으로 뒤바뀐 적 있음(exe 크기로 판별·npm 재설치)
 
 ## User
 - [사용자 프로필](user_profile.md) — 풀스택 개발자. 프론트엔드(Next.js 모노레포 + CRA 레거시) + Java 레거시 백엔드(SB 2.5+MyBatis+Oracle+MySQL+Redisson 2+EhCache 2+AWS SDK v1) 운영
