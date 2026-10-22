@@ -8,7 +8,8 @@ const { spawnSync } = require('child_process')
 const fs = require('fs')
 const path = require('path')
 const HOOK = path.join(__dirname, 'verification-guard.js')
-const TMP = '/tmp/verification-guard-test.json'
+// 고정 '/tmp' 는 윈도우에서 '현재 드라이브:\tmp' 라 없을 수 있음(CI 러너 D:\tmp ENOENT, 2026-10-22)
+const TMP = path.join(require('os').tmpdir(), 'verification-guard-test.json')
 
 let passed = 0, failed = 0
 
