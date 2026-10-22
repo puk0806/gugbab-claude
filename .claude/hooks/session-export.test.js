@@ -301,5 +301,68 @@ fs.rmSync(cliHome, { recursive: true, force: true });
 fs.rmSync(gitRepo, { recursive: true, force: true });
 fs.rmSync(outside, { recursive: true, force: true });
 
+// ── 비밀값 가리기 (2026-10-22 실사용 보고 — yml 평문 비밀번호를 대화에 인용 → exports 로 레포 커밋 위험) ──
+const { redactSecrets } = require('./session-export.js');
+// 시험용 가짜 값 — 실제 비밀이 아니다
+const FAKE_PW = 'Tr0ub4dor&3xyz';
+const FAKE_GH = 'ghp_' + 'A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6Q7r8';
+const FAKE_SK = 'sk-ant-' + 'api03-abcdefghijklmnopqrstuvwxyz012345';
+check('비밀값 정상: yml·properties·JSON·env 형태의 비밀번호 값은 *** 로', () => {
+  const src = [
+    `  password: ${FAKE_PW}`,
+    `spring.datasource.password=${FAKE_PW}`,
+    `"apiKey": "${FAKE_PW}"`,
+    `DB_PASSWORD="${FAKE_PW}"`,
+    `client_secret: '${FAKE_PW}'`,
+  ].join('\n');
+  const out = redactSecrets(src);
+  assert.ok(!out.includes(FAKE_PW), out);
+  assert.match(out, /password: \*\*\*/);
+  assert.match(out, /spring\.datasource\.password=\*\*\*/);
+  assert.match(out, /"apiKey": "\*\*\*"/);
+});
+check('비밀값 정상: 토큰 접두어·Bearer·URL 안 비밀번호·PEM 개인키', () => {
+  const src = `token ${FAKE_GH} 와 ${FAKE_SK}\nAuthorization: Bearer abcdefghijklmnop.qrstuvwxyz\n` +
+    `jdbc:mysql://admin:${FAKE_PW}@db.local:3306/app\n-----BEGIN RSA PRIVATE KEY-----\nMIIEow\nIBAAK\n-----END RSA PRIVATE KEY-----`;
+  const out = redactSecrets(src);
+  for (const s of [FAKE_GH, FAKE_SK, 'abcdefghijklmnop.qrstuvwxyz', FAKE_PW, 'MIIEow']) assert.ok(!out.includes(s), `${s} 남음:\n${out}`);
+  assert.match(out, /admin:\*\*\*@db\.local/);
+  assert.match(out, /-----BEGIN RSA PRIVATE KEY-----\n\*\*\*\n-----END RSA PRIVATE KEY-----/);
+});
+check('비밀값 악성: 따옴표·접두 키·대소문자를 바꿔 숨겨도 가린다', () => {
+  for (const s of [`PASSWORD : ${FAKE_PW}`, `my_db_Passwd='${FAKE_PW}'`, `x.api-key=${FAKE_PW}`, `"accessKey":"${FAKE_PW}"`]) {
+    assert.ok(!redactSecrets(s).includes(FAKE_PW), s);
+  }
+});
+check('비밀값 경계: 자리표시자·변수·이미 가린 값·한글 문장·빈 값은 그대로', () => {
+  for (const s of ['password: ${DB_PASSWORD}', 'password=<비밀번호>', 'password: ***', 'password: 주석을 지우세요',
+    'password:', 'max_tokens: 1024', 'token 이라는 낱말만', '', 'https://example.com/path', 'password: changeme']) {
+    assert.strictEqual(redactSecrets(s), s, s);
+  }
+  assert.strictEqual(redactSecrets(undefined), undefined);
+  assert.strictEqual(redactSecrets(null), null);
+});
+check('비밀값 경계: 아주 긴 입력도 시간 안에 끝난다 (정규식 폭주 없음)', () => {
+  const t0 = Date.now();
+  redactSecrets('password' + '='.repeat(5000) + 'a'.repeat(200000) + ' Bearer ' + 'x'.repeat(100000));
+  assert.ok(Date.now() - t0 < 2000, `${Date.now() - t0}ms`);
+});
+check('비밀값 실제 훅: Stop 으로 쓴 exports 에 대화 속 비밀번호가 남지 않는다', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'se-redact-'));
+  const tp = path.join(dir, 'sessredact.jsonl');
+  fs.writeFileSync(tp, [
+    L({ type: 'user', timestamp: '2026-10-22T01:00:00Z', message: { role: 'user', content: `yml 에 password: ${FAKE_PW} 가 있어` } }),
+    L({ type: 'assistant', timestamp: '2026-10-22T01:00:05Z', message: { role: 'assistant', content: [
+      { type: 'text', text: `주석의 \`password: ${FAKE_PW}\` 를 지우세요. 토큰 ${FAKE_GH} 도 바꾸세요.` }] } }),
+  ].join('\n'));
+  const r = spawnSync('node', [HOOK], { input: JSON.stringify({ session_id: 'sessredact', transcript_path: tp }), encoding: 'utf8' });
+  assert.strictEqual(r.status, 0, r.stderr);
+  const files = fs.readdirSync(path.join(dir, 'exports'));
+  const md = fs.readFileSync(path.join(dir, 'exports', files[0]), 'utf8');
+  assert.ok(!md.includes(FAKE_PW) && !md.includes(FAKE_GH), md);
+  assert.match(md, /password: \*\*\*/);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
 console.log(`\nsession-export.test.js: ${pass} pass / ${fail} fail`);
 process.exit(fail ? 1 : 0);

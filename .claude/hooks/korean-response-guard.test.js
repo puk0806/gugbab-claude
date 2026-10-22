@@ -97,6 +97,57 @@ check('닫히지 않은 코드 블록 → 크래시 없이 통과', isPass(stop(
 check('초장문 한국어(200KB) → 통과', isPass(stop(KOREAN.repeat(1500))))
 check('제로폭·제어문자 섞인 영어 → 차단', isBlock(stop(ENGLISH.replace(/ /g, ' ​'))))
 
+console.log('\n── 이번 턴 중간 안내 검사 (2026-10-22 실사용 보고 — 중간 영어 문장 7~8개가 안 걸러짐) ──')
+{
+  // 턴: 사람 질문 → [어시스턴트 text + tool_use → tool_result] 반복 → 마지막 답
+  const turnTranscript = (mids, { userText = '로그인 기능 만들어줘', before = [], sidechain = [] } = {}) => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'krg-mid-'))
+    const f = path.join(dir, 't.jsonl')
+    const lines = [...before, { type: 'user', message: { role: 'user', content: userText } }]
+    for (const t of mids) {
+      lines.push({ type: 'assistant', message: { role: 'assistant', content: [{ type: 'text', text: t }, { type: 'tool_use', name: 'Bash', input: { command: 'ls' } }] } })
+      lines.push({ type: 'user', message: { role: 'user', content: [{ type: 'tool_result', content: 'out' }] } })
+    }
+    for (const t of sidechain) lines.push({ type: 'assistant', isSidechain: true, message: { role: 'assistant', content: [{ type: 'text', text: t }] } })
+    fs.writeFileSync(f, lines.map(l => JSON.stringify(l)).join('\n') + '\n')
+    return f
+  }
+  const MID_EN = ['The test caught a real bug in the login flow.', 'DB connection works now, moving on to the API.', 'Now let me fix the mapper and rerun the tests.']
+  const MID_KO = ['로그인 흐름에서 시험이 실제 버그를 잡았습니다.', 'DB 연결은 됩니다. 이제 API 로 넘어갑니다.']
+  // 정상: 보고된 형태 — 마지막 답은 한국어인데 중간 안내가 영어
+  const r = stop(KOREAN, { transcript_path: turnTranscript(MID_EN) })
+  check('보고된 형태: 중간 영어 안내 3개 + 한국어 마지막 답 → 차단', isBlock(r), r)
+  check('차단 사유에 개수와 "한국어로 짧게 다시" 안내', /중간 안내 3개/.test(r.json?.reason || '') && /한국어로 짧게 다시/.test(r.json?.reason || ''), r.json)
+  check('중간 안내가 한국어 → 통과', isPass(stop(KOREAN, { transcript_path: turnTranscript(MID_KO) })))
+  check('중간 영어 1개뿐 → 통과 (한 줄 오탐으로 다시 쓰게 하지 않음)', isPass(stop(KOREAN, { transcript_path: turnTranscript([MID_EN[0], ...MID_KO]) })))
+  check('재작성 1회 뒤(stop_hook_active) → 통과 (무한 루프 없음)', isPass(stop(KOREAN, { transcript_path: turnTranscript(MID_EN), stop_hook_active: true })))
+  check('사용자가 영어 요청 → 중간 영어도 통과', isPass(stop(KOREAN, { transcript_path: turnTranscript(MID_EN, { userText: 'in English please' }) })))
+  // 악성·우회: 이전 턴·서브에이전트·알림 메시지로 섞기
+  check('이전 턴의 영어는 이번 턴 판정에 안 들어감', isPass(stop(KOREAN, { transcript_path: turnTranscript(MID_KO, {
+    before: [{ type: 'user', message: { role: 'user', content: '이전 질문' } }, ...MID_EN.map(t => ({ type: 'assistant', message: { role: 'assistant', content: [{ type: 'text', text: t }] } }))] }) })))
+  check('서브에이전트(isSidechain) 영어는 제외', isPass(stop(KOREAN, { transcript_path: turnTranscript(MID_KO, { sidechain: MID_EN }) })))
+  {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'krg-mid-'))
+    const f = path.join(dir, 't.jsonl')
+    const L = [{ type: 'user', message: { role: 'user', content: '작업해줘' } }]
+    for (const t of MID_EN) {
+      L.push({ type: 'assistant', message: { role: 'assistant', content: [{ type: 'text', text: t }] } })
+      L.push({ type: 'user', message: { role: 'user', content: '<task-notification>bg done</task-notification>' } }) // 시스템 알림은 턴 경계 아님
+    }
+    fs.writeFileSync(f, L.map(l => JSON.stringify(l)).join('\n') + '\n')
+    check('중간에 시스템 알림이 끼어도 같은 턴으로 봄 → 차단', isBlock(stop(KOREAN, { transcript_path: f })))
+  }
+  // 이상·경계: 코드·경로·식별자만 있는 중간 블록, 깨진 줄, 마지막 답이 영어면 기존 메시지
+  check('코드·경로·식별자 위주 중간 블록 → 통과', isPass(stop(KOREAN, { transcript_path: turnTranscript(['`npm test` → `src/App.tsx`', '```js\nconst userName = loadUser()\n```', 'AuthService.login() OK']) })))
+  {
+    const f = turnTranscript(MID_EN)
+    fs.appendFileSync(f, '{깨진 줄\n')
+    check('깨진 JSON 줄이 섞여도 크래시 없이 판정', isBlock(stop(KOREAN, { transcript_path: f })))
+  }
+  const rEn = stop(ENGLISH, { transcript_path: turnTranscript(MID_EN) })
+  check('마지막 답이 영어면 기존 "다시 작성" 메시지', isBlock(rEn) && /직전 답변/.test(rEn.json?.reason || ''), rEn.json)
+}
+
 console.log(`\n${'─'.repeat(40)}`)
 console.log(`결과: ${passed}/${passed + failed} 통과 ${failed > 0 ? `(${failed}개 실패)` : ''}`)
 if (failed === 0) console.log('✅ 모든 테스트 통과')

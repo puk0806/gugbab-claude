@@ -32,6 +32,35 @@ function cleanUserText(text) {
   return t;
 }
 
+// ── 비밀값 가리기 (2026-10-22 실사용 보고 — 대화에 인용한 yml 평문 비밀번호가 exports 로 레포에 커밋될 뻔함) ──
+// 요약 전체(요청·응답·Codex 기록)를 파일에 쓰기 직전에 거른다. 모양으로 판단하므로 놓칠 수 있다 —
+// 원본 트랜스크립트(JSONL)는 로컬에만 있고 레포로 가는 것은 이 요약뿐이다.
+// 값처럼 보이지 않는 것은 그대로 둔다: 변수·자리표시자(${X}·<x>·%X%)·이미 가린 값·한글이 섞인 문장
+const SECRET_KEY_RE = /([\w.-]*(?:password|passwd|secret|api[_-]?key|access[_-]?key|private[_-]?key|client[_-]?secret|credentials?|token(?!s))[\w.-]*)(["']?\s*[:=]\s*)(["']?)([^\s"'`,;<>]{3,})\3/gi
+const SECRET_PREFIX_RES = [
+  /\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}/g,      // GitHub 토큰
+  /\bgithub_pat_[A-Za-z0-9_]{20,}/g,
+  /\bsk-(?:ant-)?[A-Za-z0-9_-]{20,}/g,                 // Anthropic·OpenAI 키
+  /\bAKIA[0-9A-Z]{16}\b/g,                             // AWS 액세스 키
+  /\bxox[abprs]-[A-Za-z0-9-]{10,}/g,                   // Slack
+  /\bAIza[0-9A-Za-z_-]{35}\b/g,                        // Google API 키
+]
+const MASK = '***'
+
+function isPlaceholderValue(v) {
+  return /^[$%{<*]/.test(v) || /^\*+$/.test(v) || /[가-힣]/.test(v) || /^(?:null|none|true|false|changeme|example|xxx+|your[_-]?\w*)$/i.test(v)
+}
+
+function redactSecrets(text) {
+  if (typeof text !== 'string' || !text) return text
+  return text
+    .replace(/(-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----)[\s\S]*?(-----END [A-Z0-9 ]*PRIVATE KEY-----)/g, `$1\n${MASK}\n$2`)
+    .replace(/\b((?:Bearer|Basic)\s+)[A-Za-z0-9._~+/=-]{12,}/g, `$1${MASK}`)
+    .replace(/\b([a-z][a-z0-9+.-]*:\/\/[^\s:/@]+):([^\s@/]+)@/gi, (m, head, pw) => isPlaceholderValue(pw) ? m : `${head}:${MASK}@`)
+    .replace(SECRET_KEY_RE, (m, key, sep, q, val) => isPlaceholderValue(val) ? m : `${key}${sep}${q}${MASK}${q}`)
+    .replace(new RegExp(SECRET_PREFIX_RES.map(r => r.source).join('|'), 'g'), MASK)
+}
+
 // ── 트랜스크립트 파싱 ───────────────────────────────────────────────────
 const FILE_EDIT_TOOLS = ['Write', 'Edit', 'NotebookEdit'];
 
@@ -219,7 +248,7 @@ function main(input, toRepo = false, projectDir = process.env.CLAUDE_PROJECT_DIR
   const startMs = parsed.firstTs ? new Date(parsed.firstTs).getTime() : 0;
   const codexRounds = collectCodexRounds(startMs);
 
-  const md = buildMarkdown(parsed, sessionId, codexRounds);
+  const md = redactSecrets(buildMarkdown(parsed, sessionId, codexRounds));
   const { destDir } = resolveDest(transcriptPath, toRepo, projectDir);
   const fileName = `${localDate(parsed.firstTs)}-${sessionId.slice(0, 8)}.md`;
 
@@ -315,7 +344,7 @@ function refreshCandidates(env = process.env, cwd = process.cwd()) {
 
 module.exports = {
   parseTranscript, buildMarkdown, resolveDest, cleanUserText, resolveRefreshTarget,
-  encodeProjectPath, projectStoreDir, resolveProjectDir, refreshCandidates, codexRoundDirs,
+  encodeProjectPath, projectStoreDir, resolveProjectDir, refreshCandidates, codexRoundDirs, redactSecrets,
 };
 
 if (require.main === module) {
