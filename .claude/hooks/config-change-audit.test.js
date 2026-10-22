@@ -77,6 +77,27 @@ console.log('\n── 보호 장치를 끄는 변경 → ⚠ ──')
   const r = scenario(s => { s.hooks.PreToolUse[0].hooks = [H('auto-approve.js')] })
   check('bash-guard 훅 제거 → ⚠ + 훅 이름', r.msg && r.msg.startsWith('⚠') && r.msg.includes('bash-guard'), r)
 }
+// 윈도우 경로(`\`)로 연결된 훅을 지워도 훅 이름이 보여야 한다 — `hooks[\\/]` (2026-10-20 윈도우, 2026-10-22 시험 추가)
+{
+  const WH = (n) => ({ type: 'command', command: `node C:\\gugbab\\.claude\\hooks\\${n}` })
+  const sid = `cca-${n++}`
+  const winOrig = { hooks: { PreToolUse: [{ matcher: '*', hooks: [WH('bash-guard.js'), WH('auto-approve.js')] }] } }
+  write(winOrig)
+  run({ hook_event_name: 'SessionStart', source: 'startup' }, sid)
+  write({ hooks: { PreToolUse: [{ matcher: '*', hooks: [WH('auto-approve.js')] }] } })
+  const r = run({ hook_event_name: 'ConfigChange', source: 'project_settings', file_path: SETTINGS }, sid)
+  check('윈도우 경로 훅(C:\\…\\hooks\\bash-guard.js) 제거 → ⚠ + 훅 이름', r.msg && r.msg.startsWith('⚠') && r.msg.includes('bash-guard.js') && !r.msg.includes('C:\\'), r)
+}
+{
+  // 이름 위장: `hooksX\` 처럼 hooks 로 시작하는 다른 폴더는 그 뒤 글자를 훅 이름으로 쓰지 않는다 — 명령 원문 일부로 표시
+  const sid = `cca-${n++}`
+  const odd = (n2) => ({ type: 'command', command: `node /x/myhooksdir/${n2}` })
+  write({ hooks: { Stop: [{ hooks: [odd('evil.js')] }] } })
+  run({ hook_event_name: 'SessionStart', source: 'startup' }, sid)
+  write({ hooks: {} })
+  const r = run({ hook_event_name: 'ConfigChange', source: 'project_settings', file_path: SETTINGS }, sid)
+  check('hooks 폴더가 아닌 경로의 훅 제거도 ⚠ 로 잡힘(이름 추출 실패해도 숨지 않음)', r.msg && r.msg.startsWith('⚠') && r.msg.includes('훅 1개 제거'), r)
+}
 {
   const r = scenario(s => { s.permissions.deny = [] })
   check('deny 규칙 제거 → ⚠', r.msg && r.msg.startsWith('⚠') && r.msg.includes('차단 규칙 1개 제거'), r)

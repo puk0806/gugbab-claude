@@ -68,8 +68,14 @@ function present(cfg, id) {
     if (String(it.key).startsWith('plugin:')) return !!(st.enabledPlugins && st.enabledPlugins[it.key.slice(7)] === true);
     return null;
   }
-  return null; // 훅은 실제 동작으로 확인 (wrapper-e2e.js)
+  return null; // 훅은 hookCount 로 따로 본다 (실제 실행은 wrapper-e2e.js)
 }
+// 훅은 설정 폴더에 연결되지 않고 디스패처가 실행 때 고른다 → status 의 "훅 N/전체" 가 끄기·켜기마다 1씩 바뀌는지 본다 (2026-10-22)
+function hookCount(dir) {
+  const m = /훅 (\d+)\/(\d+)/.exec(g(dir, ['status']));
+  return m ? Number(m[1]) : null;
+}
+let UNCHECKED = 0; // 이 매트릭스로 확인할 방법이 없어 넘어간 항목 수 (끝에 출력)
 
 // 고정 집합 — manifest lock + 고정이 필요로 하는 것(requires 전파). 제품 resolve.js 와 독립으로 계산
 const expandRaw = (raw) => raw.startsWith('block:') ? (rel.blocks[raw.slice(6)] || { items: [] }).items : raw.startsWith('bundle:') ? (rel.bundles[raw.slice(7)] || { items: [] }).items : [raw];
@@ -117,6 +123,29 @@ function itemsPass() {
   let n = 0;
   for (const id of ids) {
     const it = items[id];
+    if (it.type === 'hook') {
+      const before = hookCount(d);
+      if (locked.has(id)) {
+        const out = g(d, ['off', id]);
+        check(`🔒 ${id} 끄기 거부`, out.includes('고정'), out.split('\n')[0]);
+        check(`🔒 ${id} 훅 수 그대로`, before !== null && hookCount(d) === before, `${before} → ${hookCount(d)}`);
+      } else if (it.state === 'on') {
+        g(d, ['off', id]);
+        const off = hookCount(d);
+        check(`${id} 끄기 → 켜진 훅 1개 줄어듦`, before !== null && off === before - 1, `${before} → ${off}`);
+        g(d, ['on', id]);
+        check(`${id} 다시 켜기 → 원래 수`, hookCount(d) === before, `${off} → ${hookCount(d)}`);
+      } else {
+        g(d, ['on', id]);
+        const on = hookCount(d);
+        check(`${id} 켜기 → 켜진 훅 1개 늘어남`, before !== null && on === before + 1, `${before} → ${on}`);
+        g(d, ['off', id]);
+        check(`${id} 다시 끄기 → 원래 수`, hookCount(d) === before, `${on} → ${hookCount(d)}`);
+      }
+      if (++n % 40 === 0) console.log(`  · ${n}/${ids.length}`);
+      continue;
+    }
+    if (present(cfg, id) === null) UNCHECKED++;
     if (locked.has(id)) {
       const out = g(d, ['off', id]);
       check(`🔒 ${id} 끄기 거부`, out.includes('고정'), out.split('\n')[0]);
@@ -135,16 +164,21 @@ function itemsPass() {
     if (++n % 40 === 0) console.log(`  · ${n}/${ids.length}`);
   }
   // 한 번에 많이 — 모든 스킬 블록을 켰다 끄기(--all 이 아닌 이 프로젝트만)
-  const before = fs.readdirSync(path.join(cfg, 'skills')).length;
+  //   개수 비교(>=)는 하나도 안 늘어도 참이라 쓰지 않는다 — 블록에 든 스킬 하나하나가 연결됐는지 본다 (2026-10-22)
+  const blockSkills = [...new Set(Object.values(rel.blocks).flatMap(b => b.items))].filter(id => items[id] && items[id].type === 'skill');
   for (const b of Object.keys(rel.blocks)) g(d, ['on', `block:${b}`]);
-  const allSkills = Object.entries(items).filter(([, it]) => it.type === 'skill').length;
-  check(`모든 블록 켜기 → 스킬 ${allSkills}개 중 블록에 든 것 전부 연결`, fs.readdirSync(path.join(cfg, 'skills')).length >= before);
+  const notLinked = blockSkills.filter(id => present(cfg, id) !== true);
+  check(`모든 블록 켜기 → 블록에 든 스킬 ${blockSkills.length}개 전부 연결`, blockSkills.length > 0 && notLinked.length === 0, notLinked.slice(0, 5).join(', '));
   for (const b of Object.keys(rel.blocks)) g(d, ['off', `block:${b}`]);
+  // 블록 끄기는 그 블록 항목을 명시적으로 끈다 — 기본 켬이라도 빠지고(예: spec-extraction 블록의 기본 켬 스킬), 고정만 남는다
+  const wrongAfterOff = blockSkills.filter(id => present(cfg, id) !== locked.has(id));
+  check('모든 블록 끄기 → 블록 스킬은 고정만 남고 모두 빠짐', wrongAfterOff.length === 0, wrongAfterOff.slice(0, 5).join(', '));
 }
 
 if (ONLY !== 'items') presetsPass();
 if (ONLY !== 'preset') itemsPass();
 console.log('');
 console.log(`wrapper-matrix: 성공 ${PASS} · 실패 ${FAIL} (${MODE}, ${process.platform})`);
+if (UNCHECKED) console.log(`  (설정 폴더로 확인할 방법이 없어 넘어간 항목 ${UNCHECKED}개 — 설정 중 settings.json 키로 안 드러나는 것)`);
 if (fails.length) console.log('실패 목록:\n' + fails.map(f => `  - ${f}`).join('\n'));
 process.exitCode = FAIL ? 1 : 0;

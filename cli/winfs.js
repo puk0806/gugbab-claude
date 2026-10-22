@@ -126,7 +126,8 @@ function removeLink(p) {
 
 // ── 실행 파일 ──────────────────────────────────────────────────────────
 // PATH 에서 name 찾기 — 윈도우는 PATHEXT 확장자가 붙은 일반 파일만(확장자 없는 sh 스크립트는 spawn 불가)
-function findExecutable(name, { env = process.env, win = IS_WIN } = {}) {
+//   fsys: 시험용 파일 시스템(statSync·accessSync·readFileSync) — 맥에서도 윈도우 경로(C:\…)로 판정 로직을 본다 (2026-10-22)
+function findExecutable(name, { env = process.env, win = IS_WIN, fsys = fs } = {}) {
   const pathVar = env.PATH || env.Path || '';
   const dirs = pathVar.split(win ? ';' : path.delimiter).filter(Boolean);
   const exts = win ? (env.PATHEXT || '.COM;.EXE;.BAT;.CMD').split(';').filter(Boolean).map(e => e.toLowerCase()) : [''];
@@ -135,9 +136,9 @@ function findExecutable(name, { env = process.env, win = IS_WIN } = {}) {
     for (const ext of hasExt ? [''] : exts) {
       const p = (win ? path.win32 : path).join(d.replace(/^"(.*)"$/, '$1'), name + ext);
       try {
-        const st = fs.statSync(p);
+        const st = fsys.statSync(p);
         if (!st.isFile()) continue;
-        if (!win) { fs.accessSync(p, fs.constants.X_OK); }
+        if (!win) { fsys.accessSync(p, fs.constants.X_OK); }
         return p;
       } catch { /* 없음·실행 불가 */ }
     }
@@ -146,24 +147,24 @@ function findExecutable(name, { env = process.env, win = IS_WIN } = {}) {
 }
 
 // npm 이 만든 .cmd 껍데기에서 실제 .exe — `"%dp0%\node_modules\…\claude.exe"   %*` 형식만 인정 (그 밖이면 null)
-function exeFromCmdShim(cmdPath) {
+function exeFromCmdShim(cmdPath, { fsys = fs } = {}) {
   let text;
-  try { text = fs.readFileSync(cmdPath, 'utf8'); } catch { return null; }
+  try { text = fsys.readFileSync(cmdPath, 'utf8'); } catch { return null; }
   const m = /"%(?:dp0|~dp0)%?\\([^"%<>|&^]+?\.exe)"/i.exec(text);
   if (!m) return null;
   const exe = path.win32.resolve(path.win32.dirname(cmdPath), m[1]);
   if (!samePath(exe, path.win32.dirname(cmdPath), true) && !exe.toLowerCase().startsWith(path.win32.dirname(cmdPath).toLowerCase() + '\\')) return null; // 껍데기 폴더 밖이면 거부
-  try { return fs.statSync(exe).isFile() ? exe : null; } catch { return null; }
+  try { return fsys.statSync(exe).isFile() ? exe : null; } catch { return null; }
 }
 
 // claude 실행 파일 — { file, viaShell }. 윈도우: claude.exe 우선, .cmd 면 그 안의 .exe, 그래도 없으면 .cmd 를 셸로
-function resolveClaude({ env = process.env, win = IS_WIN } = {}) {
-  if (!win) { const p = findExecutable('claude', { env, win }); return p ? { file: p, viaShell: false } : null; }
-  const p = findExecutable('claude', { env, win });
+function resolveClaude({ env = process.env, win = IS_WIN, fsys = fs } = {}) {
+  if (!win) { const p = findExecutable('claude', { env, win, fsys }); return p ? { file: p, viaShell: false } : null; }
+  const p = findExecutable('claude', { env, win, fsys });
   if (!p) return null;
   if (/\.exe$/i.test(p)) return { file: p, viaShell: false };
   if (/\.(cmd|bat)$/i.test(p)) {
-    const exe = exeFromCmdShim(p);
+    const exe = exeFromCmdShim(p, { fsys });
     return exe ? { file: exe, viaShell: false } : { file: p, viaShell: true };
   }
   return { file: p, viaShell: true };

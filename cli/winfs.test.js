@@ -1,5 +1,6 @@
 // winfs.js — 윈도우 링크·쓰기·실행 파일 찾기
 // 정상 / 악성·우회 / 경계 3계층. 플랫폼 인자(win)를 넘겨 맥·윈도우 어디서나 판정 로직을 본다.
+// 실행 파일 찾기는 윈도우 경로로 된 가짜 fs(fakeWinFs)로 — 맥에서 윈도우 경로를 진짜 fs 로 찾으면 언제나 없음이라 시험이 안 된다
 // 실제 링크를 만드는 시험은 지금 플랫폼 방식으로(윈도우 junction·하드링크, 맥 심볼릭 링크)
 const test = require('node:test');
 const assert = require('node:assert');
@@ -59,49 +60,100 @@ test('정상: fromMsys — 윈도우만 /c/x → C:\\x', () => {
   assert.strictEqual(w.fromMsys('C:\\a', true), 'C:\\a');
 });
 
+// 윈도우 경로(C:\…)로 된 가짜 파일 시스템 — 맥에서도 PATHEXT·.cmd 껍데기 판정을 실제 윈도우 경로 모양으로 본다 (2026-10-22)
+//   예전에는 맥 임시 폴더를 path.win32 로 이어 붙인 `\var\folders\…` 를 진짜 fs 로 찾다가 맥에서 실패했다. 대소문자 무시는 NTFS 와 같게
+function fakeWinFs(tree) {
+  const key = (p) => path.win32.resolve(p).toLowerCase();
+  const files = new Map(), dirs = new Set();
+  for (const [p, v] of Object.entries(tree)) {
+    if (v === null) dirs.add(key(p)); else files.set(key(p), v);
+    for (let d = path.win32.dirname(p); d !== path.win32.dirname(d); d = path.win32.dirname(d)) dirs.add(key(d));
+  }
+  const nf = (p) => Object.assign(new Error(`ENOENT: ${p}`), { code: 'ENOENT' });
+  return {
+    statSync(p) {
+      const k = key(p);
+      if (files.has(k)) return { isFile: () => true, isDirectory: () => false };
+      if (dirs.has(k)) return { isFile: () => false, isDirectory: () => true };
+      throw nf(p);
+    },
+    readFileSync(p) { const k = key(p); if (!files.has(k)) throw nf(p); return files.get(k); },
+    accessSync() { /* 윈도우는 실행 권한 비트가 없다 */ },
+  };
+}
+const NPM_SHIM = '@ECHO off\r\nGOTO start\r\n:find_dp0\r\nSET dp0=%~dp0\r\nEXIT /b\r\n:start\r\nSETLOCAL\r\nCALL :find_dp0\r\n"%dp0%\\node_modules\\@anthropic-ai\\claude-code\\bin\\claude.exe"   %*\r\n';
+
 test('정상: findExecutable — 윈도우는 PATHEXT 확장자 있는 것만, 확장자 없는 sh 스크립트는 건너뜀', () => {
+  const env = { PATH: 'C:\\tools', PATHEXT: '.COM;.EXE;.BAT;.CMD' };
+  let fsys = fakeWinFs({ 'C:\\tools\\tool': '#!/bin/sh\n', 'C:\\tools\\tool.cmd': '@echo off\n' });
+  assert.strictEqual(w.findExecutable('tool', { env, win: true, fsys }), 'C:\\tools\\tool.cmd');
+  // .exe 가 PATHEXT 순서상 .cmd 보다 앞
+  fsys = fakeWinFs({ 'C:\\tools\\tool': '', 'C:\\tools\\tool.cmd': '', 'C:\\tools\\tool.exe': '' });
+  assert.strictEqual(w.findExecutable('tool', { env, win: true, fsys }), 'C:\\tools\\tool.exe');
+  // 확장자 없는 것만 있으면 못 찾음 (spawn 할 수 없는 sh 스크립트)
+  fsys = fakeWinFs({ 'C:\\tools\\tool': '#!/bin/sh\n' });
+  assert.strictEqual(w.findExecutable('tool', { env, win: true, fsys }), null);
+  // PATH 앞 폴더가 이김, 따옴표로 감싼 폴더도 읽음, 이름에 확장자를 붙이면 그대로
+  fsys = fakeWinFs({ 'C:\\a b\\tool.cmd': '', 'D:\\z\\tool.exe': '' });
+  assert.strictEqual(w.findExecutable('tool', { env: { PATH: '"C:\\a b";D:\\z', PATHEXT: '.EXE;.CMD' }, win: true, fsys }), 'C:\\a b\\tool.cmd');
+  assert.strictEqual(w.findExecutable('tool.exe', { env: { PATH: 'C:\\a b;D:\\z', PATHEXT: '.EXE;.CMD' }, win: true, fsys }), 'D:\\z\\tool.exe');
+});
+
+test('정상: npm .cmd 껍데기 → 그 안의 claude.exe 를 직접 실행 대상으로', () => {
+  const npm = 'C:\\Users\\x\\AppData\\Roaming\\npm';
+  const exe = `${npm}\\node_modules\\@anthropic-ai\\claude-code\\bin\\claude.exe`;
+  const fsys = fakeWinFs({ [exe]: '', [`${npm}\\claude`]: '#!/bin/sh\n', [`${npm}\\claude.cmd`]: NPM_SHIM });
+  assert.deepStrictEqual(w.resolveClaude({ env: { PATH: npm, PATHEXT: '.EXE;.CMD' }, win: true, fsys }), { file: exe, viaShell: false });
+  // 껍데기는 있는데 그 안의 exe 가 없으면 .cmd 를 셸로
+  const noExe = fakeWinFs({ [`${npm}\\claude.cmd`]: NPM_SHIM });
+  assert.deepStrictEqual(w.resolveClaude({ env: { PATH: npm, PATHEXT: '.EXE;.CMD' }, win: true, fsys: noExe }), { file: `${npm}\\claude.cmd`, viaShell: true });
+  // claude.exe 가 PATH 에 바로 있으면 그것
+  const direct = fakeWinFs({ 'C:\\bin\\claude.exe': '' });
+  assert.deepStrictEqual(w.resolveClaude({ env: { PATH: 'C:\\bin', PATHEXT: '.EXE;.CMD' }, win: true, fsys: direct }), { file: 'C:\\bin\\claude.exe', viaShell: false });
+});
+
+test('악성: .cmd 껍데기가 폴더 밖(..)의 exe 를 가리키면 따르지 않고 셸 실행으로 둠', () => {
+  const fsys = fakeWinFs({ 'C:\\p\\evil.exe': '', 'C:\\p\\bin\\claude.cmd': '"%dp0%\\..\\evil.exe" %*\r\n' });
+  assert.strictEqual(w.exeFromCmdShim('C:\\p\\bin\\claude.cmd', { fsys }), null);
+  assert.deepStrictEqual(w.resolveClaude({ env: { PATH: 'C:\\p\\bin', PATHEXT: '.CMD' }, win: true, fsys }), { file: 'C:\\p\\bin\\claude.cmd', viaShell: true });
+  // 접두만 같은 형제 폴더(bin-evil)도 밖
+  const sib = fakeWinFs({ 'C:\\p\\bin-evil\\x.exe': '', 'C:\\p\\bin\\claude.cmd': '"%dp0%\\..\\bin-evil\\x.exe" %*\r\n' });
+  assert.strictEqual(w.exeFromCmdShim('C:\\p\\bin\\claude.cmd', { fsys: sib }), null);
+  // 정해진 형식이 아닌 껍데기(다른 명령을 섞음)는 따르지 않음
+  const odd = fakeWinFs({ 'C:\\p\\bin\\a.exe': '', 'C:\\p\\bin\\claude.cmd': 'calc.exe & "%dp0%\\a.exe|x" %*\r\n' });
+  assert.strictEqual(w.exeFromCmdShim('C:\\p\\bin\\claude.cmd', { fsys: odd }), null);
+});
+
+test('악성: PATH 에 같은 이름 폴더만 있으면 실행 파일 아님', () => {
+  const fsys = fakeWinFs({ 'C:\\tools\\claude.exe': null });
+  assert.strictEqual(fsys.statSync('C:\\tools\\claude.exe').isDirectory(), true, '가짜 fs 가 폴더로 보고 있어야 시험이 의미 있음');
+  assert.strictEqual(w.findExecutable('claude', { env: { PATH: 'C:\\tools', PATHEXT: '.EXE' }, win: true, fsys }), null);
+});
+
+// 진짜 파일 시스템으로 한 번 더 — 그 플랫폼 경로 모양에서만 의미가 있다
+test('정상(윈도우 실제 fs): PATHEXT·npm 껍데기·같은 이름 폴더', { skip: !w.IS_WIN && '윈도우 실제 파일 시스템 시험 — 판정 로직은 위 가짜 fs 시험이 맥에서도 본다' }, () => {
   const d = tmp('wf-');
   try {
     fs.writeFileSync(path.join(d, 'tool'), '#!/bin/sh\n');
     fs.writeFileSync(path.join(d, 'tool.cmd'), '@echo off\n');
-    const env = { PATH: d, PATHEXT: '.COM;.EXE;.BAT;.CMD' };
-    assert.strictEqual(w.findExecutable('tool', { env, win: true }), path.win32.join(d, 'tool.cmd'));
-    // .exe 가 PATHEXT 순서상 .cmd 보다 앞
-    fs.writeFileSync(path.join(d, 'tool.exe'), '');
-    assert.strictEqual(w.findExecutable('tool', { env, win: true }), path.win32.join(d, 'tool.exe'));
-  } finally { fs.rmSync(d, { recursive: true, force: true }); }
-});
-
-test('정상: npm .cmd 껍데기 → 그 안의 claude.exe 를 직접 실행 대상으로', () => {
-  const d = tmp('wf-');
-  try {
+    assert.strictEqual(w.findExecutable('tool', { env: { PATH: d, PATHEXT: '.EXE;.CMD' }, win: true }), path.win32.join(d, 'tool.cmd'));
     const exeDir = path.join(d, 'node_modules', '@anthropic-ai', 'claude-code', 'bin'); fs.mkdirSync(exeDir, { recursive: true });
     fs.writeFileSync(path.join(exeDir, 'claude.exe'), '');
-    fs.writeFileSync(path.join(d, 'claude'), '#!/bin/sh\n');
-    fs.writeFileSync(path.join(d, 'claude.cmd'), '@ECHO off\r\nGOTO start\r\n:find_dp0\r\nSET dp0=%~dp0\r\nEXIT /b\r\n:start\r\nSETLOCAL\r\nCALL :find_dp0\r\n"%dp0%\\node_modules\\@anthropic-ai\\claude-code\\bin\\claude.exe"   %*\r\n');
-    const r = w.resolveClaude({ env: { PATH: d, PATHEXT: '.EXE;.CMD' }, win: true });
-    assert.deepStrictEqual(r, { file: path.win32.join(exeDir, 'claude.exe'), viaShell: false });
+    fs.writeFileSync(path.join(d, 'claude.cmd'), NPM_SHIM);
+    assert.deepStrictEqual(w.resolveClaude({ env: { PATH: d, PATHEXT: '.EXE;.CMD' }, win: true }), { file: path.win32.join(exeDir, 'claude.exe'), viaShell: false });
+    fs.mkdirSync(path.join(d, 'dir.exe'));
+    assert.strictEqual(w.findExecutable('dir', { env: { PATH: d, PATHEXT: '.EXE' }, win: true }), null);
   } finally { fs.rmSync(d, { recursive: true, force: true }); }
 });
 
-test('악성: .cmd 껍데기가 폴더 밖(..)의 exe 를 가리키면 따르지 않고 셸 실행으로 둠', () => {
-  const d = tmp('wf-');
+test('정상(맥·리눅스 실제 fs): 실행 권한 있는 파일만, 권한 없는 같은 이름은 건너뜀', { skip: w.IS_WIN && '맥·리눅스 실행 권한 비트 시험' }, () => {
+  const a = tmp('wf-'), b = tmp('wf-');
   try {
-    const inner = path.join(d, 'bin'); fs.mkdirSync(inner);
-    fs.writeFileSync(path.join(d, 'evil.exe'), '');
-    fs.writeFileSync(path.join(inner, 'claude.cmd'), '"%dp0%\\..\\evil.exe" %*\r\n');
-    assert.strictEqual(w.exeFromCmdShim(path.join(inner, 'claude.cmd')), null);
-    const r = w.resolveClaude({ env: { PATH: inner, PATHEXT: '.CMD' }, win: true });
-    assert.deepStrictEqual(r, { file: path.win32.join(inner, 'claude.cmd'), viaShell: true });
-  } finally { fs.rmSync(d, { recursive: true, force: true }); }
-});
-
-test('악성: PATH 에 같은 이름 폴더만 있으면 실행 파일 아님', () => {
-  const d = tmp('wf-');
-  try {
-    fs.mkdirSync(path.join(d, 'claude.exe'));
-    assert.strictEqual(w.findExecutable('claude', { env: { PATH: d, PATHEXT: '.EXE' }, win: true }), null);
-  } finally { fs.rmSync(d, { recursive: true, force: true }); }
+    fs.writeFileSync(path.join(a, 'claude'), '#!/bin/sh\n', { mode: 0o644 });
+    fs.writeFileSync(path.join(b, 'claude'), '#!/bin/sh\n', { mode: 0o755 });
+    assert.deepStrictEqual(w.resolveClaude({ env: { PATH: `${a}:${b}` }, win: false }), { file: path.join(b, 'claude'), viaShell: false });
+    assert.strictEqual(w.findExecutable('claude', { env: { PATH: a }, win: false }), null);
+  } finally { fs.rmSync(a, { recursive: true, force: true }); fs.rmSync(b, { recursive: true, force: true }); }
 });
 
 test('악성: 다른 폴더를 가리키는 링크는 linkPointsTo 가 거짓, 접두만 같은 형제도 거짓', () => {
@@ -161,7 +213,7 @@ test('정상·악성: compareToOrigin — 하드링크·같은 내용은 same, �
     assert.strictEqual(w.compareToOrigin(c, o), 'differs');
     assert.strictEqual(w.compareToOrigin(c, path.join(d, 'gone.md')), 'differs');
     fs.mkdirSync(path.join(d, 'dir.md'));
-    assert.strictEqual(w.compareToOrigin(path.join(d, 'dir.md'), o), w.IS_WIN ? 'unknown' : 'unknown');
+    assert.strictEqual(w.compareToOrigin(path.join(d, 'dir.md'), o), 'unknown');
   } finally { fs.rmSync(d, { recursive: true, force: true }); }
 });
 
