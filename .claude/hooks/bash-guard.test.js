@@ -1098,7 +1098,9 @@ if (!IS_WIN) {
   assert('cd /c/<proj> (MSYS) && git status → true', isCdGitSafe(`cd ${RM} && git status`, A), true)
   assert('cd <proj 소문자 드라이브> && git status → true', isCdGitSafe(`cd ${R.toLowerCase()} && git status`, A), true)
   assert('ls && cp a <proj>/b → true', isCompoundSafe(`ls && cp a ${R}/b`, A), true)
-  assert('heredoc → <proj>/x.tsx → true', isHeredocSafe(`cat > ${R}/x.tsx << 'EOF'\nx\nEOF`, A), true)
+  assert('heredoc → <proj>/x.txt → true', isHeredocSafe(`cat > ${R}/x.txt << 'EOF'\nx\nEOF`, A), true)
+  // 2026-10-22: 프로젝트 안 소스 파일은 heredoc 자동 허용 안 함(Write·Edit 검사 훅 우회 — classifySourceWrite)
+  assert('heredoc → <proj>/x.tsx → false', isHeredocSafe(`cat > ${R}/x.tsx << 'EOF'\nx\nEOF`, A), false)
   // 악성·우회
   assert('cd C:\\<proj> (따옴표 밖 \\ — bash 가 지움) → false', isCdGitSafe(`cd ${PROJECT_ROOT_NATIVE} && git status`, A), false)
   assert('cd <proj>-evil (접두 형제) → false', isCdGitSafe(`cd ${R}-evil && git status`, A), false)
