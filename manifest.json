@@ -922,6 +922,11 @@
           "event": "SessionStart",
           "matcher": "",
           "args": []
+        },
+        {
+          "event": "UserPromptSubmit",
+          "matcher": "",
+          "args": []
         }
       ]
     },
@@ -2837,6 +2842,11 @@
       },
       {
         "id": "hook:parallel-hint",
+        "matcher": "",
+        "args": []
+      },
+      {
+        "id": "hook:wrapper-version-check",
         "matcher": "",
         "args": []
       }

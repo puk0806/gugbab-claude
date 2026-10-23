@@ -10,6 +10,10 @@ const { execFileSync } = require('child_process');
 const { renameRetry } = require('./winfs');
 
 const INTERVAL_MS = 60 * 60 * 1000;
+// 세션이 켜져 있는 동안의 확인 간격 — wrapper-version-check 훅이 질문할 때 이 간격이 지났으면 뒤에서 self-update 를 띄운다 (2026-10-23)
+const SESSION_INTERVAL_MS = 24 * 60 * 60 * 1000;
+// 업데이트 잠금 — 여러 세션·실행이 동시에 fetch·checkout 하지 않게. 이보다 오래된 잠금은 죽은 프로세스가 남긴 것으로 보고 넘겨받는다
+const LOCK_STALE_MS = 10 * 60 * 1000;
 // 윈도우는 git 첫 실행·자격 증명 관리자(GCM) 초기화가 느려 3초면 자주 fetch-failed — 8초 (2026-10-20)
 const FETCH_TIMEOUT_MS = process.platform === 'win32' ? 8000 : 3000;
 const BRANCH_RE = /^[A-Za-z0-9][A-Za-z0-9._/-]{0,99}$/; // 옵션처럼 보이는 이름·경로 조작 거부
@@ -36,6 +40,34 @@ function describe(cwd) {
   try { return git(cwd, ['rev-parse', '--short', 'HEAD']); } catch { return '?'; }
 }
 
+// 잠금 얻기 — 일반 파일만 만들고(wx), 남이 쥔 잠금이 오래됐거나 깨졌으면 지우고 한 번 더. 링크·폴더 자리면 손대지 않고 실패
+function acquireLock(lockFile, now) {
+  for (let i = 0; i < 2; i++) {
+    try {
+      fs.writeFileSync(lockFile, JSON.stringify({ at: now, pid: process.pid }), { flag: 'wx' });
+      return true;
+    } catch (e) {
+      if (e.code !== 'EEXIST') return false;
+    }
+    let st;
+    try { st = fs.lstatSync(lockFile); } catch { continue; } // 그 사이 풀림 → 다시
+    if (!st.isFile()) return false;
+    let at = NaN;
+    try { at = Number(JSON.parse(fs.readFileSync(lockFile, 'utf8')).at); } catch { /* 깨짐 → 오래된 것으로 */ }
+    const fresh = Number.isFinite(at) && at <= now && now - at < LOCK_STALE_MS;
+    if (fresh) return false;
+    try { fs.rmSync(lockFile); } catch { return false; }
+  }
+  return false;
+}
+function releaseLock(lockFile) {
+  try {
+    if (!fs.lstatSync(lockFile).isFile()) return;
+    const v = JSON.parse(fs.readFileSync(lockFile, 'utf8'));
+    if (v && v.pid === process.pid) fs.rmSync(lockFile);
+  } catch { /* 이미 없음·남의 것 */ }
+}
+
 function checkUpdate({ codeHome, stateDir, channel = 'stable', branch = null, dev = false, pin = null, now = Date.now() }) {
   if (dev) return { updated: false, skipped: 'dev' };
   if (pin) return { updated: false, skipped: 'pinned' };
@@ -46,7 +78,18 @@ function checkUpdate({ codeHome, stateDir, channel = 'stable', branch = null, de
   let last = 0;
   try { last = Number(JSON.parse(fs.readFileSync(stampFile, 'utf8')).at) || 0; } catch { /* 처음 */ }
   if (now - last < INTERVAL_MS && now >= last) return { updated: false, skipped: 'recent', lastCheckAt: last };
-  try { fs.mkdirSync(stateDir, { recursive: true }); fs.writeFileSync(stampFile, JSON.stringify({ at: now })); } catch { /* 기록 실패는 무시 */ }
+  try { fs.mkdirSync(stateDir, { recursive: true }); } catch { /* 아래 잠금에서 실패로 처리 */ }
+  const lockFile = path.join(stateDir, 'update.lock');
+  if (!acquireLock(lockFile, now)) return { updated: false, skipped: 'locked' };
+  try {
+    return checkLocked({ codeHome, stampFile, channel, branch, now });
+  } finally {
+    releaseLock(lockFile);
+  }
+}
+
+function checkLocked({ codeHome, stampFile, channel, branch, now }) {
+  try { fs.writeFileSync(stampFile, JSON.stringify({ at: now })); } catch { /* 기록 실패는 무시 */ }
 
   try { git(codeHome, ['fetch', '--quiet', '--tags', '--force', 'origin'], FETCH_TIMEOUT_MS); } catch { return { updated: false, skipped: 'fetch-failed' }; }
 
@@ -125,7 +168,7 @@ function versionInfo({ codeHome, stateDir, dev = false }) {
 //   launch = 래퍼가 실행마다 새로 만드는 값(GUGBAB_LAUNCH). 훅은 자기 세션의 launch 와 같을 때만 결과를 보여 주고 한 번 보여 주면 shown 표시
 //   링크·폴더 자리에는 쓰지 않음, 임시 파일 → rename 으로 통째로 바꿈
 const LAUNCH_RE = /^\d{1,10}-\d{1,13}$/;
-const RESULTS = new Set(['updated', 'up-to-date', 'recent', 'fetch-failed', 'pinned', 'local-changes', 'not-ff', 'failed', 'no-tag', 'no-target', 'not-git', 'bad-branch', 'error']);
+const RESULTS = new Set(['updated', 'up-to-date', 'recent', 'fetch-failed', 'pinned', 'local-changes', 'not-ff', 'failed', 'no-tag', 'no-target', 'not-git', 'bad-branch', 'error', 'locked']);
 function writeLastCheck({ stateDir, launch, result, now = Date.now() }) {
   if (typeof launch !== 'string' || !LAUNCH_RE.test(launch) || !result || result.skipped === 'dev') return false;
   const kind = result.updated ? 'updated' : result.skipped;
@@ -147,4 +190,4 @@ function writeLastCheck({ stateDir, launch, result, now = Date.now() }) {
   }
 }
 
-module.exports = { checkUpdate, latestTag, versionInfo, readChannel, writeLastCheck };
+module.exports = { checkUpdate, latestTag, versionInfo, readChannel, writeLastCheck, INTERVAL_MS, SESSION_INTERVAL_MS, LOCK_STALE_MS };

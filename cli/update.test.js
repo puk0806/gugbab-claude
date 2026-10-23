@@ -257,3 +257,65 @@ test('경계: 개발 모드는 기록하지 않고, 상태 폴더가 없으면 �
   const file = path.join(tmp('up-last-'), 'plain'); fs.writeFileSync(file, 'x');
   assert.strictEqual(writeLastCheck({ stateDir: path.join(file, 'state'), launch: L, result: { updated: false, skipped: 'up-to-date' } }), false);
 });
+
+// ── 업데이트 잠금 (state/update.lock — 세션 중 자동 업데이트와 실행 때 확인이 겹치지 않게, 2026-10-23) ──
+const { LOCK_STALE_MS, SESSION_INTERVAL_MS, INTERVAL_MS } = require('./update');
+const lockOf = (s) => path.join(s.state, 'update.lock');
+
+test('정상: 업데이트가 끝나면 잠금을 풀고, 다음 확인도 그대로 됨', () => {
+  const s = setup();
+  sh('echo 2 > f && git commit -qam two && git tag v1.1.0', s.origin);
+  assert.strictEqual(checkUpdate({ codeHome: s.home, stateDir: s.state, channel: 'stable', now: now() }).updated, true);
+  assert.strictEqual(fs.existsSync(lockOf(s)), false, '잠금이 남지 않음');
+  sh('echo 3 > f && git commit -qam three && git tag v1.2.0', s.origin);
+  assert.strictEqual(checkUpdate({ codeHome: s.home, stateDir: s.state, channel: 'stable', now: now() + INTERVAL_MS + 1 }).updated, true);
+});
+
+test('정상: 세션 중 간격(24시간)은 실행 때 간격(1시간)보다 길다', () => {
+  assert.strictEqual(SESSION_INTERVAL_MS, 24 * 60 * 60 * 1000);
+  assert.ok(SESSION_INTERVAL_MS > INTERVAL_MS);
+});
+
+test('악성·경합: 다른 프로세스가 방금 쥔 잠금이 있으면 fetch·checkout 하지 않고 locked, 확인 시각도 안 바꿈', () => {
+  const s = setup();
+  sh('echo 2 > f && git commit -qam two && git tag v1.1.0', s.origin);
+  fs.writeFileSync(lockOf(s), JSON.stringify({ at: now() - 1000, pid: 999999 }));
+  const before = head(s.home);
+  const r = checkUpdate({ codeHome: s.home, stateDir: s.state, channel: 'stable', now: now() });
+  assert.strictEqual(r.skipped, 'locked');
+  assert.strictEqual(head(s.home), before, '갱신하지 않음');
+  assert.strictEqual(fs.existsSync(path.join(s.state, 'update-check.json')), false, '확인 시각을 남기지 않음 → 다음에 다시 시도');
+  assert.ok(fs.existsSync(lockOf(s)), '남의 잠금은 지우지 않음');
+});
+
+test('경계: 오래된(10분 넘은)·깨진·미래 시각 잠금은 죽은 프로세스 것으로 보고 넘겨받음', () => {
+  for (const content of [JSON.stringify({ at: now() - LOCK_STALE_MS - 1, pid: 1 }), '{깨진', JSON.stringify({ at: now() + 60000, pid: 1 }), JSON.stringify({ at: 'x' })]) {
+    const s = setup();
+    sh('echo 2 > f && git commit -qam two && git tag v1.1.0', s.origin);
+    fs.writeFileSync(lockOf(s), content);
+    const r = checkUpdate({ codeHome: s.home, stateDir: s.state, channel: 'stable', now: now() });
+    assert.strictEqual(r.updated, true, content);
+    assert.strictEqual(fs.existsSync(lockOf(s)), false, `넘겨받은 잠금도 풀림: ${content}`);
+  }
+});
+
+test('악성: 잠금 자리에 심은 링크·폴더는 따라가거나 지우지 않음 → locked', () => {
+  const s = setup();
+  fs.mkdirSync(s.state, { recursive: true });
+  fs.mkdirSync(lockOf(s));
+  assert.strictEqual(checkUpdate({ codeHome: s.home, stateDir: s.state, channel: 'stable', now: now() }).skipped, 'locked');
+  assert.ok(fs.statSync(lockOf(s)).isDirectory(), '폴더는 그대로');
+  const t = setup();
+  const victim = path.join(tmp('up-victim-'), 'v.txt'); fs.writeFileSync(victim, JSON.stringify({ at: 0 }));
+  fs.mkdirSync(t.state, { recursive: true });
+  if (require('../.claude/hooks/lib/testfs').trySymlink(victim, lockOf(t)) !== null) {
+    assert.strictEqual(checkUpdate({ codeHome: t.home, stateDir: t.state, channel: 'stable', now: now() }).skipped, 'locked');
+    assert.strictEqual(fs.readFileSync(victim, 'utf8'), JSON.stringify({ at: 0 }), '링크 대상은 그대로');
+  }
+});
+
+test('경계: 잠금 중 결과(locked)도 기록할 수 있음 — 세션 시작 안내용', () => {
+  const d = tmp('up-last-');
+  assert.strictEqual(writeLastCheck({ stateDir: d, launch: L, result: { updated: false, skipped: 'locked' } }), true);
+  assert.strictEqual(readLast(d).result, 'locked');
+});

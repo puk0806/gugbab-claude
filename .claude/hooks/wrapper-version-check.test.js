@@ -299,6 +299,146 @@ console.log('\n[버전 안내 — 이상·경계]')
   check('  기록은 그대로', readRec(s).shown === undefined)
 }
 
+// ─── 세션 중 자동 업데이트 (UserPromptSubmit, 2026-10-23) ───
+// 래퍼는 실행할 때만 업데이트를 확인해서 며칠 켜 둔 세션은 새 버전을 받지 못했다 — 24시간이 지나면 질문할 때 뒤에서 self-update
+const { maybeSessionUpdate, promptCheck, SESSION_INTERVAL_MS } = require('./wrapper-version-check.js')
+const DAY = SESSION_INTERVAL_MS
+console.log('\n[세션 중 자동 업데이트 — 정상]')
+function withCli(s) { fs.mkdirSync(path.join(s.home, 'cli'), { recursive: true }); fs.writeFileSync(path.join(s.home, 'cli', 'main.js'), '// stub\n'); return s }
+const stamp = (s, at) => { fs.mkdirSync(path.join(s.home, 'state'), { recursive: true }); fs.writeFileSync(path.join(s.home, 'state', 'update-check.json'), typeof at === 'string' ? at : JSON.stringify({ at })) }
+const spy = () => { const calls = []; const fn = (home, env) => calls.push({ home, launch: env.GUGBAB_LAUNCH }); fn.calls = calls; return fn }
+{
+  const s = withCli(setup()); stamp(s, NOW - DAY - 1)
+  const sp = spy()
+  check('마지막 확인에서 24시간 넘음 → self-update 를 띄움', maybeSessionUpdate({ env: envOf(s, { GUGBAB_LAUNCH: L }), now: NOW, spawnUpdate: sp }) === 'spawned' && sp.calls.length === 1 && sp.calls[0].home === s.home, sp.calls)
+}
+{
+  const s = withCli(setup())
+  const sp = spy()
+  check('확인 기록이 아직 없음 → 띄움', maybeSessionUpdate({ env: envOf(s), now: NOW, spawnUpdate: sp }) === 'spawned' && sp.calls.length === 1)
+}
+{
+  const s = withCli(setup())
+  const data = path.join(s.d, 'data'); fs.mkdirSync(path.join(data, 'state'), { recursive: true })
+  fs.writeFileSync(path.join(data, 'state', 'update-check.json'), JSON.stringify({ at: NOW - 60000 }))
+  const sp = spy()
+  check('데이터 폴더를 따로 둔 경우(GUGBAB_DATA) 그쪽 확인 시각을 봄', maybeSessionUpdate({ env: envOf(s, { GUGBAB_DATA: data }), now: NOW, spawnUpdate: sp }) === 'recent' && sp.calls.length === 0)
+}
+{
+  // 실제 띄우기: 자식 프로세스가 self-update 인자로 실행되고, 이 세션의 실행 값(GUGBAB_LAUNCH)은 넘기지 않는다
+  const s = withCli(setup())
+  const out = path.join(s.d, 'child.json')
+  fs.writeFileSync(path.join(s.home, 'cli', 'main.js'), `require('fs').writeFileSync(${JSON.stringify(out)}, JSON.stringify({ argv: process.argv.slice(2), launch: process.env.GUGBAB_LAUNCH || null, cwd: process.cwd() }))\n`)
+  const t0 = Date.now()
+  const r = maybeSessionUpdate({ env: { ...process.env, ...envOf(s, { GUGBAB_LAUNCH: L }) }, now: NOW })
+  const waited = Date.now() - t0
+  let got = null
+  for (let i = 0; i < 100 && !got; i++) { try { got = JSON.parse(fs.readFileSync(out, 'utf8')) } catch { spawnSync(process.execPath, ['-e', 'setTimeout(()=>{},50)']) } }
+  check('실제로 띄움 → 자식이 `self-update` 로 실행됨', r === 'spawned' && got && got.argv[0] === 'self-update' && got.argv.length === 1, got)
+  check('  자식에게 이 세션의 GUGBAB_LAUNCH 를 넘기지 않음 (세션 시작 기록 보호)', got && got.launch === null, got)
+  check('  자식의 작업 폴더 = 하네스 폴더', got && fs.realpathSync(got.cwd) === fs.realpathSync(s.home), got)
+  check('  질문을 기다리게 하지 않음(띄우고 바로 돌아옴)', waited < 1000, waited)
+}
+
+console.log('\n[세션 중 자동 업데이트 — 경계]')
+{
+  const s = withCli(setup()); stamp(s, NOW - DAY + 60000)
+  const sp = spy()
+  check('24시간 안(23시간 59분) → 띄우지 않음', maybeSessionUpdate({ env: envOf(s), now: NOW, spawnUpdate: sp }) === 'recent' && sp.calls.length === 0)
+}
+{
+  const s = withCli(setup()); stamp(s, NOW - DAY - 1)
+  for (const dev of ['1', undefined, '']) {
+    const env = envOf(s, { GUGBAB_DEV: dev }); if (dev === undefined) delete env.GUGBAB_DEV
+    const sp = spy()
+    check(`개발 모드·래퍼 밖(GUGBAB_DEV=${JSON.stringify(dev)}) → 띄우지 않음`, maybeSessionUpdate({ env, now: NOW, spawnUpdate: sp }) === 'dev' && sp.calls.length === 0)
+  }
+  const sp = spy()
+  check('래퍼가 조립한 설정 폴더가 아님 → 띄우지 않음', maybeSessionUpdate({ env: envOf(s, { CLAUDE_CONFIG_DIR: s.d }), now: NOW, spawnUpdate: sp }) === 'not-wrapper' && sp.calls.length === 0)
+}
+{
+  const s = setup(); stamp(s, NOW - DAY - 1)
+  const sp = spy()
+  check('하네스에 cli/main.js 없음 → 띄우지 않음', maybeSessionUpdate({ env: envOf(s), now: NOW, spawnUpdate: sp }) === 'no-cli' && sp.calls.length === 0)
+  const thrower = () => { throw new Error('spawn EACCES') }
+  withCli(s)
+  check('띄우기 실패 → 죽지 않고 spawn-failed', maybeSessionUpdate({ env: envOf(s), now: NOW, spawnUpdate: thrower }) === 'spawn-failed')
+}
+
+console.log('\n[세션 중 자동 업데이트 — 악성·이상]')
+{
+  for (const [desc, val] of [['미래 시각', JSON.stringify({ at: NOW + DAY })], ['깨진 JSON', '{x'], ['숫자 아님', JSON.stringify({ at: 'tomorrow' })], ['배열', '[1]'], ['초대용량', JSON.stringify({ at: NOW, pad: 'x'.repeat(10000) })]]) {
+    const s = withCli(setup()); stamp(s, val)
+    const sp = spy()
+    check(`확인 시각 ${desc} → 확인할 때가 된 것으로 보고 띄움 (영원히 막히지 않게)`, maybeSessionUpdate({ env: envOf(s), now: NOW, spawnUpdate: sp }) === 'spawned' && sp.calls.length === 1)
+  }
+}
+{
+  for (const home of ['gugbab', '../gugbab', '']) {
+    const s = withCli(setup())
+    const sp = spy()
+    check(`하네스 폴더가 상대·빈 경로(${JSON.stringify(home)}) → 띄우지 않음`, maybeSessionUpdate({ env: envOf(s, { GUGBAB_HOME: home }), now: NOW, spawnUpdate: sp }) === 'no-home' && sp.calls.length === 0)
+  }
+}
+{
+  const s = setup(); stamp(s, NOW - DAY - 1)
+  fs.mkdirSync(path.join(s.home, 'cli', 'main.js'), { recursive: true })
+  const sp = spy()
+  check('cli/main.js 자리가 폴더 → 띄우지 않음', maybeSessionUpdate({ env: envOf(s), now: NOW, spawnUpdate: sp }) === 'no-cli' && sp.calls.length === 0)
+  const t = setup(); stamp(t, NOW - DAY - 1)
+  fs.mkdirSync(path.join(t.home, 'cli'), { recursive: true })
+  const evil = path.join(t.d, 'evil.js'); fs.writeFileSync(evil, '// evil\n')
+  if (trySymlink(evil, path.join(t.home, 'cli', 'main.js')) !== null) {
+    const sp2 = spy()
+    check('cli/main.js 가 밖을 가리키는 링크 → 띄우지 않음', maybeSessionUpdate({ env: envOf(t), now: NOW, spawnUpdate: sp2 }) === 'no-cli' && sp2.calls.length === 0)
+  } else skip('cli/main.js 가 밖을 가리키는 링크', WIN_NO_SYMLINK)
+}
+
+console.log('\n[세션 중 자동 업데이트 — 안내]')
+{
+  const s = withCli(setup()); stamp(s, NOW)
+  const r1 = promptCheck({ env: envOf(s), headOf: headIs(B), now: NOW, spawnUpdate: spy() })
+  // 다른 세션 실행 때 바뀐 경우도 있으니 "자동"이라 하지 않는다 (2026-10-23)
+  check('세션 도중 하네스가 바뀜 → 업데이트 안내(버전·짧은 커밋·바로 반영·/exit)', r1.message && /하네스 v1\.0\.5로 업데이트됐습니다/.test(r1.message) && !/자동/.test(r1.message) &&
+    /aaaaaaa → bbbbbbb/.test(r1.message) && /지금부터 새 버전/.test(r1.message) && /--continue/.test(r1.message), r1)
+  check('  재시작 표시 남김', fs.existsSync(s.marker))
+  const r2 = promptCheck({ env: envOf(s), headOf: headIs(B), now: NOW, spawnUpdate: spy() })
+  check('  같은 커밋으로 다음 질문 → 다시 안내하지 않음', r2.message === null, r2)
+  const C = 'c'.repeat(40)
+  const r3 = promptCheck({ env: envOf(s), headOf: headIs(C), now: NOW, spawnUpdate: spy() })
+  check('  또 업데이트됨(다른 커밋) → 한 번 더 안내', r3.message && /aaaaaaa → ccccccc/.test(r3.message), r3)
+}
+{
+  const s = withCli(setup()); stamp(s, NOW)
+  const r = promptCheck({ env: envOf(s), headOf: headIs(A), now: NOW, spawnUpdate: spy() })
+  check('같은 커밋 → 안내 없음 · 재시작 표시 없음', r.message === null && !fs.existsSync(s.marker), r)
+}
+{
+  const s = withCli(setup()); stamp(s, NOW)
+  checkWrapperVersion({ env: envOf(s), headOf: headIs(B) }) // 압축·이어하기 SessionStart 가 먼저 안내
+  const r = promptCheck({ env: envOf(s), headOf: headIs(B), now: NOW, spawnUpdate: spy() })
+  check('SessionStart 가 이미 알린 커밋 → 다음 질문에서 반복하지 않음', r.message === null, r)
+}
+{
+  const s = withCli(setup()); stamp(s, NOW)
+  for (const rev of [undefined, 'unknown', '$(id)', 'A'.repeat(40)]) {
+    const env = envOf(s, { GUGBAB_WRAPPER_REV: rev }); if (rev === undefined) delete env.GUGBAB_WRAPPER_REV
+    const r = promptCheck({ env, headOf: headIs(B), now: NOW, spawnUpdate: spy() })
+    check(`세션 커밋 값 이상(${JSON.stringify(rev)}) → 질문 때는 안내 안 함`, r.message === null, r)
+  }
+  const thr = promptCheck({ env: envOf(s), headOf: () => { throw new Error('git') }, now: NOW, spawnUpdate: spy() })
+  check('git 실패 → 안내 없음, 죽지 않음', thr.message === null)
+}
+{
+  // 안내 기록 자리에 심은 링크 → 따라가 쓰지 않음
+  const s = withCli(setup()); stamp(s, NOW)
+  const victim = path.join(s.d, 'victim.txt'); fs.writeFileSync(victim, 'keep')
+  if (trySymlink(victim, path.join(s.cfg, '.gugbab-update-notified')) !== null) {
+    promptCheck({ env: envOf(s), headOf: headIs(B), now: NOW, spawnUpdate: spy() })
+    check('안내 기록 자리의 링크 → 링크 대상은 그대로', fs.readFileSync(victim, 'utf8') === 'keep')
+  } else skip('안내 기록 자리의 링크', WIN_NO_SYMLINK)
+}
+
 console.log('\n[훅 프로세스]')
 function runHook(input, env) {
   const r = spawnSync('node', [HOOK], { input: typeof input === 'string' ? input : JSON.stringify(input), encoding: 'utf8', timeout: 10000, env: { PATH: process.env.PATH, HOME: process.env.HOME, ...env } })
@@ -339,6 +479,18 @@ function runHook(input, env) {
   check('실제 git: 다른 커밋 → exit 0 + SessionStart additionalContext + systemMessage', diff.code === 0 && hs && hs.hookEventName === 'SessionStart' &&
     /\[wrapper-version-check\]/.test(hs.additionalContext) && /\[wrapper-version-check\]/.test(diff.j.systemMessage), diff)
   check('  재시작 표시 생김', fs.existsSync(s.marker))
+  // 질문할 때(UserPromptSubmit): 세션 도중 바뀐 하네스를 알림 — SessionStart 가 이미 알린 커밋이면 조용히
+  const t = setup()
+  const tgit = (...a) => execFileSync('git', ['-C', t.home, ...a], { encoding: 'utf8', env: { ...process.env, GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@t' } }).trim()
+  tgit('init', '-q'); tgit('add', 'VERSION'); tgit('commit', '-qm', 'v')
+  const ups = runHook({ hook_event_name: 'UserPromptSubmit', prompt: '안녕' }, envOf(t, { GUGBAB_WRAPPER_REV: A }))
+  const uh = ups.j && ups.j.hookSpecificOutput
+  check('실제 훅: 질문할 때 하네스가 바뀌어 있음 → UserPromptSubmit additionalContext 로 자동 업데이트 안내', ups.code === 0 && uh && uh.hookEventName === 'UserPromptSubmit' &&
+    /로 업데이트됐습니다/.test(uh.additionalContext) && /한 번 알려/.test(uh.additionalContext), ups)
+  const ups2 = runHook({ hook_event_name: 'UserPromptSubmit', prompt: '다음' }, envOf(t, { GUGBAB_WRAPPER_REV: A }))
+  check('실제 훅: 다음 질문 → 출력 없음(반복 안 함)', ups2.code === 0 && ups2.out === '', ups2)
+  const upsSame = runHook({ hook_event_name: 'UserPromptSubmit', prompt: '안녕' }, envOf(t, { GUGBAB_WRAPPER_REV: tgit('rev-parse', 'HEAD') }))
+  check('실제 훅: 같은 커밋 → 출력 없음', upsSame.code === 0 && upsSame.out === '', upsSame)
   for (const [desc, input] of [['SessionStart 아닌 이벤트', { hook_event_name: 'Stop' }], ['깨진 stdin', '{not json'], ['빈 stdin', '']]) {
     const r = runHook(input, envOf(s, { GUGBAB_WRAPPER_REV: B }))
     check(`${desc} → exit 0 · 출력 없음`, r.code === 0 && r.out === '', r)

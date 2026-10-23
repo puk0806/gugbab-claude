@@ -179,7 +179,8 @@ hooks.Stop = [{ hooks: stopHooks }];
 // UserPromptSubmit — 매 질문마다 "한국어로 답변" 지시 주입 (Stop 검사와 짝) + 승인 여부 기록(task-confirm-guard)
 // 모든 템플릿·util 공통
 // progress-tracker: 승인된 계획 기록 (task-confirm-guard 와 같은 승인 판정 함수 공유)
-hooks.UserPromptSubmit = [{ hooks: [H('korean-response-guard.js'), H('task-confirm-guard.js'), H('progress-tracker.js'), ...(withParallelHint ? [H('parallel-hint.js')] : [])] }];
+// wrapper-version-check(2026-10-23): 세션 중 24시간마다 자동 업데이트 + 업데이트 안내
+hooks.UserPromptSubmit = [{ hooks: [H('korean-response-guard.js'), H('task-confirm-guard.js'), H('progress-tracker.js'), ...(withParallelHint ? [H('parallel-hint.js')] : []), ...(withWrapperVersionCheck ? [H('wrapper-version-check.js')] : [])] }];
 
 // PermissionRequest
 hooks.PermissionRequest = [
