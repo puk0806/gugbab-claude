@@ -79,6 +79,13 @@ test('테스트 파일 자체', path.join(tmp, 'src', 'covered.test.ts'), 0)
 test('.claude/hooks 파일', '/proj/.claude/hooks/some-hook.js', 0)
 test('scripts/ 파일', '/proj/scripts/gen-settings.js', 0)
 test('설정 파일 (*.config.ts)', path.join(tmp, 'vite.config.ts'), 0)
+// 2026-10-22: 제외는 프로젝트 *최상위* .claude/hooks·.claude/commands 만 — 경로 중간의 같은 글자는 제품 코드
+test('정상: 프로젝트 최상위 .claude/hooks 훅 → 제외', path.join(tmp, '.claude', 'hooks', 'my-hook.js'), 0)
+test('정상: 프로젝트 최상위 .claude/commands → 제외', path.join(tmp, '.claude', 'commands', 'x.js'), 0)
+test('악성: src/.claude/hooks/ 아래 소스로 위장 → 차단', path.join(tmp, 'src', '.claude', 'hooks', 'pay.ts'), 2)
+test('악성: .claude/hooksX/ (접두만 같은 폴더) → 차단', path.join(tmp, '.claude', 'hooksX', 'pay.ts'), 2)
+test('악성: app/.claude/commands/ 아래 소스 → 차단', path.join(tmp, 'app', '.claude', 'commands', 'pay.js'), 2)
+if (process.platform === 'darwin') test('경계(맥): 대소문자만 다른 .CLAUDE/HOOKS 최상위 → 제외(같은 폴더)', path.join(tmp, '.CLAUDE', 'HOOKS', 'h.js'), 0)
 test('마크다운 (소스 아님)', path.join(tmp, 'README.md'), 0)
 test('file_path 없음', '', 0)
 

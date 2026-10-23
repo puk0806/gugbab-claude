@@ -219,6 +219,19 @@ console.log('\n── 악성·우회 시도 ──')
     check('프로젝트 안 심볼릭 링크(밖을 가리킴) → 손대지 않음', calls().length === 0 && fs.readFileSync(target, 'utf8') === 'x')
   }
 }
+{
+  // 2026-10-22: 파일은 일반 파일이어도 *상위 폴더*가 프로젝트 밖을 가리키는 링크면 실제로는 밖의 파일 — 밖의 포매터까지 돌았다
+  const { linkDir } = require('./lib/testfs')
+  const P = project('dirlink', { '.prettierrc': '{}', 'inner/b.ts': 'y' }, { 'node_modules/.bin/prettier': { name: 'prettier' } })
+  const outDir = project('dirlink-outside', { '.prettierrc': '{}', 'evil.ts': 'x' }, { 'node_modules/.bin/prettier': { name: 'evil-prettier' } })
+  linkDir(outDir, path.join(P, 'vendor'))
+  reset(); run(P, 'vendor/evil.ts'); run(P, path.join(P, 'vendor', 'evil.ts'), { tool: 'Edit' })
+  check('악성: 프로젝트 안 폴더 링크(밖을 가리킴) 아래 파일 → 손대지 않음(밖 포매터도 안 돎)', calls().length === 0 && fs.readFileSync(path.join(outDir, 'evil.ts'), 'utf8') === 'x', calls())
+  // 경계: 프로젝트 *안*을 가리키는 폴더 링크는 그대로 정리
+  linkDir(path.join(P, 'inner'), path.join(P, 'alias'))
+  reset(); run(P, 'alias/b.ts')
+  check('경계: 프로젝트 안을 가리키는 폴더 링크 → 정리함', calls().length === 1 && calls()[0].startsWith('prettier'), calls())
+}
 
 console.log('\n── 이상·경계 경로 ──')
 {

@@ -273,6 +273,34 @@ check('JSON null → 통과', run('null').code === 0)
   check('file_path 누락된 Write → 승인 상태면 허용', run({ hook_event_name: 'PreToolUse', session_id: s, tool_name: 'Write', tool_input: {} }).code === 0)
 }
 
+// ─── 자기 승인 — 승인 상태 파일은 임시 폴더 안이지만 예외가 아니다 (2026-10-22: 맥 분기엔 검사가 없어 승인 전 Write 로 approved:true 를 써 넣을 수 있었다) ───
+console.log('\n[자기 승인 — 승인 상태 폴더 쓰기]')
+{
+  const s = sid()
+  prompt(s, '이거 해줘', transcript('안녕하세요'))
+  const own = stateFile(s)
+  // 악성: 승인 전 Write/Edit 로 내 상태 파일·다른 세션 상태 파일·폴더 자체
+  check('악성: 승인 전 Write 로 내 승인 상태 파일 → 차단', write(s, own).code === 2)
+  check('악성: 승인 전 Edit 로 내 승인 상태 파일 → 차단', write(s, own, 'Edit').code === 2)
+  check('악성: 다른 세션 상태 파일 → 차단', write(s, stateFile('other-session')).code === 2)
+  const dir = path.dirname(own)
+  check('악성: 상태 폴더 아래 새 이름 → 차단', write(s, path.join(dir, 'x', 'y.json')).code === 2)
+  check('악성: `..` 로 상태 폴더에 돌아 들어감 → 차단', write(s, path.join(os.tmpdir(), 'tcg-x', '..', 'claude-task-confirm-guard', 's.json')).code === 2)
+  if (process.platform === 'darwin') {
+    // 맥 기본 파일 시스템은 대소문자 무시 — 대문자 폴더 이름도 같은 상태 폴더
+    check('악성(맥): 대문자로 쓴 상태 폴더 → 차단', write(s, path.join(os.tmpdir(), 'CLAUDE-TASK-CONFIRM-GUARD', `${s}.json`)).code === 2)
+    // /var ↔ /private/var — 실제 위치 표기로 써도 같은 폴더
+    let realTmp = null; try { realTmp = fs.realpathSync(os.tmpdir()) } catch {}
+    if (realTmp) check('악성(맥): 임시 폴더 실제 경로(/private/var/…)로 쓴 상태 파일 → 차단', write(s, path.join(realTmp, 'claude-task-confirm-guard', `${s}.json`)).code === 2)
+  }
+  // 정상·경계: 임시 폴더의 다른 파일, 접두만 같은 형제 폴더는 그대로 예외
+  check('정상: 승인 전 임시 폴더 다른 파일 → 허용', write(s, path.join(os.tmpdir(), 'tcg-scratch', 'a.txt')).code === 0)
+  check('경계: 접두만 같은 형제 폴더(claude-task-confirm-guard2) → 허용', write(s, path.join(os.tmpdir(), 'claude-task-confirm-guard2', 'a.json')).code === 0)
+  // 승인 뒤엔 일반 규칙대로(승인 = 허용) — 상태 폴더도 다른 파일처럼 승인을 따른다
+  prompt(s, '응', transcript(PLAN))
+  check('경계: 승인 뒤 상태 파일 쓰기는 일반 파일처럼 승인 상태를 따름', write(s, own).code === 0)
+}
+
 fs.rmSync(tmp, { recursive: true, force: true })
 for (const f of fs.readdirSync(path.join(os.tmpdir(), 'claude-task-confirm-guard'))) {
   if (f.startsWith(`tcg-test-${process.pid}-`)) fs.rmSync(path.join(os.tmpdir(), 'claude-task-confirm-guard', f), { force: true })

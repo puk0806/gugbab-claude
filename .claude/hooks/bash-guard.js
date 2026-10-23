@@ -1649,6 +1649,57 @@ function classifySourceWrite(inv, ctx, add) {
   }
 }
 
+// ── Bash 쓰기 대상 위치 판정 (2026-10-22, 다른 프로젝트 보고로 재현) ──
+// PermissionRequest 는 classifyShell 판정이 없으면 자동 승인하므로, 쓰기 대상을 보지 않으면 `cp x ~/.zshrc`·
+// `cp x ~/.claude/settings.json`(훅 끄기)·`cp x /etc/hosts`·`echo '{"approved":true}' > $TMPDIR/claude-task-confirm-guard/<세션>.json`(자기 승인)이
+// 확인 없이 지나갔다. Write 도구 정책(auto-approve: 프로젝트·허용 폴더 밖은 확인, protect-secrets: 보호 파일 차단)과 같게 맞춘다.
+//   승인 상태 폴더 → deny · 보호 파일 → 프로젝트·임시 폴더 밖이면 deny, 안이면 ask(`cp .env.example .env` 같은 흔한 작업은 확인만)
+//   · 프로젝트·허용 폴더·임시 폴더·/dev 밖 → ask. 대상을 정적으로 해석할 수 없으면(변수 등) 이 검사는 판정하지 않음(기존 흐름)
+const TCG_STATE_DIR = path.join(os.tmpdir(), 'claude-task-confirm-guard')
+function inTcgStateDir(abs) {
+  if (!abs) return false
+  if (IS_WIN) {
+    const c = winCanon(abs)
+    const bases = [TCG_STATE_DIR, realLocation(TCG_STATE_DIR)].filter(Boolean).map(b => winCanon(b)).filter(Boolean)
+    return !!c && bases.some(b => W.isUnder(c, b, true))
+  }
+  // 맥 기본 파일 시스템은 대소문자를 무시한다 — 대문자로 쓴 폴더 이름도 같은 폴더
+  const fold = (p) => (process.platform === 'darwin' ? p.toLowerCase() : p)
+  const bases = [TCG_STATE_DIR, realLocation(TCG_STATE_DIR)].filter(Boolean).map(fold)
+  return [abs, realLocation(abs)].filter(Boolean).map(fold).some(x => bases.some(b => x === b || x.startsWith(b + path.sep)))
+}
+let _isProtectedWritePath = null
+try { _isProtectedWritePath = require('./protect-secrets.js').isProtectedWritePath } catch { /* 미설치 → 보호 파일 검사 생략 */ }
+const DEV_PATH_RE = /^\/dev\/(?:null|zero|stdout|stderr|stdin|tty|fd\/\d+)$/
+
+function writeLocationTargets(inv) {
+  const redirs = (inv.redirs || []).filter(r => r.out && !(r.dup && /^(?:\d+|-)$/.test(r.value)))
+  // ln 은 마지막 인자(만들 링크)만 쓴다 — 링크가 가리킬 대상(`ln -s ~/.zshrc x`)은 바뀌지 않는다
+  const own = inv.name === 'ln' ? harnessWriteTargets(inv).slice(-1) : harnessWriteTargets(inv)
+  return [...own, ...redirs]
+}
+
+function classifyWriteLocation(inv, ctx, add) {
+  for (const t of writeLocationTargets(inv)) {
+    if (DEV_PATH_RE.test(cleanValue(t.value))) continue
+    const r = resolveRmTarget(t, ctx.vcwd)
+    if (!r) continue
+    const real = realLocation(r.abs) || r.abs
+    const label = inv.name || '리다이렉트'
+    if (inTcgStateDir(r.abs) || inTcgStateDir(real)) {
+      add('deny', `${label} 로 task-confirm-guard 승인 상태 파일을 쓰는 것은 차단됩니다 — 사용자 승인은 대화로만 기록됩니다.`)
+      return
+    }
+    const inProject = !!ctx.root && (isAncestorOrSame(ctx.root, r.abs) || isAncestorOrSame(ctx.root, real))
+    const inSafe = inProject || isUnderAllowed(real, ctx.allowedDirs) || isUnderTempDir(r.abs) || isUnderTempDir(real)
+    if (_isProtectedWritePath && (_isProtectedWritePath(r.abs) || _isProtectedWritePath(real))) {
+      add(inSafe ? 'ask' : 'deny', `${label} 로 보호 파일(${IS_WIN ? path.posix.basename(r.abs) : path.basename(r.abs)})을 쓰는 것은 ${inSafe ? '사용자 확인이 필요합니다' : '차단됩니다'} — Write 도구라면 protect-secrets 가 막는 파일입니다.`)
+      continue
+    }
+    if (!inSafe) add('ask', `${label} 로 프로젝트·허용 폴더 밖(${r.abs})에 쓰는 것은 사용자 확인이 필요합니다.`)
+  }
+}
+
 // git push 인자 → { remote, refspecs, force, pushAll, deleteMode } (branch-protection 과 공용)
 const PUSH_VALUE_OPTS = new Set(['-o', '--push-option', '--repo', '--receive-pack', '--exec'])
 function parsePushArgs(args) {
@@ -1895,6 +1946,7 @@ function classifyShell(cmd, opts = {}) {
     classifySecretArgs(inv, ctx, add)
     classifyHarnessWrite(inv, ctx, add)
     classifySourceWrite(inv, ctx, add)
+    classifyWriteLocation(inv, ctx, add)
     if (WIN_SHELLS.has(nm)) { add('ask', `${nm} 로 넘긴 명령은 판정할 수 없습니다. 사용자 확인이 필요합니다.`); continue }
     if (nm === 'git') { classifyGit(inv.git, add, ctx); continue }
     if (nm === 'gh') { classifyGh(vals, add); continue }

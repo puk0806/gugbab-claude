@@ -31,6 +31,16 @@ function isInsideProject(targetPath, baseCwd) {
   return rel === '' || (rel !== '..' && !rel.startsWith('..' + path.sep) && !path.isAbsolute(rel));
 }
 
+// 프로젝트 최상위의 하네스 인프라(.claude/hooks·.claude/commands)인가 — 경로 *중간*의 같은 글자(`src/.claude/hooksX/`·
+// `app/.claude/hooks/`)는 제품 코드다 (2026-10-22: 부분 문자열 비교라 그런 경로의 소스가 검사를 비켜 갔다)
+function isRootInfra(targetPath, baseCwd) {
+  const base = baseCwd || process.cwd();
+  const abs = path.isAbsolute(targetPath) ? targetPath : path.resolve(base, targetPath);
+  const fold = (p) => (CASE_INSENSITIVE_FS ? p.toLowerCase() : p);
+  const rel = path.relative(fold(resolveProjectRoot(baseCwd)), fold(realCanonical(abs))).split(path.sep).join('/');
+  return /^\.claude\/(?:hooks|commands)\//.test(rel);
+}
+
 try {
   const input = JSON.parse(fs.readFileSync(0, 'utf8')); // fd 0 — '/dev/stdin' 은 윈도우에 없다
   const filePath = input.tool_input?.file_path || input.tool_input?.path;
@@ -52,8 +62,7 @@ try {
     basename.includes('.spec') ||
     basename.includes('_test') ||
     slashPath.includes('__tests__') ||
-    slashPath.includes('.claude/hooks') ||
-    slashPath.includes('.claude/commands') ||
+    isRootInfra(filePath, input.cwd) ||
     /(?:^|\/)scripts\//.test(slashPath) ||
     // *.config.ts / *.config.js / *.config.mjs 등 순수 설정 파일
     /\.config\.[a-z]+$/.test(path.basename(filePath)) ||

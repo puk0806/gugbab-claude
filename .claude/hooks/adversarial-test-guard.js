@@ -51,6 +51,16 @@ function isInsideProject(targetPath, baseCwd) {
   return rel === '' || (rel !== '..' && !rel.startsWith('..' + path.sep) && !path.isAbsolute(rel))
 }
 
+// 프로젝트 최상위의 하네스 인프라(.claude/hooks·.claude/commands)인가 — 경로 *중간*의 같은 글자(`src/.claude/hooks/`)는
+// 제품 코드다 (2026-10-22: 경로 어디든 맞는 정규식이라 그런 위치의 테스트가 검사를 비켜 갔다)
+function isRootInfra(targetPath, baseCwd) {
+  const base = baseCwd || process.cwd()
+  const abs = path.isAbsolute(targetPath) ? targetPath : path.resolve(base, targetPath)
+  const fold = (p) => (CASE_INSENSITIVE_FS ? p.toLowerCase() : p)
+  const rel = path.relative(fold(resolveProjectRoot(baseCwd)), fold(realCanonical(abs))).split(path.sep).join('/')
+  return /^\.claude\/(?:hooks|commands)\//.test(rel)
+}
+
 const SOURCE_EXTS = ['.ts', '.tsx', '.js', '.jsx', '.py', '.rs', '.go', '.java', '.rb']
 
 // 테스트 파일 판별
@@ -137,7 +147,7 @@ try {
   // 레포 인프라(훅·커맨드·스크립트)는 제품 코드가 아니므로 제외 (tdd-guard와 동일 철학)
   // 윈도우 file_path 는 `…\.claude\hooks\…` — 슬래시로 바꿔 맥과 같은 기준으로 판정한다 (맥은 그대로)
   const slashPath = toSlash(filePath)
-  if (/\.claude\/(?:hooks|commands)\//.test(slashPath) || /(?:^|\/)scripts\//.test(slashPath)) process.exit(0)
+  if (isRootInfra(filePath, input.cwd) || /(?:^|\/)scripts\//.test(slashPath)) process.exit(0)
 
   const ext = path.extname(filePath)
   if (!SOURCE_EXTS.includes(ext)) process.exit(0)

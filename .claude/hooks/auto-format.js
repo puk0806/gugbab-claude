@@ -156,6 +156,14 @@ function handle(input) {
   let stat
   try { stat = fs.lstatSync(file) } catch { return null }
   if (!stat.isFile() || stat.isSymbolicLink()) return null
+  // 파일 자체가 링크가 아니어도 상위 폴더가 프로젝트 밖을 가리키는 링크면, 실제로는 프로젝트 밖 파일을 고치고
+  // 그 밖의 node_modules/.bin·.venv 실행 파일을 찾아 돌리게 된다 → 실제 위치로 한 번 더 본다 (2026-10-22)
+  let realFile, realRoot
+  try {
+    const rp = IS_WIN ? fs.realpathSync.native : fs.realpathSync
+    realFile = rp(file); realRoot = rp(root)
+  } catch { return null }
+  if (IS_WIN ? !isUnder(realFile, realRoot) : !(realFile === realRoot || realFile.startsWith(realRoot + path.sep))) return null
 
   const f = pickFormatter(file, root)
   if (!f) return null

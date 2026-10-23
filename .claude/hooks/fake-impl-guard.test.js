@@ -126,11 +126,18 @@ run('테스트 파일 자체는 검사 안 함', {
   test: undefined,
 }, 0)
 
-run('.claude/hooks/ 인프라 제외', {
-  src: `function calc(price, rate) { return 900 }`,
-  srcName: path.join('.claude', 'hooks', 'calc.js'),
-  test: `test('c', () => { expect(calc(1,1)).toBe(900) })`,
-}, 0)
+// 테스트는 소스 옆에 둔다(testName) — 예전 시험은 테스트를 다른 폴더에 둬 "테스트를 못 찾아 통과"였다 (2026-10-22)
+// 제외는 프로젝트 *최상위* .claude/hooks·.claude/commands 만 — 경로 중간의 같은 글자는 제품 코드라 검사 대상
+{
+  const FAKE = `function calc(price, rate) { return 900 }`
+  const T = `test('c', () => { expect(calc(1,1)).toBe(900) })`
+  const P = path.join(tmp, 'infra-root')
+  const at = (rel) => ({ src: FAKE, srcName: rel, testName: rel.replace(/\.js$/, '.test.js'), test: T, dir: P, projectDir: P })
+  run('기준: 같은 내용의 src/calc.js → 차단 (아래 제외 판정의 전제)', at(path.join('src', 'calc.js')), 2)
+  run('정상: 최상위 .claude/hooks/ 인프라 제외', at(path.join('.claude', 'hooks', 'calc.js')), 0)
+  run('악성: src/.claude/hooks/ 아래로 위장 → 차단', at(path.join('src', '.claude', 'hooks', 'calc.js')), 2)
+  run('악성: .claude/hooksX/ (접두만 같은 폴더) → 차단', at(path.join('.claude', 'hooksX', 'calc.js')), 2)
+}
 
 console.log('\n── 프로젝트 밖 파일은 통과(스킵) — 경로 정규화 적대적 테스트 ──')
 const FAKE_SRC = `export function calcDiscount(price, rate) {\n  return 900;\n}`

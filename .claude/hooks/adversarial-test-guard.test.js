@@ -122,6 +122,14 @@ run('.claude/hooks/ 인프라 제외', {
   file: '.claude/hooks/foo.test.js',
   content: `test('a', () => { expect(a()).toBe(1) })\ntest('b', () => { expect(b()).toBe(2) })`,
 }, 0)
+// 2026-10-22: 제외는 프로젝트 *최상위* 만 — 경로 중간의 .claude/hooks 는 제품 테스트라 검사 대상
+{
+  const HAPPY = `test('a', () => { expect(a()).toBe(1) })\ntest('b', () => { expect(b()).toBe(2) })`
+  run('악성: src/.claude/hooks/ 아래 정상 흐름만 테스트 → 차단', { file: 'src/.claude/hooks/pay.test.ts', content: HAPPY }, 2)
+  run('악성: .claude/hooksX/ (접두만 같은 폴더) → 차단', { file: '.claude/hooksX/pay.test.ts', content: HAPPY }, 2)
+  run('악성: packages/a/.claude/commands/ 아래 → 차단', { file: 'packages/a/.claude/commands/x.test.js', content: HAPPY }, 2)
+  run('정상: 최상위 .claude/commands/ 는 제외', { file: '.claude/commands/x.test.js', content: HAPPY }, 0)
+}
 
 console.log('\n── 프로젝트 밖 파일은 통과(스킵) — 경로 정규화 적대적 테스트 ──')
 // happy-path만 담은(원래는 exit 2) 테스트 파일들 — 아래는 전부 "실제로는 프로젝트 밖(또는 안)"인 케이스.

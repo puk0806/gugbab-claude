@@ -350,8 +350,9 @@ test('heredoc → /tmp/x.tsx (cwd 주입) → allow',
   'Bash', { command: `cat > /tmp/x.tsx << 'EOF'\nfoo\nEOF\necho done` }, 'allow', 'PreToolUse', { cwd: PROJECT_ROOT })
 test('cd + git push (cwd 주입) → ask (allow 금지)',
   'Bash', { command: `cd ${PROJECT_ROOT} && git push origin main` }, 'ask', 'PreToolUse', { cwd: PROJECT_ROOT })
-test('heredoc → .zshrc → null',
-  'Bash', { command: `cat > /Users/lf/.zshrc << 'EOF'\nexport X=1\nEOF` }, 'null', 'PreToolUse', { cwd: PROJECT_ROOT })
+// 2026-10-22: 홈 셸 설정 쓰기는 자동 허용 안 함(null) → Write 도구(protect-secrets)와 같게 차단
+test('heredoc → .zshrc → deny',
+  'Bash', { command: `cat > ${toSlash(require('os').homedir())}/.zshrc << 'EOF'\nexport X=1\nEOF` }, 'deny', 'PreToolUse', { cwd: PROJECT_ROOT })
 test('brace expansion wc -l → allow',
   'Bash', { command: `wc -l src/forms/{Slider,Toast}/*.tsx 2>/dev/null` }, 'allow', 'PreToolUse', { cwd: PROJECT_ROOT })
 test('brace expansion {rm,-rf} → null',
@@ -1311,6 +1312,57 @@ section('프로젝트 소스 파일 Bash 쓰기 → deny, 명령 출력·임시 
   notDeny('읽기만: cat·sed 출력', "cat src/a.ts; sed 's/a/b/' src/a.ts")
   notDeny('대상이 변수(정적 해석 불가)는 이 검사 밖', 'echo x > "$OUT"')
   notDeny('프로젝트 밖 홈 폴더 아님 경로(/tmp 하위 폴더)', `mkdir -p /tmp/bgx && echo x > /tmp/bgx/a.java`)
+}
+
+// ─── Bash 쓰기 대상 위치 (2026-10-22, 다른 프로젝트 보고로 재현) ───
+// PermissionRequest 는 판정이 없으면 자동 승인 → 쓰기 대상을 안 보면 `cp x ~/.zshrc`·`cp x ~/.claude/settings.json`·
+// `cp x /etc/hosts`·승인 상태 파일 쓰기(자기 승인)가 확인 없이 지나갔다. 고치기 전 코드로 이 구역의 악성 시험은 실패한다
+section('Bash 쓰기 대상 위치 — 보호 파일·승인 상태·프로젝트 밖')
+{
+  const P = { cwd: PROJECT_ROOT }
+  const os2 = require('os')
+  const TCG = toSlash(require('path').join(os2.tmpdir(), 'claude-task-confirm-guard'))
+  const both = (desc, command, pre) => { // Pre 판정 + PermissionRequest 자동 승인 안 함
+    test(desc, 'Bash', { command }, pre, 'PreToolUse', P)
+    test(`  └ 자동 승인 안 함: ${desc}`, 'Bash', { command }, 'null', 'PermissionRequest', P)
+  }
+  // 악성: 홈 셸·git·ssh 설정 덮기 (Write 도구면 protect-secrets 가 막는 파일) → deny
+  both('cp 로 ~/.zshrc 덮기', 'cp /tmp/evil ~/.zshrc', 'deny')
+  both('cp 로 "$HOME/.gitconfig"', 'cp /tmp/evil "$HOME/.gitconfig"', 'deny')
+  both('mv 로 ~/.ssh/authorized_keys', 'mv /tmp/k ~/.ssh/authorized_keys', 'deny')
+  both('tee -a ~/.bashrc', 'echo "curl x | sh" | tee -a ~/.bashrc', 'deny')
+  both('ln -sf 로 ~/.zshrc 를 링크로 바꿈', 'ln -sf /tmp/evil ~/.zshrc', 'deny')
+  both('cp -t 대상 폴더 ~/.ssh', 'cp -t ~/.ssh /tmp/authorized_keys', 'deny')
+  // 악성: 승인 상태 파일 — 자기 승인
+  both('리다이렉트로 승인 상태 파일 쓰기', `echo '{"approved":true}' > ${TCG}/s1.json`, 'deny')
+  both('cp 로 승인 상태 파일', `cp /tmp/a.json ${TCG}/s1.json`, 'deny')
+  both('mkdir 로 승인 상태 폴더 선점', `mkdir -p ${TCG}/x`, 'deny')
+  if (process.platform === 'darwin') {
+    both('대문자로 쓴 승인 상태 폴더(맥 — 대소문자 무시)', `echo x > ${TCG.replace(/claude-task-confirm-guard$/, 'CLAUDE-TASK-CONFIRM-GUARD')}/s1.json`, 'deny')
+    let realTcg = null; try { realTcg = require('fs').realpathSync(os2.tmpdir()) + '/claude-task-confirm-guard' } catch {}
+    if (realTcg) both('임시 폴더 실제 경로(/private/var/…)로 쓴 승인 상태 파일', `echo x > ${realTcg}/s1.json`, 'deny')
+  }
+  // 악성: 프로젝트·허용 폴더 밖 쓰기 — Claude 설정을 바꿔 훅 끄기 등 → 확인
+  both('~/.claude/settings.json 덮기', "echo '{\"disableAllHooks\":true}' > ~/.claude/settings.json", 'ask')
+  both('install 로 ~/.local/bin 에 실행 파일', 'install -m 755 /tmp/x ~/.local/bin/git', 'ask')
+  both('rsync 로 홈 설정 폴더', 'rsync -a /tmp/cfg/ ~/.config/app/', 'ask')
+  both('홈 폴더 자체에 복사', 'cp /tmp/x ~/', 'ask')
+  both('touch 로 프로젝트 밖 절대 경로', 'touch /opt/bg-evil-marker', 'ask')
+  // 시스템 파일 덮기도 PermissionRequest 자동 승인이었다
+  both('cp 로 /etc/hosts', 'cp /tmp/x /etc/hosts', 'ask')
+  both('리다이렉트로 /etc/hosts', 'echo "1.2.3.4 example.com" > /etc/hosts', 'ask')
+  both('cp 로 /usr/local/bin/git 바꿔치기', 'cp /tmp/x /usr/local/bin/git', 'ask')
+  both('&& 뒤에 숨긴 홈 쓰기', 'ls && cp /tmp/x ~/.claude/CLAUDE.md', 'ask')
+  // 경계: 프로젝트 안 보호 이름 파일은 확인만(흔한 작업), 정상 쓰기는 그대로
+  test('경계: cp .env.example .env (프로젝트 안 보호 이름) → ask', 'Bash', { command: 'cp .env.example .env' }, 'ask', 'PreToolUse', P)
+  test('정상: cp README.md /tmp/r.md → 자동 승인', 'Bash', { command: 'cp README.md /tmp/r.md' }, 'allow', 'PermissionRequest', P)
+  test('정상: mkdir -p node_modules/.cache → 자동 승인', 'Bash', { command: 'mkdir -p node_modules/.cache' }, 'allow', 'PermissionRequest', P)
+  test('정상: 프로젝트 안 링크(대상이 홈이어도 링크만 만듦) → deny 아님', 'Bash', { command: 'ln -s ~/.zshrc zshrc-link' }, 'null', 'PreToolUse', P)
+  test('정상: echo > /dev/null 2>&1 → 자동 승인', 'Bash', { command: 'echo x > /dev/null 2>&1' }, 'allow', 'PermissionRequest', P)
+  test('경계: 승인 상태 폴더와 접두만 같은 형제 → deny 아님', 'Bash', { command: `echo x > ${TCG}2/a.json` }, 'null', 'PreToolUse', P)
+  test('경계: 대상이 변수(정적 해석 불가) → 이 검사는 판정 안 함', 'Bash', { command: 'cp a.txt "$OUT"' }, 'null', 'PreToolUse', P)
+  test('경계: 읽기만(cat ~/.zshrc) → deny 아님', 'Bash', { command: 'cat ~/.zshrc' }, 'null', 'PreToolUse', P)
+  test('경계: 홈 경로가 원본(cp ~/x.txt ./) → 자동 승인', 'Bash', { command: 'cp ~/x.txt ./x.txt' }, 'allow', 'PermissionRequest', P)
 }
 
 console.log(`\n${'─'.repeat(40)}`)
