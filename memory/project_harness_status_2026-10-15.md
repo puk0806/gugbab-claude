@@ -5,10 +5,10 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 0693c72c-1709-4533-8cb9-8a3b20e52a64
-  modified: 2026-10-22T06:56:40.293Z
+  modified: 2026-10-23T01:12:11.049Z
 ---
 
-**상태 (2026-10-22 갱신)**: **shim 래퍼(`gugbab-claude`)로만 사용**(결정 27). main = `63bc46f`(PR #44), 설치본 `~/gugbab` = **v1.1.0**(stable, PR 마다 VERSION 올림 → 머지 때 자동 태그 — 결정 32). 2026-10-20~22 머지: PR #40 v1.0.12(설치 PATH 자동), #41 v1.0.13(/harness 창 자동 닫힘), #42 v1.0.14(결정 42·43), **#43 v1.0.15(윈도우 지원 결정 41 + 단위 테스트 CI `unit-tests` 맥·윈도우)** → 윈도우 지원 마무리로 **v1.1.0**(minor, 코드 변경 없음) PR. 개편 0~6단계 완료, 결정 1~43 은 계획서 13장 + [[project-shim-wrapper-direction]]. 옛 복사 설치(`project-install.sh`·템플릿 0~15)는 6단계에서 삭제됨. 다른 PC 에서 시작하면 계획서 페이지 https://claude.ai/artifact/U7vpKRXVemaNYYNhz8nNLj (계획서 + 항목 체크리스트) 와 `docs/DEFAULTS.md` 가 기본값·고정 목록 원본.
+**상태 (2026-10-23 갱신)**: **shim 래퍼(`gugbab-claude`)로만 사용**(결정 27). main = `7b16841`(PR #45 v1.1.1 — 실사용 빈틈 4개), 설치본 `~/gugbab` = **v1.1.1**. 2026-10-23 PR v1.1.2 올림(lfmall 보고 약점 4곳 — [[project_harness_write_location_fix_2026-10-23]] + 세션 중 하루 한 번 자동 업데이트 — [[project_in_session_auto_update_2026-10-23]]). (stable, PR 마다 VERSION 올림 → 머지 때 자동 태그 — 결정 32). 2026-10-20~22 머지: PR #40 v1.0.12(설치 PATH 자동), #41 v1.0.13(/harness 창 자동 닫힘), #42 v1.0.14(결정 42·43), **#43 v1.0.15(윈도우 지원 결정 41 + 단위 테스트 CI `unit-tests` 맥·윈도우)** → 윈도우 지원 마무리로 **v1.1.0**(minor, 코드 변경 없음) PR. 개편 0~6단계 완료, 결정 1~43 은 계획서 13장 + [[project-shim-wrapper-direction]]. 옛 복사 설치(`project-install.sh`·템플릿 0~15)는 6단계에서 삭제됨. 다른 PC 에서 시작하면 계획서 페이지 https://claude.ai/artifact/U7vpKRXVemaNYYNhz8nNLj (계획서 + 항목 체크리스트) 와 `docs/DEFAULTS.md` 가 기본값·고정 목록 원본.
 
 **자산 수 (manifest 실측 2026-10-20)**: 스킬 195 · 에이전트 61 · 훅 32 + statusline · 규칙 14 · 커맨드 12 · 설정 7 = 321 항목, 기본 고정 35 · 켬 70 · 끔 216. 검증 상태(10-16 기준) APPROVED 181 · PENDING_TEST 15(실사용 필수만) · NEEDS_REVISION 0.
 
