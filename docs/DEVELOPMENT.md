@@ -89,7 +89,7 @@ gugbab-claude --raw              # 하네스 없이 그냥 claude
 |---|---|
 | `gugbab-claude status` | 이 프로젝트에 켜진 것 요약 (하네스 버전·Claude Code 버전·종류별 개수·기본값과 다른 항목·경고) |
 | `gugbab-claude doctor` | 설치·로그인·조립 상태 점검 |
-| `gugbab-claude update` | 지금 바로 최신화 (평소엔 실행할 때 1시간에 한 번 자동) |
+| `gugbab-claude update` | 지금 바로 최신화 (평소엔 실행할 때 1시간에 한 번 자동, 켜 둔 세션은 하루에 한 번 질문할 때 뒤에서 자동) |
 | `gugbab-claude harness` | 켜기·끄기 화면 (터미널에서) |
 | `gugbab-claude on\|off <항목> [--all]` | 명령으로 켜기·끄기 — 예: `off hook:cc-notify`, `on bundle:dev-quality`, `on block:rust` |
 | `gugbab-claude preset [이름] [--all]` | 프리셋 목록 / 적용 |

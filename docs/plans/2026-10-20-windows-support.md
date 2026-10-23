@@ -234,7 +234,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\poc\poc-windows.ps1 -LinkCred
 
 **남은 것**: ~~맥 회귀 확인(M13)~~ → 5.3 · ~~`windows-latest` CI~~ → 5.3(워크플로 추가, 첫 실행은 푸시 뒤) · 5.3 의 윈도우 재확인 · v1.1.0 릴리스. M1·M2·M3·M4·M8·M11 은 2026-10-21 윈도우 실측으로 확인(위). 버전은 main 병합으로 **1.0.14**, PR 을 올릴 때만 `release-version.js bump`(결정 32 — 단계 PR 은 패치 +1).
 
-**맥에도 있는 것으로 찾았지만 동작을 바꾸지 않아 남긴 것**(따로 결정 필요): task-confirm-guard 승인 상태 파일을 임시 폴더에 직접 써 자기 승인 가능(윈도우 분기는 막음) · tdd/adversarial/fake-impl 의 `.claude/hooks` 부분 문자열 제외(`.claude/hooksX/…`·경로 중간 `.claude/hooks/`) · 폴더 링크 너머 파일 신뢰(staleness-check·auto-format) · 자동 허용 패턴이 `cp x ~/…` 대상은 보지 않음 · 이름만으로 `git` 실행 시 현재 폴더의 `git.exe`(윈도우 `NoDefaultCurrentDirectoryInExePath` 없을 때).
+**맥에도 있는 것으로 찾았지만 동작을 바꾸지 않아 남긴 것**(따로 결정 필요): ~~task-confirm-guard 승인 상태 파일을 임시 폴더에 직접 써 자기 승인 가능(윈도우 분기는 막음)~~ · ~~tdd/adversarial/fake-impl 의 `.claude/hooks` 부분 문자열 제외(`.claude/hooksX/…`·경로 중간 `.claude/hooks/`)~~ · 폴더 링크 너머 파일 신뢰(staleness-check·~~auto-format~~) · ~~자동 허용 패턴이 `cp x ~/…` 대상은 보지 않음~~ · 이름만으로 `git` 실행 시 현재 폴더의 `git.exe`(윈도우 `NoDefaultCurrentDirectoryInExePath` 없을 때).
+> 2026-10-23: 다른 프로젝트(같은 하네스 구조) 보고로 맥에서 실제로 뚫리는 것을 재현해 줄 친 4곳을 고쳤다 — 승인 상태 폴더 쓰기 차단(Write·Bash 모두, 실제 위치·대소문자 무시), bash-guard 쓰기 대상 위치 판정(보호 파일 밖 = 차단·안 = 확인, 프로젝트·허용·임시 폴더 밖 = 확인 — `/etc/hosts` 포함), 검사 제외는 프로젝트 최상위 `.claude/hooks|commands/` 만, auto-format 은 실제 위치가 프로젝트 밖이면 손대지 않음. 남은 것: staleness-check 링크 너머·`git.exe` 현재 폴더.
 
 ### 5.3 맥 회귀 확인(M13)·테스트 보강 (2026-10-22 — 맥)
 
