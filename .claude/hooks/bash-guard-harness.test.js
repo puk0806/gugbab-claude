@@ -128,8 +128,12 @@ test('악성: 허용 폴더 이름만 앞부분이 같은 형제 폴더(memDir-e
 })
 
 // ── 경계 ──
-test('경계: GUGBAB_HOME 이 없으면(래퍼 밖 세션) 보호 안 함', () => {
-  assert.strictEqual(level(`touch ${harness}/x`, { env: {} }), null)
+// 하네스 보호가 꺼졌는지는 "하네스 설치 폴더" 사유로 본다 — 대상이 프로젝트 밖이라 2026-10-22 부터는 일반 "프로젝트 밖 쓰기" 확인이 걸린다
+const harnessAsk = (cmd, opts) => withEnv((opts && opts.env) || { GUGBAB_HOME: harness, CLAUDE_BASH_GUARD_ALLOWED_DIRS: memDir },
+  () => /하네스 설치 폴더/.test(classifyShell(cmd, { cwd: proj }).reason || ''))
+test('경계: GUGBAB_HOME 이 없으면(래퍼 밖 세션) 하네스 보호 안 함 — 프로젝트 밖 쓰기 확인만', () => {
+  assert.strictEqual(harnessAsk(`touch ${harness}/x`, { env: {} }), false)
+  assert.strictEqual(level(`touch ${harness}/x`, { env: {} }), 'ask')
 })
 
 test('경계: GUGBAB_HOME 이 상대경로·빈 값·루트·홈(또는 그 상위)이면 보호 안 함 (홈 전체 확인 창 방지)', () => {
@@ -147,9 +151,9 @@ test('경계: fd 복제(2>&1, >&2, <&0)는 경로가 아님 — cd 하네스 안
 })
 
 test('경계: 하네스 폴더 판정 캐시가 GUGBAB_HOME 변경을 따라감', () => {
-  assert.strictEqual(level(`touch ${harness}/x`), 'ask')
-  assert.strictEqual(level(`touch ${harness}/x`, { env: {} }), null)
-  assert.strictEqual(level(`touch ${harness}/x`), 'ask')
+  assert.strictEqual(harnessAsk(`touch ${harness}/x`), true)
+  assert.strictEqual(harnessAsk(`touch ${harness}/x`, { env: {} }), false)
+  assert.strictEqual(harnessAsk(`touch ${harness}/x`), true)
 })
 
 test('경계: Bash 가 아닌 도구는 이 훅이 판정 안 함 (Edit·Write 는 auto-approve 담당)', () => {

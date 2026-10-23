@@ -176,6 +176,8 @@ function isExemptPath(filePath, cwd) {
   if (HOME && (v === '~' || v.startsWith('~/'))) v = HOME + v.slice(1)
   let abs
   try { abs = path.resolve(cwd || process.env.CLAUDE_PROJECT_DIR || process.cwd(), v) } catch { return false }
+  // 이 훅의 승인 상태 폴더는 임시 폴더 안이지만 예외가 아니다 — Write 로 approved:true 를 써 넣는 자기 승인 차단 (2026-10-22, 윈도우 분기와 같게)
+  if (inStateDir(abs)) return false
   if (/^\/(?:private\/)?(?:tmp|var\/folders)\//.test(abs)) return true
   if (HOME) {
     // 래퍼 설정 폴더의 projects/·plans/ 는 ~/.claude 쪽 링크 — 실제 위치로도 한 번 더 본다
@@ -189,6 +191,28 @@ function isExemptPath(filePath, cwd) {
     }
   }
   return false
+}
+
+// 경로가 승인 상태 폴더(또는 그 폴더 자체) 안인가 — `/var` ↔ `/private/var` 링크, 맥 기본 파일 시스템의 대소문자 무시까지
+// 실제 위치(realpath.native)로 비교한다. 상태 폴더가 아직 없으면 그 부모(임시 폴더)의 실경로 + 이름으로
+function inStateDir(abs) {
+  const nat = (p) => { try { return fs.realpathSync.native(p) } catch { return null } }
+  const locate = (p) => { // 가장 가까운 실제 존재하는 상위 폴더의 실표기 + 나머지
+    let cur = p
+    const rest = []
+    for (let i = 0; i < 256; i++) {
+      const r = nat(cur)
+      if (r) return path.join(r, ...rest.reverse())
+      const up = path.dirname(cur)
+      if (up === cur) return null
+      rest.push(path.basename(cur))
+      cur = up
+    }
+    return null
+  }
+  const fold = (p) => (process.platform === 'darwin' ? p.toLowerCase() : p)
+  const bases = [STATE_DIR, locate(STATE_DIR)].filter(Boolean).map(fold)
+  return [abs, locate(abs)].filter(Boolean).map(fold).some(x => bases.some(b => x === b || x.startsWith(b + path.sep)))
 }
 
 // ~/.claude 와 그 실경로 (홈 아래가 링크인 환경 대비)

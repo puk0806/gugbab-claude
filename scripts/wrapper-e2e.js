@@ -312,6 +312,43 @@ async function main() {
   check('wrapper-version-check 안내 없음 (세션 커밋 = 설치본 커밋)', 0, (UP.match(/wrapper-version-check/g) || []).length);
   check('세션 시작 때 "하네스 v9.0.0 → v9.0.1 로 업데이트됐습니다" 안내', true, UP.includes('하네스 v9.0.0 → v9.0.1 로 업데이트됐습니다'));
 
+  console.log('== 5. 세션이 켜져 있는 동안 하루가 지나면 자동 업데이트 (2026-10-23)');
+  // 원격에 v9.0.2 를 올리고, 확인 시각을 10분 전으로 → 실행 때는 건너뜀. 세션이 뜬 뒤 확인 시각을 25시간 전으로 돌리고 질문 1
+  // → wrapper-version-check 가 뒤에서 self-update → v9.0.2. 질문 2 에서 "업데이트됐습니다" 안내 (한 세션 — stream-json 입력)
+  fs.writeFileSync(path.join(SRC, 'VERSION'), '9.0.2\n');
+  git(SRC, ['commit', '-qam', 'v9.0.2']); git(SRC, ['tag', 'v9.0.2']); git(SRC, ['push', '-q', path.join(U, 'origin.git'), 'main', 'v9.0.2']);
+  const v902 = git(SRC, ['rev-parse', 'HEAD']);
+  const stampFile = path.join(U, 'data', 'state', 'update-check.json');
+  fs.writeFileSync(stampFile, JSON.stringify({ at: Date.now() - 10 * 60 * 1000 }));
+  const sleep = (ms) => new Promise(res => setTimeout(res, ms));
+  const waitFor = async (pred, ms) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { if (pred()) return true; await sleep(200); } return false; };
+  const headOfH = () => { try { return git(path.join(U, 'harness'), ['rev-parse', 'HEAD']); } catch { return '?'; } };
+  const [sf, spre] = wrapperCmd(path.join(U, 'harness'));
+  const sc = spawn(sf, [...spre, '-p', '--input-format', 'stream-json', '--output-format', 'stream-json', '--verbose', '--model', MODEL, '--max-turns', '4'], { cwd: A, env, stdio: ['pipe', 'pipe', 'pipe'] });
+  let SO = '';
+  sc.stdout.on('data', d => { SO += d; }); sc.stderr.on('data', d => { SO += d; });
+  const send = (text) => sc.stdin.write(JSON.stringify({ type: 'user', message: { role: 'user', content: [{ type: 'text', text }] } }) + '\n');
+  const results = () => (SO.match(/"type":"result"/g) || []).length;
+  if (!(await waitFor(() => SO.includes('"subtype":"init"'), 15000))) await sleep(8000); // init 이 첫 질문 뒤에 오는 버전 — 래퍼 준비 시간
+  check('실행 때는 1시간 안이라 업데이트하지 않음 (아직 v9.0.1)', true, headOfH() !== v902);
+  fs.writeFileSync(stampFile, JSON.stringify({ at: Date.now() - 25 * 60 * 60 * 1000 }));
+  send('1 이라고만 답해');
+  await waitFor(() => results() >= 1, 180000);
+  check('세션 중 자동 업데이트 v9.0.1 → v9.0.2 (질문 1 뒤)', v902, (await waitFor(() => headOfH() === v902, 30000)) ? v902 : headOfH());
+  send('2 라고만 답해');
+  await waitFor(() => results() >= 2, 180000);
+  sc.stdin.end();
+  await waitFor(() => sc.exitCode !== null, 30000);
+  let notified = null;
+  try {
+    const UD = path.join(U, 'data', 'projects');
+    const id = JSON.parse(fs.readFileSync(path.join(UD, 'index.json'), 'utf8'))[real(A)];
+    notified = fs.readFileSync(path.join(UD, id, '.claude', '.gugbab-update-notified'), 'utf8').trim();
+  } catch { /* 없음 */ }
+  check('질문 2 에서 "업데이트됐습니다" 안내 (안내한 커밋 기록)', v902, notified);
+  check('-p 라 끝날 때 "다음 실행부터 반영" 안내 (재시작 표시 처리)', true, SO.includes('하네스가 바뀌었습니다'));
+  check('업데이트 잠금이 남지 않음', false, fs.existsSync(path.join(U, 'data', 'state', 'update.lock')));
+
   console.log('');
   console.log(`wrapper-e2e: 성공 ${PASS} · 실패 ${FAIL}${UNDECIDED ? ` · 판정 불가 ${UNDECIDED}(모델 거절 — 훅은 단위 테스트가 본다)` : ''} (${MODE}, ${process.platform})`);
   process.exitCode = FAIL === 0 ? 0 : 1;

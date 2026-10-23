@@ -15,6 +15,8 @@
  *        예전 래퍼의 재시작은 여전히 값을 넘기지 않아 매번 다시 시작하게 되므로)
  *   ② 값이 HEAD 와 다름 = 세션 도중(다른 세션 등에서) 하네스가 업데이트됨
  *      → 설정 폴더에 재시작 표시(.gugbab-restart)를 남겨 /exit 하면 래퍼가 새 버전으로 대화를 이어서 다시 띄우게 하고 안내
+ *   ③ UserPromptSubmit (2026-10-23) — 세션이 켜져 있는 동안 마지막 업데이트 확인에서 24시간이 지났으면 self-update 를 뒤에서 띄워
+ *      자동 업데이트하고, 이 세션이 열린 뒤 하네스가 바뀌었으면 커밋마다 한 번 안내 + 재시작 표시 (아래 promptCheck)
  *   건너뜀: 개발 모드(GUGBAB_DEV≠0), 래퍼가 조립한 설정 폴더가 아님. ①②는 커밋을 알 수 없음(unknown·형식 틀림)·git 실패여도 건너뜀(⓪은 그대로)
  *
  *   입력 환경: GUGBAB_DEV · GUGBAB_HOME(하네스 폴더) · GUGBAB_DATA(데이터 폴더, 없으면 하네스 폴더) · GUGBAB_LAUNCH · GUGBAB_WRAPPER_REV · CLAUDE_CONFIG_DIR
@@ -104,6 +106,7 @@ function checkResultText(rec, ver, now) {
     case 'local-changes': return `하네스 ${v} — 하네스 폴더에 로컬 변경이 있어 업데이트하지 않았습니다 (\`gugbab-claude doctor\`)`
     case 'not-ff': return `하네스 ${v} — 원격 이력이 달라 업데이트하지 않았습니다 (\`gugbab-claude doctor\`)`
     case 'failed': case 'error': return `하네스 ${v} — 업데이트 중 오류가 나 지금 버전으로 실행합니다 (\`gugbab-claude doctor\`)`
+    case 'locked': return `하네스 ${v} — 다른 세션이 업데이트 중이라 이번엔 확인을 건너뛰었습니다`
     case 'no-tag': case 'no-target': case 'not-git': case 'bad-branch':
       return `하네스 ${v} — 업데이트를 확인하지 못했습니다 (${rec.result}, \`gugbab-claude doctor\`)`
     default: return null
@@ -149,6 +152,7 @@ function checkWrapperVersion({ env = process.env, headOf = defaultHeadOf, source
   if (!SHA_RE.test(rev) || rev === head) return res
   res.kind = 'updated-during-session'
   res.marked = markRestart(cfgDir)
+  markNotified(cfgDir, head) // 다음 질문(UserPromptSubmit)에서 같은 안내를 반복하지 않게
   res.message = `이 세션이 열린 뒤 ${harness}가 업데이트됐습니다 (${rev.slice(0, 7)} → ${head.slice(0, 7)}). ` +
     (res.marked
       ? '`/exit` 하면 래퍼가 새 버전으로 대화를 이어서(--continue) 다시 시작합니다.'
@@ -156,7 +160,78 @@ function checkWrapperVersion({ env = process.env, headOf = defaultHeadOf, source
   return res
 }
 
-module.exports = { checkWrapperVersion, wrapperConfigDir, markRestart }
+// ── 세션 중 자동 업데이트 (2026-10-23) ──
+// 래퍼는 실행할 때만 업데이트를 확인하므로(1시간 간격), 며칠씩 켜 둔 세션은 새 버전을 받지 못했다.
+// UserPromptSubmit 마다 마지막 확인 시각(<데이터>/state/update-check.json)만 읽고, 24시간이 지났으면
+// 시작할 때와 같은 `node <하네스>/cli/main.js self-update` 를 뒤에서 따로 띄운다(질문은 기다리지 않음 — fetch·checkout 은 그쪽에서).
+// 실제 판정(채널·버전 고정·로컬 변경·fast-forward·잠금)은 self-update 가 그대로 한다. 바뀐 하네스는 다음 질문에서 아래 안내로 알린다
+const SESSION_INTERVAL_MS = 24 * 60 * 60 * 1000
+function defaultSpawnUpdate(home, env) {
+  const { spawn } = require('child_process')
+  const childEnv = { ...env }
+  delete childEnv.GUGBAB_LAUNCH // 이 세션 시작 기록(last-check.json)을 덮어쓰지 않게
+  const child = spawn(process.execPath, [path.join(home, 'cli', 'main.js'), 'self-update'], { cwd: home, env: childEnv, detached: true, stdio: 'ignore', windowsHide: true })
+  child.on('error', () => {})
+  child.unref()
+}
+
+function maybeSessionUpdate({ env = process.env, now = Date.now(), spawnUpdate = defaultSpawnUpdate } = {}) {
+  if (env.GUGBAB_DEV !== '0') return 'dev'
+  if (!wrapperConfigDir(env.CLAUDE_CONFIG_DIR)) return 'not-wrapper'
+  const home = env.GUGBAB_HOME
+  if (typeof home !== 'string' || !path.isAbsolute(home)) return 'no-home'
+  try { if (!fs.lstatSync(path.join(home, 'cli', 'main.js')).isFile()) return 'no-cli' } catch { return 'no-cli' }
+  const dataDir = typeof env.GUGBAB_DATA === 'string' && path.isAbsolute(env.GUGBAB_DATA) ? env.GUGBAB_DATA : home
+  const rec = readRecord(path.join(dataDir, 'state', 'update-check.json'))
+  const last = rec ? Number(rec.at) : NaN
+  // 미래 시각·깨진 값은 확인할 때가 된 것으로 본다 (self-update 의 1시간 판정과 같은 방향)
+  if (Number.isFinite(last) && last > 0 && last <= now && now - last < SESSION_INTERVAL_MS) return 'recent'
+  try { spawnUpdate(home, env) } catch { return 'spawn-failed' }
+  return 'spawned'
+}
+
+// 세션 도중 업데이트 안내는 하네스 커밋마다 한 번 — 설정 폴더의 .gugbab-update-notified 에 알린 커밋을 남긴다
+function notifiedHead(cfgDir) {
+  try {
+    const f = path.join(cfgDir, '.gugbab-update-notified')
+    const st = fs.lstatSync(f)
+    if (!st.isFile() || st.size > 100) return null
+    return fs.readFileSync(f, 'utf8').trim()
+  } catch { return null }
+}
+function markNotified(cfgDir, head) {
+  const f = path.join(cfgDir, '.gugbab-update-notified')
+  try { if (!fs.lstatSync(f).isFile()) return false } catch { /* 없음 → 새로 */ }
+  const tmp = `${f}.${process.pid}.tmp`
+  try { fs.writeFileSync(tmp, head + '\n', { flag: 'wx' }); fs.renameSync(tmp, f); return true } catch {
+    try { if (fs.lstatSync(tmp).isFile()) fs.rmSync(tmp) } catch { /* 없음 */ }
+    return false
+  }
+}
+
+// UserPromptSubmit: 자동 업데이트를 띄우고, 이 세션이 열린 뒤 하네스가 바뀌었으면(커밋당 한 번) 안내
+function promptCheck({ env = process.env, headOf = defaultHeadOf, now = Date.now(), spawnUpdate } = {}) {
+  const res = { update: null, message: null }
+  try { res.update = maybeSessionUpdate({ env, now, spawnUpdate }) } catch { /* 무시 */ }
+  if (env.GUGBAB_DEV !== '0') return res
+  const cfgDir = wrapperConfigDir(env.CLAUDE_CONFIG_DIR)
+  const home = env.GUGBAB_HOME
+  const rev = env.GUGBAB_WRAPPER_REV
+  if (!cfgDir || typeof home !== 'string' || !path.isAbsolute(home) || !SHA_RE.test(rev || '')) return res
+  let head
+  try { head = headOf(home) } catch { return res }
+  if (!SHA_RE.test(head || '') || head === rev) return res
+  if (notifiedHead(cfgDir) === head) return res
+  markNotified(cfgDir, head)
+  const marked = markRestart(cfgDir)
+  const ver = versionOf(home)
+  res.message = `이 세션이 열린 뒤 ${ver ? `하네스 ${ver}` : '하네스'}로 업데이트됐습니다 (${rev.slice(0, 7)} → ${head.slice(0, 7)}). ` +
+    '이미 연결된 훅·스킬·커맨드는 지금부터 새 버전으로 동작하고, 룰·CLAUDE.md·에이전트·설정은 ' +
+    (marked ? '`/exit` 하면 래퍼가 새 버전으로 대화를 이어서(--continue) 다시 시작할 때 반영됩니다.' : '`/exit` 후 터미널에서 `gugbab-claude -c` 로 다시 실행하면 반영됩니다.')
+  return res
+}
+
+module.exports = { checkWrapperVersion, wrapperConfigDir, markRestart, maybeSessionUpdate, promptCheck, SESSION_INTERVAL_MS }
 
 if (require.main === module) {
   const hardStop = setTimeout(() => process.exit(0), 3000) // SessionStart 지연 상한
@@ -166,6 +241,15 @@ if (require.main === module) {
   let input
   try { input = JSON.parse(raw) } catch { process.exit(0) }
   const event = input && (input.hook_event_name || input.hookEventName)
+  if (event === 'UserPromptSubmit') {
+    let p
+    try { p = promptCheck() } catch { process.exit(0) }
+    if (p && p.message) {
+      const text = `[wrapper-version-check] ${p.message}`
+      process.stdout.write(JSON.stringify({ hookSpecificOutput: { hookEventName: 'UserPromptSubmit', additionalContext: `${text}\n이 내용을 이번 답변 맨 위에 사용자에게 한 번 알려 주세요.` } }) + '\n')
+    }
+    process.exit(0)
+  }
   if (event !== 'SessionStart') process.exit(0)
   const source = typeof input.source === 'string' ? input.source : 'startup'
   let r

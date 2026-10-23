@@ -676,6 +676,7 @@
     "hook:bash-guard>hook:branch-protection": "code",
     "hook:bash-guard>hook:memory-sync": "mention",
     "hook:bash-guard>hook:protect-secrets": "code",
+    "hook:bash-guard>hook:task-confirm-guard": "mention",
     "hook:bash-guard>hook:verification-guard": "mention",
     "hook:branch-protection>hook:bash-guard": "code",
     "hook:deliverable-guard>hook:memory-sync": "code",
