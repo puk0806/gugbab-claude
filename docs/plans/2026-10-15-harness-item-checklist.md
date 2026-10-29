@@ -1,6 +1,6 @@
 # gugbab 하네스 항목 체크리스트 — 고정 / 켜고 끄기 선택
 
-> 최종 수정: 2026-10-19 · 상태: **사용자 체크 반영** (고정 35 · 켬 70 · 끔 216 — 사용자 체크 45개 + 묶음 정리 규칙 적용(계획서 14.5) + 새 훅 relation-guard · parallel-hint · claude-version-check · release-version-guard · wrapper-version-check) · 기준: 현재 레포 실측 (훅 32 + 상태줄 1 · 룰 14 · 커맨드 11 + `/harness` · 에이전트 61 · 스킬 195)
+> 최종 수정: 2026-10-29 · 상태: **사용자 체크 반영** (고정 35 · 켬 53 · 끔 233 — 2026-10-29 스택 전용 에이전트 12개와 spec-extraction-method·/spec-extract·룰 java.md·typescript.md·rust.md 기본 끔(프리셋으로 켬) · 이전: 고정 35 · 켬 70 · 끔 216 — 사용자 체크 45개 + 묶음 정리 규칙 적용(계획서 14.5) + 새 훅 relation-guard · parallel-hint · claude-version-check · release-version-guard · wrapper-version-check) · 기준: 현재 레포 실측 (훅 32 + 상태줄 1 · 룰 14 · 커맨드 11 + `/harness` · 에이전트 61 · 스킬 195)
 > 짝 문서: `docs/plans/2026-10-15-gugbab-claude-shim-wrapper.md`
 
 ## 체크하는 법
@@ -241,12 +241,12 @@
   - 하는 일: 테스트에 정상 케이스 + 악성 유저 공격(인젝션·권한 우회·중복 제출 등) + 이상·경계 입력(빈 값·초장문·동시 요청)을 모두 넣게 하고, 테스트 통과용 가짜 구현을 금지한다. 공격 시나리오 체크리스트가 들어 있다.
   - 이렇게 보여요: "로그인 API 테스트 써줘" 하면 성공 케이스와 함께 SQL 인젝션·잠금·빈 값 테스트까지 만든다.
   - 연관: dev-quality 묶음(8장 A)
-- [ ] **typescript.md** (기본 켬) — TypeScript·React 코딩 규칙
-  - 하는 일: TS·React 코드 작성 규칙. `*.ts`·`*.tsx` 를 다룰 때만 읽혀서 다른 프로젝트에는 영향이 없다.
-- [ ] **java.md** (기본 켬) — Java 코딩 규칙
-  - 하는 일: Java·Spring 코드 작성 규칙. `*.java`·gradle·pom 을 다룰 때만 읽힌다.
-- [ ] **rust.md** (기본 켬) — Rust 코딩 규칙
-  - 하는 일: Rust 코드 작성 규칙. `*.rs`·`Cargo.toml` 을 다룰 때만 읽힌다.
+- [ ] **typescript.md** (기본 끔) — TypeScript·React 코딩 규칙
+  - 하는 일: TS·React 코드 작성 규칙. `*.ts`·`*.tsx` 를 다룰 때만 읽혀서 다른 프로젝트에는 영향이 없다. `nextjs`·`dream`·`fortune`·`health` 프리셋을 고르거나 TS 백엔드 에이전트를 켜면 켜진다.
+- [ ] **java.md** (기본 끔) — Java 코딩 규칙
+  - 하는 일: Java·Spring 코드 작성 규칙. `*.java`·gradle·pom 을 다룰 때만 읽힌다. `java-legacy`·`java-modern` 프리셋을 고르면 켜진다.
+- [ ] **rust.md** (기본 끔) — Rust 코딩 규칙
+  - 하는 일: Rust 코드 작성 규칙. `*.rs`·`Cargo.toml` 을 다룰 때만 읽힌다. `rust` 프리셋을 고르면 켜진다.
 - [ ] **codex-review.md** (기본 켬) — Codex 리뷰 진행 방법
   - 하는 일: Codex 리뷰 실행 조건 3가지(CLI 설치·로그인·플러그인), 라운드 진행, 지적별 ACCEPT/REJECT 판정, 완료·사용 불가 표시 파일 기록 방법을 정한다.
   - 연관: codex-review 묶음
@@ -311,7 +311,7 @@
 - [ ] **/codex-review** (기본 켬) — Codex 리뷰를 원할 때 실행
   - 하는 일: codex-review 룰의 절차대로 커밋 안 한 변경 전체를 Codex 에게 최대 3라운드 리뷰받는다.
   - 연관: codex-review 묶음
-- [ ] **/spec-extract** (기본 켬) — 레거시 코드에서 스펙 문서 추출
+- [ ] **/spec-extract** (기본 끔) — 레거시 코드에서 스펙 문서 추출
   - 하는 일: 지정한 범위(레포·모듈·화면)의 레거시 코드에서 화면·API·데이터·규칙 명세를 뽑아 `docs/spec/` 에 문서로 남긴다. 소스는 고치지 않는다.
   - 연관: 에이전트 `legacy-spec-extractor`·`spec-reviewer`, 스펙 추출 스킬 4종(spec-extraction 묶음)
 
@@ -481,7 +481,7 @@
   - 예시 요청: 운세 앱 시스템 프롬프트 v0.3 평가해줘. 타워 카드 나올 때 겁주는 말이 나오는지 봐줘
   - 주의: 운세 앱 전용이며, 전통 상징 설명 자체는 감점하지 않고 미래 단정만 문제 삼습니다.
   - 쓰는 스킬: fortune-interpretation-prompt-engineering, korean-saju-tradition, palmistry-limitations, tarot-history-symbolism
-- [ ] **migration-parity-tester** (기본 켬) — 마이그레이션 전후 결과가 같은지 확인하는 테스트 작성 에이전트 · 모델 `sonnet`
+- [ ] **migration-parity-tester** (기본 끔 · 해당 스택/앱 모듈에서 켬) — 마이그레이션 전후 결과가 같은지 확인하는 테스트 작성 에이전트 · 모델 `sonnet`
   - 하는 일: 변환 문서와 스펙 문서를 읽고, 기존 시스템(넥사크로 화면·레거시 API)과 새 시스템(Next.js·REST API)에 같은 입력을 넣어 조회 결과, 행 추가·수정·삭제 저장 결과, 오류 처리가 같은지 비교하는 테스트 코드를 만듭니다. 비로그인 접근, 남의 데이터 ID 조작, 위조된 저장 요청 같은 공격 테스트와 빈 값·긴 문자열 같은 경계 테스트도 함께 넣습니다. 테스트 파일을 직접 쓰고 실행할 수 있으며(Write·Edit·Bash 보유), 결과가 다른 항목은 docs/migration/parity 폴더에 차이 보고서로 남깁니다.
   - 이럴 때: 옛 화면이나 API를 새 기술로 옮긴 뒤, 예전과 똑같이 동작하는지와 옮기면서 보안 구멍이 생기지 않았는지 증명해야 할 때 씁니다.
   - 예시 요청: 이 화면 옮긴 거 기존 넥사크로 화면이랑 저장 결과 같은지 비교 테스트 만들어줘
@@ -522,7 +522,7 @@
   - 이럴 때: 새 라이브러리나 블로그 글, 저장소를 참고 자료로 쓰기 전에 믿을 만한지 먼저 확인하고 싶을 때 씁니다.
   - 예시 요청: 이 GitHub 저장소 믿고 써도 되는지 확인해줘 https://github.com/xxx/yyy
   - 주의: 한 번에 출처 하나만 평가하며, 판단이 애매하면 CAUTION으로 판정합니다.
-- [ ] **spec-reviewer** (기본 켬) — 레거시 코드에서 뽑은 스펙 문서를 검토하는 에이전트 · 모델 `sonnet`
+- [ ] **spec-reviewer** (기본 끔 · 해당 스택/앱 모듈에서 켬) — 레거시 코드에서 뽑은 스펙 문서를 검토하는 에이전트 · 모델 `sonnet`
   - 하는 일: docs/spec 폴더에 있는 레거시 스펙 문서를 받아, 각 행에 근거(파일:줄)가 붙어 있는지, 표본으로 근거를 실제로 열었을 때 내용이 맞는지, 필수 칸이 비었는지, 테이블별 CRUD(생성·조회·수정·삭제) 표가 빠짐없는지, 화면→API→SQL 연결이 끊긴 곳은 없는지 점검합니다. 비밀번호·접속 정보가 문서에 들어갔는지도 확인합니다. 결과는 위치와 이유가 붙은 지적표와 PASS / NEEDS_REVISION 판정으로 내며, 문서나 코드는 고치지 않습니다.
   - 이럴 때: legacy-spec-extractor 같은 에이전트가 만든 스펙 문서를 마이그레이션에 쓰기 전에 근거가 정확한지 확인할 때 씁니다.
   - 예시 요청: docs/spec 에 뽑아 둔 주문 모듈 스펙 근거가 맞는지 검토해줘
@@ -531,21 +531,21 @@
 
 ### 5.4 프론트엔드 (3)
 
-- [ ] **frontend-architect** (기본 켬) — 웹 화면 프로젝트의 구조와 기술 선택을 조언하는 설계 에이전트 · 모델 `opus`
+- [ ] **frontend-architect** (기본 끔 · 해당 스택/앱 모듈에서 켬) — 웹 화면 프로젝트의 구조와 기술 선택을 조언하는 설계 에이전트 · 모델 `opus`
   - 하는 일: React·Next.js 프로젝트에 대한 질문을 받아 폴더 구조, 기술 선택, 화면을 어디서 그릴지(렌더링 전략), 데이터 가져오기, 빌드 설정 같은 큰 그림을 제안합니다. 저장소에 있는 스킬 문서를 먼저 읽고, 필요하면 공식 문서를 웹에서 찾아 근거와 장단점을 함께 답합니다. 코드나 파일은 쓰거나 고치지 않고 답변만 합니다.
   - 이럴 때: 프론트엔드 프로젝트를 어떻게 나누고 어떤 방식을 쓸지 결정해야 할 때 씁니다.
   - 예시 요청: Next.js 앱에서 데이터 페칭 전략을 어떻게 설계해야 할까?
   - 주의: 모델이 opus라 비용이 크며, 실제 컴포넌트 코드는 frontend-developer가 작성합니다.
   - 쓰는 스킬: bundle-size-analysis, bundling-compiler, core-web-vitals-optimization, ddd, frontend-domain-structure, incremental-refactoring, module-boundaries, monorepo-turborepo, nextjs, state-management, tanstack-query, typescript-v4, typescript-v5, vite-advanced-splitting
   - 연결 에이전트: frontend-developer
-- [ ] **frontend-developer** (기본 켬) — React·Next.js 화면 코드를 직접 작성·수정하는 에이전트 · 모델 `sonnet`
+- [ ] **frontend-developer** (기본 끔 · 해당 스택/앱 모듈에서 켬) — React·Next.js 화면 코드를 직접 작성·수정하는 에이전트 · 모델 `sonnet`
   - 하는 일: 요청을 받아 컴포넌트, 커스텀 훅, API(서버 호출) 연동, 입력 폼, 애니메이션 등 실제 코드를 프로젝트에 직접 만들거나 고칩니다. 작성 전 기존 코드 방식과 관련 스킬 문서를 확인하고, 작성 후 `tsc --noEmit`으로 타입 오류를 검사해 고칩니다. 끝나면 바뀐 파일 목록을 보고합니다.
   - 이럴 때: 웹 화면 기능을 실제로 구현하거나 TypeScript 타입 오류를 고쳐야 할 때 씁니다.
   - 예시 요청: 로그인 폼 컴포넌트 만들어줘. React Hook Form + Zod 쓸게
   - 주의: 구조 결정은 하지 않으며, 같은 타입 오류가 3번 시도해도 안 풀리면 시도 내역을 보고하고 멈춥니다.
   - 쓰는 스킬: ag-grid, animation, bundling-compiler, chat-ui-pattern, code-convention, design-token-scss, e2e-testing, form-handling, frontend-domain-structure, incremental-refactoring, indexeddb-dexie, module-boundaries, mui-v5, mui-v9, nextjs, recoil-to-zustand-migration, seo-nextjs, seo-static-html, seo-vite-spa, state-management, storybook, swiper, tanstack-query, tanstack-query-v4-to-v5-migration, testing, typescript-v4, typescript-v5, wcag-2.2-checklist, webpack-vite-config-mapping
   - 연결 에이전트: frontend-domain-refactorer, frontend-architect
-- [ ] **nexacro-screen-converter** (기본 켬) — 넥사크로 화면을 Next.js 화면 초안으로 바꾸는 에이전트 · 모델 `sonnet`
+- [ ] **nexacro-screen-converter** (기본 끔 · 해당 스택/앱 모듈에서 켬) — 넥사크로 화면을 Next.js 화면 초안으로 바꾸는 에이전트 · 모델 `sonnet`
   - 하는 일: 넥사크로 17 화면 파일과 분석·명세 결과를 받아 정해진 대응 규칙대로 Next.js 페이지, 컴포넌트, 서버 호출 코드, 입력 검사 규칙, AG Grid(표 라이브러리) 설정 초안을 직접 만듭니다. 원본과 동작이 다를 수 있는 곳은 TODO로 표시하고, 원본 요소와 새 코드 위치를 대응시킨 변환표를 docs/migration/converted/ 에 남깁니다. 원본 넥사크로 파일은 고치지 않습니다.
   - 이럴 때: 넥사크로 화면을 새 Next.js 시스템으로 하나씩 옮기기 시작할 때 씁니다.
   - 예시 요청: 이 넥사크로 조회 화면을 Next.js 페이지로 옮겨줘
@@ -567,13 +567,13 @@
   - 주의: ORM(코드로 DB를 다루는 도구) 선택과 모델 코드 작성은 하지 않고 백엔드 에이전트에 넘깁니다.
   - 쓰는 스킬: dream-journal-data-modeling, drizzle-neon-postgres, saju-tarot-data-modeling
   - 연결 에이전트: qa-engineer
-- [ ] **java-backend-architect** (기본 켬) — Java·Spring Boot 백엔드 구조를 결정하는 설계 에이전트 · 모델 `sonnet`
+- [ ] **java-backend-architect** (기본 끔 · 해당 스택/앱 모듈에서 켬) — Java·Spring Boot 백엔드 구조를 결정하는 설계 에이전트 · 모델 `sonnet`
   - 하는 일: 질문과 프로젝트 설정(build.gradle 등)을 읽고 레거시(Java 11·Spring Boot 2.5)인지 모던(Java 21·Spring Boot 3.x)인지 먼저 판별한 뒤, 모듈 구조·여러 DB 연결·캐시 계층·보안·트랜잭션·업그레이드 가능성에 대해 근거와 장단점이 담긴 제안을 냅니다. 파일을 수정하지 않고 다른 에이전트도 부르지 않습니다.
   - 이럴 때: Oracle과 MySQL을 함께 쓰는 구성이나 Spring Boot 2에서 3으로 올릴지 같은 구조적 결정이 필요할 때 씁니다.
   - 예시 요청: Spring Boot 2.5 레거시를 3.x로 올릴 수 있을지 판단해줘
   - 주의: 실제 구현 코드는 쓰지 않으며 코드 작성은 java-backend-developer가 맡습니다.
   - 연결 에이전트: java-backend-developer
-- [ ] **java-backend-developer** (기본 켬) — Java·Spring Boot 백엔드 코드를 작성·수정하는 에이전트 · 모델 `sonnet`
+- [ ] **java-backend-developer** (기본 끔 · 해당 스택/앱 모듈에서 켬) — Java·Spring Boot 백엔드 코드를 작성·수정하는 에이전트 · 모델 `sonnet`
   - 하는 일: 요청과 프로젝트 설정을 읽어 컨트롤러·서비스·MyBatis 매퍼(SQL 연결 파일)·보안 설정 등 실제 코드를 직접 만들고 고칩니다. 관련 스킬 문서의 패턴을 따르고, ./gradlew compileJava로 컴파일을 확인하며 최대 3번까지 고쳐 봅니다. 다른 에이전트는 부르지 않습니다.
   - 이럴 때: Spring Boot 프로젝트에 API를 새로 만들거나 컴파일·실행 에러를 고쳐야 할 때 씁니다.
   - 예시 요청: 회원 조회 API 만들어줘. MyBatis랑 Oracle 써
@@ -607,14 +607,14 @@
   - 주의: 구조 결정은 하지 않고, 근거 없는 unsafe 코드나 검증 안 된 크레이트는 쓰지 않습니다.
   - 쓰는 스킬: axum, multipart-upload, reqwest, sse-streaming, tower-http
   - 연결 에이전트: rust-backend-architect
-- [ ] **typescript-backend-architect** (기본 켬) — Node.js·TypeScript 백엔드 구조를 결정하는 설계 에이전트 · 모델 `sonnet`
+- [ ] **typescript-backend-architect** (기본 끔 · 해당 스택/앱 모듈에서 켬) — Node.js·TypeScript 백엔드 구조를 결정하는 설계 에이전트 · 모델 `sonnet`
   - 하는 일: 서비스 설명이나 PRD(기능 명세서)를 받아 실행 환경(Node.js·Bun·Deno), 웹 프레임워크, ORM, 입력 검증, 인증, 캐시, LLM(대형 언어 모델) 연동, 테스트, 배포까지 결정하고 근거와 장단점을 정리한 문서를 냅니다. 버전은 매번 웹 검색으로 확인합니다. 파일을 수정하지 않고 다른 에이전트도 부르지 않습니다.
   - 이럴 때: Express·Fastify·Hono 중 무엇을 쓸지, Prisma와 Drizzle 중 무엇을 고를지 같은 결정이 필요할 때 씁니다.
   - 예시 요청: Prisma랑 Drizzle 중에 뭐 쓸지 골라줘. PostgreSQL 써
   - 주의: 코드는 절대 쓰지 않으며, Next.js와 같은 저장소면 모노레포(여러 앱을 한 저장소에 두는 방식)를 기본 권장합니다.
   - 쓰는 스킬: claude-api-streaming-frontend, tsup
   - 연결 에이전트: database-architect, typescript-backend-developer, api-spec-designer, qa-engineer
-- [ ] **typescript-backend-developer** (기본 켬) — Node.js·TypeScript 백엔드 코드를 작성·수정하는 에이전트 · 모델 `sonnet`
+- [ ] **typescript-backend-developer** (기본 끔 · 해당 스택/앱 모듈에서 켬) — Node.js·TypeScript 백엔드 코드를 작성·수정하는 에이전트 · 모델 `sonnet`
   - 하는 일: 요청이 새 기능인지 에러 수정인지 나눈 뒤, 기존 코드 패턴을 읽고 라우터·입력 검증·DB 쿼리·인증·테스트 코드를 직접 만들거나 고칩니다. tsc(타입 검사), eslint(코드 검사), vitest(테스트)를 실행해 확인합니다. 다른 에이전트는 부르지 않습니다.
   - 이럴 때: Hono·Express 같은 서버에 API를 만들거나 TypeScript 타입 에러·실행 에러를 고칠 때 씁니다.
   - 예시 요청: Hono로 회원가입 엔드포인트 만들어줘. Zod랑 Drizzle 써
@@ -639,21 +639,21 @@
   - 예시 요청: 이 프로젝트 코드 보고 도메인 구조랑 의존성 방향 분석해줘
   - 주의: 모델이 opus라 비용이 크고, JavaScript·Python처럼 동적 언어는 import 문 기준 분석이라 한계가 있습니다.
   - 연결 에이전트: frontend-domain-refactorer
-- [ ] **frontend-domain-refactorer** (기본 켬) — React 코드를 도메인별 폴더로 옮기는 실행 계획 에이전트 · 모델 `opus`
+- [ ] **frontend-domain-refactorer** (기본 끔 · 해당 스택/앱 모듈에서 켬) — React 코드를 도메인별 폴더로 옮기는 실행 계획 에이전트 · 모델 `opus`
   - 하는 일: React·Next.js 코드베이스의 import 관계와 git 변경 이력을 분석해 도메인 경계를 찾고, 순환 참조 해소부터 시작하는 단계별 이동 계획서, 파일 이동 스크립트(codemod, 실행은 안 함), 경계 검사 규칙, 검증 스크립트를 docs/domain/ 아래에 만듭니다. 소스 파일은 직접 옮기지 않고 다른 에이전트도 부르지 않습니다.
   - 이럴 때: types/·utils/·hooks/ 폴더마다 같은 도메인이 흩어진 큰 프론트엔드 프로젝트를 기능별 폴더로 차근차근 재정리하고 싶을 때 씁니다.
   - 예시 요청: src 폴더를 도메인별로 재구성하고 싶어. 계획 짜줘
   - 주의: 모델이 opus이고 최대 40턴까지 돌아 비용이 크며, 계획만 만들고 실제 이동은 사람이나 frontend-developer가 합니다.
   - 쓰는 스킬: ddd, frontend-domain-structure, incremental-refactoring, module-boundaries, monorepo-turborepo, typescript-v4, typescript-v5
   - 연결 에이전트: codebase-domain-analyst, frontend-developer
-- [ ] **legacy-spec-extractor** (기본 켬) — 오래된 코드에서 현재 시스템 명세를 뽑아내는 총괄 에이전트 · 모델 `opus`
+- [ ] **legacy-spec-extractor** (기본 끔 · 해당 스택/앱 모듈에서 켬) — 오래된 코드에서 현재 시스템 명세를 뽑아내는 총괄 에이전트 · 모델 `opus`
   - 하는 일: 레거시(오래된) 코드베이스 경로를 받아 화면·API(서버 호출 창구)·데이터 사용·비즈니스 규칙·배치/외부 연동 명세를 문서로 만듭니다. 큰 코드는 모듈별로 나눠 다른 에이전트에게 맡긴 뒤 결과를 합치고, 마지막에 spec-reviewer 에이전트에게 검토를 받습니다. 모든 항목에 근거(파일:줄)와 확신도를 붙이며, 소스 코드는 고치지 않고 docs/spec/ 아래 문서만 씁니다.
   - 이럴 때: Java Spring·MyBatis, React, 넥사크로 같은 오래된 시스템을 새로 옮기거나 다시 만들기 전에 지금 무엇을 하는지 정리해야 할 때 씁니다.
   - 예시 요청: 이 레거시 어드민 레포 스펙 뽑아줘. 넥사크로 화면이랑 Spring 백엔드야
   - 주의: 모델이 opus이고 여러 에이전트를 함께 돌려 비용이 크며, 화면이 500개 이상이면 목록 정리까지만 하고 우선순위를 먼저 묻습니다.
   - 쓰는 스킬: nexacro-17-xfdl-anatomy, react-spec-extraction, spec-extraction-method, spring-mybatis-spec-extraction
   - 연결 에이전트: spec-reviewer
-- [ ] **nexacro-screen-analyzer** (기본 켬) — 넥사크로 화면별 옮기기 난이도와 전환 순서를 정리하는 에이전트 · 모델 `sonnet`
+- [ ] **nexacro-screen-analyzer** (기본 끔 · 해당 스택/앱 모듈에서 켬) — 넥사크로 화면별 옮기기 난이도와 전환 순서를 정리하는 에이전트 · 모델 `sonnet`
   - 하는 일: 넥사크로 17 프로젝트의 화면 파일(.xfdl)을 읽어 화면마다 데이터 묶음(Dataset), 서버 호출, 표(Grid) 기능, 팝업, 공통 함수 의존을 뽑습니다. 이를 바탕으로 난이도(상·중·하)를 매기고 어떤 순서로 옮길지 단계별 계획(웨이브)을 docs/migration/ 아래 문서로 만듭니다. 화면 코드는 고치지 않고 분석 문서만 씁니다.
   - 이럴 때: 수백~수천 개의 넥사크로 화면을 새 시스템으로 옮기기 전에 전체 규모와 순서를 잡고 싶을 때 씁니다.
   - 예시 요청: 넥사크로 화면 1,400개 마이그레이션 난이도 분류해줘
@@ -1822,7 +1822,7 @@
     - 예시 질문: 이 React 프로젝트에서 화면별로 어떤 API를 부르는지 표로 뽑아줘
     - 주의: 명세 양식과 공통 규칙은 spec-extraction-method 스킬을 따릅니다.
     - 쓰는 에이전트: legacy-spec-extractor
-  - [x] `spec-extraction-method` — 레거시 코드에서 스펙 뽑는 공통 방법론과 양식
+  - [ ] `spec-extraction-method` — 레거시 코드에서 스펙 뽑는 공통 방법론과 양식
     - 담은 내용: 기술 종류와 상관없이 레거시 코드에서 이관·재구축용 스펙을 뽑는 공통 방법론입니다. 역공학(재문서화·설계 복원), 현재 동작 고정 테스트, 다 옮기지 말라는 Feature Parity 경고, EventStorming으로 사람 검증, CRUD 매트릭스(데이터 생성·조회·수정·삭제 표), LLM 대규모 추출 규약, 명세 템플릿, 완료 기준을 다룹니다.
     - 이럴 때: 레거시 시스템 재구축 프로젝트를 시작하며 스펙 추출 방법과 문서 양식을 정할 때 꺼내 씁니다.
     - 예시 질문: 레거시 관리자 시스템을 새로 만들려는데 스펙 문서는 어떤 양식으로 뽑아야 해?
