@@ -5,12 +5,14 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 0693c72c-1709-4533-8cb9-8a3b20e52a64
-  modified: 2026-10-23T01:12:11.049Z
+  modified: 2026-10-29T02:01:52.509Z
 ---
 
-**상태 (2026-10-23 갱신)**: **shim 래퍼(`gugbab-claude`)로만 사용**(결정 27). main = `7b16841`(PR #45 v1.1.1 — 실사용 빈틈 4개), 설치본 `~/gugbab` = **v1.1.1**. 2026-10-23 PR v1.1.2 올림(lfmall 보고 약점 4곳 — [[project_harness_write_location_fix_2026-10-23]] + 세션 중 하루 한 번 자동 업데이트 — [[project_in_session_auto_update_2026-10-23]]). (stable, PR 마다 VERSION 올림 → 머지 때 자동 태그 — 결정 32). 2026-10-20~22 머지: PR #40 v1.0.12(설치 PATH 자동), #41 v1.0.13(/harness 창 자동 닫힘), #42 v1.0.14(결정 42·43), **#43 v1.0.15(윈도우 지원 결정 41 + 단위 테스트 CI `unit-tests` 맥·윈도우)** → 윈도우 지원 마무리로 **v1.1.0**(minor, 코드 변경 없음) PR. 개편 0~6단계 완료, 결정 1~43 은 계획서 13장 + [[project-shim-wrapper-direction]]. 옛 복사 설치(`project-install.sh`·템플릿 0~15)는 6단계에서 삭제됨. 다른 PC 에서 시작하면 계획서 페이지 https://claude.ai/artifact/U7vpKRXVemaNYYNhz8nNLj (계획서 + 항목 체크리스트) 와 `docs/DEFAULTS.md` 가 기본값·고정 목록 원본.
+**상태 (2026-10-23 갱신)**: **shim 래퍼(`gugbab-claude`)로만 사용**(결정 27). main = `cdda01c`(PR #46 v1.1.2 머지), 설치본 `~/gugbab` = **v1.1.2**(E2E node 57·sh 40·매트릭스 671 통과, lfmall 에 결과 전달). PR #46 내용(lfmall 보고 약점 4곳 — [[project_harness_write_location_fix_2026-10-23]] + 세션 중 하루 한 번 자동 업데이트 — [[project_in_session_auto_update_2026-10-23]]). (stable, PR 마다 VERSION 올림 → 머지 때 자동 태그 — 결정 32). 2026-10-20~22 머지: PR #40 v1.0.12(설치 PATH 자동), #41 v1.0.13(/harness 창 자동 닫힘), #42 v1.0.14(결정 42·43), **#43 v1.0.15(윈도우 지원 결정 41 + 단위 테스트 CI `unit-tests` 맥·윈도우)** → 윈도우 지원 마무리로 **v1.1.0**(minor, 코드 변경 없음) PR. 개편 0~6단계 완료, 결정 1~43 은 계획서 13장 + [[project-shim-wrapper-direction]]. 옛 복사 설치(`project-install.sh`·템플릿 0~15)는 6단계에서 삭제됨. 다른 PC 에서 시작하면 계획서 페이지 https://claude.ai/artifact/U7vpKRXVemaNYYNhz8nNLj (계획서 + 항목 체크리스트) 와 `docs/DEFAULTS.md` 가 기본값·고정 목록 원본.
 
-**자산 수 (manifest 실측 2026-10-20)**: 스킬 195 · 에이전트 61 · 훅 32 + statusline · 규칙 14 · 커맨드 12 · 설정 7 = 321 항목, 기본 고정 35 · 켬 70 · 끔 216. 검증 상태(10-16 기준) APPROVED 181 · PENDING_TEST 15(실사용 필수만) · NEEDS_REVISION 0.
+**2026-10-29 v1.1.3 PR (`feat/lfmall-sync-2026-10-29`)**: lfmall 변경 골라 반영 — [[project-lfmall-sync-2026-10-29]]. 기본값이 고정 35 · **켬 53 · 끔 233** 으로 바뀜(스택 전용 17개 끔). 설치본 시험은 임시 복제본에 시험용 커밋 + `install.sh --dir --bin-dir --no-modify-path` 임시 설치 → `wrapper-e2e.js --home`·`wrapper-matrix.js --home` 으로(커밋 전에도 가능). 고치기 전·후 실세션 비교는 stream-json 의 `init` 줄(agents·skills·slash_commands) — `anthropic-skills:*`·`extra-usage`·`usage-credits` 는 계정 쪽이라 실행마다 흔들리니 빼고 비교.
+
+**자산 수 (manifest 실측 2026-10-20)**: 스킬 195 · 에이전트 61 · 훅 32 + statusline · 규칙 14 · 커맨드 12 · 설정 7 = 321 항목, 기본 고정 35 · 켬 70 · 끔 216(→ 10-29 켬 53 · 끔 233). 검증 상태(10-16 기준) APPROVED 181 · PENDING_TEST 15(실사용 필수만) · NEEDS_REVISION 0.
 
 **남은 제안 (2026-10-20)**: `v*` 태그 보호 규칙(결정 28) · Codex 적대적 리뷰 맨 마지막 1회 · 🔒 고정 훅 비정상 종료 시 fail-closed · 디스패처가 프로젝트 훅 삭제를 실시간 반영 · 윈도우 지원은 2026-10-22 v1.0.15 로 머지 끝([[project-windows-support-analysis]] — 남은 결정: 계획서 :237 "맥에도 있는 것" 5건, 하면 좋은 것: M12 VS Code·M7 수동 update).
 
