@@ -183,6 +183,15 @@ test('경계: first-run 은 터미널이 아니면 묻지 않고 조용히 끝(e
   assert.ok(!fs.existsSync(path.join(s.data, 'projects', path.basename(s.proj), 'settings.json')));
 });
 
+test('경계: first-run — .gugbab.json 이 있어도 터미널이 아니면 안내 없이 조용히 끝, 표시 파일도 만들지 않음', () => {
+  const s = setup();
+  fs.writeFileSync(path.join(s.proj, '.gugbab.json'), '{}');
+  const r = run(s, ['first-run']);
+  assert.strictEqual(r.status, 0, r.stderr);
+  assert.strictEqual(r.stdout, '');
+  assert.ok(!fs.existsSync(path.join(s.data, 'projects', path.basename(s.proj), '.first-run-notice')));
+});
+
 test('악성: first-run 이 깨진 manifest 를 만나도 세션을 막지 않음(exit 0)', () => {
   const s = setup();
   fs.writeFileSync(path.join(s.code, 'manifest.json'), '{broken');

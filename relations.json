@@ -504,6 +504,9 @@
     ],
     "command:commit": [
       "rule:git.md"
+    ],
+    "agent:typescript-backend-developer": [
+      "rule:typescript.md"
     ]
   },
   "conflicts": [
@@ -519,7 +522,7 @@
     ]
   },
   "presets": {
-    "$comment": "지금 설치 템플릿을 블록·묶음 조합으로 다시 쓴 것 (계획서 14.4). TUI 의 p 키 / gugbab-claude preset <이름> 으로 한 번에 켬. 애드온은 다른 프리셋에 더함",
+    "$comment": "지금 설치 템플릿을 블록·묶음 조합으로 다시 쓴 것 (계획서 14.4). TUI 의 p 키 / gugbab-claude preset <이름> 으로 한 번에 켬. 프리셋마다 그 스택에 필요한 것만 담고 여러 개를 골라 조합한다 — 처음 실행은 \"1,5\" 처럼 쉼표로 여러 개. 애드온은 다른 프리셋에 더함 (2026-10-29 넥사크로 최소 구성)",
     "nextjs": { "title": "React·Next.js (+TS 백엔드)", "enable": ["block:dev-common", "block:frontend-core", "block:frontend-tooling", "block:ts-backend"] },
     "java-legacy": { "title": "Java Spring 레거시", "enable": ["block:dev-common", "block:java-common", "block:java-legacy"] },
     "java-modern": { "title": "Java Spring 모던", "enable": ["block:dev-common", "block:java-common", "block:java-modern"] },
@@ -529,13 +532,14 @@
     "dream": { "title": "꿈 해몽 앱", "enable": ["block:frontend-core", "block:frontend-tooling", "block:ai-app", "block:dream"] },
     "fortune": { "title": "운세 앱", "enable": ["block:frontend-core", "block:frontend-tooling", "block:ai-app", "block:fortune"] },
     "health": { "title": "건강·식단 앱", "enable": ["block:frontend-core", "block:frontend-tooling", "block:ai-app", "block:health"] },
-    "nexacro": { "title": "넥사크로 마이그레이션", "enable": ["block:dev-common", "block:frontend-core", "block:java-common", "block:java-legacy", "block:nexacro"] },
+    "nexacro": { "title": "넥사크로 마이그레이션 (java-legacy·nextjs 와 조합)", "enable": ["block:dev-common", "block:nexacro"] },
     "seo-geo": { "title": "애드온 · SEO·GEO", "enable": ["block:seo-geo"] },
     "spec-extraction": { "title": "애드온 · 레거시 스펙 추출", "enable": ["block:spec-extraction"] },
     "n8n": { "title": "애드온 · n8n", "enable": ["block:n8n"] }
   },
   "edges": {
     "command:harness>hook:cc-notify": "mention",
+    "command:harness>skill:nextjs": "mention",
     "rule:commands.md>command:harness": "mention",
     "agent:a11y-auditor>agent:build-perf-benchmarker": "uses",
     "agent:a11y-auditor>agent:frontend-developer": "uses",

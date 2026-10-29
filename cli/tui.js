@@ -39,6 +39,31 @@ function fit(s, width) {
   return out;
 }
 const pad = (s, width) => { const f = fit(s, width); return f + ' '.repeat(Math.max(0, width - strWidth(f))); };
+// 폭에 맞춰 여러 줄로 — 띄어쓰기에서 끊고, 한 단어가 폭보다 길면 글자 단위로 자른다. indent = 둘째 줄부터 앞 공백
+function wrap(s, width, indent = '') {
+  const text = clean(s).replace(/ +/g, ' ').trim();
+  if (width <= 0 || !text) return [];
+  const ind = strWidth(indent) < width / 2 ? indent : ''; // 들여쓰기가 폭을 다 먹지 않게
+  const lines = [];
+  let line = '';
+  const empty = () => line === '' || line === ind;
+  const push = () => { lines.push(line); line = ind; };
+  for (const word of text.split(' ')) {
+    const sep = empty() ? '' : ' ';
+    if (strWidth(line + sep + word) <= width) { line += sep + word; continue; }
+    if (!empty()) push();
+    let w = word;
+    while (strWidth(line + w) > width) {
+      const head = fit(w, width - strWidth(line)); // 남은 폭 ≥ 1 (ind < width/2)
+      line += head; w = w.slice(head.length); push();
+      if (!head) break; // 2칸 글자가 1칸 자리에 안 들어가는 경우 — 다음 줄에서 이어감
+    }
+    line += w;
+  }
+  if (!empty()) lines.push(line);
+  return lines;
+}
+const WIDE_MIN = 80; // 이 폭 이상이면 왼쪽 트리 · 오른쪽 설명칸 (comux 옆 창은 원래 창의 반 — 2026-10-28 100 → 80)
 
 function stripSource(l) { const { source, ...rest } = l || {}; return JSON.parse(JSON.stringify(rest)); }
 
@@ -267,6 +292,33 @@ function relationLines(st, row, res) {
   return lines;
 }
 
+// ── 오른쪽 설명칸 (넓은 창) ─────────────────────────────────────────
+// 항목: 이름 · 종류·상태 → 한 줄 설명 → 하는 일·이럴 때·주의 (manifest about) → 속한 곳·연관 관계
+// 그룹: relationLines 를 폭에 맞춰 줄바꿈. height 를 넘으면 마지막 줄을 … 로
+function detailLines(st, row, res, width, height) {
+  if (!row || width <= 0 || height <= 0) return [];
+  const out = [];
+  const add = (s, indent = '') => out.push(...wrap(s, width, indent));
+  const rel = relationLines(st, row, res);
+  if (row.kind !== 'item') {
+    add(rel[0] || '');
+    for (const l of rel.slice(1)) add(l.replace(/^\s*·\s*/, '· '), '  ');
+  } else {
+    const it = (st.manifest.items || {})[row.id] || {};
+    const state = res.locked.has(row.id) ? '🔒 고정' : res.enabled.has(row.id) ? '✅ 켜짐' : '⬜ 꺼짐';
+    add(`${row.label}`);
+    add(`${TYPE_NAME[it.type] || clean(it.type)} · ${state}${st.skipped.has(row.id) ? ' · ↷ 이 프로젝트 자체 .claude 의 것을 씀' : ''}`);
+    // 속한 곳·연관은 짧고 켜고 끌 때 꼭 필요해서 설명보다 먼저 (긴 설명이 잘려도 보이게)
+    add(rel[0] ? rel[0].replace(/^\[[^\]]*\]\s*[^·]*·\s*/, '') : '', '  '); // 첫 줄의 [이름] 종류 는 위에 이미 있음
+    for (const l of rel.slice(1)) add(l.replace(/^\s*·\s*/, '· '), '  ');
+    if (typeof it.desc === 'string' && it.desc) { out.push(''); add(it.desc); }
+    const about = Array.isArray(it.about) ? it.about.filter((x) => typeof x === 'string') : [];
+    for (const a of about) { out.push(''); add(a, '  '); }
+  }
+  if (out.length > height) return [...out.slice(0, height - 1), fit('… (창을 키우면 더 보입니다)', width)];
+  return out;
+}
+
 // ── 켜기·끄기 ───────────────────────────────────────────────────────
 // 이름 있는 그룹(블록·묶음)은 그 이름 하나로, 종류·용도처럼 이름 없는 그룹은 아래로 내려가며
 // 이름 있는 그룹·항목을 하나씩 같은 방향으로 기록 — 🔒 고정만 있는 것은 건너뜀
@@ -441,7 +493,15 @@ function render(st, { cols = 80, rows: height = 24 } = {}) {
   out.push(fit(` ${counts.join(' · ')} · 🔒 ${res.locked.size}${pinCount ? ` · 📌 ${pinCount} (${projectFileName(st)})` : ''}${dirty(st) ? ' · ● 저장 안 됨' : ''}`, cols));
   out.push(fit(` ${LEGEND}`, cols));
   out.push('─'.repeat(Math.max(0, cols)));
-  const bodyH = Math.max(0, height - 9); // 머리 4줄(제목·개수·범례·선) + 아래 5줄(선·설명 2·메시지·키 도움말)
+  // 넓은 창(80칸 이상 — comux 옆 창처럼 반으로 나눈 창도): 왼쪽 트리 · 오른쪽 설명칸 — 머리 4줄 + 아래 3줄(선·메시지·키 도움말)
+  // 좁은 창: 트리 아래 설명 — 높이 24줄 이상이면 6줄(한 줄 설명·하는 일까지), 아니면 3줄. 머리 4줄 + 아래 (3 + 설명 줄 수)
+  const wide = cols >= WIDE_MIN && st.mode !== 'preset';
+  const infoH = height >= 24 ? 6 : 3;
+  const bodyH = Math.max(0, height - (st.mode === 'preset' ? 9 : wide ? 7 : 4 + 3 + infoH));
+  // 트리는 이름·상태 표시(📌·↷ 등)까지 — 남는 폭은 설명칸에. 좁은 쪽에서 잘려도 같은 내용이 설명칸에 있다.
+  // 120칸 이상은 트리 60~84칸, 그 아래는 설명칸에 최소 36칸(폭의 45%)을 주고 나머지를 트리에
+  const treeW = !wide ? cols : cols >= 120 ? Math.max(60, Math.min(84, Math.floor(cols * 0.5))) : cols - Math.max(36, Math.floor(cols * 0.45)) - 3;
+  const paneW = wide ? cols - treeW - 3 : 0;
 
   if (st.mode === 'preset') {
     const presets = (st.manifest.relations || {}).presets || {};
@@ -454,16 +514,17 @@ function render(st, { cols = 80, rows: height = 24 } = {}) {
     }
     out.push(...Array(Math.max(0, bodyH - Math.min(bodyH, names.length))).fill(''));
     out.push('─'.repeat(Math.max(0, cols)));
-    out.push(fit(' 프리셋 = 블록 여러 개를 한 번에 켬 (이미 켠 것은 그대로, 끄지는 않음)', cols), '');
+    out.push(fit(' 프리셋 = 한 스택에 필요한 블록만 한 번에 켬 · 여러 개를 차례로 적용해 조합 (이미 켠 것은 그대로, 끄지는 않음)', cols), '');
     out.push(fit(` 프리셋을 ${SCOPE_NAME[st.scope]}에 적용 — Enter 적용 · Esc 돌아가기`, cols));
     out.push(fit(' ↑↓ 이동 · Enter 적용 · Esc 취소', cols));
     return out.slice(0, height).join('\n');
   }
 
   const rows = rowsOf(st);
+  const cur = rows[st.cursor];
+  const body = []; // [글자, 반전 여부] — 넓은 창이면 오른쪽 설명칸을 옆에 붙인다
   if (!rows.length) {
-    out.push(fit('   맞는 항목이 없습니다 — / 로 검색어를 바꾸거나 Esc 로 지우세요', cols));
-    out.push(...Array(Math.max(0, bodyH - 1)).fill(''));
+    body.push(['   맞는 항목이 없습니다 — / 로 검색어를 바꾸거나 Esc 로 지우세요', false]);
   } else {
     let top = st.top || 0;
     if (st.cursor < top) top = st.cursor;
@@ -476,7 +537,7 @@ function render(st, { cols = 80, rows: height = 24 } = {}) {
       const changed = r.ids.some((id) => res.enabled.has(id) !== saved.enabled.has(id));
       const indent = '  '.repeat(r.depth);
       const arrow = r.kind === 'item' ? '  ' : r.open ? '▾ ' : '▸ ';
-      const labelW = Math.max(8, Math.min(34, Math.floor(cols * 0.38)) - r.depth * 2);
+      const labelW = Math.max(8, (wide ? Math.min(30, Math.max(14, treeW - 22)) : Math.min(34, Math.floor(cols * 0.38))) - r.depth * 2);
       const own = r.ids.filter((id) => st.skipped.has(id)).length;
       const ownNote = own ? ` · ↷ 자체 .claude 우선${r.kind === 'item' ? '' : ` ${own}`}` : '';
       const pinned = r.kind === 'item' ? pin(r.id) : r.ids.filter((id) => pin(id)).length;
@@ -488,14 +549,26 @@ function render(st, { cols = 80, rows: height = 24 } = {}) {
         if (groups.length > 1) detail += ` · 다른 묶음에도 속함`;
       } else detail = `${ns.on}/${ns.total}${r.op ? ` · ${r.op}` : ''}`;
       const line = `${i === st.cursor ? '›' : ' '}${changed ? '*' : ' '}${indent}${arrow}${ns.mark} ${pad(r.label, labelW)}  ${detail}${pinNote}${ownNote}`;
-      out.push(i === st.cursor ? `\x1b[7m${fit(line, cols)}\x1b[0m` : fit(line, cols));
+      body.push([line, i === st.cursor]);
     }
-    out.push(...Array(Math.max(0, bodyH - Math.min(bodyH, rows.length - top))).fill(''));
+  }
+  const pane = wide ? detailLines(st, cur, res, paneW, bodyH) : [];
+  for (let j = 0; j < bodyH; j++) {
+    const [text, rev] = body[j] || ['', false];
+    if (!wide) { out.push(rev ? `\x1b[7m${fit(text, cols)}\x1b[0m` : fit(text, cols)); continue; }
+    const left = pad(text, treeW);
+    out.push(`${rev ? `\x1b[7m${left}\x1b[0m` : left} │ ${fit(pane[j] || '', paneW)}`);
   }
   out.push('─'.repeat(Math.max(0, cols)));
-  const cur = rows[st.cursor];
-  const info = cur ? relationLines(st, cur, res) : [];
-  out.push(fit(` ${info[0] || ''}`, cols), fit(` ${info[1] || ''}`, cols));
+  if (!wide) {
+    // 첫 줄 [이름]·속한 곳, 끝 줄 연관 관계, 그 사이에 한 줄 설명 → 하는 일·이럴 때를 남는 줄만큼
+    const info = cur ? relationLines(st, cur, res) : [];
+    const it = cur && cur.kind === 'item' ? (st.manifest.items || {})[cur.id] || {} : {};
+    const texts = [it.desc, ...(Array.isArray(it.about) ? it.about : [])].filter((x) => typeof x === 'string' && x);
+    const mid = texts.flatMap((t, i) => wrap(t, cols - 3, i ? '  ' : '')).slice(0, infoH - 2);
+    const lines = [info[0] || '', ...mid.map((l) => `  ${l}`), ...Array(Math.max(0, infoH - 2 - mid.length)).fill(''), info[1] || ''];
+    out.push(...lines.map((l) => fit(` ${l}`, cols)));
+  }
   const msg = st.mode === 'search' ? `검색: ${clean(st.filter)}▏ (Enter 확정 · Esc 지우기)` : clean(st.message);
   out.push(fit(` ${msg}`, cols));
   out.push(fit(` ${KEYS_HELP}`, cols));
@@ -585,4 +658,4 @@ function summaryLines(r) {
   return lines;
 }
 
-module.exports = { createState, handleKey, render, rowsOf, strWidth, replayOps, runTui, summaryLines, buildTree, relationLines };
+module.exports = { createState, handleKey, render, rowsOf, strWidth, replayOps, runTui, summaryLines, buildTree, relationLines, detailLines, wrap, WIDE_MIN };

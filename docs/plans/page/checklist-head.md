@@ -1,6 +1,6 @@
 # gugbab 하네스 항목 체크리스트 — 고정 / 켜고 끄기 선택
 
-> 최종 수정: 2026-10-19 · 상태: **사용자 체크 반영** (고정 35 · 켬 70 · 끔 216 — 사용자 체크 45개 + 묶음 정리 규칙 적용(계획서 14.5) + 새 훅 relation-guard · parallel-hint · claude-version-check · release-version-guard · wrapper-version-check) · 기준: 현재 레포 실측 (훅 32 + 상태줄 1 · 룰 14 · 커맨드 11 + `/harness` · 에이전트 61 · 스킬 195)
+> 최종 수정: 2026-10-29 · 상태: **사용자 체크 반영** (고정 35 · 켬 53 · 끔 233 — 2026-10-29 스택 전용 에이전트 12개와 spec-extraction-method·/spec-extract·룰 java.md·typescript.md·rust.md 기본 끔(프리셋으로 켬) · 이전: 고정 35 · 켬 70 · 끔 216 — 사용자 체크 45개 + 묶음 정리 규칙 적용(계획서 14.5) + 새 훅 relation-guard · parallel-hint · claude-version-check · release-version-guard · wrapper-version-check) · 기준: 현재 레포 실측 (훅 32 + 상태줄 1 · 룰 14 · 커맨드 11 + `/harness` · 에이전트 61 · 스킬 195)
 > 짝 문서: `docs/plans/2026-10-15-gugbab-claude-shim-wrapper.md`
 
 ## 체크하는 법
@@ -241,12 +241,12 @@
   - 하는 일: 테스트에 정상 케이스 + 악성 유저 공격(인젝션·권한 우회·중복 제출 등) + 이상·경계 입력(빈 값·초장문·동시 요청)을 모두 넣게 하고, 테스트 통과용 가짜 구현을 금지한다. 공격 시나리오 체크리스트가 들어 있다.
   - 이렇게 보여요: "로그인 API 테스트 써줘" 하면 성공 케이스와 함께 SQL 인젝션·잠금·빈 값 테스트까지 만든다.
   - 연관: dev-quality 묶음(8장 A)
-- [ ] **typescript.md** (기본 켬) — TypeScript·React 코딩 규칙
-  - 하는 일: TS·React 코드 작성 규칙. `*.ts`·`*.tsx` 를 다룰 때만 읽혀서 다른 프로젝트에는 영향이 없다.
-- [ ] **java.md** (기본 켬) — Java 코딩 규칙
-  - 하는 일: Java·Spring 코드 작성 규칙. `*.java`·gradle·pom 을 다룰 때만 읽힌다.
-- [ ] **rust.md** (기본 켬) — Rust 코딩 규칙
-  - 하는 일: Rust 코드 작성 규칙. `*.rs`·`Cargo.toml` 을 다룰 때만 읽힌다.
+- [ ] **typescript.md** (기본 끔) — TypeScript·React 코딩 규칙
+  - 하는 일: TS·React 코드 작성 규칙. `*.ts`·`*.tsx` 를 다룰 때만 읽혀서 다른 프로젝트에는 영향이 없다. `nextjs`·`dream`·`fortune`·`health` 프리셋을 고르거나 TS 백엔드 에이전트를 켜면 켜진다.
+- [ ] **java.md** (기본 끔) — Java 코딩 규칙
+  - 하는 일: Java·Spring 코드 작성 규칙. `*.java`·gradle·pom 을 다룰 때만 읽힌다. `java-legacy`·`java-modern` 프리셋을 고르면 켜진다.
+- [ ] **rust.md** (기본 끔) — Rust 코딩 규칙
+  - 하는 일: Rust 코드 작성 규칙. `*.rs`·`Cargo.toml` 을 다룰 때만 읽힌다. `rust` 프리셋을 고르면 켜진다.
 - [ ] **codex-review.md** (기본 켬) — Codex 리뷰 진행 방법
   - 하는 일: Codex 리뷰 실행 조건 3가지(CLI 설치·로그인·플러그인), 라운드 진행, 지적별 ACCEPT/REJECT 판정, 완료·사용 불가 표시 파일 기록 방법을 정한다.
   - 연관: codex-review 묶음
@@ -311,7 +311,7 @@
 - [ ] **/codex-review** (기본 켬) — Codex 리뷰를 원할 때 실행
   - 하는 일: codex-review 룰의 절차대로 커밋 안 한 변경 전체를 Codex 에게 최대 3라운드 리뷰받는다.
   - 연관: codex-review 묶음
-- [ ] **/spec-extract** (기본 켬) — 레거시 코드에서 스펙 문서 추출
+- [ ] **/spec-extract** (기본 끔) — 레거시 코드에서 스펙 문서 추출
   - 하는 일: 지정한 범위(레포·모듈·화면)의 레거시 코드에서 화면·API·데이터·규칙 명세를 뽑아 `docs/spec/` 에 문서로 남긴다. 소스는 고치지 않는다.
   - 연관: 에이전트 `legacy-spec-extractor`·`spec-reviewer`, 스펙 추출 스킬 4종(spec-extraction 묶음)
 

@@ -1,6 +1,7 @@
 // 처음 실행 — 프로젝트(git 최상위 폴더)에서 gugbab-claude 를 처음 띄울 때 기본으로 켤 프리셋을 고른다 (계획서 결정 31)
 //   프로젝트 파일로 스택을 감지해 추천하고, 번호로 고르면(여러 개는 쉼표, Enter = 추천, 0 = 안 고름) 이 프로젝트 설정에 적용한다
 //   한 번 물으면 프로젝트 설정에 firstRun 을 남겨 다시 묻지 않는다. 터미널이 아니거나 -p 이거나 이미 설정이 있으면 묻지 않는다
+//   .gugbab.json 이 있어 묻지 않을 때는 그 사실을 한 번만 알린다(noticeSkipOnce)
 'use strict';
 const fs = require('fs');
 const path = require('path');
@@ -51,9 +52,21 @@ function shouldAsk({ project, argv = [], isTTY, env = process.env, manifest }) {
   if (argv.some((a) => a === '-p' || a === '--print')) return { ask: false, reason: '한 번 실행(-p)' };
   if (env.GUGBAB_NO_FIRST_RUN) return { ask: false, reason: 'GUGBAB_NO_FIRST_RUN' };
   try { fs.lstatSync(project.settingsPath); return { ask: false, reason: '이미 이 프로젝트 설정이 있음' }; } catch { /* 없음 */ }
-  try { fs.lstatSync(path.join(project.root, '.gugbab.json')); return { ask: false, reason: '.gugbab.json 이 있음 (git 공유 설정)' }; } catch { /* 없음 */ }
+  try { fs.lstatSync(path.join(project.root, '.gugbab.json')); return { ask: false, reason: '.gugbab.json 이 있음 (git 공유 설정)', notice: true }; } catch { /* 없음 */ }
   if (!presetsOf(manifest).length) return { ask: false, reason: '프리셋 없음' };
   return { ask: true, reason: '' };
+}
+
+// .gugbab.json 때문에 묻지 않을 때 한 번만 알린다 — 말없이 건너뛰면 "처음 실행인데 프리셋 질문이 안 나온다" 로 보인다 (2026-10-23 윈도우 보고)
+//   표시 파일을 먼저 만들고('wx' — 이미 있거나 링크면 실패) 만든 경우에만 알린다. 못 만들면 매번 알리지 않도록 조용히 넘어간다
+function noticeSkipOnce({ project, output = process.stdout }) {
+  const mark = path.join(path.dirname(project.settingsPath), '.first-run-notice');
+  try {
+    fs.mkdirSync(path.dirname(mark), { recursive: true });
+    fs.writeFileSync(mark, JSON.stringify({ reason: '.gugbab.json', at: new Date().toISOString() }) + '\n', { flag: 'wx' });
+  } catch { return false; }
+  output.write('[gugbab] 이 프로젝트에는 .gugbab.json(git 공유 설정)이 있어 프리셋을 묻지 않고 그 설정으로 시작합니다 — 바꾸려면 /harness 또는 gugbab-claude preset (이 안내는 한 번만)\n');
+  return true;
 }
 
 function parseChoice(input, names, suggest = []) {
@@ -131,4 +144,4 @@ function runFirstRun({ manifest, paths, project, input = process.stdin, output =
   });
 }
 
-module.exports = { detectStack, shouldAsk, parseChoice, promptText, applyChoice, runFirstRun };
+module.exports = { detectStack, shouldAsk, noticeSkipOnce, parseChoice, promptText, applyChoice, runFirstRun };

@@ -6,7 +6,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { PassThrough } = require('stream');
-const { detectStack, shouldAsk, parseChoice, promptText, applyChoice, runFirstRun } = require('./first-run');
+const { detectStack, shouldAsk, noticeSkipOnce, parseChoice, promptText, applyChoice, runFirstRun } = require('./first-run');
 const { readJsonObject } = require('./layers');
 const { resolve } = require('./resolve');
 
@@ -150,4 +150,61 @@ test('경계: 입력이 바로 끝나면(EOF) 추천을 고른 것으로 보지 
   input.end();
   const r = await p;
   assert.deepStrictEqual(r.presets, []);
+});
+
+// ── .gugbab.json 때문에 묻지 않을 때 한 번만 알림 (2026-10-23 윈도우 보고) ──
+const captured = () => { const o = new PassThrough(); o.text = ''; o.on('data', (c) => { o.text += c; }); return o; };
+const markOf = (s) => path.join(path.dirname(s.project.settingsPath), '.first-run-notice');
+
+test('정상: .gugbab.json 이 있으면 notice 표시 — 첫 번째만 알리고 두 번째부터는 조용, 프로젝트 설정은 만들지 않음', () => {
+  const s = setup();
+  w(path.join(s.root, '.gugbab.json'), '{}');
+  const sa = shouldAsk({ project: s.project, argv: [], isTTY: true, env: {}, manifest });
+  assert.deepStrictEqual([sa.ask, sa.notice], [false, true]);
+  const o1 = captured();
+  assert.strictEqual(noticeSkipOnce({ project: s.project, output: o1 }), true);
+  assert.match(o1.text, /\.gugbab\.json\(git 공유 설정\)이 있어 프리셋을 묻지 않고/);
+  assert.match(o1.text, /\/harness 또는 gugbab-claude preset/);
+  const o2 = captured();
+  assert.strictEqual(noticeSkipOnce({ project: s.project, output: o2 }), false);
+  assert.strictEqual(o2.text, '');
+  assert.ok(!fs.existsSync(s.project.settingsPath), '표시 파일은 settings.json 이 아님 — "이미 설정 있음" 판정을 바꾸지 않는다');
+  assert.strictEqual(shouldAsk({ project: s.project, argv: [], isTTY: true, env: {}, manifest }).notice, true, '.gugbab.json 을 지우면 다시 물을 수 있게 판정은 그대로');
+});
+
+test('악성: 표시 파일 자리에 밖을 가리키는 링크·폴더가 있으면 따라가 쓰지 않고 알리지도 않음', () => {
+  const s = setup();
+  const outside = path.join(s.d, 'outside.txt'); w(outside, 'keep');
+  fs.mkdirSync(path.dirname(markOf(s)), { recursive: true });
+  // 윈도우 권한 없으면(EPERM) 링크 부분은 건너뜀 — 그 PC 에선 공격자도 파일 심볼릭 링크를 못 만든다
+  if (require('../.claude/hooks/lib/testfs').trySymlink(outside, markOf(s)) !== null) {
+    const o = captured();
+    assert.strictEqual(noticeSkipOnce({ project: s.project, output: o }), false);
+    assert.strictEqual(fs.readFileSync(outside, 'utf8'), 'keep', '링크 대상 파일이 바뀌면 안 됨');
+    assert.strictEqual(o.text, '');
+  }
+  const d = setup(); fs.mkdirSync(markOf(d), { recursive: true });
+  const o = captured();
+  assert.strictEqual(noticeSkipOnce({ project: d.project, output: o }), false);
+  assert.strictEqual(o.text, '');
+});
+
+test('경계: notice 는 .gugbab.json 경우에만 — 터미널 아님·-p·끄는 환경변수·이미 설정 있음은 .gugbab.json 이 있어도 알리지 않음', () => {
+  const s = setup();
+  w(path.join(s.root, '.gugbab.json'), '{}');
+  assert.ok(!shouldAsk({ project: s.project, argv: [], isTTY: false, env: {}, manifest }).notice);
+  assert.ok(!shouldAsk({ project: s.project, argv: ['-p', 'x'], isTTY: true, env: {}, manifest }).notice);
+  assert.ok(!shouldAsk({ project: s.project, argv: [], isTTY: true, env: { GUGBAB_NO_FIRST_RUN: '1' }, manifest }).notice);
+  w(s.project.settingsPath, '{}');
+  assert.ok(!shouldAsk({ project: s.project, argv: [], isTTY: true, env: {}, manifest }).notice, '이미 켜고 끈 프로젝트는 알릴 필요 없음');
+  const n = setup();
+  assert.ok(!shouldAsk({ project: n.project, argv: [], isTTY: true, env: {}, manifest }).notice, '.gugbab.json 없으면 묻는 쪽');
+});
+
+test('경계: 표시 파일을 둘 폴더를 만들 수 없으면(같은 이름 파일) 오류 없이 false — 세션을 막지 않고 매번 알리지도 않음', () => {
+  const s = setup();
+  w(path.dirname(s.project.settingsPath), 'not a dir');
+  const o = captured();
+  assert.doesNotThrow(() => assert.strictEqual(noticeSkipOnce({ project: s.project, output: o }), false));
+  assert.strictEqual(o.text, '');
 });

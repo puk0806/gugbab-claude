@@ -176,9 +176,13 @@ switch (cmd) {
     try {
       const manifest = JSON.parse(fs.readFileSync(paths.manifestPath, 'utf8')); // loadManifest 는 실패 때 exit 1 이라 여기선 직접 읽는다
       const project = resolveProject(process.cwd(), paths.dataDir);
-      const { shouldAsk, runFirstRun } = require('./first-run');
+      const { shouldAsk, noticeSkipOnce, runFirstRun } = require('./first-run');
       const sa = shouldAsk({ project, argv: args.slice(1), isTTY: !!(process.stdin.isTTY && process.stdout.isTTY), env: process.env, manifest });
-      if (!sa.ask) process.exit(0);
+      if (!sa.ask) {
+        if (sa.notice && noticeSkipOnce({ project })) process.stdout.write('', () => process.exit(0)); // 안내가 다 나간 뒤 끝냄 (윈도우 터미널 쓰기는 비동기)
+        else process.exit(0);
+        break;
+      }
       runFirstRun({ manifest, paths, project }).then(() => process.exit(0), () => process.exit(0));
     } catch { process.exit(0); }
     break;
