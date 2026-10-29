@@ -22,7 +22,7 @@ nodeTest('정상(윈도우): Git Bash 에서 sh 래퍼를 부르면 launch.js �
   const log = path.join(data, 'calls.jsonl');
   const fake = path.join(data, 'fake.js');
   fs.writeFileSync(fake, `require('fs').appendFileSync(process.env.LOG, JSON.stringify(process.argv.slice(2))+'\\n')`);
-  const env = { ...process.env, HOME: home, USERPROFILE: home, GUGBAB_HOME: REPO, GUGBAB_DATA: data, GUGBAB_CLAUDE_BIN: fake, LOG: log };
+  const env = { ...baseEnv(), HOME: home, USERPROFILE: home, GUGBAB_HOME: REPO, GUGBAB_DATA: data, GUGBAB_CLAUDE_BIN: fake, LOG: log };
   delete env.CLAUDE_CONFIG_DIR;
   const st = spawnSync('sh', [BIN, 'status'], { cwd: proj, env, encoding: 'utf8', timeout: 60000 });
   assert.strictEqual(st.status, 0, st.stderr);
@@ -38,6 +38,15 @@ nodeTest('정상(윈도우): Git Bash 에서 sh 래퍼를 부르면 launch.js �
   assert.deepStrictEqual(JSON.parse(fs.readFileSync(log, 'utf8').trim()), ['-p', ...odd]);
 });
 const tmp = (p) => fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), p)));
+// 바깥 gugbab-claude 세션 안에서 시험을 돌리면 그 세션의 설정 폴더·모드 변수가 물려 와 판정이 바뀐다
+//   (2026-10-29 lfmall 에서 옮김 — GUGBAB_DEV=0·CLAUDE_CONFIG_DIR 를 넣고 돌리면 --raw·개발 모드 시험 2건 실패를 재현). 시험마다 지우고 시작
+function baseEnv() {
+  const env = { ...process.env };
+  for (const k of Object.keys(env)) if (k.startsWith('GUGBAB_')) delete env[k];
+  delete env.CLAUDE_CONFIG_DIR;
+  delete env.CLAUDE_SECURESTORAGE_CONFIG_DIR;
+  return env;
+}
 
 function setup(fakeClaude) {
   const home = tmp('bn-home-');
@@ -52,7 +61,7 @@ function setup(fakeClaude) {
 }
 function run(s, args, env = {}) {
   return spawnSync('sh', [BIN, ...args], { cwd: s.proj, encoding: 'utf8', timeout: 60000,
-    env: { ...process.env, HOME: s.home, GUGBAB_HOME: REPO, GUGBAB_DATA: s.data, PATH: `${s.fakeBin}:${process.env.PATH}`, LOG: path.join(s.fakeBin, 'calls.log'), ...env } });
+    env: { ...baseEnv(), HOME: s.home, GUGBAB_HOME: REPO, GUGBAB_DATA: s.data, PATH: `${s.fakeBin}:${process.env.PATH}`, LOG: path.join(s.fakeBin, 'calls.log'), ...env } });
 }
 const calls = (s) => fs.existsSync(s.log) ? fs.readFileSync(s.log, 'utf8').trim().split('\n') : [];
 
@@ -155,7 +164,7 @@ test('경계: 하위 명령(status)은 claude 없이 동작, 심볼릭 링크로
   const s = setup('exit 0');
   const link = path.join(s.fakeBin, 'gugbab-claude');
   fs.symlinkSync(BIN, link);
-  const r = spawnSync('sh', [link, 'status'], { cwd: s.proj, encoding: 'utf8', env: { ...process.env, HOME: s.home, GUGBAB_DATA: s.data, GUGBAB_HOME: '' } });
+  const r = spawnSync('sh', [link, 'status'], { cwd: s.proj, encoding: 'utf8', env: { ...baseEnv(), HOME: s.home, GUGBAB_DATA: s.data, GUGBAB_HOME: '' } });
   assert.strictEqual(r.status, 0, r.stderr);
   assert.match(r.stdout, /gugbab 하네스/);
 });
@@ -173,9 +182,7 @@ test('경계: 처음 실행 프리셋 질문은 터미널이 아니면(스크립
 function deployedEnv(s, extra = {}) {
   fs.mkdirSync(path.join(s.data, 'state'), { recursive: true });
   fs.writeFileSync(path.join(s.data, 'state', 'update-check.json'), JSON.stringify({ at: Date.now() }));
-  const env = { ...process.env, HOME: s.home, GUGBAB_DATA: s.data, PATH: `${s.fakeBin}:${process.env.PATH}`, LOG: s.log, ...extra };
-  for (const k of ['GUGBAB_HOME', 'GUGBAB_DEV']) if (!(k in extra)) delete env[k];
-  return env;
+  return { ...baseEnv(), HOME: s.home, GUGBAB_DATA: s.data, PATH: `${s.fakeBin}:${process.env.PATH}`, LOG: s.log, ...extra };
 }
 const runEnv = (s, args, env) => spawnSync('sh', [BIN, ...args], { cwd: s.proj, encoding: 'utf8', timeout: 60000, env });
 const NESTED = 'echo "dev=[$GUGBAB_DEV] home=$GUGBAB_HOME" >> "$LOG"; gugbab-claude status | grep "버전" >> "$LOG"';
@@ -213,6 +220,23 @@ test('경계: GUGBAB_DEV 가 0·1 이 아닌 값이면 예전처럼 GUGBAB_HOME 
   const t = setup('echo "dev=[$GUGBAB_DEV]" >> "$LOG"');
   assert.strictEqual(runEnv(t, ['-p', 'x'], deployedEnv(t, { GUGBAB_DEV: '' })).status, 0);
   assert.strictEqual(calls(t)[0], 'dev=[0]', '빈 값 + GUGBAB_HOME 없음 → 배포 모드');
+});
+
+test('경계: 바깥 배포 모드 세션 변수(GUGBAB_DEV=0·엉뚱한 CLAUDE_CONFIG_DIR 등)가 남은 채 돌려도 시험 결과가 같음', () => {
+  const leaked = { GUGBAB_DEV: '0', GUGBAB_HOME: tmp('bn-leak-home-'), GUGBAB_DATA: tmp('bn-leak-data-'), GUGBAB_LAUNCH: '1-1',
+    CLAUDE_CONFIG_DIR: tmp('bn-leak-cfg-'), CLAUDE_SECURESTORAGE_CONFIG_DIR: '' };
+  const saved = Object.fromEntries(Object.keys(leaked).map((k) => [k, process.env[k]]));
+  Object.assign(process.env, leaked);
+  try {
+    const s = setup('echo "cfg=${CLAUDE_CONFIG_DIR-unset} args=$*" >> "$LOG"');
+    run(s, ['--raw', '--version']);
+    assert.deepStrictEqual(calls(s), ['cfg=unset args=--version'], '--raw 는 바깥 설정 폴더를 물려주지 않음');
+    const t = setup(NESTED);
+    assert.strictEqual(run(t, ['-p', 'x']).status, 0);
+    assert.strictEqual(calls(t)[0], `dev=[1] home=${REPO}`, '바깥 GUGBAB_DEV=0 에 끌려 배포 모드가 되지 않음');
+  } finally {
+    for (const [k, v] of Object.entries(saved)) if (v === undefined) delete process.env[k]; else process.env[k] = v;
+  }
 });
 
 // ── 업데이트 직후 새 래퍼로 다시 실행 (2026-10-19 — 업데이트한 그 실행은 예전 래퍼 코드로 돌아 래퍼 수정이 한 번 늦게 반영되던 문제) ──
@@ -253,7 +277,7 @@ function fakeHarness(fakeClaude) {
   return { ...s, h, hbin: path.join(h, 'bin', 'gugbab-claude') };
 }
 function runHarness(s, args, extra = {}) {
-  const env = { ...process.env, HOME: s.home, GUGBAB_DATA: s.data, PATH: `${s.fakeBin}:${process.env.PATH}`, LOG: s.log, ...extra };
+  const env = { ...baseEnv(), HOME: s.home, GUGBAB_DATA: s.data, PATH: `${s.fakeBin}:${process.env.PATH}`, LOG: s.log, ...extra };
   for (const k of ['GUGBAB_HOME', 'GUGBAB_DEV', 'GUGBAB_REEXEC', 'GUGBAB_WRAPPER_REV', 'CLAUDE_CONFIG_DIR', 'GUGBAB_LAUNCH']) if (!(k in extra)) delete env[k];
   return spawnSync('sh', [s.hbin, ...args], { cwd: s.proj, encoding: 'utf8', timeout: 60000, env });
 }
@@ -339,7 +363,7 @@ test('경계: 하위 명령(status 등)과 --raw 는 업데이트·다시 실행
 });
 
 test('경계: 개발 모드(실제 main.js)의 self-update 는 건너뛰고 0 — 다시 실행 없음', () => {
-  const r = spawnSync(process.execPath, [path.join(REPO, 'cli', 'main.js'), 'self-update'], { encoding: 'utf8', env: { ...process.env, GUGBAB_HOME: REPO, GUGBAB_DEV: '1', GUGBAB_DATA: tmp('bn-su-') } });
+  const r = spawnSync(process.execPath, [path.join(REPO, 'cli', 'main.js'), 'self-update'], { encoding: 'utf8', env: { ...baseEnv(), GUGBAB_HOME: REPO, GUGBAB_DEV: '1', GUGBAB_DATA: tmp('bn-su-') } });
   assert.strictEqual(r.status, 0, r.stderr);
   assert.strictEqual(r.stdout, '', 'stdout 은 비어 있어야 함');
 });
@@ -426,7 +450,7 @@ print(json.dumps({'stopped': stopped, 'status': status, 'out': out.decode('utf8'
 `;
 function runTty(s, args, env = {}) {
   const r = spawnSync('python3', ['-I', '-c', PTY_RUN, s.proj, 'sh', BIN, ...args], { encoding: 'utf8', timeout: 60000,
-    env: { ...process.env, HOME: s.home, GUGBAB_HOME: REPO, GUGBAB_DATA: s.data, GUGBAB_NO_FIRST_RUN: '1', PATH: `${s.fakeBin}:${process.env.PATH}`, LOG: s.log, ...env } });
+    env: { ...baseEnv(), HOME: s.home, GUGBAB_HOME: REPO, GUGBAB_DATA: s.data, GUGBAB_NO_FIRST_RUN: '1', PATH: `${s.fakeBin}:${process.env.PATH}`, LOG: s.log, ...env } });
   assert.strictEqual(r.status, 0, r.stderr);
   return JSON.parse(r.stdout.trim().split('\n').pop());
 }

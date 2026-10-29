@@ -48,8 +48,10 @@ function makeGitRepo({ commits = true, dirty = false, weirdFileName = false } = 
   return dir
 }
 
+// 시험 쪽 강제 종료 — 멈춤을 잡는 용도. 윈도우는 git·node 기동이 느려(훅 한 번 ~1.7초) 병렬 시험 중 5초를 넘길 수 있다 (2026-10-29 lfmall 윈도우 PC). 훅 자체 상한은 settings timeout
+const HOOK_TIMEOUT_MS = IS_WIN ? 20000 : 5000
 function runHook(stdinRaw, cwd) {
-  return spawnSync('node', [HOOK], { input: stdinRaw, encoding: 'utf8', timeout: 5000, cwd })
+  return spawnSync('node', [HOOK], { input: stdinRaw, encoding: 'utf8', timeout: HOOK_TIMEOUT_MS, cwd })
 }
 
 // 공식 문서(code.claude.com/docs/en/hooks): "Stderr from a hook that exits 0 goes to the debug log only,

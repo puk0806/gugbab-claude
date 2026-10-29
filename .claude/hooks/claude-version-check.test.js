@@ -190,7 +190,9 @@ function server(handler) {
     const slow = await server((req, res) => { setTimeout(() => { try { res.end(JSON.stringify({ version: '9.9.9' })) } catch { /* 닫힘 */ } }, 8000) })
     const d = dir()
     const r = await runHook({ hook_event_name: 'SessionStart' }, { GUGBAB_STATE_DIR: d, GUGBAB_CLAUDE_BIN: fakeClaude('2.1.296 (Claude Code)'), GUGBAB_TEST_NPM_LATEST_URL: slow.url })
-    check('느린 레지스트리 → 4초 안에 exit 0, 안내 없음', r.code === 0 && r.ms < 4500 && !r.ctx, { ms: r.ms, ctx: r.ctx })
+    // 훅 상한은 4초(hardStop) — 시험은 프로세스 기동까지 재므로 윈도우(백신·node 기동 0.5초+)는 여유를 더 둔다. 8초 서버를 기다리지 않는지가 요점 (2026-10-29 lfmall 윈도우 PC 4.5~4.7초)
+    const limit = IS_WIN ? 6500 : 4500
+    check(`느린 레지스트리 → 상한(${limit}ms) 안에 exit 0, 안내 없음`, r.code === 0 && r.ms < limit && !r.ctx, { ms: r.ms, ctx: r.ctx })
     slow.s.closeAllConnections && slow.s.closeAllConnections(); slow.s.close()
   }
   {
