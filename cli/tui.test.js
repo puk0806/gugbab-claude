@@ -567,3 +567,114 @@ test('정상: 프로젝트 파일이 없는 일반 프로젝트는 📌 가 하�
   assert.ok(eff(r).enabled.has('skill:s1'));
   assert.deepStrictEqual(r.ops.project, [['on', 'skill:s1']]);
 });
+
+// ── 오른쪽 설명칸 (2026-10-28 — 넓은 창은 좌우 분할, 좁은 창은 아래 설명 3줄) ─────────
+{
+  const { detailLines, wrap, WIDE_MIN } = require('./tui');
+  const plainOf = (s) => s.replace(/\x1b\[[0-9;]*m/g, '');
+  const withDesc = (extra = {}) => ({
+    ...manifest,
+    items: { ...manifest.items, 'skill:s1': { ...manifest.items['skill:s1'], desc: 'S1 한 줄 설명', about: ['하는 일: S1 은 표를 그립니다', '주의: 유료 기능 있음'], ...extra } },
+  });
+  const wideState = (m) => goto(press(goto(createState({ manifest: m, layers: layers(), projectName: 'p', view: 'stack' }), 'block:st'), 'right').st, 'skill:s1');
+  const paneOf = (st, w, h) => detailLines(st, rowsOf(st)[st.cursor], resolve(st.manifest, layers()), w, h);
+
+  test('정상: 넓은 창은 왼쪽 트리 · 오른쪽 설명칸 — 이름·상태·속한 곳·한 줄 설명·하는 일이 보임', () => {
+    const st = wideState(withDesc());
+    const out = plainOf(render(st, { cols: 120, rows: 30 })).split('\n');
+    assert.strictEqual(out.length, 30, '높이를 넘지 않음');
+    const body = out.slice(4, 27);
+    assert.ok(body.every((l) => l.includes(' │ ')), '본문 모든 줄에 구분선');
+    assert.ok(body.every((l) => strWidth(l) <= 120), '폭을 넘지 않음');
+    const pane = body.map((l) => l.split(' │ ')[1]).join('\n');
+    for (const s of ['s1', '⬜ 꺼짐', '속한 곳: 스택', 'S1 한 줄 설명', '하는 일: S1 은 표를 그립니다', '주의: 유료 기능 있음']) assert.ok(pane.includes(s), `${s} 가 설명칸에 없음`);
+    assert.ok(pane.indexOf('속한 곳') < pane.indexOf('S1 한 줄 설명'), '속한 곳·연관이 긴 설명보다 먼저');
+  });
+
+  test('정상: 좁은 창(80칸 미만)·높이 24 이상은 아래 설명 6줄 — [이름] → 한 줄 설명 → 하는 일·주의 → 연관, 구분선 없음', () => {
+    const st = wideState(withDesc());
+    const out = plainOf(render(st, { cols: WIDE_MIN - 1, rows: 24 })).split('\n');
+    assert.strictEqual(out.length, 24);
+    assert.ok(!out.some((l) => l.includes(' │ ')));
+    const info = out.slice(16, 22);
+    assert.ok(info[0].includes('[s1]') && info[1].includes('S1 한 줄 설명') && info[2].includes('하는 일: S1') && info[3].includes('주의: 유료'), info.join('\n'));
+    assert.ok(info[5].includes('연관') || info[5].includes('·'), info.join('\n'));
+  });
+
+  test('경계: 좁고 낮은 창(높이 24 미만)은 아래 설명 3줄 — 트리 칸을 지킴', () => {
+    const st = wideState(withDesc());
+    const out = plainOf(render(st, { cols: 70, rows: 20 })).split('\n');
+    assert.strictEqual(out.length, 20);
+    const info = out.slice(15, 18);
+    assert.ok(info[0].includes('[s1]') && info[1].includes('S1 한 줄 설명'), info.join('\n'));
+    assert.ok(!out.slice(15).some((l) => l.includes('하는 일')), '3줄일 땐 하는 일은 생략');
+  });
+
+  test('정상: 80·90칸(comux 옆 창 크기)도 좌우 분할 — 설명칸 36칸 이상, 트리에 이름과 종류가 보임', () => {
+    const st = wideState(withDesc());
+    for (const cols of [WIDE_MIN, 90, 119]) {
+      const out = plainOf(render(st, { cols, rows: 24 })).split('\n');
+      const body = out.slice(4, 21);
+      assert.ok(body.every((l) => l.includes(' │ ') && strWidth(l) <= cols), `${cols}칸`);
+      const cursorLine = body.find((l) => l.startsWith('›'));
+      const [left, right] = cursorLine.split(' │ ');
+      assert.ok(left.includes('s1') && left.includes('스킬'), `${cols}칸 트리: ${left}`);
+      assert.ok(cols - strWidth(left) - 3 >= 36, `${cols}칸 설명칸 폭 ${cols - strWidth(left) - 3}`);
+      assert.ok(body.map((l) => l.split(' │ ')[1]).join(' ').includes('S1 한 줄 설명'), `${cols}칸 설명칸`);
+      assert.ok(right !== undefined);
+    }
+  });
+
+  test('정상: 그룹에 커서가 있으면 설명칸에 안의 항목 수·일괄 안내', () => {
+    const st = goto(fresh(), 'block:st');
+    const pane = paneOf(st, 50, 20).join('\n');
+    assert.ok(pane.includes('[스택]') && pane.includes('3개 중'), pane);
+  });
+
+  test('경계: 설명(desc·about)이 없는 항목·옛 manifest 도 깨지지 않고 관계만 보임', () => {
+    const st = wideState(manifest);
+    const pane = paneOf(st, 40, 30);
+    assert.ok(pane.length >= 3 && pane.some((l) => l.includes('속한 곳')));
+    assert.strictEqual(plainOf(render(st, { cols: 120, rows: 30 })).split('\n').length, 30);
+  });
+
+  test('경계: 아주 긴 설명은 폭에 맞춰 줄바꿈하고 높이를 넘으면 … 로 끝남, 각 줄은 폭 이하', () => {
+    const st = wideState(withDesc({ desc: '가나다라마바사 '.repeat(200), about: [`하는 일: ${'x'.repeat(500)}`] }));
+    const pane = paneOf(st, 30, 12);
+    assert.strictEqual(pane.length, 12);
+    assert.ok(pane[11].startsWith('…'));
+    assert.ok(pane.every((l) => strWidth(l) <= 30), pane.find((l) => strWidth(l) > 30));
+  });
+
+  test('경계: wrap — 폭 0·빈 글·띄어쓰기 없는 긴 단어·2칸 글자도 무한 반복 없이 폭 이하', () => {
+    assert.deepStrictEqual(wrap('abc', 0), []);
+    assert.deepStrictEqual(wrap('', 10), []);
+    assert.deepStrictEqual(wrap('   ', 10), []);
+    assert.deepStrictEqual(wrap('ab cd ef', 5), ['ab cd', 'ef']);
+    assert.deepStrictEqual(wrap('abcdefghij', 4), ['abcd', 'efgh', 'ij']);
+    for (const w of [1, 2, 3, 7]) {
+      const lines = wrap('한글이 섞인 아주아주아주긴단어입니다 끝', w, '  ');
+      assert.ok(lines.length > 0 && lines.length < 200, `폭 ${w}`);
+      if (w >= 2) assert.ok(lines.every((l) => strWidth(l) <= w), `폭 ${w}: ${JSON.stringify(lines)}`);
+    }
+  });
+
+  test('악성: 설명에 섞인 터미널 제어문자(ESC·OSC·줄바꿈)·문자열 아닌 값은 지우거나 무시', () => {
+    const st = wideState(withDesc({ desc: '\x1b]0;hack\x07정상\x1b[31m빨강\n줄', about: ['하는 일: \x1b[2J지움', 42, null, { x: 1 }] }));
+    const pane = paneOf(st, 60, 30).join('\n');
+    assert.ok(!/[\x00-\x09\x0b-\x1f\x7f]/.test(pane), JSON.stringify(pane));
+    assert.ok(pane.includes('정상빨강줄') && pane.includes('하는 일: 지움'), pane);
+    assert.ok(!pane.includes('42') && !pane.includes('[object'));
+    const screen = render(st, { cols: 120, rows: 30 });
+    assert.ok(!screen.includes('\x1b]0;') && !screen.includes('\x1b[2J') && !screen.includes('\x1b[31m'));
+  });
+
+  test('경계: 높이가 아주 작거나 폭이 딱 경계값이어도 줄 수·폭을 지킴', () => {
+    const st = wideState(withDesc());
+    for (const [cols, rows] of [[WIDE_MIN, 8], [WIDE_MIN, 3], [WIDE_MIN - 1, 11], [300, 60]]) {
+      const out = plainOf(render(st, { cols, rows })).split('\n');
+      assert.ok(out.length <= rows, `${cols}x${rows}: ${out.length}줄`);
+      assert.ok(out.every((l) => strWidth(l) <= cols), `${cols}x${rows}`);
+    }
+  });
+}

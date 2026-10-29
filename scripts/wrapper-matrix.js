@@ -146,6 +146,22 @@ function itemsPass() {
       continue;
     }
     if (present(cfg, id) === null) UNCHECKED++;
+    // 필수 의존이 있고 기본 끔인 항목은 새 프로젝트에서 — 같은 프로젝트에서 앞서 그 의존 항목을 켰다 끈 기록(사용자가 끔)이 있으면
+    // 제품은 의도대로 "필수 의존 규칙 때문에 유지" 하므로, 순서 탓에 켜기가 안 되는 것을 실패로 세지 않게 (2026-10-28 /spec-extract 기본 끔)
+    if (!locked.has(id) && it.state !== 'on' && (rel.requires || {})[id]) {
+      const fd = newproj(`req-${id.replace(/[^a-z0-9]/gi, '-')}`);
+      g(fd, ['compose']);
+      const fcfg = cfgOf(fd);
+      g(fd, ['on', id]);
+      if (present(fcfg, id) !== null) check(`${id} 켜기(새 프로젝트) → 연결`, present(fcfg, id) === true);
+      const needs = (rel.requires[id] || []).filter((r) => items[r]);
+      const missing = needs.filter((r) => present(fcfg, r) === false);
+      check(`${id} 켜기 → 필수 의존 ${needs.length}개도 연결`, missing.length === 0, missing.join(', '));
+      g(fd, ['off', id]);
+      if (present(fcfg, id) !== null) check(`${id} 다시 끄기 → 빠짐`, present(fcfg, id) === false);
+      if (++n % 40 === 0) console.log(`  · ${n}/${ids.length}`);
+      continue;
+    }
     if (locked.has(id)) {
       const out = g(d, ['off', id]);
       check(`🔒 ${id} 끄기 거부`, out.includes('고정'), out.split('\n')[0]);

@@ -148,3 +148,40 @@ test('경계: 훅이 settings 에 연결되지 않았으면 hooks 는 빈 배열
   const m = buildManifest({ root: d, checklistMd: checklist, settings, relations });
   assert.deepStrictEqual(m.items['hook:cc-notify'].hooks, []);
 });
+
+// ── /harness 설명칸용 desc·about (2026-10-28) ────────────────────────
+const withDetails = (lines) => {
+  const r = fakeRepo();
+  r.checklist = r.checklist.replace('- [ ] **cc-notify** (기본 켬) — 알림\n  - 프로젝트 추천: 끔', ['- [ ] **cc-notify** (기본 켬) — 알림 `--quiet` **끝**', ...lines].join('\n'));
+  return { ...r, m: buildManifest({ root: r.d, checklistMd: r.checklist, settings: r.settings, relations: r.relations }) };
+};
+
+test('정상: 체크리스트 한 줄 설명은 desc, 하는 일·이럴 때·주의 줄은 about 으로 — 마크다운 기호는 뺌', () => {
+  const { m } = withDetails(['  - 하는 일: 답변이 끝나면 `소리`로 알림', '  - 이럴 때: 자리를 비울 때', '  - 주의: 맥 전용']);
+  assert.strictEqual(m.items['hook:cc-notify'].desc, '알림 --quiet 끝');
+  assert.deepStrictEqual(m.items['hook:cc-notify'].about, ['하는 일: 답변이 끝나면 소리로 알림', '이럴 때: 자리를 비울 때', '주의: 맥 전용']);
+  assert.strictEqual(m.items['hook:bash-guard'].desc, '차단');
+  assert.ok(!('about' in m.items['hook:bash-guard']), '설명 줄이 없으면 about 없음');
+});
+
+test('정상: 이름 목록·연관·날짜 같은 줄은 about 에 넣지 않고, 정해진 순서(하는 일 → … → 주의)로', () => {
+  const { m } = withDetails(['  - 주의: 마지막', '  - 쓰는 스킬: a, b', '  - 연결 에이전트: x', '  - 연관: bash-guard', '  - 2026-10-15 사용자 결정으로 고정', '  - 하는 일: 처음']);
+  assert.deepStrictEqual(m.items['hook:cc-notify'].about, ['하는 일: 처음', '주의: 마지막']);
+});
+
+test('악성: 설명 줄의 제어문자(ESC·벨)는 지우고 아주 긴 줄은 400자로 자름 — manifest 크기·화면 보호', () => {
+  const { m } = withDetails([`  - 하는 일: \x1b[31m빨강\x07${'가'.repeat(1000)}`]);
+  const a = m.items['hook:cc-notify'].about[0];
+  assert.ok(!/[\x00-\x1f\x7f]/.test(a));
+  assert.ok(a.startsWith('하는 일: 빨강'));
+  assert.strictEqual(a.length, 400);
+  assert.ok(a.endsWith('…'));
+});
+
+test('경계: 실제 체크리스트 — 모든 항목에 desc 가 있고 about 줄은 모두 400자 이하', () => {
+  const m = JSON.parse(fs.readFileSync(path.join(REPO, 'manifest.json'), 'utf8'));
+  for (const [id, it] of Object.entries(m.items)) {
+    assert.ok(typeof it.desc === 'string' && it.desc.length > 0, `${id} desc 없음`);
+    for (const a of it.about || []) assert.ok(a.length <= 400, `${id} about 이 너무 김`);
+  }
+});

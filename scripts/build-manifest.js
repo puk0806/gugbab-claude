@@ -35,6 +35,23 @@ function parseHookCommand(cmd) {
 
 const exists = (root, rel) => fs.existsSync(path.join(root, rel));
 
+// /harness 오른쪽 설명칸 — 체크리스트의 한 줄 설명(desc)과 상세 줄 중 "무엇을 하는지" 줄만(about).
+// 이름 목록(쓰는 스킬·연결 에이전트)·연관 줄은 화면이 relations 로 따로 보여 주므로 넣지 않는다
+const ABOUT_KEYS = ['하는 일', '담은 내용', '이럴 때', '이렇게 보여요', '끄면', '예시 요청', '예시 질문', '들어가는 것', '주의'];
+const ABOUT_MAX = 400; // 줄 하나 최대 글자 — manifest 는 훅이 매번 읽으므로 크기를 묶어 둔다
+const plain = (s) => String(s || '')
+  .replace(/\u001b\][^\u0007\u001b]*(?:\u0007|\u001b\\)?/g, '').replace(/\u001b\[[0-9;?]*[ -/]*[@-~]/g, '') // 터미널 제어 시퀀스는 통째로
+  .replace(/\*\*/g, '').replace(/`/g, '').replace(/[\u0000-\u001f\u007f-\u009f]/g, '').replace(/\s+/g, ' ').trim();
+const cut = (s) => (s.length > ABOUT_MAX ? `${s.slice(0, ABOUT_MAX - 1)}…` : s);
+function aboutOf(it) {
+  const out = [];
+  for (const key of ABOUT_KEYS) {
+    const line = (it.rel || []).find(r => r.startsWith(`${key}: `));
+    if (line) out.push(cut(plain(line)));
+  }
+  return out;
+}
+
 function findAgent(root, name) {
   const dir = path.join(root, HARNESS_DIR, 'agents');
   const hits = fs.readdirSync(dir, { withFileTypes: true })
@@ -76,6 +93,10 @@ function buildManifest({ root, checklistMd, settings, relations }) {
   for (const it of list) {
     const entry = { type: it.type, state: it.rec };
     if (it.projHint) entry.projHint = it.projHint;
+    const desc = cut(plain(it.desc));
+    if (desc) entry.desc = desc;
+    const about = aboutOf(it);
+    if (about.length) entry.about = about;
     if (it.type === 'setting') {
       if (!SETTING_KEYS[it.name]) throw new Error(`모르는 설정 항목: ${it.name} — build-manifest.js SETTING_KEYS 에 추가하세요`);
       entry.key = SETTING_KEYS[it.name];
