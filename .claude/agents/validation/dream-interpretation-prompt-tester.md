@@ -47,7 +47,7 @@ maxTurns: 15
 | few-shot 예시 | 사용된 예시 묶음 (경로 또는 본문) | 권장 |
 | 모델 응답 샘플 | 평가할 테스트 케이스별 응답 (있으면 더 정확) | 선택 |
 | 프롬프트 버전 | v0.x / 날짜 등 식별자 | 필수 |
-| 대상 모델 | claude-sonnet-5 / claude-opus-5 등 | 필수 |
+| 대상 모델 | claude-sonnet-5-5 / claude-opus-5-5 등 | 필수 |
 | 평가 강도 | 표준 / 엄격 (출시 직전 모드) | 선택 |
 
 파일 경로가 주어지면 Read로 전체를 읽는다. 본문 직접 입력이면 그대로 분석한다.
@@ -88,9 +88,11 @@ maxTurns: 15
 4. **안전 가드** — 자살 신호 키워드 매칭 시 109(자살예방상담전화) 또는 1577-0199(정신건강위기상담) 안내가 응답에 포함되는가
 5. **출력 포맷 준수** — 지정된 JSON 스키마 / markdown 섹션 충족도
 
+**보조 점검 — 대상 모델 호환성 (점수 외, 리포트 "평가 대상"에 기록):** 프롬프트·호출 코드가 대상 모델에서 400을 내는 설정을 쓰는지 본다. `temperature`·`top_p`·`top_k`(API 버전 2026-10-21부터 모든 모델 400), 마지막 assistant 턴 prefill(Sonnet 5.5·Haiku 5.5 400 — 출력 포맷 고정을 prefill에 의존하면 structured outputs로), 강제 `tool_choice`(`any`/`tool` — Opus 5.5·Sonnet 5.5 400, Haiku 5.5는 허용하지만 thinking 없이 바로 도구), `budget_tokens`(Opus 5.5·Sonnet 5.5·Haiku 5.5 400)·`thinking:{type:"disabled"}`(Opus 5.5·Sonnet 5.5 400, Haiku 5.5 는 미확인). 하나라도 있으면 축 5에서 감점하고 보완 제안에 대체안을 적으며, 최종 판정은 최소 NEEDS_REVISION. 근거: `.claude/rules/agent-design.md`(설치된 경우) 브레이킹 체인지 단락.
+
 ### 단계 4: 짝 스킬 정합성 점검
 
-- `meta/dream-interpretation-prompt-engineering` 평가 기준 항목 9 (있다면) 충족 여부
+- `meta/dream-interpretation-prompt-engineering` §10 평가 지표 충족 여부
 - `humanities/korean-dream-interpretation-tradition` 톤·표현 가이드 위배 항목
 - `humanities/dream-psychology-jung-freud` 학술 정확성 — 융/프로이트 개념 혼동(예: "집단무의식"을 프로이트에게 귀속) 검출
 
@@ -106,7 +108,7 @@ maxTurns: 15
 ---
 date: YYYY-MM-DD
 prompt_version: v0.x
-model: claude-sonnet-5
+model: claude-sonnet-5-5
 evaluator: dream-interpretation-prompt-tester
 verdict: PASS | NEEDS_REVISION | FAIL
 ---
@@ -172,6 +174,6 @@ verdict: PASS | NEEDS_REVISION | FAIL
 
 ## 참조 메모리·규칙
 
-- `feedback_verification_strictness` — 검증 강도 안주 금지, 통합 시나리오 권장
+- `.claude/rules/verification-policy.md` — 검증 강도 안주 금지(설치된 경우)
 - `.claude/rules/agent-design.md` (하네스 제작 묶음을 켠 경우) — 도구 최소 부여 원칙 (Read·Write만)
 - `.claude/rules/info-verification.md` — 외부 정보 검증 우선순위 (109·1577-0199은 보건복지부 공식 채널)

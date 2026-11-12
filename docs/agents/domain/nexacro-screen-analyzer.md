@@ -16,7 +16,7 @@
 
 ## 함께 쓰는 자산
 
-`nexacro-17-xfdl-anatomy`(파일 구조·API), `nexacro-to-react-mapping`(대응 규칙·Enterprise 경계) 스킬. 화면 상세 명세는 `legacy-spec-extractor`(spec-extraction 템플릿 함께 설치 시), 변환은 `nexacro-screen-converter`.
+`nexacro-17-xfdl-anatomy`(파일 구조·API), `nexacro-to-react-mapping`(대응 규칙·Enterprise 경계) 스킬. 화면 상세 명세는 `legacy-spec-extractor`(스펙 추출 블록 `block:spec-extraction` 을 켠 경우), 변환은 `nexacro-screen-converter`.
 
 ## 설계 근거
 

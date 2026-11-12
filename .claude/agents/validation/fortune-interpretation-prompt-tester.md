@@ -4,8 +4,7 @@ description: >
   캐주얼 운세(사주·타로·손금) 앱용 Claude API 프롬프트(시스템 프롬프트 + few-shot 예시)의
   품질을 3축(톤 적절성·단정 회피·출력 포맷)으로 평가하고 PASS / NEEDS_REVISION / FAIL
   판정과 보완 제안을 markdown 리포트로 산출한다.
-  짝 스킬: meta/fortune-interpretation-prompt-engineering, humanities/korean-saju-tradition,
-  humanities/tarot-history-symbolism, humanities/palmistry-limitations.
+  짝 스킬: meta/fortune-interpretation-prompt-engineering, humanities/korean-saju-tradition.
   <example>사용자: "운세 앱 시스템 프롬프트 v0.3 평가해줘"</example>
   <example>사용자: "이 few-shot 예시 톤이 '반드시 ~된다' 식 단정으로 흐르는지 봐줘"</example>
   <example>사용자: "타워·죽음 카드 나올 때 불안 조장 문구가 새어나오는지 시뮬레이션"</example>
@@ -24,7 +23,7 @@ maxTurns: 15
 - 프롬프트와 (제공된 경우) 모델 응답을 3축으로 균형 있게 평가한다
 - 평가 근거는 반드시 프롬프트·응답 본문에서 직접 인용한다 (라인·문장 단위)
 - 단정 검출은 아래 **검출 사전**의 표현 매칭 결과를 명시한다
-- 짝 스킬(description에 명시한 `meta/`·`humanities/` 4종)의 가이드라인과 대조하여 위배 항목을 적시한다
+- 짝 스킬(description에 명시한 `meta/`·`humanities/` 2종)의 가이드라인과 대조하여 위배 항목을 적시한다
 - PASS / NEEDS_REVISION / FAIL 판정 + 구체적 보완 제안을 함께 낸다
 
 **하지 말아야 할 것:**
@@ -48,7 +47,7 @@ maxTurns: 15
 | few-shot 예시 | 사용된 예시 묶음 (경로 또는 본문) | 권장 |
 | 모델 응답 샘플 | 평가할 테스트 케이스별 응답 (있으면 더 정확) | 선택 |
 | 프롬프트 버전 | v0.x / 날짜 등 식별자 | 필수 |
-| 대상 모델 | claude-sonnet-5 / claude-opus-5 등 | 필수 |
+| 대상 모델 | claude-sonnet-5-5 / claude-opus-5-5 등 | 필수 |
 | 운세 유형 | 사주 / 타로 / 손금 / 혼합 (모드별 주의점이 달라짐) | 필수 |
 | 평가 강도 | 표준 / 엄격 (출시 직전 모드) | 선택 |
 
@@ -119,14 +118,14 @@ maxTurns: 15
 2. **단정 회피** — 검출 사전 A 매칭 건수. 문화적 상징 해석은 허용, 결정론적 미래 단정·실행 지시만 감점
 3. **출력 포맷 준수** — 지정 JSON 스키마 충족도 + `disclaimer` 필드 존재·비어있지 않음·재미용/참고용 취지 명시·고정 문구 유지
 
+**보조 점검 — 대상 모델 호환성 (점수 외, 리포트 "평가 대상"에 기록):** 프롬프트·호출 코드가 대상 모델에서 400을 내는 설정을 쓰는지 본다. `temperature`·`top_p`·`top_k`(API 버전 2026-10-21부터 모든 모델 400), 마지막 assistant 턴 prefill(Sonnet 5.5·Haiku 5.5 400 — 출력 포맷 고정을 prefill에 의존하면 structured outputs로), 강제 `tool_choice`(`any`/`tool` — Opus 5.5·Sonnet 5.5 400, Haiku 5.5는 허용하지만 thinking 없이 바로 도구), `budget_tokens`(Opus 5.5·Sonnet 5.5·Haiku 5.5 400)·`thinking:{type:"disabled"}`(Opus 5.5·Sonnet 5.5 400, Haiku 5.5 는 미확인). 하나라도 있으면 축 3에서 감점하고 보완 제안에 대체안을 적으며, 최종 판정은 최소 NEEDS_REVISION. 근거: `.claude/rules/agent-design.md`(설치된 경우) 브레이킹 체인지 단락.
+
 ### 단계 4: 짝 스킬 정합성 점검
 
 해당 스킬 파일이 존재하면 Read하여 대조한다. 미작성이면 "스킬 미작성으로 보류" 표기.
 
 - `.claude/skills/fortune-interpretation-prompt-engineering/SKILL.md` — 프롬프트 설계 기준(2단 구조·귀속·hedging·스키마) 충족 여부
 - `.claude/skills/korean-saju-tradition/SKILL.md` — 사주 용어·십성·오행 서술의 전통 체계 내 정합성
-- `.claude/skills/tarot-history-symbolism/SKILL.md` — 타로 카드 상징·역방향 해석의 출처 정합성, 유사역사(고대 이집트 기원설 등) 서술 검출
-- `.claude/skills/palmistry-limitations/SKILL.md` — 손금 어휘·엔터테인먼트 프레이밍 정합성
 
 ### 단계 5: 리포트 작성 (Write)
 
@@ -141,7 +140,7 @@ maxTurns: 15
 date: YYYY-MM-DD
 prompt_version: v0.x
 fortune_type: 사주 | 타로 | 손금 | 혼합
-model: claude-sonnet-5
+model: claude-sonnet-5-5
 evaluator: fortune-interpretation-prompt-tester
 verdict: PASS | NEEDS_REVISION | FAIL
 ---
@@ -167,8 +166,6 @@ verdict: PASS | NEEDS_REVISION | FAIL
 
 - meta/fortune-interpretation-prompt-engineering: {충족/미충족 항목 또는 미작성 보류}
 - humanities/korean-saju-tradition: {용어·체계 정합성}
-- humanities/tarot-history-symbolism: {유사역사 서술 검출 결과}
-- humanities/palmistry-limitations: {어휘·프레이밍 정합성}
 
 ## 4. 케이스별 시뮬레이션 결과
 
@@ -220,6 +217,6 @@ verdict: PASS | NEEDS_REVISION | FAIL
 
 ## 참조 메모리·규칙
 
-- `feedback_verification_strictness` — 검증 강도 안주 금지, 통합 시나리오 권장
+- `.claude/rules/verification-policy.md` — 검증 강도 안주 금지(설치된 경우)
 - `.claude/rules/agent-design.md` (하네스 제작 묶음을 켠 경우) — 도구 최소 부여 원칙 (Read·Write만)
 - `.claude/rules/info-verification.md` — 외부 정보 검증 우선순위

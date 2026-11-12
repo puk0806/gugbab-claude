@@ -18,4 +18,4 @@
 ## 설계 근거
 
 - 현행 동작을 고정하는 특성화·승인 테스트 — Michael Feathers, *Working Effectively with Legacy Code*(2004), approvaltests.com
-- 테스트 3계층(정상·악성 유저·경계) — 레포 `adversarial-testing` 규칙
+- 테스트 3계층(정상·악성 유저·경계) — 레포 `adversarial-testing` 규칙(테스트 품질 묶음 `bundle:dev-quality` 를 켠 경우)
