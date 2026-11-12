@@ -11,7 +11,7 @@
 
 ## 처음 실행 — 기본 프리셋 고르기
 
-프로젝트(git 최상위 폴더)에서 `gugbab-claude` 를 처음 띄우면 기본으로 켤 프리셋을 묻습니다. 프로젝트 파일을 보고 추천합니다 — `package.json` 의 next·react → `nextjs`, `pom.xml`·`build.gradle` → `java-legacy`/`java-modern`(Spring Boot 버전), `Cargo.toml` → `rust`, `pyproject.toml`·`requirements.txt` → `python`, Unity `ProjectSettings` → `unity`.
+프로젝트(git 최상위 폴더)에서 `gugbab-claude` 를 처음 띄우면 기본으로 켤 프리셋을 묻습니다. 프로젝트 파일을 보고 추천합니다 — `package.json` 의 next·react → `nextjs`, `pom.xml`·`build.gradle` → `java-legacy`/`java-modern`(Spring Boot 버전), `Cargo.toml` → `rust`, `pyproject.toml`·`requirements.txt` → `python`.
 
 ```
 [gugbab] 이 프로젝트(my-ui)에서 처음 실행합니다 — 기본으로 켤 프리셋(스택별 스킬·에이전트 묶음)을 고르세요
@@ -40,20 +40,20 @@
 
 ```
  gugbab 하네스 · my-ui   범위: [이 프로젝트]  모든 프로젝트
- 설정 7/7 · 훅 32/32 · 룰 14/14 · 커맨드 12/12 · 에이전트 39/61 · 스킬 1/195 · 🔒 35
+ 설정 7/7 · 훅 29/29 · 룰 11/14 · 커맨드 6/7 · 에이전트 2/10 · 스킬 0/90 · 🔒 27
  ✅ 켬 · ⬜ 끔 · 🟨 일부만 켬(그룹 안 일부) · 🔒 고정(끌 수 없음) · 📌 프로젝트 파일이 정함(여기서 못 바꿈) · * 저장 안 한 변경
  ──────────────────────────────────────────────────────────────
    ▸ ✅ 설정                                7/7
-   ▾ ✅ 훅                                  31/31
+   ▾ ✅ 훅                                  29/29
  ›   ▾ ✅ 안전 — 위험한 행동 차단           6/6
          🔒 bash-guard                      훅
          ✅ branch-protection               훅
      ▸ 🔒 작업 방식 — 사용자 규칙 강제      3/3
      ▸ ✅ 개발 품질 (코드 작성 프로젝트용)  7/7
-   ▸ ✅ 룰                                  14/14
-   ▾ 🟨 스킬                                1/195
-     ▸ ⬜ 프론트엔드 (React·Next.js·PWA…)   0/78
-     ▸ ⬜ 백엔드 (Java·Rust·Python·TS)      0/52
+   ▸ 🟨 룰                                  11/14
+   ▾ ⬜ 스킬                                0/90
+     ▸ ⬜ 프론트엔드 (React·Next.js·PWA…)   0/28
+     ▸ ⬜ 백엔드 (Java·Python·TS)           0/27
  ──────────────────────────────────────────────────────────────
  [안전 — 위험한 행동 차단] 6개 중 6개 켜짐 (훅 6) · 🔒 5개는 끌 수 없음 — Space: 안의 항목 일괄 끄기
    · 용도 = 계획서 체크리스트의 분류. Space = 안의 항목 일괄 (🔒 고정은 건너뜀) · 스택 단위는 p(프리셋)·v(블록·묶음 보기)
@@ -61,7 +61,7 @@
 
 - **Space 규칙**: 항목이면 그것만, 용도면 안의 항목 일괄, 종류면 그 아래 전체 일괄(🔒 고정은 건너뜀). 모두 켜져 있으면 끄고, 하나라도 꺼져 있으면 켭니다. 펼친 그룹에서 → 는 첫 항목으로, 항목에서 ← 는 그 그룹으로 갑니다. 검색(`/`)하면 맞는 항목과 그 위 종류·용도가 자동으로 펼쳐지고, 용도 이름으로 찾으면 그 안 전체가 나옵니다. 저장 안 한 변경이 있으면 q 를 한 번 더 눌러야 닫힙니다.
 - **창 닫힘**: `/harness` 로 띄운 창(comux 옆 창·tmux 팝업·macOS 새 터미널 창)은 Enter 로 저장하면 결과를 2초 보여 준 뒤 저절로 닫힙니다(아무 키나 누르면 바로). 바꾼 것 없이 닫거나 q 로 닫으면 바로 닫힙니다. 저장이 오류로 실패하면 내용을 읽을 수 있게 창을 남깁니다.
-- **`v` 보기 전환**: 스택 블록(스킬·에이전트·언어 룰 묶음)·기능 묶음(훅·룰·커맨드) 단위로 보고 싶으면 `v` — 큰 갈래(스택 블록·묶음·단독 항목) → 블록·묶음 → 항목. 이 보기에서 블록·묶음 줄의 Space 는 그 이름 하나로 기록됩니다(`block:rust` 등). 저장 안 한 변경은 보기를 바꿔도 그대로입니다.
+- **`v` 보기 전환**: 스택 블록(스킬·에이전트·언어 룰 묶음)·기능 묶음(훅·룰·커맨드) 단위로 보고 싶으면 `v` — 큰 갈래(스택 블록·묶음·단독 항목) → 블록·묶음 → 항목. 이 보기에서 블록·묶음 줄의 Space 는 그 이름 하나로 기록됩니다(`block:java-legacy` 등). 저장 안 한 변경은 보기를 바꿔도 그대로입니다.
 - **표시**: ✅ 켬 · ⬜ 끔 · **🟨 일부만 켬** — 묶음·블록 안의 항목 중 일부만 켜진 상태(예: 개발 공통 14개 중 8개) · 🔒 고정 · **📌 `.gugbab.json` 켬/끔** — 프로젝트 폴더의 `.gugbab.json`(git 으로 공유하는 프로젝트 설정)이 정해 둔 항목. "이 프로젝트" 범위에서는 Space 로 바뀌지 않고 기록도 남기지 않으며, 바꾸려면 그 파일을 고친다("모든 프로젝트" 범위에서는 다른 프로젝트에 적용되도록 기록) · `*` 저장 안 한 변경 · ↷ 이 프로젝트의 자체 `.claude` 가 같은 것을 가져서 여기서 바꿔도 적용 안 됨.
 - **설명칸**: 폭 80칸 이상은 화면 오른쪽(120칸 미만이면 설명칸에 폭의 45% 이상을 주고 트리 이름 칸을 줄임), 더 좁은 창은 트리 아래입니다. 항목이면 이름·종류·상태 → 속한 곳·연관 관계(아래 "연관 동작")·🔒 고정 이유 → 한 줄 설명 → 하는 일·이럴 때·예시·주의(체크리스트의 설명 줄)를 보여 주고, 용도·묶음·블록이면 안의 개수와 일괄 동작을 보여 줍니다. 아래 설명칸은 창 높이 24줄 이상이면 6줄(속한 곳·한 줄 설명·하는 일·연관), 낮으면 3줄(속한 곳·한 줄 설명·연관)입니다. 설명이 칸보다 길면 끝에 "…"이 붙으니 창을 키우세요. 눌렀는데 안 바뀌면 그 이유를 메시지 줄에 보여 줍니다.
 - **이름**: `hook:이름` · `rule:이름.md` · `command:이름` · `agent:이름` · `skill:이름`, 기능 묶음 `bundle:이름`, 스킬·에이전트 스택 `block:이름`.
@@ -88,17 +88,20 @@
 | A | 필요로 하는 B |
 |---|---|
 | `command:spec-extract` | `agent:legacy-spec-extractor`, `agent:spec-reviewer`, `skill:spec-extraction-method` |
-| `agent:legacy-spec-extractor` | `agent:spec-reviewer` |
+| `agent:legacy-spec-extractor` | `agent:spec-reviewer`, `skill:spec-extraction-method` |
+| `agent:spec-reviewer` | `skill:spec-extraction-method` |
+| `agent:nexacro-screen-converter` | `skill:nexacro-17-xfdl-anatomy`, `skill:nexacro-to-react-mapping` |
+| `agent:nexacro-screen-analyzer` | `skill:nexacro-17-xfdl-anatomy`, `skill:nexacro-to-react-mapping` |
 | `hook:progress-tracker` | `hook:task-confirm-guard` |
 | `hook:deliverable-guard` | `agent:skill-tester` |
 | `rule:creation-workflow.md` | `agent:skill-tester` |
-| `agent:skill-creator` | `rule:creation-workflow.md` |
-| `agent:agent-creator` | `rule:agent-design.md`, `rule:creation-workflow.md` |
+| `skill:better-auth` | `rule:typescript.md` |
+| `skill:drizzle-neon-postgres` | `rule:typescript.md` |
+| `skill:prisma-orm` | `rule:typescript.md` |
+| `skill:zod-schema-validation` | `rule:typescript.md` |
 | `hook:codex-review-guard` | `rule:codex-review.md` |
 | `command:codex-review` | `rule:codex-review.md` |
-| `agent:deep-researcher` | `agent:web-searcher`, `agent:research-reviewer` |
 | `command:commit` | `rule:git.md` |
-| `agent:typescript-backend-developer` | `rule:typescript.md` |
 
 **충돌 목록** (A 를 켜면 B 가 꺼짐)
 
@@ -126,9 +129,8 @@
 | `nextjs` | React·Next.js (+TS 백엔드) | `dev-common` · `frontend-core` · `frontend-tooling` · `ts-backend` |
 | `java-legacy` | Java Spring 레거시 | `dev-common` · `java-common` · `java-legacy` |
 | `java-modern` | Java Spring 모던 | `dev-common` · `java-common` · `java-modern` |
-| `rust` | Rust Axum | `dev-common` · `rust` |
-| `python` | Python FastAPI | `dev-common` · `python` |
-| `unity` | Unity 게임 | `dev-common` · `unity` |
+| `rust` | Rust | `dev-common` · `rust` |
+| `python` | Python LLM·한국어 NLP | `dev-common` · `python` |
 | `dream` | 꿈 해몽 앱 | `frontend-core` · `frontend-tooling` · `ai-app` · `dream` |
 | `fortune` | 운세 앱 | `frontend-core` · `frontend-tooling` · `ai-app` · `fortune` |
 | `health` | 건강·식단 앱 | `frontend-core` · `frontend-tooling` · `ai-app` · `health` |

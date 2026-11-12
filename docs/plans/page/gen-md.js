@@ -35,11 +35,11 @@ const clip = (s, n) => (s.length >= n ? s + '…' : s);
 // 스킬 카테고리 → 모듈 제안 (기존 설치 템플릿 기준 이름)
 const CAT = {
   frontend: '프론트엔드 (React·Next.js·PWA·SEO 일부 포함)',
-  backend: '백엔드 (Java·Rust·Python·TS)',
+  backend: '백엔드 (Java·Python·TS)',
   architecture: '아키텍처·도메인 모델링',
   devops: '배포·CI/CD·n8n·Vercel',
   game: 'Unity 게임',
-  humanities: '인문 (꿈 해몽·사주·타로·애착 이론 등 앱 도메인 지식)',
+  humanities: '인문 (꿈 해몽·사주·애착 이론 등 앱 도메인 지식)',
   health: '건강·식단 앱',
   meta: '메타 (Claude Code·프롬프트 엔지니어링)',
   writing: '글쓰기·콘텐츠 품질',
@@ -56,7 +56,7 @@ let md = '';
 md += `\n---\n\n## 5. 에이전트 (${agents.length}종)\n\n`;
 md += '> 에이전트 = 특정 일을 맡겨 따로 돌리는 전문 일꾼. Claude 가 필요할 때 불러서 일을 넘기고 결과만 받는다.\n';
 md += '> 체크 = 🔒 고정. 체크 안 함 = `/harness` 에서 켜고 끌 수 있음. `(기본 켬/끔)` 은 처음 설치했을 때 상태.\n';
-md += '> **쓰는 스킬** / **연결 에이전트** = 에이전트 본문에 이름이 나오는 스킬·에이전트를 자동으로 찾은 것. 실제로 의존하는 것(예: java-backend-developer → mybatis-mapper-patterns)도 있고 예시로만 언급된 것(예: freshness-auditor → axum)도 섞여 있어서, manifest 로 옮길 때 한 번 걸러야 한다 (8장 B).\n\n';
+md += '> **쓰는 스킬** / **연결 에이전트** = 에이전트 본문에 이름이 나오는 스킬·에이전트를 자동으로 찾은 것. 실제로 의존하는 것(예: legacy-spec-extractor → spec-extraction-method)도 있고 예시로만 언급된 것(예: skill-tester → 예시로 든 스킬)도 섞여 있어서, manifest 로 옮길 때 한 번 걸러야 한다 (8장 B).\n\n';
 const byCat = {};
 for (const a of agents) (byCat[a.c] = byCat[a.c] || []).push(a);
 const ACAT = { meta: '메타 (생성·검증·관리)', research: '리서치', validation: '검증·감사', frontend: '프론트엔드', backend: '백엔드', domain: '도메인·기획·설계', devops: '배포', game: '게임', health: '건강' };

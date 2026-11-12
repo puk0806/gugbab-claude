@@ -76,10 +76,10 @@ gugbab-claude --raw    # 하네스 없이 그냥 claude
 
 | 종류 | 수 | 문서 |
 |---|---|---|
-| 스킬 | 스킬 (11카테고리, 195종) | [docs/skills/](./docs/skills/README.md) |
-| 에이전트 | 에이전트 (9카테고리) 61종 | [docs/agents/](./docs/agents/README.md) |
-| 훅 | 훅 (33종) — 확인 절차·위험 명령 차단·비밀 보호·TDD·적대적 테스트·한국어 답변·병렬 안내·Claude Code 버전 확인·래퍼 버전 확인·PR 전 버전 검사 등 | [docs/hooks/](./docs/hooks/README.md) |
+| 스킬 | 스킬 (10카테고리, 90종) | [docs/skills/](./docs/skills/README.md) |
+| 에이전트 | 에이전트 (5카테고리) 10종 | [docs/agents/](./docs/agents/README.md) |
+| 훅 | 훅 (30종) — 확인 절차·위험 명령 차단·비밀 보호·TDD·적대적 테스트·한국어 답변·Claude Code 버전 확인·래퍼 버전 확인·PR 전 버전 검사 등 | [docs/hooks/](./docs/hooks/README.md) |
 | 룰 | 규칙 (14종) | [docs/rules/](./docs/rules/README.md) |
-| 커맨드 | 12종 — `/harness` · `/commit` · `/create-pr` · `/create-plan` · `/tdd-implement` 등 | [.claude/commands/](./.claude/commands) |
+| 커맨드 | 7종 — `/harness` · `/commit` · `/create-pr` · `/fix-pr` · `/spec-extract` 등 | [.claude/commands/](./.claude/commands) |
 
 무엇이 기본으로 켜지고 무엇이 고정인지, 기본·프리셋마다 각 항목이 🔒 고정·✅ 켜짐·⬜ 꺼짐 중 무엇인지는 [기본값·고정 목록](./docs/DEFAULTS.md) 에 정리했습니다. 원본은 [항목 체크리스트](./docs/plans/2026-10-15-harness-item-checklist.md), 항목끼리의 관계(묶음·블록·필수 의존)는 [relations.json](./relations.json) 이 원본입니다.

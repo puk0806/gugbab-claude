@@ -1,6 +1,6 @@
 # 훅 (Hooks)
 
-Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 33종 = 실행 훅 32종 + `statusline.sh`, 2026-10-19 레포·래퍼 전용 🔒 `wrapper-version-check` 추가 — 2026-10-17 실측 — 같은 날 레포 전용 🔒 `release-version-guard` 추가 — 같은 날 옛 복사 설치와 함께 `instructions-loaded` 삭제 — 2026-10-16 레포 전용 `relation-guard`, 2026-10-17 레포·래퍼 전용 `parallel-hint`·`claude-version-check` 추가).
+Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 30종 = 실행 훅 29종 + `statusline.sh` — 2026-11-11 `session-start`(내장 gitStatus 와 중복)·`parallel-hint`(선호 안내)·`relation-guard`(관계 검사는 `scripts/relations.test.js` 가 맡음) 제거 · 2026-10-19 레포·래퍼 전용 🔒 `wrapper-version-check` 추가 — 2026-10-17 실측 — 같은 날 레포 전용 🔒 `release-version-guard` 추가 — 같은 날 옛 복사 설치와 함께 `instructions-loaded` 삭제 — 2026-10-16 레포 전용 `relation-guard`, 2026-10-17 레포·래퍼 전용 `parallel-hint`·`claude-version-check` 추가).
 
 훅 파일 위치: `.claude/hooks/`
 
@@ -29,11 +29,10 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 33종 = 실행 �
 | [agent-md-guard.js](../../.claude/hooks/agent-md-guard.js) | PreToolUse Write · PostToolUse Edit | 에이전트 .md name·description·tools·model·example 검증 — **위반 시 저장 자체 차단** | ✅ |
 | [verification-guard.js](../../.claude/hooks/verification-guard.js) | PreToolUse Write · PostToolUse Edit | verification.md 필수 섹션·UNVERIFIED·"내장 지식" 자백 검증 — **위반 시 저장 자체 차단**. 편집 후 frontmatter date·메타 표 검증일·SKILL.md 검증일이 다르면 비차단 경고(2026-09-30) | ✅ |
 | [staleness-check.js](../../.claude/hooks/staleness-check.js) | SessionStart | 스킬 검증일 경과 감지 — 30~59일 경고, 60일+ 재검증 강제 지시. 검증일 3곳(frontmatter·메타 표·SKILL.md) 불일치·판독 불가 스킬 목록 경고(2026-09-30 — "최신 날짜" 판정이 불일치를 가리던 문제) | ✅ |
-| [session-start.js](../../.claude/hooks/session-start.js) | SessionStart | 세션 시작 시 현재 브랜치·미커밋 파일·최근 커밋 요약 출력 | ✅ |
 | [session-export.js](../../.claude/hooks/session-export.js) | Stop | 세션 대화 요약(요청·응답·수정 파일·Codex 리뷰) 강제 보존 — Stop(매 턴)은 로컬 `~/.claude/projects/<해시>/exports/`에만 기록(레포 status 오염 없음), 커밋 배치의 `--refresh` 실행 시에만 레포 `exports/`에 전체 요약 생성(Y 프로젝트). **비밀번호·토큰·개인키처럼 보이는 값(`password:`·`api_key=`·`Bearer …`·`ghp_`·`sk-`·URL 안 `user:pass@`·PEM 블록)은 `***` 로 가려 기록**(2026-10-22 — 대화에 인용한 평문 비밀번호가 레포로 갈 뻔함) (비차단) | ✅ |
 | [cc-notify.js](../../.claude/hooks/cc-notify.js) | Stop | 작업 완료 시 macOS 데스크탑 알림 (비차단, 타 플랫폼 silent) | ✅ |
 | [korean-response-guard.js](../../.claude/hooks/korean-response-guard.js) | UserPromptSubmit · Stop | 답변 한국어 강제 — 매 질문마다 "한국어로 답변" 지시 주입 + 종료 시 마지막 답변의 한국어 단어 비율(코드·경로·URL·식별자 제외) 50% 미만이면 재작성 요구(1회, `stop_hook_active` 루프 방지) + **이번 턴 중간 안내(도구 호출 사이 문장) 중 영어 블록이 2개 이상이면 그 내용을 한국어로 다시 알리게 함**(2026-10-22 — 마지막 답만 보던 빈틈). 사용자가 "영어로" 요청하면 통과 | ✅ |
-| [task-confirm-guard.js](../../.claude/hooks/task-confirm-guard.js) | UserPromptSubmit · PreToolUse Write/Edit/NotebookEdit | **확인 절차 강제**(2026-10-06) — 질문할 때 승인 여부를 기록하고, 승인 전 Write/Edit/NotebookEdit 를 **차단**. 승인 = 직전 답변의 마지막 줄이 "진행할까요?" + 이번 질문이 거절·수정 요청(아니·말고·다시 정리·"-지 마"·"-면 안 돼" 등)이나 승인 표현 없는 되묻기가 아님. 예외: 메모리·계획·임시 폴더 쓰기(래퍼 설정 폴더 링크 경로는 실제 위치로 판정 — 2026-10-16. 이 훅의 승인 상태 폴더는 임시 폴더 안이어도 예외 아님 — 자기 승인 차단, 2026-10-23), "바로 진행"·"확인 없이"·"물어보지 말고"·"컨펌 없이"·"그냥 진행/만들어/해줘" 명시(바로 뒤에 "하지 마" 같은 부정이 오면 생략 아님 — 2026-10-22). 단어로 작업 복잡도를 추측하던 구 task-plan-guard 와 달리 직전 대화만으로 판정 | ✅ |
+| [task-confirm-guard.js](../../.claude/hooks/task-confirm-guard.js) | UserPromptSubmit · PreToolUse Write/Edit/NotebookEdit·Bash/Monitor · SubagentStart/Stop | **확인 절차 강제**(2026-10-06) — 질문할 때 승인 여부를 기록하고, 승인 전 Write/Edit/NotebookEdit 를 **차단**. **승인 전 셸로 파일 바꾸기도 차단**(2026-11-10 — 리다이렉트·cp·mv·rm·sed -i·tee, 쓰기·삭제·실행 코드가 든 python·node 인라인/스크립트, 쓰는 npm 스크립트(package.json 실제 명령을 따라가 판정)·설치, git checkout·stash·reset --hard, prettier --write 등. 읽기·테스트·임시 폴더 쓰기는 통과, 해석 불가 명령은 차단 — 판정 `lib/pre-approval-write.js`). **승인 중 띄운 서브에이전트는 끝날 때까지 승인 유지**(SubagentStart 로 agent_id 기록, 거절·중단하면 함께 풀림, 승인 전에 띄운 서브에이전트는 차단). 승인 = 직전 답변의 마지막 줄이 "진행할까요?" + 이번 질문이 거절·수정 요청(아니·말고·다시 정리·"-지 마"·"-면 안 돼" 등)이나 승인 표현 없는 되묻기가 아님. 예외: 메모리·계획·임시 폴더 쓰기(래퍼 설정 폴더 링크 경로는 실제 위치로 판정 — 2026-10-16. 이 훅의 승인 상태 폴더는 임시 폴더 안이어도 예외 아님 — 자기 승인 차단, 2026-10-23), "바로 진행"·"확인 없이"·"물어보지 말고"·"컨펌 없이"·"그냥 진행/만들어/해줘" 명시(바로 뒤에 "하지 마" 같은 부정이 오면 생략 아님 — 2026-10-22). 단어로 작업 복잡도를 추측하던 구 task-plan-guard 와 달리 직전 대화만으로 판정 | ✅ |
 | [config-change-audit.js](../../.claude/hooks/config-change-audit.js) | SessionStart · ConfigChange | **설정 변경 감사**(2026-10-06) — 세션 시작 때 settings 스냅샷을 저장하고, 세션 중 설정 파일이 바뀌면 비교해 감사 로그(대화 기록 폴더 `config-audit/`)에 남긴다. 훅 제거·deny 제거·넓은 허용(`Bash`·`Bash(*)` 등)·`bypassPermissions`·`disableAllHooks`·파일 삭제/깨짐은 ⚠ systemMessage 로 알림. **차단하지 않음**(하네스 레포는 설정을 개발하므로). skills 변경은 기록만 | ✅ |
 | [progress-tracker.js](../../.claude/hooks/progress-tracker.js) | UserPromptSubmit · PostToolUse Write/Edit/NotebookEdit · SessionStart | **진행 기록**(2026-10-06) — "진행할까요?" 승인 시 직전 답변의 이해 요약·작업 목록을 저장(승인 판정은 task-confirm-guard 와 공유), 파일 수정마다 경로 기록(최대 200). SessionStart compact·resume 이면 이 세션 계획을, startup·clear 이면 72시간 안의 직전 작업을 한 번 안내. 저장은 대화 기록 폴더 `progress/` (레포 미오염). 백그라운드 알림은 계획을 덮어쓰지 않음 | ✅ |
 | [statusline.sh](../../.claude/hooks/statusline.sh) | statusLine | 상태 바 — 브랜치 + 미커밋 수 + PENDING_TEST 스킬 수 표시. PENDING_TEST 는 `docs/skills/**/verification.md` frontmatter `status:` 기준(2026-10-16 — 예전엔 스킬 본문의 예시 글자까지 셌음), 구분자 ` \| ` | ✅ |
@@ -60,11 +59,11 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 33종 = 실행 �
 
 ---
 
-## TypeScript 전용 훅 (1종) — react-spa·nextjs·health·dream-interpretation·fortune-app 템플릿
+## TypeScript 전용 훅 (1종) — TS 프로젝트(프리셋 nextjs·dream·fortune·health 의 개발 품질 묶음과 함께)
 
 | 훅 | 이벤트 | 설명 | 테스트 |
 |----|--------|------|:---:|
-| [typescript-quality.js](../../.claude/hooks/typescript-quality.js) | PostToolUse Write/Edit | .ts/.tsx 저장 시 tsc --noEmit 자동 실행 — 오류 있으면 차단. `--changed-only`(레거시 프로파일): 증분 컴파일 + 베이스라인(직전 통과 시점 에러 집합) 대비 **새로 생긴 에러만** 차단(소비자 파일 회귀 포함), 타임아웃 180s. `--seed --project <dir>`로 베이스라인 선생성(설치 시 루트+패키지 전부 제안). 베이스라인은 키별 개수(multiset)로 `~/.claude/typescript-quality/`에 영속 보관. 타임아웃·도구 장애(로컬 tsc 없음 등)는 1회 경고, 연속 2회부터 차단. 컴파일러는 `npx --no-install`로 프로젝트 로컬만 사용 | ✅ |
+| [typescript-quality.js](../../.claude/hooks/typescript-quality.js) | PostToolUse Write/Edit(`--record`) + Stop(`--stop`) | 저장 때는 고친 .ts/.tsx 만 기록하고, **답변을 마칠 때 한 번** tsc --noEmit — 오류 있으면 종료를 막음(같은 세션 연속 3회까지, 그 뒤 경고 후 통과 — 2026-11-12 변경). `--changed-only`(레거시 프로파일): 증분 컴파일 + 베이스라인(직전 통과 시점 에러 집합) 대비 **새로 생긴 에러만** 차단(소비자 파일 회귀 포함), 타임아웃 180s. `--seed --project <dir>`로 베이스라인 선생성(설치 시 루트+패키지 전부 제안). 베이스라인은 키별 개수(multiset)로 `~/.claude/typescript-quality/`에 영속 보관. 타임아웃·도구 장애(로컬 tsc 없음 등)는 1회 경고, 연속 2회부터 차단. 컴파일러는 `npx --no-install`로 프로젝트 로컬만 사용 | ✅ |
 
 ---
 
@@ -97,13 +96,11 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 33종 = 실행 �
 
 ---
 
-## 이 레포 전용 훅 (1종) — 설치되지 않음
+## 이 레포 전용 훅 (3종) — 설치되지 않음
 
 | 훅 | 이벤트 | 설명 | 테스트 |
 |----|--------|------|:---:|
-| [relation-guard.js](../../.claude/hooks/relation-guard.js) | PostToolUse Write/Edit · PreToolUse Bash | 훅·룰·커맨드·에이전트·스킬 관계 원본 [`relations.json`](../../relations.json)(묶음·블록·필수 의존·관계 분류) 검사 — 파일 저장 때 분류 안 된 새 언급·블록/묶음 소속 없는 새 항목·체크리스트 줄 없는 새 훅·룰·커맨드를 알리고(비차단), `git commit` 때 하나라도 있으면 차단. `relations.json` 이 없는 레포에서는 동작하지 않음. 레포 전체 검사는 `scripts/relations.test.js` | ✅ |
-| [parallel-hint.js](../../.claude/hooks/parallel-hint.js) | UserPromptSubmit · PostToolUse (전체) | **병렬 실행 안내**(2026-10-17, 비차단) — 요청에 서로 독립인 작업이 여럿 보이면(번호 목록 2개+·작업 동사 여럿·"병렬" 언급) 독립 도구 호출은 한 응답에, 긴 테스트는 백그라운드로, 독립 조사는 서브에이전트로 동시에 하라고 알림(앞 결과가 필요한 단계·같은 파일 수정·커밋 순서·사용자 확인 대기는 제외). 읽기 전용 도구 1개씩인 응답이 3번 연속이면 묶으라고 한 번 알림(트랜스크립트 끝 256KB만 읽음). 시스템·훅 메시지·짧은 질문은 무시. 옛 복사 설치에는 들어가지 않음 — 래퍼에서는 🔒 고정(끌 수 없음) | ✅ |
-| [claude-version-check.js](../../.claude/hooks/claude-version-check.js) | SessionStart | **Claude Code 버전 확인**(2026-10-17, 비차단, 래퍼에서 🔒 고정) — `claude --version` 을 지난 세션에 본 버전과 비교해 바뀌었으면 알림(래퍼의 로그인 공유는 문서에 없는 내부 변수 `CLAUDE_SECURESTORAGE_CONFIG_DIR` 를 쓰므로 "Not logged in" 이면 `gugbab-claude doctor`), 하루에 한 번 npm 레지스트리에서 최신 버전을 확인(3초 제한, 실패하면 건너뜀)해 새 버전이 있으면 `claude update` 안내. 기록은 래퍼 데이터 폴더 `state/claude-version.json`(디스패처가 `GUGBAB_STATE_DIR` 로 넘김, 없으면 임시 폴더) — `status`·`doctor` 도 이 기록으로 버전 줄을 보여 줌. 옛 복사 설치에는 들어가지 않음 | ✅ |
+| [claude-version-check.js](../../.claude/hooks/claude-version-check.js) | SessionStart · UserPromptSubmit | **Claude Code 자동 업데이트**(2026-11-11 사용자 요청) — 새 버전이 있으면 `claude update` 를 뒤에서 따로 띄워(세션은 기다리지 않음, 같은 목표 버전은 24시간에 한 번, 잠금 `claude-update.lock` 30분) 결과(`claude-update.json` — 명령이 성공이라 해도 버전이 실제로 올랐을 때만 성공)를 다음 SessionStart·질문 때 한 번 알림. 켜 둔 세션은 UserPromptSubmit 에서 기록만 읽고 24시간 지났으면 확인·업데이트를 뒤에서 띄움. `DISABLE_UPDATES`·`DISABLE_AUTOUPDATER`(사용자가 끔)·윈도우(실행 중 exe 잠금)·Homebrew(`CLAUDE_CODE_PACKAGE_MANAGER_AUTO_UPDATE=1` 안내)는 실행하지 않고 알리기만. Claude Code 도 native·npm 설치에서 스스로 업데이트하므로(공식 setup 문서) 그것이 실패·지연될 때를 메움. **Claude Code 버전 확인**(2026-10-17, 비차단, 래퍼에서 🔒 고정) — `claude --version` 을 지난 세션에 본 버전과 비교해 바뀌었으면 알림(래퍼의 로그인 공유는 문서에 없는 내부 변수 `CLAUDE_SECURESTORAGE_CONFIG_DIR` 를 쓰므로 "Not logged in" 이면 `gugbab-claude doctor`), 하루에 한 번 npm 레지스트리에서 최신 버전을 확인(3초 제한, 실패하면 건너뜀)해 새 버전이 있으면 `claude update` 안내. 기록은 래퍼 데이터 폴더 `state/claude-version.json`(디스패처가 `GUGBAB_STATE_DIR` 로 넘김, 없으면 임시 폴더) — `status`·`doctor` 도 이 기록으로 버전 줄을 보여 줌. 옛 복사 설치에는 들어가지 않음 | ✅ |
 | [release-version-guard.js](../../.claude/hooks/release-version-guard.js) | PreToolUse Bash | **PR 전 버전 검사**(2026-10-17, 🔒 고정, gugbab-claude 레포 전용) — `gh pr create` 직전 커밋된 `VERSION` 이 최신 `v*` 태그(origin 3초, 실패 시 로컬)보다 크지 않으면 차단하고 `scripts/release-version.js bump` → 커밋 안내. 머지되면 `release-on-main` 워크플로가 그 버전으로 태그·Release 생성. 레포에 `.github/workflows/release-on-main.yml` 이 일반 파일로 있을 때만 동작, 프로젝트 코드는 실행하지 않음 | ✅ |
 | [wrapper-version-check.js](../../.claude/hooks/wrapper-version-check.js) | SessionStart · UserPromptSubmit | **세션 중 자동 업데이트**(2026-10-23, UserPromptSubmit) — 마지막 업데이트 확인(`state/update-check.json`)에서 24시간이 지났으면 `node <하네스>/cli/main.js self-update` 를 뒤에서 띄워(질문은 기다리지 않음) 실행 때와 같은 판정(채널·버전 고정·로컬 변경·fast-forward·잠금 `state/update.lock`)으로 업데이트, 이 세션이 열린 뒤 하네스가 바뀌었으면 커밋마다 한 번 안내 + 재시작 표시. 미래·깨진 확인 시각은 확인할 때로 봄, `cli/main.js` 가 일반 파일이 아니면(링크·폴더) 띄우지 않음, 이 세션의 `GUGBAB_LAUNCH` 는 넘기지 않음. **래퍼 버전 확인**(2026-10-19, 비차단, 래퍼에서 🔒 고정) — 래퍼가 claude 를 띄울 때 넘긴 하네스 커밋 `GUGBAB_WRAPPER_REV` 를 설치본 HEAD 와 비교. 세션 도중 업데이트됐으면 설정 폴더에 재시작 표시(`.gugbab-restart`)를 남겨 `/exit` 하면 래퍼가 새 버전으로 `--continue` 재시작, 값이 없으면(다시 실행 기능이 없던 v1.0.4 이하 래퍼) 터미널에서 `gugbab-claude -c` 로 다시 실행하라고 안내(이때는 표시를 남기지 않음 — 예전 래퍼가 매번 다시 시작하지 않게). 개발 모드·래퍼가 조립하지 않은 설정 폴더·`unknown`·형식이 틀린 값은 조용히 건너뜀, 표시 자리의 링크는 따라가지 않음. 래퍼 자체도 업데이트되면 새 버전 자신으로 다시 실행(`self-update` → exit 10 → `exec`)하므로 이 훅은 안전망. **버전 안내**(같은 날 추가): 래퍼가 실행마다 만드는 `GUGBAB_LAUNCH` 와 함께 `self-update` 가 남긴 확인 결과(`state/last-check.json`)를 읽어 `[gugbab] 하네스 v1.0.4 → v1.0.5 로 업데이트됐습니다` · `하네스 v1.0.5 — 최신입니다` · `… 업데이트 확인 건너뜀 (마지막 확인 09:34, 1시간마다 …)` · 실패 사유를 실행당 한 번 보여 줌 — SessionStart `systemMessage` 는 기록에만 남고 첫 화면에 안 보여서 `additionalContext` 로 Claude 가 첫 답변 맨 위에 그대로 전하게 함(`systemMessage` 도 유지, 계획서 결정 37)(같은 실행의 /clear·재시작은 반복 안 함, 기록 없으면 새 세션일 때 버전만). 다른 실행의 기록·조작된 실행 값·버전 라벨(제어문자·셸 문자·초장문)·링크·깨진 기록은 무시. 옛 복사 설치에는 들어가지 않음 | ✅ |
 
@@ -112,13 +109,13 @@ Claude Code 이벤트에 반응하는 자동화 훅 모음 (총 33종 = 실행 �
 ## 훅 계층 구조
 
 ```
-공통 (18종)      ← 모든 템플릿
-├── 개발 전용 (6종)  ← react-spa·nextjs·rust-axum·java-spring-*·unity-game·health·dream-interpretation·fortune-app·python-fastapi·nexacro(레거시 5종)
-│   └── TypeScript (1종)  ← react-spa·nextjs·health·dream-interpretation·fortune-app 추가
+공통 (17종)      ← 모든 템플릿
+├── 개발 전용 (6종)  ← 코드를 쓰는 프로젝트(래퍼 `bundle:dev-quality` 등) · 넥사크로 레거시는 tdd-guard 제외 5종
+│   └── TypeScript (1종)  ← TS 프로젝트에서 추가 (저장 때 기록, 답변 종료 때 판정)
 ├── Memory (2종)    ← --memory 옵션 선택 시 추가
 ├── Codex (1종)     ← --codex 옵션 선택 시 추가
 └── Branch Protection (1종)  ← --branch-protection 옵션 선택 시 추가
-레포 전용 (5종)  ← relation-guard · release-version-guard — gugbab-claude 레포에서만 (release-version-guard 는 다른 프로젝트에선 스스로 건너뜀) · parallel-hint · claude-version-check · wrapper-version-check — 이 레포 + 래퍼(gugbab-claude)에서 (옛 복사 설치에는 설치되지 않음)
+레포 전용 (3종)  ← release-version-guard — gugbab-claude 레포에서만 (다른 프로젝트에선 스스로 건너뜀) · claude-version-check · wrapper-version-check — 이 레포 + 래퍼(gugbab-claude)에서 (옛 복사 설치에는 설치되지 않음)
 ```
 
 ## 래퍼(`gugbab-claude`)로 실행할 때 (2026-10-16 개편 2단계)
