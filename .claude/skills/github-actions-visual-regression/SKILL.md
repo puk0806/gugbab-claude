@@ -1,6 +1,6 @@
 ---
 name: github-actions-visual-regression
-description: GitHub Actions에서 Storybook + Playwright 시각 회귀를 자동 실행하고 PR에 결과(깨진 컴포넌트·diff PNG)를 시각화하는 workflow 패턴 - 트리거, 빌드 artifact 전달, baseline 캐시, 결과 업로드, PR 코멘트, 모노레포 matrix
+description: GitHub Actions 시각 회귀(Storybook + Playwright) 최신 변경점과 함정 - 액션 최신 메이저(checkout v7·upload v7·download v8·github-script v9), checkout v7 포크 PR 체크아웃 기본 차단(v2~v6 백포트), artifact 불변·이름 충돌, github-script v9 ESM·스크립트 주입 방지, test-runner 지원 종료(2026-09-30)와 index.json→Playwright 대안, Storybook 10 CI 요구, toHaveScreenshot·baseline 실측 함정
 disable-model-invocation: true
 ---
 
@@ -16,455 +16,141 @@ disable-model-invocation: true
 > - https://securitylab.github.com/resources/github-actions-preventing-pwn-requests/
 > - https://github.blog/changelog/2026-06-18-safer-pull_request_target-defaults-for-github-actions-checkout/
 >
-> 검증일: 2026-09-28 (최초 2026-04-29 · 재검증 08-11, 09-28)
+> - https://playwright.dev/docs/docker
+> - https://storybook.js.org/docs/releases/migration-guide (5절 — 구 storybook-visual-testing 에서 옮김)
+> - https://playwright.dev/docs/test-snapshots (5절)
+> - https://storybook.js.org/docs/writing-tests/integrations/vitest-addon/migration-guide (5절)
+>
+> 검증일: 2026-11-09 (최초 2026-04-29 · 재검증 08-11, 09-28, 11-09)
 
-> 주의: 이 문서는 2026-09-28 기준 최신 메이저 버전으로 작성되었습니다.
-> `actions/checkout@v7`(7.0.1, 2026-07-20), `actions/cache@v6`(6.1.0), `actions/upload-artifact@v7`(7.0.1),
-> `actions/download-artifact@v8`(8.0.1), `actions/setup-node@v7`(7.0.0), `actions/github-script@v9`(9.0.0),
-> `dorny/paths-filter@v4`(4.0.3), `pnpm/action-setup@v6`(6.1.0), `peter-evans/create-pull-request@v8`(8.1.1),
-> `thollander/actions-comment-pull-request@v3`(3.0.1) 기준입니다. (09-28: GitHub Releases API 전수 재확인 — pnpm/action-setup만 6.0.10→6.1.0 패치, 나머지 전부 메이저·패치 변경 없음)
+> 주의: 이 문서는 2026-11-09 기준 최신 메이저 버전으로 작성되었습니다.
+> `actions/checkout@v7`(7.0.1, 2026-07-20), `actions/cache@v6`(6.1.0), `actions/upload-artifact@v7`(7.0.2),
+> `actions/download-artifact@v8`(8.0.2), `actions/setup-node@v7`(7.1.0), `actions/github-script@v9`(9.0.0),
+> `dorny/paths-filter@v4`(4.0.3), `pnpm/action-setup@v6`(6.1.1), `peter-evans/create-pull-request@v8`(8.1.1),
+> `thollander/actions-comment-pull-request@v3`(3.0.1) 기준입니다. (11-09: GitHub Releases API 전수 재확인 — 메이저 변경 없음, setup-node 7.1.0·upload 7.0.2·download 8.0.2·pnpm 6.1.1 패치만 상승)
 
 > **보안 필독 — actions/checkout v7 기본값 변경 (2026-06-18):** `pull_request_target` 및
 > `workflow_run`(pull_request 계열 이벤트 트리거) 워크플로우에서 **포크 PR 코드 체크아웃이 기본 차단**됩니다.
 > 2026-07-20부터 v2~v6 지원 메이저에도 백포트되어, `@v5` 같은 부동 태그를 쓰던 기존 시각 회귀 워크플로우도 그대로 영향을 받습니다.
-> 시각 회귀는 `pull_request_target`을 쓰고 싶어지는 대표 사례라 특히 주의해야 합니다 — 섹션 2·7 참조.
+> 시각 회귀는 `pull_request_target`을 쓰고 싶어지는 대표 사례라 특히 주의해야 합니다 — 1절 참조.
 
-> 주의: 본 스킬은 시각 회귀 **CI 파이프라인 구성**에만 집중합니다. Playwright `toHaveScreenshot` 사용법, Storybook test-runner 설정 자체는 `frontend/storybook-visual-testing` 스킬을, 일반 CI 패턴은 `devops/github-actions` 스킬을 참조하세요.
-
----
-
-## 1. 시각 회귀 워크플로우의 전체 구조
-
-시각 회귀(Visual Regression) CI는 일반 단위 테스트와 다음이 다릅니다:
-
-| 항목 | 일반 단위 테스트 | 시각 회귀 |
-|------|-------------------|-----------|
-| 결과물 | pass/fail 텍스트 | 깨진 컴포넌트의 diff PNG |
-| 환경 민감도 | 낮음 | OS·폰트·anti-aliasing에 매우 민감 |
-| baseline | 없음 | 스크린샷 baseline 필수 |
-| 진단 | 로그로 충분 | PR에 이미지 첨부 + 다운로드 링크 필요 |
-| 빌드 단계 | test 단독 | Storybook 빌드 → 정적 서빙 → 테스트 |
-
-따라서 워크플로우는 **빌드 → baseline 복원 → 시각 테스트 → 결과 업로드 → PR 코멘트** 순서로 구성합니다.
-
-```
-┌────────────────────────────────────────────────────────────┐
-│  pull_request (paths-filter)                                │
-└─────────────────────┬──────────────────────────────────────┘
-                      ▼
-┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│  build-sb    │───▶│  vrt (matrix)│───▶│ comment-pr   │
-│  (artifact)  │    │  (baseline   │    │ (artifact    │
-│              │    │   캐시)      │    │  링크 코멘트)│
-└──────────────┘    └──────────────┘    └──────────────┘
-                          │
-                          ▼
-                    test-results/
-                    (PNG·HTML, 14일 보관)
-```
+> **test-runner 지원 종료 (2026-09-30):** `test-storybook`(@storybook/test-runner)은 공식 지원이 끝났습니다. 기존 워크플로우는 계속 돌지만, 신규 구성은 5절의 "index.json → 순수 Playwright" 패턴으로 만들고 실행 단계의 `test-storybook` 자리에 `playwright test`를 넣으세요.
 
 ---
 
-## 2. 트리거: paths-filter로 시각 영향 경로만 실행
+## 이 스킬의 범위
 
-시각 회귀는 비싸므로(보통 5~15분 소요) **시각에 영향이 있는 파일이 변경됐을 때만** 실행합니다.
+시각 회귀 CI에서 **2026년에 바뀐 액션·보안 기본값·Storybook/test-runner 상황과 실측 함정**만 다룬다. Storybook 기본 설치·스토리 작성은 `storybook` 스킬.
 
-### 워크플로우 레벨 paths
+> 기본 사용법(paths/paths-filter 트리거, concurrency, 빌드 → artifact → matrix 테스트 → 결과 업로드 → PR 코멘트 잡 구성, start-server-and-test, 전체 YAML 예시)은 공식 문서 수준이라 싣지 않는다.
 
-```yaml
-name: visual-regression
+---
 
-on:
-  pull_request:
-    branches: [main]
-    paths:
-      - 'apps/storybook-mui/**'
-      - 'apps/storybook-radix/**'
-      - 'packages/ui/**'
-      - 'packages/tokens/**'
-      - 'pnpm-lock.yaml'
-      - '.github/workflows/visual-regression.yml'
-  push:
-    branches: [main]
-    paths:
-      - 'apps/storybook-mui/**'
-      - 'apps/storybook-radix/**'
-      - 'packages/ui/**'
-      - 'packages/tokens/**'
+## 1. 트리거 보안 — `pull_request_target` 금지
 
-permissions:
-  contents: read
-  pull-requests: write   # PR 코멘트용
-  actions: read          # artifact 메타 조회용
-
-concurrency:
-  group: vrt-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-```
-
-**주의:**
-- `concurrency`로 같은 PR의 중복 실행을 취소해 비용·러너 시간 절약
-- `permissions`는 최소 권한 원칙 — 코멘트 쓰기에는 `pull-requests: write`만 필요
-- `pnpm-lock.yaml` 변경도 트리거 대상 (의존성 변경이 시각에 영향)
-
-### 잡 레벨 세분화 (모노레포에서 한쪽만 변경됐을 때)
-
-```yaml
-jobs:
-  changes:
-    runs-on: ubuntu-latest
-    outputs:
-      mui: ${{ steps.filter.outputs.mui }}
-      radix: ${{ steps.filter.outputs.radix }}
-    steps:
-      - uses: actions/checkout@v7
-      - uses: dorny/paths-filter@v4
-        id: filter
-        with:
-          filters: |
-            mui:
-              - 'apps/storybook-mui/**'
-              - 'packages/ui/**'
-              - 'packages/tokens/**'
-            radix:
-              - 'apps/storybook-radix/**'
-              - 'packages/ui/**'
-              - 'packages/tokens/**'
-```
-
-> 주의: `pull_request_target` 트리거는 **사용 금지**. 포크 PR의 코드를 baseline으로 인정하면 시크릿 유출 + 임의 코드 실행으로 이어집니다 (자세한 내용은 REFERENCE의 섹션 8-1).
+> 주의: `pull_request_target` 트리거는 **사용 금지**. 포크 PR의 코드를 baseline으로 인정하면 시크릿 유출 + 임의 코드 실행으로 이어집니다("pwn requests" — base repo 컨텍스트라 시크릿·write 권한이 노출된 상태에서 포크의 `package.json` 스크립트가 실행됨).
 >
 > 2026-06-18 `actions/checkout@v7`부터는 이 실수가 **액션 차원에서 차단**됩니다 — `pull_request_target`·`workflow_run`(pull_request 계열)에서 포크 PR의 head/merge ref·SHA 또는 포크 `repository:`를 체크아웃하려 하면 액션이 실패합니다(예외 입력 `allow-unsafe-pr-checkout`, 기본 `false`). 2026-07-20 백포트로 v2~v6 부동 태그에도 적용되므로, 이 패턴을 쓰던 기존 시각 회귀 워크플로우는 **버전을 올리지 않아도 갑자기 실패**할 수 있습니다. 해결책은 `allow-unsafe-pr-checkout: true`를 켜는 것이 아니라, 시각 테스트는 시크릿이 전달되지 않는 `pull_request`에서 돌리고 결과 코멘트만 별도 신뢰 잡으로 분리하는 것입니다.
 
----
-
-## 3. Storybook 빌드 + 정적 호스팅 (artifact로 다음 잡에 전달)
-
-빌드는 한 번만 수행하고, 시각 테스트 잡은 빌드 결과물을 다운받아 정적 서빙합니다. 빌드와 테스트를 분리하면:
-- matrix로 여러 브라우저·shard에서 테스트할 때 빌드를 중복하지 않음
-- 빌드 실패 시 테스트 잡을 띄우지 않아 비용 절감
-
-```yaml
-  build-storybook:
-    needs: changes
-    if: needs.changes.outputs.mui == 'true' || needs.changes.outputs.radix == 'true'
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        app:
-          - storybook-mui
-          - storybook-radix
-        # changes 결과로 동적 매트릭스를 만드는 것은 복잡하므로
-        # 빌드는 양쪽 모두 수행하고, 시각 테스트만 변경된 쪽에서 돌립니다.
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Use Node 22
-        uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: 'pnpm'
-
-      - uses: pnpm/action-setup@v6
-        with:
-          version: 9
-
-      - run: pnpm install --frozen-lockfile
-
-      - name: Build Storybook
-        run: pnpm --filter ${{ matrix.app }} build:storybook
-
-      - name: Upload storybook-static artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: storybook-static-${{ matrix.app }}
-          path: apps/${{ matrix.app }}/storybook-static
-          retention-days: 7
-          if-no-files-found: error
-```
-
-**핵심 포인트:**
-- `actions/upload-artifact@v7`: v4 이후 artifact는 **불변(immutable)** 이라 여러 잡이 같은 이름으로 업로드할 수 없다. matrix와 함께 쓸 때는 이름에 `${{ matrix.app }}` 같은 접두·접미를 포함해야 충돌 없음 (같은 이름을 굳이 갱신해야 하면 `overwrite: true`)
-- `if-no-files-found: error`: 빌드 결과물이 비었으면 즉시 실패 (default는 `warn`)
-- `retention-days`: 1~90 사이. 시각 회귀 결과물은 PR이 머지되기 전까지만 필요하므로 7일 권장
-- v7에서 추가된 `archive: false`(단일 파일을 zip 없이 직접 업로드)는 Storybook 정적 빌드처럼 **디렉토리**를 올릴 때는 쓰지 않는다 — 기본값 `archive: true` 유지
-- `cache: 'pnpm'`은 `actions/setup-node@v7`의 내장 캐시를 활용 (별도 `actions/cache` 불필요). `pnpm/action-setup@v6`의 `version`은 `package.json`에 `packageManager`/`devEngines.packageManager`가 있으면 생략 가능
+GitHub Security Lab 권고: 포크 PR에서 빌드/스크립트 실행이 필요하면 `pull_request`, write 권한이 꼭 필요하면 `workflow_run` + 격리된 unprivileged 빌드.
 
 ---
 
-## 4. test-runner 실행: matrix 병렬 + start-server-and-test
+## 2. artifact·캐시·matrix 함정
 
-### Storybook 두 개를 병렬 실행
-
-```yaml
-  visual-regression:
-    needs: [changes, build-storybook]
-    if: |
-      always() &&
-      needs.build-storybook.result == 'success' &&
-      (needs.changes.outputs.mui == 'true' || needs.changes.outputs.radix == 'true')
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false   # 한 쪽 실패해도 나머지 결과를 끝까지 확인
-      matrix:
-        include:
-          - app: storybook-mui
-            run: ${{ needs.changes.outputs.mui == 'true' }}
-          - app: storybook-radix
-            run: ${{ needs.changes.outputs.radix == 'true' }}
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: 'pnpm'
-
-      - uses: pnpm/action-setup@v6
-        with:
-          version: 9
-
-      - name: Skip if no changes
-        if: matrix.run != 'true'
-        run: echo "No changes for ${{ matrix.app }}, skipping" && exit 0
-
-      - if: matrix.run == 'true'
-        run: pnpm install --frozen-lockfile
-
-      - name: Download storybook-static
-        if: matrix.run == 'true'
-        uses: actions/download-artifact@v8
-        with:
-          name: storybook-static-${{ matrix.app }}
-          path: apps/${{ matrix.app }}/storybook-static
-
-      - name: Restore visual baseline cache
-        if: matrix.run == 'true'
-        uses: actions/cache@v6
-        with:
-          path: apps/${{ matrix.app }}/__snapshots__
-          key: vrt-baseline-${{ matrix.app }}-${{ runner.os }}-${{ hashFiles(format('apps/{0}/__snapshots__/**', matrix.app)) }}
-          restore-keys: |
-            vrt-baseline-${{ matrix.app }}-${{ runner.os }}-
-
-      - name: Install Playwright (chromium only)
-        if: matrix.run == 'true'
-        run: pnpm exec playwright install --with-deps chromium
-
-      - name: Run visual regression
-        if: matrix.run == 'true'
-        run: |
-          pnpm --filter ${{ matrix.app }} exec start-server-and-test \
-            "http-server storybook-static --port 6006 --silent" \
-            http://127.0.0.1:6006 \
-            "test-storybook --maxWorkers=2"
-
-      - name: Upload test-results on failure
-        if: failure() && matrix.run == 'true'
-        uses: actions/upload-artifact@v7
-        with:
-          name: vrt-results-${{ matrix.app }}
-          path: |
-            apps/${{ matrix.app }}/test-results/
-            apps/${{ matrix.app }}/playwright-report/
-          retention-days: 14
-          if-no-files-found: warn
-```
-
-**핵심 포인트:**
-- `playwright install --with-deps chromium`: chromium만 설치 (전체 설치 대비 ~3배 빠름). 시각 회귀는 단일 브라우저만으로도 충분한 경우가 많음
-- `start-server-and-test`: 정적 서버 기동 → URL ready 대기 → 테스트 실행 → 종료를 한 번에 처리. `wait-on + concurrently` 조합과 동일한 결과지만 더 단순
-- `--maxWorkers=2`: GitHub-hosted runner의 기본 vCPU(2~4)에 맞춤. 더 늘리면 OOM 위험
-- `if: failure()`로 **실패 시에만** 업로드 → 성공 시 artifact 비용 절감
-- baseline 캐시 키에 `hashFiles(...)`를 쓰면 baseline이 바뀌었을 때 자동으로 새 키 생성. `restore-keys`의 prefix-only fallback이 항상 직전 baseline을 끌어옴
+- `actions/upload-artifact@v7`: v4 이후 artifact는 **불변(immutable)** 이라 여러 잡이 같은 이름으로 업로드할 수 없다. matrix와 함께 쓸 때는 이름에 `${{ matrix.app }}`를 포함해야 충돌 없음 (같은 이름을 굳이 갱신해야 하면 `overwrite: true`).
+- v7에서 추가된 `archive: false`(단일 파일을 zip 없이 직접 업로드)는 Storybook 정적 빌드처럼 **디렉토리**를 올릴 때는 쓰지 않는다 — 기본값 `archive: true` 유지.
+- `if-no-files-found` 기본은 `warn` — 빌드 결과물 업로드에는 `error`. `retention-days` 기본은 레포 설정값(보통 90일)이므로 시각 회귀 PNG는 7~14일로 명시.
+- `actions/download-artifact@v8`: `digest-mismatch: error`가 기본(해시 불일치 시 실패), `skip-decompress: true`를 주지 않는 한 zip은 자동 해제.
+- `actions/setup-node@v7`의 `cache: 'pnpm'` 내장 캐시로 별도 `actions/cache` 불필요. `pnpm/action-setup@v6`의 `version`은 `package.json`에 `packageManager`/`devEngines.packageManager`가 있으면 생략 가능.
+- baseline 캐시 키는 `hashFiles(format('apps/{0}/__snapshots__/**', matrix.app))` + prefix-only `restore-keys`로 직전 baseline을 끌어온다.
+- **matrix는 잡 레벨 `if`에서 matrix 컨텍스트를 못 본다**(잡 내부에서만 평가) → 변경된 앱만 돌리려면 `include`에 `run:` 값을 넣고 step마다 `if: matrix.run == 'true'` 가드가 표준 패턴. 앱이 5개 이상이면 동적 matrix(`outputs.matrix` JSON) 검토.
+- `playwright install --with-deps chromium`만(전체 ~600MB·~90초 vs chromium ~200MB·~30초). GitHub-hosted runner에서는 `--maxWorkers=2` 수준(더 늘리면 OOM 위험).
 
 ---
 
-## 5. baseline 캐시: 갱신은 별도 PR로 분리
+## 3. PR 코멘트 — `actions/github-script@v9`
 
-### 캐시 전략
+> 주의: v9는 `@actions/github` v9(ESM 전용)로 올라가면서 스크립트 안의 `require('@actions/github')`가 더 이상 동작하지 않습니다. 또 주입되는 `getOctokit` 인자를 `const`/`let`으로 재선언하면 `SyntaxError`가 납니다. v7/v8에서 올릴 때 이 두 가지만 확인하면 기존 코드는 그대로 동작합니다.
 
-| 시나리오 | 동작 |
-|---------|------|
-| PR에서 시각 변화 없음 | baseline 캐시 hit → 빠른 통과 |
-| PR에서 의도하지 않은 변화 | baseline mismatch → 실패 (정상) |
-| PR에서 의도한 디자인 변경 | 별도 "baseline 업데이트" PR로 처리 |
+> 주의: `actions/github-script`는 v9(9.0.0)가 최신입니다. v8부터 스크립트가 Node 24에서 실행되며 Actions Runner 2.327.1 이상이 필요합니다(self-hosted 러너 확인 필요). `thollander/actions-comment-pull-request`는 v3.0.1이 여전히 최신입니다(`comment-tag`가 같으면 기존 코멘트 갱신).
 
-### baseline 업데이트 전용 워크플로우
+**스크립트 주입 방지** — 이전 스텝 출력은 `env`로 넘긴다. `${{ }}`를 `script:` 안에 직접 넣으면 앱 이름·파일 이름의 백틱·`${}`가 JS 코드로 실행된다.
 
 ```yaml
-name: vrt-update-baseline
-
-on:
-  workflow_dispatch:
-    inputs:
-      app:
-        description: 'Target storybook app'
-        required: true
-        type: choice
-        options:
-          - storybook-mui
-          - storybook-radix
-
-permissions:
-  contents: write          # 새 baseline 커밋용
-  pull-requests: write
-
-jobs:
-  update:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ github.head_ref || github.ref_name }}
-
-      - uses: actions/setup-node@v7
-        with: { node-version: 22, cache: 'pnpm' }
-      - uses: pnpm/action-setup@v6
-        with: { version: 9 }
-      - run: pnpm install --frozen-lockfile
-
-      - run: pnpm --filter ${{ inputs.app }} build:storybook
-      - run: pnpm exec playwright install --with-deps chromium
-
-      - name: Update baseline
-        run: |
-          pnpm --filter ${{ inputs.app }} exec start-server-and-test \
-            "http-server storybook-static --port 6006 --silent" \
-            http://127.0.0.1:6006 \
-            "test-storybook -u"
-
-      - name: Create PR with new baselines
-        uses: peter-evans/create-pull-request@v8
-        with:
-          title: "chore(vrt): update baseline for ${{ inputs.app }}"
-          branch: vrt/baseline-${{ inputs.app }}
-          commit-message: "chore(vrt): update baseline"
-          add-paths: apps/${{ inputs.app }}/__snapshots__/**
+- uses: actions/github-script@v9
+  env:
+    VRT_BODY: ${{ steps.body.outputs.body }}
+  with:
+    script: |
+      const body = process.env.VRT_BODY ?? '';
+      // 마커(<!-- vrt-comment -->)로 기존 코멘트를 찾아 updateComment, 없으면 createComment (스팸 방지)
 ```
-
-**왜 PR로 분리하는가:**
-- baseline 변경은 시각 디자인 변경과 동일한 무게 — 코드 리뷰 대상
-- 자동 갱신을 main에 직접 푸시하면 **regression이 baseline에 흡수되어 영원히 못 잡음**
-- workflow_dispatch로 명시적으로만 갱신 (자동 트리거 금지)
-
-> 주의: GitHub-hosted runner는 매번 새 VM이라 OS 폰트·렌더링이 일치합니다. 그러나 베이스라인을 **로컬(macOS) 환경에서 생성**하면 CI(Ubuntu)와 anti-aliasing 차이로 false positive가 무한 발생합니다. 반드시 **CI에서 생성한 baseline만 커밋**하세요.
 
 ---
 
-## 6. 결과 업로드 + PR 코멘트 자동화
+## 4. baseline 운영
 
-### 깨진 컴포넌트 목록 추출
+- baseline 갱신은 `workflow_dispatch` 전용 워크플로우 → `peter-evans/create-pull-request@v8`로 **별도 PR + 사람 리뷰**. main에 자동 커밋하면 regression이 baseline에 흡수되어 시각 회귀가 영구히 무력화된다.
 
-`test-storybook`이 실패하면 `playwright-report/index.html`과 `test-results/<test>/test-failed-1.png`가 생성됩니다. 깨진 컴포넌트 목록은 Playwright의 JSON reporter로 추출합니다.
+> 주의: GitHub-hosted runner는 매번 새 VM이라 OS 폰트·렌더링이 일치합니다. 그러나 베이스라인을 **로컬(macOS) 환경에서 생성**하면 CI(Ubuntu)와 anti-aliasing 차이로 false positive가 무한 발생합니다(특히 한글 폰트·sub-pixel hinting). 반드시 **CI에서 생성한 baseline만 커밋**하세요.
 
-```yaml
-      - name: Run visual regression
-        if: matrix.run == 'true'
-        run: |
-          pnpm --filter ${{ matrix.app }} exec start-server-and-test \
-            "http-server storybook-static --port 6006 --silent" \
-            http://127.0.0.1:6006 \
-            "test-storybook --maxWorkers=2"
-        env:
-          # test-runner의 jest config에서 json-reporter를 활성화하거나
-          # PLAYWRIGHT_JSON_OUTPUT_NAME 등으로 결과를 파일로 떨굼
-          STORYBOOK_TEST_REPORT_PATH: vrt-report.json
-```
-
-### actions/github-script로 코멘트
-
-`actions/github-script@v9`는 octokit이 사전 주입돼 별도 의존성 없이 PR 코멘트를 작성할 수 있습니다.
-
-> 주의: v9는 `@actions/github` v9(ESM 전용)로 올라가면서 스크립트 안의 `require('@actions/github')`가 더 이상 동작하지 않습니다. 또 주입되는 `getOctokit` 인자를 `const`/`let`으로 재선언하면 `SyntaxError`가 납니다. v7/v8에서 올릴 때 이 두 가지만 확인하면 아래 예시 코드는 그대로 동작합니다.
-
-```yaml
-  comment-pr:
-    needs: visual-regression
-    if: always() && github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-      actions: read
-    steps:
-      - name: Download all vrt-results
-        uses: actions/download-artifact@v8
-        with:
-          path: artifacts
-          pattern: vrt-results-*
-          merge-multiple: false
-          # digest-mismatch: error (기본값) — 다운로드 해시 불일치 시 실패.
-          # skip-decompress: true 를 주지 않는 한 zip은 자동 해제된다.
-
-      - name: Build comment body
-        id: body
-        run: |
-          {
-            echo 'body<<EOF'
-            echo '## Visual Regression Result'
-            echo ''
-            if [ "${{ needs.visual-regression.result }}" = 'success' ]; then
-              echo 'All visual tests passed.'
-            else
-              echo 'Visual diff detected. Download artifacts below to inspect:'
-              echo ''
-              for d in artifacts/vrt-results-*; do
-                [ -d "$d" ] || continue
-                app=$(basename "$d" | sed 's/^vrt-results-//')
-                echo "- **$app**"
-                find "$d" -name 'test-failed-*.png' -printf '  - %f\n' | head -20
-              done
-              echo ''
-              echo "Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-            fi
-            echo 'EOF'
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Comment PR
-        uses: actions/github-script@v9
-        with:
-          script: |
-            const body = `${{ steps.body.outputs.body }}`;
-            const { owner, repo } = context.repo;
-            const issue_number = context.payload.pull_request.number;
-
-            // 같은 마커가 있는 기존 코멘트 갱신 (스팸 방지)
-            const marker = '<!-- vrt-comment -->';
-            const finalBody = `${marker}\n${body}`;
-            const { data: comments } = await github.rest.issues.listComments({
-              owner, repo, issue_number,
-            });
-            const existing = comments.find(c => c.body?.startsWith(marker));
-            if (existing) {
-              await github.rest.issues.updateComment({
-                owner, repo, comment_id: existing.id, body: finalBody,
-              });
-            } else {
-              await github.rest.issues.createComment({
-                owner, repo, issue_number, body: finalBody,
-              });
-            }
-```
-
-### thollander/actions-comment-pull-request 대체안
-
-더 간단한 코멘트면 서드파티 액션도 가능합니다 (마커 갱신 로직 내장).
-
-```yaml
-      - name: Comment PR (simple)
-        if: github.event_name == 'pull_request'
-        uses: thollander/actions-comment-pull-request@v3
-        with:
-          message: |
-            ## Visual Regression: ${{ needs.visual-regression.result }}
-            [Run details](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-          comment-tag: vrt-comment   # 같은 태그면 갱신
-```
-
-> 주의: `actions/github-script`는 v9(9.0.0)가 최신입니다. v8부터 스크립트가 Node 24에서 실행되며 Actions Runner 2.327.1 이상이 필요합니다(self-hosted 러너 확인 필요). `thollander/actions-comment-pull-request`는 v3.0.1이 여전히 최신입니다.
+- 호스팅 SaaS(Chromatic·Percy·Argos)를 이미 쓰거나, 인터랙션·접근성 회귀가 더 중요하면 self-managed 파이프라인은 과잉일 수 있다.
 
 ---
 
----
+## 5. 러너·스냅샷 함정 — Storybook 10 · test-runner 지원 종료 · toHaveScreenshot
 
-> 상세 레퍼런스 (예제·고급 패턴·흔한 실수) → [`references/REFERENCE.md`](references/REFERENCE.md)
+> 2026-11-11 구 `storybook-visual-testing` 스킬에서 옮긴 절. 기준: Storybook 10.6.x(최신 안정 10.6.6, 11은 베타) · @storybook/test-runner 0.26.0(마지막) · Playwright v1.65.x. 원 검증일 2026-11-09.
+
+### 5-1. @storybook/test-runner 공식 지원 종료
+
+- 저장소가 **2026-09-30 보관(archived)** 처리됐고, 마지막 0.26.0은 실행할 때마다 지원 종료 경고를 출력하며 수정·호환성 업데이트를 받지 않는다. 기존 설정은 "사용자 책임"으로 계속 쓸 수 있다(공식 MIGRATION.md "Test runner support ended").
+- 0.26.0의 `peerDependencies`는 `storybook ^10.x`·`^11.0.0-0`·`>=11`까지 받아 **설치는 막히지 않는다** — 막히지 않는다고 지원되는 것은 아니다.
+- **신규 구성 기본값 = 스토리 `index.json` → 순수 Playwright 테스트**(공식 MIGRATION.md가 제시하는 대안, test-runner 의존 없음):
+
+```typescript
+// e2e/visual/components.spec.ts — build-storybook 결과물을 정적 서빙한 뒤 실행
+import { test, expect } from '@playwright/test';
+import storyIndex from '../../storybook-static/index.json';
+
+const stories = Object.values(storyIndex.entries).filter((e: any) => e.type === 'story');
+
+for (const story of stories) {
+  test(`visual: ${story.title} - ${story.name}`, async ({ page }) => {
+    await page.goto(`/iframe.html?id=${story.id}&viewMode=story`);
+    await page.waitForLoadState('networkidle');
+    await page.evaluate(() => document.fonts.ready);   // 폰트 fallback 순간 캡처 방지
+    await expect(page.locator('#storybook-root')).toHaveScreenshot(`${story.id}.png`, {
+      animations: 'disabled',
+    });
+  });
+}
+```
+
+- Vite 기반이면 공식 권장 경로는 Vitest 애드온 이전이지만, Vitest 애드온의 "visual tests"는 **Chromatic 연동**이다. 외부 SaaS 없이 픽셀 비교가 목적이면 위 패턴이 맞다.
+- 이미 test-runner를 쓰는 프로젝트를 유지보수한다면: `preRender`/`postRender` 훅은 deprecated → `preVisit`/`postVisit`만 쓴다. CI에서 a11y를 빌드 게이트로 강제하려면 `postVisit`에서 `axe-playwright`의 `injectAxe`/`checkA11y`를 부른다(`@storybook/addon-a11y`는 패널 표시만 한다). 갱신은 `test-storybook -u`.
+
+### 5-2. Storybook 10 이 CI 이미지에 요구하는 것
+
+| 항목 | 요구 | 함정 |
+|------|------|------|
+| Node.js | **20.19+ 또는 22.12+** (`require(esm)` 플래그 없이 필요) | 일부 글의 "20.16+ / 22.19+"는 틀림(공식 마이그레이션 가이드 기준 20.19+/22.12+). CI·Docker 이미지도 이 버전 이상으로 맞춘다 |
+| `.storybook/main`·`preview` | **ESM 필수**(`export default`) | 프로젝트가 CJS여도 이 두 파일은 ESM 문법 |
+| `addons` 배열 | `@storybook/addon-essentials`·`addon-interactions` **제거** | v9에서 코어에 내장됨 — 남겨 두면 시작 시 에러로 빌드 잡이 실패 |
+| 업그레이드 | `npx storybook@latest upgrade` | 10.4~10.6 추가분(Vite 8·Next.js 16.2 지원 등)은 시각 테스트 셋업에 영향 없음 |
+
+### 5-3. toHaveScreenshot·baseline 실측 함정
+
+- **baseline 파일명에 플랫폼이 붙는다**(`card-chromium-linux.png` / `card-chromium-darwin.png`) — macOS에서 만든 baseline은 Linux 러너에서 "없는 baseline"이거나 1px 차이로 깨진다(4절 주의와 같은 원인).
+- 로컬에서 CI와 같은 baseline을 만들 때 Docker 이미지 태그는 **프로젝트의 `@playwright/test` 버전과 같게 고정**한다(공식 Docker 문서). 베이스는 `-noble`(Ubuntu 24.04, `ubuntu-latest`와 일치, 태그 생략 시 기본)·`-jammy`(22.04, 러너를 `ubuntu-22.04`로 고정했을 때만)·`-resolute`(26.04)가 제공된다(2026-11-09 MCR 태그 확인).
+
+```bash
+docker run --rm -v $(pwd):/work -w /work \
+  mcr.microsoft.com/playwright:v1.65.0-noble \
+  npx playwright test --update-snapshots
+```
+
+- `maxDiffPixels`와 `maxDiffPixelRatio`를 함께 쓰면 **둘 중 하나만 만족해도 통과(OR)** 한다 — 의도보다 느슨해진다. 한쪽만 쓴다.
+- 모노레포에서 Storybook이 여러 개면 baseline 경로를 인스턴스별로 분리한다: `toHaveScreenshot(['mui', `${id}.png`])` — 같은 story id가 겹쳐도 덮어쓰지 않는다.
+- 브라우저는 chromium 하나로 고정(Firefox/WebKit까지 쓰면 baseline이 3배가 되고 각자 픽셀이 다르다).

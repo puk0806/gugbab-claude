@@ -329,6 +329,56 @@ section('transcript_path 우선 / 악성 transcript_path 무시')
   cleanup(home, repo, evil)
 }
 
+// 원자적 복사 (2026-11-11) — 중단된 호출의 PostToolUse 는 10초 뒤 강제 종료(2.1.319). 임시 파일에 쓴 뒤 이름만 바꾼다
+section('정상 — 원자적 복사: 내용 일치·임시 파일 남지 않음')
+{
+  const { home, repo, globalMemory, repoMemory } = mkFixture()
+  fs.mkdirSync(globalMemory, { recursive: true })
+  fs.mkdirSync(repoMemory, { recursive: true })
+  const src = path.join(globalMemory, 'atomic.md')
+  fs.writeFileSync(src, '# 원자적\n' + 'x'.repeat(200000))
+  const r = runHook({ file_path: src }, { home, repoDir: repo })
+  assert('exit 0', r.status, 0)
+  assert('레포 사본 내용 = 원본', fs.readFileSync(path.join(repoMemory, 'atomic.md'), 'utf8') === fs.readFileSync(src, 'utf8'), true)
+  assert('임시 파일(.tmp) 남지 않음', fs.readdirSync(repoMemory).filter((n) => n.endsWith('.tmp')).length, 0)
+  cleanup(home, repo)
+}
+
+section('악성 — 레포 사본 자리가 밖 파일을 가리키는 링크면 링크 대상을 덮어쓰지 않는다')
+{
+  const { home, repo, globalMemory, repoMemory } = mkFixture()
+  fs.mkdirSync(globalMemory, { recursive: true })
+  fs.mkdirSync(repoMemory, { recursive: true })
+  const outside = path.join(home, 'victim.txt')
+  fs.writeFileSync(outside, 'ORIGINAL')
+  const src = path.join(globalMemory, 'note.md')
+  fs.writeFileSync(src, 'NEW-MEMORY')
+  if (trySymlink(outside, path.join(repoMemory, 'note.md')) === null) {
+    skip('사본 자리 링크', '윈도우 권한 부족(EPERM)')
+  } else {
+    const r = runHook({ file_path: src }, { home, repoDir: repo })
+    assert('exit 0', r.status, 0)
+    assert('링크 대상(밖 파일)은 그대로', fs.readFileSync(outside, 'utf8'), 'ORIGINAL')
+    assert('사본 자리는 링크가 아니라 일반 파일로 바뀜', fs.lstatSync(path.join(repoMemory, 'note.md')).isSymbolicLink(), false)
+    assert('사본 내용 = 새 메모리', fs.readFileSync(path.join(repoMemory, 'note.md'), 'utf8'), 'NEW-MEMORY')
+  }
+  cleanup(home, repo)
+}
+
+section('경계 — 예전에 남은 임시 파일이 있어도 덮어 정상 복사, 빈 파일도 복사')
+{
+  const { home, repo, globalMemory, repoMemory } = mkFixture()
+  fs.mkdirSync(globalMemory, { recursive: true })
+  fs.mkdirSync(repoMemory, { recursive: true })
+  fs.writeFileSync(path.join(repoMemory, '.e.md.1.tmp'), 'STALE')
+  const src = path.join(globalMemory, 'e.md')
+  fs.writeFileSync(src, '')
+  const r = runHook({ file_path: src }, { home, repoDir: repo })
+  assert('exit 0', r.status, 0)
+  assert('빈 파일도 복사', fs.readFileSync(path.join(repoMemory, 'e.md'), 'utf8'), '')
+  cleanup(home, repo)
+}
+
 console.log(`\n${'─'.repeat(40)}`)
 console.log(`결과: ${passed}/${passed + failed} 통과 ${failed > 0 ? `(${failed}개 실패)` : ''}${skipped ? ` · 건너뜀 ${skipped}` : ''}`)
 if (failed === 0) console.log('✅ 모든 테스트 통과')

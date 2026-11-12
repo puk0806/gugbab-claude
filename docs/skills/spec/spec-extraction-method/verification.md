@@ -2,7 +2,7 @@
 skill: spec-extraction-method
 category: spec
 version: v1
-date: 2026-10-08
+date: 2026-11-09
 status: PENDING_TEST
 ---
 
@@ -14,7 +14,7 @@ status: PENDING_TEST
 |------|------|
 | 스킬 이름 | `spec-extraction-method` |
 | 스킬 경로 | `.claude/skills/spec-extraction-method/SKILL.md` (+ `references/spec-templates.md`) |
-| 검증일 | 2026-10-08 |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-10-08) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 
@@ -64,6 +64,9 @@ status: PENDING_TEST
 | Thoughtworks Radar — Using GenAI to understand legacy codebases | https://www.thoughtworks.com/radar/techniques/using-genai-to-understand-legacy-codebases | ⭐⭐⭐ High | 최초 2024-04-03, 갱신 2025-11-05 | Adopt |
 | Anthropic, Reduce hallucinations | https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/reduce-hallucinations | ⭐⭐⭐ High | 확인 2026-10-08 | 공식 문서 |
 | Claude Code Subagents | https://code.claude.com/docs/en/sub-agents | ⭐⭐⭐ High | 확인 2026-10-08 | 공식 문서 |
+| Thoughtworks Radar — Using GenAI to understand legacy codebases (재검증) | https://www.thoughtworks.com/radar/techniques/using-genai-to-understand-legacy-codebases | ⭐⭐⭐ High | 확인 2026-11-09 | "현재 판에는 없음" 표시, 이력 2024-04 Assess → 2024-10·2025-04 Trial → 2025-11 Adopt |
+| Fowler, Strangler Fig (재검증) | https://martinfowler.com/bliki/StranglerFigApplication.html | ⭐⭐⭐ High | 확인 2026-11-09 | 날짜 2024-08-22 그대로 |
+| Anthropic, Reduce hallucinations (재검증) | https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/reduce-hallucinations | ⭐⭐⭐ High | 확인 2026-11-09 | 기본 3기법·외부 지식 제한·"없애지는 못한다" 경고 그대로 |
 | ISO/IEC/IEEE 29148:2018 | https://standards.ieee.org/ieee/29148/6937/ | ⭐⭐⭐ High | 2018-11-30 발행, Active | 개요(abstract)만 확인 |
 | Chikofsky 용어집 (Georgia Tech) | https://sites.cc.gatech.edu/reverse/bibliography/terminology.html | ⭐⭐ Medium | 확인 2026-10-08 | 2차 소스 |
 | Chikofsky 용어집 (IEEE-CS TCSE, 훔볼트대 미러) | https://www2.informatik.hu-berlin.de/~wwwcompsoft/projekt98/lehre/taxonomy.htm | ⭐⭐ Medium | 2000-02-07 갱신 | 2차 소스 |
@@ -96,6 +99,9 @@ status: PENDING_TEST
 | C16 | CodeConcise: AST→그래프 DB, 컨텍스트 노이즈 감소, 사람 통제·SME 필수 | martinfowler.com GenAI 글, gotopia·softwareseni(검색) | VERIFIED |
 | C17 | Radar "Using GenAI to understand legacy codebases" 2025-11 Adopt | Radar 페이지, 검색 결과(최초 2024-04-03, 갱신 2025-11-05) | VERIFIED (현행 판 미게재 가능 → 시점 명시 주의) |
 | C18 | Anthropic: "I don't know" 허용, 직접 인용, 인용 못 찾으면 철회, 외부 지식 제한, 제거 불가 경고 / 서브에이전트 독립 컨텍스트·요약 반환 | platform.claude.com 원문, code.claude.com 원문 | VERIFIED |
+| R1 | (2026-11-09 재검증) Radar "Using GenAI to understand legacy codebases" 2025-11 Adopt | Radar 페이지 이력 표 + "not on the current edition" 표시 | VERIFIED (현재 판 미게재 확인 → SKILL.md 6-1 주의에 이력·미게재 사실 추가) |
+| R2 | (2026-11-09 재검증) Strangler Fig 2024-08-22 | martinfowler.com | VERIFIED |
+| R3 | (2026-11-09 재검증) Anthropic 환각 감소 기법 4종·경고 | platform.claude.com 원문 | VERIFIED |
 | (참고) | ISO/IEC/IEEE 29148:2018 Active, 요구공학 프로세스·정보 항목 | standards.ieee.org | VERIFIED(개요만) |
 | (참고) | 한국식 화면정의서 공식 표준 없음 | 국내 실무 자료 복수("구성에 정답 없음") | VERIFIED(부재 주장 — 주의 표기) |
 
@@ -206,3 +212,4 @@ status: PENDING_TEST
 | 2026-10-08 | v1 | 최초 작성 (SKILL.md + references/spec-templates.md, 클레임 18개 판정) | skill-creator |
 | 2026-10-08 | v1 | 2단계 실사용 테스트 수행 (Q1 API 명세 서브에이전트 지시·병합 / Q2 현행 버그·Feature Parity 대응 / Q3 CRUD 매트릭스 위반 해석) → 3/3 PASS, 워크플로우 성격으로 PENDING_TEST 유지 | skill-tester |
 | 2026-10-08 | v1.1 | 설치 검수 반영 — spec-extraction 템플릿 단독 설치본에 없는 `incremental-refactoring` 참조 4곳에 "(설치된 경우)" 조건 표기. 내용 클레임 변경 없음 | Claude |
+| 2026-11-09 | v1.2 | 재검증 — Radar 2025-11 Adopt·Strangler Fig 날짜·Anthropic 환각 감소 가이드 그대로 확인. 6-1 Radar 주의에 "현재 판 미게재·등재 이력" 사실만 덧붙임(권장·방법론 내용 변경 없음 → skill-tester 생략). 워크플로우 성격으로 PENDING_TEST 유지 | Claude |

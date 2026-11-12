@@ -33,12 +33,12 @@ gugbab-claude/
 
 - 단위·검사: `node --test cli/*.test.js` · `node --test .claude/hooks/*.test.js` · `node --test scripts/*.test.js` (훅 공용 헬퍼: `node .claude/hooks/lib/*.test.js`)
 - 실사용 시나리오(실제 claude 세션으로 종류별 껐다 켜기·폴더 분리·업데이트 후 다시 실행 확인, 몇 분 걸림): `node scripts/wrapper-e2e.js` (설치본) · `--dev` (작업 트리). 맥·윈도우 공용 — 윈도우는 PowerShell 도구 꺼짐·시크릿 읽기 차단·main push 차단·junction 연결·`.cmd` 런처도 확인. 예전 `sh scripts/wrapper-e2e.sh` 도 맥에서 그대로 돕니다
-- 전체 항목·프리셋 매트릭스(claude 없이 조립 결과로 프리셋 13종·항목 전부 켜기·끄기·고정 거부 확인): `node scripts/wrapper-matrix.js --dev` (`--with-claude` 면 프리셋마다 실제 세션 목록도)
+- 전체 항목·프리셋 매트릭스(claude 없이 조립 결과로 프리셋 12종·항목 전부 켜기·끄기·고정 거부 확인): `node scripts/wrapper-matrix.js --dev` (`--with-claude` 면 프리셋마다 실제 세션 목록도)
 - 윈도우에서 테스트가 실패하면 먼저: 개발자 모드가 꺼져 있으면 파일 심볼릭 링크 시험은 "건너뜀"(폴더는 junction 으로 시험), 테스트 안 임시 홈은 `HOME` 과 `USERPROFILE` 을 같이 바꿔야 실제 홈을 건드리지 않습니다. `fs.cpSync` 는 Node 22.17 윈도우에서 대상 경로에 한글이 있으면 프로세스가 죽으니 쓰지 마세요
 
 ## 항목을 추가·변경할 때
 
-- `relations.json`(소속·관계)과 체크리스트를 함께 고치고 `node scripts/build-manifest.js` 로 manifest 를 다시 만듭니다 (`relation-guard` 훅이 빠진 것을 커밋 때 막음).
+- `relations.json`(소속·관계)과 체크리스트를 함께 고치고 `node scripts/build-manifest.js` 로 manifest 를 다시 만듭니다 (빠진 것은 `node --test scripts/relations.test.js` 와 CI 가 잡음).
 - manifest 가 바뀌면 `node scripts/build-defaults-doc.js` 로 [기본값·고정 목록](DEFAULTS.md) 도 다시 만듭니다 (최신인지 `scripts/build-defaults-doc.test.js` 가 검사).
 - 이 레포에서 작업할 때의 규칙: [CLAUDE.md](../CLAUDE.md) · `.claude/rules/`
 
@@ -91,5 +91,5 @@ gugbab-claude --raw              # 하네스 없이 그냥 claude
 | `gugbab-claude doctor` | 설치·로그인·조립 상태 점검 |
 | `gugbab-claude update` | 지금 바로 최신화 (평소엔 실행할 때 1시간에 한 번 자동, 켜 둔 세션은 하루에 한 번 질문할 때 뒤에서 자동) |
 | `gugbab-claude harness` | 켜기·끄기 화면 (터미널에서) |
-| `gugbab-claude on\|off <항목> [--all]` | 명령으로 켜기·끄기 — 예: `off hook:cc-notify`, `on bundle:dev-quality`, `on block:rust` |
+| `gugbab-claude on\|off <항목> [--all]` | 명령으로 켜기·끄기 — 예: `off hook:cc-notify`, `on bundle:dev-quality`, `on block:java-legacy` |
 | `gugbab-claude preset [이름] [--all]` | 프리셋 목록 / 적용 |

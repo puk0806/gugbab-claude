@@ -8,7 +8,7 @@
 //                     (승인 판정은 task-confirm-guard 와 같은 함수를 공유 — 두 훅이 다르게 판단하지 않도록)
 //   PostToolUse Write/Edit/NotebookEdit: 계획이 있으면 수정한 파일을 덧붙인다
 // 안내:
-//   SessionStart compact·resume → 이 세션의 계획·수정 파일을 다시 알려준다 (요약으로 빠진 세부 복구)
+//   SessionStart compact·resume·fork → 이 세션의 계획·수정 파일을 다시 알려준다 (요약으로 빠진 세부 복구)
 //   SessionStart startup·clear  → 72시간 안에 활동한 직전 작업이 있으면 "여기까지 진행됨"을 알려준다 (한 번만)
 // 저장 위치: 대화 기록 폴더(~/.claude/projects/<해시>/progress/<세션>.json) — 레포 워킹트리를 더럽히지 않는다
 
@@ -126,7 +126,8 @@ function handle(input) {
 
   if (event === 'SessionStart') {
     const source = input.source
-    if ((source === 'compact' || source === 'resume') && id) {
+    // fork(갈라 나온 새 세션: --fork-session·/branch 등)는 resume 과 같게 — 이 세션 id 의 기록만 본다(다른 세션 기록을 끌어오지 않음)
+    if ((source === 'compact' || source === 'resume' || source === 'fork') && id) {
       const rec = load(fileOf(input, id))
       if (!rec) return null
       return ctx(render(rec, `[progress-tracker] 이 세션에서 진행 중인 작업 (${source === 'compact' ? '요약 직후' : '이어하기'}):`))

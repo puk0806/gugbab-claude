@@ -2,7 +2,7 @@
 skill: xss-lucy-jsoup
 category: backend
 version: v1
-date: 2026-09-26
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -18,7 +18,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `xss-lucy-jsoup` |
 | 스킬 경로 | `.claude/skills/xss-lucy-jsoup/SKILL.md` |
-| 검증일 | 2026-04-22 (재검증: 2026-09-26) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-26 · 최초 2026-04-22) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 | 기준 버전 | Naver Lucy XSS Servlet 2.0.0 / 2.0.1, jsoup 1.18.x / 1.22.x |
@@ -56,6 +56,9 @@ status: APPROVED
 | jsoup Safelist API | https://jsoup.org/apidocs/org/jsoup/safety/Safelist | ⭐⭐⭐ High | 2026-04-22 | API 스펙 |
 | Spring Security Headers | https://docs.spring.io/spring-security/reference/servlet/exploits/headers.html | ⭐⭐⭐ High | 2026-04-22 | X-XSS-Protection deprecated, CSP 권장 |
 | OWASP XSS Prevention | https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html | ⭐⭐⭐ High | 2026-04-22 | 표준 방어 전략 |
+| jsoup GitHub Releases (재검증) | https://github.com/jhy/jsoup/releases | ⭐⭐⭐ High | 2026-11-09 | 1.24.1(2026-11-03) — 셀렉터 Web query mode·파서 표준 정렬, Safelist/Cleaner/보안 관련 항목 없음 |
+| Maven Central jsoup metadata (재검증) | https://repo1.maven.org/maven2/org/jsoup/jsoup/maven-metadata.xml | ⭐⭐⭐ High | 2026-11-09 | 최신 1.24.1 교차 확인 |
+| Maven Central lucy-xss-servlet metadata + GitHub API (재검증) | https://repo1.maven.org/maven2/com/navercorp/lucy/lucy-xss-servlet/maven-metadata.xml | ⭐⭐⭐ High | 2026-11-09 | release 2.0.1 그대로, GitHub 저장소 archived=true 유지 |
 
 ---
 
@@ -67,6 +70,15 @@ status: APPROVED
 - [✅] deprecated된 패턴 주의 (X-XSS-Protection deprecated, jsoup `Whitelist` → `Safelist`)
 - [✅] 코드 예시가 실행 가능한 형태임
 - [✅] Lucy archived 상태 상단 주의문으로 명시
+
+#### 재검증 클레임 판정 (2026-11-09)
+
+| # | 클레임 | 소스 1 | 소스 2 | 판정 |
+|---|--------|--------|--------|------|
+| R1 | jsoup 최신 1.23.2 | GitHub Releases (1.24.1, 2026-11-03) | Maven Central metadata | DISPUTED → 1.24.1 로 수정 |
+| R2 | `Safelist` 프리셋·`addTags/addAttributes/addProtocols/addEnforcedAttribute`·`Jsoup.clean` API 불변 | 1.24.1 릴리스 노트(Safelist/Cleaner/보안 항목 없음) | jsoup Safelist Javadoc | VERIFIED |
+| R3 | Lucy 2.0.1 최신·저장소 archived | Maven Central metadata(release 2.0.1) | GitHub API(archived=true) | VERIFIED (변경 없음) |
+| R4 | 1.24.1 셀렉터 Web query mode 가 1.25.1 에서 기본값 예정 | GitHub Releases 본문 | jsoup.org selector migration 안내 링크 | VERIFIED → 주의문에 추가 |
 
 ### 4-2. 구조 완전성
 - [✅] YAML frontmatter 포함
@@ -89,6 +101,36 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester → general-purpose (도메인 에이전트 대신 대체 실행)
+**수행 방법**: 2026-11-09 재검증(jsoup 1.24.1 갱신·셀렉터 마이그레이션 주의 추가) 후 SKILL.md Read, 실전 질문 2개 답변, 근거 섹션 및 anti-pattern 회피 확인
+
+### 실제 수행 테스트
+
+**Q1. 댓글에서 a/b/i만 허용 + 링크 rel 강제, 최신 jsoup 버전과 Safelist API 변경 여부**
+- ✅ PASS
+- 근거: SKILL.md "4-2 Safelist 프리셋", "4-4 커스텀 Safelist", 상단 2026-11-09 재검증 주의 블록
+- 상세: `Safelist.none()` 기반 `addTags/addAttributes/addProtocols/addEnforcedAttribute` 체인 제시, `Whitelist`(deprecated) 회피, 최신 1.24.1 및 Safelist API 불변 정확히 인용, persist 직전 sanitize 언급.
+
+**Q2. Spring Boot 3.x에서 jsoup 1.24.1 업그레이드 가능 여부(select() 병용) 및 Lucy의 @RequestBody JSON 방어 여부**
+- ✅ PASS
+- 근거: SKILL.md 상단 재검증 주의 블록, "3-2 동작 방식", "2 방어 레이어 매핑", "4-6 서비스 레이어 통합"
+- 상세: sanitize는 영향 없고 select() 사용 시 셀렉터 마이그레이션 가이드 확인 필요(Web query mode, 1.25.1 기본값 예정)라고 정확히 답변. Lucy는 JSON 본문에 적용되지 않으므로 jsoup으로 직접 sanitize해야 한다고 근거 제시.
+
+### 발견된 gap (경미, 차단 요인 아님)
+
+- 3-1절 주의문의 "아래 6절 참고"가 깨진 참조(본문에 6절 없음, 상세는 references로 이동됨)
+- 4-1절 의존성 예제·20행 "1.22.x 계열 기준" 표현이 최신 1.24.1과 불일치
+- `a, b, i`만 허용하는 최소 `none()` 기반 예제 부재(4-4절 응용으로 도출 가능)
+
+### 판정
+
+- agent content test: PASS (2/2 PASS)
+- verification-policy 분류: 해당 없음 (라이브러리 사용법 스킬, content test로 충분)
+- 최종 상태: APPROVED 유지
+
+---
 
 ### 2026-09-26 — 재검증 (60일 초과 정기 재검증)
 
@@ -147,7 +189,7 @@ status: APPROVED
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-04-23, 2개 질문 모두 PASS) |
+| 에이전트 활용 테스트 | ✅ (2026-04-23 2/2 PASS, 2026-11-09 재검증 후 재시험 2/2 PASS) |
 | **최종 판정** | **APPROVED** |
 
 ---
@@ -155,6 +197,8 @@ status: APPROVED
 ## 7. 개선 필요 사항
 
 - [✅] 에이전트 활용 테스트 — SB 3.x FilterRegistrationBean + jsoup Safelist 2건 PASS (섹션 5, general-purpose 대체, 2026-04-23)
+- [✅] 2026-11-09 재검증 후 skill-tester 재시험 수행 (2/2 PASS, 섹션 5·6 반영)
+- [⏸️] 3-1절 주의문 "아래 6절 참고" 깨진 참조 및 4-1절/20행 "1.22.x" 표기를 1.24.1 기준으로 정리 — 선택 보강, 차단 요인 아님
 - [⏸️] Lucy 대체재(OWASP Java Encoder 기반 커스텀 필터) 별도 스킬 — 범위 확장 선택 사항
 - [⏸️] CSP 헤더 세밀 설정 가이드 보강 — 선택 보강, 차단 요인 아님
 
@@ -166,3 +210,6 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-04-22 | v1 | 최초 작성 — Naver Lucy + jsoup + CSP 조합, SB 2.5/3.x 통합, Lucy archived 주의 명시 | skill-creator |
 | 2026-09-26 | v1 | 재검증 — jsoup 1.23.2 최신 확인, Lucy archived 상태 변경 없음 확인 | 메인 세션 |
+| 2026-11-09 | v1 | 재검증 — jsoup 최신 1.23.2→1.24.1 갱신(Safelist API 변경 없음 확인), 1.24.1 셀렉터 Web query mode 마이그레이션 주의 추가. Lucy 2.0.1·archived 변경 없음 | Claude (Opus 5.5) |
+| 2026-11-09 | v1 | 재검증 후 2단계 재시험 수행 (Q1 a/b/i 허용 + rel 강제 Safelist·최신 버전 / Q2 1.24.1 업그레이드 select() 주의·Lucy JSON 본문 미적용) → 2/2 PASS, APPROVED 유지 | skill-tester |
+| 2026-11-12 | v1.1 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 Lucy archived·jsoup 1.24.1 셀렉터 주의, Lucy javax 전용·@RequestBody 미적용·필터 순서, rule XML 핵심·defender 3종·리치 에디터 깨짐, Whitelist→Safelist·style CSS 벡터·preserveRelativeLinks GHSA·persist 직전, JSON 방어 분담·전역 디시리얼라이저 부작용, SB 2.5 vs 3.x·X-XSS-Protection 기본값·SB 3 대안 / 덜어낸 것 XSS 위협 개요·방어 레이어 그림, 의존성 블록, rule XML 전체 예제, FilterRegistrationBean·web.xml·HtmlSanitizer·EditorSanitizer·서비스 통합 예제, Security 6 헤더 설정 코드·CSP 디렉티브 표, 대안 도구 비교표, 커스텀 jakarta 필터 전체 코드, 흔한 실수 표(references/REFERENCE.md 본문 흡수 후 폴더 삭제) | 정리 |

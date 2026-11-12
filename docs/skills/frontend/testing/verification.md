@@ -2,7 +2,7 @@
 skill: testing
 category: frontend
 version: v3
-date: 2026-09-28
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -35,9 +35,9 @@ status: APPROVED
 | 스킬 이름 | testing |
 | 스킬 경로 | `.claude/skills/testing/SKILL.md` |
 | 최초 작성일 | 2026-04-01 |
-| 검증일 | 2026-09-28 (재검증, 이전 2026-08-26) |
-| 검증 방법 | frontend-architect 활용 테스트 + 2026-09-28 재검증(2차, 1차 소스 대조) |
-| 버전 기준 | Jest 최신, Vitest 5.0.2(2026-09-03 메이저 출시), @testing-library/react v16.3 |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-28) |
+| 검증 방법 | frontend-architect 활용 테스트 + 2026-09-28 재검증(2차) + 2026-11-09 재검증(3차, npm 레지스트리·공식 문서 대조) |
+| 버전 기준 | Jest 30.5.2, Vitest 5.1.0(2026-11-02), @testing-library/react 16.3.3, @testing-library/jest-dom 7.0.1, @testing-library/dom 10.4.2, user-event 14.6.8 |
 
 ---
 
@@ -68,6 +68,20 @@ status: APPROVED
 | Jest 공식 설정 문서 | https://jestjs.io/docs/configuration | ⭐⭐⭐ High |
 | Testing Library About Queries | https://testing-library.com/docs/queries/about/ | ⭐⭐⭐ High |
 | Vitest Mock API | https://vitest.dev/api/mock | ⭐⭐⭐ High |
+| npm 레지스트리 (vitest·jest·@testing-library/*) | https://registry.npmjs.org/vitest · https://registry.npmjs.org/@testing-library/jest-dom | ⭐⭐⭐ High (2026-11-09 재검증) |
+| Vitest 공식 마이그레이션 가이드 | https://vitest.dev/guide/migration/ | ⭐⭐⭐ High (2026-11-09 재검증) |
+| jest-dom 공식 릴리즈·README | https://github.com/testing-library/jest-dom/releases · https://github.com/testing-library/jest-dom#with-vitest | ⭐⭐⭐ High (2026-11-09 재검증) |
+| Next.js 공식 — Jest 설정 | https://nextjs.org/docs/app/guides/testing/jest | ⭐⭐⭐ High (2026-11-09 재검증) |
+
+**2026-11-09 재검증 클레임 판정**
+
+| # | 클레임 | 소스 1 | 소스 2 | 판정 |
+|---|--------|--------|--------|------|
+| R1 | Vitest 5.x 요구사항(Node 22.12+·Vite 6.4+)·clearMocks 기본 true·중첩 vi.mock throw·미await 비동기 assertion 실패·test.sequential 제거·vite peer 전환 | vitest.dev/guide/migration | npm 레지스트리(latest 5.1.0) | **VERIFIED** |
+| R2 | Jest + Next.js는 `next/jest` createJestConfig + `testEnvironment: 'jsdom'` + `setupFilesAfterEnv`에서 `import '@testing-library/jest-dom'` | nextjs.org Jest 가이드(2026-08-25 갱신) | jest-dom README | **VERIFIED** |
+| R3 | Vitest setup에서 `import '@testing-library/jest-dom'` | jest-dom README "With Vitest" (`/vitest` 진입점 사용 안내) | jest-dom 7.0.1 package exports(`./vitest`) | **DISPUTED** → `@testing-library/jest-dom/vitest`로 수정 |
+| R4 | jest-dom 7.0: `@testing-library/dom` 필수 peer·Node 22+ | jest-dom GitHub releases v7.0.0 | npm 7.0.1 package.json(engines·peerDependencies) | **VERIFIED** → SKILL.md 주의 블록 추가 |
+| R5 | RTL 최신 16.3.x, `renderHook`·`act`는 `@testing-library/react`에서 import | npm 레지스트리(16.3.3) | 기존 RTL 문서 | **VERIFIED** |
 
 ---
 
@@ -101,6 +115,43 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-11-09] skill-tester 재검증 content test — 11-09 수정분 겨냥
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester → general-purpose (3건, Agent 도구로 실제 서브에이전트 호출. 3건 결과 모두 수신 후 판정)
+**수행 방법**: SKILL.md Read 후 그 내용에만 의존해 답하도록 위임. 11-09 수정분(Vitest 전용 jest-dom import·tsconfig types 안내, jest-dom 7.0 주의, 기준 버전)을 겨냥한 실전 질문 3개
+
+### 실제 수행 테스트
+
+**Q1. Vitest 신규 세팅에서 setup 파일에 `import '@testing-library/jest-dom'`을 쓰면 되나? TS matcher 타입 에러 시 tsconfig는?**
+- ✅ PASS
+- 근거: SKILL.md "Vitest + React" 섹션 vitest.setup.ts 예시(`@testing-library/jest-dom/vitest`) + tsconfig `compilerOptions.types`·`include` 안내
+- 상세: 기존 `jest-dom` import 가 아닌 `/vitest` 진입점이 정답임을 정확히 도출, Jest 쪽 import 와 구분함. anti-pattern(Vitest에서 기본 진입점 사용) 회피.
+
+**Q2. CI Node 20에서 jest-dom 7.0 업그레이드 시 설치/실행 깨짐 및 `@testing-library/dom` peer 경고 — 원인·해결·신규 matcher?**
+- ✅ PASS
+- 근거: SKILL.md "jest-dom 7.0 주의" 블록 + 설치 명령(Jest/Vitest)
+- 상세: Node 22+ 요구, `@testing-library/dom` 필수 peer(설치 명령에 이미 포함), 신규 matcher `toContainAnyBy*`·`toContainOneBy*` 모두 정확히 도출. 에이전트가 Node 20 유지 대안은 SKILL.md에 없고 추론임을 스스로 구분.
+
+**Q3. 모노레포에서 Jest(Next.js)와 Vitest(Vite) 각각의 jest-dom import, Vitest 5.x 최소 Node/Vite 및 기준 버전?**
+- ✅ PASS
+- 근거: SKILL.md "Jest + Next.js"·"Vitest + React" 섹션, jest-dom 7.0 주의, Vitest 5.0+ 주의, 검증일 헤더
+- 상세: Jest=`@testing-library/jest-dom`, Vitest=`/vitest`로 올바르게 구분. Node 22.12.0+/Vite 6.4.0+, 기준 버전 Vitest 5.1.0·Jest 30.5·RTL 16.3.3·jest-dom 7.0.1 정확히 제시.
+
+### 발견된 gap (모두 선택 보강, 차단 요인 아님)
+
+- tsconfig 안내(줄 80)가 문장만 있고 JSON 예시 없음
+- jest-dom 7 신규 matcher 의미(Any/One 차이)·Node 22 불가 시 대안(6.x 고정) 미기재
+- Jest 쪽 jest-dom 타입 설정 안내 없음, Jest 30.5·RTL 16.3.3 Node 최소 요구 미기재
+
+### 판정
+
+- agent content test: 3/3 PASS
+- verification-policy 분류: 해당 없음 (라이브러리 사용법 스킬, 실사용 필수 카테고리 아님)
+- 최종 상태: APPROVED 유지
+
+---
 
 ### 테스트 케이스 1: frontend-architect 에이전트 활용 테스트
 
@@ -163,13 +214,16 @@ status: APPROVED
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
 | 에이전트 활용 테스트 | ✅ PASS (frontend-architect, 2026-04-14) + ✅ 2/2 PASS (2026-09-28 skill-tester→general-purpose, Vitest 5.0 보강분 겨냥) |
-| **최종 판정** | **APPROVED** (2026-09-28 skill-tester content test 2/2 PASS, 실사용 필수 카테고리 아님) |
+| 에이전트 활용 테스트 (2026-11-09 재검증) | ✅ 3/3 PASS (skill-tester→general-purpose, Vitest 전용 jest-dom import·jest-dom 7.0 주의·기준 버전 겨냥) |
+| **최종 판정** | **APPROVED** (2026-11-09 재검증 content test 3/3 PASS, 실사용 필수 카테고리 아님) |
 
 ---
 
 ## 7. 개선 필요 사항
 
 - [✅] **(2026-09-28 완료, 2/2 PASS)** skill-tester로 Vitest 5.0 보강 반영분(clearMocks 기본값·vi.mock 최상단 강제) content test 수행 → APPROVED 전환
+- [✅] **(2026-11-09 완료, 3/3 PASS)** skill-tester로 11-09 수정분(Vitest 전용 jest-dom import·tsconfig types·jest-dom 7.0 주의·기준 버전) content test 수행 → APPROVED 유지
+- [❌] (선택 보강, 차단 요인 아님) tsconfig JSON 예시, jest-dom 7 신규 matcher 설명·Node 22 불가 시 대안 추가
 
 ---
 
@@ -182,3 +236,6 @@ status: APPROVED
 | 2026-08-26 | v2.1 | freshness 재검증(147일 경과) — RTL 16부터 `@testing-library/dom` peerDependency 분리(설치 커맨드 2곳에 추가, 근거: RTL npm·react-testing-library#906). Vitest 4.1 stable·쿼리 우선순위·renderHook 위치 VERIFIED | freshness-auditor + orchestrator |
 | 2026-09-28 | v3 | 재검증(2차) — Vitest 4.1 → 5.0.2 메이저 출시(2026-09-03) 반영, "주의 (Vitest 5.0+)" 블록 신설(clearMocks 기본값·vi.mock 최상단 강제·미await 비동기 assertion 실패·Node/Vite 최소 버전). status APPROVED → PENDING_TEST | Claude (Sonnet 5) |
 | 2026-09-28 | v3 | skill-tester 실사용 재테스트 — general-purpose 에이전트로 Vitest 5.0 보강분(clearMocks·vi.mock 최상단 강제) 겨냥 질문 2개 수행 → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-11-09 | v3.1 | 재검증 — Vitest 5.1.0·Jest 30.5.2·RTL 16.3.3 확인(Vitest 5 주의 블록 VERIFIED), Vitest setup import를 `@testing-library/jest-dom/vitest`로 정정(DISPUTED), jest-dom 7.0 브레이킹(`@testing-library/dom` 필수 peer·Node 22+) 주의 블록 추가 | Claude (Opus 5.5) |
+| 2026-11-09 | v3.1 | 재검증 후 2단계 실사용 테스트 수행 (Q1 Vitest 전용 jest-dom import·tsconfig / Q2 jest-dom 7.0 Node 22·peer·신규 matcher / Q3 Jest·Vitest import 구분·Vitest 5 최소 버전·기준 버전) → 3/3 PASS, APPROVED 유지 | skill-tester |
+| 2026-11-11 | v3.1 | 2026-11-11 정리 — 모델이 아는 일반 지식 절 제거(남긴 절: 설정(Jest + Next.js·Vitest + React, jest-dom/vitest 진입점·tsconfig 안내), jest-dom 7.0 주의, Vitest 5.0+ 주의 / 덜어낸 절: Jest vs Vitest 선택 기준, 핵심 원칙, 컴포넌트 테스트 패턴, 커스텀 훅 테스트, 비동기 테스트, 쿼리 우선순위, 테스트 파일 배치, 사실 재검증 아님) | Claude (Opus 5.5) |

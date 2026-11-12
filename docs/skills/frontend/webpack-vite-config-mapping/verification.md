@@ -2,7 +2,7 @@
 skill: webpack-vite-config-mapping
 category: frontend
 version: v3
-date: 2026-09-28
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -36,7 +36,7 @@ status: APPROVED
 | 스킬 이름 | webpack-vite-config-mapping |
 | 스킬 경로 | .claude/skills/webpack-vite-config-mapping/SKILL.md |
 | 최초 작성일 | 2026-04-20 |
-| 검증일 | 2026-09-28 (재검증, 이전 2026-08-11) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-28) |
 | 검증 방법 | WebSearch 교차 검증 (메인 대화) + 2026-09-28 재검증(2차, npm registry·공식 마이그레이션 가이드 대조) |
 | 버전 기준 | Vite 8.3.1(주 경로: `codeSplitting.groups`) / 레거시 Vite 6.x·Rollup 4.x(`manualChunks`) / @craco/craco 7.x |
 
@@ -73,6 +73,9 @@ status: APPROVED
 | Vite GitHub Discussion | https://github.com/vitejs/vite/discussions/17730 | ⭐⭐ Medium | - | manualChunks 고급 패턴 |
 | marabesi.com craco→vite | https://marabesi.com/2026/02/23/migrating-from-craco-to-vite.html | ⭐⭐ Medium | 2026-02 | 실제 craco→vite 사례 |
 | vite:preloadError GitHub | https://github.com/vitejs/vite/issues/14044 | ⭐⭐⭐ High | - | retry chunk 공식 이슈 |
+| Vite Migration from v7 (재조회) | https://vite.dev/guide/migration | ⭐⭐⭐ High | 2026-11-09 | v8.3.6 문서. rolldownOptions 개명, manualChunks 객체 미지원·함수 deprecated, esbuild→oxc 자동 변환, `esbuild.drop` → `output.minify.compress.drop*` |
+| npm registry — vite / rolldown | https://registry.npmjs.org/vite | ⭐⭐⭐ High | 2026-11-09 | vite 8.3.6(2026-11-05), rolldown 1.3.0, vite-tsconfig-paths 6.1.1 |
+| vite 8.3.6 · rolldown 1.3.0 패키지 타입 정의(d.ts) | https://www.npmjs.com/package/rolldown | ⭐⭐⭐ High | 2026-11-09 | `resolve.tsconfigPaths`(기본 false), 최상위 `esbuild`(deprecated)·`build.esbuildOptions` 부재, `CompressOptions.dropConsole`, `treeshake.manualPureFunctions` |
 
 ---
 
@@ -109,7 +112,14 @@ status: APPROVED
 
 | 7 | Vite 8부터 Rolldown이 기본 번들러로 전환되며 `build.rollupOptions`는 `build.rolldownOptions`로 개명(`rollupOptions`는 deprecated alias로 하위호환 유지). `output.manualChunks` 객체 형식은 Vite 8+에서 미지원(함수 형식은 deprecated로 계속 동작). esbuild `drop` 옵션은 Rolldown 전환 후 `build.rolldownOptions.output.minify.compress.drop*`로 위치 이동 | VERIFIED (SKILL.md 인용 출처 기준) | SKILL.md 자체 인용 출처 https://vite.dev/guide/migration 기준으로 2026-08-11 SKILL.md에 반영됨. 이번 동기화 세션에서 별도 WebSearch 재검증은 미수행 — SKILL.md 인용 출처 대조 + 내용 일관성만 확인 |
 
+| 8 | (2026-11-09) Vite 최신 안정 8.3.6 / Rolldown 1.3.0 | VERIFIED | npm registry + vite.dev 문서 헤더 |
+| 9 | (2026-11-09) Vite 6/7 console 제거 예시의 `build.esbuildOptions` | DISPUTED → 수정: 해당 옵션 없음, 최상위 `esbuild.drop`/`pure` 가 정답 | vite 8.3.6 d.ts(`esbuildOptions` 는 `optimizeDeps` 전용) + Vite 공식 config 문서 |
+| 10 | (2026-11-09) `console.error` 유지 방법(기존 미검증) — Oxc compress 에 메서드별 옵션 없음, `treeshake.manualPureFunctions` 로 대체 | VERIFIED(타입 정의) / 실빌드 미실측 → `> 주의: 미검증` 유지 | rolldown 1.3.0 d.ts |
+| 11 | (2026-11-09) `resolve.tsconfigPaths` 네이티브 옵션(기본 false) | VERIFIED | vite 8.3.6 d.ts + Vite 8 공지 블로그 |
+
 ### 4-5. DISPUTED 항목 처리
+
+- 2026-11-09: #9 `build.esbuildOptions` → 최상위 `esbuild` 로 SKILL.md 2절 레거시 예시 정정
 
 - 없음 (전 클레임 VERIFIED, 7번 항목은 SKILL.md 인용 출처 기준)
 
@@ -117,10 +127,50 @@ status: APPROVED
 
 - [✅] skill-tester 수행 (2026-04-24): 3개 실전 질문, 3/3 PASS
 - [✅] 메인 대화 직접 수행 (2026-08-12): Vite 8 대응 신규 내용 2개 질문, 2/2 PASS (섹션 5 참조)
+- [✅] skill-tester 재시험 수행 (2026-11-09): 11-09 재검증 수정분(`esbuild.drop` 정정, `manualPureFunctions`, Vite 8.3.6) 3개 질문, 3/3 PASS
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-11-09] skill-tester 재시험 (11-09 재검증 수정분 대상)
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester → general-purpose (frontend-developer 대신 general-purpose 사용)
+**수행 방법**: SKILL.md Read 후 11-09 수정 내용(2절 레거시 `esbuild.drop` 정정, Vite 8+ `treeshake.manualPureFunctions`, Vite 8.3.6 기준) 위주 실전 질문 3개 답변, 근거 섹션 및 anti-pattern 회피 확인 (3개 병렬 실행, 파일 수정 없음)
+
+### 실제 수행 테스트
+
+**Q1. Vite 6.x 에서 console 제거 시 동료가 말한 `build.esbuildOptions.drop` 이 맞는가**
+- ✅ PASS
+- 근거: SKILL.md 2절 "레거시 (Vite 6/7) — esbuild/terser 옵션" 코드 + 주의 블록(172-196행)
+- 상세: `build.esbuildOptions` 는 존재하지 않는 옵션이며 최상위 `esbuild.drop` 이 정답임을 194행 근거로 정확히 답변. anti-pattern(`build.esbuildOptions` 사용)을 피함. `console.error` 도 제거되며 유지하려면 `esbuild.pure` 사용(192행)까지 답변.
+
+**Q2. Vite 8.3.6 에서 console.error 만 남기고 나머지 console 제거 + 검증 수준**
+- ✅ PASS
+- 근거: SKILL.md 2절 "Vite 8+ 주 경로" 주의 블록(155-167행)
+- 상세: `dropConsole` 은 console.error 도 제거하므로 부적합, `build.rolldownOptions.treeshake.manualPureFunctions` 를 사용(output.minify 아님, 입력 옵션)하라고 정확히 답변. 167행의 "실제 빌드 결과 미실측 / 주의: 미검증" 표기를 그대로 인용.
+
+**Q3. Vite 6 의 최상위 `esbuild.drop` 을 Vite 8.3.6 에서 그대로 둬도 되는가 (판단형)**
+- ✅ PASS
+- 근거: SKILL.md 2절 196행 + "Vite 8+ 주 경로"(136-153행)
+- 상세: 최상위 `esbuild` 는 deprecated 이나 `oxc` 로 자동 변환되어 당장 동작, 권장은 `build.rolldownOptions.output.minify.compress.dropConsole`. 두 방식 모두 console.error 도 제거됨을 정확히 답변.
+
+### 발견된 gap (모두 선택 보강, SKILL.md 미수정)
+
+- 레거시 예시에서 `esbuild.drop` 과 `terserOptions` 를 한 설정에 병기, `pure_funcs: mode === 'production' ? [] : []` 는 무의미한 삼항식, Vite 기본 minifier 가 esbuild 라는 설명 없음
+- `esbuild.pure` 로 console.error 유지하는 방법이 주석으로만 있고 완성 코드 블록 없음
+- `manualPureFunctions` 의 인자 부수효과(`console.log(foo())`) 동작 설명 없음 (실빌드 미실측과 연관)
+- 22행 상단 전체 구조 대응표가 `build.rollupOptions` 로 남아 있어 Vite 8+ 주 경로(`rolldownOptions`)와 경미하게 불일치
+- 자동 변환 시 `drop: ['console']` 의 정확한 oxc 매핑·deprecated 옵션 제거 시점 불명확
+
+### 판정
+
+- agent content test: PASS (3/3)
+- verification-policy 분류: 빌드 설정 스킬 — 실사용 필수 카테고리이나 2026-09-28 실사용(실행) 검증으로 이미 APPROVED 충족, 이번 수정분은 content test 로 재확인
+- 최종 상태: APPROVED 유지
+
+---
 
 ### [2026-09-28] 실사용(실행) 검증
 
@@ -255,9 +305,10 @@ status: APPROVED
 | 구조 완전성 | ✅ (1·2절 주 경로/레거시 재편, 중복 코드 제거·참조 링크화) |
 | 실용성 | ✅ |
 | 에이전트 활용 테스트 | ✅ 수행 완료 (2026-04-24, 3/3 PASS / 2026-08-12 Vite 8 신규 내용 2/2 PASS / 2026-09-28 재구성분 skill-tester content test 2/2 PASS, 참조 링크 유효성 확인) |
+| 11-09 재검증 수정분 재시험(2026-11-09) | ✅ skill-tester content test 3/3 PASS (`esbuild.drop` 정정, `manualPureFunctions`, 최상위 esbuild deprecated 판단) |
 | Vite 8 대응 주의사항 동기화(2026-08-12) | ✅ SKILL.md 반영 내용 클레임 판정표(4-4 #7) 기록 + content test 2/2 PASS |
 | 실사용(실행) 검증(2026-09-28) | ✅ lab 샘플에서 craco→Vite 매핑표(1·2·4·5·6·7절) 그대로 적용해 빌드·dev 서버 기동 성공. 7절 SKILL.md 최소 정정(네이티브 `resolve.tsconfigPaths` 보강) |
-| **최종 판정** | **APPROVED** (2026-09-28 실사용 실행 검증 완료 — 빌드 산출물이 SKILL.md 서술과 일치, 7절 보강 반영) |
+| **최종 판정** | **APPROVED** (2026-09-28 실사용 실행 검증 완료 + 2026-11-09 재검증 수정분 content test 3/3 PASS 로 유지) |
 
 ---
 
@@ -269,7 +320,9 @@ status: APPROVED
 - [✅] skill-tester로 2026-09-28 재구성분(§1·§2 주 경로/레거시 구조, 참조 링크) content test 수행 완료 (2026-09-28, 2/2 PASS — 참조 링크를 따라가도 실제 답이 나옴을 확인)
 - [✅] 실사용(실행) 검증 완료 (2026-09-28) — lab 샘플(craco.config.js "Before" + Vite 8.3.1 "After")에서 매핑표 1·2·4·5·6·7절 전체를 실제 빌드·dev 서버 기동으로 확인 → APPROVED 전환
 - [✅] 7절 SKILL.md 정정: Vite 8.0 네이티브 `resolve.tsconfigPaths` 옵션을 주 경로로 추가, 기존 `vite-tsconfig-paths` 플러그인은 레거시로 재분류 (WebSearch로 vite.dev 공식 블로그 대조 + lab 실행 재확인)
-- [❌] Oxc `compress`에 `console.error`만 유지하는 세부 옵션이 있는지 확인 → 미검증. **차단 요인 아님** — 선택 보강(SKILL.md가 이미 정직하게 "미검증"으로 표기 중)
+- [✅] 2026-11-09 재검증 수정분(`esbuild.drop` 정정·`manualPureFunctions`·Vite 8.3.6)에 대한 skill-tester content test 수행 (2026-11-09 완료, 3/3 PASS)
+- [❌] `treeshake.manualPureFunctions` 로 `console.error` 만 남기는 방식의 실빌드 산출물 확인 → 미실측. **차단 요인 아님** — 선택 보강(SKILL.md가 이미 "미검증"으로 표기 중, 테스트 에이전트도 이를 정확히 인용)
+- [❌] 테스트에서 나온 경미한 gap(레거시 예시의 무의미한 `pure_funcs` 삼항식, `esbuild.pure` 완성 코드 부재, 22행 대응표 `rollupOptions` 표기). **차단 요인 아님** — 선택 보강, SKILL.md 수정은 사용자 승인 후
 
 ---
 
@@ -284,3 +337,6 @@ status: APPROVED
 | 2026-09-28 | v2 | 재검증(2차) — Vite 6.x → 8.3.1 갱신, 1·2절을 `codeSplitting.groups`/`dropConsole`(주 경로) vs `manualChunks`/esbuild-terser(레거시) 구조로 재편. 1절 함수형 manualChunks·3절 청크 재시도 전체 코드를 `vite-advanced-splitting` 스킬 참조로 정리(중복 제거). status PENDING_TEST 유지 | Claude (Sonnet 5) |
 | 2026-09-28 | v2 | 2단계 실사용 테스트 수행 (재검증(2차) 재구성분 대상 — Q1 cacheGroups+console 제거 Vite 8 마이그레이션 / Q2 축소된 청크 재시도 참조 링크 유효성) → 2/2 PASS, PENDING_TEST 유지 (빌드 설정 실사용 필수 카테고리) | skill-tester |
 | 2026-09-28 | v3 | 실사용(실행) 검증 — lab 샘플(craco.config.js Before → Vite 8.3.1 vite.config.ts After)에서 매핑표 1·2·4·5·6·7절 전체 빌드·dev 서버 기동 성공 확인. 7절에 Vite 8.0 네이티브 `resolve.tsconfigPaths` 옵션 보강(기존 플러그인 안내는 레거시로 재분류). status APPROVED 전환 | Claude (Sonnet 5) |
+| 2026-11-09 | v4 | 재검증 — Vite 8.3.6·Rolldown 1.3.0 확인(마이그레이션 가이드·타입 정의 대조), 2절 레거시 예시 `build.esbuildOptions`(존재하지 않는 옵션) → 최상위 `esbuild` 로 정정, Vite 8+ `console.error` 유지용 `treeshake.manualPureFunctions` 안내 추가(실빌드 미실측 주의 표기) | Claude (재검증 묶음) |
+| 2026-11-09 | v4 | 2단계 실사용 테스트 재시험 수행 (Q1 Vite 6 `esbuild.drop` 위치 정정 / Q2 Vite 8 `manualPureFunctions` 로 console.error 유지 / Q3 최상위 esbuild deprecated 판단) → 3/3 PASS, APPROVED 유지 | skill-tester |
+| 2026-11-12 | v4.1 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 Vite 8 rolldownOptions·manualChunks 객체 미지원 주의, cacheGroups test 정규식 이식·레거시 priority 함정, console 제거(dropConsole이 console.error 포함·manualPureFunctions·build.esbuildOptions 없음·esbuild deprecated), resolve.tsconfigPaths 네이티브 / 덜어낸 것 craco 전체 구조 대응도·cacheGroups/manualChunks 예제 코드, topLevelAwait·개발 서버·define·process.env 일반 대응 예제, 플러그인 대응표 중 내장 항목. 원 검증일 2026-11-09 기준 내용 그대로, status·검증일 변경 없음 | 정리 |

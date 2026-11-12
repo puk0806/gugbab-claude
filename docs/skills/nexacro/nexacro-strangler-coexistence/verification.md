@@ -2,7 +2,7 @@
 skill: nexacro-strangler-coexistence
 category: nexacro
 version: v1
-date: 2026-10-08
+date: 2026-11-09
 status: PENDING_TEST
 ---
 
@@ -14,7 +14,7 @@ status: PENDING_TEST
 |------|------|
 | 스킬 이름 | `nexacro-strangler-coexistence` |
 | 스킬 경로 | `.claude/skills/nexacro-strangler-coexistence/SKILL.md` |
-| 검증일 | 2026-10-08 |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-10-08) |
 | 검증자 | skill-creator (Claude) |
 | 스킬 버전 | v1 |
 
@@ -64,6 +64,8 @@ status: PENDING_TEST
 | 넥사크로 17 제품 제약사항 | https://docs.tobesoft.com/product_information_nexacro_17_ko/product_restrictions | ⭐⭐⭐ High | 2026-10-08 조회 | 제조사 공식 |
 | Spring Session — Custom Cookie | https://docs.spring.io/spring-session/reference/guides/java-custom-cookie.html | ⭐⭐⭐ High | 4.1.1 | 공식 문서 |
 | Chromium SameSite / web.dev (검색 결과) | https://web.dev/samesite-cookies-explained | ⭐⭐ Medium | 2020~ | Chrome 80 기본 Lax 교차 확인 |
+| (재검증) Next.js rewrites·Multi-Zones 문서 + npm `next` | https://nextjs.org/docs/app/api-reference/config/next-config-js/rewrites , https://nextjs.org/docs/app/guides/multi-zones , https://www.npmjs.com/package/next | ⭐⭐⭐ High | 2026-11-09 확인 | 최신 안정 16.4.5, 문서 lastUpdated 2026-09-28 / 2026-06-01 (변경 없음) |
+| (재검증) Maven Central spring-session-core | https://repo1.maven.org/maven2/org/springframework/session/spring-session-core/maven-metadata.xml | ⭐⭐⭐ High | 2026-11-09 확인 | 최신 GA 4.1.1 (4.2.0은 RC1 단계) |
 
 ---
 
@@ -98,6 +100,9 @@ status: PENDING_TEST
 | 23 | 넥사크로 17 폼에서 postMessage 수신 공식 방법 | 원문 미발견 | UNVERIFIED (SKILL.md `> 주의`) |
 | 24 | 외부 URL rewrite 시 쿠키·Host·X-Forwarded 헤더 전달 방식 | Next.js 문서에 명시 없음 | UNVERIFIED (SKILL.md `> 주의`) |
 | 25 | `NEXACROWEBBROWSER` 주입이 HTML5·NRE 양쪽에서 동일 / 넥사크로→React 메뉴 단위 공개 전환 사례 존재 | 공식 문서가 환경 구분 없음, 사례 검색 결과 없음 | UNVERIFIED (SKILL.md 본문 주의·상단 주의) |
+| R1 | (2026-11-09 재검증) rewrites 라우트 확인 순서(headers→redirects→proxy→beforeFiles→…→fallback)·Incremental adoption 문구 | Next.js rewrites 문서 재조회 + npm next 16.4.5 | VERIFIED |
+| R2 | (재검증) Multi-Zones `<a>` 링크·assetPrefix·같은 zone 권고·proxy 기능 플래그·allowedOrigins | Next.js Multi-Zones 문서 재조회 | VERIFIED |
+| R3 | (재검증) Spring Session 최신 GA 4.1.1 | Maven Central 메타데이터 | VERIFIED |
 
 ### 4-1. 내용 정확성
 - [✅] 공식 문서와 불일치하는 내용 없음
@@ -194,3 +199,4 @@ status: PENDING_TEST
 |------|------|-----------|--------|
 | 2026-10-08 | v1 | 최초 작성 (클레임 25개: VERIFIED 19 / DISPUTED 0 / UNVERIFIED 6) | skill-creator |
 | 2026-10-08 | v1 | 2단계 실사용 테스트 수행 (Q1 fallback rewrite 설정·병목 / Q2 다른 site 쿠키·세션·`__Host-` / Q3 WebBrowser 통신·512자·destroy) → 3/3 PASS, 실사용 필수 카테고리(PoC 대기)로 PENDING_TEST 유지 | skill-tester |
+| 2026-11-09 | v1 | 재검증 — Next.js rewrites 순서·fallback·Multi-Zones 권고(최신 16.4.5), Spring Session 4.1.1 GA 재대조 → 모두 일치. 내용 변경 없음(날짜만 갱신), PENDING_TEST 유지 | Claude |

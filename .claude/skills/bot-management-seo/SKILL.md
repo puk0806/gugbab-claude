@@ -8,7 +8,7 @@ description: >
 # 봇 관리(Bot Management)와 SEO 안전성
 
 > 소스: Google Search Central(developers.google.com/search), Cloudflare Bots Docs(developers.cloudflare.com/bots), AWS WAF Developer Guide(docs.aws.amazon.com/waf)
-> 검증일: 2026-09-28 (최초 2026-06-04 · 08-26 재검증: 역DNS 검증·Cloudflare verified_bot·AWS Bot Control VERIFIED, Googlebot IP JSON 구경로 제거·common-crawlers.json 단일화, Cloudflare AI 크롤러 3분류·Bot Preference Sync 절(2.5) 추가 · 09-28 재검증: Naver Yeti UA·IP 비공개 정책 VERIFIED(변경 없음), **AI 크롤러 UA+공식 IP 목록 ADD**(1.4절 신설 — OpenAI/Anthropic/Perplexity/Google-Extended, 전 URL 실접속 확인))
+> 검증일: 2026-11-09 (11-09 재검증: Google 검증 문서 새 주소(301)·user-triggered-agents.json 추가, 나머지 URL 200 · 최초 2026-06-04 · 08-26 재검증: 역DNS 검증·Cloudflare verified_bot·AWS Bot Control VERIFIED, Googlebot IP JSON 구경로 제거·common-crawlers.json 단일화, Cloudflare AI 크롤러 3분류·Bot Preference Sync 절(2.5) 추가 · 09-28 재검증: Naver Yeti UA·IP 비공개 정책 VERIFIED(변경 없음), **AI 크롤러 UA+공식 IP 목록 ADD**(1.4절 신설 — OpenAI/Anthropic/Perplexity/Google-Extended, 전 URL 실접속 확인))
 
 봇 관리 솔루션(Cloudflare Bot Fight Mode, AWS WAF Bot Control 등)은 악성 봇 차단에는 효과적이지만, 잘못 설정하면 Googlebot·Yeti·Bingbot 같은 정당한 검색 크롤러까지 차단해 색인 손실로 이어진다. 이 스킬은 (1) 주요 검색 엔진 크롤러를 식별하고 (2) Cloudflare·AWS WAF에서 안전하게 허용하며 (3) 차단 사고를 진단·복구하는 절차를 정리한다.
 
@@ -29,6 +29,8 @@ description: >
 - 공통 크롤러(Googlebot 등): `https://developers.google.com/static/crawling/ipranges/common-crawlers.json` ← **이것만 사용**
 - 특수 크롤러(AdsBot 등): `https://developers.google.com/static/crawling/ipranges/special-crawlers.json`
 - 사용자 트리거 페처: `https://developers.google.com/static/crawling/ipranges/user-triggered-fetchers.json` · `user-triggered-fetchers-google.json`
+- 사용자 트리거 에이전트(사용자 요청으로 동작하는 Google 에이전트, 2026-11 공식 검증 문서에 추가): `https://developers.google.com/static/crawling/ipranges/user-triggered-agents.json`
+- 위 목록에 없는 그 밖의 Google IP: `https://www.gstatic.com/ipranges/goog.json`
 
 > 주의: 구경로 `…/static/search/apis/ipranges/googlebot.json` 은 2026-03 Google Search Central 블로그 "New Location for the Google Crawlers' IP Range Files" 이후 공식 문서에서 **더 이상 안내되지 않는다**. 화이트리스트 동기화 스크립트가 구경로를 읽고 있으면 실제 IP 목록이 아닐 수 있으므로 즉시 `common-crawlers.json`으로 바꾼다.
 
@@ -286,10 +288,10 @@ WAF 룰을 프로덕션과 동일하게 staging에 적용하면 Googlebot이 sta
 
 ## 참조 URL
 
-- Google — Verify Google Crawlers: https://developers.google.com/search/docs/crawling-indexing/verifying-googlebot
+- Google — Verify Google Crawlers: https://developers.google.com/crawling/docs/crawlers-fetchers/verify-google-requests (구 `…/search/docs/crawling-indexing/verifying-googlebot` 은 이 주소로 301)
 - Google — Common Crawlers: https://developers.google.com/search/docs/crawling-indexing/google-common-crawlers
 - Google — 크롤러 IP JSON (현행): https://developers.google.com/static/crawling/ipranges/common-crawlers.json
-- Google — 크롤러 검증 절차: https://developers.google.com/search/docs/crawling-indexing/verifying-googlebot
+- Google — 크롤러 검증 절차: https://developers.google.com/crawling/docs/crawlers-fetchers/verify-google-requests
 - Cloudflare — Bot Preference Sync (AI 봇 정책 ↔ robots.txt): https://blog.cloudflare.com/bot-preference-sync/
 - Cloudflare — Verified Bots: https://developers.cloudflare.com/bots/concepts/bot/verified-bots/
 - Cloudflare — Super Bot Fight Mode: https://developers.cloudflare.com/bots/get-started/super-bot-fight-mode/

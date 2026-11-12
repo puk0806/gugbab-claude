@@ -1,7 +1,7 @@
 # 스킬·에이전트 생성 워크플로우
 
 스킬(`SKILL.md`)·에이전트(`.md`) 생성 또는 외부 기술 정보가 포함된 파일을 수정할 때 참조한다.
-`agent-creator`, `skill-creator` 모두 이 파일을 기준으로 삼는다.
+스킬·에이전트를 만들 때 이 파일을 기준으로 삼는다.
 
 ---
 
@@ -124,7 +124,7 @@ skill-tester가 자동 수행하는 것:
 ## 5. 테스트 진행 기록
 
 **수행일**: YYYY-MM-DD
-**수행자**: skill-tester → general-purpose (또는 frontend-developer 등 설치된 경우의 도메인 에이전트)
+**수행자**: skill-tester → general-purpose
 **수행 방법**: SKILL.md Read 후 실전 질문 N개 답변
 
 Q1. ... — PASS (근거: SKILL.md "..." 섹션)

@@ -1,9 +1,7 @@
 ---
 name: python-llamaindex
 description: >
-  Python LlamaIndex 기반 RAG(Retrieval-Augmented Generation) 시스템 설계·구현 스킬.
-  Document·Node·Index·Query Engine 핵심 추상화, 벡터 DB 통합, 고급 검색(re-ranking·hybrid),
-  AgentWorkflow, LlamaParse 문서 파싱을 다룬다. LangChain과의 분업 기준도 포함한다.
+  LlamaIndex 0.14.x 기준과 함정 — ServiceContext·FunctionCallingAgent·AgentRunner·ReActAgentWorker deprecated(→ Settings·AgentWorkflow), 기본값(chunk 1024/20·ada-002·gpt-3.5) 그대로 쓰지 말 것, Anthropic은 임베딩 없음(Voyage AI 공식 추천), Claude temperature 400(API 2026-10-21)·anthropic SDK 상한 없음, 한국어 임베딩·BM25 하이브리드, LlamaParse·liteparse.
   <example>사용자: "한국 전통 해몽 사전을 RAG로 만들고 싶다. LlamaIndex로 어떻게 구성?"</example>
   <example>사용자: "LlamaIndex vs LangChain — RAG 전용으로는 어느 쪽이 낫나?"</example>
   <example>사용자: "chunk_size 1024가 default인데 한국어 문서에는 어떻게 조정?"</example>
@@ -17,356 +15,72 @@ description: >
 > - PyPI: https://pypi.org/project/llama-index/
 > - LlamaParse: https://www.llamaindex.ai/llamaparse
 >
-> 검증일: 2026-09-28 (최초 2026-05-15)
-> 검증 버전: llama-index **0.14.25** (2026-09-21 PyPI 릴리즈, 재검증 시점 최신) — 최초 검증 시 0.14.22, 0.14.x 라인 내 patch 업데이트만 있어 API 변경 없음
+> - Claude 모델 개요: https://platform.claude.com/docs/en/about-claude/models/overview
+> - Claude API 버전 2026-10-21: https://platform.claude.com/docs/en/api/migration-2026-10-21
+> - PyPI llama-index-llms-anthropic: https://pypi.org/project/llama-index-llms-anthropic/
+>
+> 검증일: 2026-11-06 (재검증, 이전 2026-09-28 · 최초 2026-05-15)
+> 검증 버전: llama-index **0.14.25** (2026-11-06 PyPI 재확인, 여전히 최신) / llama-index-llms-anthropic **0.12.3**(`anthropic[bedrock,vertex]>=0.75.0` 상한 없음, `llama-index-core>=0.14.5,<0.15`) — 최초 검증 시 0.14.22, 0.14.x 라인 내 patch 업데이트만 있어 API 변경 없음
 > 권장 버전: 0.14.x 이상 (이 스킬은 0.14 기준. 0.11~0.13에서는 일부 API 다름)
 
 ---
 
-## 0. 짝 스킬과의 분업 (설치된 경우 참조)
+## 이 스킬의 범위
 
-| 스킬 | 역할 |
-|------|------|
-| **backend/python-llamaindex** (이 스킬) | RAG 전문 — Index 추상화·Query Engine·AgentWorkflow |
-| `backend/python-langchain-current` | 범용 LLM 오케스트레이션 — Agent·Tool·체이닝 |
-| `backend/python-embeddings-vector-db` | 임베딩·벡터 DB 저수준 — 모델 선택·인덱스 튜닝 원리 |
-| `humanities/korean-dream-interpretation-tradition` | 한국 전통 해몽 사전 콘텐츠 소스 (이 스킬 §10 예시의 원본) |
+0.14 기준 deprecated·기본값 함정, Claude 연동 함정, 한국어 RAG 선택만 싣는다.
+> 기본 사용법(Document·Node·VectorStoreIndex·as_query_engine·벡터 스토어 연결·QueryFusionRetriever·reranker 예제)은 공식 문서 수준이라 싣지 않는다.
 
-**선택 기준 — LlamaIndex vs LangChain:**
-- *RAG 품질·검색 정확도 우선* → LlamaIndex
-- *복잡한 Agent·다양한 외부 도구 체이닝* → LangChain (LangGraph)
-- *둘 다 필요* → LlamaIndex(retrieval) + LangGraph(orchestration) 조합이 2026 시점 production 표준 패턴
+LangChain과의 분업: RAG 품질·검색 정확도 우선 → LlamaIndex / 복잡한 Agent·외부 도구 체이닝 → LangGraph(`python-langchain-current`) / 둘 다 → LlamaIndex(retrieval) + LangGraph(orchestration). 한국 전통 해몽 사전 콘텐츠는 `korean-dream-interpretation-tradition`.
 
 ---
 
-## 1. LlamaIndex 핵심 개념
+## 1. deprecated — 구버전 코드를 섞지 말 것
 
-### 1.1 5대 추상화
+| deprecated (0.14 deprecated_terms) | 대체 |
+|-----------|------|
+| `ServiceContext` | `Settings` 싱글톤(`Settings.llm`·`embed_model`·`transformations`) |
+| `FunctionCallingAgent`, `FunctionCallingAgentWorker` | `FunctionAgent` + `AgentWorkflow` |
+| `AgentRunner` / `AgentWorker` | `AgentWorkflow` |
+| `ReActAgentWorker` | workflow 버전 `ReActAgent` (function calling 미지원 LLM용) |
+| `SimpleNodeParser` | `SentenceSplitter`(최신 권장, SimpleNodeParser는 호환성 유지용) |
 
-```
-Reader → Document → Node → Index → Retriever → QueryEngine → Response
-                                 ↓
-                              VectorStore (외부 DB)
-```
+> 구버전 코드 마이그레이션 시 `llama_index.core.agent.workflow` 경로의 클래스만 사용한다. `agent.run(...)`은 `await`.
 
-| 추상화 | 설명 |
-|--------|------|
-| **Document** | 원본 데이터 한 단위 (PDF·API 응답·DB row 등). `text` + `metadata` 보유 |
-| **Node** | Document의 청크. 인덱싱·검색의 최소 단위. 부모 Document의 metadata 상속 |
-| **Index** | Node들을 검색 가능한 구조로 정리한 자료구조 (Vector·Summary·Tree 등) |
-| **Retriever** | Query에 대해 관련 Node 반환 (top-k 등) |
-| **QueryEngine** | Retriever + Response Synthesizer 결합. 자연어 질문 → 자연어 응답 |
-
-### 1.2 최소 예제 — 5줄 RAG
-
-```python
-from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
-
-documents = SimpleDirectoryReader("./data").load_data()
-index = VectorStoreIndex.from_documents(documents)
-query_engine = index.as_query_engine()
-response = query_engine.query("문서의 핵심 주제는?")
-print(response)
-```
-
-> 기본값: chunk_size=1024, chunk_overlap=20, embed_model=OpenAIEmbedding(text-embedding-ada-002), llm=OpenAI(gpt-3.5-turbo). 모두 `Settings`로 변경 가능 (§3).
+- 0.10부터 **모듈형 패키지** — 통합마다 별도 설치(`llama-index-llms-anthropic`, `llama-index-embeddings-huggingface`, `llama-index-vector-stores-*`, `llama-index-retrievers-bm25`, `llama-index-postprocessor-cohere-rerank` 등).
 
 ---
 
-## 2. Document & Node 다루기
+## 2. 기본값 함정
 
-### 2.1 Document 생성
+> 기본값: chunk_size=1024, chunk_overlap=20, embed_model=OpenAIEmbedding(text-embedding-ada-002), llm=OpenAI(gpt-3.5-turbo). 모두 `Settings`로 변경 가능.
 
-```python
-from llama_index.core import Document
-
-doc = Document(
-    text="아리스토텔레스의 akrasia 개념은...",
-    metadata={"source": "ethics.pdf", "page": 12, "topic": "ethics"},
-)
-```
-
-### 2.2 Node 변환 — SentenceSplitter
-
-```python
-from llama_index.core.node_parser import SentenceSplitter
-
-splitter = SentenceSplitter(chunk_size=512, chunk_overlap=64)
-nodes = splitter.get_nodes_from_documents([doc])
-```
-
-> 주의: `SimpleNodeParser`도 동일 역할이지만 *최신 권장은 `SentenceSplitter`*. SimpleNodeParser는 호환성 유지용.
-
-### 2.3 metadata 검색 필터에 활용
-
-```python
-from llama_index.core.vector_stores import MetadataFilters, MetadataFilter
-
-filters = MetadataFilters(filters=[
-    MetadataFilter(key="topic", value="ethics"),
-])
-retriever = index.as_retriever(similarity_top_k=5, filters=filters)
-```
+- `text-embedding-ada-002`(영어 위주)는 한국어 검색 성능이 떨어진다 → 한국어는 `BAAI/bge-m3`(100+ 언어, 8192 토큰, 1024차원) 또는 `text-embedding-3-large`. 한국어 특화 대안 `jhgan/ko-sroberta-multitask`, `nlpai-lab/KURE-v1`(고려대 NLP 랩).
+- chunk_size 권장: 일반 문서 512~1024, 짧은 사전·FAQ 256~512(예: 1~3문장 사전 항목은 384/64), 긴 논문·법조문 1024~2048. **chunk_size + metadata 길이 > 한계** 에러는 metadata를 줄이거나 chunk_size를 늘린다.
+- 인덱싱·검색 임베딩 모델이 다르면 의미가 어긋난다 → 모델 변경 시 인덱스 **재구축**.
+- 한국어처럼 동음이의·고유명사가 많은 도메인은 BM25 + Dense(`QueryFusionRetriever(mode="reciprocal_rerank")`) 하이브리드가 recall을 크게 올린다. 권장 흐름: top_k 크게(20) → reranker(예: `CohereRerank(model="rerank-multilingual-v3.0")`) top_n 3~5 → 생성.
+- `response_mode` 기본은 `compact`. context 초과 시 `refine`·`tree_summarize` 또는 top_k 축소.
 
 ---
 
-## 3. Settings — 전역 LLM·임베딩·청크 설정
-
-```python
-from llama_index.core import Settings
-from llama_index.llms.openai import OpenAI
-from llama_index.embeddings.openai import OpenAIEmbedding
-from llama_index.core.node_parser import SentenceSplitter
-
-Settings.llm = OpenAI(model="gpt-4o-mini", temperature=0.1)
-Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small")
-Settings.transformations = [SentenceSplitter(chunk_size=1024, chunk_overlap=20)]
-```
-
-> 이전 `ServiceContext` API는 **deprecated**. 0.14에서는 `Settings` 싱글톤이 표준.
-
----
-
-## 4. Index 종류 — 언제 무엇을 쓰나
-
-| Index | 구조 | 적합한 경우 | LLM 비용 |
-|-------|------|------------|---------|
-| **VectorStoreIndex** | Node + 임베딩 → 벡터 저장 | 의미 기반 검색 (대부분의 RAG) | 낮음 |
-| **SummaryIndex** | 순차 리스트 | 전체 문서를 항상 봐야 하는 작은 코퍼스, 요약 | 높음 (모든 Node 사용) |
-| **TreeIndex** | 계층 트리 (하위→상위 요약) | 긴 문서 계층적 탐색·요약 | 중간 |
-| **KeywordTableIndex** | 키워드 → Node 매핑 | 키워드 기반 검색 (희귀 토큰) | 중간 |
-| **PropertyGraphIndex** | 지식 그래프 | 엔티티 관계 추론 | 높음 |
-
-### 4.1 VectorStoreIndex (기본)
-
-```python
-from llama_index.core import VectorStoreIndex
-index = VectorStoreIndex(nodes)  # 또는 .from_documents(documents)
-```
-
-기본 in-memory. production은 외부 vector store 연결 (§6).
-
-### 4.2 SummaryIndex (전체 스캔)
-
-```python
-from llama_index.core import SummaryIndex
-index = SummaryIndex(nodes)
-# query 시 모든 Node를 LLM에 전달 → 비용 ↑, 누락 ↓
-```
-
-### 4.3 TreeIndex (계층 요약)
-
-```python
-from llama_index.core import TreeIndex
-index = TreeIndex(nodes, num_children=10)  # 자식 10개씩 묶어 요약 노드 생성
-```
-
----
-
-## 5. 임베딩 모델
-
-### 5.1 OpenAI
-
-```python
-from llama_index.embeddings.openai import OpenAIEmbedding
-
-Settings.embed_model = OpenAIEmbedding(
-    model="text-embedding-3-small",   # 1536 차원, 비용 낮음
-    # 또는 "text-embedding-3-large" — 3072 차원, 정확도↑
-)
-```
-
-### 5.2 HuggingFace (로컬·오픈소스)
-
-```python
-# pip install llama-index-embeddings-huggingface
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-
-# 다국어·한국어 권장: BAAI/bge-m3 (100+ 언어, 8192 토큰)
-Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-m3")
-
-# 한국어 특화 대안
-# HuggingFaceEmbedding(model_name="jhgan/ko-sroberta-multitask")
-# HuggingFaceEmbedding(model_name="nlpai-lab/KURE-v1")  # 고려대 NLP 랩
-```
-
-### 5.3 Anthropic 임베딩에 관한 주의
+## 3. Claude 연동 함정
 
 > **주의:** Anthropic은 **임베딩 모델을 제공하지 않는다.** Claude(LLM)만 제공.
 > LlamaIndex에서 `Settings.llm = Anthropic(...)` 으로 LLM은 쓸 수 있지만, embedding은 OpenAI·HuggingFace·Cohere 등으로 별도 구성해야 한다.
-> Anthropic 공식 문서가 임베딩 대안으로 명시 추천하는 파트너는 **Voyage AI**다 (`pip install llama-index-embeddings-voyageai`, `from llama_index.embeddings.voyageai import VoyageEmbedding`). 한국어 특화가 필요 없고 매니지드 임베딩을 원하면 HuggingFace 로컬 모델 대신 고려 가능 (2026-09-28 재검증 확인).
+> Anthropic 공식 문서가 임베딩 대안으로 명시 추천하는 파트너는 **Voyage AI**다 (`pip install llama-index-embeddings-voyageai`, `from llama_index.embeddings.voyageai import VoyageEmbedding`). 한국어 특화가 필요 없고 매니지드 임베딩을 원하면 HuggingFace 로컬 모델 대신 고려 가능 (2026-09-28 검증 확인).
 
 ```python
 from llama_index.llms.anthropic import Anthropic
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-
-Settings.llm = Anthropic(model="claude-sonnet-5")   # 응답 생성 (현행 ID, 2026-09-25)
-Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-m3")  # 검색
+Settings.llm = Anthropic(model="claude-sonnet-5-5")   # 현행 Sonnet (2026-11-06) — temperature 지정 금지
 ```
 
-> 주의: 미확인 — Sonnet 5·Opus 5.5 등 5 계열은 `temperature`/`top_p`/`top_k`를 400으로 거부한다.
-> `llama-index-llms-anthropic` 버전에 따라 `temperature` 기본값을 요청에 실어 보낼 수 있으므로, 400이 나면
-> 통합 패키지를 최신으로 올리고 해당 파라미터 전송 여부를 확인한다.
+> **사실(공식 문서 확인, 2026-11-06):** Claude API 버전 `2026-10-21`에서는 `temperature`·`top_p`·`top_k`를 보내면 **기본값이어도 모든 모델에서 400**이다. `2023-06-01`에서도 Sonnet 5.5·Opus 5.5 등 4.7 이후 모델은 비기본값을 거부한다. `anthropic` SDK 2.x(2026-10-21 v2.0.0~)는 기본으로 `2026-10-21`을 보내고, `llama-index-llms-anthropic`은 `anthropic`에 상한이 없어 새 환경에서는 2.x가 설치될 수 있다.
+> 주의: 미검증 — `llama-index-llms-anthropic` 0.12.x가 `temperature` 기본값을 요청에 실어 보내는지, `anthropic` 2.x와 호환되는지는 공식 릴리스 노트로 확인하지 못했다. `Anthropic(...)`에 `temperature`를 넘기지 말고, 400이 나면 `pip show anthropic`으로 SDK 버전과 전송 파라미터를 확인한 뒤 통합 패키지를 올리거나 확인 전까지 `anthropic<2`로 핀한다.
+
+- 비용을 줄일 응답 모델은 `claude-haiku-5-5`($0.10/$0.50). 임베딩은 로컬 HuggingFace로 무료화 가능.
 
 ---
 
-## 6. 벡터 DB 통합
+## 4. LlamaParse·로컬 파서
 
-LlamaIndex는 **20+ vector store**를 공식 지원한다. 주요 5종:
-
-| Vector Store | 패키지 | 적합한 경우 |
-|--------------|--------|------------|
-| **Chroma** | `llama-index-vector-stores-chroma` | 로컬·prototype·자체 호스팅 |
-| **pgvector** | `llama-index-vector-stores-postgres` | 기존 Postgres 운용 중 (Spring·Java 환경 포함) |
-| **Qdrant** | `llama-index-vector-stores-qdrant` | 고성능·hybrid search·payload 필터 강함 |
-| **Pinecone** | `llama-index-vector-stores-pinecone` | 매니지드·serverless |
-| **Weaviate** | `llama-index-vector-stores-weaviate` | 매니지드·하이브리드 검색 강함 |
-
-### 6.1 Chroma 예시 (로컬)
-
-```python
-import chromadb
-from llama_index.vector_stores.chroma import ChromaVectorStore
-from llama_index.core import VectorStoreIndex, StorageContext
-
-client = chromadb.PersistentClient(path="./chroma_db")
-chroma_collection = client.get_or_create_collection("dreams")
-
-vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
-storage_context = StorageContext.from_defaults(vector_store=vector_store)
-
-index = VectorStoreIndex.from_documents(
-    documents, storage_context=storage_context,
-)
-```
-
-### 6.2 pgvector 예시 (Postgres)
-
-```python
-from llama_index.vector_stores.postgres import PGVectorStore
-
-vector_store = PGVectorStore.from_params(
-    database="rag_db",
-    host="localhost", port=5432,
-    user="postgres", password="...",
-    table_name="documents",
-    embed_dim=1024,  # bge-m3
-)
-```
-
----
-
-## 7. 검색·응답 — Retriever & ResponseSynthesizer
-
-### 7.1 기본 retriever
-
-```python
-retriever = index.as_retriever(similarity_top_k=5)
-nodes = retriever.retrieve("akrasia의 정의는?")
-```
-
-> `similarity_top_k`는 벡터 store에서 가져올 후보 Node 수. 정답이 누락되면 *top_k를 늘리고 reranker로 정밀화*하는 것이 권장 패턴.
-
-### 7.2 QueryEngine 직접 구성
-
-```python
-from llama_index.core.query_engine import RetrieverQueryEngine
-from llama_index.core.response_synthesizers import get_response_synthesizer
-
-query_engine = RetrieverQueryEngine(
-    retriever=retriever,
-    response_synthesizer=get_response_synthesizer(response_mode="compact"),
-)
-```
-
-**response_mode 종류:**
-| mode | 동작 |
-|------|------|
-| `refine` | Node를 하나씩 보며 점진적 정제 (정확도↑, 비용↑) |
-| `compact` (기본) | Node를 prompt context에 가능한 만큼 채워 한 번에 처리 |
-| `tree_summarize` | 트리 구조로 요약 (긴 답변) |
-| `simple_summarize` | 단일 LLM 호출, 잘리면 잘림 |
-
-### 7.3 Hybrid Search (BM25 + Dense) — Reciprocal Rerank Fusion
-
-```python
-from llama_index.retrievers.bm25 import BM25Retriever
-from llama_index.core.retrievers import QueryFusionRetriever
-
-vector_retriever = index.as_retriever(similarity_top_k=10)
-bm25_retriever = BM25Retriever.from_defaults(nodes=nodes, similarity_top_k=10)
-
-hybrid = QueryFusionRetriever(
-    retrievers=[vector_retriever, bm25_retriever],
-    similarity_top_k=10,
-    num_queries=1,           # query rewriting 안 함
-    mode="reciprocal_rerank",
-    use_async=True,
-)
-```
-
-> 한국어처럼 동음이의·고유명사가 많은 도메인은 *BM25 추가가 retrieval recall을 크게 끌어올린다*.
-
-### 7.4 Reranker (Cohere·sentence-transformers)
-
-```python
-# pip install llama-index-postprocessor-cohere-rerank
-from llama_index.postprocessor.cohere_rerank import CohereRerank
-
-reranker = CohereRerank(top_n=3, model="rerank-multilingual-v3.0")
-
-query_engine = RetrieverQueryEngine.from_args(
-    retriever=hybrid,
-    node_postprocessors=[reranker],
-)
-```
-
-권장 흐름: **top_k 크게(20) → reranker로 top_n 작게(3~5) → LLM 생성**.
-
----
-
-## 8. AgentWorkflow — 0.14 시점 권장 Agent 패턴
-
-### 8.1 FunctionAgent (function calling LLM용)
-
-```python
-from llama_index.core.agent.workflow import FunctionAgent
-from llama_index.llms.openai import OpenAI
-from llama_index.core.tools import FunctionTool
-
-def search_dreams(query: str) -> str:
-    """한국 전통 해몽 사전에서 query와 유사한 항목 검색."""
-    return str(query_engine.query(query))
-
-agent = FunctionAgent(
-    tools=[FunctionTool.from_defaults(fn=search_dreams)],
-    llm=OpenAI(model="gpt-4o-mini"),
-    system_prompt="당신은 한국 전통 해몽 전문가다.",
-)
-
-response = await agent.run("어젯밤 뱀 꿈을 꿨는데 무슨 의미인가?")
-```
-
-### 8.2 ReActAgent — function calling 미지원 LLM용
-
-```python
-from llama_index.core.agent.workflow import ReActAgent
-
-agent = ReActAgent(tools=[...], llm=...)  # 임의 LLM 가능
-```
-
-### 8.3 deprecated 클래스 주의
-
-> **주의:** 다음은 모두 **deprecated** (LlamaIndex 0.14 deprecated_terms 목록):
-> - `FunctionCallingAgent` → `FunctionAgent` + `AgentWorkflow`
-> - `FunctionCallingAgentWorker` → 동일
-> - `AgentRunner` / `AgentWorker` → `AgentWorkflow`
-> - `ReActAgentWorker` → workflow 버전 `ReActAgent` 사용
->
-> 구버전 코드 마이그레이션 시 `llama_index.core.agent.workflow` 경로의 클래스만 사용한다.
-
----
-
----
-
-> 상세 레퍼런스 (예제·고급 패턴·흔한 실수) → [`references/REFERENCE.md`](references/REFERENCE.md)
+- LlamaParse: 매니지드 OCR·문서 파싱(PDF 표·차트·다단 → markdown/JSON, 130+ 파일 타입). 패키지 **`llama-cloud-services`**(`from llama_cloud_services import LlamaParse`, `result_type="markdown"`, `language="ko"`). pages 단위 과금, Cost Optimizer가 단순/복잡 페이지 tier 자동 라우팅.
+- 로컬 대안은 `liteparse`(LlamaIndex의 오픈소스 CLI 파서, 2026-03 공개). 표 많은 PDF만 LlamaParse, 일반 텍스트는 `SimpleDirectoryReader`.

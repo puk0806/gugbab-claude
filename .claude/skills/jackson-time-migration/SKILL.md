@@ -1,41 +1,16 @@
 ---
 name: jackson-time-migration
-description: Jackson + 자바 시간 API 통합 — Joda-Time(레거시)에서 java.time(JSR-310)으로의 마이그레이션, Spring Boot Jackson 시간 직렬화 설정, LocalDateTime/OffsetDateTime/ZonedDateTime/Instant 선택 기준, 타임존 처리, MyBatis 연동
+description: Jackson + 자바 시간 API — SB 2.5(Jackson 2.12)+Joda-Time 레거시 설정, spring.jackson 시간 직렬화 설정 함정, Spring Boot 4.x Jackson 3(tools.jackson·java.time 내장·기본값 변경) 대응표, Joda→java.time 병존 마이그레이션(Period 함정·경계 어댑터), MyBatis·Oracle 시간 타입 매핑, 흔한 실수
 ---
 
 # Jackson + 자바 시간 API 마이그레이션
 
 > 소스: https://github.com/FasterXML/jackson-modules-java8 | https://github.com/FasterXML/jackson-datatype-joda | https://github.com/JodaOrg/joda-time | https://blog.joda.org/2014/11/converting-from-joda-time-to-javatime.html | https://docs.spring.io/spring-boot/appendix/application-properties/index.html
-> 검증일: 2026-04-22 (재검증: 2026-09-26)
+> 검증일: 2026-11-06
 
-> 주의: 이 문서는 Spring Boot 2.5 (Jackson 2.12.x 번들) + Joda-Time 2.10.10 레거시 환경 → Spring Boot 2.7/3.x (Jackson 2.13+ / 2.17+) + java.time 모던 환경으로의 전환을 전제로 합니다. 핵심 API는 Jackson 2.5 이후 안정적이므로 2.12 ~ 2.22 범위에서 동일하게 동작합니다.
+> 주의: 이 문서는 Spring Boot 2.5 (Jackson 2.12.x 번들) + Joda-Time 2.10.10 레거시 환경 → Spring Boot 2.7/3.x (Jackson 2.13 ~ 2.21, 3.5.x = 2.21.x) + java.time 모던 환경으로의 전환을 전제로 합니다. Jackson 2 계열 최신은 2.22.4(2026-10), Joda-Time 최신은 2.15.1입니다. `JavaTimeModule` 등록·`spring.jackson.*` 프로퍼티·타입 매핑 표는 2.12 ~ 2.22에서 동일합니다.
 >
-> 주의(2026-09-26 재검증): `jackson-datatype-jsr310` 최신 버전은 2.22.2(Maven Central)입니다. `JavaTimeModule` 등록 방식·`spring.jackson.*` 프로퍼티·타입 매핑 표는 전부 그대로 유효하며 breaking change 없음을 확인했습니다.
-
----
-
-## 1. 왜 Joda-Time에서 java.time으로 가야 하는가
-
-Joda-Time은 Java 7 이전 표준 날짜/시간 API의 결함을 보완하기 위해 나온 사실상의 표준이었지만, **Java SE 8부터 JSR-310 (`java.time`) 이 JDK에 정식 편입**되면서 역할을 마쳤습니다.
-
-**Joda-Time 프로젝트 공식 입장 (joda-time/README):**
-- "Joda-time is no longer in active development except to keep timezone data up to date."
-- "From Java SE 8 onwards, users are asked to migrate to `java.time` (JSR-310) — a core part of the JDK which replaces this project."
-
-**참고:** JSR-310 사양 자체가 Joda-Time 저자인 Stephen Colebourne이 이끌었고, 설계 개선(불변성 강화, 엄격한 null 처리, 캘린더 시스템 명확화)이 반영되었습니다.
-
-**모던 Java에서 Joda-Time을 권장하지 않는 이유:**
-
-| 항목 | Joda-Time | java.time |
-|------|-----------|-----------|
-| 표준 위치 | 외부 라이브러리 | JDK 내장 (표준) |
-| 유지보수 | 타임존 데이터만 업데이트 | JDK와 함께 지속 |
-| API 일관성 | 설계 시기별 편차 | JSR-310에서 재설계 |
-| null 처리 | 관대함 | 엄격함 |
-| 불변성 | 일부 가변 객체 존재 | 전면 불변 |
-| 커뮤니티/문서 | 유지보수 모드 | 활발 (공식 튜토리얼) |
-
-**결론: 신규 코드는 무조건 `java.time`. 레거시 코드는 점진적 전환.**
+> 주의(2026-11-06 재검증): **Spring Boot 4.x는 기본 JSON 라이브러리가 Jackson 3**입니다(4.0 = 3.0.x, 4.1 = 3.1.x, Jackson 3 최신 3.2.4). 패키지·그룹이 `tools.jackson`으로 바뀌고(`jackson-annotations`만 `com.fasterxml.jackson.annotation` 유지), java.time 지원이 databind에 내장되며, `WRITE_DATES_AS_TIMESTAMPS` 기본값이 false로 바뀌었습니다. Boot 4 대상이면 3-6절을 먼저 보세요.
 
 ---
 
@@ -80,45 +55,11 @@ ObjectMapper mapper = new ObjectMapper()
     .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);   // ISO-8601 문자열로
 ```
 
-또는 Jackson 3 권장 스타일:
+또는 빌더 스타일(Jackson 2.10+에서도 가능. Jackson 3에서는 이 방식만 쓰며, 모듈은 `tools.jackson.datatype:jackson-datatype-joda`의 `tools.jackson.datatype.joda.JodaModule`):
 ```java
 ObjectMapper mapper = JsonMapper.builder()
     .addModule(new JodaModule())
     .build();
-```
-
-### 2-3. 직렬화 포맷 예시
-
-```java
-public class Event {
-    private org.joda.time.DateTime  startAt;     // 시간대 포함
-    private org.joda.time.LocalDate eventDate;   // 날짜만
-    private org.joda.time.LocalTime eventTime;   // 시간만
-    // getters/setters
-}
-```
-
-`WRITE_DATES_AS_TIMESTAMPS`를 disable한 상태 기준 JSON:
-
-```json
-{
-  "startAt":   "2026-04-22T10:30:00.000+09:00",
-  "eventDate": "2026-04-22",
-  "eventTime": "10:30:00.000"
-}
-```
-
-### 2-4. 개별 필드 포맷 지정
-
-```java
-import com.fasterxml.jackson.annotation.JsonFormat;
-
-public class Event {
-    @JsonFormat(shape = JsonFormat.Shape.STRING,
-                pattern = "yyyy-MM-dd HH:mm:ss",
-                timezone = "Asia/Seoul")
-    private DateTime startAt;
-}
 ```
 
 > 주의: `@JsonFormat(pattern=...)`은 Joda 모듈에서도 동작하지만, 타임존 정보가 누락된 패턴을 쓰면 왕복 시 정보 손실이 발생합니다. 가능하면 ISO-8601 기본 포맷 유지.
@@ -127,47 +68,7 @@ public class Event {
 
 ## 3. 모던 환경: Spring Boot + java.time (JSR-310)
 
-### 3-1. 의존성 (Spring Boot 자동 포함)
-
-```xml
-<!-- spring-boot-starter-json 또는 spring-boot-starter-web을 쓰면 자동 포함 -->
-<dependency>
-    <groupId>com.fasterxml.jackson.datatype</groupId>
-    <artifactId>jackson-datatype-jsr310</artifactId>
-</dependency>
-```
-
 Spring Boot 2.2+ 이후는 `spring-boot-starter-json`에 `jackson-datatype-jsr310`이 포함되어 있으며, 자동 설정이 `JavaTimeModule`을 기본 `ObjectMapper`에 등록합니다.
-
-### 3-2. 기본 ObjectMapper 사용 시 (권장)
-
-**추가 설정 없이** `LocalDateTime`, `OffsetDateTime`, `ZonedDateTime`, `Instant` 등이 모두 직렬화/역직렬화됩니다.
-
-```java
-public class EventDto {
-    private java.time.OffsetDateTime startAt;
-    private java.time.LocalDate      eventDate;
-    private java.time.LocalTime      eventTime;
-    private java.time.Instant        createdAt;
-}
-```
-
-### 3-3. 커스텀 ObjectMapper 사용 시
-
-커스텀 빈을 등록하면 자동 설정이 꺼지므로 직접 모듈을 등록해야 합니다.
-
-```java
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-
-@Bean
-public ObjectMapper objectMapper() {
-    return new ObjectMapper()
-        .registerModule(new JavaTimeModule())
-        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-}
-```
 
 > 주의: 예전 `JSR310Module` 클래스는 deprecated 입니다. 반드시 `JavaTimeModule`을 사용하세요. 신규 Jackson 3.x에서는 `jsr310` 기능이 코어로 통합되었습니다.
 
@@ -187,152 +88,36 @@ spring:
 
 > 주의: `spring.jackson.date-format` 프로퍼티는 `java.util.Date`에만 적용되고, `java.time.*` 타입에는 영향을 주지 않습니다. `java.time` 타입의 포맷을 제어하려면 `@JsonFormat` 또는 커스텀 Serializer를 사용하세요.
 
-### 3-5. 개별 필드 포맷 지정
-
-```java
-import com.fasterxml.jackson.annotation.JsonFormat;
-
-public class EventDto {
-    @JsonFormat(shape = JsonFormat.Shape.STRING,
-                pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
-    private OffsetDateTime startAt;
-
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
-    private LocalDate eventDate;
-}
-```
-
-패턴 기호:
-- `XXX` — ISO-8601 오프셋 (`+09:00`)
-- `X` — `+09` (시간 단위)
-- `Z` — RFC 822 (`+0900`)
-- `VV` — 존 ID (`Asia/Seoul`)
-
----
-
-## 4. LocalDateTime vs OffsetDateTime vs ZonedDateTime vs Instant
-
-| 타입 | 정보 | 대표 용도 |
-|------|------|-----------|
-| `LocalDateTime` | 날짜 + 시간 (타임존 없음) | 사용자가 입력한 "2026-04-22 10:30" 같은 벽시계 시간 |
-| `Instant` | UTC 기준 epoch 시각 (타임존/오프셋 없음) | 로그 타임스탬프, 이벤트 발생 시각 |
-| `OffsetDateTime` | 날짜 + 시간 + UTC 오프셋 (`+09:00`) | DB 저장·API 전송의 **표준 권장** |
-| `ZonedDateTime` | 날짜 + 시간 + 존 ID (`Asia/Seoul`) + DST 규칙 | 사용자에게 보여줄 때, 미래 시각 예약 |
-
-### 선택 결정 트리
-
-```
-서버가 "지금 이 순간"을 기록하고 싶다
-  → Instant
-
-UI 또는 리포트용 "연/월/일 시:분"이 필요하고 타임존이 무의미하다
-  → LocalDateTime (주의: DB에 저장하거나 API로 내보낼 때는 타임존 의미가 사라짐)
-
-DB에 타임존 확정된 시각을 저장하거나, API로 시각을 주고받는다
-  → OffsetDateTime  (권장 — 왕복 시 동일 시점 보장)
-
-미래 시각을 특정 지역 기준으로 예약 (DST 전환 반영 필요)
-예: "서울 시간 2026-10-25 02:30에 실행"
-  → ZonedDateTime
-```
-
-### 주요 주의사항
-
-| 타입 | 함정 |
-|------|------|
-| `LocalDateTime` | 타임존 정보가 없어 서버 간/DB 간 전송 시 "어느 지역 기준인가" 합의 필수. 멀티 리전 환경에서 버그 원인 |
-| `Instant` | 사람이 읽기 어려움 (epoch ms). API 응답에는 `OffsetDateTime` 권장 |
-| `OffsetDateTime` | 오프셋은 고정값 — DST 규칙을 반영하지 못함 |
-| `ZonedDateTime` | 존 ID의 DB 저장 형식이 벤더마다 다름. `timestamptz`는 오프셋만 보존 |
-
----
-
-## 5. 타임존 처리 원칙 — "UTC 저장 + 렌더링 시점 변환"
-
-### 표준 흐름
-
-```
-[사용자 입력 / 이벤트 발생]
-       ↓
-[서비스 레이어: OffsetDateTime 또는 Instant로 변환]
-       ↓
-[DB: UTC 기준 저장 (timestamptz)]
-       ↓
-[API 응답: OffsetDateTime ISO-8601 문자열로 직렬화]
-       ↓
-[클라이언트: 사용자 로케일 기준 렌더링]
-```
-
-**원칙:**
-1. **서버 기본 타임존에 의존하지 말 것** — `ZoneId.systemDefault()`는 배포 환경마다 다르다
-2. **DB 컬럼은 UTC 기준** — PostgreSQL `timestamptz`, MySQL `TIMESTAMP`(내부 UTC)
-3. **API 전송은 ISO-8601 + 오프셋 포함** — 수신 측이 독립적으로 해석 가능
-4. **변환은 렌더링 시점** — 비즈니스 로직은 Instant/OffsetDateTime으로 처리
-
-### JVM 기본 타임존 UTC 고정 (권장)
-
-```bash
-# 배포 환경
-java -Duser.timezone=UTC -jar app.jar
-```
-
-또는 Spring Boot 초기화 시:
-
-```java
-@PostConstruct
-public void init() {
-    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-}
-```
-
-### Jackson 타임존 설정
-
-```yaml
-spring:
-  jackson:
-    time-zone: UTC    # 또는 Asia/Seoul — 팀 규칙으로 고정
-```
-
 > 주의: `spring.jackson.time-zone`은 Jackson이 `Date`, `Calendar` 같은 레거시 타입을 직렬화할 때의 표시 타임존입니다. `OffsetDateTime`/`ZonedDateTime`은 자체 오프셋/존을 그대로 직렬화하므로 이 설정의 영향을 덜 받습니다.
 
----
+### 3-6. Spring Boot 4.x (Jackson 3)
 
-## 6. Joda-Time → java.time 타입 매핑 표
+> 소스: https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide · https://github.com/FasterXML/jackson/blob/main/jackson3/MIGRATING_TO_JACKSON_3.md
 
-| Joda-Time | java.time 대응 | 비고 |
-|-----------|----------------|------|
-| `org.joda.time.DateTime` | `java.time.ZonedDateTime` 또는 `java.time.OffsetDateTime` | DB/API에서 주고받는 용도면 `OffsetDateTime` 권장 |
-| `org.joda.time.LocalDate` | `java.time.LocalDate` | 이름 동일, 패키지만 다름 |
-| `org.joda.time.LocalTime` | `java.time.LocalTime` | 이름 동일 |
-| `org.joda.time.LocalDateTime` | `java.time.LocalDateTime` | 이름 동일 |
-| `org.joda.time.Instant` | `java.time.Instant` | 이름 동일 |
-| `org.joda.time.Duration` | `java.time.Duration` | 이름 동일 |
-| `org.joda.time.Period` | `java.time.Period` | 이름 동일. 단, Joda는 시/분/초 포함, java.time은 연/월/일만 |
-| `org.joda.time.DateTimeZone` | `java.time.ZoneId` | `DateTimeZone.forID("Asia/Seoul")` → `ZoneId.of("Asia/Seoul")` |
-| `org.joda.time.format.DateTimeFormatter` | `java.time.format.DateTimeFormatter` | API 이름 유사하나 시그니처 다름 |
-| `org.joda.time.Interval` | 직접 대응 없음 | `Instant` 두 개 + `Duration`으로 표현 |
-| `org.joda.time.MutableDateTime` | 없음 (불변성만 지원) | 값 재할당으로 대체 |
-
-### 자주 쓰이는 변환 코드
+| 항목 | Boot 2.x~3.x (Jackson 2) | Boot 4.x (Jackson 3) |
+|------|--------------------------|----------------------|
+| 패키지·그룹 | `com.fasterxml.jackson.*` | `tools.jackson.*` (어노테이션 `@JsonFormat` 등은 `com.fasterxml.jackson.annotation` 그대로) |
+| java.time 모듈 | `jackson-datatype-jsr310` + `JavaTimeModule` | databind에 내장 — `JavaTimeModule` 등록 불필요 |
+| 날짜 직렬화 기본값 | `WRITE_DATES_AS_TIMESTAMPS` = true (epoch 숫자) | `DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS` = **false** (ISO-8601 문자열) |
+| yml 키 | `spring.jackson.serialization.write-dates-as-timestamps` | `spring.jackson.datatype.datetime.write-dates-as-timestamps` (`SerializationFeature`에서 빠져 `DateTimeFeature`로 이동) |
+| 커스터마이저 | `Jackson2ObjectMapperBuilderCustomizer` | `JsonMapperBuilderCustomizer` (`customize(JsonMapper.Builder)`) |
+| 매퍼 빈 교체 | `ObjectMapper` 빈 정의 → 자동 설정 대체 | `ObjectMapper` 빈으로는 대체 안 됨 → `JsonMapper` 빈 정의 |
+| 모듈 탐지 | 잘 알려진 모듈만 | 클래스패스 모듈 전부 (`spring.jackson.find-and-add-modules=false`로 3.x 동작) |
 
 ```java
-// Joda DateTime → java.time ZonedDateTime
-org.joda.time.DateTime joda = ...;
-java.time.ZonedDateTime modern = java.time.ZonedDateTime.ofInstant(
-    java.time.Instant.ofEpochMilli(joda.getMillis()),
-    java.time.ZoneId.of(joda.getZone().getID())
-);
-
-// Joda DateTime → java.time OffsetDateTime (DB/API 전송용)
-java.time.OffsetDateTime modern2 = java.time.OffsetDateTime.ofInstant(
-    java.time.Instant.ofEpochMilli(joda.getMillis()),
-    java.time.ZoneId.of(joda.getZone().getID())
-);
-
-// java.time Instant → Joda DateTime (역방향, 과도기용)
-java.time.Instant instant = ...;
-org.joda.time.DateTime joda2 = new org.joda.time.DateTime(instant.toEpochMilli());
+// Boot 4 — Joda 병존 단계 (tools.jackson.datatype:jackson-datatype-joda 3.x 의존성)
+@Bean
+public JsonMapperBuilderCustomizer jodaCustomizer() {
+    return builder -> builder.addModule(new tools.jackson.datatype.joda.JodaModule());
+}
 ```
+
+- Boot 3에서 올라올 때 `spring.jackson.serialization.write-dates-as-timestamps: false`는 위 키로 옮기거나, 기본값이 이미 false이므로 지운다.
+- 당장 Jackson 3로 못 옮기면: `spring.jackson.use-jackson2-defaults=true`(Jackson 3 매퍼 기본값을 Boot 3.x에 가깝게) 또는 deprecated 임시 모듈 `spring-boot-jackson2` + `spring.jackson2.*` 프로퍼티.
+
+---
+
+## 6. Joda-Time → java.time 전환 함정
 
 > 주의: `joda.getZone().getID()` 결과는 대부분 `java.time.ZoneId`에 호환되지만, 오래된 타임존 별칭(deprecated alias)은 다를 수 있습니다. `ZoneId.of(..., ZoneId.SHORT_IDS)` 또는 별도 매핑 테이블을 고려하세요.
 
@@ -350,12 +135,6 @@ Joda의 시간 단위 Period를 그대로 `java.time.Period`로 바꾸면 시/�
 ## 7. 마이그레이션 절차 (점진적)
 
 대규모 코드베이스를 한 번에 교체하면 리스크가 크므로 **단계별 병존 전략**을 권장합니다.
-
-### 단계 0: 준비
-
-- 현재 코드 Joda 사용처 전수 조사 (`grep -r "org.joda.time"`)
-- Jackson 설정 스냅샷 (`spring.jackson.*`) 기록
-- 기존 JSON 응답 포맷 샘플 저장 (회귀 테스트 기준)
 
 ### 단계 1: 의존성 병존
 
@@ -383,6 +162,7 @@ Joda의 시간 단위 Period를 그대로 `java.time.Period`로 바꾸면 시/�
 **두 모듈을 같은 ObjectMapper에 등록:**
 
 ```java
+// Boot 2.x~3.x 기준. Boot 4(Jackson 3)는 3-6절 JsonMapperBuilderCustomizer 사용
 @Configuration
 public class JacksonConfig {
     @Bean
@@ -395,12 +175,6 @@ public class JacksonConfig {
 ```
 
 이 시점에 신규 코드는 `java.time`, 기존 코드는 Joda로 작성 가능한 상태가 됩니다.
-
-### 단계 2: 도메인별 점진 전환
-
-- 경계 계층(Controller DTO, DB Entity)부터 전환
-- 전환 단위: 도메인 모듈 또는 테이블 단위 (하루 안에 완료 가능한 크기)
-- 전환 시 기존 JSON 포맷과 새 포맷을 **통합 테스트로 비교**
 
 ### 단계 3: 경계 어댑터
 
@@ -425,22 +199,6 @@ public final class TimeAdapters {
 }
 ```
 
-### 단계 4: Joda 제거
-
-- `grep -r "org.joda.time"` 0건 확인
-- `joda-time`, `jackson-datatype-joda` 의존성 제거
-- JodaModule 등록 제거
-- 회귀 테스트 전체 실행 (API 응답 포맷, DB 왕복, 타임존 테스트)
-
-### 검증 포인트 (단계마다)
-
-- [ ] JSON 응답의 시간 필드 포맷이 기존과 동일한가
-- [ ] DB에 저장된 시각이 기존과 동일한 시점을 가리키는가
-- [ ] DST 전환 시점을 포함한 테스트 케이스 통과
-- [ ] 클라이언트 코드가 새 포맷을 파싱할 수 있는가
-
 ---
 
----
-
-> 상세 레퍼런스 (예제·고급 패턴·흔한 실수) → [`references/REFERENCE.md`](references/REFERENCE.md)
+> 상세 레퍼런스 (MyBatis·Oracle 시간 타입 매핑·흔한 실수) → [`references/REFERENCE.md`](references/REFERENCE.md)

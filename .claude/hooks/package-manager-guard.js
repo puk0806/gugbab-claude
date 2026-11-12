@@ -125,7 +125,7 @@ function check(command, cwd) {
 
 function handle(input) {
   if (!input || typeof input !== 'object') return null
-  if ((input.hook_event_name || input.hookEventName) !== 'PreToolUse' || input.tool_name !== 'Bash') return null
+  if ((input.hook_event_name || input.hookEventName) !== 'PreToolUse' || (input.tool_name !== 'Bash' && input.tool_name !== 'Monitor')) return null // Monitor 도 셸 명령(v2.1.314+)
   const cmd = input.tool_input && input.tool_input.command
   const reason = check(cmd, typeof input.cwd === 'string' ? input.cwd : undefined)
   if (!reason) return null

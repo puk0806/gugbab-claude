@@ -18,7 +18,9 @@ description: 넥사크로 17 X-API(PlatformRequest/PlatformResponse·PlatformDat
 > - MyBatis 3 Java API: https://mybatis.org/mybatis-3/java-api.html
 > - Jakarta Persistence @Version: https://jakarta.ee/specifications/persistence/3.1/apidocs/jakarta.persistence/jakarta/persistence/version
 > - Apache POI SXSSF: https://poi.apache.org/components/spreadsheet/how-to.html , https://poi.apache.org/changes.html
-> 검증일: 2026-10-08
+> 검증일: 2026-11-09
+
+> 주의(2026-11-09 재검증): 이 스킬은 **Spring Boot 3 / Spring Framework 6.x** 기준이다. 현재 최신은 Spring Boot 4.1.x · Spring Framework 7.0.x이며, 이 스킬이 쓰는 ProblemDetail(RFC 9457)·`ResponseEntityExceptionHandler`·6.1+ 내장 메서드 검증 설명은 Framework 7.0.10 문서에도 그대로 있다. 다만 **Boot 4는 Jackson 3(`tools.jackson` 패키지)을 기본 자동 구성**하고 Jackson 2 자동 구성은 deprecated이므로, Boot 4로 바로 옮긴다면 Jackson import·설정(`spring.jackson`)·직렬화 기본값 차이를 따로 확인한다(spring.io "Introducing Jackson 3 support in Spring"). Boot 4 전체 마이그레이션 항목은 이 스킬 범위 밖(`spring-boot-2-to-3-migration` 등 별도 스킬·공식 마이그레이션 가이드).
 
 ---
 
@@ -29,12 +31,11 @@ description: 넥사크로 17 X-API(PlatformRequest/PlatformResponse·PlatformDat
 | 기존 X-API 서버 코드를 **읽고 분석**(행 타입 읽기 메서드, xeni 설정, 14/17/N 패키지 차이) | `nexacro-xapi-server` 스킬 |
 | X-API 컨트롤러를 **REST로 옮기는 설계·코드 패턴** | **이 스킬** |
 | `javax`→`jakarta`, Security 5→6 등 Spring Boot 2→3 자체 이관 | `spring-boot-2-to-3-migration` 스킬 |
-| `@RestControllerAdvice`·ErrorCode enum·BusinessException 계층·Bean Validation 기본 | `global-exception-validation` 스킬 |
 | MyBatis 매퍼 XML·동적 SQL·`<foreach>` 작성법 | `mybatis-mapper-patterns` 스킬 |
 | 화면(.xfdl) → Next.js 변환 | `nexacro-to-react-mapping` 스킬 / `nexacro-screen-converter` 에이전트 |
 
 **언제 사용**: 넥사크로 화면이 `transaction()`으로 호출하던 서버 서비스를 JSON REST API로 바꿀 때, 그리고 전환기에 두 방식을 함께 운영해야 할 때.
-**언제 사용하지 않음**: 넥사크로 화면을 그대로 두고 서버만 유지보수할 때(→ `nexacro-xapi-server`), 신규 REST API를 처음부터 설계할 때(→ `api-spec-designer` 에이전트).
+**언제 사용하지 않음**: 넥사크로 화면을 그대로 두고 서버만 유지보수할 때(→ `nexacro-xapi-server`), 신규 REST API를 처음부터 설계할 때.
 
 ---
 
@@ -177,7 +178,7 @@ class ApiExceptionHandler extends ResponseEntityExceptionHandler {   // Spring M
 ```
 
 - Spring Boot에서 `spring.mvc.problemdetails.enabled=true`는 내장 예외를 ProblemDetail로 처리하는 `ResponseEntityExceptionHandler`를 자동 구성한다. 기본값은 `false`다. 위처럼 직접 `ResponseEntityExceptionHandler`를 상속했다면 이 속성은 켜지 않아도 된다(둘 다 쓰면 어느 핸들러가 이기는지 헷갈리므로 하나만 쓴다).
-- 팀이 이미 `global-exception-validation` 스킬의 ErrorResponse DTO 방식을 쓰고 있다면 그 형식을 유지해도 된다. 중요한 것은 **"HTTP 200 + 본문 ErrorCode" 관행을 버리는 것**이다.
+- 팀이 이미 공통 ErrorResponse DTO 방식을 쓰고 있다면 그 형식을 유지해도 된다. 중요한 것은 **"HTTP 200 + 본문 ErrorCode" 관행을 버리는 것**이다.
 - 프론트 변경 포인트: 넥사크로 `transaction` 콜백의 `nErrorCode < 0` 분기는 `fetch` 응답의 `!res.ok` 분기로 바뀐다. 전환 화면 목록에 이 변경을 함께 기록한다.
 
 ---
@@ -343,7 +344,6 @@ Spring Boot 3는 `jakarta.servlet`을 쓰므로 `javax.servlet` 기반 X-API jar
 - `@RequestBody`가 `List<…>` 자체이면 객체 단위 검증이 적용되지 않는다(컨테이너는 command object가 아님). §3처럼 record로 감싸면 단순해진다.
 - 금액·단가처럼 **서버가 계산할 수 있는 값은 클라이언트 값을 저장하지 않는다**. 넥사크로 화면에서 계산해 보내던 합계 컬럼은 서버에서 재계산한다.
 - IDOR 방지: `deleted[]`·`updated[]`의 ID마다 소유/권한 범위를 `WHERE`에 넣어 확인한다(§4-2 예시의 `tenant_id`). 영향 행 수 0이면 409/404 구분 없이 실패로 처리해도 정보 노출이 적다.
-- Bean Validation 어노테이션 목록·커스텀 Validator 작성은 `global-exception-validation` 스킬을 따른다.
 
 ---
 
@@ -388,6 +388,7 @@ void export(@Valid OrderSearchCond cond, HttpServletResponse res, @Authenticatio
 ```
 
 > 주의: POI how-to 문서는 "SXSSF allocates temporary files that you **must** always clean up explicitly"(`dispose()`)라고 쓰지만, POI 변경 이력상 **5.3.0(2024-07-02)부터 `SXSSFWorkbook.close()`가 임시 파일을 지운다**(Bug 68183). 사용하는 POI 버전이 5.3.0 이상인지 모를 때는 위처럼 `dispose()`와 `close()`를 모두 호출한다.
+> 주의(2026-11-09): POI 최신은 **6.0.0(2026-10-22, JDK 17 이상 필수)** 이다. Spring Boot 3 앱(JDK 17+)이면 쓸 수 있으나 deprecated 메서드 제거·`getCachedResultType` 반환 타입 enum 변경·`DataFormatter` 수식 셀 캐시값 기본 사용 등 깨지는 변경이 있으므로 변경 이력(poi.apache.org/changes.html)을 보고 올린다. 5.x 마지막은 5.5.1.
 
 - 권한·조회 범위 검사는 조회 API와 똑같이 적용한다. 엑셀 엔드포인트만 검사를 빠뜨리는 실수가 흔하다.
 - 행 수 상한을 둔다(예: 조회 조건 기간 제한). 무제한 export는 서버 자원 고갈 공격 표면이다.
@@ -412,7 +413,7 @@ void export(@Valid OrderSearchCond cond, HttpServletResponse res, @Authenticatio
 10. [ ] 배열 크기·문자열 길이·export 행 수 상한을 정했다
 11. [ ] 전환기 X-API 어댑터가 같은 서비스·같은 DTO를 쓰는지 확인했다 (§5)
 12. [ ] 엑셀 export/import를 SXSSF 엔드포인트로 대체하고 임시 파일 정리를 확인했다 (§7)
-13. [ ] 레거시와 신규의 조회·저장·오류 결과 동등성 테스트 + 권한 우회·잘못된 입력 적대적 테스트를 만들었다 (`migration-parity-tester` 에이전트, `testing-junit5-spring-boot` 스킬)
+13. [ ] 레거시와 신규의 조회·저장·오류 결과 동등성 테스트 + 권한 우회·잘못된 입력 적대적 테스트를 만들었다 (`migration-parity-tester` 에이전트)
 14. [ ] 프론트 화면의 성공/실패 분기(`nErrorCode < 0` → HTTP 상태)를 바꿨다
 
 ---

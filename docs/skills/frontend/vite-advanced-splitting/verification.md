@@ -2,7 +2,7 @@
 skill: vite-advanced-splitting
 category: frontend
 version: v3
-date: 2026-09-28
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -36,7 +36,7 @@ status: APPROVED
 | 스킬 이름 | vite-advanced-splitting |
 | 스킬 경로 | .claude/skills/vite-advanced-splitting/SKILL.md |
 | 최초 작성일 | 2026-04-20 |
-| 검증일 | 2026-09-28 (재검증, 이전 2026-08-11) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-28) |
 | 검증 방법 | WebSearch 교차 검증 (메인 대화) + 2026-09-28 재검증(2차, npm registry·공식 마이그레이션 가이드 대조) |
 | 버전 기준 | Vite 8.3.1(주 경로: `rolldownOptions.output.codeSplitting`) / 레거시 Vite 6.x·Rollup 4.x(`manualChunks`) |
 
@@ -50,7 +50,7 @@ status: APPROVED
 - [✅] 흔한 실수 패턴 정리 (3가지)
 - [✅] WebSearch 교차 검증 (6개 클레임, VERIFIED 6, DISPUTED 0)
 - [✅] SKILL.md 파일 작성
-- [ ] 실제 활용 테스트
+- [✅] 실제 활용 테스트 (2026-11-09 재검증 수정분 content test 3/3 PASS)
 
 ---
 
@@ -72,6 +72,10 @@ status: APPROVED
 | soledadpenades.com manualChunks | https://soledadpenades.com/posts/2025/use-manual-chunks-with-vite-to-facilitate-dependency-caching/ | ⭐⭐ Medium | 2025-02 | 패키지명 기반 분할 실전 가이드 |
 | Vite GitHub Discussion #17730 | https://github.com/vitejs/vite/discussions/17730 | ⭐⭐ Medium | - | 대형 프로젝트 동적 import + splitting |
 | Vite Plugin API Discussion | https://github.com/vitejs/vite/discussions/13175 | ⭐⭐ Medium | - | writeBundle/closeBundle 순차 실행 |
+| npm registry (vite·rolldown) | https://www.npmjs.com/package/vite · https://www.npmjs.com/package/rolldown | ⭐⭐⭐ High | 2026-11-09 | vite 8.3.6(의존 rolldown ~1.2.16), rolldown 1.3.0 |
+| Vite 공식 마이그레이션 가이드 (원문) | https://github.com/vitejs/vite/blob/main/docs/guide/migration.md | ⭐⭐⭐ High | 2026-11-09 | manualChunks 객체 형식 제거·함수 형식 deprecated, rollupOptions→rolldownOptions 개명 |
+| Vite 공식 빌드 가이드 (원문) | https://github.com/vitejs/vite/blob/main/docs/guide/build.md | ⭐⭐⭐ High | 2026-11-09 | Chunking Strategy·Load Error Handling(`vite:preloadError`, `Cache-Control: no-cache`) |
+| Rolldown 타입 정의 (npm 패키지 1.2.16·1.3.0) | https://rolldown.rs/reference/OutputOptions.codeSplitting | ⭐⭐⭐ High | 2026-11-09 | `CodeSplittingGroup.test?: string \| RegExp \| (id) => boolean`, `name: string \| (moduleId, ctx) => string \| null`, `priority` 기본 0, `minify.compress.dropConsole` |
 
 ---
 
@@ -107,13 +111,58 @@ status: APPROVED
 
 | 7 | Vite 8부터 Rolldown이 기본 번들러로 전환되며 `build.rollupOptions`는 `build.rolldownOptions`로 개명(`rollupOptions`는 deprecated alias로 하위호환 유지). `output.manualChunks` 객체 형식은 Vite 8+에서 미지원(함수 형식은 deprecated로 계속 동작) | VERIFIED (SKILL.md 인용 출처 기준) | SKILL.md 자체 인용 출처 https://vite.dev/guide/migration 기준으로 2026-08-11 SKILL.md에 반영됨. 이번 동기화 세션에서 별도 WebSearch 재검증은 미수행 — SKILL.md 인용 출처 대조 + 내용 일관성만 확인 |
 
+#### 2026-11-09 재검증 클레임
+
+| # | 클레임 | 판정 | 비고 |
+|---|--------|------|------|
+| 8 | 최신 안정 버전 Vite 8.3.6 / Rolldown 1.3.0 | VERIFIED | npm registry (`npm view`) |
+| 9 | Vite 8: `rollupOptions`→`rolldownOptions` 개명, `manualChunks` 객체 형식 제거·함수 형식 deprecated, 대안 `codeSplitting` | VERIFIED | Vite migration.md 원문 + build.md "Chunking Strategy" 두 문서 일치 |
+| 10 | `codeSplitting.groups[].test`는 정규식만 받는다 (기존 SKILL.md 서술) | DISPUTED → 수정 | Rolldown 1.2.16(Vite 8.3.6 의존)·1.3.0 타입 정의 모두 `string \| RegExp \| function` 허용, `name`도 함수 가능. SKILL.md 1절을 정정하고 `name` 함수로 동적 청크명 예시 추가 |
+| 11 | `vite:preloadError` — `event.payload`에 원 에러, `preventDefault()`로 throw 억제, HTML `Cache-Control: no-cache` 필요 | VERIFIED | Vite build.md 원문 "Load Error Handling" (4절에 보충 문단 추가) |
+| 12 | `rolldownOptions.output.minify.compress.dropConsole` 옵션 존재 | VERIFIED | Rolldown 1.3.0 타입 정의 + Vite migration.md(`minify.compress.drop*`) |
+
 ### 4-5. DISPUTED 항목 처리
 
-- 없음 (전 클레임 VERIFIED, 7번 항목은 SKILL.md 인용 출처 기준)
+- 2026-11-09: #10 `test` 정규식 전용 서술 → 문자열·정규식·함수 허용으로 SKILL.md 1절 정정 (나머지 VERIFIED)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-11-09] 재검증 수정분 content test
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester → general-purpose (frontend-developer 대신 general-purpose 사용, Q별 독립 에이전트)
+**수행 방법**: SKILL.md Read 후 2026-11-09 수정분(`groups[].test` 문자열·정규식·함수, `name` 함수 동적 청크명, `vite:preloadError` 보충)을 겨냥한 실전 질문 3개 답변, 근거 섹션 및 anti-pattern 회피 확인
+
+**Q1. Vite 8.3에서 `lf-*-api-client` 27개 패키지를 개별 청크로 분리 — `test`에 문자열·함수 가능? 청크명은 고정 문자열이어야 하나?**
+- ✅ PASS
+- 근거: SKILL.md 1절 "Vite 8+ 주 경로" 필드 설명(44행) + `name` 함수 예시(48-54행)
+- 상세: 그룹 1개에 `test` 정규식 + `name: (id) => id.match(...)?.[1] ?? null` + `priority: 25`로 답변, `test`는 문자열·정규식·함수 모두 가능, `name`도 함수 가능(고정 문자열 아님)을 정확히 제시. 레거시 `manualChunks`는 Vite 8에서 deprecated라 쓰지 않는다고 구분.
+
+**Q2. `test`에서 바깥 변수(`currentPkg`)에 저장하고 `name`에서 읽는 패턴이 가능한가? `name`이 null을 반환하면?**
+- ✅ PASS
+- 근거: SKILL.md 1절 "주의: test·name 함수는 Rolldown이 모듈마다 정해진 순서로 호출한다…"(56행)
+- 상세: 금지 사례임을 정확히 지적, 해결은 `name(id)`에서 id로 직접 패키지명 추출 또는 모듈 id 키 저장으로 답변. null 반환 의미는 SKILL.md에 없다고 추측 없이 명시(아래 gap).
+
+**Q3. 새 배포 후 구 청크 404 — `vite:preloadError` 대응, 원 에러 위치, `preventDefault` 동작, 서버 쪽 할 일**
+- ✅ PASS
+- 근거: SKILL.md 4절(301-351행), 특히 351행 공식 문서 보충
+- 상세: `event.payload`에 원 에러, `preventDefault()` 시 throw 안 됨, HTML에 `Cache-Control: no-cache` 필요, 재시도 가능 브라우저는 새로고침 없이 재시도·구형은 새로고침 필요까지 정확히 답변.
+
+### 발견된 gap (모두 선택 보강, 차단 요인 아님)
+
+- `name` 함수가 `null`을 반환할 때 모듈의 배정 결과(다음 그룹으로 넘어가는지 등)가 SKILL.md에 없음
+- `test`에 문자열을 주는 예시 없음, `minSize` 등 크기 기준이 작은 패키지 그룹을 무시할 수 있다는 점이 개별 분리 예시에 반영되지 않음
+- 4절 플러그인 예제의 `retryCount`는 `_retry` 쿼리 이동으로 페이지가 다시 로드되면 0으로 초기화되어 재시도 상한이 실제로는 동작하지 않을 수 있음(기존 예제 코드, 이번 수정분 아님), 앱 코드 예제는 무한 새로고침 가드 없음 — 후속 보강 후보
+
+### 판정
+
+- agent content test: PASS (3/3)
+- verification-policy 분류: 빌드 설정 스킬(실사용 필수) — 2026-09-28 실사용 실행 검증으로 이미 APPROVED, 이번 수정분은 서술 정정·보충이라 재시험 PASS로 유지
+- 최종 상태: APPROVED 유지
+
+---
 
 ### [2026-09-28] 실사용(실행) 검증
 
@@ -254,8 +303,9 @@ status: APPROVED
 | 실용성 | ✅ |
 | 에이전트 활용 테스트 | ✅ PASS (3/3, 2026-04-24 / 2026-08-12 Vite 8 신규 내용 2/2 PASS / 2026-09-28 재구성분 skill-tester content test 2/2 PASS) |
 | Vite 8 대응 주의사항 동기화(2026-08-12) | ✅ SKILL.md 반영 내용 클레임 판정표(4-4 #7) 기록 + content test 2/2 PASS |
+| 재검증 수정분 content test(2026-11-09) | ✅ PASS (3/3 — `groups[].test` 타입, `name` 함수 동적 청크명·바깥 변수 주의, `vite:preloadError` 보충) |
 | 실사용(실행) 검증(2026-09-28) | ✅ lab 샘플 프로젝트에서 `codeSplitting.groups` 그대로 빌드 → 청크 분할·dropConsole 모두 서술과 일치 |
-| **최종 판정** | **APPROVED** (2026-09-28 실사용 실행 검증 완료 — 빌드 산출물이 SKILL.md 서술과 일치) |
+| **최종 판정** | **APPROVED** (2026-09-28 실사용 실행 검증 완료 — 빌드 산출물이 SKILL.md 서술과 일치, 2026-11-09 재검증 수정분 content test 3/3 PASS로 유지) |
 
 ---
 
@@ -266,6 +316,8 @@ status: APPROVED
 - [✅] Vite 6 예시를 `codeSplitting.groups` 주 경로로 전면 재구성, `manualChunks`는 레거시로 격하 (2026-09-28 완료 — 2/2 PASS)
 - [✅] skill-tester로 2026-09-28 재구성분(§1·§5 주 경로/레거시 구조) content test 수행 완료 (2026-09-28, 2/2 PASS)
 - [✅] 실사용(실행) 검증 완료 (2026-09-28) — lab 샘플(Vite 8.3.1 + React TS, 라우트 4개 + swiper)에서 `codeSplitting.groups` 그대로 빌드 → 청크 분할·dropConsole 모두 서술과 일치 → APPROVED 전환
+- [✅] 2026-11-09 재검증 수정분(`groups[].test` 문자열·정규식·함수, `name` 함수, `vite:preloadError` 보충) skill-tester content test 수행 (2026-11-09 완료, 3/3 PASS)
+- [ ] (선택 보강, 차단 요인 아님) `name`이 null 반환 시 동작 명시, 4절 예제의 `retryCount` 초기화·무한 새로고침 가드 보강
 
 ---
 
@@ -280,3 +332,6 @@ status: APPROVED
 | 2026-09-28 | v2 | 재검증(2차) — Vite 6.x → 8.3.1 갱신, SKILL.md 1·5절을 `rolldownOptions.output.codeSplitting.groups`(주 경로) / `manualChunks`(레거시, Vite 6/7) 구조로 재편. 흔한 실수 패턴 1도 공통 주의사항으로 갱신. status PENDING_TEST 유지 | Claude (Sonnet 5) |
 | 2026-09-28 | v2 | 2단계 실사용 테스트 수행 (재검증(2차) 재구성분 대상 — Q1 Vite 8 벤더청크+dropConsole 설정 / Q2 객체형 manualChunks Vite 8 마이그레이션 가능 여부) → 2/2 PASS, PENDING_TEST 유지 (빌드 설정 실사용 필수 카테고리) | skill-tester |
 | 2026-09-28 | v3 | 실사용(실행) 검증 — lab 샘플 프로젝트(Vite 8.3.1 + React TS, 라우트 4개+swiper)에서 `codeSplitting.groups` 주 경로 그대로 빌드 → 청크 분할(common-react-dom/common-swiper/vendor/라우트별 lazy)·`dropConsole` 모두 서술과 일치 확인. status APPROVED 전환 | Claude (Sonnet 5) |
+| 2026-11-09 | v4 | 재검증 — Vite 8.3.6·Rolldown 1.3.0 확인(npm registry), 마이그레이션 가이드·빌드 가이드 원문 대조. `codeSplitting.groups[].test` "정규식만" 서술을 문자열·정규식·함수 허용으로 정정(DISPUTED), `name` 함수 동적 청크명 예시·함수 호출 순서 주의 추가, `vite:preloadError` 보충(payload·preventDefault·HTML no-cache). 내용 변경 있음, status APPROVED 유지 | Claude (Opus 5.5) |
+| 2026-11-09 | v4 | 2단계 실사용 테스트 재수행 (재검증 수정분 대상 — Q1 lf-*-api-client 개별 청크 `name` 함수·`test` 타입 / Q2 test→name 바깥 변수 공유 금지 / Q3 vite:preloadError payload·preventDefault·HTML no-cache) → 3/3 PASS, APPROVED 유지 | skill-tester |
+| 2026-11-12 | v4.1 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 Vite 8 rolldownOptions 개명·manualChunks 객체 미지원/함수 deprecated, codeSplitting.groups 옵션·name 함수·test→name 상태 공유 주의, vite:preloadError 공식 동작·HTML no-cache, 흔한 실수 표 / 덜어낸 것 모바일·데스크톱 mode 분리 빌드 예제, Gulp→플러그인 전환 예제·훅 순서도, manualChunks 전체 함수 예제, retry 플러그인 코드, 빌드 출력 설정 예제. 원 검증일 2026-11-09 기준 내용 그대로, status·검증일 변경 없음 | 정리 |

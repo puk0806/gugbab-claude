@@ -1,8 +1,8 @@
 ---
 skill: geo-ai-discoverability
 category: frontend
-version: v1.2
-date: 2026-09-28
+version: v1.3
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `geo-ai-discoverability` |
 | 스킬 경로 | `.claude/skills/geo-ai-discoverability/SKILL.md` |
-| 검증일 | 2026-06-01 (최초) / 2026-08-26 (재검증 1차) / **2026-09-28 (재검증 2차)** |
+| 검증일 | **2026-11-09 (재검증, 이전 2026-09-28)** / 2026-08-26 (재검증 1차) / 2026-06-01 (최초) |
 | 검증자 | skill-creator |
-| 스킬 버전 | v1.2 |
+| 스킬 버전 | v1.3 |
 
 ---
 
@@ -108,6 +108,20 @@ status: APPROVED
 | Google 생성형 AI 최적화 가이드·AI 기능·Search Console 제어·성능 보고서 (재확인 4건) | (§3-1과 동일 URL) | ⭐⭐⭐ High | 2026-09-28 조회(200 OK, curl 확인) | 내용 변경 없음 |
 | Cloudflare·TollBit·arXiv·Anthropic llms.txt 실물(재확인 7건) | (§3-1과 동일 URL) | — | 2026-09-28 조회(전부 200 OK) | 링크 유효성만 재확인, 내용 재조사는 없음(§1 범위 밖) |
 
+### 3-3. 2026-11-09 재검증(3차) 시 조사 소스
+
+| 소스명 | URL | 신뢰도 | 날짜 | 비고 |
+|--------|-----|--------|------|------|
+| OpenAI 크롤러 문서 | https://developers.openai.com/api/docs/bots | ⭐⭐⭐ High | 2026-11-09 조회 | OAI-SearchBot·GPTBot 1.4, ChatGPT-User 1.0, **OAI-AdsBot 1.0**(광고 랜딩 페이지 검사·학습 미사용). robots.txt 태그는 OAI-SearchBot·GPTBot 두 개로만 명시 |
+| Anthropic 크롤러 문서 | https://support.claude.com/en/articles/8896518 | ⭐⭐⭐ High | 2026-11-09 조회("Updated this week") | ClaudeBot·Claude-User·Claude-SearchBot + **Claude-Agent**, **2026-10-30~ IETF aipref 초안 기반 학습 거부 신호 인식**, ClaudeBot 지정 규칙 우선, Crawl-delay 지원 |
+| Anthropic Claude-Agent 문서 | https://support.claude.com/en/articles/18234133 | ⭐⭐⭐ High | 2026-11-09 조회 | UA 토큰 `Claude-Agent/1.0`, IP 목록 `claude.com/.well-known/sail`, robots.txt 준수 여부 미기재 |
+| Google common crawlers (Google-Extended) | https://developers.google.com/crawling/docs/crawlers-fetchers/google-common-crawlers | ⭐⭐⭐ High | 2026-11-09 조회 | 학습·grounding 제어, 검색 포함·랭킹 무영향 — 변경 없음 |
+| Google-Agent 문서 | https://developers.google.com/crawling/docs/crawlers-fetchers/google-agent | ⭐⭐⭐ High | 2026-11-09 조회 | "generally ignore robots.txt rules" 원문 유지 |
+| Perplexity 크롤러 문서 | https://docs.perplexity.ai/docs/resources/perplexity-crawlers | ⭐⭐⭐ High | 2026-11-09 조회 | PerplexityBot·Perplexity-User 2종, 변경 없음 |
+| Apple Applebot 문서 | https://support.apple.com/en-us/119829 | ⭐⭐⭐ High | 2026-11-09 조회(Published 2026-09-04) | Applebot-Extended 는 크롤하지 않고 사용 여부만 제어 — 변경 없음 |
+| Meta 크롤러 문서 | https://developers.facebook.com/docs/sharing/webmasters/crawler | ⭐⭐⭐ High | 2026-11-09 조회 | **Meta-WebIndexer**(Meta AI 검색 인용)·Meta-ExternalAds 등재 확인, ExternalAgent·ExternalFetcher(robots.txt 우회 가능) 유지 |
+| llmstxt.org | https://llmstxt.org/ | ⭐⭐ Medium | 2026-11-09 조회 | v2, 수정일 2026-08-10 유지, H1 만 필수, "inference rather than training" 원문 유지 |
+
 ---
 
 ## 4. 검증 체크리스트 (Test List)
@@ -135,8 +149,8 @@ status: APPROVED
 - [✅] 정책 결정자(사이트 운영자)와 개발자 양쪽 관점 균형
 
 ### 4-4. Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-06-01 skill-tester → general-purpose 수행 / 2026-09-28 skill-tester → general-purpose로 Google-Agent 신설·Google-Extended URL 정정분 재수행)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (3/3 PASS — 2026-06-01, 2/2 PASS — 2026-09-28)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-06-01 skill-tester → general-purpose 수행 / 2026-09-28 skill-tester → general-purpose로 Google-Agent 신설·Google-Extended URL 정정분 재수행 / 2026-11-09 skill-tester → general-purpose로 3차 재검증분 재수행)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (3/3 PASS — 2026-06-01, 2/2 PASS — 2026-09-28, 3/3 PASS — 2026-11-09)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (gap 없음, 세 번의 테스트 모두 보완 불필요 — 2026-09-28 Q2에서 표 프레이밍상 가독성 개선 여지만 발견, 사실 오류 아님)
 
 ### 4-5. 2026-08-26 갱신분 클레임 교차 검증 결과
@@ -189,11 +203,53 @@ status: APPROVED
 | Perplexity 공식 문서가 Perplexity-User에 대해 "generally ignores robots.txt rules"라고 명시 | VERIFIED | Perplexity 크롤러 문서 원문 |
 | OpenAI에 `OAI-AdsBot`이 추가됨 | VERIFIED | OpenAI 크롤러 문서 원문 |
 | Anthropic 크롤러 3종 구성 변경 없음 + IP 목록 `claude.com/crawling/bots.json` 제공 | VERIFIED | Anthropic 공식 문서(문서일 2026-04-07) |
+| (2026-11-09) `OAI-AdsBot` 1.0 = ChatGPT 광고 랜딩 페이지 검사, 학습 미사용 | VERIFIED → 용도 서술 정정 | OpenAI 크롤러 문서 원문 |
+| (2026-11-09) "같은 문서에서 GPTBot·OAI-SearchBot·OAI-AdsBot 은 robots.txt 준수" | DISPUTED → 정정 | 문서는 robots.txt 태그를 OAI-SearchBot·GPTBot 두 개로만 명시, OAI-AdsBot 동작 미기재 (curl 원문 대조) |
+| (2026-11-09) Anthropic `Claude-Agent` = 호스팅 브라우저(agentic browser), 크롤러 3종과 별도 | VERIFIED → 추가 | Anthropic 8896518 + 18234133 |
+| (2026-11-09) Anthropic 2026-10-30부터 IETF aipref 초안 기반 학습 거부 신호 인식, ClaudeBot 지정 robots 규칙 우선 | VERIFIED → 추가 (신호 문법은 UNVERIFIED — 문서에 없음, SKILL.md `> 주의: 미검증`) | Anthropic 8896518 |
+| (2026-11-09) Meta `Meta-WebIndexer` = Meta AI 검색 인용용 | VERIFIED → 추가 | Meta 크롤러 문서 |
+| (2026-11-09) Google-Extended·Google-Agent·Perplexity 2종·Applebot-Extended·llms.txt v2 | VERIFIED (변경 없음) | 각 공식 문서 |
 | §4-2 로그 grep 예시에서 `Google-Extended` 제거 | 정정 반영 | Google-Extended는 **robots.txt 토큰이며 UA가 아니다**(스킬 §1-2 주의와 일치). 로그 UA 매칭 대상에서 제외하는 것이 정확 |
 
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester → general-purpose (도메인 전용 에이전트 없음, general-purpose로 대체. 3개 질문을 각각 별도 하위 에이전트로 수행, 3건 모두 완료 확인 후 판정)
+**수행 방법**: SKILL.md Read 후 3개 실전 질문(3차 재검증으로 바뀐 내용 겨냥) 답변, 근거 줄 번호 대조 및 anti-pattern 회피 확인
+
+### 실제 수행 테스트 (2026-11-09, 3차 재검증분 재테스트)
+
+**Q1. Anthropic 학습 거부 신호(2026-10-30~)로 Claude 학습만 막으려면 정확히 어떤 신호/문법을 넣어야 하고 언제부터 유효한가? 확실한 방법은?**
+- ✅ PASS
+- 근거: SKILL.md 헤더 9줄(갱신 사유 ⓒ) + §1-1 마지막 주의 블록 74줄 + 전략 A 101~102줄
+- 상세: 2026-10-30 시작 시점을 정확히 답하고, 신호의 이름·문법은 문서에 없어 `주의: 미검증(문법)`임을 밝혔다. 문법을 지어내지 않았다(anti-pattern 회피). 확실한 방법으로 `ClaudeBot` robots.txt 규칙(지정 규칙이 일반 설정보다 우선)을 제시했고, Claude-SearchBot Allow 유지·Claude-Agent 별도 트래픽까지 정확히 구분했다.
+
+**Q2. 로그의 OAI-AdsBot은 무엇이며 학습용인가, robots.txt로 확실히 막히는가, robots.txt에는 어떻게 처리하나?**
+- ✅ PASS
+- 근거: SKILL.md §1-1 41줄(OAI-AdsBot 용도) + §1-4 186줄 + 헤더 9줄
+- 상세: 광고 랜딩 페이지 검사용이며 학습 미사용임을 정확히 답했다. OpenAI 문서가 robots.txt 태그를 OAI-SearchBot·GPTBot 두 개로만 명시하고 OAI-AdsBot 동작은 미기재라 준수 여부가 확인되지 않았음을 답했다(정정 전 "준수" 서술 anti-pattern 회피). 템플릿에 항목이 없다는 점과 자기 추론 부분을 구분해 표시했다.
+
+**Q3. "학습 차단, 인용 허용" robots.txt에서 Meta-WebIndexer·Meta-ExternalAgent 처리, Claude-Agent의 분류·차단 가능 여부·영향은?**
+- ✅ PASS
+- 근거: SKILL.md §1-1 45·51~52줄, §1-2 80~84줄, 전략 A 113~114·134~135줄, 72줄, §1-4 184~190줄
+- 상세: Meta-ExternalAgent=학습용 Disallow, Meta-WebIndexer=인덱싱·검색용 Allow(차단 시 Meta AI 인용에서 사라짐)를 정확히 답했다. Claude-Agent는 "사용자 요청 시 fetch·에이전트" 분류이며 robots.txt 준수 여부가 문서에 없고 막으면 사용자가 Claude에게 그 사이트 작업을 맡길 수 없음을 정확히 답했다. 동일 분류 타사 사례(robots.txt 무시)를 근거로 WAF·IP 병행 필요를 덧붙였다.
+
+### 발견된 gap (2026-11-09, 모두 선택 보강 — 차단 요인 아님)
+
+- 전략 A/B 템플릿과 §1-2 분류표에 `OAI-AdsBot`·`Claude-Agent` 항목이 없어(41·45·72줄에만 서술) 실제 robots.txt 작성 지침이 비어 있다. 사실 오류는 아님.
+- Meta-ExternalFetcher가 전략 A 템플릿에 없다(전략 B에만 있음).
+- §1-2 84줄의 "robots.txt를 무시할 수 있다고 명시하는 회사(Perplexity·Google 등)"에 OpenAI(ChatGPT-User, §1-4 186줄)가 빠져 있어 §1-4와 경미한 불일치.
+- 74줄 `> 주의: 미검증(문법)` 표기가 문장 중간에 붙어 있어 가독성이 떨어진다.
+
+### 판정 (2026-11-09)
+
+- agent content test: 3/3 PASS
+- verification-policy 분류: 해당 없음 (표준·정책 정리형 — content test PASS = APPROVED 유지 가능)
+- 최종 상태: APPROVED (유지)
+
+---
 
 **수행일**: 2026-09-28
 **수행자**: skill-tester → general-purpose
@@ -296,7 +352,9 @@ status는 PENDING_TEST로 유지하며, 별도 세션에서 skill-tester로 검�
 | freshness 재검증 1차 | ✅ 2026-08-26 — Bytespider 추가, llms.txt v2·플랫폼 입장 정정, Google AI 기능 2026 변경 반영. VERIFIED 22건 / DISPUTED 4건(정정 또는 한계 명시 후 게재) / UNVERIFIED 3건(본문 미기재) |
 | freshness 재검증 2차 | ✅ 2026-09-28 — `Google-Agent` 신규 크롤러 추가(ADD), `Google-Extended` 공식 문서 URL 정정(구 URL 404, DISPUTED→정정). VERIFIED 5건 / DISPUTED 1건(정정) / ADD 1건 |
 | 에이전트 활용 재테스트 | ✅ 2026-09-28 — Q1 Google-Agent+URL 정정 / Q2 bot-management-seo 교차검증(모순 없음) → 2/2 PASS |
-| **최종 판정** | **APPROVED** (2026-09-28 skill-tester 재테스트 완료, 2/2 PASS — 크롤러 목록 교차검증 모순 없음 확인) |
+| freshness 재검증 3차 | ✅ 2026-11-09 — OAI-AdsBot 용도·준수 서술 정정, Claude-Agent·Meta-WebIndexer 추가, Anthropic aipref 학습 거부 신호 인식 추가(문법 미검증 표기) |
+| 에이전트 활용 재테스트 (3차) | ✅ 2026-11-09 — Q1 aipref 신호·ClaudeBot 규칙 / Q2 OAI-AdsBot 용도·준수 / Q3 Meta-WebIndexer·Claude-Agent 분류 → 3/3 PASS |
+| **최종 판정** | **APPROVED** (2026-11-09 skill-tester 재테스트 완료, 3/3 PASS — 3차 재검증 변경분 모두 SKILL.md 근거로 정확히 답변, 문법 미검증 영역을 지어내지 않음) |
 
 ---
 
@@ -306,6 +364,10 @@ status는 PENDING_TEST로 유지하며, 별도 세션에서 skill-tester로 검�
 - [✅] 정기 재검증 1회차 수행 (2026-08-26) — 크롤러 표·llms.txt·Google AI 기능 전면 재확인
 - [✅] 정기 재검증 2회차 수행 (2026-09-28) — Google-Extended URL 정정, Google-Agent 신규 크롤러 반영, 나머지 크롤러 UA·llms.txt v2 변경 없음 확인
 - [✅] Google-Agent 신설·Google-Extended URL 정정분 content 재테스트 + bot-management-seo 크롤러 목록 교차검증 (2026-09-28 완료, 2/2 PASS — skill-tester → general-purpose, 모순 없음 확인)
+- [✅] 정기 재검증 3회차 수행 (2026-11-09) — OAI-AdsBot 정정, Claude-Agent·Meta-WebIndexer·Anthropic aipref 신호 반영
+- [✅] 3차 재검증 변경분 content 재테스트 (2026-11-09 완료, 3/3 PASS — skill-tester → general-purpose)
+- [❌] 전략 A/B 템플릿·§1-2 분류표에 `OAI-AdsBot`·`Claude-Agent`·`Meta-ExternalFetcher(전략 A)` 반영 및 §1-2 84줄에 OpenAI 추가 (2026-11-09 content test에서 발견, 선택 보강 — 차단 요인 아님)
+- [❌] Anthropic aipref 학습 거부 신호의 이름·문법이 공식 문서에 공개되면 SKILL.md `주의: 미검증(문법)` 해소 (차단 요인 아님)
 - [✅] llms.txt 채택률·플랫폼 입장 변화 추적 → v2 명세(2026-08-10) 및 Google 공식 부정 문구 반영 완료
 - [❌] **다음 정기 재검증 권장일 2027-03-28** (분기 단위 정책 변동. 차단 요인 아님)
 - [❌] ByteDance 공식 크롤러 문서·IP 목록 공개 여부 추적 — 공개 시 `1차 소스 미검증` 표기 해소 (차단 요인 아님)
@@ -326,3 +388,7 @@ status는 PENDING_TEST로 유지하며, 별도 세션에서 skill-tester로 검�
 | 2026-08-26 | v1.1 | **freshness 갱신** — ① §1-1에 `Bytespider`(+`OAI-AdsBot`) 추가, UA·용도·**공식 문서 부재** 주의 명시 / §1-2·§1-3 템플릿 2종·§4-2 로그 grep에 반영 ② §1-4에 "회사가 공식 명시한 미준수"(ChatGPT-User·Perplexity-User)와 "제3자 측정 보고"(Bytespider/TollBit) 분리 신설 ③ **§1-5 신설** — Search Console `Search generative AI` 제어(2026-06) ④ §2 llms.txt 전면 재검증: *발행/권장/소비/명시적 부정* 4분할로 기존 단정 정정, **v2 명세(2026-08-10)** 반영, `llms-ctx*.txt` 서술 정정, §2-4 v1→v2 변경표 신설(기존 2-4 → 2-5) ⑤ **§3-5 신설** — Google 생성형 AI 최적화 공식 가이드(2026-07-10) ⑥ **§3-6 신설** — 네이버 AI 브리핑 요약 + `naver-seo-specifics` §2-2 포인터(중복 서술 없음) ⑦ **§4-0 신설** — Search Console 생성형 AI 성능 보고서 ⑧ `references/REFERENCE.md` §7-7 llms.txt 단정 정정 + 부록 공식 URL 8건 추가. UNVERIFIED 3건(Claude/Perplexity의 llms.txt 소비 주장, 성능 보고서 클릭 지표)은 본문 미기재. status APPROVED 유지 | skill-creator |
 | 2026-09-28 | v1.2 | **재검증(2차)** — ① `Google-Extended` 공식 문서 URL 정정: 2025-11 Google 크롤링 문서 URL 체계 이전(`search/docs/crawling-indexing/*` → `crawling/docs/*`)으로 구 URL 404 확인, SKILL.md §1-1·REFERENCE.md 부록 링크 및 주의 문구 갱신 ② **`Google-Agent` 신규 크롤러 추가(ADD)** — 2026-03-20 공식 도입, 사용자 요청 시 Google 인프라 에이전트(Project Mariner 등)의 웹 탐색·행동, robots.txt 일반적으로 무시(공식 문서 원문 확인) — §1-1·§1-2·§1-3(템플릿 2종)·§1-4·§4-2 및 REFERENCE.md §6-1·§7-5에 반영 ③ OpenAI GPTBot/OAI-SearchBot 버전 1.3→1.4 확인(정책 변경 없음, 본문 수정 불필요) ④ 나머지 크롤러 UA·llms.txt v2·Google AI 기능 정책은 재확인 결과 변경 없음(VERIFIED). status **PENDING_TEST**로 전환(ADD·URL 정정 발생 — skill-tester 재테스트 대기) | skill-creator (재검증) |
 | 2026-09-28 | v1.2 | 2단계 재테스트 수행 (Q1 Google-Agent 신설·Google-Extended URL 정정 / Q2 bot-management-seo와의 크롤러 목록 교차검증 — 모순 없음 확인) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-11-06 | v1.2 | references 분리 (구조 변경만 — 내용 검증 갱신 아님) — SKILL.md 500줄 초과(505줄) 해소. §4-1 측정 가능한 것·§4-2 nginx 로그 필터·§4-3 GA4 채널 그룹을 `references/REFERENCE.md` 맨 앞(기존 §5 앞)으로 이동하고 §4-0은 본문 유지, 본문엔 요점 포인터만 남김. SKILL.md 505→481줄, REFERENCE.md 141→175줄. HEAD 대비 줄 단위 대조로 내용 손실 0 확인. 검증일·status 변경 없음 | Claude |
+| 2026-11-09 | v1.3 | **재검증(3차)** — OpenAI·Anthropic·Google·Perplexity·Apple·Meta 크롤러 문서와 llmstxt.org 재대조. ① `OAI-AdsBot` 1.0 용도 정정(광고 랜딩 페이지 검사·학습 미사용) ② "OAI-AdsBot robots.txt 준수" 서술 정정(DISPUTED — 문서는 OAI-SearchBot·GPTBot 만 명시) ③ Anthropic `Claude-Agent`(호스팅 브라우저) 추가 ④ Anthropic 2026-10-30~ IETF aipref 기반 학습 거부 신호 인식 추가(신호 문법 미검증 표기) ⑤ Meta `Meta-WebIndexer` 추가(§1-1·§1-2·전략 A 템플릿, REFERENCE.md 로그 grep). Google-Extended·Google-Agent·Perplexity·Applebot-Extended·llms.txt v2 는 변경 없음. 검증일 4곳 갱신, skill-tester 재시험 대상 | Claude (Opus 5.5) |
+| 2026-11-09 | v1.3 | 3차 재검증분 2단계 재테스트 수행 (Q1 Anthropic aipref 신호·ClaudeBot 규칙 / Q2 OAI-AdsBot 용도·robots.txt 준수 / Q3 Meta-WebIndexer·Claude-Agent 분류) → 3/3 PASS, APPROVED 유지. 선택 보강 gap 4건은 섹션 7에 기록 | skill-tester |
+| 2026-11-12 | v1.4 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 AI 크롤러 UA·용도 표와 주의(Bytespider·legacy·Claude-Agent·aipref·Google 문서 이전), robots.txt 무시 공식 입장·제3자 미준수 보고, Search Console 생성형 AI 토글·성능 보고서·SparkToro referral 수치, Google AI 최적화 가이드 원문, FAQ rich results 축소, llms.txt v2 발행/소비 현황·v1→v2 변경, GEO 연구 수치 주의, 네이버 AI 브리핑 포인터 / 덜어낸 것 GEO 개념 소개, robots.txt 템플릿 A·B 전문, llms.txt 형식 예시·robots 비교표, 답변 우선 문단·FAQ HTML/JSON-LD·E-E-A-T 예제, 측정 grep·GA4 채널 설정, 윤리 정책 문구, 흔한 실수·체크리스트, references/REFERENCE.md(요점은 SKILL.md 로), 지워진 seo-nextjs 참조 | 정리 |

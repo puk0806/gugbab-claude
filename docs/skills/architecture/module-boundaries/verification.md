@@ -2,7 +2,7 @@
 skill: module-boundaries
 category: architecture
 version: v1
-date: 2026-09-26
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -14,11 +14,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `module-boundaries` |
 | 스킬 경로 | `.claude/skills/module-boundaries/SKILL.md` |
-| 검증일 | 2026-09-26 (30~60일 주기 재검증, 최초 검증 2026-08-26) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-26 · 최초 2026-08-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
-| 기준 버전 | dependency-cruiser 18.4.0(2026-09-26 갱신, 최초 18.2.0) / eslint-plugin-boundaries·@boundaries/eslint-plugin 7.2.0(레거시 4.2.2, 변동 없음) / eslint-plugin-import 2.32.0 / eslint-plugin-import-x 4.17.1 / eslint-import-resolver-typescript 4.4.5 / madge 8.0.0 / ESLint 10.11.0(2026-09-26 갱신, 최초 10.9.1)(8·9 호환 경로 병기) |
-| 검증일 | 2026-09-26 (30~60일 주기 재검증, 최초 검증 2026-08-26) |
+| 기준 버전 | dependency-cruiser 18.7.2(2026-11-09 갱신, 이전 18.4.0·최초 18.2.0) / eslint-plugin-boundaries·@boundaries/eslint-plugin 7.4.2(2026-11-09 갱신, 이전 7.2.0, 레거시 4.2.2) / eslint-plugin-import 2.32.0 / eslint-plugin-import-x 4.18.1 / eslint-import-resolver-typescript 4.4.5 / madge 8.0.0 / ESLint 10.14.0(2026-11-09 갱신, 이전 10.11.0)(8·9 호환 경로 병기) |
 
 ---
 
@@ -90,6 +89,8 @@ status: APPROVED
 | Next.js optimizePackageImports | https://nextjs.org/docs/app/api-reference/config/next-config-js/optimizePackageImports | ⭐⭐⭐ High | 2026-08-26 | experimental 상태·기본 최적화 패키지 목록 |
 | Vercel 엔지니어링 블로그 (barrel files) | https://vercel.com/blog/how-we-optimized-package-imports-in-next-js | ⭐⭐⭐ High | 2026-08-26 | 200~800ms import, 최대 10,000 재export, 15~70%/28%/40% 개선 수치 |
 | npm registry (madge) | https://registry.npmjs.org/madge/latest | ⭐⭐⭐ High | 2026-08-26 | 8.0.0 |
+| npm registry (재확인 — dependency-cruiser·boundaries 두 이름·import·import-x·resolver·madge·eslint) | https://registry.npmjs.org/ | ⭐⭐⭐ High | 2026-11-09 | 재검증 — 18.7.2 / 7.4.2(두 이름 동일, deprecate 없음) / 2.32.0(peer ^9까지) / 4.18.1(peer ^8.57\|\|^9\|\|^10) / 4.4.5 / 8.0.0 / 10.14.0(engines 동일) |
+| eslint-plugin-boundaries GitHub Releases v7.2.1~v7.4.2 | https://github.com/javierbrea/eslint-plugin-boundaries/releases | ⭐⭐⭐ High | 2026-11-09 | 재검증 — 7.2.1 handlebars 보안 패치, 7.3.0 약 2.5배 속도 개선, 7.4.0 `node:` 전용 내장 모듈 origin core, 7.4.2 비배열 capture 경고 |
 
 ---
 
@@ -146,6 +147,9 @@ status: APPROVED
 | 19 | `exports`가 정의되면 미등재 서브패스 import는 `ERR_PACKAGE_PATH_NOT_EXPORTED`로 실패하고, 조건 키는 선언 순서대로 매칭된다(`types` 최우선, `default` 최후) | Node 공식 packages 문서 | 동 문서 conditional exports 순서 규정 | **VERIFIED** |
 | 20 | TS project references는 `composite: true`가 필수이고 **참조한 프로젝트에서만 import 가능**하다 | TypeScript 핸드북 project-references | 동 문서 "Only import from referenced projects" 설명 | **VERIFIED** |
 | 21 | Next.js `optimizePackageImports`는 **여전히 experimental**이며 외부 패키지 대상이다 | nextjs.org 공식 API 레퍼런스(experimental 경고 + 기본 목록) | Vercel 엔지니어링 블로그(13.5 도입 배경) | **DISPUTED → 정정 반영** |
+| R1 (2026-11-09) | 기준 버전 최신값: dependency-cruiser 18.7.2, boundaries 7.4.2(두 패키지명 모두), import-x 4.18.1, ESLint 10.14.0. Node/peer 요건 변동 없음, eslint-plugin-import 는 여전히 ESLint 10 미지원 | npm registry(latest·engines·peerDependencies) | GitHub Releases(dependency-cruiser v18.7.2, boundaries v7.4.2) | **VERIFIED → §0 표 정정** |
+| R2 (2026-11-09) | boundaries 7.2.1은 handlebars 보안 패치, 7.4.0부터 `node:` 전용 내장 모듈 origin 이 external→core | boundaries GitHub Releases 본문(v7.2.1·v7.4.0) | jsboundaries.dev upgrade notes v7-4-0 링크(릴리스 노트가 지시) | **VERIFIED → §0 주의 단락 추가** |
+| R3 (2026-11-09) | 구 이름 `eslint-plugin-boundaries`도 7.4.2까지 게시, deprecate 표시 없음 | npm registry(`eslint-plugin-boundaries@7.4.2`, deprecated 필드 없음) | npm registry(`@boundaries/eslint-plugin` latest 7.4.2) | **VERIFIED (기존 주의 문구 버전만 갱신)** |
 
 > 판정 집계: VERIFIED 18 / DISPUTED 3 / UNVERIFIED 0 (총 21건).
 
@@ -235,6 +239,78 @@ status: APPROVED
 
 ---
 
+### 5-2. 2026-11-09 셀프 답변 (독립 시험 아님 — 아래 5-3 재시험으로 대체)
+
+> 이 블록은 Agent 도구 없이 tester 가 직접 답한 기록이라 독립 시험이 아니다. 판정 근거로 쓰지 않고, 5-3 재시험이 대체한다.
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester (Agent 도구가 이 실행 환경에 제공되지 않아 general-purpose 서브에이전트 호출 불가 → SKILL.md·references/REFERENCE.md를 직접 Read해 질문별 답변을 도출하고 줄 번호 대조. 독립 에이전트 답변이 아님을 명시)
+**수행 방법**: SKILL.md 전체 + references/REFERENCE.md 버전 표기 Grep 후 실전 질문 3개 답변, 근거 줄·anti-pattern 회피 확인
+
+**Q1. 7.2.0에 고정해 둔 프로젝트를 올려야 하나? 올린다면 이유는?**
+- ✅ PASS
+- 근거: SKILL.md §0 "주의 (boundaries 7.2.1~7.4.2)" (39행) + 버전 표 32행
+- 상세: 7.2.1은 `handlebars` 보안 패치(4.7.10)라 올리기를 권하고, 7.3.0은 린트 속도 약 2.5배 개선(약 5,000파일 기준)이라는 근거가 명시됨. 최신 7.4.2가 표와 일치.
+
+**Q2. boundaries 7.4.x로 올린 뒤 `node:test`·`node:sqlite` import를 external 규칙으로 막던 설정이 깨지는가?**
+- ✅ PASS
+- 근거: SKILL.md 39행 (공식 upgrade notes v7-4-0 인용)
+- 상세: 7.4.0부터 `node:` 접두사 전용 내장 모듈의 origin이 `external` → `core`로 바뀌므로 external 규칙을 core 규칙으로 옮겨야 한다고 정확히 도출. 보너스로 7.4.2의 비배열 `capture` 경고 무시 동작도 확인.
+
+**Q3. ESLint 10으로 올릴 때 import 계열 플러그인과 버전은? 구 패키지명 `eslint-plugin-boundaries`를 써도 되나?**
+- ✅ PASS
+- 근거: SKILL.md §0 표 33~34행·43행, references/REFERENCE.md 156행(import-x 4.18.1, peer `^8.57 || ^9 || ^10`)
+- 상세: `eslint-plugin-import` 2.32.0은 ESLint 10 미지원 → `eslint-plugin-import-x` 4.18.1로 교체(룰 접두사 `import-x/`). boundaries는 두 이름 모두 7.4.2 존재·deprecate 없음, 신규는 `@boundaries/eslint-plugin` 권장이되 룰 접두사는 `boundaries/` 유지. 이전 버전(18.4.0/7.2.0/4.17.1/10.11.0)이 본문·REFERENCE에 잔존하지 않음(Grep 확인; 잔존은 "09-26 확인 시" 이력 표기뿐).
+
+### 발견된 gap
+
+- 7.4.0 `external`→`core` 변경은 개념만 서술되고 core 규칙으로 옮기는 설정 예시는 없음 — 선택 보강(차단 요인 아님).
+- 버전 수치(18.7.2·7.4.2·4.18.1·10.14.0)의 npm 실재 여부는 이번 content test 범위 밖(내용 일관성만 확인).
+
+### 판정
+
+- agent content test: 3/3 PASS (독립 서브에이전트 미사용, 직접 대조 — 5-3 재시험으로 대체됨)
+- verification-policy 분류: 도구 설정·개념 — 실사용 필수 카테고리 아님
+- 최종 상태: APPROVED 유지
+
+---
+
+### 5-3. 2026-11-09 독립 재시험 (general-purpose 서브에이전트 3회)
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester → general-purpose (3회 병렬 호출, 답변 3건 모두 수신 후 판정. 도메인 전용 에이전트 대신 general-purpose 사용)
+**수행 방법**: 각 에이전트가 SKILL.md(+ references/REFERENCE.md)를 Read 후 그 내용에만 의존해 답변, 근거 줄 번호 명시. tester 가 SKILL.md 실제 내용과 대조해 판정
+
+**Q1. boundaries 7.2.0 고정 + ESLint 10 + eslint-plugin-import 2.32.0 프로젝트 — 올려야 하나, `node:test` external 규칙은?, ESLint 10 import 계열은?**
+- ✅ PASS
+- 근거: SKILL.md §0 버전 표(32·34·37행) 및 주의 단락(39·43행)
+- 상세: 7.2.1 handlebars 보안 패치로 상향 권장, 7.3.0 약 2.5배 속도 개선, 최신 7.4.2 정확. 7.4.0부터 `node:` 전용 내장 모듈 origin 이 external→core 로 바뀌어 external 규칙이 더는 매치되지 않으므로 core 규칙으로 이전해야 한다고 정확히 도출. eslint-plugin-import 2.32.0 은 ESLint 10 미지원 → eslint-plugin-import-x 4.18.1(peer `^8.57 || ^9 || ^10`) 교체. 구버전 수치 오답 없음.
+
+**Q2. ESLint 8 + .eslintrc 에서 features 간 import 금지 플러그인·버전 + dependency-cruiser 점진 도입 + 최신 버전·Node 요건**
+- ✅ PASS
+- 근거: SKILL.md §0 표(31·32행), §2 / references/REFERENCE.md §3 (b) ESLint 8 설정, §6 점진 도입
+- 상세: `eslint-plugin-boundaries@4.2.2` 정확 고정(v5+ 는 ESLint 9+ 전용이라 부적합 anti-pattern 회피). baseline 생성 → `--ignore-known` CI 게이트 → warn→error 승격 로드맵, "첫날 목표는 신규 위반 0" 원칙, 위반을 eslint-disable 로 덮지 않는 안티패턴까지 재현. dependency-cruiser 18.7.2, Node `^22 || ^24 || >=26` 정확.
+
+**Q3. 배럴 순환·번들 메커니즘 / optimizePackageImports 가 앱 내부 배럴을 해결하나 / boundaries 신·구 패키지명과 룰 접두사**
+- ✅ PASS
+- 근거: references/REFERENCE.md §5-1·§5-2, SKILL.md §0 43행·32행
+- 상세: 자기 슬라이스 배럴 재import 순환(`Cannot access 'X' before initialization`)과 재export 전체 편입·사이드이펙트로 인한 트리셰이킹 무력화를 정확히 설명. optimizePackageImports 는 experimental·외부 패키지 대상이며 내 앱 내부 배럴은 해결하지 않는다는 핵심 anti-pattern 회피. 신규 도입은 `@boundaries/eslint-plugin`, 구 이름도 7.4.2 존재·deprecate 없음, 룰 접두사는 `boundaries/` 유지.
+
+### 발견된 gap (5-3)
+
+- SKILL.md 본문에 배럴·점진 도입 절차가 없고 references/REFERENCE.md 로만 안내됨 — 에이전트가 REFERENCE.md 를 읽어야 답이 나온다. description 이 본문에 있을 것으로 기대하게 하는 점은 선택 보강.
+- 7.4.0 external→core 이전의 core 규칙 설정 예시 부재(기존 gap 재확인) — 선택 보강.
+- 구 이름 `eslint-plugin-boundaries` 를 계속 써도 되는지·발행 중단 시점 미명시 — 선택 보강.
+- import→import-x 이전 시 룰 접두사 `import-x/` 는 REFERENCE.md 156행에 있으나 SKILL.md 본문에는 없음(Q1 에이전트가 REFERENCE.md 를 읽지 않아 "없음"으로 보고) — 선택 보강.
+
+### 판정
+
+- agent content test: 3/3 PASS (독립 general-purpose 에이전트, 오답·구버전 수치 사용 없음)
+- verification-policy 분류: 도구 설정·개념 — 실사용 필수 카테고리 아님
+- 최종 상태: APPROVED 유지
+
+---
+
 ## 6. 검증 결과 요약
 
 | 항목 | 결과 |
@@ -244,7 +320,7 @@ status: APPROVED
 | 실용성 | ✅ (복붙 가능한 설정 파일·CI 워크플로·마이그레이션 절차, 프로젝트 비종속) |
 | 기존 스킬과의 중복 | ✅ 분리 완료 (`frontend/code-convention` = 린터·포매터·훅 기본 설정 / `architecture/ddd` = 레이어 개념 / 이 스킬 = 경계 강제 도구) |
 | 요구 항목 커버리지 | ✅ 7개 요구 항목 전부 반영 (flat + legacy 양쪽 예시 포함) |
-| 에이전트 활용 테스트 | ✅ 2026-08-26 수행 — 3/3 PASS (skill-tester → general-purpose) |
+| 에이전트 활용 테스트 | ✅ 2026-08-26 수행 — 3/3 PASS (skill-tester → general-purpose) / 2026-11-09 독립 재시험 3/3 PASS (§5-3, skill-tester → general-purpose; §5-2 셀프 답변은 독립 시험 아니라 대체됨) |
 | **최종 판정** | **APPROVED** |
 
 ---
@@ -252,6 +328,9 @@ status: APPROVED
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester가 content test 수행하고 섹션 5·6 업데이트 (2026-08-26 완료, 3/3 PASS)
+- [✅] 2026-11-09 재검증 수정(§0 버전 표·7.2.1~7.4.2 주의 단락) 독립 재시험 완료 (2026-11-09, general-purpose 3회, 3/3 PASS — 앞선 셀프 답변은 독립 시험 아니라 대체)
+- [❌] SKILL.md 본문에 배럴·점진 도입 요약 또는 REFERENCE.md 위치 안내 보강, import→import-x 룰 접두사 한 줄 추가 (선택 보강 — 차단 요인 아님, REFERENCE.md 를 읽으면 답 도출 가능)
+- [❌] boundaries 7.4.0 `external`→`core` 변경의 core 규칙 설정 예시 추가 (선택 보강 — 차단 요인 아님)
 - [❌] `boundaries/dependencies`의 정책 배열 키(`rules` vs `policies`) — 실제 설치 후 타입 정의로 확정하고 SKILL.md의 `> 주의:` 블록을 확정 서술로 교체 필요 (선택 보강 — 이미 `> 주의:`로 불일치 사실을 명시했으므로 차단 요인 아님)
 - [❌] `eslint-plugin-boundaries`(구 이름) 패키지가 실제로 deprecate 처리되면 섹션 0의 주의 문구를 "스코프 패키지 단일 경로"로 갱신 필요 (선택 보강 — 외부 이벤트 발생 시에만 필요)
 - [❌] dependency-cruiser 18이 요구하는 Node 22+ 때문에 Node 20 고정 CI에서는 도입 불가 — 해당 환경용 폴백(17.x 사용) 절차는 미기재 (선택 보강)
@@ -270,3 +349,6 @@ status: APPROVED
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | Claude (Sonnet 5) |
 | 2026-09-25 | v1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |
 | 2026-09-26 | v1 | 30~60일 주기 재검증. dependency-cruiser 18.2.0→18.4.0, ESLint 10.9.1→10.11.0 버전 표기 갱신(동작 변경 없음), `rules`/`policies` 문서 불일치 여전히 존재 확인. status APPROVED 유지 | 메인 세션 |
+| 2026-11-09 | v1.1 | 재검증 — npm registry·GitHub Releases 대조로 dependency-cruiser 18.4.0→18.7.2, boundaries 7.2.0→7.4.2, import-x 4.17.1→4.18.1, ESLint 10.11.0→10.14.0 정정, §0에 boundaries 7.2.1(보안)·7.3.0(속도)·7.4.0(`node:` origin core) 주의 단락 추가, REFERENCE.md 버전 표기 2곳 갱신. skill-tester 재시험 3/3 PASS, status APPROVED 유지 | Claude (Opus 5.5) / skill-tester |
+| 2026-11-09 | v1.1 | 재시험 — 앞선 셀프 답변(§5-2)은 Agent 도구 없이 직접 답한 것이라 독립 시험 아님으로 표시하고, general-purpose 에이전트 3회로 독립 재시험 수행 (Q1 boundaries 7.2.1~7.4.2 상향·`node:` origin core·import-x / Q2 ESLint 8 boundaries 4.2.2·dependency-cruiser baseline 점진 도입·18.7.2 Node 요건 / Q3 배럴 메커니즘·optimizePackageImports 한계·boundaries 신구 패키지명) → 3/3 PASS, APPROVED 유지 | skill-tester |
+| 2026-11-12 | v1.2 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 §0 버전 표·boundaries 7.2.1~7.4.2·ESLint 10·패키지명 주의, dependency-cruiser tsConfig 누락 false green·v18 해석 변경·$1 역참조·fetch-depth/Node 22, no-restricted-imports 우회·9.37 TS 지원, zone 문법 제약·no-cycle 비용·import-x, boundaries v7 deprecated 룰·policies/rules 불일치·ESLint 8은 4.2.2, exports moduleResolution 조건, optimizePackageImports 한계, baseline·ESLint 8 suppress 미지원, 실패 패턴 표 / 덜어낸 것 도구 선택 트리, 설치·설정 구조·forbidden 예제 5종·options 예제·CI YAML·package.json scripts, ESLint 3종 설정 예제, exports/imports/project references·paths 예제, barrel 비용 표·순환 해소 절차, 체크리스트. references/REFERENCE.md 삭제(남길 내용은 SKILL.md로 합침). 원 검증일 2026-11-09 기준 내용 그대로, status·검증일 변경 없음 | 정리 |

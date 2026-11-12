@@ -6,7 +6,7 @@ description: 넥사크로플랫폼 17/17.1 프로젝트 소스(.xprj·.xadl·typ
 # 넥사크로 17 소스 해부 사전 + 화면 명세 추출 체크리스트
 
 > 소스: https://docs.tobesoft.com/product_information_nexacro_17_ko · https://docs.tobesoft.com/advanced_development_guide_nexacro_17_ko/00512d676e7e6fb6 · https://docs.tobesoft.com/advanced_development_guide_nexacro_n_en/db7432d00cb85b21 · https://docs.tobesoft.com/reference_guide_nexacro_n_v24_ko/Form · https://docs.tobesoft.com/reference_guide_nexacro_n_v24_ko/Dataset · https://docs.tobesoft.com/reference_guide_nexacro_n_v24_ko/Grid · https://docs.tobesoft.com/reference_guide_nexacro_n_v24_ko/ChildFrame · https://docs.tobesoft.com/getting_started_nexacro_17_ko/d82e8b8cd262cb1a · https://docs.tobesoft.com/developer_guide_nexacro_17_ko/e0ebcf8534a1e9fc · https://docs.tobesoft.com/developer_guide_nexacro_17_ko/e3bc5853556cf5bf · https://docs.tobesoft.com/developer_guide_nexacro_n_v24_en/7cae57082a6c190c · https://github.com/TOBESOFT-DOCS/sample_nexacroplatform_17
-> 검증일: 2026-10-08
+> 검증일: 2026-11-09
 
 > 주의: **넥사크로 17 전용 API 레퍼런스는 공개 웹에서 확인되지 않는다.** 이 문서의 메서드 시그니처·상수·이벤트는 **N V24 레퍼런스 기준이며 17과 차이가 있을 수 있다.** XML 구조는 17 공식 샘플(v17.1.2.200)로 직접 대조했다. 실제 레거시 소스와 다르면 **소스가 정답**이다.
 

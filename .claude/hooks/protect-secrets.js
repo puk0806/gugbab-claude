@@ -41,7 +41,11 @@ const HOME_CONFIG_FILES = ['.zshrc', '.zprofile', '.zshenv', '.zlogin', '.bashrc
 const PRIVATE_KEY_NAME = /^id_(?:rsa|ed25519|ecdsa|dsa)(?:_[\w-]+)?$/
 const PRIVATE_KEY_EXT = /\.(?:pem|key|p12|pfx)$/i
 // 홈 기준 클라우드 인증 파일
-const HOME_CREDENTIAL_FILES = ['.aws/credentials', '.config/gcloud/application_default_credentials.json', '.docker/config.json', '.kube/config', '.netrc']
+// 2026-11-06 감사: git 자격 증명·gh 토큰·npm 토큰·Claude 로그인 토큰 추가 (.env 읽기 허용은 사용자 결정이라 유지)
+const HOME_CREDENTIAL_FILES = ['.aws/credentials', '.config/gcloud/application_default_credentials.json', '.docker/config.json', '.kube/config', '.netrc',
+  '.git-credentials', '.config/gh/hosts.yml', '.npmrc', '.claude/.credentials.json']
+// Grep glob 이 개인키·인증 파일을 겨누는가 — 이름 조각으로 판정 (중괄호 {pem,key} 포함, 대소문자 무시)
+const SECRET_GLOB_RE = /(?:\.|[{,])(?:pem|key|p12|pfx)(?![A-Za-z0-9])|id_(?:rsa|ed25519|ecdsa|dsa)|(?:^|[\/{,])\.(?:ssh|aws|kube|docker)(?:[\/},*]|$)|credentials|[._]netrc|\.git-credentials|\.npmrc|gcloud|gh\/hosts\.ya?ml/i
 
 // 윈도우 전용 — 홈 기준 인증 파일(_netrc 는 윈도우 curl·git 이 쓰는 이름)과 %APPDATA% 아래 gcloud 인증
 const WIN_HOME_CREDENTIAL_FILES = ['_netrc']
@@ -113,6 +117,15 @@ function isSecretReadPath(filePath, cwd) {
   return false
 }
 
+// Grep 디렉토리 검색 — 폴더 안에 인증 파일이 있으면(홈 자체·그 위는 제외 — 너무 넓어 막지 않는다) 차단
+function isCredentialAncestor(dirPath, cwd) {
+  const abs = expandPath(dirPath, cwd)
+  if (!abs || !HOME) return false
+  if (samePath(abs, HOME) || !isUnder(abs, HOME)) return false
+  const targets = [...HOME_CREDENTIAL_FILES, '.ssh'].map(f => path.join(HOME, f))
+  return targets.some(t => isUnder(t, abs))
+}
+
 // 윈도우판 — 대소문자 무시. bash-guard 가 Bash 인자마다 부르므로(명령 하나에 수만 번 가능) 비교 대상은 한 번만 정규화해 둔다
 let _winSecret = null
 function winSecretTargets() {
@@ -155,8 +168,24 @@ function check(input) {
     return null
   }
 
-  if (toolName === 'Read' || toolName === 'Grep') {
-    const filePath = toolName === 'Read' ? ti.file_path : ti.path
+  if (toolName === 'Grep') {
+    const p = typeof ti.path === 'string' && ti.path ? ti.path : null
+    const glob = typeof ti.glob === 'string' ? ti.glob : ''
+    let why = ''
+    if (p && isSecretReadPath(p, cwd)) why = p
+    else if (p && isCredentialAncestor(p, cwd)) why = `${p} (인증 파일이 들어 있는 폴더)`
+    else if (glob && glob.length <= 4096 && SECRET_GLOB_RE.test(glob)) why = `glob ${glob}`
+    if (why) {
+      return [
+        `[protect-secrets] 개인키·인증 파일 검색 차단: ${why}`,
+        '  ~/.ssh·~/.aws·~/.kube·~/.config/gh 등 인증 폴더와 *.pem·*.key·credentials 를 겨누는 glob 은 검색할 수 없습니다. 필요하면 사용자가 직접 확인하세요.',
+      ].join('\n')
+    }
+    return null
+  }
+
+  if (toolName === 'Read') {
+    const filePath = ti.file_path
     if (isSecretReadPath(filePath, cwd)) {
       return [
         `[protect-secrets] 개인키·인증 파일 읽기 차단: ${filePath}`,
@@ -168,14 +197,22 @@ function check(input) {
 }
 
 if (require.main === module) {
-  try {
-    const raw = fs.readFileSync(0, 'utf8')
-    const reason = check(JSON.parse(raw || '{}'))
-    if (reason) {
-      process.stderr.write(reason + '\n')
-      process.exit(2)
-    }
-  } catch {}
+  // 보안 훅이라 입력이 비었거나 JSON 객체가 아니면 통과시키지 않고 막는다 (다른 보안 훅과 같게, 2026-11-06)
+  let input = null
+  try { input = JSON.parse(fs.readFileSync(0, 'utf8')) } catch { input = null }
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    process.stderr.write('[protect-secrets] 훅 입력(JSON)을 읽지 못해 안전을 위해 차단했습니다.\n')
+    process.exit(2)
+  }
+  let reason = null
+  try { reason = check(input) } catch {
+    process.stderr.write('[protect-secrets] 판정 중 오류가 나 안전을 위해 차단했습니다.\n')
+    process.exit(2)
+  }
+  if (reason) {
+    process.stderr.write(reason + '\n')
+    process.exit(2)
+  }
   process.exit(0)
 } else {
   module.exports = { check, isProtectedWritePath, isSecretReadPath, expandPath }

@@ -7,11 +7,12 @@
 | 파일 | `.claude/agents/validation/fact-checker.md` |
 | 모델 | Sonnet |
 | 도구 | WebSearch, WebFetch |
-| 호출 | 자동 또는 `@fact-checker` |
+| 호출 | 자동 또는 `@agent-fact-checker` |
+| 실행 | 항상 백그라운드(`background: true`) — 끝나면 알림으로 결과가 온다 |
 
 ## 역할
 
-단일 클레임을 빠르게 검증합니다. `deep-researcher`(설치된 경우)는 넓은 주제 조사용이고, `fact-checker`는 "이 수치가 맞나?", "이 기능이 지원되나?" 같은 구체적인 사실 하나를 빠르게 검증할 때 사용합니다.
+단일 클레임을 빠르게 검증합니다. `fact-checker`는 "이 수치가 맞나?", "이 기능이 지원되나?" 같은 구체적인 사실 하나를 빠르게 검증할 때 사용합니다.
 
 ## 클레임 유형별 전략
 

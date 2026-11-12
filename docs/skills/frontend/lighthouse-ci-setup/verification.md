@@ -1,8 +1,8 @@
 ---
 skill: lighthouse-ci-setup
 category: frontend
-version: v2
-date: 2026-09-28
+version: v3
+date: 2026-11-09
 status: PENDING_TEST
 ---
 <!-- 2026-09-28 실행검증: 로컬 autorun(collect/assert/upload) 전체 실행 완료, GitHub Actions 실제 CI 실행은 환경 한계로 미실시(YAML 문법 검증까지만) — 졸업 조건 부분 충족, PENDING_TEST 유지. 아래 섹션 5 최상단 기록 참고. -->
@@ -15,10 +15,10 @@ status: PENDING_TEST
 |------|------|
 | 스킬 이름 | `lighthouse-ci-setup` |
 | 스킬 경로 | `.claude/skills/lighthouse-ci-setup/SKILL.md` |
-| 검증일 | 2026-09-28 (재검증, 이전 2026-05-14) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-28 · 최초 2026-05-14) |
 | 검증자 | skill-creator |
-| 스킬 버전 | v2 |
-| 기준 패키지 | `@lhci/cli@0.15.1` (2025-06-26), `treosh/lighthouse-ci-action@v12` |
+| 스킬 버전 | v3 |
+| 기준 패키지 | `@lhci/cli@0.16.0` (2026-11-02, Lighthouse 13.6.0·Node >=22.19), `treosh/lighthouse-ci-action@v12` (12.6.2, 내장 lhci ^0.15.1) |
 
 ---
 
@@ -70,6 +70,13 @@ status: PENDING_TEST
 | Chrome for Devs TBT | https://developer.chrome.com/docs/lighthouse/performance/lighthouse-total-blocking-time | ⭐⭐⭐ High | 2026-05-14 | 공식 — TBT 임계치 |
 | npm @lhci/cli | https://www.npmjs.com/package/@lhci/cli | ⭐⭐⭐ High | 2026-05-14 | 0.15.1 버전 확인 (검색 결과 경유) |
 | DebugBear Lighthouse 가중치 | https://www.debugbear.com/docs/metrics/lighthouse-performance | ⭐⭐ Medium | 2026-05-14 | 점수 가중치 보조 |
+| LHCI GitHub Release v0.16.0 (2026-11-09 확인) | https://github.com/GoogleChrome/lighthouse-ci/releases/tag/v0.16.0 | ⭐⭐⭐ High | 2026-11-02 출시 | BREAKING: Lighthouse 13.6.0 업그레이드, 최소 Node 22. "fix insight presets and map replaced legacy audits" |
+| npm registry @lhci/cli 0.16.0 | https://registry.npmjs.org/@lhci/cli/0.16.0 | ⭐⭐⭐ High | 2026-11-09 | `engines.node: ">=22.19.0"`, 의존 `lighthouse 13.6.0`, dist-tag latest 0.16.0 |
+| LHCI Getting Started (재확인) | https://github.com/GoogleChrome/lighthouse-ci/blob/main/docs/getting-started.md | ⭐⭐⭐ High | 2026-11-09 | GH Actions 예시가 `node-version: 22.x` + `npm install -g @lhci/cli@0.16.x`로 바뀜 |
+| LHCI Configuration (재확인) | https://github.com/GoogleChrome/lighthouse-ci/blob/main/docs/configuration.md | ⭐⭐⭐ High | 2026-11-09 | `lighthouse:recommended` = "every audit outside performance received a perfect score" + 메트릭 90 미만 warn. 기본 `{aggregationMethod: optimistic, minScore: 1}`·aggregationMethod 4종 변동 없음 |
+| LHCI recommended preset 소스 | https://github.com/GoogleChrome/lighthouse-ci/blob/main/packages/utils/src/presets/recommended.js | ⭐⭐⭐ High | 2026-11-09 | `*-insight` audit ID 사용, `interactive` 여전히 존재(warn) |
+| treosh/lighthouse-ci-action package.json | https://github.com/treosh/lighthouse-ci-action | ⭐⭐⭐ High | 2026-11-09 | 최신 릴리즈 12.6.2 유지, 의존 `@lhci/cli ^0.15.1` |
+| Chrome for Developers — What's new in Lighthouse 13 | https://developer.chrome.com/blog/lighthouse-13-0 | ⭐⭐⭐ High | 2025-10-10 | 구 audit 제거·insight 대체, 점수 계산 방식은 불변(3rd-party 보도 교차) |
 
 ---
 
@@ -115,13 +122,64 @@ status: PENDING_TEST
 | 15 | temporary-public-storage는 공개 URL + 수일 후 삭제 | LHCI Pages config | LHCI getting-started | **VERIFIED** |
 
 DISPUTED: 0건
-UNVERIFIED: 0건
+UNVERIFIED: 0건 (2026-05-14 ~ 09-28 기준)
+
+**2026-11-09 재검증 판정:**
+
+| # | 클레임 | 1차 소스 | 2차 소스 | 판정 |
+|---|--------|----------|----------|------|
+| 1 | (구판) `@lhci/cli` 최신 0.15.1 | GitHub Release v0.16.0 | npm registry | **DISPUTED → 정정**: 최신 **0.16.0**(2026-11-02) |
+| 16 | 0.16.0은 Lighthouse 13.6.0 + Node >=22.19 필수 | GitHub Release(BREAKING CHANGE) | npm `engines` | **VERIFIED (신규)** — 설치 명령·GH Actions `node-version` 22로 갱신 |
+| 17 | 공식 getting-started 예시 `node-version: 22.x`, `@lhci/cli@0.16.x` | LHCI getting-started | — (단일 공식) | **VERIFIED** — 구판 "Node 18 권장(공식 예시 18)" 정정 |
+| 3' | (구판) `lighthouse:recommended` = "카테고리 점수 0.9 미만 경고" | LHCI configuration.md | recommended.js 소스 | **DISPUTED → 정정**: 성능 외 audit 만점 요구 + 성능 메트릭 점수 90 미만 warn, 카테고리 assertion은 미포함 |
+| 11 | treosh action 최신 v12(12.6.2) | treosh 릴리즈 목록 | package.json | **VERIFIED** — 단 내장 lhci ^0.15.1이라 Lighthouse 13 측정엔 직접 설치 필요(주의 추가) |
+| 6·8 | CWV 임계치 LCP 2.5s / INP 200ms / CLS 0.1, TBT 200ms | (2026-09-28 확인분) | — | 변동 없음(재조회 생략) |
+| 9 | Lighthouse 13에서 성능 점수 계산 방식 불변 | Chrome 블로그 Lighthouse 13 | 3rd-party 보도 다수 | **VERIFIED** |
 
 > 클레임 10(TTI 가중치 0)은 공식 문서의 정확한 weight 테이블을 1차 소스로 못 잡고 web.dev/DebugBear 등 2차 소스에 의존했다. SKILL.md 본문에 `> 주의: ... 메이저 버전 업데이트 시 변경될 수 있다`로 명시했으며 [공식 Scoring Calculator](https://googlechrome.github.io/lighthouse/scorecalc/) 링크를 같이 안내했다.
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-11-09] 재검증(v3) 후 agent content test — 정정분 겨냥 3문항
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester → general-purpose (frontend-developer 미사용 — general-purpose 대체)
+**수행 방법**: SKILL.md(v3, @lhci/cli 0.16.0 기준) Read 후 정정분을 겨냥한 실전 질문 3개 답변, 근거 줄·anti-pattern 회피 확인. 3개 질문은 병렬 실행(verification.md는 skill-tester만 수정)
+
+### 실제 수행 테스트
+
+**Q1. setup-node가 node 20인 워크플로우에서 `npm install -g @lhci/cli@latest` 후 `lhci autorun`을 돌려도 되는가 (0.16 Node 요건)**
+- ✅ PASS
+- 근거: SKILL.md 상단 주의(0.16.0 브레이킹 체인지 ②), 설치 섹션, 5-2 quick-start, 체크리스트
+- 상세: @latest는 0.16.0으로 해석되고 Node >=22.19 필수라 Node 20에서는 설치·실행 실패, 대안으로 Node 22 상향 + `@lhci/cli@0.16.x` 또는 0.15.x 고정을 도출. @latest 회피 anti-pattern 준수.
+
+**Q2. `assert.preset: lighthouse:recommended`만으로 performance 카테고리 0.9 미만에서 CI가 실패하는가 (recommended 정정)**
+- ✅ PASS
+- 근거: SKILL.md 4-1 표(recommended 행), 4-2, 4-3
+- 상세: preset에는 카테고리 assertion이 없고 성능 메트릭은 warn(exit 0)임을 정확히 지적, `categories:performance: ["error", {minScore: 0.9}]` 직접 추가를 제시. 구판의 오답("카테고리 0.9 미만 경고 포함")으로 회귀하지 않음.
+
+**Q3. treosh action@v12만으로 Lighthouse 13 측정이 되는가 + 구 audit ID(`render-blocking-resources`, `uses-long-cache-ttl`) assertion의 운명**
+- ✅ PASS
+- 근거: SKILL.md 상단 주의 ①, 5-1 action 주의(내장 lhci ^0.15.1), 5-2, 체크리스트
+- 상세: action 12.6.2는 Lighthouse 12 계열이라 5-2 직접 설치 방식 필요, 구 ID는 insight로 대체·제거되어 assertion이 무의미해지므로 점검 필요를 도출.
+
+### 발견된 gap (모두 선택 보강, 차단 요인 아님)
+
+- `uses-long-cache-ttl`의 대체 insight ID, 제거 audit 전체 목록이 없음
+- 구 ID assertion이 실패를 일으키는지 조용히 무시되는지 불명확("무의미"로만 표기)
+- 4-1 표가 "점수 90"(100점 스케일)과 minScore 0.9(0~1)를 혼용
+- setup-node 예시는 `node-version: 22`이고 요건은 22.19 이상 — 22.x 최신이면 충족되나 명시 없음
+- 5-1 제목·7-4 예시가 action@v12 기준이어서 Lighthouse 13 측정과 다르다는 주의가 해당 위치엔 없음(5-1 하단 주의로 보완됨)
+
+### 판정
+
+- agent content test: 3/3 PASS (정정 4항목 모두 겨냥)
+- verification-policy 분류: 빌드 설정 / CI 워크플로우 (실사용 필수 카테고리)
+- 최종 상태: PENDING_TEST 유지 (content test PASS이나 0.16 기준 로컬/GH Actions 실제 실행 미검증)
+
+---
 
 ### [2026-09-28] 실사용(실행) 검증 — 부분 (로컬 autorun 완료, GitHub Actions CI 실행은 환경 한계로 미실시)
 
@@ -249,7 +307,7 @@ DISPUTED: 0건 — 2026-05-14 시점 검증 내용이 3개월 후에도 그대�
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-05-14 최초 3/3 PASS, 2026-08-11 재검증 3/3 PASS, 2026-09-28 재검증 2/2 PASS — 누적 8/8 PASS) |
+| 에이전트 활용 테스트 | ✅ (2026-05-14 최초 3/3 PASS, 2026-08-11 재검증 3/3 PASS, 2026-09-28 재검증 2/2 PASS, 2026-11-09 v3 재검증 3/3 PASS — 누적 11/11 PASS) |
 | WebSearch 재교차검증 (2026-08-11) | ✅ 3/3 VERIFIED, DISPUTED 0 |
 | WebSearch 재교차검증 (2026-09-28) | ✅ @lhci/cli 0.15.1·treosh action v12.6.2·CWV 임계치 3건 모두 변동 없음 |
 | 실사용 테스트 (로컬 autorun 실행) | ✅ **(2026-09-28 완료)** lab 샘플에서 collect(3회)→assert→upload(filesystem) 전 과정 실제 실행, 카테고리 점수·report 산출물 확인 |
@@ -267,7 +325,8 @@ DISPUTED: 0건 — 2026-05-14 시점 검증 내용이 3개월 후에도 그대�
 - [❌] performance budget(`budgetPath`) 상세 — 본 스킬에 추가하거나 별도 스킬 분리. **선택 보강** (차단 요인 아님 — 현재 스킬에서 budgetPath 입력 옵션 소개 수준으로 충분)
 - [✅] skill-tester 호출 → 섹션 5 추가 기록 (2026-05-14 완료, 3/3 PASS)
 - [✅] skill-tester 재검증(WebSearch 재교차검증 + content test) 수행 (2026-08-11 완료, 3/3 VERIFIED + 3/3 PASS)
-- [🟡] **(2026-09-28 부분 완료)** 로컬 `npx @lhci/cli autorun`으로 collect/assert/upload(filesystem) 전 과정 + LHCI report 산출물(html/json/manifest.json) 확인 완료. **차단 요인으로 남는 것**: 실제 GitHub Actions 러너에서 워크플로우 실행(PR 코멘트·체크) — 로컬 환경에는 GH Actions 러너가 없어 YAML 문법 검증(js-yaml 파싱 성공)+treosh action 최신 태그 확인(v12.6.2)까지만 수행. 실 프로젝트에서 PR 파이프라인을 돌려야 APPROVED 전환 가능
+- [✅] skill-tester v3 재검증 content test 수행 (2026-11-09 완료, 3/3 PASS — Node 22 요건·recommended 정정·treosh 내장 lhci/구 audit ID 정정분 모두 겨냥). 잔여 선택 보강: insight 대체 ID 목록·구 ID assertion 동작(실패 vs 무시) 명시, 4-1 점수 스케일 표기 통일 — **선택 보강** (차단 요인 아님)
+- [🟡] **(2026-09-28 부분 완료, 2026-11-09 기준 0.16으로 재실행 필요)** 로컬 `npx @lhci/cli autorun`으로 collect/assert/upload(filesystem) 전 과정 + LHCI report 산출물(html/json/manifest.json) 확인 완료. **차단 요인으로 남는 것**: 실제 GitHub Actions 러너에서 워크플로우 실행(PR 코멘트·체크) — 로컬 환경에는 GH Actions 러너가 없어 YAML 문법 검증(js-yaml 파싱 성공)+treosh action 최신 태그 확인(v12.6.2)까지만 수행. 실 프로젝트에서 PR 파이프라인을 돌려야 APPROVED 전환 가능
 
 ---
 
@@ -280,3 +339,6 @@ DISPUTED: 0건 — 2026-05-14 시점 검증 내용이 3개월 후에도 그대�
 | 2026-08-11 | v1 | 재검증 수행 — WebSearch 재교차검증 3/3 VERIFIED(0 DISPUTED) + 신규 질문 content test (Q1 numberOfRuns/aggregationMethod / Q2 startServerCommand dev서버 함정 / Q3 PR-only 실패 설정) → 3/3 PASS, PENDING_TEST 유지 (CI 빌드 설정 — 실행 결과물 검증 필요) | skill-tester |
 | 2026-09-28 | v2 | 재검증(2차) — WebSearch 3건(lhci/cli 버전·treosh action 버전·CWV 임계치) 모두 변동 없음 확인, 콘텐츠 변경 없이 검증일만 갱신 + content test 2/2 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | 메인 세션 |
 | 2026-09-28 | v2 | **실사용(실행) 검증 — 부분** — lab Vite 8 샘플에서 `@lhci/cli@0.15.1` 로컬 autorun(collect 3회+assert+upload filesystem) 전 과정 실행, 카테고리 점수·report 산출물 확인. GitHub Actions 워크플로우는 YAML 문법 검증(js-yaml)+treosh action 최신 태그(v12.6.2) 확인까지만 수행, 실제 GH Actions 러너 실행은 로컬 환경 한계로 미실시. SKILL.md 수정 사항 없음(전 클레임 일치). status **PENDING_TEST 유지**(부분 실행) | 실행검증 세션 |
+| 2026-11-09 | v3 | 재검증 — **바뀐 점**: ① `@lhci/cli` 0.15.1→**0.16.0**(2026-11-02, Lighthouse 13.6.0·Node >=22.19 BREAKING) — 헤더·설치 명령·5-2 예시·체크리스트를 0.16.x로, GH Actions `node-version` 20→22 ② Lighthouse 13의 구 audit 제거·insight 대체 주의 추가(커스텀 assertion ID 점검) ③ `lighthouse:recommended` 설명 DISPUTED→정정(카테고리 assertion 미포함) ④ treosh action 12.6.2 내장 lhci ^0.15.1 주의 추가. aggregationMethod·기본값·upload target 변동 없음 → skill-tester 재시험. status **PENDING_TEST 유지**(실사용 필수 카테고리 — 0.16 기준 로컬/GH Actions 실행 재검증 필요) | Claude (Opus 5.5) |
+| 2026-11-09 | v3 | 재검증 후 2단계 content test 수행 (Q1 node 20 + @latest 설치 / Q2 recommended preset과 카테고리 assertion / Q3 treosh v12 Lighthouse 13 측정·구 audit ID) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리 — 0.16 기준 실행 검증 필요) | skill-tester |
+| 2026-11-11 | v3 | 2026-11-11 정리 — 모델이 아는 일반 지식 절 제거(남긴 절: 기준 버전·0.16.0 브레이킹 주의, 1절 설치(0.16.x/0.15.x 고정), 4-1 preset 표(recommended 카테고리 미포함 정정), 5-1 treosh 내장 lhci ^0.15.1 주의, 5-2 공식 quick-start(Node 22), 8절 체크리스트 중 0.16 관련 2항목 / 덜어낸 절: 1절 명령 개요, 2절 lighthouserc 기본 구조·collect 옵션, 3절 지표·CWV 관계, 4-2~4-4, 5-1 워크플로·입력 표·runs 주의, 5-3, 6절 업로드, 7절 흔한 함정, 8절 나머지 체크 항목, 사실 재검증 아님) | Claude (Opus 5.5) |

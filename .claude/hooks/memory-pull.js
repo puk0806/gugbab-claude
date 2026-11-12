@@ -40,6 +40,8 @@ try {
     for (const name of fs.readdirSync(repoMemory)) {
       // 항목 하나(깨진 symlink 등)의 오류가 나머지 파일 동기화를 막지 않도록 격리
       try {
+        // memory-sync 가 쓰다 남긴 임시 파일(.이름.pid.tmp — 원자적 복사 도중 강제 종료)은 메모리가 아니다
+        if (name.startsWith('.') && name.endsWith('.tmp')) continue;
         const src = path.join(repoMemory, name);
         const dst = path.join(globalMemory, name);
         if (!fs.statSync(src).isFile()) continue;
@@ -52,7 +54,12 @@ try {
           // 내용이 다르고 레포 쪽이 최신이면 (git pull 직후) 전역 갱신
           copy = differs && fs.statSync(src).mtimeMs > fs.statSync(dst).mtimeMs;
         }
-        if (copy) fs.copyFileSync(src, dst);
+        if (copy) {
+          // 원자적 복사(2026-11-11) — 도중에 죽어도 전역 원본이 반쪽 파일로 바뀌지 않게
+          const tmp = path.join(globalMemory, `.${name}.${process.pid}.tmp`);
+          try { fs.copyFileSync(src, tmp); fs.renameSync(tmp, dst); }
+          catch (e) { try { fs.rmSync(tmp, { force: true }); } catch { /* 무시 */ } throw e; }
+        }
       } catch {
         // 개별 항목 오류는 건너뛰고 계속 진행
       }

@@ -1,8 +1,7 @@
 ---
 name: n8n-llm-integration
 description: >
-  n8n에서 LLM(Anthropic Claude · OpenAI · Ollama · Hugging Face)을 활용해 AI Agent·Chat Trigger·RAG·도구 호출 워크플로우를 구성하는 가이드.
-  Anthropic Chat Model 노드와 Tools Agent를 중심으로 메모리·벡터 스토어·Output Parser 사용 패턴을 정리한다.
+  n8n 2.x에서 Claude를 쓸 때의 최신 변경점·함정 — Anthropic Chat Model 노드 Thinking Mode(2.20.0/typeVersion 1.5, Disabled는 Opus·Sonnet 5.5·Fable 5.2에서 400), sampling 파라미터 자동 미전송·SDK 0.x(2023-06-01), 현행 모델 ID·Claude 3 retired, Agent 타입 선택 제거(1.82.0), 2.0 Publish 필요, MCP 직결(2.22)·HITL(2.6)·Motorhead deprecated(2.8.3), $ref 미지원, Code 노드 $env 기본 차단.
   <example>사용자: "n8n에서 Claude로 챗봇 만들고 싶어"</example>
   <example>사용자: "n8n RAG 워크플로우 — Pinecone vs Qdrant"</example>
   <example>사용자: "n8n AI Agent에서 도구 호출 setup"</example>
@@ -29,435 +28,107 @@ disable-model-invocation: true
 > - [n8n Docs — Security environment variables (`N8N_BLOCK_ENV_ACCESS_IN_NODE`)](https://docs.n8n.io/deploy/host-n8n/configure-n8n/basic-configuration/use-environment-variables/security)
 > - [npm registry — n8n latest 버전 조회](https://registry.npmjs.org/n8n/latest)
 >
-> 검증일: 2026-09-28 (최초 2026-05-15)
-> 대상 버전: n8n v2.x (2026-09-28 기준 npm latest **v2.40.7**)
+> - [n8n 소스 — Anthropic Chat Model 노드 `LmChatAnthropic.node.ts` (master)](https://github.com/n8n-io/n8n/blob/master/packages/@n8n/nodes-langchain/nodes/llms/LMChatAnthropic/LmChatAnthropic.node.ts)
+> - [n8n `pnpm-workspace.yaml` catalog (`@langchain/anthropic` 1.5.6)](https://github.com/n8n-io/n8n/blob/master/pnpm-workspace.yaml) · [npm — `@langchain/anthropic@1.5.6` 의존성](https://registry.npmjs.org/@langchain/anthropic/1.5.6)
+> - [Anthropic — Models overview](https://platform.claude.com/docs/en/about-claude/models/overview) · [API versions](https://platform.claude.com/docs/en/api/versioning) · [Migrating to API version 2026-10-21](https://platform.claude.com/docs/en/api/migration-2026-10-21) · [Claude Sonnet 5.5](https://platform.claude.com/docs/en/models/sonnet-5-5/overview) · [Claude Haiku 5.5](https://platform.claude.com/docs/en/models/haiku-5-5/overview)
+>
+> 검증일: 2026-11-11 (재검증, 이전 2026-11-06 · 2026-09-28 · 최초 2026-05-15 — 2026-11-11 상위 티어 Fable 5.2 현행화)
+> 대상 버전: n8n v2.x (2026-11-06 기준 npm latest **v2.46.6**, Anthropic Chat Model 노드 defaultVersion **1.6**)
 
-> 짝 스킬(설치된 경우 참조): `devops/n8n-self-hosting`, `devops/n8n-workflow-design`, `backend/python-anthropic-sdk`
-
----
-
-## 1. n8n LLM 통합 아키텍처
-
-n8n은 LangChain을 기반으로 **클러스터 노드(Cluster Nodes)** 구조를 사용한다.
-
-| 계층 | 노드 종류 | 역할 |
-|------|-----------|------|
-| Root Node | AI Agent, Basic LLM Chain, Q&A Chain, Vector Store 등 | 오케스트레이션 |
-| Sub-Node | Chat Model, Embeddings, Memory, Tool, Output Parser, Retriever | Root 노드에 연결되어 기능 제공 |
-| Trigger | Chat Trigger, Webhook, Schedule | 입력 진입점 |
-
-> **핵심 원칙:** Root 노드 단독으로는 작동하지 않는다. 반드시 Chat Model sub-node가 연결되어야 한다.
+> 짝 스킬: `n8n-self-hosting`, `n8n-error-handling`, Claude Code 내장 `claude-api` 스킬(n8n 밖 SDK 직접 호출)
 
 ---
 
-## 2. LLM Chat Model 노드 (공식)
+## 이 스킬의 범위
 
-| 노드 | 용도 | Tool calling | 비고 |
-|------|------|:---:|------|
-| **Anthropic Chat Model** | Claude (Fable·Opus·Sonnet·Haiku) | ✅ | API key 인증, Bedrock·Vertex 미포함 |
-| **OpenAI Chat Model** | GPT 계열 | ✅ | 기본 함수 호출 지원 |
-| **Google Gemini Chat Model** | Gemini 계열 | ✅ | |
-| **Ollama Chat Model** | 로컬 Llama·Mistral·Qwen 등 | ⚠️ 모델별 상이 | self-hosted 환경 권장 |
-| **Hugging Face Inference Model** | HF Hub 추론 API | ❌ | **AI Agent에 연결 불가**, Basic LLM Chain에만 사용 |
+n8n 노드가 Claude API 최신 규약과 부딪히는 지점, n8n 버전별 UI·동작 변경, 실측 함정만 싣는다.
+> 기본 사용법(클러스터 노드 구조, Chat Trigger + AI Agent + Memory 조립, Vector Store 모드·RAG 파이프라인, Output Parser 연결, 일반 비용·안전 원칙)은 공식 문서 수준이라 싣지 않는다.
 
-### Anthropic Chat Model 주요 파라미터
+---
 
-| 파라미터 | 설명 |
-|----------|------|
-| Model | **Anthropic API에서 동적으로 조회**되는 드롭다운 (최신순 정렬). 하드코딩 목록이 아님 — n8n PR #13543 |
-| Maximum Number of Tokens | 응답 최대 토큰 |
-| Sampling Temperature | 0.0~1.0, 높을수록 다양성 증가 |
-| Top K | 다음 토큰 후보 수 |
-| Top P | nucleus sampling, 0.0~1.0 |
-| Thinking Mode (구 Enable Thinking / Thinking Budget) | `Disabled` / `Adaptive (Recommended)` / `Manual (Deprecated)` — n8n 2.20.0+/typeVersion 1.5+ 기준 (아래 주의 참조) |
+## 1. Anthropic Chat Model 노드 — 모델 선택
 
-> **모델 목록은 하드코딩하지 않는다.** 이 노드는 자격증명의 API key로 Anthropic `/v1/models`를 조회해 드롭다운을 채운다.
-> 따라서 "어떤 모델이 뜨는가"는 **키에 열려 있는 모델**에 따라 달라진다. 워크플로우 JSON에는 선택된 모델 ID 문자열이 그대로 박히므로,
-> 모델 교체 시 워크플로우를 수정해야 한다.
-
-**현행 모델 지정 기준** — 원본 레포의 `.claude/rules/agent-design.md`(하네스 제작 묶음을 켠 경우)를 기준으로 삼는다:
+- Model 드롭다운은 **자격증명의 API key로 Anthropic `/v1/models`를 동적 조회**(최신순, n8n PR #13543) — 하드코딩 목록이 아니다. 뜨는 모델은 키에 열린 모델에 따라 다르고, 워크플로우 JSON에는 선택한 모델 ID 문자열이 박히므로 모델 교체 시 워크플로우 수정 필요.
+- 노드는 API key 인증만 — Bedrock·Vertex 미포함.
 
 | 티어 | 모델 ID | 용도 |
 |------|---------|------|
-| 상위 티어 | `claude-fable-5-1` | 최고난도 장기 에이전트 작업 (단가 $10/$50 per MTok — 비용 감안해 최소 사용) |
+| 상위 티어 | `claude-fable-5-2` | 최고난도 장기 에이전트 작업 (단가 $8/$40 per MTok — 비용 감안해 최소 사용, 2026-11-09 출시) |
 | 고성능 | `claude-opus-5-5` | 최고난도 판단·분석, 오케스트레이션 ($4/$20) |
-| 균형 | `claude-sonnet-5` | 검색·코드 생성·검증 — n8n 워크플로우 기본 선택 ($2/$10) |
-| 경량 | `claude-haiku-4-5` | 단순 분류·포맷 변환·라우팅 ($1/$5) |
+| 균형 | `claude-sonnet-5-5` | 검색·코드 생성·검증 — n8n 워크플로우 기본 선택 ($2/$10, 2026-09-28 출시) |
+| 경량 | `claude-haiku-5-5` | 단순 분류·포맷 변환·라우팅 ($0.10/$0.50 — 프롬프트 10만 토큰 초과 시 $0.50/$2.50, 2026-10-07 출시) |
 
-> **세대 정렬 (2026-09-25 갱신):** 위 표는 Anthropic 현행 라인업(**Claude Fable 5.1 / Claude Opus 5.5 / Claude Sonnet 5 /
-> Claude Haiku 4.5**) 기준이며 `.claude/rules/agent-design.md`(설치된 경우)와 일치한다. 구세대 `claude-fable-5`·`claude-opus-5`·
-> `claude-opus-4-8`·`claude-sonnet-4-6`은 여전히 호출 가능한 *legacy*지만 신규 워크플로우에는 쓰지 않는다.
-> Haiku는 `claude-haiku-4-5`가 계속 현행이다. 신규 n8n 워크플로우 구성 시 드롭다운에 뜨는 최신 ID를 함께 확인한다.
->
-> **주의 — Opus 5.5·Fable 5.1 선택 시:** 두 모델은 강제 `tool_choice`(`any`/`tool`)를 400으로 거부하고, Opus 5.5는
-> thinking 비활성(`{type: "disabled"}`)도 400이다. n8n 노드/LangChain 내부가 구조화 출력 등을 위해 도구 호출을 강제하는
-> 경로를 쓰면 실패할 수 있으므로(주의: 미확인 — n8n 노드 버전별 동작 미검증), 400이 나면 `claude-sonnet-5`로 전환하거나
-> HTTP Request 노드로 직접 호출한다.
+> **세대 정렬 (2026-11-11 갱신):** 위 표는 Anthropic 현행 라인업(**Claude Fable 5.2 / Claude Opus 5.5 / Claude Sonnet 5.5 /
+> Claude Haiku 5.5**, 공식 models overview) 기준이다. `claude-sonnet-5`·`claude-haiku-4-5`·`claude-fable-5-1`·`claude-fable-5`·`claude-opus-5`·
+> `claude-opus-4-8`·`claude-sonnet-4-6` 등은 여전히 호출 가능한 **Legacy** 지만 신규 워크플로우에는 쓰지 않는다
+> (이전 판의 "Haiku 4.5 가 계속 현행" 서술은 Haiku 5.5 출시로 틀렸다). 신규 n8n 워크플로우 구성 시 드롭다운에 뜨는 최신 ID를 함께 확인한다.
 
 > **구버전 모델명 금지:** `claude-3-7-sonnet`, `claude-3-5-sonnet`, `claude-3-haiku`, `claude-3-opus` 등 Claude 3 계열은
 > 대부분 **retired**(API 404)다. 과거 워크플로우 JSON에 이 문자열이 남아 있으면 실행이 실패하므로 일괄 점검 대상이다.
+
+- 컨텍스트 윈도우: **1M** (Fable 5.2·Opus 5.5·Sonnet 5.5·Haiku 5.5 현행 전 모델) / 200K (legacy Haiku 4.5) — Anthropic 공식 모델 문서 기준.
+
+---
+
+## 2. Thinking Mode·Sampling — 400 함정
+
+> **주의 — Opus 5.5·Sonnet 5.5·Fable 5.2 선택 시:** 세 모델은 강제 `tool_choice`(`any`/`tool`)를 400으로 거부한다.
+> thinking 비활성(`{type: "disabled"}`)은 Opus 5.5·Sonnet 5.5·Fable 5.2 에서 400이다(Sonnet 5.5 는 대신 `between_tools`, 노드에는 이 옵션이 없다).
+> n8n 노드는 **Thinking Mode = Disabled 를 고르면 `thinking: {type: 'disabled'}` 를 실제로 전송**하고, 옵션을 비워 두면 필드를
+> 생략한다(소스 확인) — 이 모델들에서는 Thinking Mode 를 비우거나 `Adaptive` 로 둔다. LangChain 내부가 구조화 출력 등을 위해
+> 도구 호출을 강제하는 경로를 쓰면 실패할 수 있으므로(주의: 미확인 — n8n 노드 버전별 동작 미검증), 400이 나면 HTTP Request 노드로 직접 호출한다.
 
 > **해결됨 — thinking 파라미터 (n8n issue #28635 → PR #29467, n8n 2.20.0 / typeVersion 1.5부터):** 과거 Anthropic Chat Model
 > 노드(typeVersion 1.4 이하)는 레거시 포맷 `thinking: {type: "enabled", budget_tokens: N}`만 전송해 최신 모델 + thinking 활성화
 > 조합에서 400 에러(`"thinking.type.enabled" is not supported for this model`)가 났다. **n8n 2.20.0(2026-05-05 릴리즈)부터
 > typeVersion 1.5 노드에 `Thinking Mode` 옵션 3종이 생겼다: `Disabled` / `Adaptive (Recommended)` / `Manual (Deprecated)`.**
-> Adaptive를 고르면 노드가 `thinking.type: "adaptive"` + `output_config.effort`를 전송해 최신 모델과 호환된다. 2026-09-28
-> 기준 npm latest는 v2.40.7이므로 신규 인스턴스는 이 버전 이상을 쓴다. **오래된 워크플로우이거나 인스턴스가 2.20.0 미만이면
-> 여전히 레거시 경로**라 400이 날 수 있다 — 그 경우 `Manual`을 피하고 `Disabled`로 두거나 인스턴스를 업그레이드한다.
+> Adaptive를 고르면 노드가 `thinking.type: "adaptive"` + `output_config.effort`를 전송해 최신 모델과 호환된다. **오래된 워크플로우이거나 인스턴스가 2.20.0 미만이면
+> 여전히 레거시 경로**라 400이 날 수 있다 — 그 경우 `Manual`을 피하고 `Disabled`로 두거나 인스턴스를 업그레이드한다(단, Opus 5.5·Sonnet 5.5·Fable 5.2 에서는 위 주의대로 `Disabled`도 400).
 > `Manual (Deprecated)`은 신규 워크플로우에서 선택하지 않는다.
 
-> **주의 — 샘플링 파라미터 (5 계열에서 제거됨):** Claude Opus 5.5·Opus 5·Sonnet 5·Fable 5.1·Fable 5·Opus 4.8/4.7은 `temperature`·`top_p`·`top_k`를
-> **더 이상 받지 않는다** — 기본값이 아닌 값을 보내면 400이다. n8n Anthropic Chat Model 노드는 Sampling Temperature 필드를
-> 그대로 전송하므로, **5 계열 모델을 선택했다면 노드의 Sampling Temperature를 기본값으로 두고 프롬프트로 톤을 제어**한다.
-> 응답 다양성이나 결정성이 필요하면 `output_config.effort`를 쓰되 노드가 지원하지 않으므로 HTTP Request 노드로 직접 호출한다.
-> (4.6 이하 legacy 모델을 쓰는 경우에만 종전 제약이 적용된다 — `temperature`와 `top_p` 중 하나만 지정. 참고: n8n issue #18304)
-
----
-
-## 3. AI Agent 노드 (Root) — Tools Agent 중심
-
-### Agent 타입 선택은 제거됐다 (n8n 1.82.0+)
-
-**1.82.0부터 AI Agent 노드의 Agent 타입 선택 파라미터가 제거됐다.** 이제 모든 AI Agent 노드는 **Tools Agent로만 동작**한다
-— 기존에 가장 많이 쓰이던 권장 설정이 유일한 동작 방식이 된 것이다.
-
-| 구 Agent 타입 | 현재 |
-|--------------|------|
-| **Tools Agent** | ✅ 유일한 동작 방식 (선택 UI 없음) |
-| Conversational / OpenAI Functions / ReAct / Plan and Execute / SQL Agent | ❌ 선택지 제거 |
-
-기존 워크플로우가 `Tools Agent`로 설정돼 있었다면 **그대로 동작**한다. 다른 타입으로 설정돼 있던 노드는 마이그레이션 검토가 필요하다.
-
-> 오래된 튜토리얼·블로그가 여전히 "Agent 타입에서 Tools Agent를 고르세요"라고 안내한다 — 현재 UI에는 그 드롭다운이 없다.
-> 화면에 안 보인다고 잘못 설치된 게 아니다.
-
-### Tools Agent 파라미터
-
-| 파라미터 | 설명 |
-|----------|------|
-| Prompt (Define / Take from previous) | 사용자 입력. Chat Trigger 연결 시 `Take from previous node automatically` 권장 |
-| Require Specific Output Format | Output Parser 연결 활성화 토글 |
-| System Message (옵션) | 에이전트 역할 정의 |
-| Max Iterations (옵션) | 도구 호출 최대 횟수 (기본 10) |
-| Return Intermediate Steps | 디버깅용 reasoning step 반환 |
-| Enable Streaming | Chat Trigger에 토큰 단위 스트리밍 |
-
-### 필수 sub-node 연결
-
-```
-Chat Trigger ──▶ AI Agent (Tools)
-                    │
-                    ├─ Chat Model       (필수: Anthropic Chat Model 등)
-                    ├─ Memory           (옵션: Simple Memory)
-                    ├─ Tool × N         (옵션: HTTP Request Tool, Calculator 등)
-                    └─ Output Parser    (옵션: Structured Output Parser)
-```
-
----
-
-## 4. 채팅 패턴 — Chat Trigger + AI Agent + Memory
-
-### 최소 구성
-
-```
-[Chat Trigger]  ──▶  [AI Agent (Tools)]  ──▶  (응답은 Chat Trigger UI로 자동 반환)
-                          ├─ Anthropic Chat Model
-                          └─ Simple Memory  (sessionId = $('Chat Trigger').item.json.sessionId)
-```
-
-Chat Trigger는 세 가지 모드를 지원한다.
-- **Hosted Chat** — n8n이 호스팅하는 공개/임베드 URL
-- **Embedded Chat** — `@n8n/chat` 위젯으로 외부 사이트 임베드
-- **Webhook** — REST 호출
-
-> **주의 — Publish 필요 (n8n 2.0+):** 워크플로우 활성화 방식이 **Active 토글 → Publish 버튼**으로 바뀌었다. Save는 변경사항을
-> 저장만 할 뿐 운영에 반영하지 않으며, 화면 우측 상단 **Publish**(단축키 `Shift+P`)를 눌러야 그 버전이 고정 배포되어 Webhook·
-> Chat Trigger의 프로덕션 URL·스케줄·연결 앱 이벤트가 실제로 동작한다. 2.0 업그레이드 이전에 이미 활성화(active) 상태였던
-> 워크플로우는 자동으로 published로 마이그레이션되므로 별도 조치가 필요 없다. 새로 만든 LLM/챗봇 워크플로우는 Save만 하고
-> Publish를 잊으면 프로덕션 URL이 응답하지 않으니 주의한다.
-
-### Simple Memory (구 Window Buffer Memory)
-
-- 메모리 sub-node 중 **가장 단순**, 워크플로 내 in-memory 저장
-- **Session Key**: 같은 사용자/세션을 식별. Chat Trigger의 sessionId를 expression으로 연결 권장
-- **Context Window Length**: 보존할 이전 메시지 수 (기본 5)
-
-> **주의 — 메모리 노드 누락 시:** Memory sub-node가 없으면 매 호출이 stateless가 되어 대화 맥락이 끊긴다. 챗봇 워크플로우에는 반드시 연결한다.
-
-> **주의 — 다중 Memory 동일 sessionId:** 같은 워크플로우에 Simple Memory를 2개 이상 두면 *기본적으로 같은 메모리 인스턴스를 공유*한다. 분리하려면 sessionId를 다르게 지정한다.
-
----
-
-## 5. 도구 호출 (Tool Sub-Nodes)
-
-| Tool | 용도 |
-|------|------|
-| **HTTP Request Tool** | 외부 REST API 호출. tool description으로 LLM이 자동 호출 |
-| **Calculator Tool** | 수식 계산 |
-| **Vector Store Tool** | RAG 검색 (Retriever as tool) |
-| **Workflow Tool (Call n8n Workflow)** | 다른 n8n 워크플로우를 도구로 호출 |
-| **Code Tool** | JS/Python 커스텀 도구 |
-| **Wikipedia / SerpAPI / Wolfram** | 검색·지식 |
-| **MCP Client Tool** | MCP 서버 도구 호출 |
-
-### MCP 서버 직접 연결 (n8n 2.22+)
-
-**2.22부터 MCP Client 노드를 별도로 두지 않고 에이전트에 MCP 서버를 직접 연결**할 수 있다.
-초기 지원 대상: Apify, Linear, monday.com, Notion, PostHog. 단순 MCP 도구 사용이라면 노드 하나를 줄일 수 있다.
-
-### 도구 호출 사람 승인 (Human-in-the-loop, n8n 2.6+)
-
-특정 도구에 대해 **AI Agent가 실행하기 전 명시적 사람 승인을 요구**하도록 설정할 수 있다.
-DB 쓰기·메일 발송·결제 같은 비가역 액션 도구에는 이 옵션을 켜는 것이 기본이다 (11절 안전 가드 참조).
-
-### `$fromAI()` — 동적 파라미터
-
-도구 파라미터를 LLM이 결정하게 하려면 `$fromAI('key', 'description', 'type')` 사용:
-
-```js
-// HTTP Request Tool URL 필드
-https://api.example.com/dreams/{{ $fromAI('dreamId', '꿈 레코드 ID', 'string') }}
-```
-
-### Tool Description 작성 원칙
-
-- 도구 이름과 설명은 **LLM이 읽고 호출 여부를 판단하는 근거**다.
-- "꿈 해몽 사전을 조회한다. 입력은 꿈 키워드(예: 뱀, 물)" 처럼 *언제 호출해야 하는지*를 명확히 적는다.
-
-> **주의 — Tool schema 오류:** description이 모호하면 LLM이 도구를 호출하지 않거나, 잘못된 인자를 전달한다. JSON Schema 파라미터를 명시할 때 `$ref`는 n8n이 지원하지 않으므로 평탄화해서 작성한다.
-
----
-
-## 6. RAG 워크플로우 — Vector Store
-
-### 지원 Vector Store (공식 Root 노드)
-
-| Vector Store | 환경 | 비고 |
-|--------------|------|------|
-| **Pinecone** | 클라우드 SaaS | 빠른 시작, 프로덕션 가능 |
-| **Qdrant** | self-host (Docker) | self-host n8n 동거 권장 |
-| **Supabase** | Postgres pgvector | 기존 Supabase 스택과 통합 |
-| **PGVector** | Postgres 확장 | 자체 Postgres 운영 시 |
-| **Simple Vector Store (In-Memory)** | 메모리 | 개발/테스트 전용, 재시작 시 휘발 |
-| Milvus, Weaviate, MongoDB Atlas, Redis | 추가 옵션 | 환경에 따라 선택 |
-
-### Vector Store 노드의 4가지 동작 모드
-
-1. **Insert Documents** — 문서 임베딩 후 저장
-2. **Get Many** — 메타데이터 필터로 조회
-3. **Retrieve Documents (as Vector Store for Chain/Tool)** — Chain/Retriever에 연결
-4. **Retrieve Documents (as Tool for AI Agent)** — AI Agent에 도구로 직접 연결
-
-### 표준 RAG 파이프라인
-
-```
-[문서 적재]
-File/HTTP ──▶ Text Splitter ──▶ Embeddings (OpenAI) ──▶ Vector Store (Insert)
-
-[검색]
-Chat Trigger ──▶ AI Agent ──▶ (Tool) Vector Store Retrieve
-                    └─ Chat Model
-```
-
-### Embeddings OpenAI 노드 파라미터
-
-| 파라미터 | 설명 |
-|----------|------|
-| Model | text-embedding-3-small, text-embedding-3-large, text-embedding-ada-002 |
-| Base URL | OpenAI 호환 self-host 모델 사용 시 |
-| Batch Size | 한 요청당 문서 수 |
-| Strip New Lines | 개행 제거 |
-| Timeout | 요청 타임아웃(초) |
-
----
-
-## 7. 메모리 노드 비교
-
-| Memory | 영속성 | 용도 |
-|--------|:---:|------|
-| **Simple Memory** (구 Window Buffer) | ❌ 워크플로 내 in-memory | 단일 인스턴스 챗봇 |
-| **Postgres Chat Memory** | ✅ | 프로덕션 영속 저장, 사용자 프로필과 통합 |
-| **Redis Chat Memory** | ✅ (단 TTL 가능) | 빠른 세션 컨텍스트, 다중 인스턴스 |
-| **MongoDB Chat Memory** | ✅ | 문서형 저장 |
-| **Xata / Zep** | ✅ | 매니지드 메모리 서비스 |
-| ~~Motorhead~~ | — | **n8n 2.8.3에서 deprecated** (업스트림 프로젝트 유지보수 중단) — 신규 사용 금지 |
-
-> Postgres·Redis·Xata 메모리 노드는 **Context Window Length** 옵션을 지원해 보존 메시지 수를 제한할 수 있다.
-
-### 권장 패턴
-
-- **개발/단일 사용자**: Simple Memory
-- **다중 사용자 프로덕션**: Postgres Chat Memory (영속) 또는 Redis (속도)
-- **하이브리드**: Redis(세션) + Postgres(사용자 프로필) 조합
-
----
-
-## 8. Output Parser
-
-| Parser | 출력 형태 |
-|--------|----------|
-| **Structured Output Parser** | JSON 객체 (스키마 강제) |
-| **Item List Output Parser** | 배열 (구분자로 split) |
-| **Auto-fixing Output Parser** | 다른 parser 결과가 깨졌을 때 LLM이 보정 |
-
-### Structured Output Parser 사용
-
-1. AI Agent 노드의 `Require Specific Output Format` 토글 ON
-2. Output Parser sub-node 연결
-3. 스키마 정의 — 두 방식:
-   - **Generate from JSON Example**: 예시 JSON 입력하면 자동 추론
-   - **Manually input the JSON schema**: JSON Schema 직접 작성
-
-> **주의 — `$ref` 미지원:** n8n Structured Output Parser는 JSON Schema의 `$ref`를 지원하지 않는다. 중첩 구조는 inline으로 평탄화한다.
-
-### Item List Output Parser 파라미터
-
-- **Number of Items**: 최대 항목 수 (-1 = 무제한)
-- **Separator**: 분리 문자 (개행, 콤마 등)
-
----
-
-## 9. 모델 선택 — Claude vs GPT vs Llama (중립 비교)
-
-| 기준 | Claude (Anthropic) | OpenAI GPT 계열 | Llama/Mistral via Ollama |
-|------|-------------------|-----------------|--------------------------|
-| 추론 품질 | 최상위권, 긴 컨텍스트·에이전트 작업 강함 | 최상위권, 함수 호출 안정 | 모델별 편차 큼 |
-| 컨텍스트 윈도우 | **1M** (Fable 5.1·Opus 5.5·Sonnet 5 등 최신 세대) / 200K (Haiku 4.5) | 모델별 | 모델별 (8K~128K) |
-| Tool calling | 안정 | 안정 (네이티브) | 모델별, Tools Agent 호환 모델 한정 |
-| 비용 | Haiku 저렴 → Sonnet 중간 → Opus 높음 → Fable 최상 | 티어별 상이 | self-host 운영비만 |
-| 데이터 주권 | API 호출 (외부) | API 호출 (외부) | 로컬 (self-host) |
-| 적합한 용도 | 긴 문서 분석·코드·장기 에이전트 추론 | 함수 호출 중심·범용 | 데이터 외부 송출 금지·내부망 |
-
-> 컨텍스트 윈도우 수치는 Anthropic 공식 모델 문서(2026-08-11 확인) 기준. OpenAI·Ollama 측 수치는 벤더 문서에서 직접 확인할 것
-> — 이 스킬은 n8n 통합이 주제이므로 타 벤더 스펙을 추적하지 않는다.
-
-> **선택 기준**
-> - 외부 API 허용 + 추론 품질 우선 → Claude 또는 GPT
-> - 데이터 외부 송출 금지 → Ollama (self-host) + Tools Agent 호환 모델
-> - Tool calling 안정성 최우선 → OpenAI 또는 Anthropic (Hugging Face Inference는 Tools Agent 비호환)
-
----
-
-## 10. 비용 관리·캐싱 패턴
-
-| 패턴 | 방법 |
-|------|------|
-| **모델 라우팅** | Switch 노드로 간단 질의는 Haiku, 복잡한 추론은 Opus/Fable |
-| **프롬프트 캐싱** | Anthropic prompt caching 활용 (System Message 고정 시 효과 큼) |
-| **컨텍스트 윈도우 축소** | Memory `Context Window Length` 5~10으로 제한 |
-| **Embedding 재사용** | Vector Store 노드 Insert는 1회, 이후 Retrieve만 |
-| **Max Iterations 제한** | Tools Agent의 무한 루프 방지 (기본 10, 단순 작업은 3~5) |
-| **응답 캐시** | Webhook 입력을 해시 키로 Redis/PostgreSQL 캐시 후 동일 입력은 캐시 반환 |
+> **주의 — 샘플링 파라미터:** Claude 4.7 이후 모델(Opus 5.5·Sonnet 5.5·Haiku 5.5·Fable 5.2 등)은 `temperature`·`top_p`·`top_k`
+> 비기본값을 400으로 거부하고, **API 버전 `2026-10-21` 에서는 모든 모델에서 세 파라미터 자체가 400**(기본값이어도)이다.
+> n8n 노드 소스(2026-11-06 master 확인)는 `modelSupportsSamplingParams(modelName)` 로 걸러 **`claude-sonnet-4*`·`claude-haiku-4*`·
+> `claude-opus-4`~`4-6`·`claude-3*` 등 구모델에만 Temperature(UI 기본 0.7)·Top K·Top P 를 보내고, 그 밖의 `claude-*`(5 계열 포함)에는 보내지 않는다.**
+> 따라서 노드에서 현행 모델을 고르면 Sampling Temperature 필드는 무시된다 — 톤은 프롬프트로 제어한다.
+> 노드가 쓰는 SDK 는 `@langchain/anthropic` 1.5.6 → `@anthropic-ai/sdk` **^0.115.0**(0.x)이므로 요청은 `anthropic-version: 2023-06-01` 로 나간다(0.x SDK 기본값).
+> 그래서 legacy 4.x 모델의 temperature 도 지금은 통한다. 주의: 미검증 — n8n 이 SDK 1.x(API `2026-10-21`)로 올리면 4.x 모델에서도 temperature 가 400 이 되므로, 업그레이드 시 노드 Temperature 를 비우고 재확인한다.
+> HTTP Request 노드로 직접 호출할 때 `anthropic-version: 2026-10-21` 을 보내면 본문에서 `temperature`·`top_p`·`top_k` 를 빼고, 결정성이 필요하면 `output_config.format`(structured outputs)과 낮은 `output_config.effort` 를 쓴다.
+> (4.6 이하 legacy 모델 + `2023-06-01` 조합에서만 종전 제약이 적용된다 — `temperature`와 `top_p` 중 하나만 지정. 참고: n8n issue #18304)
 
 > **주의 — Anthropic 프롬프트 캐싱:** n8n Anthropic Chat Model 노드의 system 메시지 캐싱 동작이 명시적으로 노출되지 않는 시점이 있었다 (n8n issue #13231). 최신 버전 확인 권장.
 
 ---
 
-## 11. 안전 가드
+## 3. n8n 버전별 변경점
 
-| 영역 | 조치 |
+| 버전 | 변경 |
 |------|------|
-| **API 키** | n8n Credential Manager에만 저장. 노드 파라미터에 직접 입력 금지. 워크플로우 export 시 자격증명 분리 확인 |
-| **PII / 시크릿** | n8n **Guardrails 노드**로 PII·시크릿·jailbreak 입력 차단 (AI Agent와 액션 사이 배치) |
-| **도구 호출 사전 승인** | **Human-in-the-loop (n8n 2.6+)** — 지정한 도구는 AI Agent 실행 전 명시적 사람 승인 필요. DB 쓰기·메일 발송·결제 도구에 필수 |
-| **Output 검증** | Structured Output Parser로 스키마 강제 + 후속 IF 노드로 값 범위 검증 |
-| **Rate Limit** | Wait 노드 / Queue 노드로 API rate limit 회피 |
-| **워크플로우 격리** | LLM 호출 워크플로우와 액션(메일 발송·DB 쓰기) 워크플로우 분리, Call n8n Workflow Tool로 명시적 호출 |
-| **Code 노드 `$env` 접근** | n8n 2.0부터 `N8N_BLOCK_ENV_ACCESS_IN_NODE` 기본값이 **`true`** — Code 노드(Code Tool 포함) 안의 환경변수 접근이 **기본 차단**된다(공식 v2.0 breaking changes: "n8n will block access to environment variables from the Code node by default"). 일반 노드 필드의 표현식은 이 변경의 영향을 받지 않는다. 시크릿은 환경변수 대신 n8n Credential로 관리하는 것이 공식 권장이며, 꼭 필요하면 인스턴스에 `N8N_BLOCK_ENV_ACCESS_IN_NODE=false`를 명시한다(짝 스킬 `devops/n8n-self-hosting`·`n8n-workflow-design`과 동일). |
+| **1.82.0** | AI Agent 노드의 **Agent 타입 선택 파라미터 제거** — 모든 AI Agent는 **Tools Agent로만 동작**(Conversational·OpenAI Functions·ReAct·Plan and Execute·SQL Agent 선택지 제거). 오래된 튜토리얼의 "Agent 타입에서 Tools Agent 선택" 드롭다운은 현재 UI에 없다. 다른 타입이던 노드는 마이그레이션 검토 |
+| **2.0** | **Active 토글 → Save/Publish 분리** — Save는 저장만, 우측 상단 **Publish**(`Shift+P`)를 눌러야 Webhook·Chat Trigger 프로덕션 URL·스케줄·연결 앱 이벤트가 동작. 2.0 이전 active 워크플로우는 자동으로 published로 마이그레이션 |
+| **2.0** | `N8N_BLOCK_ENV_ACCESS_IN_NODE` 기본값 **`true`** — Code 노드(Code Tool 포함)의 환경변수 접근 **기본 차단**(공식 v2.0 breaking changes: "n8n will block access to environment variables from the Code node by default"). 일반 노드 필드의 표현식은 영향 없음. 시크릿은 n8n Credential이 공식 권장, 꼭 필요하면 `N8N_BLOCK_ENV_ACCESS_IN_NODE=false`(`n8n-self-hosting`과 동일) |
+| **2.6** | 도구 호출 **Human-in-the-loop** — 지정 도구는 AI Agent 실행 전 사람 승인 필요. DB 쓰기·메일·결제 도구에 기본 |
+| **2.8.3** | **Motorhead** 메모리 노드 deprecated(업스트림 유지보수 중단) → Postgres / Redis Chat Memory |
+| **2.20.0** | Anthropic 노드 typeVersion 1.5 Thinking Mode (2절) |
+| **2.22** | MCP Client 노드 없이 **에이전트에 MCP 서버 직접 연결** — 초기 지원: Apify, Linear, monday.com, Notion, PostHog |
+
+- 안전 가드: n8n **Guardrails 노드**로 PII·시크릿·jailbreak 입력 차단(AI Agent와 액션 사이 배치).
 
 ---
 
-## 12. 예시 — 꿈 해몽 워크플로우
-
-요구사항: 사용자가 webhook으로 꿈을 입력 → AI Agent(Anthropic Claude)가 해몽 → 결과를 DB에 저장.
-
-### 노드 구성
-
-```
-[Webhook Trigger]
-  POST /dream
-  Body: { userId, dreamText }
-        │
-        ▼
-[AI Agent (Tools)]
-  Prompt: "{{ $json.dreamText }}"
-  Require Specific Output Format: ON
-        │
-        ├─ [Anthropic Chat Model]
-        │     Model: claude-sonnet-5         # 드롭다운에서 선택 (API로 동적 조회)
-        │     System Message: "당신은 꿈 해몽 전문가다. 문화적 맥락(동양 전통 해몽 + 현대 심리학)을 모두 고려해 균형 있게 해석한다."
-        │     Sampling Temperature: (기본값 유지)  # 5 계열은 temperature 미지원 — 비기본값 전송 시 400
-        │     Thinking Mode: Disabled          # 또는 Adaptive(Recommended) — Manual(Deprecated)은 피한다 (n8n 2.20.0+/typeVersion 1.5+)
-        │
-        ├─ [Simple Memory]
-        │     Session Key: {{ $json.userId }}
-        │     Context Window Length: 10
-        │
-        ├─ [HTTP Request Tool]  (선택: 해몽 사전 API)
-        │     Name: dreamDictionary
-        │     Description: "꿈 키워드별 전통 해몽을 조회한다. 입력: keyword (string)"
-        │     URL: https://api.example.com/dict/{{ $fromAI('keyword', '꿈 핵심 키워드', 'string') }}
-        │
-        └─ [Structured Output Parser]
-              JSON Example:
-              {
-                "summary": "한 줄 요약",
-                "interpretation": "상세 해몽 본문",
-                "keywords": ["뱀", "물"],
-                "mood": "positive"
-              }
-        │
-        ▼
-[Postgres — Insert]
-  Table: dream_interpretations
-  Columns: user_id, dream_text, summary, interpretation, keywords, mood, created_at
-        │
-        ▼
-[Respond to Webhook]
-  Body: {{ $('AI Agent').item.json.output }}
-```
-
-### 핵심 포인트
-
-- `Require Specific Output Format` ON + Structured Output Parser → 파싱 실패 없이 Postgres 컬럼에 매핑 가능
-- Simple Memory의 `Session Key`를 `userId`로 → 같은 사용자의 꿈 이력 컨텍스트 유지
-- HTTP Request Tool은 선택. 없으면 모델 내재 지식으로만 해몽
-- 응답은 Respond to Webhook으로 반환 (Webhook의 Respond 설정이 `Using Respond to Webhook Node`여야 함)
-- Save만으로는 프로덕션 Webhook URL이 동작하지 않는다 — 화면 우측 상단 **Publish**를 눌러야 실제 요청을 받는다 (n8n 2.0+)
-
----
-
-## 13. 흔한 함정
+## 4. 실측 함정
 
 | 함정 | 증상 | 대응 |
 |------|------|------|
-| **API 키 노출** | 워크플로우 JSON export에 키가 포함 | n8n Credential에만 저장, export 시 credentials 제외 옵션 사용 |
-| **Memory 노드 누락** | 챗봇이 매번 처음처럼 대답 | Simple Memory 또는 Postgres Chat Memory 연결 |
-| **Tool description 모호** | LLM이 도구 호출 안 함 또는 잘못된 인자 전달 | "언제 호출하는가 + 입력 형식"을 명시 |
-| **`$ref` 사용 schema** | Structured Output Parser 에러 | 스키마를 inline 평탄화 |
-| **5 계열 모델 + Sampling Temperature 지정** | `400` — Opus 5.5·Opus 5·Sonnet 5·Fable 5.1·Fable 5·Opus 4.8/4.7은 `temperature`/`top_p`/`top_k` 미지원 | 노드 필드를 기본값으로 두고 프롬프트로 톤 제어 |
-| **`temperature` + `top_p` 동시** (4.6 이하 legacy 한정) | Anthropic API 에러 | 한쪽만 지정 |
-| **Thinking Mode = Manual(Deprecated) + 최신 Claude 모델, n8n 2.20.0 미만/typeVersion 1.4 이하** | `400 "thinking.type.enabled" is not supported` | `Adaptive(Recommended)` 또는 `Disabled` 선택, 인스턴스를 2.20.0 이상으로 업그레이드 (issue #28635 → PR #29467로 해결) |
-| **Save만 하고 Publish 안 함 (n8n 2.0+)** | Webhook·Chat Trigger 프로덕션 URL·스케줄이 동작 안 함 | 우측 상단 **Publish**(`Shift+P`) 클릭 — Save는 저장만, 운영 반영 아님 |
-| **Code 노드 `$env`로 시크릿 그대로 노출** | 워크플로우 export·화면 공유 시 민감 환경변수 값 노출 | n8n 2.0+ 기본은 Code 노드 접근 차단(`N8N_BLOCK_ENV_ACCESS_IN_NODE=true`) — `false`로 풀어 쓰는 인스턴스에서 특히 주의. 시크릿은 Credential로 분리 |
-| **워크플로우에 Claude 3 계열 모델명 잔존** | 모델 404 / 실행 실패 | `claude-3-*` 문자열 일괄 검색 후 현행 모델로 교체 |
-| **오래된 가이드대로 Agent 타입 찾기** | UI에 드롭다운이 없음 | 1.82.0에서 제거됨 — 항상 Tools Agent |
-| **Motorhead 메모리 노드 사용** | 2.8.3부터 deprecated | Postgres / Redis Chat Memory로 이전 |
-| **Hugging Face Inference → AI Agent** | Tools Agent에서 모델 인식 안 됨 | Basic LLM Chain으로 변경하거나 다른 모델 사용 |
-| **Simple Memory 다중 인스턴스** | 분리된 줄 알았는데 공유됨 | sessionId를 노드별로 다르게 expression 설정 |
-| **OpenAI `sk-proj-...` 키 호환성** | OpenAI 노드가 키 거부하는 케이스 보고됨 | n8n 최신 버전 확인, 필요 시 user-scoped key 사용 |
-| **Max Iterations 무한 루프** | 토큰·요금 폭주 | Tools Agent `Max Iterations`를 작업별로 3~10 사이 설정 |
-| **Vector Store In-Memory 휘발** | n8n 재시작 시 인덱스 사라짐 | 프로덕션은 Pinecone·Qdrant·Supabase 등 영속 저장소로 교체 |
-
----
-
-## 14. 짝 스킬과의 관계 (설치된 경우 참조)
-
-| 스킬 | 다루는 범위 |
-|------|-------------|
-| `devops/n8n-llm-integration` (본 스킬) | LLM 노드·AI Agent·RAG·메모리·도구 호출 |
-| `devops/n8n-self-hosting` | n8n Docker/Kubernetes 자체 호스팅, 환경변수, queue mode |
-| `devops/n8n-workflow-design` | 일반 워크플로우 설계 원칙, 에러 처리, 모듈화 |
-| `backend/python-anthropic-sdk` | n8n 외부에서 직접 Anthropic SDK 호출(파이썬), Tool Use·streaming |
-
-> n8n 워크플로우 내에서 LLM을 *시각적 노드 조합*으로 다룰 때는 본 스킬을, 직접 SDK 호출이 필요한 영역(복잡한 도구 체인·테스트 코드)은 `backend/python-anthropic-sdk`(설치된 경우)를 참조한다.
+| JSON Schema `$ref` | Structured Output Parser·Tool 스키마 에러 | n8n이 `$ref` 미지원 — inline 평탄화 |
+| Hugging Face Inference → AI Agent | Tools Agent에서 모델 인식 안 됨 | AI Agent 연결 불가, Basic LLM Chain에만 |
+| Ollama Chat Model 도구 호출 | 모델별로 동작 상이 | Tools Agent 호환 모델만 |
+| Simple Memory 2개 이상 | 분리된 줄 알았는데 공유 | 기본적으로 같은 인스턴스 공유 — sessionId를 노드별로 다르게 |
+| Simple Memory 기본값 | 맥락이 짧음 | Context Window Length 기본 5, in-memory(단일 인스턴스용) |
+| Memory 노드 누락 | 매번 처음처럼 대답 | 챗봇엔 반드시 연결 |
+| Simple Vector Store(In-Memory) | n8n 재시작 시 인덱스 사라짐 | 프로덕션은 Pinecone·Qdrant·Supabase·PGVector |
+| Tools Agent Max Iterations | 토큰·요금 폭주 | 기본 10, 단순 작업 3~5 |
+| Respond to Webhook 미동작 | 응답 안 옴 | Webhook Respond 설정 = `Using Respond to Webhook Node` |
+| OpenAI `sk-proj-...` 키 | OpenAI 노드가 키 거부하는 케이스 보고 | n8n 최신 버전 확인, 필요 시 user-scoped key |
+| 워크플로우 export | 키 포함 | Credential에만 저장, export 시 credentials 제외 |
+| `$fromAI('key', 'description', 'type')` | — | 도구 파라미터를 LLM이 채우게 하는 표현식. description이 모호하면 호출 안 함·잘못된 인자 |

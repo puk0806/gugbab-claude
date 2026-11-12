@@ -2,7 +2,7 @@
 skill: dream-content-research
 category: humanities
 version: v2
-date: 2026-09-26
+date: 2026-11-06
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `dream-content-research` |
 | 스킬 경로 | `.claude/skills/dream-content-research/SKILL.md` |
-| 검증일 | 2026-09-26 |
+| 검증일 | 2026-11-06 (재검증, 이전 2026-09-26) |
 | 검증자 | skill-creator (Claude Code) / 2026-09-26 재검증: 메인 세션 (DreamResearch.net 원문·Crossref DOI 직접 대조) |
 | 스킬 버전 | v2 |
 
@@ -71,6 +71,8 @@ status: APPROVED
 | SEP "Dreams and Dreaming" (Jennifer Windt) | https://plato.stanford.edu/entries/dreams-dreaming/ | ⭐⭐⭐ High | 2026-05-15 | 철학적·과학적 종합 |
 | Schredl *International Journal of Dream Research* (편집장) | https://journals.ub.uni-heidelberg.de/index.php/IJoDR/ | ⭐⭐⭐ High | 2026-05-15 | 회상 빈도·꿈 일지 메타 |
 | Schredl (2004) Reliability of DRF Scale | https://journals.sagepub.com/doi/10.2466/pms.98.3c.1422-1426 | ⭐⭐⭐ High | 2026-05-15 | r=0.85 신뢰도 보고 |
+| Crossref DOI 메타데이터 (2026-11-06 재검증) | https://api.crossref.org/works/{DOI} — 10.2190/LLXL-D4DB-9CP5-BRGT · 10.1023/A:1021152411010 · 10.1002/jclp.20212 · 10.2466/pms.98.3c.1422-1426 · 10.1016/j.concog.2008.06.010 · 10.1038/nrn2716 · 10.1017/S0140525X00003976 | ⭐⭐⭐ High | 2026-11-06 | 출판사 등록 서지 (1차) |
+| ProQuest 학술지 초록 (반복 꿈 60~80%, Zadra 1994 인용) | https://www.proquest.com/docview/2490256841/abstract/B2EC6ED2FF634D6DPQ/1 | ⭐⭐ Medium | 2026-11-06 | 2차 인용 — 1차 원문 미대조 |
 
 ---
 
@@ -121,6 +123,18 @@ status: APPROVED
 | R10 | Pesant & Zadra 2006 | Crossref: *J Clin Psychol* 62(1) 111–121 (온라인 2005) | VERIFIED (권호 보완) |
 | R11 | Domhoff & Schneider 2008 | Crossref: *Conscious Cogn* 17(4) 1238–1247 | VERIFIED (권호 보완) |
 | R12 | 반복 꿈 경험률 60~75% | 1차 수치 미대조 | **UNVERIFIED→`주의: 미검증`** |
+
+#### 2026-11-06 재검증
+
+| # | 클레임 | 1차 소스 | 판정 |
+|---|---|---|---|
+| S1 | Zadra, O'Brien & Donderi 1998 *ICP* 17(4) 293–311 | Crossref | VERIFIED |
+| S2 | Duke & Davidson 2002 *Dreaming* 12(4) 185–197 | Crossref | VERIFIED |
+| S3 | Pesant & Zadra *J Clin Psychol* 62(1) 111–121 (2005 온라인) | Crossref | VERIFIED |
+| S4 | Schredl 2004 *Percept Mot Skills* 98(3 Suppl) 1422–1426 | Crossref | VERIFIED |
+| S5 | Domhoff & Schneider 2008 *Conscious Cogn* 17(4) 1238–1247 | Crossref | VERIFIED |
+| S6 | Hobson, Pace-Schott & Stickgold 2000 *BBS* 23(6) 793–842 / Hobson 2009 *Nat Rev Neurosci* 10(11) 803–813 | Crossref | VERIFIED |
+| S7 | 반복 꿈 경험률 60~75% | 2차 초록은 60~80%(Zadra 1994) | UNVERIFIED 유지 — 2차 인용 범위를 `주의`에 추가 |
 
 ### 4-3. 구조 완전성
 
@@ -243,4 +257,5 @@ agent content test: 2/2 PASS (재검증 기록). 서지 정정으로 status PEND
 | 2026-05-15 | v1 | 최초 작성 — Hall/Van de Castle 코드북·Domhoff 연속성 가설·Zadra/Robert 반복 꿈·Schredl DRF·Hobson AIM·Solms 정리, 앱 적용 가이드 + 함정 5종 + 짝 스킬 관계 | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 Hall/Van de Castle 10개 카테고리·정서 5종·금지 척도 / Q2 연속성 가설 개인 단정 anti-pattern / Q3 Hobson AIM vs Solms 대립점) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-09-26 | v2 | 재검증 — DreamResearch.net 원문·Crossref 대조 12건, 서지 오류 2건 정정(학업 스트레스 논문 저자 Zadra & Robert 2003 → Duke & Davidson 2002, Hobson "AIM Model" 불특정 서지 교체), Norms 수치 보강, 미검증 2건(DRF r=0.85, 반복 꿈 60~75%), 실전 질문 2/2 PASS → PENDING_TEST | 메인 세션 (재검증) |
+| 2026-11-06 | v2 | 재검증 — 1차 서지 7건 Crossref 재대조 전원 VERIFIED, 본문 정정 없음. §3 반복 꿈 경험률에 2차 인용(60~80%, Zadra 1994) `주의` 한 줄 추가(미검증 유지). 내용 변경 없음(서지·권고 동일) — skill-tester 생략 | 메인 세션 (b15 재검증) |
 | 2026-09-28 | v2 | skill-tester 실제 agent 재테스트 수행 (Q1 Duke & Davidson 2002 서지 정정 확인 / Q2 Hobson AIM 서지 교체 확인) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |

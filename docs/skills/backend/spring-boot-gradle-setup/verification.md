@@ -2,7 +2,7 @@
 skill: spring-boot-gradle-setup
 category: backend
 version: v2
-date: 2026-09-28
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `spring-boot-gradle-setup` |
 | 스킬 경로 | `.claude/skills/spring-boot-gradle-setup/SKILL.md` |
-| 검증일 | 2026-09-28 (재검증 2차, 이전 2026-09-26) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-28) |
 | 검증자 | skill-creator agent |
 | 스킬 버전 | v2 |
 
@@ -67,6 +67,12 @@ status: APPROVED
 | Apache Tomcat — Which Version | https://tomcat.apache.org/whichversion.html | ⭐⭐⭐ High | 2026-04-22 | Tomcat 9 = Servlet 4.0, Tomcat 10.1 = Servlet 6.0 |
 | Spring Boot Kotlin DSL 예시 (daggerok) | https://github.com/daggerok/spring-boot-gradle-kotlin-dsl-example | ⭐⭐ Medium | 2026-04-22 | Kotlin DSL 구조 참고 |
 | Baeldung — Gradle Toolchains | https://www.baeldung.com/java-gradle-toolchains-jvm-projects | ⭐⭐ Medium | 2026-04-22 | toolchain 설정 패턴 확인 |
+| Gradle Compatibility Matrix (재검증) | https://docs.gradle.org/current/userguide/compatibility.html | ⭐⭐⭐ High | 2026-11-09 | 현행 9.9.0. Java 21 toolchain 8.4 / 실행 8.5, Java 25 = 9.1.0, Java 26 = 9.4.0, Gradle 9 실행 JVM 17+ |
+| Spring Boot System Requirements (4.1.2, 재검증) | https://docs.spring.io/spring-boot/system-requirements.html | ⭐⭐⭐ High | 2026-11-09 | Java 17~27, Framework 7.0.10+, Gradle 8.14+/9.x, Tomcat 11.0, GraalVM 25+, NBT 1.1.14 |
+| Spring Boot 3.5 System Requirements (재검증) | https://docs.spring.io/spring-boot/3.5/system-requirements.html | ⭐⭐⭐ High | 2026-11-09 | 3.5.16: Framework 6.2.19+, Gradle 7.6.4+/8.4+, Tomcat 10.1, NBT 0.10.6 |
+| Spring Boot 4.0 Migration Guide (재검증) | https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide | ⭐⭐⭐ High | 2026-11-09 | RestClient·RestTemplate → `spring-boot-restclient` 모듈, `@MockBean` 제거, aop→aspectj, classic starter |
+| Spring Boot Native Image 가이드 / Gradle 플러그인 reacting (재검증) | https://docs.spring.io/spring-boot/how-to/native-image/developing-your-first-application.html · https://docs.spring.io/spring-boot/gradle-plugin/reacting.html | ⭐⭐⭐ High | 2026-11-09 | Maven 예제는 버전 생략, Gradle 버전 관리 언급 없음 |
+| spring.io 프로젝트 페이지 / endoflife.date (재검증) | https://spring.io/projects/spring-boot · https://endoflife.date/spring-boot | ⭐⭐⭐ / ⭐⭐ | 2026-11-09 | 현행 4.1.2, 3.5.16 |
 
 ---
 
@@ -91,6 +97,13 @@ status: APPROVED
 | 6 | `SpringBootServletInitializer` 상속 필요 (WAR) | VERIFIED | 공식 Traditional Deployment + Baeldung |
 | 7 | `org.graalvm.buildtools.native` 버전은 Spring Boot BOM이 관리(0.10.x) | VERIFIED | Spring Boot 3.2+ 공식 Native Image 가이드 + Baeldung |
 | 8 | Spring Boot 2.5.x OSS EOL 경과 | DISPUTED → 수정 반영 | endoflife.date 기준 2.5 EOL 2023-02경. SKILL.md 상단 `> 주의:`에 "신규 프로젝트에는 부적합" 명시 |
+| 9 | (2026-11-09) 최신 안정 4.1.2 / 3.5.16 | VERIFIED | spring.io 프로젝트 페이지 + endoflife.date — SKILL.md 상단 각주 4.1.1→4.1.2 갱신 |
+| 10 | (2026-11-09) 3.3 Gradle 매트릭스 "8.4 = JDK 8~21 실행", "7.x Java 21 컴파일은 8.5+" | **DISPUTED → 수정** | Gradle 공식 표: Java 21 toolchain 8.4·실행 8.5, Gradle 9 실행 JVM 17+, 25 = 9.1.0, 26 = 9.4.0. 표 재작성 |
+| 11 | (2026-11-09) "Boot 3.x부터 starter-validation이 starter-web에 미포함" | **DISPUTED → 수정** | 2.3 Release Notes(기존 `spring-boot-1-to-2-migration` 클레임 25 VERIFIED) — 2.3부터. SKILL.md 4장 주의문 정정 |
+| 12 | (2026-11-09) 클레임 7 "native 플러그인 버전은 BOM이 관리, Gradle에서 생략 가능" | **UNVERIFIED → 수정** | 공식 Native Image 가이드는 Maven만 버전 생략 예시, Gradle reacting 문서는 버전 관리 언급 없음 → Gradle은 버전 명시로 수정 + `> 주의: 미검증` |
+| 13 | (2026-11-09) REFERENCE §9.1 "3.5.x Framework 6.3" | **DISPUTED → 수정** | 3.5 시스템 요구사항: Framework 6.2.19+ → 6.2 |
+| 14 | (2026-11-09) REFERENCE §9.5 "`RestTemplate` 자동 구성 제거" | **DISPUTED → 수정** | 4.0 Migration Guide: RestClient·RestTemplate은 `spring-boot-restclient` 모듈로 분리(제거 아님). `@MockBean`·`@SpyBean` 제거 행 추가 |
+| 15 | (2026-11-09) Boot 4.x Gradle 8.14+/9.x, Tomcat 11.0/Servlet 6.1, GraalVM 25+ | VERIFIED | 4.1.2 시스템 요구사항 + 4.0 Migration Guide |
 
 ### 4-3. 구조 완전성
 
@@ -116,6 +129,18 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-11-09] 재검증 수정분 content test
+
+**수행일**: 2026-11-09
+**수행자**: general-purpose (skill-tester는 중첩 호출 환경에서 Agent 도구가 없어 질문만 설계하고 중단 → 재검증 담당이 같은 질문을 general-purpose 에이전트에 직접 위임)
+**수행 방법**: SKILL.md + references/REFERENCE.md Read만 허용, 웹 검색·파일 수정 금지 조건으로 실전 질문 3개 답변
+
+- Q1. "Gradle 8.4를 JDK 21 위에서 실행해도 되나? Gradle 9의 실행 JVM 제약은?" — **PASS** (근거: §3.3 표 — 8.4는 21 위 실행 불가·toolchain 21은 가능, 8.5부터 실행, 9.x는 JVM 17+, 25 = 9.1.0, 26 = 9.4.0)
+- Q2. "starter-validation이 3.x부터 빠졌나? native 플러그인 Gradle 버전 생략 가능?" — **PASS** (근거: §4 주의 — 2.3부터, §3.2 주의 — Gradle은 버전 명시·생략 가능 여부 미검증)
+- Q3. "3.5→4.x에서 Framework 버전, RestTemplate 자동 구성, @MockBean은?" — **PASS** (근거: REFERENCE §9.1 3.5 = 6.2 → 7.0, §9.5 RestTemplate은 `spring-boot-restclient` 모듈 분리(제거 아님), `@MockBean`·`@SpyBean` 제거)
+
+agent content test: 3/3 PASS → APPROVED 유지.
 
 ### [2026-09-28] skill-tester 재테스트 — §9.7 Starter 이름 변경 신설분 + 교차 참조 정합성 확인
 
@@ -279,7 +304,8 @@ Spring Boot 3.4, Java 21, Kotlin DSL로 REST API 프로젝트의 build.gradle.kt
 | 실용성 | ✅ |
 | 에이전트 활용 테스트 | ✅ PASS (2026-04-22 1차 Q1 PASS / Q2 PARTIAL → §6.5 보강 후 2차 재테스트 Q2 PASS + **2026-09-28 §9.7 보강분 재테스트 2/2 PASS**, 교차 참조 정합성 확인 포함) |
 | 2026-09-28 재검증(2차) | 9.7 "Starter 이름 변경 (4.0)" 신설(공식 소스 VERIFIED) + 고아 테이블 행 수정. 실전 질문 2건 PASS + **skill-tester 재테스트 2/2 PASS 완료** |
-| **최종 판정** | **APPROVED** (§9.7 보강분 skill-tester content test 2/2 PASS 완료, 빌드 설정 카테고리이나 2026-04-22 확립된 기존 원칙 적용) |
+| 2026-11-09 재검증 | Gradle 호환 표·starter-validation 시점·native 플러그인 버전·3.5 Framework·RestTemplate 정정. content test 3/3 PASS |
+| **최종 판정** | **APPROVED** (2026-11-09 수정분 content test 3/3 PASS, 빌드 설정 카테고리이나 2026-04-22 확립된 기존 원칙 적용) |
 
 > 공식 문서 기반으로 작성되었고 핵심 클레임은 교차 검증을 마쳤습니다. 2026-09-28 재검증에서 Starter 이름 변경(9.7)을 새로 보강했고, skill-tester의 실사용 테스트를 거쳐 APPROVED로 재승격했습니다.
 
@@ -291,6 +317,8 @@ Spring Boot 3.4, Java 21, Kotlin DSL로 REST API 프로젝트의 build.gradle.kt
 - [⏸️] Maven(pom.xml) 대응 버전 — 필요 시 별도 스킬 분리, 현 Gradle 범위 외
 - [✅] `java-backend-developer`(대체: general-purpose) 에이전트로 실 테스트 2건 수행 — 2026-04-22 Q1 PASS + Q2 §6.5 보강 후 PASS, APPROVED 전환 완료 / **2026-09-28 §9.7 Starter 이름 변경 신설분 재테스트 2/2 PASS, APPROVED 유지 완료**
 - [⏸️] Kotlin 코드 기반 Spring Boot 예시(Kotlin 플러그인) 보강 — 선택 보강, 차단 요인 아님
+- [✅] 2026-11-09 재검증 정정분 content test 3/3 PASS, APPROVED 유지
+- [⏸️] Gradle `plugins` 블록에서 native 플러그인 버전 생략 가능 여부 1차 확인(현재 `> 주의: 미검증`)
 
 ---
 
@@ -304,3 +332,6 @@ Spring Boot 3.4, Java 21, Kotlin DSL로 REST API 프로젝트의 build.gradle.kt
 | 2026-09-26 | v1 | 정기 재검증 — Gradle 8.14+/Jackson 3.0 group id/GraalVM 25+ 재확인, 최신 안정 버전 각주만 4.1.1로 갱신 | Claude (Sonnet 5) |
 | 2026-09-28 | v2 | **재검증(2차) — 다른 스킬(`spring-boot-2-to-3-migration`)의 "9장 없음" 오판을 계기로 교차 확인, §9.7 "Starter 이름 변경 (4.0)" 신설(공식 Migration Guide "Deprecated Starters"/"AOP Starter POM"/"Classic Starters" 근거).** `spring-boot-starter-json`→`spring-boot-starter-jackson` 개명설은 2차 소스에만 존재하고 공식 표에는 없어 미반영(UNVERIFIED). §9.6 뒤에 잘못 붙어있던 고아 테이블 행을 §8로 이동해 마크다운 깨짐 수정. status **PENDING_TEST 전환**(보강 발생, skill-tester 재테스트 대기) | Claude (Sonnet 5) |
 | 2026-09-28 | v2 | 2단계 실사용 재테스트 수행 (Q1 §9.7 Starter 좌표 변경 실전 적용 / Q2 `spring-boot-2-to-3-migration`의 "9장" 인용이 실제 §9.1~9.7과 모순 없는지 교차 확인) → 2/2 PASS, 빌드 설정 카테고리이나 2026-04-22 확립 원칙 적용해 **PENDING_TEST → APPROVED** 전환. 섹션 5·6·7·8 동기화 | skill-tester |
+| 2026-11-09 | v2 | 재검증 — 4.1.2/3.5.16 현행, Boot 4 Gradle 8.14+·Tomcat 11·GraalVM 25+ VERIFIED. **바뀐 점**: SKILL.md 상단 최신 버전 4.1.2, 3.3 Gradle 호환 표 재작성(Java 21 toolchain 8.4/실행 8.5, Gradle 9 = JVM 17+), starter-validation 분리 시점 3.x→2.3 정정, native 플러그인 Gradle 버전 생략 주장 삭제(명시 권장 + 미검증 주의). REFERENCE §9.1 3.5 Framework 6.3→6.2, §9.5 RestTemplate "제거"→`spring-boot-restclient` 모듈 분리·`@MockBean` 행 추가, 예제 4.1.2. skill-tester 재시험 대상 | 재검증 (Claude) |
+| 2026-11-09 | v2 | 수정분 content test (Q1 Gradle 실행 JVM·toolchain / Q2 starter-validation 시점·native 플러그인 버전 / Q3 3.5→4 Framework·RestTemplate·@MockBean) → 3/3 PASS, APPROVED 유지. skill-tester는 Agent 도구 없음으로 질문 설계 후 중단 → general-purpose에 직접 위임. 섹션 5·6·7 동기화 | general-purpose |
+| 2026-11-11 | v2 | 2026-11-11 정리 — 모델이 아는 일반 지식 절 제거(2.4 레거시 Java 버전 설정, 4장 스타터 표·선택 패턴, 5장 프로파일 분리·활성화·시크릿·단일 파일 멀티 프로파일, REFERENCE 6장 2→3 체크리스트(`spring-boot-2-to-3-migration` 스킬 담당), 7장 자주 쓰는 명령어). 남긴 절: 상단 EOL·최신 버전 주의, 1장 선택 가이드, 2장 레거시 2.5.12 WAR/Tomcat 9(2.1~2.3), 3장 모던 3.4+(3.1~3.3 Gradle 호환 매트릭스), 4장 starter-validation 2.3 주의, 8장 흔한 실수, 9장 4.x 마이그레이션(9.1~9.7). 사실 재검증 아님 | Claude (Opus 5.5) |

@@ -1,6 +1,7 @@
 # Memory Index
 
 ## ★ 하네스 현재 상태
+- [★ 전수 점검 → 11-11 하네스 걷어내기 (2026-11-06~12, feat/lfmall-sync-2026-11-06, 11-12 커밋·푸시)](project_full_audit_2026-11-06.md) — 보안 가드 빈틈·Sonnet/Haiku 5.5 → 11-10 결정 4건 → 11-11 모델이 아는 것 제거(스킬 195→139·에이전트 61→49·훅 32→29·커맨드 12→7)·Fable 5.2 현행화 → 11-12 2차(스킬 90·에이전트 10, typescript-quality Stop 판정·에이전트 10개 점검). 남은 것: PR(요청 시)·알레르기 19종 고시 확인. Codex 는 gpt-5.4 계정 400 으로 사용 불가 표시
 - [★★ 하네스 현재 상태 (2026-10-23 갱신) — 여기부터 읽기](project_harness_status_2026-10-15.md) — shim 래퍼로만 사용, 설치본 v1.1.2(PR #46 머지 — 쓰기 위치·세션 중 자동 업데이트, lfmall 에 전달), v1.1.0 = 윈도우 지원 마무리(PR #43·#44 머지; 단위 테스트 CI 맥·윈도우; 결정 42 변수 읽기 자동·43 📌 표시 — lfmall 은 전달 끝·신경 안 씀), 321 항목(훅 32·고정 35·켬 70·끔 216). 남은 제안: 태그 보호·Codex 리뷰·고정 훅 fail-closed·윈도우 :237 5건 결정. 설치는 PATH 를 묻지 않고 자동 추가(v1.0.12). 기본값·고정 = 계획서 페이지 + `docs/DEFAULTS.md`. **수정 작업은 마지막 줄 `진행할까요?`**
 - [★ 개편 방향 = shim wrapper (2026-10-15)](project_shim_wrapper_direction.md) — `gugbab-claude` 래퍼 + 프로젝트별 `CLAUDE_CONFIG_DIR` + `/harness` 토글. 플러그인 제안 거부됨. **2026-10-17 0~4단계 완료·PR #24 머지, 래퍼로만 사용(결정 27) — README 래퍼 전용·로그는 docs/CHANGELOG.md** → v1.0.5 까지 릴리스(결정 35 새 래퍼 재실행), 2026-10-19 결정 36(세션 시작 때 하네스 버전·vA→vB 표시, v1.0.6 머지) → 결정 37(SessionStart systemMessage 는 화면에 안 보여 Claude 가 첫 답변 맨 위에 전달, v1.0.7 머지·설치본 반영) — 남은 한계: 첫 메시지 전엔 화면에 안 보임, 래퍼 출력/상태줄 미결정. `gugbab-claude --version` 은 claude 버전임 → 결정 38(dash `set -m` 으로 comux 에이전트 감지 + `sessions/` 공유로 세션 간 메시지, v1.0.8) → 결정 39(이 프로젝트 메모리 폴더 env 허용 + 설치 폴더 Bash 쓰기 확인, v1.0.9 머지·설치본 반영) → 결정 40(SendMessage 자동 — 받는 세션이 확인, v1.0.11 머지·설치본 반영). 남은 제안: 태그 보호·Codex 리뷰·고정 훅 fail-closed
 - [윈도우 지원 — 구현·실측·맥 회귀·윈도우 재확인·맥 확인·CI 통과, PR #43 머지·v1.0.15 → v1.1.0 마무리 (2026-10-20~22, 결정 41)](project_windows_support_analysis.md) — 사용자 윈도우 PC 에서 PoC(로그인=빈 값 변수 OK·구조 유지)·Node 래퍼 `cli/launch.js`+`.cmd`·junction/하드링크·`install.ps1`·훅 윈도우 경로·E2E/매트릭스 Node 이식. main(PR #41·#42) 병합 완료(윈도우 `~` 보안 회귀 수정)·병합 뒤 대화형·M2·M3·M8·M11 실측 통과. 2026-10-22 맥 회귀(M13)·테스트 보강·CI 추가·윈도우 재확인·맥 확인 끝, 설치본 v1.1.0 E2E 51·40·매트릭스 671. 필수로 남은 것 없음(하면 좋은 것: M12 VS Code·M7 수동 update)
@@ -28,12 +29,14 @@
 - [사용자 프로필](user_profile.md) — 풀스택 개발자. 프론트엔드(Next.js 모노레포 + CRA 레거시) + Java 레거시 백엔드(SB 2.5+MyBatis+Oracle+MySQL+Redisson 2+EhCache 2+AWS SDK v1) 운영
 
 ## Feedback — 작업 방식
+- [정리 기준은 모델 지식, 사용 여부 아님](feedback_prune_by_model_knowledge.md) — 미사용이라 지우지 않고 사용 중이라 되살리지 않음, 컷오프 뒤 변경점·함정·한국/레거시 특화만 남길 가치
+- [결정은 하나씩 짧게](feedback_one_decision_at_a_time.md) — 한 답변에 질문 1개 + 추천, 목록 몰아 주지 않음, 팝업 말고 대화로
 - [자동 허용은 읽기만 넓힌다](feedback_auto_allow_reads_only.md) — Edit·Write·삭제·실행은 새로 자동 허용 금지, 훅으로 강제·적대 테스트, 바꾸기 전 실제 확인 창 기록 재생으로 효과 수치 보고 (결정 42)
 - [커밋은 사용자 요청 시에만](feedback_commit_policy.md) — 자동 커밋·제안 금지, 요청 시 실행 전 메모리 정리 선행 후 [memory] 커밋 포함, main push는 branch-protection이 차단(PR 경유)
 - [삭제 요청은 범위를 좁게](feedback_deletion_scope_narrow.md) — 확정/경계/유지로 나눠 경계는 질문, 검색·검증 범용 에이전트는 휩쓸어 지우지 않음, 남는 자산의 설치 경로 이관
 - [기준은 항상 원본 레포](feedback_source_repo_is_standard.md) — 설치본이 쓰고 있어도 원본 기준 불필요면 제거, 프로젝트별 보존 예외 없음, 유용한 내용만 원본으로 흡수 후 재설치로 배포
 - [설치본 사정으로 원본 export 동작 바꾸지 않기](feedback_no_target_driven_changes.md) — 원본은 그 자체로 정상, export는 대상을 원본 기준으로 전부 갱신
-- [전수 감사 사각지대](feedback_audit_blind_spots.md) — 훅 I/O 규약 대조·설치본 역류·실설치 참조 스캔·짝 단위 처리. 교훈은 테스트로 강제하고 감사 계획에 체크리스트로 직접 포함
+- [전수 감사 사각지대](feedback_audit_blind_spots.md) — 훅 I/O 규약 대조·설치본 역류·실설치 참조 스캔·짝 단위 처리·두 훅에 나뉜 기능은 목표 기준으로 함께 시험. 교훈은 테스트로 강제하고 감사 계획에 체크리스트로 직접 포함
 - [적대적 테스트 강제](feedback_adversarial_testing.md) — 악성 유저 방어·이상 경로까지 필수, 테스트 통과용 하드코딩 return 금지. adversarial-test-guard·fake-impl-guard 훅
 - [permission 프롬프트 줄이기 작업 맥락](feedback_permission_prompt_reduction.md) — defaultMode acceptEdits / permission 키 단순화 / hook 경로 절대화는 의도된 변경
 - [플러그인 설치는 claude CLI로 끝낸다](feedback_plugin_install.md) — `claude plugin marketplace add` + `install` Bash 실행, 프로젝트 scope `enabledPlugins`만
@@ -45,7 +48,7 @@
 - [토큰 95% 소진 시 일시 정지](feedback_pause_at_95_percent_tokens.md) — 장기 작업은 병렬 가능한 것만 병렬, 잔여 5% 이하면 새 작업 금지·완료/미완 목록+재개법 보고 후 멈춤
 
 ## Feedback — 스킬·검증
-- [스킬 생성 후 2단계 테스트 즉시 수행](feedback_skill_testing_enforcement.md) — skill-creator → skill-tester 순차 호출 필수, pending-test-guard 훅이 세션 종료 차단
+- [스킬 생성 후 2단계 테스트 즉시 수행](feedback_skill_testing_enforcement.md) — 작성 직후 skill-tester 호출 필수(skill-creator 는 11-12 삭제), pending-test-guard 훅이 세션 종료 차단
 - [셀프 검증으로 skill-tester 대체 금지](feedback_skill_tester_self_replacement_anti.md) — "수행일" 형식만 박고 "skill-tester 호출 미수행" 자백하는 패턴 금지
 - [verification.md 섹션 7·8까지 cleanup 확인](feedback_verification_full_cleanup.md) — skill-tester 후 섹션 5·6만 업데이트되는 누락 케이스 있으므로 메인이 직접 전 섹션 동기화 확인
 - [verification.md 작성 4원칙](feedback_verification_md_rules.md) — 로컬 프로젝트명·PR 번호 박기 금지, 일괄 업데이트는 사전 승인, 자의적 부분 적용 금지, content test PASS = APPROVED 가능 카테고리 구분
@@ -67,12 +70,12 @@
 ## 자산 구축 이력 (완료·머지)
 - [전수 점검·모델 현행화 (2026-09-25, PR #18 머지)](project_full_audit_2026-09-25.md) — Opus 5.5/Fable 5.1 현행화, 신규 스킬 5·에이전트 1·템플릿 13 python-fastapi, 31종 references 분리. 이후 09-28 학술 자산 삭제까지 기록
 - [전수감사 + 백로그 수정 (2026-09-11, PR #17 머지)](project_full_audit_2026-09-11.md) — 감사 백로그 7항을 TDD로 수정, E2E 30/30. 후속 과제: docs 프루닝·statusline 배선·구 템플릿 문서 카운트
-- [운세 앱(fortune-app) 자산 (2026-09-10~14, PR #17 머지)](project_fortune_app_assets_2026-09-10.md) — 스킬 10종·에이전트 1종·템플릿 12. 병렬 생성 한도 문제·워크트리 회수 절차
+- [운세 앱(fortune-app) 자산 (2026-09-10~14, PR #17 머지)](project_fortune_app_assets_2026-09-10.md) — 스킬 10종·에이전트 1종·템플릿 12. 병렬 생성 한도 문제·워크트리 회수 절차. **2026-11-11 일반 지식 5개 삭제(타로·손금·리텐션), 사주 계열 5개+시험 에이전트 유지 — 사용자 "추후 작업"**
 - [프론트 도메인 리팩터링 자산 정비 (2026-08-26)](project_frontend_domain_refactor_assets_2026-08-26.md) — 타깃 2개 스택 실측표, 신규 스킬 8종+에이전트 1종, `--legacy` 훅 프로파일·SEO 옵트아웃·commands export
 - [전수검사·정리 (2026-08-11)](project_full_audit_2026-08-11.md) — 스킬 209·에이전트 67 전수 감사, 에이전트 4종 정리, UPDATE 백로그 12건
 - [★ 레포 개편 전체 완료 (2026-06-12)](project_overhaul_progress.md) — 스킬 224→202종, 훅 20→28종, docs 전체 구조 신설, 9종 templates·examples
 - [★ SEO·GEO·웹표준 인프라 (2026-06-04)](project_seo_geo_assets_2026-06.md) — 스킬 28종 + 에이전트 4종
-- [★ Unity 게임 개발 인프라 (2026-06-10)](project_unity_gamedev_assets_plan.md) — 스킬 17종 + 에이전트 6종 APPROVED
+- [★ Unity 게임 개발 인프라 (2026-06-10)](project_unity_gamedev_assets_plan.md) — 스킬 17종 + 에이전트 6종 APPROVED. **2026-11-11 사용자 결정으로 묶음·프리셋 전체 삭제(게임 앱 없음)**
 - [스킬/에이전트 frontmatter 업그레이드 (2026-06-06)](project_skill_agent_frontmatter_upgrade_2026-06.md) — disable-model-invocation·permissionMode·isolation·background 필드 + InstructionsLoaded·UserPromptSubmit 훅
 - [프론트엔드 성능 벤치마킹 인프라 (2026-05-14)](project_perf_benchmarking_assets_2026-05-14.md) — 스킬 5종 + validation 에이전트 2종
 - [꿈 해몽 앱 인프라 (2026-05-14·15)](project_dream_app_complete_2026-05.md) — 스킬 28종 + 에이전트 5종
@@ -86,4 +89,5 @@
 - [PDF 빈칸 뚫기 워크플로우](project_pdf_blank_workflow.md) — 반복 요청 작업. 글자 단위 판정·침범 금지 6대 주의사항 + 검증 6종
 - [PDF 근무표 양식 생성 워크플로우](project_pdf_schedule_form_workflow.md) — 요일=상단 가로 / 홀·주방=좌측 세로 8행 불변. 재요청 시 `pdf변환/make-schedule.py` 먼저 확인
 - [PDF 재고량 표 생성 워크플로우](project_pdf_inventory_form_workflow.md) — A4 세로·3열·여분 3줄·한 줄 걸러 음영. 품목 15종
+- [차용증 PDF 작성 (2026-11-06)](project_loan_agreement_2026-11-06.md) — 채권자 이인숙·채무자 박노훈, 1억·연 2%·3년, `~/Downloads/차용증.pdf`. 개인정보 원문은 저장 안 함
 - 강아지 영상(dog-video)은 2026-10-15 `~/Desktop/gugbab-workspace/dog-video`로 폴더·메모리 모두 이동

@@ -251,6 +251,28 @@ section('검증일 소스 — 신뢰 소스(SKILL.md 인용 줄·메타 표·fro
   ok('SKILL.md 의 인라인·코드펜스 안 날짜는 무시 → 100일 stale 보고', r.stdout.includes('60일 초과 스킬 1종 감지') && r.stdout.includes('skillmd-inline'))
 }
 {
+  // 재검증 표기를 줄 안에 덧붙인 형식("2026-04-23 (재검증: 2026-09-26)") — 줄 안 날짜 중 최신 (collectDateSources 와 같은 규칙)
+  const root = mkRoot('sc-src-skillmd-latest-')
+  mkSkill(root, 'game', 'skillmd-latest', metaDoc({ meta: isoDaysAgo(100), fm: isoDaysAgo(100) }))
+  mkSkillMd(root, 'game', 'skillmd-latest', `# 스킬\n\n> 검증일: ${isoDaysAgo(100)} (재검증: ${isoDaysAgo(2)})\n`)
+  const r = runHook(root, ['--strict'])
+  ok('SKILL.md 인용 줄 안 재검증 날짜(최신) 채택 → 60일 초과 보고 없음', !r.stdout.includes('60일 초과') && !r.stderr.includes('60일 초과'), r.stdout + r.stderr)
+}
+{
+  const root = mkRoot('sc-src-skillmd-2nd-')
+  mkSkill(root, 'game', 'skillmd-second', metaDoc({ meta: isoDaysAgo(100) }))
+  mkSkillMd(root, 'game', 'skillmd-second', `# 스킬\n\n> 검증일: ${isoDaysAgo(100)}\n\n(위장) 두 번째 인용 줄:\n> 검증일: ${isoDaysAgo(1)}\n`)
+  const r = runHook(root, ['--strict'])
+  ok('악성: SKILL.md 두 번째 인용 줄의 새 날짜는 무시(첫 줄만) → stale 보고', r.stdout.includes('skillmd-second') && r.stdout.includes('60일 초과'))
+}
+{
+  const root = mkRoot('sc-src-skillmd-future-')
+  mkSkill(root, 'game', 'skillmd-future', metaDoc({ meta: isoDaysAgo(100) }))
+  mkSkillMd(root, 'game', 'skillmd-future', `# 스킬\n\n> 검증일: ${isoDaysAgo(100)} (재검증: 2999-01-01)\n`)
+  const r = runHook(root, ['--strict'])
+  ok('악성: 줄 안 미래 날짜로 신선 위장 불가 → stale 보고', r.stdout.includes('skillmd-future') && r.stdout.includes('60일 초과'))
+}
+{
   const root = mkRoot('sc-src-fence-')
   mkSkill(root, 'game', 'verif-fence', metaDoc({ meta: isoDaysAgo(100), extra: `\n\`\`\`\n| 검증일 | ${isoDaysAgo(1)} |\n> 검증일: ${isoDaysAgo(1)}\n\`\`\`\n` }))
   const r = runHook(root, ['--strict'])
@@ -647,6 +669,53 @@ section('날짜 불일치 경고 — 정상 / 불일치 / 파싱 불가 / frontm
     const j = parseJ(start(root))
     ok('경계: 불일치 25종 → 총 25종 표기 + 10줄 상한("외 15종") + 9000자 이하', !!j && j.systemMessage.includes('25종') && j.systemMessage.includes('외 15종') && j.systemMessage.length <= 9000)
   }
+}
+
+// ── 검증 문서 없는 스킬 (2026-11-06) — .claude/skills/<name>/SKILL.md 가 있는데 docs/skills/*/<name>/verification.md 가 없음 ──
+section('검증 문서 없음 — .claude/skills 순회')
+{
+  const SS = (source = 'startup') => JSON.stringify({ hook_event_name: 'SessionStart', source })
+  const parseJ = (r) => { try { return r.stdout.trim() ? JSON.parse(r.stdout) : null } catch { return null } }
+  const root = mkRoot('sc-nodoc-')
+  mkSkill(root, 'backend', 'has-doc', verifDoc(isoDaysAgo(5)))
+  mkSkillMd(root, 'backend', 'has-doc', `> 검증일: ${isoDaysAgo(5)}\n`)
+  mkSkillMd(root, 'backend', 'orphan-skill', `> 검증일: ${isoDaysAgo(5)}\n`)
+  let j = parseJ(runHook(root, ['--strict'], { input: SS() }))
+  ok('정상: verification.md 없는 스킬 → systemMessage·additionalContext 에 "검증 문서 없음"', !!j && /검증 문서 없음/.test(j.systemMessage || '') && j.systemMessage.includes('orphan-skill') && /orphan-skill/.test(j.hookSpecificOutput?.additionalContext || ''), j)
+  ok('  짝이 있는 스킬은 목록에 없음', !!j && !j.systemMessage.includes('has-doc'))
+  j = parseJ(runHook(root, ['--strict'], { input: SS('resume') }))
+  ok('  resume → 사용자 요약만(지시 없음)', !!j && j.systemMessage.includes('orphan-skill') && !j.hookSpecificOutput)
+  ok('  compact → 무출력', runHook(root, ['--strict'], { input: SS('compact') }).stdout.trim() === '')
+  const legacy = runHook(root, ['--strict'])
+  ok('  레거시 경로(입력 없음) → stderr 로 보고', legacy.stderr.includes('검증 문서 없음') && legacy.stderr.includes('orphan-skill'))
+
+  // 경계: SKILL.md 없는 폴더·파일·숨김 항목은 스킬 아님
+  const r2 = mkRoot('sc-nodoc-edge-')
+  mkSkill(r2, 'backend', 'ok', verifDoc(isoDaysAgo(5)))
+  fs.mkdirSync(path.join(r2, '.claude', 'skills', 'empty-dir'), { recursive: true })
+  fs.writeFileSync(path.join(r2, '.claude', 'skills', 'README.md'), '# not a skill')
+  const e = runHook(r2, ['--strict'], { input: SS() })
+  ok('경계: SKILL.md 없는 폴더·일반 파일 → 보고 안 함', e.stdout.trim() === '' && e.stderr.trim() === '', e.stdout)
+
+  // 악성: 밖을 가리키는 링크 스킬 폴더는 따라가지 않음(보고도 안 함 — 링크 대상은 이 레포 스킬이 아님)
+  const r3 = mkRoot('sc-nodoc-link-')
+  mkSkill(r3, 'backend', 'ok', verifDoc(isoDaysAgo(5)))
+  const outside = mkRoot('sc-nodoc-out-')
+  fs.writeFileSync(path.join(outside, 'SKILL.md'), '# outside')
+  fs.mkdirSync(path.join(r3, '.claude', 'skills'), { recursive: true })
+  if (trySymlink(outside, path.join(r3, '.claude', 'skills', 'linked'), 'dir') === null) {
+    console.log('  ⚠️ 건너뜀: 폴더 심볼릭 링크 생성 불가'); skipped++
+  } else {
+    const l = runHook(r3, ['--strict'], { input: SS() })
+    ok('악성: 링크 스킬 폴더 → 따라가지 않음', !l.stdout.includes('linked'))
+  }
+
+  // 대량: 25종 → 10줄 상한 + "외 15종", 9000자 이하
+  const r4 = mkRoot('sc-nodoc-bulk-')
+  mkSkill(r4, 'backend', 'ok', verifDoc(isoDaysAgo(5)))
+  for (let i = 0; i < 25; i++) mkSkillMd(r4, 'backend', `orphan-${String(i).padStart(2, '0')}`, '# x\n')
+  j = parseJ(runHook(r4, ['--strict'], { input: SS() }))
+  ok('경계: 25종 → "25종" + "외 15종" + 9000자 이하', !!j && j.systemMessage.includes('25종') && j.systemMessage.includes('외 15종') && j.systemMessage.length <= 9000)
 }
 
 // ── 정리 ──────────────────────────────────────────────────────────────

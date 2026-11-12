@@ -2,7 +2,7 @@
 skill: ibatis-to-mybatis-migration
 category: backend
 version: v1
-date: 2026-10-08
+date: 2026-11-06
 status: PENDING_TEST
 ---
 
@@ -14,7 +14,7 @@ status: PENDING_TEST
 |------|------|
 | 스킬 이름 | `ibatis-to-mybatis-migration` |
 | 스킬 경로 | `.claude/skills/ibatis-to-mybatis-migration/SKILL.md` |
-| 검증일 | 2026-10-08 |
+| 검증일 | 2026-11-06 (재검증, 이전 2026-10-08) |
 | 검증자 | skill-creator 절차 수행 에이전트 (Claude) |
 | 스킬 버전 | v1 |
 
@@ -63,6 +63,10 @@ status: PENDING_TEST
 | MyBatis-Spring Transactions / SqlSession | https://mybatis.org/spring/transactions.html · https://mybatis.org/spring/sqlsession.html | ⭐⭐⭐ High | 2026-10-08 | 같은 DataSource 필수, SqlSessionTemplate |
 | OGNL Language Guide | https://commons.apache.org/dormant/commons-ognl/language-guide.html | ⭐⭐⭐ High | 2026-10-08 | 문자/문자열 리터럴 구분 |
 | MyBatis ParamNameResolver xref | https://mybatis.org/mybatis-3/xref/org/apache/ibatis/reflection/ParamNameResolver.html | ⭐⭐⭐ High | 2026-10-08 | collection/list/array 키 (검색 결과로 확인) |
+| Maven Central metadata (mybatis2·mybatis-2-spring·mybatis·mybatis-spring·mybatis-spring-boot-starter) | https://repo1.maven.org/maven2/org/mybatis/ | ⭐⭐⭐ High | 2026-11-06 | 재검증 — 2.8.1 / 1.4.2 / 3.6.0 / 4.1.0 / 4.1.0 |
+| MyBatis 3.6.0 릴리스 노트 | https://github.com/mybatis/mybatis-3/releases/tag/mybatis-3.6.0 | ⭐⭐⭐ High | 2026-11-06 | 재검증 — Java 11 필요, Type 기준 TypeHandler 해석 |
+| ibatis2mybatis 릴리스 | https://github.com/mybatis/ibatis2mybatis/releases | ⭐⭐⭐ High | 2026-11-06 | 재검증 — 태그 1.0·1.1.0·1.2.0·1.3.0·1.3.1 |
+| spring-boot-starter README (master) | https://github.com/mybatis/spring-boot-starter | ⭐⭐⭐ High | 2026-11-06 | 재검증 — master = MyBatis-Spring 4.1·Boot 4.1, 4.1.0 pom = MyBatis 3.5.19 |
 | 커뮤니티 글 (OGNL 'Y' char, Integer 0 != '', Oracle 1111) | cloud.tencent.com, cnblogs, juejin, jira.camunda.com 등 | ⭐ Low~⭐⭐ Medium | 2026-10-08 | 공식 소스 보조용 — 함정 사례 확인에만 사용 |
 
 ---
@@ -99,6 +103,11 @@ status: PENDING_TEST
 | 24 | OGNL에서 Integer 0과 `''` 비교 시 같다고 평가 → `p != ''` 조건 탈락 | 커뮤니티 다수 사례만, OGNL 공식 문서에 명시 문장 없음 | UNVERIFIED → SKILL.md에 `> 주의:` 표기, 특성화 테스트로 확인하도록 안내 |
 | 25 | OGNL 작은따옴표 한 글자 = Character 리터럴 → `'Y'` 비교 함정 | OGNL language guide, 커뮤니티 사례 | VERIFIED |
 | 26 | 빈 컬렉션일 때 iBATIS iterate가 prepend까지 생략하는지 | 소스 미확인 | UNVERIFIED → SKILL.md에 `> 주의: ... 미검증` 표기 (권고 내용은 어느 경우든 안전) |
+| 27 | (2026-11-06 재검증) mybatis2 2.8.1·mybatis-2-spring 1.4.2·starter 4.1.0이 최신 | Maven Central metadata, ibatis-spring README(1.3.0 Java 11·Spring 5~7, 1.4.0 Java 17·Spring 6+) | VERIFIED |
+| 28 | (2026-11-06) "ibatis2mybatis 정식 릴리스 없음" | GitHub 릴리스 태그 1.0(2013)~1.3.1(2026-07) 존재, Maven Central 배포는 없음, pom 1.0.0-SNAPSHOT | DISPUTED → "릴리스 태그 1.3.1, Central 배포 없음"으로 수정 |
+| 29 | (2026-11-06) MyBatis 최신 = 3.5.19 | Maven Central release 3.6.0(2026-10-23), 스타터 4.1.0은 3.5.19 사용 | DISPUTED → 3.6.0 존재·Java 11·변경점 주의 추가, 문서 기준은 3.5.19 유지 |
+| 30 | (2026-11-06) `jdbcTypeForNull` 기본 OTHER | 3.6.0 `Configuration.java` 소스 | VERIFIED |
+| 31 | (2026-11-06) starter 호환표(master=4.1 / 4.0.x / 3.0.x Boot 3.2–3.5 / 2.3.x Boot 2.7) | spring-boot-starter README | VERIFIED |
 
 추가 확인(보조): MyBatis `jdbcTypeForNull` 기본값 OTHER(공식) + Oracle `Invalid column type: 1111`(커뮤니티 다수), iBATIS null 처리 `Types.NULL`(ParameterMap 소스), namespace = 인터페이스 FQCN(getting-started), foreach 단일 List 파라미터 `collection`/`list`/`array` 키(ParamNameResolver) — 모두 VERIFIED로 보고 본문에 반영.
 
@@ -122,19 +131,40 @@ status: PENDING_TEST
 - [✅] 범용적으로 사용 가능 (특정 프로젝트 종속 X — 일반 예시만 사용)
 
 ### 4-4. Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-10-08, general-purpose 대체 사용)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (3/3 PASS)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-10-08, 재시험 2026-11-06, general-purpose 대체 사용)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-10-08 3/3 PASS, 2026-11-06 재시험 2/2 PASS)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (FAIL 없음, 보완 불필요 — 선택 보강만 섹션 5 gap에 기록)
 
 ---
 
 ## 5. 테스트 진행 기록
 
+**수행일**: 2026-11-06
+**수행자**: skill-tester → general-purpose (domain 에이전트 대신 general-purpose로 대체 사용)
+**수행 방법**: 2026-11-06 재검증으로 바뀐 내용(도구 릴리스 태그/Central 미배포, MyBatis 3.6.0 주의)을 중심으로 SKILL.md Read 후 2개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
+
+### 실제 수행 테스트 (2026-11-06 재시험)
+
+**Q1. "ibatis2mybatis를 pom.xml 의존성으로 추가하면 되나? 최신 정식 릴리스는?"**
+- ✅ PASS
+- 근거: SKILL.md "기준 버전" 인용블록, 1-2절(실행 절차), 10절 첫 행, 9절
+- 상세: Central 미배포라 의존성 추가가 아니라 레포 clone 후 `source/`에 sqlMap 복사 → ant 또는 `./mvnw clean install` 실행이라고 답변. 버전은 GitHub 릴리스 태그 1.3.1(안정 지점 표시용), pom은 1.0.0-SNAPSHOT이며 `mybatis2`/`mybatis-2-spring`과 별개임을 구분. 완료 기준(콘솔 "Sorry" 0건 + 특성화 테스트 통과)도 정확히 인용. anti-pattern("정식 릴리스 없음" 단정, Central 의존성 안내) 회피.
+
+**Q2. Boot 3.4 + Java 17에서 MyBatis 3.6.0으로 바로 올려도 되나? starter 선택, Oracle jdbcTypeForNull은?**
+- ✅ PASS
+- 근거: SKILL.md "기준 버전" 3.6.0 주의 블록, 4절, 8절 starter 표, 10절
+- 상세: 3.6.0은 Java 11+·TypeHandler 해석 변경이 있어 릴리스 노트 별도 확인 필요, 스타터 4.1.0까지 3.5.19 사용이라 starter 3.0.5(Boot 3.2~3.5)를 선택, `jdbcTypeForNull` 기본 OTHER는 3.6.0에서도 동일하며 `jdbc-type-for-null: NULL` 또는 jdbcType 명시로 처리하라고 답변. 스킬에 없는 "3.6.0 비권장" 직접 문장은 추론이라고 구분해 표기.
+
+**재시험 gap (선택 보강, 차단 요인 아님)**
+- starter 3.0.5에서 mybatis만 3.6.0으로 오버라이드해도 되는지 미기재
+- 8절 4.1 행 확인일(2026-10-08)과 상단 검증일(2026-11-06)이 달라 혼동 여지
+- `./mvnw` 없을 때 시스템 mvn 대안 미기재
+
+### 이전 수행 기록 (2026-10-08, 최초 테스트)
+
 **수행일**: 2026-10-08
 **수행자**: skill-tester → general-purpose (domain 에이전트 대신 general-purpose로 대체 사용)
 **수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
-
-### 실제 수행 테스트
 
 **Q1. 변환된 isNotEmpty(Integer 0, 빈 List)가 iBATIS와 결과가 달라지는 이유·수정·검증**
 - ✅ PASS
@@ -161,7 +191,7 @@ status: PENDING_TEST
 
 ### 판정
 
-- agent content test: PASS (3/3 PASS)
+- agent content test: PASS (2026-11-06 재시험 2/2 PASS, 2026-10-08 최초 3/3 PASS)
 - verification-policy 분류: 마이그레이션 가이드 (실사용 필수)
 - 최종 상태: PENDING_TEST 유지 (실제 sqlMap 변환·특성화 테스트 실행 전까지 APPROVED 불가)
 
@@ -176,7 +206,7 @@ status: PENDING_TEST
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-10-08, 3/3 PASS) |
+| 에이전트 활용 테스트 | ✅ (2026-11-06 재시험 2/2 PASS, 2026-10-08 3/3 PASS) |
 | **최종 판정** | **PENDING_TEST** (content test 통과, 마이그레이션 가이드라 실사용 확인 전까지 유지) |
 
 > 분류 메모: 마이그레이션 가이드 스킬이므로 verification-policy.md의 "실사용 필수 스킬"에 해당할 수 있다. content test PASS 후에도 실제 변환 도구 실행·특성화 테스트 결과로 확인하기 전까지 PENDING_TEST 유지가 기본이다.
@@ -185,7 +215,8 @@ status: PENDING_TEST
 
 ## 7. 개선 필요 사항
 
-- [✅] skill-tester로 2단계 content test 수행 및 섹션 5·6 갱신 (2026-10-08 완료, 3/3 PASS)
+- [✅] skill-tester로 2단계 content test 수행 및 섹션 5·6 갱신 (2026-10-08 완료 3/3 PASS, 2026-11-06 재검증 후 재시험 2/2 PASS)
+- [❌] (선택 보강, 비차단) starter 3.0.x에서 mybatis 3.6.0 오버라이드 가능 여부, `./mvnw` 없을 때 대안 보강
 - [❌] 실제 sqlMap 샘플로 ibatis2mybatis 도구를 실행해 콘솔 보고 형식·DTD 검증 실패 메시지·`<dynamic>` 비WHERE 분기 실제 출력 확인 (클레임 9 보강) — APPROVED 전환의 차단 요인(실사용 필수 카테고리)
 - [❌] OGNL `0 != ''` 동작을 MyBatis 3.5.19에서 실측해 UNVERIFIED(#24) 해소
 - [❌] 빈 컬렉션에서 iBATIS `<iterate>` prepend 동작을 `IterateTagHandler` 소스로 확인해 UNVERIFIED(#26) 해소
@@ -199,3 +230,6 @@ status: PENDING_TEST
 |------|------|-----------|--------|
 | 2026-10-08 | v1 | 최초 작성 (공식 도구·위키·소스 대조, 클레임 26개 교차 검증) | skill-creator 절차 수행 에이전트 (Claude) |
 | 2026-10-08 | v1 | 2단계 실사용 테스트 수행 (Q1 isNotEmpty 0/빈 리스트 의미 차이 / Q2 도구 실행·Oracle null·`${}` / Q3 Boot 3 공존 전환·insert 반환값) → 3/3 PASS, PENDING_TEST 유지(마이그레이션 가이드 = 실사용 필수) | skill-tester |
+| 2026-11-06 | v1 | 재검증 — mybatis2 2.8.1·mybatis-2-spring 1.4.2·starter 4.1.0·호환표·jdbcTypeForNull 기본값 확인. 정정: ibatis2mybatis는 릴리스 태그 1.3.1 존재(Central 배포 없음), MyBatis 3.6.0(Java 11+) 출시 주의 추가. PENDING_TEST 유지(실사용 필수). skill-tester 재시험 예정 | Claude (Opus 5.5) |
+| 2026-11-06 | v1 | 재검증 후 2단계 실사용 재시험 수행 (Q1 변환 도구 확보·Central 미배포·태그 1.3.1 / Q2 MyBatis 3.6.0 주의·starter 선택·jdbcTypeForNull) → 2/2 PASS, PENDING_TEST 유지(마이그레이션 가이드 = 실사용 필수) | skill-tester |
+| 2026-11-12 | v1.1 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 기준 버전·3.6.0 주의, 변환 도구 build.xml 동작·변환 불가 요소표, 설정·매퍼·동적 SQL 대응표, null·캐시 구조 차이, isNotEmpty·OGNL 비교·$ 의미 변화, SqlMapClient→SqlSession API 표·Spring orm.ibatis 제거·mybatis-2-spring/mybatis2 버전, 공존 트랜잭션 원칙, 스타터 버전표, 깨지기 쉬운 검증 입력 / 덜어낸 것 언제 쓰나 표, 도구 실행 명령 블록, resultMap·프로시저·캐시·동적 SQL·DAO·공존 설정 before/after 예제 코드, 검증 절차 서술, 흔한 실수 표(본문과 중복). references 폴더 없음 | 정리 |

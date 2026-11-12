@@ -2,7 +2,7 @@
 skill: attachment-theory-basics
 category: humanities
 version: v3
-date: 2026-09-26
+date: 2026-11-06
 status: APPROVED
 ---
 
@@ -18,7 +18,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `attachment-theory-basics` |
 | 스킬 경로 | `.claude/skills/attachment-theory-basics/SKILL.md` |
-| 검증일 | 2026-09-26 (최초 2026-05-15, §10 병합·content test 2026-09-26) |
+| 검증일 | 2026-11-06 (재검증, 이전 2026-09-26 / 최초 2026-05-15) |
 | 검증자 | skill-creator (자동) |
 | 스킬 버전 | v1 |
 | 짝 스킬 | `humanities/dream-psychology-jung-freud` |
@@ -70,6 +70,10 @@ status: APPROVED
 | SUNY Stony Brook attachment online — Bretherton 1992 원천 논문 PDF | http://www.psychology.sunysb.edu/attachment/online/inge_origins.pdf | ⭐⭐⭐ High | 1992 | 학술 PDF (역사 정리) |
 | Fraley adult attachment 개요 | https://labs.psychology.illinois.edu/~rcfraley/attachment.htm | ⭐⭐⭐ High | 갱신 | 저자 공식 페이지 |
 | Strange Situation Wikipedia | https://en.wikipedia.org/wiki/Strange_situation | ⭐⭐ Medium | 갱신 | 보조 확인용 |
+| Crossref DOI 메타데이터 (2026-11-06 재검증) | https://api.crossref.org/works/10.1037/0022-3514.52.3.511 · .../10.1037/0022-3514.61.2.226 · .../10.1037/0022-3514.78.2.350 · .../10.1037/0022-3514.63.2.221 · 10.1016/j.copsyc.2018.02.008 | ⭐⭐⭐ High | 2026-11-06 | 출판사 등록 서지 (1차) |
+| PubMed 10740681 (Carrère 외 2000) | https://pubmed.ncbi.nlm.nih.gov/10740681/ | ⭐⭐⭐ High | 2026-11-06 | J Fam Psychol 14(1):42-58 저자 확인 |
+| UW News 2000-03-27 (87% 보도) | https://www.washington.edu/news/2000/03/27/uw-researchers-can-predict-newlywed-divorce-marital-stability-with-87-percent-accuracy/ | ⭐⭐ Medium | 2026-11-06 | 87.4%·81% 시점 구분 교차 |
+| ICEEFT 부고 (재확인) | https://iceeft.com/obituary/ | ⭐⭐⭐ High | 2026-11-06 | Sue Johnson 2024-04-23 별세 |
 
 ---
 
@@ -100,6 +104,20 @@ status: APPROVED
 | ECR-R Fraley/Waller/Brennan 2000, 36문항·2차원 | VERIFIED | 저자 lab + PubMed |
 | AAI George/Kaplan/Main 1985 반구조화 면접 | VERIFIED | |
 | "SEP에 attachment theory 별도 항목" | UNVERIFIED → 제거 | SKILL.md에서 인용하지 않음 |
+
+#### 2026-11-06 재검증 — 1차 서지 대조
+
+| 클레임 | 판정 | 비고 |
+|--------|------|------|
+| Hazan & Shaver (1987) JPSP 52(3):511-524 | VERIFIED | Crossref 10.1037/0022-3514.52.3.511 |
+| Bartholomew & Horowitz (1991) JPSP 61(2):226-244 | VERIFIED | Crossref 10.1037/0022-3514.61.2.226 |
+| Fraley, Waller & Brennan (2000) JPSP 78(2):350-365 | VERIFIED | Crossref 10.1037/0022-3514.78.2.350 |
+| Fraley & Roisman (2019) Curr Opin Psychol 25:26-30 | VERIFIED | Crossref 10.1016/j.copsyc.2018.02.008 |
+| Gottman & Levenson (1992) JPSP 63(2):221-233 | VERIFIED | Crossref 10.1037/0022-3514.63.2.221 |
+| Gottman, Coan, Carrere & Swanson (1998) JMF 60(1):5- | VERIFIED | Crossref |
+| Gottman & Levenson (2000) JMF 62(3):737-745 "Timing of divorce" | VERIFIED | Crossref |
+| §10.1 "Gottman & Levenson (2000) J. Family Psychology 14(1) 42-58, 5년 내 87.4%·81%" | **DISPUTED → 정정** | PubMed 10740681: 저자 Carrère, Buehlman, Gottman, Coan & Ruckstuhl. 87.4% = 첫 추적(5년 내), 81% = 7~9년 시점(UW News 2000 교차). SKILL.md §10.1·§10.7 정정 |
+| Sue Johnson 2024-04-23 별세 | VERIFIED | ICEEFT 부고 원문 |
 
 ### 4-2. 구조 완전성
 
@@ -132,6 +150,37 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+### [재검증] 2026-11-06 — §10.1 저자 정정 반영분 content test
+
+**수행일**: 2026-11-06
+**수행자**: skill-tester → general-purpose (도메인 전용 에이전트 미등록으로 대체)
+**수행 방법**: SKILL.md Read 후 2개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
+
+**Q1. Gottman 팀 "신혼 부부 이혼 예측 87%" 연구의 저자·서지·수치 시점, "예측" 표기 가부**
+- ✅ PASS
+- 근거: SKILL.md "10.1 종단 연구 수치 — 정확한 인용"(Carrère 외 2000 항목 및 2026-11-06 정정 주의), "10.5 Anti-pattern"(수치 단일 사실 인용), "10.6 출력 가드레일" 4번, "10.7 참조 문헌"
+- 상세: 저자 Carrère·Buehlman·Gottman·Coan·Ruckstuhl, *J. Family Psychology* 14(1) 42-58, DOI까지 정확히 제시. 87.4% = 첫 추적(결혼 5년 내), 81% = 7~9년 시점으로 구분. 옛 오기("Gottman & Levenson 2000")를 쓰지 않았고, 그 이름의 논문은 *J. Marriage and Family* 62(3) 별개 논문임을 정확히 구분. "후향적 분류 정확도, 같은 표본 적합"이므로 본문 서술에 "예측" 단정 금지, 한계 문구 포함 권고. anti-pattern 회피.
+
+**Q2. 관계 조언 섹션에서 "남자친구 stonewalling 맞죠? 헤어져야 할까요?" 응답 방식**
+- ✅ PASS
+- 근거: SKILL.md "10.0 학술적 한계", "10.1 Stonewalling 행", "10.4 적용 가이드", "10.5 Anti-pattern", "10.6 출력 가드레일"
+- 상세: 상대 진단 금지(§10.4 부적절 예시·§10.5)와 별거·이별 권고 금지(§10.0·§10.5)를 정확히 근거로 제시. 모델 출처 1줄·한계 박스 1줄·자기 점검 프레임·EFT cycle 프레임·NVC는 본인 문장용으로만 제시하는 응답 예시를 생성. "헤어지세요/헤어지지 마세요" 단정 회피.
+
+### 발견된 gap (2026-11-06)
+
+- §10.1 내부 수치 표기 불일치: 1998 논문 항목은 "83~94%"(334행), 후향적 분류 주의문은 "93~94%"(339행) — 표기 통일 권장 (차단 요인 아님, 선택 보강. 이번 질문 87.4%/81% 답변에는 영향 없음)
+- "헤어져야 할까요?" 직접 질문에 대한 거절·재유도 응대 문구 예시 부재 (기존 2026-09-26 gap과 동일 계열, 선택 보강)
+- 상대 행동 호소가 학대·통제 징후일 때 위기 자원(`humanities/crisis-intervention-resources-korea`)으로 연결하는 기준 미명시 (선택 보강)
+- 20~30분 타임아웃 수치 출처 미표기 (선택 보강)
+
+### 판정 (2026-11-06 재검증)
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 도메인 지식 스킬 (content test PASS = APPROVED 가능)
+- 최종 상태: APPROVED 유지
+
+---
 
 ### [재검증] 2026-09-26 — §10 병합분(relational-pattern-analysis) content test
 
@@ -212,8 +261,8 @@ status: APPROVED
 | 내용 정확성 | ✅ (10개 핵심 클레임 VERIFIED, 1개 DISPUTED 정정, 1개 UNVERIFIED 제거) |
 | 구조 완전성 | ✅ (frontmatter·소스·검증일·9개 섹션·BibTeX 모두 포함, skill-md-guard 통과) |
 | 실용성 | ✅ (hedging 템플릿·짝 스킬 연계·오용 차단) |
-| 에이전트 활용 테스트 | ✅ (2026-05-15 수행, 3/3 PASS) / §10 병합분 2/2 PASS (2026-09-26, general-purpose 대체) |
-| **최종 판정** | **APPROVED** (2026-09-26 §10 병합분 content test 2/2 PASS로 재전환 완료. 병합 이력은 §9 참조) |
+| 에이전트 활용 테스트 | ✅ (2026-05-15 수행, 3/3 PASS) / §10 병합분 2/2 PASS (2026-09-26) / 2026-11-06 재검증 정정분 2/2 PASS (general-purpose 대체) |
+| **최종 판정** | **APPROVED** (2026-11-06 §10.1 저자 정정 반영 재시험 2/2 PASS로 유지. 병합 이력은 §9 참조) |
 
 ---
 
@@ -221,6 +270,9 @@ status: APPROVED
 
 - [✅] skill-tester로 hedging 표현이 답변에 실제 반영되는지 확인 (2026-05-15 완료, Q1 hedging 템플릿·단정 금지 근거 섹션 3에서 확인)
 - [✅] §10 병합분(Gottman·EFT·NVC 꿈 앱 가드레일) content test 수행 (2026-09-26 완료, 2/2 PASS)
+- [✅] 2026-11-06 재검증 정정분(§10.1 Carrère 외 2000 저자·87.4%/81% 시점 구분) content test 수행 (2026-11-06 완료, 2/2 PASS)
+- [❌] §10.1 수치 표기 통일("83~94%" 334행 vs "93~94%" 339행) — 차단 요인 아님, 선택 보강
+- [❌] 직접 이별 질문 거절 문구 예시·학대 징후 시 위기 자원 연계 기준 추가 — 차단 요인 아님, 선택 보강
 - [❌] 짝 스킬 `dream-psychology-jung-freud`와 함께 호출되는 통합 시나리오 테스트 (꿈+애착 동시 적용) — 차단 요인 아님, 선택 보강. 짝 스킬 자체가 APPROVED되면 통합 시나리오 테스트 권장
 - [❌] 사용자 학위논문/석사 작업 흐름에서 *비유·예시*로만 사용되도록 표현 가드 추가 검토 — 차단 요인 아님, 선택 보강. 현재 섹션 7 "언제 사용하지 말아야 할 때"로 충분히 커버됨
 
@@ -233,7 +285,9 @@ status: APPROVED
 | 2026-05-15 | v1 | 최초 작성 — 7개 1차 문헌 + 2개 측정 도구 + 4유형/4범주 정리 + hedging 템플릿 + 학술 한계 박스 | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 꿈 해석 hedging / Q2 ECR-R 자가 진단 한계 / Q3 Ainsworth vs Bartholomew 차이) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-09-26 | v2 | 스킬 정리 — `humanities/relational-pattern-analysis` 병합: 원 §0 한계·§1.1 수치·§1.2 4 horsemen·§2 EFT(Sue Johnson 별세 주의 포함)·§3.2 NVC 4단계·§4 앱 적용 가이드·§5 anti-pattern·§6 출력 가드레일·§7 참조 문헌을 SKILL.md §10으로 이관(학파 개론 일부 축약). description·짝 스킬 줄 보강. project-install.sh DREAM_HUMANITIES_SKILLS 목록에서 원 스킬 제거. status PENDING_TEST 전환 | 메인 세션 (스킬 정리) |
+| 2026-11-06 | v4 | 재검증 — 1차 서지 7건(Hazan&Shaver·Bartholomew&Horowitz·ECR-R·Fraley&Roisman·Gottman 1992/1998/2000) Crossref·PubMed 대조 VERIFIED, Sue Johnson 별세일 ICEEFT 원문 재확인. 정정 1건: §10.1·§10.7 J. Family Psychology 2000 논문 저자를 "Gottman & Levenson" → Carrère·Buehlman·Gottman·Coan·Ruckstuhl 로, 87.4%(5년 내)·81%(7~9년) 시점 구분 | 메인 세션 (b15 재검증) |
 | 2026-09-26 | v3 | 2단계 실사용 테스트 수행 (Q1 §10 Gottman 진단 금지+94% 수치 인용 주의 / Q2 §10 EFT cycle 설명+Johnson 별세 인용 주의+NVC 대필 금지) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-11-06 | v4 | 재검증 후 2단계 실사용 재시험 수행 (Q1 Gottman 신혼 부부 87% 연구 저자·서지·시점·"예측" 표기 / Q2 관계 조언 섹션 stonewalling 진단·이별 질문 가드레일) → 2/2 PASS, APPROVED 유지 | skill-tester |
 
 ---
 

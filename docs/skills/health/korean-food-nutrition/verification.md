@@ -2,7 +2,7 @@
 skill: korean-food-nutrition
 category: health
 version: v3
-date: 2026-09-28
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -33,7 +33,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `korean-food-nutrition` |
 | 스킬 경로 | `.claude/skills/korean-food-nutrition/SKILL.md` |
-| 검증일 | 2026-09-28 (최초 2026-06-26, 2026-09-28 재검증) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-28) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v2 |
 
@@ -69,6 +69,8 @@ status: APPROVED
 | 공공데이터포털 식품영양성분DB API | https://www.data.go.kr/data/15127578/openapi.do | ⭐⭐⭐ High | 2026-06-26 | 공식 REST API |
 | 농촌진흥청 국가표준식품성분표 | https://koreanfood.rda.go.kr/kfi/fct/fctFoodSrch/list | ⭐⭐⭐ High | 2026-06-26 | 농축수산물 중심 |
 | 전국통합식품영양성분 음식 표준데이터 | https://www.data.go.kr/data/15100070/standard.do | ⭐⭐⭐ High | 2026-06-26 | 조리 후 음식 기준 |
+| 공공데이터포털 식품영양성분DB API (재확인) | https://www.data.go.kr/data/15127578/openapi.do | ⭐⭐⭐ High | 2026-11-09 | 재검증: 기본 주소 `apis.data.go.kr/1471000/FoodNtrCpntDbInfo03` 유지(수정일 2026-09-16), `serviceKey` 필수·`FOOD_NM_KR`·`pageNo`·`numOfRows`·`type`(xml/json) 파라미터 — VERIFIED. 오퍼레이션명·AMT_NUM 필드 매핑은 상세페이지 본문에 노출되지 않아 이번 회차 재대조 못 함 — UNVERIFIED(이번 회차), 2026-09-28 Swagger 대조값 유지 |
+| 농촌진흥청 국가표준식품성분 DB 10.2 공개 보도 / RDA 웹진 | https://newsseoul.co.kr/news/view/1065584418575792 | ⭐⭐ Medium | 2026-11-09 | 재검증: 제10개정판 기반 DB 10.x 유지, 제11개정판 발간 확인 안 됨(5년 주기) — VERIFIED(변경 없음) |
 
 ---
 
@@ -257,3 +259,4 @@ status: APPROVED
 | 2026-09-28 | v2 | 2단계 재테스트 수행 (Q1 고등어 API 검색 나트륨·비타민C 코드 / Q2 국가표준식품성분표 개정판·갱신주기·가공식품 우선순위) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-09-28 | v3 | 선택 보강 반영 — 응답 JSON 최상위 wrapping 구조 설명 추가 및 코드 오류 정정(`data.body.items` → `data.response.body.items`). WebSearch로 data.go.kr 공통 응답 구조(response>header/body>items) 교차 확인, 서비스별 Swagger 원문은 활용신청 게이트로 미열람 — caveat 명시. status APPROVED → PENDING_TEST (코드 예시 변경, 메인이 재테스트 예정) | Claude (Opus 5.5) |
 | 2026-09-28 | v3 | 2단계 3차 재테스트 수행 (Q1 고등어 API 나트륨 파싱 코드 — 정확한 응답 경로 포함 / Q2 "data.body.items로 바로 접근하면 안 되나" 오해 정정 + 타 서비스 재사용 가능 여부) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-11-09 | v3 | 재검증 — data.go.kr 15127578 API 기본 주소(FoodNtrCpntDbInfo03)·serviceKey·FOOD_NM_KR·pageNo·numOfRows·type 파라미터 VERIFIED, 국가표준식품성분표 제10개정판(11개정판 발간 확인 안 됨) VERIFIED, 기준 줄의 "2026-09 기준" 표기만 "2026-11 기준"으로 갱신. 오퍼레이션명·AMT_NUM 매핑은 이번 회차 재대조 못 함(이전 Swagger 대조값 유지). 내용 변경 없음, skill-tester 생략, status APPROVED 유지 | Claude (Opus 5.5) |

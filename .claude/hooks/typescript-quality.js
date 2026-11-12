@@ -1,4 +1,5 @@
-// PostToolUse Write|Edit — .ts/.tsx 저장 시 tsc --noEmit 자동 실행 (오류 있으면 차단)
+// typescript-quality — 기본 배선(2026-11-12): PostToolUse Write|Edit `--record`(고친 .ts/.tsx 기록만) + Stop `--stop`(답변 종료 때 tsc --noEmit 한 번, 오류면 차단).
+// 인자 없이 PostToolUse 로 부르면 예전처럼 저장 때마다 검사한다(하위 호환).
 //
 // 옵션:
 //   --changed-only  레거시 대형 프로젝트 모드. 전체 프로젝트를 검사하되
@@ -182,6 +183,133 @@ if (SEED) {
   process.exit(0);
 }
 
+// tsconfig.json 탐색 (최대 5단계 상위) — 없으면 null
+function findTsconfig(filePath) {
+  let dir = path.dirname(filePath);
+  for (let i = 0; i < 5; i++) {
+    const candidate = path.join(dir, 'tsconfig.json');
+    try { if (fs.existsSync(candidate)) return candidate; } catch {}
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return null;
+}
+
+// ── --record / --stop (2026-11-12 사용자 결정: 저장마다 → 답변을 마칠 때 한 번) ──────────────
+// --record (PostToolUse Write·Edit): tsc 를 돌리지 않고 "이번 세션에 고친 .ts/.tsx" 만 대기 파일에 적는다 (빠름).
+// --stop   (Stop): 대기 파일이 있으면 tsconfig 루트마다 tsc 를 한 번 돌려, 새 오류가 있으면 exit 2 로 답변 종료를 막는다.
+//   여러 파일에 걸친 수정 중간의 일시적 타입 불일치로 매번 막히지 않게 하려는 것. 판정 기준(--changed-only 베이스라인 비교 포함)은 그대로.
+//   통과한 루트는 대기 목록에서 지운다. 차단은 같은 세션에서 연속 3회까지 — 그 뒤엔 무한 반복을 막으려 경고만 남기고 통과(목록 비움).
+const RECORD = ARGV.includes('--record');
+const STOP = ARGV.includes('--stop');
+const MAX_STOP_BLOCKS = 3;
+function pendingFile(sessionId) {
+  const sid = String(sessionId || 'nosession').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 80) || 'nosession';
+  return path.join(stateDir(), `claude-tsq-pending-${sid}.json`);
+}
+function loadPending(file) {
+  try {
+    const j = JSON.parse(fs.readFileSync(file, 'utf8'));
+    if (j && typeof j === 'object' && j.roots && typeof j.roots === 'object') return { roots: j.roots, blocks: Number.isInteger(j.blocks) ? j.blocks : 0 };
+  } catch {}
+  return { roots: {}, blocks: 0 };
+}
+function savePending(file, p) {
+  try {
+    const roots = Object.fromEntries(Object.entries(p.roots).filter(([, v]) => Array.isArray(v) && v.length));
+    if (!Object.keys(roots).length) { try { fs.unlinkSync(file); } catch {} return; }
+    const tmp = `${file}.${process.pid}.tmp`;
+    fs.writeFileSync(tmp, JSON.stringify({ roots, blocks: p.blocks || 0 }));
+    fs.renameSync(tmp, file);
+  } catch {}
+}
+
+if (RECORD) {
+  try {
+    const input = JSON.parse(fs.readFileSync(0, 'utf8'));
+    const filePath = input.tool_input?.file_path || input.tool_input?.path;
+    if (filePath && isInsideProject(filePath, input.cwd) && ['.ts', '.tsx'].includes(path.extname(filePath))) {
+      const abs = path.isAbsolute(filePath) ? filePath : path.resolve(input.cwd || process.cwd(), filePath);
+      const tsconfig = findTsconfig(abs);
+      if (tsconfig) {
+        const root = path.dirname(tsconfig);
+        const rel = path.relative(root, abs).split(path.sep).join('/');
+        const pf = pendingFile(input.session_id);
+        const p = loadPending(pf);
+        const list = new Set(p.roots[root] || []);
+        list.add(rel);
+        p.roots[root] = [...list].slice(-500);
+        savePending(pf, p);
+      }
+    }
+  } catch {}
+  process.exit(0);
+}
+
+if (STOP) {
+  let input = {};
+  try { input = JSON.parse(fs.readFileSync(0, 'utf8')); } catch {}
+  const pf = pendingFile(input.session_id);
+  const p = loadPending(pf);
+  const roots = Object.keys(p.roots).filter(r => { try { return fs.existsSync(path.join(r, 'tsconfig.json')); } catch { return false; } });
+  if (!roots.length) { savePending(pf, { roots: {}, blocks: 0 }); process.exit(0); }
+  const timeout = TIMEOUT_OVERRIDE || (CHANGED_ONLY ? 180000 : 60000);
+  const blocks = [];   // 차단 사유 문구
+  const warns = [];    // 통과하되 사용자에게 보일 경고
+  for (const root of roots) {
+    const files = p.roots[root];
+    const st = stateFiles(root);
+    const r = runTsc(root, { incremental: CHANGED_ONLY, timeout });
+    if (r.timeout || r.toolFailure) {
+      const n = readTimeouts(st.timeouts) + 1;
+      writeTimeouts(st.timeouts, n);
+      const why = r.timeout ? `tsc 가 ${Math.round(timeout / 1000)}s 안에 끝나지 않음` : `tsc 가 타입 진단 없이 비정상 종료(도구 장애)\n${(r.lines || []).slice(0, 6).map(l => '  ' + l).join('\n')}`;
+      if (n >= 2) blocks.push(`[typescript-quality] ❌ ${root}: ${why} — ${n}회 연속이라 무검사 통과를 막습니다. 직접 \`npx --no-install tsc --noEmit\` 으로 원인을 확인하세요.`);
+      else warns.push(`[typescript-quality] ⚠ ${root}: ${why} — 이번 검사는 건너뜁니다(다음에도 같으면 차단).`);
+      continue;
+    }
+    writeTimeouts(st.timeouts, 0);
+    if (r.ok) { if (CHANGED_ONLY) saveBaseline(st.baseline, new Map()); delete p.roots[root]; continue; }
+    let offenders = r.diags;
+    let preexisting = 0;
+    if (CHANGED_ONLY) {
+      const baseline = loadBaseline(st.baseline);
+      if (baseline) {
+        const seen = new Map();
+        offenders = r.diags.filter(d => { const n = (seen.get(d.key) || 0) + 1; seen.set(d.key, n); return n > (baseline.get(d.key) || 0); });
+      } else {
+        const set = new Set(files);
+        offenders = r.diags.filter(d => set.has(d.file));
+        warns.push(`[typescript-quality] ⚠ ${root}: 베이스라인이 없어 이번 답변에서 고친 파일의 에러로만 판정했습니다 — \`node .claude/hooks/typescript-quality.js --seed --project ${root}\` 로 시드하세요.`);
+      }
+      preexisting = r.diags.length - offenders.length;
+      if (!offenders.length) { saveBaseline(st.baseline, countKeys(r.diags)); delete p.roots[root]; continue; }
+    }
+    const fmt = d => `  ${d.file || '(global)'}: ${d.code} ${d.msg}`;
+    blocks.push(
+      `[typescript-quality] ❌ 이번 답변에서 고친 .ts/.tsx(${files.slice(0, 5).join(', ')}${files.length > 5 ? ' 외' : ''}) 뒤에 TypeScript 오류 ${offenders.length}건 — 고친 뒤 마치세요:\n` +
+      offenders.slice(0, 15).map(fmt).join('\n') +
+      (offenders.length > 15 ? `\n  ... (총 ${offenders.length}건)` : '') +
+      (preexisting > 0 ? `\n  (참고: 기존 에러 ${preexisting}건은 차단 사유에서 제외)` : '')
+    );
+  }
+  if (blocks.length) {
+    p.blocks = (p.blocks || 0) + 1;
+    if (p.blocks > MAX_STOP_BLOCKS) {
+      savePending(pf, { roots: {}, blocks: 0 });
+      process.stdout.write(JSON.stringify({ systemMessage: `[typescript-quality] ⚠ 같은 오류로 ${MAX_STOP_BLOCKS}번 막아도 남아 있어 이번엔 통과시킵니다 — 남은 오류를 직접 확인하세요.\n${blocks.join('\n')}` }) + '\n');
+      process.exit(0);
+    }
+    savePending(pf, p);
+    process.stderr.write(blocks.concat(warns).join('\n') + '\n');
+    process.exit(2);
+  }
+  savePending(pf, { roots: p.roots, blocks: 0 });
+  if (warns.length) process.stdout.write(JSON.stringify({ systemMessage: warns.join('\n') }) + '\n');
+  process.exit(0);
+}
+
 try {
   const input = JSON.parse(fs.readFileSync(0, 'utf8')); // fd 0 — '/dev/stdin' 은 윈도우에 없다
   const filePath = input.tool_input?.file_path || input.tool_input?.path;
@@ -191,18 +319,7 @@ try {
   const ext = path.extname(filePath);
   if (!['.ts', '.tsx'].includes(ext)) process.exit(0);
 
-  // tsconfig.json 탐색 (최대 5단계 상위)
-  let dir = path.dirname(filePath);
-  let tsconfig = null;
-  for (let i = 0; i < 5; i++) {
-    const candidate = path.join(dir, 'tsconfig.json');
-    try {
-      if (fs.existsSync(candidate)) { tsconfig = candidate; break; }
-    } catch {}
-    const parent = path.dirname(dir);
-    if (parent === dir) break;
-    dir = parent;
-  }
+  const tsconfig = findTsconfig(filePath);
   if (!tsconfig) process.exit(0);
 
   const projectRoot = path.dirname(tsconfig);

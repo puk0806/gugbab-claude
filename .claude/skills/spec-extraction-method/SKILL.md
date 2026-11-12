@@ -20,7 +20,7 @@ description: 레거시 코드(Java Spring·MyBatis, React, 넥사크로 등 기�
 > 소스: https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/reduce-hallucinations (Anthropic, Reduce hallucinations)
 > 소스: https://code.claude.com/docs/en/sub-agents (Claude Code Subagents)
 > 소스: https://standards.ieee.org/ieee/29148/6937/ (ISO/IEC/IEEE 29148:2018, 개요만 확인)
-> 검증일: 2026-10-08
+> 검증일: 2026-11-09
 
 ---
 
@@ -34,7 +34,6 @@ description: 레거시 코드(Java Spring·MyBatis, React, 넥사크로 등 기�
 | 넥사크로 17 `.xfdl` 구조(Dataset·Transaction·이벤트) 해부 | `nexacro-17-xfdl-anatomy` (설치된 경우) |
 | 특성화 테스트·승인 테스트를 실제로 작성하는 법 | `characterization-testing` (설치된 경우) |
 | 목표 구조로 코드를 **옮기는** 절차(Strangler Fig 실행, codemod, PR 분할) | `incremental-refactoring` (설치된 경우) |
-| 새 시스템의 도메인 모델 설계(바운디드 컨텍스트·Aggregate) | `ddd` |
 
 이 스킬은 **"옮기기 전에 현재 시스템이 무엇을 하는지 문서로 확정하는 단계"** 만 다룬다. 산출물은 대상 레포의 `docs/spec/` 에 둔다(관례).
 
@@ -163,7 +162,7 @@ CRUD 매트릭스는 **데이터(엔티티·테이블)와 프로세스를 잇는
 - **Anthropic 환각 감소 가이드**: (1) "모르겠다"고 말할 권한을 준다 (2) 긴 문서는 **원문 그대로 인용을 먼저 뽑고** 그 인용에 근거해 작업 (3) 각 주장마다 인용을 달게 하고, **지지 인용을 못 찾으면 그 주장을 철회**하게 한다 (4) 제공 자료 외 일반 지식 사용 제한. 그리고 "이 기법들은 환각을 줄이지만 없애지는 못한다. 중요한 정보는 항상 검증하라."
 - **Claude Code 서브에이전트**: 각자 **독립 컨텍스트 창**에서 작업하고 **요약만 반환**한다 → 수천 파일 탐색이 메인 대화를 오염시키지 않는다.
 
-> 주의: Radar 항목은 이후 판에서 빠질 수 있다(Radar는 판마다 항목을 교체한다). 인용 시 "2025-11 판 Adopt"로 시점을 붙인다.
+> 주의: Radar 항목은 이후 판에서 빠질 수 있다(Radar는 판마다 항목을 교체한다). 2026-11-09 확인 시 이 항목 페이지는 "현재 판에는 없음"으로 표시되고 마지막 등재가 2025-11 Adopt(이력: 2024-04 Assess → 2024-10·2025-04 Trial → 2025-11 Adopt)다. 인용 시 "2025-11 판 Adopt"로 시점을 붙인다.
 
 ### 6-2. 추출 규약 (프롬프트·서브에이전트 지시에 그대로 넣는다)
 

@@ -2,7 +2,7 @@
 skill: wcag-2.2-checklist
 category: frontend
 version: v3
-date: 2026-09-28
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `wcag-2.2-checklist` |
 | 스킬 경로 | `.claude/skills/wcag-2.2-checklist/SKILL.md` |
-| 검증일 | 2026-09-28 (재검증, 최초 2026-06-02) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-28, 최초 2026-06-02) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 | 대상 표준 | WCAG 2.2 (W3C Recommendation, 2023-10-05) |
@@ -81,6 +81,11 @@ status: APPROVED
 | AccessibleEU — EAA 시행 안내 | https://accessible-eu-centre.ec.europa.eu/content-corner/news/eaa-comes-effect-june-2025-are-you-ready-2025-01-31_en | ⭐⭐⭐ High | 2026-06-02 | EU 공식 시행 안내 |
 | 한국디지털접근성진흥원 — 관련 법률 | http://www.kwacc.or.kr/Accessibility/Law | ⭐⭐⭐ High | 2026-06-02 | 한국 법적 근거 |
 | 국가법령정보센터 — 장애인차별금지법 | https://www.law.go.kr/lsInfoP.do?lsiSeq=195377 | ⭐⭐⭐ High | 2026-06-02 | 법조문 원문 |
+| W3C — WCAG 2.2 Quick Reference (A·AA 필터) | https://www.w3.org/WAI/WCAG22/quickref/?versions=2.2&levels=a,aa | ⭐⭐⭐ High | 2026-11-09 | A 31개·AA 24개 SC 목록 (재검증) |
+| W3C — WCAG 2.2 현행판 | https://www.w3.org/TR/2024/REC-WCAG22-20241212/ | ⭐⭐⭐ High | 2026-11-09 | "This version" 2024-12-12 확인 |
+| W3C WAI 뉴스 — WCAG 2.2 ISO 승인 | https://www.w3.org/WAI/news/2025-10-21/wcag22-iso | ⭐⭐⭐ High | 2026-11-09 | ISO/IEC 40500:2025 = WCAG 2.2 |
+| Deque — EN 301 549 V4.1.1 is final | https://www.deque.com/blog/en-301-549-v4-1-1-is-final-what-changed-what-it-means-and-what-you-should-do/ | ⭐⭐ Medium | 2026-11-09 | V4.1.1 2026-09-02 발행·WCAG 2.2 정렬, 관보 인용 예정 시점 |
+| NDA(아일랜드 국가장애청) — EN 301 549 발행 | https://nda.ie/news/en301549-published | ⭐⭐⭐ High | 2026-11-09 | V4.1.1 발행 교차 확인 |
 
 ---
 
@@ -119,10 +124,59 @@ status: APPROVED
 - [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-06-02 확인 완료)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 — gap 발견 없음
 - [✅] 2026-09-26 `media-accessibility` 병합 반영분(5.9절) 포함 재테스트 (a11y-auditor, 3/3 PASS)
+- [✅] 2026-11-09 재검증 수정분(A 31·AA 24·합 55, 현행판·ISO, EN 301 549 V4.1.1) 겨냥 재시험 (general-purpose, 3/3 PASS)
+
+### 4-5. 2026-11-09 재검증 클레임 판정
+
+| # | 클레임 | 판정 | 근거 |
+|---|--------|------|------|
+| 1 | A 레벨 SC 30개 / AA 20개 / 합 50개 | **DISPUTED → 정정** | W3C Quick Reference 기준 A **31**·AA **24**·합 **55**(4.1.1 제외). 표 행 수는 원래 31·24로 맞았고 제목·합계 숫자만 틀렸음. SKILL.md 2·3·10절 수정 |
+| 2 | WCAG 2.2 W3C Recommendation 2023-10-05 | VERIFIED (보강) | TR/WCAG22 "This version" = 2024-12-12 편집판. SC 변동 없음. 소스 줄에 현행판 날짜 추가 |
+| 3 | 신규 9개 SC(A 2·AA 4·AAA 3), 4.1.1 제거 | VERIFIED | Quick Reference 목록과 일치 |
+| 4 | EN 301 549는 WCAG 2.1 AA, 2.2로 업데이트 예정 | **DISPUTED → 정정** | V4.1.1이 2026-09-02 발행돼 WCAG 2.2 A/AA로 정렬(Deque·NDA 2개 소스). 관보(OJEU) 인용은 2026-11 말 예정 보도 → `> 주의: 미검증` 표기 |
+| 5 | ISO 표준화 | VERIFIED (추가) | ISO/IEC 40500:2025 = WCAG 2.2 (W3C WAI 뉴스 2025-10-21, ISO 카탈로그) |
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### 2026-11-09 재검증 수정분 재시험
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester → general-purpose (domain 에이전트 대신 사용, Read만 허용·웹 검색·자기 지식 금지, 질문별 독립 에이전트 3개 병렬 수행 후 결과 대기)
+**수행 방법**: SKILL.md Read 후 재검증 수정분을 겨냥한 실전 질문 3개 답변, 근거 섹션 및 숫자 일관성 확인
+
+**Q1. VPAT 범위 — A/AA SC 개수, 4.1.1 포함 여부, 2.2 신규 중 A/AA**
+- ✅ PASS
+- 근거: SKILL.md §2 제목(31개), §3 제목(24개)·120행 합산(55개), §1.3·§2 4.1.1 제거, §4
+- 상세: A 31 / AA 24 / 합 55, 표 행 수 직접 집계와 일치, 4.1.1 제외(레거시 2.0/2.1에는 적용 단서 포함), 신규 9개 중 A/AA 6개(3.2.6·3.3.7·2.4.11·2.5.7·2.5.8·3.3.8) 정확. 옛 수치(30/20/50) 잔존 없음.
+
+**Q2. EU EAA — "EN 301 549는 WCAG 2.1 AA" vs "WCAG 2.2 AA면 적합성 추정 자동" 판정**
+- ✅ PASS
+- 근거: SKILL.md §9.1 EU 행, §9.2 EN 301 549 V4.1.1 주의 문단
+- 상세: 팀장 주장은 V4.1.1(2026-09-02 발행, WCAG 2.2 A/AA 정렬) 때문에 낡았다고 판정, 동료 주장은 적합성 추정이 OJEU 인용 후 발생하고 EN 301 549에 WCAG 외 요구사항이 있어 틀렸다고 판정. 관보 인용 시점을 "미검증"으로 구분해 날조 없이 답변.
+
+**Q3. 보고서 서문 버전 표기 — 발표일·현행판·ISO·신규/제거 SC**
+- ✅ PASS
+- 근거: SKILL.md 소스 줄, §1.3 표, 기준 표준 줄
+- 상세: 2023-10-05 발표, 현행판 2024-12-12(SC 변동 없는 편집 갱신), ISO/IEC 40500:2025, 신규 9개·제거 4.1.1 정확. 현행판 날짜가 SC 내용 변경이 아님을 정확히 구분.
+
+### 발견된 gap (선택 보강, 차단 요인 아님)
+
+- §1.3 표 "신규 SC 9개 추가 (아래 §5 참조)"의 상호참조 오류 — 신규 SC 설명은 §4임 (§5는 코드 예시)
+- §3 하단 "자동 점검 매핑은 아래 §7 도구별 커버리지 표" 참조 오류 — 실제는 §6
+- §9.1 V4.1.1 서술에는 미검증 표기가 없고 §9.2 주의에만 있어 신뢰도 표기가 약간 비일관
+- EN 301 549 V3.2.1/V4.1.1 전환 기간, WCAG 외 요구사항 목록은 SKILL.md 범위 밖
+
+### 판정
+
+- agent content test: 3/3 PASS (2026-11-09)
+- verification-policy 분류: 해당 없음 (표준 정리형 — content test PASS = APPROVED 가능 카테고리)
+- 최종 상태: APPROVED 유지
+
+---
+
+### 이전 테스트 (2026-09-26)
 
 **수행일**: 2026-09-26
 **수행자**: skill-tester → a11y-auditor
@@ -241,7 +295,8 @@ Q2. "WCAG 2.2가 지금도 최신 기준이야, 아니면 2.3 같은 게 나왔�
 | 구조 완전성 | ✅ frontmatter + 소스/검증일 + 50개 SC 표 + 신규 9개 상세 + 법적 배경 |
 | 실용성 | ✅ 표 형식 체크리스트 + 코드 예시 8개 + 실수 Top 10 |
 | 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-02, Q1 신규 AA SC / Q2 타겟 크기 예외 / Q3 자동점검 커버리지) + ✅ 3/3 PASS (2026-09-26 재테스트, 미디어 병합 반영분 포함) |
-| **최종 판정** | **APPROVED** (2026-09-26 재검증 완료 — 미디어 병합 반영분 포함 3/3 PASS) |
+| 에이전트 활용 테스트 (2026-11-09) | ✅ 3/3 PASS (재검증 수정분: A 31·AA 24·55 개수 / EN 301 549 V4.1.1·관보 미검증 구분 / 현행판·ISO 표기) |
+| **최종 판정** | **APPROVED** (2026-11-09 재검증 수정분 재시험 3/3 PASS, 이전 2026-09-26 3/3 PASS) |
 
 ### 교차 검증 결과 (핵심 클레임 6개)
 
@@ -266,6 +321,9 @@ Q2. "WCAG 2.2가 지금도 최신 기준이야, 아니면 2.3 같은 게 나왔�
 - [✅] (2026-09-26 완료, 3/3 PASS) `media-accessibility` 병합 반영분(5.9절) 포함 skill-tester 재테스트 → 섹션 5·6 업데이트, PENDING_TEST → APPROVED 재전환
 - [❌] (선택 보강, 차단 요인 아님) 자동 생성 자막의 "사람 교정 완료" 판단 기준(정량 임계값) 보강
 - [❌] (선택 보강, 차단 요인 아님) 1.2.4 라이브 자막(AA) 실무 가이드 §5.9 본문 보강
+- [✅] (2026-11-09 완료, 3/3 PASS) 재검증 수정분 skill-tester 재시험 — 섹션 5·6·7·8 동기화, APPROVED 유지
+- [❌] (선택 보강, 차단 요인 아님) SKILL.md 상호참조 오류 수정: §1.3 "아래 §5 참조"→§4, §3 하단 "아래 §7"→§6 (재시험 중 발견, FAIL 아님이라 즉시 수정하지 않고 보고)
+- [❌] (선택 보강, 차단 요인 아님) §9.1 V4.1.1 서술에도 관보 인용 미검증 표기 일관 적용, EN 301 549 버전 전환 기간 안내
 
 ---
 
@@ -278,3 +336,6 @@ Q2. "WCAG 2.2가 지금도 최신 기준이야, 아니면 2.3 같은 게 나왔�
 | 2026-09-26 | v2 | **병합**: 구 `frontend/media-accessibility` 스킬 제거(스킬 트리아지 MERGE 판정)하면서 미디어 SC 고유분을 5.9절로 이관 — 1.2.3(A, 해설 또는 대체본) vs 1.2.5(AA, 해설 자체) 구분, captions vs subtitles 표, "한국어 콘텐츠도 captions 필요" 오해 교정, `<track>` 감사 포인트, 자동 자막 사람 교정 필요, descriptions 트랙 지원 한계. WebVTT 작성법·Whisper 자막 생성·transcript 양식은 일반 지식이라 이관하지 않음. 출처: https://www.w3.org/TR/WCAG22/ , https://webaim.org/techniques/captions/ , https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/track (구 media-accessibility verification.md: C1·C2·C3·C4 VERIFIED — SC 1.2.2=A, 1.2.4·1.2.5=AA, 1.4.2 3초, track kind 5종, 검증일 2026-06-04, APPROVED). status APPROVED → PENDING_TEST | 메인 대화 (스킬 정리) |
 | 2026-09-26 | v3 | 2단계 실사용 테스트 재수행 (Q1 1.4.3 vs 1.4.11 명도 대비 구분 / Q2 병합 반영분 — 한국어 콘텐츠 captions 필요·자동 자막 미충족·1.2.3 vs 1.2.5 / Q3 3.3.8 드래그 캡차·객체 인식 캡차 AA/AAA 판정) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-09-28 | v3 | 재검증: axe-core 커버리지(57.38%) Deque 공식 페이지 재대조로 불변 확인. WCAG 2.3 동향은 WebSearch 세션 한도 소진으로 미검증(체크리스트 유효성 영향 없음). status APPROVED 유지 | 메인 세션 |
+| 2026-11-09 | v4 | 재검증: A/AA 개수 정정(30·20·50 → 31·24·55, W3C Quick Reference), WCAG 2.2 현행판 2024-12-12·ISO/IEC 40500:2025 추가, EU 행을 EN 301 549 V4.1.1(2026-09 발행, WCAG 2.2 정렬)로 갱신 + 관보 인용 시점 미검증 주의. 신규 9개 SC·4.1.1 제거 VERIFIED. 내용 실질 수정 — skill-tester 재시험은 상위 작업에서 별도 수행 | 재검증 작업자 |
+| 2026-11-09 | v4 | 재검증 수정분 2단계 실사용 재시험 (Q1 A/AA 개수·4.1.1·신규 6개 / Q2 EN 301 549 V4.1.1·관보 미검증 구분 / Q3 현행판·ISO 표기) → 3/3 PASS, APPROVED 유지. 선택 보강 gap 2건(상호참조 §5→§4·§7→§6, 신뢰도 표기 일관성) 섹션 7에 기록 | skill-tester |
+| 2026-11-11 | v4 | 2026-11-11 정리 — 모델이 아는 일반 지식 절 제거(남긴 절: 1.3 핵심 변경점(ISO/IEC 40500:2025·4.1.1 제거), 2·3 A/AA 체크리스트(자동/수동 매핑, a11y-auditor 근거), 5.9 미디어(captions≠subtitles 한국어 함정), 6.1 도구별 커버리지·자동 점검 한계, 7 수동 점검 시나리오, 9 법적·제도적 배경(한국·EN 301 549 V4.1.1·EAA), 11 추가 참고(KWCAG) / 덜어낸 절: 1.1 POUR, 1.2 적합성 레벨, 4 신규 9개 SC 요점, 5.1~5.8 코드 예시, 6.2 CI 예시, 8 흔한 실수 Top 10, 10 사용 절차, 사실 재검증 아님) | Claude (Opus 5.5) |

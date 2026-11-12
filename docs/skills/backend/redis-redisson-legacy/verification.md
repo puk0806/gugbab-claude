@@ -2,7 +2,7 @@
 skill: redis-redisson-legacy
 category: backend
 version: v1
-date: 2026-09-26
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -40,7 +40,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `redis-redisson-legacy` |
 | 스킬 경로 | `.claude/skills/redis-redisson-legacy/SKILL.md` |
-| 검증일 | 2026-09-26 (최초 2026-04-23) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-26 · 최초 2026-04-23) |
 | 검증자 | skill-creator (Claude Code) → 2026-09-26 재검증: 메인 오케스트레이션 (Claude Sonnet 5) |
 | 스킬 버전 | v1 |
 | 대상 버전 | Redisson 2.15.2 (2019-02 릴리스) / Spring Boot 2.5.x / Java 11 / spring-data-redis 2.6.0 |
@@ -86,6 +86,17 @@ status: APPROVED
 | Redisson Publish/Subscribe docs | https://github.com/redisson/redisson/blob/master/docs/data-and-services/publish-subscribe.md | ⭐⭐⭐ High | 2026-04-23 | RTopic 패턴 |
 | Spring Data Redis 2.6 docs | https://docs.spring.io/spring-data/redis/docs/2.6.0/reference/html/ | ⭐⭐⭐ High | 2026-04-23 | 병행 사용 확인 |
 | Baeldung - A Guide to Redis with Redisson | https://www.baeldung.com/redis-redisson | ⭐⭐ Medium | 2026-04-23 | 패턴 참고용 |
+| Maven Central — redisson 2.15.2 / metadata | https://repo1.maven.org/maven2/org/redisson/redisson/ | ⭐⭐⭐ High | 2026-11-09 | 2.15.2 가 2.x 마지막(2019-02-07 배포), 3.x 마지막 3.52.0, 최신 4.8.0 |
+| NVD CVE-2023-42809 | https://nvd.nist.gov/vuln/detail/cve-2023-42809 | ⭐⭐⭐ High | 2026-11-09 | 3.22.0 미만 영향·3.22.0 수정 (GitLab Advisory 와 일치) |
+| Redisson CHANGELOG | https://raw.githubusercontent.com/redisson/redisson/master/CHANGELOG.md | ⭐⭐⭐ High | 2026-11-09 | 4.8.0 = 2026-10-02 |
+
+### 3-1. 2026-11-09 재검증 클레임 판정
+
+| 클레임 | 판정 | 근거 |
+|--------|------|------|
+| 2.15.2 = 2019-02 릴리스, 2.x 마지막 | VERIFIED | Maven Central 목록·배포일 |
+| CVE-2023-42809 는 3.22.0 미만 전부 영향 | VERIFIED | NVD·GitLab Advisory |
+| "3.x: 2018~현재 활발히 유지", "최신은 Boot 3.x" | DISPUTED → 수정 | 3.x 는 3.52.0(2025-09)로 마감, 4.x(4.8.0)가 현행·Boot 4 지원 |
 
 ---
 
@@ -314,3 +325,5 @@ RedisCacheManager와 RedissonSpringCacheManager 중 뭘 써야 해?
 | 2026-04-23 | v1 | 최초 작성 — Redisson 2.15.2 기반 Spring Boot 2.5 + Java 11 레거시 스킬 | skill-creator |
 | 2026-09-26 | v1 | 재검증 — CVE-2023-42809(안전하지 않은 역직렬화, 3.22.0 미만 영향) 주의 문구 신규 추가 → PENDING_TEST | 메인 오케스트레이션 (Claude Sonnet 5) |
 | 2026-09-28 | v1 | 2단계 실사용 재테스트 수행 (Q1 재고 차감 분산 락 / Q2 CVE-2023-42809 정정분) → 2/2 PASS, APPROVED 전환 | skill-tester |
+| 2026-11-09 | v1 | 재검증 — 2.15.2 사실관계·CVE-2023-42809 경계 VERIFIED. 2절 비교표의 3.x 수명 표기만 정정(3.52.0 마감·4.x 현행·Boot 4 는 4.x 부터). 2.x API·사용법 내용 변경 없음 → skill-tester 생략, APPROVED 유지 | 메인 오케스트레이션 (Claude Opus 5.5) |
+| 2026-11-12 | v1.1 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 레거시·CVE-2023-42809·starter 비권장 주의, 2.x vs 3.x 차이표(Streams 미지원 포함)·MessageListener 경로, 수동 Bean 함정(shutdown·redis:// 스킴·password null·Cluster DB0), RLock 함정(leaseTime 시 watchdog 비활성·isHeldByCurrentThread·race), RedissonSpringCacheManager ms·Spring 5.3 호환, RedisTemplate 직렬화 불일치, 3.17.x 이하 업그레이드 경계 / 덜어낸 것 의존성 XML, RedissonClient·Sentinel·Cluster·YAML 설정 예제, RLock·FairLock·RBucket·RMap·RSet·RQueue·RAtomicLong·RTopic 사용 예제, RedisCacheManager·Spring Session·RedisTemplate 설정, 연결 방식 선택표·튜닝 기본값(references/REFERENCE.md 폴더 삭제) | 정리 |

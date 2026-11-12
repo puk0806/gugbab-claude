@@ -2,7 +2,7 @@
 skill: characterization-testing
 category: spec
 version: v1
-date: 2026-10-08
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `characterization-testing` |
 | 스킬 경로 | `.claude/skills/characterization-testing/SKILL.md` |
-| 검증일 | 2026-10-08 |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-10-08) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 
@@ -62,6 +62,10 @@ status: APPROVED
 | opendiffy/diffy | https://github.com/opendiffy/diffy | ⭐⭐ Medium | 확인 2026-10-08 | primary/secondary/candidate. 유지 상태 미확인 |
 | InfoQ, Twitter Diffy | https://www.infoq.com/news/2015/09/twitter-diffy | ⭐⭐ Medium | 2015-09 | Diffy 교차 확인(검색 요약) |
 | Understand Legacy Code — Approval Tests | https://understandlegacycode.com/approval-tests | ⭐⭐ Medium | 확인 2026-10-08 | Nicolas Carlo, 4순위 참고(명칭 혼용) |
+| Maven Central maven-metadata.xml (재검증) | https://repo1.maven.org/maven2/com/approvaltests/approvaltests/maven-metadata.xml | ⭐⭐⭐ High | 확인 2026-11-09 | latest/release 31.0.0 그대로(lastUpdated 2026-06-18) |
+| Vitest Snapshot 가이드 (재검증) | https://vitest.dev/guide/snapshot | ⭐⭐⭐ High | 확인 2026-11-09 | Vitest 5.1 문서. CI 미기록·`toMatchFileSnapshot` await·`-u` 그대로. "Jest 29.0.0 미만은 printBasicPrototype true" |
+| Jest Configuration `snapshotFormat` (재검증) | https://jestjs.io/docs/configuration | ⭐⭐⭐ High | 확인 2026-11-09 | Jest 30.5 기본값 `{escapeString: false, printBasicPrototype: false}` |
+| npm registry (재검증) | https://registry.npmjs.org/jest/latest · https://registry.npmjs.org/vitest/latest | ⭐⭐⭐ High | 확인 2026-11-09 | jest 30.5.2, vitest 5.1.0 |
 
 ---
 
@@ -91,6 +95,10 @@ status: APPROVED
 | 18 | Vitest: CI에서 기본으로 스냅샷 미기록·불일치/누락/obsolete 실패, `toMatchFileSnapshot` await 필수, Jest와 헤더·printBasicPrototype·구분자 차이 | Vitest 가이드, expect API | VERIFIED |
 | 19 | fake timers: `jest.setSystemTime`(modern만), `vi.setSystemTime`는 fake timer 없으면 Date만 모킹 | Jest Object, Vitest vi API | VERIFIED |
 | 20 | Diffy primary/secondary/candidate 노이즈 판별, 현 유지 상태 | opendiffy README, InfoQ, WebSearch | VERIFIED(동작) / 유지 상태 UNVERIFIED → `> 주의:` |
+| R1 | (2026-11-09 재검증) ApprovalTests.Java 최신 31.0.0 유지 | Maven Central metadata, central.sonatype.com | VERIFIED |
+| R2 | (2026-11-09 재검증) Vitest CI 기본 미기록·불일치/누락/obsolete 실패, `toMatchFileSnapshot` await, `-u`/`--update` | Vitest 5.1 스냅샷 가이드 | VERIFIED |
+| R3 | (2026-11-09 재검증) "Jest와 printBasicPrototype 기본값이 다르다"(클레임 18 일부) | Jest 30.5 configuration(기본 false), Vitest 가이드("Jest 29.0.0 미만이 true") | DISPUTED → SKILL.md 3-1 정정(Jest 28 이하에서 옮길 때만 차이) |
+| R4 | (2026-11-09 재검증) Jest 최신 30.5.x, `--ci` 동작 | npm registry 30.5.2, Jest CLI 문서 | VERIFIED |
 
 ### 4-1. 내용 정확성
 - [✅] 공식 문서와 불일치하는 내용 없음
@@ -119,6 +127,20 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+### 2026-11-09 재시험 (재검증으로 3-1 정정 후)
+
+**수행일**: 2026-11-09
+**수행자**: general-purpose 에이전트 (skill-tester 서브에이전트에 하위 Agent 도구가 없어 메인이 general-purpose 를 직접 호출, 답변은 그 에이전트가 SKILL.md 만 근거로 작성)
+**수행 방법**: SKILL.md Read 후 실전 질문 3개 답변, 메인이 근거 절·정정 내용 일치 확인
+
+**Q1. Jest 30 스냅샷을 Vitest로 옮길 때 printBasicPrototype 차이가 있나, Jest 28이면?** — ✅ PASS (근거: 3-1 정정 문단·8절). Jest 29+·30과 Vitest 모두 false라 차이 없음, 헤더·구분자 때문에 재생성, Jest 28 이하면 `Object {`/`Array [` 차이 추가 — 정정 내용과 일치, "항상 다르다" 오답 회피.
+**Q2. 주문 조회 API를 ApprovalTests.Java로 고정 — 좌표·고정 대상·변동값·CI 리포터** — ✅ PASS (근거: 2-1·2-2·2-5·2-6·4절). 31.0.0, 상태+헤더+본문, Clock 고정 우선 후 좁은 스크러버, QuietReporter 명시·JDK/CI 감지 주의까지 인용.
+**Q3. CI에서 Jest/Vitest 스냅샷 누락 시 동작과 갱신 절차** — ✅ PASS (근거: 3-1 표·3-3·8절). Jest `--ci` 실패, Vitest `CI` truthy 시 미기록·실패, 범위 좁힌 `-u`·diff 리뷰.
+
+agent content test: 3/3 PASS
+
+### 2026-10-08 최초 시험
 
 **수행일**: 2026-10-08
 **수행자**: skill-tester → general-purpose (도메인 에이전트 대신 general-purpose 사용)
@@ -165,7 +187,7 @@ status: APPROVED
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-10-08, 3/3 PASS) |
+| 에이전트 활용 테스트 | ✅ (2026-11-09 재시험 3/3 PASS, 최초 2026-10-08 3/3 PASS) |
 | **최종 판정** | **APPROVED** |
 
 ---
@@ -173,6 +195,7 @@ status: APPROVED
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester가 agent content test 수행하고 섹션 5·6 업데이트 (2026-10-08 완료, 3/3 PASS)
+- [✅] 2026-11-09 재검증 정정(printBasicPrototype) 반영 후 재시험 3/3 PASS
 - [❌] ApprovalTests.Java 31.x 최소 JDK 버전 릴리즈 노트로 확인 (2절 주의 해소) — 선택 보강, APPROVED 차단 요인 아님
 - [❌] `JsonApprovals`(Gson)·`JsonJacksonApprovals` 의존성 범위(optional 여부) pom 직접 확인 — 선택 보강, 차단 아님
 - [❌] 조합 승인에서 예외 출력 형식 실제 실행으로 확인 — 선택 보강, 차단 아님
@@ -188,3 +211,5 @@ status: APPROVED
 | 2026-10-08 | v1 | 최초 작성 | skill-creator |
 | 2026-10-08 | v1 | 2단계 실사용 테스트 수행 (Q1 ApprovalTests 주문 API 고정·스크러버 / Q2 Jest `-u`·`--ci`·Vitest 전환 / Q3 레거시 보안 결함 동등성·H2 사용) → 3/3 PASS, APPROVED 전환 (실사용 필수 카테고리 아님) | skill-tester |
 | 2026-10-08 | v1.1 | 설치 검수 반영 — spec-extraction 템플릿 단독 설치본에 없는 스킬(`testing-junit5-spring-boot`·`e2e-testing` 등) 참조에 "(설치된 경우)" 조건 표기(0절 담당 표 머리글·2-6·HAR 문장). 내용 클레임 변경 없음 | Claude |
+| 2026-11-09 | v1.2 | 재검증 — ApprovalTests.Java 31.0.0 최신 유지, Jest 30.5.2·Vitest 5.1 스냅샷 CI 동작 재확인. 바뀐 점: 3-1 "printBasicPrototype 차이"를 Jest 29 미만에서 옮길 때만 해당한다고 정정(Jest 29+·30 기본 false). 소스 줄에 Vitest 5.1·Jest configuration 추가. 재시험(general-purpose, Q1 printBasicPrototype 정정·Q2 ApprovalTests 고정·Q3 CI 스냅샷) 3/3 PASS → APPROVED 유지 | Claude |
+| 2026-11-12 | v1.3 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 ApprovalTests 31.0.0·JDK 문구 미확인·received/approved 커밋 규칙·조합 승인·JsonApprovals Gson/Jackson·NAMES.withParameters·Options·PackageSettings·CI 리포터 명시·WithTimeZone/스크러버 API·Spring Boot 3.4+ @MockitoBean·H2 방언 오염·Jest --ci vs Vitest CI·toMatchFileSnapshot await·printBasicPrototype 정정·러너 전환 재생성·좁은 스크러버·골든 파일 마스킹/헤더 화이트리스트·Diffy 주의·레포 3계층 관계·현행 버그 결정 절차 / 덜어낸 것 Feathers 절차 설명과 수작업 예제·의존성 XML/Gradle 블록·verify/조합/MockMvc/매퍼/스냅샷/property matcher 코드 예제·비결정성 제어 일반표·골든 폴더 구조 예시·흔한 실수 표(본문으로 흡수) | 정리 |

@@ -1,21 +1,8 @@
 ## 5. useMutation + 낙관적 업데이트 전체 흐름
 
-### 5-1. 콜백 시그니처 (v5.89.0+ 주의)
+### 5-1. 콜백 시그니처 (v5.89.0+)
 
-```typescript
-useMutation({
-  mutationFn,
-  onMutate:   (variables, context) => { /* 반환값 = onMutateResult */ },
-  onSuccess:  (data, variables, onMutateResult, context) => {},
-  onError:    (error, variables, onMutateResult, context) => {},
-  onSettled:  (data, error, variables, onMutateResult, context) => {},
-})
-```
-
-> **주의:** v5.89.0에서 콜백 시그니처가 확장됐다. `onMutate`가 반환한 롤백용 값은 이제 **`onMutateResult`(3번째 인자)** 라는 이름이며,
-> 마지막 `context`는 `client`·`meta`를 담은 **MutationFunctionContext**다(과거 문서의 `context`와 이름이 겹치니 혼동 주의).
-> 3번째 위치가 여전히 onMutate 반환값이라 기존 3-인자 코드는 동작하지만, **네이밍은 새 규약을 따른다.**
-> 5.89.0 미만을 쓰는 프로젝트라면 `(err, variables, context)` 3-인자 형태가 맞다.
+→ SKILL.md 5절(`onMutateResult`·MutationFunctionContext)을 본다.
 
 ### 5-2. 캐시 롤백 방식 (여러 화면이 같은 데이터를 보여줄 때)
 
@@ -87,54 +74,7 @@ const addTodo = useMutation({
 
 ## 11. 흔한 실수
 
-### ❌ useEffect로 수동 fetch 후 setState
-
-```typescript
-// ❌ 중복 요청·경쟁 조건·캐시 없음·취소 없음·에러/로딩 수동 관리
-useEffect(() => {
-  let alive = true
-  setLoading(true)
-  fetch(`/api/todos/${id}`).then(r => r.json()).then(d => alive && setTodo(d))
-  return () => { alive = false }
-}, [id])
-
-// ✅
-const { data, isPending, isError } = useQuery(todoDetailQuery(id))
-```
-StrictMode 이중 실행, 응답 순서 역전(늦게 온 옛 응답이 최신 값을 덮어씀), 화면 복귀 시 갱신 없음 — 전부 Query가 해결하는 문제다.
-
-### ❌ queryKey에 불안정한 값 넣기
-
-```typescript
-// ❌ 렌더마다 값이 달라지는 것 → 매 렌더 새 캐시 엔트리 + 무한 요청
-useQuery({ queryKey: ['todos', new Date()], queryFn: fetchTodos })
-useQuery({ queryKey: ['todos', () => filterFn], queryFn: fetchTodos })  // 함수는 직렬화 불가
-
-// ✅ 안정적인 원시값 / 직렬화 가능한 객체만
-useQuery({ queryKey: ['todos', { status, page }], queryFn: () => fetchTodos({ status, page }) })
-```
-> 정정: **인라인 객체 리터럴 자체는 문제가 아니다.** 키는 결정적으로 해싱되며 프로퍼티 순서도 무관하다.
-> 진짜 문제는 ① 렌더마다 **내용이 달라지는 값**(`new Date()`, `Math.random()`, 매번 순서가 바뀌는 배열),
-> ② **직렬화 불가능한 값**(함수, 클래스 인스턴스, `Map`/`Set`),
-> ③ 반대로 **queryFn이 쓰는 변수를 키에서 누락**해 필터를 바꿔도 캐시가 그대로인 경우다.
-
-### ❌ 서버 데이터를 전역 상태 라이브러리에 복사
-
-```typescript
-// ❌ Query로 받아서 Zustand/Redux에 다시 저장 → 진실의 원천 2개, 동기화 지옥
-const { data } = useQuery(todoListQuery(f))
-useEffect(() => { setTodos(data) }, [data])
-
-// ✅ 캐시가 곧 스토어다. 필요한 컴포넌트에서 같은 키로 useQuery를 다시 호출한다(중복 요청 안 남)
-const { data } = useQuery(todoListQuery(f))
-
-// ✅ 파생값이 필요하면 select
-const doneCount = useQuery({ ...todoListQuery(f), select: (d) => d.filter(t => t.done).length })
-
-// ✅ 전역 스토어에는 "선택된 id" 같은 클라이언트 상태만 둔다 (→ frontend/state-management)
-```
-
-### ❌ 기타
+> queryKey 불안정 값·서버 데이터를 전역 스토어에 복사하지 말 것 등 기본 원칙은 SKILL.md 2절 참조.
 
 | 실수 | 결과 | 수정 |
 |------|------|------|

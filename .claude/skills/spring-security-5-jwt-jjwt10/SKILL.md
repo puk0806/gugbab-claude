@@ -1,12 +1,12 @@
 ---
 name: spring-security-5-jwt-jjwt10
-description: Spring Security 5.5.x + jjwt 0.10.7 레거시 JWT 인증 - WebSecurityConfigurerAdapter, OncePerRequestFilter, javax.servlet 환경
+description: Spring Security 5.5.x + jjwt 0.10.7 레거시 JWT 인증에서 최신 API 섞기 막기 — Boot 2.5~2.7 번들 Security 버전, WebSecurityConfigurerAdapter 가 5.5 표준(SecurityFilterChain·requestMatchers·jakarta 쓰지 말 것), jjwt 0.10 parser() vs 0.11 parserBuilder()/0.12 Jwts.SIG, io.jsonwebtoken.security.SecurityException import 함정(500), runtime 스코프, 필터 @Component 이중 등록, ROLE_ 접두사, CVE-2024-31033
 ---
 
 # Spring Security 5 + jjwt 0.10.x 레거시 JWT 인증
 
 > 소스: https://docs.spring.io/spring-security/site/docs/5.5.x-SNAPSHOT/reference/html5/ | https://github.com/jwtk/jjwt/tree/0.10.7 | https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-2.5-Release-Notes
-> 검증일: 2026-09-26
+> 검증일: 2026-11-09
 
 > 주의: 이 스킬은 **Spring Boot 2.5.x + Spring Security 5.5.x + jjwt 0.10.7 + Java 11 + javax.\*** 레거시 환경 전용입니다.
 > 신규 프로젝트는 Spring Security 6 + jjwt 0.12.x (parserBuilder, jakarta.\*) 기반 모던 스킬을 사용하세요.
@@ -16,356 +16,90 @@ description: Spring Security 5.5.x + jjwt 0.10.7 레거시 JWT 인증 - WebSecur
 
 ---
 
-## 환경 전제
+## 이 스킬의 범위
+
+JWT 필터·UserDetailsService·EntryPoint 작성 같은 기본 사용법은 공식 문서 수준이라 싣지 않는다. 여기엔 **레거시 버전에 최신 API(Security 6·jjwt 0.11/0.12·jakarta)를 섞지 않도록 하는 경고와 실측 함정**만 둔다. 모던 쪽은 `spring-security-6-jwt-jjwt12`, 전환 순서는 `spring-boot-2-to-3-migration`.
+
+## 1. 환경 전제
 
 | 항목 | 버전 |
 |------|------|
 | Java | 11 |
 | Spring Boot | 2.5.x (번들 Spring Security 5.5.x) |
-| Spring Security | 5.5.x |
-| jjwt | 0.10.7 |
-| Servlet API | `javax.servlet.*` (jakarta 아님) |
+| jjwt | 0.10.7 (`jjwt-api` compile, `jjwt-impl`·`jjwt-jackson` **runtime**) |
+| Servlet API | `javax.servlet.*` (jakarta 아님 — jakarta로 쓰면 컴파일 불가) |
 
-> 주의: Spring Boot 2.5는 출시 시점 Spring Security 5.5.0-M2 이상을 번들합니다. 2.5.15 기준으로도 5.5.x 라인을 유지합니다. 2.6은 5.6, 2.7은 5.7로 올라갑니다.
-
----
-
-## 의존성 설정
-
-### Maven
-
-```xml
-<!-- Spring Security (Spring Boot BOM이 5.5.x 버전 관리) -->
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-security</artifactId>
-</dependency>
-
-<!-- jjwt 0.10.7: api는 compile, impl/jackson은 runtime -->
-<dependency>
-    <groupId>io.jsonwebtoken</groupId>
-    <artifactId>jjwt-api</artifactId>
-    <version>0.10.7</version>
-</dependency>
-<dependency>
-    <groupId>io.jsonwebtoken</groupId>
-    <artifactId>jjwt-impl</artifactId>
-    <version>0.10.7</version>
-    <scope>runtime</scope>
-</dependency>
-<dependency>
-    <groupId>io.jsonwebtoken</groupId>
-    <artifactId>jjwt-jackson</artifactId>
-    <version>0.10.7</version>
-    <scope>runtime</scope>
-</dependency>
-```
-
-### Gradle
-
-```groovy
-implementation 'org.springframework.boot:spring-boot-starter-security'
-
-implementation 'io.jsonwebtoken:jjwt-api:0.10.7'
-runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.10.7'
-runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.10.7'
-```
+> 주의: Spring Boot 2.5는 Spring Security 5.5.x를 관리합니다(2.5.0 = 5.5.0, 마지막 2.5.15 = 5.5.8). 2.6은 5.6(2.6.15 = 5.6.10), 2.7은 5.7(2.7.18 = 5.7.11)로 올라갑니다 — Maven Central `spring-boot-dependencies` POM 기준.
 
 > 주의: `jjwt-impl`과 `jjwt-jackson`은 반드시 `runtime` 스코프로 선언합니다. `jjwt-api` 외부 API의 하위 호환성 보증을 위해 impl 패키지는 런타임에만 노출됩니다.
 
 ---
 
-## WebSecurityConfigurerAdapter 설정 클래스
+## 2. Security 5.5 — 최신 API를 쓰면 안 되는 곳
 
-레거시 Security 5.5.x의 핵심 패턴은 `WebSecurityConfigurerAdapter`를 상속하고 세 개의 `configure(...)` 메서드를 오버라이드하는 것입니다.
+| 모델이 쓰기 쉬운 최신 API | 5.5.x 레거시에서 쓸 것 |
+|---------------------------|------------------------|
+| `SecurityFilterChain` Bean + 람다 DSL | `extends WebSecurityConfigurerAdapter` + `configure(HttpSecurity)` 오버라이드, `.and()` 체이닝 |
+| `requestMatchers(...)` | `antMatchers(...)` |
+| `authorizeHttpRequests(...)` | `authorizeRequests()` |
+| `WebSecurityCustomizer` Bean | `configure(WebSecurity web)` → `web.ignoring().antMatchers(...)` |
+| `UserDetailsService`/`AuthenticationManager`를 별도 Bean으로만 구성 | `configure(AuthenticationManagerBuilder)` + `@Bean @Override authenticationManagerBean()` (노출해야 로그인 컨트롤러에서 주입 가능) |
+| `jakarta.servlet.*` | `javax.servlet.*` |
 
 ```java
-package com.example.security.config;
-
-import javax.servlet.http.HttpServletResponse; // javax 네임스페이스
-
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.AuthenticationEntryPoint;
-import org.springframework.security.web.access.AccessDeniedHandler;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
-import lombok.RequiredArgsConstructor;
-
 @Configuration
-@EnableWebSecurity
-@RequiredArgsConstructor
+@EnableWebSecurity   // Adapter 와 함께 필수
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
-
-    private final UserDetailsService userDetailsService;
-    private final JwtProvider jwtProvider;
-    private final AuthenticationEntryPoint jwtAuthenticationEntryPoint;
-    private final AccessDeniedHandler jwtAccessDeniedHandler;
-
-    // 1) AuthenticationManager: UserDetailsService + PasswordEncoder 연결
-    @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userDetailsService)
-            .passwordEncoder(passwordEncoder());
-    }
-
-    // 2) AuthenticationManager를 Bean으로 노출 (로그인 엔드포인트에서 주입용)
-    @Bean
-    @Override
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-        return super.authenticationManagerBean();
-    }
-
-    // 3) WebSecurity: 정적 리소스·Swagger 등 필터 체인 자체를 건너뛸 경로
-    @Override
-    public void configure(WebSecurity web) {
-        web.ignoring()
-           .antMatchers("/h2-console/**", "/favicon.ico",
-                        "/swagger-ui/**", "/v3/api-docs/**");
-    }
-
-    // 4) HttpSecurity: 실제 인가·필터 구성
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http
-            .csrf().disable()                                       // REST API: CSRF 불필요
-            .httpBasic().disable()
-            .formLogin().disable()
-            .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // 세션 사용 안 함
-            .and()
-            .exceptionHandling()
-                .authenticationEntryPoint(jwtAuthenticationEntryPoint)  // 401
-                .accessDeniedHandler(jwtAccessDeniedHandler)            // 403
-            .and()
-            .authorizeRequests()
-                .antMatchers("/api/auth/**", "/api/public/**").permitAll()
-                .antMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
-                .antMatchers("/api/admin/**").hasRole("ADMIN")
+        http.csrf().disable().httpBasic().disable().formLogin().disable()
+            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            .and().exceptionHandling()
+                .authenticationEntryPoint(entryPoint).accessDeniedHandler(deniedHandler)
+            .and().authorizeRequests()
+                .antMatchers("/api/auth/**").permitAll()
                 .anyRequest().hasRole("USER")
             .and()
-            // JWT 필터를 UsernamePasswordAuthenticationFilter 앞에 등록
             .addFilterBefore(new JwtAuthenticationFilter(jwtProvider),
                              UsernamePasswordAuthenticationFilter.class);
     }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
 }
 ```
 
-**핵심 포인트:**
+함정:
+- `configure(HttpSecurity)`를 생략하면 기본 설정(폼 로그인/세션)이 켜진다 — STATELESS·CSRF disable을 명시.
+- **JWT 필터를 `@Component`로 등록하면** Spring Boot가 서블릿 필터로 자동 등록해 **이중 실행**된다. SecurityConfig 안에서 `new`로만 만들거나 `FilterRegistrationBean`으로 자동 등록을 끈다.
+- `hasRole("USER")`는 내부적으로 `ROLE_USER`로 확장된다. `hasRole("ROLE_USER")`로 쓰지 말고, 권한 값은 `ROLE_` 접두사를 붙여 저장.
+- 필터에서 검증 실패 시 예외를 던지지 말고 SecurityContext를 비운 채 체인을 진행 → 401은 `AuthenticationEntryPoint`가 처리.
 
-- `@EnableWebSecurity`는 `WebSecurityConfigurerAdapter`와 함께 있을 때 필수
-- `authenticationManagerBean()`을 `@Bean`으로 노출해야 다른 컴포넌트에서 `AuthenticationManager`를 주입받을 수 있음 (예: 로그인 컨트롤러)
-- `sessionCreationPolicy(STATELESS)`로 HTTP 세션을 끄면 SecurityContext가 요청 간 유지되지 않음 → JWT로 매 요청 인증
-- `hasRole("USER")`는 내부적으로 `ROLE_USER` 권한으로 확장됨. `GrantedAuthority` 값을 저장할 때 `ROLE_` 접두사 포함 여부에 주의
+> 주의: 전역 `@RestControllerAdvice` + `@ExceptionHandler(AuthenticationException.class)`를 두면 `AuthenticationEntryPoint` 가 호출되지 않는 경우가 있습니다. Security 필터 체인 단계에서 발생한 예외는 `DispatcherServlet`에 도달하기 전에 처리되어야 하므로 Entry Point/Handler 쪽에서 처리하는 것이 정석입니다.
 
 ---
 
-## JwtAuthenticationFilter (OncePerRequestFilter)
+## 3. jjwt 0.10.7 — 0.11/0.12 API 섞기 금지
+
+| 작업 | 0.10.7 (이 환경) | 0.11.x | 0.12.x |
+|------|------------------|--------|--------|
+| 파서 | `Jwts.parser().setSigningKey(key).parseClaimsJws(token).getBody()` | `Jwts.parserBuilder().setSigningKey(key).build()...` 빌더/파서 메서드 다수 개명 (`spring-security-6-jwt-jjwt12`) |
+| 서명 | `signWith(key, SignatureAlgorithm.HS256)` | 동일 | `Jwts.SIG.HS256` |
+| 빌더 클레임 | `setSubject()`·`setIssuedAt()`·`setExpiration()` | 동일 | 개명 |
+| 키 | `Keys.hmacShaKeyFor(byte[])` (HS256 최소 32바이트, 부족하면 `WeakKeyException`) | 동일 | 동일 |
+
+`Jwts.parserBuilder()`는 **0.10.7에 없다** — 쓰면 컴파일 에러.
+
+> 주의(2026-11-09 재검증): `validateToken`의 `SecurityException`은 반드시 `io.jsonwebtoken.security.SecurityException`을 import해야 합니다. import 없이 쓰면 `java.lang.SecurityException`으로 해석되어 서명 위조 토큰의 `SignatureException`(0.10.7 계층: `security.SignatureException` → `io.jsonwebtoken.SignatureException` → `security.SecurityException` → `JwtException`)을 잡지 못하고 필터 밖으로 던져져 401 대신 500이 납니다.
 
 ```java
-package com.example.security.filter;
+import io.jsonwebtoken.security.SecurityException; // ← 필수
 
-import java.io.IOException;
-
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.springframework.http.HttpHeaders;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.util.StringUtils;
-import org.springframework.web.filter.OncePerRequestFilter;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
-@RequiredArgsConstructor
-public class JwtAuthenticationFilter extends OncePerRequestFilter {
-
-    public static final String BEARER_PREFIX = "Bearer ";
-
-    private final JwtProvider jwtProvider;
-
-    @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain chain)
-            throws ServletException, IOException {
-
-        String token = resolveToken(request);
-
-        if (StringUtils.hasText(token) && jwtProvider.validateToken(token)) {
-            Authentication authentication = jwtProvider.getAuthentication(token);
-            // SecurityContextHolder에 인증 정보 주입 → 이후 컨트롤러·@PreAuthorize에서 사용
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            log.debug("Set authentication for '{}' : {}", authentication.getName(), request.getRequestURI());
-        }
-
-        chain.doFilter(request, response);
-    }
-
-    private String resolveToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
-            return bearerToken.substring(BEARER_PREFIX.length());
-        }
-        return null;
-    }
-}
+try {
+    Jwts.parser().setSigningKey(key).parseClaimsJws(token);
+    return true;
+} catch (ExpiredJwtException e) { ...
+} catch (MalformedJwtException | SecurityException e) { ...
+} catch (UnsupportedJwtException | IllegalArgumentException e) { ... }
+return false;
 ```
-
-**핵심 포인트:**
-
-- `OncePerRequestFilter`는 Spring이 요청당 정확히 한 번 실행을 보장. forward/include 시 중복 실행 방지
-- 검증 실패 시 예외를 던지지 말고 조용히 체인을 이어간다 → `SecurityContextHolder`가 비어있으면 이후 인가 단계에서 `AuthenticationEntryPoint`가 401을 반환
-- `SecurityContextHolder`에 주입하는 `Authentication`은 `UsernamePasswordAuthenticationToken` 또는 커스텀 토큰. 반드시 `setAuthenticated(true)` 또는 권한 인자 생성자 사용
-
----
-
-## JwtProvider 유틸 클래스 (jjwt 0.10.7 API)
-
-```java
-package com.example.security.jwt;
-
-import java.security.Key;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.stream.Collectors;
-
-import javax.annotation.PostConstruct;
-
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.stereotype.Component;
-
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.UnsupportedJwtException;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
-
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
-@Component
-public class JwtProvider {
-
-    private static final String AUTHORITIES_KEY = "auth";
-    private static final long ACCESS_TOKEN_VALIDITY_MS = 30 * 60 * 1000L; // 30분
-
-    @Value("${jwt.secret}") // Base64 인코딩된 256-bit 이상 키
-    private String secretBase64;
-
-    private Key key;
-
-    @PostConstruct
-    public void init() {
-        byte[] keyBytes = Decoders.BASE64.decode(secretBase64);
-        this.key = Keys.hmacShaKeyFor(keyBytes);
-        // 주의: HS256은 최소 256-bit (32 byte) 키 필요. 부족하면 WeakKeyException.
-    }
-
-    // 토큰 생성
-    public String createToken(Authentication authentication) {
-        String authorities = authentication.getAuthorities().stream()
-            .map(GrantedAuthority::getAuthority)
-            .collect(Collectors.joining(","));
-
-        long now = System.currentTimeMillis();
-        Date expiry = new Date(now + ACCESS_TOKEN_VALIDITY_MS);
-
-        return Jwts.builder()
-            .setSubject(authentication.getName())
-            .claim(AUTHORITIES_KEY, authorities)
-            .setIssuedAt(new Date(now))
-            .setExpiration(expiry)
-            .signWith(key, SignatureAlgorithm.HS256)
-            .compact();
-    }
-
-    // 토큰 검증
-    public boolean validateToken(String token) {
-        try {
-            // 0.10.x: Jwts.parser().setSigningKey(key).parseClaimsJws(token)
-            //         0.11부터는 parserBuilder().setSigningKey(key).build() 로 변경됨
-            Jwts.parser().setSigningKey(key).parseClaimsJws(token);
-            return true;
-        } catch (ExpiredJwtException e) {
-            log.debug("Expired JWT token");
-        } catch (MalformedJwtException | SecurityException e) {
-            log.debug("Invalid JWT signature or format");
-        } catch (UnsupportedJwtException e) {
-            log.debug("Unsupported JWT token");
-        } catch (IllegalArgumentException e) {
-            log.debug("JWT claims string is empty");
-        }
-        return false;
-    }
-
-    // 토큰에서 Authentication 복원
-    public Authentication getAuthentication(String token) {
-        Claims claims = Jwts.parser()
-            .setSigningKey(key)
-            .parseClaimsJws(token)
-            .getBody();
-
-        String authoritiesStr = claims.get(AUTHORITIES_KEY, String.class);
-        Collection<? extends GrantedAuthority> authorities = (authoritiesStr == null || authoritiesStr.isEmpty())
-            ? java.util.Collections.emptyList()
-            : Arrays.stream(authoritiesStr.split(","))
-                    .map(SimpleGrantedAuthority::new)
-                    .collect(Collectors.toList());
-
-        User principal = new User(claims.getSubject(), "", authorities);
-        return new UsernamePasswordAuthenticationToken(principal, token, authorities);
-    }
-
-    public String getUsername(String token) {
-        return Jwts.parser()
-            .setSigningKey(key)
-            .parseClaimsJws(token)
-            .getBody()
-            .getSubject();
-    }
-}
-```
-
-**jjwt 0.10.7 API 요약:**
-
-| 작업 | API |
-|------|-----|
-| 빌더 시작 | `Jwts.builder()` |
-| 키 생성 | `Keys.hmacShaKeyFor(byte[])` (최소 256-bit) |
-| 알고리즘 지정 | `signWith(key, SignatureAlgorithm.HS256)` |
-| 파서 (0.10.x) | `Jwts.parser().setSigningKey(key).parseClaimsJws(token)` |
-| 파서 (0.11+) | `Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token)` ← 0.10.7은 **사용 불가** |
 
 > 주의: 0.10.x의 `Jwts.parser()`는 thread-safe가 보장되지 않습니다. 0.11부터 `parserBuilder()`로 immutable 파서가 도입되었으며, 가능하면 요청마다 파싱 인스턴스를 지역 변수로 사용하세요.
 
@@ -373,6 +107,13 @@ public class JwtProvider {
 
 ---
 
----
+## 4. 업그레이드 경로
 
-> 상세 레퍼런스 (예제·고급 패턴·흔한 실수) → [`references/REFERENCE.md`](references/REFERENCE.md)
+| 현재 | 다음 단계 | 주요 변경 |
+|------|-----------|-----------|
+| jjwt 0.10.7 | jjwt 0.11.x | `Jwts.parser()` → `Jwts.parserBuilder().build()` |
+| jjwt 0.11.x | jjwt 0.12.x | `SignatureAlgorithm.HS256` → `Jwts.SIG.HS256`, 빌더/파서 메서드 다수 개명 |
+| Spring Security 5.5 | 5.7 | `WebSecurityConfigurerAdapter` deprecated → `SecurityFilterChain` Bean |
+| Spring Boot 2.5 | 3.x | `javax.*` → `jakarta.*`, Java 17 이상 |
+
+> 주의: 위 경로는 1단계씩 올리는 것을 권장. jjwt 0.10 → 0.12 직행, Boot 2.5 → 3.x 직행은 변경점이 커서 회귀 테스트 부담이 큽니다.

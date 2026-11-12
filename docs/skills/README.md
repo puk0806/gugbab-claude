@@ -4,15 +4,14 @@
 
 | 카테고리 | 종류 | 설명 |
 |----------|------|------|
-| [frontend](./frontend/README.md) | 78종 | 프레임워크·상태관리·UI·빌드·테스트·성능·SEO·LLM·i18n·꿈/운세 앱 UI |
-| [backend](./backend/README.md) | 52종 | Rust·Java(레거시/모던)·Python·TypeScript(Hono/Prisma/Zod/Better Auth/Drizzle/Neon)·Claude Code CLI·만세력 백엔드·넥사크로 레거시 백엔드 마이그레이션(SB 1→2·iBATIS→MyBatis) |
-| [devops](./devops/README.md) | 11종 | Docker·GitHub Actions·n8n·Vercel Sandbox/Workflow·SEO 운영 |
-| [architecture](./architecture/README.md) | 6종 | DDD·프론트 도메인 구조·모듈 경계·점진 리팩터링·꿈/운세 앱 데이터 모델링 |
-| [humanities](./humanities/README.md) | 9종 | 꿈 심리학·애착 이론·위기 개입·사주/타로/손금 전통 |
-| [writing](./writing/README.md) | 4종 | SEO 콘텐츠 품질 |
-| [game](./game/README.md) | 16종 | Unity 2D 게임 개발·출시·수익화 |
-| [health](./health/README.md) | 5종 | 건강·식단·영양 (KDRIs·한국 식품 DB·식단 프롬프트) |
-| [meta](./meta/README.md) | 5종 | 프롬프트 엔지니어링(꿈·운세)·훅 작성법 |
+| [frontend](./frontend/README.md) | 28종 | 프레임워크·UI·빌드·테스트·성능·SEO·i18n·음성 입력·PWA 푸시·꿈/운세 앱 UI |
+| [backend](./backend/README.md) | 27종 | Java(레거시/모던)·Python(LLM·한국어 NLP)·TypeScript(Prisma/Zod/Better Auth/Drizzle/Neon)·Claude Code CLI·만세력 백엔드·iBATIS→MyBatis |
+| [devops](./devops/README.md) | 7종 | GitHub Actions 시각 회귀·n8n·Vercel Sandbox/Workflow |
+| [architecture](./architecture/README.md) | 3종 | 프론트 도메인 구조·모듈 경계·점진 리팩터링 |
+| [humanities](./humanities/README.md) | 7종 | 꿈 심리학·애착 이론·위기 개입·사주 전통 |
+| [writing](./writing/README.md) | 1종 | SEO 콘텐츠 품질(E-E-A-T·YMYL) |
+| [health](./health/README.md) | 4종 | 건강·식단·영양 (KDRIs·한국 식품 DB·식단 프롬프트) |
+| [meta](./meta/README.md) | 4종 | 프롬프트 엔지니어링(꿈·운세)·훅 작성법 |
 | [spec](./spec/README.md) | 4종 | 레거시 스펙 추출 — 공통 방법론·양식, Spring/MyBatis·React 추출, 특성화 테스트 |
 | [nexacro](./nexacro/README.md) | 5종 | 넥사크로 17 소스 읽기·X-API 서버·React 대응표·REST 전환·Strangler 공존 |
 

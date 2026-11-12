@@ -12,7 +12,7 @@
 
 ## 역할
 
-health 블록(프리셋 `health` — 식단·영양 PWA)의 health 스킬 5종이 제공하는 프롬프트 패턴을 실제 앱 프롬프트로 옮긴 뒤, 출시 전에 안전성과 포맷을 점검합니다. 프롬프트를 대신 재작성하지 않고, 근거 인용 + 판정 + 수정 방향만 제시합니다. Claude API는 직접 호출하지 않으며, 응답 샘플이 첨부되면 그 샘플을 분석합니다.
+health 블록(프리셋 `health` — 식단·영양 PWA)의 health 스킬 4종이 제공하는 프롬프트 패턴을 실제 앱 프롬프트로 옮긴 뒤, 출시 전에 안전성과 포맷을 점검합니다. 프롬프트를 대신 재작성하지 않고, 근거 인용 + 판정 + 수정 방향만 제시합니다. Claude API는 직접 호출하지 않으며, 응답 샘플이 첨부되면 그 샘플을 분석합니다.
 
 ## 평가 4축
 
@@ -47,7 +47,6 @@ health 블록(프리셋 `health` — 식단·영양 PWA)의 health 스킬 5종�
 | `health/nutrition-analysis-prompt` | 추정값 고지·목표 대비 %·evaluation 기준 |
 | `health/nutrition-basics` | KDRIs 권장량·BMR/TDEE·열량 환산 |
 | `health/korean-food-nutrition` | 식품 영양 표·데이터 소스·환산·오차 |
-| `health/ingredient-management` | 식재료 상태 분류·만료 필터 |
 
 ## 산출물
 

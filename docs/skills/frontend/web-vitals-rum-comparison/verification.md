@@ -2,7 +2,7 @@
 skill: web-vitals-rum-comparison
 category: frontend
 version: v3
-date: 2026-09-28
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `web-vitals-rum-comparison` |
 | 스킬 경로 | `.claude/skills/web-vitals-rum-comparison/SKILL.md` |
-| 검증일 | 2026-09-28 (최초 2026-05-14, 2026-09-28 재검증) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-28, 최초 2026-05-14) |
 | 검증자 | skill-creator → Claude (Sonnet 5, 2026-09-28 재검증) |
 | 스킬 버전 | v3 |
 
@@ -69,6 +69,12 @@ status: APPROVED
 | Datadog — Monitoring Page Performance | https://docs.datadoghq.com/real_user_monitoring/application_monitoring/browser/monitoring_page_performance/ | ⭐⭐⭐ High | 2026-05-14 | 공식 |
 | Datadog — RUM Explorer Search Syntax | https://docs.datadoghq.com/real_user_monitoring/explorer/search_syntax/ | ⭐⭐⭐ High | 2026-05-14 | 공식 |
 | Datadog Blog — CWV Monitoring | https://www.datadoghq.com/blog/core-web-vitals-monitoring-datadog-rum-synthetics/ | ⭐⭐ Medium | 2026-05-14 | 공식 블로그 |
+| npm registry (`npm view`) | https://www.npmjs.com/package/web-vitals · https://www.npmjs.com/package/@sentry/browser · https://www.npmjs.com/package/@datadog/browser-rum | ⭐⭐⭐ High | 2026-11-09 | 최신 web-vitals 6.2.3 · @sentry/browser 11.11.0 · @datadog/browser-rum 7.17.0 |
+| GoogleChrome/web-vitals CHANGELOG | https://github.com/GoogleChrome/web-vitals/blob/main/CHANGELOG.md | ⭐⭐⭐ High | 2026-11-09 | 6.2.3(2026-10-05) 버그 수정만 |
+| DataDog/browser-sdk CHANGELOG | https://github.com/DataDog/browser-sdk/blob/main/CHANGELOG.md | ⭐⭐⭐ High | 2026-11-09 | 7.15~7.17 실험 기능(soft navigation vitals) 추가, breaking 없음 |
+| getsentry/sentry-javascript CHANGELOG | https://github.com/getsentry/sentry-javascript/blob/develop/CHANGELOG.md | ⭐⭐⭐ High | 2026-11-09 | 11.1~11.11 web vitals breaking 없음, 11.0 interactionsIntegration·bfcache 변경 재확인 |
+| Sentry — Migrate from 10.x to 11.x | https://docs.sentry.io/platforms/javascript/migration/v10-to-v11/ | ⭐⭐⭐ High | 2026-11-09 | `enableInp` deprecated 재확인, **INP 값이 span 속성 `browser.web_vital.inp.value`로 이동**, soft-navigation vitals 기본 수집 |
+| web.dev — INP (재확인) | https://web.dev/articles/inp | ⭐⭐⭐ High | 2026-11-09 | Good ≤ 200ms, NI ≤ 500ms 불변 |
 
 ---
 
@@ -94,6 +100,16 @@ status: APPROVED
 
 **최종**: VERIFIED 13 / DISPUTED 0 / UNVERIFIED 0
 
+**2026-11-09 재검증 판정**
+
+| # | 클레임 | 1차 소스 | 2차 소스 | 판정 |
+|---|--------|---------|---------|:----:|
+| R1 | 최신 버전 web-vitals 6.2.2 · Sentry 11.0.0 · Datadog 7.14.0 | npm registry | 각 GitHub CHANGELOG | **DISPUTED → 갱신** (6.2.3 · 11.11.0 · 7.17.0, 마이너·패치만) |
+| R2 | `enableInp` v11 deprecated, `webVitals: { ignore: ['inp'] }` 대체 | Sentry v10→v11 마이그레이션 가이드 | MIGRATION.md / CHANGELOG 11.0 | VERIFIED |
+| R3 | Sentry Discover `p75(measurements.inp)`로 INP 비교 | Sentry v10→v11 마이그레이션 가이드 | — | **DISPUTED → 주의 추가** (v11부터 INP는 span 속성 `browser.web_vital.inp.value`, 커스텀 대시보드 수정 필요) |
+| R4 | INP Good ≤ 200ms / Poor > 500ms | web.dev/articles/inp | web.dev/vitals | VERIFIED |
+| R5 | Datadog `datadogRum.init` 옵션 불변 | Datadog CHANGELOG 7.15~7.17 | npm 7.17.0 | VERIFIED (soft navigation vitals는 실험 기능으로만 추가) |
+
 ### 4-2. 내용 정확성
 - [✅] 공식 문서와 불일치하는 내용 없음
 - [✅] 버전 정보가 명시되어 있음 (web-vitals v5, Sentry 8.x, Datadog v7.1.0)
@@ -114,13 +130,51 @@ status: APPROVED
 - [✅] 범용적으로 사용 가능 (특정 프로젝트 종속 X — Sentry/Datadog 양쪽 커버)
 
 ### 4-5. Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-14 skill-tester 수행, 2026-09-28 재검증 정정분 재테스트)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (누적 5/5 PASS)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-14 skill-tester 수행, 2026-09-28 재검증 정정분 재테스트, 2026-11-09 §4-3 수정분 재테스트)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (누적 8/8 PASS)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (gap 없음 — 보완 불필요)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-11-09] 재검증 수정분(§4-3 INP span 속성 이동·soft-navigation vitals·버전 갱신) 재테스트
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester → general-purpose 3개 (병렬, 조회 전용; frontend-developer 대체)
+**수행 방법**: SKILL.md Read 후 2026-11-09 수정분을 겨냥한 실전 질문 3개 답변, 근거 섹션 및 anti-pattern 회피 확인
+
+**Q1. Sentry 10.x → 11.11.0 업그레이드 후 커스텀 Discover 위젯 `p75(measurements.inp)`가 비는 이유와 해결, 내장 대시보드 영향은?**
+- ✅ PASS
+- 근거: SKILL.md §4-3 두 번째 주의(2026-11-09), §4-1 하단 주의
+- 상세: v11부터 INP는 span 속성 `browser.web_vital.inp.value`로 이동해 measurement 쿼리가 비며 커스텀 대시보드·알람 수정 필요, 내장 Web Vitals 대시보드는 그대로임을 정확히 답변. anti-pattern(`measurements.inp` 계속 사용 권유) 회피.
+
+**Q2. v11 적용 후 릴리스 비교 기준선 변화 원인(soft navigation vitals)·끄는 설정·비교 시 주의점은?**
+- ✅ PASS
+- 근거: SKILL.md §4-3 두 번째 주의, §7-4 bfcache 주의, §4-1 주의, §6-1·§7-1·§7-2
+- 상세: `webVitals: { softNavigations: false }`로 끄는 방법, 기준선 재설정 필요, `enableInp` 제거를 정확히 답변.
+
+**Q3. 세 패키지 기준 버전과 Datadog 7.17.0의 soft navigation vitals 기본 수집 여부·init 변경 필요성은?**
+- ✅ PASS
+- 근거: SKILL.md 헤더 기준 버전(web-vitals 6.2.3 · @sentry/browser 11.11.0 · @datadog/browser-rum 7.17.0) + 2026-11-09 주의, §5-1 버전 의존 주의
+- 상세: Datadog 쪽은 실험 기능이며 기본 동작 아님, `init` 시그니처 불변임을 정확히 답변. 과대 주장(기본 수집됨) 회피.
+
+### 발견된 gap (모두 선택 보강, 차단 요인 아님)
+
+- §4-3 본문 쿼리 예시(`p75(measurements.inp)`)에 "v8~10 한정" 표기가 없고 경고가 아래 주의 박스에만 있음
+- v11 `softNavigations: false`의 독립 코드 예시 부재(§4-1 init에 미반영), "stream 모드" 정의 부재
+- `browser.web_vital.inp.value`를 Discover에서 조회하는 구체 쿼리 문법 부재
+- Datadog 실험 기능을 켜는 옵션명 미기술
+
+### 판정
+
+- agent content test: 3/3 PASS
+- verification-policy 분류: "해당 없음" (RUM 패턴·쿼리 작성법 — content test로 APPROVED 가능)
+- 최종 상태: APPROVED 유지
+
+---
+
+### [2026-05-14] 최초 테스트
 
 **수행일**: 2026-05-14
 **수행자**: skill-tester → general-purpose (frontend-developer 대체)
@@ -229,8 +283,8 @@ status: APPROVED
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ 누적 5/5 PASS (2026-05-14 3/3 + 2026-09-28 재테스트 2/2 — §4-1·§7-4·§7-7 정정분 반영 확인) |
-| **최종 판정** | **APPROVED** (2026-09-28 skill-tester 재테스트 2/2 PASS — §4-1 `enableInp` deprecated·§7-7 `interactionsSampleRate` 제거 정정분 검증 완료) |
+| 에이전트 활용 테스트 | ✅ 누적 8/8 PASS (2026-05-14 3/3 + 2026-09-28 재테스트 2/2 + 2026-11-09 재테스트 3/3 — §4-3 INP span 속성 이동·soft-navigation·Datadog 실험 기능·버전 갱신 반영 확인) |
+| **최종 판정** | **APPROVED** (2026-11-09 skill-tester 재테스트 3/3 PASS — §4-3 수정분 검증 완료) |
 
 > RUM 패턴·쿼리 작성법은 2026-05-14 content test로 검증 완료. 실 RUM 대시보드 데이터(Sentry/Datadog 운영 환경에서의 실제 p75 수치 확인)는 사용자 운영 환경에서만 가능하며, 이는 SKILL.md 사용 범위가 아닌 사용자 운영 영역임. 2026-09-28 재테스트로 §4-1·§7-4·§7-7 정정 부분의 답변 정확성까지 확인 완료.
 
@@ -244,6 +298,8 @@ status: APPROVED
 - [✅] (2026-09-28 완료) `interactionsSampleRate`가 Sentry 8.x~11.x에서 여전히 곱셈 방식인지 재확인 → **이미 v8에서 제거**되어 있었음을 확인, §7-7 전체 정정
 - [✅] (2026-09-28 완료) SKILL.md §4-1·§7-4·§7-7 정정 반영분을 겨냥한 skill-tester 재테스트 → 2/2 PASS, status APPROVED 전환
 - [❌] `webVitals: { ignore: [...] }` 옵션에 `inp` 외 다른 값 지정 가능 여부 미기술 (선택 보강 — 차단 요인 아님)
+- [✅] (2026-11-09 완료) 2026-11-09 재검증 수정분(§4-3 INP span 속성 이동·soft-navigation·버전 갱신)을 겨냥한 skill-tester 재테스트 → 3/3 PASS, APPROVED 유지
+- [❌] §4-3 본문 쿼리 예시에 "v8~10 한정" 표기, `softNavigations: false` 독립 코드 예시·"stream 모드" 설명, `browser.web_vital.inp.value` Discover 쿼리 예시 추가 (2026-11-09 테스트에서 발견 — 선택 보강, 차단 요인 아님)
 
 ---
 
@@ -256,3 +312,5 @@ status: APPROVED
 | 2026-09-28 | v2 | 재검증(1차) — web-vitals v5→v6·Sentry 8.x→11.x·Datadog v7.1.0→v7.14.0 버전 갱신 확인, `@astrojs` 등 무관. §4-1(`enableInp`)·§7-4(bfcache) 헤더에 "미검증" 주의문 추가하고 중단. status APPROVED → PENDING_TEST | 메인 대화 (재검증 작업, 미완결) |
 | 2026-09-28 | v3 | 재검증(2차) — 1차가 "미검증"으로 남긴 항목을 공식 마이그레이션 가이드·GitHub 이슈로 확인 완료: `enableInp` v11 deprecated 확정(§4-1 정정), `interactionsSampleRate`는 v11이 아니라 **이미 v8에서 제거**되어 있었음을 신규 발견(§7-7 전체 재작성), bfcache 기본 리포트 변경 VERIFIED(§7-4 "미검증" 제거). status PENDING_TEST 유지 (skill-tester 재테스트 필요) | Claude (Sonnet 5) |
 | 2026-09-28 | v3 | 2단계 실사용 재테스트 수행 (Q1 enableInp v11 deprecated 대응 / Q2 interactionsSampleRate 제거·tracesSampleRate 단독 샘플링) → 2/2 PASS, APPROVED 전환 | skill-tester |
+| 2026-11-09 | v4 | 재검증: npm 최신 web-vitals 6.2.3 · @sentry/browser 11.11.0 · @datadog/browser-rum 7.17.0으로 기준 버전 갱신(마이너·패치, 코드 예시 유효). Sentry v11 마이그레이션 가이드 재대조로 `enableInp` deprecated 재확인 + **INP가 measurement에서 span 속성 `browser.web_vital.inp.value`로 이동**·soft-navigation vitals 기본 수집을 §4-3 주의로 추가. Datadog 7.15~7.17 soft navigation vitals는 실험 기능으로 명시. CWV 한계값 불변. 내용 실질 수정(§4-3) — skill-tester 재시험은 상위 작업에서 별도 수행. status APPROVED 유지 | 재검증 작업자 |
+| 2026-11-09 | v4 | 재검증 수정분 2단계 재테스트 수행 (Q1 v11 `p75(measurements.inp)` 위젯 공백 원인·해결 / Q2 soft-navigation vitals 기준선 변화·끄는 설정 / Q3 세 패키지 기준 버전·Datadog 7.17 soft navigation 실험 기능) → 3/3 PASS, APPROVED 유지 | skill-tester |

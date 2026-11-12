@@ -2,7 +2,7 @@
 skill: webflux-webclient-in-sync-app
 category: backend
 version: v1
-date: 2026-09-26
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -18,7 +18,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `webflux-webclient-in-sync-app` |
 | 스킬 경로 | `.claude/skills/webflux-webclient-in-sync-app/SKILL.md` |
-| 검증일 | 2026-09-26 (최초 2026-04-23) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-26 · 최초 2026-04-23) |
 | 검증자 | skill-creator (자동) → 2026-09-26 재검증: 메인 오케스트레이션 (Claude Sonnet 5) |
 | 스킬 버전 | v1 |
 
@@ -79,6 +79,10 @@ status: APPROVED
 | Baeldung — Spring WebClient Filters | https://www.baeldung.com/spring-webclient-filters | ⭐⭐ Medium | 2026-04-23 | 보조 |
 | rieckpil — WebClientCustomizer 가이드 | https://rieckpil.de/customize-spring-webclient-with-webclientcustomizer/ | ⭐⭐ Medium | 2026-04-23 | 보조 |
 | rieckpil — Test Spring WebClient with MockWebServer | https://rieckpil.de/test-spring-webclient-with-mockwebserver-from-okhttp/ | ⭐⭐ Medium | 2026-04-23 | 보조 |
+| Spring Framework 소스 RestTemplate.java (main) (재검증) | https://github.com/spring-projects/spring-framework/blob/main/spring-web/src/main/java/org/springframework/web/client/RestTemplate.java | ⭐⭐⭐ High | 2026-11-09 | `@Deprecated(since = "7.1", forRemoval = true)`, "in favor of RestClient. For removal in 8.0" |
+| Spring Framework 7.1.x Javadoc (재검증) | https://docs.spring.io/spring-framework/docs/7.1.x/javadoc-api/org/springframework/web/client/RestTemplate.html | ⭐⭐⭐ High | 2026-11-09 | RestTemplate "Deprecated, for removal" 표시 확인 |
+| Maven Central spring-web / spring-boot-dependencies 4.2.0-RC2 (재검증) | https://repo1.maven.org/maven2/org/springframework/spring-web/maven-metadata.xml | ⭐⭐⭐ High | 2026-11-09 | 7.1.0-RC2 가 최신(7.1 GA 전), 7.0.10 최신 GA. Boot 4.2.0-RC2 가 spring-framework 7.1.0-RC2 사용 |
+| Maven Central mockwebserver3 (재검증) | https://repo1.maven.org/maven2/com/squareup/okhttp3/mockwebserver3/maven-metadata.xml | ⭐⭐⭐ High | 2026-11-09 | 5.5.1 — 5.x 라인 별도 아티팩트 유지 |
 
 ---
 
@@ -105,6 +109,9 @@ status: APPROVED
 | 8 | `retrieve()`는 4xx/5xx에서 `WebClientResponseException` 발생 | VERIFIED | Spring Javadoc, Baeldung |
 | 9 | Spring 7.0에서 RestTemplate deprecation, Spring 8.0에서 제거 예정 | VERIFIED | Spring 공식 블로그 2025-09-30 |
 | 10 | OkHttp 5.x에서 `mockwebserver3` 아티팩트로 네임스페이스 분리 | PARTIALLY VERIFIED | Maven Central 결과에서 확인했으나 Square의 마이그레이션 문서 직접 확인 실패 → SKILL.md에서 `> 주의:` 표기로 처리 |
+| R1 (2026-11-09) | "Spring 7.1(2026-11 잠정)에서 정식 `@Deprecated` 예정" | DISPUTED → 수정 | Spring Framework 소스(main)·7.1.x Javadoc: 이미 `@Deprecated(since="7.1", forRemoval=true)` 확정, Maven Central: 7.1.0-RC2 가 최신(GA 2026-11 예정) → "7.1 에서 확정, 현재 RC2" 로 갱신 |
+| R2 (2026-11-09) | Spring Boot 4.2 가 Spring Framework 7.1 기반 | VERIFIED | Maven Central spring-boot-dependencies 4.2.0-RC2 pom(`spring-framework.version` 7.1.0-RC2) + 2차 블로그(Boot 4.2 RestTemplate retire) |
+| R3 (2026-11-09) | WebClient `block()` 동기 사용·`WebClient.Builder` 자동 설정·`retrieve()` 예외 동작 | VERIFIED (변경 없음) | Spring Framework reference "Synchronous Use" + WebClient Javadoc (7.0.x) |
 
 ### 4-2. 구조 완전성
 
@@ -123,13 +130,45 @@ status: APPROVED
 
 ### 4-4. Claude Code 에이전트 활용 테스트
 
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-09-28)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-09-28)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-09-28, 재테스트 2026-11-09)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-09-28, 재테스트 2026-11-09)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (gap 있으나 차단 요인 아님, 섹션 7 참고)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### 재테스트 (2026-11-09, RestTemplate 7.1 `@Deprecated(forRemoval)` 확정 반영 후)
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester → general-purpose (도메인 에이전트 미사용, general-purpose 대체)
+**수행 방법**: SKILL.md Read 후 2개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인. Q1 은 이번에 갱신된 RestTemplate 타임라인을 겨냥.
+
+**Q1. "Boot 3.5 WebMVC 앱의 RestTemplate — Boot 4.2(Spring 7.1)로 올리면 어떻게 되나? 전부 WebClient로 바꿔야 하나? 단순 동기 호출은 무엇을?"**
+- ✅ PASS
+- 근거: SKILL.md 상단 "(2026-11-09 갱신)" 주의 블록, "언제 이 패턴을 쓰나" 표, "RestTemplate / WebClient / RestClient 선택 기준" 표
+- 상세: 7.1 에서 `@Deprecated(since="7.1", forRemoval=true)` 확정, Boot 4.2 가 7.1 기반이라 deprecation 경고 발생(컴파일 오류 아님), 제거는 8.0, 2029년까지 OSS 지원이므로 즉각 마이그레이션 불필요, 단순 동기는 RestClient 1순위, WebClient 는 병렬 조합·스트리밍·기존 webflux 포함 시로 정확히 답변. 옛 타임라인("7.1 예정")과 모순 없음.
+
+**Q2. "Boot 3.3 WebMVC 에서 결제 API 2개 병렬 호출·합치기 + 5xx만 3회 지수 백오프 재시도 + 안전한 타임아웃"**
+- ✅ PASS
+- 근거: SKILL.md "의존성", "타임아웃 설정 (필수)", "동기 사용 기본 패턴 — Mono.zip", "에러 처리 — retryWhen + Retry.backoff" 섹션
+- 상세: starter-web+starter-webflux 공존(Tomcat 유지), 3종 타임아웃(CONNECT/responseTimeout/Read·WriteTimeoutHandler) + `block(Duration)` 최종 방어선, Bean 재사용, `Mono.zip` 후 단일 block, `Retry.backoff` + 5xx filter + `onRetryExhaustedThrow`, 재시도 총합 고려한 block 타임아웃, Tomcat 스레드 점유 주의까지 anti-pattern 없이 재현.
+- gap: `onStatus` 로 5xx 를 커스텀 예외(`PaymentUpstreamException`)로 매핑하면 `retryWhen` filter(`WebClientResponseException` 기준)와 맞지 않아 재시도가 동작하지 않는 예제 간 비일관성 — 선택 보강.
+
+### 발견된 gap (2026-11-09)
+
+- `onStatus` 커스텀 예외 사용 시 재시도 filter 대상 예외 타입도 맞춰야 한다는 안내 부재 — 선택 보강, 차단 요인 아님
+- RestTemplate → RestClient 구체 마이그레이션 코드, 비멱등 POST 재시도 시 멱등키 주의, `Mono.zip` 부분 실패 처리 — 선택 보강
+
+### 판정 (2026-11-09)
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: API 사용 패턴 스킬 → 실사용 필수 카테고리 해당 없음
+- 최종 상태: APPROVED 유지
+
+---
+
+### 이전 테스트 (2026-09-28)
 
 **수행일**: 2026-09-28
 **수행자**: skill-tester → general-purpose
@@ -251,14 +290,16 @@ WebClient를 써야 하나요, RestTemplate을 써야 하나요?
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-04-23, 2문항 PASS) + ✅ (2026-09-26 재검증 셀프, 2문항 PASS) + ✅ (2026-09-28 skill-tester → general-purpose, 2/2 PASS — RestTemplate deprecation 타임라인 정정분 겨냥) |
-| **최종 판정** | **APPROVED** (2026-09-28 재테스트로 타임라인 정정 내용 반영 확인, 모순 없음) |
+| 에이전트 활용 테스트 | ✅ (2026-04-23, 2문항 PASS) + ✅ (2026-09-26 재검증 셀프, 2문항 PASS) + ✅ (2026-09-28 skill-tester → general-purpose, 2/2 PASS — RestTemplate deprecation 타임라인 정정분 겨냥) + ✅ (2026-11-09 skill-tester → general-purpose, 2/2 PASS — 7.1 `@Deprecated(forRemoval)` 확정 반영분 + 병렬·재시도·타임아웃 종합) |
+| **최종 판정** | **APPROVED** (2026-11-09 재테스트로 7.1 deprecation 확정 서술 반영 확인, 모순 없음) |
 
 ---
 
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester content test 수행 및 섹션 5·6 업데이트 — 2026-09-28 완료, 2/2 PASS (RestTemplate deprecation 타임라인 정정분 겨냥 포함)
+- [✅] skill-tester content test 재수행 (2026-11-09 완료, 2/2 PASS — 7.1 RestTemplate `@Deprecated(forRemoval)` 갱신분 반영 확인)
+- [⏸️] `onStatus` 로 5xx 를 커스텀 예외 매핑할 때 `retryWhen` filter 대상 예외 타입도 맞춰야 한다는 안내 보강 — 2026-11-09 재테스트에서 발견, 선택 보강(차단 요인 아님)
 - [⏸️] 타임아웃 초과 시 예외 타입(`TimeoutException` 등)과 "에러 처리" 섹션(`onStatus`/`WebClientResponseException`) 간 연결 고리 보강 — 2026-09-28 재테스트에서 발견, 선택 보강(차단 요인 아님)
 - [⏸️] OkHttp 5.x `mockwebserver3` 네임스페이스 마이그레이션 문서 Square 공식 레포 직접 재확인 — 검증 보강 선택 사항
 - [⏸️] 별도 스레드풀 분리 예시(`@Async` + `ThreadPoolTaskExecutor`) 구체화 — 현재 범위 밖 선택 보강
@@ -274,3 +315,6 @@ WebClient를 써야 하나요, RestTemplate을 써야 하나요?
 | 2026-04-23 | v1 | 최초 작성 | skill-creator |
 | 2026-09-26 | v1 | 재검증 — RestTemplate deprecation 타임라인 정밀도 보정(Spring 7.0 GA 완료 반영, 7.1/8.0 시점 구분, 2029년까지 지원 명시) → PENDING_TEST | 메인 오케스트레이션 (Claude Sonnet 5) |
 | 2026-09-28 | v1 | 2단계 실사용 재테스트 수행 (Q1 타임아웃 설정 / Q2 RestTemplate deprecation 타임라인 정정분) → 2/2 PASS, APPROVED 전환 | skill-tester |
+| 2026-11-09 | v1 | 재검증 — RestTemplate 이 Spring 7.1 에서 `@Deprecated(forRemoval = true)` 로 실제 확정된 것 반영(현재 7.1.0-RC2, GA 2026-11 예정, Boot 4.2 가 7.1 기반), 상단 주의문·선택 기준 표 갱신. WebClient 사용법·타임아웃·에러/재시도 패턴 변경 없음 | Claude (Opus 5.5) |
+| 2026-11-09 | v1 | 2단계 실사용 재테스트 수행 (Q1 Boot 4.2 업그레이드 시 RestTemplate 상태·마이그레이션 선택 / Q2 병렬 호출+5xx 재시도+타임아웃 종합) → 2/2 PASS, APPROVED 유지 | skill-tester |
+| 2026-11-11 | v1 | 2026-11-11 정리 — 모델이 아는 일반 지식 절 제거(pom 예시 전문, WebClient 생성·Bean·`WebClientCustomizer`, 타임아웃 설정 의미표, `block()` 기본 패턴·응답 메서드표, `onStatus`·`WebClientResponseException`·`Retry.backoff` 예제, `ExchangeFilterFunction`, 외부 API 연동 예, MockWebServer 테스트 코드). 남긴 절: 범위·RestTemplate 7.1 forRemoval 주의문, 언제 쓰나, 의존성 요약·Tomcat 유지, 선택 기준표, 타임아웃 필수(HttpClient 코드·responseTimeout vs ReadTimeoutHandler)·`block(Duration)` 방어선, `Mono.zip` 병렬·Tomcat 워커 주의, MockWebServer 의존성·mockwebserver3 주의, 자주 하는 실수. 사실 재검증 아님 | Claude (Opus 5.5) |

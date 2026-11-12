@@ -5,10 +5,13 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 7ab7ffde-a635-446b-9889-56dd55fe246b
-  modified: 2026-09-26T06:33:38.579Z
+  modified: 2026-11-12T02:04:39.857Z
 ---
 
 이 맥(Darwin)의 Claude Code 설치 환경. 2026-07-27 /doctor 수동 진단으로 최초 정리, 2026-08-10·2026-09-25 갱신.
+
+- **2026-11-11 현재: native 설치로 바뀜** — `claude doctor`(이제 세션 없이 읽기 전용 진단 출력, Bash 에서 실행 가능): Running native 2.1.322, `~/.local/bin/claude` → `~/.local/share/claude/versions/2.1.322`, Auto-updates enabled·channel latest. 경고 1건: nvm 쪽 npm 전역 패키지가 **orphan** 으로 남음(`~/.nvm/versions/node/v22.23.1/lib/node_modules/@anthropic-ai/claude-code`, doctor 권장 Fix = 그 경로 `rm -rf` — 사용자에게 보고, 사용자가 직접 처리). 아래 nvm 일원화·"doctor 는 TUI" 서술은 그 전 상태. `claude config get` 처럼 없는 하위 명령은 프롬프트로 해석돼 세션이 뜨니 쓰지 말 것. 하네스 claude-version-check 가 11-11 부터 새 버전이면 `claude update` 를 뒤에서 실행.
+- **2026-11-12: npm 잔재 전부 제거 → native 한 곳만** — v22(2.1.296, `bin/claude` 링크는 원래 없었음)·v20(2.1.204)·빈 `@anthropic-ai` 폴더들. v22 는 `.claude-code-iFAbfb0x` 잔재 때문에 `ENOTEMPTY` → 잔재 삭제 후 `npm uninstall -g` 통과. `claude doctor` "No installation issues found", `which -a claude` = `~/.local/bin/claude` 뿐. 같은 날 "자동 업데이트 실패" 알림은 npm 탓이 아니라 **claude-version-check.test.js 가 기본 상태 폴더(`$TMPDIR/gugbab-claude-state`)를 오염**시킨 것(시험 격리로 수정). doctor 는 `node -e spawnSync(... timeout)` 로 돌리면 됨(macOS 엔 `timeout` 명령 없음).
 
 - **설치는 nvm 글로벌 한 곳만** (`~/.nvm/versions/node/v22.23.1/lib/node_modules`, 2026-09-26 기준 2.1.283 — 09-26 15:25 자동 업데이트). 현재 npm의 글로벌 루트가 nvm 쪽이라 `claude update`도 여기로 설치됨. **자동 업데이트가 진행되는 그 순간** 셸에서 `claude`를 부르는 명령이 돌면 `Error: claude native binary not installed`(postinstall 전 상태)가 잠깐 날 수 있다 — 업데이트 완료 후 `claude --version`으로 재확인하면 정상. (v20.17.0 쪽에도 2.1.204 잔재가 있으나 PATH에 없어 무해.)
 - **2026-09-25 업데이트 시 겪은 2가지 함정**: ① 전날(09-24) 설치가 중간에 실패해 `@anthropic-ai/.claude-code-XXXX` 임시 백업 디렉토리가 남아 있으면 다음 `npm install -g`가 `ENOTEMPTY: rename` 으로 실패 → 해당 임시 디렉토리 `rm -rf` 후 재시도하면 통과. ② postinstall(`install.cjs`)이 완료되지 않으면 `bin/claude.exe`가 500바이트 스텁(mode 644)으로 남아 새 셸에서 `claude` = "permission denied"/`which` not found 상태가 됨. 실행 중인 세션은 메모리에 올라간 바이너리로 계속 돌기 때문에 눈치채기 어렵다. 정상 상태 = `bin/claude.exe`가 200MB급 네이티브 바이너리(하드링크, `node_modules/@anthropic-ai/claude-code-darwin-arm64/claude`와 동일 inode).

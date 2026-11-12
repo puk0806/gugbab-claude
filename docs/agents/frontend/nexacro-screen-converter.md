@@ -17,7 +17,7 @@
 
 ## 함께 쓰는 자산
 
-`nexacro-17-xfdl-anatomy`, `nexacro-to-react-mapping`, `nextjs`, `ag-grid`, `tanstack-query`, `form-handling` 스킬(서버 측 Zod 검증 상세는 `zod-schema-validation` — 설치된 경우). 동등성 검증은 `migration-parity-tester`.
+`nexacro-17-xfdl-anatomy`, `nexacro-to-react-mapping`, `nextjs`, `ag-grid`, `tanstack-query` 스킬(서버 측 Zod 검증 상세는 `zod-schema-validation` — 설치된 경우). 동등성 검증은 `migration-parity-tester`.
 
 ## 설계 근거
 

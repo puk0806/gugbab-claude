@@ -55,7 +55,7 @@ function frontmatter(raw) {
 const all = listVerifications();
 
 test('레포에 verification.md 가 실제로 존재한다 (빈 순회로 통과하는 가짜 성공 방지)', () => {
-  assert.ok(all.length >= 100, `verification.md ${all.length}개 — 경로 오류로 순회가 비었을 가능성`);
+  assert.ok(all.length >= 50, `verification.md ${all.length}개 — 경로 오류로 순회가 비었을 가능성`); // 2026-11-12 스킬 90개로 줄어 하한 100→50
 });
 
 test('모든 verification.md: frontmatter·필수 키·status 허용 집합·경로 일치', () => {
@@ -116,7 +116,7 @@ test('구조: 모든 SKILL.md 는 1단(.claude/skills/<name>/SKILL.md) — 2단 
     }
   })(SKILLS, 0);
   assert.deepStrictEqual(nested, []);
-  assert.ok(skillDirs().filter((n) => fs.existsSync(path.join(SKILLS, n, 'SKILL.md'))).length >= 100, '1단 스킬 순회가 비었음');
+  assert.ok(skillDirs().filter((n) => fs.existsSync(path.join(SKILLS, n, 'SKILL.md'))).length >= 50, '1단 스킬 순회가 비었음'); // 하한 100→50 (2026-11-12 스킬 90개)
 });
 
 test('구조: 스킬 폴더는 SKILL.md 가 있어야 하고, 이름이 구 카테고리명과 같으면 안 된다', () => {

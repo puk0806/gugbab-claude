@@ -49,10 +49,16 @@ function fakeClaude(out, code = 0, dirPath = base) {
   return f
 }
 // 훅 프로세스 실행 (비동기 — 같은 프로세스의 로컬 http 서버가 응답할 수 있게)
+// 2026-11-12: 훅이 기본 상태 폴더(os.tmpdir()/gugbab-claude-state)로 떨어지는 경로가 있어, 시험의 가짜 claude(2.1.296)가
+// 실제 기록을 더럽히고 진짜 세션에 "자동 업데이트 실패"를 띄운 일이 있었다 → 훅 실행은 항상 격리된 TMPDIR 로
+const SANDBOX_TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'cvc-tmpdir-'))
+const REAL_DEFAULT_DIR = path.join(os.tmpdir(), 'gugbab-claude-state')
+const snapReal = () => { try { return fs.readdirSync(REAL_DEFAULT_DIR).map((n) => n + ':' + fs.statSync(path.join(REAL_DEFAULT_DIR, n)).mtimeMs).sort().join('|') } catch { return 'none' } }
+const REAL_BEFORE = snapReal()
 function runHook(input, env = {}) {
   return new Promise((resolve) => {
     const started = Date.now()
-    const p = spawn(process.execPath, [HOOK], { env: { ...process.env, ...env } }) // PATH 를 바꾼 시험에서도 node 를 찾도록
+    const p = spawn(process.execPath, [HOOK], { env: { ...process.env, TMPDIR: SANDBOX_TMP, TEMP: SANDBOX_TMP, TMP: SANDBOX_TMP, ...env } }) // PATH 를 바꾼 시험에서도 node 를 찾도록
     let out = '', err = ''
     p.stdout.on('data', (d) => { out += d }); p.stderr.on('data', (d) => { err += d })
     const killer = setTimeout(() => p.kill('SIGKILL'), 10000)
@@ -168,6 +174,7 @@ function server(handler) {
     const d = dir()
     const r = await runHook({ hook_event_name: 'SessionStart' }, { GUGBAB_STATE_DIR: 'relative/dir', GUGBAB_CLAUDE_BIN: fakeClaude('2.1.296 (Claude Code)'), GUGBAB_TEST_NPM_LATEST_URL: 'http://127.0.0.1:1/x' })
     check('상태 폴더가 상대경로면 쓰지 않고 기본 위치 사용(현재 폴더에 파일 안 만듦)', r.code === 0 && !fs.existsSync(path.join(process.cwd(), 'relative')), r)
+    check('격리: 기본 위치로 떨어져도 시험용 TMPDIR 안에만 기록', fs.existsSync(path.join(SANDBOX_TMP, 'gugbab-claude-state', 'claude-version.json')), fs.readdirSync(SANDBOX_TMP))
     void d
   }
 
@@ -205,11 +212,185 @@ function server(handler) {
   {
     const env = { GUGBAB_STATE_DIR: dir(), GUGBAB_CLAUDE_BIN: fakeClaude('2.1.296 (Claude Code)'), GUGBAB_TEST_NPM_LATEST_URL: 'http://127.0.0.1:1/x' }
     let r = await runHook({ hook_event_name: 'UserPromptSubmit', prompt: 'x' }, env)
-    check('SessionStart 아닌 이벤트 → 출력 없음 exit 0', r.code === 0 && r.out === '', r)
+    check('UserPromptSubmit: 알릴 결과 없으면 출력 없음 exit 0', r.code === 0 && r.out === '', r)
+    r = await runHook({ hook_event_name: 'PreToolUse', tool_name: 'Bash' }, env)
+    check('SessionStart·UserPromptSubmit 아닌 이벤트 → 출력 없음 exit 0', r.code === 0 && r.out === '', r)
     r = await runHook('{broken', env)
     check('깨진 stdin → exit 0', r.code === 0 && r.out === '', r)
     r = await runHook({ hook_event_name: 'SessionStart' }, { ...env, GUGBAB_CLAUDE_BIN: fakeClaude('x', 1) })
     check('claude 가 실패 종료 → exit 0 출력 없음', r.code === 0 && r.out === '', r)
+  }
+
+  // ── 자동 업데이트 (2026-11-11) ──
+  const M = require('./claude-version-check.js')
+  const BIN = '/usr/local/lib/node_modules/.bin/claude' // 시험용 경로 문자열(Homebrew 아님)
+  const spy = () => { const calls = []; const f = (d, mode) => calls.push(mode); f.calls = calls; return f }
+  // 업데이트 전 버전 → 업데이트 명령이 불리면 새 버전을 돌려주는 가짜 claude
+  const fakeCli = (from, to, { ok = true, out = 'Successfully updated' } = {}) => {
+    let v = from, runs = 0
+    return { exec: () => `${v} (Claude Code)`, run: () => { runs++; if (ok) v = to; return { ok, out } }, get runs() { return runs } }
+  }
+  console.log('\n[정상] 자동 업데이트 — 새 버전이면 뒤에서 실행, 결과는 한 번만 알림')
+  {
+    const d = dir(); const sp = spy()
+    let r = await M.checkClaudeVersion({ stateDir: d, now: T0, exec: exec('2.1.322'), fetchLatest: fetchOf('2.1.323'), autoUpdate: true, spawnRunner: sp, env: {}, platform: 'darwin', binPath: BIN })
+    check('새 버전 → 업데이트 프로세스를 update 모드로 띄움 + "뒤에서 실행" 안내', sp.calls.join() === 'update' && r.spawned && /뒤에서 `claude update`/.test(r.messages.join('\n')), { calls: sp.calls, r })
+    check('띄우기 전에 최신 버전을 기록(업데이트 프로세스가 읽음)', readClaudeVersionState(d).latest === '2.1.323')
+    const cli = fakeCli('2.1.322', '2.1.323')
+    const out = await M.runUpdate({ stateDir: d, now: T0 + 1000, exec: cli.exec, runUpdateCmd: cli.run, env: {}, platform: 'darwin', binPath: BIN })
+    check('runUpdate: claude update 1번 실행 → updated 기록', out === 'updated' && cli.runs === 1 && M.readUpdateRecord(d).ok && M.readUpdateRecord(d).to === '2.1.323', { out, rec: M.readUpdateRecord(d) })
+    check('잠금은 끝나면 풀림', !fs.existsSync(path.join(d, 'claude-update.lock')))
+    r = await M.checkClaudeVersion({ stateDir: d, now: T0 + 2000, exec: exec('2.1.323'), fetchLatest: fetchOf('2.1.323'), autoUpdate: true, spawnRunner: sp, env: {}, platform: 'darwin', binPath: BIN })
+    check('다음 세션: "2.1.322 → 2.1.323 자동 업데이트" 안내 + 다시 띄우지 않음', /2\.1\.322 → 2\.1\.323 로 자동 업데이트/.test(r.messages.join('\n')) && sp.calls.length === 1, { r, calls: sp.calls })
+    r = await M.checkClaudeVersion({ stateDir: d, now: T0 + 3000, exec: exec('2.1.323'), fetchLatest: fetchOf('2.1.323'), autoUpdate: true, spawnRunner: sp, env: {}, platform: 'darwin', binPath: BIN })
+    check('결과 안내는 한 번만', !/자동 업데이트/.test(r.messages.join('\n')), r)
+  }
+  {
+    const d = dir(); const sp = spy()
+    const r = await M.checkClaudeVersion({ stateDir: d, now: T0, exec: exec('2.1.322'), fetchLatest: fetchOf('2.1.322'), autoUpdate: true, spawnRunner: sp, env: {}, platform: 'darwin', binPath: BIN })
+    check('최신과 같으면 띄우지 않음·안내 없음', sp.calls.length === 0 && r.messages.length === 0, r)
+    const r2 = await M.checkClaudeVersion({ stateDir: dir(), now: T0, exec: exec('2.1.322'), fetchLatest: fetchOf('2.2.0'), spawnRunner: sp, env: {}, platform: 'darwin', binPath: BIN })
+    check('모듈로 부를 때(status·doctor — autoUpdate 없음)는 띄우지 않고 예전처럼 안내만', sp.calls.length === 0 && /claude update` 로 올릴 수/.test(r2.messages.join('\n')), r2)
+  }
+  {
+    const d = dir()
+    let fetched = 0
+    const cli = fakeCli('2.1.322', '2.1.330')
+    let out = await M.runUpdate({ stateDir: d, now: T0, mode: 'check', exec: cli.exec, fetchLatest: async () => { fetched++; return '2.1.330' }, runUpdateCmd: cli.run, env: {}, platform: 'darwin', binPath: BIN })
+    check('check 모드: 다시 조회해 더 높으면 업데이트', fetched === 1 && out === 'updated' && cli.runs === 1, { fetched, out })
+    const cli2 = fakeCli('2.1.330', '2.1.331')
+    out = await M.runUpdate({ stateDir: dir(), now: T0, mode: 'check', exec: cli2.exec, fetchLatest: fetchOf('2.1.330'), runUpdateCmd: cli2.run, env: {}, platform: 'darwin', binPath: BIN })
+    check('check 모드: 최신과 같으면 실행 안 함', out === 'up-to-date' && cli2.runs === 0, out)
+  }
+  {
+    const d = dir(); const sp = spy()
+    let r = M.maybeSessionCheck({ stateDir: d, now: T0, spawnRunner: sp, env: {}, platform: 'darwin' })
+    check('세션 중: 기록이 없거나 24시간 지남 → check 모드로 띄움', sp.calls.join() === 'check' && r.spawned, sp.calls)
+    r = M.maybeSessionCheck({ stateDir: d, now: T0 + 1000, spawnRunner: sp, env: {}, platform: 'darwin' })
+    check('세션 중: 방금 띄웠으면 같은 세션 다음 질문엔 다시 안 띄움', sp.calls.length === 1 && !r.spawned, sp.calls)
+    r = M.maybeSessionCheck({ stateDir: d, now: T0 + DAY + 1, spawnRunner: sp, env: {}, platform: 'darwin' })
+    check('세션 중: 24시간 지나면 다시 띄움', sp.calls.length === 2, sp.calls)
+  }
+
+  console.log('\n[악성] 자동 업데이트 — 잠금·기록 링크, 조작된 버전, 거짓 성공, 출력 주입')
+  {
+    const d = dir(); const sp = spy()
+    for (const v of ['9.9.9; rm -rf ~', '$(touch /tmp/pwn)', '10.0.0-rc.1', '../../9.9.9']) {
+      await M.checkClaudeVersion({ stateDir: d, now: T0 + 5 * DAY, exec: exec('2.1.322'), fetchLatest: fetchOf(v), autoUpdate: true, spawnRunner: sp, env: {}, platform: 'darwin', binPath: BIN })
+    }
+    check('레지스트리 버전이 x.y.z 숫자가 아니면 업데이트를 띄우지 않음', sp.calls.length === 0, sp.calls)
+  }
+  {
+    const d = dir()
+    const outside = path.join(base, 'lock-target.txt'); fs.writeFileSync(outside, 'KEEP')
+    if (trySymlink(outside, path.join(d, 'claude-update.lock'), 'file') === null) skip('잠금 파일 링크', '심볼릭 링크 생성 불가')
+    else {
+      fs.writeFileSync(path.join(d, 'claude-version.json'), JSON.stringify({ lastSeen: '2.1.322', latest: '2.1.323', latestCheckedAt: T0 }))
+      const cli = fakeCli('2.1.322', '2.1.323')
+      const out = await M.runUpdate({ stateDir: d, now: T0, exec: cli.exec, runUpdateCmd: cli.run, env: {}, platform: 'darwin', binPath: BIN })
+      check('잠금 자리가 링크면 잡지 않고 실행 안 함, 링크 대상 그대로', out === 'locked' && cli.runs === 0 && fs.readFileSync(outside, 'utf8') === 'KEEP', out)
+    }
+  }
+  {
+    const d = dir()
+    fs.writeFileSync(path.join(d, 'claude-version.json'), JSON.stringify({ lastSeen: '2.1.322', latest: '2.1.323', latestCheckedAt: T0 }))
+    fs.writeFileSync(path.join(d, 'claude-update.lock'), JSON.stringify({ at: T0 - 60 * 1000 }))
+    const cli = fakeCli('2.1.322', '2.1.323')
+    const out = await M.runUpdate({ stateDir: d, now: T0, exec: cli.exec, runUpdateCmd: cli.run, env: {}, platform: 'darwin', binPath: BIN })
+    check('다른 세션이 1분 전에 잡은 잠금 → 동시 실행 안 함', out === 'locked' && cli.runs === 0, out)
+  }
+  {
+    const d = dir()
+    fs.writeFileSync(path.join(d, 'claude-version.json'), JSON.stringify({ lastSeen: '2.1.322', latest: '2.1.323', latestCheckedAt: T0 }))
+    const cli = fakeCli('2.1.322', '2.1.323', { ok: true, out: '\u001b[31m성공\u001b[0m\u0007 ' + 'x'.repeat(2000) })
+    const lie = { exec: () => '2.1.322 (Claude Code)', run: () => ({ ok: true, out: 'Successfully updated' }) }
+    let out = await M.runUpdate({ stateDir: d, now: T0, exec: lie.exec, runUpdateCmd: lie.run, env: {}, platform: 'darwin', binPath: BIN })
+    check('명령은 성공이라 해도 버전이 안 올랐으면 실패로 기록(거짓 성공 무시)', out === 'failed' && M.readUpdateRecord(d).ok === false, out)
+    // 2026-11-12: 실패 기록·안내에 실제로 쓴 실행 파일 경로 — 다음에 원인을 바로 알 수 있게
+    check('실패 기록에 쓴 실행 파일 경로(bin) 남김', M.readUpdateRecord(d).bin === BIN, M.readUpdateRecord(d))
+    check('실패 안내에 "(실행 파일: <경로>)" 표시', (M.takeUpdateReport(d) || '').includes(`(실행 파일: ${BIN})`))
+    const d2 = dir()
+    fs.writeFileSync(path.join(d2, 'claude-version.json'), JSON.stringify({ lastSeen: '2.1.322', latest: '2.1.323', latestCheckedAt: T0 }))
+    await M.runUpdate({ stateDir: d2, now: T0, exec: cli.exec, runUpdateCmd: cli.run, env: {}, platform: 'darwin', binPath: BIN })
+    const rec = M.readUpdateRecord(d2)
+    check('업데이트 출력의 제어문자·ANSI 는 지우고 300자로 자름', rec && !/[\u0000-\u001f]/.test(rec.out) && rec.out.length <= 300, rec)
+    // 악성·경계: 기록 파일의 bin 에 제어문자·초장문을 넣어도 안내에는 정리된 200자 이하만
+    fs.writeFileSync(path.join(d2, 'claude-update.json'), JSON.stringify({ at: T0, from: '2.1.322', target: '2.1.323', to: '2.1.322', ok: false, out: 'x', bin: '/evil\u001b[31m\u0007' + 'a'.repeat(5000), reported: false }))
+    const evil = M.readUpdateRecord(d2)
+    check('악성: bin 의 제어문자 제거·200자 제한', evil && !/[\u0000-\u001f]/.test(evil.bin) && evil.bin.length <= 200, evil)
+    fs.writeFileSync(path.join(d2, 'claude-update.json'), JSON.stringify({ at: T0, from: '2.1.322', target: '2.1.323', to: null, ok: false, out: 'x', bin: 12345, reported: false }))
+    check('경계: bin 이 문자열이 아니면 빈 값(안내에 경로 없음)', M.readUpdateRecord(d2).bin === '' && !/실행 파일/.test(M.takeUpdateReport(d2) || ''))
+  }
+  {
+    const d = dir()
+    const outside = path.join(base, 'update-target.json'); fs.writeFileSync(outside, JSON.stringify({ at: T0, from: '1.0.0', target: '1.0.1', to: '1.0.1', ok: true, out: 'EVIL', reported: false }))
+    if (trySymlink(outside, path.join(d, 'claude-update.json'), 'file') === null) skip('결과 기록 링크', '심볼릭 링크 생성 불가')
+    else {
+      check('결과 기록이 링크면 읽지 않음(안내 없음)', M.readUpdateRecord(d) === null && M.takeUpdateReport(d) === null)
+      check('링크 대상은 그대로', JSON.parse(fs.readFileSync(outside, 'utf8')).reported === false)
+    }
+  }
+
+  console.log('\n[경계] 자동 업데이트 — 꺼 둔 설정·윈도우·Homebrew·잠금 만료·같은 목표 재시도·시계')
+  for (const [name, env, platform, bin, re] of [
+    ['DISABLE_AUTOUPDATER=1', { DISABLE_AUTOUPDATER: '1' }, 'darwin', BIN, /꺼 두셔서\(DISABLE_AUTOUPDATER\)/],
+    ['DISABLE_UPDATES=true', { DISABLE_UPDATES: 'true' }, 'darwin', BIN, /꺼 두셔서\(DISABLE_UPDATES\)/],
+    ['윈도우', {}, 'win32', null, /윈도우는 실행 중 파일 잠금/],
+    ['Homebrew 설치', {}, 'darwin', '/opt/homebrew/Caskroom/claude-code/2.1.322/claude', /CLAUDE_CODE_PACKAGE_MANAGER_AUTO_UPDATE=1/],
+  ]) {
+    const sp = spy()
+    const r = await M.checkClaudeVersion({ stateDir: dir(), now: T0, exec: exec('2.1.322'), fetchLatest: fetchOf('2.1.323'), autoUpdate: true, spawnRunner: sp, env, platform, binPath: bin })
+    check(`${name} → 띄우지 않고 이유와 함께 안내`, sp.calls.length === 0 && re.test(r.messages.join('\n')), r.messages)
+  }
+  {
+    const sp = spy()
+    const r = M.maybeSessionCheck({ stateDir: dir(), now: T0, spawnRunner: sp, env: { DISABLE_AUTOUPDATER: '1' }, platform: 'darwin' })
+    check('세션 중에도 꺼 둔 설정이면 띄우지 않음', sp.calls.length === 0 && !r.spawned)
+    check('DISABLE_AUTOUPDATER=0 은 끈 것이 아님', M.autoUpdateBlocked({ env: { DISABLE_AUTOUPDATER: '0' }, platform: 'darwin', binPath: BIN }) === null)
+  }
+  {
+    const d = dir()
+    fs.writeFileSync(path.join(d, 'claude-update.lock'), JSON.stringify({ at: T0 - 31 * 60 * 1000 }))
+    check('31분 지난 잠금은 버린 것으로 보고 새로 잡음', M.acquireLock(d, T0) === true)
+    fs.writeFileSync(path.join(d, 'claude-update.lock'), JSON.stringify({ at: T0 + DAY }))
+    check('미래 시각 잠금(시계 조작)은 버린 것으로 봄', M.acquireLock(d, T0) === true)
+    fs.writeFileSync(path.join(d, 'claude-update.lock'), '{broken')
+    check('깨진 잠금 파일도 버린 것으로 봄', M.acquireLock(d, T0) === true)
+  }
+  {
+    const d = dir(); const sp = spy()
+    fs.writeFileSync(path.join(d, 'claude-update.json'), JSON.stringify({ at: T0, from: '2.1.322', target: '2.1.323', to: '2.1.322', ok: false, out: 'EACCES', reported: true }))
+    let r = await M.checkClaudeVersion({ stateDir: d, now: T0 + 60 * 60 * 1000, exec: exec('2.1.322'), fetchLatest: fetchOf('2.1.323'), autoUpdate: true, spawnRunner: sp, env: {}, platform: 'darwin', binPath: BIN })
+    check('같은 목표 버전을 24시간 안에 이미 시도(실패) → 다시 띄우지 않고 같은 안내도 반복 안 함', sp.calls.length === 0 && r.messages.length === 0, r)
+    r = await M.checkClaudeVersion({ stateDir: d, now: T0 + DAY + 1, exec: exec('2.1.322'), fetchLatest: fetchOf('2.1.323'), autoUpdate: true, spawnRunner: sp, env: {}, platform: 'darwin', binPath: BIN })
+    check('24시간 지나면 다시 시도', sp.calls.length === 1, sp.calls)
+    const sp2 = spy()
+    await M.checkClaudeVersion({ stateDir: d, now: T0 + DAY + 2, exec: exec('2.1.322'), fetchLatest: fetchOf('2.1.324'), autoUpdate: true, spawnRunner: sp2, env: {}, platform: 'darwin', binPath: BIN })
+    check('목표 버전이 더 새로 나오면 24시간 안이어도 다시 시도', sp2.calls.length === 1, sp2.calls)
+  }
+  {
+    const d = dir()
+    fs.writeFileSync(path.join(d, 'claude-update.json'), JSON.stringify({ at: T0, from: '2.1.322', target: '2.1.323', to: null, ok: false, out: 'npm ERR! EACCES', reported: false }))
+    const msg = M.takeUpdateReport(d)
+    check('실패 결과 → 직접 할 명령(claude update·npm·doctor) 안내', /실패/.test(msg) && /claude update/.test(msg) && /claude doctor/.test(msg), msg)
+  }
+  if (!IS_WIN) {
+    // 실제 프로세스: --run-update check — 가짜 claude(--version 은 상태 파일 값, update 는 버전 올림) + 로컬 레지스트리
+    const { s, url } = await server((req, res) => { res.setHeader('content-type', 'application/json'); res.end(JSON.stringify({ version: '2.1.400' })) })
+    const d = dir()
+    const vf = path.join(d, 'ver.txt'); fs.writeFileSync(vf, '2.1.322')
+    const f = path.join(d, 'claude-fake.sh')
+    fs.writeFileSync(f, `#!/bin/sh\nif [ "$1" = update ]; then echo 2.1.400 > '${vf}'; echo "Successfully updated"; exit 0; fi\nprintf '%s (Claude Code)\\n' "$(cat '${vf}')"\n`)
+    fs.chmodSync(f, 0o755)
+    const r = await new Promise((resolve) => {
+      const p = spawn(process.execPath, [HOOK, '--run-update', 'check'], { env: { ...process.env, GUGBAB_STATE_DIR: d, GUGBAB_CLAUDE_BIN: f, GUGBAB_TEST_NPM_LATEST_URL: url, DISABLE_AUTOUPDATER: '', DISABLE_UPDATES: '' } })
+      p.on('close', (code) => resolve(code))
+    })
+    const rec = M.readUpdateRecord(d)
+    check('실제 프로세스(--run-update check): 조회 → claude update → 2.1.322 → 2.1.400 기록', r === 0 && rec && rec.ok && rec.from === '2.1.322' && rec.to === '2.1.400', { r, rec })
+    const h = await runHook({ hook_event_name: 'UserPromptSubmit', prompt: 'x' }, { GUGBAB_STATE_DIR: d, GUGBAB_CLAUDE_BIN: f, GUGBAB_TEST_NPM_LATEST_URL: url })
+    check('실제 훅 UserPromptSubmit: 결과를 한 번 알림(hookEventName UserPromptSubmit)', h.code === 0 && h.ev === 'UserPromptSubmit' && /2\.1\.322 → 2\.1\.400/.test(h.ctx || ''), h)
+    s.close()
   }
 
   if (IS_WIN) {
@@ -260,6 +441,8 @@ function server(handler) {
     s.close()
   }
 
+  check('격리: 시험 전체를 돌려도 실제 기본 상태 폴더(os.tmpdir()/gugbab-claude-state)는 그대로', snapReal() === REAL_BEFORE, { before: REAL_BEFORE, after: snapReal() })
+  try { fs.rmSync(SANDBOX_TMP, { recursive: true, force: true }) } catch { /* 무시 */ }
   console.log(`\n결과: ${passed} 통과 / ${failed} 실패${skipped ? ` (건너뜀 ${skipped})` : ''}`)
   try { fs.rmSync(base, { recursive: true, force: true }) } catch { /* 무시 */ }
   process.exit(failed ? 1 : 0)

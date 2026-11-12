@@ -2,7 +2,7 @@
 skill: mui-v5
 category: frontend
 version: v1
-date: 2026-09-26
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `mui-v5` |
 | 스킬 경로 | `.claude/skills/mui-v5/SKILL.md` |
-| 검증일 | 2026-09-26 (30~60일 주기 재검증, 최초 검증 2026-08-26) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-26 · 최초 검증 2026-08-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 | 기준 버전 | `@mui/material` 5.x 라인 (최종 릴리스 5.18.0 / 2025-07-08), Emotion 11, React 17~19 |
@@ -94,6 +94,8 @@ status: APPROVED
 | @mui/codemod README (master 원문) | https://raw.githubusercontent.com/mui/material-ui/master/packages/mui-codemod/README.md | ⭐⭐⭐ High | 2026-08-26 | 네임스페이스 목록, `deprecations/all`, `v5.0.0/preset-safe` |
 | MUI System 지원 페이지 | https://mui.com/system/getting-started/support/ | ⭐⭐ Medium | 2026-08-26 | v5를 "Stable major"로 표기한 **오래된 내용** — DISPUTED 처리(4-5 #2) |
 | 레포 내 기존 스킬 | `.claude/skills/mui-v9/SKILL.md` | ⭐⭐⭐ High | 2026-08-26 | 서술 범위 분리 기준 |
+| Material UI 지원 페이지 (재확인) | https://mui.com/material-ui/getting-started/support/ | ⭐⭐⭐ High | 2026-11-09 | Supported versions: ^9 ✅ Stable / ^7 ⚠️ LTS / ^6·^5 ❌ 변동 없음, "immediate predecessor" 보안 지원 정책 동일 |
+| npm registry @mui/material (재확인) | https://registry.npmjs.org/@mui/material | ⭐⭐⭐ High | 2026-11-09 | `latest-v5` 5.18.0 동결, `latest` 9.5.0, `next` 10.0.0-alpha.0. 5.18.0 peer `react ^17 \|\| ^18 \|\| ^19` 동일 |
 
 ---
 
@@ -145,6 +147,8 @@ status: APPROVED
 | 13 | React 19 지원은 v6에서 v5로 백포트되어 5.18.0 peer가 `^17 \|\| ^18 \|\| ^19`이며, 초기 마이너(5.10.0)는 `^17 \|\| ^18`뿐 | npm 5.18.0 / 5.10.0 peerDependencies 대조 | GitHub 이슈 #44413 (closed 2024-12-17, v6→v5 백포트 트래킹) | **VERIFIED** |
 | 14 | `sx` 성능 비용: 순수 div 100ms / styled 181ms / Box+sx 296ms, 번들은 약 15kB gzip 고정, 리스트는 단일 주입 지점 권장 | v5 문서 system/getting-started/usage (Performance tradeoffs) | v5 문서 the-sx-prop (동 섹션으로 링크 + 동적 값은 인라인 CSS 변수 권장) | **VERIFIED (동일 문서군 · 측정 환경 의존 지표로 표기)** |
 | 15 | `slots`/`slotProps`가 v5의 **어느 마이너에서 어떤 컴포넌트에 도입되었는지**의 정확한 목록 | v5 API 문서(최종 마이너 기준 상태만 표기) | 마이너별 변경 이력 추적 불가 | **UNVERIFIED → SKILL.md에서 "설치 마이너의 API 문서 확인" 지침으로 대체** |
+
+**2026-11-09 재검증 판정:** #1(5.18.0 최종·`latest-v5`) VERIFIED — npm dist-tags / #2(v5 ❌·v7 LTS·v9 stable) VERIFIED — Material UI 지원 페이지 / #13(5.18.0 React peer ^17·^18·^19) VERIFIED — npm 5.18.0 peerDependencies. 참고: v10.0.0-alpha.0(2026-10-12) 프리릴리스 존재 — 지원 표에는 아직 없음, SKILL.md 서술 영향 없음.
 
 ### 4-6. DISPUTED 처리 내역
 
@@ -261,3 +265,5 @@ status: APPROVED
 | 2026-08-26 | v1 | 2단계 실사용 테스트 수행 (Q1 반응형 2열 Grid `size` prop 오용 방지 / Q2 다크모드 `colorSchemes` 오용 방지 + 정식 방법 / Q3 `@mui/styles` React 18 비호환 / Q4 EOL 상태 + v5→v6 breaking change) → 4/4 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | skill-creator |
 | 2026-09-26 | v1 | 30~60일 주기 재검증. v5 5.18.0 동결 유지, EOL/LTS/stable 지원 표 변동 없음 확인. status APPROVED 유지 | 메인 세션 |
+| 2026-11-09 | v1 | 재검증 — npm dist-tags(`latest-v5` 5.18.0 동결)·Material UI 지원 표(v9 ✅/v7 LTS/v5 ❌)·5.18.0 React peer 재대조 3건 VERIFIED. 내용 변경 없음(검증일만 갱신) — skill-tester 생략, status APPROVED 유지 | Claude (Opus 5.5) |
+| 2026-11-12 | v1.1 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 버전·EOL·React peer, 마이너별 기능 시점, 패키지 메이저 일치, 최신 문법→v5 정답 대응표(Grid size/offset·applyStyles·cssVariables·variants 위치·TextField slotProps·makeStyles·System props), slots 편차·실험 CSS vars·theme.vars 주의, @mui/styles 증상, sx 성능·주입 순서·SSR 캐시, v5→v6→v7→v9 breaking·codemod / 덜어낸 것 설치 명령·createTheme/ThemeProvider 예제, 스타일링 방법 선택·sx/styled 예제, Grid 사용 예제, 테마 확장 module augmentation·theme.components 예제, 다크모드 Context 예제·CssVarsProvider 코드, Emotion SSR·Next.js 레이아웃 코드, 흔한 실수 표(대응표로 흡수, references/REFERENCE.md 폴더 삭제) | 정리 |

@@ -2,7 +2,7 @@
 skill: nexacro-17-xfdl-anatomy
 category: nexacro
 version: v1
-date: 2026-10-08
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `nexacro-17-xfdl-anatomy` |
 | 스킬 경로 | `.claude/skills/nexacro-17-xfdl-anatomy/SKILL.md` |
-| 검증일 | 2026-10-08 |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-10-08) |
 | 검증자 | skill-creator (Claude) |
 | 스킬 버전 | v1 |
 | 버전 기준 | Nexacro Platform 17 / 17.1 (공식 샘플 v17.1.2.200). API 시그니처는 N V24 레퍼런스 기준 |
@@ -73,6 +73,7 @@ status: APPROVED
 | velog 넥사크로 DataSet 정리 | https://velog.io/@5tmdhkfem/Nexacro-DataSet-Method | ⭐ Low | - | ROWTYPE 값 교차 확인용 |
 | 인프런 Q&A "팝업 종료 콜백" | https://www.inflearn.com/questions/967563/팝업-종료-콜백 | ⭐ Low | - | 팝업 콜백(strId, strVal)·공통 팝업 래퍼 관례 확인용 |
 | 아시아경제 기사(Nexacro N 출시) | https://view.asiae.co.kr/en/article/2022062013284263607 | ⭐⭐ Medium | 2022 | N 2021-09 출시 |
+| (재검증) 17 제품 정보 · N V24 레퍼런스 Form·ChildFrame | https://docs.tobesoft.com/product_information_nexacro_17_ko , https://docs.tobesoft.com/reference_guide_nexacro_n_v24_ko/Form , https://docs.tobesoft.com/reference_guide_nexacro_n_v24_ko/ChildFrame | ⭐⭐⭐ High | 2026-11-09 확인 | 최신 17.1 릴리스 노트·transaction·showModal 시그니처 재대조 |
 
 ---
 
@@ -123,6 +124,10 @@ status: APPROVED
 | 39 | BindItem compid·propid·datasetid·columnid, value 바인딩은 양방향 | VERIFIED | V24 BindItem 레퍼런스 + N 개발자 가이드 바인딩 페이지 |
 | 40 | Div 내부 컴포넌트의 BindItem compid 문자열 형식 | UNVERIFIED | 공식 문서에 없음 → `> 주의:` |
 | 41 | 팝업 쪽에서 objArguList 값을 읽는 경로(`this.parent.키` 등) | UNVERIFIED | 공식 문서로 확정 못 함 → `> 주의:` |
+| R1 | (2026-11-09 재검증) 17.1 최신 릴리스 노트는 여전히 2024-01(17.1.3.1700), EOL 공지 없음 | VERIFIED | 17 제품 정보 목록 재확인 |
+| R2 | (재검증) transaction 9인자 시그니처·bAsync 기본 true·nDataType 0~3·bCompress 기본 false·콜백 생략 시 Promise | VERIFIED | N V24 Form 레퍼런스 재대조 |
+| R3 | (재검증) showModal 시그니처·콜백 생략 시 Promise·showModalSync 존재·비블로킹 | VERIFIED | N V24 ChildFrame 레퍼런스 재대조 |
+| R4 | (재검증) ROWTYPE 1/2/4/8 값 | VERIFIED (기존 판정 유지) | 이번 검색에서 공식 페이지 재확인은 못 함 — 기존 레퍼런스 대조 결과 유지 |
 
 > 집계: 클레임 41개 — VERIFIED 30 / DISPUTED 4 (#12·#13·#20·#24) / UNVERIFIED 7 (#5·#22·#27·#33·#35·#40·#41)
 
@@ -255,3 +260,4 @@ showModal 다음 줄에서 Grid를 갱신하는 코드가 있다. 팝업 결과 
 |------|------|-----------|--------|
 | 2026-10-08 | v1 | 최초 작성 (클레임 41개: VERIFIED 30 / DISPUTED 4 / UNVERIFIED 7) | skill-creator |
 | 2026-10-08 | v1 | 2단계 실사용 테스트 수행 (Q1 transaction 호출표·URL 확정·ErrorCode / Q2 showModal 비블로킹·콜백 / Q3 gfn 래퍼·행 상태·이벤트 연결) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-11-09 | v1 | 재검증 — 17.1 최신 릴리스(2024-01 17.1.3.1700)·EOL 공지 없음, transaction·showModal 시그니처(N V24 레퍼런스) 재대조 → 모두 일치. 내용 변경 없음(날짜만 갱신) | Claude |

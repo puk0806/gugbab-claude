@@ -1,8 +1,8 @@
 ---
 skill: seo-vite-spa
 category: frontend
-version: v1.5
-date: 2026-09-28
+version: v1.6
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `seo-vite-spa` |
 | 스킬 경로 | `.claude/skills/seo-vite-spa/SKILL.md` |
-| 검증일 | 2026-09-28 (재검증, 이전 2026-08-26, 최초 2026-06-01) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-28·2026-08-26, 최초 2026-06-01) |
 | 검증자 | skill-creator (Claude Code 에이전트) |
 | 스킬 버전 | v1.3 |
 
@@ -75,6 +75,21 @@ status: APPROVED
 | vite-plugin-sitemap npm | https://www.npmjs.com/package/vite-plugin-sitemap | ⭐⭐ Medium | 2026-06-01 | npm 패키지 |
 | react-snap GitHub | https://github.com/stereobooster/react-snap | ⭐ Low (dormant) | 2026-06-01 | 미유지보수 확인용 |
 | vite-prerender-plugin (preactjs) | https://github.com/preactjs/vite-prerender-plugin | ⭐⭐ Medium | 2026-06-01 | 활성 대안 |
+| npm registry — @unhead/react (버전·peerDependencies·exports) | https://registry.npmjs.org/@unhead/react | ⭐⭐⭐ High | 2026-11-09 | 3.4.3, peer `react >=19.2.4` (v2.0.19 peer `>=18.3.1`) |
+| npm registry — react-helmet-async / vike / vike-react / vite-plugin-sitemap / vite-prerender-plugin | https://registry.npmjs.org/vike | ⭐⭐⭐ High | 2026-11-09 | 3.0.0 / 0.4.270 / 0.6.32 / 0.8.2 / 0.5.14 |
+
+### 4-0. 2026-11-09 재검증 클레임 판정
+
+| 클레임 | 판정 | 근거 |
+|--------|------|------|
+| react-helmet-async 최신 3.0.0, React 16~19 지원 | VERIFIED | npm registry latest·peerDependencies + 09-28 GitHub 확인과 일치 |
+| @unhead/react v3 API(`@unhead/react/client`의 createHead/UnheadProvider, useHead/useSeoMeta) 유지 | VERIFIED | 3.4.3 tarball `client.d.mts`·`index.d.mts` export + unhead 공식 설치 가이드(09-28 확인) |
+| @unhead/react v3는 React 18에서 사용 가능 | DISPUTED → 수정 | v3 peer `react >=19.2.4` — SKILL.md 3절 주의 추가 |
+| Vike 0.4.x 활발히 유지보수, v1.0 미출시 | VERIFIED | npm latest 0.4.270(2026-11-05) |
+| vike-react `useConfig`/`useData` import 경로 | VERIFIED | vike-react 0.6.32 package.json exports |
+| vite-plugin-sitemap 정체 | VERIFIED | latest 0.8.2(2025-05-15) 불변 |
+
+> 주의: 이번 재검증에서 vike.dev·unhead.unjs.io 공식 문서 재조회는 도구 한도로 수행하지 못했다 — API 경로는 npm 패키지 실제 export로 대조했다.
 
 ---
 
@@ -109,10 +124,42 @@ status: APPROVED
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 — 보완 필요 없음, 3/3 PASS
 - [✅] 2026-09-28 재검증(2차) 보강분(REFERENCE.md 6-1-1 Vike 네이티브 Head API) content test 재수행 — 2/2 PASS
 - [✅] 2026-09-28 선택 보강분(REFERENCE.md 6-1-1 JSON-LD × Vike +Head 예제, XSS 이스케이프) content test 재수행 — 2/2 PASS
+- [✅] 2026-11-09 재검증(3차) 수정분(@unhead/react v3 peer React 19.2.4+ 주의·비교표) content test 재시험 — 2/2 PASS (2026-11-09)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-11-09] 재시험 — @unhead/react v3 peer(react >=19.2.4) 주의 블록·비교표 수정 반영 확인
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester → general-purpose (domain-specific 프론트엔드 에이전트 미사용, 대체)
+**수행 방법**: SKILL.md Read 후 2개 실전 질문 답변(각 에이전트 답변 완료 후 판정), 근거 섹션 및 anti-pattern 회피 확인
+
+### 실제 수행 테스트
+
+**Q1. React 18.3 + Vite 신규 프로젝트에서 `npm i @unhead/react` 시 peer dependency 에러 — 원인과 해결**
+- ✅ PASS
+- 근거: SKILL.md 3절 "설치 및 Provider" 아래 "주의 (2026-11-09)" 블록, 선택 기준 표 "React 19 지원" 행
+- 상세: v3 peer `react >=19.2.4` 때문이라고 정확히 진단, 해결책으로 `@unhead/react@^2`(peer `>=18.3.1`) 또는 react-helmet-async v3를 제시. v3를 React 18에 설치 가능하다는 anti-pattern 회피.
+
+**Q2. React 18 기존 Vite SPA(react-helmet 사용)에서 react-helmet-async vs @unhead/react 선택, 카카오 미리보기 문제**
+- ✅ PASS
+- 근거: SKILL.md 2절, 3절 주의 블록·선택 기준 표, "전제와 한계", 1절 정적 메타
+- 상세: React 18 + 기존 코드 유지이므로 react-helmet-async `@^3` 선택, 설치·Provider 코드 정확 인용. helmet만으로는 카카오 1차 크롤링에 불충분하며 index.html 정적 OG·프리렌더/SSR·Edge 주입이 필요하다고 정확히 답변.
+
+### 발견된 gap (경미, 선택 보강)
+
+- `@unhead/react@^2`에서 `@unhead/react/client`·`UnheadProvider`·`useSeoMeta` API가 v3와 동일한지 SKILL.md에 없음(UNVERIFIED) — 차단 요인 아님.
+- 3절 제목 "React 19 기반 신규 프로젝트 권장"이 React 18 주의와 어긋나 보임, 제목에 "React 18은 v2" 한 줄 보강 권장 — 선택 보강.
+
+### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 해당 없음 (라이브러리 사용법 — content test로 충분)
+- 최종 상태: APPROVED 유지
+
+---
 
 ### [2026-09-28] 재테스트(skill-tester) — REFERENCE.md 6-1-1 JSON-LD × Vike +Head 예제·XSS 이스케이프 반영 확인
 
@@ -278,7 +325,8 @@ react-helmet-async로 Product 페이지에 JSON-LD를 넣고 있는데, 사용�
 | 구조 완전성 | ✅ (frontmatter + 소스 + 검증일 + 8개 본문 섹션 + 실수 패턴) |
 | 실용성 | ✅ (단계별 강화 경로 + 실행 가능 코드 + 범용 표현) |
 | 에이전트 활용 테스트 | ✅ (3/3 PASS, 2026-06-01 / 2026-09-28 재테스트: 2/2 PASS — Vike 네이티브 Head API 반영·참조 링크 추적 확인 / 2026-09-28 재테스트②: 2/2 PASS — JSON-LD × +Head XSS 이스케이프·cumulative 동작 반영 확인) |
-| **최종 판정** | **APPROVED** (2026-09-28 skill-tester 재테스트② 2/2 PASS — REFERENCE.md 6-1-1 JSON-LD × Vike +Head 예제·XSS 이스케이프가 답변에 정확히 반영됨 확인, PENDING_TEST → APPROVED 전환) |
+| 에이전트 활용 테스트 (2026-11-09 재시험) | ✅ 2/2 PASS — React 18 peer 에러 진단·라이브러리 선택(v2 또는 react-helmet-async v3) 반영 확인 |
+| **최종 판정** | **APPROVED 유지** (2026-11-09 재시험 2/2 PASS; 이전: 2026-09-28 skill-tester 재테스트② 2/2 PASS — REFERENCE.md 6-1-1 JSON-LD × Vike +Head 예제·XSS 이스케이프가 답변에 정확히 반영됨 확인, PENDING_TEST → APPROVED 전환) |
 
 ---
 
@@ -286,6 +334,8 @@ react-helmet-async로 Product 페이지에 JSON-LD를 넣고 있는데, 사용�
 
 - [✅] skill-tester로 3개 테스트 케이스 실행 → 통과 시 APPROVED 전환 (2026-06-01 완료, 3/3 PASS)
 - [✅] 2026-09-28 재검증(2차) 보강분(REFERENCE.md 6-1-1 Vike 네이티브 Head API) skill-tester content test 수행 — 2/2 PASS, PENDING_TEST → APPROVED 전환 완료 (2026-09-28)
+- [✅] 2026-11-09 재검증 수정분(@unhead/react v3 peer React 19.2.4+) skill-tester 재시험 수행 (2026-11-09 완료, 2/2 PASS, APPROVED 유지)
+- [❌] SKILL.md 3절 제목에 "React 18은 v2" 한 줄 및 `@unhead/react@^2` API(import 경로) 동일성 확인 보강 — 차단 요인 아님, 선택 보강
 - [❌] react-helmet-async가 다시 dormant 상태가 되거나 v3.1+ 변경이 있으면 재검증 — 차단 요인 아님, 선택적 신선도 재검증 과제
 - [❌] @unhead/react가 react-helmet 호환 export(`@unhead/react/helmet`) 동작을 한 번이라도 실제 프로젝트에서 검증한 사례가 누적되면 권장 우선순위를 재평가 — 차단 요인 아님, 실전 도입 후 추가 보강 권장
 - [❌] Vike v1.0 정식 배포 시점에 prerender API 변경 여부 확인 — 차단 요인 아님, v1.0 출시 시 재검증 권장
@@ -304,3 +354,5 @@ react-helmet-async로 Product 페이지에 JSON-LD를 넣고 있는데, 사용�
 | 2026-09-28 | v1.3 | 2단계 재테스트 수행 (Q1 Vike 네이티브 Head API — 참조 링크 추적 확인 / Q2 대규모 커머스 sitemap 회피) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-09-28 | v1.4 | 선택 보강 반영 — vike.dev 공식 문서(head-tags) 확인 후 REFERENCE.md 6-1-1에 JSON-LD × `+Head.js` 조합 예제 추가(`serializeJsonLd` 이스케이프 적용). status APPROVED → PENDING_TEST (메인 skill-tester 재테스트 필요) | orchestrator (선택 보강 반영 배치) |
 | 2026-09-28 | v1.5 | 2단계 재테스트 수행② (Q1 공식 예제 그대로 쓰면 안전한가·XSS 이스케이프 필요 확인 / Q2 +Head cumulative vs title/description override 구분) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-11-09 | v1.6 | 3차 재검증 — npm registry(버전·peerDependencies·exports)로 react-helmet-async 3.0.0(변동 없음, peer React 16~19)·@unhead/react 3.4.3(`./client`에 `createHead`/`UnheadProvider`, index에 `useHead`/`useSeoMeta` export 유지)·Vike 0.4.270(2026-11-05)·vike-react 0.6.32(`./useConfig`·`./useData` export 유지)·vite-plugin-sitemap 0.8.2(2025-05-15 이후 무갱신 지속 — 09-28 행의 "2026-05-15"는 2025-05-15 오기)·vite-prerender-plugin 0.5.14(2026-09-26, 활성) VERIFIED. **바뀐 점**: @unhead/react v3 peer가 `react >=19.2.4`라 React 18 SPA는 설치 불가 → SKILL.md 3절에 주의 블록(React 18은 `@unhead/react@^2`, peer `>=18.3.1`) + 비교표 행 보강. status APPROVED 유지. **재시험 결과(2026-11-09, skill-tester)**: Q1 React 18 `@unhead/react` peer 에러 진단 / Q2 React 18 라이브러리 선택·카카오 미리보기 → 2/2 PASS, APPROVED 유지(경미 gap: v2 API 동일성 미기재) | orchestrator (재검증 배치) |
+| 2026-11-11 | v1.6 | 2026-11-11 정리 — 모델이 아는 일반 지식 절 제거(남긴 절: 전제와 한계 중 Rendertron·동적 렌더링 주의, 단계별 SEO 강화 경로 표, 2절 react-helmet-async v3 버전 서술, 3절 @unhead/react v3 서술·peer 주의·선택 기준표, 5절 vite-plugin-sitemap 정체 주의 / REFERENCE: 6-1-1 Vike Head API, 6-2 vite-prerender-plugin·유지보수 정체 주의 / 덜어낸 절: two-wave·CRA deprecated 설명, 1절 정적 메타, 2·3절 설치·사용 코드, 4절 JSON-LD, 5절 정적 sitemap·플러그인 사용 예, REFERENCE 6-1 Vike 기본·7 OG 이미지·8 CRA 조치·흔한 실수·언제 부족한가, 사실 재검증 아님) | Claude (Opus 5.5) |

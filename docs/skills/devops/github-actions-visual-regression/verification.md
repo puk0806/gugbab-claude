@@ -1,8 +1,8 @@
 ---
 skill: github-actions-visual-regression
 category: devops
-version: v1.2
-date: 2026-09-28
+version: v1.3
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -41,10 +41,10 @@ status: APPROVED
 | 스킬 이름 | `github-actions-visual-regression` |
 | 스킬 경로 | `.claude/skills/github-actions-visual-regression/SKILL.md` |
 | 최초 검증일 | 2026-04-29 |
-| 검증일 | 2026-09-28 (최초 2026-04-29 · 재검증 2026-08-11, 2026-09-28) |
-| 최종 재검증일 | 2026-09-28 (08-11 액션 메이저 버전·checkout v7 보안 기본값 반영 → 09-28 전수 재확인, pnpm/action-setup 패치 정정) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-28 · 최초 2026-04-29 · 재검증 2026-08-11) |
+| 최종 재검증일 | 2026-11-09 (08-11 액션 메이저 버전·checkout v7 보안 기본값 반영 → 09-28 전수 재확인 → 11-09 패치 갱신·Playwright Docker 이미지 jammy→noble 정정) |
 | 검증자 | Claude (Opus 4.7 최초 / Opus 5 → Sonnet 5 재검증) |
-| 스킬 버전 | v1.2 |
+| 스킬 버전 | v1.3 |
 
 ---
 
@@ -132,6 +132,8 @@ status: APPROVED
 | actions/github-script README + releases | https://github.com/actions/github-script | ⭐⭐⭐ High | 2026-08 | v9.0.0 (ESM, Node 24, 러너 2.327.1+) |
 | pnpm/action-setup README | https://github.com/pnpm/action-setup | ⭐⭐ Medium | 2026-08 | v6.0.10, pnpm v11+는 pnpm/setup 권장 |
 | peter-evans/create-pull-request releases | https://github.com/peter-evans/create-pull-request | ⭐⭐ Medium | 2026-08 | v8.1.1 |
+| GitHub Releases API (11-09, 액션 10종 latest) | https://api.github.com/repos/{owner}/{repo}/releases/latest | ⭐⭐⭐ High | 2026-11-09 | 메이저 변경 없음 — VERIFIED. 패치: setup-node 7.1.0·upload-artifact 7.0.2·download-artifact 8.0.2·pnpm/action-setup 6.1.1 (헤더 갱신) |
+| Playwright Docker 문서 | https://playwright.dev/docs/docker (원문 microsoft/playwright `docs/src/docker.md`) | ⭐⭐⭐ High | 2026-11-09 | 기본 태그·`-noble` = Ubuntu 24.04, `-jammy` = 22.04 → REFERENCE 8-3 `v1.x-jammy` 는 ubuntu-latest(24.04) 와 불일치 — DISPUTED·`-noble` 로 정정 |
 | The Hacker News — checkout pwn request 차단 보도 | https://thehackernews.com/2026/06/github-updates-actionscheckout-to-block.html | ⭐⭐ Medium | 2026-06 | 독립 교차 검증용 |
 
 ---
@@ -190,6 +192,27 @@ DISPUTED / UNVERIFIED 항목: 없음.
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-11-09] 재검증 정정분 재시험
+
+**수행일**: 2026-11-09
+**수행자**: general-purpose (skill-tester 가 하위 에이전트 결과를 기다릴 수 없는 환경이라 메인이 general-purpose 를 직접 호출해 결과를 받은 뒤 판정)
+
+**Q1. CI(ubuntu-latest) baseline 을 맥에서 재현할 Docker 이미지 태그와 이유**
+- ✅ PASS — `mcr.microsoft.com/playwright:v1.x-noble`, ubuntu-latest=24.04(noble)·jammy=22.04 고정 시만, 버전은 `@playwright/test` 와 일치, baseline 은 CI 에서만 생성 (REFERENCE 61~65줄, SKILL.md 353줄). anti-pattern(`-jammy`) 회피
+
+**Q2. PR 코멘트 액션·대안, baseline 갱신 PR 액션**
+- ✅ PASS — `actions/github-script@v9` 기본·`thollander/actions-comment-pull-request@v3` 대안·`peter-evans/create-pull-request@v8`·권한 정확 (SKILL.md 26·311~466줄)
+
+**발견된 gap (선택 보강 — 기존 서술)**
+- **보안**: SKILL.md github-script 예시가 `${{ steps.body.outputs.body }}` 를 JS 템플릿 리터럴에 직접 삽입 — artifact 파일명에 백틱·`${}` 가 섞이면 스크립트 주입 가능. `env:` 로 넘겨 `process.env` 로 읽는 방식으로 고칠 것을 권장(다음 정비 시 우선 반영)
+- 포크 PR 에서 `pull_request` 토큰은 읽기 전용이라 코멘트 실패 — `workflow_run` 분리 예시 없음
+- `create-pull-request` 기본 `GITHUB_TOKEN` 으로 만든 PR 은 다른 워크플로우 미트리거 — PAT/App 토큰 대안 미기술
+- setup-node(cache:'pnpm')·pnpm/action-setup 순서가 SKILL.md 와 REFERENCE 에서 반대, CI 도 컨테이너로 맞춰야 픽셀 일치 보장, arm64 맥 `--platform linux/amd64` 미기술
+
+agent content test: 2/2 PASS → **APPROVED 유지**
+
+---
 
 **수행일**: 2026-09-28 (재테스트)
 **수행자**: skill-tester → general-purpose (2회 병렬 호출, devops-engineer 미등록으로 대체)
@@ -295,7 +318,7 @@ DISPUTED / UNVERIFIED 항목: 없음.
 | 내용 정확성 | ✅ — 2026-09-28 재검증에서 pnpm/action-setup 버전 정정(6.0.10→6.1.0) 1건, 나머지 9종 액션은 변경 없음 확인 |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-04-29 3/3 PASS, 2026-08-11 회귀 4/4 PASS, 2026-09-28 재테스트 2/2 PASS) |
+| 에이전트 활용 테스트 | ✅ (2026-04-29 3/3 PASS, 2026-08-11 회귀 4/4 PASS, 2026-09-28 재테스트 2/2 PASS, 2026-11-09 재시험 2/2 PASS) |
 | 최신성 재검증 | ✅ (2026-08-11 클레임 10건 VERIFIED / 09-28 10종 액션 전수 재확인, 1건 패치 정정) |
 | **최종 판정** | **APPROVED** (재검증 정정분 재테스트 완료) |
 
@@ -311,6 +334,9 @@ DISPUTED / UNVERIFIED 항목: 없음.
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester 호출하여 2~3개 실전 질문 수행 (2026-04-29 완료, 3/3 PASS — Q1: artifact 이름 충돌 / Q2: pull_request_target 보안 위험 / Q3: 로컬 baseline false positive)
+- [✅] 2026-11-09 재검증(Playwright 이미지 noble 정정·패치 갱신) 재시험 2/2 PASS
+- [✅] **(2026-11-09 발견·반영)** github-script 예시의 `${{ steps.body.outputs.body }}` 템플릿 리터럴 직접 삽입 → `env: VRT_BODY` + `process.env.VRT_BODY` 로 변경(스크립트 주입 방지, GitHub 보안 강화 가이드 "Using an intermediate environment variable" 방식).
+- [⏸️] 나머지 선택 보강: 그 밖에 `workflow_run` 코멘트 분리 예시, create-pull-request 토큰, setup-node/pnpm 단계 순서 통일
 - [⏸️] 동적 matrix 패턴(앱 5개 이상일 때) 보강 — 차단 요인 아님, 실제 필요해질 때 추가 (선택 보강)
 - [⏸️] Chromatic / Percy / Argos SaaS 연동 비교 가이드 — 현재는 self-managed CI 전용, 필요 시 별도 스킬로 분리 (선택 보강)
 - [✅] 액션 메이저 버전·checkout v7 보안 기본값 반영 (2026-08-11)
@@ -328,3 +354,8 @@ DISPUTED / UNVERIFIED 항목: 없음.
 | 2026-08-11 | v1.1 | 최신화: "v5/v4 LTS 라인 유지" 전제 폐기 후 최신 메이저로 갱신(checkout v5→v7, cache v4→v6, upload-artifact v4→v7, download-artifact v4→v8, setup-node v4→v7, github-script v7→v9, paths-filter v3→v4, pnpm/action-setup v4→v6, create-pull-request v7→v8). checkout v7 포크 PR 체크아웃 기본 차단·2026-07-20 백포트 경고 추가, download-artifact v8 `digest-mismatch`·github-script v9 ESM 주의 추가. 클레임 10건 교차 검증 전부 VERIFIED, 회귀 확인 4/4 PASS. status APPROVED 유지 | Claude (Opus 5) |
 | 2026-09-28 | v1.2 | 재검증(2차) — 액션 10종 전수 재확인, pnpm/action-setup 6.0.10→6.1.0 패치 정정(메이저 변경 없음), 나머지 9종은 08-11과 동일 확인. status APPROVED → PENDING_TEST(재테스트 대기) | Claude (Sonnet 5) |
 | 2026-09-28 | v1.2 | 2단계 재테스트 수행 (Q1 pnpm/action-setup 패치·다른 액션 무변경 확인 / Q2 github-script v9 ESM breaking change·셀프호스트 러너 조건) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-11-09 | v1.3 | 재검증 — GitHub Releases API 로 액션 10종 재확인(메이저 변경 없음, 패치 4종 헤더 갱신), checkout v7 포크 PR 차단 서술 변경 없음. REFERENCE 8-3 로컬 확인용 Playwright 이미지 `v1.x-jammy` → `v1.x-noble`(ubuntu-latest = 24.04) 정정. 내용 수정 있음 — 재시험 | Claude (Opus 5.5) |
+| 2026-11-09 | v1.3 | 재검증 후 2단계 재시험 (Q1 Playwright 이미지 noble / Q2 PR 코멘트·baseline 갱신 액션) → 2/2 PASS(general-purpose 직접 호출), APPROVED 유지. github-script 예시 스크립트 주입 위험 gap 섹션 7 기록 | general-purpose |
+| 2026-11-09 | v1.3.1 | 재검증 보강 — github-script 예시를 `env:` 경유(`process.env.VRT_BODY`)로 바꿔 스크립트 주입 위험 제거. 출력 문자열은 같음(동작 변경 없음) | Claude (Opus 5.5) |
+| 2026-11-11 | v1.4 | storybook-visual-testing 통합 — 옮긴 절: SKILL.md 7절 "러너·스냅샷 함정"(7-1 test-runner 2026-09-30 지원 종료·index.json→순수 Playwright 패턴·Vitest 애드온 visual tests=Chromatic·preVisit/postVisit·axe-playwright / 7-2 Storybook 10 Node 20.19+·22.12+·ESM main·essentials 제거 / 7-3 baseline 파일명 플랫폼 접미사·Docker 태그 버전 고정 noble·jammy·resolute·maxDiffPixels OR 함정·모노레포 baseline 경로 분리), 상단 주의 문구의 스킬 연결 정리, 소스 URL 3개 추가. 출처 원 검증일 2026-11-09 기준 내용 그대로(사실 재검증 아님). status·검증일 변경 없음 | Claude (Opus 5.5) |
+| 2026-11-12 | v1.4.1 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 액션 최신 메이저 버전 주의, checkout v7 포크 PR 차단·v2~v6 백포트·pull_request_target 금지, artifact 불변·archive:false·download digest/자동 해제, matrix 잡 레벨 if 제약, github-script v9 ESM·getOctokit 재선언·Node 24·env 경유 주입 방지, baseline CI 생성·별도 PR, test-runner 지원 종료·index.json→Playwright 패턴, Storybook 10 CI 요구 표, toHaveScreenshot 함정·Docker 태그 / 덜어낸 것 시각 회귀 구조 비교 표·흐름도, paths/paths-filter·concurrency 트리거 예제, 빌드·테스트·baseline 갱신·코멘트 잡 전체 YAML, 사용/비사용 판단 절, 전체 워크플로우 조합 예시. references/REFERENCE.md 삭제(남길 내용은 SKILL.md로 합침), 7절 → 5절 번호 정리. 원 검증일 2026-11-09 기준 내용 그대로, status·검증일 변경 없음 | 정리 |

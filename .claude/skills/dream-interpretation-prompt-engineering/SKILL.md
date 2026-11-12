@@ -2,9 +2,9 @@
 name: dream-interpretation-prompt-engineering
 user-invocable: false
 description: >
-  꿈 해몽 앱용 Claude API 프롬프트 설계 패턴 — 시스템 프롬프트 구조, few-shot
-  예시, 안전 가드, JSON 응답 스키마, 프롬프트 캐싱을 한국 전통 해몽 + 융/프로이트
-  심리학 두 관점 균형으로 다룹니다.
+  꿈 해몽 앱용 프롬프트 설계 패턴 — 시스템 프롬프트 구조, hedging 톤 규칙, few-shot
+  예시, 안전 가드(한국 위기 자원), JSON 응답 스키마를 한국 전통 해몽 + 융/프로이트
+  심리학 두 관점 균형으로 다룹니다. API 호출·캐싱·structured outputs 는 claude-api 스킬.
   <example>사용자: "꿈 해몽 앱에서 Claude API 시스템 프롬프트 어떻게 짜야 해?"</example>
   <example>사용자: "꿈 해몽 응답 JSON 스키마 설계 + 안전 가드 같이 보여줘"</example>
   <example>사용자: "자해 관련 꿈 입력 들어왔을 때 응답 방식은?"</example>
@@ -18,12 +18,15 @@ description: >
 > - Anthropic Prompt caching — https://platform.claude.com/docs/en/build-with-claude/prompt-caching
 > - Anthropic Structured outputs — https://platform.claude.com/docs/en/build-with-claude/structured-outputs
 > - 보건복지부 자살예방 상담전화 109 통합 — https://www.mohw.go.kr/board.es?mid=a10503010100&bid=0027
+> - Anthropic Models overview / Sonnet 5.5 — https://platform.claude.com/docs/en/about-claude/models/overview , https://platform.claude.com/docs/en/models/sonnet-5-5/overview
+> - API versions / 2026-10-21 마이그레이션 — https://platform.claude.com/docs/en/api/versioning , https://platform.claude.com/docs/en/api/migration-2026-10-21
 >
-> 검증일: 2026-09-28 (최초 2026-05-14)
-> 대상 모델: Claude Opus 5.5 / Sonnet 5 / Haiku 4.5 (2026-09-25 현행 세대 — 예제 기본은 비용 효율상 Sonnet 5)
+> 검증일: 2026-11-11 (재검증, 이전 2026-11-06 · 2026-09-28 · 최초 2026-05-14 — 2026-11-11 Fable 5.2 현행화)
+>
+> API 호출·캐싱·structured outputs 는 Claude Code 기본 `claude-api` 스킬 참조. 톤·일관성은 프롬프트·few-shot·스키마로 잡는다.
 
-이 스킬은 꿈 해몽 앱(소비자용 AI 코파일럿) 백엔드에서 Claude API를 호출할 때
-시스템 프롬프트·few-shot·안전 가드·JSON 응답·캐싱을 어떻게 조립할지에 대한
+이 스킬은 꿈 해몽 앱(소비자용 AI 코파일럿) 백엔드 프롬프트에서
+시스템 프롬프트·few-shot·안전 가드·JSON 응답을 어떻게 조립할지에 대한
 패턴 모음이다. **모든 패턴은 Anthropic 공식 문서 권고에 정합**한다.
 
 짝 스킬:
@@ -136,17 +139,11 @@ JSON 스키마(아래)를 따릅니다. 추가 텍스트·markdown 코드펜스 
 - `"trauma"` — 반복 외상 패턴 감지, 위와 유사 처리
 - `"violence"` — 타인 가해 구체 묘사
 
-### 3-1. 스키마 강제 방식 — Structured Outputs (권장)
+### 3-1. 스키마 강제
 
-`output_config.format`으로 JSON 스키마를 강제하는 것이 현행 권장 방식이다(GA,
-constrained decoding으로 스키마 위반 자체를 차단 — "JSON만 반환" 프롬프트 지시보다
-신뢰도가 높다).
+위 스키마는 프롬프트 지시만이 아니라 structured outputs 로 강제하는 편이 신뢰도가 높다 — API 호출·캐싱·structured outputs 는 Claude Code 기본 `claude-api` 스킬 참조. 강제할 JSON Schema 본체(분야 내용):
 
 ```python
-import anthropic, json
-
-client = anthropic.Anthropic()
-
 DREAM_SCHEMA = {
     "type": "object",
     "properties": {
@@ -163,36 +160,10 @@ DREAM_SCHEMA = {
     ],
     "additionalProperties": False,
 }
-
-response = client.messages.create(
-    model="claude-sonnet-5",
-    max_tokens=1024,
-    system=[{
-        "type": "text",
-        "text": SYSTEM_PROMPT,
-        "cache_control": {"type": "ephemeral"},
-    }],
-    output_config={"format": {"type": "json_schema", "schema": DREAM_SCHEMA}},
-    messages=[{"role": "user", "content": user_dream_text}],
-)
-result = json.loads(response.content[0].text)  # constrained decoding — 파싱 실패 사실상 없음
 ```
 
-**스키마 작성 시 공식 제약(위반 시 400):**
-- `additionalProperties`는 객체마다 `false`여야 한다.
-- `minLength`/`maxLength`, `minimum`/`maximum` 같은 길이·수치 제약은 **미지원** →
-  "3–5줄" 같은 분량 제약(§2 톤 규칙)은 스키마가 아니라 **프롬프트**로 건다.
-- 재귀 스키마, 외부 `$ref`(URL)는 미지원. `enum`은 문자열·숫자·불리언·null만 가능.
-- **`output_config.format`을 바꾸면 해당 스레드의 프롬프트 캐시가 무효화된다** →
-  스키마는 한 번 고정하면 바꾸지 않는다(§6 캐싱과 충돌 방지).
-
-### 3-2. 폴백 — 프롬프트 지시 + 재시도
-
-Structured Outputs를 쓸 수 없는 환경(구버전 SDK·클라이언트 제약)에서는 기존 방식을
-폴백으로 둔다: system prompt에 "추가 텍스트·코드펜스 없이 JSON만 반환" 지시(§2
-출력 포맷)를 유지하고, 클라이언트에서 JSON 파싱 실패 시 한 번 더 호출(retry) 또는
-자유 텍스트 fallback을 둔다. Anthropic 공식 API는 이 지시를 따르지만 100% 보장은
-아니므로, 가능하면 §3-1 Structured Outputs를 우선 사용한다.
+- "3–5줄" 같은 분량 제약(§2 톤 규칙)은 스키마가 아니라 **프롬프트**로 건다.
+- 스키마를 강제하지 못하는 경로에서는 system prompt 의 "추가 텍스트·코드펜스 없이 JSON만 반환" 지시(§2 출력 포맷)를 유지하고, JSON 파싱 실패 시 재시도 또는 자유 텍스트 fallback 을 둔다.
 
 ---
 
@@ -278,68 +249,9 @@ Structured Outputs를 쓸 수 없는 환경(구버전 SDK·클라이언트 제�
 
 ## 6. 프롬프트 캐싱 활용
 
-꿈 해몽 시스템 프롬프트는 *모든 요청에서 동일* → 캐싱 적합도가 매우 높다.
+꿈 해몽 시스템 프롬프트(역할·톤·안전 가드·few-shot)는 *모든 요청에서 동일* → 캐싱 적합도가 매우 높다. 그래서 바뀌는 것(꿈 내용)은 user 메시지로만 보내고 system 은 불변으로 둔다. few-shot 3개 + 안전 가드 + 톤 규칙을 모두 포함한 시스템 프롬프트는 한국어 기준 대략 1,500–2,500 tokens 다.
 
-**API 요청 예시 (anthropic SDK Python):**
-
-```python
-import anthropic
-
-client = anthropic.Anthropic()
-
-SYSTEM_PROMPT = """당신은 한국 전통 해몽과 융/프로이트 심리학 ... (위 템플릿)"""
-
-response = client.messages.create(
-    model="claude-sonnet-5",  # 비용 효율 권장 모델 (2026-09-28 기준)
-    max_tokens=1024,
-    system=[
-        {
-            "type": "text",
-            "text": SYSTEM_PROMPT,
-            "cache_control": {"type": "ephemeral"}  # 기본 5분 TTL
-        }
-    ],
-    messages=[
-        {"role": "user", "content": user_dream_text}
-    ]
-)
-
-# 캐시 적중 확인
-print(response.usage.cache_read_input_tokens, response.usage.cache_creation_input_tokens)
-```
-
-**최소 캐시 토큰 임계값 (공식 docs 2026-09-28 재확인):**
-- Claude Fable 5.1 / Fable 5 / Opus 5.5 / Opus 5: **512 tokens** (Opus 5.5도 공식 표에
-  512로 명시됨을 재확인 — 2026-09-25 시점엔 표에 없어 "미확인"이었으나 이후 반영됨)
-- Claude Sonnet 5 / Opus 4.8 / Sonnet 4.6 / Sonnet 4.5: **1,024 tokens**
-- Claude Opus 4.7: **2,048 tokens**
-- Claude Opus 4.6 / 4.5: **4,096 tokens**
-- Claude Haiku 4.5: **4,096 tokens**
-
-> 임계값은 세대 순으로 단조롭지 않다 — Opus 5.5·Opus 5가 512로 가장 낮고 Opus 4.6·Haiku 4.5가 4,096으로 가장 높다.
-
-few-shot 3개 + 안전 가드 + 톤 규칙을 모두 포함한 시스템 프롬프트는 한국어
-기준 대략 1,500–2,500 tokens 이므로 **Sonnet 5 에서는 캐시 적용 가능**,
-Haiku 4.5에서는 토큰 부족으로 캐시 미스 가능성 → 프롬프트를 더 채우거나
-Sonnet 5 사용을 권장.
-
-**1시간 TTL (`ttl: "1h"`) 사용 기준:**
-- 트래픽이 5분 안에 다음 요청이 안 들어오는 저-트래픽 앱 → 1h 권장
-  (cache write 비용 2x이지만 5분 만료 후 재작성보다 저렴)
-- 5분 이내 재호출이 항상 보장되는 고-트래픽 앱 → 기본 5m 유지
-
-```python
-"cache_control": {"type": "ephemeral", "ttl": "1h"}
-```
-
-**비용 효과 (공식 docs 기준, Sonnet 5 / per 1M tokens):**
-- 기본 input: $3
-- 5m cache write: $3.75 (1.25x)
-- 1h cache write: $6 (2x)
-- cache read: $0.30 (0.1x)
-
-→ 시스템 프롬프트 2,000 tokens 가 매 요청마다 cache hit 되면
-   기존 $0.006 → $0.0006 (90% 절감).
+API 호출·캐싱·structured outputs 는 Claude Code 기본 `claude-api` 스킬 참조.
 
 ---
 
@@ -382,9 +294,9 @@ Sonnet 5 사용을 권장.
 
 ## 9. 출력 후처리
 
-1. **JSON 파싱 (필수)** — Structured Outputs(§3-1) 사용 시 스키마 위반 자체가
-   차단되어 파싱 실패가 사실상 없다. §3-2 폴백 경로를 쓸 때만 실패 시 한 번 더
-   호출(retry) 또는 자유 텍스트 fallback을 둔다
+1. **JSON 파싱 (필수)** — 스키마를 강제(§3-1)하면 파싱 실패가 사실상 없다.
+   강제하지 못하는 경로에서만 실패 시 한 번 더 호출(retry) 또는 자유 텍스트
+   fallback을 둔다
 2. **금칙어 필터** — 욕설·혐오 표현 정규식 차단 (Claude가 생성할 가능성은
    낮지만 사용자 입력을 그대로 echo하는 케이스 방지)
 3. **markdown 안전 렌더링** — Claude 출력의 `**굵게**`만 허용, `<script>` 등
@@ -406,7 +318,7 @@ Sonnet 5 사용을 권장.
 | 안전 가드 정확도 | 자해 키워드 포함 입력 → flag 발동률 | ≥ 95% (recall) |
 | 안전 가드 오발동률 | 일반 흉몽 → flag 발동률 | < 5% (precision) |
 | JSON 파싱 성공률 | client 측 try/catch 카운트 | ≥ 99% |
-| 캐시 적중률 | `cache_read_input_tokens / total_input` | ≥ 80% (정상 운영 시) |
+| 캐시 적중률 | 캐시 읽기 입력 토큰 / 전체 입력 토큰 | ≥ 80% (정상 운영 시) |
 
 ---
 
@@ -440,19 +352,11 @@ Sonnet 5 사용을 권장.
 8. **109/1577-0199 혼동** — *자살 위험*은 109 (2024 통합), *일반 정신건강
    상담*은 1577-0199. system prompt에 두 번호 역할을 명확히 분리해 기재.
 
-9. **모델 ID 하드코딩** — `claude-sonnet-4-20250514` / `claude-opus-4-20250514`는
-   2026-06-15에 **retired** 되어 이미 호출 실패한다(`claude-opus-4-1-20250805`도
-   2026-08-05 retired). 날짜 접미사 없는 현행 별칭 ID(`claude-opus-5-5`·`claude-sonnet-5`·
-   `claude-haiku-4-5`)를 사용한다. 구세대 `claude-opus-5`·`claude-sonnet-4-6`·`claude-opus-4-8`은
-   아직 호출 가능한 legacy지만 신규 코드에는 쓰지 않는다(2026-09-25 기준).
+9. **few-shot 예시에 PII** — 예시 안의 가상 인물 이름·번호도 실제 PII로
+   오인될 수 있다. 모두 명백히 가상("홍길동", "01000000000")으로.
 
-10. **few-shot 예시에 PII** — 예시 안의 가상 인물 이름·번호도 실제 PII로
-    오인될 수 있다. 모두 명백히 가상("홍길동", "01000000000")으로.
-
-11. **`output_config.format`을 자주 바꿈** — Structured Outputs(§3-1) 스키마 변경은
-    해당 스레드의 프롬프트 캐시를 무효화한다. 스키마는 한 번 고정하면 바꾸지 않는다.
-
----
+10. **톤을 프롬프트 밖에서 잡으려 함** — 톤 일관성은 시스템 프롬프트·few-shot(§4)으로,
+    형식은 스키마(§3)로 고정한다. 스키마는 한 번 고정하면 자주 바꾸지 않는다.
 
 ---
 

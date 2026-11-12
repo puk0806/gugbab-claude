@@ -1,6 +1,6 @@
 # gugbab 하네스 항목 체크리스트 — 고정 / 켜고 끄기 선택
 
-> 최종 수정: 2026-10-29 · 상태: **사용자 체크 반영** (고정 35 · 켬 53 · 끔 233 — 2026-10-29 스택 전용 에이전트 12개와 spec-extraction-method·/spec-extract·룰 java.md·typescript.md·rust.md 기본 끔(프리셋으로 켬) · 이전: 고정 35 · 켬 70 · 끔 216 — 사용자 체크 45개 + 묶음 정리 규칙 적용(계획서 14.5) + 새 훅 relation-guard · parallel-hint · claude-version-check · release-version-guard · wrapper-version-check) · 기준: 현재 레포 실측 (훅 32 + 상태줄 1 · 룰 14 · 커맨드 11 + `/harness` · 에이전트 61 · 스킬 195)
+> 최종 수정: 2026-11-11 · 2026-11-11 모델이 이미 아는 일반 지식·내장 기능과 겹치는 항목 제거(스킬 48·에이전트 11·훅 relation-guard·parallel-hint·session-start·커맨드 /context-prime·/create-plan·/update-docs·/tdd-implement·/sparc-refine, 2차 점검으로 스킬 8·에이전트 claude-code-guide(내장 에이전트와 같은 이름), 3차로 게임(Unity) 묶음·프리셋 전체·운세 일반 지식 스킬 5·합친 스킬 3(storybook-visual-testing·tanstack-query-v4-to-v5-migration·seo-monitoring-automation) — 실제 수는 `docs/DEFAULTS.md`) · 이전 상태: **사용자 체크 반영** (고정 35 · 켬 53 · 끔 233 — 2026-10-29 스택 전용 에이전트 12개와 spec-extraction-method·/spec-extract·룰 java.md·typescript.md·rust.md 기본 끔(프리셋으로 켬) · 이전: 고정 35 · 켬 70 · 끔 216 — 사용자 체크 45개 + 묶음 정리 규칙 적용(계획서 14.5) + 새 훅 relation-guard · parallel-hint · claude-version-check · release-version-guard · wrapper-version-check) · 기준: 현재 레포 실측 (훅 29 + 상태줄 1 · 룰 14 · 커맨드 6 + `/harness` · 에이전트 43 · 스킬 115)
 > 짝 문서: `docs/plans/2026-10-15-gugbab-claude-shim-wrapper.md`
 
 ## 체크하는 법
@@ -56,7 +56,7 @@
 
 ---
 
-## 2. 훅 (32종)
+## 2. 훅 (29종)
 
 > 훅 = Claude 가 도구를 쓰기 직전·직후, 사용자가 질문을 보낼 때, 답변을 끝낼 때 자동으로 실행되는 검사 프로그램. 막기(차단)·물어보기(확인 창)·정보 주입(Claude 에게 한마디 덧붙이기)을 한다.
 > 래퍼에서는 디스패처가 실행 직전에 켜짐/꺼짐을 읽으므로 **훅은 `/harness` 에서 바꾸면 즉시 반영**된다.
@@ -111,10 +111,6 @@
 
 ### 2.3 세션 편의
 
-- [x] **session-start** — 세션 시작 때 git 상태를 Claude 에게 알려줌
-  - 하는 일: 세션이 시작되면 현재 브랜치, 커밋 안 한 파일 목록, 최근 커밋 5개를 Claude 에게 전달한다.
-  - 이렇게 보여요: 사용자 화면에는 안 보이고, Claude 가 처음부터 "지금 main 브랜치에 미커밋 파일 8개" 를 알고 답한다.
-  - 끄면: Claude 가 상태를 알려면 매번 `git status` 를 직접 실행해야 한다.
 - [x] **session-export** — 매 턴 대화 요약을 파일로 저장
   - 하는 일: 답변이 끝날 때마다 요청·답변·수정한 파일·Codex 리뷰 결과를 요약해 `~/…/projects/<해시>/exports/` 에 저장한다. 커밋할 때 `--refresh` 로 레포 `exports/` 에 전체 요약을 만든다(메모리 공유 프로젝트만).
   - 이렇게 보여요: 화면에는 안 보이고, 나중에 "그때 무슨 작업을 했더라" 를 exports 폴더의 md 파일로 확인할 수 있다.
@@ -144,7 +140,7 @@
   - 하는 일: 실제 테스트 러너(jest·vitest·pytest·cargo test 등) 없이 `echo "tests passed"`·`true`·`exit 0` 으로 테스트 통과를 흉내내는 명령을 막는다.
   - 이렇게 보여요: Claude 가 `echo "All tests passed"` 를 실행하려 하면 거부된다.
   - 끄면: "테스트 통과" 라는 보고를 믿을 수 없게 된다.
-  - 연관 (tdd·adversarial·fake-impl·test-fake 4개 공통): 룰 `adversarial-testing.md`, 커맨드 `/tdd-implement` 와 한 묶음(8장 A — dev-quality)
+  - 연관 (tdd·adversarial·fake-impl·test-fake 4개 공통): 룰 `adversarial-testing.md` 와 한 묶음(8장 A — dev-quality)
 - [x] **package-manager-guard** — 프로젝트가 쓰는 패키지 매니저만 허용
   - 하는 일: lock 파일로 매니저를 판단한다(pnpm-lock.yaml → pnpm, yarn.lock → yarn, uv.lock → uv 등). 다른 매니저로 설치·삭제·업데이트하면 막는다. `npm run test` 같은 실행 명령은 통과.
   - 이렇게 보여요: pnpm 프로젝트에서 `npm install lodash` 를 하려 하면 "이 프로젝트는 pnpm 을 씁니다" 로 거부된다.
@@ -153,7 +149,7 @@
   - 하는 일: 파일을 저장하면 그 프로젝트에 설정·설치된 포매터(biome·prettier·ruff·black·rustfmt)로 그 파일 하나만 정리한다. 포매터가 없으면 아무것도 안 하고, 인터넷에서 받지도 않는다. Java 는 대상 아님.
   - 이렇게 보여요: Claude 가 쓴 코드의 들여쓰기·따옴표가 저장 직후 프로젝트 스타일로 바뀐다.
   - 끄면: 포맷이 안 맞는 코드가 남고, 나중에 커밋 전 포매터를 따로 돌려야 한다.
-- [x] **typescript-quality** — `.ts`·`.tsx` 저장 시 타입 검사, 에러 있으면 차단
+- [x] **typescript-quality** — `.ts`·`.tsx` 를 고친 답변이 끝날 때 타입 검사 한 번, 에러 있으면 종료를 막음
   - 하는 일: TypeScript 파일을 저장할 때마다 `tsc --noEmit` 으로 타입 검사를 돌려 에러가 있으면 막는다. 레거시 모드는 이번 저장으로 **새로 생긴** 에러만 막는다(기존 에러 수백 개인 프로젝트용).
   - 이렇게 보여요: 타입이 안 맞는 코드를 저장하면 "TS2322: Type 'string' is not assignable to type 'number'" 같은 에러와 함께 막혀서 Claude 가 바로 고친다.
   - 끄면: 타입 에러는 빌드할 때 한꺼번에 발견된다.
@@ -202,17 +198,10 @@
   - 프로젝트 추천: 끔
   - 하는 일: 세션 시작 때 스킬 검증일을 확인해 60일이 넘은 스킬이 있으면 재검증하라고 알린다(`--strict` 면 다른 작업보다 먼저 하게 강제).
   - 이렇게 보여요: "검증일 60일 초과 스킬 3개: …" 안내가 Claude 에게 전달된다.
-- [ ] **relation-guard** (기본 켬) (신규) — 새 훅·에이전트·스킬의 관계 분류 누락 검사
-  - 프로젝트 추천: 끔
-  - 하는 일: 훅·에이전트·스킬·룰·커맨드 파일을 저장하면 다른 항목 이름이 새로 나오는데 `relations.json` 에 분류(requires·uses·mention·code)가 없는 관계, 블록·묶음 소속이 없는 새 항목, 체크리스트 줄이 없는 새 훅·룰·커맨드를 알린다. `git commit` 때 하나라도 남아 있으면 커밋을 막는다.
-  - 이렇게 보여요: 새 에이전트에서 `skill-tester` 를 부르게 쓰고 커밋하면 "분류 안 된 관계 agent:새이름>agent:skill-tester — relations.json 의 edges 에 추가하세요" 로 막힌다.
-  - 연관 (2.7 전체): 룰 `creation-workflow.md`·`verification-policy.md`·`agent-design.md`·`readme-update.md`·`commands.md`, 에이전트 `skill-creator`·`skill-tester`·`agent-creator`·`freshness-auditor`, 커맨드 `/agent-status` 와 한 묶음(8장 A — harness-authoring). 래퍼에서는 스킬·에이전트가 각 프로젝트가 아니라 `~/gugbab` 에 있으므로 이 레포의 `.gugbab.json` 에서만 켠다
-- [x] **parallel-hint** (신규) — 병렬로 할 수 있는 작업을 병렬로 하게 안내 (🔒 2026-10-17 사용자 결정)
-  - 하는 일: 요청에 서로 독립인 작업이 여럿 보이면(번호 목록·여러 동사·"병렬") 독립 도구 호출은 한 응답에 묶고, 긴 테스트는 백그라운드로, 독립 조사는 서브에이전트로 동시에 하라고 Claude 에게 알린다(앞 결과가 필요한 단계·같은 파일 수정·커밋 순서는 제외). 읽기 전용 조회를 한 번에 하나씩 3번 연속하면 묶으라고 한 번 알린다. 막지는 않는다.
-  - 이렇게 보여요: "독립 조회는 한 응답에 묶어 병렬로" 같은 안내가 Claude 에게 전달된다.
-- [x] **claude-version-check** (신규) — 세션 시작 때 Claude Code 버전 변경·새 버전 알림 (🔒 2026-10-17 사용자 결정)
-  - 하는 일: 세션을 시작하면 `claude --version` 을 지난 세션에 본 버전과 비교해, 바뀌었으면 "래퍼의 로그인 공유는 문서에 없는 내부 변수를 쓰므로 Not logged in 이면 `gugbab-claude doctor`" 를 알린다. 하루에 한 번 npm 레지스트리에서 최신 버전을 확인해(3초 제한, 실패하면 건너뜀) 더 새 버전이 있으면 `claude update` 로 올릴 수 있다고 알린다. 막지는 않는다. `/harness`·`status`·`doctor` 에도 버전 줄이 나온다.
-  - 이렇게 보여요: "Claude Code 새 버전 2.1.300 이 있습니다 (지금 2.1.296)" 안내가 Claude 에게 전달된다.
+  - 연관 (2.7 전체): 룰 `creation-workflow.md`·`verification-policy.md`·`agent-design.md`·`readme-update.md`·`commands.md`, 에이전트 `skill-tester`, 커맨드 `/agent-status` 와 한 묶음(8장 A — harness-authoring). 래퍼에서는 스킬·에이전트가 각 프로젝트가 아니라 `~/gugbab` 에 있으므로 이 레포의 `.gugbab.json` 에서만 켠다
+- [x] **claude-version-check** (신규) — Claude Code 버전 변경 알림 + 새 버전이면 자동 업데이트 (🔒 2026-10-17 사용자 결정 · 2026-11-11 자동 업데이트 추가)
+  - 하는 일: 세션을 시작하면 `claude --version` 을 지난 세션에 본 버전과 비교해, 바뀌었으면 "래퍼의 로그인 공유는 문서에 없는 내부 변수를 쓰므로 Not logged in 이면 `gugbab-claude doctor`" 를 알린다. 하루에 한 번 npm 레지스트리에서 최신 버전을 확인해(3초 제한, 실패하면 건너뜀) 더 새 버전이 있으면 `claude update` 를 뒤에서 실행하고(세션은 기다리지 않음), 결과를 다음 세션·질문 때 한 번 알린다. 켜 둔 세션도 24시간마다 확인한다. `DISABLE_UPDATES`·`DISABLE_AUTOUPDATER` 로 꺼 두었거나 윈도우·Homebrew 설치면 실행하지 않고 알리기만 한다. 막지는 않는다. `/harness`·`status`·`doctor` 에도 버전 줄이 나온다.
+  - 이렇게 보여요: "Claude Code 를 2.1.322 → 2.1.323 로 자동 업데이트했습니다. 새로 시작하는 세션부터 반영됩니다" 안내가 첫 답변에 전달된다.
 - [x] **release-version-guard** (신규) — PR 전에 버전(VERSION)을 올렸는지 검사, gugbab-claude 레포 전용 (🔒 2026-10-17 사용자 결정)
   - 하는 일: `gh pr create` 직전에 커밋된 `VERSION` 이 최신 `v*` 태그보다 큰지 확인하고, 아니면 막고 `node scripts/release-version.js bump` → 커밋 → 다시 PR 을 안내한다. 머지되면 `release-on-main` 워크플로가 그 버전으로 태그·Release 를 만들어 stable 설치본이 자동으로 받는다(PR 마다 `version-check` 워크플로도 같은 검사). 레포에 `.github/workflows/release-on-main.yml` 이 있을 때만 동작해 다른 프로젝트에서는 아무것도 하지 않는다.
   - 이렇게 보여요: 버전을 안 올리고 PR 을 만들면 "VERSION 1.0.1 이 최신 태그 v1.0.1 보다 커야 합니다 — bump 로 1.0.2 …" 로 막힌다.
@@ -276,7 +265,7 @@
 
 ---
 
-## 4. 슬래시 커맨드 (11종 + 신규 `/harness`)
+## 4. 슬래시 커맨드 (6종 + `/harness`)
 
 > 커맨드 = 입력창에 `/이름` 을 치면 미리 정해둔 지시가 실행되는 단축 명령. 바꾸면 반영 시점은 PoC 에서 확인(즉시일 가능성 있음).
 
@@ -293,17 +282,6 @@
 - [ ] **/fix-pr** (기본 켬) — PR 리뷰 코멘트 반영
   - 하는 일: PR 의 대화 코멘트·리뷰 요약·라인 코멘트를 모두 읽고, 해결 안 된 것만 골라 파일별로 수정 계획을 보여준 뒤 확인받고 고친다. 커밋은 안 한다.
   - 이렇게 보여요: `/fix-pr 24` → "코멘트 5개 중 미해결 3개: …" 계획 → 승인 후 수정
-- [ ] **/context-prime** (기본 켬) — 새 세션에서 현재 상태 파악
-  - 하는 일: CLAUDE.md·룰·git 상태·최근 커밋·README 앞부분을 읽고 "지금 브랜치·수정 중인 파일·적용 중인 규칙·이어서 할 일" 을 요약한다.
-- [ ] **/create-plan** (기본 켬) — 3단계 구현 계획서 작성
-  - 하는 일: 요구사항(해결할 문제·완료 조건·범위 밖) → 설계(바꿀 파일·인터페이스) → 작업 목록(30분 단위) 순서로 계획을 쓰고 "이 계획으로 진행할까요?" 를 묻는다.
-- [ ] **/update-docs** (기본 켬) — 코드 변경에 맞춰 문서 동기화
-  - 하는 일: 최근 커밋과 커밋 안 한 변경을 보고 관련 README·docs 를 찾아 어긋난 부분을 목록으로 보여준 뒤, 확인받고 문서만 고친다. 코드와 커밋은 건드리지 않는다.
-- [ ] **/tdd-implement** (기본 켬) — 테스트 먼저 쓰는 방식으로 구현
-  - 하는 일: 실패하는 테스트 작성(Red) → 통과할 최소 코드(Green) → 정리(Refactor) 순서를 지키며, 단계마다 넘어가도 되는지 묻는다.
-  - 연관: dev-quality 묶음
-- [ ] **/sparc-refine** (기본 켬) — 5단계 리팩터링
-  - 하는 일: 명세(문제·목표·범위) → 의사코드 → 구조 설계 → 개선 → 완성 순서로 코드를 정리한다. 단계마다 확인받는다.
 - [ ] **/agent-status** (기본 켬) — 하네스 작업 현황 요약
   - 프로젝트 추천: 끔
   - 하는 일: 브랜치·최근 커밋 3개·미커밋 파일·PENDING_TEST 스킬 수·오늘 수정한 파일을 한 번에 보여준다.
@@ -323,10 +301,10 @@
 | 종류 | 🔒 고정 | 이유 |
 |---|---|---|
 | 설정 (5) | deny 목록, allow 목록, 전역 CLAUDE.md 공통부, `acceptEdits` 시작 권한 모드, 임시 폴더 접근 허용 | 꺼지면 위험 명령이 그냥 실행됨 / 나머지는 사용자 결정(작업 흐름 고정) |
-| 훅 (15) | bash-guard, protect-secrets, parry, auto-approve, config-change-audit, task-confirm-guard, progress-tracker, korean-response-guard, session-start, session-export, cc-notify, package-manager-guard, auto-format, typescript-quality, verification-guard | 안전·비밀 보호, 하네스가 몰래 꺼지는 것 감지, 사용자가 모든 프로젝트에 강제하기로 한 작업 흐름 |
+| 훅 (14) | bash-guard, protect-secrets, parry, auto-approve, config-change-audit, task-confirm-guard, progress-tracker, korean-response-guard, session-export, cc-notify, package-manager-guard, auto-format, typescript-quality, verification-guard | 안전·비밀 보호, 하네스가 몰래 꺼지는 것 감지, 사용자가 모든 프로젝트에 강제하기로 한 작업 흐름 |
 | 룰 (3) | info-verification.md, task-workflow.md, verification-policy.md | 모든 프로젝트 공통 원칙 (git.md 는 사용자 결정으로 켬으로 바꿈) |
 | 커맨드 (1) | /harness | 이게 꺼지면 다시 켤 방법이 없음 |
-| 에이전트 (7) | claude-code-guide, web-searcher, fact-checker, source-validator, research-reviewer, tech-stack-advisor, socratic-interviewer | 정보 검증 원칙을 실제로 수행하는 범용 도구 + 사용자 결정 |
+| 에이전트 (1) | fact-checker | 정보 검증 원칙을 실제로 수행하는 범용 도구 (나머지는 2026-11-11~12 모델이 아는 것 걷어내기로 삭제) |
 | 스킬 | 없음 | 많을수록 엉뚱한 스킬이 끌려오므로 묶음 단위 선택 |
 
 묶음 정리로 **고정 → 켬** 이 된 12개(dev-quality 훅 3, memory-pull, harness-authoring 8)는 계획서 14.5 참고. harness-authoring 은 gugbab-claude 레포에서만 `.gugbab.json` 으로 다시 고정한다.
@@ -344,10 +322,10 @@
 | 묶음 | 구성 |
 |---|---|
 | **task-confirm** | 훅 task-confirm-guard + 룰 task-workflow.md |
-| **dev-quality** | 훅 tdd-guard·adversarial-test-guard·fake-impl-guard·test-fake-guard + 룰 adversarial-testing.md + 커맨드 /tdd-implement |
+| **dev-quality** | 훅 tdd-guard·adversarial-test-guard·fake-impl-guard·test-fake-guard + 룰 adversarial-testing.md |
 | **codex-review** | 훅 codex-review-guard + 룰 codex-review.md + 커맨드 /codex-review + codex 플러그인 |
 | **memory-share** | 훅 memory-pull·memory-sync + 룰 memory-sync.md + deliverable-guard 의 push 전 검사 |
-| **harness-authoring** | 훅 verification-guard·skill-md-guard·agent-md-guard·deliverable-guard·staleness-check·relation-guard + 룰 agent-design·creation-workflow·verification-policy·readme-update·commands + 에이전트 skill-creator·skill-tester·agent-creator·freshness-auditor + 커맨드 /agent-status |
+| **harness-authoring** | 훅 verification-guard·skill-md-guard·agent-md-guard·deliverable-guard·staleness-check + 룰 agent-design·creation-workflow·verification-policy·readme-update·commands + 에이전트 skill-tester + 커맨드 /agent-status |
 | **spec-extraction** | 에이전트 legacy-spec-extractor·spec-reviewer + 커맨드 /spec-extract + 스킬 spec 4종 |
 | **nexacro** | 에이전트 nexacro-screen-analyzer·nexacro-screen-converter·migration-parity-tester + 스킬 nexacro 5종 + 레거시 프로파일 (C 참고) |
 
@@ -355,13 +333,13 @@
 
 ### B. 의존 — A 를 쓰려면 B 가 켜져 있어야 하는 것
 
-- **에이전트 → 스킬**: 예) `java-backend-developer` 는 `mybatis-mapper-patterns` 등 10종을 참조 (5장 "쓰는 스킬")
-- **에이전트 → 에이전트**: 예) `deep-researcher` 는 `web-searcher`·`research-reviewer` 를 부름
+- **에이전트 → 스킬**: 예) `nexacro-screen-converter` 는 `nexacro-to-react-mapping` 등을 참조 (5장 "쓰는 스킬")
+- **에이전트 → 에이전트**: 예) `legacy-spec-extractor` 는 `spec-reviewer` 를 부름
 - **훅 → 훅 (기능)**: `progress-tracker` 는 `task-confirm-guard` 의 승인이 있어야 계획을 기록
 
 **처리:**
-- A 를 켜면 B 를 **자동 포함** (TUI 에 "자동 포함 — deep-researcher 때문" 표시, 사용자가 B 를 따로 끄지 않아도 됨)
-- A 가 켜진 상태에서 B 를 끄려 하면 "deep-researcher 가 사용 중 — 같이 끌까요?" 확인
+- A 를 켜면 B 를 **자동 포함** (TUI 에 "자동 포함 — legacy-spec-extractor 때문" 표시, 사용자가 B 를 따로 끄지 않아도 됨)
+- A 가 켜진 상태에서 B 를 끄려 하면 "legacy-spec-extractor 가 사용 중 — 같이 끌까요?" 확인
 - 🔒 고정 항목이 필요로 하는 것은 자동으로 고정 취급
 
 ### C. 충돌·변형 — 동시에 켤 수 없는 것
@@ -388,7 +366,7 @@
 ```jsonc
 {
   "bundles":   { "codex-review": ["hook:codex-review-guard", "rule:codex-review", "command:codex-review", "plugin:codex@openai-codex"] },
-  "requires":  { "agent:deep-researcher": ["agent:web-searcher", "agent:research-reviewer"],
+  "requires":  { "agent:legacy-spec-extractor": ["agent:spec-reviewer", "skill:spec-extraction-method"],
                  "hook:progress-tracker": ["hook:task-confirm-guard"] },
   "conflicts": [["bundle:nexacro", "hook:tdd-guard"]],
   "variants":  { "hook:typescript-quality": ["normal", "changed-only"] }

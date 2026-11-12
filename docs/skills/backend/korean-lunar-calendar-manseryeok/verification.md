@@ -2,7 +2,7 @@
 skill: korean-lunar-calendar-manseryeok
 category: backend
 version: v3
-date: 2026-09-28
+date: 2026-11-09
 status: PENDING_TEST
 ---
 
@@ -16,7 +16,7 @@ status: PENDING_TEST
 |------|------|
 | 스킬 이름 | `korean-lunar-calendar-manseryeok` |
 | 스킬 경로 | `.claude/skills/korean-lunar-calendar-manseryeok/SKILL.md` |
-| 검증일 | 2026-09-28 (재검증, 이전 2026-09-10) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-28 · 최초 2026-09-10) |
 | 검증자 | skill-creator (최초), 재검증 2차 작업(2026-09-28), 실사용(실행) 검증(2026-09-28) |
 | 스킬 버전 | v3 |
 | 소스 유형 | 혼합 — 공식 기관 데이터(KASI·공공데이터포털) + 오픈소스 라이브러리 + 전통 방법론(명리 관법) |
@@ -131,6 +131,22 @@ status: PENDING_TEST
 | distbe/holidays | https://github.com/distbe/holidays | ⭐⭐ Medium | 2026-09-10 | 특일정보 API 파생 데이터셋. 절기 시각 포함 주장(원본 JSON 403으로 미확증) |
 | 정해 만세력 문서 — 육십갑자와 연월일시 | https://doc.8-codes.com/docs/lecture/02/ | ⭐⭐ Medium | 2026-09-10 | 명리 관법(연주=입춘, 월주=12절) 확인 |
 | timeanddate — Seoul time zone | https://www.timeanddate.com/time/zone/south-korea/seoul | — | 2026-09-10 | **HTTP 403 — 접근 실패.** 미사용 |
+| PyPI JSON API (재확인) | https://pypi.org/pypi/korean-lunar-calendar/json · /lunar-python/json · /sxtwl/json | ⭐⭐⭐ High | 2026-11-09 | korean-lunar-calendar 0.4.0 / **lunar-python 1.4.9 (2026-11-05)** / sxtwl 2.0.7 (2024-09-06) |
+| npm registry (재확인) | https://registry.npmjs.org/korean-lunar-calendar | ⭐⭐⭐ High | 2026-11-09 | latest 0.4.0 (2026-06-15) |
+| lunar-python CHANGELOG | https://github.com/6tail/lunar-python/blob/master/CHANGELOG.md | ⭐⭐⭐ High | 2026-11-09 | 1.4.9: 날짜 검증 버그·절기 상태 리셋 수정, 2027 공휴일 추가. 절기 시각대 변경 없음 |
+| IANA tzdb (로컬 `zdump -v Asia/Seoul`, tzdata 2026c) | https://www.iana.org/time-zones | ⭐⭐⭐ High | 2026-11-09 | 1954-03-20 15:00 UT(+9→+8:30)·1961-08-09 15:30 UT(+8:30→+9) 전환 재확인 |
+| 공공데이터포털 음양력 정보 (재접속) | https://www.data.go.kr/data/15012679/openapi.do | ⭐⭐⭐ High | 2026-11-09 | 오퍼레이션 4종 동일, 수정일 2022-10-29. 페이지 자체엔 범위 표기 없음(범위는 기존 C-01 소스 유지) |
+
+### 2026-11-09 재검증 클레임 판정
+
+| 클레임 | 판정 | 처리 |
+|--------|------|------|
+| `korean-lunar-calendar` 최신 0.4.0 (npm·PyPI) | VERIFIED | 변경 없음 |
+| `lunar-python` 최신 1.4.8 (2025-11-05) | DISPUTED(버전 드리프트) → 수정 | 1.4.9 (2026-11-05) 로 §7-2·헤더 갱신, 절기 시각대(UTC+8) 경고는 CHANGELOG상 변경 없어 유지 |
+| `sxtwl` 2.0.7 (2024-09-06) | VERIFIED | 변경 없음 |
+| 1954-03-21·1961-08-10 표준시 전환 순간(중복/실존하지 않는 구간) | VERIFIED | `zdump` 재실행으로 동일 |
+| KASI 음양력 Open API 오퍼레이션 4종 | VERIFIED | 변경 없음 |
+| C-16·C-17 | 미해소(DISPUTED/UNVERIFIED 유지) | KASI API 키 없이 확인 불가 — 기존 주의 표기 유지 |
 
 ---
 
@@ -419,4 +435,5 @@ status: PENDING_TEST
 | 2026-09-28 | v2 | **재검증(2차) — 로컬 `zdump`로 C-13(서머타임 연도별 일자) UNVERIFIED 해소, 라이브러리 버전 재확인.** §4-2를 IANA tzdb 직접 덤프 기반 연도별 정확한 표로 교체(1949·1950 시작월 오근사 정정 포함). sxtwl 배포일 오기재("2021년경"→2024-09/2024-11) 정정. C-16(특일정보 API 절기 시각)은 WebFetch 세션 한도로 이번에도 미해소. status **PENDING_TEST 유지**(실사용 필수 카테고리) | 재검증(2차) 작업 |
 | 2026-09-28 | v2 | 2단계 실사용(content) 재테스트 수행 (Q10 §4-2 서머타임 정정분 / Q11 §7-2 sxtwl 정정분) → 2/2 PASS, 누적 5/5 PASS. PENDING_TEST 유지(실사용 필수 카테고리 — C-16·C-17 미해소 + T-1~T-14 실행 전까지). 신규 gap 1건(§8 T-3 연도 확장) 발견·기록 | skill-tester |
 | 2026-09-28 | v3 | **실사용(실행) 검증 — 격리 lab venv에 `korean-lunar-calendar`/`lunar-python`/`sxtwl` 실치 설치, 버전·범위 경계·이상 입력·UTC+8 시간대 경고(2024 입춘 16:27 베이징=17:27 KST 실측)·`Asia/Seoul` 역사적 오프셋 전량 실측 재현.** 신규 발견: 1954-03-21·1961-08-10 표준시 전환 순간이 벽시계상 각각 중복(ambiguous)/실존하지 않는(imaginary) 구간을 만듦 → §4-1·T-8 최소 정정 반영. KASI 공식 API(T-1·T-2)는 키 필요로 미수행, C-16·C-17 미해소 → **PENDING_TEST 유지** | 실사용 검증 세션 |
+| 2026-11-09 | v3 | 재검증 — PyPI·npm·lunar-python CHANGELOG·로컬 zdump(tzdata 2026c)·공공데이터포털 재대조. 바뀐 점: `lunar-python` 1.4.8 → **1.4.9**(2026-11-05, 절기 상태 리셋·날짜 검증 버그 수정) 로 §7-2·헤더 갱신. korean-lunar-calendar 0.4.0·sxtwl 2.0.7·표준시 전환 순간은 변경 없음. C-16·C-17 은 KASI API 키 없이 여전히 미해소 → **PENDING_TEST 유지** | 메인 세션 |
 | 2026-09-28 | v3 | **2단계 실사용 테스트 재수행(skill-tester → general-purpose).** Q1 1954-03-20 23:45 중복(ambiguous) 구간 처리 / Q2 1961-08-10 00:15 실존하지 않는(imaginary) 구간 + T-8 검증 요구사항 → 2/2 PASS(누적 7/7). 실사용 필수 카테고리(계산 결과값 정확성)이므로 **PENDING_TEST 유지** | skill-tester |

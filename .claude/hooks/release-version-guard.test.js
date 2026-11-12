@@ -113,7 +113,13 @@ console.log('\n[이상·경계]')
   check('Bash 가 아닌 도구 → exit 0', runHook({ tool_name: 'Write', tool_input: { file_path: 'x' } }).status === 0)
   check('command 가 문자열이 아님 → exit 0', runHook({ tool_name: 'Bash', tool_input: { command: ['gh', 'pr', 'create'] }, cwd: noRemote }).status === 0)
   check('빈 명령·null → 검사 안 함', isPrCreate('') === false && isPrCreate(null) === false)
+  // 2026-11-06 감사: 1MB 넘는 입력은 예전엔 exit 0(통과) — 긴 명령 끝에 gh pr create 를 붙이면 버전 검사를 건너뛰었다
+  const big = runHook({ tool_name: 'Bash', tool_input: { command: 'echo ' + 'a'.repeat(1100000) + ' && gh pr create --fill' }, cwd: s0() })
+  check('1MB 초과 입력 → exit 2 (악성: 크기로 검사 우회)', big.status === 2 && /입력이 너무 커/.test(big.stderr), { status: big.status, stderr: big.stderr })
+  const near = runHook({ tool_name: 'Bash', tool_input: { command: 'echo ' + 'a'.repeat(900000) }, cwd: s0() })
+  check('1MB 미만 큰 입력(gh 없음) → exit 0 (경계)', near.status === 0, { status: near.status })
 }
+function s0() { return repo({ version: '1.0.2\n', localTags: ['v1.0.1'] }) }
 
 fs.rmSync(base, { recursive: true, force: true })
 console.log(`\n결과: ${passed} 통과 / ${failed} 실패${skipped ? ` (건너뜀 ${skipped})` : ''}`)

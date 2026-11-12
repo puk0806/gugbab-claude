@@ -1,8 +1,8 @@
 ---
 skill: vercel-workflow
 category: devops
-version: v1.1
-date: 2026-09-28
+version: v1.2
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -14,10 +14,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `vercel-workflow` |
 | 스킬 경로 | `.claude/skills/vercel-workflow/SKILL.md` |
-| 검증일 | 2026-09-28 (최초 2026-09-17 · 09-25 구조 개편 · 09-28 재검증) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-28 · 최초 2026-09-17 · 09-25 구조 개편) |
 | 검증자 | skill-creator |
-| 스킬 버전 | v1.1 |
-| 기준 버전 | `workflow` v4.8.9 (npm latest, Apache-2.0, 09-28 재확인 동일) / Workflows 과금·한도 문서 2026-06-16 갱신본(09-28 수치 변경 없음 확인) / Cron 문서 2026-07-15 갱신본(09-28 수치 변경 없음 확인) |
+| 스킬 버전 | v1.2 |
+| 기준 버전 | **11-09: `workflow` v5.4.0** (npm latest 2026-11-04, 4.x = `previous` 4.8.16) / Workflow Pricing 2026-09-16 갱신본 / web-push 4.0.0 (ESM 전용). 이하 이전 기준: `workflow` v4.8.9 (npm latest, Apache-2.0, 09-28 재확인 동일) / Workflows 과금·한도 문서 2026-06-16 갱신본(09-28 수치 변경 없음 확인) / Cron 문서 2026-07-15 갱신본(09-28 수치 변경 없음 확인) |
 
 ---
 
@@ -86,6 +86,11 @@ status: APPROVED
 | GitHub: vercel/workflow | https://github.com/vercel/workflow | ⭐⭐⭐ High | 2026 | Apache-2.0, GA (2순위) |
 | npm registry: workflow | https://registry.npmjs.org/workflow/latest | ⭐⭐⭐ High | 2026-09-17 | latest 4.8.9 (3순위 교차 확인) |
 | GitHub: web-push-libs/web-push | https://github.com/web-push-libs/web-push | ⭐⭐⭐ High | 2026 | 발송 스텝 예시 근거 |
+| npm registry: workflow (11-09) | https://registry.npmjs.org/workflow | ⭐⭐⭐ High | 2026-11-09 | latest 5.4.0, previous 4.8.16, 5.0.0 공개 2026-09-30 |
+| workflow 5.4.0 패키지 동봉 문서 `docs/whats-new.mdx` · `api-reference/workflow-api/start.mdx` · `worlds/vercel.mdx` · `configuration/cli-and-web-ui.mdx` | https://workflow-sdk.dev/docs/whats-new (패키지 tarball 내 원문 대조) | ⭐⭐⭐ High | 2026-11-09 | v5 Breaking changes 표, start() 워크플로 내 호출, 멀티리전, CLI cancel/web/health |
+| Workflow Pricing and Limits (11-09) | https://vercel.com/docs/workflows/pricing | ⭐⭐⭐ High | 2026-09-16 | Hobby 50,000 events·1GB, 런 한도 동일, **Hobby 레이트 리밋 50,000 req/분** |
+| Workflow Data Retention | https://vercel.com/docs/workflows/retention | ⭐⭐⭐ High | 2026-11-09 조회 | Hobby 1일/Pro 7일/Ent 30일 + 완전 삭제 상한 66/96/126일, 4.x 런 iad1 |
+| npm registry: web-push 4.0.0 | https://registry.npmjs.org/web-push/latest | ⭐⭐⭐ High | 2026-11-06 | `"type":"module"`, named export 전용(default 없음) — 패키지 실측 |
 
 ---
 
@@ -128,6 +133,21 @@ status: APPROVED
 
 **집계: VERIFIED 26 / DISPUTED 1 / UNVERIFIED 3 (총 30개 클레임)**
 
+**2026-11-09 재검증 클레임**
+
+| # | 클레임 | 소스 | 판정 |
+|---|--------|------|------|
+| R1 | npm latest 4.8.9 | npm registry: latest **5.4.0**(2026-11-04), previous 4.8.16 | ⚠️ DISPUTED → 5.4.0 기준으로 정정, v5 변경점 블록 추가 |
+| R2 | `sleep()` 문자열·ms·Date 오버로드, `sleepUntil` 없음 | 5.4.0 동봉 `api-reference/workflow/sleep.mdx` | ✅ VERIFIED |
+| R3 | 런 한도(25,000 이벤트·10,000 스텝·50MB·2GB·240s·sleep 무제한), Hobby 50,000 events/1GB | Workflow Pricing 2026-09-16 | ✅ VERIFIED (v5 는 이벤트 한도를 `MAX_EVENTS_EXCEEDED` 로 강제 — 추가) |
+| R4 | Hobby 레이트 리밋 100,000 req/분 | Workflow Pricing: Hobby **50,000** / Pro 500,000 / Ent 2,500,000 | ⚠️ DISPUTED → 정정 |
+| R5 | 보존 Hobby 1일/Pro 7일/Ent 30일 | Workflow Data Retention | ✅ VERIFIED (완전 삭제 상한 66/96/126일 추가) |
+| R6 | v4 `start()` 는 스텝 안에서만 | whats-new "start() from inside a workflow" + start.mdx | ✅ VERIFIED(v4 한정) — v5 는 본문 직접 호출 허용으로 보강 |
+| R7 | 멀티리전 5.0.0-beta.33+ 필요 | worlds/vercel.mdx: 5.0.0+ 기본, 4.x 는 iad1 | ⚠️ DISPUTED → "5.0.0+ 기본 동작"으로 정정, `region` 옵션 추가 |
+| R8 | (기존 #27 UNVERIFIED) `workflow cancel`/`web`/`health` | configuration/cli-and-web-ui.mdx | ✅ VERIFIED → 미검증 주의 해제 |
+| R9 | 워크플로 금지 전역(전역 fetch·timer·Buffer)·결정론 전역 | 5.4.0 `api-reference/workflow-globals` | ✅ VERIFIED |
+| R10 | `import webpush from 'web-push'` | web-push 4.0.0 패키지: `"type":"module"`, default export 없음 — Node 22 실측 SyntaxError, `import * as` 동작 | ⚠️ DISPUTED → REFERENCE §7-a 네임스페이스 import 로 정정 |
+
 > **DISPUTED 처리:** 작업 요청 단계의 전제였던 "`sleepUntil` 시그니처"는 공식 문서에 해당 API가 존재하지 않음을 확인했다.
 > SKILL.md §2에서 `> 주의 (정정):` 블록으로 명시하고, 안티패턴 표 #4에 "존재하지 않는 API"로 기재했다.
 > **UNVERIFIED 처리:** #27·#28·#29는 삭제하지 않고 SKILL.md 본문에 미검증임을 명시한 뒤 확인 방법(`npx workflow --help`)과
@@ -159,13 +179,53 @@ status: APPROVED
 - [✅] 악성 입력·경합 방어 반영 (슬롯 정규식·개수 상한, 인증/인가, 멱등 키, CAS 교체, 취소 순서)
 
 ### 4-5. Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-09-17)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-09-17, 재시험 2026-11-09)
 - [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-09-17)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (해당 없음 — 3/3 PASS, 보완 불필요)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-11-09] v5.4.0 재검증 후 재시험
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester → general-purpose 3개 (도메인 특화 에이전트 미등록으로 대체)
+**수행 방법**: SKILL.md(+references/REFERENCE.md) Read 후 11-09 변경점을 겨냥한 실전 질문 3개 답변, 하위 에이전트 결과 수신 후 SKILL.md 줄과 대조
+
+**Q1. 5.4.0에서 start() 본문 직접 호출 가능 여부(4.x와 차이), 25,000 이벤트 초과 시 동작·예방, 취소 사유 기록**
+- ✅ PASS
+- 근거: SKILL.md 헤더 "v4 → v5" 블록(28·30·32줄), §3 cancel(167줄), §4 한도·회전(275줄 MAX_ITERATIONS=150), REFERENCE 안티패턴 #5·#8
+- 상세: v5 본문 직접 호출 허용 / v4 스텝 래퍼 필수, `MAX_EVENTS_EXCEEDED` 런 실패, 회전 + `deploymentId: 'latest'`, `cancel({ cancelReason })` 를 모두 정확히 인용. 줄 번호 대조 일치.
+- 경미한 gap: 4.x 에서 `cancelReason` 사용 가능 여부, `MAX_EVENTS_EXCEEDED` 실패 런 복구 방법, 본문 직접 `start()` 의 이벤트 수가 명시되지 않음.
+
+**Q2. Hobby 레이트 리밋·월 이벤트 한도·보존/완전 삭제 상한·`Date()` 문자열 동작**
+- ✅ PASS
+- 근거: SKILL.md §4-2 (228~244줄), 헤더 31줄
+- 상세: 50,000 req/분(초과해도 백오프 재시도, 런 실패 아님), 50,000 events/월, 보존 1/7/30일·완전 삭제 66/96/126일, `Date()` 문자열 반환 → `new Date()` 사용을 정확히 답변(줄 대조 일치).
+- 경미한 gap: §1 결정론 전역 목록(75줄)에 `Date()` 호출 형태 주의가 교차 참조되지 않음, Hobby 월 한도 초과 시 차단/과금 여부 미명시.
+
+**Q3. web-push 4.0 import 오류 해결, CLI 단건·일괄 취소·웹 UI, 검증 여부**
+- ✅ PASS
+- 근거: REFERENCE.md §7-a (99~102줄), SKILL.md §5 (299·309~311줄)
+- 상세: `import * as webpush from 'web-push'`(4.0 ESM·default 없음, 3.6.x 는 default 가능), `workflow cancel <run_id>` / `--status`·`--workflowName` 필터(최대 100건) / `workflow web`을 정확히 인용하고, 4.x 는 `--help` 확인 안내까지 답변. anti-pattern(default import 권장) 회피.
+- 경미한 gap: `workflow cancel` 구체 호출 예시·`workflow web` 과 `inspect runs --web` 차이 설명 없음.
+
+### 발견된 gap (선택 보강, SKILL.md 수정 안 함)
+
+- §1 결정론 전역 목록에 "`Date()` 단독 호출은 문자열" 교차 참조 한 줄
+- Hobby 월 이벤트 한도 초과 시 동작(차단 vs 과금) 명시
+- `workflow cancel` 사용 예시, 4.x 의 `cancelReason` 지원 여부, `MAX_EVENTS_EXCEEDED` 복구 방법
+
+### 판정
+
+- agent content test: 3/3 PASS
+- verification-policy 분류: 실사용 검증 불필요(content test로 충분) — 09-17 판정 유지
+- 최종 상태: **APPROVED 유지**
+
+---
+
+### [2026-09-17] 최초 2단계 테스트
 
 **수행일**: 2026-09-17
 **수행자**: skill-tester → general-purpose (도메인 특화 에이전트 미등록으로 대체, verification-policy 대체 규정에 따름)
@@ -224,20 +284,22 @@ status: APPROVED
 | 내용 정확성 | ✅ — 2026-09-28 재검증에서 workflow 4.8.9·sleep(Date)·Hobby 한도 3건 전부 VERIFIED, 변경 없음 |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-09-17 수행, 3/3 PASS) |
-| **최종 판정** | **APPROVED** (유지) |
+| 에이전트 활용 테스트 | ✅ (2026-09-17 3/3 PASS, 2026-11-09 v5.4.0 재시험 3/3 PASS) |
+| **최종 판정** | **APPROVED** (유지, 2026-11-09 재시험 포함) |
 
 ---
 
 ## 7. 개선 필요 사항
 
-- [✅] skill-tester content test 수행 (2026-09-17 완료, 3/3 PASS) — 더 이상 차단 요인 아님
-- [❌] CLI 레퍼런스 페이지를 찾지 못해 `workflow cancel` / `workflow health` / `workflow web` 커맨드가 미검증 상태 — 선택 보강(실사용 시 `npx workflow --help`로 확인), 차단 요인 아님
+- [✅] skill-tester content test 수행 (2026-09-17 완료, 3/3 PASS; 2026-11-09 v5.4.0 재시험 3/3 PASS) — 더 이상 차단 요인 아님
+- [❌] 11-09 재시험 gap: Hobby 월 이벤트 한도 초과 시 차단/과금 여부, §1 에 `Date()` 문자열 교차 참조, `workflow cancel` 호출 예시·4.x `cancelReason` 지원 여부·`MAX_EVENTS_EXCEEDED` 복구 방법 — 선택 보강, 차단 요인 아님
+- [✅] `workflow cancel` / `workflow health` / `workflow web` 커맨드 — 2026-11-09 v5 공식 CLI 문서로 확인, 미검증 주의 해제
 - [❌] `vercel dev` 환경에서의 동작이 공식 문서에 없음 — 선택 보강(실제 배포 후 확인), 차단 요인 아님
 - [❌] `sleep` 만료 후 재개 지연(정확도) 실측 없음 — 선택 보강(프리뷰 배포에서 실측 후 §6에 수치 추가 권장), 차단 요인 아님
 - [❌] 회전 오버헤드 산식("6명×6≈36")과 §7-d 훅 경합 "+5 이벤트/회" 세부 구성이 본문에 없어 재검산 어려움 — 선택 보강(2026-09-17 Q3 테스트에서 발견), 차단 요인 아님
 - [❌] 과금·플랜 한도는 정책 변동 가능 — 선택 보강(재사용 시 Workflow Pricing 페이지 재확인 권장), 차단 요인 아님
-- [❌] `workflow` 5.x(beta) 라인의 API 변화(멀티리전 등)는 다루지 않음 — 선택 보강(4.x 기준으로 범위 한정), 차단 요인 아님
+- [✅] `workflow` 5.x API 변화 — 2026-11-09 v5 GA 반영(SKILL.md 헤더 "v4 → v5 영향" 블록). 예제 코드는 v4·v5 공통으로 동작하는 형태 유지
+- [❌] v5 의 `experimental_hook`(멱등 start)·`experimental_force` 훅 takeover 로 §7-b CAS 패턴을 대체할 수 있는지는 미검토 — 선택 보강, 차단 요인 아님
 
 ---
 
@@ -249,3 +311,6 @@ status: APPROVED
 | 2026-09-17 | v1 | 2단계 실사용 테스트 수행 (Q1 sleep(Date) vs sleepUntil / Q2 취소·재시작 순서·중복 방지 / Q3 이벤트 한도·회전·Hobby 예산 계산) → 3/3 PASS, "실사용 검증 불필요 — content test로 충분" 카테고리 판정, PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | Claude (Sonnet 5) |
 | 2026-09-28 | v1.1 | 재검증(2차) — workflow npm latest 4.8.9·sleep(Date)/sleepUntil 부재·Hobby 한도 3건 재대조, 전부 VERIFIED 변경 없음. status APPROVED 유지 | Claude (Sonnet 5) |
+| 2026-11-09 | v1.2 | 재검증 — `workflow` latest 4.8.9→**5.4.0**(v5 GA 2026-09-30) 기준으로 정정·v5 변경점 블록 추가(start() 본문 호출 허용·멀티리전 기본·MAX_EVENTS_EXCEEDED·cancelReason·Date() 문자열), Hobby 레이트 리밋 100,000→50,000 req/분 정정, 보존표에 완전 삭제 상한 추가, CLI cancel/web/health 공식 확인(미검증 주의 해제), web-push 4.0 ESM 대응(`import * as webpush`). sleep·런 한도·Hobby 이벤트 한도 VERIFIED. 내용 수정 있음 — skill-tester 재시험 | Claude (Opus 5.5) |
+| 2026-11-09 | v1.2 | 재검증 후 skill-tester 재시험 수행 (Q1 start() 본문 호출·MAX_EVENTS_EXCEEDED·cancelReason / Q2 Hobby 레이트 리밋 50,000·보존 완전 삭제 상한·Date() 문자열 / Q3 web-push 4.0 `import * as`·CLI cancel/web) → 3/3 PASS, APPROVED 유지. SKILL.md 미수정, gap 은 섹션 5·7 에 기록 | skill-tester |
+| 2026-11-12 | v1.3 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 v5 변경점 블록(CLI cancel/web/health 포함)·matcher 제외·결정론 패치 전역/금지 API·pass-by-value·sleepUntil 없음·sleep/리플레이 한도·cancel 하드 종료·배포 핀 고정·런 한도표·Hobby 이벤트/데이터/보존/레이트 리밋·이벤트 종류와 개수·예산/회전 계산·스케줄러 설계 함정(취소 순서·CAS·멱등 키·404/410·web-push 4.0 import)·Local World 한계·관찰 CLI/암호화·Cron 비교 / 덜어낸 것 durable execution 개념 설명·추상 표·기본 디렉티브/withWorkflow/start/getRun/defineHook 코드 예제·sleep 시그니처 예제·완결 예시 코드(타임존 유틸·워크플로/스텝·Route Handler·hook race)·체크리스트. references/REFERENCE.md 는 남길 사실을 SKILL.md 로 옮기고 폴더 삭제 | 정리 |

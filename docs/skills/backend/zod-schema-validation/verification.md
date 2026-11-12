@@ -2,7 +2,7 @@
 skill: zod-schema-validation
 category: backend
 version: v1
-date: 2026-09-26
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `zod-schema-validation` |
 | 스킬 경로 | `.claude/skills/zod-schema-validation/SKILL.md` |
-| 검증일 | 2026-09-26 (최초 2026-09-25, 섹션 7 보강·재테스트 2026-09-26) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 | 대상 라이브러리 버전 | zod 4.6.5 (최신 안정), 비교 대상 valibot 1.5.0 |
@@ -97,6 +97,9 @@ status: APPROVED
 | 15 | `z.stringbool()`은 3.25.0(2025-05-19)부터 존재 | `npm pack zod@<버전>` 직접 다운로드 후 dist 내 문자열 검색으로 버전 이분 탐색 (1차 데이터) | VERIFIED |
 | 16 | `z.record(z.string(), z.any())`는 zod 4.6.5에서 `__proto__` 키를 결과에 복사하지 않고 프로토타입도 오염시키지 않음 | 로컬 `npm i zod@4`(4.6.5) 후 직접 실행 실측 (1차 데이터) | VERIFIED (단일 버전 실측, 과거 이슈 #2227 재현 안 됨) |
 | 17 | 422 Unprocessable Content는 RFC 9110 §15.5.21에 정의(원 출처 RFC 4918 WebDAV) | RFC 9110 공식 문서 목차 확인 | VERIFIED |
+| 18 | (2026-11-09) 최신 안정 4.6.7, 4.6.6·4.6.7은 문서·릴리스 절차 변경만 | npm registry dist-tags(latest 4.6.7, 2026-10-12)·GitHub Releases https://github.com/colinhacks/zod/releases | VERIFIED → 기준 버전 줄 갱신 |
+| 19 | (2026-11-09) Zod 3→4 deprecated/제거 표(메서드형 포맷·`message`·`required_error`·strict/passthrough·merge·format/flatten·nativeEnum) | https://zod.dev/v4/changelog 원문 인용 대조 | VERIFIED |
+| 20 | (2026-11-09) `.validate()` 불리언 검사·`z.record` `__proto__` 키 미복사 | 로컬 `npm i zod@4.6.7` 실측 (`validate` true/false, 키 `['b']`, 프로토타입 오염 없음) | VERIFIED |
 
 ### 3-1. 내용 정확성
 - [✅] 공식 문서와 불일치하는 내용 없음
@@ -247,3 +250,5 @@ status: APPROVED
 | 2026-09-25 | v1 | 2단계 실사용 테스트 수행 (Q1 body strictObject+422 / Q2 query boolean 함정 / Q3 z.record `__proto__` 판단형) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-09-26 | v1 | 섹션 7 선택 보강 3건 반영: `z.stringbool()` 도입 버전(3.25.0) 명시, 422 vs 400 선택 근거 설명 추가, `z.record` `__proto__` 처리 로컬 실측으로 "미검증"→실측 결과 갱신. 내용 변경으로 APPROVED → PENDING_TEST 재전환(재테스트 대기) | Claude (Sonnet 5) |
 | 2026-09-26 | v1 | 2단계 재테스트 수행 (Q1 z.stringbool 도입 버전 / Q2 422 vs 400 RFC 근거 / Q3 z.record `__proto__` 실측 판단형) — 보강 내용 전부 타깃, 3/3 PASS → PENDING_TEST → APPROVED 재전환 | skill-tester |
+| 2026-11-09 | v1 | 재검증 — 최신 4.6.7 확인(4.6.6·4.6.7 API 변경 없음), Zod 3→4 변경표 zod.dev/v4/changelog 대조 VERIFIED, 4.6.7로 `.validate()`·`z.record` `__proto__` 재실측 동일. 기준 버전 줄만 갱신, 내용 변경 없음 | Claude (Opus 5.5) |
+| 2026-11-11 | v1 | 2026-11-11 정리 — 모델이 아는 일반 지식 절 제거(남긴 절: 기준 버전·범위, 5. `.default()` vs `.prefault()`, 10-2. 프로토타입 오염(`__proto__` 4.4.0+ 수정·`z.record` 실측), 12. `.validate()`(4.6.0+) / 덜어낸 절: 1. 언제 쓰나, 2. 설치·임포트, 3. Zod 3 → 4 변경점 표, 4. 요청 검증(body·query·params, 422 vs 400, stringbool), 6. 환경변수, 7. 외부 API 응답·웹훅, 8. 에러 커스터마이즈, 9. 에러 포맷팅, 10-1·10-3·10-4, 11. 모노레포 공유, 13. Valibot 비교, 14. 흔한 실수, 15. 테스트 체크, 사실 재검증 아님) | Claude (Opus 5.5) |

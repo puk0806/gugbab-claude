@@ -249,6 +249,83 @@ section('README 미갱신 commit → JSON deny (메시지 채널)')
   fs.rmSync(rRoot, { recursive: true, force: true })
 }
 
+// ─── 2026-11-06 README 개편 규칙 반영 — 수정만이면 docs/CHANGELOG.md 로 통과, 추가·삭제는 루트 README(수) 필수 ───
+section('README 검사 — 수정은 CHANGELOG, 추가·삭제는 루트 README')
+{
+  let n = 0
+  const mkRepo = () => {
+    const d = fs.mkdtempSync(path.join(os.tmpdir(), 'dg-cl-'))
+    const g = (...a) => spawnSync('git', ['-C', d, '-c', 'user.email=t@t', '-c', 'user.name=t', ...a], { encoding: 'utf8' })
+    g('init', '-q')
+    const w = (rel, c) => { fs.mkdirSync(path.dirname(path.join(d, rel)), { recursive: true }); fs.writeFileSync(path.join(d, rel), c) }
+    w('.claude/skills/a/SKILL.md', 'v1'); w('.claude/agents/x.md', 'v1'); w('README.md', 'r1')
+    w('docs/CHANGELOG.md', 'c1'); w('docs/skills/README.md', 'l1'); w('sub/docs/CHANGELOG.md', 's1')
+    g('add', '.'); g('commit', '-qm', 'init')
+    const sid = `dg-cl-${process.pid}-${n++}`
+    try { fs.unlinkSync(sessionFilePath(sid)) } catch {}
+    // 편집 = 디스크 수정 + 세션 기록(PostToolUse) + 스테이지
+    const edit = (rel, c = 'v2') => { w(rel, c); recordModifiedFile(sid, 'Edit', { file_path: path.join(d, rel) }); g('add', '--', rel) }
+    const pre = () => runHook({ hook_event_name: 'PreToolUse', session_id: sid, tool_name: 'Bash', tool_input: { command: 'git commit -m x' } }, { cwd: d, env: { ...process.env, CLAUDE_PROJECT_DIR: d } })
+    const reason = (r) => { try { return JSON.parse(r.stdout).hookSpecificOutput.permissionDecisionReason || '' } catch { return '' } }
+    const done = () => { try { fs.unlinkSync(sessionFilePath(sid)) } catch {}; fs.rmSync(d, { recursive: true, force: true }) }
+    return { d, g, w, sid, edit, pre, reason, done }
+  }
+  const denied = (r) => r.stdout.includes('"permissionDecision":"deny"')
+
+  // 정상
+  { const t = mkRepo(); t.edit('.claude/skills/a/SKILL.md'); t.edit('docs/CHANGELOG.md')
+    assert('스킬 내용 수정 + docs/CHANGELOG.md → 통과 (루트 README 불필요)', denied(t.pre()), false); t.done() }
+  { const t = mkRepo(); t.edit('.claude/agents/x.md'); t.edit('docs/CHANGELOG.md')
+    assert('에이전트 내용 수정 + CHANGELOG → 통과', denied(t.pre()), false); t.done() }
+  { const t = mkRepo(); t.edit('.claude/skills/a/SKILL.md'); t.edit('README.md')
+    assert('스킬 수정 + 루트 README (예전 방식) → 통과', denied(t.pre()), false); t.done() }
+  { const t = mkRepo(); t.edit('.claude/skills/new/SKILL.md', 'n'); t.edit('README.md'); t.edit('docs/CHANGELOG.md')
+    assert('새 스킬 + 루트 README + CHANGELOG → 통과', denied(t.pre()), false); t.done() }
+  { const t = mkRepo(); t.g('rm', '-q', '.claude/agents/x.md'); t.edit('README.md')
+    assert('에이전트 삭제(git rm) + 루트 README → 통과', denied(t.pre()), false); t.done() }
+
+  // 악성 — 다른 문서로 때우기
+  { const t = mkRepo(); t.edit('.claude/skills/a/SKILL.md')
+    const r = t.pre()
+    assert('스킬 수정 + 아무 문서도 안 고침 → deny', denied(r), true)
+    assert('  └ 수정만이면 안내가 docs/CHANGELOG.md 를 가리킴', t.reason(r).includes('docs/CHANGELOG.md'), true); t.done() }
+  { const t = mkRepo(); t.edit('.claude/skills/a/SKILL.md'); t.edit('docs/skills/README.md')
+    assert('스킬 수정 + docs/skills/README.md 만 (CHANGELOG 아님) → deny', denied(t.pre()), true); t.done() }
+  { const t = mkRepo(); t.edit('.claude/skills/a/SKILL.md'); t.edit('sub/docs/CHANGELOG.md')
+    assert('스킬 수정 + 하위 폴더 sub/docs/CHANGELOG.md → deny', denied(t.pre()), true); t.done() }
+  { const t = mkRepo(); t.edit('.claude/skills/a/SKILL.md'); t.edit('docs/CHANGELOG.md.bak')
+    assert('스킬 수정 + docs/CHANGELOG.md.bak → deny', denied(t.pre()), true); t.done() }
+  { const t = mkRepo(); t.edit('.claude/skills/new/SKILL.md', 'n'); t.edit('docs/CHANGELOG.md')
+    const r = t.pre()
+    assert('새 스킬 추가 + CHANGELOG 만 (루트 README 수 안 고침) → deny', denied(r), true)
+    assert('  └ 추가·삭제 안내가 루트 README 수를 가리킴', /README\.md/.test(t.reason(r)) && /수/.test(t.reason(r)), true); t.done() }
+  { const t = mkRepo(); t.g('rm', '-q', '.claude/agents/x.md'); t.edit('docs/CHANGELOG.md')
+    assert('에이전트 삭제(git rm) + CHANGELOG 만 → deny', denied(t.pre()), true); t.done() }
+  { const t = mkRepo(); t.edit('.claude/agents/new.md', 'n')
+    t.edit('.claude/skills/a/SKILL.md'); t.edit('docs/CHANGELOG.md')
+    assert('수정 1 + 새 에이전트 1 + CHANGELOG 만 → deny (추가가 섞이면 README 필요)', denied(t.pre()), true); t.done() }
+
+  // 경계
+  { const t = mkRepo(); t.edit('.claude/skills/a/SKILL.md'); t.w('docs/CHANGELOG.md', 'c2')
+    assert('CHANGELOG 를 디스크만 고치고 스테이지 안 함(commit 직전) → deny', denied(t.pre()), true); t.done() }
+  { const t = mkRepo(); t.w('.claude/skills/a/SKILL.md', 'v2'); recordModifiedFile(t.sid, 'Edit', { file_path: path.join(t.d, '.claude/skills/a/SKILL.md') }); t.w('docs/CHANGELOG.md', 'c2')
+    const stop = runHook({ hook_event_name: 'Stop', session_id: t.sid, cwd: t.d }, { cwd: t.d, env: { ...process.env, CLAUDE_PROJECT_DIR: t.d } })
+    assert('Stop: 미스테이지 스킬 수정 + 미스테이지 CHANGELOG → exit 0', stop.status, 0); t.done() }
+  { const t = mkRepo(); t.w('.claude/skills/a/SKILL.md', 'v2'); recordModifiedFile(t.sid, 'Edit', { file_path: path.join(t.d, '.claude/skills/a/SKILL.md') })
+    const stTmp = fs.mkdtempSync(path.join(os.tmpdir(), 'dg-cl-st-'))
+    const stop = runHook({ hook_event_name: 'Stop', session_id: t.sid, cwd: t.d }, { cwd: t.d, env: { ...process.env, CLAUDE_PROJECT_DIR: t.d } })
+    assert('Stop: 스킬 수정 + 문서 없음 → exit 2', stop.status, 2)
+    assert('  └ Stop 사유에 docs/CHANGELOG.md', stop.stderr.includes('docs/CHANGELOG.md'), true)
+    fs.rmSync(stTmp, { recursive: true, force: true }); t.done() }
+  { const t = mkRepo(); t.w('.claude/skills/b/SKILL.md', 'n'); recordModifiedFile(t.sid, 'Write', { file_path: path.join(t.d, '.claude/skills/b/SKILL.md') }); t.w('docs/CHANGELOG.md', 'c2')
+    const stTmp = fs.mkdtempSync(path.join(os.tmpdir(), 'dg-cl-st-'))
+    const stop = runHook({ hook_event_name: 'Stop', session_id: t.sid, cwd: t.d }, { cwd: t.d, env: { ...process.env, CLAUDE_PROJECT_DIR: t.d } })
+    assert('Stop: 미추적(untracked) 새 스킬 + CHANGELOG 만 → exit 2', stop.status, 2)
+    fs.rmSync(stTmp, { recursive: true, force: true }); t.done() }
+  { const t = mkRepo(); fs.rmSync(path.join(t.d, '.git'), { recursive: true, force: true }); t.edit('.claude/skills/a/SKILL.md'); recordModifiedFile(t.sid, 'Edit', { file_path: path.join(t.d, 'docs/CHANGELOG.md') })
+    assert('git 레포 아님 + 스킬 수정 + CHANGELOG(세션 기록) → 크래시 없이 통과', t.pre().status === 0 && !denied(t.pre()), true); t.done() }
+}
+
 // ─── 윈도우 — 네이티브 `\` 경로의 스킬 수정도 README 검사 대상 (2026-10-20 실측: 패턴이 `/` 라 통째로 꺼져 있었다) ───
 section('윈도우 — 백슬래시 SKILL 경로·대소문자 다른 README')
 if (process.platform !== 'win32') {
@@ -330,6 +407,29 @@ assert('--no-readme여도 memory 검사는 동작', spawnSync('node', [HOOK, '--
   input: JSON.stringify({ hook_event_name: 'PreToolUse', session_id: 'dg-mem', tool_name: 'Bash', tool_input: { command: 'git push' } }),
   encoding: 'utf8', timeout: 5000, ...memEnv,
 }).stdout.includes('"permissionDecision":"deny"'), true)
+
+// ── 2026-11-06 감사: push·PR 감지를 문자열 분할 → 셸 분석기로 (heredoc·인용 오탐, -C·개행·bash -c 누락) ──
+{
+  const isDeny = (r) => r.stdout.includes('"permissionDecision":"deny"')
+  // 악성·변형: 실제로 실행되는 push / PR 생성 → deny
+  assert('git -C <레포> push → deny', isDeny(preBash(`git -C ${memRoot} push origin x`)), true)
+  assert('개행 뒤 git push → deny', isDeny(preBash('ls\ngit push origin x')), true)
+  assert('bash -c "git push" → deny', isDeny(preBash('bash -c "git push origin x"')), true)
+  assert('env X=1 git push → deny', isDeny(preBash('env X=1 git push')), true)
+  assert('(git push) 서브셸 → deny', isDeny(preBash('(git push)')), true)
+  assert('true | gh pr create → deny', isDeny(preBash('true | gh pr create --fill')), true)
+  assert('gh --repo a/b pr create → deny', isDeny(preBash('gh --repo a/b pr create --fill')), true)
+  assert('git.exe push → deny', isDeny(preBash('git.exe push')), true)
+  // 오탐 금지: 인용·heredoc 본문 속 텍스트
+  assert("cat <<'EOF' > notes.md (본문에 git push) → 통과", isDeny(preBash("cat <<'EOF' > notes.md\ngit push origin main\nEOF")), false)
+  assert('echo "git push" → 통과', isDeny(preBash('echo "git push origin main"')), false)
+  assert("git log --grep 'gh pr create' → 통과", isDeny(preBash("git log --grep 'gh pr create'")), false)
+  assert("printf 'x; git push' → 통과", isDeny(preBash("printf 'x; git push'")), false)
+  assert('gh pr list → 통과', isDeny(preBash('gh pr list')), false)
+  // 이상·경계
+  assert('닫히지 않은 따옴표 + push 단어 → 크래시 없이 exit 0', preBash('echo "git push').status, 0)
+  assert('command 가 문자열 아님 → 통과', runHook({ hook_event_name: 'PreToolUse', session_id: 'dg-mem', tool_name: 'Bash', tool_input: { command: ['git', 'push'] } }, memEnv).status, 0)
+}
 
 // exports 미커밋도 차단
 git(['add', '.']); git(['commit', '-qm', 'memory v2'])

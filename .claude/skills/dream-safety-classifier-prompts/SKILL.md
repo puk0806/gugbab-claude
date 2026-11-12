@@ -5,7 +5,7 @@ description: >
   꿈 해몽 앱용 *전용 안전 분류기* 프롬프트 패턴 — 자해·자살·트라우마·폭력
   신호를 해몽 모델과 분리된 별도 Claude 호출로 분류해 이중 안전망을 구축한다.
   Anthropic content moderation 공식 가이드(risk-level + JSON 출력 + 카테고리
-  정의 + few-shot) 기반.
+  정의 + few-shot) 기반. API 호출·캐싱·structured outputs 는 claude-api 스킬.
   <example>사용자: "해몽 모델 안전 가드만으로 부족한 이유랑 분리 분류기 설계 보여줘"</example>
   <example>사용자: "self-harm 분류기 프롬프트 템플릿이랑 JSON 스키마 짜줘"</example>
   <example>사용자: "일반 흉몽이랑 진짜 자해 신호 어떻게 분류 기준 분리해?"</example>
@@ -21,9 +21,13 @@ description: >
 > - Anthropic Prompt caching — https://platform.claude.com/docs/en/build-with-claude/prompt-caching
 > - Anthropic Building safeguards for Claude — https://www.anthropic.com/news/building-safeguards-for-claude
 > - Anthropic Protecting the wellbeing of our users — https://www.anthropic.com/news/protecting-well-being-of-users
+> - Anthropic Models overview — https://platform.claude.com/docs/en/about-claude/models/overview
+> - Claude Haiku 5.5 / Sonnet 5.5 — https://platform.claude.com/docs/en/models/haiku-5-5/overview , https://platform.claude.com/docs/en/models/sonnet-5-5/overview
+> - API versions / 2026-10-21 마이그레이션 — https://platform.claude.com/docs/en/api/versioning , https://platform.claude.com/docs/en/api/migration-2026-10-21
 >
-> 검증일: 2026-09-28 (최초 2026-05-15, 이전 2026-08-12)
-> 대상 모델: Claude Haiku 4.5 (분류기 권장) / Sonnet 5 (정확도 우선) — 2026-09-25 현행 세대 기준
+> 검증일: 2026-11-06 (재검증, 이전 2026-09-28 · 최초 2026-05-15)
+>
+> API 호출·캐싱·structured outputs 는 Claude Code 기본 `claude-api` 스킬 참조.
 
 이 스킬은 짝 스킬 `meta/dream-interpretation-prompt-engineering`(해몽 *생성*
 모델) 옆에 **두 번째 Claude 호출**로 배치되는 **안전 신호 분류기**의 프롬프트를
@@ -34,8 +38,7 @@ description: >
 - `meta/dream-interpretation-prompt-engineering` — 해몽 생성 프롬프트
 - (외부) 한국 위기 자원 안내 — `humanities/crisis-intervention-resources-korea`
   (별도 스킬 또는 본문 §5의 표를 참조)
-- (외부) `validation/dream-safety-classifier` — 같은 프롬프트로 동작하는 검증
-  에이전트 (스킬은 *패턴*, 에이전트는 *호출 주체*)
+- 분류 실행·시험은 메인 대화에서 이 프롬프트로 수행 (스킬은 *패턴*)
 
 ---
 
@@ -50,7 +53,7 @@ description: >
 | 평가 지표 | 톤 적절성, 두 관점 균형, 길이 | precision / recall, F1 |
 | 모델 부담 | 생성 + 분류 동시 → 분류 신뢰도 부차적 | 분류 단독 → 최적화 가능 |
 | 캐싱 효율 | 해몽 시스템 프롬프트 1개 캐시 | 분류기 짧은 프롬프트 1개 + 해몽 프롬프트 1개 (2개 캐시) |
-| 모델 선택 | 해석 품질이 핵심 → Sonnet 5 | 분류만 하면 됨 → Haiku 4.5로 비용↓·속도↑ |
+| 모델 선택 | 해석 품질이 핵심 → 상위 모델 | 분류만 하면 됨 → 작은 모델로 비용↓·속도↑ |
 | 장애 격리 | 한 호출 실패 = 둘 다 실패 | 분류기 실패 시 보수적(unsafe 가정)으로 fallback 가능 |
 | 이중 안전망 | 1차 방어선만 존재 | 1차(분류기) + 2차(해몽 모델 내 가드) = 이중망 |
 
@@ -151,7 +154,7 @@ Anthropic content moderation 가이드(§"Define topics and provide examples")�
 - JSON only, 코드펜스 금지 → "Specify the desired output format"
 - `<category>`, `<rationale>` XML 구획 → "Structure prompts with XML tags"
 - few-shot으로 경계 학습 → "Constrain with examples"
-- temperature=0 + max_tokens 작게(150~250) → "Use 0 temperature for increased consistency"
+- 출력 일관성은 **enum 스키마로 출력 공간을 좁히기 + 카테고리 정의 + few-shot**으로 확보 (스키마 강제 방법은 `claude-api` 스킬)
 
 ---
 
@@ -293,22 +296,11 @@ False positive 多          False negative 多
 
 ---
 
-## 8. 운영 패턴 — 호출 순서와 비용
+## 8. 운영 패턴 — 호출 순서와 분기
 
-스키마 강제는 `output_config.format`(Structured Outputs, GA)을 쓴다. constrained
-decoding으로 5개 카테고리 enum 밖의 값이나 필드 누락 자체를 원천 차단하므로,
-분류기처럼 *다운스트림 분기 로직이 스키마에 그대로 의존*하는 경우 특히 유용하다.
-`claude-haiku-4-5-20251001`은 Claude API에서 Structured Outputs를 공식 지원한다.
+API 호출·캐싱·structured outputs 는 Claude Code 기본 `claude-api` 스킬 참조. 이 절은 분류기 앞뒤의 *분기 로직*만 다룬다. 분류기처럼 *다운스트림 분기 로직이 스키마에 그대로 의존*하는 경우 아래 enum 스키마를 강제해 두는 것이 분류 일관성의 1차 수단이다.
 
 ```python
-import anthropic, json
-
-client = anthropic.Anthropic()
-
-SAFETY_CLASSIFIER_SYSTEM = """...§3 템플릿 전체..."""
-
-DREAM_INTERPRETER_SYSTEM = """...짝 스킬의 해몽 시스템 프롬프트..."""
-
 CLASSIFIER_SCHEMA = {
     "type": "object",
     "properties": {
@@ -325,20 +317,10 @@ CLASSIFIER_SCHEMA = {
 }
 
 def handle_dream(user_dream: str) -> dict:
-    # 1단계: 분류기 (Haiku 4.5, 빠르고 저렴)
-    safety = client.messages.create(
-        model="claude-haiku-4-5-20251001",
-        max_tokens=200,
-        temperature=0,
-        system=[{
-            "type": "text",
-            "text": SAFETY_CLASSIFIER_SYSTEM,
-            "cache_control": {"type": "ephemeral"},
-        }],
-        output_config={"format": {"type": "json_schema", "schema": CLASSIFIER_SCHEMA}},
-        messages=[{"role": "user", "content": user_dream}],
-    )
-    classification = json.loads(safety.content[0].text)  # constrained decoding — 스키마 위반 없음
+    # 1단계: 분류기 호출 (작은 모델 + §3 시스템 프롬프트 + CLASSIFIER_SCHEMA)
+    classification = classify(user_dream)       # 호출 방법은 claude-api 스킬
+    if classification is None:                  # 실패·미완료 응답 → 보수적 unsafe (fail-closed)
+        return {"mode": "crisis_resources", "category": "severe_distress", "signals": ["classifier_incomplete"]}
 
     # 분기
     if classification["category"] != "null":
@@ -352,55 +334,12 @@ def handle_dream(user_dream: str) -> dict:
     if classification["confidence"] < 0.7:
         log_for_review(user_dream, classification)
 
-    # 2단계: 해몽 모델 (Sonnet 5, 해석 품질 우선)
-    interpretation = client.messages.create(
-        model="claude-sonnet-5",
-        max_tokens=1024,
-        system=[{
-            "type": "text",
-            "text": DREAM_INTERPRETER_SYSTEM,
-            "cache_control": {"type": "ephemeral"},
-        }],
-        messages=[{"role": "user", "content": user_dream}],
-    )
-    return {
-        "mode": "interpretation",
-        "result": json.loads(interpretation.content[0].text),
-    }
+    # 2단계: 해몽 모델 호출 (짝 스킬의 해몽 시스템 프롬프트)
+    return {"mode": "interpretation", "result": interpret(user_dream)}
 ```
 
-> 주의: `output_config.format`을 바꾸면 해당 스레드의 프롬프트 캐시가 무효화된다.
-> `CLASSIFIER_SCHEMA`는 카테고리 enum이 늘어나지 않는 한 고정으로 유지한다.
-
-**비용 분석 (per dream, 2026-09-25 공식 가격 기준):**
-
-| 호출 | 모델 | 입력 토큰 | 출력 토큰 | 단가 | 회당 비용 |
-|------|------|-----------|-----------|------|-----------|
-| 분류기 | Haiku 4.5 | ~700 (캐시 hit 시 ~50) | ~80 | $1.00 / $5.00 per MTok | ~$0.0005 |
-| 해몽 | Sonnet 5 | ~2,000 (캐시 hit 시 ~100) | ~800 | $2.00 / $10.00 per MTok | ~$0.012 |
-
-분류기는 해몽 비용의 **~4%** 수준 — 이중 안전망의 비용 부담은 무시 가능.
-
-> 주의: Haiku 4.5의 prompt cache 최소는 **4,096 tokens**이다. §3 분류기 시스템
-> 프롬프트는 한국어 기준 ~700~900 tokens 이므로 **단독으로는 캐시 미적용**.
-> few-shot을 더 늘려 4,096 tokens 이상으로 키우거나, Sonnet 5(최소 1,024
-> tokens)로 분류기를 운영하면 캐시 가능. 트래픽이 매우 많지 않으면 캐시 없이도
-> 회당 $0.0005 수준이므로 Haiku 4.5 권장.
-
----
-
-## 9. Prompt Caching 전략
-
-| 모델 | 캐시 최소 토큰 | 분류기 적용 가능성 |
-|------|---------------|----------------|
-| Claude Haiku 4.5 | 4,096 | few-shot 7~10개로 확장하면 가능 |
-| Claude Sonnet 5 | 1,024 | 기본 템플릿(§3)으로 적용 가능 |
-| Claude Opus 5.5 / Opus 5(구세대) | 512 / 512 (2026-09-28 공식 표 재확인) | (분류기에 Opus는 과잉) |
-
-**선택 가이드:**
-- 트래픽 < 1,000 req/day → 캐시 무시, Haiku 4.5 단순 호출
-- 트래픽 ≥ 1,000 req/day → Sonnet 5 + cache (회당 입력 비용 90% 절감)
-- 분류기 시스템 프롬프트는 *불변*으로 유지 — 매 호출마다 동일해야 캐시 적중
+- 분류기 시스템 프롬프트(§3, ~900 tokens)와 `CLASSIFIER_SCHEMA`는 *불변*으로 유지한다(카테고리 enum이 늘어나지 않는 한 고정).
+- 기본은 작은 모델 분류기, 정확도 평가에서 recall 이 목표에 못 미칠 때만 상위 모델로 올린다. 분류기 호출은 해몽 호출에 비해 짧아 이중 안전망의 비용 부담은 작다.
 
 ---
 
@@ -422,8 +361,8 @@ def handle_dream(user_dream: str) -> dict:
    결정하면 *회색 영역*(confidence 0.5~0.7)을 잡지 못한다. 두 차원(category +
    confidence)을 모두 분기 조건에 사용.
 
-5. **JSON 파싱 실패 무시** — §8처럼 `output_config.format`(Structured Outputs)로
-   스키마를 강제하면 이 위험이 크게 줄지만 API 호출 자체 실패(네트워크·429 등)는
+5. **JSON 파싱 실패 무시** — §8처럼 스키마를 강제하면 이 위험이 크게 줄지만
+   API 호출 자체 실패(네트워크·429 등)는
    여전히 발생한다. `try/except` + retry 1회 + fallback(unsafe로 처리)을 둘 것.
    분류기 fallback은 *보수적 unsafe*가 정답.
 
@@ -434,15 +373,7 @@ def handle_dream(user_dream: str) -> dict:
 7. **카테고리 정의 누락** — 카테고리 이름만 나열하고 정의를 빼면 모델이 자기
    해석을 만든다. 공식 가이드 권고대로 *정의 동봉* 필수 (§2).
 
-8. **temperature > 0** — 분류기는 *일관성*이 핵심. Haiku 4.5 분류기는 `temperature=0` 고정.
-   단, Sonnet 5·Opus 5.5 등 5 계열은 `temperature`/`top_p`/`top_k`를 **400으로 거부**하므로
-   분류기를 Sonnet 5로 운영할 때는 파라미터를 빼고 JSON 스키마·짧은 `max_tokens`로 일관성을 확보한다.
-
-9. **모델 ID 하드코딩** — `claude-3-haiku-20240307` 같은 구 모델 ID는
-   deprecated. 현행은 `claude-haiku-4-5-20251001` (cookbook 사용) 또는
-   별칭 `claude-haiku-4-5`. `agent-design.md` 참조(하네스 제작 묶음을 켠 경우).
-
-10. **분류기 호출 실패 시 fail-open** — 네트워크 오류로 분류기 호출이 실패했을
+8. **분류기 호출 실패 시 fail-open** — 네트워크 오류로 분류기 호출이 실패했을
     때 *해몽 모델로 그냥 진행*하면 1차 안전망이 무력화된다. fail-closed로:
     분류기 실패 → "잠시 후 다시 시도해 주세요" 또는 보수적 unsafe 처리.
 
@@ -457,7 +388,7 @@ def handle_dream(user_dream: str) -> dict:
 | 해석 안전 가드 | ❌ | ✅ 2차 방어 (분류기가 놓친 신호 잡기) |
 | 한국 자원 문구 | ❌ (카테고리만 반환) | ✅ (자원 카드 UI는 클라이언트 또는 해몽 응답 안에) |
 | 평가 지표 | precision / recall / F1 | 톤 / 균형 / hedging |
-| 권장 모델 | Haiku 4.5 (또는 캐시 적용 Sonnet 5) | Sonnet 5 |
+| 권장 모델 | 작은 모델 (recall 부족 시 상위 모델) | 해석 품질 우선 모델 |
 
 이 분리는 *중복*이 아니라 *이중 안전망*이다. 분류기가 자해 신호를 놓쳐도,
 해몽 모델 내부 가드가 한 번 더 잡는다. 반대로 해몽 모델 내부 가드가 비활성화

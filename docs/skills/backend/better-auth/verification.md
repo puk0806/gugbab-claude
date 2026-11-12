@@ -2,7 +2,7 @@
 skill: better-auth
 category: backend
 version: v1
-date: 2026-09-26
+date: 2026-11-06
 status: APPROVED
 ---
 
@@ -14,10 +14,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `better-auth` |
 | 스킬 경로 | `.claude/skills/better-auth/SKILL.md` |
-| 검증일 | 2026-09-26 (최초 2026-09-25, 섹션 7 보강·재테스트 2026-09-26) |
+| 검증일 | 2026-11-06 (재검증, 이전 2026-09-26) |
 | 검증자 | skill-creator 에이전트 |
 | 스킬 버전 | v1 |
-| 기준 버전 | `better-auth` 1.7.6 (npm `latest`, 2026-09-24) |
+| 기준 버전 | `better-auth` 1.7.18 (npm `latest`, 2026-11-05) — 이전 1.7.6 |
 
 ---
 
@@ -74,6 +74,22 @@ status: APPROVED
 | GitHub 이슈/PR (nextCookies·isAPIError·secret) | https://github.com/better-auth/better-auth/issues | ⭐⭐ Medium | 2025~2026 | 교차 검증 보조 |
 | Releasebot | https://releasebot.io/updates/better-auth/betterauth | ⭐⭐ Medium | 2026-09 | 릴리스 날짜 교차 확인 |
 | Makerkit rate limiting 가이드 | https://makerkit.dev/docs/nextjs-drizzle/better-auth/rate-limiting | ⭐⭐ Medium | 2026 | rate limit 기본값 교차 확인 |
+| npm registry (2026-11-06 재검증) | https://registry.npmjs.org/better-auth · `/@better-auth/drizzle-adapter` · `/@better-auth/redis-storage` · `/auth` · `/@better-auth/cli` | ⭐⭐⭐ High | 2026-11-06 | dist-tags·peerDependencies·exports·deprecated |
+| better-auth 1.7.6 / 1.7.18 패키지 소스 (npm tarball `dist/`) | https://registry.npmjs.org/better-auth/-/better-auth-1.7.18.tgz | ⭐⭐⭐ High | 2026-11-06 | `context/create-context.mjs`(rateLimit 기본값), `api/rate-limiter/index.mjs`(내장 규칙), `plugins/admin/routes.mjs`(revoke·ban 엔드포인트) |
+| Rate Limit · Options · Session · CLI · Admin · Drizzle 문서 (2026-11-06 재조회) | https://www.better-auth.com/docs/concepts/rate-limit · https://www.better-auth.com/docs/reference/options · https://www.better-auth.com/docs/concepts/session-management · https://www.better-auth.com/docs/concepts/cli · https://www.better-auth.com/docs/plugins/admin · https://www.better-auth.com/docs/adapters/drizzle | ⭐⭐⭐ High | 2026-11-06 | 공식 문서 |
+
+### 2026-11-06 재검증 클레임
+
+| # | 클레임 | 소스 | 판정 |
+|---|--------|------|------|
+| R1 | 최신 안정 1.7.18(2026-11-05), `release-1.6`=1.6.34, 1.8은 beta(1.8.0-beta.6)만 | npm registry dist-tags(better-auth·@better-auth/drizzle-adapter·auth 모두 동일) | VERIFIED → 기준 버전 1.7.6→1.7.18 갱신 |
+| R2 | peer 범위 next ^14/^15/^16, react ^18/^19, drizzle-orm ^0.45.2 \|\| >=1.0.0-rc.1 <2.0.0, @prisma/client ^5/^6/^7 | npm 1.7.18 package.json | VERIFIED (drizzle-orm 상한 `<2.0.0` 표기 추가) |
+| R3 | CLI `npx auth@latest`, `migrate`는 내장 Kysely 전용, `@better-auth/cli` deprecated | 공식 CLI 문서 + npm(`@better-auth/cli` latest에 deprecated 메시지) | VERIFIED (upgrade·check·info·init·create-admin 서브커맨드 추가 기재) |
+| R4 | rate limit 기본 "60초/100회" (기존 클레임 #7 일부) | 공식 options 문서 `window` default `10`·rate-limit 문서 "10 seconds" + 1.7.6·1.7.18 소스 `window: options.rateLimit?.window \|\| 10` | DISPUTED → **10초/100회로 정정**. 내장 규칙(sign-in·sign-up·change-password·change-email 10초/3회, 메일 발송 경로 60초/3회)도 소스로 확인해 기재 |
+| R5 | `revokeUserSessions`는 admin 플러그인 없이도 존재, Better Auth가 인가하지 않음 (기존 클레임 #16 일부) | 공식 admin 플러그인 문서 + 1.7.18 소스 `plugins/admin/routes.mjs`(`/admin/revoke-user-sessions`, `use: [adminMiddleware]`, `hasPermission({ permissions: { session: ["revoke"] } })`) + session-management 문서에 서버 revoke API 미기재 | DISPUTED → **admin 플러그인 전용·플러그인이 호출자 권한 검사**로 정정 |
+| R6 | `secondaryStorage` 설정 시 `rateLimit.storage` 기본값이 `"secondary-storage"`, `increment` 필요 | 공식 options 문서(storage 값 `"memory" \| "database" \| "secondary-storage"`) + 1.7.18 소스 | VERIFIED (신규 기재) |
+| R7 | 세션 기본값 expiresIn 7일·updateAge 1일·freshAge 1일, cookieCache strategy 기본 `compact`, revoke 후 타 기기 maxAge까지 유효 | 공식 session-management + options 문서 | VERIFIED (변경 없음) |
+| R8 | Drizzle 어댑터 `@better-auth/drizzle-adapter`, `relations-v2` 서브패스, `advanced.database.joins` | 공식 drizzle 어댑터 문서 + npm 1.7.18 exports(`.`, `./relations-v2`) | VERIFIED (변경 없음) |
 
 ---
 
@@ -89,7 +105,7 @@ status: APPROVED
 | 4 | Drizzle 어댑터 import 경로 | 공식 drizzle 문서(`@better-auth/drizzle-adapter`) vs package.json exports(`better-auth/adapters/drizzle` 존재) | DISPUTED → 둘 다 유효하게 수정, 공식 권장 경로를 기본으로 하고 `> 주의:` 표기 |
 | 5 | 세션 기본값 expiresIn 7일 / updateAge 1일 / freshAge 1일, cookieCache 기본 strategy `compact` | 공식 session 문서(mdx 원문), options 문서, GitHub 이슈 | VERIFIED |
 | 6 | cookieCache 사용 시 revoke가 타 기기에서 maxAge까지 지연 | 공식 session 문서 원문 | VERIFIED |
-| 7 | rate limit은 프로덕션 기본 활성, 60초/100회, `/sign-in/email` 10초/3회, 429 + `X-Retry-After`, memory 저장소는 서버리스 부적합, `auth.api` 서버 호출은 제외 | 공식 rate-limit 문서, 검색 결과(공식 mdx + Makerkit + 서드파티 이슈) | VERIFIED |
+| 7 | rate limit은 프로덕션 기본 활성, 60초/100회, `/sign-in/email` 10초/3회, 429 + `X-Retry-After`, memory 저장소는 서버리스 부적합, `auth.api` 서버 호출은 제외 | 공식 rate-limit 문서, 검색 결과(공식 mdx + Makerkit + 서드파티 이슈) | VERIFIED → 2026-11-06 일부 DISPUTED(기본 창 60초는 오류, 10초가 맞음 — R4 참조) |
 | 8 | `nextCookies()`는 plugins 배열 마지막 | 공식 Next.js 문서, GitHub 이슈 다수 | VERIFIED |
 | 9 | `getSessionCookie`는 존재만 확인·검증 안 함, Next 16 proxy에서 `auth.api.getSession` 전체 검증 가능 | 공식 Next.js 문서 원문, GitHub 이슈 #6187·#6360 | VERIFIED |
 | 10 | 비밀번호 해시 기본 scrypt, 길이 8~128, autoSignIn 기본 true, 미인증 로그인 403 | 공식 email-password·security 문서, GitHub 이슈 #6608, DeepWiki | VERIFIED |
@@ -98,7 +114,7 @@ status: APPROVED
 | 13 | 서버 에러 처리 `isAPIError` / `APIError` from `better-auth/api` | 공식 API 문서, GitHub PR #9211·#8734 | VERIFIED |
 | 14 | Drizzle 어댑터가 neon-http(트랜잭션 미지원)에서 내부 트랜잭션을 요구하는지 | 확인 소스 없음 | UNVERIFIED → SKILL.md에 `> 주의: 미검증` 표기 |
 | 15 | rate limit은 계정이 아니라 연결 IP 주소 기준으로 판정, IPv6는 `/64` 서브넷 정규화 | 공식 rate-limit 문서 ("Rate limiting uses the connecting IP address") | VERIFIED |
-| 16 | 관리자 서버사이드 강제 로그아웃: `auth.api.revokeUserSession`(토큰 단위)·`revokeUserSessions`(유저 전체)·`banUser`(정지+세션 무효화) | 공식 session-management·admin 플러그인 문서 | VERIFIED |
+| 16 | 관리자 서버사이드 강제 로그아웃: `auth.api.revokeUserSession`(토큰 단위)·`revokeUserSessions`(유저 전체)·`banUser`(정지+세션 무효화) | 공식 session-management·admin 플러그인 문서 | VERIFIED(API 이름) → 2026-11-06 DISPUTED(플러그인 불필요·인가 없음 서술은 오류 — R5 참조) |
 | 17 | 공식 Redis 저장소 패키지 `@better-auth/redis-storage`(ioredis 기반) 존재 | npm registry 실측(1.7.6, better-auth 팀 유지보수) + 공식 database 문서 언급 | VERIFIED |
 | 18 | `auth.api.getSession()`(서버)도 cookieCache 대상 — `disableCookieCache` 옵션이 서버 호출 예시로도 제시됨 | 공식 session-management 문서의 서버측 예시 코드 | VERIFIED (문서가 "적용된다"를 평서문으로 못박진 않았으나, 서버 호출에 옵션을 노출한 것 자체가 근거) |
 
@@ -110,7 +126,8 @@ status: APPROVED
 
 ### 4-1. 내용 정확성
 - [✅] 공식 문서와 불일치하는 내용 없음
-- [✅] 버전 정보가 명시되어 있음 (better-auth 1.7.6, peer 범위 명시)
+- [✅] 버전 정보가 명시되어 있음 (better-auth 1.7.18 — 2026-11-06 재검증 갱신, peer 범위 명시)
+- [✅] 2026-11-06 재검증 DISPUTED 2건(rate limit 기본 창 60초→10초, admin 전용 revoke API·인가 주체) 정정 반영
 - [✅] deprecated된 패턴을 권장하지 않음 (`@better-auth/cli` → `npx auth@latest`)
 - [✅] 코드 예시가 실행 가능한 형태임
 
@@ -128,13 +145,50 @@ status: APPROVED
 - [✅] 범용적으로 사용 가능 (특정 프로젝트 종속 X)
 
 ### 4-4. Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-09-25, 2026-09-26 재테스트)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-09-25, 2026-09-26 재테스트, 2026-11-06 재시험)
 - [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-09-25, 2026-09-26 재테스트)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 — FAIL 없음, 선택 보강 항목만 기록 (2026-09-25, 2026-09-26)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-11-06
+**수행자**: skill-tester → general-purpose (도메인 전용 에이전트 부재로 대체, 대체 사실 명시)
+**수행 방법**: 2026-11-06 재검증으로 수정된 내용(rate limit 기본값·내장 규칙, admin 플러그인 전용 revoke/ban API와 권한 검사, secondary-storage·trustedProxies·disableIpTracking)을 겨냥해 SKILL.md Read 후 실전 질문 3개 답변, 근거 줄 번호 및 anti-pattern 회피 확인
+
+### 재검증 후 재시험 (2026-11-06)
+
+**Q1. 프로덕션 rate limit 기본값, `/sign-in/email` vs 비밀번호 재설정 메일 경로 규칙, 초과 응답, 개발 환경 적용 여부**
+- ✅ PASS
+- 근거: SKILL.md §10 452~453줄, §8 418~421줄, §2 137줄
+- 상세: 기본 10초/100회(구 "60초/100회" anti-pattern 회피, 정정 주석까지 인용), `/sign-in*` 10초/3회 vs 메일 발송 경로 60초/3회 구분, 429 + `X-Retry-After`, 개발에서는 비활성 모두 정확.
+
+**Q2. 관리자 전 기기 강제 로그아웃·계정 정지 — admin 플러그인 필요 여부, 권한 검사 주체, headers 없는 백그라운드 호출, cookieCache 주의**
+- ✅ PASS
+- 근거: SKILL.md §6 "관리자용 서버사이드 강제 로그아웃" 309~328줄, cookieCache 269~271줄
+- 상세: "admin 플러그인 전용, 없으면 존재하지 않음"과 "플러그인이 `adminMiddleware`로 호출자 권한(`session:["revoke"]`·`user:["ban"]`) 검사"를 정확히 인용(구 "플러그인 불필요·Better Auth가 인가 안 함" anti-pattern 회피). headers 없으면 실패, cookieCache maxAge 지연과 `disableCookieCache` 대응도 정확.
+
+**Q3. Cloudflare 프록시 뒤 Vercel 서버리스 + Redis rate limit — storage 결정, 필요 메서드, IP 헤더·trustedProxies, disableIpTracking**
+- ✅ PASS
+- 근거: SKILL.md §6-1 293~295줄, §10 454~456줄, §11 476줄
+- 상세: `secondaryStorage` 설정 시 `rateLimit.storage` 기본값 `"secondary-storage"` 자동 선택, `increment` 없으면 에러, `ipAddressHeaders`(`cf-connecting-ip`)+`trustedProxies`, 헤더 위조 불가 구성 확인, `disableIpTracking`이 내장 rate limit을 끈다는 점 모두 정확.
+
+### 발견된 gap (선택 보강, 차단 요인 아님)
+
+- 429 응답 본문 형식, 개발 환경에서 rate limit을 강제로 켜는 옵션 미기재
+- `rateLimit.storage`·`advanced.ipAddress.*` 설정 코드 스니펫 없음(문장 서술만), `trustedProxies`의 XFF 홉 선택 동작 미설명
+- 헤더 없는 서버 컨텍스트(크론)에서 강제 로그아웃하는 대안 미기재, `adminRoles`/`adminUserIds` 설정 예시 없음
+
+### 판정 (2026-11-06)
+
+- agent content test: 3/3 PASS
+- verification-policy 분류: 라이브러리 사용법 스킬 — 실사용 필수 카테고리 아님
+- 최종 상태: **APPROVED** 유지
+
+---
+
+### 이전 재테스트 (2026-09-26, 참고 보존)
 
 **수행일**: 2026-09-26 (재테스트)
 **수행자**: skill-tester → general-purpose (도메인 전용 에이전트 부재로 대체, 대체 사실 명시)
@@ -250,8 +304,8 @@ Vercel에 배포한 Hono + Better Auth에서 로그인 무차별 대입 방어�
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (최초 3/3 PASS 2026-09-25 → 2026-09-26 섹션 6·9·10 보강분 타깃 재테스트 3/3 PASS) |
-| **최종 판정** | **APPROVED** (2026-09-26 재테스트 완료로 재전환) |
+| 에이전트 활용 테스트 | ✅ (최초 3/3 PASS 2026-09-25 → 2026-09-26 재테스트 3/3 PASS → 2026-11-06 재검증 수정분 타깃 재시험 3/3 PASS) |
+| **최종 판정** | **APPROVED** (2026-11-06 재검증 후 재시험 통과로 유지) |
 
 ---
 
@@ -266,6 +320,8 @@ Vercel에 배포한 Hono + Better Auth에서 로그인 무차별 대입 방어�
 - [✅] `secondaryStorage`(Redis) 설정 코드 예시 추가 — 2026-09-26 공식 패키지 `@better-auth/redis-storage`(npm 실측, 1.7.6, better-auth 팀 유지보수 확인) 기반 예시를 SKILL.md §6-1에 신설. 수동 구현 시의 `get`/`set`/`delete` 인터페이스도 함께 기재
 - [✅] `auth.api.getSession()`의 cookieCache 적용 여부 명시 — 2026-09-26 공식 문서(`concepts/session-management`)가 `disableCookieCache` 옵션을 서버 `auth.api.getSession({ query: { disableCookieCache: true } })` 예시로도 제시하는 것을 근거로 "서버 경로도 기본적으로 cookieCache를 탄다"고 SKILL.md §6에 명시(공식 문서가 명시적 평서문으로 확언하지는 않아 근거는 "옵션 존재 자체가 함의"임을 함께 밝힘)
 - [✅] 2026-09-26 보강분(rate limit 키·관리자 강제 로그아웃·secondaryStorage Redis·getSession cookieCache)에 대한 skill-tester 재테스트 수행 — Q1·Q2·Q3 모두 보강 내용을 직접 겨냥한 질문으로 재실행, 3/3 PASS. 발견된 gap 없음(기존 4건 gap 전부 해소 확인). PENDING_TEST → APPROVED 재전환
+- [✅] 2026-11-06 재검증 수정분(rate limit 10초/100회·내장 규칙, admin 플러그인 전용 revoke/ban·권한 검사, secondary-storage·trustedProxies)에 대한 skill-tester 재시험 수행 (2026-11-06 완료, 3/3 PASS, APPROVED 유지)
+- [❌] 선택 보강: `rateLimit.storage`·`advanced.ipAddress.*` 설정 코드 스니펫, 429 응답 본문, 크론용 강제 로그아웃 대안 — 선택 보강, 차단 요인 아님(2026-11-06 재시험에서 발견)
 
 ---
 
@@ -277,3 +333,6 @@ Vercel에 배포한 Hono + Better Auth에서 로그인 무차별 대입 방어�
 | 2026-09-25 | v1 | 2단계 실사용 테스트 수행 (Q1 Next.js+Drizzle+Google 로그인 설정 / Q2 서버리스 rate limit·모든 기기 로그아웃 / Q3 cookieCache revoke 지연 대응) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-09-26 | v1 | 섹션 7 선택 보강 4건 반영: rate limit 판정 키(IP) 명시, 관리자 강제 로그아웃 API(`revokeUserSession(s)`/`banUser`) 추가, `secondaryStorage` Redis 예시(§6-1) 신설, `auth.api.getSession()` cookieCache 적용 여부 명시. 내용 변경으로 APPROVED → PENDING_TEST 재전환(재테스트 대기) | Claude (Sonnet 5) |
 | 2026-09-26 | v1 | 2단계 재테스트 수행 (Q1 rate limit 판정 키 / Q2 관리자 강제 로그아웃 / Q3 secondaryStorage Redis + getSession cookieCache) — 보강 내용 전부 타깃, 3/3 PASS → PENDING_TEST → APPROVED 재전환 | skill-tester |
+| 2026-11-06 | v1.1 | 재검증 — 기준 버전 1.7.6→1.7.18(1.6.34, 1.8 beta만) 갱신, peer·CLI·세션 기본값·Drizzle 어댑터 VERIFIED. 정정 2건: ① rate limit 기본 60초/100회 → **10초/100회**(공식 options + 패키지 소스), 내장 규칙(sign-in/up 등 10초/3회, 메일 발송 60초/3회) 기재 ② `revokeUserSession(s)`·`banUser`는 **admin 플러그인 전용**이며 플러그인이 호출자 권한(`session:revoke`·`user:ban`)을 검사 — "플러그인 없이 존재·Better Auth가 인가 안 함" 서술 삭제. 추가: `secondary-storage` 저장소 값·자동 선택, `trustedProxies`·`disableIpTracking`, CLI `upgrade` 등. 내용 수정 있음 — skill-tester 재시험 예정 | Claude (Opus 5.5) |
+| 2026-11-06 | v1.1 | 재검증 후 2단계 재시험 수행 (Q1 rate limit 기본값·내장 규칙 / Q2 admin 플러그인 전용 강제 로그아웃·권한 검사 / Q3 secondary-storage·IP 헤더·trustedProxies) → 3/3 PASS, APPROVED 유지 | skill-tester |
+| 2026-11-12 | v1.2 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 1.7 변경점(CLI `auth` 이전·어댑터 패키지·joins stable·MCP/SCIM 분리)·프로덕션 secret 에러·timing attack 메일 발송·cookieCache revoke 지연(서버 getSession 포함)·secondaryStorage 자동 저장소/`increment`·admin 플러그인 전용 강제 로그아웃·nextCookies 순서·getSessionCookie 비검증·rate limit 기본값/IP 기준/서버 호출 제외·흔한 실수 / 덜어낸 것 설치·betterAuth() 기본 설정 예제·옵션 표·Drizzle/Prisma 설치 명령·이메일/OAuth/클라이언트/세션 조회 기본 예제·Next.js/Hono 핸들러 코드·플러그인 개요표·적대적 테스트 일반 목록 | 정리 |

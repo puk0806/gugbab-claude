@@ -2,7 +2,7 @@
 skill: naver-seo-specifics
 category: frontend
 version: v1.2
-date: 2026-09-26
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `naver-seo-specifics` |
 | 스킬 경로 | `.claude/skills/naver-seo-specifics/SKILL.md` |
-| 검증일 | 2026-06-03 (최초) / 2026-08-26 (freshness 갱신) / **2026-09-26 (30~60일 주기 재검증)** |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-26) — 최초 2026-06-03 / 2026-08-26 freshness 갱신 |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1.2 |
 
@@ -89,6 +89,14 @@ status: APPROVED
 | 인터넷트렌드 데이터 인용 보도 | https://v.daum.net/v/20260422060211189 | ⭐⭐ Medium | 2026-04-22 | 2025-09~2026-04 네이버 60%+ 8개월 연속, 일간 최고 70.6% |
 | SEO NEWS — AI 브리핑 인용 출처 분석 | https://seonews.co.kr/naver-ai-briefing-geo-202605/ | ⭐ Medium-Low | 2026-05 | 272건 표본 분석. **비공식 분석으로만 인용** |
 
+### 3-2. 2026-11-09 재검증 시 조회 소스
+
+| 소스명 | URL | 신뢰도 | 날짜 | 비고 |
+|--------|-----|--------|------|------|
+| StatCounter Korea (재조회) | https://gs.statcounter.com/search-engine-market-share/all/south-korea | ⭐⭐⭐ High | 2026-11-09 조회 | 2026-10 Google 48.48% / Naver 42.25% / Bing 4.94% / Daum 0.72% |
+| 디지털데일리 — 네이버 1Q 컨콜 "AI 검색 3분기부터 본격 수익화" | https://www.ddaily.co.kr/page/view/2026043009212638181 | ⭐⭐ Medium | 2026-04-30 | AI 브리핑 광고 2분기 테스트·3분기 수익화 — 기존 광고 도입 서술과 일치 |
+| 51Degrees — Naver's robots and crawlers | https://51degrees.com/blog/naver-crawlers-2026 | ⭐⭐ Medium | 2026 | Yeti/1.1 UA 형식 `Mozilla/5.0 (compatible; Yeti/1.1; +http://naver.me/spd)` 재확인 (searchadvisor.naver.com 은 WebFetch 접근 불가) |
+
 ---
 
 ## 4. 검증 체크리스트
@@ -157,9 +165,46 @@ status: APPROVED
 | 정보 탐색형 질의에서 AI 브리핑 노출이 잦고 상업형("추천"·"비교")에서는 드물다 | DISPUTED → `> 주의: 비공식 분석` 표기 | 복수 국내 SEO 매체 관찰이 일치하나 네이버 공식 확인 없음 |
 | AI 브리핑 확대 후 클릭 없이 이탈하는 비율 증가 / 창작자 수익 감소 보고 | DISPUTED → 본문에서 "보고가 다수" 수준으로만 서술 | 개별 창작자 사례 보도(2026-08) 존재하나 정량 공식 통계 없음. 네이버는 반대로 "창작자 지원 규모 2배 증가"를 공식 발표 |
 
+### 4-6. 2026-11-09 재검증 클레임 판정
+
+| 클레임 | 판정 | 근거 |
+|--------|------|------|
+| StatCounter 최신 수치(2026-08 Google 46.6%/Naver 43.71%) | DISPUTED(낡음) → 2026-10 수치로 갱신 | StatCounter 원 페이지 직접 조회: 2026-10 Google 48.48% / Naver 42.25% / Bing 4.94% / Daum 0.72%. "월별 등락" 서술은 그대로 유효 |
+| Bing 점유 "상승세" | DISPUTED → "2025년 이후 늘었으나 2026-10 소폭 하락(월별 등락)"으로 정정 | StatCounter 2026-08 5.44% → 2026-10 4.94% |
+| Yeti UA `Mozilla/5.0 (compatible; Yeti/1.1; +http://naver.me/spd)` | VERIFIED | 51Degrees·Dark Visitors 등 다수 크롤러 디렉터리 일치 |
+| AI 브리핑 쿼리 약 20%(2025-12)·연말 2배 목표, 광고 2분기 테스트→하반기 수익화 | VERIFIED (변경 없음) | 디지털데일리 1Q 컨콜(2026-04-30)·서울경제TV(2026-02-06). 2026-10~11 시점 최신 적용 비율은 공식 수치 미확인 → 본문 미반영 |
+
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester → general-purpose (domain-specific 에이전트 미설치로 대체)
+**수행 방법**: 2026-11-09 재검증 수정분(§1·§8 StatCounter 2026-10 수치, Bing "상승세" → 월별 등락 정정) 대상으로 SKILL.md Read 후 실전 질문 2개 답변, 근거 섹션 및 anti-pattern("Bing 상승세" 단정, 낡은 2026-08 수치 인용) 회피 확인
+
+### 실제 수행 테스트 (2026-11-09 재검증분)
+
+**Q1. 보고서에 "StatCounter 기준 최신 점유율, Bing 계속 상승세"라고 써도 되나?**
+- ✅ PASS
+- 근거: SKILL.md §1 점유율 표·참고(정정) 문단·주의 문단, §8 Daum·ZUM·Bing 표
+- 상세: 2026-10 수치(Google 48.48% / Naver 42.25% / Bing 4.94% / Daum 0.72%)를 정확히 제시하고, "Bing 계속 상승세"는 2026-08 5.44% → 2026-10 4.94% 하락으로 부정확하다고 판정(월별 등락). 조회 월 병기·측정 기관 명시·추세 단정 금지 규칙을 정확히 인용. 낡은 수치·상승세 오답 회피.
+
+**Q2. 국내 일반 소비자 대상 블로그형 사이트의 네이버/Google 우선순위, 두 측정 기관 수치가 다른 이유, Daum·Bing 대응은?**
+- ✅ PASS
+- 근거: SKILL.md §1 실무 판단·주의, §8 표, §4 Yeti 화이트리스트, §5-3·§6-3, §9
+- 상세: 네이버 우선 + Google 병행, StatCounter(해외 편향)/인터넷트렌드(국내 표본) 차이로 상반 결과가 정상임을 정확히 설명. Daum 0.72%·Bing 4.94%(2026-10) 갱신 수치 반영, 양대 산맥 집중 + 별도 등록 판단 도출.
+
+### 발견된 gap (선택 보강, 차단 요인 아님)
+
+- Daum 웹마스터 도구·등록 방법 미언급, 인터넷트렌드(2026-04까지)와 StatCounter(2026-10) 시점 불일치 미명시, "모바일 점유 70%+" 출처 미표기
+
+### 판정 (2026-11-09 재검증분)
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 알고리즘·랭킹·시장 동향 정리형 스킬 — 실사용 필수 카테고리 해당 없음(content test로 충분)
+- 최종 상태: APPROVED 유지
+
+---
 
 ### 5-0. 2026-09-26 재검증 (30~60일 주기, verification-policy.md 절차)
 
@@ -296,7 +341,8 @@ status: APPROVED
 | 에이전트 활용 테스트 (freshness 갱신분) | ✅ 3/3 PASS (2026-08-26) — Q1 AI 브리핑 출처 조건 / Q2 미검증 수치(70% UGC) 인용 금지 판정 / Q3 2026 점유율 수치·출처 |
 | freshness 재검증 (2026-09-26) | ✅ 검색 점유율 추세 서술 오류 발견·정정(격차 확대→월별 등락), AI 브리핑 광고 도입 사실 신규 반영 |
 | 에이전트 활용 테스트 (2026-09-26 재검증분) | ✅ 2/2 PASS — Q1 점유율 추세 정정 정면 타겟 / Q2 AI 브리핑 광고 도입 신규 사실 정면 타겟 |
-| **최종 판정** | **APPROVED** (2026-09-26 재검증 — 정정 사항 2건을 skill-tester가 general-purpose 에이전트로 정면 타겟 재테스트하여 2/2 PASS 확인) |
+| 에이전트 활용 테스트 (2026-11-09 재검증분) | ✅ 2/2 PASS — Q1 StatCounter 2026-10 수치·Bing 상승세 정정 / Q2 네이버·Google 우선순위·기관별 수치 차이·Daum/Bing 대응 |
+| **최종 판정** | **APPROVED** (2026-11-09 재검증 — 수정분 2건을 skill-tester가 general-purpose 에이전트로 재테스트하여 2/2 PASS 확인) |
 
 ---
 
@@ -305,6 +351,8 @@ status: APPROVED
 - [✅] skill-tester content test 수행 (2026-06-03 완료, 3/3 PASS) → APPROVED 전환
 - [✅] 2026-08-26 freshness 갱신분(AI 브리핑 §2-2 신설 + 점유율 §1 최신화) content 재테스트 수행 (2026-08-26 완료, 3/3 PASS) — 신규 gap 없음, APPROVED 유지
 - [✅] 2026-09-26 재검증 정정분(§1 점유율 추세, §2-2 AI 브리핑 광고 도입) skill-tester content 재테스트 수행 (2026-09-26 완료, 2/2 PASS) — 정정 사항이 실제 답변에 정확히 반영됨을 확인, PENDING_TEST → APPROVED 전환
+- [✅] 2026-11-09 재검증 수정분(§1·§8 StatCounter 2026-10 수치, Bing 월별 등락 정정) skill-tester content 재테스트 수행 (2026-11-09 완료, 2/2 PASS) — APPROVED 유지
+- [❌] Daum 웹마스터 도구·등록 방법 및 인터넷트렌드/StatCounter 시점 불일치 명시 보강 — *선택 보강*. 2026-11-09 테스트에서 발견된 gap, 차단 요인 아님
 - [❌] AI 브리핑 광고 도입이 자연 인용 슬롯·비중에 미치는 영향(잠식 효과 등) 서술 보강 — *선택 보강*. Q2 테스트에서 발견된 gap. 현재 SKILL.md는 도입 사실·방식만 다루고 자연 인용과의 상호작용은 미서술. 네이버 공식 자료 확보 전까지는 비공식 분석으로도 단정 서술 불가하여 차단 요인 아님
 - [❌] 네이버 검색 공식 블로그의 C-Rank·D.I.A. 원문 직접 인용 URL 확보 (현재는 간접 인용) — 선택 보강 (현재 `비공식 분석` 표기로 충분히 안전)
 - [❌] 한국 SEO 도구(어센트·NSIDE·가제트AI) 비교 섹션 추가 검토 — 선택 보강 (현 스킬 범위 밖)
@@ -314,7 +362,7 @@ status: APPROVED
 - [❌] **네이버가 AI 브리핑 출처 선정 기준을 공식 문서로 공개하면 §2-2 "인용 소스로 잡히는 조건"을 공식 근거로 교체** (현재는 부재 확인 상태. 차단 요인 아님)
 - [❌] **AI 브리핑 옵트아웃 수단이 신설되면 §2-2 마지막 주의 갱신** (Google Search Console 토글 대비 항목. 차단 요인 아님)
 - [❌] AI탭 정식 출시(2026 상반기 목표) 이후 통합검색 구조 표에 반영 필요 여부 재검토 — 선택 보강
-- [❌] 점유율 수치는 월 단위 변동 → **다음 재조회 권장일 2026-11-26** (본문에 조회일 병기로 현재 사용에 문제 없음)
+- [✅] 점유율 수치 재조회 (2026-11-09, 2026-10 수치 반영) — 다음 재조회 권장일 2027-01 (본문에 조회일 병기로 현재 사용에 문제 없음)
 
 ---
 
@@ -328,3 +376,5 @@ status: APPROVED
 | 2026-08-26 | v1.1 | freshness 갱신분 content 재테스트 수행 (Q1 AI 브리핑 정의·자체 도메인 출처 조건 / Q2 "70% UGC" 미검증 수치 인용 금지 판정 / Q3 2026 검색 점유율 수치·출처·기관 간 상반 이유) → 3/3 PASS, APPROVED 유지 | skill-tester |
 | 2026-09-26 | v1.2 | 30~60일 주기 재검증. StatCounter 8월 수치 반영 결과 "격차 확대 추세" 서술이 부정확했음을 발견해 "월별 등락" 으로 정정, AI 브리핑 검색광고 도입(2026-07-21) 신규 사실 추가. status APPROVED → PENDING_TEST | 메인 세션 |
 | 2026-09-26 | v1.2 | 재검증: 2단계 실사용 테스트 수행 (Q1 점유율 추세 정정 정면 타겟 / Q2 AI 브리핑 광고 도입 신규 사실 정면 타겟) → general-purpose 에이전트 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-11-09 | v1.3 | 재검증 — StatCounter 2026-10 수치(Google 48.48%/Naver 42.25%/Bing 4.94%/Daum 0.72%)로 §1·§8 갱신, Bing "상승세" 서술을 월별 등락으로 정정. Yeti UA·AI 브리핑 공식 수치·광고 도입 서술은 변경 없음(VERIFIED) | 메인 세션 |
+| 2026-11-09 | v1.3 | 재검증분 2단계 실사용 테스트 수행 (Q1 StatCounter 2026-10 수치·Bing 상승세 정정 / Q2 네이버·Google 우선순위·기관별 수치 차이·Daum/Bing 대응) → general-purpose 에이전트 2/2 PASS, APPROVED 유지 | skill-tester |

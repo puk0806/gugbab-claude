@@ -1,8 +1,8 @@
 ---
 skill: n8n-llm-integration
 category: devops
-version: v3.2
-date: 2026-09-28
+version: v3.3
+date: 2026-11-11
 status: APPROVED
 ---
 
@@ -14,10 +14,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `n8n-llm-integration` |
 | 스킬 경로 | `.claude/skills/n8n-llm-integration/SKILL.md` |
-| 검증일 | **2026-09-28** (재검증, 이전 2026-08-12 / 2026-09-25) — 최초 작성 2026-05-15 |
-| 검증자 | skill-creator (최초) → 최신화 재검증(2026-08-11, 2026-08-12, 2026-09-25) → 2차 재검증(2026-09-28) |
-| 스킬 버전 | v3.2 |
-| 대상 버전 | n8n v2.x — 2026-09-28 기준 npm latest **v2.40.7** |
+| 검증일 | **2026-11-11** (재검증, 이전 2026-11-06 · 2026-09-28) — 최초 작성 2026-05-15 |
+| 검증자 | skill-creator (최초) → 최신화 재검증(2026-08-11, 2026-08-12, 2026-09-25) → 2차 재검증(2026-09-28) → 3차 재검증(2026-11-06) |
+| 스킬 버전 | v3.3 |
+| 대상 버전 | n8n v2.x — 2026-11-06 기준 npm latest **v2.46.6** (Anthropic Chat Model 노드 defaultVersion 1.6) |
 | 카테고리 분류 | content test 가능 (경계선) — *실행 결과·빌드 산출물 없이도 SKILL.md 답변 정확성만으로 1차 검증 가능*. 단, 실제 n8n 워크플로우 동작은 사용자 self-host 환경에서 별도 확인 권장 |
 
 ---
@@ -69,6 +69,13 @@ status: APPROVED
 | n8n Docs — What's memory in AI? | https://docs.n8n.io/advanced-ai/examples/understand-memory/ | ⭐⭐⭐ High | 2026-05-15 | 공식 |
 | GitHub n8n-io/n8n issue #18304 | https://github.com/n8n-io/n8n/issues/18304 | ⭐⭐⭐ High | 2026-05-15 | temperature+top_p 동시 지정 이슈 |
 | GitHub n8n-io/n8n issue #13231 | https://github.com/n8n-io/n8n/issues/13231 | ⭐⭐⭐ High | 2026-05-15 | Anthropic 프롬프트 캐싱 이슈 |
+| n8n 소스 `LmChatAnthropic.node.ts` (master) | https://github.com/n8n-io/n8n/blob/master/packages/@n8n/nodes-langchain/nodes/llms/LMChatAnthropic/LmChatAnthropic.node.ts | ⭐⭐⭐ High | 2026-11-06 | sampling 파라미터 모델별 분기, Thinking Mode 매핑, typeVersion 1.6 |
+| n8n `pnpm-workspace.yaml` | https://github.com/n8n-io/n8n/blob/master/pnpm-workspace.yaml | ⭐⭐⭐ High | 2026-11-06 | catalog `@langchain/anthropic` 1.5.6 |
+| npm `@langchain/anthropic@1.5.6` | https://registry.npmjs.org/@langchain/anthropic/1.5.6 | ⭐⭐⭐ High | 2026-11-06 | `@anthropic-ai/sdk` ^0.115.0 |
+| npm `n8n` latest | https://registry.npmjs.org/n8n/latest | ⭐⭐⭐ High | 2026-11-06 | 2.46.6 |
+| Anthropic Models overview | https://platform.claude.com/docs/en/about-claude/models/overview | ⭐⭐⭐ High | 2026-11-06 | 현행 4종·Legacy 목록 |
+| Claude Sonnet 5.5 / Haiku 5.5 개요 | https://platform.claude.com/docs/en/models/sonnet-5-5/overview · https://platform.claude.com/docs/en/models/haiku-5-5/overview | ⭐⭐⭐ High | 2026-11-06 | 가격·출시일·thinking·sampling |
+| Anthropic API versions / migration-2026-10-21 | https://platform.claude.com/docs/en/api/versioning · https://platform.claude.com/docs/en/api/migration-2026-10-21 | ⭐⭐⭐ High | 2026-11-06 | `2026-10-21` sampling 파라미터 전 모델 400 |
 | n8n Docs — OpenAI credentials common issues | https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-langchain.openai/common-issues/ | ⭐⭐⭐ High | 2026-05-15 | sk-proj-... 키 호환성 |
 
 ---
@@ -115,6 +122,20 @@ status: APPROVED
 > DISPUTED 3건은 모두 **시간 경과로 낡아진 서술**이다: Agent 타입 6종(#16), Claude 3 계열 모델명(#19),
 > 컨텍스트 윈도우 200K(#27). 세 건 모두 SKILL.md 본문을 현행 기준으로 교체했다.
 
+**2026-11-06 재검증 클레임**
+
+| # | 클레임 | 판정 | 근거 |
+|---|--------|------|------|
+| 28 | ~~Haiku 는 `claude-haiku-4-5` 가 계속 현행~~ (SKILL.md 구 90행) | **DISPUTED → 본문 정정** | 현행 Haiku = `claude-haiku-5-5`(2026-10-07), Haiku 4.5·Sonnet 5 는 Legacy — models overview + Haiku 5.5 개요 |
+| 29 | 현행 4종 ID·가격: Fable 5.2 `claude-fable-5-2` $8/$40(2026-11-11 갱신, Fable 5.1 $10/$50 은 Legacy), Opus 5.5 $4/$20, Sonnet 5.5 $2/$10, Haiku 5.5 $0.10/$0.50(10만 토큰 초과 $0.50/$2.50), 전부 1M | VERIFIED | models overview + Sonnet 5.5·Haiku 5.5 개요(독립 페이지 일치) |
+| 30 | API `2026-10-21` 에서 `temperature`/`top_p`/`top_k` 는 모든 모델 400(기본값 포함). `2023-06-01` 계속 유효 | VERIFIED | versioning 페이지 + migration-2026-10-21 |
+| 31 | n8n Anthropic Chat Model 노드는 `modelSupportsSamplingParams()` 로 구모델(`claude-sonnet-4*`·`claude-haiku-4*`·`claude-opus-4`~`4-6`·`claude-3*`·`claude-2` 등)에만 Temperature(UI 기본 0.7)·Top K(-1)·Top P(1)를 보내고 그 밖의 `claude-*` 에는 보내지 않는다 | VERIFIED (소스 1차) | n8n master `LmChatAnthropic.node.ts` 소스 직접 확인 — 공식 문서에는 이 분기 서술 없음 |
+| 32 | 노드 Thinking Mode=Disabled 는 `thinking:{type:'disabled'}` 를 전송, 옵션 미설정이면 필드 생략. Adaptive 는 `thinking:{type:'adaptive'}`+`output_config.effort`(기본 medium) | VERIFIED (소스 1차) | 같은 소스 파일 |
+| 33 | Opus 5.5·Sonnet 5.5 는 `thinking:{type:'disabled'}` 400 (Sonnet 5.5 는 `between_tools` 대체) | VERIFIED | Sonnet 5.5 개요 "lowest thinking setting is between_tools", claude-api 공식 스킬 Opus 5.5 breaking changes |
+| 34 | 노드 typeVersion 1~1.6, defaultVersion 1.6 / n8n npm latest 2.46.6 | VERIFIED | 소스 파일 + registry.npmjs.org/n8n/latest |
+| 35 | 노드 SDK: `@langchain/anthropic` 1.5.6(catalog) → `@anthropic-ai/sdk ^0.115.0` → 0.x 이므로 `anthropic-version: 2023-06-01` 전송 | VERIFIED (의존성 체인) — 단 실제 lockfile 해석 버전·헤더 값은 직접 관측하지 않음 | n8n `pnpm-workspace.yaml` + npm registry `@langchain/anthropic@1.5.6` + migration 가이드("Earlier SDK versions sent 2023-06-01") |
+| 36 | n8n 이 SDK 1.x 로 올리면 legacy 4.x 모델 temperature 도 400 | UNVERIFIED (향후 동작 추정) → SKILL.md `주의: 미검증` 표기 | — |
+
 ### 4-1. 내용 정확성
 - [✅] 공식 문서와 불일치하는 내용 없음
 - [✅] 버전 정보가 명시되어 있음 (검증일 2026-05-15 명시, n8n 노드명 최신 — Simple Memory)
@@ -135,13 +156,50 @@ status: APPROVED
 - [✅] 범용적으로 사용 가능 (특정 프로젝트 종속 X — 꿈 해몽은 예시일 뿐)
 
 ### 4-4. Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-15 skill-tester 수행, 2026-09-28 재테스트 수행)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-05-15 3/3 PASS, 2026-09-28 2/2 PASS)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-15 skill-tester 수행, 2026-09-28 재테스트 수행, 2026-11-06 3차 재시험 수행)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-05-15 3/3 PASS, 2026-09-28 2/2 PASS, 2026-11-06 3/3 PASS)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (gap 없음 — 경미한 보강 후보만 발견)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-11-06
+**수행자**: skill-tester → general-purpose (도메인 전용 에이전트 미설치로 대체 사용, 동시 실행 한도로 1회 호출에 질문 3개 일괄 답변)
+**수행 방법**: 3차 재검증(티어 표 Sonnet 5.5·Haiku 5.5·가격, 노드 sampling 분기, Thinking Disabled 400, SDK 체인) 반영분을 겨냥해 SKILL.md Read 후 실전 질문 3개 답변, 근거 섹션·줄 번호 대조 및 anti-pattern 회피 확인
+
+### 실제 수행 테스트 (2026-11-06)
+
+**Q1. claude-sonnet-5-5 + Sampling Temperature 0.2 가 전송되는가 / Thinking Mode Disabled 결과와 올바른 설정**
+- ✅ PASS
+- 근거: SKILL.md §2 "주의 — 샘플링 파라미터" 블록 + "주의 — Opus 5.5·Sonnet 5.5·Fable 5.1 선택 시" 블록 + §12 노드 구성 + §13 함정 표 Thinking Disabled 행
+- 상세: 현행 5 계열에는 노드가 Temperature를 전송하지 않아 무시됨(`modelSupportsSamplingParams` 분기), Disabled 선택 시 `thinking:{type:'disabled'}` 전송으로 400, 비우거나 Adaptive 로 설정 — 모두 정확. anti-pattern(현행 모델에 temperature 적용, Disabled 권장) 회피.
+
+**Q2. 경량 라우팅 모델 ID·가격, SDK 체인과 anthropic-version, 향후 변경 가능성**
+- ✅ PASS
+- 근거: SKILL.md §2 모델 티어 표(`claude-haiku-5-5`, $0.10/$0.50, 10만 토큰 초과 $0.50/$2.50) + 샘플링 주의 블록(`@langchain/anthropic` 1.5.6 → `@anthropic-ai/sdk` ^0.115.0 → `2023-06-01`) + §10 모델 라우팅
+- 상세: Haiku 4.5 를 현행으로 답하는 구 오답 없음. SDK 1.x 전환 영향은 SKILL.md 의 "주의: 미검증" 표기를 그대로 인용해 확정 서술을 피함.
+
+**Q3. HTTP Request 노드 `anthropic-version: 2026-10-21` + temperature/top_p 전송**
+- ✅ PASS
+- 근거: SKILL.md §2 샘플링 주의 블록 후반부 + §13 함정 표(HTTP Request 노드 sampling 행, 4.6 이하 legacy 한정 행)
+- 상세: 2026-10-21 에서는 모든 모델 400, 본문에서 세 파라미터 제거, 결정성은 `output_config.format` + 낮은 `output_config.effort`. "temperature/top_p 중 하나만" 규칙은 legacy+2023-06-01 한정임을 정확히 구분.
+
+### 발견된 gap (있으면)
+
+- (경미) SKILL.md §2 thinking 해결됨 블록(110줄 부근)에 "2026-09-28 기준 npm latest v2.40.7" 이 남아 있어 상단 메타(2.46.6)와 시점이 어긋남 — 과거 기준 서술이라 오류는 아니나 선택 정리 후보.
+- (경미) `output_config.effort` 구체 값(low/medium/high)·`output_config.format` 요청 JSON 예시 없음 — 선택 보강.
+- (경미) §14 표가 스킬을 `devops/n8n-llm-integration` 으로 표기(카테고리/이름 표기) — 영향 없음.
+
+### 판정
+
+- agent content test: 3/3 PASS
+- verification-policy 분류: content test 가능 (경계선) — 실사용 필수 카테고리 아님
+- 최종 상태: APPROVED
+
+---
+
+> (2026-09-28 기록, 참고용 보존)
 
 **수행일**: 2026-09-28
 **수행자**: skill-tester → general-purpose (도메인 전용 에이전트 미설치로 대체 사용)
@@ -244,13 +302,14 @@ status: APPROVED
 | 내용 정확성 | ✅ (v1 15개 + v2 재검증 12개 + 2026-09-28 2차 재검증 4개 클레임 대조. DISPUTED 3건(v2) + 2건(2차: 버전·thinking) 본문 정정 완료) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-05-15 3/3 PASS + **2026-09-28 skill-tester 재테스트 2/2 PASS** — Publish 배포 모델·Code 노드 `$env` 차단 정책 정정분·thinking 해결 상태 겨냥, 형제 스킬 교차 일치 확인) |
+| 에이전트 활용 테스트 | ✅ (**2026-11-06 3차 재시험 3/3 PASS** — 노드 sampling 미전송·Thinking Disabled 400·Haiku 5.5 가격/SDK 체인·API 2026-10-21 HTTP 호출) + (2026-05-15 3/3 PASS + **2026-09-28 skill-tester 재테스트 2/2 PASS** — Publish 배포 모델·Code 노드 `$env` 차단 정책 정정분·thinking 해결 상태 겨냥, 형제 스킬 교차 일치 확인) |
 | 최신성 (2026-09-28) | ✅ (n8n npm latest 2.40.7 반영, Publish 배포 모델·Code 노드 `$env` 차단 정책 신규 보강, thinking 함정 해결 상태 반영) |
 | **최종 판정** | **APPROVED** |
 
 > 판정 근거: 내용 검증(공식 docs·npm registry·GitHub 1차 소스 기반) + 2026-05-15 agent content test 3/3 PASS (Q1 Chat Trigger+Memory 구성 / Q2 temperature+top_p 함정 / Q3 RAG 노드 조합)에 더해
 > **2026-09-28 skill-tester(general-purpose 대체) 재테스트 2/2 PASS**로 신규 보강분(Publish 배포 모델, Code 노드 `$env` 차단 정책 정정, thinking "해결됨" 정정)까지 검증 완료.
-> 카테고리 분류가 "content test 가능(경계선)" — 실사용 필수 카테고리가 아니므로 PASS로 **APPROVED 전환**한다.
+> **2026-11-06 3차 재검증 후 skill-tester 재시험 3/3 PASS**로 모델 티어·sampling·Thinking Disabled·SDK 체인 정정분까지 검증 완료.
+> 카테고리 분류가 "content test 가능(경계선)" — 실사용 필수 카테고리가 아니므로 PASS로 **APPROVED 유지**한다.
 
 ---
 
@@ -262,6 +321,9 @@ status: APPROVED
 - [✅] 신모델 출시 시 모델 선택 표 갱신 — 2026-08-11 수행 (Claude 3 계열 제거, 현행 티어 표 + Opus 5/Sonnet 5 차이 주의 표기)
 - [✅] (2026-09-28 해소) **n8n issue #28635 해소 추적** — GitHub 확인 결과 PR #29467로 closed, n8n 2.20.0/typeVersion 1.5부터 Adaptive Thinking Mode 지원. 본문 주의 문구·예시(`Enable Thinking: OFF` → `Thinking Mode: Disabled`)·함정 표 전부 "해결됨 + 레거시 조건부" 서술로 갱신
 - [✅] (2026-09-25 해소 — agent-design.md가 Opus 5.5/Fable 5.1 기준으로 갱신되어 본 스킬 표와 일치) **`agent-design.md`의 Opus 5 / Sonnet 5 반영 여부 결정** — 결정 시 본 스킬 모델 표와 `> 주의:` 블록 동기화 필요 (레포 전역 판단 사항이므로 이 스킬 단독 결정 금지)
+- [✅] **(2026-11-06 완료)** 3차 재검증 정정분(Sonnet 5.5·Haiku 5.5 티어/가격, 노드 sampling 미전송, Thinking Disabled 400, SDK 체인 2023-06-01) skill-tester 재시험 — general-purpose 대체 수행, 3/3 PASS, APPROVED 유지
+- [ ] SKILL.md §2 thinking 해결됨 블록의 "2026-09-28 기준 npm latest v2.40.7" 문구를 현행(2.46.6) 기준으로 정리 (선택 보강 — 차단 요인 아님, 2026-11-06 재시험에서 발견)
+- [ ] `output_config.effort` 값 예시·`output_config.format` 요청 JSON 예시 추가 (선택 보강 — 차단 요인 아님)
 - [ ] MCP 서버 직접 연결(2.22) 실제 워크플로우 구성 예시 추가 검토 (선택 보강 — 차단 요인 아님)
 - [✅] **(2026-09-28 완료)** 2026-09-28 보강분(Publish 배포 모델, Code 노드 `$env` 차단 정책) skill-tester 2단계 재테스트 — general-purpose 대체 수행, 2/2 PASS, APPROVED 전환
 - [ ] n8n Cloud의 `N8N_BLOCK_ENV_ACCESS_IN_NODE` 기본값(셀프호스트와 다르다는 커뮤니티 보고가 있으나 공식 문서 수치 미확인) 추가 검증 — 선택 보강, 차단 요인 아님(현재 `> 주의: 미검증`으로 표기 유지)
@@ -281,3 +343,7 @@ status: APPROVED
 | 2026-09-25 | v3.1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |
 | 2026-09-28 | v3.2 | **2차 재검증.** npm registry로 n8n 최신 버전 확인(2.40.7, 기존 2.33.7/2.34.4 정정). 신규 보강 2건: Publish 배포 모델(n8n 2.0부터 Active 토글 → Publish 버튼, §4·§12·§13), Code 노드 `$env` 접근 기본 정책(§11·§13 — 초안은 security 참조 표를 근거로 `false`=허용으로 적었으나 메인이 v2.0 breaking changes 원문으로 **`true`=Code 노드 기본 차단**으로 정정, 형제 n8n 스킬 3종과 일치). 정정 1건: n8n issue #28635(thinking 포맷 400)는 PR #29467로 해결됨(n8n 2.20.0/typeVersion 1.5, Adaptive Thinking Mode) — "미해결 함정" 서술을 "해결됨 + 2.20.0 미만 레거시 조건부 함정"으로 전면 개정(§2·§12·§13). 축소 없음. 검증일 4곳(SKILL.md 인용·본 표·frontmatter·본 행) 동기화. status **PENDING_TEST 전환**(신규 보강분 skill-tester 재테스트 필요) | 2차 재검증(devops 전수 재검증 배치) |
 | 2026-09-28 | v3.2 | **2단계 실사용 테스트 재수행(skill-tester → general-purpose).** Q1 Save-vs-Publish + Code 노드 `$env` 차단 정책 + 형제 스킬(n8n-self-hosting·n8n-workflow-design) 교차 일치 확인 / Q2 thinking 400 해결 상태 → 2/2 PASS. 카테고리 "content test 가능(경계선)"이므로 **APPROVED 전환** | skill-tester |
+| 2026-11-06 | v3.3 | **3차 재검증 — 모델·API 2026-10-21·노드 소스 확인.** ① 티어 표 `claude-sonnet-5` → **`claude-sonnet-5-5`**, `claude-haiku-4-5` → **`claude-haiku-5-5`**($0.10/$0.50, 10만 토큰 초과 $0.50/$2.50), "Haiku 4.5 계속 현행" 오류 정정(#28) ② 샘플링 파라미터 주의 전면 개정 — n8n 노드 소스 직접 확인 결과 현행 모델에는 Temperature/Top K/Top P 를 **보내지 않음**(구 서술 "노드가 그대로 전송" 정정, #31), API 2026-10-21 전 모델 400, 노드 SDK 체인(`@langchain/anthropic` 1.5.6 → `@anthropic-ai/sdk` ^0.115.0 → `2023-06-01`) 명시, 향후 SDK 1.x 전환 영향은 미검증 표기 ③ Thinking Mode=Disabled 가 `{type:'disabled'}` 를 전송해 Opus 5.5·Sonnet 5.5 에서 400 — 예시·함정 표를 "비움 또는 Adaptive" 로 정정 ④ n8n latest 2.40.7 → 2.46.6, 노드 defaultVersion 1.6 ⑤ 함정 표에 HTTP Request 노드 sampling 행·Thinking Disabled 행 추가, 컨텍스트 행 Haiku 5.5 1M 반영. 검증일 4곳 동기화. status는 skill-tester 재시험 결과로 결정 | 3차 재검증 — 메인 오케스트레이션 포크 |
+| 2026-11-06 | v3.3 | 3차 재검증 후 2단계 실사용 테스트 재수행(skill-tester → general-purpose 1회 호출). Q1 Sonnet 5.5 temperature 미전송 + Thinking Disabled 400 / Q2 Haiku 5.5 가격·SDK 체인·2023-06-01·미검증 표기 / Q3 HTTP Request 2026-10-21 sampling 400 → 3/3 PASS, 카테고리 "content test 가능(경계선)"이므로 APPROVED 유지 | skill-tester |
+| 2026-11-11 | v3.3 | 2026-11-11 재검증 — Fable 5.2 현행화(공식 models overview·whats-new-fable-5-2). §2 상위 티어 `claude-fable-5-1` $10/$50 → **`claude-fable-5-2` $8/$40**, 세대 정렬 블록 현행 라인업 Fable 5.2·Legacy 목록에 `claude-fable-5-1` 추가, 강제 tool_choice·thinking disabled 400 주의와 샘플링 주의·컨텍스트 표의 Fable 표기를 5.2로(thinking disabled 400 대상에 Fable 5.2 추가). 클레임 29 갱신. status 변경 없음 | Claude |
+| 2026-11-12 | v3.4 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 모델 동적 조회·현행 모델 ID/단가표·세대 정렬·Claude 3 retired·1M 컨텍스트·Thinking Mode(2.20.0/typeVersion 1.5)와 Disabled 400·sampling 자동 미전송/SDK 0.x 2023-06-01·프롬프트 캐싱 이슈·버전별 변경표(1.82.0 Agent 타입 제거·2.0 Publish·2.0 $env 차단·2.6 HITL·2.8.3 Motorhead·2.22 MCP 직결)·Guardrails·실측 함정표 / 덜어낸 것 클러스터 노드 아키텍처 설명·Chat Model 노드 비교표·파라미터 설명표·Tools Agent 파라미터·sub-node 연결도·Chat Trigger 모드·도구/Vector Store/Memory/Output Parser 일반 표·모델 중립 비교·비용 관리·안전 가드 일반표·꿈 해몽 예시 워크플로우·짝 스킬 관계표 | 정리 |

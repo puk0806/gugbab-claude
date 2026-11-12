@@ -77,10 +77,6 @@
       "Bash(wget*|*sh)"
     ]
   },
-  "statusLine": {
-    "type": "command",
-    "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/statusline.sh"
-  },
   "hooks": {
     "PreToolUse": [
       {
@@ -88,7 +84,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/bash-guard.js"
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/bash-guard.js",
+            "onFailure": "block"
           },
           {
             "type": "command",
@@ -101,11 +98,13 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/parry.js"
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/parry.js",
+            "onFailure": "block"
           },
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/protect-secrets.js"
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/protect-secrets.js",
+            "onFailure": "block"
           },
           {
             "type": "command",
@@ -130,7 +129,13 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/protect-secrets.js"
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/parry.js",
+            "onFailure": "block"
+          },
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/protect-secrets.js",
+            "onFailure": "block"
           },
           {
             "type": "command",
@@ -143,7 +148,13 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/protect-secrets.js"
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/parry.js",
+            "onFailure": "block"
+          },
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/protect-secrets.js",
+            "onFailure": "block"
           },
           {
             "type": "command",
@@ -156,7 +167,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/protect-secrets.js"
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/protect-secrets.js",
+            "onFailure": "block"
           }
         ]
       },
@@ -165,7 +177,17 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/protect-secrets.js"
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/protect-secrets.js",
+            "onFailure": "block"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|Monitor",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/task-confirm-guard.js"
           }
         ]
       },
@@ -196,12 +218,14 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/branch-protection.js"
-          },
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/relation-guard.js"
-          },
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/branch-protection.js",
+            "onFailure": "block"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
           {
             "type": "command",
             "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/release-version-guard.js"
@@ -227,6 +251,10 @@
           },
           {
             "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/memory-sync.js"
+          },
+          {
+            "type": "command",
             "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/tdd-guard.js"
           },
           {
@@ -243,15 +271,7 @@
           },
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/typescript-quality.js"
-          },
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/memory-sync.js"
-          },
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/relation-guard.js"
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/typescript-quality.js --record"
           }
         ]
       },
@@ -280,6 +300,10 @@
           },
           {
             "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/memory-sync.js"
+          },
+          {
+            "type": "command",
             "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/tdd-guard.js"
           },
           {
@@ -296,15 +320,7 @@
           },
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/typescript-quality.js"
-          },
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/memory-sync.js"
-          },
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/relation-guard.js"
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/typescript-quality.js --record"
           }
         ]
       },
@@ -325,15 +341,6 @@
             "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/bash-guard.js"
           }
         ]
-      },
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/parallel-hint.js"
-          }
-        ]
       }
     ],
     "SessionStart": [
@@ -342,10 +349,6 @@
           {
             "type": "command",
             "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/memory-pull.js"
-          },
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-start.js"
           },
           {
             "type": "command",
@@ -393,6 +396,10 @@
           },
           {
             "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/typescript-quality.js --stop"
+          },
+          {
+            "type": "command",
             "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-export.js"
           },
           {
@@ -423,11 +430,35 @@
           },
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/parallel-hint.js"
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/config-change-audit.js"
           },
           {
             "type": "command",
             "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/wrapper-version-check.js"
+          },
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/claude-version-check.js"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/task-confirm-guard.js"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/task-confirm-guard.js"
           }
         ]
       }
@@ -438,7 +469,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/bash-guard.js"
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/bash-guard.js",
+            "onFailure": "block"
           },
           {
             "type": "command",
@@ -447,5 +479,9 @@
         ]
       }
     ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/statusline.sh"
   }
 }

@@ -2,7 +2,7 @@
 skill: voice-input-ui
 category: frontend
 version: v2
-date: 2026-09-28
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -18,7 +18,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `voice-input-ui` |
 | 스킬 경로 | `.claude/skills/voice-input-ui/SKILL.md` |
-| 검증일 | 2026-09-28 (최초 2026-05-14) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-28 · 최초 2026-05-14) |
 | 검증자 | skill-creator → Claude (Sonnet 5, 2026-09-28 재검증) |
 | 스킬 버전 | v2 |
 
@@ -57,6 +57,8 @@ status: APPROVED
 | W3C Web Speech API (Draft CG Report) | https://webaudio.github.io/web-speech-api/ | ⭐⭐⭐ High | 2026-05-08 (명세 갱신일) | 표준 명세. interimResults·continuous |
 | caniuse — Vibration API | https://caniuse.com/vibration | ⭐⭐⭐ High | 2026-05-14 | 글로벌 지원 ~77%, iOS Safari 미지원(MDN 일치) |
 | WebRTCHacks — Guide to Safari WebRTC | https://webrtchacks.com/guide-to-safari-webrtc/ | ⭐⭐ Medium | 2026-05-14 | iOS Safari 권한 지속성·user gesture 정책 보강 |
+| MDN browser-compat-data 8.1.8 (npm, 2026-11-02 게시) | https://github.com/mdn/browser-compat-data | ⭐⭐⭐ High | 2026-11-09 | `api.Navigator.vibrate`·`api.Permissions.permission_microphone`·`api.SpeechRecognition`·getUserMedia·AnalyserNode 지원 버전, 브라우저 릴리스 상태(Firefox 159 current / 160 beta) |
+| caniuse 원본 데이터 (Fyrd/caniuse features-json) | https://github.com/Fyrd/caniuse | ⭐⭐⭐ High | 2026-11-09 | vibration·speech-recognition·permissions-api 최신 버전별 지원 |
 
 ---
 
@@ -99,6 +101,45 @@ status: APPROVED
 
 **교차 검증 요약:** VERIFIED 10 / DISPUTED 1 / UNVERIFIED 0
 
+#### 2026-11-09 재검증 클레임
+
+| 클레임 | 소스 | 판정 |
+|--------|------|------|
+| Navigator.vibrate Safari·iOS Safari 미지원 (최신 27.x 까지) | MDN BCD 8.1.8 + caniuse | VERIFIED — 기존 DISPUTED(일부 동작 보고) 해소, 두 소스 모두 미지원 |
+| Firefox 는 129 에서 `navigator.vibrate` 제거 (기존 스킬 미기재) | MDN BCD(`version_removed: 129`) + caniuse(현행 `n`) | VERIFIED → REFERENCE.md §8 주의문에 추가 |
+| Chrome 60+ 은 사용자 제스처 없는 `vibrate()` 호출 시 `false` 반환 | MDN BCD chrome_android 노트 | VERIFIED |
+| Permissions `name: 'microphone'` 지원 — Chrome 64+, Safari/iOS 16+, Firefox 132+ (기존 "Safari/Firefox 일부 미지원" 서술) | MDN BCD 8.1.8 + caniuse(Permissions API 전 브라우저 `y`) | DISPUTED → SKILL.md 2-1 주의문을 버전 명시로 정정 |
+| Chrome 139+ 는 프리픽스 없는 `SpeechRecognition` 노출, Safari 는 `webkitSpeechRecognition` 만 | MDN BCD 8.1.8 (caniuse 는 Chrome 을 여전히 프리픽스 표기) | VERIFIED(BCD 기준) — "두 이름 모두 폴백" 권장은 그대로 유효 |
+| Firefox SpeechRecognition 기본 지원 시점 | MDN BCD = 160(2026-11-10 출시 예정 beta) / caniuse = 162 까지 기본 비활성 | UNVERIFIED — 출처 충돌. SKILL.md 4-1 에 `> 주의: 미검증` 표기, 현행 159 까지 플래그 뒤로 서술 |
+| getUserMedia·AnalyserNode 전 브라우저 지원, deprecated 아님 | MDN BCD 8.1.8 | VERIFIED |
+
+#### 흡수한 원본의 핵심 클레임 (2026-11-12 통합 시 옮김 — 판정은 원본 기록 그대로)
+
+| 클레임 | 소스 | 판정 |
+|--------|------|------|
+| (구 web-speech-api-stt) Safari iOS 지원은 14.5+부터 (16+ 아님) | caniuse + LambdaTest | DISPUTED → 정정 |
+| (구 web-speech-api-stt) Edge 안정판은 API 객체만 있고 결과 반환 안 함(no-op) | caniuse + MDN BCD issue #22126 | DISPUTED → 정정 (Canary/Dev 150.0.4076+ 플래그 온디바이스는 VERIFIED 보강) |
+| (구 web-speech-api-stt) Firefox 는 flag 켜도 실제 동작 안 함 | caniuse + AssemblyAI | VERIFIED |
+| (구 web-speech-api-stt) Chrome STT 기본은 Google 서버, 139+ 데스크톱은 `processLocally` 온디바이스 | MDN + Chrome 139 블로그 + blink-dev Intent | DISPUTED → 정정 |
+| (구 web-speech-api-stt) `available()`·`install()` 정적 메서드, 반환값 4종 | MDN available_static + Microsoft Learn | VERIFIED |
+| (구 web-speech-api-stt) grammars Deprecated·효과 없음 | MDN | DISPUTED → 정정 |
+| (구 web-speech-api-stt) `phrases`·`quality` 지원 버전, Chrome 온디바이스 ko-KR | MDN 문서화만 | UNVERIFIED (`> 주의: 미검증`) |
+| (구 web-speech-api-stt) iOS Safari `continuous=true` 불안정 | Apple Developer Forums + LambdaTest | VERIFIED |
+| (구 media-recorder-api) `stop` 이벤트는 마지막 `dataavailable` 뒤에 발생 | W3C 명세 + MDN | VERIFIED |
+| (구 media-recorder-api) `recorder.stop()`만으로는 트랙이 살아 메모리 누수·인디케이터 잔존 | Mozilla bugzilla #1376134 + MDN | VERIFIED |
+| (구 media-recorder-api) iOS Safari 18.3 이하 `audio/webm` 미지원, 18.4부터 `audio/webm;codecs=opus` | WebKit blog + caniuse | VERIFIED |
+| (구 media-recorder-api) `start(timeslice)` 청크는 단독 재생 보장 없음 | addpipe 블로그 + media-codings | VERIFIED |
+| (구 media-recorder-api) 입력 포맷 7종(mp3·mp4·mpeg·mpga·m4a·wav·webm)·25MB | OpenAI speech-to-text 가이드 | VERIFIED (flac·ogg 제외 정정 반영) |
+| (구 whisper-api-integration) `gpt-transcribe`가 파일 전사 권장 모델, $0.0045/min | 공식 STT 가이드 + 모델 페이지 + Cookbook | VERIFIED |
+| (구 whisper-api-integration) `languages`가 단수 `language`를 대체, 동시 전송 금지 | 공식 가이드 + API 레퍼런스 | VERIFIED |
+| (구 whisper-api-integration) `gpt-transcribe`는 srt·vtt·verbose_json·타임스탬프 미지원 | 공식 Cookbook + STT 가이드 | VERIFIED |
+| (구 whisper-api-integration) `gpt-live-transcribe`는 realtime 전용, $0.017/min | 공식 모델 페이지 | VERIFIED |
+| (구 whisper-api-integration) whisper-1·gpt-4o-transcribe·-mini·-diarize·`/v1/audio/translations` 2026-08-26 deprecated, 2027-02-26 제거 | Deprecations 페이지 + STT 가이드 | VERIFIED (기존 서술 정정) |
+| (구 whisper-api-integration) 번역 대체 `/v1/realtime/translations`(`gpt-realtime-translate`) | Deprecations + STT 가이드 | VERIFIED |
+| (구 whisper-api-integration) SDK openai-python 3.46.0·openai-node 7.53.0 `keywords`/`languages` 최상위 인자 | PyPI·npm + SDK 소스 | VERIFIED |
+| (구 whisper-api-integration) WER 40.37%→19.27% | 공식 발표 403, 커뮤니티 보도만 | UNVERIFIED |
+| (구 media-recorder-api) `gpt-transcribe`의 `response_format` 지원 범위 | 가이드 명시 없음 | UNVERIFIED |
+
 ### 4-5. Claude Code 에이전트 활용 테스트
 - [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-14 skill-tester → general-purpose 수행)
 - [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (Q1·Q2·Q3 3/3 PASS)
@@ -107,6 +148,41 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+### 재검증 후 재시험 (2026-11-09)
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester → general-purpose 3개 (도메인 에이전트 대신 general-purpose 사용)
+**수행 방법**: 2026-11-09 재검증으로 수정된 내용을 겨냥한 실전 질문 3개. SKILL.md·REFERENCE.md Read 후 그 내용에만 의존해 답하도록 하고, 근거 섹션·수정분 반영 여부 확인
+
+**Q1. Permissions API `microphone` 사전 조회 — 지원 브라우저/버전, Firefox 120 같은 구버전 처리**
+- ✅ PASS
+- 근거: SKILL.md "2-1. 사전 권한 상태 조회" 코드 + 주의 블록
+- 상세: Chrome 64+·Safari/iOS 16+·Firefox 132+ 를 정확히 제시, 미만은 TypeError → try/catch 후 getUserMedia 폴백 코드를 그대로 도출. 오답(Firefox/Safari 전반 미지원 등) 없음. 소 gap: API 자체 Baseline(2022-09)과 `microphone` 이름 지원 시점이 다르다는 한 줄 설명이 없어 혼동 가능.
+
+**Q2. SpeechRecognition 접두어(Safari/Chrome/Firefox)와 Firefox 지원 가정 여부**
+- ✅ PASS
+- 근거: SKILL.md "4-1. Web Speech API" 코드 + 주의 2개 블록, REFERENCE "흔한 함정" 표
+- 상세: Safari 는 webkit 접두어만, Chrome 139+ 무접두어도 노출, 두 이름 폴백 권장. Firefox 는 현행 159 까지 플래그 뒤이며 기본 활성 시점은 출처 충돌(BCD 160 vs caniuse 161·162+)로 미검증 → 지원을 전제로 설계하지 말고 feature detection. `미검증` 표기를 단정하지 않고 그대로 전달.
+
+**Q3. navigator.vibrate — 브라우저별 동작, 제스처 없는 타이머 호출, 햅틱 단독 사용**
+- ✅ PASS
+- 근거: REFERENCE.md "8. 햅틱 피드백" 주의 블록·제약, "10. 흔한 함정"
+- 상세: Firefox 129 제거, iOS/데스크톱 Safari 미지원, 실질 Chrome/Android Chromium 만 동작. Chrome 은 사용자 제스처 없는 호출 시 false 반환·무진동(타이머 콜백 해당). 햅틱 단독 의존 금지, 시각 피드백 주 채널. 소 gap: 자동 종료(AUTO_STOP) 경로와 제스처 요구를 잇는 문장이 없어 독자가 추론해야 함.
+
+### 발견된 gap (선택 보강, 차단 요인 아님)
+
+- Permissions API Baseline 과 `microphone` 이름 지원 시점(132+) 차이를 한 줄로 명시하면 혼동 감소
+- 햅틱 상세가 REFERENCE 에만 있음 — SKILL.md 본문에서 REFERENCE §8 로 안내하는 문장 추가 가능
+- REFERENCE §8 에 "자동 종료 경로에서는 vibrate 무효 → 시각·청각 대체" 한 줄 연결 권장
+
+### 판정
+
+- agent content test: 3/3 PASS (수정분 3항목 모두 정확히 도출, 틀린 답·anti-pattern 없음)
+- verification-policy 분류: 해당 없음 (라이브러리·API 사용법 스킬, content test PASS = APPROVED)
+- 최종 상태: APPROVED 유지
+
+---
 
 ### 재평가 기록 (2026-06-19)
 
@@ -206,8 +282,8 @@ status: APPROVED
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
 | 교차 검증 | ✅ (VERIFIED 10 / DISPUTED 1 — DISPUTED는 SKILL.md에서 `> 주의:` 표기) |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-14 수행) |
-| **최종 판정** | **APPROVED** (content test 3/3 PASS, 2026-06-19 카테고리 재분류로 APPROVED 전환) |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-14 수행) · 재검증 수정분 재시험 3/3 PASS (2026-11-09 수행) |
+| **최종 판정** | **APPROVED** (content test 3/3 PASS, 2026-06-19 카테고리 재분류로 APPROVED 전환, 2026-11-09 재시험 3/3 PASS 로 유지) |
 
 > **APPROVED 전환 근거:** 본 스킬은 라이브러리 사용법 패턴 스킬 (Web Audio API·Web Speech API·Permissions API)로, verification-policy.md 기준 content test PASS = APPROVED 가능 카테고리에 해당한다. 2026-05-14 초기 판정의 "실사용 필수" 분류는 과도하게 보수적이었으며, 2026-06-19 재평가에서 정정되었다.
 
@@ -217,7 +293,9 @@ status: APPROVED
 
 - [✅] skill-tester가 content test 수행하고 섹션 5·6 업데이트 (2026-05-14 완료, 3/3 PASS)
 - [✅] APPROVED 전환 (2026-06-19 완료 — 카테고리 재분류: 라이브러리 사용법 스킬, content test PASS = APPROVED 가능)
-- [❌] navigator.vibrate iOS Safari 지원 동향 재확인 (MDN browser-compat-data Issue #29166 추적) — 선택 보강, 차단 요인 아님
+- [✅] 2026-11-09 재검증 수정분 재시험 (Permissions microphone 버전 / SpeechRecognition 접두어 / vibrate) — 3/3 PASS, APPROVED 유지
+- [✅] navigator.vibrate iOS Safari 지원 동향 재확인 (2026-11-09 BCD 8.1.8·caniuse 로 미지원 재확인)
+- [❌] Permissions Baseline 과 `microphone` 이름 지원 시점 차이 한 줄 명시, REFERENCE §8 에 자동 종료 경로 vibrate 무효 연결 문장 추가 — 선택 보강, 차단 요인 아님
 - [❌] 짝 스킬 `frontend/web-speech-api-stt` 작성 후, 본 스킬에서 cross-link 정밀화 — 선택 보강
 - [❌] 짝 스킬 `frontend/media-recorder-api` 작성 후, MediaRecorder 무음 감지 부분에서 cross-link — 선택 보강
 
@@ -231,3 +309,6 @@ status: APPROVED
 | 2026-05-14 | v1 | 2단계 실사용 테스트 수행 (Q1 중복클릭 상태 머신 / Q2 권한 거부 후 재요청 불가 UX / Q3 AnalyserNode waveform+하울링) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | skill-tester |
 | 2026-06-19 | v1 | 카테고리 재분류 재평가 — 라이브러리 사용법 스킬(content test PASS = APPROVED 가능) 판정, 기존 3/3 PASS 유효 → PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-09-28 | v2 | 재검증 — caniuse 최신 데이터로 vibrate iOS Safari 미지원 재확인(REFERENCE.md §8 주의문 갱신), Permissions API Baseline 재확인. status APPROVED 유지 | Claude (Sonnet 5) |
+| 2026-11-09 | v3 | 재검증 — MDN BCD 8.1.8·caniuse 원본 데이터 대조. Permissions `microphone` 지원 버전 명시(Firefox 132+·Safari 16+)로 정정, Firefox `vibrate` 129 제거·Chrome 제스처 요구 추가(REFERENCE §8·§10), SpeechRecognition 지원 정정(Chrome 139 무프리픽스, Firefox 160 기본 지원은 출처 충돌로 `> 주의: 미검증`). 내용 변경 있음, status APPROVED 유지 | Claude (Opus 5.5) |
+| 2026-11-09 | v3 | 재검증 수정분 2단계 재시험 수행 (Q1 Permissions microphone 지원 버전·폴백 / Q2 SpeechRecognition 접두어·Firefox 미검증 / Q3 vibrate Firefox 129 제거·제스처 요구·iOS 미지원) → 3/3 PASS, APPROVED 유지 | skill-tester |
+| 2026-11-12 | v3.1 | 정리(사실 재검증 아님) — web-speech-api-stt·media-recorder-api·whisper-api-integration 통합 + 일반 지식 덜어내기: 옮긴 것 Web Speech 브라우저 지원 현실·Chrome 139 온디바이스·iOS 함정·confidence 차이, MediaRecorder isTypeSupported·청크·트랙 정리 함정, OpenAI 2026-08-26 deprecation·gpt-transcribe 제약·languages/keywords·포맷 7종·translations 영어 고정, 원본 클레임 표 / 덜어낸 것 상태 머신·시각화·confirm·ARIA 예제 코드, 이벤트 목록·옵션 설명, TTS 사용법, React 훅, 백엔드 프록시 3종 구현, 청크 분할 코드, 비용 표 세부, references/REFERENCE.md(핵심 함정은 SKILL.md 로) | 정리 |

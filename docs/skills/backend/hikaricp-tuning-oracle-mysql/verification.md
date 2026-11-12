@@ -2,7 +2,7 @@
 skill: hikaricp-tuning-oracle-mysql
 category: backend
 version: v1
-date: 2026-09-26
+date: 2026-11-06
 status: APPROVED
 ---
 
@@ -16,7 +16,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `hikaricp-tuning-oracle-mysql` |
 | 스킬 경로 | `.claude/skills/hikaricp-tuning-oracle-mysql/SKILL.md` |
-| 검증일 | 2026-09-26 (재검증) |
+| 검증일 | 2026-11-06 (재검증, 이전 2026-09-26) |
 | 검증자 | skill-creator (Claude) |
 | 스킬 버전 | v1 |
 | 대상 버전 | HikariCP 3.4.5 ~ 5.x (통합) |
@@ -76,6 +76,11 @@ status: APPROVED
 | Spring Boot 3.4 Release Notes | https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-3.4-Release-Notes | ⭐⭐⭐ High | 2026-04-22 | 공식 릴리즈 노트 |
 | Baeldung HikariCP with Spring Boot | https://www.baeldung.com/spring-boot-hikari | ⭐⭐ Medium | 2026-04-22 | 보조 확인용 |
 | Vlad Mihalcea: Optimal Connection Pool Size | https://vladmihalcea.com/optimal-connection-pool-size/ | ⭐⭐⭐ High | 2026-04-22 | Hibernate 전문가 공인 자료 |
+| HikariCP CHANGES (raw) | https://raw.githubusercontent.com/brettwooldridge/HikariCP/dev/CHANGES | ⭐⭐⭐ High | 2026-11-06 | 재검증 — 7.1.0까지, keepaliveTime 4.0.0 추가·6.2.1 기본 2분 |
+| HikariCP README (Java별 아티팩트·기본값) | https://github.com/brettwooldridge/HikariCP | ⭐⭐⭐ High | 2026-11-06 | 재검증 — Java 11+ = 7.1.0, Java 8 = 4.0.3 |
+| HikariCredentialsProvider·Credentials·HikariConfig 소스 | https://github.com/brettwooldridge/HikariCP/tree/dev/src/main/java/com/zaxxer/hikari | ⭐⭐⭐ High | 2026-11-06 | 재검증 — `Credentials getCredentials()` 단일 메서드 |
+| Maven Central metadata (com.zaxxer:HikariCP) | https://repo1.maven.org/maven2/com/zaxxer/HikariCP/maven-metadata.xml | ⭐⭐⭐ High | 2026-11-06 | 재검증 — release 7.1.0 |
+| Spring Boot spring-boot-dependencies build.gradle (태그별) | https://github.com/spring-projects/spring-boot | ⭐⭐⭐ High | 2026-11-06 | 재검증 — 2.7.18=4.0.3, 3.0/3.2=5.0.1, 3.3/3.4=5.1.0, 3.5.0=6.3.0, 3.5.16=6.3.3, 4.0.0~4.1.2=7.0.2 |
 
 ---
 
@@ -124,19 +129,65 @@ status: APPROVED
 | 18 | Micrometer 메트릭 이름 `hikaricp.connections.active/idle/pending/timeout/usage` | VERIFIED |
 | 19 | HikariCP 설정 키는 `autoCommit`(카멜케이스), DBCP의 `defaultAutoCommit`이 아님 | DISPUTED → 수정 반영 |
 | 20 | `keepaliveTime`은 HikariCP 4.0.x에서 추가됨 (3.4.5에는 없음) | VERIFIED |
+| 21 | (2026-11-06 재검증) HikariCP 최신 안정 7.1.0, 7.x까지 설정 키 이름 변경 없음 (근거: CHANGES + Maven Central) | VERIFIED |
+| 22 | (2026-11-06) `keepaliveTime` 기본 120000ms (근거: CHANGES — 6.2.1에서 2분으로 변경, 이전 0) | DISPUTED → 표에 버전별 기본값 병기 |
+| 23 | (2026-11-06) "HikariCP 4.0.x부터 Java 11+ 전용" (근거: README — Java 8 아티팩트 = 4.0.3, Java 11+는 5.x) | DISPUTED → "5.0.0부터 Java 11+"로 수정 |
+| 24 | (2026-11-06) Spring Boot 2.7.x 번들 "4.0.3 → 5.0.1" (근거: Boot 2.7.18 BOM = 4.0.3, 5.x 금지) | DISPUTED → 4.0.3로 수정 |
+| 25 | (2026-11-06) Spring Boot 3.5.x 번들 5.1.x (근거: Boot 3.5.0 = 6.3.0, 3.5.16 = 6.3.3) | DISPUTED → 6.3.x로 수정 |
+| 26 | (2026-11-06) `HikariCredentialsProvider`가 `getUsername()`/`getPassword()`를 구현 (근거: 소스 — `Credentials getCredentials()` 단일 메서드, `Credentials.of(user, pass)`) | DISPUTED → 예시 코드 수정 |
+| 27 | (2026-11-06) Spring Boot 4.0.x~4.1.x 번들 7.0.x (근거: 4.0.0·4.0.9·4.1.2 BOM = 7.0.2) | VERIFIED (7.0.2로 구체화) |
 
-**요약:** VERIFIED 19건 / DISPUTED 1건 (수정 반영 완료) / UNVERIFIED 0건
+**요약:** VERIFIED 19건 / DISPUTED 1건 (수정 반영 완료) / UNVERIFIED 0건 — 2026-11-06 재검증 추가분: VERIFIED 2 / DISPUTED 5(모두 수정 반영)
 
 **DISPUTED 처리:** 사용자 요청 원문의 `defaultAutoCommit`은 HikariCP의 정확한 설정명이 아니며, 공식 키는 `autoCommit`임. SKILL.md에서 양자 구분을 명시하여 혼동 방지.
 
 ### 4-5. Claude Code 에이전트 활용 테스트
 - [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-04-22)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-11-06 재검증 수정분 재시험 3/3 PASS — 섹션 5 참조)
 - [✅] 잘못된 응답 없음 — 보완 불필요
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### 재검증 후 재시험 (2026-11-06)
+
+**수행일**: 2026-11-06
+**수행자**: skill-tester → general-purpose (3개 병렬, 도메인 에이전트 대신 SKILL.md 의존 여부를 격리해 보기 위해 general-purpose 사용)
+**수행 방법**: SKILL.md + references/REFERENCE.md Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인 (재검증으로 수정된 항목 중심)
+
+**Q1. Spring Boot 3.2 → 3.5 업그레이드 시 번들 HikariCP 변화와 keepaliveTime 동작 변화, keepaliveTime과 maxLifetime 관계**
+- ✅ PASS
+- 근거: SKILL.md 상단 주의 블록 및 1절 파라미터 표(keepaliveTime 행), REFERENCE 10절 번들 표, 11.2절 변경사항 표
+- 상세: 5.0.1 → 6.3.x, 기본값이 6.2.1에서 0 → 120000ms로 바뀌어 yml 미설정 시 keepalive가 새로 켜진다고 정확히 답변. keepaliveTime < maxLifetime 제약도 근거 제시. anti-pattern(구 기본값 0을 현재 기본값으로 서술, Boot 3.5를 5.1.x로 서술) 회피.
+
+**Q2. Java 8 + Spring Boot 2.7에서 HikariCP 5.x로 올려도 되는가, Java 8 마지막 버전, Java 11+ 전용 시작 버전, 2.7 번들**
+- ✅ PASS
+- 근거: REFERENCE 9절(Java 8 아티팩트 4.0.3, Java 11+ 전용은 5.0.0부터), 10절 번들 표(2.7.x = 4.0.3), SKILL.md 상단 주의 블록
+- 상세: "5.x 불가, Java 8 마지막 = 4.0.3, Java 11+ 전용은 5.0.0부터, 2.7 번들 4.0.3"을 정확히 답변. anti-pattern("4.0.x부터 Java 11+ 전용", "2.7 번들 5.0.1") 회피.
+
+**Q3. 동적 DB 자격증명(Secrets Manager/IAM 토큰) 연결 — 구현 인터페이스·메서드·등록 방법·레거시 오버라이드 위상·도입 버전**
+- ✅ PASS
+- 근거: REFERENCE 11.1~11.3절(코드 예시와 주의 블록)
+- 상세: `HikariCredentialsProvider` 구현, `Credentials getCredentials()` 단일 메서드, `Credentials.of(user, pass)` 반환, `setCredentialsProvider`/`setCredentialsProviderClassName` 등록, `getUsername()`/`getPassword()` 오버라이드는 레거시, 7.0+ 신규를 정확히 답변. anti-pattern(provider에 getUsername/getPassword 구현) 회피.
+
+### 발견된 gap (모두 선택 보강, APPROVED 차단 요인 아님)
+
+- REFERENCE 9절 제목이 "3.4.5"인데 본문은 4.0.3·5.0.0 경계까지 다뤄 찾기 어렵다
+- REFERENCE 10절 오버라이드 예시(5.1.0)에 "Java 8 환경에서는 사용 불가" 경고가 없다
+- `keepalive-time: 0`으로 새 keepalive를 끄는 처방이 문서에 직접 없다 (표의 "0(비활성)"에서 추론 가능)
+- `getCredentials()` 호출 시점(커넥션 생성마다인지 캐시되는지), Spring Boot yml에서 provider를 지정하는 방법, 레거시 오버라이드를 켜는 시스템 프로퍼티 이름이 없다
+- 11절 제목이 "Boot 4.x 마이그레이션"이라 3.5 이행 정보는 10절과 11.2절을 함께 봐야 한다
+
+### 판정
+
+- agent content test: PASS (3/3 PASS)
+- verification-policy 분류: 해당 없음 (라이브러리 설정 가이드 — content test로 충분)
+- 최종 상태: APPROVED 유지
+
+---
+
+### 최초 테스트 (2026-04-22)
 
 **수행일**: 2026-04-22
 **수행 방법**: general-purpose 에이전트에게 SKILL.md만 Read한 뒤 2개 실전 질문 답변 수행.
@@ -242,7 +293,7 @@ Oracle DB 재시작 후 HikariCP 커넥션 복구가 오래 걸린다
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-04-22 수행, 2개 질문 모두 PASS) |
+| 에이전트 활용 테스트 | ✅ (2026-04-22 수행 2/2 PASS, 2026-11-06 재검증 후 재시험 3/3 PASS) |
 | **최종 판정** | **APPROVED** |
 
 ---
@@ -250,6 +301,8 @@ Oracle DB 재시작 후 HikariCP 커넥션 복구가 오래 걸린다
 ## 7. 개선 필요 사항
 
 - [✅] 에이전트 활용 테스트 — MySQL wait_timeout 관계 + Pool Exhaustion 진단 2건 PASS (섹션 5, general-purpose 대체, 2026-04-22). 추가 2종은 선택 보강
+- [✅] 2026-11-06 재검증 수정분(keepaliveTime 버전별 기본값, Java 11+ 전용 5.0.0부터, Boot 번들표, HikariCredentialsProvider `getCredentials()`) 재시험 — skill-tester가 3개 질문 수행, 3/3 PASS (2026-11-06 완료, 섹션 5)
+- [❌] (선택 보강, 차단 요인 아님) 섹션 5 "발견된 gap" 항목 반영 — REFERENCE 9절 제목, 10절 오버라이드 예시의 Java 8 경고, `keepalive-time: 0` 처방, provider yml 지정 방법
 - [⏸️] Oracle 공식 블로그 WebFetch 실패 — 향후 인증서 이슈 해결 시 원문 재확인
 - [🔬] 실제 운영 환경에서 `leakDetectionThreshold`, `prepStmtCacheSize` 튜닝 결과 feedback — 실환경 검증 대기
 - [📅] HikariCP 7.x Breaking Change 조사 후 별도 섹션 추가 — 7.x 도입 시점에 검토
@@ -265,3 +318,6 @@ Oracle DB 재시작 후 HikariCP 커넥션 복구가 오래 걸린다
 | 2026-06-19 | v1 | Spring Boot 4.x / HikariCP 7.0 마이그레이션 섹션 추가 (섹션 11 — HikariCP 번들 버전표, 설정 키 변경 없음, HikariCredentialsProvider, Virtual Thread 고려사항). 검증일 갱신. | Claude (Sonnet 4.6) |
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | Claude (Sonnet 5) |
 | 2026-09-26 | v1 | 정기 재검증 — HikariCP 7.0.x~7.1.x 설정 키 변경 없음·HikariCredentialsProvider 확인, 본문 변경 없음 | Claude (Sonnet 5) |
+| 2026-11-06 | v1 | 재검증 — 최신 7.1.0·설정 키 변경 없음 확인. 정정: keepaliveTime 기본값 버전별 표기(6.2.1+ 2분/이전 0), Java 11+ 전용은 5.0.0부터(4.0.3 = Java 8), Boot 번들표(2.7=4.0.3, 3.5=6.3.x, 4.x=7.0.2), HikariCredentialsProvider 예시를 `getCredentials()`로 수정. skill-tester 재시험 예정 | Claude (Opus 5.5) |
+| 2026-11-06 | v1 | 재검증 후 2단계 실사용 재시험 수행 (Q1 Boot 3.2→3.5 keepaliveTime 변화 / Q2 Java 8 + Boot 2.7 HikariCP 버전 / Q3 HikariCredentialsProvider 동적 자격증명) → 3/3 PASS, APPROVED 유지 | skill-tester |
+| 2026-11-11 | v1 | 2026-11-11 정리 — 모델이 아는 일반 지식 절 제거(풀 크기·데드락 공식, minimumIdle 해설, maxLifetime 환경별 계산표, MySQL 단일 yml 예시, Leak 탐지·Pool Exhaustion 진단·Micrometer 모니터링 절, 벤치마크 팁, 중복 번들표). 남긴 절: 파라미터 기본값표(keepaliveTime 버전별), maxLifetime 주의, MySQL/Oracle datasource properties·autoCommit 주의, Oracle yml 예시, 멀티 DataSource, 3.4.5 레거시, SB 버전별 번들표·오버라이드, 체크리스트, 7.x 변경점·HikariCredentialsProvider·가상 스레드. 사실 재검증 아님 | Claude (Opus 5.5) |

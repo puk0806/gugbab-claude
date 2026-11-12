@@ -2,7 +2,7 @@
 skill: nexacro-xapi-server
 category: nexacro
 version: v1
-date: 2026-10-08
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `nexacro-xapi-server` |
 | 스킬 경로 | `.claude/skills/nexacro-xapi-server/SKILL.md` |
-| 검증일 | 2026-10-08 |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-10-08) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 | 버전 기준 | 넥사크로플랫폼 17 X-API (`com.nexacro17.xapi`), 비교 대상 14(`com.nexacro.xapi`)·N V24(`com.nexacro.java.xapi`), nexacro-xeni 17 (20200103 빌드 기준 매뉴얼) |
@@ -64,6 +64,7 @@ status: APPROVED
 | 기술노트 — Excel Import/Export | https://docs.tobesoft.com/nexacro_technical_note_en/067d3e071928b598 | ⭐⭐⭐ High | 2026-10-08 확인 | 공식, /XExportImport·/XImport 경로 |
 | 기술노트 — 연동 프레임워크 | https://docs.tobesoft.com/nexacro_technical_note_en/030675d2a1cd7706 | ⭐⭐ Medium | 2026-10-08 확인 | eGovFrame UI Adaptor 링크만 존재, 본문 없음 |
 | nexacro-spring/nexacro-core | https://github.com/nexacro-spring/nexacro-core | ⭐ Low | 마지막 커밋 2017-06-19 | Stars 10, 14 계열 — 낮은 신뢰도 참고 |
+| (재검증) 17 / N V24 서버 설치 가이드 — X-API 설치, xeni 매뉴얼 개요 | https://docs.tobesoft.com/server_setup_guide_nexacro_17_en_kr/4fe8e637183e9fc4 , https://docs.tobesoft.com/server_setup_guide_nexacro_n_v24_en/638d458b567ddda9 , https://docs.tobesoft.com/xeni_user_manual_ko/42332e9efc1e46a3 | ⭐⭐⭐ High | 2026-11-09 확인 | 17 jar·라이선스, V24 Jakarta 1.0.11 문구·jar명, xeni WAR 동봉 재대조 |
 
 ---
 
@@ -105,7 +106,11 @@ status: APPROVED
 | 30 | exporturl `/nexacro-xeni/XExportImport` | VERIFIED | xeni 매뉴얼 export, 17 설치 가이드 export, 기술노트 |
 | 31 | xeni 서블릿 클래스 `com.nexacro.xeni.services.GridExportImportServlet` (17 기준) | UNVERIFIED | 14 가이드에서만 확인, 17 매뉴얼은 servlet 요소 미노출 — `> 주의:` |
 
-집계: VERIFIED 21 / DISPUTED 1 / UNVERIFIED 9 (UNVERIFIED 항목은 모두 SKILL.md에 `> 주의:` 표기 또는 제거)
+| R1 | (2026-11-09 재검증) 17 X-API: `nexacro-xapi-x.x.x.jar`(예 `nexacro17-xapi-1.0.jar`)+commons-logging, `nexacro17_server_license.xml`, WEB-INF/lib | VERIFIED | 17 서버 설치 가이드 재조회 |
+| R2 | (재검증) N V24: "Versions 1.0.11 and later" Jakarta EE, `nexacro-xapi-java-jakarta_x.x.x.jar`, `com.nexacro.java.xapi`, `NexacroN_server_license.xml` | VERIFIED | N V24 서버 설치 가이드 재조회 |
+| R3 | (재검증) 필요 jar가 nexacro-xeni.war 안에 동봉 | VERIFIED | xeni 매뉴얼 개요 재조회 |
+
+집계: VERIFIED 21 / DISPUTED 1 / UNVERIFIED 9 (UNVERIFIED 항목은 모두 SKILL.md에 `> 주의:` 표기 또는 제거) + 2026-11-09 재검증 R1~R3 VERIFIED
 
 ### 4-1. 내용 정확성
 - [✅] 공식 문서와 불일치하는 내용 없음
@@ -206,3 +211,4 @@ status: APPROVED
 |------|------|-----------|--------|
 | 2026-10-08 | v1 | 최초 작성 (신규 카테고리 nexacro) | skill-creator |
 | 2026-10-08 | v1 | 2단계 실사용 테스트 수행 (Q1 삭제 행 처리 위치 / Q2 Spring Boot 3 Jakarta jar 이관 / Q3 xeni export 미동작 점검) → 3/3 PASS, APPROVED 전환 | skill-tester |
+| 2026-11-09 | v1 | 재검증 — 17 X-API jar·라이선스, N V24 Jakarta(1.0.11 이상) jar·패키지·라이선스, xeni WAR 동봉 재대조 → 모두 일치. 내용 변경 없음(날짜만 갱신) | Claude |

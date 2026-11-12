@@ -1,8 +1,8 @@
 ---
 skill: n8n-error-handling
 category: devops
-version: v2
-date: 2026-09-28
+version: v3
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `n8n-error-handling` |
 | 스킬 경로 | `.claude/skills/n8n-error-handling/SKILL.md` |
-| 검증일 | 2026-09-28 (최초 검증 2026-05-15, 2026-09-28 재검증, 2026-09-28 형제 스킬 정합 보완) |
-| 검증자 | skill-creator (Claude Opus 4.7) / 재검증: Claude (Sonnet 5) |
-| 스킬 버전 | v2 |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-28 · 최초 검증 2026-05-15) |
+| 검증자 | skill-creator (Claude Opus 4.7) / 재검증: Claude (Sonnet 5) / 2026-11-09 재검증: Claude (Opus 5.5) |
+| 스킬 버전 | v3 (기준 stable n8n 2.46.6) |
 
 ---
 
@@ -71,6 +71,22 @@ status: APPROVED
 | n8n GitHub Issue #11596 | https://github.com/n8n-io/n8n/issues/11596 | ⭐⭐⭐ High | 2026-05-15 | Timeout 무시 버그 |
 | n8n Community Forum (다수) | https://community.n8n.io/ | ⭐⭐ Medium | 2026-05-15 | Max Tries 5 한계·Wait 5000ms 한계 다중 확인 |
 | n8n Workflow Templates | https://n8n.io/workflows/ | ⭐⭐⭐ High | 2026-05-15 | Exponential backoff·Slack 알림 공식 템플릿 |
+| n8n 소스 — Node settings 정의 | https://github.com/n8n-io/n8n/blob/master/packages/frontend/editor-ui/src/features/ndv/shared/ndv.utils.ts + `@n8n/i18n` en.json | ⭐⭐⭐ High | 2026-11-09 | maxTries min 2·max 5·default 3, waitBetweenTries 0~5000·default 1000, onError 라벨 "Continue" = `continueRegularOutput` ("Pass error message as item in regular output") |
+| n8n Docs — Work with nodes (Node settings) | https://docs.n8n.io/build/understand-workflows/workflow-components/work-with-nodes.md | ⭐⭐⭐ High | 2026-11-09 | On Error 3모드(Stop Workflow / Continue / Continue (using error output)) |
+| n8n Docs — Error handling (11-09) | https://docs.n8n.io/build/flow-logic/error-handling.md | ⭐⭐⭐ High | 2026-11-09 | Error Trigger 워크플로우 "Select Save" 절차 그대로 |
+| n8n Docs — Executions env vars | https://docs.n8n.io/deploy/host-n8n/configure-n8n/basic-configuration/use-environment-variables/executions.md | ⭐⭐⭐ High | 2026-11-09 | `EXECUTIONS_TIMEOUT` -1, `EXECUTIONS_TIMEOUT_MAX` 3600 |
+| n8n 3.0 Breaking changes | https://docs.n8n.io/changelog/v30-breaking-changes.md | ⭐⭐⭐ High | 2026-11-09 | Always Output Data 다중 출력 노드 동작 변경 (early access) |
+
+**2026-11-09 재검증 클레임**
+
+| 클레임 | 소스 | 판정 |
+|--------|------|------|
+| Max Tries 범위 1~5·기본 3 | n8n 소스 `minValue: 2, maxValue: 5, default: 3` | DISPUTED → 2~5 정정 |
+| Wait Between Tries 0~5000ms·기본 1000 | n8n 소스 | VERIFIED (09-28 "재대조 못 함" 해소) |
+| `Continue (regular output)` = 빈 출력으로 진행·에러 정보 손실 | 소스 i18n "Pass error message as item in regular output", 공식 문서 라벨 "Continue" | DISPUTED → 에러 메시지가 일반 출력 item 으로 전달됨으로 정정 |
+| Error Workflow 는 Save 만으로 충분, 수동 실행 시 미동작 | error-handling 문서 | VERIFIED |
+| `EXECUTIONS_TIMEOUT` -1 / `_MAX` 3600 | executions env 문서 | VERIFIED |
+| (신규) 3.0 Always Output Data 다중 출력 노드 동작 변경 | v3.0 breaking changes | VERIFIED → §5.1 주의 추가 |
 
 ---
 
@@ -123,6 +139,30 @@ VERIFIED 9 / DISPUTED 0 / UNVERIFIED 0
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-11-09] 재검증 정정분 재시험
+
+**수행일**: 2026-11-09
+**수행자**: general-purpose (skill-tester 가 하위 에이전트 결과를 기다릴 수 없는 환경이라 메인이 general-purpose 를 직접 호출해 결과를 받은 뒤 판정)
+**수행 방법**: SKILL.md 만 근거로 실전 질문 2개 답변, 줄 번호 인용 확인
+
+**Q1. Retry On Fail 에 Max Tries 1·Wait 30초 설정 가능 여부, 범위·기본값, 대안, On Error 조합**
+- ✅ PASS
+- 근거: §3 표(103~104줄)·주의(106줄), §3.1(110~115줄), §4·§11.1 Wait+Loop
+- 상세: Max Tries 2~5(기본 3)라 1 불가, Wait 0~5000ms(기본 1000)라 30초 불가 → Wait 노드+Loop, 내장 Retry 는 `Stop Workflow` 와 함께 써야 함을 정확히 답변. anti-pattern(구 범위 1~5) 회피
+
+**Q2. "Continue" 와 "Continue (using error output)" 차이, 3.0 Always Output Data 변경**
+- ✅ PASS
+- 근거: §1 표(39~40줄)·선택 가이드(44~45줄), §5.1 주의(145줄)
+- 상세: "Continue" 는 에러 메시지가 일반 출력 item 으로 실려 섞임(에러 정보 손실 아님), error output 은 별도 분기, 3.0 은 모든 출력이 비었을 때만 빈 item → Migration Report 확인을 정확히 답변. anti-pattern(구 "빈 출력·정보 손실") 회피
+
+**발견된 gap (선택 보강, 기존 서술)**
+- §5.2 Never Error(모든 상태코드 성공 처리)와 §12 예시(Never Error ON + error output 분기에서 429/5xx 분기)가 서로 맞지 않음
+- §3.1 제목은 `On Error: Continue`, 본문은 `Continue (using error output)` — 어느 모드에서 Retry 가 무시되는지 불명확
+- Max Tries 가 첫 실행 포함 총 횟수인지 미기술, 3.0 주의문이 §5(HTTP) 아래에 있어 위치 부적절
+- (09-28 주의문 미해소 표기 → 같은 날 "2026-11-09 해소" 표기 추가)
+
+agent content test: 2/2 PASS → **APPROVED 유지**
 
 **수행일**: 2026-09-28
 **수행자**: skill-tester → general-purpose (devops 도메인 전용 에이전트 미등록으로 대체)
@@ -235,10 +275,11 @@ VERIFIED 9 / DISPUTED 0 / UNVERIFIED 0
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-15) / 2026-09-28 형제 스킬 정합 재테스트 2/2 PASS |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-15) / 2026-09-28 형제 스킬 정합 재테스트 2/2 PASS / 2026-11-09 재시험 2/2 PASS |
+| 2026-11-09 재검증 | ✅ Retry 수치 소스 재대조 완료(Max Tries 2~5 정정), On Error "Continue" 동작 정정, 3.0 Always Output Data 주의 추가 |
 | 2026-09-28 재검증 | ⚠️ PARTIAL — n8n 2.x 전환·문서 개편 확인, Retry 수치 일부 미재확인(선택 보강, 차단 요인 아님) |
 | 2026-09-28 재검증 보완 | ✅ 형제 스킬 정합 — Active→Publish 용어 2건 정정, skill-tester 재테스트 2/2 PASS |
-| **최종 판정** | **APPROVED** (2026-09-28 형제 스킬 정합 정정에 대한 skill-tester 재테스트 2/2 PASS로 재승인. Retry 수치 미확인 건은 차단 요인 아닌 선택 보강으로 섹션 7에 별도 기록) |
+| **최종 판정** | **APPROVED** (유지 — 2026-11-09 재검증 정정 후 재시험 2/2 PASS. 이전: 2026-09-28 형제 스킬 정합 정정에 대한 skill-tester 재테스트 2/2 PASS로 재승인. Retry 수치 미확인 건은 차단 요인 아닌 선택 보강으로 섹션 7에 별도 기록) |
 
 content test 카테고리(워크플로우 패턴 가이드 — 실행 결과·빌드 산출물이 아닌 *답변 정확성*으로 검증 가능)이므로 skill-tester content test 3/3 PASS로 APPROVED 전환했었으나, 2026-09-28 재검증에서 n8n 2.x 메이저 버전 전환과 문서 사이트 개편을 확인하면서 Retry On Fail 한계치 등 일부 세부 수치를 새 문서로 재대조하지 못해 PENDING_TEST로 하향했었다. 같은 날 형제 스킬 정합 점검에서 Active 토글 관련 용어 2건(섹션 2.1·13.5)을 추가로 정정했고, 이 정정에 대해 skill-tester가 실전 질문 2개로 재테스트해 2/2 PASS를 확인, APPROVED로 재전환했다. Retry 수치 미확인 건은 여전히 선택 보강 과제로 남아있으나 스킬 사용 자체를 막는 요인은 아니다.
 
@@ -248,7 +289,8 @@ content test 카테고리(워크플로우 패턴 가이드 — 실행 결과·�
 
 - [✅] skill-tester가 content test 수행하고 섹션 5·6 업데이트 (2026-05-15 완료, 3/3 PASS)
 - [✅] 2026-09-28 형제 스킬 정합 정정(Active→Publish 용어 2건) 반영 후 skill-tester 재테스트 및 섹션 5·6·7·8 동기화 (2026-09-28 완료, 2/2 PASS)
-- [❌] n8n 메이저 버전 업데이트 시 Max Tries / Wait 한계 변경 여부 재확인 — 차단 요인 아님, 선택 보강 (정기 점검. 2026-09-28 재검증에서 새 문서 구조상 미재대조로 남은 항목)
+- [✅] Max Tries / Wait 한계 재확인 — 2026-11-09 n8n 소스로 대조 완료(Max Tries 최소 1→2 정정)
+- [❌] (2026-11-09 재시험 발견, 선택 보강) §5.2 Never Error 와 §12 예시(Never Error + error output 분기) 모순 정리, §3.1 대상 모드 명확화, 3.0 주의문 위치(IF/Switch) 조정
 - [❌] issue #10763, #11596 등 보고된 버그의 fix 여부 정기 점검 — 차단 요인 아님, 선택 보강 (버전 업 시 점검)
 - [❌] Anthropic Claude API의 retry-after 헤더 정책 변경 시 12장 예시 갱신 — 차단 요인 아님, 선택 보강 (Anthropic 정책 변경 시)
 - [❌] 섹션 2.1·13.5 상호 참조 문구 추가(Error Handler 자체 vs 메인 워크플로우 게시 대상 구분 명확화) — 차단 요인 아님, 선택 보강
@@ -264,3 +306,6 @@ content test 카테고리(워크플로우 패턴 가이드 — 실행 결과·�
 | 2026-09-28 | v1 | 재검증: n8n이 1.x→2.x로 메이저 버전 상승 확인(GitHub Releases API, `n8n@2.40.7`), 공식 문서 URL 구조 개편 확인(`/flow-logic/error-handling/` → `/build/flow-logic/handle-errors-gracefully.md`, 구 URL 404). 소스 링크 갱신. HMAC 미내장 등 재확인 가능한 항목은 변경 없음이나, Retry On Fail 한계치(Max Tries 5/Wait 5000ms)·On Error 3모드 세부 동작은 새 문서 구조상 직접 재대조하지 못해 **PENDING_TEST로 하향**. 다음 세션에서 2.x 환경 기준 재확인 권장 | Claude (Sonnet 5) |
 | 2026-09-28 | v2 | 재검증 보완(형제 스킬 정합): 앞선 재검증에서 누락된 Active 토글 관련 서술 2건 정정 — 섹션 2.1 "Error Workflow는 비활성 상태로 둔다"→"게시(Publish)하지 않아도 된다", 섹션 13.5 "Production에서 Active 상태로"→"게시(Publish)한 상태로". 프런트매터 status가 본문(PENDING_TEST)과 불일치(APPROVED로 표기)했던 오류도 함께 수정. status PENDING_TEST 유지 | Claude (Sonnet 5) |
 | 2026-09-28 | v2 | 2단계 실사용 재테스트 수행 (Q1 Error Handler 자체 게시 필요 여부 / Q2 Error Workflow 트리거 확인 — 수동 실행 불가·메인 워크플로우 게시 필요) → 2/2 PASS, 형제 스킬(`n8n-workflow-design`, `n8n-webhook-patterns`)과 서술 일관성 확인, PENDING_TEST → APPROVED 전환 (Retry 수치 미확인 건은 선택 보강으로 섹션 7 유지) | skill-tester |
+| 2026-11-09 | v3 | 재검증 — 기준 stable 2.46.6. n8n 소스로 Retry On Fail 재대조: Max Tries 1~5 → **2~5** 정정(기본 3·Wait 0~5000/1000 VERIFIED), On Error "Continue (regular output)=빈 출력·에러 정보 손실" → **"Continue" = 에러 메시지를 일반 출력 item 으로 전달**로 정정(§1 표·선택 가이드·§12 무한 루프 방지 문구), 3.0(early access) Always Output Data 다중 출력 노드 동작 변경 주의(§5.1) 추가. Error Workflow Save 절차·EXECUTIONS_TIMEOUT 기본값 VERIFIED. 내용 수정 있음 — 재시험 | Claude (Opus 5.5) |
+| 2026-11-09 | v3 | 재검증 후 2단계 재시험 (Q1 Retry 범위·대안·On Error 조합 / Q2 Continue vs error output·3.0 Always Output Data) → 2/2 PASS(general-purpose 직접 호출 — skill-tester 하위 에이전트 대기 불가), APPROVED 유지. 선택 보강 gap(§5.2↔§12 Never Error 모순 등) 섹션 5·7 기록 | general-purpose |
+| 2026-11-12 | v3.1 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 On Error 3모드 정확한 동작·Retry On Fail UI 한계값(2~5·기본 3, 0~5000·기본 1000)·Continue+Retry 무시(#10763)·Error Workflow Publish 불필요/수동 실행 미동작/무한 루프/데이터 필드 조건·2.0 Save/Publish 모델·3.0 Always Output Data 변경·Never Error·EXECUTIONS_TIMEOUT 기본값과 soft timeout·#11596·Claude 529 처리 / 덜어낸 것 Try/Catch·알림·실패 로깅 SQL·DLQ·헬스 체크·지수 백오프·Circuit Breaker 일반 설계도·꿈 해몽 예시 워크플로우 장문·중복 함정 목록·없는 짝 스킬(n8n-workflow-design) 언급 | 정리 |

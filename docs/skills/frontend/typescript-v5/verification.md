@@ -1,8 +1,8 @@
 ---
 skill: typescript-v5
 category: frontend
-version: v4
-date: 2026-09-28
+version: v5
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -12,9 +12,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | typescript-v5 |
 | 스킬 경로 | .claude/skills/typescript-v5/SKILL.md |
-| 검증일 | 2026-09-28 (NEEDS_REVISION 보강) / 2026-09-28 (재검증(2차)) / 2026-08-11 (v2) / 2026-04-20 (v1 최초) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-28 · 2026-08-11 · 2026-04-20) |
 | 검증자 | skill-creator (v1·v2) → 재검증(2차) → NEEDS_REVISION 보강 |
-| 스킬 버전 | v4 |
+| 스킬 버전 | v5 |
 | 커버리지 | TS 5.0~5.9 본문 + 6.0·7.0 전환 프레임 (7.0.2 patch 기준) |
 
 ---
@@ -58,6 +58,9 @@ status: APPROVED
 | InfoWorld — Go-based TypeScript 7.0 arrives | https://www.infoworld.com/article/4196378/go-based-typescript-7-0-arrives.html | ⭐⭐ Medium-High | 2026-07-13 | 독립 매체 교차 확인 |
 | InfoQ — TypeScript 7.0 released | https://www.infoq.com/news/2026/08/typescript-7-released/ | ⭐⭐ Medium-High | 2026-08 | 독립 매체, 7.1 API 계획 |
 | Visual Studio Magazine — TS 6.0 ships as final JS-based release | https://visualstudiomagazine.com/articles/2026/03/23/typescript-6-0-ships-as-final-javascript-based-release-clears-path-for-go-native-7-0.aspx | ⭐⭐ Medium-High | 2026-03-23 | 6.0 출시일 독립 확인 |
+| Announcing TypeScript 7.1 Beta (공식, 2026-11-09 재검증) | https://devblogs.microsoft.com/typescript/announcing-typescript-7-1-beta/ | ⭐⭐⭐ High | 2026-10-20 | 새 API 진입점·content mapper·`--runExternalCode`·breaking 2건·RC 약 1개월 뒤 |
+| npm registry — typescript / @typescript/typescript6 / @typescript/native (2026-11-09 재검증) | https://registry.npmjs.org/typescript · https://registry.npmjs.org/@typescript%2ftypescript6 · https://registry.npmjs.org/@typescript%2fnative | ⭐⭐⭐ High | 2026-11-09 | typescript latest 7.0.2·beta 7.1.0-beta(2026-10-20); typescript6 latest 6.0.2; `@typescript/native` 404(패키지 없음) |
+| Visual Studio Magazine — TS 7.1 Beta (2026-11-09 재검증) | https://visualstudiomagazine.com/articles/2026/10/23/typescript-7-1-beta-improves-support-for-embedded-code-import-attributes.aspx | ⭐⭐ Medium-High | 2026-10-23 | 7.1 베타 독립 확인, `npm install -D typescript@beta` |
 
 ---
 
@@ -77,7 +80,6 @@ status: APPROVED
 - [✅] 코드 예시 포함
 - [✅] 언제 사용 / 언제 사용하지 않을지 기준 포함
 - [✅] 흔한 실수 패턴 포함
-- [✅] 짝 스킬(typescript-v4, 레거시 4.x 전용)과의 역할 분리 명시
 
 ### 4-3. 실용성
 - [✅] 에이전트가 참조했을 때 실제 코드 작성에 도움이 되는 수준
@@ -85,13 +87,48 @@ status: APPROVED
 - [✅] 범용적으로 사용 가능 (특정 프로젝트 종속 X)
 
 ### 4-4. Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-04-20 · 2026-08-11 · 2026-09-28(1차) · 2026-09-28(2차, 보강 후 최종) skill-tester 재테스트)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-04-20 · 2026-08-11 · 2026-09-28(1차) · 2026-09-28(2차, 보강 후 최종) · 2026-11-09(재검증 수정분, 3/3 PASS) skill-tester 재테스트)
 - [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-09-28 2차 재테스트: 2/2 PASS — 근거 섹션·코드 예시 정확히 인용)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 — 2026-09-28 1차 재테스트에서 §9-2 신규 breaking change 표 3건에 코드 예시 부재로 PARTIAL 2건 발견 → 공식 발표문·JSDoc 핸드북 원문 기반 before/after 예시 3쌍 추가 + 서술 정정 완료 → 2026-09-28 2차 재테스트에서 2/2 PASS로 gap 해소 확인, APPROVED 전환
 
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester → general-purpose (3개 에이전트 실제 호출, 대체 사용: 도메인 전용 에이전트 대신 general-purpose)
+**수행 방법**: 2026-11-09 재검증 수정분(7.1 베타·병행 설치 별칭 교정·stableTypeOrdering 정밀화)이 반영된 SKILL.md를 각 에이전트에게 Read시켜 수정분을 겨냥한 실전 질문 3개에 답변하게 하고, 근거 줄 번호를 SKILL.md와 대조
+
+### 실제 수행 테스트 (2026-11-09 재검증 후)
+
+**Q1. "7.0.2 + 6.0 병행 설치 방식과 `npm install -D @typescript/native` 가능 여부" (병행 설치 교정 겨냥)**
+- ✅ PASS
+- 근거: SKILL.md §9-4 "6.0과 7.0 병행 설치"(L474-483) + 정정 주의 문구(L483)
+- 상세: `typescript@npm:@typescript/typescript6` 별칭과 `"@typescript/native": "npm:typescript@^7.0.2"` 별칭 방식을 정확히 제시하고, `npm install -D @typescript/native`는 404라 실패한다고 답해 구버전 오답을 회피. gap: 두 별칭이 공존하는 package.json devDependencies 전체 예시가 없어 7.0 `tsc` 호출 이름이 한눈에 안 보임(선택 보강).
+
+**Q2. "7.1 현재 상태, 임베디드 툴링용 진입점·tsc 플래그, 7.0→7.1 breaking" (7.1 베타 반영 겨냥)**
+- ✅ PASS
+- 근거: SKILL.md §0 표 7.1 행(L24) + §9-4(L465-472)
+- 상세: "dev 단계"라는 낡은 인식을 2026-10-20 베타로 정정, 진입점 `typescript/sync`·`async`·`fs`·`ast`, `--runExternalCode`, breaking 2건(분배 조건부 타입 엄격화·DOM lib.d.ts 생성 방식)을 모두 줄 번호와 함께 정확히 인용. gap: breaking 2건 before/after 예시 없음, §0 L34 "7.0은 API 미제공"에 7.0 한정 표기 보강 여지(선택).
+
+**Q3. "`--stableTypeOrdering` 목적·6.0 비용·상시 사용 여부·7.0 동작" (감속 문구 정밀화 겨냥)**
+- ✅ PASS
+- 근거: SKILL.md §9-3(L455-463) + §9-5 체크리스트 3번(L489)
+- 상세: 목적(7.0 결정적 순서 사전 확인), "최대 약 25%" 감속, 상시 사용 비권장, 7.0 기본값·비활성화 불가를 정확히 답변. 문구 모순 없음.
+
+### 발견된 gap (있으면)
+
+- 선택 보강: §9-4에 병행 설치 package.json devDependencies 완성 예시 추가
+- 선택 보강: 7.1 베타 breaking 2건 before/after 예시(베타 단계라 공식 예시 확보 후)
+- 선택 보강: §0 L34 "7.0은 프로그래매틱 API 미제공"에 "7.0 한정" 명시
+
+### 판정
+
+- agent content test: 3/3 PASS
+- verification-policy 분류: 해당 없음 (개념·버전별 기능 정리형 — content test로 충분)
+- 최종 상태: APPROVED 유지
+
+### 이전 테스트 기록 (2026-09-28, 참고)
 
 **수행일**: 2026-09-28
 **수행자**: skill-tester → general-purpose (실제 Agent 도구 호출, 최종 재테스트)
@@ -187,6 +224,17 @@ agent content test: 4/4 PASS (v1 2/2 포함 누적 6/6)
 
 **DISPUTED 처리 (#4)**: 7.0 출시일에 대해 2026-07-08(공식 블로그 게시일, InfoWorld 일치)과 2026-08-03(InfoQ 보도) 두 값이 확인됨. 1순위 소스인 공식 블로그 게시일을 채택하여 SKILL.md에 **2026-07-08**로 기재했다. 감사 지적서에 적힌 "2026-08-05"는 어느 1차 소스에서도 확인되지 않아 채택하지 않았다.
 
+### WebFetch·npm 교차 검증 (2026-11-09 재검증)
+
+| # | 클레임 | 검증 소스 (2개 이상) | 판정 |
+|---|--------|----------------------|------|
+| 1 | 최신 안정 = 7.0.2, "7.1은 dev만·베타 미출시" | npm dist-tags(beta 7.1.0-beta, 2026-10-20) + devblogs 7.1 Beta 발표 + Visual Studio Magazine | DISPUTED → 정정 (§0 표에 7.1 베타 행 추가) |
+| 2 | 7.0은 프로그래매틱 API 미제공, API는 7.1에서 | devblogs 7.0 발표문("does not ship with an API", "7.1 to ship with a new (and different) API") + 7.1 Beta 발표(typescript/sync·async·fs·ast) | VERIFIED (§9-4에 7.1 베타 공개 사실·`--runExternalCode` 추가) |
+| 3 | 병행 설치 `npm install -D @typescript/native` | npm registry `@typescript/native` 404 + devblogs 7.0 발표문(`"@typescript/native": "npm:typescript@^7.0.2"` 별칭) | DISPUTED → 정정 (별칭 방식으로 교체) |
+| 4 | 6.0 기본값 7종·deprecation 목록·`ignoreDeprecations: "6.0"` | devblogs 6.0 발표문 원문 재확인 + 7.0 발표문 | VERIFIED |
+| 5 | `--stableTypeOrdering` 약 25% 감속 | devblogs 6.0 발표문("up to 25% depending on codebase") | VERIFIED (문구를 "최대 약 25%"로 정밀화) |
+| 6 | 7.0 출시일 2026-07-08, 전체 빌드 8~12배 | devblogs 7.0 발표문 + npm typescript 7.0.2 게시 시각 2026-07-08 | VERIFIED |
+
 **참고**: github.com/microsoft/TypeScript/releases의 최신 태그는 6.0.3이다. 7.0은 Go 기반 별도 구현이라 해당 레포의 릴리즈 태그 목록만으로는 최신 버전을 판단할 수 없다 — 버전 확인 시 공식 블로그를 함께 봐야 한다.
 
 ---
@@ -239,8 +287,9 @@ agent content test: 4/4 PASS (v1 2/2 포함 누적 6/6)
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
 | 에이전트 활용 테스트 | ✅ (누적 6/6 PASS(구 버전 대상) + 2026-09-28 1차 재테스트 2/2 PARTIAL(§9-2 신규 표 3건 코드 예시 부재 gap) → 보강 완료 → 2026-09-28 최종 재테스트 2/2 PASS로 gap 해소 확인) |
-| 버전 프레임 최신성 | ✅ (2026-09-28 기준 7.0.2 patch까지 반영, 7.1은 아직 dev 단계) |
-| **최종 판정** | **APPROVED** (2026-09-28 최종 재테스트 2/2 PASS — §9-2 신규 표 3건 코드 예시 보강 + 스코프 정정이 실전 질문에서 정확히 반영됨을 확인) |
+| 에이전트 활용 테스트 (2026-11-09 재검증 후) | ✅ 3/3 PASS (병행 설치 별칭 교정 / 7.1 베타·API·breaking / stableTypeOrdering) |
+| 버전 프레임 최신성 | ✅ (2026-11-09 기준 7.0.2 latest + 7.1 베타(2026-10-20) 반영) |
+| **최종 판정** | **APPROVED** (2026-11-09 재검증 수정분 3/3 PASS 재확인; 이전: 2026-09-28 최종 재테스트 2/2 PASS — §9-2 신규 표 3건 코드 예시 보강 + 스코프 정정이 실전 질문에서 정확히 반영됨을 확인) |
 
 판정 근거: 라이브러리 사용법·개념 정리형 스킬로 실행 결과·빌드 산출물이 아니라 답변 정확성으로 검증 가능한 카테고리다(검증 정책의 "content test로 충분" 유형). v1·v2에서 APPROVED였고 2026-09-28 재검증에서 §9-2에 breaking change 3건을 새로 보강했으나, skill-tester 1차 재테스트 결과 신규 보강 3건 전부에 코드 예시가 없어 두 질문 모두 PARTIAL 판정을 받았다(원인 진단 자체는 정확했으므로 사실 오류는 아니었음). 이후 공식 발표문(devblogs 7.0)과 공식 JSDoc 핸드북을 재대조해 before/after 코드 예시 3쌍을 추가하고, enum-typeof 항목이 실제로는 JSDoc `.js` 전용이라는 서술 오류도 정정했다. 보강된 SKILL.md로 최종 재테스트를 수행한 결과 ①.ts 파일 무관 스코프 정정 ②이모지 Template Literal Types 예시 두 질문 모두 PASS — 콘텐츠 완성도 gap이 완전히 해소되었으므로 APPROVED로 전환한다.
 
@@ -254,6 +303,9 @@ agent content test: 4/4 PASS (v1 2/2 포함 누적 6/6)
 - [⏸️] 6.0 이후 tsconfig 기본값이 추가 변경되면 §9-1 표 갱신 필요 (`target`은 매년 현행 ES로 이동하는 구조)
 - [✅] §9-2 아래 "7.0에서 새로 확인된 추가 breaking change" 표 3건(enum-typeof·Template Literal 유니코드·JSDoc 분석 변경)에 코드 예시(before/after) 보강 완료 (2026-09-28) — 공식 발표문(devblogs 7.0)·공식 JSDoc 핸드북 원문 기반. enum-typeof 항목은 JSDoc `.js` 전용이라는 스코프 정정도 함께 반영
 - [✅] skill-tester 재테스트 완료 (2026-09-28, 2/2 PASS) — PENDING_TEST → APPROVED 전환
+- [✅] 2026-11-09 재검증 수정분(7.1 베타·병행 설치 별칭·stableTypeOrdering)에 대한 skill-tester content test 수행 (2026-11-09 완료, 3/3 PASS, APPROVED 유지)
+- [⏸️] TS 7.1 RC/정식 출시 시 §0 7.1 행·§9-4 재검토 (차단 요인 아님 — 출시 이벤트 대기)
+- [❌] 선택 보강: §9-4 병행 설치 package.json 완성 예시, 7.1 breaking 2건 before/after 예시, §0 L34 "7.0 한정" 표기 — 차단 요인 아님(PASS 판정에 영향 없는 개선 사항)
 
 ---
 
@@ -267,3 +319,7 @@ agent content test: 4/4 PASS (v1 2/2 포함 누적 6/6)
 | 2026-09-28 | v3 | 2단계 실사용 재테스트 수행 (Q1 enum-typeof / Q2 Template Literal 유니코드, 둘 다 §9-2 신규 보강분 겨냥) → 2/2 PARTIAL(진단은 정확하나 코드 예시 부재), PENDING_TEST → NEEDS_REVISION 전환. 원칙에 따라 SKILL.md 미수정, 보강안 사용자 승인 대기 | skill-tester |
 | 2026-09-28 | v4 | NEEDS_REVISION 보강 — devblogs TypeScript 7.0 발표문·공식 JSDoc 핸드북 원문 재대조 후 §9-2 신규 표 3건에 before/after 코드 예시 추가(JSDoc `@enum`, Template Literal Types 유니코드, JSDoc Closure 스타일 함수 문법). enum-typeof 행이 실제로는 JSDoc `.js` 전용이라는 서술 오류 정정. NEEDS_REVISION → PENDING_TEST 전환(재테스트는 메인이 수행) | 재검증 보강 |
 | 2026-09-28 | v4 | 2단계 실사용 최종 재테스트 수행 (Q1 .ts 파일 스코프 무관 확인 / Q2 이모지 Template Literal Types before/after) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-11-09 | v5 | 재검증 — npm registry·devblogs 6.0/7.0/7.1 Beta 대조. 6.0 기본값·deprecation·7.0 출시일·성능 VERIFIED. **내용 정정**: ① §0 "7.1 베타 미출시" → 2026-10-20 7.1 베타 행 추가(새 API 진입점·content mapper) ② §9-4에 7.1 베타 API 공개·`--runExternalCode`·7.1 베타 breaking 2건 추가 ③ 병행 설치 명령의 `npm install -D @typescript/native`(존재하지 않는 패키지) → 공식 별칭 `"@typescript/native": "npm:typescript@^7.0.2"` 방식으로 교체 ④ stableTypeOrdering 감속을 "최대 약 25%"로 정밀화. SKILL.md 495줄. status 유지 | 재검증 작업자 |
+| 2026-11-09 | v5 | 2단계 실사용 재테스트 수행 — 재검증 수정분 겨냥 (Q1 병행 설치 별칭·@typescript/native 404 / Q2 7.1 베타 API·--runExternalCode·breaking 2건 / Q3 stableTypeOrdering 최대 약 25%) → 3/3 PASS, APPROVED 유지 | skill-tester |
+| 2026-11-11 | v5 | 2026-11-11 정리 — 모델이 아는 일반 지식 절 제거(남긴 절: §0 버전 지형(6.0·7.0 GA·7.1 베타), §9 5.x → 6.0 → 7.0 마이그레이션(9-1~9-5) / 덜어낸 절: §0-1 5.9, 5.0~5.5 기능 절, 5.6·5.7·5.8 포인터, 하단 REFERENCE 링크. `references/REFERENCE.md`(5.6~5.8·tsconfig 5.x·4.x→5.x·React 타입·흔한 실수 — 전부 컷오프 이전 일반 지식)는 Bash 삭제 금지로 파일은 남기고 SKILL.md 링크만 제거, 사실 재검증 아님) | Claude (Opus 5.5) |
+| 2026-11-06 | v4 | references 분리 (구조 변경만 — 내용 검증 갱신 아님) — SKILL.md 500줄 초과(552줄) 해소. §5.6·§5.7 절을 `references/REFERENCE.md` 맨 앞(기존 §5.8 앞)으로 이동하고 본문엔 포인터만 남김. SKILL.md 552→488줄, REFERENCE.md 257→327줄. HEAD 대비 줄 단위 대조로 내용 손실 0 확인. 검증일·status 변경 없음 | Claude |

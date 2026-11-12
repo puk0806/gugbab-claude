@@ -7,7 +7,7 @@
  *      그 값과 함께 남긴다. launch 가 이 세션 것과 같고 아직 안 보여 줬으면 결과를 보여 주고 shown 표시
  *        "[gugbab] 하네스 v1.0.4 → v1.0.5 로 업데이트됐습니다" / "[gugbab] 하네스 v1.0.5 — 최신입니다 (방금 확인)" /
  *        "[gugbab] 하네스 v1.0.5 — 업데이트 확인 건너뜀 (마지막 확인 09:34, 1시간마다 확인 …)" 등
- *      기록이 없거나 다른 실행 것이면 새 세션(startup·resume)일 때만 "[gugbab] 하네스 v1.0.5" — /clear·compact 에서는 반복하지 않음
+ *      기록이 없거나 다른 실행 것이면 새 세션(startup·resume·fork)일 때만 "[gugbab] 하네스 v1.0.5" — /clear·compact 에서는 반복하지 않음
  *   래퍼(gugbab-claude)는 업데이트되면 새 버전 자신으로 다시 실행하고(2026-10-19), claude 를 띄울 때 하네스 커밋을
  *   GUGBAB_WRAPPER_REV 로 넘긴다. 이 훅은 그 값을 설치본의 HEAD 와 비교한다.
  *   ① 값이 없음 = 다시 실행 기능이 없던 예전 래퍼(v1.0.4 이하)가 업데이트한 직후 띄운 세션
@@ -125,7 +125,8 @@ function versionNotice({ env, home, source, now }) {
     if (text) { markShown(f, rec); return text }
   }
   // 이 실행의 확인 기록이 없음(업데이트 확인 안 한 실행·예전 래퍼) — 새 세션일 때만 지금 버전
-  if (source === 'startup' || source === 'resume') return ver ? `하네스 ${ver}` : null
+  // fork(갈라 나온 새 세션)는 resume 과 같게 (공식 SessionStart source: startup·resume·clear·compact·fork)
+  if (source === 'startup' || source === 'resume' || source === 'fork') return ver ? `하네스 ${ver}` : null
   return null
 }
 

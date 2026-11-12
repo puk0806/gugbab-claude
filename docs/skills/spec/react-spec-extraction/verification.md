@@ -2,7 +2,7 @@
 skill: react-spec-extraction
 category: spec
 version: v1
-date: 2026-10-08
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `react-spec-extraction` |
 | 스킬 경로 | `.claude/skills/react-spec-extraction/SKILL.md` |
-| 검증일 | 2026-10-08 |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-10-08) |
 | 검증자 | Claude (skill-creator 절차 직접 수행) |
 | 스킬 버전 | v1 |
 
@@ -65,6 +65,11 @@ status: APPROVED
 | TanStack Query Query Keys / Migrating to v5 | https://tanstack.com/query/latest/docs/framework/react/guides/query-keys · .../migrating-to-v5 | ⭐⭐⭐ High | 5.104.1 (npm) | 공식 문서 |
 | Recoil 저장소 상태 | https://github.com/facebookexperimental/Recoil (GitHub API `archived: true`) | ⭐⭐⭐ High | 마지막 push 2025-01-01 | npm 0.7.7 |
 | npm 레지스트리 | `npm view <pkg> version` | ⭐⭐⭐ High | 2026-10-08 | 버전 기준 |
+| npm 레지스트리 (재검증) | https://registry.npmjs.org/<pkg>/latest | ⭐⭐⭐ High | 2026-11-09 | react-router 8.5.1·react-router-dom 7.18.5·next 16.4.5·ts-morph 28.0.0·zod 4.6.7·react-hook-form 7.91.0·@tanstack/react-query 5.107.1·axios 1.21.0·zustand 5.1.0·@reduxjs/toolkit 2.14.0·recoil 0.7.7 |
+| React Router Middleware (8.3.1 문서) | https://reactrouter.com/8.3.1/how-to/middleware.md | ⭐⭐⭐ High | 2026-11-09 열람 | Data mode `middleware` 배열 프로퍼티, Framework `export const middleware`/`clientMiddleware`, `({request, context}, next)` |
+| React Router v8 changelog (재검증) | https://reactrouter.com/8.0.0/changelog.md + InfoQ 2026-08 보도 | ⭐⭐⭐ High | 2026-11-09 검색 | `future.v8_middleware` 제거 → 항상 활성 |
+| Next.js proxy.js (재검증) | https://nextjs.org/docs/app/api-reference/file-conventions/proxy | ⭐⭐⭐ High | 2026-11-06 갱신 | v16.0.0 개명·deprecated, matcher 상수, Server Function 주의 그대로 |
+| Zod JSON Schema 원문 MDX (재검증) | https://raw.githubusercontent.com/colinhacks/zod/main/packages/docs/content/json-schema.mdx | ⭐⭐⭐ High | 2026-11-09 | "Introduced in `zod@4.0`" 그대로, target·io·unrepresentable 기본값 그대로 |
 
 ---
 
@@ -99,6 +104,10 @@ status: APPROVED
 | C23 | queryKey는 최상위 배열, 쿼리 함수 의존성 역할 | Query Keys 문서 + tanstack-query 스킬 | VERIFIED |
 | C24 | Recoil 저장소 archived, npm 최신 0.7.7 | GitHub API + npm | VERIFIED |
 | C25 | zustand `create` export, RTK createSlice(name·initialState·reducers), Recoil atom/selector `key` 필수 | 설치한 패키지 타입 정의 grep + state-management 스킬 | VERIFIED |
+| R1 | (2026-11-09 재검증) 기준 버전 갱신 — 전부 마이너·패치 상승, 메이저 변화 없음, react-router-dom은 7.x 유지 | npm 레지스트리 | VERIFIED → 버전 줄 갱신 |
+| R2 | (2026-11-09 재검증, C6 해소) v8 middleware 항상 활성(플래그 제거), Data mode `middleware` 배열·Framework `middleware`/`clientMiddleware` export, 시그니처 `({request, context}, next)` | RR 8.3.1 middleware 문서 + 8.0.0 changelog + InfoQ 검색 | VERIFIED → §6 주의를 구체 규칙으로 교체 |
+| R3 | (2026-11-09 재검증) Next.js proxy 개명·matcher 상수·Server Function 비경유 | proxy.js 공식 문서(2026-11-06 갱신) | VERIFIED |
+| R4 | (2026-11-09 재검증) `z.toJSONSchema` 도입 zod@4.0, 옵션 기본값 | zod 원문 MDX + zod.dev | VERIFIED |
 
 ### 4-1. 내용 정확성
 - [✅] 공식 문서와 불일치하는 내용 없음
@@ -127,6 +136,20 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+### 2026-11-09 재시험 (재검증으로 §6 v8 middleware 규칙·버전 줄 수정 후)
+
+**수행일**: 2026-11-09
+**수행자**: general-purpose 에이전트 (skill-tester 서브에이전트에 하위 Agent 도구가 없어 메인이 general-purpose 를 직접 호출, 답변은 그 에이전트가 SKILL.md 만 근거로 작성)
+**수행 방법**: SKILL.md Read 후 실전 질문 3개 답변, 메인이 근거 절·변경 내용 일치 확인
+
+**Q1. Data mode react-router 8 앱의 라우트 단계 인증 가드를 어디서 찾나, 미들웨어 형태는?** — ✅ PASS (근거: §6 표 "데이터 단계" 행·v8 middleware 단락). route 객체 `middleware` 배열 + 원소 함수 본문의 `redirect(`, v8은 플래그 없이 항상 활성, `({request, context}, next)`, 층별 기록·"서버 검증 미확인".
+**Q2. react-router 7 Framework mode에서 `export const middleware`를 바로 "가드 확인됨"으로 적어도 되나?** — ✅ PASS (근거: §6 v8 middleware 단락). 안 됨 — v7은 `future.v8_middleware` 켜야 실행, `react-router.config.ts` 확인, `clientMiddleware`도 검색, 버전 없는 문서 페이지 주의까지 답함.
+**Q3. Next.js 16 proxy matcher가 /admin만일 때 /orders Server Function이 proxy로 보호되나?** — ✅ PASS (근거: §6 "Next.js 요청 단계" 행). 아니오 — 사용 위치 라우트로의 POST라 matcher 밖이면 proxy 미경유, 함수 내부 권한 검사 확인.
+
+agent content test: 3/3 PASS. 선택 gap: v7 Data mode에서 플래그 위치(`createBrowserRouter` 옵션)를 구체 예시로 적지 않음 — 차단 아님.
+
+### 2026-10-08 최초 시험
 
 **수행일**: 2026-10-08
 **수행자**: skill-tester → general-purpose (도메인 전용 에이전트 대신 general-purpose 사용)
@@ -170,7 +193,7 @@ status: APPROVED
 | 내용 정확성 | ✅ (DISPUTED 1건 정정, UNVERIFIED 3건 주의 표기) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-10-08, 3/3 PASS) |
+| 에이전트 활용 테스트 | ✅ (2026-11-09 재시험 3/3 PASS, 최초 2026-10-08 3/3 PASS) |
 | **최종 판정** | **APPROVED** |
 
 ---
@@ -178,8 +201,10 @@ status: APPROVED
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester가 content test 수행하고 섹션 5·6 업데이트 (2026-10-08 완료, 3/3 PASS → APPROVED)
+- [✅] 2026-11-09 재검증 수정(§6 v8 middleware) 후 재시험 3/3 PASS
+- [❌] v7 Data mode에서 middleware 플래그 위치 예시(`createBrowserRouter` 옵션) 구체화 — 선택 보강(차단 아님, SKILL.md 500줄 한도라 references 로 옮길 때 함께)
 - [❌] React Router fs-routes(flatRoutes) 파일명 규칙을 공식 문서(how-to/file-route-conventions)로 확인 후 §2-3에 매핑표 추가 — 선택 보강(차단 요인 아님, SKILL.md에 UNVERIFIED·추정 처리 지시 있음)
-- [❌] React Router v8 라우트 `middleware` 시그니처 확인 후 §6 권한 가드 추출 규칙 구체화 — 선택 보강(차단 요인 아님, 주의 표기 있음)
+- [✅] React Router v8 라우트 `middleware` 시그니처 확인 후 §6 권한 가드 추출 규칙 구체화 — 2026-11-09 재검증에서 해소
 - [❌] zod 3 스키마를 zod 4 `toJSONSchema`에 넘겼을 때 동작 실측(과도기 레포 대응) — 선택 보강(차단 요인 아님)
 - [❌] 실제 규모의 React 레포(수백 화면)에서 스크립트 성능·누락률 측정 — 현재는 가상 fixture로만 실행 검증. 선택 보강(실사용 후 갱신)
 - [❌] content test에서 나온 gap 반영: 인터셉트 행 병합 후처리 안내(§2-1), JS 전용 CRA(allowJs)·0건 의심 항목 확장(§3-2), zod refine/메시지 AST 스크립트(§4-2) — 선택 보강(차단 요인 아님)
@@ -193,3 +218,6 @@ status: APPROVED
 | 2026-10-08 | v1 | 최초 작성 (조사·교차 검증·스크립트 실행 검증) | Claude |
 | 2026-10-08 | v1 | 2단계 실사용 테스트 수행 (Q1 Next.js 화면/API 목록 산출 / Q2 zod toJSONSchema 한계·zod 3 대응 / Q3 CRA API 인벤토리·동적 URL·역추적) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-10-08 | v1.1 | 설치 검수 반영 — spec-extraction 템플릿 단독 설치본에 없는 스킬(`form-handling`·`zod-schema-validation`·`tanstack-query`·`state-management`·`recoil-to-zustand-migration`·`frontend-domain-structure`) 참조에 "(설치된 경우)" 조건 표기(담당 표 머리글·전역 상태 절 2곳). 내용 클레임 변경 없음 | Claude |
+| 2026-11-06 | v1.1 | references 분리 (구조 변경만 — 내용 검증 갱신 아님) — SKILL.md 500줄 초과(551줄) 해소. §7 전역 상태 목록·§8 표 병합법·§9 언제 쓰나·§10 흔한 실수를 `references/REFERENCE.md`(신설, 61줄)로 이동하고 본문엔 절 목록 포인터만 남김. SKILL.md 551→498줄. HEAD 대비 줄 단위 대조로 내용 손실 0 확인. 검증일·status 변경 없음 | Claude |
+| 2026-11-09 | v1.2 | 재검증 — npm 최신 버전 재조회(전부 마이너·패치 상승), Next.js proxy·zod toJSONSchema 클레임 그대로 확인. 바뀐 점: 기준 버전 줄·react-router 버전 주의 갱신, §6 React Router v8 middleware 주의(미검증)를 공식 문서 기반 추출 규칙(`middleware` 배열 프로퍼티·`middleware`/`clientMiddleware` export·v7 플래그 확인)으로 교체. SKILL.md 500줄 이하 유지. 재시험(general-purpose, Q1 Data mode middleware·Q2 v7 플래그·Q3 proxy Server Function) 3/3 PASS → APPROVED 유지 | Claude |
+| 2026-11-12 | v1.3 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 산출 양식 매핑·파이프라인·스택 판별, 실행 검증 스크립트 전부(next-routes·rr-routes·extract-api·trace-callers·rhf-fields·events), 추출 함정(Next.js 화면 판정·인터셉트/병렬·node_modules 필요·동적 URL 추정·toJSONSchema 메시지/refine 누락·RR v8 middleware·권한 층·서버 검증 교차), references §7~9 / 덜어낸 것 React Router route 객체 필드 해설, ts-morph Project 설정·설치 해설, RHF register 옵션 목록 해설, references의 "언제 쓰나" 적합 목록(부적합만 §8로), 삭제된 recoil-to-zustand-migration 참조(→ "대체 스택 결정은 메인 대화에서"), Redux/zustand 정의 패턴의 부가 설명. 원 검증일 2026-11-09 기준 내용 그대로, status·검증일 변경 없음 | 정리 |

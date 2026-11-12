@@ -1,4 +1,4 @@
-## 6. JSON 응답 스키마 + Structured Outputs
+## 6. JSON 응답 스키마
 
 ### 6-1. 스키마
 
@@ -19,15 +19,11 @@
 | `tradition_reading` / `reflection` | 문자열 | 전통 귀속 풀이 / 열린 결말의 성찰 서술 |
 | `disclaimer` | 고정 문구 | 항상 채운다. 모델이 창작하지 않도록 few-shot 전부에 동일 문구를 넣는다 |
 
-### 6-2. Structured Outputs로 스키마 강제
+### 6-2. 스키마 강제
 
-`output_config.format`으로 JSON 스키마를 강제하는 것이 현행 권장 방식이다.
+API 호출·캐싱·structured outputs 는 Claude Code 기본 `claude-api` 스킬 참조. 강제할 JSON Schema 본체(분야 내용):
 
 ```python
-import anthropic
-
-client = anthropic.Anthropic()
-
 FORTUNE_SCHEMA = {
     "type": "object",
     "properties": {
@@ -44,38 +40,10 @@ FORTUNE_SCHEMA = {
     ],
     "additionalProperties": False,
 }
-
-response = client.messages.create(
-    model="claude-sonnet-5",
-    max_tokens=1024,
-    system=[
-        {"type": "text", "text": CORE_PROMPT,
-         "cache_control": {"type": "ephemeral"}},          # 블록 A (공통 코어)
-        {"type": "text", "text": MODE_PROMPTS["saju"],     # 블록 B (모드별 지침 + <examples> few-shot)
-         "cache_control": {"type": "ephemeral"}},
-    ],
-    output_config={"format": {"type": "json_schema", "schema": FORTUNE_SCHEMA}},
-    messages=[{"role": "user", "content": user_payload_json}],
-)
 ```
 
-**스키마 작성 시 공식 제약(위반 시 400):**
-- `additionalProperties`는 객체마다 `false`여야 한다.
-- `minLength`/`maxLength`, `minimum`/`maximum` 같은 길이·수치 제약은 **미지원** →
-  "3–5줄" 같은 분량 제약은 스키마가 아니라 **프롬프트로** 건다.
-- 재귀 스키마, 외부 `$ref`(URL), enum 안의 복합 타입 미지원.
-- `enum`은 문자열·숫자·불리언·null만 가능.
-
-**캐싱과의 상호작용 (중요):**
-- Structured Outputs는 내부 시스템 프롬프트를 추가해 입력 토큰이 약간 늘어난다.
-- **`output_config.format`을 바꾸면 해당 스레드의 프롬프트 캐시가 무효화된다.**
-  → 모드별로 스키마를 다르게 두면 캐시가 파편화되므로, **`mode` enum을 가진
-  단일 공통 스키마**를 쓰는 것이 유리하다.
-- 컴파일된 grammar는 마지막 사용 시점부터 24시간 캐시된다(첫 요청만 약간 느림).
-
-> 주의: **assistant 프리필로 JSON을 강제하던 옛 패턴은 쓰지 않는다.** Claude 4.6
-> 세대부터 마지막 assistant 턴 프리필이 지원 중단되어 **400 에러**가 난다.
-> 프리필 대신 Structured Outputs(또는 도구 호출)로 이관한다.
+- "3–5줄" 같은 분량 제약은 스키마가 아니라 **프롬프트로** 건다.
+- 모드별로 스키마를 다르게 두지 말고 **`mode` enum을 가진 단일 공통 스키마**를 고정해 쓴다(스키마가 갈라지면 캐시도 갈라진다).
 
 ---
 
@@ -132,55 +100,14 @@ response = client.messages.create(
 
 ---
 
-## 8. 프롬프트 캐싱
+## 8. 캐시 친화 구성
 
 운세 앱 시스템 프롬프트(공통 코어 + 모드 블록 + few-shot)는 요청마다 동일 →
-캐싱 적합도가 매우 높다.
+캐싱 적합도가 매우 높다. API 호출·캐싱·structured outputs 는 Claude Code 기본 `claude-api` 스킬 참조. 프롬프트 설계 쪽 규칙만 남긴다:
 
-**최소 캐시 토큰 (공식 문서, 2026-09-10 기준):**
-
-| 모델 | 최소 토큰 |
-|------|----------|
-| Claude Opus 5 (및 Fable 5.1 / Mythos 5.1 / Fable 5 / Mythos 5) | **512** |
-| Claude Opus 5.5 | **512** (2026-09-28 공식 표 등재 확인 — Opus 5와 동일) |
-| Claude Sonnet 5 (및 Opus 4.8 / Sonnet 4.6 / Sonnet 4.5) | **1,024** |
-| Claude Opus 4.7 | **2,048** |
-| Claude Opus 4.6 / 4.5, Claude Haiku 4.5 | **4,096** |
-
-> 임계값은 세대순으로 단조롭지 않다 — Opus 5가 512로 가장 낮고, Haiku 4.5·
-> Opus 4.6이 4,096으로 가장 높다. 임계 미달이면 **에러 없이 조용히 캐시가
-> 무시**되므로 `usage` 필드로 반드시 확인한다.
-
-**비용 배수 (공식):** 5분 캐시 쓰기 1.25x / 1시간 캐시 쓰기 2x / 캐시 읽기 0.1x.
-> 단, **Claude Opus 5.5는 캐시 읽기 0.05x**(표준 0.1x보다 우대, 아래 표) — 2026-09-28 공식 가격표(platform.claude.com/docs/en/about-claude/pricing) 확인.
-
-| 모델 | 기본 input | 5m write | 1h write | cache read |
-|------|-----------|----------|----------|-----------|
-| Claude Sonnet 5 | $2 / MTok | $2.50 | $4 | $0.20 |
-| Claude Opus 5.5 | $4 / MTok | $5 | $8 | $0.20 (0.05x 배수 — 표준 0.1x보다 우대) |
-| Claude Opus 5 (구세대) | $5 / MTok | $6.25 | $10 | $0.50 |
-
-**적중 확인:**
-
-```python
-u = response.usage
-print(u.cache_creation_input_tokens, u.cache_read_input_tokens, u.input_tokens)
-# 총 입력 = cache_read + cache_creation + input_tokens
-```
-
-**운세 앱 캐시 전략:**
-- breakpoint는 요청당 최대 **4개**. 여기서는 2개(공통 코어 / 모드 블록)면 충분하다.
-- 세 모드가 **같은 코어 접두사**를 공유하므로 코어 캐시는 모드와 무관하게 재사용된다.
-- 저트래픽(5분 내 재요청이 보장되지 않음) → `{"type": "ephemeral", "ttl": "1h"}`.
-  쓰기 비용 2x지만 5분마다 재작성하는 것보다 싸다. 고트래픽이면 기본 5분 유지.
-- breakpoint는 **요청마다 바뀌지 않는 내용** 위에만 둔다. "오늘 날짜", "사용자
-  닉네임" 같은 가변 값을 코어에 섞으면 적중률이 0으로 떨어진다.
-- 캐시 읽기는 이전 20개 블록 위치까지 조회(lookback)한다.
-
-한국어 기준 코어(역할+톤+출력) 약 600–1,000 tokens, 모드 블록(지침+few-shot 2–3개)
-약 1,000–1,800 tokens → **Sonnet 5(1,024)는 코어 단독으로는 미달할 수 있으므로
-코어+모드 누적 지점(breakpoint #2)에서 적중을 확인**한다. Haiku 4.5(4,096)는
-누적으로도 미달하기 쉬워 해석 모델로는 Sonnet 5 이상을 권장한다.
+- 세 모드가 **같은 코어 접두사**를 공유하므로 코어는 모드와 무관하게 재사용된다 — 경계는 공통 코어 / 모드 블록 2곳이면 충분하다.
+- 경계는 **요청마다 바뀌지 않는 내용** 위에만 둔다. "오늘 날짜", "사용자 닉네임" 같은 가변 값을 코어에 섞으면 적중률이 0으로 떨어진다.
+- 한국어 기준 코어(역할+톤+출력) 약 600–1,000 tokens, 모드 블록(지침+few-shot 2–3개) 약 1,000–1,800 tokens.
 
 ---
 
@@ -208,7 +135,7 @@ print(u.cache_creation_input_tokens, u.cache_read_input_tokens, u.input_tokens)
 
 ## 10. 출력 후처리
 
-1. **스키마 검증** — Structured Outputs를 써도 클라이언트에서 한 번 더 검증한다
+1. **스키마 검증** — 스키마를 강제해도 클라이언트에서 한 번 더 검증한다
    (필드 존재·enum 값 확인). 실패 시 1회 재시도.
 2. **단정 표현 스캔** — `반드시|틀림없이|할 것입니다|하게 됩니다|징조입니다` 정규식
    매칭 시 로깅(누출률 지표, §11). 심각하면 재생성.
@@ -225,7 +152,7 @@ print(u.cache_creation_input_tokens, u.cache_read_input_tokens, u.input_tokens)
 | 단정 표현 누출률 | §10-2 정규식 매칭 | < 1% |
 | 원국 재현성(사주) | 동일 입력 반복 → `pillars` 동일 | **100%** (깨지면 모델이 계산에 개입 중) |
 | 스키마 유효율 | 클라이언트 검증 통과율 | ≥ 99.5% |
-| 캐시 적중률 | `cache_read_input_tokens / 총 입력` | ≥ 80% |
+| 캐시 적중률 | 캐시 읽기 입력 토큰 / 총 입력 | ≥ 80% |
 
 ---
 
@@ -250,20 +177,11 @@ print(u.cache_creation_input_tokens, u.cache_read_input_tokens, u.input_tokens)
 6. **모드별로 시스템 프롬프트를 통째로 다르게 작성** — 캐시가 3벌로 파편화되고
    톤 규칙이 모드마다 미묘하게 갈라진다. 공통 코어 + 모드 블록 2단으로 쌓는다(§2).
 
-7. **`output_config.format`을 자주 바꿈** — 스키마 변경은 프롬프트 캐시를 무효화한다.
-   `mode` enum을 가진 단일 공통 스키마로 고정한다(§6-2).
+7. **스키마를 자주 바꿈** — `mode` enum을 가진 단일 공통 스키마로 고정한다(§6-2).
 
-8. **assistant 프리필로 JSON 강제** — Claude 4.6 세대 이후 프리필은 **400 에러**다.
-   Structured Outputs 또는 도구 호출로 이관한다.
+8. **불안 조장 후 유료 전환** — "액운이 있으니 부적 결제" 같은 흐름은 재미를
+   공포로 바꾸는 설계이자 Apple 2.3.1(오해를 부르는 마케팅) 리스크다. 유료 상품은
+   *더 깊은 해석*으로 팔고 *공포*로 팔지 않는다.
 
-9. **모델 ID 하드코딩** — 예제·설정에는 현행 별칭 ID(`claude-opus-5-5`,
-   `claude-sonnet-5`, `claude-haiku-4-5`)를 쓴다. `claude-opus-5`·`claude-opus-4-8`·
-   `claude-sonnet-4-6`은 아직 호출되는 legacy지만 신규 코드에는 쓰지 않는다(2026-09-25 기준).
-   Opus 5.5로 올릴 때는 강제 `tool_choice`·thinking disabled가 400이므로 Structured Outputs 경로를 유지한다.
-
-10. **불안 조장 후 유료 전환** — "액운이 있으니 부적 결제" 같은 흐름은 재미를
-    공포로 바꾸는 설계이자 Apple 2.3.1(오해를 부르는 마케팅) 리스크다. 유료 상품은
-    *더 깊은 해석*으로 팔고 *공포*로 팔지 않는다.
-
-11. **AI 고지 누락** — Anthropic Usage Policy는 외부 노출 AI 에이전트가 사람이 아닌
-    AI임을 이용자에게 분명히 알리도록 요구한다. 온보딩·결과 화면에 고지를 둔다.
+9. **AI 고지 누락** — Anthropic Usage Policy는 외부 노출 AI 에이전트가 사람이 아닌
+   AI임을 이용자에게 분명히 알리도록 요구한다. 온보딩·결과 화면에 고지를 둔다.

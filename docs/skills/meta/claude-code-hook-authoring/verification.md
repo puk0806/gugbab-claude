@@ -2,7 +2,7 @@
 skill: claude-code-hook-authoring
 category: meta
 version: v2
-date: 2026-09-28
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -14,10 +14,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `claude-code-hook-authoring` |
 | 스킬 경로 | `.claude/skills/claude-code-hook-authoring/SKILL.md` |
-| 검증일 | 2026-09-28 (재검증, 이전 2026-08-11) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-28) |
 | 검증자 | skill-creator / 재검증(2차) |
 | 스킬 버전 | v2 |
-| 기준 버전 | Claude Code 2.1.x (공식 hooks 레퍼런스 + changelog 2.1.283 시점, 2026-09-28) |
+| 기준 버전 | Claude Code 2.1.x (공식 hooks 레퍼런스 + changelog 2.1.319 시점, 2026-11-09) |
 
 ---
 
@@ -56,6 +56,7 @@ status: APPROVED
 | Claude Code Hooks reference | https://code.claude.com/docs/en/hooks | ⭐⭐⭐ High | 2026-08-11 | 1순위 공식 문서 — 이벤트·스키마·exit code·matcher·타임아웃 |
 | Automate actions with hooks (guide) | https://code.claude.com/docs/en/hooks-guide | ⭐⭐⭐ High | 2026-08-11 | 1순위 공식 문서 — 배선 예시·디버깅·보안 |
 | Claude Code changelog | https://code.claude.com/docs/en/changelog | ⭐⭐⭐ High | 2026-09-28 | 1순위 공식 — 2.1.133(effort·`$CLAUDE_EFFORT`), 2.1.214(exit 2 + 스키마 실패 JSON 차단), 2.1.248(깨진 JSON = 훅 에러), 2.1.251(Pre/PostModelSwitch) 버전 근거 |
+| Claude Code CHANGELOG.md (공식 GitHub, 2026-11-09 재대조) | https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md | ⭐⭐⭐ High | 2026-11-09 | 2.1.295(`onFailure: "block"` command·http), 2.1.314(Monitor 셸 명령에 Bash 훅 적용·`if: Monitor(...)`), 최신 2.1.319 |
 | anthropics/claude-code 이슈 #19009 | https://github.com/anthropics/claude-code/issues/19009 | ⭐⭐⭐ High | 2026-08-11 | 2순위 공식 GitHub — PostToolUse exit 2가 실제로 되돌리지 않음(not planned 종료) |
 | anthropics/claude-code bash_command_validator 예제 | https://github.com/anthropics/claude-code/blob/main/examples/hooks/bash_command_validator_example.py | ⭐⭐⭐ High | 2026-08-11 | 공식 레퍼런스 구현(가이드에서 링크) |
 | Claude Code Hooks Complete Reference 2026 | https://thepromptshelf.dev/blog/claude-code-hooks-complete-reference-2026/ | ⭐⭐ Medium | 2026-08-11 | 교차 검증용 — exit code 의미, `hookSpecificOutput`, 600초 기본값 |
@@ -77,6 +78,11 @@ status: APPROVED
 | 5 | command/http/mcp_tool 훅 기본 타임아웃 600초, prompt 30초, agent 60초이며 UserPromptSubmit은 30초로 하향 | 공식 reference 타임아웃 표 + 커뮤니티 레퍼런스("Default timeout is 600 seconds") | **VERIFIED** |
 | 6 | settings.json 배선은 `이벤트 → matcher 그룹 → hooks 배열` 3중 중첩이며 경로는 `$CLAUDE_PROJECT_DIR` 절대경로 권장, 매칭 훅은 병렬 실행 | 공식 reference + hooks-guide 예시 + 이 레포 `.claude/settings.json` 실제 배선 | **VERIFIED** |
 | 7 | `UserPromptSubmit`·`UserPromptExpansion`·`SessionStart`는 exit 0 stdout이 Claude 컨텍스트로 주입됨 | 공식 reference exit 0 설명 + hooks-guide "anything you write to stdout is added to Claude's context" | **VERIFIED** |
+
+| 8 | (2026-11-09) `onFailure: "block"` — command·http 훅, v2.1.295+, 시작 실패·타임아웃·0/2 외 exit·잘못된 JSON이면 차단(PermissionRequest는 거부), Stop 계열·async 훅엔 효과 없음 | 공식 hooks reference "Block the action when a hook fails" + CHANGELOG 2.1.295 | **VERIFIED → ADD** (SKILL §3-2·§5·§8-3·§9 반영) |
+| 9 | (2026-11-09) Monitor 도구 셸 명령에도 Bash matcher 훅 실행(차단·ask만, allow·재작성 불가), `if: Monitor(tail *)` 매칭 | CHANGELOG 2.1.314 2건 | **VERIFIED → ADD** (SKILL §4) — 공식 hooks reference 본문 대조는 못 함 |
+| 10 | (2026-11-09) 기본 타임아웃 600/30/60 유지, UserPromptSubmit·PreModelSwitch·PostModelSwitch 30초, MessageDisplay 10초, SessionEnd 1.5초 공유 예산 | 공식 hooks reference 타임아웃 절 | **VERIFIED** (PostModelSwitch 30초 표기 보강) |
+| 11 | (2026-11-09) 이벤트 목록 33종, PermissionRequest exit 2 무시, 기타 exit + 스키마 통과 JSON은 JSON이 결정, `additionalContext` 10,000자 | 공식 hooks reference | **VERIFIED** (변경 없음) |
 
 > DISPUTED / UNVERIFIED 항목 없음. 이벤트 목록은 버전에 따라 증가하므로 SKILL.md에 "새 이벤트는 `/hooks`로 현재 CLI 인식 여부 확인" 주의 문구를 명시했다.
 
@@ -102,11 +108,50 @@ status: APPROVED
 ### 4-4. Claude Code 에이전트 활용 테스트
 - [✅] 스킬 내용 기반 실전 질문 수행 (섹션 5 기록, 최초 2026-08-11 + 재검증 정정분 타깃 skill-tester 재테스트 2026-09-28)
 - [✅] 답변이 SKILL.md 근거 섹션으로 도출되는지 확인 (2026-09-28 재테스트 2/2 PASS)
+- [✅] 2026-11-09 재검증 변경분(`onFailure: "block"`·Monitor 훅·PostModelSwitch 타임아웃) 대상 skill-tester 재시험 3/3 PASS (2026-11-09, 섹션 5 최상단)
 - [✅] 실제 훅 신규 작성·배선까지의 실사용 검증 (2026-09-28 — 스킬만 보고 신규 훅 작성·임시 프로젝트 배선·headless 세션 9회로 정정 규약 재현, 섹션 5 최상단)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-11-09] skill-tester 재시험 (재검증 v2.1 변경분 타깃)
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester → general-purpose (도메인 전용 에이전트 대신 general-purpose 사용, 3개 질문 각각 독립 호출)
+**수행 방법**: 2026-11-09 재검증에서 추가·수정된 `onFailure: "block"`·Monitor 훅 적용·PostModelSwitch 타임아웃을 겨냥한 실전 질문 3개를 SKILL.md만 근거로 답변하게 하고, 근거 섹션·행 번호를 SKILL.md와 대조
+
+### 실제 수행 테스트
+
+**Q1. 경로 오타·크래시로 정책 훅이 조용히 통과하는 문제를 fail-closed로 만들려면? (JSON allow + exit 1, 예외 시 exit 0 안전장치와의 충돌 포함)**
+- ✅ PASS
+- 근거: SKILL.md "5. settings.json 배선"(fail-closed `onFailure` 항목·경로 오타 bullet), "3-2 exit code 규약", "7-1 스켈레톤", "8-3 흔한 실수", "9 체크리스트"
+- 상세: `"onFailure": "block"`, v2.1.295+, command·http 한정, Stop 계열·async 훅 무효, 차단 조건(시작 실패·타임아웃·0/2 외 exit·JSON 실패, JSON이 allow여도 차단), plain text stdout은 실패 아님, "예외 시 exit 0" 안전장치와 병용하면 fail-closed가 무력화되므로 catch에서 exit 2로 끝내야 한다는 점을 모두 정확히 도출. anti-pattern(exit 1만으로 차단된다는 오해) 회피.
+
+**Q2. matcher "Bash" 차단 훅이 Monitor 도구의 셸 명령에도 적용되는가? 할 수 있는 것과 스크립트·`if` 수정 방법**
+- ✅ PASS
+- 근거: SKILL.md "4. matcher 문법" 마지막 bullet(Monitor 항목), "5 `if` 필드", "3-2", "7-1"
+- 상세: v2.1.314+ 에서 적용, 차단·ask만 가능하며 allow·`updatedInput` 재작성 불가, `if: "Monitor(tail *)"`가 `Bash(tail *)`처럼 매칭, 스크립트는 `tool_name`이 `Monitor`일 때도 검사하도록 수정, `if` 파싱 실패는 fail-open이라 하드 차단은 스크립트 내부 검사에 의존해야 함을 정확히 도출.
+
+**Q3. PostModelSwitch 컨텍스트 주입 훅의 타임아웃·stdout·exit 2 처리**
+- ✅ PASS
+- 근거: SKILL.md "5. 타임아웃" 표, "3-2" exit 0 예외 이벤트 목록, "3-3 이벤트별 표", "2. 이벤트 카탈로그"
+- 상세: 기본 30초(일반 command 600초와 대비), exit 0 plain-text stdout 및 `additionalContext`가 다음 요청에 주입, exit 2는 차단 아님이고 stderr는 `hook error`로 트랜스크립트에만 표시되며 Claude는 보지 못함, 전환 차단은 PreModelSwitch 몫임을 정확히 도출.
+
+### 발견된 gap (모두 선택 보강, 차단 요인 아님)
+
+- Monitor 호출의 `tool_input` 명령 필드명과, Monitor 경로에서 allow·`updatedInput`을 내놨을 때의 동작이 SKILL.md에 없음. §7·§8-3에 Monitor 항목이 없어 §4 한 bullet에만 의존.
+- `onFailure`가 `mcp_tool`·`prompt`·`agent` 핸들러에 적용되는지는 "command·http만"이라는 문장에서 추론해야 함. fail-closed 훅 전용 스켈레톤(catch에서 exit 2)·테스트 예시 없음.
+- PostModelSwitch의 stdin 입력 스키마(전·후 모델 필드명)·타임아웃 초과 시 동작·`hookEventName: "PostModelSwitch"` JSON 예시 없음.
+- §4 Monitor 항목(v2.1.314)은 공식 hooks reference 본문 대조가 안 된 채 changelog 근거만 있음(섹션 4 클레임 9 참조).
+
+### 판정
+
+- agent content test: 3/3 PASS
+- verification-policy 분류: 실사용 필수 스킬(훅 작성·배선) — 2026-09-28 실행 검증으로 이미 충족, 이번 변경분은 content test로 확인
+- 최종 상태: APPROVED 유지
+
+---
 
 ### [2026-09-28] 실사용(실행) 검증
 
@@ -277,6 +322,7 @@ matcher를 "Edit|Write|multiEdit"로 써도 되나? 타임아웃 기본값은 �
 | 실용성 | ✅ |
 | 에이전트 활용 테스트 | ✅ 스킬 작성 시 3/3 PASS (2026-08-11) + **skill-tester 재검증 content test 2/2 PASS (2026-09-28, 정정분 타깃)** |
 | 실사용(실행 결과) 검증 | ✅ 훅 테스트 16스위트 391건 전부 통과 + 차단 동작 라이브 확인 (2026-08-12) + **신규 훅 작성·배선 후 headless 세션 9회로 정정 규약 6케이스 재현, 전부 일치 (2026-09-28, Claude Code 2.1.283)** |
+| 재검증(2026-11-09) 재시험 | ✅ skill-tester content test 3/3 PASS (`onFailure: "block"`·Monitor 훅 적용·PostModelSwitch 타임아웃 타깃), status APPROVED 유지 |
 | 재검증(2차, 2026-09-28) | 정정·보강 반영, 실전 질문 3/3 PASS(내용 재검증) + skill-tester content test 2/2 PASS(2026-09-28) 완료 |
 | **최종 판정** | **APPROVED** (2026-09-28 실사용 실행 검증 완료 — 스킬만 보고 신규 훅 작성·배선, PermissionRequest decision deny·exit 2 + JSON reason 우선·exit 1 + JSON 결정·경로 오타 비차단·PermissionRequest exit 2 무시 재현. SKILL.md 누락 형태 1건 최소 보강) |
 
@@ -294,6 +340,8 @@ matcher를 "Edit|Write|multiEdit"로 써도 되나? 타임아웃 기본값은 �
 - [❌] `type: "prompt"` / `type: "agent"` 핸들러의 실제 사용 예시 보강 (현재는 존재·기본 타임아웃만 기술)
 - [❌] `http` 핸들러 배선·응답 포맷 예시 미포함 (이 레포는 command 훅만 사용 중)
 - [❌] 이벤트 목록은 CLI 버전에 따라 증가 — 60일 경과 시 `code.claude.com/docs/en/hooks` lifecycle 표와 재대조 필요 (2026-09-28 재대조 완료 — Pre/PostModelSwitch 반영)
+- [✅] 2026-11-09 재검증 변경분 skill-tester content test 수행 (2026-11-09 완료, 3/3 PASS) — APPROVED 유지
+- [❌] (선택 보강, 차단 요인 아님) Monitor 호출의 `tool_input` 필드명·allow/`updatedInput` 거부 시 동작, §7·§8-3의 Monitor 항목, fail-closed 훅 전용 스켈레톤(catch에서 exit 2), PostModelSwitch stdin 스키마·타임아웃 초과 동작 — 다음 갱신 때 보강 고려
 - [✅] 2026-09-28 정정분 skill-tester content test 수행 (2026-09-28 완료, 2/2 PASS) — 실사용 필수 카테고리라 status는 PENDING_TEST 유지(APPROVED 전환 아님). 잔여 차단 요인은 위 "신규 훅 처음부터 작성" 항목 하나뿐
 
 ---
@@ -308,3 +356,5 @@ matcher를 "Edit|Write|multiEdit"로 써도 되나? 타임아웃 기본값은 �
 | 2026-09-28 | v2 | 2단계 실사용 테스트 수행(재검증 정정분 타깃) — Q1 PermissionRequest exit 2 무시 규약 / Q2 PreToolUse exit 2+JSON allow 우선순위 및 메시지 출처 → 2/2 PASS, PENDING_TEST 유지(실사용 필수 카테고리 — 신규 훅 작성 실행 검증은 별도 필요) | skill-tester |
 | 2026-09-28 | v2 | 실사용(실행) 검증 — 스킬만 보고 신규 훅 작성·임시 git 프로젝트 배선 후 `claude -p` headless 9회(2.1.283). PreToolUse exit 2+stderr / exit 2+JSON reason 우선 / exit 1+JSON deny 결정 / 경로 오타 비차단(127·node exit 1) / PermissionRequest decision deny / PermissionRequest exit 2 무시 전부 일치. SKILL.md 최소 보강(§5·§8-3 `node <경로>` 오타 시 exit 1 형태, §10 headless 재현·PermissionRequest 발화 조건). PENDING_TEST → **APPROVED** | 실사용 검증 |
 | 2026-09-30 | v2 | tdd-guard 예시(§5 배선·§7-3)에 "dev 템플릿 전용 훅, 설치된 경우에만 존재" 표기 추가 (내용 변경 없음), status 유지 | Claude (Sonnet 5.5) |
+| 2026-11-09 | v2.1 | 재검증 — 공식 hooks reference·CHANGELOG(2.1.319) 재대조. 추가: `onFailure: "block"`(v2.1.295, fail-closed — §3-2 예외·§5 배선·§8-3·§9), Monitor 셸 명령에 Bash 훅 적용(v2.1.314, §4), PostModelSwitch 30초 타임아웃. 기존 exit code·타임아웃·이벤트 목록 규약은 변경 없음 확인. skill-tester 재시험 | 메인 세션 (재검증) |
+| 2026-11-09 | v2.1 | 재검증 변경분 재시험 수행 (Q1 `onFailure: "block"` fail-closed·exit 0 안전장치 충돌 / Q2 Monitor 셸 명령 Bash 훅 적용·`if` 매칭 / Q3 PostModelSwitch 30초 타임아웃·stdout 주입) → 3/3 PASS, APPROVED 유지. 선택 보강 gap 4건은 섹션 7 기록 | skill-tester |

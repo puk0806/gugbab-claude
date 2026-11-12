@@ -41,7 +41,7 @@ function detectStack(root) {
   }
   if (safeRead(path.join(root, 'Cargo.toml')) !== null) add('rust', 'Cargo.toml');
   if (safeRead(path.join(root, 'pyproject.toml')) !== null || safeRead(path.join(root, 'requirements.txt')) !== null) add('python', 'pyproject.toml·requirements.txt');
-  if (safeRead(path.join(root, 'ProjectSettings', 'ProjectVersion.txt')) !== null) add('unity', 'Unity ProjectSettings');
+  // Unity 프리셋은 2026-11-11 게임 묶음과 함께 삭제 — Unity 프로젝트는 추천하지 않는다
   return { suggest, reasons };
 }
 

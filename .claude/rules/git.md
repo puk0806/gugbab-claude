@@ -68,17 +68,17 @@ footer (선택)
 ## 예시
 
 ```
-[agent] Add: agent-creator subagent for generating agent MD files
+[agent] Add: spec-reviewer subagent for legacy spec review
 
-새로운 서브에이전트를 대화형으로 설계하고 .claude/agents/에 저장.
-모델/도구/절차/출력형식을 자동으로 구성함.
+추출된 스펙 문서의 근거 누락·CRUD 완전성을 검토.
+문서는 고치지 않고 판정과 지적만 출력함.
 ```
 
 ```
 # 여러 관심사가 섞인 경우 — 아래처럼 분리
 
-[skill] Add: Rust 백엔드 스킬 15종 추가
-[agent] Add: rust-backend-developer, rust-backend-architect
-[config] Improve: skill-creator 검증 프로세스 강화
-[docs] Add: 백엔드 스킬 verification.md 15종 및 README 업데이트
+[skill] Add: 넥사크로 스킬 4종 추가
+[agent] Add: nexacro-screen-analyzer, nexacro-screen-converter
+[config] Improve: verification-guard 검증 프로세스 강화
+[docs] Add: 넥사크로 스킬 verification.md 4종 및 README 업데이트
 ```

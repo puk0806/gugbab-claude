@@ -16,8 +16,8 @@ description: 넥사크로 17 화면을 Next.js(App Router·React 19)로 규칙 �
 > 소스: https://react-hook-form.com/docs/usefieldarray · https://react-hook-form.com/docs/useform/formstate
 > 소스: https://poi.apache.org/components/spreadsheet/how-to.html · https://poi.apache.org/changes.html
 > 소스: https://docs.sheetjs.com/docs/getting-started/installation/frameworks
-> 검증일: 2026-10-08
-> 버전 기준: 넥사크로 17 · Next.js 16.x App Router · React 19 · TanStack Query v5 · react-hook-form 7.x · **AG Grid 문서 기준 36.2.0** · Apache POI 5.5.1 · SheetJS 0.20.3
+> 검증일: 2026-11-09
+> 버전 기준: 넥사크로 17 · Next.js 16.x App Router · React 19 · TanStack Query v5 · react-hook-form 7.x · **AG Grid 문서 기준 36.2.0**(최신 36.3.0, 2026-11-04 — 이 스킬이 쓰는 기능의 36.3 변경 여부는 미검증) · Apache POI 5.5.1(JDK 8/11) / 6.0.0(JDK 17+) · SheetJS 0.20.3
 
 이 스킬은 **"무엇을 무엇으로 바꾸는가"의 판단 규칙**만 고정한다. 각 라이브러리 사용법은 아래 스킬이 정본이다(설치된 경우).
 
@@ -26,10 +26,7 @@ description: 넥사크로 17 화면을 Next.js(App Router·React 19)로 규칙 �
 | AG Grid 모듈 등록·라이선스 경계·getRowId·테마 | `ag-grid` |
 | App Router·Server/Client 경계·캐싱 | `nextjs` |
 | queryKey 설계·staleTime·invalidate 범위·SSR | `tanstack-query` |
-| RHF + Zod 폼 기본 | `form-handling` |
-| 서버 측 요청 검증·악성 입력 방어 | `form-handling`(폼·Zod 기본) · `zod-schema-validation`(서버 검증 상세 — 설치된 경우) |
-| 서버 상태 vs 클라이언트 상태 분류 | `state-management` |
-
+| 서버 측 요청 검증·악성 입력 방어 | `zod-schema-validation`(서버 검증 상세 — 설치된 경우) |
 ---
 
 ## 0. 전제 — 자동 변환은 없다
@@ -174,7 +171,7 @@ export function diffRows<T>(
 |---|---|
 | 서비스 ID (`strSvcID`) | 훅 이름 + 엔드포인트 (`useSaveItems` → `POST /api/items/changes`). mutationKey로도 사용 가능 |
 | URL | API 클라이언트의 경로 상수 |
-| 입력 Dataset (`"서버명=화면Dataset"`) | **요청 DTO 타입** (Zod 스키마로 정의 → 서버와 공유, `form-handling` · `zod-schema-validation`(설치된 경우) 참조) |
+| 입력 Dataset (`"서버명=화면Dataset"`) | **요청 DTO 타입** (Zod 스키마로 정의 → 서버와 공유, `zod-schema-validation`(설치된 경우) 참조) |
 | 출력 Dataset (`"화면Dataset=서버명"`) | **응답 DTO 타입**. 응답을 화면 상태에 직접 대입하지 말고 쿼리 캐시로 받음 |
 | 인자 문자열 (`strArgument`) | query string / body 필드로 명시적 타입화 |
 | 콜백 (`svcID, errorCode, errorMsg`) | `onSuccess` / `onError` (+ 공통 에러 처리는 QueryClient 기본 옵션이나 공통 훅) |
@@ -337,7 +334,9 @@ try (SXSSFWorkbook wb = new SXSSFWorkbook(100)) { // 메모리에 유지할 행 
 - SXSSF는 **슬라이딩 윈도우**(기본 100행) 밖 행을 임시 파일로 내린다.
 - **병합 영역·하이퍼링크·코멘트는 여전히 메모리에만 저장**된다(공식 how-to). 넥사크로 suppress/헤더 병합을 엑셀에 그대로 재현하려고 행마다 병합을 걸면 대용량에서 메모리가 터진다 → 병합은 헤더 등 최소로.
 
-> 주의(DISPUTED 수정): "SXSSF는 `dispose()` 필수"는 **POI 5.3.0 미만에만 해당**한다. POI 변경 이력(5.3.0, 2024-07-02): "SXSSFWorkbook now removes temp files when closed - removing need for a separate dispose call". 5.3.0 이상은 try-with-resources(`close()`)로 충분하고, **5.3.0 미만(레거시 서버)에서는 `finally`에서 `dispose()`를 반드시 호출**한다. 현재 최신 안정판은 5.5.1.
+> 주의(DISPUTED 수정): "SXSSF는 `dispose()` 필수"는 **POI 5.3.0 미만에만 해당**한다. POI 변경 이력(5.3.0, 2024-07-02): "SXSSFWorkbook now removes temp files when closed - removing need for a separate dispose call". 5.3.0 이상은 try-with-resources(`close()`)로 충분하고, **5.3.0 미만(레거시 서버)에서는 `finally`에서 `dispose()`를 반드시 호출**한다.
+
+> 주의(2026-11-09 재검증): POI 최신은 **6.0.0(2026-10-22)이며 JDK 17 이상이 필요**하다(5.x는 JDK 8 지원). 6.0.0은 deprecated 메서드 제거·`getCachedResultType` 반환 타입 enum 변경·`DataFormatter`가 수식 셀에 캐시값 사용 등 깨지는 변경이 있다. **JDK 8/11 레거시 서버는 5.5.1(5.x 마지막)을 쓴다.** 6.0.0으로 올릴 때는 변경 이력을 보고 코드를 함께 고친다.
 
 ### 6-2. 클라이언트 — SheetJS
 
@@ -365,7 +364,7 @@ npm i --save https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz
 | 공통 코드 조회 (콤보 Dataset 채우기) | `useCommonCode(groupCode)` = `useQuery` + 긴 `staleTime` + `<CodeSelect groupCode=… />` |
 | transaction 공통 래퍼 (세션 만료·에러 코드 처리) | API 클라이언트 인터셉터 + QueryClient 기본 `onError` |
 | 날짜·숫자 포맷 | 순수 함수 모듈(테스트 필수) |
-| 필수값 검증 | Zod 스키마 + RHF resolver (`form-handling`) |
+| 필수값 검증 | Zod 스키마 + RHF resolver |
 
 ---
 
@@ -398,7 +397,7 @@ npm i --save https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz
 
 | 실수 | 왜 문제인가 | 바로잡기 |
 |---|---|---|
-| Dataset 하나를 전역 스토어 하나로 옮김 | 서버 상태 캐시·무효화를 직접 재구현하게 됨 | 조회 = Query, 편집 = 폼/그리드 로컬 (`state-management`) |
+| Dataset 하나를 전역 스토어 하나로 옮김 | 서버 상태 캐시·무효화를 직접 재구현하게 됨 | 조회 = Query, 편집 = 폼/그리드 로컬 |
 | 행에 `_rowType` 플래그를 들고 다님 | 추가→삭제, 수정→원복에서 상태가 틀어짐 | 저장 시 diff 계산(§2-4) |
 | `key={index}` 또는 PK를 `id` 필드로 둔 채 `useFieldArray` | 재정렬·삭제 시 입력값 꼬임 / PK 덮어쓰기 | `key={field.id}`, PK는 `rowKey` |
 | 그리드에 쿼리 캐시 배열을 그대로 전달 후 편집 | 캐시 원본이 바뀌어 diff가 항상 "변경 없음" | `readOnlyEdit` + 로컬 사본 |

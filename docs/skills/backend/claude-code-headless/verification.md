@@ -2,7 +2,7 @@
 skill: claude-code-headless
 category: backend
 version: v2
-date: 2026-09-28
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `claude-code-headless` |
 | 스킬 경로 | `.claude/skills/claude-code-headless/SKILL.md` |
-| 검증일 | 2026-09-28 (2026-09-26 정기 재검증, 2026-09-28 "흔한 실수" 표 정정·재테스트, 최초 2026-07-03) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-28 · 2026-09-26 정기 재검증, 최초 2026-07-03) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 
@@ -57,6 +57,12 @@ status: APPROVED
 | Use the Agent SDK with your Claude plan | https://support.claude.com/en/articles/15036540 | ⭐⭐⭐ High | 2026-07-03 | 공식 지원 문서, 크레딧 정책 pause |
 | Anthropic pauses Agent SDK subscription change | https://thenewstack.io/anthropic-pauses-claude-agent-sdk-subscription-change/ | ⭐⭐ Medium | 2026-06 | 정책 pause 교차 검증 |
 | Zed blog — Anthropic subscription changes | https://zed.dev/blog/anthropic-subscription-changes | ⭐⭐ Medium | 2026-06 | 정책 pause 교차 검증 |
+| headless (재조회) | https://code.claude.com/docs/en/headless | ⭐⭐⭐ High | 2026-11-09 | `-p` 기본 Manual(v2.1.302+), 비-bare `-p` 프로젝트 훅·.mcp.json 실행, `--permission-prompts none`, `--permission-mode` 예시 |
+| cli-reference (재조회) | https://code.claude.com/docs/en/cli-reference | ⭐⭐⭐ High | 2026-11-09 | `--tools`는 MCP 도구 미적용·`--disallowedTools "mcp__*"`, `--permission-mode` 값, `--max-budget-usd` |
+| authentication (재조회) | https://code.claude.com/docs/en/authentication | ⭐⭐⭐ High | 2026-11-09 | Ultra 플랜, 우선순위 7단계·profile 3소스 |
+| Use the Agent SDK with your Claude plan (재조회) | https://support.claude.com/en/articles/15036540 | ⭐⭐⭐ High | 2026-11-09 | 2026-10-07 업데이트: Max·Ultra·Team 월 API 크레딧, 구독 로그인 `-p`는 구독 한도 |
+| API credits for Max and Team plans | https://platform.claude.com/docs/en/about-claude/api-credits-for-subscribers | ⭐⭐⭐ High | 2026-11-09 | 크레딧 금액·소멸·적용 범위 교차 |
+| Monthly API credits for Max and Team plans | https://support.claude.com/en/articles/17154008 | ⭐⭐⭐ High | 2026-11-09 | GitHub Action·IDE·데스크톱 `-p` 제외, 6월 Agent SDK 크레딧 미제공 |
 
 ---
 
@@ -86,6 +92,7 @@ status: APPROVED
 - [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-07-03)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (발견 없음)
 - [✅] skill-tester → general-purpose 모순 정정 재테스트 수행 (2026-09-28, "흔한 실수" 표 `--resume` 행 모순 해소 겨냥 2/2 PASS)
+- [✅] 2026-11-09 재검증 신규 내용(MCP 차단·권한 모드·비-bare 훅 실행·월 API 크레딧) 재시험 수행 (2026-11-09, 3/3 PASS)
 
 ### 4-5. 교차 검증한 클레임 판정
 
@@ -110,11 +117,58 @@ status: APPROVED
 | 17 | 제3자 제품에 claude.ai 로그인/레이트리밋 제공 불가(사전 승인 없이) → API 키 사용 | VERIFIED | agent-sdk overview Note |
 | 18 | 2026-06-15 크레딧 풀 분리 정책 pause, 현재 구독 한도 차감 유지 | VERIFIED | support 15036540 + thenewstack + zed.dev |
 
-- VERIFIED: 18 / DISPUTED: 0 / UNVERIFIED: 0
+| 19 | (2026-11-09) setup-token·구독 OAuth 대상 플랜에 Ultra 포함 | DISPUTED(누락) → 수정 | authentication |
+| 20 | (2026-11-09) `--tools ""`는 내장 도구만, MCP 도구는 `--disallowedTools "mcp__*"` 필요 | DISPUTED(기존 "전체 비활성" 서술 불충분) → 수정 | cli-reference `--tools`·`--disallowedTools` 행 |
+| 21 | (2026-11-09) `--permission-mode` 값·`--permission-prompts none`(v2.1.259+)·`--max-budget-usd`(print 전용) | VERIFIED → 추가 | cli-reference + headless |
+| 22 | (2026-11-09) v2.1.302+ `-p`는 권한 모드 미지정 시 Manual 시작, 승인 필요 호출 거부 | VERIFIED → 추가 | headless "Auto-approve tools" |
+| 23 | (2026-11-09) 비-bare `-p`는 미신뢰 폴더에서도 프로젝트 훅·.mcp.json 실행 | VERIFIED → 추가 | headless "Start faster with bare mode" |
+| 24 | (2026-11-09) profile/federation 3소스 순서 | VERIFIED → 보강 | authentication |
+| 25 | (2026-11-09) 2026-10-07 월 API 크레딧(Max·Ultra·Team), API 키 실행에만 적용, 구독 로그인 `-p`는 구독 한도 | VERIFIED → 추가 (Ultra 금액은 UNVERIFIED 표기) | support 15036540 + platform api-credits + support 17154008 |
+| 26 | (2026-11-09) `--resume` 세션 ID로 모든 프로젝트 조회 | VERIFIED (유지) | headless "Continue conversations" |
+
+- VERIFIED: 18 / DISPUTED: 0 / UNVERIFIED: 0 (2026-07-03 기준) · 2026-11-09 추가 8건: VERIFIED 6 / DISPUTED→수정 2
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### 2026-11-09 재검증 내용 재시험 (v3 신규 내용 겨냥)
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester → general-purpose (도메인 전용 에이전트 미설치로 대체)
+**수행 방법**: SKILL.md Read 후 2026-11-09 재검증으로 바뀐 내용 위주 실전 질문 3개 답변, 근거 섹션 및 anti-pattern 회피 확인
+
+### 실제 수행 테스트 (2026-11-09)
+
+**Q1. 채팅 전용 중계에서 `--tools ""`만으로 파일 수정·외부 도구가 완전 차단되나? (.mcp.json 존재 가정)**
+- ✅ PASS
+- 근거: SKILL.md "1. 플래그 표(`--tools`)", "5. bare 모드 제약" 2026-11 주의, "8. 안전 가드" 코드·체크리스트, "흔한 실수" 표
+- 상세: "`--tools ""`는 내장 도구만 끄며 MCP 도구는 그대로"라고 정확히 답하고 `--disallowedTools "mcp__*"` 병용 및 빈 전용 폴더 실행을 섹션 8 명령 그대로 제시. anti-pattern(`--tools ""`만으로 충분) 회피.
+
+**Q2. v2.1.305 CLI에서 `claude -p`가 Edit/Bash를 전부 거부 — 원인, 무인·잠금 실행, 비용 상한**
+- ✅ PASS
+- 근거: SKILL.md "1. Headless 모드" 플래그 표 및 "주의(2026-11 갱신)"(v2.1.302+ Manual 기본), "8. 안전 가드"
+- 상세: 원인(권한 모드 미지정 시 Manual → 승인 필요 호출 거부)과 `--permission-mode dontAsk`, `--permission-prompts none`(v2.1.259+), `--max-budget-usd`(클라이언트 추정치, 초과 가능)를 정확히 인용. 도구를 허용하며 잠그려면 `--allowedTools` 병용이 필요하다는 추론도 올바름.
+
+**Q3. 구독 OAuth 중계 서버에서 사용자 지정 저장소를 cwd로 써도 되나? Max/Ultra 월 API 크레딧이 적용되나?**
+- ✅ PASS
+- 근거: SKILL.md "5. bare 모드 제약" 2026-11 주의, "7. 구독 프로그래매틱 사용 정책" 월 API 크레딧 항목, "흔한 실수" 표
+- 상세: 비-bare `-p`가 신뢰 확인 없이 프로젝트 훅·`.mcp.json`을 실행하므로 빈 전용 폴더 필요(bare는 OAuth 토큰 미독이라 대안 불가)라고 정확히 답함. 월 크레딧은 Console API 키 실행에만 적용, 구독 로그인 `-p`는 구독 한도 차감, Ultra 크레딧 금액은 SKILL.md가 미검증 표기한 점까지 정확히 반영.
+
+### 발견된 gap (선택 보강, 차단 요인 아님)
+
+- Edit/Bash를 허용하면서 잠그는 CI용 예시(`--allowedTools` + `dontAsk`)와 `--allowedTools` permission rule 문법 예시 없음 (섹션 8 예시는 채팅 전용)
+- `bypassPermissions` 위험성 설명 없음, v2.1.302 이전 `-p` 기본 동작 미명시
+- 섹션 7의 "크레딧 풀 분리 정책 paused"와 "월 API 크레딧(2026-10-07)"이 별개 개념임을 잇는 연결 설명이 약함
+- 사용자 수준(`~/.claude`) 훅·MCP는 빈 폴더 격리로 막히지 않는다는 언급 없음
+
+### 판정
+
+- agent content test: 3/3 PASS
+- verification-policy 분류: CLI 사용법/패턴 스킬 → 실사용 필수 카테고리 해당 없음
+- 최종 상태: APPROVED 유지
+
+---
 
 ### 모순 정정 재테스트 (2026-09-28, 두 번째 라운드)
 
@@ -265,7 +319,8 @@ status: APPROVED
 | 구조 완전성 | ✅ (frontmatter·소스·검증일·8섹션·예시·흔한 실수 포함) |
 | 실용성 | ✅ (중계 서버 관점 실행·파싱·안전 가드 예시) |
 | 에이전트 활용 테스트 | ✅ (3/3 PASS — 2026-07-03 / 2026-09-26 재검증 2/2 PASS / 2026-09-28 첫 라운드 1/2 PASS+1/2 PARTIAL → 모순 정정 후 2026-09-28 두 번째 라운드 2/2 PASS) |
-| **최종 판정** | **APPROVED** (2026-09-28 — "흔한 실수" 표 `--resume` 행을 "v2.1.223 미만" 조건부로 정정 후 재테스트 2/2 PASS, 모순 해소 확인 → NEEDS_REVISION에서 재전환) |
+| 에이전트 활용 테스트 (2026-11-09 재시험) | ✅ (3/3 PASS — 재검증 신규 내용: `--tools ""`와 MCP 차단 / v2.1.302+ Manual 기본·권한 플래그 / 비-bare `-p` 훅 실행·월 API 크레딧) |
+| **최종 판정** | **APPROVED 유지** (2026-11-09 재시험 3/3 PASS. 이전 이력: 2026-09-28 — "흔한 실수" 표 `--resume` 행을 "v2.1.223 미만" 조건부로 정정 후 재테스트 2/2 PASS, 모순 해소 확인 → NEEDS_REVISION에서 재전환) |
 
 ---
 
@@ -273,6 +328,8 @@ status: APPROVED
 
 - [✅] skill-tester로 2단계 실사용 테스트 수행 후 섹션 5·6 업데이트 (2026-07-03 완료, 3/3 PASS)
 - [✅] **"흔한 실수" 표의 `--resume` 디렉터리 제약 행이 상단 2026-09-26 정정 문구와 모순** — 2026-09-28 첫 라운드에서 발견, "v2.1.223 미만 CLI에서…"로 조건부 정정 완료 후 2026-09-28 두 번째 라운드 재테스트 2/2 PASS로 해소 확인
+- [✅] 2026-11-09 재검증 신규 내용 skill-tester 재시험 후 섹션 5·6·7·8 동기화 (2026-11-09 완료, 3/3 PASS)
+- [❌] Edit/Bash 허용형 잠금 CI 예시·`--allowedTools` 규칙 문법 예시·`bypassPermissions` 위험성·섹션 7 크레딧 정책 연결 설명 보강 — 차단 요인 아님, 선택 보강 (2026-11-09 재시험에서 발견)
 - [❌] CLI 버전 업데이트 시 플래그 명칭 재확인 (`--tools`/`--disallowedTools` 변동 가능성) — 차단 요인 아님, 선택적 유지보수 항목
 
 ---
@@ -286,3 +343,5 @@ status: APPROVED
 | 2026-09-26 | v2 | 정기 재검증 — `--resume` 디렉터리 제약이 v2.1.223부터 해제된 것을 반영(구버전 동작 기준 오기재 수정), 인증 우선순위에 누락된 6번째 항목(Anthropic profile/federation) 추가, `--bare` 향후 기본값화 고지 추가. content test 2/2 PASS | Claude (Sonnet 5) |
 | 2026-09-28 | v2 | 2단계 실사용 재테스트 수행 (Q1 stream-json 파싱 / Q2 --resume 디렉터리 제약 정정분) → 1/2 PASS + 1/2 PARTIAL. **"흔한 실수" 표가 상단 정정 문구와 모순되는 SKILL.md 내부 오류 발견** → APPROVED에서 NEEDS_REVISION으로 하향 (SKILL.md는 미수정, 보고만 함) | skill-tester |
 | 2026-09-28 | v2 | "흔한 실수" 표 `--resume` 행을 "v2.1.223 미만 CLI에서…"로 조건부 정정(메인 세션) 후 모순 해소 재테스트 수행 (Q1 stream-json 파싱 / Q2 모순 해소 확인) → 2/2 PASS, NEEDS_REVISION → APPROVED 전환 | skill-tester |
+| 2026-11-09 | v3 | 재검증 — 공식 headless·cli-reference·authentication·지원 문서 재조회. Ultra 플랜 추가, `--tools ""`는 MCP 도구를 막지 않음 → `--disallowedTools "mcp__*"` 안내, `--permission-mode`·`--permission-prompts none`·`--max-budget-usd` 추가, v2.1.302+ `-p` 기본 Manual, profile/federation 3소스, 비-bare `-p`의 프로젝트 훅·.mcp.json 실행 주의, 2026-10 월 API 크레딧 정책 반영, 안전 가드 예시 갱신 | Claude (재검증 묶음) |
+| 2026-11-09 | v3 | 2단계 실사용 재시험 수행 (Q1 `--tools ""`와 MCP 차단 / Q2 v2.1.302+ Manual 기본·dontAsk·permission-prompts·max-budget / Q3 비-bare `-p` 훅·.mcp.json 실행과 월 API 크레딧) → 3/3 PASS, APPROVED 유지 (선택 보강 gap 4건 섹션 7 기록, SKILL.md 미수정) | skill-tester |

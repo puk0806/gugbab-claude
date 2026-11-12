@@ -2,7 +2,7 @@
 skill: next-intl-i18n
 category: frontend
 version: v1
-date: 2026-09-26
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -14,10 +14,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `next-intl-i18n` |
 | 스킬 경로 | `.claude/skills/next-intl-i18n/SKILL.md` |
-| 검증일 | 2026-09-26 (최초 2026-09-25, 섹션 7 보강·재테스트 2026-09-26) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-26) — 최초 2026-09-25 |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
-| 버전 기준 | next-intl 4.14.7 (2026-09-24, npm latest) / Next.js 16.3.x (공식 문서 16.3.6 시점) |
+| 버전 기준 | next-intl 4.14.9 (2026-10-02, npm latest) / Next.js 16.3+ (2026-11-09 npm latest 16.4.5) |
 
 ---
 
@@ -69,6 +69,9 @@ status: APPROVED
 | Next.js — not-found.js (global-not-found) | https://nextjs.org/docs/app/api-reference/file-conventions/not-found | ⭐⭐⭐ High | docs 16.3.6 | 공식 문서 |
 | FormatJS — ICU syntax | https://formatjs.github.io/docs/core-concepts/icu-syntax/ | ⭐⭐⭐ High | 2026-09-25 확인 | ICU 복수형·`other` 필수 |
 | Unicode CLDR — Language Plural Rules | https://www.unicode.org/cldr/charts/48/supplemental/language_plural_rules.html | ⭐⭐⭐ High | CLDR 48 | 한국어 `other` 단일 범주 |
+| (2026-11-09 재검증) npm registry next-intl / next dist-tags | https://registry.npmjs.org/next-intl · https://registry.npmjs.org/next | ⭐⭐⭐ High | 2026-11-09 | next-intl latest 4.14.9, next latest 16.4.5 |
+| (2026-11-09 재검증) next-intl releases v4.14.8·v4.14.9 | https://github.com/amannn/next-intl/releases | ⭐⭐⭐ High | 2026-09-29 / 2026-10-02 | `useExtracted` 버그 수정만 — API 변경 없음 |
+| (2026-11-09 재검증) next-intl routing/setup · Next.js next/root-params | https://next-intl.dev/docs/routing/setup · https://nextjs.org/docs/app/api-reference/functions/next-root-params | ⭐⭐⭐ High | 2026-11-09 조회 | request.ts·proxy.ts 코드, 16.3 기본·이전 `experimental.rootParams`, Server Component 전용·Route Handler 향후 지원 그대로 |
 
 ---
 
@@ -96,6 +99,15 @@ status: APPROVED
 | 16 | 한국어(ko)는 CLDR 복수 범주가 `other` 하나뿐 | CLDR plural rules 차트 + 복수 가이드(Locize 등) 검색 | VERIFIED |
 | 17 | `global-not-found.tsx`로 `[locale]` root layout 앱의 전역 404 처리 | Next.js not-found 문서 — 15.4.0 도입이며 **여전히 experimental**, `experimental.globalNotFound: true` 필요 | DISPUTED → SKILL.md에 "experimental·플래그 필요"로 정정 표기 |
 | 18 | 16.3 미만에서는 `experimental.rootParams` 플래그로 root-params 사용 가능 | next-intl setup 문서에만 언급, Next.js 16.3 문서 version history에는 이전 experimental 이력 미기재 | 최초 UNVERIFIED → 2026-09-26 재확인: next-intl 공식 routing/setup 문서가 "In earlier versions, it needs to be enabled via `experimental.rootParams`"로 명시(1차 소스), Next.js 자체 GitHub PR `vercel/next.js#72837`("feat: rootParams (experimental)")로 독립 소스 2개 이상 교차 검증 완료 → **VERIFIED로 전환**. 다만 레거시 버전 안정성은 별도 이슈이므로 SKILL.md는 여전히 7-2 `setRequestLocale` 경로를 레거시 권장 경로로 유지 |
+
+### 2026-11-09 재검증 판정
+
+| # | 클레임 | 소스 | 판정 |
+|---|--------|------|------|
+| R1 | next-intl 최신 4.14.7 | npm registry + GitHub releases | DISPUTED(낡음) → 4.14.9로 갱신 (4.14.8·4.14.9는 `useExtracted` 버그 수정만, 사용법 영향 없음) |
+| R2 | 권장 request.ts(root-params+hasLocale+notFound)·proxy.ts matcher | next-intl routing/setup 문서 원문 | VERIFIED (변경 없음) |
+| R3 | root-params 16.3.0 도입·Server Component 전용·Server Action/Client 불가·Route Handler 향후·`unstable_cache` 불가 | Next.js root-params 문서(lastUpdated 2026-06-24) + next-intl setup | VERIFIED (변경 없음) |
+| R4 | `setRequestLocale` 레거시(하위 호환용) | next-intl setup 문서("legacy API… still supported for backwards compatibility") | VERIFIED (변경 없음) |
 
 ### 3-1. 내용 정확성
 - [✅] 공식 문서와 불일치하는 내용 없음
@@ -261,3 +273,5 @@ Server Action 안에서 getTranslations('Form')를 호출했더니 로케일을 
 | 2026-09-26 | v1 | 섹션 7 선택 보강 3건 반영: 클레임 #18(`experimental.rootParams`) UNVERIFIED→VERIFIED 전환(next-intl 공식 문서 + Next.js PR 교차 검증), Server Action `hasLocale` 재검증 실패 처리 코드 예시(§5) 추가, `AppConfig` tsconfig include 예시(§4) 추가. 500줄 유지 위해 §8 컴포넌트 전문을 references/locale-switcher.md로 분리. 내용 변경으로 APPROVED → PENDING_TEST 재전환(재테스트 대기) | Claude (Sonnet 5) |
 | 2026-09-26 | v1 | 2단계 재테스트 수행 (Q1 Server Action hasLocale 실패 처리+Route Handler 차이 / Q2 AppConfig tsconfig include 원인 진단 / Q3 16.2에서 rootParams 도입 판단형) — 보강 내용 전부 타깃, 3/3 PASS → PENDING_TEST → APPROVED 재전환 | skill-tester |
 | 2026-09-30 | v1 | 교차 참조 조건부 표기 (내용 변경 없음) — `frontend/i18n-seo` 참조 3곳에 "SEO 옵션 설치 시" 병기, status 유지 | Claude (Sonnet 5.5) |
+| 2026-11-09 | v1 | 재검증 — npm·GitHub releases·next-intl setup·Next.js root-params 문서 재대조. 기준 버전 표기만 갱신(next-intl 4.14.7→4.14.9, Next.js latest 16.4.5 병기). API·권장 패턴은 내용 변경 없음, status APPROVED 유지 | 메인 세션 |
+| 2026-11-12 | v1.1 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 버전 표(setRequestLocale 4.13.5·requestLocale 4.13.6 deprecated, rootParams 16.3), root layout 요구·root-params request.ts, proxy.ts 함정(점 경로 matcher·codemod), AppConfig tsconfig include, Server Action locale 재검증·거부, 정적 렌더링·레거시 마이그레이션 체크리스트, 흔한 실수 14 / 덜어낸 것 설치·플러그인·파일 구조·defineRouting 옵션 표·navigation.ts·layout 예제·메시지 JSON·ICU 문법·포맷터 API·로케일 전환 UI, references/locale-switcher.md 삭제. 원 검증일 2026-11-09 기준 내용 그대로, status·검증일 변경 없음 | 정리 |

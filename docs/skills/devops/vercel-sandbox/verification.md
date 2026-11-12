@@ -1,8 +1,8 @@
 ---
 skill: vercel-sandbox
 category: devops
-version: v2
-date: 2026-09-28
+version: v2.1
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -14,10 +14,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `vercel-sandbox` |
 | 스킬 경로 | `.claude/skills/vercel-sandbox/SKILL.md` |
-| 검증일 | 2026-09-28 (최초 2026-07-03, 2026-09-28 재검증) |
-| 검증자 | skill-creator → Claude (Sonnet 5, 2026-09-28 재검증) |
-| 스킬 버전 | v2 (2026-09-28 재검증 정정 반영) |
-| 기준 버전 | `@vercel/sandbox` v3(npm 최신 3.5.0) / 과금·한도 2026-09 |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-28 · 최초 2026-07-03) |
+| 검증자 | skill-creator → Claude (Sonnet 5, 2026-09-28 재검증) → Claude (Opus 5.5, 2026-11-09 재검증) |
+| 스킬 버전 | v2.1 (2026-11-09 재검증 정정 반영) |
+| 기준 버전 | `@vercel/sandbox` v3(npm 최신 3.9.1, 2026-10-28) / 과금·한도 pricing 문서 2026-09-10 갱신본 |
 
 ---
 
@@ -62,6 +62,8 @@ status: APPROVED
 | Changelog: Claude managed agents | https://vercel.com/changelog/run-claude-managed-agents-with-vercel-sandbox | ⭐⭐⭐ High | 2026-05-18 | 공식 changelog |
 | npm: @vercel/sandbox | https://www.npmjs.com/package/@vercel/sandbox | ⭐⭐⭐ High | 2026 | 패키지·persistent 기본 교차 확인 |
 | GitHub: vercel/sandbox | https://github.com/vercel/sandbox | ⭐⭐⭐ High | 2026 | SDK·CLI 코드베이스 (2순위) |
+| Vercel Sandbox Pricing (11-09) | https://vercel.com/docs/sandbox/pricing | ⭐⭐⭐ High | 2026-09-10 | Pro Data Transfer "Included in Flat Rate CDN", Drives 지표 추가, 나머지 수치 동일 |
+| npm registry: @vercel/sandbox 3.9.1 (11-09) | https://registry.npmjs.org/@vercel/sandbox | ⭐⭐⭐ High | 2026-10-28 | 패키지 `dist/*.d.ts` 로 create/get/getOrCreate/extendTimeout/keepLastSnapshots(1-10)/`runtime` @deprecated/`updateNetworkPolicy` @deprecated 확인 |
 
 ---
 
@@ -84,7 +86,18 @@ status: APPROVED
 | 11 | 수동 `snapshot()` 후 샌드박스 자동 종료, `source:{type:'snapshot', snapshotId}`로 재생성, 30일 만료 | snapshots doc + sdk-reference(sandbox.snapshot) + KB 가이드 | ✅ VERIFIED |
 | 12 | `runCommand` 스트리밍: `command.logs()` AsyncGenerator `{stream,data}`, detached+wait | sdk-reference(runCommand/Command.logs/wait) | ✅ VERIFIED |
 
-> DISPUTED / UNVERIFIED 항목 없음. Hobby 한도는 2026-06 기준 과금표를 근거로 명시했으며, 과금 정책은 변동 가능하므로 SKILL.md에 기준일을 표기함.
+**2026-11-09 재검증 클레임**
+
+| # | 클레임 | 소스 | 판정 |
+|---|--------|------|------|
+| R1 | npm 최신 3.5.0 | npm registry: latest **3.9.1**(2026-10-28), 메이저 v3 유지 | ⚠️ DISPUTED → 버전 정정(API 변경 없음) |
+| R2 | Hobby 한도(Active CPU 5h·420 GB-h·생성 5,000·동시 10·45분·4vCPU/8GB)·Pro 요율 $0.128/h·$0.0212/GB-h·$0.60/1M·스냅샷 $0.08 | pricing 2026-09-10 | ✅ VERIFIED |
+| R3 | Pro Data Transfer $0.15/GB | pricing: Pro **"Included in Flat Rate CDN"**, Enterprise $0.15/GB | ⚠️ DISPUTED → 정정 |
+| R4 | `runtime` deprecated → `image`, `updateNetworkPolicy` deprecated → `update`, `keepLastSnapshots`, `getOrCreate`, `extendTimeout` | 3.9.1 패키지 `dist/sandbox.d.ts` `@deprecated` 주석·시그니처 | ✅ VERIFIED |
+| R5 | `snapshot()` 호출 시 샌드박스 정지, 스냅샷 30일 만료(마지막 사용 기준) | `sandbox.d.ts` "stopped as part of the snapshot creation" + pricing "Snapshot expiration" | ✅ VERIFIED |
+| R6 | (신규) Drives 퍼블릭 베타 과금 지표 | pricing 표 | ✅ VERIFIED → 과금표에 1행 추가 |
+
+> DISPUTED / UNVERIFIED 항목 없음(최초 작성 기준). Hobby 한도는 2026-06 기준 과금표를 근거로 명시했으며, 과금 정책은 변동 가능하므로 SKILL.md에 기준일을 표기함.
 
 ---
 
@@ -115,6 +128,39 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-11-09] skill-tester 4차 재시험 — 2026-11-09 재검증 정정분(Data Transfer·Drives·vCPU 허용값·버전) 검증
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester → general-purpose (도메인 에이전트 미사용, 2개 질문 병렬 실행, 두 결과 모두 수신 후 판정)
+**수행 방법**: SKILL.md Read 후 이번 재검증 변경점을 겨냥한 실전 질문 2개 답변, 근거 섹션 및 anti-pattern 회피 확인
+
+**Q1. Pro 플랜에서 egress 200GB + npm 다운로드 50GB + Drives 100GB 보관(읽기·쓰기 각 10GB) 시 Data Transfer를 $0.15/GB로 계산하면 얼마인가, Drives 비용은**
+- ✅ PASS
+- 근거: SKILL.md §4 과금 모델 표 "Data Transfer" 행·"Drive Storage / Reads / Writes" 행, §5 Hobby/Pro 표 "Data Transfer" 행
+- 상세: 질문의 $0.15/GB 전제가 Pro에는 맞지 않고 Enterprise 요율임을 정확히 지적(anti-pattern인 "Pro $0.15/GB" 회피). Pro는 "Flat Rate CDN 포함", 다운로드(npm·git clone)는 무료로 처리. Drives는 $0.05/GB-month·$0.0015/GB·$0.004/GB로 약 $5.055/월 계산, Hobby 포함량은 Pro에 비적용으로 구분. 퍼블릭 베타·실행당 최대 4개도 인용
+
+**Q2. `resources: { vcpus: 3 }` 가능 여부, 허용값 규칙, Hobby 최대치·메모리, 최신 버전과 3.5.0 업그레이드 시 API 변경**
+- ✅ PASS
+- 근거: SKILL.md 헤더 "기준 버전", §1 "기본 리소스", §5 "최대 리소스" 행, §4 메모리 예시
+- 상세: vCPU는 1 또는 2~32 짝수이므로 3은 불가(2 또는 4 사용)로 정확히 답변. Hobby 4 vCPU/8GB(vCPU당 2GB)·Pro 8 vCPU/16GB 정확. 최신 3.9.1(2026-10-28), 같은 v3 메이저임을 인용. 3.5.0→3.9.1 변경 내역은 문서에 없다고 정직하게 답변(날조 없음)
+
+### 발견된 gap (SKILL.md 보강 권장, 모두 선택 보강)
+
+- Pro "Flat Rate CDN에 포함"의 의미(무제한 여부·포함 용량·초과 과금)가 문서에 없어 Pro egress의 실제 금액은 산출 불가
+- Drives Hobby 포함량 "15 GB lifetime · 30 GB/월 · 30 GB/월"이 Storage/Reads/Writes 순서 대응임을 명시하지 않음
+- $20 포함 크레딧이 적용되는 지표 범위 미기술
+- 허용되지 않는 vCPU 값(홀수 등) 입력 시 에러 동작 미기술, Hobby는 2·4만 가능하다는 결론을 독자가 연결해야 함
+- 3.5.0→3.9.1 사이 마이너 변경 이력 미기술(API 동일하다는 점은 verification.md R4·§3에서만 확인)
+- §4 제목 "2026-06 기준"과 헤더 "pricing 2026-09-10 갱신본 기준"의 기준일 표기 불일치(경미)
+
+### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 라이브러리/SDK 사용법 스킬 — content test PASS = APPROVED 가능 (빌드/워크플로우/마이그레이션 카테고리 아님)
+- 최종 상태: APPROVED (유지)
+
+---
 
 ### [2026-09-28] skill-tester 3차 재테스트 — §3 예시 코드 `image` 정정 반영 확인
 
@@ -234,8 +280,8 @@ status: APPROVED
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-09-28 3차 재테스트 1/1 PASS — §3 예시 `image` 정정 반영 및 전 섹션 정합성 확인) |
-| **최종 판정** | **APPROVED** (2026-09-28 skill-tester 3차 재테스트 1/1 PASS — §3 `runtime` 잔재 gap 해소 확인, 잔여 gap 없음) |
+| 에이전트 활용 테스트 | ✅ (2026-11-09 4차 재시험 2/2 PASS — Data Transfer 정정·Drives·vCPU 허용값·버전) |
+| **최종 판정** | **APPROVED** (유지 — 2026-11-09 재검증 정정 후 skill-tester 4차 재시험 2/2 PASS) |
 
 ---
 
@@ -259,4 +305,7 @@ status: APPROVED
 | 2026-07-03 | v1 | 2단계 실사용 테스트 수행 (Q1 SSE 중계 패턴 / Q2 Hobby 상시 실행 불가 / Q3 Persistent vs 수동 스냅샷) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-09-28 | v2 | 재검증 — 공식 문서 재대조 결과 8건 DISPUTED 발견 및 정정: `@vercel/sandbox` v2→v3, `iad1` 전용→19개 리전 개방(`region`/`failoverRegions`), `runtime` deprecated→`image` 권장, 디스크 32GB→64GB(3.0.0+), Data Transfer 다운로드 무료화, Pro 동시실행 2,000→10,000개, vCPU 생성 속도 고정치→동적 쿼터, `stop()` 반환 필드명 `activeCpuDurationMs` 정정. SKILL.md 전 섹션 반영. status APPROVED → PENDING_TEST(재테스트 필요) | Claude (Sonnet 5) |
 | 2026-09-28 | v2 | 2단계 실사용 재테스트 수행 (Q1 서울 리전 icn1 지정+image API / Q2 runtime deprecated+디스크 용량+stop() 필드명) → 2/2 PASS, APPROVED 유지. §3 예시 코드 `runtime` 잔재 gap 발견·기록(선택 보강) | skill-tester |
+| 2026-11-09 | v2.1 | 재검증 — npm latest 3.5.0→3.9.1(메이저 v3·API 동일, d.ts 대조), Pro Data Transfer $0.15/GB→"Flat Rate CDN 포함" 정정, Drives(베타) 과금 행·vCPU 허용값(1 또는 2~32 짝수) 추가. Hobby 한도·요율·runtime/updateNetworkPolicy deprecated·snapshot 동작 VERIFIED. 내용 수정 있음 — skill-tester 재시험 | Claude (Opus 5.5) |
+| 2026-11-09 | v2.1 | 재검증 후 skill-tester 4차 재시험 (Q1 Pro Data Transfer·Drives 비용 / Q2 vCPU 허용값·Hobby 최대치·버전) → 2/2 PASS, APPROVED 유지. 선택 보강 gap(Flat Rate CDN 의미 등) 섹션 5 기록 | skill-tester |
 | 2026-09-28 | v2 | 3차 재테스트 — 메인이 §3 `Sandbox.getOrCreate()` 예시를 `image: 'vercel/sandbox/universal'`로 정정 후 §3 복붙 시나리오 질문(Q1) 1개로 재검증 → 1/1 PASS, 잔여 gap 없음, APPROVED 유지 | skill-tester |
+| 2026-11-12 | v2.2 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 runtime deprecated→image·64GB/32GB 디스크·19개 리전/failoverRegions·기본 타임아웃/리소스·updateNetworkPolicy deprecated·logs() 스트리밍·OIDC 12시간 만료·Persistent 기본/자동 재개 예외·snapshot() 즉시 종료/30일 만료/리전 고정·과금표(2026-09-10)·Hobby 한도표와 상시 실행 불가 계산·안티패턴표 / 덜어낸 것 설치·Sandbox.create/runCommand/생명주기/getOrCreate/수동 스냅샷 코드 예제·Route Handler SSE 완결 예제·요약 체크리스트 | 정리 |

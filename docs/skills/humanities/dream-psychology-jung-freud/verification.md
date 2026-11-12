@@ -2,7 +2,7 @@
 skill: dream-psychology-jung-freud
 category: humanities
 version: v2
-date: 2026-09-26
+date: 2026-11-06
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `dream-psychology-jung-freud` |
 | 스킬 경로 | `.claude/skills/dream-psychology-jung-freud/SKILL.md` |
-| 검증일 | 2026-09-26 |
+| 검증일 | 2026-11-06 (재검증, 이전 2026-09-26) |
 | 검증자 | skill-creator (gugbab-claude) / 2026-09-26 재검증: 메인 세션 (독일어 원문·영역본·MaHS·PubMed·Crossref·SEP 직접 대조) |
 | 스킬 버전 | v2 |
 
@@ -64,6 +64,9 @@ status: APPROVED
 | Plevin & Munro 2025 — "The clinical use of dream content in modern psychiatry" | https://pubmed.ncbi.nlm.nih.gov/39748545/ | ⭐⭐⭐ High | 2025, *Australas Psychiatry* | 현대 임상 사용 평가 |
 | Bulkeley — "Jung's Theory of Dreams" | https://bulkeley.org/jungs-theory-of-dreams/ | ⭐⭐ Medium | Kelly Bulkeley(꿈 연구 학자) | Jung 보충 |
 | Jungian Center — "Jung on Dreams" | https://jungiancenter.org/jung-on-dreams-part-i/ | ⭐⭐ Medium | Jung 연구 기관 | 보상 기능 보충 |
+| (2026-11-06 재검증) SEP "Dreams and Dreaming" 원문 | https://plato.stanford.edu/entries/dreams-dreaming/ | ⭐⭐⭐ High | 2026-11-06 접근 | First published 2015-04-09 / Substantive revision 2026-01-26 그대로 |
+| (2026-11-06 재검증) NCBI PubMed E-utilities (PMID 39748545·21570·19794431·11515143) | https://eutils.ncbi.nlm.nih.gov/entrez/eutils/ | ⭐⭐⭐ High | 2026-11-06 접근 | Plevin & Munro 2025, Hobson & McCarley 1977, Hobson 2009, Hobson·Pace-Schott·Stickgold 2000 서지·초록 1차 대조 |
+| (2026-11-06 재검증) psychiatryonline.org DOI 10.1176/ajp.134.12.1335 | https://psychiatryonline.org/doi/abs/10.1176/ajp.134.12.1335 | ⭐⭐⭐ High | 2026-11-06 접근 | Hobson & McCarley 1977 출판사 페이지 |
 
 ---
 
@@ -81,6 +84,16 @@ status: APPROVED
 - [✅] AIM 모델 자기 수정 — Wikipedia + Dream Studies Portal 일치
 - [✅] 현대 임상 사용 — Plevin & Munro 2025 "widespread disuse" 직접 인용
 - [✅] deprecated 패턴 권장 없음 (이론 사용 자체에 학술적 한계 박스로 명시)
+
+### 4-1b. 2026-11-06 재검증 판정
+
+| 클레임 | 판정 | 근거 |
+|--------|------|------|
+| SEP 항목 2015-04-09 초판 / 2026-01-26 개정, "royal road" 문구, Jung 미등장 | VERIFIED | SEP 원문 |
+| Plevin & Munro, *Australas Psychiatry* 2025;33(3):413–416, doi:10.1177/10398562241311926, "widespread disuse"·"regularly enquire about dream content" | VERIFIED | PubMed 초록 원문 |
+| Hobson & McCarley, *Am J Psychiatry* 1977;134(12):1335–48 | VERIFIED | PubMed PMID 21570 + 출판사 DOI 페이지 |
+| Hobson 2009 *Nat Rev Neurosci* 10(11):803–13 / Hobson·Pace-Schott·Stickgold 2000 *BBS* 23(6):793–842 | VERIFIED | PubMed PMID 19794431·11515143 |
+| Freud 독일어 원문 "Via regia"·"Werkmeister" 문장 | VERIFIED (2026-09-26 원문 대조 유지) | 이번엔 Gutenberg 접속이 네트워크에서 차단되어 재대조 못 함 — 고전 원문이라 변동 없음 |
 
 ### 4-2. 구조 완전성
 - [✅] YAML frontmatter 포함 (name, description, <example> 3개)
@@ -262,3 +275,4 @@ UNVERIFIED: 0건
 | 2026-05-14 | v1 | 2단계 실사용 테스트 수행 (Q1 꿈 작업 4가지 원어 정리 / Q2 확충 vs 자유 연상 3축 비교 / Q3 Hobson AIM 단순화 금지) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-09-26 | v2 | 재검증 — 1차 원문 대조 11건, 오류 2건 정정("two craftsmen" SE→Brill 귀속, Jung 보상 인용문 CW 8→*Man and His Symbols*), 미검증 2건(CW 16 확충 문구·Whitmont & Perera), Plevin 결론·Hobson 서지 보완, 실전 질문 2/2 PASS → PENDING_TEST | 메인 세션 (재검증) |
 | 2026-09-28 | v2 | 2단계 실사용 재테스트 수행 (Q1 "two craftsmen" SE 인용 가부 / Q2 Jung 보상 기능 인용문 CW 8 인용 가부) → 2/2 PASS, 정정 내용이 옛 오류 재발 없이 반영됨 확인 → PENDING_TEST에서 APPROVED 전환 | skill-tester |
+| 2026-11-06 | v2 | 재검증 — SEP 개정일(2026-01-26 그대로)·Plevin & Munro 2025 초록 문구·Hobson 1977/2000/2009 서지를 SEP 원문·PubMed 1차 대조, 모두 VERIFIED. 내용 변경 없음(날짜만 갱신, skill-tester 생략). Gutenberg 원문은 네트워크 차단으로 재대조 못 해 이전 대조 유지 | 메인 세션 (재검증) |

@@ -12,7 +12,7 @@
  *   2. frontmatter에 name: 필드 (kebab-case)
  *   3. frontmatter에 description: 필드
  *   4. frontmatter에 tools: 필드
- *   5. frontmatter에 model: 필드 (opus/sonnet/haiku 계열)
+ *   5. frontmatter에 model: 필드 (opus/sonnet/haiku 별칭·inherit·전체 ID)
  *   6. description 또는 본문에 <example> 태그 최소 1개
  *
  * 대상: Write/Edit 도구로 .claude/agents/ 하위 .md 파일 저장 시
@@ -25,20 +25,21 @@ const fs = require('fs')
 const AGENT_MD_PATTERN = /\.claude\/agents\/.+\.md$/
 const NON_AGENT_BASENAMES = new Set(['CLAUDE.md', 'README.md'])
 
-// 유효한 model 값 (단축명 + 전체 ID) — agent-design.md 모델 표와 동기화
-// 'fable' 별칭은 불허 — agent-design.md 규정상 frontmatter에는 전체 ID
-// claude-fable-5-1만 사용 (별칭 해석 미보장)
+// 유효한 model 값 (단축명 + inherit + 전체 ID) — agent-design.md 모델 표와 동기화
+// 공식 sub-agents 문서(2026-11-06 확인)는 'fable' 별칭도 받지만, 이 레포 정책은
+// fable 티어를 비용 때문에 전체 ID claude-fable-5-2 로만 명시 지정하게 한다 → 'fable' 불허.
+// 'inherit' 은 공식 유효값(메인 대화 모델을 그대로 씀)이라 허용한다.
 const VALID_MODELS = new Set([
-  'opus', 'sonnet', 'haiku',
-  // 현행 세대 — agent-design.md 모델 표에 문서화된 ID만 허용한다.
-  // (claude-mythos-5-1은 Project Glasswing 전용이고 이 레포 문서에 없어 제외)
-  'claude-fable-5-1',
-  'claude-opus-5-5', 'claude-sonnet-5',
-  'claude-haiku-4-5', 'claude-haiku-4-5-20251001',
+  'opus', 'sonnet', 'haiku', 'inherit',
+  // 현행 세대 — agent-design.md 모델 표에 문서화된 ID만 허용한다 (2026-11-11 Fable 5.2 반영 — 공식 models overview)
+  // (claude-mythos-5-2·5-1 은 검증 프로그램 통과 조직 전용이고 이 레포 문서에 없어 제외)
+  'claude-fable-5-2',
+  'claude-opus-5-5', 'claude-sonnet-5-5', 'claude-haiku-5-5',
   // 아직 서비스되는 구세대 — 레거시 대응용으로 명시할 때만 허용
-  'claude-fable-5', 'claude-opus-5',
+  'claude-fable-5-1', 'claude-fable-5', 'claude-opus-5',
   'claude-opus-4-6', 'claude-opus-4-7', 'claude-opus-4-8',
-  'claude-sonnet-4-6',
+  'claude-sonnet-5', 'claude-sonnet-4-6',
+  'claude-haiku-4-5', 'claude-haiku-4-5-20251001',
 ])
 
 function validate(content) {
@@ -83,7 +84,7 @@ function validate(content) {
     if (!VALID_MODELS.has(model)) {
       errors.push(
         `model: "${model}"은 유효하지 않습니다.\n` +
-        '  → opus / sonnet / haiku (또는 전체 모델 ID) 중 하나를 사용하세요.\n' +
+        '  → opus / sonnet / haiku / inherit (또는 agent-design.md 표의 전체 모델 ID) 중 하나를 사용하세요.\n' +
         '  → 선택 기준: 오케스트레이터 → opus, 검색·코드·검증 → sonnet, 단순 변환 → haiku'
       )
     }

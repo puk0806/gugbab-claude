@@ -2,7 +2,7 @@
 skill: prisma-orm
 category: backend
 version: v1
-date: 2026-09-26
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -18,10 +18,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `prisma-orm` |
 | 스킬 경로 | `.claude/skills/prisma-orm/SKILL.md` (+ `references/v6-to-v7-upgrade.md`, `references/serverless-edge.md`) |
-| 검증일 | 2026-09-26 (최초 2026-09-25, 섹션 7 보강·재테스트 2026-09-26) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
-| 기준 버전 | Prisma ORM **7.10.0** (`@prisma/client`·`@prisma/adapter-pg`·`@prisma/adapter-neon` npm `latest` = 7.10.0, GitHub Latest = 7.10.0 / 2026-08-25). `prisma` CLI npm `latest` = 8.0.0-rc.17 (`prev` = 7.10.0) |
+| 기준 버전 | Prisma ORM **7.10.1** (`@prisma/client`·`@prisma/adapter-pg`·`@prisma/adapter-neon` npm `latest` = 7.10.1, 2026-10-15 게시). `prisma` CLI npm `latest` = 8.0.0-rc.33 (`prev` = 7.10.1) — 2026-11-09 기준, v8 아직 RC |
 | 대상 에이전트 | `typescript-backend-developer`, `typescript-backend-architect` |
 
 ---
@@ -86,6 +86,10 @@ status: APPROVED
 | Vercel KB — Connection pooling | https://vercel.com/kb/guide/connection-pooling-with-functions | ⭐⭐⭐ High | 2026-09-25 | 벤더 공식 |
 | prisma/prisma 이슈·토론 (FK 인덱스 #16543, P2002 meta.target #28953, Neon HTTP 트랜잭션) | https://github.com/prisma/prisma/issues/16543 , https://github.com/prisma/prisma/issues/28953 | ⭐⭐ Medium | 2026 | 보조 근거 |
 | 2차 자료 (Medium·기술 블로그·mcpservers 등) | 검색 결과 요약 | ⭐ Low | 2026 | 교차 확인용으로만 사용 |
+| npm registry dist-tags·time (재검증) | https://registry.npmjs.org/-/package/prisma/dist-tags , https://registry.npmjs.org/prisma | ⭐⭐⭐ High | 2026-11-09 | CLI latest 8.0.0-rc.33(2026-11-06), prev 7.10.1, client/adapter latest 7.10.1(2026-10-15) |
+| GitHub 7.10.1 릴리스 노트 | https://github.com/prisma/prisma/releases/tag/7.10.1 | ⭐⭐⭐ High | 2026-11-09 | 패치 — 중첩 `$transaction` 옵션 변형 버그·P3025 섀도 DB 가드, 브레이킹 없음 |
+| Release status (재검증) | https://www.prisma.io/docs/orm/release-status | ⭐⭐⭐ High | 2026-11-09 | 여전히 "v8 = RC, GA 2026-10 예상", v7 18개월 지원 문구 유지 |
+| Transactions (v7, 재검증) · CLI migrate dev (v7, 재검증) | https://www.prisma.io/docs/orm/v7/prisma-client/queries/transactions , https://www.prisma.io/docs/cli/v7/migrate/dev | ⭐⭐⭐ High | 2026-11-09 | maxWait 2000 / timeout 5000, migrate dev가 generate·seed 자동 실행 안 함 재확인 |
 
 ---
 
@@ -121,6 +125,10 @@ status: APPROVED
 | 24 | Neon 공식 트러블슈팅: `connect_timeout`은 풀드 URL(`DATABASE_URL`)에 부착, 값 `0`은 타임아웃 비활성화 | Neon 공식 `guides/prisma` 문서 | VERIFIED |
 | 25 | Vercel의 Neon 통합(Vercel-Managed·Neon-Managed 공통)이 `DATABASE_URL`(풀드)·`DATABASE_URL_UNPOOLED`(다이렉트)를 주입, `POSTGRES_*`는 구 Vercel Postgres 템플릿 호환용 별칭 | Neon 공식 Vercel 통합 문서 + WebSearch 교차 확인(Neon Previews 통합 문서) | VERIFIED |
 
+| 26 | (2026-11-09) 최신 안정 = 7.10.1, CLI `latest` = 8.0.0-rc.33 / `prev` = 7.10.1 → 메이저 고정 필요성 유지 | npm dist-tags·time | GitHub 7.10.1 릴리스 | VERIFIED — SKILL.md §1·기준 버전 갱신 (#1·#2 값 대체) |
+| 27 | (2026-11-09) v8 GA 2026-10 목표 → 11-09 현재 미도달(RC) | release-status (RC 문구 유지) | npm(8.0.0 정식 미게시, rc.33) | VERIFIED — §1에 "예고했지만 아직 RC" 반영 (#3 보완) |
+| 28 | (2026-11-09) migrate dev generate·seed 자동 실행 없음, 트랜잭션 기본값 2000/5000 | CLI v7 migrate dev | v7 transactions 문서 | VERIFIED (변경 없음) |
+
 보조 확인: `$queryRaw` 태그드 템플릿 파라미터화·`$queryRawUnsafe` 위험(공식 raw-queries), 에러 판별은 `Prisma.PrismaClientKnownRequestError`를 생성 클라이언트에서 import(공식 문서 — 2차 자료의 `@prisma/client/runtime/library` 경로는 채택하지 않음), P2002 `meta.target` 형태 변경은 이슈 1건 근거라 `> 주의:`로만 기재.
 
 ### 4-1. 내용 정확성
@@ -143,13 +151,44 @@ status: APPROVED
 - [✅] 범용적으로 사용 가능 (특정 프로젝트 종속 X)
 
 ### 4-4. Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-09-25, 2026-09-26 재테스트)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-09-25, 2026-09-26 재테스트)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-09-25, 2026-09-26, 2026-11-09 재테스트)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-09-25, 2026-09-26, 2026-11-09 재테스트)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (해당 없음 — 최초 3/3, 재테스트 3/3 PASS, 보완 불필요)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-11-09 (재검증 후 재시험)
+**수행자**: skill-tester → general-purpose (TypeScript 백엔드 개발자 역할, 질문별 개별 에이전트 순차 수행)
+**수행 방법**: 2026-11-09 재검증 변경분(§1 버전 정책 7.10.1·CLI v8 RC, 7.10.1 패치 수정사항) SKILL.md Read 후 실전 질문 2개 답변, 근거 줄 번호·anti-pattern 회피 확인
+
+### 실제 수행 테스트 (2026-11-09)
+
+**Q1. `npm i -D prisma` 설치 시 CLI가 8.0.0-rc로 깔림 — 최신 안정 버전·설치 방법·v8 GA 상황**
+- ✅ PASS
+- 근거: SKILL.md §1 "버전 정책 — 설치 함정" (37-55줄), §13 안티패턴 #1
+- 상세: 최신 안정 7.10.1, CLI `latest`=8.0.0-rc.33 때문에 CLI(v8 RC)·클라이언트(v7) 혼재, `prisma@^7`·`@prisma/client@^7` 메이저 고정 명령, v8 GA 2026-10 예고했으나 11-09 현재 RC, v7 18개월 지원을 정확히 인용. anti-pattern(무고정 설치 권장) 회피.
+
+**Q2. 중첩 `$transaction` 옵션 이상 동작·기본 maxWait/timeout·7.10.1 변경·migrate dev 후 generate/seed 자동 실행**
+- ✅ PASS
+- 근거: SKILL.md §8 트랜잭션(346-347·355줄), §1 45줄, §0·§2·§6
+- 상세: 기본 maxWait 2000 / timeout 5000(P2028), 7.5.0+ 세이브포인트 중첩, 7.10.1이 옵션 객체 변형 버그(재사용 시 P2028)를 수정했음을 정확히 인용. migrate dev는 generate·seed 자동 실행 안 함(v7)도 정확하며, 구 문서 서술 충돌(`> 주의:`)도 반영.
+
+### 발견된 gap (경미, 차단 아님)
+
+- 7.10.1 중첩 `$transaction` 버그는 §1에 한 문장뿐이고 §8 중첩 트랜잭션 설명과 연결되지 않음(발생 시작 버전·옵션 상속 여부 미기재) — 선택 보강
+- CLI가 이미 v8 RC로 깔린 경우의 되돌리기 절차(재설치·lockfile) 미명시 — 선택 보강
+
+### 판정 (2026-11-09)
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 라이브러리 사용법 스킬(ORM 사용 패턴) — content test PASS로 APPROVED 가능한 카테고리
+- 최종 상태: **APPROVED 유지**
+
+---
+
+### 이전 테스트 (2026-09-26 재테스트, 참고 보존)
 
 **수행일**: 2026-09-26 (재테스트)
 **수행자**: skill-tester → general-purpose (TypeScript 백엔드 개발자 역할, domain-specific 에이전트 세션 registry 미등록으로 대체 사용)
@@ -232,20 +271,22 @@ status: APPROVED
 | 내용 정확성 | ✅ (DISPUTED 3건 정정 반영, UNVERIFIED 1건은 2026-09-26 패키지 원본 실측으로 VERIFIED 전환) |
 | 구조 완전성 | ✅ (500줄 유지 위해 §5·§9 코드 예시 일부를 references/로 이동) |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (최초 2026-09-25 typescript-backend-developer 3/3 PASS → 2026-09-26 §5·§7·§9·§10 보강분 타깃 재테스트 3/3 PASS) |
-| **최종 판정** | **APPROVED** (2026-09-26 재테스트 완료로 재전환) |
+| 에이전트 활용 테스트 | ✅ (최초 2026-09-25 typescript-backend-developer 3/3 PASS → 2026-09-26 보강분 재테스트 3/3 PASS → 2026-11-09 재검증 변경분(§1 버전 정책·7.10.1) 재시험 2/2 PASS) |
+| **최종 판정** | **APPROVED** (2026-11-09 재시험 2/2 PASS로 유지) |
 
 ---
 
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester로 2단계 content test 수행 후 섹션 5·6 갱신 (2026-09-25 완료, 3/3 PASS)
-- [❌] Prisma 8 GA(2026-10 목표) 이후: npm `latest` 태그·지원 정책 재확인, v8 전용 스킬 분리 여부 판단 — 차단 요인 아님, GA 시점 도래 후 선택 갱신
+- [❌] Prisma 8 GA(2026-10 목표) 이후: npm `latest` 태그·지원 정책 재확인, v8 전용 스킬 분리 여부 판단 — 차단 요인 아님, GA 시점 도래 후 선택 갱신 (2026-11-09 재확인: 아직 RC(rc.33), GA 미도달)
 - [✅] `PrismaNeonHttp` v7 생성자 시그니처가 공식 문서에 게시되면 references/serverless-edge.md에 예시 추가 — 2026-09-26 공식 문서 대신 **패키지 원본**(`@prisma/adapter-neon@7.10.0`의 `dist/index.d.ts`, 1차 데이터)으로 직접 확인: `constructor(connectionString: string, options: neon.HTTPQueryOptions<boolean, boolean>)`. `HTTPQueryOptions`(`@neondatabase/serverless`)의 전 필드가 optional임도 확인해 `{}` 사용 가능함을 명시. references/serverless-edge.md에 코드 추가, SKILL.md §9-4 "미검증" 표기 제거
 - [❌] P2002 `meta.target` v7 형태 변경 이슈(#28953) 해결 여부 추적 — 차단 요인 아님, 상류 이슈 추적용 선택 보강
 - [✅] (2026-09-25 content test 발견) §5 `$extends` 로깅 미들웨어 완전한 코드 예시 추가 — 2026-09-26 공식 문서(`client-extensions/query`)의 `$allOperations` 로깅 예시를 v7 어댑터 패턴으로 조정해 references/v6-to-v7-upgrade.md에 전문 추가, SKILL.md §5에서 링크
 - [✅] (2026-09-25 content test 발견) §9-2 `connect_timeout` 부착 위치 명시 — 2026-09-26 Neon 공식 문서(`guides/prisma` 트러블슈팅)로 **풀드 URL(`DATABASE_URL`)에 부착**함을 확인(런타임 요청 시점의 scale-to-zero 웨이크업 문제이므로). 동시에 Vercel-Neon 통합의 실제 환경변수명(`DATABASE_URL`/`DATABASE_URL_UNPOOLED`, 레거시 호환용 `POSTGRES_*`)도 Neon 공식 Vercel 통합 문서로 확인해 SKILL.md §9-2에 반영
 - [✅] (2026-09-25 content test 발견) §7 Post 기준 역방향 include 예시 추가 — SKILL.md §7에 `post.findMany({ include: { author: { select } } })` 예시 신설(코드 예시라 별도 외부 검증 불필요)
+- [✅] 2026-11-09 재검증 변경분(§1 버전 정책 7.10.1·CLI v8 RC, 7.10.1 패치)에 대한 skill-tester 재시험 수행 — 2026-11-09 완료, 2/2 PASS, APPROVED 유지
+- [❌] (2026-11-09 content test 발견) §8 중첩 트랜잭션 설명에 7.10.1 옵션 객체 변형 버그 연결·CLI v8 RC로 깔린 경우 되돌리기 절차 보강 — 차단 요인 아님, 선택 보강
 - [✅] 2026-09-26 보강분(`$extends` 로깅·connect_timeout 위치·Vercel-Neon 환경변수명·역방향 include·`PrismaNeonHttp` v7 생성자)에 대한 skill-tester 재테스트 수행 — Q1·Q2·Q3 모두 보강 내용을 직접 겨냥한 질문으로 재실행, 3/3 PASS. 경미한 표기 불일치(`$allModels`) 1건 외 gap 없음. PENDING_TEST → APPROVED 재전환
 
 ---
@@ -259,3 +300,6 @@ status: APPROVED
 | 2026-09-26 | v1 | 섹션 7 선택 보강 4건 반영: `$extends` 로깅 전체 예시(references/v6-to-v7-upgrade.md 신설 절), `connect_timeout` 부착 위치(풀드 URL)·Vercel-Neon 환경변수명 명시, 역방향 include 예시(§7), `PrismaNeonHttp` v7 생성자 UNVERIFIED→VERIFIED 전환(패키지 원본 실측, references/serverless-edge.md). 500줄 유지 위해 코드 예시 일부를 references/로 이동. 내용 변경으로 APPROVED → PENDING_TEST 재전환(재테스트 대기) | Claude (Sonnet 5) |
 | 2026-09-26 | v1 | 2단계 재테스트 수행 (Q1 `$extends` 로깅 완전 코드 / Q2 connect_timeout 위치+Vercel-Neon 환경변수 / Q3 역방향 include+`PrismaNeonHttp` v7 생성자·트랜잭션) — 보강 내용 전부 타깃, 3/3 PASS → PENDING_TEST → APPROVED 재전환 | skill-tester |
 | 2026-09-26 | v1 | 표기 정합: SKILL.md 본문의 `$allModels.$allOperations` 축약 표기를 references 실제 코드(최상위 `query.$allOperations`, raw 쿼리 포함)와 일치시키고 두 형태의 범위 차이를 명시 (코드 변경 없음, status 유지) | Claude (Opus 5.5) |
+| 2026-11-09 | v1 | 재검증 — npm·GitHub로 최신 안정 7.10.0 → **7.10.1**(패치, 브레이킹 없음) 갱신, CLI `latest` 8.0.0-rc.17 → rc.33, v8 GA(2026-10 목표) 미도달·여전히 RC 반영, 7.10.1 수정 사항(중첩 `$transaction` 옵션·P3025) 한 줄 추가. migrate dev·트랜잭션 기본값 등 API 변경 없음 확인. SKILL.md 500줄 유지 | Claude (Opus 5.5) |
+| 2026-11-09 | v1 | 재검증 후 2단계 재시험 수행 (Q1 CLI v8 RC 설치 함정·최신 안정 7.10.1·메이저 고정 / Q2 중첩 `$transaction`·7.10.1 수정·기본 maxWait/timeout·migrate dev generate 비자동) → 2/2 PASS, APPROVED 유지 | skill-tester |
+| 2026-11-12 | v1.1 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 v8 RC 설치 함정·7.10.1 패치 내용·v6→v7 브레이킹 표(references 상세 표 통합: db execute·migrate diff 플래그·엔진 env·Metrics 제거·풀 타임아웃 v6 호환값)·DISPUTED 2건·`$allOperations` 전환 요점·FK 인덱스 비자동/참조 동작 기본값·relationJoins Preview·트랜잭션 기본값/P2034/7.5 중첩·migrate deploy 락·Fluid attachDatabasePool·엣지 요청 단위·connect_timeout 위치·PrismaNeonHttp 트랜잭션 불가와 생성자 시그니처·v7 전용 안티패턴 / 덜어낸 것 설치 명령·package.json/tsconfig/config 예제·모델링 예제·싱글톤 코드·마이그레이션 명령표·N+1/raw SQL/트랜잭션/에러 처리/테스트 일반 예제·일반 안티패턴. references/ 2개는 SKILL.md 로 합치고 폴더 삭제 | 정리 |

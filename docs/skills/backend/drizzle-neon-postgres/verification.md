@@ -2,7 +2,7 @@
 skill: drizzle-neon-postgres
 category: backend
 version: v1.1
-date: 2026-09-28
+date: 2026-11-06
 status: APPROVED
 ---
 
@@ -14,10 +14,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `drizzle-neon-postgres` |
 | 스킬 경로 | `.claude/skills/drizzle-neon-postgres/SKILL.md` |
-| 검증일 | 2026-09-28 (최초 2026-09-17 · 09-25 구조 개편 · 09-28 재검증) |
+| 검증일 | 2026-11-06 (재검증, 이전 2026-09-28) |
 | 검증자 | skill-creator |
-| 스킬 버전 | v1.1 |
-| 기준 버전 | `drizzle-orm` 0.45.3 / `drizzle-kit` 0.31.11 / `@neondatabase/serverless` 1.1.0 / Next.js 16.x App Router / Neon Free 플랜 한도 2026-09-28 재확인(변경 없음) |
+| 스킬 버전 | v1.2 |
+| 기준 버전 | `drizzle-orm` 0.45.4 / `drizzle-kit` 0.31.11 / `@neondatabase/serverless` 1.2.0 / Next.js 16.x App Router / Neon Free 플랜 한도 2026-11-06 재확인(스토리지 1 GB로 상향) |
 
 ---
 
@@ -80,6 +80,12 @@ status: APPROVED
 | Snyk Advisor 패키지 페이지 | https://security.snyk.io/package/npm/drizzle-orm 외 2건 | ⭐⭐ Medium | 2026-09-17 조회 | 버전·배포일 2차 교차 확인 |
 | Upstash Redis Pricing | https://upstash.com/pricing/redis , https://upstash.com/docs/redis/overall/pricing | ⭐⭐⭐ High | 2026-09-17 조회 | 대안 비교(무료 한도) |
 | Web Push 오류 코드 해설 (RFC 8030 §7.3 인용) | https://pushpad.xyz/blog/web-push-errors-explained-with-http-status-codes | ⭐⭐ Medium | 2026-09-17 조회 | 404/410 처리 근거 보조 |
+| npm registry (2026-11-06 재검증) | https://registry.npmjs.org/drizzle-orm · https://registry.npmjs.org/drizzle-kit · https://registry.npmjs.org/@neondatabase/serverless | ⭐⭐⭐ High | 2026-11-06 조회 | dist-tags·배포 시각 |
+| Drizzle release 0.45.4 | https://github.com/drizzle-team/drizzle-orm/releases/tag/0.45.4 | ⭐⭐⭐ High | 2026-11-06 조회 | postgres-js prepared 수정만 |
+| neondatabase/serverless CHANGELOG | https://github.com/neondatabase/serverless/blob/main/CHANGELOG.md | ⭐⭐⭐ High | 2026-11-06 조회 | 1.2.0 하위 호환 기능 추가·JSR 중단 |
+| Neon Plans / Free plan FAQ (2026-11-06 재조회) | https://neon.com/docs/introduction/plans · https://neon.com/faqs/free-plan-limits-and-quotas | ⭐⭐⭐ High | 2026-11-06 조회 | 스토리지 1 GB/프로젝트·합계 20 GB |
+| 가격 변경 추적(보조) | https://www.usagepricing.com/blueprint/activity/neon-2026-10-02-free-plan-storage-doubled | ⭐⭐ Medium | 2026-11-06 조회 | 0.5→1 GB 변경 시점(2026-10-02) 교차 확인 |
+| Drizzle get-started neon-new (2026-11-06 재조회) | https://orm.drizzle.team/docs/get-started/neon-new | ⭐⭐⭐ High | 2026-11-06 조회 | 여전히 `@rc` 설치 안내 |
 
 ---
 
@@ -121,13 +127,24 @@ status: APPROVED
 
 **집계: VERIFIED 27 / DISPUTED 1 / UNVERIFIED 1 (총 29건)**
 
+#### 2026-11-06 재검증 클레임
+
+| # | 클레임 | 소스 | 판정 |
+|---|--------|------|------|
+| R1 | `drizzle-orm` latest 0.45.3 | npm registry(latest=0.45.4, 2026-10-08) + GitHub release 0.45.4(postgres-js named prepare 수정만) | DISPUTED → 0.45.4로 정정(API 영향 없음) |
+| R2 | `drizzle-kit` latest 0.31.11 | npm registry | VERIFIED (변경 없음) |
+| R3 | v1은 RC, 공식 `rc` dist-tag 1.0.0-rc.4 | npm registry(`rc`=1.0.0-rc.5, 2026-10-21) + get-started 문서(`@rc` 설치 안내 유지) | DISPUTED → rc 태그 rc.5로 정정, GA 아님은 VERIFIED |
+| R4 | `@neondatabase/serverless` 1.1.0 | npm registry(latest=1.2.0, 2026-10-01) + 공식 CHANGELOG(하위 호환 기능 추가, breaking 없음, JSR 중단) | DISPUTED → 1.2.0으로 정정, 변경 요지 1줄 추가 |
+| R5 | Neon Free 스토리지 0.5 GB/프로젝트 | Neon plans 문서(1 GB/프로젝트, 합계 20 GB) + Neon Free plan FAQ(2026-10-01 갱신) + 가격 변경 추적 사이트(2026-10-02 상향) | DISPUTED → 1 GB·합계 20 GB로 정정 |
+| R6 | 컴퓨트 100 CU-hours·브랜치 10·오토스케일 2 CU·5분 scale-to-zero(Free 비활성 불가)·전송 5 GB·스냅샷 1개 | Neon plans 문서 | VERIFIED (변경 없음) |
+
 > DISPUTED(28번)는 1차 문서 기준으로 내용을 정정해 반영했고, UNVERIFIED(29번)는 제거하지 않고 "공식 근거 없음 + 판단 근거 명시" 형태로 `주의` 표기해 남겼다.
 
 ---
 
 ### 4-2. 내용 정확성
 - [✅] 공식 문서와 불일치하는 내용 없음 (DISPUTED 1건은 1차 문서 기준으로 정정 반영)
-- [✅] 버전 정보가 명시되어 있음 (drizzle-orm 0.45.2 / drizzle-kit 0.31.10 / @neondatabase/serverless 1.1.0 / Next.js 16.x, Neon 한도 기준일 2026-09-17)
+- [✅] 버전 정보가 명시되어 있음 (2026-11-06 재검증 기준 drizzle-orm 0.45.4 / drizzle-kit 0.31.11 / @neondatabase/serverless 1.2.0 / Next.js 16.x, Neon 한도 기준일 2026-11-06)
 - [✅] deprecated된 패턴을 권장하지 않음 (pgTable 3번째 인자 객체 반환 대신 배열 콜백 사용, 레거시 `POSTGRES_*` 변수 사용 금지 명시)
 - [✅] 코드 예시가 실행 가능한 형태임 (스키마·config·db 클라이언트·migrate 스크립트·Route Handler 3종이 import까지 완결)
 
@@ -145,13 +162,50 @@ status: APPROVED
 - [✅] 범용적으로 사용 가능 (로컬 프로젝트명·절대경로 비종속. 대상 시나리오는 "개인용 PWA 푸시 알림 앱" 일반 서술로만 기술)
 
 ### 4-5. Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-09-17, typescript-backend-developer 3회 / 2026-09-28 재검증 후 general-purpose 2회 재테스트)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-09-17, typescript-backend-developer 3회 / 2026-09-28 재검증 후 general-purpose 2회 재테스트 / 2026-11-06 재검증 v1.2 후 general-purpose 3회 재시험)
 - [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-09-17 3/3, 2026-09-28 2/2 근거 섹션·줄번호 정확 인용)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (FAIL 없음 — 보완 불필요, gap만 기록)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-11-06 (재검증 v1.2 재시험)
+**수행자**: skill-tester → general-purpose (3회 호출, typescript-backend-developer 미등록으로 대체)
+**수행 방법**: SKILL.md + REFERENCE.md Read 후 2026-11-06 재검증 정정분(0.45.4 / rc.5 / serverless 1.2.0 / Neon Free 스토리지 1 GB)을 겨냥한 실전 질문 3개 답변, 근거 섹션·줄번호 확인
+
+### 실제 수행 테스트 (2026-11-06)
+
+**Q1. Neon Free 스토리지가 0.5GB가 아니라 지금 몇 GB인가, 합계·컴퓨트·scale-to-zero 제약**
+- ✅ PASS
+- 근거: SKILL.md 헤더(16행), §8 "콜드 스타트" 행(365행), REFERENCE.md §10 표(162-172행)·해석(174-178행)·안티패턴 #11(209행)
+- 상세: 프로젝트당 1 GB·합계 20 GB·100 CU-hours·5분 scale-to-zero(Free 비활성 불가)를 정확히 인용하고 keep-alive cron을 안티패턴으로 지적. SKILL.md와 REFERENCE.md 간 수치 불일치 없음.
+
+**Q2. 새 설치 버전 선택(@rc 안내 vs latest), latest/rc 태그·drizzle-kit 버전, 0.45.x에서 pgTable 배열 콜백·relations 유효 여부, v1 변경점**
+- ✅ PASS
+- 근거: SKILL.md 15행, §1 "주의(버전 정책)" 46행, 199행, 216-226행
+- 상세: 0.45.x + drizzle-kit 0.31.x 고정 권고, latest 0.45.4 / rc 1.0.0-rc.5 / kit 0.31.11을 정확히 답변. v1 변경(journal.json 제거, drop 삭제, up 이전, 관계형 쿼리 API 변경) 인용.
+
+**Q3. @neondatabase/serverless 1.2.0 업그레이드 시 기존 코드 영향, db.transaction() 에러 원인·대안, Deno 참조**
+- ✅ PASS
+- 근거: SKILL.md 44행, §0(30행), §3 표(87-88행), §7 트랜잭션(344-355행), REFERENCE.md §12 #3
+- 상세: 1.2.0은 하위 호환(연결 문자열 방식 그대로 동작), neon-http `db.transaction()` 미지원 → `db.batch()` 또는 neon-serverless, Deno는 `npm:@neondatabase/serverless`(JSR 중단)로 정확히 답변.
+
+### 발견된 gap (2026-11-06, 보강 권장, 차단 요인 아님)
+
+- v1 RC에 맞는 drizzle-kit 구체 버전, v1 관계 API 구체 형태, v1에서 pgTable 3번째 인자 유효 여부 미기술 (upgrade-v1 링크로 위임).
+- §1 설치 명령(38행)에 버전 고정(`@0.45.4` 등) 명령이 없어 "고정" 권고와 명령이 분리됨.
+- serverless 1.2.0 개별 파라미터(함수형) 신기능은 한 줄 설명뿐 코드 예시 없음.
+
+### 판정 (2026-11-06)
+
+- agent content test: 3/3 PASS
+- verification-policy 분류: 라이브러리/ORM 사용법 스킬 — 실사용 필수 카테고리 아님
+- 최종 상태: APPROVED 유지
+
+---
+
+### 이전 테스트 기록 — 2026-09-28 (재테스트)
 
 **수행일**: 2026-09-28 (재테스트)
 **수행자**: skill-tester → general-purpose (2회 병렬 호출, typescript-backend-developer 미등록으로 대체)
@@ -255,8 +309,8 @@ status: APPROVED
 | 내용 정확성 | ✅ — 2026-09-28 재검증에서 drizzle-orm/kit 버전 정정(0.45.2→0.45.3, 0.31.10→0.31.11) 1건 추가 |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-09-17 3/3 PASS, 2026-09-28 재테스트 2/2 PASS) |
-| **최종 판정** | **APPROVED** (재검증 정정분 재테스트 완료) |
+| 에이전트 활용 테스트 | ✅ (2026-09-17 3/3 PASS, 2026-09-28 2/2 PASS, 2026-11-06 재시험 3/3 PASS) |
+| **최종 판정** | **APPROVED** (2026-11-06 재검증 정정분 재테스트 완료) |
 
 > 분류: 라이브러리/ORM 사용법 스킬 — verification-policy 기준상 실사용 필수 카테고리가 아니므로, skill-tester content test PASS(2026-09-17 3/3, 2026-09-28 2/2)로 APPROVED 전환.
 
@@ -264,12 +318,13 @@ status: APPROVED
 
 ## 7. 개선 필요 사항
 
-- [✅] skill-tester 2단계 content test 수행 (2026-09-17 완료, 3/3 PASS — typescript-backend-developer / 2026-09-28 재검증 정정분 재테스트 완료, 2/2 PASS — general-purpose)
+- [✅] skill-tester 2단계 content test 수행 (2026-09-17 완료, 3/3 PASS — typescript-backend-developer / 2026-09-28 재검증 정정분 재테스트 완료, 2/2 PASS — general-purpose / 2026-11-06 재검증 v1.2 재시험 완료, 3/3 PASS — general-purpose)
 - [❌] Drizzle v1.0.0이 정식 릴리즈되면 마이그레이션 폴더 구조·관계 정의 API 기준으로 스킬 전면 갱신 필요 (현재 0.45.x 기준) — 차단 요인 아님, v1 정식 릴리즈 시점에 재작성 필요한 선택 보강
 - [❌] Neon Free 플랜 한도·Upstash Free 한도는 정책 변동 가능 — 재사용 시 pricing 페이지 재확인 권장 — 차단 요인 아님, 선택 보강
 - [❌] 빌드 단계 마이그레이션 실행에 대한 공식 근거를 찾지 못함(UNVERIFIED) — Vercel/Drizzle 공식 가이드가 추가되면 6절 갱신 — 차단 요인 아님, 선택 보강
 - [❌] `neon-http` + 풀드 연결 조합의 공식 명시 서술이 없어 "필수 아님"으로만 기술 — Neon 문서 갱신 시 재확인 — 차단 요인 아님, 선택 보강
 - [❌] 대량 발송 시 Neon 동시 커넥션·rate limit 관점의 배치 전략 미기술 (6명 규모 범위 밖) — 차단 요인 아님, 선택 보강
+- [❌] 설치 명령 버전 고정 미표기, v1 RC용 drizzle-kit 버전·v1 pgTable 호환 여부 미기술, serverless 1.2.0 개별 파라미터 코드 예시 부재 (2026-11-06 content test gap) — 차단 요인 아님, 선택 보강
 - [❌] `db.batch()`에서 `isolationLevel` 등 옵션 실사용 코드 예시 부재, `onConflictDoUpdate`의 userId 덮어쓰기 소유권 이전 트레이드오프 미기술, "Production만 마이그레이션" 분기 구현 예시 부재 (content test 3건에서 발견된 gap) — 차단 요인 아님, 선택 보강
 
 ---
@@ -283,3 +338,7 @@ status: APPROVED
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | skill-creator |
 | 2026-09-28 | v1.1 | 재검증(2차) — drizzle-orm 0.45.2→0.45.3, drizzle-kit 0.31.10→0.31.11 버전 정정(API 영향 없음), Neon Free 한도 변경 없음 확인. status APPROVED → PENDING_TEST(재테스트 대기) | Claude (Sonnet 5) |
 | 2026-09-28 | v1.1 | 2단계 재테스트 수행 (Q1 0.45.3/0.31.11 패치 영향·v1 GA 여부 / Q2 Neon Free 한도 축소설·keep-alive cron 안전성) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-11-06 | v1.2 | 재검증 — drizzle-orm 0.45.3→0.45.4(postgres-js 수정만, API 영향 없음), `rc` dist-tag rc.4→rc.5(v1 여전히 GA 아님), @neondatabase/serverless 1.1.0→1.2.0(하위 호환 기능 추가·JSR 중단 1줄 추가), Neon Free 스토리지 0.5 GB→1 GB/프로젝트(합계 20 GB) 정정(SKILL.md 헤더·REFERENCE.md §10·§13). drizzle-kit 0.31.11·나머지 Free 한도 VERIFIED. 내용 수정 있음 — skill-tester 재시험 예정 | Claude (Opus 5.5) |
+| 2026-11-06 | v1.2 | 재검증 후 2단계 재시험 수행 (Q1 Neon Free 스토리지 1 GB·합계·컴퓨트 / Q2 설치 버전 정책·latest 0.45.4·rc.5·v1 변경점 / Q3 serverless 1.2.0 호환·neon-http 트랜잭션 대안·Deno 참조) → 3/3 PASS, APPROVED 유지 | skill-tester |
+| 2026-11-09 | v1.2 | 2026-11-09 보강 — web-push 4.0 ESM 대응: web-push 4.0.0(npm latest, 2026-11-06)이 `"type":"module"`·named export 전용(default export 없음)으로 바뀌어 REFERENCE.md §9-3 의 `import webpush from 'web-push'`를 `import * as webpush from 'web-push'`로 정정(4.0.0 패키지로 default import 실패·네임스페이스 import 동작 실측). 검증일 변경 없음 | Claude (Opus 5.5) |
+| 2026-11-12 | v1.3 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 0.45.x latest vs v1 RC(rc.5) 버전 정책·relations v1 변경·serverless 1.2.0/JSR 중단·neon-http transaction 미지원과 batch 한계·WebSocket Pool 수명·UNPOOLED 마이그레이션·Vercel 빌드 마이그레이션 동시성·scale-to-zero/keep-alive CU 소진·web-push 4.0 ESM import·404/410 정리·Neon Free 한도표 / 덜어낸 것 설치·드라이버/drizzle.config 기본 코드·스키마 정의와 타입 추론 예제·generate/migrate/push 명령표·select/insert/upsert/update/delete 예제·Route Handler 완결 예제 3종·도입 체크리스트. references/REFERENCE.md 는 남길 사실을 SKILL.md 로 옮기고 폴더 삭제 | 정리 |

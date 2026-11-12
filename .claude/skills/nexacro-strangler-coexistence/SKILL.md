@@ -16,7 +16,7 @@ description: 넥사크로 17 관리자 화면을 Next.js로 한 번에 바꾸지
 > 소스: https://docs.tobesoft.com/developer_guide_nexacro_n_en/de1da5195a28d553 (Nexacro N 개발자 가이드 — WebBrowser, 같은 API)
 > 소스: https://docs.tobesoft.com/product_information_nexacro_17_ko/product_restrictions (넥사크로 17 제품 제약사항)
 > 소스: https://docs.spring.io/spring-session/reference/guides/java-custom-cookie.html (Spring Session 4.1.1 — 쿠키 도메인)
-> 검증일: 2026-10-08
+> 검증일: 2026-11-09
 
 > 주의: **넥사크로 → React/Next.js를 메뉴 단위로 전환한 공개 사례는 찾지 못했다.** 이 스킬은 Strangler Fig 일반 원칙 + Next.js·MDN·투비소프트 공식 문서의 개별 기능을 조합한 **설계 가이드**다. 실제 적용 전 PoC(메뉴 1개)로 인증·통신·롤백을 반드시 확인한다.
 

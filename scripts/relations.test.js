@@ -2,7 +2,7 @@
 // relations.test.js — 레포 전체 관계 정합성 검사 (2026-10-16)
 //
 // relations.json(훅·룰·커맨드·에이전트·스킬 관계 원본, 계획서 14장)이 레포 실물과 맞는지 본다.
-// 검사 로직은 .claude/hooks/relation-guard.js 의 check() 를 그대로 쓴다(판정 규칙 이원화 방지).
+// 검사 로직은 scripts/relations-check.js 의 check() 를 쓴다 (2026-11-11 relation-guard 훅에서 옮김 — 커밋 차단 훅 대신 이 시험이 지킴).
 //
 // 3계층 (rules/adversarial-testing.md):
 //  - 정상: 레포 실물 전수 — 분류 안 된 관계·소속 없는 항목·없는 항목 참조·체크리스트 누락이 0건
@@ -15,7 +15,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const REPO = path.resolve(__dirname, '..');
-const guard = require(path.join(REPO, '.claude', 'hooks', 'relation-guard.js'));
+const guard = require(path.join(REPO, 'scripts', 'relations-check.js'));
 const REL = JSON.parse(fs.readFileSync(path.join(REPO, 'relations.json'), 'utf8'));
 const TYPES = new Set(['hook', 'rule', 'command', 'agent', 'skill']);
 
@@ -64,7 +64,7 @@ test('경계: relations.json 의 모든 id 가 "종류:이름" 형식이고 종�
 // ── 프리셋 최소 구성 (2026-10-29 — lfmall 에서 옮김: 스택 전용 항목 기본 끔 · 넥사크로 프리셋 최소 · TS 백엔드 → typescript.md) ──
 const { resolve } = require(path.join(REPO, 'cli', 'resolve.js'));
 const MANIFEST = JSON.parse(fs.readFileSync(path.join(REPO, 'manifest.json'), 'utf8'));
-const STACK_BLOCKS = ['frontend-core', 'ts-backend', 'java-common', 'java-legacy', 'java-modern', 'nexacro', 'rust', 'python', 'unity', 'spec-extraction'];
+const STACK_BLOCKS = ['frontend-core', 'ts-backend', 'java-common', 'java-legacy', 'java-modern', 'nexacro', 'rust', 'python', 'spec-extraction']; // unity 는 2026-11-11 삭제
 const on = (layer) => resolve(MANIFEST, layer ? [{ source: 'test', ...layer }] : []).enabled;
 
 test('정상: 프리셋을 고르지 않은 기본 상태에는 스택 전용 에이전트·룰·스펙 추출이 켜져 있지 않다', () => {
@@ -73,18 +73,18 @@ test('정상: 프리셋을 고르지 않은 기본 상태에는 스택 전용 �
   assert.deepStrictEqual(leaked, [], `기본으로 켜진 스택 전용 항목: ${leaked.join(', ')}`);
 });
 
-test('정상: TS 백엔드 개발 에이전트만 켜도 typescript.md 가 같이 켜지고, 프론트 에이전트는 따라오지 않는다', () => {
-  const en = on({ enable: ['agent:typescript-backend-developer'] });
+test('정상: TS 백엔드 스킬만 켜도 typescript.md 가 같이 켜지고, 프론트 블록 스킬은 따라오지 않는다', () => {
+  const en = on({ enable: ['skill:prisma-orm'] });
   assert.ok(en.has('rule:typescript.md'));
-  assert.ok(!en.has('agent:frontend-developer'));
+  assert.ok(!en.has('skill:nextjs'));
   const blk = on({ enable: ['block:ts-backend'] });
   assert.ok(blk.has('rule:typescript.md'), 'TS 백엔드 블록만 켜도 TS 룰');
 });
 
-test('악성·오남용: typescript.md 를 끄면서 TS 백엔드 개발 에이전트만 켜 두는 조합은 만들 수 없다 (필수 의존 우회 차단)', () => {
-  const en = on({ enable: ['agent:typescript-backend-developer'], disable: ['rule:typescript.md'] });
+test('악성·오남용: typescript.md 를 끄면서 TS 백엔드 스킬만 켜 두는 조합은 만들 수 없다 (필수 의존 우회 차단)', () => {
+  const en = on({ enable: ['skill:prisma-orm'], disable: ['rule:typescript.md'] });
   assert.ok(!en.has('rule:typescript.md'));
-  assert.ok(!en.has('agent:typescript-backend-developer'), '룰이 꺼지면 쓰는 쪽도 꺼짐');
+  assert.ok(!en.has('skill:prisma-orm'), '룰이 꺼지면 쓰는 쪽도 꺼짐');
 });
 
 test('경계: 어느 프리셋도 자기 enable 에 없는 스택 블록의 에이전트를 켜지 않는다 — 넥사크로는 개발 공통 + 넥사크로만', () => {

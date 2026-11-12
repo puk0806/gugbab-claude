@@ -1,9 +1,5 @@
 # Codex 적대적 코드 리뷰 워크플로우
 
-> **이 규칙은 `paths`로 스코핑하지 않는다.** `codex-review-guard` 훅이 Stop 시점에
-> 이 워크플로우를 평문 경로로 안내하므로(=`@` 임포트가 아님), 조건부 로딩으로 두면
-> 정작 리뷰가 필요한 순간에 규칙이 컨텍스트에 없다. 2026-08-11에 `.codex-review-done`
-> (리뷰 *완료 후* 생기는 마커)로 스코핑했다가 트리거가 역전되는 문제로 되돌렸다.
 
 ## 실행 조건 — 3가지 모두 충족해야 실행
 
@@ -52,12 +48,10 @@ node -e "const s=require('./.claude/settings.json');process.exit(s.enabledPlugin
 
 ## 워크플로우 (최대 3라운드)
 
-> **리뷰 경로 (2026-07-21 정렬)**: 기본 `codex review`는 codex 내장 *일반* 리뷰 기준을 쓴다.
-> 진짜 적대적 기준(아래 attack-surface)을 쓰려면 플러그인의 **`adversarial-review` 컴패니언**을 태운다.
-> `codex review --uncommitted "[PROMPT]"` 병용은 v0.122.0+에서 미지원이므로, 커스텀 프롬프트 대신
-> 플러그인에 내장된 적대적 프롬프트(`prompts/adversarial-review.md`)를 사용한다.
+> **리뷰 경로**: 기본 `codex review`는 codex 내장 *일반* 리뷰 기준을 쓴다.
+> 적대적 기준(아래 attack-surface)은 플러그인의 **`adversarial-review` 컴패니언**으로 돌린다(`codex review --uncommitted` 에는 커스텀 프롬프트를 함께 줄 수 없다).
 >
-> **각 라운드 공통 실행** (컴패니언 경로는 설치 버전에 무관하게 동적 해석):
+> **각 라운드 공통 실행** (N = 라운드 번호, 컴패니언 경로는 설치 버전에 무관하게 동적 해석):
 > ```bash
 > CODEX_COMPANION=$(ls ~/.claude/plugins/cache/openai-codex/codex/*/scripts/codex-companion.mjs 2>/dev/null | sort -V | tail -1); \
 >   node "$CODEX_COMPANION" adversarial-review --wait --scope working-tree 2>&1 | tee /tmp/codex-rN.txt
@@ -70,11 +64,7 @@ node -e "const s=require('./.claude/settings.json');process.exit(s.enabledPlugin
 > - **finding 문턱**: 스타일·네이밍·저가치 클린업 제외, 근거 있는 material finding만
 > - **출력**: `needs-attention`(막을 위험) / `approve`(적대적 결함 0). 이 attack-surface는 `.claude/rules/adversarial-testing.md`(테스트 품질 묶음을 켠 경우)의 테스트 기준과 동일 축으로 정렬됨
 
-### Round 1 — 초기 적대적 리뷰
-
-```bash
-CODEX_COMPANION=$(ls ~/.claude/plugins/cache/openai-codex/codex/*/scripts/codex-companion.mjs 2>/dev/null | sort -V | tail -1); node "$CODEX_COMPANION" adversarial-review --wait --scope working-tree 2>&1 | tee /tmp/codex-r1.txt
-```
+### Round 1 — 초기 적대적 리뷰 (공통 실행, `/tmp/codex-r1.txt`)
 
 Codex는 위 attack-surface 기준으로 결함·보안취약점·설계 약점을 찾는다. Claude는 전체 출력(`/tmp/codex-r1.txt`)을 읽어 아래를 수행한다:
 
@@ -83,11 +73,7 @@ Codex는 위 attack-surface 기준으로 결함·보안취약점·설계 약점�
 2. ACCEPT 항목 수정
 3. 수용·거부 근거 정리 후 Round 2 실행
 
-### Round 2 — 수정 검증 + 추가 공격
-
-```bash
-CODEX_COMPANION=$(ls ~/.claude/plugins/cache/openai-codex/codex/*/scripts/codex-companion.mjs 2>/dev/null | sort -V | tail -1); node "$CODEX_COMPANION" adversarial-review --wait --scope working-tree 2>&1 | tee /tmp/codex-r2.txt
-```
+### Round 2 — 수정 검증 + 추가 공격 (공통 실행, `/tmp/codex-r2.txt`)
 
 Round 1 수정 후 재실행. 전체 출력(`/tmp/codex-r2.txt`) 읽어 판정한다.
 
@@ -96,11 +82,7 @@ Round 1 수정 후 재실행. 전체 출력(`/tmp/codex-r2.txt`) 읽어 판정�
 - 새로 제기된 이슈에 대해 ACCEPT / REJECT / PARTIAL
 - Round 3 실행 또는 조기 종료 판단
 
-### Round 3 — 최종 검토 (마지막 기회)
-
-```bash
-CODEX_COMPANION=$(ls ~/.claude/plugins/cache/openai-codex/codex/*/scripts/codex-companion.mjs 2>/dev/null | sort -V | tail -1); node "$CODEX_COMPANION" adversarial-review --wait --scope working-tree 2>&1 | tee /tmp/codex-r3.txt
-```
+### Round 3 — 최종 검토 (마지막 기회, 공통 실행, `/tmp/codex-r3.txt`)
 
 전체 출력(`/tmp/codex-r3.txt`) 읽어 최종 판정한다.
 

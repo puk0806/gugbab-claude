@@ -1,8 +1,8 @@
 ---
 skill: tanstack-query
 category: frontend
-version: v1.2
-date: 2026-09-28
+version: v1.3
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -14,10 +14,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `tanstack-query` |
 | 스킬 경로 | `.claude/skills/tanstack-query/SKILL.md` |
-| 검증일 | 2026-09-28 (재검증(2차)) / 2026-08-26 (v1.1) / 2026-08-11 (v1 최초) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-28) / 2026-08-26 (v1.1) / 2026-08-11 (v1 최초) |
 | 검증자 | skill-creator (v1) → 재검증(2차) |
-| 스킬 버전 | v1.2 |
-| 기준 버전 | `@tanstack/react-query` 5.104.0 (React 18+ / 19) |
+| 스킬 버전 | v1.3 |
+| 기준 버전 | `@tanstack/react-query` 5.107.1 (React 18+ / 19, 2026-11-09 재검증 — 이전 5.104.0) |
 
 ---
 
@@ -69,6 +69,11 @@ status: APPROVED
 | 공식 문서 (Query Options / TypeScript) | https://github.com/TanStack/query/blob/main/docs/framework/react/guides/query-options.md | ⭐⭐⭐ High | 2026-08-11 | queryOptions·infiniteQueryOptions |
 | 공식 레퍼런스 (useQuery) | https://tanstack.com/query/latest/docs/framework/react/reference/useQuery | ⭐⭐⭐ High | 2026-08-11 | staleTime 함수·'static'·throwOnError·select |
 | npm registry (latest) | https://registry.npmjs.org/@tanstack/react-query/latest | ⭐⭐⭐ High | 2026-08-11 | version 5.101.4, peer react ^18 \|\| ^19 |
+| npm registry (react-query·query-core·solid-query·svelte-query, 2026-11-09) | https://registry.npmjs.org/@tanstack/react-query | ⭐⭐⭐ High | 2026-11-09 | latest 5.107.1, previous 4.44.0, 6.x 없음 / solid rc 6.0.0-rc.5 / svelte latest 6.4.1 |
+| GitHub query-core CHANGELOG.md | https://raw.githubusercontent.com/TanStack/query/main/packages/query-core/CHANGELOG.md | ⭐⭐⭐ High | 2026-11-09 | 5.104.1~5.107.1 patch만, 5.105.3 static 판정 변경(#12497) |
+| GitHub react-query CHANGELOG.md | https://raw.githubusercontent.com/TanStack/query/main/packages/react-query/CHANGELOG.md | ⭐⭐⭐ High | 2026-11-09 | 5.105.2 `<Activity>` 관련 fix 등 patch만 |
+| 공식 레퍼런스 (QueryClient, 렌더) | https://tanstack.com/query/latest/docs/reference/QueryClient | ⭐⭐⭐ High | 2026-11-09 | prefetch/fetch/ensure 계열 "Use queryClient.query(...) instead" 유지 |
+| query-core 5.107.1 배포 tarball (d.ts·query.js) | https://registry.npmjs.org/@tanstack/query-core/-/query-core-5.107.1.tgz | ⭐⭐⭐ High | 2026-11-09 | `@deprecated` 표기 6종 유지, `isStatic()`은 data 없으면 false |
 | GitHub 이슈 #9660 (v5.89.0 시그니처 변경) | https://github.com/TanStack/query/issues/9660 | ⭐⭐⭐ High | 2026-08-11 | 콜백 3번째 인자 → onMutateResult 삽입 보고 |
 | 공식 레퍼런스 (environmentManager) | https://tanstack.com/query/latest/docs/reference/environmentManager | ⭐⭐⭐ High | 2026-08-11 | core 5.91.1 도입, isServer export deprecated |
 
@@ -100,6 +105,7 @@ status: APPROVED
 - [✅] 해당 스킬을 참조하는 실전 질문 3개 수행 (섹션 5 참조)
 - [✅] 스킬 내용이 올바른 답변 경로를 도출하는지 확인
 - [✅] 오답 유도 시나리오 회귀 확인 2건 수행 (v6 권고 방지, gcTime 오해 방지)
+- [✅] 2026-11-09 재검증 후 재시험 2건 수행 (`'static'` 데이터 유무, v6 범위) — 2/2 PASS
 
 ### 4-5. 교차 검증 판정표
 
@@ -118,6 +124,15 @@ status: APPROVED
 | 11 | `useInfiniteQuery`는 `initialPageParam` 필수, stale 시 첫 페이지부터 순차 전체 refetch, `maxPages`로 상한 | 공식 Infinite Queries 가이드 | 동 문서 refetch 동작 설명 | **VERIFIED** |
 | 12 | 쿼리 retry 기본 3회 + `Math.min(1000 * 2 ** attemptIndex, 30000)`, 서버에서는 0, 뮤테이션은 0 | 공식 Query Retries 가이드 | useMutation 레퍼런스(retry 기본 0) | **VERIFIED** |
 
+#### 2026-11-09 재검증 판정
+
+| # | 클레임 | 소스 1 | 소스 2 | 판정 |
+|---|--------|--------|--------|------|
+| R1 | React 어댑터 최신은 5.107.1, 6.x 없음 | npm registry dist-tags·versions | GitHub react-query CHANGELOG.md(최상단 5.107.1) | **VERIFIED (버전 갱신)** |
+| R2 | v6는 Svelte(정식)·Solid 어댑터 한정 — Solid는 beta | npm solid-query dist-tags(`rc` 6.0.0-rc.5, latest 5.107.1) | npm svelte-query latest 6.4.1 | **DISPUTED → 수정 반영 (Solid beta→RC)** |
+| R3 | 5.104~5.107에 신규 deprecated·breaking 없음, 통합 메서드 deprecated 유지 | query-core CHANGELOG.md | 5.107.1 배포 d.ts `@deprecated` 6종 + QueryClient 렌더 문서 | **VERIFIED** |
+| R4 | `staleTime: 'static'`은 invalidate로도 stale 안 됨 | query-core CHANGELOG 5.105.3(#12497: "A query is static only when it has data") | 5.107.1 배포 `query.js` `isStatic()`(data 없으면 false) | **DISPUTED → 수정 반영 (데이터 있을 때만 static 단서 추가)** |
+
 ### 4-6. DISPUTED 처리 내역
 
 **#6 — 뮤테이션 콜백 시그니처**
@@ -132,6 +147,37 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-11-09] 재검증 후 재시험 (skill-tester)
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester → general-purpose (도메인 에이전트 대신 general-purpose 사용)
+**수행 방법**: SKILL.md Read 후 2개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인 (5.107.1 재검증으로 수정된 내용 대상)
+
+**Q1. `staleTime: 'static'` 쿼리의 첫 요청이 실패해 데이터가 없을 때 `invalidateQueries()`가 다시 가져오는가? 데이터가 있을 때는? 어느 버전부터인가?**
+- ✅ PASS
+- 근거: SKILL.md "2. staleTime vs gcTime" 핵심 정리 5번, "6. invalidateQueries" 원칙
+- 상세: 데이터 없음 → 5.105.3부터 static으로 보지 않아 reset·invalidate·refetch 때 다시 가져옴, 데이터 있음 → invalidate로도 stale 안 됨, 이라고 정확히 답함. anti-pattern("static이면 데이터 유무와 무관하게 항상 무시")을 회피함.
+
+**Q2. 동료가 "v6가 나왔으니 React 프로젝트도 v6로 올리자"고 한다. React 최신 버전과 v6의 존재 범위는?**
+- ✅ PASS
+- 근거: SKILL.md "0. 버전 기준" 섹션
+- 상세: React 어댑터 최신 5.107.1(v5), v6는 Svelte(latest 6.4.x)와 Solid(RC, dist-tag `rc`) 한정, React를 v6로 올리라는 조언은 오답이라고 답함. Solid를 beta로 잘못 답하지 않음(이번 재검증의 정정 사항 반영 확인).
+
+### 발견된 gap (선택 보강, 차단 요인 아님)
+
+- 섹션 6의 "단 `staleTime: 'static'`은 예외다" 문장에는 "데이터 있을 때만"이라는 단서가 없어 섹션 2 핵심 정리 5번과 함께 읽어야 정확함
+- 5.105.3 이전 동작과 `'static'` 도입 버전은 SKILL.md에 없음 (질문 범위 밖)
+
+### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 해당 없음 (라이브러리 사용법 스킬 — content test PASS = APPROVED)
+- 최종 상태: APPROVED 유지
+
+---
+
+### [2026-08-11] 최초 테스트 기록
 
 **수행일**: 2026-08-11
 **수행자**: skill-creator (frontend 라이브러리 사용법 카테고리 — agent content test)
@@ -195,8 +241,8 @@ status: APPROVED
 | 구조 완전성 | ✅ (frontmatter·소스 URL·검증일·버전 기준·주의 표기·흔한 실수·체크리스트) |
 | 실용성 | ✅ (전 섹션 실행 가능한 TypeScript 예시, 프로젝트 비종속) |
 | 기존 스킬과의 중복 | ✅ 분리 완료 (state-management = 선택 기준·Zustand / 이 스킬 = TanStack Query 사용법, 양방향 포인터) |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS |
-| **최종 판정** | **APPROVED** (2026-09-28 재검증에서도 유지) |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-08-11) · 2026-11-09 재시험 2/2 PASS (`'static'` 데이터 유무 판정, v6 범위) |
+| **최종 판정** | **APPROVED** (2026-09-28·2026-11-09 재검증/재시험에서도 유지) |
 
 > 판정 근거: `verification-policy.md`의 "실사용 검증이 필요 없는 스킬 — 라이브러리 사용법 스킬은 content test PASS = APPROVED" 기준 적용.
 > 빌드 산출물·실행 결과로만 검증 가능한 항목(마이그레이션·빌드 설정)은 포함돼 있지 않다.
@@ -205,6 +251,8 @@ status: APPROVED
 
 ## 7. 개선 필요 사항
 
+- [✅] skill-tester content test 재시험 (2026-11-09 완료, 2/2 PASS, APPROVED 유지)
+- [❌] (선택 보강, 차단 요인 아님) SKILL.md 섹션 6 "`'static'`은 예외다" 문장에 "데이터 있을 때만" 단서 추가 검토
 - [❌] `frontend/state-management` 스킬의 낙관적 업데이트 예시가 v5.89.0 이전 콜백 네이밍(`(err, newData, context)`)을 사용 중 — 별도 작업으로 해당 스킬 갱신 검토 필요(이번 작업 범위 밖, 파일 미수정)
 - [❌] React 어댑터 v6가 정식 출시되면 섹션 0(버전 기준)과 마이그레이션 포인터 재검증 필요
 - [❌] `environmentManager.isServer()` 미지원 버전(코어 5.91.1 미만) 프로젝트용 폴백은 각주 수준 — 레거시 적용 시 확인 필요
@@ -218,4 +266,6 @@ status: APPROVED
 | 2026-08-11 | v1 | 최초 작성 — 공식 문서 21회 페치·6회 검색 기반, 12개 클레임 교차 검증(DISPUTED 1건 수정 반영), content test 3/3 PASS로 APPROVED | skill-creator |
 | 2026-08-26 | v1.1 | v5.102.0 통합 메서드 반영 — `prefetchQuery`/`fetchQuery`/`ensureQueryData` 계열 `@deprecated`(v6 제거 예정), `queryClient.query()`/`infiniteQuery()` 대체 및 동작 차이(throw·`staleTime: 'static'`) 주의 블록을 섹션 10에 추가. fact-checker 5개 독립 소스 VERIFIED(소스 JSDoc·마이그레이션 가이드·QueryClient 레퍼런스·RFC #9135·PR #11282). 기존 예시는 v5 내 유효하므로 유지 | orchestrator + fact-checker |
 | 2026-09-25 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | |
+| 2026-11-09 | v1.3 | 재검증 — 최신 5.104.0→**5.107.1**(2026-11-06) 갱신. query-core·react-query CHANGELOG 5.104.1~5.107.1 전수 대조: 신규 deprecated·breaking 없음(patch만), 통합 메서드 `query()`/`infiniteQuery()` deprecated 표기 그대로(5.107.1 배포 d.ts 확인). 정정: Solid 어댑터 v6 beta→**RC**(dist-tag `rc` 6.0.0-rc.5, latest 5.x), Svelte v6 latest 6.4.x 명시. 보강: `staleTime: 'static'`은 데이터가 있을 때만 static(5.105.3 #12497, 배포 소스 `isStatic()` 확인). status APPROVED 유지. skill-tester 재시험 수행(Q1 `'static'` 데이터 없음/있음 동작 / Q2 React v6 업그레이드 오답 방지) → 2/2 PASS, APPROVED 유지 | Claude (재검증) + skill-tester |
 | 2026-09-28 | v1.2 | 재검증(2차) — 5.104.0 확인(GitHub Releases 5.102~5.104 전수 대조, 신규 deprecated 없음). 버전 배너만 갱신, status APPROVED 유지 | 재검증(2차) |
+| 2026-11-11 | v1.4 | tanstack-query-v4-to-v5-migration 통합 + 일반 지식 덜어내기 — 옮긴 절: SKILL.md 6절(6-1 서브패키지 동일 버전·코어 중복 확인·v4 전용 eslint 규칙 / 6-2 codemod 5종 위치·`.cjs`·`--parser=tsx`·`useInfiniteQuery` 조용히 건너뜀 등 자동/수동 경계 / 6-3 타입 에러 없는 런타임 함정 13항·잔재 grep·롤백 기준), 소스 URL 4개 추가. 덜어낸 것: 멘탈 모델·staleTime 선택표·useQuery 옵션·invalidate·Suspense·에러 경계·무한 스크롤 기본 해설 → 1절 판단표·3절 함정표로 압축, onMutate 시그니처는 REFERENCE에서 SKILL 5절로 올림, REFERENCE 일반 흔한 실수 예제 3개 삭제. 출처 원 검증일 2026-11-09 기준 내용 그대로(사실 재검증 아님). status·검증일 변경 없음 | Claude (Opus 5.5) |

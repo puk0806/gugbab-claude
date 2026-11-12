@@ -2,7 +2,7 @@
 skill: spring-boot-2-to-3-migration
 category: backend
 version: v2
-date: 2026-09-28
+date: 2026-11-09
 status: PENDING_TEST
 ---
 
@@ -14,7 +14,7 @@ status: PENDING_TEST
 |------|------|
 | 스킬 이름 | `spring-boot-2-to-3-migration` |
 | 스킬 경로 | `.claude/skills/spring-boot-2-to-3-migration/SKILL.md` |
-| 검증일 | 2026-09-28 (재검증, 이전 2026-08-11) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-28) |
 | 검증자 | skill-creator (최초), 재검증 2차 작업(2026-09-28) |
 | 스킬 버전 | v2 |
 | 기준 버전 | Spring Boot 2.5/2.7.18 → 3.x(3.5.x 목표), Java 11 → 17/21, Spring Framework 5.3 → 6.0+, Spring Security 5.5 → 6.x |
@@ -76,7 +76,13 @@ status: PENDING_TEST
 | Oracle JDBC Downloads / FAQ | https://www.oracle.com/database/technologies/appdev/jdbc-downloads.html | ⭐⭐⭐ High | 2026-08-11 확인 | ojdbc11(JDK11+, JDBC 4.3) vs ojdbc8(JDBC 4.2 제한) |
 | Spring Boot issue #30381 (metrics export 이동) | https://github.com/spring-projects/spring-boot/issues/30381 | ⭐⭐⭐ High | 2026-08-11 확인 | `management.metrics.export.<product>` → `management.<product>.metrics.export` |
 | OpenRewrite SpringBootProperties_3_0 | https://docs.openrewrite.org/recipes/java/spring/boot3/springbootproperties_3_0 | ⭐⭐ Medium | 2026-08-11 확인 | 프로퍼티 rename 목록 보조 확인 |
-| Spring Boot issue #46200 (Hikari) | https://github.com/spring-projects/spring-boot/issues/46200 | ⭐⭐ Medium | 2026-08-11 확인 | 3.5.3에서 HikariCP 5.1.0 → 6.3.0 |
+| Spring Boot issue #46200 (Hikari) | https://github.com/spring-projects/spring-boot/issues/46200 | ⭐⭐ Medium | 2026-08-11 확인 | 3.5.3에서 HikariCP 5.1.0 → 6.3.0 (2026-11-09 재검증에서 오해석으로 판명 — 이슈는 "3.5.x Hikari Issue" 질의일 뿐, 클레임 18 참조) |
+| Maven Central — spring-boot-dependencies POM (재검증) | https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/ | ⭐⭐⭐ High | 2026-11-09 확인 | `hikaricp.version`: 3.4.0~3.4.8 = 5.1.0, 3.5.0·3.5.2·3.5.3 = 6.3.0, 3.5.16 = 6.3.3 |
+| Spring Boot 3.5 Release Notes (재검증) | https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-3.5-Release-Notes | ⭐⭐⭐ High | 2026-11-09 확인 | 3.5 Dependency Upgrades에 HikariCP 6.3 명시 |
+| Spring Boot 3.5 System Requirements (재검증) | https://docs.spring.io/spring-boot/3.5/system-requirements.html | ⭐⭐⭐ High | 2026-11-09 확인 | 3.5.16 기준 Java 17~25, Gradle 7.6.4+/8.4+, Maven 3.6.3+, Tomcat 10.1.25+ |
+| Spring Boot 4.0 Migration Guide (재검증) | https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide | ⭐⭐⭐ High | 2026-11-09 확인 | 최신 3.5.x 선행, Java 17+, Undertow 제거, Jackson 3 `tools.jackson`·`spring-boot-jackson2`, Jersey·Batch 주의, starter 개명 |
+| MyBatis Spring Boot Starter 호환표 (재검증) | https://mybatis.org/spring-boot-starter/mybatis-spring-boot-autoconfigure/ | ⭐⭐⭐ High | 2026-11-09 확인 | 2.3 = Boot 2.7, 3.0 = Boot 3.2–3.5, 4.0 = Boot 4.0+ |
+| endoflife.date — Spring Boot (재검증) | https://endoflife.date/spring-boot | ⭐⭐ Medium | 2026-11-09 확인 | 3.5 OSS 2026-06-30 종료, 최신 3.5.16 / 4.1.2 |
 
 ---
 
@@ -104,6 +110,16 @@ status: PENDING_TEST
 | 16 | `mybatis-spring-boot-starter` 3.0.x의 Spring Boot 지원 범위 | **DISPUTED → 부분 해소.** 공식 README 매트릭스는 3.0.x = SB **3.2~3.5**로 표기한다(SB 3.0/3.1은 미표기). 초기 3.0.x 패치가 SB 3.0/3.1과 함께 쓰였던 이력이 있으나 현행 공식 표기와 다르므로, 스킬에는 공식 표기를 싣고 "SB 3.0/3.1 목표 시 초기 3.0.x 패치 조합을 릴리즈 노트에서 확인"이라는 확인 지시로 처리했다. |
 
 **요약: VERIFIED 14 / DISPUTED 2(모두 스킬 본문에 반영·주석 처리) / UNVERIFIED 0**
+
+#### 2026-11-09 재검증 클레임
+
+| # | 클레임 | 독립 소스 | 판정 |
+|---|--------|-----------|------|
+| 17 | Boot 3.5 요구사항: Java 17+, Gradle 7.6.4+/8.4+, Maven 3.6.3+, Tomcat 10.1(Servlet 6.0) | 3.5 system-requirements(3.5.16) + 3.4 릴리스 노트(기존) | **VERIFIED** |
+| 18 | "3.5.3부터 HikariCP 6.3.0" | **DISPUTED → 수정.** Maven Central POM 직접 확인 결과 3.5.0부터 6.3.0(3.4.x는 5.1.0), 3.5.16 = 6.3.3. 3.5 릴리스 노트도 HikariCP 6.3을 3.5 업그레이드 항목으로 명시. SKILL.md 8장 문구 정정 |
+| 19 | 4.0 Migration Guide: 최신 3.5.x 선행, Java 17+, Undertow 제거, Jackson 3 `tools.jackson`(+`spring-boot-jackson2` 과도기), Jersey·Spring Batch(DB 메타데이터) 주의, `spring-boot-starter-web`→`-webmvc` | 4.0 Migration Guide 원문 + endoflife.date(4.x 현행) | **VERIFIED** |
+| 20 | mybatis starter 2.3 = SB 2.7, 3.0 = SB 3.2~3.5 | mybatis.org 호환표 + GitHub README(기존) | **VERIFIED** |
+| 21 | Boot 3.5 OSS 2026-06-30 종료, 현행 OSS 4.x | endoflife.date + spring.io 프로젝트 페이지(4.1.2) | **VERIFIED** |
 
 ### 4-2. 내용 정확성
 - [✅] 공식 문서와 불일치하는 내용 없음
@@ -148,6 +164,18 @@ status: PENDING_TEST
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-11-09] 재검증 수정분 content test — HikariCP 관리 버전 정정 확인
+
+**수행일**: 2026-11-09
+**수행자**: general-purpose (skill-tester는 중첩 호출 환경에서 Agent 도구가 없어 질문만 설계하고 중단 → 재검증 담당이 같은 질문을 general-purpose 에이전트에 직접 위임)
+**수행 방법**: SKILL.md(+references) Read만 허용, 웹 검색·파일 수정 금지 조건으로 실전 질문 3개 답변
+
+- Q1. "3.4.x→3.5.x로 올리면 HikariCP가 바뀌나? 3.5.3부터 6.3.0이라던데 3.5.0·3.5.1도 같은가?" — **PASS** (근거: 8장 HikariCP 행. 3.4.x = 5.1.0, 3.5.0부터 6.3.x로 정정 내용을 그대로 인용하고 "3.5.3부터" 주장을 반박, 직접 고정 설정 충돌 확인 안내)
+- Q2. "SB 2.7 + Java 11 + Oracle + MySQL + MyBatis를 3.5.x로 올릴 때 확인할 것" — **PASS** (근거: 1·2장 Java 17 선행, 8장 starter 3.0.x·`mysql-connector-j`·`ojdbc11`·Hikari, 5.1 `javax.sql` 유지, 13장 장시간 커넥션 테스트)
+- Q3. "배포 직후 DB 커넥션 대기 급증 — 즉시 롤백인가?" — **PASS** (근거: 11장 즉시 롤백 표 + 8장 원인 후보로 Hikari 버전 변경·드라이버 조합 연결)
+
+agent content test: 3/3 PASS. status는 PENDING_TEST 유지(마이그레이션 가이드 = 실사용 필수).
 
 ### [2026-09-29] 실사용(실행) 검증
 
@@ -264,7 +292,7 @@ status: PENDING_TEST
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ (4.0 이행 체크포인트 보강) |
 | 요구 항목 커버리지 | ✅ (요청 11개 항목 전부 반영) |
-| 에이전트 활용 테스트(content test) | ✅ 7/7 PASS 누적 (2026-08-11 5/5 + 2026-09-28 skill-tester 독립 재테스트 2/2 — §1.1 보강분·깨진 참조 정정분 모두 반영 확인) |
+| 에이전트 활용 테스트(content test) | ✅ 10/10 PASS 누적 (2026-08-11 5/5 + 2026-09-28 skill-tester 독립 재테스트 2/2 + **2026-11-09 HikariCP 정정분 3/3**) |
 | 실사용(빌드·배포) 검증 | 🟡 **부분 실시** (2026-09-29, 소규모 lab 샘플로 Phase 0~4+9 실제 빌드·테스트 GREEN 확인 — 섹션 5 "[2026-09-29] 실사용(실행) 검증" 참조). Phase 5·7·8은 샘플 범위 밖 |
 | **최종 판정** | **PENDING_TEST** (유지) |
 
@@ -286,6 +314,7 @@ status: PENDING_TEST
 - [❌] **README.md 스킬 목록·스킬 수·업데이트 로그 반영** — 이번 작업에서 명시적으로 범위 제외(병렬 작업 README 충돌 방지). 메인 세션에서 일괄 반영 필요
 - [✅] `skill-tester` 에이전트를 통한 독립 재검증 — 2026-09-28 완료. general-purpose 2건(§1.1 체크포인트 판단 / 깨진 참조 정정 반영 확인) 2/2 PASS (섹션 5 "[2026-09-28] skill-tester 독립 재테스트" 참조)
 - [🟡] 실사용 검증(섹션 6의 APPROVED 전환 조건 1~3) — **부분 진행**(2026-09-29, 소규모 lab 샘플로 Phase 0~4+9 GREEN 확인). 남은 차단 요인: Java 11 실환경, Phase 5 라이브러리 매트릭스(Springfox/Sleuth/EhCache2/Redisson), Phase 7 WAR/Tomcat 10.1, Phase 8 카나리·롤백 리허설, MyBatis 경로 — 이들 확인 전까지 APPROVED 불가
+- [✅] 2026-11-09 재검증 HikariCP 관리 버전 정정(3.5.0부터 6.3.x) + content test 3/3 PASS
 - [❌] EhCache 2 → EhCache 3 전환 전용 스킬 부재 — 현재는 "별도 확인"으로만 연결됨. 모던 캐시 스킬 신설 검토
 - [❌] Lucy XSS servlet filter의 jakarta 대체 구현 패턴이 `xss-lucy-jsoup` 스킬에 SB 3 기준으로 보강되면 이 스킬의 C등급 리스크 항목에서 링크 갱신 필요
 - [❌] Boot 3.5 OSS EOL(2026-06-30) 이후 상황이므로, 3.x 도달 후 4.x 경로를 다루는 후속 스킬(`spring-boot-3-to-4-migration`) 신설 검토
@@ -302,3 +331,7 @@ status: PENDING_TEST
 | 2026-09-28 | v2 | 2단계 실사용(content) 재테스트 수행 (Q8 §1.1 4.0 이행 체크포인트 판단 / Q9 깨진 참조 정정 반영 확인) → 2/2 PASS, 누적 7/7 PASS. PENDING_TEST 유지(마이그레이션 가이드 — 실사용 검증 전까지 APPROVED 불가) | skill-tester |
 | 2026-09-28 | v2 | **재교차확인 — 앞선 "9장 없음" 판정은 오판이었음.** `spring-boot-gradle-setup`을 SKILL.md만 보고 판단해 §9(references/REFERENCE.md, 2026-06-19 신설)를 놓쳤다. 해당 절은 실재하며 §9.1~9.7(Gradle 최소버전·플러그인 좌표·Jackson 3 group id·Starter 이름 변경)까지 다룬다. SKILL.md 30~32행·105행 인용 문구를 "그 스킬 §9(빌드 설정 관점)는 존재/참조, Jackson·Security·Framework 7 API 레벨 세부만 별도 스킬 필요"로 재정정 | Claude (Sonnet 5) |
 | 2026-09-29 | v2 | **실사용(실행) 검증 — 부분.** 격리 lab(OpenJDK 17 + Gradle Wrapper 7.6.4/services.gradle.org)에 SB 2.5.15 소규모 샘플(Web+javax 필터/컨트롤러+`WebSecurityConfigurerAdapter`+JPA+테스트 7개)을 만들어 Phase 0→1→2→3→4(+9)를 실제 실행. 전 구간 GREEN. 서술 오류 1건 발견·정정: SKILL.md 4.3절에 "Boot 2.7.18의 관리 Security는 5.7.11까지라 `requestMatchers(String...)`가 없고 `ext['spring-security.version']='5.8.x'` 수동 오버라이드가 필요하다"는 주의문 추가. OpenRewrite `UpgradeSpringBoot_3_0`→`UpgradeSpringBoot_3_2`(rewrite-spring 5.24.0 기준 최대치)까지 자동 전환 확인, 3.5.16까지는 수동 상향(10장 서술과 일치). "ISO-8601 로그 포맷"·"트레일링 슬래시 404" 클레임도 실행 로그·테스트로 추가 확인(VERIFIED). Phase 5·7·8과 Java 11 실환경·MyBatis 경로는 샘플 범위 밖이라 미검증 — status **PENDING_TEST 유지** | Claude (Sonnet 5) |
+| 2026-11-06 | v2 | references 분리 (구조 변경만 — 내용 검증 갱신 아님) — SKILL.md 500줄 초과(502줄) 해소. §12 흔한 실수 표(10항)를 `references/REFERENCE.md`(신설, 18줄)로 이동하고 본문 §12엔 요점 포인터만 남김(§13 완료 체크리스트는 본문 유지). SKILL.md 502→491줄. HEAD 대비 줄 단위 대조로 내용 손실 0 확인. 검증일·status 변경 없음(PENDING_TEST 유지) | Claude |
+| 2026-11-09 | v2 | 재검증 — 3.5 시스템 요구사항(Gradle 7.6.4+/8.4+·Tomcat 10.1)·4.0 Migration Guide 체크포인트·mybatis starter 매트릭스·3.5 OSS 종료 VERIFIED. **바뀐 점: 8장 HikariCP 문구 "3.5.3부터 6.3.0" → "3.4.x = 5.1.0, 3.5.0부터 6.3.x(3.5.16 = 6.3.3)"** (Maven Central POM 직접 확인, 클레임 18 DISPUTED→수정). PENDING_TEST 유지 | 재검증 (Claude) |
+| 2026-11-09 | v2 | 수정분 content test (Q1 Hikari 관리 버전 / Q2 DB·드라이버·starter 매트릭스 / Q3 커넥션 대기 급증 롤백 판단) → 3/3 PASS, 누적 10/10. skill-tester는 Agent 도구 없음으로 질문 설계 후 중단 → general-purpose에 직접 위임. PENDING_TEST 유지. 섹션 5·6·7 동기화 | general-purpose |
+| 2026-11-12 | v2.1 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 사전 조건·4.0 이행 체크포인트, Phase 분리 요점, Boot 2.7 Security 5.8 오버라이드 함정·Security 6 동작 변경, JDK 소유 javax 목록, 교체 필수 라이브러리·Lucy C등급, Sleuth B3/W3C 공존, 프로퍼티·migrator 미감지 비호환, MyBatis·드라이버·HikariCP 매트릭스, Tomcat 10.1, OpenRewrite 경계 / 덜어낸 것 짝 스킬 지도 표·Phase 0 스캔 명령·Before/After Security 코드·jakarta 전환 전체 표·OpenRewrite 실행법·Jar/WAR 선택지·롤백 준비 일반론·완료 체크리스트·references/REFERENCE.md(흔한 실수 표, 폴더 삭제) | 정리 |

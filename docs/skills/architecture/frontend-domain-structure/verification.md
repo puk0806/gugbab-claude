@@ -2,7 +2,7 @@
 skill: frontend-domain-structure
 category: architecture
 version: v1
-date: 2026-09-26
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -14,10 +14,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `frontend-domain-structure` |
 | 스킬 경로 | `.claude/skills/frontend-domain-structure/SKILL.md` |
-| 검증일 | 2026-09-26 (30~60일 주기 재검증, 최초 검증 2026-08-26) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-26 · 최초 2026-08-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
-| 기준 버전 | FSD 스펙 2.1 (2024-11-13 릴리즈) / Next.js 16.3.3 (문서 기준일 2026-07-21) / Turborepo 2.10.12 / React 18·19 |
+| 기준 버전 | FSD 스펙 2.1 (2024-11-13 릴리즈, 2026-11-09 현재도 최신) / Next.js 16.4.5 (project-structure 문서 lastUpdated 2026-07-21) / Turborepo 2.11.10 / Steiger 0.9.0 / React 18·19 |
 | 적용 대상 | ① Next.js App Router + Turborepo 모노레포 ② 대규모 Vite + React SPA(수천 파일 규모 단일 앱) |
 
 ---
@@ -92,6 +92,11 @@ status: APPROVED
 | dependency-cruiser | https://github.com/sverweij/dependency-cruiser | ⭐⭐⭐ High | 2026-08-26 | forbidden 규칙 서식, 순환·orphan 탐지, 그래프 출력 |
 | Kent C. Dodds — Colocation | https://kentcdodds.com/blog/colocation | ⭐⭐ Medium-High | 2026-08-26 | 저자 명확·널리 인용되는 원저 글. colocation 격언과 예외(E2E) |
 | Adam Tornhill — code-maat / Software Design X-Rays | https://github.com/adamtornhill/code-maat | ⭐⭐⭐ High | 2026-08-26 | change/temporal coupling 분석 원저자 도구 |
+| FSD 공식 GitHub — Releases (재확인) | https://api.github.com/repos/feature-sliced/documentation/releases | ⭐⭐⭐ High | 2026-11-09 | 재검증 — 최신 태그 여전히 v2.1(2024-11-13), 2.2 없음 |
+| FSD 공식 — Layers (재확인) | https://feature-sliced.design/docs/reference/layers | ⭐⭐⭐ High | 2026-11-09 | 재검증 — 7 layers, Processes (deprecated) 표기 그대로 |
+| Steiger GitHub Releases·README (재확인) | https://github.com/feature-sliced/steiger/releases | ⭐⭐⭐ High | 2026-11-09 | 재검증 — steiger 0.9.0(2026-11-01, 설정을 린트 대상 경로 기준으로 탐색), README "in beta" 유지 |
+| Next.js 공식 — Project structure (재확인) | https://nextjs.org/docs/app/getting-started/project-structure | ⭐⭐⭐ High | 2026-11-09 | 재검증 — `(group)`·`_folder`·colocation 서술 변동 없음, lastUpdated 2026-07-21 |
+| npm registry — next·turbo·steiger dist-tags | https://registry.npmjs.org/next | ⭐⭐⭐ High | 2026-11-09 | 재검증 — next latest 16.4.5, turbo latest 2.11.10, steiger latest 0.9.0 |
 
 ---
 
@@ -147,6 +152,9 @@ status: APPROVED
 | 15 | FSD 공식 Next.js 가이드는 FSD `app`·`pages` 레이어를 **양쪽 모두** `_app`·`_pages`로 리네이밍할 것을 권고하며 공식 린터와 호환 | FSD 공식 with-nextjs 페이지 본문 | 동 페이지에 대한 검색 인덱스 요약(동일 문구 재확인) | **VERIFIED (단, Next.js 공식 규약 아님 → #16)** |
 | 16 | `src/_pages`의 `_`가 Next.js private folder 규칙과 같은 것이다 | 표기 유사성에 기반한 통념 | Next.js 공식 문서: `_folder` 규칙은 **`app/` 디렉터리 내부**의 라우팅 제외 규칙 | **DISPUTED → "이름 충돌 회피용 접두사일 뿐"으로 정정 표기** |
 | 17 | Steiger는 FSD 조직이 관리하는 아키텍처 린터이며 `forbidden-imports`·`public-api`·`insignificant-slice`·`excessive-slicing` 등을 검사 | steiger 공식 GitHub | FSD 공식 Migration 가이드(마이그레이션 절차에서 두 규칙 활용 안내) | **VERIFIED (단 beta 단계 — 주의 표기)** |
+| R1 (2026-11-09) | FSD 현재 스펙은 여전히 2.1이고 processes 는 deprecated | FSD GitHub Releases API(최신 v2.1) | FSD 공식 Layers 문서("Processes (deprecated)") | **VERIFIED (변경 없음)** |
+| R2 (2026-11-09) | Next.js `(group)` URL 제외·`_folder` 라우팅 제외·colocation 안전 | Next.js 공식 Project structure 문서 | 동 문서 경로 표 + npm next latest 16.4.5 | **VERIFIED (변경 없음, 버전 표기만 16.3.6→16.4.5)** |
+| R3 (2026-11-09) | Steiger는 아직 beta이며 0.9.0에서 설정 탐색 기준이 린트 대상 경로로 바뀜 | Steiger README("in beta") | steiger@0.9.0 릴리스 노트(#231) + npm latest 0.9.0 | **VERIFIED → SKILL.md 2-7 주의 문구에 1줄 추가** |
 
 ### 4-6. DISPUTED / UNVERIFIED 처리 내역
 
@@ -228,6 +236,69 @@ status: APPROVED
 
 ---
 
+### 5-3. 2026-11-09 독립 재시험 (general-purpose 위임, 5-2 대체)
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester → general-purpose (질문당 에이전트 1개, 총 2개 병렬 호출)
+**수행 방법**: 각 에이전트가 SKILL.md를 Read한 뒤 그 내용에만 의존해 답변. 판정은 skill-tester가 SKILL.md 줄과 대조.
+
+**Q1. 모노레포 루트에서 `npx steiger apps/web/src`로 돌리는데 steiger 0.9.0 업그레이드 후 설정이 적용 안 된다. 원인·확인점·CI 게이트 가능 여부는?**
+- ✅ PASS
+- 근거: SKILL.md "2-7 자동 검사 — Steiger" 주의문(265행) + 기준 버전 줄(33행)
+- 상세: 0.9.0부터 설정 탐색이 cwd가 아닌 린트 대상 경로 기준임을 원인으로 제시, 설정 위치 확인을 권고. beta 단계라 CI 게이트는 버전 고정 필수, 0.5.0 설정 포맷 breaking change(codemod)도 언급. anti-pattern(cwd 기준 탐색 가정, 버전 고정 없이 도입)을 피함. SKILL.md 밖 추론은 에이전트가 스스로 "추론"으로 구분 표기.
+
+**Q2. features/order에서 features/product를 import 가능한가, 불가 시 해법, `insignificant-slice` 경고 대응, 현재 FSD·Steiger 버전은?**
+- ✅ PASS
+- 근거: SKILL.md "2-3 import 방향 규칙"(152·181행), "2-6", "2-7"(256·267행), 기준 버전 줄(33행)
+- 상세: 같은 레이어 slice 간 import 금지(strictly below)로 불가 판정, `@x`는 entities 한정이며 features 간 참조는 slice 경계 오류 신호(181행)임을 정확히 인용. 해법으로 entities/shared로 내리기·합치기를 본문에서 도출. `insignificant-slice`는 "합쳐라" 신호(256·267행)로 해석, 새 slice 분할이라는 오답 회피. 버전 FSD 2.1·Steiger 0.9.0 일치.
+
+### 발견된 gap
+
+- 경미: 0.9.0 설정 탐색 변경의 구체 동작(설정 파일명·탐색 순서·모노레포 해결 예시)이 SKILL.md에 없어 "설정 위치 확인" 수준에서 끝남. 릴리스 노트 수준 정보이며 선택 보강.
+- 경미: features 간 의존 해소 방법(entities/shared로 내리기·합치기·상위 레이어 조합)이 2-3·181행·267행에 흩어져 있어 답변자가 조합해야 함. 선택 보강.
+
+### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 개념·설계 기준 스킬 (실사용 필수 아님)
+- 최종 상태: APPROVED 유지
+
+---
+
+### 5-2. 2026-11-09 재검증 후 셀프 답변 (독립 시험 아님 — 위 5-3 재시험으로 대체)
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester (이번 실행 환경에 하위 에이전트 호출 도구가 없어 general-purpose 에이전트 위임 대신 skill-tester가 SKILL.md 줄 번호 근거로 직접 답변·대조함 — 독립 에이전트 시험보다 약한 검증이며 **독립 시험 아님, 5-3 재시험으로 대체**)
+**수행 방법**: SKILL.md 2-7(247~267행)·기준 버전 줄(33행) Read 후 실전 질문 3개 답변, 근거 섹션 및 anti-pattern 회피 확인
+
+**Q1. 모노레포 루트에서 `npx steiger apps/web/src`로 돌리는데 steiger 0.9.0 업그레이드 후 설정이 적용되지 않는 것 같다. 원인은?**
+- ✅ PASS
+- 근거: SKILL.md "2-7 자동 검사 — Steiger" 주의 문구(265행)
+- 상세: 0.9.0부터 설정 파일을 작업 디렉토리가 아닌 린트 대상 경로 기준으로 탐색하므로 설정 위치(대상 경로 쪽)를 확인해야 한다고 도출 가능. anti-pattern(cwd 기준 탐색 가정)을 피함.
+
+**Q2. Steiger를 CI 게이트로 도입해도 되는가, 어떤 점을 주의하나?**
+- ✅ PASS
+- 근거: 2-7 주의 문구(265행) + 기준 버전 줄(33행)
+- 상세: beta 단계이므로 버전 고정 필수, 0.5.0 설정 포맷 breaking change(codemod), 0.9.0 설정 탐색 변경을 근거와 함께 답할 수 있음. 최신 버전 0.9.0이 SKILL.md 두 곳에서 일치.
+
+**Q3. `fsd/insignificant-slice` 경고가 뜨면 어떻게 하나? 판단형**
+- ✅ PASS
+- 근거: 2-7 규칙 표(256행)와 267행, 2-6
+- 상세: 한 페이지에서만 쓰이는 entity/feature이므로 해당 페이지 slice로 합치라는 신호로 읽는 것이 공식 권장 절차. 새 slice를 더 쪼개라는 오답을 피함.
+
+### 발견된 gap
+
+- 경미: 0.9.0 설정 탐색 변경의 구체 동작(설정 파일명·탐색 순서)은 SKILL.md에 없어 "위치를 확인하라" 수준에서 끝남(릴리스 노트 수준 정보라 결격 아님, 필수 보강 아님).
+- 시험 방식 한계: 서브에이전트 위임이 아닌 직접 대조라 독립성이 낮음. 차단 요인 아님.
+
+### 판정
+
+- agent content test: 3/3 PASS
+- verification-policy 분류: 개념·설계 기준 스킬 (실사용 필수 아님)
+- 최종 상태: APPROVED 유지
+
+---
+
 ### 이전 상태 (참고, 해소됨)
 
 과거 기록: 본 스킬 생성 작업은 `creation-workflow.md`의 단계 1~4(조사→교차 검증→작성→검증 문서 저장)까지만 범위가 지정되어 skill-tester 호출(단계 5)이 미수행 상태였다. 위 2026-08-26 기록으로 해소되었다.
@@ -242,7 +313,7 @@ status: APPROVED
 | 구조 완전성 | ✅ (frontmatter·소스 URL 22종·검증일·기준 버전·주의 표기·흔한 실수·체크리스트) |
 | 실용성 | ✅ (전환 플레이북 6단계, 실행 가능한 린트/분석 설정, 프로젝트 비종속) |
 | 기존 스킬과의 중복 | ✅ 분리 완료 (`architecture/ddd` = 도메인 개념·바운디드 컨텍스트 / 본 스킬 = 프론트엔드 폴더 구조·의존 방향, 참조 포인터로 연결) |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-08-26, frontend-developer 3회) |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-08-26, frontend-developer 3회) · 2026-11-09 독립 재시험 2/2 PASS (2-7 Steiger 0.9.0 변경분 + FSD import 방향, skill-tester → general-purpose; 같은 날 앞선 셀프 답변은 독립 시험 아님으로 대체) |
 | **최종 판정** | **APPROVED** |
 
 > 카테고리 판정 참고: 본 스킬은 `verification-policy.md`의 "개념·이론 정리 스킬"에 가까워 content test PASS만으로 APPROVED 전환이 가능한 유형이다. 2026-08-26 skill-tester가 3개 질문(전환 첫 단계·FSD import 방향·Next.js private folder/route group)을 frontend-developer로 검증해 3/3 PASS, APPROVED로 전환했다.
@@ -252,6 +323,8 @@ status: APPROVED
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester를 통한 agent content test 수행 및 섹션 5·6 갱신 (2026-08-26 완료, 3/3 PASS)
+- [✅] 2026-11-09 재검증 변경분(2-7 Steiger 0.9.0 주의·기준 버전 줄) 재시험 (2026-11-09 general-purpose 독립 시험 완료, 2/2 PASS — 앞선 셀프 답변 3/3은 독립 시험이 아니어서 대체됨)
+- [❌] (선택 보강, 차단 요인 아님) Steiger 0.9.0 설정 탐색 구체 동작·모노레포 실행 예시, features 간 의존 해소 방법 한곳 정리 — 재시험에서 나온 경미한 gap
 - [❌] README.md 스킬 목록·스킬 수·업데이트 로그 반영 — 차단 요인 아님, 병렬 충돌 방지를 위해 의도적 미수행. 오케스트레이터가 일괄 정리 예정
 - [❌] Steiger가 stable(1.x)에 도달하면 2-7의 beta 주의 문구와 규칙 목록 재검증 필요
 - [❌] Next.js `optimizePackageImports`가 experimental에서 승격되면 5-3의 주의 문구 갱신 필요
@@ -269,3 +342,6 @@ status: APPROVED
 | 2026-08-26 | v1 | 2단계 실사용 테스트 수행 (Q1 layer-first→domain-first 전환 첫 단계 / Q2 FSD 레이어 import 방향·slice 간 import 가능 여부 / Q3 Next.js private folder·route group 의미와 도메인 1:1 매핑 평가) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | Claude (Sonnet 5) |
 | 2026-09-26 | v1 | 30~60일 주기 재검증. FSD 2.1 유지, Steiger beta 유지, `optimizePackageImports` experimental 유지 확인 — 실질 변경 없음, Next.js 문서 버전 표기만 16.3.3→16.3.6 갱신, status APPROVED 유지 | 메인 세션 |
+| 2026-11-09 | v1 | 재검증 — FSD 2.1 최신 유지·processes deprecated, Next.js route group/private folder 규칙, Steiger beta 3건 VERIFIED. 기준 버전 표기 갱신(Next.js 16.3.6→16.4.5, Turborepo 2.10.12→2.11.10, Steiger 0.9.0 명시), 2-7 Steiger 주의에 "0.9.0부터 설정을 린트 대상 경로 기준으로 탐색" 1줄 추가. 권장사항·구조 변경 없음. skill-tester 재시험(Q1 Steiger 0.9.0 설정 탐색 / Q2 Steiger CI 게이트 / Q3 insignificant-slice) 3/3 PASS, status APPROVED 유지 (※ 이 시험은 직접 답변이라 독립 시험 아님 — 아래 행으로 대체) | Claude (Opus 5.5) / skill-tester |
+| 2026-11-09 | v1 | 재검증 후 독립 재시험 수행 (Q1 steiger 0.9.0 설정 탐색·CI 게이트 / Q2 features 간 import 가능 여부·insignificant-slice·버전) → general-purpose 위임, 2/2 PASS, APPROVED 유지 | skill-tester |
+| 2026-11-12 | v1.1 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 전환 판단 경험칙 표(주의 유지), FSD 2.1 변경점(pages-first·@x·processes deprecated·types 세그먼트 금지·index.server.ts), Steiger 0.9.0 주의·규칙, Next.js colocation·route group 오용, `_app`/`_pages` vs private folder 구분 주의, 배럴 트레이드오프·optimizePackageImports 주의, Nx 태그 없는 프로젝트 제약, change coupling 명령·해석, 실패 패턴 표 / 덜어낸 것 layer-first/domain-first 정의·증상 표, FSD 3단계·레이어 6종 정의·세그먼트 표·public API 원칙 해설, FSD 채택 판단 표, bulletproof-react 구조·ESLint zone 예제, Next.js 배치 트리·예제 코드, Vite SPA 예제, Turborepo 규칙 표·승격 절차, colocation 원칙·배치 표, dependency-cruiser 규칙 예제, 전환 단계 표, 체크리스트. references/REFERENCE.md 삭제(남길 내용은 SKILL.md로 합침). 원 검증일 2026-11-09 기준 내용 그대로, status·검증일 변경 없음 | 정리 |

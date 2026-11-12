@@ -16,7 +16,7 @@ description: Java Spring(Boot 1.x~3.x·Spring MVC)·MyBatis 3/iBATIS 2 레거시
 > 소스: https://mybatis.org/mybatis-3/sqlmap-xml.html · https://mybatis.org/mybatis-3/dynamic-sql.html · https://mybatis.org/mybatis-3/getting-started.html
 > 소스: https://mybatis.org/spring/batch.html
 > 소스: https://github.com/mybatis/ibatis2mybatis/wiki · https://ibatis.apache.org/dtd/sql-map-2.dtd
-> 검증일: 2026-10-08
+> 검증일: 2026-11-09
 
 ---
 
@@ -26,7 +26,6 @@ description: Java Spring(Boot 1.x~3.x·Spring MVC)·MyBatis 3/iBATIS 2 레거시
 |------|------|
 | 무엇을 어떤 양식(근거 `파일:줄`·확신도·사용 여부)·순서로 남기나, CRUD 완전성 규칙, LLM 추출 규약 | **`spec-extraction-method`** — 먼저 Read하고 그 7절 양식 그대로 산출 |
 | Spring·MyBatis/iBATIS 코드에서 **실제로 어떻게 뽑나** (grep·스크립트·실행 시 추출) | **이 스킬** |
-| springdoc 설정·어노테이션 자체 | `springdoc-openapi-3` |
 | Springfox(`@EnableSwagger2`·Docket) 설정 | `swagger-springfox-2` |
 | 매퍼 XML 문법·동적 SQL 작성법 | `mybatis-mapper-patterns` |
 | 넥사크로 X-API 서버 객체(PlatformData·DataSet·행 타입) | `nexacro-xapi-server` |
@@ -181,7 +180,7 @@ curl -s http://localhost:8080/actuator/mappings | jq '.contexts[].mappings | {se
 | 3.x | **v2** | `org.springdoc:springdoc-openapi-starter-webmvc-ui` (UI 불필요 시 `-webmvc-api`) |
 | 4.x | **v3** | 아티팩트명 v2와 동일, 버전만 3.x |
 
-- 기본 문서 경로 `/v3/api-docs`(JSON), `/v3/api-docs.yaml`(YAML). 설정·어노테이션은 `springdoc-openapi-3` 스킬(설치된 경우)로.
+- 기본 문서 경로 `/v3/api-docs`(JSON), `/v3/api-docs.yaml`(YAML).
 - 스펙 추출용이면 **UI 없는 api 아티팩트**로 충분하고, 추출 브랜치에서만 의존성을 추가한 뒤 되돌린다(레거시 본선 변경 금지 — 소스를 바꾸지 않는다는 0절 원칙의 예외이므로 별도 브랜치·사람 승인).
 
 > 주의(DISPUTED): "Boot 1.x는 springdoc 미지원"이라는 통념과 달리, springdoc v1 공식 문서의 호환표는 모든 1.x 행에 Spring Boot `1.5.x`를 함께 적고 있다(예: `2.7.x, 1.5.x → 1.6.11+`). 다만 v1은 OSS 지원이 끝난 라인(1.8.0이 마지막 OSS 릴리스)이고 1.5 + springdoc 조합의 실제 기동은 이 스킬에서 검증하지 않았다. **Boot 1.3 이하는 호환표에 없다.** 레거시 1.x에서는 ① 이미 Springfox가 있으면 그 `/v2/api-docs`를 쓰고(`swagger-springfox-2` — 설치된 경우), ② 없으면 의존성을 새로 넣기보다 **정적 추출(2절) + Actuator `/mappings`(3-1)** 를 기본으로 한다.
@@ -209,17 +208,20 @@ curl -s http://localhost:8080/actuator/mappings | jq '.contexts[].mappings | {se
 ```
 
 ```kotlin
-// Gradle: 플러그인이 forkedSpringBootRun + generateOpenApiDocs 태스크 생성 → `gradle clean generateOpenApiDocs`
+// Gradle 2.x: generateOpenApiDocs 하나가 앱 기동 → 문서 받기 → 종료까지 수행 → `gradle clean generateOpenApiDocs`
 plugins {
+    java
     id("org.springframework.boot") version "<프로젝트 버전>"
-    id("org.springdoc.openapi-gradle-plugin") version "1.9.0"
+    id("org.springdoc.openapi-gradle-plugin") version "2.1.0"   // 2026-11-09 Gradle Plugin Portal 최신
 }
-openApi { // 기본값: apiDocsUrl=http://localhost:8080/v3/api-docs, outputDir=$buildDir, outputFileName=openapi.json, waitTimeInSeconds=30
+openApi { // 기본값: apiDocsUrl=http://localhost:8080/v3/api-docs, outputDir=build, outputFileName=openapi.json, waitTimeInSeconds=30
     outputFileName.set("openapi.json")
 }
 ```
 
-> 주의: Maven 플러그인 README는 `spring-boot-maven-plugin`에 JVM 인자 `-Dspring.application.admin.enabled=true`를 넣는 구성을 보여 준다(start/stop 골이 앱 기동 완료를 확인하는 데 쓰임). 두 플러그인 모두 **앱이 실제로 떠야** 하므로 DB·외부 시스템 연결이 필요한 레거시는 로컬 프로파일·테스트 DB를 먼저 준비한다. Gradle 플러그인은 Gradle 7.0+ 기준이다.
+> 주의: Maven 플러그인 README는 `spring-boot-maven-plugin`에 JVM 인자 `-Dspring.application.admin.enabled=true`를 넣는 구성을 보여 준다(start/stop 골이 앱 기동 완료를 확인하는 데 쓰임, 2026-11-09 README 예시 버전 1.6). 두 플러그인 모두 **앱이 실제로 떠야** 하므로 DB·외부 시스템 연결이 필요한 레거시는 로컬 프로파일·테스트 DB를 먼저 준비한다.
+
+> 주의(2026-11-09 갱신): Gradle 플러그인 **2.x는 Gradle 8.0+** 필요(README: 9.8까지 시험, Gradle 9는 Java 17+), `org.springframework.boot`와 `java`(또는 Kotlin) 플러그인을 함께 적용해야 하며 앱은 `bootRun` 설정으로 뜬다. 1.x의 `forkedSpringBootRun`·`forkedSpringBootStop` 태스크와 execfork 플러그인은 **2.0에서 제거**됐다 — 1.x 예제의 `customBootRun`·`dependsOn(...)` 설정을 그대로 옮기면 안 된다. **Gradle 7 이하 레거시 빌드**는 1.x(마지막 1.9.0)를 쓰거나, 앱을 수동 기동 후 `curl http://localhost:8080/v3/api-docs -o openapi.json`으로 받는다. 플러그인은 HTTP 엔드포인트만 호출하므로 springdoc 버전(1.x·2.x·3.x)과 무관하다.
 
 생성된 `openapi.json`에서 경로 목록만 뽑기:
 

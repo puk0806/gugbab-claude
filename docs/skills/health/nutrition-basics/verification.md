@@ -2,7 +2,7 @@
 skill: nutrition-basics
 category: health
 version: v2
-date: 2026-09-28
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -33,7 +33,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `nutrition-basics` |
 | 스킬 경로 | `.claude/skills/nutrition-basics/SKILL.md` |
-| 검증일 | 2026-09-28 (최초 2026-06-26, 2026-09-28 재검증) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-28) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v2 |
 
@@ -68,6 +68,9 @@ status: APPROVED
 | 서울시민 건강포털 (보건복지부 KDRIs) | https://health.seoulmc.or.kr/healthCareInfo/nutrientStandard.do | ⭐⭐⭐ High | 2026-06-26 | 수치 직접 WebFetch 확인 |
 | 보건복지부 KDRIs 배포 | https://www.mohw.go.kr/board.es?mid=a10411010100&bid=0019&act=view&list_no=362385 | ⭐⭐⭐ High | 2026-06-26 | 공식 배포 페이지 |
 | 한국영양학회 KDRIs | https://www.kns.or.kr/FileRoom/FileRoom_view.asp?idx=108&BoardID=Kdr | ⭐⭐⭐ High | 2026-06-26 | 학회 공식 자료 |
+| 보건복지부 보도자료 (2025 KDRIs 개정) | https://www.mohw.go.kr/board.es?mid=a10503010100&bid=0027&act=view&list_no=1488441 | ⭐⭐⭐ High | 2026-11-09 | 재검증: 2025-12-31 발표, 탄 55~65→50~65%, 단 7~20→10~20%, 지방 15~30% 유지 — VERIFIED |
+| 언론 보도 교차(디지털데일리·SBS Biz·스마트투데이) | https://www.ddaily.co.kr/page/view/2025123111291718936 | ⭐⭐ Medium | 2026-11-09 | 재검증: 에너지 적정비율 변경·칼슘·식이섬유 포함 20개 영양소 기준 변경 — VERIFIED (2개 독립 소스) |
+| 서울시민 건강포털 (재확인) | https://health.seoulmc.or.kr/healthCareInfo/nutrientStandard.do | ⭐⭐⭐ High | 2026-11-09 | 재검증: 2025년판 PDF 링크 게시 확인. 칼슘·철 개별 수치는 본문 표에 없어 이번에 재대조 못 함 — UNVERIFIED(이번 회차), 2026-09-28 검증값 유지 |
 
 ---
 
@@ -220,3 +223,4 @@ status: APPROVED
 | 2026-06-26 | v1 | 2단계 실사용 테스트 수행 (Q1 체중감량 칼로리 계산 / Q2 에너지 적정비율 / Q3 식단기록 필수항목) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-09-28 | v2 | 재검증 — 보건복지부 2025 한국인 영양소 섭취기준(KDRIs, 2025-12-31 발표) 개정 확인. 에너지적정비율(탄·단백질), 칼슘·철 권장량, 식이섬유(여성 50-64세) 정정 반영. 개정과 무관한 기존 오기재(여성 50-64세 에너지필요추정량 1,800→1,700kcal, 단백질·비타민D 연령 구간 단순화 오류)도 함께 정정. APPROVED → PENDING_TEST 전환(재테스트 필요) | skill-creator (재검증) |
 | 2026-09-28 | v2 | 2단계 재테스트 수행 (Q1 50세 여성 에너지필요추정량·칼슘·철 / Q2 탄단백 에너지적정비율 2025 vs 2020) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-11-09 | v2 | 재검증 — 2025 KDRIs(2025-12-31 발표)가 현행 최신 확인(후속 개정 없음), 에너지 적정비율 탄 50~65%·단 10~20%·지방 15~30% 유지를 복지부 보도자료·언론 2곳으로 교차 VERIFIED, 칼슘·식이섬유 개정 대상 포함 확인. 철·칼슘 개별 수치는 대비표 PDF 미열람으로 이번 회차 재대조 못 함(이전 검증값 유지). 내용 변경 없음, skill-tester 생략, status APPROVED 유지 | Claude (Opus 5.5) |

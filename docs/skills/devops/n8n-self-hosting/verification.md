@@ -1,8 +1,8 @@
 ---
 skill: n8n-self-hosting
 category: devops
-version: v3
-date: 2026-09-28
+version: v4
+date: 2026-11-09
 status: PENDING_TEST
 ---
 
@@ -18,10 +18,10 @@ status: PENDING_TEST
 |------|------|
 | 스킬 이름 | `n8n-self-hosting` |
 | 스킬 경로 | `.claude/skills/n8n-self-hosting/SKILL.md` |
-| 검증일 | **2026-09-28** (최초 작성 2026-05-15, 재검증 2026-08-11 / 2026-09-28) |
-| 검증자 | skill-creator (최초) → 최신화 재검증 (2026-08-11) → 2차 재검증 (2026-09-28) |
-| 스킬 버전 | v3 |
-| 대상 버전 | n8n v2.x — 2026-09-28 기준 **stable v2.40.7 / beta v2.41.3** (v1 작성 시점: v2.21.x, v2 재검증 시점: v2.33.7) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-28 · 최초 작성 2026-05-15 · 재검증 2026-08-11) |
+| 검증자 | skill-creator (최초) → 최신화 재검증 (2026-08-11) → 2차 재검증 (2026-09-28) → 3차 재검증 (2026-11-09) |
+| 스킬 버전 | v4 |
+| 대상 버전 | n8n v2.x — 2026-11-09 기준 **stable v2.46.6 / beta v2.47.2**, 3.0 early access(3.1.0 prerelease) / 이전: 2026-09-28 기준 **stable v2.40.7 / beta v2.41.3** (v1 작성 시점: v2.21.x, v2 재검증 시점: v2.33.7) |
 
 ---
 
@@ -67,6 +67,12 @@ status: PENDING_TEST
 | n8n GitHub — n8n-docs raw | https://raw.githubusercontent.com/n8n-io/n8n-docs/main/... | ⭐⭐⭐ High | 2026-05-15 | JS 렌더 우회용 raw |
 | Docker Hub — n8nio/n8n | https://hub.docker.com/r/n8nio/n8n/tags | ⭐⭐⭐ High | 2026-05-15 | 버전 확인 |
 | Release notes | https://docs.n8n.io/release-notes/ | ⭐⭐⭐ High | 2026-05-15 | 2026-05-14 릴리즈 확인 |
+| GitHub Releases API + npm dist-tags (11-09) | https://api.github.com/repos/n8n-io/n8n/releases · https://registry.npmjs.org/n8n | ⭐⭐⭐ High | 2026-11-09 | stable 2.46.6, beta 2.47.2, 3.0.0/3.0.1/3.1.0 prerelease |
+| n8n 3.0 Breaking changes | https://docs.n8n.io/changelog/v30-breaking-changes.md | ⭐⭐⭐ High | 2026-11-09 | early access, Docker 필수·Compression 한도·storage 이름·runner timeout 등 |
+| Durable scheduler (11-09) | https://docs.n8n.io/deploy/host-n8n/configure-n8n/durable-scheduler.md | ⭐⭐⭐ High | 2026-11-09 | v2.45.0 기본 ON, SKIP 변수 제거, 고정 간격 기본 |
+| Endpoints env vars | https://docs.n8n.io/deploy/host-n8n/configure-n8n/basic-configuration/use-environment-variables/endpoints.md | ⭐⭐⭐ High | 2026-11-09 | `WEBHOOK_URL` deprecated from 2.35.0 |
+| Set up task runners (11-09) | https://docs.n8n.io/deploy/host-n8n/configure-n8n/set-up-task-runners.md | ⭐⭐⭐ High | 2026-11-09 | internal 모드 deprecated from 3.0 |
+| Docker Hub n8nio/runners | https://hub.docker.com/v2/repositories/n8nio/runners/tags/2.46.6 | ⭐⭐⭐ High | 2026-11-04 | 2.46.6 태그 존재 확인 |
 
 ---
 
@@ -134,12 +140,48 @@ status: PENDING_TEST
 
 **판정 요약 (v2, 2026-08-11): VERIFIED 9 / DISPUTED 1(정정 완료) / UNVERIFIED 1(범위 축소 처리)**
 
+### 4-7. 3차 재검증 클레임 판정 (2026-11-09, v4)
+
+| # | 클레임 | 소스 1 | 소스 2 | 판정 |
+|---|--------|--------|--------|------|
+| 21 | stable v2.40.7 / beta v2.41.3 | GitHub Releases API: stable 2.46.6·beta 2.47.2 | npm dist-tags 동일 | DISPUTED → 2.46.6/2.47.2 정정, 3.0 early access 병기 |
+| 22 | Durable scheduler 기본 off(opt-in), `N8N_ENV_FEAT_SKIP_DURABLE_SCHEDULER` 사용 가능 | durable-scheduler 문서: **v2.45.0 부터 기본 ON**, SKIP 변수·노드 설정 제거, 고정 간격 기본 | 동 문서 deprecation 절 | DISPUTED → 5절 표·REFERENCE 10절 정정 |
+| 23 | `WEBHOOK_URL` deprecated alias (09-28 실측) | endpoints env 문서 "Deprecated from n8n 2.35.0" | 09-28 기동 로그 실측 | VERIFIED (도입 버전 명시) |
+| 24 | Compression 256MiB/1000 은 향후 예정값 | v3.0 breaking changes "drops from 2 GiB to 256 MiB … 5,000 to 1,000" | nodes env 문서(3.0 값 표기) | VERIFIED → "3.0 기본값"으로 구체화 |
+| 25 | internal task runner 모드 deprecated | set-up-task-runners "deprecated from n8n 3.0" | 09-28 기동 로그 | VERIFIED |
+| 26 | `N8N_RUNNERS_ENABLED` v2.0+ deprecated | install-with-docker · set-up-task-runners | — | VERIFIED |
+| 27 | (신규) 3.0: npm 설치 미지원·storage 디렉터리 이름 변경·runner timeout 60초·변수 제거 | v3.0 breaking changes | GitHub prerelease 3.0.0(2026-10-27) | VERIFIED (early access 로 표기) |
+
+**판정 요약 (v4, 2026-11-09): VERIFIED 5 / DISPUTED 2(정정 완료) / UNVERIFIED 0**. PostgreSQL 17 권장(09-28 기동 로그 실측)은 공식 database 문서에 지원 범위 표기가 없어 재확인 불가 — 기존 서술 유지.
+
 > DISPUTED 1건(#13)은 v1 본문의 **명백한 오류**였다 — 함정 6이 "`N8N_RUNNERS_ENABLED` 누락 주의"로 정반대를 안내하고 있었고,
 > 이번 개정에서 "v2에서는 삭제하라"로 뒤집었다.
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-11-09] 3차 재검증 정정분 재시험
+
+**수행일**: 2026-11-09
+**수행자**: general-purpose (skill-tester 가 하위 에이전트 결과를 기다릴 수 없는 환경이라 메인이 general-purpose 를 직접 호출해 결과를 받은 뒤 판정)
+**수행 방법**: SKILL.md + references/REFERENCE.md 만 근거로 실전 질문 2개 답변, 줄 번호 인용 확인
+
+**Q1. 2.42 → 최신 stable 업그레이드 시 Minutes 간격 Schedule Trigger 정각 실행 유지, `N8N_ENV_FEAT_SKIP_DURABLE_SCHEDULER` 잔재, 버전·runners 태그**
+- ✅ PASS
+- 근거: SKILL.md 헤더 블록(28·32줄)·5절 표(248~259줄), REFERENCE 10절(62·67·176줄)
+- 상세: stable 2.46.6 핀·runners 2.46.6 일치, 2.45.0 durable 기본 ON 으로 게시 시점 기준 고정 간격이 된다는 점, `N8N_SCHEDULER_TRIGGER_NODE_MODE=legacy` 를 업그레이드 전 지정, SKIP 변수는 2.45.0 제거·인스턴스 전체 `N8N_SCHEDULER_ENABLED=false` 만 가능을 정확히 답변
+
+**Q2. `WEBHOOK_URL`·Compression 1.5GB/3,000 엔트리의 2.x 상태와 3.0 대비, 3.0 프로덕션 사용 여부**
+- ✅ PASS
+- 근거: SKILL.md 헤더(33~35줄)·5절 표(216·255~256줄), REFERENCE 10절(69~73줄)
+- 상세: 2.x 는 2GiB/5000 이라 통과, 3.0 은 256MiB/1000 이라 실패 → 두 변수 명시, `WEBHOOK_URL` 2.35.0 deprecated → `N8N_WEBHOOK_URL`, npm 미지원·binaryData→storage(둘 다 있으면 기동 실패), runner timeout 60초, 3.0 은 early access 라 프로덕션 비권장까지 정확히 답변
+
+**발견된 gap (선택 보강)**
+- 3.0 에서 `WEBHOOK_URL` alias 존속 여부 미기술, `legacy` 모드의 제거 시점·기존 게시 워크플로우의 간격 기준점 미기술, compose 예시 `:stable` 과 버전 핀 권장의 표기 차이
+- REFERENCE v1→v2 목록과 3.0 목록의 in-memory binary data 서술 충돌 → 같은 날 REFERENCE 3.0 문단을 "`=default` 값 무효화(2.0 에서 기본값 제외, 3.0 에서 filesystem 으로 전환)"로 정정
+
+agent content test: 2/2 PASS (누적 9/9). 실사용 필수 카테고리라 **PENDING_TEST 유지**.
 
 ### [2026-09-28] skill-tester 재테스트 — WEBHOOK_URL 개명 + 압축 노드 기본값·PostgreSQL 16·internal task runner deprecated 정정분 검증
 
@@ -310,6 +352,7 @@ status: PENDING_TEST
 | 에이전트 활용 테스트 | ✅ 누적 7/7 PASS (2026-05-15, 3/3 PASS — N8N_ENCRYPTION_KEY 분실 영향 / PostgreSQL 권장 이유 / v1→v2 breaking changes. 2026-09-28 skill-tester 재테스트 2/2 PASS — durable scheduler 신규 보강분·Task runner 격리 모드, REFERENCE.md 참조 링크 추적 확인. **2026-09-28 실사용(실행) 검증 정정분 재테스트 2/2 PASS** — N8N_WEBHOOK_URL 개명 / PostgreSQL 16·internal task runner deprecated 판단형 질문) |
 | 최신성 (2026-08-11) | ✅ (버전 v2.33.7 반영, 문서 URL 개편 반영, runner 변수 오류 정정) |
 | 최신성 (2026-09-28, 2차 재검증) | ✅ (버전 v2.40.7 반영, durable scheduler·노드 리소스 한도 env 5개 보강, release-notes URL 재개편 반영) |
+| 최신성 (2026-11-09, 3차 재검증) | ✅ (버전 v2.46.6 반영, durable scheduler 2.45.0 기본 ON 정정, 3.0 early access 대비 정리, 재시험 2/2 PASS — 누적 9/9) |
 | **실사용(실행) 검증 (2026-09-28)** | ✅ 부분 — docker compose 5-서비스 스택 실기동, `/healthz` 200, 큐 모드·external task runner·DB 마이그레이션·`$env` 차단 기본값 전부 서술과 일치 확인. 서술 오류 5건 발견·정정(WEBHOOK_URL 개명, 압축 노드 기본값 2건, PostgreSQL 16 지원 등급, task runner internal 모드 deprecated 표기). HTTPS/owner 계정/webhook 외부 호출/백업 복원/업그레이드 사이클은 지침상 제외 |
 | **최종 판정** | **PENDING_TEST 유지** |
 
@@ -340,7 +383,9 @@ status: PENDING_TEST
 - [ ] Cloudflare Tunnel 경유 webhook URL 케이스 코드 예시 추가 검토 (선택 보강 — 차단 요인 아님, 현재 언급은 있음)
 - [ ] Kubernetes/Helm 배포는 별도 스킬로 분리 검토 (선택 — 현재 스킬은 Docker/Compose 중심으로 범위 명확)
 - [ ] 큐 모드 운영 시 워커 헬스체크·재시작 정책 추가 검토 (선택 보강 — 차단 요인 아님)
-- [ ] 향후 v2.x → v3.x 메이저 업그레이드 시 별도 마이그레이션 스킬 검토 (선택 — 미래 작업)
+- [ ] 향후 v2.x → v3.x 메이저 업그레이드 시 별도 마이그레이션 스킬 검토 (선택 — 미래 작업. 2026-11-09 에 3.0 early access 사전 대비만 REFERENCE 10절에 요약)
+- [✅] **(2026-11-09 완료)** 3차 재검증 정정분 재시험 2/2 PASS (general-purpose 직접 호출)
+- [ ] **(2026-11-09 신규, 선택 보강)** 3.0 에서 `WEBHOOK_URL` alias 존속 여부, `N8N_SCHEDULER_TRIGGER_NODE_MODE=legacy` 제거 시점, 기존 게시 워크플로우의 고정 간격 기준점 — 공식 문서 확인 후 보강
 - [ ] **(2026-09-28 신규)** PostgreSQL 17+ 예시로 compose 기본값 상향 검토 — 현재 16은 "compatibility support only" 등급(선택 보강, 16 자체는 정상 동작 확인되어 차단 요인 아님)
 
 ---
@@ -358,3 +403,6 @@ status: PENDING_TEST
 | 2026-09-28 | v3 | 선택 보강 반영 — SKILL.md 91행 참조 문구에 `references/REFERENCE.md` "11-1. Task runner 모드" 절 번호 명시(파일명 누락으로 인한 혼동 해소). 내부 참조 명확화라 소스 확인 불필요, status PENDING_TEST 유지(실사용 필수 카테고리) | Claude (Opus 5.5) |
 | 2026-09-28 | v3 | **실사용(실행) 검증 수행.** 로컬 Docker 27.3.1로 docker-compose 5-서비스 스택(postgres:16+redis:7-alpine+n8n-main+n8n-worker+n8nio/runners, 전부 2.40.7) 실기동 → `/healthz` 200 확인, 큐 모드(Redis bull 큐 키 확인)·external task runner(브로커+runner 등록 로그 확인)·durable scheduler 신규 env 인식·DB 마이그레이션(142개 테이블)·`N8N_BLOCK_ENV_ACCESS_IN_NODE` 기본값 `$env` 차단 동작(CLI로 3가지 조합 비교)까지 서술과 대조. **서술 오류 5건 발견·SKILL.md/REFERENCE.md 최소 정정**: ① `WEBHOOK_URL`→`N8N_WEBHOOK_URL` 개명(구 이름 deprecated) ② `N8N_COMPRESSION_NODE_MAX_DECOMPRESSED_SIZE_BYTES` 기본값 268435456(256MiB)→실측 2147483648(2GiB), 256MiB는 향후 예정값 ③ `N8N_COMPRESSION_NODE_MAX_ZIP_ENTRIES` 기본값 1000→실측 5000, 1000은 향후 예정값 ④ PostgreSQL 16 "compatibility support only" 등급 주의문 추가(17+ 권장 상향) ⑤ task runner internal 모드 "insecure by design"에 "공식 deprecated" 병기. HTTPS 발급·owner 계정 생성·webhook 외부 호출·백업 복원·업그레이드 사이클은 계정 생성 금지·외부 노출 금지 지침으로 의도적 제외 — **부분 실행 검증**이므로 status는 실사용 필수 카테고리 원칙에 따라 **PENDING_TEST 유지**(임의 APPROVED 전환 금지) | 실사용 검증 세션 |
 | 2026-09-28 | v3 | **2단계 실사용 테스트 재수행(skill-tester → general-purpose).** Q1 `WEBHOOK_URL`→`N8N_WEBHOOK_URL` 개명 대응 / Q2 PostgreSQL 16·internal task runner deprecated 판단형 질문 → 2/2 PASS(누적 7/7). 신규 gap 1건(REFERENCE.md 11절 구 변수명 잔재) 발견·기록. 실사용 필수 카테고리(워크플로우/인프라 설정)이므로 **PENDING_TEST 유지** | skill-tester |
+| 2026-11-09 | v4 | **3차 재검증.** 대상 버전 v2.40.7 → v2.46.6(stable)/v2.47.2(beta), 3.0 early access(GitHub prerelease, npm 미배포) 병기. Durable scheduler **v2.45.0 기본 ON** 정정(SKIP 변수 제거·고정 간격 기본·`N8N_SCHEDULER_TRIGGER_NODE_MODE` 추가), `WEBHOOK_URL` deprecated 도입 버전(2.35.0) 명시, Compression 한도 256MiB/1000 을 "3.0 기본값"으로 구체화, internal runner deprecated 공식 문서 근거 추가, REFERENCE 10절에 v2.40→2.46 변경 표·3.0 사전 대비 추가, runners 이미지 태그 2.46.6. 내용 수정 있음 — skill-tester 재시험. 실사용 필수 카테고리로 **PENDING_TEST 유지** | Claude (Opus 5.5) |
+| 2026-11-09 | v4 | 재검증 후 2단계 재시험 (Q1 2.45 durable 기본 ON·legacy 모드·SKIP 변수 제거·버전 태그 / Q2 WEBHOOK_URL·Compression 한도 2.x vs 3.0·3.0 early access) → 2/2 PASS(general-purpose 직접 호출 — skill-tester 하위 에이전트 대기 불가). gap 1건(in-memory binary data 서술 충돌) REFERENCE 정정. **PENDING_TEST 유지** | general-purpose |
+| 2026-11-12 | v4.1 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 2.41~2.46/3.0 영향 목록(durable scheduler 2.45 기본 ON·WEBHOOK_URL 2.35 deprecated·internal runner deprecated·3.0 사전 대비)·이미지 태그 정책·v1→v2 breaking·N8N_RUNNERS_ENABLED 삭제 방향·2.x 운영 변수표(Compression 2.x vs 3.0 실측 정정 포함)·Postgres 16 호환 지원 격하·SQLite 전환·task runner internal/external·큐 모드 동일 키/헬스체크·webhook URL·owner 선점·키 손실·라이선스 경계 / 덜어낸 것 n8n 소개·설치 옵션 비교·docker run/compose/Caddy/.env 예제·핵심 환경 변수 기본표 대부분·HTTPS 방식 비교·User Management 설정 흐름·pg_dump 명령·업그레이드 명령·큐 모드/runner compose 예제·보안 요약표·체크리스트·공식 자료 링크 중복. references/REFERENCE.md 는 남길 사실을 SKILL.md 로 옮기고 폴더 삭제. status PENDING_TEST 그대로 | 정리 |

@@ -13,7 +13,7 @@
 3. **"진행할까요?"** — 답변 마지막 줄에 따옴표 없이 쓰고 사용자 확인을 기다린다
 4. 승인 후 실행
 
-`task-confirm-guard` 훅이 켜져 있으면 승인 전 Write/Edit 를 막는다. 설명·요약·조회와 git 커밋·푸시 요청은 예외. 상세 → `task-workflow.md` 룰(켜져 있으면)
+`task-confirm-guard` 훅이 켜져 있으면 승인 전 Write/Edit 와 파일을 바꾸는 셸 명령을 막는다. 설명·요약·조회와 git 커밋·푸시 요청은 예외. 상세 → `task-workflow.md` 룰(켜져 있으면)
 
 ---
 
@@ -26,18 +26,4 @@
 
 ---
 
-## 상황별 룰 안내
-
-켜진 룰만 설정 폴더 `rules/` 에 들어 있다. 없는 룰은 이 프로젝트에서 꺼진 것이다.
-
-| 상황 | 룰 |
-|------|----|
-| 외부 정보 조사·검증 | `info-verification.md` |
-| 테스트 코드 작성(악성 유저 방어·가짜 구현 차단) | `adversarial-testing.md` |
-| Git 커밋 메시지·커밋 나누기 | `git.md` |
-| 작업 착수 전 확인 절차 상세 | `task-workflow.md` |
-| Codex 리뷰 | `codex-review.md` |
-| 메모리 공유·커밋 전 메모리 정리 | `memory-sync.md` |
-| 언어별 코딩 규칙 | `typescript.md` · `java.md` · `rust.md` (해당 파일을 다룰 때만 읽힘) |
-
-하네스 항목을 켜고 끄려면 `/harness`.
+켜진 룰은 설정 폴더 `rules/` 에서 자동으로 읽힌다. 하네스 항목을 켜고 끄려면 `/harness`.

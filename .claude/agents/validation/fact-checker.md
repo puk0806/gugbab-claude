@@ -3,7 +3,7 @@ name: fact-checker
 description: >
   특정 사실, 수치, 주장, 기술 정보를 복수의 독립 소스로 교차 검증하고
   VERIFIED / UNVERIFIED / DISPUTED 중 하나로 판정하는 팩트체크 전담 에이전트.
-  단일 클레임 검증에 특화되어 있으며 deep-researcher(설치된 경우)보다 가볍고 빠르게 동작.
+  단일 클레임 검증에 특화되어 있어 가볍고 빠르게 동작.
   <example>사용자: "Claude Sonnet이 GPT-4o보다 코딩 벤치마크에서 높다는게 맞아?"</example>
   <example>사용자: "React가 Vue보다 npm 다운로드 수가 10배 많다는 주장 검증해줘"</example>
   <example>사용자: "이 GitHub 레포 Stars 수가 50k 이상이라는게 사실인지 확인해줘"</example>
@@ -65,9 +65,9 @@ background: true
 
 | 신뢰도 | 소스 유형 |
 |--------|-----------|
-| High | 공식 문서, 공식 GitHub, 피어리뷰 논문, 공식 벤치마크 |
-| Medium | 기술 블로그(작성자 명확), 컨퍼런스 발표, Stars 500+ 레포 |
-| Low | 개인 블로그, 포럼, 2차 인용 |
+| High | 공식 문서, 공식 GitHub, 피어리뷰 논문, 공식 벤치마크 (Anthropic·Claude 관련은 `code.claude.com`·`docs.claude.com`·`platform.claude.com`·`github.com/anthropics` 가 1·2순위) |
+| Medium | 기술 블로그(작성자·날짜 명확), 컨퍼런스 발표, Stars 500+ 이면서 최근 6개월 내 업데이트된 레포 |
+| Low | 개인 블로그, 포럼, 2차 인용, Stars 100 미만·출처 불명·1년 이상 된 자료, 공식 문서와 배치되는 내용 |
 
 **Low 소스만 존재하면 UNVERIFIED로 판정합니다.**
 

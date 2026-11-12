@@ -24,7 +24,7 @@ maxTurns: 30
 
 **해야 할 것:**
 - 원본 이해는 `nexacro-17-xfdl-anatomy`, 대응 규칙은 `nexacro-to-react-mapping` 스킬을 먼저 읽고 그대로 따른다
-- 대상 스택 구현은 설치된 스킬(`nextjs`·`ag-grid`·`tanstack-query`·`form-handling`)의 패턴을 따른다. 서버 측 Zod 검증 상세는 `zod-schema-validation`(설치된 경우)
+- 대상 스택 구현은 `nextjs`·`ag-grid`·`tanstack-query` 스킬(프론트 핵심 블록 `block:frontend-core` 를 켠 경우)의 패턴을 따른다. `ag-grid` 스킬(v33 기준)과 `nexacro-to-react-mapping` §5(36.2 기준)가 다르면 매핑 스킬을 따른다. 서버 측 Zod 검증 상세는 `zod-schema-validation`(TS 백엔드 블록 `block:ts-backend` 를 켠 경우)
 - 원본 Dataset·transaction·버튼마다 새 코드의 대응 위치를 주석이나 변환표로 남긴다 (원본 파일:줄)
 - 원본과 동작이 달라질 수 있는 곳, 대응 규칙에 없는 것은 `// TODO(migration): 이유` 로 표시한다
 - AG Grid는 프로젝트가 정한 에디션(Community/Enterprise)을 따른다. 정해지지 않았으면 묻는다

@@ -1,4 +1,4 @@
-# frontend 스킬 (78종)
+# frontend 스킬 (28종)
 
 React·Next.js·TypeScript·SEO·접근성·성능·PWA·꿈 앱 UI·운세 앱 UI 등 프론트엔드 전 영역 스킬 모음.
 
@@ -10,17 +10,13 @@ React·Next.js·TypeScript·SEO·접근성·성능·PWA·꿈 앱 UI·운세 앱 
 |------|------|------|
 | [nextjs](../../../.claude/skills/nextjs/SKILL.md) | Next.js 15/16 App Router, 데이터 페칭, 캐싱 전략, Server Actions | [→](./nextjs/verification.md) |
 | [typescript-v5](../../../.claude/skills/typescript-v5/SKILL.md) | TypeScript 5.x 버전별 신규 기능, tsconfig, React 타입 패턴 | [→](./typescript-v5/verification.md) |
-| [typescript-v4](../../../.claude/skills/typescript-v4/SKILL.md) | TypeScript 4.x 핵심 기능, 타입 시스템 고급 패턴 | [→](./typescript-v4/verification.md) |
 | [next-intl-i18n](../../../.claude/skills/next-intl-i18n/SKILL.md) | Next.js 16.3+ App Router 다국어(next-intl 4.14) — defineRouting·localePrefix, proxy.ts, next/root-params 기반 getRequestConfig, Server/Client 번역, ICU 복수형·날짜·숫자 포맷 | [→](./next-intl-i18n/verification.md) |
 
 ## 상태 관리·폼·에러
 
 | 스킬 | 설명 | 검증 |
 |------|------|------|
-| [state-management](../../../.claude/skills/state-management/SKILL.md) | Zustand v5 전역 상태, TanStack Query v5 서버 상태·캐싱 — 무엇을 어디에 둘지 선택 기준 | [→](./state-management/verification.md) |
-| [recoil-to-zustand-migration](../../../.claude/skills/recoil-to-zustand-migration/SKILL.md) | Recoil(유지보수 중단) → Zustand/Jotai 전환 — 개념 대응표, async selector→TanStack Query 분리, 공존·브리지 점진 이행 | [→](./recoil-to-zustand-migration/verification.md) |
-| [tanstack-query](../../../.claude/skills/tanstack-query/SKILL.md) | TanStack Query v5 실전 — queryKey 설계·staleTime/gcTime·낙관적 업데이트·무한 스크롤·App Router SSR | [→](./tanstack-query/verification.md) |
-| [form-handling](../../../.claude/skills/form-handling/SKILL.md) | React Hook Form + Zod 유효성 검증, 재사용 필드 컴포넌트 | [→](./form-handling/verification.md) |
+| [tanstack-query](../../../.claude/skills/tanstack-query/SKILL.md) | TanStack Query v5 최신 변경점(onMutate 시그니처·통합 메서드 deprecated·`'static'`)·실측 함정·App Router SSR + v4→v5 마이그레이션(codemod·런타임 함정) | [→](./tanstack-query/verification.md) |
 
 ## UI 컴포넌트·라이브러리
 
@@ -28,24 +24,16 @@ React·Next.js·TypeScript·SEO·접근성·성능·PWA·꿈 앱 UI·운세 앱 
 |------|------|------|
 | [mui-v9](../../../.claude/skills/mui-v9/SKILL.md) | MUI v9 + Emotion — slots/slotProps, CSS Variables·colorSchemes, v5→v9 마이그레이션 | [→](./mui-v9/verification.md) |
 | [mui-v5](../../../.claude/skills/mui-v5/SKILL.md) | MUI v5(EOL, 최종 5.18.0) 레거시 고정용 — Emotion styled/sx, v5 Grid item/xs 문법, components/componentsProps, CSS 변수는 experimental, @mui/styles React 18 비호환, v6+ 업그레이드 경로 | [→](./mui-v5/verification.md) |
-| [animation](../../../.claude/skills/animation/SKILL.md) | motion 12.x 애니메이션 — CSS transition, useScroll, 드래그, LazyMotion | [→](./animation/verification.md) |
-| [swiper](../../../.claude/skills/swiper/SKILL.md) | Swiper 11.x 슬라이더 — React 컴포넌트, 핵심 모듈, 반응형, Next.js SSR | [→](./swiper/verification.md) |
 | [ag-grid](../../../.claude/skills/ag-grid/SKILL.md) | AG Grid v33 — ModuleRegistry 모듈 등록, Theming API, Community(MIT) vs Enterprise 경계, React 셀 렌더러·getRowId, Next.js App Router, row model별 성능 | [→](./ag-grid/verification.md) |
-| [design-token-scss](../../../.claude/skills/design-token-scss/SKILL.md) | 디자인 토큰 3계층 설계, Figma 추출, Style Dictionary v4 변환 | [→](./design-token-scss/verification.md) |
 | [srs-spaced-repetition](../../../.claude/skills/srs-spaced-repetition/SKILL.md) | 간격 반복 학습 알고리즘 — SM-2(Anki) + FSRS-5 비교 | [→](./srs-spaced-repetition/verification.md) |
 
 ## 빌드·번들러·마이그레이션
 
 | 스킬 | 설명 | 검증 |
 |------|------|------|
-| [bundling-compiler](../../../.claude/skills/bundling-compiler/SKILL.md) | tsup/Vite/Turbopack 선택 기준, React Compiler(도입 후에도 수동 메모가 필요한 경우 포함), Tree Shaking | [→](./bundling-compiler/verification.md) |
 | [monorepo-turborepo](../../../.claude/skills/monorepo-turborepo/SKILL.md) | 모노레포 구조, Turborepo 파이프라인 | [→](./monorepo-turborepo/verification.md) |
-| [tsup](../../../.claude/skills/tsup/SKILL.md) | TypeScript 라이브러리 번들러 — CJS/ESM 동시 출력, DTS, 모노레포 패턴 | [→](./tsup/verification.md) |
-| [rsbuild](../../../.claude/skills/rsbuild/SKILL.md) | Rsbuild 2.x — Rspack 기반 웹 앱 빌드, CRA·webpack 마이그레이션 | [→](./rsbuild/verification.md) |
-| [tanstack-query-v4-to-v5-migration](../../../.claude/skills/tanstack-query-v4-to-v5-migration/SKILL.md) | React Query v4 → v5 — breaking change 전수(isPending·gcTime·throwOnError·useQuery 콜백 제거·initialPageParam), 공식 codemod, 타입 에러 없이 동작만 바뀌는 함정 | [→](./tanstack-query-v4-to-v5-migration/verification.md) |
 | [webpack-vite-config-mapping](../../../.claude/skills/webpack-vite-config-mapping/SKILL.md) | Webpack/Craco 설정 → Vite 1:1 매핑 | [→](./webpack-vite-config-mapping/verification.md) |
 | [vite-advanced-splitting](../../../.claude/skills/vite-advanced-splitting/SKILL.md) | Vite 고급 코드 스플리팅 — manualChunks 함수형, 멀티 빌드 | [→](./vite-advanced-splitting/verification.md) |
-| [vite-pwa-service-worker](../../../.claude/skills/vite-pwa-service-worker/SKILL.md) | Vite PWA/Service Worker — vite-plugin-pwa, generateSW/injectManifest | [→](./vite-pwa-service-worker/verification.md) |
 | [code-convention](../../../.claude/skills/code-convention/SKILL.md) | ESLint 9+ flat config, Biome, Prettier, Husky, lint-staged | [→](./code-convention/verification.md) |
 
 ## 테스트
@@ -53,81 +41,43 @@ React·Next.js·TypeScript·SEO·접근성·성능·PWA·꿈 앱 UI·운세 앱 
 | 스킬 | 설명 | 검증 |
 |------|------|------|
 | [testing](../../../.claude/skills/testing/SKILL.md) | Jest/Vitest + React Testing Library, 동작 중심 테스트 전략 | [→](./testing/verification.md) |
-| [e2e-testing](../../../.claude/skills/e2e-testing/SKILL.md) | Playwright E2E — POM, 로케이터, 네트워크 인터셉트, 비주얼 회귀, CI | [→](./e2e-testing/verification.md) |
 | [storybook](../../../.claude/skills/storybook/SKILL.md) | Storybook 8.x — CSF 3.0, args/controls, play function, autodocs | [→](./storybook/verification.md) |
-| [storybook-visual-testing](../../../.claude/skills/storybook-visual-testing/SKILL.md) | Storybook + Playwright 자체 호스팅 시각 회귀 테스트 | [→](./storybook-visual-testing/verification.md) |
 
 ## 성능
 
 | 스킬 | 설명 | 검증 |
 |------|------|------|
-| [build-perf-benchmarking](../../../.claude/skills/build-perf-benchmarking/SKILL.md) | hyperfine 빌드 시간 벤치마킹 — cold/warm, median, p95 | [→](./build-perf-benchmarking/verification.md) |
-| [bundle-size-analysis](../../../.claude/skills/bundle-size-analysis/SKILL.md) | gzip/brotli 번들 크기 측정 — rollup-plugin-visualizer, size-limit | [→](./bundle-size-analysis/verification.md) |
-| [dev-server-hmr-benchmarking](../../../.claude/skills/dev-server-hmr-benchmarking/SKILL.md) | dev server cold start + HMR 지연 측정 | [→](./dev-server-hmr-benchmarking/verification.md) |
+| [build-perf-benchmarking](../../../.claude/skills/build-perf-benchmarking/SKILL.md) | 빌드 시간·번들 크기·dev 서버(HMR) 측정 최신 변경점·함정 — hyperfine 2.0 파괴적 변경, size-limit 14, Vite 8 Rolldown (구 bundle-size-analysis·dev-server-hmr-benchmarking 통합) | [→](./build-perf-benchmarking/verification.md) |
 | [lighthouse-ci-setup](../../../.claude/skills/lighthouse-ci-setup/SKILL.md) | Lighthouse CI + Core Web Vitals 회귀 감지 설정 | [→](./lighthouse-ci-setup/verification.md) |
 | [web-vitals-rum-comparison](../../../.claude/skills/web-vitals-rum-comparison/SKILL.md) | RUM 실사용자 CWV — Sentry/Datadog 배포 전후 비교 | [→](./web-vitals-rum-comparison/verification.md) |
-| [core-web-vitals-optimization](../../../.claude/skills/core-web-vitals-optimization/SKILL.md) | LCP/INP/CLS 수정 패턴 — Next.js, scheduler.yield, aspect-ratio | [→](./core-web-vitals-optimization/verification.md) |
 
 ## SEO·접근성
 
 | 스킬 | 설명 | 검증 |
 |------|------|------|
-| [seo-nextjs](../../../.claude/skills/seo-nextjs/SKILL.md) | Next.js 15 App Router SEO — Metadata API, OpenGraph, JSON-LD, sitemap | [→](./seo-nextjs/verification.md) |
 | [seo-vite-spa](../../../.claude/skills/seo-vite-spa/SKILL.md) | Vite/CRA SPA SEO — Googlebot 한계, head 관리, SSG, CRA deprecated | [→](./seo-vite-spa/verification.md) |
-| [seo-static-html](../../../.claude/skills/seo-static-html/SKILL.md) | 프레임워크 비종속 HTML SEO — 표준 메타, OG, sitemap, robots.txt | [→](./seo-static-html/verification.md) |
-| [schema-org-patterns](../../../.claude/skills/schema-org-patterns/SKILL.md) | Google Rich Results JSON-LD 카탈로그 (Article/FAQ/Product 등) | [→](./schema-org-patterns/verification.md) |
 | [geo-ai-discoverability](../../../.claude/skills/geo-ai-discoverability/SKILL.md) | GEO — llms.txt, AI 크롤러 robots 분기, 질문-답변 구조 | [→](./geo-ai-discoverability/verification.md) |
 | [wcag-2.2-checklist](../../../.claude/skills/wcag-2.2-checklist/SKILL.md) | WCAG 2.2 A/AA 전체 체크리스트 + 2.2 신규 9개 SC + 미디어 SC(1.2.3 vs 1.2.5, captions vs subtitles) | [→](./wcag-2.2-checklist/verification.md) |
-| [i18n-seo](../../../.claude/skills/i18n-seo/SKILL.md) | 다국어 SEO — hreflang, canonical, URL 전략, Naver/Baidu | [→](./i18n-seo/verification.md) |
-| [og-image-generation](../../../.claude/skills/og-image-generation/SKILL.md) | 동적 OG 이미지 — Next.js opengraph-image, satori, CJK 폰트 | [→](./og-image-generation/verification.md) |
-| [url-canonicalization-redirects](../../../.claude/skills/url-canonicalization-redirects/SKILL.md) | URL 정규화·redirect 7대 항목, 301/302/307/308 차이 | [→](./url-canonicalization-redirects/verification.md) |
-| [search-console-webmaster](../../../.claude/skills/search-console-webmaster/SKILL.md) | GSC·Bing·Naver·Yandex·Baidu 콘솔 운영, IndexNow | [→](./search-console-webmaster/verification.md) |
-| [mobile-seo-pwa](../../../.claude/skills/mobile-seo-pwa/SKILL.md) | 모바일 SEO + Web App Manifest — Mobile-First, viewport, PWA | [→](./mobile-seo-pwa/verification.md) |
-| [structured-data-validation-api](../../../.claude/skills/structured-data-validation-api/SKILL.md) | JSON-LD 자동 검증 — schema-dts, CI 통합, GSC URL Inspection API | [→](./structured-data-validation-api/verification.md) |
-| [google-indexing-api](../../../.claude/skills/google-indexing-api/SKILL.md) | Google Indexing API — JobPosting·BroadcastEvent 2타입만 공식 지원 | [→](./google-indexing-api/verification.md) |
-| [image-optimization-seo](../../../.claude/skills/image-optimization-seo/SKILL.md) | 이미지 SEO — srcset, AVIF/WebP, CDN, Next.js Image, alt text | [→](./image-optimization-seo/verification.md) |
-| [font-optimization](../../../.claude/skills/font-optimization/SKILL.md) | 웹폰트 로딩 전략·CLS 감소·CJK 서브셋·variable font | [→](./font-optimization/verification.md) |
+| [search-console-webmaster](../../../.claude/skills/search-console-webmaster/SKILL.md) | GSC·Bing·Naver·Yandex·Baidu 콘솔 운영, IndexNow(네이버 엔드포인트), Search Console API·cron 자동화 함정 | [→](./search-console-webmaster/verification.md) |
 | [naver-seo-specifics](../../../.claude/skills/naver-seo-specifics/SKILL.md) | 네이버 SEO — C-Rank, D.I.A.+, 서치어드바이저, 통합검색 | [→](./naver-seo-specifics/verification.md) |
 | [kakao-share-optimization](../../../.claude/skills/kakao-share-optimization/SKILL.md) | 카카오톡 공유 OG 최적화 — SDK 2.8.x, 캐시 초기화, SPA 주의 | [→](./kakao-share-optimization/verification.md) |
-| [security-headers-seo](../../../.claude/skills/security-headers-seo/SKILL.md) | HTTP 보안 헤더 + SEO 영향 — HSTS, CSP, Referrer-Policy | [→](./security-headers-seo/verification.md) |
 | [bot-management-seo](../../../.claude/skills/bot-management-seo/SKILL.md) | 봇 관리 — Cloudflare Bot, AWS WAF, Googlebot 화이트리스트 | [→](./bot-management-seo/verification.md) |
-| [ecommerce-seo](../../../.claude/skills/ecommerce-seo/SKILL.md) | 이커머스 SEO — Product Schema, 재고 소진, faceted navigation | [→](./ecommerce-seo/verification.md) |
-| [local-business-seo](../../../.claude/skills/local-business-seo/SKILL.md) | 로컬 비즈니스 SEO — NAP, LocalBusiness Schema, 스마트플레이스 | [→](./local-business-seo/verification.md) |
-| [seo-monitoring-automation](../../../.claude/skills/seo-monitoring-automation/SKILL.md) | SEO 모니터링 자동화 — GSC API, IndexNow, GitHub Actions | [→](./seo-monitoring-automation/verification.md) |
 
 ## LLM·음성·PWA
 
 | 스킬 | 설명 | 검증 |
 |------|------|------|
-| [claude-api-streaming-frontend](../../../.claude/skills/claude-api-streaming-frontend/SKILL.md) | Claude Messages API SSE 스트리밍 프론트 — 이벤트 처리, 백엔드 프록시 | [→](./claude-api-streaming-frontend/verification.md) |
-| [chat-ui-pattern](../../../.claude/skills/chat-ui-pattern/SKILL.md) | LLM 챗봇 UI — react-markdown, 스트리밍 토큰, 자동 스크롤, IME, react-virtuoso 가상 스크롤 API 요약 | [→](./chat-ui-pattern/verification.md) |
-| [web-speech-api-stt](../../../.claude/skills/web-speech-api-stt/SKILL.md) | 브라우저 내장 STT + TTS — SpeechRecognition, ko-KR, continuous, 에러 코드 8종 / speechSynthesis, getVoices, iOS 대응 | [→](./web-speech-api-stt/verification.md) |
-| [voice-input-ui](../../../.claude/skills/voice-input-ui/SKILL.md) | 음성 입력 UI/UX — 마이크 상태 머신, WAI-ARIA, getUserMedia | [→](./voice-input-ui/verification.md) |
-| [media-recorder-api](../../../.claude/skills/media-recorder-api/SKILL.md) | MediaRecorder 오디오 녹음 — MIME 타입, Blob 수집, Whisper 연동 | [→](./media-recorder-api/verification.md) |
-| [whisper-api-integration](../../../.claude/skills/whisper-api-integration/SKILL.md) | OpenAI Whisper API 통합 — 모델·포맷·25MB·language 파라미터 | [→](./whisper-api-integration/verification.md) |
+| [voice-input-ui](../../../.claude/skills/voice-input-ui/SKILL.md) | 음성 입력 최신 변경점·함정 — OpenAI 구 전사 모델 지원 종료(2027-02-26 제거)·gpt-transcribe, Web Speech 브라우저 지원 현실, MediaRecorder 함정 (구 web-speech-api-stt·media-recorder-api·whisper-api-integration 통합) | [→](./voice-input-ui/verification.md) |
 | [pwa-push-notifications](../../../.claude/skills/pwa-push-notifications/SKILL.md) | Web Push API + VAPID — iOS Safari 16.4+, 권한 설계 | [→](./pwa-push-notifications/verification.md) |
-| [pwa-offline-llm-fallback](../../../.claude/skills/pwa-offline-llm-fallback/SKILL.md) | PWA 오프라인 LLM 호출 fallback — Background Sync, 재시도 | [→](./pwa-offline-llm-fallback/verification.md) |
-| [indexeddb-dexie](../../../.claude/skills/indexeddb-dexie/SKILL.md) | Dexie 4.4.x IndexedDB — 스키마, 마이그레이션, useLiveQuery | [→](./indexeddb-dexie/verification.md) |
 
 ## 꿈 앱 UI (꿈 도메인 블록 · 프리셋 `dream`)
 
 | 스킬 | 설명 | 검증 |
 |------|------|------|
-| [dream-symbol-tagging](../../../.claude/skills/dream-symbol-tagging/SKILL.md) | 꿈 텍스트 상징 자동 추출 — 룰·LLM·임베딩 하이브리드 | [→](./dream-symbol-tagging/verification.md) |
-| [dream-recurrence-detection](../../../.claude/skills/dream-recurrence-detection/SKILL.md) | 반복 꿈 패턴 감지 — 태그·임베딩·LLM 3종 비교 | [→](./dream-recurrence-detection/verification.md) |
-| [emotion-tagging-input](../../../.claude/skills/emotion-tagging-input/SKILL.md) | 꿈 감정 태깅 UI — Plutchik 8 primary, WAI-ARIA | [→](./emotion-tagging-input/verification.md) |
-| [dream-image-generation](../../../.claude/skills/dream-image-generation/SKILL.md) | 꿈 텍스트 → DALL-E 3/Imagen/Stability AI 이미지 생성 | [→](./dream-image-generation/verification.md) |
-| [dream-statistics-visualization](../../../.claude/skills/dream-statistics-visualization/SKILL.md) | 꿈 통계 시각화 — Recharts, 워드클라우드, 히트맵 | [→](./dream-statistics-visualization/verification.md) |
-| [dream-app-onboarding](../../../.claude/skills/dream-app-onboarding/SKILL.md) | 꿈 앱 온보딩 5단계 — 권한 priming, 안전 자원 안내 | [→](./dream-app-onboarding/verification.md) |
 | [dream-privacy-consent-ui](../../../.claude/skills/dream-privacy-consent-ui/SKILL.md) | 꿈 데이터 동의 UI — 개인정보보호법 제23조, GDPR | [→](./dream-privacy-consent-ui/verification.md) |
-| [dream-export-import](../../../.claude/skills/dream-export-import/SKILL.md) | 꿈 일기 export·import — JSON/CSV/암호화 ZIP | [→](./dream-export-import/verification.md) |
-| [dream-sharing-anonymized](../../../.claude/skills/dream-sharing-anonymized/SKILL.md) | 꿈 익명 공유 — 옵트인, PII 마스킹, k-anonymity | [→](./dream-sharing-anonymized/verification.md) |
 
 ## 운세 앱 UI (운세 도메인 블록 · 프리셋 `fortune`)
 
 | 스킬 | 설명 | 검증 |
 |------|------|------|
 | [saju-chart-visualization](../../../.claude/skills/saju-chart-visualization/SKILL.md) | 사주 원국 표·오행 분포 차트·대운 타임라인 — 오방정색 WCAG 재조정, "오행 개수=우열" 오독 방지, CJK 서브셋, SVG vs 차트 라이브러리 | [→](./saju-chart-visualization/verification.md) |
-| [tarot-card-deck-ui](../../../.claude/skills/tarot-card-deck-ui/SKILL.md) | 타로 덱 UI — CSS 3D 플립·셔플, 스프레드 배치(1/3/켈틱크로스), 부채꼴 선택, Fisher-Yates + crypto 셔플, 접근성, 카드 에셋 전략 | [→](./tarot-card-deck-ui/verification.md) |
-| [palm-photo-capture-vision](../../../.claude/skills/palm-photo-capture-vision/SKILL.md) | 손바닥 촬영 → Claude Vision 파이프라인 — 후면 카메라·iOS Safari 제약, 촬영 가이드, 품질 검증, 리사이즈·압축, 손 아닌 이미지 거부, 원본 미보관 | [→](./palm-photo-capture-vision/verification.md) |
-| [daily-fortune-retention-loop](../../../.claude/skills/daily-fortune-retention-loop/SKILL.md) | 일일 운세 리텐션 루프 — 시간대 기준 service day key, write-once 캐싱(리롤 금지), 발송 시각 개인화 푸시, 스트릭·공유 카드, 과의존 조장 방지 가드 | [→](./daily-fortune-retention-loop/verification.md) |

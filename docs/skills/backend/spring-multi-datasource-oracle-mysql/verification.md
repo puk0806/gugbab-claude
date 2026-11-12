@@ -2,7 +2,7 @@
 skill: spring-multi-datasource-oracle-mysql
 category: backend
 version: v1
-date: 2026-09-26
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `spring-multi-datasource-oracle-mysql` |
 | 스킬 경로 | `.claude/skills/spring-multi-datasource-oracle-mysql/SKILL.md` |
-| 검증일 | 2026-04-22 (재검증: 2026-09-26) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-26) |
 | 검증자 | skill-creator (Claude Code) |
 | 스킬 버전 | v1 |
 
@@ -63,6 +63,10 @@ status: APPROVED
 | Spring Boot Support Timeline | https://spring.io/support-policy/ | ⭐⭐⭐ High | 2026-04-22 | 2.7 OSS EOL 2023-11-24 |
 | Baeldung Multi DataSources | https://www.baeldung.com/spring-boot-configure-multiple-datasources | ⭐⭐ Medium | 2026-04-22 | 패턴 참고 (공식 문서와 교차 검증) |
 | Oracle Developers Blog (HikariCP) | https://blogs.oracle.com/developers/hikaricp-best-practices-for-oracle-database-and-spring-boot | ⭐⭐⭐ High | 2026-04-22 | Oracle 공식 블로그 |
+| Maven Central metadata (재검증) | https://repo1.maven.org/maven2/ (mybatis-spring-boot-starter · mysql-connector-j · ojdbc11 · ojdbc8 maven-metadata.xml) | ⭐⭐⭐ High | 2026-11-09 | starter 최신 4.1.0(3.0.x 라인 최신 3.0.5), mysql-connector-j 26.10.0(9.7.0 → 26.7.0 → 26.10.0), ojdbc11/ojdbc8 23.26.4.0.0 |
+| MyBatis Spring Boot Starter 호환표 (재검증) | https://mybatis.org/spring-boot-starter/mybatis-spring-boot-autoconfigure/ | ⭐⭐⭐ High | 2026-11-09 | 2.3 = Boot 2.7, 3.0 = Boot 3.2–3.5, 4.0 = Boot 4.0+ |
+| Spring Framework Javadoc — JdbcTransactionManager (재검증) | https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/jdbc/support/JdbcTransactionManager.html | ⭐⭐⭐ High | 2026-11-09 | @since 5.3, DataSourceTransactionManager 하위 클래스 + commit/rollback 예외 변환 |
+| endoflife.date — Spring Boot (재검증) | https://endoflife.date/spring-boot | ⭐⭐ Medium | 2026-11-09 | 2.7 OSS 2023-06-30 종료, 상용 2029-06-30 |
 
 ---
 
@@ -104,6 +108,11 @@ status: APPROVED
 | 8 | 멀티 DataSource 환경에서 mybatis 자동 설정 미적용 | VERIFIED | MyBatis autoconfigure 공식 문서 명시 |
 | 9 | `@Transactional`에 트랜잭션 매니저 미지정 시 `@Primary` 사용 | VERIFIED | Spring Framework Reference 문서 |
 | - | (초기 추정) ojdbc11 최신이 `23.7.x` | DISPUTED → 수정 | Maven 검색 결과 23.6.0.24.10 및 23.26.x 존재. SKILL.md에 `23.6.0.24.10` 명시로 수정 |
+| 10 | (2026-11-09) 버전 매트릭스 "Boot 3.x 패키지 `jakarta.sql.DataSource`" | **DISPUTED → 수정** | `jakarta.sql` 패키지는 존재하지 않음 — 클레임 7과 본문 주의문(JDK 소속 `javax.sql` 유지)과도 모순. 매트릭스·트랜잭션 매니저 절 문구를 `javax.sql.DataSource`로 정정 |
+| 11 | (2026-11-09) "Spring Boot 2.7 OSS 종료 2023-11-24" | **DISPUTED → 수정** | endoflife.date: 2.7 OSS 2023-06-30, 상용 2029-06-30 (2-to-3·1-to-2 스킬과 일치) |
+| 12 | (2026-11-09) "`JdbcTransactionManager`는 Framework 6.0부터 권장" | **DISPUTED → 수정** | Javadoc: @since 5.3, `DataSourceTransactionManager` 하위 클래스 + commit/rollback 예외 변환 → Boot 2.4+에서도 사용 가능하다고 정정 |
+| 13 | (2026-11-09) mybatis starter 2.3.2 = Boot 2.7, 3.0.5 = Boot 3.2~3.5, Boot 4는 4.x(최신 4.1.0) | VERIFIED | mybatis.org 호환표 + Maven Central metadata |
+| 14 | (2026-11-09) mysql-connector-j 캘린더 버전(26.7.0 → 26.10.0), ojdbc11/ojdbc8 23.26.4.0.0, 드라이버 클래스명 변동 없음 | VERIFIED | Maven Central metadata + 기존 MySQL·Oracle 공식 문서 |
 
 ### 4-5. Claude Code 에이전트 활용 테스트
 
@@ -114,6 +123,18 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+### 2026-11-09 — 재검증 수정분 content test
+
+**수행일**: 2026-11-09
+**수행자**: general-purpose (skill-tester는 중첩 호출 환경에서 Agent 도구가 없어 재검증 담당이 general-purpose 에이전트에 직접 위임)
+**수행 방법**: SKILL.md + references Read만 허용, 웹 검색·파일 수정 금지 조건으로 실전 질문 3개 답변
+
+- Q1. "Boot 3.5로 올리며 `javax.sql.DataSource`를 `jakarta.sql.DataSource`로 바꿔야 하나?" — **PASS** (근거: 버전 매트릭스 "패키지" 행 + Oracle DataSource 절 주의문 — JDK 소속이라 유지). 답변자가 매트릭스 아래 일반 주의문("jakarta 전환, import 변경 필수")이 오해를 줄 수 있다고 지적 → 주의문에 "Jakarta EE 스펙 한정, `javax.sql`은 제외" 문구 보강
+- Q2. "Boot 2.7에서 `JdbcTransactionManager` 사용 가능? 차이는?" — **PASS** (근거: 트랜잭션 매니저 분리 절 주의 — Framework 5.3+, 하위 클래스 + commit/rollback 예외 변환)
+- Q3. "Boot 2.7·3.5·4.x별 mybatis starter 라인과 2.7 OSS 종료일" — **PASS** (근거: 버전 매트릭스 — 2.3.x / 3.0.x / 4.x(4.1.0), 상단 주의 — 2023-06-30, 상용 2029-06-30)
+
+agent content test: 3/3 PASS → APPROVED 유지.
 
 ### 2026-09-26 — 재검증 (60일 초과 정기 재검증)
 
@@ -196,7 +217,7 @@ Oracle에 주문 저장하고 MySQL에 로그 남기는데, 한 트랜잭션으�
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-04-22, 2개 질문 모두 PASS) |
+| 에이전트 활용 테스트 | ✅ (2026-04-22, 2개 질문 모두 PASS / **2026-11-09 재검증 수정분 3/3 PASS**) |
 | **최종 판정** | **APPROVED** |
 
 ---
@@ -207,6 +228,7 @@ Oracle에 주문 저장하고 MySQL에 로그 남기는데, 한 트랜잭션으�
 - [⏸️] Testcontainers 예시 추가(Oracle/MySQL 실제 컨테이너) — 범위 확장 선택 사항
 - [⏸️] MyBatis 어노테이션 기반 매퍼(@Mapper + XML 미사용) 예시 — 선택 보강, 차단 요인 아님
 - [✅] 에이전트 활용 테스트 — Oracle Primary 멀티 DataSource + 크로스 DB 트랜잭션 2건 PASS (섹션 5, general-purpose 대체, 2026-04-22)
+- [✅] 2026-11-09 재검증 정정(`jakarta.sql` 오기·2.7 EOL·JdbcTransactionManager 시점) content test 3/3 PASS
 
 ---
 
@@ -216,3 +238,6 @@ Oracle에 주문 저장하고 MySQL에 로그 남기는데, 한 트랜잭션으�
 |------|------|-----------|--------|
 | 2026-04-22 | v1 | 최초 작성 | skill-creator (Claude Code) |
 | 2026-09-26 | v1 | 재검증 — mysql-connector-j 캘린더 버전 전환(26.7.0), ojdbc11 신규 패치 반영, 핵심 설정 변경 없음 확인 | 메인 세션 |
+| 2026-11-09 | v1 | 재검증 — starter/드라이버 최신(4.1.0·26.10.0·23.26.4.0.0) 확인. **바뀐 점**: 버전 매트릭스 `jakarta.sql.DataSource` 오기 → `javax.sql.DataSource`(트랜잭션 매니저 절 문구도 정정), 2.7 OSS 종료일 2023-11-24 → 2023-06-30, `JdbcTransactionManager` 도입 시점 6.0 → 5.3(레거시에서도 사용 가능), starter 4.x 라인·드라이버 최신 버전 주의문 갱신. skill-tester 재시험 대상 | 재검증 (Claude) |
+| 2026-11-09 | v1 | 수정분 content test (Q1 DataSource 패키지 / Q2 JdbcTransactionManager 레거시 사용 / Q3 starter 라인·2.7 EOL) → 3/3 PASS, APPROVED 유지. 답변자 지적 반영해 버전 매트릭스 아래 jakarta 주의문에 "`javax.sql` 제외" 보강. skill-tester Agent 도구 없음 → general-purpose 직접 위임. 섹션 5·6·7 동기화 | general-purpose |
+| 2026-11-12 | v1.1 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 버전 매트릭스·드라이버 캘린더 버전 주의, javax.sql 비전환, jdbc-url·드라이버 클래스·sslMode, @Primary·스타터 자동설정 미적용·매퍼 패키지 분리, JdbcTransactionManager 5.3, @Transactional 매니저 명시, Boot 3 Atomikos 제거, H2 호환 한계·@DataJpaTest 교체 / 덜어낸 것 Maven 의존성 블록·DataSource·SqlSessionFactory·TransactionManager·@Transactional 전체 예제 코드, 폴더 구조, 보상 패턴 예제·HikariCP 튜닝표·체크리스트(references/REFERENCE.md 폴더 삭제) | 정리 |

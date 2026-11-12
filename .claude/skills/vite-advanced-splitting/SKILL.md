@@ -1,25 +1,29 @@
 ---
 name: vite-advanced-splitting
-description: Vite 고급 코드 스플리팅 — manualChunks 함수형, 모바일/데스크톱 분리 빌드(mode), Gulp 빌드 훅 → Vite 플러그인 전환, vite:preloadError 재시도 처리
+description: Vite 8 Rolldown 전환 후 코드 스플리팅 — rolldownOptions 개명, manualChunks 객체 미지원·함수 deprecated → codeSplitting.groups(test·name 함수·priority) 이전과 함정, vite:preloadError 공식 동작·HTML no-cache 조건
 ---
 
 # Vite 고급 코드 스플리팅 & 빌드 자동화
 
 > 소스: https://vitejs.dev/config/build-options | https://vitejs.dev/guide/api-plugin | https://vitejs.dev/guide/build | https://vite.dev/guide/migration | https://rolldown.rs/reference/OutputOptions.codeSplitting
-> 검증일: 2026-09-28 (최초 작성 2026-04-20 · 08-11 Vite 8 대응 주의사항 추가 · 09-28 재검증: Vite 8.3.1 확인, `codeSplitting.groups`를 주 경로로 전면 재작성, `manualChunks`는 레거시(Vite 6/7)로 격하)
+> 검증일: 2026-11-09 (최초 작성 2026-04-20 · 09-28 `codeSplitting.groups` 주 경로로 재작성 · 11-09 재검증: Vite 8.3.6·Rolldown 1.3.0 확인, `groups[].test`가 문자열·정규식·함수 모두 받는 것으로 정정)
 
 > **버전 분기:** Vite 8부터 Rolldown이 기본 번들러로 전환되며 `build.rollupOptions`는 `build.rolldownOptions`로 개명(`rollupOptions`는 deprecated alias로 하위호환 유지, 당장 깨지지 않음). `output.manualChunks`는 **객체 형식 미지원**, 함수 형식은 **deprecated로만 동작**. 신규 프로젝트·Vite 8+ 환경은 아래 "Vite 8+ 주 경로"(`codeSplitting.groups`)를 쓰고, 아직 Vite 6/7(Rollup 기반)을 유지 중이면 "레거시" 절의 `manualChunks`를 그대로 쓴다. 출처: https://vite.dev/guide/migration
 
 ---
 
-## 1. 코드 스플리팅 전략 — `codeSplitting.groups`(주 경로) vs `manualChunks`(레거시)
+## 이 스킬의 범위
 
-### Vite 8+ 주 경로 — `rolldownOptions.output.codeSplitting`
+Vite 8(Rolldown)에서 바뀐 청크 분할 설정과 그 함정, `vite:preloadError` 공식 동작만 다룬다.
+
+> 기본 사용법(`loadEnv`·mode 분리 빌드·`transformIndexHtml`·플러그인 훅 순서·`React.lazy` 라우트 분할·파일명 패턴)은 공식 문서 수준이라 싣지 않는다.
+
+---
+
+## 1. Vite 8+ 주 경로 — `rolldownOptions.output.codeSplitting`
 
 ```typescript
 // vite.config.ts (Vite 8+)
-import { defineConfig } from 'vite'
-
 export default defineConfig({
   build: {
     rolldownOptions: {
@@ -28,8 +32,6 @@ export default defineConfig({
           groups: [
             // priority 숫자가 클수록 먼저 평가됨 (먼저 매칭되는 그룹이 우선 배정)
             { name: 'common-react-dom', test: /node_modules[\\/](react|react-dom|react-router-dom)[\\/]/, priority: 30 },
-            { name: 'common-swiper', test: /node_modules[\\/]swiper[\\/]/, priority: 20 },
-            { name: 'vendors-sentry', test: /node_modules[\\/]@sentry[\\/]/, priority: 20 },
             { name: 'vendors-mui', test: /node_modules[\\/](@mui|@emotion)[\\/]/, priority: 20 },
             // test 없이 마지막에 두면 나머지 node_modules를 모두 흡수하는 catch-all
             { name: 'vendor', test: /node_modules/ },
@@ -41,393 +43,50 @@ export default defineConfig({
 })
 ```
 
-> `groups` 각 항목: `name`(청크명, 문자열 또는 함수) · `test`(정규식 — 매칭되는 모듈을 이 그룹에 배정) · `priority`(숫자가 클수록 먼저 평가) · `minSize`/`maxSize`/`minModuleSize`/`maxModuleSize`/`minShareCount`(크기·공유 기준 세부 제어, 미달 시 그룹 무시). `test`는 함수가 아닌 **정규식만** 받으므로, 구 함수형 `manualChunks`처럼 패키지명을 문자열로 파싱해 동적으로 분기하는 로직 자체가 필요하면(예: `lf-*-api-client` 패턴처럼 접두/접미사 조건) 그룹을 패키지 단위로 정규식 나열하거나 아래 레거시 함수형을 계속 사용한다. 출처: https://rolldown.rs/reference/OutputOptions.codeSplitting
+> `groups` 각 항목: `name`(청크명, 문자열 또는 함수 `(moduleId, ctx) => string | null`) · `test`(문자열 = id 포함 여부, 정규식 = id 매칭, 함수 `(id) => boolean`, 생략 = 모든 모듈) · `priority`(숫자가 클수록 먼저 평가, 기본 0, 같으면 배열 앞쪽 우선) · `minSize`/`maxSize`/`minModuleSize`/`maxModuleSize`/`minShareCount`(크기·공유 기준 세부 제어, 미달 시 그룹 무시). 경로 구분자는 윈도우 대비 `/` 대신 `[\\/]`로 쓴다(공식 권장). 출처: https://rolldown.rs/reference/OutputOptions.codeSplitting (Rolldown 1.3.0 타입 정의로 확인, 2026-11-09)
 
-### 레거시 (Vite 6/7, Rollup 기반) — `manualChunks`
+구 함수형 `manualChunks`처럼 패키지명을 파싱해 동적으로 청크명을 정하는 로직은 **`name` 함수**로 옮긴다 — `test`로 대상 모듈을 고르고 `name`이 청크명을 돌려준다.
+
+```typescript
+{
+  name: (id) => id.match(/node_modules[\\/](lf-[^\\/]+-api-client)[\\/]/)?.[1] ?? null,
+  test: /node_modules[\\/]lf-[^\\/]+-api-client[\\/]/,
+  priority: 25,
+}
+```
+
+> 주의: `test`·`name` 함수는 Rolldown이 모듈마다 정해진 순서로 호출한다 — `test`가 쓴 "현재 모듈" 같은 바깥 변수를 `name`에서 읽지 말 것(마지막 모듈 값이 남는다). 상태가 필요하면 모듈 id 를 키로 저장한다.
+
+같은 `rolldownOptions.output` 아래로 옮겨진 것: `chunkFileNames`·`entryFileNames`·`assetFileNames`(옵션명 동일), console 제거 `minify: { compress: { dropConsole: true } }`(→ `webpack-vite-config-mapping` 2절). 분리 빌드의 `input`도 `rolldownOptions.input`.
+
+---
+
+## 2. 레거시 (Vite 6/7, Rollup 기반) — `manualChunks`
 
 > **주의 (Vite 8+):** 아래 방식은 Vite 8에서 객체 형식 **미지원**, 함수 형식은 **deprecated**(당장 동작은 하나 신규 작성 금지). 신규 프로젝트는 위 "Vite 8+ 주 경로"를 사용할 것 — 이 절은 기존 Vite 6/7 프로젝트를 마이그레이션 전까지 유지 보수하는 용도로만 참고한다.
 
-```typescript
-// 객체 형식 — 명시적, 소규모 청크 분할에 적합 (Vite 8+에서는 미지원)
-manualChunks: {
-  'react-vendor': ['react', 'react-dom'],
-  'ui-vendor': ['@mui/material'],
-}
-
-// 함수 형식 — 동적 조건 처리, 대규모 분할에 적합 (Vite 8+에서도 동작하나 deprecated)
-manualChunks(id: string) {
-  if (id.includes('node_modules')) { ... }
-}
-```
-
-```typescript
-// vite.config.ts (Vite 6/7)
-import { defineConfig } from 'vite'
-
-export default defineConfig({
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (!id.includes('node_modules')) return
-
-          // node_modules에서 패키지명 추출
-          // 예: /path/to/node_modules/@sentry/react/dist/index.js → @sentry/react
-          const parts = id.split('/node_modules/')
-          const rawPkg = parts[parts.length - 1]
-
-          // scoped 패키지 처리 (@org/pkg)
-          const pkg = rawPkg.startsWith('@')
-            ? rawPkg.split('/').slice(0, 2).join('/')
-            : rawPkg.split('/')[0]
-
-          // 그룹별 청크 분류
-          if (['react', 'react-dom', 'react-router-dom'].includes(pkg)) {
-            return 'common-react-dom'
-          }
-          if (pkg === 'swiper') return 'common-swiper'
-          if (pkg.startsWith('@sentry')) return 'vendors-sentry'
-          if (pkg.startsWith('@mui') || pkg === '@emotion/react' || pkg === '@emotion/styled') {
-            return 'vendors-mui'
-          }
-          if (pkg.startsWith('@datadog')) return 'vendors-datadog'
-
-          // API 클라이언트 패키지 개별 청크
-          if (pkg.startsWith('lf-') && pkg.endsWith('-api-client')) {
-            return pkg
-          }
-
-          // 나머지 node_modules → 공통 vendor
-          return 'vendor'
-        },
-      },
-    },
-  },
-})
-```
-
-### React.lazy + Suspense와 함께 사용
-
-```typescript
-// ❌ codeSplitting.groups/manualChunks와 React.lazy 조합 시 주의
-// 잘못된 그룹 test 패턴(또는 manualChunks 분기)가 lazy chunk 경계를 깨뜨릴 수 있음
-
-// ✅ 라우트 기반 lazy split은 codeSplitting.groups/manualChunks와 별개로 동작
-const ProductPage = lazy(() => import('./pages/ProductPage'))
-
-// Vite 8+: groups의 test는 node_modules만 타겟, 앱 코드는 건드리지 않는 게 안전
-{ name: 'vendor', test: /node_modules/ }
-
-// 레거시 manualChunks도 동일 원칙
-manualChunks(id) {
-  if (id.includes('node_modules')) { ... }
-  // 앱 코드 분기는 return 없이 통과 (Vite가 자동 처리)
-}
-```
+- 위치: `build.rollupOptions.output.manualChunks`. 객체(`{ 'react-vendor': ['react', 'react-dom'] }`) 또는 함수(`(id) => string | undefined`).
+- 함수형에서 scoped 패키지(`@org/pkg`)는 `id.split('/node_modules/')` 마지막 조각의 앞 두 세그먼트로 이름을 뽑는다. 앱 코드 분기는 `return` 없이 통과시킨다.
+- 이전 매핑: 객체 형식 → `groups`의 `{ name, test }` 항목, 함수 형식 분기 → `name` 함수 + `test` (1절).
 
 ---
 
-## 2. 모바일 / 데스크톱 분리 빌드
+## 3. 청크 로드 실패 재시도 (`vite:preloadError`)
 
-### 환경 변수 + mode 방식
+webpack의 `webpack-retry-chunk-load-plugin` 대체. `window.addEventListener('vite:preloadError', ...)`에서 `event.preventDefault()` 후 재시도 횟수를 쿼리(`_retry`)로 실어 새로고침하는 방식이 일반적이다(무한 새로고침 방지를 위해 상한을 둔다).
 
-```bash
-# package.json scripts
-"build:mobile": "cross-env VITE_DEVICE_TYPE=1 vite build --mode mobile",
-"build:desktop": "cross-env VITE_DEVICE_TYPE=2 vite build --mode desktop",
-"dev:mobile": "cross-env VITE_DEVICE_TYPE=1 vite --mode mobile",
-"dev:desktop": "cross-env VITE_DEVICE_TYPE=2 vite --mode desktop",
-```
-
-```
-# .env.mobile
-VITE_DEVICE_TYPE=1
-VITE_ENTRY=src/mobile/index.tsx
-
-# .env.desktop
-VITE_DEVICE_TYPE=2
-VITE_ENTRY=src/desktop/index.tsx
-```
-
-```typescript
-// vite.config.ts
-import { defineConfig, loadEnv } from 'vite'
-import react from '@vitejs/plugin-react-swc'
-
-export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '')
-
-  const isMobile = env.VITE_DEVICE_TYPE === '1'
-
-  return {
-    plugins: [react()],
-    build: {
-      outDir: isMobile ? 'build/mobile' : 'build/desktop',
-      rollupOptions: {
-        input: isMobile ? 'src/mobile/index.html' : 'src/desktop/index.html',
-      },
-    },
-    define: {
-      __IS_MOBILE__: isMobile,
-    },
-  }
-})
-```
-
-### 분리 entry (index.html이 루트 1개인 경우)
-
-```typescript
-// 단일 index.html + 조건부 entry 처리
-export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '')
-  const deviceType = env.VITE_DEVICE_TYPE ?? '1'
-
-  return {
-    // index.html의 <script src>를 모드에 맞게 변경하는 플러그인
-    plugins: [
-      react(),
-      {
-        name: 'device-entry',
-        transformIndexHtml(html) {
-          return html.replace(
-            '/src/index.tsx',
-            deviceType === '2' ? '/src/desktop/index.tsx' : '/src/mobile/index.tsx'
-          )
-        },
-      },
-    ],
-  }
-})
-```
+> 공식 문서 보충 (2026-11-09 확인): `event.payload`에 원래 import 에러가 들어 있고, `event.preventDefault()`를 부르면 에러가 throw 되지 않는다. 새 배포 후 구 청크 404 대응이 목적이면 **HTML 에 `Cache-Control: no-cache`** 를 걸어야 한다(아니면 새로고침해도 옛 자산을 참조). 재시도 가능한 모듈 로딩을 지원하는 브라우저에선 새로고침 없이 같은 dynamic import 를 다시 시도할 수 있고, 구형 브라우저는 실패를 모듈 맵에 캐시하므로 새로고침이 필요하다. 출처: https://vite.dev/guide/build#load-error-handling
 
 ---
 
-## 3. Gulp 빌드 스크립트 → Vite 플러그인 전환
+## 4. 흔한 실수
 
-Gulp의 `pre/postbuild` 태스크(version.json 생성, 빌드 타입 파일 생성)를 Vite 플러그인 훅으로 대체한다.
-
-### Gulp 태스크 원본
-
-```javascript
-// gulpfile.js (Before)
-gulp.task('touchVersion', () => {
-  const version = `${format(new Date(), 'yyyyMMdd')}@${gitRev}`
-  fs.writeFileSync('src/version.json', JSON.stringify({ version }))
-})
-
-gulp.task('touchBuildType', () => {
-  const type = process.env.DEVICE_TYPE === '1' ? 'mobile' : 'desktop'
-  fs.writeFileSync(`build/${type}.json`, JSON.stringify({ type }))
-})
-```
-
-### Vite 플러그인으로 대체
-
-```typescript
-// plugins/build-meta.ts
-import type { Plugin } from 'vite'
-import { execSync } from 'child_process'
-import fs from 'fs'
-
-export function buildMetaPlugin(deviceType: string): Plugin {
-  return {
-    name: 'build-meta',
-
-    // buildStart: 빌드 시작 시 (prebuild 대체)
-    buildStart() {
-      const gitRev = execSync('git rev-parse --short HEAD').toString().trim()
-      const date = new Date().toISOString().slice(0, 10).replace(/-/g, '')
-      const version = `${date}@${gitRev}`
-      fs.writeFileSync('src/version.json', JSON.stringify({ version }))
-      console.log(`[build-meta] version: ${version}`)
-    },
-
-    // closeBundle: 빌드 완료 후 (postbuild 대체)
-    closeBundle() {
-      const type = deviceType === '1' ? 'mobile' : 'desktop'
-      const outDir = 'build'
-      fs.writeFileSync(`${outDir}/${type}.json`, JSON.stringify({ type }))
-      // version.json을 build/로 복사
-      fs.copyFileSync('src/version.json', `${outDir}/version.json`)
-      console.log(`[build-meta] build type: ${type}`)
-    },
-  }
-}
-```
-
-```typescript
-// vite.config.ts에서 사용
-import { buildMetaPlugin } from './plugins/build-meta'
-
-export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '')
-
-  return {
-    plugins: [
-      react(),
-      buildMetaPlugin(env.VITE_DEVICE_TYPE ?? '1'),
-    ],
-  }
-})
-```
-
-### Vite 플러그인 훅 실행 순서
-
-```
-build 명령 실행
-  │
-  ├─ config()          설정 해석 (초기화)
-  ├─ buildStart()      빌드 시작 ← prebuild 태스크
-  ├─ transform()       파일 변환
-  ├─ generateBundle()  번들 생성
-  ├─ writeBundle()     파일 쓰기
-  └─ closeBundle()     빌드 완료 ← postbuild 태스크
-```
-
----
-
-## 4. 청크 로드 실패 재시도 (vite:preloadError)
-
-webpack의 `webpack-retry-chunk-load-plugin` 대체 패턴.
-
-### index.html 직접 주입 플러그인
-
-```typescript
-// plugins/retry-chunk.ts
-import type { Plugin } from 'vite'
-
-export function retryChunkPlugin(maxRetries = 3): Plugin {
-  return {
-    name: 'retry-chunk-load',
-    apply: 'build',  // 빌드 시에만 적용
-    transformIndexHtml: {
-      order: 'post',
-      handler(html) {
-        const script = `
-<script>
-  (function() {
-    var retryCount = 0;
-    var MAX_RETRIES = ${maxRetries};
-    window.addEventListener('vite:preloadError', function(event) {
-      event.preventDefault();
-      if (retryCount < MAX_RETRIES) {
-        retryCount++;
-        var url = new URL(window.location.href);
-        url.searchParams.set('_retry', retryCount);
-        window.location.href = url.toString();
-      }
-    });
-  })();
-</script>`
-        return html.replace('</head>', `${script}\n</head>`)
-      },
-    },
-  }
-}
-```
-
-### 앱 코드에서 직접 처리 (플러그인 없이)
-
-```typescript
-// src/main.tsx
-window.addEventListener('vite:preloadError', (event) => {
-  // 청크 로드 실패 시 페이지 새로고침 (새 배포 후 구 청크 404 상황)
-  window.location.reload()
-})
-```
-
----
-
-## 5. 빌드 출력 최적화
-
-### Vite 8+ 주 경로
-
-```typescript
-export default defineConfig({
-  build: {
-    // 청크 크기 경고 임계값 (기본 500KB)
-    chunkSizeWarningLimit: 1000,
-
-    rolldownOptions: {
-      output: {
-        // 청크 파일명 패턴 (Rolldown에서도 동일 옵션명 유지)
-        chunkFileNames: 'assets/js/[name]-[hash].js',
-        entryFileNames: 'assets/js/[name]-[hash].js',
-        assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
-
-        codeSplitting: { groups: [ /* 1절 참조 */ ] },
-
-        // console 제거 위치도 Vite 8+에서 이곳으로 이동 (webpack-vite-config-mapping 스킬 2절 참조)
-        minify: { compress: { dropConsole: true } },
-      },
-    },
-
-    // 소스맵 (프로덕션에서 Sentry 연동 시 필요)
-    sourcemap: process.env.GENERATE_SOURCEMAP === 'true',
-  },
-})
-```
-
-### 레거시 (Vite 6/7)
-
-```typescript
-export default defineConfig({
-  build: {
-    chunkSizeWarningLimit: 1000,
-    rollupOptions: {
-      output: {
-        chunkFileNames: 'assets/js/[name]-[hash].js',
-        entryFileNames: 'assets/js/[name]-[hash].js',
-        assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
-        manualChunks: { /* ... */ },
-      },
-    },
-    sourcemap: process.env.GENERATE_SOURCEMAP === 'true',
-  },
-})
-```
-
----
-
-## 흔한 실수 패턴
-
-### 1. codeSplitting.groups/manualChunks에서 앱 코드까지 지정
-
-```typescript
-// ❌ 앱 내부 파일을 그룹 test(또는 manualChunks)로 강제 분할하면 circular dependency 위험
-{ name: 'pages', test: /src\/pages/ }       // Vite 8+ — 위험
-manualChunks(id) {
-  if (id.includes('src/pages')) return 'pages'  // 레거시 — 위험
-}
-
-// ✅ React.lazy로 라우트 기반 분할 사용
-const ProductPage = lazy(() => import('./pages/ProductPage'))
-```
-
-### 2. loadEnv 미사용으로 .env.{mode} 파일 못 읽음
-
-```typescript
-// ❌ defineConfig 함수형 미사용 시 env 파일 못 읽음
-export default defineConfig({
-  build: { outDir: process.env.OUT_DIR }  // undefined
-})
-
-// ✅
-export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '')
-  return { build: { outDir: env.OUT_DIR } }
-})
-```
-
-### 3. closeBundle vs writeBundle 혼동
-
-```typescript
-// writeBundle: 각 청크 파일이 쓰여진 직후 (병렬 실행)
-// closeBundle: 모든 번들 작업 완료 후 (순차 실행)
-
-// ✅ postbuild 태스크 (파일 읽기/복사)는 closeBundle에서
-closeBundle() {
-  // build/ 디렉토리에 파일이 모두 존재하는 시점
-  fs.copyFileSync('src/version.json', 'build/version.json')
-}
-```
+| 실수 | 바른 처리 |
+|------|----------|
+| Vite 8에서 `manualChunks` 객체 형식 사용 | 미지원 — `codeSplitting.groups` |
+| Vite 8 신규 코드에 함수형 `manualChunks`·`rollupOptions` | deprecated alias — `rolldownOptions` + `groups` |
+| 그룹 `test`(또는 `manualChunks`)로 앱 내부 파일(`src/pages`) 강제 분할 | circular dependency 위험 — node_modules만 타겟, 앱 코드는 `React.lazy` 라우트 분할 |
+| `test`에서 쓴 바깥 변수를 `name`에서 읽음 | 마지막 모듈 값이 남음 — 모듈 id 키로 저장 |
+| 경로 구분자를 `/`로만 작성 | 윈도우 빌드 누락 — `[\\/]` |
+| preloadError 새로고침만 넣고 HTML 캐시 방치 | HTML `Cache-Control: no-cache` |
+| postbuild 파일 복사를 `writeBundle`에서 | 모든 번들 작업 완료 후인 `closeBundle`에서 |

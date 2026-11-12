@@ -77,11 +77,15 @@ function loadRv() {
 if (require.main === module) {
   let raw = '';
   process.stdin.setEncoding('utf8');
-  process.stdin.on('data', (c) => { raw += c; if (raw.length > 1e6) process.exit(0); });
+  // 1MB 초과 입력은 막는다 (2026-11-06 — 예전엔 exit 0 이라 긴 명령 끝의 gh pr create 가 검사를 건너뛰었다)
+  process.stdin.on('data', (c) => {
+    raw += c;
+    if (raw.length > 1e6) { process.stderr.write(`${TAG} 훅 입력이 너무 커(1MB 초과) 버전 검사를 할 수 없어 막았습니다 — 명령을 나눠 다시 실행하세요\n`); process.exit(2); }
+  });
   process.stdin.on('end', () => {
     let input;
     try { input = JSON.parse(raw); } catch { process.exit(0); }
-    if (!input || input.tool_name !== 'Bash') process.exit(0);
+    if (!input || (input.tool_name !== 'Bash' && input.tool_name !== 'Monitor')) process.exit(0); // Monitor 도 셸 명령(v2.1.314+)
     const command = input.tool_input && input.tool_input.command;
     const cwd = typeof input.cwd === 'string' ? input.cwd : (process.env.CLAUDE_PROJECT_DIR || process.cwd());
     let r;

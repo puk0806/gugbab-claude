@@ -144,14 +144,14 @@ async function main() {
   console.log('== 1. 종류별 껐다 켜기 (프로젝트 alpha)');
   init(A, 'a0');
   check('기본: /commit 커맨드 있음', '있음', has('a0', 'slash', 'commit'));
-  g(A, ['off', 'agent:qa-engineer']); init(A, 'a1');
-  check('에이전트 끄기 → qa-engineer 사라짐', '없음', has('a1', 'agents', 'qa-engineer'));
-  g(A, ['on', 'agent:qa-engineer']); init(A, 'a2');
-  check('에이전트 켜기 → qa-engineer 돌아옴', '있음', has('a2', 'agents', 'qa-engineer'));
-  g(A, ['on', 'skill:axum']); init(A, 'a3');
-  check('스킬 켜기 → axum 생김', '있음', has('a3', 'skills', 'axum'));
-  g(A, ['off', 'skill:axum']); init(A, 'a4');
-  check('스킬 끄기 → axum 사라짐', '없음', has('a4', 'skills', 'axum'));
+  g(A, ['off', 'agent:skill-tester']); init(A, 'a1');
+  check('에이전트 끄기 → skill-tester 사라짐', '없음', has('a1', 'agents', 'skill-tester'));
+  g(A, ['on', 'agent:skill-tester']); init(A, 'a2');
+  check('에이전트 켜기 → skill-tester 돌아옴', '있음', has('a2', 'agents', 'skill-tester'));
+  g(A, ['on', 'skill:vercel-sandbox']); init(A, 'a3');
+  check('스킬 켜기 → vercel-sandbox 생김', '있음', has('a3', 'skills', 'vercel-sandbox'));
+  g(A, ['off', 'skill:vercel-sandbox']); init(A, 'a4');
+  check('스킬 끄기 → vercel-sandbox 사라짐', '없음', has('a4', 'skills', 'vercel-sandbox'));
   g(A, ['off', 'command:commit']); init(A, 'a5');
   check('커맨드 끄기 → /commit 사라짐', '없음', has('a5', 'slash', 'commit'));
   g(A, ['on', 'command:commit']);
@@ -169,9 +169,9 @@ async function main() {
   out = g(A, ['off', 'bundle:codex-review']);
   check('묶음 끄기 → 훅·룰·커맨드 3개 같이 꺼짐', true, out.includes('command:codex-review, hook:codex-review-guard, rule:codex-review.md'));
   g(A, ['on', 'bundle:codex-review']);
-  g(A, ['on', 'block:rust']); init(A, 'a7');
-  check('블록 켜기 → rust 에이전트 생김', '있음', has('a7', 'agents', 'rust-backend-developer'));
-  g(A, ['off', 'block:rust']);
+  g(A, ['on', 'block:fortune']); init(A, 'a7');
+  check('블록 켜기 → 운세 에이전트 생김', '있음', has('a7', 'agents', 'fortune-interpretation-prompt-tester'));
+  g(A, ['off', 'block:fortune']);
   // 훅 — 실제 동작: tdd-guard 는 테스트 없는 소스를 쓰면 경고
   //   판정은 훅 실행 결과(--include-hook-events 의 PostToolUse hook_response)로 — 예전엔 출력 전체의 'tdd-guard' 글자를 세어
   //   모델이 답에서 언급하지 않으면 실패했다(2026-10-22 윈도우 haiku 2번 중 1번 언급 없음)
@@ -189,32 +189,32 @@ async function main() {
   check('훅 켜기 → 소스 파일을 실제로 씀 (아래 검사의 전제)', true, fs.existsSync(path.join(A, 'src', 'calc.js')));
   check('훅 켜기 → tdd-guard 안내 나옴 (훅이 Git Bash 로 실제 실행됨)', true, c > 0);
   fs.rmSync(path.join(A, 'src'), { recursive: true, force: true });
-  for (const id of ['hook:bash-guard', 'hook:claude-version-check', 'hook:parallel-hint', 'hook:wrapper-version-check', 'rule:task-workflow.md', 'command:harness']) {
+  for (const id of ['hook:bash-guard', 'hook:claude-version-check', 'hook:release-version-guard', 'hook:wrapper-version-check', 'rule:task-workflow.md', 'command:harness']) {
     check(`🔒 ${id} 끄기 거부`, true, g(A, ['off', id]).includes('고정'));
   }
 
   console.log('== 2. 폴더(워크스페이스) 분리');
-  g(A, ['preset', 'rust']); init(A, 'w1'); init(B, 'w2');
-  check('alpha 에 켠 프리셋이 alpha 에만 (alpha)', '있음', has('w1', 'agents', 'rust-backend-developer'));
-  check('alpha 에 켠 프리셋이 alpha 에만 (beta)', '없음', has('w2', 'agents', 'rust-backend-developer'));
+  g(A, ['preset', 'fortune']); init(A, 'w1'); init(B, 'w2');
+  check('alpha 에 켠 프리셋이 alpha 에만 (alpha)', '있음', has('w1', 'agents', 'fortune-interpretation-prompt-tester'));
+  check('alpha 에 켠 프리셋이 alpha 에만 (beta)', '없음', has('w2', 'agents', 'fortune-interpretation-prompt-tester'));
   check('프로젝트마다 설정 폴더가 다름', true, cfgof(A) !== cfgof(B) && !!cfgof(B));
   const X = path.join(T, 'x', 'app'), Y = path.join(T, 'y', 'app'); newproj(X); newproj(Y);
-  g(X, ['on', 'skill:axum']); g(Y, ['status']);
+  g(X, ['on', 'skill:vercel-sandbox']); g(Y, ['status']);
   check('같은 이름(app) 폴더 둘은 다른 프로젝트로', true, cfgof(X) !== cfgof(Y));
   init(X, 'x1'); init(Y, 'y1');
-  check('x/app 에 켠 스킬이 y/app 엔 없음', '있음/없음', `${has('x1', 'skills', 'axum')}/${has('y1', 'skills', 'axum')}`);
+  check('x/app 에 켠 스킬이 y/app 엔 없음', '있음/없음', `${has('x1', 'skills', 'vercel-sandbox')}/${has('y1', 'skills', 'vercel-sandbox')}`);
   const D = path.join(A, 'sub', 'deep'); fs.mkdirSync(D, { recursive: true }); g(D, ['status']);
   check('하위 폴더 → 새 프로젝트로 등록되지 않음(git 최상위 = alpha)', `없음/${CA}`, `${cfgof(D) ? '있음' : '없음'}/${cfgof(A)}`);
   init(D, 'd1');
-  check('하위 폴더에서 연 세션에도 alpha 설정(rust) 적용', '있음', has('d1', 'agents', 'rust-backend-developer'));
+  check('하위 폴더에서 연 세션에도 alpha 설정(fortune) 적용', '있음', has('d1', 'agents', 'fortune-interpretation-prompt-tester'));
   const N = path.join(T, 'plain'); fs.mkdirSync(N, { recursive: true }); init(N, 'n1');
   check('git 이 아닌 폴더도 세션 시작', '있음', has('n1', 'slash', 'commit'));
   await Promise.all([initAsync(A, 'c1'), initAsync(B, 'c2')]);
-  check('동시 세션: alpha 는 rust 있음 · beta 는 없음', '있음/없음', `${has('c1', 'agents', 'rust-backend-developer')}/${has('c2', 'agents', 'rust-backend-developer')}`);
-  g(B, ['on', 'skill:sqlx', '--all']); g(A, ['off', 'skill:sqlx']); init(A, 'p1'); init(B, 'p2');
-  check('--all 은 beta 에 적용, alpha 는 자기 설정(끔)이 이김', '없음/있음', `${has('p1', 'skills', 'sqlx')}/${has('p2', 'skills', 'sqlx')}`);
-  fs.writeFileSync(path.join(B, '.gugbab.json'), '{"lock":["command:commit"],"enable":["block:python"]}\n'); init(B, 's1'); init(A, 's2');
-  check('.gugbab.json enable → beta 만 python 에이전트', '있음/없음', `${has('s1', 'agents', 'python-backend-developer')}/${has('s2', 'agents', 'python-backend-developer')}`);
+  check('동시 세션: alpha 는 fortune 있음 · beta 는 없음', '있음/없음', `${has('c1', 'agents', 'fortune-interpretation-prompt-tester')}/${has('c2', 'agents', 'fortune-interpretation-prompt-tester')}`);
+  g(B, ['on', 'skill:vercel-sandbox', '--all']); g(A, ['off', 'skill:vercel-sandbox']); init(A, 'p1'); init(B, 'p2');
+  check('--all 은 beta 에 적용, alpha 는 자기 설정(끔)이 이김', '없음/있음', `${has('p1', 'skills', 'vercel-sandbox')}/${has('p2', 'skills', 'vercel-sandbox')}`);
+  fs.writeFileSync(path.join(B, '.gugbab.json'), '{"lock":["command:commit"],"enable":["block:health"]}\n'); init(B, 's1'); init(A, 's2');
+  check('.gugbab.json enable → beta 만 health 에이전트', '있음/없음', `${has('s1', 'agents', 'nutrition-prompt-tester')}/${has('s2', 'agents', 'nutrition-prompt-tester')}`);
   check('.gugbab.json lock → beta 에서 /commit 끄기 거부', true, g(B, ['off', 'command:commit']).includes('고정'));
   fs.rmSync(path.join(B, '.gugbab.json'));
 

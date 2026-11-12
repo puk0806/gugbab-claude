@@ -1,16 +1,16 @@
 ---
 name: webflux-webclient-in-sync-app
-description: Spring WebFlux WebClient를 블로킹(WebMVC) 애플리케이션에서 부분 비동기 HTTP 클라이언트로 사용하는 패턴 - 의존성, 타임아웃, 에러/재시도, ExchangeFilter, MockWebServer 테스트, 흔한 실수
+description: Spring WebFlux WebClient를 블로킹(WebMVC) 애플리케이션에서 부분 비동기 HTTP 클라이언트로 사용하는 패턴 - RestTemplate 7.1 forRemoval·RestClient 선택 기준, SB 2.5~3.x 의존성(서버는 Tomcat 유지), 타임아웃 필수 설정, Mono.zip 병렬 호출, MockWebServer 버전, 흔한 실수
 ---
 
 # WebFlux WebClient를 동기 앱에서 사용하는 패턴
 
 > 소스: https://docs.spring.io/spring-framework/reference/web/webflux-webclient.html | https://docs.spring.io/spring-framework/reference/web/webflux-webclient/client-synchronous.html | https://docs.spring.io/spring-framework/reference/web/webflux-webclient/client-builder.html | https://docs.spring.io/spring-framework/reference/web/webflux-webclient/client-filter.html | https://docs.spring.io/projectreactor/reactor-netty/docs/current/reference/html/http-client.html | https://github.com/square/okhttp/tree/master/mockwebserver | https://spring.io/blog/2025/09/30/the-state-of-http-clients-in-spring/
-> 검증일: 2026-09-26 (2026-04-23 최초 검증 · 재검증 이력은 8절 참조)
+> 검증일: 2026-11-09 (2026-04-23 최초 검증 · 재검증 이력은 8절 참조)
 
 > 주의: 이 문서는 **Spring Boot 2.5 ~ 3.x** 범위에서 **WebMVC(블로킹) 애플리케이션**이 `spring-boot-starter-webflux`를 **WebClient 목적으로만** 함께 포함하는 시나리오를 다룹니다. 앱 자체의 WebFlux 전면 도입(리액티브 스택 전환)은 범위 밖입니다.
 
-> 주의: **(2026-09-26 갱신)** Spring Framework 7.0은 2025-11에 이미 GA되어 RestTemplate "deprecation 의도"를 공식 발표했고(아직 `@Deprecated` 표시는 아님), Spring 7.1(2026-11 잠정)에서 정식 `@Deprecated` 처리, 8.0에서 완전 제거가 예정되어 있습니다. RestTemplate 자체는 2029년까지 오픈소스 지원이 유지되므로 기존 코드의 즉각 마이그레이션이 급한 것은 아닙니다. 동기 스택에서는 Spring 6.1+의 `RestClient`가 Spring 팀의 1순위 권장입니다. 그럼에도 WebClient를 선택하는 합리적 이유는 ① 이미 `spring-boot-starter-webflux`가 포함되어 있음 ② 부분적으로 리액티브 조합(`Mono.zip` 등)을 사용해 외부 호출을 병렬화하고 싶음 ③ 스트리밍/backpressure가 필요함 ④ Spring Boot 2.5처럼 RestClient가 없는 버전 등입니다. RestTemplate 대비 WebClient가 권장되는 것은 변함없습니다.
+> 주의: **(2026-11-09 갱신)** Spring Framework 7.0(2025-11 GA)이 RestTemplate "deprecation 의도"를 공식 발표했고, **7.1에서 `@Deprecated(since = "7.1", forRemoval = true)`가 실제로 붙었습니다**(7.1.x Javadoc·소스 확인, "in favor of RestClient. For removal in 8.0"). 2026-11-09 현재 7.1은 **7.1.0-RC2**까지 나왔고 GA는 2026-11 예정입니다 — Spring Boot 4.2 가 7.1 을 쓰므로 4.2 업그레이드 시 RestTemplate 사용처에 deprecation 경고가 납니다. 완전 제거는 8.0. RestTemplate 자체는 2029년까지 오픈소스 지원이 유지되므로 기존 코드의 즉각 마이그레이션이 급한 것은 아닙니다. 동기 스택에서는 Spring 6.1+의 `RestClient`가 Spring 팀의 1순위 권장입니다. 그럼에도 WebClient를 선택하는 합리적 이유는 ① 이미 `spring-boot-starter-webflux`가 포함되어 있음 ② 부분적으로 리액티브 조합(`Mono.zip` 등)을 사용해 외부 호출을 병렬화하고 싶음 ③ 스트리밍/backpressure가 필요함 ④ Spring Boot 2.5처럼 RestClient가 없는 버전 등입니다. RestTemplate 대비 WebClient가 권장되는 것은 변함없습니다.
 
 ---
 
@@ -29,41 +29,7 @@ description: Spring WebFlux WebClient를 블로킹(WebMVC) 애플리케이션에
 
 ## 의존성
 
-### Spring Boot 3.x (3.2 ~ 3.5)
-
-```xml
-<!-- pom.xml -->
-<dependencies>
-    <!-- WebMVC 앱 본체는 그대로 유지 -->
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-web</artifactId>
-    </dependency>
-
-    <!-- WebClient만 가져오기 위해 WebFlux starter를 함께 포함 -->
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-webflux</artifactId>
-    </dependency>
-</dependencies>
-```
-
-Spring Boot BOM이 Spring 6.x + Reactor Netty를 관리한다. 별도 버전 명시 불필요.
-
-### Spring Boot 2.5 ~ 2.7
-
-```xml
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-web</artifactId>
-</dependency>
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-webflux</artifactId>
-</dependency>
-```
-
-동일. 2.5는 Spring 5.3 + Reactor Netty 1.0이 BOM에 포함.
+`spring-boot-starter-web`(WebMVC 앱 본체)에 `spring-boot-starter-webflux`를 WebClient만 가져오기 위해 함께 포함한다. Spring Boot BOM이 버전을 관리한다. 2.5는 Spring 5.3 + Reactor Netty 1.0이 BOM에 포함.
 
 ### 서버 스택은 Tomcat 유지됨
 
@@ -75,73 +41,13 @@ Spring Boot BOM이 Spring 6.x + Reactor Netty를 관리한다. 별도 버전 명
 
 ## RestTemplate / WebClient / RestClient 선택 기준
 
-| 클라이언트 | 스택 | 상태 (2026-09 기준) | 주요 용도 |
+| 클라이언트 | 스택 | 상태 (2026-11 기준) | 주요 용도 |
 |-----------|------|------|-----------|
-| `RestTemplate` | 동기 | Spring 5.0+ **유지보수 모드**. Spring 7.0(2025-11 GA)이 deprecation 의도 발표, 7.1(2026-11 잠정)에서 정식 `@Deprecated`, 8.0에서 제거 예정. 오픈소스 지원은 2029년까지 | 레거시 유지 |
+| `RestTemplate` | 동기 | Spring 5.0+ **유지보수 모드**. Spring 7.0(2025-11 GA)이 deprecation 의도 발표, 7.1(현재 RC2, 2026-11 GA 예정)에서 `@Deprecated(forRemoval = true)` 확정, 8.0에서 제거 예정. 오픈소스 지원은 2029년까지 | 레거시 유지 |
 | `RestClient` | 동기 | Spring 6.1+ / Boot 3.2+ 권장 | 동기 앱의 기본 선택 |
 | `WebClient` | 리액티브 (동기 사용 가능) | 활발히 유지됨 | 리액티브/스트리밍/병렬 조합 |
 
 **"WebMVC + WebClient 일부 사용"**은 정식으로 권장되는 패턴이다. Spring 공식 레퍼런스에도 `block()` 기반 동기 사용법이 별도 섹션으로 문서화되어 있다.
-
----
-
-## WebClient 생성과 Bean 설정
-
-### 간단 생성
-
-```java
-WebClient simple = WebClient.create();
-WebClient withBaseUrl = WebClient.create("https://api.example.com");
-```
-
-### Builder 기반 — 권장
-
-```java
-WebClient client = WebClient.builder()
-    .baseUrl("https://api.example.com")
-    .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
-    .build();
-```
-
-### Spring Boot가 제공하는 `WebClient.Builder` 자동 설정
-
-Spring Boot는 `WebClientAutoConfiguration`을 통해 **prototype 스코프의 `WebClient.Builder`를 자동 등록**한다. 주입받을 때마다 새 복제본이 오므로 API별로 커스터마이징해 여러 WebClient를 만들 수 있다.
-
-```java
-@Configuration
-public class PaymentClientConfig {
-
-    @Bean
-    public WebClient paymentWebClient(WebClient.Builder builder) {
-        return builder
-            .baseUrl("https://pay.example.com")
-            .defaultHeader("X-Client-Id", "myapp")
-            .build();
-    }
-
-    @Bean
-    public WebClient authWebClient(WebClient.Builder builder) {
-        return builder
-            .baseUrl("https://auth.example.com")
-            .build();
-    }
-}
-```
-
-**핵심:**
-- 매 요청마다 `WebClient.builder().build()`를 호출하지 않는다 — 커넥션풀/코덱이 매번 생성된다
-- 외부 API별로 한 번만 Bean으로 만들어 주입해 쓴다
-
-### 전역 커스터마이징: `WebClientCustomizer`
-
-모든 `WebClient.Builder`에 일괄 적용하려면:
-
-```java
-@Bean
-public WebClientCustomizer tracingCustomizer() {
-    return builder -> builder.defaultHeader("X-Trace-Id", UUID.randomUUID().toString());
-}
-```
 
 ---
 
@@ -152,15 +58,6 @@ public WebClientCustomizer tracingCustomizer() {
 ### Reactor Netty HttpClient 커스터마이징
 
 ```java
-import io.netty.channel.ChannelOption;
-import io.netty.handler.timeout.ReadTimeoutHandler;
-import io.netty.handler.timeout.WriteTimeoutHandler;
-import org.springframework.http.client.reactive.ReactorClientHttpConnector;
-import reactor.netty.http.client.HttpClient;
-
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
-
 @Bean
 public WebClient paymentWebClient(WebClient.Builder builder) {
     HttpClient httpClient = HttpClient.create()
@@ -180,72 +77,15 @@ public WebClient paymentWebClient(WebClient.Builder builder) {
 }
 ```
 
-| 설정 | 의미 |
-|------|------|
-| `CONNECT_TIMEOUT_MILLIS` | TCP SYN → 연결 수립까지 허용 시간 |
-| `responseTimeout(Duration)` | HTTP 요청 시작 ~ 응답 완료까지 전체 시간 (가장 중요) |
-| `ReadTimeoutHandler` | 소켓이 이 시간 동안 **읽기 없음** 상태면 에러 |
-| `WriteTimeoutHandler` | 소켓이 이 시간 동안 **쓰기 없음** 상태면 에러 |
-
 > 주의: `responseTimeout`은 HTTP 요청/응답 전체 시간을 재는 반면, `ReadTimeoutHandler`는 HTTP 의미가 아닌 Netty 채널의 read idle 감지다. 둘은 목적이 다르며 **둘 다 설정**하는 것이 안전하다.
 
 ### `block(Duration)` 방어선
 
-동기 사용 시에도 타임아웃을 한 겹 더 두는 것이 좋다:
-
-```java
-Payment p = paymentWebClient.get().uri("/payments/{id}", id)
-    .retrieve()
-    .bodyToMono(Payment.class)
-    .block(Duration.ofSeconds(10));   // HttpClient 타임아웃과 별개의 최종 방어선
-```
+동기 사용 시에도 타임아웃을 한 겹 더 두는 것이 좋다 — `.block(Duration.ofSeconds(10))`은 HttpClient 타임아웃과 별개의 최종 방어선이다. 재시도(`retryWhen`)를 걸면 `block()`의 최종 타임아웃은 **재시도 총합**을 고려해 넉넉히 잡는다.
 
 ---
 
-## 동기 사용 기본 패턴 (`block()`)
-
-Spring 공식 레퍼런스 "Synchronous Use" 섹션에 명시된 패턴이다.
-
-### 본문만 받기 — `bodyToMono` + `block`
-
-```java
-Person person = client.get().uri("/person/{id}", id)
-    .retrieve()
-    .bodyToMono(Person.class)
-    .block();
-```
-
-### 리스트 받기 — `bodyToFlux` + `collectList`
-
-```java
-List<Person> persons = client.get().uri("/persons")
-    .retrieve()
-    .bodyToFlux(Person.class)
-    .collectList()
-    .block();
-```
-
-### 헤더/상태 코드까지 받기 — `toEntity`
-
-```java
-ResponseEntity<Payment> res = client.get().uri("/payments/{id}", id)
-    .retrieve()
-    .toEntity(Payment.class)
-    .block();
-
-HttpStatusCode status = res.getStatusCode();
-Payment body = res.getBody();
-```
-
-| 메서드 | 반환 |
-|--------|------|
-| `bodyToMono(T.class)` | 바디만 `Mono<T>` |
-| `bodyToFlux(T.class)` | 요소 스트림 `Flux<T>` |
-| `toEntity(T.class)` | `Mono<ResponseEntity<T>>` (헤더+상태+바디) |
-| `toEntityList(T.class)` | `Mono<ResponseEntity<List<T>>>` |
-| `toBodilessEntity()` | `Mono<ResponseEntity<Void>>` (DELETE 등) |
-
-### 여러 호출을 병렬로 — `Mono.zip`
+## 여러 호출을 병렬로 — `Mono.zip`
 
 동기 앱이라도 **한 요청 처리 내에서 여러 외부 호출을 병렬화**하는 것이 WebClient를 쓰는 실익이다.
 
@@ -269,92 +109,4 @@ Map<String, Object> result = Mono.zip(personMono, hobbiesMono, (person, hobbies)
 
 ---
 
-## 에러 처리
-
-### `onStatus` — 상태 코드별 예외 매핑
-
-```java
-Payment p = client.get().uri("/payments/{id}", id)
-    .retrieve()
-    .onStatus(HttpStatusCode::is4xxClientError, resp ->
-        resp.bodyToMono(String.class)
-            .defaultIfEmpty("")
-            .map(body -> new PaymentNotFoundException("4xx: " + body)))
-    .onStatus(HttpStatusCode::is5xxServerError, resp ->
-        resp.bodyToMono(String.class)
-            .defaultIfEmpty("")
-            .map(body -> new PaymentUpstreamException("5xx: " + body)))
-    .bodyToMono(Payment.class)
-    .block(Duration.ofSeconds(5));
-```
-
-**특정 상태 코드 분리 매핑 (401/403을 별도 처리)** — `onStatus` predicate는 `HttpStatusCode` 객체를 받으므로 `status.value() == N` 또는 enum 비교로 세밀하게 분기 가능. 매핑은 **위에서 아래로 순서대로** 평가되므로, 좁은 조건을 먼저 두고 포괄 조건을 뒤에 둔다.
-
-```java
-Payment p = client.post().uri("/pay")
-    .bodyValue(req)
-    .retrieve()
-    // 401 — 인증 만료 (재시도 대상 아님, 토큰 재발급 유도)
-    .onStatus(status -> status.value() == 401, resp ->
-        resp.bodyToMono(String.class).defaultIfEmpty("")
-            .map(body -> new PaymentAuthExpiredException(body)))
-    // 403 — 권한 부족 (재시도 불가)
-    .onStatus(status -> status.value() == 403, resp ->
-        resp.bodyToMono(String.class).defaultIfEmpty("")
-            .map(body -> new PaymentForbiddenException(body)))
-    // 그 외 4xx — 포괄 처리
-    .onStatus(HttpStatusCode::is4xxClientError, resp ->
-        resp.bodyToMono(String.class).defaultIfEmpty("")
-            .map(body -> new PaymentBadRequestException(body)))
-    // 5xx — 재시도 대상
-    .onStatus(HttpStatusCode::is5xxServerError, resp ->
-        resp.bodyToMono(String.class).defaultIfEmpty("")
-            .map(body -> new PaymentUpstreamException(body)))
-    .bodyToMono(Payment.class)
-    .block(Duration.ofSeconds(30));
-```
-
-### 기본 예외: `WebClientResponseException`
-
-`onStatus`를 지정하지 않으면 `retrieve()`는 4xx/5xx에서 `WebClientResponseException`(또는 하위 클래스 `BadRequest`, `NotFound`, `InternalServerError` 등)을 발생시킨다.
-
-```java
-try {
-    Payment p = client.get().uri("/payments/{id}", id)
-        .retrieve().bodyToMono(Payment.class).block();
-} catch (WebClientResponseException.NotFound e) {
-    // 404 처리
-} catch (WebClientResponseException e) {
-    int code = e.getStatusCode().value();
-    String body = e.getResponseBodyAsString();
-    // ...
-}
-```
-
-### 재시도 — `retryWhen` + `Retry.backoff`
-
-Reactor의 `Retry.backoff`로 지수 백오프 재시도를 구성한다. **5xx만 재시도, 4xx는 재시도하지 않음**이 기본 원칙이다.
-
-```java
-import reactor.util.retry.Retry;
-
-Payment p = client.get().uri("/payments/{id}", id)
-    .retrieve()
-    .bodyToMono(Payment.class)
-    .retryWhen(Retry.backoff(3, Duration.ofMillis(200))
-        .maxBackoff(Duration.ofSeconds(2))
-        .filter(throwable -> throwable instanceof WebClientResponseException ex
-            && ex.getStatusCode().is5xxServerError())
-        .onRetryExhaustedThrow((spec, signal) -> signal.failure()))
-    .block(Duration.ofSeconds(10));
-```
-
-- `filter`로 재시도 대상 예외 제한
-- `onRetryExhaustedThrow`로 재시도 소진 시 원래 예외를 그대로 던지도록 설정
-- `block()`의 최종 타임아웃은 **재시도 총합**을 고려해 넉넉히 잡는다
-
----
-
----
-
-> 상세 레퍼런스 (예제·고급 패턴·흔한 실수) → [`references/REFERENCE.md`](references/REFERENCE.md)
+> 상세 레퍼런스 (MockWebServer 버전·흔한 실수) → [`references/REFERENCE.md`](references/REFERENCE.md)

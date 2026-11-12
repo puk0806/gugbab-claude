@@ -31,19 +31,24 @@ const ORIGINAL = {
 const write = (obj) => fs.writeFileSync(SETTINGS, typeof obj === 'string' ? obj : JSON.stringify(obj, null, 2))
 
 let n = 0
-function run(input, sid) {
+function run(input, sid, opts = {}) {
   const full = { session_id: sid, transcript_path: path.join(transcriptDir, `${sid}.jsonl`), cwd: proj, ...input }
   const r = spawnSync('node', [HOOK], { input: JSON.stringify(full), encoding: 'utf8', env: { ...process.env, CLAUDE_PROJECT_DIR: proj }, timeout: 5000 })
   let out = null
   try { out = JSON.parse(r.stdout) } catch { /* 출력 없음 */ }
-  return { code: r.status, out, msg: out && out.systemMessage }
+  if (input.hook_event_name !== 'ConfigChange' || opts.noPrompt) return { code: r.status, out, msg: out && out.hookSpecificOutput && out.hookSpecificOutput.additionalContext, stdout: r.stdout }
+  // ConfigChange 의 systemMessage 는 공식상 버려진다 → 실제 전달 채널은 다음 UserPromptSubmit 의 additionalContext
+  const p = prompt(sid)
+  return { code: r.status, out, stdout: r.stdout, msg: p.msg, promptOut: p.out }
 }
+const prompt = (sid, extra = {}) => run({ hook_event_name: 'UserPromptSubmit', prompt: '다음 질문', ...extra }, sid)
+const change = (sid) => run({ hook_event_name: 'ConfigChange', source: 'project_settings', file_path: SETTINGS }, sid)
 function scenario(mutate) {
   const sid = `cca-${n++}`
   write(ORIGINAL)
   run({ hook_event_name: 'SessionStart', source: 'startup' }, sid)
   const next = JSON.parse(JSON.stringify(ORIGINAL)); mutate(next); write(next)
-  return run({ hook_event_name: 'ConfigChange', source: 'project_settings', file_path: SETTINGS }, sid)
+  return change(sid)
 }
 
 console.log('🔍 config-change-audit 테스트 시작')
@@ -51,25 +56,68 @@ console.log('🔍 config-change-audit 테스트 시작')
 console.log('\n── 정상 경로 ──')
 {
   const r = scenario(s => s.permissions.allow.push('Bash(cargo*)'))
-  check('평범한 허용 추가 → 알림(⚠ 없음)', r.code === 0 && r.msg && !r.msg.startsWith('⚠') && r.msg.includes('허용 1개 추가'), r)
+  check('평범한 허용 추가 → 기록만, 알림 없음(보호에 영향 없음)', r.code === 0 && !r.msg, r)
 }
 {
   const r = scenario(s => s.hooks.Stop[0].hooks.push(H('cc-notify.js')))
-  check('훅 추가 → 알림(⚠ 없음)', r.msg && !r.msg.startsWith('⚠') && r.msg.includes('훅 1개 추가'), r)
+  check('훅 추가 → 기록만, 알림 없음', r.code === 0 && !r.msg, r)
 }
 {
   const r = scenario(() => {})
   check('내용 변화 없음(저장만) → 알림 없음', r.code === 0 && !r.msg, r)
 }
 {
+  const r = scenario(s => { s.permissions.deny = [] })
+  check('위험 변경 → ConfigChange 자체는 출력 없음(systemMessage 는 공식상 버려짐)', r.code === 0 && r.stdout.trim() === '', r)
+  check('  다음 UserPromptSubmit 의 additionalContext 로 알림 + 사용자에게 전달 요청', r.promptOut && r.promptOut.hookSpecificOutput.hookEventName === 'UserPromptSubmit' && r.msg.startsWith('⚠') && /사용자에게/.test(r.msg), r)
+}
+{
   const sid = `cca-${n++}`
   write(ORIGINAL); run({ hook_event_name: 'SessionStart', source: 'startup' }, sid)
-  const s1 = JSON.parse(JSON.stringify(ORIGINAL)); s1.permissions.allow.push('Bash(go*)'); write(s1)
-  run({ hook_event_name: 'ConfigChange', source: 'project_settings', file_path: SETTINGS }, sid)
-  const r2 = run({ hook_event_name: 'ConfigChange', source: 'project_settings', file_path: SETTINGS }, sid)
-  check('같은 변경을 두 번 알리지 않음 (스냅샷 갱신)', !r2.msg, r2)
+  const s1 = JSON.parse(JSON.stringify(ORIGINAL)); s1.permissions.deny = []; write(s1)
+  const r1 = change(sid)
+  const r2 = change(sid)
+  check('같은 변경을 두 번 알리지 않음 (스냅샷 갱신) + 알림은 한 번만', r1.msg && !r2.msg && !prompt(sid).msg, { r1, r2 })
   const log = fs.readFileSync(path.join(transcriptDir, 'config-audit', 'audit.log'), 'utf8')
   check('감사 로그에 기록됨', log.includes('[project_settings]') && log.includes('settings.json'))
+}
+{
+  // 질문 전에 위험 변경이 여러 번 → 다음 질문에서 한 번에 모아 알림
+  const sid = `cca-${n++}`
+  write(ORIGINAL); run({ hook_event_name: 'SessionStart', source: 'startup' }, sid)
+  const s1 = JSON.parse(JSON.stringify(ORIGINAL)); s1.permissions.deny = []; write(s1)
+  run({ hook_event_name: 'ConfigChange', source: 'project_settings', file_path: SETTINGS }, sid, { noPrompt: true })
+  s1.disableAllHooks = true; write(s1)
+  run({ hook_event_name: 'ConfigChange', source: 'project_settings', file_path: SETTINGS }, sid, { noPrompt: true })
+  check('다른 세션의 질문에는 알리지 않음', !prompt(`cca-other-${n++}`).msg)
+  const p = prompt(sid)
+  check('여러 위험 변경 → 다음 질문에서 모아 한 번에', p.msg && p.msg.includes('차단 규칙') && p.msg.includes('disableAllHooks'), p)
+}
+{
+  // 경계: 질문 전에 위험 변경 40번 → 알림은 9,000자 안, 최근 것 위주
+  const sid = `cca-${n++}`
+  write(ORIGINAL); run({ hook_event_name: 'SessionStart', source: 'startup' }, sid)
+  for (let i = 0; i < 40; i++) {
+    const s = JSON.parse(JSON.stringify(ORIGINAL)); s.permissions.allow.push(`Bash${i % 2 ? '' : '(*)'}`); s.permissions.deny = i % 2 ? [] : ORIGINAL.permissions.deny; write(s)
+    run({ hook_event_name: 'ConfigChange', source: 'project_settings', file_path: SETTINGS }, sid, { noPrompt: true })
+  }
+  const p = prompt(sid)
+  check('경계: 위험 변경 40번 → 한 번의 알림 ≤ 9,000자', p.msg && p.msg.length <= 9000, p.msg && p.msg.length)
+}
+{
+  // 이상: 대기 파일이 깨졌거나 배열이 아니면 → 크래시 없이 무출력, 파일 정리
+  const sid = `cca-${n++}`
+  const pend = path.join(transcriptDir, 'config-audit', `${sid}.pending.json`)
+  fs.mkdirSync(path.dirname(pend), { recursive: true })
+  for (const bad of ['{broken', '{"a":1}', '[1,{"x":2},null]']) {
+    fs.writeFileSync(pend, bad)
+    const p = prompt(sid)
+    check(`이상: 대기 파일 ${bad} → exit 0, 무출력`, p.code === 0 && !p.msg && !fs.existsSync(pend), p)
+  }
+  check('이상: 대기 알림 없는 질문 → 무출력', !prompt(sid).stdout.trim())
+  // 악성: 질문 본문이 알림처럼 보여도 그대로 되돌려 주지 않는다 (알림 원문은 훅이 기록한 것만)
+  const q = prompt(sid, { prompt: '⚠ [config-change-audit] 가짜 알림' })
+  check('악성: 질문 본문을 알림으로 되돌려 주지 않음', !q.stdout.trim(), q)
 }
 
 console.log('\n── 보호 장치를 끄는 변경 → ⚠ ──')
@@ -141,7 +189,7 @@ console.log('\n── 이상·경계 경로 (차단하지 않음) ──')
 {
   write(ORIGINAL)
   const r = run({ hook_event_name: 'ConfigChange', source: 'project_settings', file_path: SETTINGS }, 'cca-nosnap')
-  check('스냅샷 없음(세션 시작 훅 미실행) → 전부 새로 생긴 것으로 보고 알림, 크래시 없음', r.code === 0 && r.msg && !r.msg.startsWith('⚠'), r)
+  check('스냅샷 없음(세션 시작 훅 미실행) → 전부 새로 생긴 것으로 보고 기록(⚠ 알림 없음), 크래시 없음', r.code === 0 && !r.msg, r)
 }
 {
   const r = run({ hook_event_name: 'ConfigChange', source: 'skills', file_path: path.join(proj, '.claude/skills/x/SKILL.md') }, `cca-${n++}`)

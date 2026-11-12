@@ -7,10 +7,12 @@
 //   차단은 하지 않는다 — 하네스 레포는 설정 자체를 개발하므로 차단하면 작업이 막힌다 (기록 + 알림만).
 //
 // 공식 문서(code.claude.com/docs/en/hooks — ConfigChange): 입력 source(user_settings·project_settings·
-//   local_settings·policy_settings·skills)·file_path, 출력 systemMessage(사용자 표시), exit 2 는 변경 차단(미사용).
+//   local_settings·policy_settings·skills)·file_path, exit 2·decision:block 은 변경 차단(미사용).
+//   "Claude Code acts on the blocking decision ... and discards systemMessage and continue" — ConfigChange 의 알림은 어디에도 안 보인다
 //
 // SessionStart: 프로젝트·로컬·사용자 settings 를 스냅샷으로 저장 (비교 기준)
-// ConfigChange: 스냅샷과 비교 → 위험 변경 요약 → 감사 로그 기록 + systemMessage, 스냅샷 갱신
+// ConfigChange: 스냅샷과 비교 → 감사 로그 기록, 스냅샷 갱신, 위험 변경(⚠)은 세션별 대기 파일에 쌓음 (2026-11-06)
+// UserPromptSubmit: 대기 알림이 있으면 additionalContext 로 한 번 전하고(Claude 가 답변 맨 위에 사용자에게 알림) 대기 파일 삭제
 //   skills 변경은 스킬 작성 중 자주 일어나므로 로그만 남기고 알리지 않는다
 // 저장 위치: 대화 기록 폴더(~/.claude/projects/<해시>/) — 레포 워킹트리를 더럽히지 않는다
 
@@ -108,6 +110,7 @@ function handle(input) {
     writeSnapshot(input, settingsFiles(input.cwd))
     return null
   }
+  if (event === 'UserPromptSubmit') return promptNotice(input)
   if (event !== 'ConfigChange') return null
 
   const source = typeof input.source === 'string' ? input.source : 'unknown'
@@ -126,12 +129,52 @@ function handle(input) {
     snap[file] = after
     try { fs.writeFileSync(snapshotPath(input), JSON.stringify(snap)) } catch { /* ignore */ }
   }
-  if (risky.length === 0 && other.length === 0) return null
+  // 공식: ConfigChange 의 systemMessage·continue 는 버려진다(화면에도 Claude 에도 안 감) → 위험 변경만 대기 파일에 쌓아 두고
+  // 다음 UserPromptSubmit 에서 additionalContext 로 한 번 알린다. 보호에 영향 없는 변경은 감사 로그에만
+  if (risky.length === 0) return null
   const name = file ? path.basename(path.dirname(file)) + '/' + path.basename(file) : source
-  const msg = risky.length
-    ? `⚠ [config-change-audit] ${name} 변경 — 보호 장치에 영향: ${risky.join(' / ')}${other.length ? ` (그 외: ${other.join(', ')})` : ''}. 의도한 변경이 아니면 되돌리세요.`
-    : `[config-change-audit] ${name} 변경: ${other.join(', ')}`
-  return { systemMessage: msg }
+  const msg = `⚠ [config-change-audit] ${name} 변경 — 보호 장치에 영향: ${risky.join(' / ')}${other.length ? ` (그 외: ${other.join(', ')})` : ''}. 의도한 변경이 아니면 되돌리세요.`
+  queueNotice(input, msg)
+  return null
+}
+
+// ── 다음 질문에서 알릴 대기 목록 (세션별) ──
+const PENDING_MAX = 20
+const NOTICE_CAP = 9000 // 공식 additionalContext 상한 10,000자 — 여유
+function pendingPath(input) { return path.join(storeDir(input), 'config-audit', `${sessionKey(input)}.pending.json`) }
+function readPending(p) {
+  try { const v = JSON.parse(fs.readFileSync(p, 'utf8')); return Array.isArray(v) ? v.filter(x => typeof x === 'string' && x) : [] } catch { return [] }
+}
+function queueNotice(input, msg) {
+  const p = pendingPath(input)
+  const list = readPending(p).concat(msg).slice(-PENDING_MAX)
+  try { fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, JSON.stringify(list)) } catch { /* 대기 실패 — 감사 로그에는 남아 있음 */ }
+}
+function takeNotices(input) {
+  const p = pendingPath(input)
+  let exists = false
+  try { exists = fs.lstatSync(p).isFile() } catch { return [] }
+  const list = exists ? readPending(p) : []
+  try { fs.unlinkSync(p) } catch { /* ignore */ }
+  return list
+}
+function promptNotice(input) {
+  const list = takeNotices(input)
+  if (!list.length) return null
+  const tail = '\n위 설정 변경 알림을 이번 답변 맨 위에 사용자에게 한 번 알려 주세요(화면에는 아직 보이지 않음).'
+  let body = list.join('\n')
+  if (body.length + tail.length > NOTICE_CAP) {
+    // 최근 것 위주로 남긴다 — 오래된 것부터 뺀다
+    const keep = []
+    let n = 0
+    for (let i = list.length - 1; i >= 0; i--) {
+      const s = list[i].length > 1500 ? list[i].slice(0, 1500) + '…' : list[i]
+      if (n + s.length + 1 + tail.length + 40 > NOTICE_CAP) break
+      keep.unshift(s); n += s.length + 1
+    }
+    body = (keep.length < list.length ? `(앞선 알림 ${list.length - keep.length}건 생략 — 감사 로그 config-audit/audit.log)\n` : '') + keep.join('\n')
+  }
+  return { hookSpecificOutput: { hookEventName: 'UserPromptSubmit', additionalContext: body + tail } }
 }
 
 if (require.main === module) {
