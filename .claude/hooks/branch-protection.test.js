@@ -257,29 +257,38 @@ testIn('detached: git status → 0', 'git status', 0, detRepo)
 testIn('detached: git checkout -b x → 0 (분기 규칙은 브랜치를 알 때만)', 'git checkout -b x', 0, detRepo)
 testIn('detached: push origin --delete feature/old → 0 (보호 아닌 원격 삭제)', `${P} origin --delete feature/old`, 0, detRepo)
 
+// 명령 문자열에 넣는 경로 — 윈도우 `C:\x` 를 따옴표 없이 넣으면 bash 가 `\` 를 지워 다른 경로가 되고 훅은 판정 불가로 막는다.
+// Claude 가 Git Bash 에 쓰는 `C:/x` 형태로 넣는다 (2026-11-12 윈도우 CI 에서 시험이 잘못된 명령을 만들던 것을 발견)
+const shp = (p) => (process.platform === 'win32' ? p.replace(/\\/g, '/') : p)
+
 // 레포 아닌 cwd 에서 다른 레포로
-testIn('레포 아님: git -C <피처레포> push origin HEAD:main', `git -C ${repo} ${'push'} origin HEAD:main`, 2, noRepo)
-testIn('레포 아님: cd <피처레포> && git push origin HEAD:main', `cd ${repo} && ${P} origin HEAD:main`, 2, noRepo)
+testIn('레포 아님: git -C <피처레포> push origin HEAD:main', `git -C ${shp(repo)} ${'push'} origin HEAD:main`, 2, noRepo)
+testIn('레포 아님: cd <피처레포> && git push origin HEAD:main', `cd ${shp(repo)} && ${P} origin HEAD:main`, 2, noRepo)
 testIn('레포 아님: git push origin main (대상 main)', `${P} origin main`, 2, noRepo)
 testIn('레포 아님: git push (브랜치 확인 불가)', P, 2, noRepo)
 testIn('레포 아님: git status → 0', 'git status', 0, noRepo)
-testIn('레포 아님: git -C <피처레포> push origin feature/test → 0', `git -C ${repo} push origin feature/test`, 0, noRepo)
-testIn('레포 아님: cd <피처레포> && git push origin feature/test → 0', `cd ${repo} && ${P} origin feature/test`, 0, noRepo)
+testIn('레포 아님: git -C <피처레포> push origin feature/test → 0', `git -C ${shp(repo)} push origin feature/test`, 0, noRepo)
+testIn('레포 아님: cd <피처레포> && git push origin feature/test → 0', `cd ${shp(repo)} && ${P} origin feature/test`, 0, noRepo)
+if (process.platform === 'win32') {
+  // 따옴표 밖 `C:\x` 는 bash 가 `\` 를 지워 엉뚱한 폴더가 된다 → 어느 레포인지 모르므로 막아야 한다 (fail-closed)
+  testIn('윈도우: 따옴표 밖 역슬래시 경로 git -C C:\\x push → 판정 불가 차단', `git -C ${repo} push origin feature/test`, 2, noRepo)
+  testIn("윈도우: 작은따옴표 안 역슬래시 경로 git -C 'C:\\x' push → 피처 판정", `git -C '${repo}' push origin feature/test`, 0, noRepo)
+}
 
 // main 위 레포를 다른 cwd 에서
-testIn('다른 cwd: git -C <main레포> push origin feat', `git -C ${mainRepo} push origin feat`, 2, noRepo)
-testIn('다른 cwd: cd <main레포> && git push origin feat', `cd ${mainRepo} && ${P} origin feat`, 2, noRepo)
-testIn('피처레포 cwd: git -C <main레포> push origin feat', `git -C ${mainRepo} push origin feat`, 2, repo)
+testIn('다른 cwd: git -C <main레포> push origin feat', `git -C ${shp(mainRepo)} push origin feat`, 2, noRepo)
+testIn('다른 cwd: cd <main레포> && git push origin feat', `cd ${shp(mainRepo)} && ${P} origin feat`, 2, noRepo)
+testIn('피처레포 cwd: git -C <main레포> push origin feat', `git -C ${shp(mainRepo)} push origin feat`, 2, repo)
 testIn('input.cwd=<main레포> (훅 프로세스는 피처레포): push origin feat', `${P} origin feat`, 2, repo, mainRepo)
 testIn('input.cwd=<피처레포> (훅 프로세스는 레포 아님): checkout -b x', 'git checkout -b x', 2, noRepo, repo)
 testIn('input.cwd=<피처레포>: push origin feature/test → 0', `${P} origin feature/test`, 0, noRepo, repo)
-testIn('cd <main레포> 후 git -C <피처레포> push origin feature/test → 0', `cd ${mainRepo} && git -C ${repo} push origin feature/test`, 0, noRepo)
-testIn('git -C <피처레포> 상대경로 -C . → 피처 판정', `cd ${repo} && git -C . push origin feature/test`, 0, noRepo)
+testIn('cd <main레포> 후 git -C <피처레포> push origin feature/test → 0', `cd ${shp(mainRepo)} && git -C ${shp(repo)} push origin feature/test`, 0, noRepo)
+testIn('git -C <피처레포> 상대경로 -C . → 피처 판정', `cd ${shp(repo)} && git -C . push origin feature/test`, 0, noRepo)
 
 // 경로를 정적으로 알 수 없으면 push 는 막는다
 testIn('cd "$X" && git push origin feature/test (동적 cd)', `cd "$X" && ${P} origin feature/test`, 2, repo)
 testIn('git -C "$X" push origin feature/test (동적 -C)', `git -C "$X" push origin feature/test`, 2, repo)
-testIn('(cd <main레포> && git push origin feat) 서브셸 cd', `(cd ${mainRepo} && ${P} origin feat)`, 2, repo)
+testIn('(cd <main레포> && git push origin feat) 서브셸 cd', `(cd ${shp(mainRepo)} && ${P} origin feat)`, 2, repo)
 testIn('cd /없는/경로 && git push origin feature/test', `cd /nonexistent-bp-dir && ${P} origin feature/test`, 2, repo)
 
 // 이상 입력: cwd 가 문자열이 아니거나 없는 경로

@@ -320,7 +320,9 @@ fs.writeFileSync(path.join(proj, 'read.js'), "console.log(require('fs').readFile
 fs.writeFileSync(path.join(proj, 'w.sh'), 'echo x > README.md\n')
 const sh = (session, command, tool = 'Bash', extra = {}) =>
   run({ hook_event_name: 'PreToolUse', session_id: session, tool_name: tool, tool_input: { command }, cwd: proj, ...extra })
-const tmpOut = IS_WIN ? path.join(os.tmpdir(), 'tcg-o.txt') : '/tmp/tcg-o.txt'
+// 명령 문자열에 넣는 경로 — 윈도우 `C:\x` 를 따옴표 없이 넣으면 bash 가 `\` 를 지워 다른 곳에 쓰게 된다(훅은 판정 불가로 막음, 아래 악성 시험).
+// Claude 가 Git Bash 에 쓰는 `C:/x` 형태로 (2026-11-12 윈도우 CI 에서 시험이 잘못된 명령을 만들던 것을 발견)
+const tmpOut = IS_WIN ? path.join(os.tmpdir(), 'tcg-o.txt').replace(/\\/g, '/') : '/tmp/tcg-o.txt'
 
 console.log('\n[승인 전 셸 쓰기 — 정상: 읽기·테스트·임시 폴더 쓰기는 그대로]')
 {
@@ -346,6 +348,12 @@ console.log('\n[승인 전 셸 쓰기 — 악성: 셸로 프로젝트 파일을 
   ]
   for (const [d, c] of attacks) { const r = sh(s, c); check(`악성: 승인 전 ${d} → 차단`, r.code === 2 && /셸 명령도 파일을 바꾸면/.test(r.stderr), r) }
   check('악성: Monitor 로 같은 쓰기 → 차단', sh(s, 'echo x > README.md', 'Monitor').code === 2)
+  if (IS_WIN) {
+    // 따옴표 밖 `C:\…\Temp\x` 는 bash 가 `\` 를 지워 `C:Users…`(드라이브 상대 = 현재 폴더 쪽)에 쓴다 — 임시 폴더로 보면 안 된다
+    const winBack = path.join(os.tmpdir(), 'tcg-o.txt')
+    check('악성: 윈도우 따옴표 밖 역슬래시 임시 경로 → 차단(실제로는 다른 곳에 씀)', sh(s, `echo x > ${winBack}`).code === 2)
+    check("정상: 윈도우 작은따옴표 안 역슬래시 임시 경로 → 허용", sh(s, `echo x > '${winBack}'`).code === 0)
+  }
   check('악성: 서브에이전트(승인 없이 시작)에서 Bash 쓰기 → 차단', sh(s, 'echo x > README.md', 'Bash', { agent_id: 'agent-x1' }).code === 2)
 }
 console.log('\n[승인 전 셸 쓰기 — 경계]')

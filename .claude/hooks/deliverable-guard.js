@@ -106,9 +106,12 @@ function isRootChangelog(filePath) {
 }
 
 // 경로 비교용 실제 경로 (맥 /var → /private/var). 파일이 없으면 부모 폴더 기준
+// 윈도우는 realpathSync.native — JS 판 realpathSync 는 8.3 짧은 이름(`RUNNER~1`)을 펼치지 않아, 긴 이름을 주는
+// `git rev-parse --show-toplevel` 과 상대 경로가 `..` 로 어긋나 새 스킬·에이전트 추가를 "레포 밖"으로 놓쳤다(2026-11-12 윈도우 CI)
+const realpath = IS_WIN && fs.realpathSync.native ? fs.realpathSync.native : fs.realpathSync
 function realish(p) {
-  try { return fs.realpathSync(p) } catch {}
-  try { return path.join(fs.realpathSync(path.dirname(p)), path.basename(p)) } catch {}
+  try { return realpath(p) } catch {}
+  try { return path.join(realpath(path.dirname(p)), path.basename(p)) } catch {}
   return p
 }
 
