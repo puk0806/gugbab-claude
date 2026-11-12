@@ -153,7 +153,7 @@ async function main() {
   const { hook_event_name, hookEventName, tool_name, tool_input = {} } = input
   const eventName = hook_event_name || hookEventName
 
-  if (eventName !== 'PreToolUse' || tool_name !== 'Bash') return process.exit(0)
+  if (eventName !== 'PreToolUse' || tool_name !== 'Bash' && tool_name !== 'Monitor') return process.exit(0) // Monitor 도 셸 명령(v2.1.314+)
 
   const cmd = (tool_input.command || '').trim()
   if (!cmd) return process.exit(0)

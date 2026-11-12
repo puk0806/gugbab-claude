@@ -159,10 +159,135 @@ console.log('\n── 폴백: bash-guard.js 없이 단독 설치된 경우 (정�
   fs.rmSync(solo, { recursive: true, force: true })
 }
 
-console.log('\n── git 레포 밖에서 ──')
-const noRepo = fs.mkdtempSync(path.join(os.tmpdir(), 'bp-norepo-'))
-test('레포 아님 → exit 0', 'git push origin main', 0, noRepo)
+// ── 2026-11-06 감사 — 분석 불가한 셸 넘김·--repo·브랜치 생성 변형·실제 레포 기준 판정 ──
+// testIn: 훅 프로세스 cwd(spawnCwd)와 훅 입력 cwd(inputCwd)를 따로 준다 — Claude Code 는 세션 cwd 를 input.cwd 로 넘긴다
+function testIn(desc, command, expectedExit, spawnCwd, inputCwd) {
+  const payload = { hook_event_name: 'PreToolUse', tool_name: 'Bash', tool_input: { command } }
+  if (inputCwd !== undefined) payload.cwd = inputCwd
+  const r = spawnSync('node', [HOOK], { input: JSON.stringify(payload), encoding: 'utf8', timeout: 5000, cwd: spawnCwd })
+  const TAG = '[branch-protection]', out = r.stdout || '', err = r.stderr || ''
+  const chanErr = expectedExit === 2
+    ? (!err.includes(TAG) ? 'stderr 에 차단 사유 없음' : out.includes(TAG) ? 'stdout 에 차단 사유가 섞임' : '')
+    : ((out + err).includes(TAG) ? '통과인데 차단 사유 출력' : '')
+  const pass = r.status === expectedExit && !chanErr
+  console.log(`  ${pass ? '✅' : '❌'} ${desc} → ${pass ? 'PASS' : `FAIL (기대 exit ${expectedExit}, 실제 ${r.status}${chanErr ? ', ' + chanErr : ''})`}`)
+  pass ? passed++ : failed++
+}
 
+git('checkout feature/test')
+console.log('\n── 피처 브랜치 — 분석 불가한 셸 넘김 + push (악성, 전부 exit 2) ──')
+test("echo 'git push origin main' | sh", `echo '${P} origin main' | sh`, 2, repo)
+test("cat <<'EOF' | bash (따옴표 heredoc 본문을 셸로)", `cat <<'EOF' | bash\n${P} origin main\nEOF`, 2, repo)
+test("bash <<<'git push origin main' (here-string)", `bash <<<'${P} origin main'`, 2, repo)
+test('bash -s < 파이프 입력', `printf '${P} origin main' | bash -s`, 2, repo)
+test('echo origin main | xargs git push', `echo origin main | xargs ${P}`, 2, repo)
+test('$(echo git) push origin main (동적 명령 이름)', '$(echo git) push origin main', 2, repo)
+test('$G push origin main (변수 명령 이름)', 'G=git; $G push origin main', 2, repo)
+test('sh -c "$(printf …)" (동적 스크립트)', `sh -c "$(printf '${P} origin main')"`, 2, repo)
+test('eval "$CMD" + push 문자열', `CMD='${P} origin main'; eval "$CMD"`, 2, repo)
+test('source <(echo git push origin main)', `source <(echo ${P} origin main)`, 2, repo)
+test('python3 -c os.system(git push)', `python3 -c "import os;os.system('${P} origin main')"`, 2, repo)
+test('node -e execSync(git push)', `node -e "require('child_process').execSync('${P} origin main')"`, 2, repo)
+// 2026-11-09 — git·push 를 배열로 쪼갠 형태도 막고, push 가 JS 배열 메서드일 뿐이면 통과
+test("python3 -c subprocess.run(['git','push',…])", `python3 -c "import subprocess;subprocess.run(['git', 'pu' 'sh', 'origin', 'main'])"`.replace("'pu' 'sh'", "'" + 'pu' + "sh'"), 2, repo)
+test('node -e spawnSync("git", ["push"])', `node -e "require('child_process').spawnSync('git', ['${'pu'}sh', 'origin', 'main'])"`, 2, repo)
+test('python heredoc: 다른 줄의 git 과 arr.push(x) → 통과', `python3 - <<'EOF'\ns = "git: (v) => true"\ncode = "pos.${'pu'}sh(x)"\nEOF`, 0, repo)
+test('node -e arr.push + git 문자열 → 통과', `node -e "const a=[];a.${'pu'}sh('git');console.log(a)"`, 0, repo)
+test('git push --repo=origin main', `${P} --repo=origin main`, 2, repo)
+test('git push --repo origin main', `${P} --repo origin main`, 2, repo)
+test('GIT_DIR=… git push (다른 레포 지정)', `GIT_DIR=/tmp/x/.git ${P} origin feature/test`, 2, repo)
+test('git --git-dir=… push (다른 레포 지정)', `git --git-dir=/tmp/x/.git push origin feature/test`, 2, repo)
+
+console.log('\n── 피처 브랜치 — 셸 넘김 오탐 금지 (exit 0) ──')
+test('echo hi | sh (push 없음)', 'echo hi | sh', 0, repo)
+test("cat <<'EOF' | bash (npm run build)", "cat <<'EOF' | bash\nnpm run build\nEOF", 0, repo)
+test('node -e "a.push(1)" (JS 배열 push — git 없음)', 'node -e "const a=[];a.push(1);console.log(a)"', 0, repo)
+test("cat <<'EOF' > notes.md (heredoc 을 파일로 — 셸 아님)", `cat <<'EOF' > notes.md\n${P} origin main\nEOF`, 0, repo)
+test('git push --repo=origin feature/test', `${P} --repo=origin feature/test`, 0, repo)
+test('git commit -m "git push origin main 차단 추가" (인용 텍스트)', `git commit -m "${P} origin main 차단 추가"`, 0, repo)
+
+console.log('\n── 피처 브랜치 — 새 브랜치 생성 변형 (악성, 전부 exit 2) ──')
+test('git branch feature/new', 'git branch feature/new', 2, repo)
+test('git branch -f feature/new (강제 생성)', 'git branch -f feature/new', 2, repo)
+test('git branch -c feature/test feature/copy (복사 = 새 브랜치)', 'git branch -c feature/test feature/copy', 2, repo)
+test('git worktree add -b x ../w', 'git worktree add -b x ../w', 2, repo)
+test('git worktree add ../w2 (이름 자동 생성)', 'git worktree add ../w2', 2, repo)
+test('git checkout -bx (붙여 쓴 -b)', 'git checkout -bx', 2, repo)
+test('git checkout -qb x (짧은 옵션 묶음)', 'git checkout -qb x', 2, repo)
+test('git switch -cx (붙여 쓴 -c)', 'git switch -cx', 2, repo)
+test('git switch --create=x', 'git switch --create=x', 2, repo)
+test('git checkout --orphan x', 'git checkout --orphan x', 2, repo)
+
+console.log('\n── 피처 브랜치 — 브랜치 조회·정리 오탐 금지 (exit 0) ──')
+test('git branch (목록)', 'git branch', 0, repo)
+test('git branch -a', 'git branch -a', 0, repo)
+test('git branch -vv', 'git branch -vv', 0, repo)
+test('git branch -d old', 'git branch -d old', 0, repo)
+test('git branch -D old', 'git branch -D old', 0, repo)
+test('git branch -m new-name (이름 변경)', 'git branch -m new-name', 0, repo)
+test("git branch --list 'feat*'", "git branch --list 'feat*'", 0, repo)
+test('git branch --show-current', 'git branch --show-current', 0, repo)
+test('git branch --contains abc123', 'git branch --contains abc123', 0, repo)
+test('git branch -u origin/feature/test (업스트림 설정)', 'git branch -u origin/feature/test', 0, repo)
+test('git worktree list', 'git worktree list', 0, repo)
+test('git worktree add ../w3 feature/test (기존 브랜치)', 'git worktree add ../w3 feature/test', 0, repo)
+test('git worktree add -d ../w4 (detach)', 'git worktree add -d ../w4', 0, repo)
+test('git checkout feature/other (전환만)', 'git checkout feature/other', 0, repo)
+
+console.log('\n── main 브랜치 — 브랜치 생성 변형 허용 (exit 0) ──')
+git('checkout main')
+test('git branch feature/z (main 에서)', 'git branch feature/z', 0, repo)
+test('git worktree add -b z ../wz (main 에서)', 'git worktree add -b z ../wz', 0, repo)
+test('git checkout -bz (main 에서)', 'git checkout -bz', 0, repo)
+git('checkout feature/test')
+
+console.log('\n── 실제 레포 기준 판정 — input.cwd · cd · -C ──')
+const noRepo = fs.mkdtempSync(path.join(os.tmpdir(), 'bp-norepo-'))
+const mainRepo = fs.mkdtempSync(path.join(os.tmpdir(), 'bp-main-'))
+execSync('git -c user.email=t@t -c user.name=t init -q -b main && git -c user.email=t@t -c user.name=t commit -q --allow-empty -m init', { cwd: mainRepo, stdio: 'pipe' })
+const detRepo = fs.mkdtempSync(path.join(os.tmpdir(), 'bp-det-'))
+execSync('git -c user.email=t@t -c user.name=t init -q -b main && git -c user.email=t@t -c user.name=t commit -q --allow-empty -m init && git checkout -q -b feat && git checkout -q --detach', { cwd: detRepo, stdio: 'pipe' })
+
+// detached HEAD — 브랜치를 못 읽으면 push 는 막는다 (fail-closed)
+testIn('detached: push origin HEAD:main', `${P} origin HEAD:main`, 2, detRepo)
+testIn('detached: push origin main', `${P} origin main`, 2, detRepo)
+testIn('detached: push (인자 없음)', P, 2, detRepo)
+testIn('detached: push origin HEAD', `${P} origin HEAD`, 2, detRepo)
+testIn('detached: git status → 0', 'git status', 0, detRepo)
+testIn('detached: git checkout -b x → 0 (분기 규칙은 브랜치를 알 때만)', 'git checkout -b x', 0, detRepo)
+testIn('detached: push origin --delete feature/old → 0 (보호 아닌 원격 삭제)', `${P} origin --delete feature/old`, 0, detRepo)
+
+// 레포 아닌 cwd 에서 다른 레포로
+testIn('레포 아님: git -C <피처레포> push origin HEAD:main', `git -C ${repo} ${'push'} origin HEAD:main`, 2, noRepo)
+testIn('레포 아님: cd <피처레포> && git push origin HEAD:main', `cd ${repo} && ${P} origin HEAD:main`, 2, noRepo)
+testIn('레포 아님: git push origin main (대상 main)', `${P} origin main`, 2, noRepo)
+testIn('레포 아님: git push (브랜치 확인 불가)', P, 2, noRepo)
+testIn('레포 아님: git status → 0', 'git status', 0, noRepo)
+testIn('레포 아님: git -C <피처레포> push origin feature/test → 0', `git -C ${repo} push origin feature/test`, 0, noRepo)
+testIn('레포 아님: cd <피처레포> && git push origin feature/test → 0', `cd ${repo} && ${P} origin feature/test`, 0, noRepo)
+
+// main 위 레포를 다른 cwd 에서
+testIn('다른 cwd: git -C <main레포> push origin feat', `git -C ${mainRepo} push origin feat`, 2, noRepo)
+testIn('다른 cwd: cd <main레포> && git push origin feat', `cd ${mainRepo} && ${P} origin feat`, 2, noRepo)
+testIn('피처레포 cwd: git -C <main레포> push origin feat', `git -C ${mainRepo} push origin feat`, 2, repo)
+testIn('input.cwd=<main레포> (훅 프로세스는 피처레포): push origin feat', `${P} origin feat`, 2, repo, mainRepo)
+testIn('input.cwd=<피처레포> (훅 프로세스는 레포 아님): checkout -b x', 'git checkout -b x', 2, noRepo, repo)
+testIn('input.cwd=<피처레포>: push origin feature/test → 0', `${P} origin feature/test`, 0, noRepo, repo)
+testIn('cd <main레포> 후 git -C <피처레포> push origin feature/test → 0', `cd ${mainRepo} && git -C ${repo} push origin feature/test`, 0, noRepo)
+testIn('git -C <피처레포> 상대경로 -C . → 피처 판정', `cd ${repo} && git -C . push origin feature/test`, 0, noRepo)
+
+// 경로를 정적으로 알 수 없으면 push 는 막는다
+testIn('cd "$X" && git push origin feature/test (동적 cd)', `cd "$X" && ${P} origin feature/test`, 2, repo)
+testIn('git -C "$X" push origin feature/test (동적 -C)', `git -C "$X" push origin feature/test`, 2, repo)
+testIn('(cd <main레포> && git push origin feat) 서브셸 cd', `(cd ${mainRepo} && ${P} origin feat)`, 2, repo)
+testIn('cd /없는/경로 && git push origin feature/test', `cd /nonexistent-bp-dir && ${P} origin feature/test`, 2, repo)
+
+// 이상 입력: cwd 가 문자열이 아니거나 없는 경로
+testIn('input.cwd 숫자 → 훅 프로세스 cwd 로 판정 (피처, 대상 main) → 2', `${P} origin main`, 2, repo, 42)
+testIn('input.cwd 없는 경로 → 브랜치 확인 불가 → push 2', `${P} origin feature/test`, 2, repo, '/nonexistent-bp-dir')
+
+fs.rmSync(mainRepo, { recursive: true, force: true })
+fs.rmSync(detRepo, { recursive: true, force: true })
 fs.rmSync(repo, { recursive: true, force: true })
 fs.rmSync(noRepo, { recursive: true, force: true })
 

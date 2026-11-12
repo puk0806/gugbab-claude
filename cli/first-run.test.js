@@ -44,7 +44,8 @@ test('정상: 스택 감지 — package.json next/react → nextjs, Cargo.toml �
   const p = setup(); w(path.join(p.root, 'pyproject.toml'), '[project]\nname="x"\n');
   assert.deepStrictEqual(detectStack(p.root).suggest, ['python']);
   const u = setup(); w(path.join(u.root, 'ProjectSettings', 'ProjectVersion.txt'), 'm_EditorVersion: 6000.0.1f1');
-  assert.deepStrictEqual(detectStack(u.root).suggest, ['unity']);
+  // 경계: Unity 프리셋은 2026-11-11 삭제 — Unity 프로젝트여도 없는 프리셋을 추천하지 않는다
+  assert.deepStrictEqual(detectStack(u.root).suggest, []);
 });
 
 test('정상: 번호 고르기 — 하나·여러 개(쉼표)·Enter=추천·0=안 고름', () => {

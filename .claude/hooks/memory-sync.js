@@ -59,7 +59,17 @@ process.stdin.on('end', () => {
     if (same(dstDir, repoMemory) && !fs.existsSync(repoMemory)) process.exit(0);
 
     fs.mkdirSync(dstDir, { recursive: true });
-    fs.copyFileSync(written, path.join(dstDir, path.basename(written)));
+    // 원자적 복사(2026-11-11): 임시 파일에 다 쓴 뒤 이름만 바꾼다. 중단된 호출의 PostToolUse 는 10초 뒤 강제 종료되므로(2.1.319)
+    // 복사 도중 죽어도 반쪽 파일이 남지 않게 — 반쪽 파일의 mtime 이 더 최신이면 memory-pull 이 그것으로 원본을 덮을 수 있었다
+    const dst = path.join(dstDir, path.basename(written));
+    const tmp = path.join(dstDir, `.${path.basename(written)}.${process.pid}.tmp`);
+    try {
+      fs.copyFileSync(written, tmp);
+      fs.renameSync(tmp, dst);
+    } catch (e) {
+      try { fs.rmSync(tmp, { force: true }); } catch { /* 정리 실패는 무시 */ }
+      throw e;
+    }
   } catch {
     // Claude 작업 절대 차단 금지
   }

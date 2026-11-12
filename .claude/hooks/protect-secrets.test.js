@@ -140,8 +140,66 @@ if (!IS_WIN) {
   test('UNC \\\\srv\\share\\.env → 이름으로 차단(2)', 'Write', '\\\\srv\\share\\.env', 2)
 }
 
-console.log('\n── 이상 입력 → 크래시 없이 exit 0 ──')
-for (const [desc, stdin] of [['깨진 JSON', '{x'], ['빈 입력', ''], ['null', 'null'], ['tool_input 문자열', JSON.stringify({ tool_name: 'Read', tool_input: 'x' })],
+// ── 2026-11-06 감사: Grep 은 path 만 보던 문제 — 인증 폴더 통째·glob 패턴으로 개인키를 뒤질 수 있었다 ──
+function testGrepIn(desc, ti, expectedExit) {
+  const r = spawnSync('node', [HOOK], { input: JSON.stringify({ hook_event_name: 'PreToolUse', tool_name: 'Grep', tool_input: { pattern: 'x', ...ti } }), encoding: 'utf8', timeout: 5000 })
+  const err = r.stderr || ''
+  const pass = r.status === expectedExit && (expectedExit === 2 ? err.includes('[protect-secrets]') : !err.includes('[protect-secrets]'))
+  console.log(`  ${pass ? '✅' : '❌'} ${desc} → ${pass ? 'PASS' : `FAIL (기대 exit ${expectedExit}, 실제 ${r.status})`}`)
+  pass ? passed++ : failed++
+}
+console.log('\n── Grep 인증 폴더·glob (악성 → exit 2) ──')
+testGrepIn('Grep path=~/.aws (틸드, 인증 폴더 통째)', { path: '~/.aws' }, 2)
+testGrepIn('Grep path=<HOME>/.aws', { path: `${HOME}/.aws` }, 2)
+testGrepIn('Grep path=<HOME>/.kube', { path: `${HOME}/.kube` }, 2)
+testGrepIn('Grep path=<HOME>/.config (gh·gcloud 인증 포함)', { path: `${HOME}/.config` }, 2)
+testGrepIn('Grep path=<HOME>/.config/gh', { path: `${HOME}/.config/gh` }, 2)
+testGrepIn('Grep path=<HOME>/.claude (.credentials.json 포함)', { path: `${HOME}/.claude` }, 2)
+testGrepIn('Grep path=~ + glob **/.ssh/*', { path: '~', glob: '**/.ssh/*' }, 2)
+testGrepIn('Grep glob *.pem (path 없음)', { glob: '*.pem' }, 2)
+testGrepIn('Grep glob *.{pem,key} (중괄호)', { glob: '*.{pem,key}' }, 2)
+testGrepIn('Grep glob **/id_rsa*', { glob: '**/id_rsa*' }, 2)
+testGrepIn('Grep glob **/.aws/**', { path: HOME, glob: '**/.aws/**' }, 2)
+testGrepIn('Grep glob **/credentials', { glob: '**/credentials' }, 2)
+testGrepIn('Grep glob .git-credentials', { path: HOME, glob: '.git-credentials' }, 2)
+testGrepIn('Grep glob .npmrc (홈)', { path: HOME, glob: '.npmrc' }, 2)
+testGrepIn('Grep glob 대문자 *.PEM', { glob: '*.PEM' }, 2)
+testGrepIn('Grep path=~/.ssh/../.aws (상위 이동 위장)', { path: '~/.ssh/../.aws' }, 2)
+
+console.log('\n── Grep 정상 (exit 0) ──')
+testGrepIn('Grep path=<HOME> (홈 전체, glob 없음)', { path: HOME }, 0)
+testGrepIn('Grep glob *.ts', { glob: '*.ts' }, 0)
+testGrepIn('Grep glob **/*.{js,json}', { path: '/proj', glob: '**/*.{js,json}' }, 0)
+testGrepIn('Grep glob *.keystore.md (key 접두만 같음)', { glob: '*.keystore.md' }, 0)
+testGrepIn('Grep path=<HOME>/.claude/projects (메모리 검색)', { path: `${HOME}/.claude/projects` }, 0)
+testGrepIn('Grep path=<HOME>/.config/nvim (인증 아님)', { path: `${HOME}/.config/nvim` }, 0)
+
+console.log('\n── Grep 이상 입력 (exit 0, 크래시 없음) ──')
+testGrepIn('glob 숫자', { glob: 7 }, 0)
+testGrepIn('glob 빈 문자열', { glob: '' }, 0)
+testGrepIn('glob 초장문', { glob: '*.' + 'a'.repeat(100000) }, 0)
+
+console.log('\n── 추가 홈 인증 파일 읽기 (악성 → exit 2) ──')
+test('Read ~/.git-credentials', 'Read', `${HOME}/.git-credentials`, 2)
+test('Read ~/.config/gh/hosts.yml', 'Read', `${HOME}/.config/gh/hosts.yml`, 2)
+test('Read ~/.npmrc', 'Read', `${HOME}/.npmrc`, 2)
+test('Read ~/.claude/.credentials.json', 'Read', `${HOME}/.claude/.credentials.json`, 2)
+test('Read ~/.npmrc (틸드)', 'Read', '~/.npmrc', 2)
+console.log('\n── 추가 항목 주변 정상 (exit 0) ──')
+test('Read 프로젝트 .npmrc (홈 아님)', 'Read', '/proj/.npmrc', 0)
+test('Read ~/.config/gh/config.yml (토큰 아님)', 'Read', `${HOME}/.config/gh/config.yml`, 0)
+test('Read ~/.claude/settings.json', 'Read', `${HOME}/.claude/settings.json`, 0)
+
+console.log('\n── 입력을 못 읽으면 차단 (다른 보안 훅과 같게 — 예전엔 exit 0 통과) ──')
+for (const [desc, stdin] of [['깨진 JSON', '{x'], ['빈 입력', ''], ['null', 'null'], ['JSON 배열', '[]'], ['숫자', '42']]) {
+  const r = spawnSync('node', [HOOK], { input: stdin, encoding: 'utf8', timeout: 5000 })
+  const pass = r.status === 2 && (r.stderr || '').includes('입력(JSON)을 읽지 못해')
+  console.log(`  ${pass ? '✅' : '❌'} ${desc} → exit 2 → ${pass ? 'PASS' : `FAIL (exit ${r.status})`}`)
+  pass ? passed++ : failed++
+}
+
+console.log('\n── 이상 입력 (객체) → 크래시 없이 exit 0 ──')
+for (const [desc, stdin] of [['tool_input 문자열', JSON.stringify({ tool_name: 'Read', tool_input: 'x' })],
   ['file_path 숫자', JSON.stringify({ tool_name: 'Read', tool_input: { file_path: 7 } })], ['초장문 경로', JSON.stringify({ tool_name: 'Read', tool_input: { file_path: '/a/' + 'b'.repeat(100000) } })]]) {
   const r = spawnSync('node', [HOOK], { input: stdin, encoding: 'utf8', timeout: 5000 })
   const pass = r.status === 0

@@ -58,17 +58,23 @@ console.log('🔍 agent-md-guard 테스트 시작')
 console.log('\n── 유효한 에이전트 MD → exit 0 ──')
 test('model: sonnet', AGENT_PATH, validAgent('sonnet'), 0)
 test('model: opus', AGENT_PATH, validAgent('opus'), 0)
-test('model: claude-fable-5-1 (현행 fable 티어)', AGENT_PATH, validAgent('claude-fable-5-1'), 0)
+test('model: claude-fable-5-2 (현행 fable 티어, 2026-11-09 출시)', AGENT_PATH, validAgent('claude-fable-5-2'), 0)
+test('model: claude-fable-5-1 (구세대 — 레거시 대응용 허용)', AGENT_PATH, validAgent('claude-fable-5-1'), 0)
 test('model: claude-opus-5-5 (현행 Opus)', AGENT_PATH, validAgent('claude-opus-5-5'), 0)
 test('model: claude-fable-5 (구세대 — 레거시 대응용 허용)', AGENT_PATH, validAgent('claude-fable-5'), 0)
 test('model: claude-opus-5 (구세대 — 레거시 대응용 허용)', AGENT_PATH, validAgent('claude-opus-5'), 0)
-test('model: claude-sonnet-5 (현행 Sonnet)', AGENT_PATH, validAgent('claude-sonnet-5'), 0)
+test('model: claude-sonnet-5-5 (현행 Sonnet)', AGENT_PATH, validAgent('claude-sonnet-5-5'), 0)
+test('model: claude-haiku-5-5 (현행 Haiku)', AGENT_PATH, validAgent('claude-haiku-5-5'), 0)
+test('model: haiku (별칭)', AGENT_PATH, validAgent('haiku'), 0)
+test('model: inherit (공식 유효값 — 메인 대화 모델 사용)', AGENT_PATH, validAgent('inherit'), 0)
+test('model: "claude-sonnet-5-5" (따옴표 감싼 값)', AGENT_PATH, validAgent('"claude-sonnet-5-5"'), 0)
+test('model: claude-sonnet-5 (구세대 — 레거시 대응용 허용)', AGENT_PATH, validAgent('claude-sonnet-5'), 0)
 test('model: claude-opus-4-8 (구세대 — 레거시 대응용 허용)', AGENT_PATH, validAgent('claude-opus-4-8'), 0)
 test('model: claude-opus-4-6 (구세대 — 레거시 대응용 허용)', AGENT_PATH, validAgent('claude-opus-4-6'), 0)
 test('model: claude-opus-4-7 (구세대 — 레거시 대응용 허용)', AGENT_PATH, validAgent('claude-opus-4-7'), 0)
 test('model: claude-sonnet-4-6 (구세대 — 레거시 대응용 허용)', AGENT_PATH, validAgent('claude-sonnet-4-6'), 0)
-test('model: claude-haiku-4-5 (현행 Haiku)', AGENT_PATH, validAgent('claude-haiku-4-5'), 0)
-test('model: claude-haiku-4-5-20251001 (현행 Haiku 날짜 고정판)', AGENT_PATH, validAgent('claude-haiku-4-5-20251001'), 0)
+test('model: claude-haiku-4-5 (구세대 — 레거시 대응용 허용)', AGENT_PATH, validAgent('claude-haiku-4-5'), 0)
+test('model: claude-haiku-4-5-20251001 (구세대 날짜 고정판 — 레거시 대응용 허용)', AGENT_PATH, validAgent('claude-haiku-4-5-20251001'), 0)
 
 console.log('\n── 구조 위반 → exit 2 ──')
 test('frontmatter 없음', AGENT_PATH, '# 제목뿐인 파일', 2)
@@ -81,9 +87,28 @@ test('model 필드 없음 (CRLF) → 차단', AGENT_PATH, '---\r\nname: x\r\ndes
 test('실존하지 않는 model (claude-sonnet-4-7)', AGENT_PATH, validAgent('claude-sonnet-4-7'), 2)
 test('날짜 접미사 위조 model (claude-opus-5-5-20260901)', AGENT_PATH, validAgent('claude-opus-5-5-20260901'), 2)
 test('fable 별칭 불허 (fable)', AGENT_PATH, validAgent('fable'), 2)
+// Fable 5.2 ID 위조·경계 (2026-11-11) — 없는 세대·날짜 접미사·Mythos(검증 조직 전용, 이 레포 문서에 없음)·공백 섞기는 차단
+test('날짜 접미사 위조 model (claude-fable-5-2-20261109)', AGENT_PATH, validAgent('claude-fable-5-2-20261109'), 2)
+test('없는 세대 model (claude-fable-5-3)', AGENT_PATH, validAgent('claude-fable-5-3'), 2)
+test('Mythos 5.2 는 문서에 없어 차단 (claude-mythos-5-2)', AGENT_PATH, validAgent('claude-mythos-5-2'), 2)
+test('대소문자 변형 model (Claude-Fable-5-2)', AGENT_PATH, validAgent('Claude-Fable-5-2'), 2)
+test('중간 공백 model (claude-fable- 5-2)', AGENT_PATH, validAgent('claude-fable- 5-2'), 2)
 test('대소문자 변형 model (Claude-Opus-5-5)', AGENT_PATH, validAgent('Claude-Opus-5-5'), 2)
 test('은퇴된 model (claude-sonnet-4-20250514)', AGENT_PATH, validAgent('claude-sonnet-4-20250514'), 2)
 test('은퇴된 model (claude-3-haiku-20240307)', AGENT_PATH, validAgent('claude-3-haiku-20240307'), 2)
+test('은퇴된 model (claude-opus-4-20250514)', AGENT_PATH, validAgent('claude-opus-4-20250514'), 2)
+// 새 ID 위조·경계 (2026-11-06) — 현행 ID 를 흉내낸 값은 모두 차단
+test('날짜 접미사 위조 model (claude-sonnet-5-5-20260928)', AGENT_PATH, validAgent('claude-sonnet-5-5-20260928'), 2)
+test('날짜 접미사 위조 model (claude-haiku-5-5-20261007)', AGENT_PATH, validAgent('claude-haiku-5-5-20261007'), 2)
+test('실존하지 않는 model (claude-haiku-5)', AGENT_PATH, validAgent('claude-haiku-5'), 2)
+test('실존하지 않는 model (claude-sonnet-5-6)', AGENT_PATH, validAgent('claude-sonnet-5-6'), 2)
+test('대소문자 변형 model (Claude-Sonnet-5-5)', AGENT_PATH, validAgent('Claude-Sonnet-5-5'), 2)
+test('대소문자 변형 별칭 (Inherit)', AGENT_PATH, validAgent('Inherit'), 2)
+test('공급자 접두사 model (anthropic.claude-haiku-5-5 — Bedrock ID)', AGENT_PATH, validAgent('anthropic.claude-haiku-5-5'), 2)
+test('[1m] 접미사 model (claude-sonnet-5-5[1m])', AGENT_PATH, validAgent('claude-sonnet-5-5[1m]'), 2)
+test('경로 조작 문자열 model (../claude-opus-5-5)', AGENT_PATH, validAgent('../claude-opus-5-5'), 2)
+test('빈 따옴표 model ("")', AGENT_PATH, validAgent('""'), 2)
+test('초장문 model (claude-opus-5-5 + 5000자)', AGENT_PATH, validAgent('claude-opus-5-5' + 'x'.repeat(5000)), 2)
 test('example 태그 없음', AGENT_PATH, '---\nname: x\ndescription: y\ntools:\n  - Read\nmodel: sonnet\n---\n본문', 2)
 test('tools 필드 없음', AGENT_PATH, '---\nname: x\ndescription: y\nmodel: sonnet\n---\n<example>a</example>', 2)
 
@@ -137,6 +162,19 @@ console.log('\n── agent-design.md ↔ VALID_MODELS 동기화 ──')
   ok(
     `구세대 ID 목록 일치 (훅: [${hookLegacyIds.join(', ')}] ↔ 문서: [${docLegacyIds.join(', ')}])`,
     JSON.stringify(hookLegacyIds) === JSON.stringify(docLegacyIds)
+  )
+
+  // 훅 "현행 세대" 블록의 ID 가 문서 모델 표(| 모델 | 최신 ID | ...)의 "최신 ID" 열과 일치하는지
+  // (현행 목록만 바꾸고 표를 안 고치는 드리프트, 또는 그 반대를 잡는다 — 2026-11-06)
+  const hookCurrentBlockMatch = hookSrc.match(/\/\/\s*현행 세대[\s\S]*?\/\/\s*아직 서비스되는 구세대/)
+  const hookCurrentIds = hookCurrentBlockMatch
+    ? Array.from(hookCurrentBlockMatch[0].replace(/\/\/.*$/gm, '').matchAll(/'(claude-[^']+)'/g)).map(m => m[1]).sort()
+    : []
+  const docTableIds = Array.from(docSrc.matchAll(/^\|[^|\n]+\|\s*`(claude-[^`]+)`\s*\|/gm)).map(m => m[1]).sort()
+  ok('훅 소스에서 현행 ID 블록을 찾음', hookCurrentIds.length > 0)
+  ok(
+    `현행 ID 목록 일치 (훅: [${hookCurrentIds.join(', ')}] ↔ 문서 표: [${docTableIds.join(', ')}])`,
+    JSON.stringify(hookCurrentIds) === JSON.stringify(docTableIds)
   )
 
   // 문서에 등장하는 모든 claude-* ID(백틱 표기)가 훅의 VALID_MODELS 전체 집합에 존재하는지

@@ -1,4 +1,4 @@
-// PreToolUse Write — 시크릿·프롬프트 인젝션 패턴 스캔 (시크릿/인젝션 감지 시 차단)
+// PreToolUse Write·Edit·MultiEdit·NotebookEdit — 시크릿·프롬프트 인젝션 패턴 스캔 (시크릿/인젝션 감지 시 차단)
 const fs = require('fs');
 const path = require('path');
 
@@ -30,11 +30,25 @@ if (!input || typeof input !== 'object' || Array.isArray(input)) {
   process.exit(2);
 }
 
-try {
-  if (input.tool_name !== 'Write') process.exit(0);
+// 쓰기 도구별로 "새로 들어갈 글" 만 모은다 (2026-11-06 — 예전엔 Write 만 검사해 Edit·NotebookEdit 로 시크릿을 넣으면 통과)
+//   Write.content · Edit.new_string · MultiEdit.edits[].new_string · NotebookEdit.new_source  (지워지는 old_string 은 보지 않는다)
+const WRITE_TOOLS = new Set(['Write', 'Edit', 'MultiEdit', 'NotebookEdit']);
+function newTextOf(toolName, ti) {
+  if (!ti || typeof ti !== 'object') return '';
+  const s = (v) => (typeof v === 'string' ? v : '');
+  if (toolName === 'Write') return s(ti.content);
+  if (toolName === 'Edit') return s(ti.new_string);
+  if (toolName === 'MultiEdit') return Array.isArray(ti.edits) ? ti.edits.map(e => (e && typeof e === 'object' ? s(e.new_string) : '')).join('\n') : '';
+  if (toolName === 'NotebookEdit') return s(ti.new_source);
+  return '';
+}
 
-  const content = input.tool_input?.content || '';
-  const filePath = input.tool_input?.file_path || '';
+try {
+  if (!WRITE_TOOLS.has(input.tool_name)) process.exit(0);
+
+  const ti = input.tool_input && typeof input.tool_input === 'object' ? input.tool_input : {};
+  const content = newTextOf(input.tool_name, ti);
+  const filePath = typeof ti.file_path === 'string' ? ti.file_path : (typeof ti.notebook_path === 'string' ? ti.notebook_path : '');
 
   // .env 파일 자체는 의도적으로 시크릿을 담으므로 스킵
   if (path.basename(filePath).startsWith('.env')) process.exit(0);

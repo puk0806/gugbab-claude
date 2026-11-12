@@ -78,9 +78,10 @@ console.log('\n[훅 다이어트] deliverable-guard 통합 · 제거 훅 미참�
   assert('제거된 훅 미참조 (pending-test/readme/session-summary/handoff/task-plan/confirmation-gate/verification-gate/careful-with-judge/memory-stop)',
     /pending-test-guard|readme-guard\.js|session-summary|session-handoff|task-plan-guard|confirmation-gate|verification-gate|careful-with-judge|memory-stop-guard/.test(flat(s)), false)
   // UserPromptSubmit 은 2026-07 다이어트로 비웠다가 2026-10-06 한국어 지시 주입 전용으로 재도입 — 그 외 훅 금지
-  assert('UserPromptSubmit 에는 korean-response-guard·task-confirm-guard·progress-tracker 3개만',
+  // 2026-11-09 config-change-audit 추가 — ConfigChange 알림을 다음 질문 때 전한다(ConfigChange 의 systemMessage 는 화면에 안 나옴)
+  assert('UserPromptSubmit 에는 korean-response-guard·task-confirm-guard·progress-tracker·config-change-audit 4개만',
     JSON.stringify((s.hooks.UserPromptSubmit || []).flatMap(g => g.hooks.map(h => h.command.split('/').pop()))),
-    JSON.stringify(['korean-response-guard.js', 'task-confirm-guard.js', 'progress-tracker.js']))
+    JSON.stringify(['korean-response-guard.js', 'task-confirm-guard.js', 'progress-tracker.js', 'config-change-audit.js']))
   // 2026-10-06 신규 훅 4종 배선
   const cmdsOf = (st, ev, m) => (st.hooks[ev] || []).filter(g => m === undefined || g.matcher === m).flatMap(g => g.hooks.map(h => h.command)).join(' ')
   assert('ConfigChange 에 config-change-audit', cmdsOf(s, 'ConfigChange').includes('config-change-audit.js'), true)
@@ -220,8 +221,13 @@ console.log('\n[--legacy] tdd-guard 제외 · typescript-quality --changed-only'
     JSON.stringify(s.hooks.PreToolUse).includes('test-fake-guard'), true)
   const tsW = w.find(c => c.includes('typescript-quality'))
   const tsE = e.find(c => c.includes('typescript-quality'))
-  assert('legacy: Write typescript-quality에 --changed-only 전달', (tsW || '').endsWith('typescript-quality.js --changed-only'), true)
-  assert('legacy: Edit typescript-quality에 --changed-only 전달', (tsE || '').endsWith('typescript-quality.js --changed-only'), true)
+  // 2026-11-12: 저장 때는 기록만(--record), 판정은 Stop 에서 한 번(--stop). 레거시는 Stop 에 --changed-only
+  assert('legacy: Write typescript-quality 는 기록만(--record, tsc 없음)', (tsW || '').endsWith('typescript-quality.js --record'), true)
+  assert('legacy: Edit typescript-quality 는 기록만(--record)', (tsE || '').endsWith('typescript-quality.js --record'), true)
+  const stopCmds = s.hooks.Stop.flatMap(b => b.hooks.map(h => h.command))
+  assert('legacy: Stop 에 typescript-quality --stop --changed-only', stopCmds.some(c => c.endsWith('typescript-quality.js --stop --changed-only')), true)
+  assert('legacy: PostToolUse 어디에도 tsc 를 돌리는 형태(인자 없음·--changed-only) 없음',
+    JSON.stringify(s.hooks.PostToolUse).match(/typescript-quality\.js(?! --record)/) === null, true)
 
   // 악성·오남용: --legacy 만 단독으로 줘도 dev 훅이 생기거나 사라지지 않아야 함 (dev 미선택 = 강제 훅 없음)
   const only = generate('--legacy')
@@ -234,7 +240,12 @@ console.log('\n[--legacy] tdd-guard 제외 · typescript-quality --changed-only'
   const base = generate('--dev', '--typescript')
   const bw = cmds(base, 'Write')
   assert('legacy 없음 → tdd-guard 배선 유지', bw.some(c => c.includes('tdd-guard')), true)
-  assert('legacy 없음 → typescript-quality 인자 없음', bw.some(c => c.endsWith('typescript-quality.js')), true)
+  assert('legacy 없음 → Write 는 typescript-quality --record', bw.some(c => c.endsWith('typescript-quality.js --record')), true)
+  const bStop = base.hooks.Stop.flatMap(b => b.hooks.map(h => h.command))
+  assert('legacy 없음 → Stop 은 --stop (--changed-only 없음)', bStop.some(c => c.endsWith('typescript-quality.js --stop')), true)
+  assert('경계: --typescript 없으면 Stop 에 typescript-quality 없음', generate('--dev').hooks.Stop.flatMap(b => b.hooks.map(h => h.command)).some(c => c.includes('typescript-quality')), false)
+  const iTs = bStop.findIndex(c => c.includes('typescript-quality')), iNotify = bStop.findIndex(c => c.includes('cc-notify'))
+  assert('순서: Stop 의 typescript-quality 는 cc-notify(완료 알림)보다 앞', iTs >= 0 && iTs < iNotify, true)
 
   // util + legacy: util 은 강제 훅 자체가 없으므로 legacy 가 아무것도 추가하지 않아야 함
   const u = generate('--util', '--legacy')
@@ -328,37 +339,39 @@ console.log('\n[quoting] 모든 훅·statusLine 명령이 "$CLAUDE_PROJECT_DIR" 
   fs.rmSync(base, { recursive: true, force: true })
 }
 
-// ── relation-guard (2026-10-16, gugbab-claude 레포 전용 — 설치 스크립트는 이 옵션을 넘기지 않음) ──────
-console.log('\n[relation-guard] --relation-guard 일 때만 PreToolUse Bash · PostToolUse Write/Edit 에 배선')
+// ── 2026-11-11 제거한 훅 3종(relation-guard·parallel-hint·session-start) ──────
+// 악성·경계: 옛 옵션(--relation-guard·--parallel-hint)을 넘겨도, 어떤 조합에서도 없는 훅 파일을 가리키는 배선이 생기지 않는다
+console.log('\n[제거한 훅] relation-guard·parallel-hint·session-start 는 어떤 옵션 조합에서도 배선되지 않음')
 {
-  const cmdsOf = (s, ev, m) => (s.hooks[ev] || []).filter((g) => g.matcher === m).flatMap((g) => g.hooks.map((h) => h.command))
-  const has = (s, ev, m) => cmdsOf(s, ev, m).some((c) => /relation-guard\.js/.test(c))
-  const on = generate('--dev', '--relation-guard')
-  assert('--relation-guard → PreToolUse Bash 배선', has(on, 'PreToolUse', 'Bash'), true)
-  assert('--relation-guard → PostToolUse Write 배선', has(on, 'PostToolUse', 'Write'), true)
-  assert('--relation-guard → PostToolUse Edit 배선', has(on, 'PostToolUse', 'Edit'), true)
-  // 악성·경계: 옵션 없이는 어떤 조합에서도 배선되지 않는다 (설치본에 없는 훅 파일을 가리키는 깨진 배선 방지)
-  for (const flags of [['--dev'], ['--dev', '--typescript', '--memory', '--codex', '--readme-guard', '--staleness-guard', '--branch-protection'], ['--util', '--readme-guard']]) {
-    const s = generate(...flags)
-    const any = Object.keys(s.hooks).some((ev) => JSON.stringify(s.hooks[ev]).includes('relation-guard'))
-    assert(`${flags.join(' ')} (옵션 없음) → relation-guard 미배선`, any, false)
+  const fs = require('fs')
+  for (const flags of [['--dev'], ['--util'], ['--dev', '--typescript', '--memory', '--superpowers', '--codex', '--readme-guard', '--staleness-guard', '--branch-protection', '--claude-version-check', '--release-version-guard', '--wrapper-version-check'], ['--dev', '--relation-guard', '--parallel-hint'], ['--util', '--relation-guard', '--parallel-hint']]) {
+    const txt = JSON.stringify(generate(...flags).hooks)
+    for (const h of ['relation-guard', 'parallel-hint', 'session-start']) assert(`${flags.join(' ')} → ${h} 미배선`, txt.includes(h), false)
   }
-  // 경계: util 모드에서는 옵션이 있어도 배선하지 않는다 (util 은 스킬·에이전트 구조 검증 훅을 빼는 최소 구성)
-  const util = generate('--util', '--relation-guard')
-  assert('--util --relation-guard → 미배선', JSON.stringify(util.hooks).includes('relation-guard'), false)
+  // 경계: 배선된 모든 훅 파일이 실제로 있어야 한다 (지운 훅을 가리키는 깨진 배선 방지)
+  const full = generate('--dev', '--typescript', '--memory', '--superpowers', '--codex', '--readme-guard', '--staleness-guard', '--branch-protection', '--claude-version-check', '--release-version-guard', '--wrapper-version-check')
+  const files = [...new Set(JSON.stringify(full.hooks).match(/hooks\/[\w.-]+\.(?:js|sh)/g) || [])]
+  const missing = files.filter((f) => !fs.existsSync(path.join(__dirname, '..', '.claude', f)))
+  assert(`전체 옵션 배선 훅 파일 ${files.length}개 모두 존재 (없음: ${missing.join(',') || '-'})`, missing.length, 0)
 }
 
-// ── parallel-hint (2026-10-17, 레포·래퍼 전용 — 설치 스크립트는 이 옵션을 넘기지 않음) ──────
-console.log('\n[parallel-hint] --parallel-hint 일 때만 UserPromptSubmit · PostToolUse * 에 배선')
+// ── PostToolUse 순서 (2026-11-11) — 래퍼는 이 순서대로 하나씩 돌리고, 끼어든 호출의 PostToolUse 는 10초 안에 끝나야 한다(2.1.319)
+// 정상: 기록형 훅이 느린 훅보다 앞 / 경계: legacy(--changed-only)·TS 없음·memory 없음 조합도 같은 규칙 / 악성: 느린 훅이 기록형 훅 앞에 끼면 실패
+console.log('\n[순서] PostToolUse Write·Edit — 기록형(deliverable·progress·memory-sync)이 느린 auto-format·typescript-quality 보다 앞')
 {
-  const cmdsOf = (s, ev, m) => (s.hooks[ev] || []).filter((g) => m === undefined || g.matcher === m).flatMap((g) => g.hooks.map((h) => h.command))
-  const on = generate('--dev', '--parallel-hint')
-  assert('--parallel-hint → UserPromptSubmit 배선', cmdsOf(on, 'UserPromptSubmit').some((c) => /parallel-hint\.js/.test(c)), true)
-  assert('--parallel-hint → PostToolUse * 배선', cmdsOf(on, 'PostToolUse', '*').some((c) => /parallel-hint\.js/.test(c)), true)
-  // 악성·경계: 옵션 없이는 어떤 조합에서도 배선되지 않음 (옛 설치본엔 훅 파일이 없음), util 은 옵션이 있어도 미배선
-  for (const flags of [['--dev'], ['--dev', '--typescript', '--memory', '--codex', '--readme-guard', '--staleness-guard', '--branch-protection', '--relation-guard'], ['--util', '--parallel-hint']]) {
+  const seq = (s, m) => (s.hooks.PostToolUse || []).filter((g) => g.matcher === m).flatMap((g) => g.hooks.map((h) => (h.command.match(/hooks\/([\w-]+)\.js/) || [])[1]))
+  const SLOW = ['auto-format', 'typescript-quality']
+  const REC = ['deliverable-guard', 'progress-tracker', 'memory-sync']
+  for (const flags of [['--dev', '--typescript', '--memory'], ['--dev', '--typescript', '--memory', '--legacy'], ['--dev', '--memory'], ['--dev', '--typescript'], ['--util', '--memory']]) {
     const s = generate(...flags)
-    assert(`${flags.join(' ')} → parallel-hint 미배선`, JSON.stringify(s.hooks).includes('parallel-hint'), false)
+    for (const m of ['Write', 'Edit']) {
+      const q = seq(s, m)
+      const lastRec = Math.max(-1, ...REC.map((h) => q.indexOf(h)))
+      const slowIdx = SLOW.map((h) => q.indexOf(h)).filter((i) => i >= 0)
+      const firstSlow = slowIdx.length ? Math.min(...slowIdx) : Infinity
+      assert(`${flags.join(' ')} ${m}: 기록형 훅이 모두 느린 훅 앞 (${q.join('→')})`, lastRec < firstSlow, true)
+      if (slowIdx.length) assert(`${flags.join(' ')} ${m}: 느린 훅이 맨 뒤`, Math.max(...slowIdx), q.length - 1)
+    }
   }
 }
 
@@ -367,7 +380,11 @@ console.log('\n[claude-version-check] --claude-version-check 일 때만 SessionS
 {
   const cmds = (s) => (s.hooks.SessionStart || []).flatMap((g) => g.hooks.map((h) => h.command))
   assert('--claude-version-check → SessionStart 배선', cmds(generate('--dev', '--claude-version-check')).some((c) => /claude-version-check\.js/.test(c)), true)
-  for (const flags of [['--dev'], ['--dev', '--typescript', '--memory', '--codex', '--readme-guard', '--staleness-guard', '--branch-protection', '--relation-guard', '--parallel-hint'], ['--util', '--claude-version-check']]) {
+  // 2026-11-11: 세션 중 자동 업데이트 확인 — UserPromptSubmit 에도 배선
+  const ups = (s) => (s.hooks.UserPromptSubmit || []).flatMap((g) => g.hooks.map((h) => h.command))
+  assert('--claude-version-check → UserPromptSubmit 배선', ups(generate('--dev', '--claude-version-check')).some((c) => /claude-version-check\.js/.test(c)), true)
+  assert('옵션 없으면 UserPromptSubmit 에도 없음', ups(generate('--dev')).some((c) => /claude-version-check\.js/.test(c)), false)
+  for (const flags of [['--dev'], ['--dev', '--typescript', '--memory', '--codex', '--readme-guard', '--staleness-guard', '--branch-protection'], ['--util', '--claude-version-check']]) {
     assert(`${flags.join(' ')} → claude-version-check 미배선`, JSON.stringify(generate(...flags).hooks).includes('claude-version-check'), false)
   }
 }
@@ -377,7 +394,7 @@ console.log('\n[wrapper-version-check] --wrapper-version-check 일 때만 Sessio
 {
   const cmds = (s) => (s.hooks.SessionStart || []).flatMap((g) => g.hooks.map((h) => h.command))
   assert('--wrapper-version-check → SessionStart 배선', cmds(generate('--dev', '--wrapper-version-check')).some((c) => /wrapper-version-check\.js/.test(c)), true)
-  for (const flags of [['--dev'], ['--dev', '--typescript', '--memory', '--codex', '--readme-guard', '--staleness-guard', '--branch-protection', '--relation-guard', '--parallel-hint', '--claude-version-check', '--release-version-guard'], ['--util', '--wrapper-version-check']]) {
+  for (const flags of [['--dev'], ['--dev', '--typescript', '--memory', '--codex', '--readme-guard', '--staleness-guard', '--branch-protection', '--claude-version-check', '--release-version-guard'], ['--util', '--wrapper-version-check']]) {
     assert(`${flags.join(' ')} → wrapper-version-check 미배선`, JSON.stringify(generate(...flags).hooks).includes('wrapper-version-check'), false)
   }
 }
@@ -387,7 +404,7 @@ console.log('\n[release-version-guard] --release-version-guard 일 때만 PreToo
 {
   const pre = (s) => (s.hooks.PreToolUse || []).filter((g) => g.matcher === 'Bash').flatMap((g) => g.hooks.map((h) => h.command))
   assert('--release-version-guard → PreToolUse Bash 배선', pre(generate('--dev', '--release-version-guard')).some((c) => /release-version-guard\.js/.test(c)), true)
-  for (const flags of [['--dev'], ['--dev', '--typescript', '--memory', '--codex', '--readme-guard', '--staleness-guard', '--branch-protection', '--relation-guard', '--parallel-hint', '--claude-version-check'], ['--util', '--release-version-guard']]) {
+  for (const flags of [['--dev'], ['--dev', '--typescript', '--memory', '--codex', '--readme-guard', '--staleness-guard', '--branch-protection', '--claude-version-check'], ['--util', '--release-version-guard']]) {
     assert(`${flags.join(' ')} → release-version-guard 미배선`, JSON.stringify(generate(...flags).hooks).includes('release-version-guard'), false)
   }
 }
@@ -398,12 +415,12 @@ console.log('\n[release-version-guard] --release-version-guard 일 때만 PreToo
 // PostToolUse Write)이 생긴 것을 계기로, 의미 단위(훅은 이벤트별 matcher::command 집합, 권한은 집합)로 비교한다.
 console.log('\n[회귀] 원본 .claude/settings.json == gen-settings 전체 옵션 출력 (의미 비교)')
 {
-  const full = generate('--dev', '--typescript', '--memory', '--superpowers', '--codex', '--readme-guard', '--staleness-guard', '--branch-protection', '--relation-guard', '--parallel-hint', '--claude-version-check', '--release-version-guard', '--wrapper-version-check')
+  const full = generate('--dev', '--typescript', '--memory', '--superpowers', '--codex', '--readme-guard', '--staleness-guard', '--branch-protection', '--claude-version-check', '--release-version-guard', '--wrapper-version-check')
   const repo = JSON.parse(require('fs').readFileSync(path.join(__dirname, '..', '.claude', 'settings.json'), 'utf8'))
   const norm = (s) => {
     const o = JSON.parse(JSON.stringify(s))
     for (const ev of Object.keys(o.hooks || {})) {
-      o.hooks[ev] = o.hooks[ev].flatMap((g) => g.hooks.map((h) => `${g.matcher || ''} :: ${h.command}`)).sort()
+      o.hooks[ev] = o.hooks[ev].flatMap((g) => g.hooks.map((h) => `${g.matcher || ''} :: ${h.command}${h.onFailure ? ` :: onFailure=${h.onFailure}` : ''}`)).sort()
     }
     for (const k of ['allow', 'deny', 'ask', 'additionalDirectories']) if (o.permissions && o.permissions[k]) o.permissions[k] = [...o.permissions[k]].sort()
     if (o.enabledPlugins) o.enabledPlugins = Object.fromEntries(Object.entries(o.enabledPlugins).sort())
@@ -416,6 +433,37 @@ console.log('\n[회귀] 원본 .claude/settings.json == gen-settings 전체 옵�
   assert('비교기: allow 1줄 추가를 차이로 판정', norm(tampered) === norm(full), false)
   const unwired = JSON.parse(JSON.stringify(full)); unwired.hooks.PostToolUse[0].hooks.pop()
   assert('비교기: 훅 1개 배선 누락을 차이로 판정', norm(unwired) === norm(full), false)
+}
+
+// ── 2026-11-06 감사: 보안 훅 onFailure:"block" · parry Edit/NotebookEdit 배선 ──
+// 공식 hooks 문서 "Block the action when a hook fails"(v2.1.295+): command 훅에 onFailure:"block" 이면
+// 시작 실패·0/2 외 종료·타임아웃·잘못된 JSON 이 exit 2 처럼 동작(PreToolUse 차단, PermissionRequest 거부). Stop 계열엔 효과 없음
+console.log('\n[보안 훅] onFailure:"block" · parry 배선')
+{
+  const SECURITY = ['bash-guard.js', 'branch-protection.js', 'protect-secrets.js', 'parry.js']
+  const hookName = (h) => (/\.claude\/hooks\/([\w.-]+\.js)/.exec(h.command || '') || [])[1]
+  const entries = (s, ev) => (s.hooks[ev] || []).flatMap(g => g.hooks.map(h => ({ matcher: g.matcher, h, name: hookName(h) })))
+  for (const [label, flags] of [['전체 옵션', ['--dev', '--typescript', '--memory', '--codex', '--readme-guard', '--branch-protection', '--release-version-guard']], ['util', ['--util', '--branch-protection']], ['옵션 없음', []]]) {
+    const s = generate(...flags)
+    const gated = [...entries(s, 'PreToolUse'), ...entries(s, 'PermissionRequest')]
+    const sec = gated.filter(e => SECURITY.includes(e.name))
+    assert(`${label}: Pre/PermissionRequest 의 보안 훅 전부 onFailure=block`, sec.length > 0 && sec.every(e => e.h.onFailure === 'block'), true)
+    // 악성·경계: 비보안 훅·Stop/Post 에 붙이면 안 된다 (Stop 엔 효과 없음, 비보안 훅 고장으로 모든 도구가 막히면 안 됨)
+    assert(`${label}: 비보안 Pre/PermissionRequest 훅엔 onFailure 없음`, gated.filter(e => !SECURITY.includes(e.name)).every(e => e.h.onFailure === undefined), true)
+    const others = ['PostToolUse', 'Stop', 'SessionStart', 'UserPromptSubmit', 'ConfigChange'].flatMap(ev => entries(s, ev))
+    assert(`${label}: Post·Stop·SessionStart 등엔 onFailure 없음`, others.every(e => e.h.onFailure === undefined), true)
+    assert(`${label}: onFailure 값은 "block" 만`, [...gated, ...others].every(e => e.h.onFailure === undefined || e.h.onFailure === 'block'), true)
+    const parryOn = (m) => entries(s, 'PreToolUse').some(e => e.matcher === m && e.name === 'parry.js')
+    assert(`${label}: parry 가 Write·Edit·NotebookEdit 에 배선`, parryOn('Write') && parryOn('Edit') && parryOn('NotebookEdit'), true)
+    if (flags.includes('--branch-protection')) {
+      assert(`${label}: branch-protection 도 onFailure=block`, entries(s, 'PreToolUse').some(e => e.name === 'branch-protection.js' && e.h.onFailure === 'block'), true)
+    }
+  }
+  // 회귀 비교기가 onFailure 차이도 잡는지 (레포 settings.json 에서 빠지면 실패해야 한다)
+  const full = generate('--dev')
+  const stripped = JSON.parse(JSON.stringify(full)); for (const g of stripped.hooks.PreToolUse) for (const h of g.hooks) delete h.onFailure
+  const sig = (s) => JSON.stringify(Object.values(s.hooks).flat().flatMap(g => g.hooks.map(h => `${g.matcher || ''}::${h.command}::${h.onFailure || ''}`)).sort())
+  assert('비교기: onFailure 누락을 차이로 판정', sig(stripped) === sig(full), false)
 }
 
 // ── 최종 ────────────────────────────────────────────────────────────────

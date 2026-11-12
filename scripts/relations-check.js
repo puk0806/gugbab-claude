@@ -1,19 +1,12 @@
 #!/usr/bin/env node
 /**
- * relation-guard.js — 훅·룰·커맨드·에이전트·스킬 관계가 분류 없이 늘어나지 않게 막는다 (2026-10-16)
+ * relations-check.js — relations.json(훅·룰·커맨드·에이전트·스킬 관계 원본)이 레포 실물과 맞는지 검사 (2026-11-11)
  *
- * 관계 원본은 레포 최상위 relations.json (계획서 14장, 결정 13장 15·16번):
- *   bundles(같이 켜고 끄는 묶음) · standalone(묶음 없는 훅·룰·커맨드) · blocks(스킬·에이전트 스택 블록)
- *   requires(필수 의존) · conflicts · variants · edges("from>to": requires|uses|mention|code)
- *
- * 이벤트:
- *   PostToolUse Write|Edit|MultiEdit — .claude/{hooks,agents,skills,rules,commands} 파일이나 relations.json 을 저장하면
- *     그 항목의 분류 안 된 언급·소속 없음 등을 Claude 에게 알린다 (막지 않음)
- *   PreToolUse Bash — git commit 이면 레포 전체를 검사해 문제가 하나라도 있으면 차단
- *
+ * 2026-10-16 relation-guard 훅의 검사 부분을 옮긴 것. 훅(저장 때 알림·커밋 차단)은 2026-11-11 제거했고,
+ * 같은 검사는 scripts/relations.test.js(CI·단위 시험)가 맡는다.
+ *   bundles · standalone · blocks · requires · conflicts · variants · edges("from>to": requires|uses|mention|code)
  * 자동 분류: 스킬이 무엇이든 언급하는 것, 에이전트가 스킬을 언급하는 것은 uses.
  *           requires 에 적힌 관계, 같은 묶음 안의 언급은 따로 적지 않는다.
- * relations.json 이 없는 레포(다른 프로젝트)에서는 아무것도 하지 않는다.
  */
 'use strict'
 
@@ -23,11 +16,8 @@ const path = require('path')
 const KINDS = new Set(['requires', 'uses', 'mention', 'code'])
 const MAX_READ = 2 * 1024 * 1024 // 파일당 읽는 최대 바이트 — 초대용량 파일로 훅을 멈추게 하지 못하게
 const MAX_SKILL_FILES = 200
-const MAX_LIST = 40
 const AREAS = ['hooks', 'agents', 'skills', 'rules', 'commands']
 
-let analyzer = null
-try { analyzer = require('./bash-guard.js') } catch { analyzer = null }
 
 const own = (o, k) => Object.prototype.hasOwnProperty.call(o, k)
 const isObj = v => !!v && typeof v === 'object' && !Array.isArray(v)
@@ -210,101 +200,4 @@ function check(root, only) {
   return { problems }
 }
 
-// 프로젝트 루트: CLAUDE_PROJECT_DIR → cwd 순, 위로 올라가며 relations.json 이 있는 곳
-function rootOf(input) {
-  const starts = [process.env.CLAUDE_PROJECT_DIR, typeof input.cwd === 'string' ? input.cwd : null].filter(Boolean)
-  for (const s of starts) {
-    let d = path.resolve(s)
-    for (let i = 0; i < 40; i++) {
-      if (fs.existsSync(path.join(d, 'relations.json'))) return d
-      const up = path.dirname(d)
-      if (up === d) break
-      d = up
-    }
-  }
-  return null
-}
-
-// 저장한 파일 → 항목 id (대상 아니면 null). 레포 밖으로 나가는 경로는 무시
-function itemOfPath(root, file) {
-  const abs = path.resolve(root, file)
-  const rel = path.relative(root, abs)
-  if (!rel || rel.startsWith('..') || path.isAbsolute(rel)) return null
-  if (rel === 'relations.json') return { all: true }
-  const parts = rel.split(path.sep)
-  if (parts[0] !== '.claude' || !AREAS.includes(parts[1])) return null
-  const area = parts[1], last = parts[parts.length - 1]
-  if (area === 'hooks') return last.endsWith('.js') && !last.endsWith('.test.js') && parts.length === 3 ? { id: 'hook:' + last.slice(0, -3) } : null
-  if (area === 'rules') return last.endsWith('.md') && parts.length === 3 ? { id: 'rule:' + last } : null
-  if (area === 'commands') return last.endsWith('.md') && parts.length === 3 && last !== 'CLAUDE.md' ? { id: 'command:' + last.slice(0, -3) } : null
-  if (area === 'agents') return last.endsWith('.md') && last !== 'CLAUDE.md' ? { id: 'agent:' + last.slice(0, -3) } : null
-  if (area === 'skills') return parts.length >= 4 && last.endsWith('.md') ? { id: 'skill:' + parts[2] } : null
-  return null
-}
-
-function isGitCommit(cmd) {
-  if (typeof cmd !== 'string' || !cmd.trim()) return false
-  if (analyzer && typeof analyzer.analyzeShell === 'function') {
-    let acc
-    try { acc = analyzer.analyzeShell(cmd) } catch { acc = null }
-    if (acc && Array.isArray(acc.invocations)) {
-      return acc.invocations.some(inv => {
-        if (inv.name !== 'git') return false
-        const args = (inv.args || []).map(a => String(a && a.value !== undefined ? a.value : a))
-        for (let i = 0; i < args.length; i++) {
-          const a = args[i]
-          if (a === '-C' || a === '-c' || a === '--git-dir' || a === '--work-tree' || a === '--namespace') { i++; continue }
-          if (a.startsWith('-')) continue
-          return a === 'commit'
-        }
-        return false
-      })
-    }
-  }
-  return /(^|[;&|]\s*)git(\s+-\S+(\s+\S+)?)*\s+commit\b/.test(cmd)
-}
-
-function summary(problems) {
-  const shown = problems.slice(0, MAX_LIST).map(p => '  - ' + p)
-  if (problems.length > MAX_LIST) shown.push(`  … 외 ${problems.length - MAX_LIST}건`)
-  return shown.join('\n')
-}
-
-function handle(input) {
-  if (!isObj(input)) return null
-  const event = input.hook_event_name || input.hookEventName
-  if (event === 'PostToolUse' && ['Write', 'Edit', 'MultiEdit'].includes(input.tool_name)) {
-    const file = isObj(input.tool_input) ? input.tool_input.file_path : null
-    if (typeof file !== 'string' || !file) return null
-    const root = rootOf(input)
-    if (!root) return null
-    const target = itemOfPath(root, file)
-    if (!target) return null
-    const r = check(root, target.all ? null : target.id)
-    if (r.skip || !r.problems.length) return null
-    const text = `[relation-guard] 관계 정리가 필요합니다 (relations.json — 계획서 14장). 지금 고치지 않으면 git commit 이 차단됩니다:\n${summary(r.problems)}`
-    return { hookSpecificOutput: { hookEventName: 'PostToolUse', additionalContext: text.slice(0, 9000) } }
-  }
-  if (event === 'PreToolUse' && input.tool_name === 'Bash') {
-    const cmd = isObj(input.tool_input) ? input.tool_input.command : null
-    if (!isGitCommit(cmd)) return null
-    const root = rootOf(input)
-    if (!root) return null
-    const r = check(root, null)
-    if (r.skip || !r.problems.length) return null
-    const text = `[relation-guard] 분류 안 된 관계·소속 없는 항목이 있어 커밋을 막았습니다. relations.json 을 고친 뒤 다시 커밋하세요:\n${summary(r.problems)}`
-    return { hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny', permissionDecisionReason: text.slice(0, 9000) } }
-  }
-  return null
-}
-
-if (require.main === module) {
-  let input = null
-  try { input = JSON.parse(fs.readFileSync(0, 'utf8')) } catch { process.exit(0) }
-  let r = null
-  try { r = handle(input) } catch { r = null }
-  if (r) process.stdout.write(JSON.stringify(r) + '\n')
-  process.exit(0)
-} else {
-  module.exports = { handle, check, scanItems, loadRelations, itemOfPath, isGitCommit }
-}
+module.exports = { check, scanItems, loadRelations }

@@ -71,7 +71,7 @@ test('Bash → null', 'Bash', { command: 'git status' }, 'null', 'PermissionRequ
 
 // 2026-10-06 — 설정이 없어 매번 확인 창이 뜨던 도구(C 분류)를 자동 승인으로 이동
 section('2026-10-06 추가 도구 → allow (PreToolUse·PermissionRequest 모두)')
-for (const tool of ['Skill', 'Monitor', 'Workflow', 'EnterWorktree', 'Artifact', 'ShareOnboardingGuide', 'NotebookEdit']) {
+for (const tool of ['Skill', 'Workflow', 'EnterWorktree', 'Artifact', 'ShareOnboardingGuide', 'NotebookEdit']) {
   test(`${tool} (Pre)`, tool, {}, 'allow')
   test(`${tool} (PermissionRequest)`, tool, {}, 'allow', 'PermissionRequest')
 }
@@ -104,11 +104,71 @@ section('프로젝트 밖 쓰기 → 확인 / 안쪽·메모리·임시 → 자�
   test('Write 프로젝트 상위로 이동 위장 ../outside.txt', 'Write', { file_path: '../outside.txt' }, 'ask')
   test('Write 밖 (PermissionRequest → 사용자에게)', 'Write', { file_path: `${HOME}/Documents/x.txt` }, 'null', 'PermissionRequest')
   test('Write 프로젝트 안 README.md', 'Write', { file_path: 'README.md' }, 'allow')
-  test('Write 메모리 폴더', 'Write', { file_path: `${HOME}/.claude/projects/-x/memory/a.md` }, 'allow')
   test('Write 계획 폴더', 'Write', { file_path: `${HOME}/.claude/plans/p.md` }, 'allow')
   // 윈도우 임시 폴더는 %TEMP%(os.tmpdir()) — `/private/tmp` 는 맥 경로라 윈도우에선 의미가 없다
   test('Write 임시 폴더', 'Write', { file_path: IS_WIN ? path.join(os.tmpdir(), 'claude-1', 'a.txt') : '/private/tmp/claude-1/a.txt' }, 'allow')
   test('NotebookEdit 밖', 'NotebookEdit', { notebook_path: `${HOME}/Documents/n.ipynb` }, 'ask')
+}
+
+// 2026-11-09 — 프로젝트 안이어도 .git/ 와 .claude/settings*.json 쓰기는 확인 (allow 하면 Claude Code 자체 확인까지 건너뜀)
+section('git 내부·설정 파일 쓰기 → 확인 / 이름만 비슷한 파일은 자동')
+test('Write .git/hooks/pre-commit', 'Write', { file_path: '.git/hooks/pre-commit' }, 'ask')
+test('Edit .git/config', 'Edit', { file_path: '.git/config' }, 'ask')
+test('Write 대문자 위장 .GIT/hooks/x', 'Write', { file_path: '.GIT/hooks/x' }, 'ask')
+test('Write 하위 폴더 경유 src/../.git/hooks/x', 'Write', { file_path: 'src/../.git/hooks/x' }, 'ask')
+test('Edit .claude/settings.json', 'Edit', { file_path: '.claude/settings.json' }, 'ask')
+test('Edit .claude/settings.local.json', 'Edit', { file_path: '.claude/settings.local.json' }, 'ask')
+test('Edit 대문자 .claude/Settings.JSON', 'Edit', { file_path: '.claude/Settings.JSON' }, 'ask')
+test('  └ PermissionRequest 는 사용자에게 (allow 안 함)', 'Edit', { file_path: '.claude/settings.json' }, 'null', 'PermissionRequest')
+test('Write .gitignore (git 내부 아님)', 'Write', { file_path: '.gitignore' }, 'allow')
+test('Write docs/git/notes.md', 'Write', { file_path: 'docs/git/notes.md' }, 'allow')
+test('Write src/settings.json (.claude 밖)', 'Write', { file_path: 'src/settings.json' }, 'allow')
+test('Write .claude/settings.json.bak', 'Write', { file_path: '.claude/settings.json.bak' }, 'allow')
+test('Write 빈 경로', 'Write', { file_path: '' }, 'allow')
+
+section('Monitor → 판정 안 함 (bash-guard 가 명령을 보고 판정)')
+test('Monitor (Pre)', 'Monitor', { command: 'rm -rf /' }, 'null')
+test('Monitor (PermissionRequest)', 'Monitor', { command: 'tail -f x.log' }, 'null', 'PermissionRequest')
+
+// 2026-11-06 (lfmall e4ab84a 반영) — ~/.claude/projects 전체가 아니라 이 프로젝트의 폴더만 자동. 하위 프로젝트 세션이
+// 상위 워크스페이스 메모리를 묻지 않고 고칠 수 있던 문제. 읽기는 그대로 자동
+section('메모리 폴더 — 이 프로젝트만 자동 / 다른 프로젝트·상위 폴더 메모리 수정은 확인')
+{
+  const os = require('os')
+  const HOME = os.homedir()
+  const PROJ = IS_WIN ? 'C:\\work\\shop\\app' : '/Users/nobody/work/shop/app'
+  const key = (p) => path.resolve(p).replace(/[^A-Za-z0-9]/g, '-')
+  const projects = path.join(HOME, '.claude', 'projects')
+  const mine = path.join(projects, key(PROJ))
+  const run = (tool, input, env, cwd = PROJ, ev = 'PreToolUse') => {
+    const stdin = JSON.stringify({ hook_event_name: ev, tool_name: tool, tool_input: input, cwd })
+    const r = spawnSync(process.execPath, [HOOK], { input: stdin, encoding: 'utf8', timeout: 5000, env: { ...process.env, CLAUDE_PROJECT_DIR: PROJ, ...env } })
+    try { return getDecision(JSON.parse((r.stdout || '').trim()), ev) } catch { return 'null' }
+  }
+  const at = (desc, actual, expected) => {
+    const pass = actual === expected
+    console.log(`  ${pass ? '✅' : '❌'} ${desc} → ${pass ? 'PASS' : `FAIL (기대: ${expected}, 실제: ${actual})`}`)
+    pass ? passed++ : failed++
+  }
+  // 정상
+  at('이 프로젝트 메모리 Write → 자동', run('Write', { file_path: path.join(mine, 'memory', 'a.md') }), 'allow')
+  at('이 프로젝트 메모리 Edit → 자동', run('Edit', { file_path: path.join(mine, 'memory', 'MEMORY.md'), old_string: 'a', new_string: 'b' }), 'allow')
+  at('이 프로젝트 메모리 Write (PermissionRequest)', run('Write', { file_path: path.join(mine, 'memory', 'a.md') }, {}, PROJ, 'PermissionRequest'), 'allow')
+  at('상위 폴더 메모리 Read → 자동 (읽기는 그대로)', run('Read', { file_path: path.join(projects, key(path.dirname(PROJ)), 'memory', 'MEMORY.md') }), 'allow')
+  at('다른 프로젝트 메모리 Grep → 자동', run('Grep', { pattern: 'x', path: path.join(projects, '-x', 'memory') }), 'allow')
+  // 악성·우회 — 다른 프로젝트 쓰기는 확인
+  at('상위 워크스페이스 메모리 Edit → 확인', run('Edit', { file_path: path.join(projects, key(path.dirname(PROJ)), 'memory', 'MEMORY.md'), old_string: 'a', new_string: 'b' }), 'ask')
+  at('상위 워크스페이스 메모리 Write (PermissionRequest → 사용자에게)', run('Write', { file_path: path.join(projects, key(path.dirname(PROJ)), 'memory', 'a.md') }, {}, PROJ, 'PermissionRequest'), 'null')
+  at('다른 프로젝트 메모리 Write → 확인', run('Write', { file_path: path.join(projects, '-x', 'memory', 'a.md') }), 'ask')
+  at('이름 앞부분만 같은 형제 폴더 <이름>-evil → 확인', run('Write', { file_path: path.join(projects, key(PROJ) + '-evil', 'memory', 'a.md') }), 'ask')
+  at('이 프로젝트 폴더에서 .. 로 다른 프로젝트로 → 확인', run('Write', { file_path: path.join(mine, '..', '-x', 'memory', 'a.md') }), 'ask')
+  at('projects 폴더 바로 아래 파일 → 확인', run('Write', { file_path: path.join(projects, 'a.md') }), 'ask')
+  at('이 프로젝트 폴더 자체를 파일로 덮기 → 확인', run('Write', { file_path: mine }), 'ask')
+  // 이상·경계
+  at('CLAUDE_PROJECT_DIR 없음 → cwd 로 판정 (cwd 프로젝트 메모리 자동)', run('Write', { file_path: path.join(projects, key(path.resolve(__dirname, '..', '..')), 'memory', 'a.md') }, { CLAUDE_PROJECT_DIR: '' }, path.resolve(__dirname, '..', '..')), 'allow')
+  at('CLAUDE_PROJECT_DIR·cwd 둘 다 없음 → 메모리 쓰기 확인', run('Write', { file_path: path.join(projects, '-x', 'memory', 'a.md') }, { CLAUDE_PROJECT_DIR: '' }, ''), 'ask')
+  const longProj = (IS_WIN ? 'C:\\' : '/') + 'a'.repeat(210)
+  at('200자 넘는 프로젝트 경로 → 이름을 못 맞춰 확인', run('Write', { file_path: path.join(projects, key(longProj), 'memory', 'a.md') }, { CLAUDE_PROJECT_DIR: longProj }, longProj), 'ask')
 }
 
 // 2026-10-16 계획서 12장 권한 정책 반영
@@ -155,10 +215,12 @@ section('래퍼 설정 폴더(CLAUDE_CONFIG_DIR) 링크를 거친 메모리·계
   const cfgReal = fs.mkdtempSync(path.join(HOME, '.aa-cfg-'))
   linkDir(realProjects, path.join(cfgLinked, 'projects')) // 윈도우는 junction (래퍼도 junction 으로 링크)
   fs.mkdirSync(path.join(cfgReal, 'projects'))
+  const PROJ = '/Users/nobody-project'
+  const KEY = path.resolve(PROJ).replace(/[^A-Za-z0-9]/g, '-')
   const runIn = (filePath, env) => {
-    const input = JSON.stringify({ hook_event_name: 'PreToolUse', tool_name: 'Write', tool_input: { file_path: filePath }, cwd: '/Users/nobody-project' })
+    const input = JSON.stringify({ hook_event_name: 'PreToolUse', tool_name: 'Write', tool_input: { file_path: filePath }, cwd: PROJ })
     try {
-      const out = execSync(`node "${HOOK}"`, { input, encoding: 'utf8', timeout: 5000, env: { ...process.env, ...env } }).trim()
+      const out = execSync(`node "${HOOK}"`, { input, encoding: 'utf8', timeout: 5000, env: { ...process.env, CLAUDE_PROJECT_DIR: PROJ, ...env } }).trim()
       return out ? JSON.parse(out).hookSpecificOutput.permissionDecision : 'null'
     } catch { return 'CRASH' }
   }
@@ -167,10 +229,12 @@ section('래퍼 설정 폴더(CLAUDE_CONFIG_DIR) 링크를 거친 메모리·계
     console.log(`  ${pass ? '✅' : '❌'} ${desc} → ${pass ? 'PASS' : `FAIL (기대: ${expected}, 실제: ${actual})`}`)
     pass ? passed++ : failed++
   }
-  check('설정 폴더 projects → ~/.claude/projects 링크 안 메모리 → 자동',
-    runIn(path.join(cfgLinked, 'projects', '-x', 'memory', 'a.md'), { CLAUDE_CONFIG_DIR: cfgLinked }), 'allow')
+  check('설정 폴더 projects → ~/.claude/projects 링크 안 이 프로젝트 메모리 → 자동',
+    runIn(path.join(cfgLinked, 'projects', KEY, 'memory', 'a.md'), { CLAUDE_CONFIG_DIR: cfgLinked }), 'allow')
+  check('설정 폴더 링크를 거쳐 다른 프로젝트 메모리 → 확인',
+    runIn(path.join(cfgLinked, 'projects', '-x', 'memory', 'a.md'), { CLAUDE_CONFIG_DIR: cfgLinked }), 'ask')
   check('설정 폴더 projects 가 링크 아닌 진짜 폴더 → 확인 (이름만 projects 인 폴더 위장)',
-    runIn(path.join(cfgReal, 'projects', '-x', 'memory', 'a.md'), { CLAUDE_CONFIG_DIR: cfgReal }), 'ask')
+    runIn(path.join(cfgReal, 'projects', KEY, 'memory', 'a.md'), { CLAUDE_CONFIG_DIR: cfgReal }), 'ask')
   check('CLAUDE_CONFIG_DIR=/ 로 위장 → /etc/hosts 는 여전히 확인',
     runIn('/etc/hosts', { CLAUDE_CONFIG_DIR: '/' }), 'ask')
   check('링크된 projects 를 ../ 로 빠져나가기 → 확인',
@@ -202,8 +266,10 @@ if (!IS_WIN) {
   at('MSYS /c/<repo>/x', '/' + ROOT[0].toLowerCase() + ROOT.slice(2).replace(/\\/g, '/') + '/x.txt', 'allow')
   at('공백·한글 하위 폴더 <repo>\\내 폴더\\가.txt', path.join(ROOT, '내 폴더', '가.txt'), 'allow')
   at('PoC: %TEMP% 아래', path.join(os.tmpdir(), 'poc', 'a.txt'), 'allow')
-  at('~\\.claude\\projects\\-x\\memory\\a.md (~\\ 표기)', '~\\.claude\\projects\\-x\\memory\\a.md', 'allow')
-  at('메모리 폴더 대소문자 섞임 (NTFS 대소문자 무시)', path.join(HOME, '.CLAUDE', 'Projects', '-x', 'memory', 'a.md'), 'allow')
+  const KEY = ROOT.replace(/[^A-Za-z0-9]/g, '-')
+  at('~\\.claude\\projects\\<이 레포>\\memory\\a.md (~\\ 표기)', `~\\.claude\\projects\\${KEY}\\memory\\a.md`, 'allow')
+  at('메모리 폴더 대소문자 섞임 (NTFS 대소문자 무시)', path.join(HOME, '.CLAUDE', 'Projects', KEY, 'memory', 'a.md'), 'allow')
+  at('다른 프로젝트 메모리 ~\\.claude\\projects\\-x → 확인', '~\\.claude\\projects\\-x\\memory\\a.md', 'ask')
   // 악성·우회
   at('접두만 같은 형제 폴더 <repo>-evil\\x', ROOT + '-evil\\x.txt', 'ask')
   at('<repo>\\..\\x 로 빠져나가기', ROOT + '\\..\\x.txt', 'ask')

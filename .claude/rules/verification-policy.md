@@ -79,7 +79,7 @@ Write 또는 Edit 도구로 다음을 수정한다:
 위 *실사용 필수 카테고리*에 해당하지 않는 스킬은 Claude 자체 content test(skill-tester가 SKILL.md 기반 실전 질문 답변 검증)만으로 APPROVED 전환이 가능하다.
 
 대표 예시:
-- 라이브러리 사용법 스킬 (dayjs, swiper 등) — content test로 충분
+- 라이브러리 사용법 스킬 (dayjs, lodash 등) — content test로 충분
 - API 패턴 스킬 (REST 설계 등) — content test로 충분
 - 개념·이론 정리 스킬 (DDD, 디자인 패턴 등) — content test로 충분
 

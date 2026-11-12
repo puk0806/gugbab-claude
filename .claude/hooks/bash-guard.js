@@ -1087,6 +1087,8 @@ function skipHeredocs(src, i, list, st) {
       if ((hd.strip ? line.replace(/^\t+/, '') : line) === hd.delim) break
       body += line + '\n'
     }
+    // 본문 보관 — 셸이 표준입력으로 읽으면(bash <<EOF · cat <<EOF | bash) 본문을 스크립트로 다시 분석한다 (2026-11-06)
+    if (st.heredocs) st.heredocs.push(body)
     if (!hd.quoted) {
       for (let k = 0; k < body.length; k++) {
         if (body[k] === '\\') { k++; continue }
@@ -1110,7 +1112,7 @@ function lexShell(src, st) {
     if (!cur) return
     const w = cur; cur = null
     if (heredocExpect) { pending.push({ delim: w.value, strip: heredocExpect.strip, quoted: w.quoted }); heredocExpect = null; return }
-    if (redirNext) { const r = redirNext; redirNext = false; tokens.push({ t: 'redir', w, out: r.out, dup: r.dup }); return }
+    if (redirNext) { const r = redirNext; redirNext = false; tokens.push({ t: 'redir', w, out: r.out, dup: r.dup, here: !!r.here }); return }
     tokens.push({ t: 'word', w })
   }
   const op = (v) => { end(); tokens.push({ t: 'op', v }) }
@@ -1165,7 +1167,7 @@ function lexShell(src, st) {
       else end()
       let j = i + 1
       if (ch === '<' && src[j] === '<') {
-        if (src[j + 1] === '<') { i = j + 2; redirNext = { out: false, dup: false }; continue } // here-string
+        if (src[j + 1] === '<') { i = j + 2; redirNext = { out: false, dup: false, here: true }; continue } // here-string
         j++
         let strip = false
         if (src[j] === '-') { strip = true; j++ }
@@ -1216,7 +1218,7 @@ function splitCommands(tokens) {
       continue
     }
     if (!cur) cur = { words: [], redirs: [], pipeline, inParen: parenDepth > 0 }
-    if (tk.t === 'redir') cur.redirs.push({ ...tk.w, out: !!tk.out, dup: !!tk.dup })
+    if (tk.t === 'redir') cur.redirs.push({ ...tk.w, out: !!tk.out, dup: !!tk.dup, here: !!tk.here })
     else cur.words.push(...expandWord(tk.w))
   }
   flush()
@@ -1421,12 +1423,16 @@ function collectInvocations(words, ctx, acc, meta) {
 
 function analyzeShellInto(src, depth, acc, inSub) {
   if (depth > MAX_DEPTH) { acc.unknown.push('중첩 과다'); return }
-  const st = { error: null, subs: [] }
+  const st = { error: null, subs: [], heredocs: [] }
   const tokens = lexShell(src, st)
   if (st.error) acc.unknown.push(st.error)
   for (const sub of st.subs) analyzeShellInto(sub, depth + 1, acc, true)
   const scope = acc.seq++
-  for (const c of splitCommands(tokens)) {
+  const cmds = splitCommands(tokens)
+  let heredocsDone = false
+  for (let ci = 0; ci < cmds.length; ci++) {
+    const c = cmds[ci]
+    const before = acc.invocations.length
     collectInvocations(c.words, { depth }, acc, {
       pipeline: `${scope}:${c.pipeline}`,
       subshell: !!(inSub || c.inParen || c.inPipe),
@@ -1434,6 +1440,26 @@ function analyzeShellInto(src, depth, acc, inSub) {
       argSubst: c.words.slice(1).some(x => x.subst),
       redirs: c.redirs,
     })
+    // 셸이 표준입력에서 스크립트를 읽으면 넘겨준 글자를 스크립트로 다시 분석 (2026-11-06 점검: `echo 'rm -rf ~' | bash`·
+    // `bash -s <<< '…'`·`cat <<EOF | bash` 가 위험 판정 없이 지나갔다). 내용을 모르는 입력(cat f | bash 등)은 여기서 판정하지 않고,
+    // PermissionRequest 자동 승인 대상에서 빠져(셸은 승인 목록에 없음) 사용자 확인으로 간다
+    const sh = acc.invocations.slice(before).find(x => !x.dynamicName && SHELL_NAMES.has(x.name) && readsStdin(x))
+    if (!sh) continue
+    const feed = (text) => analyzeShellInto(text, depth + 1, acc, true)
+    for (const r of c.redirs) if (r.here) feed(r.value)
+    if (!heredocsDone) { heredocsDone = true; for (const b of st.heredocs) feed(b) } // 본문이 어느 명령의 것인지 가르지 않는다(보수적)
+    const prev = ci > 0 && cmds[ci - 1].pipeline === c.pipeline ? cmds[ci - 1] : null
+    if (!prev) continue
+    for (const r of prev.redirs) if (r.here) feed(r.value) // cat <<< '…' | bash
+    const pw = prev.words
+    const pn = pw.length && !pw[0].dyn ? cmdNameOf(pw[0]) : ''
+    if (pn === 'echo') {
+      const rest = pw.slice(1)
+      while (rest.length && /^-[neE]+$/.test(rest[0].value)) rest.shift()
+      feed(rest.map(w => w.value).join(' ').replace(/\\n/g, '\n'))
+    } else if (pn === 'printf') {
+      for (const w of pw.slice(1)) feed(w.value.replace(/%[-+ #0-9.]*[a-zA-Z]/g, ' ').replace(/\\n/g, '\n'))
+    }
   }
 }
 
@@ -1777,9 +1803,39 @@ let _isSecretReadPath = null
 try { _isSecretReadPath = require('./protect-secrets.js').isSecretReadPath } catch { /* 미설치 → 검사 생략 */ }
 
 // 인자 중 개인키·인증 파일(또는 ~/.ssh 디렉토리)을 가리키는 것이 있으면 차단 — cat·cp·grep·scp 등 명령 무관
+// grep 류의 검색어 인자 — 경로가 아니다 (2026-11-06: `grep -c -- 'id_rsa' file` 이 비밀 파일 접근으로 오탐 차단).
+// -e/--regexp 값과, -e·-f 가 없을 때의 첫 위치 인자(단 / 나 ~ 가 든 것은 파일일 수 있어 계속 검사). -f/--file 값은 파일이라 계속 검사
+const GREP_LIKE = new Set(['grep', 'egrep', 'fgrep', 'zgrep', 'rg', 'ag', 'ack'])
+const GREP_VALUE_OPTS = new Set(['-m', '--max-count', '-A', '-B', '-C', '--context', '--after-context', '--before-context', '-d', '-D',
+  '-g', '--glob', '--iglob', '-t', '--type', '-T', '--type-not', '-j', '--threads', '-M', '--max-columns', '--color', '--colors', '--label', '--exclude', '--include', '--exclude-dir'])
+function grepPatternArgs(args) {
+  const skip = new Set()
+  let hasE = false, endOpts = false, firstPos = null
+  for (let k = 0; k < args.length; k++) {
+    const v = cleanValue(args[k].value)
+    if (!endOpts && v === '--') { endOpts = true; continue }
+    if (!endOpts && v.length > 1 && v.startsWith('-')) {
+      if (v === '-e' || v === '--regexp') { hasE = true; if (args[k + 1]) skip.add(args[k + 1]); k++; continue }
+      if (/^--regexp=/.test(v) || /^-e./.test(v)) { hasE = true; skip.add(args[k]); continue }
+      if (v === '-f' || v === '--file' || /^--file=/.test(v) || /^-f./.test(v)) { hasE = true; if (v === '-f' || v === '--file') k++; continue }
+      if (GREP_VALUE_OPTS.has(v)) k++
+      continue
+    }
+    if (firstPos === null) firstPos = args[k]
+  }
+  if (!hasE && firstPos && !/[/~]/.test(cleanValue(firstPos.value)) && !firstPos.dyn) skip.add(firstPos)
+  return skip
+}
+
 function classifySecretArgs(inv, ctx, add) {
   if (!_isSecretReadPath) return
-  for (const a of inv.args) {
+  let skip = null
+  if (GREP_LIKE.has(inv.name)) skip = grepPatternArgs(inv.args)
+  else if (inv.name === 'git' && inv.git && inv.git.sub === 'grep') skip = grepPatternArgs(inv.git.args)
+  // 입력 리다이렉트(cat < ~/.ssh/id_rsa)도 읽기 — here-string 은 글자라 제외
+  const inRedirs = (inv.redirs || []).filter(r => !r.out && !r.here && !r.dup)
+  for (const a of [...inv.args, ...inRedirs]) {
+    if (skip && skip.has(a)) continue
     const raw = cleanValue(a.value)
     if (a.dyn && !/^\$(?:\{HOME\}|HOME)(?![A-Za-z0-9_])/.test(raw)
       && !(IS_WIN && /^\$\{?(?:USERPROFILE|APPDATA|LOCALAPPDATA)(?![A-Za-z0-9_])/.test(raw))) continue
@@ -1903,6 +1959,188 @@ function classifyDockerKill(nm, vals, add) {
 // 명령 전체 위험 분류 — PreToolUse·PermissionRequest 공용 (판정 일관성)
 // 반환: { level: 'deny'|'ask'|'unknown'|null, reason }
 const _classifyCache = new Map()
+// ── 보호 파일(SKILL.md·verification.md·memory/) Bash 쓰기 — 명령 단위 판정 (2026-11-06 점검) ──
+// DENY_PATTERNS 는 리다이렉트·sed -i·tee 만 봐서 `cp x SKILL.md`·`truncate -s0`·`git checkout HEAD~3 -- SKILL.md`·`patch`·`ex`·
+// `node -e writeFileSync(…)`·`rm -rf memory`·글롭 `SKILL.m?` 가 지나갔다. 쓰기 대상 인자를 받는 명령의 대상을 보고 차단한다.
+// memory 는 프로젝트 루트의 memory/ 와 Claude 설정 폴더의 projects/<프로젝트>/memory 만 (src/memory-cache 같은 이름은 무관)
+const PROTECTED_NAMES = ['skill.md', 'verification.md']
+const PROTECTED_RM = new Set(['rm', 'unlink', 'rmdir', 'shred', 'srm', 'trash'])
+const EDITOR_CMDS = new Set(['ex', 'vi', 'vim', 'nvim', 'gvim', 'view', 'ed', 'red', 'nano', 'pico', 'emacs', 'joe', 'mcedit', 'patch'])
+const EDITOR_VALUE_OPTS = new Set(['-c', '-S', '--cmd', '-u', '-i', '-p', '-r', '-o', '-D', '-F', '-B', '-V', '--eval', '-l', '--load'])
+const INLINE_CODE_FLAGS = /^(?:-e|-E|-c|-p|-r|--eval|--print|--command|--exec)$/
+const PROTECTED_CODE_NAME_RE = /skill\.md|verification\.md|(?:^|[\s'"`/(,=])memory(?:[\s'"`/),]|$)/i
+const WRITE_CODE_RE = /write|append|unlink|\brm|rmdir|rename|copy|truncate|remove|delete|move|shutil|symlink|chmod|open\s*\([^)]*['"][^'"]*[wax+][^'"]*['"]|createWriteStream|>\s*['"]?\S*(?:skill|verification|memory)/i
+
+function globSegRe(seg) {
+  let re = ''
+  for (let i = 0; i < seg.length; i++) {
+    const ch = seg[i]
+    if (ch === '*') re += '.*'
+    else if (ch === '?') re += '.'
+    else if (ch === '[') {
+      const j = seg.indexOf(']', i + 1)
+      if (j < 0) { re += '\\['; continue }
+      re += '[' + seg.slice(i + 1, j).replace(/^!/, '^').replace(/\\/g, '\\\\') + ']'
+      i = j
+    } else re += ch.replace(/[.+^${}()|\\]/g, '\\$&')
+  }
+  try { return new RegExp(`^${re}$`, 'i') } catch { return null }
+}
+function segMatches(seg, name) {
+  if (!seg) return false
+  if (seg.toLowerCase() === name) return true
+  if (!/[*?[]/.test(seg)) return false
+  // `*.md`·`*` 같은 넓은 글롭은 이름 앞 3글자가 글자 그대로 들어 있을 때만 보호 이름으로 본다(실제 항목은 protectedLabel 이 폴더를 읽어 판정)
+  if (!seg.replace(/\[[^\]]*\]|[*?]/g, '').toLowerCase().includes(name.slice(0, 3))) return false
+  const re = globSegRe(seg)
+  return !!re && re.test(name)
+}
+
+// 단어 → 절대경로 (글롭 글자는 그대로 둔다). 모르는 변수면 null
+function protectedAbsOf(w, ctx) {
+  let v = cleanValue(w.value)
+  if (w.dyn) {
+    const m = /^\$(?:\{HOME\}|HOME)(?=\/|$)/.exec(v)
+    if (!m || !HOME_DIR) return null
+    v = HOME_DIR + v.slice(m[0].length)
+  } else if (w.tilde && HOME_DIR && (v === '~' || v.startsWith('~/'))) v = HOME_DIR + v.slice(1)
+  if (IS_WIN) v = W.msysToWin(W.toSlash(v, true), true)
+  if (!path.isAbsolute(v)) {
+    const base = ctx.vcwd || ctx.startCwd
+    if (!base) return null
+    v = path.join(base, v)
+  }
+  return path.normalize(v)
+}
+
+// 보호 대상이면 사람이 읽을 이름, 아니면 null
+function protectedLabel(abs, ctx) {
+  if (!abs) return null
+  const check = (p) => {
+    const segs = p.split(/[\\/]+/).filter(Boolean)
+    const last = segs[segs.length - 1]
+    for (const n of PROTECTED_NAMES) if (segMatches(last, n)) return n === 'skill.md' ? 'SKILL.md' : 'verification.md'
+    if (ctx.root) {
+      const rel = path.relative(ctx.root, p)
+      if (rel && !rel.startsWith('..') && !path.isAbsolute(rel) && segMatches(rel.split(/[\\/]+/)[0], 'memory')) return 'memory/'
+    }
+    for (let i = 2; i < segs.length; i++) {
+      if (segMatches(segs[i], 'memory') && segMatches(segs[i - 2], 'projects')) return 'memory/'
+    }
+    return null
+  }
+  // 마지막 조각만 글롭이고 폴더가 있으면 실제 항목으로 판정 — `rm docs/*.md` 는 통과, `rm skills/x/*` 는 그 안의 SKILL.md 때문에 차단
+  const dir = path.dirname(abs)
+  const lastSeg = path.basename(abs)
+  if (/[*?[]/.test(lastSeg) && !/[*?[]/.test(dir)) {
+    let entries = null
+    try { entries = fs.readdirSync(dir) } catch { /* 폴더 없음 — 아래 이름 판정 */ }
+    if (entries) {
+      const re = globSegRe(lastSeg)
+      for (const e of entries) {
+        if (!re || !re.test(e)) continue
+        const h = check(path.join(dir, e))
+        if (h) return h
+      }
+      return check(path.join(dir, '\0'))
+    }
+  }
+  const hit = check(abs)
+  if (hit) return hit
+  const real = /[*?[]/.test(abs) ? null : realLocation(abs)
+  return real && real !== abs ? check(real) : null
+}
+
+function nonOptArgs(args, valueOpts) {
+  const out = []
+  let end = false
+  for (let k = 0; k < args.length; k++) {
+    const v = cleanValue(args[k].value)
+    if (!end && v === '--') { end = true; continue }
+    if (!end && v.length > 1 && (v.startsWith('-') || v.startsWith('+'))) {
+      if (valueOpts && valueOpts.has(v)) k++
+      continue
+    }
+    out.push(args[k])
+  }
+  return out
+}
+
+function protectedWriteTargets(inv) {
+  const nm = inv.name
+  const targets = [...writeLocationTargets(inv)]
+  if (nm === 'ln') targets.push(...harnessWriteTargets(inv).slice(-1))
+  if (PROTECTED_RM.has(nm)) targets.push(...nonOptArgs(inv.args))
+  if (EDITOR_CMDS.has(nm)) {
+    targets.push(...nonOptArgs(inv.args, EDITOR_VALUE_OPTS))
+    for (let k = 0; k < inv.args.length - 1; k++) if (cleanValue(inv.args[k].value) === '-o') targets.push(inv.args[k + 1]) // patch -o
+  }
+  if (nm === 'dd') for (const a of inv.args) { const v = cleanValue(a.value); if (v.startsWith('of=')) targets.push({ ...a, value: v.slice(3), tilde: v.slice(3).startsWith('~') }) }
+  if (nm === 'git' && inv.git && ['checkout', 'restore', 'rm', 'mv'].includes(inv.git.sub)) {
+    targets.push(...nonOptArgs(inv.git.args, new Set(['-s', '--source', '-b', '-B', '--orphan', '--conflict'])))
+  }
+  return targets
+}
+
+function classifyProtectedWrite(inv, ctx, add) {
+  const nm = inv.name
+  const deny = (label) => add('deny', `${label}은(는) Bash 로 쓰거나 지울 수 없습니다(${nm || '리다이렉트'}). Write/Edit 도구를 사용하세요 — Write/Edit 에 걸린 검증·동기화 훅을 거쳐야 합니다. (읽기 전용 cat·grep·diff 는 허용)`)
+  for (const t of protectedWriteTargets(inv)) {
+    const label = protectedLabel(protectedAbsOf(t, ctx), ctx)
+    if (label) { deny(label); return }
+  }
+  // cp /tmp/SKILL.md .claude/skills/x/ — 목적지가 폴더면 원본 이름으로 생긴다
+  if (HARNESS_WRITE_DEST.has(nm)) {
+    const pos = nonOptArgs(inv.args, new Set(['-t', '-m', '--mode', '-o', '-g']))
+    if (pos.length >= 2) {
+      const destAbs = protectedAbsOf(pos[pos.length - 1], ctx)
+      let isDir = /[\\/]$/.test(cleanValue(pos[pos.length - 1].value))
+      if (!isDir && destAbs) { try { isDir = fs.statSync(destAbs).isDirectory() } catch { /* 없음 */ } }
+      if (destAbs && isDir && !isUnderTempDir(destAbs)) {
+        for (const s of pos.slice(0, -1)) {
+          const sAbs = protectedAbsOf(s, ctx)
+          const label = sAbs && protectedLabel(path.join(destAbs, path.basename(sAbs)), ctx)
+          if (label) { deny(label); return }
+        }
+      }
+    }
+  }
+  // node -e "fs.writeFileSync('SKILL.md')" · python3 -c "open('memory/x','w')"
+  if (isInterpreterName(nm) && !SHELL_NAMES.has(nm)) {
+    for (let k = 0; k < inv.args.length - 1; k++) {
+      if (!INLINE_CODE_FLAGS.test(cleanValue(inv.args[k].value))) continue
+      const code = cleanValue(inv.args[k + 1].value)
+      if (PROTECTED_CODE_NAME_RE.test(code) && WRITE_CODE_RE.test(code)) { deny(/memory/i.test(code) && !/skill|verification/i.test(code) ? 'memory/' : 'SKILL.md·verification.md'); return }
+    }
+  }
+}
+
+// find -delete / find -exec rm … — rm 과 같은 기준으로 시작 경로를 본다. 조건(-name 등)이 있으면 프로젝트·현재 폴더 자체는 허용
+const FIND_FILTER_RE = /^-(?:i?name|i?path|i?wholename|i?regex|type|mtime|mmin|atime|amin|ctime|cmin|newer\w*|size|empty|user|group|perm|links|inum|samefile|maxdepth|mindepth|prune)$/
+function classifyFindDelete(inv, ctx, add) {
+  const vals = inv.args.map(a => cleanValue(a.value))
+  let deletes = vals.includes('-delete')
+  for (let k = 0; k < vals.length; k++) {
+    if (/^-(?:exec|execdir|ok|okdir)$/.test(vals[k]) && PROTECTED_RM.has((vals[k + 1] || '').replace(/^.*\//, ''))) deletes = true
+  }
+  if (!deletes) return
+  const roots = []
+  let k = 0
+  while (k < inv.args.length && /^-[HLP]$|^-O\d$/.test(vals[k])) k++
+  if (vals[k] === '-D') k += 2
+  for (; k < inv.args.length; k++) {
+    if (/^[-(!)]/.test(vals[k]) || vals[k] === ',') break
+    roots.push(inv.args[k])
+  }
+  if (!roots.length) roots.push({ ...newWord(), value: '.' })
+  const filtered = vals.some(v => FIND_FILTER_RE.test(v))
+  for (const w of roots) {
+    const r = resolveRmTarget(w, ctx.vcwd)
+    if (filtered && r && !r.glob && ((ctx.root && sameDir(r.abs, ctx.root)) || (ctx.startCwd && sameDir(r.abs, ctx.startCwd)))) continue
+    classifyRm({ args: [{ ...newWord(), value: '-r' }, w] }, ctx, (level, reason) => add(level, `find 삭제: ${reason}`))
+  }
+}
+
 function classifyShell(cmd, opts = {}) {
   const cwdIn = opts.cwd || process.env.CLAUDE_PROJECT_DIR || process.cwd()
   const harness = harnessRoots()
@@ -1947,6 +2185,8 @@ function classifyShell(cmd, opts = {}) {
     classifyHarnessWrite(inv, ctx, add)
     classifySourceWrite(inv, ctx, add)
     classifyWriteLocation(inv, ctx, add)
+    classifyProtectedWrite(inv, ctx, add)
+    if (nm === 'find') classifyFindDelete(inv, ctx, add)
     if (WIN_SHELLS.has(nm)) { add('ask', `${nm} 로 넘긴 명령은 판정할 수 없습니다. 사용자 확인이 필요합니다.`); continue }
     if (nm === 'git') { classifyGit(inv.git, add, ctx); continue }
     if (nm === 'gh') { classifyGh(vals, add); continue }
@@ -2116,6 +2356,8 @@ const hasOpt = (vals, opts) => vals.some(v => opts.some(o => v === o || v.starts
 const noArgs = (vals) => !vals.some(v => !v.startsWith('-'))
 const GIT_READ_SUB = new Set(['status', 'log', 'diff', 'show', 'rev-parse', 'ls-files', 'ls-tree', 'cat-file', 'describe',
   'blame', 'shortlog', 'grep', 'branch', 'tag', 'remote', 'config', 'stash', 'worktree', 'reflog', 'rev-list', 'merge-base', 'name-rev', 'whatchanged', 'count-objects'])
+const SED_ADDR = '(?:\\d+|\\$|/[^/\\\\]*/)'
+const SED_PRINT_RE = new RegExp(`^\\s*(?:${SED_ADDR}(?:\\s*,\\s*${SED_ADDR})?)?\\s*[pq=]\\s*$`)
 const READ_ONLY_RESOLVED = {
   ls: () => true, pwd: () => true, stat: () => true, realpath: () => true, readlink: () => true, basename: () => true,
   dirname: () => true, printenv: () => true, whoami: () => true, true: () => true, test: () => true, '[': () => true,
@@ -2133,6 +2375,17 @@ const READ_ONLY_RESOLVED = {
   find: (v) => !v.some(x => /^-(?:exec|execdir|ok|okdir|delete|fprint|fprint0|fprintf|fls)$/.test(x)),
   date: (v) => !hasOpt(v, ['-s', '--set']) && !v.some(x => !x.startsWith('-') && !x.startsWith('+')),
   hostname: (v) => noArgs(v),
+  // 2026-11-09 — 출력만 하는 sed(`sed -n 10,20p f`·`sed -n '/re/p' f`·`sed 5q f`)만. 확인 창 재생에서 약 900건이 이것 때문에 묻게 됐다.
+  // -i·-f·-e·w·e·r 명령·{…} 묶음은 SED_PRINT_RE 에 안 맞아 그대로 확인
+  sed: (v) => {
+    const pos = []
+    for (const x of v) {
+      if (/^-[nErs]+$/.test(x) || x === '--quiet' || x === '--silent' || x === '--regexp-extended') continue
+      if (x.startsWith('-')) return false
+      pos[pos.length] = x
+    }
+    return pos.length >= 1 && pos[0].split(';').every(c => SED_PRINT_RE.test(c))
+  },
   git: (v, inv) => {
     const g = inv.git
     if (!g || !g.sub || g.subDyn || Object.keys(g.aliases || {}).length || !GIT_READ_SUB.has(g.sub)) return false
@@ -2149,16 +2402,92 @@ const READ_ONLY_RESOLVED = {
     return true
   },
 }
+// 2026-11-10 사용자 결정 1("읽는 건 굳이 allow 요청 안 해도 돼") — 읽기 전용으로 확정되는 형태를 더 넓힌다(쓰기·삭제·실행은 그대로 확인).
+// ① 출력·조회만 하는 명령 추가 ② 반복문 틀(`for x in …`·`while read x`) ③ 값을 몰라도 읽기만 하는 명령의 변수 인자
+// ④ `for` 목록이 글자 그대로면 반복 변수 자리에 값을 하나씩 넣어 판정(git·sed 처럼 옵션에 따라 쓰기가 되는 명령도 정확히 본다)
+const positionals = (v) => v.filter(x => !x.startsWith('-'))
+Object.assign(READ_ONLY_RESOLVED, {
+  uniq: (v) => positionals(v).length <= 1, // 두 번째 위치 인자는 출력 파일
+  ps: () => true, pgrep: () => true, lsof: () => true, id: () => true, uname: () => true, sw_vers: () => true,
+  nl: () => true, comm: () => true, paste: () => true, column: () => true, seq: () => true, tac: () => true, rev: () => true,
+  cksum: () => true, md5: () => true, md5sum: () => true, shasum: () => true, sha1sum: () => true, sha256sum: () => true,
+  ':': () => true, break: () => true, continue: () => true,
+  read: (v) => v.every(x => /^-[rsae]+$/.test(x) || /^[A-Za-z_][A-Za-z0-9_]*$/.test(x)), // 표준입력 한 줄을 변수에 — -u·-p 등은 확인
+  for: (v) => v.length >= 1 && /^[A-Za-z_][A-Za-z0-9_]*$/.test(v[0]) && (v.length === 1 || v[1] === 'in'),
+})
+// 인자 값이 무엇이든(옵션으로 바뀌어도) 읽기·출력만 하는 명령 — 모르는 변수·치환 인자를 허용한다(치환 속 명령은 따로 판정)
+const DYN_ARG_READ_SAFE = new Set(['cat', 'head', 'tail', 'wc', 'ls', 'stat', 'realpath', 'readlink', 'basename', 'dirname',
+  'grep', 'egrep', 'fgrep', 'cut', 'tr', 'du', 'df', 'echo', 'test', '[', 'cd', 'pushd', 'for', 'nl', 'tac', 'rev', 'seq',
+  'shasum', 'md5', 'md5sum', 'sha1sum', 'sha256sum', 'cksum', ':'])
+const FIXED_VAR_RE = /^\$(?:\{(?:HOME|PWD)\}|(?:HOME|PWD)(?![A-Za-z0-9_]))/
+const LOOP_VALUE_RE = /^[A-Za-z0-9_.\/:@%+,=-]*$/ // 공백·glob·따옴표 없는 값만 — 단어 나누기가 생기지 않는다
+const VAR_REF_RE = /\$(?:\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*))/g
+// 반복 변수 → 글자 그대로의 값 목록. 같은 이름을 다른 곳에서 바꾸면(대입·read·declare 등) 쓰지 않는다
+function loopValuesOf(cmd, acc) {
+  const vals = new Map(), tainted = new Set()
+  for (const inv of acc.invocations) {
+    const a = inv.args
+    if (inv.name === 'for' && a.length >= 2 && a[1].value === 'in') {
+      const name = a[0].value
+      const words = a.slice(2)
+      if (vals.has(name) || words.some(w => w.dyn || w.subst || w.tilde || !LOOP_VALUE_RE.test(cleanValue(w.value)))) { tainted.add(name); continue }
+      vals.set(name, words.map(w => cleanValue(w.value)))
+    } else if (['read', 'mapfile', 'readarray', 'declare', 'typeset', 'local', 'let', 'export', 'printf', 'getopts', 'unset', 'readonly'].includes(inv.name)) {
+      for (const w of a) tainted.add(String(w.value).replace(/[+]?=.*$/, ''))
+    }
+  }
+  for (const name of vals.keys()) {
+    if (new RegExp(`(?:^|[^A-Za-z0-9_$])${name}\\+?=`).test(cmd)) tainted.add(name) // 본문 안 재대입
+  }
+  for (const t of tainted) vals.delete(t)
+  return vals
+}
+// 반복 변수만 쓴 인자는 값을 하나씩 넣은 인자 목록들로 펼친다. 펼칠 수 없으면 null
+function expandLoopArgs(inv, loopVals) {
+  let combos = [[]]
+  for (const a of inv.args) {
+    const v = cleanValue(a.value)
+    if (!a.dyn || FIXED_VAR_RE.test(a.value)) { combos = combos.map(c => [...c, v]); continue }
+    if (a.subst || /`|\$\(/.test(v)) return null
+    const names = [...v.matchAll(VAR_REF_RE)].map(m => m[1] || m[2])
+    if (!names.length || names.some(n => !loopVals.has(n))) return null
+    if (v.replace(VAR_REF_RE, '').includes('$')) return null // $1·$?·${x:-…} 같은 다른 확장이 섞임
+    if (!a.quoted && v.replace(VAR_REF_RE, '').match(/[*?[\]]/)) return null
+    const next = []
+    for (const c of combos) {
+      let partial = [v]
+      for (const n of new Set(names)) {
+        partial = partial.flatMap(p => loopVals.get(n).map(val => p.split(`\${${n}}`).join(val).replace(new RegExp(`\\$${n}(?![A-Za-z0-9_])`, 'g'), val)))
+      }
+      for (const p of partial) next.push([...c, p])
+      if (next.length > 64) return null
+    }
+    combos = next
+  }
+  return combos
+}
 function isReadOnlyResolved(cmd) {
   if (typeof cmd !== 'string') return false
   const acc = analyzeShell(cmd)
   if (acc.unknown.length) return false
+  let loopVals = null
   for (const inv of acc.invocations) {
     if (inv.dynamicName || inv.sudo) return false
     if ((inv.redirs || []).some(r => r.out && !r.dup && cleanValue(r.value) !== '/dev/null')) return false // 쓰기 리다이렉트
-    if (inv.args.some(a => a.dyn && !/^\$(?:\{(?:HOME|PWD)\}|(?:HOME|PWD)(?![A-Za-z0-9_]))/.test(a.value))) return false // 아직 모르는 변수
     const ok = Object.prototype.hasOwnProperty.call(READ_ONLY_RESOLVED, inv.name) && READ_ONLY_RESOLVED[inv.name]
-    if (!ok || !ok(inv.args.map(a => cleanValue(a.value)), inv)) return false
+    if (!ok) return false
+    const hasDyn = inv.args.some(a => a.dyn && !FIXED_VAR_RE.test(a.value))
+    if (!hasDyn) { if (!ok(inv.args.map(a => cleanValue(a.value)), inv)) return false; continue }
+    if (DYN_ARG_READ_SAFE.has(inv.name)) {
+      // 값을 몰라도 읽기만 — 다만 글자 그대로인 인자만으로도 판정을 통과해야 한다
+      if (!ok(inv.args.filter(a => !a.dyn || FIXED_VAR_RE.test(a.value)).map(a => cleanValue(a.value)), inv)) return false
+      continue
+    }
+    if (!loopVals) loopVals = loopValuesOf(cmd, acc)
+    const combos = expandLoopArgs(inv, loopVals)
+    // 값을 넣은 명령을 처음부터 다시 해석해 판정한다(git 하위 명령처럼 인자 해석이 값에 달린 경우도 정확히)
+    const q = (s) => `'${String(s).replace(/'/g, `'\\''`)}'`
+    if (!combos || !combos.every(c => isReadOnlyResolved([inv.name, ...c].map(q).join(' ')))) return false
   }
   return true
 }
@@ -2167,12 +2496,24 @@ function denyResult(reason) {
   return { hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny', permissionDecisionReason: reason } }
 }
 
-function handlePreToolUse(toolName, toolInput, cwd) {
-  if (toolName !== 'Bash') return null
+// 셸 명령을 받는 도구 — Monitor 도 command 로 셸을 실행한다(공식 hooks 문서 "Match Monitor commands": 매처 `*` 훅은
+// Monitor 호출의 입력을 그대로 받고 allow 도 적용된다). command 가 없는 Monitor(WebSocket 감시 등)는 판정하지 않는다 (2026-11-06)
+const SHELL_TOOLS = new Set(['Bash', 'Monitor'])
 
-  const rawCmd = toolInput && toolInput.command
-  if (rawCmd !== undefined && rawCmd !== null && typeof rawCmd !== 'string') return null
-  const cmd = (rawCmd || '').trim()
+function askResult(reason) {
+  return { hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'ask', permissionDecisionReason: `bash-guard: ${reason}` } }
+}
+
+function handlePreToolUse(toolName, toolInput, cwd) {
+  if (!SHELL_TOOLS.has(toolName)) return null
+
+  const rawCmd = toolInput && typeof toolInput === 'object' ? toolInput.command : undefined
+  if (typeof rawCmd !== 'string') {
+    if (toolName === 'Monitor' && (rawCmd === undefined || rawCmd === null)) return null
+    // 입력이 깨졌다 — 판정할 수 없으니 허용하지 않고 사용자 확인 (fail-closed, 2026-11-06)
+    return askResult('명령 입력(tool_input.command)이 없거나 문자열이 아니라 판정할 수 없습니다. 사용자 확인이 필요합니다.')
+  }
+  const cmd = rawCmd.trim()
 
   for (const { pattern, reason } of DENY_PATTERNS) {
     if (pattern.test(cmd)) return denyResult(reason)
@@ -2229,26 +2570,104 @@ function handlePreToolUse(toolName, toolInput, cwd) {
   return null
 }
 
+// ── PermissionRequest 자동 승인 범주 (2026-11-06 좁힘) ──
+// 예전엔 분류기가 위험으로 못 잡은 명령을 **전부** 확인 창에서 승인해 `echo 'rm -rf ~' | bash`·`find ~ -delete`·`node -e …`·
+// `python3 -c …`·`osascript`·`nc host < .env`·`scp`·`security … -w`·`crontab -r`·`make deploy`·`./x.sh` 가 묻지 않고 실행됐다.
+// 이제 자동 승인은 ① 읽기 전용으로 확정된 명령(READ_ONLY_RESOLVED) ② PreToolUse 가 이미 자동 허용하던 안전 패턴
+// ③ 사용자가 설정 allow 로 정해 둔 개발 명령(node 스크립트·npm/pnpm 스크립트·git·파일 조작 — 인라인 코드·원격 실행 형태 제외)만.
+// 그 밖(셸·인터프리터 인라인 코드·받은 스크립트·네트워크·시스템 도구·모르는 프로그램)은 결정 없이 사용자에게 묻는다.
+const PKG_SCRIPT_SUBS = new Set(['test', 't', 'tst', 'run', 'run-script', 'start', 'build', 'lint', 'typecheck', 'check', 'format', 'dev',
+  'ls', 'list', 'outdated', 'view', 'info', 'why', 'help', '-v', '--version', '-h', '--help'])
+const PKG_VALUE_OPTS = new Set(['--filter', '-F', '-C', '--dir', '--prefix', '-w', '--workspace', '--cwd'])
+const NODE_INLINE_RE = /^(?:-e|-p|-pe|-i|--eval|--print|--interactive|-)$|^--(?:eval|print)=/
+const GIT_EXEC_SUBS = new Set(['submodule', 'bisect', 'filter-branch', 'filter-repo', 'difftool', 'mergetool', 'send-email', 'daemon',
+  'instaweb', 'credential', 'hook', 'maintenance', 'p4', 'svn', 'cvsimport', 'cvsserver', 'archimport', 'quiltimport', 'web--browse'])
+const GIT_EXEC_ARG_RE = /^(?:--(?:upload-pack|receive-pack|exec|ext-diff|textconv|config-env)|-x)(?:=|$)/
+const devTrue = () => true
+const PERM_DEV_OK = {
+  node: (v) => {
+    if (v.some(x => NODE_INLINE_RE.test(x))) return false
+    if (v.includes('--test') || v.includes('--version') || v.includes('-v')) return true
+    return v.some(x => !x.startsWith('-')) // 스크립트 파일을 실행 (없으면 REPL·표준입력)
+  },
+  npm: (v) => pkgSub(v), pnpm: (v) => pkgSub(v), yarn: (v) => pkgSub(v), bun: (v) => pkgSub(v),
+  git: (v, inv) => {
+    const g = inv.git
+    if (!g || !g.sub || g.subDyn || Object.keys(g.aliases || {}).length) return false
+    const pre = v.slice(0, v.length - g.args.length - 1)
+    if (pre.some(x => /^(?:-c|--config-env|--exec-path)(?:=|$)/.test(x))) return false
+    if (GIT_EXEC_SUBS.has(g.sub)) return false
+    const a = g.args.map(x => cleanValue(x.value))
+    if (a.some(x => GIT_EXEC_ARG_RE.test(x))) return false
+    if (['fetch', 'pull', 'clone', 'ls-remote'].includes(g.sub) && a.includes('-u')) return false
+    if (g.sub === 'config') return READ_ONLY_RESOLVED.git(v, inv) // 설정 쓰기(core.hooksPath·sshCommand 등)는 다음 실행을 바꾼다
+    return true // push·commit·푸시된 커밋 reset 은 classifyShell 이 이미 확인·차단으로 걸렀다
+  },
+  mkdir: devTrue, touch: devTrue, cp: devTrue, mv: devTrue, rm: devTrue, // 쓰기 위치·보호 파일·rm 대상은 classifyShell 이 판정
+  sleep: devTrue, false: devTrue, wait: devTrue,
+  // 2026-10-06 사용자 결정 — 조회·일반 요청은 자동, 쓰기·업로드·정리·강제 종료는 classifyShell 이 확인·차단으로 거른다
+  gh: devTrue, curl: devTrue, wget: devTrue, docker: devTrue, podman: devTrue, kill: devTrue, killall: devTrue, pkill: devTrue,
+  python: (v) => v[0] === '-m' && v[1] === 'json.tool', python3: (v) => v[0] === '-m' && v[1] === 'json.tool', // 받은 JSON 보기만
+  tsc: devTrue, eslint: devTrue, prettier: devTrue, biome: devTrue, vitest: devTrue, jest: devTrue, mocha: devTrue,
+  cargo: (v) => ['build', 'check', 'test', 'fmt', 'clippy', 'doc', 'tree', 'metadata', 'run', 'bench', '--version'].includes(v.find(x => !x.startsWith('-'))),
+}
+function pkgSub(v) {
+  for (let k = 0; k < v.length; k++) {
+    if (PKG_VALUE_OPTS.has(v[k])) { k++; continue }
+    if (v[k].startsWith('-') && !PKG_SCRIPT_SUBS.has(v[k])) continue
+    return PKG_SCRIPT_SUBS.has(v[k])
+  }
+  return false // 인자 없음(yarn = install)
+}
+function isDevResolved(cmd) {
+  const acc = analyzeShell(cmd)
+  if (acc.unknown.length || !acc.invocations.length) return false
+  const fixedVar = /^\$(?:\{(?:HOME|PWD)\}|(?:HOME|PWD)(?![A-Za-z0-9_]))/
+  for (const inv of acc.invocations) {
+    if (inv.dynamicName || inv.sudo) return false
+    if (inv.name === 'for' || inv.name === 'read') return false // 반복문은 본문이 읽기뿐일 때만(isReadOnlyResolved) — 개발 명령 반복은 넓히지 않는다 (2026-11-10)
+    if ((inv.redirs || []).some(r => r.out && !r.dup && r.dyn)) return false // 쓰기 대상이 변수 — 위치 판정 불가
+    // 모르는 변수·치환 인자는 옵션·대상을 바꿀 수 있어 거른다 — echo 는 인자가 무엇이든 출력만 (치환 속 명령은 따로 검사됨)
+    if (inv.name !== 'echo' && inv.args.some(a => a.dyn && !fixedVar.test(a.value))) return false
+    const vals = inv.args.map(a => cleanValue(a.value))
+    const has = (t) => Object.prototype.hasOwnProperty.call(t, inv.name) && t[inv.name]
+    const ro = has(READ_ONLY_RESOLVED), dev = has(PERM_DEV_OK)
+    if (!(ro && ro(vals, inv)) && !(dev && dev(vals, inv))) return false
+  }
+  return true
+}
+function isPermApprovable(cmd, cwd) {
+  if (isReadOnlyResolved(cmd) || isDevResolved(cmd)) return true
+  const allowedDirs = getAllowedDirs(cwd)
+  return isCdGitSafe(cmd, allowedDirs) || isHeredocSafe(cmd, allowedDirs) || isBraceExpansionSafe(cmd, allowedDirs)
+    || isCompoundSafe(cmd, allowedDirs) || isShellScriptSafe(cmd, allowedDirs)
+}
+
 // PermissionRequest — PreToolUse 와 같은 분류기를 재사용한다 (판정 일관성).
 // 위험(deny/ask)·정적 판정 불가(unknown)는 자동 승인하지 않고 사용자 확인으로 넘긴다.
-// 그 외 읽기 전용·일반 개발 명령은 프롬프트 마찰 제거 의도대로 자동 승인 유지.
+// 위험 판정이 없어도 위 자동 승인 범주(isPermApprovable)에 들 때만 승인 — 나머지는 사용자 확인 (2026-11-06)
 function handlePermissionRequest(toolName, toolInput, cwd) {
-  if (toolName !== 'Bash') return null
+  if (!SHELL_TOOLS.has(toolName)) return null
 
-  const rawCmd = toolInput && toolInput.command
-  if (rawCmd !== undefined && rawCmd !== null && typeof rawCmd !== 'string') return null
-  if (rawCmd === null) return null
-  const cmd = (rawCmd || '').trim()
+  const rawCmd = toolInput && typeof toolInput === 'object' ? toolInput.command : undefined
+  if (typeof rawCmd !== 'string') return null // 없거나 깨진 입력 — 결정 없이 사용자 확인
+  const cmd = rawCmd.trim()
+  if (!cmd) return { hookSpecificOutput: { hookEventName: 'PermissionRequest', decision: { behavior: 'allow' } } } // 빈 명령 — 아무것도 실행하지 않음
 
   if (DENY_PATTERNS.some(({ pattern }) => pattern.test(cmd))) return null
   // 같은 명령 안의 고정값 변수를 풀어 본 명령이 위험하면 자동 승인하지 않는다.
   // 변수 때문에 판정하지 못하던 명령은 풀어 보니 **읽기 전용일 때만** 자동 승인 (쓰기·삭제·실행은 사용자 확인 — 2026-10-21)
   const lit = resolveLiteralVars(cmd)
+  let ok
   if (lit && lit.changed) {
     if (DENY_PATTERNS.some(({ pattern }) => pattern.test(lit.cmd))) return null
     if (classifyShell(lit.cmd, { cwd }).level !== null) return null
-    if (classifyShell(cmd, { cwd }).level !== null && !isReadOnlyResolved(lit.cmd)) return null
-  } else if (classifyShell(cmd, { cwd }).level !== null) return null // 사용자 확인 필요
+    ok = classifyShell(cmd, { cwd }).level !== null ? isReadOnlyResolved(lit.cmd) : isPermApprovable(lit.cmd, cwd)
+  } else {
+    if (classifyShell(cmd, { cwd }).level !== null) return null // 사용자 확인 필요
+    ok = isPermApprovable(cmd, cwd)
+  }
+  if (!ok) return null
 
   return {
     hookSpecificOutput: {
@@ -2278,7 +2697,8 @@ function handlePostToolUse(toolName, toolInput) {
   if (postToolUseMonitoredPath(cmd)) {
     return {
       decision: 'block',
-      reason: 'README.md 동기화 필요: .claude/ 경로 파일이 삭제·이동됐습니다. 프로젝트 구조도·목록·스킬 수를 README.md에 즉시 반영하세요.',
+      // 2026-11-11 문구 갱신 — README 는 2026-10-17 부터 수만 두고, 목록·관계는 아래 위치에 있다(README 업데이트 룰)
+      reason: '문서 동기화 필요: .claude/ 경로 파일이 삭제·이동됐습니다. relations.json(블록·관계)·docs/<종류>/README.md 목록·README 수·docs/CHANGELOG.md 를 맞추세요(검사: node --test scripts/relations.test.js scripts/docs-counts.test.js).',
     }
   }
 
@@ -2290,29 +2710,43 @@ async function main() {
   let raw = ''
   for await (const line of rl) raw += line + '\n'
   raw = raw.trim()
+  _rawInput = raw
 
-  if (!raw) return process.exit(0)
+  if (!raw) return failClosed(raw, '훅 입력이 비어 있습니다')
 
   let input
-  try { input = JSON.parse(raw) } catch { return process.exit(0) }
+  try { input = JSON.parse(raw) } catch { return failClosed(raw, '훅 입력 JSON 을 읽을 수 없습니다') }
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return failClosed(raw, '훅 입력이 객체가 아닙니다')
 
-  const { hook_event_name, hookEventName, tool_name, tool_input = {}, cwd } = input
+  const { hook_event_name, hookEventName, tool_name, tool_input, cwd } = input
   const eventName = hook_event_name || hookEventName
 
   const result = eventName === 'PermissionRequest'
-    ? handlePermissionRequest(tool_name, tool_input, cwd)
+    ? handlePermissionRequest(tool_name, tool_input, typeof cwd === 'string' ? cwd : undefined)
     : eventName === 'PostToolUse'
-      ? handlePostToolUse(tool_name, tool_input)
-      : handlePreToolUse(tool_name, tool_input, cwd)
+      ? handlePostToolUse(tool_name, tool_input && typeof tool_input === 'object' ? tool_input : {})
+      : handlePreToolUse(tool_name, tool_input, typeof cwd === 'string' ? cwd : undefined)
 
   if (result) process.stdout.write(JSON.stringify(result) + '\n')
 
   process.exit(0)
 }
 
+// 입력이 비거나 깨졌거나 처리 중 예외 — 허용하지 않는다 (2026-11-06 fail-closed).
+// PreToolUse(또는 이벤트를 알 수 없음) → ask 로 사용자 확인, PermissionRequest → 결정 없음(사용자 확인), PostToolUse 등 → 출력 없음
+let _rawInput = ''
+function failClosed(raw, reason) {
+  const m = /"(?:hook_event_name|hookEventName)"\s*:\s*"([A-Za-z]+)"/.exec(raw || '')
+  const ev = m ? m[1] : null
+  if (!ev || ev === 'PreToolUse') {
+    try { process.stdout.write(JSON.stringify(askResult(`${reason} — 판정할 수 없어 사용자 확인으로 넘깁니다.`)) + '\n') } catch { /* 출력 실패 */ }
+  }
+  process.exit(0)
+}
+
 // 테스트에서 import 가능하도록 export — main 모듈로 직접 실행될 때만 main() 호출
 if (require.main === module) {
-  main().catch(() => process.exit(0))
+  main().catch(() => failClosed(_rawInput, 'bash-guard 처리 중 예외가 났습니다'))
 }
 
 module.exports = {
@@ -2339,4 +2773,9 @@ module.exports = {
   parsePushArgs,
   winCanon,
   isWinRoot,
+  // task-confirm-guard 승인 전 쓰기 판정(lib/pre-approval-write.js)이 같은 해석을 쓴다 (2026-11-10)
+  resolveRmTarget,
+  writeLocationTargets,
+  cleanValue,
+  SHELL_NAMES,
 }

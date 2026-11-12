@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// task-confirm-guard.js — UserPromptSubmit + PreToolUse(Write·Edit·NotebookEdit) Hook (공통)
+// task-confirm-guard.js — UserPromptSubmit + PreToolUse(Write·Edit·NotebookEdit·Bash·Monitor) + SubagentStart·SubagentStop Hook (공통)
 //
 // 목적: task-workflow.md 의 "이렇게 이해했습니다 → 작업 목록 → 진행할까요?" 절차를 훅으로 강제한다
 //       (2026-10-06 사용자 요청 — 규칙만으로는 약해 확인 없이 수정에 착수하는 일이 반복됨)
@@ -8,11 +8,14 @@
 //   직전 Claude 답변에 "진행할까요"가 있었고 이번 질문이 거절·수정 요청이 아니면 = 승인.
 //   UserPromptSubmit: 승인 여부를 세션별 상태 파일에 기록 (+ 미승인이면 절차 지시 주입)
 //   PreToolUse Write/Edit/NotebookEdit: 미승인이면 수정 차단 (exit 2)
+//   PreToolUse Bash/Monitor: 미승인이면 파일을 바꾸는 셸 명령만 차단 — 판정은 lib/pre-approval-write.js (2026-11-10 결정 2-a)
+//   SubagentStart/Stop: 승인된 동안 시작한 서브에이전트(agent_id)를 기록 → 끝날 때까지 승인 유지 (결정 2-b)
 //
 // 예외 (항상 허용): 메모리(~/.claude/projects/*/memory)·계획(~/.claude/plans)·임시 폴더 쓰기,
 //                  질문에 "바로 진행"·"확인 없이" 등 명시 생략 요청
 // 한계: 작업 중간에 보낸 메시지는 UserPromptSubmit 이 발생하지 않아 승인 상태를 바꾸지 못한다.
-//       Bash 로 파일을 바꾸는 명령은 판정하지 않는다(정확한 구분 불가).
+//       셸 명령 판정은 이름·옵션·코드 내용 기준이라, 알려지지 않은 프로그램이 스스로 파일을 쓰는 것은 막지 못한다
+//       (2026-11-09 까지는 Bash 를 아예 보지 않아 python heredoc·cp 로 승인 전 수정이 가능했다)
 
 const fs = require('fs')
 const os = require('os')
@@ -101,7 +104,8 @@ function lastAssistantText(transcriptPath) {
 }
 
 // 사람이 아닌 시스템이 대화에 넣는 메시지 — 태그로 시작한다
-const SYSTEM_PROMPT_RE = /^\s*(?:<(?:task-notification|system-reminder|cross-session-message|local-command-stdout|local-command-caveat|bash-notification|command-name)\b|Stop hook feedback:|Another Claude session sent a message)/
+// agent-message: 서브에이전트 결과 보고(SubagentHandback) — 2026-11-09 이게 빠져 서브에이전트가 끝날 때마다 승인이 풀렸다
+const SYSTEM_PROMPT_RE = /^\s*(?:<(?:task-notification|agent-message|system-reminder|cross-session-message|local-command-stdout|local-command-caveat|bash-notification|command-name)\b|Stop hook feedback:|Another Claude session sent a message)/
 function isSystemPrompt(prompt) {
   return typeof prompt === 'string' && SYSTEM_PROMPT_RE.test(prompt)
 }
@@ -237,7 +241,7 @@ function realLocation(abs) {
   return null
 }
 
-const PRE_CONTEXT = '[task-confirm-guard] 이번 요청에 파일 수정이 필요하면 먼저 "이렇게 이해했습니다:"(요약) → "작업 목록:"(번호 목록) → "진행할까요?"를 제시하고 답변을 끝낸다. 승인 전 Write/Edit 는 훅이 차단한다. 설명·조회·보고 요청이면 파일을 수정하지 않는다.'
+const PRE_CONTEXT = '[task-confirm-guard] 이번 요청에 파일 수정이 필요하면 먼저 "이렇게 이해했습니다:"(요약) → "작업 목록:"(번호 목록) → "진행할까요?"를 제시하고 답변을 끝낸다. 승인 전 Write/Edit 와 파일을 바꾸는 셸 명령은 훅이 차단한다. 설명·조회·보고 요청이면 파일을 수정하지 않는다.'
 const BLOCK_MSG = [
   '[task-confirm-guard] 사용자 승인 전이라 파일 수정을 차단했습니다.',
   '  → 먼저 "이렇게 이해했습니다:" / "작업 목록:" / "진행할까요?" 를 제시하고 답변을 끝내세요.',
@@ -254,22 +258,73 @@ function handle(input) {
     // (실제 세션 2026-10-06: <task-notification> 이 UserPromptSubmit 으로 들어와 승인이 풀린 사례)
     if (isSystemPrompt(input.prompt)) return { code: 0 }
     const verdict = judgePrompt(input.prompt, lastAssistantText(input.transcript_path))
-    writeState(sessionId, { approved: verdict.approved, why: verdict.why, at: new Date().toISOString() })
+    // 승인된 동안 시작한 서브에이전트는 새 메시지가 와도 끝날 때까지 유지 — 사용자가 거절·중단하면("멈춰"·"아니") 함께 푼다
+    const prev = readState(sessionId)
+    const agents = verdict.why === 'rejected' ? [] : (prev && Array.isArray(prev.agents) ? prev.agents.filter(validAgentId).slice(-MAX_AGENTS) : [])
+    writeState(sessionId, { approved: verdict.approved, why: verdict.why, at: new Date().toISOString(), agents })
     if (verdict.approved) return { code: 0 }
     return { code: 0, stdout: JSON.stringify({ hookSpecificOutput: { hookEventName: 'UserPromptSubmit', additionalContext: PRE_CONTEXT } }) }
   }
 
+  // 승인된 동안 띄운 서브에이전트 — 끝날 때까지 승인을 유지한다 (2026-11-10 사용자 결정 2-b)
+  // SubagentStart 는 차단할 수 없어(공식) 기록만 한다. agent_id 는 Claude Code 가 넣는 값이고, 상태 파일은 Write·Bash 로 못 쓴다
+  if (event === 'SubagentStart') {
+    const id = validAgentId(input.agent_id)
+    const st = readState(sessionId)
+    if (!id || !st || st.approved !== true) return { code: 0 }
+    const agents = Array.isArray(st.agents) ? st.agents.filter(validAgentId) : []
+    if (!agents.includes(id)) agents.push(id)
+    writeState(sessionId, { ...st, agents: agents.slice(-MAX_AGENTS) })
+    return { code: 0 }
+  }
+  if (event === 'SubagentStop') {
+    const id = validAgentId(input.agent_id)
+    const st = readState(sessionId)
+    if (!id || !st || !Array.isArray(st.agents) || !st.agents.includes(id)) return { code: 0 }
+    writeState(sessionId, { ...st, agents: st.agents.filter(a => a !== id) })
+    return { code: 0 }
+  }
+
   if (event === 'PreToolUse') {
     const tool = input.tool_name
-    if (tool !== 'Write' && tool !== 'Edit' && tool !== 'NotebookEdit') return { code: 0 }
     const ti = input.tool_input && typeof input.tool_input === 'object' ? input.tool_input : {}
-    const target = ti.file_path || ti.notebook_path || ti.path
-    if (isExemptPath(target, typeof input.cwd === 'string' ? input.cwd : undefined)) return { code: 0 }
-    const st = readState(sessionId)
-    if (st && st.approved === true) return { code: 0 }
-    return { code: 2, stderr: BLOCK_MSG }
+    const cwd = typeof input.cwd === 'string' ? input.cwd : undefined
+    let reason = null
+    if (tool === 'Write' || tool === 'Edit' || tool === 'NotebookEdit') {
+      const target = ti.file_path || ti.notebook_path || ti.path
+      if (isExemptPath(target, cwd)) return { code: 0 }
+      reason = 'file'
+    } else if (tool === 'Bash' || tool === 'Monitor') {
+      // 셸로 파일을 바꾸는 명령도 승인 전에는 막는다 (2026-11-10 사용자 결정 2-a) — 읽기·테스트·임시 폴더 쓰기는 통과
+      if (typeof ti.command !== 'string') return { code: 0 } // command 없는 Monitor(WebSocket 등)
+      reason = shellWriteReason(ti.command, cwd)
+      if (!reason) return { code: 0 }
+    } else {
+      return { code: 0 }
+    }
+    if (isApproved(readState(sessionId), input.agent_id)) return { code: 0 }
+    return { code: 2, stderr: reason === 'file' ? BLOCK_MSG : `${BLOCK_MSG}\n  → 셸 명령도 파일을 바꾸면 막습니다: ${reason}` }
   }
   return { code: 0 }
+}
+
+const MAX_AGENTS = 64
+function validAgentId(id) {
+  return typeof id === 'string' && /^[A-Za-z0-9_.:-]{1,128}$/.test(id) ? id : null
+}
+// 메인 대화 = 현재 승인 상태. 서브에이전트 = 승인된 동안 시작해 기록된 경우만(이후 메인 승인이 풀려도 끝날 때까지 유지)
+// — 승인 없이 시작한 서브에이전트는 메인이 나중에 승인돼도 막는다(승인 전 띄운 에이전트가 승인을 빌려 쓰지 않게)
+function isApproved(st, agentId) {
+  if (!st) return false
+  if (agentId === undefined || agentId === null || agentId === '') return st.approved === true
+  const id = validAgentId(agentId)
+  return !!id && Array.isArray(st.agents) && st.agents.includes(id)
+}
+
+function shellWriteReason(cmd, cwd) {
+  let lib
+  try { lib = require('./lib/pre-approval-write') } catch { return '판정 모듈(lib/pre-approval-write.js)을 불러오지 못했습니다' }
+  return lib.preApprovalWriteReason(cmd, cwd || process.env.CLAUDE_PROJECT_DIR || process.cwd(), { isExemptPath: (abs) => isExemptPath(abs, cwd) })
 }
 
 if (require.main === module) {

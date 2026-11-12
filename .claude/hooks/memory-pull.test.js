@@ -282,6 +282,32 @@ if (!IS_WIN) {
   cleanup(home, repo, cfg)
 }
 
+// 원자적 복사 (2026-11-11) — memory-sync 가 강제 종료되며 남긴 임시 파일은 메모리로 가져오지 않는다
+section('악성·경계 — 레포 memory/ 의 임시 파일(.이름.pid.tmp)은 전역으로 복사하지 않음, 진짜 파일은 원자적으로 복사')
+{
+  const { home, repo, globalMemory, repoMemory } = mkFixture()
+  fs.mkdirSync(globalMemory, { recursive: true })
+  fs.mkdirSync(repoMemory, { recursive: true })
+  fs.writeFileSync(path.join(repoMemory, '.half.md.4242.tmp'), '반쪽')
+  fs.writeFileSync(path.join(repoMemory, 'whole.md'), '온전한 메모리')
+  // 전역에 같은 이름이 링크면 링크 대상(밖 파일)을 덮지 않고 링크 자리를 일반 파일로 바꾼다
+  const victim = path.join(home, 'victim.txt')
+  fs.writeFileSync(victim, 'ORIGINAL')
+  fs.writeFileSync(path.join(repoMemory, 'linked.md'), 'REPO-NEWER')
+  const linked = trySymlink(victim, path.join(globalMemory, 'linked.md'))
+  if (linked !== null) touch(path.join(repoMemory, 'linked.md'), Date.now() + 60000)
+  const r = runHook({ home, repoDir: repo })
+  assert('exit 0', r.status, 0)
+  assert('임시 파일은 전역에 안 감', fs.readdirSync(globalMemory).some((n) => n.endsWith('.tmp')), false)
+  assert('진짜 메모리는 복사됨', fs.readFileSync(path.join(globalMemory, 'whole.md'), 'utf8'), '온전한 메모리')
+  if (linked === null) skip('전역 자리 링크', '윈도우 권한 부족(EPERM)')
+  else {
+    assert('링크 대상(밖 파일)은 그대로', fs.readFileSync(victim, 'utf8'), 'ORIGINAL')
+    assert('전역 자리는 일반 파일 + 레포 내용', fs.lstatSync(path.join(globalMemory, 'linked.md')).isSymbolicLink() === false && fs.readFileSync(path.join(globalMemory, 'linked.md'), 'utf8') === 'REPO-NEWER', true)
+  }
+  cleanup(home, repo)
+}
+
 console.log(`\n${'─'.repeat(40)}`)
 console.log(`결과: ${passed}/${passed + failed} 통과 ${failed > 0 ? `(${failed}개 실패)` : ''}${skipped ? ` · 건너뜀 ${skipped}` : ''}`)
 if (failed === 0) console.log('✅ 모든 테스트 통과')

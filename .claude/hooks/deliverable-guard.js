@@ -96,17 +96,35 @@ function isRootReadme(filePath) {
   return !normalized.match(/\/_radix-reference\/|\/node_modules\/|\/packages\/[^/]+\/README|\/apps\/[^/]+\/README|\/docs\/[^/]+\/README/)
 }
 
+// 루트 docs/CHANGELOG.md 여부 — 하위 폴더(sub/docs/CHANGELOG.md)·다른 이름(.bak)은 인정하지 않는다
+function isRootChangelog(filePath) {
+  if (typeof filePath !== 'string' || !filePath) return false
+  const projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd()
+  const want = path.join(projectDir, 'docs', 'CHANGELOG.md')
+  if (IS_WIN) return require('./lib/winpath').samePath(filePath, want, true)
+  return path.normalize(filePath) === path.normalize(want)
+}
+
+// 경로 비교용 실제 경로 (맥 /var → /private/var). 파일이 없으면 부모 폴더 기준
+function realish(p) {
+  try { return fs.realpathSync(p) } catch {}
+  try { return path.join(fs.realpathSync(path.dirname(p)), path.basename(p)) } catch {}
+  return p
+}
+
 /**
- * 변경된 감시 대상 파일과 타입을 반환 — README 업데이트됐으면 null
+ * 변경된 감시 대상 파일과 타입을 반환 — 필요한 문서가 갱신됐으면 null
+ * 2026-11-06 README 개편 규칙(readme-update.md) 반영:
+ *   - 스킬·에이전트 "내용 수정"만 → docs/CHANGELOG.md(또는 예전처럼 루트 README.md)가 바뀌었으면 통과
+ *   - 스킬·에이전트 "추가·삭제"(HEAD 에 없던 파일 / HEAD 에 있는데 사라진 파일) 또는 changeset → 루트 README.md(수) 필수
+ *   루트 README 의 수가 실제와 맞는지는 scripts/docs-counts.test.js 가 따로 검사한다
  * stagedOnly=true  → PreToolUse(commit/push): 스테이지된 파일만 검사
  * stagedOnly=false → Stop: 스테이지+미스테이지+미추적 파일까지 검사
  */
 function getReadmeViolations(sessionId, stagedOnly = false) {
   const session = loadSession(sessionId)
   const sessionFiles = session.files || []
-
-  // skill/agent: Write/Edit 도구로 기록됨 → session 기반
-  const skillAgentFiles = sessionFiles.filter(f => matches(SKILL_PATTERN, f) || matches(AGENT_PATTERN, f))
+  const isSkillAgent = (f) => matches(SKILL_PATTERN, f) || matches(AGENT_PATTERN, f)
 
   const projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd()
   const toAbs = (files) => files.map(f => path.isAbsolute(f) ? f : path.join(projectDir, f))
@@ -118,12 +136,36 @@ function getReadmeViolations(sessionId, stagedOnly = false) {
   const changesetFiles = [...new Set([...staged, ...unstaged, ...untracked])]
     .filter(f => matches(CHANGESET_PATTERN, f) && fs.existsSync(f))
 
+  // skill/agent: Write/Edit 도구로 기록됨 → session 기반 + git 으로 지운 스킬·에이전트(rm·git rm 은 세션에 안 남는다)
+  const deletedByGit = toAbs(runGit(stagedOnly ? 'git diff --staged --name-only --diff-filter=D' : 'git diff HEAD --name-only --diff-filter=D'))
+    .filter(isSkillAgent)
+  const skillAgentFiles = [...new Set([...sessionFiles.filter(isSkillAgent), ...deletedByGit])]
+
   if (skillAgentFiles.length === 0 && changesetFiles.length === 0) return null
 
-  const allGitReadmeFiles = stagedOnly ? staged : [...staged, ...unstaged]
-  if (sessionFiles.some(isRootReadme) || allGitReadmeFiles.some(isRootReadme)) return null
+  // 추가·삭제 판정 — HEAD 트리와 디스크를 비교 (HEAD 가 없으면 전부 새 파일)
+  const top = (runGit('git rev-parse --show-toplevel')[0] || '').trim()
+  const inHead = new Set(top
+    ? runGit(`git -C "${top}" ls-tree -r --name-only --full-tree HEAD -- .claude/skills .claude/agents`).map(s => s.trim())
+    : [])
+  const rel = (f) => top ? slash(path.relative(realish(top), realish(f)), true) : null
+  const structural = skillAgentFiles.filter(f => {
+    const r = rel(f)
+    const exists = fs.existsSync(f)
+    if (!r || r.startsWith('..')) return !exists // 레포 밖·레포 아님: 사라진 파일만 삭제로 본다
+    return exists ? !inHead.has(r) : true // 디스크에 없으면 삭제
+  })
 
-  return { skillAgentFiles, changesetFiles }
+  // README 와 같은 기준 — 이번 세션 Write/Edit 기록 또는 git 변경(commit 직전엔 스테이지분)
+  // (git add -A && git commit 한 줄이면 훅 시점엔 아직 스테이지 전이라 세션 기록도 인정한다)
+  const gitDocFiles = stagedOnly ? staged : [...staged, ...unstaged]
+  const readmeDone = sessionFiles.some(isRootReadme) || gitDocFiles.some(isRootReadme)
+  const changelogDone = sessionFiles.some(isRootChangelog) || gitDocFiles.some(isRootChangelog)
+
+  const needsReadme = structural.length > 0 || changesetFiles.length > 0
+  if (needsReadme ? readmeDone : (readmeDone || changelogDone)) return null
+
+  return { skillAgentFiles, changesetFiles, structuralFiles: structural }
 }
 
 function shortPath(fp) {
@@ -142,7 +184,9 @@ function buildFileList(files) {
 }
 
 function buildReadmeReason(violations, action) {
-  const lines = [`[deliverable-guard] README.md 미업데이트 — ${action} 차단`, '']
+  const structural = violations.structuralFiles || violations.skillAgentFiles
+  const needsReadme = structural.length > 0 || violations.changesetFiles.length > 0
+  const lines = [`[deliverable-guard] ${needsReadme ? 'README.md' : 'docs/CHANGELOG.md'} 미업데이트 — ${action} 차단`, '']
 
   if (violations.changesetFiles.length > 0) {
     lines.push(
@@ -155,15 +199,25 @@ function buildReadmeReason(violations, action) {
     )
   }
 
-  if (violations.skillAgentFiles.length > 0) {
+  if (structural.length > 0) {
     if (violations.changesetFiles.length > 0) lines.push('')
     lines.push(
-      `⚠️  스킬/에이전트 파일 ${violations.skillAgentFiles.length}개 수정됨 → README 자산 현황 업데이트 필수`,
+      `⚠️  스킬/에이전트 파일 ${structural.length}개 추가·삭제됨 → 루트 README.md 의 수(스킬·에이전트 수) 갱신 필수`,
+      '',
+      '추가·삭제된 파일:',
+      buildFileList(structural),
+      '',
+      '조치: ① 루트 README.md "무엇이 들어 있나" 수 ② docs/<종류>/README.md 목록 ③ docs/CHANGELOG.md 오늘 날짜 행을 갱신한 뒤 다시 시도하세요.',
+    )
+  } else if (violations.skillAgentFiles.length > 0) {
+    if (violations.changesetFiles.length > 0) lines.push('')
+    lines.push(
+      `⚠️  스킬/에이전트 파일 ${violations.skillAgentFiles.length}개 내용 수정됨 → docs/CHANGELOG.md 변경 기록 필수`,
       '',
       '수정된 파일:',
       buildFileList(violations.skillAgentFiles),
       '',
-      '조치: README.md의 해당 섹션(목록·스킬 수·업데이트 로그)을 업데이트한 뒤 다시 시도하세요.',
+      '조치: docs/CHANGELOG.md 의 오늘 날짜 행에 변경 내용을 합산해 적은 뒤 다시 시도하세요 (같은 날은 한 행 — 수가 바뀌지 않으면 루트 README 는 그대로).',
     )
   }
 
@@ -419,6 +473,41 @@ function decideStop(input, messages) {
 
 const STOP_WARN_CAP = 9000 // systemMessage 10,000자 상한 여유
 
+// ── git push / commit · gh pr create 감지 (2026-11-06) ────────────
+// bash-guard.js 의 셸 분석기를 require 해서 쓴다(수정하지 않음). 불러오지 못하면 예전 세그먼트 판정으로 폴백
+let _analyzer
+function loadAnalyzer() {
+  if (_analyzer !== undefined) return _analyzer
+  try { _analyzer = require('./bash-guard.js'); if (typeof _analyzer.analyzeShell !== 'function') _analyzer = null } catch { _analyzer = null }
+  return _analyzer
+}
+function detectGitActions(cmd) {
+  const out = { push: false, prCreate: false, commit: false }
+  if (typeof cmd !== 'string' || !cmd.trim()) return out
+  const a = loadAnalyzer()
+  if (a) {
+    try {
+      for (const inv of a.analyzeShell(cmd).invocations) {
+        if (inv.name === 'git' && inv.git && inv.git.sub) {
+          if (inv.git.sub === 'push') out.push = true
+          if (inv.git.sub === 'commit') out.commit = true
+        } else if (inv.name === 'gh') {
+          // gh --repo a/b pr create 처럼 옵션 값이 앞에 올 수 있다
+          const vals = (inv.args || []).map(x => (x && typeof x === 'object' ? String(x.value) : '')).filter(v => !v.startsWith('-'))
+          const i = vals.indexOf('pr')
+          if (i >= 0 && vals[i + 1] === 'create') out.prCreate = true
+        }
+      }
+      return out
+    } catch { /* 분석 실패 → 폴백 */ }
+  }
+  const segs = cmd.split(/&&|\|\||;|\n/).map(s => s.trim())
+  out.push = segs.some(s => /^git\s+push\b/.test(s))
+  out.prCreate = segs.some(s => /^gh\s+pr\s+create\b/.test(s))
+  out.commit = segs.some(s => /^git\s+commit\b/.test(s))
+  return out
+}
+
 // ── 진입점 ───────────────────────────────────────────────────────
 
 async function readStdin() {
@@ -447,14 +536,12 @@ async function main() {
 
   // ── PreToolUse Bash: push/PR 직전 memory·exports 검사 + commit/push 직전 README 검사 ─
   if (eventName === 'PreToolUse') {
-    if (!session_id || tool_name !== 'Bash') return process.exit(0)
+    if (!session_id || (tool_name !== 'Bash' && tool_name !== 'Monitor')) return process.exit(0) // Monitor 도 셸 명령(v2.1.314+)
     const cmd = (tool_input.command || '').trim()
 
     // memory·exports 클린 검사 — --no-readme와 무관하게 항상 (별개 관심사)
-    // 명령 세그먼트 선두에서만 매치 — 커밋 메시지 등 인용 텍스트 내 "git push" 오탐 방지
-    const segs = cmd.split(/&&|\|\||;/).map(s => s.trim())
-    const isPush = segs.some(s => /^git\s+push\b/.test(s))
-    const isPrCreate = segs.some(s => /^gh\s+pr\s+create\b/.test(s))
+    // 실제로 실행되는 git push / gh pr create 만 — 셸 분석기로 판정 (heredoc·인용 텍스트 오탐 없음, -C·개행·bash -c 포함)
+    const { push: isPush, prCreate: isPrCreate, commit: isCommit } = detectGitActions(cmd)
     if (isPush || isPrCreate) {
       const dirty = getMemoryExportViolations()
       if (dirty.length > 0) {
@@ -471,12 +558,12 @@ async function main() {
     }
 
     if (!readmeCheckEnabled) return process.exit(0)
-    if (!/\bgit\s+(commit|push)\b/.test(cmd)) return process.exit(0)
+    if (!isCommit && !isPush) return process.exit(0)
 
     const violations = getReadmeViolations(session_id, true)
     if (!violations) return process.exit(0)
 
-    const action = cmd.includes('push') ? '푸시' : '커밋'
+    const action = isPush ? '푸시' : '커밋'
     process.stdout.write(JSON.stringify({
       hookSpecificOutput: {
         hookEventName: 'PreToolUse',

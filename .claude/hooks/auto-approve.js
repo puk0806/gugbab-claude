@@ -27,7 +27,7 @@ const fs = require('fs')
 const os = require('os')
 const path = require('path')
 const readline = require('readline')
-const { getAllowedDirs, isUnderAllowed, isUnderTempDir } = require('./bash-guard.js')
+const { findProjectRoot, getAllowedDirs, isUnderAllowed, isUnderTempDir } = require('./bash-guard.js')
 // 윈도우(2026-10-20 윈도우 2단계): file_path·cwd 는 네이티브 `C:\x`. 비교는 대소문자·구분자 무시. 맥 판정은 기존 코드 그대로
 const W = require('./lib/winpath')
 const IS_WIN = W.IS_WIN
@@ -48,7 +48,7 @@ const SAFE_TOOLS = new Set([
   'NotebookEdit',
   // 2026-10-06 추가 — 설정이 없어 매번 확인 창이 뜨던 도구
   'Skill',
-  'Monitor',
+  // Monitor 는 2026-11-09 뺌 — 셸 명령을 띄우는 도구라 bash-guard 가 명령을 보고 판정한다(여기서 allow 하면 위험 명령도 묻지 않고 실행)
   'Workflow',       // 도구 자체가 사용자 명시 요청 시에만 호출 — 확인 창은 중복 (사용자 결정)
   'EnterWorktree',
   'Artifact',
@@ -86,8 +86,28 @@ const MCP_DESTRUCTIVE_RE = /(?:^|[_.-])(?:delete|trash|share|remove|destroy|purg
 const WRITE_TOOLS = new Set(['Write', 'Edit', 'NotebookEdit'])
 
 const HOME = (() => { try { return path.resolve(os.homedir()) } catch { return null } })()
-// 프로젝트 밖이지만 Claude Code 가 정상적으로 쓰는 위치 — 메모리(projects/<해시>/memory)·계획 파일
-const CLAUDE_WORK_DIRS = HOME ? [path.join(HOME, '.claude', 'projects'), path.join(HOME, '.claude', 'plans')] : []
+// 이 프로젝트의 대화·메모리 폴더 이름 — Claude Code 와 같게 영숫자 밖 글자를 - 로.
+// 200자 넘으면 Claude Code 가 잘라 해시를 붙여 이름을 맞출 수 없다 → 계산하지 않음(= 확인)
+function projectKey(dir) {
+  if (typeof dir !== 'string' || !dir) return null
+  let v = dir
+  if (IS_WIN) v = W.msysToWin(W.toSlash(v, true), true)
+  try { v = path.resolve(v) } catch { return null }
+  const key = v.replace(/[^A-Za-z0-9]/g, '-')
+  return key.length > 200 ? null : key
+}
+
+// 프로젝트 밖이지만 Claude Code 가 정상적으로 쓰는 위치 — **이 프로젝트의** 메모리·대화 폴더(projects/<프로젝트 이름>)와 계획 폴더.
+// 2026-11-06 (lfmall e4ab84a 반영): 예전엔 ~/.claude/projects 전체를 허용해 다른 프로젝트(상위 워크스페이스 등) 메모리도 Edit·Write 로 묻지 않고 고쳤다 → 확인으로
+function claudeWorkDirs(cwd) {
+  if (!HOME) return []
+  const keys = new Set()
+  for (const d of [process.env.CLAUDE_PROJECT_DIR, cwd && findProjectRoot(cwd)]) {
+    const k = projectKey(d)
+    if (k) keys.add(k)
+  }
+  return [...[...keys].map(k => path.join(HOME, '.claude', 'projects', k)), path.join(HOME, '.claude', 'plans')]
+}
 
 // 가장 가까운 실제 존재하는 상위 폴더의 실경로 + 나머지 — 링크를 따라간 실제 위치
 function realLocation(abs) {
@@ -102,24 +122,21 @@ function realLocation(abs) {
   }
   return null
 }
-const realDirs = (() => {
-  let cache = null
-  return () => cache || (cache = CLAUDE_WORK_DIRS.map(d => { try { return fs.realpathSync(d) } catch { return d } }))
-})()
-
 // 래퍼(gugbab-claude)는 설정 폴더의 projects/·plans/ 를 ~/.claude 쪽으로 링크한다 (윈도우는 junction) — 링크를 따라간 실제 위치로 판정한다.
 // 이름만 projects 인 진짜 폴더나 CLAUDE_CONFIG_DIR 위장은 실제 위치가 ~/.claude 밖이라 통과하지 못한다
-function isClaudeWorkPath(abs) {
+function isClaudeWorkPath(abs, cwd) {
+  const dirs = claudeWorkDirs(cwd)
+  const realDirs = dirs.map(d => realLocation(d) || d)
   if (IS_WIN) {
     // 윈도우: 대소문자 무시 + 경로 단위, 실제 위치(junction 따라감)로만 판정 — 래퍼 설정 폴더 링크는 통과,
     // ~/.claude/projects 안에 심은 junction 으로 밖을 가리키는 탈출은 차단
-    const under = (p, dirs) => dirs.some(d => !W.samePath(p, d, true) && W.isUnder(p, d, true))
+    const under = (p, list) => list.some(d => !W.samePath(p, d, true) && W.isUnder(p, d, true))
     const real = realLocation(abs)
-    return !!real && (under(real, CLAUDE_WORK_DIRS) || under(real, realDirs()))
+    return !!real && (under(real, dirs) || under(real, realDirs))
   }
-  if (CLAUDE_WORK_DIRS.some(d => abs.startsWith(d + path.sep))) return true
+  if (dirs.some(d => abs.startsWith(d + path.sep))) return true
   const real = realLocation(abs)
-  return !!real && realDirs().some(d => real.startsWith(d + path.sep))
+  return !!real && realDirs.some(d => real.startsWith(d + path.sep))
 }
 
 function writeTargetOf(toolInput) {
@@ -137,7 +154,7 @@ function isWriteInsideAllowed(filePath, cwd) {
   let abs
   try { abs = path.resolve(cwd || process.env.CLAUDE_PROJECT_DIR || process.cwd(), v) } catch { return false }
   if (isUnderTempDir(abs)) return true
-  if (isClaudeWorkPath(abs)) return true
+  if (isClaudeWorkPath(abs, cwd)) return true
   return isUnderAllowed(abs, getAllowedDirs(cwd))
 }
 
@@ -150,7 +167,7 @@ function isWriteInsideAllowedWin(filePath, cwd) {
   v = W.msysToWin(v, true)
   let abs
   try { abs = path.resolve(W.msysToWin(W.toSlash(cwd || process.env.CLAUDE_PROJECT_DIR || process.cwd(), true), true), v) } catch { return false }
-  if (isClaudeWorkPath(abs)) return true
+  if (isClaudeWorkPath(abs, cwd)) return true
   const real = realLocation(abs)
   if (!real) return false
   if (isUnderTempDir(abs)) return isUnderTempDir(real)
@@ -158,6 +175,17 @@ function isWriteInsideAllowedWin(filePath, cwd) {
   if (!isUnderAllowed(abs, dirs)) return false
   const realAllowed = dirs.map(d => { try { return fs.realpathSync(d) } catch { return d } })
   return isUnderAllowed(real, dirs) || isUnderAllowed(real, realAllowed)
+}
+
+// 프로젝트 안이어도 묻는 쓰기 — git 내부(.git/hooks 에 심으면 다음 git 명령 때 실행)와 권한·훅 설정 파일(훅을 끄거나 allow 를 넓힘).
+// 여기서 allow 하면 Claude Code 자체 확인 창까지 건너뛰므로 ask 로 돌려준다 (2026-11-09 점검)
+const GUARDED_SETTINGS_RE = /^settings(?:\.local)?\.json$/i
+function guardedConfigLabel(filePath) {
+  const segs = String(filePath).split(/[\\/]+/).filter(Boolean)
+  if (segs.some(s => s.toLowerCase() === '.git')) return 'git 내부 파일(.git/)'
+  const last = segs[segs.length - 1] || ''
+  if (segs.length >= 2 && segs[segs.length - 2].toLowerCase() === '.claude' && GUARDED_SETTINGS_RE.test(last)) return 'Claude Code 설정 파일(.claude/settings*.json)'
+  return null
 }
 
 // 반환: { level: 'allow'|'ask', reason } | null
@@ -169,6 +197,8 @@ function classify(toolName, toolInput, cwd) {
     if (target && !isWriteInsideAllowed(target, cwd)) {
       return { level: 'ask', reason: `프로젝트·허용 폴더 밖 파일 수정(${target})은 사용자 확인이 필요합니다.` }
     }
+    const guarded = target && guardedConfigLabel(target)
+    if (guarded) return { level: 'ask', reason: `${guarded} 수정은 사용자 확인이 필요합니다(${target}).` }
     return { level: 'allow' }
   }
 

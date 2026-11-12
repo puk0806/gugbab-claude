@@ -89,14 +89,4 @@ function calcDiscount(price: number, rate: number): number {
 |------|-----------|
 | 단위·통합 테스트 파일(`*.test.*`, `*.spec.*`, `*_test.*`, `__tests__/`) | `adversarial-test-guard` — 악성/경계 마커 없으면 차단 |
 | 소스 구현 파일 | `fake-impl-guard` — 파라미터 무시 + 테스트 기대 리터럴 반환 시 차단 |
-| E2E 테스트(Playwright 등) | `qa-engineer` 에이전트가 적대적 E2E 시나리오를 **필수 산출물**로 생성 |
-
-두 훅은 `tdd-guard`·`test-fake-guard`·이 규칙과 함께 래퍼의 **테스트 품질 묶음(`bundle:dev-quality`)** 에 속한다 — 묶음 단위로 켜고 끈다(`/harness`). 레거시 프로젝트처럼 테스트가 거의 없는 곳에서는 `tdd-guard` 만 끄고(`gugbab-claude off hook:tdd-guard`) 나머지 3종은 유지할 수 있다. 넥사크로 블록을 켜면 충돌 규칙으로 `tdd-guard` 가 자동으로 꺼진다.
-
----
-
-## 5. 왜 필요한가
-
-- 정상 경로만 검증된 코드는 **공격 표면이 그대로 노출**된 채 배포된다. 인젝션·IDOR·권한 상승은 happy-path 테스트로는 절대 잡히지 않는다.
-- 테스트 기대값을 박아넣은 가짜 구현은 **커버리지 수치는 올라가지만 실제로는 아무것도 검증하지 못한다** — 최악의 기술 부채다.
-- "나중에 보안 테스트 추가"는 대부분 오지 않는다. 테스트 작성 시점에 강제해야 한다.
+| E2E 테스트(Playwright 등) | 위 2절 체크리스트를 E2E 시나리오에도 그대로 적용한다(정상 흐름만의 E2E 금지) |

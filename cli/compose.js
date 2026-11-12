@@ -2,7 +2,7 @@
 //   ① 켜진 룰·커맨드·에이전트·스킬·공통 CLAUDE.md → 하네스 원본으로 심볼릭 링크 (PoC 3)
 //   ② projects/·plugins/·plans/·sessions/ → ~/.claude 쪽 링크 (대화기록·메모리·플러그인·계획·실행 중 세션 목록 공유 — 결정 2·38, PoC 8·플러그인)
 //   ③ settings.json 은 일반 파일 — 권한·상태줄·플러그인 + 이벤트마다 디스패처(cli/hook.js) 하나 (PoC 4)
-//   ④ .claude.json 에 온보딩 완료 표시와 이 폴더의 신뢰 기록만 옮김 (첫 실행 화면 PoC)
+//   ④ .claude.json 에 온보딩 완료 표시·Chrome 확장 기본 켜기와 이 폴더의 신뢰 기록만 옮김 (첫 실행 화면 PoC)
 // 프로젝트가 이미 가진 항목(.claude/ 아래 같은 이름, settings.json 에 연결된 같은 훅)은 건너뛴다 — 두 번 실행·중복 방지
 // 사용자가 설정 폴더에 직접 만든 것은 건드리지 않는다. 지우는 것은 우리가 만든 링크(.gugbab-managed.json 기록)뿐
 // 윈도우(2026-10-20): 링크는 폴더 junction · 파일 하드링크(안 되면 복사), 명령에 넣는 경로는 `/` 표기(훅은 Git Bash 로 돎),
@@ -238,7 +238,12 @@ function compose({ manifest, paths, project, resolved }) {
     });
     if (!active.length) continue;
     const timeout = Math.min(600, active.reduce((n, h) => n + (Number(h.timeout) > 0 ? Number(h.timeout) : 60), 0));
-    const entry = { hooks: [{ type: 'command', command: `node "${cmdCode}/cli/hook.js" ${event}`, timeout }] };
+    const cmd = { type: 'command', command: `node "${cmdCode}/cli/hook.js" ${event}`, timeout };
+    // 디스패처 자체가 못 뜨거나 죽으면(경로 오류·문법 오류·시간 초과) 모든 가드가 빠진 채 도구가 돈다 → PreToolUse 만 공식 onFailure:"block"
+    // (v2.1.295+). 훅 하나하나의 실패는 디스패처가 받아 비보안 훅은 기록만 하므로 여기서 같이 막히지 않는다(cli/hook.js FAIL_CLOSED).
+    // PermissionRequest 는 실패 시 평소 확인 창이 떠 안전, UserPromptSubmit 은 막으면 질문을 못 보내 고칠 수도 없어 넣지 않는다
+    if (event === 'PreToolUse') cmd.onFailure = 'block';
+    const entry = { hooks: [cmd] };
     hooks[event] = [TOOL_EVENTS.has(event) ? { matcher: '*', ...entry } : entry];
   }
   if (Object.keys(hooks).length) composed.hooks = hooks;
@@ -283,7 +288,7 @@ function compose({ manifest, paths, project, resolved }) {
   const cj = readJson(cjFile, {});
   const homeCj = readJson(path.join(paths.home, '.claude.json'), {});
   const before = JSON.stringify(cj);
-  for (const k of ['hasCompletedOnboarding', 'lastOnboardingVersion', 'theme']) if (homeCj[k] !== undefined && cj[k] === undefined) cj[k] = homeCj[k];
+  for (const k of ['hasCompletedOnboarding', 'lastOnboardingVersion', 'theme', 'claudeInChromeDefaultEnabled']) if (homeCj[k] !== undefined && cj[k] === undefined) cj[k] = homeCj[k];
   for (const key of trustKeys(homeCj.projects, project.root)) {
     cj.projects = cj.projects && typeof cj.projects === 'object' ? cj.projects : {};
     cj.projects[key] = { ...(cj.projects[key] || {}), hasTrustDialogAccepted: true };

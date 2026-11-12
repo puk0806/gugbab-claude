@@ -487,6 +487,108 @@ console.log('\n── 프로젝트 밖 파일은 통과(스킵) — 경로 정�
   fs.rmSync(outsideRoot, { recursive: true, force: true })
 }
 
+// ── --record / --stop (2026-11-12: 저장마다 → 답변을 마칠 때 한 번) ─────────────────────────
+console.log('\n[--record / --stop] 저장 때는 기록만, Stop 에서 한 번 판정')
+{
+  const proj = makeProject('stop')
+  const other = makeProject('stop-outside')
+  const edited = path.join(proj, 'src', 'edited.ts')
+  const SID = 'sess-stop-1'
+  const pend = (sid) => path.join(STATE_DIR, `claude-tsq-pending-${sid}.json`)
+  const rec = (file, env = {}, sid = SID, extra = {}) => spawnSync('node', [HOOK, '--record'], {
+    input: JSON.stringify({ hook_event_name: 'PostToolUse', tool_name: 'Edit', tool_input: { file_path: file }, session_id: sid, ...extra }),
+    encoding: 'utf8', timeout: 20000, env: { ...process.env, CLAUDE_PROJECT_DIR: proj, ...env },
+  })
+  const stop = (args = [], env = {}, sid = SID, raw) => spawnSync('node', [HOOK, '--stop', ...args], {
+    input: raw !== undefined ? raw : JSON.stringify({ hook_event_name: 'Stop', session_id: sid, stop_hook_active: false }),
+    encoding: 'utf8', timeout: 20000, env: { ...process.env, CLAUDE_PROJECT_DIR: proj, ...env },
+  })
+  const ok = (desc, cond, extra = '') => { console.log(`  ${cond ? '✅' : '❌'} ${desc}${cond ? '' : ' → FAIL ' + extra}`); cond ? passed++ : failed++ }
+  const errOut = { TSC_STUB_OUT: 'src/edited.ts(1,1): error TS2322: Type mismatch\\n', TSC_STUB_EXIT: '1' }
+
+  // 정상: 기록은 tsc 를 돌리지 않는다 — 실패 스텁이어도 exit 0, 대기 파일에 상대경로가 남는다
+  try { fs.unlinkSync(pend(SID)) } catch {}
+  let r = rec(edited, errOut)
+  const p1 = (() => { try { return JSON.parse(fs.readFileSync(pend(SID), 'utf8')) } catch { return null } })()
+  ok('--record: tsc 실패 스텁이어도 exit 0 (저장 때 판정 안 함)', r.status === 0, String(r.status))
+  ok('--record: 대기 파일에 루트별 상대경로 기록', !!(p1 && Object.values(p1.roots).some(v => v.includes('src/edited.ts'))), JSON.stringify(p1))
+
+  // 정상: 기록이 없으면 Stop 은 tsc 없이 통과
+  r = stop([], errOut, 'sess-empty')
+  ok('--stop: 이 세션 기록 없음 → exit 0 (다른 세션 기록에 끌려가지 않음)', r.status === 0, String(r.status))
+
+  // 정상: 오류 없음 → 통과하고 대기 목록 비움
+  r = stop([], { TSC_STUB_OUT: '', TSC_STUB_EXIT: '0' })
+  ok('--stop: tsc 통과 → exit 0', r.status === 0, String(r.status))
+  ok('--stop: 통과 뒤 대기 파일 삭제', !fs.existsSync(pend(SID)))
+
+  // 정상: 오류 → exit 2, stderr 로 사유 (Stop exit 2 는 stderr 가 Claude 에게 전달)
+  rec(edited)
+  r = stop([], errOut)
+  ok('--stop: TS 오류 → exit 2', r.status === 2, String(r.status))
+  ok('--stop: 차단 사유를 stderr 로, 고친 파일 이름 포함', (r.stderr || '').includes('src/edited.ts') && (r.stderr || '').includes('TS2322'), r.stderr)
+  ok('--stop: 차단 뒤 대기 목록 유지(다음 Stop 에서 다시 검사)', fs.existsSync(pend(SID)))
+
+  // 악성·오남용: 같은 오류가 계속 남아도 무한 반복하지 않는다 — 연속 3회까지만 막고 4회째 경고 후 통과
+  stop([], errOut); stop([], errOut)
+  r = stop([], errOut)
+  ok('--stop: 연속 4회째 → exit 0 + systemMessage 경고(무한 차단 방지)', r.status === 0 && (r.stdout || '').includes('systemMessage'), `${r.status} ${r.stdout}`)
+  ok('--stop: 반복 방지 통과 뒤 대기 목록 비움', !fs.existsSync(pend(SID)))
+
+  // 악성: 프로젝트 밖 파일·비 TS 파일·tsconfig 없는 경로는 기록하지 않는다
+  rec(path.join(other, 'src', 'edited.ts'))
+  rec(path.join(proj, 'README.md'))
+  rec(path.join(os.tmpdir(), 'no-tsconfig-xyz.ts'))
+  ok('--record: 프로젝트 밖·비 TS·tsconfig 없음 → 기록 안 함', !fs.existsSync(pend(SID)))
+
+  // 악성: session_id 경로 조작(../)은 상태 폴더 밖으로 나가지 않는다
+  rec(edited, {}, '../../evil')
+  const escaped = fs.existsSync(path.join(STATE_DIR, '..', '..', 'evil.json')) || fs.existsSync(path.join(path.dirname(STATE_DIR), 'claude-tsq-pending-..json'))
+  ok('--record: session_id 의 ../ 는 걸러져 상태 폴더 안에만 저장', !escaped && fs.readdirSync(STATE_DIR).some(f => f.startsWith('claude-tsq-pending-evil')))
+  try { fs.unlinkSync(path.join(STATE_DIR, 'claude-tsq-pending-evil.json')) } catch {}
+
+  // 경계: 깨진 대기 파일·빈 stdin·JSON 아닌 입력에도 죽지 않는다
+  fs.writeFileSync(pend(SID), '{not json')
+  r = stop([], errOut)
+  ok('--stop: 깨진 대기 파일 → exit 0 (기록 없음으로 취급)', r.status === 0, String(r.status))
+  r = stop([], errOut, SID, '')
+  ok('--stop: 빈 stdin → exit 0', r.status === 0, String(r.status))
+  r = spawnSync('node', [HOOK, '--record'], { input: 'garbage', encoding: 'utf8', timeout: 20000, env: { ...process.env, CLAUDE_PROJECT_DIR: proj } })
+  ok('--record: JSON 아닌 입력 → exit 0', r.status === 0, String(r.status))
+
+  // 경계: tsconfig 가 사라진 루트는 건너뛴다
+  rec(edited)
+  fs.renameSync(path.join(proj, 'tsconfig.json'), path.join(proj, 'tsconfig.bak'))
+  r = stop([], errOut)
+  ok('--stop: 기록 뒤 tsconfig 삭제된 루트 → exit 0', r.status === 0, String(r.status))
+  fs.renameSync(path.join(proj, 'tsconfig.bak'), path.join(proj, 'tsconfig.json'))
+
+  // --changed-only: 베이스라인에 있던 기존 오류만이면 통과, 새 오류면 차단
+  resetBaseline(proj); resetTimeouts(proj)
+  const oldErr = { TSC_STUB_OUT: 'src/other.ts(1,1): error TS1111: old\\n', TSC_STUB_EXIT: '1' }
+  spawnSync('node', [HOOK, '--seed', '--project', proj], { encoding: 'utf8', timeout: 20000, env: { ...process.env, ...oldErr } })
+  rec(edited)
+  r = stop(['--changed-only'], oldErr)
+  ok('--stop --changed-only: 기존 오류만 → exit 0', r.status === 0, `${r.status} ${r.stderr}`)
+  rec(edited)
+  r = stop(['--changed-only'], { TSC_STUB_OUT: 'src/other.ts(1,1): error TS1111: old\\nsrc/edited.ts(2,2): error TS2322: new\\n', TSC_STUB_EXIT: '1' })
+  ok('--stop --changed-only: 새 오류 → exit 2, 기존 오류는 제외 표기', r.status === 2 && (r.stderr || '').includes('TS2322') && !(r.stderr || '').includes('TS1111: old\n  src') , r.stderr)
+
+  // 경계: 도구 장애(진단 없는 비정상 종료)는 1회 경고 통과, 연속 2회째 차단
+  try { fs.unlinkSync(pend(SID)) } catch {}
+  resetTimeouts(proj)
+  const broken = { TSC_STUB_OUT: 'segfault\\n', TSC_STUB_EXIT: '3' }
+  rec(edited); r = stop([], broken)
+  ok('--stop: 도구 장애 1회 → exit 0 + 경고', r.status === 0 && (r.stdout || '').includes('도구 장애'), `${r.status} ${r.stdout}`)
+  r = stop([], broken)
+  ok('--stop: 도구 장애 연속 2회 → exit 2', r.status === 2, String(r.status))
+  try { fs.unlinkSync(pend(SID)) } catch {}
+  resetTimeouts(proj)
+
+  fs.rmSync(proj, { recursive: true, force: true })
+  fs.rmSync(other, { recursive: true, force: true })
+}
+
 fs.rmSync(STATE_DIR, { recursive: true, force: true })
 console.log(`\n결과: ${passed}/${passed + failed} 통과`)
 if (failed > 0) { console.log('❌ 일부 테스트 실패'); process.exit(1) }

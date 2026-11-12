@@ -81,15 +81,15 @@ echo "== 1. 종류별 껐다 켜기 (프로젝트 alpha)"
 init "$A" a0
 check "기본: /commit 커맨드 있음" 있음 "$(has a0 slash commit)"
 # 에이전트
-g "$A" off agent:qa-engineer >/dev/null; init "$A" a1
-check "에이전트 끄기 → qa-engineer 사라짐" 없음 "$(has a1 agents qa-engineer)"
-g "$A" on agent:qa-engineer >/dev/null; init "$A" a2
-check "에이전트 켜기 → qa-engineer 돌아옴" 있음 "$(has a2 agents qa-engineer)"
+g "$A" off agent:skill-tester >/dev/null; init "$A" a1
+check "에이전트 끄기 → skill-tester 사라짐" 없음 "$(has a1 agents skill-tester)"
+g "$A" on agent:skill-tester >/dev/null; init "$A" a2
+check "에이전트 켜기 → skill-tester 돌아옴" 있음 "$(has a2 agents skill-tester)"
 # 스킬
-g "$A" on skill:axum >/dev/null; init "$A" a3
-check "스킬 켜기 → axum 생김" 있음 "$(has a3 skills axum)"
-g "$A" off skill:axum >/dev/null; init "$A" a4
-check "스킬 끄기 → axum 사라짐" 없음 "$(has a4 skills axum)"
+g "$A" on skill:vercel-sandbox >/dev/null; init "$A" a3
+check "스킬 켜기 → vercel-sandbox 생김" 있음 "$(has a3 skills vercel-sandbox)"
+g "$A" off skill:vercel-sandbox >/dev/null; init "$A" a4
+check "스킬 끄기 → vercel-sandbox 사라짐" 없음 "$(has a4 skills vercel-sandbox)"
 # 커맨드
 g "$A" off command:commit >/dev/null; init "$A" a5
 check "커맨드 끄기 → /commit 사라짐" 없음 "$(has a5 slash commit)"
@@ -110,9 +110,9 @@ g "$A" on "setting:superpowers 플러그인" >/dev/null
 out=$(g "$A" off bundle:codex-review)
 check "묶음 끄기 → 훅·룰·커맨드 3개 같이 꺼짐" 1 "$(echo "$out" | grep -c 'command:codex-review, hook:codex-review-guard, rule:codex-review.md')"
 g "$A" on bundle:codex-review >/dev/null
-g "$A" on block:rust >/dev/null; init "$A" a7
-check "블록 켜기 → rust 에이전트 생김" 있음 "$(has a7 agents rust-backend-developer)"
-g "$A" off block:rust >/dev/null
+g "$A" on block:fortune >/dev/null; init "$A" a7
+check "블록 켜기 → 운세 에이전트 생김" 있음 "$(has a7 agents fortune-interpretation-prompt-tester)"
+g "$A" off block:fortune >/dev/null
 # 훅 — 실제 동작: tdd-guard 는 테스트 없는 소스를 쓰면 경고
 P='바로 진행해. 확인 없이 Write 도구로 src/calc.js 파일을 만들어 add(a,b) 함수를 넣어. 그 뒤 아무것도 하지 말고 끝내.'
 g "$A" off hook:tdd-guard >/dev/null; rm -rf "$A/src"
@@ -123,38 +123,38 @@ g "$A" on hook:tdd-guard >/dev/null; rm -rf "$A/src"
 c=$(g "$A" -p "$P" --max-turns 3 --output-format stream-json --verbose | grep -c 'tdd-guard'); check "훅 켜기 → tdd-guard 안내 나옴" yes "$([ "$c" -gt 0 ] && echo yes || echo no)"
 rm -rf "$A/src"
 # 고정
-for id in hook:bash-guard hook:claude-version-check hook:parallel-hint hook:wrapper-version-check; do
+for id in hook:bash-guard hook:claude-version-check hook:release-version-guard hook:wrapper-version-check; do
   check "🔒 $id 끄기 거부" 1 "$(g "$A" off $id | grep -c '고정')"
 done
 
 echo "== 2. 폴더(워크스페이스) 분리"
-g "$A" preset rust >/dev/null; init "$A" w1; init "$B" w2
-check "alpha 에 켠 프리셋이 alpha 에만 (alpha)" 있음 "$(has w1 agents rust-backend-developer)"
-check "alpha 에 켠 프리셋이 alpha 에만 (beta)" 없음 "$(has w2 agents rust-backend-developer)"
+g "$A" preset fortune >/dev/null; init "$A" w1; init "$B" w2
+check "alpha 에 켠 프리셋이 alpha 에만 (alpha)" 있음 "$(has w1 agents fortune-interpretation-prompt-tester)"
+check "alpha 에 켠 프리셋이 alpha 에만 (beta)" 없음 "$(has w2 agents fortune-interpretation-prompt-tester)"
 check "프로젝트마다 설정 폴더가 다름" yes "$([ "$(cfgof "$A")" != "$(cfgof "$B")" ] && [ -n "$(cfgof "$B")" ] && echo yes || echo no)"
 # 같은 이름 폴더가 다른 위치에
 X="$T/x/app"; Y="$T/y/app"; newproj "$X"; newproj "$Y"
-g "$X" on skill:axum >/dev/null; g "$Y" status >/dev/null
+g "$X" on skill:vercel-sandbox >/dev/null; g "$Y" status >/dev/null
 check "같은 이름(app) 폴더 둘은 다른 프로젝트로" yes "$([ "$(cfgof "$X")" != "$(cfgof "$Y")" ] && echo yes || echo no)"
 init "$X" x1; init "$Y" y1
-check "x/app 에 켠 스킬이 y/app 엔 없음" "있음/없음" "$(has x1 skills axum)/$(has y1 skills axum)"
+check "x/app 에 켠 스킬이 y/app 엔 없음" "있음/없음" "$(has x1 skills vercel-sandbox)/$(has y1 skills vercel-sandbox)"
 # 하위 폴더에서 실행해도 같은 프로젝트(git 최상위)
 mkdir -p "$A/sub/deep"; g "$A/sub/deep" status >/dev/null
 check "하위 폴더 → 새 프로젝트로 등록되지 않음(git 최상위 = alpha)" "없음/$CA" "$([ -n "$(cfgof "$A/sub/deep")" ] && echo 있음 || echo 없음)/$(cfgof "$A")"
 init "$A/sub/deep" d1
-check "하위 폴더에서 연 세션에도 alpha 설정(rust) 적용" 있음 "$(has d1 agents rust-backend-developer)"
+check "하위 폴더에서 연 세션에도 alpha 설정(fortune) 적용" 있음 "$(has d1 agents fortune-interpretation-prompt-tester)"
 # git 이 아닌 폴더
 N="$T/plain"; mkdir -p "$N"; init "$N" n1
 check "git 이 아닌 폴더도 세션 시작" 있음 "$(has n1 slash commit)"
 # 동시에 두 세션 (서로 다른 설정)
 init "$A" c1 & init "$B" c2 & wait
-check "동시 세션: alpha 는 rust 있음 · beta 는 없음" "있음/없음" "$(has c1 agents rust-backend-developer)/$(has c2 agents rust-backend-developer)"
+check "동시 세션: alpha 는 fortune 있음 · beta 는 없음" "있음/없음" "$(has c1 agents fortune-interpretation-prompt-tester)/$(has c2 agents fortune-interpretation-prompt-tester)"
 # 모든 프로젝트(--all) 와 프로젝트별 덮기
-g "$B" on skill:sqlx --all >/dev/null; g "$A" off skill:sqlx >/dev/null; init "$A" p1; init "$B" p2
-check "--all 은 beta 에 적용, alpha 는 자기 설정(끔)이 이김" "없음/있음" "$(has p1 skills sqlx)/$(has p2 skills sqlx)"
+g "$B" on skill:vercel-sandbox --all >/dev/null; g "$A" off skill:vercel-sandbox >/dev/null; init "$A" p1; init "$B" p2
+check "--all 은 beta 에 적용, alpha 는 자기 설정(끔)이 이김" "없음/있음" "$(has p1 skills vercel-sandbox)/$(has p2 skills vercel-sandbox)"
 # git 공유 설정 .gugbab.json
-printf '{"lock":["command:commit"],"enable":["block:python"]}\n' > "$B/.gugbab.json"; init "$B" s1; init "$A" s2
-check ".gugbab.json enable → beta 만 python 에이전트" "있음/없음" "$(has s1 agents python-backend-developer)/$(has s2 agents python-backend-developer)"
+printf '{"lock":["command:commit"],"enable":["block:health"]}\n' > "$B/.gugbab.json"; init "$B" s1; init "$A" s2
+check ".gugbab.json enable → beta 만 health 에이전트" "있음/없음" "$(has s1 agents nutrition-prompt-tester)/$(has s2 agents nutrition-prompt-tester)"
 check ".gugbab.json lock → beta 에서 /commit 끄기 거부" 1 "$(g "$B" off command:commit | grep -c '고정')"
 rm -f "$B/.gugbab.json"
 

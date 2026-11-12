@@ -102,6 +102,9 @@ test('정상: settings.json — 이벤트마다 디스패처 하나, 권한·상
   assert.strictEqual(st.hooks.PreToolUse[0].matcher, '*');
   assert.strictEqual(st.hooks.PreToolUse[0].hooks[0].command, `node "${cmdPath(s.code)}/cli/hook.js" PreToolUse`);
   assert.strictEqual(st.hooks.Stop[0].matcher, undefined);
+  // 디스패처 자체가 못 뜨거나 죽으면 도구 호출을 막는다(가드가 다 꺼진 채 진행 방지) — PreToolUse 만. Stop 등은 공식상 효과 없음·잠금 위험
+  assert.strictEqual(st.hooks.PreToolUse[0].hooks[0].onFailure, 'block');
+  assert.strictEqual(st.hooks.Stop[0].hooks[0].onFailure, undefined);
   assert.strictEqual(st.statusLine.command, `bash "${cmdPath(s.code)}/.claude"/hooks/statusline.sh`);
   if (WIN) {
     assert.ok(!st.hooks.PreToolUse[0].hooks[0].command.includes('\\'), 'Git Bash 가 \\ 를 먹지 않게 명령 경로는 / 만');
@@ -123,6 +126,34 @@ test('정상: 첫 실행 화면 — 온보딩 완료 표시와 그 폴더의 신
   assert.strictEqual(cj.oauthAccount, undefined, '계정 정보는 옮기지 않음');
   assert.strictEqual(cj.projects[s.project.root].allowedTools, undefined);
   if (!WIN) assert.strictEqual((fs.statSync(path.join(s.project.configDir, '.claude.json')).mode & 0o777), 0o600); // 윈도우는 권한 비트 없음
+});
+
+// 2026-11-06 (lfmall 1051908 반영) — 래퍼로 열면 Chrome 확장 도구가 안 올라오던 문제: 평소 설정의 "기본으로 켜기" 를 이어받음
+test('정상: Chrome 확장 "기본으로 켜기" 를 평소 설정에서 이어받음', () => {
+  const s = setup();
+  const homeCj = readJson(path.join(s.paths.home, '.claude.json'));
+  w(path.join(s.paths.home, '.claude.json'), JSON.stringify({ ...homeCj, claudeInChromeDefaultEnabled: true }));
+  compose(s);
+  assert.strictEqual(readJson(path.join(s.project.configDir, '.claude.json')).claudeInChromeDefaultEnabled, true);
+});
+
+test('이상: 프로젝트에서 /chrome 으로 끈 값(false)은 평소 설정이 true 여도 덮어쓰지 않음', () => {
+  const s = setup();
+  const homeCj = readJson(path.join(s.paths.home, '.claude.json'));
+  w(path.join(s.paths.home, '.claude.json'), JSON.stringify({ ...homeCj, claudeInChromeDefaultEnabled: true }));
+  w(path.join(s.project.configDir, '.claude.json'), JSON.stringify({ claudeInChromeDefaultEnabled: false }));
+  compose(s);
+  assert.strictEqual(readJson(path.join(s.project.configDir, '.claude.json')).claudeInChromeDefaultEnabled, false);
+});
+
+test('경계: 평소 설정에 값이 없으면 넣지 않음, 평소 설정이 깨져 있어도 조립', () => {
+  const s = setup();
+  compose(s);
+  assert.ok(!('claudeInChromeDefaultEnabled' in readJson(path.join(s.project.configDir, '.claude.json'))));
+  const s2 = setup();
+  w(path.join(s2.paths.home, '.claude.json'), '{broken');
+  assert.doesNotThrow(() => compose(s2));
+  assert.strictEqual(readJson(path.join(s2.project.configDir, '.claude.json')).claudeInChromeDefaultEnabled, undefined);
 });
 
 test('정상: 끈 항목의 링크는 지우고, 다시 조립해도 바뀐 게 없으면 changed=false', () => {
