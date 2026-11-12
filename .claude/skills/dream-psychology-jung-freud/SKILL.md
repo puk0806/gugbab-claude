@@ -20,7 +20,7 @@ description: >
 > - Plevin & Munro, "The clinical use of dream content in modern psychiatry", *Australasian Psychiatry*, 33(3), 413–416, 2025: https://pubmed.ncbi.nlm.nih.gov/39748545/
 > - 1차 원문 대조(2026-09-26): Freud *Die Traumdeutung* 독일어 원문(Project Gutenberg #40739), Brill 영역(Gutenberg #66048), Jung *Man and His Symbols* (1964) 본문
 >
-> 검증일: 2026-09-26
+> 검증일: 2026-11-06 (재검증 — SEP 개정일·PubMed 서지 4건 재대조, 내용 변경 없음)
 
 ---
 

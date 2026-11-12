@@ -6,8 +6,8 @@ description: Claude Code 훅(hooks) 작성법 — 이벤트 종류·stdin 입력
 # Claude Code 훅 작성법
 
 > 소스: https://code.claude.com/docs/en/hooks (Hooks reference) · https://code.claude.com/docs/en/hooks-guide (Automate actions with hooks) · 검증 사례는 이 레포 `.claude/hooks/` 실제 동작 코드
-> 검증일: 2026-09-28 (최초 2026-08-11)
-> 기준 버전: Claude Code 2.1.x (공식 changelog 2.1.283 시점 대조, 일부 필드는 최소 버전 요구 — 본문 표기)
+> 검증일: 2026-11-09 (최초 2026-08-11)
+> 기준 버전: Claude Code 2.1.x (공식 changelog 2.1.319 시점 대조, 일부 필드는 최소 버전 요구 — 본문 표기)
 
 ---
 
@@ -92,7 +92,7 @@ description: Claude Code 훅(hooks) 작성법 — 이벤트 종류·stdin 입력
 - **JSON 파싱 실패**(`{`로 시작·`}`로 끝나지만 유효 JSON이 아님)는 exit 2 외 모든 exit code에서 **비차단 에러**로 보고된다. 컨텍스트 주입 이벤트에서도 그 텍스트는 주입되지 않는다. v2.1.248 이전에는 plain text로 취급됐다.
 - **스키마 검증 실패 JSON**: exit 0·기타 → 비차단 에러(동작 진행) / exit 2 → 그래도 차단되고 stderr가 사유가 된다(v2.1.214 수정 — 이전에는 비차단 에러로 진행됐다).
 
-> **exit 1은 (유효 JSON 없이는) 차단하지 않는다.** 유닉스 관례상 실패 코드지만 Claude Code는 그대로 진행한다. 정책을 강제하려면 `exit 2` 또는 exit 0 + JSON 결정. 예외: `WorktreeCreate`/`WorktreeRemove`는 non-zero 전부가 실패 처리.
+> **exit 1은 (유효 JSON 없이는) 차단하지 않는다.** 유닉스 관례상 실패 코드지만 Claude Code는 그대로 진행한다. 정책을 강제하려면 `exit 2` 또는 exit 0 + JSON 결정. 예외: `WorktreeCreate`/`WorktreeRemove`는 non-zero 전부가 실패 처리, 그리고 `"onFailure": "block"`을 단 훅(5절, v2.1.295+)은 0·2 외 exit code가 **JSON이 허용해도 실패=차단**.
 >
 > **exit 2 + plain text 사유는 stdout이 아니라 stderr로 써야 한다.** plain text stdout은 차단 메시지로 쓰이지 않아 모델은 "No stderr output"만 본다.
 
@@ -169,6 +169,7 @@ matcher 값의 **문자 구성**에 따라 해석 방식이 바뀐다.
 - MCP 도구는 `mcp__<server>__<tool>` 형태 → 서버 전체는 `mcp__memory__.*`.
 - 도구 이벤트가 아닌 이벤트의 matcher는 도구명이 아니라 **사유 문자열**을 매칭한다(SessionStart는 `startup|resume`, PreCompact는 `manual|auto` 등). `UserPromptSubmit`·`Stop` 등 일부 이벤트는 matcher를 지원하지 않고 항상 실행된다.
 - 도구 이벤트에서는 matcher 대신/추가로 `if` 필드(권한 규칙 문법)로 더 좁힐 수 있다: `"if": "Bash(git *)"`, `"if": "Edit(*.ts)"`. `if`는 파싱 실패 시 **fail-open**(훅이 그냥 실행됨)이므로 하드 차단 용도로 의존하지 말 것.
+- **Monitor 도구의 셸 명령도 `Bash` matcher 훅이 받는다**(v2.1.314+, 그 전엔 건너뛰던 버그 수정). 이때 훅은 차단·ask는 되지만 allow·`updatedInput` 재작성은 안 된다. `if: "Monitor(tail *)"`도 `Bash(tail *)`처럼 매칭된다. Bash 차단 훅은 `tool_name`이 `Monitor`일 때의 입력도 검사하도록 만든다.
 
 ---
 
@@ -203,6 +204,10 @@ matcher 값의 **문자 구성**에 따라 해석 방식이 바뀐다.
 - **경로는 항상 `$CLAUDE_PROJECT_DIR`(또는 `${CLAUDE_PROJECT_DIR}`) 기준 절대경로**로 쓴다. 훅은 임의의 cwd에서 실행될 수 있다. 플러그인은 `${CLAUDE_PLUGIN_ROOT}`.
 - **경로 오타 = 정책 훅이 조용히 꺼짐.** 스크립트가 없거나 실행 불가면 셸이 127 등으로 종료 → **비차단 에러**(`Failed with non-blocking status code: /bin/sh: ...: No such file or directory`)로 처리되고 동작은 그대로 진행된다. 차단형 훅은 배선 직후 첫 실행에서 이 notice가 없는지 반드시 확인한다.
   - 위 127 형태는 스크립트 경로를 **직접** 실행할 때다. 위 예시처럼 `node $CLAUDE_PROJECT_DIR/...js`로 인터프리터를 앞에 두면 셸이 아니라 node가 **exit 1**(`Error: Cannot find module '...'`)로 끝난다 — 결과는 똑같이 비차단 통과이므로, notice를 `No such file`만으로 찾지 말고 `Cannot find module`도 확인한다. (2026-09-28 실행 확인, Claude Code 2.1.283)
+- **fail-closed: `"onFailure": "block"`** (v2.1.295+, `command`·`http` 핸들러만, 기본값 `"continue"`). 훅이 **시작 못 함(스크립트 없음)·타임아웃·0/2 외 exit code(JSON이 allow여도)·JSON 파싱/스키마 실패·HTTP 비2xx** 이면 그 이벤트에서 exit 2와 같은 효과(PermissionRequest는 거부)를 낸다. plain text stdout은 실패가 아니다. `Stop`·`SubagentStop`·`TaskCompleted`·`TeammateIdle`과 `async`/`asyncRewake` 훅에는 효과 없음. 차단형 정책 훅은 이 필드로 경로 오타·크래시가 "조용히 통과"되는 문제를 막을 수 있다 — 단 7-1의 "예외는 exit 0" 안전장치와 함께 쓰면 진짜 버그도 통과되니, fail-closed 훅은 예외 시 exit 2(또는 1)로 끝내도록 설계를 맞춘다.
+  ```json
+  { "type": "command", "command": "node", "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/check-command.js"], "onFailure": "block" }
+  ```
 - 매칭된 훅은 **모두 병렬 실행**된다. 서로의 결과에 의존하는 순서 가정을 하지 말 것.
 - 설정 위치별 범위: `~/.claude/settings.json`(전역, 비공유) · `.claude/settings.json`(프로젝트, 커밋) · `.claude/settings.local.json`(로컬, gitignore) · 플러그인 `hooks/hooks.json` · 스킬/에이전트 frontmatter(해당 컴포넌트 활성 동안만).
 - 핸들러 타입: `command`(셸), `http`(POST), `mcp_tool`, `prompt`(모델 판정), `agent`(서브에이전트, 실험적).
@@ -216,7 +221,7 @@ matcher 값의 **문자 구성**에 따라 해석 방식이 바뀐다.
 | `command`·`http`·`mcp_tool` | **600초** |
 | `prompt` | 30초 |
 | `agent` | 60초 |
-| UserPromptSubmit의 command/http/mcp_tool | 30초 |
+| UserPromptSubmit·PostModelSwitch의 command/http/mcp_tool | 30초 |
 | MessageDisplay | 10초 |
 | PreModelSwitch | 30초 — **타임아웃 시 전환 차단**(PreToolUse command 훅은 타임아웃 시 차단 안 됨·정상 권한 흐름 진행) |
 | SessionEnd | 훅들이 공유하는 1.5초 예산(개별 `timeout` 지정 시 최대 60초까지 상향) |
@@ -235,7 +240,7 @@ matcher 값의 **문자 구성**에 따라 해석 방식이 바뀐다.
 | 이 레포 규칙 | **`*.test.js` 필수** | 테스트 선택 |
 | 실패 시 동작 | 예외 발생해도 `exit 0`으로 빠져나갈 안전장치 필요 | 동일 |
 
-이 레포의 실제 배선 예: 차단형 = `bash-guard`(위험 Bash deny) · `parry`/`protect-secrets`(시크릿 저장 차단) · `skill-md-guard`/`verification-guard`/`agent-md-guard`(구조 위반 저장 차단) · `deliverable-guard`(README·PENDING_TEST 미완 시 종료 차단) · dev 전용 `tdd-guard`/`adversarial-test-guard`/`fake-impl-guard`. 비차단형 = `session-start`·`claude-version-check`·`parallel-hint`·`staleness-check`·`session-export`·`cc-notify`·`memory-sync`.
+이 레포의 실제 배선 예: 차단형 = `bash-guard`(위험 Bash deny) · `parry`/`protect-secrets`(시크릿 저장 차단) · `skill-md-guard`/`verification-guard`/`agent-md-guard`(구조 위반 저장 차단) · `deliverable-guard`(README·PENDING_TEST 미완 시 종료 차단) · dev 전용 `tdd-guard`/`adversarial-test-guard`/`fake-impl-guard`. 비차단형 = `claude-version-check`·`staleness-check`·`session-export`·`cc-notify`·`memory-sync`.
 
 ---
 
@@ -352,7 +357,7 @@ const pass = r.status === 2 && r.stderr.includes('[tdd-guard]')
 | PostToolUse `exit 2`로 되돌리려 함 | 파일은 이미 변경됨 | PreToolUse로 이동 |
 | JSON stdout + `exit 2` 병용 | 차단은 되지만 메시지 출처가 JSON reason/stderr로 갈려 헷갈림 | exit 0 + JSON **또는** exit 2 + stderr 한 방식만 |
 | `{...}` 형태인데 깨진 JSON 출력 | 비차단 에러, 결정·컨텍스트 무효 (v2.1.248+) | `JSON.stringify` 한 번만, 다른 출력 섞지 않기 |
-| settings.json 경로 오타 | exit 127(직접 실행) / exit 1(`node <경로>`, Cannot find module) → 비차단 에러로 **정책 훅이 조용히 무력화** | 배선 후 첫 실행 notice 확인, 경로 존재 검사 |
+| settings.json 경로 오타 | exit 127(직접 실행) / exit 1(`node <경로>`, Cannot find module) → 비차단 에러로 **정책 훅이 조용히 무력화** | 배선 후 첫 실행 notice 확인, 경로 존재 검사, 차단형은 `"onFailure": "block"`(v2.1.295+) |
 | `hookSpecificOutput`에 `hookEventName` 누락 | 결정이 적용되지 않음 | 필수 필드 추가 |
 | 상대 경로 `command` | cwd에 따라 실행 실패 | `$CLAUDE_PROJECT_DIR` 절대경로 |
 | matcher `multiEdit` | 매칭 안 됨(대소문자 구분) | `MultiEdit` |
@@ -369,7 +374,7 @@ const pass = r.status === 2 && r.stderr.includes('[tdd-guard]')
 - [ ] matcher가 필요한 도구만 좁히는가(대소문자 확인)
 - [ ] 차단 시 `exit 2` + **stderr**에 "무엇을 하면 통과하는지" 명시 (PermissionRequest는 exit 0 + `decision` deny)
 - [ ] 예외·파싱 실패 시 `exit 0` 안전장치
-- [ ] `$CLAUDE_PROJECT_DIR` 절대경로로 settings.json 배선
+- [ ] `$CLAUDE_PROJECT_DIR` 절대경로로 settings.json 배선 (차단형이면 `"onFailure": "block"` 검토)
 - [ ] 차단형이면 `*.test.js` 작성 — 정상/차단(사유 스트림 포함)/제외·깨진 입력 3계층
 - [ ] 오탐 후보(설정 파일·훅 자신·생성 파일·워크트리)를 제외 목록에 반영
 - [ ] `/hooks`로 등록 확인, `claude --debug-file /tmp/claude.log` + `tail -f`로 실제 실행 로그 확인

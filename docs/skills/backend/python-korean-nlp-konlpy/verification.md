@@ -2,7 +2,7 @@
 skill: python-korean-nlp-konlpy
 category: backend
 version: v1
-date: 2026-09-26
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `python-korean-nlp-konlpy` |
 | 스킬 경로 | `.claude/skills/python-korean-nlp-konlpy/SKILL.md` |
-| 검증일 | 2026-09-26 (최초 2026-05-15) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-26 · 최초 2026-05-15) |
 | 검증자 | skill-creator (Opus 4.7) → 2026-09-26 재검증: 메인 오케스트레이션 (Claude Sonnet 5) |
 | 스킬 버전 | v1 |
 
@@ -67,6 +67,18 @@ status: APPROVED
 | mecab-ko-dic (LuminosoInsight) | https://github.com/LuminosoInsight/mecab-ko-dic | ⭐⭐ Medium | 2026-05-15 | 사전 패키징 참고 |
 | blog.cosadama 한국어 형태소 비교 | https://www.blog.cosadama.com/articles/2021-practicenlp-01/ | ⭐⭐ Medium | 2026-05-15 | 속도 벤치마크 데이터 |
 | soohee410 형태소 분석기 비교 | https://soohee410.github.io/compare_tagger | ⭐⭐ Medium | 2026-05-15 | 명사 추출 정확도 비교 |
+| PyPI JSON API — konlpy / mecab-ko / python-mecab-ko | https://pypi.org/pypi/mecab-ko/json | ⭐⭐⭐ High | 2026-11-09 | konlpy 0.6.0 그대로, mecab-ko 1.0.3(2026-10-28, Python 3.9~3.15 wheel), python-mecab-ko 1.3.7 |
+| pymecab-ko GitHub 릴리스 | https://github.com/NoUnique/pymecab-ko/releases | ⭐⭐⭐ High | 2026-11-09 | v1.0.3 태그 2026-10-28 확인, import `mecab_ko`·`Tagger` API |
+| python-mecab-ko 소스 | https://github.com/jonghwanhyeon/python-mecab-ko | ⭐⭐⭐ High | 2026-11-09 | `MeCab(dictionary_path, user_dictionary_path)` 시그니처 확인 |
+
+### 4-0. 2026-11-09 재검증 클레임 판정
+
+| 클레임 | 판정 | 근거 |
+|--------|------|------|
+| KoNLPy 최신 0.6.0 | VERIFIED | PyPI JSON (마지막 릴리스 2022-01-02) |
+| mecab-ko 최신 1.0.2 / Python 3.8~3.13 | DISPUTED → 수정 | PyPI·GitHub 릴리스: 1.0.3(2026-10-28), Python 3.9~3.15 |
+| 6.1 사용자 사전 `from mecab import MeCab(user_dictionary_path=...)` 가 `mecab-ko` 패키지 API | DISPUTED → 수정 | 이 API는 `python-mecab-ko` 패키지(import `mecab`). `mecab-ko` 는 import `mecab_ko`·`Tagger` |
+| `mecab-ko` wheel 이 macOS·Linux·Windows 64bit 제공, 사전 동봉 | VERIFIED | PyPI 설명·1.0.3 wheel 목록 |
 
 ---
 
@@ -99,6 +111,41 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester → general-purpose (도메인 전용 에이전트 대신 general-purpose 사용)
+**수행 방법**: 2026-11-09 재검증으로 바뀐 내용(mecab-ko 1.0.3·Python 3.9~3.15, 6.1 사용자 사전 API 패키지 구분, Windows 경로)을 겨냥한 실전 질문 3개를 SKILL.md Read 후 답변시키고 근거 섹션·anti-pattern 회피 확인
+
+### 실제 수행 테스트 (2026-11-09 재시험)
+
+**Q1. Python 3.14 + Windows 64bit에서 mecab-ko 설치 가능 여부·최신 버전·import 방법**
+- ✅ PASS
+- 근거: SKILL.md "3. Mecab-ko 설치 > 옵션 A" 및 상단 소스·검증일 블록
+- 상세: v1.0.3, Python 3.9~3.15(3.14 범위 내, 3.8 제외), Windows wheel은 VC++ 재배포 패키지 필요, `import mecab_ko as MeCab` + `Tagger`, KoNLPy `Mecab`은 Windows 불가를 모두 정확히 답함. 구버전(1.0.2, 3.8~3.13) anti-pattern 없음.
+
+**Q2. `pip install mecab-ko` 후 `from mecab import MeCab(user_dictionary_path=...)` 실패 원인과 사용자 사전 적용 절차**
+- ✅ PASS
+- 근거: SKILL.md "6.1 python-mecab-ko PyPI 패키지에서" 주의 블록 및 본문, 3절 옵션 A
+- 상세: 두 패키지(`mecab-ko`=import `mecab_ko`/`Tagger`, `python-mecab-ko`=import `mecab`) 혼동임을 정확히 짚고, `pip install python-mecab-ko` → CSV → `mecab-dict-index` 컴파일 → `MeCab(user_dictionary_path=...)` 절차를 정확히 제시. 바뀐 부분이 의도대로 전달됨.
+
+**Q3. Windows에서 KoNLPy `Mecab` 사용 가능 여부·대안·사용자 사전**
+- ✅ PASS
+- 근거: SKILL.md "2. 5개 분석기 비교" 표, "3. 옵션 B > Windows", "6.2 Komoran userdic"
+- 상세: Windows 미지원 확인, 대안(mecab-ko wheel / Komoran·Okt), 사용자 사전은 Komoran userdic 우선 권장, `python-mecab-ko`와 `mecab-ko`를 섞지 말라는 경고까지 정확히 인용.
+
+### 발견된 gap (선택 보강, 차단 요인 아님)
+
+- `mecab-ko`(`Tagger`)로 명사만 추출하는 예제 없음 (parse 결과 파싱 방법 미기재)
+- `mecab-dict-index` 바이너리 입수 방법·`python-mecab-ko`의 Windows 지원 여부 미명시 (REFERENCE는 테스트 에이전트가 읽지 않아 미확인)
+- Windows용 Komoran 설치(JDK·JPype) 절차 미기재
+
+### 판정
+
+- agent content test: 3/3 PASS (2026-11-09)
+- verification-policy 분류: 해당 없음 (라이브러리 사용법 스킬 — content test PASS = APPROVED)
+- 최종 상태: APPROVED 유지
+
+---
 
 ### 재검증 (2026-09-26)
 
@@ -178,8 +225,8 @@ status: APPROVED
 | 내용 정확성 | ✅ 공식 문서 교차 검증 완료 |
 | 구조 완전성 | ✅ 모든 필수 섹션 포함 (12개 섹션) |
 | 실용성 | ✅ 짝 스킬 통합 예시 포함 |
-| 에이전트 활용 테스트 | ✅ 4/4 PASS (2026-05-15 3/3 + 2026-06-19 Q4 추가) + ✅ 2/2 PASS (2026-09-26 재검증) |
-| **최종 판정** | **APPROVED** (2026-09-26 재검증 완료, 변동 없음) |
+| 에이전트 활용 테스트 | ✅ 4/4 PASS (2026-05-15 3/3 + 2026-06-19 Q4 추가) + ✅ 2/2 PASS (2026-09-26 재검증) + ✅ 3/3 PASS (2026-11-09 재시험, 변경 부분 포함) |
+| **최종 판정** | **APPROVED** (2026-11-09 재검증·재시험 완료) |
 
 **전환 사유**: 이전 "설치+실행 유형 실사용 필수 카테고리" 분류는 오분류. verification-policy.md 기준상 라이브러리 사용법 스킬(dayjs, react-virtuoso 등과 동일 유형)은 content test PASS만으로 APPROVED 전환 가능. 4/4 PASS 확인 후 APPROVED로 전환.
 
@@ -187,7 +234,8 @@ status: APPROVED
 
 ## 7. 개선 필요 사항
 
-- [✅] skill-tester가 content test 수행하고 섹션 5·6 업데이트 (2026-05-15 완료, 3/3 PASS; 2026-06-19 재검증 Q4 추가 PASS → APPROVED 전환 완료)
+- [✅] skill-tester가 content test 수행하고 섹션 5·6 업데이트 (2026-05-15 완료, 3/3 PASS; 2026-06-19 재검증 Q4 추가 PASS → APPROVED 전환 완료; 2026-11-09 재검증 후 재시험 3/3 PASS, APPROVED 유지)
+- [❌] `mecab-ko`(`Tagger`) 명사 추출 예제·`mecab-dict-index` 입수 방법·Windows Komoran(JDK) 설치 절차 보강 — 2026-11-09 재시험에서 발견, 선택 보강 (차단 요인 아님)
 - [❌] krwordrank 외 추가 한국어 TextRank 라이브러리 비교 — 선택 보강 (차단 요인 아님)
 - [❌] Docker 이미지 빌드 시간 최적화 예시 추가 — 선택 보강 (차단 요인 아님)
 - [❌] FAISS/pgvector 연동 실제 코드 — `backend/python-fastapi` 스킬 완성 후 연계 보강 (차단 요인 아님, 의존 스킬 완성 선행 필요)
@@ -204,3 +252,6 @@ status: APPROVED
 | 2026-06-19 | v1 | 카테고리 재분류 + 추가 content test 수행 (Q4 TF-IDF tokenizer·TfidfVectorizer 연결·빈도 기반 차이) → 4/4 PASS, PENDING_TEST → APPROVED 전환 (라이브러리 사용법 스킬, content test PASS = APPROVED 가능) | skill-tester |
 | 2026-09-25 | v1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |
 | 2026-09-26 | v1 | 재검증 — mecab-ko 1.0.2·KoNLPy 0.6.0·ko-sbert-multitask 수치 전부 변동 없음 확인 → APPROVED 유지 | 메인 오케스트레이션 (Claude Sonnet 5) |
+| 2026-11-09 | v1 | 재검증 — KoNLPy 0.6.0 그대로. mecab-ko 1.0.2→1.0.3(2026-10-28), 지원 Python 3.8~3.13→3.9~3.15 수정. 6.1 사용자 사전 API를 `python-mecab-ko` 패키지로 바로잡고 두 패키지 구분 주의 추가, REFERENCE 12.1 사전 경로 주의 추가 | 메인 오케스트레이션 (Claude Opus 5.5) |
+| 2026-11-09 | v1 | 재검증 후 2단계 재시험 수행 (Q1 Python 3.14·Windows mecab-ko 설치 / Q2 mecab-ko vs python-mecab-ko 사용자 사전 혼동 / Q3 Windows KoNLPy Mecab 대안·사전) → 3/3 PASS, APPROVED 유지 | skill-tester |
+| 2026-11-12 | v1.1 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 KoNLPy·mecab-ko·python-mecab-ko 3종 구분표(버전·import·Python 범위·Windows)·KoNLPy Mecab 설치 스크립트와 Windows 미지원·분석기 속도/강점표·사용자 사전 CSV 컬럼/컴파일/경로 주의·Komoran userdic·ko-sbert 계열 모델 수치·흔한 함정표 / 덜어낸 것 KoNLPy 소개·morphs/pos/nouns 예제·세종 품사 태그표·라이브러리 비교 장문·정규화 코드·빈도/TF-IDF/TextRank 키워드 추출 코드·FastAPI 예시와 테스트·삭제된 짝 스킬(python-fastapi·dream-symbol-tagging) 언급. references/REFERENCE.md 는 남길 사실을 SKILL.md 로 옮기고 폴더 삭제 | 정리 |

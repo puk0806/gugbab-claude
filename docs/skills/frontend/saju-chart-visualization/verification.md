@@ -2,7 +2,7 @@
 skill: saju-chart-visualization
 category: frontend
 version: v2
-date: 2026-09-28
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -17,7 +17,7 @@ status: APPROVED
 | 스킬 이름 | `saju-chart-visualization` |
 | 스킬 경로 | `.claude/skills/saju-chart-visualization/SKILL.md` |
 | 검증 문서 경로 | `docs/skills/frontend/saju-chart-visualization/verification.md` |
-| 검증일 | 2026-09-28 (재검증, 이전 2026-09-10) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-28) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v2 |
 | 버전 기준 | Recharts 3.10.1 / visx 4.0.0 / React 19 / WCAG 2.2 |
@@ -107,6 +107,8 @@ status: APPROVED
 | 위키백과 — 대운(사주팔자) | https://ko.wikipedia.org/wiki/대운_(사주팔자) | ⭐⭐ Medium-High | 2026-09-10 | 10년 주기·대운수·순행/역행 |
 | 명리 실무 해설 블로그·강의자료 다수 | (검색 결과 — sajustudy.com, chocosd.com, brunch, lei.or.kr 교안 등) | ⭐ Low-Medium | 2026-09-10 | 개수 단독 판정의 한계·월령·왕상휴수사 통용 여부 확인용 보조. **수치·규칙을 SKILL.md에 직접 인용하지 않음** |
 | CJK 폰트 서브셋 관련 블로그 다수 | (검색 결과 — font-converters.com 등) | ⭐ Low | 2026-09-10 | Google Fonts 슬라이싱 세부 수치는 **교차 검증 실패 → SKILL.md에서 배제** |
+| npm 레지스트리 — recharts·@visx/visx (`npm view` version·peerDependencies·time·dist-tags) | https://registry.npmjs.org/recharts/latest | ⭐⭐⭐ High | 2026-11-09 | 재검증 — recharts latest 3.10.1(2026-07-25, 3.11은 canary만), @visx/visx 4.0.0(2026-06-11) |
+| Recharts RadarChart·Radar API (재확인) | https://recharts.github.io/en-US/api/Radar/ | ⭐⭐⭐ High | 2026-11-09 | 재검증 — `accessibilityLayer` 기본 true, `isAnimationActive` 기본 `"auto"`(SSR off·reduced-motion 존중) |
 
 > 참고: 본 스킬의 도메인(명리)은 **공식 표준 문서·저자 공식 사이트가 존재하지 않는 전통 지식 영역**이다.
 > 그래서 (1) 전거가 명시된 백과사전 항목을 1차로 삼고, (2) 실무 해설 자료는 *"그런 논점이 통용된다"*는 사실 확인에만 쓰고,
@@ -139,6 +141,14 @@ status: APPROVED
 | C17 | 표면 8자 오행 개수만으로 강약을 단정하는 것은 지장간·월령(왕상휴수사)·득령/득지/득세를 누락한다 — 그리고 **강약 판정법 자체가 학파별로 갈린다** | 위키백과 사주명리학(지장간·학파별 기준 차이·과학적 근거 부재) | 명리 실무 해설·강의 자료 다수 | **VERIFIED**(논점 존재 사실) — 단 *어느 판정법이 옳은지*는 SKILL.md에서 채택하지 않음 |
 | C18 | Google Fonts의 CJK 슬라이싱 세부 수치(조각 100+개, 조각당 100~200자 등) | 저신뢰 블로그 다수 | 공식 문서 확인 실패 | **UNVERIFIED** → SKILL.md 8-3에 `> 주의: 교차 검증 실패`로 명시하고 **수치에 의존하지 않는 서술로 대체**(고정 문자셋 서브셋) |
 
+**2026-11-09 재검증 판정:**
+
+| # | 클레임 | 소스 A | 소스 B | 판정 |
+|---|--------|--------|--------|------|
+| R1 | Recharts 최신 안정 3.10.1, peer React 16.8~19 | npm `latest: 3.10.1`(3.11.0은 canary.9까지만) | npm peerDependencies | **VERIFIED** (변경 없음) |
+| R2 | `accessibilityLayer` 기본 true / `isAnimationActive` 기본 `"auto"` | 공식 RadarChart API | 공식 Radar API | **VERIFIED** (변경 없음) |
+| R3 | visx 최신 4.0.0, peer React 18/19 | npm `@visx/visx` 4.0.0 peer `^18 \|\| ^19` | npm time (`@visx/group` 4.0.0 2026-06-11) | **VERIFIED** (변경 없음) |
+
 **DISPUTED / UNVERIFIED 반영 내역:**
 - C9 → SKILL.md 5-1 하단 `> 주의:` 블록 + 5-4 "색만으로 구분하지 않기"로 우회 처리
 - C18 → SKILL.md 8-3 하단 `> 주의:` 블록. 본문은 Google 슬라이싱 수치 대신 `--text` 고정 문자셋 서브셋만 권장
@@ -157,7 +167,7 @@ status: APPROVED
 - [✅] 코드 예시 포함 (TS 타입 / TSX 컴포넌트 4종 / CSS 토큰·레이아웃 / 서브셋 스크립트 2종)
 - [✅] 언제 사용 / 언제 사용하지 않을지 기준 포함 (0절 범위표, 3-2 화면별 결정, 6-1 레이더 vs 바 선택 기준)
 - [✅] 흔한 실수 패턴 포함 (10절 18종)
-- [✅] 짝 스킬 상호 참조 명시 (font-optimization / dream-statistics-visualization / wcag-2.2-checklist / design-token-scss)
+- [✅] 짝 스킬 상호 참조 명시 (dream-statistics-visualization / wcag-2.2-checklist / design-token-scss)
 - [✅] 부정확 가능성 항목에 `> 주의:` 표기 (1-1 본기 단순화 / 2절 학파 차이 / 4-2 표기 순서 / 5-3 hex 미확정 / 8-3 슬라이싱 수치 / 3-3 3.x 파괴적 변경)
 
 ### 4-3. 실용성
@@ -286,3 +296,5 @@ status: APPROVED
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | |
 | 2026-09-25 | v1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |
 | 2026-09-28 | v2 | 재검증(2차) — Recharts 3.10.1·visx 4.0.0·WCAG 2.2 현행성 재확인, 3/3 VERIFIED·DISPUTED 0, 내용 변경 없음 → APPROVED 유지 | Claude (Sonnet 5) |
+| 2026-11-09 | v2 | 재검증 — npm(recharts 3.10.1 latest·3.11 canary만, visx 4.0.0)·Recharts 공식 API(`accessibilityLayer` true·`isAnimationActive` "auto") 대조, 3/3 VERIFIED. 내용 변경 없음(날짜만 갱신) → APPROVED 유지 | 재검증 |
+| 2026-11-12 | v2.1 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 도메인 최소 사전·본기 배속·고정 한자 집합·표기 순서, 단정 금지 가드(3가지 오독·명리학 내부 논점·학파 주의·레이더 표현 규칙·시주 미상 분모 6·고정 캡션), 오행 색상 시스템(오방정색·백흑황 재매핑·fg/surface 토큰·hex 주의·색만으로 구분 금지) / 덜어낸 것 범위 표, 라이브러리 선택·SVG vs 라이브러리, 원국 표·분포 차트·대운 타임라인 구현 코드, 폰트 서브셋 스크립트, 다크모드 절, 흔한 실수 18항, 구현 순서, references/REFERENCE.md. 지워진 dream-statistics-visualization 참조 제거, 계산 참조는 korean-lunar-calendar-manseryeok 로 | 정리 |

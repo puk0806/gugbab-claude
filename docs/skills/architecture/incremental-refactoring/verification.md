@@ -2,7 +2,7 @@
 skill: incremental-refactoring
 category: architecture
 version: v1.1
-date: 2026-09-28
+date: 2026-11-09
 status: PENDING_TEST
 ---
 
@@ -14,10 +14,10 @@ status: PENDING_TEST
 |------|------|
 | 스킬 이름 | `incremental-refactoring` |
 | 스킬 경로 | `.claude/skills/incremental-refactoring/SKILL.md` |
-| 검증일 | 2026-09-28 (실사용 검증 v1.1, 직전 30~60일 주기 재검증 2026-09-26, 최초 검증 2026-08-26) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-28 실사용 검증 v1.1 · 2026-09-26 주기 재검증 · 최초 2026-08-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
-| 기준 버전 | ts-morph 28.0.0 / jscodeshift 17.4.0 / dependency-cruiser 18.2.0 / eslint-plugin-boundaries 7.2.0 / tsconfig-paths 4.2.0 / size-limit 13.0.3 / TypeScript 7.0.2(6.0.2 병행) |
+| 기준 버전 | ts-morph 28.0.0 / jscodeshift 17.4.0 / dependency-cruiser 18.7.2 / eslint-plugin-boundaries 7.4.2 / tsconfig-paths 4.2.0 / size-limit 14.3.0 / TypeScript 7.0.2(6.0.2 병행, 7.1.0-beta 공개) |
 
 ---
 
@@ -99,6 +99,10 @@ status: PENDING_TEST
 | Vercel Engineering Blog — optimizePackageImports | https://vercel.com/blog/how-we-optimized-package-imports-in-next-js | ⭐⭐ Medium-High | 2026-08-26 | 배럴 파일 비용 수치(벤더 자체 측정치로 명시 인용) |
 | Wikipedia — Characterization test | https://en.wikipedia.org/wiki/Characterization_test | ⭐⭐ Medium | 2026-08-26 | Feathers 용어 창안 사실 교차 확인용 보조 소스 |
 | Michael Feathers, *Working Effectively with Legacy Code* (Prentice Hall, 2004) | (서적) | ⭐⭐⭐ High | 2026-08-26 | characterization test 원저 |
+| TypeScript 공식 블로그 — Announcing TypeScript 7.1 Beta | https://devblogs.microsoft.com/typescript/announcing-typescript-7-1-beta/ | ⭐⭐⭐ High | 2026-11-09 | 재검증 — 2026-10-20 공개, 새 API 진입점(typescript/sync·async·fs·ast·ast/is·ast/factory), RC "약 한 달 뒤" |
+| npm registry — typescript·ts-morph·@typescript/typescript6 dist-tags | https://registry.npmjs.org/typescript | ⭐⭐⭐ High | 2026-11-09 | 재검증 — typescript latest 7.0.2 / beta 7.1.0-beta(2026-10-20), ts-morph 28.0.0 그대로, @typescript/typescript6 6.0.2 |
+| size-limit CHANGELOG + GitHub Releases | https://github.com/ai/size-limit/blob/main/CHANGELOG.md | ⭐⭐⭐ High | 2026-11-09 | 재검증 — 14.0.0(2026-09-15) preset-small-lib 기본 rolldown·Node 지원 통일, latest 14.3.0, engines `^22.19 \|\| ^24.5 \|\| >=26` |
+| npm registry + GitHub Releases — dependency-cruiser·eslint-plugin-boundaries | https://github.com/javierbrea/eslint-plugin-boundaries/releases | ⭐⭐⭐ High | 2026-11-09 | 재검증 — dependency-cruiser 18.7.2(engines 동일), boundaries 7.4.2(7.2.1 handlebars 보안 패치) |
 
 ---
 
@@ -149,6 +153,9 @@ status: PENDING_TEST
 | 13 | `.git-blame-ignore-revs`를 **레포 루트**에 두면 GitHub 블레임 뷰에서도 적용되며, "해당 커밋이 마지막으로 수정한 라인"은 여전히 blame에 남는다 | docs.github.com viewing-and-understanding-files | git-scm.com/docs/git-blame (`--ignore-revs-file` / `blame.ignoreRevsFile` 형식·동작) | **VERIFIED** |
 | 14 | dependency-cruiser는 `--output-type baseline`(또는 `depcruise-baseline`)으로 `.dependency-cruiser-known-violations.json`을 만들고, `--ignore-known`으로 기존 위반의 severity를 `ignore`로 낮춘다 | github.com/sverweij/dependency-cruiser doc/cli.md (main) | registry.npmjs.org/dependency-cruiser/latest (18.2.0 — 현행 메이저에서 유효) + WebSearch 결과 | **VERIFIED** |
 | 15 | TypeScript 7.0은 프로그래매틱 API를 포함하지 않으며 7.1에서 새 API 예정. `@typescript/typescript6`가 `tsc6`와 6.0 API re-export를 제공해 side-by-side 운용이 가능하다 | 커뮤니티 블로그 다수(Medium/DEV) — "ts-morph가 깨진다" 주장 | **devblogs.microsoft.com 공식 7.0 / 7.0 Beta 발표문 원문** | **DISPUTED → 공식 근거로 재작성** |
+| R1 (2026-11-09) | TS 7.1 Beta(2026-10-20)가 새 API를 냈으나 6.0 API와 다른 형태이고, ts-morph 최신은 28.0.0 그대로 → side-by-side 회피책 유효 | TS 공식 7.1 Beta 발표문(진입점 6종) | npm registry(typescript beta 7.1.0-beta, ts-morph latest 28.0.0) | **VERIFIED → SKILL.md 0절에 재검증 단락 추가** (ts-morph 의 7.1 지원 여부·시기는 UNVERIFIED, 주의 표기) |
+| R2 (2026-11-09) | size-limit 최신은 14.3.0이며 14.0.0에서 preset-small-lib 기본 번들러가 rolldown 으로 바뀌고 Node 요구가 올라감 | size-limit CHANGELOG(14.0.0 항목) | npm registry(latest 14.3.0, engines) + GitHub Releases 14.0.0 | **VERIFIED → 버전 표 정정(13.0.3→14.3.0) + 수치 비교 주의** |
+| R3 (2026-11-09) | dependency-cruiser 18.7.2·eslint-plugin-boundaries 7.4.2가 최신, Node/peer 요건 변동 없음 | npm registry(latest·engines·peerDependencies) | GitHub Releases(v18.7.2 / v7.4.2, 7.2.1 보안 패치) | **VERIFIED → 버전 표 정정** |
 
 ### 4-6. DISPUTED 처리 내역
 
@@ -171,6 +178,82 @@ status: PENDING_TEST
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-11-09] skill-tester 독립 재시험 (general-purpose 위임) — §0 버전 표 + TS 7.1 Beta 단락 검증
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester → general-purpose (3개 질문을 각각 별도 에이전트에 위임, 답변 3건 모두 수신 후 판정. 도메인 특화 에이전트 대신 general-purpose 사용)
+**수행 방법**: 각 에이전트가 SKILL.md를 Read한 뒤 SKILL.md 내용에만 의존해 답변, 근거 섹션·줄 번호를 명시하고 품질 평가를 첨부. tester는 답변을 SKILL.md 실제 내용과 대조해 판정.
+
+### 실제 수행 테스트
+
+**Q1. size-limit 13.0.3 → 14.3.0 업그레이드를 폴더 이동 PR에 같이 넣어도 되는가, 번들 diff 게이트(⑤)와 Node 요건은**
+- ✅ PASS
+- 근거: SKILL.md "0. 버전 기준" size-limit 행, 5-1(PR 유형 1개 원칙·섞지 말 조합), 5-2 게이트 ⑤, 10절 "번들 diff 게이트 생략" 행
+- 상세: 메이저 14로 preset-small-lib 기본 번들러가 rolldown으로 바뀌어 13/14 수치를 같은 게이트에서 비교하면 안 된다는 점, Node `^22.19 || ^24.5 || >=26` 요건, 업그레이드는 별도 PR로 먼저 머지하고 baseline 재측정 후 이동 PR을 비교하라는 결론을 정확히 도출. 수치 어긋남을 이유로 ⑤를 생략하는 anti-pattern을 회피. 에이전트가 "업그레이드를 같은 PR에 섞는 것의 명시적 금지 문장은 없고 5-1 원칙에서 추론"이라고 스스로 구분해 표기함.
+
+**Q2. TS 7.1 Beta가 나왔으니 side-by-side(@typescript/typescript6) 우회책을 버리고 ts-morph를 7.1 API 위에서 써도 되는가**
+- ✅ PASS
+- 근거: SKILL.md 0절 "재검증(2026-11-09)" 단락·"재검증(2026-09-26)" 단락·side-by-side package.json 예시, 10절 TS7 행
+- 상세: 7.1 API는 6.0 API와 형태가 다르고(`typescript/sync`·`async`·`fs`·`ast` 진입점, 불변 `update*`) ts-morph 28.0.0은 6.0 API 기준이므로 우회책은 현재도 유효하다고 답함. ts-morph의 7.1 지원 여부·시기는 SKILL.md의 "주의: 미검증"을 그대로 인용하고 단정하지 않음. RC·정식 시점도 발표문 표현("약 한 달 뒤")만 인용. jscodeshift 대안·`tsc6 --noEmit`까지 근거와 함께 제시. anti-pattern(우회책 폐기, ts-morph 7.1 지원 단정) 회피.
+
+**Q3. eslint-plugin-boundaries·dependency-cruiser 고정 버전·피할 버전·Node/peer 요건, ts-morph move() 대상 경로 흔한 실수**
+- ✅ PASS
+- 근거: SKILL.md 0절 버전 표, 10절 move() 경로 행·별칭 행
+- 상세: boundaries 7.4.2(peer eslint >=6, 7.2.0은 보안 패치 전이므로 회피), dependency-cruiser 18.7.2(Node `^22 || ^24 || >=26`)를 정확히 답함. dependency-cruiser의 "피할 버전"은 SKILL.md에 없다고 명시적으로 밝히고 지어내지 않음. move()에 프로젝트 루트 기준 상대경로를 넘기면 중첩된 잘못된 위치로 조용히 이동하며 `path.resolve(to)`로 해결한다는 점, 별칭 import는 `move()`가 갱신하지 않으므로 경로 재작성 codemod가 이어져야 한다는 점까지 정확.
+
+### 발견된 gap (모두 선택 보강, 차단 요인 아님)
+
+- 0절 size-limit 행: 업그레이드를 이동 PR과 분리해야 한다는 문장이 직접 없고(5-1에서 추론), 불가피하게 같은 PR에서 올릴 때 같은 14.x로 before/after를 재측정하는 절차와 13→14 `--json` 스키마 호환 여부가 없다.
+- 0절 TS 행(7.0.2 / 7.1.0-beta 병기)은 RC·stable 예정 서술이 없고, 2026-09-26 단락의 "7.1 Beta 2026-10-06 예정"은 실제 공개일 2026-10-20과 달라 읽는 사람이 혼동할 수 있다(과거 시점 기록).
+- eslint-plugin-boundaries 7.4.2의 Node 요건, dependency-cruiser의 회피 버전은 표에 없음.
+
+### 판정
+
+- agent content test: 3/3 PASS
+- verification-policy 분류: 워크플로우 스킬(실사용 필수 카테고리)
+- 최종 상태: PENDING_TEST 유지 (content test 통과, 대규모 코드베이스 실전 사이클 미충족은 기존과 동일)
+
+---
+
+### [2026-11-09] (독립 시험 아님 — 위 독립 재시험으로 대체) skill-tester 셀프 답변 기록
+
+> 이 블록은 Agent 도구 없이 tester가 직접 답변한 것이라 독립 시험이 아니다. 판정 근거로 쓰지 않으며 위 독립 재시험이 대체한다. 이력 보존용으로만 남긴다.
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester (Agent 도구 미제공 환경이라 general-purpose 위임 대신 tester가 SKILL.md만 근거로 직접 답변·대조)
+**수행 방법**: SKILL.md 전체 Read 후, 이번 재검증에서 바뀐 §0 버전 표와 TS7 절 끝 "재검증(2026-11-09)" 단락을 겨냥한 실전 질문 3개를 SKILL.md 내용에만 의존해 답하고 근거 섹션·anti-pattern 회피를 대조.
+
+### 실제 수행 테스트
+
+**Q1. size-limit 을 13.0.3 에서 14.3.0 으로 올린 PR 에서 번들 diff 게이트(⑤)를 어떻게 다뤄야 하나**
+- ✅ PASS
+- 근거: SKILL.md "0. 버전 기준" size-limit 행 + 5-2 게이트 ⑤
+- 상세: 메이저 14 로 `@size-limit/preset-small-lib` 기본 번들러가 rolldown 으로 바뀌었고 Node `^22.19 || ^24.5 || >=26` 이 필요하므로, 13 으로 만든 before.json 과 14 로 만든 after.json 을 같은 게이트에서 비교하면 안 된다는 결론을 도출. 이동 PR 과 도구 업그레이드를 섞지 말라는 5-1 원칙으로 보강 가능. anti-pattern(수치 차이를 이동 탓으로 해석) 회피.
+
+**Q2. TypeScript 7.1 Beta 가 나왔으니 side-by-side(@typescript/typescript6) 우회책을 버리고 ts-morph 를 7.1 API 위에서 써도 되나**
+- ✅ PASS
+- 근거: SKILL.md 0절 "재검증(2026-11-09)" 단락 + 직전 "재검증(2026-09-26)" 단락 + 10절 TS7 행
+- 상세: 7.1 API 는 6.0 API 와 형태가 다르고(`typescript/sync`·`async`·`fs`·`ast` 진입점, 불변 `update*`), ts-morph 28.0.0 은 6.0 API 기준이므로 우회책은 2026-11-09 현재도 유효하다고 답함. "ts-morph 가 7.1 을 지원한다"는 단정을 하지 않고 SKILL.md 의 "주의: 미검증"을 그대로 인용. 7.1 API 로 새 codemod 를 짜는 것은 베타 변경 위험 감수 시에만이라는 조건도 정확.
+
+**Q3. eslint-plugin-boundaries 를 새로 도입하는데 어떤 버전을 고정해야 하나**
+- ✅ PASS
+- 근거: SKILL.md 0절 eslint-plugin-boundaries 행
+- 상세: 7.4.2 를 쓰고, 7.2.0 은 7.2.1 보안 패치 이전이라 피하라는 점, peer eslint >=6 을 정확히 답함. 구버전 7.2.0 권장 anti-pattern 회피.
+
+### 발견된 gap
+
+- 경미(선택 보강): 0절 size-limit 행은 "수치를 비교하지 말라"만 말하고, 업그레이드 시 before 스냅샷을 새 버전으로 재생성하는 절차는 명시하지 않아 에이전트가 5-2 로 추론해야 함. 차단 요인 아님.
+- 경미(선택 보강): 0절 TS 행은 7.0.2 와 7.1.0-beta 를 함께 적어, npm `latest` 가 7.0.2 인지 beta 가 dist-tag 인지 구분이 약함.
+- 참고: verification.md 메타 표의 기준 버전 행(size-limit 13.0.3, dependency-cruiser 18.2.0, eslint-plugin-boundaries 7.2.0)은 SKILL.md 와 불일치하나 부모가 메타 표를 갱신하기로 한 범위.
+
+### 판정
+
+- agent content test: 3/3 PASS
+- verification-policy 분류: 워크플로우 스킬(실사용 필수 카테고리)
+- 최종 상태: PENDING_TEST 유지 (content test 통과, 대규모 코드베이스 실전 사이클 미충족은 기존과 동일)
+
+---
 
 ### [2026-09-28] skill-tester 재테스트 — REFERENCE.md §3-3 정정분(path.resolve) + §10 신규 실패 패턴 행 검증
 
@@ -299,6 +382,7 @@ status: PENDING_TEST
 | 실용성 | ✅ (복사 가능한 codemod 4종·게이트 명령·PR 템플릿·지표 스크립트, 프로젝트 비종속) |
 | 기존 스킬과의 중복 | ✅ 없음 (`architecture/ddd`와 역할 분리 명시, dependency-cruiser·Strangler 주제는 레포 최초) |
 | 에이전트 활용 테스트 | ✅ 2026-08-26 수행(general-purpose 대체, Q1~Q4 4/4 PASS) + 2026-09-28 재테스트(§3-3/§10 정정분 겨냥, Q1~Q2 2/2 PASS) — 섹션 5 참조 |
+| 재검증 후 재시험 (2026-11-09) | ✅ general-purpose 독립 위임으로 §0 버전 표(size-limit 14 메이저·dependency-cruiser 18.7.2·eslint-plugin-boundaries 7.4.2)와 TS 7.1 Beta 단락 겨냥 Q1~Q3 3/3 PASS, 섹션 5 참조 (같은 날 앞선 셀프 답변 기록은 독립 시험이 아니라 대체됨) |
 | 실사용(실행) 검증 (2026-09-28, 부분) | ⚠️ 20파일 lab 샘플에서 ts-morph 배치 이동 + tsc + dependency-cruiser 경계 게이트까지 절차 실행. **REFERENCE.md §3-3 예제 스크립트의 실제 버그 발견**(`move()` 대상 경로가 프로젝트 루트 기준이 아니라 이동 파일 자신 기준으로 해석되어 잘못된 위치로 이동) → 수정 반영. "소스 수백 개" 조건 미충족으로 졸업 조건은 여전히 미충족 |
 | **최종 판정** | **PENDING_TEST (유지)** |
 
@@ -310,7 +394,9 @@ status: PENDING_TEST
 
 - [✅] skill-tester 2단계 테스트 수행 후 섹션 4-4·5·6 갱신 (2026-08-26 완료, 4/4 PASS, general-purpose 대체 수행)
 - [❌] README.md 스킬 목록·스킬 수·업데이트 로그 반영 — 차단 요인 아님, 별도 커밋/오케스트레이터 담당으로 보류 중
-- [❌] TypeScript **7.1** 릴리즈 시 0절 재검증 필요 — 새 프로그래매틱 API가 나오면 ts-morph 대응 상황과 `@typescript/typescript6` 우회책 권고를 갱신해야 함
+- [✅] 2026-11-09 재검증 변경분(§0 버전 표·TS 7.1 Beta 단락)에 대한 skill-tester content test 수행 (2026-11-09 general-purpose 독립 위임으로 완료, 3/3 PASS — 섹션 5 참조. 앞선 셀프 답변은 독립 시험이 아니어서 대체됨)
+- [❌] 선택 보강(차단 요인 아님): 0절 size-limit 행에 "도구 업그레이드는 이동 PR과 분리, 같은 14.x로 before 재측정" 문장 추가, 0절 TS 행·09-26 단락의 7.1 Beta 날짜 혼동 정리, boundaries Node 요건·dependency-cruiser 회피 버전 표기 검토
+- [❌] TypeScript **7.1** 정식 출시(RC 이후) 시 0절 재검증 필요 (2026-11-09 Beta 단락은 반영됨, 정식·ts-morph 7.1 API 지원 여부 추적은 계속) — 새 프로그래매틱 API가 나오면 ts-morph 대응 상황과 `@typescript/typescript6` 우회책 권고를 갱신해야 함
 - [❌] ts-morph가 별칭(비상대) 지정자 갱신을 지원하게 되면 3-3의 ⚠️ 블록과 10절 실패 패턴 행을 재검토 (관련 이슈 #927 open 상태 추적)
 - [❌] 4-2 barrel 해체 codemod의 `path.replace(...nodes)` 가변 인자 사용은 ast-types NodePath 규약에 의존한다 — jscodeshift 메이저 업그레이드 시 회귀 확인 필요
 - [❌] `size-limit` 기반 번들 diff 예시는 스냅샷 스크립트를 직접 작성하는 형태다. 레포에 `frontend/bundle-size-analysis` 스킬이 있으므로, 추후 상호 참조 포인터 삽입 검토
@@ -331,3 +417,6 @@ status: PENDING_TEST
 | 2026-09-28 | v1.1 | 실사용(실행) 검증 부분 수행 — 20파일 lab 샘플로 ts-morph 배치 이동+tsc+dependency-cruiser 게이트 절차 실행(졸업 조건이 요구하는 "소스 수백 개" 규모에는 미달, PENDING_TEST 유지). 과정에서 REFERENCE.md §3-3 예제 스크립트의 실제 버그 발견(`move()` 대상 경로 해석 오류) → `path.resolve()` 적용해 수정, SKILL.md §10 실패 패턴 표에 신규 행 추가 | 메인 세션(fe-migrate lab) |
 | 2026-09-26 | v1 | 30~60일 주기 재검증. TS 7.1 미출시·ts-morph/jscodeshift 버전 유지 확인, dependency-cruiser 18.2.0→18.4.0 버전 표기 갱신(동작 변경 없음). status PENDING_TEST 유지(워크플로우 스킬 실사용 필수 카테고리) | 메인 세션 |
 | 2026-09-28 | v1.1 | 2단계 실사용 테스트 재수행 (Q1 MOVES 배열 절대경로 변환 실수 / Q2 tsc·depcruise가 §3-3 버그를 못 잡는 이유) → 2/2 PASS, 워크플로우 스킬(실사용 필수 카테고리)이므로 PENDING_TEST 유지 | skill-tester |
+| 2026-11-09 | v1.2 | 재검증 — TS 7.1 Beta(2026-10-20) 새 API 공개 확인·ts-morph 28.0.0 유지 → side-by-side 유효 단락 추가, size-limit 13.0.3→14.3.0(메이저, rolldown 기본·Node 요건) 정정, dependency-cruiser 18.4.0→18.7.2·eslint-plugin-boundaries 7.2.0→7.4.2 정정. skill-tester 재시험(Q1 size-limit 14 게이트 / Q2 TS 7.1 Beta·side-by-side / Q3 boundaries 버전) 3/3 PASS, 실사용 필수 카테고리라 PENDING_TEST 유지 | Claude (Opus 5.5) / skill-tester |
+| 2026-11-09 | v1.2 | 재검증 후 독립 재시험 — 앞선 셀프 답변은 독립 시험이 아니므로 "독립 시험 아님"으로 표시하고 general-purpose 3개 에이전트에 질문 위임 (Q1 size-limit 14 업그레이드·게이트⑤·Node 요건 / Q2 TS 7.1 Beta vs ts-morph side-by-side / Q3 boundaries·dependency-cruiser 버전 + move() 경로 실수) → 3/3 PASS, PENDING_TEST 유지 (실사용 필수 카테고리) | skill-tester |
+| 2026-11-12 | v1.3 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 §0 버전 표(size-limit 14 rolldown)·TS7 API 부재와 side-by-side·7.1 Beta 재검증 단락, ts-morph move() 절대경로·별칭 미갱신·organizeImports, jscodeshift --extensions/--parser 기본값·stats dry 전용·반환 규약, git rename 50% 유사도·.git-blame-ignore-revs, PR 유형·게이트·번들 diff·타입체크 한계(동적 import·CSS 순서), shim·semantic conflict, baseline CI 재생성 금지, 실패 패턴 표 / 덜어낸 것 Strangler Fig·Azure 4단계·Branch by Abstraction·Parallel Change 개념 해설, 이동 수단 비교 표, ts-morph·jscodeshift 전체 예제 코드·CLI 옵션 표, characterization test 절차·예제, 번들 스냅샷 스크립트, 리프 우선 원칙 해설, dependency-cruiser·ESLint 설정 예제, PR 본문 템플릿, 추적 스크립트, 적합/부적합 판단. references/REFERENCE.md 삭제(남길 내용은 SKILL.md로 합침). 원 검증일 2026-11-09 기준 내용 그대로, status·검증일 변경 없음 | 정리 |

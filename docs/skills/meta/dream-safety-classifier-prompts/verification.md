@@ -1,8 +1,8 @@
 ---
 skill: dream-safety-classifier-prompts
 category: meta
-version: v1.5
-date: 2026-09-28
+version: v1.6
+date: 2026-11-06
 status: APPROVED
 ---
 
@@ -14,9 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `dream-safety-classifier-prompts` |
 | 스킬 경로 | `.claude/skills/dream-safety-classifier-prompts/SKILL.md` |
-| 검증일 | 2026-09-28 (최초 2026-05-15, 이전 2026-08-12) |
-| 검증자 | skill-creator (Claude Opus 4.7) / 재검증 2차 (2026-09-28) / skill-tester 재테스트 (2026-09-28) |
-| 스킬 버전 | v1.5 |
+| 검증일 | 2026-11-06 (재검증, 이전 2026-09-28 · 최초 2026-05-15) |
+| 검증자 | skill-creator (Claude Opus 4.7) / 재검증 2차 (2026-09-28) / skill-tester 재테스트 (2026-09-28) / 재검증 3차 (2026-11-06, Claude Opus 5.5) |
+| 스킬 버전 | v1.6 |
 
 ---
 
@@ -66,6 +66,12 @@ status: APPROVED
 | Anthropic Protecting the wellbeing of our users | https://www.anthropic.com/news/protecting-well-being-of-users | ⭐⭐⭐ High | 2026-05-15 | claude.ai 자체 self-harm 분류기 운영 + 자원 안내 banner |
 | Anthropic Prompting best practices | https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices | ⭐⭐⭐ High | 2026-05-15 | XML tag 구조, role 설정 |
 | 짝 스킬: dream-interpretation-prompt-engineering | (로컬) | ⭐⭐⭐ | 2026-05-14 | 안전 가드·한국 자원 표 일관성 확인 |
+| Anthropic Models overview | https://platform.claude.com/docs/en/about-claude/models/overview | ⭐⭐⭐ High | 2026-11-06 | 현행 4종 ID·가격, Sonnet 5·Haiku 4.5 Legacy |
+| Claude Haiku 5.5 overview | https://platform.claude.com/docs/en/models/haiku-5-5/overview | ⭐⭐⭐ High | 2026-11-06 | $0.10/$0.50(10만 토큰 초과 $0.50/$2.50), 캐시 최소 512, effort 기본 medium, 샘플링 생략 |
+| Claude Sonnet 5.5 overview | https://platform.claude.com/docs/en/models/sonnet-5-5/overview | ⭐⭐⭐ High | 2026-11-06 | $2/$10, 캐시 최소 512, 샘플링 400 |
+| API versions | https://platform.claude.com/docs/en/api/versioning | ⭐⭐⭐ High | 2026-11-06 | 2026-10-21: temperature/top_p/top_k 모든 모델 400 |
+| Migrating to API version 2026-10-21 | https://platform.claude.com/docs/en/api/migration-2026-10-21 | ⭐⭐⭐ High | 2026-11-06 | Python SDK 2.0.0 첫 릴리스, SDK에서 파라미터 삭제, 대체 설정 없음 |
+| anthropic-sdk-python CHANGELOG | https://github.com/anthropics/anthropic-sdk-python/blob/main/CHANGELOG.md | ⭐⭐⭐ High | 2026-11-06 | 2.0.0(2026-10-21) BREAKING "add support for new API version 2026-10-21", 최신 2.6.0 |
 
 ---
 
@@ -77,6 +83,22 @@ status: APPROVED
 - [✅] 모델 ID(`claude-haiku-4-5-20251001`, `claude-sonnet-4-6`)가 현재(2026-05-15) 유효
 - [✅] deprecated된 패턴(temperature>0 분류, binary-only 분류) 권장하지 않음
 - [✅] 코드 예시가 실행 가능한 anthropic SDK 형태
+
+**2026-11-06 재검증 클레임 (공식 문서 2곳 이상 교차 확인):**
+
+| 클레임 | 근거 소스 | 판정 |
+|--------|-----------|------|
+| 현행 Haiku = `claude-haiku-5-5`, Sonnet = `claude-sonnet-5-5`; Haiku 4.5·Sonnet 5는 Legacy | models/overview + haiku-5-5·sonnet-5-5 overview | VERIFIED |
+| Haiku 5.5 가격 $0.10/$0.50 (프롬프트 10만 토큰 초과 $0.50/$2.50), 캐시 읽기 $0.01 | haiku-5-5 overview + models/overview | VERIFIED |
+| Haiku 5.5·Sonnet 5.5 캐시 최소 512 tokens | haiku-5-5·sonnet-5-5 overview | VERIFIED |
+| API `2026-10-21`에서 `temperature`/`top_p`/`top_k`는 기본값이어도 모든 모델 400, 대체 설정 없음 | api/versioning + migration-2026-10-21 | VERIFIED |
+| Python SDK 2.0.0(2026-10-21)이 `2026-10-21` 기본 전송 첫 릴리스, 최신 2.6.0, SDK에서 샘플링 파라미터 삭제 | migration-2026-10-21 + SDK CHANGELOG | VERIFIED |
+| `extra_body`로 샘플링 파라미터를 넣어도 요청 JSON에 실려 400 | migration-2026-10-21(SDK 파라미터 삭제·400 서술) + claude-api 스킬 api-version 절 | VERIFIED |
+| Haiku 5.5 adaptive thinking 기본 켜짐, effort 기본 `medium` | haiku-5-5 overview + models/overview | VERIFIED |
+| Haiku 5.5는 같은 텍스트를 Haiku 4.5 대비 약 30% 더 많은 토큰으로 계산 | haiku-5-5 overview | VERIFIED (단일 공식 소스) |
+
+- [✅] (2026-11-06) `temperature=0` 예제·권고 제거, 일관성은 enum 스키마 + few-shot + `effort="low"`로 대체
+- [✅] (2026-11-06) 응답 파싱을 `content[0]` → `type == "text"` 블록 탐색으로 변경(thinking 블록 혼입 대비)
 
 ### 4-2. 구조 완전성
 
@@ -102,6 +124,42 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-11-06] skill-tester 재테스트 (3차 재검증 대응)
+
+**수행일**: 2026-11-06
+**수행자**: skill-tester → general-purpose (domain-specific 에이전트 미사용, meta 카테고리이므로 general-purpose로 대체; 동시 실행 한도로 1회 호출에 3문항 일괄 답변)
+**수행 방법**: SKILL.md Read 후 2026-11-06 재검증(3차)에서 반영된 `temperature=0` 제거·Haiku 5.5 전환·`stop_reason`/text 블록 파싱·캐시 512를 겨냥한 실전 질문 3개 답변, 근거 섹션 인용 및 anti-pattern 회피 확인
+
+**Q1. `temperature=0`으로 일관성을 확보하던 코드가 신규 SDK/API 버전에서 400 — 원인, 대체 방법, `extra_body` 우회 가능 여부**
+- ✅ PASS
+- 근거: SKILL.md 헤더 "SDK 기준" / "3. 분류기 시스템 프롬프트 템플릿" 설계 근거 주의 블록 / "8. 운영 패턴" 코드 / "10. 흔한 함정" 8번
+- 상세: API `2026-10-21`에서 샘플링 파라미터는 기본값이어도 모든 모델 400, SDK 2.x에서 파라미터 삭제, `extra_body` 우회도 동일하게 400이라고 정확히 답변. 대체는 enum 스키마(`output_config.format`) + 카테고리 정의 + few-shot + `effort="low"`로 제시. anti-pattern(temperature 재도입, extra_body 우회) 회피.
+
+**Q2. 분류기 응답 처리 — `content[0].text` 파싱 가능 여부 / `stop_reason != end_turn` / 호출 예외 시 동작**
+- ✅ PASS
+- 근거: SKILL.md "8. 운영 패턴" 본문·코드 / "10. 흔한 함정" 5번·10번
+- 상세: thinking 블록 혼입 대비 `type == "text"` 블록 탐색, `stop_reason` 불완전 시 보수적 unsafe, 호출 실패는 retry 1회 + fail-closed(fail-open 금지)로 정확히 답변. 단 §8 코드에 `try/except` 구현이 없다는 점을 gap으로 지적(선택 보강).
+
+**Q3. 분류기 모델·캐시 적용 여부, 자해 신호 입력의 카테고리와 후속 처리**
+- ✅ PASS
+- 근거: SKILL.md 헤더 "대상 모델" / "8. 운영 패턴" 하단 캐시 설명 / "9. Prompt Caching 전략" / "4. few-shot" 3번 / "5. gate()" / "6. 한국 위기 자원 매핑"
+- 상세: Haiku 5.5(`claude-haiku-5-5`), 캐시 최소 512라 ~900 tokens 프롬프트 단독 캐시 가능, 4,096 우회 불필요(Haiku 4.5 Legacy 서술)를 정확히 인용. 입력은 `self_harm`(~0.95) → `SHOW_CRISIS_RESOURCES`, 해몽 호출 생략, 109 우선 안내. 구세대 Haiku 4.5 기준 답변 anti-pattern 회피.
+
+### 발견된 gap (2026-11-06, 모두 선택 보강 — 차단 요인 아님)
+
+- §8 코드에 API 예외(`anthropic.APIError` 등) `try/except` + retry 구현 부재 (§10-5·10-10 서술과 코드 불일치, 2026-06-19에 이어 재지적)
+- §5 `gate()`와 §8 `handle_dream` 분기 불일치 (`gate()`는 trauma·violence 별도 처리, `handle_dream`은 null 외 전부 `crisis_resources`) — 기준 명시 필요
+- §3 설계 근거의 `<category>`/`<rationale>` XML 구획 서술이 실제 템플릿(`<역할>`·`<카테고리>` 등)과 불일치
+- trauma("자꾸" 빈도) vs self_harm(반복+현실 충동) 동시 신호 우선순위 규칙 미명문화, `log_for_review` 미정의
+
+### 판정 (2026-11-06)
+
+- agent content test: 3/3 PASS (사실 오류·DISPUTED 없음)
+- verification-policy 분류: 프롬프트 패턴·개념 스킬 — content test PASS = APPROVED 가능 (실사용 필수 카테고리 아님)
+- 최종 상태: APPROVED 유지
+
+---
 
 ### [2026-09-28] skill-tester 재테스트 (2차 재검증 대응)
 
@@ -278,8 +336,8 @@ DISPUTED 항목 없음. UNVERIFIED 항목 없음.
 | 내용 정확성 | ✅ (2026-09-28 재검증 — §8 Structured Outputs 반영, §9 Opus 5.5 캐시 임계값 정정) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-15, skill-tester 수행, general-purpose 대체) + 2026-09-28 skill-tester 재테스트 2/2 PASS (§8 Structured Outputs·§9 캐시 정정 겨냥) |
-| **최종 판정** | **APPROVED** (2026-09-28 skill-tester 재테스트 2/2 PASS — Structured Outputs·캐시 임계값 정정 반영 확인) |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-15, skill-tester 수행, general-purpose 대체) + 2026-09-28 재테스트 2/2 PASS + 2026-11-06 재테스트 3/3 PASS (temperature 제거·Haiku 5.5·stop_reason/text 블록·캐시 512 겨냥) |
+| **최종 판정** | **APPROVED** (2026-11-06 skill-tester 재테스트 3/3 PASS — 3차 재검증 반영 확인) |
 
 **판정 근거:**
 - 8개 핵심 클레임 모두 Anthropic 공식 문서 + 공식 cookbook + 공식 발표 블로그
@@ -305,6 +363,8 @@ DISPUTED 항목 없음. UNVERIFIED 항목 없음.
   남아 있어 본 SKILL.md·짝 스킬의 "512 확인" 서술과 불일치 — 규칙 파일 갱신은
   본 스킬 배정 범위 밖, 메인 에이전트/사용자 후속 조치 필요 (차단 요인 아님, 별도
   후속 과제)
+- [✅] 2026-11-06 재검증(3차) 반영(temperature 제거·Haiku 5.5·stop_reason 처리·캐시 512)에 대한 skill-tester 재테스트 완료 (2026-11-06, 3/3 PASS) — APPROVED 유지
+- [❌] §8 코드에 API 예외 `try/except` + retry 예시 추가, `gate()`와 `handle_dream` 분기 기준 통일, §3 설계 근거의 XML 구획 서술 정정 (2026-11-06 테스트 발견 gap — 선택 보강, 차단 요인 아님)
 
 ---
 
@@ -320,3 +380,6 @@ DISPUTED 항목 없음. UNVERIFIED 항목 없음.
 | 2026-09-25 | v1.3 | **모델 ID 현행화(Opus 5.5/Fable 5.1).** SKILL.md 헤더 "대상 모델" Sonnet 4.6 → Sonnet 5, §1 비교표·§11 분리 원칙 표의 Sonnet 4.6 표기 → Sonnet 5, §8 비용 표 Sonnet 5 단가 $3/$15 → $2/$10(회당 ~$0.013 → ~$0.012, 가격 기준일 2026-09-25), §9 캐싱 표 Opus 행에 Opus 5.5 "미확인" 병기. §10-8에 5 계열 `temperature` 400 주의 추가(Haiku 4.5 분류기의 `temperature=0`은 유지). §10-9 안티패턴 예시의 형식 오류 ID `claude-haiku-4-20240307` → 실존 구 ID `claude-3-haiku-20240307`. 메타 날짜 정합 — frontmatter `date`·검증일이 2026-05-15로 남아 SKILL.md(2026-08-12)와 불일치하던 것을 2026-08-12로 동기화. status APPROVED 유지 | 모델 ID 현행화 |
 | 2026-09-28 | v1.4 | **재검증(2차) — Structured Outputs 반영.** §8 `json.loads(safety.content[0].text)`만 쓰던 코드에 `output_config.format`(Structured Outputs, GA) + `CLASSIFIER_SCHEMA`(category enum 5종) 추가, `claude-haiku-4-5-20251001` Claude API 지원 확인. §9 캐싱 표의 "Opus 5.5 미확인"을 **512로 정정**(공식 표 갱신 확인). §10-5에 API 호출 실패 자체는 별도 처리 필요하다는 단서 추가. 5개 카테고리 정의·FP/FN 회피 기준·한국 위기 자원 매핑은 축소 없음. status **PENDING_TEST 전환** | 재검증 2차 |
 | 2026-09-28 | v1.5 | 2단계 실사용 재테스트 수행 (Q1 Structured Outputs로 파싱 실패 원천 차단 + fail-closed fallback / Q2 Haiku 4.5·Opus 5.5 캐시 최소 토큰) → 2/2 PASS, PENDING_TEST → APPROVED 전환. 부수적으로 `.claude/rules/agent-design.md`의 Opus 5.5 캐시 임계값 "미확인" 서술이 본 스킬·짝 스킬의 "512 확인" 서술과 불일치함을 발견 — 규칙 파일 수정은 배정 범위 밖이라 후속 과제로 기록 | skill-tester |
+| 2026-11-06 | v1.6 | **재검증(3차) — 현행 모델·API 버전 2026-10-21 반영.** 분류기 모델 `claude-haiku-4-5-20251001` → `claude-haiku-5-5`, 해몽 모델 `claude-sonnet-5` → `claude-sonnet-5-5`. §3 설계 근거·§8 코드·§10-8의 `temperature=0` 제거 — API `2026-10-21`(Python SDK 2.x 기본)에서 모든 모델 400, 공식 가이드 "Use 0 temperature" 권고는 적용 불가로 정정, 일관성은 enum 스키마·few-shot·`effort="low"`로. §8 코드에 `stop_reason` 확인(불완전 시 보수적 unsafe)·text 블록 탐색 추가. §8 비용 표 Haiku 5.5 $0.10/$0.50·Sonnet 5.5 $2/$10로 재계산(분류기 ~$0.0001, 해몽의 ~1%). §9 캐시 표 Haiku 5.5·Sonnet 5.5 = 512로 갱신(Haiku 4.5 4,096 우회 서술 삭제). 헤더 소스 4개·SDK 기준(`anthropic>=2.6.0`) 추가 | 재검증 3차 |
+| 2026-11-06 | v1.6 | 재검증(3차) 후 2단계 실사용 재테스트 수행 (Q1 temperature 400 원인·대체·extra_body 우회 불가 / Q2 text 블록 파싱·stop_reason·호출 실패 fail-closed / Q3 Haiku 5.5·캐시 512·self_harm 입력 후속 처리) → 3/3 PASS, APPROVED 유지. 선택 보강 gap 4건 기록(try/except 코드 부재, gate()/handle_dream 분기 불일치, XML 구획 서술, trauma-self_harm 우선순위) | skill-tester |
+| 2026-11-12 | v1.7 | 정리(사실 재검증 아님) — Claude API 사용법 절만 덜어내기: 덜어낸 것 헤더 대상 모델·SDK 기준 줄, §3 temperature 400 주의, §8 SDK 호출 코드(모델 ID·max_tokens·cache_control·output_config·text 블록 파싱)·Haiku 5.5 effort/thinking 주의·비용 표·토크나이저·캐시 최소 토큰 주의, §9 Prompt Caching 표 전체, 함정 8(temperature)·9(모델 ID), 모델명 표기(→ "작은 모델/상위 모델") → 그 자리에 "API 호출·캐싱·structured outputs 는 Claude Code 기본 `claude-api` 스킬 참조" / 남긴 것 분리 동기·카테고리 정의·FP/FN 기준·시스템 프롬프트 템플릿·few-shot 5개·JSON 스키마(CLASSIFIER_SCHEMA 본체)·gate 분기·fail-closed 흐름·한국 위기 자원 매핑·평가 지표. 지워진 validation/dream-safety-classifier 에이전트 언급은 "메인 대화에서"로 | 정리 |

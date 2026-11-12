@@ -2,7 +2,7 @@
 skill: ag-grid
 category: frontend
 version: v1
-date: 2026-09-26
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `ag-grid` |
 | 스킬 경로 | `.claude/skills/ag-grid/SKILL.md` |
-| 검증일 | 2026-09-26 (30~60일 주기 재검증, 최초 검증 2026-08-26) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-26 / 최초 검증 2026-08-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 | 기준 버전 | `ag-grid-community` / `ag-grid-react` **33.x** (React 18/19, Next.js App Router) |
@@ -91,6 +91,8 @@ status: APPROVED
 | npm registry (`ag-grid-react` latest) | https://registry.npmjs.org/ag-grid-react/latest | ⭐⭐⭐ High | 2026-08-26 | 36.1.0, peer react ^16.8 \|\| ^17 \|\| ^18 \|\| ^19 |
 | AG Grid 공식 GitHub | https://github.com/ag-grid/ag-grid | ⭐⭐⭐ High | 2026-08-26 | 릴리스 목록·태그 소스 확인 |
 | 패키지 export 목록 (`ag-grid-enterprise`) | https://www.jsdocs.io/package/ag-grid-enterprise | ⭐⭐ Medium | 2026-08-26 | Enterprise 모듈 40종 export 목록 (라이선스 경계 교차 확인용) |
+| npm registry (`ag-grid-community` latest) | https://registry.npmjs.org/ag-grid-community | ⭐⭐⭐ High | 2026-11-09 | 36.3.0 (2026-11-04) |
+| 공식 업그레이드 가이드 (v36.3) | https://www.ag-grid.com/javascript-data-grid/upgrading-to-ag-grid-36-3/ | ⭐⭐⭐ High | 2026-11-09 | "There are no breaking changes in AG Grid version 36.3" + deprecation 3건 |
 | npm (`@ag-grid-community/infinite-row-model`) | https://www.npmjs.com/package/@ag-grid-community/infinite-row-model | ⭐⭐⭐ High | 2026-08-26 | Infinite Row Model = MIT / v33부터 `ag-grid-community`로 통합 |
 
 ---
@@ -146,6 +148,8 @@ status: APPROVED
 | 15 | v34는 breaking change가 없고 deprecation만 존재 / v35·v36에 실제 breaking change 존재 | 공식 v34 업그레이드 가이드 원문 "There are no breaking changes in AG Grid version 34.0" | 공식 v35·v36 업그레이드 가이드(타입 제거·DOM 개편·기본값 변경) | **VERIFIED** |
 | 16 | 행 선택 설정은 v33 기준 **객체 API**(`rowSelection: { mode: 'multiRow' }`)이며 문자열 `'single'`/`'multiple'`은 deprecated | v32.2.1 업그레이드 가이드(문자열 → mode 전환 공지) | v33 업그레이드 가이드(RowSelectionModule 등록 필요 + 새 API) | **VERIFIED** |
 | 17 | v33 모듈화로 번들이 "최대 40% 감소" | 초기 검색 요약(검색 엔진 생성 문구) | 공식 블로그 원문 "vary between **20-40%** depending on the features you're using" | **DISPUTED → 수정 반영** |
+| 18 | (2026-11-09 재검증) 최신 안정 버전 36.3.0, 36.2→36.3 breaking·behaviour change·API 제거 없음 | npm registry `ag-grid-community` latest = 36.3.0 (2026-11-04) | 공식 36.3 업그레이드 가이드 원문 | **VERIFIED** |
+| 19 | (2026-11-09 재검증) 36.3 deprecation: `debug` → `enableDevValidations({ debug: true })`, `calculatedColumnExpressionChanged` → `calculatedColumnChanged`, 지역 로케일 → BCP47 export | 공식 36.3 업그레이드 가이드 Deprecations 표 | 2026-11-06 조사 기록(같은 가이드 + npm 릴리스) | **VERIFIED** |
 
 ### 4-6. DISPUTED / 미검증 처리 내역
 
@@ -261,3 +265,5 @@ status: APPROVED
 | 2026-08-26 | v1 | 2단계 실사용 테스트 수행 (Q1 라이선스 경계 / Q2 v33 모듈 미등록 에러 / Q3 Next.js App Router 컴포넌트 분리) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-09-25 | v1 | 구조 개편: 상세 내용 references/REFERENCE.md 분리 (내용 변경 없음) | skill-creator |
 | 2026-09-26 | v1 | 30~60일 주기 재검증. 최신 버전 36.1.0→36.2.0 갱신(breaking change 없음), React 19 peer 지원 변동 없음 확인. status APPROVED 유지 | 메인 세션 |
+| 2026-11-09 | v1 | 재검증 — 최신 버전 36.2.0→36.3.0 숫자 갱신(SKILL.md 버전 줄·REFERENCE §8), 36.3 deprecation 3건 §8 표에 1행 추가. 공식 36.3 가이드상 breaking change 없음, v33 기준 내용 변경 없음(버전 숫자·deprecation 메모만) → skill-tester 생략, status APPROVED 유지 | 재검증 b01 |
+| 2026-11-12 | v1.1 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 v32→v33 변경 표(rowSelection 객체 API 포함)·패키지 버전 일치·React 19 지원, 모듈 등록(error #200·AllCommunityModule 트리 셰이킹 불가·ValidationModule·Charts .with()), 라이선스 경계 표와 컬럼 메뉴·SSRM 주의, 테마 legacy 공존·동시 사용 금지, 데이터 갱신·상태 복원 함정(getRowId·setData 경고·applyColumnState false·initialState 1회·rowBuffer 픽셀), Next.js columnDefs 직렬화, v33→v36 표·위험도 순위 / 덜어낸 것 설치 명령, 기본 사용 예제·제네릭 타입 표·gridOptions vs prop, 셀 렌더러·withParams·Infinite Row Model 예제, TanStack Query 조합 예제, 성능 체크리스트, react-virtuoso 비교. references/REFERENCE.md 삭제(남길 내용은 SKILL.md로 합침). 원 검증일 2026-11-09 기준 내용 그대로, status·검증일 변경 없음 | 정리 |

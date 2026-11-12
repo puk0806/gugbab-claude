@@ -2,7 +2,7 @@
 skill: nextjs
 category: frontend
 version: v8
-date: 2026-09-28
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -35,10 +35,10 @@ status: APPROVED
 | 스킬 이름 | nextjs |
 | 스킬 경로 | `.claude/skills/nextjs/SKILL.md` |
 | 최초 작성일 | 2026-03-27 |
-| 검증일 | 2026-09-28 (최초 2026-03-27, 직전 재검증 2026-08-11) |
-| 재검증일 | **2026-09-28** (직전 2026-08-11) |
-| 검증 방법 | 공식 문서 교차 검증 (nextjs.org 블로그 + docs + 독립 3rd-party 보도) / 2026-09-28: npm registry + GitHub 공식 릴리스 노트 |
-| 버전 기준 | **Next.js 16.3.6** (2026-09-22 릴리즈, 16.3.0의 패치. 16.4.0은 아직 canary) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-28) — 최초 2026-03-27 |
+| 재검증일 | **2026-11-09** (직전 2026-09-28) |
+| 검증 방법 | 공식 문서 교차 검증 (nextjs.org 블로그 + docs + 독립 3rd-party 보도) / 2026-09-28·2026-11-09: npm registry + GitHub 공식 릴리스 노트·security advisories |
+| 버전 기준 | **Next.js 16.4.5** (2026-11-03 릴리즈. 16.4.0 정식 2026-10-06. 15.x 백포트 15.5.29) |
 
 ---
 
@@ -78,6 +78,11 @@ status: APPROVED
 | GitHub 릴리즈 (버전 존재 확인) | https://github.com/vercel/next.js/releases | ⭐⭐⭐ High |
 | 독립 보도 — heise online | https://www.heise.de/en/news/Next-js-16-3-reduces-memory-consumption-by-up-to-90-percent-11399735.html | ⭐⭐ Medium |
 | 독립 보도 — The Register | https://www.theregister.com/devops/2026/08/04/nextjs-163-aims-to-reduce-dreaded-fatal-error-messages/5283036 | ⭐⭐ Medium |
+| (2026-11-09) Next.js 16.4 블로그 | https://nextjs.org/blog/next-16-4 | ⭐⭐⭐ High |
+| (2026-11-09) GitHub 릴리스 v16.4.0 / v16.4.5 | https://github.com/vercel/next.js/releases/tag/v16.4.0 · https://github.com/vercel/next.js/releases/tag/v16.4.5 | ⭐⭐⭐ High |
+| (2026-11-09) GitHub security advisories | https://github.com/vercel/next.js/security/advisories | ⭐⭐⭐ High |
+| (2026-11-09) npm registry next (`latest` 16.4.5, `time`) | https://registry.npmjs.org/next | ⭐⭐⭐ High |
+| (2026-11-09) revalidateTag · proxy.js · next/root-params 레퍼런스 | https://nextjs.org/docs/app/api-reference/functions/revalidateTag · https://nextjs.org/docs/app/api-reference/file-conventions/proxy · https://nextjs.org/docs/app/api-reference/functions/next-root-params | ⭐⭐⭐ High |
 
 ---
 
@@ -109,10 +114,58 @@ status: APPROVED
 - [✅] Claude Code에서 실제 활용 테스트 (frontend-architect, 수정 후 APPROVED)
 - [✅] 2026-09-28 재검증(2차) 보강분(16.3.6 보안 패치·revalidateTag 2-인자) content test 재수행 — 2/2 PASS
 - [✅] 2026-09-28 선택 보강분(GHSA 3건 Windows 한정 vs 플랫폼 무관 구분) content test 재수행 — 2/2 PASS
+- [✅] 2026-11-09 재검증 보강분(16.4.5 보안 주의·Cache Components 권장·revalidateTag expire:0) content test 재수행 — 3/3 PASS (2026-11-09)
+
+### 4-5. 2026-11-09 재검증 클레임 판정
+
+| # | 클레임 | 소스 | 판정 |
+|---|--------|------|------|
+| R1 | 최신 stable 16.3.6, 16.4.0은 canary | npm registry `latest`=16.4.5, `time` 16.4.0=2026-10-06 + GitHub release v16.4.0 | DISPUTED(낡음) → 16.4.5로 갱신 |
+| R2 | "16.3.6 이상이면 안전" | GitHub security advisories — 2026-10-14 Critical 2건(GHSA-673q-mjm6-r5xr `use cache` typed array RCE, GHSA-2464-fhr4-w9xw SVG 이미지 최적화 RCE, 16.4.1/15.5.28 패치)·High 1건, 2026-11-03 Moderate 7건(16.4.5/15.5.29 패치) + v16.4.5 릴리스 노트 | DISPUTED → "16.4.5(15.x는 15.5.29) 이상 필수"로 정정 |
+| R3 | Cache Components 권장 | 16.4 블로그: "모든 앱에 권장", `create-next-app` 기본 활성, Next.js 17 기본값 예정 | VERIFIED + 보강(ADD) |
+| R4 | 16.4 신규 API `ensureStatic`·`navigation()`/`prefetch()`(`next/cache`)·`next upgrade --agent`·`experimental.agentUpgrade` | 16.4 블로그 + v16.4.0 릴리스 노트 | VERIFIED → REFERENCE.md 16.4 절 신설 |
+| R5 | `revalidateTag(tag, profile)` 2번째 인자 필수, 1-인자 deprecated | revalidateTag 레퍼런스(lastUpdated 2026-08-25) — `{ expire: 0 }` 옵션도 명시 | VERIFIED + `{ expire: 0 }` 보강 |
+| R6 | proxy.ts Node.js 런타임 고정·`runtime` 설정 불가, middleware deprecated | proxy.js 레퍼런스(lastUpdated 2026-11-06) version history | VERIFIED (변경 없음) |
+| R7 | `next/root-params` 16.3.0 도입·Server Component 전용 | root-params 레퍼런스 | VERIFIED (변경 없음) |
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-11-09] 재테스트(skill-tester) — 16.4.5 재검증 보강분 반영 확인
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester → general-purpose (domain-specific 프론트엔드 에이전트 미설치로 대체)
+**수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
+
+**Q1. 프로덕션이 16.3.6(Linux, SVG·AVIF 미사용)인데 "16.3.6이면 안전"이라 들었다 — 그대로 둬도 되나? 올릴 버전, 15.x 팀은?**
+- ✅ PASS
+- 근거: SKILL.md 상단 2026-11-09 주의 블록(16.4.5 이상 / 15.x는 15.5.29 이상)
+- 상세: "16.3.6이면 안전"은 낡은 정보임을 지적하고 16.4.5 이상, 15.x는 15.5.29 이상으로 정확히 답함. 조건별 회피 가능한 GHSA와 조건 무관(Server Actions DoS·16.3.8 SSRF·16.4.5 Moderate 7건)을 구분. "16.3.6 이상이면 안전" anti-pattern 회피.
+
+**Q2. CMS 웹훅 Route Handler에서 'posts' 태그를 즉시 만료 — updateTag를 쓰면 되나?**
+- ✅ PASS
+- 근거: SKILL.md "온디맨드 재검증 (Next.js 16)" API 표 (`updateTag` Server Action 전용, `revalidateTag(tag, { expire: 0 })`)
+- 상세: Route Handler에서 updateTag 불가를 정확히 판단하고 `revalidateTag('posts', { expire: 0 })` 코드를 제시, `'max'`는 stale-while-revalidate라 즉시 만료가 아님을 구분. 1-인자 revalidateTag anti-pattern 회피.
+
+**Q3. 16.4 신규 앱에서 Cache Components를 켜야 하나? 설정, experimental.dynamicIO, 16.4 breaking change?**
+- ✅ PASS
+- 근거: SKILL.md 상단 주의 블록, "'use cache' 디렉티브", "캐싱 모델 — 두 갈래" 섹션 + REFERENCE.md "Next.js 16.4"
+- 상세: 모든 앱에 권장·신규 앱 기본 활성·17 기본값 예정, `cacheComponents: true` 설정, `experimental.dynamicIO` v16 제거(모델 전환), 16.4 Breaking 없음을 정확히 답함. 구 플래그 사용 anti-pattern 회피.
+
+### 발견된 gap (경미, 선택 보강)
+
+- Route Handler 전체 예시·`{ expire: 0 }`가 cacheLife 인자 자리에 들어간다는 시그니처 설명 부재(API 표 1줄만) — 차단 요인 아님
+- 16.3.8 SSRF 항목에 GHSA ID·15.x 영향 범위 미기재, `partialPrefetching` 설정 위치 불명확 — 차단 요인 아님
+- GHSA-2464-fhr4-w9xw 영향 범위 "16.x~16.4.0" 표기가 다소 부정확(패치 16.4.1 병기로 결론 영향 없음)
+
+### 판정
+
+- agent content test: 3/3 PASS
+- verification-policy 분류: 해당 없음 (프레임워크 사용법 스킬 — content test로 충분)
+- 최종 상태: APPROVED 유지
+
+---
 
 ### [2026-09-28] 재테스트(skill-tester) — GHSA 3건 플랫폼 구분(Windows 한정 vs 플랫폼 무관) 반영 확인
 
@@ -259,12 +312,16 @@ status: APPROVED
 | 실용성 | ✅ |
 | 에이전트 활용 테스트 | ✅ PASS (frontend-architect, 2026-08-11 / 2026-09-28 재테스트: general-purpose 2/2 PASS — 16.3.6 보안 패치·revalidateTag 정정 반영 확인 / 2026-09-28 재테스트②: general-purpose 2/2 PASS — GHSA 3건 Windows 한정·플랫폼 무관 구분 반영 확인) |
 | 버전 최신성 (2026-09-28 기준) | ✅ Next.js 16.3.6 반영 (보안 패치 주의 추가, GHSA ID별 플랫폼 범위 구분) |
-| **최종 판정** | **APPROVED** (2026-09-28 skill-tester 재테스트② 2/2 PASS — GHSA 3건 Windows 한정 vs 플랫폼 무관 구분이 답변에 정확히 반영됨 확인, PENDING_TEST → APPROVED 전환) |
+| 버전 최신성 (2026-11-09 재검증) | ✅ Next.js 16.4.5 반영 (16.4 절 신설, 보안 주의 16.4.5/15.5.29 이상으로 정정) — 2026-11-09 skill-tester 재시험 3/3 PASS(섹션 5) |
+| 에이전트 활용 테스트 (2026-11-09 재시험) | ✅ PASS 3/3 (general-purpose — 16.4.5 보안 주의·revalidateTag expire:0·Cache Components 권장 반영 확인) |
+| **최종 판정** | **APPROVED** (2026-11-09 skill-tester 재시험 3/3 PASS, APPROVED 유지. 이전: 2026-09-28 재테스트② 2/2 PASS) |
 
 ---
 
 ## 7. 개선 필요 사항
 
+- [✅] 2026-11-09 재검증 내용 수정분(16.4.5 보안 주의·Cache Components 권장·revalidateTag expire:0·REFERENCE 16.4 절) skill-tester content test 수행 — 3/3 PASS, APPROVED 유지 (2026-11-09 완료)
+- [❌] Route Handler용 `revalidateTag(tag, { expire: 0 })` 전체 예시·시그니처 설명, 16.3.8 SSRF GHSA ID·15.x 영향 범위, `partialPrefetching` 위치 명시 — 차단 요인 아님, 선택 보강
 - [✅] 2026-09-28 재검증(2차) 보강분(16.3.6 보안 패치·revalidateTag 2-인자) skill-tester content test 수행 — 2/2 PASS, PENDING_TEST → APPROVED 전환 완료 (2026-09-28)
 - [❌] Instant Navigations(`cacheComponents` + `partialPrefetching`)와 Cache Components 마이그레이션은 **실제 프로젝트 적용 결과로만 검증 가능**한 영역이다 — 차단 요인 아님, 실사용 사례가 생기면 해당 절에 실측 기록을 추가하는 선택 보강
 - [❌] `experimental.turbopackRustReactCompiler`·`useOffline`은 실험적 플래그 — 차단 요인 아님, 다음 재검증 시 stable 승격/제거 여부 확인하는 선택 보강
@@ -287,3 +344,6 @@ status: APPROVED
 | 2026-09-28 | v6 | 2단계 재테스트 수행 (Q1 16.3.6 보안 패치 필수 반영 확인 / Q2 revalidateTag 2-인자 필수 마이그레이션) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-09-28 | v7 | 선택 보강 반영 — GitHub 공식 advisory 원문 대조 후 SKILL.md·REFERENCE.md 보안 주의 문구를 GHSA ID별로 재구성: GHSA-p293-qw3h-jr36(Windows 한정)·GHSA-2xp9-vwfh-vxw4(플랫폼 무관 AVIF)·GHSA-vcvr-r3jv-pc5j(플랫폼 무관, Node.js 런타임 한정 next/og) 구분 명시 + 영향/패치 버전대 추가. status APPROVED → PENDING_TEST (메인 skill-tester 재테스트 필요) | orchestrator (선택 보강 반영 배치) |
 | 2026-09-28 | v8 | 2단계 재테스트 수행② (Q1 Windows 한정 GHSA-p293 회피 불가 확인 / Q2 Linux+Edge 조건에서 3건 GHSA 조건별 대조) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-11-09 | v9 | 재검증 — 최신 stable 16.3.6→**16.4.5** 갱신, 보안 주의를 "16.4.5(15.5.29) 이상 필수"로 정정(2026-10-14 Critical RCE 2건·2026-11-03 Moderate 7건 GHSA 반영). 16.4(2026-10-06, Breaking 없음) 반영: Cache Components "모든 앱 권장"·신규 앱 기본·17 기본 예정, REFERENCE.md에 16.4 절 신설(`ensureStatic`·`navigation()`/`prefetch()`·`next upgrade --agent`·`agentUpgrade`·React 19.3·실험 플래그). `revalidateTag(tag, {expire: 0})` 보강. proxy.ts·root-params·revalidateTag 2-인자 서술은 변경 없음(VERIFIED). 내용 수정 — skill-tester 재시험 대상 | 메인 세션 |
+| 2026-11-09 | v9 | 재검증 후 2단계 재시험 수행 (Q1 16.3.6→16.4.5 보안 업그레이드 판단 / Q2 웹훅 Route Handler 즉시 만료 `revalidateTag(tag,{expire:0})` / Q3 16.4 Cache Components 권장·dynamicIO 제거) → 3/3 PASS, APPROVED 유지 | skill-tester |
+| 2026-11-12 | v9.1 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 16.4.5 이상 보안 권고(GHSA 전체), 15→16 Breaking 표·next/image 기본값·Turbopack 함정, proxy.ts nodejs 고정, revalidateTag 2인자·updateTag·use cache 변형·cookies 제약·unstable_cache 대체, Cache Components 모델 함정(크롤러 동적 렌더 등), 16.1~16.4 신규 API(catchError·root-params·ensureStatic·navigation()·실험 플래그) / 덜어낸 것 파일 컨벤션·Server/Client 구분·fetch 예제·Route Handler·Server Action·메타데이터·Suspense 기본 예제, 이전 4계층 캐시 해설, middleware 예제 코드, references/(REFERENCE·PATTERNS) 폴더 삭제(남길 내용은 SKILL.md로 합침). 원 검증일 2026-11-09 기준 내용 그대로, status·검증일 변경 없음 | 정리 |

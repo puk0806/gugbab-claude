@@ -2,7 +2,7 @@
 skill: spring-security-6-jwt-jjwt12
 category: backend
 version: v1
-date: 2026-09-26
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -19,7 +19,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `spring-security-6-jwt-jjwt12` |
 | 스킬 경로 | `.claude/skills/spring-security-6-jwt-jjwt12/SKILL.md` |
-| 검증일 | 2026-09-26 (재검증, 이전 2026-07-04) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-26) |
 | 검증자 | skill-creator (자동) |
 | 스킬 버전 | v1 |
 
@@ -77,6 +77,10 @@ status: APPROVED
 | Baeldung Spring 6 Virtual Threads | https://www.baeldung.com/spring-6-virtual-threads | ⭐⭐ Medium | 2026-04-22 | `spring.threads.virtual.enabled` 공식 프로퍼티 확인 |
 | Spring Boot 3.2 Virtual Threads 공식 블로그 | https://spring.io/blog/2023/09/09/all-together-now-spring-boot-3-2-graalvm-native-images-java-21-and-virtual/ | ⭐⭐⭐ High | 2026-04-22 | 공식 블로그 |
 | RFC 7518 JWA §3.2 | https://www.rfc-editor.org/rfc/rfc7518#section-3.2 | ⭐⭐⭐ High | 2026-04-22 | IETF 공식 표준 |
+| DaoAuthenticationProvider Javadoc 7.1.2 / 6.5 (재검증) | https://docs.spring.io/spring-security/reference/api/java/org/springframework/security/authentication/dao/DaoAuthenticationProvider.html · https://docs.spring.io/spring-security/reference/6.5/api/java/org/springframework/security/authentication/dao/DaoAuthenticationProvider.html | ⭐⭐⭐ High | 2026-11-09 | 7.1.2: `(UserDetailsService)` 생성자만, `setUserDetailsService` 없음 / 6.5: 무인자·`setUserDetailsService` deprecated |
+| spring-security-core jar 6.2.0·6.3.0·6.4.0·6.5.11 (Maven Central, 재검증) | https://repo1.maven.org/maven2/org/springframework/security/spring-security-core/ | ⭐⭐⭐ High | 2026-11-09 | `javap`: `(UserDetailsService)` 생성자는 6.5에서 처음 등장(6.2~6.4엔 없음) |
+| spring-boot-dependencies POM 3.5.16·4.1.2 (재검증) | https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/ | ⭐⭐⭐ High | 2026-11-09 | Security 6.5.11 / 7.1.2 |
+| jjwt GitHub Releases API (재검증) | https://github.com/jwtk/jjwt/releases | ⭐⭐⭐ High | 2026-11-09 | 최신 0.13.0(2025-08-20, Java 7 지원 마지막 마이너, 신규 개발은 0.14.0), 0.12.7(2025-08-14) |
 
 ---
 
@@ -106,6 +110,10 @@ status: APPROVED
 | 11 | Virtual Threads는 Java 21 정식 기능 (Java 17 불가) | VERIFIED | JEP 444 + Spring Boot 3.2 블로그 + openrewrite docs |
 | 12 | `oauth2ResourceServer().jwt()` 자체 JwtDecoder/JwtAuthenticationConverter 지원 | VERIFIED | docs.spring.io OAuth2 Resource Server JWT 페이지 + 공식 GitHub |
 | 13 | jjwt 0.12.6 vs 0.13.0 중 어느 것을 써야 하는가 | DISPUTED → 문서에 양쪽 명시 | 공식 README는 0.13.0 표시, 사용자 요구사항은 0.12.x. SKILL.md에 "0.12.6 이상 또는 0.13.0" 두 옵션 모두 명시하여 해소. |
+| 14 | (2026-11-09) 현행 Boot 4.1.2 / Security 7.1.2, Boot 3.5.16 = Security 6.5.11 | VERIFIED | Maven Central POM + spring.io 프로젝트 페이지 — SKILL.md 4.1.1/7.1.1 표기 갱신 |
+| 15 | (2026-11-09) `new DaoAuthenticationProvider()` + `setUserDetailsService()` 예제 | **DISPUTED → 수정** | 6.5 Javadoc deprecated, 7.1.2 Javadoc에서 제거. `javap`로 `(UserDetailsService)` 생성자 6.5 신설 확인 → 예제를 생성자 주입으로 바꾸고 6.2~6.4용 대체 방법 주의문 추가 |
+| 16 | (2026-11-09) JwtAuthenticationFilter가 만료·위조 토큰에서 예외를 잡지 않음 | **DISPUTED → 수정(코드 보강)** | `parseSignedClaims()`는 `JwtException` 계열을 던지고(jjwt API), 필터는 `ExceptionTranslationFilter` 앞이라 401로 변환되지 않음 → `try/catch (JwtException \| IllegalArgumentException)` + `clearContext()` 추가 |
+| 17 | (2026-11-09) jjwt 최신 0.13.0(Java 7 지원 마지막 마이너), 0.12.7 | VERIFIED | GitHub Releases API + Maven Central metadata(jjwt-api release 0.13.0) |
 
 ---
 
@@ -148,6 +156,18 @@ status: APPROVED
 발견된 gap: `@EnableMethodSecurity` (메서드 레벨 보안 활성화) 가이드가 SKILL.md에 없음. URL 기반 `hasRole()` 예시만 있고, `@PreAuthorize` 전제 시 활성화 어노테이션 한 줄 추가 권장 (경미한 보완).
 
 ---
+
+### [2026-11-09] 재검증 수정분 content test
+
+**수행일**: 2026-11-09
+**수행자**: general-purpose (skill-tester는 중첩 호출 환경에서 Agent 도구가 없어 재검증 담당이 general-purpose 에이전트에 직접 위임)
+**수행 방법**: SKILL.md + references Read만 허용, 웹 검색·파일 수정 금지 조건으로 실전 질문 3개 답변
+
+- Q1. "Security 6.5/7.1에서 DaoAuthenticationProvider Bean 생성법, 6.3이라면?" — **PASS** (근거: UserDetailsService + DaoAuthenticationProvider 절 코드·주의 — 6.5+ 생성자 주입, 6.2~6.4는 무인자+setter, 7.x 제거)
+- Q2. "만료 JWT로 보호 API 호출 시 응답과 필터 처리" — **PASS** (근거: JwtAuthenticationFilter 절 catch 블록 + 주의 — `JwtException` 잡고 `clearContext()` → 401, 안 잡으면 500)
+- Q3. "2026-11 최신 Boot·Security, 3.5.16 번들 Security, 권장 jjwt" — **PASS** (근거: 상단 주의·적용 범위 표 — 4.1.2 / 7.1.2 / 6.5.11 / 0.12.7 또는 0.13.0). 답변자가 지적한 표 머리글 날짜(2026-07)를 2026-11로 보정
+
+agent content test: 3/3 PASS → APPROVED 유지.
 
 ### (참고) 권장 테스트 케이스 — 향후 실사용 시 추가 수행 가능
 
@@ -253,7 +273,7 @@ Q2. "`.and()` 체이닝을 계속 안 쓰는 이유가 아직도 '나중에 제�
 | 내용 정확성 | ✅ (교차 검증 VERIFIED 12건, DISPUTED 1건은 문서에서 양쪽 명시로 해소) |
 | 구조 완전성 | ✅ (frontmatter, 소스·검증일, 개념, 코드, 선택 기준, 안티패턴 모두 포함) |
 | 실용성 | ✅ (의존성부터 컨트롤러까지 풀 스택 예시, 실제 사용 시나리오 기반) |
-| 에이전트 활용 테스트 | ✅ (2026-04-22, 2개 질문 모두 PASS, `@EnableMethodSecurity` 가이드 추가 필요 gap) |
+| 에이전트 활용 테스트 | ✅ (2026-04-22, 2개 질문 모두 PASS, `@EnableMethodSecurity` 가이드 추가 필요 gap / **2026-11-09 수정분 3/3 PASS**) |
 | **최종 판정** | **APPROVED** |
 
 ---
@@ -262,7 +282,8 @@ Q2. "`.and()` 체이닝을 계속 안 쓰는 이유가 아직도 '나중에 제�
 
 - [⏸️] `java-backend-developer` 에이전트 description 등록 — 에이전트 파일 별도 작업, 현 스킬 영향 없음
 - [📅] jjwt 0.13.0으로 업그레이드 시 Breaking Change 버전 표기 업데이트
-- [📅] Spring Security 7 정식 릴리스 시 `.and()` 체이닝 제거 영향 재검증
+- [✅] Spring Security 7 정식 릴리스 시 `.and()` 체이닝 제거 영향 재검증 — 2026-09-26 반영, 2026-11-09 `DaoAuthenticationProvider` 7.x 제거 API도 정정
+- [✅] 2026-11-09 필터 `JwtException` 처리·DaoAuthenticationProvider 생성자 수정 + content test 3/3 PASS
 - [⏸️] Refresh Token 패턴 추가 예제 — 별도 확장 스킬로 분리 검토, 현 범위 밖
 - [✅] 실사용 테스트 — SecurityFilterChain + jjwt 0.12.x API 2건 PASS (섹션 5, general-purpose 대체, 2026-04-22). 추가 1종은 선택 보강
 
@@ -275,3 +296,6 @@ Q2. "`.and()` 체이닝을 계속 안 쓰는 이유가 아직도 '나중에 제�
 | 2026-04-22 | v1 | 최초 작성: Spring Boot 3.5 + Security 6.5 + jjwt 0.12.x 모던 패턴 스킬. 교차 검증 13건 수행 (VERIFIED 12 / DISPUTED 1). | skill-creator |
 | 2026-07-04 | v2 | freshness 재검증 — Spring Boot 3.5 OSS EOL(2026-06-30, 최종 3.5.16)·Security 6.5.11(OSS 2027-07-31까지)·jjwt 0.12.7 반영. 0.12.x 파서/빌더 API·SecurityFilterChain 람다 DSL 패턴 변화 없음 확인 | freshness-audit |
 | 2026-09-26 | v2 | 60일 경과 정기 재검증: Spring Boot 4.1.1/Security 7.1.1 GA 출시 확인 → "Security 7 제거 예정" 표현을 "실제로 제거됨"으로 정정(SKILL.md + REFERENCE.md 2곳), Security 6.5 종료일 미확정 표기로 정정, jjwt 0.13.0 legacy 표기 캐비엇 추가. 코드 예시 변경 없음, status APPROVED 유지 | Claude |
+| 2026-11-09 | v2 | 재검증 — Boot 4.1.2/Security 7.1.2·3.5.16/6.5.11·jjwt 0.13.0 현행 확인. **바뀐 점**: `DaoAuthenticationProvider` 예제를 `new DaoAuthenticationProvider(userDetailsService())`로 변경(6.5 deprecated·7.x 제거된 무인자+setter 대체, 6.2~6.4 대안 주의문), JwtAuthenticationFilter에 `JwtException` try/catch 추가(만료·위조 토큰 500 방지), 버전 표기 갱신. skill-tester 재시험 대상 | 재검증 (Claude) |
+| 2026-11-09 | v2 | 수정분 content test (Q1 DaoAuthenticationProvider 버전별 / Q2 만료 토큰 401 처리 / Q3 버전 매트릭스) → 3/3 PASS, APPROVED 유지. 답변자 지적으로 적용 범위 표 머리글 2026-07→2026-11 보정. skill-tester Agent 도구 없음 → general-purpose 직접 위임. 섹션 5·6·7 동기화 | general-purpose |
+| 2026-11-11 | v2 | 2026-11-11 정리 — 모델이 아는 일반 지식 절 제거(Maven 의존성 예시, SecurityFilterChain 전체 설정 코드·`@EnableMethodSecurity`·hasRole/csrf 해설, JwtService 전체 코드, UserDetailsService·AuthenticationManager·PasswordEncoder 예시, 로그인 컨트롤러, OAuth2 Resource Server, Virtual Threads, 시크릿·키 관리, 흔한 실수 1·2·6·7·8, 체크리스트). 남긴 절: 상단 SB 3.5 EOL·Security 7 제거 주의문, 적용 범위 버전표, Gradle 의존성·jjwt 3모듈 주의, `authorizeRequests()`·`.and()` 7.0 제거 요점, JwtAuthenticationFilter(JwtException→401)·`@Component` 이중 등록 주의, jjwt 0.10→0.12 API 대응표·`SignatureAlgorithm`·`WeakKeyException` 주의, DaoAuthenticationProvider 6.5 생성자·버전별 주의, 흔한 실수 3·4·5, 참고 자료. 사실 재검증 아님 | Claude (Opus 5.5) |

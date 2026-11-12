@@ -2,9 +2,10 @@
 name: fortune-interpretation-prompt-engineering
 user-invocable: false
 description: >
-  캐주얼 운세 앱(사주·타로·손금)용 Claude API 프롬프트 설계 패턴 — XML 구획 시스템
-  프롬프트, 모드별 변형, few-shot, "문화적 상징 해석은 허용 / 결정론적 단정은 회피"
-  hedging 톤, Structured Outputs JSON 스키마, 프롬프트 캐싱을 다룬다.
+  캐주얼 운세 앱(사주·타로·손금)용 프롬프트 설계 패턴 — XML 구획 시스템
+  프롬프트(공통 코어 + 모드 블록), 모드별 변형, few-shot, "문화적 상징 해석은 허용 / 결정론적 단정은 회피"
+  hedging 톤, 응답 JSON 스키마, 사주 계산·타로 추첨을 LLM 밖에 두는 규칙을 다룬다.
+  API 호출·캐싱·structured outputs 는 claude-api 스킬.
   <example>사용자: "사주 앱 Claude 시스템 프롬프트 어떻게 짜야 해?"</example>
   <example>사용자: "타로 해석 JSON 스키마랑 few-shot 예시 같이 보여줘"</example>
   <example>사용자: "세 모드(사주·타로·손금) 프롬프트를 캐시 잘 먹게 쌓는 방법은?"</example>
@@ -17,6 +18,8 @@ description: >
 > - Anthropic Prompt caching — https://platform.claude.com/docs/en/build-with-claude/prompt-caching
 > - Anthropic Structured outputs — https://platform.claude.com/docs/en/build-with-claude/structured-outputs
 > - Anthropic Models overview — https://platform.claude.com/docs/en/about-claude/models/overview
+> - Anthropic API Versions / 2026-10-21 마이그레이션 — https://platform.claude.com/docs/en/api/versioning , https://platform.claude.com/docs/en/api/migration-2026-10-21
+> - Claude Sonnet 5.5 / Haiku 5.5 개요 — https://platform.claude.com/docs/en/models/sonnet-5-5/overview , https://platform.claude.com/docs/en/models/haiku-5-5/overview
 > - Anthropic Usage Policy (AI 고지 요건) — https://www.anthropic.com/aup
 > - Apple App Review Guidelines (4.3(b) fortune telling) — https://developer.apple.com/app-store/review/guidelines/
 > - 사주(四柱) — 한국민족문화대백과사전 — https://encykorea.aks.ac.kr/Article/E0025957
@@ -24,17 +27,17 @@ description: >
 > - 한국천문연구원 음양력 정보 OpenAPI — https://www.data.go.kr/data/15012679/openapi.do
 > - Major Arcana / 78장 구조 — https://en.wikipedia.org/wiki/Major_Arcana
 >
-> 검증일: 2026-09-28 (최초 2026-09-10, 2026-09-11 캐주얼 앱 방향으로 안전 계열 섹션 축소, 2026-09-28 재검증)
-> 대상 모델: Claude Opus 5.5 / Sonnet 5 / Haiku 4.5 (2026-09-25 현행 세대 — 예제 기본은 비용 효율상 Sonnet 5)
+> 검증일: 2026-11-11 (재검증 — Fable 5.2 현행화(references 캐시 512 표), 이전 2026-11-06 · 2026-09-28 · 최초 2026-09-10, 2026-09-11 캐주얼 앱 방향으로 안전 계열 섹션 축소)
+>
+> API 호출·캐싱·structured outputs 는 Claude Code 기본 `claude-api` 스킬 참조.
 
-이 스킬은 **재미로 보는 캐주얼 운세 앱** 백엔드에서 Claude API를 호출할 때
-시스템 프롬프트·모드별 변형·few-shot·톤·JSON 응답·캐싱을 어떻게 조립할지에
+이 스킬은 **재미로 보는 캐주얼 운세 앱** 백엔드 프롬프트에서
+시스템 프롬프트·모드별 변형·few-shot·톤·JSON 응답을 어떻게 조립할지에
 대한 패턴 모음이다. **모든 프롬프트 패턴은 Anthropic 공식 문서 권고에 정합**한다.
 
 짝 스킬(같은 운세 앱 자산군):
 - `backend/korean-lunar-calendar-manseryeok` — 만세력·절기 계산 로직 (사주 원국 산출)
-- `humanities/korean-saju-tradition` · `humanities/tarot-history-symbolism` — 사주·타로 전통 어휘와 귀속 서술의 근거
-- `humanities/palmistry-limitations` — 손금 어휘와 엔터테인먼트 프레이밍
+- `humanities/korean-saju-tradition` — 사주 전통 어휘와 귀속 서술의 근거
 
 이 스킬은 *프롬프트 설계 패턴*만 다룬다. **사주 원국 계산은 이 스킬의 범위가
 아니며, LLM이 아니라 백엔드 계산 로직의 책임이다**(§5-1).
@@ -92,8 +95,7 @@ Anthropic 공식 권고(역할은 system, XML 태그로 구획, `<examples>`로 
   └─ user: 구조화 입력 JSON + (선택) 사용자 질문 텍스트
 ```
 
-**왜 2단으로 나누는가:** 캐시 breakpoint는 요청당 최대 4개이고, 캐시는
-*breakpoint까지의 접두사*에 걸린다. 공통 코어를 첫 블록으로 고정하면 세 모드가
+**왜 2단으로 나누는가:** 공통 코어를 첫 블록으로 고정하면 세 모드가
 같은 접두사를 공유해 캐시 재사용률이 올라가고, 톤 규칙이 한 곳에만 존재해
 모드 간 톤 드리프트도 사라진다(§8).
 
@@ -284,5 +286,5 @@ API 호출 전 클라이언트에서 반려.
 
 ---
 
-> 상세 레퍼런스 (JSON 스키마·Structured Outputs·few-shot 전체 예시·프롬프트 캐싱·
+> 상세 레퍼런스 (JSON 스키마·few-shot 전체 예시·캐시 친화 구성·
 > 입력 전처리·출력 후처리·평가 지표·흔한 함정) → [`references/REFERENCE.md`](references/REFERENCE.md)

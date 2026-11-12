@@ -15,8 +15,9 @@ description: React 프론트(CRA·Vite SPA·Next.js Pages/App Router)에서 화�
 > 소스: https://zod.dev/json-schema (원문 MDX: github.com/colinhacks/zod `packages/docs/content/json-schema.mdx`)
 > 소스: https://react-hook-form.com/docs/useform/register · https://react-hook-form.com/docs/usecontroller/controller
 > 소스: https://tanstack.com/query/latest/docs/framework/react/guides/query-keys · .../guides/migrating-to-v5
-> 검증일: 2026-10-08
-> 기준 버전(2026-10-08 npm 최신): react-router 8.4.0(react-router-dom 7.18.4) · next 16.4.0 · ts-morph 28.0.0 · zod 4.6.5 · react-hook-form 7.89.0 · @tanstack/react-query 5.104.1 · axios 1.20.0 · zustand 5.0.15 · @reduxjs/toolkit 2.13.0 · recoil 0.7.7
+> 소스: https://reactrouter.com/8.3.1/how-to/middleware.md · https://reactrouter.com/8.0.0/changelog.md · https://nextjs.org/docs/app/api-reference/file-conventions/proxy
+> 검증일: 2026-11-09
+> 기준 버전(2026-11-09 npm 최신): react-router 8.5.1(react-router-dom 7.18.5) · next 16.4.5 · ts-morph 28.0.0 · zod 4.6.7 · react-hook-form 7.91.0 · @tanstack/react-query 5.107.1 · axios 1.21.0 · zustand 5.1.0 · @reduxjs/toolkit 2.14.0 · recoil 0.7.7 (모두 2026-10-08 판 대비 마이너·패치만 올라 추출 방법에 영향 없음. 아래 본문의 "실측" 표기는 2026-10-08 당시 버전 기준)
 
 ---
 
@@ -29,13 +30,13 @@ description: React 프론트(CRA·Vite SPA·Next.js Pages/App Router)에서 화�
 | 무엇을 어떤 양식으로 남기나, 확신도·사용 여부 규칙 | `spec-extraction-method` (+ `references/spec-templates.md`) |
 | React 라우트·API 호출·폼·이벤트·권한·전역 상태를 **코드에서 뽑는 법** | **이 스킬** |
 | Next.js 기능 자체(Server/Client Component, 캐싱, proxy) 사용법 | `nextjs` |
-| RHF + zod 폼을 **새로 작성**하는 법 | `form-handling` |
 | zod 4 스키마 설계·서버 경계 검증 | `zod-schema-validation` |
 | TanStack Query 사용 패턴(queryKey 설계·invalidate) | `tanstack-query` |
-| 전역 상태 설계(Zustand v5 등) | `state-management` (Recoil 이관은 `recoil-to-zustand-migration`) |
 | 추출 결과로 폴더 구조를 domain-first로 재편 | `frontend-domain-structure` |
 
 **원칙:** 추출 단계에서는 코드를 고치지 않는다. 산출물은 대상 레포 `docs/spec/` (spec-extraction-method 7-7).
+
+> React·React Router·Next.js·React Hook Form·zod 자체의 기본 사용법은 공식 문서 수준이라 싣지 않는다. 이 스킬에 남긴 것은 **추출 절차·실행 검증한 스크립트·산출 칸 매핑·추출 함정**뿐이다.
 
 ---
 
@@ -67,7 +68,7 @@ description: React 프론트(CRA·Vite SPA·Next.js Pages/App Router)에서 화�
 | `react-router-dom` + `<Routes>`/`<Route>` | Declarative mode (v6 흔함) | §2-2 (JSX) |
 | `react-scripts` | CRA | 라우터 판별은 위와 동일 |
 
-> 주의: React Router v7부터 패키지 이름이 `react-router` 로 통합됐고, 2026-10-08 기준 npm 최신은 `react-router` 8.4.0, `react-router-dom` 7.18.4다(npm 레지스트리 직접 조회). 레거시 코드는 `react-router-dom` import가 대부분이므로 **두 이름을 모두 검색**한다.
+> 주의: React Router v7부터 패키지 이름이 `react-router` 로 통합됐고, 2026-11-09 기준 npm 최신은 `react-router` 8.5.1, `react-router-dom` 7.18.5다(npm 레지스트리 직접 조회 — `react-router-dom`은 7.x에 머물러 있다). 레거시 코드는 `react-router-dom` import가 대부분이므로 **두 이름을 모두 검색**한다.
 
 ---
 
@@ -137,7 +138,7 @@ for (const r of rows.sort((a, b) => a[2].localeCompare(b[2]))) console.log(r.joi
 
 ### 2-2. React Router — Data mode route 객체 + Declarative JSX
 
-공식 문서상 route 객체의 핵심 필드: `path`, `Component`(또는 `element`), `children`, `index`, `loader`, `action`, `lazy`. path 없는 route = **레이아웃 라우트**(URL 세그먼트 없음). 동적 `:id`, 선택 `:lang?`, splat `files/*`. JSX 모드는 `<Routes>` 안의 `<Route path element>` 중첩이 같은 의미다.
+path 없는 route = **레이아웃 라우트**(URL 세그먼트 없음) — 화면이 아니지만 `element`가 권한 가드 단서다.
 
 ```js
 // rr-routes.mjs — 사용: node rr-routes.mjs <tsconfig 경로>  (ts-morph 28에서 실행 검증)
@@ -216,9 +217,9 @@ console.log("근거\t경로\t컴포넌트\t확신도"); for (const r of out) con
 
 ### 3-1. 왜 grep이 아니라 AST인가
 
-`get(`·`post(`는 Map·URLSearchParams·lodash에도 있다. ts-morph(TypeScript 컴파일러 API 래퍼)는 **수신 객체의 타입**을 물을 수 있어 axios 인스턴스(`axios.create()` 반환값을 import해서 쓰는 경우 포함)만 걸러낸다. `new Project({ tsConfigFilePath })`는 tsconfig의 파일을 자동 추가한다(`skipAddingFilesFromTsConfig: true`로 끌 수 있음 — ts-morph 공식 Setup 문서).
+`get(`·`post(`는 Map·URLSearchParams·lodash에도 있다. ts-morph는 **수신 객체의 타입**을 물을 수 있어 axios 인스턴스(`axios.create()` 반환값을 import해서 쓰는 경우 포함)만 걸러낸다.
 
-설치: `npm i -D ts-morph` (2026-10-08 최신 28.0.0). **타입 해석이 되려면 대상 레포의 `node_modules`가 설치돼 있어야 한다** — 없으면 axios 타입이 `any`가 되어 3-2의 axios 판별이 전부 빠진다.
+**타입 해석이 되려면 대상 레포의 `node_modules`가 설치돼 있어야 한다** — 없으면 axios 타입이 `any`가 되어 3-2의 axios 판별이 전부 빠진다.
 
 ### 3-2. 호출 위치·메서드·URL 수집 스크립트 (실행 검증 완료)
 
@@ -354,7 +355,7 @@ for (const w of wrappers) for (const ref of w.findReferencesAsNodes()) {
 
 ### 4-1. RHF `register` / `Controller`
 
-공식 API: `register(name, options)`의 검증 옵션은 `required`, `min`, `max`, `minLength`, `maxLength`, `pattern`, `validate` (+ `valueAsNumber`, `valueAsDate`, `setValueAs` 변환). 메시지는 `required: "메시지"` 또는 `{ value, message }` 형태. `Controller`의 `rules` prop은 **register 옵션과 같은 형식**(required·min·max·minLength·maxLength·pattern·validate).
+`register(name, options)`의 옵션 객체와 `Controller`의 `rules` prop은 같은 형식이므로 둘 다 수집해 "검증·메시지" 칸으로 옮긴다.
 
 ```js
 // rhf-fields.mjs 핵심부 — register("name", { ... }) 와 <Controller name rules> 수집
@@ -488,64 +489,11 @@ rg -n -t ts -t js -e '\b(hasRole|hasPermission|can|isAdmin|useAuth|usePermission
 - 화면 명세 "권한" 칸에는 **층별로** 적는다(예: `라우트: RequireAuth(로그인) / 버튼 '취소': hasRole("ORDER_CANCEL")`).
 - **프론트 가드는 보안 경계가 아니다.** 서버가 같은 권한을 검사하는지는 API 명세(백엔드 추출 결과)와 교차 확인하고, 프론트에만 있으면 "서버 검증 미확인"으로 표시한다 — 재구축 시 누락되기 쉬운 지점.
 
-> 주의: React Router v8에서 middleware가 기본 활성화됐다는 내용은 v8 릴리스 관련 보도·업그레이드 문서 검색 결과로 확인했으나 middleware API 시그니처는 이번에 직접 검증하지 않았다. 대상 프로젝트 버전 문서에서 `middleware` 프로퍼티 형식을 확인한 뒤 추출 규칙을 정한다.
+> React Router v8 middleware (2026-11-09 공식 문서 확인): v8.0.0 changelog에서 `future.v8_middleware` 플래그가 제거되어 **항상 활성**이다(v7은 이 플래그를 켠 경우에만). 형태는 ① Data mode — route 객체의 `middleware: [fn, ...]` **배열** 프로퍼티 ② Framework mode — 라우트 모듈의 `export const middleware = [...]`(서버)와 `export const clientMiddleware = [...]`(브라우저). 함수 시그니처는 `({ request, context }, next)`이고 인증 가드는 보통 `throw redirect("/login")` 형태다. 추출 시 **세 이름(`middleware` 프로퍼티·`middleware` export·`clientMiddleware` export)을 모두 검색**하고 배열 원소 함수의 본문에서 `redirect(`를 찾는다. 주의: reactrouter.com의 버전 없는 middleware 페이지에는 아직 `future: { v8_middleware: true }` 예시가 남아 있다(v8 이전 내용). v7 프로젝트면 그 플래그가 켜져 있어야만 middleware가 실행되므로 `react-router.config.ts`·`createBrowserRouter` 옵션도 같이 확인한다.
 
 ---
 
-## 7. 전역 상태 목록
+## 7 ~ 9. 전역 상태·병합·흔한 실수
 
-화면 간에 데이터를 넘기는 통로라서 "화면 이동 시 무엇이 유지되나"의 근거가 된다. 목록 칸: `상태 이름(key) / 라이브러리 / 초기값 / 정의 위치 / 읽는 화면 / 쓰는 화면`.
-
-| 라이브러리 | 정의 패턴 (설치 타입 정의로 확인) | 읽기/쓰기 추적 |
-|------|------|------|
-| Recoil | `atom({ key, default })`, `selector({ key, get, set? })`, `atomFamily`/`selectorFamily` — `key` 필수 | `useRecoilState`·`useRecoilValue`·`useSetRecoilState`의 인자 참조 |
-| Redux Toolkit | `createSlice({ name, initialState, reducers, extraReducers })`, `configureStore({ reducer })` | `useSelector((s) => s.<slice>…)`, `dispatch(<action>())` |
-| zustand | `create(...)` / `create<T>()(...)` (v5 `zustand` 패키지 `create` export) | `use<Store>(selector)` 훅 참조 |
-| Context | `createContext(...)` + Provider `value` | `useContext(X)` |
-
-```bash
-rg -n -t ts -t js -e '\b(atom|selector|atomFamily|selectorFamily)\(\s*\{' -e 'createSlice\(\s*\{' -e '\bcreate(<[^>]*>)?\(\)?\(' -e 'createContext\(' src
-```
-
-- 읽기/쓰기 위치는 3-3의 `findReferencesAsNodes()`를 상태 선언(atom 변수·slice actions·store 훅)에 그대로 적용한다.
-- **서버 상태(TanStack Query 캐시)는 전역 상태 목록에 넣지 않는다** — API 명세 쪽 정보다(`tanstack-query` 스킬(설치된 경우)의 서버/클라이언트 상태 구분과 같은 기준).
-- Recoil은 GitHub 저장소(facebookexperimental/Recoil)가 **archived** 상태이고 npm 최신이 0.7.7이다. 재구축 대상 스택에서 대체가 필요하면 `recoil-to-zustand-migration`(설치된 경우) 참조. 추출 단계에서는 key 목록만 정확히 남긴다.
-
----
-
-## 8. 7-1/7-2 표로 병합하는 법
-
-1. §2 출력의 각 화면 행 → 화면ID 부여(`SCR-<도메인>-<번호>`, 규칙은 spec-extraction-method 양식) + 근거 = 라우트 정의 줄;컴포넌트 파일.
-2. §3-3 체인으로 화면 컴포넌트에 닿은 API 행 → 해당 화면의 "버튼·이벤트 → 호출 API". §5-1 결과로 어느 버튼인지 붙인다. 버튼 없이 마운트 시 호출(useQuery·useEffect)이면 이벤트 = "화면 진입".
-3. §4 필드 → 입력 필드 표. §6 → 권한 칸. §5-2 → 화면 이동·팝업 칸.
-4. 모든 행에 `확신도`: 스크립트가 "확인됨"을 찍어도 **R3(근거 줄 재확인)** 전까지는 초안. 동적 URL·props 경유·미확인 체인은 "추정"/"미확인" 유지.
-5. `사용 여부`는 코드로 알 수 없다 → 접근 로그·애널리틱스 페이지뷰(라우트 경로 기준)로 채운다(spec-extraction-method 3-2).
-6. 화면이 많으면 **라우트 묶음(=도메인) 단위로 서브에이전트 분할**(R1). 스크립트 TSV를 먼저 만들어 두고, 서브에이전트는 TSV + 해당 파일만 읽게 하면 컨텍스트가 작다.
-
----
-
-## 9. 언제 쓰나 / 쓰지 않나
-
-**적합:** React 프론트를 다른 스택(또는 새 구조)으로 재구축하기 전 화면 명세가 없거나 낡았을 때 / 백엔드 API 명세와 "어느 화면이 이 API를 부르나"를 연결해야 할 때 / 화면 수십~수백 개를 LLM과 함께 훑되 근거를 남겨야 할 때.
-
-**부적합:** 화면 몇 개짜리 앱(직접 읽는 게 빠르다) / 런타임 조립이 지배적인 앱(서버가 화면 JSON을 내려주는 SDUI, 메뉴·권한·폼을 DB 메타데이터로 생성) — 이 경우 코드가 아니라 **메타데이터 테이블**이 스펙 원천이므로 데이터 추출로 전환한다.
-
----
-
-## 10. 흔한 실수
-
-| 실수 | 왜 문제인가 | 올바른 접근 |
-|------|------|------|
-| Next.js 폴더 수를 화면 수로 셈 | `page` 없는 폴더·`_private`·`(group)`은 화면이 아님 | `page`/`route` 파일 기준(§2-1) |
-| 인터셉트·병렬 라우트를 별도 화면으로 등록 | 같은 URL의 표시 방식일 뿐 → 중복 화면 | 비고 칸에 "모달 표시"로 |
-| `route.ts`·`pages/api`를 화면 목록에 섞음 | API다 | API 명세로 분리 |
-| `rg "\.get\("` 로 API 수집 | Map·URLSearchParams까지 잡힘, 인스턴스 import는 놓침 | ts-morph 타입 판별(§3-2) |
-| 대상 레포 `node_modules` 없이 ts-morph 실행 | axios 타입이 any → axios 호출 전부 누락 | 의존성 설치 후 실행, 0건이면 의심 |
-| 동적 URL을 그럴듯하게 채움 | R4·R5 위반 — 추정이 사실로 둔갑 | `{url}` 그대로 + 추정, HAR로 확인 |
-| queryKey를 API 경로로 기록 | 캐시 식별자일 뿐 실제 요청과 다를 수 있음 | queryFn 안의 실제 호출을 기록 |
-| `z.toJSONSchema` 결과만으로 검증 명세 확정 | 메시지·`.refine` 교차 규칙이 조용히 빠짐(실측) | 메시지·refine은 AST로 보완 |
-| zod 3 프로젝트에서 `z.toJSONSchema` 호출 | 4.0부터 제공 — zod 3엔 없음 | 버전 확인, 필요 시 zod-to-json-schema |
-| 하위 `<Routes>` 경로를 루트 기준으로 기록 | v6 descendant routes는 부모 경로 기준 상대 경로 | 부모 `/*` 경로와 결합 |
-| 버튼 숨김(조건부 렌더)을 권한 명세 전체로 간주 | 서버 검증 여부 불명 | 서버 API 명세와 교차, 없으면 "서버 검증 미확인" |
-| TanStack Query 캐시를 전역 상태 목록에 포함 | 서버 상태와 클라이언트 상태 혼동 | 전역 상태 = Recoil/Redux/zustand/Context만 |
-| 스크립트 출력 "확인됨"을 그대로 확정 | 스크립트 버그·누락 가능 | R3 근거 재확인 + 표본 수동 대조 |
+> 아래 3개 절은 [`references/REFERENCE.md`](references/REFERENCE.md) 로 분리했다 (절 번호 그대로).
+> §7 전역 상태 목록(Recoil·Redux Toolkit·zustand·Context 정의 패턴·rg 명령, 서버 상태 제외) / §8 7-1/7-2 표로 병합하는 법(6단계)·부적합 대상 / §9 흔한 실수(13항)

@@ -2,7 +2,7 @@
 skill: bouncycastle-crypto
 category: backend
 version: v1
-date: 2026-09-26
+date: 2026-11-06
 status: APPROVED
 ---
 
@@ -18,7 +18,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `bouncycastle-crypto` |
 | 스킬 경로 | `.claude/skills/bouncycastle-crypto/SKILL.md` |
-| 검증일 | 2026-04-23 (재검증: 2026-09-26) |
+| 검증일 | 2026-11-06 (재검증, 이전 2026-09-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 | 대상 버전 | BC 1.64 (`bcprov-jdk15on`) 레거시 / **BC 1.86** (`bcprov-jdk18on`, 2026-09-26 재검증으로 1.78.1→1.86 갱신) |
@@ -85,6 +85,8 @@ status: APPROVED
 | elttam: Attacks on GCM with Repeated Nonces | https://www.elttam.com/blog/key-recovery-attacks-on-gcm | ⭐⭐ Medium | 2026-04-23 | IV 재사용 공격 기술적 근거 |
 | Neil Madden: Galois/Counter Mode and random nonces | https://neilmadden.blog/2024/05/23/galois-counter-mode-and-random-nonces/ | ⭐⭐ Medium | 2026-04-23 | 2^32 메시지 한계 설명 |
 | Bouncycastle CVE Details | https://www.cvedetails.com/vendor/7637/Bouncycastle.html | ⭐⭐ Medium | 2026-04-23 | CVE 목록 |
+| bc-java 공식 release notes (docs/releasenotes.md) | https://github.com/bcgit/bc-java/blob/main/docs/releasenotes.md | ⭐⭐⭐ High | 2026-11-06 | 1.86 = 2026-09-11(+bctls 1.86.1/1.86.2), 1.85.2 = 2026-08-07, 1.85 = 2026-07-12, 1.84 = 2026-04-14, 1.87 개발 중. 버전별 Security Advisories 목록 |
+| Maven Central — bcprov-jdk18on 메타데이터 | https://repo1.maven.org/maven2/org/bouncycastle/bcprov-jdk18on/maven-metadata.xml | ⭐⭐⭐ High | 2026-11-06 | latest/release 1.86 (bcpkix·bcutil·bcpg-jdk18on, bcprov·bcpkix-jdk15to18 도 1.86, bctls-jdk18on 1.86.2) |
 
 ---
 
@@ -123,7 +125,14 @@ status: APPROVED
 | 20 (2026-09-26 추가) | CVE-2026-13586 (PKCS#12 MAC/bag KDF 반복 횟수 상한 없음, DoS, 2026-08-03 공개) | VERIFIED | Snyk 취약점 DB |
 | 21 (2026-09-26 추가) | CVE-2026-5598 (FrodoEngine 샘플링 타이밍 공격, PQC 알고리즘 한정) | VERIFIED | Snyk SNYK-JAVA-ORGBOUNCYCASTLE-16074612 |
 
+| 22 (2026-11-06) | 최신 안정 버전 1.86, 릴리스일 2026-09-11 (기존 표기 09-12 는 DISPUTED → 수정) | VERIFIED | bc-java release notes 2.2.1 절 + Maven Central 메타데이터(2026-09-11 갱신) |
+| 23 (2026-11-06) | CVE-2026-0636·CVE-2026-5598 은 1.84 에서, CVE-2026-13506·CVE-2026-59651·CVE-2026-13586 은 1.85 에서 패치 | VERIFIED | release notes 1.84 "Security Fixes"·1.85 "Security Fixes" 목록 + 기존 GitHub Advisory/Snyk 근거 |
+| 24 (2026-11-06) | 1.86 에서 14건 보안 수정(CVE-2026-17508 PBE KDF 비용 무제한, CVE-2026-71889 PKIXCertPathReviewer 이름 제약, CVE-2026-71888 CMS AuthenticatedData 등) → 1.85 도 최소 버전으로 부적합 (기존 "최소 1.85" 서술 DISPUTED → 수정) | VERIFIED | release notes 1.86 "Security Advisories" 절 (2차 독립 소스 NVD 는 미대조 — 공식 1차 소스 단독) |
+| 25 (2026-11-06) | 1.85 부터 기본 "BKS" 로 v0/v1 스토어 로드 시 IOException (`org.bouncycastle.bks.enable_v1` 으로 허용) | VERIFIED | release notes 1.85 Defects Fixed (CVE-2018-5382 관련) |
+| 26 (2026-11-06) | 1.86 은 deprecated `pqc.crypto.{mldsa,mlkem,slhdsa,frodo,cmce}` 삭제 | VERIFIED | release notes 1.85 Additional Notes(예고) + 1.86 Additional Notes(삭제) |
+
 교차 검증 결과 (최초): **VERIFIED 16 / DISPUTED 0 / UNVERIFIED 0**
+교차 검증 결과 (2026-11-06 재검증 추가분): **VERIFIED 5 / DISPUTED 0 / UNVERIFIED 0** — 기존 서술 중 릴리스일(09-12)·"최소 1.85" 2곳을 정정
 교차 검증 결과 (2026-09-26 재검증 추가분): **VERIFIED 5 / DISPUTED 0 / UNVERIFIED 0** — 신규 CVE 5건 전부 확인, SKILL.md 버전 권고를 1.78.1/1.84 → 1.86으로 갱신
 
 ### 4-3. 구조 완전성
@@ -145,13 +154,48 @@ status: APPROVED
 
 ### 4-5. Claude Code 에이전트 활용 테스트
 
-- [❌] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (실제 CLI 테스트 미실행)
-- [❌] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (미실행)
-- [❌] 잘못된 응답이 나오는 경우 스킬 내용 보완 (미실행)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-11-06, general-purpose 3문항)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-11-06, 3/3 PASS)
+- [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (FAIL 없음 — 선택 보강 gap만 섹션 5 기재)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### 2026-11-06 — 재검증 내용 수정분 재시험 (1.86 미만 금지·CVE 버전별 재정리·BKS/PBE/PQC 주의)
+
+**수행일**: 2026-11-06
+**수행자**: skill-tester → general-purpose (domain 에이전트 미사용, general-purpose로 대체)
+**수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern(1.85를 최소 안전 버전으로 안내, 1.84 롤백 권유, 구 PQC 패키지 유지) 회피 확인
+
+**Q1. "팀이 '최소 1.85면 안전'이라 한다. 신규 Spring Boot 3.x에 어떤 아티팩트·버전을 쓰고 1.85는 왜 부족한가? pom도 제시"**
+- ✅ PASS
+- 근거: SKILL.md 상단 "주의 (2026-11-06 재검증 — 최소 버전 1.86)" 블록 + "1-3. Spring Boot 3.x + Java 17+" 섹션
+- 상세: `bcprov/bcpkix/bcutil-jdk18on:1.86` pom을 정확히 제시, 1.85도 1.86 수정 14건(CVE-2026-17508·71889·71888·71892)에 노출되어 부적합하다고 답변. 버전별 패치 라인(1.84/1.85/1.86)도 정확. anti-pattern 회피.
+
+**Q2. "1.84→1.85 업그레이드 후 `KeyStore.getInstance("BKS")` 로드 시 IOException. 원인과 대응, 1.84 롤백해도 되나?"**
+- ✅ PASS (핵심 정확, 보강 gap 있음)
+- 근거: SKILL.md 상단 주의 블록의 1.85 패치 항목(CVE-2026-59651, BKS v0/v1 IOException)
+- 상세: 원인(16비트 MAC legacy 스토어 거부)을 정확히 짚고, 롤백은 CVE-2026-13506/59651/13586/12860 재노출이라 비권장, 1.85 잔류도 부적합이라 1.86+로 가야 한다고 답변. 다만 SKILL.md에 허용 속성(`org.bouncycastle.bks.enable_v1`)·마이그레이션 절차가 없어 에이전트가 "근거 없음"으로 정직하게 표기.
+
+**Q3. "1.83→1.86 업그레이드: (a) `pqc.crypto.mlkem` 컴파일 깨지나 (b) 업로드 PKCS#12 + AES-GCM 서비스에서 얻는 것·바꿀 것·IV/태그 설정"**
+- ✅ PASS
+- 근거: SKILL.md 상단 주의 블록(1.86 PQC 패키지 삭제, CVE-2026-13586·17508) + "3-1. AES-GCM" 섹션
+- 상세: (a) 구 PQC 패키지 삭제로 컴파일 오류 가능·AES/RSA/PEM API는 불변, (b) PKCS#12 KDF DoS 두 건(13586, 17508, 기본 상한 10,000,000) 인용, AES-GCM 코드 변경 불필요, IV 12바이트 SecureRandom·태그 128비트·`AES/GCM/NoPadding` 정확 재현.
+
+### 발견된 gap (모두 선택 보강, 차단 요인 아님)
+
+- 상단 11행에 "2026년 4월 기준 최신 1.84"·"1.78.x 이상" 표현이 남아 13행(최신 1.86)과 시점이 섞임 — 모순은 아니나 낡아 보임
+- BKS v0/v1 허용 속성(`org.bouncycastle.bks.enable_v1`)·스토어 변환 절차 미수록 (verification 클레임 25에는 있으나 SKILL.md에는 없음)
+- `org.bouncycastle.pbe.max_iteration_count` 설정 방법·PQC 대체 패키지 클래스명 미수록
+
+### 판정
+
+- agent content test: 3/3 PASS
+- verification-policy 분류: 라이브러리 사용법 스킬 → 실사용 필수 카테고리 해당 없음
+- 최종 상태: APPROVED 유지
+
+---
 
 ### 2026-09-28 — 재테스트 (2026-09-26 CVE 정정분 겨냥, APPROVED 유지 확인)
 
@@ -251,7 +295,8 @@ BouncyCastle PEMParser로 OpenSSL 스타일 PEM 개인키를 읽어서 java.secu
 | 에이전트 활용 테스트 | ✅ (2026-04-23, 2문항 PASS — AES-256-GCM 유틸 + BC Provider 등록, KISA ARIA-256-GCM 권장 근거 + Cipher.getInstance 호출 정확) |
 | 재검증 (2026-09-26) | ✅ 신규 CVE 5건 확인·버전 권고 1.86으로 갱신, content test 2/2 PASS |
 | 재테스트 (2026-09-28) | ✅ skill-tester → general-purpose, 2/2 PASS (1.86 버전 정정분 + CVE-2026-0636 겨냥) |
-| **최종 판정** | **APPROVED** (2026-09-28 재테스트로 버전 정정 내용 반영 확인, 모순 없음) |
+| 재테스트 (2026-11-06) | ✅ skill-tester → general-purpose, 3/3 PASS (1.86 미만 금지 / BKS v0/v1 IOException·롤백 / PQC 패키지 삭제·PKCS#12 KDF·AES-GCM) |
+| **최종 판정** | **APPROVED** (2026-11-06 재검증 수정분 재테스트 3/3 PASS, 선택 보강 gap만 존재) |
 
 ---
 
@@ -259,10 +304,12 @@ BouncyCastle PEMParser로 OpenSSL 스타일 PEM 개인키를 읽어서 java.secu
 
 - [✅] 에이전트 활용 테스트 — AES-256-GCM 유틸 + KISA ARIA-256-GCM 권장 근거 2문항 PASS (섹션 6, 2026-04-23)
 - [✅] skill-tester 재테스트 수행 — 2026-09-28 완료, 2/2 PASS (1.86 버전 정정 + CVE-2026-0636 겨냥)
+- [✅] skill-tester 재시험 (2026-11-06 재검증 수정분) — 2026-11-06 완료, 3/3 PASS
+- [❌] SKILL.md 11행 "2026년 4월 기준 최신 1.84"·"1.78.x" 낡은 표현 정리, BKS `enable_v1`·`max_iteration_count` 설정 안내 보강 — 선택 보강(차단 요인 아님)
 - [⏸️] FIPS 모드(`bc-fips`) 별도 섹션 — 금융·공공기관 대상 확장, 현 범위는 non-FIPS
 - [⏸️] OpenPGP(`bcpg-jdk18on`) 활용 예시 — 범위 외, 필요 시 별도 스킬 분리
 - [🔬] 실제 Spring Boot 2.5 + BC 1.64 샘플 프로젝트 빌드·동작 — 실환경 검증 대기
-- [🔬] 실제 Spring Boot 3.x + BC 1.78.1 샘플 프로젝트 빌드·동작 — 실환경 검증 대기
+- [🔬] 실제 Spring Boot 3.x + BC 1.86 샘플 프로젝트 빌드·동작 — 실환경 검증 대기 (2026-11-06: 대상 버전 1.78.1 → 1.86)
 
 ---
 
@@ -273,3 +320,6 @@ BouncyCastle PEMParser로 OpenSSL 스타일 PEM 개인키를 읽어서 java.secu
 | 2026-04-23 | v1 | 최초 작성. BC 1.64 레거시 + 1.78.1 최신 양쪽 커버, KISA 표준(SEED/ARIA/LEA) 포함, CVE 알림 반영 | skill-creator |
 | 2026-09-26 | v1 | 재검증 — 신규 CVE 5건 발견(CVE-2026-0636/13506/59651/13586/5598), 권장 버전 1.78.1/1.84 → **1.86**으로 갱신, content test 2/2 PASS | 메인 세션 |
 | 2026-09-28 | v1 | 2단계 실사용 재테스트 수행 (Q1 AES-256-GCM 유틸 / Q2 1.78.1→1.86 업그레이드 정정분) → 2/2 PASS, APPROVED 유지 | skill-tester |
+| 2026-11-06 | v1 | 재검증 — 최신 1.86 유지 확인(릴리스일 09-12 → 09-11 정정, bctls 1.86.2), "최소 1.85" 권고 삭제 → 1.86 미만 금지로 정정(1.86 보안 수정 14건: CVE-2026-17508·71889·71888 등 추가), CVE 별 패치 버전 정리(1.84/1.85/1.86), 1.85 BKS v0/v1 로드 차단·1.86 PBE 반복 횟수 상한·PQC 구 패키지 삭제 주의 추가, references 11-1 예시 1.78.1 → 1.86. 내용 수정 — skill-tester 재시험 예정 | Claude |
+| 2026-11-06 | v1 | 재검증 수정분 2단계 재시험 수행 (Q1 1.86 미만 금지·pom / Q2 1.85 BKS v0/v1 IOException·롤백 판단 / Q3 PQC 패키지 삭제·PKCS#12 KDF·AES-GCM) → 3/3 PASS, APPROVED 유지 (선택 보강 gap 3건 섹션 5 기재) | skill-tester |
+| 2026-11-11 | v1 | 2026-11-11 정리 — 모델이 아는 일반 지식 절 제거(2장 Provider 등록, 3장 AES-GCM/CBC/ECB 예제·IV 규칙, 4장 RSA 키쌍·OAEP·PKCS#1, 5장 서명, 6장 해시·OpenBSDBCrypt, 7장 PEM, 8장 X.509, 10-1 PKCS#12 코드·10-2 JKS, 11장 Spring Boot 통합). 남긴 절: 상단 1.86 최소 버전·2026 CVE 주의문, 1장 의존성(아티팩트 네이밍·레거시 1.64·1.86·Gradle), 9장 KISA SEED/ARIA/LEA, 10-3 BKS·PKCS#12 1.85/1.86 변경, 12장 자주 하는 실수, 13장 알고리즘 선택표. 사실 재검증 아님 | Claude (Opus 5.5) |

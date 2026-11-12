@@ -10,4 +10,4 @@
 | [xapi-to-rest-migration](../../../.claude/skills/xapi-to-rest-migration/SKILL.md) | X-API 컨트롤러 → Spring Boot 3 REST + DTO — ProblemDetail, 행 상태 일괄 저장(POST /batch), 낙관적 잠금, 공존 어댑터, POI SXSSF | [→](./xapi-to-rest-migration/verification.md) |
 | [nexacro-strangler-coexistence](../../../.claude/skills/nexacro-strangler-coexistence/SKILL.md) | 점진 전환(Strangler Fig) 공존 — Next.js rewrites fallback·Multi-Zones, 넥사크로에서 새 화면 열기, 쿠키·세션 공유, 메뉴 전환 플래그, 웨이브 운영 | [→](./nexacro-strangler-coexistence/verification.md) |
 
-넥사크로 마이그레이션용 백엔드 스킬 `spring-boot-1-to-2-migration`·`ibatis-to-mybatis-migration`은 [backend](../backend/README.md)에 있다 (프리셋 `nexacro` 로 함께 켜짐).
+넥사크로 마이그레이션용 백엔드 스킬 `ibatis-to-mybatis-migration`은 [backend](../backend/README.md)에 있다 (프리셋 `nexacro` 로 함께 켜짐).

@@ -15,7 +15,7 @@ description: >
 # 성인 애착 이론 기초 (Attachment Theory Basics)
 
 > 소스: Bowlby (1969/1982) *Attachment and Loss Vol.1* — https://www.amazon.com/Attachment-Loss-Basic-Books-Classics/dp/0465005438
-> 검증일: 2026-09-26 (최초 2026-05-15 / §10 관계 패턴 모델 2026-09-26 병합·재검증 반영)
+> 검증일: 2026-11-06 (최초 2026-05-15 / §10 관계 패턴 모델 2026-09-26 병합 / 2026-11-06 재검증 — Crossref·PubMed 서지 대조, §10.1 저자 정정)
 > 짝 스킬: `humanities/dream-psychology-jung-freud` (꿈 해석 시 함께 활용) · `meta/dream-interpretation-prompt-engineering` (꿈 해몽 후 관계 조언 — §10 가드레일 적용)
 
 **전체 1차 문헌 소스:**
@@ -332,7 +332,9 @@ Mikulincer&Shaver(통합서·2차원 모델) → Fraley&Roisman(현대 평가)
 **종단 연구 수치 — 정확한 인용:**
 - **Gottman & Levenson (1992)** *J. Personality & Social Psychology* 63(2), 221-233 — 73쌍, 1983·1987 4년 추적.
 - **Gottman, Coan, Carrere & Swanson (1998)** *J. Marriage & Family* 60(1), 5-22 — 신혼 부부, 6년 추적에서 약 **83~94% 수준의 분류 정확도** 보고. *대중적으로 "94%" 인용은 이 연구 계열*.
-- **Gottman & Levenson (2000)** *J. Family Psychology* 14(1), 42-58 — *Oral History Interview*로 신혼 부부의 5년 내 해체를 **약 87.4%·81% 정확도**로 분류.
+- **Carrère, Buehlman, Gottman, Coan & Ruckstuhl (2000)** *J. Family Psychology* 14(1), 42-58 (DOI 10.1037/0893-3200.14.1.42) — 신혼 95쌍, *Oral History Interview*로 첫 추적 시점(결혼 5년 내) 유지·해체를 **약 87.4%**, 7~9년 시점 유지·이혼을 **약 81%** 정확도로 분류(판별 분석, 같은 표본 적합). 이혼 쌍은 95쌍 중 16쌍.
+
+> 주의 (2026-11-06 재검증 정정): 이 J. Family Psychology 2000 논문은 이전 판에서 "Gottman & Levenson (2000)" 으로 잘못 적었다. 1저자는 **Carrère** 이다. Gottman & Levenson (2000) 은 *J. Marriage and Family* 62(3) 의 14년 추적 논문(아래 §10.7)으로 별개다.
 
 > 주의: "결혼 안정성을 93~94% 정확도로 예측"이라는 대중 표현은 *후향적 분류 정확도*(retrodictive classification)이지, 미래 *예측*과는 통계적 의미가 다르다. 연구마다 표본·기간·지표가 다르므로 단일 수치로 단정하지 않는다. Criticism → Contempt → Defensiveness → Stonewalling cascade도 *관찰된 경향*이며 인과 법칙이 아니다.
 
@@ -399,7 +401,8 @@ Mikulincer&Shaver(통합서·2차원 모델) → Fraley&Roisman(현대 평가)
 
 - Gottman, J. M., & Levenson, R. W. (1992). Marital processes predictive of later dissolution: Behavior, physiology, and health. *Journal of Personality and Social Psychology*, 63(2), 221-233.
 - Gottman, J. M., Coan, J., Carrere, S., & Swanson, C. (1998). Predicting marital happiness and stability from newlywed interactions. *Journal of Marriage and Family*, 60(1), 5-22.
-- Gottman, J. M., & Levenson, R. W. (2000). The timing of divorce: Predicting when a couple will divorce over a 14-year period. *Journal of Marriage and Family*, 62(3), 737-745. (cf. *J. Family Psychology* 14(1) "Predicting Marital Stability and Divorce in Newlywed Couples", 42-58)
+- Gottman, J. M., & Levenson, R. W. (2000). The timing of divorce: Predicting when a couple will divorce over a 14-year period. *Journal of Marriage and Family*, 62(3), 737-745.
+- Carrère, S., Buehlman, K. T., Gottman, J. M., Coan, J. A., & Ruckstuhl, L. (2000). Predicting marital stability and divorce in newlywed couples. *Journal of Family Psychology*, 14(1), 42-58.
 - Gottman, J. M., & Silver, N. (1999). *The Seven Principles for Making Marriage Work*. Crown.
 - Johnson, S. M. (1996/2004). *The Practice of Emotionally Focused Couple Therapy: Creating Connection* (2nd ed.). Brunner-Routledge.
 - Johnson, S. M. (2008). *Hold Me Tight: Seven Conversations for a Lifetime of Love*. Little, Brown Spark.

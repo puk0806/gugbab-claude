@@ -1,8 +1,9 @@
 ---
 name: kakao-share-optimization
 description: >
-  카카오톡 링크 공유 시 OG 미리보기를 최적화하는 방법.
-  카카오 캐시 초기화, 이미지 사양, JavaScript SDK 공유 구현, SPA 환경 대응을 다룬다.
+  카카오톡 링크 공유 OG 미리보기의 한국 특화 규칙과 함정 — 이미지 사양(800×400 스마트 크롭·최소 200/400·5MB·JPEG/PNG),
+  공유 디버거(구 tool/clear/og) 캐시 초기화, SDK 2.8.4·integrity·JavaScript 키, Kakao.Link→Kakao.Share,
+  sendDefault/sendCustom/sendScrap 차이, 크롤러가 JS를 실행하지 않는 SPA 대응(kakaotalk-scrap UA), 디버깅 체크리스트.
   <example>사용자: "카카오톡 공유했는데 미리보기 이미지가 옛날 거 나와요"</example>
   <example>사용자: "Next.js에서 카카오톡 공유 미리보기 구현하려면?"</example>
   <example>사용자: "Kakao.Share.sendDefault 사용법 알려줘"</example>
@@ -17,31 +18,23 @@ description: >
 > - Kakao Developers — 공유 디버거(OG 캐시 초기화): https://developers.kakao.com/tool/debugger/sharing
 > - Kakao Developers — SDK Reference (Kakao.Share): https://developers.kakao.com/sdk/reference/js/release/Kakao.Share.html
 >
-> 검증일: 2026-09-28 (재검증 2차, 이전 2026-08-26 / 최초 2026-06-04) — 갱신 사유: ① SDK 2.8.2→**2.8.3**(2026-09-03 출시) 갱신, CDN 경로 반영 ② **OG 캐시 초기화 도구 URL 변경**: 구 `tool/clear/og`는 현재 `tool/debugger/sharing`("공유 디버거")로 리다이렉트 — 기능(도메인 입력→캐시 초기화)은 동일, 명칭·경로만 변경. §3·소스 링크 갱신 ③ 메시지 템플릿 이미지 최소 크기 규정을 **기본 템플릿(200×200) vs 사용자 정의 템플릿(400×400)** 으로 세분화해 반영(공식 문서 확인) ④ `Kakao.Share`/`sendDefault`/`sendCustom`/`sendScrap`·objectType 5종·`Kakao.Link`→`Kakao.Share` 변경 공지는 재확인 결과 동일(VERIFIED)
-> SDK 기준 버전: **2.8.3** (2026-09-03 출시, 내부 개선 — 이전 버전과 API 동일. integrity 해시는 공식 다운로드 페이지에서 해당 버전 값으로 교체)
+> 검증일: 2026-11-09 (재검증 3차, 이전 2026-09-28 / 2026-08-26 / 최초 2026-06-04) — 3차 갱신 사유: SDK 2.8.3→**2.8.4**(2026-10-19 출시 — 배송지 조회 v1 API 호출 지원 제거·내부 개선, `Kakao.Share` API 변경 없음) 갱신. 문서 URL `docs/latest/ko/...`는 `docs/ko/...`로 리다이렉트됨. `Kakao.Share` 메서드(send*/create*Button)·기본 템플릿 5종·이미지 5MB 제한 재확인(VERIFIED).
+> 2차(2026-09-28) 갱신 사유: ① SDK 2.8.2→**2.8.3**(2026-09-03 출시) 갱신, CDN 경로 반영 ② **OG 캐시 초기화 도구 URL 변경**: 구 `tool/clear/og`는 현재 `tool/debugger/sharing`("공유 디버거")로 리다이렉트 — 기능(도메인 입력→캐시 초기화)은 동일, 명칭·경로만 변경. §3·소스 링크 갱신 ③ 메시지 템플릿 이미지 최소 크기 규정을 **기본 템플릿(200×200) vs 사용자 정의 템플릿(400×400)** 으로 세분화해 반영(공식 문서 확인) ④ `Kakao.Share`/`sendDefault`/`sendCustom`/`sendScrap`·objectType 5종·`Kakao.Link`→`Kakao.Share` 변경 공지는 재확인 결과 동일(VERIFIED)
+> SDK 기준 버전: **2.8.4** (2026-10-19 출시 — 배송지 조회 API가 단일 배송지 조회로 바뀌고 v1 `/v1/user/shipping_address` 호출 지원 제거, 내부 개선. 공유 API는 이전 버전과 동일. integrity 해시는 공식 다운로드 페이지에서 해당 버전 값으로 교체)
 
 ---
 
-## 1. 카카오톡 OG 미리보기 기본 구조
+## 이 스킬의 범위
 
-카카오톡은 링크 공유 시 **서버 사이드**에서 대상 URL을 크롤링해 OG 메타태그를 읽는다. 카카오 크롤러는 JavaScript를 실행하지 않으므로, SSR/SSG로 OG 태그를 응답 HTML에 직접 포함해야 한다.
+카카오톡 공유 미리보기의 **카카오 고유 규칙(이미지 사양·캐시·SDK)과 실측 함정**만 다룬다.
 
-### 필수 OG 태그
+> 기본 사용법(OG 메타태그 작성, Next.js `generateMetadata`·Pages Router `next/head` 예제, 페이스북 디버거 사용)은 공식 문서 수준이라 싣지 않는다.
 
-```html
-<meta property="og:title" content="페이지 제목" />
-<meta property="og:description" content="페이지 설명" />
-<meta property="og:image" content="https://example.com/og.jpg" />
-<meta property="og:url" content="https://example.com/post/123" />
-<meta property="og:type" content="website" />
-```
-
-- `og:url`이 실제 공유 URL과 불일치하면 공유 동작이 혼란스러워진다 (canonical 일치 권장)
-- `og:image`는 반드시 **절대 URL + HTTPS**
+**핵심 전제:** 카카오톡은 링크 공유 시 **서버 사이드**에서 대상 URL을 크롤링해 OG 메타태그를 읽고, 카카오 크롤러는 **JavaScript를 실행하지 않는다** → OG 태그는 SSR/SSG로 응답 HTML에 직접 포함해야 한다. `og:image`·`og:url`은 반드시 **HTTPS 절대 URL**, `og:url`은 실제 공유 URL(canonical)과 일치.
 
 ---
 
-## 2. 이미지 요구사항
+## 1. 이미지 요구사항
 
 | 항목 | 값 | 근거 |
 |------|-----|------|
@@ -57,17 +50,13 @@ description: >
 
 > 주의: `sendCustom`(콘솔에서 만든 커스텀 템플릿)은 이미지 최소 크기가 `sendDefault`(기본 템플릿)보다 엄격하다 — **400×400 이상**. `sendDefault`용 800×400 이미지를 그대로 커스텀 템플릿에 재사용해도 최소치는 만족하지만, 커스텀 템플릿 설계 시 이 기준으로 별도 검증한다.
 
-### 카카오 스마트 크롭
-
-카카오는 스크랩 시 내부 스마트 크롭 API로 이미지를 800×400으로 자동 변환한다. 인물 포함 이미지의 크롭 위치가 자동 조정될 수 있고, 이 동작은 옵션으로 제어할 수 없다. 텍스트·로고는 **이미지 중앙 80% 안전 영역**에 배치한다.
+**스마트 크롭:** 카카오는 스크랩 시 내부 스마트 크롭 API로 이미지를 800×400으로 자동 변환한다. 인물 포함 이미지의 크롭 위치가 자동 조정될 수 있고, 이 동작은 옵션으로 제어할 수 없다. 텍스트·로고는 **이미지 중앙 80% 안전 영역**에 배치한다.
 
 ---
 
-## 3. 카카오 캐시 문제와 초기화
+## 2. 카카오 OG 캐시와 초기화
 
-카카오 서버는 한 번 크롤링한 OG를 캐싱한다. OG를 수정해도 공유 미리보기에 반영되지 않는다면 **수동 캐시 초기화**가 필요하다.
-
-### 초기화 방법 (공식 도구)
+카카오 서버는 한 번 크롤링한 OG를 캐싱한다. OG를 수정해도 반영되지 않으면 수동 초기화가 필요하다.
 
 1. https://developers.kakao.com/tool/debugger/sharing ("공유 디버거") 접속 (카카오 계정 로그인 필요)
 2. 입력 칸에 대상 URL 입력 — **`http`/`https` 정확히 구분**, SSL 사이트는 반드시 `https`
@@ -77,19 +66,13 @@ description: >
 
 > 주의: 초기화 후에도 반영까지 수 분~수십 분 지연이 발생할 수 있다. 급한 경우 `og:image` URL에 쿼리스트링(`?v=2`)을 추가해 우회한다. 다만 CDN 캐시도 함께 갱신해야 의미가 있다.
 
-### 페이스북 디버거 병행
-
-페이스북 OG 디버거(https://developers.facebook.com/tools/debug/)도 함께 돌려 메타태그 자체의 정합성을 점검한다.
-
 ---
 
-## 4. Kakao JavaScript SDK 공유 구현
-
-### SDK 로드 (2.8.3 기준)
+## 3. Kakao JavaScript SDK (2.8.4)
 
 ```html
 <script
-  src="https://t1.kakaocdn.net/kakao_js_sdk/2.8.3/kakao.min.js"
+  src="https://t1.kakaocdn.net/kakao_js_sdk/2.8.4/kakao.min.js"
   integrity="${INTEGRITY_VALUE}"
   crossorigin="anonymous"
 ></script>
@@ -103,38 +86,7 @@ description: >
 
 > 주의: `Kakao.init()`에는 카카오 개발자 콘솔의 **JavaScript 키**를 넣는다. REST API 키·Admin 키와 혼동하지 않는다.
 
-### 피드(feed) 공유
-
-```javascript
-Kakao.Share.sendDefault({
-  objectType: 'feed',
-  content: {
-    title: '제목',
-    description: '설명',
-    imageUrl: 'https://example.com/og.jpg', // HTTPS 절대 URL
-    imageWidth: 800,
-    imageHeight: 400,
-    link: {
-      mobileWebUrl: 'https://example.com/post/123',
-      webUrl: 'https://example.com/post/123',
-    },
-  },
-  buttons: [
-    {
-      title: '자세히 보기',
-      link: {
-        mobileWebUrl: 'https://example.com/post/123',
-        webUrl: 'https://example.com/post/123',
-      },
-    },
-  ],
-  serverCallbackArgs: { // 공유 콜백 웹훅 수신 시 필요
-    postId: '123',
-  },
-});
-```
-
-### sendDefault vs sendCustom vs sendScrap
+> 주의: SDK v1.43.0부터 모듈명이 `Kakao.Link`에서 `Kakao.Share`로 변경됐다. 옛 문서나 블로그의 `Kakao.Link.sendDefault`는 현행 SDK에서 deprecated 또는 동작 안 함. **`Kakao.Share.*`만 사용**한다.
 
 | 메서드 | 용도 | 핵심 파라미터 |
 |--------|------|----------------|
@@ -142,109 +94,36 @@ Kakao.Share.sendDefault({
 | `Kakao.Share.sendCustom` | 카카오 콘솔에서 만든 커스텀 템플릿 사용 | `templateId`, `templateArgs` |
 | `Kakao.Share.sendScrap` | 대상 URL의 OG를 카카오가 스크랩해서 전송 | `requestUrl` (필수), `templateId`(선택) |
 
-> 주의: SDK v1.43.0부터 모듈명이 `Kakao.Link`에서 `Kakao.Share`로 변경됐다. 옛 문서나 블로그의 `Kakao.Link.sendDefault`는 현행 SDK에서 deprecated 또는 동작 안 함. **`Kakao.Share.*`만 사용**한다.
-
-### sendScrap — OG 기반 공유
-
-`Kakao.Share.sendScrap`은 별도 콘텐츠 구성 없이 URL만 넘기면 카카오가 해당 페이지의 OG 태그를 읽어 미리보기를 만든다. OG 캐시 동작에 100% 의존하므로 캐시 초기화 + SSR 정합성이 필수다.
-
-```javascript
-Kakao.Share.sendScrap({
-  requestUrl: 'https://example.com/post/123',
-});
-```
+- `sendDefault` feed: `content.imageUrl`(HTTPS 절대 URL)과 함께 `imageWidth: 800`·`imageHeight: 400`을 명시한다(누락 시 이미지 일부 잘림·왜곡). 공유 콜백 웹훅을 받으려면 `serverCallbackArgs`.
+- `sendScrap`은 URL만 넘기면 카카오가 OG를 읽어 미리보기를 만든다 — **OG 캐시 동작에 100% 의존**하므로 캐시 초기화 + SSR 정합성이 필수.
+- 공개 페이지 공유는 비로그인 가능한 `Kakao.Share.*`. 나에게/친구에게 메시지는 `Kakao.API.request`(`/v2/api/talk/memo/default/send`·`/v1/api/talk/friends/message/default/send`)로 로그인(+친구 동의) 필요, 채널은 `Kakao.Channel.*`(비즈 채널 필요).
 
 ---
 
-## 5. SPA (Next.js / React) 환경에서 OG 처리
+## 4. 순수 CSR React SPA 대응
 
-**카카오 크롤러는 JavaScript를 실행하지 않는다.** CSR로 `document.querySelector('meta[property="og:title"]').setAttribute(...)`를 해도 카카오는 변경된 값을 읽지 못한다. 반드시 서버에서 렌더링된 HTML에 OG 태그가 포함돼 있어야 한다.
+CSR로 `meta[property="og:title"]`를 바꿔도 카카오는 읽지 못한다.
 
-### Next.js (App Router) — generateMetadata
-
-```typescript
-// app/post/[id]/page.tsx
-import type { Metadata } from 'next';
-
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-  const post = await fetchPost(params.id);
-  return {
-    title: post.title,
-    description: post.description,
-    openGraph: {
-      title: post.title,
-      description: post.description,
-      url: `https://example.com/post/${params.id}`,
-      images: [{ url: post.ogImageUrl, width: 800, height: 400 }],
-      type: 'article',
-    },
-  };
-}
-```
-
-### Next.js (Pages Router) — next/head
-
-```tsx
-import Head from 'next/head';
-
-export default function Post({ post }) {
-  return (
-    <>
-      <Head>
-        <meta property="og:title" content={post.title} />
-        <meta property="og:description" content={post.description} />
-        <meta property="og:image" content={post.ogImageUrl} />
-        <meta property="og:url" content={`https://example.com/post/${post.id}`} />
-      </Head>
-      {/* ... */}
-    </>
-  );
-}
-
-export async function getServerSideProps(ctx) {
-  const post = await fetchPost(ctx.params.id);
-  return { props: { post } };
-}
-```
-
-### 순수 CSR React SPA
-
-- 빌드 타임 프리렌더(Vike·vite-prerender-plugin) 또는 SSR 도입 — 정공법 (`frontend/seo-vite-spa`(설치된 경우) 단계 4·5)
+- 빌드 타임 프리렌더(Vike·vite-prerender-plugin) 또는 SSR 도입 — 정공법 (`seo-vite-spa`(설치된 경우) 단계 4·5)
 - CDN/Edge(Cloudflare Worker·Vercel Edge)에서 카카오 스크래퍼 UA(`kakaotalk-scrap`)·페이스북·네이버 봇에만 `og:*` 메타를 주입한 HTML 셸을 응답 — 가장 가볍고 빠른 대안
 - ~~prerender.io / rendertron / react-snap~~ — **Rendertron은 2022년 Google이 archive 처리(유지보수 없음)**, 동적 렌더링 자체가 Google 기준 "권장 아님·임시 우회책". 이미 운영 중이 아니면 도입하지 않는다 (2026-08-26 정정)
-- **Cloudflare Workers / Vercel Edge Function**으로 크롤러 User-Agent 분기 응답
 - 가능하면 Next.js 같은 SSR/SSG 프레임워크로 마이그레이션
 
 ---
 
-## 6. 카카오 메시지 vs 공유 vs 채널
-
-| 기능 | API | 로그인 필요 | 대상 |
-|------|-----|:----------:|------|
-| 카카오톡 공유 | `Kakao.Share.sendDefault` / `sendScrap` | ❌ | 친구·채팅방 |
-| 나에게 메시지 | `Kakao.API.request({ url: '/v2/api/talk/memo/default/send' })` | ✅ | 본인 |
-| 친구에게 메시지 | `Kakao.API.request({ url: '/v1/api/talk/friends/message/default/send' })` | ✅ + 친구 동의 | 친구 |
-| 채널 추가/메시지 | `Kakao.Channel.*` | 비즈 채널 필요 | 채널 구독자 |
-
-대부분의 공개 페이지 공유에는 **`Kakao.Share.sendDefault`** (비로그인 가능)를 쓴다.
-
----
-
-## 7. 디버깅 체크리스트
-
-링크 공유 미리보기가 안 뜨거나 이상하면 순서대로 점검한다.
+## 5. 디버깅 체크리스트
 
 1. **HTTPS 절대 URL인가** — `og:image`와 `og:url`이 HTTP거나 상대경로면 무시될 수 있다
 2. **SSR/SSG로 OG가 응답 HTML에 포함되는가** — `curl https://example.com/post/123 | grep og:` 결과 확인
-3. **이미지 사양 — 5MB 이하, 200×200 이상, JPEG/PNG인가**
-4. **카카오 OG 캐시가 옛날 값을 들고 있는가** — `developers.kakao.com/tool/debugger/sharing`(공유 디버거)로 초기화
+3. **이미지 사양 — 5MB 이하, 200×200 이상(커스텀 템플릿 400×400), JPEG/PNG인가**
+4. **카카오 OG 캐시가 옛날 값을 들고 있는가** — 공유 디버거로 초기화
 5. **`og:url`이 실제 공유 URL과 일치하는가** — 불일치 시 클릭 시 다른 페이지로 갈 수 있음
 6. **리다이렉트 체인이 과한가** — 카카오 크롤러는 리다이렉트 다수에서 실패할 수 있음
 7. **SDK 호출 시 콘솔 에러** — `Kakao.isInitialized()` 결과, `Kakao.init` 키 종류 확인
 
 ---
 
-## 8. 흔한 실수 패턴 (Anti-patterns)
+## 6. 흔한 실수 패턴
 
 | 실수 | 결과 | 해결 |
 |------|------|------|
@@ -252,21 +131,10 @@ export async function getServerSideProps(ctx) {
 | SVG 이미지 사용 | 미리보기 없음 | JPEG/PNG 변환 |
 | 5MB 초과 이미지 | 미리보기 없음 | 압축·리사이징 |
 | CSR로 OG meta 동적 변경 | 카카오 미인식 | SSR/SSG로 응답 HTML에 포함 |
-| 캐시 초기화 없이 OG 수정 후 공유 | 옛 미리보기 노출 | OG 초기화 도구 사용 |
+| 캐시 초기화 없이 OG 수정 후 공유 | 옛 미리보기 노출 | 공유 디버거로 초기화 |
 | `og:url` 미설정·불일치 | 공유 URL 혼란 | 실제 공유 URL과 정확히 일치시킴 |
 | `Kakao.Link.sendDefault` 사용 | 동작 안 함 (v1.43.0+ 변경) | `Kakao.Share.sendDefault`로 변경 |
 | REST API 키로 `Kakao.init` | 동작 안 함 | JavaScript 키 사용 |
 | SDK 로드 안 하고 `Kakao` 호출 | `Kakao is not defined` | SDK `<script>` 로드 + `Kakao.init` 선행 |
 | `imageWidth`/`imageHeight` 누락 | 이미지 일부 잘림·왜곡 | 권장 800×400으로 명시 |
-
----
-
-## 9. 권장 워크플로우
-
-1. **OG 메타태그 작성** (SSR/SSG로 응답 HTML에 포함)
-2. **이미지 준비** — 800×400 JPEG/PNG, 5MB 이하, HTTPS URL
-3. **로컬에서 페이스북 디버거로 OG 정합성 확인**
-4. **배포 후 카카오 공유 디버거로 미리보기 확인**
-5. **수정 시 카카오 OG 초기화 도구로 캐시 초기화**
-6. **SDK 공유 버튼 — `Kakao.Share.sendDefault` 또는 `sendScrap`**
-7. **버전 업그레이드 시 CDN URL과 integrity 동시 갱신**
+| SDK 버전만 올리고 integrity 그대로 | 스크립트 로드 실패 | CDN URL과 integrity 동시 갱신 |

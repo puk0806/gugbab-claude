@@ -1,8 +1,8 @@
 ---
 skill: dream-interpretation-prompt-engineering
 category: meta
-version: v1.4
-date: 2026-09-28
+version: v1.5
+date: 2026-11-11
 status: APPROVED
 ---
 
@@ -14,10 +14,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `dream-interpretation-prompt-engineering` |
 | 스킬 경로 | `.claude/skills/dream-interpretation-prompt-engineering/SKILL.md` |
-| 검증일 | 2026-09-28 (최초 2026-05-14, 이전 2026-08-12) |
-| 검증자 | skill-creator (최초) / 모델 ID 정기 감사 (2026-08-11) / 재검증 2차 (2026-09-28) / skill-tester 재테스트 (2026-09-28) |
-| 스킬 버전 | v1.4 |
-| 대상 모델 | Claude Opus 5.5 / Sonnet 5 / Haiku 4.5 (`.claude/rules/agent-design.md`, 2026-09-25 현행화) |
+| 검증일 | 2026-11-11 (재검증, 이전 2026-11-06 · 2026-09-28 · 최초 2026-05-14) |
+| 검증자 | skill-creator (최초) / 모델 ID 정기 감사 (2026-08-11) / 재검증 2차 (2026-09-28) / skill-tester 재테스트 (2026-09-28) / 재검증 3차 (2026-11-06) |
+| 스킬 버전 | v1.5 |
+| 대상 모델 | Claude Opus 5.5 / Sonnet 5.5 / Haiku 5.5 (공식 models/overview, 2026-11-06 현행화) |
 
 ---
 
@@ -64,6 +64,10 @@ status: APPROVED
 | 보건복지부 보도자료 — 자살예방 상담전화 109 통합 | https://www.mohw.go.kr/board.es?mid=a10503010100&bid=0027 | ⭐⭐⭐ High | 2026-05-14 | 1393 → 109 통합 공식 발표 |
 | 대한민국 정책브리핑 — 1393 개통 | https://www.korea.kr/news/policyNewsView.do?newsId=148856771 | ⭐⭐⭐ High | 2026-05-14 | 1393 역할 이력 |
 | anthropics/prompt-eng-interactive-tutorial | https://github.com/anthropics/prompt-eng-interactive-tutorial | ⭐⭐⭐ High | 2026-05-14 | 공식 GitHub 튜토리얼 |
+| Anthropic — Models overview | https://platform.claude.com/docs/en/about-claude/models/overview | ⭐⭐⭐ High | 2026-11-06 | 현행 4종 ID·가격·캐시 읽기 비율(Opus 5.5·Sonnet 5.5 = 5%) |
+| Anthropic — Claude Sonnet 5.5 overview | https://platform.claude.com/docs/en/models/sonnet-5-5/overview | ⭐⭐⭐ High | 2026-11-06 | $2/$10, cache write 5m $2.50·1h $4, read $0.10, 캐시 최소 512, between_tools |
+| Anthropic — Claude Haiku 5.5 overview | https://platform.claude.com/docs/en/models/haiku-5-5/overview | ⭐⭐⭐ High | 2026-11-06 | 캐시 최소 512 |
+| Anthropic — API versions / Migrating to 2026-10-21 | https://platform.claude.com/docs/en/api/versioning , https://platform.claude.com/docs/en/api/migration-2026-10-21 | ⭐⭐⭐ High | 2026-11-06 | 샘플링 파라미터 모든 모델 400, Python SDK 2.0.0 |
 
 ---
 
@@ -92,6 +96,11 @@ status: APPROVED
 | C7 | role prompting을 system에 두는 권고 | **VERIFIED** | 공식 best-practices `Give Claude a role` + 검색 결과 다수 |
 | C8 | XML 태그로 구획화 권고 | **VERIFIED** | 공식 best-practices `Structure prompts with XML tags` |
 | C9 | 한국 자살예방 상담전화 109 통합 (2024-01-01) | **VERIFIED** | 보건복지부 보도자료 + 정책브리핑 일치 |
+| C11 | (2026-11-06) 현행 예제 모델 `claude-sonnet-5-5`, Sonnet 5·Haiku 4.5는 Legacy | **VERIFIED** | models/overview + sonnet-5-5 overview |
+| C12 | (2026-11-06) Sonnet 5.5 가격 $2 / 5m write $2.50 / 1h write $4 / read $0.10 per MTok | **VERIFIED** | sonnet-5-5 overview 가격 표 + models/overview 캐시 읽기 5% 각주 |
+| C13 | (2026-11-06, 2026-11-11 갱신) 현행 4종(Fable 5.2·Opus 5.5·Sonnet 5.5·Haiku 5.5) 캐시 최소 512, Fable 5.1 은 Legacy(512) | **VERIFIED** | sonnet-5-5·haiku-5-5 overview "minimum cacheable prompt length is 512" + claude-api 스킬 캐시 표 + prompt-caching 문서(2026-11-11, Fable 5.2 512) |
+| C14 | (2026-11-06) API `2026-10-21`에서 `temperature`/`top_p`/`top_k` 모든 모델 400, `extra_body` 우회도 400 | **VERIFIED** | api/versioning + migration-2026-10-21 |
+| C15 | (2026-11-06) Sonnet 5.5 thinking disabled 400 → `between_tools`(effort high 이하), prefill·budget_tokens 400 | **VERIFIED** | sonnet-5-5 overview "Good to know" + claude-api 스킬 thinking 표 |
 | C10 | 사용자 초안의 "KCC 콜센터 1577-0199" 안내 | **DISPUTED → 수정** | 1577-0199는 *정신건강상담전화*(보건복지부)지 KCC가 아니다. 또한 자살 위험에는 109가 더 적합. SKILL.md에서 109를 자살 위험 1순위, 1577-0199를 정신건강 일반으로 분리해 작성 |
 
 ### 4-3. 구조 완전성
@@ -114,10 +123,48 @@ status: APPROVED
 - [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-14 수행)
 - [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (3/3 PASS)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 — gap 없음, 보완 불필요
+- [✅] 2026-11-06 재검증(3차) 후 재테스트 수행 (3/3 PASS, 2026-11-06)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-11-06] skill-tester 재테스트 (3차 재검증 대응)
+
+**수행일**: 2026-11-06
+**수행자**: skill-tester → general-purpose (1회 호출로 3문항 일괄 답변, 도메인 특화 에이전트 미사용으로 대체)
+**수행 방법**: SKILL.md Read 후 3차 재검증(Sonnet 5.5·SDK 2.x·between_tools·캐시 512·비용 재계산·temperature 400)을 겨냥한 실전 질문 3개 답변, 근거 섹션 및 anti-pattern 회피 확인
+
+### 실제 수행 테스트
+
+**Q1. Sonnet 5.5에서 prefill/thinking disabled가 400일 때 JSON 강제·thinking 끄기·응답 텍스트 추출은?**
+- ✅ PASS
+- 근거: SKILL.md "3-1. 스키마 강제 방식 — Structured Outputs" 섹션 (코드 + Sonnet 5.5 주의 인용문)
+- 상세: `output_config.format`(json_schema)을 권장 방식으로, `thinking: {"type":"between_tools"}`(effort high 이하)를 끄기 대안으로, `stop_reason` 확인 후 text 블록 탐색(thinking 블록 건너뜀)을 정확히 인용. prefill·`disabled`·`budget_tokens` 사용 anti-pattern 회피.
+
+**Q2. Haiku 5.5·Sonnet 5.5 캐시 최소 토큰, Sonnet 5.5 단가, 2,000토큰 hit 시 절감, 4,096 우회 필요 여부?**
+- ✅ PASS
+- 근거: SKILL.md "6. 프롬프트 캐싱 활용" 최소 캐시 토큰 임계값·비용 효과·1h TTL 항목
+- 상세: 현행 4종 512, $2 / $2.50 / $4 / $0.10, $0.004→$0.0002(95%), 4,096 채우기 우회 불필요를 모두 SKILL.md 값 그대로 답변. 옛 Sonnet 4.6 단가($3) 사용·Haiku 4.5 4,096 적용 anti-pattern 회피.
+
+**Q3. temperature=0.2(extra_body 포함)가 에러인 원인·대안, 스키마를 자주 바꿔도 되는가?**
+- ✅ PASS
+- 근거: SKILL.md 상단 "SDK 기준" 주석 / "11. 흔한 함정" 12번 / "3-1" 공식 제약 / 함정 11번·4번
+- 상세: API 2026-10-21에서 `temperature`/`top_p`/`top_k` 모든 모델 400(extra_body 우회도 400), 대안은 프롬프트·few-shot·`output_config.format`, 스키마·시스템 프롬프트 고정(변경 시 캐시 무효화)을 일관되게 인용.
+
+### 발견된 gap (비차단, 선택 보강)
+
+- §11 함정 번호가 1~9 → 12 → 10 → 11 순서로 어긋나 있음(내용 충돌 아님, 가독성 문제).
+- `between_tools`의 정확한 동작 설명 없음, Haiku 5.5 단가·캐시 write/read 손익분기점 미기재 (모두 선택 보강).
+- SKILL.md 수정은 하지 않음(사용자 승인 사항).
+
+### 판정
+
+- agent content test: 3/3 PASS
+- verification-policy 분류: 프롬프트 패턴 스킬 — "content test PASS = APPROVED 가능" (실사용 필수 카테고리 해당 없음)
+- 최종 상태: APPROVED
+
+---
 
 ### [2026-09-28] skill-tester 재테스트 (2차 재검증 대응)
 
@@ -242,8 +289,8 @@ Structured Outputs 스키마를 자주 바꿔도 되는가?**
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
 | 핵심 클레임 교차 검증 | ✅ (VERIFIED 9 / DISPUTED 1 수정반영 / UNVERIFIED 0, 2026-05-14) + 2026-09-28 재검증 3건(정정 2·검증 1) |
-| 에이전트 활용 테스트 | ✅ (2026-05-14 수행, 3/3 PASS) + 2026-09-28 skill-tester 재테스트 2/2 PASS (Structured Outputs·캐시 정정 겨냥) |
-| **최종 판정** | **APPROVED** (2026-09-28 skill-tester 재테스트 2/2 PASS — Structured Outputs 보강·캐시 임계값 정정 반영 확인) |
+| 에이전트 활용 테스트 | ✅ (2026-05-14 수행, 3/3 PASS) + 2026-09-28 재테스트 2/2 PASS + 2026-11-06 skill-tester 재테스트 3/3 PASS (Sonnet 5.5 JSON 강제·between_tools / 캐시 512·비용 / temperature 400 겨냥) |
+| **최종 판정** | **APPROVED** (2026-11-06 3차 재검증 후 skill-tester 재테스트 3/3 PASS) |
 
 > 본 스킬은 *프롬프트 패턴* 카테고리로, `verification-policy.md` 기준 "content test PASS = APPROVED 가능". 운영 환경의 *톤 일관성·안전 가드 발동률* 같은 실측 메트릭 검증은 사용자 영역.
 
@@ -256,6 +303,8 @@ Structured Outputs 스키마를 자주 바꿔도 되는가?**
 - [✅] **skill-tester content test 수행 완료** (2026-05-14, 3/3 PASS) — APPROVED 전환
 - [✅] 2026-09-28 재검증(2차)에서 Structured Outputs §3-1·3-2 신설 + 캐시 표 정정 →
   skill-tester 재테스트 완료 (2026-09-28, 2/2 PASS) — APPROVED 전환
+- [✅] 2026-11-06 재검증(3차, Sonnet 5.5·SDK 2.x·캐시 512·비용 재계산·temperature 400) 후 skill-tester 재테스트 완료 (2026-11-06 완료, 3/3 PASS) — APPROVED 유지
+- [❌] (선택 보강, 차단 요인 아님) SKILL.md §11 함정 번호 순서 정리(9→12→10→11), `between_tools` 동작 설명·Haiku 5.5 단가·캐시 손익분기점 추가
 
 ---
 
@@ -270,3 +319,7 @@ Structured Outputs 스키마를 자주 바꿔도 되는가?**
 | 2026-09-25 | v1.2 | **모델 ID 현행화(Opus 5.5/Fable 5.1).** 헤더 대상 모델 Opus 5 → Opus 5.5(예제 기본은 Sonnet 5 유지). §6 최소 캐시 토큰 512 행에 Fable 5.1/Fable 5 편입, Opus 5.5는 "미확인" 표기. 함정 §9 현행 ID를 `claude-opus-5-5`로, `claude-opus-5`를 legacy 목록에 추가. 메타 표 "대상 모델" 행(4.8/4.6 잔존) 동기화. 본문 코드에 thinking disabled·강제 `tool_choice` 없음 — Opus 5.5 브레이킹 해당 없음. status APPROVED 유지 | 모델 ID 현행화 |
 | 2026-09-28 | v1.3 | **재검증(2차) — Structured Outputs 반영.** §3에 3-1(Structured Outputs `output_config.format` 스키마 강제, GA, Haiku 4.5/Sonnet 5/Opus 5.5 지원 확인)·3-2(기존 "JSON만 반환+재시도"를 폴백으로 재배치) 신설. §6 최소 캐시 토큰 표의 "Opus 5.5 미확인"을 **512로 정정**(공식 표 갱신 확인). §9 출력 후처리·§11 함정에 Structured Outputs 관련 단서 추가. SKILL.md(2026-08-12)·verification.md 메타 표(2026-08-11) 검증일 불일치를 2026-09-28로 통일. 안전 가드·한국 자원 안내는 축소 없음. status **PENDING_TEST 전환** | 재검증 2차 |
 | 2026-09-28 | v1.4 | 2단계 실사용 재테스트 수행 (Q1 Structured Outputs 현행 권장 방식·폴백 위치 / Q2 Opus 5.5 캐시 최소 토큰·스키마 변경 시 캐시 무효화) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-11-06 | v1.5 | **재검증(3차) — 현행 모델·API 버전 2026-10-21 반영.** 헤더 대상 모델 Sonnet 5·Haiku 4.5 → Sonnet 5.5·Haiku 5.5(예제 기본 `claude-sonnet-5-5`), SDK 기준 `anthropic>=2.6.0` 명시. §3-1 코드에 `effort="low"`·`stop_reason` 확인·text 블록 탐색 추가, Sonnet 5.5 주의(disabled 400 → `between_tools`, prefill·budget_tokens 400) 추가. §6 최소 캐시 토큰을 현행 4종 512 / Legacy 별도 줄로 재구성, "Haiku 4.5 캐시 미스 → Sonnet 권장" 서술 삭제. §6 비용을 Sonnet 5.5 기준($2·$2.50·$4·$0.10, 95% 절감)으로 재계산 — 이전 $3 기준값은 Sonnet 4.6 단가가 남아 있던 오류. §10 함정 9 현행 ID 갱신, 함정 12(`temperature` 400) 신설 | 재검증 3차 |
+| 2026-11-06 | v1.5 | 재검증 후 2단계 실사용 재테스트 수행 (Q1 Sonnet 5.5 JSON 강제·between_tools·text 블록 추출 / Q2 캐시 512·Sonnet 5.5 단가·95% 절감·4,096 우회 불필요 / Q3 temperature 400·스키마 고정) → 3/3 PASS, APPROVED 유지 | skill-tester |
+| 2026-11-11 | v1.6 | 2026-11-11 재검증 — Fable 5.2 현행화(공식 models overview·whats-new-fable-5-2). SKILL.md §6 최소 캐시 토큰 현행 목록 Fable 5.1 → **Fable 5.2**, Legacy 목록에 Fable 5.1 추가. 클레임 C13 갱신. status 변경 없음 | Claude |
+| 2026-11-12 | v1.7 | 정리(사실 재검증 아님) — Claude API 사용법 절만 덜어내기: 덜어낸 것 헤더 대상 모델·SDK 기준 줄, §3-1 SDK 호출 코드·Sonnet 5.5 thinking/prefill 주의·스키마 공식 제약·§3-2 Structured Outputs 폴백 설명, §6 캐싱 코드·최소 캐시 토큰·TTL·단가 계산, 함정 9(모델 ID)·11(output_config 캐시 무효화)·12(temperature 400) → 그 자리에 "API 호출·캐싱·structured outputs 는 Claude Code 기본 `claude-api` 스킬 참조" / 남긴 것 프롬프트 구조·시스템 프롬프트 템플릿·JSON 스키마(DREAM_SCHEMA 본체 포함)·few-shot·한국 위기 자원·전처리·후처리·평가 지표·분야 함정, REFERENCE.md(지워진 dream-multi-perspective-synthesizer 언급은 "메인 대화에서"로) | 정리 |

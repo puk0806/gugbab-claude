@@ -2,7 +2,7 @@
 skill: fortune-interpretation-prompt-engineering
 category: meta
 version: v3
-date: 2026-09-28
+date: 2026-11-11
 status: APPROVED
 ---
 
@@ -14,10 +14,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `fortune-interpretation-prompt-engineering` |
 | 스킬 경로 | `.claude/skills/fortune-interpretation-prompt-engineering/SKILL.md` |
-| 검증일 | 2026-09-28 (최초 2026-09-10, 2026-09-11·2026-09-25·2026-09-28 재검증) |
+| 검증일 | 2026-11-11 (재검증, 이전 2026-11-06 · 2026-09-28 · 최초 2026-09-10, 2026-09-11·2026-09-25 재검증) |
 | 검증자 | skill-creator (Claude Code) → Claude (Sonnet 5, 2026-09-28 재검증) |
 | 스킬 버전 | v3 |
-| 대상 기준 | Claude API 2026-09-25 현행 (Opus 5.5 / Sonnet 5 / Haiku 4.5) — 최초 2026-09-10 Opus 5 기준 |
+| 대상 기준 | Claude API 2026-11-06 현행 (Opus 5.5 / Sonnet 5.5 / Haiku 5.5, API 버전 2026-10-21) — 이전 2026-09-25 Opus 5.5 / Sonnet 5 / Haiku 4.5, 최초 2026-09-10 Opus 5 기준 |
 | 포크 원본 | `.claude/skills/dream-interpretation-prompt-engineering/SKILL.md` (구조 계승, 톤 룰 교체) |
 
 ---
@@ -94,6 +94,21 @@ status: APPROVED
 | Wikipedia — Major Arcana | https://en.wikipedia.org/wiki/Major_Arcana | ⭐⭐ Medium | 2026-09-10 | 타로 78장 구조 (2차 소스, 복수 교차 확인) |
 | Internet Sacred Text Archive — RWS Copyright FAQ | https://sacred-texts.com/tarot/faq.htm | ⭐⭐ Medium | 2026-09-10 | RWS 저작권 상태 (법무 확인 필요로 표기) |
 | 만세력 절기 해설 실무 자료(복수) | thegot.co.kr/manseryeok, doc.8-codes.com/docs/lecture/02/, sazasaju.com/blog/ipchun-new-year-guide | ⭐⭐ Medium | 2026-09-10 | 입춘·절입일 기준 교차 확인용 (상호 일치 확인) |
+| Anthropic — Models overview (재확인) | https://platform.claude.com/docs/en/about-claude/models/overview | ⭐⭐⭐ High | 2026-11-06 | 현행 4종 ID·가격, Sonnet 5·Haiku 4.5 legacy 목록 |
+| Anthropic — Claude Sonnet 5.5 / Haiku 5.5 개요 | https://platform.claude.com/docs/en/models/sonnet-5-5/overview , https://platform.claude.com/docs/en/models/haiku-5-5/overview | ⭐⭐⭐ High | 2026-11-06 | 출시일(09-28·10-07)·가격·캐시 최소 512·샘플링 파라미터 금지 |
+| Anthropic — Prompt caching (재확인) | https://platform.claude.com/docs/en/build-with-claude/prompt-caching | ⭐⭐⭐ High | 2026-11-06 | 최소 캐시 토큰 목록·Sonnet 5.5/Haiku 5.5 캐시 가격 |
+| Anthropic — API Versions / 2026-10-21 마이그레이션 | https://platform.claude.com/docs/en/api/versioning , https://platform.claude.com/docs/en/api/migration-2026-10-21 | ⭐⭐⭐ High | 2026-11-06 | 샘플링 파라미터 모든 모델 400, Py SDK 2.0.0·TS SDK 1.0.0 부터 기본 |
+| anthropic-sdk-python CHANGELOG | https://github.com/anthropics/anthropic-sdk-python/blob/main/CHANGELOG.md | ⭐⭐⭐ High | 2026-11-06 | 2.0.0(2026-10-21) BREAKING = 새 API 버전, 최신 2.6.0 |
+
+### 2026-11-06 재검증 교차 검증 클레임
+
+| # | 클레임 | 소스 | 판정 |
+|---|--------|------|------|
+| 1 | 현행 Sonnet = `claude-sonnet-5-5`($2/$10), Haiku = `claude-haiku-5-5`($0.10/$0.50, 프롬프트 10만 토큰 초과 $0.50/$2.50), Sonnet 5·Haiku 4.5는 legacy | models overview + 각 모델 개요 페이지 | VERIFIED |
+| 2 | 최소 캐시 토큰: Fable 5.2(2026-11-11 현행화, 구세대 Fable 5.1 도 512)·Opus 5.5·Sonnet 5.5·Haiku 5.5 = 512, Sonnet 5 = 1,024, Haiku 4.5 = 4,096 | prompt-caching 문서 + Sonnet 5.5/Haiku 5.5 개요 | VERIFIED |
+| 3 | 캐시 읽기: Sonnet 5.5 $0.10·Opus 5.5 $0.20 (모두 0.05x), Haiku 5.5 $0.01(10만 이하) | prompt-caching 가격표 + 모델 개요 | VERIFIED |
+| 4 | API `2026-10-21`에서 `temperature`/`top_p`/`top_k`는 기본값이어도 모든 모델 400, Py SDK 2.x·TS SDK 1.x 에서 파라미터 삭제 | versioning + migration-2026-10-21 + SDK CHANGELOG | VERIFIED |
+| 5 | Sonnet 5.5 강제 `tool_choice` 400·thinking disabled 400(`between_tools` 로 대체), 프리필 400 | Sonnet 5.5 개요 + claude-api 번들 스킬(2026-10-06 캐시) | VERIFIED |
 
 ---
 
@@ -122,7 +137,7 @@ status: APPROVED
 - [✅] 짝 스킬과의 역할 경계 명시 (계산 → backend 스킬, 안전 분류 → classifier 스킬)
 
 ### 4-4. Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-09-10, general-purpose 3건)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-09-10, general-purpose 3건 / 2026-11-06 재검증 후 재시험 3건 3/3 PASS)
 - [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (3/3 PASS, 근거 섹션 정합 확인)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (FAIL 없음 — 보완 불필요, §9 few-shot 삽입 지점 명시 여부는 경미한 개선 항목으로 §7 기록)
 
@@ -159,6 +174,46 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-11-06] 재검증(모델 ID·API 2026-10-21 현행화) 후 재시험
+
+**수행일**: 2026-11-06
+**수행자**: skill-tester → general-purpose (domain-specific 에이전트 미사용, general-purpose로 대체)
+**수행 방법**: SKILL.md + references/REFERENCE.md Read 후 3개 실전 질문 답변, 근거 섹션 실재 여부 및 anti-pattern 회피 확인 (답변의 인용 줄을 REFERENCE.md 원문과 직접 대조)
+
+### 실제 수행 테스트
+
+**Q1. Sonnet 계열 Python SDK 2.x 호출 코드 설계** ("모델 ID, max_tokens, temperature=0.7, JSON 강제, 캐시 breakpoint, 프리필 가능 여부")
+- ✅ PASS
+- 근거: SKILL.md 헤더(대상 모델·API 버전) + REFERENCE.md §6-2 코드·`> 주의:`, §8, §12-8, §12-9
+- 상세: `claude-sonnet-5-5` 사용, `max_tokens=4096`(adaptive thinking도 토큰 소모), `temperature` 미사용(API 2026-10-21 모든 모델 400, Py SDK 2.x 인자 삭제), `output_config.format` + `mode` enum 단일 스키마, 2-breakpoint(공통 코어/모드 블록), 최소 캐시 토큰 512, 프리필 400 금지까지 정확히 재현. anti-pattern(temperature 지정, 구세대 ID, 프리필) 모두 회피.
+
+**Q2. Opus 5.5/Sonnet 5.5 이전 시 강제 tool_choice + thinking disabled, 모델별 캐시 최소 토큰·읽기 비용** 
+- ✅ PASS
+- 근거: REFERENCE.md §12-9, §8 최소 토큰 표·비용 표·0.05x 예외 문구
+- 상세: 강제 `tool_choice`(any/tool) 400, thinking disabled 400(Sonnet 5.5는 `between_tools`, effort high 이하), Structured Outputs 경로 유지 권고를 정확히 인용. 최소 토큰 Sonnet 5.5·Haiku 5.5=512 / Haiku 4.5=4,096, 캐시 읽기 Sonnet 5.5 $0.10(0.05x)·Haiku 5.5 $0.01(10만 이하)·Opus 5.5 $0.20(0.05x)을 표와 일치하게 답변. Haiku 4.5 읽기 단가는 스킬에 없다고 스스로 명시(정직한 gap 보고).
+
+**Q3. 사주 원국·타로 추첨 책임 분리, 단정 톤 회피, 실행 판단 질문 처리** ("생년월일시를 LLM에 넘겨 원국을 뽑게? 타로 카드 추첨? 재물운 단정 회피? 주식 몰빵 질문")
+- ✅ PASS
+- 근거: SKILL.md §1, §3, §4, §5-1, §5-2 + REFERENCE.md §7 few-shot(재성 예시), §10, §11, §12-1·3·4·5
+- 상세: 원국 계산은 백엔드(입춘·절입일 경계, 라이브러리 간지 ≠ 사주), 타로는 CSPRNG 추첨 후 입력 주입, 귀속+hedging 어미, 실행 판단 질문은 상징 풀이만 제공하고 판단은 사용자에게 돌려주는 방식을 REFERENCE.md §7 두 번째 예시(원문 대조 확인)로 제시.
+
+### 발견된 gap (선택 보강, 차단 요인 아님)
+
+- Opus 5.5에서 thinking 깊이를 줄이는 방법(`output_config.effort` 등)과 Sonnet 5.5 `between_tools` 코드 예시가 없음 (§12-9에 한 줄 언급만).
+- 도구 호출을 `auto` + `strict`로 쓰는 구체 설정 예시 없음(§12-8은 "도구 호출로 이관"만 언급).
+- `question_topic` 허용값이 정의되어 있지 않고, SKILL.md §5-1 입력 JSON에는 `user_question` 필드가 없는데 REFERENCE.md §7 예시에는 있음.
+- 극단적 질문("몰빵")에 대한 시범 및 전문가 상담 안내 문구 기준 없음 (§7 예시 reflection의 "감당할 범위를 정해 보시면 좋겠습니다"는 완곡 권유 수준이나 §3-1 실행 지시 회피 규칙과 경계선상).
+- 표기: SKILL.md §5-1 주의 문구와 REFERENCE.md §12-2의 "사주 사주(四柱)" 중복 오타, REFERENCE.md §6-2 코드 주석 "현행 Sonnet (2026-09-28)" 날짜 표기 미갱신.
+- 3개 답변 모두 서로 모순되는 내용·SKILL.md 오류는 발견되지 않음 (위는 모두 보강 사항).
+
+### 판정
+
+- agent content test: 3/3 PASS
+- verification-policy 분류: 해당 없음 (API/프롬프트 패턴 스킬 — content test PASS로 APPROVED 가능)
+- 최종 상태: **APPROVED** 유지 (2026-11-06 재검증 반영분 재시험 통과)
+
+---
 
 ### [2026-09-28] 선택 보강 반영
 
@@ -324,8 +379,8 @@ status: APPROVED
 | 실용성 | ✅ (복붙 가능한 시스템 프롬프트 템플릿·3모드 입력 스키마·Python 호출 예제·평가 지표 5종) |
 | 공식 소스 비중 | ✅ (Anthropic 공식 4건 + 공식 정책 1건 + 플랫폼/기관 1차 소스 5건) |
 | 최신성 | ✅ (2026-09-10 현행 모델 ID·가격·캐시 임계값, 구세대 ID 하드코딩 없음) |
-| 에이전트 활용 테스트 | ✅ (2026-09-10 skill-tester → general-purpose 3건, 3/3 PASS — 근거 섹션 §5-1·§2/§6-2/§8 정합 확인. Q2 근거였던 §3-3은 2026-09-11 축소로 제거, 이력으로만 유지) — 2026-09-28 skill-tester 재테스트 2/2 PASS (Opus 5.5 캐시 수치 보강 반영 확인 완료) |
-| **최종 판정** | **APPROVED** (2026-09-28 skill-tester 재테스트 2/2 PASS 완료 — Opus 5.5 캐시 임계값/비용 확정치 보강 반영 확인) |
+| 에이전트 활용 테스트 | ✅ (2026-09-10 skill-tester → general-purpose 3건, 3/3 PASS — 근거 섹션 §5-1·§2/§6-2/§8 정합 확인. Q2 근거였던 §3-3은 2026-09-11 축소로 제거, 이력으로만 유지) — 2026-09-28 skill-tester 재테스트 2/2 PASS (Opus 5.5 캐시 수치 보강 반영 확인 완료) — 2026-11-06 skill-tester 재테스트 3/3 PASS (Sonnet 5.5/Haiku 5.5 모델 ID·API 2026-10-21 sampling 400·강제 tool_choice 400·캐시 512 현행화 반영 확인) |
+| **최종 판정** | **APPROVED** (2026-11-06 skill-tester 재테스트 3/3 PASS 완료 — 모델·API 버전 현행화 반영 확인) |
 
 ---
 
@@ -341,6 +396,9 @@ status: APPROVED
 - [❌] README.md 스킬 목록·업데이트 로그 반영 (이번 작업에서 의도적으로 제외 — 병렬 생성 충돌 방지, 별도 정리 작업에서 처리 예정)
 - [✅] (2026-09-28 완료) REFERENCE.md §8 Opus 5.5 캐시 최소 토큰·비용 "미확인"/"가정" 표기를 공식 확정치(512 / $5 / $8 / $0.20=0.05x)로 정정
 - [✅] (2026-09-28 완료) skill-tester 재테스트 수행 — 2/2 PASS, PENDING_TEST → APPROVED 전환
+- [✅] (2026-11-06 완료) skill-tester 재테스트 수행 — 모델 ID·API 2026-10-21 현행화 반영분 3/3 PASS, APPROVED 유지
+- [❌] Opus 5.5 thinking 깊이 조절(`output_config.effort`)·Sonnet 5.5 `between_tools` 코드 예시, 도구 호출 `auto`+`strict` 설정 예시 추가 — 선택 보강(2026-11-06 테스트 Q2 발견, 차단 요인 아님)
+- [❌] `question_topic` 허용값 정의 및 SKILL.md §5-1 입력 JSON과 REFERENCE.md §7 예시의 `user_question` 필드 정합, "사주 사주" 오타·§6-2 주석 날짜 표기 정리 — 선택 보강(2026-11-06 테스트 Q3 발견, 차단 요인 아님)
 - [✅] (2026-09-28 반영) REFERENCE.md §8 상단 요약 문장에 "Opus 5.5는 0.05x 예외" 한 줄 명시 — 2026-09-28 재테스트에서 발견, 공식 가격표로 재확인 후 반영 완료(status 영향 없음 — 기존 검증 사실의 위치 보강)
 
 ---
@@ -358,3 +416,7 @@ status: APPROVED
 | 2026-09-28 | v3 | 재검증(2차) — Structured Outputs(`output_config.format`) 서술 VERIFIED(변경 없음). REFERENCE.md §8 Opus 5.5 캐시 최소 토큰 "미확인" → **512**(공식 표 등재 확인), 캐시 비용 "가정" 표기 → 공식 확정치($5/$8/$0.20=0.05x)로 정정. Opus 5.5 강제 tool_choice·thinking disabled 400 재확인(변경 없음). status APPROVED → PENDING_TEST (skill-tester 재테스트 대기) | Claude (Sonnet 5) |
 | 2026-09-28 | v3 | 2단계 실사용 재테스트 수행 (Q1 Opus 5.5 캐시 최소 토큰·비용 정정 확인 / Q2 캐시 breakpoint 구성·JSON 강제·프리필 금지) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-09-28 | v3 | 선택 보강 반영 — REFERENCE.md §8 상단 요약 문장에 "Opus 5.5는 캐시 읽기 0.05x 예외" 한 줄 추가(공식 가격표 재확인). 기존 검증 사실의 표기 위치 보강이라 status 영향 없음, APPROVED 유지 | Claude (Opus 5.5) |
+| 2026-11-06 | v3.1 | **재검증(모델·API 버전 현행화).** 대상 모델 Sonnet 5 / Haiku 4.5 → Sonnet 5.5 / Haiku 5.5(legacy 표기). REFERENCE.md 예제 `claude-sonnet-5` → `claude-sonnet-5-5`, `max_tokens` 1024 → 4096(adaptive thinking 기본 ON), 샘플링 파라미터 금지 주석(API 2026-10-21·Py SDK 2.x). §8 최소 캐시 토큰 표 Sonnet 5.5·Haiku 5.5 = 512 추가, 캐시 비용 표 Sonnet 5.5($0.10=0.05x)·Haiku 5.5 2단 가격 추가. 함정 §9 현행 ID·Sonnet 5.5 강제 tool_choice/thinking disabled 400·2026-10-21 샘플링 400 반영. 클레임 5건 VERIFIED. skill-tester 재테스트 대기 | Claude (Opus 5.5) |
+| 2026-11-06 | v3.1 | 재검증 후 2단계 실사용 재테스트 수행 (Q1 Sonnet 5.5 Python SDK 2.x 호출 설계: 모델 ID·max_tokens·sampling 금지·Structured Outputs·캐시 / Q2 Opus·Sonnet 5.5 강제 tool_choice·thinking disabled 400 및 모델별 캐시 최소 토큰·읽기 비용 / Q3 사주·타로 계산 책임 분리·단정 톤 회피·실행 판단 질문) → 3/3 PASS, APPROVED 유지 | skill-tester |
+| 2026-11-11 | v3.2 | 2026-11-11 재검증 — Fable 5.2 현행화(공식 models overview·whats-new-fable-5-2). references/REFERENCE.md 최소 캐시 토큰 512 행의 현행 Fable 표기 Fable 5.1 → **Fable 5.2**(Mythos 5.2 추가, Fable 5.1·Mythos 5.1 은 괄호 안 구세대로 유지). 클레임 2 갱신. SKILL.md 본문 변경 없음. status 변경 없음 | Claude |
+| 2026-11-12 | v3.3 | 정리(사실 재검증 아님) — Claude API 사용법 절만 덜어내기: 덜어낸 것 SKILL.md 헤더 대상 모델·API 버전 줄, §2 breakpoint 개수 서술, REFERENCE §6-2 SDK 호출 코드·스키마 공식 제약·캐시 상호작용·grammar 캐시·prefill 주의, §8 최소 캐시 토큰 표·비용 배수·단가 표·usage 확인 코드·TTL·lookback·모델별 임계 서술, 함정 8(prefill)·9(모델 ID·tool_choice·thinking·temperature) → 그 자리에 "API 호출·캐싱·structured outputs 는 Claude Code 기본 `claude-api` 스킬 참조" / 남긴 것 톤 룰 교체·hedging 사전·귀속 의무·공통 코어 템플릿·모드 블록(사주 절기 경계·타로 CSPRNG·손금 판독 정직성)·응답 스키마(FORTUNE_SCHEMA 본체, mode enum 단일 스키마)·few-shot·캐시 친화 구성 규칙·전처리·후처리·평가 지표·분야 함정 | 정리 |

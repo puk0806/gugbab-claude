@@ -1,15 +1,16 @@
 ---
 name: build-perf-benchmarking
 description: >
-  hyperfine 기반 프론트엔드 빌드 시간 벤치마킹 방법론.
-  warmup·runs·prepare 옵션, cold vs warm build 분리, 혼동변수 통제,
-  median/p95 보고, 표준 markdown 리포트 포맷, 흔한 함정과 안티패턴을 다룬다.
+  프론트엔드 빌드 시간·번들 크기·dev 서버(cold start·HMR) 측정 시 모델이 놓치기 쉬운 최신 변경점과 실측 함정.
+  hyperfine 2.0.0 파괴적 변경(셸 기본 없음·JSON 스키마 v2·삭제 옵션), warmup/prepare 차이, 도구별 캐시 위치,
+  size-limit 13·14 Node 요건 변경, rollup-plugin-visualizer 7.x(Vite 8 타입 수정·gzip 기본 꺼짐), 모듈별 gzip 합 ≠ 파일 gzip,
+  Next.js 16 Turbopack 분석기, Vite 8 Rolldown 사전 번들링, dev 서버 측정 미종료·HMR 로그 조건 함정, 지표 명시 규칙과 최소 보고 형식.
   <example>사용자: "vite 빌드 최적화 PR 전후 빌드 시간을 어떻게 비교해야 정확한가?"</example>
   <example>사용자: "hyperfine으로 turborepo cold build 측정하려는데 warmup은 몇 번?"</example>
-  <example>사용자: "빌드 벤치마크 결과가 매번 들쭉날쭉한데 뭘 통제해야 하지?"</example>
+  <example>사용자: "이번 PR로 vendor 청크가 얼마나 커졌는지 비교해줘"</example>
 ---
 
-# 빌드 시간 벤치마킹 방법론 (hyperfine)
+# 빌드·번들·dev 서버 성능 측정 — 최신 변경점·실측 함정
 
 > 소스:
 > - hyperfine 공식 GitHub: https://github.com/sharkdp/hyperfine
@@ -17,338 +18,108 @@ description: >
 > - Vite 캐시 가이드: https://vite.dev/guide/dep-pre-bundling
 > - Turborepo 캐싱 가이드: https://turborepo.dev/docs/crafting-your-repository/caching
 >
-> 검증일: 2026-09-28 (최초 2026-05-14)
-> 대상 버전: hyperfine v1.20.0 (2025-11-18 릴리즈), 리포트 예시는 Vite v8.3.1(2026-03 Rolldown 기반 출시) 기준
+> - hyperfine v2.0.0 릴리스 노트: https://github.com/sharkdp/hyperfine/releases/tag/v2.0.0
+> - 번들 크기: https://github.com/btd/rollup-plugin-visualizer · https://github.com/KusStar/vite-bundle-visualizer · https://github.com/webpack/webpack-bundle-analyzer · https://github.com/ai/size-limit · https://nextjs.org/docs/app/guides/package-bundling (구 bundle-size-analysis, 검증일 2026-11-09)
+> - dev 서버: https://vite.dev/guide/api-hmr · https://vite.dev/guide/features · https://vite.dev/guide/migration · https://webpack.js.org/configuration/dev-server/ · https://developer.chrome.com/docs/devtools/performance/reference · https://github.com/paulmillr/chokidar (구 dev-server-hmr-benchmarking, 검증일 2026-11-09)
+>
+> 검증일: 2026-11-09 (최초 2026-05-14, 직전 2026-09-28)
+> 대상 버전: **hyperfine v2.0.0** (2026-10-07 릴리즈), 리포트 예시는 Vite v8.3.1(2026-03 Rolldown 기반 출시) 기준
+> 번들 도구 버전 기준(구 bundle-size-analysis): rollup-plugin-visualizer 7.1.3 (2026-11-08) / vite-bundle-visualizer 1.2.1 / size-limit 14.3.0 (2026-10-22) / webpack-bundle-analyzer 5.4.2
 
 ---
 
-## 1. hyperfine이 무엇이며 왜 쓰는가
+## 1. 지표 명시 규칙 — 숫자 하나로 보고하지 않는다
 
-hyperfine은 sharkdp가 Rust로 작성한 CLI 벤치마킹 도구로, 임의의 shell 명령을 N회 반복 실행해 통계적 분석(평균·표준편차·min·max)과 outlier 탐지까지 수행한다. `time` 명령 대비 다음이 강점이다:
+- **빌드 시간**: 1회 `time pnpm build`는 캐시·CPU 상태로 ±30% 흔들린다. 다회 측정 후 **median + p95**(mean 은 outlier 에 민감). 최소 5회 미만은 통계적 의미가 약하다.
+- **cold / warm 를 한 표에 섞지 않는다** — 별도 측정·별도 표.
+- **번들 크기**: 항상 어떤 지표인지 붙인다 — `vendor.js — 850 KB (raw) / 280 KB (gzip) / 240 KB (brotli)`. 전송은 brotli(없으면 gzip), JS parse 비용은 raw(parsed). 초기 로드와 lazy 청크를 분리한다.
+- **dev 서버**: `dev_ready_ms`(“ready in” 로그) ≠ `first_paint_ms` ≠ `tti_ms` — 첫 요청 entry transform 이 cold 면 수백 ms~수 초 더 걸리므로 따로 보고. HMR 은 client-side(모듈 교체)와 server-detect(저장→감지)를 분리.
+- before/after 는 같은 머신·같은 세션. 측정 조건(머신·OS·Node·도구 버전·cold/warm·runs/warmup·전원·백그라운드)을 적지 않은 결과는 비교 불가.
 
-- 다회 측정 자동화 (기본 최소 10회 / 최소 3초)
-- warmup·prepare·setup·cleanup 단계 분리
-- 통계적 outlier 탐지 + 경고 메시지
-- Markdown / JSON / CSV / AsciiDoc export
+## 2. hyperfine v2.0.0 파괴적 변경
 
-빌드 시간 측정은 단일 실행값(1회 `time pnpm build`)이 디스크 캐시·페이지 캐시·CPU 부하 상태에 따라 ±30% 이상 흔들리므로, **반드시 hyperfine 같은 다회 측정 도구로 통계 보고**해야 한다.
+> 주의: **v2.0.0 에 파괴적 변경이 있다.** ① 측정 명령을 기본으로 셸 없이 직접 실행(`--shell=none`) ② `--export-json` 스키마 v2 ③ `--time-unit/-u`·`--sort`·`--reference` 삭제 ④ Markdown·CSV export 열 변경. v1.x(예: 1.20.0)를 쓰고 있다면 아래 예시의 `-S`·JSON 경로·export 열이 다르다 — `hyperfine --version` 으로 먼저 확인한다.
 
----
+- `&&`·`>`·`&`·`$VAR`·`NODE_ENV=production pnpm build`·`*`·`~` 가 들어간 명령은 **`-S`(= `--shell=default`) 또는 `--shell zsh` 필수** — 빠뜨리면 hyperfine 이 셸 선택을 요구하며 멈춘다. 환경 변수만 필요하면 v2 신규 `--env 'K=V'`. (v1.x 는 반대로 기본이 셸이었다.)
+- `--setup/--prepare/--conclude/--cleanup` 은 `--shell=none` 이어도 **항상 셸로 실행** — `rm -rf ...` 정리 명령은 그대로.
+- 삭제: `--time-unit` → `--metrics time_wall_clock:ms`, `--sort`, `--reference`/`--reference-name` → **첫 번째 명령이 항상 기준**. 신규 `--metrics M[:UNIT],…`(기본 = 경과 시간 + 최대 메모리, 프리셋 `default`/`time`/`all`).
+- JSON v2: `results[i].mean` → `results[i].summary.time_wall_clock.{mean,stddev,median,min,max}`, `times` → `measurements[j].time_wall_clock.value`. 시간은 초, 메모리는 바이트. run 1회면 `stddev` 는 `null`. CSV 는 `time_wall_clock_median` 같은 `_mean/_stddev/_median/_min/_max` 열.
+- p95/p99 는 기본 출력이 없다(공식 p95 스크립트도 없음) → `measurements` 로 직접 계산:
 
-## 2. 핵심 옵션 (v1.20.0 기준)
+```python
+r = json.load(open("result.json"))["results"][0]
+times = [m["time_wall_clock"]["value"] for m in r["measurements"]]
+print(r["summary"]["time_wall_clock"]["median"], np.percentile(times, 95))
+```
 
-| 옵션 | 단축 | 역할 |
-|------|------|------|
-| `--warmup NUM` | `-w` | 측정 전 NUM회 실행 (디스크 캐시·워밍업 목적) |
-| `--runs NUM` | `-r` | 정확히 NUM회 측정 (기본: 최소 10회/3초까지 자동) |
-| `--min-runs NUM` | `-m` | 최소 NUM회 보장 (기본 10) |
-| `--max-runs NUM` | `-M` | 최대 NUM회 제한 (기본 무제한) |
-| `--prepare CMD` | `-p` | **매 측정 직전마다** 실행 (cold build용 캐시 정리) |
-| `--setup CMD` | `-s` | 명령 series **시작 시 1회만** 실행 |
-| `--cleanup CMD` | `-c` | 명령 series **종료 후 1회만** 실행 |
-| `--conclude CMD` | — | 매 측정 직후 실행 |
-| `--export-markdown FILE` | — | 결과를 markdown 표로 출력 |
-| `--export-json FILE` | — | 개별 run 시간 포함 JSON 출력 (median·times 배열 포함) |
-| `--shell SHELL` | `-S` | 셸 지정 (기본: `/bin/sh`) |
-| `-N` / `--shell=none` | — | 셸 없이 직접 실행 (매우 빠른 명령용) |
-| `--ignore-failure` | `-i` | non-zero exit code 허용 |
-| `--time-unit UNIT` | `-u` | `microsecond` / `millisecond` / `second` |
-| `--show-output` | — | 명령의 stdout/stderr 그대로 출력 (디버깅용) |
+- markdown export 는 `| Command | Mean Wall Time [s] | Change | Factor |`(주 지표 하나) — v1.x 의 `Mean/Min/Max/Relative` 형식이 아니다. median·p95 는 빠지므로 JSON 에서 뽑아 확장 표를 붙인다.
+- 경고: v2.0.0 소스(`src/output/warnings.rs`)에는 **첫 run 이상치 경고 하나만** 남았다 — v1.x 의 "Statistical outliers were detected ..." 일반 경고는 없다(소스로 확인, v2 바이너리 실행으로는 재현하지 않음). 경고가 안 떠도 stddev 급증은 직접 확인한다.
+
+## 3. warmup vs prepare — 의미가 정반대
 
 > 주의: `--prepare`와 `--warmup`은 목적이 다르다. **warmup은 캐시를 채우려는 것**(warm build 측정 전 준비), **prepare는 캐시를 비우려는 것**(cold build 측정 전 매번 청소)이다. 혼동하면 측정값 의미가 정반대가 된다.
 
----
+- `hyperfine 'pnpm build'`(warmup 0 + prepare 없음)는 첫 run 만 cold, 나머지 warm — 의미 불명. `--runs 30`만 늘려도 두 번째부터 turbo 캐시 hit.
+- `--ignore-failure` 는 "10회 즉시 실패한 평균"을 숨긴다.
+- warmup 횟수의 보편 권장값은 공식 문서에 없다(실용치: 빌드 < 5초면 3~5, 2분 이상이면 1 또는 생략).
 
-## 3. N회 반복 측정과 보고 방식
-
-### 3.1 권장 측정 횟수
-
-| 빌드 소요 시간 | 권장 `--runs` | 권장 `--warmup` |
-|----------------|---------------|------------------|
-| < 5초 | 30~50 | 3~5 |
-| 5초 ~ 30초 | 10~20 | 2~3 |
-| 30초 ~ 2분 | 10 | 1~2 |
-| > 2분 | 5~10 | 1 (생략 가능) |
-
-> 주의: hyperfine 공식 문서는 "warmup 횟수의 보편적 권장값을 명시하지 않는다". 위 표는 본 스킬의 실용 권장치이며, 빌드 시간이 길수록 측정 시간 부담 때문에 runs를 줄여야 한다. **최소 5회 미만은 통계적 의미가 약하다.**
-
-### 3.2 보고할 통계값
-
-hyperfine CLI 출력은 `mean ± stddev`, `min`, `max`, `Relative`까지 표시한다. **그러나 median·p95는 CLI 출력에 없으므로, `--export-json`으로 받아서 직접 계산**해야 한다.
-
-JSON 스키마 (v1.20.0):
-```json
-{
-  "results": [
-    {
-      "command": "pnpm build",
-      "mean": 12.345,
-      "median": 12.301,
-      "stddev": 0.234,
-      "min": 12.012,
-      "max": 12.901,
-      "user": 25.6,
-      "system": 1.2,
-      "times": [12.34, 12.30, 12.45, ...]   // 개별 측정값
-    }
-  ]
-}
-```
-
-표준 보고 포맷에는 **median과 p95를 함께** 싣는다. 이유:
-- `mean`은 outlier에 민감해서 단발성 thermal throttling 한 번에 흔들린다.
-- `median`은 분포 중앙값으로 outlier에 robust하다.
-- `p95`는 "최악에 가까운 빌드도 이 정도 시간 안에 끝난다"는 운영 SLA 관점 지표다.
-
-p95 계산 예시 (Python):
-```python
-import json, numpy as np
-data = json.load(open("result.json"))
-times = data["results"][0]["times"]
-print(f"p95 = {np.percentile(times, 95):.3f}s")
-```
-
-> 주의: hyperfine은 p95/p99를 기본 출력하지 않는다. `scripts/` 폴더에 `plot_whisker.py` 등이 있고 numpy 기반 분석이 가능하지만, p95 전용 스크립트는 공식 제공되지 않는다.
-
----
-
-## 4. Cold build vs Warm build 분리
-
-성능 PR 비교에서 가장 흔한 실수는 두 빌드를 섞어 측정하는 것이다. 반드시 분리해서 두 표를 만든다.
-
-### 4.1 정의
-
-| 구분 | 의미 | 측정 방법 |
-|------|------|-----------|
-| **Cold build** | 모든 캐시가 비워진 상태에서 처음부터 빌드 | `--prepare`로 캐시 삭제 명령을 매번 실행 |
-| **Warm build** | 이전 빌드 캐시가 살아 있는 상태에서 incremental 빌드 | `--warmup`으로 캐시 채운 뒤 측정 |
-
-### 4.2 도구별 캐시 정리 명령
-
-| 도구 | Cold (캐시 삭제) | 비고 |
+| 도구 | cold 캐시 삭제 | 비고 |
 |------|------------------|------|
-| **Vite** | `rm -rf node_modules/.vite dist` | `node_modules/.vite`는 pre-bundle 캐시 위치 (공식). 대안: `vite build --force` |
-| **Turborepo** | `rm -rf .turbo node_modules/.cache/turbo dist` | `.turbo/cache`가 로컬 캐시 (공식). 대안: `turbo run build --force` (캐시 읽기만 비활성화, 쓰기는 유지) |
-| **Next.js** | `rm -rf .next` | `.next` 폴더가 빌드 산출물 + 캐시 |
-| **TypeScript (tsc)** | `rm -f tsconfig.tsbuildinfo` | incremental build info 파일 |
-| **Webpack** | `rm -rf node_modules/.cache/webpack` | filesystem cache 기본 위치 |
+| Vite | `rm -rf node_modules/.vite dist` | 대안 `vite --force`. lockfile·patches·`vite.config`·NODE_ENV 변경 시 자동 재번들 |
+| Turborepo | `rm -rf .turbo node_modules/.cache/turbo dist` | `--force` 는 캐시 읽기만 끄고 쓰기는 유지 |
+| Next.js | `rm -rf .next` (dev 는 `.next/cache/`) | |
+| tsc | `rm -f tsconfig.tsbuildinfo` | |
+| Webpack | `rm -rf node_modules/.cache/webpack` | |
+| Rsbuild/Rspack | `rm -rf node_modules/.cache/.rsbuild` | |
 
-> Vite 8(Rolldown 기반)에서도 pre-bundle 캐시 위치(`node_modules/.vite`)와 `--force` 동작은 바뀌지 않았다 — 위 Vite 행을 그대로 쓴다(2026-09-28 공식 마이그레이션 가이드 https://vite.dev/guide/migration 대조, 바뀐 것은 dep pre-bundling 엔진 esbuild→Rolldown뿐).
+> Vite 8(Rolldown 기반)에서도 pre-bundle 캐시 위치(`node_modules/.vite`)와 `--force` 동작은 바뀌지 않았다 — 위 Vite 행을 그대로 쓴다(2026-09-28 공식 마이그레이션 가이드 https://vite.dev/guide/migration 대조, 바뀐 것은 dep pre-bundling 엔진 esbuild→Rolldown뿐). JS 변환·minify 는 esbuild → Oxc. 공식 가이드에 dev cold start·HMR 수치 변화는 명시돼 있지 않다 — 서드파티 블로그 수치("200ms→20ms" 등)는 > 주의: 미검증, 직접 측정해 보고한다.
 
-### 4.3 hyperfine 명령 패턴
+- `drop_caches`(페이지 캐시 비우기)는 Linux 전용·sudo 필요. macOS·Windows 는 일반 사용자가 못 비운다 → 새 CI 머신·`docker --rm`.
+- `git stash && pnpm build && git stash pop` 비교는 워킹트리 전환 오버헤드가 섞인다 → `git worktree add`로 분리.
 
-**Cold build 측정:**
-```bash
-hyperfine \
-  --runs 10 \
-  --warmup 0 \
-  --prepare 'rm -rf node_modules/.vite dist .turbo' \
-  --export-markdown bench-cold.md \
-  --export-json bench-cold.json \
-  'pnpm build'
-```
+## 4. 번들 크기 측정 함정
 
-**Warm build 측정:**
-```bash
-hyperfine \
-  --runs 20 \
-  --warmup 3 \
-  --export-markdown bench-warm.md \
-  --export-json bench-warm.json \
-  'pnpm build'
-```
+> **주의:** 모듈별 개별 압축이므로 *합산이 실제 파일 gzip 크기와 1:1 일치하지 않는다*. 전체 파일 단위 압축이 인접 모듈끼리 사전을 공유해 더 작아지기 때문이다. 회귀 임계치는 *전체 파일*의 gzip/brotli로 잡는다.
 
-**Before/After 비교 (같은 머신, 같은 세션 권장):**
-```bash
-hyperfine \
-  --runs 10 \
-  --warmup 2 \
-  --prepare 'rm -rf node_modules/.vite dist' \
-  --export-markdown bench-compare.md \
-  -n 'before' 'git stash && pnpm build && git stash pop' \
-  -n 'after'  'pnpm build'
-```
-> 주의: 위 비교 패턴은 git stash로 인한 워킹트리 전환 오버헤드가 함께 측정된다. 더 엄밀하게 하려면 별도 워크트리(`git worktree add`)로 before/after를 각각 빌드하고 결과만 markdown으로 합치는 편이 좋다.
+- webpack-bundle-analyzer 의 Stat(minify·트리쉐이킹 전) / Parsed(산출물 내 크기) / Gzip·Brotli(모듈별 개별 압축) — 위 이유로 Gzip 열 합산 금지. `defaultSizes` 기본은 `parsed`. 5.0 부터 Node 20.9 미만 지원 종료.
 
-### 4.4 Linux 페이지 캐시까지 비우는 경우 (옵션, 매우 엄격한 측정)
+> **주의:** `gzipSize`·`brotliSize` 기본값은 둘 다 `false`다. 켜지 않으면 raw 크기만 표시되어 *실 전송 크기를 못 본다*. 항상 켠다. (rollup-plugin-visualizer)
 
-```bash
-hyperfine \
-  --prepare 'sync; echo 3 | sudo tee /proc/sys/vm/drop_caches; rm -rf node_modules/.vite dist' \
-  --runs 10 \
-  'pnpm build'
-```
+> **주의:** rollup-plugin-visualizer 7.x는 **Node.js ≥ 22**를 요구한다. 더 낮은 Node 버전을 쓰는 프로젝트는 6.x 계열로 핀 고정한다.
+>
+> **주의 (Vite 8 사용자 필수):** 7.1.0 이전 버전은 배포된 타입 선언이 `rollup` 패키지를 직접 import하도록 되어 있어, `rollup`을 설치하지 않고 `rolldown`만 있는 프로젝트에서 타입이 `any`로 조용히 깨지거나(`skipLibCheck` 켠 경우) `TS2307`(모듈 찾을 수 없음) 에러가 났다. **Vite 8은 내부적으로 rolldown을 쓰고 `rollup`을 아예 설치하지 않으므로 Vite 8 프로젝트는 전원 영향받았다.** 7.1.0(2026-09)에서 수정됐다 — Vite 8 + TypeScript 조합이면 반드시 `rollup-plugin-visualizer@^7.1.0` 이상을 쓴다.
 
-> 주의: `drop_caches`는 Linux 전용이며 sudo가 필요하다. macOS·Windows에서는 페이지 캐시를 일반 사용자가 강제 비울 수 없다. 페이지 캐시까지 통제하려면 CI 머신을 빌드마다 새로 띄우거나 docker --rm 컨테이너 안에서 측정한다.
+> 주의: size-limit 13.0.0에서 Node 20 지원이 종료됐고, 14.0.0(2026-09-15)에서 `@size-limit/preset-small-lib`가 기본 번들러를 `rolldown`으로 전환했다(`@size-limit/preset-app`은 대상 아님). 14.x는 Node 버전 요건이 `^22.19.0 || ^24.5.0 || >=26.0.0`으로 더 좁아졌다(구 22.x 전체 허용 아님 — 22.19 미만이면 CI 러너 업그레이드 필요). `size-limit` 설정 배열 문법·limit 단위·brotli 기본 압축은 12.x부터 변경 없이 그대로 유효하다. 14.1 `--ignore-missing`, 14.2 플러그인 타입, 14.3 주석 가능한 `.jsonc` 설정. 13.1.0부터 `rolldown`/`rolldown-why` 플러그인(preset-app 사용자에겐 선택).
 
----
+- size-limit 은 **기본 brotli**, `.map` 자동 제외, 해시 파일 glob 매칭, 시간 limit(`"300 ms"` + `running: true`)은 preset-app 필요.
+- `du -sh dist/` 는 sourcemap(`.map`)까지 합산해 부풀려진다 → `.js`/`.css`만.
+- dev 빌드(`-m development`)로 분석하지 않는다 — minify·트리쉐이킹이 없어 3~10배.
+- `manualChunks`로 node_modules 를 단일 `vendor`로 묶으면 청크별 분석 자체가 불가 + 작은 의존성 추가에도 캐시 전체 무효화.
+- treemap 에 같은 모듈이 여러 청크에 보이면 duplicate 의심 → `npm ls react`, Vite `resolve.dedupe`.
 
-## 5. 혼동변수(Confounding Variables) 명시
+> 주의 (2026-11-09): Next.js 16 은 기본 번들러가 Turbopack 이다. `@next/bundle-analyzer` 는 **Webpack 용** 플러그인이므로 Turbopack 빌드에는 `next analyze`(16.1+, `--output` 시 `.next/diagnostics/analyze` 저장)를 쓴다. 16.4+ 는 `next analyze export`.
 
-빌드 시간 측정 결과를 신뢰할 수 있게 하려면 다음 요소를 반드시 보고서에 명시한다. **이걸 명시하지 않은 벤치마크는 비교 불가능하다.**
+## 5. dev 서버 cold start·HMR 측정 함정
 
-### 5.1 필수 명시 항목
+> 주의: 단순히 `vite` 프로세스가 종료될 때까지 측정하면 dev 서버가 계속 떠 있어 측정이 종료되지 않는다. `sleep N && kill %1`로 강제 종료하거나, "Server ready" 로그가 찍힐 때까지만 대기하는 래퍼 스크립트를 만든다.
 
-| 카테고리 | 항목 | 측정 방법 |
-|----------|------|-----------|
-| **하드웨어** | CPU 모델, 코어 수, RAM, 디스크(SSD/NVMe) | `system_profiler SPHardwareDataType` (macOS), `lscpu` (Linux) |
-| **OS** | OS 버전, 커널 버전 | `uname -a`, `sw_vers` |
-| **런타임** | Node.js / pnpm / Vite / Turborepo 버전 | `node -v`, `pnpm -v`, `pnpm vite --version` |
-| **빌드 환경** | `NODE_ENV`, `CI` 등 env 변수 | 측정 스크립트에 echo |
-| **CPU 상태** | governor / power mode | macOS: 충전 연결 + 절전모드 OFF. Linux: `cpupower frequency-info` |
-| **백그라운드** | 측정 중 실행한 다른 프로세스 | "측정 중 Slack/Chrome/Docker 종료" 명시 |
-| **온도** | 측정 시작 시 CPU 온도 (thermal throttling 회피) | macOS: 사전 5분 idle. 측정 도중 fan 풀가동이면 결과 무효 |
+- 래퍼 스크립트 실측 함정(2026-09-28, macOS + hyperfine 1.20.0 실행): `date +%s%3N`은 **GNU date 전용** — macOS(BSD date)는 `%N`을 몰라 `1790556416163N` 이 되어 `$((END - START))` 가 `value too great for base` 로 실패 → `python3 -c 'import time; print(int(time.time()*1000))'`. 또 `pkill`로 vite 를 끊은 뒤 `exit 0` 이 없으면 SIGTERM 종료 코드(143)가 그대로 나가 hyperfine 이 첫 실행에서 실패 처리한다.
+- `kill %1`·`&` 가 든 측정 명령은 v2 에서 `-S` 필수(§2). `./bench-cold.sh` 처럼 스크립트를 직접 실행하면 영향 없음.
+- **Vite `hmr update ...` stdout 로그는 WebSocket 으로 연결된 브라우저 탭이 최소 1개 있어야만 찍힌다**(2026-09-28 직접 재현: 미연결 2회 모두 0줄, 탭 연결 후 즉시 출력). 브라우저 없이 CLI 만으로 HMR 을 자동 측정하는 시도는 동작하지 않는다. 이 방식의 값(서버 감지+로그 출력, 실측 20회 median 87ms)은 클라이언트 모듈 교체 시간과 다른 지표다.
+- 정밀 측정은 `import.meta.hot.on('vite:beforeUpdate'|'vite:afterUpdate')` 시간차(client-side), 서버 구간은 `Date.now() - payload.updates[0].timestamp`. 두 이벤트·캐시 위치·`--force`는 Vite 8 에서도 유지. 단 **`import.meta.hot.accept`에 URL 을 넘기는 방식은 8.0 에서 제거** — id 를 넘긴다.
+- 파일 워처: WSL2 의 `/mnt/c/...` 는 inotify 가 NTFS 이벤트를 못 받는다 → 프로젝트를 WSL2 홈(ext4)으로. Docker + macOS/Windows 마운트는 이벤트가 전달 안 됨 → `CHOKIDAR_USEPOLLING=true`/`WATCHPACK_POLLING=true`, 단 폴링 interval 만큼 HMR 이 늘어나므로 on/off 분리 보고. Linux `fs.inotify.max_user_watches` 가 낮으면 누락.
+- DevTools Performance 녹화 중엔 페이지가 5~10% 느려진다 → hyperfine 자동 벤치와 별도 세션. 횟수는 cold 최소 10회, HMR 30회.
+- 노트북 전원 모드 변동(±30%), Spotlight·Time Machine(fsevents 큐 밀림), thermal throttling(후반 run outlier) — 전원 연결·5분 idle·백그라운드 종료를 보고서에 명시.
 
-### 5.2 통제 가능한 요인 vs 통제 불가능한 요인
-
-| 통제 가능 | 통제 어렵지만 명시 가능 | 통제 불가 (CI에서 측정) |
-|-----------|------------------------|--------------------------|
-| 캐시 상태 (`--prepare`) | OS 버전 | 다른 사용자의 CI 머신 부하 |
-| 빌드 도구 버전 | 백그라운드 앱 | Cloud VM의 noisy neighbor |
-| Env 변수 | CPU governor | OS 페이지 캐시 잔존 |
-| 측정 횟수 | thermal state | macOS Spotlight 인덱싱 |
-
-**Thermal throttling 방지 체크리스트:**
-- 노트북은 충전 연결, 책상 위에 놓고 측정 (이불·무릎 금지)
-- macOS는 `pmset noidle` 또는 carafeine 앱으로 sleep 방지
-- 첫 측정 전 5분 idle 권장 (CPU 온도 ambient 회귀)
-- runs가 길어지면 thermal throttling 진입 → outlier 증가. 이 경우 batch를 작게 쪼개 측정 간 cooldown 삽입
-
----
-
-## 6. 표준 보고서 포맷
-
-### 6.1 markdown 표 (hyperfine `--export-markdown` 그대로 활용)
-
-hyperfine이 생성하는 기본 markdown 형식:
+## 6. 최소 보고 형식
 
 ```markdown
-| Command | Mean [s] | Min [s] | Max [s] | Relative |
-|:---|---:|---:|---:|---:|
-| `before: pnpm build` | 12.345 ± 0.234 | 12.012 | 12.901 | 1.18 ± 0.03 |
-| `after: pnpm build`  | 10.456 ± 0.198 | 10.201 | 10.812 | 1.00 |
+- 측정일 / 머신(CPU·RAM·OS) / Node·pnpm·Vite·도구 버전 / hyperfine v2.0.0
+- 유형: cold(--prepare 로 .vite·dist 매번 삭제) | warm(--warmup N) · runs N
+- 백그라운드·전원 통제, 이상치 경고·stddev 급증 구간
+
+| Command | Median [s] | p95 [s] | Stddev | Runs |      ← 빌드/dev (JSON summary·measurements)
+| 청크 | Before (gzip) | After (gzip) | Δ | Before (brotli) | After (brotli) | Δ |   ← 번들, 초기 로드 합계·% 행 별도, lazy 표기
 ```
 
-이 표를 PR description 또는 `docs/perf-reports/{YYYY-MM-DD}-{topic}.md`에 그대로 붙인다.
-
-### 6.2 권장 확장 표 (median·p95 추가)
-
-CLI 표는 median이 빠지므로 JSON에서 추출해 다음 표를 함께 첨부한다:
-
-```markdown
-| Command | Mean [s] | Median [s] | p95 [s] | Stddev | Runs |
-|:---|---:|---:|---:|---:|---:|
-| before | 12.345 | 12.301 | 12.78 | 0.234 | 10 |
-| after  | 10.456 | 10.410 | 10.79 | 0.198 | 10 |
-| 개선 | -15.3% | -15.5% | -15.6% | — | — |
-```
-
-### 6.3 보고서 헤더 템플릿
-
-```markdown
-# 빌드 성능 벤치마크: {주제}
-
-- **측정일**: YYYY-MM-DD
-- **측정자**: @user
-- **머신**: MacBook Pro M3 Pro, 36GB RAM, macOS 14.5
-- **런타임**: Node v24.21.0 (LTS), pnpm v12.6.0, Vite v8.3.1 (Rolldown 기반)
-- **측정 도구**: hyperfine v1.20.0
-- **runs**: 10, **warmup**: 2
-- **빌드 유형**: cold build (--prepare로 .vite·dist 매번 삭제)
-- **백그라운드**: Slack·Chrome·Docker 종료, 충전 연결, 5분 idle 후 측정
-
-## 결과 (CLI 표)
-
-{hyperfine --export-markdown 출력}
-
-## 확장 통계 (median·p95)
-
-{JSON에서 추출한 표}
-
-## 혼동변수 노트
-
-{측정 중 outlier 경고 여부, thermal throttling 의심 구간 등}
-```
-
----
-
-## 7. 측정 시 흔한 함정 + 안티패턴
-
-### 7.1 함정 (Pitfalls)
-
-1. **1회 측정으로 결론 내기** — `time pnpm build` 결과만 보고 "X% 빨라졌다" 주장. ±30% 변동 무시.
-2. **warmup 없이 첫 run을 포함하기** — hyperfine은 첫 run이 유의미하게 느리면 다음 경고를 띄운다:
-   > "The first benchmarking run for this command was significantly slower than the rest (...). This could be caused by filesystem caches that were not filled until after the first run. You should consider using the '--warmup' option to fill those caches before the actual benchmark. Alternatively, use the '--prepare' option to clear the caches before each timing run."
-3. **cold와 warm을 한 표에 섞기** — Mean이 cold 1회 + warm 9회처럼 섞이면 의미 없는 평균이 나온다.
-4. **before/after 다른 머신에서 측정** — CI 머신 변경, 노트북 ↔ 데스크톱, 다른 시간대 측정은 비교 불가.
-5. **백그라운드 프로세스 미통제** — Docker·Spotlight·webpack-dev-server가 켜진 채 측정. outlier 경고:
-   > "Statistical outliers were detected. Consider re-running this benchmark on a quiet system without any interferences from other programs."
-6. **thermal throttling 무시** — runs 30회 돌리는 동안 후반 5회는 throttling 상태로 측정되어 stddev가 커진다.
-7. **mean만 보고 median 안 보기** — outlier 1회로 mean이 흔들렸는데 그걸로 결론.
-8. **`--shell=none`을 빌드 명령에 잘못 적용** — 빌드는 셸 통한 PATH 해석·env 확장이 필요하므로 `-N` 옵션을 쓰면 안 된다. `-N`은 sub-millisecond 명령용.
-9. **`--ignore-failure` 남용** — 빌드 실패가 묻혀 "10회 평균 5초"가 사실은 "10회 다 즉시 실패한 평균"인 경우.
-
-### 7.2 안티패턴
-
-```bash
-# 안티패턴 1: 1회 측정 + time 명령
-time pnpm build   # X 단발성, 분산 모름
-
-# 안티패턴 2: warmup 0 + cold 캐시 정리도 없음
-hyperfine 'pnpm build'   # X 첫 run이 cold, 나머지는 warm — 의미 불명
-
-# 안티패턴 3: prepare 없이 --runs만 늘리기
-hyperfine --runs 30 'pnpm build'   # X 두 번째부터는 turbo 캐시 hit, mean이 의미 없음
-
-# 안티패턴 4: --shell=none을 복합 명령에 적용
-hyperfine -N 'pnpm build && pnpm test'   # X &&·환경변수 해석 안 됨
-
-# 안티패턴 5: ignore-failure로 실패 은폐
-hyperfine --ignore-failure 'pnpm build'  # X 실패 빌드도 평균에 합산됨
-```
-
-### 7.3 권장 패턴 (Do)
-
-```bash
-# Do 1: warmup + prepare 명시 + export
-hyperfine \
-  --warmup 2 --runs 10 \
-  --prepare 'rm -rf node_modules/.vite dist' \
-  --export-markdown bench.md --export-json bench.json \
-  -n 'cold-build' 'pnpm build'
-
-# Do 2: cold와 warm을 별도 명령으로 분리
-hyperfine --warmup 2 --runs 10 --prepare 'rm -rf dist .vite' 'pnpm build'  # cold
-hyperfine --warmup 3 --runs 20 'pnpm build'                                  # warm
-
-# Do 3: 측정 환경 echo 후 측정
-echo "node=$(node -v) vite=$(pnpm vite --version)" | tee env.txt
-hyperfine --warmup 2 --runs 10 'pnpm build'
-```
-
----
-
-## 8. 체크리스트 (PR에 빌드 성능 결과 첨부 전)
-
-- [ ] hyperfine 버전 명시 (`hyperfine --version`)
-- [ ] 측정 머신·OS·런타임 버전 명시
-- [ ] cold / warm 명시 (둘 다 측정하면 더 좋음)
-- [ ] warmup·runs 횟수 명시
-- [ ] outlier 경고 발생 여부 보고서에 기록
-- [ ] mean·median·p95 모두 표시 (median은 JSON에서 추출)
-- [ ] before/after는 같은 머신·같은 세션 내 측정
-- [ ] `--export-markdown` + `--export-json` 둘 다 산출하여 raw 데이터 보존
-- [ ] 백그라운드 프로세스 통제 사실 명시
-- [ ] thermal throttling 의심 구간 (stddev 급증) 노트
-
----
-
-## 9. 참고 (hyperfine outlier 경고 메시지 원문)
-
-> "Warning: The first benchmarking run for this command was significantly slower than the rest (...). This could be caused by (filesystem) caches that were not filled until after the first run. It might help to use the '--warmup' or '--prepare' options."
-
-> "Warning: Statistical outliers were detected. Consider re-running this benchmark on a quiet system without any interferences from other programs. It might help to use the '--warmup' or '--prepare' options."
-
-이 경고가 뜨면 결과를 신뢰하지 말고 환경을 정리한 뒤 재측정한다.
-
-> 실행 검증 (2026-09-28, hyperfine 1.20.0 실제 실행 + 바이너리 strings 대조): 위 두 인용문은 v1.20.0 기준 정정된 원문이다. 이전 판(v2 이전)에는 "quiet **PC**"로 잘못 인용돼 있었으나 실제 바이너리·라이브 재현 모두 "quiet **system**"이었다. first-run 경고도 "You should consider using the '--warmup' option ... Alternatively, use the '--prepare' option to clear the caches before each timing run."로 더 길게 인용돼 있었으나 실제 바이너리 문자열은 위처럼 더 짧다(라이브 재현은 못했으나 설치된 동일 버전 바이너리의 strings 추출로 확인). outlier 경고는 warm build(20회, warmup 3) 측정 중 실제로 발동해 라이브 재현까지 확인됨.
+`--export-markdown` + `--export-json`(또는 visualizer `raw-data`) 원본을 함께 남긴다.

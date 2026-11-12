@@ -2,7 +2,7 @@
 skill: bot-management-seo
 category: frontend
 version: v2.1
-date: 2026-09-28
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `bot-management-seo` |
 | 스킬 경로 | `.claude/skills/bot-management-seo/SKILL.md` |
-| 검증일 | 2026-09-28 (최초 2026-06-04) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-28 / 최초 2026-06-04) |
 | 검증자 | skill-creator (Claude) |
 | 스킬 버전 | v2.1 |
 
@@ -55,6 +55,8 @@ status: APPROVED
 | AWS WAF — Bot Control Rule Group | https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-bot.html | ⭐⭐⭐ High | 2026-06-04 | 공식 문서 |
 | Bing — Verify Bingbot | https://www.bing.com/toolbox/verify-bingbot | ⭐⭐⭐ High | 2026-06-04 | 공식 도구 |
 | Naver Search Advisor 도움말 | https://help.naver.com/robots/ | ⭐⭐ Medium | 2026-06-04 | 공식이나 IP 범위 비공개 |
+| Google — Verify Google requests (현행 주소) | https://developers.google.com/crawling/docs/crawlers-fetchers/verify-google-requests | ⭐⭐⭐ High | 2026-11-09 | 구 verifying-googlebot 301 대상, JSON 목록·역DNS 절차 |
+| Google — user-triggered-agents.json | https://developers.google.com/static/crawling/ipranges/user-triggered-agents.json | ⭐⭐⭐ High | 2026-11-09 | 200 응답, 사용자 트리거 에이전트 IP |
 
 ---
 
@@ -99,6 +101,9 @@ status: APPROVED
 | 3 | Cloudflare는 Verified Bots(Googlebot, Bingbot 등)를 기본 통과시키며 `cf.verified_bot`/`cf.verified_bot_category` 필드로 WAF Custom Rules에서 분기 가능하다 | Cloudflare Verified Bots 공식 문서 (WebFetch) | Cloudflare Super Bot Fight Mode 공식 문서 (WebFetch) | VERIFIED |
 | 4 | AWS WAF Bot Control의 `CategorySearchEngine` 룰은 검증된 검색 엔진 봇에는 매치되지 않고 `awswaf:managed:aws:bot-control:bot:category:search_engine` + `bot:verified` 레이블을 부여한다 | AWS WAF Developer Guide Bot Control rule group 페이지 (WebFetch) | AWS re:Post 지식센터 "Allow bot blocked by AWS WAF Bot Control rule group" | VERIFIED |
 | 5 | Googlebot 검증은 역DNS → 도메인이 googlebot.com/google.com/googleusercontent.com 중 하나인지 확인 → 정방향 DNS 재조회 → IP 일치의 4단계로 수행한다 | Google Search Central Verify Googlebot 페이지 (WebFetch) | Google Search Central 2006 Verify Googlebot 블로그·SISTRIX 문서 | VERIFIED |
+| 6 | (2026-11-09) Google 크롤러 검증 문서가 `developers.google.com/crawling/docs/crawlers-fetchers/verify-google-requests` 로 이동(구 주소 301), 역DNS 도메인 3종 유지 | 구 URL `curl -I` → 301 Location 확인 | 새 문서 본문(googlebot.com·google.com·googleusercontent.com 서술) | VERIFIED → URL 교체 |
+| 7 | (2026-11-09) 사용자 트리거 에이전트용 `user-triggered-agents.json` 이 공식 IP 목록에 추가, 그 밖의 IP 는 `goog.json` | 새 검증 문서의 JSON 목록(common·special·user-triggered-fetchers·-google·user-triggered-agents·goog.json) | JSON 실접속 200, `creationTime` 2026-11 확인 | VERIFIED → SKILL.md 1절 추가 |
+| 8 | (2026-11-09) 기존 참조 URL(OpenAI·Perplexity·Anthropic·Cloudflare·AWS·Naver) 유효 | 2026-11-06 조사 시 전 URL 200 | 변경 보고 없음 | VERIFIED (변경 없음) |
 
 ---
 
@@ -227,3 +232,4 @@ status: APPROVED
 | 2026-09-28 | v2.1 | 재검증(2차, 33일 경과) — Naver Yeti UA·IP 비공개 정책 변경 없음 재확인. **ADD**: 신규 "1.4 AI 크롤러 UA + 공식 IP 목록" 절 — OpenAI(GPTBot/OAI-SearchBot/ChatGPT-User)·Anthropic(ClaudeBot/Claude-User/Claude-SearchBot)·Perplexity(PerplexityBot)·Google-Extended 공식 IP JSON 4개 URL 실접속 확인 후 반영. status APPROVED → PENDING_TEST 전환 | orchestrator (2차 재검증 배치) |
 | 2026-09-28 | v2.1 | 2단계 재테스트 수행 (Q1 GPTBot/ChatGPT-User 분리 제어 + geo-ai-discoverability 크롤러 목록 교차검증 / Q2 ClaudeBot 공식 IP 목록·3봇 독립 제어) → 2/2 PASS(경미한 선택보강 gap 1건), PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-09-28 | v2.1 | 선택 보강 반영 — 1.4절에 "IP 공유 시 WAF로 봇 구분 불가, 세분 제어는 UA 매칭으로만" 연결 문장 추가, `Google-Extended`가 크롤러가 아닌 opt-out 토큰임을 각주로 명시 (내부 명확화, 사실 변경 없음, status 유지) | orchestrator (선택 보강 반영 배치) |
+| 2026-11-09 | v2.2 | 재검증 — Google 크롤러 검증 문서 새 주소(301)로 참조 URL 2곳 교체, IP 목록에 `user-triggered-agents.json`·`goog.json` 2줄 추가, 역DNS 도메인·나머지 URL 변경 없음 VERIFIED. 기존 절차·판단 기준 변경 없음(URL·목록 보강만) → skill-tester 생략, status APPROVED 유지 | 재검증 b01 |

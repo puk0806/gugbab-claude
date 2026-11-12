@@ -2,7 +2,7 @@
 skill: redis-redisson-4
 category: backend
 version: v1
-date: 2026-09-26
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -14,11 +14,11 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `redis-redisson-4` |
 | 스킬 경로 | `.claude/skills/redis-redisson-4/SKILL.md` |
-| 검증일 | 2026-09-26 (30~60일 주기 재검증, 최초 검증 2026-08-11) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-26 · 최초 검증 2026-08-11) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 | 대상 버전 | Redisson 4.0.0 ~ **4.7.0** (2026-08-04 릴리스) |
-| 관련 스킬 | `redis-redisson-modern`(3.x), `redis-redisson-legacy`(2.15.2) — 역할 분리 포인터를 SKILL.md 상단에 명시 |
+| 관련 스킬 | `redis-redisson-legacy`(2.15.2) — 역할 분리 포인터를 SKILL.md 상단에 명시 |
 
 ---
 
@@ -134,6 +134,22 @@ status: APPROVED
 - **#18 (UNVERIFIED)**: 에디션 판정을 단정하지 않고 "공식 docs 표에서 PRO 기능으로 표기된다"는 **출처 기반 서술 + `> 주의:` 표기**로 처리하고, 커뮤니티 대안(`getMapCache()` / `RBucket` 분리)을 함께 제시했다.
 - 부가: docs Getting Started 페이지의 예시 버전은 4.6.1로 갱신이 지연된 상태였으나, CHANGELOG·Releases·태그 pom 3종이 4.7.0으로 일치하므로 **4.7.0을 최신으로 채택**했다.
 
+### 3-x. 2026-11-09 재검증 소스·판정
+
+| 소스 | URL | 신뢰도 | 확인 내용 |
+|------|-----|--------|-----------|
+| Redisson CHANGELOG | https://raw.githubusercontent.com/redisson/redisson/master/CHANGELOG.md | ⭐⭐⭐ 공식 | 4.8.0 (2026-10-02) — 기능 추가 위주, 제거 없음, RTimeSeries·FailedNodeDetector 옛 메서드 deprecated |
+| Maven Central metadata | https://repo1.maven.org/maven2/org/redisson/redisson/maven-metadata.xml | ⭐⭐⭐ 레지스트리 | latest/release 4.8.0, 3.x 마지막 3.52.0 |
+| 스타터 4.8.0 pom | https://repo1.maven.org/maven2/org/redisson/redisson-spring-boot-starter/4.8.0/ | ⭐⭐⭐ 레지스트리 | 기본 번들 `redisson-spring-data-41`, `spring-boot.version` 4.1.0 |
+| Redisson AI 문서 | https://redisson.pro/docs/data-and-services/ai/ | ⭐⭐⭐ 공식 | "available only in Redisson PRO edition" |
+
+| 클레임 | 판정 |
+|--------|------|
+| 4.x 최신 4.7.0 | DISPUTED → 4.8.0 으로 수정 |
+| 스타터 기본 번들 `-41` (Boot 4.1) | VERIFIED (4.8.0 도 동일) |
+| 4.0.0/4.1.0 breaking change 목록 | VERIFIED (4.8.0 에 되돌림·추가 제거 없음) |
+| Redisson AI 객체 에디션 | 신규 — PRO 전용 VERIFIED, 나머지 4.8.0 기능 에디션은 UNVERIFIED(주의 표기) |
+
 ---
 
 ## 4. 검증 체크리스트 (Test List)
@@ -165,6 +181,43 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+### 5-0. 2026-11-09 재검증 후 skill-tester content test (4.8.0 갱신분 타겟)
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester → general-purpose (domain-specific 에이전트 미설치로 대체)
+**수행 방법**: SKILL.md + references/REFERENCE.md Read 후 실전 질문 3개를 general-purpose 에이전트에 각각 답변시키고, 근거 섹션·anti-pattern 회피 확인
+
+**Q1. Boot 3.5 + Java 17 + RedissonSpringCacheManager 사용 서비스를 3.51.0에서 최신 4.x로 올릴 때 버전·의존성·JDK**
+- ✅ PASS
+- 근거: SKILL.md §1 매트릭스·Spring Boot 호환 표, §2 의존성 설정, §3-2
+- 상세: 최신 4.8.0 제시, JDK 상향 불필요, 스타터 기본 번들 `-41` exclude + `redisson-spring-data-35` 명시, `redisson-spring-cache` 별도 추가까지 정확히 도출. 예시 버전 4.8.0으로 일관. anti-pattern(4.7.0 최신 오답, JDK 상향) 회피.
+
+**Q2. 4.7.0 → 4.8.0 업그레이드 시 breaking change 여부, RTimeSeries.add()·FailedNodeDetector·JsonJacksonCodec 영향**
+- ✅ PASS
+- 근거: SKILL.md §3-3 "4.8.0" 행, REFERENCE §8
+- 상세: "제거·시그니처 변경 없음, 컴파일 유지"로 정확히 답변. RTimeSeries 옛 add()는 `add(TimeSeriesAddArgs)`로, FailedNodeDetector는 deprecated, JsonJacksonCodec은 `allowedClasses` 추가임을 인용.
+
+**Q3. 4.8.0 Redisson AI 객체(RVectorStore·RSemanticCache)를 커뮤니티 에디션에서 써도 되나? getNonReentrantLock()은?**
+- ✅ PASS
+- 근거: SKILL.md §1 라이선스 주의, §3-3 4.8.0 행, REFERENCE §8 4.8.0 행·4.4.0 행, §5
+- 상세: AI 객체 = PRO 전용(공식 AI 문서 문구), NonReentrantLock = 4.4.0 커뮤니티로 구분 답변. "신규 기능 = 유료/무료" 일반화 오답 회피.
+
+### 발견된 gap (선택 보강, 차단 요인 아님)
+
+- `FailedNodeDetector` 대체 메서드의 정확한 이름·시그니처 미기재 ("노드 주소 받는 메서드"로만 서술)
+- `RTimeSeries.add(TimeSeriesAddArgs)` 사용 예제, `JsonJacksonCodec` `allowedClasses` 설정 예제·기본 동작 미기재
+- 4.8.0의 나머지 신규 기능(Count-min sketch, Time Series Native 등) 에디션은 SKILL.md가 이미 "미검증" 주의로 표기
+
+### 판정
+
+- agent content test: 3/3 PASS
+- verification-policy 분류: 라이브러리 사용법·API 정확성 스킬 — content test로 충분 (실사용 필수 카테고리 해당 없음)
+- 최종 상태: APPROVED 유지
+
+---
+
+### 5-A. 최초 테스트 기록 (2026-08-11)
 
 **수행일**: 2026-08-11
 **수행자**: skill-creator → agent content test (SKILL.md 기반 실전 질문 답변 검증)
@@ -263,8 +316,8 @@ status: APPROVED
 | 구조 완전성 | ✅ (frontmatter·소스 URL·검증일·버전 매트릭스·코드 예시·사용/미사용 기준·흔한 실수 포함) |
 | 실용성 | ✅ (실제 pom/YAML/Java diff를 그대로 복사해 쓸 수 있는 형태) |
 | 기존 스킬과의 역할 분리 | ✅ (2.x/3.x/4.x 3종 포인터를 SKILL.md 최상단 표로 명시, 3.x 상세는 modern 스킬 참조로 위임해 중복 최소화) |
-| 에이전트 활용 테스트 | ✅ 최초 3/3 PASS (2026-08-11) + 재검증 2/2 PASS (2026-09-26, 정정 부분 타겟 general-purpose 테스트) |
-| **최종 판정** | **APPROVED** (2026-09-26 재검증 — `getMapCacheNative()` PRO/커뮤니티 서술 정정 후 skill-tester가 정정 부분을 정면 타겟한 질문으로 general-purpose 에이전트 content test 2/2 PASS 재확인) |
+| 에이전트 활용 테스트 | ✅ 최초 3/3 PASS (2026-08-11) + 재검증 2/2 PASS (2026-09-26, 정정 부분 타겟 general-purpose 테스트) + 4.8.0 갱신분 3/3 PASS (2026-11-09, skill-tester) |
+| **최종 판정** | **APPROVED** (2026-11-09 재검증 후 4.8.0 갱신분 content test 3/3 PASS로 유지; 이전 2026-09-26 재검증 — `getMapCacheNative()` PRO/커뮤니티 서술 정정 후 skill-tester가 정정 부분을 정면 타겟한 질문으로 general-purpose 에이전트 content test 2/2 PASS 재확인) |
 
 > 판정 근거: 본 스킬은 *라이브러리 사용법·API 정확성* 중심으로 검증 대상이 **답변 정확성**이다(`verification-policy.md`의 "content test로 충분" 범주).
 > 다만 §4의 마이그레이션 diff는 실제 빌드 산출물로만 최종 확인 가능한 성격이 일부 있으므로, 실 프로젝트 적용 시 SKILL.md §10 체크리스트 14번(스테이징 기동·락·캐시·페일오버 검증)을 반드시 수행하도록 본문에 명시했다.
@@ -276,7 +329,10 @@ status: APPROVED
 - [❌] **README.md 스킬 목록·업데이트 로그 반영** — 본 작업에서 수정이 금지되어 미수행 (skill-tester 범위 밖). 상위 에이전트가 일괄 반영 필요 — *차단 요인 아님, 별도 후속 커밋에서 처리*
 - [✅] `getMapCacheNative()` 에디션(커뮤니티/PRO) 재확인 — (2026-09-26 완료) 공식 docs 재조회로 기본판=커뮤니티, `getMapCacheNativeV2()`/클러스터 변종=PRO로 확정, REFERENCE.md §6 정정 + skill-tester 재테스트(§5-2) 2/2 PASS로 정정 반영 확인
 - [❌] Spring Boot 4.1 대응이 docs 호환 매트릭스에 반영되는지 재확인 (현재 docs는 4.0.x까지만 기재) — *선택 보강. 스타터 pom.xml 1차 소스로 이미 SKILL.md에 정확히 반영되어 있어 차단 요인 아님*
-- [❌] 4.8.0 이후 릴리스 시 §1 버전 매트릭스·§3-3 이후 breaking change 표 갱신 — *아직 4.8.0 미출시. 향후 정기 재검증(30~60일 주기) 시 처리할 선택 후속 과제*
+- [✅] 4.8.0 릴리스 반영 — (2026-11-09 완료) §1 매트릭스·§3-3 4.8.0 행·REFERENCE §8 갱신, skill-tester content test 3/3 PASS
+- [❌] 4.8.0 이후(4.9.0 등) 릴리스 시 §1 매트릭스·§3-3 갱신 — *선택 후속 과제. 향후 정기 재검증(30~60일 주기) 시 처리*
+- [✅] skill-tester content test 수행 및 섹션 5·6 동기화 — (2026-11-09 완료, 3/3 PASS)
+- [❌] 4.8.0 세부 보강: `FailedNodeDetector` 대체 메서드 시그니처, `RTimeSeries.add(TimeSeriesAddArgs)`·`allowedClasses` 예제, 나머지 4.8.0 기능 에디션 확정 — *선택 보강, 차단 요인 아님(현재 "미검증" 주의 표기됨)*
 - [❌] `redis-redisson-modern` 스킬에 "4.x는 `redis-redisson-4` 참조" 역방향 포인터 추가 검토 — *선택 보강(다른 스킬 파일 수정 필요, 본 스킬 정확성과 무관하여 차단 요인 아님)*
 
 ---
@@ -290,3 +346,6 @@ status: APPROVED
 | 2026-09-26 | v1 | 30~60일 주기 재검증. 4.7.0 최신 유지 확인, Spring Boot 매트릭스 DISPUTED 해소, `getMapCacheNative()` PRO/커뮤니티 서술 오류 발견·정정(REFERENCE.md §6) → status APPROVED에서 PENDING_TEST로 전환 | 메인 세션 |
 | 2026-09-26 | v1 | 재검증: 2단계 실사용 테스트 수행 (Q1 `getMapCacheNative()` 커뮤니티/PRO 정정 타겟 / Q2 4.4.0 신규 기능 PRO 오인 방지) → general-purpose 에이전트 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-10-08 | v1 | 설치본 참조 정리 — 레거시 스킬이 없는 템플릿(java-spring-modern 등)을 위해 `redis-redisson-legacy` 참조 3곳(SKILL.md 2·references 1)에 "(설치된 경우)" 표기(참조 검사 보강으로 발견). 내용 변경 없음 | Claude |
+| 2026-11-09 | v1 | 재검증 — 최신 4.7.0→4.8.0(2026-10-02) 갱신(의존성 예시 전부·매트릭스·범위), 4.8.0 deprecated(RTimeSeries `add()`, FailedNodeDetector)·`allowedClasses` 추가, REFERENCE §8 에 4.8.0 행(Redisson AI = PRO 전용) 추가. 스타터 기본 번들 `-41` 유지 확인 | 메인 오케스트레이션 (Claude Opus 5.5) |
+| 2026-11-09 | v1 | 재검증 후 2단계 실사용 테스트 수행 (Q1 Boot 3.5 + 4.8.0 의존성·JDK / Q2 4.7.0→4.8.0 breaking·deprecated / Q3 Redisson AI PRO 전용 vs NonReentrantLock 커뮤니티) → 3/3 PASS, APPROVED 유지 | skill-tester |
+| 2026-11-12 | v1.1 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 버전·호환 매트릭스(Java 8+·Apache 2.0·spring-data 모듈·Boot 3.x exclude), Spring Cache/Transaction 모듈 분리, 4.0.0~4.8.0 Breaking·deprecated 대체표·import 정규식, spring.redis.redisson 키 함정, RLock 불변·watchdog·getMapCacheNative 조건, 제거 코덱·저장 포맷 주의, 커뮤니티/PRO 표, 체크리스트 / 덜어낸 것 의존성 블록 다수·Config/YAML/RScript/import/TTL/Session/XML before-after 예제 코드, RLock 시그니처·표준 패턴·락 종류 표, 세마포어·RBucket·RMap·Cache-Aside·Spring Cache 예제, 코덱 일반 선택표, 커넥션 풀 YAML·튜닝표, 사용 시점 표, 흔한 실수 표(references/REFERENCE.md 본문 흡수 후 폴더 삭제) | 정리 |

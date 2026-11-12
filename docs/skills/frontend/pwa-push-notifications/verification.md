@@ -1,8 +1,8 @@
 ---
 skill: pwa-push-notifications
 category: frontend
-version: v4
-date: 2026-09-28
+version: v5
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -14,10 +14,9 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `pwa-push-notifications` |
 | 스킬 경로 | `.claude/skills/pwa-push-notifications/SKILL.md` |
-| 검증일 | 2026-09-28 (재검증, 이전 2026-05-15) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-28) |
 | 검증자 | skill-creator (Opus 4.7 1M) |
-| 스킬 버전 | v2 |
-| 짝 스킬 | `frontend/vite-pwa-service-worker` |
+| 스킬 버전 | v5 |
 
 ---
 
@@ -68,6 +67,10 @@ status: APPROVED
 | Apple Developer Web Push | https://developer.apple.com/documentation/usernotifications/sending-web-push-notifications-in-web-apps-and-browsers | ⭐⭐⭐ High | 2026-05-15 | iOS 16.4+ 공식 |
 | web-push GitHub | https://github.com/web-push-libs/web-push | ⭐⭐⭐ High | 2026-05-15 | Node 서버 라이브러리 (공식 web-push-libs org) |
 | MagicBell PWA iOS 가이드 | https://www.magicbell.com/blog/pwa-ios-limitations-safari-support-complete-guide | ⭐⭐ Medium | 2026 | iOS 옵션 미지원 보조 확인 |
+| npm web-push 4.0.0 (package.json·src/index.js·README) | https://www.npmjs.com/package/web-push | ⭐⭐⭐ High | 2026-11-09 | `"type": "module"`, named export만, README localhost subject 경고 |
+| web-push GitHub 커밋·ESM 전환 풀 리퀘스트 | https://github.com/web-push-libs/web-push/pull/961 | ⭐⭐⭐ High | 2026-11-09 | "feat: migrate to ESM-only", require(esm) 안내 |
+| MDN showNotification (재확인) | https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerRegistration/showNotification | ⭐⭐⭐ High | 2026-11-09 | renotify+빈 tag TypeError, badge Android 약 96×96 |
+| Chrome Notification Triggers | https://developer.chrome.com/docs/web-platform/notification-triggers | ⭐⭐⭐ High | 2026-11-09 | Origin trial 완료·Launch Not started |
 
 ---
 
@@ -97,6 +100,7 @@ status: APPROVED
 - [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 — 3/3 PASS
 - [✅] 잘못된 응답 시 스킬 보완 — gap 없음, 보완 불필요
 - [✅] 2026-09-28 선택 보강분(manifest display fullscreen 병기) content test 재수행 — 2/2 PASS
+- [✅] 2026-11-09 재검증 수정분(web-push 4.0.0 ESM·VAPID subject·badge 96·Notification Triggers) content test 재수행 — 2/2 PASS (질문 Q2는 3개 하위 질문 포함)
 
 ---
 
@@ -115,9 +119,50 @@ status: APPROVED
 
 **총합: VERIFIED 8 / DISPUTED 0 / UNVERIFIED 0**
 
+**2026-11-09 재검증 판정**
+
+| # | 클레임 | 소스 1 | 소스 2 | 판정 |
+|---|--------|--------|--------|------|
+| 9 | 서버 예제 `import webpush from 'web-push'` (web-push 최신) | npm web-push 4.0.0 tarball(`type: module`, default export 없음) | GitHub 커밋 "feat: migrate to ESM-only (#961)"·태그 v4.0.0 | **DISPUTED → 수정** (`import * as webpush`) |
+| 10 | VAPID subject 아무 mailto 가능 | web-push 4.0.0 README(Apple `403 BadJwtToken` 경고) | GitHub 커밋 "docs: warn against localhost VAPID subjects (#988)" | **DISPUTED → 주의 추가** |
+| 11 | badge ~72×72 | MDN showNotification (Android 약 96×96) | — | **DISPUTED → 수정** |
+| 12 | Notification Triggers = 실험적 Chrome 전용 | Chrome 문서 (Origin trial 완료, Launch Not started) | blink-dev Intent to Extend OT | **DISPUTED → "미출시" 명시** |
+| 4 | `renotify: true` + 빈 `tag` → TypeError | MDN showNotification (재확인) | — | VERIFIED |
+| 6 | `generate-vapid-keys` CLI | web-push 4.0.0 src/cli.js(명령 유지, parseArgs로 전환) | — | VERIFIED |
+
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-11-09] 재테스트(skill-tester) — 재검증 수정분(web-push 4.x ESM 등) 반영 확인
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester → general-purpose (domain-specific 프론트엔드 에이전트 미설치로 대체, 질문별 순차 실행)
+**수행 방법**: SKILL.md Read 후 2개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
+
+**Q1. web-push 4.x에서 `import webpush from 'web-push'` 시 "does not provide an export named default" 에러 원인·올바른 import·CommonJS require 가능 여부**
+- ✅ PASS
+- 근거: SKILL.md §5 "서버 측 — web-push (Node)" 주의 블록 + 예제 코드, §11 흔한 함정 표 web-push 4.x 행
+- 상세: ESM 전용·default export 없음·named export만 존재를 정확히 도출, `import * as webpush from 'web-push'` 제시(anti-pattern인 default import 회피), require는 require(esm) 지원 Node(20.19+/22.12+)에서만 동작하며 engines가 node>=16이라 설치에서 막히지 않는 점까지 정확히 답변.
+
+**Q2. 운영 iPhone 홈 화면 PWA에서만 403 BadJwtToken / 매일 23시 리마인더를 showTrigger로 예약해도 되는지 / badge 크기**
+- ✅ PASS
+- 근거: SKILL.md §5 VAPID subject 주의, §11 표 VAPID subject 행, §10 시나리오 B, §4 옵션 표 badge 행·§3 코드 주석
+- 상세: localhost mailto subject가 Apple Push 403 BadJwtToken 원인이므로 실제 연락 가능한 mailto:/https: URI로 교체(정확). Notification Triggers는 미출시이므로 쓰지 않고 서버 크론 사용(정확). badge는 Android 약 96×96 단색(정확, 구 72px 오답 회피).
+
+### 발견된 gap (경미, 선택 보강)
+
+- `require(esm)` 불가 구형 Node 대안(동적 `import()`·3.x 고정)과 require 반환 객체 형태는 SKILL.md에 없음 — 차단 요인 아님.
+- Apple의 localhost subject 거부 조건이 "거부할 수 있다" 수준 표현 — 차단 요인 아님.
+- 서버 크론의 사용자별 시간대 처리 안내 없음 — 선택 보강.
+
+### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 해당 없음 (API 사용법 패턴 스킬 — content test로 충분)
+- 최종 상태: APPROVED 유지
+
+---
 
 ### [2026-09-28] 재테스트(skill-tester) — manifest display `fullscreen` 병기 반영 확인
 
@@ -298,8 +343,9 @@ DISPUTED: 0건 — SKILL.md 본문 클레임 자체는 모두 유효. 단, EU �
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
 | 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-15 최초), ✅ 3/3 PASS (2026-08-11 재검증), ✅ 2/2 PASS (2026-09-28 재테스트 — manifest fullscreen 병기 반영 확인) |
+| 재검증 수정분 content test (2026-11-09) | ✅ 2/2 PASS (web-push 4.x ESM import / VAPID subject·Notification Triggers·badge 96) |
 | WebSearch 재교차검증 (2026-08-11) | ✅ 3/3 VERIFIED, DISPUTED 0 (EU 지역 예외 gap 1건 기록) |
-| **최종 판정** | **APPROVED** (2026-09-28 skill-tester 재테스트 2/2 PASS — manifest display `fullscreen` 병기가 답변에 정확히 반영됨 확인, PENDING_TEST → APPROVED 전환) |
+| **최종 판정** | **APPROVED** (2026-11-09 skill-tester 재시험 2/2 PASS — v5 수정분이 답변에 정확히 반영됨 확인, APPROVED 유지) |
 
 **판정 근거:**
 - 2026-05-15 최초 판단은 실 디바이스 검증 필요를 근거로 "실사용 필수 카테고리"로 분류했으나, 2026-08-11 재검토 결과 본 스킬은 "본문 대부분이 범용 Web Push 가이드"(감사 평가)로, 공식 문서(MDN·Apple·WHATWG)에 규격화된 API 사용법 스킬로 재분류함 — 상세 근거는 섹션 5 "카테고리 재판단" 참조.
@@ -312,6 +358,8 @@ DISPUTED: 0건 — SKILL.md 본문 클레임 자체는 모두 유효. 단, EU �
 
 - [✅] skill-tester가 agent content test 수행하고 섹션 5·6 업데이트 (2026-05-15 완료, 3/3 PASS)
 - [✅] skill-tester 재검증(WebSearch 재교차검증 + content test) 및 카테고리 재판단 수행 (2026-08-11 완료, 3/3 VERIFIED + 3/3 PASS → APPROVED 전환)
+- [✅] 2026-11-09 재검증(v5) 수정분 skill-tester 재시험 수행 (2026-11-09 완료, 2/2 PASS — web-push 4.x ESM import·VAPID subject·Notification Triggers·badge 96 모두 정확히 도출, APPROVED 유지)
+- [❌] 서버 크론 사용자별 시간대 처리·require(esm) 불가 구형 Node 대안(동적 import) 보강 — **선택 보강** (차단 요인 아님, 2026-11-09 재시험에서 발견된 경미한 gap)
 - [❌] 실 디바이스(iOS 16.4+ PWA·Android Chrome) 푸시 수신 검증 후 캡처 첨부 — **선택 보강** (차단 요인 아님, 2026-08-11 재분류로 content test 통과가 APPROVED 조건 충족. 배포 후 QA 성격의 추가 확인 권장)
 - [❌] Notification Triggers API(Chrome 실험 단계)의 안정성 추적 — **선택 보강**: 현재 보조 언급 수준으로도 사용 가능
 - [❌] FCM(Firebase Cloud Messaging) 통합 예시 추가 검토 — **선택 보강**: web-push 라이브러리 사용법은 이미 충분히 커버됨
@@ -332,3 +380,6 @@ DISPUTED: 0건 — SKILL.md 본문 클레임 자체는 모두 유효. 단, EU �
 | 2026-09-28 | v2 | 재검증(2차) — web-push 3.6.7(변동 없음)·iOS 16.4+ 홈 화면 요건·Declarative Web Push §8-1 정합 재확인, 3/3 VERIFIED·DISPUTED 0, 내용 변경 없음 → APPROVED 유지 (fullscreen display 허용은 선택 보강 기록) | Claude (Sonnet 5) |
 | 2026-09-28 | v3 | 선택 보강 반영 — WebKit 공식 블로그 원문 확인 후 §8 표 manifest.json display 허용값을 `"standalone"`/`"fullscreen"` 병기로 수정. status APPROVED → PENDING_TEST (메인 skill-tester 재테스트 필요) | orchestrator (선택 보강 반영 배치) |
 | 2026-09-28 | v4 | 2단계 재테스트 수행 (Q1 manifest fullscreen 요건 충족 확인 / Q2 홈 화면 미설치 상태 requestPermission 동작) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-11-09 | v5 | 재검증 — **web-push 4.0.0(2026-11-06) ESM 전용·default export 없음** 확인 → §5 서버 예제 `import * as webpush from 'web-push'`로 수정·require(esm) Node 조건 주의 추가, VAPID subject localhost 금지(Apple 403 BadJwtToken) 주의·흔한 함정 2행 추가, badge 72→96(MDN), Notification Triggers "미출시"로 정정. renotify TypeError·generate-vapid-keys CLI VERIFIED. 내용 수정 있음 → skill-tester 재시험 대상 | orchestrator (2026-11-09 재검증 배치) |
+| 2026-11-09 | v5 | 2단계 재시험 수행 (Q1 web-push 4.x ESM import·require 가능 조건 / Q2 VAPID subject localhost 403 BadJwtToken·Notification Triggers 미출시·badge 96px) → 2/2 PASS, APPROVED 유지 | skill-tester |
+| 2026-11-12 | v5.1 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 web-push 4.0.0 ESM 전용·named export·require(esm) 조건, VAPID subject localhost 금지·키 분실, userVisibleOnly·openWindow·renotify·410 처리 함정, iOS 16.4+ 조건 표, Declarative Web Push 절, Notification Triggers 미출시, 흔한 함정 표 / 덜어낸 것 전체 흐름도, subscribe·urlBase64 변환·SW push/notificationclick 예제 코드, 알림 옵션 표, 권한 UX·구독 해지 예제 코드, iOS 안내 배너 코드, 브라우저 호환성 표, 꿈 앱 시나리오 A~C, 짝 스킬 표. 원 검증일 2026-11-09 기준 내용 그대로, status·검증일 변경 없음 | 정리 |

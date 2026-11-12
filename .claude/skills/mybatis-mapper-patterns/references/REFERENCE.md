@@ -1,38 +1,6 @@
-## N+1 방지
-
-N+1 문제는 부모 N건 조회 후 각 부모의 자식을 개별 SELECT로 조회하여 총 N+1번 쿼리가 실행되는 상황이다.
-
-| 해결 방법 | 설명 |
-|-----------|------|
-| **Nested Results + JOIN** | 1번의 JOIN 쿼리로 모든 데이터 로드 — 가장 확실한 해결책 |
-| **Nested Select + `fetchType="lazy"`** | 접근 시점 로드. 목록 화면에서 실제 접근이 드물 때 유효 |
-| **Batch Loading** | `mybatis.configuration.default-executor-type=BATCH` + 수동 페치 |
-
-### Nested Results가 항상 더 나은가
-
-- 부모-자식 건수가 적고 화면에서 모두 필요 → Nested Results (JOIN)
-- 자식 데이터가 크고 일부만 접근 → Nested Select + lazy
-- Nested Select + eager는 N+1 그대로 발생하므로 피할 것
-
-> 주의: MyBatis의 lazy 로딩은 프록시 기반이므로 엔티티 클래스가 `final`이 아니어야 하고, Spring의 `OpenSessionInView` 같은 세션 생존 구간이 필요하다.
-
----
-
 ## TypeHandler — 커스텀 타입 변환
 
 Java 타입 ↔ JDBC 타입 변환 로직. enum 커스텀 처리, JSON 컬럼 매핑, 암호화 컬럼 등에 사용.
-
-### 기본 enum 처리 (내장)
-
-MyBatis는 기본으로 `EnumTypeHandler`를 제공한다:
-- `EnumTypeHandler`: enum의 `name()`을 VARCHAR로 저장 (기본값)
-- `EnumOrdinalTypeHandler`: enum의 ordinal을 INTEGER로 저장
-
-```yaml
-mybatis:
-  configuration:
-    default-enum-type-handler: org.apache.ibatis.type.EnumOrdinalTypeHandler
-```
 
 ### 커스텀 enum TypeHandler (코드값 매핑)
 
@@ -72,30 +40,6 @@ public class YnFlagTypeHandler extends BaseTypeHandler<YnFlag> {
         String code = cs.getString(columnIndex);
         return code == null ? null : YnFlag.fromCode(code);
     }
-}
-```
-
-### JSON 컬럼 TypeHandler
-
-```java
-@MappedTypes({Map.class})
-public class JsonMapTypeHandler extends BaseTypeHandler<Map<String, Object>> {
-    private static final ObjectMapper OM = new ObjectMapper();
-
-    @Override
-    public void setNonNullParameter(PreparedStatement ps, int i, Map<String, Object> p, JdbcType t) throws SQLException {
-        try { ps.setString(i, OM.writeValueAsString(p)); }
-        catch (Exception e) { throw new SQLException(e); }
-    }
-
-    @Override
-    public Map<String, Object> getNullableResult(ResultSet rs, String columnName) throws SQLException {
-        String json = rs.getString(columnName);
-        if (json == null) return null;
-        try { return OM.readValue(json, new TypeReference<Map<String, Object>>(){}); }
-        catch (Exception e) { throw new SQLException(e); }
-    }
-    // getNullableResult(int), getNullableResult(CallableStatement) 동일 패턴
 }
 ```
 
@@ -227,111 +171,6 @@ int insert(User user);
 ```
 
 > 주의: OFFSET이 클 경우 성능이 급격히 저하된다. 대용량은 cursor/keyset 페이지네이션 (WHERE id < lastSeenId)을 고려.
-
----
-
-## SQL 인젝션 방지
-
-### `#{}` vs `${}`
-
-| 문법 | 동작 | 안전성 |
-|------|------|:------:|
-| `#{name}` | PreparedStatement 파라미터 바인딩 (`?`) | ✅ 안전 |
-| `${name}` | 문자열 치환 (SQL에 직접 삽입) | ❌ SQL 인젝션 위험 |
-
-**원칙:** 가능한 모든 파라미터는 `#{}`를 사용한다.
-
-### `${}`의 정당한 사용처
-
-- 테이블/컬럼 이름 동적 지정 (PreparedStatement로 표현 불가)
-- ORDER BY 컬럼 지정 (정적 화이트리스트 검증 필수)
-- 동적 힌트 (`/*+ INDEX(...) */`)
-
-### 안전한 `${}` 사용 예 (화이트리스트)
-
-```java
-// 서비스 레이어에서 검증
-private static final Set<String> ALLOWED = Set.of("id", "username", "created_at");
-
-public List<User> list(String sortColumn) {
-    if (!ALLOWED.contains(sortColumn)) {
-        throw new IllegalArgumentException("invalid sort: " + sortColumn);
-    }
-    return userMapper.listSorted(sortColumn);
-}
-```
-
-```xml
-<select id="listSorted" resultMap="UserResultMap">
-    SELECT id, username, email FROM users ORDER BY ${sortColumn}
-</select>
-```
-
-> 사용자 입력을 검증 없이 `${}`로 꽂는 것은 절대 금지.
-
----
-
-## Spring Boot 통합 요약
-
-### 완전한 설정 예 (application.yml)
-
-```yaml
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/app?serverTimezone=Asia/Seoul
-    username: app
-    password: ${DB_PASSWORD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    hikari:
-      maximum-pool-size: 10
-
-mybatis:
-  mapper-locations: classpath:mapper/**/*.xml
-  type-aliases-package: com.example.domain
-  type-handlers-package: com.example.typehandler
-  configuration:
-    map-underscore-to-camel-case: true
-    default-fetch-size: 100
-    default-statement-timeout: 30
-    cache-enabled: true
-    lazy-loading-enabled: true
-    aggressive-lazy-loading: false
-```
-
-### 트랜잭션
-
-```java
-@Service
-@RequiredArgsConstructor
-public class UserService {
-
-    private final UserMapper userMapper;
-
-    @Transactional
-    public Long create(CreateUserReq req) {
-        User user = User.of(req.getUsername(), req.getEmail());
-        userMapper.insert(user);       // AUTO_INCREMENT 또는 selectKey로 id 채워짐
-        return user.getId();
-    }
-
-    @Transactional(readOnly = true)
-    public User findById(Long id) {
-        return userMapper.findById(id);
-    }
-}
-```
-
-Spring의 `@Transactional`이 그대로 적용된다. MyBatis 세션은 Spring이 관리한다.
-
-### SQL 로깅
-
-```yaml
-logging:
-  level:
-    com.example.mapper: DEBUG      # 해당 매퍼의 SQL + 파라미터 출력
-```
-
-매퍼 네임스페이스(FQCN) 레벨을 `DEBUG`로 두면 실행 SQL과 바인딩 값이 찍힌다.
 
 ---
 

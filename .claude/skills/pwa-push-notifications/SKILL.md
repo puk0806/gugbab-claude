@@ -1,6 +1,6 @@
 ---
 name: pwa-push-notifications
-description: Web Push API + Notifications API — PWA 푸시 알림 구현(VAPID·Service Worker push/notificationclick·iOS 16.4+ 홈 화면 설치 PWA 한정·권한 요청 UX·꿈 앱 시나리오)
+description: PWA 웹 푸시 최신 변경점과 함정 — web-push 4.0.0 ESM 전용·default export 없음, VAPID subject localhost 금지(Apple 403 BadJwtToken), iOS 16.4+ 홈 화면 PWA 한정 조건과 무시되는 옵션, Declarative Web Push(iOS 18.4+/Safari 18.5+), Notification Triggers 미출시, openWindow·renotify·userVisibleOnly·410 처리 함정
 ---
 
 # PWA Push Notifications (Web Push API)
@@ -13,280 +13,83 @@ description: Web Push API + Notifications API — PWA 푸시 알림 구현(VAPID
 > - https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerGlobalScope/notificationclick_event
 > - https://developer.mozilla.org/en-US/docs/Web/API/Clients/openWindow
 > - https://web.dev/articles/push-notifications-permissions-ux
-> - https://github.com/web-push-libs/web-push
+> - https://github.com/web-push-libs/web-push (v4.0.0, 2026-11-06 — ESM 전용)
+> - https://www.npmjs.com/package/web-push
 > - https://developer.apple.com/documentation/usernotifications/sending-web-push-notifications-in-web-apps-and-browsers
-> - https://webkit.org/blog/16535/meet-declarative-web-push/ (Declarative Web Push, §8-1)
-> 검증일: 2026-09-28 (최초 2026-05-15, §8-1 Declarative Web Push 보강: 2026-09-17)
-> 짝 스킬: `frontend/vite-pwa-service-worker` (Service Worker 등록·precache는 그쪽 참조)
+> - https://webkit.org/blog/16535/meet-declarative-web-push/ (Declarative Web Push, §3-1)
+> - https://developer.chrome.com/docs/web-platform/notification-triggers (§4)
+> 검증일: 2026-11-09 (최초 2026-05-15, §8-1 Declarative Web Push 보강: 2026-09-17 · 11-09 재검증: web-push 4.0.0 ESM 전용·default export 없음 반영, VAPID subject localhost 금지, badge 크기·Notification Triggers 상태 정정)
 
 ---
 
-## 1. 전체 흐름
+## 이 스킬의 범위
 
-```
-[클라이언트]                              [앱 서버]                [Push 서비스 (FCM/Mozilla 등)]
-     │ ① SW 등록 + Notification.requestPermission()
-     │ ② pushManager.subscribe({userVisibleOnly, applicationServerKey: VAPID 공개키})
-     │ ③ PushSubscription(endpoint, keys.p256dh, keys.auth) ────────────►│ 저장
-     │                                                                    │
-     │                                                  ④ webpush.sendNotification(sub, payload, VAPID 비공개키 서명)
-     │                                                                    └──────────────►│
-     │ ⑤ SW 'push' 이벤트 ◄──── 푸시 전달 ────────────────────────────────────────────────│
-     │ ⑥ self.registration.showNotification(title, options)
-     │ ⑦ 'notificationclick' → clients.matchAll / openWindow
-```
+웹 푸시에서 **최근 바뀐 서버 라이브러리·플랫폼 조건과 실측 함정**만 다룬다.
 
-핵심: **클라이언트는 endpoint 등록만, 실제 전송은 항상 앱 서버가 VAPID 비공개키로 서명해 Push 서비스에 보낸다.**
+> 기본 사용법(구독 → 서버 저장 → VAPID 서명 발송 → SW `push`/`notificationclick` 흐름, `PushManager.subscribe`·`showNotification` 예제, 알림 옵션 표, Double Opt-in 권한 UX 코드, 구독 해지 코드)은 공식 문서 수준이라 싣지 않는다.
 
 ---
 
-## 2. 클라이언트 구독 — `PushManager.subscribe`
+## 1. 서버 — `web-push` 4.0.0
 
-```ts
-// src/lib/push/subscribe.ts
-const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY; // Base64URL 문자열
-
-export async function subscribePush(): Promise<PushSubscription | null> {
-  // 1) Service Worker 등록 보장 (vite-plugin-pwa가 등록한 것을 가져옴)
-  const reg = await navigator.serviceWorker.ready;
-
-  // 2) 이미 구독되어 있으면 그대로 반환
-  const existing = await reg.pushManager.getSubscription();
-  if (existing) return existing;
-
-  // 3) 권한 요청 (반드시 사용자 제스처 컨텍스트에서)
-  const permission = await Notification.requestPermission();
-  if (permission !== 'granted') return null;
-
-  // 4) 구독 생성
-  const sub = await reg.pushManager.subscribe({
-    userVisibleOnly: true, // Chromium·Firefox 모두 필수, false면 즉시 reject
-    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-  });
-
-  // 5) 서버로 endpoint·keys 전송
-  await fetch('/api/push/subscribe', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(sub.toJSON()),
-  });
-
-  return sub;
-}
-
-// VAPID Base64URL → Uint8Array (subscribe()는 BufferSource를 요구)
-function urlBase64ToUint8Array(base64: string): Uint8Array {
-  const padding = '='.repeat((4 - (base64.length % 4)) % 4);
-  const b64 = (base64 + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const raw = atob(b64);
-  const arr = new Uint8Array(raw.length);
-  for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
-  return arr;
-}
-```
-
-> 주의: `userVisibleOnly: true`는 Chrome·Edge에서 **필수**이며 누락 또는 `false`이면 `subscribe()`가 reject된다. Firefox도 같은 정책을 적용한다.
-
----
-
-## 3. Service Worker — `push` / `notificationclick` 이벤트
+> 주의 — **web-push 4.0.0(2026-11-06)은 ESM 전용**(`"type": "module"`)이고 **default export가 없다**(named export만: `setVapidDetails`·`sendNotification`·`generateVAPIDKeys`·`WebPushError` 등). 3.x 예제의 `import webpush from 'web-push'`는 4.x에서 실패하므로 `import * as webpush from 'web-push'` 또는 named import를 쓴다. CommonJS `require('web-push')`는 `require(esm)`을 지원하는 Node(20.19+/22.12+ 등 현행 LTS)에서만 동작한다(메인테이너 ESM 전환 풀 리퀘스트 설명 — https://github.com/web-push-libs/web-push/pull/961). `engines`는 여전히 `node >= 16`이라 설치 단계에서 막히지 않으니 주의.
 
 ```js
-// public/service-worker.js  (또는 injectManifest용 src/sw.ts)
-self.addEventListener('push', (event) => {
-  const payload = event.data?.json() ?? { title: '알림', body: '' };
-
-  event.waitUntil(
-    self.registration.showNotification(payload.title, {
-      body: payload.body,
-      icon: '/icons/icon-192.png',
-      badge: '/icons/badge-72.png', // Android·Chrome 상태바용 단색 아이콘
-      tag: payload.tag,             // 같은 tag면 기존 알림 교체 (iOS는 무시됨)
-      renotify: !!payload.tag && payload.renotify, // tag 비어있으면 에러
-      silent: false,
-      data: { url: payload.url, dreamId: payload.dreamId },
-      actions: payload.actions ?? [],  // iOS Safari에서는 무시됨
-    })
-  );
-});
-
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-  const targetUrl = event.notification.data?.url ?? '/';
-
-  event.waitUntil((async () => {
-    const allClients = await self.clients.matchAll({
-      type: 'window',
-      includeUncontrolled: true,
-    });
-
-    // 이미 열린 창이 있으면 focus
-    for (const client of allClients) {
-      const url = new URL(client.url);
-      if (url.pathname === targetUrl) {
-        return client.focus();
-      }
-    }
-
-    // 없으면 새 창 열기 (notificationclick 안에서만 가능)
-    return self.clients.openWindow(targetUrl);
-  })());
-});
-```
-
-> 주의: `notificationclick` 이벤트 핸들러 **밖**에서 `clients.openWindow()`를 호출하면 `InvalidAccessError`. 반드시 이벤트 콜백 안에서, `event.waitUntil(...)`로 감싸야 한다.
-
----
-
-## 4. 알림 옵션 — Notification·showNotification
-
-| 옵션 | 설명 | 비고 |
-|------|------|------|
-| `title` | 알림 제목 (1번째 인자) | 모든 플랫폼 지원 |
-| `body` | 본문 텍스트 | 모든 플랫폼 지원 |
-| `icon` | 알림 아이콘 URL | **iOS는 무시**(앱 아이콘 강제) |
-| `badge` | 상태바용 단색 아이콘 (~72×72, 4x: ~96×96) | Android Chrome |
-| `tag` | 동일 tag 알림은 교체 | **iOS는 무시**(매번 새 알림) |
-| `renotify` | tag 교체 시 재알림 | `tag` 비어있으면 에러 |
-| `silent` | 소리·진동 없음 | `null`(기본)이면 디바이스 설정 따름 |
-| `data` | 임의 JSON 페이로드 | notificationclick에서 `event.notification.data`로 접근 |
-| `actions` | 액션 버튼 배열 `[{action, title, icon}]` | **iOS Safari에서 무시**, Chrome/Firefox 지원 |
-| `requireInteraction` | 사용자 dismiss 전까지 유지 | Chrome desktop |
-
----
-
-## 5. 서버 측 — `web-push` (Node)
-
-```js
-// server/push.js
-import webpush from 'web-push';
+// web-push 4.x, ESM
+import * as webpush from 'web-push';
 
 webpush.setVapidDetails(
-  'mailto:admin@dreamapp.example',
+  'mailto:admin@example.com', // 실제 연락 가능한 mailto:/https: URI — localhost 금지
   process.env.VAPID_PUBLIC_KEY,
   process.env.VAPID_PRIVATE_KEY
 );
 
-export async function sendDreamReminder(subscription, payload) {
-  try {
-    await webpush.sendNotification(
-      subscription,
-      JSON.stringify(payload),
-      { TTL: 60 * 60 * 24 } // 24h
-    );
-  } catch (err) {
-    // 410 Gone / 404 Not Found → 구독 만료, DB에서 제거
-    if (err.statusCode === 410 || err.statusCode === 404) {
-      await db.subscriptions.deleteByEndpoint(subscription.endpoint);
-    } else {
-      throw err;
-    }
-  }
+try {
+  await webpush.sendNotification(subscription, JSON.stringify(payload), { TTL: 60 * 60 * 24 });
+} catch (err) {
+  // 410 Gone / 404 Not Found → 구독 만료, DB에서 endpoint 삭제
+  if (err.statusCode === 410 || err.statusCode === 404) await deleteByEndpoint(subscription.endpoint);
+  else throw err;
 }
 ```
 
-### VAPID 키 생성 (한 번만)
+> 주의: VAPID `subject`는 실제로 연락 가능한 `mailto:`/`https:` URI여야 한다. web-push README(4.0.0)는 `mailto:user@localhost` 같은 로컬 placeholder를 쓰면 **Apple Push가 `403 BadJwtToken`으로 거부할 수 있다**고 경고한다.
+>
+> 주의: **VAPID 비공개키를 분실하면 기존 구독자 전원 재구독 필요.** 1Password·KMS 등에 별도 보관하고 키 로테이션 정책을 정의한다. 키 생성은 `npx web-push generate-vapid-keys`(비공개키는 Git 커밋 금지).
 
-```bash
-npx web-push generate-vapid-keys
-# {
-#   publicKey:  "BNc...",   ← 클라이언트 VITE_VAPID_PUBLIC_KEY
-#   privateKey: "Hs7..."    ← 서버 환경변수, Git 커밋 금지
-# }
-```
-
-> 주의: **VAPID 비공개키를 분실하면 기존 구독자 전원 재구독 필요.** 1Password·KMS 등에 별도 보관하고 키 로테이션 정책을 정의한다.
+페이로드 암호화는 `web-push`가 자동 처리한다 — 수동 구현 금지.
 
 ---
 
-## 6. 권한 요청 UX — Mute Notifications 회피
+## 2. 클라이언트·SW 함정
 
-**금지 패턴:**
+> 주의: `userVisibleOnly: true`는 Chrome·Edge에서 **필수**이며 누락 또는 `false`이면 `subscribe()`가 reject된다. Firefox도 같은 정책을 적용한다.
 
-```ts
-// 페이지 진입 즉시 권한 요청 — 영구 차단 위험
-useEffect(() => { Notification.requestPermission(); }, []);
-```
+> 주의: `notificationclick` 이벤트 핸들러 **밖**에서 `clients.openWindow()`를 호출하면 `InvalidAccessError`. 반드시 이벤트 콜백 안에서, `event.waitUntil(...)`로 감싸야 한다.
 
-**권장 패턴 (Double Opt-in):**
-
-```tsx
-// 1) 맥락 있는 시점(꿈 기록 3개 이상 작성 후)에 *앱 자체 UI*로 사전 동의 받기
-function ReminderOptIn() {
-  return (
-    <Card>
-      <h3>매일 밤 꿈 기록 리마인더를 받아보시겠어요?</h3>
-      <p>잊지 않고 꿈을 기록하면 반복 패턴을 찾기 쉬워집니다.</p>
-      <Button onClick={handleEnable}>알림 켜기</Button>
-      <Button variant="ghost" onClick={handleSkip}>나중에</Button>
-    </Card>
-  );
-}
-
-// 2) 사용자가 '알림 켜기'를 누른 그 순간에만 브라우저 권한 요청
-async function handleEnable() {
-  const sub = await subscribePush();
-  if (sub) toast.success('알림이 설정되었습니다');
-}
-```
-
-핵심 원칙:
-- **첫 진입 시 즉시 요청 금지** — 차단되면 영구 차단 (Chrome은 3번 dismiss하면 자동 차단).
-- **사용자 제스처 안에서** 요청해야 한다 (iOS는 더 엄격: 반드시 click·tap 핸들러 안).
-- **가치 제안을 먼저** — 무엇을, 언제, 왜 알릴지 설명 후 권한 요청.
+- `applicationServerKey`는 BufferSource를 요구 — Base64URL VAPID 공개키를 Uint8Array로 변환해 넘긴다.
+- `renotify: true`인데 `tag`가 비어 있으면 TypeError.
+- `badge`는 Android·Chrome 상태바용 단색 아이콘(Android 약 96×96, 자동으로 실루엣 마스킹 — MDN).
+- 권한은 첫 진입 즉시 요청 금지 — Chrome은 3번 dismiss하면 자동 차단. 맥락 있는 시점에 앱 자체 UI로 사전 동의 → 사용자 제스처 안에서 `Notification.requestPermission()`. 설정 화면에 끄기 토글이 없으면 사용자는 브라우저 단에서 영구 차단한다.
+- HTTP에서는 SW·Push 둘 다 불가(localhost 또는 HTTPS).
+- `injectManifest` 전략으로 커스텀 SW에 `push`·`notificationclick` 핸들러를 추가하는 것이 일반적인 통합 흐름이다.
 
 ---
 
-## 7. 사용자 컨트롤 — 알림 끄기 의무
-
-```ts
-export async function unsubscribePush(): Promise<void> {
-  const reg = await navigator.serviceWorker.ready;
-  const sub = await reg.pushManager.getSubscription();
-  if (!sub) return;
-
-  await sub.unsubscribe();
-  await fetch('/api/push/unsubscribe', {
-    method: 'POST',
-    body: JSON.stringify({ endpoint: sub.endpoint }),
-  });
-}
-```
-
-설정 화면에 항상 *알림 켜기/끄기* 토글을 둔다. 끄기 UI가 없으면 사용자는 브라우저 단에서 영구 차단해버린다.
-
----
-
-## 8. iOS Safari 16.4+ 특별 조건
+## 3. iOS Safari 16.4+ 특별 조건
 
 | 항목 | 조건 |
 |------|------|
 | **OS 버전** | iOS/iPadOS 16.4 이상 |
-| **설치 형태** | **반드시 "홈 화면에 추가"로 설치한 PWA만** 지원. Safari 브라우저 안에서는 **불가** |
+| **설치 형태** | **반드시 "홈 화면에 추가"로 설치한 PWA만** 지원. Safari 브라우저 안에서는 **불가** (`Notification` 미정의/무반응) |
 | **권한 트리거** | 사용자 탭(click) 이벤트 *동기* 컨텍스트에서만 `Notification.requestPermission` 호출 가능 |
 | **manifest.json** | `display: "standalone"` 또는 `"fullscreen"` 필요(둘 다 홈 화면 웹앱 요건 충족 — WebKit 공식 블로그) |
 | **무시되는 옵션** | `icon`(앱 아이콘 강제), `tag`(매번 새 알림), `actions`(액션 버튼 없음) |
 | **Service Worker** | 일반 SW 동작하지만 백그라운드 실행 제한 있음 |
 
-**개발자 안내 UI 권장:**
+iOS이면서 `matchMedia('(display-mode: standalone)')`가 거짓이면 "공유 → 홈 화면에 추가 후 아이콘으로 다시 열기" 안내를 띄우고, standalone 모드에서만 권한을 시도한다. macOS Safari는 16.1+ 지원(actions 제한).
 
-```tsx
-function IOSInstallGuide() {
-  const isIOS = /iPad|iPhone/.test(navigator.userAgent);
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-
-  if (isIOS && !isStandalone) {
-    return (
-      <Banner>
-        iOS에서 알림을 받으려면: 공유 버튼 → "홈 화면에 추가" 후 홈 화면 아이콘으로 앱을 다시 열어주세요.
-      </Banner>
-    );
-  }
-  return null;
-}
-```
-
-### 8-1. Declarative Web Push (iOS 18.4+ / Safari 18.5+) — 선택
+### 3-1. Declarative Web Push (iOS 18.4+ / Safari 18.5+) — 선택
 
 > 소스: https://webkit.org/blog/16535/meet-declarative-web-push/ · 검증일: 2026-09-17
 
@@ -309,71 +112,17 @@ Service Worker 없이도 알림을 띄우는 WebKit 전용 확장. 푸시 본문
 - 구형 브라우저는 같은 JSON을 일반 payload로 받아 SW `push` 핸들러가 처리하므로, **서버는 이 형식 하나로 신·구 브라우저를 모두 커버**할 수 있다
 - 지원: iOS/iPadOS 18.4+ 홈 화면 웹앱, macOS Safari 18.5+. Chrome·Firefox는 미지원(일반 push 경로로 동작)
 
-> 주의: 기존 SW 기반 흐름(§2·§3)을 대체하는 것이 아니라 보완이다. 크로스 브라우저 앱은 SW 경로를 유지하고 payload만 위 형식으로 통일하는 것이 안전하다.
+> 주의: 기존 SW 기반 흐름을 대체하는 것이 아니라 보완이다. 크로스 브라우저 앱은 SW 경로를 유지하고 payload만 위 형식으로 통일하는 것이 안전하다.
 
 ---
 
-## 9. 브라우저 호환성 요약
+## 4. 예약 알림 — Notification Triggers 쓰지 말 것
 
-| 브라우저 | Push API | 비고 |
-|----------|---------|------|
-| Chrome (Desktop·Android) | ✅ 안정 | 모든 옵션 지원 |
-| Edge | ✅ 안정 | Chromium 기반 |
-| Firefox (Desktop·Android) | ✅ 안정 | 푸시 quota 있음 |
-| Safari (macOS) | ✅ 16.1+ | actions 제한 |
-| **Safari (iOS/iPadOS)** | ✅ **16.4+, 홈 화면 PWA만** | icon/tag/actions 미지원 |
-| Samsung Internet | ✅ | |
+정해진 시각 알림(예: 매일 밤 리마인더)은 서버 측 크론으로 발송한다. 클라이언트 측 `Notification Triggers`(`showTrigger`/`TimestampTrigger`)는 Chrome origin trial만 끝났고 정식 출시되지 않았다(Chrome 문서 상태: Launch "Not started", 플래그로만 시험 가능) — 프로덕션에 쓰지 않는다.
 
 ---
 
-## 10. 꿈 앱 시나리오
-
-### 시나리오 A: 반복 꿈 알림
-
-같은 키워드(예: "물에 빠지는 꿈")가 3회 이상 누적되면 서버가 푸시 발송.
-
-```js
-// server
-await sendDreamReminder(sub, {
-  title: '반복되는 꿈이 발견됐어요',
-  body: '"물에 빠지는 꿈"이 이번 달에 3번 기록됐습니다.',
-  tag: 'recurring-water', // Chrome에서 같은 패턴 중복 알림 방지
-  url: '/insights/recurring/water',
-  actions: [{ action: 'view', title: '자세히 보기' }],
-});
-```
-
-### 시나리오 B: 일일 꿈 기록 리마인더
-
-서버 측 크론(매일 23:00) 또는 클라이언트 측 `Notification Triggers` API(실험적, Chrome 전용)로 발송.
-
-```js
-await sendDreamReminder(sub, {
-  title: '오늘 밤 꿈을 기록해보세요',
-  body: '잠들기 전 1분, 꿈 일기를 미리 열어두면 깨자마자 적기 쉬워요.',
-  tag: 'daily-reminder',
-  renotify: true,
-  url: '/journal/new',
-});
-```
-
-### 시나리오 C: 해몽 결과 알림
-
-비동기 AI 해몽이 완료되면 푸시.
-
-```js
-await sendDreamReminder(sub, {
-  title: '꿈 해석이 완료됐어요',
-  body: '"하늘을 나는 꿈"의 분석 결과를 확인해보세요.',
-  tag: `interpret-${dreamId}`,
-  url: `/dreams/${dreamId}/interpretation`,
-  data: { dreamId },
-});
-```
-
----
-
-## 11. 흔한 함정
+## 5. 흔한 함정
 
 | 함정 | 증상 | 해결 |
 |------|------|------|
@@ -387,15 +136,7 @@ await sendDreamReminder(sub, {
 | 알림 끄기 UI 없음 | 사용자가 브라우저 단에서 영구 차단 | 설정에 토글 + `pushManager.getSubscription().unsubscribe()` |
 | HTTP에서 테스트 | Service Worker·Push 둘 다 불가 | localhost 또는 HTTPS 필수 |
 | 페이로드 암호화 누락 | Push 서비스가 거부 | `web-push` 사용 시 자동 처리, 수동 구현 금지 |
+| web-push 4.x에 `import webpush from 'web-push'` | `does not provide an export named 'default'` | `import * as webpush from 'web-push'` (4.0.0부터 ESM 전용·named export) |
+| VAPID subject에 `mailto:...@localhost` | Apple Push `403 BadJwtToken` | 실제 연락 가능한 mailto:/https: URI |
+| iOS에서 `tag`로 중복 알림 교체 기대 | iOS는 `tag` 무시 — 매번 새 알림 | 빈도 자체를 서버에서 제한 |
 | 과도한 알림 빈도 | 사용자가 OS 단에서 차단 | 일일 1~2건 상한, 사용자 설정 가능 시간대 |
-
----
-
-## 12. 짝 스킬 연계
-
-| 작업 | 참조 |
-|------|------|
-| Service Worker 등록·precache | `frontend/vite-pwa-service-worker` |
-| 푸시 알림 구독·발송·표시 | 이 스킬 |
-
-`injectManifest` 전략으로 커스텀 SW에 위의 `push`·`notificationclick` 핸들러를 추가하는 것이 일반적인 통합 흐름이다.

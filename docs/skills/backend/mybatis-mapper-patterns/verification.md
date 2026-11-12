@@ -2,7 +2,7 @@
 skill: mybatis-mapper-patterns
 category: backend
 version: v1
-date: 2026-09-26
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -16,10 +16,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `mybatis-mapper-patterns` |
 | 스킬 경로 | `.claude/skills/mybatis-mapper-patterns/SKILL.md` |
-| 검증일 | 2026-04-22 (재검증: 2026-09-26) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
-| 기준 버전 | MyBatis 3.5.16 ~ 3.5.19, mybatis-spring-boot-starter 2.3.2 / 3.0.5 |
+| 기준 버전 | MyBatis 3.5.16 ~ 3.5.19 (3.6.0 주의 표기), mybatis-spring-boot-starter 2.3.2 / 3.0.5 / 4.0.1 / 4.1.0 |
 
 ---
 
@@ -58,6 +58,10 @@ status: APPROVED
 | mybatis-spring-boot-autoconfigure Introduction | https://mybatis.org/spring-boot-starter/mybatis-spring-boot-autoconfigure/ | ⭐⭐⭐ High | 2026-04-22 | 자동 설정 속성 (검색 결과로 간접 확인, 직접 fetch는 SSL 오류) |
 | MyBatis 3 Releases | https://github.com/mybatis/mybatis-3/releases | ⭐⭐⭐ High | 2026-04-22 | 3.5.16 (2024-04-02), 3.5.19 공식 릴리스 |
 | Baeldung — MyBatis with Spring | https://www.baeldung.com/spring-mybatis | ⭐⭐ Medium | 2026-04-22 | @Mapper vs @MapperScan 보조 |
+| Maven Central — mybatis 메타데이터·POM | https://repo1.maven.org/maven2/org/mybatis/mybatis/maven-metadata.xml | ⭐⭐⭐ High | 2026-11-09 | 3.6.0 게시(2026-10-23), POM `java.version` 11 |
+| MyBatis 3.6.0 릴리스 노트 | https://github.com/mybatis/mybatis-3/releases/tag/mybatis-3.6.0 | ⭐⭐⭐ High | 2026-11-09 | Java 11 필수, TypeHandler Type 기반 해석, 알려진 이슈(3.6.1에서 수정 예정) |
+| Maven Central — starter POM (3.0.5·4.0.1·4.1.0) | https://repo1.maven.org/maven2/org/mybatis/spring/boot/mybatis-spring-boot/ | ⭐⭐⭐ High | 2026-11-09 | 세 버전 모두 MyBatis 3.5.19 번들, 3.0.5 게시 2025-07-11, 4.1.0 게시 2026-07-16 |
+| spring-boot-starter README 호환표 | https://github.com/mybatis/spring-boot-starter | ⭐⭐⭐ High | 2026-11-09 | master(4.1)/4.0.x/3.0.x/2.3.x 행 재확인 |
 
 ---
 
@@ -83,7 +87,7 @@ status: APPROVED
 - [✅] 범용적으로 사용 가능 (특정 프로젝트 종속 X)
 
 ### 4-4. Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-04-22)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-04-22, 재시험 2026-11-09)
 - [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인
 - [✅] 잘못된 응답 없음 — 보완 불필요
 
@@ -105,11 +109,45 @@ status: APPROVED
 | MySQL: useGeneratedKeys="true" + keyProperty로 AUTO_INCREMENT 반환 | VERIFIED | MyBatis Mapper XML 공식 문서 |
 | Oracle 12c+ OFFSET ROWS FETCH NEXT ROWS ONLY | VERIFIED | Oracle 공식 12c Row Limiting Clause |
 | Nested Select + fetchType="lazy"로 N+1 완화 가능 | VERIFIED | 공식 문서 + N+1 참고 블로그 |
+| (2026-11-09) 현행 스타터 3.0.5·4.0.1·4.1.0 모두 MyBatis 3.5.19 번들, 4.1.x = Spring Boot 4.1 | VERIFIED | Maven Central POM + GitHub README 호환표 |
+| (2026-11-09) starter 3.0.5 릴리스일 2024-07-12 | DISPUTED → 2025-07-11로 정정 | Maven Central POM last-modified 2025-07-11, 번들 Spring Boot 3.5.0(2025-05 출시)과도 정합 |
+| (2026-11-09) MyBatis 3.6.0 출시(2026-10-23), Java 11+ 필수, TypeHandler 해석 변경·알려진 이슈 | VERIFIED | GitHub 릴리스 노트 + Maven Central POM — SKILL.md 주의문 추가 |
+| (2026-11-09) `#{}`/`${}`·동적 SQL 요소 문법은 3.6.0에서도 유지 | VERIFIED | 3.6.0 릴리스 노트에 해당 변경 없음 (`<choose>` 내 미지 요소 예외만 추가) |
 | Jasypt의 구체적 MyBatis 연동 모듈명 | UNVERIFIED | SKILL.md에 "사용 중인 Jasypt 버전 문서를 확인"으로 표기, 구체 클래스명 기재하지 않음 |
 
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester → general-purpose (도메인 에이전트 대신 대체 사용)
+**수행 방법**: 2026-11-09 재검증으로 수정된 내용(3.6.0 주의문, starter 4.0.1·4.1.0, 3.0.5 날짜 정정)을 겨냥해 SKILL.md Read 후 2개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
+
+### 실제 수행 테스트 (2026-11-09 재시험)
+
+**Q1. 운영 중인 Spring Boot 3.5 + Java 17에서 MyBatis 3.6.0으로 올려도 되나?**
+- ✅ PASS
+- 근거: SKILL.md 상단 주의 블록(15행, 13행) + 의존성 설정 32~33행
+- 상세: "지금은 올리지 말고 3.6.1 이후 권장, 스타터 번들 3.5.19 유지" 결론 도출. Java 11+, TypeHandler Type 기반 해석 변경, `<choose>` 미지 요소 예외까지 정확히 인용. anti-pattern(3.6.0 즉시 업그레이드 권장) 회피.
+
+**Q2. Spring Boot 4.1 / 3.5 / 2.7 각각의 starter 버전·번들 MyBatis·Java·릴리스일은?**
+- ✅ PASS
+- 근거: SKILL.md "의존성 설정" 섹션(21~49행) + 13행
+- 상세: 4.1.x(4.1.0, 2026-07-16, 3.5.19, Java 17+) / 3.0.5(2025-07-11, 3.5.19, Java 17+) / 2.3.2(2023-11-25, 2.3.x 마지막, Java 8+) 모두 정확. 정정된 3.0.5 날짜(2025-07-11)를 올바르게 인용.
+
+### 발견된 gap (경미, 차단 아님)
+
+- 4.1.x는 pom.xml 예제 블록이 없고 정보가 주의 블록(13·49행)에 분산됨
+- 2.3.2가 번들하는 MyBatis 정확한 패치 버전 미기재
+- 3.6.1 예상 릴리스 시점·스타터 번들 버전 오버라이드 방법 미기재
+
+### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 해당 없음 (라이브러리 사용법 스킬, content test로 충분)
+- 최종 상태: APPROVED 유지
+
+---
 
 ### 2026-09-26 — 재검증 (60일 초과 정기 재검증)
 
@@ -176,7 +214,7 @@ MySQL `id BIGINT AUTO_INCREMENT PK` INSERT 후 Java 객체에 생성 id 채우�
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-04-22, 2개 테스트 케이스 모두 PASS) |
+| 에이전트 활용 테스트 | ✅ (2026-04-22 2/2 PASS, 재시험 2026-11-09 2/2 PASS) |
 | **최종 판정** | **APPROVED** |
 
 ---
@@ -187,6 +225,8 @@ MySQL `id BIGINT AUTO_INCREMENT PK` INSERT 후 Java 객체에 생성 id 채우�
 - [⏸️] MyBatis Dynamic SQL 라이브러리(별도 프로젝트) 사용 시 차이점 섹션 — 범위 확장 선택 사항
 - [⏸️] `mybatis-config.xml` vs Spring Boot 자동 설정만 쓰는 경우 비교 — 선택 보강, 차단 요인 아님
 - [✅] 에이전트 활용 테스트 — 동적 SQL name+age + MySQL AUTO_INCREMENT PK 2건 PASS (섹션 5, general-purpose 대체, 2026-04-22)
+- [✅] 2026-11-09 재검증 수정분 재시험 — 3.6.0 업그레이드 판단 + starter 버전 선택 2건 PASS (2026-11-09 완료, 2/2 PASS)
+- [⏸️] 4.1.x pom.xml 예제 블록 추가, 2.3.2 번들 MyBatis 패치 버전 명시, 3.6.1 릴리스 후 주의문 갱신 — 선택 보강, 차단 요인 아님
 
 ---
 
@@ -196,3 +236,6 @@ MySQL `id BIGINT AUTO_INCREMENT PK` INSERT 후 Java 객체에 생성 id 채우�
 |------|------|-----------|--------|
 | 2026-04-22 | v1 | 최초 작성 — MyBatis 3.5.x + Spring Boot 2.5/3.x 통합 패턴, 동적 SQL, resultMap, TypeHandler, Oracle/MySQL 특화, 페이징, N+1 방지, SQL 인젝션 방지 포함 | skill-creator |
 | 2026-09-26 | v1 | 재검증 — mybatis-spring-boot-starter Spring Boot 4.0/4.1 대응 브랜치 반영, 핵심 패턴 변경 없음 확인 | 메인 세션 |
+| 2026-11-09 | v1 | 재검증 — MyBatis 3.6.0(2026-10-23, Java 11+, 알려진 TypeHandler 이슈) 주의문 추가, starter 4.0.1·4.1.0 릴리스·모두 3.5.19 번들 반영, starter 3.0.5 날짜 2024-07-12 → 2025-07-11 정정. Mapper·동적 SQL 패턴 변경 없음 | 메인 세션 |
+| 2026-11-09 | v1 | 재검증 수정분 2단계 재시험 (Q1 3.6.0 업그레이드 가능 여부 / Q2 Boot 4.1·3.5·2.7별 starter 버전) → 2/2 PASS, APPROVED 유지 | skill-tester |
+| 2026-11-11 | v1 | 2026-11-11 정리 — 모델이 아는 일반 지식 절 제거(인터페이스+XML 기본 구조, `@Mapper` vs `@MapperScan`, 어노테이션 방식·`@Param` 해설, `<if>`/`<where>`/`<choose>`/`<set>`/`<trim>` 예제, N+1 해설, 내장 enum·JSON TypeHandler, `#{}` vs `${}` 해설, Spring Boot 통합 요약·트랜잭션·SQL 로깅). 남긴 절: 3.6.0·스타터 4.x 주의문, 의존성 설정·application.yml, XML 비교 연산자 주의, `<foreach>`, resultMap(association·collection), YnFlag TypeHandler·등록·Jasypt, Oracle 특화, MySQL 특화, 자주 하는 실수. 사실 재검증 아님 | Claude (Opus 5.5) |

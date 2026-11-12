@@ -2,7 +2,7 @@
 skill: nexacro-to-react-mapping
 category: nexacro
 version: v1
-date: 2026-10-08
+date: 2026-11-09
 status: PENDING_TEST
 ---
 
@@ -14,7 +14,7 @@ status: PENDING_TEST
 |------|------|
 | 스킬 이름 | `nexacro-to-react-mapping` |
 | 스킬 경로 | `.claude/skills/nexacro-to-react-mapping/SKILL.md` |
-| 검증일 | 2026-10-08 |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-10-08) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 
@@ -66,6 +66,9 @@ status: PENDING_TEST
 | SheetJS 설치 문서 | https://docs.sheetjs.com/docs/getting-started/installation/frameworks | ⭐⭐⭐ High | 2026-10-08 | 공식 |
 | velog 넥사크로 교육 정리 | https://velog.io/@itkang0219/교육-06 | ⭐ Low | 2024-07-03 | `:U`/`:A` 의미 — 공식 원문 미확보로 보조 근거만 |
 | netsgo0319/nexacro-test | https://github.com/netsgo0319/nexacro-test | ⭐ Low | 2026-10-08 확인 | Stars 0 개인 PoC — 참고만 |
+| (재검증) Apache POI changes / download + Maven Central poi-ooxml | https://poi.apache.org/changes.html · https://poi.apache.org/download.html · https://repo1.maven.org/maven2/org/apache/poi/poi-ooxml/maven-metadata.xml | ⭐⭐⭐ High | 2026-11-09 확인 | 6.0.0(2026-10-22) 출시·JDK 17 필수·깨지는 변경, 5.x 마지막 5.5.1 |
+| (재검증) AG Grid 아카이브 + npm ag-grid-community | https://www.ag-grid.com/archive/ · https://www.npmjs.com/package/ag-grid-community | ⭐⭐⭐ High | 2026-11-09 확인 | 최신 36.3.0(2026-11-04) |
+| (재검증) SheetJS 설치 문서 + npm xlsx | https://docs.sheetjs.com/docs/getting-started/installation/frameworks · https://www.npmjs.com/package/xlsx | ⭐⭐⭐ High | 2026-11-09 확인 | CDN 0.20.3 정본, npm 0.18.5 그대로 |
 
 ---
 
@@ -91,8 +94,8 @@ status: PENDING_TEST
 - [✅] 범용적으로 사용 가능 (특정 프로젝트 종속 X — 특정 회사 코드 없음)
 
 ### 4-4. Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-10-08, 3문항)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (3/3 PASS)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-10-08, 3문항 / 2026-11-09 재시험 3문항)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (3/3 PASS, 2026-11-09 재시험도 3/3 PASS)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (FAIL 없음, 보완 불필요)
 
 ### 4-5. 클레임 교차 검증 결과
@@ -131,11 +134,49 @@ status: PENDING_TEST
 | 30 | "SXSSF dispose() 필수" | **DISPUTED** | POI changes 5.3.0(2024-07-02): close()가 임시 파일 삭제 → 5.3.0 미만에만 dispose 필수로 수정, `> 주의:` 표기 |
 | 31 | Next.js 버전 표기 | UNVERIFIED | parallel-routes 페이지 메타는 16.4.0이나 안정판 여부 미확인(`nextjs` 스킬은 16.3.6 기준) → 스킬은 "16.x"로만 표기 |
 
-판정 합계: **VERIFIED 24 / DISPUTED 1 / UNVERIFIED 6** (총 31)
+| R1 | (2026-11-09 재검증) "POI 최신 안정판 5.5.1" | **DISPUTED** | POI changes·download 페이지 + Maven Central: 6.0.0(2026-10-22) 출시, JDK 17 필수 → SKILL.md §6-1에 6.0.0·JDK 17·깨지는 변경 `> 주의` 추가, 레거시(JDK 8/11)는 5.5.1 유지로 수정 |
+| R2 | (재검증) SXSSF 5.3.0+ close()가 임시 파일 삭제 | VERIFIED | POI changes(5.3.0) 재확인 |
+| R3 | (재검증) SheetJS CDN 0.20.3 정본, npm xlsx 0.18.5 정체 | VERIFIED | SheetJS 문서 + npm view xlsx |
+| R4 | (재검증) AG Grid 최신 버전 | VERIFIED | 아카이브 + npm: 36.3.0(2026-11-04). 36.3 에서 이 스킬이 쓰는 기능 변경 여부는 UNVERIFIED → 버전 줄에 미검증 표기 |
+
+판정 합계: **VERIFIED 24 / DISPUTED 1 / UNVERIFIED 6** (총 31) + 2026-11-09 재검증 R1~R4 (VERIFIED 3 / DISPUTED 1)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester → general-purpose (도메인 전용 에이전트 대신 general-purpose 사용)
+**수행 방법**: 2026-11-09 재검증(POI 6.0.0·JDK 17 주의 추가) 후 재시험. SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
+
+### 실제 수행 테스트 (2026-11-09 재시험)
+
+**Q1. JDK 11 레거시 서버에서 POI 버전 선택(5.5.1 vs 6.0.0) + SXSSF dispose/close(5.2.x vs 5.5.x) + 행마다 병합**
+- ✅ PASS
+- 근거: SKILL.md 버전 기준 줄, §6-1(주의 2건·코드 주석), §6 표, §9
+- 상세: JDK 8/11은 5.5.1(5.x 마지막), 6.0.0은 JDK 17+ 필요·깨지는 변경(deprecated 제거, getCachedResultType enum, DataFormatter 캐시값) 정확히 제시. 5.3.0 이상은 try-with-resources close()로 충분, 5.3.0 미만은 finally에서 dispose() 필수로 구분. 병합 영역은 SXSSF에서도 메모리 상주하므로 행마다 걸지 않음. anti-pattern(JDK 11에 6.0.0 권장, dispose 항상 필수) 회피.
+
+**Q2. `:U` 저장 편집 그리드를 AG Grid Community로 이식 (행 상태 추적·저장·서버 책임·합계 행·`:U/:A` 확실성)**
+- ✅ PASS
+- 근거: SKILL.md §2-4, §3-2, §5-1, §5-2, §8, §9
+- 상세: `_rowType` 플래그 대신 `diffRows`, `readOnlyEdit` + 로컬 사본, `useMutation` + `await invalidateQueries`, "변경 없음" 호출 생략, 서버 재검증(IDOR·조작 키·파생 값 재계산), `pinnedBottomRowData` 합계, `:U/:A`는 커뮤니티 자료 기준·`:N` 미검증을 정확히 구분. Batch Editing은 Enterprise 경로로 분리.
+
+**Q3. 값 반환 모달 vs URL 공유 팝업·조건부 슬롯 권한·useFieldArray PK id·AG Grid 버전/Community 범위**
+- ✅ PASS
+- 근거: SKILL.md §4, §4-1, §4-2, §2-2, §9, §5, §5-1
+- 상세: 값 반환형은 클라이언트 모달 `onSelect`, 상세 팝업은 Parallel+Intercepting Routes, 조건부 슬롯도 서버 실행이므로 page/DAL 인가. `key={field.id}` + PK는 `rowKey`. AG Grid 문서 36.2.0 기준(최신 36.3.0 변경 미검증), Batch Editing·Tree Data·xlsx 내보내기는 Enterprise 전용으로 정확히 답변.
+
+### 발견된 gap (2026-11-09)
+
+- 모두 차단 요인 아닌 선택 보강: (1) 5.3.0 미만 레거시용 finally dispose() 코드 예시 없음(문장 설명만), (2) 행 추가·삭제 UI의 rows 사본 반영 코드 및 `isSameItem` 예시 없음, (3) 합계 행이 diffRows 대상에서 빠진다는 명시 없음, (4) 서버 측 트랜잭션 원자성·복합키 대응 설명 없음
+
+### 판정 (2026-11-09)
+
+- agent content test: PASS (3/3 PASS)
+- verification-policy 분류: 마이그레이션 가이드 (실사용 필수 스킬)
+- 최종 상태: PENDING_TEST (유지)
+
+### 이전 수행 기록 (2026-10-08)
 
 **수행일**: 2026-10-08
 **수행자**: skill-tester → general-purpose (도메인 전용 에이전트 대신 general-purpose 사용)
@@ -193,7 +234,7 @@ useQuery 조회 + readOnlyEdit 로컬 사본 + diffRows 변경분 DTO + useMutat
 | 내용 정확성 | ✅ (DISPUTED 1건 수정, UNVERIFIED 6건 주의 표기·제외) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-10-08, 3/3 PASS) |
+| 에이전트 활용 테스트 | ✅ (2026-10-08 3/3 PASS, 2026-11-09 재시험 3/3 PASS — POI 6.0.0/JDK 17·SXSSF close/dispose 포함) |
 | **최종 판정** | **PENDING_TEST** (content test 통과, 마이그레이션 가이드 카테고리라 실제 화면 재작성 사용 후 APPROVED) |
 
 ---
@@ -204,7 +245,8 @@ useQuery 조회 + readOnlyEdit 로컬 사본 + diffRows 변경분 DTO + useMutat
 - [❌] `showModal` 반환값 규약 공식 원문 확보
 - [❌] AG Grid `grandTotalRow`의 평면 데이터 + Client-Side Row Model 동작을 실제 버전으로 확인
 - [❌] 대상 프로젝트의 AG Grid 버전(v33 vs v34+)·Enterprise 라이선스 결정 후 §5 경로 확정
-- [✅] skill-tester로 2단계 content test 수행 (2026-10-08 완료, 3/3 PASS)
+- [✅] skill-tester로 2단계 content test 수행 (2026-10-08 완료, 3/3 PASS; 2026-11-09 재검증 후 재시험 완료, 3/3 PASS)
+- [❌] §6-1에 POI 5.3.0 미만용 finally dispose() 코드 예시 추가 (선택 보강, 차단 요인 아님)
 - [❌] 실제 넥사크로 화면 1개 이상을 이 대응표로 재작성해 동작 확인 (차단 요인: 마이그레이션 가이드 카테고리의 APPROVED 전환 조건)
 - [❌] §5-2 코드의 `tempKey` 타입 정의, 엑셀 경로 전환 임계값 보강 (선택 보강, 차단 요인 아님)
 
@@ -217,3 +259,5 @@ useQuery 조회 + readOnlyEdit 로컬 사본 + diffRows 변경분 DTO + useMutat
 | 2026-10-08 | v1 | 최초 작성 (대응표 7개 영역, 클레임 31개 교차 검증) | skill-creator |
 | 2026-10-08 | v1 | 2단계 실사용 테스트 수행 (Q1 :U 그리드 저장 이식 / Q2 조건부 슬롯·useFieldArray·값 반환 모달 함정 / Q3 Grid 6기능 Community·Enterprise 경로·POI·자동 변환률) → 3/3 PASS, PENDING_TEST 유지(마이그레이션 가이드 카테고리) | skill-tester |
 | 2026-10-08 | v1.1 | 설치 검수 반영 — nexacro 템플릿에 설치되지 않는 `zod-schema-validation` 참조 3곳(§1 표·§4 입력 Dataset·§7 업로드)을 `form-handling` 병기 + "(설치된 경우)" 조건으로 정정, 업로드 재검증은 Java 서버 Bean Validation / Node 서버 Zod로 구분. 내용 클레임 변경 없음 | Claude |
+| 2026-11-09 | v1.2 | 재검증 — POI 6.0.0(2026-10-22, JDK 17 필수·깨지는 변경) 출시 반영(§6-1 주의 추가, 버전 기준 줄 5.5.1(JDK 8/11)/6.0.0(JDK 17+)), AG Grid 최신 36.3.0 표기(기능 변경 미검증), SheetJS 0.20.3·SXSSF 5.3.0 동작 재확인. 내용 변경 있음 → skill-tester 재시험, PENDING_TEST 유지 | Claude |
+| 2026-11-09 | v1.2 | 재검증 후 2단계 재시험 수행 (Q1 JDK 11 서버 POI 5.5.1 vs 6.0.0·SXSSF dispose/close / Q2 :U 그리드 Community 저장 이식 / Q3 모달·조건부 슬롯·useFieldArray·AG Grid 버전) → 3/3 PASS, PENDING_TEST 유지(마이그레이션 가이드 카테고리) | skill-tester |

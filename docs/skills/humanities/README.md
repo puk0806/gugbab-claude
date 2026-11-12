@@ -1,6 +1,6 @@
 # humanities 스킬
 
-꿈 심리학·위기 대응·운세 전통 관련 도메인 지식 스킬 모음 (총 9종).
+꿈 심리학·위기 대응·운세 전통 관련 도메인 지식 스킬 모음 (총 7종).
 
 ---
 
@@ -22,5 +22,3 @@
 | 스킬 | 설명 | 검증 |
 |------|------|------|
 | [korean-saju-tradition](../../../.claude/skills/korean-saju-tradition/SKILL.md) | 한국 사주명리 전통 — 『연해자평』·『자평진전』·『적천수』 3대 원전 계보, 간지·오행·십성·대운 개념, 조선 명과학 수용사, 경험과학적 미검증 명시·YMYL 금지 톤 | [→](./korean-saju-tradition/verification.md) |
-| [tarot-history-symbolism](../../../.claude/skills/tarot-history-symbolism/SKILL.md) | 타로 역사·덱 계보(15c 이탈리아→마르세유→RWS→현대)·78장 구조·RWS 상징, 융 원형론 연결(과장 금지), 예언 vs 자기성찰 논쟁, 카드 이미지 저작권 | [→](./tarot-history-symbolism/verification.md) |
-| [palmistry-limitations](../../../.claude/skills/palmistry-limitations/SKILL.md) | 손금 문화사·선/구 명칭 어휘 + 손금-수명/성격 상관 경험 연구 실패 이력, 피부문리학과의 구분 — 엔터테인먼트 프레이밍·건강 해석 금지 가드레일 | [→](./palmistry-limitations/verification.md) |

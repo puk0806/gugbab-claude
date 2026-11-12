@@ -23,9 +23,11 @@ description: >
 > - https://docs.datadoghq.com/real_user_monitoring/application_monitoring/browser/monitoring_page_performance/
 > - https://docs.datadoghq.com/real_user_monitoring/explorer/search_syntax/
 >
-> 검증일: 2026-09-28 (최초 2026-05-14, 2026-09-28 재검증 — 아래 `> 주의` 참조)
+> 검증일: 2026-11-09 (최초 2026-05-14, 재검증 2026-09-28·2026-11-09 — 아래 `> 주의` 참조)
 > 기준 버전(2026-05-14 당시): `web-vitals` v5 · `@sentry/browser` 8.x · `@datadog/browser-rum` v7.1.0
-> 기준 버전(2026-09-28 재검증 — npm registry 최신): `web-vitals` **v6.2.2** · `@sentry/browser` **v11.0.0** · `@datadog/browser-rum` **v7.14.0**
+> 기준 버전(2026-11-09 재검증 — npm registry 최신): `web-vitals` **v6.2.3** · `@sentry/browser` **v11.11.0** · `@datadog/browser-rum` **v7.17.0**
+>
+> 주의 (2026-11-09 재검증): 세 패키지 모두 9-28 이후 마이너·패치만 올랐다. 공식 CHANGELOG 기준 `web-vitals` 6.2.3은 LCP attribution 음수 `resourceLoadDuration`·INP 메모리 누수 수정, `@sentry/browser` 11.1~11.11은 web vitals·INP·bfcache 관련 breaking change 없음, `@datadog/browser-rum` 7.15~7.17은 **실험(⚗️) 기능**으로 Soft Navigation API 기반 `route_change` view의 FCP·CLS·INP·LCP 수집을 추가했다(기본 동작 아님). 본문 코드·옵션은 그대로 유효하다.
 
 > 주의 (2026-09-28 재검증, 확인 완료): `web-vitals`는 v5→v6으로 메이저가 올랐다. v6.0.0의 핵심은 Soft Navigation 지원 추가이며, 본 스킬이 쓰는 기본 API(`onCLS`/`onINP`/`onLCP`, `web-vitals/attribution`)는 공식 CHANGELOG 기준 breaking change 대상이 아니라 **코드 예시는 그대로 유효**하다(단, `verbatimModuleSyntax` tsconfig 사용 시 모듈 임포트 방식에 영향 가능 — 이 스킬 예시 범위 밖).
 >
@@ -147,7 +149,7 @@ Sentry.init({
 
 자동 수집되는 Web Vitals: **LCP, CLS, FCP, TTFB, INP**. `browserTracingIntegration`이 페이지 로드·네비게이션·HTTP·long task를 자동 계측한다.
 
-> 주의(2026-09-28 재검증, 확인 완료): 위는 `@sentry/browser` 8.x~10.x 기준. 현재 최신은 v11.0.0이며 공식 마이그레이션 가이드(https://docs.sentry.io/platforms/javascript/migration/v10-to-v11/) 기준 `enableInp`는 **v11부터 deprecated**다. 대체 방법은 `browserTracingIntegration({ webVitals: { ignore: ['inp'] } })`로 **INP만 비활성화**하는 방식이며, 옵션을 아예 생략하면 기본으로 INP가 포함된다. 상호작용(INP) span 자체는 v11에서 별도의 `interactionsIntegration`으로 분리됐다("Report web vitals for bfcache restores by default"와 함께 v11 breaking change). v8.x 신규 프로젝트라면 위 코드 그대로 유효하고, v11로 마이그레이션할 계획이면 `enableInp` 줄을 제거하고 필요시 `webVitals: { ignore: [...] }`로 대체할 것.
+> 주의(2026-09-28 재검증, 확인 완료 · 2026-11-09 v11.11.0까지 동일 확인): 위는 `@sentry/browser` 8.x~10.x 기준. v11.0.0부터 공식 마이그레이션 가이드(https://docs.sentry.io/platforms/javascript/migration/v10-to-v11/) 기준 `enableInp`는 **v11부터 deprecated**다. 대체 방법은 `browserTracingIntegration({ webVitals: { ignore: ['inp'] } })`로 **INP만 비활성화**하는 방식이며, 옵션을 아예 생략하면 기본으로 INP가 포함된다. 상호작용(INP) span 자체는 v11에서 별도의 `interactionsIntegration`으로 분리됐다("Report web vitals for bfcache restores by default"와 함께 v11 breaking change). v8.x 신규 프로젝트라면 위 코드 그대로 유효하고, v11로 마이그레이션할 계획이면 `enableInp` 줄을 제거하고 필요시 `webVitals: { ignore: [...] }`로 대체할 것.
 
 ### 4-2. release 값 일관성 (배포 비교의 핵심)
 
@@ -179,6 +181,8 @@ Y축: `p75(measurements.lcp)`, `p75(measurements.inp)`, `p75(measurements.cls)`
 X축: `release` 또는 `timestamp`
 
 > 주의: Discover에서 사용 가능한 measurements 키는 SDK 버전에 따라 다르다. 8.x 기준 `measurements.lcp`, `measurements.cls`, `measurements.inp`, `measurements.fcp`, `measurements.ttfb` 가 표준이다.
+>
+> 주의 (2026-11-09 재검증 — v11 마이그레이션 가이드 확인): **v11부터 INP는 항상 Web Vital span으로 보내지고 값은 measurement가 아니라 span 속성 `browser.web_vital.inp.value`에 담긴다.** `p75(measurements.inp)`를 읽는 커스텀 대시보드·알람은 v11 적용 후 고쳐야 한다(내장 Web Vitals 대시보드는 그대로). LCP·CLS는 pageload span의 measurement(stream 모드에선 별도 span)로 남는다. 또 v11은 Soft Navigations API 지원 브라우저의 stream 모드에서 soft-navigation vitals를 기본 수집한다(`webVitals: { softNavigations: false }`로 끔) — 릴리스 비교 기준선이 바뀔 수 있다.
 
 ---
 
@@ -205,7 +209,7 @@ datadogRum.init({
 });
 ```
 
-> 주의 (버전 의존): INP 메트릭은 `@datadog/browser-rum` **v5.1.0** 이상에서 지원. LCP subparts는 v6.32.0+, INP subparts는 v6.33.0+. v2.2.0+ 부터 Core Web Vitals 자체는 수집된다. (2026-09-28 재검증: npm 최신은 v7.14.0 — v7.1.0에서 마이너만 올라 API·옵션 변동 없음, `datadogRum.init` 시그니처 동일)
+> 주의 (버전 의존): INP 메트릭은 `@datadog/browser-rum` **v5.1.0** 이상에서 지원. LCP subparts는 v6.32.0+, INP subparts는 v6.33.0+. v2.2.0+ 부터 Core Web Vitals 자체는 수집된다. (2026-11-09 재검증: npm 최신은 v7.17.0 — v7.1.0에서 마이너만 올라 API·옵션 변동 없음, `datadogRum.init` 시그니처 동일)
 
 ### 5-2. view 이벤트 필드 (RUM Explorer 쿼리 키)
 

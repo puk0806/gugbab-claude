@@ -2,7 +2,7 @@
 skill: ehcache-2-legacy
 category: backend
 version: v1
-date: 2026-09-26
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -18,7 +18,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `ehcache-2-legacy` |
 | 스킬 경로 | `.claude/skills/ehcache-2-legacy/SKILL.md` |
-| 검증일 | 2026-09-26 (최초 2026-04-23) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-26 · 최초 2026-04-23) |
 | 검증자 | skill-creator (Claude) → 2026-09-26 재검증: 메인 오케스트레이션 (Claude Sonnet 5) |
 | 스킬 버전 | v1 |
 | 기준 버전 | EhCache 2.10.9.2 (net.sf.ehcache), Spring Boot 2.5, Java 11 |
@@ -81,6 +81,10 @@ status: APPROVED
 | EhCache Wikipedia | https://en.wikipedia.org/wiki/Ehcache | ⭐⭐ Medium | 2026-04-23 | 유지보수 상태 보조 확인 |
 | mvnrepository.com 2.10.9.2 | https://mvnrepository.com/artifact/net.sf.ehcache/ehcache/2.10.9.2 | ⭐⭐ Medium | 2026-04-23 | 릴리스 날짜 교차 검증 |
 | Baeldung: Spring Boot EhCache | https://www.baeldung.com/spring-boot-ehcache | ⭐⭐ Medium | 2026-04-23 | 통합 예제 교차 검증 |
+| Spring Boot 2.5 Reference — Supported Cache Providers | https://docs.spring.io/spring-boot/docs/2.5.x/reference/html/features.html#features.caching.provider | ⭐⭐⭐ High | 2026-11-09 | 감지 순서 원문 확인 |
+| Spring Framework 6.0 Release Notes / Upgrading to 6.x wiki | https://github.com/spring-projects/spring-framework/wiki/Spring-Framework-6.0-Release-Notes | ⭐⭐⭐ High | 2026-11-09 | `org.springframework.cache.ehcache` 삭제, EhCache 3(jakarta) 대체 |
+| Maven Central org.ehcache:ehcache metadata | https://repo1.maven.org/maven2/org/ehcache/ehcache/maven-metadata.xml | ⭐⭐⭐ High | 2026-11-09 | 최신 3.12.0 |
+| GitHub ehcache3 releases | https://github.com/ehcache/ehcache3/releases | ⭐⭐⭐ High | 2026-11-09 | 3.11.1(2025-08, IBM 소유 첫 릴리스, Java 8 마지막 라인) |
 | Spring Framework KeyGenerator Doc | https://docs.spring.io/spring-framework/docs/4.3.15.RELEASE/spring-framework-reference/html/cache.html | ⭐⭐⭐ High | 2026-04-23 | SimpleKey 규칙 확인 |
 
 ---
@@ -104,7 +108,9 @@ status: APPROVED
 | 11 | `Element.getObjectValue()`로 값 추출 | Tabnine 코드샘플 | 공식 code-samples 페이지 | VERIFIED |
 | 12 | EhCache 2.x는 `net.sf.ehcache`, 3.x는 `org.ehcache` 패키지 | Migration Guide | ehcache-jcache README | VERIFIED |
 | 13 | FOSS EhCache 2.x 유지보수 중단 (2023-09 이후) | google groups 사용자 공지 | Terracotta 공식 FAQ | VERIFIED |
-| 14 | Spring Boot 캐시 자동 감지 순서 (JSR-107 → EhCache 2 → Caffeine 등) | Medium 설명 | Spring Boot 2.1 Ref | UNVERIFIED (순서 정확성 1차 소스에서 명시적 확인 못함 — SKILL.md에 "권장 확인 사항"으로 남김) |
+| 14 | Spring Boot 캐시 자동 감지 순서 (JSR-107 → EhCache 2 → Caffeine 등) | Medium 설명 | Spring Boot 2.1 Ref | UNVERIFIED (순서 정확성 1차 소스에서 명시적 확인 못함 — SKILL.md에 "권장 확인 사항"으로 남김) → **2026-11-09 DISPUTED → 수정**: Boot 2.5 원문은 Generic → JCache → EhCache 2.x → Hazelcast → Infinispan → Couchbase → Redis → Caffeine → Simple (기존 서술은 Generic·Hazelcast 등 누락) |
+| 15 | (2026-11-09) Spring Framework 6 에서 `org.springframework.cache.ehcache` 패키지 삭제 | Spring 6.0 Release Notes | Upgrading to 6.x wiki | VERIFIED → 추가 |
+| 16 | (2026-11-09) 3.x 이전 대상 3.12.x (Maven Central 최신 3.12.0, 기존 3.10.x 표기) | Maven Central metadata | GitHub releases(3.11.1) | DISPUTED(구버전) → 수정. 3.12.0 Java 기준은 UNVERIFIED 표기 |
 
 ### 4-2. 내용 정확성
 - [✅] 공식 문서와 불일치하는 내용 없음
@@ -126,13 +132,51 @@ status: APPROVED
 - [✅] 범용적 사용 가능 (특정 프로젝트 종속 없음)
 
 ### 4-5. Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-09-28)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-09-28)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-09-28, 재시험 2026-11-09)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (2026-09-28, 재시험 2026-11-09)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (발견 없음)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### 재시험 (2026-11-09, 재검증 수정분 대상)
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester → general-purpose (java-backend-developer 미사용, general-purpose 대체)
+**수행 방법**: SKILL.md(+REFERENCE.md 8절) Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인. 2026-11-09 재검증에서 바뀐 내용(감지 순서·Spring 6 패키지 삭제·3.x 이전 대상)을 겨냥.
+
+**Q1. "Boot 2.5에서 spring.cache.type 없이 JCache(EhCache 3) JAR가 추가되면 감지 순서·원인·대응은?"**
+- ✅ PASS
+- 근거: SKILL.md 1절 application.yml 아래 첫 `> 주의:` 블록
+- 상세: Generic → JCache → EhCache 2.x → Hazelcast → Infinispan → Couchbase → Redis → Caffeine → Simple 순서를 원문 그대로 도출. JCache 가 2.x 보다 앞서 ehcache.xml 이 무시될 수 있다는 원인과 `spring.cache.type: ehcache` 강제, `@Bean` 직접 정의 시 자동 감지 비개입까지 정확. 옛 순서(Generic·Hazelcast 누락) anti-pattern 회피.
+
+**Q2. "Boot 3 로 올릴 때 EhCacheCacheManager·2.10.9.2 를 그대로 쓸 수 있나? 대체와 분류자는?"**
+- ✅ PASS
+- 근거: SKILL.md 1절 두 번째 `> 주의:` 블록 + 4-2절
+- 상세: Spring 6 에서 `org.springframework.cache.ehcache` 삭제로 불가, 대체는 EhCache 3(JCache) 또는 Caffeine, 아티팩트는 `org.ehcache:ehcache:3.12.x:jakarta` 로 정확히 답변. 그룹 ID 변경(net.sf.ehcache → org.ehcache)도 인용.
+
+**Q3. "Java 11 + Boot 2.5 에서 3.x 이전 시 목표 라인, 3.12.0 의 Java 11 사용 가능 여부, 유지보수 주체는?"**
+- ✅ PASS
+- 근거: references/REFERENCE.md 8절(52·56행) + SKILL.md 1절 주의 블록
+- 상세: 목표를 3.12.x 표기와 함께 "Java 11 은 당장 3.11.1(Java 8 마지막 라인)" 으로 정확히 구분, 3.12.0 의 Java 기준은 문서가 "미검증"이라 명시한 대로 단정하지 않고 보수적으로 3.11.1 권고. 유지보수 주체 IBM(3.11.1 부터) 인용. 옛 표기 3.10.x 사용 안 함.
+
+### 발견된 gap (선택 보강, 차단 요인 아님)
+
+- 마이그레이션 목표 버전·유지보수 주체(IBM)가 REFERENCE.md 8절에만 있고 SKILL.md 본문에는 없음
+- Boot 3 이전 시 Java 17 최소 요구와 `spring.cache.type: jcache` 설정 안내 없음
+- REFERENCE.md 56행이 "3.12.x 교체"와 "당장은 3.11.1"을 한 줄에 병기해 다소 혼동 소지
+- SKILL.md Boot 3 박스가 `3.12.x:jakarta` 를 권하면서 3.12 계열 Java 기준 미검증 사실은 함께 적지 않음
+
+### 판정
+
+- agent content test: 3/3 PASS
+- verification-policy 분류: 라이브러리 사용법 스킬 → 실사용 필수 카테고리 해당 없음 (content test PASS로 APPROVED 유지)
+- 최종 상태: APPROVED
+
+---
+
+### 이전 테스트 기록 (2026-09-28)
 
 **수행일**: 2026-09-28
 **수행자**: skill-tester → general-purpose
@@ -246,15 +290,17 @@ products 캐시에 힙 10000 / 디스크 100000 오버플로우를 설정하고,
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-04-23, 2문항 PASS) + ✅ (2026-09-26 재검증 셀프, 2문항 PASS) + ✅ (2026-09-28 skill-tester → general-purpose, 2/2 PASS — CVE 정정분 겨냥) |
-| **최종 판정** | **APPROVED** (2026-09-28 재테스트로 CVE 정정 내용 반영 확인, 모순 없음) |
+| 에이전트 활용 테스트 | ✅ (2026-04-23, 2문항 PASS) + ✅ (2026-09-26 재검증 셀프, 2문항 PASS) + ✅ (2026-09-28 skill-tester → general-purpose, 2/2 PASS — CVE 정정분 겨냥) + ✅ (2026-11-09 skill-tester → general-purpose, 3/3 PASS — 감지 순서·Spring 6 패키지 삭제·3.x 이전 대상 겨냥) |
+| **최종 판정** | **APPROVED** (2026-11-09 재검증 수정분 재시험 3/3 PASS, 모순 없음) |
 
 ---
 
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester content test 수행 및 섹션 5·6 업데이트 — 2026-09-28 완료, 2/2 PASS (CVE 정정분 겨냥 포함)
-- [⏸️] Spring Boot 캐시 프로바이더 자동 감지 순서 1차 소스 재확인 — 검증 보강 선택 사항
+- [✅] Spring Boot 캐시 프로바이더 자동 감지 순서 1차 소스 재확인 — 2026-11-09 Boot 2.5 레퍼런스 원문으로 확인·정정
+- [✅] 2026-11-09 재검증 수정분 skill-tester 재시험 — 3/3 PASS, 섹션 5·6 동기화 완료
+- [⏸️] 마이그레이션 목표 버전(3.11.1)·유지보수 주체(IBM)·Boot 3 Java 17 요구를 SKILL.md 본문에도 요약 — 현재 REFERENCE.md 8절에만 있음, 선택 보강(차단 요인 아님)
 - [⏸️] 2계층 캐시(L1 EhCache + L2 Redis) 구현 예시 — 현재 개념만, 선택 보강
 - [🔬] Java 17/21 환경에서의 EhCache 2.10.9.2 호환성 실측 — 실환경 검증 대기
 - [🔬] 실제 Spring Boot 2.5 + EhCache 2.10.9.2 샘플 프로젝트 테스트 3종 — 실환경 검증 대기 (agent content test는 2026-04-23 2문항 PASS로 별도 수행됨)
@@ -268,3 +314,6 @@ products 캐시에 힙 10000 / 디스크 100000 오버플로우를 설정하고,
 | 2026-04-23 | v1 | 최초 작성 — EhCache 2.10.9.2 기준, Spring Boot 2.5 / Java 11 레거시 유지보수용 | skill-creator |
 | 2026-09-26 | v1 | 재검증 — EOL 상태·버전 재확인(변동 없음), 구버전 번들 jackson-databind CVE 주의 문구 신규 추가 → PENDING_TEST | 메인 오케스트레이션 (Claude Sonnet 5) |
 | 2026-09-28 | v1 | 2단계 실사용 재테스트 수행 (Q1 orders 캐시 설정 / Q2 CVE 점검 정정분) → 2/2 PASS, APPROVED 전환 | skill-tester |
+| 2026-11-09 | v1 | 재검증 — Boot 2.5 캐시 공급자 감지 순서 원문으로 정정(Generic·Hazelcast 등 누락 보완, UNVERIFIED 해소), Spring 6 에서 `org.springframework.cache.ehcache` 삭제 주의 추가, 3.x 이전 대상 3.10.x → 3.12.x(3.11.1 Java 8 마지막 라인), 3.x 유지 주체 IBM 반영 | Claude (재검증 묶음) |
+| 2026-11-09 | v1 | 2단계 실사용 재시험 수행 (Q1 캐시 공급자 감지 순서·JCache 충돌 / Q2 Boot 3 패키지 삭제·jakarta 분류자 / Q3 3.x 이전 목표 3.11.1·3.12.0 Java 미검증·IBM) → 3/3 PASS, APPROVED 유지 | skill-tester |
+| 2026-11-12 | v1.1 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 유지 종료·번들 jackson-databind CVE 경고, net.sf.ehcache vs org.ehcache, Boot 2.5 공급자 감지 순서·Spring 6 패키지 삭제, setShared·updateCheck·defaultCache 자동 생성, persistence 전략 OSS/상용 경계·레거시 속성 함정, 리스너 동기 호출, 2계층 커스텀 래퍼 필요, 2.x vs 3.x 표·3.11.1/3.12.x 이전 지침 / 덜어낸 것 pom·yml 예제, ehcache.xml 전체 예제·속성 해설·축출 정책 설명, @Cacheable 사용·키 생성 규칙, CacheManager 직접 API·리스너 구현 예제, 2계층 개념도·장단점, 흔한 실수 표(references/REFERENCE.md 본문 흡수 후 폴더 삭제) | 정리 |

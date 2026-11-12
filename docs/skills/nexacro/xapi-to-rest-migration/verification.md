@@ -2,7 +2,7 @@
 skill: xapi-to-rest-migration
 category: nexacro
 version: v1
-date: 2026-10-08
+date: 2026-11-09
 status: PENDING_TEST
 ---
 
@@ -14,7 +14,7 @@ status: PENDING_TEST
 |------|------|
 | 스킬 이름 | `xapi-to-rest-migration` |
 | 스킬 경로 | `.claude/skills/xapi-to-rest-migration/SKILL.md` |
-| 검증일 | 2026-10-08 |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-10-08) |
 | 검증자 | skill-creator 절차(Claude) |
 | 스킬 버전 | v1 |
 
@@ -66,6 +66,10 @@ status: PENDING_TEST
 | Apache POI — History of Changes | https://poi.apache.org/changes.html | ⭐⭐⭐ High | 2026-10-08 확인 | 5.3.0(2024-07-02) Bug 68183 |
 | Apache POI commit 68478c8 | https://Apache.googlesource.com/poi/+/68478c8b8c75d3a7fe2497e4105a396286ed73d5 | ⭐⭐⭐ High | 2024-05-17 | close 시 임시 파일 삭제 |
 | Apache POI SXSSFWorkbook javadoc | https://poi.apache.org/apidocs/dev/org/apache/poi/xssf/streaming/SXSSFWorkbook.html | ⭐⭐⭐ High | 2026-10-08 확인 | dispose/close 설명 |
+| (재검증) Spring Framework Error Responses·MVC Validation 레퍼런스 | 위 두 URL | ⭐⭐⭐ High | 2026-11-09 확인 | 문서 7.0.10 기준으로 내용 동일 |
+| (재검증) Maven Central spring-boot / spring-core | https://repo1.maven.org/maven2/org/springframework/boot/spring-boot/maven-metadata.xml · https://repo1.maven.org/maven2/org/springframework/spring-core/maven-metadata.xml | ⭐⭐⭐ High | 2026-11-09 확인 | 최신 Boot 4.1.2 · Framework 7.0.10 |
+| (재검증) spring.io blog — Introducing Jackson 3 support in Spring | https://spring.io/blog/2025/10/07/introducing-jackson-3-support-in-spring/ | ⭐⭐⭐ High | 2025-10-07 | Boot 4는 Jackson 3 자동 구성, Jackson 2 자동 구성 deprecated |
+| (재검증) Apache POI changes / download + Maven Central poi-ooxml | https://poi.apache.org/changes.html · https://poi.apache.org/download.html | ⭐⭐⭐ High | 2026-11-09 확인 | 6.0.0(2026-10-22) JDK 17 필수 |
 
 ---
 
@@ -93,7 +97,13 @@ status: PENDING_TEST
 | 16 | SXSSF 임시 파일은 반드시 `dispose()`로 정리해야 함 | how-to("must ... clean up explicitly") vs changes 5.3.0("removes temp files when closed") + 커밋 68478c8 | DISPUTED → 5.3.0+ close 자동 삭제 병기, 코드는 dispose+close 모두 호출 |
 | 17 | Spring 6.1 내장 메서드 검증(`MethodArgumentNotValidException` vs `HandlerMethodValidationException`, 클래스 `@Validated` 제거), 컨테이너 원소 `List<@Valid T>` | Spring MVC Validation 레퍼런스 + Jakarta Tutorial | VERIFIED |
 
-집계: VERIFIED 12 / DISPUTED 2 / UNVERIFIED 3
+| R1 | (2026-11-09 재검증) ProblemDetail·ErrorResponse·ResponseEntityExceptionHandler·RFC 9457 지원 | Spring Framework 7.0.10 레퍼런스 재조회 | VERIFIED |
+| R2 | (재검증) 6.1+ 내장 메서드 검증·클래스 `@Validated` 제거·두 예외 모두 처리 | Spring MVC Validation 7.0.10 재조회 | VERIFIED |
+| R3 | (재검증) 최신 Spring 세대 = Boot 4.1.x / Framework 7.0.x, Boot 4 기본 Jackson 3(`tools.jackson`) | Maven Central + spring.io 블로그(Jackson 3) + 2차 마이그레이션 가이드 다수 | VERIFIED → SKILL.md 상단에 Boot 3 기준·Boot 4 Jackson 3 주의 추가 |
+| R4 | (재검증) POI 최신 6.0.0(2026-10-22), JDK 17 필수·깨지는 변경 | POI changes + download + Maven Central | VERIFIED → §7 주의 추가 |
+| R5 | (재검증) N V24 Jakarta X-API "1.0.11 and later" | N V24 서버 설치 가이드 재조회 | VERIFIED(기존 DISPUTED 병기 유지) |
+
+집계: VERIFIED 12 / DISPUTED 2 / UNVERIFIED 3 + 2026-11-09 재검증 R1~R5 VERIFIED
 
 ### 4-1. 내용 정확성
 - [✅] 공식 문서와 불일치하는 내용 없음 (불일치 2건은 `> 주의:`로 병기)
@@ -115,13 +125,48 @@ status: PENDING_TEST
 - [✅] 범용적으로 사용 가능 (특정 회사 코드·URL 없음, 일반 주문 도메인 예시)
 
 ### 4-4. Claude Code 에이전트 활용 테스트
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-10-08, 3문항)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (3/3 PASS)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-10-08, 3문항 / 재시험 2026-11-09, 3문항)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (3/3 PASS, 재시험 3/3 PASS)
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (해당 없음 — FAIL 0건, 선택 보강 gap만 기록)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### 재시험 (2026-11-09, 내용 수정 후)
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester → general-purpose (도메인 에이전트 대신 general-purpose 사용)
+**수행 방법**: 2026-11-09 재검증으로 수정된 SKILL.md(Boot 4 Jackson 3 주의, POI 6.0.0 JDK 17 주의)를 Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인. 답변 에이전트 3개 결과를 모두 받은 뒤 판정.
+
+**Q1. Boot 3를 건너뛰고 Boot 4.1.x로 바로 갈 때 이 스킬의 ProblemDetail·메서드 검증을 그대로 써도 되는가, Jackson 관련 확인사항, 범위 밖 항목**
+- ✅ PASS
+- 근거: SKILL.md 상단 2026-11-09 재검증 주의 블록, "0. 이 스킬의 위치", "2-4 ProblemDetail", "6. 입력 검증"
+- 상세: Boot 3/Framework 6.x 기준이며 ProblemDetail·`ResponseEntityExceptionHandler`·6.1+ 메서드 검증은 Framework 7.0.10 문서에도 동일하다고 정확히 인용. Boot 4는 Jackson 3(`tools.jackson`) 기본 자동 구성·Jackson 2 deprecated이므로 import·`spring.jackson`·직렬화 기본값 확인이 필요함을 도출. Boot 4 전체 이관은 범위 밖(별도 스킬·공식 가이드)으로 정확히 구분. Boot 4에서 `spring.mvc.problemdetails.enabled` 유지 여부는 근거 없음으로 단정하지 않음.
+
+**Q2. xeni → SXSSF 대체 시 POI 6.0.0 사용 가능 여부(WAS JDK 11), 임시 파일 정리, 엑셀 엔드포인트 보안 누락점**
+- ✅ PASS
+- 근거: SKILL.md "7. 엑셀(xeni) 대체" 주의 블록 2개, "9. 흔한 실수"
+- 상세: POI 6.0.0은 JDK 17 이상 필수라 JDK 11 WAS에서는 불가, 5.x 마지막 5.5.1 후보(JDK 11 동작 여부는 SKILL.md 미기재로 미확인 처리)를 정확히 구분. `dispose()`+`close()` 병행(5.3.0+ close 자동 삭제), 권한·행수 상한·수식 인젝션·업로드 검증 정확히 인용. 깨지는 변경은 changes 문서 확인 안내를 그대로 전달.
+
+**Q3. 편집 그리드 일괄 저장 REST 이관 — 엔드포인트·DTO, 트랜잭션, 영향 행 0건, catch(Throwable) 패턴, checked 예외 롤백**
+- ✅ PASS
+- 근거: SKILL.md "3. 행 상태 일괄 저장", "4-2 MyBatis 조건부 UPDATE", "2-4 ProblemDetail", "3-3 @Transactional 함정", "9. 흔한 실수"
+- 상세: `POST /batch` + `created/updated/deleted` record, `List<@Valid T>`, 삭제→수정→추가 순서, 영향 행 != 1 → RuntimeException 전체 롤백 → 409 ProblemDetail, catch 삼킴 금지(advice에서만 변환), checked 예외는 `rollbackFor` 또는 감싸기를 정확히 도출. 행별 호출 anti-pattern 회피. Oracle 특화 내용은 SKILL.md에 없다고 명시.
+
+### 발견된 gap (재시험, 선택 보강 — 차단 요인 아님)
+
+- JDK 11 환경에서 쓸 수 있는 POI 5.x 버전과 Boot 3의 JDK 최소 버전이 본문에 명시되어 있지 않음
+- Jackson 3 직렬화 기본값의 구체적 차이, Boot 4에서 `spring.mvc.problemdetails.enabled` 유지 여부 미기술(상단 주의가 "확인하라"는 수준)
+- `rollbackFor` 코드 예시, Spring `DataAccessException`(unchecked 변환)과 checked 예외 롤백 문제 발생 조건 설명 없음
+
+### 판정 (재시험)
+
+- agent content test: PASS (3/3 PASS)
+- verification-policy 분류: 마이그레이션 가이드 (실사용 필수 스킬)
+- 최종 상태: PENDING_TEST 유지
+
+### 최초 시험 기록 (2026-10-08)
 
 **수행일**: 2026-10-08
 **수행자**: skill-tester → general-purpose (도메인 에이전트 대신 general-purpose 사용)
@@ -170,7 +215,7 @@ skill-tester 수행 대기. (위 기록으로 대체됨)
 | 내용 정확성 | ✅ (DISPUTED 2건 주의 표기) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-10-08, 3/3 PASS, 선택 보강 gap만 존재) |
+| 에이전트 활용 테스트 | ✅ (2026-11-09 재시험 3/3 PASS — Boot 4 Jackson 3 / POI 6.0.0 JDK 17 / 배치 저장; 2026-10-08 3/3 PASS, 선택 보강 gap만 존재) |
 | **최종 판정** | **PENDING_TEST** (마이그레이션 가이드 = 실사용 필수 카테고리, 실프로젝트 적용 전까지 유지) |
 
 ---
@@ -178,6 +223,8 @@ skill-tester 수행 대기. (위 기록으로 대체됨)
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester로 2단계 content test 수행 후 섹션 5·6 갱신 (2026-10-08 완료, 3/3 PASS)
+- [✅] 2026-11-09 재검증으로 수정된 내용(Boot 4 Jackson 3 주의, POI 6.0.0 JDK 17 주의)에 대한 skill-tester 재시험 (2026-11-09 완료, 3/3 PASS)
+- [❌] JDK 11 환경용 POI 5.x 버전·Boot 3 JDK 최소 버전 본문 명시, `rollbackFor` 코드 예시 검토 (선택 보강 — 차단 요인 아님)
 - [❌] 넥사크로 17 라이선스로 N 계열 Jakarta X-API 사용 가능 여부 벤더(투비소프트) 확인 시 SKILL.md §5 주의 표기 갱신 (선택 보강 — 차단 요인 아님)
 - [❌] Jakarta X-API 시작 버전(1.0.11 vs 1.0.12) 실제 배포 파일로 확인되면 SKILL.md §5 갱신 (선택 보강 — 차단 요인 아님)
 - [❌] 실제 마이그레이션 프로젝트에서 배치 엔드포인트·어댑터 공존 패턴 적용 결과 기록 (설계 제안 부분) — **APPROVED 전환의 차단 요인** (실사용 필수 카테고리)
@@ -192,3 +239,5 @@ skill-tester 수행 대기. (위 기록으로 대체됨)
 | 2026-10-08 | v1 | 최초 작성 | skill-creator 절차(Claude) |
 | 2026-10-08 | v1 | 2단계 실사용 테스트 수행 (Q1 편집 그리드 일괄 저장 배치 설계 / Q2 낙관적 잠금·롤백 함정 / Q3 X-API·REST 공존·Jakarta jar·SXSSF 엑셀) → 3/3 PASS, 마이그레이션 가이드 카테고리로 PENDING_TEST 유지 | skill-tester |
 | 2026-10-08 | v1.1 | 설치 검수 반영 — Rust(Axum)용 `multipart-upload` 스킬을 가리키던 엑셀 업로드 안내(§7)를 Java 기준 본문으로 교체(`spring.servlet.multipart.max-file-size`·`max-request-size` 상한, `.xlsx` 화이트리스트 + ZIP 시그니처 확인, 행 수·셀 길이 상한, Bean Validation·권한·트랜잭션). §8 체크리스트의 `legacy-spec-extractor` 참조에 spec-extraction 템플릿 조건 표기 | Claude |
+| 2026-11-09 | v1.2 | 재검증 — ProblemDetail·메서드 검증(Framework 7.0.10 문서 동일), Jakarta X-API 1.0.11 재대조. 상단에 "Boot 3/Framework 6.x 기준, 최신 Boot 4.1.x는 Jackson 3 기본" 주의 추가, §7에 POI 6.0.0(JDK 17 필수·깨지는 변경) 주의 추가. 내용 변경 있음 → skill-tester 재시험, PENDING_TEST 유지 | Claude |
+| 2026-11-09 | v1.2 | skill-tester 재시험 (Q1 Boot 4 직행 시 Jackson 3 주의·범위 구분 / Q2 POI 6.0.0 JDK 17 필수·SXSSF 정리·엑셀 보안 / Q3 편집 그리드 배치 저장·영향 행 0건·롤백 함정) → 3/3 PASS, 마이그레이션 가이드 카테고리로 PENDING_TEST 유지 | skill-tester |

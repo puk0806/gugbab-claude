@@ -1,14 +1,14 @@
 ---
 name: hikaricp-tuning-oracle-mysql
-description: HikariCP 커넥션 풀 튜닝 가이드 - Oracle/MySQL 환경 필수 파라미터, DB별 datasource properties, Leak 탐지, Pool Exhaustion 진단, 모니터링
+description: HikariCP 커넥션 풀 튜닝 가이드 - 버전별 기본값(keepaliveTime 6.2.1 변경)·Spring Boot 버전별 번들표, Oracle/MySQL datasource properties, Oracle+MySQL 멀티 DataSource, 3.4.5 레거시 주의점, 7.x 변경점
 ---
 
 # HikariCP 커넥션 풀 튜닝 (Oracle + MySQL)
 
 > 소스: https://github.com/brettwooldridge/HikariCP | https://github.com/brettwooldridge/HikariCP/wiki/MySQL-Configuration | https://github.com/brettwooldridge/HikariCP/wiki/About-Pool-Sizing | https://github.com/brettwooldridge/HikariCP/wiki/Rapid-Recovery
-> 검증일: 2026-09-26 (재검증, 내용 변경 없음)
+> 검증일: 2026-11-06
 
-> 주의: 이 문서는 HikariCP 3.4.5(레거시) ~ 5.x(현재 Spring Boot 3.x 번들) 기준입니다. 이 범위에서 API 및 설정 키는 사실상 동일하므로 통합 가이드로 사용 가능합니다. 7.x에서 일부 Breaking Change가 있으므로 최신 버전 사용 시 공식 changelog를 확인하세요.
+> 주의: 이 문서는 HikariCP 3.4.5(레거시) ~ 7.x 기준입니다(최신 안정 7.1.0, 2026-11 확인). Spring Boot 번들: 2.7 = 4.0.3, 3.0~3.2 = 5.0.1, 3.3~3.4 = 5.1.0, 3.5 = 6.3.x, 4.0~4.1 = 7.0.2. 이 범위에서 설정 키 이름은 같지만 **`keepaliveTime` 기본값이 6.2.1에서 바뀌었으니** 아래 표의 버전 표기를 확인하세요.
 
 ---
 
@@ -23,54 +23,14 @@ description: HikariCP 커넥션 풀 튜닝 가이드 - Oracle/MySQL 환경 필�
 | `connectionTimeout` | 30000ms (30초) | 250ms | 클라이언트가 커넥션을 기다릴 최대 시간 |
 | `idleTimeout` | 600000ms (10분) | 10000ms | 유휴 커넥션이 제거되기 전 대기 시간. `minimumIdle < maximumPoolSize`일 때만 적용 |
 | `maxLifetime` | 1800000ms (30분) | 30000ms | 커넥션의 최대 수명. 반드시 DB `wait_timeout`보다 짧게 |
-| `keepaliveTime` | 120000ms (2분) | 30000ms | 유휴 커넥션 ping 주기. `maxLifetime`보다 작아야 함 |
+| `keepaliveTime` | 120000ms (2분) — 6.2.1+ / 0(비활성) — 4.0.0~6.2.0 | 30000ms | 유휴 커넥션 ping 주기. `maxLifetime`보다 작아야 함. 4.0.0에서 추가(3.x에는 없음) |
 | `validationTimeout` | 5000ms | 250ms | 커넥션 유효성 검증 최대 시간 |
 | `leakDetectionThreshold` | 0 (비활성) | 2000ms | 커넥션 누수 의심 경고 임계값. 0이면 비활성화 |
-
-### maximumPoolSize 산정 공식 (공식 Wiki)
-
-PostgreSQL 프로젝트 기반 공식:
-
-```
-connections = ((core_count * 2) + effective_spindle_count)
-```
-
-- **core_count**: 물리 CPU 코어 수 (HT 스레드 제외)
-- **effective_spindle_count**:
-  - 데이터셋이 캐시에 전부 올라가면 0
-  - 캐시 히트율이 낮을수록 실제 스핀들 수에 근접
-
-**예시:** 4-core i7 + HDD 1개 → `(4 × 2) + 1 = 9`
-
-> 주의: HikariCP 공식 문서는 **"작은 풀이 더 빠르다"**는 원칙을 명시합니다. Oracle 실증 사례에서 커넥션을 2048 → 96으로 줄이자 응답 시간이 ~100ms → ~2ms로 **50배 개선**되었습니다. 커넥션을 무작정 늘리는 것은 성능을 오히려 해칩니다.
-
-### Deadlock 방지 공식
-
-```
-pool_size = (max_threads × (max_connections_per_thread - 1)) + 1
-```
-
-**예시:** 한 트랜잭션에서 커넥션 4개를 동시에 보유하는 스레드가 3개라면 → `3 × (4 - 1) + 1 = 10`
-
-### minimumIdle 권장
-
-공식 문서는 `minimumIdle`을 **기본값 그대로 두는 것(=maximumPoolSize와 동일)**을 권장합니다. 이유는 응답시간 변동을 줄이는 고정 크기 풀(fixed-size pool) 동작이 일반적으로 더 우수하기 때문입니다.
 
 ### maxLifetime 주의사항
 
 - DB의 `wait_timeout`(MySQL)이나 유사 제한보다 **최소 30초 이상 짧게** 설정
 - 방화벽·로드밸런서의 idle timeout보다도 짧게 설정
-- 공식 권장 공식: `maxLifetime ≤ (DB wait_timeout - 30s)`
-
-**환경별 구체 권장값:**
-
-| DB wait_timeout | 권장 maxLifetime | 설정값 (ms) |
-|:---:|:---:|:---:|
-| 28800s (MySQL 기본 8시간) | HikariCP 기본값 유지 권장 | `1800000` (30분) |
-| 3600s (축소 운영 1시간) | ≤ 3570s | `3500000` (58분) |
-| 1800s (축소 운영 30분) | ≤ 1770s | `1700000` (약 28분) |
-| 600s (축소 운영 10분) | ≤ 570s | `560000` (약 9분) |
-
 - MySQL 기본 8시간 환경이면 HikariCP 기본 30분을 그대로 두는 것이 가장 안전 (공식 기본값이 이미 DB 기본값보다 충분히 짧음)
 - 운영 DB에서 `wait_timeout`이 축소되어 있는 경우가 흔하므로 **설정 전 DBA·운영팀에 반드시 확인**
 
@@ -147,39 +107,6 @@ dataSource.oracle.jdbc.defaultConnectionValidation=LOCAL
 
 ## 3. Spring Boot application.yml 설정 예시
 
-### MySQL — 단일 DataSource
-
-```yaml
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/appdb?useSSL=false&serverTimezone=Asia/Seoul
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    hikari:
-      pool-name: MySQLMainPool
-      maximum-pool-size: 20
-      minimum-idle: 20                     # maximumPoolSize와 동일 권장
-      connection-timeout: 30000            # 30초
-      idle-timeout: 600000                 # 10분
-      max-lifetime: 1700000                # DB wait_timeout(1800초)보다 짧게
-      keepalive-time: 120000               # 2분
-      validation-timeout: 5000
-      leak-detection-threshold: 60000      # 60초 이상 반환 안 되면 누수 의심
-      data-source-properties:
-        cachePrepStmts: true
-        prepStmtCacheSize: 250
-        prepStmtCacheSqlLimit: 2048
-        useServerPrepStmts: true
-        useLocalSessionState: true
-        rewriteBatchedStatements: true
-        cacheResultSetMetadata: true
-        cacheServerConfiguration: true
-        elideSetAutoCommits: true
-        maintainTimeStats: false
-        socketTimeout: 30000
-```
-
 ### Oracle — 단일 DataSource
 
 ```yaml
@@ -206,122 +133,8 @@ spring:
         oracle.jdbc.implicitStatementCacheSize: 100
 ```
 
----
-
-## 4. Connection Leak 탐지
-
-### 활성화
-
-```yaml
-spring:
-  datasource:
-    hikari:
-      leak-detection-threshold: 60000   # 60초. 최소값 2000ms
-```
-
-### 로그 해석
-
-```
-WARN com.zaxxer.hikari.pool.ProxyLeakTask : Connection leak detection triggered for
-  oracle.jdbc.driver.T4CConnection@abc123 on thread http-nio-8080-exec-3,
-  stack trace follows
-  java.lang.Exception: Apparent connection leak detected
-    at com.zaxxer.hikari.HikariDataSource.getConnection(HikariDataSource.java:128)
-    at com.example.service.UserService.findAll(UserService.java:42)
-    ...
-```
-
-- 경고는 **threshold 시간 경과 시점에** 1회 발생 (커넥션이 결국 반환되면 정상 복귀)
-- 스택 트레이스의 상단이 누수 발생 코드 위치
-- 주요 원인:
-  - `try-with-resources`/`@Transactional` 없이 커넥션 획득 후 `close()` 누락
-  - 예외 경로에서 커넥션 반환 누락
-  - 매우 긴 외부 API 호출 중 트랜잭션 보유
-
-### 운영 팁
-
-- 초기엔 `leakDetectionThreshold`를 짧게(10~30초) 설정해 즉각 감지
-- 안정화 후엔 60초 이상으로 완화하여 정상 장시간 트랜잭션과 구분
+MySQL은 2절의 `dataSource.*` 속성을 `data-source-properties:` 아래에 같은 이름으로 넣는다(Oracle+MySQL 동시 설정 예시는 REFERENCE 7절).
 
 ---
 
-## 5. Pool Exhaustion 진단
-
-### 전형적 에러
-
-```
-HikariPool-1 - Connection is not available, request timed out after 30000ms.
-  Total connections: 20, active: 20, idle: 0, waiting: 5
-```
-
-의미: `maximumPoolSize(20)`개가 모두 사용 중, 5개 스레드가 `connectionTimeout` 동안 대기하다 실패.
-
-### 진단 순서
-
-1. **커넥션 누수인가?**
-   - `leakDetectionThreshold`를 활성화하고 로그 확인
-   - active 수가 줄지 않고 계속 꽉 차있다면 누수 가능성 높음
-
-2. **느린 쿼리가 커넥션을 오래 잡고 있는가?**
-   - DB의 slow query log 확인
-   - `SHOW PROCESSLIST` (MySQL), `V$SESSION` (Oracle)로 오래 실행 중인 세션 확인
-   - 느린 쿼리의 인덱스·실행 계획 점검
-
-3. **풀 크기가 부족한가? (누수·느린 쿼리가 아닐 경우)**
-   - 공식 공식으로 재산정: `(core × 2) + spindle`
-   - 이때 DB 서버 리소스도 함께 확인 — 풀을 키웠는데 DB가 못 받으면 오히려 악화
-
-4. **멀티 DataSource의 총 커넥션이 DB `max_connections`를 넘지는 않는가?**
-   - MySQL: `SHOW VARIABLES LIKE 'max_connections'`
-   - Oracle: `SELECT value FROM v$parameter WHERE name='processes';`
-
-5. **트랜잭션이 비정상적으로 길어지는가?**
-   - `@Transactional` 메서드 내부에서 외부 HTTP 호출 등 오래 걸리는 I/O 수행 금지
-   - 트랜잭션 범위를 DB 작업으로만 한정
-
-### 임시 완화 vs 근본 해결
-
-| 접근 | 효과 | 주의 |
-|------|------|------|
-| `maximumPoolSize` 증가 | 단기 완화 | 근본 원인이 누수/느린 쿼리면 DB 과부하로 번질 수 있음 |
-| `connectionTimeout` 증가 | 실패 대신 느린 응답으로 전환 | UX 악화, 카스케이딩 장애 위험 |
-| 누수 코드 수정 | 근본 해결 | 최우선 |
-| 느린 쿼리 최적화 | 근본 해결 | DB 부하도 함께 감소 |
-
----
-
-## 6. 모니터링 (Micrometer / Actuator)
-
-HikariCP는 Micrometer에 Meter를 자동 등록합니다. Spring Boot Actuator + Micrometer가 클래스패스에 있으면 별도 설정 없이 `/actuator/metrics`에 노출됩니다.
-
-### 주요 메트릭
-
-| 메트릭 | 의미 | 경보 기준 예시 |
-|--------|------|---------------|
-| `hikaricp.connections` | 풀 내 총 커넥션 수 | — |
-| `hikaricp.connections.active` | 현재 사용 중인 커넥션 수 | `maximumPoolSize`에 근접하면 위험 |
-| `hikaricp.connections.idle` | 유휴 커넥션 수 | — |
-| `hikaricp.connections.pending` | 커넥션을 기다리는 스레드 수 | > 0이 지속되면 풀 부족 신호 |
-| `hikaricp.connections.timeout` | `connectionTimeout`으로 실패한 횟수 (Counter) | 증가하면 즉시 조사 |
-| `hikaricp.connections.usage` | 커넥션 대여 → 반환까지 소요 시간 (Timer) | p99가 급증하면 트랜잭션 길어짐 |
-| `hikaricp.connections.acquire` | 커넥션 획득 소요 시간 (Timer) | p99 급증은 풀 부족 신호 |
-| `hikaricp.connections.creation` | 새 커넥션 생성 소요 시간 (Timer) | DB 네트워크 지연 지표 |
-
-### Prometheus 스크랩 설정 예시
-
-```yaml
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health, metrics, prometheus
-  metrics:
-    tags:
-      application: ${spring.application.name}
-```
-
-`pool-name`을 명시적으로 설정하면 여러 풀 구분이 쉬워집니다 (`pool: MySQLMainPool` 태그로 노출).
-
----
-
-> 상세 레퍼런스 (예제·고급 패턴·흔한 실수) → [`references/REFERENCE.md`](references/REFERENCE.md)
+> 상세 레퍼런스 (멀티 DataSource·3.4.5 레거시·버전별 번들·7.x 변경점·체크리스트) → [`references/REFERENCE.md`](references/REFERENCE.md)

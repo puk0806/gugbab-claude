@@ -1,16 +1,17 @@
 ---
 name: storybook
-description: Storybook 10 컴포넌트 문서화 — ESM-only 설정, CSF 3 스토리, args/argTypes/controls, play function 인터랙션 테스트, autodocs 태그, TypeScript 타입 패턴, Vite/Next.js 프레임워크 설정, v8→v10 마이그레이션
+description: Storybook 10 ESM-only 전환·v8→v10 패키지 이동/제거 대응표·요구 버전, Storybook 11 베타 요구사항, addon-vitest의 Vitest peer 범위 함정과 test-runner 지원 종료
 ---
 
 # Storybook 10 컴포넌트 문서화
 
 > 소스: https://storybook.js.org/docs | https://storybook.js.org/docs/releases/migration-guide | https://github.com/storybookjs/storybook/blob/next/MIGRATION.md
-> 검증일: 2026-09-28 (최초 2026-08-11)
-> 대상 버전: Storybook 10.6.x (2026-09-28 기준 최신 안정 10.6.0) · React ≥ 16.8 · Vite ≥ 5
+> 검증일: 2026-11-09 (최초 2026-08-11)
+> 대상 버전: Storybook 10.6.x (2026-11-09 기준 최신 안정 10.6.6) · React ≥ 16.8 · Vite ≥ 5
+>
+> 주의: Storybook 11은 2026-11-09 현재 **베타**(`11.0.0-beta.0`, npm `next` 태그)다. 11은 Node 22.12+, Vite 6.3+, TypeScript 5.9+, addon-vitest의 Vitest 4.0+를 요구한다(공식 MIGRATION.md "From version 10.x to 11.0.0"). 이 스킬은 10.x 안정판 기준이다.
 
-시각 회귀(스크린샷) 테스트 셋업은 이 스킬 범위가 아니다 → `frontend/storybook-visual-testing` 스킬 참조.
-이 스킬은 **설치·스토리 작성·컨트롤·인터랙션·문서화** 기본기를 다룬다.
+시각 회귀(스크린샷) 테스트 셋업은 이 스킬 범위가 아니다 → `github-actions-visual-regression` 스킬 참조(2026-11-11 storybook-visual-testing 통합).
 
 ---
 
@@ -72,16 +73,6 @@ npx storybook doctor           # 중복 의존성·비호환 애드온·버전 �
 
 ## 1. 설치 및 초기 설정
 
-### 신규 프로젝트 (권장)
-
-```bash
-npm create storybook@latest
-```
-
-프레임워크(React, Next.js, Vue 등)를 자동 감지해 적합한 패키지를 설치하고 `.storybook/main.ts`, `.storybook/preview.ts`, 예제 스토리를 생성한다. 설치 시 **Recommended**(개발 + 문서 + 테스트 + 접근성) / **Minimal**(개발만) 중 선택한다.
-
-> `npx storybook@latest init`도 여전히 동작하지만, 현재 공식 문서가 안내하는 명령은 `npm create storybook@latest`다.
-
 ### Vite 프로젝트 수동 설정
 
 ```bash
@@ -92,8 +83,6 @@ npm install -D @storybook/react-vite @storybook/addon-docs
 > 주의: **`@storybook/addon-essentials` / `@storybook/addon-interactions`는 설치하지 않는다** — v9에서 제거되어 코어에 내장됐다. 남아 있으면 시작 시 에러가 난다.
 
 `.storybook/main.ts` — **ESM이어야 한다**:
-
-→ references/REFERENCE.md §12 (Vite 수동 설정 main.ts 예제)
 
 ESM 전환 시 주의점:
 
@@ -116,191 +105,11 @@ const __dirname = dirname(fileURLToPath(import.meta.url)); // 직접 정의해�
 
 ### Next.js 프로젝트
 
-```bash
-npm create storybook@latest
-```
-
 Storybook 10은 **`@storybook/nextjs-vite`를 권장**한다(더 빠르고 테스트 기능 지원이 낫다). 커스텀 Webpack·Babel 설정이 있어 Vite와 호환되지 않는 경우에만 Webpack 기반 `@storybook/nextjs`를 쓴다. 최소 Next.js 14.1.
-
-```typescript
-import type { StorybookConfig } from '@storybook/nextjs-vite';
-
-const config: StorybookConfig = {
-  stories: ['../src/**/*.mdx', '../src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
-  addons: ['@storybook/addon-docs'],
-  framework: '@storybook/nextjs-vite',
-};
-
-export default config;
-```
-
-`next/image`, `next/router`, `next/navigation`, `next/head`, `next/font`가 자동 모킹된다. 라우터 값은 `nextjs` 파라미터 네임스페이스로 오버라이드한다(얕은 병합).
-
-```typescript
-export const OnProductPage: Story = {
-  parameters: {
-    nextjs: {
-      appDirectory: true,                      // App Router 사용 시
-      navigation: { pathname: '/products/1' }, // App Router
-      // router: { pathname: '/products/[id]', query: { id: '1' } }, // Pages Router
-    },
-  },
-};
-```
-
----
-
-## 2. CSF 3 스토리 작성
-
-Storybook 10은 CSF 3(Component Story Format)을 기본 포맷으로 사용한다. `storiesOf` API는 Storybook 8.0에서 이미 제거됐다.
-
-> 타입은 **프레임워크 패키지**에서 import한다 (`@storybook/react-vite`, `@storybook/nextjs-vite` 등). 공식 문서는 `@storybook/your-framework` 플레이스홀더로 표기한다. 8.x 시절의 렌더러 패키지(`@storybook/react`) import는 v9부터 프레임워크 패키지로 옮기는 것이 공식 방향이다.
-
-### 기본 구조
-
-→ references/REFERENCE.md §13 (CSF 3 기본 구조 전체 예제)
-
-### 핵심 규칙
-
-- `export default`: Meta 객체 (컴포넌트 수준 설정)
-- `export const {Name}`: 개별 스토리
-- `satisfies Meta<typeof Component>`: 타입 안전성 보장 (TypeScript satisfies 연산자 활용)
-- `type Story = StoryObj<typeof meta>`: meta에서 args 타입 자동 추론
-
----
-
-## 3. Args, ArgTypes, Controls
-
-Controls는 **코어에 내장**되어 있다. 별도 애드온 설치가 필요 없다.
-
-### Args
-
-스토리의 props 초기값을 선언한다. Meta에서 설정한 공통 args는 모든 스토리에 적용된다.
-
-```typescript
-const meta = {
-  component: Button,
-  args: {
-    variant: 'primary', // 모든 스토리의 기본값
-  },
-} satisfies Meta<typeof Button>;
-
-export const Default: Story = {
-  args: {
-    label: 'Click me',
-    disabled: false,
-    // variant는 meta.args에서 상속
-  },
-};
-```
-
-### ArgTypes — Control 타입
-
-| control 타입 | 용도 | 예시 |
-|-------------|------|------|
-| `'text'` | 문자열 입력 | label, placeholder |
-| `'number'` | 숫자 입력 | count, max |
-| `'boolean'` | 토글 스위치 | disabled, loading |
-| `'select'` | 드롭다운 선택 | variant, size |
-| `'radio'` | 라디오 버튼 | size, theme |
-| `'color'` | 색상 선택 | backgroundColor |
-| `'date'` | 날짜 선택 | createdAt |
-| `'object'` | JSON 편집 | style, config |
-| `'range'` | 슬라이더 | opacity, fontSize |
-| `false` | 컨트롤 숨김 | children, className |
-
-→ references/REFERENCE.md §14 (argTypes 컨트롤 커스터마이징 예제)
-
-### TypeScript에서 자동 추론
-
-TypeScript props가 있으면 argTypes가 자동 추론된다. 추가 커스터마이징만 수동으로 작성한다.
-
-```typescript
-interface ButtonProps {
-  variant: 'primary' | 'secondary';  // → 자동으로 select 컨트롤
-  disabled?: boolean;                 // → 자동으로 boolean 컨트롤
-  onClick?: () => void;              // → 자동으로 action 타입
-}
-```
-
-### Actions 설정
-
-```typescript
-// 방법 1: argTypes에서 action 명시 (로깅만 필요할 때)
-argTypes: {
-  onClick: { action: 'clicked' },
-},
-
-// 방법 2: fn() 사용 (play function에서 spy 가능 — 권장)
-import { fn } from 'storybook/test';   // ← v10: '@storybook/test' 아님
-
-const meta = {
-  component: Button,
-  args: {
-    onClick: fn(),
-  },
-} satisfies Meta<typeof Button>;
-```
-
-> 주의: `action`으로만 선언된 args는 play function 내에서 spy로 검증할 수 없다. 인터랙션 테스트를 붙일 인자는 반드시 `fn()`을 직접 할당한다. `fn()`으로 할당한 args는 Storybook이 자동으로 spy 처리해 Actions 패널에도 함께 표시된다.
 
 ---
 
 ## 4. Play Function (인터랙션 테스트)
-
-`storybook/test` 모듈이 Vitest + Testing Library 래퍼를 제공한다. 원본 패키지(`vitest`, `@testing-library/*`)가 아닌 이 모듈에서 import해야 인터랙션 패널에 정상 로깅된다.
-
-**v10 권장 시그니처**: play 컨텍스트에서 `canvas`와 `userEvent`를 바로 구조분해한다. `within(canvasElement)` 보일러플레이트가 더 이상 필요 없다.
-
-```typescript
-import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn } from 'storybook/test';
-import { LoginForm } from './LoginForm';
-
-const meta = {
-  component: LoginForm,
-  args: {
-    onSubmit: fn(), // 모킹된 함수 (spy 가능)
-  },
-} satisfies Meta<typeof LoginForm>;
-
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-export const FilledForm: Story = {
-  play: async ({ canvas, userEvent, args }) => {
-    // 사용자 입력 시뮬레이션 — 항상 await
-    await userEvent.type(canvas.getByLabelText('Email'), 'user@example.com');
-    await userEvent.type(canvas.getByLabelText('Password'), 'password123');
-
-    // 버튼 클릭
-    await userEvent.click(canvas.getByRole('button', { name: /submit/i }));
-
-    // 검증 — 항상 await
-    await expect(args.onSubmit).toHaveBeenCalledTimes(1);
-    await expect(canvas.getByText('Successfully submitted')).toBeInTheDocument();
-  },
-};
-```
-
-### play function 핵심 API
-
-→ references/REFERENCE.md §15 (play function 핵심 API 치트시트 예제)
-
-> 레거시 호환: `within`은 여전히 `storybook/test`에서 export되므로 `within(canvasElement)` 패턴도 동작한다. 신규 코드에는 `canvas`를 쓴다.
-
-### 스토리 간 합성 (compose)
-
-```typescript
-export const LoggedIn: Story = {
-  play: async (context) => {
-    // 다른 스토리의 play 먼저 실행
-    await FilledForm.play!(context);
-
-    await expect(context.canvas.getByText('Welcome')).toBeInTheDocument();
-  },
-};
-```
 
 ### CLI·CI에서 인터랙션 테스트 실행
 
@@ -319,83 +128,9 @@ export default defineConfig({
 });
 ```
 
-- 요구사항: Vitest ≥ 3, Vite 기반 프레임워크(`react-vite`, `nextjs-vite`, `vue3-vite` 등), Playwright Chromium(브라우저 모드)
-- Vitest 애드온을 쓸 수 없는 환경(Webpack 빌더 등)에서는 `@storybook/test-runner`로 CI 실행한다
+- 요구사항: **Vitest 4 또는 5**(아래 주의 참조), Vite 기반 프레임워크(`react-vite`, `nextjs-vite`, `vue3-vite` 등), Playwright Chromium(브라우저 모드)
+- Vitest 애드온을 쓸 수 없는 환경(Webpack 빌더 등)은 먼저 Vite 프레임워크로 옮기는 것이 공식 권장이다(예: `npx storybook automigrate nextjs-to-nextjs-vite`). `@storybook/test-runner`는 **공식 지원이 끝났다**(아래 주의)
 
-> 주의(2026-09-28 확인): 공식 문서는 "Vitest ≥ 3.0"이라고만 적혀 있어 Vitest 5와도 호환되는 것처럼 읽히지만, 실제 `@storybook/addon-vitest` 최신 안정판(10.6.0)의 `peerDependencies`는 `vitest: "^3.0.0 || ^4.0.0"`로 **Vitest 5는 아직 지원 범위 밖**이다(2026-09-28 npm registry 확인). Vitest 5 지원 PR은 Storybook 저장소에 존재하지만 `next`/11.0.0-alpha 라인에만 반영된 상태이고 10.x 안정판에는 아직 병합되지 않았다. **Vitest 5 프로젝트에서 addon-vitest를 도입하려면 Vitest를 4.x로 유지하거나 Storybook 11 안정화를 기다린다.**
+> 주의(2026-11-09 확인): 공식 문서는 여전히 "Vitest ≥ 3.0"이라고 적혀 있지만, npm registry의 실제 `@storybook/addon-vitest` `peerDependencies.vitest`는 버전마다 다르다 — 10.6.0: `^3.0.0 || ^4.0.0` → **10.6.1·10.6.2: `^3 || ^4 || ^5`(Vitest 5 지원 추가)** → **10.6.3 이후(현재 10.6.6): `^4.0.0 || ^5.0.0`(Vitest 3 제외)**. 따라서 **Vitest 5 프로젝트는 addon-vitest 10.6.1 이상**, **Vitest 3 프로젝트는 Vitest 4 이상으로 올리거나 addon-vitest를 10.6.2 이하로 고정**한다. 10.6.3 릴리스 노트에는 Vitest 3 제외가 따로 적혀 있지 않으니 설치 전 `npm view @storybook/addon-vitest peerDependencies`로 직접 확인한다.
 
----
-
-## 5. Autodocs (자동 문서화)
-
-`@storybook/addon-docs`를 `main.ts`의 `addons`에 등록해야 동작한다.
-
-### 활성화 방법 — 태그 전용
-
-> **v9에서 `docs.autodocs` 설정 옵션이 제거됐다.** `autodocs: 'tag'` / `autodocs: true`는 더 이상 유효하지 않다. 오직 `tags`로만 제어한다.
-
-**방법 1: 컴포넌트별 태그 (권장)**
-
-```typescript
-const meta = {
-  component: Button,
-  tags: ['autodocs'],
-} satisfies Meta<typeof Button>;
-```
-
-**방법 2: 프로젝트 전역 활성화** — `.storybook/preview.ts`:
-
-```typescript
-import type { Preview } from '@storybook/react-vite';
-
-const preview: Preview = {
-  tags: ['autodocs'], // 모든 컴포넌트에 문서 페이지 생성
-};
-
-export default preview;
-```
-
-전역 활성화 후 특정 컴포넌트·스토리를 제외하려면 `tags: ['!autodocs']`를 사용한다.
-
-### JSDoc 주석 연동
-
-컴포넌트·props의 JSDoc이 autodocs 페이지에 반영된다.
-
-```typescript
-/**
- * 기본 버튼 컴포넌트
- *
- * 폼 제출, 다이얼로그 트리거, 액션 실행에 사용합니다.
- */
-export function Button({
-  /** 버튼 스타일 변형 */
-  variant = 'primary',
-  /** 버튼 크기 */
-  size = 'md',
-  /** 비활성 상태 */
-  disabled = false,
-  children,
-}: ButtonProps) {
-  // ...
-}
-```
-
-### MDX 문서 커스터마이징
-
-> Doc Block import 경로가 v10에서 바뀌었다: `@storybook/blocks` → **`@storybook/addon-docs/blocks`**
-
-`Button.mdx`:
-
-```mdx
-import { Meta, Canvas, Controls, ArgTypes } from '@storybook/addon-docs/blocks';
-import * as ButtonStories from './Button.stories';
-
-<Meta of={ButtonStories} />
-
-# Button
-
-기본 버튼 컴포넌트입니다.
-
----
-
-> 상세 레퍼런스 (예제·고급 패턴·흔한 실수) → [`references/REFERENCE.md`](references/REFERENCE.md)
+> 주의(2026-11-09 확인): **`@storybook/test-runner` 공식 지원 종료** — 저장소가 2026-09-30 보관(archived, 읽기 전용) 처리됐고, 마지막 버전 0.26.0은 실행할 때마다 지원 종료 경고를 출력하며 더 이상 수정·호환성 업데이트를 받지 않는다(공식 MIGRATION.md "Test runner support ended", test-runner README). 기존 설정은 계속 쓸 수 있지만 "사용자 책임"이다. Vite 기반이면 Vitest 애드온으로 이전(공식 migration guide: https://storybook.js.org/docs/writing-tests/integrations/vitest-addon/migration-guide), 이전이 불가능하면 스토리 index에서 테스트를 만드는 순수 Playwright 구성이 대안이다.

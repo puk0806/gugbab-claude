@@ -31,7 +31,7 @@ description: >
 > - Solms, M. & Hobson 논쟁 정리 (Domhoff 2005, DreamResearch.net): https://dreams.ucsc.edu/Library/domhoff_2005b.html
 > - SEP "Dreams and Dreaming" (Jennifer Windt): https://plato.stanford.edu/entries/dreams-dreaming/
 >
-> 검증일: 2026-09-26 (DreamResearch.net Norms·Chapter 2 원문, Crossref DOI 메타데이터 직접 대조)
+> 검증일: 2026-11-06 (2026-11-06 재검증: 1차 서지 7건 Crossref DOI 메타데이터 재대조 / 이전 2026-09-26 DreamResearch.net Norms·Chapter 2 원문 대조)
 
 ---
 
@@ -136,6 +136,7 @@ description: >
 ## 3. 반복 꿈 (Recurrent Dreams) 연구
 
 > 주의 (2026-09-26): 아래 "빈도 60~75%"는 1차 논문 수치를 이번 재검증에서 대조하지 못했다(`미검증`). 학업 스트레스 연구의 저자는 Duke & Davidson (2002)로 정정되었다.
+> 주의 (2026-11-06 재검증): 2차 문헌(학술지 초록)에서는 "성인의 60~80%가 일생에 한 번 이상 반복 꿈 시리즈 경험(Zadra, 1994)" 으로 인용된다. 1차 원문(Zadra 1994)은 여전히 대조하지 못해 `미검증` 유지 — 앱 문구에는 "성인 다수(대략 60~80%)" 처럼 범위로만 쓰고 출처를 단정하지 않는다.
 
 ### 3.1 정의
 
@@ -328,7 +329,6 @@ Michael Schredl (독일 Mannheim Central Institute of Mental Health). *Internati
 |------|------|
 | `humanities/dream-psychology-jung-freud` | **별개 전통.** 정신분석은 *잠재 내용·상징·해석*. 본 스킬은 *현재 내용·정량 코딩·통계*. 사용자 질문에 따라 *어느 노선의 답을 원하는지* 먼저 확인 |
 | `humanities/korean-dream-interpretation-tradition` | **별개 전통.** 한국 전통 해몽은 *문화·상징 사전 기반*. 본 스킬은 *경험 연구*. 앱에서 사용자에게 양립 가능하나 *섞지 말고 분리 제시* |
-| `frontend/dream-recurrence-detection` | **학술 근거 제공.** 반복 꿈 감지 알고리즘의 *왜·언제·어떻게* 학술 정당화는 본 스킬의 §3 참조 |
 
 ---
 

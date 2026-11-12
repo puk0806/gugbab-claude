@@ -10,7 +10,7 @@ description: 넥사크로 17 화면과 통신하는 Java 서버(X-API·Spring �
 > 소스: https://docs.tobesoft.com/server_setup_guide_nexacro_n_v24_en/638d458b567ddda9 (N V24 X-API 설치, Jakarta jar)
 > 소스: https://docs.tobesoft.com/admin_guide_nexacro_14_en_kr/ea2d0a940547e4a5 (Dataset XML 포맷)
 > 소스: https://docs.tobesoft.com/xeni_user_manual_ko/42332e9efc1e46a3 (nexacro-xeni 매뉴얼)
-> 검증일: 2026-10-08
+> 검증일: 2026-11-09
 
 이 스킬은 **마이그레이션 전 "현 백엔드 읽기"**용이다. 넥사크로 화면이 `transaction()`으로 보낸 요청을 Java 서버가 어디서 받고, 어떻게 Dataset을 풀고, 어디서 SQL을 부르고, 어떻게 응답하는지 추적하는 데 필요한 지식만 담는다.
 

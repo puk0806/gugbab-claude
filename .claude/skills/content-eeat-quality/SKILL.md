@@ -1,13 +1,15 @@
 ---
 name: content-eeat-quality
 description: >
-  Google의 Quality Rater Guidelines(QRG)와 Helpful Content System에 기반한 콘텐츠 신뢰성·전문성 평가 프레임워크 E-E-A-T를 정리한 스킬. 일반 콘텐츠 사이트(블로그·매체·SaaS·이커머스) 관점에서 Experience·Expertise·Authoritativeness·Trustworthiness 4축을 어떻게 콘텐츠와 사이트 구조에 반영하는지, AI 생성 콘텐츠를 어떻게 다뤄야 하는지, 한국 사이트 특유의 신뢰 신호는 무엇인지 다룬다.
+  Google Quality Rater Guidelines(QRG) 2025-09-11판 기준 E-E-A-T·YMYL 판단에서 모델이 틀리기 쉬운 정정 사항과 한국 사이트 신뢰 신호.
+  현행 YMYL 4유형(구판 6분류 아님)·스펙트럼 개념("Many or most topics are not YMYL"), Trust 최상위 원문, 없는 인용문·없는 챕터 정정,
+  scaled content abuse 원문, Helpful Content 질문 묶음 현행 구성, schema.org 의료·법률 마크업 정정, 한국 전자상거래 푸터 정보·의료법 제56·57조·금소법 제22조·변호사법 제112조·공정위 추천보증 심사지침·위기 자원 안내.
   <example>사용자: "우리 블로그에 E-E-A-T 적용하려는데 뭐부터 손대야 해?"</example>
   <example>사용자: "AI로 글 쓰고 있는데 Google에서 페널티 받을까?"</example>
-  <example>사용자: "의료 블로그인데 신뢰도 점수 올리려면 어떤 페이지를 추가해야 해?"</example>
+  <example>사용자: "의료 블로그인데 YMYL 범주랑 한국 광고 규정 기준으로 점검해줘"</example>
 ---
 
-# 콘텐츠 E-E-A-T 품질 — Google Quality Rater Guidelines 기반 신뢰성 강화
+# E-E-A-T·YMYL — QRG 2025-09-11판 정정 사항과 한국 신뢰 신호
 
 > 소스:
 > - Google Search Quality Rater Guidelines 전문 (현행 2025-09-11판, 182쪽): https://static.googleusercontent.com/media/guidelines.raterhub.com/en//searchqualityevaluatorguidelines.pdf
@@ -17,356 +19,87 @@ description: >
 > - Helpful Content / People-First Content: https://developers.google.com/search/docs/fundamentals/creating-helpful-content
 > - 생성 AI 콘텐츠 가이드라인: https://developers.google.com/search/docs/fundamentals/using-gen-ai-content
 > - QRG 업데이트 블로그(2023-11): https://developers.google.com/search/blog/2023/11/search-quality-rater-guidelines-update
-> 검증일: 2026-09-26
-> 적용 범위: Quality Rater Guidelines 2025-09-11판 기준 (2026-09-26 전문 PDF 재확인 시에도 최신판)
+> - YMYL 한국 규정·schema.org (구 ymyl-content-seo, 검증일 2026-11-09): https://guidelines.raterhub.com/searchqualityevaluatorguidelines.pdf · schema.org MedicalWebPage / MedicalCondition / LegalService / InvestmentOrDeposit · 국가법령정보센터 의료법 제56조·제57조, 의료법 시행령 제24조, 금융소비자 보호에 관한 법률 제22조, 변호사법 제112조, 표시·광고의 공정화에 관한 법률 · 금융위원회 금융광고규제 가이드라인, 대한변호사협회 변호사 광고에 관한 규정 (2025-02-06 개정 — 2026-09-26 미대조) · 보건복지부 자살예방 보도준칙 4.0, 한국생명존중희망재단
+> 검증일: 2026-11-06
+> 적용 범위: Quality Rater Guidelines 2025-09-11판 기준 (2026-11-06 전문 PDF 재확인 시에도 최신판 — Last-Modified 2025-09-11, 182쪽)
 
 ---
 
-## 0. 이 스킬을 언제 쓰는가
+## 1. QRG·E-E-A-T — 자주 틀리는 사실
 
-- 블로그·매체·뉴스레터·SaaS 마케팅 사이트의 신뢰도를 점검할 때
-- AI를 활용한 콘텐츠 제작 워크플로우를 설계할 때
-- 의료·금융·법률·교육 등 YMYL 영역에서 콘텐츠를 발행할 때
-- Google 코어 업데이트 이후 트래픽이 빠진 사이트의 원인을 진단할 때
-- SEO/GEO 작업과 함께 콘텐츠 품질 baseline을 정의할 때
-
-학술 논문 작성·인용은 다루지 않는다.
-
----
-
-## 1. E-E-A-T 정의와 진화
-
-### 1-1. 4요소
-
-| 약자 | 의미 | 핵심 질문 | 한 줄 요약 |
-|------|------|-----------|------------|
-| **E**xperience | 직접 경험 | "글쓴이가 실제로 해봤는가?" | 1인칭 경험·사진·날짜·구체 디테일 |
-| **E**xpertise | 전문성 | "주제에 대한 깊은 지식이 있는가?" | 자격·경력·기술적 정확성 |
-| **A**uthoritativeness | 권위 | "이 주제의 신뢰 가능한 출처로 인용되는가?" | 백링크·언급·표창·도메인 평판 |
-| **T**rustworthiness | 신뢰 | "이 사이트·페이지를 믿을 수 있는가?" | 정확성·투명성·안전·면책 |
-
-### 1-2. 진화 타임라인
-
-| 시점 | 변화 |
-|------|------|
-| 2014 | E-A-T 최초 도입 (Expertise·Authoritativeness·Trustworthiness) — 연도는 2026-09-26 1차 미대조 |
-| 2022-12-15 | Experience(E) 추가 → E-E-A-T 4요소로 확장 (Google Search Central Blog, 2022-12-15 원문 확인) |
-| 2023-11 | QRG 업데이트 + 개요 문서(An Overview) 발행 |
-| 2024-03-05 | March 2024 core update — "There's no longer one signal or system" (helpfulness 판단이 코어 랭킹 시스템 여러 신호로 흡수), scaled content abuse 등 신규 스팸 정책 3종 (Google Blog 2024-03-05 원문) |
-| 2025-09-11 | 현행 QRG 182쪽 — §2.3 YMYL을 Health or Safety / Financial Security / Government, Civics & Society / Other 4유형으로 기술 |
+- **E-E-A-T는 직접 랭킹 신호(단일 점수)가 아니다.** QRG 는 랭킹 시스템을 평가하는 사람 평가자용 지침이고, 평가자 점수가 페이지 랭킹을 바꾸지 않는다. "점수를 올린다"가 아니라 "신호로 잡힐 구조를 만든다".
+- Experience(E)는 **2022-12-15** 추가(Search Central Blog 원문). 최초 E-A-T 도입 연도(2014)는 2026-09-26 1차 미대조.
+- **Trust 최상위** — QRG 2025-09-11판 §3.4 원문: "Trust is the most important member of the E-E-A-T family because untrustworthy pages have low E-E-A-T no matter how Experienced, Expert, or Authoritative they may seem." 바로 뒤 예시: "a financial scam is untrustworthy, even if the content creator is a highly experienced and expert scammer".
+- Experience 가 항상 우월하지는 않다 — 세무·약물 상호작용·법률 절차처럼 반복 가능한 일반 정보는 Expertise 가 앞선다.
 
 > 주의 (2026-09-26 정정): 이전 판의 "2025-09-11판에 AI Overviews 평가 챕터 신설"은 전문 PDF(182쪽)에서 "AI Overview" 문구가 한 번도 나오지 않아 삭제했다. 생성형 AI는 §2.x 정의·Lowest 품질(scaled content abuse) 판단 부분에서 다룬다.
 
-### 1-3. **E-E-A-T는 직접 랭킹 신호가 아니다**
+> 주의 (2026-09-26 정정): 이전 판의 따옴표 인용 *"highest E-E-A-T standards"*는 QRG 전문(182쪽)에 없는 문구다. 원문은 명확한 YMYL 주제 페이지에 "the most scrutiny"를 요구하고 "a high level of E-E-A-T may be required"라고 서술한다(§2.3, §7.3). 요약 표현으로만 사용할 것. (구 ymyl-content-seo)
 
-> 주의: E-E-A-T는 알고리즘 안의 단일 점수가 아니다.
+- About Us·연락처는 QRG §2.5.3 기준 *목적에 비해 충분한지*를 볼 뿐 분량 기준이 없다 — "한 문단이면 불충분"은 QRG 문구가 아닌 실무 해석(2026-09-26 보완).
 
-Google 공식 입장:
-- QRG는 검색 *랭킹 시스템 평가*를 위해 사람 평가자(Quality Rater)가 사용하는 가이드
-- 평가자의 점수가 직접 페이지 랭킹을 바꾸지 않는다
-- 대신 Google이 "이런 콘텐츠를 보상하는 시스템"을 설계할 때 *방향*을 제시
+## 2. YMYL — 현행 4유형과 스펙트럼
 
-**실무 함의:** "E-E-A-T 점수를 올린다"는 표현보다 "E-E-A-T가 신호로 잡힐 만한 콘텐츠·사이트 구조를 만든다"가 정확하다.
-
----
-
-## 2. Trustworthiness가 최상위인 이유
-
-### 2-1. Google 공식 표현
-
-> "Trust is the most important member of the E-E-A-T family because untrustworthy pages have low E-E-A-T no matter how Experienced, Expert, or Authoritative they may seem."
-> — Quality Rater Guidelines 2025-09-11판, §3.4 "Experience, Expertise, Authoritativeness, and Trust (E-E-A-T)" (2026-09-26 전문 PDF 원문 대조 — 바로 뒤에 "a financial scam is untrustworthy, even if the content creator is a highly experienced and expert scammer" 예시)
-
-### 2-2. 시각 모델
-
-```
-        ┌─────────────────┐
-        │      Trust      │  ← 최상위. 깨지면 나머지 무의미
-        ├─────┬─────┬─────┤
-        │  E  │  E  │  A  │  ← Trust를 지탱하는 3개 기둥
-        │ xp. │ xp. │ uth.│
-        └─────┴─────┴─────┘
-```
-
-### 2-3. Trust가 깨지는 시나리오
-
-| 상황 | 결과 |
-|------|------|
-| 전문가가 작성했지만 정보가 부정확 | Trust ❌ — 다른 E·E·A 무의미 |
-| 권위 있는 사이트지만 결제 페이지가 HTTPS 아님 | Trust ❌ |
-| 경험·전문성 모두 우수하지만 광고와 본문 구분이 모호 | Trust ⚠️ |
-| 사기성 콘텐츠 — "사기 전문가가 사기 글 작성" | Trust ❌ — 분명한 사례 (QRG 명시) |
-
-### 2-4. Trust의 4대 구성요소
-
-1. **정확성(Accuracy)** — 사실 오류·출처 미상 통계 없음
-2. **안전(Safety)** — HTTPS, 결제 보안, 악성 다운로드 없음
-3. **투명성(Transparency)** — 누가·왜·어떻게 운영하는지 공개
-4. **책임성(Accountability)** — 연락처·정정 절차·면책 조항
-
----
-
-## 3. Experience — 2022 신규 요소
-
-### 3-1. Experience가 추가된 배경
-
-기존 E-A-T는 "전문가만 평가 가능"이라는 한계가 있었다. 일반 사용자의 *직접 경험*도 가치 있다는 인식이 반영되어 2022-12-15에 Experience가 추가되었다.
-
-### 3-2. 주제별 Experience 적용 예시
-
-| 주제 유형 | Experience 시그널 |
-|-----------|-------------------|
-| **제품 리뷰** | 실제 구매·개봉·사용 사진, 사용 기간, 단점 언급 |
-| **여행기** | 방문 날짜, 현장 사진(메타데이터 포함), 동행자·날씨 등 디테일 |
-| **의료 정보** | 환자 본인 경험 vs 의사 임상 경험 — 둘 다 가치 있지만 *맥락 다름* |
-| **소프트웨어 튜토리얼** | 실제 실행 스크린샷, 에러 메시지 원문, 해결 과정 |
-| **음식점 리뷰** | 영수증·메뉴 사진·방문 시각·동행 인원 |
-
-### 3-3. Experience를 증명하는 구체 디테일
-
-- 구체 날짜·시각 ("2026년 3월 화창한 토요일 오후")
-- 1인칭 서술 ("내가 도착했을 때 줄이 30명쯤이었다")
-- 비교 ("이전에 쓰던 X와 비교하면…")
-- 단점·실패 언급 (광고성 글은 단점을 거의 안 적는다)
-- EXIF 메타데이터가 살아있는 본인 사진
-
-### 3-4. **Experience가 항상 우월하지는 않다**
-
-> 주의: 주제에 따라 Expertise가 Experience보다 중요한 경우가 있다.
-
-- 세무 신고법: 환자 1명의 경험 < 회계사 1명의 전문 지식
-- 약물 상호작용: 사용자 후기 < 임상 의사 검토
-- 법률 절차: 1회 경험자 < 전문 변호사
-
-**판정 기준:** 주제가 *반복 가능한 일반 정보*인가, *개별 사례 경험*인가에 따라 다르다.
-
----
-
-## 4. 저자(Author) 표기 — E-E-A-T 코어 신호
-
-### 4-1. 필수 요소 체크리스트
-
-- [ ] **byline**: 모든 본문 페이지에 글쓴이 이름 노출
-- [ ] **저자 프로필 페이지**: `/author/{slug}` 형태의 독립 페이지
-- [ ] **자격·약력·경력**: 200자 이상의 진짜 소개
-- [ ] **프로필 사진**: 익명 아바타가 아닌 실제 인물 사진
-- [ ] **외부 프로필 링크**: LinkedIn, X, GitHub, 학회 페이지 등
-- [ ] **연락 수단**: 이메일 또는 폼
-- [ ] **저자별 글 목록**: 동일 저자의 다른 글 인덱스
-
-### 4-2. Schema.org 구조화 데이터
-
-```html
-<!-- Article 페이지 -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Article",
-  "headline": "글 제목",
-  "datePublished": "2026-06-02T09:00:00+09:00",
-  "dateModified": "2026-06-02T09:00:00+09:00",
-  "author": {
-    "@type": "Person",
-    "@id": "https://example.com/author/hong-gildong#person",
-    "name": "홍길동",
-    "url": "https://example.com/author/hong-gildong"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "사이트명",
-    "url": "https://example.com"
-  }
-}
-</script>
-```
-
-```html
-<!-- 저자 프로필 페이지 — Person 본체 1번만 정의 -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Person",
-  "@id": "https://example.com/author/hong-gildong#person",
-  "name": "홍길동",
-  "image": "https://example.com/images/hong-gildong.jpg",
-  "jobTitle": "내과 전문의",
-  "affiliation": {
-    "@type": "Organization",
-    "name": "○○대학교 의료원"
-  },
-  "alumniOf": "○○대학교 의과대학",
-  "sameAs": [
-    "https://www.linkedin.com/in/hong-gildong",
-    "https://x.com/honggildong",
-    "https://scholar.google.com/citations?user=XXXX"
-  ]
-}
-</script>
-```
-
-**핵심 원칙:**
-- Person 본체는 *저자 프로필 페이지 1곳*에만 두고, 다른 글에서는 `@id`로 참조
-- 변경이 생기면 한 곳만 업데이트하면 된다 (DRY)
-
-### 4-3. YMYL 분야의 자격증 명시
-
-| 분야 | 권장 표기 |
-|------|-----------|
-| 의료 | "내과 전문의, 의사면허번호 ○○○○○" + "Medically reviewed by Dr. ○○○" |
-| 금융 | "공인재무설계사(CFP), AFPK 자격" |
-| 법률 | "변호사, 대한변호사협회 등록번호 ○○○○" |
-| 세무 | "공인회계사 / 세무사 자격 보유" |
-| 부동산 | "공인중개사, 등록번호 ○○○○○" |
-
-### 4-4. 익명·가명 처리
-
-| 케이스 | 권장 처리 |
-|--------|-----------|
-| 개인정보 노출 위험 큰 분야(정치·내부고발) | 가명 + 편집부 책임 명시 + 검증 절차 공개 |
-| 일반 블로그 익명 | YMYL 영역이면 신뢰도 하락 — 실명 권장 |
-| 회사 공식 블로그 | 부서명·팀명 byline 가능 (예: "OO팀") + 회사 책임 명시 |
-
----
-
-## 5. About Us · Contact · 신뢰 페이지
-
-### 5-1. "Who, Why, How" 프레임워크
-
-Google이 헬프 문서("Creating helpful, reliable, people-first content" — "Ask 'Who, How, and Why' about your content", 2026-09-26 원문 확인)에서 직접 제시하는 3가지 질문:
-
-- **Who** — 누가 이 콘텐츠를 만들었는가? (저자 byline, 회사 소개)
-- **Why** — 왜 이 콘텐츠를 만들었는가? (사명, 독자에게 어떤 도움)
-- **How** — 어떻게 만들었는가? (편집 프로세스, AI 사용 여부, 출처 검증 절차)
-
-### 5-2. About Us 페이지 필수 요소
-
-- 회사·매체의 사명(mission)과 운영 주체
-- 설립일·역사
-- 핵심 인물 소개 (편집장·CEO·주요 기여자)
-- 편집 가이드라인 (별도 페이지 링크)
-- 광고·제휴·후원 정책 공개
-- 외부 인증·수상·언론 인용
-
-> 주의: 한 문단짜리 About Us는 신뢰 신호로 약하다(실무 권장). QRG §2.5.3은 About Us·연락처·고객서비스 정보를 *목적에 비해 충분한지* 보라고 할 뿐 분량 기준을 두지 않는다 — "불충분"은 QRG 문구가 아닌 권장 해석이다(2026-09-26 보완).
-
-### 5-3. Contact 페이지 최소 요건
-
-- 이메일 주소 또는 폼
-- 운영 주체 회사명·대표자
-- 사업장 주소 (가능한 경우)
-- 전화번호 (이커머스·금융 등 강력 권장)
-
-### 5-4. 편집·교정 프로세스 공개 페이지
-
-E-E-A-T 강한 매체가 갖는 페이지:
-
-- **Editorial Guidelines** — 작성 원칙·취재 윤리
-- **Fact-Checking Policy** — 사실 확인 절차
-- **Corrections Policy** — 오류 발견 시 정정 방법
-- **AI Usage Disclosure** — AI 활용 범위 (2024 이후 권장)
-- **Sponsored Content Policy** — 광고와 본문 구분 기준
-
-### 5-5. 한국 사이트 특유의 신뢰 페이지 (필수 / 권장)
-
-| 항목 | 법적 의무 | 표시 위치 |
-|------|----------|-----------|
-| 사업자등록번호 | 전자상거래법 | 푸터 |
-| 대표자명 | 전자상거래법 | 푸터 |
-| 사업장 주소 | 전자상거래법 | 푸터 |
-| 통신판매업 신고번호 | 전자상거래법 (판매 사이트) | 푸터 + 공정거래위원회 조회 링크 |
-| 연락처(전화·이메일) | 전자상거래법 | 푸터·Contact |
-| 개인정보처리방침 | 개인정보보호법 | 푸터 별도 페이지 |
-| 이용약관 | 권장 | 푸터 |
-| 환불·교환 정책 | 권장 (의무인 경우 있음) | 푸터·Contact |
-
-> 한국 이커머스 사이트는 푸터의 사업자 정보 박스가 *그 자체로 강한 신뢰 신호*다. 정부 공식 등록 정보와 연결되기 때문이다.
-
----
-
-## 6. YMYL 콘텐츠 — 더 엄격한 E-E-A-T
-
-### 6-1. YMYL 영역 (QRG 2025-09-11판 §2.3 원문 기준)
-
-| 유형 (QRG 원문) | 원문 정의 요약 | 예시 |
+| 유형 (QRG §2.3 원문 명칭) | 원문 정의 요약 | 예시 |
 |----------|------|------|
-| **YMYL Health or Safety** | 정신·신체·정서 건강 또는 물리적·온라인 안전을 해칠 수 있는 주제 | 심장마비 증상, 약물, 지진 시 대처 |
-| **YMYL Financial Security** | 자신과 가족을 부양할 능력을 해칠 수 있는 주제 | 투자 방법, 대출, 세금 |
-| **YMYL Government, Civics & Society** | 집단·공공 이익·공공기관 신뢰·선거와 투표 정보 등 | 투표 자격, 운전면허 취득 요건 |
+| **YMYL Health or Safety** | 정신·신체·정서 건강 또는 물리적·온라인 안전을 해칠 수 있는 주제 | 심장마비 증상, 약물, 정신건강, 자해/자살, 지진 시 대처 |
+| **YMYL Financial Security** | 자신과 가족을 부양할 능력을 해칠 수 있는 주제 | 투자, 세금, 대출, 보험, 은퇴 |
+| **YMYL Government, Civics & Society** | 집단·공공 이익·공공기관 신뢰·선거와 투표 정보 등 | 투표 자격, 운전면허 취득 요건, 복지 정책 |
 | **YMYL Other** | 사람을 해치거나 사회 복리에 부정적인 기타 주제 | — |
 
-> 주의 (2026-09-26 정정): 이전 판의 6분류(Health & Safety / Financial / **Legal / News & Current Events / Shopping**)는 **구판 QRG 분류**다. 현행판은 위 4유형이며, 법률·뉴스·쇼핑은 해당 주제가 위 유형의 피해를 줄 수 있을 때 YMYL로 판단한다. 또한 QRG는 YMYL을 "스펙트럼"으로 보고 "Many or most topics are not YMYL"이라고 명시한다.
+> 주의 (2026-09-26 정정): 이전 판의 6분류(Health & Safety / Financial / **Legal / News & Current Events / Shopping**)는 **구판 QRG 분류**다. 현행판은 위 4유형이며, 법률·뉴스·고가 쇼핑은 해당 주제가 위 유형의 피해를 줄 수 있을 때 YMYL로 판단한다.
+>
+> 주의: YMYL은 **스펙트럼**이다. QRG 원문: "it may be helpful to think of topics as clear YMYL, definitely not YMYL or something in between. Pages on clear YMYL topics require the most scrutiny" — 또한 "Many or most topics are not YMYL".
 
-### 6-2. YMYL 강화 체크리스트
+해(harm)의 잠재성(개인 건강 → 개인 재정 → 타인 안전 → 사회 후생)이 높을수록 "high level" / "very high level of E-E-A-T"와 "the most scrutiny"가 요구된다.
 
-- [ ] 저자의 자격증·전문 경력 명시
-- [ ] 의료/법률은 *별도 전문가 검토* 표시 ("Medically reviewed by ...")
-- [ ] 출처는 정부·학회·peer-reviewed 저널 우선
-- [ ] 최근 업데이트 날짜 표시 (`dateModified`)
-- [ ] 면책 조항 — "본 글은 일반 정보 제공 목적이며, 개별 상담은 전문가에게 문의하세요"
-- [ ] 응급 상황 안내 (의료 콘텐츠는 119/응급실 안내 권장)
+## 3. AI 생성 콘텐츠 — 원문 기준
 
-### 6-3. YMYL은 별도 스킬에서 더 자세히
+- AI 사용 자체는 페널티가 아니다 — 이것은 Google 입장의 **요약**이며 따옴표 직접 인용이 아니다. QRG 원문: "the use of Generative AI tools alone does not determine the level of effort or Page Quality rating". QRG 는 저노력 생성 AI 양산을 Lowest 로 평가하도록 지시한다.
+- **Scaled content abuse**(2024-03-05 신규 스팸 정책 3종 중 하나, 기존 automatically-generated content 정책 확장) 원문: "Scaled content abuse is when many pages are generated for the primary purpose of manipulating Search rankings and not helping users … no matter how it's created." 기준은 양이 아니라 의도와 결과 가치.
+- March 2024 core update — "There's no longer one signal or system": helpfulness 판단이 코어 랭킹 시스템의 여러 신호로 흡수됐다.
 
-→ 별도 스킬 `writing/ymyl-content-seo`(SEO 전체 프로파일 설치 시)에서 분야별 디테일 다룸. 본 스킬은 *프레임워크* 수준에서만 다룬다.
+> 주의: 미검증 — 이전 판의 "영향 받은 일부 사이트 50~80% 트래픽 감소", "2025-06 사이트 단위 manual action 본격화, 의료·금융 우선 타겟"은 출처를 확인하지 못해 삭제했다(2026-09-26).
 
----
+> 주의 (2026-09-26 정정): 현행 "Creating helpful, reliable, people-first content" 문서(최종 수정 2025-12-10)의 질문 묶음은 **Content and quality(12) / Expertise(4) / Focus on people-first content(5) / Avoid creating search engine-first content(10) / Who·How(각 3)** 이다. 이전 판의 "32개 질문 4묶음, Presentation and Production 묶음"은 구판 구성이며 현행 문서에 Presentation and Production 묶음은 없다(페이지 경험은 "Provide a great page experience" 단락). "Who, How, and Why" 질문은 같은 문서 원문("Ask 'Who, How, and Why' about your content").
 
-## 7. AI 생성 콘텐츠와 E-E-A-T
+- fake freshness(본문 변경 없이 dateModified 만 갱신): QRG 는 페이지 표시 날짜가 실제 생성·갱신과 다를 수 있음을 평가자에게 주지시킨다. "알고리즘이 fake freshness 패턴을 감지"한다는 Google 공식 서술은 2026-09-26 미확인.
 
-### 7-1. Google 공식 입장 (2023-02 블로그 + 현행 가이드)
+## 4. schema.org 정정 (YMYL 마크업)
 
-> AI 사용 자체는 페널티가 아니며, 핵심은 *Helpful Content*다. (Google 입장의 **요약** — 따옴표 직접 인용 아님. QRG 원문: "the use of Generative AI tools alone does not determine the level of effort or Page Quality rating")
+> 주의: schema.org `Attorney` 정의 원문: "This type is deprecated - LegalService is more inclusive and less ambiguous." 신규 마크업은 `LegalService` 사용 (2026-09-26 대조).
 
-> Helpful Content System의 Google 공식 자가 점검 질문 5묶음(Content and quality / Expertise / Focus on people-first content / Avoid search engine-first content / Who·How)은 `references/REFERENCE.md` §8 참조.
+> 주의 (2026-09-26 정정): `"mainContentOfPage": ["Diagnosis", "Treatment", "Prevention"]`는 schema.org 정의상 기대 타입이 **WebPageElement**(구 `aspect` 속성을 대체)여서 문자열 배열은 부적절하다. 청중은 MedicalWebPage 고유 속성 `medicalAudience`(MedicalAudience 또는 MedicalAudienceType)를 쓴다. `lastReviewed`(Date)·`reviewedBy`(Organization/Person)는 WebPage 속성으로 정의 확인.
 
-| 행위 | Google 평가 |
-|------|-------------|
-| AI를 글쓰기 보조로 사용 + 사람 편집·검증 | OK |
-| AI로 빠른 초안 작성 후 전문가 검토·재집필 | OK |
-| AI로 대량 생성 + 검증 없이 발행 | **scaled content abuse — 페널티** |
-| AI 콘텐츠로 검색 노출만 노린 사이트 | 스팸 정책 위반 |
+- Person 본체는 저자 프로필 페이지 1곳에만 두고 다른 글에서는 `@id`로 참조.
 
-### 7-2. Scaled Content Abuse 정책 (2024-03)
+## 5. 한국 사이트 신뢰 신호
 
-- 정의 (Google Blog 2024-03-05 원문): "Scaled content abuse is when many pages are generated for the primary purpose of manipulating Search rankings and not helping users … no matter how it's created."
-- 2024-03-05 발표된 신규 스팸 정책 3종 중 하나 (기존 automatically-generated content 정책을 확장)
-- 핵심 기준: **양이 아니라 의도와 결과 가치**
+**전자상거래 푸터** — 한국 이커머스는 정부 등록 정보와 연결되는 사업자 정보 박스 자체가 강한 신뢰 신호다.
 
-> 주의: 미검증 — 이전 판의 "영향 받은 일부 사이트 50~80% 트래픽 감소"는 출처가 없어 삭제했다(2026-09-26).
-
-### 7-3. AI 안전 사용 워크플로우
-
-```
-[1] 주제·아웃라인 — 사람 작성
-[2] 초안 — AI 보조 가능
-[3] 사실 확인 — 사람 + 공식 출처 검증
-[4] 1인칭 경험·디테일 추가 — 사람 (Experience 신호)
-[5] 전문가 검토 — YMYL이면 필수
-[6] 최종 편집 — 사람
-[7] AI 사용 공개 — Editorial 페이지 + 필요 시 글 하단
-```
-
-### 7-4. AI 사용 공개(Disclosure) 모범 예시
-
-```
-이 글은 ChatGPT(GPT-4)로 초안을 작성한 뒤,
-편집자 ○○○이 자료 검증·재집필을 거쳐 게재되었습니다.
-사실 확인 출처는 본문 하단 [참고자료]에 명시되어 있습니다.
-```
-
-> 주의: "Edited by AI" 한 줄만 박고 사람 검토가 없는 것은 *공개의 의미를 잃는다*. Helpful Content 기준에서 부정적 신호다.
-
-### 7-5. **흔한 함정 — 셀프 검증 부재**
-
-| 함정 | 결과 |
+| 항목 | 근거 |
 |------|------|
-| AI가 만든 통계·인용을 그대로 사용 | 환각으로 인한 사실 오류 → Trust ❌ |
-| AI 생성 사진을 직접 촬영한 것처럼 사용 | Experience 신호 위반 + 신뢰 붕괴 |
-| 같은 AI 프롬프트로 50개 사이트 운영 | 명백한 scaled content abuse |
-| AI가 쓴 "전문가" 자격으로 YMYL 콘텐츠 발행 | 자격 사칭 — 가장 강한 페널티 신호 |
+| 사업자등록번호·대표자명·사업장 주소·연락처 | 전자상거래법 |
+| 통신판매업 신고번호 (+ 공정거래위원회 조회 링크) | 전자상거래법 (판매 사이트) |
+| 개인정보처리방침 | 개인정보보호법 |
+| 환불·교환 정책 | 권장 (의무인 경우 있음) |
 
----
+**의료 (의료법)**
+- 광고 주체 제한(제56조 ①): 의료기관 개설자·의료기관의 장·의료인이 아닌 자는 의료 광고 불가.
+- 금지 유형(제56조 ② 1~15호 중 주요, 2026-09-26 현행 조문 대조): 신의료기술 평가 미경유(1호), 환자 치료경험담 등 치료 효과 오인 우려(2호), 거짓(3호), 다른 의료인등과 **비교**(4호 — "우월" 비교에 한정되지 않음), 비방(5호), 직접적 시술행위 노출(6호), 심각한 부작용 등 중요 정보 누락(7호), 과장(8호), 기사·전문가 의견 형태(10호), 심의 미경유·심의 내용과 다른 광고(11호), 상장·인증·보증·추천 표방(14호, 법정 인증 등 예외).
+- 사전심의(제57조·시행령 제24조): 의사회·치과의사회·한의사회 및 요건을 갖춘 소비자단체가 신고한 **자율심의기구**. 대상 매체에 **전년도 말 기준 직전 3개월 일일 평균 이용자 수 10만 명 이상**인 인터넷 매체·SNS 광고매체 포함(시행령 제24조 ②, 2018. 9. 28. 개정). 명칭·소재지·전화번호·진료과목·의료인 성명 등만의 광고는 심의 면제 가능(제57조 ③).
 
----
+> 주의 (2026-09-26 정정): "2025년 가이드라인 개정으로 블로그·유튜브·인스타그램 포함"은 근거 문서를 확인하지 못했다. 이용자 수 10만 명 기준은 **2018년부터 시행령에 있는 기준**이다. "심의필번호 본문 표기 필수"는 자율심의기구 규정 소관으로 2026-09-26 미대조(`미검증`).
 
-> 상세 레퍼런스 (예제·고급 패턴·흔한 실수) → [`references/REFERENCE.md`](references/REFERENCE.md)
+> 주의: 미검증 — HONcode는 2022년 운영 종료. 대안으로 거론되던 "NHS Information Standard"는 이미 종료된 제도로 알려져 있고(영국은 PIF TICK 등으로 대체), "Health on the Net 후속 인증"은 실체를 확인하지 못했다. 한국은 정부 공인 의료정보 인증 제도가 없다 — 자체 편집 가이드라인 공개가 차선.
+
+**금융 (금융소비자 보호에 관한 법률 제22조, 2021-03-25 시행, 2026-09-26 현행 조문 대조)** — ① 금융상품판매업자등이 아닌 자의 광고 원칙 금지(협회 등 예외) ② 오해 없도록 명확·공정 전달 ③ 필수 포함 사항(설명서·약관 권유, 판매업자 명칭·상품 내용, 투자 위험, 과거 운용실적 ≠ 미래 수익 보장 등). 사전심의는 권역별 협회. **광고심의필번호** 표시는 협회 규정 소관, 2026-09-26 미대조(`미검증`). "안전한 고수익"·"원금 보장 + 고수익"은 위반 소지.
+
+**법률 (변호사법)** — 변호사 아닌 자가 변호사·법률사무소를 표시하거나 이익 목적으로 법률 상담 등을 취급한다는 뜻을 표시하면 **변호사법 제112조 제3호**(3년 이하 징역 또는 2천만원 이하 벌금) 위반(2026-09-26 현행 조문 대조 — 이전 판의 "제109조"는 금품 수수 법률사무 취급 처벌 조항으로, 광고 표시 행위는 제112조 제3호가 직접 규정). 규범 체계는 변호사법 + 「변호사 광고에 관한 규정」 + 「변호사 광고에 관한 규칙」(2024-10 신설) + 변호사검색서비스 운영 가이드라인(2025-05).
+> 주의: 미검증 — "AI 사용 광고 시 협회 사전 등록·검토 변호사 이름 명시", "'전관 변호사'·'전관예우' 표현 금지" 등 2025-02-06 개정 내용은 대한변호사협회 규정 원문을 2026-09-26 재검증에서 대조하지 못했다.
+
+**광고·제휴 표기** — 공정위 2024-06 시행 「추천·보증 등에 관한 표시·광고 심사지침」: 신용카드·대출·증권 계좌 추천 등 어필리에이트는 수수료 수령 사실을 명확한 한국어로 고지(본문 상단 + 링크 직전).
+
+**위기 자원** — 자해·자살 키워드 글은 본문에 **109**(자살예방 통합 상담, 2024-01-01 개통)·**1577-0199**(정신건강 위기상담)·**119** 안내 박스. 자살예방 보도준칙 4.0: 구체적 방법·도구·장소·동기 비공개. 상세 문구 → `crisis-intervention-resources-korea`.
+
+**네이버 병행** — 한국 의료·금융 검색은 네이버 비중이 높고, 네이버는 의사·병원·공식 기관 출처를 우대하는 자체 평가(세부 미공개)를 가진다. 네이버 블로그 의료광고도 이용자 수 기준(시행령 제24조)에 따라 사전심의 대상이 될 수 있다("2025 가이드" 근거는 미검증). 한국어 YMYL 블로그는 1차 출처 인라인 인용 비율이 낮아, 의식적으로 강화하면 차별화된다.

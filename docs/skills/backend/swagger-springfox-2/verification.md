@@ -2,7 +2,7 @@
 skill: swagger-springfox-2
 category: backend
 version: v1
-date: 2026-09-26
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -32,7 +32,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `swagger-springfox-2` |
 | 스킬 경로 | `.claude/skills/swagger-springfox-2/SKILL.md` |
-| 검증일 | 2026-09-26 (최초 2026-04-23) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-26 · 최초 2026-04-23) |
 | 검증자 | skill-creator → 2026-09-26 재검증: 메인 오케스트레이션 (Claude Sonnet 5) |
 | 스킬 버전 | v1 |
 
@@ -87,6 +87,9 @@ status: APPROVED
 | Maven Central `springfox-boot-starter:3.0.0` | https://mvnrepository.com/artifact/io.springfox/springfox-boot-starter/3.0.0 | ⭐⭐⭐ High | 2026-04-23 | 의존성 좌표 및 릴리즈 검증 |
 | Maven Central `springfox-swagger2:2.9.2` | https://central.sonatype.com/artifact/io.springfox/springfox-swagger2/2.9.2 | ⭐⭐⭐ High | 2026-04-23 | 2.9.2 릴리즈 날짜(2018-06-23) 및 좌표 검증 |
 | Baeldung: Setting Up Swagger 2 | https://www.baeldung.com/swagger-2-documentation-for-spring-rest-api | ⭐⭐ Medium | 2026-04-23 | Docket/ApiInfo 기본 패턴 크로스 체크용 |
+| Maven Central metadata (재검증) | https://repo1.maven.org/maven2/io/springfox/springfox-boot-starter/maven-metadata.xml | ⭐⭐⭐ High | 2026-11-09 | springfox-boot-starter·springfox-swagger2 모두 latest=release=3.0.0, lastUpdated 2020-07-14 |
+| GitHub API springfox/springfox (재검증) | https://github.com/springfox/springfox | ⭐⭐⭐ High | 2026-11-09 | 아카이브는 아니나 마지막 push 2024-03-18, 신규 릴리스 없음 |
+| Maven Central springdoc-openapi-ui metadata (재검증) | https://repo1.maven.org/maven2/org/springdoc/springdoc-openapi-ui/maven-metadata.xml | ⭐⭐⭐ High | 2026-11-09 | Boot 2.x 용 springdoc 1.8.0 이 여전히 마지막 (references 전환 가이드 버전 유효) |
 
 ---
 
@@ -112,6 +115,9 @@ status: APPROVED
 | Springfox 어노테이션 패키지 = `io.swagger.annotations.*` | VERIFIED | Springdoc 공식 마이그레이션 페이지의 어노테이션 매핑 표 |
 | Springdoc 어노테이션 매핑 표 (`@Api→@Tag`, `@ApiOperation→@Operation` 등) | VERIFIED | https://springdoc.org/migrating-from-springfox.html 공식 |
 | Spring Boot 3.x(Spring 6, Jakarta) 에서 Springfox 미지원 | VERIFIED | Springfox 3.0.0 이후 릴리즈 없음 + 다수 커뮤니티 보고 |
+| (2026-11-09 재검증) Springfox 3.0.0 이 여전히 마지막 릴리스 | VERIFIED | Maven Central metadata(boot-starter·swagger2) + GitHub 저장소 활동 |
+| (2026-11-09 재검증) Boot 2.x 전환 대상 springdoc-openapi-ui 1.8.0 이 마지막 | VERIFIED | Maven Central metadata + springdoc 공식 호환 표(2.x 라인은 Boot 3) |
+| (2026-11-09 재검증) Spring Boot 3.x 에서 Springfox 미지원 | VERIFIED | Springfox 3.0.0 이후 Jakarta 대응 릴리스 없음(Maven Central) + springdoc 마이그레이션 페이지 |
 
 ### 4-2. 구조 완전성
 
@@ -225,3 +231,5 @@ application.properties에 spring.mvc.pathmatch.matching-strategy=ant_path_matche
 |------|------|-----------|--------|
 | 2026-04-23 | v1 | 최초 작성. Springfox 2.9.2 / 3.0.0 의존성, @EnableSwagger2 + Docket 설정, 어노테이션(@Api/@ApiOperation/@ApiParam/@ApiResponse/@ApiModel/@ApiModelProperty), Docket 그룹화, 전역 JWT 헤더(2.9.2 globalOperationParameters / 3.0.0 globalRequestParameters), Spring Boot 2.6+ PathPatternParser NPE 이슈 + 해결책(ant_path_matcher), Swagger UI/JSON 경로, Security permitAll 화이트리스트, Springdoc 전환 매핑 표, 흔한 실수 11개 포함 | skill-creator |
 | 2026-09-26 | v1 | 재검증 — 핵심 클레임 전부 변동 없음 확인(Springfox 3.0.0 마지막 릴리스, Spring Boot 3.x 미지원, 2.6+ NPE 해결책). 내용 변경 없음 → APPROVED 유지 | 메인 오케스트레이션 (Claude Sonnet 5) |
+| 2026-11-09 | v1 | 재검증 — Springfox 3.0.0 마지막 릴리스(Maven Central)·Boot 3 미지원·Boot 2.x 전환용 springdoc 1.8.0 마지막 확인. 내용 변경 없음(날짜만 갱신, skill-tester 생략) → APPROVED 유지 | Claude (Opus 5.5) |
+| 2026-11-12 | v1.1 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 EOL·적용 범위, 2.9.2 vs 3.0.0 차이표(@EnableSwagger2·전역 헤더 API·UI/JSON 경로)·혼용 금지·공식 좌표, io.swagger.annotations vs v3·@ApiResponse code/message, @ApiParam 인식 조건·groupName 필수, Boot 2.6+ NPE·ant_path_matcher, Boot 3 미지원, Security permitAll 경로, Springdoc 의존성·어노테이션 매핑 / 덜어낸 것 의존성 XML, Docket·ApiInfo·그룹화·전역 헤더 전체 예제 코드, select() 체인 표, 컨트롤러·DTO 어노테이션 예제·대응표, SecurityFilterChain 예제, OpenAPI Bean 코드, 흔한 실수 표(references/REFERENCE.md 본문 흡수 후 폴더 삭제) · 같은 날 정정: Boot 2.7 OSS 종료일 2023-11-18 → **2023-06-30**(spring.io 공식 API `ossSupportEndDate`, 마지막 OSS 릴리스 2.7.18 = 2023-11-23 — spring.io 블로그 "2.7.18 marks the end of open source support for Spring Boot 2.x"), spring-multi-datasource-oracle-mysql 스킬과 일치 | 정리 |

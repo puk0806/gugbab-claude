@@ -1,6 +1,6 @@
 ---
 name: spring-boot-gradle-setup
-description: Spring Boot 프로젝트 초기 셋업 - 레거시(2.5.12/Java 11/WAR/Tomcat 9)와 모던(3.4+/Java 21/Jar/Native) Gradle 빌드 스크립트, 패키징, 프로파일 분리, 2→3 마이그레이션 포인트
+description: Spring Boot 프로젝트 초기 셋업 - 레거시(2.5.12/Java 11/WAR/Tomcat 9)와 모던(3.4+/Java 21/Jar/Native) Gradle 빌드 스크립트, Gradle 호환 매트릭스, WAR 배포 흔한 실수, 4.x 마이그레이션 포인트(버전 매트릭스·Starter 이름 변경)
 ---
 
 # Spring Boot + Gradle 프로젝트 셋업
@@ -14,11 +14,11 @@ description: Spring Boot 프로젝트 초기 셋업 - 레거시(2.5.12/Java 11/W
 > - https://endoflife.date/spring-boot
 > - https://plugins.gradle.org/plugin/org.springframework.boot
 >
-> 검증일: 2026-09-28 (최초 2026-04-22)
+> 검증일: 2026-11-09 (최초 2026-04-22)
 
 > 주의: Spring Boot 2.5.x는 OSS 지원이 종료된 상태(2.5 EOL ≈ 2023-02)이며, 2.7.x만 상용 Extended 지원이 연장되어 있습니다. 레거시 스택 유지 보수 용도로만 사용하고, 신규 프로젝트에는 3.4+ 또는 4.0+를 선택하세요.
 >
-> 주의: 2026-09 기준 Spring Boot 최신 안정은 4.1.1(2026-08-21 릴리즈, Spring Framework 7 기반)입니다. 본 스킬은 사용자가 요청한 3.4+를 메인으로 작성하되, 4.0+/4.1+ 마이그레이션 포인트(9.7 Starter 이름 변경 포함)는 섹션 9(references/REFERENCE.md)에서 별도로 다룹니다.
+> 주의: 2026-11-09 기준 Spring Boot 최신 안정은 4.1.2(Spring Framework 7 기반, 3.x 마지막 라인 최신은 3.5.16)입니다. 본 스킬은 사용자가 요청한 3.4+를 메인으로 작성하되, 4.0+/4.1+ 마이그레이션 포인트(9.7 Starter 이름 변경 포함)는 섹션 9(references/REFERENCE.md)에서 별도로 다룹니다.
 
 ---
 
@@ -118,15 +118,6 @@ public class Application extends SpringBootServletInitializer {
 
 > 주의: Spring Boot 2.5.x와 Tomcat 9(또는 그 이하)는 정확히 맞물립니다. 외장 Tomcat을 10.x로 올리려면 Jakarta 네임스페이스가 필요하므로 반드시 Spring Boot 3.x로 올려야 합니다.
 
-### 2.4 Java 버전 설정 (레거시 방식)
-
-Gradle 7.x 이전 스타일에서는 `sourceCompatibility`/`targetCompatibility`를 문자열로 설정하는 관행을 여전히 사용할 수 있습니다. toolchain으로 바꾸고 싶다면 아래 3.3 참고.
-
-```groovy
-sourceCompatibility = '11'
-targetCompatibility = '11'
-```
-
 ---
 
 ## 3. 모던 셋업 (Spring Boot 3.4+ + Java 21 + Jar)
@@ -185,7 +176,9 @@ plugins {
 }
 ```
 
-> 주의: Spring Boot 3.2+ 이후 Spring Boot BOM이 `org.graalvm.buildtools.native` 플러그인 버전(0.10.x)을 관리하므로, 버전 번호를 생략해도 BOM이 자동 주입합니다. 실행 시에는 GraalVM JDK(예: GraalVM 21) toolchain이 필요합니다.
+> 주의: Maven(`spring-boot-starter-parent`)은 공식 예제가 `native-maven-plugin`을 버전 없이 선언합니다. Gradle은 공식 문서에 "`plugins` 블록에 `org.graalvm.buildtools.native`를 포함하라"고만 되어 있고 버전 생략 가능 여부는 명시돼 있지 않으므로 **버전을 명시**합니다(Boot 3.5.16 시스템 요구사항 기준 Native Build Tools 0.10.6). 실행 시에는 GraalVM JDK(예: GraalVM 21) toolchain이 필요합니다.
+>
+> 주의: 미검증 — Gradle `plugins` 블록에서 Boot가 이 플러그인 버전을 대신 정해 주는지는 확인하지 못했습니다(2026-11-09).
 
 빌드 명령:
 ```bash
@@ -195,12 +188,14 @@ plugins {
 
 ### 3.3 Gradle 호환성 매트릭스 (검증된 조합)
 
-| Gradle | JDK 빌드 실행 | Java 21 컴파일 |
-|--------|--------------|----------------|
-| 7.x | 11 ~ 19 | ❌ (8.5+에서 지원) |
-| 8.4 | 8 ~ 21 | ✅ |
-| 8.5+ | 8 ~ 21+ | ✅ (공식 지원 시작) |
-| 9.x | 17 ~ 26 | ✅ |
+| Gradle | Gradle 실행 JVM | Java 21 컴파일(toolchain) |
+|--------|----------------|----------------|
+| 7.6.x | 8 ~ 19 | ❌ (toolchain은 8.4+) |
+| 8.4 | 8 ~ 20 (21 위에서 실행 불가) | ✅ (toolchain 지원 시작) |
+| 8.5+ | 8 ~ 21+ (21 위 실행은 8.5부터) | ✅ |
+| 9.x | **17+** 필수 (25는 9.1.0+, 26은 9.4.0+) | ✅ |
+
+> 근거: Gradle 공식 호환성 표(2026-11-09 확인, 현행 Gradle 9.9.0) — Java 21은 toolchain 8.4 / 실행 8.5, Java 25는 9.1.0, Java 26은 9.4.0.
 
 > 주의: Gradle 자체를 실행하는 JVM 버전(= `gradle --version`의 JVM)과 빌드 대상 Java 버전(toolchain)은 분리됩니다. toolchain을 쓰면 Gradle 실행 JDK는 낮은 버전을 써도 컴파일은 Java 21로 수행 가능합니다.
 
@@ -208,135 +203,8 @@ plugins {
 
 ## 4. Spring Boot Starter 의존성 선택
 
-자주 사용하는 스타터 (Spring Boot 2.5 / 3.4 공통):
-
-| 스타터 | 용도 | 포함 주요 라이브러리 |
-|--------|------|----------------------|
-| `spring-boot-starter-web` | REST API, 내장 Tomcat | Spring MVC, Jackson, Tomcat |
-| `spring-boot-starter-webflux` | 리액티브 WebFlux | Reactor Netty, Spring WebFlux |
-| `spring-boot-starter-validation` | Bean Validation | Hibernate Validator |
-| `spring-boot-starter-data-jpa` | JPA + Hibernate | Spring Data JPA, Hibernate |
-| `spring-boot-starter-security` | 인증/인가 | Spring Security |
-| `spring-boot-starter-actuator` | 헬스체크, 메트릭 | Micrometer |
-| `spring-boot-starter-test` | 테스트 | JUnit 5, Mockito, AssertJ, Spring Test |
-| `spring-boot-starter-tomcat` | 내장 Tomcat (교체/exclude 용) | Tomcat Embed |
-
-**자주 쓰는 선택 패턴:**
-
-- REST JSON API 기본: `starter-web` + `starter-validation` + `starter-test`
-- DB 연동 추가: `starter-data-jpa` + JDBC 드라이버 (예: `com.mysql:mysql-connector-j` — 3.x에서는 `mysql:mysql-connector-java`가 아님)
-- Netty 전환: `starter-web` 제거 후 `starter-webflux`
-
-> 주의: Spring Boot 3.x부터 `starter-validation`이 `starter-web`에 자동 포함되지 않으므로 별도 선언해야 `@Valid`가 동작합니다.
+> 주의: Spring Boot **2.3**부터 `starter-validation`이 `starter-web`에 자동 포함되지 않으므로(2.5 레거시·3.x 모두 해당) 별도 선언해야 `@Valid`가 동작합니다.
 
 ---
 
-## 5. `application.yml` 프로파일 분리
-
-### 5.1 파일 분리 방식 (권장)
-
-```
-src/main/resources/
-├── application.yml               # 공통/기본값
-├── application-local.yml         # 로컬 개발
-├── application-prod.yml          # 운영
-└── application-test.yml          # 테스트
-```
-
-**`application.yml` (공통):**
-```yaml
-spring:
-  application:
-    name: my-service
-
-server:
-  port: 8080
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info
-```
-
-**`application-local.yml`:**
-```yaml
-spring:
-  datasource:
-    url: jdbc:h2:mem:devdb
-    username: sa
-    password: ""
-
-logging:
-  level:
-    com.example: DEBUG
-    org.springframework.web: DEBUG
-```
-
-**`application-prod.yml`:**
-```yaml
-spring:
-  datasource:
-    url: ${DB_URL}
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
-
-logging:
-  level:
-    root: INFO
-    com.example: INFO
-```
-
-### 5.2 프로파일 활성화
-
-```bash
-# 실행 시 프로파일 지정
-java -jar app.jar --spring.profiles.active=prod
-
-# 또는 환경변수
-export SPRING_PROFILES_ACTIVE=prod
-java -jar app.jar
-
-# Gradle bootRun
-./gradlew bootRun --args='--spring.profiles.active=local'
-```
-
-### 5.3 시크릿 관리 규칙
-
-- `application-prod.yml`에 실제 비밀번호·키를 하드코딩하지 않는다
-- 운영 환경 값은 `${ENV_VAR}` 플레이스홀더로 참조하고 실제 값은 배포 환경의 환경변수/시크릿 매니저(AWS SSM, Vault 등)로 주입
-- `application-local.yml`도 개인 계정 정보가 들어가면 Git에 커밋하지 말고 `.gitignore`에 추가
-
-### 5.4 단일 파일 멀티 프로파일 (대안)
-
-소규모 프로젝트에서는 `---` 구분자로 한 파일에 모두 기재할 수 있습니다.
-
-```yaml
-spring:
-  application:
-    name: my-service
-
----
-spring:
-  config:
-    activate:
-      on-profile: local
-  datasource:
-    url: jdbc:h2:mem:devdb
-
----
-spring:
-  config:
-    activate:
-      on-profile: prod
-  datasource:
-    url: ${DB_URL}
-```
-
-> 주의: Spring Boot 2.4+에서는 `spring.profiles: prod` 대신 `spring.config.activate.on-profile: prod` 문법을 사용해야 합니다. 2.4 이전 문법은 deprecated되었고 3.x에서는 완전 제거되었습니다.
-
----
-
----
-
-> 상세 레퍼런스 (예제·고급 패턴·흔한 실수) → [`references/REFERENCE.md`](references/REFERENCE.md)
+> 상세 레퍼런스 (흔한 실수·Spring Boot 4.x 마이그레이션 포인트) → [`references/REFERENCE.md`](references/REFERENCE.md)

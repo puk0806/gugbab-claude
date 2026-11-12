@@ -2,7 +2,7 @@
 skill: build-perf-benchmarking
 category: frontend
 version: v3
-date: 2026-09-28
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -32,7 +32,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `build-perf-benchmarking` |
 | 스킬 경로 | `.claude/skills/build-perf-benchmarking/SKILL.md` |
-| 검증일 | 2026-09-28 (재검증, 이전 2026-05-14) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-28) |
 | 검증자 | skill-creator agent |
 | 스킬 버전 | v2 |
 | 대상 도구 버전 | hyperfine v1.20.0 (2025-11-18 릴리즈) |
@@ -82,7 +82,10 @@ status: APPROVED
 | Turborepo Caching 공식 문서 | https://turborepo.dev/docs/crafting-your-repository/caching | ⭐⭐⭐ High | 2026-05-14 | `.turbo/cache` 위치 + `--force` 출처 |
 | Turborepo 캐시 삭제 Discussion | https://github.com/vercel/turborepo/discussions/5270 | ⭐⭐ Medium | 2026-05-14 | 실용 캐시 삭제 패턴 |
 | Linux dynamic frequency scaling | https://en.wikipedia.org/wiki/Dynamic_frequency_scaling | ⭐⭐ Medium | 2026-05-14 | CPU governor 배경 |
-| 외부 hyperfine 사용 가이드 | https://imzye.com/Tips/how-to-use-hyperfine/ | ⭐⭐ Medium | 2026-05-14 | JSON 스키마 교차 검증 |
+| 외부 hyperfine 사용 가이드 | https://imzye.com/Tips/how-to-use-hyperfine/ | ⭐⭐ Medium | 2026-05-14 | JSON 스키마 교차 검증 (v1.x 기준 — v2 에서 낡음) |
+| hyperfine v2.0.0 Release | https://github.com/sharkdp/hyperfine/releases/tag/v2.0.0 | ⭐⭐⭐ High | 2026-11-09 | 2026-10-07 릴리스, Breaking changes 원문(셸 기본 none·JSON schema 2·`--time-unit`/`--sort`/`--reference` 삭제·export 형식 변경) |
+| hyperfine v2.0.0 README | https://raw.githubusercontent.com/sharkdp/hyperfine/v2.0.0/README.md | ⭐⭐⭐ High | 2026-11-09 | Intermediate shell 절(`-S`=`--shell=default`, `-N`=`--shell=none`), `--metrics` 프리셋, Markdown `Mean Wall Time [s] \| Change \| Factor`, CSV `_median` 열 |
+| hyperfine v2.0.0 소스 `src/output/warnings.rs` | https://github.com/sharkdp/hyperfine/blob/v2.0.0/src/output/warnings.rs | ⭐⭐⭐ High | 2026-11-09 | 경고 문구 원문 (first-run 경고 4변형, 일반 outlier 경고 없음) |
 
 ---
 
@@ -112,6 +115,32 @@ status: APPROVED
 | C18 | `--shell=none`(-N)은 sub-millisecond 명령용, 일반 빌드에 부적합 | man page | WebSearch | ✅ VERIFIED |
 | C19 | warmup 권장 횟수는 hyperfine 공식이 *명시하지 않음* (본 스킬의 권장표는 실용치) | WebFetch (README) | man page | ✅ VERIFIED (스킬에 주의 표기) |
 | C20 | scripts/ 폴더에 `plot_whisker.py` 등 numpy 기반 분석 도구 존재 | WebFetch (scripts README) | — | ⚠️ VERIFIED (단일 1차 소스, 공식 레포) |
+| C21 | (2026-11-09) 최신 안정 버전 v1.20.0 | GitHub Releases API latest = **v2.0.0 (2026-10-07)** | v2.0.0 README | **DISPUTED → 수정** (대상 버전 v2.0.0, v1.x 차이 주의 추가) |
+| C22 | (2026-11-09) 측정 명령 기본 실행 방식 = 셸(`-S`=셸 지정) | v2.0.0 Release Breaking changes "executed directly by default ... (`--shell=none`). Use `-S` (an alias for `--shell=default`)" | v2.0.0 README Intermediate shell 절 | **DISPUTED → 수정** (§2 표·§4.3·§7.1-8·§7.2-4) |
+| C23 | (2026-11-09) JSON 스키마 `times[]`·최상위 `mean`/`median` | v2.0.0 Release: `results[i].summary.time_wall_clock.mean`, `measurements[j].time_wall_clock.value` | v2.0.0 README JSON 절 | **DISPUTED → 수정** (§3.2 스키마·p95 Python) |
+| C24 | (2026-11-09) `--time-unit/-u` 사용 가능 | v2.0.0 Release: 삭제, `--metrics METRIC[:UNIT]` 로 대체 | v2.0.0 README Choosing metrics 절 | **DISPUTED → 수정** (옵션 표에서 삭제, `--metrics`·`--env` 추가) |
+| C25 | (2026-11-09) Markdown export 열 `Mean/Min/Max/Relative` | v2.0.0 Release: Markdown 은 주 지표만 | v2.0.0 README 예시 `\| Command \| Mean Wall Time [s] \| Change \| Factor \|` | **DISPUTED → 수정** (§6.1) |
+| C26 | (2026-11-09) `--prepare`·`--setup` 등은 셸 없이도 셸로 실행 | v2.0.0 Release "Always run --setup, --prepare, --conclude, and --cleanup commands in a shell" | v2.0.0 README | VERIFIED (§2 각주 추가) |
+| C27 | (2026-11-09) 경고 문구(§9) v2 에서도 동일 | v2.0.0 `src/output/warnings.rs` — first-run 경고는 사용 옵션별 4변형, "Statistical outliers were detected" 일반 경고는 없음 | `src/benchmark/mod.rs` 이상치 검사가 첫 run(`scores[0]`)에만 적용 | **DISPUTED → 수정** (§9 를 v2/v1.20 으로 분리, v2 바이너리 실행 재현은 미실시 — `> 주의:` 표기) |
+
+#### 흡수한 원본의 핵심 클레임 (2026-11-12 통합 시 옮김 — 판정은 원본 기록 그대로)
+
+| # | 클레임 | 근거 | 판정 |
+|---|--------|------|------|
+| B2 | (구 bundle-size-analysis) rollup-plugin-visualizer `gzipSize`/`brotliSize` 기본값 둘 다 `false` | GitHub README + WebSearch | VERIFIED |
+| B4 | (구 bundle-size-analysis) rollup-plugin-visualizer 7.x 는 Node.js ≥ 22 | GitHub README + npm | VERIFIED |
+| B8 | (구 bundle-size-analysis) webpack-bundle-analyzer `defaultSizes` 기본 `parsed` | GitHub README | VERIFIED |
+| B13 | (구 bundle-size-analysis) 버전 기준 visualizer 7.1.3·size-limit 14.3.0·webpack-bundle-analyzer 5.4.2 | npm registry + CHANGELOG | DISPUTED → 숫자 갱신 |
+| B14 | (구 bundle-size-analysis) size-limit 14.x Node `^22.19.0 \|\| ^24.5.0 \|\| >=26.0.0` | npm engines | VERIFIED |
+| B16 | (구 bundle-size-analysis) webpack-bundle-analyzer 5.0 에서 Node 20.9 미만 지원 종료 | CHANGELOG 5.0.0 + npm engines | VERIFIED |
+| B17 | (구 bundle-size-analysis) Next.js 16 Turbopack 은 `next analyze`(16.1+), `@next/bundle-analyzer` 는 Webpack 용 | Next.js Package Bundling 가이드 | DISPUTED → 수정 |
+| B18 | (구 bundle-size-analysis) size-limit 13.0.0 Node 20 종료, 14.0.0 preset-small-lib 기본 번들러 rolldown(preset-app 대상 아님) | size-limit CHANGELOG | VERIFIED (2026-09-28 실행 검증) |
+| B19 | (구 bundle-size-analysis) visualizer 7.1.0 에서 rollup 미설치(Vite 8) 타입 버그 수정 | visualizer CHANGELOG | VERIFIED (2026-09-28 실행 검증, TS2307 미발생) |
+| D1 | (구 dev-server-hmr-benchmarking) Vite 8 캐시 위치 `node_modules/.vite/deps/`·`--force` 변동 없음 | Vite 마이그레이션 가이드 | VERIFIED |
+| D2 | (구 dev-server-hmr-benchmarking) Vite 8 pre-bundling esbuild → Rolldown, 변환·minify → Oxc | Vite 마이그레이션 가이드 | VERIFIED |
+| D3 | (구 dev-server-hmr-benchmarking) `vite:beforeUpdate`/`afterUpdate` 유지, `hot.accept` URL 전달은 8.0 제거 | Vite HMR API 문서 | VERIFIED |
+| D4 | (구 dev-server-hmr-benchmarking) `&`·`&&` 든 비교 명령은 hyperfine v2 에서 `-S` 필요 | v2 README + 릴리스 노트 | DISPUTED → 수정 |
+| D5 | (구 dev-server-hmr-benchmarking) `hmr update` 로그는 WS 연결 브라우저가 있어야 출력, macOS `date %N` 불가·`exit 0` 필요 | 2026-09-28 직접 실행 재현 | VERIFIED (실측) |
 
 ### 4-2. 판정 요약
 
@@ -144,13 +173,52 @@ status: APPROVED
 
 ### 4-6. Claude Code 에이전트 활용 테스트
 
-- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-14 skill-tester 수행)
+- [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-05-14 skill-tester 수행, 2026-11-09 v2.0.0 정정 재시험 3/3 PASS)
 - [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인
 - [✅] 잘못된 응답이 나오는 경우 스킬 내용 보완 (보완 필요 없음 — 3/3 PASS)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-11-09] skill-tester content test — hyperfine v2.0.0 정정 반영 확인
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester → general-purpose (도메인 전용 에이전트 미사용, 범용 에이전트로 대체)
+**수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인. 3문항 모두 이번 재검증의 정정 부분(셸 기본값 반전, JSON schema v2, 삭제 옵션, markdown 열, 경고문 v2/v1.20 분리)을 직접 겨냥.
+
+### 실제 수행 테스트
+
+**Q1. v2.0.0 에서 `'NODE_ENV=production pnpm build && pnpm test'` 가 기대대로 동작하지 않는 원인, 올바른 명령, `--prepare` 의 셸 여부**
+- ✅ PASS
+- 근거: SKILL.md 상단 주의, §2 옵션표(`-S`·`--shell=none`·`--env`)와 삭제 옵션 인용, §4.3 비교 예시 주의, §7.1 함정 8, §7.2 안티패턴 4
+- 상세: v2 기본이 셸 없음(`--shell=none`)이라 `&&`·접두 환경변수를 해석하지 못함을 정확히 설명. 해법으로 `-S`(셸 필요 시)와 `--env 'NODE_ENV=production'`(환경변수만 필요 시)을 구분 제시하고, `--prepare/--setup/--conclude/--cleanup` 은 항상 셸로 실행되어 `rm -rf` 가 그대로 동작한다고 답함. v1.x 기본값(셸)과의 반전도 언급. anti-pattern(v1 관습대로 `-S` 없이 복합 명령 실행) 회피.
+
+**Q2. v2 `--export-json` 에서 median·p95 추출(KeyError 원인) + `--time-unit millisecond` 사용 가능 여부**
+- ✅ PASS
+- 근거: SKILL.md §3.2 JSON 스키마 v2·v1.x 차이 인용·p95 Python 예시, §2 옵션표와 삭제 옵션 인용
+- 상세: `times`/최상위 `median` 이 사라지고 `measurements[j].time_wall_clock.value` / `summary.time_wall_clock.median` 으로 바뀐 점을 정확히 제시, p95 는 JSON 에 없어 numpy 로 직접 계산. `--time-unit/-u` 삭제와 대안 `--metrics time_wall_clock:ms` 도 정확. anti-pattern(v1 스키마 접근, 삭제된 옵션 사용) 회피.
+
+**Q3. `--reference`/`--sort` 사용 가능 여부와 기준 결정 방식, v2 markdown 열, v2 에서 "Statistical outliers were detected" 경고 부재의 정상 여부**
+- ✅ PASS
+- 근거: SKILL.md §2 삭제 옵션 인용, §4.3 비교 예시 주의, §6.1, §7.1 함정 5, §9
+- 상세: `--reference`·`--sort` 삭제와 "첫 번째 명령이 항상 기준"을 정확히 답함. v2 markdown 은 `Command | Mean Wall Time [s] | Change | Factor`, v1.x 는 `Mean/Min/Max/Relative` 로 구분. 일반 이상치 경고가 v2 소스에는 없고 첫 run 경고만 남았다는 점, 단 v2 바이너리 실행 재현은 하지 않았다는 SKILL.md 의 단서까지 인용. 경고가 뜨면 환경 정리 후 재측정, 보고서에 기록.
+
+### 발견된 gap (선택 보강, 차단 요인 아님)
+
+- `&&` 와 환경변수를 한 명령에서 함께 쓰는 완성 예시가 없음 (`-S` 하나로 충분하다는 점만 암시)
+- `--metrics ...:ms` 사용 시 JSON `unit` 필드가 ms 로 바뀌는지 SKILL.md 에 명시 없음 (현재는 "항상 초"만 기술)
+- v2 에서 일반 이상치 경고가 없어진 뒤 대체 판단 기준(예: JSON stddev·min/max 점검)이 명시되지 않음
+- §9 에는 v2 경고 4변형 중 1변형만 수록
+- p95 계산이 numpy 의존 (표준 라이브러리 대안 없음)
+
+### 판정
+
+- agent content test: 3/3 PASS (SKILL.md 오류·DISPUTED 발견 없음)
+- verification-policy 분류: 실사용 필수 카테고리(빌드 워크플로우) — 2026-09-28 실행 검증으로 APPROVED 전환된 상태. v2.0.0 바이너리 실행 재현은 미실시(소스·릴리스 노트 대조만)
+- 최종 상태: APPROVED 유지
+
+---
 
 ### [2026-09-28] 실사용(실행) 검증
 
@@ -331,11 +399,12 @@ status: APPROVED
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-05-14 3/3 PASS + 2026-08-11 재검증 3/3 PASS + 2026-09-28 WebSearch 재검증 2/2 PASS + 2026-09-28 content test 재수행 1/2 PASS·1/2 PARTIAL + **2026-09-28 재테스트(3차) 2/2 PASS** — SKILL.md 4.2 보강(136행 각주) 후 Rolldown 갭 해소 확인) |
+| 에이전트 활용 테스트 | ✅ (**2026-11-09 v2.0.0 정정 재시험 3/3 PASS** — 셸 기본값 반전·JSON schema v2·삭제 옵션·markdown 열·경고문 분리 + 2026-05-14 3/3 PASS + 2026-08-11 재검증 3/3 PASS + 2026-09-28 WebSearch 재검증 2/2 PASS + 2026-09-28 content test 재수행 1/2 PASS·1/2 PARTIAL + **2026-09-28 재테스트(3차) 2/2 PASS** — SKILL.md 4.2 보강(136행 각주) 후 Rolldown 갭 해소 확인) |
 | WebSearch 재검증 (2026-08-11) | ✅ hyperfine v1.20.0·옵션·Vite 캐시 위치 3건 모두 변동 없음 |
 | WebSearch 재검증 (2026-09-28) | ✅ hyperfine v1.20.0·Vite 캐시 경로(Rolldown 전환 후에도 불변)·Turborepo 캐시 경로 3건 모두 변동 없음. 리포트 예시 버전 Vite 8 기준 갱신 |
 | 실사용 테스트 (hyperfine 실제 실행) | ✅ **(2026-09-28 완료)** lab 샘플(Vite 8+React 19)에서 cold(n=10)·warm(n=20) 실제 실행, median/p95 추출 성공, outlier 경고 라이브 재현. 경고 원문 인용 오류 1건 발견 즉시 정정 |
-| **최종 판정** | **APPROVED** (2026-09-28 실사용 실행 검증 완료 — 방법론 전부 일치 확인, 인용 오류 정정 후 전환) |
+| 재검증 (2026-11-09) | ✅ hyperfine v2.0.0 파괴적 변경 반영(C21~C27), content test 3/3 PASS. v2 바이너리 실행 재현은 미실시(소스·릴리스 노트 대조) |
+| **최종 판정** | **APPROVED** (2026-09-28 실사용 실행 검증 완료 후 전환, 2026-11-09 v2.0.0 정정 재시험 3/3 PASS로 APPROVED 유지) |
 
 ---
 
@@ -343,6 +412,9 @@ status: APPROVED
 
 - [✅] skill-tester로 content test 수행 (2026-05-14 완료, 3/3 PASS — cold/warm 분리·median/p95 추출·runs/warmup 권장값·warmup vs prepare 목적 차이 시나리오 포함 / 2026-08-11 재검증 3/3 PASS 추가 — Turborepo git stash 대안·first-run 경고 대응·혼동변수 필수 항목 / 2026-09-28 재수행 1/2 PASS·1/2 PARTIAL / **2026-09-28 재테스트(3차) 2/2 PASS 완료** — SKILL.md 4.2에 Rolldown 무관 확인 문구(136행) 보강 후 갭 해소)
 - [✅] **(2026-09-28 완료)** 실제 프로젝트(lab Vite 8+React 19 샘플)에서 hyperfine v1.20.0 실행 — cold(n=10)/warm(n=20) markdown+JSON 출력 형식 스킬 설명과 일치 확인, outlier 경고 라이브 재현, 경고 원문 인용 오류 2건 발견해 SKILL.md §7.1·§9 정정
+- [✅] **(2026-11-09 완료, 3/3 PASS)** hyperfine v2.0.0 정정 반영 후 skill-tester 재시험 — 셸 기본값 반전·JSON schema v2·삭제 옵션·markdown 열·경고문 분리 모두 SKILL.md 근거로 정확히 답변
+- [❌] hyperfine v2.0.0 바이너리를 실제 설치해 §2·§3.2·§4.3·§6.1·§9 재현 확인 (선택 보강: 현재는 소스·릴리스 노트 대조까지만이며 APPROVED 유지에는 차단 요인 아님)
+- [❌] 2026-11-09 재시험 gap 5건 보강 — `&&`+환경변수 완성 예시, `--metrics ...:ms` 시 JSON unit, v2 이상치 대체 판단 기준, §9 경고 4변형, p95 표준 라이브러리 대안 (선택 보강, 차단 요인 아님)
 - [❌] macOS/Linux/Windows 각 OS에서 `--prepare` 명령 동작 확인 (선택 보강: 특히 Windows에서 `rm -rf` 대체 명령 추가 필요, APPROVED 전환 조건은 아님 — 이번 실행 검증은 macOS만 수행)
 - [❌] turborepo 모노레포에서 `--filter=` 옵션과 hyperfine 조합 측정 검증 + 워크트리별 `.turbo` 캐시 격리 방법 (선택 보강: 실전 도입 이후 추가 검증 권장)
 
@@ -359,3 +431,6 @@ status: APPROVED
 | 2026-09-28 | v2 | 2단계 실사용 테스트 재수행 (Q1 Vite 8/Rolldown 헤더 버전+캐시 명령 변경 여부 / Q2 cold/warm 분리+warmup·prepare 차이) → 1/2 PASS, 1/2 PARTIAL(Rolldown 캐시 확인 문구가 SKILL.md 4.2에 미반영) → **NEEDS_REVISION 전환** (SKILL.md는 수정하지 않고 gap만 보고, 사용자 승인 대기) | skill-tester |
 | 2026-09-28 | v2 | SKILL.md 4.2 섹션에 "Vite 8/Rolldown 전환과 무관하게 캐시 위치·정리 명령 변경 없음" 확인 각주(136행) 보강 반영 확인 후 2단계 실사용 테스트 재테스트(3차) 수행 (Q1 Rolldown 캐시 명령 변경 여부 재확인 / Q2 cold/warm 분리+warmup·prepare 차이) → 2/2 PASS, **NEEDS_REVISION 해제 → PENDING_TEST 복귀** (실사용 필수 카테고리, hyperfine 실제 실행 검증 전까지 APPROVED 보류) | skill-tester |
 | 2026-09-28 | v3 | **실사용(실행) 검증 완료** — lab Vite 8+React 19 샘플에서 hyperfine 1.20.0 cold(n=10)/warm(n=20) 실제 실행, median/p95 JSON 추출, outlier 경고 라이브 재현. §7.1·§9의 hyperfine 경고 원문 인용 오류 2건("quiet PC"→"quiet system", first-run 경고 문구 축약) 발견해 최소 정정 + 검증 각주 추가. status **PENDING_TEST → APPROVED** | 실행검증 세션 |
+| 2026-11-09 | v4 | 재검증 — hyperfine **v2.0.0(2026-10-07) 파괴적 변경** 반영: 대상 버전 v2.0.0 + v1.x 차이 주의, §2 옵션 표(`-S`=`--shell=default`, `-N`=기본, `--time-unit` 삭제, `--metrics`·`--env`·`--export-csv` 추가), §3.2 JSON schema v2 + p95 Python, §4.3 비교 예시 `-S` 필수, §6.1 markdown 열, §7.1-8·§7.2-4 셸 기본값 반전, §9 경고 원문을 v2 소스/v1.20 으로 분리. 클레임 C21~C27(DISPUTED 6·VERIFIED 1). v2 는 소스·릴리스 노트로만 확인하고 실행은 못 함(로컬 설치본 1.20.0). 내용 수정 → skill-tester 재시험 | 재검증 b01 |
+| 2026-11-09 | v4 | 재검증 후 2단계 content test 재시험 (Q1 v2 셸 기본값 반전·`-S`/`--env`·`--prepare` 셸 실행 / Q2 JSON schema v2 median·p95 + `--time-unit` 삭제·`--metrics` / Q3 `--reference`·`--sort` 삭제·markdown 열·v2 경고문 부재) → 3/3 PASS, APPROVED 유지 (선택 보강 gap 5건 섹션 7 기록) | skill-tester |
+| 2026-11-12 | v4.1 | 정리(사실 재검증 아님) — bundle-size-analysis·dev-server-hmr-benchmarking 통합 + 일반 지식 덜어내기: 옮긴 것 size-limit 13·14 변경, visualizer 7.x Node·Vite 8 타입 수정·gzip 기본 꺼짐, 모듈별 gzip 합 ≠ 파일, Next 16 `next analyze`, Vite 8 Rolldown/Oxc·HMR URL accept 제거, dev 서버 미종료·`date %N`·`exit 0`·HMR 로그 WS 조건·워처 함정, 원본 클레임 표 / 덜어낸 것 hyperfine 소개·옵션 전체 표·runs 권장표·혼동변수 표·안티패턴 코드, 번들 도구 설치·옵션·템플릿 표·CI 예시·대안 도구, DevTools 절차·HMR 측정 코드·touch 스크립트, 보고서 템플릿(최소 형식만 유지) | 정리 |

@@ -2,7 +2,7 @@
 skill: jackson-time-migration
 category: backend
 version: v1
-date: 2026-09-26
+date: 2026-11-06
 status: APPROVED
 ---
 
@@ -18,7 +18,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `jackson-time-migration` |
 | 스킬 경로 | `.claude/skills/jackson-time-migration/SKILL.md` |
-| 검증일 | 2026-04-22 (재검증: 2026-09-26) |
+| 검증일 | 2026-11-06 (재검증, 이전 2026-09-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 
@@ -70,6 +70,12 @@ status: APPROVED
 | Spring Boot issue #26859 | https://github.com/spring-projects/spring-boot/issues/26859 | ⭐⭐⭐ High | 2026-04-22 | SB 2.5.0 Instant 직렬화 이슈 |
 | Baeldung — Jackson Date | https://www.baeldung.com/jackson-serialize-dates | ⭐⭐ Medium | 2026-04-22 | Jackson 날짜 직렬화 보충 |
 | Baeldung — ZonedDateTime vs OffsetDateTime | https://www.baeldung.com/java-zoneddatetime-offsetdatetime | ⭐⭐ Medium | 2026-04-22 | 타입 선택 기준 보충 |
+| Spring Boot 4.0 Migration Guide | https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide | ⭐⭐⭐ High | 2026-11-06 | 재검증 — Jackson 3 기본, JsonMapperBuilderCustomizer, JsonMapper 빈, use-jackson2-defaults, spring-boot-jackson2 |
+| Migrating to Jackson 3 (FasterXML) | https://github.com/FasterXML/jackson/blob/main/jackson3/MIGRATING_TO_JACKSON_3.md | ⭐⭐⭐ High | 2026-11-06 | 재검증 — java.time 내장, WRITE_DATES_AS_TIMESTAMPS 기본 false, tools.jackson |
+| jackson-databind 3.x DateTimeFeature / SerializationFeature 소스 | https://github.com/FasterXML/jackson-databind/tree/3.x | ⭐⭐⭐ High | 2026-11-06 | 재검증 — WRITE_DATES_AS_TIMESTAMPS가 DateTimeFeature(false)로 이동 |
+| Spring Boot JacksonProperties·JsonMapperBuilderCustomizer 소스 (v4.1.2) | https://github.com/spring-projects/spring-boot/tree/v4.1.2/module/spring-boot-jackson | ⭐⭐⭐ High | 2026-11-06 | 재검증 — `spring.jackson.datatype.datetime.*` 키 |
+| Maven Central metadata (jsr310·joda 2.x / tools.jackson 3.x / joda-time) | https://repo1.maven.org/maven2/ | ⭐⭐⭐ High | 2026-11-06 | 재검증 — 2.22.4 / 3.2.4 / joda-time 2.15.1 |
+| Spring Boot gradle.properties (태그별 Jackson 버전) | https://github.com/spring-projects/spring-boot | ⭐⭐⭐ High | 2026-11-06 | 재검증 — 3.5.16 = 2.21.4, 4.0.0 = 3.0.2(+Jackson 2 2.20.1), 4.1.2 = 3.1.7 |
 
 ---
 
@@ -94,6 +100,17 @@ status: APPROVED
 - [✅] 지나치게 이론적이지 않고 실용적인 예시 포함 (SB 2.5 레거시 → 모던 전환 단계 구체화)
 - [✅] 범용적으로 사용 가능 (특정 프로젝트 종속 X)
 
+### 4-3b. 2026-11-06 재검증 클레임
+
+| # | 클레임 | 소스 | 판정 |
+|---|--------|------|------|
+| 1 | Joda-Time "no longer in active development except timezone data", java.time 이관 권고 | JodaOrg README | VERIFIED |
+| 2 | Jackson 2 `JavaTimeModule` 등록 방식 유지, 최신 2.22.4 | jackson-modules-java8 README, Maven Central | VERIFIED |
+| 3 | "Jackson 3에서는 jsr310이 코어로 통합" | MIGRATING_TO_JACKSON_3.md | VERIFIED |
+| 4 | 2-2절 `JsonMapper.builder().addModule(new JodaModule())`를 "Jackson 3 권장 스타일"로만 표기 | Jackson 3 Joda 모듈은 `tools.jackson.datatype.joda.JodaModule`(별도 아티팩트), 빌더는 2.10+에도 존재 | DISPUTED → 패키지·아티팩트 명시 |
+| 5 | 문서 범위가 "Spring Boot 2.7/3.x"만 — Boot 4.x 시간 직렬화 차이 누락 | Boot 4.0 Migration Guide: Jackson 3 기본, `JsonMapperBuilderCustomizer`, `JsonMapper` 빈, `spring.jackson.datatype.datetime.*` | DISPUTED → 3-6절 추가 |
+| 6 | Spring Boot 3.5.x Jackson 2.21.x | Boot 3.5.16 gradle.properties | VERIFIED |
+
 ### 4-4. Claude Code 에이전트 활용 테스트
 - [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-04-23, general-purpose로 대체 실행)
 - [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 — `JavaTimeModule` 자동 등록, `WRITE_DATES_AS_TIMESTAMPS=false`, Joda→java.time 타입 매핑 표, 점진 마이그레이션 4단계 모두 정확 제시
@@ -102,6 +119,44 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+### 2026-11-06 — 재검증 후 재시험 (3-6절 Boot 4.x/Jackson 3 신설 반영)
+
+**수행일**: 2026-11-06
+**수행자**: skill-tester → general-purpose (도메인 에이전트 대신 general-purpose로 대체 실행)
+**수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
+
+### 실제 수행 테스트
+
+**Q1. Boot 4.x 신규 프로젝트에서 OffsetDateTime/Instant — JavaTimeModule 등록 필요 여부, ISO-8601용 yml 설정, Boot 3와의 차이**
+- ✅ PASS
+- 근거: SKILL.md 3-6절 표·불릿, 3-3절 주의, 상단 주의 블록
+- 상세: JavaTimeModule 불필요(databind 내장), 기본값이 이미 false라 생략 가능, 명시 시 `spring.jackson.datatype.datetime.write-dates-as-timestamps` 키 정확 제시. Boot 3의 `serialization.*` 키를 Boot 4에 그대로 쓰는 anti-pattern 회피.
+
+**Q2. Boot 3.5 → 4.1 업그레이드 — ObjectMapper 빈 방식 유효성, Joda 병존 모듈 등록, yml 변경, Jackson 3 미이전 시 임시 대안**
+- ✅ PASS
+- 근거: SKILL.md 3-6절 표("매퍼 빈 교체" 행)·JsonMapperBuilderCustomizer 코드·불릿(use-jackson2-defaults, spring-boot-jackson2), 7절 단계 1 주석
+- 상세: ObjectMapper 빈으로는 대체 안 되고 JsonMapper 빈 필요, `tools.jackson.datatype.joda.JodaModule`을 JsonMapperBuilderCustomizer로 등록, 7절 Boot 2~3용 코드와 구분. Jackson2ObjectMapperBuilderCustomizer 사용 anti-pattern 회피.
+
+**Q3. Joda DateTime 필드 타입 선택(API/DB용 vs 서울 시간 미래 예약), Joda Period 변환, 버전**
+- ✅ PASS
+- 근거: SKILL.md 4절 결정 트리·주의사항, 6절 Period 의미 차이, 상단 주의 블록
+- 상세: API/DB는 OffsetDateTime, 미래 예약은 ZonedDateTime(DST 근거 제시), Period는 시/분/초 유실 방지를 위해 Duration 분리, Jackson 2 최신 2.22.4·Boot 3.5=2.21.x·Jackson 3 최신 3.2.4 정확 인용.
+
+### 발견된 gap (선택 보강, 차단 요인 아님)
+
+- Joda Period를 Period+Duration으로 쪼개는 변환 코드 예시 없음
+- `JsonMapper` 빈 정의 예시 코드, `spring-boot-jackson2` 좌표, `use-jackson2-defaults` 변경 항목 목록 없음
+- 3-4절 yml이 Boot 2~3 기준임이 절 제목에 표시되지 않음 (상단 주의 블록이 3-6절을 안내하므로 오답 유발은 없었음)
+- 상단 주의 블록의 "3.5.x = 2.21.x"는 Spring Boot 3.5.x 번들 Jackson이 2.21.x라는 뜻이나 Jackson 3 버전과 혼동 가능 — 표현 명확화 권장 (선택 보강)
+
+### 판정
+
+- agent content test: PASS (3/3 PASS)
+- verification-policy 분류: 해당 없음 (라이브러리 사용법·마이그레이션 매핑 지식, content test로 충분)
+- 최종 상태: APPROVED 유지
+
+---
 
 ### 2026-09-26 — 재검증 (60일 초과 정기 재검증)
 
@@ -184,7 +239,7 @@ java.time으로 바꿀 때 ZonedDateTime과 OffsetDateTime 중 뭘 써야 하나
 | 내용 정확성 | ✅ |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-04-23, 2개 질문 모두 PASS) |
+| 에이전트 활용 테스트 | ✅ (2026-04-23 2/2 PASS, 2026-11-06 재시험 3/3 PASS — Boot 4.x/Jackson 3 포함) |
 | **최종 판정** | **APPROVED** |
 
 **판정 근거:**
@@ -206,7 +261,10 @@ java.time으로 바꿀 때 ZonedDateTime과 OffsetDateTime 중 뭘 써야 하나
 
 - [✅] 에이전트 활용 테스트 — OffsetDateTime 직렬화 + Joda→java.time 마이그레이션 2건 PASS (섹션 5, general-purpose 대체, 2026-04-23)
 - [🔬] Oracle DATE 컬럼 ↔ `LocalDateTime`/`OffsetDateTime` 왕복 실제 검증 — 실환경 검증 대기
-- [📅] Jackson 3.x로 넘어갈 때의 변경사항(내장된 jsr310) 별도 섹션 추가 검토
+- [✅] skill-tester 재시험 수행 (2026-11-06 완료, 3/3 PASS)
+- [✅] Jackson 3.x로 넘어갈 때의 변경사항(내장된 jsr310) 별도 섹션 추가 — 3-6절로 반영 (2026-11-06)
+- [⏸️] 재시험 gap: Joda Period→Period+Duration 변환 예시, `JsonMapper` 빈 예시, `spring-boot-jackson2` 좌표 보강 — 선택 보강, 차단 요인 아님
+- [⏸️] 상단 주의 블록 "Boot 3.5.x = 2.21.x" 표현이 Jackson 3 버전과 혼동될 수 있음 — 표현 명확화, 선택 보강, 차단 요인 아님 (2026-11-06 재시험에서 지적)
 - [⏸️] PostgreSQL `timestamptz` vs MySQL `TIMESTAMP` 실제 왕복 값 비교 예시 — 선택 보강, 차단 요인 아님
 
 ---
@@ -217,3 +275,6 @@ java.time으로 바꿀 때 ZonedDateTime과 OffsetDateTime 중 뭘 써야 하나
 |------|------|-----------|--------|
 | 2026-04-22 | v1 | 최초 작성 — Jackson + 시간 API 마이그레이션 스킬 (Joda 2.10.10 → java.time) | skill-creator |
 | 2026-09-26 | v1 | 재검증 — jackson-datatype-jsr310 최신 버전(2.22.2) 확인, 버전 범위 표기 갱신, 핵심 API 변경 없음 확인 | 메인 세션 |
+| 2026-11-06 | v1 | 재검증 — Jackson 2 최신 2.22.4·Joda 2.15.1·JavaTimeModule 방식 유지 확인. 추가·정정: 3-6절 Spring Boot 4.x(Jackson 3) 신설(java.time 내장, WRITE_DATES_AS_TIMESTAMPS 기본 false, `spring.jackson.datatype.datetime.*`, JsonMapperBuilderCustomizer, JsonMapper 빈, Jackson 2 유지 옵션), 2-2절 Jackson 3 JodaModule 패키지 명시. skill-tester 재시험 예정 | Claude (Opus 5.5) |
+| 2026-11-06 | v1 | 재검증 후 2단계 실사용 재시험 수행 (Q1 Boot 4 JavaTimeModule·yml 키 / Q2 Boot 3.5→4.1 Joda 병존·JsonMapperBuilderCustomizer / Q3 OffsetDateTime·ZonedDateTime·Period·버전) → 3/3 PASS, APPROVED 유지 | skill-tester |
+| 2026-11-11 | v1 | 2026-11-11 정리 — 모델이 아는 일반 지식 절 제거(1장 Joda→java.time 전환 이유, 2-3·2-4 직렬화 예시·필드 포맷, 3-1~3-3·3-5 java.time 기본 사용·커스텀 ObjectMapper·패턴 기호, 4장 타입 선택 기준, 5장 타임존 원칙·JVM UTC 고정, 6장 타입 매핑표·변환 코드, 7장 단계 0·2·4·검증 포인트, MyBatis TypeHandler 표·예제, 10장 체크리스트). 남긴 절: 상단 버전·Jackson 3 주의문, 2-1·2-2 SB 2.5 Joda 의존성·JodaModule 등록(Jackson 3 모듈 좌표 포함), JSR310Module 주의, 3-4 yml 설정·date-format/time-zone 함정, 3-6 Boot 4 Jackson 3 대응표, Period·타임존 별칭 함정, 7장 단계 1 병존·단계 3 경계 어댑터, MyBatis java.time 지원 버전·Joda 미지원·Oracle 컬럼 매핑, 9장 자주 하는 실수. 사실 재검증 아님 | Claude (Opus 5.5) |

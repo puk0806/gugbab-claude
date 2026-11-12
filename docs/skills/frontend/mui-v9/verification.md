@@ -2,7 +2,7 @@
 skill: mui-v9
 category: frontend
 version: v3
-date: 2026-09-28
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -12,7 +12,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `mui-v9` (구: mui-v5) |
 | 스킬 경로 | `.claude/skills/mui-v9/SKILL.md` (2026-08-11 폴더 리네임: mui-v5 → mui-v9) |
-| 검증일 | 2026-09-28 (최초 2026-06-19, 2026-09-28 재검증) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-28 · 최초 2026-06-19) |
 | 검증자 | Claude (Sonnet 4.6) → Claude (Sonnet 5, 2026-09-28 재검증) |
 | 스킬 버전 | v3 (MUI v5 → v9 전면 재작성, 2026-09-28 재검증 반영) |
 
@@ -53,6 +53,9 @@ status: APPROVED
 | MUI Grid Component | https://mui.com/material-ui/react-grid/ | ⭐⭐⭐ High | v9 Grid API (size prop) |
 | MUI Dark Mode | https://mui.com/material-ui/customization/dark-mode/ | ⭐⭐⭐ High | applyStyles(), colorSchemes |
 | npm @mui/material | https://www.npmjs.com/package/@mui/material | ⭐⭐⭐ High | 버전 확인 (v9.1.1) |
+| MUI v9 Upgrade Guide (2026-11-09 재확인) | https://mui.com/material-ui/migration/upgrade-to-v9/ | ⭐⭐⭐ High | System props 제거(Box·DialogContentText·Grid·Link·Stack·Typography 등)·Grid `direction="column"` 미지원·`GridLegacy` 제거·`disableEscapeKeyDown` 제거 원문 확인 |
+| Material UI 지원 페이지 (2026-11-09) | https://mui.com/material-ui/getting-started/support/ | ⭐⭐⭐ High | ^9 Stable major / ^7 LTS |
+| npm registry @mui/material (2026-11-09) | https://registry.npmjs.org/@mui/material | ⭐⭐⭐ High | latest 9.5.0(2026-10-09), next 10.0.0-alpha.0(2026-10-12, 프리릴리스). 9.5.0 peer react ^17·^18·^19, @emotion ^11 |
 
 ---
 
@@ -71,6 +74,7 @@ status: APPROVED
 - [✅] `disableEscapeKeyDown` 제거 → onClose reason 처리 — VERIFIED
 - [✅] CSS 복합 클래스 변경 (`.MuiButton-textPrimary` → 다중 선택자) — VERIFIED
 - [✅] v8은 존재하지 않음 (v7 → v9, MUI X 번호 맞춤) — VERIFIED
+- [✅] (2026-11-09 재검증) System props 제거·Grid direction column 미지원·GridLegacy 제거·disableEscapeKeyDown 제거 — 공식 Upgrade to v9 원문 재대조 VERIFIED, v9가 현행 stable(지원 페이지) VERIFIED, 최신 9.5.0 — SKILL.md는 마이너를 고정하지 않으므로 영향 없음. v10은 alpha(프리릴리스)만 존재
 
 ### 4-2. 구조 완전성
 
@@ -166,3 +170,5 @@ agent content test: 3/3 PASS
 | 2026-06-19 | v2 | MUI v9 기준 전면 재작성 — System props 제거, Grid size prop, slots/slotProps, cssVariables+colorSchemes, applyStyles, v5→v9 Breaking Changes 표 추가. 검증일 갱신. | Claude (Sonnet 4.6) |
 | 2026-09-26 | v2 | SKILL.md 500줄 초과 해소 — CSS Variables+colorSchemes·다크모드 토글 훅·styled() 컴포넌트·커스텀 테마(palette/typography/breakpoints/단계적 확장)·theme.components 오버라이드 예제를 references/REFERENCE.md §11~§15로 이동(내용 변경 없음, 이동만). SKILL.md 530→389줄. 내용·검증 상태 변경 없음 | Claude (Sonnet 5) |
 | 2026-09-28 | v3 | 재검증 — v9 Breaking Changes 핵심 클레임 5건(System props 제거·Grid size/direction·slots/slotProps·disableEscapeKeyDown·아이콘 리네임) 공식 마이그레이션 가이드 재대조 전부 VERIFIED, v10 미출시 확인(npm 최신 9.4.0). status APPROVED 유지 | Claude (Sonnet 5) |
+| 2026-11-09 | v3 | 재검증 — 공식 Upgrade to v9(System props·Grid direction·GridLegacy·disableEscapeKeyDown)·지원 페이지(v9 stable)·npm(latest 9.5.0, v10은 10.0.0-alpha.0 프리릴리스뿐) 재대조 VERIFIED. 내용 변경 없음(검증일만 갱신) — skill-tester 생략, status APPROVED 유지 | Claude (Opus 5.5) |
+| 2026-11-11 | v3 | 2026-11-11 정리 — 모델이 아는 일반 지식 절 제거(남긴 절: 버전 순서·v5 레거시 참고, 8. Dialog disableEscapeKeyDown 제거, 9. CSS 클래스 변경, 10. v5 → v9 주요 Breaking Changes 요약 / 덜어낸 절: 1. 설치·기본 설정, 2. 스타일링 선택 기준(sx·System props 예시), 3. 커스텀 테마, 4. 글로벌 오버라이드, 5. TS 모듈 확장, 6. slots/slotProps 예시, 7. 반응형 레이아웃(Grid·Box·Stack), 하단 REFERENCE 링크·§11~15 포인터. `references/REFERENCE.md`(7~15절 — 컴포넌트 패턴·성능·Next.js 통합·흔한 실수·예제, 전부 일반 지식)는 Bash 삭제 금지로 파일은 남기고 SKILL.md 링크만 제거, 사실 재검증 아님) | Claude (Opus 5.5) |

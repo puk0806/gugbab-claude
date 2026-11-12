@@ -1,15 +1,18 @@
 ---
 name: nutrition-analysis-prompt
-description: 식단 입력 → 칼로리·영양소 분석 Claude 프롬프트 패턴. 하루 목표 대비 진행률, structured outputs(output_config.format) JSON, 서버 주입 필수 면책(disclaimer) 필드, 의료 단정 필터, 음식명 인젝션 방어, 한국 식품 기반.
+description: 식단 입력 → 칼로리·영양소 분석 Claude 프롬프트 패턴. 하루 목표 대비 진행률, 모델용/앱용 분리 응답 스키마, 서버 주입 필수 면책(disclaimer) 필드와 fail-closed 처리, 의료 단정 필터, 음식명 인젝션 방어, 한국 식품 기반. API 호출·structured outputs 는 claude-api 스킬.
 ---
 
 # Nutrition Analysis Prompt — 식단 영양소 분석
 
 > 소스: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices
-> 소스: https://platform.claude.com/docs/en/build-with-claude/structured-outputs (output_config.format, claude-sonnet-5·claude-opus-5-5 지원)
+> 소스: https://platform.claude.com/docs/en/build-with-claude/structured-outputs (output_config.format, claude-sonnet-5-5·claude-opus-5-5·claude-haiku-5-5 지원)
+> 소스: https://platform.claude.com/docs/en/api/migration-2026-10-21 (API 2026-10-21 — 샘플링 파라미터 제거, TS SDK 1.0.0 부터 기본)
+> 소스: https://platform.claude.com/docs/en/models/sonnet-5-5/overview (Sonnet 5.5 — 강제 tool_choice·temperature 400)
 > 참고: https://platform.claude.com/cookbook/tool-use-vision-with-tools
 > 참고: 식품 등의 표시·광고에 관한 법률 제8조 (질병 예방·치료 효능 인식 우려 표시·광고 금지) — https://www.law.go.kr/lsInfoP.do?lsiSeq=269957&lsId=013094
-> 검증일: 2026-09-26
+> 검증일: 2026-11-11 (재검증, 이전 2026-11-06 — 강제 tool_choice 금지 모델 표기 Fable 5.2 현행화 · 2026-11-06 이전 2026-09-26) — 모델 ID `claude-sonnet-5-5` 현행화, API 2026-10-21·TS SDK 1.x 기준 샘플링 파라미터 서술 정정
+> API 호출·캐싱·structured outputs 는 Claude Code 기본 `claude-api` 스킬 참조.
 
 ---
 
@@ -66,6 +69,7 @@ const UNITS = ['g', 'ml', '인분'] as const;
 
 export const sanitizeFoodName = (raw: unknown): string | null => {
   if (typeof raw !== 'string') return null;
+  if (/[\r\n  ]/.test(raw)) return null;   // 줄바꿈(\r \n U+2028 U+2029)은 평탄화하지 않고 거부 (지시 주입 분리 시도 차단)
   const s = raw.normalize('NFKC').replace(/[\p{Cc}\p{Cf}]/gu, ' ').replace(/\s+/g, ' ').trim();
   if (s.length === 0 || s.length > MAX_FOOD_NAME || !FOOD_NAME_RE.test(s)) return null;
   return s;
@@ -164,21 +168,9 @@ export const sanitizeDayFeedback = (out: z.infer<typeof DayModelOutput>) => {
 
 ---
 
-## Claude API 호출 패턴
+## 분석 흐름
 
-```ts
-import Anthropic from '@anthropic-ai/sdk';
-import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
-
-const client = new Anthropic();
-const MODEL = 'claude-sonnet-5'; // 또는 'claude-opus-5-5' — 둘 다 structured outputs 지원
-
-// 공통: temperature/top_p/top_k 금지(5 계열 400), 강제 tool_choice 금지(Opus 5.5 400) — JSON은 output_config.format으로
-const ensureComplete = (res: { stop_reason: string | null }) => {
-  if (res.stop_reason === 'refusal') throw new Error('MODEL_REFUSED');
-  if (res.stop_reason === 'max_tokens') throw new Error('OUTPUT_TRUNCATED');
-};
-```
+API 호출·캐싱·structured outputs 는 Claude Code 기본 `claude-api` 스킬 참조. 아래에서 `callModel(system, userContent, schema)`는 모델용 스키마(`FoodModelOutput`·`DayModelOutput`)를 강제해 호출하고 파싱 결과를 돌려주는 함수이며, 거절·잘림·파싱 실패는 각각 `MODEL_REFUSED`·`OUTPUT_TRUNCATED`·`PARSE_FAILED`로 던진다고 가정한다.
 
 ### 단일 음식 분석
 
@@ -189,23 +181,16 @@ export const analyzeFoodNutrition = async (
   const foodName = sanitizeFoodName(rawName);
   if (!foodName || !validateAmount(amount, unit)) throw new Error('INVALID_INPUT');
 
-  const res = await client.messages.parse({
-    model: MODEL,
-    max_tokens: 16000,                           // thinking 기본 adaptive — 낮게 잡으면 잘림
-    system: NUTRITION_SYSTEM_PROMPT,
-    messages: [{
-      role: 'user',
-      content: `<meals>\n${JSON.stringify([{ foodName, amount, unit }])}\n</meals>\n\n위 음식 1개의 영양소를 섭취량 기준으로 추정해주세요.`,
-    }],
-    output_config: { format: zodOutputFormat(FoodModelOutput) },
-  });
-  ensureComplete(res);
-  if (!res.parsed_output) throw new Error('PARSE_FAILED');
+  const out = await callModel(
+    NUTRITION_SYSTEM_PROMPT,
+    `<meals>\n${JSON.stringify([{ foodName, amount, unit }])}\n</meals>\n\n위 음식 1개의 영양소를 섭취량 기준으로 추정해주세요.`,
+    FoodModelOutput,
+  );
 
   // 서버가 면책을 주입하고 최종 스키마로 재검증 (문구 불일치·누락 시 throw)
   return NutritionResultSchema.parse({
-    ...res.parsed_output,
-    note: scrubMedical(res.parsed_output.note),
+    ...out,
+    note: scrubMedical(out.note),
     disclaimer: NUTRITION_DISCLAIMER,
   });
 };
@@ -240,23 +225,13 @@ export const analyzeDayNutrition = async (
   if (mealLogs.length === 0) throw new Error('NO_MEALS');       // 빈 기록에 환각 수치 금지
   if (mealLogs.length > 50) throw new Error('TOO_MANY_MEALS');
 
-  const res = await client.messages.parse({
-    model: MODEL,
-    max_tokens: 16000,
-    system: NUTRITION_SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: buildDayAnalysisPrompt(mealLogs, goal) }],
-    output_config: { format: zodOutputFormat(DayModelOutput) },
-  });
-  ensureComplete(res);
-  if (!res.parsed_output) throw new Error('PARSE_FAILED');
+  const out = await callModel(NUTRITION_SYSTEM_PROMPT, buildDayAnalysisPrompt(mealLogs, goal), DayModelOutput);
 
-  const { removedMedicalClaims, ...cleaned } = sanitizeDayFeedback(res.parsed_output);
+  const { removedMedicalClaims, ...cleaned } = sanitizeDayFeedback(out);
   if (removedMedicalClaims > 0) console.warn('nutrition: medical claims removed', removedMedicalClaims);
   return DayAnalysisResultSchema.parse({ ...cleaned, disclaimer: NUTRITION_DISCLAIMER });
 };
 ```
-
-> `message.content[0]`을 텍스트로 가정하고 코드블록을 정규식으로 벗겨 `JSON.parse`하던 방식은 쓰지 않는다 — thinking이 켜진 5 계열은 첫 블록이 thinking일 수 있고, structured outputs가 형식을 보장한다.
 
 ---
 

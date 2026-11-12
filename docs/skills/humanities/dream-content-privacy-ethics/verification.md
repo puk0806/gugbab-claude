@@ -2,7 +2,7 @@
 skill: dream-content-privacy-ethics
 category: humanities
 version: v2
-date: 2026-09-26
+date: 2026-11-06
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `dream-content-privacy-ethics` |
 | 스킬 경로 | `.claude/skills/dream-content-privacy-ethics/SKILL.md` |
-| 검증일 | 2026-09-26 |
+| 검증일 | 2026-11-06 (재검증, 이전 2026-09-26) |
 | 검증자 | skill-creator (자동) / 2026-09-26 재검증: 메인 세션 (법령정보센터 현행 조문·eCFR·GDPR 원문 직접 대조) |
 | 스킬 버전 | v2 |
 | 카테고리 분류 | content test 가능 (실사용 필수 스킬 아님) — 답변 정확성만으로 검증 가능 |
@@ -79,6 +79,11 @@ status: APPROVED
 | PMC8382275 NLP deidentification | https://pmc.ncbi.nlm.nih.gov/articles/PMC8382275/ | ⭐⭐⭐ High | 2026-05-15 | PubMed Central |
 | Kim&Chang 법률 인사이트 (아동 가이드라인) | https://www.kimchang.com/ko/insights/detail.kc?idx=25475 | ⭐⭐ Medium | 2026-05-15 | 법무법인 해설(보완) |
 | privacy.go.kr — 법정대리인 동의 | https://www.privacy.go.kr/front/contents/cntntsView.do?contsNo=75 | ⭐⭐⭐ High | 2026-05-15 | 정부 공식 |
+| 법령정보센터 — 개인정보 보호법 시행령 개정 연혁 | https://www.law.go.kr/lsRvsDocListP.do?lsId=011468 | ⭐⭐⭐ High | 2026-11-06 | 최신 대통령령 제36671호(공포 2026-09-10, 시행 09-11) |
+| 법률신문 — 2026. 9. 11. 개정법 시행 | https://www.lawtimes.co.kr/news/articleView.html?idxno=226491 | ⭐⭐ Medium | 2026-11-06 | 법률 제21445호 공포 03-10·시행 09-11 교차 |
+| 개인정보보호위원회 보도자료 (KDI 경제정보센터 전재) — AI 개발 특례 본회의 통과 | https://eiec.kdi.re.kr/policy/materialView.do?num=285599 | ⭐⭐⭐ High | 2026-11-06 | 2026-08-20, 공포 후 6개월 시행 |
+| eCFR 45 CFR 164.508·164.524 (API, 2026-10-30 판) | https://www.ecfr.gov/api/versioner/v1/full/2026-10-30/title-45.xml?part=164 | ⭐⭐⭐ High | 2026-11-06 | psychotherapy notes 문언 재확인 |
+| GDPR Art. 9 (재확인) | https://gdpr-info.eu/art-9-gdpr/ | ⭐⭐⭐ High | 2026-11-06 | 9(1)·9(2)(a)(h)(j) |
 
 ---
 
@@ -117,6 +122,16 @@ status: APPROVED
 | R14 | APA "2017 개정 디지털 비밀유지 강화" / PIPC "임베딩 = 기술적 변환물" | APA 페이지 접속 차단·안내서 원문 미대조 | **UNVERIFIED→`주의: 미검증`** |
 | R15 | Domhoff (1999) *Dreaming* 9(2-3) | Crossref 10.1023/A:1021325331276 | VERIFIED (115–137 보완) |
 
+#### 4-1-S. 2026-11-06 재검증
+
+| # | 클레임 | 1차 소스 | 판정 |
+|---|---|---|---|
+| S1 | 현행 법률 제21445호 [시행 2026. 9. 11.]·시행령 동일 시행 | 법령정보센터 시행령 연혁(대통령령 제36671호 2026-09-10 공포), 법률신문 | VERIFIED (그 뒤 시행된 개정 없음) |
+| S2 | AI 개발 개인정보 활용 특례 개정안 본회의 통과(2026-08-20), 공포 후 6개월 시행 | 개인정보보호위원회 보도자료(KDI 전재) | VERIFIED(통과) / 공포일·조문 번호 UNVERIFIED → SKILL.md 상단 `주의` 신설 |
+| S3 | HIPAA §164.508(a)(2) psychotherapy notes 별도 authorization | eCFR 2026-10-30 판 원문 | VERIFIED |
+| S4 | HIPAA §164.524(a)(1)(i) psychotherapy notes 열람권 제외 | eCFR 2026-10-30 판 원문 | VERIFIED |
+| S5 | GDPR Art.9(1) 범주·9(2)(a)(h)(j) | gdpr-info.eu 원문 | VERIFIED |
+
 ### 4-2. 구조 완전성
 
 - [✅] YAML frontmatter (name, description, example 3개)
@@ -139,10 +154,45 @@ status: APPROVED
 
 - [✅] skill-tester 호출 수행 (2026-05-15)
 - [✅] 실전 질문 3개 답변 검증 완료 (2026-05-15, 3/3 PASS)
+- [✅] 2026-11-06 재검증 후 skill-tester 재테스트 수행 (2/2 PASS)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### skill-tester 재검증 테스트 (2026-11-06)
+
+**수행일**: 2026-11-06
+**수행자**: skill-tester → general-purpose (도메인 전담 에이전트 미사용으로 대체)
+**수행 방법**: 2026-11-06 재검증으로 SKILL.md 상단에 신설된 AI 개발 특례 개정안 `주의`를 겨냥해 SKILL.md Read 후 실전 질문 2개 답변, 근거 섹션 및 anti-pattern(특례를 시행 중인 근거로 인용) 회피 확인
+
+**Q1. 꿈 일기 앱이 꿈 텍스트를 AI 학습에 쓰려면 지금 필요한 법적 근거·동의 (특례 개정안 상태 포함)**
+- ✅ PASS
+- 근거: SKILL.md 상단 `주의` 블록, §3-2 운영 원칙, §1-1·§10-4(민감정보 별도 동의), §10-5(가명처리 한계), §3-1(국외 이전·제26조·제28조의8)
+- 상세: 특례를 "본회의 통과, 공포 후 6개월 시행, 조문 번호·공포일·시행일 미검증, 현행 제21445호에 미반영인 공포 대기 개정"으로 정확히 서술하고 현재 근거로 인용 불가라고 답했다. 학습용 외부 전송 금지 원칙 유지, 별도 동의 분리, 민감정보는 가명처리로 우회 불가, 14세 미만 추가 조치까지 도출했다. 특례를 이미 유효한 근거로 쓰는 오답은 없었다.
+
+**Q2. 꿈 내용이 민감정보로 취급되는 근거 (제23조·GDPR Art.9), 꿈 일기 전체가 민감정보인가**
+- ✅ PASS
+- 근거: SKILL.md §1-1, §1-2(결론), §1-3, §3-3, §10-4, §10-5
+- 상세: 제23조 제1항 항목과 시행령 제18조 4종(인종·민족 포함), Art.9(1)·Recital 35(정신적 건강)·9(2)(a)(h)(j)를 정확히 인용했다. "전체가 일률적으로 민감정보는 아니고 내용에 따라 달라지나 민감정보에 준해 처리가 안전"이라는 보수적 학술 견해와 판례 미정립 단서도 유지했다.
+
+**순차 재수행 확인 (2026-11-06)**: 동시 서브에이전트 한도로 중단된 이전 시도 후, general-purpose 서브에이전트를 질문당 하나씩 순차로 다시 띄워 Q1·Q2를 재수행했다. 결과는 위 기록과 같은 2/2 PASS다. Q1은 특례를 "본회의 통과, 공포 후 6개월 시행, 조문·공포일·시행일 미검증"으로 답하고 학습 근거로 쓰지 말라고 했다(시행 중인 것처럼 답하지 않음). Q2는 "꿈 일기 전체가 일률적으로 민감정보는 아니고 내용에 따라 달라 민감정보에 준해 처리가 안전"이라고 답했고, 제23조·시행령 제18조·GDPR Art.9·Recital 35 근거를 정확히 인용했다.
+
+### 발견된 gap (선택·비차단)
+
+- 상단 `주의`가 특례 개정안이 현행 법률 제21445호에 미반영인 공포 대기 상태라는 점을 명시하지 않아, Q1 답변자가 "이미 시행 중인지 확정 불가"라고 표현함 (독자 혼동 소지, 선택 보강)
+- 특례가 민간 서비스 사업자에 적용되는지, 위원회 심의 절차, 이용자 동의 면제 여부 서술 없음 (조문 원문 미확인이라 현재는 의도된 공백, 시행 후 보강)
+- 파인튜닝 시 기존 수집 정보의 목적 외 이용(제15조·제18조) 언급 없음
+- §3-2 "OpenAI zero data retention / Anthropic no-training default" 사업자 약관 출처 없음 (변동 가능, 재확인 필요)
+- 보도자료 URL이 SKILL.md 본문에 없음 (verification.md §3에는 있음)
+
+### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 해당 없음 (개념·법령 정리 스킬 — content test PASS = APPROVED)
+- 최종 상태: APPROVED 유지
+
+---
 
 ### skill-tester 재테스트 (2026-09-28)
 
@@ -215,8 +265,8 @@ agent content test: 2/2 PASS (재검증 기록). 법령 조문 정정으로 stat
 | 내용 정확성 | ✅ (공식 법령·공식 가이드·EDPB 자료 다중 출처 교차 검증) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-05-15, 3/3 PASS / 2026-09-26 메인 세션 재검증 2/2 PASS / 2026-09-28 skill-tester 실제 agent 재테스트 2/2 PASS) |
-| **최종 판정** | **APPROVED** (2026-09-28 skill-tester 재테스트: 법령 정정 8건이 SKILL.md에 정확히 반영됨을 agent content test로 확인, 2/2 PASS) |
+| 에이전트 활용 테스트 | ✅ (2026-05-15, 3/3 PASS / 2026-09-26 메인 세션 재검증 2/2 PASS / 2026-09-28 skill-tester 실제 agent 재테스트 2/2 PASS / 2026-11-06 재검증 skill-tester 재테스트 2/2 PASS) |
+| **최종 판정** | **APPROVED** (2026-11-06 재검증 후 skill-tester 재테스트: 특례 개정안 `주의`가 정확히 반영되고 꿈=민감정보 근거 유지됨을 확인, 2/2 PASS) |
 
 ---
 
@@ -226,6 +276,10 @@ agent content test: 2/2 PASS (재검증 기록). 법령 조문 정정으로 stat
 - [❌] (선택·비차단) 한국 *판례*나 *개인정보보호위 의결례* 중 꿈·심리 관련 직접 사례 발견 시 추가 — APPROVED 상태에 영향 없음, 실전 도입 이후 보강 가능
 - [❌] (선택·비차단) 2026년 PIPA 추가 개정 시행 시점 재검토 (자동화된 의사결정 거부권 등) — 법령 개정 시 스킬 갱신 필요하나 현재 v1 내용은 2026-05-15 기준 정확
 - [✅] skill-tester 실제 agent 재테스트 수행 및 섹션 5·6·7·8 동기화 (2026-09-28 완료, 2/2 PASS) — APPROVED 재전환
+- [✅] 2026-11-06 재검증(AI 개발 특례 `주의` 신설) 후 skill-tester 재테스트 및 섹션 5·6·7·8 동기화 (2026-11-06 완료, 2/2 PASS) — APPROVED 유지
+- [❌] (선택·비차단) AI 개발 특례 공포 확정 시 조문 번호·공포일·시행일·민간 적용 범위·동의 면제 여부를 법령정보센터 원문으로 확인해 SKILL.md `주의`를 본문으로 승격 — APPROVED에 영향 없음, 시행 후 보강
+- [❌] (선택·비차단) SKILL.md 상단 `주의`에 "현행 제21445호에 미반영, 공포 대기" 문구 명시 — Q1 순차 재수행에서 발견된 표현 모호성, APPROVED에 영향 없음
+- [❌] (선택·비차단) §3-2 사업자별 no-training 서술(OpenAI·Anthropic)에 약관 출처 추가 — APPROVED에 영향 없음
 
 ---
 
@@ -236,4 +290,6 @@ agent content test: 2/2 PASS (재검증 기록). 법령 조문 정정으로 stat
 | 2026-05-15 | v1 | 최초 작성 (한국 PIPA·GDPR·HIPAA·APA·IRB 종합, AI/LLM 시대 위험 포함) | skill-creator |
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 꿈=민감정보 학술 논의 / Q2 k-anonymity 한계+재식별 / Q3 APA Ethics 임상+만 14세 미만) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-09-26 | v2 | 재검증 — 현행 개인정보 보호법(법률 제21445호)·시행령·eCFR·GDPR·PMC 대조 15건, 오류 8건 정정(시행령 제18조 인종·민족 누락, 제28조의8 예외, 제26조 "신고", 제37조의2·제35조의2 시행 서술, 동의 철회 조문, 30일 파기, PMC8382275 결과 과장), 미검증 2건, 실전 질문 2/2 PASS → PENDING_TEST | 메인 세션 (재검증) |
+| 2026-11-06 | v3 | 재검증 — 현행 법률 제21445호·시행령 제36671호 유지, HIPAA §164.508(a)(2)·§164.524(a)(1)(i)(eCFR 2026-10-30)·GDPR Art.9 원문 재확인(VERIFIED). 추가: 2026-08-20 본회의 통과한 AI 개발 개인정보 활용 특례 개정안(공포 후 6개월 시행) 상단 `주의` — 공포일·조문 번호 미검증. 기존 본문 정정 없음 | 메인 세션 (b15 재검증) |
+| 2026-11-06 | v3 | 재검증 후 2단계 테스트 수행 (Q1 AI 학습 법적 근거·동의+특례 개정안 상태 / Q2 꿈=민감정보 근거 제23조·GDPR Art.9) → 2/2 PASS, APPROVED 유지 | skill-tester |
 | 2026-09-28 | v2 | skill-tester 실제 agent 재테스트 수행 (Q1 국외 이전 예외 5가지 / Q2 동의 철회 제37조·30일 파기 근거 없음 정정 확인) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |

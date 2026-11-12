@@ -1,6 +1,6 @@
 ---
 name: xss-lucy-jsoup
-description: Spring Boot XSS 방어 패턴 - Naver Lucy XSS Servlet Filter(요청 파라미터 레벨) + jsoup Safelist(HTML 본문 sanitize) 조합. Spring Boot 2.5 / 3.x 양쪽, FilterRegistrationBean 등록, rule XML 설정, CSP 헤더, 한국 엔터프라이즈 실무 패턴
+description: Naver Lucy XSS Servlet Filter + jsoup Safelist 레거시 XSS 방어의 함정 — Lucy 2.0.1 archived·javax.servlet 전용(SB 3 ClassNotFound)·@RequestBody(JSON) 미적용, rule XML(default·global·url-rule·useDefender=false) 핵심, defender 3종, CharacterEncodingFilter 이후 등록, jsoup 1.24.1 셀렉터 주의·Whitelist→Safelist, style 허용 CSS 벡터, preserveRelativeLinks GHSA, persist 직전 sanitize, X-XSS-Protection 기본값 차이, 전역 Jackson 디시리얼라이저 부작용, SB 3 대안
 ---
 
 # Spring Boot XSS 방어 — Lucy Servlet Filter + jsoup Safelist
@@ -13,181 +13,53 @@ description: Spring Boot XSS 방어 패턴 - Naver Lucy XSS Servlet Filter(요�
 > - https://docs.spring.io/spring-security/reference/servlet/exploits/headers.html
 > - https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html
 >
-> 검증일: 2026-04-22 (재검증: 2026-09-26)
+> 검증일: 2026-11-09 (재검증, 최초 2026-04-22 · 이전 재검증 2026-09-26)
 
 > 주의: `com.navercorp.lucy:lucy-xss-servlet` 레포는 2025-06-09 GitHub에서 **archived** 상태로 전환되었습니다. 최신 버전은 2.0.1 (Maven Central)이며 2.0.0(2015-05-15) 이후 신규 기능 추가는 드뭅니다. 신규 프로젝트라면 OWASP Java Encoder + jsoup + Content-Security-Policy 조합도 함께 검토하세요. 다만 한국 엔터프라이즈에서 Lucy는 여전히 널리 사용 중이며, 서블릿 파라미터 레벨 방어에는 충분히 안정적입니다. (2026-09-26 재검증: archived 상태·2.0.1 최신 버전 변경 없음 확인)
 
-> 주의: jsoup 버전은 공식 Maven Central(https://central.sonatype.com/artifact/org.jsoup/jsoup/versions)에서 최신 안정 버전 확인 후 사용하세요. 본 문서는 1.18.3 (LTS성) 및 최신 1.22.x 계열을 기준으로 합니다. Safelist API는 1.14.2부터 안정적이며 이전의 `Whitelist`(deprecated)와 호환됩니다.
+> 주의: jsoup 버전은 공식 Maven Central(https://central.sonatype.com/artifact/org.jsoup/jsoup/versions)에서 최신 안정 버전 확인 후 사용하세요. 본 문서는 1.18.3 (LTS성) 및 최신 1.24.x 계열을 기준으로 합니다. Safelist API는 1.14.2부터 안정적이며 이전의 `Whitelist`(deprecated)와 호환됩니다.
 >
-> 주의(2026-09-26 재검증): jsoup 최신 버전은 **1.23.2**(2026-08-26)입니다. `Safelist` 프리셋(`none/simpleText/basic/basicWithImages/relaxed`)·`addTags/addAttributes/addProtocols/addEnforcedAttribute` API는 변경 없이 그대로 유효하며, `preserveRelativeLinks` 관련 GHSA-gp7f-rwcx-9369 패치도 유지됩니다.
+> 주의(2026-11-09 재검증): jsoup 최신 버전은 **1.24.1**(2026-11-03)입니다. 1.24.1의 변경은 CSS 셀렉터(opt-in "Web query mode", 1.25.1에서 기본값 예정)·HTML 파서 표준 정렬 위주이고, `Safelist` 프리셋(`none/simpleText/basic/basicWithImages/relaxed`)·`addTags/addAttributes/addProtocols/addEnforcedAttribute`·`Jsoup.clean` API는 변경 없이 그대로 유효합니다. `preserveRelativeLinks` 관련 GHSA-gp7f-rwcx-9369 패치도 유지됩니다. 단, 같은 프로젝트에서 jsoup 셀렉터(`select()`)로 HTML을 파싱·추출하고 있다면 1.24.1 업그레이드 전 셀렉터 마이그레이션 가이드(https://jsoup.org/news/selector-migration)를 확인하세요.
 
 ---
 
-## 1. XSS 위협 개요
+## 이 스킬의 범위
 
-| 유형 | 설명 | 주요 진입점 |
-|------|------|-------------|
-| Reflected | 요청 파라미터가 그대로 응답에 반사 | GET/POST 파라미터 → 즉시 렌더 |
-| Stored | 악성 스크립트가 DB에 저장 후 다른 사용자에게 노출 | 게시글 본문, 댓글, 닉네임 |
-| DOM-based | 서버 왕복 없이 클라이언트 JS가 DOM에 주입 | `location.hash`, `document.write` |
-
-**서버 사이드 방어 원칙 (OWASP XSS Prevention Cheat Sheet):**
-1. 입력 검증(whitelist) + 출력 시점 context-aware 이스케이프 (HTML / attribute / JS / CSS / URL)
-2. rich text(HTML 허용 필드)는 반드시 sanitize(allowlist 기반)
-3. Content-Security-Policy로 브라우저 레벨 방어 추가
-4. 쿠키에 `HttpOnly`, `Secure`, `SameSite` 설정
-
-본 스킬은 서버 사이드(2번·일부 1번) 방어에 집중한다.
+XSS 유형·OWASP 원칙·CSP 디렉티브 해설·`Jsoup.clean` 기본 사용법은 공식 문서 수준이라 싣지 않는다. 여기엔 **한국 레거시에서 쓰는 Lucy 필터의 설정·한계와 jsoup 조합의 함정**만 둔다. 역할 분담: Lucy = form/query 파라미터 이스케이프, jsoup = HTML 허용 본문 sanitize, 출력 시점 = 템플릿 이스케이프 + CSP.
 
 ---
 
-## 2. 방어 레이어 매핑
+## 1. Lucy XSS Servlet Filter
 
-```
-[Client Request]
-     │
-     ▼
-┌─────────────────────────────────────────┐
-│ (A) Lucy XSS Servlet Filter             │  ← 요청 파라미터(form/query)
-│     - request.getParameter(…) 인터셉트  │    HTML 엔티티 이스케이프
-│     - ServletRequestWrapper 형태        │
-└─────────────────────────────────────────┘
-     │
-     ▼
-┌─────────────────────────────────────────┐
-│ Controller / Service                    │
-│                                         │
-│ (B) jsoup Safelist sanitize             │  ← HTML 본문(게시판, 댓글 rich text)
-│     - Jsoup.clean(dirty, safelist)      │    태그/속성 allowlist 기반
-│     - JSON body, RequestBody 대상       │
-└─────────────────────────────────────────┘
-     │
-     ▼
-┌─────────────────────────────────────────┐
-│ DB Persist                              │
-└─────────────────────────────────────────┘
-     │
-     ▼
-┌─────────────────────────────────────────┐
-│ (C) 출력 시점                           │  ← Thymeleaf `th:text` 기본 이스케이프
-│     - Thymeleaf / JSP <c:out> / React   │    (절대 신뢰 X, sanitize 병행)
-│     - HTTP 응답 헤더: CSP, HSTS 등      │
-└─────────────────────────────────────────┘
-```
+- 좌표 `com.navercorp.lucy:lucy-xss-servlet:2.0.1`, 필터 클래스 `com.navercorp.lucy.security.xss.servletfilter.XssEscapeServletFilter`, 설정 파일 `src/main/resources/lucy-xss-servlet-filter-rule.xml`.
+- `HttpServletRequest`를 래핑해 `getParameter`/`getParameterValues`/`getParameterMap` **호출 시점**에 필터링한다 → **`@RequestBody`(JSON)에는 적용되지 않는다.**
+- Boot에선 `FilterRegistrationBean`으로 `/*` 등록, **`CharacterEncodingFilter` 이후** 순서(예: `Ordered.HIGHEST_PRECEDENCE + 10`) — 인코딩이 먼저 확정돼야 정확하다. WAR는 `web.xml` `<filter>`로.
 
-| 레이어 | 도구 | 처리 대상 | 이유 |
-|--------|------|-----------|------|
-| A | Lucy Servlet Filter | form/query 파라미터 | 필터 레벨에서 일괄 처리, 애플리케이션 코드 무침투 |
-| B | jsoup | 게시글 본문, 댓글 등 HTML 허용 필드 | Lucy는 HTML 본문을 완전 제거하지 않고 이스케이프만 하므로 rich text엔 부적합 |
-| C | 템플릿 엔진 + CSP | 렌더링 | 다중 방어 |
+> 주의: Lucy는 `jakarta.servlet` 이 아닌 `javax.servlet` API에 의존합니다. **Spring Boot 3.x (Jakarta EE 9+)** 환경에서는 별도 대응이 필요할 수 있습니다 (아래 4절 참고).
 
-**Lucy는 요청 파라미터 보호, jsoup은 HTML 본문 sanitize.** 둘은 역할이 겹치지 않고 보완적이다.
-
----
-
-## 3. Naver Lucy XSS Servlet Filter
-
-### 3-1. 의존성
+### rule XML 핵심 (namespace `http://www.navercorp.com/lucy-xss-servlet`)
 
 ```xml
-<!-- pom.xml -->
-<dependency>
-    <groupId>com.navercorp.lucy</groupId>
-    <artifactId>lucy-xss-servlet</artifactId>
-    <version>2.0.1</version>
-</dependency>
-```
-
-```gradle
-// build.gradle
-implementation 'com.navercorp.lucy:lucy-xss-servlet:2.0.1'
-```
-
-> 주의: Lucy는 `jakarta.servlet` 이 아닌 `javax.servlet` API에 의존합니다. **Spring Boot 3.x (Jakarta EE 9+)** 환경에서는 별도 대응이 필요할 수 있습니다 (아래 6절 참고).
-
-### 3-2. 동작 방식
-
-- `XssEscapeServletFilter`가 `HttpServletRequest`를 래핑
-- `request.getParameter(…)` / `getParameterValues(…)` / `getParameterMap()` 호출 시점에 defender가 값을 필터링
-- URL 호출 시점이 아니라 **파라미터 접근 시점**에 변환되므로 `@RequestBody`(JSON)에는 **적용되지 않는다**
-
-### 3-3. lucy-xss-servlet-filter-rule.xml (`src/main/resources/` 루트)
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
 <config xmlns="http://www.navercorp.com/lucy-xss-servlet">
-
-    <!-- 1. defender 정의: 어떤 방식으로 필터링할지 -->
-    <defenders>
+    <defenders>  <!-- name + class (+ init-param: lucy-xss-sax.xml / lucy-xss.xml, false) -->
         <defender>
             <name>xssPreventerDefender</name>
             <class>com.navercorp.lucy.security.xss.servletfilter.defender.XssPreventerDefender</class>
         </defender>
-        <defender>
-            <name>xssSaxFilterDefender</name>
-            <class>com.navercorp.lucy.security.xss.servletfilter.defender.XssSaxFilterDefender</class>
-            <init-param>
-                <param-value>lucy-xss-sax.xml</param-value>
-                <param-value>false</param-value>
-            </init-param>
-        </defender>
-        <defender>
-            <name>xssFilterDefender</name>
-            <class>com.navercorp.lucy.security.xss.servletfilter.defender.XssFilterDefender</class>
-            <init-param>
-                <param-value>lucy-xss.xml</param-value>
-                <param-value>false</param-value>
-            </init-param>
-        </defender>
     </defenders>
-
-    <!-- 2. default: 규칙에 명시되지 않은 파라미터에 적용되는 기본 defender -->
-    <default>
-        <defender>xssPreventerDefender</defender>
-    </default>
-
-    <!-- 3. global: 모든 URL에서 필터링 제외할 파라미터 -->
-    <global>
-        <params>
-            <param name="csrfToken" useDefender="false"/>
-            <param name="_method"   useDefender="false"/>
-            <!-- 접두어 매칭 -->
-            <param name="dummy_" usePrefix="true" useDefender="false"/>
-        </params>
-    </global>
-
-    <!-- 4. url-rule-set: URL 패턴별 세부 규칙 -->
+    <default><defender>xssPreventerDefender</defender></default>   <!-- 규칙 없는 파라미터 -->
+    <global><params>                                               <!-- 모든 URL 공통 제외 -->
+        <param name="csrfToken" useDefender="false"/>
+        <param name="dummy_" usePrefix="true" useDefender="false"/>
+    </params></global>
     <url-rule-set>
-        <!-- 4-1. 특정 URL 전체 필터링 비활성화 -->
-        <url-rule>
-            <url disable="true">/api/webhook/**</url>
-        </url-rule>
-
-        <!-- 4-2. 특정 URL에서 일부 파라미터만 제외 -->
-        <url-rule>
-            <url>/board/write</url>
-            <params>
-                <param name="content" useDefender="false"/>  <!-- 본문은 jsoup으로 별도 처리 -->
-                <param name="title">
-                    <defender>xssPreventerDefender</defender>
-                </param>
-            </params>
-        </url-rule>
-
-        <!-- 4-3. 풍부한 HTML 허용이 필요한 필드는 SAX defender -->
-        <url-rule>
-            <url>/editor/save</url>
-            <params>
-                <param name="htmlBody">
-                    <defender>xssSaxFilterDefender</defender>
-                </param>
-            </params>
-        </url-rule>
+        <url-rule><url disable="true">/api/webhook/**</url></url-rule>   <!-- URL 전체 비활성 -->
+        <url-rule><url>/board/write</url><params>
+            <param name="content" useDefender="false"/>                  <!-- 본문은 jsoup 으로 -->
+        </params></url-rule>
     </url-rule-set>
 </config>
 ```
-
-### 3-4. defender 3종 비교
 
 | Defender | 동작 | 용도 |
 |----------|------|------|
@@ -195,181 +67,52 @@ implementation 'com.navercorp.lucy:lucy-xss-servlet:2.0.1'
 | `XssSaxFilterDefender` | SAX 기반으로 태그를 파싱 후 `lucy-xss-sax.xml` 화이트리스트에 따라 허용/제거. 메모리 효율적 | 대용량 HTML 입력, 스트리밍 |
 | `XssFilterDefender` | DOM 기반 파싱 후 `lucy-xss.xml` 화이트리스트 적용 | 작은 HTML, 정밀한 구조 제어 |
 
-### 3-5. Spring Boot FilterRegistrationBean 등록
-
-레거시 `web.xml` 대신 Spring Boot에서는 Java config로 등록한다.
-
-```java
-package com.example.config;
-
-import com.navercorp.lucy.security.xss.servletfilter.XssEscapeServletFilter;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.core.Ordered;
-
-@Configuration
-public class XssFilterConfig {
-
-    @Bean
-    public FilterRegistrationBean<XssEscapeServletFilter> xssEscapeServletFilter() {
-        FilterRegistrationBean<XssEscapeServletFilter> reg = new FilterRegistrationBean<>();
-        reg.setFilter(new XssEscapeServletFilter());
-        reg.addUrlPatterns("/*");
-        reg.setName("xssEscapeServletFilter");
-        // 인코딩 필터 뒤에 배치 — Spring의 CharacterEncodingFilter order보다 크게
-        reg.setOrder(Ordered.HIGHEST_PRECEDENCE + 10);
-        return reg;
-    }
-}
-```
-
-- `CharacterEncodingFilter` **이후**에 등록되어야 한다 (인코딩이 먼저 확정되어야 필터링 정확).
-- `/*` 패턴으로 전체 요청 적용, 세부 제외는 rule XML에서 처리.
-
-### 3-6. 레거시 web.xml 등록 (WAR 배포)
-
-```xml
-<!-- WEB-INF/web.xml -->
-<filter>
-    <filter-name>xssEscapeServletFilter</filter-name>
-    <filter-class>com.navercorp.lucy.security.xss.servletfilter.XssEscapeServletFilter</filter-class>
-</filter>
-<filter-mapping>
-    <filter-name>xssEscapeServletFilter</filter-name>
-    <url-pattern>/*</url-pattern>
-</filter-mapping>
-```
+함정: HTML 본문 필드를 default defender에 두면 `<`·`>`가 `&lt;`·`&gt;`로 바뀌어 **리치 에디터가 깨진다** → `useDefender="false"` + 서비스 단 jsoup.
 
 ---
 
-## 4. jsoup Safelist — HTML 본문 Sanitize
-
-### 4-1. 의존성
-
-```xml
-<dependency>
-    <groupId>org.jsoup</groupId>
-    <artifactId>jsoup</artifactId>
-    <version>1.18.3</version>  <!-- 또는 최신 1.22.x -->
-</dependency>
-```
-
-```gradle
-implementation 'org.jsoup:jsoup:1.18.3'
-```
+## 2. jsoup Safelist 함정
 
 > 주의: Safelist API는 jsoup 1.14.2부터 이름이 바뀌었으며, 이전의 `org.jsoup.safety.Whitelist`는 deprecated됐습니다. 신규 코드는 `org.jsoup.safety.Safelist`를 사용하세요.
 
-### 4-2. Safelist 프리셋 5종
-
-| 메서드 | 허용 태그 | 용도 |
-|--------|-----------|------|
-| `Safelist.none()` | (없음, 텍스트만) | 태그를 전부 제거하고 텍스트만 남김 |
-| `Safelist.simpleText()` | `b, em, i, strong, u` | 채팅, 짧은 코멘트 |
-| `Safelist.basic()` | `a, b, blockquote, br, cite, code, dd, dl, dt, em, i, li, ol, p, pre, q, small, span, strike, strong, sub, sup, u, ul` (링크 + 인용, `rel="nofollow"` 강제) | 일반 댓글 |
-| `Safelist.basicWithImages()` | `basic()` + `img` (src http/https만) | 이미지 포함 댓글·설명 |
-| `Safelist.relaxed()` | 테이블·헤딩 포함한 넓은 구조 HTML (`h1-h6, table, thead, tbody, tr, td, ...`) | 게시판 본문 (rich text editor) |
-
-모두 공통으로 `<script>`, `<iframe>`, `<object>`, `<embed>`, 인라인 이벤트 핸들러(`onclick` 등), `javascript:` URL은 **제거**한다.
-
-### 4-3. 기본 사용
-
-```java
-import org.jsoup.Jsoup;
-import org.jsoup.safety.Safelist;
-
-public class HtmlSanitizer {
-
-    // 게시판 본문: 풍부한 HTML 허용
-    public static String sanitizeRichText(String dirtyHtml) {
-        if (dirtyHtml == null) return null;
-        return Jsoup.clean(dirtyHtml, Safelist.relaxed());
-    }
-
-    // 댓글: 기본 텍스트 + 링크
-    public static String sanitizeComment(String dirtyHtml) {
-        if (dirtyHtml == null) return null;
-        return Jsoup.clean(dirtyHtml, Safelist.basic());
-    }
-
-    // 닉네임·제목: 태그 제거, 텍스트만
-    public static String stripHtml(String dirty) {
-        if (dirty == null) return null;
-        return Jsoup.clean(dirty, Safelist.none());
-    }
-}
-```
-
-### 4-4. 커스텀 Safelist
-
-rich text editor(TinyMCE, CKEditor 등)가 생성하는 HTML에 맞춰 확장.
-
-```java
-import org.jsoup.Jsoup;
-import org.jsoup.safety.Safelist;
-
-public class EditorSanitizer {
-
-    private static final Safelist EDITOR_SAFELIST = Safelist.relaxed()
-            // 태그 추가
-            .addTags("figure", "figcaption", "hr")
-            // 속성 허용
-            .addAttributes("img", "data-src", "loading", "srcset")
-            .addAttributes("a", "target", "rel")
-            .addAttributes(":all", "class", "style")  // 모든 태그에 class/style 허용
-            // URL 프로토콜 제한
-            .addProtocols("img", "src", "http", "https", "data")  // data: URI는 신중히
-            .addProtocols("a", "href", "http", "https", "mailto")
-            // 강제 속성 (보안 목적)
-            .addEnforcedAttribute("a", "rel", "nofollow noopener noreferrer");
-
-    public static String clean(String dirty) {
-        if (dirty == null) return null;
-        return Jsoup.clean(dirty, EDITOR_SAFELIST);
-    }
-}
-```
+- 프리셋: `none()`(텍스트만) · `simpleText()` · `basic()`(링크, `rel="nofollow"` 강제) · `basicWithImages()`(img src http/https) · `relaxed()`(테이블·헤딩 포함 게시판 본문). 모두 `<script>`·`<iframe>`·이벤트 핸들러·`javascript:` URL 제거.
+- 에디터 확장: `addTags`·`addAttributes(":all", ...)`·`addProtocols`·`addEnforcedAttribute("a", "rel", "nofollow noopener noreferrer")`. `data:` 프로토콜 허용은 신중히.
 
 > 주의: `style` 속성을 허용하면 `background: url(javascript:...)` 같은 CSS 기반 XSS 벡터가 생길 수 있다. jsoup은 style 내부 값을 검사하지 않으므로, style 허용 시에는 CSP의 `style-src` 제한을 반드시 병행한다.
 
-### 4-5. `preserveRelativeLinks` 주의
-
-```java
-Safelist safelist = Safelist.basic().preserveRelativeLinks(true);
-```
-
-- 기본값은 `false`(상대 경로를 절대 경로로 강제 변환).
-- `true`로 설정 시 crafted XSS 우회 가능성이 과거 보고됨 (GHSA-gp7f-rwcx-9369). **1.15.3 이상에서 패치**되었지만, 꼭 필요한 경우가 아니면 기본값 유지 권장.
-
-### 4-6. 서비스 레이어 통합
-
-```java
-@Service
-@RequiredArgsConstructor
-public class PostService {
-
-    private final PostMapper postMapper;
-
-    @Transactional
-    public Long writePost(PostWriteReq req) {
-        // 제목: Lucy가 필터에서 이미 이스케이프했으나, 한 번 더 방어
-        String safeTitle = Jsoup.clean(req.getTitle(), Safelist.none());
-
-        // 본문: rich text이므로 Lucy는 rule XML에서 제외하고 jsoup으로만 처리
-        String safeContent = Jsoup.clean(req.getContent(), Safelist.relaxed());
-
-        Post post = Post.of(safeTitle, safeContent, currentUserId());
-        postMapper.insert(post);
-        return post.getId();
-    }
-}
-```
-
-**중요:** sanitize는 **persist 직전**에 수행한다. 조회 시점에 sanitize하면 매 요청마다 비용이 발생하고, 이미 저장된 악성 HTML이 조회 시점 실수로 통과할 수 있다. 단, 기존 DB의 데이터를 신뢰할 수 없다면 출력 시점 추가 sanitize도 검토.
+- `preserveRelativeLinks(true)`: 기본값은 `false`(상대 경로를 절대 경로로 변환). `true`면 crafted XSS 우회가 과거 보고됨(GHSA-gp7f-rwcx-9369, **1.15.3 이상에서 패치**) — 꼭 필요하지 않으면 기본값 유지.
+- sanitize는 **persist 직전**에. 조회 시점 sanitize는 매 요청 비용 + 누락 위험. 기존 DB 데이터를 신뢰할 수 없다면 출력 시점 추가 sanitize 검토.
+- Thymeleaf `th:utext`는 이스케이프 없이 출력 — sanitize된 HTML만 넘긴다. `@Valid`는 HTML 살균이 아니다.
 
 ---
 
+## 3. JSON 요청 — Lucy가 못 막는 곳
+
+| 입력 | 방어 주체 |
+|------|-----------|
+| form 파라미터(제목·닉네임·검색어) | Lucy `XssPreventerDefender`(default) |
+| form 파라미터 중 HTML 본문 | Lucy 제외(`useDefender="false"`) + 서비스 jsoup |
+| JSON `@RequestBody` 전체 | jsoup (Lucy는 form만) |
+| webhook·외부 연동 | Lucy `<url disable="true">` |
+
+Jackson `StdScalarDeserializer<String>`로 전역 sanitize하는 방법도 있지만:
+
+> 주의: 전역 String 디시리얼라이저는 **모든 문자열**을 sanitize하므로 URL/base64 등 의도된 특수 문자가 깨질 수 있다. 필드별 `@JsonDeserialize(using = ...)` 또는 DTO별 처리 권장.
+
+권장은 DTO/서비스 레이어에서 필드별 명시 sanitize.
+
 ---
 
-> 상세 레퍼런스 (예제·고급 패턴·흔한 실수) → [`references/REFERENCE.md`](references/REFERENCE.md)
+## 4. Spring Boot 2.5 vs 3.x
+
+| 항목 | Spring Boot 2.5 (javax) | Spring Boot 3.x (jakarta) |
+|------|--------------------------|----------------------------|
+| Lucy 호환 | ✅ 직접 호환 | ⚠️ **javax → jakarta 변환 필요** |
+| `FilterRegistrationBean` | `org.springframework.boot.web.servlet.FilterRegistrationBean` | 동일 |
+| Spring Security 기본 `X-XSS-Protection` | `1; mode=block` | `0` (OWASP 권고 반영) |
+
+> 주의: Spring Boot 3.x + Lucy 그대로 사용은 `ClassNotFoundException: javax.servlet.Filter`로 실패합니다. 프로젝트가 3.x라면 먼저 호환성 전략을 결정하세요.
+
+SB 3 대안: ① Eclipse Transformer / Tomcat migration tool로 빌드 타임 javax→jakarta 변환(커뮤니티 산출물은 비공식 — 검증 필요) ② jakarta `HttpServletRequestWrapper` 커스텀 필터(`getParameter`/`getParameterValues`를 `Jsoup.clean(raw, Safelist.none())`로) + URL 제외는 `getRequestURI()` 매칭 ③ OWASP Java HTML Sanitizer(+ OWASP Java Encoder)로 대체.
+
+`X-XSS-Protection`은 모든 주요 브라우저에서 제거/미지원 — 의존하지 말고 CSP로 방어한다(`script-src`에 `'unsafe-inline'` 금지). 세션 쿠키엔 `HttpOnly; Secure; SameSite`.

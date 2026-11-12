@@ -2,7 +2,7 @@
 skill: spring-security-5-jwt-jjwt10
 category: backend
 version: v1
-date: 2026-09-26
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -35,7 +35,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `spring-security-5-jwt-jjwt10` |
 | 스킬 경로 | `.claude/skills/spring-security-5-jwt-jjwt10/SKILL.md` |
-| 검증일 | 2026-09-26 (재검증, 이전 2026-07-04) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 
@@ -88,6 +88,9 @@ status: APPROVED
 | Baeldung: WebSecurityConfigurerAdapter 업그레이드 | https://www.baeldung.com/spring-deprecated-websecurityconfigureradapter | ⭐⭐ Medium | 2026-04-22 | 5.5.x에서 Adapter 유효성 교차 확인 |
 | Baeldung: JWT parser 대체 | https://www.baeldung.com/jwt-deprecated-setsigningkey | ⭐⭐ Medium | 2026-04-22 | 0.10→0.11 파서 전환 교차 확인 |
 | Spring Security GitHub Issue #11288 | https://github.com/spring-projects/spring-security/issues/11288 | ⭐⭐⭐ High | 2026-04-22 | Adapter deprecation 공식 트래킹 |
+| jjwt-api 0.10.7 jar (Maven Central, 재검증) | https://repo1.maven.org/maven2/io/jsonwebtoken/jjwt-api/0.10.7/ | ⭐⭐⭐ High | 2026-11-09 | `javap`로 예외 계층 확인: `security.SignatureException` → `io.jsonwebtoken.SignatureException` → `security.SecurityException` → `JwtException` |
+| spring-boot-dependencies POM (Maven Central, 재검증) | https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/ | ⭐⭐⭐ High | 2026-11-09 | `spring-security.version`: 2.5.0 = 5.5.0, 2.5.15 = 5.5.8, 2.6.15 = 5.6.10, 2.7.18 = 5.7.11 |
+| NVD / GHSA — CVE-2024-31033 (재검증) | https://nvd.nist.gov/vuln/detail/CVE-2024-31033 · https://security-tracker.debian.org/tracker/CVE-2024-31033 | ⭐⭐⭐ High | 2026-11-09 | NVD "Disputed" 태그 유지, GHSA-r65j-6h5f-4f92 철회 |
 
 ---
 
@@ -114,6 +117,10 @@ status: APPROVED
 | 8 | `Keys.hmacShaKeyFor(byte[])`는 HS256에서 최소 256-bit(32byte) 필요 | VERIFIED | jjwt 0.10.7 JavaDoc + WeakKeyException 명세 |
 | 9 | Spring Boot 2.5는 `javax.servlet` 네임스페이스 (jakarta 아님) | VERIFIED | Spring Boot 3 마이그레이션 가이드에서 3.0부터 jakarta 전환 명시 |
 | 10 | jjwt 0.10.7 자체의 특이 변경점 | UNVERIFIED | 0.10.7 전용 릴리즈 노트가 검색 결과에 나타나지 않음. 0.10.x 시리즈 범용 API로 작성했으므로 영향 없음 |
+| 11 | (2026-11-09) `validateToken`의 `catch (MalformedJwtException \| SecurityException e)`가 서명 위조를 잡는다 | **DISPUTED → 수정(코드 버그)** | 0.10.7 jar `javap`: 서명 실패 예외는 `io.jsonwebtoken.security.SecurityException` 하위. import 없이 쓴 `SecurityException`은 `java.lang.SecurityException`이라 잡지 못함 → 필터에서 500. `import io.jsonwebtoken.security.SecurityException;` 추가 + 주의문 |
+| 12 | (2026-11-09) Boot 2.5 = Security 5.5.x(2.5.15 = 5.5.8), 2.6 = 5.6, 2.7 = 5.7 | VERIFIED | Maven Central POM 직접 확인 + 2.5 Release Notes(기존). "5.5.0-M2 이상" 표현을 실제 GA 버전으로 정정 |
+| 13 | (2026-11-09) CVE-2024-31033 disputed, `Keys.hmacShaKeyFor(byte[])` 패턴은 영향 없음 | VERIFIED | NVD Disputed 태그 + GHSA 철회 |
+| 14 | (2026-11-09) `WebSecurityConfigurerAdapter` 5.7 deprecated·6.0 제거 | VERIFIED | spring.io 블로그 + `spring-boot-2-to-3-migration` 클레임 7(동일 소스 교차) |
 
 ### 4-2. 구조 완전성
 
@@ -154,6 +161,18 @@ status: APPROVED
 자기 지식 없이 SKILL.md만으로 답변 생성 확인됨.
 
 ---
+
+### [2026-11-09] 재검증 수정분 content test
+
+**수행일**: 2026-11-09
+**수행자**: general-purpose (skill-tester는 중첩 호출 환경에서 Agent 도구가 없어 재검증 담당이 general-purpose 에이전트에 직접 위임)
+**수행 방법**: SKILL.md + references Read만 허용, 웹 검색·파일 수정 금지 조건으로 실전 질문 3개 답변
+
+- Q1. "validateToken에서 `SecurityException` import를 빠뜨리면? 서명 위조 토큰의 응답 코드는?" — **PASS** (근거: JwtProvider 절 import 주석 + 2026-11-09 주의문 — `java.lang.SecurityException`으로 해석돼 500, import 시 false → 401)
+- Q2. "Boot 2.5.15·2.7.18의 관리 Security 버전, 2.7에서 Adapter 상태" — **PASS** (근거: 환경 전제 주의 — 5.5.8 / 5.7.11, 상단 주의 — 5.7 deprecated·6.x 제거)
+- Q3. "0.10.7에서 `parserBuilder()` 사용 가능? CVE-2024-31033 때문에 키 코드 수정 필요?" — **PASS** (근거: API 요약 표 — 0.11+ 전용, 상단 주의 — `Keys.hmacShaKeyFor(byte[])`는 영향 없음)
+
+agent content test: 3/3 PASS → APPROVED 유지.
 
 ### (참고) 권장 테스트 케이스 — 향후 실사용 시 수행 가능
 
@@ -244,7 +263,7 @@ Q2. "jjwt 0.10.7 쓰는데 보안 이슈 없는가?" → SKILL.md 상단 CVE-202
 | 내용 정확성 | ✅ (핵심 클레임 9/10 VERIFIED, 1건 UNVERIFIED는 영향 없음) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-04-22, 2개 질문 모두 PASS) |
+| 에이전트 활용 테스트 | ✅ (2026-04-22, 2개 질문 모두 PASS / **2026-11-09 수정분 3/3 PASS**) |
 | **최종 판정** | **APPROVED** |
 
 ---
@@ -253,7 +272,8 @@ Q2. "jjwt 0.10.7 쓰는데 보안 이슈 없는가?" → SKILL.md 상단 CVE-202
 
 - [✅] 에이전트 활용 테스트 — SecurityConfig + JwtProvider 2건 PASS (섹션 5, general-purpose 대체, 2026-04-22)
 - [⏸️] jjwt 0.10.7 전용 릴리즈 노트 입수 시 breaking change 최종 확인 — 검증 보강 선택 사항
-- [⏸️] Spring Boot 2.5.0~2.5.15 Security 5.5.x 마이너 변동 확인 — 검증 보강 선택 사항
+- [✅] Spring Boot 2.5.0~2.5.15 Security 5.5.x 마이너 변동 확인 — 2026-11-09 POM 확인(5.5.0~5.5.8)
+- [✅] 2026-11-09 `SecurityException` import 버그 수정 + content test 3/3 PASS
 - [⏸️] Refresh Token Redis 저장 전략 별도 스킬 분리 — 범위 확장 선택 사항
 
 ---
@@ -265,3 +285,6 @@ Q2. "jjwt 0.10.7 쓰는데 보안 이슈 없는가?" → SKILL.md 상단 CVE-202
 | 2026-04-22 | v1 | 최초 작성. Spring Boot 2.5 + Security 5.5 + jjwt 0.10.7 레거시 패턴 전 범위 포함 | skill-creator |
 | 2026-07-04 | v2 | freshness 재검증 — WebSecurityConfigurerAdapter deprecation(5.7)·jjwt 0.10↔0.11 파서 API 이력·jjwt 0.10.7 최종 유지 재확인. 내용 변화 없음, 검증일만 갱신 | freshness-audit |
 | 2026-09-26 | v2 | 60일 경과 정기 재검증: 핵심 클레임 3개 재확인(VERIFIED 3/3). WebSecurityConfigurerAdapter의 Security 6.x 완전 제거, Spring Boot 2.5 OSS EOL, jjwt CVE-2024-31033(영향 없음) 3건을 `> 주의` 캐비엇으로 추가. 코드 패턴 변경 없음, status APPROVED 유지 | Claude |
+| 2026-11-09 | v2 | 재검증 — Boot 2.5~2.7 번들 Security 버전(Maven POM), CVE-2024-31033 disputed, Adapter 5.7/6.0 재확인. **바뀐 점**: JwtProvider에 `import io.jsonwebtoken.security.SecurityException;` 추가(없으면 `java.lang.SecurityException`으로 해석돼 서명 위조 토큰에서 500) + 주의문, Boot↔Security 버전 주의문을 실제 패치 번호로 정정. skill-tester 재시험 대상 | 재검증 (Claude) |
+| 2026-11-09 | v2 | 수정분 content test (Q1 import 누락 시 500 / Q2 Boot↔Security 버전·Adapter 상태 / Q3 parserBuilder·CVE) → 3/3 PASS, APPROVED 유지. skill-tester Agent 도구 없음 → general-purpose 직접 위임. 섹션 5·6·7 동기화 | general-purpose |
+| 2026-11-12 | v2.1 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 환경 전제·Boot↔Security 번들 버전, Security 5.5에서 쓰면 안 되는 최신 API 대응표·Adapter 골격, 필터 @Component 이중 등록·ROLE_ 접두사·필터 예외 처리, jjwt 0.10/0.11/0.12 API 대응표, SecurityException import 함정·parser thread-safety·키 길이, CVE-2024-31033, 업그레이드 경로 / 덜어낸 것 Maven·Gradle 의존성 블록, 전체 SecurityConfig·JwtAuthenticationFilter·JwtProvider 예제, UserDetailsService·EntryPoint·AccessDeniedHandler·로그인 컨트롤러·Refresh Token 전략·사용 시점(references/REFERENCE.md 폴더 삭제) | 정리 |

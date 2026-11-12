@@ -15,7 +15,7 @@ description: >
 # 한국 사주명리 전통 — 문헌학·역사학 정리
 
 > 소스: 한국민족문화대백과사전(https://encykorea.aks.ac.kr/), 조선왕조실록 전문사전 sillokwiki(https://dh.aks.ac.kr/sillokwiki/), 한국민속대백과사전(https://folkency.nfm.go.kr/), 김만태 「조선조 命課學 試取書 『徐子平』에 관한 연구」(『장서각』 28, 2012), 김만태 「현대 사주명리 상담의 현장론적 연구」(『실천민속학연구』 45, 2025), 황금옥 「한국 명리학의 메타분석학적 고찰」(『한국학』 40-1, 2017), 나혁진·김기승 「명리원전 『적천수』의 판본 연구」(『산업진흥연구』 6-3, 2021), 나혁진·정경화 「명리학 고법과 신법의 논리구조 비교연구」(『산업진흥연구』 5-3, 2020), 김미석·박영창 「『연해자평』의 저자 및 저작과정에 대한 연구」(『인문사회 21』 12-4, 2021), 이명재 「『자평진전』의 용신 고찰」(『동방문화와 사상』 12, 2022), Dean & Kelly, *Journal of Consciousness Studies* (2003)
-> 검증일: 2026-09-28 (최초 2026-09-10, 2026-09-28 재검증)
+> 검증일: 2026-11-06 (최초 2026-09-10, 2026-09-28·2026-11-06 재검증)
 > 검증 상태: 문헌 계보·개념 정의·수용사 VERIFIED, 앱 톤 가이드 포함 skill-tester content test 3/3 PASS → APPROVED (2026-09-10, 2026-09-28 재검증 유지)
 
 ---
@@ -156,7 +156,7 @@ description: >
 
 > 출처: 한국민족문화대백과사전 "일진(日辰)" 항목 (encykorea.aks.ac.kr/Article/E0047325, 집필 권오호, 1995)
 >
-> **주의:** 위 encykorea 항목 본문에는 천간 다섯째 글자가 `무(武)`로 오식되어 있다. 정자는 **무(戊)** 다. 인용 시 원문 오식을 그대로 옮기지 않는다.
+> **주의:** 천간 다섯째 글자의 정자는 **무(戊)** 다. 2026-09 확인 때 위 encykorea 항목에 `무(武)` 오식이 있었으나, 2026-11-06 재확인 시 현재 본문은 한글 "갑 · 을 · 병 · 정 · 무 …"로만 적혀 있고 武·戊 한자가 보이지 않는다. 한자로 인용할 때는 戊로 쓴다.
 
 ### 2.2 오행 상생·상극
 
@@ -264,9 +264,10 @@ description: >
 
 ### 4.1 국제 학계 — 출생 시각 기반 예측의 재현 실패
 
-- Dean & Kelly(2003)의 이른바 "time twins" 연구: 1958년 5월 3~9일 런던 출생자 2,101명을 대상으로, 출생 차이가 **5분 미만**인 사람들 사이에서 능력·사고경향·행동·직업·성격·신장·체중·시력·청력 등 **110개 변수**의 유사성을 검사했다. 결과는 "The test conditions could hardly have been more conducive to success … but the results are uniformly negative" — 예측된 유사성이 전혀 발견되지 않았다.
+- Dean & Kelly(2003)의 이른바 "time twins" 연구: 1958년 **3월** 3~9일 런던 출생자 2,101명(평균 4.8분 간격 출생)을 대상으로, 출생 차이가 **5분 미만**인 사람들 사이에서 능력·사고경향·행동·직업·성격·신장·체중·시력·청력 등 **110개 변수**의 유사성을 검사했다. 결과는 "The test conditions could hardly have been more conducive to success … but the results are uniformly negative" — 예측된 유사성이 전혀 발견되지 않았다.
 
-> 출처: Geoffrey Dean & Ivan W. Kelly, "Is Astrology Relevant to Consciousness and Psi?", *Journal of Consciousness Studies* 10(6-7), 2003.
+> 출처: Geoffrey Dean & Ivan W. Kelly, "Is Astrology Relevant to Consciousness and Psi?", *Journal of Consciousness Studies* 10(6-7), 2003, 175-198.
+> 주의 (2026-11-06 정정): 이전 판은 출생 기간을 "1958년 5월 3~9일"로 적었으나, 저자 공개 원문은 "born in London during 3-9 March 1958"이다(1958년 3월 3~9일 출생 코호트 = 영국 National Child Development Study).
 
 > **주의 — 범위 한정:** Dean & Kelly는 **서양 점성술(natal astrology)** 을 대상으로 한 연구이며, 사주명리를 직접 검증한 것이 아니다. 다만 "출생 시각이 개인의 생애 변수를 결정한다"는 **공통 전제**를 검사한 연구이므로, 그 전제의 취약함을 보이는 근거로는 유효하다. 앱에서 인용할 때는 "서양 점성술 대상 연구"임을 반드시 밝힌다.
 >

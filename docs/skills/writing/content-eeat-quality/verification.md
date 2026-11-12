@@ -2,7 +2,7 @@
 skill: content-eeat-quality
 category: writing
 version: v2
-date: 2026-09-26
+date: 2026-11-06
 status: APPROVED
 ---
 
@@ -18,7 +18,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `content-eeat-quality` |
 | 스킬 경로 | `.claude/skills/content-eeat-quality/SKILL.md` |
-| 검증일 | 2026-09-26 |
+| 검증일 | 2026-11-06 (재검증, 이전 2026-09-26) |
 | 검증자 | skill-creator / 2026-09-26 재검증: 메인 세션 (QRG 전문 PDF·Google Search Central 원문 직접 대조) |
 | 스킬 버전 | v2 |
 
@@ -76,6 +76,8 @@ status: APPROVED
 | Yoast — Author·Publisher Entities | https://yoast.com/author-publisher-entities-seo/ | ⭐⭐ Medium | 최근 | Schema.org Person 패턴 |
 | 정부24 — 통신판매업 신고 안내 | https://www.gov.kr/mw/AA020InfoCappView.do?CappBizCD=11300000006 | ⭐⭐⭐ High | 현행 | 한국 법적 기준 |
 | 공정거래위원회 — 통신판매사업자 조회 | https://www.ftc.go.kr/www/selectBizCommList.do?key=254 | ⭐⭐⭐ High | 현행 | 한국 법적 기준 |
+| QRG 전문 PDF (2026-11-06 재다운로드) | https://static.googleusercontent.com/media/guidelines.raterhub.com/en//searchqualityevaluatorguidelines.pdf | ⭐⭐⭐ High | 2026-11-06 | HTTP Last-Modified 2025-09-11, 182쪽, 표지 "September 11, 2025", 본문 "AI Overview" 0건 |
+| Creating helpful content / Using gen AI content (2026-11-06 재조회) | https://developers.google.com/search/docs/fundamentals/creating-helpful-content | ⭐⭐⭐ High | 2026-11-06 | "Who, How, and Why"·E-E-A-T 섹션 유지, gen-AI 문서의 scaled content abuse·공개 권장 유지 |
 
 ---
 
@@ -100,6 +102,22 @@ status: APPROVED
 | R4 | scaled content abuse 정의·2024-03-05 | Google Blog 원문 | — | VERIFIED (원문 정의로 교체) / "50~80% 트래픽 감소" **UNVERIFIED→삭제** |
 | R5 | "Who, How, and Why" 프레임 | Google 헬프 문서 원문 | — | VERIFIED (2026-09-26) |
 | 12 | 한국 사이트는 사업자 정보·통신판매업 신고번호 푸터 표시가 법적 의무 | 정부24 / 공정위 | 토스페이먼츠 가이드, Shopify KR | VERIFIED |
+| N1 | (2026-11-06) QRG 현행판 = 2025-09-11판·182쪽 | QRG 전문 PDF 재다운로드 | — | VERIFIED (변경 없음) |
+| N2 | (2026-11-06) QRG 본문에 "AI Overview" 문구 없음 | QRG 전문 PDF 텍스트 검색 | — | VERIFIED (변경 없음) |
+| N3 | (2026-11-06) "Who, How, and Why"·gen-AI 공식 입장 | Google 문서 원문 재조회 | — | VERIFIED (변경 없음) |
+| N4 | (2026-11-06) 2026-06 QRG 개정설 | 단일 블로그 | — | UNVERIFIED — 반영 안 함 |
+| Y1 | (구 ymyl-content-seo) "highest E-E-A-T standards" 따옴표 인용 | QRG 전문 182쪽 검색 | — | DISPUTED→수정 — 원문 "the most scrutiny", "high/very high level of E-E-A-T" |
+| Y2 | (구 ymyl-content-seo) YMYL 범주에 News·Shopping 포함 | QRG 2025-09-11 §2.3 | — | DISPUTED→수정 — 현행 4유형 |
+| Y3 | (구 ymyl-content-seo) 의료법 제56조 주체 제한·금지 유형 | 현행 의료법 제56조 ①② 1~15호 | — | VERIFIED — "우월 비교"→"비교", 누락 호 보완 |
+| Y4 | (구 ymyl-content-seo) "2025년 가이드: 블로그·유튜브·인스타 포함" | 의료법 제57조 + 시행령 제24조(10만 명, SNS 2018. 9. 28.) | — | DISPUTED→수정 — 기준은 2018년 시행령 |
+| Y5 | (구 ymyl-content-seo) 금소법 제22조 광고 규제·필수 표기 | 현행 금소법 제22조 | — | VERIFIED / 심의필번호 표시는 `미검증` |
+| Y6 | (구 ymyl-content-seo) 변호사 아닌 자 법률 광고 = 변호사법 제109조 | 현행 변호사법 제112조 제3호 | — | DISPUTED→수정 — 제112조 제3호 |
+| Y7 | (구 ymyl-content-seo) MedicalWebPage `mainContentOfPage` 문자열 배열 | schema.org/MedicalWebPage | — | 부분 정정 — WebPageElement 기대, `medicalAudience` 사용 |
+| Y8 | (구 ymyl-content-seo) schema.org Attorney deprecated → LegalService | schema.org/Attorney 원문 | — | VERIFIED |
+| Y9 | (구 ymyl-content-seo) 자살예방 통합 상담 109 (2024-01-01 개통) | 보건복지부 보도자료 | 정책브리핑 | VERIFIED |
+| Y10 | (구 ymyl-content-seo) HONcode 대안 "NHS Information Standard" | 1차 확인 불가 | — | UNVERIFIED→`주의` |
+| Y11 | (구 ymyl-content-seo) 변호사 광고 규정 AI 표기 / 공정위 심사지침 2024-06 | 협회·공정위 원문 미대조 | — | UNVERIFIED (주의 표기 유지) |
+| Y12 | (구 ymyl-content-seo) "2025-06 manual action 본격화"·"50~80% 하락" | 출처 없음 | — | UNVERIFIED→삭제 |
 
 **최종 판정 분포:** VERIFIED 12 / DISPUTED 0 / UNVERIFIED 0
 
@@ -225,3 +243,5 @@ agent content test: 2/2 PASS (재검증 기록). 분류·출처 정정으로 sta
 | 2026-09-26 | v2 | 재검증 — QRG 전문 PDF·Google 공식 문서 원문 대조 10건, 오류 5건 정정(QRG PDF 링크=개요 문서, YMYL 구판 6분류→현행 4유형, "AI Overviews 챕터 신설" 삭제, helpful content 질문 묶음 구성, 근거 없는 50~80% 트래픽 수치 삭제), SKILL.md·REFERENCE.md 반영, 실전 질문 2/2 PASS → PENDING_TEST | 메인 세션 (재검증) |
 | 2026-09-28 | v2 | 2단계 실사용 재테스트 수행 (Q1 Helpful Content 자가진단 묶음 구성 / Q2 scaled content abuse 트래픽 수치·AI Overview 챕터 여부) → 2/2 PASS, 2026-09-26 정정 5건 전체 반영 확인, PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-09-28 | v2 | 선택 보강 반영 — SKILL.md §7-1에 Helpful Content 자가진단 5묶음이 REFERENCE.md §8에 있다는 포인터 한 줄 추가(내부 참조, 소스 확인 불필요). status 영향 없음, APPROVED 유지 | Claude (Opus 5.5) |
+| 2026-11-06 | v2 | 재검증 — QRG 전문 PDF 재다운로드(2025-09-11판·182쪽 그대로, "AI Overview" 문구 0건), helpful content "Who, How, Why"·gen-AI 문서 원문 재확인. 2026-06 개정설은 단일 블로그뿐이라 미반영. 내용 변경 없음 | Claude (Opus 5.5) |
+| 2026-11-12 | v2.1 | 정리(사실 재검증 아님) — ymyl-content-seo 통합 + 일반 지식 덜어내기: 옮긴 것 QRG 2025-09-11판 정정 사항(인용문·챕터·질문 묶음·YMYL 4유형·스펙트럼), scaled content abuse 원문, schema.org Attorney·mainContentOfPage 정정, 한국 신뢰 신호(전자상거래 푸터·의료법 56·57조·금소법 22조·변호사법 112조·공정위 심사지침·109/1577-0199·네이버), 원본 클레임 표 / 덜어낸 것 E-E-A-T 4요소 설명·Experience 예시·저자 표기 체크리스트·JSON-LD 예제·About/Contact 요건·AI 워크플로우·자가 진단 30문항·액션 플랜·GEO 시너지·YMYL 7대 신호·면책 문구·안티패턴 사례, references/REFERENCE.md | 정리 |

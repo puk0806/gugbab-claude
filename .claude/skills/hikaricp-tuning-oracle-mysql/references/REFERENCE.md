@@ -83,28 +83,13 @@ public class DataSourceConfig {
 
 ---
 
-## 8. 성능 벤치마크 팁
-
-- **절대 피할 것:** "혹시 모르니까" 풀 크기를 100, 500으로 설정
-- **시작점:** `(core_count × 2) + effective_spindle_count`
-- **방법:**
-  1. 기준 풀 크기로 부하 테스트 (JMeter/k6) 실행
-  2. 처리량(TPS)과 p95/p99 지연 기록
-  3. 풀 크기를 ±2씩 조정하며 반복
-  4. 처리량이 더는 증가하지 않거나 감소하는 지점 이전이 최적값
-- **지표 기반 검증:** 부하 테스트 중 `hikaricp.connections.pending`이 0에 수렴하고 `active`가 `maximumPoolSize`에 항상 닿지 않으면 여유 있음
-
-> 주의: 커넥션을 늘려 TPS가 개선되는 것처럼 보여도, DB 서버의 컨텍스트 스위칭·락 경합이 증가해 p99 지연이 악화되는 경우가 흔합니다. 처리량만 보지 말고 p95/p99를 반드시 함께 확인하세요.
-
----
-
 ## 9. 레거시 3.4.5 버전 관련 주의점
 
 HikariCP 3.4.5의 확인된 특성:
 
 - **Java 8 호환성 수정 포함** (3.4.5에서 proxy가 Java 8로 생성되도록 build 수정, Java 11 클래스 참조 제거)
-- 이후 4.0.x부터는 **Java 11+ 전용**으로 전환됨
-- 3.4.5는 Java 7/8 환경을 지원하는 마지막 안정 계열에 가까움
+- 4.0.x(최종 4.0.3)도 **Java 8 아티팩트**다 — 공식 README: Java 8 = `HikariCP:4.0.3`(deprecated), Java 11+ = 5.x 이상
+- Java 11+ 전용은 **5.0.0부터**. Java 8 환경의 마지막 선택지는 4.0.3(Spring Boot 2.7 번들)
 
 **3.4.5 → 최신(5.x) 차이 요약:**
 
@@ -125,9 +110,11 @@ HikariCP 3.4.5의 확인된 특성:
 |-------------|---------------|-----------|
 | 2.0.x | 2.7.x | 8 |
 | 2.4.x | 3.4.x | 8 |
-| 2.7.x | 4.0.3 → 5.0.1 (2.7 중반부터 5.x) | 8 |
-| 3.0.x ~ 3.2.x | 5.0.x | 17 |
-| 3.3.x ~ 3.4.x | 5.1.x | 17 |
+| 2.7.x | 4.0.3 (5.x는 Java 11+라 2.7 BOM이 5.x를 금지) | 8 |
+| 3.0.x ~ 3.2.x | 5.0.1 | 17 |
+| 3.3.x ~ 3.4.x | 5.1.0 | 17 |
+| 3.5.x | 6.3.x (3.5.0 = 6.3.0, 최신 3.5.x = 6.3.3) | 17 |
+| 4.0.x ~ 4.1.x | 7.0.2 | 17 |
 
 > 주의: 정확한 번들 버전은 `mvn dependency:tree | grep HikariCP` 또는 `./gradlew dependencies | grep HikariCP`로 **현재 프로젝트에서 직접 확인**하세요. 위 표는 개괄이며 패치 버전은 유동적입니다.
 
@@ -160,6 +147,7 @@ ext['hikaricp.version'] = '5.1.0'
 - [ ] `pool-name` 명시로 메트릭/로그에서 풀 구분
 - [ ] Actuator `/metrics`에 `hikaricp.connections.*` 노출 확인
 - [ ] 멀티 DataSource 총합이 DB `max_connections`의 80% 이하인가
+- [ ] 부하 테스트로 p95/p99 지연 측정 완료
 
 ---
 
@@ -168,16 +156,11 @@ ext['hikaricp.version'] = '5.1.0'
 > 기준: Spring Boot 4.0 번들 HikariCP 7.0.x / Java 17+
 > 소스: https://github.com/brettwooldridge/HikariCP/blob/dev/CHANGES
 >       https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Release-Notes
-> 검증일: 2026-09-26 (재검증, 내용 변경 없음 — HikariCP 최신 안정 7.1.0/설정 키 변경 없음 확인)
+> 검증일: 2026-11-06 (재검증 — 최신 안정 7.1.0·설정 키 변경 없음 재확인, 번들표·HikariCredentialsProvider 예시 정정)
 
 ### 11.1 Spring Boot 버전별 HikariCP 번들
 
-| Spring Boot | 번들 HikariCP |
-|-------------|---------------|
-| 2.7.x | 4.0.3 ~ 5.0.1 |
-| 3.0.x ~ 3.2.x | 5.0.x |
-| 3.3.x ~ 3.5.x | 5.1.x |
-| **4.0.x ~ 4.1.x** | **7.0.x** |
+10절 표 참조. **4.0.x ~ 4.1.x** = **7.0.2** (HikariCP 최신 7.1.0은 직접 오버라이드 필요)
 
 ### 11.2 HikariCP 7.0 변경사항 요약
 
@@ -189,6 +172,8 @@ ext['hikaricp.version'] = '5.1.0'
 | `HikariCredentialsProvider` | 신규 추가 — 동적 자격증명 공급자 인터페이스 |
 | 가상 스레드 최적화 | ConcurrentBag의 virtual-thread yield 스핀 최소화 |
 | 메트릭 이름 | 변경 없음 (`hikaricp.connections.*`) |
+| `keepaliveTime` 기본값 | 6.2.1에서 0(비활성) → 120000ms(2분)로 변경 — 5.x 이하에서 올라오면 keepalive가 새로 켜진다 |
+| 시간 값 표기 | 6.3.0+ 프로퍼티에 `30s`·`10m` 같은 단위 값 허용 |
 
 ### 11.3 HikariCredentialsProvider (7.0+ 신규)
 
@@ -196,21 +181,24 @@ AWS Secrets Manager, Vault 동적 시크릿 등 자격증명을 동적으로 제
 
 ```java
 import com.zaxxer.hikari.HikariCredentialsProvider;
+import com.zaxxer.hikari.util.Credentials;
 
 public class AwsIamCredentialsProvider implements HikariCredentialsProvider {
     @Override
-    public String getUsername() { return fetchUsernameFromSecretsManager(); }
-    @Override
-    public String getPassword() { return generateIamAuthToken(); }
+    public Credentials getCredentials() {          // 인터페이스 메서드는 이것 하나
+        return Credentials.of(fetchUsernameFromSecretsManager(), generateIamAuthToken());
+    }
 }
 
-// HikariConfig에 등록
+// HikariConfig에 등록 (인스턴스 또는 클래스명)
 config.setCredentialsProvider(new AwsIamCredentialsProvider());
+// config.setCredentialsProviderClassName("com.example.AwsIamCredentialsProvider");
 ```
+
+> 주의: `HikariDataSource`를 상속해 `getUsername()`/`getPassword()`를 오버라이드하던 방식은 레거시다. 공식 README는 `getCredentials()` 오버라이드를 권장하며, 6.3.2에서 레거시 오버라이드 지원을 시스템 프로퍼티로 켜도록 했다(CHANGES #2256).
 
 ### 11.4 Virtual Thread 환경 고려사항 (Spring Boot 4.x)
 
 Spring Boot 4.x에서 가상 스레드 활성화 시 HikariCP 7.x의 ConcurrentBag 최적화가 자동 적용된다. 별도 설정 변경 불필요.
 
 > 주의: Virtual Thread 환경에서는 물리 스레드 기반 공식인 `(core_count * 2) + spindle`보다 낮은 커넥션 수에서도 높은 처리량이 유지되는 경우가 많다. 기존 값부터 시작해 실측값을 기반으로 조정할 것.
-- [ ] 부하 테스트로 p95/p99 지연 측정 완료

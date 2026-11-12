@@ -1,8 +1,8 @@
 ---
 skill: monorepo-turborepo
 category: frontend
-version: v6
-date: 2026-09-28
+version: v7
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -35,9 +35,9 @@ status: APPROVED
 | 스킬 이름 | monorepo-turborepo |
 | 스킬 경로 | `.claude/skills/monorepo-turborepo/SKILL.md` |
 | 최초 작성일 | 2026-03-27 |
-| 검증일 | 2026-09-28 (재검증(2차)) / 2026-08-11 (v4) / 2026-06-20 (v3) |
-| 검증 방법 | frontend-architect 활용 테스트 + 버전 재검증 (공식 문서·GitHub API·npm 레지스트리) → 재검증(2차) |
-| 버전 기준 | **Turborepo 2.11.4 (2026-09-24), pnpm 12.6.0 (2026-08-26 GA)** |
+| 검증일 | 2026-11-09 (재검증(3차), 이전 2026-09-28 재검증(2차) / 2026-08-11 (v4) / 2026-06-20 (v3)) |
+| 검증 방법 | frontend-architect 활용 테스트 + 버전 재검증 (공식 문서·GitHub API·npm 레지스트리) → 재검증(2차) → 재검증(3차) |
+| 버전 기준 | **Turborepo 2.11.10 (2026-10-20), pnpm 12.18.0 (2026-11-05; 12.0 GA 2026-08-26)** |
 
 ---
 
@@ -76,6 +76,10 @@ status: APPROVED
 | Turborepo 2.11 공식 릴리즈 블로그 | https://turborepo.dev/blog/2-11 | ⭐⭐⭐ High | 2026-09-28 |
 | pnpm 12.0 공식 릴리즈 블로그 | https://pnpm.io/blog/releases/12.0 | ⭐⭐⭐ High | 2026-09-28 |
 | GitHub PR #13879 (Turborepo 저장소 pnpm 12 전환) / Issue #14096 (pnpm 12 호환 이슈, closed) | https://github.com/vercel/turborepo | ⭐⭐⭐ High | 2026-09-28 |
+| GitHub Releases API (v2.11.5~v2.11.10) | https://api.github.com/repos/vercel/turborepo/releases | ⭐⭐⭐ High | 2026-11-09 |
+| npm 레지스트리 turbo / pnpm dist-tags | https://registry.npmjs.org/turbo · https://registry.npmjs.org/pnpm | ⭐⭐⭐ High | 2026-11-09 |
+| Turborepo run 레퍼런스 (`--parallel` deprecated, `--affected` 정의) | https://turborepo.dev/docs/reference/run | ⭐⭐⭐ High | 2026-11-09 |
+| Turborepo 설정 레퍼런스 (`$schema` turborepo.dev, cacheMaxAge/Size) | https://turborepo.dev/docs/reference/configuration | ⭐⭐⭐ High | 2026-11-09 |
 
 ---
 
@@ -107,6 +111,7 @@ status: APPROVED
 - [✅] Claude Code에서 실제 활용 테스트 (frontend-architect, 6/6 PASS)
 - [✅] 재테스트 수행 (2026-09-28, skill-tester → general-purpose — 2문항: 1 PASS + 1 PARTIAL, PARTIAL 사유는 §5 참조)
 - [✅] SKILL.md 361행 버전 표기 정정 확인 후 재재테스트 수행 (2026-09-28, skill-tester → general-purpose — 2문항 2/2 PASS, 내부 모순 해소 확인)
+- [✅] 재검증(3차) 정정분 재시험 수행 (2026-11-09, skill-tester → general-purpose — 3문항 3/3 PASS)
 
 ### 4-5. 재검증 클레임 판정 (2026-08-11)
 
@@ -125,6 +130,18 @@ status: APPROVED
 | 11 | pnpm 최신 버전은 11.21.0 | ① `npm view pnpm version` ② npm 레지스트리 | **VERIFIED** (SKILL.md `packageManager` 예시 갱신) |
 | 12 | 공식 문서 도메인이 `turbo.build` → `turborepo.dev`로 이전 | ① `curl -I https://turbo.build/repo/docs` → 301 → `turborepo.dev/repo/docs` ② `turborepo.com` → 301 → `turborepo.dev` | **VERIFIED** (소스 URL 갱신) |
 
+### 4-6. 재검증(3차) 클레임 판정 (2026-11-09)
+
+| # | 클레임 | 독립 소스 | 판정 |
+|---|--------|-----------|------|
+| 13 | Turborepo 최신 안정 **2.11.10**(2026-10-20), 2.12 미출시 | ① npm dist-tag latest 2.11.10 ② GitHub Releases(최신 비-pre 태그 v2.11.10, 이후 canary만) | **VERIFIED** (2.11.4→2.11.10 갱신) |
+| 14 | (구판) "2.11.5는 canary, stable 미출시" | GitHub Release v2.11.5 published 2026-09-28 (stable) | **DISPUTED → 정정** |
+| 15 | pnpm 최신 **12.18.0**(2026-11-05) | npm dist-tag latest + time 메타데이터 | **VERIFIED** (12.6.0→12.18.0 갱신, `packageManager` 예시) |
+| 16 | `turbo run --parallel` deprecated(다음 메이저 제거 예정) — `persistent`/`with`·`--concurrency`로 대체 | ① 공식 run 레퍼런스 ② 설정 레퍼런스 concurrency 절 "deprecated `--parallel` flag" | **VERIFIED (신규)** — 구판 예시 2곳(`"dev": "turbo run dev --parallel"`, 명령어 목록) 정정 |
+| 17 | `--affected` 기본값 = `--filter=...[main...HEAD]`(의존자 포함) | 공식 run 레퍼런스 | **VERIFIED** — 구판 "`--filter=[main...HEAD]`의 간략형" 서술 정밀화 |
+| 18 | 공식 `turbo.json` 예시 `$schema`는 `https://turborepo.dev/schema.json` | 공식 설정 레퍼런스 | **VERIFIED** — 예시 2곳 갱신 |
+| 7' | `cacheMaxAge`/`cacheMaxSize` 최상위 키 | 공식 설정 레퍼런스 | VERIFIED (변동 없음) |
+
 > **핵심 정정 (#3):** 기존 SKILL.md는 pnpm 11 lockfile 이슈를 "Turborepo 2.9.x 알려진 이슈"로 서술했으나,
 > 두 이슈 모두 **2.9.7(2026-05-01)** 에서 수정 완료된 상태였다. 직전 재검증일(2026-06-20) 시점의 최신 버전이
 > 이미 2.9.18이었으므로 **그 시점에도 이미 낡은 서술**이었다. 2026-08-11 재검증에서 "해소됨 + 해소 버전 명시"로 교체했다.
@@ -135,6 +152,41 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester → general-purpose (domain 에이전트 대신 general-purpose 사용, 대체 사실 명시)
+**수행 방법**: 재검증(3차) 정정분(`--parallel` deprecated, `--affected` 정의, 2.11.5 stable 정정, 버전·$schema 갱신)을 겨냥해 SKILL.md Read 후 실전 질문 3개 답변, 근거 섹션·anti-pattern·내부 모순 여부 확인
+
+### 실제 수행 테스트
+
+**Q1. 기존 `"dev": "turbo run dev --parallel"` 스크립트를 그대로 써도 되는가, 고친다면 turbo.json은?**
+- ✅ PASS
+- 근거: SKILL.md 상단 "주의"(14행), 루트 package.json 예시(67행), turbo.json `dev` 태스크(97-100행), 명령어 목록(278-282행)
+- 상세: `--parallel` deprecated(다음 메이저 제거 예정, 의존 그래프·캐시 보장 상실)를 정확히 인용하고 `turbo run dev` + `persistent: true, cache: false`로 교정. anti-pattern(`--parallel` 권장) 회피. 사소한 gap: `with` 옵션은 이름만 언급되고 JSON 예시 없음.
+
+**Q2. 변경 패키지 + 의존자까지 CI에서 실행하는 명령, `--filter=[main...HEAD]`와의 차이, 신규 세팅 `$schema`·`packageManager`**
+- ✅ PASS
+- 근거: SKILL.md "자주 쓰는 Turbo 명령어"(271-273행), 루트 package.json(64행), turbo.json(89행)
+- 상세: `--affected` = `--filter=...[main...HEAD]`(의존자 포함), `--filter=[main...HEAD]`는 변경 패키지 자체만이라고 정확히 구분. `$schema` `https://turborepo.dev/schema.json`, `pnpm@12.18.0` 정확. gap: 비교 기준 브랜치 변경(CI base ref)·shallow clone 주의는 SKILL.md에 없음(선택 보강).
+
+**Q3. "2.11.5는 아직 canary" 주장 진위, 현재 권장 버전, `--parallel` 대체 동시성 옵션**
+- ✅ PASS
+- 근거: SKILL.md 10행(기준 버전), 339행(2.11.5 stable 2026-09-28·2.11.10까지 패치), 363행, 14·281행(`--concurrency=100%`)
+- 상세: 동료 주장을 "틀림"으로 판정(구판 canary 서술이 정정된 것이 답변에 반영됨), Turborepo 2.11.10 / pnpm 12.18.0 권장, 동시성은 `--concurrency` 사용. 문서 내 버전 불일치·내부 모순 없음(10·64·339·363행 일치, 잔존 "canary" 서술 0건).
+
+### 발견된 gap (있으면)
+
+- 차단 요인 없음. 선택 보강: `with` 키의 turbo.json 예시, `--affected` 비교 기준 브랜치/CI shallow clone 주의, 67행 JSON 예시의 `//` 주석(순수 JSON 아님) — 모두 문서 친절성 향상 목적.
+
+### 판정
+
+- agent content test: 3/3 PASS
+- verification-policy 분류: 빌드 설정 스킬(실사용 필수 카테고리 해당)이나, 이번은 정정분의 답변 정확성 재검증이며 기존 2026-09-28 판정(APPROVED)과 오케스트레이션 지시에 따라 APPROVED 유지
+- 최종 상태: APPROVED 유지
+
+---
+
+## 5-직전. 테스트 진행 기록 (2026-09-28, 교정 확인 재재테스트)
 
 **수행일**: 2026-09-28 (교정 확인 재재테스트)
 **수행자**: skill-tester → general-purpose (frontend-developer 미설치/미등록 세션이라 대체, 대체 사실 명시)
@@ -238,7 +290,8 @@ status: APPROVED
 | 버전 재검증 (2026-09-28) | ✅ 클레임 4건 — VERIFIED 3 / PARTIAL·미검증 1(Turborepo-pnpm12 호환 세부사항) |
 | 에이전트 활용 테스트 재수행 (2026-09-28, 1차) | 🟡 1/2 PASS + 1/2 PARTIAL (skill-tester → general-purpose) — pnpm 11 레거시 섹션 버전 표기(2.10.9) vs 상단 메타(2.11.4) 불일치 발견 |
 | 버전 정정 확인 재재테스트 (2026-09-28, 2차) | ✅ 2/2 PASS (skill-tester → general-purpose) — SKILL.md 361행이 "이 문서 기준 버전(2.11.4, 상단 참조)"으로 정정된 것 확인, 내부 모순 해소·`turbo prune --production` 실사용 질문 모두 PASS |
-| **최종 판정** | **APPROVED** (361행 버전 정정 확인 + 2/2 PASS로 NEEDS_REVISION → APPROVED 전환) |
+| 재검증(3차) 정정분 재시험 (2026-11-09) | ✅ 3/3 PASS (skill-tester → general-purpose) — `--parallel` deprecated 교정·`--affected` 정의·2.11.5 stable 정정·버전/$schema 모두 정확 답변, 내부 모순 없음 |
+| **최종 판정** | **APPROVED** (2026-11-09 3/3 PASS로 유지; 이전: 361행 버전 정정 확인 + 2/2 PASS로 NEEDS_REVISION → APPROVED 전환) |
 
 **2026-08-11 재검증 근거:**
 - 기준 버전을 Turborepo 2.9.18 → **2.10.9(2026-08-07)**, pnpm 11.8.0 → **11.21.0** 으로 갱신.
@@ -253,6 +306,8 @@ status: APPROVED
 - [✅] 버전 관련 "알려진 이슈" 서술은 다음 재검증 시 이슈 종결 여부 + 해소 릴리즈 태그까지 확인 — 2026-09-28 2차 재검증에서 실제로 GitHub PR/Issue 대조 방식으로 수행됨(§4-5 없음, §5 클레임 대조 참조)
 - [✅] **skill-tester가 content test 수행하고 섹션 5·6 업데이트** (2026-09-28 완료, 2/2 PASS — §5 참조)
 - [✅] "pnpm 11 + Turborepo 호환성" 레거시 섹션(361행)의 "최신 안정 버전(2.10.9)" 문구를 현재 기준(2.11.4)으로 정정 — 2026-09-28 SKILL.md 361행이 "신규 세팅은 이 문서 기준 버전(2.11.4, 상단 참조)을 권장한다"로 이미 수정됨을 확인, 재테스트 2/2 PASS로 내부 모순 해소 검증 완료
+- [✅] 재검증(3차) 정정분 content test 수행 (2026-11-09 완료, 3/3 PASS — §5 참조)
+- [❌] 선택 보강(2026-11-09 테스트에서 발견, 차단 요인 아님): `with` 키 turbo.json 예시 부재, `--affected` 비교 기준 브랜치/CI shallow clone 주의 부재, 67행 JSON 예시 `//` 주석 — 문서 친절성 향상 목적
 - [❌] 선택 보강: 신규 프로젝트가 레거시 pnpm 11 팀 소속인 케이스(신규 프로젝트만 최신 버전 채택)를 SKILL.md에 직접 예시로 다루지 않음 — 재테스트 에이전트가 두 섹션(상단 기준 버전 + 레거시 섹션)을 조합해 추론으로 답변함. 차단 요인 아님(추론으로 정답 도출 가능), 문서 친절성 향상 목적의 선택 보강
 
 ---
@@ -268,3 +323,6 @@ status: APPROVED
 | 2026-09-28 | v5 | 재검증(2차) — 기준을 Turborepo 2.11.4(2026-09-24)·pnpm 12.6.0(2026-08-26 GA)으로 갱신. ① **Turborepo 2.11 신규 기능 섹션 신설**(`turbo prune --production`, Time to First Task 최대 4배, `devEngines.packageManager`, nub·aube, Rust/Python/Go 네이티브 지원 Experimental) ② **pnpm 12 섹션 신설**(breaking change 5건 + Turborepo 호환 상태, 세부 미검증 항목은 `> 주의: 미검증`으로 명시) ③ 기존 pnpm 11 섹션은 레거시로 유지(축소 없음, 제목에 "현재는 레거시" 추가) ④ `packageManager` 예시 pnpm 12.6.0으로 갱신. 클레임 4건(VERIFIED 3 / PARTIAL 1) | 재검증(2차) |
 | 2026-09-28 | v5 | 2단계 실사용 테스트 재수행 (Q1 pnpm 12·`--production` prune / Q2 pnpm 11 lockfile 이슈+전환 시급성) → 1/2 PASS + 1/2 PARTIAL(버전 표기 내부 모순 발견), PENDING_TEST → **NEEDS_REVISION** 전환 (SKILL.md 미수정, 보고만 수행) | skill-tester |
 | 2026-09-28 | v6 | 361행 "최신 안정 버전(2.10.9)" 표기가 "이 문서 기준 버전(2.11.4, 상단 참조)"으로 정정된 것을 확인 후 재재테스트 수행 (Q1 신규 세팅 버전 정합성·내부 모순 여부 / Q2 `turbo prune --production` 실사용) → 2/2 PASS, NEEDS_REVISION → **APPROVED** 전환 | skill-tester |
+| 2026-11-09 | v7 | 재검증(3차) — **바뀐 점**: ① 기준 버전 Turborepo 2.11.4→**2.11.10**, pnpm 12.6.0→**12.18.0**(`packageManager` 예시 포함) ② "2.11.5 canary" 서술 DISPUTED→정정(2026-09-28 stable 출시) ③ `--parallel` deprecated 반영 — 루트 scripts `dev`·명령어 목록을 `persistent` 태스크/`--concurrency`로 교체, 상단 주의 신설 ④ `--affected` 정의(`...[main...HEAD]`, 의존자 포함) 정밀화 ⑤ `$schema`를 `turborepo.dev/schema.json`으로. 클레임 7건(VERIFIED 6 / DISPUTED 1 정정) → skill-tester 재시험 | Claude (Opus 5.5) |
+| 2026-11-09 | v7 | 재검증(3차) 후 2단계 실사용 테스트 수행 (Q1 `--parallel` deprecated 교정 / Q2 `--affected` vs `--filter` 및 $schema·packageManager / Q3 2.11.5 stable 정정·권장 버전·`--concurrency`) → 3/3 PASS, APPROVED 유지 | skill-tester |
+| 2026-11-11 | v7 | 2026-11-11 정리 — 모델이 아는 일반 지식 절 제거(남긴 절: 기준 버전·`turborepo.dev`·`--parallel` deprecated 주의, 자주 쓰는 Turbo 명령어(`--affected`·`--concurrency`), pnpm 12, pnpm 11 + Turborepo 호환성, Turborepo 2.10·2.11 신규 기능 / 덜어낸 절: 모노레포 vs 멀티레포 선택 기준, 표준 폴더 구조·루트 package.json·pnpm-workspace.yaml, turbo.json 파이프라인, 워크스페이스 패키지 참조, 내부 패키지 유형, 캐싱 전략, Changesets, 환경변수 관리, 흔한 실수, 사실 재검증 아님) | Claude (Opus 5.5) |

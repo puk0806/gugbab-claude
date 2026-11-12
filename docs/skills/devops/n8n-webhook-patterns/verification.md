@@ -1,8 +1,8 @@
 ---
 skill: n8n-webhook-patterns
 category: devops
-version: v2
-date: 2026-09-28
+version: v3
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -14,10 +14,10 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `n8n-webhook-patterns` |
 | 스킬 경로 | `.claude/skills/n8n-webhook-patterns/SKILL.md` |
-| 검증일 | 2026-09-28 (최초 검증 2026-05-15, 2026-09-28 재검증, 2026-09-28 형제 스킬 정합 보완) |
-| 검증자 | skill-creator / 재검증: Claude (Sonnet 5) |
-| 스킬 버전 | v2 |
-| 짝 스킬 | `devops/n8n-self-hosting`, `devops/n8n-workflow-design`, `devops/n8n-error-handling` |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-28 · 최초 검증 2026-05-15) |
+| 검증자 | skill-creator / 재검증: Claude (Sonnet 5) / 2026-11-09 재검증: Claude (Opus 5.5) |
+| 스킬 버전 | v3 (기준 stable n8n 2.46.6) |
+| 짝 스킬 | `devops/n8n-self-hosting`, `devops/n8n-error-handling` |
 
 ---
 
@@ -116,11 +116,46 @@ status: APPROVED
 | 5 | multipart 처리: Binary Data 옵션 ON, Raw Body OFF, Binary Property 비워두면 모든 파일 자동 매핑 | prosperasoft.com + community.n8n.io 15945 + GitHub issue 14876 | VERIFIED |
 | 6 | Respond `Immediately` 모드 시 후속 Respond to Webhook 노드는 실행되지만 응답에 반영되지 않음 (이미 200 전송됨) | automategeniushub.com + Synta.io blog | VERIFIED |
 
-DISPUTED 0건 / UNVERIFIED 0건.
+DISPUTED 0건 / UNVERIFIED 0건. (최초 작성 기준 — #4 는 2026-11-09 재검증에서 DISPUTED 로 뒤집힘, 아래 표)
+
+### 2026-11-09 재검증 클레임
+
+| # | 클레임 | 소스 | 판정 |
+|---|--------|------|------|
+| R1 | Test/Production URL·게시(Publish) 필요·최대 페이로드 16MB·HTML iframe 래핑(1.103.0+) | Webhook 노드 문서 .md (https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.webhook.md) | VERIFIED |
+| R2 | 응답 모드 (Immediately / When Last Node Finishes / Using 'Respond to Webhook' Node / Streaming) | 동 문서 Respond 절 | VERIFIED |
+| R3 | 인증 4종(None/Basic/Header/JWT), HMAC 미내장 | 동 문서: **n8n User Auth (OAuth2)** 가 5번째로 추가, HMAC 은 여전히 미내장 | DISPUTED(보강) → §5 표에 추가, "Require Workflow Execute Permission"(v2.34 릴리즈 노트) 포함 |
+| R4 | (기존 #4) CORS 환경변수 `WEBHOOK_CORS_ALLOWED_*`·`N8N_CORS_ALLOW_ORIGIN` | 공식 endpoints/deployment/security 환경변수 문서에 없음 + `gh search code` 로 n8n 소스 검색 결과 0건. 공식 방식은 노드 옵션 **Allowed Origins (CORS)**(기본 `*`) | **DISPUTED → §6 정정(환경변수 삭제)** |
+| R5 | IP(s) Whitelist 에 CIDR 입력 | 문서: 옵션명 **IP(s) Allowlist**, 목록 밖 403. n8n 소스 `nodes-base/nodes/Webhook/utils.ts` `getAllowList` 가 CIDR 처리 | VERIFIED(명칭 정정) |
+| R6 | (신규) Only Run If 요청 필터 옵션 | 동 문서 Options + 릴리즈 노트 v2.28(PR #28872) | VERIFIED → §5 추가(평가 실패 시 통과 → 보안 용도 금지 명시) |
+| R7 | `WEBHOOK_URL` 로 외부 URL 지정 | endpoints 환경변수 문서: `WEBHOOK_URL` 2.35.0 부터 deprecated alias, `N8N_WEBHOOK_URL` 사용 | DISPUTED(경미) → 예시 `N8N_WEBHOOK_URL` 로 통일 |
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-11-09] 재검증 정정분 재시험
+
+**수행일**: 2026-11-09
+**수행자**: general-purpose (skill-tester 가 하위 에이전트 결과를 기다릴 수 없는 환경이라 메인이 general-purpose 를 직접 호출해 결과를 받은 뒤 판정)
+**수행 방법**: SKILL.md 만 근거로 실전 질문 2개 답변, 줄 번호 인용 확인
+
+**Q1. 브라우저 SPA 직접 호출 시 CORS 설정 위치·기본값·preflight 실패 대응·외부 URL 환경변수**
+- ✅ PASS
+- 근거: §6(144~161줄), §13(369·371줄), §8(201~202줄)
+- 상세: 노드 옵션 Allowed Origins (CORS)(기본 `*`), `WEBHOOK_CORS_*` 환경변수는 효과 없음, preflight 실패 시 reverse proxy OPTIONS 응답, `N8N_WEBHOOK_URL`(구 `WEBHOOK_URL` deprecated)을 정확히 답변. anti-pattern(가짜 CORS 환경변수) 회피
+
+**Q2. 사내 사용자 전용·캠페인 ID 필터·Only Run If 로 서명 검증 대체 가능 여부·GitHub IP 제한**
+- ✅ PASS
+- 근거: §5(118~123줄), §10(302~310줄), §11(318~324줄)
+- 상세: n8n User Auth (OAuth2)·Require Workflow Execute Permission, Only Run If(불일치 200·실행 기록 없음, 평가 실패 시 통과라 보안 용도 금지), HMAC 은 Code 노드+Raw Body, IP(s) Allowlist(403·CIDR) + `N8N_PROXY_HOPS` 를 정확히 답변
+
+**발견된 gap (선택 보강)**
+- Allowed Origins 옵션의 preflight 허용 메서드·헤더·credentials 처리 범위, Respond to Webhook 헤더와의 중복 여부 미기술
+- n8n User Auth 정확한 도입 버전, Only Run If 표현식 예시, GitHub IP 대역 갱신 출처(meta API) 미기술
+- 09-28 이력 각주의 "인증 4종"·`n8n@2.40.7` 이 현행과 달라 혼동 → 같은 날 "이력 각주" 표기 추가
+
+agent content test: 2/2 PASS → **APPROVED 유지**
 
 **수행일**: 2026-09-28
 **수행자**: skill-tester → general-purpose (devops 도메인 전용 에이전트 미등록으로 대체)
@@ -226,8 +261,8 @@ DISPUTED 0건 / UNVERIFIED 0건.
 | 내용 정확성 | ✅ 2026-09-28 정정 반영 확인 (Active→Publish, Code 노드 `$env` 기본 차단) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (3/3 PASS, 2026-05-15) / 2026-09-28 형제 스킬 정합 재테스트 2/2 PASS |
-| **최종 판정** | **APPROVED** (2026-09-28 정정 반영 후 skill-tester 재테스트 2/2 PASS로 재승인) |
+| 에이전트 활용 테스트 | ✅ (3/3 PASS, 2026-05-15) / 2026-09-28 형제 스킬 정합 재테스트 2/2 PASS / 2026-11-09 재시험 2/2 PASS |
+| **최종 판정** | **APPROVED** (유지 — 2026-11-09 CORS 환경변수 삭제·인증/필터/Allowlist 보강 후 재시험 2/2 PASS. 이전: 2026-09-28 정정 반영 후 skill-tester 재테스트 2/2 PASS로 재승인) |
 
 검증 정책상 본 스킬은 *content test로 충분* 카테고리에 해당한다 (n8n Webhook 노드 사용법 — 답변 정확성으로 검증 가능, 빌드 산출물 검증 불필요). skill-tester가 정정된 내용 기준 content test 2/2 PASS로 APPROVED 재전환.
 
@@ -236,6 +271,8 @@ DISPUTED 0건 / UNVERIFIED 0건.
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester로 실전 질문 2~3개 PASS 확인 필요 (2026-05-15 완료, 3/3 PASS)
+- [✅] 2026-11-09 재검증 정정분 재시험 2/2 PASS (general-purpose 직접 호출)
+- [❌] (2026-11-09 신규, 선택 보강) Allowed Origins (CORS) 옵션의 preflight 범위·credentials 처리, n8n User Auth 도입 버전, Only Run If 표현식 예시, GitHub IP 대역 갱신 출처
 - [✅] 2026-09-28 형제 스킬 정합 정정(Active→Publish, Code 노드 `$env` 차단) 반영 후 skill-tester 재테스트 및 섹션 5·6·7·8 동기화 (2026-09-28 완료, 2/2 PASS)
 - [❌] n8n 버전 업그레이드 시 (특히 HMAC 내장 지원 추가 시) 섹션 5·10 갱신 — 차단 요인 아님, 선택 보강 (현재 HMAC 미내장은 community feature request 단계로 실제 추가 시 업데이트 권장)
 - [❌] 섹션 13 흔한 함정 표에 `N8N_BLOCK_ENV_ACCESS_IN_NODE` 차단 케이스 별도 행 추가 — 차단 요인 아님, 선택 보강 (현재 섹션 10 각주로만 존재)
@@ -251,3 +288,6 @@ DISPUTED 0건 / UNVERIFIED 0건.
 | 2026-09-28 | v1 | 재검증: n8n 1.x→2.x 메이저 버전 상승 확인(`n8n@2.40.7`), Webhook 노드 공식 문서 재조회로 HMAC 미내장·인증 4종·Test/Production URL 구분 변경 없음 확인. 소스 URL은 유효하여 갱신 불필요. 내용 수정 없음, status APPROVED 유지 | Claude (Sonnet 5) |
 | 2026-09-28 | v2 | 재검증 보완(형제 스킬 정합): 앞선 재검증에서 누락된 2건 정정 — ① Active 토글→Save/Publish 분리 모델(섹션 1·13), ② Code 노드 `$env` 기본 차단(`N8N_BLOCK_ENV_ACCESS_IN_NODE` 기본값 `true`, 섹션 5·10 예제에 주의+대안 추가). status APPROVED → **PENDING_TEST** 하향 | Claude (Sonnet 5) |
 | 2026-09-28 | v2 | 2단계 실사용 재테스트 수행 (Q1 Stripe Production URL 404 원인 / Q2 HMAC Code 노드 `$env` undefined 원인) → 2/2 PASS, `n8n-workflow-design`과 서술 일관성 확인, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-11-09 | v3 | 재검증 — 기준 stable 2.46.6. **§6 CORS 환경변수 4종(`WEBHOOK_CORS_ALLOWED_*`·`N8N_CORS_ALLOW_ORIGIN`)이 공식 문서·n8n 소스에 없음을 확인해 삭제**, 노드 옵션 Allowed Origins (CORS)(기본 `*`)로 교체. 인증에 n8n User Auth (OAuth2) 추가, Only Run If 옵션(v2.28) 추가, IP(s) Whitelist → Allowlist(403·CIDR 소스 확인), `WEBHOOK_URL` 예시 → `N8N_WEBHOOK_URL`. Test/Production URL·응답 모드·16MB·HMAC 미내장 VERIFIED. 내용 수정 있음 — 재시험 | Claude (Opus 5.5) |
+| 2026-11-09 | v3 | 재검증 후 2단계 재시험 (Q1 CORS 설정 위치·preflight·N8N_WEBHOOK_URL / Q2 n8n User Auth·Only Run If·IP Allowlist) → 2/2 PASS(general-purpose 직접 호출 — skill-tester 하위 에이전트 대기 불가), APPROVED 유지 | general-purpose |
+| 2026-11-12 | v3.1 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 2.0 Publish 필요·Test URL 만료·Respond 4모드/16MB/iframe 래핑·n8n User Auth(OAuth2) 세부·Only Run If(v2.28) 한계·IP(s) Allowlist 403/CIDR/N8N_PROXY_HOPS·rate limit 없음·HMAC 미내장과 Raw Body·multipart 옵션·CORS 환경변수 정정과 Allowed Origins·Wait 노드 preflight 버그·$env 기본 차단·흔한 함정표 / 덜어낸 것 HTTP method·$json 추출표·Respond With 옵션 목록·nginx/Caddy rate limit 예제·비동기 패턴 A~C·curl 예시·시크릿/HMAC Code 예제 코드·서비스별 서명 헤더표 대부분·꿈 해몽 예시 워크플로우 | 정리 |

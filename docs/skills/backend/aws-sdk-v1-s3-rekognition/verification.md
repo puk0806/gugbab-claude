@@ -2,7 +2,7 @@
 skill: aws-sdk-v1-s3-rekognition
 category: backend
 version: v1
-date: 2026-09-26
+date: 2026-11-06
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `aws-sdk-v1-s3-rekognition` |
 | 스킬 경로 | `.claude/skills/aws-sdk-v1-s3-rekognition/SKILL.md` |
-| 검증일 | 2026-04-23 (재검증: 2026-09-26) |
+| 검증일 | 2026-11-06 (재검증, 이전 2026-09-26) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 | 대상 스택 | AWS SDK for Java v1 (1.12.x), Spring Boot 2.5, Java 11 |
@@ -79,6 +79,9 @@ status: APPROVED
 | AWS Developer Blog — Migration Tool GA | https://aws.amazon.com/blogs/developer/general-availability-release-of-the-migration-tool-for-the-aws-sdk-for-java-2-x/ | ⭐⭐⭐ High | 2026-04-23 | OpenRewrite 도구 |
 | OpenRewrite — AwsSdkJavaV1ToV2 | https://docs.openrewrite.org/recipes/software/amazon/awssdk/v2migration/awssdkjavav1tov2 | ⭐⭐ Medium | 2026-04-23 | 자동 변환 레시피 |
 | Maven Central — aws-java-sdk-bom | https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-bom | ⭐⭐⭐ High | 2026-04-23 | 버전 이력 확인 |
+| Maven Central — aws-java-sdk-bom 메타데이터 | https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bom/maven-metadata.xml | ⭐⭐⭐ High | 2026-11-06 | latest/release 1.12.797, 마지막 갱신 2025-12-30 (이후 배포 없음) |
+| aws/aws-sdk-java GitHub README (재확인) | https://github.com/aws/aws-sdk-java | ⭐⭐⭐ High | 2026-11-06 | "reached end-of-support on December 31, 2025", "no longer receives updates or releases" |
+| Rekognition Guidelines and quotas | https://docs.aws.amazon.com/rekognition/latest/dg/limits.html | ⭐⭐⭐ High | 2026-11-06 | S3 15MB / bytes 5MB / PNG·JPEG, ThrottlingException·ProvisionedThroughputExceededException 재시도 가능 |
 
 ---
 
@@ -123,7 +126,11 @@ status: APPROVED
 | 10 | AWS는 OpenRewrite 기반 v1→v2 마이그레이션 도구 GA 제공 | VERIFIED | AWS Dev Blog "General Availability Release of the Migration Tool" |
 | 11 | Rekognition 이미지 크기 한도: S3 15MB, bytes 5MB, JPEG/PNG만 | VERIFIED | Rekognition API Reference 제약사항 (다수 공식 예제에서 일관) |
 
-**총계:** VERIFIED 11 / DISPUTED 0 / UNVERIFIED 0
+| 12 (2026-11-06) | v1 end-of-support(2025-12-31) 유지, 신규 릴리스 없음 | VERIFIED | aws/aws-sdk-java README + Maven Central 메타데이터(마지막 갱신 2025-12-30) |
+| 13 (2026-11-06) | BOM 최종 버전 1.12.797 | VERIFIED | Maven Central maven-metadata.xml latest/release, GitHub README BOM 예시 |
+| 14 (2026-11-06) | Rekognition 이미지 한도 S3 15MB / bytes 5MB / PNG·JPEG | VERIFIED | Rekognition Guidelines and quotas 페이지 (DetectProtectiveEquipment 만 bytes 4MB — 스킬 범위 밖) |
+
+**총계:** VERIFIED 11 / DISPUTED 0 / UNVERIFIED 0 (2026-11-06 재검증 추가분 VERIFIED 3)
 
 ### 4-5. Claude Code 에이전트 활용 테스트
 
@@ -219,3 +226,5 @@ S3 bucket/key 에 올라간 이미지에 대해 얼굴 속성을 추출하고 �
 |------|------|-----------|--------|
 | 2026-04-23 | v1 | 최초 작성 (S3 + Rekognition + Spring Boot 2.5 통합) | skill-creator |
 | 2026-09-26 | v1 | 재검증 — v1 end-of-support 상태·BOM 1.12.797 최종 버전 변경 없음 확인 | 메인 세션 |
+| 2026-11-06 | v1 | 재검증 — end-of-support 유지·신규 릴리스 없음(Maven Central 마지막 갱신 2025-12-30)·BOM 1.12.797 최종·Rekognition 이미지 한도(S3 15MB/bytes 5MB/PNG·JPEG) 확인. 내용 변경 없음(날짜만 갱신) | Claude |
+| 2026-11-11 | v1 | 2026-11-11 정리 — 모델이 아는 일반 지식 절 제거(환경별 자격 증명 전략·명시적 provider 코드, S3 기본 객체 연산·presigned GET/PUT·TransferManager 사용 예제, S3 이벤트 SQS polling, Rekognition DetectFaces/Labels/Moderation/CompareFaces/IndexFaces 예제, 예외 계층·처리 패턴·재시도·Rekognition 에러 코드표, 체크리스트). 남긴 절: EOL 주의문·대상 스택, BOM 버전 통일(1.12.201/1.12.372 혼재 문제·1.12.797), SB 2.5 호환성, v1 자격 증명 체인 순서·v2 분리 주의, SB 2.5 Bean 등록(destroyMethod), S3 함정(ContentLength·S3Object close·presigned 임시 자격 증명·TransferManager 기본값), Rekognition 이미지 입력·한도, v1→v2 비교·OpenRewrite 레시피, 흔한 실수. 사실 재검증 아님 | Claude (Opus 5.5) |

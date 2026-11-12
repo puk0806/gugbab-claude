@@ -2,7 +2,7 @@
 skill: spring-mybatis-spec-extraction
 category: spec
 version: v1
-date: 2026-10-08
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `spring-mybatis-spec-extraction` |
 | 스킬 경로 | `.claude/skills/spring-mybatis-spec-extraction/SKILL.md` (+ `references/extract-scripts.md`) |
-| 검증일 | 2026-10-08 |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-10-08) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 
@@ -63,6 +63,11 @@ status: APPROVED
 | springdoc README (jsDelivr 미러) | https://cdn.jsdelivr.net/gh/springdoc/springdoc-openapi@main/README.md | ⭐⭐⭐ High | 확인 2026-10-08 | "v1.8.0 is the latest Open Source release supporting Spring Boot 2.x and 1.x"(검색 결과) |
 | springdoc-openapi-maven-plugin | https://github.com/springdoc/springdoc-openapi-maven-plugin | ⭐⭐⭐ High | 확인 2026-10-08 | generate 골·integration-test 단계·기본값·`mvn verify`·JVM 인자 원문 |
 | springdoc-openapi-gradle-plugin | https://github.com/springdoc/springdoc-openapi-gradle-plugin | ⭐⭐⭐ High | 확인 2026-10-08 | 플러그인 ID, 1.9.0, 태스크, 기본값, Gradle 7.0+ |
+| springdoc-openapi-gradle-plugin README (재검증) | https://raw.githubusercontent.com/springdoc/springdoc-openapi-gradle-plugin/master/README.md | ⭐⭐⭐ High | 확인 2026-11-09 | 2.x: Gradle 8.0+ (9.8까지 시험), forkedSpringBootRun/Stop·execfork 제거, generateOpenApiDocs 단일 태스크, outputDir 기본 `build`, Boot↔springdoc 호환표 |
+| Gradle Plugin Portal maven-metadata (재검증) | https://plugins.gradle.org/m2/org/springdoc/openapi-gradle-plugin/org.springdoc.openapi-gradle-plugin.gradle.plugin/maven-metadata.xml | ⭐⭐⭐ High | 확인 2026-11-09 | 최신 2.1.0 (1.9.0 → 2.0.0 → 2.1.0) |
+| springdoc-openapi-maven-plugin README·Maven Central (재검증) | https://raw.githubusercontent.com/springdoc/springdoc-openapi-maven-plugin/master/README.md · https://repo1.maven.org/maven2/org/springdoc/springdoc-openapi-maven-plugin/maven-metadata.xml | ⭐⭐⭐ High | 확인 2026-11-09 | 최신 1.6, JVM 인자·기본값 그대로 |
+| Maven Central springdoc-openapi-ui (재검증) | https://repo1.maven.org/maven2/org/springdoc/springdoc-openapi-ui/maven-metadata.xml | ⭐⭐⭐ High | 확인 2026-11-09 | latest 1.8.0 그대로(v1 OSS 마지막) |
+| Spring Batch 6.0 deprecated list (재검증) | https://docs.spring.io/spring-batch/docs/6.0.x/api/deprecated-list.html | ⭐⭐⭐ High | 확인 2026-11-09(검색) | JobBuilderFactory 5.0 deprecated 그대로, 6.0 제거 여부는 공식 확인 못 함 |
 | MyBatis 3 — Mapper XML Files | https://mybatis.org/mybatis-3/sqlmap-xml.html | ⭐⭐⭐ High | 확인 2026-10-08 | 최상위 요소, statementType, `${}` 경고, sql/include |
 | MyBatis 3 — Dynamic SQL | https://mybatis.org/mybatis-3/dynamic-sql.html | ⭐⭐⭐ High | 확인 2026-10-08 | 동적 요소 목록 |
 | MyBatis 3 — Getting Started | https://mybatis.org/mybatis-3/getting-started.html | ⭐⭐⭐ High | 확인 2026-10-08 | namespace = 인터페이스 FQCN, 짧은 이름 모호성 오류 |
@@ -103,6 +108,10 @@ status: APPROVED
 | C21 | mybatis-spring 배치: MyBatisPagingItemReader·MyBatisCursorItemReader(`queryId`), MyBatisBatchItemWriter(`statementId`) | mybatis.org/spring/batch.html(단일 1차 소스) | VERIFIED (공식 1차 소스) |
 | C22 | springdoc·Springfox는 `HttpServletRequest`를 직접 파싱하는 X-API 핸들러의 Dataset 본문 스키마를 문서화하지 못함 | 추론(실행 검증 없음) | UNVERIFIED → SKILL.md 2-5 "주의(추정)" 표기 |
 | C23 | Boot 2.6+ 기본 경로 매처가 PathPatternParser로 바뀌어 표기 차이가 날 수 있음 | 기존 swagger-springfox-2 스킬(springfox #3462 등), Spring MVC 문서 PathPattern 기본 | VERIFIED |
+| R1 | (2026-11-09 재검증, C9 갱신) Gradle 플러그인 최신 = 1.9.0, Gradle 7.0+, `forkedSpringBootRun` 태스크 | Plugin Portal metadata(2.1.0) + README(2.x Gradle 8.0+, forked 태스크 2.0에서 제거, outputDir 기본 `build`) | DISPUTED → SKILL.md 3-2 Gradle 예시를 2.1.0·`java` 플러그인 포함으로 수정, 2.x 요구사항·1.x 마이그레이션·Gradle 7 이하 대안 주의 추가 |
+| R2 | (2026-11-09 재검증) springdoc v1 OSS 마지막 1.8.0, Boot 3 = v2, Boot 4 = v3 | Maven Central springdoc-openapi-ui 1.8.0 + Gradle 플러그인 README 호환표 | VERIFIED |
+| R3 | (2026-11-09 재검증) Maven 플러그인 기본값·JVM 인자 `-Dspring.application.admin.enabled=true` | Maven 플러그인 README(1.6) | VERIFIED |
+| R4 | (2026-11-09 재검증) Spring Batch 5.0 JobBuilderFactory deprecated → `JobBuilder(name, jobRepository)` | Batch 5.0 M6 블로그, 6.0.x deprecated list(검색) | VERIFIED (6.0 제거 여부는 UNVERIFIED — 본문은 deprecated만 서술하므로 수정 불필요) |
 
 ### 4-1. 내용 정확성
 - [✅] 공식 문서와 불일치하는 내용 없음 (작업 지시 전제 C6은 공식 호환표 기준으로 수정)
@@ -131,6 +140,20 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+### 2026-11-09 재시험 (재검증으로 3-2 Gradle 플러그인 2.x 갱신 후)
+
+**수행일**: 2026-11-09
+**수행자**: general-purpose 에이전트 (skill-tester 서브에이전트에 하위 Agent 도구가 없어 메인이 general-purpose 를 직접 호출, 답변은 그 에이전트가 SKILL.md 만 근거로 작성)
+**수행 방법**: SKILL.md Read 후 실전 질문 3개 답변, 메인이 근거 절·변경 내용 일치 확인
+
+**Q1. Boot 3 + Gradle 8.10에서 빌드 중 openapi.json 생성 — 플러그인·버전·태스크, 옛 `forkedSpringBootRun` 설정, 기본 출력** — ✅ PASS (근거: 3-2 표·Gradle 블록·"주의(2026-11-09 갱신)"). 2.1.0 + `java`·Boot 플러그인, `generateOpenApiDocs` 단일 태스크, forked 태스크 2.0에서 제거라 옮기지 않음, `build/openapi.json`.
+**Q2. Boot 2.3 + Gradle 6.9 레거시** — ✅ PASS (근거: 3-2 표·주의). springdoc v1(OSS 마지막 1.8.0), Gradle 플러그인 2.x 불가 → 1.x(1.9.0) 또는 수동 curl, 추출 브랜치·사람 승인. Boot 2.3용 v1 하위 버전은 스킬 범위 밖(springdoc-openapi-3 스킬 소관)으로 정확히 "확정 불가"라 답함.
+**Q3. Boot 1.5에서 springdoc 신규 도입이 기본인가, Actuator 경로·주의** — ✅ PASS (근거: 3-1 표·주의, 3-2 DISPUTED, 흔한 실수 표). 기본 아님 — Springfox `/v2/api-docs` 또는 정적+`/mappings`, sensitive=true, 응답 형식 차이(2차 소스 주의 인용), 운영에서 열지 않기.
+
+agent content test: 3/3 PASS
+
+### 2026-10-08 최초 시험
 
 **수행일**: 2026-10-08
 **수행자**: skill-tester → general-purpose (도메인 에이전트 대신 general-purpose 사용, 질문당 1개 에이전트)
@@ -188,7 +211,7 @@ status: APPROVED
 | 내용 정확성 | ✅ (DISPUTED 1·UNVERIFIED 3은 수정·주의 표기로 반영) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-10-08, 3/3 PASS) |
+| 에이전트 활용 테스트 | ✅ (2026-11-09 재시험 3/3 PASS, 최초 2026-10-08 3/3 PASS) |
 | **최종 판정** | **APPROVED** |
 
 ---
@@ -196,6 +219,7 @@ status: APPROVED
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester로 2단계 content test 수행 후 섹션 4-4·5·6 갱신 (2026-10-08 완료, 3/3 PASS)
+- [✅] 2026-11-09 재검증 수정(Gradle 플러그인 2.x) 후 재시험 3/3 PASS
 - [❌] Boot 1.5 `/mappings` 응답 원문 예시 확인(C4) — 1.5 Actuator API 문서 또는 실제 1.5 앱 응답
 - [❌] iBATIS 2 개발자 가이드에서 `useStatementNamespaces` 의미 원문 확인(C17)
 - [❌] X-API 핸들러에 springdoc 적용 시 생성 결과 실측(C22)
@@ -212,3 +236,4 @@ status: APPROVED
 | 2026-10-08 | v1 | 최초 작성 (SKILL.md + references/extract-scripts.md, 클레임 23개 검증: VERIFIED 19 / DISPUTED 1 / UNVERIFIED 3, 스크립트 3종 가상 예제 실행 확인) | skill-creator |
 | 2026-10-08 | v1 | 2단계 실사용 테스트 수행 (Q1 클래스 prefix 합성·ANY·상수 경로 / Q2 동적 SQL·`${}`·MERGE·프로시저 CRUD 표기 / Q3 Boot 1.5 실행 시 추출·springdoc 판단·X-API 칸) → 3/3 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
 | 2026-10-08 | v1.1 | 설치 검수 반영 — spec-extraction 템플릿 단독 설치본에 없는 스킬(`springdoc-openapi-3`·`swagger-springfox-2`·`mybatis-mapper-patterns`·`nexacro-xapi-server`) 참조에 "(설치된 경우)" 조건 표기(담당 표 머리글·X-API 절·springdoc 절·DISPUTED 주의). 내용 클레임 변경 없음 | Claude |
+| 2026-11-09 | v1.2 | 재검증 — springdoc v1 1.8.0·Maven 플러그인(1.6) 기본값·Spring Batch deprecated 그대로 확인. 바뀐 점: springdoc Gradle 플러그인 1.9.0 → 2.1.0(Gradle 8.0+, `forkedSpringBootRun`·execfork 제거, `generateOpenApiDocs` 단일 태스크, outputDir 기본 `build`, `java` 플러그인 필요)로 3-2 예시·주의 갱신, Gradle 7 이하 대안(1.x 또는 수동 curl) 추가. 재시험(general-purpose, Q1 Boot3+Gradle8·Q2 Boot2.3+Gradle6·Q3 Boot1.5) 3/3 PASS → APPROVED 유지 | Claude |

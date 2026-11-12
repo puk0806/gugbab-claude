@@ -2,7 +2,7 @@
 skill: python-llamaindex
 category: backend
 version: v2
-date: 2026-09-28
+date: 2026-11-06
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `python-llamaindex` |
 | 스킬 경로 | `.claude/skills/python-llamaindex/SKILL.md` |
-| 검증일 | 2026-09-28 (재검증, 이전 2026-05-15) |
+| 검증일 | 2026-11-06 (재검증, 이전 2026-09-28 / 최초 2026-05-15) |
 | 검증자 | skill-creator (Claude) |
 | 스킬 버전 | v2 |
 | 대상 라이브러리 버전 | llama-index **0.14.25** (2026-09-21 PyPI 릴리즈, 재검증 시점 최신) — 최초 검증 시 0.14.22 |
@@ -74,6 +74,20 @@ status: APPROVED
 | BAAI/bge-m3 HuggingFace | https://huggingface.co/BAAI/bge-m3 | ⭐⭐⭐ High | 2026-05-15 | 다국어·한국어 임베딩 |
 | 한국어 임베딩 비교 자료 | https://github.com/nlpai-lab/KURE | ⭐⭐ Medium | 2026-05-15 | 고려대 NLP 랩, 한국어 특화 |
 | IBM LlamaIndex vs LangChain | https://www.ibm.com/think/topics/llamaindex-vs-langchain | ⭐⭐ Medium | 2026-05-15 | 분업 비교 보조 자료 |
+| PyPI llama-index (재확인) | https://pypi.org/project/llama-index/ | ⭐⭐⭐ High | 2026-11-06 | 0.14.25 여전히 최신 |
+| PyPI llama-index-llms-anthropic | https://pypi.org/project/llama-index-llms-anthropic/ | ⭐⭐⭐ High | 2026-11-06 | 0.12.3, `anthropic[bedrock,vertex]>=0.75.0`(상한 없음) |
+| Claude Models overview / Sonnet 5.5 개요 | https://platform.claude.com/docs/en/about-claude/models/overview , https://platform.claude.com/docs/en/models/sonnet-5-5/overview | ⭐⭐⭐ High | 2026-11-06 | 현행 Sonnet `claude-sonnet-5-5`, sampling 400 |
+| Claude API Versions / 2026-10-21 마이그레이션 | https://platform.claude.com/docs/en/api/versioning , https://platform.claude.com/docs/en/api/migration-2026-10-21 | ⭐⭐⭐ High | 2026-11-06 | sampling 파라미터 모든 모델 400 |
+| anthropic-sdk-python CHANGELOG | https://github.com/anthropics/anthropic-sdk-python/blob/main/CHANGELOG.md | ⭐⭐⭐ High | 2026-11-06 | 2.0.0 = API 2026-10-21 기본 |
+
+### 3-1. 2026-11-06 재검증 교차 검증
+
+| # | 클레임 | 판정 | 근거 |
+|---|--------|------|------|
+| 1 | API `2026-10-21`에서 sampling 파라미터는 모든 모델 400 | VERIFIED | versioning + 마이그레이션 가이드 + Sonnet 5.5 개요("Setting temperature… returns a 400") |
+| 2 | 현행 Sonnet `claude-sonnet-5-5`, Sonnet 5 Legacy | VERIFIED | models overview + Sonnet 5.5 개요 |
+| 3 | llama-index-llms-anthropic 0.12.3은 anthropic 상한 없음 | VERIFIED | PyPI requires_dist (1차 메타) |
+| 4 | llama-index-llms-anthropic이 temperature 기본값을 싣는지·anthropic 2.x 호환 | UNVERIFIED | 릴리스 노트 미확인 → SKILL.md `> 주의: 미검증` 유지·보강 |
 
 ---
 
@@ -131,6 +145,38 @@ status: APPROVED
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-11-06] 재검증 후 재시험 (claude-sonnet-5-5 반영, sampling 사실/미검증 분리)
+
+**수행일**: 2026-11-06
+**수행자**: skill-tester → general-purpose (python-backend-developer 대신 general-purpose 사용)
+**수행 방법**: SKILL.md Read 후 2개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
+
+**Q1. Claude LLM + "Anthropic 임베딩" + temperature=0.1 Settings 구성, 설치 후 400 점검**
+- ✅ PASS
+- 근거: SKILL.md "§5.3 Anthropic 임베딩에 관한 주의"(사실/미검증 분리 블록) + "§3 Settings"
+- 상세: Anthropic 임베딩 불가를 짚고 HuggingFace bge-m3(대안 Voyage AI)를 제시. `Anthropic(model="claude-sonnet-5-5")`에 temperature를 넘기지 않고(API 2026-10-21에서 400), `pip show anthropic` 확인 → 통합 패키지 업그레이드 또는 `anthropic<2` 핀 절차를 안내. 통합 패키지 동작은 미검증임을 잠정 절차로 명시해 과신 없이 답함. anti-pattern(temperature 전달, Anthropic embed_model 할당, 구세대 모델 ID) 모두 회피.
+
+**Q2. FunctionCallingAgent 마이그레이션 + 한국어 검색 누락 개선(hybrid + reranker)**
+- ✅ PASS
+- 근거: SKILL.md "§8.1 FunctionAgent", "§8.3 deprecated 클래스 주의", "§7.3 Hybrid Search", "§7.4 Reranker", "§5.2"
+- 상세: `llama_index.core.agent.workflow.FunctionAgent` + `await agent.run()`, `QueryFusionRetriever`(BM25+dense, reciprocal_rerank), `CohereRerank` 연결, 권장 흐름 top_k 20 → top_n 3~5, 한국어 임베딩 bge-m3를 정확히 제시. deprecated 클래스 사용 없음.
+
+### 발견된 gap (선택 보강, 차단 요인 아님)
+
+- §3 Settings 예시가 OpenAI 전용 `temperature=0.1`이라 Claude에 그대로 옮길 위험 — "Claude는 temperature 금지, §5.3 참조" 상호 참조 1줄 권장
+- §7.3 예제 `similarity_top_k=10`과 §7.4 권장 흐름 top_k 20 불일치 — 수치 정렬 또는 설명 권장
+- 한국어 BM25 토크나이저, FunctionCallingAgent → FunctionAgent 전후 diff 미기재
+
+### 판정
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: "라이브러리 사용법 스킬" — 해당 없음 (실사용 필수 카테고리 아님)
+- 최종 상태: APPROVED 유지
+
+---
+
+### [2026-05-15] 최초 테스트
 
 **수행일**: 2026-05-15
 **수행자**: skill-tester → general-purpose (세션 내 직접 수행)
@@ -226,7 +272,7 @@ status: APPROVED
 | 내용 정확성 | ✅ (DISPUTED 2건은 본문에 `> 주의:` 표기로 정정 완료) |
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
-| 에이전트 활용 테스트 | ✅ (2026-05-15 수행 완료, 3/3 PASS) |
+| 에이전트 활용 테스트 | ✅ (2026-05-15 3/3 PASS, 2026-11-06 재시험 2/2 PASS) |
 | **최종 판정** | **APPROVED** |
 
 **판정 근거:** 공식 문서 12개 클레임 VERIFIED, 2개 DISPUTED는 본문에 명시 정정. 카테고리상 본 스킬은 "라이브러리 사용법 스킬"이므로 verification-policy.md 기준 content test PASS = APPROVED 가능. 2026-05-15 skill-tester에 의해 3개 실전 질문 수행, 전부 PASS → APPROVED 전환.
@@ -238,6 +284,8 @@ status: APPROVED
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester로 위 3개 테스트 케이스 수행 후 PASS 시 APPROVED 전환 (2026-05-15 완료, 3/3 PASS)
+- [✅] 2026-11-06 재검증 후 skill-tester 재시험 수행 (2026-11-06 완료, 2/2 PASS)
+- [❌] §3 Settings에 "Claude는 temperature 금지(§5.3 참조)" 상호 참조 및 §7.3 top_k 10 vs §7.4 권장 20 수치 정렬 — 차단 요인 아님, 선택 보강
 - [❌] llama-index 0.15 릴리즈 시 재검증 (현재 0.14.25, 2026-09-28 확인) — 차단 요인 아님, 선택 보강 (버전 변경 시 재검증 권장)
 - [❌] PropertyGraphIndex 활용 예시 추가 검토 (현재 표만 언급, 상세 미작성) — 차단 요인 아님, 선택 보강
 
@@ -252,3 +300,6 @@ status: APPROVED
 | 2026-09-25 | v1 | 모델 ID 현행화(Opus 5.5/Fable 5.1 정렬 작업의 일환) — 2026-08-12 세대 정렬에서 누락된 `Anthropic(model="claude-sonnet-4-5")` → `claude-sonnet-5`(SKILL.md §5, REFERENCE.md 1곳). 5 계열의 `temperature` 400과 통합 패키지 기본 temperature 전송 가능성에 대한 `> 주의: 미확인` 추가. 내용 재검증 없음 — status APPROVED 유지 | 모델 ID 현행화 |
 | 2026-09-25 | v1 | 교차 참조 조건부 표기 (내용 변경 없음) | Claude (Sonnet 5) |
 | 2026-09-28 | v2 | 재검증(2차). llama-index 0.14.22→0.14.25 확인(patch만, breaking change 없음), FunctionAgent/AgentWorkflow·Settings·Anthropic 임베딩 미제공 4개 클레임 재검증 VERIFIED. Voyage AI(Anthropic 공식 임베딩 파트너) 보강(§5.3, REFERENCE.md §14). status APPROVED 유지 | Claude (Sonnet 5) |
+| 2026-11-06 | v2 | **재검증 — Claude API `2026-10-21`·현행 모델 반영.** ① `Anthropic(model="claude-sonnet-5")` → **`claude-sonnet-5-5`**(SKILL.md §5.3, REFERENCE.md 1곳), 비용표 `claude-haiku` → `claude-haiku-5-5`. ② §5.3 sampling 주의를 공식 사실(2026-10-21 모든 모델 400, anthropic 2.x 기본)과 미검증(통합 패키지 동작)으로 분리. ③ llama-index-llms-anthropic 0.12.3 버전·의존성 명시 | Claude (Opus 5.5) |
+| 2026-11-06 | v2 | 재검증 후 2단계 실사용 재시험 수행 (Q1 Claude LLM+임베딩 구성·temperature 금지·400 점검 / Q2 FunctionCallingAgent 마이그레이션·hybrid+rerank) → 2/2 PASS, APPROVED 유지. 선택 보강 gap 2건 섹션 7 기록 | skill-tester |
+| 2026-11-12 | v2.1 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 0.14 deprecated→대체 표(ServiceContext·Agent 계열·SimpleNodeParser)·모듈형 패키지·기본값(1024/20·ada-002·gpt-3.5) 함정·한국어 임베딩(bge-m3 등)·chunk_size 권장/metadata 길이 에러·임베딩 모델 불일치 재구축·BM25 하이브리드+rerank 흐름·Anthropic 임베딩 없음/Voyage AI·temperature 400과 anthropic 상한 없음(미검증 주의 포함)·LlamaParse 패키지명/liteparse / 덜어낸 것 5대 추상화 설명·5줄 RAG·Document/Node/Settings/Index 종류/벡터 스토어/retriever/QueryEngine/Agent 예제·해몽 사전 RAG 완결 예제·비용 절감 코드·체크리스트·설치 목록. references/REFERENCE.md 는 남길 사실을 SKILL.md 로 옮기고 폴더 삭제 | 정리 |

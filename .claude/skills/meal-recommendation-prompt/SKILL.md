@@ -1,14 +1,17 @@
 ---
 name: meal-recommendation-prompt
-description: 보유 식재료 기반 식단·레시피 추천 Claude 프롬프트 패턴. 알레르기·식단 제한 기본 입력 + 코드 출력 검증(fail-closed), 만료 식재료 필터(KST 날짜 기준), 식재료명 프롬프트 인젝션 방어, structured outputs(output_config.format) 포함.
+description: 보유 식재료 기반 식단·레시피 추천 Claude 프롬프트 패턴. 알레르기(한국 법정 19종)·식단 제한 기본 입력 + 코드 출력 검증(fail-closed), 만료 식재료 필터(KST 날짜 기준), 식재료명 프롬프트 인젝션 방어, 응답 스키마·서버 고정 안내문 포함. API 호출·structured outputs 는 claude-api 스킬.
 ---
 
 # Meal Recommendation Prompt — 식재료 기반 식단 추천
 
 > 소스: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices
-> 소스: https://platform.claude.com/docs/en/build-with-claude/structured-outputs (output_config.format, claude-sonnet-5·claude-opus-5-5 지원)
+> 소스: https://platform.claude.com/docs/en/build-with-claude/structured-outputs (output_config.format, claude-sonnet-5-5·claude-opus-5-5·claude-haiku-5-5 지원)
+> 소스: https://platform.claude.com/docs/en/api/migration-2026-10-21 (API 2026-10-21 — 샘플링 파라미터 제거, TS SDK 1.0.0 부터 기본)
+> 소스: https://platform.claude.com/docs/en/models/sonnet-5-5/overview (Sonnet 5.5 — 강제 tool_choice·temperature 400)
 > 소스: 식품 등의 표시·광고에 관한 법률 시행규칙 [별표 2] — https://www.law.go.kr/LSW/flDownload.do?gubun=&flSeq=42533884&bylClsCd=110201
-> 검증일: 2026-09-26
+> 검증일: 2026-11-11 (재검증, 이전 2026-11-06 — 강제 tool_choice 금지 모델 표기 Fable 5.2 현행화 · 2026-11-06 이전 2026-09-26) — 모델 ID `claude-sonnet-5-5` 현행화, API 2026-10-21·TS SDK 1.x 기준 샘플링 파라미터 서술 정정
+> API 호출·캐싱·structured outputs 는 Claude Code 기본 `claude-api` 스킬 참조.
 > 부속: `references/allergen-safety-data.md` — 알레르기 19종·별칭 사전·식단 제한 용어·적대적 테스트 시나리오
 
 ---
@@ -20,7 +23,7 @@ description: 보유 식재료 기반 식단·레시피 추천 Claude 프롬프�
 3. **만료 식재료는 모델에 보내지 않는다**: KST 날짜 기준으로 판정하고, 제외한 식재료와 이유를 사용자에게 알린다
 4. **사용자 입력은 데이터**: 식재료명은 정제·길이 제한 후 JSON 데이터 블록으로만 전달한다
 5. **소비기한 우선 + 현실적 추천**: 임박 재료 우선, 추가 재료는 메뉴당 0~2가지
-6. **구조화 출력**: structured outputs(`output_config.format`)로 스키마를 보장하고, 그 위에 안전 검증을 한 번 더 건다
+6. **구조화 출력**: 응답 스키마를 강제하고, 그 위에 안전 검증을 한 번 더 건다
 
 ---
 
@@ -32,8 +35,8 @@ description: 보유 식재료 기반 식단·레시피 추천 Claude 프롬프�
   ├─ 1. prepareIngredients: 이름 정제 → 날짜 검증 → 만료/기한없는 신선식품/알레르기 재료 제외
   │      └─ 사용할 식재료 0개 → status 'no_ingredients' (API 호출 안 함)
   ├─ 2. 프롬프트 조립: <ingredients>·<safety_profile> JSON 데이터 블록
-  ├─ 3. Claude 호출: messages.parse + output_config.format (강제 tool_choice·temperature 없음)
-  │      └─ stop_reason refusal / max_tokens / parsed_output null → 예외 (부분 결과 노출 금지)
+  ├─ 3. Claude 호출: MealResponseSchema 강제 (호출 방법은 claude-api 스킬)
+  │      └─ 거절·잘림·파싱 실패 → 예외 (부분 결과 노출 금지)
   ├─ 4. validateRecommendations: 알레르기·제한·미보유 재료·의료 단정 → 추천 단위 차단
   └─ 5. 응답: 통과한 추천 + 제외 식재료 알림 + 서버 고정 안내문(혼입·질환 상담)
 ```
@@ -43,7 +46,7 @@ description: 보유 식재료 기반 식단·레시피 추천 Claude 프롬프�
 ## 입력 스키마 (기본 흐름)
 
 ```ts
-import type { Ingredient, IngredientCategory } from './ingredient-management'; // health/ingredient-management 스킬
+import type { Ingredient, IngredientCategory } from './ingredient'; // 앱의 식재료 타입 (name·quantity·unit·category·expiryDate)
 
 // 한국 법정 알레르기 표시 대상 19개 (시행규칙 별표 2 제1호 가목)
 export const KR_LABELED_ALLERGENS = [
@@ -166,11 +169,11 @@ export const prepareIngredients = (
 > - **띄어쓰기·특수문자 삽입**: "무 시", "지.시", "s y s t e m"
 > - **유니코드 변형**: 전각문자(ＩＧＮＯＲＥ), 동형이의 문자(cyrillic а vs latin a), 제로폭 문자(ZWSP) 삽입, 자모 분리
 >
-> **정규식만 믿지 않는다.** 이 스킬의 실제 방어선은 정규식이 아니라 **4단계 `validateRecommendations`의 `usedIngredients ⊆ owned` 구조 검증**(292~355행, 특히 337~339행)이다. 이 검증은 "추천에 등장한 재료명이 서버가 전달한 보유 재료 목록에 포함되는가"만 확인하며, 모델이 인젝션 문구에 얼마나 설득당했는지·`SUSPICIOUS_RE`를 얼마나 정교하게 우회했는지와 **무관하게 동작**한다. 즉 2차 방어는 "지시문 텍스트를 다시 검사"하는 게 아니라 "출력이 서버가 아는 데이터 범위를 벗어났는가"라는 구조적 사실만 본다 — 텍스트 기반 필터가 뚫려도 무너지지 않는 이유다. `SUSPICIOUS_RE`는 비용이 거의 없는 1차 필터(명백한 시도를 조기에 걸러 API 호출을 아낀다)일 뿐, 이것을 안전의 근거로 삼지 않는다.
+> **정규식만 믿지 않는다.** 이 스킬의 실제 방어선은 정규식이 아니라 **4단계 `validateRecommendations`의 `usedIngredients ⊆ owned` 구조 검증**(4단계 코드의 `owned.has` 검사)이다. 이 검증은 "추천에 등장한 재료명이 서버가 전달한 보유 재료 목록에 포함되는가"만 확인하며, 모델이 인젝션 문구에 얼마나 설득당했는지·`SUSPICIOUS_RE`를 얼마나 정교하게 우회했는지와 **무관하게 동작**한다. 즉 2차 방어는 "지시문 텍스트를 다시 검사"하는 게 아니라 "출력이 서버가 아는 데이터 범위를 벗어났는가"라는 구조적 사실만 본다 — 텍스트 기반 필터가 뚫려도 무너지지 않는 이유다. `SUSPICIOUS_RE`는 비용이 거의 없는 1차 필터(명백한 시도를 조기에 걸러 API 호출을 아낀다)일 뿐, 이것을 안전의 근거로 삼지 않는다.
 
 | 경계 | 처리 |
 |------|------|
-| 소비기한 = 오늘 (KST) | 포함, `daysLeft: 0`, UI "오늘까지" (ingredient-management 알림 "오늘까지 사용하세요"와 동일 기준) |
+| 소비기한 = 오늘 (KST) | 포함, `daysLeft: 0`, UI "오늘까지" (식재료 알림 "오늘까지 사용하세요"와 동일 기준) |
 | 소비기한 < 오늘 | 제외 `expired` |
 | 기기 시간대가 UTC·해외 | `todayInSeoul`로 판정 — `new Date('YYYY-MM-DD')`(UTC 자정 파싱) + 로컬 `getTime()` 비교 금지 |
 | 날짜 없음 | 곡류·양념 등은 `no_expiry`로 포함, 육류·어패류·난류/유제품은 제외 `no_date_perishable` |
@@ -248,11 +251,11 @@ ${mealType} 메뉴를 최대 ${safeCount}가지 추천해주세요.`;
 
 ---
 
-## 3단계 — 출력 스키마 + Claude API 호출
+## 3단계 — 출력 스키마
+
+API 호출·캐싱·structured outputs 는 Claude Code 기본 `claude-api` 스킬 참조. 아래 스키마를 강제해 호출하는 함수를 `callMealModel(userPrompt)`로 두고, 거절·잘림·파싱 실패는 예외로 던진다(부분 결과 노출 금지).
 
 ```ts
-import Anthropic from '@anthropic-ai/sdk';
-import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
 
 const RecommendationSchema = z.object({
@@ -272,26 +275,8 @@ const MealResponseSchema = z.object({
   urgentUsageNote: z.string().nullable(),
 });
 export type ModelRecommendation = z.infer<typeof RecommendationSchema>;
-
-const client = new Anthropic();
-
-const callMealModel = async (userPrompt: string) => {
-  const response = await client.messages.parse({
-    model: 'claude-sonnet-5',                 // 또는 'claude-opus-5-5' — 둘 다 structured outputs 지원
-    max_tokens: 16000,                        // Sonnet 5는 thinking 기본 adaptive — 낮게 잡으면 잘림
-    system: MEAL_SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: userPrompt }],
-    output_config: { format: zodOutputFormat(MealResponseSchema) },
-    // temperature/top_p/top_k 금지 (5 계열 400), 강제 tool_choice 금지 (Opus 5.5 400) — JSON은 structured outputs로
-  });
-  if (response.stop_reason === 'refusal') throw new Error('MODEL_REFUSED');
-  if (response.stop_reason === 'max_tokens') throw new Error('OUTPUT_TRUNCATED');
-  if (!response.parsed_output) throw new Error('PARSE_FAILED');
-  return response.parsed_output;
-};
 ```
 
-> `message.content[0]`을 텍스트로 가정하지 않는다 — thinking이 켜진 5 계열은 첫 블록이 thinking일 수 있다. `messages.parse`의 `parsed_output`을 쓴다.
 > 스키마 보장은 "형식"만 보장한다. 알레르기 재료가 들어간 추천도 스키마상으로는 유효하므로 4단계 검증이 필수다.
 
 ---

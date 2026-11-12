@@ -2,7 +2,7 @@
 skill: dream-privacy-consent-ui
 category: frontend
 version: v1
-date: 2026-09-28
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `dream-privacy-consent-ui` |
 | 스킬 경로 | `.claude/skills/dream-privacy-consent-ui/SKILL.md` |
-| 검증일 | 2026-05-15 (최초) / 2026-09-28 재검증 |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-28 / 최초 2026-05-15) |
 | 검증자 | skill-creator (agent) |
 | 스킬 버전 | v1 |
 | 적용 법령 기준 | 한국 개인정보 보호법(2024년 9월 15일 시행령 적용) · GDPR(2016/679) · ePrivacy Directive |
@@ -80,6 +80,10 @@ status: APPROVED
 | CookieYes — Dark Patterns | https://www.cookieyes.com/blog/dark-patterns-in-cookie-consent/ | ⭐⭐ Medium | 2026-05-15 | 업계 가이드 |
 | Cookie-Script — WCAG Cookie Banner | https://cookie-script.com/guides/web-accessibility-and-cookie-banners-compliance-checklist | ⭐⭐ Medium | 2026-05-15 | 업계 가이드 |
 | Clym — Cookies vs localStorage | https://www.clym.io/blog/what-are-cookies-local-storage-and-session-storage-from-a-privacy-law-perspective | ⭐⭐ Medium | 2026-05-15 | 업계 가이드 |
+| 법률신문 — 2026-09-11 개정 「개인정보 보호법」 시행 | https://www.lawtimes.co.kr/news/articleViewAmp.html?idxno=226491 | ⭐⭐ Medium | 2026-11-09 | 재검증 — 2026-03-10 공포(법률 제21445호)·2026-09-11 시행이 최신 |
+| 법률신문 TMT 브리핑 | https://www.lawtimes.co.kr/news/articleViewAmp.html?idxno=226414 | ⭐⭐ Medium | 2026-11-09 | 재검증 — 개정 내용(과징금 10%·CPO)이 동의 조문과 무관함 교차 확인 |
+| Kennedys / Gibson Dunn — EU Digital Omnibus GDPR 해설 | https://www.kennedyslaw.com/en/thought-leadership/article/2026/the-2025-european-commission-eu-digital-omnibus-package-the-gdpr-regulation-eu-2016679 | ⭐⭐ Medium | 2026-11-09 | 재검증 — Art.9 예외 신설 제안, 입법 절차 진행 중 |
+| DLA Piper Privacy Matters — CNIL 2022 쿠키 과징금 | https://privacymatters.dlapiper.com/2022/01/france-cookies-new-record-sanctions-for-tech-giants-cnil-fines-facebook-ireland-60-million-euros-and-google-150-million-euros/ | ⭐⭐ Medium | 2026-11-09 | 재검증 — Google €150M·Facebook €60M 재확인 |
 
 ---
 
@@ -98,6 +102,7 @@ status: APPROVED
 - [✅] 한국 국외이전 별도 동의(제28조의8) 명시 항목 정확 — PIPC 가이드 확인
 - [✅] EDPB Cookie Banner Taskforce 위반 사례 정확 — EDPB 보고서 확인
 - [✅] CNIL Google €150M·Facebook €60M 과징금 사례 정확 — 복수 소스 교차 확인
+- [✅] 2026-11-09 재검증 판정 — ① 한국법 최신 시행본 = 2026-03-10 공포·2026-09-11 시행(인용 조문 제22조의2·제23조 제1항·제28조의8 영향 없음): **VERIFIED** (법률신문 2건) ② CNIL 2022 과징금 금액: **VERIFIED** (DLA Piper·Taylor Wessing 등 복수) ③ GDPR Art.9 현행 explicit consent 요건: **VERIFIED**, 단 Digital Omnibus 개정 제안(미채택)은 **UNVERIFIED(최종 결과)** → SKILL.md에 `> 주의:` 추가
 
 ### 4-2. 구조 완전성
 
@@ -129,11 +134,45 @@ status: APPROVED
 
 - [✅] skill-tester 호출 완료 (2026-05-15)
 - [✅] 테스트 질문 3개로 PASS 확인 (3/3 PASS)
+- [✅] 2026-11-09 재검증 후 재시험 수행 (2/2 PASS)
 - [✅] verification.md 섹션 5·6·7·8 업데이트 완료
 
 ---
 
 ## 5. 테스트 진행 기록
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester → general-purpose (도메인 에이전트 미사용, general-purpose 대체)
+**수행 방법**: 2026-11-09 재검증으로 SKILL.md 수정(재검증 메모 + EU Digital Omnibus 주의 추가) 후 재시험. SKILL.md Read 후 2개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인
+
+### 실제 수행 테스트 (2026-11-09 재시험)
+
+**Q1. 한국 사용자 대상 온보딩 동의 화면 — 체크박스 분리·필수/선택·버튼 설계·미리 체크 여부**
+- ✅ PASS
+- 근거: SKILL.md "2.2 민감정보 처리 요건", "2.3 필수동의 폐지", "4.1·4.2 동의 화면/ConsentScreen", "5.1·5.2 분리 동의", "3.4 다크 패턴"
+- 상세: 약관·민감정보(필수, 별도 강조) / 외부 LLM 국외이전·통계(선택, 각각 별도)로 정확히 분리. 모든 상태 초기값 false(Recital 32), Accept/Reject 동일 시각 비중 버튼, 한 체크박스 묶음 무효 근거(§2.2·§5)를 정확히 인용. anti-pattern(미리 체크, 비대칭 버튼, 일괄 동의) 회피.
+
+**Q2. "Digital Omnibus로 Art.9 예외가 생겨 explicit consent 없이 처리해도 된다"는 주장 검증 + Art.6(f) 단독 가능 여부**
+- ✅ PASS
+- 근거: SKILL.md "재검증 메모 (2026-11-09)", "3.1 Art.6 주의", "3.2 Art.9", "3.3 Art.7"
+- 상세: 신규 `> 주의:`를 근거로 Digital Omnibus는 제안 단계(입법 진행 중, 미채택)이며 현행법 기준 explicit consent 설계 유지·채택 시 재검토라고 정확히 답변. Art.6(f) 단독 처리 불가(Art.9 별도 조건 필요)도 §3.1에서 정확히 인용. 제안 내용을 확정 사실로 단정하는 anti-pattern 회피.
+
+### 발견된 gap (SKILL.md 보강 권장 — 모두 선택 보강, 차단 요인 아님)
+
+- §2.3(필수동의 폐지)과 §4.2 코드의 "필수" 체크박스(약관·민감정보) 간 긴장 — 민감정보는 계약 이행 근거가 없어 별도 동의가 여전히 필요하다는 점을 명시하면 혼동 방지
+- §5.1 표는 약관·개인정보처리방침을 별도로 적지만 §4.2 코드는 하나로 묶음(§5.2는 분리 예시) — 내부 일관성 보강 여지
+- §4.1의 "나중에 결정" 버튼이 §4.2 코드에 미구현
+- Digital Omnibus 제안 예외의 구체 조문·적용 범위 서술 부족(미채택 상태라 현재는 허용 범위)
+
+### 판정 (2026-11-09)
+
+- agent content test: 2/2 PASS
+- verification-policy 분류: 법령 준수 동의 UI 패턴 — "실사용 필수 카테고리" 미해당. content test PASS = APPROVED 가능
+- 최종 상태: APPROVED 유지
+
+---
+
+> (참고용 — 2026-09-28 정기 재검증 기록)
 
 **수행일**: 2026-09-28
 **수행자**: Claude (Sonnet 5) — 정기 재검증(서브에이전트 금지 지시 하 직접 수행), 국가법령정보센터 Open API 원문 대조 포함
@@ -205,8 +244,8 @@ status: APPROVED
 | 내용 정확성 | ✅ 11/11 VERIFIED (복수 공식 소스 교차 검증) |
 | 구조 완전성 | ✅ 13/13 항목 충족 |
 | 실용성 | ✅ 7/7 항목 충족 |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-15) + 2/2 PASS (2026-09-28 재검증, 법령 원문 직접 대조 포함) |
-| **최종 판정** | **APPROVED** (agent content test 통과 — 2026-06-20 사용자 명시 지시 + 2026-09-28 법령 원문 재검증으로 변경 없음 확인) |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-15) + 2/2 PASS (2026-09-28 재검증, 법령 원문 직접 대조 포함) + 2/2 PASS (2026-11-09 재시험, Digital Omnibus 주의 반영 확인) |
+| **최종 판정** | **APPROVED** (agent content test 통과 — 2026-06-20 사용자 명시 지시 + 2026-09-28 법령 원문 재검증 + 2026-11-09 재검증·재시험 2/2 PASS) |
 
 ---
 
@@ -217,6 +256,9 @@ status: APPROVED
 - [❌] 한국 적정성 결정 후 EU→한국 이전은 별도 동의 불필요하나, *역방향*(한국→미국 OpenAI/Anthropic)은 한국법 제28조의8 별도 동의 여전히 필요 — SKILL.md에 *명시 강화 검토* (차단 요인 아님, 선택 보강)
 - [❌] 2024-09-15 필수동의 폐지와 민감정보(제23조) 별도 동의 필수성이 혼동될 수 있음 — "필수동의 폐지는 계약 이행 근거 적용이며, 민감정보 별도 동의는 여전히 필수"를 섹션 2.2·2.3에 명시 강화 검토 (차단 요인 아님, 선택 보강)
 - [✅] APPROVED 전환 완료 (2026-06-20 — 사용자 명시 지시, content test PASS = APPROVED 가능 카테고리 확인)
+- [✅] 2026-11-09 재검증 후 skill-tester 재시험 수행 (2026-11-09 완료, 2/2 PASS, APPROVED 유지)
+- [❌] §2.3(필수동의 폐지)과 §4.2 필수 체크박스 간 긴장, §5.1 표와 §4.2 코드의 약관·처리방침 분리 불일치, §4.1 "나중에 결정" 버튼 코드 미구현 — 2026-11-09 재시험에서 발견, 내부 일관성 보강 검토 (차단 요인 아님, 선택 보강)
+- [❌] EU Digital Omnibus(GDPR Art.9 예외 제안) 최종 채택 여부 — 입법 확정 시 SKILL.md 재검토 필요 (차단 요인 아님, 추후 재검증 시 확인)
 
 ---
 
@@ -228,3 +270,5 @@ status: APPROVED
 | 2026-05-15 | v1 | 2단계 실사용 테스트 수행 (Q1 한국법 제23조 민감정보 별도 동의 / Q2 GDPR Art.9 explicit consent vs Art.6(a) / Q3 만 14세 미만 법정대리인 + 다크 패턴) → 3/3 PASS, PENDING_TEST 유지 (사용자 명시 지시) | skill-tester |
 | 2026-06-20 | v1 | PENDING_TEST → APPROVED 전환 — content test 3/3 PASS 확인 + 실사용 필수 카테고리 미해당 + 사용자 명시 지시 | skill-tester |
 | 2026-09-28 | v1 | **정기 재검증** — 국가법령정보센터 Open API로 개인정보 보호법·시행령 원문(시행일 2026-09-11) 직접 대조. §2.1(제23조+시행령 제18조 민감정보 4항목, 인종·민족 포함 확인)·§7.1(제22조의2)·§10.1(제28조의8) 모두 원문과 일치, 변경 없음. content test 2/2 PASS. SKILL.md에 재검증 메모 추가, status APPROVED 유지 | Claude (Sonnet 5) |
+| 2026-11-09 | v1 | 재검증 — 한국법 최신 시행본(2026-09-11) 유지·인용 조문 무변경, CNIL 2022 과징금 재확인 VERIFIED. EU Digital Omnibus(GDPR Art.9 예외 신설 제안, 입법 진행 중) `> 주의:` 메모를 SKILL.md에 추가. 검증일 4곳 갱신, skill-tester 재시험 대상 | Claude (Opus 5.5) |
+| 2026-11-09 | v1 | 재검증 후 2단계 재시험 수행 (Q1 온보딩 동의 화면 체크박스 분리·버튼·미리 체크 / Q2 Digital Omnibus 주장 검증 + Art.6(f) 단독 처리) → 2/2 PASS, APPROVED 유지. 내부 일관성 gap 3건은 선택 보강으로 섹션 7 기록 | skill-tester |

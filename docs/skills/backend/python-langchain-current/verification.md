@@ -2,7 +2,7 @@
 skill: python-langchain-current
 category: backend
 version: v1
-date: 2026-09-26
+date: 2026-11-11
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `python-langchain-current` |
 | 스킬 경로 | `.claude/skills/python-langchain-current/SKILL.md` |
-| 검증일 | 2026-09-26 (최초 2026-05-15) |
+| 검증일 | 2026-11-11 (재검증, 이전 2026-11-06 / 2026-09-26 / 최초 2026-05-15) |
 | 검증자 | skill-creator → 2026-09-25 메인 오케스트레이션(부분 갱신) → 2026-09-26 재검증: 메인 오케스트레이션 (Claude Sonnet 5) |
 | 스킬 버전 | v1 |
 | 검증 기준 버전 | langchain-core 1.4.8 (최초 검증 시점 1.4.0에서 갱신) / langchain 1.3.x / langchain-community 0.4.x / langgraph 1.x |
@@ -84,6 +84,21 @@ status: APPROVED
 | IBM LlamaIndex vs LangChain | https://www.ibm.com/think/topics/llamaindex-vs-langchain | ⭐⭐ Medium | 2025 | 중립 비교 |
 | LangChain criticisms (Medium·HN) | https://shashankguda.medium.com/challenges-criticisms-of-langchain-b26afcef94e7 / https://news.ycombinator.com/item?id=36648272 | ⭐⭐ Medium | 다수 | 비판 합의 |
 | Anthropic SDK vs LangChain 비교 | https://mooreiq.ai/blog/claude-agent-anthropic-sdk-vs-langchain | ⭐⭐ Medium | 2025 | 단일 공급자 SDK 권장 의견 |
+| PyPI langchain-anthropic | https://pypi.org/project/langchain-anthropic/ | ⭐⭐⭐ High | 2026-11-06 | 1.7.10, `anthropic>=0.120.0`(상한 없음), `langchain-core>=1.7.5,<2` |
+| PyPI langchain-core (재확인) | https://pypi.org/project/langchain-core/ | ⭐⭐⭐ High | 2026-11-06 | 1.7.6 |
+| Claude Models overview | https://platform.claude.com/docs/en/about-claude/models/overview | ⭐⭐⭐ High | 2026-11-06 | 현행 Haiku 5.5 `claude-haiku-5-5`, Haiku 4.5 Legacy |
+| Claude API Versions / 2026-10-21 마이그레이션 | https://platform.claude.com/docs/en/api/versioning , https://platform.claude.com/docs/en/api/migration-2026-10-21 | ⭐⭐⭐ High | 2026-11-06 | sampling 파라미터 모든 모델 400, 서드파티 라이브러리 설정에서 제거 권고 |
+| anthropic-sdk-python CHANGELOG | https://github.com/anthropics/anthropic-sdk-python/blob/main/CHANGELOG.md | ⭐⭐⭐ High | 2026-11-06 | 2.0.0(2026-10-21) = API 2026-10-21 기본 |
+
+### 3-1. 2026-11-06 재검증 교차 검증
+
+| # | 클레임 | 판정 | 근거 |
+|---|--------|------|------|
+| 1 | API `2026-10-21`에서 `temperature`/`top_p`/`top_k`는 기본값이어도 모든 모델 400 | VERIFIED | versioning + 마이그레이션 가이드 |
+| 2 | `anthropic` 2.0.0부터 기본 API 버전 `2026-10-21` | VERIFIED | SDK CHANGELOG + 마이그레이션 가이드 |
+| 3 | langchain-anthropic 1.7.10은 `anthropic` 상한 없음 → 새 환경에 2.x 설치 가능 | VERIFIED | PyPI requires_dist (단일 1차 소스 — 패키지 메타 자체) |
+| 4 | 현행 Haiku = `claude-haiku-5-5`, Haiku 4.5 Legacy | VERIFIED | models overview + Haiku 5.5 개요 |
+| 5 | langchain-anthropic 1.7.x가 anthropic 2.x와 완전 호환(sampling 기본값 미전송) | UNVERIFIED | 공식 릴리스 노트에서 확인 못 함 → SKILL.md에 `> 주의: 미검증` 표기 |
 
 ---
 
@@ -126,15 +141,50 @@ status: APPROVED
 ### 4-4. 실용성
 - [✅] 에이전트가 참조했을 때 실제 코드 작성에 도움
 - [✅] 추상이론 아닌 코드 중심
-- [✅] 짝 스킬(`python-anthropic-sdk`·`python-llamaindex`) 명시로 의사결정 지원
+- [✅] 짝 스킬(Claude Code 내장 `claude-api` 스킬·`python-llamaindex`) 명시로 의사결정 지원
 - [✅] 균형 잡힌 평가(권장·비권장 둘 다 명확)
 
 ### 4-5. Claude Code 에이전트 활용 테스트
-- [✅] skill-tester 호출 (2026-05-15 수행 — 3/3 PASS, 2026-09-28 재테스트 — 2/2 PASS)
+- [✅] skill-tester 호출 (2026-05-15 수행 — 3/3 PASS, 2026-09-28 재테스트 — 2/2 PASS, 2026-11-06 재검증 후 재시험 — 3/3 PASS)
 
 ---
 
 ## 5. 테스트 진행 기록
+
+### 2단계 재시험 (2026-11-06, 재검증 후)
+
+**수행일**: 2026-11-06
+**수행자**: skill-tester → general-purpose (1회 호출로 3문항 일괄 답변; 동시 실행 한도 때문)
+**수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 줄 번호 및 anti-pattern 회피 확인. 2026-11-06 재검증에서 추가·변경된 내용(API 2026-10-21 sampling 400, 현행 모델 ID, 강제 tool_choice 400 대상, anthropic 2.x 미검증 주의)을 겨냥
+
+**Q1. 분류용 ChatAnthropic을 temperature=0·Haiku로, OpenAI와 같은 설정 dict 공유**
+- ✅ PASS
+- 근거: SKILL.md 상단 30행 주의, "4. 모델 통합" 코드(155-156행) 및 162행 주의, 28행/95행 모델명
+- 상세: Claude에 temperature를 주지 말 것, 공통 설정 dict 일괄 주입은 400, OpenAI만 temperature=0 별도 지정, 모델은 `claude-haiku-5-5`(날짜 접미사 없음, `claude-haiku-4-5` Legacy), 일관성은 `with_structured_output(method="json_schema")`로 확보 — anti-pattern(temperature 주입, 구 모델 ID) 회피.
+
+**Q2. claude-sonnet-5-5에서 tool_choice="any" 에러 원인·대안·with_structured_output 주의**
+- ✅ PASS
+- 근거: SKILL.md "5.3 tool_choice 옵션" 205행 주의
+- 상세: Opus 5.5·Sonnet 5.5·Fable 5.1 강제 tool_choice 400, 대안(`auto`+프롬프트+`strict: true` / structured outputs), 기본 `function_calling` 방식이 내부적으로 강제 tool_choice를 쓸 수 있어 method 명시 필요 — 정확히 반영.
+
+**Q3. langchain-anthropic 설치 후 anthropic 2.x 설치 — 안전한가**
+- ✅ PASS
+- 근거: SKILL.md 27행, 30-31행(`> 주의: 미검증`), 12.2절 426-427행
+- 상세: 상한 없음이라 2.x 설치는 정상이나 완전 호환은 미검증이라 "안전 단정 불가"로 답변, `pip show anthropic` 확인·실호출 400 확인·`anthropic<2` 핀 고려 제시 — 미검증 표기를 과장 없이 전달.
+
+### 발견된 gap (2026-11-06)
+
+- SKILL.md 43행(§1 주의)이 여전히 "2026-09 기준 `langchain-core 1.4.8`"로 남아 있어 27행·426행(1.7.6/1.7.*)과 불일치 — 선택 보강(차단 요인 아님, 사용자 승인 후 수정 대상).
+- 12.2절에 `anthropic<2` 구체 핀 예시 없음(미검증 상태라 현재 서술로 충분, 선택 보강).
+- 공통 설정 dict를 공급자별로 분리하는 코드 예시 없음(선택 보강).
+
+### 판정 (2026-11-06)
+
+- agent content test: 3/3 PASS
+- verification-policy 분류: 라이브러리 사용법 스킬 (content test PASS = APPROVED 가능)
+- 최종 상태: APPROVED
+
+---
 
 ### 2단계 재테스트 (2026-09-28)
 
@@ -234,8 +284,8 @@ status: APPROVED
 | 구조 완전성 | ✅ |
 | 실용성 | ✅ |
 | 핵심 클레임 교차 검증 | ✅ (VERIFIED 12 / UNVERIFIED 1 — SKILL에 보수적 기술 / DISPUTED 0) |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-15 수행) + ✅ 2/2 PASS (2026-09-26 재검증) + ✅ 2/2 PASS (2026-09-28 재테스트) |
-| **최종 판정** | **APPROVED** (2026-09-28 재테스트: langchain-core 1.4.8 + AgentExecutor 마이그레이션 기한 반영 내용이 정확히 답변에 활용됨 확인 — 2/2 PASS) |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-05-15 수행) + ✅ 2/2 PASS (2026-09-26 재검증) + ✅ 2/2 PASS (2026-09-28 재테스트) + ✅ 3/3 PASS (2026-11-06 재검증 후 재시험) |
+| **최종 판정** | **APPROVED** (2026-11-06 재시험: API 2026-10-21 sampling 400·현행 모델 ID·강제 tool_choice 400·anthropic 2.x 미검증 주의가 정확히 답변에 반영됨 — 3/3 PASS. 이전 2026-09-28 재테스트: langchain-core 1.4.8 + AgentExecutor 마이그레이션 기한 반영 내용이 정확히 답변에 활용됨 확인 — 2/2 PASS) |
 
 > 카테고리 판정: LangChain은 *라이브러리 사용법 스킬* 카테고리에 해당하나, **API 변동성이 매우 크다**는 특수성이 있다. content test PASS만으로 APPROVED 전환 가능하나, 6개월 단위 재검증 권장을 §7에 기록한다.
 
@@ -243,7 +293,9 @@ status: APPROVED
 
 ## 7. 개선 필요 사항
 
-- [✅] skill-tester로 2~3개 실전 질문 테스트 수행 (2026-05-15 완료, 3/3 PASS; 2026-09-28 재테스트 완료, 2/2 PASS)
+- [✅] skill-tester로 2~3개 실전 질문 테스트 수행 (2026-05-15 완료, 3/3 PASS; 2026-09-28 재테스트 완료, 2/2 PASS; 2026-11-06 재검증 후 재시험 완료, 3/3 PASS)
+- [❌] SKILL.md 43행 "2026-09 기준 langchain-core 1.4.8" 문구를 27행·426행(1.7.x)과 일치시키기 (차단 요인 아님 — 선택 보강, 2026-11-06 재시험에서 발견, 수정은 사용자 승인 후)
+- [❌] `anthropic<2` 핀 예시·공급자별 설정 분리 코드 예시 추가 (차단 요인 아님 — 선택 보강; anthropic 2.x 호환 확인 후 반영)
 - [❌] 6개월 주기 재검증 — LangChain은 API 변동성 큰 라이브러리이므로 langchain-core·langgraph 마이너 버전 변경 시 deprecated 목록 갱신 필요 (차단 요인 아님 — APPROVED 전환 후 선택 보강)
 - [❌] LangSmith self-hosted 옵션 세부 조건 확인 후 SKILL.md §9 보강 (차단 요인 아님 — 현재 "별도 enterprise 계약 필요"로 보수적 기술로 충분, 선택 보강)
 
@@ -258,3 +310,7 @@ status: APPROVED
 | 2026-09-25 | v1 | §5.3 `tool_choice="any"`/특정 도구 강제 예시에 주의 1개 추가 — Claude Opus 5.5·Fable 5.1은 강제 tool_choice 400(Sonnet 5·Haiku 4.5는 동작), 대안 `auto`+`strict: true`+프롬프트 지시 또는 structured outputs(`method="json_schema"`). 예제 코드 변경 없음. 근거: Claude API 공식 스킬(2026-09). status **APPROVED 유지** | 메인 대화 오케스트레이션 |
 | 2026-09-26 | v1 | 재검증 — langchain-core 1.4.0→1.4.8 버전 갱신, LangChain 1.0 GA 날짜(2025-10-22) 및 "2.0 전 breaking change 없음" 공식 정책 반영, AgentExecutor→LangGraph 마이그레이션 기한(2026-12) 신규 추가 → PENDING_TEST | 메인 오케스트레이션 (Claude Sonnet 5) |
 | 2026-09-28 | v1 | 2단계 재테스트 수행 (Q1 AgentExecutor 마이그레이션 기한+안정성 정책 / Q2 버전 핀+Opus 5.5 tool_choice 400) → 2/2 PASS, PENDING_TEST → APPROVED 전환 | skill-tester |
+| 2026-11-06 | v1 | **재검증 — Claude API `2026-10-21`·현행 모델 반영.** ① `ChatAnthropic(..., temperature=0)` 예제 제거(API 2026-10-21 모든 모델 400), 공급자 공통 설정으로 temperature 일괄 주입 금지 주의 추가. ② 모델 `claude-haiku-4-5-20251001` → **`claude-haiku-5-5`**(4곳). ③ §5.3 강제 tool_choice 400 대상에 Sonnet 5.5 추가, Legacy 표기. ④ 기준 버전 langchain-core 1.4.8 → 1.7.6, langchain-anthropic 1.7.10 명시, 버전 핀 예시 갱신. ⑤ langchain-anthropic의 anthropic 2.x 호환은 `> 주의: 미검증` | Claude (Opus 5.5) |
+| 2026-11-06 | v1 | 재검증 후 2단계 재시험 수행 (Q1 Haiku·temperature 미지정·공급자 설정 dict 분리 / Q2 Sonnet 5.5 강제 tool_choice 400·대안·with_structured_output method 명시 / Q3 anthropic 2.x 설치 안전성(미검증 표기)) → 3/3 PASS, APPROVED 유지. 발견 gap: SKILL.md 43행 langchain-core 1.4.8 문구 불일치(선택 보강). 날짜(date·검증일)는 변경 없음 | skill-tester |
+| 2026-11-11 | v1 | 2026-11-11 재검증 — Fable 5.2 현행화(공식 models overview·whats-new-fable-5-2). SKILL.md §5.3 강제 tool_choice 400 모델 표기 Fable 5.1(`claude-fable-5-1`) → **Fable 5.2(`claude-fable-5-2`)**, 구세대 Fable 5.1도 동일 400 병기. 검증일 2026-11-11. status 변경 없음 | Claude |
+| 2026-11-12 | v1.1 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 1.0 GA "2.0 전 breaking 없음" 정책·AgentExecutor 2026-12 이관 권장·deprecated→대체 표·패키지 안정성/버전 핀·sampling 400과 anthropic 상한 없음(미검증 주의 포함)·강제 tool_choice 400 모델과 with_structured_output method 명시·채택 판단표/휴리스틱·비판 사실 확인·LangSmith/공급자 추상화 주의 / 덜어낸 것 설치 예시·Runnable 메서드 목록·LCEL/병렬/프롬프트/모델 통합/@tool/Pydantic/tool_choice/RAG/LangGraph/체크포인터/RunnableWithMessageHistory 예제·LangSmith 환경변수 블록·anti-pattern 코드 예제·참고 자료 중복 목록 | 정리 |

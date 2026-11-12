@@ -1,8 +1,8 @@
 ---
 skill: search-console-webmaster
 category: frontend
-version: v1.2
-date: 2026-09-28
+version: v1.3
+date: 2026-11-09
 status: APPROVED
 ---
 
@@ -14,7 +14,7 @@ status: APPROVED
 |------|------|
 | 스킬 이름 | `search-console-webmaster` |
 | 스킬 경로 | `.claude/skills/search-console-webmaster/SKILL.md` |
-| 검증일 | 2026-09-28 (최초 2026-06-02 · 1차 재검증 2026-08-26) |
+| 검증일 | 2026-11-09 (재검증, 이전 2026-09-28 · 2026-08-26, 최초 2026-06-02) |
 | 검증자 | skill-creator |
 | 스킬 버전 | v1 |
 
@@ -81,6 +81,9 @@ status: APPROVED
 | sitemaps.org | https://www.sitemaps.org/protocol.html | ⭐⭐⭐ High | 2026-06-02 | sitemap 표준 스펙 |
 | Search Engine Journal | https://www.searchenginejournal.com/excluded-pages-google-search-console/453226/ | ⭐⭐ Medium | 2026-06-02 | GSC 제외 사유 교차 검증 |
 | ICP 备案中心 | https://cloud.baidu.com/beian/index.html | ⭐⭐⭐ High | 2026-06-02 | ICP 등록 공식 |
+| IndexNow 참여자 목록 (재검증) | https://www.indexnow.org/searchengines.json | ⭐⭐⭐ High | 2026-11-09 | Bing·Yandex·Seznam·Naver·Yep·Internet Archive·Amazonbot |
+| Bing Webmaster Blog (IndexNow 확산) | https://blogs.bing.com/webmaster/December-2024/Look-How-Far-We-ve-Come-IIndexNow-Expands-Adoption-Across-Industries | ⭐⭐⭐ High | 2026-11-09 | Internet Archive 참여 교차 |
+| Google Indexing API 할당량 (재검증) | https://developers.google.com/search/apis/indexing-api/v3/quota-pricing | ⭐⭐⭐ High | 2026-11-09 | 200 publish/일·180 getMetadata/분 |
 
 ---
 
@@ -109,7 +112,7 @@ status: APPROVED
 
 ### 4-4. Claude Code 에이전트 활용 테스트
 - [✅] 해당 스킬을 참조하는 에이전트에게 테스트 질문 수행 (2026-06-02 skill-tester 수행)
-- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (3/3 PASS)
+- [✅] 에이전트가 스킬 내용을 올바르게 활용하는지 확인 (3/3 PASS, 2026-11-09 재시험 3/3 PASS)
 - [✅] 잘못된 응답 시 보완 (gap 없음, 보완 불필요)
 
 ---
@@ -139,9 +142,56 @@ status: APPROVED
 
 총 18 클레임 / VERIFIED 18 / DISPUTED 0 / UNVERIFIED 0
 
+### 2026-11-09 재검증 클레임
+
+| 클레임 | 판정 | 근거 |
+|--------|------|------|
+| Indexing API 200 publish/일(태평양 자정 리셋)·180 getMetadata/분, JobPosting·BroadcastEvent 전용, 배치 100건 | VERIFIED | quota-pricing · quickstart 공식 |
+| IndexNow 키 8~128자, POST 최대 10,000 URL | VERIFIED | indexnow.org/documentation |
+| IndexNow 키 문자 = "hex" | DISPUTED → 정정 | 공식 문서가 a-z·A-Z·0-9·대시라고 쓰면서 hexadecimal 이라고도 적어 모호 → SKILL.md 6.2 표기 정정 |
+| IndexNow 응답 코드에 `422` 존재 | VERIFIED (추가) | indexnow.org/documentation — SKILL.md 6.4 에 추가 |
+| 참여자에 Internet Archive·Amazonbot 포함, Google 미참여 | VERIFIED (추가) | searchengines.json 공식 + Bing Webmaster Blog(Internet Archive). Amazonbot 은 공식 json 1곳 + 2차 소스 |
+
 ---
 
 ## 5. 테스트 진행 기록
+
+### [2026-11-09] 재검증 후 재시험 (11-09 수정 내용 대상)
+
+**수행일**: 2026-11-09
+**수행자**: skill-tester → general-purpose (frontend-developer 대체)
+**수행 방법**: SKILL.md Read 후 3개 실전 질문 답변, 근거 섹션 및 anti-pattern 회피 확인. 질문은 11-09 수정 항목(참여자 목록·422·키 문자 표기) 위주로 구성
+
+**Q1. IndexNow로 Bing에 push하면 어디까지 전달되나? 검색 노출 엔진이 아닌 참여자는? Google은?**
+- ✅ PASS
+- 근거: SKILL.md "6.1 핵심 개념", "2.3 URL 제출 & IndexNow", "8.4"
+- 상세: Bing·Yandex·Naver·Seznam·Yep + Internet Archive·Amazonbot(검색 노출 엔진 아님) 정확히 인용, Google 미참여 및 대안(sitemap·내부 링크) 제시.
+
+**Q2. IndexNow POST 422 원인 후보와 키 생성 규격·키 파일 위치**
+- ✅ PASS
+- 근거: SKILL.md "6.4 API 호출(POST)" 응답 코드, "6.2 키 파일 인증"
+- 상세: 422 = URL이 host에 속하지 않음 또는 키 규격 불일치로 도출. 키 8~128자, a-z·A-Z·0-9·대시, hex 표기 모호성과 "소문자 hex+대시" 권고 정확히 인용. 키 파일은 루트 또는 keyLocation 디렉토리 이하.
+
+**Q3. 블로그에 Google Indexing API 사용 가능 여부, 채용공고 사이트 할당량, 블로그 대안**
+- ✅ PASS
+- 근거: SKILL.md "1.8 Google Indexing API의 한계", "8.4", "9. 흔한 실수 패턴"
+- 상세: 블로그는 불가(JobPosting·BroadcastEvent 전용), 200 publish/일·180 read/분, 대안은 sitemap·URL 검사·내부 링크로 정확.
+
+### 발견된 gap (선택 보강, 차단 아님)
+
+- 422 vs 403 경계(키 파일 경로 오류가 어느 코드인지)와 422 디버깅 순서는 SKILL.md에 없음
+- Indexing API 호출 절차(URL_UPDATED/URL_DELETED, 서비스 계정)·증설 신청은 범위 밖
+- 오류·anti-pattern 사용 없음
+
+### 판정
+
+- agent content test: 3/3 PASS
+- verification-policy 분류: 해당 없음 (운영 절차·라이브러리 사용법 성격 — content test로 APPROVED 유지)
+- 최종 상태: APPROVED 유지
+
+---
+
+### [2026-06-02] 최초 테스트
 
 **수행일**: 2026-06-02
 **수행자**: skill-tester → general-purpose (frontend-developer 대체)
@@ -241,7 +291,7 @@ GSC 페이지 보고서에서 "크롤됨 - 현재 색인되지 않음"이 100개
 | 내용 정확성 | ✅ 18/18 클레임 VERIFIED |
 | 구조 완전성 | ✅ 12개 섹션 + 결정 트리 + 체크리스트 포함 |
 | 실용성 | ✅ 한국 운영자 우선순위 명시, D-Day 체크리스트 제공 |
-| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-02 skill-tester 수행) |
+| 에이전트 활용 테스트 | ✅ 3/3 PASS (2026-06-02 skill-tester 수행), 2026-11-09 재시험 3/3 PASS |
 | 2차 재검증 (2026-09-28) | ✅ IndexNow·Naver·Google Indexing API 핵심 클레임 4건 공식 원문 재대조, 전부 VERIFIED, 변경 없음 |
 | **최종 판정** | **APPROVED** |
 
@@ -250,6 +300,8 @@ GSC 페이지 보고서에서 "크롤됨 - 현재 색인되지 않음"이 100개
 ## 7. 개선 필요 사항
 
 - [✅] skill-tester로 실전 질문 2~3개 답변 검증 (2026-06-02 완료, 3/3 PASS)
+- [✅] 2026-11-09 재검증 수정(참여자 목록·422·키 문자 표기) 반영 후 skill-tester 재시험 (2026-11-09 완료, 3/3 PASS)
+- [❌] 422 vs 403 경계·422 디버깅 순서 보강 (차단 요인 아님 — 선택 보강)
 - [❌] 실제 사이트 런칭 시 D-Day 체크리스트 적용 후 누락 항목 보강 (차단 요인 아님 — 실사용 후 선택 보강)
 - [❌] Google Search Console UI는 주기적으로 변경되므로 6개월마다 메뉴명 재확인 (차단 요인 아님 — 주기적 유지보수 항목)
 
@@ -263,3 +315,7 @@ GSC 페이지 보고서에서 "크롤됨 - 현재 색인되지 않음"이 100개
 | 2026-06-02 | v1 | 2단계 실사용 테스트 수행 (Q1 신규 사이트 등록 순서 / Q2 크롤됨-색인 안 됨 진단 / Q3 IndexNow 이득·Google 미지원) → 3/3 PASS, APPROVED 전환 | skill-tester |
 | 2026-08-26 | v1.1 | freshness 재검증(85일 경과) — URL Inspection API 600/분·2,000/일, Indexing API JobPosting·BroadcastEvent 전용, Bing GSC Import, Naver IndexNow(2023-07), 속성 유형 5건 전부 VERIFIED. 분리 모바일 호스트 속성 분리 등록 안내를 검증일 줄에 추가 | freshness-auditor + orchestrator |
 | 2026-09-28 | v1.2 | 2차 재검증(33일 경과) — IndexNow 참여 검색엔진 목록·키 파일 규격, Google Indexing API 할당량·범위(2026-07-16 공식 문서 갱신 이후 기준), Naver Search Advisor IndexNow 메뉴 활성 상태 4건을 공식 원문(curl 직접 조회) 재대조, 전부 VERIFIED·변경 없음 | 재검증 담당 에이전트 |
+| 2026-11-09 | v1.3 | 재검증 — Indexing API 할당량·범위, IndexNow 키 길이·URL 한도 VERIFIED. 바뀐 점: IndexNow 참여자에 Internet Archive·Amazonbot 추가, 응답 코드 422 추가, 키 허용 문자 표기 정정(hex 모호성 명시). status APPROVED 유지(skill-tester 재시험 예정) | 재검증 담당 에이전트 |
+| 2026-11-09 | v1.3 | 재검증 후 2단계 재시험 수행 (Q1 IndexNow 참여자·전파 / Q2 422 원인·키 규격 / Q3 Indexing API 범위·할당량) → 3/3 PASS, APPROVED 유지 | skill-tester |
+| 2026-11-11 | v1.4 | seo-monitoring-automation 통합 — 옮긴 절: SKILL.md 3.4 네이버 IndexNow GET/POST 엔드포인트 표 + 잘못된 엔드포인트 주의 + POST 호스트 미검증 표시(원문 그대로 유지), 8.5 "Search Console API·cron 자동화 함정"(Service Account 사용자 추가 403·scope·siteUrl 표기·데이터 지연 2일/16개월·rowLimit 25,000/일 50,000행·URL Inspection 2,000/일·600/분 및 프로젝트·Search Analytics 한도·cron UTC/`timezone`(2026-03)·정시 지연·60일 비활성화·키 파일 커밋 금지), 소스 URL 7개 추가. 출처 원 검증일 2026-11-09 기준 내용 그대로(사실 재검증 아님). status·검증일 변경 없음 | Claude (Opus 5.5) |
+| 2026-11-12 | v1.5 | 정리(사실 재검증 아님) — 일반 지식 덜어내기: 남긴 것 GSC 색인 요청 10~12회/일·첫 요청만 큐, "크롤됨-색인 안 됨" 해석, sitemap 50,000/50MB, Indexing API 용도·할당량, Search Console API·cron 함정 표 전체, IndexNow 참여자·키 규격·10,000 URL·응답 코드·Naver 엔드포인트와 주의, Bing import 한도, Baidu ICP·quota 공유, 첫 색인 소요 시간 / 덜어낸 것 콘솔 우선순위·GSC vs GA 설명, 등록·인증 단계별 절차, 보고서 화면 설명, Yandex·Baidu 등록 절차, IndexNow 개념·curl 예시, 출시 D-Day 체크리스트, 자동화 패턴 개요, 흔한 실수 표·진단 결정 트리·사용 시점 표 | 정리 |
