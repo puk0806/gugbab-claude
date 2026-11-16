@@ -254,14 +254,22 @@ function handle(input) {
   const sessionId = input.session_id
 
   if (event === 'UserPromptSubmit') {
+    // 사용자가 친 슬래시 커맨드(/commit·/create-pr)는 커밋·푸시 요청이다 — 승인 상태는 그대로 두고 요청 동작만 새로 기록 (2026-11-13)
+    if (typeof input.prompt === 'string' && /^\s*<command-name>/.test(input.prompt)) {
+      const prev = readState(sessionId)
+      writeState(sessionId, { ...(prev || { approved: false, why: 'slash-command', agents: [] }), vcs: vcsRequested(input.prompt), at: new Date().toISOString() })
+      return { code: 0 }
+    }
     // 시스템이 보낸 알림(백그라운드 작업 완료 등)은 사용자 답이 아니다 — 승인 상태를 바꾸지 않는다
     // (실제 세션 2026-10-06: <task-notification> 이 UserPromptSubmit 으로 들어와 승인이 풀린 사례)
+    // 다른 세션 메시지도 마찬가지 — 그 안의 "커밋·머지" 글자가 커밋 허락이 되면 안 된다(요청 동작도 그대로 둔다)
     if (isSystemPrompt(input.prompt)) return { code: 0 }
     const verdict = judgePrompt(input.prompt, lastAssistantText(input.transcript_path))
     // 승인된 동안 시작한 서브에이전트는 새 메시지가 와도 끝날 때까지 유지 — 사용자가 거절·중단하면("멈춰"·"아니") 함께 푼다
     const prev = readState(sessionId)
     const agents = verdict.why === 'rejected' ? [] : (prev && Array.isArray(prev.agents) ? prev.agents.filter(validAgentId).slice(-MAX_AGENTS) : [])
-    writeState(sessionId, { approved: verdict.approved, why: verdict.why, at: new Date().toISOString(), agents })
+    // 커밋·푸시·PR·머지 요청은 이번 메시지 글자로만 정한다 — 계획 승인("진행해")은 허락이 아니다 (2026-11-13 사고, 사용자 결정 B)
+    writeState(sessionId, { approved: verdict.approved, why: verdict.why, at: new Date().toISOString(), agents, vcs: vcsRequested(input.prompt) })
     if (verdict.approved) return { code: 0 }
     return { code: 0, stdout: JSON.stringify({ hookSpecificOutput: { hookEventName: 'UserPromptSubmit', additionalContext: PRE_CONTEXT } }) }
   }
@@ -297,6 +305,9 @@ function handle(input) {
     } else if (tool === 'Bash' || tool === 'Monitor') {
       // 셸로 파일을 바꾸는 명령도 승인 전에는 막는다 (2026-11-10 사용자 결정 2-a) — 읽기·테스트·임시 폴더 쓰기는 통과
       if (typeof ti.command !== 'string') return { code: 0 } // command 없는 Monitor(WebSocket 등)
+      // 커밋·푸시·PR·머지는 승인 여부와 따로 — 가장 최근 사용자 메시지가 그 동작을 요청했을 때만 (2026-11-13, 서브에이전트 포함)
+      const missing = vcsMissing(ti.command, readState(sessionId))
+      if (missing) return { code: 2, stderr: missing }
       reason = shellWriteReason(ti.command, cwd)
       if (!reason) return { code: 0 }
     } else {
@@ -319,6 +330,22 @@ function isApproved(st, agentId) {
   if (agentId === undefined || agentId === null || agentId === '') return st.approved === true
   const id = validAgentId(agentId)
   return !!id && Array.isArray(st.agents) && st.agents.includes(id)
+}
+
+// 커밋·푸시·PR·머지 요청 판정 (lib/vcs-request.js). 모듈을 못 불러오면 요청 기록은 비우고, 판정은 글자 기준으로 막는다(보수)
+function vcsLib() { try { return require('./lib/vcs-request') } catch { return null } }
+function vcsRequested(prompt) {
+  const lib = vcsLib()
+  return lib ? lib.requestedActions(prompt) : { commit: false, push: false, pr: false, merge: false }
+}
+function vcsMissing(cmd, st) {
+  const lib = vcsLib()
+  if (!lib) {
+    return /\b(?:git\b[^\n]{0,80}?\b(?:commit|push)|gh\b[^\n]{0,40}?\bpr\b[^\n]{0,20}?\b(?:create|merge))\b/i.test(cmd)
+      ? '[task-confirm-guard] 판정 모듈(lib/vcs-request.js)을 불러오지 못해 커밋·푸시·PR·머지를 막았습니다.' : null
+  }
+  const missing = lib.missingActions(cmd, st && st.vcs)
+  return missing.length ? lib.blockMessage(missing) : null
 }
 
 function shellWriteReason(cmd, cwd) {

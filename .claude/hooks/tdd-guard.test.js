@@ -172,6 +172,49 @@ if (process.platform === 'win32') {
   test('[윈도우] CLAUDE_PROJECT_DIR=/c/… + 테스트 없는 소스 → 차단 exit 2', mk('src', 'msys.ts'), 2, { projectDir: msysW })
 }
 
+// 2026-11-16 사용자 결정 — 로직 없는 파일(타입·선언·테스트 설정·Next.js 표시/메타데이터)은 빼고, 권한·요청 처리가 있는 파일은 계속 요구
+console.log('\n── 로직 없는 파일은 테스트 없이 통과, 로직 있는 Next.js 파일은 계속 요구 ──')
+{
+  const app = path.join(tmp, 'src', 'app')
+  fs.mkdirSync(path.join(app, 'api', 'x'), { recursive: true })
+  const w = (rel, body) => { const p = path.join(tmp, rel); fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, body); return p }
+  // 정상(통과)
+  test('*.d.ts 선언 파일 → 0', w('src/server/ports.d.ts', 'export interface Repo { get(id: string): Promise<string> }'), 0)
+  test('타입만 있는 .ts (type·interface·import type) → 0', w('src/server/ports.ts', "import type { A } from './a'\n// 포트 정의\nexport type Id = string\nexport interface Repo {\n  get(id: Id): Promise<A>\n}\nexport type { A }\n"), 0)
+  test('vitest.setup.ts → 0', w('vitest.setup.ts', "import '@testing-library/jest-dom/vitest'"), 0)
+  test('setupTests.ts → 0', w('src/setupTests.ts', "import '@testing-library/jest-dom'"), 0)
+  for (const f of ['layout.tsx', 'loading.tsx', 'error.tsx', 'not-found.tsx', 'template.tsx', 'default.tsx', 'global-error.tsx', 'manifest.ts', 'robots.ts', 'sitemap.ts', 'icon.tsx', 'apple-icon.tsx', 'opengraph-image.tsx', 'twitter-image.tsx'])
+    test(`Next.js app/ ${f} → 0`, w(`src/app/${f}`, 'export default function X() { return null }'), 0)
+  test('중첩 경로 app/(group)/fines/loading.tsx → 0', w('src/app/(group)/fines/loading.tsx', 'export default () => null'), 0)
+  // 악성·우회(계속 차단)
+  test('app/page.tsx → 계속 요구 2', w('src/app/page.tsx', 'export default function P() { return null }'), 2)
+  test('app/api/x/route.ts → 계속 요구 2', w('src/app/api/x/route.ts', 'export async function POST(r: Request) { return new Response(await r.text()) }'), 2)
+  test('src/proxy.ts → 계속 요구 2', w('src/proxy.ts', 'export function proxy() {}'), 2)
+  test('middleware.ts → 계속 요구 2', w('middleware.ts', 'export function middleware() {}'), 2)
+  test('db/schema.ts → 계속 요구 2', w('src/db/schema.ts', "export const t = pgTable('t', {})"), 2)
+  test('타입처럼 보이지만 함수가 섞인 .ts → 2', w('src/server/mixed.ts', 'export type Id = string\nexport const check = (id: Id) => id.length > 0\n'), 2)
+  test('type 뒤 한 줄에 실행 코드 → 2', w('src/server/sneak.ts', 'export type A = string; export const run = () => fetch("/x")\n'), 2)
+  test("문자열 속 '{' 로 깊이 속이기 + 실행 코드 → 2", w('src/server/brace.ts', "export type T = '{'\nexport const run = () => fetch('/x')\n"), 2)
+  test('주석 속 { 로 깊이 속이기 + 실행 코드 → 2', w('src/server/brace2.ts', "export type T = string // {\nexport const run = () => 1\n"), 2)
+  test('인터페이스 뒤 맨 윗줄 호출 → 2', w('src/server/call.ts', 'export interface X {\n  a: string\n}\nconsole.log(1)\n'), 2)
+  test('여러 줄 타입 별칭 (= 뒤 줄바꿈, 함수 타입) → 0', w('src/server/fn-type.ts', "export type Handler =\n  (req: Request) => Promise<Response>\nexport type U = 'a' | 'b'\n  | 'c'\n"), 0)
+  test('enum (런타임 값 생성) → 2', w('src/server/kinds.ts', 'export enum Kind { A, B }\n'), 2)
+  test('declare 블록 + export function → 2', w('src/server/decl.ts', 'declare module "x" {}\nexport function f() { return 1 }\n'), 2)
+  test('app/ 밖의 layout.tsx (일반 컴포넌트 이름) → 2', w('src/components/layout.tsx', 'export default function L() { return null }'), 2)
+  test('이름만 비슷한 loading-bar.tsx → 2', w('src/app/loading-bar.tsx', 'export default () => null'), 2)
+  test('vitest.setup 이 아닌 setup.ts → 2', w('src/setup.ts', 'export function setup() {}'), 2)
+  // 이상·경계
+  test('빈 .ts 파일 → 0 (로직 없음)', w('src/server/empty.ts', ''), 0)
+  test('주석만 있는 .ts → 0', w('src/server/notes.ts', '// TODO\n/* 나중에 */\n'), 0)
+  test('없는 파일(내용 못 읽음) .ts → 2', path.join(tmp, 'src', 'server', 'ghost.ts'), 2)
+  // 차단 메시지 경로는 프로젝트 루트 기준 (cwd 가 node_modules 안이어도 ../../ 로 깨지지 않음)
+  const nm = path.join(tmp, 'node_modules', '@x', 'y'); fs.mkdirSync(nm, { recursive: true })
+  const r = spawnSync('node', [HOOK], { input: JSON.stringify({ hook_event_name: 'PostToolUse', tool_name: 'Write', tool_input: { file_path: path.join(tmp, 'src', 'app', 'page.tsx') } }), encoding: 'utf8', cwd: nm, env: { ...process.env, CLAUDE_PROJECT_DIR: tmp } })
+  const okMsg = r.status === 2 && /테스트 파일 없음: src[\\/]app[\\/]page\.tsx/.test(r.stderr) && !/\.\.[\\/]/.test(r.stderr)
+  console.log(`  ${okMsg ? '✅' : '❌'} 차단 메시지 경로 = 프로젝트 루트 기준 → ${okMsg ? 'PASS' : 'FAIL ' + JSON.stringify(r.stderr)}`)
+  okMsg ? passed++ : failed++
+}
+
 fs.rmSync(tmp, { recursive: true, force: true })
 
 console.log(`\n결과: ${passed}/${passed + failed} 통과`)
