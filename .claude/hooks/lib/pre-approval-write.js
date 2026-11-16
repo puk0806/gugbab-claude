@@ -257,6 +257,30 @@ function checkShell(inv, v, vcwd, depth, ctx) {
   return null
 }
 
+// git config 가 값을 읽기만 하는지 (2026-11-13 — `git config user.email` 같은 조회 오탐)
+// git-config 문법: 키 하나 = 읽기, 키+값 = 쓰기. 2.46+ 하위 명령(get·list = 읽기 / set·unset·…·edit = 쓰기)
+// 쓰기 옵션이 하나라도 있거나 `--` 뒤 인자·값을 정적으로 모르면 쓰기로 본다
+function gitConfigReadOnly(a) {
+  const WRITE_OPT = /^(?:--unset|--unset-all|--add|--replace-all|--rename-section|--remove-section|--edit|-e|--comment(?:=.*)?|--fixed-value)$/
+  const READ_OPT = /^(?:--get|--get-all|--get-regexp|--get-urlmatch|--get-color|--get-colorbool|--list|-l)$/
+  const VALUE_OPT = /^(?:-f|--file|--blob|--type|--default)$/ // 다음 인자가 값
+  if (a.some(x => x == null || WRITE_OPT.test(x) || /^-[a-zA-Z]*e[a-zA-Z]*$/.test(x) && !/^--/.test(x))) return false
+  const pos = []
+  let readOpt = false
+  for (let i = 0; i < a.length; i++) {
+    const x = a[i]
+    if (x === '--') return false // 그 뒤는 옵션처럼 보여도 값 — 판정하지 않는다
+    if (VALUE_OPT.test(x)) { i++; continue }
+    if (READ_OPT.test(x)) { readOpt = true; continue }
+    if (x.startsWith('-')) continue // 범위(--local·--global…)·표시(--show-origin·-z·--name-only…)
+    pos.push(x)
+  }
+  if (pos[0] === 'get' || pos[0] === 'list') return true
+  if (['set', 'unset', 'rename-section', 'remove-section', 'edit'].includes(pos[0])) return false
+  if (readOpt) return true
+  return pos.length === 1
+}
+
 function checkGit(inv, vcwd) {
   const g = inv.git
   if (!g || !g.sub || g.subDyn) return 'git 하위 명령을 정적으로 알 수 없습니다'
@@ -271,7 +295,7 @@ function checkGit(inv, vcwd) {
   if (sub === 'apply' && a.some(x => ['--check', '--stat', '--numstat', '--summary'].includes(x)) && !a.includes('--apply')) return null
   if (sub === 'reset' && !a.some(x => ['--hard', '--merge', '--keep'].includes(x))) return null // --soft·--mixed·경로 지정은 인덱스·HEAD 만 바꾼다
   if (sub === 'rm' && a.includes('--cached')) return null
-  if (sub === 'config' && a.some(x => /^(?:--get|--get-all|--get-regexp|--list|-l|--show-origin|--show-scope)$/.test(x))) return null
+  if (sub === 'config' && gitConfigReadOnly(a)) return null
   if (sub === 'lfs' && ['ls-files', 'status', 'env', 'version', 'track'].includes(a[0]) && a[0] !== 'track') return null
   if (sub === 'bisect' && ['log', 'view', 'visualize'].includes(a[0])) return null
   if (sub === 'clone' || sub === 'init' || sub === 'archive' || sub === 'format-patch' || sub === 'bundle') {

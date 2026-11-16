@@ -1869,7 +1869,16 @@ function classifyGh(vals, add) {
       if (m) { const method = (m[1] !== undefined ? m[1] : vals[i + 1] || '').toUpperCase(); if (method !== 'GET') write = true }
       if (/^(?:-f|-F|--field|--raw-field|--input)(?:=|$)/.test(v)) write = true
     }
+    // 머지 API(pulls/N/merge·merges)는 서버에서 브랜치를 바꾼다 — 운영 배포로 이어질 수 있어 따로 경고 (2026-11-13)
+    if (write && vals.some(v => /(?:^|\/)(?:pulls\/[^/\s]+\/merge|merges)(?:[/?]|$)/.test(v))) {
+      add('ask', 'gh api 머지 요청은 GitHub 에서 대상 브랜치(main 등)를 바로 바꿔 운영 배포로 이어질 수 있습니다 — 머지·배포를 명시적으로 요청받았을 때만 허용하세요.')
+      return
+    }
     if (write) add('ask', 'gh api 쓰기 요청(POST·PATCH·DELETE 등)은 GitHub 에 바로 반영돼 사용자 확인이 필요합니다.')
+    return
+  }
+  if (sub === 'pr' && action === 'merge') {
+    add('ask', 'gh pr merge 는 GitHub 에서 main 을 바꿔 운영 배포로 이어질 수 있습니다 — 머지·배포를 명시적으로 요청받았을 때만 허용하세요.')
     return
   }
   if (sub === 'repo' && action === 'delete') { add('deny', 'gh repo delete 는 되돌릴 수 없어 차단됩니다. 직접 실행하세요.'); return }
@@ -2148,7 +2157,11 @@ function classifyShell(cmd, opts = {}) {
   if (_classifyCache.has(key)) return _classifyCache.get(key)
 
   let best = { level: null, reason: '' }
-  const add = (level, reason) => { if ((LEVEL_RANK[level] || 0) > (LEVEL_RANK[best.level] || 0)) best = { level, reason } }
+  const asks = [] // 확인(ask) 사유 전부 — 묶음 명령에서 첫 사유만 보이지 않게 (composeAskReasons)
+  const add = (level, reason) => {
+    if (level === 'ask' && !asks.includes(reason)) asks.push(reason)
+    if ((LEVEL_RANK[level] || 0) > (LEVEL_RANK[best.level] || 0)) best = { level, reason }
+  }
 
   const acc = analyzeShell(cmd)
   for (const u of acc.unknown) add('unknown', `명령을 정적으로 해석할 수 없습니다(${u}).`)
@@ -2222,9 +2235,25 @@ function classifyShell(cmd, opts = {}) {
     }
   }
 
+  if (best.level === 'ask' && asks.length > 1) best = { level: 'ask', reason: composeAskReasons(asks) }
   if (_classifyCache.size > 200) _classifyCache.clear()
   _classifyCache.set(key, best)
   return best
+}
+
+// 묶음 명령의 확인 사유 — 확인이 필요한 동작을 전부 보여 준다 (2026-11-13 사고: 첫 사유 "git commit" 만 보여
+// 같은 명령의 push·gh pr merge(운영 배포)가 함께 승인됐다). 머지·배포 경고를 맨 앞에, 길면 뒤를 줄인다
+const ASK_REASON_CAP = 1400
+function composeAskReasons(asks) {
+  const ordered = [...asks.filter(r => /배포|머지/.test(r)), ...asks.filter(r => !/배포|머지/.test(r))]
+  const head = `확인이 필요한 동작 ${ordered.length}개 — `
+  let out = head
+  for (let i = 0; i < ordered.length; i++) {
+    const piece = `${i + 1}) ${ordered[i]} `
+    if ((out + piece).length > ASK_REASON_CAP) { out += `… 외 ${ordered.length - i}개`; break }
+    out += piece
+  }
+  return out.trim()
 }
 
 // 안전 패턴(allow) 함수들의 공통 게이트 — commit/push/publish/원격실행/동적명령이 섞이면 자동 허용 금지

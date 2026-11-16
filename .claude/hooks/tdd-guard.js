@@ -41,6 +41,51 @@ function isRootInfra(targetPath, baseCwd) {
   return /^\.claude\/(?:hooks|commands)\//.test(rel);
 }
 
+function displayPath(filePath, baseCwd) {
+  try {
+    const abs = path.isAbsolute(filePath) ? filePath : path.resolve(baseCwd || process.cwd(), filePath);
+    const rel = path.relative(resolveProjectRoot(baseCwd), realCanonical(abs));
+    return rel && !rel.startsWith('..') && !path.isAbsolute(rel) ? rel : filePath;
+  } catch { return filePath; }
+}
+
+// Next.js App Router 의 표시·메타데이터 파일 (app/ 아래에서만) — 화면 껍데기라 단위 테스트 대상이 아니다
+const NEXT_PRESENTATIONAL = new Set(['layout', 'loading', 'error', 'not-found', 'template', 'default', 'global-error',
+  'manifest', 'robots', 'sitemap', 'icon', 'apple-icon', 'opengraph-image', 'twitter-image']);
+
+// 내용이 타입 선언뿐인가 (type·interface·import type·export type·declare) — 실행 코드가 한 줄이라도 있으면 아님.
+// 주석을 지우고, 중괄호 밖(깊이 0)의 문장 시작이 허용 키워드이거나 앞 문장의 이어짐일 때만 타입 전용으로 본다.
+// enum·const·function·class·일반 import·호출 등은 문장 시작이 허용 목록에 없어 걸린다. 못 읽으면 false(테스트 요구)
+const TYPE_START = /^(?:export\s+)?(?:declare\s+|type\s|interface\s)|^import\s+type\s|^export\s+type\s*\{|^[|&>)\]}]/;
+const CONTINUES = /(?:[=|&,<([{?:]|=>)$/;
+function isTypeOnlyFile(filePath, baseCwd) {
+  if (!/\.(?:ts|tsx)$/.test(filePath)) return false;
+  let text;
+  try {
+    const abs = path.isAbsolute(filePath) ? filePath : path.resolve(baseCwd || process.cwd(), filePath);
+    const st = fs.statSync(abs);
+    if (!st.isFile() || st.size > 512 * 1024) return false;
+    text = fs.readFileSync(abs, 'utf8');
+  } catch { return false; }
+  // 문자열을 먼저 비운다 — `type T = '{'` 처럼 문자열 속 중괄호로 깊이를 속여 뒤의 실행 코드를 숨기지 못하게
+  const code = text
+    .replace(/'(?:\\.|[^'\\\n])*'|"(?:\\.|[^"\\\n])*"|`(?:\\.|[^`\\])*`/g, "''")
+    .replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:])\/\/.*$/gm, '$1');
+  let depth = 0;
+  let prev = '';
+  for (const rawLine of code.split('\n')) {
+    for (const seg of rawLine.split(';')) {
+      const s = seg.trim();
+      if (!s) { if (seg !== rawLine) prev = ''; continue; }
+      if (depth === 0 && !TYPE_START.test(s) && !CONTINUES.test(prev)) return false;
+      for (const ch of s) { if (ch === '{') depth++; else if (ch === '}') depth = Math.max(0, depth - 1); }
+      prev = s;
+    }
+    if (rawLine.includes(';') && depth === 0) prev = '';
+  }
+  return true;
+}
+
 try {
   const input = JSON.parse(fs.readFileSync(0, 'utf8')); // fd 0 — '/dev/stdin' 은 윈도우에 없다
   const filePath = input.tool_input?.file_path || input.tool_input?.path;
@@ -69,7 +114,13 @@ try {
     // Service Worker (브라우저 환경 의존, 단위 테스트 불가)
     basename === 'sw' ||
     // DB 커넥션 셋업 (통합 테스트로만 검증 가능)
-    /(?:^|\/)lib\/db\//.test(slashPath)
+    /(?:^|\/)lib\/db\//.test(slashPath) ||
+    // 2026-11-16 사용자 결정 — 로직이 없는 파일: 선언(.d.ts)·테스트 설정(*.setup.*·setupTests)·Next.js app/ 표시·메타데이터 파일.
+    // page·route·proxy·middleware·schema 는 권한·요청 처리가 들어가므로 계속 테스트를 요구한다
+    basename.endsWith('.d') ||
+    /\.setup$/.test(basename) || basename === 'setupTests' ||
+    (/(?:^|\/)app\//.test(slashPath) && NEXT_PRESENTATIONAL.has(basename)) ||
+    isTypeOnlyFile(filePath, input.cwd)
   ) {
     process.exit(0);
   }
@@ -99,7 +150,8 @@ try {
   if (!hasTest) {
     // exit 2 차단 시 모델에 전달되는 메시지는 stderr (stdout은 유실됨)
     process.stderr.write(
-      `[tdd-guard] 테스트 파일 없음: ${path.relative(process.cwd(), filePath)}\n` +
+      // 경로는 프로젝트 루트 기준 — 훅 프로세스 cwd(셸이 node_modules 안으로 cd 한 뒤 등) 기준이면 ../../ 로 깨진다 (2026-11-16)
+      `[tdd-guard] 테스트 파일 없음: ${displayPath(filePath, input.cwd)}\n` +
       `즉시 생성하세요: ${basename}.test${ext}` +
       (testExts.length > 1 ? ` (또는 ${basename}.test${testExts[1]})` : '') +
       `\n`

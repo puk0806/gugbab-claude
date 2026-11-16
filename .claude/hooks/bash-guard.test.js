@@ -1420,6 +1420,35 @@ section('Bash 쓰기 대상 위치 — 보호 파일·승인 상태·프로젝�
   t('경계: 값 65개 넘게 펼치면 판정 안 함', `for a in ${'x '.repeat(9)}; do for b in ${'y '.repeat(9)}; do git show $a$b; done; done`, 'null')
 }
 
+// ─────────────────────────────────────────────────────────────
+// 2026-11-13 사고 — 묶음 명령의 확인 창 사유가 첫 번째("git commit")만 보여 push·머지(운영 배포)가 함께 승인됐다
+// ─────────────────────────────────────────────────────────────
+section('묶음 명령 확인 사유 — 확인이 필요한 동작을 전부 보여 준다')
+{
+  const P = { cwd: PROJECT_ROOT }
+  const out = (command) => runHook('Bash', { command }, 'PreToolUse', P)?.hookSpecificOutput || {}
+  const PS = 'pu' + 'sh'
+  const chain = `git commit -m x && git ${PS} -u origin feature/a && gh pr create --fill && gh pr merge 1 --squash`
+  const o = out(chain)
+  assert('묶음: 결정은 ask', o.permissionDecision, 'ask')
+  assert('묶음: 사유에 git commit', /git commit/.test(o.permissionDecisionReason || ''), true)
+  assert(`묶음: 사유에 git ${PS}`, new RegExp(`git ${PS}`).test(o.permissionDecisionReason || ''), true)
+  assert('묶음: 사유에 gh pr create', /gh pr create/.test(o.permissionDecisionReason || ''), true)
+  assert('묶음: 사유에 gh pr merge 와 운영 배포 경고', /gh pr merge[^]*배포/.test(o.permissionDecisionReason || ''), true)
+  assert('묶음: 사유 맨 앞에 동작 수', /^bash-guard: 확인이 필요한 동작 4개/.test(o.permissionDecisionReason || ''), true)
+  assert('단일 gh pr merge: 운영 배포 경고', /배포/.test(out('gh pr merge 3 --squash --delete-branch').permissionDecisionReason || ''), true)
+  assert('gh api …/pulls/N/merge PUT: 머지 경고', /머지/.test(out('gh api -X PUT repos/a/b/pulls/3/merge').permissionDecisionReason || ''), true)
+  assert('gh api …/merges POST: 머지 경고', /머지/.test(out('gh api repos/a/b/merges -f base=main -f head=x').permissionDecisionReason || ''), true)
+  assert('gh api GET …/pulls/3/merge (읽기): 확인 없음', out('gh api repos/a/b/pulls/3/merge').permissionDecision !== 'ask', true)
+  assert('같은 동작 반복은 한 번만', (out('git commit -m a && git commit -m b').permissionDecisionReason || '').split('git commit').length - 1, 1)
+  assert('deny 섞이면 deny 우선', out('git commit -m a && gh repo delete a/b --yes').permissionDecision, 'deny')
+  // 이상·경계: 초장문 묶음도 사유 길이 상한 안에서 끝난다
+  const many = Array.from({ length: 40 }, (_, i) => `gh issue close ${i}`).join(' && ') + ' && gh pr merge 1'
+  const mr = out(many).permissionDecisionReason || ''
+  assert('초장문 묶음: 사유 1,500자 이하', mr.length <= 1500, true)
+  assert('초장문 묶음: 잘려도 gh pr merge 경고는 남는다', /gh pr merge/.test(mr), true)
+}
+
 console.log(`\n${'─'.repeat(40)}`)
 console.log(`결과: ${passed}/${passed + failed} 통과 ${failed > 0 ? `(${failed}개 실패)` : ''}`)
 if (failed === 0) console.log('✅ 모든 테스트 통과')

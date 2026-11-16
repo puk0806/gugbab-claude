@@ -72,6 +72,20 @@ t('악성: gugbab-claude preset nextjs --all → 차단', 'gugbab-claude preset 
 t('악성: 변수 이름 preset → 차단', 'gugbab-claude preset "$P"', true)
 t('악성: 목록 뒤 체인으로 켜기 → 차단', 'gugbab-claude preset; gugbab-claude preset rust', true)
 t('경계: lfmall-claude preset (목록) → 통과', 'lfmall-claude preset', false)
+// 2026-11-13 git config 읽기 오탐 — 키 하나만 주면 값을 읽기만 한다(git-config "git config [<scope>] <name>")
+for (const c of ['git config user.email', 'git config --local user.name', 'git config --global user.email', 'git config --show-origin user.name',
+  'git config --file .gitmodules submodule.a.url', 'git config -f x.cfg a.b', 'git config --type=bool core.bare', 'git config --default x a.b',
+  'git config get user.name', 'git config list', 'git config list --show-origin', 'git config --get-urlmatch http.proxy https://x', 'git config -z user.name',
+  'echo "--- local"; git config --local user.name; git config --local user.email; git remote -v'])
+  t(`정상: \`${c}\` (읽기) → 통과`, c, false)
+for (const [d, c] of [['값 설정', 'git config user.email a@b.c'], ['--local 값 설정', 'git config --local user.name x'],
+  ['새 문법 set', 'git config set user.name x'], ['새 문법 unset', 'git config unset user.name'], ['--unset', 'git config --unset user.name'],
+  ['--unset-all', 'git config --unset-all a.b'], ['--add', 'git config --add a.b c'], ['--replace-all', 'git config --replace-all a.b c'],
+  ['--remove-section', 'git config --remove-section a'], ['--rename-section', 'git config --rename-section a b'], ['새 문법 remove-section', 'git config remove-section a'],
+  ['새 문법 rename-section', 'git config rename-section a b'], ['--edit', 'git config --edit'], ['-e', 'git config -e'], ['새 문법 edit', 'git config edit'],
+  ['훅 경로 바꾸기', 'git config core.hooksPath /tmp/h'], ['--file 뒤 값 설정', 'git config --file x.cfg a.b c'], ['읽기 뒤 체인으로 설정', 'git config user.name; git config user.name x'],
+  ['-- 뒤 옵션처럼 보이는 값 설정', 'git config a.b -- --get'], ['키 없는 git config', 'git config'], ['변수 키·값', 'git config "$K" "$V"']])
+  t(`악성: ${d} → 차단`, c, true)
 const okCode = [codeWrites('print(1)'), codeWrites("open('a','w')"), codeWrites('process.stdout.write("x")'), codeWrites('fs.rmSync("a")')]
 const pass = JSON.stringify(okCode) === JSON.stringify([false, true, false, true])
 console.log(`  ${pass ? '✅' : '❌'} codeWrites: 출력만은 통과, 쓰기·삭제는 감지 → ${pass ? 'PASS' : 'FAIL ' + JSON.stringify(okCode)}`)

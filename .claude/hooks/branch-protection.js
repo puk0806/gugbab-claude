@@ -117,6 +117,59 @@ function refDestination(value, branch) {
   return String(dst || '').replace(/^refs\/heads\//i, '')
 }
 
+// ── 예외: 빈 원격에 main 첫 push (2026-11-16 사용자 결정 — "빈 레포에 최초의 메인 브랜치 생성에만 허용") ──
+// 원격에 ref 가 하나도 없을 때(브랜치·태그 전부 없음)만 main/master 를 만드는 push 를 통과시킨다. 하나라도 어긋나면 예전처럼 막는다.
+//   · 옵션은 -u/--set-upstream·-q·-v·--progress 만 (force·--all·--tags·삭제·--mirror·push-option 등은 예외 아님)
+//   · 원격은 이름 하나(정적), 그 원격의 url 은 정확히 하나, pushurl·uploadpack·receivepack 설정 없음,
+//     어느 범위에도 url.*.insteadOf·pushInsteadOf 없음 — 확인하는 곳과 push 하는 곳이 다르게 만들 수 없게
+//   · url 은 https·ssh(ssh:// 또는 user@host:path)·절대 경로·file:// 만 (ext:: 같은 명령 실행형 거부)
+//   · git ls-remote 를 셸 없이 8초 제한, 비밀번호 창·ssh 질문 끔으로 실행 — 실패·시간 초과·출력 있음 = 빈 레포 아님
+//   · 확인과 push 사이에 누가 main 을 만들면 force 가 아니므로 git 이 push 를 거절한다(덮어쓰기 없음)
+// 사용자가 "푸시"를 직접 요청해야 하는 규칙(task-confirm-guard)과 확인 창(bash-guard)은 그대로 적용된다
+const FIRST_PUSH_OPTS = new Set(['-u', '--set-upstream', '-q', '--quiet', '-v', '--verbose', '--progress', '--no-progress', '-uq', '-qu'])
+function gitOut(dir, args, timeout = 3000) {
+  try {
+    return { ok: true, out: execFileSync('git', args, { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout }) }
+  } catch (e) { return { ok: false, status: e.status, out: (e.stdout || '').toString() } }
+}
+function firstMainPushAllowed(dir, branch, args, p) {
+  if (!dir || p.force || p.pushAll || p.deleteMode) return false
+  if (args.some(a => a.dyn || a.subst)) return false
+  const vals = args.map(a => cleanValue(a.value))
+  const opts = vals.filter(v => v.startsWith('-'))
+  if (opts.some(v => !FIRST_PUSH_OPTS.has(v))) return false
+  const remote = p.remote ? cleanValue(p.remote.value) : ''
+  if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$/.test(remote)) return false
+  // 대상: refspec 없음(현재 브랜치가 main/master) 또는 main/master 를 만드는 refspec 하나
+  if (p.refspecs.length > 1) return false
+  if (p.refspecs.length === 0) { if (!isProtected(branch)) return false }
+  else {
+    const r = cleanValue(p.refspecs[0].value)
+    if (r.startsWith('+') || r.startsWith(':') || !/^[A-Za-z0-9._\/@-]+(?::[A-Za-z0-9._\/-]+)?$/.test(r)) return false
+    if (!isProtected(refDestination(r, branch))) return false
+  }
+  // 원격 설정 — url 정확히 하나, 확인 대상을 바꾸는 설정 없음
+  const urls = gitOut(dir, ['config', '--get-all', `remote.${remote}.url`])
+  const urlList = urls.ok ? urls.out.split('\n').map(s => s.trim()).filter(Boolean) : []
+  if (urlList.length !== 1) return false
+  for (const k of ['pushurl', 'uploadpack', 'receivepack', 'vcs', 'proxy']) {
+    if (gitOut(dir, ['config', '--get-all', `remote.${remote}.${k}`]).out.trim()) return false
+  }
+  if (gitOut(dir, ['config', '--get-regexp', '^url\\..*\\.(push)?insteadof$']).out.trim()) return false
+  const url = urlList[0]
+  const okUrl = /^https:\/\/[^\s]+$/i.test(url) || /^ssh:\/\/[^\s]+$/i.test(url) || /^[A-Za-z0-9._-]+@[A-Za-z0-9.-]+:[^\s]+$/.test(url)
+    || /^file:\/\/\/[^\s]+$/i.test(url) || (path.isAbsolute(url) && !url.includes('::')) || /^[A-Za-z]:[\\/]/.test(url)
+  if (!okUrl || /::/.test(url)) return false
+  // 원격이 정말 비었는가 — 셸 없이, 묻는 창 없이, 8초 제한
+  try {
+    const out = execFileSync('git', ['-c', 'protocol.ext.allow=never', '-c', 'core.askPass=', 'ls-remote', '--', url], {
+      cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 8000,
+      env: { ...process.env, GIT_TERMINAL_PROMPT: '0', GIT_ASKPASS: '', SSH_ASKPASS: '', GIT_SSH_COMMAND: 'ssh -o BatchMode=yes -o ConnectTimeout=5' },
+    })
+    return out.trim() === ''
+  } catch { return false }
+}
+
 // parsePushArgs + --repo 보정 — --repo(=)<원격> 이 있으면 남은 위치 인자는 모두 refspec 이다
 function pushArgs(args) {
   const p = analyzer.parsePushArgs(args)
@@ -151,22 +204,65 @@ function opaqueFeed(inv) {
     if (stdinFlag || positional == null || vals[positional] === '-') return { kind: 'shell', what: `${nm} 표준입력` }
     return null // 스크립트 파일 실행 — 내용 미확인(한계)
   }
-  if (INTERPRETERS.test(nm)) return { kind: 'interp', what: `${nm} 인라인 코드·표준입력` }
+  if (INTERPRETERS.test(nm)) return { kind: 'interp', what: `${nm} 인라인 코드·표준입력`, script: interpScriptIndex(vals) }
   return null
 }
 
-function checkOpaque(cmd, acc) {
+// 인터프리터가 스크립트 파일을 돌리면 그 파일의 인자 위치, 인라인 코드·표준입력·모듈(-m)이면 -1 (2026-11-13)
+// 값을 받는 옵션(-r·--require·-W 등)은 다음 인자를 건너뛴다. 모르는 형태는 -1 = 예전처럼 명령 전체 글자로 판정
+function interpScriptIndex(vals) {
+  for (let i = 0; i < vals.length; i++) {
+    const v = vals[i]
+    if (v == null) return -1
+    if (v === '-' || v === '--') return -1
+    if (/^(?:-[ecpm]|-pe|-E|--eval|--print|--command|-[A-Za-z]*[cem])$/.test(v) || /^--(?:eval|print)=/.test(v)) return -1
+    if (/^(?:-r|--require|--import|--loader|-W|-X|-Q|-I|-O|--env-file|--conditions|-C)$/.test(v)) { i++; continue }
+    if (v.startsWith('-')) continue
+    return i
+  }
+  return -1
+}
+
+// 명령을 띄울 수 있는 코드 — 넓게 잡는다(놓치면 인자로 넘긴 git push 가 실행된다). 동적 require·import·eval 도 포함
+const SPAWN_RE = /child_process|\bexecSync\b|\bexecFile|\bspawn|\bsubprocess\b|\bos\.(?:system|popen|exec|spawn)|\bsystem\s*\(|\bDeno\.(?:run|Command)|\bBun\.(?:spawn|\$)|\bexec\s*\(|\beval\s*\(|\bFunction\s*\(|\bshell_exec\b|\bpassthru\b|\bproc_open\b|\bpopen\b|\bIO\.popen\b|\bOpen3\b|%x\{|\bqx\s*[{(\/]|do shell script|\brequire\s*\(\s*[^'"\s)]|\bimport\s*\(\s*[^'"\s)]|\b__import__\b|\bimportlib\b|\bgetattr\s*\(|\bctypes\b|\bpty\b|\bsh\b\s*\(|\bzx\b|\bexeca\b|\bshelljs\b/
+const gitPushIn = (s) => /\bgit\b[^\n]{0,80}?\bpush\b/i.test(s.replace(/\.push\s*\(/g, ''))
+
+function checkOpaque(cmd, acc, startDir) {
   const hasPush = /push/i.test(cmd)
-  if (!hasPush) return
   // 인터프리터 코드는 git 과 push 가 같은 줄 가까이 있을 때만 (2026-11-09 오탐: heredoc 의 `pos.push(x)` 와 다른 줄 `git:` 로 막힘).
   // JS 배열 메서드 `.push(` 는 뺀다. 여러 줄·인코딩으로 숨긴 코드는 원래 이 휴리스틱의 한계
-  const hasGitPush = /\bgit\b[^\n]{0,80}?\bpush\b/i.test(cmd.replace(/\.push\s*\(/g, ''))
-  for (const u of acc.unknown) blockOpaque(`해석 불가: ${u}`)
+  const hasGitPush = hasPush && gitPushIn(cmd)
+  if (hasPush) for (const u of acc.unknown) blockOpaque(`해석 불가: ${u}`)
+  let vcwd = startDir
   for (const inv of acc.invocations) {
+    if (inv.name === 'cd' || inv.name === 'pushd' || inv.name === 'popd') {
+      if (inv.subshell || inv.name === 'popd') { vcwd = null; continue }
+      const t = inv.args.find(a => !/^-[LPe@]$/.test(a.value))
+      vcwd = t ? resolveDirWord(t, vcwd) : HOME
+      continue
+    }
     const o = opaqueFeed(inv)
     if (!o) continue
+    if (!hasPush) continue
+    if (o.kind === 'interp' && o.script >= 0 && hasGitPush) {
+      // 스크립트 파일 실행 — 명령 글자의 git push 는 그 스크립트에 넘기는 인자(검색어·메시지 등)일 수 있다 (2026-11-13 오탐).
+      // 스크립트를 읽어 명령을 띄우는 코드가 없으면 인자는 값일 뿐이라 통과. 못 읽거나 띄우는 코드가 있으면 예전처럼 막는다.
+      // (스크립트 파일 자체의 내용은 원래 검사하지 않는다 — 셸 스크립트 파일과 같은 한계, 인자에 push 가 없으면 이전과 동일하게 통과)
+      const word = inv.args[o.script]
+      const rel = cleanValue(word.value)
+      const abs = word.dyn || word.subst || !rel ? null : path.isAbsolute(rel) ? rel : vcwd ? path.resolve(vcwd, rel) : null
+      let text = null
+      try { const st = abs && fs.statSync(abs); if (st && st.isFile() && st.size <= 2 * 1024 * 1024) text = fs.readFileSync(abs, 'utf8') } catch { text = null }
+      if (text == null) blockOpaque(`${inv.name} 스크립트(${rel || '동적 경로'}) 내용 확인 불가`)
+      // 백틱: JS·TS 에선 템플릿 문자열이지만 perl·ruby·php·셸에선 명령 실행 — JS 계열 확장자가 아니면 백틱도 실행으로 본다
+      const backtickRuns = !/\.(?:[cm]?js|[cm]?ts|jsx|tsx)$/i.test(abs) && text.includes('`')
+      if (SPAWN_RE.test(text) || backtickRuns || gitPushIn(text)) blockOpaque(`${inv.name} 스크립트(${path.basename(abs)})가 명령을 띄울 수 있음`)
+      // 인자 말고 명령의 다른 곳(같은 줄의 다른 인터프리터 인라인 코드 등)은 그 호출에서 따로 판정된다
+      continue
+    }
     if (o.kind === 'shell' || hasGitPush) blockOpaque(o.what)
   }
+  if (!hasPush) return
   // xargs 는 분석기가 벗겨 내므로 원문으로 본다 — xargs 가 git·셸에 인자를 이어 붙이면 refspec 을 알 수 없다
   if (/\bxargs\b[^\n;&|]*\b(?:git(?:\.exe)?|sh|bash|zsh|dash|eval)\b/i.test(cmd)) blockOpaque('xargs 로 넘긴 인자')
 }
@@ -196,10 +292,12 @@ function createsBranch(g) {
 
 function checkWithAnalyzer(cmd, startDir) {
   const acc = analyzer.analyzeShell(cmd)
-  checkOpaque(cmd, acc)
+  checkOpaque(cmd, acc, startDir)
   if (!acc.invocations.some(i => i.name === 'git')) return
 
   const gitEnvRedirect = /\bGIT_(?:DIR|WORK_TREE)=/.test(cmd)
+  // 빈 원격 첫 push 예외는 명령 안에 push 가 하나일 때만 — 첫 push 뒤 같은 명령에서 main 에 계속 push 하지 못하게
+  const pushCount = acc.invocations.filter(i => i.name === 'git' && i.git && i.git.sub === 'push').length
   let vcwd = startDir
   for (const inv of acc.invocations) {
     const nm = inv.name
@@ -227,6 +325,8 @@ function checkWithAnalyzer(cmd, startDir) {
         && p.refspecs.every(r => { if (r.dyn) return false; const d = refDestination(r.value, branch); return !!d && !isProtected(d) })
       if (pureDelete) continue
       if (!branch) blockUnknownBranch(unknownWhy)
+      // 예외: 원격이 완전히 빈 레포에 main 을 처음 만드는 push 하나 (2026-11-16 사용자 결정) — 조건은 firstMainPushAllowed
+      if (pushCount === 1 && firstMainPushAllowed(dir, branch, g.args, p)) continue
       if (isProtected(branch)) blockPush(`현재 브랜치 ${branch}`, true)
       if (p.pushAll) blockPush('--all/--mirror 는 main 을 포함합니다', false)
       for (const r of p.refspecs) {
