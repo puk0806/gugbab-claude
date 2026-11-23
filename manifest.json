@@ -3,6 +3,18 @@
   "version": 1,
   "root": ".claude",
   "items": {
+    "agent:clean-reviewer": {
+      "type": "agent",
+      "state": "on",
+      "desc": "대화 맥락 없이 코드 변경만 보고 배포를 막을 결함을 찾는 적대적 리뷰 에이전트 · 모델 sonnet",
+      "about": [
+        "하는 일: clean-review-guard 훅이 준 리뷰 요청문(사용자 요청 원문과 바뀐 파일 목록)만 받아 git diff 로 변경을 직접 읽습니다. 이해 확인(요청과 맞는지) → 적대적 검토(권한·경로 조작·데이터 손실·레이스·빈 값·호환·테스트 빈틈) → 준비 확인 3단계로 보고 approve / needs-attention 판정과 파일:줄·실패 시나리오가 붙은 지적을 냅니다. 파일은 고치지 않습니다(Write·Edit 금지, Bash 는 읽기 명령만).",
+        "이럴 때: Codex 리뷰를 쓰지 않는 프로젝트에서 코드를 고친 턴이 끝날 때 훅이 자동으로 부릅니다.",
+        "예시 요청: 방금 고친 코드 깨끗한 리뷰어로 검토해줘",
+        "주의: 훅이 준 요청문 그대로 부른 것만 리뷰로 인정됩니다. 코드를 바꾼 턴마다 한 번씩 돌아 토큰이 듭니다."
+      ],
+      "path": ".claude/agents/validation/clean-reviewer.md"
+    },
     "agent:dream-interpretation-prompt-tester": {
       "type": "agent",
       "state": "off",
@@ -101,7 +113,7 @@
     },
     "agent:skill-tester": {
       "type": "agent",
-      "state": "on",
+      "state": "off",
       "projHint": "off",
       "desc": "새 스킬을 실전 질문으로 시험하는 에이전트 · 모델 sonnet",
       "about": [
@@ -126,7 +138,7 @@
     },
     "command:agent-status": {
       "type": "command",
-      "state": "on",
+      "state": "off",
       "projHint": "off",
       "desc": "하네스 작업 현황 요약",
       "about": [
@@ -136,7 +148,7 @@
     },
     "command:codex-review": {
       "type": "command",
-      "state": "on",
+      "state": "off",
       "desc": "Codex 리뷰를 원할 때 실행",
       "about": [
         "하는 일: codex-review 룰의 절차대로 커밋 안 한 변경 전체를 Codex 에게 최대 3라운드 리뷰받는다."
@@ -216,7 +228,7 @@
     },
     "hook:agent-md-guard": {
       "type": "hook",
-      "state": "on",
+      "state": "off",
       "projHint": "off",
       "desc": "에이전트 파일 형식 검사",
       "about": [
@@ -369,9 +381,28 @@
         }
       ]
     },
-    "hook:codex-review-guard": {
+    "hook:clean-review-guard": {
       "type": "hook",
       "state": "on",
+      "desc": "코드를 바꾼 턴이 끝날 때, Codex 리뷰가 돌지 않으면 깨끗한 Claude 리뷰어로 적대적 리뷰 요구",
+      "about": [
+        "하는 일: 이번 턴에 코드 파일을 바꿨으면 답변이 끝날 때 리뷰 요청문(사용자 요청 원문 + 바뀐 파일 목록)을 주고 clean-reviewer 를 부르게 한다. 대화 기록에서 마지막 코드 변경 뒤에 그 요청문 그대로 끝까지 돈 호출이 있어야 통과 — 표시 파일·다른 에이전트·문구 바꾼 호출·완료 기록 없는 호출은 인정 안 함(백그라운드는 Claude Code 완료 알림으로 인정, 도는 동안은 안 막음). 고치면 다음 라운드, 최대 3라운드. Codex 가 실제로 리뷰할 상황이면 건너뛴다.",
+        "이렇게 보여요: 코드를 고친 답변이 끝나는 순간 \"✗ 깨끗한 Claude 리뷰 필요\" 가 뜨고, Claude 가 리뷰어를 불러 지적마다 ACCEPT/REJECT 한 뒤 \"깨끗한 리뷰 요약\" 을 보고한다.",
+        "끄면: Codex 리뷰를 켜지 않은 프로젝트는 적대적 리뷰 없이 끝난다.",
+        "주의: 코드를 바꾼 턴마다 리뷰 서브에이전트(sonnet)가 한 번씩 돌아 토큰·시간이 든다."
+      ],
+      "path": ".claude/hooks/clean-review-guard.js",
+      "hooks": [
+        {
+          "event": "Stop",
+          "matcher": "",
+          "args": []
+        }
+      ]
+    },
+    "hook:codex-review-guard": {
+      "type": "hook",
+      "state": "off",
       "desc": "코드를 바꾼 턴이 끝날 때 Codex 적대적 리뷰 요구",
       "about": [
         "하는 일: 코드를 바꾼 답변이 끝나면 OpenAI Codex 에게 \"배포를 막을 결함을 찾아라\" 리뷰를 최대 3라운드 받게 하고, 끝날 때까지 종료를 막는다. codex CLI 가 없거나 로그인이 안 됐으면 조용히 건너뛴다.",
@@ -418,7 +449,7 @@
     },
     "hook:deliverable-guard": {
       "type": "hook",
-      "state": "on",
+      "state": "off",
       "projHint": "off",
       "desc": "산출물이 빠졌으면 커밋·종료 차단",
       "about": [
@@ -695,7 +726,7 @@
     },
     "hook:skill-md-guard": {
       "type": "hook",
-      "state": "on",
+      "state": "off",
       "projHint": "off",
       "desc": "스킬 파일(SKILL.md) 형식 검사",
       "about": [
@@ -718,7 +749,7 @@
     },
     "hook:staleness-check": {
       "type": "hook",
-      "state": "on",
+      "state": "off",
       "projHint": "off",
       "desc": "스킬 검증일이 오래되면 재검증 알림",
       "about": [
@@ -921,7 +952,7 @@
     },
     "rule:agent-design.md": {
       "type": "rule",
-      "state": "on",
+      "state": "off",
       "projHint": "off",
       "desc": "에이전트 만드는 규칙",
       "about": [
@@ -929,9 +960,18 @@
       ],
       "path": ".claude/rules/agent-design.md"
     },
-    "rule:codex-review.md": {
+    "rule:clean-review.md": {
       "type": "rule",
       "state": "on",
+      "desc": "깨끗한 Claude 리뷰 진행 방법",
+      "about": [
+        "하는 일: clean-review-guard 가 막으면 clean-reviewer 를 요청문 그대로 부르고, 지적마다 ACCEPT/REJECT/PARTIAL 판정, 최대 3라운드, \"깨끗한 리뷰 요약\" 보고 형식을 정한다. 인정되지 않는 호출(다른 에이전트·문구 변경·완료 기록 없음)과 알려진 한계도 적어 둔다."
+      ],
+      "path": ".claude/rules/clean-review.md"
+    },
+    "rule:codex-review.md": {
+      "type": "rule",
+      "state": "off",
       "desc": "Codex 리뷰 진행 방법",
       "about": [
         "하는 일: Codex 리뷰 실행 조건 3가지(CLI 설치·로그인·플러그인), 라운드 진행, 지적별 ACCEPT/REJECT 판정, 완료·사용 불가 표시 파일 기록 방법을 정한다."
@@ -940,7 +980,7 @@
     },
     "rule:commands.md": {
       "type": "rule",
-      "state": "on",
+      "state": "off",
       "projHint": "off",
       "desc": "슬래시 커맨드 작성 규칙과 목록",
       "about": [
@@ -950,7 +990,7 @@
     },
     "rule:creation-workflow.md": {
       "type": "rule",
-      "state": "on",
+      "state": "off",
       "projHint": "off",
       "desc": "스킬·에이전트 생성 5단계",
       "about": [
@@ -998,7 +1038,7 @@
     },
     "rule:readme-update.md": {
       "type": "rule",
-      "state": "on",
+      "state": "off",
       "projHint": "off",
       "desc": "자산이 바뀌면 README 도 같이",
       "about": [
@@ -2260,7 +2300,8 @@
         {
           "title": "Codex 리뷰",
           "items": [
-            "hook:codex-review-guard"
+            "hook:codex-review-guard",
+            "hook:clean-review-guard"
           ]
         },
         {
@@ -2299,6 +2340,7 @@
             "rule:java.md",
             "rule:rust.md",
             "rule:codex-review.md",
+            "rule:clean-review.md",
             "rule:memory-sync.md",
             "rule:agent-design.md",
             "rule:creation-workflow.md",
@@ -2338,6 +2380,7 @@
         {
           "title": "검증·감사",
           "items": [
+            "agent:clean-reviewer",
             "agent:dream-interpretation-prompt-tester",
             "agent:fact-checker",
             "agent:fortune-interpretation-prompt-tester",
@@ -2794,6 +2837,11 @@
         "args": []
       },
       {
+        "id": "hook:clean-review-guard",
+        "matcher": "",
+        "args": []
+      },
+      {
         "id": "hook:typescript-quality",
         "matcher": "",
         "args": [
@@ -2913,6 +2961,14 @@
           "command:codex-review"
         ]
       },
+      "clean-review": {
+        "title": "깨끗한 리뷰 (Codex 대신 Claude 리뷰어)",
+        "items": [
+          "hook:clean-review-guard",
+          "rule:clean-review.md",
+          "agent:clean-reviewer"
+        ]
+      },
       "memory-share": {
         "title": "메모리 공유",
         "items": [
@@ -2964,6 +3020,7 @@
       "core": {
         "title": "공통 에이전트",
         "items": [
+          "agent:clean-reviewer",
           "agent:fact-checker"
         ]
       },

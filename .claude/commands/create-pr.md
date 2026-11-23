@@ -9,6 +9,7 @@
 0-1. **버전 올리기 (레포 최상위에 `VERSION` 과 `.github/workflows/release-on-main.yml` 이 있는 레포만)** — 머지되면 `VERSION` 값으로 태그·Release 가 자동으로 만들어지므로, PR 마다 최신 태그보다 크게 올린다:
    - `node scripts/release-version.js check --remote` 가 실패하면 `node scripts/release-version.js bump --remote`(기본 패치 +1, 사용자가 큰 변경이라고 하면 `bump minor`·`bump major`) → `git add VERSION && git commit -m "[config] Modify: 버전 X.Y.Z"`
    - 이미 이번 브랜치에서 올렸으면 그대로 둔다. 빠뜨리면 `release-version-guard` 훅이 `gh pr create` 를 막고, PR 의 `version-check` 워크플로도 실패한다
+   - **릴리스 노트** — `bump` 가 끝에 `docs/release-notes/<버전> <핵심 수정 요약>.md` 초안을 만든다(요약을 정하려면 `node scripts/release-version.js notes --title "핵심 수정 요약"`, 이미 있으면 덮어쓰지 않음). "큰 수정 내용"의 커밋 제목 모음을 읽는 사람이 알 수 있는 문장으로 다듬고 초안 안내 주석을 지운 뒤 `git add docs/release-notes && git commit -m "[docs] Add: X.Y.Z 릴리스 노트"`. 노트가 커밋돼 있지 않아도 훅·`version-check` 가 막는다. 머지되면 이 노트가 GitHub Release 본문이 된다
 1. `git log main...HEAD --oneline` 으로 커밋 목록 확인
 2. `git diff main...HEAD --stat` 으로 변경 파일 범위 파악
 3. PR title 작성 (70자 이내, 변경 핵심을 한 줄로)

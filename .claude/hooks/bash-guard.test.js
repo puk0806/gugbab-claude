@@ -120,11 +120,11 @@ const ALLOWED = [PROJECT_ROOT]
 
 section('isCdGitSafe — 허용 케이스 (true)')
 assert('cd + git status', isCdGitSafe(`cd ${PROJECT_ROOT} && git status`, ALLOWED), true)
-assert('cd + git stash', isCdGitSafe(`cd ${PROJECT_ROOT} && git stash`, ALLOWED), true)
+assert('cd + git stash → 거부로 바뀜 (2026-11-18 git stash 거부)', isCdGitSafe(`cd ${PROJECT_ROOT} && git stash`, ALLOWED), false)
 assert('cd + git diff + pnpm', isCdGitSafe(`cd ${PROJECT_ROOT} && git diff && pnpm typecheck`, ALLOWED), true)
 assert('cd + git log + pipe', isCdGitSafe(`cd ${PROJECT_ROOT} && git log --oneline -5 | head`, ALLOWED), true)
 assert('cd + git fetch', isCdGitSafe(`cd ${PROJECT_ROOT} && git fetch origin`, ALLOWED), true)
-assert('cd + git stash + tail', isCdGitSafe(`cd ${PROJECT_ROOT} && git stash && pnpm typecheck 2>&1 | tail -20`, ALLOWED), true)
+assert('cd + git stash + tail → 거부로 바뀜 (2026-11-18)', isCdGitSafe(`cd ${PROJECT_ROOT} && git stash && pnpm typecheck 2>&1 | tail -20`, ALLOWED), false)
 
 section('isCdGitSafe — 거부 케이스 (false)')
 assert('워크스페이스 밖 경로', isCdGitSafe(`cd /tmp/random && git status`, ALLOWED), false)
@@ -207,8 +207,8 @@ assert('echo + grep + sort',
   isCompoundSafe(`echo a && grep b file && sort file`, ALLOWED_WITH_SIBLING), true)
 assert('mkdir + touch + ls',
   isCompoundSafe(`mkdir -p /tmp/foo && touch /tmp/foo/x && ls /tmp/foo`, ALLOWED_WITH_SIBLING), true)
-assert('pnpm test + git stash pop',
-  isCompoundSafe(`pnpm test 2>&1 | tail -3 && git stash pop`, ALLOWED_WITH_SIBLING), true)
+assert('pnpm test + git stash pop → 거부로 바뀜 (2026-11-18)',
+  isCompoundSafe(`pnpm test 2>&1 | tail -3 && git stash pop`, ALLOWED_WITH_SIBLING), false)
 assert('npx vitest with redirect to /dev/null',
   isCompoundSafe(`npx vitest run src/x.test.tsx 2>&1 | head -30 && rm /tmp/x`, ALLOWED_WITH_SIBLING), true)
 
@@ -424,16 +424,16 @@ pnpm test src/forms/Toast/swipe_trace.test.tsx 2>&1 | tail -20`
 
 test('Case 1 — heredoc + pnpm vitest',
   'Bash', { command: CASE1 }, 'allow', 'PreToolUse', { cwd: SIBLING })
-test('Case 2 — cd sibling + git stash pop',
-  'Bash', { command: CASE2 }, 'allow', 'PreToolUse', { cwd: SIBLING })
+test('Case 2 — cd sibling + git stash pop → 거부 (2026-11-18 git stash 거부)',
+  'Bash', { command: CASE2 }, 'deny', 'PreToolUse', { cwd: SIBLING })
 test('Case 3 — heredoc + pnpm vitest --reporter',
   'Bash', { command: CASE3 }, 'allow', 'PreToolUse', { cwd: SIBLING })
 test('Case 4 — cp /tmp → workspace + pnpm test + rm',
   'Bash', { command: CASE4 }, 'allow', 'PreToolUse', { cwd: SIBLING })
 test('Case 5 — heredoc ENDTEST + npx vitest',
   'Bash', { command: CASE5 }, 'allow', 'PreToolUse', { cwd: SIBLING })
-test('Case 6 — cd + git stash + npx vitest + git stash pop',
-  'Bash', { command: CASE6 }, 'allow', 'PreToolUse', { cwd: SIBLING })
+test('Case 6 — cd + git stash + npx vitest + git stash pop → 거부 (2026-11-18)',
+  'Bash', { command: CASE6 }, 'deny', 'PreToolUse', { cwd: SIBLING })
 // 2026-10-22: 프로젝트 안 시험 파일을 heredoc 으로 만들면 adversarial-test-guard 등 Write 훅을 비켜 감 → 차단(Write 도구로)
 test('Case 7 — heredoc to workspace path + pnpm test → 차단',
   'Bash', { command: CASE7 }, 'deny', 'PreToolUse', { cwd: SIBLING })
@@ -1197,7 +1197,8 @@ section('허용 폴더 환경변수 구분자 — 맥 `:` / 윈도우 `;`')
   test('X=sed; $X -n 1p f (출력 전용 sed — 자동)', 'Bash', { command: 'X=sed; $X -n 1p f' }, 'allow', 'PermissionRequest')
   test("X=sed; $X -n '1w x' f (sed w 쓰기 — 확인)", 'Bash', { command: "X=sed; $X -n '1w x' f" }, 'null', 'PermissionRequest')
   test("X=sed; $X -n '1e id' f (sed e 실행 — 확인)", 'Bash', { command: "X=sed; $X -n '1e id' f" }, 'null', 'PermissionRequest')
-  test('X=awk (system() 실행 가능 — 제외)', 'Bash', { command: "X=awk; $X 'BEGIN{print 1}'" }, 'null', 'PermissionRequest')
+  test('X=awk + system() (명령 실행 — 제외)', 'Bash', { command: "X=awk; $X 'BEGIN{system(\"id\")}'" }, 'null', 'PermissionRequest')
+  test('X=awk + 출력만 (2026-11-18 awk 출력만은 읽기)', 'Bash', { command: "X=awk; $X 'BEGIN{print 1}'" }, 'allow', 'PermissionRequest')
   test('X=find; $X . -delete', 'Bash', { command: 'X=find; $X . -delete' }, 'null', 'PermissionRequest')
   test('X=find; $X . -exec rm {} +', 'Bash', { command: 'X=find; $X . -exec rm {} +' }, 'null', 'PermissionRequest')
   test('X=sort; $X -o out in', 'Bash', { command: 'X=sort; $X -o out in' }, 'null', 'PermissionRequest')
@@ -1330,6 +1331,70 @@ section('프로젝트 소스 파일 Bash 쓰기 → deny, 명령 출력·임시 
   notDeny('프로젝트 밖 홈 폴더 아님 경로(/tmp 하위 폴더)', `mkdir -p /tmp/bgx && echo x > /tmp/bgx/a.java`)
 }
 
+// ─────────────────────────────────────────────────────────────
+// python3·node 등 인터프리터 코드로 프로젝트 소스 쓰기 → deny (2026-11-23 06-gugbab-attendance 보고 —
+// `python3 - <<'EOF' … open(p,'w') … EOF` 로 소스를 고쳐 acceptEdits 인데도 확인 창이 계속 떴다. 막으면 Claude 가 Edit 로 다시 고친다)
+// ─────────────────────────────────────────────────────────────
+section('인터프리터 코드로 프로젝트 소스 쓰기 → deny (Edit 로 다시), 읽기·임시 폴더·대상 불명은 그대로')
+{
+  const P = { cwd: PROJECT_ROOT }
+  const dec = (command) => getDecision(runHook('Bash', { command }, 'PreToolUse', P), 'PreToolUse')
+  const deny = (desc, command) => assert(desc, dec(command), 'deny')
+  const notDeny = (desc, command) => assert(desc, dec(command) !== 'deny', true)
+  const reason = (command) => runHook('Bash', { command }, 'PreToolUse', P)?.hookSpecificOutput?.permissionDecisionReason || ''
+  const { interpWriteTargets: T } = require('./bash-guard.js')
+  // 정상(막아야 함): attendance 에서 실제로 나온 형태
+  deny('보고된 형태: 변수 p + open(p,"w") heredoc', `python3 - <<'EOF'\np='src/config/rules.ts'\ns=open(p).read()\ns=s.replace('"A" | "B"','"A" | "B" | "C"')\nopen(p,'w').write(s)\nEOF\ngrep -n "C" src/config/rules.ts | head -20`)
+  deny('보고된 형태: 함수 rep(p,…) 안 open(p,"w") + p 여러 번 대입', `python3 - <<'EOF'\ndef rep(p, a, b, n=1):\n    s=open(p).read()\n    assert s.count(a)==n, (p,a,s.count(a))\n    s=s.replace(a,b); open(p,'w').write(s)\np='src/lib/fines.ts'\nrep(p,'''x''','''y''')\np='src/server/views.ts'\nrep(p,'''(a, b)''','''c''')\nEOF`)
+  deny('보고된 형태: cd 프로젝트 && python3 heredoc', `cd ${PROJECT_ROOT} && python3 - <<'EOF'\np='src/lib/seed-members.ts'\ns=open(p).read()\nopen(p,'w').write(s)\nEOF`)
+  deny('python3 -c 로 직접 쓰기', `python3 -c "open('src/a.ts','w').write('x')"`)
+  deny('with open(..., "a") 이어쓰기', `python3 - <<'EOF'\nwith open("README.md", "a") as f:\n    f.write("x")\nEOF`)
+  deny('open(mode="w") 키워드', `python3 -c "open('package.json', mode='w').write('{}')"`)
+  deny('pathlib Path(...).write_text', `python3 -c "from pathlib import Path; Path('src/b.tsx').write_text('x')"`)
+  deny('node -e fs.writeFileSync', `node -e "require('fs').writeFileSync('src/c.js','x')"`)
+  deny('node heredoc: const f = … + appendFileSync', `node <<'EOF'\nconst fs = require('fs')\nconst f = 'docs/x.md'\nfs.appendFileSync(f, 'y')\nEOF`)
+  deny('perl -e open(my $fh, ">", ...)', `perl -e 'open(my $fh, ">", "src/x.java") or die; print $fh "x"'`)
+  deny('ruby -e File.write', `ruby -e "File.write('config.yml', 'a: 1')"`)
+  assert('차단 이유가 Edit 도구로 다시 하라고 안내', /Edit 도구/.test(reason(`python3 -c "open('src/a.ts','w').write('x')"`)), true)
+  // 악성(우회 시도): 경로 쪼개 붙이기·join·파이프·here-string·대소문자·r 접두·괄호
+  deny('우회: 경로 문자열 더하기', `python3 -c "open('src/'+'x.ts','w').write('x')"`)
+  deny('우회: os.path.join', `python3 -c "import os; open(os.path.join('src','lib','x.ts'),'w').write('x')"`)
+  deny('우회: Path("src") / "x.ts"', `python3 -c "from pathlib import Path; (Path('src') / 'x.ts').write_text('x')"`)
+  deny('우회: path.join 변수 + writeFileSync', `node -e "const path=require('path'); const p=path.join('src','y.ts'); require('fs').writeFileSync(p,'x')"`)
+  deny('우회: cat <<EOF | python3 파이프', `cat <<'EOF' | python3\nopen('src/z.py','w').write('x')\nEOF`)
+  deny('우회: here-string python3 <<<', `python3 <<< "open('src/z.ts','w').write('x')"`)
+  deny('우회: echo | python3', `echo "open('src/z.ts','w').write('x')" | python3`)
+  deny('우회: 대문자 확장자 A.TS', `python3 -c "open('A.TS','w').write('x')"`)
+  deny('우회: r 접두 문자열·괄호 감싸기', `python3 -c "open((r'src/q.ts'),'w').write('x')"`)
+  deny('우회: python3.12 이름·cd src 뒤 상대경로', `cd src && python3.12 -c "open('w.ts','w').write('x')"`)
+  deny('우회: shutil.copy 로 소스 덮어쓰기', `python3 -c "import shutil; shutil.copy('/tmp/x', 'src/a.ts')"`)
+  deny('우회: 절대경로', `python3 -c "open('${PROJECT_ROOT}/src/abs.ts','w').write('x')"`)
+  deny('우회: 읽기와 쓰기가 섞인 여러 파일 중 하나만 쓰기', `python3 - <<'EOF'\nimport json\nd=json.load(open('package.json'))\nopen('tsconfig.json','w').write(json.dumps(d))\nEOF`)
+  // 경계(그대로 둬야 함): 읽기만·임시 폴더·소스 아닌 파일·대상 불명·프로젝트 밖
+  notDeny('읽기만: open(p).read()', `python3 - <<'EOF'\np='src/config/rules.ts'\nprint(open(p).read()[:100])\nEOF`)
+  notDeny('읽기만: open(p, "r")', `python3 -c "print(open('package.json','r').read())"`)
+  notDeny('읽기만: json.load + print', `python3 -c "import json; print(json.load(open('package.json'))['name'])"`)
+  notDeny('읽기만: node readFileSync', `node -e "console.log(require('fs').readFileSync('package.json','utf8').length)"`)
+  notDeny('임시 폴더 쓰기: /tmp/out.json', `python3 -c "open('/tmp/bg-out.json','w').write('{}')"`)
+  notDeny('임시 폴더 쓰기: node writeFileSync /tmp', `node -e "require('fs').writeFileSync('/tmp/bg-out.ts','x')"`)
+  notDeny('소스 아닌 파일: out.txt·build.log', `python3 -c "open('out.txt','w').write('x'); open('build.log','a').write('y')"`)
+  notDeny('대상 불명(인자): open(sys.argv[1],"w")', `python3 - src/a.ts <<'EOF'\nimport sys\nopen(sys.argv[1],'w').write('x')\nEOF`)
+  notDeny('대상 불명: 따옴표 없는 heredoc 의 $S 경로 (재생 오탐 — 셸이 임시 폴더로 바꿔 넣음)', `S=/tmp/bgs; python3 -I - <<EOF\nimport json\njson.dump({},open('$S/req.json','w'))\nEOF`)
+  notDeny('대상 불명: node 안 $SP 경로 (재생 오탐)', `SP=/tmp/bgs; node -e "require('fs').writeFileSync('$SP/g.test.js','x')"`)
+  notDeny('대상 불명(f-string)',`python3 -c "n='a'; open(f'src/{n}.ts','w').write('x')"`)
+  notDeny('스크립트 파일 실행(코드 안 봄)', 'python3 scripts/gen.py')
+  notDeny('.git 안 쓰기', `python3 -c "open('.git/info/exclude','a').write('x')"`)
+  notDeny('문자열 안 "open(" 글자만 (실제 호출 아님 — 대상 해석 불가)', `python3 -c "print('use open(path, w) carefully')"`)
+  // 이상·경계 입력: 깨지지 않아야 함
+  assert('이상: 닫히지 않은 괄호', Array.isArray(T("open('src/a.ts','w'")), true)
+  assert('이상: 닫히지 않은 따옴표', Array.isArray(T("open('src/a.ts,'w')")), true)
+  assert('이상: 빈 코드', T('').length, 0)
+  assert('이상: 자기 참조 대입(p=p) — 무한 반복 없음', T("p=p\nopen(p,'w')").length, 0)
+  assert('이상: 순환 대입(a=b, b=a)', T("a=b\nb=a\nopen(a,'w')").length, 0)
+  assert('이상: 초장문 코드도 시간 안에', (() => { const t0 = Date.now(); T("x='" + 'a'.repeat(100000) + "'\nopen('src/a.ts','w')"); return Date.now() - t0 < 2000 })(), true)
+  assert('해석: 변수 두 값 모두 대상', JSON.stringify(T("p='a.ts'\np='b.ts'\nopen(p,'w')")), JSON.stringify(['a.ts', 'b.ts']))
+}
+
 // ─── Bash 쓰기 대상 위치 (2026-10-22, 다른 프로젝트 보고로 재현) ───
 // PermissionRequest 는 판정이 없으면 자동 승인 → 쓰기 대상을 안 보면 `cp x ~/.zshrc`·`cp x ~/.claude/settings.json`·
 // `cp x /etc/hosts`·승인 상태 파일 쓰기(자기 승인)가 확인 없이 지나갔다. 고치기 전 코드로 이 구역의 악성 시험은 실패한다
@@ -1447,6 +1512,370 @@ section('묶음 명령 확인 사유 — 확인이 필요한 동작을 전부 �
   const mr = out(many).permissionDecisionReason || ''
   assert('초장문 묶음: 사유 1,500자 이하', mr.length <= 1500, true)
   assert('초장문 묶음: 잘려도 gh pr merge 경고는 남는다', /gh pr merge/.test(mr), true)
+}
+
+// 2026-11-17 같은 명령에서 방금 mktemp 로 만든 임시 폴더 지우기 — 사용자에게 묻지 않는다 (lfmall 1.2.2 방식 + 남은 우회 경로 막음)
+// 실측: `T=$(mktemp -d ~/.x.XXXX); …; rm -rf "$T"` 가 "rm 대상 경로를 정적으로 해석할 수 없습니다($T)" 확인 창을 띄움 (설치본 v1.1.5)
+if (process.platform !== 'win32') {
+  const notAsk = (desc, cmd) => {
+    const a = pre(cmd), b = perm(cmd)
+    const ok = a !== 'ask' && a !== 'deny' && b === 'allow'
+    console.log(`  ${ok ? '✅' : '❌'} ${desc} → ${ok ? 'PASS' : `FAIL (기대 Pre≠ask/deny·Perm=allow, 실제 Pre=${a}/Perm=${b})`}`)
+    ok ? passed++ : failed++
+  }
+  section('mktemp 임시 폴더 — 정상 (묻지 않음)')
+  notAsk('홈 템플릿 + 파일 쓰기 + 지우기', `T=$(mktemp -d ~/.x.XXXX); echo hi > "$T/a"; cat "$T/a"; ${RMRF}"$T"`)
+  notAsk('기본 임시 폴더 mktemp -d', `T=$(mktemp -d); ls "$T"; ${RMRF}"$T"`)
+  notAsk('/tmp 템플릿 + && 묶음', `D=$(mktemp -d /tmp/x.XXXXXX) && ls "$D" && ${RMRF}"$D"`)
+  notAsk('따옴표로 감싼 치환 + ${D}', `D="$(mktemp -d -t chk)"; ls "\${D}"; ${RMRF}"\${D}"`)
+  notAsk('-p 임시 폴더 + 파일(-d 없음) 지우기', `F=$(mktemp -p /tmp f.XXXX); cat "$F"; rm -f "$F"`)
+  notAsk('프로젝트 상대 템플릿 (앞에 cd 없음)', `T=$(mktemp -d .tmp.XXXXXX); ls "$T"; ${RMRF}"$T"`)
+  notAsk('비슷한 이름 변수 TT 는 T 와 별개', `T=$(mktemp -d); TT=~/x; ${RMRF}"$T"`)
+  notAsk('작은 이름 tmp · -- 뒤 대상', `tmp=$(mktemp -d); ls "$tmp"; ${RMRF}-- "$tmp"`)
+
+  section('mktemp 임시 폴더 — 악성·우회 (계속 확인)')
+  expectNotApproved('대입 뒤 다른 경로로 덮어쓰기', `T=$(mktemp -d); T=~/Documents; ${RMRF}"$T"`, 'ask')
+  expectNotApproved('${T:=} 로 다시 정하기', `T=$(mktemp -d); : "\${T:=/x}"; ${RMRF}"$T"`, 'ask')
+  expectNotApproved('zsh ${T::=} 무조건 대입', `T=$(mktemp -d); : \${T::=~}; ${RMRF}"$T"`, 'ask')
+  expectNotApproved('배열 원소 대입 T[0]= (bash) · T[1,-1]= (zsh)', `T=$(mktemp -d); T[0]=~; ${RMRF}"$T"`, 'ask')
+  expectNotApproved('zsh 부분 대입 T[1,-1]=', `T=$(mktemp -d); T[1,-1]=$HOME; ${RMRF}"$T"`, 'ask')
+  expectNotApproved('read 로 다시 정하기', `T=$(mktemp -d); read T < x; ${RMRF}"$T"`, 'ask')
+  expectNotApproved('export 로 다시 정하기', `T=$(mktemp -d); export T=~/x; ${RMRF}"$T"`, 'ask')
+  expectNotApproved('zsh print -v 로 다시 정하기', `T=$(mktemp -d); print -v T ~; ${RMRF}"$T"`, 'ask')
+  expectNotApproved('zsh vared · integer', `T=$(mktemp -d); vared T; ${RMRF}"$T"`, 'ask')
+  expectNotApproved('wait -p 로 다시 정하기', `T=$(mktemp -d); sleep 1 & wait -p T; ${RMRF}"$T"`, 'ask')
+  expectNotApproved('대입 전에 지움 (밖에서 온 값)', `${RMRF}"$T"; T=$(mktemp -d)`, 'ask')
+  expectNotApproved('조건부 대입 (실행 안 되면 밖에서 온 값)', `false && T=$(mktemp -d); ${RMRF}"$T"`, 'ask')
+  expectNotApproved('if 안 줄바꿈 대입 (최상위처럼 보임)', `if false; then\nNVM_DIR=$(mktemp -d)\nfi\n${RMRF}"$NVM_DIR"`, 'ask')
+  expectNotApproved('{ } 묶음 안 줄바꿈 대입', `false || {\nT=$(mktemp -d)\n}\n${RMRF}"$T"`, 'ask')
+  expectNotApproved('서브셸 안 대입 (바깥엔 안 남음)', `(T=$(mktemp -d)); ${RMRF}"$T"`, 'ask')
+  expectNotApproved('셸이 바꾸는 변수 _ ($_ = 직전 인자)', `_=$(mktemp -d); ls ~/Documents; ${RMRF}"$_"`, 'ask')
+  expectNotApproved('셸이 바꾸는 변수 OLDPWD (cd 가 바꿈)', `OLDPWD=$(mktemp -d); cd ~/Documents; cd /tmp; ${RMRF}"$OLDPWD"`, 'ask')
+  expectNotApproved('셸이 바꾸는 변수 REPLY (read 가 바꿈)', `REPLY=$(mktemp -d); read < x; ${RMRF}"$REPLY"`, 'ask')
+  expectNotApproved('읽기 전용 변수 UID (대입 무시)', `UID=$(mktemp -d); ${RMRF}"$UID"`, 'ask')
+  expectNotApproved('bash -c 안에서 다시 정하기 (작은따옴표 안)', `T=$(mktemp -d); bash -c 'T=$(echo ~); ${RMRF}"$T"'`, 'ask')
+  expectNotApproved('zsh -c 안에서 지우기', `T=$(mktemp -d); zsh -c '${RMRF}"$T"'`, 'ask')
+  expectNotApproved('다른 변수와 섞어 지우기', `T=$(mktemp -d); ${RMRF}"$T" "$X"`, 'ask')
+  expectNotApproved('임시 폴더 기준 위로 올라가기', `T=$(mktemp -d); ${RMRF}"$T/.."`, 'ask')
+  expectNotApproved('임시 폴더 아래 경로 (실패하면 / 아래)', `T=$(mktemp -d); ${RMRF}"$T/x"`, 'ask')
+  expectNotApproved('따옴표 없는 $T (단어 나누기)', `T=$(mktemp -d); ${RMRF}$T`, 'ask')
+  expectNotApproved('-u (이름만 만들기)', `T=$(mktemp -u); ${RMRF}"$T"`, 'ask')
+  expectNotApproved('템플릿이 시스템 폴더', `T=$(mktemp -d /etc/x.XXXX); ${RMRF}"$T"`, 'ask')
+  expectNotApproved('템플릿에 .. 섞기', `T=$(mktemp -d /tmp/../etc/x.XXXX); ${RMRF}"$T"`, 'ask')
+  expectNotApproved('템플릿에 변수', `T=$(mktemp -d "$X".XXXX); ${RMRF}"$T"`, 'ask')
+  expectNotApproved('zsh = 펼침 템플릿', `T=$(mktemp -d =ls); ${RMRF}"$T"`, 'ask')
+  expectNotApproved('X 없는 템플릿 (이미 있는 이름)', `T=$(mktemp -d ~/Documents); ${RMRF}"$T"`, 'ask')
+  expectNotApproved('mktemp 가 아닌 치환 값', `T=$(cat x); ${RMRF}"$T"`, 'ask')
+  expectNotApproved('mktemp 뒤에 다른 명령을 붙인 치환', `T=$(mktemp -d; echo ~); ${RMRF}"$T"`, 'ask')
+  expectNotApproved('PATH 를 바꿔 가짜 mktemp', `PATH=.:$PATH; T=$(mktemp -d); ${RMRF}"$T"`, 'ask')
+  expectNotApproved('zsh path 배열로 가짜 mktemp', `path=(. $path); T=$(mktemp -d); ${RMRF}"$T"`, 'ask')
+  expectNotApproved('함수로 mktemp 덮어쓰기 f()', `mktemp() { echo ~; }; T=$(mktemp -d); ${RMRF}"$T"`, 'ask')
+  expectNotApproved('function 키워드로 덮어쓰기', `function mktemp { echo ~; }; T=$(mktemp -d); ${RMRF}"$T"`, 'ask')
+  expectNotApproved('hash 로 mktemp 경로 바꾸기', `hash mktemp=./evil; T=$(mktemp -d); ${RMRF}"$T"`, 'ask')
+  expectNotApproved('zsh functions[] 로 덮어쓰기', `functions[mktemp]='echo ~'; T=$(mktemp -d); ${RMRF}"$T"`, 'ask')
+  expectNotApproved('eval 섞기', `T=$(mktemp -d); eval "T=~"; ${RMRF}"$T"`, 'ask')
+  expectNotApproved('cd 뒤 상대 템플릿', `cd /etc; T=$(mktemp -d x.XXXX); ${RMRF}"$T"`, 'ask')
+  expectNotApproved('다른 이름의 변수 지우기', `T=$(mktemp -d); ${RMRF}"$U"`, 'ask')
+  expectNotApproved('같은 명령의 다른 위험은 그대로 (git push)', `T=$(mktemp -d); ${RMRF}"$T"; ${PUSH}`, 'ask')
+  expectNotApproved('홈 삭제는 그대로 차단', `T=$(mktemp -d); ${RMRF}"$T" ~`, 'deny')
+
+  section('mktemp 임시 폴더 — 이상·경계')
+  expectNotApproved('-q 실패 무시 + 따옴표 없는 지우기', `T=$(mktemp -dq); ${RMRF}$T/*`, 'ask')
+  expectNotApproved('모르는 옵션 --suffix', `T=$(mktemp -d --suffix=.x); ${RMRF}"$T"`, 'ask')
+  expectNotApproved('템플릿 두 개', `T=$(mktemp -d a.XXXX b.XXXX); ${RMRF}"$T"`, 'ask')
+  expectNotApproved('-p 값 빠짐', `T=$(mktemp -d -p); ${RMRF}"$T"`, 'ask')
+  expectNotApproved('~다른사용자 템플릿', `T=$(mktemp -d ~root/x.XXXX); ${RMRF}"$T"`, 'ask')
+  expectNotApproved('for 반복 안 (최상위 아님)', `for i in 1; do T=$(mktemp -d); done; ${RMRF}"$T"`, 'ask')
+  expectNotApproved('초장문 명령 (판정 상한 넘음)', `T=$(mktemp -d); echo ${'a'.repeat(21000)}; ${RMRF}"$T"`, 'ask')
+
+  // 2026-11-18 사용자 결정 — 결정 42 예외: 방금 만든 임시 폴더 안 쓰기·그 폴더 삭제는 PermissionRequest 도 자동 허용.
+  // 그 폴더로 바깥 파일을 옮겨 넣고 지우기·위치 바꾸기·다른 변수 쓰기는 자동 허용하지 않는다 (bash-guard 는 묻지 않아도 Claude Code 확인 창)
+  const permNot = (desc, cmd) => {
+    const b = perm(cmd)
+    const ok = b !== 'allow'
+    console.log(`  ${ok ? '✅' : '❌'} ${desc} → ${ok ? 'PASS' : `FAIL (기대 Perm≠allow, 실제 Perm=${b})`}`)
+    ok ? passed++ : failed++
+  }
+  section('mktemp 임시 폴더 — 자동 허용 예외의 악성·경계 (PermissionRequest 자동 허용 안 함)')
+  permNot('mv 로 바깥 파일을 옮겨 넣고 지우기', `T=$(mktemp -d); mv ~/Documents/a "$T/"; ${RMRF}"$T"`)
+  permNot('cd 로 들어가 상대 경로로 옮기기', `T=$(mktemp -d); cd "$T"; mv ~/a .; cd /; ${RMRF}"$T"`)
+  permNot('rsync --remove-source-files 로 옮기기', `T=$(mktemp -d); rsync -a --remove-source-files ~/a "$T/"; ${RMRF}"$T"`)
+  permNot('find 로 임시 폴더 기준 실행', `T=$(mktemp -d); find "$T" -exec sh -c x \\;; ${RMRF}"$T"`)
+  permNot('ln 으로 바깥 연결', `T=$(mktemp -d); ln -s ~ "$T/h"; ${RMRF}"$T"`)
+  permNot('다른 변수로 쓰기', `T=$(mktemp -d); echo hi > "$X/a"; ${RMRF}"$T"`)
+  permNot('임시 폴더 기준 .. 로 쓰기', `T=$(mktemp -d); echo hi > "$T/../a"; ${RMRF}"$T"`)
+  permNot('따옴표 없는 $T 로 쓰기', `T=$(mktemp -d); echo hi > $T/a; ${RMRF}"$T"`)
+  permNot('임시 폴더 아래 경로 지우기', `T=$(mktemp -d); ${RMRF}"$T/x"`)
+  permNot('임시 폴더 변수로 node 실행', `T=$(mktemp -d); node "$T/a.js"; ${RMRF}"$T"`)
+  permNot('mktemp 대입 없이 쓰기만', `echo hi > "$T/a"`)
+  permNot('mktemp 만 (대입 없음)', 'mktemp -d')
+  permNot('조건이 깨진 mktemp (재정의) 쓰기', `T=$(mktemp -d); T=~; echo hi > "$T/a"`)
+  notAsk('cp 로 복사해 넣고 지우기', `T=$(mktemp -d); cp package.json "$T/"; ls "$T"; ${RMRF}"$T"`)
+}
+
+// 2026-11-18 06-gugbab-attendance 요청 — 이 세션이 띄운 프로세스만 끄는 pkill·killall 은 묻지 않는다
+if (process.platform !== 'win32') {
+  const { spawn, execSync: ex } = require('child_process')
+  const env = { ...process.env, BASH_GUARD_TEST_SESSION_PID: String(process.pid) }
+  const run = (cmd, ev) => {
+    const input = JSON.stringify({ hook_event_name: ev, tool_name: 'Bash', tool_input: { command: cmd }, cwd: PROJECT_ROOT })
+    try { const o = execSync(`node "${HOOK}"`, { input, encoding: 'utf8', env, timeout: 10000 }).trim(); return getDecision(o ? JSON.parse(o) : null, ev) } catch { return 'ERR' }
+  }
+  const tag = `${process.pid}${Date.now() % 100000}`
+  const mine = spawn('sleep', [`61.${tag}`], { stdio: 'ignore' })
+  // 세션 밖 프로세스 — 부모 셸이 끝나 launchd/init 아래로 옮겨진 sleep
+  ex(`sh -c 'nohup sleep 62.${tag} >/dev/null 2>&1 &'`)
+  ex(`sh -c 'nohup sleep 63.${tag} >/dev/null 2>&1 &'`)
+  const mine2 = spawn('sleep', [`63.${tag}`], { stdio: 'ignore' })
+  ex('sleep 0.3')
+  const check = (desc, cmd, wantAllow) => {
+    const a = run(cmd, 'PreToolUse'), b = run(cmd, 'PermissionRequest')
+    const ok = wantAllow ? (a !== 'ask' && a !== 'deny' && b === 'allow') : a === 'ask' && b !== 'allow'
+    console.log(`  ${ok ? '✅' : '❌'} ${desc} → ${ok ? 'PASS' : `FAIL (Pre=${a}/Perm=${b})`}`)
+    ok ? passed++ : failed++
+  }
+  section('pkill·killall — 이 세션이 띄운 프로세스 (정상)')
+  check('pkill -f 세션이 띄운 것만 맞음', `pkill -f "sleep 61.${tag}"`, true)
+  check('pkill -9 -f (신호 + 옵션)', `pkill -9 -f "sleep 61.${tag}"`, true)
+  check('pkill --signal TERM -f', `pkill --signal TERM -f "sleep 61.${tag}"`, true)
+  check('끄고 확인까지 한 줄 (attendance 형태)', `pkill -f "sleep 61.${tag}"; sleep 1; ls`, true)
+
+  section('pkill·killall — 악성·우회 (계속 확인)')
+  check('세션 밖 프로세스만 맞음', `pkill -f "sleep 62.${tag}"`, false)
+  check('세션 것 + 세션 밖 것 섞임', `pkill -f "sleep 63.${tag}"`, false)
+  check('넓은 패턴 (세션 밖 sleep 포함)', `pkill -f "sleep 6"`, false)
+  check('killall sleep (세션 밖 포함)', 'killall sleep', false)
+  check('-u 다른 사용자 지정', `pkill -u root -f "sleep 61.${tag}"`, false)
+  check('-P 부모 지정 (모르는 옵션)', `pkill -P 1 -f "sleep 61.${tag}"`, false)
+  check('패턴이 변수', 'pkill -f "$P"', false)
+  check('패턴이 치환', 'pkill -f "$(echo sleep)"', false)
+  check('따옴표 없는 glob', `pkill -f sleep*`, false)
+  check('패턴 두 개', `pkill -f "sleep 61.${tag}" x`, false)
+  check('sudo pkill', `sudo pkill -f "sleep 61.${tag}"`, false)
+  check('Claude 세션 자신 (세션으로 지정한 이 테스트 프로세스)', 'pkill -f "bash-guard.test.js"', false)
+
+  section('pkill·killall — 이상·경계')
+  check('맞는 프로세스 없음', `pkill -f "no-such-process-${tag}"`, false)
+  check('빈 패턴', 'pkill -f ""', false)
+  check('옵션만', 'pkill -f', false)
+  check('killall 이름이 15자 넘음', 'killall abcdefghijklmnopq', false)
+  check('killall -s (드라이런 옵션 — 모름)', 'killall -s sleep', false)
+  mine.kill('SIGKILL'); mine2.kill('SIGKILL')
+  try { ex(`pkill -f "sleep 6[23].${tag}"`) } catch { /* 이미 끝남 */ }
+}
+
+// 2026-11-18 사용자 결정 — 쓸데없는 확인 창 없애기(읽기 넓힘) · 확인 창이 뜰 명령은 먼저 거부 · git stash 거부 · 보호 파일 Bash 이동·삭제 거부
+{
+  const fs = require('fs'), os = require('os')
+  section('읽기 자동 허용 넓힘 — 이번에 확인 창을 띄운 조사 명령 (정상)')
+  expectAutoApproved('바깥 고정 변수 + 고정 값 반복문 sed -n', `F=~/a/b.jsonl; for n in 319 320; do echo "=== $n"; sed -n "\${n}p" "$F" | grep -o 'x'; done`)
+  expectAutoApproved('치환 값 반복문 + ps', 'pgrep -fl "sleep 200" ; for p in $(pgrep -f "sleep 200"); do ps -o pid,ppid,comm -p $p; done')
+  expectAutoApproved('ps | awk 출력만', "pgrep -fl sleep; echo \"---\"; cat /tmp/x.output; ps -axo pid,ppid,comm | awk '$3 ~ /claude/'")
+  expectAutoApproved("awk -F: '{print $1}'", "awk -F: '{print $1}' /etc/hosts")
+  expectAutoApproved('lsof 변수 인자', 'P=3100; lsof -i :$P | head -3')
+  expectAutoApproved('gugbab-claude status (조회)', 'gugbab-claude status 2>&1 | grep -i codex')
+  expectAutoApproved('gugbab-claude preset (목록만)', 'gugbab-claude preset')
+  expectNotApproved('gugbab-claude off (설정 바꿈)', 'gugbab-claude off bundle:codex-review --all', 'null')
+  expectNotApproved('gugbab-claude preset <이름> (적용)', 'gugbab-claude preset nextjs', 'null')
+  expectNotApproved('gugbab-claude update', 'gugbab-claude update', 'null')
+  expectNotApproved('gugbab-claude (세션 실행)', 'gugbab-claude -p hi', 'null')
+  expectNotApproved('gugbab-claude status 에 인자 더 붙임', 'gugbab-claude status --x', 'null')
+
+  section('읽기 자동 허용 넓힘 — 악성·우회 (자동 허용 안 함)')
+  expectNotApproved('awk system()', `awk 'BEGIN{system("${RMRF}~")}'`, 'null')
+  expectNotApproved('awk 파일 쓰기 >', `awk '{print > "/etc/x"}' f`, 'null')
+  expectNotApproved('awk 명령으로 보내기 |', `awk '{print | "sh"}' f`, 'null')
+  expectNotApproved('awk getline 명령 실행', `awk 'BEGIN{"id" | getline x}'`, 'null')
+  expectNotApproved('awk -f 프로그램 파일', 'awk -f prog.awk f', 'null')
+  expectNotApproved('awk -i inplace', `awk -i inplace '{print}' f`, 'null')
+  expectNotApproved('awk @load 확장', `awk '@load "x"; {print}' f`, 'null')
+  expectNotApproved('awk 프로그램이 변수', 'awk "$P" f', 'null')
+  expectNotApproved('awk 나눗셈 사이에 print > 숨기기', `awk '{x=$1/2; print > "/etc/x"; y=$2/3}' f`, 'null')
+  expectNotApproved('awk 정규식 안 따옴표로 print > 숨기기', `awk '/"/ {print > "f"} /"/' f`, 'null')
+  expectNotApproved('awk printf(…) > 파일', `awk '{printf("%s", $1) > "o"}' f`, 'null')
+  expectNotApproved('awk print >> 파일', `awk '{print >> "o"}' f`, 'null')
+  expectNotApproved('awk |& 코프로세스', `awk 'BEGIN{print "x" |& "sh"}'`, 'null')
+  expectNotApproved('awk 닫히지 않은 문자열', `awk '{print "x}' f`, 'null')
+  expectAutoApproved('awk 정규식 안 | (회귀 — 2026-11-18 재생)', `grep error f | awk '{ if ($0 ~ /\\.(test|spec)\\.tsx?$/) t++; else n++ } END {print "t:",t," n:",n}'`)
+  expectAutoApproved('awk 비교 $1>1500 (회귀 — 2026-11-18 재생)', `grep -n x f | awk -F: '$1>1500' | head -60`)
+  expectAutoApproved('awk 문자열 안 > 와 |', `awk '{print "a > b | c"}' f`)
+  expectNotApproved('치환 값 반복문 + sed (스크립트가 바뀜)', 'for p in $(cat list); do sed -n "$p" f; done', 'null')
+  expectNotApproved('치환 값 반복문 + rm', `for p in $(cat list); do ${RMRF}"$p"; done`, 'ask')
+  expectNotApproved('ps 뒤 리다이렉트로 프로젝트 밖 쓰기', 'ps -ax > ~/x.txt', 'ask')
+
+  section('git stash 거부 (묻지 않음)')
+  expectNotApproved('git stash', 'git stash', 'deny')
+  expectNotApproved('git stash -q && 테스트; pop (relay 실측 형태)', 'git stash -q && pnpm -s test; git stash pop -q', 'deny')
+  expectNotApproved('git stash push -m', 'git stash push -m x', 'deny')
+  expectNotApproved('git stash drop', 'git stash drop', 'deny')
+  expectNotApproved('git stash clear', 'git stash clear', 'deny')
+  expectNotApproved('git -C 폴더 stash', 'git -C /tmp/x stash', 'deny')
+  expectNotApproved('bash -c 안 git stash', "bash -c 'git stash'", 'deny')
+  expectNotApproved('git -c alias 로 stash 부르기', 'git -c alias.s=stash s', 'deny')
+  expectNotApproved('&& 뒤에 숨김', 'git status && git stash', 'deny')
+  expectAutoApproved('git stash list (조회)', 'git stash list')
+  expectAutoApproved('git stash show (조회)', 'git stash show -p')
+
+  section('보호 파일 Bash 이동·삭제 거부')
+  const proj = fs.mkdtempSync(path.join(os.homedir(), '.bg-prot-'))
+  fs.mkdirSync(path.join(proj, 'docs', 'skills', 'a'), { recursive: true })
+  fs.writeFileSync(path.join(proj, 'docs', 'skills', 'a', 'verification.md'), 'x')
+  fs.mkdirSync(path.join(proj, '.claude', 'skills', 'k'), { recursive: true })
+  fs.writeFileSync(path.join(proj, '.claude', 'skills', 'k', 'SKILL.md'), 'x')
+  fs.mkdirSync(path.join(proj, 'plain'), { recursive: true })
+  fs.writeFileSync(path.join(proj, 'plain', 'a.txt'), 'x')
+  fs.mkdirSync(path.join(proj, 'node_modules', 'p'), { recursive: true })
+  fs.writeFileSync(path.join(proj, 'node_modules', 'p', 'SKILL.md'), 'x')
+  const P = toSlash(proj)
+  const at = (cmd) => getDecision(runHook('Bash', { command: cmd }, 'PreToolUse', { cwd: P }), 'PreToolUse')
+  const expPre = (desc, cmd, want) => {
+    const a = at(cmd)
+    const ok = want === 'deny' ? a === 'deny' : a !== 'deny'
+    console.log(`  ${ok ? '✅' : '❌'} ${desc} → ${ok ? 'PASS' : `FAIL (기대 ${want === 'deny' ? 'deny' : '≠deny'}, 실제 ${a})`}`)
+    ok ? passed++ : failed++
+  }
+  expPre('반복문 변수 경로 git mv …/$p/SKILL.md (relay 실측)', 'for p in k; do mkdir -p skills/$p && git mv .claude/skills/$p/SKILL.md skills/$p/SKILL.md; done', 'deny')
+  expPre('변수 경로 mv "$D"/verification.md', 'mv "$D"/verification.md /tmp/', 'deny')
+  expPre('변수 경로 rm memory/ 아래', `${RMRF}"$R"/memory/x.md`, 'deny')
+  expPre('git mv verification.md', 'git mv docs/skills/a/verification.md x.md', 'deny')
+  expPre('mv 로 SKILL.md 옮기기 (원본이 사라짐)', 'mv .claude/skills/k/SKILL.md /tmp/x', 'deny')
+  expPre('rm -rf 폴더 안에 verification.md (relay 실측)', `${RMRF}docs/skills`, 'deny')
+  expPre('rm -r docs (깊은 곳에 있음)', 'rm -r docs', 'deny')
+  expPre('git rm -r 폴더', 'git rm -r -q docs/skills', 'deny')
+  expPre('mv 폴더째 옮기기', 'mv docs/skills /tmp/', 'deny')
+  expPre('git mv 폴더째', 'git mv .claude/skills skills', 'deny')
+  expPre('git rm -r --cached (파일은 안 지움)', 'git rm -r -q --cached docs/skills', 'allow')
+  expPre('보호 파일 없는 폴더 rm -rf', `${RMRF}plain`, 'allow')
+  expPre('node_modules 안 SKILL.md 는 안 봄', `${RMRF}node_modules`, 'allow')
+  expPre('임시 폴더 안 SKILL.md 는 안 봄', `${RMRF}/tmp/bg-x/skills`, 'allow')
+  expPre('rm (재귀 아님) 폴더 아닌 일반 파일', 'rm plain/a.txt', 'allow')
+  expPre('없는 폴더', `${RMRF}nope-dir`, 'allow')
+  fs.rmSync(proj, { recursive: true, force: true })
+
+  section('확인 창이 뜰 명령은 먼저 거부 — default·acceptEdits 모드')
+  const cfg = fs.mkdtempSync(path.join(os.tmpdir(), 'bg-cfg-'))
+  fs.writeFileSync(path.join(cfg, 'settings.json'), JSON.stringify({ permissions: { allow: ['Bash(tar -tf*)'] } }))
+  const tdir = fs.mkdtempSync(path.join(os.tmpdir(), 'bg-tr-'))
+  const tr = (entries) => { const f = path.join(tdir, `t${Math.random().toString(36).slice(2)}.jsonl`); fs.writeFileSync(f, entries.map(e => JSON.stringify(e)).join('\n') + '\n'); return f }
+  const userMsg = (t) => ({ type: 'user', message: { role: 'user', content: t } })
+  const asst = (t) => ({ type: 'assistant', message: { role: 'assistant', content: [{ type: 'text', text: t }] } })
+  const toolRes = { type: 'user', message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'x', content: 'ok' }] } }
+  const plain = tr([userMsg('조사해줘'), asst('보겠습니다.')])
+  const told = tr([userMsg('조사해줘'), asst('재생 스크립트를 돌립니다. 이 명령은 확인 창이 한 번 뜹니다.'), toolRes])
+  const toldBefore = tr([userMsg('앞 요청'), asst('이 명령은 확인 창이 한 번 뜹니다.'), userMsg('다음 요청'), asst('봅니다.')])
+  const runM = (cmd, mode, transcript, env = {}, description) => {
+    const input = JSON.stringify({ hook_event_name: 'PreToolUse', tool_name: 'Bash', tool_input: { command: cmd, ...(description !== undefined ? { description } : {}) }, cwd: PROJECT_ROOT, permission_mode: mode, transcript_path: transcript })
+    const r = spawnSync('node', [HOOK], { input, encoding: 'utf8', timeout: 10000, env: { ...process.env, CLAUDE_CONFIG_DIR: cfg, BASH_GUARD_TEST_SESSION_ARGS: 'claude --continue', ...env } })
+    try { return JSON.parse(r.stdout).hookSpecificOutput || {} } catch { return {} }
+  }
+  const expM = (desc, cmd, mode, transcript, want) => {
+    const o = runM(cmd, mode, transcript)
+    const d = o.permissionDecision || 'null'
+    const ok = want === 'deny' ? d === 'deny' && /확인 창/.test(o.permissionDecisionReason || '')
+      : want === 'deny-risk' ? d === 'deny' && !/확인 창/.test(o.permissionDecisionReason || '')
+        : want === 'not-deny' ? d !== 'deny' : d === want
+    console.log(`  ${ok ? '✅' : '❌'} ${desc} → ${ok ? 'PASS' : `FAIL (기대 ${want}, 실제 ${d}: ${(o.permissionDecisionReason || '').slice(0, 80)})`}`)
+    ok ? passed++ : failed++
+  }
+  const script = 'python3 /tmp/x.py'
+  expM('스크립트 실행 (acceptEdits) → 거부', script, 'acceptEdits', plain, 'deny')
+  expM('스크립트 실행 (default) → 거부', script, 'default', plain, 'deny')
+  expM('python3 -c 인라인 (acceptEdits) → 거부', 'python3 -c "print(1)"', 'acceptEdits', plain, 'deny')
+  expM('이 레포 allow 규칙(Bash(node*))에 맞는 node -e 는 그대로', 'node -e "console.log(1)"', 'acceptEdits', plain, 'null')
+  expM('awk system 섞인 조사 → 거부', `ps | awk '{system("x")}'`, 'acceptEdits', plain, 'deny')
+  expM('auto 모드는 그대로 (자동 모드 판정에 맡김)', script, 'auto', plain, 'null')
+  expM('bypassPermissions 는 그대로', script, 'bypassPermissions', plain, 'null')
+  expM('plan 모드는 그대로', script, 'plan', plain, 'null')
+  expM('모드 없음(예전 입력)은 그대로', script, undefined, plain, 'null')
+  expM('이번 답변에서 미리 알렸으면 통과', script, 'acceptEdits', told, 'null')
+  expM('앞 차례에서 알린 것은 무효', script, 'acceptEdits', toldBefore, 'deny')
+  expM('transcript 없음 → 거부', script, 'acceptEdits', undefined, 'deny')
+  expM('transcript 경로가 깨짐 → 거부', script, 'acceptEdits', '/nonexistent/x.jsonl', 'deny')
+  expM('설정 allow 규칙에 맞음 → 그대로', 'tar -tf a.tar', 'acceptEdits', plain, 'null')
+  expM('allow 규칙에 맞아도 변수가 있으면 → 거부', 'tar -tf "$A"', 'acceptEdits', plain, 'deny')
+  expM('allow 규칙 + 안 맞는 명령 섞임 → 거부', 'tar -tf a.tar | python3 x.py', 'acceptEdits', plain, 'deny')
+  expM('읽기 명령은 거부하지 않음', 'ls -la', 'acceptEdits', plain, 'not-deny')
+  expM('관측된 조사 반복문은 거부하지 않음 (자동 허용)', 'for p in $(pgrep -f x); do ps -p $p; done', 'acceptEdits', plain, 'not-deny')
+  expM('개발 명령(테스트)은 그대로 (Perm 자동)', 'node --test scripts/a.test.js', 'acceptEdits', plain, 'null')
+  expM('bash-guard 가 묻는 것(commit)은 그대로 확인', `${COMMIT} -m x`, 'acceptEdits', plain, 'ask')
+  expM('위험은 원래 거부 사유 그대로', `${RMRF}~`, 'acceptEdits', plain, 'deny-risk')
+  expM('빈 명령', '', 'acceptEdits', plain, 'null')
+  const expEnv = (desc, args, want) => {
+    const d = runM(script, 'default', plain, { BASH_GUARD_TEST_SESSION_ARGS: args }).permissionDecision || 'null'
+    const ok = d === want
+    console.log(`  ${ok ? '✅' : '❌'} ${desc} → ${ok ? 'PASS' : `FAIL (기대 ${want}, 실제 ${d})`}`)
+    ok ? passed++ : failed++
+  }
+  expEnv('claude -p (화면 없음 — 확인 창 없음) → 그대로', 'claude -p hi --max-turns 3', 'null')
+  expEnv('--allowedTools 로 허용 (훅이 못 봄) → 그대로', "claude --allowedTools Bash(python3*)", 'null')
+  expEnv('--allowed-tools= 형태', 'claude --allowed-tools=Bash', 'null')
+  expEnv('-p 가 다른 글자 안에 있을 뿐 (--project-x) → 거부', 'claude --project-x', 'deny')
+  expEnv('대화형 세션 → 거부', 'claude --continue', 'deny')
+  const expD = (desc, d, want) => {
+    const got = runM(script, 'acceptEdits', plain, {}, d).permissionDecision || 'null'
+    const ok = got === want
+    console.log(`  ${ok ? '✅' : '❌'} ${desc} → ${ok ? 'PASS' : `FAIL (기대 ${want}, 실제 ${got})`}`)
+    ok ? passed++ : failed++
+  }
+  expD('도구 설명에 "(확인 창 한 번)" → 통과 (사용자 화면에 보이는 알림)', '설정 변경 (확인 창 한 번)', 'null')
+  expD('도구 설명에 알림 없음 → 거부', '설정 변경', 'deny')
+  expD('도구 설명이 문자열 아님 → 거부', 42, 'deny')
+  const o = runM(`for f in $(ls); do python3 "$f"; done`, 'acceptEdits', plain)
+  const okR = /python3/.test(o.permissionDecisionReason || '') && /변수·명령 치환/.test(o.permissionDecisionReason || '') && /확인 창 한 번/.test(o.permissionDecisionReason || '')
+  console.log(`  ${okR ? '✅' : '❌'} 거부 사유에 걸린 명령·치환·알리는 법이 들어감 → ${okR ? 'PASS' : `FAIL (${o.permissionDecisionReason})`}`)
+  okR ? passed++ : failed++
+  fs.rmSync(cfg, { recursive: true, force: true }); fs.rmSync(tdir, { recursive: true, force: true })
+}
+
+// ─────────────────────────────────────────────────────────────
+// 2026-11-23 사용자 결정 — 프로젝트 안 셸 스크립트 파일 실행(`sh scripts/x.sh`)은 node 스크립트처럼 자동 허용
+// (`sh scripts/wrapper-e2e.sh --dev` 가 매번 확인 창을 띄웠다). 표준입력·-c·임시 폴더·밖을 가리키는 링크·없는 파일은 그대로 확인
+// ─────────────────────────────────────────────────────────────
+section('프로젝트 안 셸 스크립트 실행 자동 허용 — 밖·표준입력·-c 는 확인')
+{
+  const fs = require('fs'), os = require('os')
+  const proj =fs.mkdtempSync(path.join(os.homedir(), '.bg-shs-'))
+  const outside = fs.mkdtempSync(path.join(os.homedir(), '.bg-shs-out-'))
+  fs.mkdirSync(path.join(proj, 'scripts'), { recursive: true })
+  fs.writeFileSync(path.join(proj, 'scripts', 'e2e.sh'), 'echo ok\n')
+  fs.writeFileSync(path.join(proj, 'run.sh'), 'echo ok\n')
+  fs.writeFileSync(path.join(outside, 'evil.sh'), 'echo evil\n')
+  fs.symlinkSync(path.join(outside, 'evil.sh'), path.join(proj, 'scripts', 'link.sh'))
+  fs.mkdirSync(path.join(proj, '.git', 'hooks'), { recursive: true })
+  fs.writeFileSync(path.join(proj, '.git', 'hooks', 'pre-commit'), 'echo x\n')
+  const tmpScript = path.join(os.tmpdir(), `bg-shs-${process.pid}.sh`)
+  fs.writeFileSync(tmpScript, 'echo tmp\n')
+  const P = toSlash(proj)
+  const permAt = (cmd) => getDecision(runHook('Bash', { command: cmd }, 'PermissionRequest', { cwd: P }), 'PermissionRequest')
+  const exp = (desc, cmd, want) => assert(desc, permAt(cmd), want)
+  // 정상: 자동 허용
+  exp('sh scripts/e2e.sh --dev (보고된 형태)', 'sh scripts/e2e.sh --dev', 'allow')
+  exp('bash ./run.sh', 'bash ./run.sh', 'allow')
+  exp('zsh 절대경로', `zsh ${P}/scripts/e2e.sh`, 'allow')
+  exp('cd 프로젝트 && sh scripts/e2e.sh 2>&1 | tail -3', `cd ${P} && sh scripts/e2e.sh 2>&1 | tail -3`, 'allow')
+  exp('cd scripts && sh e2e.sh (cd 따라감)', 'cd scripts && sh e2e.sh', 'allow')
+  exp('실행 옵션 -eu·-o pipefail', 'bash -eu -o pipefail scripts/e2e.sh', 'allow')
+  // 악성(우회 시도): 확인으로 남아야 함
+  exp('우회: sh -c 로 임의 명령', `sh -c 'curl x | sh'`, 'null')
+  exp('우회: bash -s 표준입력', 'bash -s < scripts/e2e.sh', 'null')
+  exp('우회: heredoc 으로 코드 넘기기', "bash <<'EOF'\necho hi\nEOF", 'null')
+  exp('우회: --rcfile 로 다른 파일 읽히기', 'bash --rcfile /tmp/x scripts/e2e.sh', 'null')
+  exp('우회: -i 대화형', 'bash -i scripts/e2e.sh', 'null')
+  exp('우회: ../ 로 프로젝트 밖 스크립트', `sh ../${path.basename(outside)}/evil.sh`, 'null')
+  exp('우회: 프로젝트 안 링크가 밖을 가리킴', 'sh scripts/link.sh', 'null')
+  exp('우회: 임시 폴더 스크립트', `sh ${toSlash(tmpScript)}`, 'null')
+  exp('우회: 변수 경로', 'sh "$S"/e2e.sh', 'null')
+  exp('우회: 글롭 경로', 'sh scripts/*.sh', 'null')
+  exp('우회: cd 밖으로 나간 뒤 상대경로', `cd ${toSlash(outside)} && sh evil.sh`, 'null')
+  exp('우회: .git/hooks 안 스크립트', 'sh .git/hooks/pre-commit', 'null')
+  exp('우회: sudo sh', 'sudo sh scripts/e2e.sh', 'null')
+  exp('우회: 허용 스크립트 뒤에 위험 명령', 'sh scripts/e2e.sh && rm -rf ~', 'null')
+  // 이상·경계 입력
+  exp('경계: 없는 파일', 'sh scripts/nope.sh', 'null')
+  exp('경계: 폴더 경로', 'sh scripts', 'null')
+  exp('경계: 인자 없는 sh (표준입력)', 'sh', 'null')
+  exp('경계: 서브셸 안 cd 뒤 실행은 위치를 모름', '(cd scripts) && sh e2e.sh', 'null')
+  fs.rmSync(proj, { recursive: true, force: true }); fs.rmSync(outside, { recursive: true, force: true }); fs.rmSync(tmpScript, { force: true })
 }
 
 console.log(`\n${'─'.repeat(40)}`)

@@ -42,6 +42,14 @@
         "command:codex-review"
       ]
     },
+    "clean-review": {
+      "title": "깨끗한 리뷰 (Codex 대신 Claude 리뷰어)",
+      "items": [
+        "hook:clean-review-guard",
+        "rule:clean-review.md",
+        "agent:clean-reviewer"
+      ]
+    },
     "memory-share": {
       "title": "메모리 공유",
       "items": [
@@ -93,6 +101,7 @@
     "core": {
       "title": "공통 에이전트",
       "items": [
+        "agent:clean-reviewer",
         "agent:fact-checker"
       ]
     },
@@ -454,6 +463,12 @@
     }
   },
   "edges": {
+    "hook:clean-review-guard>hook:codex-review-guard": "mention",
+    "hook:codex-review-guard>hook:clean-review-guard": "mention",
+    "hook:clean-review-guard>hook:task-confirm-guard": "mention",
+    "hook:clean-review-guard>command:harness": "mention",
+    "rule:clean-review.md>command:harness": "mention",
+    "rule:clean-review.md>hook:codex-review-guard": "mention",
     "agent:dream-interpretation-prompt-tester>rule:agent-design.md": "uses",
     "agent:dream-interpretation-prompt-tester>rule:info-verification.md": "uses",
     "agent:dream-interpretation-prompt-tester>rule:verification-policy.md": "uses",

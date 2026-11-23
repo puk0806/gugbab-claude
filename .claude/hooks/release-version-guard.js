@@ -8,6 +8,8 @@
 //   다른 프로젝트(래퍼로 연 일반 프로젝트)에서는 아무것도 하지 않는다.
 // - 프로젝트의 코드는 실행하지 않는다 — 판정 로직은 이 훅이 들어 있는 하네스의 scripts/release-version.js,
 //   프로젝트에서는 `git show HEAD:VERSION`(데이터)과 태그 목록만 읽는다.
+// - (2026-11-17) 버전을 올렸으면 그 버전 릴리스 노트(docs/release-notes/<X.Y.Z> <핵심 수정 요약>.md)도 커밋돼 있어야 한다 —
+//   없으면 막고 `node scripts/release-version.js notes --title …` 로 초안 만드는 법을 알려 준다.
 // - 훅은 파일을 고치거나 커밋하지 않는다. 막히면 Claude 가 VERSION 을 올려 커밋한 뒤 다시 PR 을 만든다.
 // - 원격 태그는 3초 안에 확인, 실패하면 로컬 태그. 태그가 하나도 없으면(첫 릴리스) 형식만 본다.
 // - 명령 해석은 bash-guard.js 의 셸 분석기를 쓴다 — echo "gh pr create" 같은 인용 텍스트는 무시, bash -c·체인 안은 잡는다.
@@ -44,6 +46,28 @@ function isThisRepo(root) {
   try { return fs.lstatSync(path.join(root, MARKER)).isFile(); } catch { return false; }
 }
 
+// 버전은 올렸는데 그 버전 릴리스 노트(docs/release-notes/<X.Y.Z> <핵심 수정 요약>.md)가 커밋돼 있지 않으면 막는다 (2026-11-17)
+//   노트 기능이 없는 예전 release-version.js 면 건너뜀. 판정은 커밋된 트리(git ls-tree)만 — 작업 폴더 파일은 안내에만 쓴다
+function notesCheck({ root, rv, version }) {
+  if (typeof rv.notesFile !== 'function' || !rv.parseVersion(String(version))) return { block: false, message: '' };
+  if (rv.notesFile(root, version, 'HEAD')) return { block: false, message: '' };
+  const dir = rv.NOTES_DIR || 'docs/release-notes';
+  let draft = null;
+  try {
+    const st = fs.lstatSync(path.join(root, dir));
+    if (st.isDirectory()) draft = fs.readdirSync(path.join(root, dir)).find((n) => rv.isNotesName(n, version)) || null;
+  } catch { /* 폴더 없음 */ }
+  const lines = [`${TAG} PR 전에 ${version} 릴리스 노트를 커밋해야 합니다 — ${dir}/ 에 "${version} <핵심 수정 요약>.md" 가 커밋돼 있지 않습니다`];
+  if (draft) {
+    lines.push(`  작업 폴더에 ${dir}/${draft.replace(/[\u0000-\u001f\u007f]/g, '')} 가 있습니다 → 문장을 다듬고 커밋한 뒤 push 하고 다시 gh pr create`);
+  } else {
+    lines.push('  1) node scripts/release-version.js notes --title "핵심 수정 요약"   (수 변화·커밋 제목으로 초안을 만듭니다)');
+    lines.push(`  2) 초안 문장 다듬기   3) git add ${dir} && git commit -m "[docs] Add: ${version} 릴리스 노트"   4) push 후 다시 gh pr create`);
+  }
+  lines.push('  머지되면 release-on-main 워크플로가 이 노트를 GitHub Release 본문으로 씁니다');
+  return { block: true, message: lines.join('\n') };
+}
+
 // 판정 — 테스트에서 직접 부른다. { block: bool, message }
 function evaluate({ command, cwd, rv }) {
   if (!isPrCreate(command)) return { block: false, message: '' };
@@ -54,7 +78,7 @@ function evaluate({ command, cwd, rv }) {
   if (head == null) return { block: true, message: `${TAG} 커밋된 VERSION 파일이 없습니다 — 레포 최상위에 VERSION(예: 1.0.0)을 만들어 커밋한 뒤 PR 을 만드세요` };
   const { tags, source } = rv.tagsOf(root, true);
   const r = rv.checkVersion(head, tags);
-  if (r.ok) return { block: false, message: '' };
+  if (r.ok) return notesCheck({ root, rv, version: r.version });
   let working = null;
   try { const st = fs.lstatSync(path.join(root, 'VERSION')); if (st.isFile() && st.size <= 64) working = rv.parseVersion(fs.readFileSync(path.join(root, 'VERSION'), 'utf8')); } catch { /* 없음 */ }
   const lines = [`${TAG} PR 전에 버전을 올려야 합니다 — ${r.reason} (태그 확인: ${source})`];

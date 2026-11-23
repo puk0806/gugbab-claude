@@ -166,9 +166,10 @@ async function main() {
   g(A, ['off', 'setting:superpowers 플러그인']); init(A, 'a6');
   check('설정 끄기 → superpowers 플러그인 빠짐', '없음', inits.a6 ? (inits.a6.plugins.includes('superpowers') ? '있음' : '없음') : '읽기실패');
   g(A, ['on', 'setting:superpowers 플러그인']);
-  out = g(A, ['off', 'bundle:codex-review']);
-  check('묶음 끄기 → 훅·룰·커맨드 3개 같이 꺼짐', true, out.includes('command:codex-review, hook:codex-review-guard, rule:codex-review.md'));
-  g(A, ['on', 'bundle:codex-review']);
+  // 2026-11-18 Codex 리뷰 묶음이 기본 끔이 되어, 기본으로 켜진 메모리 공유 묶음으로 확인한다
+  out = g(A, ['off', 'bundle:memory-share']);
+  check('묶음 끄기 → 묶음 항목 3개 같이 꺼짐', true, out.includes('hook:memory-pull, hook:memory-sync, rule:memory-sync.md'));
+  g(A, ['on', 'bundle:memory-share']);
   g(A, ['on', 'block:fortune']); init(A, 'a7');
   check('블록 켜기 → 운세 에이전트 생김', '있음', has('a7', 'agents', 'fortune-interpretation-prompt-tester'));
   g(A, ['off', 'block:fortune']);
