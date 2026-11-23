@@ -117,6 +117,7 @@
 | `bundle:verification` | 스킬 검증 문서 | 2 |
 | `bundle:dev-quality` | 테스트 품질 (TDD·적대적 테스트) | 6 |
 | `bundle:codex-review` | Codex 리뷰 | 3 |
+| `bundle:clean-review` | 깨끗한 리뷰 (Codex 대신 Claude 리뷰어) | 3 |
 | `bundle:memory-share` | 메모리 공유 | 3 |
 | `bundle:harness-authoring` | 하네스 제작 (스킬·에이전트 만들기) | 14 |
 
@@ -160,6 +161,7 @@
 | `command not found: gugbab-claude` | 설치가 셸 설정(`~/.zshrc` 등)에 PATH 를 넣었으면 새 터미널을 열거나 `source ~/.zshrc`. 넣지 않았으면(`--no-modify-path`·셸 문자가 든 경로·쓸 수 없는 설정 파일) 설치가 알려 준 한 줄을 직접 넣기 |
 | "Not logged in" | 먼저 그냥 `claude` 로 한 번 로그인. 래퍼는 같은 로그인을 씁니다 — Claude Code 업데이트 뒤 이 문제가 생기면 `gugbab-claude doctor` 결과를 확인하세요 |
 | 세션을 끝낼 때마다 Codex 리뷰를 요구 | 쓰지 않으면 `/harness` 에서 "Codex 리뷰" 묶음을 끄거나 `gugbab-claude off bundle:codex-review` |
+| 코드를 고칠 때마다 "깨끗한 Claude 리뷰 필요" | Codex 리뷰가 돌지 않는 프로젝트에서 대화 모르는 리뷰어(`clean-reviewer`)가 대신 리뷰합니다(기본 켬). 쓰지 않으면 `/harness` 에서 "깨끗한 리뷰" 묶음을 끄거나 `gugbab-claude off bundle:clean-review` |
 | 바꿨는데 반영이 안 됨 | 룰·에이전트·설정은 `/exit` 후 다시 시작해야 반영. `gugbab-claude status` 의 ⚠ 줄 확인 |
 | 하네스 없이 확인하고 싶음 | `gugbab-claude --raw` |
 | 메모리 폴더를 읽거나 고칠 때 확인 창이 뜸 | 세션 도중에 프로젝트 자체 `.claude/hooks` 를 지웠다면 `/exit` 후 다시 실행(실행할 때 어느 훅을 프로젝트 것으로 쓸지 정합니다). 하위 폴더에서 실행했다면 프로젝트 루트에서 실행 |

@@ -1,4 +1,5 @@
 {
+  "agent:clean-reviewer": "on",
   "agent:dream-interpretation-prompt-tester": "off",
   "agent:fact-checker": "lock",
   "agent:fortune-interpretation-prompt-tester": "off",
@@ -7,7 +8,7 @@
   "agent:nexacro-screen-analyzer": "off",
   "agent:nexacro-screen-converter": "off",
   "agent:nutrition-prompt-tester": "off",
-  "agent:skill-tester": "on",
+  "agent:skill-tester": "off",
   "agent:spec-reviewer": "off",
   "skill:spec-extraction-method": "off"
 }

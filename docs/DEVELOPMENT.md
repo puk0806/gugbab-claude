@@ -46,7 +46,8 @@ gugbab-claude/
 
 - 레포 최상위 `VERSION`(X.Y.Z 한 줄)이 다음 릴리스 버전입니다. **PR 마다 최신 `v*` 태그보다 크게 올립니다** — `node scripts/release-version.js bump`(기본 패치 +1, `bump minor`·`bump major`) 후 커밋.
 - 빠뜨리면 `release-version-guard` 훅(🔒, 이 레포 전용)이 `gh pr create` 를 막고, PR 의 `version-check` 워크플로도 실패합니다. `/create-pr` 는 이 단계를 먼저 처리합니다.
-- main 에 머지되면 `release-on-main` 워크플로가 `VERSION` 값으로 태그(`v1.0.2` …)와 GitHub Release 를 만들고, stable 설치본은 다음 실행 때 자동으로 받습니다. 이미 그 태그가 있으면 건너뛰고, 필요하면 Actions 화면에서 손으로 다시 실행할 수 있습니다.
+- **릴리스 노트** (2026-11-17): 버전마다 `docs/release-notes/<버전> <핵심 수정 요약>.md` 를 커밋합니다. `bump` 가 끝에 초안을 만들고(`--no-notes` 로 끔), 따로 만들 땐 `node scripts/release-version.js notes --title "핵심 수정 요약"`(`--base <커밋>` 기준 지정, `--print` 화면에만). 초안 = 제목·날짜·기준 커밋 / **수 변화**(스킬·에이전트는 그룹별 전→후, 훅·룰·커맨드는 추가·삭제 이름) / **큰 수정 내용**(origin/main 과 갈라진 뒤 커밋 제목을 `[분류]` 로 모음, 버전 올림·`[export] sync` 제외 — 문장은 사람이 다듬음). 요약의 위험 글자는 지우고 50자로 자르며, 이미 있는 그 버전 노트는 덮어쓰지 않고 노트 폴더가 링크면 쓰지 않습니다. 노트가 커밋돼 있지 않으면 훅과 `version-check`(`notes-check`)가 막습니다.
+- main 에 머지되면 `release-on-main` 워크플로가 `VERSION` 값으로 태그(`v1.0.2` …)와 GitHub Release 를 만들고(본문 = 그 버전 릴리스 노트, 노트가 없던 예전 버전은 PR 목록 자동 생성), stable 설치본은 다음 실행 때 자동으로 받습니다. 이미 그 태그가 있으면 건너뛰고, 필요하면 Actions 화면에서 손으로 다시 실행할 수 있습니다.
 - 확인: `node scripts/release-version.js check --remote` · 최신 태그 `node scripts/release-version.js latest --remote`
 
 ## 참고
