@@ -100,7 +100,7 @@ test('문서만 바꿈 → 건너뜀', () => {
 })
 
 test('셸·PowerShell·SQL·뷰 파일도 리뷰 대상, 비슷한 이름의 문서·설정은 아님', () => {
-  for (const name of ['run.sh', 'install.ps1', 'q.sql', 'App.vue', 'P.svelte', 'i.php']) {
+  for (const name of ['run.sh', 'install.ps1', 'q.sql', 'App.vue', 'P.svelte', 'i.php', 'm.mts', 'c.cts', 'b.bash', 'z.zsh', 'w.bat', 'g.cmd', 'RUN.SH', 'X.Ps1', 'A.TS']) {
     const repo = mkRepo(); fs.writeFileSync(path.join(repo, name), 'x'); touch(path.join(repo, name), NOW - 40000)
     assert.strictEqual(run(repo, stop(writeTranscript(repo, [human(NOW - 100000)]))).status, 2, name)
   }
@@ -115,8 +115,9 @@ test('리뷰 대상 확장자 목록이 codex-review-guard 와 글자까지 같�
   const a = ext('clean-review-guard.js'), b = ext('codex-review-guard.js')
   assert.ok(a && b, '두 파일에서 CODE_EXT 를 찾지 못함')
   assert.strictEqual(a, b)
-  for (const e of ['sh', 'ps1', 'sql', 'vue', 'svelte', 'php', 'ts', 'py']) assert.ok(new RegExp(`[(|]${e}[|)]`).test(b), `codex 훅 목록에 ${e} 없음`)
-  const re = new RegExp(b.slice(1, b.lastIndexOf('/')))
+  for (const e of ['sh', 'ps1', 'sql', 'vue', 'svelte', 'php', 'ts', 'py', 'mts', 'cts', 'bash', 'zsh', 'bat', 'cmd']) assert.ok(new RegExp(`[(|]${e}[|)]`).test(b), `codex 훅 목록에 ${e} 없음`)
+  const re = new RegExp(b.slice(1, b.lastIndexOf('/')), b.slice(b.lastIndexOf('/') + 1))
+  assert.strictEqual(re.test('RUN.SH'), true, '대문자 확장자')
   for (const n of ['run.sh.md', 'sh', 'a.shx', 'x.sql.bak']) assert.strictEqual(re.test(n), false, n)
 })
 

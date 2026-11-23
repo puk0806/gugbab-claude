@@ -129,7 +129,7 @@ function passWithWarning(text) {
 }
 
 // clean-review-guard 와 같은 목록 (2026-11-23 셸·SQL·뷰 계열 추가)
-const CODE_EXT = /\.(ts|tsx|js|jsx|mjs|cjs|rs|java|py|go|rb|c|cpp|h|hpp|cs|swift|kt|sh|ps1|sql|vue|svelte|php)$/;
+const CODE_EXT = /\.(ts|tsx|mts|cts|js|jsx|mjs|cjs|rs|java|py|go|rb|c|cpp|h|hpp|cs|swift|kt|sh|bash|zsh|bat|cmd|ps1|sql|vue|svelte|php)$/i;
 
 /**
  * 변경 엔트리 목록 — `git status --porcelain -z -uall`

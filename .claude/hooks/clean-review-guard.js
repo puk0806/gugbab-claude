@@ -30,7 +30,7 @@ const TRANSCRIPT_TAIL_BYTES = 8 * 1024 * 1024
 const MAX_FILES_LISTED = 40
 const MAX_PROMPT_CHARS = 1500
 // codex-review-guard 와 같은 목록 (2026-11-23 셸·SQL·뷰 계열 추가 — 설치·시험 스크립트만 바꾼 턴이 빠지던 것)
-const CODE_EXT = /\.(ts|tsx|js|jsx|mjs|cjs|rs|java|py|go|rb|c|cpp|h|hpp|cs|swift|kt|sh|ps1|sql|vue|svelte|php)$/
+const CODE_EXT = /\.(ts|tsx|mts|cts|js|jsx|mjs|cjs|rs|java|py|go|rb|c|cpp|h|hpp|cs|swift|kt|sh|bash|zsh|bat|cmd|ps1|sql|vue|svelte|php)$/i
 // 사람이 쓴 질문이 아닌 user 기록 (task-confirm-guard 와 같은 기준)
 const SYSTEM_PROMPT_RE = /^\s*(?:<(?:task-notification|agent-message|system-reminder|cross-session-message|local-command-stdout|local-command-caveat|bash-notification|command-name)\b|Stop hook feedback:|Another Claude session sent a message)/
 const IS_WIN = process.platform === 'win32'
