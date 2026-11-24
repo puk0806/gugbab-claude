@@ -171,11 +171,14 @@ console.log('\n[릴리스 노트 — 이상·경계]')
 {
   const first = repo({ version: '1.0.0\n', localTags: [], notes: false })
   check('첫 릴리스(태그 없음)도 노트는 필요 → 차단', ev('gh pr create', first).block === true)
-  const ctl = repo({ version: '1.0.2\n', localTags: ['v1.0.1'], notes: false })
-  fs.mkdirSync(path.join(ctl, 'docs', 'release-notes'), { recursive: true })
-  fs.writeFileSync(path.join(ctl, 'docs', 'release-notes', '1.0.2 \u001b[31m색.md'), 'x\n')
-  const rc = ev('gh pr create', ctl)
-  check('초안 이름의 제어 문자는 안내에서 지움', rc.block === true && !/\u001b/.test(rc.message), rc)
+  // 윈도우는 파일 이름에 제어 문자를 허용하지 않아(ENOENT) 이 시험을 만들 수 없다 — 2026-11-24 윈도우 CI 가 여기서 파일째 죽었다
+  if (process.platform !== 'win32') {
+    const ctl = repo({ version: '1.0.2\n', localTags: ['v1.0.1'], notes: false })
+    fs.mkdirSync(path.join(ctl, 'docs', 'release-notes'), { recursive: true })
+    fs.writeFileSync(path.join(ctl, 'docs', 'release-notes', '1.0.2 \u001b[31m색.md'), 'x\n')
+    const rc = ev('gh pr create', ctl)
+    check('초안 이름의 제어 문자는 안내에서 지움', rc.block === true && !/\u001b/.test(rc.message), rc)
+  }
   const notDir = repo({ version: '1.0.2\n', localTags: ['v1.0.1'], notes: false })
   fs.mkdirSync(path.join(notDir, 'docs'), { recursive: true }); fs.writeFileSync(path.join(notDir, 'docs', 'release-notes'), 'x\n')
   check('docs/release-notes 가 파일이어도 깨지지 않고 차단', ev('gh pr create', notDir).block === true)

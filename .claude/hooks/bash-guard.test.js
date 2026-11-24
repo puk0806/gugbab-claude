@@ -1780,6 +1780,49 @@ if (process.platform !== 'win32') {
   expPre('임시 폴더 안 SKILL.md 는 안 봄', `${RMRF}/tmp/bg-x/skills`, 'allow')
   expPre('rm (재귀 아님) 폴더 아닌 일반 파일', 'rm plain/a.txt', 'allow')
   expPre('없는 폴더', `${RMRF}nope-dir`, 'allow')
+  // 2026-11-24 윈도우 CI: rm -rf C:/ 가 폴더 훑기에서 시간 초과로 끊겨 루트·시스템 폴더 거부까지 사라졌다
+  // → 위험 대상 거부는 훑기와 무관해야 한다 (훑기 시간 상한을 0 미만으로 줘 훑기가 바로 포기하게 한 상태에서도 거부)
+  const expAt = (desc, cmd, want) => {
+    const a = String(at(cmd))
+    const ok = a === String(want)
+    console.log(`  ${ok ? '✅' : '❌'} ${desc} → ${ok ? 'PASS' : `FAIL (기대 ${want}, 실제 ${a})`}`)
+    ok ? passed++ : failed++
+  }
+  try {
+    process.env.BASH_GUARD_TEST_SCAN_MS = '-1'
+    expPre('훑기 포기 상태에서도 rm -rf / 는 거부', `${RMRF}/`, 'deny')
+    expPre('훑기 포기 상태에서도 rm -rf ~ 는 거부', `${RMRF}~`, 'deny')
+    expPre('훑기 포기 상태에서도 rm -rf /usr 는 거부', `${RMRF}/usr`, 'deny')
+    expPre('훑기 포기 상태에서도 보호 파일 직접 삭제는 거부', `${RMRF}docs/skills/a/verification.md`, 'deny')
+    expPre('훑기 포기 상태에서도 변수 경로 SKILL.md 는 거부', 'mv "$D"/SKILL.md /tmp/', 'deny')
+    expAt('시간 안에 다 못 훑으면 통과가 아니라 확인 (rm -rf 폴더)', `${RMRF}docs/skills`, 'ask')
+    expAt('시간 안에 다 못 훑으면 통과가 아니라 확인 (mv 폴더)', 'mv docs/skills /tmp/', 'ask')
+    expAt('훑기 포기 상태 — 대상이 여러 개여도 확인', `${RMRF}plain docs/skills .claude/skills`, 'ask')
+    expAt('훑기 포기 상태 — 명령이 나뉘어도 확인', `${RMRF}plain; ${RMRF}docs/skills`, 'ask')
+    process.env.BASH_GUARD_TEST_SCAN_MS = ''
+    expPre('이상 입력: 상한 값이 빈 문자열이면 기본값으로 훑음', `${RMRF}docs/skills`, 'deny')
+    process.env.BASH_GUARD_TEST_SCAN_MS = '   '
+    expPre('이상 입력: 상한 값이 공백뿐이어도 기본값으로 훑음', `${RMRF}docs/skills`, 'deny')
+    expAt('시간 안에 다 못 훑어도 보호 파일 없는 작은 폴더까지 묻지는 않음 — 폴더가 아니면 훑지 않음', 'rm plain/a.txt', null)
+    process.env.BASH_GUARD_TEST_SCAN_MS = 'abc'
+    expPre('이상 입력: 상한 값이 숫자가 아니면 기본값으로 훑음', `${RMRF}docs/skills`, 'deny')
+    process.env.BASH_GUARD_TEST_SCAN_MS = '999999999'
+    expPre('악용: 상한을 크게 줘도 기본값을 넘지 못하고 정상 판정', `${RMRF}docs/skills`, 'deny')
+  } finally {
+    delete process.env.BASH_GUARD_TEST_SCAN_MS
+  }
+  expPre('위험 대상과 보호 폴더가 섞여도 거부', `${RMRF}docs/skills /`, 'deny')
+  expPre('위험 대상이 앞에 와도 뒤 보호 폴더는 그대로 훑어 거부', `${RMRF}/usr docs/skills`, 'deny')
+  expPre('위험 대상 + 보호 파일 없는 폴더도 거부(위험 대상 때문에)', `${RMRF}/usr plain`, 'deny')
+  expPre('rm 이 묻기만 하는 대상(프로젝트 밖)은 그대로 훑어 보호 파일을 찾음', `${RMRF}${P}/docs`, 'deny')
+  {
+    const t0 = Date.now()
+    const a = at(`${RMRF}/`)
+    const ms = Date.now() - t0
+    const ok = a === 'deny' && ms < 3000
+    console.log(`  ${ok ? '✅' : '❌'} rm -rf / 는 루트를 훑지 않고 바로 거부 (${ms}ms) → ${ok ? 'PASS' : `FAIL (실제 ${a})`}`)
+    ok ? passed++ : failed++
+  }
   fs.rmSync(proj, { recursive: true, force: true })
 
   section('확인 창이 뜰 명령은 먼저 거부 — default·acceptEdits 모드')

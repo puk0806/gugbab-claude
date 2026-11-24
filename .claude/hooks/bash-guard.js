@@ -2472,13 +2472,26 @@ function dynProtectedLabel(w) {
   return null
 }
 const SCAN_SKIP_DIRS = new Set(['node_modules', '.git', '.next', 'dist', 'build', 'coverage', '.turbo', '.cache'])
+function scanBudgetMs() {
+  const raw = process.env.BASH_GUARD_TEST_SCAN_MS
+  const t = Number(raw)
+  // 시험용 값은 기본값보다 늘릴 수 없다(훅 제한 시간을 넘기지 않게). 줄이면 "다 못 봄 → 확인" 쪽으로만 간다. 빈 값·숫자 아님은 기본값
+  return typeof raw === 'string' && raw.trim() !== '' && Number.isFinite(t) ? Math.min(t, 1500) : 1500
+}
+const SCAN_TIMED_OUT = Symbol('scan-timed-out')
+let _scanDeadline = 0
 function dirProtectedLabel(abs, ctx) {
   let st
   try { st = fs.lstatSync(abs) } catch { return null }
   if (!st.isDirectory() || isUnderTempDir(path.join(abs, 'x')) || SCAN_SKIP_DIRS.has(path.basename(abs))) return null
   const stack = [abs]
   let n = 0
+  // 시간 상한 — 훅 제한 시간 안에 판정을 내야 다른 거부(루트·홈·시스템 폴더)가 살아남는다 (2026-11-24 윈도우 CI: C:/ 를 훑다 끊김)
+  // 상한은 훅 실행 한 번 전체가 함께 쓴다 — 큰 폴더를 여러 개 준 명령(rm -rf a b c …)이 1.5초 × N 을 쓰지 못하게
+  if (!_scanDeadline) _scanDeadline = Date.now() + scanBudgetMs()
+  const deadline = _scanDeadline
   while (stack.length) {
+    if (Date.now() > deadline) return SCAN_TIMED_OUT
     const d = stack.pop()
     let ents
     try { ents = fs.readdirSync(d, { withFileTypes: true }) } catch { continue }
@@ -2525,10 +2538,21 @@ function classifyProtectedWrite(inv, ctx, add) {
     }
   }
   if (isMoveOrDelete(inv)) {
+    // rm 이 어차피 거부하는 대상(루트·홈·드라이브 루트·시스템 폴더)은 훑지 않는다 — 큰 폴더를 훑다 훅이 시간 초과로 끊기면 그 거부까지 사라진다
+    //   대상마다 따로 본다 — 위험 대상과 함께 준 다른 폴더(rm -rf /usr docs/skills)는 그대로 훑는다
+    const rmDenies = (t) => {
+      if (nm !== 'rm') return false
+      let denied = false
+      classifyRm({ args: [{ ...newWord(), value: '-r' }, t] }, ctx, (level) => { if (level === 'deny') denied = true })
+      return denied
+    }
     for (const t of moveOrDeleteSources(inv)) {
       if (t.dyn) continue
+      if (rmDenies(t)) continue
       const abs = protectedAbsOf(t, ctx)
       const label = abs && dirProtectedLabel(abs, ctx)
+      // 시간 안에 다 못 훑음 — 보호 파일이 없다고 단정할 수 없으니 통과시키지 않고 사용자에게 묻는다 (느린 디스크에서 판정이 갈리지 않게)
+      if (label === SCAN_TIMED_OUT) { add('ask', `${cleanValue(t.value)} 폴더가 커서 안에 보호 파일(SKILL.md·verification.md·memory)이 있는지 다 확인하지 못했습니다(${nm}). 사용자 확인이 필요합니다.`); continue }
       if (label) { add('deny', `${cleanValue(t.value)} 폴더 안에 ${label} 이(가) 있어 Bash 로 옮기거나 지울 수 없습니다(${nm}). 보호 파일은 Write/Edit 도구로만 고치고, 폴더째 정리가 꼭 필요하면 사용자에게 직접 실행해 달라고 하세요.`); return }
     }
   }
