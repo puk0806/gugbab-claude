@@ -349,7 +349,7 @@ console.log('\n[제거한 훅] relation-guard·parallel-hint·session-start 는 
     for (const h of ['relation-guard', 'parallel-hint', 'session-start']) assert(`${flags.join(' ')} → ${h} 미배선`, txt.includes(h), false)
   }
   // 경계: 배선된 모든 훅 파일이 실제로 있어야 한다 (지운 훅을 가리키는 깨진 배선 방지)
-  const full = generate('--dev', '--typescript', '--memory', '--superpowers', '--codex', '--readme-guard', '--staleness-guard', '--branch-protection', '--claude-version-check', '--release-version-guard', '--wrapper-version-check')
+  const full = generate('--dev', '--typescript', '--memory', '--superpowers', '--codex', '--clean-review', '--readme-guard', '--staleness-guard', '--branch-protection', '--claude-version-check', '--release-version-guard', '--wrapper-version-check')
   const files = [...new Set(JSON.stringify(full.hooks).match(/hooks\/[\w.-]+\.(?:js|sh)/g) || [])]
   const missing = files.filter((f) => !fs.existsSync(path.join(__dirname, '..', '.claude', f)))
   assert(`전체 옵션 배선 훅 파일 ${files.length}개 모두 존재 (없음: ${missing.join(',') || '-'})`, missing.length, 0)
@@ -409,13 +409,25 @@ console.log('\n[release-version-guard] --release-version-guard 일 때만 PreToo
   }
 }
 
+// ── clean-review-guard (2026-11-23) — --clean-review 일 때만 Stop 에 배선 (dev·util 둘 다) ──────
+console.log('\n[clean-review-guard] --clean-review 일 때만 Stop 에 배선')
+{
+  const stop = (s) => (s.hooks.Stop || []).flatMap((g) => g.hooks.map((h) => h.command))
+  assert('--dev --clean-review → Stop 배선', stop(generate('--dev', '--clean-review')).some((c) => /clean-review-guard\.js/.test(c)), true)
+  assert('--util --clean-review → Stop 배선', stop(generate('--util', '--clean-review')).some((c) => /clean-review-guard\.js/.test(c)), true)
+  assert('--codex --clean-review → codex 뒤에 한 번만', stop(generate('--dev', '--codex', '--clean-review')).filter((c) => /review-guard\.js/.test(c)).map((c) => c.match(/(\w+-review-guard)/)[1]).join(','), 'codex-review-guard,clean-review-guard')
+  for (const flags of [['--dev'], ['--util'], ['--dev', '--codex', '--memory', '--readme-guard'], ['--dev', '--clean-reviewx'], ['--dev', '--clean']]) {
+    assert(`${flags.join(' ')} → clean-review-guard 미배선`, JSON.stringify(generate(...flags).hooks).includes('clean-review-guard'), false)
+  }
+}
+
 // ── 원본 레포 settings.json ↔ 생성기 전체 옵션 출력 동기 (2026-10-05) ──────
 // 원본 레포는 모든 옵션을 켠 설치본과 같은 설정을 써야 한다(원본에서 훅을 실사용하며 검증하는 구조).
 // 손으로 고친 settings.json 이 생성기와 어긋나 statusLine 누락·allow 누락·훅 배선 누락(verification-guard
 // PostToolUse Write)이 생긴 것을 계기로, 의미 단위(훅은 이벤트별 matcher::command 집합, 권한은 집합)로 비교한다.
 console.log('\n[회귀] 원본 .claude/settings.json == gen-settings 전체 옵션 출력 (의미 비교)')
 {
-  const full = generate('--dev', '--typescript', '--memory', '--superpowers', '--codex', '--readme-guard', '--staleness-guard', '--branch-protection', '--claude-version-check', '--release-version-guard', '--wrapper-version-check')
+  const full = generate('--dev', '--typescript', '--memory', '--superpowers', '--codex', '--clean-review', '--readme-guard', '--staleness-guard', '--branch-protection', '--claude-version-check', '--release-version-guard', '--wrapper-version-check')
   const repo = JSON.parse(require('fs').readFileSync(path.join(__dirname, '..', '.claude', 'settings.json'), 'utf8'))
   const norm = (s) => {
     const o = JSON.parse(JSON.stringify(s))

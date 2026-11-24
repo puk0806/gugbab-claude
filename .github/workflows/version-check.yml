@@ -21,3 +21,5 @@ jobs:
         run: |
           git fetch --tags --force origin
           node scripts/release-version.js check
+      - name: 그 버전 릴리스 노트가 커밋돼 있는지 (docs/release-notes/<버전> <요약>.md)
+        run: node scripts/release-version.js notes-check

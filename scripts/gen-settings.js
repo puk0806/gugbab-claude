@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // gen-settings.js — 이 레포 .claude/settings.json 의 원본 생성기 (옛 project-install.sh 는 2026-10-17 삭제).
 // 레포 settings.json 은 전체 옵션 출력과 같아야 하고(gen-settings.test.js 회귀 검사), build-manifest 가 그 settings.json 에서 훅 배선을 읽는다
-// 사용: node scripts/gen-settings.js [--util] [--dev] [--typescript] [--legacy] [--memory] [--superpowers] [--codex] [--readme-guard] [--staleness-guard] [--branch-protection] [--claude-version-check] [--release-version-guard] [--wrapper-version-check]
+// 사용: node scripts/gen-settings.js [--util] [--dev] [--typescript] [--legacy] [--memory] [--superpowers] [--codex] [--clean-review] [--readme-guard] [--staleness-guard] [--branch-protection] [--claude-version-check] [--release-version-guard] [--wrapper-version-check]
 
 const args = process.argv.slice(2);
 const isUtil               = args.includes('--util');
@@ -15,6 +15,8 @@ const isLegacy             = args.includes('--legacy');
 const withMemory           = args.includes('--memory');            // memory-* 훅 포함
 const withSuperpowers      = args.includes('--superpowers');       // superpowers@superpowers-marketplace 플러그인 활성화
 const withCodex            = args.includes('--codex');             // codex@openai-codex 플러그인 활성화
+// clean-review-guard(2026-11-23): Codex 리뷰가 돌지 않으면 깨끗한 Claude 리뷰어(clean-reviewer 에이전트 필요)로 리뷰 강제
+const withCleanReview      = args.includes('--clean-review');
 const withReadmeGuard      = args.includes('--readme-guard');      // git commit/push 직전 README 미업데이트 차단
 const withStalenessGuard   = args.includes('--staleness-guard');   // 60일 초과 스킬 강제 재검증 지시 주입
 const withBranchProtection = args.includes('--branch-protection'); // main push 금지 + 피처→피처 브랜치 생성 금지
@@ -172,6 +174,7 @@ const deliverableStop = withReadmeGuard
   : { type: 'command', command: 'node "$CLAUDE_PROJECT_DIR"/.claude/hooks/deliverable-guard.js --no-readme' };
 const stopHooks = [deliverableStop];
 if (withCodex) stopHooks.push(H('codex-review-guard.js'));
+if (withCleanReview) stopHooks.push(H('clean-review-guard.js'));
 if (withTs) stopHooks.push(tsStopHook); // 답변 종료 때 tsc 한 번 — 기록·알림 훅보다 앞
 // memory-stop-guard는 2026-07-10 제거 — 자동 커밋 폐지로 존재 이유 소멸 (memory-sync가 미러 복사 담당)
 stopHooks.push(H('session-export.js')); // 대화 요약 강제 보존 — 옵션 없음 (Y: 레포 exports/ 워킹트리 · N: 로컬 exports/)
@@ -197,7 +200,7 @@ hooks.PermissionRequest = [
 ];
 
 // ── util 모드: 스킬·에이전트 구조 검증 훅 제외, 최소 구성 ────────────────
-// 단, 명시적 opt-in 옵션(--readme-guard·--branch-protection·--memory·--codex)은 보존한다
+// 단, 명시적 opt-in 옵션(--readme-guard·--branch-protection·--memory·--codex·--clean-review)은 보존한다
 if (isUtil) {
   // PreToolUse 재정의 — 구조 검증 3종(verification/skill-md/agent-md)이 딸려가지 않도록
   hooks.PreToolUse = [
@@ -230,6 +233,7 @@ if (isUtil) {
     { hooks: [
       ...(withReadmeGuard ? [H('deliverable-guard.js')] : []),
       ...(withCodex ? [H('codex-review-guard.js')] : []),
+      ...(withCleanReview ? [H('clean-review-guard.js')] : []),
       H('session-export.js'), // 대화 요약 강제 보존 — util 모드에서도 옵션 없이 포함
       H('korean-response-guard.js'), // 답변 한국어 강제 — util 모드에서도 옵션 없이 포함
       H('cc-notify.js'),

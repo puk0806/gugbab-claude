@@ -27,6 +27,9 @@ docs/research/.draft-*.md
 
 # OS
 .DS_Store
+# 맥 화면 캡처 (레포 루트에 떨어진 것)
+/스크린샷*.png
+/Screenshot*.png
 Thumbs.db
 
 # 에디터

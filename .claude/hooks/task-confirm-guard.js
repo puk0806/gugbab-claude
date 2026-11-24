@@ -48,6 +48,11 @@ const PROHIBIT_CLAUSE_RE = /지\s*(?:말(?:고|아(?:줘|요|주세요)?|기|구
 // 승인어로 시작해도 중간에 거절어가 낱말로 끼면("응 아니 그거 하지 말고") 관대 처리하지 않는다
 const MID_REJECT_RE = /(?:^|[\s,.!~…])(?:아니|아뇨|아냐|잠깐|잠시만|멈춰|중단|취소|보류|그만)(?=$|[\s,.!~…]|야|요|해)/
 
+// 계획 전체를 실행하라는 지시 — 금지 절("-지 말고")이 섞여 있어도 승인으로 본다 (judgePrompt 의 관대 처리)
+const PROHIBITED_WORD_RE = /[가-힣]+지\s*(?:말(?:고|아(?:줘|요|주세요)?|기|구)?|마(?:세요|요)?)|[가-힣]+면\s*안\s*(?:돼|되|됩)/g
+// 낱말 시작에서만 찾고("했다 하고" 의 '다' 는 아님), 소망·서술("다 하고 싶지만"·"다 하고 있는")은 지시가 아니다
+const PROCEED_ALL_RE = /(?:^|[\s,.!~…])(?:(?:다|전부|모두|싹\s*다|끝까지|마저)\s*(?:진행(?!\s*(?:해[야도서]|하면|할지|할까))|하고(?!\s*(?:싶|있))|해(?:줘|라|$|[\s,.!~])|끝내|마무리)|진행\s*(?:해(?![야도서])|하고(?!\s*(?:싶|있))|하자|시켜))/
+const OTHER_NEGATION_RE = /안\s*(?:하|해|할)|않(?:고|아|을|는|았|게)|못\s*(?:하|해)/
 const APPROVE_WORD_RE = /진행|^\s*(?:응|네|넹|예|ㅇㅇ|ㅇㅋ|좋아|오케이|그래|콜)|해\s*줘|하자|ok\b|okay\b|go\b|yes\b/i
 const QUESTION_RE = /\?\s*$|뭐야|뭐지|뭔데|왜\s|어떻게|무슨|무엇|맞아\??\s*$|건가|는가\??\s*$/
 
@@ -120,7 +125,16 @@ function judgePrompt(prompt, prevAssistant) {
   const lastLine = (lines[lines.length - 1] || '').slice(-CONFIRM_TAIL_CHARS)
   if (!CONFIRM_RE.test(lastLine) || /["“'‘「]진행할까요/.test(lastLine)) return { approved: false, why: 'no-confirm-question' }
   // 승인어로 시작 + 중간 거절어 없음 → "하지 말고/하지 마" 금지 절만 빼고 거절 표현을 본다
-  const rejectTarget = APPROVE_START_RE.test(p) && !MID_REJECT_RE.test(p) ? p.replace(PROHIBIT_CLAUSE_RE, ' ') : p
+  // 승인어로 시작하지 않아도, 금지 절을 뺀 나머지에 "다 하고·전부 진행·진행해" 같은 전체 실행 지시가 있으면 같은 관대 처리
+  // (2026-11-23 실사용 오탐: "다른 프로젝트 신경쓰지말고 … 잔존 작업 다하고 … 보고해" 가 "말고" 에 걸려 거절로 판정).
+  // "A 말고 B로"(‑지 없음)·"다시 정리"·중간 거절어는 그대로 거절이다
+  const stripped = p.replace(PROHIBIT_CLAUSE_RE, ' ')
+  // 실행 지시는 금지된 낱말째 지운 글에서 찾는다 — "전부 진행하지 말고 기다려" 의 "전부 진행" 은 금지 대상이지 지시가 아니다
+  const withoutProhibited = p.replace(PROHIBITED_WORD_RE, ' ')
+  // "-지 말고" 가 아닌 부정("진행 안 하고"·"진행하지 않고")이 있으면 실행 지시로 보지 않는다
+  const proceedAll = PROCEED_ALL_RE.test(withoutProhibited) && !OTHER_NEGATION_RE.test(p)
+  const lenient = !MID_REJECT_RE.test(p) && (APPROVE_START_RE.test(p) || proceedAll)
+  const rejectTarget = lenient ? stripped : p
   if (REJECT_START_RE.test(p) || REJECT_ANY_RE.test(rejectTarget)) return { approved: false, why: 'rejected' }
   // 승인 표현 없이 되묻는 질문("이건 뭐야??")은 승인이 아니라 확인 질문 (실제 세션 검증으로 추가)
   if (!APPROVE_WORD_RE.test(p) && QUESTION_RE.test(p)) return { approved: false, why: 'question' }
@@ -173,8 +187,49 @@ function isExemptPathWin(filePath, cwd) {
   return false
 }
 
+// 레포 memory/ 미러 — 전역 메모리 폴더와 같은 내용을 memory-sync 가 양방향으로 맞추는 곳이라 전역과 같게 승인 없이 쓸 수 있다
+// (2026-11-23 다른 세션 보고: 전역 메모리는 되는데 레포 미러 Edit 만 승인 전에 막힘).
+// 조건: git 최상위에 memory/MEMORY.md 가 실제 파일로 있고, 대상이 그 memory/ 안의 .md 이며, 링크를 따라간 실제 위치도 그 안일 것
+function isRepoMemoryMirror(filePath, cwd) {
+  try {
+    if (/^~/.test(filePath)) return false
+    const abs = path.resolve(cwd || process.env.CLAUDE_PROJECT_DIR || process.cwd(), filePath)
+    if (!/\.md$/i.test(abs)) return false
+    let root = path.dirname(abs)
+    for (let i = 0; i < 64; i++) {
+      if (fs.existsSync(path.join(root, '.git'))) break
+      const up = path.dirname(root)
+      if (up === root) return false
+      root = up
+    }
+    // 지금 프로젝트의 git 최상위여야 한다 — 안쪽에 따로 있는 .git(서브모듈·벤더 폴더)의 memory/ 는 미러가 아니다
+    let proj = path.resolve(cwd || process.env.CLAUDE_PROJECT_DIR || process.cwd())
+    for (let i = 0; i < 64; i++) {
+      if (fs.existsSync(path.join(proj, '.git'))) break
+      const up = path.dirname(proj)
+      if (up === proj) return false
+      proj = up
+    }
+    if (fs.realpathSync(proj) !== fs.realpathSync(root)) return false
+    // 메모리 공유를 쓰는 프로젝트여야 한다 — 래퍼는 켜진 항목(GUGBAB_ENABLED), 레포 직접 실행은 프로젝트의 memory-sync 훅 파일로 본다
+    const en = process.env.GUGBAB_ENABLED
+    const shared = typeof en === 'string' ? en.split(',').includes('hook:memory-sync') : fs.existsSync(path.join(root, '.claude', 'hooks', 'memory-sync.js'))
+    if (!shared) return false
+    const mem = path.join(root, 'memory')
+    if (!fs.lstatSync(mem).isDirectory() || !fs.lstatSync(path.join(mem, 'MEMORY.md')).isFile()) return false
+    const realMem = fs.realpathSync(mem)
+    let dir = path.dirname(abs)
+    while (!fs.existsSync(dir)) dir = path.dirname(dir)
+    const realTarget = path.join(fs.realpathSync(dir), path.relative(dir, abs))
+    try { if (fs.lstatSync(abs).isSymbolicLink()) return false } catch { /* 새 파일 */ }
+    const rel = path.relative(realMem, realTarget)
+    return !!rel && !rel.startsWith('..') && !path.isAbsolute(rel)
+  } catch { return false }
+}
+
 function isExemptPath(filePath, cwd) {
   if (typeof filePath !== 'string' || !filePath) return false
+  if (isRepoMemoryMirror(filePath, cwd)) return true
   if (IS_WIN) return isExemptPathWin(filePath, cwd)
   let v = filePath
   if (HOME && (v === '~' || v.startsWith('~/'))) v = HOME + v.slice(1)
@@ -308,6 +363,8 @@ function handle(input) {
       // 커밋·푸시·PR·머지는 승인 여부와 따로 — 가장 최근 사용자 메시지가 그 동작을 요청했을 때만 (2026-11-13, 서브에이전트 포함)
       const missing = vcsMissing(ti.command, readState(sessionId))
       if (missing) return { code: 2, stderr: missing }
+      // 커밋·푸시를 요청받은 차례의 세션 요약 갱신은 커밋 절차의 일부라 막지 않는다 (2026-11-24 — 막혀서 exports 가 두 번 밀렸다)
+      if (isSessionExportRefresh(ti.command, cwd, readState(sessionId))) return { code: 0 }
       reason = shellWriteReason(ti.command, cwd)
       if (!reason) return { code: 0 }
     } else {
@@ -346,6 +403,65 @@ function vcsMissing(cmd, st) {
   }
   const missing = lib.missingActions(cmd, st && st.vcs)
   return missing.length ? lib.blockMessage(missing) : null
+}
+
+// 세션 요약 갱신 명령(.claude/rules/memory-sync.md 3단계) — 이번 사용자 메시지가 커밋·푸시·PR·머지를 요청했고,
+// 명령이 정해진 꼴 그대로이며, 실행되는 스크립트가 이 프로젝트의 .claude/hooks/session-export.js(링크 아님)일 때만 참.
+// 다른 명령을 덧붙이거나(; && |) 다른 폴더의 같은 이름 스크립트를 가리키면 거짓 → 평소 판정으로
+const EXPORT_REFRESH_RE = /^(?:cd\s+("[^"$`\\]+"|[\w.\/~-]+)\s*&&\s*)?(R="\$\(git rev-parse --show-toplevel\)"\s*&&\s*)?CLAUDE_PROJECT_DIR=("\$R"|"[^"$`\\]+"|[\w.\/~-]+)\s+node\s+("\$R\/\.claude\/hooks\/session-export\.js"|\.claude\/hooks\/session-export\.js)\s+--refresh(?:\s+2>&1)?(?:\s*\|\s*tail\s+-(?:n\s*)?\d+)?\s*$/
+function isSessionExportRefresh(cmd, cwd, st) {
+  const v = st && st.vcs
+  if (!v || !(v.commit || v.push || v.pr || v.merge)) return false
+  const text = String(cmd).trim()
+  // 줄바꿈이 끼면 셸은 여러 명령으로 실행한다 — 한 줄 명령만 인정
+  if (/[\r\n]/.test(text)) return false
+  const m = EXPORT_REFRESH_RE.exec(text)
+  if (!m) return false
+  // 셸은 따옴표 안의 ~ 를 풀지 않는다 — 따옴표 없는 값에서만 홈으로 푼다 (훅이 본 경로와 실제 경로가 어긋나지 않게)
+  const unq = (s) => (/^".*"$/.test(s) ? s.slice(1, -1) : s.replace(/^~(?=\/|$)/, os.homedir()))
+  const base = cwd || process.env.CLAUDE_PROJECT_DIR || process.cwd()
+  const runDir = m[1] ? path.resolve(base, unq(m[1])) : base
+  const usesR = !!m[2]
+  if ((m[3] === '"$R"' || m[4].startsWith('"$R')) && !usesR) return false
+  let root = runDir
+  if (usesR) {
+    try { root = require('child_process').execFileSync('git', ['rev-parse', '--show-toplevel'], { cwd: runDir, encoding: 'utf8', timeout: 3000, stdio: ['ignore', 'pipe', 'ignore'] }).trim() } catch { return false }
+  }
+  // 스크립트는 이 세션 프로젝트의 것이어야 한다
+  const projRoot = gitRootOf(base)
+  if (!projRoot || !sameReal(root, projRoot)) return false
+  if (m[3] !== '"$R"' && !sameReal(path.resolve(runDir, unq(m[3])), projRoot)) return false
+  // 셸이 실제로 실행할 파일 — 상대 경로 꼴은 실행 폴더(runDir) 기준이다. 하위 폴더에서 돌리면 그쪽의 같은 이름 파일이 실행되므로
+  // 프로젝트 최상위의 스크립트와 같은 파일인지 확인한다 (2026-11-24 깨끗한 리뷰 지적)
+  const REL = path.join('.claude', 'hooks', 'session-export.js')
+  const script = path.join(projRoot, REL)
+  const executed = m[4].startsWith('"$R') ? path.join(root, REL) : path.join(runDir, REL)
+  try { const s = fs.lstatSync(executed); if (!s.isFile() || s.isSymbolicLink()) return false } catch { return false }
+  if (!sameReal(executed, script)) return false
+  // 커밋된 내용 그대로일 때만 — 이번 차례에 바뀌었거나 git 이 모르는 스크립트는 평소 판정으로
+  //   스크립트가 불러오는 공용 모듈(.claude/hooks/lib/)도 함께 본다 — 거기에 쓰기 코드를 넣고 갱신 명령으로 돌리는 우회 방지
+  const git = (args) => { try { return require('child_process').execFileSync('git', args, { cwd: projRoot, encoding: 'utf8', timeout: 3000, stdio: ['ignore', 'pipe', 'ignore'] }) } catch { return null } }
+  const WATCH = ['.claude/hooks/session-export.js', '.claude/hooks/lib']
+  // lib(또는 그 위 폴더)가 링크면 git 은 링크가 가리키는 곳의 내용 변경을 보지 못한다 → 링크면 허용하지 않는다
+  for (const rel of ['.claude', path.join('.claude', 'hooks'), path.join('.claude', 'hooks', 'lib')]) {
+    // lib 는 없어도 된다(ENOENT). 그 밖의 오류는 확인할 수 없으니 허용하지 않는다
+    try { if (fs.lstatSync(path.join(projRoot, rel)).isSymbolicLink()) return false } catch (err) { if (!(err && err.code === 'ENOENT' && rel === path.join('.claude', 'hooks', 'lib'))) return false }
+  }
+  // 감시 대상 안의 파일 하나가 링크여도 같은 문제 — git 이 링크로 기록한 항목(모드 120000)이 있으면 허용하지 않는다
+  const staged = git(['ls-files', '-s', '--', ...WATCH])
+  if (staged === null || /^120000 /m.test(staged)) return false
+  if (git(['ls-files', '--error-unmatch', '--', '.claude/hooks/session-export.js']) === null) return false
+  if (git(['diff', '--quiet', 'HEAD', '--', ...WATCH]) === null) return false
+  const untracked = git(['ls-files', '--others', '--', '.claude/hooks/lib'])
+  return untracked !== null && untracked.trim() === ''
+}
+function gitRootOf(dir) {
+  try { return require('child_process').execFileSync('git', ['rev-parse', '--show-toplevel'], { cwd: dir, encoding: 'utf8', timeout: 3000, stdio: ['ignore', 'pipe', 'ignore'] }).trim() } catch { return null }
+}
+function sameReal(a, b) {
+  // native — 윈도우의 짧은 이름(RUNNER~1)·대소문자·구분자를 실제 경로로 맞춘다
+  const real = (p) => (fs.realpathSync.native || fs.realpathSync)(p)
+  try { const x = real(a), y = real(b); return process.platform === 'win32' ? x.toLowerCase() === y.toLowerCase() : x === y } catch { return false }
 }
 
 function shellWriteReason(cmd, cwd) {

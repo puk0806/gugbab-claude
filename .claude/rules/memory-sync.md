@@ -49,6 +49,8 @@ Claude가 memory 파일 Write/Edit
 4. 레포 ↔ 전역 미러 일치 확인 (`diff -rq memory ~/.claude/projects/<해시>/memory`)
 5. memory 변경 → `[memory]` 커밋 / exports 변경 → `[export]` 커밋으로 **해당 커밋 배치에 함께 포함**
 
+**순서 예외**: 이번 작업에서 `.claude/hooks/session-export.js` 나 `.claude/hooks/lib/` 를 고쳤으면 3번은 코드 커밋 **뒤에** 실행한다 — 그 파일들이 커밋된 내용과 다르면 승인 확인 훅(작업 확인 묶음을 켠 경우)이 갱신 명령을 승인 없이 통과시키지 않는다 (코드·문서·memory 커밋 → 3번 → `[export]` 커밋 → push).
+
 세션 중 발생한 피드백·결정은 그 자리에서 memory에 기록하되(미러까지 자동), 커밋은 이 시점에만 묶는다.
 
 **훅 강제 (deliverable-guard)**: `git push`·`gh pr create` 직전에 memory/·exports/ 미커밋 변경이 있으면

@@ -27,11 +27,14 @@ const base = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'rvg-')))
 let n = 0
 const g = (cwd, ...a) => execFileSync('git', a, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
 // 이 레포처럼 생긴 임시 레포 — marker: release-on-main.yml, origin: 태그를 가진 bare 레포(선택)
-function repo({ version = '1.0.2\n', marker = true, localTags = [], originTags = null } = {}) {
+// notes: true 면 그 버전 릴리스 노트(docs/release-notes/<버전> 요약.md)도 같이 커밋 — 노트 검사 전용 시험은 false
+function repo({ version = '1.0.2\n', marker = true, localTags = [], originTags = null, notes = true } = {}) {
   const d = path.join(base, `r${++n}`); fs.mkdirSync(d)
   g(d, 'init', '-q'); g(d, 'config', 'user.email', 't@t'); g(d, 'config', 'user.name', 't')
   if (marker) { fs.mkdirSync(path.join(d, '.github', 'workflows'), { recursive: true }); fs.writeFileSync(path.join(d, '.github', 'workflows', 'release-on-main.yml'), 'name: x\n') }
   if (version !== null) fs.writeFileSync(path.join(d, 'VERSION'), version)
+  const pv = version !== null && rv.parseVersion(version)
+  if (notes && pv) { fs.mkdirSync(path.join(d, 'docs', 'release-notes'), { recursive: true }); fs.writeFileSync(path.join(d, 'docs', 'release-notes', `${rv.fmt(pv)} 시험 요약.md`), '# x\n') }
   fs.writeFileSync(path.join(d, 'README.md'), 'x\n')
   g(d, 'add', '-A'); g(d, 'commit', '-q', '-m', 'init')
   for (const t of localTags) g(d, 'tag', t)
@@ -120,6 +123,66 @@ console.log('\n[이상·경계]')
   check('1MB 미만 큰 입력(gh 없음) → exit 0 (경계)', near.status === 0, { status: near.status })
 }
 function s0() { return repo({ version: '1.0.2\n', localTags: ['v1.0.1'] }) }
+
+console.log('\n[릴리스 노트 — 정상]')
+{
+  const d = repo({ version: '1.0.2\n', localTags: ['v1.0.1'] })
+  check('버전 올림 + 그 버전 노트 커밋됨 → 통과', ev('gh pr create --fill', d).block === false)
+  const no = repo({ version: '1.0.2\n', localTags: ['v1.0.1'], notes: false })
+  const r = ev('gh pr create --fill', no)
+  check('버전은 올렸는데 노트 없음 → 차단 + notes --title 안내', r.block === true && /릴리스 노트를 커밋해야/.test(r.message) && /notes --title/.test(r.message), r)
+  const p = runHook({ tool_name: 'Bash', tool_input: { command: 'gh pr create --fill' }, cwd: no })
+  check('훅 프로세스: 노트 없음 → exit 2', p.status === 2 && /릴리스 노트/.test(p.stderr), { status: p.status, err: p.stderr })
+  const low = repo({ version: '1.0.1\n', localTags: ['v1.0.1'], notes: false })
+  const rl = ev('gh pr create', low)
+  check('버전도 안 올렸으면 버전 안내가 먼저 (노트 안내 아님)', rl.block === true && /버전을 올려야/.test(rl.message) && !/릴리스 노트를/.test(rl.message), rl)
+}
+
+console.log('\n[릴리스 노트 — 악성·우회]')
+{
+  const draft = repo({ version: '1.0.2\n', localTags: ['v1.0.1'], notes: false })
+  fs.mkdirSync(path.join(draft, 'docs', 'release-notes'), { recursive: true })
+  fs.writeFileSync(path.join(draft, 'docs', 'release-notes', '1.0.2 초안.md'), '# x\n')
+  const rd = ev('gh pr create', draft)
+  check('작업 폴더에만 초안(커밋 안 함) → 차단 + 그 파일 커밋 안내', rd.block === true && /1\.0\.2 초안\.md 가 있습니다/.test(rd.message), rd)
+  const other = repo({ version: '1.0.2\n', localTags: ['v1.0.1'], notes: false })
+  fs.mkdirSync(path.join(other, 'docs', 'release-notes'), { recursive: true })
+  for (const f of ['1.0.1 예전.md', '1.0.20 다른 버전.md', '1.0.2.md', '1.0.2 메모.txt']) fs.writeFileSync(path.join(other, 'docs', 'release-notes', f), 'x\n')
+  g(other, 'add', '-A'); g(other, 'commit', '-q', '-m', 'notes')
+  check('다른 버전(1.0.1·1.0.20)·요약 없는 이름·.md 아닌 파일은 노트로 안 침 → 차단', ev('gh pr create', other).block === true)
+  const ln = repo({ version: '1.0.2\n', localTags: ['v1.0.1'], notes: false })
+  fs.mkdirSync(path.join(ln, 'docs', 'release-notes'), { recursive: true })
+  fs.writeFileSync(path.join(ln, 'README.md'), 'x\n')
+  if (trySymlink(path.join(ln, 'README.md'), path.join(ln, 'docs', 'release-notes', '1.0.2 링크.md'), 'file') === null) {
+    console.log('  ⚠️ 건너뜀: 노트가 링크 — 파일 심볼릭 링크 생성 불가(EPERM)'); skipped++
+  } else {
+    g(ln, 'add', '-A'); g(ln, 'commit', '-q', '-m', 'link')
+    check('노트 파일이 심볼릭 링크로 커밋됨 → 노트로 안 침 (차단)', ev('gh pr create', ln).block === true)
+  }
+  const sub = repo({ version: '1.0.2\n', localTags: ['v1.0.1'], notes: false })
+  fs.mkdirSync(path.join(sub, 'docs', 'release-notes', '1.0.2 폴더.md'), { recursive: true })
+  fs.writeFileSync(path.join(sub, 'docs', 'release-notes', '1.0.2 폴더.md', 'x'), 'x\n')
+  g(sub, 'add', '-A'); g(sub, 'commit', '-q', '-m', 'dir')
+  check('노트 이름을 한 폴더(트리) → 노트로 안 침 (차단)', ev('gh pr create', sub).block === true)
+  check('예전 release-version.js(notesFile 없음)면 노트 검사 건너뜀', evaluate({ command: 'gh pr create', cwd: draft, rv: { ...rv, notesFile: undefined } }).block === false)
+}
+
+console.log('\n[릴리스 노트 — 이상·경계]')
+{
+  const first = repo({ version: '1.0.0\n', localTags: [], notes: false })
+  check('첫 릴리스(태그 없음)도 노트는 필요 → 차단', ev('gh pr create', first).block === true)
+  // 윈도우는 파일 이름에 제어 문자를 허용하지 않아(ENOENT) 이 시험을 만들 수 없다 — 2026-11-24 윈도우 CI 가 여기서 파일째 죽었다
+  if (process.platform !== 'win32') {
+    const ctl = repo({ version: '1.0.2\n', localTags: ['v1.0.1'], notes: false })
+    fs.mkdirSync(path.join(ctl, 'docs', 'release-notes'), { recursive: true })
+    fs.writeFileSync(path.join(ctl, 'docs', 'release-notes', '1.0.2 \u001b[31m색.md'), 'x\n')
+    const rc = ev('gh pr create', ctl)
+    check('초안 이름의 제어 문자는 안내에서 지움', rc.block === true && !/\u001b/.test(rc.message), rc)
+  }
+  const notDir = repo({ version: '1.0.2\n', localTags: ['v1.0.1'], notes: false })
+  fs.mkdirSync(path.join(notDir, 'docs'), { recursive: true }); fs.writeFileSync(path.join(notDir, 'docs', 'release-notes'), 'x\n')
+  check('docs/release-notes 가 파일이어도 깨지지 않고 차단', ev('gh pr create', notDir).block === true)
+}
 
 fs.rmSync(base, { recursive: true, force: true })
 console.log(`\n결과: ${passed} 통과 / ${failed} 실패${skipped ? ` (건너뜀 ${skipped})` : ''}`)

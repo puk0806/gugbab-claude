@@ -46,4 +46,11 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag -a "$TAG" -m "$TAG" "$GITHUB_SHA"
           git push origin "refs/tags/$TAG"
-          gh release create "$TAG" --title "$TAG" --generate-notes --verify-tag
+          # 릴리스 노트(docs/release-notes/<버전> <요약>.md, 커밋된 일반 파일)가 있으면 그것을 본문·제목으로, 없으면 PR 목록 자동 생성
+          NOTES=$(node scripts/release-version.js notes-path)
+          if [ -n "$NOTES" ] && [ -f "$NOTES" ] && [ ! -L "$NOTES" ]; then
+            NAME=$(basename "$NOTES" .md)
+            gh release create "$TAG" --title "v${NAME}" --notes-file "$NOTES" --verify-tag
+          else
+            gh release create "$TAG" --title "$TAG" --generate-notes --verify-tag
+          fi

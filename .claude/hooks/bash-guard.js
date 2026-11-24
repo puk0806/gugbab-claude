@@ -53,7 +53,11 @@ function buildProtectedWritePatterns() {
     patterns.push({ pattern: new RegExp(`\\bperl\\b[^|;&\\n]*\\s-[a-zA-Z]*i[^|;&\\n]*${re}`), reason })
     patterns.push({ pattern: new RegExp(`\\bawk\\b[^|;&\\n]*-i\\s*inplace[^|;&\\n]*${re}`), reason })
     // 리다이렉트로 덮어쓰기·이어쓰기: echo/cat/printf/sed/awk ... > FILE
-    patterns.push({ pattern: new RegExp(`>>?\\s*\\S*${re}`), reason })
+    // `=>` 바로 뒤가 함수 호출(`이름(`·`a.b(`)이면 코드 안 화살표 함수로 보고 뺀다 — `d=>fs.existsSync(d+'/SKILL.md')` 를 리다이렉트로 읽어
+    // 읽기 전용 node -e 를 막았다(2026-11-23 다른 세션 보고). 셸 리다이렉트 대상은 따옴표 없는 `이름(` 으로 시작할 수 없으므로
+    // `x=>파일`·`x=>"$(pwd)/파일"`·`x=>$(pwd)/파일`·`x=>"dir(1)/파일"` 은 그대로 막힌다
+    // 함수 이름 자리에 보호 파일 이름이 오면 예외가 아니다 — zsh 는 `x=>SKILL.md(.)`(파일 한정자)를 리다이렉트로 실행한다
+    patterns.push({ pattern: new RegExp(`(?<!=)>>?\\s*\\S*${re}|=>>?(?!\\s*(?![\\w.]*${re})[A-Za-z_][\\w.]*\\()\\s*\\S*${re}`), reason })
     // tee로 쓰기
     patterns.push({ pattern: new RegExp(`\\btee\\b\\s+(?:-a\\s+)?\\S*${re}`), reason })
   }
@@ -1443,6 +1447,19 @@ function analyzeShellInto(src, depth, acc, inSub) {
     // 셸이 표준입력에서 스크립트를 읽으면 넘겨준 글자를 스크립트로 다시 분석 (2026-11-06 점검: `echo 'rm -rf ~' | bash`·
     // `bash -s <<< '…'`·`cat <<EOF | bash` 가 위험 판정 없이 지나갔다). 내용을 모르는 입력(cat f | bash 등)은 여기서 판정하지 않고,
     // PermissionRequest 자동 승인 대상에서 빠져(셸은 승인 목록에 없음) 사용자 확인으로 간다
+    // python3·node 등이 표준입력으로 코드를 읽으면(python3 - <<'EOF' · node <<< '…' · cat <<EOF | python3) 그 코드를 붙여 둔다
+    // — 소스 파일 쓰기 판정(classifyInterpSourceWrite)용 (2026-11-23 attendance 보고)
+    for (const x of acc.invocations.slice(before)) {
+      if (x.dynamicName || SHELL_NAMES.has(x.name) || !isInterpreterName(x.name) || !readsStdin(x)) continue
+      const codes = [...c.redirs.filter(r => r.here).map(r => r.value), ...st.heredocs]
+      const pv = ci > 0 && cmds[ci - 1].pipeline === c.pipeline ? cmds[ci - 1] : null
+      if (pv) {
+        for (const r of pv.redirs) if (r.here) codes.push(r.value)
+        const pn = pv.words.length && !pv.words[0].dyn ? cmdNameOf(pv.words[0]) : ''
+        if (pn === 'echo' || pn === 'printf') codes.push(pv.words.slice(1).map(w => w.value).join(' ').replace(/\\n/g, '\n'))
+      }
+      x.stdinCode = codes
+    }
     const sh = acc.invocations.slice(before).find(x => !x.dynamicName && SHELL_NAMES.has(x.name) && readsStdin(x))
     if (!sh) continue
     const feed = (text) => analyzeShellInto(text, depth + 1, acc, true)
@@ -1539,6 +1556,92 @@ function isAncestorOrSame(dir, of) {
 }
 function sameDir(a, b) { return IS_WIN ? !!a && !!b && W.samePath(winCanon(a) || a, winCanon(b) || b, true) : a === b }
 
+// ── 같은 명령에서 방금 만든 임시 폴더 지우기 (2026-11-17, lfmall 1.2.2 방식을 이 레포에 맞추고 남은 우회 경로를 막음) ──
+// `T=$(mktemp -d …); …; rm -rf "$T"` 는 Claude 가 스스로 만든 폴더를 치우는 흔한 형태인데, 이름이 실행할 때 정해져
+// 정적으로 풀 수 없어 매번 확인 창이 떴다. 아래를 모두 만족할 때만 그 변수 하나("$T")의 삭제를 통과시킨다.
+//  ① 최상위 문장 `이름=$(mktemp …)` 로 조건 없이 대입(앞이 && || 아님, 파이프·& 아님, 서브셸 아님), 이름은 셸이 스스로 바꾸거나
+//     읽기 전용인 특수 변수(_·PWD·OLDPWD·REPLY·UID·HOME·PATH …)가 아님 — 대입이 무시되거나 cd·read 가 값을 바꾼다
+//  ② 명령 어디에도 if·for·while·case·{ } 같은 제어 구조가 없음 — 줄바꿈으로 나뉜 조건부 대입(if …; then⏎T=…⏎fi)을 최상위로 오판하지 않게
+//  ③ mktemp 옵션은 -d -q -t -p 폴더 --tmpdir[=폴더] --directory --quiet 만(-u·모르는 옵션 → 확인), 템플릿은 X 3개 이상으로 끝남
+//     (-t 이고 / 가 없으면 임시 폴더 안), 템플릿·폴더는 [A-Za-z0-9._/~+-] 글자만(~/ 는 홈) — .. ·시스템 폴더·/ 면 확인,
+//     상대 템플릿은 앞에 cd 가 없을 때만
+//  ④ 그 대입 앞에서 그 변수를 쓰지 않고, 명령 어디에도(작은따옴표 안 포함 — bash -c '…' 안도 같은 판정 맥락이라) 같은 이름을
+//     다시 정하는 곳이 없음: 대입·T[i]=·${T:=}·${T::=}(zsh)·read·for·export·unset·declare·integer·float·print -v·vared·zparseopts·wait -p 등
+//  ⑤ eval·source·.·alias·exec·hash·enable·autoload·함수 정의(f() · function f)·functions[…]=·셸 -c(bash/sh/zsh -c)가 없고,
+//     PATH·path(zsh)·TMPDIR·IFS 대입이 없음 — mktemp 자체나 값이 바뀔 수 있다
+// rm 쪽은 따옴표로 감싼 그 변수 하나("$T"·"${T}")만 — "$T/x"·$T/.. 는 mktemp 가 실패해 값이 비면 / 아래가 되므로 그대로 확인.
+// 윈도우(Git Bash)는 경로 판정이 달라 넣지 않는다(지금처럼 확인).
+const MKTEMP_ASSIGN_RE = /^([A-Za-z_][A-Za-z0-9_]*)=(?:"\$\(\s*mktemp((?:\s+[^\s()"'`$;&|<>]+)*)\s*\)"|\$\(\s*mktemp((?:\s+[^\s()"'`$;&|<>]+)*)\s*\))$/
+const MKTEMP_SPECIAL_VARS = new Set(['_', 'PWD', 'OLDPWD', 'REPLY', 'reply', 'OPTARG', 'OPTIND', 'RANDOM', 'SECONDS', 'LINENO', 'UID', 'EUID',
+  'GID', 'EGID', 'PPID', 'GROUPS', 'HOSTNAME', 'HOSTTYPE', 'OSTYPE', 'MACHTYPE', 'SHLVL', 'HISTCMD', 'DIRSTACK', 'COLUMNS', 'LINES', 'MAPFILE',
+  'COPROC', 'FUNCNAME', 'match', 'MATCH', 'MBEGIN', 'MEND', 'mbegin', 'mend', 'argv', 'status', 'pipestatus', 'ERRNO', 'TTYIDLE', 'USERNAME',
+  'path', 'cdpath', 'fpath', 'manpath', 'mailpath', 'module_path', 'psvar', 'watch', 'signals', 'options', 'parameters', 'functions',
+  'aliases', 'builtins', 'commands', 'jobdirs', 'jobstates', 'jobtexts', 'dirstack', 'history', 'historywords', 'termcap', 'terminfo',
+  'userdirs', 'nameddirs', 'widgets', 'HOME', 'USER', 'LOGNAME', 'SHELL'])
+const MKTEMP_BAIL_RE = /(?:^|[\s;&|(])(?:eval|source|\.|alias|unalias|exec|hash|enable|autoload|builtin|command|function|trap|coproc|noglob|zmodload)(?:\s|$)|[A-Za-z_][\w-]*\s*\(\s*\)|(?:^|[\s;&|(])(?:functions|aliases|builtins|commands)\[|(?:^|[\s;&|(])(?:export\s+)?(?:PATH|path|TMPDIR|IFS|fpath|FPATH|ENV|BASH_ENV)(?:\[[^\]]*\])?\+?=|(?:^|[\s;&|(/])(?:ba|z|da|k|mk|fi|tc|c)?sh\s+(?:-\S+\s+)*-\S*c/
+const MKTEMP_WORD_RE = /^[A-Za-z0-9._/~+-]+$/
+function mktempDirOk(d, vcwd, relOk) {
+  if (typeof d !== 'string' || !d || !MKTEMP_WORD_RE.test(d) || /(?:^|\/)\.\.(?:\/|$)/.test(d)) return false
+  let v = d
+  if (v === '~' || v.startsWith('~/')) { if (!HOME_DIR) return false; v = HOME_DIR + v.slice(1) }
+  else if (v.includes('~')) return false // ~다른사용자·중간의 ~
+  else if (!v.startsWith('/')) { if (!relOk || !vcwd) return false; v = vcwd + '/' + v }
+  const abs = path.resolve(v)
+  if (abs === '/tmp' || abs === '/private/tmp' || isUnderTempDir(abs + '/x')) return true
+  if (abs === '/' || SYSTEM_DIRS.some(s => isAncestorOrSame(s, abs))) return false
+  return true
+}
+function mktempArgsOk(args, vcwd, relOk) {
+  let tmpl = null, tFlag = false
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i]
+    if (/^-[dqt]+$/.test(a)) { if (a.includes('t')) tFlag = true; continue }
+    if (a === '--directory' || a === '--quiet' || a === '--tmpdir') { if (a === '--tmpdir') tFlag = true; continue }
+    if (a === '-p') { if (!mktempDirOk(args[++i], vcwd, relOk)) return false; tFlag = true; continue }
+    if (a.startsWith('--tmpdir=')) { if (!mktempDirOk(a.slice(9), vcwd, relOk)) return false; tFlag = true; continue }
+    if (a.startsWith('-')) return false
+    if (tmpl !== null) return false
+    tmpl = a
+  }
+  if (tmpl === null) return true // 기본 임시 폴더
+  if (!MKTEMP_WORD_RE.test(tmpl) || tmpl.startsWith('~') && !tmpl.startsWith('~/')) return false
+  if (tFlag && !tmpl.includes('/') && !tmpl.includes('~')) return true // 임시 폴더 안 (-t 접두어·--tmpdir 템플릿)
+  if (!/X{3,}$/.test(tmpl)) return false
+  return mktempDirOk(tmpl.includes('/') ? (path.posix.dirname(tmpl) || '/') : '.', vcwd, relOk)
+}
+function mktempVars(cmd, vcwd) {
+  const out = new Set()
+  if (IS_WIN || typeof cmd !== 'string' || cmd.length > MAX_RESOLVE_LEN || !cmd.includes('mktemp')) return out
+  const parts = splitTopLevelStatements(cmd)
+  if (!parts) return out
+  const all = parts.map(p => p.text).join('\n') // 작은따옴표 안도 본다 (bash -c '…' 안 재정의 막기)
+  if (MKTEMP_BAIL_RE.test(all)) return out
+  if (parts.some(p => RESOLVE_BAIL_WORDS.has((p.text.trim().match(/^\S+/) || [''])[0]) || /(?:^|\s)[{}](?:\s|$)/.test(p.text))) return out
+  parts.forEach((p, i) => {
+    const m = MKTEMP_ASSIGN_RE.exec(p.text.trim())
+    if (!m) return
+    const name = m[1]
+    if (MKTEMP_SPECIAL_VARS.has(name) || SENSITIVE_VAR_RE.test(name) || /^(?:BASH|ZSH)/.test(name)) return
+    if (p.sepBefore === '&&' || p.sepBefore === '||' || p.sep === '&' || p.pipe) return
+    const before = parts.slice(0, i)
+    const relOk = !before.some(q => /(?:^|[\s;&|(])(?:cd|pushd|popd)(?:\s|$)/.test(q.text))
+    if (!mktempArgsOk((m[2] !== undefined ? m[2] : m[3] || '').trim().split(/\s+/).filter(Boolean), vcwd, relOk)) return
+    if (before.some(q => new RegExp(`\\$(?:\\{${name}(?![A-Za-z0-9_])|${name}(?![A-Za-z0-9_]))`).test(q.text))) return
+    const others = parts.filter((_, j) => j !== i).map(q => q.text).join('\n')
+    const redef = new RegExp(`(?:^|[^A-Za-z0-9_$])${name}(?:\\[[^\\]]*\\])?\\+?=|\\$\\{${name}:{0,2}=|`
+      + '(?:^|[\\s;&|(])(?:read|for|select|export|unset|declare|typeset|local|readonly|getopts|mapfile|readarray|let|printf|print|integer|float|'
+      + `vared|zparseopts|strftime|wait|sysread|zstat|zformat|getln|zle|zregexparse|zsocket|ztcp)\\b[^;&|\\n]*(?:^|[^A-Za-z0-9_$])${name}(?![A-Za-z0-9_])`)
+    if (redef.test(others)) return
+    out.add(name)
+  })
+  return out
+}
+function isOwnMktempTarget(t, ctx) {
+  if (!ctx.mktempVars || !ctx.mktempVars.size || !t.quoted || t.tilde || t.subst) return false
+  const m = /^\$(?:\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*))$/.exec(cleanValue(t.value))
+  return !!m && ctx.mktempVars.has(m[1] || m[2])
+}
+
 function classifyRm(inv, ctx, add) {
   let recursive = false, endOpts = false
   const targets = []
@@ -1551,6 +1654,7 @@ function classifyRm(inv, ctx, add) {
   }
   for (const t of targets) {
     const r = resolveRmTarget(t, ctx.vcwd)
+    if (!r && isOwnMktempTarget(t, ctx)) continue // 같은 명령에서 방금 mktemp 로 만든 폴더 (위 mktempVars)
     if (!r) { add('ask', `rm 대상 경로를 정적으로 해석할 수 없습니다(${t.value}). 사용자 확인이 필요합니다.`); continue }
     const abs = r.abs
     if (abs === '/') { add('deny', '루트 디렉토리 삭제는 차단됩니다.'); continue }
@@ -1675,6 +1779,219 @@ function classifySourceWrite(inv, ctx, add) {
   }
 }
 
+// ── python3·node 등 인터프리터 코드로 프로젝트 소스 파일 쓰기 차단 (2026-11-23 06-gugbab-attendance 보고) ──
+// `python3 - <<'EOF' … open('src/x.ts','w').write(s) … EOF` 로 소스를 고치면 acceptEdits 여도 확인 창이 뜨고(인터프리터는
+// 자동 허용 밖 — 결정 42) Write·Edit 검사 훅도 비켜 간다. 쓰는 대상을 코드에서 정적으로 찾아 프로젝트 소스면 deny →
+// Claude 가 Edit 로 다시 고친다(확인 창 없음). 대상을 못 찾으면(인자·환경변수·계산된 경로) 이 검사는 판정하지 않는다(기존 흐름).
+// [호출 정규식, 대상 인자 위치, 모드 인자 검사 여부]
+const INTERP_WRITE_CALLS = [
+  [/\b(?:io\.|codecs\.|fs\.|os\.)?open(?:Sync)?\s*\(/g, 0, true], // python open · node fs.open(Sync) · perl 은 아래 따로
+  [/\bFile\.open\s*\(/g, 0, true], // ruby
+  [/\bfopen\s*\(/g, 0, true], // php
+  [/\b(?:writeFile|appendFile)(?:Sync)?\s*\(/g, 0, false], // node fs·fs.promises
+  [/\bcreateWriteStream\s*\(/g, 0, false],
+  [/\b(?:copyFile|rename|cp)(?:Sync)?\s*\(/g, 1, false], // node
+  [/\bshutil\.(?:copy\w*|move)\s*\(/g, 1, false],
+  [/\bos\.(?:replace|rename)\s*\(/g, 1, false],
+  [/\bBun\.write\s*\(/g, 0, false],
+  [/\bDeno\.write(?:Text)?File(?:Sync)?\s*\(/g, 0, false],
+  [/\b(?:File|IO)\.(?:write|binwrite)\s*\(/g, 0, false], // ruby
+  [/\bfile_put_contents\s*\(/g, 0, false], // php
+]
+const INTERP_PATH_FNS_RE = /^(?:(?:pathlib\.)?(?:Pure)?(?:Posix)?Path|os\.path\.join|path\.(?:join|resolve)|Pathname|File\.join)\s*\(/
+
+// 문자열·괄호를 건너뛰며 open 위치부터 짝 괄호까지 최상위 쉼표로 나눈다. 반환: { parts, end } 또는 null
+function splitCallArgs(code, i) {
+  const parts = []
+  let depth = 0, cur = ''
+  while (i < code.length) {
+    const ch = code[i]
+    const tq = code.slice(i, i + 3)
+    if (tq === "'''" || tq === '"""') {
+      const j = code.indexOf(tq, i + 3)
+      if (j < 0) return null
+      cur += code.slice(i, j + 3); i = j + 3; continue
+    }
+    if (ch === "'" || ch === '"' || ch === '`') {
+      let j = i + 1
+      while (j < code.length && code[j] !== ch) { if (code[j] === '\\') j++; if (code[j] === '\n' && ch !== '`') return null; j++ }
+      if (j >= code.length) return null
+      cur += code.slice(i, j + 1); i = j + 1; continue
+    }
+    if (ch === '(' || ch === '[' || ch === '{') depth++
+    else if (ch === ')' || ch === ']' || ch === '}') {
+      if (depth === 0) { parts.push(cur.trim()); return { parts, end: i + 1 } }
+      depth--
+    } else if (ch === ',' && depth === 0) { parts.push(cur.trim()); cur = ''; i++; continue }
+    cur += ch; i++
+  }
+  return null
+}
+
+// 최상위 연산자 글자(+ 또는 /)로 나눈다 — 문자열·괄호 안은 그대로
+function splitTopLevel(expr, sep) {
+  const out = []
+  let depth = 0, cur = ''
+  for (let i = 0; i < expr.length; i++) {
+    const ch = expr[i]
+    if (ch === "'" || ch === '"' || ch === '`') {
+      let j = i + 1
+      while (j < expr.length && expr[j] !== ch) { if (expr[j] === '\\') j++; j++ }
+      cur += expr.slice(i, j + 1); i = j; continue
+    }
+    if ('([{'.includes(ch)) depth++
+    else if (')]}'.includes(ch)) depth--
+    if (ch === sep && depth === 0) { out.push(cur.trim()); cur = ''; continue }
+    cur += ch
+  }
+  out.push(cur.trim())
+  return out
+}
+
+// 코드 안 단순 대입 수집 — 이름 → 값 식 목록 (python `p = '…'` · js `const p = '…'` · perl `my $p = '…'` · ruby)
+function interpAssignments(code) {
+  const vars = new Map()
+  const re = /(?:^|[\n;{])[ \t]*(?:(?:const|let|var|my|our)[ \t]+)?(\$?[A-Za-z_][\w]*)[ \t]*=(?!=)[ \t]*([^\n;]+)/g
+  let m
+  while ((m = re.exec(code))) {
+    const name = m[1].replace(/^\$/, '')
+    if (!vars.has(name)) vars.set(name, [])
+    vars.get(name).push(m[2].trim())
+  }
+  return vars
+}
+
+// 식 → 가능한 문자열 값 목록. 하나라도 알 수 없으면 null
+function interpResolve(expr, vars, depth = 0) {
+  if (depth > 6 || !expr) return null
+  let e = expr.trim().replace(/;$/, '').trim()
+  while (/^\(.*\)$/s.test(e) && splitCallArgs(e, 1)?.end === e.length) e = e.slice(1, -1).trim()
+  const lit = /^([rRbBuU]{0,2})(['"`])((?:\\.|(?!\2)[^\\])*)\2$/s.exec(e)
+  if (lit) {
+    // f-string·템플릿 치환·`$` (따옴표 없는 heredoc 은 셸이 $S 를 바꿔 넣고, perl "…$dir…" 은 변수) — 실제 경로를 알 수 없다
+    if (/[fF]/.test(lit[1]) || lit[3].includes('$')) return null
+    return [lit[3].replace(/\\(.)/g, '$1')]
+  }
+  const fn = INTERP_PATH_FNS_RE.exec(e)
+  if (fn) {
+    const call = splitCallArgs(e, fn[0].length)
+    if (!call) return null
+    const rest = e.slice(call.end).trim()
+    const partsVals = []
+    for (const p of call.parts.filter(Boolean)) { const v = interpResolve(p, vars, depth + 1); if (!v) return null; partsVals.push(v) }
+    if (!partsVals.length) return null
+    let combos = partsVals.reduce((acc, vs) => acc.flatMap(a => vs.map(v => a === null ? v : path.posix.join(a, v))), [null])
+    if (rest) { // Path('src') / 'x.ts'
+      if (!rest.startsWith('/')) return null
+      for (const seg of splitTopLevel(rest.slice(1), '/')) {
+        const v = interpResolve(seg, vars, depth + 1)
+        if (!v) return null
+        combos = combos.flatMap(a => v.map(x => path.posix.join(a, x)))
+      }
+    }
+    return combos
+  }
+  const plus = splitTopLevel(e, '+')
+  if (plus.length > 1) {
+    let combos = ['']
+    for (const p of plus) { const v = interpResolve(p, vars, depth + 1); if (!v) return null; combos = combos.flatMap(a => v.map(x => a + x)) }
+    return combos
+  }
+  const id = /^\$?([A-Za-z_]\w*)$/.exec(e)
+  if (id && vars.has(id[1])) {
+    const out = []
+    for (const v of vars.get(id[1])) { const r = interpResolve(v, vars, depth + 1); if (!r) return null; out.push(...r) }
+    return out
+  }
+  return null
+}
+
+const INTERP_WRITE_MODE_RE = /[wax+]/
+function interpWriteTargets(code) {
+  const vars = interpAssignments(code)
+  const targets = []
+  for (const [re, idx, needMode] of INTERP_WRITE_CALLS) {
+    re.lastIndex = 0
+    let m
+    while ((m = re.exec(code))) {
+      const call = splitCallArgs(code, m.index + m[0].length)
+      if (!call) continue
+      const args = call.parts
+      if (needMode) {
+        const kw = args.find(a => /^(?:mode|flags)\s*=/.test(a))
+        const modeExpr = kw ? kw.replace(/^\w+\s*=\s*/, '') : args[1]
+        const mode = modeExpr && interpResolve(modeExpr, vars)
+        if (!mode || !mode.some(v => INTERP_WRITE_MODE_RE.test(v))) continue
+      }
+      const t = args[idx] && interpResolve(args[idx], vars)
+      if (t) targets.push(...t)
+    }
+  }
+  // pathlib: Path('x').write_text(…) · p.write_bytes(…) — 받는 쪽 식을 해석
+  const wt = /\.(?:write_text|write_bytes|touch)\s*\(/g
+  let m
+  while ((m = wt.exec(code))) {
+    const before = code.slice(0, m.index).replace(/\s+$/, '')
+    let recv = null
+    if (before.endsWith(')')) { // (Path('src') / 'x.ts').write_text — 짝 괄호를 거꾸로 찾는다
+      let d = 0
+      for (let k = before.length - 1; k >= 0; k--) {
+        if (before[k] === ')') d++
+        else if (before[k] === '(' && --d === 0) {
+          const head = /((?:pathlib\.)?(?:Pure)?(?:Posix)?Path\s*)$/.exec(before.slice(0, k))
+          recv = head ? before.slice(k - head[1].length) : before.slice(k)
+          break
+        }
+      }
+    } else {
+      const pm = /\$?[A-Za-z_]\w*$/.exec(before)
+      recv = pm && pm[0]
+    }
+    const t = recv && interpResolve(recv, vars)
+    if (t) targets.push(...t)
+  }
+  // perl: open(my $fh, '>', 'x') · open(FH, ">x") · open my $fh, '>>', $p
+  const po = /\bopen\s*\(?\s*(?:my\s+)?[$\w]+\s*,\s*/g
+  while ((m = po.exec(code))) {
+    const rest = code.slice(m.index + m[0].length)
+    const call = splitCallArgs(rest + ')', 0)
+    if (!call) continue
+    const [a0, a1] = call.parts
+    const v0 = a0 && interpResolve(a0, vars)
+    if (!v0) continue
+    if (v0.some(v => /^\s*(?:>>?|\+<|\+>)\s*$/.test(v))) { const t = a1 && interpResolve(a1.replace(/\)\s*(?:or|\|\|)[\s\S]*$/, ''), vars); if (t) targets.push(...t) }
+    else for (const v of v0) { const mm = /^\s*(?:>>?|\+<|\+>)\s*(\S.*)$/.exec(v); if (mm) targets.push(mm[1]) }
+  }
+  return targets
+}
+
+function classifyInterpSourceWrite(inv, ctx, add) {
+  if (!isInterpreterName(inv.name) || SHELL_NAMES.has(inv.name)) return
+  const codes = [...(inv.stdinCode || [])]
+  for (let k = 0; k < inv.args.length - 1; k++) {
+    if (INLINE_CODE_FLAGS.test(cleanValue(inv.args[k].value))) codes.push(cleanValue(inv.args[k + 1].value))
+  }
+  for (const code of codes) {
+    if (!code || code.length > 200000) continue
+    for (const t of interpWriteTargets(code)) {
+      if (!t || /[*?]/.test(t)) continue
+      const r = resolveRmTarget({ ...newWord(), value: t }, ctx.vcwd)
+      if (!r || r.glob) continue
+      const abs = r.abs
+      const base = IS_WIN ? path.posix.basename(abs) : path.basename(abs)
+      if (!SOURCE_EXT_RE.test(base) && !SOURCE_NAME_RE.test(base)) continue
+      if (/^\/dev\//.test(abs) || isUnderTempDir(abs)) continue
+      const real = realLocation(abs) || abs
+      if (isUnderTempDir(real)) continue
+      if ((IS_WIN ? /\/\.git(?:\/|$)/i : /\/\.git(?:\/|$)/).test(real)) continue
+      const inProject = (ctx.root && (isAncestorOrSame(ctx.root, abs) || isAncestorOrSame(ctx.root, real))) || isUnderAllowed(real, ctx.allowedDirs)
+      if (!inProject) continue
+      add('deny', `${inv.name} 코드로 프로젝트 파일(${base})을 직접 쓰면 확인 창이 뜨고 Write·Edit 검사 훅도 거치지 않습니다. 같은 수정을 Edit 도구(새 파일은 Write 도구)로 다시 하세요 — 확인 창 없이 됩니다. 바꿀 곳이 많으면 Edit 를 여러 번 부르면 됩니다. 데이터로 계산해 만드는 내용이면 코드 안에서 쓰지 말고 출력을 파일로 받으세요(\`python3 gen.py > 파일\`).`)
+      return
+    }
+  }
+}
+
 // ── Bash 쓰기 대상 위치 판정 (2026-10-22, 다른 프로젝트 보고로 재현) ──
 // PermissionRequest 는 classifyShell 판정이 없으면 자동 승인하므로, 쓰기 대상을 보지 않으면 `cp x ~/.zshrc`·
 // `cp x ~/.claude/settings.json`(훅 끄기)·`cp x /etc/hosts`·`echo '{"approved":true}' > $TMPDIR/claude-task-confirm-guard/<세션>.json`(자기 승인)이
@@ -1775,6 +2092,16 @@ function classifyGit(g, add, ctx) {
     return
   }
   if (g.sub === 'commit') { add('ask', 'git commit 은 사용자 확인이 필요합니다 (커밋·푸시는 명시적 요청 시에만).'); return }
+  // 2026-11-18 사용자 결정 — git stash 거부(묻지 않음). 커밋 안 한 작업을 작업 트리에서 치웠다가 되돌리는 동작이라
+  // pop 이 실패하거나 --index 를 빠뜨리면 작업·스테이징이 사라진다(실측: 05 relay 세션 `git stash -q && pnpm test; git stash pop -q`
+  // 로 스테이징한 삭제·이동이 풀림). 조회(list·show)만 허용
+  if (g.sub === 'stash') {
+    const a0 = vals.find(v => !v.startsWith('-'))
+    if (a0 !== 'list' && a0 !== 'show') {
+      add('deny', 'git stash 는 쓰지 않습니다 — 커밋 안 한 작업을 치웠다가 되돌리는 동안 pop 이 실패하거나 --index 를 빠뜨리면 작업·스테이징이 사라집니다. 고치기 전과 비교하려면 `git worktree add <임시 폴더> HEAD` 로 따로 받아 그 폴더에서 실행하세요. (git stash list·show 는 허용)')
+    }
+    return
+  }
   // reset --hard (2026-10-06 사용자 결정): 커밋 안 한 작업·푸시 안 된 커밋만 지우면 자동 허용(의도된 리셋),
   // 이미 푸시된 커밋을 지우면 차단(원격과 어긋나 되돌리기 어려움), 판정 불가(동적 대상·git 실패)면 확인.
   // git clean -f 는 자동 허용으로 전환 (같은 결정 — 이전엔 확인)
@@ -1947,15 +2274,55 @@ function isSessionDescendant(pid, root) {
   return false
 }
 
+// pkill·killall 이 이 세션이 띄운 프로세스만 끄는가 (2026-11-18, 06-gugbab-attendance 요청)
+// 실행 전에 같은 조건으로 pgrep 을 돌려 대상 목록을 뽑고, 1개 이상이고 전부 이 세션의 자손일 때만 true.
+// 옵션은 이름·명령줄 매칭(-f -i -x -n -o)과 신호(-9·-TERM·-SIGTERM·--signal X)만 — 사용자·터미널·부모 지정 등 그 밖은 false.
+// 패턴은 따옴표 없는 glob 글자·변수·치환 없이 1개(killall 은 이름 1개 이상, 15자 이하 — pgrep -x 와 같은 기준이 되게).
+// 남는 한계: 확인과 실행 사이 아주 짧은 틈에 세션 밖에서 같은 이름 프로세스가 새로 뜨면 함께 꺼진다.
+// 윈도우는 ps 표가 없어 항상 false(확인).
+const KILL_SIGNAL_RE = /^-(?:\d{1,2}|(?:SIG)?[A-Z][A-Z0-9+-]*)$/
+function isOwnProcessMatch(nm, args) {
+  if (IS_WIN) return false
+  const root = sessionPid()
+  if (!root) return false
+  const flags = [], pats = []
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i], v = cleanValue(a.value)
+    if (a.dyn || a.subst || a.tilde) return false
+    if (!a.quoted && /[*?[\]{}~=^#!]/.test(v)) return false // zsh glob·= 펼침 — 실제 인자가 달라진다
+    if (!pats.length && v === '--signal') { if (nm !== 'pkill' || !/^[A-Z0-9]+$/i.test(cleanValue((args[++i] || {}).value || ''))) return false; continue }
+    if (!pats.length && KILL_SIGNAL_RE.test(v)) continue
+    if (!pats.length && nm === 'pkill' && /^-[fixno]+$/.test(v)) { flags.push(v); continue }
+    if (v.startsWith('-')) return false
+    pats.push(v)
+  }
+  if (!pats.length || pats.some(p => !p.trim())) return false
+  if (nm === 'pkill' && pats.length !== 1) return false
+  if (nm === 'killall' && pats.some(p => p.length > 15 || !/^[A-Za-z0-9._+-]+$/.test(p))) return false
+  const pids = new Set()
+  for (const p of pats) {
+    let out
+    try {
+      out = require('child_process').execFileSync('pgrep', nm === 'pkill' ? [...flags, '--', p] : ['-x', '--', p], { encoding: 'utf8', timeout: 3000, stdio: ['ignore', 'pipe', 'ignore'] })
+    } catch (e) { if (e && e.status === 1) continue; return false } // 1 = 맞는 것 없음, 그 밖 = pgrep 실패
+    for (const s of out.split('\n')) { const n = Number(s.trim()); if (Number.isInteger(n) && n > 1 && n !== process.pid) pids.add(n) }
+  }
+  if (!pids.size) return false // 끌 대상이 없다 — 판정할 근거 없음
+  return [...pids].every(pid => isSessionDescendant(pid, root))
+}
+
 // docker 정리(prune)·볼륨 삭제, 일괄·강제 종료 — 다른 프로젝트 데이터·사용자 프로세스에 영향
-function classifyDockerKill(nm, vals, add) {
+function classifyDockerKill(nm, vals, add, args) {
   if (nm === 'docker' || nm === 'podman') {
     if (vals.includes('prune') || (vals.includes('volume') && (vals.includes('rm') || vals.includes('remove')))) {
       add('ask', `${nm} 정리·볼륨 삭제는 누가 만들었든 전부 지워 사용자 확인이 필요합니다.`)
     }
     return
   }
-  if (nm === 'killall' || nm === 'pkill') { add('ask', `${nm} 는 이름으로 여러 프로세스를 한꺼번에 종료해 사용자 확인이 필요합니다.`); return }
+  if (nm === 'killall' || nm === 'pkill') {
+    if (!isOwnProcessMatch(nm, args || [])) add('ask', `${nm} 대상에 이 Claude 세션이 띄우지 않은 프로세스가 있거나 대상을 미리 알 수 없습니다. 사용자 확인이 필요합니다.`)
+    return
+  }
   if (nm !== 'kill') return
   const forceIdx = vals.findIndex((v, i) => /^-(?:9|KILL|SIGKILL)$/i.test(v) || (v === '-s' && /^(?:9|KILL|SIGKILL)$/i.test(vals[i + 1] || '')))
   if (forceIdx < 0) return
@@ -1978,7 +2345,7 @@ const EDITOR_CMDS = new Set(['ex', 'vi', 'vim', 'nvim', 'gvim', 'view', 'ed', 'r
 const EDITOR_VALUE_OPTS = new Set(['-c', '-S', '--cmd', '-u', '-i', '-p', '-r', '-o', '-D', '-F', '-B', '-V', '--eval', '-l', '--load'])
 const INLINE_CODE_FLAGS = /^(?:-e|-E|-c|-p|-r|--eval|--print|--command|--exec)$/
 const PROTECTED_CODE_NAME_RE = /skill\.md|verification\.md|(?:^|[\s'"`/(,=])memory(?:[\s'"`/),]|$)/i
-const WRITE_CODE_RE = /write|append|unlink|\brm|rmdir|rename|copy|truncate|remove|delete|move|shutil|symlink|chmod|open\s*\([^)]*['"][^'"]*[wax+][^'"]*['"]|createWriteStream|>\s*['"]?\S*(?:skill|verification|memory)/i
+const WRITE_CODE_RE = /write|append|unlink|\brm|rmdir|rename|copy|truncate|remove|delete|move|shutil|symlink|chmod|open\s*\([^)]*['"][^'"]*[wax+][^'"]*['"]|createWriteStream|(?<!=)>\s*['"]?\S*(?:skill|verification|memory)|=>(?!\s*(?![\w.]*(?:skill|verification|memory))[A-Za-z_][\w.]*\()\s*['"]?\S*(?:skill|verification|memory)/i
 
 function globSegRe(seg) {
   let re = ''
@@ -2091,12 +2458,123 @@ function protectedWriteTargets(inv) {
   return targets
 }
 
+// 2026-11-18 사용자 결정 — 보호 파일을 Bash 로 옮기거나 지우는 우회 막기 (실측: 05 relay 세션 `for p in …; do git mv .claude/skills/$p/SKILL.md …`
+// 는 변수 경로라 판정을 빠져나갔고, `rm -rf docs/skills` 는 폴더라서 그 안의 verification.md 를 보지 않았다)
+// ① 변수가 든 경로도 끝 이름이 SKILL.md·verification.md 거나 memory/ 아래면 보호 파일로 본다
+// ② 지우기(rm -r·git rm -r)·옮기기(mv·git mv) 대상이 폴더면 안을 훑어 보호 파일이 있으면 막는다 — 임시 폴더·node_modules·.git 은 안 본다,
+//    너무 큰 폴더(5만 항목 넘음·1.5초 넘음)는 다 못 보므로 사용자 확인(2026-11-24 — 전에는 통과). 빌드 산출물 폴더는 SCAN_SKIP_DIRS 로 안 봄.
+//    git rm --cached 는 파일을 지우지 않아 제외
+function dynProtectedLabel(w) {
+  if (!w.dyn) return null
+  const segs = cleanValue(w.value).split(/[\\/]+/).filter(Boolean)
+  const last = segs[segs.length - 1] || ''
+  for (const n of PROTECTED_NAMES) if (segMatches(last, n)) return n === 'skill.md' ? 'SKILL.md' : 'verification.md'
+  if (segs.slice(0, -1).some(s => segMatches(s, 'memory'))) return 'memory/'
+  return null
+}
+const SCAN_SKIP_DIRS = new Set(['node_modules', '.git', '.next', 'dist', 'build', 'coverage', '.turbo', '.cache'])
+function scanBudgetMs() {
+  const raw = process.env.BASH_GUARD_TEST_SCAN_MS
+  const t = Number(raw)
+  // 시험용 값은 기본값보다 늘릴 수 없다(훅 제한 시간을 넘기지 않게). 줄이면 "다 못 봄 → 확인" 쪽으로만 간다. 빈 값·숫자 아님은 기본값
+  return typeof raw === 'string' && raw.trim() !== '' && Number.isFinite(t) ? Math.min(t, 1500) : 1500
+}
+function scanMaxEntries() {
+  const raw = process.env.BASH_GUARD_TEST_SCAN_MAX
+  const t = Number(raw)
+  // 시험용 값은 기본값(5만)보다 늘릴 수 없다. 줄이면 "다 못 봄 → 확인" 쪽으로만 간다
+  return typeof raw === 'string' && raw.trim() !== '' && Number.isFinite(t) ? Math.min(t, 50000) : 50000
+}
+const SCAN_TIMED_OUT = Symbol('scan-timed-out')
+let _scanDeadline = 0
+function dirProtectedLabel(abs, ctx) {
+  let st
+  try { st = fs.lstatSync(abs) } catch { return null }
+  if (!st.isDirectory() || isUnderTempDir(path.join(abs, 'x')) || SCAN_SKIP_DIRS.has(path.basename(abs))) return null
+  const stack = [abs]
+  let n = 0
+  // 시간 상한 — 훅 제한 시간 안에 판정을 내야 다른 거부(루트·홈·시스템 폴더)가 살아남는다 (2026-11-24 윈도우 CI: C:/ 를 훑다 끊김)
+  // 상한은 훅 실행 한 번 전체가 함께 쓴다 — 큰 폴더를 여러 개 준 명령(rm -rf a b c …)이 1.5초 × N 을 쓰지 못하게
+  if (!_scanDeadline) _scanDeadline = Date.now() + scanBudgetMs()
+  const deadline = _scanDeadline
+  const maxEntries = scanMaxEntries()
+  while (stack.length) {
+    if (Date.now() > deadline) return SCAN_TIMED_OUT
+    const d = stack.pop()
+    // 항목을 하나씩 읽는다 — 한 번에 다 읽으면(readdirSync) 파일이 아주 많은 폴더 하나에서는 읽는 도중 상한을 걸 수 없다
+    let dir
+    // 사라진 폴더는 건너뛰고, 그 밖의 오류(권한 등)로 못 읽으면 "없음"으로 단정하지 않고 확인으로 보낸다 (상한 초과와 같은 쪽)
+    const gone = (err) => !!err && (err.code === 'ENOENT' || err.code === 'ENOTDIR')
+    try { dir = fs.opendirSync(d) } catch (err) { if (gone(err)) continue; return SCAN_TIMED_OUT }
+    try {
+      let e
+      while ((e = dir.readSync()) !== null) {
+        // 개수 상한을 넘어도 "보호 파일 없음"으로 단정하지 않는다 — 시간 상한과 같은 쪽(확인)으로 (2026-11-24 깨끗한 리뷰 지적)
+        if (++n > maxEntries) return SCAN_TIMED_OUT
+        if ((n & 255) === 0 && Date.now() > deadline) return SCAN_TIMED_OUT
+        const p = path.join(d, e.name)
+        if (e.isDirectory()) { if (!SCAN_SKIP_DIRS.has(e.name)) stack.push(p); continue }
+        const label = protectedLabel(p, ctx)
+        if (label) return label
+      }
+    } catch (err) {
+      if (!gone(err)) return SCAN_TIMED_OUT
+    } finally {
+      try { dir.closeSync() } catch { /* 이미 닫힘 */ }
+    }
+  }
+  return null
+}
+function isMoveOrDelete(inv) {
+  const nm = inv.name
+  const vals = inv.args.map(a => cleanValue(a.value))
+  if (nm === 'mv') return true
+  if (nm === 'rm') return vals.some(v => /^-[A-Za-z]*[rR]/.test(v) || v === '--recursive')
+  if (nm === 'git' && inv.git && inv.git.sub === 'mv') return true
+  if (nm === 'git' && inv.git && inv.git.sub === 'rm') {
+    const a = inv.git.args.map(x => cleanValue(x.value))
+    return !a.includes('--cached') && a.some(v => /^-[A-Za-z]*r/.test(v))
+  }
+  return false
+}
+function moveOrDeleteSources(inv) {
+  if (inv.name === 'mv') return nonOptArgs(inv.args, new Set(['-t', '--target-directory', '-S', '--suffix']))
+  if (inv.name === 'git') return nonOptArgs(inv.git.args)
+  return nonOptArgs(inv.args)
+}
+
 function classifyProtectedWrite(inv, ctx, add) {
   const nm = inv.name
   const deny = (label) => add('deny', `${label}은(는) Bash 로 쓰거나 지울 수 없습니다(${nm || '리다이렉트'}). Write/Edit 도구를 사용하세요 — Write/Edit 에 걸린 검증·동기화 훅을 거쳐야 합니다. (읽기 전용 cat·grep·diff 는 허용)`)
+  const isGitCached = nm === 'git' && inv.git && inv.git.sub === 'rm' && inv.git.args.some(a => cleanValue(a.value) === '--cached')
   for (const t of protectedWriteTargets(inv)) {
-    const label = protectedLabel(protectedAbsOf(t, ctx), ctx)
+    const label = protectedLabel(protectedAbsOf(t, ctx), ctx) || (!isGitCached && dynProtectedLabel(t))
     if (label) { deny(label); return }
+  }
+  if (nm === 'mv') {
+    for (const t of moveOrDeleteSources(inv)) {
+      const label = protectedLabel(protectedAbsOf(t, ctx), ctx) || dynProtectedLabel(t)
+      if (label) { deny(label); return }
+    }
+  }
+  if (isMoveOrDelete(inv)) {
+    // rm 이 어차피 거부하는 대상(루트·홈·드라이브 루트·시스템 폴더)은 훑지 않는다 — 큰 폴더를 훑다 훅이 시간 초과로 끊기면 그 거부까지 사라진다
+    //   대상마다 따로 본다 — 위험 대상과 함께 준 다른 폴더(rm -rf /usr docs/skills)는 그대로 훑는다
+    const rmDenies = (t) => {
+      if (nm !== 'rm') return false
+      let denied = false
+      classifyRm({ args: [{ ...newWord(), value: '-r' }, t] }, ctx, (level) => { if (level === 'deny') denied = true })
+      return denied
+    }
+    for (const t of moveOrDeleteSources(inv)) {
+      if (t.dyn) continue
+      if (rmDenies(t)) continue
+      const abs = protectedAbsOf(t, ctx)
+      const label = abs && dirProtectedLabel(abs, ctx)
+      // 시간 안에 다 못 훑음 — 보호 파일이 없다고 단정할 수 없으니 통과시키지 않고 사용자에게 묻는다 (느린 디스크에서 판정이 갈리지 않게)
+      if (label === SCAN_TIMED_OUT) { add('ask', `${cleanValue(t.value)} 폴더가 크거나(5만 항목·1.5초 넘음) 읽을 수 없는 곳이 있어 안에 보호 파일(SKILL.md·verification.md·memory)이 있는지 다 확인하지 못했습니다(${nm}). 사용자 확인이 필요합니다.`); continue }
+      if (label) { add('deny', `${cleanValue(t.value)} 폴더 안에 ${label} 이(가) 있어 Bash 로 옮기거나 지울 수 없습니다(${nm}). 보호 파일은 Write/Edit 도구로만 고치고, 폴더째 정리가 꼭 필요하면 사용자에게 직접 실행해 달라고 하세요.`); return }
+    }
   }
   // cp /tmp/SKILL.md .claude/skills/x/ — 목적지가 폴더면 원본 이름으로 생긴다
   if (HARNESS_WRITE_DEST.has(nm)) {
@@ -2174,6 +2652,7 @@ function classifyShell(cmd, opts = {}) {
     root: startCwd ? (findProjectRoot(startCwd) || startCwd) : null,
     allowedDirs: opts.allowedDirs || getAllowedDirs(cwdIn),
     harness,
+    mktempVars: mktempVars(cmd, startCwd),
   }
   // 하네스 폴더 자체에서 작업 중이면(프로젝트 루트가 그 안) 보호하지 않는다
   if (ctx.root && harness.some(d => isAncestorOrSame(d, ctx.root))) ctx.harness = []
@@ -2197,6 +2676,7 @@ function classifyShell(cmd, opts = {}) {
     classifySecretArgs(inv, ctx, add)
     classifyHarnessWrite(inv, ctx, add)
     classifySourceWrite(inv, ctx, add)
+    classifyInterpSourceWrite(inv, ctx, add)
     classifyWriteLocation(inv, ctx, add)
     classifyProtectedWrite(inv, ctx, add)
     if (nm === 'find') classifyFindDelete(inv, ctx, add)
@@ -2204,7 +2684,7 @@ function classifyShell(cmd, opts = {}) {
     if (nm === 'git') { classifyGit(inv.git, add, ctx); continue }
     if (nm === 'gh') { classifyGh(vals, add); continue }
     if (nm === 'curl' || nm === 'wget') { classifyUpload(nm, vals, add); continue }
-    if (['docker', 'podman', 'kill', 'killall', 'pkill'].includes(nm)) { classifyDockerKill(nm, vals, add); continue }
+    if (['docker', 'podman', 'kill', 'killall', 'pkill'].includes(nm)) { classifyDockerKill(nm, vals, add, inv.args); continue }
     if (PUBLISHERS.has(nm)) {
       const cut = vals.indexOf('--')
       const head = (cut >= 0 ? vals.slice(0, cut) : vals).map(v => v.toLowerCase())
@@ -2443,11 +2923,28 @@ Object.assign(READ_ONLY_RESOLVED, {
   ':': () => true, break: () => true, continue: () => true,
   read: (v) => v.every(x => /^-[rsae]+$/.test(x) || /^[A-Za-z_][A-Za-z0-9_]*$/.test(x)), // 표준입력 한 줄을 변수에 — -u·-p 등은 확인
   for: (v) => v.length >= 1 && /^[A-Za-z_][A-Za-z0-9_]*$/.test(v[0]) && (v.length === 1 || v[1] === 'in'),
+  // 2026-11-18 — 하네스 래퍼의 조회 명령만: status · 이름 없는 preset(목록) · --help · --version (on·off·preset <이름>·update 는 설정을 바꿔 제외)
+  'gugbab-claude': (v) => v.length === 1 && ['status', 'help', '--help', '-h', '--version', '-v', 'preset'].includes(v[0]),
+  // 2026-11-18 — 출력만 하는 awk(`awk '$3 ~ /x/'`·`awk -F: '{print $1}'`). 명령 실행(system·| ·getline)·파일 쓰기(>)·
+  // 확장(@load·@include)이 프로그램에 있거나, 프로그램 파일(-f)·제자리 수정(-i)·그 밖 옵션이면 그대로 확인
+  awk: (v) => {
+    let prog = null
+    for (let i = 0; i < v.length; i++) {
+      const x = v[i]
+      if (prog !== null) continue
+      if (x === '-F' || x === '-v') { i++; continue }
+      if (/^-[Fv]./.test(x) || x === '--') continue
+      if (x.startsWith('-')) return false
+      prog = x
+    }
+    return prog !== null && awkProgramReadOnly(prog)
+  },
 })
 // 인자 값이 무엇이든(옵션으로 바뀌어도) 읽기·출력만 하는 명령 — 모르는 변수·치환 인자를 허용한다(치환 속 명령은 따로 판정)
 const DYN_ARG_READ_SAFE = new Set(['cat', 'head', 'tail', 'wc', 'ls', 'stat', 'realpath', 'readlink', 'basename', 'dirname',
   'grep', 'egrep', 'fgrep', 'cut', 'tr', 'du', 'df', 'echo', 'test', '[', 'cd', 'pushd', 'for', 'nl', 'tac', 'rev', 'seq',
-  'shasum', 'md5', 'md5sum', 'sha1sum', 'sha256sum', 'cksum', ':'])
+  'shasum', 'md5', 'md5sum', 'sha1sum', 'sha256sum', 'cksum', ':',
+  'ps', 'pgrep', 'lsof']) // 2026-11-18 — 프로세스·열린 파일 조회는 어떤 인자로도 쓰지 않는다 (`for p in $(pgrep …); do ps -p $p`)
 const FIXED_VAR_RE = /^\$(?:\{(?:HOME|PWD)\}|(?:HOME|PWD)(?![A-Za-z0-9_]))/
 const LOOP_VALUE_RE = /^[A-Za-z0-9_.\/:@%+,=-]*$/ // 공백·glob·따옴표 없는 값만 — 단어 나누기가 생기지 않는다
 const VAR_REF_RE = /\$(?:\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*))/g
@@ -2467,6 +2964,25 @@ function loopValuesOf(cmd, acc) {
   }
   for (const name of vals.keys()) {
     if (new RegExp(`(?:^|[^A-Za-z0-9_$])${name}\\+?=`).test(cmd)) tainted.add(name) // 본문 안 재대입
+  }
+  // 2026-11-18 — 반복문 앞에서 조건 없이 한 번만 대입한 고정 값(`F=~/x.jsonl; for n in 1 2; do sed -n "${n}p" "$F"; done`)도
+  // 값 하나짜리 목록으로 본다. resolveLiteralVars 는 반복문이 있으면 풀지 않아 이 형태가 확인 창을 띄웠다.
+  // 첫 제어 구조(for·while·if·case·{ ·( ) 뒤의 대입, 조건부(&&·||·&·파이프) 대입, 다시 대입하는 이름, 위험 변수는 넣지 않는다
+  const parts = splitTopLevelStatements(cmd)
+  if (parts) {
+    for (const p of parts) {
+      const t = p.text.trim()
+      const first = (t.match(/^\S+/) || [''])[0]
+      if (/^(?:for|while|until|if|case|select|function|\{|\(|do|then)$/.test(first) || /^[A-Za-z_][\w-]*\s*\(\s*\)/.test(t)) break
+      const m = /^([A-Za-z_][A-Za-z0-9_]*)=(\S*|'[^']*'|"[^"]*")$/.exec(t)
+      if (!m || p.sepBefore === '&&' || p.sepBefore === '||' || p.sep === '&' || p.pipe) continue
+      const name = m[1]
+      if (vals.has(name) || tainted.has(name) || SENSITIVE_VAR_RE.test(name) || MKTEMP_SPECIAL_VARS.has(name)) continue
+      if ((cmd.match(new RegExp(`(?:^|[^A-Za-z0-9_$])${name}\\+?=`, 'g')) || []).length !== 1) continue
+      const v = literalAssignValue(m[2], new Map())
+      if (v === null || !LOOP_VALUE_RE.test(v)) continue
+      vals.set(name, [v])
+    }
   }
   for (const t of tainted) vals.delete(t)
   return vals
@@ -2519,6 +3035,44 @@ function isReadOnlyResolved(cmd) {
     if (!combos || !combos.every(c => isReadOnlyResolved([inv.name, ...c].map(q).join(' ')))) return false
   }
   return true
+}
+
+// awk 프로그램이 출력만 하는가 — 문자열("…")·정규식(/…/, 패턴 자리) 안은 지우고 본다. 정규식 안 `(a|b)`·비교 `$1>5` 는 허용,
+// print·printf 뒤의 `>`·`>>`·`|`(파일 쓰기·명령으로 보내기)·system·getline·@load/@include·close 없는 코프로세스(|&)는 거부.
+// 한 번에 훑는 작은 스캐너라 정규식 안 따옴표(/"/)나 나눗셈(a/2)으로 print 를 숨기지 못한다
+function awkProgramReadOnly(prog) {
+  let out = ''
+  for (let i = 0; i < prog.length; i++) {
+    const c = prog[i]
+    if (c === '"') {
+      let j = i + 1
+      while (j < prog.length && prog[j] !== '"') { if (prog[j] === '\\') j++; j++ }
+      if (j >= prog.length) return false // 닫히지 않은 문자열
+      out += '""'; i = j; continue
+    }
+    if (c === '/') {
+      const before = out.replace(/\s+$/, '')
+      const prev = before[before.length - 1]
+      if (!before || /[~(,!{};&|?:]/.test(prev)) {
+        let j = i + 1
+        while (j < prog.length && prog[j] !== '/' && prog[j] !== '\n') { if (prog[j] === '\\') j++; j++ }
+        if (j >= prog.length || prog[j] !== '/') return false
+        out += '//'; i = j; continue
+      }
+    }
+    out += c
+  }
+  if (/\b(?:system|getline|close|fflush)\b|@/.test(out)) return false
+  return !/\bprintf?\b[^;{}\n]*[>|]/.test(out)
+}
+
+// 안전 패턴 휴리스틱(SAFE_READONLY_COMMANDS·COMPOUND_SAFE_COMMANDS)은 awk 를 통째로 안전하다고 봐서
+// `awk '{print | "sh"}'`·`awk 'BEGIN{"id" | getline}'` 가 자동 허용됐다(2026-11-18 발견) — 출력만 하는 awk 가 아니면 휴리스틱을 쓰지 않는다
+function hasUnsafeAwk(cmd) {
+  if (typeof cmd !== 'string' || !/awk/.test(cmd)) return false
+  const acc = analyzeShell(cmd)
+  return acc.invocations.some(inv => /^(?:g|m|n)?awk$/.test(inv.name || '')
+    && (inv.args.some(a => a.dyn) || !READ_ONLY_RESOLVED.awk(inv.args.map(a => cleanValue(a.value)), inv)))
 }
 
 function denyResult(reason) {
@@ -2582,6 +3136,7 @@ function handlePreToolUse(toolName, toolInput, cwd) {
 
   // 안전 패턴 자동 허용 — 휴리스틱 우회 (cd+git, heredoc, brace, compound, multiline shell)
   const allowedDirs = getAllowedDirs(cwd)
+  if (hasUnsafeAwk(cmd)) return null
   if (isCdGitSafe(cmd, allowedDirs)
    || isHeredocSafe(cmd, allowedDirs)
    || isBraceExpansionSafe(cmd, allowedDirs)
@@ -2639,6 +3194,33 @@ const PERM_DEV_OK = {
   python: (v) => v[0] === '-m' && v[1] === 'json.tool', python3: (v) => v[0] === '-m' && v[1] === 'json.tool', // 받은 JSON 보기만
   tsc: devTrue, eslint: devTrue, prettier: devTrue, biome: devTrue, vitest: devTrue, jest: devTrue, mocha: devTrue,
   cargo: (v) => ['build', 'check', 'test', 'fmt', 'clippy', 'doc', 'tree', 'metadata', 'run', 'bench', '--version'].includes(v.find(x => !x.startsWith('-'))),
+  // 2026-11-23 사용자 결정 — 프로젝트 안 셸 스크립트 파일 실행은 `node scripts/x.js`(Bash(node*) 허용)와 같게 자동 허용.
+  // `sh scripts/wrapper-e2e.sh --dev` 가 매번 확인 창을 띄웠다. 스크립트가 프로젝트 안 실제 일반 파일일 때만 — 표준입력·`-c`·
+  // 대화형·임시 폴더·링크로 밖을 가리키는 파일·없는 파일은 지금처럼 확인
+  sh: (v, inv, c) => projectShellScript(v, c), bash: (v, inv, c) => projectShellScript(v, c),
+  zsh: (v, inv, c) => projectShellScript(v, c), dash: (v, inv, c) => projectShellScript(v, c),
+}
+const SHELL_SCRIPT_OPT_RE = /^-[eux]+$/
+const SHELL_SCRIPT_O_RE = /^(?:errexit|nounset|pipefail|xtrace)$/
+function projectShellScript(v, c) {
+  if (!c || !c.vcwd || !c.root) return false
+  let k = 0
+  for (; k < v.length; k++) {
+    if (v[k] === '-o') { if (!SHELL_SCRIPT_O_RE.test(v[k + 1] || '')) return false; k++; continue }
+    if (v[k].startsWith('-') || v[k].startsWith('+')) { if (!SHELL_SCRIPT_OPT_RE.test(v[k])) return false; continue } // -c·-s·-i·--rcfile 등
+    break
+  }
+  const script = v[k]
+  if (!script || /[*?[\]{}~$`]/.test(script)) return false
+  const abs = path.resolve(c.vcwd, script)
+  let real, st
+  try { real = fs.realpathSync(abs); st = fs.statSync(real) } catch { return false }
+  if (!st.isFile()) return false
+  if (isUnderTempDir(abs) || isUnderTempDir(real)) return false
+  let root = c.root
+  try { root = fs.realpathSync(c.root) } catch { /* 그대로 */ }
+  if (!isAncestorOrSame(root, real) || /[\\/]\.git[\\/]/i.test(real)) return false
+  return true
 }
 function pkgSub(v) {
   for (let k = 0; k < v.length; k++) {
@@ -2648,25 +3230,54 @@ function pkgSub(v) {
   }
   return false // 인자 없음(yarn = install)
 }
-function isDevResolved(cmd) {
+// 같은 명령에서 방금 만든 임시 폴더(mktempVars) 안 쓰기·그 폴더 삭제 자동 허용 — 결정 42 의 사용자 승인 예외 (2026-11-18)
+// 그 변수를 쓰는 명령은 아래 목록만: mv·cd·find·rsync·ln 등은 바깥 파일을 옮겨 넣고 지우거나 위치를 바꿀 수 있어 제외
+const OWN_TMP_REF_RE = /^\$(?:\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*)(?![A-Za-z0-9_]))(\/[A-Za-z0-9._+/-]*)?$/
+const OWN_TMP_CMDS = new Set(['ls', 'cat', 'head', 'tail', 'wc', 'grep', 'diff', 'cmp', 'stat', 'file', 'test', '[', 'echo', 'printf', 'touch', 'mkdir', 'cp', 'rm'])
+function ownTmpRef(w, own) {
+  if (!own.size || !w.quoted || w.tilde || w.subst) return null
+  const m = OWN_TMP_REF_RE.exec(cleanValue(w.value))
+  if (!m || !own.has(m[1] || m[2])) return null
+  const sub = m[3] || ''
+  return /(?:^|\/)\.\.(?:\/|$)/.test(sub) ? null : { sub }
+}
+function isDevResolved(cmd, cwd) {
   const acc = analyzeShell(cmd)
   if (acc.unknown.length || !acc.invocations.length) return false
   const fixedVar = /^\$(?:\{(?:HOME|PWD)\}|(?:HOME|PWD)(?![A-Za-z0-9_]))/
+  const own = typeof cwd === 'string' && cwd ? mktempVars(cmd, cwd) : new Set()
+  let startCwd = null
+  try { startCwd = typeof cwd === 'string' && cwd ? path.resolve(cwd) : null } catch { /* ignore */ }
+  const c = { vcwd: startCwd, root: startCwd ? (findProjectRoot(startCwd) || startCwd) : null } // 셸 스크립트 실행 판정용(cd 추적)
   for (const inv of acc.invocations) {
     if (inv.dynamicName || inv.sudo) return false
+    if (inv.name === 'cd') { // cd 자체 판정은 READ_ONLY_RESOLVED — 여기서는 위치만 따라간다(서브셸·변수·~·- 면 포기)
+      const t = inv.args.find(a => !/^-[LPe@]$/.test(a.value))
+      const r = !inv.subshell && t && !t.dyn && !t.tilde && t.value !== '-' && c.vcwd ? path.resolve(c.vcwd, cleanValue(t.value)) : null
+      c.vcwd = r
+    }
     if (inv.name === 'for' || inv.name === 'read') return false // 반복문은 본문이 읽기뿐일 때만(isReadOnlyResolved) — 개발 명령 반복은 넓히지 않는다 (2026-11-10)
-    if ((inv.redirs || []).some(r => r.out && !r.dup && r.dyn)) return false // 쓰기 대상이 변수 — 위치 판정 불가
+    if (inv.name === 'mktemp') { if (own.size && mktempArgsOk(inv.args.map(a => cleanValue(a.value)), cwd, true) && !inv.args.some(a => a.dyn)) continue; return false }
+    const ownArgs = inv.args.map(a => (a.dyn ? ownTmpRef(a, own) : null))
+    const outRedirs = (inv.redirs || []).filter(r => r.out && !r.dup && r.dyn)
+    const ownRedir = outRedirs.map(r => ownTmpRef(r, own))
+    if (ownRedir.some(x => !x)) return false // 쓰기 대상이 (방금 만든 임시 폴더가 아닌) 변수 — 위치 판정 불가
+    if (ownArgs.some(Boolean) || ownRedir.length) {
+      if (!OWN_TMP_CMDS.has(inv.name)) return false
+      if (inv.name === 'rm' && ownArgs.some(x => x && x.sub)) return false // "$T/x" 는 mktemp 가 실패하면 / 아래가 된다
+    }
     // 모르는 변수·치환 인자는 옵션·대상을 바꿀 수 있어 거른다 — echo 는 인자가 무엇이든 출력만 (치환 속 명령은 따로 검사됨)
-    if (inv.name !== 'echo' && inv.args.some(a => a.dyn && !fixedVar.test(a.value))) return false
+    if (inv.name !== 'echo' && inv.args.some((a, i) => a.dyn && !ownArgs[i] && !fixedVar.test(a.value))) return false
     const vals = inv.args.map(a => cleanValue(a.value))
     const has = (t) => Object.prototype.hasOwnProperty.call(t, inv.name) && t[inv.name]
     const ro = has(READ_ONLY_RESOLVED), dev = has(PERM_DEV_OK)
-    if (!(ro && ro(vals, inv)) && !(dev && dev(vals, inv))) return false
+    if (!(ro && ro(vals, inv)) && !(dev && dev(vals, inv, c))) return false
   }
   return true
 }
 function isPermApprovable(cmd, cwd) {
-  if (isReadOnlyResolved(cmd) || isDevResolved(cmd)) return true
+  if (isReadOnlyResolved(cmd) || isDevResolved(cmd, cwd)) return true
+  if (hasUnsafeAwk(cmd)) return false
   const allowedDirs = getAllowedDirs(cwd)
   return isCdGitSafe(cmd, allowedDirs) || isHeredocSafe(cmd, allowedDirs) || isBraceExpansionSafe(cmd, allowedDirs)
     || isCompoundSafe(cmd, allowedDirs) || isShellScriptSafe(cmd, allowedDirs)
@@ -2734,6 +3345,109 @@ function handlePostToolUse(toolName, toolInput) {
   return null
 }
 
+// ── 확인 창이 뜰 명령은 먼저 거부 (2026-11-18 사용자 결정 "쓸데없는 거 계속 물어보잖아 — 훅으로 강제") ──
+// 위험 판정은 없지만 자동 허용도 안 되는 명령은 Claude Code 확인 창이 뜬다(조사용 반복문·awk·인라인 스크립트 등).
+// 확인 창이 뜨는 모드(default·acceptEdits)에서는 띄우기 전에 거부하고 자동 허용되는 형태로 다시 쓰게 한다.
+// - 아래 셋 중 하나면 그대로 둔다: PermissionRequest 자동 승인 범주 / 설정 allow 규칙에 모든 명령이 맞음(변수·치환이 없을 때만 —
+//   Claude Code 는 `$(…)`·변수가 든 명령을 allow 규칙과 무관하게 묻는다, 2026-11-18 실측) / 직전 답변에서 사용자에게
+//   "확인 창이 (한 번) 뜹니다" 라고 미리 알림(꼭 필요한 실행 — 이번 사용자 메시지 뒤의 답변만 본다)
+// - bash-guard 가 직접 묻는 것(commit·push·rm 해석 불가 등)은 사용자 결정이 필요한 확인이라 그대로 묻는다
+const PROMPT_MODES = new Set(['default', 'acceptEdits'])
+const ANNOUNCE_RE = /확인 창이 (?:한 번 )?뜹니다/
+function readAllowRules(root) {
+  const files = [path.join(process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude'), 'settings.json')]
+  if (root) files.push(path.join(root, '.claude', 'settings.json'), path.join(root, '.claude', 'settings.local.json'))
+  const rules = []
+  for (const f of files) {
+    try {
+      const j = JSON.parse(fs.readFileSync(f, 'utf8'))
+      for (const r of (j && j.permissions && Array.isArray(j.permissions.allow) ? j.permissions.allow : [])) {
+        const m = typeof r === 'string' && /^Bash\(([\s\S]*)\)$/.exec(r)
+        if (m) rules.push(m[1])
+      }
+    } catch { /* 없음·깨짐 */ }
+  }
+  return rules
+}
+function allowRuleMatches(rule, text) {
+  const r = rule.replace(/:\*$/, '*')
+  const re = new RegExp('^' + r.split('*').map(s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('[\\s\\S]*') + '$')
+  return re.test(text)
+}
+function nativeAllows(cmd, root) {
+  if (/\$|`|<\(|>\(/.test(cmd)) return false
+  const acc = analyzeShell(cmd)
+  if (acc.unknown.length || !acc.invocations.length) return false
+  const rules = readAllowRules(root)
+  if (!rules.length) return false
+  return acc.invocations.every(inv => !inv.dynamicName && !inv.sudo
+    && rules.some(r => allowRuleMatches(r, [inv.name, ...inv.args.map(a => cleanValue(a.value))].join(' '))))
+}
+function announcedPrompt(transcriptPath) {
+  if (typeof transcriptPath !== 'string' || !transcriptPath) return false
+  let text
+  try {
+    const fd = fs.openSync(transcriptPath, 'r')
+    try {
+      const size = fs.fstatSync(fd).size
+      const len = Math.min(size, 2 * 1024 * 1024)
+      const buf = Buffer.alloc(len)
+      fs.readSync(fd, buf, 0, len, size - len)
+      text = buf.toString('utf8')
+    } finally { fs.closeSync(fd) }
+  } catch { return false }
+  const lines = text.split('\n')
+  for (let i = lines.length - 1; i >= 0; i--) {
+    let e
+    try { e = JSON.parse(lines[i]) } catch { continue }
+    if (!e || e.isSidechain) continue
+    const c = e.message && e.message.content
+    if (e.type === 'user' && !e.isMeta) {
+      if (typeof c === 'string') return false
+      if (Array.isArray(c) && !c.some(b => b && b.type === 'tool_result') && c.some(b => b && b.type === 'text')) return false
+    }
+    if (e.type === 'assistant' && Array.isArray(c) && c.some(b => b && b.type === 'text' && ANNOUNCE_RE.test(b.text || ''))) return true
+  }
+  return false
+}
+function promptBlockReason(cmd) {
+  const acc = analyzeShell(cmd)
+  const names = [...new Set(acc.invocations.filter(inv => !Object.prototype.hasOwnProperty.call(READ_ONLY_RESOLVED, inv.name)).map(inv => inv.name || '?'))].slice(0, 6)
+  const dyn = /\$\(|`|\$\{?[A-Za-z_]/.test(cmd)
+  return 'bash-guard: 이 명령은 자동 허용 범위 밖이라 사용자에게 확인 창이 뜹니다'
+    + (names.length ? ` (자동 허용 안 되는 명령: ${names.join('·')})` : '') + (dyn ? ' (변수·명령 치환이 들어 있음)' : '')
+    + '. 확인 창을 띄우지 말고 자동 허용되는 형태로 바꿔 다시 실행하세요 — 반복문 변수는 고정 값 나열로, 조사는 Read·Grep 도구나 단순 읽기 명령(cat·grep·sed -n·ps·git log)으로, '
+    + '여러 단계는 나눠서. 이 명령이 꼭 필요하면 답변에 "이 명령은 확인 창이 한 번 뜹니다" 라고 사용자에게 알리고, Bash 도구 description 에도 "(확인 창 한 번)" 을 넣어 다시 실행하세요.'
+}
+// 화면 없는 실행(`claude -p`)은 확인 창 자체가 없고, `--allowedTools`·`--permission-mode` 같은 명령줄 허용은 훅이 볼 수 없다
+// → 세션 프로세스 명령줄에 이런 옵션이 있으면 사전 거부를 하지 않는다 (2026-11-18 E2E 실측: -p --allowedTools 'Bash(x)' 가 거부됨)
+function sessionHasCliPermissionFlags() {
+  if (process.env.BASH_GUARD_TEST_SESSION_ARGS !== undefined) return /(?:^|\s)(?:-p|--print|--allowed-?[Tt]ools|--dangerously-skip-permissions|--permission-prompt-tool)(?:[\s=]|$)/.test(process.env.BASH_GUARD_TEST_SESSION_ARGS)
+  if (IS_WIN) return false
+  const pid = sessionPid()
+  if (!pid) return false
+  try {
+    const args = require('child_process').execFileSync('ps', ['-o', 'args=', '-p', String(pid)], { encoding: 'utf8', timeout: 3000, stdio: ['ignore', 'pipe', 'ignore'] })
+    return /(?:^|\s)(?:-p|--print|--allowed-?[Tt]ools|--dangerously-skip-permissions|--permission-prompt-tool)(?:[\s=]|$)/.test(args)
+  } catch { return false }
+}
+function preDenyPrompt(input) {
+  const { tool_name, tool_input, cwd, permission_mode, transcript_path } = input
+  if (!SHELL_TOOLS.has(tool_name) || !PROMPT_MODES.has(permission_mode)) return null
+  const cmd = tool_input && typeof tool_input === 'object' && typeof tool_input.command === 'string' ? tool_input.command.trim() : ''
+  if (!cmd) return null
+  const c = typeof cwd === 'string' ? cwd : undefined
+  if (handlePermissionRequest(tool_name, tool_input, c)) return null
+  if (nativeAllows(cmd, findProjectRoot(c || process.cwd()))) return null
+  // 미리 알림: 도구 설명(description — 사용자 화면에 명령 설명으로 보임)에 "확인 창" 을 적었거나, 이번 사용자 메시지 뒤의 답변에 알림 문장이 있음.
+  // 도구를 부르는 바로 그 답변의 글은 훅이 돌 때 아직 세션 기록에 없다(2026-11-18 실측) → 설명 칸이 주 경로
+  const desc = tool_input && typeof tool_input.description === 'string' ? tool_input.description : ''
+  if (/확인 창/.test(desc)) return null
+  if (announcedPrompt(transcript_path)) return null
+  if (sessionHasCliPermissionFlags()) return null
+  return denyResult(promptBlockReason(cmd))
+}
+
 async function main() {
   const rl = readline.createInterface({ input: process.stdin })
   let raw = ''
@@ -2750,11 +3464,12 @@ async function main() {
   const { hook_event_name, hookEventName, tool_name, tool_input, cwd } = input
   const eventName = hook_event_name || hookEventName
 
-  const result = eventName === 'PermissionRequest'
+  let result = eventName === 'PermissionRequest'
     ? handlePermissionRequest(tool_name, tool_input, typeof cwd === 'string' ? cwd : undefined)
     : eventName === 'PostToolUse'
       ? handlePostToolUse(tool_name, tool_input && typeof tool_input === 'object' ? tool_input : {})
       : handlePreToolUse(tool_name, tool_input, typeof cwd === 'string' ? cwd : undefined)
+  if (!result && eventName !== 'PermissionRequest' && eventName !== 'PostToolUse') result = preDenyPrompt(input)
 
   if (result) process.stdout.write(JSON.stringify(result) + '\n')
 
@@ -2779,6 +3494,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  interpWriteTargets,
   findProjectRoot,
   getAllowedDirs,
   isCdGitSafe,
@@ -2794,9 +3510,11 @@ module.exports = {
   handlePreToolUse,
   handlePermissionRequest,
   handlePostToolUse,
+  preDenyPrompt,
   analyzeShell,
   classifyShell,
   resolveLiteralVars,
+  splitTopLevelStatements,
   isReadOnlyResolved,
   parseGitInvocation,
   parsePushArgs,

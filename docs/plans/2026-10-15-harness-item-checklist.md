@@ -1,6 +1,6 @@
 # gugbab 하네스 항목 체크리스트 — 고정 / 켜고 끄기 선택
 
-> 최종 수정: 2026-11-11 · 2026-11-11 모델이 이미 아는 일반 지식·내장 기능과 겹치는 항목 제거(스킬 48·에이전트 11·훅 relation-guard·parallel-hint·session-start·커맨드 /context-prime·/create-plan·/update-docs·/tdd-implement·/sparc-refine, 2차 점검으로 스킬 8·에이전트 claude-code-guide(내장 에이전트와 같은 이름), 3차로 게임(Unity) 묶음·프리셋 전체·운세 일반 지식 스킬 5·합친 스킬 3(storybook-visual-testing·tanstack-query-v4-to-v5-migration·seo-monitoring-automation) — 실제 수는 `docs/DEFAULTS.md`) · 이전 상태: **사용자 체크 반영** (고정 35 · 켬 53 · 끔 233 — 2026-10-29 스택 전용 에이전트 12개와 spec-extraction-method·/spec-extract·룰 java.md·typescript.md·rust.md 기본 끔(프리셋으로 켬) · 이전: 고정 35 · 켬 70 · 끔 216 — 사용자 체크 45개 + 묶음 정리 규칙 적용(계획서 14.5) + 새 훅 relation-guard · parallel-hint · claude-version-check · release-version-guard · wrapper-version-check) · 기준: 현재 레포 실측 (훅 29 + 상태줄 1 · 룰 14 · 커맨드 6 + `/harness` · 에이전트 43 · 스킬 115)
+> 최종 수정: 2026-11-11 · 2026-11-11 모델이 이미 아는 일반 지식·내장 기능과 겹치는 항목 제거(스킬 48·에이전트 11·훅 relation-guard·parallel-hint·session-start·커맨드 /context-prime·/create-plan·/update-docs·/tdd-implement·/sparc-refine, 2차 점검으로 스킬 8·에이전트 claude-code-guide(내장 에이전트와 같은 이름), 3차로 게임(Unity) 묶음·프리셋 전체·운세 일반 지식 스킬 5·합친 스킬 3(storybook-visual-testing·tanstack-query-v4-to-v5-migration·seo-monitoring-automation) — 실제 수는 `docs/DEFAULTS.md`) · 이전 상태: **사용자 체크 반영** (고정 35 · 켬 53 · 끔 233 — 2026-10-29 스택 전용 에이전트 12개와 spec-extraction-method·/spec-extract·룰 java.md·typescript.md·rust.md 기본 끔(프리셋으로 켬) · 이전: 고정 35 · 켬 70 · 끔 216 — 사용자 체크 45개 + 묶음 정리 규칙 적용(계획서 14.5) + 새 훅 relation-guard · parallel-hint · claude-version-check · release-version-guard · wrapper-version-check) · 기준: 현재 레포 실측 (훅 30 + 상태줄 1 · 룰 15 · 커맨드 6 + `/harness` · 에이전트 43 · 스킬 115)
 > 짝 문서: `docs/plans/2026-10-15-gugbab-claude-shim-wrapper.md`
 
 ## 체크하는 법
@@ -56,7 +56,7 @@
 
 ---
 
-## 2. 훅 (29종)
+## 2. 훅 (30종)
 
 > 훅 = Claude 가 도구를 쓰기 직전·직후, 사용자가 질문을 보낼 때, 답변을 끝낼 때 자동으로 실행되는 검사 프로그램. 막기(차단)·물어보기(확인 창)·정보 주입(Claude 에게 한마디 덧붙이기)을 한다.
 > 래퍼에서는 디스패처가 실행 직전에 켜짐/꺼짐을 읽으므로 **훅은 `/harness` 에서 바꾸면 즉시 반영**된다.
@@ -68,6 +68,10 @@
   - 이렇게 보여요: Claude 가 `git commit -m "…"` 를 실행하려 하면 "git commit 은 사용자 확인이 필요합니다" 확인 창이 뜬다. `echo hi && rm -rf ~` 처럼 숨겨도 거부된다.
   - 끄면: 위 판단이 전부 사라지고 Claude Code 기본 동작(대부분 확인 창)만 남는다. deny 목록 14개만 막힌다.
   - 연관: protect-secrets 의 판정을 가져다 쓰고, branch-protection·package-manager-guard·auto-approve 가 이 훅의 분석기를 가져다 쓴다(코드 공유 — 8장 D)
+  - 2026-11-18 Claude 가 스스로 만든 것은 묻지 않음 (lfmall·06-gugbab-attendance 세션이 전한 사용자 요청): 같은 명령에서 `T=$(mktemp -d …)` 로 만든 임시 폴더 안 쓰기와 `rm -rf "$T"` 는 자동 허용(결정 42 의 사용자 승인 예외 — 그 변수는 ls·cat·echo·cp·rm 같은 정해 둔 명령에만, mv·cd·find 로 쓰면 확인). `pkill`·`killall` 은 실행 전에 `pgrep` 으로 대상을 뽑아 전부 이 세션이 띄운 프로세스면 자동 허용, 하나라도 다르거나 0개·변수 패턴이면 확인.
+  - 2026-11-18 쓸데없는 확인 창은 훅이 강제로 없앰 (사용자 결정 "모든 건 훅으로 통제"): ① 읽기 자동 허용을 넓힘 — 출력만 하는 `awk`, 값을 몰라도 읽기만 하는 `ps`·`pgrep`·`lsof`, 반복문 앞의 고정 변수(`F=…; for n in 1 2; do sed -n "${n}p" "$F"`), 래퍼 조회(`gugbab-claude status`) ② 위험 판정은 없지만 자동 허용도 안 돼 확인 창이 뜰 명령은 default·acceptEdits 모드에서 먼저 거부하고 자동 허용되는 형태로 다시 쓰게 함 — 꼭 필요하면 답변과 Bash 설명 칸에 "확인 창" 을 적어 알린 뒤에만 통과(`claude -p`·`--allowedTools` 세션은 제외) ③ `git stash`(list·show 빼고) 거부 — pop 실패·`--index` 누락으로 작업이 사라진다 ④ `SKILL.md`·`verification.md`·`memory/` 를 Bash 로 옮기거나 지우기 거부 — 변수 경로(`…/$p/SKILL.md`)와 그 파일이 든 폴더(`rm -rf docs/skills`·`git mv .claude/skills`)도. 안전 패턴이 awk 의 `| "sh"`·`getline` 을 통과시키던 빈틈도 막음.
+  - 2026-11-23 소스 파일을 `python3`·`node` 코드로 고치면 거부 (06-gugbab-attendance 보고, 사용자 결정): heredoc·`-c`·`-e`·파이프로 넘긴 코드 안에서 프로젝트 소스·설정·문서 파일에 쓰면(`open(p,'w')`·`write_text`·`writeFileSync`·perl `open(>…)`·`File.write` 등, 변수·경로 더하기·`os.path.join`·`Path()/` 까지 풀어 봄) 확인 창이 뜨기 전에 거부 → Claude 가 Edit 로 다시 고쳐 acceptEdits 에서 확인 창이 안 뜬다. 읽기만·임시 폴더·경로를 알 수 없는 코드(`sys.argv`·f-string·`$S`)는 그대로. 과거 명령 8,288건 재생에서 203건 해당.
+  - 2026-11-23 프로젝트 안 셸 스크립트 실행은 묻지 않음 (사용자 결정): `sh scripts/x.sh` 처럼 프로젝트 안 실제 스크립트 파일을 `sh`·`bash`·`zsh`·`dash` 로 돌리면 `node scripts/x.js` 와 같이 자동 허용(`cd` 위치를 따라감, 실행 옵션 `-e`·`-u`·`-x`·`-o pipefail` 만). `-c`·`-s`·`-i`·`--rcfile`·표준입력·heredoc·임시 폴더·프로젝트 밖·밖을 가리키는 링크·`.git` 안·없는 파일·변수·글롭 경로는 지금처럼 확인. 재생에서 19건이 새로 자동.
 - [x] **protect-secrets** — 비밀 파일은 못 고치게, 개인키는 못 읽게
   - 하는 일: `.env`·`*.pem`·`*.key`·credentials 파일과 홈의 셸·SSH·git 설정 파일(`~/.zshrc`, `~/.ssh/config`, `~/.gitconfig` 등) 수정을 막는다. 개인키(`~/.ssh/id_rsa`)·클라우드 인증 파일(`~/.aws/credentials` 등)은 읽기도 막는다. `.env` 읽기는 디버깅에 필요해서 허용.
   - 이렇게 보여요: Claude 가 `.env` 에 값을 쓰려 하면 "민감 파일 수정은 차단됩니다" 로 거부된다.
@@ -157,12 +161,20 @@
 
 ### 2.5 Codex 리뷰
 
-- [ ] **codex-review-guard** (기본 켬) — 코드를 바꾼 턴이 끝날 때 Codex 적대적 리뷰 요구
+- [ ] **codex-review-guard** (기본 끔) — 코드를 바꾼 턴이 끝날 때 Codex 적대적 리뷰 요구
+  - 2026-11-18 사용자 결정: 묶음(훅·룰·커맨드) 전체를 기본 끔으로 바꾸고, 켜 두었던 프로젝트도 전부 껐다.
   - 하는 일: 코드를 바꾼 답변이 끝나면 OpenAI Codex 에게 "배포를 막을 결함을 찾아라" 리뷰를 최대 3라운드 받게 하고, 끝날 때까지 종료를 막는다. codex CLI 가 없거나 로그인이 안 됐으면 조용히 건너뛴다.
   - 이렇게 보여요: 답변이 끝나는 순간 "✗ Codex 적대적 리뷰 필요" 가 뜨고 Claude 가 리뷰를 돌린다(이번 대화에서도 한 번 떴고, 지금은 사용자 요청으로 일시 중지).
   - 끄면: 리뷰는 `/codex-review` 로 원할 때만 한다.
   - 주의: 커밋 안 한 변경 전체가 외부(OpenAI)로 나간다 — 회사 관련 내용이 섞이면 안 됨
   - 연관: 룰 `codex-review.md`, 커맨드 `/codex-review`, codex 플러그인과 한 묶음(8장 A — codex-review)
+- [ ] **clean-review-guard** (기본 켬) — 코드를 바꾼 턴이 끝날 때, Codex 리뷰가 돌지 않으면 깨끗한 Claude 리뷰어로 적대적 리뷰 요구
+  - 2026-11-23 사용자 결정: Codex 리뷰를 안 할 때(묶음 꺼짐·`codex.skipReview`·CLI 없음·미로그인·계정 400) 대화 맥락 없는 `clean-reviewer` 가 대신 리뷰한다. 코드를 바꾼 턴마다, 모든 프로젝트 기본 켬. Google Elephant-Goldfish Model(맥락 없는 리뷰어) 참고.
+  - 하는 일: 이번 턴에 코드 파일을 바꿨으면 답변이 끝날 때 리뷰 요청문(사용자 요청 원문 + 바뀐 파일 목록)을 주고 `clean-reviewer` 를 부르게 한다. 대화 기록에서 마지막 코드 변경 뒤에 그 요청문 그대로 끝까지 돈 호출이 있어야 통과 — 표시 파일·다른 에이전트·문구 바꾼 호출·완료 기록 없는 호출은 인정 안 함(백그라운드는 Claude Code 완료 알림으로 인정, 도는 동안은 안 막음). 고치면 다음 라운드, 최대 3라운드. Codex 가 실제로 리뷰할 상황이면 건너뛴다.
+  - 이렇게 보여요: 코드를 고친 답변이 끝나는 순간 "✗ 깨끗한 Claude 리뷰 필요" 가 뜨고, Claude 가 리뷰어를 불러 지적마다 ACCEPT/REJECT 한 뒤 "깨끗한 리뷰 요약" 을 보고한다.
+  - 끄면: Codex 리뷰를 켜지 않은 프로젝트는 적대적 리뷰 없이 끝난다.
+  - 주의: 코드를 바꾼 턴마다 리뷰 서브에이전트(sonnet)가 한 번씩 돌아 토큰·시간이 든다.
+  - 연관: 룰 `clean-review.md`, 에이전트 `clean-reviewer` 와 한 묶음(8장 A — clean-review)
 
 ### 2.6 메모리 공유 (레포에 `memory/` 를 두고 git 으로 여러 PC 공유하는 프로젝트용)
 
@@ -182,36 +194,38 @@
   - 프로젝트 추천: 끔
   - 하는 일: verification.md 에 소스 URL·검증일·판정·테스트 기록이 갖춰졌는지, "내장 지식으로 대체했다" 같은 자백 문구가 없는지 검사해 어긋나면 저장을 막는다.
   - 이렇게 보여요: 검증일을 빼고 저장하면 "verification.md 필수 항목 누락: 검증일" 로 막힌다.
-- [ ] **skill-md-guard** (기본 켬) — 스킬 파일(SKILL.md) 형식 검사
+- [ ] **skill-md-guard** (기본 끔) — 스킬 파일(SKILL.md) 형식 검사
   - 프로젝트 추천: 끔
   - 하는 일: SKILL.md 의 이름·설명, 소스 URL, 검증일, 폴더 구조(1단)가 규칙에 맞는지 검사한다.
   - 이렇게 보여요: 소스 URL 없이 스킬을 쓰면 저장이 거부된다.
-- [ ] **agent-md-guard** (기본 켬) — 에이전트 파일 형식 검사
+- [ ] **agent-md-guard** (기본 끔) — 에이전트 파일 형식 검사
   - 프로젝트 추천: 끔
   - 하는 일: 에이전트 md 의 이름·설명·도구·모델, 예시 태그, 구세대 모델 ID 사용 여부, 다른 에이전트를 부르는 에이전트의 maxTurns 설정을 검사한다.
   - 이렇게 보여요: `model: claude-opus-4-6` 같은 구세대 ID 를 쓰면 저장이 거부된다.
-- [ ] **deliverable-guard** (기본 켬) — 산출물이 빠졌으면 커밋·종료 차단
+- [ ] **deliverable-guard** (기본 끔) — 산출물이 빠졌으면 커밋·종료 차단
   - 프로젝트 추천: 끔
   - 하는 일: ① 스킬·에이전트를 바꿨는데 README 를 안 고치고 commit/push 하면 막는다 ② 테스트 안 끝난(PENDING_TEST) 스킬을 두고 세션을 끝내려 하면 막는다 ③ memory·exports 를 커밋 안 한 채 push 하면 막는다.
   - 이렇게 보여요: 스킬을 추가하고 `git push` 하면 "README 스킬 목록이 갱신되지 않았습니다" 로 막힌다.
-- [ ] **staleness-check** (기본 켬) — 스킬 검증일이 오래되면 재검증 알림
+- [ ] **staleness-check** (기본 끔) — 스킬 검증일이 오래되면 재검증 알림
   - 프로젝트 추천: 끔
   - 하는 일: 세션 시작 때 스킬 검증일을 확인해 60일이 넘은 스킬이 있으면 재검증하라고 알린다(`--strict` 면 다른 작업보다 먼저 하게 강제).
   - 이렇게 보여요: "검증일 60일 초과 스킬 3개: …" 안내가 Claude 에게 전달된다.
   - 연관 (2.7 전체): 룰 `creation-workflow.md`·`verification-policy.md`·`agent-design.md`·`readme-update.md`·`commands.md`, 에이전트 `skill-tester`, 커맨드 `/agent-status` 와 한 묶음(8장 A — harness-authoring). 래퍼에서는 스킬·에이전트가 각 프로젝트가 아니라 `~/gugbab` 에 있으므로 이 레포의 `.gugbab.json` 에서만 켠다
+  - 2026-11-23 사용자 결정: 하네스 제작 묶음(훅 4·룰 4·`/agent-status`·`skill-tester`)을 모든 프로젝트 기본 끔으로 바꿨다 — 앱 프로젝트에서 README 검사와 삭제 검사가 서로 막아 작업이 멈췄다(health·relay 보고). 이 레포는 `.gugbab.json` 의 `lock` 으로 그대로 켜짐. 끄면 `deliverable-guard` 의 "memory·exports 를 커밋 안 한 채 push 차단" 도 다른 프로젝트에서 빠진다(필요한 프로젝트는 `/harness` 로 켬)
 - [x] **claude-version-check** (신규) — Claude Code 버전 변경 알림 + 새 버전이면 자동 업데이트 (🔒 2026-10-17 사용자 결정 · 2026-11-11 자동 업데이트 추가)
   - 하는 일: 세션을 시작하면 `claude --version` 을 지난 세션에 본 버전과 비교해, 바뀌었으면 "래퍼의 로그인 공유는 문서에 없는 내부 변수를 쓰므로 Not logged in 이면 `gugbab-claude doctor`" 를 알린다. 하루에 한 번 npm 레지스트리에서 최신 버전을 확인해(3초 제한, 실패하면 건너뜀) 더 새 버전이 있으면 `claude update` 를 뒤에서 실행하고(세션은 기다리지 않음), 결과를 다음 세션·질문 때 한 번 알린다. 켜 둔 세션도 24시간마다 확인한다. `DISABLE_UPDATES`·`DISABLE_AUTOUPDATER` 로 꺼 두었거나 윈도우·Homebrew 설치면 실행하지 않고 알리기만 한다. 막지는 않는다. `/harness`·`status`·`doctor` 에도 버전 줄이 나온다.
   - 이렇게 보여요: "Claude Code 를 2.1.322 → 2.1.323 로 자동 업데이트했습니다. 새로 시작하는 세션부터 반영됩니다" 안내가 첫 답변에 전달된다.
 - [x] **release-version-guard** (신규) — PR 전에 버전(VERSION)을 올렸는지 검사, gugbab-claude 레포 전용 (🔒 2026-10-17 사용자 결정)
   - 하는 일: `gh pr create` 직전에 커밋된 `VERSION` 이 최신 `v*` 태그보다 큰지 확인하고, 아니면 막고 `node scripts/release-version.js bump` → 커밋 → 다시 PR 을 안내한다. 머지되면 `release-on-main` 워크플로가 그 버전으로 태그·Release 를 만들어 stable 설치본이 자동으로 받는다(PR 마다 `version-check` 워크플로도 같은 검사). 레포에 `.github/workflows/release-on-main.yml` 이 있을 때만 동작해 다른 프로젝트에서는 아무것도 하지 않는다.
   - 이렇게 보여요: 버전을 안 올리고 PR 을 만들면 "VERSION 1.0.1 이 최신 태그 v1.0.1 보다 커야 합니다 — bump 로 1.0.2 …" 로 막힌다.
+  - 2026-11-17 릴리스 노트 (lfmall 세션이 전한 사용자 요청): 버전을 올렸으면 그 버전 노트 `docs/release-notes/<버전> <핵심 수정 요약>.md`(지라 번호 없음 — 사용자 결정)도 커밋돼 있어야 PR 이 된다. `bump` 가 초안(수 변화·커밋 제목)을 만들고, 머지되면 그 노트가 GitHub Release 본문이 된다.
 - [x] **wrapper-version-check** (신규) — 세션 시작 때 하네스 버전·업데이트 결과(vA → vB)를 보여 주고(Claude 가 첫 답변 맨 위에 전달 — 결정 37), 세션을 띄운 래퍼가 설치된 하네스와 같은 버전인지 확인 (🔒 2026-10-19 사용자 결정)
   - 하는 일: 래퍼가 claude 를 띄울 때 넘긴 하네스 커밋(`GUGBAB_WRAPPER_REV`)을 설치본의 지금 커밋과 비교한다. 세션 도중 하네스가 업데이트됐으면 재시작 표시를 남겨 `/exit` 하면 래퍼가 새 버전으로 대화를 이어서 다시 띄우게 하고, 커밋 값이 아예 없으면(다시 실행 기능이 없던 예전 래퍼) 터미널에서 `gugbab-claude -c` 로 다시 실행하라고 알린다. 개발 모드·래퍼 밖에서는 아무것도 하지 않는다. 막지는 않는다.
   - 이렇게 보여요: "이 세션이 열린 뒤 하네스 v1.0.5가 업데이트됐습니다 (b20ff06 → 1a2b3c4). `/exit` 하면 래퍼가 새 버전으로 대화를 이어서 다시 시작합니다." 안내가 사용자와 Claude 에게 전달된다.
 
 ---
 
-## 3. 룰 (14종)
+## 3. 룰 (15종)
 
 > 룰 = Claude 가 세션 시작 때 읽는 규칙 문서. `paths` 가 있는 룰은 해당 종류 파일을 다룰 때만 읽힌다. 바꾸면 **재시작 후 반영**.
 
@@ -236,17 +250,20 @@
   - 하는 일: Java·Spring 코드 작성 규칙. `*.java`·gradle·pom 을 다룰 때만 읽힌다. `java-legacy`·`java-modern` 프리셋을 고르면 켜진다.
 - [ ] **rust.md** (기본 끔) — Rust 코딩 규칙
   - 하는 일: Rust 코드 작성 규칙. `*.rs`·`Cargo.toml` 을 다룰 때만 읽힌다. `rust` 프리셋을 고르면 켜진다.
-- [ ] **codex-review.md** (기본 켬) — Codex 리뷰 진행 방법
+- [ ] **codex-review.md** (기본 끔) — Codex 리뷰 진행 방법
   - 하는 일: Codex 리뷰 실행 조건 3가지(CLI 설치·로그인·플러그인), 라운드 진행, 지적별 ACCEPT/REJECT 판정, 완료·사용 불가 표시 파일 기록 방법을 정한다.
   - 연관: codex-review 묶음
+- [ ] **clean-review.md** (기본 켬) — 깨끗한 Claude 리뷰 진행 방법
+  - 하는 일: `clean-review-guard` 가 막으면 `clean-reviewer` 를 요청문 그대로 부르고, 지적마다 ACCEPT/REJECT/PARTIAL 판정, 최대 3라운드, "깨끗한 리뷰 요약" 보고 형식을 정한다. 인정되지 않는 호출(다른 에이전트·문구 변경·완료 기록 없음)과 알려진 한계도 적어 둔다.
+  - 연관: clean-review 묶음
 - [ ] **memory-sync.md** (기본 켬) — 메모리 저장 구조와 커밋 전 메모리 정리
   - 하는 일: 메모리는 전역 폴더가 원본, 레포 `memory/` 는 복사본이라는 구조와, 커밋을 요청받으면 먼저 메모리를 정리하는 5단계를 정한다.
   - 연관: memory-share 묶음, `/commit` 의 "메모리 정리 먼저" 단계
-- [ ] **agent-design.md** (기본 켬) — 에이전트 만드는 규칙
+- [ ] **agent-design.md** (기본 끔) — 에이전트 만드는 규칙
   - 프로젝트 추천: 끔
   - 하는 일: 에이전트 모델 선택 기준(fable·opus·sonnet·haiku), 도구는 최소로, frontmatter 형식, 폴더 구조를 정한다.
   - 연관: harness-authoring
-- [ ] **creation-workflow.md** (기본 켬) — 스킬·에이전트 생성 5단계
+- [ ] **creation-workflow.md** (기본 끔) — 스킬·에이전트 생성 5단계
   - 프로젝트 추천: 끔
   - 하는 일: 조사 → 교차 검증 → 작성 → verification.md 저장 → skill-tester 실사용 테스트 순서를 정하고, 셀프 검증으로 테스트를 대신하는 것을 금지한다.
   - 연관: harness-authoring
@@ -254,11 +271,11 @@
   - 프로젝트 추천: 끔
   - 하는 일: PENDING_TEST → APPROVED 전환 절차(개별 확인 필수, 일괄 전환 금지), 재검증할 때 함께 고칠 위치를 정한다.
   - 연관: harness-authoring
-- [ ] **readme-update.md** (기본 켬) — 자산이 바뀌면 README 도 같이
+- [ ] **readme-update.md** (기본 끔) — 자산이 바뀌면 README 도 같이
   - 프로젝트 추천: 끔
   - 하는 일: 에이전트·스킬·훅을 추가·삭제·이름변경하면 README 목록·개수·업데이트 로그를 함께 고치게 한다.
   - 연관: harness-authoring (deliverable-guard 의 README 검사)
-- [ ] **commands.md** (기본 켬) — 슬래시 커맨드 작성 규칙과 목록
+- [ ] **commands.md** (기본 끔) — 슬래시 커맨드 작성 규칙과 목록
   - 프로젝트 추천: 끔
   - 하는 일: 커맨드 파일 위치·작성 원칙과 현재 커맨드 목록을 관리한다.
   - 연관: harness-authoring
@@ -282,11 +299,11 @@
 - [ ] **/fix-pr** (기본 켬) — PR 리뷰 코멘트 반영
   - 하는 일: PR 의 대화 코멘트·리뷰 요약·라인 코멘트를 모두 읽고, 해결 안 된 것만 골라 파일별로 수정 계획을 보여준 뒤 확인받고 고친다. 커밋은 안 한다.
   - 이렇게 보여요: `/fix-pr 24` → "코멘트 5개 중 미해결 3개: …" 계획 → 승인 후 수정
-- [ ] **/agent-status** (기본 켬) — 하네스 작업 현황 요약
+- [ ] **/agent-status** (기본 끔) — 하네스 작업 현황 요약
   - 프로젝트 추천: 끔
   - 하는 일: 브랜치·최근 커밋 3개·미커밋 파일·PENDING_TEST 스킬 수·오늘 수정한 파일을 한 번에 보여준다.
   - 연관: harness-authoring
-- [ ] **/codex-review** (기본 켬) — Codex 리뷰를 원할 때 실행
+- [ ] **/codex-review** (기본 끔) — Codex 리뷰를 원할 때 실행
   - 하는 일: codex-review 룰의 절차대로 커밋 안 한 변경 전체를 Codex 에게 최대 3라운드 리뷰받는다.
   - 연관: codex-review 묶음
 - [ ] **/spec-extract** (기본 끔) — 레거시 코드에서 스펙 문서 추출
@@ -296,7 +313,7 @@
 
 ---
 
-## 5. 에이전트 (10종)
+## 5. 에이전트 (11종)
 
 > 에이전트 = 특정 일을 맡겨 따로 돌리는 전문 일꾼. Claude 가 필요할 때 불러서 일을 넘기고 결과만 받는다.
 > 체크 = 🔒 고정. 체크 안 함 = `/harness` 에서 켜고 끌 수 있음. `(기본 켬/끔)` 은 처음 설치했을 때 상태.
@@ -304,14 +321,20 @@
 
 ### 5.1 메타 (생성·검증·관리) (1)
 
-- [ ] **skill-tester** (기본 켬 · harness-authoring 묶음) — 새 스킬을 실전 질문으로 시험하는 에이전트 · 모델 `sonnet`
+- [ ] **skill-tester** (기본 끔 · harness-authoring 묶음) — 새 스킬을 실전 질문으로 시험하는 에이전트 · 모델 `sonnet`
   - 프로젝트 추천: 끔
   - 하는 일: 시험 대기(PENDING_TEST) 상태인 스킬의 SKILL.md를 읽고 실전 질문 2~3개를 만든 뒤, 다른 에이전트(general-purpose 등)를 불러 그 스킬만 보고 답하게 합니다. 답이 스킬 내용에 근거했는지, 피해야 할 실수를 피했는지 판정하고, 결과를 verification.md에 직접 기록해 상태를 승인(APPROVED)·대기 유지·수정 필요로 바꿉니다. 여러 스킬이면 하나씩 차례로 처리합니다.
   - 이럴 때: 스킬을 만든 직후나, 시험 대기 중인 스킬을 승인 상태로 넘기고 싶을 때 씁니다.
   - 예시 요청: mybatis-mapper-patterns 스킬 2단계 테스트 돌려줘
   - 주의: 시험에서 실패해도 SKILL.md는 바로 고치지 않고 사용자에게 먼저 보고합니다.
 
-### 5.3 검증·감사 (5)
+### 5.3 검증·감사 (6)
+
+- [ ] **clean-reviewer** (기본 켬) — 대화 맥락 없이 코드 변경만 보고 배포를 막을 결함을 찾는 적대적 리뷰 에이전트 · 모델 `sonnet`
+  - 하는 일: clean-review-guard 훅이 준 리뷰 요청문(사용자 요청 원문과 바뀐 파일 목록)만 받아 git diff 로 변경을 직접 읽습니다. 이해 확인(요청과 맞는지) → 적대적 검토(권한·경로 조작·데이터 손실·레이스·빈 값·호환·테스트 빈틈) → 준비 확인 3단계로 보고 approve / needs-attention 판정과 파일:줄·실패 시나리오가 붙은 지적을 냅니다. 파일은 고치지 않습니다(Write·Edit 금지, Bash 는 읽기 명령만).
+  - 이럴 때: Codex 리뷰를 쓰지 않는 프로젝트에서 코드를 고친 턴이 끝날 때 훅이 자동으로 부릅니다.
+  - 예시 요청: 방금 고친 코드 깨끗한 리뷰어로 검토해줘
+  - 주의: 훅이 준 요청문 그대로 부른 것만 리뷰로 인정됩니다. 코드를 바꾼 턴마다 한 번씩 돌아 토큰이 듭니다.
 
 - [ ] **dream-interpretation-prompt-tester** (기본 끔 · 해당 스택/앱 모듈에서 켬) — 꿈 해몽 앱 프롬프트의 품질과 안전장치를 평가하는 에이전트 · 모델 `sonnet`
   - 하는 일: 꿈 해몽 앱에 쓰는 Claude API(외부 프로그램이 Claude를 부르는 통로) 시스템 프롬프트와 예시 대화를 받아 말투, 전통 해몽과 심리학 관점의 균형, 미신·단정 표현 회피, 자살·자해 신호에 상담 번호(109·1577-0199)를 안내하는 안전장치, 출력 형식 5가지 축으로 점수를 매깁니다. 일반 꿈·부정적 꿈·위험 신호 꿈 등 5가지 상황을 가정해 반응을 예측하고, PASS / NEEDS_REVISION / FAIL 판정과 고칠 점을 담은 마크다운 리포트를 파일로 저장합니다. 프롬프트를 대신 다시 쓰지 않고 수정 방향만 제안하며, Claude API를 직접 호출하지도 않습니다.
@@ -932,6 +955,7 @@
 | **task-confirm** | 훅 task-confirm-guard + 룰 task-workflow.md |
 | **dev-quality** | 훅 tdd-guard·adversarial-test-guard·fake-impl-guard·test-fake-guard + 룰 adversarial-testing.md |
 | **codex-review** | 훅 codex-review-guard + 룰 codex-review.md + 커맨드 /codex-review + codex 플러그인 |
+| **clean-review** | 훅 clean-review-guard + 룰 clean-review.md + 에이전트 clean-reviewer (기본 켬 — Codex 리뷰가 돌지 않을 때 대신) |
 | **memory-share** | 훅 memory-pull·memory-sync + 룰 memory-sync.md + deliverable-guard 의 push 전 검사 |
 | **harness-authoring** | 훅 verification-guard·skill-md-guard·agent-md-guard·deliverable-guard·staleness-check + 룰 agent-design·creation-workflow·verification-policy·readme-update·commands + 에이전트 skill-tester + 커맨드 /agent-status |
 | **spec-extraction** | 에이전트 legacy-spec-extractor·spec-reviewer + 커맨드 /spec-extract + 스킬 spec 4종 |

@@ -42,6 +42,14 @@
         "command:codex-review"
       ]
     },
+    "clean-review": {
+      "title": "깨끗한 리뷰 (Codex 대신 Claude 리뷰어)",
+      "items": [
+        "hook:clean-review-guard",
+        "rule:clean-review.md",
+        "agent:clean-reviewer"
+      ]
+    },
     "memory-share": {
       "title": "메모리 공유",
       "items": [
@@ -93,6 +101,7 @@
     "core": {
       "title": "공통 에이전트",
       "items": [
+        "agent:clean-reviewer",
         "agent:fact-checker"
       ]
     },
@@ -454,6 +463,15 @@
     }
   },
   "edges": {
+    "hook:task-confirm-guard>hook:memory-sync": "mention",
+    "hook:task-confirm-guard>hook:session-export": "mention",
+    "hook:task-confirm-guard>rule:memory-sync.md": "mention",
+    "hook:clean-review-guard>hook:codex-review-guard": "mention",
+    "hook:codex-review-guard>hook:clean-review-guard": "mention",
+    "hook:clean-review-guard>hook:task-confirm-guard": "mention",
+    "hook:clean-review-guard>command:harness": "mention",
+    "rule:clean-review.md>command:harness": "mention",
+    "rule:clean-review.md>hook:codex-review-guard": "mention",
     "agent:dream-interpretation-prompt-tester>rule:agent-design.md": "uses",
     "agent:dream-interpretation-prompt-tester>rule:info-verification.md": "uses",
     "agent:dream-interpretation-prompt-tester>rule:verification-policy.md": "uses",
@@ -475,6 +493,7 @@
     "command:commit>hook:deliverable-guard": "uses",
     "command:commit>hook:memory-sync": "uses",
     "command:commit>hook:session-export": "uses",
+    "command:commit>hook:task-confirm-guard": "mention",
     "command:commit>rule:memory-sync.md": "uses",
     "command:create-pr>hook:deliverable-guard": "uses",
     "command:create-pr>hook:memory-sync": "uses",
@@ -538,6 +557,9 @@
     "rule:creation-workflow.md>rule:verification-policy.md": "uses",
     "rule:task-workflow.md>command:commit": "mention",
     "rule:task-workflow.md>command:create-pr": "mention",
+    "rule:task-workflow.md>hook:memory-sync": "mention",
+    "rule:task-workflow.md>hook:session-export": "mention",
+    "rule:task-workflow.md>rule:memory-sync.md": "mention",
     "rule:git.md>agent:nexacro-screen-analyzer": "mention",
     "rule:git.md>agent:nexacro-screen-converter": "mention",
     "rule:git.md>agent:spec-reviewer": "mention",

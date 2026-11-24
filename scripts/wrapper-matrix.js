@@ -136,11 +136,16 @@ function itemsPass() {
         g(d, ['on', id]);
         check(`${id} 다시 켜기 → 원래 수`, hookCount(d) === before, `${off} → ${hookCount(d)}`);
       } else {
-        g(d, ['on', id]);
-        const on = hookCount(d);
-        check(`${id} 켜기 → 켜진 훅 1개 늘어남`, before !== null && on === before + 1, `${before} → ${on}`);
-        g(d, ['off', id]);
-        check(`${id} 다시 끄기 → 원래 수`, hookCount(d) === before, `${on} → ${hookCount(d)}`);
+        // 필수 의존이 있는 기본 끔 훅은 새 프로젝트에서 — 앞서 그 의존 항목을 켰다 끈 기록이 남아 있으면 제품은 의도대로
+        // 켜지 않으므로(아래 다른 종류와 같은 처리) 순서 탓 실패를 막는다 (2026-11-23 deliverable-guard 기본 끔 → skill-tester 필요)
+        const hd = (rel.requires || {})[id] ? newproj(`req-${id.replace(/[^a-z0-9]/gi, '-')}`) : d;
+        if (hd !== d) g(hd, ['compose']);
+        const base = hd === d ? before : hookCount(hd);
+        g(hd, ['on', id]);
+        const on = hookCount(hd);
+        check(`${id} 켜기 → 켜진 훅 1개 늘어남`, base !== null && on === base + 1, `${base} → ${on}`);
+        g(hd, ['off', id]);
+        check(`${id} 다시 끄기 → 원래 수`, hookCount(hd) === base, `${on} → ${hookCount(hd)}`);
       }
       if (++n % 40 === 0) console.log(`  · ${n}/${ids.length}`);
       continue;

@@ -65,6 +65,34 @@ console.log('\n── 정상 경로 ──')
   const s = sid(); const r = prompt(s, '이거 설명해줘', transcript('완료했습니다.'))
   check('미승인 질문 → 절차 지시 주입', /진행할까요/.test(r.stdout) && JSON.parse(r.stdout).hookSpecificOutput.hookEventName === 'UserPromptSubmit', r.stdout)
   check('미승인이어도 메모리 폴더 쓰기는 허용', write(s, path.join(os.homedir(), '.claude/projects/-x/memory/a.md')).code === 0)
+  // 레포 memory/ 미러 (2026-11-23) — git 최상위에 memory/MEMORY.md 가 있는 레포의 memory 안 .md 만
+  {
+    const repo = fs.mkdtempSync(path.join(os.homedir(), '.tcg-mem-'))
+    const wr = (file, cwd = repo) => write(s, file, 'Write', { cwd }) // 그 레포에서 연 세션
+    try {
+      fs.mkdirSync(path.join(repo, '.git')); fs.mkdirSync(path.join(repo, 'memory')); fs.writeFileSync(path.join(repo, 'memory', 'MEMORY.md'), '# i\n')
+      fs.mkdirSync(path.join(repo, 'src')); fs.writeFileSync(path.join(repo, 'src', 'a.js'), 'x')
+      const wrapped = typeof process.env.GUGBAB_ENABLED === 'string' // 래퍼 세션 안에서 돌리면 켜진 항목 목록이 기준
+      if (!wrapped) check('memory-sync 훅이 없는 프로젝트(메모리 공유 아님)의 memory/ 는 차단', wr(path.join(repo, 'memory', 'note.md')).code === 2)
+      fs.mkdirSync(path.join(repo, '.claude', 'hooks'), { recursive: true }); fs.writeFileSync(path.join(repo, '.claude', 'hooks', 'memory-sync.js'), '')
+      check('미승인이어도 레포 memory/ 미러 .md 는 허용', wr(path.join(repo,'memory', 'note.md')).code === 0)
+      check('레포 memory/ 안이어도 .md 가 아니면 차단', wr(path.join(repo,'memory', 'run.js')).code === 2)
+      check('레포 memory/../src 로 빠져나가면 차단', wr(path.join(repo,'memory', '..', 'src', 'a.md')).code === 2)
+      check('레포의 다른 폴더 .md 는 차단', wr(path.join(repo,'src', 'memory.md')).code === 2)
+      const noIdx = fs.mkdtempSync(path.join(os.homedir(), '.tcg-mem2-'))
+      fs.mkdirSync(path.join(noIdx, '.git')); fs.mkdirSync(path.join(noIdx, 'memory'))
+      // 안쪽에 따로 있는 .git(서브모듈·벤더)의 memory/ 는 지금 프로젝트의 미러가 아니다
+      const inner = path.join(repo, 'vendor', 'x')
+      fs.mkdirSync(path.join(inner, '.git'), { recursive: true }); fs.mkdirSync(path.join(inner, 'memory')); fs.writeFileSync(path.join(inner, 'memory', 'MEMORY.md'), '# i\n')
+      check('프로젝트 안쪽 다른 .git 의 memory/ 는 차단', wr(path.join(inner, 'memory', 'a.md')).code === 2)
+      check('다른 프로젝트에서 연 세션이 이 레포 memory/ 에 쓰면 차단', write(s, path.join(repo, 'memory', 'note.md')).code === 2)
+      check('MEMORY.md 없는 memory/ 폴더(메모리 공유 아님)는 차단', wr(path.join(noIdx, 'memory', 'a.md'), noIdx).code === 2)
+      fs.rmSync(noIdx, { recursive: true, force: true })
+      let linked = true
+      try { fs.symlinkSync(path.join(repo, 'src'), path.join(repo, 'memory', 'out'), 'dir') } catch { linked = false }
+      if (linked) check('memory/ 안 링크를 거쳐 밖(src)에 쓰면 차단', wr(path.join(repo,'memory', 'out', 'b.md')).code === 2)
+    } finally { fs.rmSync(repo, { recursive: true, force: true }) }
+  }
   // 윈도우 임시 폴더 = os.tmpdir() (`C:\Users\…\AppData\Local\Temp`, scratchpad 도 그 아래). 맥은 기존 경로 그대로
   const tmpFile = IS_WIN ? path.join(os.tmpdir(), 'claude', 'scratchpad', 'a.txt') : '/private/tmp/claude-1/scratchpad/a.txt'
   check('미승인이어도 임시 폴더 쓰기는 허용', write(s, tmpFile).code === 0)
@@ -196,6 +224,20 @@ console.log('\n── 승인 + 다른 행동 금지 부가 조건 (2026-10-20 �
     const v = judgePrompt(reply, PLAN)
     check(`진짜 거절·대체 "${reply}" → 거절`, v.approved === false, v)
   }
+  // 2026-11-23 실사용 오탐: 승인어로 시작하지 않아도 금지 절 + 전체 실행 지시면 승인
+  for (const reply of ['다른 프로젝트 신경쓰지말고 지금 프로젝트만 신경쓰고 잔족 작업 다하고 테스트까지 다 하고 보고해 커밋 푸쉬 전상태로 완벽하게',
+    '커밋은 하지 말고 전부 진행해', 'README 건드리지 말고 끝까지 해줘','푸시하지 마. 나머지는 싹 다 진행하고 보고해']) {
+    const v = judgePrompt(reply, PLAN)
+    check(`금지 절 + 전체 실행 지시 "${reply.slice(0, 30)}" → 승인`, v.approved === true, v)
+  }
+  // 악성·우회: 전체 실행 지시처럼 보여도 대체 요청·재정리·중간 거절·금지 그 자체면 거절
+  for (const reply of ['그 방식 말고 다른 방식으로 다 해줘', '그렇게 하지 말고 다시 정리해서 다 가져와', '다 하지 마', '전부 진행하지 말고 기다려', '잠깐 그거 하지 말고 다 해',
+    '진행하면 안 돼', '다 지우지 말고 대신에 옮겨', '다 하고 싶지만 일단 하지 마', '했다 하고 넘어가지 말고 하지 마', '진행하고 싶은데 아직 하지 마', '그건 다 하고 있는 거니까 건드리지 마',
+    '전부 진행 안 하고 기다려. 건드리지 마', '진행하지 않고 기다려, 손대지 마', '진행해야 할지 고민이야 하지 말고 기다려', '다 진행해도 되는지 모르겠어 하지 마']) {
+    const v = judgePrompt(reply, PLAN)
+    check(`전체 실행처럼 보이는 거절 "${reply}" → 거절`, v.approved === false, v)
+  }
+  check('경계: 확인 질문 없는 답 뒤의 금지 절 + 전체 실행 → 미승인', judgePrompt('커밋하지 말고 다 진행해', '완료했습니다.').approved === false)
   // 이상·경계: 승인어만·빈 값·초장문·특수문자
   check('경계: "응" 단독 → 승인', judgePrompt('응', PLAN).approved === true)
   check('경계: 빈 문자열 → 승인(기존 동작: 확인 질문 뒤 거절 표현 없음)', judgePrompt('', PLAN).approved === true)
@@ -515,6 +557,142 @@ console.log('\n[커밋·푸시·PR·머지 — 가장 최근 사용자 메시지
   check('경계: 초장문 프롬프트 끝의 "커밋해줘"', go('가'.repeat(30000) + ' 커밋해줘', COMMIT).code !== null)
   check('경계: 빈 프롬프트 → commit 차단', go('', COMMIT).code === 2)
   check('경계: 차단 메시지가 stderr 에, 다시 요청하는 방법 안내', /직접 요청/.test(go('진행해', COMMIT, transcript(PLAN)).stderr))
+}
+
+console.log('\n[세션 요약 갱신 — 커밋·푸시를 요청받은 차례에만 승인 없이 허용]')
+{
+  const { execFileSync } = require('child_process')
+  const mk = (withScript = true) => {
+    const d = fs.mkdtempSync(path.join(os.homedir(), '.tcg-exp-'))
+    execFileSync('git', ['init', '-q', d])
+    if (withScript) { fs.mkdirSync(path.join(d, '.claude', 'hooks'), { recursive: true }); fs.writeFileSync(path.join(d, '.claude', 'hooks', 'session-export.js'), "require('fs').writeFileSync('exports/x.md', 'y')\n") } // 실제처럼 쓰기 코드가 있어 평소에는 막히는 스크립트
+    if (withScript) {
+      execFileSync('git', ['-C', d, 'add', '-A'])
+      execFileSync('git', ['-C', d, '-c', 'user.name=t', '-c', 'user.email=t@example.com', '-c', 'commit.gpgsign=false', 'commit', '-q', '-m', 'init'])
+    }
+    return d
+  }
+  const repoX = mk()
+  const other = mk()
+  const noScript = mk(false)
+  const Q = (p) => `"${p.replace(/\\/g, '/')}"`
+  const A = 'R="$(git rev-parse --show-toplevel)" && CLAUDE_PROJECT_DIR="$R" node "$R/.claude/hooks/session-export.js" --refresh'
+  const B = `CLAUDE_PROJECT_DIR=${Q(repoX)} node .claude/hooks/session-export.js --refresh`
+  const at = (text, cmd, cwd = repoX) => { const s = sid(); prompt(s, text, transcript('안녕하세요')); return run({ hook_event_name: 'PreToolUse', session_id: s, tool_name: 'Bash', tool_input: { command: cmd }, cwd }) }
+  // 정상
+  check('정상: "커밋해줘" + 룰에 적힌 갱신 명령 → 허용', at('커밋해줘', A).code === 0)
+  check('정상: "커밋 푸쉬 진행해" + 고정 경로 꼴 → 허용', at('커밋 푸쉬 진행해', B).code === 0)
+  check('정상: 끝에 2>&1 | tail -3 → 허용', at('커밋해줘', `${A} 2>&1 | tail -3`).code === 0)
+  check('정상: 앞에 cd <프로젝트> && → 허용', at('푸시해줘', `cd ${Q(repoX)} && ${B}`).code === 0)
+  check('정상: "PR 올려줘" 도 허용', at('PR 올려줘', A).code === 0)
+  // 악성·우회
+  check('악성: 커밋 요청 없는 차례 → 차단', at('설명해줘', A).code === 2)
+  check('악성: "커밋하지 마" → 차단', at('커밋하지 마', A).code === 2)
+  check('악성: 뒤에 다른 명령 덧붙임(;) → 차단', at('커밋해줘', `${A}; touch src/x.ts`).code === 2)
+  check('악성: 뒤에 다른 명령 덧붙임(&&) → 차단', at('커밋해줘', `${A} && node -e "require('fs').writeFileSync('a.ts','x')"`).code === 2)
+  check('악성: 파이프로 다른 프로그램(tee 파일) → 차단', at('커밋해줘', `${A} | tee src/x.ts`).code === 2)
+  check('악성: 리다이렉트로 파일 쓰기 → 차단', at('커밋해줘', `${A} > src/x.ts`).code === 2)
+  check('악성: --refresh 가 아닌 다른 인자 → 차단', at('커밋해줘', A.replace('--refresh', '--refresh --out src/x.ts')).code === 2)
+  check('악성: 다른 폴더로 cd 해서 그쪽 스크립트 실행 → 차단', at('커밋해줘', `cd ${Q(other)} && CLAUDE_PROJECT_DIR=${Q(other)} node .claude/hooks/session-export.js --refresh`).code === 2)
+  check('악성: CLAUDE_PROJECT_DIR 만 다른 프로젝트 → 차단', at('커밋해줘', `CLAUDE_PROJECT_DIR=${Q(other)} node .claude/hooks/session-export.js --refresh`).code === 2)
+  check('악성: 같은 이름의 다른 경로 스크립트 → 차단', at('커밋해줘', `CLAUDE_PROJECT_DIR=${Q(repoX)} node ${Q(other)}/.claude/hooks/session-export.js --refresh`).code === 2)
+  check('악성: 명령 치환을 경로에 넣음 → 차단', at('커밋해줘', 'CLAUDE_PROJECT_DIR="$(pwd)" node .claude/hooks/session-export.js --refresh').code === 2)
+  check('악성: $R 을 정의하지 않고 씀 → 차단', at('커밋해줘', 'CLAUDE_PROJECT_DIR="$R" node "$R/.claude/hooks/session-export.js" --refresh').code === 2)
+  if (process.platform !== 'win32') {
+    const linked = mk(false)
+    fs.mkdirSync(path.join(linked, '.claude', 'hooks'), { recursive: true })
+    fs.symlinkSync(path.join(other, '.claude', 'hooks', 'session-export.js'), path.join(linked, '.claude', 'hooks', 'session-export.js'))
+    check('악성: 스크립트가 다른 곳을 가리키는 링크 → 차단', at('커밋해줘', A, linked).code === 2)
+    fs.rmSync(linked, { recursive: true, force: true })
+  }
+  // 하위 폴더에서 돌리면 그쪽의 같은 이름 파일이 실행된다 — 프로젝트 최상위 스크립트가 아니면 차단
+  {
+    const sub = path.join(repoX, 'sub')
+    fs.mkdirSync(path.join(sub, '.claude', 'hooks'), { recursive: true })
+    fs.writeFileSync(path.join(sub, '.claude', 'hooks', 'session-export.js'), "require('fs').writeFileSync('src/evil.ts', 'y')\n")
+    const REL_R = 'R="$(git rev-parse --show-toplevel)" && CLAUDE_PROJECT_DIR="$R" node .claude/hooks/session-export.js --refresh'
+    check('악성: cd 하위폴더 && $R 정의 + 상대 경로 스크립트 → 차단', at('커밋해줘', `cd ${Q(sub)} && ${REL_R}`).code === 2)
+    check('악성: 세션 cwd 가 하위 폴더 + 상대 경로 스크립트 → 차단', at('커밋해줘', REL_R, sub).code === 2)
+    check('정상: 세션 cwd 가 하위 폴더여도 "$R/…" 꼴은 최상위 스크립트라 허용', at('커밋해줘', A, sub).code === 0)
+    fs.rmSync(sub, { recursive: true, force: true })
+  }
+  // 커밋된 내용 그대로일 때만
+  {
+    const f = path.join(repoX, '.claude', 'hooks', 'session-export.js')
+    const orig = fs.readFileSync(f, 'utf8')
+    fs.writeFileSync(f, orig + "require('fs').writeFileSync('src/evil.ts', 'y')\n")
+    check('악성: 이번 차례에 스크립트를 바꿔 놓고 실행 → 차단', at('커밋해줘', A).code === 2)
+    fs.writeFileSync(f, orig)
+    check('정상: 되돌리면 다시 허용', at('커밋해줘', A).code === 0)
+    // 스크립트가 불러오는 공용 모듈(lib/)을 바꾸거나 새로 넣는 우회
+    const libDir = path.join(repoX, '.claude', 'hooks', 'lib')
+    fs.mkdirSync(libDir, { recursive: true })
+    fs.writeFileSync(path.join(libDir, 'winpath.js'), "require('fs').writeFileSync('src/evil.ts', 'y')\n")
+    check('악성: 추적 안 된 lib 모듈을 새로 넣고 실행 → 차단', at('커밋해줘', A).code === 2)
+    execFileSync('git', ['-C', repoX, 'add', '-A'])
+    execFileSync('git', ['-C', repoX, '-c', 'user.name=t', '-c', 'user.email=t@example.com', '-c', 'commit.gpgsign=false', 'commit', '-q', '-m', 'lib'])
+    check('정상: lib 모듈이 커밋된 상태 → 허용', at('커밋해줘', A).code === 0)
+    fs.appendFileSync(path.join(libDir, 'winpath.js'), '// changed\n')
+    check('악성: 커밋된 lib 모듈을 이번 차례에 바꾸고 실행 → 차단', at('커밋해줘', A).code === 2)
+    execFileSync('git', ['-C', repoX, 'checkout', '-q', '--', '.claude/hooks/lib/winpath.js'])
+    check('정상: lib 를 되돌리면 다시 허용', at('커밋해줘', A).code === 0)
+    // lib 가 레포 밖을 가리키는 링크 — git 은 링크 안쪽 내용 변경을 못 본다
+    if (process.platform !== 'win32') {
+      const made = []
+      const tmpRepo = (withScript) => { const d = mk(withScript); made.push(d); return d }
+      const commitAll = (d, msg) => {
+        execFileSync('git', ['-C', d, 'add', '-A'])
+        execFileSync('git', ['-C', d, '-c', 'user.name=t', '-c', 'user.email=t@example.com', '-c', 'commit.gpgsign=false', 'commit', '-q', '-m', msg])
+      }
+      try {
+        const outside = fs.mkdtempSync(path.join(os.homedir(), '.tcg-out-')); made.push(outside)
+        fs.writeFileSync(path.join(outside, 'winpath.js'), "require('fs').writeFileSync('src/evil.ts', 'y')\n")
+        const lk = tmpRepo(false)
+        fs.mkdirSync(path.join(lk, '.claude', 'hooks'), { recursive: true })
+        fs.writeFileSync(path.join(lk, '.claude', 'hooks', 'session-export.js'), orig)
+        fs.symlinkSync(outside, path.join(lk, '.claude', 'hooks', 'lib'))
+        commitAll(lk, 'link')
+        check('악성: lib 가 레포 밖을 가리키는 링크(커밋됨) → 차단', at('커밋해줘', A, lk).code === 2)
+        // lib 폴더는 진짜인데 그 안의 파일 하나만 링크 — git 은 링크 문자열만 비교해 대상 내용 변경을 못 본다
+        const lf = tmpRepo(false)
+        fs.mkdirSync(path.join(lf, '.claude', 'hooks', 'lib'), { recursive: true })
+        fs.writeFileSync(path.join(lf, '.claude', 'hooks', 'session-export.js'), orig)
+        fs.symlinkSync(path.join(outside, 'winpath.js'), path.join(lf, '.claude', 'hooks', 'lib', 'winpath.js'))
+        commitAll(lf, 'file link')
+        check('악성: lib 안의 파일 하나가 레포 밖을 가리키는 링크(커밋됨) → 차단', at('커밋해줘', A, lf).code === 2)
+        fs.appendFileSync(path.join(outside, 'winpath.js'), '// 대상만 바꿈 — git diff 에는 안 보임\n')
+        check('악성: 링크 대상 내용만 바꿔도(git 은 변경 없음으로 봄) → 차단', at('커밋해줘', A, lf).code === 2)
+        // 스크립트 자체가 링크(커밋됨)
+        const ls = tmpRepo(false)
+        fs.mkdirSync(path.join(ls, '.claude', 'hooks'), { recursive: true })
+        fs.writeFileSync(path.join(outside, 'se.js'), orig)
+        fs.symlinkSync(path.join(outside, 'se.js'), path.join(ls, '.claude', 'hooks', 'session-export.js'))
+        commitAll(ls, 'script link')
+        check('악성: 스크립트 자체가 레포 밖을 가리키는 링크(커밋됨) → 차단', at('커밋해줘', A, ls).code === 2)
+        const lk2 = tmpRepo(false)
+        const real = tmpRepo(true)
+        fs.symlinkSync(path.join(real, '.claude'), path.join(lk2, '.claude'))
+        check('악성: .claude 자체가 다른 레포를 가리키는 링크 → 차단', at('커밋해줘', A, lk2).code === 2)
+      } finally {
+        for (const d of made) fs.rmSync(d, { recursive: true, force: true })
+      }
+    }
+    // 줄바꿈·따옴표 속 ~ — 훅이 본 것과 셸이 실행하는 것이 어긋나는 꼴
+    check('악성: 줄바꿈으로 명령을 나눔 → 차단', at('커밋해줘', `cd\n${Q(repoX)} && ${B}`).code === 2)
+    check('악성: 명령 끝에 줄바꿈 + 다른 명령 → 차단', at('커밋해줘', `${A}\ntouch src/x.ts`).code === 2)
+    check('악성: 따옴표 속 ~ (셸은 풀지 않음) → 차단', at('커밋해줘', 'CLAUDE_PROJECT_DIR="~/nope" node .claude/hooks/session-export.js --refresh').code === 2)
+    const untracked = mk(false)
+    fs.mkdirSync(path.join(untracked, '.claude', 'hooks'), { recursive: true })
+    fs.writeFileSync(path.join(untracked, '.claude', 'hooks', 'session-export.js'), orig)
+    check('악성: git 이 모르는(추적 안 된) 스크립트 → 차단', at('커밋해줘', A, untracked).code === 2)
+    fs.rmSync(untracked, { recursive: true, force: true })
+  }
+  // 이상·경계
+  check('경계: 스크립트가 없는 프로젝트 → 차단', at('커밋해줘', A, noScript).code === 2)
+  check('경계: git 레포가 아닌 폴더 → 차단', at('커밋해줘', A, os.tmpdir()).code === 2)
+  check('경계: 빈 명령 → 차단 아님(쓰기 없음)', at('커밋해줘', '').code === 0)
+  check('경계: 초장문 꼬리 → 차단', at('커밋해줘', A + ' ' + 'x'.repeat(20000)).code === 2)
+  for (const d of [repoX, other, noScript]) fs.rmSync(d, { recursive: true, force: true })
 }
 fs.rmSync(proj, { recursive: true, force: true })
 fs.rmSync(tmp, { recursive: true, force: true })

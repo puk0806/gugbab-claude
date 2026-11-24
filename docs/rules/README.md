@@ -1,6 +1,6 @@
 # 규칙 (Rules)
 
-상황별 Claude Code 동작 규칙 파일 모음 (총 14종).
+상황별 Claude Code 동작 규칙 파일 모음 (총 15종).
 
 규칙 파일 위치: `.claude/rules/`
 
@@ -24,17 +24,20 @@
 | [adversarial-testing.md](../../.claude/rules/adversarial-testing.md) | ✅ | 테스트 품질 `bundle:dev-quality` | 적대적 테스트 원칙 — 테스트 3계층(정상/악성 유저 방어/이상·경계) 강제, 테스트 통과용 하드코딩 return 금지(adversarial-test-guard·fake-impl-guard 훅) |
 | [memory-sync.md](../../.claude/rules/memory-sync.md) | ✅ | 메모리 공유 `bundle:memory-share` | 크로스 데스크탑 Claude 메모리 동기화 정책 — 전역 1차 저장 + 레포 미러, 커밋 시 메모리 정리 절차 |
 | [codex-review.md](../../.claude/rules/codex-review.md) | ✅ | Codex 리뷰 `bundle:codex-review` | Codex 적대적 코드 리뷰 워크플로우 — 최대 3라운드 핑퐁, ACCEPT/REJECT 판정 기준 |
+| [clean-review.md](../../.claude/rules/clean-review.md) | ✅ | 깨끗한 리뷰 `bundle:clean-review` | Codex 리뷰가 돌지 않을 때 깨끗한 Claude 리뷰어(`clean-reviewer`) 진행 — 요청문 그대로 호출, ACCEPT/REJECT/PARTIAL, 최대 3라운드, 인정 안 되는 호출 (2026-11-23) |
 
 ---
 
 ## 하네스 제작 규칙 — 스킬·에이전트·커맨드를 만들 때 (`bundle:harness-authoring`)
 
+> 2026-11-23 사용자 결정: 이 묶음은 모든 프로젝트에서 기본 끔이고, 이 레포만 `.gugbab.json` 으로 켜 둔다(필요한 프로젝트는 `/harness` 로 켬).
+
 | 규칙 | 기본값 | 설명 |
 |------|:---:|------|
-| [agent-design.md](../../.claude/rules/agent-design.md) | ✅ | 에이전트 설계 규칙 — 모델 선택 기준, 도구 부여 원칙, 파일 작성 포맷 |
-| [commands.md](../../.claude/rules/commands.md) | ✅ | 슬래시 커맨드 작성 규칙 — 파일 위치, 작성 원칙, 기존 커맨드 목록 |
-| [creation-workflow.md](../../.claude/rules/creation-workflow.md) | ✅ | 스킬·에이전트 생성 5단계 워크플로우 — 조사→교차검증→작성→검증문서→2단계테스트 |
-| [readme-update.md](../../.claude/rules/readme-update.md) | ✅ | 문서 업데이트 규칙 — 추가·삭제·이름변경 시 반영 항목, 업데이트 로그(`docs/CHANGELOG.md`) 형식 |
+| [agent-design.md](../../.claude/rules/agent-design.md) | ⬜ | 에이전트 설계 규칙 — 모델 선택 기준, 도구 부여 원칙, 파일 작성 포맷 |
+| [commands.md](../../.claude/rules/commands.md) | ⬜ | 슬래시 커맨드 작성 규칙 — 파일 위치, 작성 원칙, 기존 커맨드 목록 |
+| [creation-workflow.md](../../.claude/rules/creation-workflow.md) | ⬜ | 스킬·에이전트 생성 5단계 워크플로우 — 조사→교차검증→작성→검증문서→2단계테스트 |
+| [readme-update.md](../../.claude/rules/readme-update.md) | ⬜ | 문서 업데이트 규칙 — 추가·삭제·이름변경 시 반영 항목, 업데이트 로그(`docs/CHANGELOG.md`) 형식 |
 
 ---
 

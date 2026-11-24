@@ -12,12 +12,12 @@
 | 종류 | 🔒 고정 | ✅ 기본 켬 | ⬜ 기본 끔 | 합계 |
 |---|---:|---:|---:|---:|
 | 설정 | 5 | 2 | 0 | 7 |
-| 훅 | 17 | 12 | 0 | 29 |
-| 룰 | 3 | 8 | 3 | 14 |
-| 커맨드 | 1 | 5 | 1 | 7 |
-| 에이전트 | 1 | 1 | 8 | 10 |
+| 훅 | 17 | 8 | 5 | 30 |
+| 룰 | 3 | 4 | 8 | 15 |
+| 커맨드 | 1 | 3 | 3 | 7 |
+| 에이전트 | 1 | 1 | 9 | 11 |
 | 스킬 | 0 | 0 | 90 | 90 |
-| **합계** | **27** | **28** | **102** | **157** |
+| **합계** | **27** | **18** | **115** | **160** |
 
 ## 🔒 고정 — 27개
 
@@ -29,17 +29,17 @@
 - **커맨드** (1): harness
 - **에이전트** (1): fact-checker
 
-## ✅ 기본으로 켜짐 — 28개
+## ✅ 기본으로 켜짐 — 18개
 
 처음부터 켜져 있고, 프로젝트마다 끌 수 있습니다.
 
 - **설정** (2): superpowers 플러그인 · 상태줄 `statusline.sh`
-- **훅** (12): adversarial-test-guard · agent-md-guard · branch-protection · codex-review-guard · deliverable-guard · fake-impl-guard · memory-pull · memory-sync · skill-md-guard · staleness-check · tdd-guard · test-fake-guard
-- **룰** (8): adversarial-testing.md · agent-design.md · codex-review.md · commands.md · creation-workflow.md · git.md · memory-sync.md · readme-update.md
-- **커맨드** (5): agent-status · codex-review · commit · create-pr · fix-pr
-- **에이전트** (1): skill-tester
+- **훅** (8): adversarial-test-guard · branch-protection · clean-review-guard · fake-impl-guard · memory-pull · memory-sync · tdd-guard · test-fake-guard
+- **룰** (4): adversarial-testing.md · clean-review.md · git.md · memory-sync.md
+- **커맨드** (3): commit · create-pr · fix-pr
+- **에이전트** (1): clean-reviewer
 
-## ⬜ 기본으로 꺼짐 — 102개
+## ⬜ 기본으로 꺼짐 — 115개
 
 처음에는 꺼져 있습니다. 스택에 맞는 블록·프리셋을 켜면 들어옵니다.
 
@@ -150,8 +150,15 @@
 
 </details>
 
-- **룰** (3): java.md · rust.md · typescript.md
-- **커맨드** (1): spec-extract
+<details><summary>하네스 제작 에이전트 — 꺼진 항목 1개</summary>
+
+- **에이전트**: skill-tester
+
+</details>
+
+- **훅** (5): agent-md-guard · codex-review-guard · deliverable-guard · skill-md-guard · staleness-check
+- **룰** (8): agent-design.md · codex-review.md · commands.md · creation-workflow.md · java.md · readme-update.md · rust.md · typescript.md
+- **커맨드** (3): agent-status · codex-review · spec-extract
 
 ## 블록 구성
 
@@ -159,7 +166,7 @@
 
 | 블록 | 제목 | 항목 수 | 기본 켬 |
 |---|---|---:|---:|
-| `block:core` | 공통 에이전트 | 1 | 1 |
+| `block:core` | 공통 에이전트 | 2 | 2 |
 | `block:dev-common` | 개발 공통 | 3 | 0 |
 | `block:frontend-core` | 프론트 핵심 | 8 | 0 |
 | `block:frontend-tooling` | 프론트 도구·품질 | 13 | 0 |
@@ -178,7 +185,7 @@
 | `block:spec-extraction` | 스펙 추출 | 8 | 0 |
 | `block:nexacro` | 넥사크로 | 8 | 0 |
 | `block:misc` | 기타 | 3 | 0 |
-| `block:harness-authoring` | 하네스 제작 에이전트 | 1 | 1 |
+| `block:harness-authoring` | 하네스 제작 에이전트 | 1 | 0 |
 
 ## 묶음 구성
 
@@ -190,6 +197,7 @@
 | `bundle:verification` | 스킬 검증 문서 | verification-guard · verification-policy.md |
 | `bundle:dev-quality` | 테스트 품질 (TDD·적대적 테스트) | tdd-guard · adversarial-test-guard · fake-impl-guard · test-fake-guard · adversarial-testing.md |
 | `bundle:codex-review` | Codex 리뷰 | codex-review-guard · codex-review.md · codex-review |
+| `bundle:clean-review` | 깨끗한 리뷰 (Codex 대신 Claude 리뷰어) | clean-review-guard · clean-review.md · clean-reviewer |
 | `bundle:memory-share` | 메모리 공유 | memory-pull · memory-sync · memory-sync.md |
 | `bundle:harness-authoring` | 하네스 제작 (스킬·에이전트 만들기) | skill-md-guard · agent-md-guard · deliverable-guard · staleness-check · agent-design.md · creation-workflow.md · readme-update.md · commands.md · agent-status · skill-tester |
 
@@ -209,19 +217,19 @@
 
 | 프리셋 | 설명 | 🔒 고정 | ✅ 켜짐 | ⬜ 꺼짐 | 설정 | 훅 | 룰 | 커맨드 | 에이전트 | 스킬 |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 기본 | 프리셋 없음 (처음 상태) | 27 | 28 | 102 | 7/7 | 29/29 | 11/14 | 6/7 | 2/10 | 0/90 |
-| `nextjs` | React·Next.js (+TS 백엔드) | 27 | 56 | 74 | 7/7 | 29/29 | 12/14 | 6/7 | 2/10 | 27/90 |
-| `java-legacy` | Java Spring 레거시 | 27 | 47 | 83 | 7/7 | 29/29 | 12/14 | 6/7 | 2/10 | 18/90 |
-| `java-modern` | Java Spring 모던 | 27 | 43 | 87 | 7/7 | 29/29 | 12/14 | 6/7 | 2/10 | 14/90 |
-| `rust` | Rust | 27 | 32 | 98 | 7/7 | 29/29 | 12/14 | 6/7 | 2/10 | 3/90 |
-| `python` | Python LLM·한국어 NLP | 27 | 34 | 96 | 7/7 | 29/29 | 11/14 | 6/7 | 2/10 | 6/90 |
-| `dream` | 꿈 해몽 앱 | 27 | 61 | 69 | 7/7 | 29/29 | 12/14 | 6/7 | 3/10 | 31/90 |
-| `fortune` | 운세 앱 | 27 | 56 | 74 | 7/7 | 29/29 | 12/14 | 6/7 | 3/10 | 26/90 |
-| `health` | 건강·식단 앱 | 27 | 56 | 74 | 7/7 | 29/29 | 12/14 | 6/7 | 3/10 | 26/90 |
-| `nexacro` | 넥사크로 마이그레이션 (java-legacy·nextjs 와 조합) | 27 | 39 | 91 | 7/7 | 28/29 | 11/14 | 6/7 | 5/10 | 9/90 |
-| `seo-geo` | 애드온 · SEO·GEO | 27 | 35 | 95 | 7/7 | 29/29 | 11/14 | 6/7 | 2/10 | 7/90 |
-| `spec-extraction` | 애드온 · 레거시 스펙 추출 | 27 | 36 | 94 | 7/7 | 29/29 | 11/14 | 7/7 | 4/10 | 5/90 |
-| `n8n` | 애드온 · n8n | 27 | 32 | 98 | 7/7 | 29/29 | 11/14 | 6/7 | 2/10 | 4/90 |
+| 기본 | 프리셋 없음 (처음 상태) | 27 | 18 | 115 | 7/7 | 25/30 | 7/15 | 4/7 | 2/11 | 0/90 |
+| `nextjs` | React·Next.js (+TS 백엔드) | 27 | 46 | 87 | 7/7 | 25/30 | 8/15 | 4/7 | 2/11 | 27/90 |
+| `java-legacy` | Java Spring 레거시 | 27 | 37 | 96 | 7/7 | 25/30 | 8/15 | 4/7 | 2/11 | 18/90 |
+| `java-modern` | Java Spring 모던 | 27 | 33 | 100 | 7/7 | 25/30 | 8/15 | 4/7 | 2/11 | 14/90 |
+| `rust` | Rust | 27 | 22 | 111 | 7/7 | 25/30 | 8/15 | 4/7 | 2/11 | 3/90 |
+| `python` | Python LLM·한국어 NLP | 27 | 24 | 109 | 7/7 | 25/30 | 7/15 | 4/7 | 2/11 | 6/90 |
+| `dream` | 꿈 해몽 앱 | 27 | 51 | 82 | 7/7 | 25/30 | 8/15 | 4/7 | 3/11 | 31/90 |
+| `fortune` | 운세 앱 | 27 | 46 | 87 | 7/7 | 25/30 | 8/15 | 4/7 | 3/11 | 26/90 |
+| `health` | 건강·식단 앱 | 27 | 46 | 87 | 7/7 | 25/30 | 8/15 | 4/7 | 3/11 | 26/90 |
+| `nexacro` | 넥사크로 마이그레이션 (java-legacy·nextjs 와 조합) | 27 | 29 | 104 | 7/7 | 24/30 | 7/15 | 4/7 | 5/11 | 9/90 |
+| `seo-geo` | 애드온 · SEO·GEO | 27 | 25 | 108 | 7/7 | 25/30 | 7/15 | 4/7 | 2/11 | 7/90 |
+| `spec-extraction` | 애드온 · 레거시 스펙 추출 | 27 | 26 | 107 | 7/7 | 25/30 | 7/15 | 5/7 | 4/11 | 5/90 |
+| `n8n` | 애드온 · n8n | 27 | 22 | 111 | 7/7 | 25/30 | 7/15 | 4/7 | 2/11 | 4/90 |
 
 ## 항목 × 프리셋 표
 
@@ -241,21 +249,22 @@
 
 </details>
 
-<details><summary>훅 — 29개</summary>
+<details><summary>훅 — 30개</summary>
 
 | 항목 | 기본 | `nextjs` | `java-legacy` | `java-modern` | `rust` | `python` | `dream` | `fortune` | `health` | `nexacro` | `seo-geo` | `spec-extraction` | `n8n` |
 |---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
 | adversarial-test-guard | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| agent-md-guard | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| agent-md-guard | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | auto-approve | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 |
 | auto-format | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 |
 | bash-guard | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 |
 | branch-protection | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | cc-notify | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 |
 | claude-version-check | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 |
-| codex-review-guard | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| clean-review-guard | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| codex-review-guard | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | config-change-audit | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 |
-| deliverable-guard | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| deliverable-guard | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | fake-impl-guard | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | korean-response-guard | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 |
 | memory-pull | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -266,8 +275,8 @@
 | protect-secrets | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 |
 | release-version-guard | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 |
 | session-export | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 |
-| skill-md-guard | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| staleness-check | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| skill-md-guard | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
+| staleness-check | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | task-confirm-guard | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 |
 | tdd-guard | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | ✅ | ✅ | ✅ |
 | test-fake-guard | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -277,20 +286,21 @@
 
 </details>
 
-<details><summary>룰 — 14개</summary>
+<details><summary>룰 — 15개</summary>
 
 | 항목 | 기본 | `nextjs` | `java-legacy` | `java-modern` | `rust` | `python` | `dream` | `fortune` | `health` | `nexacro` | `seo-geo` | `spec-extraction` | `n8n` |
 |---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
 | adversarial-testing.md | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| agent-design.md | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| codex-review.md | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| commands.md | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| creation-workflow.md | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| agent-design.md | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
+| clean-review.md | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| codex-review.md | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
+| commands.md | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
+| creation-workflow.md | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | git.md | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | info-verification.md | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 |
 | java.md | ⬜ | ⬜ | ✅ | ✅ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | memory-sync.md | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| readme-update.md | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| readme-update.md | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | rust.md | ⬜ | ⬜ | ⬜ | ⬜ | ✅ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | task-workflow.md | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 |
 | typescript.md | ⬜ | ✅ | ⬜ | ⬜ | ⬜ | ⬜ | ✅ | ✅ | ✅ | ⬜ | ⬜ | ⬜ | ⬜ |
@@ -302,8 +312,8 @@
 
 | 항목 | 기본 | `nextjs` | `java-legacy` | `java-modern` | `rust` | `python` | `dream` | `fortune` | `health` | `nexacro` | `seo-geo` | `spec-extraction` | `n8n` |
 |---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-| agent-status | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| codex-review | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| agent-status | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
+| codex-review | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | commit | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | create-pr | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | fix-pr | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -312,10 +322,11 @@
 
 </details>
 
-<details><summary>에이전트 — 10개</summary>
+<details><summary>에이전트 — 11개</summary>
 
 | 항목 | 블록 | 기본 | `nextjs` | `java-legacy` | `java-modern` | `rust` | `python` | `dream` | `fortune` | `health` | `nexacro` | `seo-geo` | `spec-extraction` | `n8n` |
 |---|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| clean-reviewer | 공통 에이전트 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | dream-interpretation-prompt-tester | 꿈 도메인 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ✅ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | fact-checker | 공통 에이전트 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 |
 | fortune-interpretation-prompt-tester | 운세 도메인 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ✅ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
@@ -324,7 +335,7 @@
 | nexacro-screen-analyzer | 넥사크로 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ✅ | ⬜ | ⬜ | ⬜ |
 | nexacro-screen-converter | 넥사크로 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ✅ | ⬜ | ⬜ | ⬜ |
 | nutrition-prompt-tester | 건강 도메인 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ✅ | ⬜ | ⬜ | ⬜ | ⬜ |
-| skill-tester | 하네스 제작 에이전트 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| skill-tester | 하네스 제작 에이전트 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | spec-reviewer | 스펙 추출 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ✅ | ⬜ |
 
 </details>
@@ -432,23 +443,24 @@
 
 ### 기본 — 프리셋 없음 (처음 상태)
 
-- 🔒 고정 27 · ✅ 켜짐 28 · ⬜ 꺼짐 102
+- 🔒 고정 27 · ✅ 켜짐 18 · ⬜ 꺼짐 115
 
-<details><summary>✅ 켜짐 28개 (🔒 고정 제외)</summary>
+<details><summary>✅ 켜짐 18개 (🔒 고정 제외)</summary>
 
 - **설정** (2): superpowers 플러그인 · 상태줄 `statusline.sh`
-- **훅** (12): adversarial-test-guard · agent-md-guard · branch-protection · codex-review-guard · deliverable-guard · fake-impl-guard · memory-pull · memory-sync · skill-md-guard · staleness-check · tdd-guard · test-fake-guard
-- **룰** (8): adversarial-testing.md · agent-design.md · codex-review.md · commands.md · creation-workflow.md · git.md · memory-sync.md · readme-update.md
-- **커맨드** (5): agent-status · codex-review · commit · create-pr · fix-pr
-- **에이전트** (1): skill-tester
+- **훅** (8): adversarial-test-guard · branch-protection · clean-review-guard · fake-impl-guard · memory-pull · memory-sync · tdd-guard · test-fake-guard
+- **룰** (4): adversarial-testing.md · clean-review.md · git.md · memory-sync.md
+- **커맨드** (3): commit · create-pr · fix-pr
+- **에이전트** (1): clean-reviewer
 
 </details>
 
-<details><summary>⬜ 꺼짐 102개</summary>
+<details><summary>⬜ 꺼짐 115개</summary>
 
-- **룰** (3): java.md · rust.md · typescript.md
-- **커맨드** (1): spec-extract
-- **에이전트** (8): dream-interpretation-prompt-tester · fortune-interpretation-prompt-tester · legacy-spec-extractor · migration-parity-tester · nexacro-screen-analyzer · nexacro-screen-converter · nutrition-prompt-tester · spec-reviewer
+- **훅** (5): agent-md-guard · codex-review-guard · deliverable-guard · skill-md-guard · staleness-check
+- **룰** (8): agent-design.md · codex-review.md · commands.md · creation-workflow.md · java.md · readme-update.md · rust.md · typescript.md
+- **커맨드** (3): agent-status · codex-review · spec-extract
+- **에이전트** (9): dream-interpretation-prompt-tester · fortune-interpretation-prompt-tester · legacy-spec-extractor · migration-parity-tester · nexacro-screen-analyzer · nexacro-screen-converter · nutrition-prompt-tester · skill-tester · spec-reviewer
 - **스킬** (90): ag-grid · attachment-theory-basics · aws-sdk-v1-s3-rekognition · better-auth · bot-management-seo · bouncycastle-crypto · build-perf-benchmarking · characterization-testing · claude-code-headless · claude-code-hook-authoring · code-convention · content-eeat-quality · crisis-intervention-resources-korea · dream-content-privacy-ethics · dream-content-research · dream-interpretation-prompt-engineering · dream-privacy-consent-ui · dream-psychology-jung-freud · dream-safety-classifier-prompts · drizzle-neon-postgres · ehcache-2-legacy · fortune-interpretation-prompt-engineering · frontend-domain-structure · geo-ai-discoverability · github-actions-visual-regression · hikaricp-tuning-oracle-mysql · ibatis-to-mybatis-migration · incremental-refactoring · jackson-time-migration · jasypt-encrypted-config · kakao-share-optimization · korean-dream-interpretation-tradition · korean-food-nutrition · korean-lunar-calendar-manseryeok · korean-saju-tradition · lighthouse-ci-setup · meal-recommendation-prompt · module-boundaries · monorepo-turborepo · mui-v5 · mui-v9 · mybatis-mapper-patterns · n8n-error-handling · n8n-llm-integration · n8n-self-hosting · n8n-webhook-patterns · naver-seo-specifics · nexacro-17-xfdl-anatomy · nexacro-strangler-coexistence · nexacro-to-react-mapping · nexacro-xapi-server · next-intl-i18n · nextjs · nutrition-analysis-prompt · nutrition-basics · prisma-orm · pwa-push-notifications · python-korean-nlp-konlpy · python-langchain-current · python-llamaindex · react-spec-extraction · redis-redisson-4 · redis-redisson-legacy · saju-chart-visualization · search-console-webmaster · seo-vite-spa · spec-extraction-method · spring-boot-2-to-3-migration · spring-boot-gradle-setup · spring-multi-datasource-oracle-mysql · spring-mybatis-spec-extraction · spring-security-5-jwt-jjwt10 · spring-security-6-jwt-jjwt12 · srs-spaced-repetition · storybook · swagger-springfox-2 · tanstack-query · testing · typescript-v5 · vercel-sandbox · vercel-workflow · vite-advanced-splitting · voice-input-ui · wcag-2.2-checklist · web-vitals-rum-comparison · webflux-webclient-in-sync-app · webpack-vite-config-mapping · xapi-to-rest-migration · xss-lucy-jsoup · zod-schema-validation
 
 </details>
@@ -456,7 +468,7 @@
 ### `nextjs` — React·Next.js (+TS 백엔드)
 
 - 켜는 블록: `dev-common` · `frontend-core` · `frontend-tooling` · `ts-backend`
-- 🔒 고정 27 · ✅ 켜짐 56 · ⬜ 꺼짐 74
+- 🔒 고정 27 · ✅ 켜짐 46 · ⬜ 꺼짐 87
 - 기본과 비교: 새로 켜짐 28개 (룰 1 · 스킬 27)
 
 <details><summary>새로 켜지는 항목 28개</summary>
@@ -466,22 +478,23 @@
 
 </details>
 
-<details><summary>✅ 켜짐 56개 (🔒 고정 제외)</summary>
+<details><summary>✅ 켜짐 46개 (🔒 고정 제외)</summary>
 
 - **설정** (2): superpowers 플러그인 · 상태줄 `statusline.sh`
-- **훅** (12): adversarial-test-guard · agent-md-guard · branch-protection · codex-review-guard · deliverable-guard · fake-impl-guard · memory-pull · memory-sync · skill-md-guard · staleness-check · tdd-guard · test-fake-guard
-- **룰** (9): adversarial-testing.md · agent-design.md · codex-review.md · commands.md · creation-workflow.md · git.md · memory-sync.md · readme-update.md · typescript.md
-- **커맨드** (5): agent-status · codex-review · commit · create-pr · fix-pr
-- **에이전트** (1): skill-tester
+- **훅** (8): adversarial-test-guard · branch-protection · clean-review-guard · fake-impl-guard · memory-pull · memory-sync · tdd-guard · test-fake-guard
+- **룰** (5): adversarial-testing.md · clean-review.md · git.md · memory-sync.md · typescript.md
+- **커맨드** (3): commit · create-pr · fix-pr
+- **에이전트** (1): clean-reviewer
 - **스킬** (27): ag-grid · better-auth · build-perf-benchmarking · claude-code-hook-authoring · code-convention · drizzle-neon-postgres · frontend-domain-structure · github-actions-visual-regression · incremental-refactoring · lighthouse-ci-setup · module-boundaries · monorepo-turborepo · mui-v5 · mui-v9 · next-intl-i18n · nextjs · prisma-orm · pwa-push-notifications · storybook · tanstack-query · testing · typescript-v5 · vite-advanced-splitting · wcag-2.2-checklist · web-vitals-rum-comparison · webpack-vite-config-mapping · zod-schema-validation
 
 </details>
 
-<details><summary>⬜ 꺼짐 74개</summary>
+<details><summary>⬜ 꺼짐 87개</summary>
 
-- **룰** (2): java.md · rust.md
-- **커맨드** (1): spec-extract
-- **에이전트** (8): dream-interpretation-prompt-tester · fortune-interpretation-prompt-tester · legacy-spec-extractor · migration-parity-tester · nexacro-screen-analyzer · nexacro-screen-converter · nutrition-prompt-tester · spec-reviewer
+- **훅** (5): agent-md-guard · codex-review-guard · deliverable-guard · skill-md-guard · staleness-check
+- **룰** (7): agent-design.md · codex-review.md · commands.md · creation-workflow.md · java.md · readme-update.md · rust.md
+- **커맨드** (3): agent-status · codex-review · spec-extract
+- **에이전트** (9): dream-interpretation-prompt-tester · fortune-interpretation-prompt-tester · legacy-spec-extractor · migration-parity-tester · nexacro-screen-analyzer · nexacro-screen-converter · nutrition-prompt-tester · skill-tester · spec-reviewer
 - **스킬** (63): attachment-theory-basics · aws-sdk-v1-s3-rekognition · bot-management-seo · bouncycastle-crypto · characterization-testing · claude-code-headless · content-eeat-quality · crisis-intervention-resources-korea · dream-content-privacy-ethics · dream-content-research · dream-interpretation-prompt-engineering · dream-privacy-consent-ui · dream-psychology-jung-freud · dream-safety-classifier-prompts · ehcache-2-legacy · fortune-interpretation-prompt-engineering · geo-ai-discoverability · hikaricp-tuning-oracle-mysql · ibatis-to-mybatis-migration · jackson-time-migration · jasypt-encrypted-config · kakao-share-optimization · korean-dream-interpretation-tradition · korean-food-nutrition · korean-lunar-calendar-manseryeok · korean-saju-tradition · meal-recommendation-prompt · mybatis-mapper-patterns · n8n-error-handling · n8n-llm-integration · n8n-self-hosting · n8n-webhook-patterns · naver-seo-specifics · nexacro-17-xfdl-anatomy · nexacro-strangler-coexistence · nexacro-to-react-mapping · nexacro-xapi-server · nutrition-analysis-prompt · nutrition-basics · python-korean-nlp-konlpy · python-langchain-current · python-llamaindex · react-spec-extraction · redis-redisson-4 · redis-redisson-legacy · saju-chart-visualization · search-console-webmaster · seo-vite-spa · spec-extraction-method · spring-boot-2-to-3-migration · spring-boot-gradle-setup · spring-multi-datasource-oracle-mysql · spring-mybatis-spec-extraction · spring-security-5-jwt-jjwt10 · spring-security-6-jwt-jjwt12 · srs-spaced-repetition · swagger-springfox-2 · vercel-sandbox · vercel-workflow · voice-input-ui · webflux-webclient-in-sync-app · xapi-to-rest-migration · xss-lucy-jsoup
 
 </details>
@@ -489,7 +502,7 @@
 ### `java-legacy` — Java Spring 레거시
 
 - 켜는 블록: `dev-common` · `java-common` · `java-legacy`
-- 🔒 고정 27 · ✅ 켜짐 47 · ⬜ 꺼짐 83
+- 🔒 고정 27 · ✅ 켜짐 37 · ⬜ 꺼짐 96
 - 기본과 비교: 새로 켜짐 19개 (룰 1 · 스킬 18)
 
 <details><summary>새로 켜지는 항목 19개</summary>
@@ -499,22 +512,23 @@
 
 </details>
 
-<details><summary>✅ 켜짐 47개 (🔒 고정 제외)</summary>
+<details><summary>✅ 켜짐 37개 (🔒 고정 제외)</summary>
 
 - **설정** (2): superpowers 플러그인 · 상태줄 `statusline.sh`
-- **훅** (12): adversarial-test-guard · agent-md-guard · branch-protection · codex-review-guard · deliverable-guard · fake-impl-guard · memory-pull · memory-sync · skill-md-guard · staleness-check · tdd-guard · test-fake-guard
-- **룰** (9): adversarial-testing.md · agent-design.md · codex-review.md · commands.md · creation-workflow.md · git.md · java.md · memory-sync.md · readme-update.md
-- **커맨드** (5): agent-status · codex-review · commit · create-pr · fix-pr
-- **에이전트** (1): skill-tester
+- **훅** (8): adversarial-test-guard · branch-protection · clean-review-guard · fake-impl-guard · memory-pull · memory-sync · tdd-guard · test-fake-guard
+- **룰** (5): adversarial-testing.md · clean-review.md · git.md · java.md · memory-sync.md
+- **커맨드** (3): commit · create-pr · fix-pr
+- **에이전트** (1): clean-reviewer
 - **스킬** (18): aws-sdk-v1-s3-rekognition · bouncycastle-crypto · claude-code-hook-authoring · ehcache-2-legacy · hikaricp-tuning-oracle-mysql · incremental-refactoring · jackson-time-migration · jasypt-encrypted-config · module-boundaries · mybatis-mapper-patterns · redis-redisson-legacy · spring-boot-2-to-3-migration · spring-boot-gradle-setup · spring-multi-datasource-oracle-mysql · spring-security-5-jwt-jjwt10 · swagger-springfox-2 · webflux-webclient-in-sync-app · xss-lucy-jsoup
 
 </details>
 
-<details><summary>⬜ 꺼짐 83개</summary>
+<details><summary>⬜ 꺼짐 96개</summary>
 
-- **룰** (2): rust.md · typescript.md
-- **커맨드** (1): spec-extract
-- **에이전트** (8): dream-interpretation-prompt-tester · fortune-interpretation-prompt-tester · legacy-spec-extractor · migration-parity-tester · nexacro-screen-analyzer · nexacro-screen-converter · nutrition-prompt-tester · spec-reviewer
+- **훅** (5): agent-md-guard · codex-review-guard · deliverable-guard · skill-md-guard · staleness-check
+- **룰** (7): agent-design.md · codex-review.md · commands.md · creation-workflow.md · readme-update.md · rust.md · typescript.md
+- **커맨드** (3): agent-status · codex-review · spec-extract
+- **에이전트** (9): dream-interpretation-prompt-tester · fortune-interpretation-prompt-tester · legacy-spec-extractor · migration-parity-tester · nexacro-screen-analyzer · nexacro-screen-converter · nutrition-prompt-tester · skill-tester · spec-reviewer
 - **스킬** (72): ag-grid · attachment-theory-basics · better-auth · bot-management-seo · build-perf-benchmarking · characterization-testing · claude-code-headless · code-convention · content-eeat-quality · crisis-intervention-resources-korea · dream-content-privacy-ethics · dream-content-research · dream-interpretation-prompt-engineering · dream-privacy-consent-ui · dream-psychology-jung-freud · dream-safety-classifier-prompts · drizzle-neon-postgres · fortune-interpretation-prompt-engineering · frontend-domain-structure · geo-ai-discoverability · github-actions-visual-regression · ibatis-to-mybatis-migration · kakao-share-optimization · korean-dream-interpretation-tradition · korean-food-nutrition · korean-lunar-calendar-manseryeok · korean-saju-tradition · lighthouse-ci-setup · meal-recommendation-prompt · monorepo-turborepo · mui-v5 · mui-v9 · n8n-error-handling · n8n-llm-integration · n8n-self-hosting · n8n-webhook-patterns · naver-seo-specifics · nexacro-17-xfdl-anatomy · nexacro-strangler-coexistence · nexacro-to-react-mapping · nexacro-xapi-server · next-intl-i18n · nextjs · nutrition-analysis-prompt · nutrition-basics · prisma-orm · pwa-push-notifications · python-korean-nlp-konlpy · python-langchain-current · python-llamaindex · react-spec-extraction · redis-redisson-4 · saju-chart-visualization · search-console-webmaster · seo-vite-spa · spec-extraction-method · spring-mybatis-spec-extraction · spring-security-6-jwt-jjwt12 · srs-spaced-repetition · storybook · tanstack-query · testing · typescript-v5 · vercel-sandbox · vercel-workflow · vite-advanced-splitting · voice-input-ui · wcag-2.2-checklist · web-vitals-rum-comparison · webpack-vite-config-mapping · xapi-to-rest-migration · zod-schema-validation
 
 </details>
@@ -522,7 +536,7 @@
 ### `java-modern` — Java Spring 모던
 
 - 켜는 블록: `dev-common` · `java-common` · `java-modern`
-- 🔒 고정 27 · ✅ 켜짐 43 · ⬜ 꺼짐 87
+- 🔒 고정 27 · ✅ 켜짐 33 · ⬜ 꺼짐 100
 - 기본과 비교: 새로 켜짐 15개 (룰 1 · 스킬 14)
 
 <details><summary>새로 켜지는 항목 15개</summary>
@@ -532,22 +546,23 @@
 
 </details>
 
-<details><summary>✅ 켜짐 43개 (🔒 고정 제외)</summary>
+<details><summary>✅ 켜짐 33개 (🔒 고정 제외)</summary>
 
 - **설정** (2): superpowers 플러그인 · 상태줄 `statusline.sh`
-- **훅** (12): adversarial-test-guard · agent-md-guard · branch-protection · codex-review-guard · deliverable-guard · fake-impl-guard · memory-pull · memory-sync · skill-md-guard · staleness-check · tdd-guard · test-fake-guard
-- **룰** (9): adversarial-testing.md · agent-design.md · codex-review.md · commands.md · creation-workflow.md · git.md · java.md · memory-sync.md · readme-update.md
-- **커맨드** (5): agent-status · codex-review · commit · create-pr · fix-pr
-- **에이전트** (1): skill-tester
+- **훅** (8): adversarial-test-guard · branch-protection · clean-review-guard · fake-impl-guard · memory-pull · memory-sync · tdd-guard · test-fake-guard
+- **룰** (5): adversarial-testing.md · clean-review.md · git.md · java.md · memory-sync.md
+- **커맨드** (3): commit · create-pr · fix-pr
+- **에이전트** (1): clean-reviewer
 - **스킬** (14): bouncycastle-crypto · claude-code-hook-authoring · hikaricp-tuning-oracle-mysql · incremental-refactoring · jackson-time-migration · jasypt-encrypted-config · module-boundaries · mybatis-mapper-patterns · redis-redisson-4 · spring-boot-gradle-setup · spring-multi-datasource-oracle-mysql · spring-security-6-jwt-jjwt12 · webflux-webclient-in-sync-app · xss-lucy-jsoup
 
 </details>
 
-<details><summary>⬜ 꺼짐 87개</summary>
+<details><summary>⬜ 꺼짐 100개</summary>
 
-- **룰** (2): rust.md · typescript.md
-- **커맨드** (1): spec-extract
-- **에이전트** (8): dream-interpretation-prompt-tester · fortune-interpretation-prompt-tester · legacy-spec-extractor · migration-parity-tester · nexacro-screen-analyzer · nexacro-screen-converter · nutrition-prompt-tester · spec-reviewer
+- **훅** (5): agent-md-guard · codex-review-guard · deliverable-guard · skill-md-guard · staleness-check
+- **룰** (7): agent-design.md · codex-review.md · commands.md · creation-workflow.md · readme-update.md · rust.md · typescript.md
+- **커맨드** (3): agent-status · codex-review · spec-extract
+- **에이전트** (9): dream-interpretation-prompt-tester · fortune-interpretation-prompt-tester · legacy-spec-extractor · migration-parity-tester · nexacro-screen-analyzer · nexacro-screen-converter · nutrition-prompt-tester · skill-tester · spec-reviewer
 - **스킬** (76): ag-grid · attachment-theory-basics · aws-sdk-v1-s3-rekognition · better-auth · bot-management-seo · build-perf-benchmarking · characterization-testing · claude-code-headless · code-convention · content-eeat-quality · crisis-intervention-resources-korea · dream-content-privacy-ethics · dream-content-research · dream-interpretation-prompt-engineering · dream-privacy-consent-ui · dream-psychology-jung-freud · dream-safety-classifier-prompts · drizzle-neon-postgres · ehcache-2-legacy · fortune-interpretation-prompt-engineering · frontend-domain-structure · geo-ai-discoverability · github-actions-visual-regression · ibatis-to-mybatis-migration · kakao-share-optimization · korean-dream-interpretation-tradition · korean-food-nutrition · korean-lunar-calendar-manseryeok · korean-saju-tradition · lighthouse-ci-setup · meal-recommendation-prompt · monorepo-turborepo · mui-v5 · mui-v9 · n8n-error-handling · n8n-llm-integration · n8n-self-hosting · n8n-webhook-patterns · naver-seo-specifics · nexacro-17-xfdl-anatomy · nexacro-strangler-coexistence · nexacro-to-react-mapping · nexacro-xapi-server · next-intl-i18n · nextjs · nutrition-analysis-prompt · nutrition-basics · prisma-orm · pwa-push-notifications · python-korean-nlp-konlpy · python-langchain-current · python-llamaindex · react-spec-extraction · redis-redisson-legacy · saju-chart-visualization · search-console-webmaster · seo-vite-spa · spec-extraction-method · spring-boot-2-to-3-migration · spring-mybatis-spec-extraction · spring-security-5-jwt-jjwt10 · srs-spaced-repetition · storybook · swagger-springfox-2 · tanstack-query · testing · typescript-v5 · vercel-sandbox · vercel-workflow · vite-advanced-splitting · voice-input-ui · wcag-2.2-checklist · web-vitals-rum-comparison · webpack-vite-config-mapping · xapi-to-rest-migration · zod-schema-validation
 
 </details>
@@ -555,7 +570,7 @@
 ### `rust` — Rust
 
 - 켜는 블록: `dev-common` · `rust`
-- 🔒 고정 27 · ✅ 켜짐 32 · ⬜ 꺼짐 98
+- 🔒 고정 27 · ✅ 켜짐 22 · ⬜ 꺼짐 111
 - 기본과 비교: 새로 켜짐 4개 (룰 1 · 스킬 3)
 
 <details><summary>새로 켜지는 항목 4개</summary>
@@ -565,22 +580,23 @@
 
 </details>
 
-<details><summary>✅ 켜짐 32개 (🔒 고정 제외)</summary>
+<details><summary>✅ 켜짐 22개 (🔒 고정 제외)</summary>
 
 - **설정** (2): superpowers 플러그인 · 상태줄 `statusline.sh`
-- **훅** (12): adversarial-test-guard · agent-md-guard · branch-protection · codex-review-guard · deliverable-guard · fake-impl-guard · memory-pull · memory-sync · skill-md-guard · staleness-check · tdd-guard · test-fake-guard
-- **룰** (9): adversarial-testing.md · agent-design.md · codex-review.md · commands.md · creation-workflow.md · git.md · memory-sync.md · readme-update.md · rust.md
-- **커맨드** (5): agent-status · codex-review · commit · create-pr · fix-pr
-- **에이전트** (1): skill-tester
+- **훅** (8): adversarial-test-guard · branch-protection · clean-review-guard · fake-impl-guard · memory-pull · memory-sync · tdd-guard · test-fake-guard
+- **룰** (5): adversarial-testing.md · clean-review.md · git.md · memory-sync.md · rust.md
+- **커맨드** (3): commit · create-pr · fix-pr
+- **에이전트** (1): clean-reviewer
 - **스킬** (3): claude-code-hook-authoring · incremental-refactoring · module-boundaries
 
 </details>
 
-<details><summary>⬜ 꺼짐 98개</summary>
+<details><summary>⬜ 꺼짐 111개</summary>
 
-- **룰** (2): java.md · typescript.md
-- **커맨드** (1): spec-extract
-- **에이전트** (8): dream-interpretation-prompt-tester · fortune-interpretation-prompt-tester · legacy-spec-extractor · migration-parity-tester · nexacro-screen-analyzer · nexacro-screen-converter · nutrition-prompt-tester · spec-reviewer
+- **훅** (5): agent-md-guard · codex-review-guard · deliverable-guard · skill-md-guard · staleness-check
+- **룰** (7): agent-design.md · codex-review.md · commands.md · creation-workflow.md · java.md · readme-update.md · typescript.md
+- **커맨드** (3): agent-status · codex-review · spec-extract
+- **에이전트** (9): dream-interpretation-prompt-tester · fortune-interpretation-prompt-tester · legacy-spec-extractor · migration-parity-tester · nexacro-screen-analyzer · nexacro-screen-converter · nutrition-prompt-tester · skill-tester · spec-reviewer
 - **스킬** (87): ag-grid · attachment-theory-basics · aws-sdk-v1-s3-rekognition · better-auth · bot-management-seo · bouncycastle-crypto · build-perf-benchmarking · characterization-testing · claude-code-headless · code-convention · content-eeat-quality · crisis-intervention-resources-korea · dream-content-privacy-ethics · dream-content-research · dream-interpretation-prompt-engineering · dream-privacy-consent-ui · dream-psychology-jung-freud · dream-safety-classifier-prompts · drizzle-neon-postgres · ehcache-2-legacy · fortune-interpretation-prompt-engineering · frontend-domain-structure · geo-ai-discoverability · github-actions-visual-regression · hikaricp-tuning-oracle-mysql · ibatis-to-mybatis-migration · jackson-time-migration · jasypt-encrypted-config · kakao-share-optimization · korean-dream-interpretation-tradition · korean-food-nutrition · korean-lunar-calendar-manseryeok · korean-saju-tradition · lighthouse-ci-setup · meal-recommendation-prompt · monorepo-turborepo · mui-v5 · mui-v9 · mybatis-mapper-patterns · n8n-error-handling · n8n-llm-integration · n8n-self-hosting · n8n-webhook-patterns · naver-seo-specifics · nexacro-17-xfdl-anatomy · nexacro-strangler-coexistence · nexacro-to-react-mapping · nexacro-xapi-server · next-intl-i18n · nextjs · nutrition-analysis-prompt · nutrition-basics · prisma-orm · pwa-push-notifications · python-korean-nlp-konlpy · python-langchain-current · python-llamaindex · react-spec-extraction · redis-redisson-4 · redis-redisson-legacy · saju-chart-visualization · search-console-webmaster · seo-vite-spa · spec-extraction-method · spring-boot-2-to-3-migration · spring-boot-gradle-setup · spring-multi-datasource-oracle-mysql · spring-mybatis-spec-extraction · spring-security-5-jwt-jjwt10 · spring-security-6-jwt-jjwt12 · srs-spaced-repetition · storybook · swagger-springfox-2 · tanstack-query · testing · typescript-v5 · vercel-sandbox · vercel-workflow · vite-advanced-splitting · voice-input-ui · wcag-2.2-checklist · web-vitals-rum-comparison · webflux-webclient-in-sync-app · webpack-vite-config-mapping · xapi-to-rest-migration · xss-lucy-jsoup · zod-schema-validation
 
 </details>
@@ -588,7 +604,7 @@
 ### `python` — Python LLM·한국어 NLP
 
 - 켜는 블록: `dev-common` · `python`
-- 🔒 고정 27 · ✅ 켜짐 34 · ⬜ 꺼짐 96
+- 🔒 고정 27 · ✅ 켜짐 24 · ⬜ 꺼짐 109
 - 기본과 비교: 새로 켜짐 6개 (스킬 6)
 
 <details><summary>새로 켜지는 항목 6개</summary>
@@ -597,22 +613,23 @@
 
 </details>
 
-<details><summary>✅ 켜짐 34개 (🔒 고정 제외)</summary>
+<details><summary>✅ 켜짐 24개 (🔒 고정 제외)</summary>
 
 - **설정** (2): superpowers 플러그인 · 상태줄 `statusline.sh`
-- **훅** (12): adversarial-test-guard · agent-md-guard · branch-protection · codex-review-guard · deliverable-guard · fake-impl-guard · memory-pull · memory-sync · skill-md-guard · staleness-check · tdd-guard · test-fake-guard
-- **룰** (8): adversarial-testing.md · agent-design.md · codex-review.md · commands.md · creation-workflow.md · git.md · memory-sync.md · readme-update.md
-- **커맨드** (5): agent-status · codex-review · commit · create-pr · fix-pr
-- **에이전트** (1): skill-tester
+- **훅** (8): adversarial-test-guard · branch-protection · clean-review-guard · fake-impl-guard · memory-pull · memory-sync · tdd-guard · test-fake-guard
+- **룰** (4): adversarial-testing.md · clean-review.md · git.md · memory-sync.md
+- **커맨드** (3): commit · create-pr · fix-pr
+- **에이전트** (1): clean-reviewer
 - **스킬** (6): claude-code-hook-authoring · incremental-refactoring · module-boundaries · python-korean-nlp-konlpy · python-langchain-current · python-llamaindex
 
 </details>
 
-<details><summary>⬜ 꺼짐 96개</summary>
+<details><summary>⬜ 꺼짐 109개</summary>
 
-- **룰** (3): java.md · rust.md · typescript.md
-- **커맨드** (1): spec-extract
-- **에이전트** (8): dream-interpretation-prompt-tester · fortune-interpretation-prompt-tester · legacy-spec-extractor · migration-parity-tester · nexacro-screen-analyzer · nexacro-screen-converter · nutrition-prompt-tester · spec-reviewer
+- **훅** (5): agent-md-guard · codex-review-guard · deliverable-guard · skill-md-guard · staleness-check
+- **룰** (8): agent-design.md · codex-review.md · commands.md · creation-workflow.md · java.md · readme-update.md · rust.md · typescript.md
+- **커맨드** (3): agent-status · codex-review · spec-extract
+- **에이전트** (9): dream-interpretation-prompt-tester · fortune-interpretation-prompt-tester · legacy-spec-extractor · migration-parity-tester · nexacro-screen-analyzer · nexacro-screen-converter · nutrition-prompt-tester · skill-tester · spec-reviewer
 - **스킬** (84): ag-grid · attachment-theory-basics · aws-sdk-v1-s3-rekognition · better-auth · bot-management-seo · bouncycastle-crypto · build-perf-benchmarking · characterization-testing · claude-code-headless · code-convention · content-eeat-quality · crisis-intervention-resources-korea · dream-content-privacy-ethics · dream-content-research · dream-interpretation-prompt-engineering · dream-privacy-consent-ui · dream-psychology-jung-freud · dream-safety-classifier-prompts · drizzle-neon-postgres · ehcache-2-legacy · fortune-interpretation-prompt-engineering · frontend-domain-structure · geo-ai-discoverability · github-actions-visual-regression · hikaricp-tuning-oracle-mysql · ibatis-to-mybatis-migration · jackson-time-migration · jasypt-encrypted-config · kakao-share-optimization · korean-dream-interpretation-tradition · korean-food-nutrition · korean-lunar-calendar-manseryeok · korean-saju-tradition · lighthouse-ci-setup · meal-recommendation-prompt · monorepo-turborepo · mui-v5 · mui-v9 · mybatis-mapper-patterns · n8n-error-handling · n8n-llm-integration · n8n-self-hosting · n8n-webhook-patterns · naver-seo-specifics · nexacro-17-xfdl-anatomy · nexacro-strangler-coexistence · nexacro-to-react-mapping · nexacro-xapi-server · next-intl-i18n · nextjs · nutrition-analysis-prompt · nutrition-basics · prisma-orm · pwa-push-notifications · react-spec-extraction · redis-redisson-4 · redis-redisson-legacy · saju-chart-visualization · search-console-webmaster · seo-vite-spa · spec-extraction-method · spring-boot-2-to-3-migration · spring-boot-gradle-setup · spring-multi-datasource-oracle-mysql · spring-mybatis-spec-extraction · spring-security-5-jwt-jjwt10 · spring-security-6-jwt-jjwt12 · srs-spaced-repetition · storybook · swagger-springfox-2 · tanstack-query · testing · typescript-v5 · vercel-sandbox · vercel-workflow · vite-advanced-splitting · voice-input-ui · wcag-2.2-checklist · web-vitals-rum-comparison · webflux-webclient-in-sync-app · webpack-vite-config-mapping · xapi-to-rest-migration · xss-lucy-jsoup · zod-schema-validation
 
 </details>
@@ -620,7 +637,7 @@
 ### `dream` — 꿈 해몽 앱
 
 - 켜는 블록: `frontend-core` · `frontend-tooling` · `ai-app` · `dream`
-- 🔒 고정 27 · ✅ 켜짐 61 · ⬜ 꺼짐 69
+- 🔒 고정 27 · ✅ 켜짐 51 · ⬜ 꺼짐 82
 - 기본과 비교: 새로 켜짐 33개 (룰 1 · 에이전트 1 · 스킬 31)
 
 <details><summary>새로 켜지는 항목 33개</summary>
@@ -631,22 +648,23 @@
 
 </details>
 
-<details><summary>✅ 켜짐 61개 (🔒 고정 제외)</summary>
+<details><summary>✅ 켜짐 51개 (🔒 고정 제외)</summary>
 
 - **설정** (2): superpowers 플러그인 · 상태줄 `statusline.sh`
-- **훅** (12): adversarial-test-guard · agent-md-guard · branch-protection · codex-review-guard · deliverable-guard · fake-impl-guard · memory-pull · memory-sync · skill-md-guard · staleness-check · tdd-guard · test-fake-guard
-- **룰** (9): adversarial-testing.md · agent-design.md · codex-review.md · commands.md · creation-workflow.md · git.md · memory-sync.md · readme-update.md · typescript.md
-- **커맨드** (5): agent-status · codex-review · commit · create-pr · fix-pr
-- **에이전트** (2): dream-interpretation-prompt-tester · skill-tester
+- **훅** (8): adversarial-test-guard · branch-protection · clean-review-guard · fake-impl-guard · memory-pull · memory-sync · tdd-guard · test-fake-guard
+- **룰** (5): adversarial-testing.md · clean-review.md · git.md · memory-sync.md · typescript.md
+- **커맨드** (3): commit · create-pr · fix-pr
+- **에이전트** (2): clean-reviewer · dream-interpretation-prompt-tester
 - **스킬** (31): ag-grid · attachment-theory-basics · build-perf-benchmarking · code-convention · crisis-intervention-resources-korea · dream-content-privacy-ethics · dream-content-research · dream-interpretation-prompt-engineering · dream-privacy-consent-ui · dream-psychology-jung-freud · dream-safety-classifier-prompts · frontend-domain-structure · github-actions-visual-regression · korean-dream-interpretation-tradition · lighthouse-ci-setup · monorepo-turborepo · mui-v5 · mui-v9 · next-intl-i18n · nextjs · pwa-push-notifications · srs-spaced-repetition · storybook · tanstack-query · testing · typescript-v5 · vite-advanced-splitting · voice-input-ui · wcag-2.2-checklist · web-vitals-rum-comparison · webpack-vite-config-mapping
 
 </details>
 
-<details><summary>⬜ 꺼짐 69개</summary>
+<details><summary>⬜ 꺼짐 82개</summary>
 
-- **룰** (2): java.md · rust.md
-- **커맨드** (1): spec-extract
-- **에이전트** (7): fortune-interpretation-prompt-tester · legacy-spec-extractor · migration-parity-tester · nexacro-screen-analyzer · nexacro-screen-converter · nutrition-prompt-tester · spec-reviewer
+- **훅** (5): agent-md-guard · codex-review-guard · deliverable-guard · skill-md-guard · staleness-check
+- **룰** (7): agent-design.md · codex-review.md · commands.md · creation-workflow.md · java.md · readme-update.md · rust.md
+- **커맨드** (3): agent-status · codex-review · spec-extract
+- **에이전트** (8): fortune-interpretation-prompt-tester · legacy-spec-extractor · migration-parity-tester · nexacro-screen-analyzer · nexacro-screen-converter · nutrition-prompt-tester · skill-tester · spec-reviewer
 - **스킬** (59): aws-sdk-v1-s3-rekognition · better-auth · bot-management-seo · bouncycastle-crypto · characterization-testing · claude-code-headless · claude-code-hook-authoring · content-eeat-quality · drizzle-neon-postgres · ehcache-2-legacy · fortune-interpretation-prompt-engineering · geo-ai-discoverability · hikaricp-tuning-oracle-mysql · ibatis-to-mybatis-migration · incremental-refactoring · jackson-time-migration · jasypt-encrypted-config · kakao-share-optimization · korean-food-nutrition · korean-lunar-calendar-manseryeok · korean-saju-tradition · meal-recommendation-prompt · module-boundaries · mybatis-mapper-patterns · n8n-error-handling · n8n-llm-integration · n8n-self-hosting · n8n-webhook-patterns · naver-seo-specifics · nexacro-17-xfdl-anatomy · nexacro-strangler-coexistence · nexacro-to-react-mapping · nexacro-xapi-server · nutrition-analysis-prompt · nutrition-basics · prisma-orm · python-korean-nlp-konlpy · python-langchain-current · python-llamaindex · react-spec-extraction · redis-redisson-4 · redis-redisson-legacy · saju-chart-visualization · search-console-webmaster · seo-vite-spa · spec-extraction-method · spring-boot-2-to-3-migration · spring-boot-gradle-setup · spring-multi-datasource-oracle-mysql · spring-mybatis-spec-extraction · spring-security-5-jwt-jjwt10 · spring-security-6-jwt-jjwt12 · swagger-springfox-2 · vercel-sandbox · vercel-workflow · webflux-webclient-in-sync-app · xapi-to-rest-migration · xss-lucy-jsoup · zod-schema-validation
 
 </details>
@@ -654,7 +672,7 @@
 ### `fortune` — 운세 앱
 
 - 켜는 블록: `frontend-core` · `frontend-tooling` · `ai-app` · `fortune`
-- 🔒 고정 27 · ✅ 켜짐 56 · ⬜ 꺼짐 74
+- 🔒 고정 27 · ✅ 켜짐 46 · ⬜ 꺼짐 87
 - 기본과 비교: 새로 켜짐 28개 (룰 1 · 에이전트 1 · 스킬 26)
 
 <details><summary>새로 켜지는 항목 28개</summary>
@@ -665,22 +683,23 @@
 
 </details>
 
-<details><summary>✅ 켜짐 56개 (🔒 고정 제외)</summary>
+<details><summary>✅ 켜짐 46개 (🔒 고정 제외)</summary>
 
 - **설정** (2): superpowers 플러그인 · 상태줄 `statusline.sh`
-- **훅** (12): adversarial-test-guard · agent-md-guard · branch-protection · codex-review-guard · deliverable-guard · fake-impl-guard · memory-pull · memory-sync · skill-md-guard · staleness-check · tdd-guard · test-fake-guard
-- **룰** (9): adversarial-testing.md · agent-design.md · codex-review.md · commands.md · creation-workflow.md · git.md · memory-sync.md · readme-update.md · typescript.md
-- **커맨드** (5): agent-status · codex-review · commit · create-pr · fix-pr
-- **에이전트** (2): fortune-interpretation-prompt-tester · skill-tester
+- **훅** (8): adversarial-test-guard · branch-protection · clean-review-guard · fake-impl-guard · memory-pull · memory-sync · tdd-guard · test-fake-guard
+- **룰** (5): adversarial-testing.md · clean-review.md · git.md · memory-sync.md · typescript.md
+- **커맨드** (3): commit · create-pr · fix-pr
+- **에이전트** (2): clean-reviewer · fortune-interpretation-prompt-tester
 - **스킬** (26): ag-grid · build-perf-benchmarking · code-convention · fortune-interpretation-prompt-engineering · frontend-domain-structure · github-actions-visual-regression · korean-lunar-calendar-manseryeok · korean-saju-tradition · lighthouse-ci-setup · monorepo-turborepo · mui-v5 · mui-v9 · next-intl-i18n · nextjs · pwa-push-notifications · saju-chart-visualization · srs-spaced-repetition · storybook · tanstack-query · testing · typescript-v5 · vite-advanced-splitting · voice-input-ui · wcag-2.2-checklist · web-vitals-rum-comparison · webpack-vite-config-mapping
 
 </details>
 
-<details><summary>⬜ 꺼짐 74개</summary>
+<details><summary>⬜ 꺼짐 87개</summary>
 
-- **룰** (2): java.md · rust.md
-- **커맨드** (1): spec-extract
-- **에이전트** (7): dream-interpretation-prompt-tester · legacy-spec-extractor · migration-parity-tester · nexacro-screen-analyzer · nexacro-screen-converter · nutrition-prompt-tester · spec-reviewer
+- **훅** (5): agent-md-guard · codex-review-guard · deliverable-guard · skill-md-guard · staleness-check
+- **룰** (7): agent-design.md · codex-review.md · commands.md · creation-workflow.md · java.md · readme-update.md · rust.md
+- **커맨드** (3): agent-status · codex-review · spec-extract
+- **에이전트** (8): dream-interpretation-prompt-tester · legacy-spec-extractor · migration-parity-tester · nexacro-screen-analyzer · nexacro-screen-converter · nutrition-prompt-tester · skill-tester · spec-reviewer
 - **스킬** (64): attachment-theory-basics · aws-sdk-v1-s3-rekognition · better-auth · bot-management-seo · bouncycastle-crypto · characterization-testing · claude-code-headless · claude-code-hook-authoring · content-eeat-quality · crisis-intervention-resources-korea · dream-content-privacy-ethics · dream-content-research · dream-interpretation-prompt-engineering · dream-privacy-consent-ui · dream-psychology-jung-freud · dream-safety-classifier-prompts · drizzle-neon-postgres · ehcache-2-legacy · geo-ai-discoverability · hikaricp-tuning-oracle-mysql · ibatis-to-mybatis-migration · incremental-refactoring · jackson-time-migration · jasypt-encrypted-config · kakao-share-optimization · korean-dream-interpretation-tradition · korean-food-nutrition · meal-recommendation-prompt · module-boundaries · mybatis-mapper-patterns · n8n-error-handling · n8n-llm-integration · n8n-self-hosting · n8n-webhook-patterns · naver-seo-specifics · nexacro-17-xfdl-anatomy · nexacro-strangler-coexistence · nexacro-to-react-mapping · nexacro-xapi-server · nutrition-analysis-prompt · nutrition-basics · prisma-orm · python-korean-nlp-konlpy · python-langchain-current · python-llamaindex · react-spec-extraction · redis-redisson-4 · redis-redisson-legacy · search-console-webmaster · seo-vite-spa · spec-extraction-method · spring-boot-2-to-3-migration · spring-boot-gradle-setup · spring-multi-datasource-oracle-mysql · spring-mybatis-spec-extraction · spring-security-5-jwt-jjwt10 · spring-security-6-jwt-jjwt12 · swagger-springfox-2 · vercel-sandbox · vercel-workflow · webflux-webclient-in-sync-app · xapi-to-rest-migration · xss-lucy-jsoup · zod-schema-validation
 
 </details>
@@ -688,7 +707,7 @@
 ### `health` — 건강·식단 앱
 
 - 켜는 블록: `frontend-core` · `frontend-tooling` · `ai-app` · `health`
-- 🔒 고정 27 · ✅ 켜짐 56 · ⬜ 꺼짐 74
+- 🔒 고정 27 · ✅ 켜짐 46 · ⬜ 꺼짐 87
 - 기본과 비교: 새로 켜짐 28개 (룰 1 · 에이전트 1 · 스킬 26)
 
 <details><summary>새로 켜지는 항목 28개</summary>
@@ -699,22 +718,23 @@
 
 </details>
 
-<details><summary>✅ 켜짐 56개 (🔒 고정 제외)</summary>
+<details><summary>✅ 켜짐 46개 (🔒 고정 제외)</summary>
 
 - **설정** (2): superpowers 플러그인 · 상태줄 `statusline.sh`
-- **훅** (12): adversarial-test-guard · agent-md-guard · branch-protection · codex-review-guard · deliverable-guard · fake-impl-guard · memory-pull · memory-sync · skill-md-guard · staleness-check · tdd-guard · test-fake-guard
-- **룰** (9): adversarial-testing.md · agent-design.md · codex-review.md · commands.md · creation-workflow.md · git.md · memory-sync.md · readme-update.md · typescript.md
-- **커맨드** (5): agent-status · codex-review · commit · create-pr · fix-pr
-- **에이전트** (2): nutrition-prompt-tester · skill-tester
+- **훅** (8): adversarial-test-guard · branch-protection · clean-review-guard · fake-impl-guard · memory-pull · memory-sync · tdd-guard · test-fake-guard
+- **룰** (5): adversarial-testing.md · clean-review.md · git.md · memory-sync.md · typescript.md
+- **커맨드** (3): commit · create-pr · fix-pr
+- **에이전트** (2): clean-reviewer · nutrition-prompt-tester
 - **스킬** (26): ag-grid · build-perf-benchmarking · code-convention · frontend-domain-structure · github-actions-visual-regression · korean-food-nutrition · lighthouse-ci-setup · meal-recommendation-prompt · monorepo-turborepo · mui-v5 · mui-v9 · next-intl-i18n · nextjs · nutrition-analysis-prompt · nutrition-basics · pwa-push-notifications · srs-spaced-repetition · storybook · tanstack-query · testing · typescript-v5 · vite-advanced-splitting · voice-input-ui · wcag-2.2-checklist · web-vitals-rum-comparison · webpack-vite-config-mapping
 
 </details>
 
-<details><summary>⬜ 꺼짐 74개</summary>
+<details><summary>⬜ 꺼짐 87개</summary>
 
-- **룰** (2): java.md · rust.md
-- **커맨드** (1): spec-extract
-- **에이전트** (7): dream-interpretation-prompt-tester · fortune-interpretation-prompt-tester · legacy-spec-extractor · migration-parity-tester · nexacro-screen-analyzer · nexacro-screen-converter · spec-reviewer
+- **훅** (5): agent-md-guard · codex-review-guard · deliverable-guard · skill-md-guard · staleness-check
+- **룰** (7): agent-design.md · codex-review.md · commands.md · creation-workflow.md · java.md · readme-update.md · rust.md
+- **커맨드** (3): agent-status · codex-review · spec-extract
+- **에이전트** (8): dream-interpretation-prompt-tester · fortune-interpretation-prompt-tester · legacy-spec-extractor · migration-parity-tester · nexacro-screen-analyzer · nexacro-screen-converter · skill-tester · spec-reviewer
 - **스킬** (64): attachment-theory-basics · aws-sdk-v1-s3-rekognition · better-auth · bot-management-seo · bouncycastle-crypto · characterization-testing · claude-code-headless · claude-code-hook-authoring · content-eeat-quality · crisis-intervention-resources-korea · dream-content-privacy-ethics · dream-content-research · dream-interpretation-prompt-engineering · dream-privacy-consent-ui · dream-psychology-jung-freud · dream-safety-classifier-prompts · drizzle-neon-postgres · ehcache-2-legacy · fortune-interpretation-prompt-engineering · geo-ai-discoverability · hikaricp-tuning-oracle-mysql · ibatis-to-mybatis-migration · incremental-refactoring · jackson-time-migration · jasypt-encrypted-config · kakao-share-optimization · korean-dream-interpretation-tradition · korean-lunar-calendar-manseryeok · korean-saju-tradition · module-boundaries · mybatis-mapper-patterns · n8n-error-handling · n8n-llm-integration · n8n-self-hosting · n8n-webhook-patterns · naver-seo-specifics · nexacro-17-xfdl-anatomy · nexacro-strangler-coexistence · nexacro-to-react-mapping · nexacro-xapi-server · prisma-orm · python-korean-nlp-konlpy · python-langchain-current · python-llamaindex · react-spec-extraction · redis-redisson-4 · redis-redisson-legacy · saju-chart-visualization · search-console-webmaster · seo-vite-spa · spec-extraction-method · spring-boot-2-to-3-migration · spring-boot-gradle-setup · spring-multi-datasource-oracle-mysql · spring-mybatis-spec-extraction · spring-security-5-jwt-jjwt10 · spring-security-6-jwt-jjwt12 · swagger-springfox-2 · vercel-sandbox · vercel-workflow · webflux-webclient-in-sync-app · xapi-to-rest-migration · xss-lucy-jsoup · zod-schema-validation
 
 </details>
@@ -722,7 +742,7 @@
 ### `nexacro` — 넥사크로 마이그레이션 (java-legacy·nextjs 와 조합)
 
 - 켜는 블록: `dev-common` · `nexacro`
-- 🔒 고정 27 · ✅ 켜짐 39 · ⬜ 꺼짐 91
+- 🔒 고정 27 · ✅ 켜짐 29 · ⬜ 꺼짐 104
 - 기본과 비교: 새로 켜짐 12개 (에이전트 3 · 스킬 9) · 충돌로 꺼짐 1개: tdd-guard
 
 <details><summary>새로 켜지는 항목 12개</summary>
@@ -732,23 +752,23 @@
 
 </details>
 
-<details><summary>✅ 켜짐 39개 (🔒 고정 제외)</summary>
+<details><summary>✅ 켜짐 29개 (🔒 고정 제외)</summary>
 
 - **설정** (2): superpowers 플러그인 · 상태줄 `statusline.sh`
-- **훅** (11): adversarial-test-guard · agent-md-guard · branch-protection · codex-review-guard · deliverable-guard · fake-impl-guard · memory-pull · memory-sync · skill-md-guard · staleness-check · test-fake-guard
-- **룰** (8): adversarial-testing.md · agent-design.md · codex-review.md · commands.md · creation-workflow.md · git.md · memory-sync.md · readme-update.md
-- **커맨드** (5): agent-status · codex-review · commit · create-pr · fix-pr
-- **에이전트** (4): migration-parity-tester · nexacro-screen-analyzer · nexacro-screen-converter · skill-tester
+- **훅** (7): adversarial-test-guard · branch-protection · clean-review-guard · fake-impl-guard · memory-pull · memory-sync · test-fake-guard
+- **룰** (4): adversarial-testing.md · clean-review.md · git.md · memory-sync.md
+- **커맨드** (3): commit · create-pr · fix-pr
+- **에이전트** (4): clean-reviewer · migration-parity-tester · nexacro-screen-analyzer · nexacro-screen-converter
 - **스킬** (9): claude-code-hook-authoring · ibatis-to-mybatis-migration · incremental-refactoring · module-boundaries · nexacro-17-xfdl-anatomy · nexacro-strangler-coexistence · nexacro-to-react-mapping · nexacro-xapi-server · xapi-to-rest-migration
 
 </details>
 
-<details><summary>⬜ 꺼짐 91개</summary>
+<details><summary>⬜ 꺼짐 104개</summary>
 
-- **훅** (1): tdd-guard
-- **룰** (3): java.md · rust.md · typescript.md
-- **커맨드** (1): spec-extract
-- **에이전트** (5): dream-interpretation-prompt-tester · fortune-interpretation-prompt-tester · legacy-spec-extractor · nutrition-prompt-tester · spec-reviewer
+- **훅** (6): agent-md-guard · codex-review-guard · deliverable-guard · skill-md-guard · staleness-check · tdd-guard
+- **룰** (8): agent-design.md · codex-review.md · commands.md · creation-workflow.md · java.md · readme-update.md · rust.md · typescript.md
+- **커맨드** (3): agent-status · codex-review · spec-extract
+- **에이전트** (6): dream-interpretation-prompt-tester · fortune-interpretation-prompt-tester · legacy-spec-extractor · nutrition-prompt-tester · skill-tester · spec-reviewer
 - **스킬** (81): ag-grid · attachment-theory-basics · aws-sdk-v1-s3-rekognition · better-auth · bot-management-seo · bouncycastle-crypto · build-perf-benchmarking · characterization-testing · claude-code-headless · code-convention · content-eeat-quality · crisis-intervention-resources-korea · dream-content-privacy-ethics · dream-content-research · dream-interpretation-prompt-engineering · dream-privacy-consent-ui · dream-psychology-jung-freud · dream-safety-classifier-prompts · drizzle-neon-postgres · ehcache-2-legacy · fortune-interpretation-prompt-engineering · frontend-domain-structure · geo-ai-discoverability · github-actions-visual-regression · hikaricp-tuning-oracle-mysql · jackson-time-migration · jasypt-encrypted-config · kakao-share-optimization · korean-dream-interpretation-tradition · korean-food-nutrition · korean-lunar-calendar-manseryeok · korean-saju-tradition · lighthouse-ci-setup · meal-recommendation-prompt · monorepo-turborepo · mui-v5 · mui-v9 · mybatis-mapper-patterns · n8n-error-handling · n8n-llm-integration · n8n-self-hosting · n8n-webhook-patterns · naver-seo-specifics · next-intl-i18n · nextjs · nutrition-analysis-prompt · nutrition-basics · prisma-orm · pwa-push-notifications · python-korean-nlp-konlpy · python-langchain-current · python-llamaindex · react-spec-extraction · redis-redisson-4 · redis-redisson-legacy · saju-chart-visualization · search-console-webmaster · seo-vite-spa · spec-extraction-method · spring-boot-2-to-3-migration · spring-boot-gradle-setup · spring-multi-datasource-oracle-mysql · spring-mybatis-spec-extraction · spring-security-5-jwt-jjwt10 · spring-security-6-jwt-jjwt12 · srs-spaced-repetition · storybook · swagger-springfox-2 · tanstack-query · testing · typescript-v5 · vercel-sandbox · vercel-workflow · vite-advanced-splitting · voice-input-ui · wcag-2.2-checklist · web-vitals-rum-comparison · webflux-webclient-in-sync-app · webpack-vite-config-mapping · xss-lucy-jsoup · zod-schema-validation
 
 </details>
@@ -757,7 +777,7 @@
 
 - 애드온 — 다른 프리셋에 더해 씀
 - 켜는 블록: `seo-geo`
-- 🔒 고정 27 · ✅ 켜짐 35 · ⬜ 꺼짐 95
+- 🔒 고정 27 · ✅ 켜짐 25 · ⬜ 꺼짐 108
 - 기본과 비교: 새로 켜짐 7개 (스킬 7)
 
 <details><summary>새로 켜지는 항목 7개</summary>
@@ -766,22 +786,23 @@
 
 </details>
 
-<details><summary>✅ 켜짐 35개 (🔒 고정 제외)</summary>
+<details><summary>✅ 켜짐 25개 (🔒 고정 제외)</summary>
 
 - **설정** (2): superpowers 플러그인 · 상태줄 `statusline.sh`
-- **훅** (12): adversarial-test-guard · agent-md-guard · branch-protection · codex-review-guard · deliverable-guard · fake-impl-guard · memory-pull · memory-sync · skill-md-guard · staleness-check · tdd-guard · test-fake-guard
-- **룰** (8): adversarial-testing.md · agent-design.md · codex-review.md · commands.md · creation-workflow.md · git.md · memory-sync.md · readme-update.md
-- **커맨드** (5): agent-status · codex-review · commit · create-pr · fix-pr
-- **에이전트** (1): skill-tester
+- **훅** (8): adversarial-test-guard · branch-protection · clean-review-guard · fake-impl-guard · memory-pull · memory-sync · tdd-guard · test-fake-guard
+- **룰** (4): adversarial-testing.md · clean-review.md · git.md · memory-sync.md
+- **커맨드** (3): commit · create-pr · fix-pr
+- **에이전트** (1): clean-reviewer
 - **스킬** (7): bot-management-seo · content-eeat-quality · geo-ai-discoverability · kakao-share-optimization · naver-seo-specifics · search-console-webmaster · seo-vite-spa
 
 </details>
 
-<details><summary>⬜ 꺼짐 95개</summary>
+<details><summary>⬜ 꺼짐 108개</summary>
 
-- **룰** (3): java.md · rust.md · typescript.md
-- **커맨드** (1): spec-extract
-- **에이전트** (8): dream-interpretation-prompt-tester · fortune-interpretation-prompt-tester · legacy-spec-extractor · migration-parity-tester · nexacro-screen-analyzer · nexacro-screen-converter · nutrition-prompt-tester · spec-reviewer
+- **훅** (5): agent-md-guard · codex-review-guard · deliverable-guard · skill-md-guard · staleness-check
+- **룰** (8): agent-design.md · codex-review.md · commands.md · creation-workflow.md · java.md · readme-update.md · rust.md · typescript.md
+- **커맨드** (3): agent-status · codex-review · spec-extract
+- **에이전트** (9): dream-interpretation-prompt-tester · fortune-interpretation-prompt-tester · legacy-spec-extractor · migration-parity-tester · nexacro-screen-analyzer · nexacro-screen-converter · nutrition-prompt-tester · skill-tester · spec-reviewer
 - **스킬** (83): ag-grid · attachment-theory-basics · aws-sdk-v1-s3-rekognition · better-auth · bouncycastle-crypto · build-perf-benchmarking · characterization-testing · claude-code-headless · claude-code-hook-authoring · code-convention · crisis-intervention-resources-korea · dream-content-privacy-ethics · dream-content-research · dream-interpretation-prompt-engineering · dream-privacy-consent-ui · dream-psychology-jung-freud · dream-safety-classifier-prompts · drizzle-neon-postgres · ehcache-2-legacy · fortune-interpretation-prompt-engineering · frontend-domain-structure · github-actions-visual-regression · hikaricp-tuning-oracle-mysql · ibatis-to-mybatis-migration · incremental-refactoring · jackson-time-migration · jasypt-encrypted-config · korean-dream-interpretation-tradition · korean-food-nutrition · korean-lunar-calendar-manseryeok · korean-saju-tradition · lighthouse-ci-setup · meal-recommendation-prompt · module-boundaries · monorepo-turborepo · mui-v5 · mui-v9 · mybatis-mapper-patterns · n8n-error-handling · n8n-llm-integration · n8n-self-hosting · n8n-webhook-patterns · nexacro-17-xfdl-anatomy · nexacro-strangler-coexistence · nexacro-to-react-mapping · nexacro-xapi-server · next-intl-i18n · nextjs · nutrition-analysis-prompt · nutrition-basics · prisma-orm · pwa-push-notifications · python-korean-nlp-konlpy · python-langchain-current · python-llamaindex · react-spec-extraction · redis-redisson-4 · redis-redisson-legacy · saju-chart-visualization · spec-extraction-method · spring-boot-2-to-3-migration · spring-boot-gradle-setup · spring-multi-datasource-oracle-mysql · spring-mybatis-spec-extraction · spring-security-5-jwt-jjwt10 · spring-security-6-jwt-jjwt12 · srs-spaced-repetition · storybook · swagger-springfox-2 · tanstack-query · testing · typescript-v5 · vercel-sandbox · vercel-workflow · vite-advanced-splitting · voice-input-ui · wcag-2.2-checklist · web-vitals-rum-comparison · webflux-webclient-in-sync-app · webpack-vite-config-mapping · xapi-to-rest-migration · xss-lucy-jsoup · zod-schema-validation
 
 </details>
@@ -790,7 +811,7 @@
 
 - 애드온 — 다른 프리셋에 더해 씀
 - 켜는 블록: `spec-extraction`
-- 🔒 고정 27 · ✅ 켜짐 36 · ⬜ 꺼짐 94
+- 🔒 고정 27 · ✅ 켜짐 26 · ⬜ 꺼짐 107
 - 기본과 비교: 새로 켜짐 8개 (커맨드 1 · 에이전트 2 · 스킬 5)
 
 <details><summary>새로 켜지는 항목 8개</summary>
@@ -801,21 +822,23 @@
 
 </details>
 
-<details><summary>✅ 켜짐 36개 (🔒 고정 제외)</summary>
+<details><summary>✅ 켜짐 26개 (🔒 고정 제외)</summary>
 
 - **설정** (2): superpowers 플러그인 · 상태줄 `statusline.sh`
-- **훅** (12): adversarial-test-guard · agent-md-guard · branch-protection · codex-review-guard · deliverable-guard · fake-impl-guard · memory-pull · memory-sync · skill-md-guard · staleness-check · tdd-guard · test-fake-guard
-- **룰** (8): adversarial-testing.md · agent-design.md · codex-review.md · commands.md · creation-workflow.md · git.md · memory-sync.md · readme-update.md
-- **커맨드** (6): agent-status · codex-review · commit · create-pr · fix-pr · spec-extract
-- **에이전트** (3): legacy-spec-extractor · skill-tester · spec-reviewer
+- **훅** (8): adversarial-test-guard · branch-protection · clean-review-guard · fake-impl-guard · memory-pull · memory-sync · tdd-guard · test-fake-guard
+- **룰** (4): adversarial-testing.md · clean-review.md · git.md · memory-sync.md
+- **커맨드** (4): commit · create-pr · fix-pr · spec-extract
+- **에이전트** (3): clean-reviewer · legacy-spec-extractor · spec-reviewer
 - **스킬** (5): characterization-testing · nexacro-17-xfdl-anatomy · react-spec-extraction · spec-extraction-method · spring-mybatis-spec-extraction
 
 </details>
 
-<details><summary>⬜ 꺼짐 94개</summary>
+<details><summary>⬜ 꺼짐 107개</summary>
 
-- **룰** (3): java.md · rust.md · typescript.md
-- **에이전트** (6): dream-interpretation-prompt-tester · fortune-interpretation-prompt-tester · migration-parity-tester · nexacro-screen-analyzer · nexacro-screen-converter · nutrition-prompt-tester
+- **훅** (5): agent-md-guard · codex-review-guard · deliverable-guard · skill-md-guard · staleness-check
+- **룰** (8): agent-design.md · codex-review.md · commands.md · creation-workflow.md · java.md · readme-update.md · rust.md · typescript.md
+- **커맨드** (2): agent-status · codex-review
+- **에이전트** (7): dream-interpretation-prompt-tester · fortune-interpretation-prompt-tester · migration-parity-tester · nexacro-screen-analyzer · nexacro-screen-converter · nutrition-prompt-tester · skill-tester
 - **스킬** (85): ag-grid · attachment-theory-basics · aws-sdk-v1-s3-rekognition · better-auth · bot-management-seo · bouncycastle-crypto · build-perf-benchmarking · claude-code-headless · claude-code-hook-authoring · code-convention · content-eeat-quality · crisis-intervention-resources-korea · dream-content-privacy-ethics · dream-content-research · dream-interpretation-prompt-engineering · dream-privacy-consent-ui · dream-psychology-jung-freud · dream-safety-classifier-prompts · drizzle-neon-postgres · ehcache-2-legacy · fortune-interpretation-prompt-engineering · frontend-domain-structure · geo-ai-discoverability · github-actions-visual-regression · hikaricp-tuning-oracle-mysql · ibatis-to-mybatis-migration · incremental-refactoring · jackson-time-migration · jasypt-encrypted-config · kakao-share-optimization · korean-dream-interpretation-tradition · korean-food-nutrition · korean-lunar-calendar-manseryeok · korean-saju-tradition · lighthouse-ci-setup · meal-recommendation-prompt · module-boundaries · monorepo-turborepo · mui-v5 · mui-v9 · mybatis-mapper-patterns · n8n-error-handling · n8n-llm-integration · n8n-self-hosting · n8n-webhook-patterns · naver-seo-specifics · nexacro-strangler-coexistence · nexacro-to-react-mapping · nexacro-xapi-server · next-intl-i18n · nextjs · nutrition-analysis-prompt · nutrition-basics · prisma-orm · pwa-push-notifications · python-korean-nlp-konlpy · python-langchain-current · python-llamaindex · redis-redisson-4 · redis-redisson-legacy · saju-chart-visualization · search-console-webmaster · seo-vite-spa · spring-boot-2-to-3-migration · spring-boot-gradle-setup · spring-multi-datasource-oracle-mysql · spring-security-5-jwt-jjwt10 · spring-security-6-jwt-jjwt12 · srs-spaced-repetition · storybook · swagger-springfox-2 · tanstack-query · testing · typescript-v5 · vercel-sandbox · vercel-workflow · vite-advanced-splitting · voice-input-ui · wcag-2.2-checklist · web-vitals-rum-comparison · webflux-webclient-in-sync-app · webpack-vite-config-mapping · xapi-to-rest-migration · xss-lucy-jsoup · zod-schema-validation
 
 </details>
@@ -824,7 +847,7 @@
 
 - 애드온 — 다른 프리셋에 더해 씀
 - 켜는 블록: `n8n`
-- 🔒 고정 27 · ✅ 켜짐 32 · ⬜ 꺼짐 98
+- 🔒 고정 27 · ✅ 켜짐 22 · ⬜ 꺼짐 111
 - 기본과 비교: 새로 켜짐 4개 (스킬 4)
 
 <details><summary>새로 켜지는 항목 4개</summary>
@@ -833,22 +856,23 @@
 
 </details>
 
-<details><summary>✅ 켜짐 32개 (🔒 고정 제외)</summary>
+<details><summary>✅ 켜짐 22개 (🔒 고정 제외)</summary>
 
 - **설정** (2): superpowers 플러그인 · 상태줄 `statusline.sh`
-- **훅** (12): adversarial-test-guard · agent-md-guard · branch-protection · codex-review-guard · deliverable-guard · fake-impl-guard · memory-pull · memory-sync · skill-md-guard · staleness-check · tdd-guard · test-fake-guard
-- **룰** (8): adversarial-testing.md · agent-design.md · codex-review.md · commands.md · creation-workflow.md · git.md · memory-sync.md · readme-update.md
-- **커맨드** (5): agent-status · codex-review · commit · create-pr · fix-pr
-- **에이전트** (1): skill-tester
+- **훅** (8): adversarial-test-guard · branch-protection · clean-review-guard · fake-impl-guard · memory-pull · memory-sync · tdd-guard · test-fake-guard
+- **룰** (4): adversarial-testing.md · clean-review.md · git.md · memory-sync.md
+- **커맨드** (3): commit · create-pr · fix-pr
+- **에이전트** (1): clean-reviewer
 - **스킬** (4): n8n-error-handling · n8n-llm-integration · n8n-self-hosting · n8n-webhook-patterns
 
 </details>
 
-<details><summary>⬜ 꺼짐 98개</summary>
+<details><summary>⬜ 꺼짐 111개</summary>
 
-- **룰** (3): java.md · rust.md · typescript.md
-- **커맨드** (1): spec-extract
-- **에이전트** (8): dream-interpretation-prompt-tester · fortune-interpretation-prompt-tester · legacy-spec-extractor · migration-parity-tester · nexacro-screen-analyzer · nexacro-screen-converter · nutrition-prompt-tester · spec-reviewer
+- **훅** (5): agent-md-guard · codex-review-guard · deliverable-guard · skill-md-guard · staleness-check
+- **룰** (8): agent-design.md · codex-review.md · commands.md · creation-workflow.md · java.md · readme-update.md · rust.md · typescript.md
+- **커맨드** (3): agent-status · codex-review · spec-extract
+- **에이전트** (9): dream-interpretation-prompt-tester · fortune-interpretation-prompt-tester · legacy-spec-extractor · migration-parity-tester · nexacro-screen-analyzer · nexacro-screen-converter · nutrition-prompt-tester · skill-tester · spec-reviewer
 - **스킬** (86): ag-grid · attachment-theory-basics · aws-sdk-v1-s3-rekognition · better-auth · bot-management-seo · bouncycastle-crypto · build-perf-benchmarking · characterization-testing · claude-code-headless · claude-code-hook-authoring · code-convention · content-eeat-quality · crisis-intervention-resources-korea · dream-content-privacy-ethics · dream-content-research · dream-interpretation-prompt-engineering · dream-privacy-consent-ui · dream-psychology-jung-freud · dream-safety-classifier-prompts · drizzle-neon-postgres · ehcache-2-legacy · fortune-interpretation-prompt-engineering · frontend-domain-structure · geo-ai-discoverability · github-actions-visual-regression · hikaricp-tuning-oracle-mysql · ibatis-to-mybatis-migration · incremental-refactoring · jackson-time-migration · jasypt-encrypted-config · kakao-share-optimization · korean-dream-interpretation-tradition · korean-food-nutrition · korean-lunar-calendar-manseryeok · korean-saju-tradition · lighthouse-ci-setup · meal-recommendation-prompt · module-boundaries · monorepo-turborepo · mui-v5 · mui-v9 · mybatis-mapper-patterns · naver-seo-specifics · nexacro-17-xfdl-anatomy · nexacro-strangler-coexistence · nexacro-to-react-mapping · nexacro-xapi-server · next-intl-i18n · nextjs · nutrition-analysis-prompt · nutrition-basics · prisma-orm · pwa-push-notifications · python-korean-nlp-konlpy · python-langchain-current · python-llamaindex · react-spec-extraction · redis-redisson-4 · redis-redisson-legacy · saju-chart-visualization · search-console-webmaster · seo-vite-spa · spec-extraction-method · spring-boot-2-to-3-migration · spring-boot-gradle-setup · spring-multi-datasource-oracle-mysql · spring-mybatis-spec-extraction · spring-security-5-jwt-jjwt10 · spring-security-6-jwt-jjwt12 · srs-spaced-repetition · storybook · swagger-springfox-2 · tanstack-query · testing · typescript-v5 · vercel-sandbox · vercel-workflow · vite-advanced-splitting · voice-input-ui · wcag-2.2-checklist · web-vitals-rum-comparison · webflux-webclient-in-sync-app · webpack-vite-config-mapping · xapi-to-rest-migration · xss-lucy-jsoup · zod-schema-validation
 
 </details>
