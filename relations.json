@@ -493,6 +493,7 @@
     "command:commit>hook:deliverable-guard": "uses",
     "command:commit>hook:memory-sync": "uses",
     "command:commit>hook:session-export": "uses",
+    "command:commit>hook:task-confirm-guard": "mention",
     "command:commit>rule:memory-sync.md": "uses",
     "command:create-pr>hook:deliverable-guard": "uses",
     "command:create-pr>hook:memory-sync": "uses",

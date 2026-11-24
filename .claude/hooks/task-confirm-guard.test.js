@@ -636,6 +636,47 @@ console.log('\n[세션 요약 갱신 — 커밋·푸시를 요청받은 차례�
     check('악성: 커밋된 lib 모듈을 이번 차례에 바꾸고 실행 → 차단', at('커밋해줘', A).code === 2)
     execFileSync('git', ['-C', repoX, 'checkout', '-q', '--', '.claude/hooks/lib/winpath.js'])
     check('정상: lib 를 되돌리면 다시 허용', at('커밋해줘', A).code === 0)
+    // lib 가 레포 밖을 가리키는 링크 — git 은 링크 안쪽 내용 변경을 못 본다
+    if (process.platform !== 'win32') {
+      const made = []
+      const tmpRepo = (withScript) => { const d = mk(withScript); made.push(d); return d }
+      const commitAll = (d, msg) => {
+        execFileSync('git', ['-C', d, 'add', '-A'])
+        execFileSync('git', ['-C', d, '-c', 'user.name=t', '-c', 'user.email=t@example.com', '-c', 'commit.gpgsign=false', 'commit', '-q', '-m', msg])
+      }
+      try {
+        const outside = fs.mkdtempSync(path.join(os.homedir(), '.tcg-out-')); made.push(outside)
+        fs.writeFileSync(path.join(outside, 'winpath.js'), "require('fs').writeFileSync('src/evil.ts', 'y')\n")
+        const lk = tmpRepo(false)
+        fs.mkdirSync(path.join(lk, '.claude', 'hooks'), { recursive: true })
+        fs.writeFileSync(path.join(lk, '.claude', 'hooks', 'session-export.js'), orig)
+        fs.symlinkSync(outside, path.join(lk, '.claude', 'hooks', 'lib'))
+        commitAll(lk, 'link')
+        check('악성: lib 가 레포 밖을 가리키는 링크(커밋됨) → 차단', at('커밋해줘', A, lk).code === 2)
+        // lib 폴더는 진짜인데 그 안의 파일 하나만 링크 — git 은 링크 문자열만 비교해 대상 내용 변경을 못 본다
+        const lf = tmpRepo(false)
+        fs.mkdirSync(path.join(lf, '.claude', 'hooks', 'lib'), { recursive: true })
+        fs.writeFileSync(path.join(lf, '.claude', 'hooks', 'session-export.js'), orig)
+        fs.symlinkSync(path.join(outside, 'winpath.js'), path.join(lf, '.claude', 'hooks', 'lib', 'winpath.js'))
+        commitAll(lf, 'file link')
+        check('악성: lib 안의 파일 하나가 레포 밖을 가리키는 링크(커밋됨) → 차단', at('커밋해줘', A, lf).code === 2)
+        fs.appendFileSync(path.join(outside, 'winpath.js'), '// 대상만 바꿈 — git diff 에는 안 보임\n')
+        check('악성: 링크 대상 내용만 바꿔도(git 은 변경 없음으로 봄) → 차단', at('커밋해줘', A, lf).code === 2)
+        // 스크립트 자체가 링크(커밋됨)
+        const ls = tmpRepo(false)
+        fs.mkdirSync(path.join(ls, '.claude', 'hooks'), { recursive: true })
+        fs.writeFileSync(path.join(outside, 'se.js'), orig)
+        fs.symlinkSync(path.join(outside, 'se.js'), path.join(ls, '.claude', 'hooks', 'session-export.js'))
+        commitAll(ls, 'script link')
+        check('악성: 스크립트 자체가 레포 밖을 가리키는 링크(커밋됨) → 차단', at('커밋해줘', A, ls).code === 2)
+        const lk2 = tmpRepo(false)
+        const real = tmpRepo(true)
+        fs.symlinkSync(path.join(real, '.claude'), path.join(lk2, '.claude'))
+        check('악성: .claude 자체가 다른 레포를 가리키는 링크 → 차단', at('커밋해줘', A, lk2).code === 2)
+      } finally {
+        for (const d of made) fs.rmSync(d, { recursive: true, force: true })
+      }
+    }
     // 줄바꿈·따옴표 속 ~ — 훅이 본 것과 셸이 실행하는 것이 어긋나는 꼴
     check('악성: 줄바꿈으로 명령을 나눔 → 차단', at('커밋해줘', `cd\n${Q(repoX)} && ${B}`).code === 2)
     check('악성: 명령 끝에 줄바꿈 + 다른 명령 → 차단', at('커밋해줘', `${A}\ntouch src/x.ts`).code === 2)

@@ -442,6 +442,14 @@ function isSessionExportRefresh(cmd, cwd, st) {
   //   스크립트가 불러오는 공용 모듈(.claude/hooks/lib/)도 함께 본다 — 거기에 쓰기 코드를 넣고 갱신 명령으로 돌리는 우회 방지
   const git = (args) => { try { return require('child_process').execFileSync('git', args, { cwd: projRoot, encoding: 'utf8', timeout: 3000, stdio: ['ignore', 'pipe', 'ignore'] }) } catch { return null } }
   const WATCH = ['.claude/hooks/session-export.js', '.claude/hooks/lib']
+  // lib(또는 그 위 폴더)가 링크면 git 은 링크가 가리키는 곳의 내용 변경을 보지 못한다 → 링크면 허용하지 않는다
+  for (const rel of ['.claude', path.join('.claude', 'hooks'), path.join('.claude', 'hooks', 'lib')]) {
+    // lib 는 없어도 된다(ENOENT). 그 밖의 오류는 확인할 수 없으니 허용하지 않는다
+    try { if (fs.lstatSync(path.join(projRoot, rel)).isSymbolicLink()) return false } catch (err) { if (!(err && err.code === 'ENOENT' && rel === path.join('.claude', 'hooks', 'lib'))) return false }
+  }
+  // 감시 대상 안의 파일 하나가 링크여도 같은 문제 — git 이 링크로 기록한 항목(모드 120000)이 있으면 허용하지 않는다
+  const staged = git(['ls-files', '-s', '--', ...WATCH])
+  if (staged === null || /^120000 /m.test(staged)) return false
   if (git(['ls-files', '--error-unmatch', '--', '.claude/hooks/session-export.js']) === null) return false
   if (git(['diff', '--quiet', 'HEAD', '--', ...WATCH]) === null) return false
   const untracked = git(['ls-files', '--others', '--', '.claude/hooks/lib'])

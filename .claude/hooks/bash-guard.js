@@ -2501,15 +2501,26 @@ function dirProtectedLabel(abs, ctx) {
   while (stack.length) {
     if (Date.now() > deadline) return SCAN_TIMED_OUT
     const d = stack.pop()
-    let ents
-    try { ents = fs.readdirSync(d, { withFileTypes: true }) } catch { continue }
-    for (const e of ents) {
-      // 개수 상한을 넘어도 "보호 파일 없음"으로 단정하지 않는다 — 시간 상한과 같은 쪽(확인)으로 (2026-11-24 깨끗한 리뷰 지적)
-      if (++n > maxEntries) return SCAN_TIMED_OUT
-      const p = path.join(d, e.name)
-      if (e.isDirectory()) { if (!SCAN_SKIP_DIRS.has(e.name)) stack.push(p); continue }
-      const label = protectedLabel(p, ctx)
-      if (label) return label
+    // 항목을 하나씩 읽는다 — 한 번에 다 읽으면(readdirSync) 파일이 아주 많은 폴더 하나에서는 읽는 도중 상한을 걸 수 없다
+    let dir
+    // 사라진 폴더는 건너뛰고, 그 밖의 오류(권한 등)로 못 읽으면 "없음"으로 단정하지 않고 확인으로 보낸다 (상한 초과와 같은 쪽)
+    const gone = (err) => !!err && (err.code === 'ENOENT' || err.code === 'ENOTDIR')
+    try { dir = fs.opendirSync(d) } catch (err) { if (gone(err)) continue; return SCAN_TIMED_OUT }
+    try {
+      let e
+      while ((e = dir.readSync()) !== null) {
+        // 개수 상한을 넘어도 "보호 파일 없음"으로 단정하지 않는다 — 시간 상한과 같은 쪽(확인)으로 (2026-11-24 깨끗한 리뷰 지적)
+        if (++n > maxEntries) return SCAN_TIMED_OUT
+        if ((n & 255) === 0 && Date.now() > deadline) return SCAN_TIMED_OUT
+        const p = path.join(d, e.name)
+        if (e.isDirectory()) { if (!SCAN_SKIP_DIRS.has(e.name)) stack.push(p); continue }
+        const label = protectedLabel(p, ctx)
+        if (label) return label
+      }
+    } catch (err) {
+      if (!gone(err)) return SCAN_TIMED_OUT
+    } finally {
+      try { dir.closeSync() } catch { /* 이미 닫힘 */ }
     }
   }
   return null
@@ -2561,7 +2572,7 @@ function classifyProtectedWrite(inv, ctx, add) {
       const abs = protectedAbsOf(t, ctx)
       const label = abs && dirProtectedLabel(abs, ctx)
       // 시간 안에 다 못 훑음 — 보호 파일이 없다고 단정할 수 없으니 통과시키지 않고 사용자에게 묻는다 (느린 디스크에서 판정이 갈리지 않게)
-      if (label === SCAN_TIMED_OUT) { add('ask', `${cleanValue(t.value)} 폴더가 커서(5만 항목 또는 1.5초 넘음) 안에 보호 파일(SKILL.md·verification.md·memory)이 있는지 다 확인하지 못했습니다(${nm}). 사용자 확인이 필요합니다.`); continue }
+      if (label === SCAN_TIMED_OUT) { add('ask', `${cleanValue(t.value)} 폴더가 크거나(5만 항목·1.5초 넘음) 읽을 수 없는 곳이 있어 안에 보호 파일(SKILL.md·verification.md·memory)이 있는지 다 확인하지 못했습니다(${nm}). 사용자 확인이 필요합니다.`); continue }
       if (label) { add('deny', `${cleanValue(t.value)} 폴더 안에 ${label} 이(가) 있어 Bash 로 옮기거나 지울 수 없습니다(${nm}). 보호 파일은 Write/Edit 도구로만 고치고, 폴더째 정리가 꼭 필요하면 사용자에게 직접 실행해 달라고 하세요.`); return }
     }
   }

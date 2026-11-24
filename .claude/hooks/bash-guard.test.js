@@ -1836,6 +1836,26 @@ if (process.platform !== 'win32') {
     delete process.env.BASH_GUARD_TEST_SCAN_MS
     delete process.env.BASH_GUARD_TEST_SCAN_MAX
   }
+  // 폴더를 항목 하나씩 읽는 방식(2026-11-24) — 파일이 많은 폴더, 읽을 수 없는 폴더, 깊은 곳
+  {
+    const many = path.join(proj, 'many')
+    fs.mkdirSync(path.join(many, 'deep', 'er'), { recursive: true })
+    for (let i = 0; i < 700; i++) fs.writeFileSync(path.join(many, `f${i}.txt`), '')
+    expPre('파일 700개짜리 폴더(보호 파일 없음) rm -rf → 통과', `${RMRF}many`, 'allow')
+    fs.writeFileSync(path.join(many, 'deep', 'er', 'SKILL.md'), 'x')
+    expPre('파일 700개 뒤 깊은 곳의 SKILL.md 도 찾아 거부', `${RMRF}many`, 'deny')
+    expPre('mv 도 같은 폴더를 거부', 'mv many /tmp/', 'deny')
+    fs.rmSync(path.join(many, 'deep', 'er', 'SKILL.md'))
+    if (process.platform !== 'win32' && process.getuid && process.getuid() !== 0) {
+      fs.chmodSync(path.join(many, 'deep'), 0o000)
+      expAt('이상: 읽을 수 없는 하위 폴더가 있으면 통과가 아니라 확인 (없다고 단정하지 않음)', `${RMRF}many`, 'ask')
+      fs.chmodSync(path.join(many, 'deep'), 0o755)
+    }
+    process.env.BASH_GUARD_TEST_SCAN_MAX = '300'
+    expAt('파일 700개 폴더 + 개수 상한 300 → 읽는 도중 멈추고 확인', `${RMRF}many`, 'ask')
+    delete process.env.BASH_GUARD_TEST_SCAN_MAX
+    fs.rmSync(many, { recursive: true, force: true })
+  }
   expPre('위험 대상과 보호 폴더가 섞여도 거부', `${RMRF}docs/skills /`, 'deny')
   expPre('위험 대상이 앞에 와도 뒤 보호 폴더는 그대로 훑어 거부', `${RMRF}/usr docs/skills`, 'deny')
   expPre('위험 대상 + 보호 파일 없는 폴더도 거부(위험 대상 때문에)', `${RMRF}/usr plain`, 'deny')

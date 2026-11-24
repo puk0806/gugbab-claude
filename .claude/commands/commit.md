@@ -10,6 +10,8 @@
 4. 레포 `memory/` ↔ 전역 `~/.claude/projects/<해시>/memory/` 미러 일치 확인 (`diff -rq`)
 5. memory 변경이 있으면 `[memory]` 커밋으로, exports 변경이 있으면 `[export]` 커밋으로 이번 배치에 포함
 
+> **순서 예외**: 이번 작업에서 `.claude/hooks/session-export.js` 나 `.claude/hooks/lib/` 를 고쳤으면 3번(세션 요약 최신화)은 **코드 커밋 뒤에** 실행한다 — 그 파일들이 커밋된 내용과 다르면 task-confirm-guard 가 갱신 명령을 승인 없이 통과시키지 않는다. 순서: 코드·문서·memory 커밋 → 3번 → `[export]` 커밋 → push.
+
 > **강제됨**: memory/·exports/에 미커밋 변경이 남은 채 `git push`·`gh pr create`를 실행하면 deliverable-guard 훅이 차단한다.
 
 ## 커밋 규칙
