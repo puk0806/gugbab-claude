@@ -412,9 +412,13 @@ const EXPORT_REFRESH_RE = /^(?:cd\s+("[^"$`\\]+"|[\w.\/~-]+)\s*&&\s*)?(R="\$\(gi
 function isSessionExportRefresh(cmd, cwd, st) {
   const v = st && st.vcs
   if (!v || !(v.commit || v.push || v.pr || v.merge)) return false
-  const m = EXPORT_REFRESH_RE.exec(String(cmd).trim())
+  const text = String(cmd).trim()
+  // 줄바꿈이 끼면 셸은 여러 명령으로 실행한다 — 한 줄 명령만 인정
+  if (/[\r\n]/.test(text)) return false
+  const m = EXPORT_REFRESH_RE.exec(text)
   if (!m) return false
-  const unq = (s) => s.replace(/^"|"$/g, '').replace(/^~(?=\/|$)/, os.homedir())
+  // 셸은 따옴표 안의 ~ 를 풀지 않는다 — 따옴표 없는 값에서만 홈으로 푼다 (훅이 본 경로와 실제 경로가 어긋나지 않게)
+  const unq = (s) => (/^".*"$/.test(s) ? s.slice(1, -1) : s.replace(/^~(?=\/|$)/, os.homedir()))
   const base = cwd || process.env.CLAUDE_PROJECT_DIR || process.cwd()
   const runDir = m[1] ? path.resolve(base, unq(m[1])) : base
   const usesR = !!m[2]
@@ -427,8 +431,21 @@ function isSessionExportRefresh(cmd, cwd, st) {
   const projRoot = gitRootOf(base)
   if (!projRoot || !sameReal(root, projRoot)) return false
   if (m[3] !== '"$R"' && !sameReal(path.resolve(runDir, unq(m[3])), projRoot)) return false
-  const script = path.join(root, '.claude', 'hooks', 'session-export.js')
-  try { const s = fs.lstatSync(script); return s.isFile() && !s.isSymbolicLink() } catch { return false }
+  // 셸이 실제로 실행할 파일 — 상대 경로 꼴은 실행 폴더(runDir) 기준이다. 하위 폴더에서 돌리면 그쪽의 같은 이름 파일이 실행되므로
+  // 프로젝트 최상위의 스크립트와 같은 파일인지 확인한다 (2026-11-24 깨끗한 리뷰 지적)
+  const REL = path.join('.claude', 'hooks', 'session-export.js')
+  const script = path.join(projRoot, REL)
+  const executed = m[4].startsWith('"$R') ? path.join(root, REL) : path.join(runDir, REL)
+  try { const s = fs.lstatSync(executed); if (!s.isFile() || s.isSymbolicLink()) return false } catch { return false }
+  if (!sameReal(executed, script)) return false
+  // 커밋된 내용 그대로일 때만 — 이번 차례에 바뀌었거나 git 이 모르는 스크립트는 평소 판정으로
+  //   스크립트가 불러오는 공용 모듈(.claude/hooks/lib/)도 함께 본다 — 거기에 쓰기 코드를 넣고 갱신 명령으로 돌리는 우회 방지
+  const git = (args) => { try { return require('child_process').execFileSync('git', args, { cwd: projRoot, encoding: 'utf8', timeout: 3000, stdio: ['ignore', 'pipe', 'ignore'] }) } catch { return null } }
+  const WATCH = ['.claude/hooks/session-export.js', '.claude/hooks/lib']
+  if (git(['ls-files', '--error-unmatch', '--', '.claude/hooks/session-export.js']) === null) return false
+  if (git(['diff', '--quiet', 'HEAD', '--', ...WATCH]) === null) return false
+  const untracked = git(['ls-files', '--others', '--', '.claude/hooks/lib'])
+  return untracked !== null && untracked.trim() === ''
 }
 function gitRootOf(dir) {
   try { return require('child_process').execFileSync('git', ['rev-parse', '--show-toplevel'], { cwd: dir, encoding: 'utf8', timeout: 3000, stdio: ['ignore', 'pipe', 'ignore'] }).trim() } catch { return null }

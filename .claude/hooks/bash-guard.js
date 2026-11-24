@@ -2497,6 +2497,7 @@ function dirProtectedLabel(abs, ctx) {
   // 상한은 훅 실행 한 번 전체가 함께 쓴다 — 큰 폴더를 여러 개 준 명령(rm -rf a b c …)이 1.5초 × N 을 쓰지 못하게
   if (!_scanDeadline) _scanDeadline = Date.now() + scanBudgetMs()
   const deadline = _scanDeadline
+  const maxEntries = scanMaxEntries()
   while (stack.length) {
     if (Date.now() > deadline) return SCAN_TIMED_OUT
     const d = stack.pop()
@@ -2504,7 +2505,7 @@ function dirProtectedLabel(abs, ctx) {
     try { ents = fs.readdirSync(d, { withFileTypes: true }) } catch { continue }
     for (const e of ents) {
       // 개수 상한을 넘어도 "보호 파일 없음"으로 단정하지 않는다 — 시간 상한과 같은 쪽(확인)으로 (2026-11-24 깨끗한 리뷰 지적)
-      if (++n > scanMaxEntries()) return SCAN_TIMED_OUT
+      if (++n > maxEntries) return SCAN_TIMED_OUT
       const p = path.join(d, e.name)
       if (e.isDirectory()) { if (!SCAN_SKIP_DIRS.has(e.name)) stack.push(p); continue }
       const label = protectedLabel(p, ctx)
