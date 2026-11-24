@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: fcd01deb-5e2e-4ed8-8072-cbe66cb8d86f
-  modified: 2026-11-24T02:25:24.229Z
+  modified: 2026-11-24T06:07:01.441Z
 ---
 
 v1.1.6 브랜치 `feat/release-notes-2026-11-17` 에 담은 것 (2026-11-17~23, 2026-11-23 커밋·푸시).
@@ -26,4 +26,5 @@ v1.1.6 브랜치 `feat/release-notes-2026-11-17` 에 담은 것 (2026-11-17~23, 
 - 미결정: 리뷰어 성능 비교(과거 Fix 커밋으로 문제 세트) — 사용자가 "앞 작업 다 끝나고" 하기로 함.
 - 다른 세션 보고 7건 중 이 레포에도 해당하는 4건(메모리 미러 Edit 차단, `node -e` 안 SKILL.md 오탐, stash 중복 알림 = stash 차단으로 해소, `~/gugbab` 읽기 = 이미 자동 허용)은 끝. 다른 프로젝트 전용 3건(옛 `.claude` 정리 명령 없음, acceptEdits 풀림, 래퍼 모드 룰 경로)은 사용자 지시("다른 프로젝트 신경쓰지 말고")로 다루지 않음.
 - 2026-11-24 윈도우 CI 수정: 지우는 폴더 안 보호 파일 훑기에 1.5초 상한(훅 실행 전체 공유, 넘으면 확인), `rm` 이 거부하는 대상은 대상별로 훑기 생략. GitHub `main` 에 필수 검사 3개(`unit (macos-latest)`·`unit (windows-latest)`·`version`) 적용, 관리자 우회는 열어 둠. 같은 날 사용자 "싹다 수정해" 로 추가: 5만 항목 넘는 폴더도 통과가 아니라 확인, GitHub 룰셋 `protect-version-tags`(`v*` 태그 삭제·덮어쓰기 금지, 생성 허용, 관리자 우회), `task-confirm-guard` 가 커밋·푸시 요청 차례의 `session-export.js --refresh` 를 막지 않음(정해진 명령 꼴·이 프로젝트 스크립트일 때만).
+- 2026-11-24 마무리: 폴더 훑기를 항목 하나씩 읽게 바꿈(`opendirSync`, 읽을 수 없는 곳은 확인), 세션 요약 갱신 허용은 스크립트·`hooks/lib` 가 커밋된 그대로이고 링크가 아닐 때만 → **훅이나 `lib/` 를 고친 차례에는 코드 커밋 → `--refresh` → `[export]` 커밋 순서**(`commit.md`·`memory-sync.md` 에 순서 예외). 레포 루트 화면 캡처는 `.gitignore`.
 - `wrapper-e2e` 가 사용량 한도 직전에 돌면 시험 세션이 답을 못 받아 3~4건 실패로 보인다 — 코드를 의심하기 전에 한도 풀린 뒤 다시 돌려 본다.
