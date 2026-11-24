@@ -1,7 +1,7 @@
 # Memory Index
 
 ## ★ 하네스 현재 상태
-- [v1.1.6 — 릴리스 노트·확인 창 줄이기·깨끗한 Claude 리뷰 (2026-11-17~23, feat/release-notes-2026-11-17)](project_v1_1_6_clean_review_2026-11-23.md) — python3 소스 쓰기 거부·프로젝트 셸 스크립트 자동 허용·하네스 제작 묶음 기본 끔·`bundle:clean-review` 기본 켬(Codex 대신 맥락 없는 리뷰어). 대화형 세션은 서브에이전트가 백그라운드. 미결정: 확장자 넓히기·리뷰어 성능 비교·다른 세션 보고 7건
+- [v1.1.6 — 릴리스 노트·확인 창 줄이기·깨끗한 Claude 리뷰 (2026-11-17~23, feat/release-notes-2026-11-17)](project_v1_1_6_clean_review_2026-11-23.md) — python3 소스 쓰기 거부·프로젝트 셸 스크립트 자동 허용·하네스 제작 묶음 기본 끔·`bundle:clean-review` 기본 켬(Codex 대신 맥락 없는 리뷰어). 대화형 세션은 서브에이전트가 백그라운드. 11-24 커밋한 코드도 리뷰·승인 판정·화살표 오탐 수정. 미결정: 리뷰어 성능 비교. 안 함: 다른 프로젝트 전용 보고 3건
 - [훅 오탐·요청 없는 커밋 사고 대응 (2026-11-13~16, fix/hook-false-positives-2026-11-13 → v1.1.5 PR)](project_hook_false_positives_2026-11-16.md) — 계획 승인≠커밋 허락(task-confirm-guard B)·확인 사유 전부 표시(A)·git config 읽기·인자 글자 오탐·tdd-guard 범위·빈 레포 첫 main push 예외
 - [★ 전수 점검 → 11-11 하네스 걷어내기 (2026-11-06~12, feat/lfmall-sync-2026-11-06, 11-12 커밋·푸시)](project_full_audit_2026-11-06.md) — 보안 가드 빈틈·Sonnet/Haiku 5.5 → 11-10 결정 4건 → 11-11 모델이 아는 것 제거(스킬 195→139·에이전트 61→49·훅 32→29·커맨드 12→7)·Fable 5.2 현행화 → 11-12 2차(스킬 90·에이전트 10, typescript-quality Stop 판정·에이전트 10개 점검). PR #48 머지(v1.1.4). 남은 것: 알레르기 19종 고시 확인. Codex 는 gpt-5.4 계정 400 으로 사용 불가 표시
 - [★★ 하네스 현재 상태 (2026-10-23 갱신) — 여기부터 읽기](project_harness_status_2026-10-15.md) — shim 래퍼로만 사용, 설치본 v1.1.2(PR #46 머지 — 쓰기 위치·세션 중 자동 업데이트, lfmall 에 전달), v1.1.0 = 윈도우 지원 마무리(PR #43·#44 머지; 단위 테스트 CI 맥·윈도우; 결정 42 변수 읽기 자동·43 📌 표시 — lfmall 은 전달 끝·신경 안 씀), 321 항목(훅 32·고정 35·켬 70·끔 216). 남은 제안: 태그 보호·Codex 리뷰·고정 훅 fail-closed·윈도우 :237 5건 결정. 설치는 PATH 를 묻지 않고 자동 추가(v1.0.12). 기본값·고정 = 계획서 페이지 + `docs/DEFAULTS.md`. **수정 작업은 마지막 줄 `진행할까요?`**
@@ -32,6 +32,7 @@
 
 ## Feedback — 작업 방식
 - [정리 기준은 모델 지식, 사용 여부 아님](feedback_prune_by_model_knowledge.md) — 미사용이라 지우지 않고 사용 중이라 되살리지 않음, 컷오프 뒤 변경점·함정·한국/레거시 특화만 남길 가치
+- [다 끝내고 한 번만 보고](feedback_finish_then_report_once.md) — "다 진행해" 를 받으면 되묻지 말고 끝까지, 정할 것은 추천안으로 정하고 보고에 적음 (2026-11-23 사용자 강한 불만)
 - [결정은 하나씩 짧게](feedback_one_decision_at_a_time.md) — 한 답변에 질문 1개 + 추천, 목록 몰아 주지 않음, 팝업 말고 대화로
 - [자동 허용은 읽기만 넓힌다](feedback_auto_allow_reads_only.md) — Edit·Write·삭제·실행은 새로 자동 허용 금지, 훅으로 강제·적대 테스트, 바꾸기 전 실제 확인 창 기록 재생으로 효과 수치 보고 (결정 42)
 - [커밋은 사용자 요청 시에만](feedback_commit_policy.md) — 자동 커밋·제안 금지, 요청 시 실행 전 메모리 정리 선행 후 [memory] 커밋 포함, main push는 branch-protection이 차단(PR 경유)
