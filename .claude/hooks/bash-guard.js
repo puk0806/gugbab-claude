@@ -2462,7 +2462,8 @@ function protectedWriteTargets(inv) {
 // 는 변수 경로라 판정을 빠져나갔고, `rm -rf docs/skills` 는 폴더라서 그 안의 verification.md 를 보지 않았다)
 // ① 변수가 든 경로도 끝 이름이 SKILL.md·verification.md 거나 memory/ 아래면 보호 파일로 본다
 // ② 지우기(rm -r·git rm -r)·옮기기(mv·git mv) 대상이 폴더면 안을 훑어 보호 파일이 있으면 막는다 — 임시 폴더·node_modules·.git 은 안 본다,
-//    너무 큰 폴더(5만 항목 넘음)는 다 못 보므로 통과(빌드 산출물 정리를 막지 않게). git rm --cached 는 파일을 지우지 않아 제외
+//    너무 큰 폴더(5만 항목 넘음·1.5초 넘음)는 다 못 보므로 사용자 확인(2026-11-24 — 전에는 통과). 빌드 산출물 폴더는 SCAN_SKIP_DIRS 로 안 봄.
+//    git rm --cached 는 파일을 지우지 않아 제외
 function dynProtectedLabel(w) {
   if (!w.dyn) return null
   const segs = cleanValue(w.value).split(/[\\/]+/).filter(Boolean)
@@ -2477,6 +2478,12 @@ function scanBudgetMs() {
   const t = Number(raw)
   // 시험용 값은 기본값보다 늘릴 수 없다(훅 제한 시간을 넘기지 않게). 줄이면 "다 못 봄 → 확인" 쪽으로만 간다. 빈 값·숫자 아님은 기본값
   return typeof raw === 'string' && raw.trim() !== '' && Number.isFinite(t) ? Math.min(t, 1500) : 1500
+}
+function scanMaxEntries() {
+  const raw = process.env.BASH_GUARD_TEST_SCAN_MAX
+  const t = Number(raw)
+  // 시험용 값은 기본값(5만)보다 늘릴 수 없다. 줄이면 "다 못 봄 → 확인" 쪽으로만 간다
+  return typeof raw === 'string' && raw.trim() !== '' && Number.isFinite(t) ? Math.min(t, 50000) : 50000
 }
 const SCAN_TIMED_OUT = Symbol('scan-timed-out')
 let _scanDeadline = 0
@@ -2496,7 +2503,8 @@ function dirProtectedLabel(abs, ctx) {
     let ents
     try { ents = fs.readdirSync(d, { withFileTypes: true }) } catch { continue }
     for (const e of ents) {
-      if (++n > 50000) return null
+      // 개수 상한을 넘어도 "보호 파일 없음"으로 단정하지 않는다 — 시간 상한과 같은 쪽(확인)으로 (2026-11-24 깨끗한 리뷰 지적)
+      if (++n > scanMaxEntries()) return SCAN_TIMED_OUT
       const p = path.join(d, e.name)
       if (e.isDirectory()) { if (!SCAN_SKIP_DIRS.has(e.name)) stack.push(p); continue }
       const label = protectedLabel(p, ctx)
@@ -2552,7 +2560,7 @@ function classifyProtectedWrite(inv, ctx, add) {
       const abs = protectedAbsOf(t, ctx)
       const label = abs && dirProtectedLabel(abs, ctx)
       // 시간 안에 다 못 훑음 — 보호 파일이 없다고 단정할 수 없으니 통과시키지 않고 사용자에게 묻는다 (느린 디스크에서 판정이 갈리지 않게)
-      if (label === SCAN_TIMED_OUT) { add('ask', `${cleanValue(t.value)} 폴더가 커서 안에 보호 파일(SKILL.md·verification.md·memory)이 있는지 다 확인하지 못했습니다(${nm}). 사용자 확인이 필요합니다.`); continue }
+      if (label === SCAN_TIMED_OUT) { add('ask', `${cleanValue(t.value)} 폴더가 커서(5만 항목 또는 1.5초 넘음) 안에 보호 파일(SKILL.md·verification.md·memory)이 있는지 다 확인하지 못했습니다(${nm}). 사용자 확인이 필요합니다.`); continue }
       if (label) { add('deny', `${cleanValue(t.value)} 폴더 안에 ${label} 이(가) 있어 Bash 로 옮기거나 지울 수 없습니다(${nm}). 보호 파일은 Write/Edit 도구로만 고치고, 폴더째 정리가 꼭 필요하면 사용자에게 직접 실행해 달라고 하세요.`); return }
     }
   }

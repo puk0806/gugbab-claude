@@ -363,6 +363,8 @@ function handle(input) {
       // 커밋·푸시·PR·머지는 승인 여부와 따로 — 가장 최근 사용자 메시지가 그 동작을 요청했을 때만 (2026-11-13, 서브에이전트 포함)
       const missing = vcsMissing(ti.command, readState(sessionId))
       if (missing) return { code: 2, stderr: missing }
+      // 커밋·푸시를 요청받은 차례의 세션 요약 갱신은 커밋 절차의 일부라 막지 않는다 (2026-11-24 — 막혀서 exports 가 두 번 밀렸다)
+      if (isSessionExportRefresh(ti.command, cwd, readState(sessionId))) return { code: 0 }
       reason = shellWriteReason(ti.command, cwd)
       if (!reason) return { code: 0 }
     } else {
@@ -401,6 +403,40 @@ function vcsMissing(cmd, st) {
   }
   const missing = lib.missingActions(cmd, st && st.vcs)
   return missing.length ? lib.blockMessage(missing) : null
+}
+
+// 세션 요약 갱신 명령(.claude/rules/memory-sync.md 3단계) — 이번 사용자 메시지가 커밋·푸시·PR·머지를 요청했고,
+// 명령이 정해진 꼴 그대로이며, 실행되는 스크립트가 이 프로젝트의 .claude/hooks/session-export.js(링크 아님)일 때만 참.
+// 다른 명령을 덧붙이거나(; && |) 다른 폴더의 같은 이름 스크립트를 가리키면 거짓 → 평소 판정으로
+const EXPORT_REFRESH_RE = /^(?:cd\s+("[^"$`\\]+"|[\w.\/~-]+)\s*&&\s*)?(R="\$\(git rev-parse --show-toplevel\)"\s*&&\s*)?CLAUDE_PROJECT_DIR=("\$R"|"[^"$`\\]+"|[\w.\/~-]+)\s+node\s+("\$R\/\.claude\/hooks\/session-export\.js"|\.claude\/hooks\/session-export\.js)\s+--refresh(?:\s+2>&1)?(?:\s*\|\s*tail\s+-(?:n\s*)?\d+)?\s*$/
+function isSessionExportRefresh(cmd, cwd, st) {
+  const v = st && st.vcs
+  if (!v || !(v.commit || v.push || v.pr || v.merge)) return false
+  const m = EXPORT_REFRESH_RE.exec(String(cmd).trim())
+  if (!m) return false
+  const unq = (s) => s.replace(/^"|"$/g, '').replace(/^~(?=\/|$)/, os.homedir())
+  const base = cwd || process.env.CLAUDE_PROJECT_DIR || process.cwd()
+  const runDir = m[1] ? path.resolve(base, unq(m[1])) : base
+  const usesR = !!m[2]
+  if ((m[3] === '"$R"' || m[4].startsWith('"$R')) && !usesR) return false
+  let root = runDir
+  if (usesR) {
+    try { root = require('child_process').execFileSync('git', ['rev-parse', '--show-toplevel'], { cwd: runDir, encoding: 'utf8', timeout: 3000, stdio: ['ignore', 'pipe', 'ignore'] }).trim() } catch { return false }
+  }
+  // 스크립트는 이 세션 프로젝트의 것이어야 한다
+  const projRoot = gitRootOf(base)
+  if (!projRoot || !sameReal(root, projRoot)) return false
+  if (m[3] !== '"$R"' && !sameReal(path.resolve(runDir, unq(m[3])), projRoot)) return false
+  const script = path.join(root, '.claude', 'hooks', 'session-export.js')
+  try { const s = fs.lstatSync(script); return s.isFile() && !s.isSymbolicLink() } catch { return false }
+}
+function gitRootOf(dir) {
+  try { return require('child_process').execFileSync('git', ['rev-parse', '--show-toplevel'], { cwd: dir, encoding: 'utf8', timeout: 3000, stdio: ['ignore', 'pipe', 'ignore'] }).trim() } catch { return null }
+}
+function sameReal(a, b) {
+  // native — 윈도우의 짧은 이름(RUNNER~1)·대소문자·구분자를 실제 경로로 맞춘다
+  const real = (p) => (fs.realpathSync.native || fs.realpathSync)(p)
+  try { const x = real(a), y = real(b); return process.platform === 'win32' ? x.toLowerCase() === y.toLowerCase() : x === y } catch { return false }
 }
 
 function shellWriteReason(cmd, cwd) {

@@ -558,6 +558,56 @@ console.log('\n[커밋·푸시·PR·머지 — 가장 최근 사용자 메시지
   check('경계: 빈 프롬프트 → commit 차단', go('', COMMIT).code === 2)
   check('경계: 차단 메시지가 stderr 에, 다시 요청하는 방법 안내', /직접 요청/.test(go('진행해', COMMIT, transcript(PLAN)).stderr))
 }
+
+console.log('\n[세션 요약 갱신 — 커밋·푸시를 요청받은 차례에만 승인 없이 허용]')
+{
+  const { execFileSync } = require('child_process')
+  const mk = (withScript = true) => {
+    const d = fs.mkdtempSync(path.join(os.homedir(), '.tcg-exp-'))
+    execFileSync('git', ['init', '-q', d])
+    if (withScript) { fs.mkdirSync(path.join(d, '.claude', 'hooks'), { recursive: true }); fs.writeFileSync(path.join(d, '.claude', 'hooks', 'session-export.js'), "require('fs').writeFileSync('exports/x.md', 'y')\n") } // 실제처럼 쓰기 코드가 있어 평소에는 막히는 스크립트
+    return d
+  }
+  const repoX = mk()
+  const other = mk()
+  const noScript = mk(false)
+  const Q = (p) => `"${p.replace(/\\/g, '/')}"`
+  const A = 'R="$(git rev-parse --show-toplevel)" && CLAUDE_PROJECT_DIR="$R" node "$R/.claude/hooks/session-export.js" --refresh'
+  const B = `CLAUDE_PROJECT_DIR=${Q(repoX)} node .claude/hooks/session-export.js --refresh`
+  const at = (text, cmd, cwd = repoX) => { const s = sid(); prompt(s, text, transcript('안녕하세요')); return run({ hook_event_name: 'PreToolUse', session_id: s, tool_name: 'Bash', tool_input: { command: cmd }, cwd }) }
+  // 정상
+  check('정상: "커밋해줘" + 룰에 적힌 갱신 명령 → 허용', at('커밋해줘', A).code === 0)
+  check('정상: "커밋 푸쉬 진행해" + 고정 경로 꼴 → 허용', at('커밋 푸쉬 진행해', B).code === 0)
+  check('정상: 끝에 2>&1 | tail -3 → 허용', at('커밋해줘', `${A} 2>&1 | tail -3`).code === 0)
+  check('정상: 앞에 cd <프로젝트> && → 허용', at('푸시해줘', `cd ${Q(repoX)} && ${B}`).code === 0)
+  check('정상: "PR 올려줘" 도 허용', at('PR 올려줘', A).code === 0)
+  // 악성·우회
+  check('악성: 커밋 요청 없는 차례 → 차단', at('설명해줘', A).code === 2)
+  check('악성: "커밋하지 마" → 차단', at('커밋하지 마', A).code === 2)
+  check('악성: 뒤에 다른 명령 덧붙임(;) → 차단', at('커밋해줘', `${A}; touch src/x.ts`).code === 2)
+  check('악성: 뒤에 다른 명령 덧붙임(&&) → 차단', at('커밋해줘', `${A} && node -e "require('fs').writeFileSync('a.ts','x')"`).code === 2)
+  check('악성: 파이프로 다른 프로그램(tee 파일) → 차단', at('커밋해줘', `${A} | tee src/x.ts`).code === 2)
+  check('악성: 리다이렉트로 파일 쓰기 → 차단', at('커밋해줘', `${A} > src/x.ts`).code === 2)
+  check('악성: --refresh 가 아닌 다른 인자 → 차단', at('커밋해줘', A.replace('--refresh', '--refresh --out src/x.ts')).code === 2)
+  check('악성: 다른 폴더로 cd 해서 그쪽 스크립트 실행 → 차단', at('커밋해줘', `cd ${Q(other)} && CLAUDE_PROJECT_DIR=${Q(other)} node .claude/hooks/session-export.js --refresh`).code === 2)
+  check('악성: CLAUDE_PROJECT_DIR 만 다른 프로젝트 → 차단', at('커밋해줘', `CLAUDE_PROJECT_DIR=${Q(other)} node .claude/hooks/session-export.js --refresh`).code === 2)
+  check('악성: 같은 이름의 다른 경로 스크립트 → 차단', at('커밋해줘', `CLAUDE_PROJECT_DIR=${Q(repoX)} node ${Q(other)}/.claude/hooks/session-export.js --refresh`).code === 2)
+  check('악성: 명령 치환을 경로에 넣음 → 차단', at('커밋해줘', 'CLAUDE_PROJECT_DIR="$(pwd)" node .claude/hooks/session-export.js --refresh').code === 2)
+  check('악성: $R 을 정의하지 않고 씀 → 차단', at('커밋해줘', 'CLAUDE_PROJECT_DIR="$R" node "$R/.claude/hooks/session-export.js" --refresh').code === 2)
+  if (process.platform !== 'win32') {
+    const linked = mk(false)
+    fs.mkdirSync(path.join(linked, '.claude', 'hooks'), { recursive: true })
+    fs.symlinkSync(path.join(other, '.claude', 'hooks', 'session-export.js'), path.join(linked, '.claude', 'hooks', 'session-export.js'))
+    check('악성: 스크립트가 다른 곳을 가리키는 링크 → 차단', at('커밋해줘', A, linked).code === 2)
+    fs.rmSync(linked, { recursive: true, force: true })
+  }
+  // 이상·경계
+  check('경계: 스크립트가 없는 프로젝트 → 차단', at('커밋해줘', A, noScript).code === 2)
+  check('경계: git 레포가 아닌 폴더 → 차단', at('커밋해줘', A, os.tmpdir()).code === 2)
+  check('경계: 빈 명령 → 차단 아님(쓰기 없음)', at('커밋해줘', '').code === 0)
+  check('경계: 초장문 꼬리 → 차단', at('커밋해줘', A + ' ' + 'x'.repeat(20000)).code === 2)
+  for (const d of [repoX, other, noScript]) fs.rmSync(d, { recursive: true, force: true })
+}
 fs.rmSync(proj, { recursive: true, force: true })
 fs.rmSync(tmp, { recursive: true, force: true })
 

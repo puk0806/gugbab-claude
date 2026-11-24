@@ -464,6 +464,8 @@
   },
   "edges": {
     "hook:task-confirm-guard>hook:memory-sync": "mention",
+    "hook:task-confirm-guard>hook:session-export": "mention",
+    "hook:task-confirm-guard>rule:memory-sync.md": "mention",
     "hook:clean-review-guard>hook:codex-review-guard": "mention",
     "hook:codex-review-guard>hook:clean-review-guard": "mention",
     "hook:clean-review-guard>hook:task-confirm-guard": "mention",
@@ -554,6 +556,9 @@
     "rule:creation-workflow.md>rule:verification-policy.md": "uses",
     "rule:task-workflow.md>command:commit": "mention",
     "rule:task-workflow.md>command:create-pr": "mention",
+    "rule:task-workflow.md>hook:memory-sync": "mention",
+    "rule:task-workflow.md>hook:session-export": "mention",
+    "rule:task-workflow.md>rule:memory-sync.md": "mention",
     "rule:git.md>agent:nexacro-screen-analyzer": "mention",
     "rule:git.md>agent:nexacro-screen-converter": "mention",
     "rule:git.md>agent:spec-reviewer": "mention",

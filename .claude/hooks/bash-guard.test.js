@@ -1059,6 +1059,16 @@ if (!IS_WIN) {
   expectNotApproved('cd /c && rm -rf Users (cd 추적)', `cd /c && ${RMRF}Users`, 'deny')
   expectNotApproved('cd ~ && rm -rf .. (cd 추적 → 홈 상위)', `cd ~ && ${RMRF}..`, 'deny')
   expectNotApproved('RM.EXE -rf C:/ (대문자 .exe)', 'RM.EXE -rf C:/', 'deny')
+  // 2026-11-24 윈도우 CI: 위 드라이브 루트·시스템 폴더 거부가 폴더 훑기 시간 초과로 사라졌다 → 훑기가 바로 포기하는 상태에서도 거부여야 한다
+  try {
+    process.env.BASH_GUARD_TEST_SCAN_MS = '-1'
+    expectNotApproved('훑기 포기 상태에서도 rm -rf C:/ 거부', `${RMRF}C:/`, 'deny')
+    expectNotApproved('훑기 포기 상태에서도 rm -rf "C:\\Windows" 거부', `${RMRF}${DQ('C:\\Windows')}`, 'deny')
+    expectNotApproved('훑기 포기 상태에서도 rm -rf "C:/Program Files" 거부', `${RMRF}"C:/Program Files"`, 'deny')
+    expectNotApproved('훑기 포기 상태에서도 rm -rf /c (MSYS) 거부', `${RMRF}/c`, 'deny')
+  } finally {
+    delete process.env.BASH_GUARD_TEST_SCAN_MS
+  }
   // 확인(ask) — 프로젝트 밖·해석 불가
   expectNotApproved('따옴표 밖 C:\\Users\\x (bash 가 \\ 를 지워 C:Usersx) → 해석 불가 확인', `${RMRF}C:\\Users\\nobody`, 'ask')
   expectNotApproved('드라이브 상대 c:foo → 확인', `${RMRF}c:foo`, 'ask')
@@ -1799,17 +1809,32 @@ if (process.platform !== 'win32') {
     expAt('시간 안에 다 못 훑으면 통과가 아니라 확인 (mv 폴더)', 'mv docs/skills /tmp/', 'ask')
     expAt('훑기 포기 상태 — 대상이 여러 개여도 확인', `${RMRF}plain docs/skills .claude/skills`, 'ask')
     expAt('훑기 포기 상태 — 명령이 나뉘어도 확인', `${RMRF}plain; ${RMRF}docs/skills`, 'ask')
+    expAt('훑기 포기 상태 — 폴더가 아닌 일반 파일 삭제는 훑지 않으므로 묻지 않음', 'rm plain/a.txt', null)
+    expAt('훑기 포기 상태 — 보호 파일 없는 폴더도 다 못 봤으면 확인 (없다고 단정하지 않음)', `${RMRF}plain`, 'ask')
     process.env.BASH_GUARD_TEST_SCAN_MS = ''
     expPre('이상 입력: 상한 값이 빈 문자열이면 기본값으로 훑음', `${RMRF}docs/skills`, 'deny')
     process.env.BASH_GUARD_TEST_SCAN_MS = '   '
     expPre('이상 입력: 상한 값이 공백뿐이어도 기본값으로 훑음', `${RMRF}docs/skills`, 'deny')
-    expAt('시간 안에 다 못 훑어도 보호 파일 없는 작은 폴더까지 묻지는 않음 — 폴더가 아니면 훑지 않음', 'rm plain/a.txt', null)
     process.env.BASH_GUARD_TEST_SCAN_MS = 'abc'
     expPre('이상 입력: 상한 값이 숫자가 아니면 기본값으로 훑음', `${RMRF}docs/skills`, 'deny')
     process.env.BASH_GUARD_TEST_SCAN_MS = '999999999'
     expPre('악용: 상한을 크게 줘도 기본값을 넘지 못하고 정상 판정', `${RMRF}docs/skills`, 'deny')
+    delete process.env.BASH_GUARD_TEST_SCAN_MS
+    // 개수 상한 — 넘으면 통과가 아니라 확인 (전에는 통과였다)
+    process.env.BASH_GUARD_TEST_SCAN_MAX = '1'
+    expAt('개수 상한을 넘으면 통과가 아니라 확인 (rm -rf 폴더)', `${RMRF}docs`, 'ask')
+    expAt('개수 상한을 넘으면 통과가 아니라 확인 (mv 폴더)', 'mv .claude/skills /tmp/', 'ask')
+    expPre('개수 상한이 작아도 rm -rf / 는 거부', `${RMRF}/`, 'deny')
+    expPre('개수 상한이 작아도 보호 파일 직접 삭제는 거부', `${RMRF}.claude/skills/k/SKILL.md`, 'deny')
+    process.env.BASH_GUARD_TEST_SCAN_MAX = '999999999'
+    expPre('악용: 개수 상한을 크게 줘도 기본값을 넘지 못하고 정상 판정', `${RMRF}docs/skills`, 'deny')
+    process.env.BASH_GUARD_TEST_SCAN_MAX = 'x'
+    expPre('이상 입력: 개수 상한이 숫자가 아니면 기본값', `${RMRF}docs/skills`, 'deny')
+    process.env.BASH_GUARD_TEST_SCAN_MAX = ''
+    expPre('이상 입력: 개수 상한이 빈 문자열이면 기본값', `${RMRF}docs/skills`, 'deny')
   } finally {
     delete process.env.BASH_GUARD_TEST_SCAN_MS
+    delete process.env.BASH_GUARD_TEST_SCAN_MAX
   }
   expPre('위험 대상과 보호 폴더가 섞여도 거부', `${RMRF}docs/skills /`, 'deny')
   expPre('위험 대상이 앞에 와도 뒤 보호 폴더는 그대로 훑어 거부', `${RMRF}/usr docs/skills`, 'deny')
