@@ -32,6 +32,7 @@
 
 ## Feedback — 작업 방식
 - [정리 기준은 모델 지식, 사용 여부 아님](feedback_prune_by_model_knowledge.md) — 미사용이라 지우지 않고 사용 중이라 되살리지 않음, 컷오프 뒤 변경점·함정·한국/레거시 특화만 남길 가치
+- [푸시 뒤 CI 결과까지 확인하고 완료 보고](feedback_check_ci_before_done.md) — 윈도우 전용 시험은 맥에서 건너뛰어짐, GitHub 설정(필수 검사)은 워크플로 추가와 별개로 실제 적용 확인 (2026-11-24 윈도우 CI 실패를 놓침)
 - [다 끝내고 한 번만 보고](feedback_finish_then_report_once.md) — "다 진행해" 를 받으면 되묻지 말고 끝까지, 정할 것은 추천안으로 정하고 보고에 적음 (2026-11-23 사용자 강한 불만)
 - [결정은 하나씩 짧게](feedback_one_decision_at_a_time.md) — 한 답변에 질문 1개 + 추천, 목록 몰아 주지 않음, 팝업 말고 대화로
 - [자동 허용은 읽기만 넓힌다](feedback_auto_allow_reads_only.md) — Edit·Write·삭제·실행은 새로 자동 허용 금지, 훅으로 강제·적대 테스트, 바꾸기 전 실제 확인 창 기록 재생으로 효과 수치 보고 (결정 42)
