@@ -121,6 +121,80 @@ test('리뷰 대상 확장자 목록이 codex-review-guard 와 글자까지 같�
   for (const n of ['run.sh.md', 'sh', 'a.shx', 'x.sql.bak']) assert.strictEqual(re.test(n), false, n)
 })
 
+// 이번 턴에 커밋까지 해 버린 코드 (2026-11-23 — 답변이 끝나기 전에 커밋하면 리뷰가 빠지던 빈틈)
+function datedRepo() {
+  const d = fs.mkdtempSync(path.join(os.tmpdir(), 'crg2-dated-'))
+  const g = (a, t) => execSync(`git ${a}`, { cwd: d, stdio: 'ignore', env: { ...process.env, ...(t ? { GIT_AUTHOR_DATE: iso(t), GIT_COMMITTER_DATE: iso(t) } : {}) } })
+  g('init -q'); g('config user.email t@t'); g('config user.name t')
+  fs.writeFileSync(path.join(d, 'a.js'), 'module.exports = 1\n'); fs.writeFileSync(path.join(d, 'README.md'), '# r\n')
+  g('add -A'); g('commit -q -m init', NOW - 1000000)
+  for (const f of ['a.js', 'README.md']) touch(path.join(d, f), NOW - 1000000)
+  return { d, g }
+}
+test('이번 턴에 고치고 커밋까지 한 코드 → 리뷰 요구 (턴 시작 전 커밋과 비교하라고 안내)', () => {
+  const { d, g } = datedRepo()
+  const base = execSync('git rev-parse HEAD', { cwd: d, encoding: 'utf8' }).trim()
+  fs.writeFileSync(path.join(d, 'a.js'), 'module.exports = 2\n'); g('add -A'); g('commit -q -m fix', NOW - 40000)
+  touch(path.join(d, 'a.js'), NOW - 45000) // 고친 시각
+  const r = run(d, stop(writeTranscript(d, [human(NOW - 100000)])))
+  assert.strictEqual(r.status, 2, r.stderr)
+  const req = requestOf(r.stderr)
+  assert.match(req, /a\.js \(이번 턴에 커밋됨\)/); assert.ok(req.includes(`git diff ${base.slice(0, 12)}`), req)
+  // 요청문 그대로 리뷰하면 통과
+  const tmp = r.tmp
+  const ok = run(d, stop(writeTranscript(d, [human(NOW - 100000), callR(NOW - 10000, 'u1', req), resultR(NOW - 5000, 'u1')])), { tmp })
+  assert.strictEqual(ok.status, 0, ok.stderr)
+})
+test('턴 시작 전에 한 커밋·이번 턴의 문서만 커밋 → 리뷰 없음', () => {
+  const a = datedRepo()
+  fs.writeFileSync(path.join(a.d, 'a.js'), 'module.exports = 2\n'); a.g('add -A'); a.g('commit -q -m old', NOW - 500000); touch(path.join(a.d, 'a.js'), NOW - 500000)
+  assert.strictEqual(run(a.d, stop(writeTranscript(a.d, [human(NOW - 100000)]))).status, 0)
+  const b = datedRepo()
+  fs.writeFileSync(path.join(b.d, 'README.md'), '# 바뀜\n'); b.g('add -A'); b.g('commit -q -m docs', NOW - 40000)
+  assert.strictEqual(run(b.d, stop(writeTranscript(b.d, [human(NOW - 100000)]))).status, 0)
+})
+test('커밋한 코드와 커밋 안 한 코드가 섞이면 둘 다 목록에, 같은 파일은 한 번만', () => {
+  const { d, g } = datedRepo()
+  fs.writeFileSync(path.join(d, 'a.js'), 'module.exports = 2\n'); fs.writeFileSync(path.join(d, 'b.js'), 'x\n'); g('add -A'); g('commit -q -m fix', NOW - 40000)
+  fs.writeFileSync(path.join(d, 'a.js'), 'module.exports = 3\n'); touch(path.join(d, 'a.js'), NOW - 30000)
+  const req = requestOf(run(d, stop(writeTranscript(d, [human(NOW - 100000)]))).stderr)
+  assert.strictEqual((req.match(/^- a\.js/gm) || []).length, 1, req); assert.match(req, /^- b\.js \(이번 턴에 커밋됨\)/m)
+})
+test('리뷰를 마친 뒤 코드를 안 바꾸고 커밋만 하면 → 다시 요구하지 않음', () => {
+  const { d, g } = datedRepo()
+  fs.writeFileSync(path.join(d, 'a.js'), 'module.exports = 2\n'); touch(path.join(d, 'a.js'), NOW - 60000) // 고침
+  const tr0 = writeTranscript(d, [human(NOW - 100000)])
+  const r0 = run(d, stop(tr0)); const req = requestOf(r0.stderr)
+  assert.strictEqual(r0.status, 2)
+  g('add -A'); g('commit -q -m fix', NOW - 20000) // 리뷰(NOW-40s) 뒤에 커밋만
+  touch(path.join(d, 'a.js'), NOW - 60000)
+  const r = run(d, stop(writeTranscript(d, [human(NOW - 100000), callR(NOW - 40000, 'u1', req), resultR(NOW - 35000, 'u1')]), { stop_hook_active: true }), { tmp: r0.tmp })
+  assert.strictEqual(r.status, 0, r.stderr); assert.match(r.stderr, /리뷰 완료/)
+})
+test('턴 시작과 같은 초에 만든 커밋도 리뷰 대상 (커밋 시각은 초 단위)', () => {
+  const { d, g } = datedRepo()
+  const start = Math.floor((NOW - 100000) / 1000) * 1000 + 800 // xx.800
+  fs.writeFileSync(path.join(d, 'a.js'), 'module.exports = 2\n'); g('add -A'); g('commit -q -m fix', start + 100) // 같은 초 xx.900 → 커밋 시각은 xx.000
+  touch(path.join(d, 'a.js'), NOW - 1000000) // 수정 시각으로는 안 잡히게
+  const r = run(d, stop(writeTranscript(d, [human(start)])))
+  assert.strictEqual(r.status, 2, r.stderr); assert.match(requestOf(r.stderr), /a\.js \(이번 턴에 커밋됨\)/)
+})
+test('턴 중에 받아 온 남의 커밋(만든 시각이 턴 전)·머지 커밋은 리뷰 대상이 아님', () => {
+  const { d, g } = datedRepo()
+  g('checkout -q -b other')
+  fs.writeFileSync(path.join(d, 'theirs.js'), 'x\n'); g('add -A'); g('commit -q -m theirs', NOW - 600000) // 남이 예전에 만든 커밋
+  g('checkout -q -'); fs.writeFileSync(path.join(d, 'README.md'), '# m\n'); g('add -A'); g('commit -q -m mine-doc', NOW - 700000)
+  g('merge -q --no-ff other -m merge', NOW - 40000) // 이번 턴에 머지
+  for (const f of ['theirs.js', 'README.md']) touch(path.join(d, f), NOW - 600000)
+  const r = run(d, stop(writeTranscript(d, [human(NOW - 100000)])))
+  assert.strictEqual(r.status, 0, r.stderr)
+})
+test('사람 질문을 못 찾은 경우(시작 시각 0)·첫 커밋뿐인 새 레포 → 커밋 비교 없이 기존 판정', () => {
+  const repo = mkRepo(); editCode(repo, NOW - 50000)
+  const r = run(repo, stop(writeTranscript(repo, [human(NOW - 100000)])))
+  assert.strictEqual(r.status, 2); assert.match(requestOf(r.stderr), /커밋 안 됨/)
+})
+
 test('코드 변경이 이번 턴 전(이전 세션 미커밋) → 건너뜀', () => {
   const repo = mkRepo()
   editCode(repo, NOW - 500000)

@@ -53,7 +53,11 @@ function buildProtectedWritePatterns() {
     patterns.push({ pattern: new RegExp(`\\bperl\\b[^|;&\\n]*\\s-[a-zA-Z]*i[^|;&\\n]*${re}`), reason })
     patterns.push({ pattern: new RegExp(`\\bawk\\b[^|;&\\n]*-i\\s*inplace[^|;&\\n]*${re}`), reason })
     // 리다이렉트로 덮어쓰기·이어쓰기: echo/cat/printf/sed/awk ... > FILE
-    patterns.push({ pattern: new RegExp(`>>?\\s*\\S*${re}`), reason })
+    // `=>` 바로 뒤가 함수 호출(`이름(`·`a.b(`)이면 코드 안 화살표 함수로 보고 뺀다 — `d=>fs.existsSync(d+'/SKILL.md')` 를 리다이렉트로 읽어
+    // 읽기 전용 node -e 를 막았다(2026-11-23 다른 세션 보고). 셸 리다이렉트 대상은 따옴표 없는 `이름(` 으로 시작할 수 없으므로
+    // `x=>파일`·`x=>"$(pwd)/파일"`·`x=>$(pwd)/파일`·`x=>"dir(1)/파일"` 은 그대로 막힌다
+    // 함수 이름 자리에 보호 파일 이름이 오면 예외가 아니다 — zsh 는 `x=>SKILL.md(.)`(파일 한정자)를 리다이렉트로 실행한다
+    patterns.push({ pattern: new RegExp(`(?<!=)>>?\\s*\\S*${re}|=>>?(?!\\s*(?![\\w.]*${re})[A-Za-z_][\\w.]*\\()\\s*\\S*${re}`), reason })
     // tee로 쓰기
     patterns.push({ pattern: new RegExp(`\\btee\\b\\s+(?:-a\\s+)?\\S*${re}`), reason })
   }
@@ -2341,7 +2345,7 @@ const EDITOR_CMDS = new Set(['ex', 'vi', 'vim', 'nvim', 'gvim', 'view', 'ed', 'r
 const EDITOR_VALUE_OPTS = new Set(['-c', '-S', '--cmd', '-u', '-i', '-p', '-r', '-o', '-D', '-F', '-B', '-V', '--eval', '-l', '--load'])
 const INLINE_CODE_FLAGS = /^(?:-e|-E|-c|-p|-r|--eval|--print|--command|--exec)$/
 const PROTECTED_CODE_NAME_RE = /skill\.md|verification\.md|(?:^|[\s'"`/(,=])memory(?:[\s'"`/),]|$)/i
-const WRITE_CODE_RE = /write|append|unlink|\brm|rmdir|rename|copy|truncate|remove|delete|move|shutil|symlink|chmod|open\s*\([^)]*['"][^'"]*[wax+][^'"]*['"]|createWriteStream|>\s*['"]?\S*(?:skill|verification|memory)/i
+const WRITE_CODE_RE = /write|append|unlink|\brm|rmdir|rename|copy|truncate|remove|delete|move|shutil|symlink|chmod|open\s*\([^)]*['"][^'"]*[wax+][^'"]*['"]|createWriteStream|(?<!=)>\s*['"]?\S*(?:skill|verification|memory)|=>(?!\s*(?![\w.]*(?:skill|verification|memory))[A-Za-z_][\w.]*\()\s*['"]?\S*(?:skill|verification|memory)/i
 
 function globSegRe(seg) {
   let re = ''

@@ -114,6 +114,37 @@ function changedCodeFiles(repoRoot) {
   return res
 }
 
+// 이번 턴에 커밋한 코드 파일 — 답변이 끝나기 전에 커밋하면 "커밋 안 된 코드" 가 없어져 리뷰가 빠지던 빈틈(2026-11-23 이 레포 세션에서 발견)
+// 반환: { base, files:[{file, deleted, mtime(=마지막 커밋 시각), committed:true}] } — 확인 불가·해당 없음이면 { base:null, files:[] }
+function committedThisTurn(repoRoot, turnStart) {
+  const none = { base: null, files: [] }
+  if (!(turnStart > 0)) return none
+  const git = (args) => {
+    const r = spawnSync('git', args, { cwd: repoRoot, encoding: 'utf8', timeout: 15000, maxBuffer: 16 * 1024 * 1024 })
+    return r.status === 0 ? r.stdout : null
+  }
+  // 커밋 시각은 초 단위 — 턴 시작과 같은 초에 만든 커밋도 이번 턴 것으로 본다(빠뜨리지 않는 쪽). 비교 기준 커밋은 그 초보다 앞의 것
+  const startSec = Math.floor(turnStart / 1000)
+  const headSec = Number((git(['log', '-1', '--format=%ct', 'HEAD']) || '').trim())
+  if (!(headSec >= startSec)) return none // 이번 턴에 만든 커밋 없음
+  const headTime = (headSec + 1) * 1000
+  const base = (git(['rev-list', '-1', `--before=${startSec - 1}`, 'HEAD']) || '').trim()
+  if (!/^[0-9a-f]{40,64}$/.test(base)) return none // 턴 시작 전 커밋이 없음(새 레포 첫 커밋 등)
+  // 턴 시작 뒤에 만든 커밋(머지 제외)이 건드린 파일만 — base..HEAD 전체를 보면 턴 중에 받아 온(pull·머지) 남의 커밋까지 들어온다.
+  // 받아 온 커밋은 만든 시각이 턴 시작 전이라 빠진다(rebase·amend 로 다시 만든 커밋은 이번 턴 것으로 잡힌다 — 리뷰를 더 하는 쪽)
+  const out = git(['log', `--since=${startSec}`, '--no-merges', '--name-only', '--format=', '-z', 'HEAD'])
+  if (out === null) return none
+  const names = [...new Set(out.split(/[\0\n]/).filter(Boolean))]
+  // 바뀐 시각은 파일의 실제 수정 시각 — 커밋 시각으로 잡으면 리뷰를 마친 뒤 커밋만 해도 "리뷰 뒤에 바뀜" 이 되어 다시 요구한다.
+  // 지워진 파일은 수정 시각이 없어 커밋 시각으로 본다
+  const files = names.filter(f => CODE_EXT.test(f)).map(file => {
+    let mtime = headTime, deleted = false
+    try { mtime = fs.statSync(path.join(repoRoot, file)).mtime.getTime() } catch { deleted = true }
+    return { file, deleted, mtime, committed: true }
+  })
+  return { base, files }
+}
+
 // ── Codex 가 리뷰할 상황인가 (codex-review-guard 판정과 같은 조건) ──────────
 function codexHookEnabled(repoRoot) {
   const en = process.env.GUGBAB_ENABLED
@@ -262,11 +293,11 @@ function readTurn(transcriptPath) {
 
 const norm = (s) => String(s).replace(/\s+/g, ' ').trim()
 
-function buildRequest(userPrompt, files) {
+function buildRequest(userPrompt, files, base) {
   const id = crypto.randomBytes(4).toString('hex')
   const req = String(userPrompt || '(사용자 질문을 찾지 못함)').trim()
   const shown = req.length > MAX_PROMPT_CHARS ? req.slice(0, MAX_PROMPT_CHARS) + ' …(뒤 생략)' : req
-  const list = files.slice(0, MAX_FILES_LISTED).map(f => `- ${f.file}${f.deleted ? ' (삭제)' : ''}`)
+  const list = files.slice(0, MAX_FILES_LISTED).map(f => `- ${f.file}${f.deleted ? ' (삭제)' : ''}${f.committed ? ' (이번 턴에 커밋됨)' : ''}`)
   if (files.length > MAX_FILES_LISTED) list.push(`- …외 ${files.length - MAX_FILES_LISTED}개 (git status 로 확인)`)
   return [
     `[clean-review 요청 ${id}]`,
@@ -274,9 +305,11 @@ function buildRequest(userPrompt, files) {
     '<<<',
     shown,
     '>>>',
-    '이번 턴에 바뀐 코드 파일 (커밋 안 됨):',
+    base ? '이번 턴에 바뀐 코드 파일:' : '이번 턴에 바뀐 코드 파일 (커밋 안 됨):',
     ...list,
-    '이 파일들의 변경을 git diff (새 파일은 Read) 로 직접 읽고, 에이전트 지침의 3단계 순서로 적대적으로 검토하세요.',
+    base
+      ? `이 파일들의 변경을 git diff ${base.slice(0, 12)} -- <파일> (턴 시작 전 커밋과 비교, 새 파일은 Read) 로 직접 읽고, 에이전트 지침의 3단계 순서로 적대적으로 검토하세요.`
+      : '이 파일들의 변경을 git diff (새 파일은 Read) 로 직접 읽고, 에이전트 지침의 3단계 순서로 적대적으로 검토하세요.',
   ].join('\n')
 }
 
@@ -306,7 +339,9 @@ function main() {
     if (files.length) process.stderr.write('[clean-review-guard] 대화 기록을 읽지 못해 이번 턴 리뷰 여부를 판단하지 않습니다\n')
     process.exit(0)
   }
-  const changed = files.filter(f => f.mtime > turn.turnStart)
+  const committed = committedThisTurn(repoRoot, turn.turnStart)
+  const uncommitted = files.filter(f => f.mtime > turn.turnStart)
+  const changed = [...uncommitted, ...committed.files.filter(c => !uncommitted.some(u => u.file === c.file))]
   if (!changed.length) skip('이번 턴에 바뀐 코드 없음')
   const latest = Math.max(...changed.map(f => f.mtime))
 
@@ -341,7 +376,7 @@ function main() {
     ].join('\n'))
   }
 
-  const request = buildRequest(turn.prompt, changed)
+  const request = buildRequest(turn.prompt, changed, committed.files.length ? committed.base : null)
   const rid = request.match(/^\[clean-review 요청 ([0-9a-f]+)\]/)[1]
   if (sid) saveState(sid, { sig, issued: [...st.issued, { prompt: request, at: Date.now() }].slice(-20) })
 

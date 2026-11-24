@@ -1332,6 +1332,36 @@ section('프로젝트 소스 파일 Bash 쓰기 → deny, 명령 출력·임시 
 }
 
 // ─────────────────────────────────────────────────────────────
+// 코드 안 화살표 함수(=>)를 리다이렉트로 읽어 읽기 전용 node -e 를 막던 오탐 (2026-11-23 다른 세션 보고)
+section('화살표 함수 + 보호 파일 이름 — 읽기 전용 코드는 통과, 진짜 쓰기·리다이렉트는 그대로 차단')
+{
+  const P = { cwd: PROJECT_ROOT }
+  const N = 'SKILL' + '.md'
+  const dec = (command) => getDecision(runHook('Bash', { command }, 'PreToolUse', P), 'PreToolUse')
+  // 정상: 보고된 형태 — 스킬 폴더를 세는 읽기 전용 코드
+  assert('보고된 형태: filter(d=>fs.existsSync(…/SKILL.md)) → 차단 안 함', dec(`node -e "const fs=require('fs');console.log(fs.readdirSync('.claude/skills').filter(d=>fs.existsSync('.claude/skills/'+d+'/${N}')).length)"`) !== 'deny', true)
+  // 악성·우회: 화살표처럼 보이게 한 쓰기는 계속 차단
+  for (const [desc, command] of [
+    ['셸 빈 대입 + 리다이렉트 x=>파일', `x=>.claude/skills/nextjs/${N}`],
+    ['셸 빈 대입 + 이어쓰기 x=>>파일', `x=>>.claude/skills/nextjs/${N}`],
+    ['echo a => 파일 (=를 인자로 넘기고 리다이렉트)', `echo a => .claude/skills/nextjs/${N}`],
+    ['일반 리다이렉트', `echo a >.claude/skills/nextjs/${N}`],
+    ['화살표 함수 안의 writeFileSync', `node -e "[1].map(d=>require('fs').writeFileSync('.claude/skills/nextjs/${N}','x'))"`],
+    ['verification.md 로 리다이렉트 x=>', `x=>docs/skills/a/b/verification.md`],
+    ['memory/ 로 리다이렉트 x=>', `x=>memory/a.md`],
+    ['명령 치환이 든 대상 hi=>"$(pwd)/파일"', `echo hi=>"$(pwd)/.claude/skills/nextjs/${N}"`],
+    ['따옴표 없는 명령 치환 x=>$(pwd)/파일', `x=>$(pwd)/.claude/skills/nextjs/${N}`],
+    ['괄호가 든 경로 x=>"dir(1)/파일"', `x=>"dir(1)/${N}"`],
+    ['zsh 파일 한정자 x=>SKILL.md(.)', `x=>${N}(.)`],
+    ['zsh 파일 한정자 x=>verification.md(N)', `x=>verification.md(N)`],
+    ['zsh 파일 한정자 + 이어쓰기 x=>>SKILL.md(.)', `x=>>${N}(.)`],
+    ['node -e 안 셸 실행 문자열의 =>"$(pwd)/…"', `node -e "require('child_process').execSync('echo hi=>\\"$(pwd)/.claude/skills/nextjs/${N}\\"')"`],
+  ]) assert(`${desc} → 차단`, dec(command), 'deny')
+  // 이상·경계: 빈 화살표·초장문·괄호만
+  assert('경계: => 만 있는 명령 → 차단 아님', dec('echo "=>"') !== 'deny', true)
+  assert('경계: 초장문 화살표 반복 → 차단 안 함·크래시 없음', dec(`node -e "console.log(${'[1].map(d=>fs.existsSync(d)),'.repeat(3000)}1)"`) !== 'deny', true)
+}
+
 // python3·node 등 인터프리터 코드로 프로젝트 소스 쓰기 → deny (2026-11-23 06-gugbab-attendance 보고 —
 // `python3 - <<'EOF' … open(p,'w') … EOF` 로 소스를 고쳐 acceptEdits 인데도 확인 창이 계속 떴다. 막으면 Claude 가 Edit 로 다시 고친다)
 // ─────────────────────────────────────────────────────────────

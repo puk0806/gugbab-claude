@@ -463,6 +463,7 @@
     }
   },
   "edges": {
+    "hook:task-confirm-guard>hook:memory-sync": "mention",
     "hook:clean-review-guard>hook:codex-review-guard": "mention",
     "hook:codex-review-guard>hook:clean-review-guard": "mention",
     "hook:clean-review-guard>hook:task-confirm-guard": "mention",

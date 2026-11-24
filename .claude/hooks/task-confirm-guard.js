@@ -48,6 +48,11 @@ const PROHIBIT_CLAUSE_RE = /지\s*(?:말(?:고|아(?:줘|요|주세요)?|기|구
 // 승인어로 시작해도 중간에 거절어가 낱말로 끼면("응 아니 그거 하지 말고") 관대 처리하지 않는다
 const MID_REJECT_RE = /(?:^|[\s,.!~…])(?:아니|아뇨|아냐|잠깐|잠시만|멈춰|중단|취소|보류|그만)(?=$|[\s,.!~…]|야|요|해)/
 
+// 계획 전체를 실행하라는 지시 — 금지 절("-지 말고")이 섞여 있어도 승인으로 본다 (judgePrompt 의 관대 처리)
+const PROHIBITED_WORD_RE = /[가-힣]+지\s*(?:말(?:고|아(?:줘|요|주세요)?|기|구)?|마(?:세요|요)?)|[가-힣]+면\s*안\s*(?:돼|되|됩)/g
+// 낱말 시작에서만 찾고("했다 하고" 의 '다' 는 아님), 소망·서술("다 하고 싶지만"·"다 하고 있는")은 지시가 아니다
+const PROCEED_ALL_RE = /(?:^|[\s,.!~…])(?:(?:다|전부|모두|싹\s*다|끝까지|마저)\s*(?:진행(?!\s*(?:해[야도서]|하면|할지|할까))|하고(?!\s*(?:싶|있))|해(?:줘|라|$|[\s,.!~])|끝내|마무리)|진행\s*(?:해(?![야도서])|하고(?!\s*(?:싶|있))|하자|시켜))/
+const OTHER_NEGATION_RE = /안\s*(?:하|해|할)|않(?:고|아|을|는|았|게)|못\s*(?:하|해)/
 const APPROVE_WORD_RE = /진행|^\s*(?:응|네|넹|예|ㅇㅇ|ㅇㅋ|좋아|오케이|그래|콜)|해\s*줘|하자|ok\b|okay\b|go\b|yes\b/i
 const QUESTION_RE = /\?\s*$|뭐야|뭐지|뭔데|왜\s|어떻게|무슨|무엇|맞아\??\s*$|건가|는가\??\s*$/
 
@@ -120,7 +125,16 @@ function judgePrompt(prompt, prevAssistant) {
   const lastLine = (lines[lines.length - 1] || '').slice(-CONFIRM_TAIL_CHARS)
   if (!CONFIRM_RE.test(lastLine) || /["“'‘「]진행할까요/.test(lastLine)) return { approved: false, why: 'no-confirm-question' }
   // 승인어로 시작 + 중간 거절어 없음 → "하지 말고/하지 마" 금지 절만 빼고 거절 표현을 본다
-  const rejectTarget = APPROVE_START_RE.test(p) && !MID_REJECT_RE.test(p) ? p.replace(PROHIBIT_CLAUSE_RE, ' ') : p
+  // 승인어로 시작하지 않아도, 금지 절을 뺀 나머지에 "다 하고·전부 진행·진행해" 같은 전체 실행 지시가 있으면 같은 관대 처리
+  // (2026-11-23 실사용 오탐: "다른 프로젝트 신경쓰지말고 … 잔존 작업 다하고 … 보고해" 가 "말고" 에 걸려 거절로 판정).
+  // "A 말고 B로"(‑지 없음)·"다시 정리"·중간 거절어는 그대로 거절이다
+  const stripped = p.replace(PROHIBIT_CLAUSE_RE, ' ')
+  // 실행 지시는 금지된 낱말째 지운 글에서 찾는다 — "전부 진행하지 말고 기다려" 의 "전부 진행" 은 금지 대상이지 지시가 아니다
+  const withoutProhibited = p.replace(PROHIBITED_WORD_RE, ' ')
+  // "-지 말고" 가 아닌 부정("진행 안 하고"·"진행하지 않고")이 있으면 실행 지시로 보지 않는다
+  const proceedAll = PROCEED_ALL_RE.test(withoutProhibited) && !OTHER_NEGATION_RE.test(p)
+  const lenient = !MID_REJECT_RE.test(p) && (APPROVE_START_RE.test(p) || proceedAll)
+  const rejectTarget = lenient ? stripped : p
   if (REJECT_START_RE.test(p) || REJECT_ANY_RE.test(rejectTarget)) return { approved: false, why: 'rejected' }
   // 승인 표현 없이 되묻는 질문("이건 뭐야??")은 승인이 아니라 확인 질문 (실제 세션 검증으로 추가)
   if (!APPROVE_WORD_RE.test(p) && QUESTION_RE.test(p)) return { approved: false, why: 'question' }
@@ -173,8 +187,49 @@ function isExemptPathWin(filePath, cwd) {
   return false
 }
 
+// 레포 memory/ 미러 — 전역 메모리 폴더와 같은 내용을 memory-sync 가 양방향으로 맞추는 곳이라 전역과 같게 승인 없이 쓸 수 있다
+// (2026-11-23 다른 세션 보고: 전역 메모리는 되는데 레포 미러 Edit 만 승인 전에 막힘).
+// 조건: git 최상위에 memory/MEMORY.md 가 실제 파일로 있고, 대상이 그 memory/ 안의 .md 이며, 링크를 따라간 실제 위치도 그 안일 것
+function isRepoMemoryMirror(filePath, cwd) {
+  try {
+    if (/^~/.test(filePath)) return false
+    const abs = path.resolve(cwd || process.env.CLAUDE_PROJECT_DIR || process.cwd(), filePath)
+    if (!/\.md$/i.test(abs)) return false
+    let root = path.dirname(abs)
+    for (let i = 0; i < 64; i++) {
+      if (fs.existsSync(path.join(root, '.git'))) break
+      const up = path.dirname(root)
+      if (up === root) return false
+      root = up
+    }
+    // 지금 프로젝트의 git 최상위여야 한다 — 안쪽에 따로 있는 .git(서브모듈·벤더 폴더)의 memory/ 는 미러가 아니다
+    let proj = path.resolve(cwd || process.env.CLAUDE_PROJECT_DIR || process.cwd())
+    for (let i = 0; i < 64; i++) {
+      if (fs.existsSync(path.join(proj, '.git'))) break
+      const up = path.dirname(proj)
+      if (up === proj) return false
+      proj = up
+    }
+    if (fs.realpathSync(proj) !== fs.realpathSync(root)) return false
+    // 메모리 공유를 쓰는 프로젝트여야 한다 — 래퍼는 켜진 항목(GUGBAB_ENABLED), 레포 직접 실행은 프로젝트의 memory-sync 훅 파일로 본다
+    const en = process.env.GUGBAB_ENABLED
+    const shared = typeof en === 'string' ? en.split(',').includes('hook:memory-sync') : fs.existsSync(path.join(root, '.claude', 'hooks', 'memory-sync.js'))
+    if (!shared) return false
+    const mem = path.join(root, 'memory')
+    if (!fs.lstatSync(mem).isDirectory() || !fs.lstatSync(path.join(mem, 'MEMORY.md')).isFile()) return false
+    const realMem = fs.realpathSync(mem)
+    let dir = path.dirname(abs)
+    while (!fs.existsSync(dir)) dir = path.dirname(dir)
+    const realTarget = path.join(fs.realpathSync(dir), path.relative(dir, abs))
+    try { if (fs.lstatSync(abs).isSymbolicLink()) return false } catch { /* 새 파일 */ }
+    const rel = path.relative(realMem, realTarget)
+    return !!rel && !rel.startsWith('..') && !path.isAbsolute(rel)
+  } catch { return false }
+}
+
 function isExemptPath(filePath, cwd) {
   if (typeof filePath !== 'string' || !filePath) return false
+  if (isRepoMemoryMirror(filePath, cwd)) return true
   if (IS_WIN) return isExemptPathWin(filePath, cwd)
   let v = filePath
   if (HOME && (v === '~' || v.startsWith('~/'))) v = HOME + v.slice(1)

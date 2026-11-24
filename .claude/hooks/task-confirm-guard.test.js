@@ -65,6 +65,34 @@ console.log('\n── 정상 경로 ──')
   const s = sid(); const r = prompt(s, '이거 설명해줘', transcript('완료했습니다.'))
   check('미승인 질문 → 절차 지시 주입', /진행할까요/.test(r.stdout) && JSON.parse(r.stdout).hookSpecificOutput.hookEventName === 'UserPromptSubmit', r.stdout)
   check('미승인이어도 메모리 폴더 쓰기는 허용', write(s, path.join(os.homedir(), '.claude/projects/-x/memory/a.md')).code === 0)
+  // 레포 memory/ 미러 (2026-11-23) — git 최상위에 memory/MEMORY.md 가 있는 레포의 memory 안 .md 만
+  {
+    const repo = fs.mkdtempSync(path.join(os.homedir(), '.tcg-mem-'))
+    const wr = (file, cwd = repo) => write(s, file, 'Write', { cwd }) // 그 레포에서 연 세션
+    try {
+      fs.mkdirSync(path.join(repo, '.git')); fs.mkdirSync(path.join(repo, 'memory')); fs.writeFileSync(path.join(repo, 'memory', 'MEMORY.md'), '# i\n')
+      fs.mkdirSync(path.join(repo, 'src')); fs.writeFileSync(path.join(repo, 'src', 'a.js'), 'x')
+      const wrapped = typeof process.env.GUGBAB_ENABLED === 'string' // 래퍼 세션 안에서 돌리면 켜진 항목 목록이 기준
+      if (!wrapped) check('memory-sync 훅이 없는 프로젝트(메모리 공유 아님)의 memory/ 는 차단', wr(path.join(repo, 'memory', 'note.md')).code === 2)
+      fs.mkdirSync(path.join(repo, '.claude', 'hooks'), { recursive: true }); fs.writeFileSync(path.join(repo, '.claude', 'hooks', 'memory-sync.js'), '')
+      check('미승인이어도 레포 memory/ 미러 .md 는 허용', wr(path.join(repo,'memory', 'note.md')).code === 0)
+      check('레포 memory/ 안이어도 .md 가 아니면 차단', wr(path.join(repo,'memory', 'run.js')).code === 2)
+      check('레포 memory/../src 로 빠져나가면 차단', wr(path.join(repo,'memory', '..', 'src', 'a.md')).code === 2)
+      check('레포의 다른 폴더 .md 는 차단', wr(path.join(repo,'src', 'memory.md')).code === 2)
+      const noIdx = fs.mkdtempSync(path.join(os.homedir(), '.tcg-mem2-'))
+      fs.mkdirSync(path.join(noIdx, '.git')); fs.mkdirSync(path.join(noIdx, 'memory'))
+      // 안쪽에 따로 있는 .git(서브모듈·벤더)의 memory/ 는 지금 프로젝트의 미러가 아니다
+      const inner = path.join(repo, 'vendor', 'x')
+      fs.mkdirSync(path.join(inner, '.git'), { recursive: true }); fs.mkdirSync(path.join(inner, 'memory')); fs.writeFileSync(path.join(inner, 'memory', 'MEMORY.md'), '# i\n')
+      check('프로젝트 안쪽 다른 .git 의 memory/ 는 차단', wr(path.join(inner, 'memory', 'a.md')).code === 2)
+      check('다른 프로젝트에서 연 세션이 이 레포 memory/ 에 쓰면 차단', write(s, path.join(repo, 'memory', 'note.md')).code === 2)
+      check('MEMORY.md 없는 memory/ 폴더(메모리 공유 아님)는 차단', wr(path.join(noIdx, 'memory', 'a.md'), noIdx).code === 2)
+      fs.rmSync(noIdx, { recursive: true, force: true })
+      let linked = true
+      try { fs.symlinkSync(path.join(repo, 'src'), path.join(repo, 'memory', 'out'), 'dir') } catch { linked = false }
+      if (linked) check('memory/ 안 링크를 거쳐 밖(src)에 쓰면 차단', wr(path.join(repo,'memory', 'out', 'b.md')).code === 2)
+    } finally { fs.rmSync(repo, { recursive: true, force: true }) }
+  }
   // 윈도우 임시 폴더 = os.tmpdir() (`C:\Users\…\AppData\Local\Temp`, scratchpad 도 그 아래). 맥은 기존 경로 그대로
   const tmpFile = IS_WIN ? path.join(os.tmpdir(), 'claude', 'scratchpad', 'a.txt') : '/private/tmp/claude-1/scratchpad/a.txt'
   check('미승인이어도 임시 폴더 쓰기는 허용', write(s, tmpFile).code === 0)
@@ -196,6 +224,20 @@ console.log('\n── 승인 + 다른 행동 금지 부가 조건 (2026-10-20 �
     const v = judgePrompt(reply, PLAN)
     check(`진짜 거절·대체 "${reply}" → 거절`, v.approved === false, v)
   }
+  // 2026-11-23 실사용 오탐: 승인어로 시작하지 않아도 금지 절 + 전체 실행 지시면 승인
+  for (const reply of ['다른 프로젝트 신경쓰지말고 지금 프로젝트만 신경쓰고 잔족 작업 다하고 테스트까지 다 하고 보고해 커밋 푸쉬 전상태로 완벽하게',
+    '커밋은 하지 말고 전부 진행해', 'README 건드리지 말고 끝까지 해줘','푸시하지 마. 나머지는 싹 다 진행하고 보고해']) {
+    const v = judgePrompt(reply, PLAN)
+    check(`금지 절 + 전체 실행 지시 "${reply.slice(0, 30)}" → 승인`, v.approved === true, v)
+  }
+  // 악성·우회: 전체 실행 지시처럼 보여도 대체 요청·재정리·중간 거절·금지 그 자체면 거절
+  for (const reply of ['그 방식 말고 다른 방식으로 다 해줘', '그렇게 하지 말고 다시 정리해서 다 가져와', '다 하지 마', '전부 진행하지 말고 기다려', '잠깐 그거 하지 말고 다 해',
+    '진행하면 안 돼', '다 지우지 말고 대신에 옮겨', '다 하고 싶지만 일단 하지 마', '했다 하고 넘어가지 말고 하지 마', '진행하고 싶은데 아직 하지 마', '그건 다 하고 있는 거니까 건드리지 마',
+    '전부 진행 안 하고 기다려. 건드리지 마', '진행하지 않고 기다려, 손대지 마', '진행해야 할지 고민이야 하지 말고 기다려', '다 진행해도 되는지 모르겠어 하지 마']) {
+    const v = judgePrompt(reply, PLAN)
+    check(`전체 실행처럼 보이는 거절 "${reply}" → 거절`, v.approved === false, v)
+  }
+  check('경계: 확인 질문 없는 답 뒤의 금지 절 + 전체 실행 → 미승인', judgePrompt('커밋하지 말고 다 진행해', '완료했습니다.').approved === false)
   // 이상·경계: 승인어만·빈 값·초장문·특수문자
   check('경계: "응" 단독 → 승인', judgePrompt('응', PLAN).approved === true)
   check('경계: 빈 문자열 → 승인(기존 동작: 확인 질문 뒤 거절 표현 없음)', judgePrompt('', PLAN).approved === true)
